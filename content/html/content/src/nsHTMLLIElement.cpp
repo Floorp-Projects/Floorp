@@ -65,7 +65,8 @@ public:
   // nsIDOMHTMLLIElement
   NS_DECL_NSIDOMHTMLLIELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -122,19 +123,24 @@ static const nsAttrValue::EnumTable kOrderedListItemTypeTable[] = {
 };
 
 PRBool
-nsHTMLLIElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLLIElement::ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::type) {
-    return aResult.ParseEnumValue(aValue, kOrderedListItemTypeTable, PR_TRUE) ||
-           aResult.ParseEnumValue(aValue, kUnorderedListItemTypeTable);
-  }
-  if (aAttribute == nsHTMLAtoms::value) {
-    return aResult.ParseIntWithBounds(aValue, 0);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::type) {
+      return aResult.ParseEnumValue(aValue, kOrderedListItemTypeTable,
+                                    PR_TRUE) ||
+             aResult.ParseEnumValue(aValue, kUnorderedListItemTypeTable);
+    }
+    if (aAttribute == nsHTMLAtoms::value) {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static void

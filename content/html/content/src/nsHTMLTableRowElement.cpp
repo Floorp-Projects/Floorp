@@ -76,7 +76,8 @@ public:
   // nsIDOMHTMLTableRowElement
   NS_DECL_NSIDOMHTMLTABLEROWELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -385,7 +386,8 @@ NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableRowElement, VAlign, valign, "middle
 
 
 PRBool
-nsHTMLTableRowElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLTableRowElement::ParseAttribute(PRInt32 aNamespaceID,
+                                      nsIAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsAttrValue& aResult)
 {
@@ -395,26 +397,29 @@ nsHTMLTableRowElement::ParseAttribute(nsIAtom* aAttribute,
    * ch
    */
 
-  if (aAttribute == nsHTMLAtoms::charoff) {
-    return aResult.ParseIntWithBounds(aValue, 0);
-  }
-  if (aAttribute == nsHTMLAtoms::height) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::width) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::align) {
-    return ParseTableCellHAlignValue(aValue, aResult);
-  }
-  if (aAttribute == nsHTMLAtoms::bgcolor) {
-    return aResult.ParseColor(aValue, GetOwnerDoc());
-  }
-  if (aAttribute == nsHTMLAtoms::valign) {
-    return ParseTableVAlignValue(aValue, aResult);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::charoff) {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
+    if (aAttribute == nsHTMLAtoms::height) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::width) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::align) {
+      return ParseTableCellHAlignValue(aValue, aResult);
+    }
+    if (aAttribute == nsHTMLAtoms::bgcolor) {
+      return aResult.ParseColor(aValue, GetOwnerDoc());
+    }
+    if (aAttribute == nsHTMLAtoms::valign) {
+      return ParseTableVAlignValue(aValue, aResult);
+    }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static 

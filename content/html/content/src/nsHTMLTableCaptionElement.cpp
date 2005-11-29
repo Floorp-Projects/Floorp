@@ -65,7 +65,8 @@ public:
   // nsIDOMHTMLTableCaptionElement
   NS_DECL_NSIDOMHTMLTABLECAPTIONELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -113,15 +114,17 @@ static const nsAttrValue::EnumTable kCaptionAlignTable[] = {
 };
 
 PRBool
-nsHTMLTableCaptionElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLTableCaptionElement::ParseAttribute(PRInt32 aNamespaceID,
+                                          nsIAtom* aAttribute,
                                           const nsAString& aValue,
                                           nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::align) {
+  if (aAttribute == nsHTMLAtoms::align && aNamespaceID == kNameSpaceID_None) {
     return aResult.ParseEnumValue(aValue, kCaptionAlignTable);
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static 

@@ -65,7 +65,8 @@ public:
   // nsIDOMHTMLBRElement
   NS_DECL_NSIDOMHTMLBRELEMENT    
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -110,15 +111,17 @@ static const nsAttrValue::EnumTable kClearTable[] = {
 };
 
 PRBool
-nsHTMLBRElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLBRElement::ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::clear) {
+  if (aAttribute == nsHTMLAtoms::clear && aNamespaceID == kNameSpaceID_None) {
     return aResult.ParseEnumValue(aValue, kClearTable);
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static void

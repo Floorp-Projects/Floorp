@@ -89,7 +89,10 @@ public:
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  PRBool ParseAttribute(nsIAtom* aAttribute, const nsAString& aValue, nsAttrValue& aResult);
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute, PRInt32 aModType) const;
 
   // SetAttr override.  C++ is stupid, so have to override both
@@ -238,20 +241,27 @@ nsHTMLCanvasElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 }
 
 PRBool
-nsHTMLCanvasElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLCanvasElement::ParseAttribute(PRInt32 aNamespaceID,
+                                    nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
-  if ((aAttribute == nsHTMLAtoms::width) ||
-      (aAttribute == nsHTMLAtoms::height))
+  if (aNamespaceID == kNameSpaceID_None)
   {
-    return aResult.ParseIntWithBounds(aValue, 0);
+    if ((aAttribute == nsHTMLAtoms::width) ||
+        (aAttribute == nsHTMLAtoms::height))
+    {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
+
+    if (ParseImageAttribute(aAttribute, aValue, aResult))
+    {
+      return PR_TRUE;
+    }
   }
 
-  if (ParseImageAttribute(aAttribute, aValue, aResult))
-    return PR_TRUE;
-
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 

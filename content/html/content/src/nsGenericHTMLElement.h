@@ -245,18 +245,8 @@ public:
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
   already_AddRefed<nsIURI> GetBaseURI() const;
 
-  //----------------------------------------
-  /**
-   * Convert an attribute string value to attribute type based on the type of
-   * attribute.  Called by SetAttr().
-   *
-   * @param aAttribute to attribute to convert
-   * @param aValue the string value to convert
-   * @param aResult the nsAttrValue [OUT]
-   * @return PR_TRUE if the parsing was successful, PR_FALSE otherwise
-   * @see nsGenericHTMLElement::SetAttr
-   */
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
 

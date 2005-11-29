@@ -68,7 +68,8 @@ public:
   // nsIDOMHTMLParagraphElement
   NS_DECL_NSIDOMHTMLPARAGRAPHELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -108,15 +109,17 @@ NS_IMPL_STRING_ATTR(nsHTMLParagraphElement, Align, align)
 
 
 PRBool
-nsHTMLParagraphElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLParagraphElement::ParseAttribute(PRInt32 aNamespaceID,
+                                       nsIAtom* aAttribute,
                                        const nsAString& aValue,
                                        nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::align) {
+  if (aAttribute == nsHTMLAtoms::align && aNamespaceID == kNameSpaceID_None) {
     return ParseDivAlignValue(aValue, aResult);
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static void

@@ -67,7 +67,8 @@ public:
   NS_DECL_NSIDOMHTMLIFRAMEELEMENT
 
   // nsIContent
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -119,33 +120,37 @@ nsHTMLIFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 }
 
 PRBool
-nsHTMLIFrameElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLIFrameElement::ParseAttribute(PRInt32 aNamespaceID,
+                                    nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::marginwidth) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::marginheight) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::width) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::height) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::frameborder) {
-    return ParseFrameborderValue(aValue, aResult);
-  }
-  if (aAttribute == nsHTMLAtoms::scrolling) {
-    return ParseScrollingValue(aValue, aResult);
-  }
-  if (aAttribute == nsHTMLAtoms::align) {
-    return ParseAlignValue(aValue, aResult);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::marginwidth) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::marginheight) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::width) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::height) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::frameborder) {
+      return ParseFrameborderValue(aValue, aResult);
+    }
+    if (aAttribute == nsHTMLAtoms::scrolling) {
+      return ParseScrollingValue(aValue, aResult);
+    }
+    if (aAttribute == nsHTMLAtoms::align) {
+      return ParseAlignValue(aValue, aResult);
+    }
   }
 
-  return nsGenericHTMLFrameElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLFrameElement::ParseAttribute(aNamespaceID, aAttribute,
+                                                   aValue, aResult);
 }
 
 static void

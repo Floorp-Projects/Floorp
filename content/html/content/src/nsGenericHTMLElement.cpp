@@ -2027,36 +2027,40 @@ nsGenericHTMLElement::IsContentOfType(PRUint32 aFlags) const
 
 
 PRBool
-nsGenericHTMLElement::ParseAttribute(nsIAtom* aAttribute,
+nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
+                                     nsIAtom* aAttribute,
                                      const nsAString& aValue,
                                      nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::dir) {
-    return aResult.ParseEnumValue(aValue, kDirTable);
-  }
-  if (aAttribute == nsHTMLAtoms::style) {
-    ParseStyleAttribute(this, mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
-                        aValue, aResult);
-    return PR_TRUE;
-  }
-  if (aAttribute == nsHTMLAtoms::kClass) {
-    aResult.ParseAtomArray(aValue);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::dir) {
+      return aResult.ParseEnumValue(aValue, kDirTable);
+    }
+    if (aAttribute == nsHTMLAtoms::style) {
+      ParseStyleAttribute(this, mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
+                          aValue, aResult);
+      return PR_TRUE;
+    }
+    if (aAttribute == nsHTMLAtoms::kClass) {
+      aResult.ParseAtomArray(aValue);
 
-    return PR_TRUE;
+      return PR_TRUE;
+    }
+  
+    if (aAttribute == nsHTMLAtoms::tabindex) {
+      return aResult.ParseIntWithBounds(aValue, -32768, 32767);
+    }
+
+    if (aAttribute == nsHTMLAtoms::name && !aValue.IsEmpty()) {
+      // Store name as an atom.  name="" means that the element has no name,
+      // not that it has an emptystring as the name.
+      aResult.ParseAtom(aValue);
+      return PR_TRUE;
+    }
   }
 
-  if (aAttribute == nsHTMLAtoms::tabindex) {
-    return aResult.ParseIntWithBounds(aValue, -32768, 32767);
-  }
-
-  if (aAttribute == nsHTMLAtoms::name && !aValue.IsEmpty()) {
-    // Store name as an atom.  name="" means that the element has no name,
-    // not that it has an emptystring as the name.
-    aResult.ParseAtom(aValue);
-    return PR_TRUE;
-  }
-
-  return nsGenericElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                          aResult);
 }
 
 PRBool

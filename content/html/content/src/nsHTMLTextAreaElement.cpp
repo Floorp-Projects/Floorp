@@ -121,7 +121,8 @@ public:
                                  PRBool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -491,17 +492,21 @@ nsHTMLTextAreaElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 }
 
 PRBool
-nsHTMLTextAreaElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLTextAreaElement::ParseAttribute(PRInt32 aNamespaceID,
+                                      nsIAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::cols) {
-    return aResult.ParseIntWithBounds(aValue, 0);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::cols) {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
+    if (aAttribute == nsHTMLAtoms::rows) {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
   }
-  if (aAttribute == nsHTMLAtoms::rows) {
-    return aResult.ParseIntWithBounds(aValue, 0);
-  }
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static void

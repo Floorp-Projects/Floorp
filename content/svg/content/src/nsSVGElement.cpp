@@ -165,13 +165,14 @@ nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 }
 
 PRBool
-nsSVGElement::ParseAttribute(nsIAtom* aAttribute,
+nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
+                             nsIAtom* aAttribute,
                              const nsAString& aValue,
                              nsAttrValue& aResult)
 {
   // Parse value
   nsCOMPtr<nsISVGValue> svg_value;
-  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aAttribute);
+  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aAttribute, aNamespaceID);
   if (val) {
     // Found the attr in the list.
     if (val->Type() == nsAttrValue::eSVGValue) {
@@ -180,7 +181,7 @@ nsSVGElement::ParseAttribute(nsIAtom* aAttribute,
   }
   else {
     // Could be a mapped attribute.
-    svg_value = GetMappedAttribute(kNameSpaceID_None, aAttribute);
+    svg_value = GetMappedAttribute(aNamespaceID, aAttribute);
   }
   
   if (svg_value) {
@@ -208,12 +209,13 @@ nsSVGElement::ParseAttribute(nsIAtom* aAttribute,
     return PR_TRUE;
   }
 
-  if (aAttribute == nsSVGAtoms::style) {
+  if (aAttribute == nsSVGAtoms::style && aNamespaceID == kNameSpaceID_None) {
     nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE, aValue, aResult);
     return PR_TRUE;
   }
 
-  return nsGenericElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                          aResult);
 }
 
 nsresult

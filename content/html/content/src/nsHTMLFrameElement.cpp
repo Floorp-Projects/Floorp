@@ -66,7 +66,8 @@ public:
   NS_DECL_NSIDOMHTMLFRAMEELEMENT
 
   // nsIContent
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -119,27 +120,31 @@ nsHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 }
 
 PRBool
-nsHTMLFrameElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLFrameElement::ParseAttribute(PRInt32 aNamespaceID,
+                                   nsIAtom* aAttribute,
                                    const nsAString& aValue,
                                    nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::bordercolor) {
-    return aResult.ParseColor(aValue, nsGenericHTMLFrameElement::GetOwnerDoc());
-  }
-  if (aAttribute == nsHTMLAtoms::frameborder) {
-    return ParseFrameborderValue(aValue, aResult);
-  }
-  if (aAttribute == nsHTMLAtoms::marginwidth) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::marginheight) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::scrolling) {
-    return ParseScrollingValue(aValue, aResult);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::bordercolor) {
+      return aResult.ParseColor(aValue, GetOwnerDoc());
+    }
+    if (aAttribute == nsHTMLAtoms::frameborder) {
+      return ParseFrameborderValue(aValue, aResult);
+    }
+    if (aAttribute == nsHTMLAtoms::marginwidth) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::marginheight) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::scrolling) {
+      return ParseScrollingValue(aValue, aResult);
+    }
   }
 
-  return nsGenericHTMLFrameElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLFrameElement::ParseAttribute(aNamespaceID, aAttribute,
+                                                   aValue, aResult);
 }
 
 static void

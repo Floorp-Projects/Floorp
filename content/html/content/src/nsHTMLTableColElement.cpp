@@ -69,7 +69,8 @@ public:
   // nsIDOMHTMLTableColElement
   NS_DECL_NSIDOMHTMLTABLECOLELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -114,29 +115,33 @@ NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Width, width)
 
 
 PRBool
-nsHTMLTableColElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLTableColElement::ParseAttribute(PRInt32 aNamespaceID,
+                                      nsIAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsAttrValue& aResult)
 {
-  /* ignore these attributes, stored simply as strings ch */
-  if (aAttribute == nsHTMLAtoms::charoff) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::span) {
-    /* protection from unrealistic large colspan values */
-    return aResult.ParseIntWithBounds(aValue, 1, MAX_COLSPAN);
-  }
-  if (aAttribute == nsHTMLAtoms::width) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_TRUE);
-  }
-  if (aAttribute == nsHTMLAtoms::align) {
-    return ParseTableCellHAlignValue(aValue, aResult);
-  }
-  if (aAttribute == nsHTMLAtoms::valign) {
-    return ParseTableVAlignValue(aValue, aResult);
+  if (aNamespaceID == kNameSpaceID_None) {
+    /* ignore these attributes, stored simply as strings ch */
+    if (aAttribute == nsHTMLAtoms::charoff) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::span) {
+      /* protection from unrealistic large colspan values */
+      return aResult.ParseIntWithBounds(aValue, 1, MAX_COLSPAN);
+    }
+    if (aAttribute == nsHTMLAtoms::width) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_TRUE);
+    }
+    if (aAttribute == nsHTMLAtoms::align) {
+      return ParseTableCellHAlignValue(aValue, aResult);
+    }
+    if (aAttribute == nsHTMLAtoms::valign) {
+      return ParseTableVAlignValue(aValue, aResult);
+    }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static 

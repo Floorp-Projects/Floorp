@@ -249,7 +249,8 @@ public:
   virtual void DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -1695,14 +1696,16 @@ nsHTMLSelectElement::DoneAddingChildren(PRBool aHaveNotified)
 }
 
 PRBool
-nsHTMLSelectElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLSelectElement::ParseAttribute(PRInt32 aNamespaceID,
+                                    nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::size) {
+  if (aAttribute == nsHTMLAtoms::size && kNameSpaceID_None == aNamespaceID) {
     return aResult.ParseIntWithBounds(aValue, 0);
   }
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static void

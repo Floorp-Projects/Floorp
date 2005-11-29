@@ -75,7 +75,8 @@ public:
   // nsIDOMHTMLUListElement
   // fully declared by NS_DECL_NSIDOMHTMLOLISTELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -147,22 +148,26 @@ nsAttrValue::EnumTable kOldListTypeTable[] = {
 };
 
 PRBool
-nsHTMLSharedListElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLSharedListElement::ParseAttribute(PRInt32 aNamespaceID,
+                                        nsIAtom* aAttribute,
                                         const nsAString& aValue,
                                         nsAttrValue& aResult)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::ol) ||
-      mNodeInfo->Equals(nsHTMLAtoms::ul)) {
-    if (aAttribute == nsHTMLAtoms::type) {
-      return aResult.ParseEnumValue(aValue, kListTypeTable) ||
-             aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE);
-    }
-    if (aAttribute == nsHTMLAtoms::start) {
-      return aResult.ParseIntValue(aValue);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (mNodeInfo->Equals(nsHTMLAtoms::ol) ||
+        mNodeInfo->Equals(nsHTMLAtoms::ul)) {
+      if (aAttribute == nsHTMLAtoms::type) {
+        return aResult.ParseEnumValue(aValue, kListTypeTable) ||
+               aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE);
+      }
+      if (aAttribute == nsHTMLAtoms::start) {
+        return aResult.ParseIntValue(aValue);
+      }
     }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static void
