@@ -567,6 +567,9 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
     if ((!root || root == this) && !mNodeInfo->Equals(nsXULAtoms::overlay)) {
         nsPIDOMWindow *window = doc->GetWindow();
 
+        if (!window || !(window = window->GetCurrentInnerWindow()))
+            return NS_ERROR_UNEXPECTED;
+
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(window);
         if (!receiver)
             return NS_ERROR_UNEXPECTED;
