@@ -3401,11 +3401,11 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
 
     doc_fragment->DropChildReferences();
   } else {
-    nsCOMPtr<nsIDOMNode> oldParent;
-    res = aNewChild->GetParentNode(getter_AddRefs(oldParent));
-
-    if (NS_FAILED(res)) {
-      return res;
+    nsIContent* bindingParent = newContent->GetBindingParent();
+    if (bindingParent == newContent ||
+        (bindingParent && bindingParent == newContent->GetParent())) {
+      // We can't deal with this so just bail
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
     /*
@@ -3414,6 +3414,9 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
      * aNewChild is a document. This code also handles the case where the
      * new child is alleady a child of this node-- jst@citec.fi
      */
+    nsCOMPtr<nsIDOMNode> oldParent;
+    res = aNewChild->GetParentNode(getter_AddRefs(oldParent));
+    NS_ENSURE_SUCCESS(res, res);
     if (oldParent) {
       nsCOMPtr<nsIDOMNode> tmpNode;
 
