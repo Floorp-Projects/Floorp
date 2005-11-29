@@ -199,17 +199,18 @@ nsNavHistoryQueryNode::ParseQueries()
   return rv;
 }
 
-NS_IMETHODIMP
-nsNavHistoryQueryNode::GetFolderId(PRInt64 *aId)
+PRInt64
+nsNavHistoryQueryNode::GetFolderId() const
 {
+  PRInt64 id;
   if (mQueryCount > 0) {
     const nsTArray<PRInt64>& folders =
       NS_STATIC_CAST(nsNavHistoryQuery*, mQueries[0])->Folders();
-    *aId = (folders.Length() == 1) ? folders[0] : 0;
+    id = (folders.Length() == 1) ? folders[0] : 0;
   } else {
-    *aId = 0;
+    id = 0;
   }
-  return NS_OK;
+  return id;
 }
 
 NS_IMETHODIMP
@@ -221,13 +222,15 @@ nsNavHistoryQueryNode::GetQueries(PRUint32 *aQueryCount,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsINavHistoryQuery **queries =
-    NS_STATIC_CAST(nsINavHistoryQuery**,
-                   nsMemory::Alloc(mQueryCount * sizeof(nsINavHistoryQuery*)));
-  NS_ENSURE_TRUE(queries, NS_ERROR_OUT_OF_MEMORY);
+  nsINavHistoryQuery **queries = nsnull;
+  if (mQueryCount > 0) {
+    queries = NS_STATIC_CAST(nsINavHistoryQuery**,
+                             nsMemory::Alloc(mQueryCount * sizeof(nsINavHistoryQuery*)));
+    NS_ENSURE_TRUE(queries, NS_ERROR_OUT_OF_MEMORY);
 
-  for (PRUint32 i = 0; i < mQueryCount; ++i) {
-    NS_ADDREF(queries[i] = mQueries[i]);
+    for (PRUint32 i = 0; i < mQueryCount; ++i) {
+      NS_ADDREF(queries[i] = mQueries[i]);
+    }
   }
 
   *aQueryCount = mQueryCount;
@@ -291,20 +294,23 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
     mTimesIncludeDates(PR_TRUE),
     mCurrentSort(nsINavHistoryQueryOptions::SORT_BY_NONE)
 {
+  NS_ASSERTION(aOptions, "must have options!");
   // Fill saved source queries with copies of the original (the caller might
   // change their original objects, and we always want to reflect the source
   // parameters).
   // XXX this should be in Init() since it could fail to alloc
-  mQueries =
-    NS_STATIC_CAST(nsINavHistoryQuery**,
-                   nsMemory::Alloc(aQueryCount * sizeof(nsINavHistoryQuery*)));
+  if (aQueryCount > 0) {
+    mQueries = NS_STATIC_CAST(nsINavHistoryQuery**,
+                              nsMemory::Alloc(aQueryCount * sizeof(nsINavHistoryQuery*)));
 
-  for (PRUint32 i = 0; i < aQueryCount; i ++) {
-    nsCOMPtr<nsINavHistoryQuery> queryClone;
-    if (NS_SUCCEEDED(aQueries[i]->Clone(getter_AddRefs(queryClone)))) {
-      mQueries[i] = nsnull;
-      queryClone.swap(mQueries[i]);
+    for (PRUint32 i = 0; i < aQueryCount; i ++) {
+      nsCOMPtr<nsINavHistoryQuery> queryClone;
+      if (NS_SUCCEEDED(aQueries[i]->Clone(getter_AddRefs(queryClone)))) {
+        mQueries[i] = nsnull;
+        queryClone.swap(mQueries[i]);
+      }
     }
+    mQueryCount = aQueryCount;
   }
   if (aOptions)
     aOptions->Clone(getter_AddRefs(mOptions));
@@ -603,39 +609,6 @@ nsNavHistoryResult::TreeIndexForNode(nsINavHistoryResultNode* aNode,
   return NS_OK;
 }
 
-
-// nsNavHistoryResult::GetSourceQueries
-
-NS_IMETHODIMP
-nsNavHistoryResult::GetSourceQueries(PRUint32* aQueryCount, 
-                                     nsINavHistoryQuery*** aQueries)
-{
-  *aQueries = nsnull;
-  *aQueryCount = 0;
-  if (mQueryCount > 0) {
-    *aQueries = NS_STATIC_CAST(nsINavHistoryQuery**,
-         nsMemory::Alloc(sizeof(nsINavHistoryQuery*) * mQueryCount));
-    if (! *aQueries)
-      return NS_ERROR_OUT_OF_MEMORY;
-    *aQueryCount = mQueryCount;
-
-    for (PRUint32 i = 0; i < mQueryCount; i ++) {
-      (*aQueries)[i] = mQueries[i];
-      NS_ADDREF((*aQueries)[i]);
-    }
-  }
-  return NS_OK;
-}
-
-// nsNavHistoryResult::GetSourceQueryOptions
-
-NS_IMETHODIMP
-nsNavHistoryResult::GetSourceQueryOptions(nsINavHistoryQueryOptions** aOptions)
-{
-  *aOptions = mOptions;
-  NS_IF_ADDREF(*aOptions);
-  return NS_OK;
-}
 
 NS_IMETHODIMP 
 nsNavHistoryResult::AddObserver(nsINavHistoryResultViewObserver* aObserver)
@@ -1086,10 +1059,10 @@ NS_IMETHODIMP nsNavHistoryResult::IsContainer(PRInt32 index, PRBool *_retval)
     return NS_ERROR_INVALID_ARG;
 
   nsNavHistoryResultNode *node = VisibleElementAt(index);
-  // XXX make empty folders still appear as folders
   *_retval = (node->mChildren.Count() > 0 ||
               (node->mType == nsINavHistoryResult::RESULT_TYPE_QUERY &&
-               mOptions && mOptions->ExpandPlaces()));
+               (node->GetFolderId() > 0 ||
+                (mOptions && mOptions->ExpandPlaces()))));
   return NS_OK;
 }
 

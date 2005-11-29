@@ -172,6 +172,7 @@ public:
   // Non-XPCOM member accessors
   PRInt32 Type() const { return mType; }
   const nsCString& URL() const { return mUrl; }
+  virtual PRInt64 GetFolderId() const { return 0; }
 
 protected:
   virtual ~nsNavHistoryResultNode() {}
@@ -224,13 +225,15 @@ public:
     : mQueries(nsnull), mQueryCount(0) {}
 
   // nsINavHistoryResultNode methods
-  NS_IMETHOD GetFolderId(PRInt64 *aId);
+  NS_IMETHOD GetFolderId(PRInt64 *aId)
+  { *aId = nsNavHistoryQueryNode::GetFolderId(); return NS_OK; }
   NS_IMETHOD GetQueries(PRUint32 *aQueryCount,
                         nsINavHistoryQuery ***aQueries);
   NS_IMETHOD GetQueryOptions(nsINavHistoryQueryOptions **aOptions);
 
   // nsNavHistoryResultNode methods
   virtual nsresult BuildChildren();
+  virtual PRInt64 GetFolderId() const;
 
 protected:
   virtual ~nsNavHistoryQueryNode();
@@ -247,8 +250,8 @@ class nsIDateTimeFormat;
 
 // nsNavHistoryResult
 //
-//    nsNavHistory creates this object and fills in mTopLevel (by getting
-//    it through GetTopLevel(). Then FilledAllResults() is called to finish
+//    nsNavHistory creates this object and fills in mChildren (by getting
+//    it through GetTopLevel()). Then FilledAllResults() is called to finish
 //    object initialization.
 
 class nsNavHistoryResult : public nsNavHistoryQueryNode,
@@ -275,7 +278,7 @@ public:
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_NSITREEVIEW
 
-  NS_FORWARD_NSINAVHISTORYRESULTNODE(nsNavHistoryResultNode::)
+  NS_FORWARD_NSINAVHISTORYRESULTNODE(nsNavHistoryQueryNode::)
 
 private:
   ~nsNavHistoryResult();
