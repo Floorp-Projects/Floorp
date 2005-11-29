@@ -129,12 +129,12 @@
       <menuseparator id="fill_after_this_node"/>
       <menuseparator id="fill_before_this_node"/>
       <menuitem type="radio" name="sort_direction" id="sort_ascending"
-        label="&menuitem.view.ascending.label;"
-        accesskey="&menuitem.view.ascending.accesskey;"
+        label="&sortAscending.label;"
+        accesskey="&sortAscending.accesskey;"
         oncommand="return SortInNewDirection('ascending');"/>
       <menuitem type="radio" name="sort_direction" id="sort_descending"
-        label="&menuitem.view.descending.label;"
-        accesskey="&menuitem.view.descending.accesskey;"
+        label="&sortDescending.label;"
+        accesskey="&sortDescending.accesskey;"
         oncommand="return SortInNewDirection('descending');"/>
     </menupopup>
   </menu>

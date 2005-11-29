@@ -94,8 +94,8 @@
               <label value="&sortOrder.label;"/>
               <menulist id="sortOrder">
                 <menupopup>
-                  <menuitem value="ascending" label="&sortOrder.ascending.label;"/>
-                  <menuitem value="descending" label="&sortOrder.descending.label;"/>
+                  <menuitem value="ascending" label="&sortAscending.label;"/>
+                  <menuitem value="descending" label="&sortDescending.label;"/>
                 </menupopup>
               </menulist>
             </row>

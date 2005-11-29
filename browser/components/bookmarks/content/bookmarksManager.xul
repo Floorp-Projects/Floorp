@@ -185,12 +185,12 @@
                     type="radio"
                     resource="direction" name="sortSet"/>
           <menuseparator id="fill-before-this-node"/>
-          <menuitem id="ascending" label="&menuitem.view.ascending.label;"
-                    accesskey="&menuitem.view.ascending.accesskey;"
+          <menuitem id="ascending" label="&sortAscending.label;"
+                    accesskey="&sortAscending.accesskey;"
                     type="radio"
                     resource="direction" name="sortDirectionSet"/>
-          <menuitem id="descending" label="&menuitem.view.descending.label;"
-                    accesskey="&menuitem.view.descending.accesskey;"
+          <menuitem id="descending" label="&sortDescending.label;"
+                    accesskey="&sortDescending.accesskey;"
                     type="radio"
                     resource="direction" name="sortDirectionSet"/>
         </menupopup>

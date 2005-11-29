@@ -84,10 +84,10 @@
 <!ENTITY menuitem.view.show_columns.accesskey       "S">
 <!ENTITY menuitem.view.unsorted.label               "Unsorted">
 <!ENTITY menuitem.view.unsorted.accesskey           "u">
-<!ENTITY menuitem.view.ascending.label              "A > Z Sort Order">
-<!ENTITY menuitem.view.ascending.accesskey          "a">
-<!ENTITY menuitem.view.descending.label             "Z > A Sort Order">
-<!ENTITY menuitem.view.descending.accesskey         "z">
+<!ENTITY sortAscending.label                        "Ascending">
+<!ENTITY sortAscending.accesskey                    "A">
+<!ENTITY sortDescending.label                       "Descending">
+<!ENTITY sortDescending.accesskey                   "D">
 <!ENTITY menuitem.personaltoolbarfolder.label       "Set as Bookmarks Toolbar Folder">
 <!ENTITY menuitem.personaltoolbarfolder.accesskey   "b">
 
