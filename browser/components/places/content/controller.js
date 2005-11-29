@@ -119,6 +119,15 @@ var PlacesController = {
     return this.__bms;
   },
 
+  __hist: null,
+  get _hist() {
+    if (!this.__hist) {
+      this.__hist =
+        Cc["@mozilla.org/browser/nav-history;1"].getService(Ci.nsINavHistory);
+    }
+    return this.__hist;
+  },
+
   _activeView: null,
   get activeView() {
     return this._activeView;
@@ -221,7 +230,8 @@ var PlacesController = {
   nodeIsFolder: function PC_nodeIsFolder(node) {
     if (!node)
       STACK(arguments);
-    return node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER;
+    return (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
+            node.folderId > 0);
   },
   
   /**
@@ -439,8 +449,9 @@ var PlacesController = {
   openLinksInTabs: function PC_openLinksInTabs() {
     var node = this._activeView.selectedNode;
     if (this._activeView.hasSingleSelection && this.nodeIsFolder(node)) {
-      var kids = this._bms.getFolderChildren(node.folderId, 
-                                             this._bms.ITEM_CHILDREN);
+      var queries = node.getQueries({});
+      var kids = this._hist.executeQueries(queries, queries.length,
+                                           node.queryOptions);
       var cc = kids.childCount;
       for (var i = 0; i < cc; ++i)
         this._activeView.browserWindow.openNewTabWith(kids.getChild(i).url, 
@@ -520,7 +531,7 @@ var PlacesController = {
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
       var index = this.getIndexOfNode(node);
-      if (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
+      if (this.nodeIsFolder(node)) {
         txns.push(new PlacesRemoveFolderTransaction(node.folderId, 
                                                     node.parent.folderId, 
                                                     index));
@@ -641,7 +652,7 @@ var PlacesController = {
    *          The index within the container the item was dropped or pasted at
    * @param   copy
    *          The drag action was copy, so don't move folders or links.
-   * @retunrs An object implementing nsITransaction that can perform
+   * @returns An object implementing nsITransaction that can perform
    *          the move/insert. 
    */
   makeTransaction: function PC_makeTransaction(data, type, container, 
@@ -877,17 +888,25 @@ var PlacesControllerDragHelper = {
     var transactions = [];
     function createTransactions(folderId, container, index) {
       var bms = PlacesController._bms;
+      var hist = PlacesController._hist;
       var folderTitle = bms.getFolderTitle(folderId);
     
       var createTxn = 
         new PlacesCreateFolderTransaction(folderTitle, container, index);
       transactions.push(createTxn);
     
-      var kids = bms.getFolderChildren(folderId, bms.ALL_CHILDREN);
+      // set up a query for the folder's children
+      var query = hist.getNewQuery();
+      query.setFolders([folderId], 1);
+      var queryOptions = hist.getNewQueryOptions();
+      queryOptions.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+      // queryOptions.setExpandPlaces(); ?
+
+      var kids = hist.executeQuery(query, options);
       var cc = kids.childCount;
       for (var i = 0; i < cc; ++i) {
         var node = kids.getChild(i);
-        if (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER)
+        if (this.nodeIsFolder(node))
           createTransactions(node.folderId, folderId, i);
         else {
           var uri = PlacesController._uri(node.url);

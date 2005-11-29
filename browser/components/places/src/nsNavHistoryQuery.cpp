@@ -59,6 +59,7 @@ static nsresult ParseQueryTimeString(const nsCString& aString,
 #define QUERYKEY_ONLY_BOOKMARKED "onlyBookmarked"
 #define QUERYKEY_DOMAIN_IS_HOST "domainIsHost"
 #define QUERYKEY_DOMAIN "domain"
+#define QUERYKEY_FOLDERS "folders"
 #define QUERYKEY_SEPARATOR "OR"
 #define QUERYKEY_GROUP "group"
 #define QUERYKEY_SORT "sort"
@@ -255,6 +256,17 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       aQueryString.Append('=');
       aQueryString += escapedDomain;
     }
+
+    // folders
+    PRInt64 *folders = nsnull;
+    PRUint32 folderCount = 0;
+    rv = query->GetFolders(&folderCount, &folders);
+    for (PRUint32 i = 0; i < folderCount; ++i) {
+      AppendAmpersandIfNonempty(aQueryString);
+      aQueryString += NS_LITERAL_CSTRING(QUERYKEY_FOLDERS);
+      aQueryString.Append('=');
+      AppendInt64(aQueryString, folders[0]);
+    }
   }
 
   // grouping
@@ -415,6 +427,7 @@ nsNavHistory::TokensToQueries(const nsVoidArray& aTokens,
   if (! groups.mItems)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  nsTArray<PRInt64> folders;
   nsCOMPtr<nsINavHistoryQuery> query(new nsNavHistoryQuery());
   if (! query)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -493,13 +506,13 @@ nsNavHistory::TokensToQueries(const nsVoidArray& aTokens,
     } else if (kvp->key.EqualsLiteral(QUERYKEY_DOMAIN_IS_HOST)) {
 
       // domainIsHost flag
-      PRBool onlyBookmarked;
-      rv = ParseQueryBooleanString(kvp->value, &onlyBookmarked);
+      PRBool domainIsHost;
+      rv = ParseQueryBooleanString(kvp->value, &domainIsHost);
       if (NS_SUCCEEDED(rv)) {
-        rv = query->SetOnlyBookmarked(onlyBookmarked);
+        rv = query->SetDomainIsHost(domainIsHost);
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
-        NS_WARNING("onlyBookmarked value in query is invalid, ignoring");
+        NS_WARNING("domainIsHost value in query is invalid, ignoring");
       }
 
     } else if (kvp->key.EqualsLiteral(QUERYKEY_DOMAIN)) {
@@ -510,7 +523,23 @@ nsNavHistory::TokensToQueries(const nsVoidArray& aTokens,
       rv = query->SetDomain(NS_ConvertUTF8toUTF16(unescapedDomain));
       NS_ENSURE_SUCCESS(rv, rv);
 
+    } else if (kvp->key.EqualsLiteral(QUERYKEY_FOLDERS)) {
+
+      // folders
+      PRInt64 folder;
+      rv = ParseQueryTimeString(kvp->value, &folder);
+      if (NS_SUCCEEDED(rv)) {
+        NS_ENSURE_TRUE(folders.AppendElement(folder), NS_ERROR_OUT_OF_MEMORY);
+      } else {
+        NS_WARNING("folders value in query is invalid, ignoring");
+      }
+
     } else if (kvp->key.EqualsLiteral(QUERYKEY_SEPARATOR)) {
+
+      if (folders.Length() != 0) {
+        query->SetFolders(folders.Elements(), folders.Length());
+        folders.Clear();
+      }
 
       // new query component
       query = new nsNavHistoryQuery();
@@ -566,6 +595,10 @@ nsNavHistory::TokensToQueries(const nsVoidArray& aTokens,
       aQueries->Clear();
       return NS_ERROR_INVALID_ARG;
     }
+  }
+
+  if (folders.Length() != 0) {
+    query->SetFolders(folders.Elements(), folders.Length());
   }
 
   aOptions->SetGroupingMode(groups.mItems, groups.mGroupCount);

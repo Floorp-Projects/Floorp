@@ -41,21 +41,6 @@
 #include "nsNavHistory.h"
 #include "nsBrowserCompsCID.h"
 
-class nsNavBookmarks;
-
-class nsNavFolderResultNode : public nsNavHistoryResultNode
-{
-public:
-  nsNavFolderResultNode() : nsNavHistoryResultNode(),
-                            mBuiltChildren(PR_FALSE) { }
-
-  virtual nsresult BuildChildren(PRUint32 aOptions);
-
-private:
-  friend class nsNavBookmarks;
-  PRBool mBuiltChildren;
-};
-
 class nsNavBookmarks : public nsINavBookmarksService,
                        public nsINavHistoryObserver
 {
@@ -77,6 +62,10 @@ public:
     return sInstance;
   }
 
+  nsresult QueryFolderChildren(nsINavHistoryQuery *aQuery,
+                               nsINavHistoryQueryOptions *aOptions,
+                               nsCOMArray<nsNavHistoryResultNode> *children);
+
 private:
   static nsNavBookmarks *sInstance;
 
@@ -86,10 +75,10 @@ private:
                          PRInt32 aStartIndex, PRInt32 aEndIndex,
                          PRInt32 aDelta);
   nsresult ResultNodeForFolder(PRInt64 aFolder,
+                               nsINavHistoryQuery *aQuery,
+                               nsINavHistoryQueryOptions *aOptions,
                                nsNavHistoryResultNode **aNode);
   PRInt32 FolderCount(PRInt64 aFolder);
-  nsresult QueryFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
-                               nsCOMArray<nsNavHistoryResultNode>* aChildren);
 
   nsNavHistory* History() { return nsNavHistory::GetHistoryService(); }
 
@@ -109,8 +98,6 @@ private:
   static const PRInt32 kGetFolderInfoIndex_Title;
 
   nsCOMPtr<mozIStorageStatement> mDBGetChildren;       // kGetInfoIndex_* results + kGetChildrenIndex_* results
-  nsCOMPtr<mozIStorageStatement> mDBGetItemChildren;
-  nsCOMPtr<mozIStorageStatement> mDBGetFolderChildren;
   static const PRInt32 kGetChildrenIndex_Position;
   static const PRInt32 kGetChildrenIndex_ItemChild;
   static const PRInt32 kGetChildrenIndex_FolderChild;
@@ -123,8 +110,6 @@ private:
   static const PRInt32 kFindBookmarksIndex_Position;
 
   nsCOMPtr<mozIStorageStatement> mDBFolderCount;
-
-  friend class nsNavFolderResultNode;
 
   nsCOMPtr<nsIStringBundle> mBundle;
 };

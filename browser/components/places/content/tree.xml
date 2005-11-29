@@ -148,8 +148,15 @@
         <parameter name="folderId"/>
         <parameter name="filterOptions"/>
         <body><![CDATA[ 
-          var filterOptions = filterOptions || this._bms.ALL_CHILDREN;
-          var result = this._bms.getFolderChildren(folderId, filterOptions);
+          var query = this._places.getNewQuery();
+          query.setFolders([folderId], 1);
+          if (filterOptions) {
+            query.itemTypes = filterOptions;
+          }
+          var options = this._places.getNewQueryOptions();
+          options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+          // options.setExpandPlaces(); ???
+          var result = this._places.executeQuery(query, options);
           result.QueryInterface(Ci.nsITreeView);
           this.view = result;
           this._lastFilterOptions = filterOptions;
