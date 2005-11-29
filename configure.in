@@ -4045,7 +4045,7 @@ MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_LIBXUL=
 MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc help p3p pref venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs auth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter"
-MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm"
+MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
 MOZ_IPCD=
 MOZ_JSDEBUGGER=1
@@ -4996,19 +4996,12 @@ MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
 dnl ========================================================
 dnl Image decoders
 dnl ========================================================
-case "$target_os" in
-cygwin*|mingw*|msvc*|mks*|os2*|wince*)
-    MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
-    ;;
-darwin*)
-    if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa";
-    then
-        MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
-    fi
+case "$MOZ_WIDGET_TOOLKIT" in
+windows|os2|mac|cocoa)
     ;;
 *)
-    if test "$MOZ_ENABLE_GNOMEUI"; then
-        MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
+    if test -z "$MOZ_ENABLE_GNOMEUI"; then
+       MOZ_IMG_DECODERS_DEFAULT=`echo $MOZ_IMG_DECODERS_DEFAULT | sed -e 's|icon||'`                
     fi
     ;;
 esac
