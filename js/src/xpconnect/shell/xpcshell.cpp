@@ -26,6 +26,7 @@
  *   John Bandhauer <jband@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   IBM Corp.
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -553,7 +554,8 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
 }
 
 static void
-ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
+ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
+            JSBool forceTTY)
 {
     JSScript *script;
     jsval result;
@@ -562,7 +564,9 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
     char *bufp, buffer[4096];
     JSString *str;
 
-    if (!isatty(fileno(file))) {
+    if (forceTTY) {
+        file = stdin;
+    } else if (!isatty(fileno(file))) {
         /*
          * It's not interactive - just execute it.
          *
@@ -590,6 +594,7 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
             JS_DestroyScript(cx, script);
         }
         DoEndRequest(cx);
+
         return;
     }
 
@@ -637,36 +642,21 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
                     else
                         ok = JS_FALSE;
                 }
-#if 0
-#if JS_HAS_ERROR_EXCEPTIONS
-                /*
-                 * Require that any time we return failure, an exception has
-                 * been set.
-                 */
-                JS_ASSERT(ok || JS_IsExceptionPending(cx));
-    
-                /*
-                 * Also that any time an exception has been set, we've
-                 * returned failure.
-                 */
-                JS_ASSERT(!JS_IsExceptionPending(cx) || !ok);
-#endif /* JS_HAS_ERROR_EXCEPTIONS */
-#endif
             }
             JS_DestroyScript(cx, script);
         }
         DoEndRequest(cx);
     } while (!hitEOF && !gQuitting);
+
     fprintf(gOutFile, "\n");
-    return;
 }
 
 static void
-Process(JSContext *cx, JSObject *obj, const char *filename)
+Process(JSContext *cx, JSObject *obj, const char *filename, JSBool forceTTY)
 {
     FILE *file;
 
-    if (!filename || strcmp(filename, "-") == 0) {
+    if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
     } else {
         file = fopen(filename, "r");
@@ -679,14 +669,14 @@ Process(JSContext *cx, JSObject *obj, const char *filename)
         }
     }
 
-    ProcessFile(cx, obj, filename, file);
+    ProcessFile(cx, obj, filename, file, forceTTY);
 }
 
 static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-PswWxC] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-PswWxCi] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -701,11 +691,12 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     JSObject *argsObj;
     char *filename = NULL;
     JSBool isInteractive = JS_TRUE;
+    JSBool forceTTY = JS_FALSE;
 
     rcfile = fopen(rcfilename, "r");
     if (rcfile) {
         printf("[loading '%s'...]\n", rcfilename);
-        ProcessFile(cx, obj, rcfilename, rcfile);
+        ProcessFile(cx, obj, rcfilename, rcfile, JS_FALSE);
     }
 
     /*
@@ -797,7 +788,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             if (++i == argc) {
                 return usage();
             }
-            Process(cx, obj, argv[i]);
+            Process(cx, obj, argv[i], JS_FALSE);
             /*
              * XXX: js -f foo.js should interpret foo.js and then
              * drop into interactive mode, but that breaks test
@@ -805,7 +796,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
              */
             isInteractive = JS_FALSE;
             break;
-
+        case 'i':
+            isInteractive = forceTTY = JS_TRUE;
+            break;
         case 'e':
         {
             jsval rval;
@@ -831,7 +824,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     }
 
     if (filename || isInteractive)
-        Process(cx, obj, filename);
+        Process(cx, obj, filename, forceTTY);
     return gExitCode;
 }
 
