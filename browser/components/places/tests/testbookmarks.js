@@ -112,6 +112,11 @@ var observer = {
     this._itemChanged = uri;
     this._itemChangedProperty = property;
   },
+  onItemReplaced: function(folder, oldItem, newItem) {
+    this._itemReplacedFolder = folder;
+    this._itemReplaced = oldItem;
+    this._itemReplacedNew = newItem;
+  },
   onFolderAdded: function(folder, parent, index) {
     this._folderAdded = folder;
     this._folderAddedParent = parent;
@@ -211,6 +216,13 @@ if (observer._itemAdded.spec != "http://developer.mozilla.org/" ||
     observer._itemAddedFolder != workFolder || observer._itemAddedIndex != 1) {
   dump("insertItem notification FAILED\n");
 }
+bmsvc.replaceItem(workFolder, uri("http://developer.mozilla.org/"),
+                  uri("http://developer.mozilla.org/devnews/"));
+if (observer._itemReplaced.spec != "http://developer.mozilla.org/" ||
+    observer._itemReplacedNew.spec != "http://developer.mozilla.org/devnews/" ||
+    observer._itemReplacedFolder != workFolder) {
+  dump("replaceItem notification FAILED\n");
+}
 var homeFolder = bmsvc.createFolder(root, "Home", -1);
 if (observer._folderAdded != homeFolder ||
     observer._folderAddedParent != root || observer._folderAddedIndex != 2) {
@@ -264,7 +276,7 @@ if (observer._folderMoved != workFolder ||
 ///  id            url
 ///  --            ------------------------
 ///  1             http://google.com/
-///  2             http://developer.mozilla.org/
+///  2             http://developer.mozilla.org/devnews/
 ///  3             http://msdn.microsoft.com/
 ///  4             http://espn.com/
 ///  5             place:domain=google.com&group=1
