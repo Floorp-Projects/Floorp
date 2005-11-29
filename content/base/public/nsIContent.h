@@ -68,8 +68,8 @@ class nsAttrValue;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x6a654488, 0xcbb3, 0x49d4, \
- { 0xad, 0x2d, 0x68, 0x4b, 0xad, 0xd5, 0xa7, 0x5d } }
+{ 0x5d098839, 0x389d, 0x41db, \
+ { 0x8f, 0x53, 0x59, 0x07, 0xbf, 0x90, 0x0d, 0x4e } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -489,27 +489,6 @@ public:
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus) = 0;
-
-  /**
-   * Get a unique ID for this piece of content.
-   * This ID is used as a key to store state information 
-   * about this content object and its associated frame object.
-   * The state information is stored in a dictionary that is
-   * manipulated by the frame manager (nsIFrameManager) inside layout.
-   * An opaque pointer to this dictionary is passed to the session
-   * history as a handle associated with the current document's state
-   *
-   * These methods are DEPRECATED, DON'T USE THEM!!!
-   *
-   */
-  virtual PRUint32 ContentID() const = 0;
-  /**
-   * Set the unique content ID for this content.
-   * @param aID the ID to set
-   */
-  virtual void SetContentID(PRUint32 aID)
-  {
-  }
 
   /**
    * Set the focus on this content.  This is generally something for the event

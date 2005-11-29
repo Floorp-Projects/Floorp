@@ -371,7 +371,6 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocum
         rv = htmlElement->AppendChildTo(headElement, PR_FALSE);
 
         if (NS_SUCCEEDED(rv)) {
-          bodyElement->SetContentID(blankDoc->GetAndIncrementContentID());
           // XXXbz Why not notifying here?
           htmlElement->AppendChildTo(bodyElement, PR_FALSE);
         }

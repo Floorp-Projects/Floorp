@@ -765,9 +765,8 @@ nsDOMEventRTTearoff::AddEventListener(const nsAString& aType,
 //----------------------------------------------------------------------
 
 nsDOMSlots::nsDOMSlots(PtrBits aFlags)
-  : mFlags(aFlags & ~GENERIC_ELEMENT_CONTENT_ID_MASK),
-    mBindingParent(nsnull),
-    mContentID(aFlags >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET)
+  : mFlags(aFlags),
+    mBindingParent(nsnull)
 {
 }
 
@@ -789,8 +788,7 @@ nsDOMSlots::~nsDOMSlots()
 PRBool
 nsDOMSlots::IsEmpty()
 {
-  return (!mChildNodes && !mStyle && !mAttributeMap && !mBindingParent &&
-          mContentID < GENERIC_ELEMENT_CONTENT_ID_MAX_VALUE);
+  return (!mChildNodes && !mStyle && !mAttributeMap && !mBindingParent);
 }
 
 PR_STATIC_CALLBACK(void)
@@ -2234,37 +2232,6 @@ nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
   }
 
   return ret;
-}
-
-PRUint32
-nsGenericElement::ContentID() const
-{
-  nsDOMSlots *slots = GetExistingDOMSlots();
-
-  if (slots) {
-    return slots->mContentID;
-  }
-
-  PtrBits flags = GetFlags();
-
-  return flags >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET;
-}
-
-void
-nsGenericElement::SetContentID(PRUint32 aID)
-{
-  // This should be in the constructor!!!
-
-  if (HasDOMSlots() || aID > GENERIC_ELEMENT_CONTENT_ID_MAX_VALUE) {
-    nsDOMSlots *slots = GetDOMSlots();
-
-    if (slots) {
-      slots->mContentID = aID;
-    }
-  } else {
-    UnsetFlags(GENERIC_ELEMENT_CONTENT_ID_MASK);
-    SetFlags(aID << GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET);
-  }
 }
 
 NS_IMETHODIMP

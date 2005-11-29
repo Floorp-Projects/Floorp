@@ -901,12 +901,6 @@ nsGenericDOMDataNode::HandleDOMEvent(nsPresContext* aPresContext,
 }
 
 PRUint32
-nsGenericDOMDataNode::ContentID() const
-{
-  return 0;
-}
-
-PRUint32
 nsGenericDOMDataNode::GetChildCount() const
 {
   return 0;

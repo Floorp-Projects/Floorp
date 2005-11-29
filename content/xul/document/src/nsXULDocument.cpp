@@ -68,7 +68,6 @@
 #include "nsDOMError.h"
 #include "nsIBoxObject.h"
 #include "nsIChromeRegistry.h"
-#include "nsIContentSink.h" // for NS_CONTENT_ID_COUNTER_BASE
 #include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
 #include "nsGUIEvent.h"
@@ -3475,8 +3474,6 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
         rv = AddAttributes(aPrototype, result);
         if (NS_FAILED(rv)) return rv;
     }
-
-    result->SetContentID(mNextContentID++);
 
     result.swap(*aResult);
 

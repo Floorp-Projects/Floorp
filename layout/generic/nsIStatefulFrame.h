@@ -17,9 +17,6 @@ class nsIStatefulFrame : public nsISupports {
   // If you create a special type stateful frame (e.g. scroll) that needs
   // to be captured outside of the standard pass through the frames, you'll need
   // a special ID by which to refer to that type.
-  //
-  // There is space reserved between standard ID's and special ID's by the
-  // offset NS_CONTENT_ID_COUNTER_BASE
   enum SpecialStateID {eNoID=0, eDocumentScrollState};
 
   NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState) = 0;

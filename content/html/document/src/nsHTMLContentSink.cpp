@@ -885,8 +885,6 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     return nsnull;
   }
 
-  result->SetContentID(mDocument->GetAndIncrementContentID());
-
   return result;
 }
 
@@ -3590,8 +3588,6 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
     result = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo);
     NS_ENSURE_SUCCESS(result, result);
-
-    element->SetContentID(mDocument->GetAndIncrementContentID());
 
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(element));
 
