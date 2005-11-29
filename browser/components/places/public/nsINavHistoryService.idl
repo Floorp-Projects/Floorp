@@ -60,8 +60,7 @@ interface nsINavHistoryResultNode : nsISupports
   const PRUint32 RESULT_TYPE_VISIT = 1;
   const PRUint32 RESULT_TYPE_HOST = 2;
   const PRUint32 RESULT_TYPE_DAY = 3;
-  const PRUint32 RESULT_TYPE_FOLDER = 4;
-  const PRUint32 RESULT_TYPE_QUERY = 5;
+  const PRUint32 RESULT_TYPE_QUERY = 4;
   readonly attribute PRUint32 type;
 
   /**
@@ -72,7 +71,8 @@ interface nsINavHistoryResultNode : nsISupports
 
   /**
    * ID of the folder corresponding to this node.
-   * Only valid for RESULT_TYPE_FOLDER nodes, 0 for all other types.
+   * Only valid for RESULT_TYPE_QUERY nodes where exactly one folder
+   * has been specified in the query.  0 in all other cases.
    */
   readonly attribute PRInt64 folderId;
 
@@ -90,7 +90,7 @@ interface nsINavHistoryResultNode : nsISupports
   readonly attribute nsINavHistoryQueryOptions queryOptions;
 
   /**
-   * Title of the web page, or name of the host.
+   * Title of the web page, or of the node's grouping (day, host, folder, etc)
    */
   readonly attribute AString title;
 
@@ -429,15 +429,32 @@ interface nsINavHistoryQuery : nsISupports
   readonly attribute boolean hasDomain;
 
   /**
+   * Limit results to items that are in all of the given folders.
+   */
+  void getFolders(out PRUint32 count,
+                  [retval,array,size_is(count)] out PRInt64 folders);
+  readonly attribute PRUint32 folderCount;
+
+  void setFolders([const,array, size_is(folderCount)] in PRInt64 folders,
+                  in PRUint32 folderCount);
+
+  /**
+   * Constants for itemTypes
+   */
+  const PRUint32 INCLUDE_ITEMS = 1;
+  const PRUint32 INCLUDE_QUERIES = 2;
+
+  /**
+   * Filter the items returned.  Takes a bitwise combination of INCLUDE_*
+   * constants.  Note that folders are only returned when a parent folder
+   * is specified with setFolders().
+   */
+  attribute PRUint32 itemTypes;
+
+  /**
    * Creates a new query item with the same parameters of this one.
    */
   nsINavHistoryQuery clone();
-
-  /**
-   * Limit results to items that are in all of the given folders.
-   */
-  //  void setFolders([const,array, size_is(folderCount)] in PRInt64 folders,
-  //                  in PRUint32 folderCount);
 };
 
 /**
@@ -470,8 +487,12 @@ interface nsINavHistoryQueryOptions : nsISupports
   const PRInt32 GROUP_BY_DOMAIN = 2;
 
   /**
-   * Group by bookmark folder.
-   * This should only be used for queries which have onlyBookmarked set.
+   * Group by bookmark folder.  Since this determines the entire subtree
+   * hierarchy, it must be the last grouping option given.  This option
+   * requires the query to have onlyBookmarked set, and for there to be
+   * at least one parent folder specified via nsINavHistoryQuery::setFolders.
+   * If all of the top-level results belong to a single folder, the folder will
+   * be omitted and its children will become the toplevel result nodes.
    */
   const PRInt32 GROUP_BY_FOLDER = 3;
 

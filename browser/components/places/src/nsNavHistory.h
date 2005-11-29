@@ -68,6 +68,7 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsWeakReference.h"
+#include "nsTArray.h"
 
 // Number of prefixes used in the autocomplete sort comparison function
 #define AUTOCOMPLETE_PREFIX_LIST_COUNT 6
@@ -92,6 +93,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYQUERY
 
+  const nsTArray<PRInt64>& Folders() const { return mFolders; }
+
 private:
   ~nsNavHistoryQuery() {}
 
@@ -107,6 +110,44 @@ protected:
   nsString mDomain;
   PRInt32 mGroupingMode;
   PRInt32 mSortingMode;
+  nsTArray<PRInt64> mFolders;
+  PRUint32 mItemTypes;
+};
+
+#define NS_NAVHISTORYQUERYOPTIONS_IID \
+{0x95f8ba3b, 0xd681, 0x4d89, {0xab, 0xd1, 0xfd, 0xae, 0xf2, 0xa3, 0xde, 0x18}}
+
+class nsNavHistoryQueryOptions : public nsINavHistoryQueryOptions
+{
+public:
+  nsNavHistoryQueryOptions() : mSort(0), mResultType(0),
+                               mGroupCount(0), mGroupings(nsnull), mExpandPlaces(PR_FALSE)
+  { }
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERYOPTIONS_IID)
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSINAVHISTORYQUERYOPTIONS
+
+  PRInt32 SortingMode() const { return mSort; }
+  PRInt32 ResultType() const { return mResultType; }
+  const PRInt32* GroupingMode(PRUint32 *count) const {
+    *count = mGroupCount; return mGroupings;
+  }
+  PRBool ExpandPlaces() const { return mExpandPlaces; }
+
+  nsresult Clone(nsNavHistoryQueryOptions **aResult);
+
+private:
+  nsNavHistoryQueryOptions(const nsNavHistoryQueryOptions& other) {} // no copy
+
+  ~nsNavHistoryQueryOptions() { delete[] mGroupings; }
+
+  PRInt32 mSort;
+  PRInt32 mResultType;
+  PRUint32 mGroupCount;
+  PRInt32 *mGroupings;
+  PRBool mExpandPlaces;
 };
 
 
@@ -126,7 +167,7 @@ public:
   NS_DECL_NSINAVHISTORYRESULTNODE
 
   // Generate the children for this node.
-  virtual nsresult BuildChildren(PRUint32 aOptions) { return NS_OK; }
+  virtual nsresult BuildChildren() { return NS_OK; }
 
   // Non-XPCOM member accessors
   PRInt32 Type() const { return mType; }
@@ -179,15 +220,17 @@ protected:
 class nsNavHistoryQueryNode : public nsNavHistoryResultNode
 {
 public:
-  nsNavHistoryQueryNode() : mQueries(nsnull), mQueryCount(0) {}
+  nsNavHistoryQueryNode()
+    : mQueries(nsnull), mQueryCount(0) {}
 
   // nsINavHistoryResultNode methods
+  NS_IMETHOD GetFolderId(PRInt64 *aId);
   NS_IMETHOD GetQueries(PRUint32 *aQueryCount,
                         nsINavHistoryQuery ***aQueries);
   NS_IMETHOD GetQueryOptions(nsINavHistoryQueryOptions **aOptions);
 
   // nsNavHistoryResultNode methods
-  virtual nsresult BuildChildren(PRUint32 aOptions);
+  virtual nsresult BuildChildren();
 
 protected:
   virtual ~nsNavHistoryQueryNode();
@@ -195,7 +238,9 @@ protected:
 
   nsINavHistoryQuery **mQueries;
   PRUint32 mQueryCount;
-  nsCOMPtr<nsINavHistoryQueryOptions> mOptions;
+  nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
+
+  friend class nsNavBookmarks;
 };
 
 class nsIDateTimeFormat;
@@ -206,8 +251,8 @@ class nsIDateTimeFormat;
 //    it through GetTopLevel(). Then FilledAllResults() is called to finish
 //    object initialization.
 
-class nsNavHistoryResult : public nsINavHistoryResult,
-                           public nsNavHistoryResultNode,
+class nsNavHistoryResult : public nsNavHistoryQueryNode,
+                           public nsINavHistoryResult,
                            public nsITreeView
 {
 public:
@@ -215,21 +260,18 @@ public:
                      nsIStringBundle* aHistoryBundle,
                      nsINavHistoryQuery** aQueries,
                      PRUint32 aQueryCount,
-                     nsINavHistoryQueryOptions *aOptions);
+                     nsNavHistoryQueryOptions *aOptions);
 
   // Two-stage init, MUST BE CALLED BEFORE ANYTHING ELSE
   nsresult Init();
 
   nsCOMArray<nsNavHistoryResultNode>* GetTopLevel() { return &mChildren; }
-  void ApplyTreeState(
-      const nsDataHashtable<nsStringHashKey, int>& aExpanded);
+  void ApplyTreeState(const nsDataHashtable<nsStringHashKey, int>& aExpanded);
   void FilledAllResults();
 
   nsresult BuildChildrenFor(nsNavHistoryResultNode *aNode);
 
-  void SetBookmarkOptions(PRUint32 aOptions) { mBookmarkOptions = aOptions; }
-
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_NSITREEVIEW
 
@@ -246,10 +288,6 @@ protected:
   nsRefPtr<nsNavHistory> mHistoryService;
 
   PRBool mCollapseDuplicates;
-
-  // what generated this result set
-  nsCOMArray<nsINavHistoryQuery> mSourceQueries;
-  nsCOMPtr<nsINavHistoryQueryOptions> mSourceOptions;
 
   nsCOMArray<nsINavHistoryResultViewObserver> mObservers;
 
@@ -274,9 +312,6 @@ protected:
 
   // keep track of sorting state
   PRUint32 mCurrentSort;
-
-  // bookmark types for this result (nsINavBookmarksService::*_CHILDREN)
-  PRUint32 mBookmarkOptions;
 
   void FillTreeStats(nsNavHistoryResultNode* aResult, PRInt32 aLevel);
   void InitializeVisibleList();
@@ -324,40 +359,6 @@ protected:
 
 
 class AutoCompleteIntermediateResultSet;
-
-#define NS_NAVHISTORYQUERYOPTIONS_IID \
-{0x95f8ba3b, 0xd681, 0x4d89, {0xab, 0xd1, 0xfd, 0xae, 0xf2, 0xa3, 0xde, 0x18}}
-
-class nsNavHistoryQueryOptions : public nsINavHistoryQueryOptions
-{
-public:
-  nsNavHistoryQueryOptions() : mSort(0), mResultType(0),
-                               mGroupCount(0), mGroupings(nsnull), mExpandPlaces(PR_FALSE)
-  { }
-
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERYOPTIONS_IID)
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSINAVHISTORYQUERYOPTIONS
-
-  PRInt32 SortingMode() const { return mSort; }
-  PRInt32 ResultType() const { return mResultType; }
-  const PRInt32* GroupingMode(PRUint32 *count) const {
-    *count = mGroupCount; return mGroupings;
-  }
-  PRBool ExpandPlaces() const { return mExpandPlaces; }
-
-private:
-  nsNavHistoryQueryOptions(const nsNavHistoryQueryOptions& other) {} // no copy
-
-  ~nsNavHistoryQueryOptions() { delete[] mGroupings; }
-
-  PRInt32 mSort;
-  PRInt32 mResultType;
-  PRUint32 mGroupCount;
-  PRInt32 *mGroupings;
-  PRBool mExpandPlaces;
-};
 
 // nsNavHistory
 
@@ -443,7 +444,7 @@ public:
   // Construct a new HistoryResult object. You can give it null query/options.
   nsNavHistoryResult* NewHistoryResult(nsINavHistoryQuery** aQueries,
                                        PRUint32 aQueryCount,
-                                       nsINavHistoryQueryOptions* aOptions)
+                                       nsNavHistoryQueryOptions* aOptions)
   {
     return new nsNavHistoryResult(this, mBundle, aQueries, aQueryCount,
                                   aOptions);

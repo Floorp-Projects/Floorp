@@ -224,16 +224,6 @@ nsNavBookmarks::Init()
                                getter_AddRefs(mDBGetChildren));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Returns only the item children in a folder
-  rv = dbConn->CreateStatement(selectItemChildren + orderByPosition,
-                               getter_AddRefs(mDBGetItemChildren));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Returns only the folder children in a folder
-  rv = dbConn->CreateStatement(selectFolderChildren + orderByPosition,
-                               getter_AddRefs(mDBGetFolderChildren));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT COUNT(*) FROM moz_bookmarks_assoc WHERE parent = ?1"),
                                getter_AddRefs(mDBFolderCount));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -727,22 +717,9 @@ nsNavBookmarks::GetFolderTitle(PRInt64 aFolder, nsAString &aTitle)
 }
 
 nsresult
-nsNavFolderResultNode::BuildChildren(PRUint32 aOptions)
-{
-  if (mBuiltChildren) {
-    return NS_OK;
-  }
-
-  nsresult rv = nsNavBookmarks::sInstance->QueryFolderChildren(mID, aOptions,
-                                                               &mChildren);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mBuiltChildren = PR_TRUE;
-  return NS_OK;
-}
-
-nsresult
 nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
+                                    nsINavHistoryQuery *aQuery,
+                                    nsINavHistoryQueryOptions *aOptions,
                                     nsNavHistoryResultNode **aNode)
 {
   mozStorageStatementScoper scope(mDBGetFolderInfo);
@@ -757,122 +734,80 @@ nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
   rv = mDBGetFolderInfo->GetString(kGetFolderInfoIndex_Title, title);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsNavFolderResultNode *node = new nsNavFolderResultNode();
+  // Create Query and QueryOptions objects to generate this folder's children
+  nsCOMPtr<nsINavHistoryQuery> query;
+  rv = aQuery->Clone(getter_AddRefs(query));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  query->SetFolders(&aID, 1);
+
+  nsCOMPtr<nsINavHistoryQueryOptions> options;
+  rv = aOptions->Clone(getter_AddRefs(options));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<nsNavHistoryQueryNode> node = new nsNavHistoryQueryNode();
   NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
 
   node->mID = aID;
-  node->mType = nsINavHistoryResultNode::RESULT_TYPE_FOLDER;
   node->mTitle = title;
-  node->mAccessCount = 0;
-  node->mTime = 0;
+  node->mType = nsINavHistoryResultNode::RESULT_TYPE_QUERY;
+  node->mQueries = NS_STATIC_CAST(nsINavHistoryQuery**,
+                                  nsMemory::Alloc(sizeof(nsINavHistoryQuery*)));
+  NS_ENSURE_TRUE(node->mQueries, NS_ERROR_OUT_OF_MEMORY);
+  node->mQueries[0] = nsnull;
+  query.swap(node->mQueries[0]);
+  node->mQueryCount = 1;
+  node->mOptions = do_QueryInterface(options);
 
   NS_ADDREF(*aNode = node);
   return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsNavBookmarks::GetBookmarks(nsINavHistoryResult **aResult)
-{
-  *aResult = nsnull;
-
-  nsRefPtr<nsNavHistoryResult> result(
-                                History()->NewHistoryResult(nsnull, 0, nsnull));
-  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult rv = result->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Fill the result with a single result node for the bookmarks root.
-  nsCOMPtr<nsNavHistoryResultNode> topNode;
-  rv = ResultNodeForFolder(mRoot, getter_AddRefs(topNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ENSURE_TRUE(result->GetTopLevel()->AppendObject(topNode), 
-                 NS_ERROR_OUT_OF_MEMORY);
-
-  result->FilledAllResults();
-
-  NS_STATIC_CAST(nsRefPtr<nsINavHistoryResult>, result).swap(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::GetFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
-                                  nsINavHistoryResult **aChildren)
-{
-  *aChildren = nsnull;
-
-  nsRefPtr<nsNavHistoryResult> result(
-                                History()->NewHistoryResult(nsnull, 0, nsnull));
-  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
-
-  result->SetBookmarkOptions(aOptions);
-  result->mType = nsINavHistoryResultNode::RESULT_TYPE_FOLDER;
-  result->mID = aFolder;
-
-  nsresult rv = QueryFolderChildren(aFolder, aOptions, result->GetTopLevel());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  result->FilledAllResults();
-
-  NS_STATIC_CAST(nsRefPtr<nsINavHistoryResult>, result).swap(*aChildren);
-  return NS_OK;
-}
-
-// Special flag OR'd with *_CHILDREN to specify that we do _not_ want to
-// build children for folders.
-
-#define BUILD_CHILDREN_NO_RECURSE (1 << 31)
-
 nsresult
-nsNavBookmarks::QueryFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
-                                    nsCOMArray<nsNavHistoryResultNode>* aChildren)
+nsNavBookmarks::QueryFolderChildren(nsINavHistoryQuery *aQuery,
+                                    nsINavHistoryQueryOptions *aOptions,
+                                    nsCOMArray<nsNavHistoryResultNode> *aChildren)
 {
   mozStorageTransaction transaction(DBConn(), PR_FALSE);
-  PRBool noRecurse = (aOptions & BUILD_CHILDREN_NO_RECURSE) != 0;
-  aOptions &= ~BUILD_CHILDREN_NO_RECURSE;
 
-  mozIStorageStatement *statement;
-  if (aOptions == ALL_CHILDREN) {
-    aOptions = PR_UINT32_MAX;
-  }
-  PRBool includeQueries = (aOptions & QUERY_CHILDREN) != 0;
-  PRBool includeItems = (aOptions & ITEM_CHILDREN) != 0;
-  PRBool includeFolders = (aOptions & FOLDER_CHILDREN) != 0;
+  PRUint32 itemTypes;
+  aQuery->GetItemTypes(&itemTypes);
 
-  if (includeFolders && (includeQueries || includeItems)) {
-    statement = mDBGetChildren;
-  } else if (includeItems || includeQueries) {
-    statement = mDBGetItemChildren;
-  } else if (includeFolders) {
-    statement = mDBGetFolderChildren;
-  } else {
-    return NS_ERROR_INVALID_ARG;
-  }
+  PRBool includeQueries = (itemTypes & nsINavHistoryQuery::INCLUDE_QUERIES) != 0;
+  PRBool includeItems = (itemTypes & nsINavHistoryQuery::INCLUDE_ITEMS) != 0;
 
   nsresult rv;
+  nsCOMArray<nsNavHistoryResultNode> folderChildren;
   {
-    mozStorageStatementScoper scope(statement);
+    mozStorageStatementScoper scope(mDBGetChildren);
 
-    rv = statement->BindInt64Parameter(0, aFolder);
+    PRInt64 *folders;
+    PRUint32 folderCount;
+    aQuery->GetFolders(&folderCount, &folders);
+    NS_ASSERTION(folderCount == 1, "querying > 1 folder not yet implemented");
+
+    rv = mDBGetChildren->BindInt64Parameter(0, folders[0]);
+    nsMemory::Free(folders);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = statement->BindInt64Parameter(1, 0);
+    rv = mDBGetChildren->BindInt64Parameter(1, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = statement->BindInt64Parameter(2, PR_INT32_MAX);
+    rv = mDBGetChildren->BindInt64Parameter(2, PR_INT32_MAX);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool results;
-    while (NS_SUCCEEDED(statement->ExecuteStep(&results)) && results) {
-      PRBool isFolder = !statement->IsNull(kGetChildrenIndex_FolderChild);
+    while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&results)) && results) {
+      PRBool isFolder = !mDBGetChildren->IsNull(kGetChildrenIndex_FolderChild);
       nsCOMPtr<nsNavHistoryResultNode> node;
       if (isFolder) {
-        PRInt64 folder = statement->AsInt64(kGetChildrenIndex_FolderChild);
-        rv = ResultNodeForFolder(folder, getter_AddRefs(node));
+        PRInt64 folder = mDBGetChildren->AsInt64(kGetChildrenIndex_FolderChild);
+        rv = ResultNodeForFolder(folder, aQuery,
+                                 aOptions, getter_AddRefs(node));
       } else {
-        rv = History()->RowToResult(statement, PR_FALSE, getter_AddRefs(node));
+        rv = History()->RowToResult(mDBGetChildren, PR_FALSE,
+                                    getter_AddRefs(node));
         PRBool isQuery = IsQueryURI(node->URL());
         if ((isQuery && !includeQueries) || (!isQuery && !includeItems)) {
           continue;
@@ -880,6 +815,10 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
       }
 
       NS_ENSURE_SUCCESS(rv, rv);
+      if (isFolder) {
+        NS_ENSURE_TRUE(folderChildren.AppendObject(node),
+                       NS_ERROR_OUT_OF_MEMORY);
+      }
       NS_ENSURE_TRUE(aChildren->AppendObject(node), NS_ERROR_OUT_OF_MEMORY);
     }
   }
@@ -887,16 +826,19 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
   // Now build children for any folder children we just created.  This is
   // pretty cheap (only go down 1 level) and allows us to know whether
   // to draw a twisty.
-  if (!noRecurse) {
-    for (PRInt32 i = 0; i < aChildren->Count(); ++i) {
-      nsNavHistoryResultNode *child = (*aChildren)[i];
-      if (child->Type() == nsINavHistoryResultNode::RESULT_TYPE_FOLDER) {
-        rv = child->BuildChildren(aOptions | BUILD_CHILDREN_NO_RECURSE);
-        NS_ENSURE_SUCCESS(rv, rv);
+  static PRBool queryingChildren = PR_FALSE;
+
+  if (!queryingChildren) {
+    queryingChildren = PR_TRUE; // don't return before resetting to false
+    for (PRInt32 i = 0; i < folderChildren.Count(); ++i) {
+      rv = folderChildren[i]->BuildChildren();
+      if (NS_FAILED(rv)) {
+        break;
       }
     }
+    queryingChildren = PR_FALSE;
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-
 
   return transaction.Commit();
 }

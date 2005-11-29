@@ -26,9 +26,11 @@
       
       <method name="init">
         <body><![CDATA[
-        var kids = this._bms.getFolderChildren(this._bms.toolbarRoot, 
-                                               this._bms.ALL_CHILDREN);
-        this._result = kids;
+        var query = this._places.getNewQuery();
+        query.setFolders([this._bms.toolbarRoot], 1);
+        var options = this._places.getNewQueryOptions();
+        options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+        this._result = this._places.executeQuery(query, options);
         this._rebuild();
         ]]></body>
       </method>

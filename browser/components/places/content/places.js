@@ -123,8 +123,8 @@ var PlacesPage = {
     // Attach the Places model to the Place View
     // XXXben - move this to an attribute/property on the tree view
     var bms = PlacesController._bms;
-    this._places.loadFolder(bms.placesRoot, 
-                            bms.FOLDER_CHILDREN | bms.QUERY_CHILDREN);
+    this._places.loadFolder(bms.placesRoot,
+                            Ci.nsINavHistoryQuery.INCLUDE_QUERIES);
   },
 
   uninit: function PP_uninit() {
@@ -165,6 +165,7 @@ var PlacesPage = {
    */
   placeSelected: function PP_placeSelected(event) {
     var node = this._places.selectedNode;
+    var queries = node.getQueries({});
     if (PlacesController.nodeIsFolder(node))
       this._content.loadFolder(node.folderId);
     else { // XXXben, this is risky, need to filter out TYPE_DAY/TYPE_HOST

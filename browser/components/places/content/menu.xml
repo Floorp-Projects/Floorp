@@ -30,8 +30,12 @@
       
       <method name="onPopupShowing">
         <body><![CDATA[
-        this._result = this._bms.getFolderChildren(this.folderId, 
-                                                   this._bms.ALL_CHILDREN);
+        var query = this._places.getNewQuery();
+        query.setFolders([this.folderId], 1);
+        var options = this._places.getNewQueryOptions();
+        options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+        // options.setExpandPlaces();  ?
+        this._result = this._places.executeQuery(query, options);
         this._rebuild();
         ]]></body>
       </method>
