@@ -1,3 +1,6 @@
+#!/bin/sh
+#
+# vim:set ts=2 sw=2 sts=2 et:
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -14,16 +17,16 @@
 #
 # The Original Code is mozilla.org code.
 #
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Darin Fisher <darin@meer.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either of the GNU General Public License Version 2 or later (the "GPL"),
-# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -33,31 +36,27 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
-# ***** END LICENSE BLOCK *****
+# ***** END LICENSE BLOCK ***** */
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+# allow core dumps
+ulimit -c 20480 2> /dev/null
 
-include $(DEPTH)/config/autoconf.mk
+dir=`dirname $0`
+bin="$dir/.."
 
-MODULE		= content
-DIRS		= base canvas html xml xul xbl xslt
+exit_status=0
 
-ifdef MOZ_SVG
-DIRS		+= svg
-endif
+for t in $dir/test_*.js
+do
+    echo -n "$t: "
+    $bin/xpcshell -f $dir/head.js -f $t -f $dir/tail.js 2> $t.log 1>&2
+    if [ `grep -c '\*\*\* PASS' $t.log` = 0 ]
+    then
+        echo "FAIL (see $t.log)"
+        exit_status=1
+    else
+        echo "PASS"
+    fi
+done
 
-ifdef MOZ_XTF
-DIRS            += xtf
-endif
-
-DIRS           += events
-
-ifdef ENABLE_TESTS
-TOOL_DIRS += test
-endif
-
-include $(topsrcdir)/config/rules.mk
-
+exit $exit_status
