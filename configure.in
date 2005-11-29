@@ -1157,12 +1157,6 @@ if test "$result" = "yes"; then
     HAVE_64BIT_OS=1
 fi
 AC_SUBST(HAVE_64BIT_OS)
-
-if test "$HAVE_64BIT_OS"; then
-       case "$target_os" in
-       solaris*) TARGET_NSPR_MDCPUCFG='\"md/_solaris64.cfg\"' ;;
-       esac
-fi
 AC_LANG_RESTORE
 fi # COMPILE_ENVIRONMENT
 
@@ -2017,7 +2011,7 @@ alpha*-*-osf*)
 dnl the qsort routine under solaris is faulty
 *-solaris*) 
     AC_DEFINE(SOLARIS)
-    TARGET_NSPR_MDCPUCFG='\"md/_solaris32.cfg\"'
+    TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
     SYSTEM_MAKEDEPEND=
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
