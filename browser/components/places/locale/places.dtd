@@ -1,3 +1,5 @@
+<!ENTITY places.title
+  "Places">
 <!ENTITY cmd.find.label 
   "Find in Bookmarks/History...">
 <!ENTITY cmd.find.accesskey
