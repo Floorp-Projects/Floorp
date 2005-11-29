@@ -1558,13 +1558,25 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     //-- See if the current window allows JS execution
     nsIScriptContext *scriptContext = GetScriptContext(cx);
     if (!scriptContext) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsPIDOMWindow> window =
-        do_QueryInterface(scriptContext->GetGlobalObject());
-    if (!window) return NS_ERROR_FAILURE;
+    nsIScriptGlobalObject *sgo = scriptContext->GetGlobalObject();
 
+    if (!sgo) {
+        return NS_ERROR_FAILURE;
+    }
+
+    // window can be null here if we're running with a non-DOM window
+    // as the script global (i.e. a XUL prototype document).
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(sgo);
+    nsCOMPtr<nsIDocShell> docshell;
     nsresult rv;
-    nsCOMPtr<nsIDocShell> docshell = window->GetDocShell();
-    nsCOMPtr<nsIDocShellTreeItem> globalObjTreeItem = do_QueryInterface(docshell);
+
+    if (window) {
+        docshell = window->GetDocShell();
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> globalObjTreeItem =
+        do_QueryInterface(docshell);
+
     if (globalObjTreeItem) 
     {
         nsCOMPtr<nsIDocShellTreeItem> treeItem(globalObjTreeItem);
