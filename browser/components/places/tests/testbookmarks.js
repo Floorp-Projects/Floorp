@@ -122,11 +122,16 @@ var observer = {
     this._folderRemovedParent = parent;
     this._folderRemovedIndex = index;
   },
-  onFolderMoved: function(folder, parent, oldIndex, newIndex) {
+  onFolderMoved: function(folder, oldParent, oldIndex, newParent, newIndex) {
     this._folderMoved = folder;
-    this._folderMovedParent = parent;
+    this._folderMovedOldParent = oldParent;
     this._folderMovedOldIndex = oldIndex;
+    this._folderMovedNewParent = newParent;
     this._folderMovedNewIndex = newIndex;
+  },
+  onFolderChanged: function(folder, property) {
+    this._folderChanged = folder;
+    this._folderChangedProperty = property;
   },
   QueryInterface: function(iid) {
     if (iid.equals(Components.interfaces.nsINavBookmarkObserver) ||
@@ -221,7 +226,24 @@ if (observer._itemChanged.spec != "http://espn.com/" ||
     observer._itemChangedProperty != "title") {
   dump("setItemTitle notification FAILED\n");
 }
-bmsvc.insertItem(root, uri("place:domain=google.com&group=1"), "Google sites");
+bmsvc.insertItem(root, uri("place:domain=google.com&group=1"), -1);
+if (observer._itemAdded.spec != "place:domain=google.com&group=1" ||
+    observer._itemAddedFolder != root || observer._itemAddedIndex != 3) {
+  dump("insertItem notification FAILED\n");
+}
+bmsvc.setItemTitle(uri("place:domain=google.com&group=1"), "Google Sites");
+if (observer._itemChanged.spec != "place:domain=google.com&group=1" ||
+    observer._itemChangedProperty != "title") {
+  dump("setItemTitle notification FAILED\n");
+}
+bmsvc.moveFolder(workFolder, root, -1);
+if (observer._folderMoved != workFolder ||
+    observer._folderMovedOldParent != root ||
+    observer._folderMovedOldIndex != 1 ||
+    observer._folderMovedNewParent != root ||
+    observer._folderMovedNewIndex != 3) {
+  dump("moveFolder notification FAILED\n");
+}
 
 ///  EXPECTED TABLE RESULTS
 ///  moz_bookmarks_assoc:
@@ -231,11 +253,12 @@ bmsvc.insertItem(root, uri("place:domain=google.com&group=1"), "Google sites");
 ///                2               1         0
 ///                3               1         1
 ///  1                             2         0
-///                4               2         1
+///                4               2         3
 ///  3                             4         0
 ///  2                             4         1
-///                5               2         2
+///                5               2         1
 ///  4                             5         0
+///  5                             2         2
 ///
 ///  moz_history:
 ///  id            url
@@ -244,6 +267,7 @@ bmsvc.insertItem(root, uri("place:domain=google.com&group=1"), "Google sites");
 ///  2             http://developer.mozilla.org/
 ///  3             http://msdn.microsoft.com/
 ///  4             http://espn.com/
+///  5             place:domain=google.com&group=1
 ///
 ///  moz_bookmarks_containers:
 ///  id            name
