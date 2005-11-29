@@ -740,7 +740,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
       document = content->GetOwnerDoc();
     else document = do_QueryInterface(mTarget);
     if (document)
-      window = document->GetWindow();
+      window = document->GetInnerWindow();
     else window = do_QueryInterface(mTarget);
     if (window) {
       NS_ASSERTION(window->IsInnerWindow(),

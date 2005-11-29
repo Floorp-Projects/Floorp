@@ -456,6 +456,13 @@ public:
   virtual nsPIDOMWindow *GetWindow();
 
   /**
+   * Return the inner window used as the script compilation scope for
+   * this document. If you're not absolutely sure you need this, use
+   * GetWindow().
+   */
+  virtual nsPIDOMWindow *GetInnerWindow();
+
+  /**
    * Get the script loader for this document
    */
   virtual nsIScriptLoader* GetScriptLoader();

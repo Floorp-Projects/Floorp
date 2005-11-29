@@ -2023,6 +2023,14 @@ nsDocument::GetWindow()
   return win->GetOuterWindow();
 }
 
+nsPIDOMWindow *
+nsDocument::GetInnerWindow()
+{
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(GetScriptGlobalObject()));
+
+  return win;
+}
+
 nsIScriptLoader *
 nsDocument::GetScriptLoader()
 {
