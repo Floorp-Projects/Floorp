@@ -18,10 +18,10 @@ EXPORTS		= 	gfxASurface.h \
 			gfxImageSurface.h \
 			gfxMatrix.h \
 			gfxPattern.h \
+			gfxPlatform.h \
 			gfxPoint.h \
 			gfxRect.h \
 			gfxRegion.h \
-			gfxTextRun.h \
 			gfxTypes.h \
 			$(NULL)
 
@@ -40,7 +40,7 @@ endif
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
-EXPORTS	+=	gfxXlibSurface.h gfxPangoFonts.h
+EXPORTS	+=	gfxXlibSurface.h gfxPangoFonts.h gfxPlatformGtk.h
 
 ifdef MOZ_ENABLE_GLITZ
 REQUIRES += glitzglx

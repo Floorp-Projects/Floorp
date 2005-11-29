@@ -65,6 +65,11 @@ public:
     /*** this DOES NOT addref the surface */
     cairo_surface_t* CairoSurface() { return mSurface; }
 
+    void SetDeviceOffset (gfxFloat xOff, gfxFloat yOff) {
+        cairo_surface_set_device_offset(mSurface,
+                                        xOff, yOff);
+    }
+
     void Flush() { cairo_surface_flush(mSurface); }
     void MarkDirty() { cairo_surface_mark_dirty(mSurface); }
     void MarkDirty(const gfxRect& r) {

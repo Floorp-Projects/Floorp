@@ -61,6 +61,10 @@ REQUIRES	= xpcom \
 		  view \
 		  $(NULL)
 
+ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
+REQUIRES += thebes cairo
+endif
+
 DEFINES		+= -D_IMPL_NS_WIDGET -DUSE_TLS_FOR_TOOLKIT
 
 CPPSRCS		= \

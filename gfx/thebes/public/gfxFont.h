@@ -45,6 +45,7 @@
 #include <vector>
 
 class gfxContext;
+class gfxTextRun;
 
 #define FONT_STYLE_NORMAL              0
 #define FONT_STYLE_ITALIC              1
@@ -147,6 +148,8 @@ protected:
     const gfxFontStyle *mStyle;
 };
 
+typedef std::vector<gfxFont*> gfxFontVector;
+
 class NS_EXPORT gfxFontGroup {
 public:
     gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
@@ -158,13 +161,10 @@ public:
             delete *it;
     }
 
-    std::vector<gfxFont*> &GetFontList() { return mFonts; } // XXX this should really be const..
+    gfxFontVector &GetFontList() { return mFonts; } // XXX this should really be const..
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
-    virtual void DrawString(gfxContext *aContext, const nsAString& aString, gfxPoint pt) = 0;
-    virtual gfxFloat MeasureText(gfxContext *aContext, const nsAString& aString) = 0; // returns length in pixels
-    // need something here for "text dimensions" similar to what we had before
-    // XXX need to handle spacing...
+    virtual gfxTextRun *MakeTextRun(const nsAString& aString) = 0;
 
 protected:
     /* data gets passed in to the font when it is created */
@@ -174,7 +174,6 @@ protected:
     PRBool FillFontArray();
     nsString mFamilies;
     gfxFontStyle mStyle;
-    typedef std::vector<gfxFont*> gfxFontVector;
     gfxFontVector mFonts;
 
     PRBool mIsRTL;
@@ -183,5 +182,16 @@ protected:
 };
 
 
+// these do not copy the text
+class NS_EXPORT gfxTextRun { 
+    THEBES_DECL_REFCOUNTING_ABSTRACT
+
+public:
+    virtual void DrawString(gfxContext *aContext,
+                            gfxPoint pt) = 0;
+
+    // returns length in pixels
+    virtual gfxFloat MeasureString(gfxContext *aContext) = 0;
+};
 #endif
 

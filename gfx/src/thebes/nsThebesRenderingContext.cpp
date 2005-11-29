@@ -91,9 +91,27 @@ nsThebesRenderingContext::~nsThebesRenderingContext()
 //// nsIRenderingContext
 
 NS_IMETHODIMP
+nsThebesRenderingContext::Init(nsIDeviceContext* aContext, gfxASurface *aThebesSurface)
+{
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p thebesSurface %p\n", this, aContext, aThebesSurface));
+
+    nsThebesDeviceContext *thebesDC = NS_STATIC_CAST(nsThebesDeviceContext*, aContext);
+
+    mDeviceContext = aContext;
+    mWidget = nsnull;
+
+    mLocalDrawingSurface = new nsThebesDrawingSurface();
+    mLocalDrawingSurface->Init(thebesDC, aThebesSurface);
+    mDrawingSurface = mLocalDrawingSurface;
+
+    mThebes = new gfxContext(aThebesSurface);
+
+    return (CommonInit());
+}
+
+NS_IMETHODIMP
 nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
 {
-
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p widget %p\n", this, aContext, aWidget));
 
     nsThebesDeviceContext *thebesDC = NS_STATIC_CAST(nsThebesDeviceContext*, aContext);

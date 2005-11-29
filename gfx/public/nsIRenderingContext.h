@@ -65,6 +65,10 @@ struct nsTextDimensions;
 struct nsBoundingMetrics;
 #endif
 
+#ifdef MOZ_CAIRO_GFX
+class gfxASurface;
+#endif
+
 /* gfx2 */
 class imgIContainer;
 
@@ -124,6 +128,16 @@ public:
    * @result The result of the initialization, NS_Ok if no errors
    */
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsIDrawingSurface* aSurface) = 0;
+
+#ifdef MOZ_CAIRO_GFX
+  /**
+   * Initialize the RenderingContext
+   * @param aContext the device context to use for the drawing.
+   * @param aThebesSurface the Thebes gfxASurface to which to draw
+   * @result The result of the initialization, NS_Ok if no errors
+   */
+  NS_IMETHOD Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface) = 0;
+#endif
 
   /**
    * Reset the rendering context

@@ -66,6 +66,10 @@ class   nsGUIEvent;
 struct  nsColorMap;
 class   imgIContainer;
 
+#ifdef MOZ_CAIRO_GFX
+class   gfxASurface;
+#endif
+
 /**
  * Callback function that processes events.
  * The argument is actually a subtype (subclass) of nsEvent which carries
@@ -851,6 +855,10 @@ class nsIWidget : public nsISupports {
     virtual nsIRenderingContext* GetRenderingContext() = 0;
     virtual nsIDeviceContext* GetDeviceContext() = 0;
     virtual nsIAppShell *GetAppShell() = 0;
+
+#ifdef MOZ_CAIRO_GFX
+    virtual gfxASurface *GetThebesSurface() = 0;
+#endif
     //@}
 
     /**

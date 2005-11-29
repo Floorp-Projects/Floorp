@@ -215,7 +215,9 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
 # ifdef MOZ_ENABLE_GLITZ
             // glitz
             nsThebesDeviceContext *tdc = NS_STATIC_CAST(nsThebesDeviceContext*, aContext);
-            glitz_drawable_format_t *gdf = (glitz_drawable_format_t*) tdc->GetGlitzDrawableFormat();
+            glitz_drawable_format_t *gdf = glitz_glx_find_pbuffer_format (GDK_DISPLAY(),
+                                                                          gdk_x11_get_default_screen(),
+                                                                          0, NULL, 0);
             glitz_drawable_t *gdraw = glitz_glx_create_pbuffer_drawable (GDK_DISPLAY(),
                                                                          DefaultScreen(GDK_DISPLAY()),
                                                                          gdf,

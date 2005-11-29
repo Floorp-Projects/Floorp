@@ -281,7 +281,9 @@ nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
                            nscoord& aWidth, PRInt32 *aFontID,
                            nsThebesRenderingContext *aContext)
 {
-    aWidth = ROUND_TO_TWIPS(mFontGroup->MeasureText(aContext->Thebes(), nsDependentSubstring(aString, aString+aLength)));
+    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(nsDependentSubstring(aString, aString+aLength));
+
+    aWidth = ROUND_TO_TWIPS(textrun->MeasureString(aContext->Thebes()));
 
     return NS_OK;
 
@@ -345,7 +347,9 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
 {
     float app2dev = mDeviceContext->AppUnitsToDevUnits();
 
-    mFontGroup->DrawString(aContext->Thebes(), nsDependentSubstring(aString, aString+aLength), gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
+    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(nsDependentSubstring(aString, aString+aLength));
+
+    textrun->DrawString(aContext->Thebes(), gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
 
     return NS_OK;
 }

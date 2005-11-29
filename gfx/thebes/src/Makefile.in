@@ -23,6 +23,7 @@ CPPSRCS	= \
 	gfxImageSurface.cpp \
 	gfxPattern.cpp \
 	gfxFont.cpp \
+	gfxPlatform.cpp \
 	$(NULL)
 
 
@@ -47,7 +48,7 @@ OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
-CPPSRCS	+= 	gfxXlibSurface.cpp gfxPangoFonts.cpp
+CPPSRCS	+= 	gfxXlibSurface.cpp gfxPangoFonts.cpp gfxPlatformGtk.cpp
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS)
 endif
 
@@ -62,9 +63,14 @@ REQUIRES +=	glitzglx
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzglx.$(LIB_SUFFIX)
 endif
 endif
+
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+
+
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
 CXXFLAGS += $(MOZ_PANGO_CFLAGS)
