@@ -159,7 +159,7 @@ var gViewSourceUtils = {
         // it's gotta be executable
         if (viewSourceAppPath.exists() && viewSourceAppPath.isExecutable()) {
           editor = Components.classes['@mozilla.org/process/util;1']
-                             .getService(Components.interfaces.nsIProcess);
+                             .createInstance(Components.interfaces.nsIProcess);
           editor.init(viewSourceAppPath);
         }
       }
