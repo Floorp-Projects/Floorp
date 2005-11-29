@@ -84,7 +84,8 @@ static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
 
 /* Some platforms don't have an implementation of PR_MemMap(). */
-#if !defined(XP_BEOS) && !defined(XP_OS2)
+/* See bug 318077 for WinCE.                                   */
+#if !defined(XP_BEOS) && !defined(XP_OS2) && !defined(WINCE)
 #define HAVE_PR_MEMMAP
 #endif
 
