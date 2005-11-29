@@ -59,6 +59,7 @@ REQUIRES	= \
 		  js \
 		  widget \
 		  gfx \
+		  layout \
 		  $(NULL)
 
 FORCE_STATIC_LIB = 1
