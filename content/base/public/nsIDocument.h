@@ -93,8 +93,8 @@ class nsIDOMUserDataHandler;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x65d26965, 0x8fed, 0x4f55, \
- { 0x80, 0xef, 0xaa, 0xd0, 0x1d, 0xd6, 0x92, 0xfd } }
+{ 0xbcb48147, 0xed60, 0x490e, \
+ { 0xa2, 0x47, 0xe2, 0x35, 0x3c, 0xf7, 0xc8, 0x68 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -505,6 +505,13 @@ public:
    * Return the window containing the document (the outer window).
    */
   virtual nsPIDOMWindow *GetWindow() = 0;
+
+  /**
+   * Return the inner window used as the script compilation scope for
+   * this document. If you're not absolutely sure you need this, use
+   * GetWindow().
+   */
+  virtual nsPIDOMWindow *GetInnerWindow() = 0;
 
   /**
    * Get the script loader for this document

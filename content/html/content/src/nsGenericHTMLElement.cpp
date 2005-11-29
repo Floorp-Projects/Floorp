@@ -1735,8 +1735,7 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
     // override BindToTree for those classes and munge event listeners there?
     nsIDocument *document = GetOwnerDoc();
     nsresult rv = NS_OK;
-    if (document && (win = document->GetWindow()) &&
-        (win = win->GetCurrentInnerWindow())) {
+    if (document && (win = document->GetInnerWindow())) {
       nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(win));
       NS_ENSURE_TRUE(receiver, NS_ERROR_FAILURE);
 
