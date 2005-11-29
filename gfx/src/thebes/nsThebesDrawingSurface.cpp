@@ -41,7 +41,9 @@
 
 #include "nsMemory.h"
 
+#if defined(MOZ_ENABLE_GTK2)
 #include "gfxPlatform.h"
+#endif
 
 #include "gfxImageSurface.h"
 

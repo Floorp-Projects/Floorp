@@ -46,19 +46,19 @@ class NS_EXPORT gfxPlatformGtk : public gfxPlatform {
 public:
     gfxPlatformGtk();
 
-    static gfxPlatformGtk* GetPlatform() {
+    static gfxPlatformGtk *GetPlatform() {
         return (gfxPlatformGtk*) gfxPlatform::GetPlatform();
     }
 
-    gfxASurface* CreateOffscreenSurface (PRUint32 width,
-                                         PRUint32 height,
-                                         gfxASurface::gfxImageFormat imageFormat,
-                                         PRBool fastPixelAccess);
+    gfxASurface *CreateOffscreenSurface(PRUint32 width,
+                                        PRUint32 height,
+                                        gfxASurface::gfxImageFormat imageFormat,
+                                        PRBool fastPixelAccess);
 
-    GdkDrawable* GetSurfaceGdkDrawable (gfxASurface *aSurf);
+    GdkDrawable *GetSurfaceGdkDrawable(gfxASurface *aSurf);
 
-    void SetSurfaceGdkWindow (gfxASurface *aSurf,
-                              GdkWindow *win);
+    void SetSurfaceGdkWindow(gfxASurface *aSurf,
+                             GdkWindow *win);
 };
 
 #endif /* GFX_PLATFORM_GTK_H */
