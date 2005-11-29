@@ -471,6 +471,46 @@ nsNavBookmarks::RemoveItem(PRInt64 aFolder, nsIURI *aItem)
 
 
 NS_IMETHODIMP
+nsNavBookmarks::ReplaceItem(PRInt64 aFolder, nsIURI *aItem, nsIURI *aNewItem)
+{
+  mozIStorageConnection *dbConn = DBConn();
+  nsNavHistory *history = History();
+  mozStorageTransaction transaction(dbConn, PR_FALSE);
+
+  PRInt64 childID;
+  nsresult rv = history->GetUrlIdFor(aItem, &childID, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (childID == 0) {
+    return NS_ERROR_INVALID_ARG; // the item isn't in history at all
+  }
+
+  PRInt64 newChildID;
+  rv = history->GetUrlIdFor(aNewItem, &newChildID, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(newChildID != 0, "must have an item id");
+
+  nsCAutoString buffer;
+  buffer.AssignLiteral("UPDATE moz_bookmarks_assoc SET item_child = ");
+  buffer.AppendInt(newChildID);
+  buffer.AppendLiteral(" WHERE item_child = ");
+  buffer.AppendInt(childID);
+  buffer.AppendLiteral(" AND parent = ");
+  buffer.AppendInt(aFolder);
+
+  rv = dbConn->ExecuteSimpleSQL(buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
+    mObservers[i]->OnItemReplaced(aFolder, aItem, aNewItem);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
                              PRInt32 aIndex, PRInt64 *aNewFolder)
 {
