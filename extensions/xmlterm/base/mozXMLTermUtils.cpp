@@ -55,6 +55,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowCollection.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
 
