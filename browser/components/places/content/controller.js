@@ -474,8 +474,8 @@ var PlacesController = {
    */
   setGroupingMode: function PC_setGroupingOptions(options) {
     var result = this._activeView.view.QueryInterface(Ci.nsINavHistoryResult);
-    var queries = result.getSourceQueries({ });
-    var newOptions = result.sourceQueryOptions.clone();
+    var queries = result.getQueries({ });
+    var newOptions = result.queryOptions.clone();
     newOptions.setGroupingMode(options, options.length);
     
     this._activeView.load(queries, newOptions);

@@ -82,7 +82,7 @@
         <body><![CDATA[
           // Get the best set of grouping options to use, either reuse the 
           // existing ones or create new ones. 
-          var options = this.getResult().sourceQueryOptions;
+          var options = this.getResult().queryOptions;
           if (!options)
             options = this._places.getNewQueryOptions();
           return options;
@@ -91,7 +91,7 @@
       
       <property name="filterString">
         <getter><![CDATA[
-          var queries = this.getResult().getSourceQueries({ });
+          var queries = this.getResult().getQueries({ });
           if (queries[i].hasSearchTerms)
             return queries[i].searchTerms;
           return null;
@@ -111,7 +111,7 @@
         <parameter name="folderRestrict"/>
         <body><![CDATA[ 
           // preserve grouping
-          var options = this.getResult().sourceQueryOptions;
+          var options = this.getResult().queryOptions;
           if (!options)
             options = this._places.getNewQueryOptions();
           
@@ -127,8 +127,8 @@
       <property name="queryString">
         <getter><![CDATA[
           var result = this.getResult();
-          var queries = result.getSourceQueries({ });
-          var options = result.sourceQueryOptions;
+          var queries = result.getQueries({ });
+          var options = result.queryOptions;
 
           const NH = Ci.nsINavHistory;
           return this._places.queriesToQueryString(queries, queries.length,
@@ -413,7 +413,7 @@
           if (PlacesController.nodeIsFolder(result))
             this.loadFolder(result.folderId, this._lastFilterOptions);
           else
-            this.load(result.getSourceQueries({ }), result.sourceQueryOptions);
+            this.load(result.getQueries({ }), result.queryOptions);
           this._restoreSelection();
         ]]></body>
       </method>
