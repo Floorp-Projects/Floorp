@@ -29,12 +29,12 @@ int argpath_conv(char **args_in, char **args_out)
 
     if (args_in[i])
     {
-      char *offset = strstr(args_out[i], "/cygdrive/c/");
+      char *offset = strstr(args_out[i], "/cygdrive/");
       
       if (offset) {
       
         strcpy(offset, offset+9);
-        offset[0] = 'c';
+        offset[0] = offset[1];
         offset[1] = ':';
         offset[2] = '/';
       }
