@@ -1737,13 +1737,15 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
       mNodeInfo->Equals(nsHTMLAtoms::frameset)) {
     nsPIDOMWindow *win;
 
-    // If we have a document, and it has a script global, add the
-    // event listener on the global. If not, proceed as normal.
+    // If we have a document, and it has a window, add the event
+    // listener on the window (the inner window). If not, proceed as
+    // normal.
     // XXXbz sXBL/XBL2 issue: should we instead use GetCurrentDoc() here,
     // override BindToTree for those classes and munge event listeners there?
     nsIDocument *document = GetOwnerDoc();
     nsresult rv = NS_OK;
-    if (document && (win = document->GetWindow())) {
+    if (document && (win = document->GetWindow()) &&
+        (win = win->GetCurrentInnerWindow())) {
       nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(win));
       NS_ENSURE_TRUE(receiver, NS_ERROR_FAILURE);
 
