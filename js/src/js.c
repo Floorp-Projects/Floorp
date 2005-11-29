@@ -162,7 +162,7 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
 }
 
 static void
-Process(JSContext *cx, JSObject *obj, char *filename)
+Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 {
     JSBool ok, hitEOF;
     JSScript *script;
@@ -175,7 +175,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
     FILE *file;
     jsuword stackLimit;
 
-    if (!filename || strcmp(filename, "-") == 0) {
+    if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
     } else {
         file = fopen(filename, "r");
@@ -201,7 +201,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
     }
     JS_SetThreadStackLimit(cx, stackLimit);
 
-    if (!isatty(fileno(file))) {
+    if (!forceTTY && !isatty(fileno(file))) {
         /*
          * It's not interactive - just execute it.
          *
@@ -224,6 +224,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
                 (void)JS_ExecuteScript(cx, obj, script, &result);
             JS_DestroyScript(cx, script);
         }
+        
         return;
     }
 
@@ -276,7 +277,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-PswWxC] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: js [-PswWxCi] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -313,6 +314,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     JSObject *argsObj;
     char *filename = NULL;
     JSBool isInteractive = JS_TRUE;
+    JSBool forceTTY = JS_FALSE;
 
     /*
      * Scan past all optional arguments so we can create the arguments object
@@ -424,7 +426,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             if (++i == argc) {
                 return usage();
             }
-            Process(cx, obj, argv[i]);
+            Process(cx, obj, argv[i], JS_FALSE);
             /*
              * XXX: js -f foo.js should interpret foo.js and then
              * drop into interactive mode, but that breaks the test
@@ -454,6 +456,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             isInteractive = JS_FALSE;
             break;
 
+        case 'i':
+            isInteractive = forceTTY = JS_TRUE;
+            break;
+
         case 'S':
             if (++i == argc) {
                 return usage();
@@ -468,7 +474,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     }
 
     if (filename || isInteractive)
-        Process(cx, obj, filename);
+        Process(cx, obj, filename, forceTTY);
     return gExitCode;
 }
 
