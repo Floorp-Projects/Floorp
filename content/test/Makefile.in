@@ -15,11 +15,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla.org.
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#     Boris Zbarsky <bzbarsky@mit.edu>  (Original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,29 +36,26 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= content
-DIRS		= base canvas html xml xul xbl xslt
-
-ifdef MOZ_SVG
-DIRS		+= svg
-endif
-
-ifdef MOZ_XTF
-DIRS            += xtf
-endif
-
-DIRS           += events
-
-ifdef ENABLE_TESTS
-TOOL_DIRS += test
-endif
+MODULE		= test_content
 
 include $(topsrcdir)/config/rules.mk
 
+_UNIT_FILES	= unit/test_all.sh \
+		  unit/head.js \
+		  unit/tail.js \
+		  unit/test_xml_parser.js \
+		  unit/test_xml_serializer.js \
+		  $(NULL)
+
+libs:: $(_UNIT_FILES)
+	$(INSTALL) $^ $(DIST)/bin/content_unit_tests
+
+check::
+	$(RUN_TEST_PROGRAM) $(DIST)/bin/content_unit_tests/test_all.sh
