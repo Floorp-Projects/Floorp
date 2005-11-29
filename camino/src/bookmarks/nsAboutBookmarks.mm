@@ -68,11 +68,14 @@ nsAboutBookmarks::NewChannel(nsIURI *aURI, nsIChannel **result)
     [sourceString assignTo_nsAString:pageSource];
     
     nsCOMPtr<nsIInputStream> in;
-    rv = NS_NewStringInputStream(getter_AddRefs(in), pageSource);
-    if (NS_FAILED(rv)) return rv;
+    rv = NS_NewCStringInputStream(getter_AddRefs(in),
+                                  NS_ConvertUTF16toUTF8(pageSource));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NS_NewInputStreamChannel(&channel, aURI, in, NS_LITERAL_CSTRING("text/html"));
-    if (NS_FAILED(rv)) return rv;
+    rv = NS_NewInputStreamChannel(&channel, aURI, in,
+                                  NS_LITERAL_CSTRING("text/html"),
+                                  NS_LITERAL_CSTRING("UTF8"));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     *result = channel;
     return rv;
