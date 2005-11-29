@@ -502,9 +502,6 @@ public:
                               PRUint32 aFlags,
                               nsEventStatus* aEventStatus);
 
-    virtual PRUint32 ContentID() const;
-    virtual void SetContentID(PRUint32 aID);
-
     virtual nsresult RangeAdd(nsIDOMRange* aRange);
     virtual void RangeRemove(nsIDOMRange* aRange);
     virtual const nsVoidArray *GetRangeList() const;

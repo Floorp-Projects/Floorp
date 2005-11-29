@@ -97,20 +97,6 @@ typedef unsigned long PtrBits;
 /** Three bits are element type specific. */
 #define ELEMENT_TYPE_SPECIFIC_BITS_OFFSET      6
 
-/** The number of bits to shift the bit field to get at the content ID */
-#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 9
-
-/** This mask masks out the bits that are used for the content ID */
-#define GENERIC_ELEMENT_CONTENT_ID_MASK \
-  ((~PtrBits(0)) << GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET)
-
-/**
- * The largest value for content ID that fits in
- * GENERIC_ELEMENT_CONTENT_ID_MASK
- */
-#define GENERIC_ELEMENT_CONTENT_ID_MAX_VALUE \
-  ((PRUint32)((~PtrBits(0)) >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET))
-
 
 /**
  * Class that implements the nsIDOMNodeList interface (a list of children of
@@ -187,9 +173,6 @@ public:
     */
     nsIControllers* mControllers; // [OWNER]
   };
-
-  // DEPRECATED, DON'T USE THIS
-  PRUint32 mContentID;
 };
 
 class RangeListMapEntry : public PLDHashEntryHdr
@@ -416,8 +399,6 @@ public:
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
-  virtual PRUint32 ContentID() const;
-  virtual void SetContentID(PRUint32 aID);
   virtual void SetFocus(nsPresContext* aContext);
   virtual nsIContent *GetBindingParent() const;
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
@@ -903,10 +884,6 @@ protected:
 
   void SetFlags(PtrBits aFlagsToSet)
   {
-    NS_ASSERTION(!((aFlagsToSet & GENERIC_ELEMENT_CONTENT_ID_MASK) &&
-                   (aFlagsToSet & ~GENERIC_ELEMENT_CONTENT_ID_MASK)),
-                 "Whaaa, don't set content ID bits and flags together!!!");
-
     nsDOMSlots *slots = GetExistingDOMSlots();
 
     if (slots) {
@@ -920,10 +897,6 @@ protected:
 
   void UnsetFlags(PtrBits aFlagsToUnset)
   {
-    NS_ASSERTION(!((aFlagsToUnset & GENERIC_ELEMENT_CONTENT_ID_MASK) &&
-                   (aFlagsToUnset & ~GENERIC_ELEMENT_CONTENT_ID_MASK)),
-                 "Whaaa, don't set content ID bits and flags together!!!");
-
     nsDOMSlots *slots = GetExistingDOMSlots();
 
     if (slots) {

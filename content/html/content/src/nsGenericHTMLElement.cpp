@@ -311,15 +311,6 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep) const
 
   nsIDocument *newDoc = aDst->GetOwnerDoc();
 
-  PRInt32 id;
-  if (newDoc) {
-    id = newDoc->GetAndIncrementContentID();
-  } else {
-    id = PR_INT32_MAX;
-  }
-
-  aDst->SetContentID(id);
-
   if (aDeep) {
     nsIDocument *doc = GetOwnerDoc();
     if (doc == newDoc) {

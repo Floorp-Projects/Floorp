@@ -93,15 +93,8 @@ class nsIDOMUserDataHandler;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x6120dffe, 0xf8fc, 0x47b1, \
- { 0x98, 0xd3, 0x97, 0x68, 0x0c, 0xc9, 0xc3, 0xcd } }
-
-// The base value for the content ID counter.
-// This counter is used by the document to 
-// assign a monotonically increasing ID to each content
-// object it creates
-#define NS_CONTENT_ID_COUNTER_BASE 10000
-
+{ 0x65d26965, 0x8fed, 0x4f55, \
+ { 0x80, 0xef, 0xaa, 0xd0, 0x1d, 0xd6, 0x92, 0xfd } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -118,7 +111,6 @@ public:
 
   nsIDocument()
     : mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
-      mNextContentID(NS_CONTENT_ID_COUNTER_BASE),
       mNodeInfoManager(nsnull),
       mPartID(0)
   {
@@ -587,11 +579,6 @@ public:
    */
   virtual void FlushPendingNotifications(mozFlushType aType) = 0;
 
-  PRInt32 GetAndIncrementContentID()
-  {
-    return mNextContentID++;
-  }
-
   nsIBindingManager* BindingManager() const
   {
     return mBindingManager;
@@ -958,10 +945,6 @@ protected:
   // A weak reference to the only child element, or null if no
   // such element exists.
   nsIContent* mRootContent;
-
-  // A content ID counter used to give a monotonically increasing ID
-  // to the content objects in the document's content model
-  PRInt32 mNextContentID;
 
   nsCOMPtr<nsIBindingManager> mBindingManager;
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]

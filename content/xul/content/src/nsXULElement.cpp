@@ -1998,17 +1998,6 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
 }
 
 
-PRUint32
-nsXULElement::ContentID() const
-{
-    return 0;
-}
-
-void
-nsXULElement::SetContentID(PRUint32 aID)
-{
-}
-
 nsresult
 nsXULElement::RangeAdd(nsIDOMRange* aRange)
 {

@@ -277,7 +277,6 @@ PRInt32 nsDocAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 {
   // A child ID of the window is required, when we use NotifyWinEvent, so that the 3rd party application
   // can call back and get the IAccessible the event occured on.
-  // We use the unique ID exposed through nsIContent::GetContentID()
 
   void *uniqueID;
   nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));

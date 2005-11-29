@@ -4873,8 +4873,6 @@ nsDocument::CreateElement(nsINodeInfo *aNodeInfo, PRInt32 aElementType,
                               aNodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  content->SetContentID(mNextContentID++);
-
   content.swap(*aResult);
 
   return NS_OK;

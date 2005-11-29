@@ -58,12 +58,6 @@ class nsIParser;
 { 0x94ec4df1, 0x6885, 0x4b1f, \
  { 0x85, 0x10, 0xe3, 0x5f, 0x4f, 0x36, 0xea, 0xaa } }
 
-// The base value for the content ID counter.
-// Values greater than or equal to this base value are used
-// by each of the content sinks to assign unique values
-// to the content objects created by them.
-#define NS_CONTENT_ID_COUNTER_BASE 10000
-
 class nsIContentSink : public nsISupports {
 public:
 

@@ -1423,7 +1423,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   PRUint32 partID = aDocument ? aDocument->GetPartID() : 0;
 
   // SpecialStateID case - e.g. scrollbars around the content window
-  // The key in this case is the special state id (always < min(contentID))
+  // The key in this case is a special state id
   if (nsIStatefulFrame::eNoID != aID) {
     KeyAppendInt(partID, aKey);  // first append a partID
     KeyAppendInt(aID, aKey);
@@ -1434,8 +1434,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   NS_ENSURE_TRUE(aContent, NS_ERROR_FAILURE);
 
   // Don't capture state for anonymous content
-  PRUint32 contentID = aContent->ContentID();
-  if (!contentID) {
+  if (aContent->IsNativeAnonymous() || aContent->GetBindingParent()) {
     return NS_OK;
   }
 
@@ -1447,6 +1446,9 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(aContent->GetCurrentDoc()));
 
   KeyAppendInt(partID, aKey);  // first append a partID
+  // Make sure we can't possibly collide with an nsIStatefulFrame
+  // special id of some sort
+  KeyAppendInt(nsIStatefulFrame::eNoID, aKey);
   PRBool generatedUniqueKey = PR_FALSE;
 
   if (htmlDocument) {
@@ -1459,16 +1461,19 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
     NS_ENSURE_TRUE(htmlForms && htmlFormControls, NS_ERROR_OUT_OF_MEMORY);
 
-    // If we have a form control and can calculate form information, use
-    // that as the key - it is more reliable than contentID.
+    // If we have a form control and can calculate form information, use that
+    // as the key - it is more reliable than just recording position in the
+    // DOM.
+    // XXXbz Is it, really?  We have bugs on this, I think...
     // Important to have a unique key, and tag/type/name may not be.
     //
     // If the control has a form, the format of the key is:
-    // type>IndOfFormInDoc>IndOfControlInForm>FormName>name
+    // f>type>IndOfFormInDoc>IndOfControlInForm>FormName>name
     // else:
-    // type>IndOfControlInDoc>name
+    // d>type>IndOfControlInDoc>name
     //
     // XXX We don't need to use index if name is there
+    // XXXbz We don't?  Why not?  I don't follow.
     //
     nsCOMPtr<nsIFormControl> control(do_QueryInterface(aContent));
     if (control && htmlFormControls && htmlForms) {
@@ -1486,6 +1491,8 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
           aKey.Truncate();
           return NS_OK;
         }
+
+        KeyAppendString(NS_LITERAL_CSTRING("f"), aKey);
 
         // Append the index of the form in the document
         nsCOMPtr<nsIContent> formContent(do_QueryInterface(formElement));
@@ -1520,6 +1527,8 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
       } else {
 
+        KeyAppendString(NS_LITERAL_CSTRING("d"), aKey);
+
         // If not in a form, add index of control in document
         // Less desirable than indexing by form info.
 
@@ -1543,10 +1552,22 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   }
 
   if (!generatedUniqueKey) {
-
-    // Either we didn't have a form control or we aren't in an HTML document
-    // so we can't figure out form info, hash by content ID instead :(
-    KeyAppendInt(contentID, aKey);
+    // Either we didn't have a form control or we aren't in an HTML document so
+    // we can't figure out form info.  First append a character that is not "d"
+    // or "f" to disambiguate from the case when we were a form control in an
+    // HTML document.
+    KeyAppendString(NS_LITERAL_CSTRING("o"), aKey);
+    
+    // Now start at aContent and append the indices of it and all its ancestors
+    // in their containers.  That should at least pin down its position in the
+    // DOM...
+    nsIContent* parent = aContent->GetParent();
+    nsIContent* content = aContent;
+    while (parent) {
+      KeyAppendInt(parent->IndexOf(content), aKey);
+      content = parent;
+      parent = content->GetParent();
+    }
   }
 
   return NS_OK;
