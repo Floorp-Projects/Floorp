@@ -335,20 +335,40 @@ PRBool
 nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
                                       const nsAString& aURI,
                                       nsIDOMElement* aElement,
-                                      PRBool aMustHavePrefix)
+                                      PRBool aIsAttribute)
 {
   if (aPrefix.EqualsLiteral(kXMLNS) ||
       (aPrefix.EqualsLiteral("xml") &&
        aURI.EqualsLiteral("http://www.w3.org/XML/1998/namespace"))) {
     return PR_FALSE;
   }
-  if (aURI.IsEmpty()) {
-    aPrefix.Truncate();
-    return PR_FALSE;
+
+  PRBool mustHavePrefix;
+  if (aIsAttribute) {
+    if (aURI.IsEmpty()) {
+      // Attribute in the null namespace.  This just shouldn't have a prefix.
+      // And there's no need to push any namespace decls
+      aPrefix.Truncate();
+      return PR_FALSE;
+    }
+
+    // Attribute not in the null namespace -- must have a prefix
+    mustHavePrefix = PR_TRUE;
+  } else {
+    // Not an attribute, so doesn't _have_ to have a prefix
+    mustHavePrefix = PR_FALSE;
   }
 
+  // Keep track of the closest prefix that's bound to aURI and whether we've
+  // found such a thing.  closestURIMatch holds the prefix, and uriMatch
+  // indicates whether we actually have one.
   nsAutoString closestURIMatch;
   PRBool uriMatch = PR_FALSE;
+
+  // Also keep track of whether we've seen aPrefix already.  If we have, that
+  // means that it's already bound to a URI different from aURI, so even if we
+  // later (so in a more outer scope) see it bound to aURI we can't reuse it.
+  PRBool haveSeenOurPrefix = PR_FALSE;
 
   PRInt32 count = mNameSpaceStack.Count();
   PRInt32 index = count - 1;
@@ -356,11 +376,18 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
     NameSpaceDecl* decl = (NameSpaceDecl*)mNameSpaceStack.ElementAt(index);
     // Check if we've found a prefix match
     if (aPrefix.Equals(decl->mPrefix)) {
-      
-      // If the URI's match, we don't have to add a namespace decl
-      if (aURI.Equals(decl->mURI)) {
-        return PR_FALSE;
+
+      // If the URIs match and aPrefix is not bound to any other URI, we can
+      // use aPrefix
+      if (!haveSeenOurPrefix && aURI.Equals(decl->mURI)) {
+        // Just use our uriMatch stuff.  That will deal with an empty aPrefix
+        // the right way.  We can break out of the loop now, though.
+        uriMatch = PR_TRUE;
+        closestURIMatch = aPrefix;
+        break;
       }
+
+      haveSeenOurPrefix = PR_TRUE;      
 
       // If they don't, and either:
       // 1) We have a prefix (so we'd be redeclaring this prefix to point to a
@@ -372,14 +399,14 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
       // URIs when |decl| doesn't have aElement as its owner.  In that case we
       // can simply push the new namespace URI as the default namespace for
       // aElement.
-      if (!aPrefix.IsEmpty() ||
-          (decl->mPrefix.IsEmpty() && decl->mOwner == aElement)) {
+      if (!aPrefix.IsEmpty() || decl->mOwner == aElement) {
         GenerateNewPrefix(aPrefix);
         // Now we need to validate our new prefix/uri combination; check it
         // against the full namespace stack again.  Note that just restarting
         // the while loop is ok, since we haven't changed aURI, so the
-        // closestURIMatch state is not affected.
+        // closestURIMatch and uriMatch state is not affected.
         index = count - 1;
+        haveSeenOurPrefix = PR_FALSE;
         continue;
       }
     }
@@ -406,33 +433,41 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
   }
 
   // At this point the following invariants hold:
-  // 1) There is nothing on the namespace stack that matches the pair
-  //    (aPrefix, aURI)
+  // 1) The prefix in closestURIMatch is mapped to aURI in our scope if
+  //    uriMatch is set.
   // 2) There is nothing on the namespace stack that has aPrefix as the prefix
   //    and a _different_ URI, except for the case aPrefix.IsEmpty (and
   //    possible default namespaces on ancestors)
-  // 3) The prefix in closestURIMatch is mapped to aURI in our scope if
-  //    uriMatch is set.
   
   // So if uriMatch is set it's OK to use the closestURIMatch prefix.  The one
   // exception is when closestURIMatch is actually empty (default namespace
   // decl) and we must have a prefix.
-  if (uriMatch && (!aMustHavePrefix || !closestURIMatch.IsEmpty())) {
+  if (uriMatch && (!mustHavePrefix || !closestURIMatch.IsEmpty())) {
     aPrefix.Assign(closestURIMatch);
     return PR_FALSE;
   }
   
-  // At this point, if aPrefix is empty (which means we never had a prefix to
-  // start with) and we must have a prefix, just generate a new prefix and then
-  // send it back through the namespace stack checks to make sure it's OK.
-  if (aPrefix.IsEmpty() && aMustHavePrefix) {
-    GenerateNewPrefix(aPrefix);
-    return ConfirmPrefix(aPrefix, aURI, aElement, aMustHavePrefix);
-  }
-  // else we will just set aURI as the new default namespace URI
+  if (aPrefix.IsEmpty()) {
+    // At this point, aPrefix is empty (which means we never had a prefix to
+    // start with).  If we must have a prefix, just generate a new prefix and
+    // then send it back through the namespace stack checks to make sure it's
+    // OK.
+    if (mustHavePrefix) {
+      GenerateNewPrefix(aPrefix);
+      return ConfirmPrefix(aPrefix, aURI, aElement, aIsAttribute);
+    }
 
-  // Indicate that we need to create a namespace decl for the
-  // final prefix
+    // One final special case.  If aPrefix is empty and we never saw an empty
+    // prefix (default namespace decl) on the namespace stack and we're in the
+    // null namespace there is no reason to output an |xmlns=""| here.  It just
+    // makes the output less readable.
+    if (!haveSeenOurPrefix && aURI.IsEmpty()) {
+      return PR_FALSE;
+    }
+  }
+
+  // Now just set aURI as the new default namespace URI.  Indicate that we need
+  // to create a namespace decl for the final prefix
   return PR_TRUE;
 }
 
@@ -626,8 +661,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     addNSAttr = PR_FALSE;
     if (kNameSpaceID_XMLNS != namespaceID) {
       nsContentUtils::NameSpaceManager()->GetNameSpaceURI(namespaceID, uriStr);
-      addNSAttr = ConfirmPrefix(prefixStr, uriStr, aElement,
-                                namespaceID != kNameSpaceID_None);
+      addNSAttr = ConfirmPrefix(prefixStr, uriStr, aElement, PR_TRUE);
     }
     
     content->GetAttr(namespaceID, attrName, valueStr);

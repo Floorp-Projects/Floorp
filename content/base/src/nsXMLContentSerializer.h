@@ -118,8 +118,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * @param aURI the namespace URI we want aPrefix to point to
    * @param aElement the element we're working with (needed for proper default
    *                 namespace handling)
-   * @param aMustHavePrefix PR_TRUE if we the output prefix must be nonempty
-   *                        whenever a new namespace decl is needed.
+   * @param aIsAttribute PR_TRUE if we're confirming a prefix for an attribute.
    * @return PR_TRUE if we need to push the (prefix, uri) pair on the namespace
    *                 stack (note that this can happen even if the prefix is
    *                 empty).
@@ -127,7 +126,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   PRBool ConfirmPrefix(nsAString& aPrefix,
                        const nsAString& aURI,
                        nsIDOMElement* aElement,
-                       PRBool aMustHavePrefix);
+                       PRBool aIsAttribute);
   /**
    * GenerateNewPrefix generates a new prefix and writes it to aPrefix
    */
