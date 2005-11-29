@@ -63,19 +63,20 @@ function isMsgEmailScam(aUrl)
 
   // loop through all of the link nodes in the message's DOM, looking for phishing URLs...
   var msgDocument = document.getElementById('messagepane').contentDocument;
+  var index;
 
-  // examine all anchor tags...
-  var anchorNodes = msgDocument.getElementsByTagName("a");
-  for (var index = 0; index < anchorNodes.length && !isEmailScam; index++)
-    isEmailScam = isPhishingURL(anchorNodes[index], true);
+  // examine all links...
+  var linkNodes = msgDocument.links;
+  for (index = 0; index < linkNodes.length && !isEmailScam; index++)
+    isEmailScam = isPhishingURL(linkNodes[index], true);
 
   // if an e-mail contains a non-addressbook form element, then assume the message is
   // a phishing attack. Legitimate sites should not be using forms inside of e-mail
   if (!isEmailScam)
   {
     var forms = msgDocument.getElementsByTagName("form");
-    for (var i = 0; i < forms.length && !isEmailScam; i++)
-      isEmailScam = forms[i].action.search("addbook") != 0;
+    for (index = 0; index < forms.length && !isEmailScam; index++)
+      isEmailScam = !/^addbook:/.test(forms[index].action);
   }
 
   // we'll add more checks here as our detector matures....
