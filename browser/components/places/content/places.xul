@@ -7,7 +7,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://browser/locale/places/places.dtd">
 
-<window id="places"
+<window id="places" title="&places.title;" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="PlacesPage.init();" onunload="PlacesPage.uninit();">
   
