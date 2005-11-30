@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.303 $ ';
+$::UtilsVersion = '$Revision: 1.304 $ ';
 
 package TinderUtils;
 
@@ -899,14 +899,18 @@ sub BuildIt {
         # Allow skipping of mozilla phase.
         unless ($Settings::SkipMozilla) {
           
-          # Make sure we have an up-to-date $Settings::moz_client_mk
+          # Allow skipping of checkout
+          unless ($Settings::SkipCheckout) {
           
-          # Set CVSROOT here.  We should only need to checkout a new
-          # version of $Settings::moz_client_mk once; we might have 
-          # more than one cvs tree so set CVSROOT here to avoid confusion.
-          $ENV{CVSROOT} = $Settings::moz_cvsroot;
+            # Make sure we have an up-to-date $Settings::moz_client_mk
             
-          run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/$Settings::moz_client_mk $TreeSpecific::extrafiles");
+            # Set CVSROOT here.  We should only need to checkout a new
+            # version of $Settings::moz_client_mk once; we might have 
+            # more than one cvs tree so set CVSROOT here to avoid confusion.
+            $ENV{CVSROOT} = $Settings::moz_cvsroot;
+              
+            run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/$Settings::moz_client_mk $TreeSpecific::extrafiles");
+          }
           
           # Create toplevel source directory.
           chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
@@ -935,37 +939,41 @@ sub BuildIt {
 
             my $status = 0;
 
-            # Pull using separate step so that we can timeout if necessary
-            my $make_co = "$Settings::Make -f $Settings::moz_client_mk " .
-                "$TreeSpecific::checkout_target";
-            if ($Settings::FastUpdate) {
-                $make_co = "$Settings::Make -f $Settings::moz_client_mk fast-update";
-            }
+            # Allow skipping of checkout
+            unless ($Settings::SkipCheckout) {
 
-            # Run the checkout command.
-            if ($build_status ne 'busted') {
+              # Pull using separate step so that we can timeout if necessary
+              my $make_co = "$Settings::Make -f $Settings::moz_client_mk " .
+                  "$TreeSpecific::checkout_target";
+              if ($Settings::FastUpdate) {
+                $make_co = "$Settings::Make -f $Settings::moz_client_mk fast-update";
+              }
+  
+              # Run the checkout command.
+              if ($build_status ne 'busted') {
                 $status = run_shell_command_with_timeout("$make_co", 
-                                         $Settings::CVSCheckoutTimeout);
+                                           $Settings::CVSCheckoutTimeout);
                 if ($status->{exit_value} != 0) {
-                    $build_status = 'busted';
-                    if ($status->{timed_out}) {
-                        print_log "Error: CVS checkout timed out.\n";
-                        # Need to figure out how to kill rogue cvs processes
-                        my $_cvs_pid=`ps -u $ENV{USER} | grep cvs`;
-                        $_cvs_pid =~ s/[a-zA-Z]*\s*(\d+).*/$1/;
-                        chomp($_cvs_pid);
-                        if ("$_cvs_pid" eq "" ) {
-                            print_log "Cannot find cvs process to kill.\n";
-                        } else {
-                            print "cvs pid $_cvs_pid\n";
-                            kill_process($_cvs_pid);
-                        }
+                  $build_status = 'busted';
+                  if ($status->{timed_out}) {
+                    print_log "Error: CVS checkout timed out.\n";
+                    # Need to figure out how to kill rogue cvs processes
+                    my $_cvs_pid=`ps -u $ENV{USER} | grep cvs`;
+                    $_cvs_pid =~ s/[a-zA-Z]*\s*(\d+).*/$1/;
+                    chomp($_cvs_pid);
+                    if ("$_cvs_pid" eq "" ) {
+                      print_log "Cannot find cvs process to kill.\n";
                     } else {
-                        print_log "Error: CVS checkout failed.\n";
+                      print "cvs pid $_cvs_pid\n";
+                      kill_process($_cvs_pid);
                     }
+                  } else {
+                    print_log "Error: CVS checkout failed.\n";
+                  }
                 } else {
-                    $build_status = 'success';
+                  $build_status = 'success';
                 }
+              }
             }
 
             # Build up initial make command.

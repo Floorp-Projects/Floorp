@@ -34,6 +34,7 @@ $ConfigureOnly     = 0;      # Configure, but do not build.
 $TestOnly          = 0;      # Only run tests, don't pull/build
 $BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 $SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
+$SkipCheckout      = 0;      # Use to debug build process without checking out new source.
 $BuildLocales      = 0;      # Do l10n packaging?
 
 # Only used when $BuildLocales = 1
