@@ -82,6 +82,7 @@ NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
 // without its objects going away.
 extern NS_COM nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator* *aResult,
-                      const nsCOMArray_base& aArray);
+                      const nsCOMArray_base& aArray,
+                      PRBool aReverse = PR_FALSE);
 
 #endif

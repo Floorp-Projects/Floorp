@@ -72,6 +72,7 @@
 
 #include "nsEventQueueService.h"
 #include "nsEventQueue.h"
+#include "nsEventQueueUtils.h"
 
 #include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"  // access to the impl of nsProxyObjectManager for the generic factory registration.
@@ -142,7 +143,6 @@ extern void _FreeAutoLockStatics();
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kINIParserFactoryCID, NS_INIPARSERFACTORY_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess)
@@ -773,11 +773,15 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 //
 // The shutdown sequence for xpcom would be
 //
+// - Notify "xpcom-shutdown" for modules to release primary (root) references
+// - Notify "xpcom-shutdown-threads" for thread joins
+// - Shutdown the main event queue (TODO)
 // - Release the Global Service Manager
 //   - Release all service instances held by the global service manager
 //   - Release the Global Service Manager itself
 // - Release the Component Manager
 //   - Release all factories cached by the Component Manager
+//   - Notify module loaders to shut down
 //   - Unload Libraries
 //   - Release Contractid Cache held by Component Manager
 //   - Release dll abstraction held by Component Manager
@@ -787,37 +791,52 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 EXPORT_XPCOM_API(nsresult)
 NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
+    nsresult rv;
+
+    // grab the event queue so that we can process events before exiting.
+    nsCOMPtr <nsIEventQueue> currentQ;
+    NS_GetCurrentEventQ(getter_AddRefs(currentQ));
+
+    nsCOMPtr<nsISimpleEnumerator> moduleLoaders;
 
     // Notify observers of xpcom shutting down
-    nsresult rv = NS_OK;
     {
         // Block it so that the COMPtr will get deleted before we hit
         // servicemanager shutdown
         nsCOMPtr<nsIObserverService> observerService =
-                 do_GetService("@mozilla.org/observer-service;1", &rv);
-        if (NS_SUCCEEDED(rv))
+                 do_GetService("@mozilla.org/observer-service;1");
+
+        if (observerService)
         {
             nsCOMPtr<nsIServiceManager> mgr;
             rv = NS_GetServiceManager(getter_AddRefs(mgr));
             if (NS_SUCCEEDED(rv))
             {
-                (void) observerService->NotifyObservers(mgr,
-                                                        NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                                        nsnull);
+                (void) observerService->
+                    NotifyObservers(mgr, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                                    nsnull);
             }
         }
+
+        if (currentQ)
+            currentQ->ProcessPendingEvents();
+
+        if (observerService)
+            (void) observerService->
+                NotifyObservers(nsnull, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
+                                nsnull);
+
+        if (currentQ)
+            currentQ->ProcessPendingEvents();
+
+        // We save the "xpcom-shutdown-loaders" observers to notify after
+        // the observerservice is gone.
+        if (observerService)
+            observerService->
+                EnumerateObservers(NS_XPCOM_SHUTDOWN_LOADERS_OBSERVER_ID,
+                                   getter_AddRefs(moduleLoaders));
     }
 
-    // grab the event queue so that we can process events one last time before exiting
-    nsCOMPtr <nsIEventQueue> currentQ;
-    {
-        nsCOMPtr<nsIEventQueueService> eventQService =
-                 do_GetService(kEventQueueServiceCID, &rv);
-
-        if (eventQService) {
-            eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(currentQ));
-        }
-    }
     // XPCOM is officially in shutdown mode NOW
     // Set this only after the observers have been notified as this
     // will cause servicemanager to become inaccessible.
@@ -844,6 +863,27 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     // Release the directory service
     NS_IF_RELEASE(nsDirectoryService::gService);
+
+    if (moduleLoaders) {
+        PRBool more;
+        nsCOMPtr<nsISupports> el;
+        while (NS_SUCCEEDED(moduleLoaders->HasMoreElements(&more)) &&
+               more) {
+            moduleLoaders->GetNext(getter_AddRefs(el));
+
+            // Don't worry about weak-reference observers here: there is
+            // no reason for weak-ref observers to register for
+            // xpcom-shutdown-loaders
+
+            nsCOMPtr<nsIObserver> obs(do_QueryInterface(el));
+            if (obs)
+                (void) obs->Observe(nsnull,
+                                    NS_XPCOM_SHUTDOWN_LOADERS_OBSERVER_ID,
+                                    nsnull);
+        }
+
+        moduleLoaders = nsnull;
+    }
 
     // Shutdown nsLocalFile string conversion
     NS_ShutdownLocalFile();
