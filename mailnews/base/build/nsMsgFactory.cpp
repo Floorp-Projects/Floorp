@@ -52,7 +52,6 @@
 
 #include "nsMessengerBootstrap.h"
 #include "nsMessenger.h"
-#include "nsMsgGroupRecord.h"
 
 #include "nsIRegistry.h"
 #include "nsIContentViewer.h"

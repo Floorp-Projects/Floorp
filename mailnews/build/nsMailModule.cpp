@@ -61,7 +61,6 @@
 #include "rdf.h"
 #include "nsMessengerBootstrap.h"
 #include "nsMessenger.h"
-#include "nsMsgGroupRecord.h"
 #include "nsIContentViewer.h"
 #include "nsIUrlListenerManager.h"
 #include "nsUrlListenerManager.h"

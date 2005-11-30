@@ -93,7 +93,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsMsgGroupRecord.cpp \
 		nsMsgLineBuffer.cpp \
 		nsMsgDBFolder.cpp \
 		nsUint8Array.cpp \
@@ -113,7 +112,6 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
-		nsMsgGroupRecord.h \
 		nsMsgLineBuffer.h \
 		nsUint8Array.h \
 		nsUInt32Array.h \
