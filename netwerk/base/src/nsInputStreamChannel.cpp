@@ -52,8 +52,12 @@ nsInputStreamChannel::OpenContentStream(PRBool async, nsIInputStream **result)
   if (len < 0) {
     PRUint32 avail;
     nsresult rv = mContentStream->Available(&avail);
-    if (NS_FAILED(rv))
+    if (rv == NS_BASE_STREAM_CLOSED) {
+      // This just means there's nothing in the stream
+      avail = 0;
+    } else if (NS_FAILED(rv)) {
       return rv;
+    }
     SetContentLength64(avail);
   }
 
