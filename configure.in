@@ -4086,6 +4086,7 @@ NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http keyword res viewsource"
 NECKO_SMALL_BUFFERS=
 SUNCTL=
+JS_STATIC_BUILD=
 
 case "$target_os" in
     msvc*|mks*|cygwin*|mingw*)
@@ -4177,6 +4178,7 @@ minimo)
   NECKO_SMALL_BUFFERS=1
   NS_DISABLE_LOGGING=1
   NS_PRINTING=
+  JS_STATIC_BUILD=1
   ;;
 
 mail)
@@ -5302,6 +5304,26 @@ if test `echo "$target_os" | grep -c \^solaris 2>/dev/null` = 0 -o \
     JS_ULTRASPARC_OPTS=
 fi
 AC_SUBST(JS_ULTRASPARC_OPTS)
+
+dnl ========================================================
+dnl = Force JS to be a static lib
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(js-static-build,
+[  --enable-js-static-build  Force js to be a static lib],
+    JS_STATIC_BUILD=1,
+    JS_STATIC_BUILD= )
+
+AC_SUBST(JS_STATIC_BUILD)
+        
+if test -n "$JS_STATIC_BUILD"; then
+    AC_DEFINE(EXPORT_JS_API)
+
+if test -z "$BUILD_STATIC_LIBS"; then
+    AC_MSG_ERROR([--enable-js-static-build is only compatible with --enable-static])
+fi
+
+fi
+
 
 dnl ========================================================
 dnl =
