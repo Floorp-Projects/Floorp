@@ -104,8 +104,13 @@
                 ondblclick="PlacesController.mouseLoadURI(event);"
                 onplacestreereloaded="PlacesPage.onContentChanged();">
             <treecols>
-              <treecol label="&col.title.label;" id="title" flex="1" primary="true"/>
-              <treecol label="&col.url.label;" id="url" flex="1"/>
+              <treecol label="&col.title.label;" id="title" flex="5" primary="true"/>
+              <splitter class="tree-splitter"/>
+              <treecol label="&col.url.label;" id="url" flex="5"/>
+              <splitter class="tree-splitter"/>
+              <treecol label="&col.lastvisit.label;" id="date" flex="1"/>
+              <splitter class="tree-splitter"/>
+              <treecol label="&col.visitcount.label;" id="visitCount" flex="1" hidden="true"/>
             </treecols>
             <treechildren id="placeContentChildren" view="placeContent" flex="1"/>
           </tree>
