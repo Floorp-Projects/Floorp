@@ -300,7 +300,6 @@ sub packit {
         TinderUtils::run_shell_command "cp -r $package_location/xpi $stagedir/windows-xpi";
       }
     } elsif (is_linux()) {
-      TinderUtils::run_shell_command "cp -r $package_location/raw/xpi $stagedir/linux-xpi";
       if ($Settings::stub_installer) {
         TinderUtils::run_shell_command "cp $package_location/stub/*.tar.* $stagedir/";
       }
