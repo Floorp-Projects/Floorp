@@ -95,15 +95,12 @@ ifdef WINCE
 RCINCLUDE  = wince/SplashScreen.rc
 endif
 
-LIBS	  = $(LIBS_DIR) \
-			$(MOZ_UNICHARUTIL_LIBS)	\
-			$(NSPR_LIBS)			\
-			$(MOZ_JS_LIBS)			\
+LIBS	  = $(NSPR_LIBS) \
 			$(NULL)
 
 ifdef MOZ_ENABLE_GTK2
-LIBS	 += $(XLDFLAGS)	\
-		 	$(XLIBS)	\
+LIBS	 += $(XLDFLAGS)	 \
+		 	$(XLIBS)	 \
 			$(NULL)
 endif
 
@@ -111,7 +108,7 @@ include $(topsrcdir)/config/config.mk
 
 ifdef WINCE
 LOCAL_INCLUDES	+= -I$(srcdir)/wince
-OS_LIBS += $(call EXPAND_LIBNAME, aygshell cellcore commdlg uuid ole32 oleaut32)
+OS_LIBS += $(call EXPAND_LIBNAME, aygshell cellcore commdlg uuid ole32 oleaut32 ws2)
 endif
 
 

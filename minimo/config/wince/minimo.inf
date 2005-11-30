@@ -25,7 +25,6 @@ CEShortcuts=Shortcuts
 
 
 [SourceDisksFiles]
-js3250.dll=1
 minimo.exe=1
 minimo_runner.exe=1
 nspr4.dll=1
@@ -51,6 +50,7 @@ snav.xpt=3
 nsDictionary.js=3
 nsInterfaceInfoToIDL.js=3
 nsXmlRpcClient.js=3
+HelperAppDlg.js=3
 
 all.js=8
 security-prefs.js=8
@@ -94,7 +94,6 @@ Files.res_fonts=0,%InstallDir%\res\fonts
 Shortcuts=0,%CE11% ; Start Menuz
 
 [Files.minimo]
-js3250.dll,,,0
 minimo.exe,,,0
 minimo_runner.exe,,,0
 nspr4.dll,,,0
@@ -122,6 +121,7 @@ snav.xpt,,,0
 nsDictionary.js,,,0
 nsInterfaceInfoToIDL.js,,,0
 nsXmlRpcClient.js,,,0
+HelperAppDlg.js,,,0
 
 [Files.greprefs]
 all.js,,,0
