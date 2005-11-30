@@ -1106,6 +1106,9 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
                                                            options);
     NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
+    rv = result->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = nsNavBookmarks::GetBookmarksService()->
       QueryFolderChildren(aQueries[0], options, result->GetTopLevel());
 
