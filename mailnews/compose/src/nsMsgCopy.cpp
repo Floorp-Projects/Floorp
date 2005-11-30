@@ -174,7 +174,6 @@ NS_IMPL_ISUPPORTS1(nsMsgCopy, nsIUrlListener)
 
 nsMsgCopy::nsMsgCopy()
 {
-  mCopyListener = nsnull;
   mFileSpec = nsnull;
   mMode = nsIMsgSend::nsMsgDeliverNow;
   mSavePref = nsnull;
@@ -278,11 +277,11 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
   //Call copyservice with dstFolder, disk file, and txnManager
   if(NS_SUCCEEDED(rv))
   {
-    mCopyListener = new CopyListener();
-    if (!mCopyListener)
+    nsRefPtr<CopyListener> copyListener = new CopyListener();
+    if (!copyListener)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    mCopyListener->SetMsgComposeAndSendObject(aMsgSendObj);
+    copyListener->SetMsgComposeAndSendObject(aMsgSendObj);
     nsCOMPtr<nsIEventQueue> eventQueue;
 
     if (aIsDraft)
@@ -299,7 +298,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
         { 
           // set the following only when we were in the middle of shutdown
           // process
-            mCopyListener->mCopyInProgress = PR_TRUE;
+            copyListener->mCopyInProgress = PR_TRUE;
             nsCOMPtr<nsIEventQueueService> pEventQService = 
                      do_GetService(kEventQueueServiceCID, &rv);
             if (NS_FAILED(rv)) return rv;
@@ -311,14 +310,14 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace, 
-                                      aIsDraft, MSG_FLAG_READ, mCopyListener, msgWindow);
-    // mCopyListener->mCopyInProgress can only be set when we are in the
+                                      aIsDraft, MSG_FLAG_READ, copyListener, msgWindow);
+    // copyListener->mCopyInProgress can only be set when we are in the
     // middle of the shutdown process
-    while (mCopyListener->mCopyInProgress)
+    while (copyListener->mCopyInProgress)
     {
-        PR_CEnterMonitor(mCopyListener);
-        PR_CWait(mCopyListener, PR_MicrosecondsToInterval(1000UL));
-        PR_CExitMonitor(mCopyListener);
+        PR_CEnterMonitor(copyListener);
+        PR_CWait(copyListener, PR_MicrosecondsToInterval(1000UL));
+        PR_CExitMonitor(copyListener);
         if (eventQueue)
             eventQueue->ProcessPendingEvents();
     }

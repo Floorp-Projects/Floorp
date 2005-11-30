@@ -128,7 +128,6 @@ public:
   //
   nsIFileSpec                     *mFileSpec;     // the file we are sending...
   nsMsgDeliverMode                mMode;
-  nsRefPtr<CopyListener>          mCopyListener;
   nsCOMPtr<nsIMsgFolder>          mDstFolder;
   nsCOMPtr<nsIMsgDBHdr>           mMsgToReplace;
   PRBool                          mIsDraft;
