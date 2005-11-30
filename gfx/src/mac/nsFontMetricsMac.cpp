@@ -95,7 +95,7 @@ NS_IMETHODIMP nsFontMetricsMac::Init(const nsFont& aFont, nsIAtom* aLangGroup, n
   mEmDescent  = NSToCoordRound(float(fInfo.descent) * dev2app);
   mEmHeight   = mEmAscent + mEmDescent;
 
-	mMaxHeight  = mEmHeight + mLeading;
+  mMaxHeight  = mEmHeight;
   mMaxAscent  = mEmAscent;
   mMaxDescent = mEmDescent;
 
@@ -309,7 +309,7 @@ NS_IMETHODIMP nsFontMetricsMac :: GetHeight(nscoord &aHeight)
 
 NS_IMETHODIMP nsFontMetricsMac :: GetNormalLineHeight(nscoord &aHeight)
 {
-  aHeight = mMaxHeight; // on Windows, it's mEmHeight + mLeading (= mMaxHeight on the Mac)
+  aHeight = mEmHeight + mLeading; // Mac's leading is external leading
   return NS_OK;
 }
 
