@@ -191,6 +191,7 @@ $LocaleProduct = "browser";
 $shiptalkback  = 1;
 $ReleaseToLatest = 1; # Push the release to latest-<milestone>?
 $ReleaseToDated = 1; # Push the release to YYYY-MM-DD-HH-<milestone>?
+$ReleaseGroup = ''; # group to set uploaded files to (if non-empty)
 $build_hour    = "8";
 $package_creation_path = "/xpinstall/packager";
 # needs setting for mac + talkback: $mac_bundle_path = "/browser/app";

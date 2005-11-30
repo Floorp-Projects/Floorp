@@ -925,6 +925,9 @@ sub pushit {
     TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path/$short_ud";
     TinderUtils::run_shell_command "rsync -av -e \"ssh $ssh_opts\" $upload_directory/ $Settings::ssh_user\@$ssh_server:$upload_path/$short_ud/";
     TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/$short_ud";
+    if ($Settings::ReleaseGroup ne '') {
+      TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chgrp -R $Settings::ReleaseGroup $upload_path/$short_ud";
+    }
 
     if ( $cachebuild and $Settings::ReleaseToLatest ) {
       TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server cp -dpf $upload_path/$short_ud/* $upload_path/latest-$Settings::milestone/";
@@ -933,6 +936,9 @@ sub pushit {
     TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path";
     TinderUtils::run_shell_command "scp $scp_opts -r $upload_directory/* $Settings::ssh_user\@$ssh_server:$upload_path/latest-$Settings::milestone/";
     TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/latest-$Settings::milestone/";
+    if ($Settings::ReleaseGroup ne '') {
+      TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chgrp -R $Settings::ReleaseGroup $upload_path/latest-$Settings::milestone/";
+    }
   }
 
   return 1;
