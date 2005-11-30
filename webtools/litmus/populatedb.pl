@@ -55,12 +55,17 @@ our \$db_pass = "";
 
 our \$user_cookiename = "litmus_login";
 our \$sysconfig_cookiename = "litmustestingconfiguration";
+
+our $bugzilla_db = "bugzilla";
+our $bugzilla_host = "localhost";
+our $bugzilla_user = "litmus";
+out $bugzilla_pass = "litmus";
 EOT
         close(OUT);
         print "Go edit 'localconfig' with your configuration and \n";
         print "run this script again.";
         exit;
-}
+} 
 
 if ($reset_db) {
   my $schema_file = "createdb.sql";
