@@ -1,5 +1,5 @@
   <commandset id="placesCommands" 
-              commandupdater="true" events="focus,select" 
+              commandupdater="true" events="focus,select,mousedown" 
               oncommandupdate="PlacesController.onCommandUpdate()">
     <command id="placesCmd_find" label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"/>
     <command id="placesCmd_export" label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"/>
