@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Darin Fisher <darin@meer.net>
+ *  Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,6 +49,7 @@
 
 static float sProgress;  // between 0 and 100
 static BOOL  sQuit = FALSE;
+static HFONT sSystemFont = 0;
 
 static BOOL
 GetStringsFile(char filename[MAX_PATH])
@@ -67,7 +69,7 @@ static void
 UpdateDialog(HWND hDlg)
 {
   int pos = int(sProgress + 0.5f);
-  SendMessage(GetDlgItem(hDlg, IDC_PROGRESS), PBM_SETPOS, pos, 0L);
+  SendDlgItemMessage(hDlg, IDC_PROGRESS, PBM_SETPOS, pos, 0L);
 }
 
 // The code in this function is from MSDN:
@@ -123,13 +125,27 @@ InitDialog(HWND hDlg)
   SetItemText(hDlg, "Title", filename);
   SetItemText(GetDlgItem(hDlg, IDC_INFO), "Info", filename);
 
+  // On Win9x, we need to send WM_SETFONT for l10n builds.  Yes, we shouldn't
+  // use the system font.  For example, if the text has Japanese characters on
+  // Win98-en, then the text may not be displayed correctly.  We should perhaps
+  // support loading a font named in updater.ini; however, even then there are
+  // cases where it might not work properly.
+  if (!sSystemFont) {
+    NONCLIENTMETRICS ncm;
+    memset(&ncm, 0, sizeof(ncm));
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    sSystemFont = CreateFontIndirect(&ncm.lfMessageFont);
+  }
+  if (sSystemFont)
+    SendDlgItemMessage(hDlg, IDC_INFO, WM_SETFONT, (WPARAM)sSystemFont, 0L);
+
   // Set dialog icon
   HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DIALOG));
   if (hIcon)
     SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM) hIcon);
 
-  SendMessage(GetDlgItem(hDlg, IDC_PROGRESS), PBM_SETRANGE, 0,
-              MAKELPARAM(0, 100));
+  SendDlgItemMessage(hDlg, IDC_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
 
   CenterDialog(hDlg);  // make dialog appear in the center of the screen
 
@@ -147,10 +163,15 @@ DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return TRUE;
 
   case WM_TIMER:
-    if (sQuit)
+    if (sQuit) {
       EndDialog(hDlg, 0);
-    else
+      if (sSystemFont) {
+        DeleteObject(sSystemFont);
+        sSystemFont = 0;
+      }
+    } else {
       UpdateDialog(hDlg);
+    }
     return TRUE;
 
   case WM_COMMAND:
