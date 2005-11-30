@@ -405,8 +405,8 @@ pref("capability.policy.default.Clipboard.paste", "noAccess");
 
 // Scripts & Windows prefs
 pref("dom.disable_image_src_set",           false);
-pref("dom.disable_window_flip",             true);
-pref("dom.disable_window_move_resize",      true);
+pref("dom.disable_window_flip",             false);
+pref("dom.disable_window_move_resize",      false);
 pref("dom.disable_window_status_change",    false);
 
 pref("dom.disable_window_open_feature.titlebar",    false);
@@ -434,7 +434,7 @@ pref("dom.disable_open_click_delay", 1000);
 //   2 = openAbused
 pref("privacy.popups.disable_from_plugins", 2);
 
-pref("dom.event.contextmenu.enabled",       false);
+pref("dom.event.contextmenu.enabled",       true);
 
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
