@@ -60,7 +60,10 @@ PACKAGE_FILE = js.pkg
 # other modules which are always built shared. Failure to do so results in
 # the js code getting copied into xpinstall and jsd as well as mozilla-bin,
 # and then the static data cells used for locking no longer work.
+
+ifndef JS_STATIC_BUILD
 FORCE_SHARED_LIB = 1
+endif
 
 CSRCS		= \
 		jsapi.c \
