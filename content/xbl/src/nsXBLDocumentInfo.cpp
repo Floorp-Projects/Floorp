@@ -71,7 +71,6 @@ public:
   virtual nsIScriptContext *GetContext();
   virtual nsresult SetNewDocument(nsIDOMDocument *aDocument,
                                   nsISupports *aState,
-                                  PRBool aRemoveEventListeners,
                                   PRBool aClearScope);
   virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener);
   virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
@@ -279,7 +278,6 @@ nsXBLDocGlobalObject::GetContext()
 nsresult
 nsXBLDocGlobalObject::SetNewDocument(nsIDOMDocument *aDocument,
                                      nsISupports *aState,
-                                     PRBool aRemoveEventListeners,
                                      PRBool aClearScope)
 {
   NS_NOTREACHED("waaah!");

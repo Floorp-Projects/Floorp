@@ -856,7 +856,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
         nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
 
         if (domdoc) {
-          global->SetNewDocument(domdoc, aState, PR_TRUE, PR_TRUE);
+          global->SetNewDocument(domdoc, aState, PR_TRUE);
         }
       }
     }
@@ -1629,7 +1629,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
     // Set the script global object on the new document
     nsCOMPtr<nsIScriptGlobalObject> global = do_GetInterface(container);
     if (global) {
-      global->SetNewDocument(aDocument, nsnull, PR_TRUE, PR_TRUE);
+      global->SetNewDocument(aDocument, nsnull, PR_TRUE);
     }
   }
 

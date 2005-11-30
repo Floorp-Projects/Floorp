@@ -804,17 +804,14 @@ NS_IMPL_ISUPPORTS1(WindowStateHolder, WindowStateHolder)
 nsresult
 nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
                                nsISupports* aState,
-                               PRBool aRemoveEventListeners,
                                PRBool aClearScopeHint)
 {
-  return SetNewDocument(aDocument, aState, aRemoveEventListeners,
-                        aClearScopeHint, PR_FALSE);
+  return SetNewDocument(aDocument, aState, aClearScopeHint, PR_FALSE);
 }
 
 nsresult
 nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
                                nsISupports* aState,
-                               PRBool aRemoveEventListeners,
                                PRBool aClearScopeHint,
                                PRBool aIsInternalCall)
 {
@@ -828,7 +825,6 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
     return GetOuterWindowInternal()->SetNewDocument(aDocument,
                                                     aState,
-                                                    aRemoveEventListeners,
                                                     aClearScopeHint, PR_TRUE);
   }
 
@@ -910,12 +906,6 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
   PRBool reUseInnerWindow = WouldReuseInnerWindow(newDoc, PR_FALSE);
 
-  // XXX We used to share event listeners between inner windows in special
-  // circumstances (that were remarkably close to the conditions that we set
-  // reUseInnerWindow in) but that left dangling pointers to the old (destroyed)
-  // inner window (bug 303765). Setting this here should be a no-op.
-  aRemoveEventListeners = !reUseInnerWindow;
-
   // Remember the old document's principal.
   nsIPrincipal *oldPrincipal = nsnull;
 
@@ -972,7 +962,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         currentInner->mChromeEventHandler = nsnull;
       }
 
-      if (aRemoveEventListeners && currentInner->mListenerManager) {
+      if (!reUseInnerWindow && currentInner->mListenerManager) {
         currentInner->mListenerManager->RemoveAllListeners(PR_FALSE);
         currentInner->mListenerManager = nsnull;
       }
@@ -1240,7 +1230,6 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
       } else {
         rv = newInnerWindow->SetNewDocument(aDocument, nsnull,
-                                            aRemoveEventListeners,
                                             aClearScopeHint, PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
 

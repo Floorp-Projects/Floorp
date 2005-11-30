@@ -1941,7 +1941,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
       do_QueryInterface((nsIHTMLDocument*)this);
 
     rv = mScriptGlobalObject->SetNewDocument((nsDocument *)this, nsnull,
-                                             PR_FALSE, PR_FALSE);
+                                             PR_FALSE);
 
     if (NS_FAILED(rv)) {
       return rv;

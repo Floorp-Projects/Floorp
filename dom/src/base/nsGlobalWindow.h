@@ -155,7 +155,6 @@ public:
   virtual nsIScriptContext *GetContext();
   virtual nsresult SetNewDocument(nsIDOMDocument *aDocument,
                                   nsISupports *aState,
-                                  PRBool aRemoveEventListeners,
                                   PRBool aClearScopeHint);
   virtual void SetDocShell(nsIDocShell* aDocShell);
   virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener);
@@ -280,7 +279,6 @@ protected:
 
   nsresult SetNewDocument(nsIDOMDocument *aDocument,
                           nsISupports *aState,
-                          PRBool aRemoveEventListeners,
                           PRBool aClearScopeHint,
                           PRBool aIsInternalCall);
 

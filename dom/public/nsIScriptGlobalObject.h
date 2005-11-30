@@ -69,7 +69,6 @@ public:
   virtual nsIScriptContext *GetContext() = 0;
   virtual nsresult SetNewDocument(nsIDOMDocument *aDocument,
                                   nsISupports *aState,
-                                  PRBool aRemoveEventListeners,
                                   PRBool aClearScope) = 0;
   virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener)=0;
 
