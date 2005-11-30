@@ -44,6 +44,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOMCID.h"
+#include "nsIFile.h"
 
 inline nsresult
 NS_GetSpecialDirectory(const char* specialDirName, nsIFile* *result)
