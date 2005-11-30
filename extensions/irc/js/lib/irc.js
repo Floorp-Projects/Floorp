@@ -1140,6 +1140,7 @@ function serv_ppline(e)
 CIRCServer.prototype.onRawData =
 function serv_onRawData(e)
 {
+    var me = this;
     function makeMaskRegExp(text)
     {
         function escapeChars(c)
@@ -1178,7 +1179,7 @@ function serv_onRawData(e)
             else
                 mask.hostRE = makeMaskRegExp(mask.host);
         }
-        var lowerNick = this.parent.toLowerCase(user.unicodeName);
+        var lowerNick = me.toLowerCase(user.unicodeName);
         if ((!mask.nickRE || lowerNick.match(mask.nickRE)) &&
             (!mask.userRE || user.name.match(mask.userRE)) &&
             (!mask.hostRE || user.host.match(mask.hostRE)))
