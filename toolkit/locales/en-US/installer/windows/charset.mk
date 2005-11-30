@@ -19,4 +19,3 @@ WIN_INSTALLER_CHARSET = CP1252
 # HEBREW_CHARSET                  CP1255
 # Thai language edition of Windows:
 # THAI_CHARSET                    CP874
-

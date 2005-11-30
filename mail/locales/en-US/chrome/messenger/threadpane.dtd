@@ -73,6 +73,3 @@
 <!ENTITY flagColumn.tooltip "Click to sort by flag">
 <!ENTITY locationColumn.tooltip "Click to sort by location">
 <!ENTITY idColumn.tooltip "Click to sort by order received">
-
-
-

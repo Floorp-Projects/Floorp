@@ -116,7 +116,7 @@ OS/2 Installation Instructions
      5. To start Thunderbird, navigate to the directory you extracted
      Thunderbird to, make sure that the C library DLLs are copied to the
      installation directory or installed in the LIBPATH, and then double-click
-     the Thunderbird.exe object.
+     the thunderbird.exe object.
 
 
 Running multiple versions concurrently

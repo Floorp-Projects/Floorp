@@ -51,5 +51,3 @@
 <!ENTITY fieldMapImport.dataTitle "Record data to import">
 <!ENTITY fieldMapImport.skipFirstRecord "First record contains field names">
 <!ENTITY fieldMapImport.skipFirstRecord.accessKey "F">
-
-

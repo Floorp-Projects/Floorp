@@ -52,7 +52,6 @@
 <!ENTITY fontOptions.label       "Fonts...">
 
 <!-- Language settings -->
-
 <!ENTITY sendDefaultCharset.label         "Outgoing Mail:">
 <!ENTITY sendDefaultCharset.accesskey     "u">
 <!ENTITY languagesTitle.label				  "Character encodings">

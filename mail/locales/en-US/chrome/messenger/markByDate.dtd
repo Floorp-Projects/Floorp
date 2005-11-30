@@ -38,5 +38,5 @@
 <!ENTITY messageMarkByDate.label "Mark Messages as Read by Date">
 <!ENTITY markByDateLower.label "Mark messages as read from:">
 <!ENTITY markByDateLower.accesskey "F">
-<!ENTITY markByDateUpper.accesskey "T">
 <!ENTITY markByDateUpper.label "To:">
+<!ENTITY markByDateUpper.accesskey "T">

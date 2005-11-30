@@ -34,7 +34,7 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-   
+
 <!ENTITY createVFDialog.title              "Save Search">
 <!ENTITY virtualFolder.label               "Enter the name for your saved search folder: ">
 <!ENTITY virtualFolder.accesskey           "E">

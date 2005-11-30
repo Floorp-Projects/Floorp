@@ -164,8 +164,8 @@
 <!ENTITY msgsMenu.label "Messages">
 <!ENTITY msgsMenu.accesskey "M">
 <!ENTITY viewAll.label "All">
-<!ENTITY viewUnread.label "Unread">
 <!ENTITY viewAll.accesskey "A">
+<!ENTITY viewUnread.label "Unread">
 <!ENTITY viewUnread.accesskey "U">
 <!ENTITY viewCustomView.label "Customize...">
 <!ENTITY viewCustomView.accesskey "C">
@@ -229,7 +229,6 @@
 <!-- Search Menu -->
 <!ENTITY searchMenu.label "Search">
 <!ENTITY searchMenu.accesskey "S">
-
 
 <!ENTITY find.label "Find">
 <!ENTITY find.accesskey "F">
@@ -413,8 +412,8 @@
 <!ENTITY hintsAndTips.label "&brandFullName; Help">
 <!ENTITY hintsAndTipsMac.commandkey "?">
 <!ENTITY hintsAndTips.accesskey "h">
-<!ENTITY updateCmd.accesskey  "o">
 <!ENTITY updateCmd.label      "Check for Updates...">
+<!ENTITY updateCmd.accesskey  "o">
 <!ENTITY aboutCmd.label "About &brandFullName;">
 <!ENTITY aboutCmd.accesskey "A">
 
@@ -597,11 +596,11 @@
 <!ENTITY remoteContentMessage.label "To protect your privacy, &brandShortName; has blocked remote images in this message.">
 <!ENTITY loadRemoteContentButton.label "Show Images">
 
-<!-- Phshing bar Bar -->
+<!-- Phishing Bar -->
 <!ENTITY phishingBarMessage.label "&brandShortName; thinks this message might be an email scam.">
 <!ENTITY removePhishingBarButton.label "Not a Scam">
 
-<!-- Search Bar -->
+<!-- Quick Search Bar -->
 <!ENTITY quickSearchCmd.key "k">
 
 <!-- Message Header Context Menu -->
@@ -622,7 +621,7 @@
 <!ENTITY totalCountText.label " Total: ">
 
 <!--  Mac OS X Window Menu -->
-<!ENTITY minimizeWindow.key "m">
 <!ENTITY minimizeWindow.label "Minimize">
+<!ENTITY minimizeWindow.key "m">
 <!ENTITY bringAllToFront.label "Bring All to Front">
 <!ENTITY zoomWindow.label "Zoom">
