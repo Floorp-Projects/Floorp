@@ -5306,26 +5306,6 @@ fi
 AC_SUBST(JS_ULTRASPARC_OPTS)
 
 dnl ========================================================
-dnl = Force JS to be a static lib
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(js-static-build,
-[  --enable-js-static-build  Force js to be a static lib],
-    JS_STATIC_BUILD=1,
-    JS_STATIC_BUILD= )
-
-AC_SUBST(JS_STATIC_BUILD)
-        
-if test -n "$JS_STATIC_BUILD"; then
-    AC_DEFINE(EXPORT_JS_API)
-
-if test -z "$BUILD_STATIC_LIBS"; then
-    AC_MSG_ERROR([--enable-js-static-build is only compatible with --enable-static])
-fi
-
-fi
-
-
-dnl ========================================================
 dnl =
 dnl = Feature options that require extra sources to be pulled
 dnl =
@@ -6206,6 +6186,25 @@ if test -n "$MOZ_ENABLE_LIBXUL"; then
     AC_DEFINE(MOZ_ENABLE_LIBXUL)
 else
     XPCOM_LIBS="$DYNAMIC_XPCOM_LIBS"
+fi
+
+dnl ========================================================
+dnl = Force JS to be a static lib
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(js-static-build,
+[  --enable-js-static-build  Force js to be a static lib],
+    JS_STATIC_BUILD=1,
+    JS_STATIC_BUILD= )
+
+AC_SUBST(JS_STATIC_BUILD)
+        
+if test -n "$JS_STATIC_BUILD"; then
+    AC_DEFINE(EXPORT_JS_API)
+
+if test -z "$BUILD_STATIC_LIBS"; then
+    AC_MSG_ERROR([--enable-js-static-build is only compatible with --enable-static])
+fi
+
 fi
 
 dnl ========================================================
