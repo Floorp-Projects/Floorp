@@ -104,6 +104,10 @@
   "Title">
 <!ENTITY col.url.label
   "Location">
+<!ENTITY col.lastvisit.label
+  "Last Visited">
+<!ENTITY col.visitcount.label
+  "Visit Count">
 <!ENTITY advancedSearch.label
   "More Options...">
 <!ENTITY advancedSearch.accesskey
