@@ -537,12 +537,9 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
   {
     if (aHTMLEditor && htmlEditor)
     {
-      if (!aBuf.IsEmpty())
-      {
-        htmlEditor->RebuildDocumentFromSource(aBuf);
+      htmlEditor->RebuildDocumentFromSource(aBuf);
 
-        m_editor->EndOfDocument();
-      }
+      m_editor->EndOfDocument();
 
       // when forwarding a message as inline, tag any embedded objects
       // which refer to local images or files so we know not to include 
@@ -1247,24 +1244,16 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
     rv = composeService->CacheWindow(m_window, m_composeHTML, mRecyclingListener);
     if (NS_SUCCEEDED(rv))
     {
-      NS_ASSERTION(m_editor, "no editor");
-      if (m_editor)
+      nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(m_editor));
+      NS_ASSERTION(htmlEditor, "no editor");
+      if (htmlEditor)
       {
         // XXX clear undo txn manager?
 
         rv = m_editor->EnableUndo(PR_FALSE);
         NS_ENSURE_SUCCESS(rv,rv);
 
-        rv = m_editor->BeginTransaction();
-        NS_ENSURE_SUCCESS(rv,rv);
-
-        rv = m_editor->SelectAll();
-        NS_ENSURE_SUCCESS(rv,rv);
-
-        rv = m_editor->DeleteSelection(0);
-        NS_ENSURE_SUCCESS(rv,rv);
-
-        rv = m_editor->EndTransaction();
+        rv = htmlEditor->RebuildDocumentFromSource(EmptyString());
         NS_ENSURE_SUCCESS(rv,rv);
 
         rv = m_editor->EnableUndo(PR_TRUE);
