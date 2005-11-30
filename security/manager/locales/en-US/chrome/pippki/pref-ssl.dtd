@@ -81,7 +81,6 @@
 <!ENTITY cipher.tab.ssl3tls_extra           "Extra SSL3/TLS">
 
 <!-- SSL2 Ciphers -->
-
 <!ENTITY cipher.ssl2.rc4_128                "128-bit RC4 encryption with RSA and an MD5 MAC">
 <!ENTITY cipher.ssl2.rc2_128                "128-bit RC2 encryption with RSA and an MD5 MAC">
 <!ENTITY cipher.ssl2.des_ede3_192           "168-bit Triple DES encryption with RSA and MD5 MAC ">
