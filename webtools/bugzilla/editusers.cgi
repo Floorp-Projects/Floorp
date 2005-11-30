@@ -15,6 +15,7 @@
 #
 # Contributor(s): Marc Schumann <wurblzap@gmail.com>
 #                 Lance Larsh <lance.larsh@oracle.com>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 use strict;
 use lib ".";
@@ -29,14 +30,14 @@ use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Field;
+use Bugzilla::Group;
 
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi       = Bugzilla->cgi;
 my $template  = Bugzilla->template;
 my $vars      = {};
 my $dbh       = Bugzilla->dbh;
-my $user      = Bugzilla->user;
 my $userid    = $user->id;
 my $editusers = $user->in_group('editusers');
 
@@ -48,19 +49,12 @@ $editusers
                                        action => "edit",
                                        object => "users"});
 
-print Bugzilla->cgi->header();
+print $cgi->header();
 
 # Common CGI params
-my $action       = $cgi->param('action') || 'search';
-my $login        = $cgi->param('login');
-my $password     = $cgi->param('password');
-my $groupid      = $cgi->param('groupid');
-my $otherUser    = new Bugzilla::User($cgi->param('userid'));
-my $realname     = trim($cgi->param('name')         || '');
-my $disabledtext = trim($cgi->param('disabledtext') || '');
-
-# Directly from common CGI params derived values
-my $otherUserID = $otherUser->id();
+my $action         = $cgi->param('action') || 'search';
+my $otherUserID    = $cgi->param('userid');
+my $otherUserLogin = $cgi->param('user');
 
 # Prefill template vars with data used in all or nearly all templates
 $vars->{'editusers'} = $editusers;
@@ -83,6 +77,13 @@ if ($action eq 'search') {
     my @bindValues;
     my $nextCondition;
     my $visibleGroups;
+
+    # If a group ID is given, make sure it is a valid one.
+    my $group;
+    if ($grouprestrict) {
+        $group = new Bugzilla::Group(scalar $cgi->param('groupid'));
+        $group || ThrowUserError('invalid_group_ID');
+    }
 
     if (!$editusers && Param('usevisibilitygroups')) {
         # Show only users in visible groups.
@@ -134,9 +135,8 @@ if ($action eq 'search') {
 
         # Handle selection by group.
         if ($grouprestrict eq '1') {
-            detaint_natural($groupid);
             my $grouplist = join(',',
-                @{Bugzilla::User->flatten_group_membership($groupid)});
+                @{Bugzilla::User->flatten_group_membership($group->id)});
             $query .= " $nextCondition profiles.userid = ugm.user_id " .
                       "AND ugm.group_id IN($grouplist)";
         }
@@ -149,9 +149,9 @@ if ($action eq 'search') {
     }
 
     if ($matchtype eq 'exact' && scalar(@{$vars->{'users'}}) == 1) {
-        $otherUserID = $vars->{'users'}[0]->{'userid'};
-        $otherUser = new Bugzilla::User($otherUserID);
-        edit_processing();
+        my $match_user_id = $vars->{'users'}[0]->{'userid'};
+        my $match_user = check_user($match_user_id);
+        edit_processing($match_user);
     } else {
         $template->process('admin/users/list.html.tmpl', $vars)
             || ThrowTemplateError($template->error());
@@ -171,6 +171,11 @@ if ($action eq 'search') {
     $editusers || ThrowUserError("auth_failure", {group  => "editusers",
                                                   action => "add",
                                                   object => "users"});
+
+    my $login        = $cgi->param('login');
+    my $password     = $cgi->param('password');
+    my $realname     = trim($cgi->param('name')         || '');
+    my $disabledtext = trim($cgi->param('disabledtext') || '');
 
     # Lock tables during the check+creation session.
     $dbh->bz_lock_tables('profiles WRITE',
@@ -196,11 +201,11 @@ if ($action eq 'search') {
     trick_taint($disabledtext);
 
     insert_new_user($login, $realname, $password, $disabledtext);
-    $otherUserID = $dbh->bz_last_key('profiles', 'userid');
+    my $new_user_id = $dbh->bz_last_key('profiles', 'userid');
     $dbh->bz_unlock_tables();
-    my $newprofile = new Bugzilla::User($otherUserID);
+    my $newprofile = new Bugzilla::User($new_user_id);
     $newprofile->derive_regexp_groups();
-    userDataToVars($otherUserID);
+    userDataToVars($new_user_id);
 
     $vars->{'message'} = 'account_created';
     $template->process('admin/users/edit.html.tmpl', $vars)
@@ -208,13 +213,14 @@ if ($action eq 'search') {
 
 ###########################################################################
 } elsif ($action eq 'edit') {
-
-    edit_processing();
+    my $otherUser = check_user($otherUserID, $otherUserLogin);
+    edit_processing($otherUser);
 
 ###########################################################################
 } elsif ($action eq 'update') {
-    $otherUser
-        || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
+    my $otherUser = check_user($otherUserID, $otherUserLogin);
+    $otherUserID = $otherUser->id;
+
     my $logoutNeeded = 0;
     my @changedFields;
 
@@ -240,8 +246,12 @@ if ($action eq 'search') {
     # Cleanups
     my $loginold        = $cgi->param('loginold')        || '';
     my $realnameold     = $cgi->param('nameold')         || '';
-    my $password        = $cgi->param('password')        || '';
     my $disabledtextold = $cgi->param('disabledtextold') || '';
+
+    my $login        = $cgi->param('login');
+    my $password     = $cgi->param('password');
+    my $realname     = trim($cgi->param('name')         || '');
+    my $disabledtext = trim($cgi->param('disabledtext') || '');
 
     # Update profiles table entry; silently skip doing this if the user
     # is not authorized.
@@ -289,7 +299,7 @@ if ($action eq 'search') {
         }
         if (@changedFields) {
             push (@values, $otherUserID);
-            $logoutNeeded && Bugzilla->logout_user_by_id($otherUserID);
+            $logoutNeeded && Bugzilla->logout_user($otherUser);
             $dbh->do('UPDATE profiles SET ' .
                      join(' = ?,', @changedFields).' = ? ' .
                      'WHERE userid = ?',
@@ -401,8 +411,8 @@ if ($action eq 'search') {
 
 ###########################################################################
 } elsif ($action eq 'del') {
-    $otherUser
-        || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
+    my $otherUser = check_user($otherUserID, $otherUserLogin);
+    $otherUserID = $otherUser->id;
 
     Param('allowuserdeletion') || ThrowUserError('users_deletion_disabled');
     $editusers || ThrowUserError('auth_failure', {group  => "editusers",
@@ -469,9 +479,8 @@ if ($action eq 'search') {
 
 ###########################################################################
 } elsif ($action eq 'delete') {
-    $otherUser
-        || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
-    my $otherUserLogin = $otherUser->login();
+    my $otherUser = check_user($otherUserID, $otherUserLogin);
+    $otherUserID = $otherUser->id;
 
     # Cache for user accounts.
     my %usercache = (0 => new Bugzilla::User());
@@ -516,7 +525,7 @@ if ($action eq 'search') {
     @{$otherUser->product_responsibilities()}
         && ThrowUserError('user_has_responsibility');
 
-    Bugzilla->logout_user_by_id($otherUserID);
+    Bugzilla->logout_user($otherUser);
 
     # Get the timestamp for LogActivityEntry.
     my $timestamp = $dbh->selectrow_array('SELECT NOW()');
@@ -679,7 +688,7 @@ if ($action eq 'search') {
     $dbh->bz_unlock_tables();
 
     $vars->{'message'} = 'account_deleted';
-    $vars->{'otheruser'}{'login'} = $otherUserLogin;
+    $vars->{'otheruser'}{'login'} = $otherUser->login;
     $vars->{'restrictablegroups'} = $user->bless_groups();
     $template->process('admin/users/search.html.tmpl', $vars)
        || ThrowTemplateError($template->error());
@@ -701,6 +710,27 @@ exit;
 ###########################################################################
 # Helpers
 ###########################################################################
+
+# Try to build a user object using its ID, else its login name, and throw
+# an error if the user does not exist.
+sub check_user {
+    my ($otherUserID, $otherUserLogin) = @_;
+
+    my $otherUser;
+    my $vars = {};
+
+    if ($otherUserID) {
+        $otherUser = Bugzilla::User->new($otherUserID);
+        $vars->{'user_id'} = $otherUserID;
+    }
+    elsif ($otherUserLogin) {
+        $otherUser = Bugzilla::User->new_from_login($otherUserLogin);
+        $vars->{'user_login'} = $otherUserLogin;
+    }
+    ($otherUser && $otherUser->id) || ThrowCodeError('invalid_user', $vars);
+
+    return $otherUser;
+}
 
 # Copy incoming list selection values from CGI params to template variables.
 sub mirrorListSelectionValues {
@@ -770,19 +800,16 @@ sub userDataToVars {
     }
 }
 
-sub edit_processing
-{
-    $otherUser 
-        || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
+sub edit_processing {
+    my $otherUser = shift;
 
     $editusers || $user->can_see_user($otherUser)
         || ThrowUserError('auth_failure', {reason => "not_visible",
                                            action => "modify",
                                            object => "user"});
 
-    userDataToVars($otherUserID);
+    userDataToVars($otherUser->id);
 
     $template->process('admin/users/edit.html.tmpl', $vars)
        || ThrowTemplateError($template->error());
-
 }
