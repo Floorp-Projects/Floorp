@@ -238,6 +238,7 @@
         else 
           this._selection = this.getResult();
         PlacesController.activeView = this;
+        document.commandDispatcher.updateCommands("mousedown");
       ]]></handler>
       <handler event="click">
         PlacesController.mouseLoadURI(event);

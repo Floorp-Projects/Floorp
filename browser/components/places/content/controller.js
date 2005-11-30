@@ -453,9 +453,12 @@ var PlacesController = {
       var kids = this._hist.executeQueries(queries, queries.length,
                                            node.queryOptions);
       var cc = kids.childCount;
-      for (var i = 0; i < cc; ++i)
-        this._activeView.browserWindow.openNewTabWith(kids.getChild(i).url, 
-                                                      null, null);
+      for (var i = 0; i < cc; ++i) {
+        var node = kids.getChild(i);
+        if (this.nodeIsURL(node))
+          this._activeView.browserWindow.openNewTabWith(node.url, 
+                                                        null, null);
+      }
     }
     else {
       var nodes = this._activeView.getSelectionNodes();
@@ -663,7 +666,7 @@ var PlacesController = {
       if (data.folderId > 0) {
         // Place is a folder. 
         if (copy)
-          return this._getFolderCopyTransaction(data.folderId, container, index);
+          return PlacesControllerDragHelper._getFolderCopyTransaction(data, container, index);
         return new PlacesMoveFolderTransaction(data.folderId, data.parent, 
                                                data.index, container, 
                                                index);
@@ -808,6 +811,7 @@ var PlacesController = {
     var xferable = 
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
+    xferable.addDataFlavor(TYPE_X_MOZ_PLACE_CONTAINER);
     xferable.addDataFlavor(TYPE_X_MOZ_PLACE);
     xferable.addDataFlavor(TYPE_X_MOZ_URL);
     xferable.addDataFlavor(TYPE_UNICODE);
@@ -915,7 +919,7 @@ var PlacesControllerDragHelper = {
         }
       }
     }
-    createTransactions(data.id, container, index);
+    createTransactions(data.folderId, container, index);
     return new PlacesAggregateTransaction("FolderCopy", transactions);
   },
   
