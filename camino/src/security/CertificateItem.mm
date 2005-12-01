@@ -111,6 +111,7 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
 - (void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [mASN1InfoDict release];
   NS_RELEASE(mCert);
   [super dealloc];
 }
