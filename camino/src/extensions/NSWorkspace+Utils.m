@@ -97,7 +97,6 @@
     
     _LSSetDefaultSchemeHandlerURL(@"http", browserURL);
     _LSSetDefaultSchemeHandlerURL(@"https", browserURL);
-    _LSSetDefaultSchemeHandlerURL(@"ftp", browserURL);
     _LSSetDefaultSchemeHandlerURL(@"gopher", browserURL);
     _LSSetWeakBindingForType(0, 0, CFSTR("htm"),  kLSRolesAll, &browserFSRef);
     _LSSetWeakBindingForType(0, 0, CFSTR("html"), kLSRolesAll, &browserFSRef);
