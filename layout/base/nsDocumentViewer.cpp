@@ -47,7 +47,6 @@
 #include "nsIContent.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIDocumentViewer.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIDocumentViewerPrint.h"
 
 #include "nsIDocument.h"
@@ -59,7 +58,6 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIFrame.h"
 
-#include "nsIScriptGlobalObject.h"
 #include "nsILinkHandler.h"
 #include "nsIDOMDocument.h"
 #include "nsISelectionListener.h"
@@ -848,16 +846,12 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
     if (!aInPrintPreview) {
       // Set script-context-owner in the document
 
-      nsCOMPtr<nsIScriptGlobalObject> global;
-      requestor->GetInterface(NS_GET_IID(nsIScriptGlobalObject),
-                              getter_AddRefs(global));
+      nsCOMPtr<nsPIDOMWindow> window;
+      requestor->GetInterface(NS_GET_IID(nsPIDOMWindow),
+                              getter_AddRefs(window));
 
-      if (global) {
-        nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
-
-        if (domdoc) {
-          global->SetNewDocument(domdoc, aState, PR_TRUE);
-        }
+      if (window) {
+        window->SetNewDocument(mDocument, aState, PR_TRUE);
       }
     }
   }
@@ -1627,9 +1621,9 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
     mDocument = newDoc;
 
     // Set the script global object on the new document
-    nsCOMPtr<nsIScriptGlobalObject> global = do_GetInterface(container);
-    if (global) {
-      global->SetNewDocument(aDocument, nsnull, PR_TRUE);
+    nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(container);
+    if (window) {
+      window->SetNewDocument(newDoc, nsnull, PR_TRUE);
     }
   }
 

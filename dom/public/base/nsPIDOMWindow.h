@@ -77,8 +77,8 @@ class nsIDocument;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x96138335, 0x51be, 0x4b2e, \
-  { 0x81, 0xd4, 0x35, 0x8a, 0xaf, 0x5b, 0x17, 0xfa } }
+{ 0x207fe64a, 0x7123, 0x43d0, \
+  { 0x91, 0x1d, 0x51, 0x19, 0x35, 0x9a, 0xb5, 0x77 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -296,6 +296,9 @@ public:
                                   nsIDOMEvent **aDOMEvent, PRUint32 aFlags,
                                   nsEventStatus *aEventStatus) = 0;
 
+  /**
+   * Get the docshell in this window.
+   */
   nsIDocShell *GetDocShell()
   {
     if (mOuterWindow) {
@@ -305,7 +308,29 @@ public:
     return mDocShell;
   }
 
+  /**
+   * Set or unset the docshell in the window.
+   */
   virtual void SetDocShell(nsIDocShell *aDocShell) = 0;
+
+  /**
+   * Set a new document in the window. Calling this method will in
+   * most cases create a new inner window. If this method is called on
+   * an inner window the call will be forewarded to the outer window,
+   * if the inner window is not the current inner window an
+   * NS_ERROR_NOT_AVAILABLE error code will be returned. This may be
+   * called with a pointer to the current document, in that case the
+   * document remains unchanged, but a new inner window will be
+   * created.
+   */
+  virtual nsresult SetNewDocument(nsIDocument *aDocument,
+                                  nsISupports *aState,
+                                  PRBool aClearScope) = 0;
+
+  /**
+   * Set the opener window.
+   */
+  virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener) = 0;
 
 
 protected:

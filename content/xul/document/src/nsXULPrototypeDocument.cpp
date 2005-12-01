@@ -88,10 +88,6 @@ public:
     // nsIScriptGlobalObject methods
     virtual void SetContext(nsIScriptContext *aContext);
     virtual nsIScriptContext *GetContext();
-    virtual nsresult SetNewDocument(nsIDOMDocument *aDocument,
-                                    nsISupports *aState,
-                                    PRBool aClearScope);
-    virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener);
     virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
     virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
     virtual JSObject *GetGlobalJSObject();
@@ -834,23 +830,6 @@ nsXULPDGlobalObject::GetContext()
     }
 
     return mScriptContext;
-}
-
-
-nsresult
-nsXULPDGlobalObject::SetNewDocument(nsIDOMDocument *aDocument,
-                                    nsISupports *aState,
-                                    PRBool aClearScope)
-{
-    NS_NOTREACHED("waaah!");
-    return NS_ERROR_UNEXPECTED;
-}
-
-
-void
-nsXULPDGlobalObject::SetOpenerWindow(nsIDOMWindowInternal *aOpener)
-{
-    NS_NOTREACHED("waaah!");
 }
 
 

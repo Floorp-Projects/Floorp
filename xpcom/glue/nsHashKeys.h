@@ -347,7 +347,10 @@ public:
     static const nsIHashable* KeyToPointer(nsIHashable* aKey) { return aKey; }
     static PLDHashNumber HashKey(const nsIHashable* aKey) {
         PRUint32 code = 8888; // magic number if GetHashCode fails :-(
-        nsresult rv = NS_CONST_CAST(nsIHashable*,aKey)->GetHashCode(&code);
+#ifdef NS_DEBUG
+        nsresult rv =
+#endif
+        NS_CONST_CAST(nsIHashable*,aKey)->GetHashCode(&code);
         NS_ASSERTION(NS_SUCCEEDED(rv), "GetHashCode should not throw!");
         return code;
     }

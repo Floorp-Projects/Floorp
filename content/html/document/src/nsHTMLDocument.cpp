@@ -1932,16 +1932,18 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     return rv;
   }
 
-  // Before we reset the doc notify the globalwindow of the change.
+  // Before we reset the doc notify the globalwindow of the change,
+  // but only if we still have a window (i.e. our window object the
+  // current inner window in our outer window).
 
-  if (mScriptGlobalObject) {
+  nsPIDOMWindow *window = GetInnerWindow();
+  if (window) {
     // Hold onto ourselves on the offchance that we're down to one ref
 
     nsCOMPtr<nsIDOMDocument> kungFuDeathGrip =
       do_QueryInterface((nsIHTMLDocument*)this);
 
-    rv = mScriptGlobalObject->SetNewDocument((nsDocument *)this, nsnull,
-                                             PR_FALSE);
+    rv = window->SetNewDocument(this, nsnull, PR_FALSE);
 
     if (NS_FAILED(rv)) {
       return rv;
