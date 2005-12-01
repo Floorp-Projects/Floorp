@@ -1,17 +1,28 @@
-<h4>Unique Users</h4>
-<p>{$users_quant}</p>
-
-<h4>Total Reports</h4>
-<p>{$reports_quant}</p>
-
-<h4>Reports Per User</h4>
-<p>{$avgRepPerUsr}</p>
-
-<h4>Hostnames found in the system</h4>
-<p>{$hosts_quant}</p>
-
-<h4>Reports in the last 24 hours</h4>
-<p>{$reports24}</p>
-
-<h4>Reports in the last 7 days</h4>
-<p>{$last7days}</p>
+<div id="reporterReport">
+	<div class="header">Statistics</div>
+	<div>
+		<div class="title">Unique Users:</div>
+		<div class="data">{$users_quant}</div>
+	</div>
+	<div>
+		<div class="title">Total Reports:</div>
+		<div class="data">{$reports_quant}</div>
+	</div>
+	<div>
+		<div class="title">Reports/User:</div>
+		<div class="data">{$avgRepPerUsr}</div>
+	</div>
+	<div>
+		<div class="title">Hostnames:</div>
+		<div class="data">{$hosts_quant}</div>
+	</div>
+	<div>
+		<div class="title">Reports (24hr):</div>
+		<div class="data">{$reports24}</div>
+	</div>
+	<div>
+		<div class="title">Reports (7d):</div>
+		<div class="data">{$last7days}</div>
+	</div>
+</div>
+<br />
