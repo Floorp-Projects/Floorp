@@ -28,10 +28,14 @@
           Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
           getService(Ci.nsINavBookmarksService);
         this._bms.addObserver(this._bookmarkObserver);
+        
+        PlacesController.addViewObserver(this);
       ]]></constructor>
       
       <destructor><![CDATA[ 
         this._bms.removeObserver(this._bookmarkObserver);
+        
+        PlacesController.removeViewObserver(this);
       ]]></destructor>
       
       <method name="_fireEvent">
@@ -123,7 +127,7 @@
           this.load([query], this.getBestOptions());
         ]]></body>
       </method>
-    
+      
       <property name="queryString">
         <getter><![CDATA[
           var result = this.getResult();
@@ -146,20 +150,17 @@
       
       <method name="loadFolder">
         <parameter name="folderId"/>
-        <parameter name="filterOptions"/>
         <body><![CDATA[ 
           var query = this._places.getNewQuery();
           query.setFolders([folderId], 1);
-          if (filterOptions) {
-            query.itemTypes = filterOptions;
-          }
+          query.itemTypes = this.filterOptions;
+          
           var options = this._places.getNewQueryOptions();
           options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
           // options.setExpandPlaces(); ???
           var result = this._places.executeQuery(query, options);
           result.QueryInterface(Ci.nsITreeView);
           this.view = result;
-          this._lastFilterOptions = filterOptions;
           this._fireEvent("reloaded");
         ]]></body>
       </method>
@@ -362,8 +363,7 @@
           // parameters into a container id and index within the container, 
           // since this information is specific to the tree view. 
           var ip = this._self._getInsertionPoint(index, orientation);
-          PlacesControllerDragHelper.onDrop(this._self, ip.folderId, ip.index, 
-                                            orientation);
+          PlacesControllerDragHelper.onDrop(this._self, ip, orientation);
         },
         
         _states: { },
@@ -382,39 +382,13 @@
         onPerformActionOnCell: function VO_onPerformActionOnCell(action, row, column) { },      
       })]]></field>
       
-      <field name="_selection">null</field>
-      <method name="_saveSelection">
-        <body><![CDATA[ 
-          this._selection = [];
-          var selection = this.view.selection;
-          var rc = selection.getRangeCount();
-          for (var i = 0; i < rc; ++i) {
-            var min = { }, max = { };
-            selection.getRangeAt(i, min, max);
-            this._selection.push({ min: min.value, max: max.value });
-          }
-        ]]></body>
-      </method>
-      
-      <method name="_restoreSelection">
-        <body><![CDATA[ 
-          var selection = this.view.selection;
-          for (var i = 0; i < this._selection.length; ++i) {
-            var range = this._selection[i];
-            selection.rangedSelect(range.min, range.max, true);
-          }
-        ]]></body>
-      </method>
-      
       <method name="_reloadView">
         <body><![CDATA[ 
           var result = this.getResult();
-          this._saveSelection();
           if (PlacesController.nodeIsFolder(result))
-            this.loadFolder(result.folderId, this._lastFilterOptions);
+            this.loadFolder(result.folderId);
           else
             this.load(result.getQueries({ }), result.queryOptions);
-          this._restoreSelection();
         ]]></body>
       </method>
       
@@ -433,31 +407,112 @@
           return false;
         },
         onItemAdded: function PT_O_onItemAdded(bookmark, folder, index) {
-          this._self._reloadView();
+          if (!this._numBatches)
+            this._self._reloadView();
         },
         onItemRemoved: function PT_O_onItemRemoved(bookmark, folder, index) {
-          this._self._reloadView();
+          if (!this._numBatches)
+            this._self._reloadView();
         },
         onItemMoved: function PT_O_onItemMoved(bookmark, folder, oldIndex, newIndex) {
-          this._self._reloadView();
+          if (!this._numBatches)
+            this._self._reloadView();
         },
         onItemChanged: function PT_O_onItemChanged(bookmark, property) {
-          this._self._reloadView();
+          if (!this._numBatches)
+            this._self._reloadView();
         },
         onFolderAdded: function PT_O_onFolderAdded(folder, parent, index) {
-          this._self._reloadView();
+          if (!this._numBatches)
+            this._self._reloadView();
         },
         onFolderRemoved: function PT_O_onFolderRemoved(folder, parent, index) {
-          this._self._reloadView();
+          if (!this._numBatches)
+            this._self._reloadView();
         },
         onFolderMoved: function PT_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
-          this._self._reloadView();
+          if (!this._numBatches)
+            this._self._reloadView();
         },
         onFolderChanged: function PT_O_onFolderChanged(folder, property) {
-          this._self._reloadView();
+          if (!this._numBatches)
+            this._self._reloadView();
         },
       })]]></field>
       
+      <field name="suppressSelection">false</field>
+      <field name="_selection">null</field>
+      
+      <method name="willReloadView">
+        <parameter name="action"/>
+        <parameter name="view"/>
+        <parameter name="insertionPoint"/>
+        <parameter name="insertCount"/>
+        <body><![CDATA[ 
+          this._selection = [];
+          var selection = this.view.selection;
+          var rc = selection.getRangeCount();
+          if (view != this)
+            action = RELOAD_ACTION_NOTHING;
+          
+          LOG("VIEW = " + view.id + ", THIS = " + this.id + " ACTION: " + action);
+          
+          switch (action) {
+          case RELOAD_ACTION_NOTHING:
+            for (var i = 0; i < rc; ++i) {
+              var min = { }, max = { };
+              selection.getRangeAt(i, min, max);
+              this._selection.push({ min: min.value, max: max.value });
+            }
+            break;
+          case RELOAD_ACTION_INSERT:
+            // Insert index of insertion and number of rows to insert
+            var query = this._places.getNewQuery();
+            query.setFolders([insertionPoint.folderId], 1);
+            query.itemTypes = this.filterOptions;
+            var options = this._places.getNewQueryOptions();
+            options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+            var result = this._places.executeQuery(query, options);
+            if (insertionPoint.index > -1) {
+              LOG("IP: " + insertionPoint.toSource())
+              LOG("CC: " + result.childCount + ", result.itemTypes = " + this.filterOptions + " ID : " + this.id);
+              var node = result.getChild(insertionPoint.index - 1);
+              var index = this.getResult().treeIndexForNode(node);
+              if (insertionPoint.index == result.childCount)
+                ++index;
+            }
+            else 
+              index = this.getResult().childCount;
+            var max = index + insertCount - 1;            
+            this._selection = [{ min: index, max: max }];
+            break;
+          case RELOAD_ACTION_REMOVE:
+            min = { }, max = { };
+            selection.getRangeAt(0, min, max);
+            this._selection = [{ min: min.value, max: min.value }];
+            break;
+          }
+          //if (this._selection.length)
+          //  LOG("SET UP RANGE: " + this._selection[0].toSource() + " for " + this.id + " action = " + action);
+        ]]></body>
+      </method>
+      
+      <method name="didReloadView">
+        <parameter name="view"/>
+        <body><![CDATA[ 
+          var selection = this.view.selection;
+          if (view != this.view)
+            this.suppressSelection = true;
+          selection.clearSelection();
+          for (var i = 0; i < this._selection.length; ++i) {
+            var range = this._selection[i];
+            //LOG("RESELECTING RANGE: " + range.min + "," + range.max + " in: " + this.id);
+            selection.rangedSelect(range.min, range.max, true);
+          }
+          if (view != this.view)
+            this.suppressSelection = false;
+        ]]></body>
+      </method>
     </implementation>
     <handlers>
       <handler event="focus"><![CDATA[

@@ -62,6 +62,10 @@ const TYPE_HTML = "text/html";
 // Place entries as raw URL text
 const TYPE_UNICODE = "text/unicode";
 
+const RELOAD_ACTION_NOTHING = 0;
+const RELOAD_ACTION_INSERT = 1;
+const RELOAD_ACTION_REMOVE = 2;
+
 function STACK(args) {
   var temp = arguments.callee.caller;
   while (temp) {
@@ -93,20 +97,6 @@ var PlacesController = {
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);
     return ios.newURI(spec, null, null);
-  },
-  
-  /**
-   * The Global Transaction Manager
-   * XXXben - this needs to move into a service, because it ain't global!
-   */
-  __txmgr: null,
-  get _txmgr() {
-    if (!this.__txmgr) {
-      this.__txmgr = 
-        Cc["@mozilla.org/transactionmanager;1"].
-        createInstance(Ci.nsITransactionManager);
-    }
-    return this.__txmgr;
   },
   
   __bms: null,
@@ -215,9 +205,6 @@ var PlacesController = {
   _canPaste: function PC__canPaste() {
     // XXXben: check selection to see if insertion point would suggest pasting 
     //         into an immutable container. 
-    // XXXben: check clipboard for leaf data when pasting into views that can
-    //         only take non-leaf data. This is going to be hard because the
-    //         clipboard apis are teh suck. 
     return this._hasClipboardData();
   },
   
@@ -256,6 +243,10 @@ var PlacesController = {
     node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
   },
   
+  /**
+   * Updates commands on focus/selection change to reflect the enabled/
+   * disabledness of commands in relation to the state of the selection. 
+   */
   onCommandUpdate: function PC_onCommandUpdate() {
     if (!this._activeView) {
       // Initial command update, no view yet. 
@@ -343,6 +334,16 @@ var PlacesController = {
     return metadata;
   },
   
+  /** 
+   * Determines if a menuitem should be shown or not by comparing the rules
+   * that govern the item's display with the state of the selection. 
+   * @param   metadata
+   *          metadata about the selection. 
+   * @param   rules
+   *          rules that govern the item's display
+   * @returns true if the conditions are satisfied and the item can be 
+   *          displayed, false otherwise. 
+   */
   _shouldShowMenuItem: function(metadata, rules) {
     for (var i = 0; i < rules.length; ++i) {
       if (rules[i] in metadata)
@@ -351,6 +352,13 @@ var PlacesController = {
     return false;
   },
     
+  /**
+   * Build a context menu for the selection, ensuring that the content of the
+   * selection is correct and enabling/disabling items according to the state
+   * of the commands. 
+   * @param   popup
+   *          The menupopup to build children into.
+   */
   buildContextMenu: function PC_buildContextMenu(popup) {
     if (document.popupNode.hasAttribute("view")) {
       var view = document.popupNode.getAttribute("view");
@@ -516,9 +524,12 @@ var PlacesController = {
     var value = { value: bundle.getString("newFolderDefault") };
     if (ps.prompt(window, title, text, value, null, { })) {
       var ip = view.insertionPoint;
+      this.willReloadView(RELOAD_ACTION_INSERT, this._activeView, ip, 1);
       var txn = new PlacesCreateFolderTransaction(value.value, ip.folderId, 
                                                   ip.index);
-      this._txmgr.doTransaction(txn);
+      this._hist.transactionManager.doTransaction(txn);
+      this.didReloadView(this._activeView);
+      this._activeView.focus();
     }
   },
   
@@ -545,8 +556,10 @@ var PlacesController = {
                                                   index));
       }
     }
+    this.willReloadView(RELOAD_ACTION_REMOVE, this._activeView, null, 0);
     var txn = new PlacesAggregateTransaction(txnName || "RemoveItems", txns);
-    this._txmgr.doTransaction(txn);
+    this._hist.transactionManager.doTransaction(txn);
+    this.didReloadView(this._activeView);
   },
 
   /**
@@ -643,6 +656,51 @@ var PlacesController = {
   },
   
   /**
+   * Gets a transaction for copying (recursively nesting to include children)
+   * a folder and its contents from one folder to another. 
+   * @param   data
+   *          Unwrapped dropped folder data
+   * @param   container
+   *          The container we are copying into
+   * @param   index
+   *          The index in the destination container to insert the new items
+   * @returns A nsITransaction object that will perform the copy. 
+   */
+  _getFolderCopyTransaction: 
+  function PC__getFolderCopyTransaction(data, container, index) {
+    var transactions = [];
+    function createTransactions(folderId, container, index) {
+      var folderTitle = this._bms.getFolderTitle(folderId);
+    
+      var createTxn = 
+        new PlacesCreateFolderTransaction(folderTitle, container, index);
+      transactions.push(createTxn);
+    
+      // set up a query for the folder's children
+      var query = hist.getNewQuery();
+      query.setFolders([folderId], 1);
+      var queryOptions = hist.getNewQueryOptions();
+      queryOptions.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+      // queryOptions.setExpandPlaces(); ?
+
+      var kids = hist.executeQuery(query, options);
+      var cc = kids.childCount;
+      for (var i = 0; i < cc; ++i) {
+        var node = kids.getChild(i);
+        if (this.nodeIsFolder(node))
+          createTransactions(node.folderId, folderId, i);
+        else {
+          var uri = this._uri(node.url);
+          transactions.push(this._getItemCopyTransaction(uri, container, 
+                                                         index));
+        }
+      }
+    }
+    createTransactions(data.folderId, container, index);
+    return new PlacesAggregateTransaction("FolderCopy", transactions);
+  },
+  
+  /**
    * Constructs a Transaction for the drop or paste of a blob of data into 
    * a container. 
    * @param   data
@@ -666,7 +724,7 @@ var PlacesController = {
       if (data.folderId > 0) {
         // Place is a folder. 
         if (copy)
-          return PlacesControllerDragHelper._getFolderCopyTransaction(data, container, index);
+          return this._getFolderCopyTransaction(data, container, index);
         return new PlacesMoveFolderTransaction(data.folderId, data.parent, 
                                                data.index, container, 
                                                index);
@@ -831,11 +889,43 @@ var PlacesController = {
       transactions.push(this.makeTransaction(data[i], type.value, 
                                              ip.folderId, ip.index, true));
     var txn = new PlacesAggregateTransaction("Paste", transactions);
-    this._txmgr.doTransaction(txn);
+    this._hist.transactionManager.doTransaction(txn);
+  },
+  
+  _viewObservers: [],
+  addViewObserver: function PC_addTransactionObserver(observer) {
+    for (var i = 0; i < this._viewObservers.length; ++i) {
+      if (this._viewObservers[i] == observer)
+        return;
+    }
+    this._viewObservers.push(observer);
+  },
+  
+  removeViewObserver: function PC_removeTransactionObserver(observer) {
+    for (var i = 0; i < this._viewObservers.length; ++i) {
+      if (this._viewObservers[i] == observer)
+        this._viewObservers.splice(i, 1);
+    }
+  },
+  
+  willReloadView: function PC_willReloadView(action, view, insertionPoint, insertCount) {
+    for (var i = 0; i < this._viewObservers.length; ++i)
+      this._viewObservers[i].willReloadView(action, this._activeView, 
+                                            insertionPoint, insertCount);
+  },
+  
+  didReloadView: function PC_didReloadView(view) {
+    for (var i = 0; i < this._viewObservers.length; ++i)
+      this._viewObservers[i].didReloadView(view);
   },
 };
 
-
+/**
+ * Handles drag and drop operations for views. Note that this is view agnostic!
+ * You should not use PlacesController.activeView within these methods, since
+ * the view that the item(s) have been dropped on was not necessarily active. 
+ * Drop functions are passed the view that is being dropped on. 
+ */
 var PlacesControllerDragHelper = {
   /**
    * @returns The current active drag session. Returns null if there is none.
@@ -859,7 +949,7 @@ var PlacesControllerDragHelper = {
    */
   canDrop: function PCDH_canDrop(view, orientation) {
     var result = view.getResult();
-    if (result.readOnly)
+    if (result.readOnly || !PlacesController.nodeIsFolder(result))
       return false;
   
     var session = this._getSession();
@@ -874,53 +964,6 @@ var PlacesControllerDragHelper = {
       }
     }
     return false;
-  },
-  
-  /**
-   * Gets a transaction for copying (recursively nesting to include children)
-   * a folder and its contents from one folder to another. 
-   * @param   data
-   *          Unwrapped dropped folder data
-   * @param   container
-   *          The container we are copying into
-   * @param   index
-   *          The index in the destination container to insert the new items
-   * @returns A nsITransaction object that will perform the copy. 
-   */
-  _getFolderCopyTransaction: 
-  function PC__getFolderCopyTransaction(data, container, index) {
-    var transactions = [];
-    function createTransactions(folderId, container, index) {
-      var bms = PlacesController._bms;
-      var hist = PlacesController._hist;
-      var folderTitle = bms.getFolderTitle(folderId);
-    
-      var createTxn = 
-        new PlacesCreateFolderTransaction(folderTitle, container, index);
-      transactions.push(createTxn);
-    
-      // set up a query for the folder's children
-      var query = hist.getNewQuery();
-      query.setFolders([folderId], 1);
-      var queryOptions = hist.getNewQueryOptions();
-      queryOptions.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-      // queryOptions.setExpandPlaces(); ?
-
-      var kids = hist.executeQuery(query, options);
-      var cc = kids.childCount;
-      for (var i = 0; i < cc; ++i) {
-        var node = kids.getChild(i);
-        if (this.nodeIsFolder(node))
-          createTransactions(node.folderId, folderId, i);
-        else {
-          var uri = PlacesController._uri(node.url);
-          transactions.push(this._getItemCopyTransaction(uri, container, 
-                                                         index));
-        }
-      }
-    }
-    createTransactions(data.folderId, container, index);
-    return new PlacesAggregateTransaction("FolderCopy", transactions);
   },
   
   /** 
@@ -951,14 +994,12 @@ var PlacesControllerDragHelper = {
    * Handles the drop of one or more items onto a view.
    * @param   view
    *          The AVI-implementing object that received the drop. 
-   * @param   container
-   *          The container the drop was into
-   * @param   index
-   *          The index within the container the item was dropped at
+   * @param   insertionPoint
+   *          The insertion point where the items should be dropped
    * @param   orientation
    *          The orientation of the drop
    */
-  onDrop: function PCDH_onDrop(view, container, index, orientation) {
+  onDrop: function PCDH_onDrop(view, insertionPoint, orientation) {
     var session = this._getSession();
     if (!session)
       return;
@@ -977,10 +1018,14 @@ var PlacesControllerDragHelper = {
       var unwrapped = PlacesController.unwrapNodes(data.value.data, 
                                                    flavor.value)[0];
       transactions.push(PlacesController.makeTransaction(unwrapped, 
-                        flavor.value, container, index, copy));
+                        flavor.value, insertionPoint.folderId, 
+                        insertionPoint.index, copy));
     }
+    PlacesController.willReloadView(RELOAD_ACTION_INSERT, view, 
+                                    insertionPoint, session.numDropItems);
     var txn = new PlacesAggregateTransaction("DropItems", transactions);
-    PlacesController._txmgr.doTransaction(txn);
+    PlacesController._hist.transactionManager.doTransaction(txn);
+    PlacesController.didReloadView(view);
   }
 };
 

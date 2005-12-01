@@ -105,7 +105,7 @@
 <!ENTITY col.url.label
   "Location">
 <!ENTITY col.lastvisit.label
-  "Last Visited">
+  "Last Visit Date">
 <!ENTITY col.visitcount.label
   "Visit Count">
 <!ENTITY advancedSearch.label
