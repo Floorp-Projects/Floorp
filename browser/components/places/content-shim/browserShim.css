@@ -1,5 +1,6 @@
 #bookmarksBarContent {
   -moz-binding: url("chrome://browser/content/places/toolbar.xml#places-bar");
+  overflow: hidden;
 }
 
 menupopup[type="places"] {
