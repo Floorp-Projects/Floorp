@@ -319,7 +319,7 @@ class query
         foreach($query_input['where'] as $node => $item){
             if($item[0] == 'report_id' && $query_input['artificialReportID']){
             } else {
-                if(!is_numeric($item[2])){
+                if(is_numeric($item[2])){
                     $standard .= $item[0].'='.$item[2].'&amp;';;
                 } else {
                     $standard .= $item[0].'='.urlencode($item[2]).'&amp;';;
@@ -337,7 +337,7 @@ class query
             }
         }
 
-        // make complete standard + complete
+        // make complete = standard + complete
         $complete = $standard.$complete;
 
         // finish off complete
