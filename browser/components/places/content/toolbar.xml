@@ -18,6 +18,10 @@
           
         this._bms.addObserver(this._observer);
         this.init();
+        var t = this;
+        window.addEventListener("resize",
+                                function f(e) { t.updateChevron(e); },
+                                false);
       ]]></constructor>
       
       <destructor><![CDATA[ 
@@ -44,6 +48,7 @@
         ]]></body>
       </method>
       
+      <field name="_chevron">null</field>
       <method name="_rebuild">
         <body><![CDATA[ 
           while (this.hasChildNodes())
@@ -68,6 +73,72 @@
             button.node = child;
             this.appendChild(button);
           }
+          
+          this._chevron = document.createElementNS(XULNS, "toolbarbutton");
+          this._chevron.setAttribute("type", "menu");
+          this._chevron.setAttribute("class", "chevron");
+          this._chevron.setAttribute("mousethrough", "never");
+          this._chevron.setAttribute("collapsed", "true");
+          this.appendChild(this._chevron);
+          var popup = document.createElementNS(XULNS, "menupopup");
+          popup.setAttribute("type", "places");
+          popup.folderId = this._result.folderId;
+          var t = this;
+          popup.popupShowingCallback = function() {t.chevronPopupShowing();};
+          this._chevron.appendChild(popup);
+
+          this.updateChevron();
+        ]]></body>
+        
+      </method>
+      <method name="chevronPopupShowing">
+        <body><![CDATA[
+          var popup = this._chevron.firstChild;
+          for (var i = 0; i < popup.childNodes.length; i++) {
+            if (!this.childNodes[i].collapsed) {
+              popup.childNodes[i].hidden = true;
+            }
+          }
+        ]]></body>
+      </method>
+      
+      <method name="getElementWidth">
+        <parameter name="element"/>
+        <body><![CDATA[
+          var style = document.defaultView.getComputedStyle(element, '');
+          var leftMargin = style.getPropertyValue("margin-left");
+          leftMargin = leftMargin ? Math.round(parseFloat(leftMargin)) : 0;
+          var rightMargin = style.getPropertyValue("margin-right");
+          rightMargin = rightMargin ? Math.round(parseFloat(rightMargin)) : 0;
+          return element.boxObject.width + leftMargin + rightMargin;
+        ]]></body>
+      </method>
+      
+      <method name="updateChevron">
+        <parameter name="event"/>
+        <body><![CDATA[
+        
+          // Ignore events that aren't on the document or the window
+          // (html document, tooltips, etc)
+          if (event && event.target != document && event.target != window)
+            return;
+        
+          this._chevron.collapsed = false;
+          var chevronWidth = this._chevron.boxObject.width;          
+          var totalWidth = this.boxObject.width;
+          var spaceLeft = totalWidth;
+          var overflowed = false;
+          for (var i = 0; i < this.childNodes.length - 1; i++) {
+            var child = this.childNodes[i];
+            child.collapsed = false;
+            spaceLeft -= this.getElementWidth(child);
+            var spaceNeeded = (i == this.childNodes.length - 2) ? 0 : chevronWidth;
+            if (spaceLeft < spaceNeeded) {
+              overflowed = true;
+              child.collapsed = true;
+            }
+          }
+          this._chevron.collapsed = !overflowed;
         ]]></body>
       </method>
       
@@ -227,8 +298,9 @@
                 ++destIndex;
             }
           }
-          PlacesControllerDragHelper.onDrop(this._self, destContainer, 
-                                            destIndex, orientation);
+          var ip = new InsertionPoint(destContainer, destIndex);
+          PlacesControllerDragHelper.onDrop(null, this._self,
+                                            ip, orientation);
         },
         getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
           var flavorSet = new FlavourSet();
