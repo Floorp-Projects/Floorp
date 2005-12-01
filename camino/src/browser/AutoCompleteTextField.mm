@@ -138,7 +138,7 @@ static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x7
 //
 - (id)initTextCell:(NSString*)inStr
 {
-  if ((self == [super initTextCell:inStr])) {
+  if ((self = [super initTextCell:inStr])) {
     mDisplaySecureIcon = NO;
   }
   return self;
