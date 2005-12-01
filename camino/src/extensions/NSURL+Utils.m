@@ -47,13 +47,12 @@
 +(NSURL*)urlFromWebloc:(NSString*)inFile
 {
   FSRef ref;
-  FSSpec spec;
   NSURL *ret = nil;
   
-  if (inFile && !FSPathMakeRef((UInt8 *)[inFile fileSystemRepresentation], &ref, NULL) && !FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &spec, NULL)) {
+  if (inFile && FSPathMakeRef((UInt8 *)[inFile fileSystemRepresentation], &ref, NULL) == noErr) {
     short resRef;
     
-    resRef = FSpOpenResFile(&spec, fsRdPerm);
+    resRef = FSOpenResFile(&ref, fsRdPerm);
     
     if (resRef != -1) { // Has resouce fork.
       Handle urlResHandle;
