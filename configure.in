@@ -4830,8 +4830,8 @@ dnl = Drop XPCOM Obsolete library
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(xpcom-obsolete,
 [  --disable-xpcom-obsolete           Disable XPCOM Obsolete Library],
-    MOZ_NO_XPCOM_OBSOLETE=,
-    MOZ_NO_XPCOM_OBSOLETE=1)
+    MOZ_NO_XPCOM_OBSOLETE=1,
+    MOZ_NO_XPCOM_OBSOLETE=)
 
 if test -n "$MOZ_NO_XPCOM_OBSOLETE"; then
 if test -n "$MOZ_XPINSTALL"; then
@@ -4848,8 +4848,8 @@ dnl = Disable Fast Load
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(xpcom-fastload,
 [  --disable-xpcom-fastload           Disable XPCOM fastload support],
-    MOZ_NO_FAST_LOAD=,
-    MOZ_NO_FAST_LOAD=1)
+    MOZ_NO_FAST_LOAD=1,
+    MOZ_NO_FAST_LOAD=)
 
 AC_SUBST(MOZ_NO_FAST_LOAD)
 
