@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -63,19 +64,19 @@
 
  */
 
+#include "nsRDFService.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsMemory.h"
 #include "nsIAtom.h"
 #include "nsIComponentManager.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIServiceManager.h"
 #include "nsIFactory.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
-#include "nsWeakReference.h"
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 #include "pldhash.h"
@@ -103,56 +104,6 @@ static PRLogModuleInfo* gLog = nsnull;
 #endif
 
 class BlobImpl;
-
-////////////////////////////////////////////////////////////////////////
-// RDFServiceImpl
-//
-//   This is the RDF service.
-//
-class RDFServiceImpl : public nsIRDFService,
-                       public nsSupportsWeakReference
-{
-protected:
-    PLHashTable* mNamedDataSources;
-    PLDHashTable mResources;
-    PLDHashTable mLiterals;
-    PLDHashTable mInts;
-    PLDHashTable mDates;
-    PLDHashTable mBlobs;
-
-    nsCAutoString mLastURIPrefix;
-    nsCOMPtr<nsIFactory> mLastFactory;
-    nsCOMPtr<nsIFactory> mDefaultResourceFactory;
-
-    RDFServiceImpl();
-    nsresult Init();
-    virtual ~RDFServiceImpl();
-
-public:
-
-    static nsresult GetRDFService(nsIRDFService** result);
-
-    // nsISupports
-    NS_DECL_ISUPPORTS
-
-    // nsIRDFService
-    NS_DECL_NSIRDFSERVICE
-
-    // Implementation methods
-    nsresult RegisterLiteral(nsIRDFLiteral* aLiteral);
-    nsresult UnregisterLiteral(nsIRDFLiteral* aLiteral);
-    nsresult RegisterInt(nsIRDFInt* aInt);
-    nsresult UnregisterInt(nsIRDFInt* aInt);
-    nsresult RegisterDate(nsIRDFDate* aDate);
-    nsresult UnregisterDate(nsIRDFDate* aDate);
-    nsresult RegisterBlob(BlobImpl* aBlob);
-    nsresult UnregisterBlob(BlobImpl* aBlob);
-
-    nsresult GetDataSource(const char *aURI, PRBool aBlock, nsIRDFDataSource **aDataSource );
-};
-
-static RDFServiceImpl* gRDFService; // The one-and-only RDF service
-
 
 // These functions are copied from nsprpub/lib/ds/plhash.c, with one
 // change to free the key in DataSourceFreeEntry.
@@ -410,18 +361,18 @@ public:
         mData.mLength = aLength;
         mData.mBytes = new PRUint8[aLength];
         memcpy(mData.mBytes, aBytes, aLength);
-        NS_ADDREF(gRDFService);
-        gRDFService->RegisterBlob(this);
+        NS_ADDREF(RDFServiceImpl::gRDFService);
+        RDFServiceImpl::gRDFService->RegisterBlob(this);
     }
 
     virtual ~BlobImpl()
     {
-        gRDFService->UnregisterBlob(this);
+        RDFServiceImpl::gRDFService->UnregisterBlob(this);
         // Use NS_RELEASE2() here, because we want to decrease the
         // refcount, but not null out the gRDFService pointer (which is
         // what a vanilla NS_RELEASE() would do).
         nsrefcnt refcnt;
-        NS_RELEASE2(gRDFService, refcnt);
+        NS_RELEASE2(RDFServiceImpl::gRDFService, refcnt);
         delete[] mData.mBytes;
     }
 
@@ -582,19 +533,19 @@ LiteralImpl::Create(const PRUnichar* aValue, nsIRDFLiteral** aResult)
 
 LiteralImpl::LiteralImpl(const PRUnichar* s)
 {
-    gRDFService->RegisterLiteral(this);
-    NS_ADDREF(gRDFService);
+    RDFServiceImpl::gRDFService->RegisterLiteral(this);
+    NS_ADDREF(RDFServiceImpl::gRDFService);
 }
 
 LiteralImpl::~LiteralImpl()
 {
-    gRDFService->UnregisterLiteral(this);
+    RDFServiceImpl::gRDFService->UnregisterLiteral(this);
 
     // Use NS_RELEASE2() here, because we want to decrease the
     // refcount, but not null out the gRDFService pointer (which is
     // what a vanilla NS_RELEASE() would do).
     nsrefcnt refcnt;
-    NS_RELEASE2(gRDFService, refcnt);
+    NS_RELEASE2(RDFServiceImpl::gRDFService, refcnt);
 }
 
 NS_IMPL_THREADSAFE_ADDREF(LiteralImpl)
@@ -684,19 +635,19 @@ private:
 DateImpl::DateImpl(const PRTime s)
     : mValue(s)
 {
-    gRDFService->RegisterDate(this);
-    NS_ADDREF(gRDFService);
+    RDFServiceImpl::gRDFService->RegisterDate(this);
+    NS_ADDREF(RDFServiceImpl::gRDFService);
 }
 
 DateImpl::~DateImpl()
 {
-    gRDFService->UnregisterDate(this);
+    RDFServiceImpl::gRDFService->UnregisterDate(this);
 
     // Use NS_RELEASE2() here, because we want to decrease the
     // refcount, but not null out the gRDFService pointer (which is
     // what a vanilla NS_RELEASE() would do).
     nsrefcnt refcnt;
-    NS_RELEASE2(gRDFService, refcnt);
+    NS_RELEASE2(RDFServiceImpl::gRDFService, refcnt);
 }
 
 NS_IMPL_ADDREF(DateImpl)
@@ -790,19 +741,19 @@ private:
 IntImpl::IntImpl(PRInt32 s)
     : mValue(s)
 {
-    gRDFService->RegisterInt(this);
-    NS_ADDREF(gRDFService);
+    RDFServiceImpl::gRDFService->RegisterInt(this);
+    NS_ADDREF(RDFServiceImpl::gRDFService);
 }
 
 IntImpl::~IntImpl()
 {
-    gRDFService->UnregisterInt(this);
+    RDFServiceImpl::gRDFService->UnregisterInt(this);
 
     // Use NS_RELEASE2() here, because we want to decrease the
     // refcount, but not null out the gRDFService pointer (which is
     // what a vanilla NS_RELEASE() would do).
     nsrefcnt refcnt;
-    NS_RELEASE2(gRDFService, refcnt);
+    NS_RELEASE2(RDFServiceImpl::gRDFService, refcnt);
 }
 
 NS_IMPL_ADDREF(IntImpl)
@@ -872,6 +823,9 @@ IntImpl::EqualsInt(nsIRDFInt* intValue, PRBool* result)
 ////////////////////////////////////////////////////////////////////////
 // RDFServiceImpl
 
+RDFServiceImpl*
+RDFServiceImpl::gRDFService;
+
 RDFServiceImpl::RDFServiceImpl()
     :  mNamedDataSources(nsnull)
 {
@@ -880,6 +834,7 @@ RDFServiceImpl::RDFServiceImpl()
     mInts.ops = nsnull;
     mDates.ops = nsnull;
     mBlobs.ops = nsnull;
+    gRDFService = this;
 }
 
 nsresult
@@ -954,27 +909,27 @@ RDFServiceImpl::~RDFServiceImpl()
 }
 
 
+// static
 nsresult
-RDFServiceImpl::GetRDFService(nsIRDFService** mgr)
+RDFServiceImpl::CreateSingleton(nsISupports* aOuter,
+                                const nsIID& aIID, void **aResult)
 {
-    if (! gRDFService) {
-        RDFServiceImpl* serv = new RDFServiceImpl();
-        if (! serv)
-            return NS_ERROR_OUT_OF_MEMORY;
+    NS_ENSURE_NO_AGGREGATION(aOuter);
 
-        nsresult rv;
-        rv = serv->Init();
-        if (NS_FAILED(rv)) {
-            delete serv;
-            return rv;
-        }
-
-        gRDFService = serv;
+    if (gRDFService) {
+        NS_ERROR("Trying to create RDF serviec twice.");
+        return gRDFService->QueryInterface(aIID, aResult);
     }
 
-    NS_ADDREF(gRDFService);
-    *mgr = gRDFService;
-    return NS_OK;
+    nsRefPtr<RDFServiceImpl> serv = new RDFServiceImpl();
+    if (!serv)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = serv->Init();
+    if (NS_FAILED(rv))
+        return rv;
+
+    return serv->QueryInterface(aIID, aResult);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(RDFServiceImpl, nsIRDFService, nsISupportsWeakReference)
@@ -1790,12 +1745,4 @@ RDFServiceImpl::UnregisterBlob(BlobImpl *aBlob)
             aBlob, aBlob->mData.mBytes));
 
     return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewRDFService(nsIRDFService** mgr)
-{
-    return RDFServiceImpl::GetRDFService(mgr);
 }
