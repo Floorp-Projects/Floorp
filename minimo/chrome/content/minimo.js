@@ -85,7 +85,6 @@ nsBrowserStatusHandler.prototype =
     this.urlBar = null;
     this.stopreloadButton = null;
     this.progressBGPosition = null;  /* To be removed, fix in onProgressChange ... */ 
-    
   },
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
@@ -98,7 +97,8 @@ nsBrowserStatusHandler.prototype =
 
       if (aStateFlags & nsIWebProgressListener.STATE_START)
       {
-      
+        document.getElementById("statusbar").hidden=false;
+
 		if(aRequest && aWebProgress.DOMWindow == content) {
 			this.startDocumentLoad(aRequest);
 		}
@@ -110,15 +110,13 @@ nsBrowserStatusHandler.prototype =
       
       if (aStateFlags & nsIWebProgressListener.STATE_STOP)
       {
-
-      
+        document.getElementById("statusbar").hidden=true;
+        
         /* To be fixed. We dont want to directly access sytle from here */
         document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
 
         this.stopreloadButton.className = "reload-button";
         this.stopreloadButton.command= "cmd_BrowserReload";
-        
-
 
         return;
       }
@@ -134,6 +132,15 @@ nsBrowserStatusHandler.prototype =
       
       if (aStateFlags & nsIWebProgressListener.STATE_STOP)
       {
+        // 
+        //        try {
+        //          var imageCache = Components.classes["@mozilla.org/image/cache;1"]
+        //                                   .getService(Components.interfaces.imgICache);
+        //          imageCache.clearCache(false);
+        //        }
+        //        catch(e) {}
+
+
         return;
       }
       return;
@@ -178,6 +185,7 @@ nsBrowserStatusHandler.prototype =
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
   {
+    document.getElementById("statusbar-text").label=aMessage;
   },
   startDocumentLoad : function(aRequest)
   {
