@@ -170,8 +170,6 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   if ((self = [self init]))
   {
     [self setProgressViewFromDictionary:aDict];
-    // since we are creating a progressview from a dict, the file
-    // will not be restarted, so setup file system notifications here
   }
   
   return self;

@@ -64,7 +64,7 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 -(BOOL)shouldAllowPauseAction;
 -(BOOL)shouldAllowResumeAction;
 -(BOOL)fileExistsForSelectedItems;
-
+-(void)maybeCloseWindow;
 
 @end
 
@@ -94,6 +94,11 @@ static id gSharedProgressController = nil;
     // it would be nice if we could get the frame from the name, and then
     // mess with it before setting it.
     [[self window] setFrameUsingName:kProgressWindowFrameSaveName];
+    
+    // these 2 bools prevent the app from locking up when the termination modal sheet
+    // is running and a download completes
+    mAwaitingTermination = NO;
+    mShouldCloseWindow   = NO;
     
     // We provide the views for the stack view, from mProgressViewControllers
     [mStackView setDataSource:self];
@@ -502,13 +507,10 @@ static id gSharedProgressController = nil;
   // close the window if user has set pref to close when all downloads complete
   if (completedOK)
   {
-    BOOL gotPref;
-    BOOL keepDownloadsOpen = [[PreferenceManager sharedInstance] getBooleanPref:"browser.download.progressDnldDialog.keepAlive" withSuccess:&gotPref];
-    if (!keepDownloadsOpen && ([self numDownloadsInProgress] == 0))
-    {
-      [self close];   // don't call -performClose: on the window, because we don't want Cocoa to look
-                      // for the option key and try to close all windows
-    }
+    if (!mAwaitingTermination)
+      [self maybeCloseWindow];
+    else
+      mShouldCloseWindow = YES;
   }
   else if (NS_FAILED(status) && status != NS_BINDING_ABORTED)  // if it's an error, and not just canceled, show sheet
   {
@@ -516,6 +518,22 @@ static id gSharedProgressController = nil;
   }
   
   [self saveProgressViewControllers];
+}
+
+-(void)maybeCloseWindow
+{
+  // only check if there are zero downloads running
+  if ([self numDownloadsInProgress] == 0)
+  {
+    BOOL gotPref;
+    BOOL keepDownloadsOpen = [[PreferenceManager sharedInstance] getBooleanPref:"browser.download.progressDnldDialog.keepAlive" withSuccess:&gotPref];
+    if (gotPref && !keepDownloadsOpen)
+    {
+      // don't call -performClose: on the window, because we don't want Cocoa to look
+      // for the option key and try to close all windows
+      [self close];
+    }
+  }
 }
 
 -(void)showErrorSheetForDownload:(id <CHDownloadProgressDisplay>)progressDisplay withStatus:(nsresult)inStatus
@@ -654,6 +672,9 @@ static id gSharedProgressController = nil;
     // downloads continue (PLEvents being processed)
     id panel = NSGetAlertPanel(alert, message, okButton, altButton, nil, message);
     
+    // set this bool to true so that if a download finishes while the modal sheet is up we don't lock
+    mAwaitingTermination = YES;
+    
     [NSApp beginSheet:panel
             modalForWindow:[self window]
             modalDelegate:self
@@ -665,7 +686,19 @@ static id gSharedProgressController = nil;
     NSReleaseAlertPanel(panel);
     
     if (sheetResult == NSAlertDefaultReturn)
+    {
+      mAwaitingTermination = NO;
+      
+      // Check to see if a request to close the download window was made while the modal sheet was running.
+      // If so, close the download window according to the user's pref.
+      if (mShouldCloseWindow)
+      {
+        [self maybeCloseWindow];
+        mShouldCloseWindow = NO;
+      }
+      
       return NSTerminateCancel;
+    }
     
     else {
       // need to save here because downloads that were downloading aren't 

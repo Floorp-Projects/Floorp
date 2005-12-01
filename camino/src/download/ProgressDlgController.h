@@ -87,6 +87,8 @@
   NSMutableArray        *mProgressViewControllers;  // the downloads we manage, STRONG ref
   int                   mNumActiveDownloads;
   int                   mSelectionPivotIndex;
+  BOOL                  mShouldCloseWindow;         // true when a download completes when termination modal sheet is up
+  BOOL                  mAwaitingTermination;       // true when we are waiting for users termination modal sheet
 }
 
 +(ProgressDlgController *)sharedDownloadController;           // creates if necessary
