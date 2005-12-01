@@ -233,6 +233,8 @@
   [dirtyStringMutant replaceOccurrencesOfString:@"&gt;"withString:@">" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
   [dirtyStringMutant replaceOccurrencesOfString:@"&mdash;"withString:@"-" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
   [dirtyStringMutant replaceOccurrencesOfString:@"&apos;"withString:@"'" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
+  // fix import from old Firefox versions, which exported &#39; instead of a plain apostrophe
+  [dirtyStringMutant replaceOccurrencesOfString:@"&#39;"withString:@"'" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
   return [dirtyStringMutant stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
 }
 
