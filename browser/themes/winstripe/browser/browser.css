@@ -253,19 +253,6 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   display: -moz-box;
 }
 
-toolbar[mode="icons"] .toolbarbutton-text {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-text {
-  padding: 0 !important;
-  margin: 3px 5px !important;
-}
-
 /* ::::: 24px primary toolbar buttons ::::: */
 
 /* back button-- */

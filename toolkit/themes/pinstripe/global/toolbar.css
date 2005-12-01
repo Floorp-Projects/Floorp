@@ -66,6 +66,18 @@ menubar {
  min-width: 1px;
 }  
 
+toolbar[mode="icons"] .toolbarbutton-text {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-icon {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-1 > .toolbarbutton-text, toolbar[mode="text"] .toolbarbutton-1 > stack > toolbarbutton > .toolbarbutton-text {
+  margin: 4px;
+}
+
 /* ::::: toolbarseparator ::::: */
 
 toolbarseparator {
