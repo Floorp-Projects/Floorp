@@ -478,6 +478,25 @@
               this._selection.push({ min: min.value, max: max.value });
             }
             break;
+          case RELOAD_ACTION_MOVE:
+            // Insert index of insertion and number of rows to insert
+            var query = this._places.getNewQuery();
+            query.setFolders([insertionPoint.folderId], 1);
+            query.itemTypes = this.filterOptions;
+            var options = this._places.getNewQueryOptions();
+            options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+            var result = this._places.executeQuery(query, options);
+            if (insertionPoint.index > -1) {
+              var node = result.getChild(insertionPoint.index - 1);
+              var index = this.getResult().treeIndexForNode(node);
+              if (insertionPoint.index == result.childCount)
+                ++index;
+            }
+            else 
+              index = this.getResult().childCount;
+            var max = index + count - 1;            
+            this._selection = [{ min: index, max: max }];
+            break;
           case RELOAD_ACTION_INSERT:
             // Insert index of insertion and number of rows to insert
             var query = this._places.getNewQuery();
@@ -505,8 +524,8 @@
             this._selection = [{ min: min.value, max: min.value }];
             break;
           }
-          if (this._selection.length)
-            LOG("SET UP RANGE: " + this._selection[0].toSource() + " for " + this.id + " action = " + action);
+          //if (this._selection.length)
+          //  LOG("SET UP RANGE: " + this._selection[0].toSource() + " for " + this.id + " action = " + action);
         ]]></body>
       </method>
       
@@ -519,7 +538,7 @@
           selection.clearSelection();
           for (var i = 0; i < this._selection.length; ++i) {
             var range = this._selection[i];
-            LOG("RESELECTING RANGE: " + range.min + "," + range.max + " in: " + this.id);
+            //LOG("RESELECTING RANGE: " + range.min + "," + range.max + " in: " + this.id);
             selection.rangedSelect(range.min, range.max, true);
           }
           if (view != this.view)

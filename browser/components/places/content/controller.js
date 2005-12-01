@@ -62,9 +62,15 @@ const TYPE_HTML = "text/html";
 // Place entries as raw URL text
 const TYPE_UNICODE = "text/unicode";
 
+// No change to the view, preserve current selection
 const RELOAD_ACTION_NOTHING = 0;
+// Inserting items new to the view, select the inserted rows
 const RELOAD_ACTION_INSERT = 1;
+// Removing items from the view, select the first item after the last selected
 const RELOAD_ACTION_REMOVE = 2;
+// Moving items within a view, don't treat the dropped items as additional 
+// rows.
+const RELOAD_ACTION_MOVE = 3;
 
 function STACK(args) {
   var temp = arguments.callee.caller;
@@ -1015,7 +1021,8 @@ var PlacesControllerDragHelper = {
     var copy = session.dragAction & Ci.nsIDragService.DRAGDROP_ACTION_COPY;
     var transactions = [];
     var xferable = this._initTransferable(targetView, orientation);
-    for (var i = 0; i < session.numDropItems; ++i) {
+    var dropCount = session.numDropItems;
+    for (var i = 0; i < dropCount; ++i) {
       session.getData(xferable, i);
     
       var data = { }, flavor = { };
@@ -1030,14 +1037,23 @@ var PlacesControllerDragHelper = {
                         insertionPoint.index, copy));
     }
     
-    if (sourceView)
-      sourceView.willReloadView(RELOAD_ACTION_REMOVE, sourceView, null, 
-                                session.numDropItems);
-    PlacesController.willReloadView(RELOAD_ACTION_INSERT, targetView, 
-                                    insertionPoint, session.numDropItems);
+    if (sourceView == targetView) {
+      // When we're rearranging the contents of the current view, we 
+      // invoke separate handling that takes care not to count the 
+      // dropCount as added rows - they just changed index.
+      PlacesController.willReloadView(RELOAD_ACTION_MOVE, targetView,
+                                      insertionPoint, dropCount);
+    }
+    else {
+      if (sourceView)
+        sourceView.willReloadView(RELOAD_ACTION_REMOVE, sourceView, null, 
+                                  dropCount);
+      PlacesController.willReloadView(RELOAD_ACTION_INSERT, targetView, 
+                                      insertionPoint, dropCount);
+    }
     var txn = new PlacesAggregateTransaction("DropItems", transactions);
     PlacesController._hist.transactionManager.doTransaction(txn);
-    if (sourceView)
+    if (sourceView && sourceView != targetView)
       sourceView.didReloadView(sourceView);
     PlacesController.didReloadView(targetView);
   }
