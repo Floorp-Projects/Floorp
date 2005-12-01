@@ -60,8 +60,6 @@ CPPSRCS		= \
 		nsByteArrayInputStream.cpp \
 		nsDirectoryService.cpp \
 		nsEscape.cpp \
-		nsFastLoadFile.cpp \
-		nsFastLoadService.cpp \
 		nsInputStreamTee.cpp \
 		nsLinebreakConverter.cpp \
 		nsLocalFileCommon.cpp \
@@ -76,6 +74,13 @@ CPPSRCS		= \
 		nsUnicharInputStream.cpp \
 		nsNativeCharsetUtils.cpp \
 		$(NULL)
+
+ifndef MOZ_NO_FAST_LOAD
+CPPSRCS += \
+		nsFastLoadFile.cpp \
+		nsFastLoadService.cpp \
+		$(NULL)
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS		+= nsLocalFileOS2.cpp
