@@ -69,15 +69,11 @@
             if (foundStartMarker && !foundEndMarker) 
               items.push(item);
           }
-          for (var i = 0; i < items.length; ++i) {
-            dump ("Removing child " + items[i].label + "\n");
+          for (var i = 0; i < items.length; ++i)
             items[i].parentNode.removeChild(items[i]);
-          }
           if (!foundStartMarker && !foundEndMarker) {
-            while (this.hasChildNodes()) {
-              dump("Removing child " + this.firstChild.getAttribute("label") + "\n");
+            while (this.hasChildNodes())
               this.removeChild(this.firstChild);
-            }
           }
           LOG("KIDS = " + this.childNodes.length);
         ]]></body>
