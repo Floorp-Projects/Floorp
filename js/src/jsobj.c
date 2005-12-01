@@ -427,15 +427,15 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
             return NULL;
         }
 
-        /* 
+        /*
          * Increment map->depth to protect js_EnterSharpObject from reentering
          * itself badly.  Without this fix, if we reenter the basis case where
          * map->depth == 0, when unwinding the inner call we will destroy the
          * newly-created hash table and crash.
          */
-	++map->depth;
+        ++map->depth;
         ida = JS_Enumerate(cx, obj);
-	--map->depth;
+        --map->depth;
         if (!ida)
             return NULL;
 
@@ -3017,8 +3017,26 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if ((attrs & JSPROP_READONLY) ||
             (SCOPE_IS_SEALED(scope) && pobj == obj)) {
             JS_UNLOCK_SCOPE(cx, scope);
-            if ((attrs & JSPROP_READONLY) && JS_VERSION_IS_ECMA(cx))
+            if ((attrs & JSPROP_READONLY) && JS_VERSION_IS_ECMA(cx)) {
+                if (JS_HAS_STRICT_OPTION(cx)) {
+                    /* Strict mode: report a read-only warning. */
+                    JSString *str =
+                        js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK,
+                                                   ID_TO_VALUE(id),
+                                                   NULL);
+                    if (!str)
+                        return JS_FALSE;
+                    return JS_ReportErrorFlagsAndNumberUC(cx,
+                                                      JSREPORT_STRICT |
+                                                      JSREPORT_WARNING,
+                                                      js_GetErrorMessage,
+                                                      NULL,
+                                                      JSMSG_READ_ONLY,
+                                                      JS_GetStringChars(str));
+                }
+                /* Just return true per ECMA if not in strict mode. */
                 return JS_TRUE;
+            }
             goto read_only_error;
         }
 
@@ -3141,9 +3159,9 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                                                ID_TO_VALUE(id),
                                                NULL);
     if (str) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_READ_ONLY,
-                             JS_GetStringBytes(str));
+        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                               JSMSG_READ_ONLY,
+                               JS_GetStringChars(str));
     }
     return JS_FALSE;
   }
