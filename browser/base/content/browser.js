@@ -2624,10 +2624,12 @@ var newTabButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var xferData = aXferData.data.split("\n");
-      var url = xferData[0] ? xferData[0] : xferData[1];
+      var draggedText = xferData[0] || xferData[1];
+      var postData = {};
+      var url = getShortcutOrURI(draggedText, postData);
       if (url) {
         getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
-        openNewTabWith(url, null, null, aEvent);
+        openNewTabWith(url, null, postData.value, aEvent);
       }
     },
   getSupportedFlavours: function ()
@@ -2657,10 +2659,12 @@ var newWindowButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var xferData = aXferData.data.split("\n");
-      var url = xferData[0] ? xferData[0] : xferData[1];
+      var draggedText = xferData[0] || xferData[1];
+      var postData = {};
+      var url = getShortcutOrURI(draggedText, postData);
       if (url) {
         getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
-        openNewWindowWith(url, null, null);
+        openNewWindowWith(url, null, postData.value);
       }
     },
   getSupportedFlavours: function ()
@@ -2690,7 +2694,9 @@ var goButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var xferData = aXferData.data.split("\n");
-      var url = xferData[0] ? xferData[0] : xferData[1];
+      var draggedText = xferData[0] || xferData[1];
+      var postData = {};
+      var url = getShortcutOrURI(draggedText, postData);
       try {
         getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
         var uri = makeURI(url);
@@ -2698,7 +2704,7 @@ var goButtonObserver = {
                                  .getService(Components.interfaces.nsIScriptSecurityManager);
         const nsIScriptSecMan = Components.interfaces.nsIScriptSecurityManager;
         secMan.checkLoadURI(gBrowser.currentURI, uri, nsIScriptSecMan.DISALLOW_SCRIPT_OR_DATA);
-        loadURI(uri.spec, null, null);
+        loadURI(uri.spec, null, postData.value);
       } catch (ex) {}
     },
   getSupportedFlavours: function ()
