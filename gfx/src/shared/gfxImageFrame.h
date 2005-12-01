@@ -71,7 +71,9 @@ protected:
   nsIntSize mSize;
 
 private:
-  /* private members */
+  nsresult  SetData(const PRUint8 *aData, PRUint32 aLength, 
+                    PRInt32 aOffset, PRBool aSetAlpha);
+
   nsCOMPtr<nsIImage> mImage;
 
   PRPackedBool mInitalized;

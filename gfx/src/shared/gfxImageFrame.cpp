@@ -284,49 +284,92 @@ NS_IMETHODIMP gfxImageFrame::GetImageData(PRUint8 **aData, PRUint32 *length)
 /* void setImageData ([array, size_is (length), const] in PRUint8 data, in unsigned long length, in long offset); */
 NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength, PRInt32 aOffset)
 {
+  return SetData(aData, aLength, aOffset, PR_FALSE);
+}
+
+nsresult gfxImageFrame::SetData(const PRUint8 *aData, PRUint32 aLength, 
+                                PRInt32 aOffset, PRBool aSetAlpha)
+{
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
   NS_ASSERTION(mMutable, "trying to set data on an immutable frame");
-  if (!mMutable)
+  NS_ASSERTION(!(aOffset<0), "can't have a negative offset");
+  if (!mMutable || aOffset < 0)
     return NS_ERROR_FAILURE;
+
+  if (aSetAlpha && !mImage->GetHasAlphaMask())
+    return NS_ERROR_NOT_INITIALIZED;
 
   if (aLength == 0)
     return NS_OK;
 
-  PRInt32 row_stride = mImage->GetLineStride();
+  mImage->LockImagePixels(aSetAlpha);
+  PRUint8 *imgData = aSetAlpha ? mImage->GetAlphaBits() : mImage->GetBits();
+  const PRUint32 rowStride = aSetAlpha ? mImage->GetAlphaLineStride() : mImage->GetLineStride();
+  const PRUint32 dataLength = rowStride * mSize.height;
+  const PRUint32 numRowsToSet = 1 + ((aLength-1) / rowStride);
+  const PRUint32 firstRowToSet = (aOffset / rowStride);
 
-  mImage->LockImagePixels(PR_FALSE);
-  PRUint8 *imgData = mImage->GetBits();
-  PRInt32 imgLen = row_stride * mSize.height;
-
-  PRInt32 newOffset = aOffset;
-  if (!mTopToBottom) {
-    // Adjust: We need offset to be top-down rows & LTR within each row
-    const PRUint32 rows = 1 + ((aLength-1) / row_stride);
-    const PRUint32 xOffset = (aOffset % row_stride);
-    const PRUint32 yOffset = (aOffset / row_stride);
-    newOffset = ((mSize.height - rows - yOffset) * row_stride) + (aOffset % row_stride);
-  }
-
-  if (((newOffset + (PRInt32)aLength) > imgLen) || !imgData) {
-    mImage->UnlockImagePixels(PR_FALSE);
+  // Independent from which order the rows are sorted in, 
+  // the number of bytes to set + offset should never exceed the image data space
+  if ((((PRUint32)aOffset + aLength) > dataLength) || !imgData) {
+    mImage->UnlockImagePixels(aSetAlpha);
     return NS_ERROR_FAILURE;
   }
 
-  if (aData)
-    memcpy(imgData + newOffset, aData, aLength);
-  else
-    memset(imgData + newOffset, 0, aLength);
-  mImage->UnlockImagePixels(PR_FALSE);
+  if (mTopToBottom) {
+    // Easy situation
+    if (aData)
+      memcpy(imgData + aOffset, aData, aLength);
+    else
+      memset(imgData + aOffset, 0, aLength);
+  } else {
+    // Rows are stored in reverse order (BottomToTop) from those supplied (TopToBottom)
+    // yOffset is the offset into the reversed image data for firstRowToSet
+    PRUint32 xOffset = aOffset % rowStride;
+    PRUint32 yOffset = (mSize.height - firstRowToSet - 1) * rowStride;
+    if (aData) {
+      // Set the image data in reverse order
+      for (PRUint32 i=0; i<numRowsToSet; i++) {
+        PRUint32 lengthOfRowToSet = rowStride - xOffset;
+        lengthOfRowToSet = PR_MIN(lengthOfRowToSet, aLength);
+        memcpy(imgData + yOffset + xOffset, aData, lengthOfRowToSet);
+        aData += lengthOfRowToSet;
+        aLength -= lengthOfRowToSet;
+        yOffset -= rowStride;
+        xOffset = 0;
+      }
+    } else {
+      // Clear the image data in reverse order
+      if (xOffset) {
+        // First row, if not starting at first column
+        PRUint32 lengthOfRowToSet = rowStride - xOffset;
+        lengthOfRowToSet = PR_MIN(lengthOfRowToSet, aLength);
+        memset(imgData + yOffset + xOffset, 0, lengthOfRowToSet);
+        aLength -= lengthOfRowToSet;
+        yOffset -= rowStride;
+      }
+      if (aLength > rowStride) {
+        // Zero all the whole rows
+        const PRUint32 wholeRows = rowStride * (PRUint32)(aLength / rowStride);
+        memset(imgData + yOffset - (wholeRows - rowStride), 0, wholeRows);
+        aLength -= wholeRows;
+        yOffset -= wholeRows;
+      }
+      if (aLength) {
+        // Last incomplete row
+        memset(imgData + yOffset, 0, aLength);
+      }
+    }
+  }
+  mImage->UnlockImagePixels(aSetAlpha);
 
-  PRInt32 row = (aOffset / row_stride);
-
-  // adjust for aLength < row_stride
-  PRInt32 numnewrows = ((aLength - 1) / row_stride) + 1;
-  nsIntRect r(0, row, mSize.width, numnewrows);
-  mImage->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-
+  if (!aSetAlpha) {
+    // adjust for aLength < rowStride
+    nsIntRect r(0, firstRowToSet, mSize.width, numRowsToSet);
+    mImage->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+  }
   return NS_OK;
 }
 
@@ -385,39 +428,7 @@ NS_IMETHODIMP gfxImageFrame::GetAlphaData(PRUint8 **aData, PRUint32 *length)
 /* void setAlphaData ([array, size_is (length), const] in PRUint8 data, in unsigned long length, in long offset); */
 NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength, PRInt32 aOffset)
 {
-  if (!mInitalized || !mImage->GetHasAlphaMask())
-    return NS_ERROR_NOT_INITIALIZED;
-
-  NS_ASSERTION(mMutable, "trying to set data on an immutable frame");
-  if (!mMutable)
-    return NS_ERROR_FAILURE;
-
-  PRInt32 row_stride = mImage->GetAlphaLineStride();
-
-  mImage->LockImagePixels(PR_TRUE);
-  PRUint8 *alphaData = mImage->GetAlphaBits();
-  PRInt32 alphaLen = row_stride * mSize.height;
-
-  PRInt32 offset = aOffset;
-  if (!mTopToBottom) {
-    // Adjust: We need offset to be top-down rows & LTR within each row
-    const PRUint32 rows = 1 + ((aLength-1) / row_stride);
-    const PRUint32 xOffset = (aOffset % row_stride);
-    const PRUint32 yOffset = (aOffset / row_stride);
-    offset = ((mSize.height - rows - yOffset) * row_stride) + (aOffset % row_stride);
-  }
-
-  if (((offset + (PRInt32)aLength) > alphaLen) || !alphaData) {
-    mImage->UnlockImagePixels(PR_TRUE);
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aData)
-    memcpy(alphaData + offset, aData, aLength);
-  else
-    memset(alphaData + offset, 0, aLength);
-  mImage->UnlockImagePixels(PR_TRUE);
-  return NS_OK;
+  return SetData(aData, aLength, aOffset, PR_TRUE);
 }
 
 /* void lockAlphaData (); */
