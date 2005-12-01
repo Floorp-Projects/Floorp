@@ -63,20 +63,6 @@ toolbarbutton[type="menu-button"] > toolbarbutton {
 	margin: 0px;
 }
 
-
-toolbar[mode="icons"] .toolbarbutton-text {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-text {
-  padding: 0 !important;
-  margin: 3px 5px !important;
-}
-
 #button-getmsg {
   -moz-image-region: rect(0px 32px 32px 0px);
 }

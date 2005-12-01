@@ -56,19 +56,6 @@ toolbar[mode="full"] .toolbarbutton-1 {
   min-width: 47px;
 }
 
-toolbar[mode="icons"] .toolbarbutton-text {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-text {
-  padding: 0 !important;
-  margin: 3px 5px !important;
-}
-
 #button-getmsg {
   -moz-image-region: rect(0px 24px 24px 0px);
 }

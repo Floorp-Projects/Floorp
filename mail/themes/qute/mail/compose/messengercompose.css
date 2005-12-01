@@ -41,6 +41,7 @@
   ======================================================================= */
 
 @import url("chrome://messenger/skin/");
+@import url("chrome://global/skin/toolbar.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -60,19 +61,6 @@
   -moz-box-orient: vertical;
   min-width: 0px;
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-}
-
-toolbar[mode="icons"] .toolbarbutton-text {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-text {
-  padding: 0 !important;
-  margin: 3px 5px !important;
 }
 
 #button-send {

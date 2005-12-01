@@ -261,18 +261,6 @@ menubutton:not([disabled="true"]):hover:active {
   display: -moz-box;
 }
 
-toolbar[mode="icons"] .toolbarbutton-text {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-1 > .toolbarbutton-text, toolbar[mode="text"] .toolbarbutton-1 > stack > toolbarbutton > .toolbarbutton-text {
-  margin: 4px;
-}
-
 #back-button, #forward-button  {
   -moz-binding: url("chrome://browser/skin/browser.xml#toolbar-menu-button");
 }

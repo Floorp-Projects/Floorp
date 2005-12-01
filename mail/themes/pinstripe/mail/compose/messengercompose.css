@@ -41,6 +41,7 @@
   ======================================================================= */
 
 @import url("chrome://messenger/skin/");
+@import url("chrome://global/skin/toolbar.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -70,19 +71,6 @@ toolbarbutton[type="menu-button"] > toolbarbutton {
 	-moz-box-orient: vertical !important;
 	padding: 0px;
 	margin: 0px;
-}
-
-toolbar[mode="icons"] .toolbarbutton-text {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
-
-toolbar[mode="text"] .toolbarbutton-text {
-  padding: 0 !important;
-  margin: 3px 5px !important;
 }
 
 #button-send {
