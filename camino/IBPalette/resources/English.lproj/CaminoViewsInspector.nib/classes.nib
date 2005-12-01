@@ -1,0 +1,11 @@
+{
+    IBClasses = (
+        {
+            CLASS = CaminoViewsPaletteInspector; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = IBInspector; 
+        }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
+    ); 
+    IBVersion = 1; 
+}

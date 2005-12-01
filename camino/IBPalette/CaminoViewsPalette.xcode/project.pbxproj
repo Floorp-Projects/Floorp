@@ -1,0 +1,865 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 39;
+	objects = {
+		0259C573FE90428111CA0C5A = {
+			buildSettings = {
+			};
+			buildStyles = (
+				2E58F360FFB2326E11CA0CBA,
+				2E58F361FFB2326E11CA0CBA,
+			);
+			hasScannedForEncodings = 1;
+			isa = PBXProject;
+			mainGroup = 0259C574FE90428111CA0C5A;
+			projectDirPath = "";
+			targets = (
+				8D1AC9600486D14A00FE50C9,
+				53DF68FC067E5B5A0090B5B0,
+				53DF6901067E5B8E0090B5B0,
+			);
+		};
+		0259C574FE90428111CA0C5A = {
+			children = (
+				32DBCF9E0370C38000C91783,
+				54D33B2C06778E4400C9C163,
+				0259C582FE90428111CA0C5A,
+				1ED78706FE9D4A0611CA0C5A,
+				2E58F364FFB232C311CA0CBA,
+			);
+			isa = PBXGroup;
+			name = CaminoViewsPalette;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0259C582FE90428111CA0C5A = {
+			children = (
+				8D1AC9730486D14A00FE50C9,
+				53DF68FE067E5B5A0090B5B0,
+				8D1AC97F0486D23B00FE50C9,
+			);
+			isa = PBXGroup;
+			name = Resources;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0259C583FE90428111CA0C5A = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = text.xml;
+			name = palette.table;
+			path = resources/palette.table;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+//020
+//021
+//022
+//023
+//024
+//0F0
+//0F1
+//0F2
+//0F3
+//0F4
+		0F1C93520934047000C95167 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = CaminoViewsInspector.m;
+			path = src/CaminoViewsInspector.m;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F1C93530934047000C95167 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = CaminoViewsPalette.m;
+			path = src/CaminoViewsPalette.m;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F1C93540934047000C95167 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = CaminoViewsInspector.h;
+			path = src/CaminoViewsInspector.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F1C93550934047000C95167 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = CaminoViewsPalette.h;
+			path = src/CaminoViewsPalette.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F1C93560934047000C95167 = {
+			fileRef = 0F1C93520934047000C95167;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F1C93570934047000C95167 = {
+			fileRef = 0F1C93530934047000C95167;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F67D8CF09397D1C00A84327 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = FlippedShrinkWrapView.tiff;
+			path = resources/images/FlippedShrinkWrapView.tiff;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F67D8D009397D1C00A84327 = {
+			fileRef = 0F67D8CF09397D1C00A84327;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F7EAC5A0932996D0082C3EA = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = CHStackView.h;
+			path = ../src/extensions/CHStackView.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F7EAC5B0932996D0082C3EA = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = CHStackView.m;
+			path = ../src/extensions/CHStackView.m;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F7EAC5D0932996D0082C3EA = {
+			fileRef = 0F7EAC5B0932996D0082C3EA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F7EAC930932C4EE0082C3EA = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = "NSView+Utils.m";
+			path = "../src/extensions/NSView+Utils.m";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F7EAC940932C4EE0082C3EA = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = "NSView+Utils.h";
+			path = "../src/extensions/NSView+Utils.h";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F7EAC950932C4EE0082C3EA = {
+			fileRef = 0F7EAC930932C4EE0082C3EA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F7EACFD0932D1090082C3EA = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = AutoSizingTextField.m;
+			path = ../src/extensions/AutoSizingTextField.m;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F7EACFE0932D1090082C3EA = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = AutoSizingTextField.h;
+			path = ../src/extensions/AutoSizingTextField.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F7EACFF0932D1090082C3EA = {
+			fileRef = 0F7EACFD0932D1090082C3EA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F9481960933E76D00D80EC8 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = ShrinkWrapView.tiff;
+			path = resources/images/ShrinkWrapView.tiff;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0F9481970933E76D00D80EC8 = {
+			fileRef = 0F9481960933E76D00D80EC8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F9481980933E77200D80EC8 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = StackView.tiff;
+			path = resources/images/StackView.tiff;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0F9481990933E77200D80EC8 = {
+			fileRef = 0F9481980933E77200D80EC8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F9481A30933E7BA00D80EC8 = {
+			children = (
+				0F9481A40933E7BA00D80EC8,
+			);
+			isa = PBXVariantGroup;
+			name = CaminoViewsPalette.nib;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0F9481A40933E7BA00D80EC8 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/English.lproj/CaminoViewsPalette.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0F9481A50933E7BA00D80EC8 = {
+			children = (
+				0F9481A60933E7BA00D80EC8,
+			);
+			isa = PBXVariantGroup;
+			name = CaminoViewsInspector.nib;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0F9481A60933E7BA00D80EC8 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/English.lproj/CaminoViewsInspector.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0F9481A70933E7BA00D80EC8 = {
+			fileRef = 0F9481A30933E7BA00D80EC8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F9481A80933E7BA00D80EC8 = {
+			fileRef = 0F9481A50933E7BA00D80EC8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//0F0
+//0F1
+//0F2
+//0F3
+//0F4
+//130
+//131
+//132
+//133
+//134
+		131E8FE8067F80F40006E0CE = {
+			children = (
+				0F9481A30933E7BA00D80EC8,
+				0F9481A50933E7BA00D80EC8,
+				0259C583FE90428111CA0C5A,
+				0F9481960933E76D00D80EC8,
+				0F9481980933E77200D80EC8,
+				0F67D8CF09397D1C00A84327,
+			);
+			isa = PBXGroup;
+			name = Resources;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		13EB9DBD07DE0F1E00EB933A = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = InterfaceBuilder.framework;
+			path = /System/Library/Frameworks/InterfaceBuilder.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		13EB9DBE07DE0F1E00EB933A = {
+			fileRef = 13EB9DBD07DE0F1E00EB933A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		13F8B6FD07B43410008AE28D = {
+			children = (
+				13EB9DBD07DE0F1E00EB933A,
+				DD92D38A0106425D02CA0E72,
+			);
+			isa = PBXGroup;
+			name = "Linked Frameworks";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		13F8B70407B43425008AE28D = {
+			children = (
+				13F8B88807B434F6008AE28D,
+				13F8B88907B434F6008AE28D,
+				13F8B88A07B434F6008AE28D,
+			);
+			isa = PBXGroup;
+			name = "Other Frameworks";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		13F8B88807B434F6008AE28D = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = AppKit.framework;
+			path = /System/Library/Frameworks/AppKit.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		13F8B88907B434F6008AE28D = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = CoreData.framework;
+			path = /System/Library/Frameworks/CoreData.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		13F8B88A07B434F6008AE28D = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = Foundation.framework;
+			path = /System/Library/Frameworks/Foundation.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		13F8B89007B43554008AE28D = {
+			fileRef = DD92D38A0106425D02CA0E72;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//130
+//131
+//132
+//133
+//134
+//1E0
+//1E1
+//1E2
+//1E3
+//1E4
+		1ED78706FE9D4A0611CA0C5A = {
+			children = (
+				8D1AC9740486D14A00FE50C9,
+				53DF68FD067E5B5A0090B5B0,
+			);
+			isa = PBXGroup;
+			name = Products;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+//1E0
+//1E1
+//1E2
+//1E3
+//1E4
+//2E0
+//2E1
+//2E2
+//2E3
+//2E4
+		2E58F360FFB2326E11CA0CBA = {
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INFOPLIST_FILE = resources/Info.plist;
+				PREBINDING = NO;
+				ZERO_LINK = NO;
+			};
+			isa = PBXBuildStyle;
+			name = Development;
+		};
+		2E58F361FFB2326E11CA0CBA = {
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				PREBINDING = NO;
+				ZERO_LINK = NO;
+			};
+			isa = PBXBuildStyle;
+			name = Deployment;
+		};
+		2E58F364FFB232C311CA0CBA = {
+			children = (
+				13F8B6FD07B43410008AE28D,
+				13F8B70407B43425008AE28D,
+			);
+			isa = PBXGroup;
+			name = Frameworks;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+//2E0
+//2E1
+//2E2
+//2E3
+//2E4
+//320
+//321
+//322
+//323
+//324
+		32DBCF980370C29C00C91783 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = CaminoViewsPalette_Prefix.pch;
+			path = src/CaminoViewsPalette_Prefix.pch;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		32DBCF9E0370C38000C91783 = {
+			children = (
+				54D33B2406778DD400C9C163,
+				54D33B2506778DF000C9C163,
+				32DBCF9F0370C38200C91783,
+				131E8FE8067F80F40006E0CE,
+			);
+			isa = PBXGroup;
+			name = Palette;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		32DBCF9F0370C38200C91783 = {
+			children = (
+				32DBCF980370C29C00C91783,
+			);
+			isa = PBXGroup;
+			name = "Other Sources";
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+//320
+//321
+//322
+//323
+//324
+//530
+//531
+//532
+//533
+//534
+		53DF68F8067E5B5A0090B5B0 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		53DF68F9067E5B5A0090B5B0 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		53DF68FA067E5B5A0090B5B0 = {
+			buildActionMask = 2147483647;
+			files = (
+				0F7EAC5D0932996D0082C3EA,
+				0F7EAC950932C4EE0082C3EA,
+				0F7EACFF0932D1090082C3EA,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		53DF68FB067E5B5A0090B5B0 = {
+			buildActionMask = 2147483647;
+			files = (
+				13F8B89007B43554008AE28D,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		53DF68FC067E5B5A0090B5B0 = {
+			buildPhases = (
+				53DF68F8067E5B5A0090B5B0,
+				53DF68F9067E5B5A0090B5B0,
+				53DF68FA067E5B5A0090B5B0,
+				53DF68FB067E5B5A0090B5B0,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = /;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = "CaminoViewsPaletteFramework-Info.plist";
+				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "-framework Foundation -framework AppKit";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = CaminoViewsPaletteFramework;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wno-four-char-constants -Wno-unknown-pragmas";
+			};
+			dependencies = (
+			);
+			isa = PBXNativeTarget;
+			name = CaminoViewsFramework;
+			productName = CaminoViewsPaletteFramework;
+			productReference = 53DF68FD067E5B5A0090B5B0;
+			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>CaminoViewsPaletteFramework</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.yourcompany._PROJECTNAME_Framework</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>FMWK</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+</dict>
+</plist>
+";
+			productType = "com.apple.product-type.framework";
+		};
+		53DF68FD067E5B5A0090B5B0 = {
+			explicitFileType = wrapper.framework;
+			includeInIndex = 0;
+			isa = PBXFileReference;
+			path = CaminoViewsPaletteFramework.framework;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		53DF68FE067E5B5A0090B5B0 = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xml;
+			name = "CaminoViewsPaletteFramework-Info.plist";
+			path = "resources/CaminoViewsPaletteFramework-Info.plist";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		53DF6901067E5B8E0090B5B0 = {
+			buildPhases = (
+			);
+			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = All;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+			};
+			dependencies = (
+				53DF6903067E5B930090B5B0,
+				53DF6905067E5B930090B5B0,
+			);
+			isa = PBXAggregateTarget;
+			name = All;
+			productName = All;
+		};
+		53DF6902067E5B930090B5B0 = {
+			containerPortal = 0259C573FE90428111CA0C5A;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 8D1AC9600486D14A00FE50C9;
+			remoteInfo = CaminoViewsPalette;
+		};
+		53DF6903067E5B930090B5B0 = {
+			isa = PBXTargetDependency;
+			target = 8D1AC9600486D14A00FE50C9;
+			targetProxy = 53DF6902067E5B930090B5B0;
+		};
+		53DF6904067E5B930090B5B0 = {
+			containerPortal = 0259C573FE90428111CA0C5A;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 53DF68FC067E5B5A0090B5B0;
+			remoteInfo = CaminoViewsPaletteFramework;
+		};
+		53DF6905067E5B930090B5B0 = {
+			isa = PBXTargetDependency;
+			target = 53DF68FC067E5B5A0090B5B0;
+			targetProxy = 53DF6904067E5B930090B5B0;
+		};
+//530
+//531
+//532
+//533
+//534
+//540
+//541
+//542
+//543
+//544
+		546DEAEF067F62F70098DCC4 = {
+			containerPortal = 0259C573FE90428111CA0C5A;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 53DF68FC067E5B5A0090B5B0;
+			remoteInfo = CaminoViewsPaletteFramework;
+		};
+		546DEAF0067F62F70098DCC4 = {
+			isa = PBXTargetDependency;
+			target = 53DF68FC067E5B5A0090B5B0;
+			targetProxy = 546DEAEF067F62F70098DCC4;
+		};
+		546DEAF3067F632A0098DCC4 = {
+			fileRef = 53DF68FD067E5B5A0090B5B0;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		54D33B2406778DD400C9C163 = {
+			children = (
+				54D33B2806778E3300C9C163,
+			);
+			isa = PBXGroup;
+			name = "Undo Support";
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		54D33B2506778DF000C9C163 = {
+			children = (
+				0F1C93540934047000C95167,
+				0F1C93520934047000C95167,
+				0F1C93550934047000C95167,
+				0F1C93530934047000C95167,
+			);
+			isa = PBXGroup;
+			name = Classes;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		54D33B2806778E3300C9C163 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			name = CaminoViewsPalette.ibclassdescription;
+			path = resources/CaminoViewsPalette.ibclassdescription;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		54D33B2906778E3300C9C163 = {
+			fileRef = 54D33B2806778E3300C9C163;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		54D33B2C06778E4400C9C163 = {
+			children = (
+				0F7EAC940932C4EE0082C3EA,
+				0F7EAC930932C4EE0082C3EA,
+				0F7EAC5A0932996D0082C3EA,
+				0F7EAC5B0932996D0082C3EA,
+				0F7EACFE0932D1090082C3EA,
+				0F7EACFD0932D1090082C3EA,
+			);
+			isa = PBXGroup;
+			name = Framework;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+//540
+//541
+//542
+//543
+//544
+//8D0
+//8D1
+//8D2
+//8D3
+//8D4
+		8D1AC9600486D14A00FE50C9 = {
+			buildPhases = (
+				8D1AC9660486D14A00FE50C9,
+				8D1AC96A0486D14A00FE50C9,
+				8D1AC96E0486D14A00FE50C9,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = /;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = src/CaminoViewsPalette_Prefix.pch;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Palettes";
+				OTHER_LDFLAGS = "-bundle";
+				PREBINDING = NO;
+				PRODUCT_NAME = CaminoViews;
+				WRAPPER_EXTENSION = palette;
+			};
+			dependencies = (
+				546DEAF0067F62F70098DCC4,
+			);
+			isa = PBXNativeTarget;
+			name = CaminoViewsPalette;
+			productInstallPath = "$(HOME)/Developer/Palettes";
+			productName = CaminoViewsPalette;
+			productReference = 8D1AC9740486D14A00FE50C9;
+			productType = "com.apple.product-type.bundle";
+		};
+		8D1AC9660486D14A00FE50C9 = {
+			buildActionMask = 2147483647;
+			files = (
+				8D1AC9690486D14A00FE50C9,
+				8D1AC9800486D23B00FE50C9,
+				54D33B2906778E3300C9C163,
+				0F9481970933E76D00D80EC8,
+				0F9481990933E77200D80EC8,
+				0F9481A70933E7BA00D80EC8,
+				0F9481A80933E7BA00D80EC8,
+				0F67D8D009397D1C00A84327,
+			);
+			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D1AC9690486D14A00FE50C9 = {
+			fileRef = 0259C583FE90428111CA0C5A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		8D1AC96A0486D14A00FE50C9 = {
+			buildActionMask = 2147483647;
+			files = (
+				0F1C93560934047000C95167,
+				0F1C93570934047000C95167,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D1AC96E0486D14A00FE50C9 = {
+			buildActionMask = 2147483647;
+			files = (
+				8D1AC9700486D14A00FE50C9,
+				546DEAF3067F632A0098DCC4,
+				13EB9DBE07DE0F1E00EB933A,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D1AC9700486D14A00FE50C9 = {
+			fileRef = DD92D38A0106425D02CA0E72;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		8D1AC9730486D14A00FE50C9 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = text.xml;
+			name = Info.plist;
+			path = resources/Info.plist;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		8D1AC9740486D14A00FE50C9 = {
+			explicitFileType = wrapper.cfbundle;
+			includeInIndex = 0;
+			isa = PBXFileReference;
+			path = CaminoViews.palette;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		8D1AC97B0486D23100FE50C9 = {
+			fileEncoding = 10;
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.strings;
+			name = InfoPlist.strings;
+			path = resources/English.lproj/InfoPlist.strings;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		8D1AC97F0486D23B00FE50C9 = {
+			children = (
+				8D1AC97B0486D23100FE50C9,
+			);
+			isa = PBXVariantGroup;
+			name = InfoPlist.strings;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		8D1AC9800486D23B00FE50C9 = {
+			fileRef = 8D1AC97F0486D23B00FE50C9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//8D0
+//8D1
+//8D2
+//8D3
+//8D4
+//DD0
+//DD1
+//DD2
+//DD3
+//DD4
+		DD92D38A0106425D02CA0E72 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = Cocoa.framework;
+			path = /System/Library/Frameworks/Cocoa.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+	};
+	rootObject = 0259C573FE90428111CA0C5A;
+}

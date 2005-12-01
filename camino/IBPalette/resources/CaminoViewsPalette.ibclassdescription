@@ -1,0 +1,22 @@
+{
+	CHShrinkWrapView = {
+		SuperClass = NSView;
+		Attributes = {
+		};
+	};
+	CHFlippedShrinkWrapView = {
+		SuperClass = CHShrinkWrapView;
+		Attributes = {
+		};
+	};
+	CHStackView = {
+		SuperClass = CHShrinkWrapView;
+		Attributes = {
+		};
+	};
+	AutoSizingTextField = {
+		SuperClass = NSTextField;
+		Attributes = {
+		};
+	};
+}
