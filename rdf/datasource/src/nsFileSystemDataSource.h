@@ -61,10 +61,10 @@ public:
                             const nsIID& aIID, void **aResult);
 
     ~FileSystemDataSource() { }
+    nsresult Init();
 
 private:
     FileSystemDataSource() { }
-    nsresult Init();
 
     // helper methods
     PRBool   isFileURI(nsIRDFResource* aResource);
