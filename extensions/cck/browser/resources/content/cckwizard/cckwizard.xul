@@ -51,7 +51,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://cckwizard/content/cckwizard.js"/>
 
-  <wizardpage>
+  <wizardpage onpageshow="document.getElementById('example-window').canAdvance = true;">
     <description>&cckWizard.description;</description>
     <groupbox>
       <caption label="&beforeYouBegin.label;"/>
@@ -277,8 +277,6 @@
     <description>&searchPlugins.description;</description>
 
     <groupbox>
-      <caption label="&prefs.label;"/>
-      <description>&prefs.description;</description>
       <hbox flex="1">
       <vbox flex="1">
       <richlistbox id="searchPluginList" flex="1" rows="5" onselect="enableSearchPluginButtons();" ondblclick="onEditSearchPlugin();">
