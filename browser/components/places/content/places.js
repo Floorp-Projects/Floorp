@@ -111,6 +111,9 @@ var PlacesPage = {
     this._content.supportedDropTypes = [TYPE_X_MOZ_PLACE_CONTAINER, 
                                         TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL];
     this._content.supportedDropOnTypes = this._content.supportedDropTypes;
+    this._places.filterOptions = [Ci.nsINavHistoryQuery.INCLUDE_QUERIES];
+    this._content.filterOptions = [Ci.nsINavHistoryQuery.INCLUDE_ITEMS + 
+                                   Ci.nsINavHistoryQuery.INCLUDE_QUERIES];
     this._places.firstDropIndex = 2;
     this._content.firstDropIndex = 0;
     
@@ -123,8 +126,7 @@ var PlacesPage = {
     // Attach the Places model to the Place View
     // XXXben - move this to an attribute/property on the tree view
     var bms = PlacesController._bms;
-    this._places.loadFolder(bms.placesRoot,
-                            Ci.nsINavHistoryQuery.INCLUDE_QUERIES);
+    this._places.loadFolder(bms.placesRoot);
   },
 
   uninit: function PP_uninit() {
@@ -165,6 +167,8 @@ var PlacesPage = {
    */
   placeSelected: function PP_placeSelected(event) {
     var node = this._places.selectedNode;
+    if (!node || this._places.suppressSelection)
+      return;
     var queries = node.getQueries({});
     if (PlacesController.nodeIsFolder(node))
       this._content.loadFolder(node.folderId);
