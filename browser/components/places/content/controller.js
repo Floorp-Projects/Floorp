@@ -87,12 +87,32 @@ function STACK(args) {
  *          The folderId of the parent container
  * @param   index
  *          The index within the container where we should insert
+ * @param   orientation
+ *          The orientation of the insertion. NOTE: the adjustments to the
+ *          insertion point to accommodate the orientation should be done by
+ *          the person who constructs the IP, not the user. The orientation
+ *          is provided for informational purposes only!
  * @constructor
  */
-function InsertionPoint(folderId, index) {
+function InsertionPoint(folderId, index, orientation) {
   this.folderId = folderId;
   this.index = index;
+  this.orientation = orientation;
 }
+
+/**
+ * Initialization Configuration for a View
+ */
+function ViewConfig(dropTypes, dropOnTypes, filterOptions, firstDropIndex) {
+  this.dropTypes = dropTypes;
+  this.dropOnTypes = dropOnTypes;
+  this.filterOptions = filterOptions;
+  this.firstDropIndex = firstDropIndex;
+}
+ViewConfig.GENERIC_DROP_TYPES = [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE,
+                                 TYPE_X_MOZ_URL];
+ViewConfig.GENERIC_FILTER_OPTIONS = Ci.nsINavHistoryQuery.INCLUDE_ITEMS +
+                                     Ci.nsINavHistoryQuery.INCLUDE_QUERIES;
 
 /**
  * The Master Places Controller
@@ -122,6 +142,45 @@ var PlacesController = {
         Cc["@mozilla.org/browser/nav-history;1"].getService(Ci.nsINavHistory);
     }
     return this.__hist;
+  },
+  
+  /**
+   * Generates a HistoryResult for the contents of a folder. 
+   * @param   folderId
+   *          The folder to open
+   * @param   filterOptions
+   *          Options regarding the type of items to be returned. See 
+   *          documentation in nsINavHistoryQuery for the |itemTypes| property.
+   * @returns A HistoryResult containing the contents of the folder. 
+   */
+  getFolderContents: function PC_getFolderContents(folderId, filterOptions) {
+    var query = this._hist.getNewQuery();
+    query.setFolders([folderId], 1);
+    query.itemTypes = filterOptions;
+    var options = this._hist.getNewQueryOptions();
+    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+    return this._hist.executeQuery(query, options);
+  },
+  
+  /**
+   * Get the pivot node for a given insertion point in a container populated 
+   * with the specified filter options. 
+   * @param   insertionPoint
+   *          The point at which content is to be inserted
+   * @param   filterOptions
+   *          Filter options for the view/container. See documentation in
+   *          nsINavHistoryQuery for the |itemTypes| property. 
+   * @returns A HistoryResultNode at which content is to be inserted. 
+   */
+  getInsertionNode: 
+  function PC_getInsertionNode(insertionPoint, filterOptions) {
+    var result = this.getFolderContents(insertionPoint.folderId, filterOptions);
+    var index = insertionPoint.index - 1;
+    if (insertionPoint.index == 0) 
+      index = 0;
+    else if (insertionPoint.index == -1)
+      index = result.childCount - 1;
+    return index > -1 ? result.getChild(index) : null;
   },
 
   _activeView: null,
@@ -221,8 +280,6 @@ var PlacesController = {
    * @returns true if the node is a Bookmark folder, false otherwise
    */
   nodeIsFolder: function PC_nodeIsFolder(node) {
-    if (!node)
-      STACK(arguments);
     return (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
             node.folderId > 0);
   },
@@ -1009,18 +1066,18 @@ var PlacesControllerDragHelper = {
    *          The AVI-implementing object that received the drop. 
    * @param   insertionPoint
    *          The insertion point where the items should be dropped
-   * @param   orientation
-   *          The orientation of the drop
+   * @param   visibleInsertCount
+   *          The number of visible items to be inserted. This can be zero
+   *          even when items are dropped because this is how many items will
+   *          be _visible_ in the resulting tree. 
    */
   onDrop: function PCDH_onDrop(sourceView, targetView, insertionPoint, 
-                               orientation) {
+                               visibleInsertCount) {
     var session = this._getSession();
-    if (!session)
-      return;
-    
     var copy = session.dragAction & Ci.nsIDragService.DRAGDROP_ACTION_COPY;
     var transactions = [];
-    var xferable = this._initTransferable(targetView, orientation);
+    var xferable = this._initTransferable(targetView, 
+                                          insertionPoint.orientation);
     var dropCount = session.numDropItems;
     for (var i = 0; i < dropCount; ++i) {
       session.getData(xferable, i);
@@ -1048,8 +1105,9 @@ var PlacesControllerDragHelper = {
       if (sourceView)
         sourceView.willReloadView(RELOAD_ACTION_REMOVE, sourceView, null, 
                                   dropCount);
-      PlacesController.willReloadView(RELOAD_ACTION_INSERT, targetView, 
-                                      insertionPoint, dropCount);
+      var action = visibleInsertCount == 0 ? RELOAD_ACTION_NOTHING 
+                                           : RELOAD_ACTION_INSERT;
+      targetView.willReloadView(action, targetView, insertionPoint, dropCount);
     }
     var txn = new PlacesAggregateTransaction("DropItems", transactions);
     PlacesController._hist.transactionManager.doTransaction(txn);
