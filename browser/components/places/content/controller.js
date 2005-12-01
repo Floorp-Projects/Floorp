@@ -908,15 +908,16 @@ var PlacesController = {
     }
   },
   
-  willReloadView: function PC_willReloadView(action, view, insertionPoint, insertCount) {
+  willReloadView: function PC_willReloadView(action, targetView, 
+                                             insertionPoint, insertCount) {
     for (var i = 0; i < this._viewObservers.length; ++i)
-      this._viewObservers[i].willReloadView(action, this._activeView, 
+      this._viewObservers[i].willReloadView(action, targetView, 
                                             insertionPoint, insertCount);
   },
   
-  didReloadView: function PC_didReloadView(view) {
+  didReloadView: function PC_didReloadView(targetView) {
     for (var i = 0; i < this._viewObservers.length; ++i)
-      this._viewObservers[i].didReloadView(view);
+      this._viewObservers[i].didReloadView(targetView);
   },
 };
 
@@ -992,21 +993,24 @@ var PlacesControllerDragHelper = {
   
   /**
    * Handles the drop of one or more items onto a view.
-   * @param   view
+   * @param   sourceView
+   *          The AVI-implementing object that started the drop. 
+   * @param   targetView
    *          The AVI-implementing object that received the drop. 
    * @param   insertionPoint
    *          The insertion point where the items should be dropped
    * @param   orientation
    *          The orientation of the drop
    */
-  onDrop: function PCDH_onDrop(view, insertionPoint, orientation) {
+  onDrop: function PCDH_onDrop(sourceView, targetView, insertionPoint, 
+                               orientation) {
     var session = this._getSession();
     if (!session)
       return;
     
     var copy = session.dragAction & Ci.nsIDragService.DRAGDROP_ACTION_COPY;
     var transactions = [];
-    var xferable = this._initTransferable(view, orientation);
+    var xferable = this._initTransferable(targetView, orientation);
     for (var i = 0; i < session.numDropItems; ++i) {
       session.getData(xferable, i);
     
@@ -1021,11 +1025,16 @@ var PlacesControllerDragHelper = {
                         flavor.value, insertionPoint.folderId, 
                         insertionPoint.index, copy));
     }
-    PlacesController.willReloadView(RELOAD_ACTION_INSERT, view, 
+    
+    if (sourceView)
+      sourceView.willReloadView(RELOAD_ACTION_REMOVE, sourceView, null, 0);
+    PlacesController.willReloadView(RELOAD_ACTION_INSERT, targetView, 
                                     insertionPoint, session.numDropItems);
     var txn = new PlacesAggregateTransaction("DropItems", transactions);
     PlacesController._hist.transactionManager.doTransaction(txn);
-    PlacesController.didReloadView(view);
+    if (sourceView)
+      sourceView.didReloadView(sourceView);
+    PlacesController.didReloadView(targetView);
   }
 };
 
