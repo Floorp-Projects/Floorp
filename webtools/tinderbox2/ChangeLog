@@ -1,3 +1,13 @@
+2005-12-01  Mike Taylor <bear@code-bear.com>
+  * src/lib/VCDisplay/ViewCVS.pm
+    updated tinderbox library use statement to have the #tinderbox_libdir#
+    marker instead of hardcoded paths
+    bug 312958
+
+2005-11-25
+  * A pass was made thru many files to correct spelling errors and typos.
+    This was done mozilla-wide.
+
 2005-10-18  Mike Taylor <bear@code-bear.com>
   * ReadMe, Install
     Updated to mention VC_SVN
