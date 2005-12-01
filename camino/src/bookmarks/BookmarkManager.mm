@@ -1383,10 +1383,18 @@ static BookmarkManager* gBookmarkManager = nil;
       }
       else if ([tokenTag isEqualToString:@"<A "]) {
         // adding a new bookmark to end of currentArray.
-        [fileScanner scanUpToString:@"</A>" intoString:&tokenString];
+        [fileScanner scanUpToString:@"</A>" intoString:&tokenString];  // fileScanner contains <A HREF="[URL]">[TITLE]</A>
         tokenScanner = [[NSScanner alloc] initWithString:tokenString];
-        [tokenScanner scanUpToString:@"href=\"" intoString:NULL];
-        // might be a menu spacer.  check to make sure.
+        [tokenScanner scanUpToString:@"href=\"" intoString:nil];  // tokenScanner now contains HREF="[URL]">[TITLE]
+        // check for a menu spacer, which will look like this: HREF="">&lt;Menu Spacer&gt; (bug 309008)
+        if ([[tokenString substringFromIndex:([tokenScanner scanLocation]+8)] isEqualToString:@"&lt;Menu Spacer&gt;"])  {
+          currentItem = [currentArray addBookmark];
+          [(Bookmark *)currentItem setIsSeparator:YES];
+          [tokenScanner release];
+          [tokenTag release];
+          [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
+          continue;
+        }
         if (![tokenScanner isAtEnd]) {
           [tokenScanner setScanLocation:([tokenScanner scanLocation]+6)];
           [tokenScanner scanUpToString:@"\"" intoString:&tempItem];
