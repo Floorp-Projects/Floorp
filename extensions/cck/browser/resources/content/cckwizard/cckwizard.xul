@@ -256,7 +256,7 @@
     </hbox>
     <hbox>
       <textbox id="BrowserPluginPath2" flex="1"/>
-      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath3');"/>
+      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath2');"/>
     </hbox>
     <hbox>
       <textbox id="BrowserPluginPath3" flex="1"/>
