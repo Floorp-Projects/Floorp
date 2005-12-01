@@ -202,8 +202,14 @@
             var min = { }, max = { };
             selection.getRangeAt(i, min, max);
             
+            try {
             for (var j = min.value; j <= max.value; ++j)
               nodes.push(result.nodeForTreeIndex(j));
+            }
+            catch (e) {
+              LOG("j = " + j + ", max.value = " + max.value);
+              STACK(arguments);
+            }
           }
           return nodes;
         ]]></body>
@@ -456,7 +462,7 @@
         <parameter name="action"/>
         <parameter name="view"/>
         <parameter name="insertionPoint"/>
-        <parameter name="insertCount"/>
+        <parameter name="count"/>
         <body><![CDATA[ 
           this._selection = [];
           var selection = this.view.selection;
@@ -488,17 +494,19 @@
             }
             else 
               index = this.getResult().childCount;
-            var max = index + insertCount - 1;            
+            var max = index + count - 1;            
             this._selection = [{ min: index, max: max }];
             break;
           case RELOAD_ACTION_REMOVE:
             min = { }, max = { };
             selection.getRangeAt(0, min, max);
+            if (min.value == this.view.rowCount - count) 
+              --min.value;
             this._selection = [{ min: min.value, max: min.value }];
             break;
           }
-          //if (this._selection.length)
-          //  LOG("SET UP RANGE: " + this._selection[0].toSource() + " for " + this.id + " action = " + action);
+          if (this._selection.length)
+            LOG("SET UP RANGE: " + this._selection[0].toSource() + " for " + this.id + " action = " + action);
         ]]></body>
       </method>
       
@@ -511,7 +519,7 @@
           selection.clearSelection();
           for (var i = 0; i < this._selection.length; ++i) {
             var range = this._selection[i];
-            //LOG("RESELECTING RANGE: " + range.min + "," + range.max + " in: " + this.id);
+            LOG("RESELECTING RANGE: " + range.min + "," + range.max + " in: " + this.id);
             selection.rangedSelect(range.min, range.max, true);
           }
           if (view != this.view)
