@@ -1710,6 +1710,18 @@ nsContentUtils::LookupNamespaceURI(nsIContent* aNamespaceResolver,
                                    const nsAString& aNamespacePrefix,
                                    nsAString& aNamespaceURI)
 {
+  if (aNamespacePrefix.EqualsLiteral("xml")) {
+    // Special-case for xml prefix
+    aNamespaceURI.AssignLiteral("http://www.w3.org/XML/1998/namespace");
+    return NS_OK;
+  }
+
+  if (aNamespacePrefix.EqualsLiteral("xmlns")) {
+    // Special-case for xmlns prefix
+    aNamespaceURI.AssignLiteral("http://www.w3.org/2000/xmlns/");
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIAtom> name;
   if (!aNamespacePrefix.IsEmpty()) {
     name = do_GetAtom(aNamespacePrefix);
