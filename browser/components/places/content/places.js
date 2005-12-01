@@ -94,6 +94,17 @@ var PlacesUIHook = {
   },
 };
 
+function ViewConfig(dropTypes, dropOnTypes, filterOptions, firstDropIndex) {
+  this.dropTypes = dropTypes;
+  this.dropOnTypes = dropOnTypes;
+  this.filterOptions = filterOptions;
+  this.firstDropIndex = firstDropIndex;
+}
+ViewConfig.GENERIC_DROP_TYPES = [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE,
+                                 TYPE_X_MOZ_URL];
+ViewConfig.GENERIC_FILTER_OPTIONS = [Ci.nsINavHistoryQuery.INCLUDE_ITEMS +
+                                     Ci.nsINavHistoryQuery.INCLUDE_QUERIES];
+
 var PlacesPage = {
   _content: null,
   _places: null,
@@ -105,17 +116,13 @@ var PlacesPage = {
     this._places.controllers.appendController(PlacesController);
     this._content.controllers.appendController(PlacesController);
     
-    this._places.supportedDropTypes = [TYPE_X_MOZ_PLACE_CONTAINER];
-    this._places.supportedDropOnTypes = [TYPE_X_MOZ_PLACE_CONTAINER, 
-                                         TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL];
-    this._content.supportedDropTypes = [TYPE_X_MOZ_PLACE_CONTAINER, 
-                                        TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL];
-    this._content.supportedDropOnTypes = this._content.supportedDropTypes;
-    this._places.filterOptions = [Ci.nsINavHistoryQuery.INCLUDE_QUERIES];
-    this._content.filterOptions = [Ci.nsINavHistoryQuery.INCLUDE_ITEMS + 
-                                   Ci.nsINavHistoryQuery.INCLUDE_QUERIES];
-    this._places.firstDropIndex = 2;
-    this._content.firstDropIndex = 0;
+    this._places.init(new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER],
+                                     ViewConfig.GENERIC_DROP_TYPES,
+                                     Ci.nsINavHistoryQuery.INCLUDE_QUERIES,
+                                     ViewConfig.GENERIC_FILTER_OPTIONS, 2));
+    this._content.init(new ViewConfig(ViewConfig.GENERIC_DROP_TYPES,
+                                      ViewConfig.GENERIC_DROP_TYPES,
+                                      ViewConfig.GENERIC_FILTER_OPTIONS, 0));
     
     // Hook the browser UI
     PlacesUIHook.init(this._content);
