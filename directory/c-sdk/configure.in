@@ -64,7 +64,6 @@ MOZ_DEBUG=1
 MOZ_OPTIMIZE=
 OBJDIR=.
 OBJDIR_NAME=.
-OBJDIR_SUFFIX=OBJ
 NSINSTALL='$(MOD_DEPTH)/config/$(OBJDIR_NAME)/nsinstall'
 NOSUCHFILE=/no-such-file
 
@@ -526,9 +525,6 @@ LIB_PREFIX=lib
 DLL_SUFFIX=so
 ASM_SUFFIX=s
 MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
-PR_MD_ASFILES=
-PR_MD_CSRCS=
-PR_MD_ARCH_DIR=unix
 AR_FLAGS='cr $@'
 AS='$(CC)'
 ASFLAGS='$(CFLAGS)'
@@ -681,7 +677,6 @@ fi
 if test "$OS_TARGET" = "WIN16"; then
     OS_RELEASE=
 fi
-OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
 
 dnl ========================================================
 
@@ -726,8 +721,6 @@ case "$target" in
     aix3.2*)
         AC_DEFINE(AIX_RENAME_SELECT)
         AC_DEFINE(_PR_NO_LARGE_FILES)
-        AIX_LINK_OPTS='-bnso -berok'
-        PR_MD_ASFILES=os_AIX.s
         ;;
     aix4.1*)
         AC_DEFINE(AIX_TIMERS)
@@ -735,12 +728,10 @@ case "$target" in
         AC_DEFINE(AIX4_1)
         MKSHLIB=
         DSO_LDOPTS=
-        AIX_LINK_OPTS='-bnso -berok'
         ;;
     aix4.2*)
         AC_DEFINE(AIX_TIMERS)
         AC_DEFINE(_PR_HAVE_OFF64_T)
-        AIX_LINK_OPTS='-brtl -bnso -berok'
         ;;
     aix4.3*)
         AC_DEFINE(AIX_TIMERS)
@@ -749,7 +740,6 @@ case "$target" in
         AC_DEFINE(HAVE_SOCKLEN_T)
         AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
         USE_IPV6=1
-        AIX_LINK_OPTS='-brtl -bnso -berok'
         ;;
     *)
         AC_DEFINE(AIX_TIMERS)
@@ -757,7 +747,6 @@ case "$target" in
         AC_DEFINE(HAVE_SOCKLEN_T)
         AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
         USE_IPV6=1
-        AIX_LINK_OPTS='-brtl -bnso -berok'
         ;;
     esac
     CFLAGS="$CFLAGS -qro -qroconst"
@@ -767,16 +756,8 @@ case "$target" in
     AIX_WRAP='$(DIST)/lib/aixwrap.o'
     AIX_TMP='./_aix_tmp.o'
     if test -n "$USE_64"; then
-        MDCPUCFG_H=_aix64.cfg
         OBJECT_MODE=64
-    else
-        if test -n "$USE_IPV6"; then
-            MDCPUCFG_H=_aix32in6.cfg
-        else
-            MDCPUCFG_H=_aix32.cfg
-        fi
     fi
-    PR_MD_CSRCS=aix.c
     RESOLVE_LINK_SYMBOLS=1
     ;;
         
@@ -786,9 +767,7 @@ case "$target" in
     AC_DEFINE(BEOS)
     AC_DEFINE(_POSIX_SOURCE)
     DSO_LDOPTS=-nostart
-    MDCPUCFG_H=_beos.cfg
     USE_BTHREADS=1
-    PR_MD_ARCH_DIR=beos
     RESOLVE_LINK_SYMBOLS=1
     case "${target_cpu}" in
     i*86)
@@ -822,9 +801,6 @@ case "$target" in
         CPU_ARCH=sparc
     fi
 
-    MDCPUCFG_H=_bsdi.cfg
-    PR_MD_CSRCS=bsdi.c
-
     DSO_LDOPTS=-r
 
     case "$target_os" in
@@ -843,7 +819,6 @@ case "$target" in
         AC_DEFINE(HAVE_DLL)
         AC_DEFINE(USE_DLFCN)
         AC_DEFINE(_PR_STAT_HAS_ST_ATIMESPEC)
-        PR_MD_ASFILES=os_BSD_OS_386_2.s
         ;;
 
     bsdi4.*)
@@ -893,8 +868,6 @@ case "$target" in
     STRIP="$STRIP -x -S"
     DLL_SUFFIX=dylib
     USE_PTHREADS=1
-    MDCPUCFG_H=_darwin.cfg
-    PR_MD_CSRCS=darwin.c
     ;;
 
 *-dgux*)
@@ -908,8 +881,6 @@ case "$target" in
     DSO_LDOPTS=-G
     _OPTIMIZE_FLAGS=-O2
     _DEBUG_FLAGS=
-    MDCPUCFG_H=_dgux.cfg
-    PR_MD_CSRCS=dgux.c
     ;;
 
 *-freebsd*)
@@ -928,8 +899,6 @@ case "$target" in
     fi
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS=-Bshareable
-    MDCPUCFG_H=_freebsd.cfg
-    PR_MD_CSRCS=freebsd.c
     ;;
 
 *-hpux*)
@@ -939,13 +908,6 @@ case "$target" in
     AC_DEFINE(hppa)
     DLL_SUFFIX=sl
     DSO_LDOPTS='-b +h $(notdir $@)'
-    PR_MD_CSRCS=hpux.c
-    PR_MD_ASFILES=os_HPUX.s
-    if test -n "$USE_64"; then
-        MDCPUCFG_H=_hpux64.cfg
-    else
-        MDCPUCFG_H=_hpux32.cfg
-    fi
     if test -z "$GNU_CC"; then
         CC="$CC -Ae"
         CXX="$CXX -ext"
@@ -1053,24 +1015,15 @@ case "$target" in
     AC_DEFINE(SVR4)
     AC_DEFINE(_SGI_MP_SOURCE)
     AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-    PR_MD_CSRCS=irix.c
-    PR_MD_ASFILES=os_Irix.s
     DSO_LDOPTS='-rdata_shared -shared'
     MKSHLIB='$(LD) $(DSO_LDOPTS) -soname $(notdir $@) -o $@'
     STRIP="$STRIP -f"
     RESOLVE_LINK_SYMBOLS=1
-    if test -n "$USE_64"; then
-        MDCPUCFG_H=_irix64.cfg
-    else
-        MDCPUCFG_H=_irix32.cfg
-    fi
     case "${target_os}" in
     irix6*)
         AC_DEFINE(IRIX6)
         USE_PTHREADS=1
         USE_N32=1
-        COMPILER_TAG=_n32
-        IMPL_STRATEGY=_PTH
         ;;
     irix5*)
         AC_DEFINE(IRIX5)
@@ -1150,7 +1103,6 @@ case "$target" in
 *-linux*)
     if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
-        IMPL_STRATEGY=_PTH
     fi
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(_POSIX_SOURCE)
@@ -1163,8 +1115,6 @@ case "$target" in
     LD='$(CC)'
     CFLAGS="$CFLAGS -ansi -Wall"
     CXXFLAGS="$CXXFLAGS -ansi -Wall"
-    MDCPUCFG_H=_linux.cfg
-    PR_MD_CSRCS=linux.c
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
@@ -1174,13 +1124,11 @@ case "$target" in
                                    # combo is not yet good at debugging inlined
                                    # functions (even when using DWARF2 as the
                                    # debugging format)
-    COMPILER_TAG=_glibc
     if echo "$OS_TEST" | grep -c 86 >/dev/null; then
         CPU_ARCH=x86
     else
         CPU_ARCH=$OS_TEST
     fi
-    CPU_ARCH_TAG=_${CPU_ARCH}
     case "${target_cpu}" in
     alpha)
         AC_DEFINE(_ALPHA_)
@@ -1190,10 +1138,8 @@ case "$target" in
         ;;
     i*86)
         AC_DEFINE(i386)
-        PR_MD_ASFILES=os_Linux_x86.s
         ;;
     ia64)
-        PR_MD_ASFILES=os_Linux_ia64.s
         ;;
     m68k)
         CFLAGS="$CFLAGS -m68020-40"
@@ -1212,7 +1158,6 @@ case "$target" in
     AC_DEFINE(XP_PC)
     AC_DEFINE(WIN32)
     AC_DEFINE(_WINDOWS)
-    PR_MD_ARCH_DIR=windows
     RESOLVE_LINK_SYMBOLS=1
     PROG_SUFFIX=.exe
     if test -n "$GNU_CC"; then
@@ -1297,27 +1242,14 @@ case "$target" in
         AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
     fi
 
-    if test "$CPU_ARCH" = "x86"; then
-        CPU_ARCH_TAG=
-    else
-        CPU_ARCH_TAG=$CPU_ARCH
-    fi
-
-    if test -n "$USE_DEBUG_RTL"; then
-        OBJDIR_SUFFIX=OBJD
-    fi
-
     OS_DLLFLAGS='-nologo -DLL -SUBSYSTEM:WINDOWS -PDB:NONE'
 
     case "$OS_TARGET" in
     WINNT)
-	    MDCPUCFG_H=_winnt.cfg
 	    ;;
     WIN95)
-	    MDCPUCFG_H=_win95.cfg
 	    ;;
     WIN16)
-	    MDCPUCFG_H=_win16.cfg
 	    ;;
     *)
 	    AC_MSG_ERROR([Missing OS_TARGET for ${target}.  Use --enable-win32-target to set.])
@@ -1361,8 +1293,6 @@ case "$target" in
         CXXFLAGS="$CXXFLAGS -fPIC -Wall"
         DSO_LDOPTS=-G
     fi
-    MDCPUCFG_H=_ncr.cfg
-    PR_MD_CSRCS=ncr.c
     ;;
 
 mips-nec-sysv*)
@@ -1378,8 +1308,6 @@ mips-nec-sysv*)
     fi
     OS_LIBS="$OS_LIBS -lsocket -lnsl -ldl"
     DSO_LDOPTS=-G
-    MDCPUCFG_H=_nec.cfg
-    PR_MD_CSRCS=nec.c
     ;;
 
 *-netbsd*)
@@ -1387,8 +1315,6 @@ mips-nec-sysv*)
     AC_DEFINE(NETBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
     USE_NSPR_THREADS=1
-    MDCPUCFG_H=_netbsd.cfg
-    PR_MD_CSRCS=netbsd.c
 
     DSO_CFLAGS='-fPIC -DPIC'
     CFLAGS="$CFLAGS -ansi -Wall"
@@ -1424,8 +1350,6 @@ mips-sony-newsos*)
     CFLAGS="$CFLAGS -Xa -fullwarn"
     CXXFLAGS="$CXXFLAGS -Xa -fullwarn"
     DSO_LDOPTS=-G
-    MDCPUCFG_H=_sony.cfg
-    PR_MD_CSRCS=sony.c
     ;;
 
 *-nextstep*|*-openstep*)
@@ -1437,8 +1361,6 @@ mips-sony-newsos*)
     CXXFLAGS="$CXXFLAGS -Wall -fno-common -traditional-cpp -posix"
     USE_NSPR_THREADS=1
     DLL_SUFFIX=dylib
-    MDCPUCFG_H=_nextstep.cfg
-    PR_MD_CSRCS=nextstep.c
     ;;
 
 
@@ -1447,8 +1369,6 @@ mips-sony-newsos*)
     AC_DEFINE(NTO)
     AC_DEFINE(_QNX_SOURCE)
     AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
-    MDCPUCFG_H=_nto.cfg
-    PR_MD_CSRCS=nto.c
     MKSHLIB='$(CC) $(DSO_LDOPTS) -Wl,-soname -Wl,$(notdir $@) -o $@'
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS=-shared
@@ -1465,8 +1385,6 @@ mips-sony-newsos*)
     CXXFLAGS="$CXXFLAGS -ansi -Wall"
     DLL_SUFFIX=so.1.0
     DSO_CFLAGS=-fPIC
-    MDCPUCFG_H=_openbsd.cfg
-    PR_MD_CSRCS=openbsd.c
     USE_NSPR_THREADS=1
     case "$OS_TEST" in
     alpha|mips|pmax)
@@ -1479,8 +1397,6 @@ mips-sony-newsos*)
 *-openvms*)
     AC_DEFINE(XP_UNIX)
     RESOLVE_LINK_SYMBOLS=1
-    MDCPUCFG_H=_openvms.cfg
-    PR_MD_CSRCS=openvms.c
     AR_FLAGS='c $@'
     DSO_LDOPTS='-shared -auto_symvec $(LDFLAGS) $(OPTIMIZER)'
     ;;
@@ -1490,7 +1406,6 @@ mips-sony-newsos*)
     AC_DEFINE(XP_PC)
     AC_DEFINE(BSD_SELECT)
     AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
-    PR_MD_ARCH_DIR=os2
     RESOLVE_LINK_SYMBOLS=1
     NSINSTALL=nsinstall
     LIB_PREFIX=
@@ -1499,7 +1414,6 @@ mips-sony-newsos*)
     DLLTOOL=''
     RC=rc.exe
     PROG_SUFFIX=.exe
-    MDCPUCFG_H=_os2.cfg
 
     # EMX/GCC build
     if test -n "$GNU_CC"; then
@@ -1597,8 +1511,6 @@ mips-sony-newsos*)
         AC_DEFINE(OSF1V4_MAP_PRIVATE_BUG)
     fi
     DSO_LDOPTS='-shared -all -expect_unresolved "*" -soname $(notdir $@)'
-    MDCPUCFG_H=_osf1.cfg
-    PR_MD_CSRCS=osf1.c
     ;;
 
 *-qnx*)
@@ -1606,8 +1518,6 @@ mips-sony-newsos*)
     AC_DEFINE(QNX)
     AC_DEFINE(_PR_NEED_H_ERRNO)
     USE_NSPR_THREADS=1
-    MDCPUCFG_H=_qnx.cfg
-    PR_MD_CSRCS=qnx.c
     ;;
 
 *-*-sco*)
@@ -1622,8 +1532,6 @@ mips-sony-newsos*)
     USE_NSPR_THREADS=1
     CPU_ARCH=x86
     DSO_LDOPTS='-b elf -G'
-    MDCPUCFG_H=_scoos.cfg
-    PR_MD_SRCS=scoos.c
     ;;
 
 *-sinix*)
@@ -1659,11 +1567,6 @@ mips-sony-newsos*)
 
     OS_LIBS="$OS_LIBS -lsocket -lnsl -lresolv -ldl -lc"
     USE_NSPR_THREADS=1
-    MDCPUCFG_H=_reliantunix.cfg
-    PR_MD_CSRCS=reliantunix.c
-    if test "${OS_ARCH}" = "mips"; then
-        PR_MD_ASFILES=os_ReliantUNIX.s
-    fi
     ;;
 
 *-sunos*)
@@ -1682,8 +1585,6 @@ mips-sony-newsos*)
         _OPTIMIZE_FLAGS=
         OS_LIBS="$OS_LIBS -lm"
     fi
-    MDCPUCFG_H=_sunos4.cfg
-    PR_MD_CSRCS=sunos4.c
     ;;
 
 *-solaris*)
@@ -1697,8 +1598,6 @@ mips-sony-newsos*)
     AC_DEFINE(__svr4__)
     AC_DEFINE(SOLARIS)
     AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-    MDCPUCFG_H=_solaris.cfg
-    PR_MD_CSRCS=solaris.c
     LD=/usr/ccs/bin/ld
     RANLIB=/usr/ccs/bin/ranlib
     DSO_LDOPTS='-G -h $(notdir $@)'
@@ -1717,7 +1616,6 @@ mips-sony-newsos*)
             CFLAGS="$CFLAGS -MDupdate \$(DEPENDENCIES)"
             CXXFLAGS="$CXXFLAGS -MDupdate \$(DEPENDENCIES)"
         fi
-	COMPILER_TAG=_gcc
     else
         CC="$CC -xstrconst"
         CXX="$CXX -Qoption cg -xstrconst"
@@ -1736,7 +1634,7 @@ mips-sony-newsos*)
     fi
     if test "$OS_TEST" = "i86pc"; then
         AC_DEFINE(i386)
-        CPU_ARCH_TAG=_$OS_TEST
+
         # The default debug format, DWARF (-g), is not supported by gcc
         # on i386-ANY-sysv4/solaris, but the stabs format is.  It is
         # assumed that the Solaris assembler /usr/ccs/bin/as is used.
@@ -1793,14 +1691,11 @@ mips-sony-newsos*)
         AC_DEFINE(_PR_NO_LARGE_FILES)
         CC='$(NSDEPTH)/build/hcc cc'
         CXX='$(NSDEPTH)/build/hcpp CC'
-        MDCPUCFG_H=_unixware.cfg
     else
         AC_DEFINE(_LARGEFILE64_SOURCE)
         AC_DEFINE(_PR_HAVE_OFF64_T)
         AC_DEFINE(_PR_HAVE_SOCKADDR_LEN)
-        MDCPUCFG_H=_unixware7.cfg
     fi
-    PR_MD_CSRCS=unixware.c
     DSO_LDOPTS=-G
     CPU_ARCH=x86
     ;;
@@ -2017,14 +1912,6 @@ AC_ARG_ENABLE(ipv6,
 	    USE_IPV6=1
       fi])
 
-
-AC_ARG_ENABLE(boehm,
-    [  --enable-boehm          Enable the Boehm Garbage Collector],
-    [ if test "$enableval" = "yes"; then
-        AC_DEFINE(GC_LEAK_DETECTOR)
-        GC_LEAK_DETECTOR=1
-    fi])
-
 if test -n "$USE_PTHREADS"; then
    dnl See if -pthread is supported.
    rm -f conftest*
@@ -2189,14 +2076,6 @@ case "$target" in
     if test -z "$USE_NSPR_THREADS"; then
         AC_DEFINE(_REENTRANT)
         AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
-        if test "$OS_TEST" = "i86pc"; then
-            PR_MD_ASFILES=os_SunOS_x86.s
-        else
-            PR_MD_ASFILES=os_SunOS.s
-            if test -n "$USE_64"; then
-                PR_MD_ASFILES="$PR_MD_ASFILES os_SunOS_sparcv9.s"
-            fi
-        fi
     fi
     ;;
 *-nto*)
@@ -2228,18 +2107,6 @@ if test -n "$MOZ_DEBUG"; then
     CFLAGS="$CFLAGS $_DEBUG_FLAGS"
     CXXFLAGS="$CXXFLAGS $_DEBUG_FLAGS"
 fi
-
-if test -n "$MOZ_OPTIMIZE"; then
-    OBJDIR_TAG=_OPT
-else
-    OBJDIR_TAG=_DBG
-fi
-
-if test -n "$USE_64"; then
-    COMPILER_TAG=${COMPILER_TAG}_64
-fi
-
-RELEASE_OBJDIR_NAME="${OS_CONFIG}${CPU_ARCH_TAG}${COMPILER_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}.${OBJDIR_SUFFIX}"
 
 dnl ========================================================
 dnl Use cygwin wrapper for win32 builds, except MinGW/MSYS
@@ -2286,11 +2153,6 @@ AC_SUBST(USE_NATIVE_THREADS)
 AC_SUBST(USE_NSPR_THREADS)
 AC_SUBST(USE_NSS)
 
-AC_SUBST(NSPR_MODNAME)
-AC_SUBST(MDCPUCFG_H)
-AC_SUBST(PR_MD_CSRCS)
-AC_SUBST(PR_MD_ASFILES)
-AC_SUBST(PR_MD_ARCH_DIR)
 AC_SUBST(CPU_ARCH)
 
 AC_SUBST(OBJ_SUFFIX)
@@ -2324,7 +2186,6 @@ AC_SUBST(IMPLIB)
 
 AC_SUBST(OS_LIBS)
 AC_SUBST(RESOLVE_LINK_SYMBOLS)
-AC_SUBST(AIX_LINK_OPTS)
 AC_SUBST(NOSUCHFILE)
 AC_SUBST(MOZ_OBJFORMAT)
 AC_SUBST(ULTRASPARC_LIBRARY)
@@ -2332,7 +2193,6 @@ AC_SUBST(ULTRASPARC_FILTER_LIBRARY)
 
 AC_SUBST(OBJDIR)
 AC_SUBST(OBJDIR_NAME)
-AC_SUBST(RELEASE_OBJDIR_NAME)
 AC_SUBST(NSINSTALL)
 AC_SUBST(OPTIMIZER)
 AC_SUBST(RC)
