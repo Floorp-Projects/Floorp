@@ -119,12 +119,22 @@
       </property>
       
       <property name="insertionPoint">
-        <getter><![CDATA[ 
-          if (!this.hasSelection)
-            var index = -1;
-          else
-            index = PlacesController.getIndexOfNode(this.selectedNode)
-          return new InsertionPoint(this._result.folderId, index);
+        <getter><![CDATA[
+          // By default, the insertion point is at the top level, at the end. 
+          var index = -1;
+          var folderId = this._result.folderId;
+          
+          if (this.hasSelection) {
+            if(PlacesController.nodeIsFolder(this.selectedNode))
+              // If there is a folder selected, the insertion point is the
+              // end of the folder.
+              folderId = this.selectedNode.folderId;
+            else
+              // If there is another type of node selected, the insertion point
+              // is after that node.
+              index = PlacesController.getIndexOfNode(this.selectedNode)
+          }
+          return new InsertionPoint(folderId, index);
         ]]></getter>
       </property>
       
