@@ -60,7 +60,6 @@
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsVoidArray.h"
 #include "nsHashSets.h"
 #include "nsCRT.h"
 #include "nsPrintfCString.h"
