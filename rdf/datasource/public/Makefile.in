@@ -46,7 +46,6 @@ MODULE		= rdf
 
 EXPORTS		= \
 		nsILocalStore.h \
-		nsIRDFFileSystem.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

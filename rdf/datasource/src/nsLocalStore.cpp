@@ -84,8 +84,7 @@ protected:
     NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
     nsCOMPtr<nsISupportsArray> mObservers;
-
-    static nsWeakPtr gRDF;
+    nsCOMPtr<nsIRDFService>    mRDFService;
 
 public:
     // nsISupports interface
@@ -232,9 +231,6 @@ public:
 	NS_DECL_NSIOBSERVER
 };
 
-nsWeakPtr LocalStoreImpl::gRDF;
-
-
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -244,9 +240,8 @@ LocalStoreImpl::LocalStoreImpl(void)
 
 LocalStoreImpl::~LocalStoreImpl(void)
 {
-    nsCOMPtr<nsIRDFService> rdf = do_QueryReferent(gRDF);
-    if (rdf)
-        rdf->UnregisterDataSource(this);
+    if (mRDFService)
+        mRDFService->UnregisterDataSource(this);
 }
 
 
@@ -381,14 +376,10 @@ LocalStoreImpl::Init()
     if (NS_FAILED(rv)) return rv;
 
     // register this as a named data source with the RDF service
-    nsCOMPtr<nsIRDFService> rdf = do_GetService(NS_RDF_CONTRACTID "/rdf-service;1", &rv);
+    mRDFService = do_GetService(NS_RDF_CONTRACTID "/rdf-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // for later
-    if (!gRDF)
-        gRDF = do_GetWeakReference(rdf);
-
-    rdf->RegisterDataSource(this, PR_FALSE);
+    mRDFService->RegisterDataSource(this, PR_FALSE);
 
     // Register as an observer of profile changes
     nsCOMPtr<nsIObserverService> obs =
