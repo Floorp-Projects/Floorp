@@ -359,11 +359,20 @@
           if (!this.canDrop(index, orientation))
             return;
             
+          var dragService = 
+              Cc["@mozilla.org/widget/dragservice;1"].
+              getService(Ci.nsIDragService);
+          var session = dragService.getCurrentSession();
+          var sourceView = session.sourceNode.wrappedJSObject;
+          while (sourceView && sourceView.localName != "tree")
+            sourceView = sourceView.parentNode;
+          
           // We are responsible for translating the |index| and |orientation| 
           // parameters into a container id and index within the container, 
           // since this information is specific to the tree view. 
           var ip = this._self._getInsertionPoint(index, orientation);
-          PlacesControllerDragHelper.onDrop(this._self, ip, orientation);
+          PlacesControllerDragHelper.onDrop(sourceView, this._self, ip, 
+                                            orientation);
         },
         
         _states: { },
@@ -455,8 +464,6 @@
           if (view != this)
             action = RELOAD_ACTION_NOTHING;
           
-          LOG("VIEW = " + view.id + ", THIS = " + this.id + " ACTION: " + action);
-          
           switch (action) {
           case RELOAD_ACTION_NOTHING:
             for (var i = 0; i < rc; ++i) {
@@ -474,8 +481,6 @@
             options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
             var result = this._places.executeQuery(query, options);
             if (insertionPoint.index > -1) {
-              LOG("IP: " + insertionPoint.toSource())
-              LOG("CC: " + result.childCount + ", result.itemTypes = " + this.filterOptions + " ID : " + this.id);
               var node = result.getChild(insertionPoint.index - 1);
               var index = this.getResult().treeIndexForNode(node);
               if (insertionPoint.index == result.childCount)
