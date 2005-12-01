@@ -332,9 +332,9 @@ sub parse_mail ($) {
         $bug_info{'who'} = $1;
     }
     elsif ( my ($comment_line) = 
-                grep /^-* Additional Comments From /, @body_lines )
+                grep /^-+.*Comment.*From /i, @body_lines )
     {
-        $comment_line =~ /^-* Additional Comments From (\S+) /;
+        $comment_line =~ /^-+.*Comment.*From (\S+) /i;
         $bug_info{'who'} = $1;
     } else {
         debug_print("Could not determine who made the change.");
