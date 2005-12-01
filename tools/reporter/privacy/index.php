@@ -37,65 +37,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 require_once('../config.inc.php');
-require_once($config['app_path'].'/includes/iolib.inc.php');
+require_once($config['base_path'].'/includes/iolib.inc.php');
 
 if (!isset($_GET['plain'])) {
-	include($config['app_path'].'/includes/header.inc.php');
+	// URL for page formatted version
+	header("Location: ".$config['privacy_policy_web']);
+	exit;
 } else {
+	// Plain version for inline use
+	header("Location: ".$config['privacy_policy_inline']);
+	exit;
+}
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
-	<title><?php print $title; ?></title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<style type="text/css" media="screen">
-	body {
-		padding: 5px;
-	}
-	body, h1, h2, h3, h4, h5, h6, li {
-	    font-family: verdana, sans-serif;
-        font-size: x-small;
-        voice-family: "\"}\"";
-        voice-family: inherit;
-        font-size: small;
-    }
-	h1, h2, h3, h4, h5, h6 {
-		margin: 1em 0 0.2em 0;
-		font-family: arial, verdana, sans-serif;
-	}
-	li h1, li h2, li h3, li h4, li h5, li h6 {
-		border: none;
-	}
-	#header h1 { border: 0; }
-		h1 { font-size: 160%; font-weight: normal; }
-		h2 { font-size: 150%; font-weight: normal; }
-		h3 { font-size: 120%; }
-		h4 { font-size: 100%; }
-		h5 { font-size: 90%; }
-		h6 { font-size: 90%; border: 0; }
-	}
-	</style>
-</head>
-<?php } ?>
-
-<h4>How it works</h4>
-<p>When you find a site, simply launch the reporter in the help menu, and fill out the short form.  Then submit it</p>
-
-<h4>Why should I participate</h4>
-<p>By helping alert us of broken web sites, we can work with the webmaster to correct the problem, and make the website compatible.  You can help make sure Mozilla can access the entire internet</p>
-
-<h4>What about my privacy</h4>
-<p>Your privacy is important.  We do collect some information, but we only make anonymous bits of it available in to the general community.  We collect the following: information.</p>
-<ul>
-  <li>List for the paranoid goes here</li>
-  <li>To do later</li>
-</ul>
-
-<?php 
-if (!isset($_GET['plain'])) {
-	include($config['app_path'].'/includes/footer.inc.php');
-} else {
-?>	</body>
-	</html>
-<?php } ?>

@@ -63,6 +63,10 @@ $config['smarty_cache_dir']                = '';
 $config['smarty_compile_check']            = true;
 $config['smarty_debug']                    = false;
 
+// Privacy Policy
+$config['privacy_policy_web']              = 'http://www.mozilla.com/privacy-policy.html';
+$config['privacy_policy_inline']           = 'http://reporter.mozilla.org/privacy/privacy-policy.html';
+
 // Service
 /**********************************************************
  * If using reporter in a corporate environment, you can
