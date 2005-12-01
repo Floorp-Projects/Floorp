@@ -556,7 +556,8 @@ var PlacesController = {
                                                   index));
       }
     }
-    this.willReloadView(RELOAD_ACTION_REMOVE, this._activeView, null, 0);
+    this.willReloadView(RELOAD_ACTION_REMOVE, this._activeView, null, 
+                        nodes.length);
     var txn = new PlacesAggregateTransaction(txnName || "RemoveItems", txns);
     this._hist.transactionManager.doTransaction(txn);
     this.didReloadView(this._activeView);
@@ -888,8 +889,11 @@ var PlacesController = {
     for (var i = 0; i < data.length; ++i)
       transactions.push(this.makeTransaction(data[i], type.value, 
                                              ip.folderId, ip.index, true));
+    
+    this.willReloadView(RELOAD_ACTION_INSERT, this._activeView, ip, data.length);
     var txn = new PlacesAggregateTransaction("Paste", transactions);
     this._hist.transactionManager.doTransaction(txn);
+    this.didReloadView(this._activeView);
   },
   
   _viewObservers: [],
@@ -908,16 +912,16 @@ var PlacesController = {
     }
   },
   
-  willReloadView: function PC_willReloadView(action, targetView, 
-                                             insertionPoint, insertCount) {
+  willReloadView: function PC_willReloadView(action, view, insertionPoint, 
+                                             count) {
     for (var i = 0; i < this._viewObservers.length; ++i)
-      this._viewObservers[i].willReloadView(action, targetView, 
-                                            insertionPoint, insertCount);
+      this._viewObservers[i].willReloadView(action, view, insertionPoint, 
+                                            count);
   },
   
-  didReloadView: function PC_didReloadView(targetView) {
+  didReloadView: function PC_didReloadView(view) {
     for (var i = 0; i < this._viewObservers.length; ++i)
-      this._viewObservers[i].didReloadView(targetView);
+      this._viewObservers[i].didReloadView(view);
   },
 };
 
@@ -1027,7 +1031,8 @@ var PlacesControllerDragHelper = {
     }
     
     if (sourceView)
-      sourceView.willReloadView(RELOAD_ACTION_REMOVE, sourceView, null, 0);
+      sourceView.willReloadView(RELOAD_ACTION_REMOVE, sourceView, null, 
+                                session.numDropItems);
     PlacesController.willReloadView(RELOAD_ACTION_INSERT, targetView, 
                                     insertionPoint, session.numDropItems);
     var txn = new PlacesAggregateTransaction("DropItems", transactions);
