@@ -398,23 +398,13 @@ static id gSharedProgressController = nil;
       }
       break;
 
+    case NSDeleteFunctionKey:
     case NSDeleteCharacter:
-      { // delete key - remove all selected items unless an active one is selected
-        NSArray* selected = [self selectedProgressViewControllers];
-        BOOL activeFound = NO;
-        for (unsigned i = 0; i < [selected count]; i++)
-        {
-          if ([[selected objectAtIndex:i] isActive])
-          {
-            activeFound = YES;
-            break;
-          }
-        }
-
-        if (activeFound)
-          NSBeep();
-        else
+      { // delete or fwd-delete key - remove all selected items unless an active one is selected
+        if ([self shouldAllowRemoveAction])
           [self remove:self];
+        else
+          NSBeep();
       }
       break;
 
