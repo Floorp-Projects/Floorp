@@ -14395,9 +14395,9 @@ fi
 if test "${enable_xpcom_obsolete+set}" = set; then
   enableval="$enable_xpcom_obsolete"
   if test "$enableval" = "no"; then
-    MOZ_NO_XPCOM_OBSOLETE=
-  elif test "$enableval" = "yes"; then
     MOZ_NO_XPCOM_OBSOLETE=1
+  elif test "$enableval" = "yes"; then
+    MOZ_NO_XPCOM_OBSOLETE=
   else
     { echo "configure: error: Option, xpcom-obsolete, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
@@ -14421,9 +14421,9 @@ fi
 if test "${enable_xpcom_fastload+set}" = set; then
   enableval="$enable_xpcom_fastload"
   if test "$enableval" = "no"; then
-    MOZ_NO_FAST_LOAD=
-  elif test "$enableval" = "yes"; then
     MOZ_NO_FAST_LOAD=1
+  elif test "$enableval" = "yes"; then
+    MOZ_NO_FAST_LOAD=
   else
     { echo "configure: error: Option, xpcom-fastload, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
