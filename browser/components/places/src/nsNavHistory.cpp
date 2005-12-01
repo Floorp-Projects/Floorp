@@ -3577,8 +3577,8 @@ NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
   nsNavHistoryQuery *clone = new nsNavHistoryQuery(*this);
   NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
 
-  *_retval = clone;
-  clone->mRefCnt = 1; // the clone doesn't inherit our refcount
+  clone->mRefCnt = 0; // the clone doesn't inherit our refcount
+  NS_ADDREF(*_retval = clone);
   return NS_OK;
 }
 
