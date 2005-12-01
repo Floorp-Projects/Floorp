@@ -153,17 +153,8 @@ public:
   // nsIScriptGlobalObject
   virtual void SetContext(nsIScriptContext *aContext);
   virtual nsIScriptContext *GetContext();
-  virtual nsresult SetNewDocument(nsIDOMDocument *aDocument,
-                                  nsISupports *aState,
-                                  PRBool aClearScopeHint);
-  virtual void SetDocShell(nsIDocShell* aDocShell);
-  virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener);
   virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
   virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
   virtual JSObject *GetGlobalJSObject();
   virtual void OnFinalize(JSObject *aJSObject);
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
@@ -219,8 +210,18 @@ public:
 
   virtual NS_HIDDEN_(nsresult) SaveWindowState(nsISupports **aState);
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
+  virtual NS_HIDDEN_(nsresult) ResumeTimeouts();
 
   virtual NS_HIDDEN_(PRBool) WouldReuseInnerWindow(nsIDocument *aNewDocument);
+  virtual NS_HIDDEN_(nsresult) HandleDOMEvent(nsPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
+  virtual NS_HIDDEN_(void) SetDocShell(nsIDocShell* aDocShell);
+  virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
+                                  nsISupports *aState,
+                                  PRBool aClearScopeHint);
+  virtual NS_HIDDEN_(void) SetOpenerWindow(nsIDOMWindowInternal *aOpener);
 
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
@@ -277,7 +278,7 @@ protected:
 
   void FreeInnerObjects(JSContext *cx);
 
-  nsresult SetNewDocument(nsIDOMDocument *aDocument,
+  nsresult SetNewDocument(nsIDocument *aDocument,
                           nsISupports *aState,
                           PRBool aClearScopeHint,
                           PRBool aIsInternalCall);
@@ -383,7 +384,6 @@ protected:
   already_AddRefed<nsIWidget> GetMainWidget();
 
   void SuspendTimeouts();
-  virtual nsresult ResumeTimeouts();
 
   void Freeze()
   {

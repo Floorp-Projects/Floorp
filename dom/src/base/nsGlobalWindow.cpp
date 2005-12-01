@@ -802,7 +802,7 @@ WindowStateHolder::~WindowStateHolder()
 NS_IMPL_ISUPPORTS1(WindowStateHolder, WindowStateHolder)
 
 nsresult
-nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
+nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                nsISupports* aState,
                                PRBool aClearScopeHint)
 {
@@ -810,7 +810,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 }
 
 nsresult
-nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
+nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                nsISupports* aState,
                                PRBool aClearScopeHint,
                                PRBool aIsInternalCall)
@@ -821,6 +821,12 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
   if (!aIsInternalCall && IsInnerWindow()) {
     if (!mOuterWindow) {
       return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    // Refuse to set a new document if the call came from an inner
+    // window that's not the current inner window.
+    if (mOuterWindow->GetCurrentInnerWindow() != this) {
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     return GetOuterWindowInternal()->SetNewDocument(aDocument,
@@ -838,9 +844,6 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
                GetCurrentInnerWindow()->GetExtantDocument() == mDocument,
                "Uh, mDocument doesn't match the current inner window "
                "document!");
-
-  nsCOMPtr<nsIDocument> newDoc(do_QueryInterface(aDocument));
-  NS_ENSURE_TRUE(newDoc, NS_ERROR_FAILURE);
 
   nsresult rv = NS_OK;
 
@@ -904,7 +907,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
   // check xpc here.
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
 
-  PRBool reUseInnerWindow = WouldReuseInnerWindow(newDoc, PR_FALSE);
+  PRBool reUseInnerWindow = WouldReuseInnerWindow(aDocument, PR_FALSE);
 
   // Remember the old document's principal.
   nsIPrincipal *oldPrincipal = nsnull;
@@ -917,7 +920,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
   // the existing inner window or the new document is from the same
   // origin as the old document.
   if (!reUseInnerWindow && mNavigator && oldPrincipal) {
-    nsIPrincipal *newPrincipal = newDoc->GetPrincipal();
+    nsIPrincipal *newPrincipal = aDocument->GetPrincipal();
     rv = NS_ERROR_FAILURE;
 
     if (newPrincipal) {
@@ -934,7 +937,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
     }
   }
 
-  if (mNavigator && newDoc != oldDoc) {
+  if (mNavigator && aDocument != oldDoc) {
     // We didn't drop our reference to our old navigator object and
     // we're loading a new document. Notify the navigator object about
     // the new document load so that it can make sure it is ready for
@@ -947,8 +950,8 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
   // having to *always* reach into the inner window to find the
   // document.
 
-  mDocument = aDocument;
-  mDoc = newDoc;
+  mDocument = do_QueryInterface(aDocument);
+  mDoc = aDocument;
 
   if (IsOuterWindow()) {
     scx->WillInitializeContext();
@@ -967,7 +970,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         currentInner->mListenerManager = nsnull;
       }
 
-      if (!reUseInnerWindow || newDoc != oldDoc) {
+      if (!reUseInnerWindow || aDocument != oldDoc) {
         nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
       }
     }
@@ -1074,7 +1077,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
         PRBool termFuncSet = PR_FALSE;
 
-        if (oldDoc == newDoc) {
+        if (oldDoc == aDocument) {
           nsCOMPtr<nsIJSContextStack> stack =
             do_GetService(sJSStackContractID);
 
@@ -1177,7 +1180,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
     // which could hold event handlers alive, which hold the context
     // alive etc.
 
-    if ((!reUseInnerWindow || newDoc != oldDoc) && !aState) {
+    if ((!reUseInnerWindow || aDocument != oldDoc) && !aState) {
       nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
       nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
                                              html_doc);
@@ -1214,14 +1217,14 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if (newDoc) {
-      newDoc->SetScriptGlobalObject(newInnerWindow);
+    if (aDocument) {
+      aDocument->SetScriptGlobalObject(newInnerWindow);
     }
 
     if (!aState) {
       if (reUseInnerWindow) {
-        newInnerWindow->mDocument = aDocument;
-        newInnerWindow->mDoc = newDoc;
+        newInnerWindow->mDocument = do_QueryInterface(aDocument);
+        newInnerWindow->mDoc = aDocument;
 
         // We're reusing the inner window for a new document. In this
         // case we don't clear the inner window's scope, but we must
@@ -5704,9 +5707,9 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
               containerPref, nsIBrowserDOMWindow::OPEN_NEW,
               getter_AddRefs(domReturn));
 
-        nsCOMPtr<nsIScriptGlobalObject> domObj(do_GetInterface(domReturn));
-        if (domObj) {
-          domObj->SetOpenerWindow(this);
+        nsCOMPtr<nsPIDOMWindow> domWin(do_GetInterface(domReturn));
+        if (domWin) {
+          domWin->SetOpenerWindow(this);
         }
       }
     } else {

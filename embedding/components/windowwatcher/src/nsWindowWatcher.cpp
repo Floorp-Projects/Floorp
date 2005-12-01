@@ -1526,13 +1526,13 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
   nsresult rv = NS_ERROR_FAILURE;
 
   *aOpenedWindow = 0;
-  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(aOpenedItem));
-  if (globalObject) {
+  nsCOMPtr<nsPIDOMWindow> piOpenedWindow(do_GetInterface(aOpenedItem));
+  if (piOpenedWindow) {
     if (aParent) {
       nsCOMPtr<nsIDOMWindowInternal> internalParent(do_QueryInterface(aParent));
-      globalObject->SetOpenerWindow(internalParent); // damnit
+      piOpenedWindow->SetOpenerWindow(internalParent); // damnit
     }
-    rv = CallQueryInterface(globalObject, aOpenedWindow);
+    rv = CallQueryInterface(piOpenedWindow, aOpenedWindow);
   }
   return rv;
 }

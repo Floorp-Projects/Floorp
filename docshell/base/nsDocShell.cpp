@@ -1079,7 +1079,7 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
                                 PRBool *aIsNewWindow,
                                 nsIDocShell **aResult)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     *aResult      = nsnull;
     *aIsNewWindow = PR_FALSE;
@@ -1149,10 +1149,10 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
                                        nsIBrowserDOMWindow::OPEN_NEW,
                                        getter_AddRefs(newWindow));
 
-                    nsCOMPtr<nsIScriptGlobalObject> newObj =
+                    nsCOMPtr<nsPIDOMWindow> newPIWindow =
                         do_GetInterface(newWindow);
-                    if (newObj)
-                        newObj->SetOpenerWindow(parentWindow);
+                    if (newPIWindow)
+                        newPIWindow->SetOpenerWindow(parentWindow);
                 }
             }
             // else fall through to the normal Open method, from which
@@ -5088,7 +5088,10 @@ HandleRestorePresentationEvent(PLEvent *aEvent)
     RestorePresentationEvent *event =
         NS_STATIC_CAST(RestorePresentationEvent*, aEvent);
 
-    nsresult rv = event->mDocShell->RestoreFromHistory();
+#ifdef NS_DEBUG
+    nsresult rv =
+#endif
+    event->mDocShell->RestoreFromHistory();
     NS_ASSERTION(NS_SUCCEEDED(rv), "RestoreFromHistory failed");
     return nsnull;
 }
@@ -7983,7 +7986,10 @@ nsDocShell::SetHistoryEntry(nsCOMPtr<nsISHEntry> *aPtr, nsISHEntry *aEntry)
                 nsDocShell *rootDocShell = NS_STATIC_CAST(nsDocShell*,
                                                           rootIDocShell);
 
-                nsresult rv = SetChildHistoryEntry(oldRootEntry, rootDocShell,
+#ifdef NS_DEBUG
+                nsresult rv =
+#endif
+                SetChildHistoryEntry(oldRootEntry, rootDocShell,
                                                    0, &data);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "SetChildHistoryEntry failed");
             }
