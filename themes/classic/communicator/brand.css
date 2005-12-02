@@ -46,26 +46,14 @@
   -moz-user-focus: ignore;
   -moz-box-align: center;
   -moz-box-pack: center;
-  margin: 1px 2px 1px 10px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight;
-  -moz-border-radius: 0;
+  margin: 1px 5px 1px 10px;
+  border: none;
   padding: 1px;
   min-width: 0;
   list-style-image: url("chrome://communicator/skin/brand/throbber-single.gif");
   -moz-appearance:none !important;
 }
 
-#navigator-throbber:hover:active {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDHighlight;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDHighlight;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
-}
-  
 #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://communicator/skin/brand/throbber-anim.gif");
 }

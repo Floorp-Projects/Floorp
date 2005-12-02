@@ -46,6 +46,7 @@ libs::
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	$(INSTALL) $(srcdir)/icons/gtk/default.xpm $(DIST)/bin/chrome/icons/default
 	$(INSTALL) $(srcdir)/icons/gtk/default16.xpm $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(srcdir)/icons/gtk/seamonkey.png $(DIST)/bin/chrome/icons/default
 endif
 
 include $(topsrcdir)/config/rules.mk

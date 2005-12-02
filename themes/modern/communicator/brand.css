@@ -46,17 +46,11 @@
   -moz-user-focus: ignore !important;
   -moz-box-align: center;
   -moz-box-pack: center;
-  margin: 6px 10px 0px 8px;
-  border-top: 1px solid #B9BFC7;
-  border-right: 1px solid #A1AAB3;
-  border-bottom: 1px solid #DEE7EE;
-  border-left: 1px solid #A4ACB5;
-  -moz-border-top-colors: none;
-  -moz-border-right-colors: none;
-  -moz-border-bottom-colors: none;
-  -moz-border-left-colors: none;
+  margin: 6px 8px 0px 8px;
+  border: none;
   min-width: 0px;
   list-style-image: url("chrome://communicator/skin/brand/throbber-single.gif");
+  background: transparent;
 }
 
 #navigator-throbber[busy="true"] {
