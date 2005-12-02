@@ -394,22 +394,22 @@ CrossCheck("products", "id",
 
 # Check the former enum types -mkanat@bugzilla.org
 CrossCheck("bug_status", "value",
-            ["bugs", "bug_status"]);
+            ["bugs", "bug_status", "bug_id"]);
 
 CrossCheck("resolution", "value",
-            ["bugs", "resolution"]);
+            ["bugs", "resolution", "bug_id"]);
 
 CrossCheck("bug_severity", "value",
-            ["bugs", "bug_severity"]);
+            ["bugs", "bug_severity", "bug_id"]);
 
 CrossCheck("op_sys", "value",
-            ["bugs", "op_sys"]);
+            ["bugs", "op_sys", "bug_id"]);
 
 CrossCheck("priority", "value",
-            ["bugs", "priority"]);
+            ["bugs", "priority", "bug_id"]);
 
 CrossCheck("rep_platform", "value",
-            ["bugs", "rep_platform"]);
+            ["bugs", "rep_platform", "bug_id"]);
 
 CrossCheck('series', 'series_id',
            ['series_data', 'series_id']);
