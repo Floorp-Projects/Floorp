@@ -120,28 +120,6 @@ caption {
 
 }
 
-#menu-button {
-	background: url("chrome://minimo/skin/m-color.png") no-repeat 50% 50%;
-    width:15px !important;
-    height:15px !important;
-}
-
-#back-button
-  {
-	  list-style-image      : url("chrome://minimo/skin/back-color.png");
-	  margin-left:2px;
-  }
-
-#forward-button
-  {
-	  list-style-image      : url("chrome://minimo/skin/forward-color.png");
-  }
-
-#stop-button 
-  {
-	  list-style-image      : url("chrome://minimo/skin/stop-color.png");
-  }
-
 .menu-button
   {
     background: url("chrome://minimo/skin/m-color.png") no-repeat 50% 50%;
