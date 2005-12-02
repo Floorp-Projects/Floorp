@@ -430,12 +430,10 @@ nsSVGTextElement::GetTextContentMetrics()
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 
   if (!frame) {
-    NS_ERROR("no frame");
     return nsnull;
   }
   
   nsISVGTextContentMetrics* metrics;
   CallQueryInterface(frame, &metrics);
-  NS_ASSERTION(metrics, "wrong frame type");
   return metrics;
 }

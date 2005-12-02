@@ -68,6 +68,7 @@
 #include "nsSVGUtils.h"
 #include "nsSVGFilterFrame.h"
 #include "nsSVGUtils.h"
+#include "nsDOMError.h"
 
 typedef nsContainerFrame nsSVGTextFrameBase;
 
@@ -191,7 +192,6 @@ protected:
   already_AddRefed<nsIDOMSVGAnimatedTransformList> GetTransform();
   nsISVGGlyphFragmentNode *GetFirstGlyphFragmentChildNode();
   nsISVGGlyphFragmentNode *GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode*node);
-  nsISVGGlyphFragmentLeaf *GetGlyphFragmentAtCharNum(PRUint32 charnum);
 
   enum UpdateState{
     unsuspended,
@@ -533,29 +533,11 @@ nsSVGTextFrame::DidModifySVGObservable (nsISVGValue* observable,
 NS_IMETHODIMP
 nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
-  *_retval = nsnull;
-  
   EnsureFragmentTreeUpToDate();
 
-  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(charnum);
-  if (!fragment) return NS_ERROR_FAILURE; // xxx return some index-out-of-range error
-  
-  // query the renderer metrics for the bounds of the character
-  nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
-  fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-  if (!metrics) return NS_ERROR_FAILURE;
-  nsresult rv = metrics->GetExtentOfChar(charnum-fragment->GetCharNumberOffset(),
-                                         _retval);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-  // offset the bounds by the position of the fragment:
-  float x,y;
-  (*_retval)->GetX(&x);
-  (*_retval)->GetY(&y);
-  (*_retval)->SetX(x+fragment->GetGlyphPositionX());
-  (*_retval)->SetY(y+fragment->GetGlyphPositionY());
-
-  return NS_OK;
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+  if (!node) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  return nsSVGUtils::GetExtentOfChar(node, charnum, _retval);
 }
 
 
@@ -1316,24 +1298,3 @@ nsSVGTextFrame::GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode*node)
   return retval;
 }
 
-nsISVGGlyphFragmentLeaf *
-nsSVGTextFrame::GetGlyphFragmentAtCharNum(PRUint32 charnum)
-{
-  nsISVGGlyphFragmentLeaf *fragment = nsnull;
-  {
-    nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
-    if (!node) return nsnull; 
-    fragment = node->GetFirstGlyphFragment();
-  }
-  
-  while(fragment) {
-    PRUint32 count = fragment->GetNumberOfChars();
-    if (count>charnum)
-      return fragment;
-    charnum-=count;
-    fragment = fragment->GetNextGlyphFragment();
-  }
-
-  // not found
-  return nsnull;
-}

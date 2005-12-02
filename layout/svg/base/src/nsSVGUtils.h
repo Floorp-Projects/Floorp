@@ -48,6 +48,8 @@ class nsFrameList;
 class nsIFrame;
 struct nsStyleSVGPaint;
 class nsISVGRendererRegion;
+class nsISVGGlyphFragmentLeaf;
+class nsISVGGlyphFragmentNode;
 class nsIDOMSVGLength;
 class nsIDOMSVGMatrix;
 class nsIURI;
@@ -87,6 +89,13 @@ public:
   static nsresult GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval);
 
   /*
+   * Determines the bounds of a character
+   */
+  static nsresult GetExtentOfChar(nsISVGGlyphFragmentNode* node,
+                                  PRUint32 charnum,
+                                  nsIDOMSVGRect **_retval);
+
+  /*
    * Figures out the worst case invalidation area for a frame, taking
    * into account filters.  Null return if no filter in the hierarcy.
    */
@@ -118,6 +127,14 @@ public:
   static void
   TransformPoint(nsIDOMSVGMatrix *matrix,
                  float *x, float *y);
+
+private:
+  /*
+   * Returns the glyph fragment containing a particular character
+   */
+  static nsISVGGlyphFragmentLeaf *
+  GetGlyphFragmentAtCharNum(nsISVGGlyphFragmentNode* node,
+                            PRUint32 charnum);
 };
 
 #endif

@@ -49,6 +49,8 @@
 #include "nsIPresShell.h"
 #include "nsSVGUtils.h"
 #include "nsISVGGeometrySource.h"
+#include "nsISVGGlyphFragmentLeaf.h"
+#include "nsISVGRendererGlyphMetrics.h"
 #include "nsNetUtil.h"
 #include "nsIDOMSVGRect.h"
 #include "nsFrameList.h"
@@ -61,6 +63,7 @@
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsSVGPoint.h"
+#include "nsDOMError.h"
 
 #if defined(MOZ_SVG_RENDERER_GDIPLUS)
 #include <windows.h>
@@ -253,6 +256,34 @@ nsSVGUtils::GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval)
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+nsSVGUtils::GetExtentOfChar(nsISVGGlyphFragmentNode* node,
+                            PRUint32 charnum,
+                            nsIDOMSVGRect **_retval)
+{
+  *_retval = nsnull;
+
+  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum);
+  if (!fragment) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+  // query the renderer metrics for the bounds of the character
+  nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
+  fragment->GetGlyphMetrics(getter_AddRefs(metrics));
+  if (!metrics) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  nsresult rv = metrics->GetExtentOfChar(charnum-fragment->GetCharNumberOffset(),
+                                         _retval);
+  if (NS_FAILED(rv)) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+  // offset the bounds by the position of the fragment:
+  float x,y;
+  (*_retval)->GetX(&x);
+  (*_retval)->GetY(&y);
+  (*_retval)->SetX(x+fragment->GetGlyphPositionX());
+  (*_retval)->SetY(y+fragment->GetGlyphPositionY());
+
+  return NS_OK;
+}
+
 void
 nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame,
                                    nsISVGRendererRegion **aRegion)
@@ -360,4 +391,22 @@ nsSVGUtils::TransformPoint(nsIDOMSVGMatrix *matrix,
 
   xfpoint->GetX(x);
   xfpoint->GetY(y);
+}
+
+nsISVGGlyphFragmentLeaf *
+nsSVGUtils::GetGlyphFragmentAtCharNum(nsISVGGlyphFragmentNode* node,
+                                      PRUint32 charnum)
+{
+  nsISVGGlyphFragmentLeaf *fragment = node->GetFirstGlyphFragment();
+  
+  while(fragment) {
+    PRUint32 count = fragment->GetNumberOfChars();
+    if (count>charnum)
+      return fragment;
+    charnum-=count;
+    fragment = fragment->GetNextGlyphFragment();
+  }
+
+  // not found
+  return nsnull;
 }
