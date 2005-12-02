@@ -135,8 +135,6 @@ public:
   char                            *mSavePref;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsMsgCopy, NS_IMSGCOPY_IID)
-
 // Useful function for the back end...
 nsresult	LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
                                        nsMsgDeliverMode aFolderType,
