@@ -40,6 +40,9 @@
 #import "ProgressView.h"
 
 
+NSString* const kDownloadInstanceSelectedNotificationName = @"DownloadInstanceSelected";
+NSString* const kDownloadInstanceOpenedNotificationName   = @"DownloadInstanceOpened";
+
 @interface ProgressView(Private)
 
 -(BOOL)isSelected;
@@ -87,14 +90,14 @@
     }
   }
   [self setSelected:shouldSelect];
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"DownloadInstanceSelected" object:self];
+  [[NSNotificationCenter defaultCenter] postNotificationName:kDownloadInstanceSelectedNotificationName object:self];
 
   // after we've processed selection and modifiers, see if it's a double-click. If so, 
   // send a notification off to the controller which will handle it accordingly. Doing it after
   // processing the modifiers allows someone to shift-dblClick and open all selected items
   // in the list in one action.
   if ([theEvent type] == NSLeftMouseDown && [theEvent clickCount] == 2)
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"DownloadInstanceOpened" object:self];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kDownloadInstanceOpenedNotificationName object:self];
 }
 
 -(int)lastModifier
@@ -130,7 +133,7 @@
     mLastModifier = kNoKey; // control is only special because it means its contextual menu time
     [self setSelected:YES];
     [self display]; // change selection immediately
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"DownloadInstanceSelected" object:self];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kDownloadInstanceSelectedNotificationName object:self];
   }
   return [[self getController] contextualMenu];
 }

@@ -95,6 +95,7 @@ typedef enum
 	  
 } ETabOpenPolicy;
 
+@class CHBrowserView;
 @class BookmarkViewController;
 @class BookmarkToolbar;
 @class BrowserTabView;
@@ -176,9 +177,6 @@ typedef enum
   // someone from messing up in the nib when making changes.
   NSView* mProgressSuperview;                // WEAK ptr
   NSView* mPopupBlockSuperview;              // WEAK ptr
-    
-  // saving window titles when opening the bookmark manager
-  NSString* mSavedTitle;
 }
 
 - (BrowserTabView*)getTabBrowser;
@@ -187,9 +185,6 @@ typedef enum
 - (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;
 
 - (void)focusURLBar;
-
-    // call to update the image of the lock icon with a value from nsIWebProgressListener
-- (void)updateLock:(unsigned int)securityState;
 
     // call to update (show/hide) the image of the blocked-popup indicator and handle
     // the items of the popup un-blocker menu
@@ -232,8 +227,7 @@ typedef enum
 - (IBAction)biggerTextSize:(id)aSender;
 - (IBAction)smallerTextSize:(id)aSender;
 
-- (void)getInfo:(id)sender;
-- (BOOL)canGetInfo;
+- (IBAction)getInfo:(id)sender;
 
 - (BOOL)shouldShowBookmarkToolbar;
 
@@ -314,6 +308,9 @@ typedef enum
 
 - (IBAction)viewOnlyThisImage:(id)aSender;
 
+- (IBAction)showPageInfo:(id)sender;
+- (IBAction)showBookmarksInfo:(id)sender;
+
 - (IBAction)addBookmark:(id)aSender;
 - (IBAction)addBookmarkForLink:(id)aSender;
 - (IBAction)addBookmarkFolder:(id)aSender;
@@ -352,8 +349,8 @@ typedef enum
 // Accessor for the bm data source
 - (BookmarkViewController *)bookmarkViewController;
 
-- (NSString*)savedTitle;
-- (void)setSavedTitle:(NSString *)aTitle;
+// Browser view of the frontmost tab (nil if bookmarks are showing?)
+- (CHBrowserView*)activeBrowserView;
 
 // return a weak reference to the current web navigation object. Callers should
 // not hold onto this for longer than the current call unless they addref it.

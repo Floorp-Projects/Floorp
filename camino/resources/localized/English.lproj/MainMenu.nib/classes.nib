@@ -18,6 +18,8 @@
                 addBookmarkFolder = id; 
                 addBookmarkSeparator = id; 
                 fillForm = id; 
+                getInfo = id; 
+                showPageInfo = id; 
             }; 
             CLASS = FirstResponder; 
             LANGUAGE = ObjC; 
@@ -47,10 +49,7 @@
                 emptyCache = id; 
                 exportBookmarks = id; 
                 feedbackLink = id; 
-                findAgain = id; 
                 findInPage = id; 
-                findPrevious = id; 
-                getInfo = id; 
                 goBack = id; 
                 goForward = id; 
                 goHome = id; 
@@ -73,6 +72,7 @@
                 searchCustomizeLink = id; 
                 sendURL = id; 
                 setFileExtension = id; 
+                showCertificates = id; 
                 showHistory = id; 
                 smallerTextSize = id; 
                 supportLink = id; 

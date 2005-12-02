@@ -50,13 +50,11 @@ class nsIDOMWindow;
 class nsIWebBrowser;
 class nsIDOMNode;
 class nsIDOMEvent;
-class nsIWebBrowserFind;
 class nsIEventSink;
 class nsIDragHelperService;
 class nsIPrintSettings;
 class nsIURI;
 class nsISupports;
-
 
 // Protocol implemented by anyone interested in progress
 // related to a BrowserView. A listener should explicitly
@@ -176,7 +174,13 @@ enum {
 - (void)goForward;
 - (void)gotoIndex:(int)index;
 - (void)stop:(unsigned int)flags;
+
 - (NSString*)getCurrentURI;
+
+- (NSString*)pageLocation;  // from window.location. can differ from the document's URI, and possibly from getCurrentURI
+- (NSString*)pageLocationHost;
+- (NSString*)pageTitle;
+- (NSDate*)pageLastModifiedDate;
 
 // nsIWebBrowserSetup methods
 - (void)setProperty:(unsigned int)property toValue:(unsigned int)value;

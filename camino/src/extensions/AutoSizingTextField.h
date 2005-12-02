@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Chimera code.
  *
  * The Initial Developer of the Original Code is
- * Josh Aas.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Calum Robinson.
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Josh Aas <josha@mac.com>
+ *   Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,34 +35,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import <Cocoa/Cocoa.h>
 
-#import <AppKit/AppKit.h>
-#import "ProgressViewController.h"
+// 
+// AutoSizingTextField
+// 
+// This is a text field that automatically adjusts its height
+// to fit the text. The width remains unchanged. It will never
+// shrink to be less that one lineheight tall.
+// 
+// Can be used in Interface Builder, if you have built and installed
+// the CaminoView.palette IB Palette.
+// 
 
-extern NSString* const kDownloadInstanceSelectedNotificationName;
-extern NSString* const kDownloadInstanceOpenedNotificationName;
-
-//
-// interface ProgressView
-//
-// A NSView representing the state of a download in the download manager. There
-// will be two of these per download: one for while it's downloading, the other
-// for after it complete.
-//
-
-@interface ProgressView : NSView
+@interface AutoSizingTextField : NSTextField
 {
-@private
-  int mLastModifier;
-  ProgressViewController* mProgressController;     // WEAK reference
+  BOOL      mSettingFrameSize;
 }
-
-// returns the most recent modifier key used during the last 
-// click on this view
--(int)lastModifier;
-
-// get/set our owning controller, to which we maintain a weak link
--(void)setController:(ProgressViewController*)controller;
--(ProgressViewController*)getController;
-
 @end

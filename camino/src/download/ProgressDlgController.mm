@@ -68,6 +68,8 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 
 @end
 
+#pragma mark -
+
 @implementation ProgressDlgController
 
 static id gSharedProgressController = nil;
@@ -88,7 +90,8 @@ static id gSharedProgressController = nil;
 
 -(id)init
 {
-  if ((self == [super initWithWindowNibName:@"ProgressDialog"])) {
+  if ((self = [super initWithWindowNibName:@"ProgressDialog"]))
+  {
     mProgressViewControllers = [[NSMutableArray alloc] init];
     mDefaultWindowSize = [[self window] frame].size;
     // it would be nice if we could get the frame from the name, and then
@@ -101,12 +104,17 @@ static id gSharedProgressController = nil;
     mShouldCloseWindow   = NO;
     
     // We provide the views for the stack view, from mProgressViewControllers
+    [mStackView setShowsSeparators:YES];
     [mStackView setDataSource:self];
+
     mSelectionPivotIndex = -1;
+
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(DLInstanceSelected:)
-                                                 name:@"DownloadInstanceSelected" object:nil];
+                                                 name:kDownloadInstanceSelectedNotificationName
+                                               object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(DLInstanceOpened:)
-                                                 name:@"DownloadInstanceOpened" object:nil];
+                                                 name:kDownloadInstanceOpenedNotificationName
+                                               object:nil];
     
   }
   return self;
@@ -592,7 +600,7 @@ static id gSharedProgressController = nil;
 
 -(void)rebuildViews
 {
-  [mStackView reloadSubviews];
+  [mStackView adaptToSubviews];
 }
 
 -(int)numDownloadsInProgress
@@ -990,14 +998,15 @@ static id gSharedProgressController = nil;
  CHStackView datasource methods
  */
 
--(int)subviewsForStackView:(CHStackView *)stackView
+- (NSArray*)subviewsForStackView:(CHStackView *)stackView
 {
-  return [mProgressViewControllers count];
-}
-
--(NSView *)viewForStackView:(CHStackView *)aResizingView atIndex:(int)index
-{
-  return [((ProgressViewController*)[mProgressViewControllers objectAtIndex:index]) view];
+  NSMutableArray* viewsArray = [NSMutableArray arrayWithCapacity:[mProgressViewControllers count]];
+  
+  unsigned int numViews = [mProgressViewControllers count];
+  for (unsigned int i = 0; i < numViews; i ++)
+    [viewsArray addObject:[((ProgressViewController*)[mProgressViewControllers objectAtIndex:i]) view]];
+  
+  return viewsArray;
 }
 
 #pragma mark -

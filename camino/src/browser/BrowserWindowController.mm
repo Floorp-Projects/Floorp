@@ -48,6 +48,7 @@
 #import "BookmarkManager.h"
 #import "AddBookmarkDialogController.h"
 #import "ProgressDlgController.h"
+#import "PageInfoWindowController.h"
 
 #import "BrowserContentViews.h"
 #import "BrowserWrapper.h"
@@ -436,6 +437,7 @@ enum BWCOpenDest {
 - (void)bookmarkableTitle:(NSString **)outTitle URL:(NSString**)outURLString forWrapper:(BrowserWrapper*)inWrapper;
 
 - (void)clearContextMenuTarget;
+- (void)updateLock:(unsigned int)securityState;
 
 // create back/forward session history menus on toolbar button
 - (IBAction)backMenu:(id)inSender;
@@ -466,7 +468,6 @@ enum BWCOpenDest {
     mProgressSuperview = nil;
     mBookmarkToolbarItem = nil;
     mSidebarToolbarItem = nil;
-    mSavedTitle = nil;
   
     // register for services
     NSArray* sendTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
@@ -669,16 +670,22 @@ enum BWCOpenDest {
   // it only works if it's here.
   [[[self window] undoManager] removeAllActions];
 
+  // release top-level nib items
+  [mPageMenu release];
+  [mImageMenu release];
+  [mInputMenu release];
+  [mLinkMenu release];
+  [mMailToLinkMenu release];
+  [mImageLinkMenu release];
+  [mImageMailToLinkMenu release];
+  [mTabMenu release];
+  
   // active Gecko connections have already been shut down in |windowWillClose|
   // so we don't need to worry about that here. We only have to be careful
   // not to access anything related to the document, as it's been destroyed. The
   // superclass dealloc takes care of our child NSView's, which include the 
   // BrowserWrappers and their child CHBrowserViews.
   
-  //if (mSidebarBrowserView)
-  //  [mSidebarBrowserView windowClosed];
-
-  [mSavedTitle release];
   [mProgress release];
   [mPopupBlocked release];
   [mSearchBar release];
@@ -1376,7 +1383,7 @@ enum BWCOpenDest {
   
   if (action == @selector(fillForm:))
     return ![self bookmarkManagerIsVisible];
-  
+
   return YES;
 }
 
@@ -1405,6 +1412,9 @@ enum BWCOpenDest {
     else
       [[self window] makeFirstResponder:[mBrowserView getBrowserView]];
   }
+  
+  if ([[self window] isMainWindow])
+    [[PageInfoWindowController visiblePageInfoWindowController] updateFromBrowserView:[self activeBrowserView]];
 }
 
 - (void)setLoadingActive:(BOOL)active
@@ -1461,10 +1471,8 @@ enum BWCOpenDest {
   [mURLBar setURI:url];
   [mLocationSheetURLField setStringValue:url];
 
-  // don't call [window display] here, no matter how much you might want
-  // to, because it forces a redraw of every view in the window and with a lot
-  // of tabs, it's dog slow.
-  // [[self window] display];
+  if ([[self window] isMainWindow])
+    [[PageInfoWindowController visiblePageInfoWindowController] updateFromBrowserView:[self activeBrowserView]];
 }
 
 - (void)updateSiteIcons:(NSImage*)icon ignoreTyping:(BOOL)ignoreTyping
@@ -1501,6 +1509,8 @@ enum BWCOpenDest {
 {
   // update bookmarks menu
   [[NSApp delegate] delayedAdjustBookmarksMenuItemsEnabling];
+
+  // should we change page info for bookmarks?
 }
 
 - (void)updateFromFrontmostTab
@@ -2954,16 +2964,12 @@ enum BWCOpenDest {
   [[mBrowserView getBrowserView] smallerTextSize];
 }
 
-- (void)getInfo:(id)sender
+- (IBAction)getInfo:(id)sender
 {
-  BookmarkViewController* bookmarksController = [self bookmarkViewControllerForCurrentTab];
-  [bookmarksController ensureBookmarks];
-  [bookmarksController showBookmarkInfo:sender];
-}
-
-- (BOOL)canGetInfo
-{
-  return [self singleBookmarkIsSelected];
+  if ([self bookmarkManagerIsVisible])
+    [self showBookmarksInfo:sender];
+  else
+    [self showPageInfo:sender];
 }
 
 - (BOOL)shouldShowBookmarkToolbar
@@ -3281,6 +3287,21 @@ enum BWCOpenDest {
   }  
 }
 
+- (IBAction)showPageInfo:(id)sender
+{
+  PageInfoWindowController* pageInfoController = [PageInfoWindowController sharedPageInfoWindowController];
+
+  [pageInfoController updateFromBrowserView:[[self getBrowserWrapper] getBrowserView]];
+  [[pageInfoController window] makeKeyAndOrderFront:nil];
+}
+
+- (IBAction)showBookmarksInfo:(id)sender
+{
+    BookmarkViewController* bookmarksController = [self bookmarkViewControllerForCurrentTab];
+    [bookmarksController ensureBookmarks];
+    [bookmarksController showBookmarkInfo:sender];
+}
+
 - (BookmarkToolbar*) bookmarkToolbar
 {
   return mPersonalToolbar;
@@ -3443,20 +3464,6 @@ enum BWCOpenDest {
   return sBrokenIcon;
 }
 
-// return the window's saved title
-- (NSString *)savedTitle
-{
-  return mSavedTitle;
-}
-
-// save the window title before showing
-// bookmark manager or History manager 
-- (void)setSavedTitle:(NSString *)aTitle
-{
-  [mSavedTitle autorelease];
-  mSavedTitle = [aTitle retain];
-}
-
 + (NSDictionary *)searchURLDictionary
 {
   static NSDictionary *searchURLDictionary = nil;
@@ -3534,6 +3541,11 @@ enum BWCOpenDest {
 - (BookmarkViewController *)bookmarkViewController
 {
   return [self bookmarkViewControllerForCurrentTab];
+}
+
+- (CHBrowserView*)activeBrowserView
+{
+  return [mBrowserView getBrowserView];
 }
 
 - (id)windowWillReturnFieldEditor:(NSWindow *)aWindow toObject:(id)anObject

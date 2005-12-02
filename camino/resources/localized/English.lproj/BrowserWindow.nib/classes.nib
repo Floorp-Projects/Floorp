@@ -141,6 +141,8 @@
                 savePageAs = id; 
                 sendURL = id; 
                 sendURLFromLink = id; 
+                showBookmarksInfo = id; 
+                showPageInfo = id; 
                 smallerTextSize = id; 
                 stop = id; 
                 unblockAllSites = id; 

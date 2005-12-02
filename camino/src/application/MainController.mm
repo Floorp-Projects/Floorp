@@ -66,6 +66,7 @@
 #import "NetworkServices.h"
 #import "MVPreferencesController.h"
 #import "CertificatesWindowController.h"
+#import "PageInfoWindowController.h"
 #import "FindDlgController.h"
 #import "PreferenceManager.h"
 #import "SharedMenusObj.h"
@@ -386,6 +387,7 @@ const int kReuseWindowOnAE = 2;
 {
   [self delayedAdjustBookmarksMenuItemsEnabling];
   [self delayedFixCloseMenuItemKeyEquivalents];
+  [self delayedUpdatePageInfo];
 }
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
@@ -651,6 +653,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   }
 }
 
+// XXX move to BWC
 -(IBAction)closeTab:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -658,6 +661,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [browserController closeCurrentTab:aSender];
 }
 
+// XXX move to BWC
 -(IBAction) previousTab:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -665,6 +669,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [browserController previousTab:aSender];
 }
 
+// XXX move to BWC
 -(IBAction) nextTab:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -818,14 +823,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   [mFindDialog showWindow:self];
 }
 
-
--(IBAction) getInfo:(id)aSender
-{
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController getInfo: aSender]; 
-}
-
+// XXX move to BWC
 -(IBAction) goBack:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -833,6 +831,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [browserController back: aSender]; 
 }
 
+// XXX move to BWC
 -(IBAction) goForward:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -840,6 +839,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [browserController forward: aSender]; 
 }
 
+// XXX move to BWC
 -(IBAction) doReload:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -847,6 +847,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [browserController reload: aSender]; 
 }
 
+// XXX move to BWC
 -(IBAction) reloadWithCharset:(id)aSender
 {
   // Figure out which charset to tell gecko to load based on the sender's tag. There
@@ -869,6 +870,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   [self doReload:nil];
 }
 
+// XXX move to BWC
 -(IBAction) doStop:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -1327,6 +1329,22 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   mFileMenuUpdatePending = NO;
 }
 
+- (void)delayedUpdatePageInfo
+{
+  if (!mPageInfoUpdatePending)
+  {
+    [self performSelector:@selector(updatePageInfo) withObject:nil afterDelay:0];
+    mPageInfoUpdatePending = YES;
+  }
+}
+
+- (void)updatePageInfo
+{
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  [[PageInfoWindowController visiblePageInfoWindowController] updateFromBrowserView:[browserController activeBrowserView]];
+  mPageInfoUpdatePending = NO;
+}
+
 - (void)adjustTextEncodingMenu
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -1401,9 +1419,6 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     else
       return NO;
   }
-
-  if ( action == @selector(getInfo:) )
-    return (browserController && [browserController canGetInfo]);
 
   // only enable newTab if there is a browser window frontmost, or if there is no window
   // (i.e. disable it for non-browser windows).

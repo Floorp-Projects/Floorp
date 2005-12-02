@@ -67,4 +67,12 @@ BOOL CHCloseSizes(NSSize aSize, NSSize bSize, float slop);
 
 - (void)removeAllSubviews;
 
+// is 'inView' an immediate subview of the receiver
+- (BOOL)hasSubview:(NSView*)inView;
+
+- (void)setFrameSizeMaintainingTopLeftOrigin:(NSSize)inNewSize;
+
+// convert inRect to view coords depending on whether the view is flipped
+- (NSRect)subviewRectFromTopRelativeRect:(NSRect)inRect;
+
 @end

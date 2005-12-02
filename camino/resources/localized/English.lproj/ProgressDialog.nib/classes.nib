@@ -1,10 +1,16 @@
 {
     IBClasses = (
         {
+            CLASS = CHFlippedShrinkWrapView; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = CHShrinkWrapView; 
+        }, 
+        {CLASS = CHShrinkWrapView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {
             CLASS = CHStackView; 
             LANGUAGE = ObjC; 
             OUTLETS = {mDataSource = id; }; 
-            SUPERCLASS = NSView; 
+            SUPERCLASS = CHShrinkWrapView; 
         }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = NSObject; LANGUAGE = ObjC; }, 

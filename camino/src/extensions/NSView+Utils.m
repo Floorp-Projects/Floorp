@@ -191,4 +191,33 @@ static void RedistributeSpace(int resizeMask, float newWidth, /* in out */ float
   [subviewsArray release];
 }
 
+- (BOOL)hasSubview:(NSView*)inView
+{
+  return [[self subviews] containsObject:inView];
+}
+
+- (void)setFrameSizeMaintainingTopLeftOrigin:(NSSize)inNewSize
+{
+  if ([[self superview] isFlipped])
+    [self setFrameSize:inNewSize];
+  else
+  {
+    NSRect newFrame = [self frame];
+    newFrame.origin.y -= (inNewSize.height - newFrame.size.height);
+    newFrame.size = inNewSize;
+    [self setFrame:newFrame];
+  }
+}
+
+- (NSRect)subviewRectFromTopRelativeRect:(NSRect)inRect
+{
+  if ([self isFlipped])
+    return inRect;
+
+  NSRect theRect = inRect;
+  theRect.origin.y = NSHeight([self bounds]) - NSMaxY(inRect);
+  return theRect;
+}
+
+
 @end

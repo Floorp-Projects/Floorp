@@ -92,6 +92,7 @@ typedef enum EBookmarkOpenBehavior
     BOOL                    mGeckoInitted;
     BOOL                    mBookmarksMenuUpdatePending;
     BOOL                    mFileMenuUpdatePending;
+    BOOL                    mPageInfoUpdatePending;
 
     BookmarkMenu*           mMenuBookmarks;
     BookmarkMenu*           mDockBookmarks;
@@ -120,7 +121,6 @@ typedef enum EBookmarkOpenBehavior
 
 // Edit menu actions.
 -(IBAction) findInPage:(id)aSender;
--(IBAction) getInfo:(id)aSender;
 
 // Go menu actions.
 -(IBAction) goBack:(id)aSender;
@@ -182,6 +182,7 @@ typedef enum EBookmarkOpenBehavior
 - (void)delayedFixCloseMenuItemKeyEquivalents;
 
 - (void)delayedAdjustBookmarksMenuItemsEnabling;
+- (void)delayedUpdatePageInfo;
 
 - (NSView*)getSavePanelView;
 - (NSWindow*)getFrontmostBrowserWindow;

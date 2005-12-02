@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,6 +38,7 @@
 
 #import "NSString+Utils.h"
 #import "NSPasteboard+Utils.h"
+#import "NSDate+Utils.h"
 
 #import "CHClickListener.h"
 
@@ -75,6 +77,7 @@
 // Saving of links/images/docs
 #include "nsIWebBrowserFocus.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMLocation.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIProperties.h"
@@ -131,9 +134,10 @@ const long NSFindPanelActionSetFindString = 7;
 - (nsIContentViewer*)getContentViewer;		// addrefs return value
 - (float)getTextZoom;
 - (void)incrementTextZoom:(float)increment min:(float)min max:(float)max;
-- (nsIDocShell*)getDocShell;
+- (nsIDocShell*)getDocShell;    // does NOT addref
 - (NSString*)getSelection;
-
+- (already_AddRefed<nsIDOMWindow>)focussedDOMWindow;
+- (NSString*)locationFromDOMWindow:(nsIDOMWindow*)inDOMWindow;
 - (void)ensurePrintSettings;
 - (void)savePrintSettings;
 
@@ -345,6 +349,7 @@ const long NSFindPanelActionSetFindString = 7;
     _listener->SetContainer(container);
 }
 
+// addrefs return value
 - (nsIDOMWindow*)getContentWindow
 {
   nsIDOMWindow* window = nsnull;
@@ -489,6 +494,7 @@ const long NSFindPanelActionSetFindString = 7;
     browserSetup->SetProperty(property, value);
 }
 
+// should we be using the window.location URL instead? see nsIDOMLocation.h
 - (NSString*)getCurrentURI
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
@@ -503,6 +509,76 @@ const long NSFindPanelActionSetFindString = 7;
   nsCAutoString spec;
   uri->GetSpec(spec);
 	return [NSString stringWithUTF8String:spec.get()];
+}
+
+- (NSString*)pageLocation
+{
+  nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([self getContentWindow]);
+  NSString* location = [self locationFromDOMWindow:contentWindow];
+  return location ? location : @"";
+}
+
+- (NSString*)pageLocationHost
+{
+  nsCOMPtr<nsIDOMWindow> domWindow = getter_AddRefs([self getContentWindow]);
+  if (!domWindow) return @"";
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  domWindow->GetDocument(getter_AddRefs(domDocument));
+  if (!domDocument) return @"";
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
+  if (!nsDoc) return @"";
+
+  nsCOMPtr<nsIDOMLocation> location;
+  nsDoc->GetLocation(getter_AddRefs(location));
+  if (!location) return @"";
+  nsAutoString hostStr;
+  location->GetHost(hostStr);
+
+  return [NSString stringWith_nsAString:hostStr];
+}
+
+- (NSString*)pageTitle
+{
+  nsCOMPtr<nsIDOMWindow> window = getter_AddRefs([self getContentWindow]);
+  if (!window)
+    return @"";
+  
+  nsCOMPtr<nsIDOMDocument> htmlDoc;
+  window->GetDocument(getter_AddRefs(htmlDoc));
+
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDocument(do_QueryInterface(htmlDoc));
+  if (!htmlDocument)
+    return @"";
+
+  nsAutoString titleString;
+  htmlDocument->GetTitle(titleString);
+  return [NSString stringWith_nsAString:titleString];
+}
+
+- (NSDate*)pageLastModifiedDate
+{
+  nsCOMPtr<nsIDOMWindow> domWindow = getter_AddRefs([self getContentWindow]);
+
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  domWindow->GetDocument(getter_AddRefs(domDocument));
+  if (!domDocument)
+    return nil;
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
+  if (!nsDoc)
+    return nil;
+
+  nsAutoString lastModifiedDate;
+  nsDoc->GetLastModified(lastModifiedDate);
+
+  // sucks that we have to parse this back to a PRTime, thence back
+  // again to an NSDate. Why doesn't nsIDOMNSDocument have an accessor
+  // which can give me a date directly?
+  PRTime time;
+  PRStatus st = PR_ParseTimeString(NS_ConvertUCS2toUTF8(lastModifiedDate).get(), PR_FALSE /* local time */, &time);
+  if (st == PR_SUCCESS)
+    return [NSDate dateWithPRTime:time];
+
+  return nil;
 }
 
 - (CHBrowserListener*)getCocoaBrowserListener
@@ -766,32 +842,46 @@ const long NSFindPanelActionSetFindString = 7;
           filterView: aFilterView];
 }
 
+- (already_AddRefed<nsIDOMWindow>)focussedDOMWindow
+{
+  if (!_webBrowser)
+    return nsnull;
+
+  nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
+  nsIDOMWindow* domWindow;
+  wbf->GetFocusedWindow(&domWindow);
+  if (!domWindow)
+    _webBrowser->GetContentDOMWindow(&domWindow);
+  return domWindow;
+}
+
+- (NSString*)locationFromDOMWindow:(nsIDOMWindow*)inDOMWindow
+{
+  if (!inDOMWindow) return nil;
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  inDOMWindow->GetDocument(getter_AddRefs(domDocument));
+  if (!domDocument)
+    return nil;
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
+  if (!nsDoc)
+    return nil;
+  nsCOMPtr<nsIDOMLocation> location;
+  nsDoc->GetLocation(getter_AddRefs(location));
+  if (!location)
+    return nil;
+  nsAutoString urlStr;
+  location->GetHref(urlStr);
+  return [NSString stringWith_nsAString:urlStr];
+}
+
 -(NSString*)getFocusedURLString
 {
   if (!_webBrowser)
     return @"";
-  nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
-  nsCOMPtr<nsIDOMWindow> domWindow;
-  wbf->GetFocusedWindow(getter_AddRefs(domWindow));
-  if (!domWindow)
-    _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-  if (!domWindow)
-    return @"";
 
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  domWindow->GetDocument(getter_AddRefs(domDocument));
-  if (!domDocument)
-    return @"";
-  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
-  if (!nsDoc)
-    return @"";
-  nsCOMPtr<nsIDOMLocation> location;
-  nsDoc->GetLocation(getter_AddRefs(location));
-  if (!location)
-    return @"";
-  nsAutoString urlStr;
-  location->GetHref(urlStr);
-  return [NSString stringWith_nsAString: urlStr];
+  nsCOMPtr<nsIDOMWindow> focussedWindow = [self focussedDOMWindow];
+  NSString* locationString = [self locationFromDOMWindow:focussedWindow];
+  return locationString ? locationString : @"";
 }
 
 - (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView
@@ -801,13 +891,9 @@ const long NSFindPanelActionSetFindString = 7;
   
   nsCOMPtr<nsIDOMWindow> domWindow;
   if (focusedFrame)
-  {
-    nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
-    wbf->GetFocusedWindow(getter_AddRefs(domWindow));
-  }
+    domWindow = [self focussedDOMWindow];
   else
     _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-
   if (!domWindow)
       return;
   
@@ -815,26 +901,19 @@ const long NSFindPanelActionSetFindString = 7;
   domWindow->GetDocument(getter_AddRefs(domDocument));
   if (!domDocument)
       return;
-  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
-  if (!nsDoc)
-      return;
-  nsCOMPtr<nsIDOMLocation> location;
-  nsDoc->GetLocation(getter_AddRefs(location));
-  if (!location)
-      return;
-  nsAutoString urlStr;
-  location->GetHref(urlStr);
+
+  NSString* windowLocation = [self locationFromDOMWindow:domWindow];
 
   nsCOMPtr<nsIURI> url;
-  nsresult rv = NS_NewURI(getter_AddRefs(url), NS_ConvertUCS2toUTF8(urlStr).get());
+  nsresult rv = NS_NewURI(getter_AddRefs(url), [windowLocation UTF8String]);
   if (NS_FAILED(rv))
       return;
   
-  [self saveInternal: url.get()
-        withDocument: domDocument
-        suggestedFilename: @""
-        bypassCache: NO
-        filterView: aFilterView];
+  [self saveInternal:url.get()
+        withDocument:domDocument
+   suggestedFilename:@""
+         bypassCache:NO
+          filterView:aFilterView];
 }
 
 -(void)doCommand:(const char*)commandName
@@ -1011,38 +1090,6 @@ const long NSFindPanelActionSetFindString = 7;
   [[self getBrowserContainer] didDismissPrompt];
 }
 
-#if 0
-// how does this differ from getCurrentURI?
--(NSString*)getCurrentURLSpec
-{
-  NSString* empty = @"";
-  if (!_webBrowser)
-    return empty;
-  nsCOMPtr<nsIDOMWindow> domWindow;
-  _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-  if (!domWindow)
-    return empty;
-  
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  domWindow->GetDocument(getter_AddRefs(domDocument));
-  if (!domDocument)
-    return empty;
-
-  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
-  if (!nsDoc)
-    return empty;
-
-  nsCOMPtr<nsIDOMLocation> location;
-  nsDoc->GetLocation(getter_AddRefs(location));
-  if (!location)
-    return empty;
-
-  nsAutoString urlStr;
-  location->GetHref(urlStr);
-  return [NSString stringWith_nsAString: urlStr];
-}
-#endif
-
 - (void)setActive: (BOOL)aIsActive
 {
   nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
@@ -1095,7 +1142,7 @@ const long NSFindPanelActionSetFindString = 7;
   }
 }
 
-
+// does NOT addref return value
 - (nsIDocShell*)getDocShell
 {
   if (!_webBrowser)

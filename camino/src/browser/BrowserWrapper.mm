@@ -261,20 +261,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (NSString*)pageTitle
 {
-  nsCOMPtr<nsIDOMWindow> window = getter_AddRefs([mBrowserView getContentWindow]);
-  if (!window)
-    return @"";
-  
-  nsCOMPtr<nsIDOMDocument> htmlDoc;
-  window->GetDocument(getter_AddRefs(htmlDoc));
-
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDocument(do_QueryInterface(htmlDoc));
-  if (!htmlDocument)
-    return @"";
-
-  nsAutoString titleString;
-  htmlDocument->GetTitle(titleString);
-  return [NSString stringWith_nsAString:titleString];
+  return [mBrowserView pageTitle];
 }
 
 - (NSImage*)siteIcon

@@ -50,28 +50,12 @@
 
 #import "nsServiceManagerUtils.h"
 
+#import "AutoSizingTextField.h"
+
+#import "CHStackView.h"
 #import "CertificateItem.h"
 #import "CertificateView.h"
 
-
-#pragma mark CertificateContentsView
-#pragma mark -
-
-@interface CertificateContentsView : NSView
-{
-}
-@end
-
-@implementation CertificateContentsView
-
-- (BOOL)isFlipped
-{
-  return YES;
-}
-
-@end
-
-#pragma mark -
 
 const float kCertImageViewSize          = 64.0f;
 const float kCertHeaderFieldVerticalGap = 4.0f;
@@ -79,6 +63,7 @@ const float kCertHeaderFieldRightGap    = 4.0f;
 const float kStatusImageSize            = 12.0f;
 
 const float kGroupHeaderLeftOffset  = 4.0f;
+const float kGapAboveGroup          = 2.0f;
 const float kGapUnderGroupHeader    = 5.0f;
 const float kDisclosureLabelGap     = 4.0f;
 
@@ -87,12 +72,14 @@ const float kDisclosureButtonSize = 12.0f;
 const float kGeneralRightGap     = 4.0f;
 
 const float kHeaderLeftOffset    = 16.0f;
-const float kGapUnderHeader      = 5.0f;
+const float kGapAboveHeader      = 2.0f;
+const float kGapUnderHeader      = 3.0f;
 const float kGapUnderGroup       = 5.0f;
 
 const float kLabelLeftOffset    = 16.0f;
 const float kLabelGutterWidth   = 10.0f;
-const float kGapUnderLine       = 5.0f;
+const float kGapUnderLine         = 5.0f;
+const float kGapUnderCheckboxLine = 3.0f;
 
 #pragma mark -
 #pragma mark CertificateView
@@ -102,20 +89,25 @@ const float kGapUnderLine       = 5.0f;
 
 - (float)labelColumnWidth;
 
-- (NSTextField*)textFieldWithInitialFrame:(NSRect)inFrame stringValue:(NSString*)inString small:(BOOL)useSmallFont bold:(BOOL)useBold;
+- (CHShrinkWrapView*)containerViewWithTopPadding:(float)inTop bottomPadding:(float)inBottom;
+- (NSTextField*)textFieldWithInitialFrame:(NSRect)inFrame stringValue:(NSString*)inString autoSizing:(BOOL)inAutosize small:(BOOL)useSmallFont bold:(BOOL)useBold;
 
-- (void)addGroupingWithKey:(NSString*)inLabelKey expanded:(BOOL)inExpanded action:(SEL)inAction atOffset:(float*)ioOffset;
-- (void)addHeaderWithKey:(NSString*)inLabelKey atOffset:(float*)ioOffset;
-- (void)addLineWithLabelKey:(NSString*)inLabelKey data:(NSString*)inData atOffset:(float*)ioOffset ignoreBlankLines:(BOOL)inIgnoreBlank;
-- (void)addScrollingTextFieldWithLabelKey:(NSString*)inLabelKey data:(NSString*)inData atOffset:(float*)ioOffset ignoreBlankLines:(BOOL)inIgnoreBlank;
-- (NSButton*)addButtonLineWithLabelKey:(NSString*)inLabelKey buttonLabelKey:(NSString*)buttonKey action:(SEL)inAction atOffset:(float*)ioOffset;
-- (NSButton*)addCheckboxLineWithLabelKey:(NSString*)inLabelKey buttonLabelKey:(NSString*)buttonKey action:(SEL)inAction atOffset:(float*)ioOffset;
+- (CHStackView *)groupingWithKey:(NSString*)inLabelKey expanded:(BOOL)inExpanded action:(SEL)inAction;
+- (NSView*)headerWithKey:(NSString*)inLabelKey;
+- (NSTextField*)addLineLabelWithKey:(NSString*)inLabelKey toView:(NSView*)inLineContainerView;
+- (NSView*)wholeLineLabelWithKey:(NSString*)inLabelKey;
+- (NSView*)lineWithLabelKey:(NSString*)inLabelKey data:(NSString*)inData ignoreBlankLines:(BOOL)inIgnoreBlank;
+- (NSView*)scrollingTextFieldWithLabelKey:(NSString*)inLabelKey data:(NSString*)inData ignoreBlankLines:(BOOL)inIgnoreBlank;
+- (NSView*)buttonLineWithLabelKey:(NSString*)inLabelKey buttonLabelKey:(NSString*)buttonKey action:(SEL)inAction button:(NSButton**)outButton;
+- (NSView*)checkboxLineWithLabelKey:(NSString*)inLabelKey buttonLabelKey:(NSString*)buttonKey action:(SEL)inAction button:(NSButton**)outButton;
 
 - (void)refreshView;
-- (float)rebuildCertHeader;
+- (void)rebuildCertHeader;
 - (void)rebuildCertContent;
-- (float)rebuildDetails:(float)inOffset;
-- (float)rebuildTrustSettings:(float)inOffset;
+
+- (void)rebuildDetails;
+- (void)rebuildTrustSettings;
+
 - (BOOL)showTrustSettings;
 
 - (IBAction)trustCheckboxClicked:(id)inSender;
@@ -290,13 +282,83 @@ const float kGapUnderLine       = 5.0f;
 
 - (float)labelColumnWidth
 {
-  // measure all the label strings?
-  return 120.0f;
+  static BOOL   sGotWidth = NO;
+  static float  sLongestLabelWidth = 0.0f;
+
+  if (!sGotWidth)
+  {
+    NSArray*    labelKeys = [NSArray arrayWithObjects:
+                                    @"IssuedTo",
+                                    @"OwnerCommonName",
+                                    @"OwnerEmailAddress",
+                                    @"OwnerOrganization",
+                                    @"OwnerOrgUnit",
+                                    @"Version",
+                                    @"SerialNumber",
+                                    @"IssuedBy",
+                                    @"IssuerCommonName",
+                                    @"IssuerOrganization",
+                                    @"IssuerOrgUnit",
+                                    @"ShowIssuerCertLabel",
+                                    @"Validity",
+                                    @"NotBeforeLocalTime",
+                                    @"NotAfterLocalTime",
+                                    @"SigAlgorithm",
+                                    @"Signature",
+                                    @"PublicKeyInfo",
+                                    @"PublicKeyAlgorithm",
+                                    @"PublicKey",
+                                    @"UsagesTitle",
+                                    @"Usages",
+                                    @"Fingerprints",
+                                    @"SHA1Fingerprint",
+                                    @"MD5Fingerprint",
+                                    nil];
+  
+    float maxWidth = 0.0f;
+    NSDictionary* fontAttributes = [NSDictionary dictionaryWithObject:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]
+                                                               forKey:NSFontAttributeName];
+    NSEnumerator* keysEnum = [labelKeys objectEnumerator];
+    NSString* curKey;
+    while ((curKey = [keysEnum nextObject]))
+    {
+      NSString* theLabel = NSLocalizedStringFromTable(curKey, @"CertificateDialogs", @"");
+      NSSize stringSize = [theLabel sizeWithAttributes:fontAttributes];
+      if (stringSize.width > maxWidth)
+        maxWidth = stringSize.width;
+    }
+    
+    if (maxWidth < 120.0f)
+      maxWidth = 120.0f;
+
+    sLongestLabelWidth = maxWidth;
+    sGotWidth = YES;
+  }
+
+  return sLongestLabelWidth;
 }
 
-- (NSTextField*)textFieldWithInitialFrame:(NSRect)inFrame stringValue:(NSString*)inString small:(BOOL)useSmallFont bold:(BOOL)useBold
+- (CHShrinkWrapView*)containerViewWithTopPadding:(float)inTop bottomPadding:(float)inBottom
 {
-  NSTextField* theTextField = [[[NSTextField alloc] initWithFrame:inFrame] autorelease];
+  // the origin of the rect doesn't matter, and we'll resize the height later
+  NSRect headerRect = NSMakeRect(0, 0, NSWidth([self frame]), NSHeight([self frame]));
+  CHShrinkWrapView* containerView = [[[CHShrinkWrapView alloc] initWithFrame:headerRect] autorelease];
+  [containerView setIntrinsicPadding:kGroupHeaderLeftOffset forEdge:NSMinXEdge];
+  [containerView setIntrinsicPadding:inBottom forEdge:NSMinYEdge];
+  [containerView setIntrinsicPadding:kGroupHeaderLeftOffset forEdge:NSMaxXEdge];
+  [containerView setIntrinsicPadding:inTop forEdge:NSMaxYEdge];
+  [containerView setAutoresizingMask:NSViewWidthSizable | NSViewMinYMargin];
+  return containerView;
+}
+
+- (NSTextField*)textFieldWithInitialFrame:(NSRect)inFrame stringValue:(NSString*)inString autoSizing:(BOOL)inAutosize small:(BOOL)useSmallFont bold:(BOOL)useBold
+{
+  NSTextField* theTextField;
+  if (inAutosize)
+    theTextField = [[[AutoSizingTextField alloc] initWithFrame:inFrame] autorelease];
+  else
+    theTextField = [[[NSTextField alloc] initWithFrame:inFrame] autorelease];
+
   [theTextField setEditable:NO];
   [theTextField setSelectable:YES];
   NSFont* fieldFont;
@@ -310,210 +372,241 @@ const float kGapUnderLine       = 5.0f;
   [theTextField setDrawsBackground:NO];
   [theTextField setBezeled:NO];
   [theTextField setStringValue:inString ? inString : @""];
-  [[theTextField cell] setWraps:NO];
+  [[theTextField cell] setWraps:inAutosize];
+  [theTextField setAutoresizingMask:NSViewWidthSizable | NSViewMinYMargin];
   
   NSSize theCellSize = [[theTextField cell] cellSizeForBounds:inFrame];
   theCellSize.width = NSWidth(inFrame);   // keep the provided width
-  [theTextField setFrameSize:theCellSize];
-  //[theTextField sizeToFit];
+  [theTextField setFrameSizeMaintainingTopLeftOrigin:theCellSize];
 
   return theTextField;
 }
 
-- (void)addGroupingWithKey:(NSString*)inLabelKey expanded:(BOOL)inExpanded action:(SEL)inAction atOffset:(float*)ioOffset
+- (CHStackView *)groupingWithKey:(NSString*)inLabelKey expanded:(BOOL)inExpanded action:(SEL)inAction
 {
-  NSRect lineRect = NSMakeRect(kGroupHeaderLeftOffset, *ioOffset + kGroupHeaderLeftOffset, NSWidth([self frame]) - 2 * kGroupHeaderLeftOffset, 100.0f);
+  NSRect stackFrame = [self bounds];
+  
+  CHStackView* groupContainer = [[[CHStackView alloc] initWithFrame:stackFrame] autorelease];
+  [groupContainer setAutoresizingMask:NSViewWidthSizable | NSViewMinYMargin];
+  
+  NSView* lineContainer = [self containerViewWithTopPadding:kGapAboveGroup bottomPadding:kGapUnderGroupHeader];
 
-  NSRect buttonRect;
+  NSRect lineRect = NSMakeRect(kGroupHeaderLeftOffset, 0.0f, NSWidth([self frame]) - 2 * kGroupHeaderLeftOffset, 100.0f);
+
+  NSRect buttonRect = NSMakeRect(0, 0, kDisclosureButtonSize, kDisclosureButtonSize);
   buttonRect.origin = lineRect.origin;
   buttonRect.size = NSMakeSize(kDisclosureButtonSize, kDisclosureButtonSize);
   
-  NSButton* theButton = [[[NSButton alloc] initWithFrame:buttonRect] autorelease];
+  NSButton* theButton = [[[NSButton alloc] initWithFrame:[groupContainer subviewRectFromTopRelativeRect:buttonRect]] autorelease];
   [theButton setBordered:NO];
   [theButton setImage:         inExpanded ? [NSImage imageNamed:@"triangle_down_normal"]  : [NSImage imageNamed:@"triangle_right_normal"]];
   [theButton setAlternateImage:inExpanded ? [NSImage imageNamed:@"triangle_down_pressed"] : [NSImage imageNamed:@"triangle_right_pressed"]];
   [theButton setButtonType:NSMomentaryChangeButton];
   [theButton setAction:inAction];
   [theButton setTarget:self];
-  [mContentView addSubview:theButton];
+  [theButton setAutoresizingMask:NSViewMinYMargin];
+  [lineContainer addSubview:theButton];
   
   lineRect.origin.x = NSMaxX(buttonRect) + kDisclosureLabelGap;
   NSString* theLabel = NSLocalizedStringFromTable(inLabelKey, @"CertificateDialogs", @"");
-  NSTextField* headerField = [self textFieldWithInitialFrame:lineRect stringValue:theLabel small:YES bold:YES];
-  [mContentView addSubview:headerField];
+  NSTextField* headerField = [self textFieldWithInitialFrame:[groupContainer subviewRectFromTopRelativeRect:lineRect] stringValue:theLabel autoSizing:NO small:YES bold:YES];
+  [lineContainer addSubview:headerField];
 
-  float buttonBottom  = NSMaxY([theButton frame]);
-  float labelBottom   = NSMaxY([headerField frame]);
-  float maxYPos = (buttonBottom > labelBottom) ? buttonBottom : labelBottom;
-
-  *ioOffset = maxYPos + kGapUnderGroupHeader;
+  [groupContainer addSubview:lineContainer];
+  return groupContainer;
 }
 
-- (void)addHeaderWithKey:(NSString*)inLabelKey atOffset:(float*)ioOffset
+- (NSView*)headerWithKey:(NSString*)inLabelKey
 {
+  NSView* headerContainer = [self containerViewWithTopPadding:kGapAboveHeader bottomPadding:kGapUnderHeader];
+
   float labelOffset = kGroupHeaderLeftOffset + kDisclosureButtonSize + kDisclosureLabelGap;
-  NSRect headerRect = NSMakeRect(labelOffset, *ioOffset, NSWidth([self frame]) - labelOffset - kGeneralRightGap, 100.0f);
+  NSRect headerRect = NSMakeRect(labelOffset, 0.0f, [self labelColumnWidth], 100.0f);
   
   NSString* theLabel = NSLocalizedStringFromTable(inLabelKey, @"CertificateDialogs", @"");
-  NSTextField* headerField = [self textFieldWithInitialFrame:headerRect stringValue:theLabel small:YES bold:YES];
-  [mContentView addSubview:headerField];
+  NSTextField* headerField = [self textFieldWithInitialFrame:[headerContainer subviewRectFromTopRelativeRect:headerRect] stringValue:theLabel autoSizing:NO small:YES bold:YES];
+  [headerField setAlignment:NSRightTextAlignment];
+  [headerField setTextColor:[NSColor lightGrayColor]];
+  [headerField setAutoresizingMask:NSViewMaxXMargin | NSViewMinYMargin];
+  [headerContainer addSubview:headerField];
 
-  *ioOffset = NSMaxY([headerField frame]) + kGapUnderHeader;
+  NSFont* labelFont = [[headerField cell] font];
+  float baselineOffset = [labelFont ascender];
+  
+  float xPos = kLabelLeftOffset + [self labelColumnWidth] + kLabelGutterWidth;
+  NSRect boxFrame = NSMakeRect(xPos, baselineOffset, NSWidth([self frame]) - xPos - kLabelLeftOffset, 2.0f);
+  
+  NSBox* lineBox = [[[NSBox alloc] initWithFrame:[headerContainer subviewRectFromTopRelativeRect:boxFrame]] autorelease];
+  [lineBox setBoxType:NSBoxSeparator];
+  [lineBox setAutoresizingMask:NSViewWidthSizable | NSViewMinYMargin];
+  [headerContainer addSubview:lineBox];
+  
+  return headerContainer;
 }
 
-// returns current V offset
-- (void)addLineWithLabelKey:(NSString*)inLabelKey data:(NSString*)inData atOffset:(float*)ioOffset ignoreBlankLines:(BOOL)inIgnoreBlank
+- (NSTextField*)addLineLabelWithKey:(NSString*)inLabelKey toView:(NSView*)inLineContainerView
+{
+  float labelOffset = kGroupHeaderLeftOffset + kDisclosureButtonSize + kDisclosureLabelGap;
+  NSRect labelRect = NSMakeRect(labelOffset, 0.0f, [self labelColumnWidth], 100.0f);
+  
+  NSString* theLabel = NSLocalizedStringFromTable(inLabelKey, @"CertificateDialogs", @"");
+  NSTextField* labelField = [self textFieldWithInitialFrame:[inLineContainerView subviewRectFromTopRelativeRect:labelRect] stringValue:theLabel autoSizing:NO small:YES bold:NO];
+  [labelField setAlignment:NSRightTextAlignment];
+  [labelField setTextColor:[NSColor darkGrayColor]];
+  [labelField setAutoresizingMask:NSViewMaxXMargin | NSViewMinYMargin];
+  [inLineContainerView addSubview:labelField];
+  return labelField;
+}
+
+- (NSView*)wholeLineLabelWithKey:(NSString*)inLabelKey
+{
+  NSView* lineContainer = [self containerViewWithTopPadding:0.0f bottomPadding:kGapUnderLine];
+
+  float labelOffset = kGroupHeaderLeftOffset + kDisclosureButtonSize + kDisclosureLabelGap;
+  NSRect labelRect = NSMakeRect(labelOffset, 0.0f, NSWidth([self frame]) - labelOffset, 100.0f);
+  
+  NSString* theLabel = NSLocalizedStringFromTable(inLabelKey, @"CertificateDialogs", @"");
+  NSTextField* labelField = [self textFieldWithInitialFrame:[lineContainer subviewRectFromTopRelativeRect:labelRect] stringValue:theLabel autoSizing:YES small:YES bold:NO];
+  [lineContainer addSubview:labelField];
+  return lineContainer;
+}
+
+- (NSView*)lineWithLabelKey:(NSString*)inLabelKey data:(NSString*)inData ignoreBlankLines:(BOOL)inIgnoreBlank
 {
   if (inIgnoreBlank && [inData length] == 0)
-    return;
-  
-  float labelOffset = kGroupHeaderLeftOffset + kDisclosureButtonSize + kDisclosureLabelGap;
-  NSRect labelRect = NSMakeRect(labelOffset, *ioOffset, NSWidth([self frame]) - labelOffset - kGeneralRightGap, 100.0f);
-  
-  NSString* theLabel = NSLocalizedStringFromTable(inLabelKey, @"CertificateDialogs", @"");
-  NSTextField* labelField = [self textFieldWithInitialFrame:labelRect stringValue:theLabel small:YES bold:NO];
-  [mContentView addSubview:labelField];
+    return nil;
+
+  NSView* lineContainer = [self containerViewWithTopPadding:0.0f bottomPadding:kGapUnderLine];
+  [self addLineLabelWithKey:inLabelKey toView:lineContainer];
 
   float xPos = kLabelLeftOffset + [self labelColumnWidth] + kLabelGutterWidth;
-  NSRect dataRect = NSMakeRect(xPos, *ioOffset, NSWidth([self frame]) - xPos - kLabelLeftOffset, 100.0f);
-  NSTextField* dataField = [self textFieldWithInitialFrame:dataRect stringValue:inData small:YES bold:NO];
-  [dataField setAutoresizingMask:NSViewWidthSizable | NSViewMaxYMargin];
-  [mContentView addSubview:dataField];
-
-  float labelBottom = NSMaxY([labelField frame]);
-  float dataBottom  = NSMaxY([dataField frame]);
-  float maxYPos = (dataBottom > labelBottom) ? dataBottom : labelBottom;
-  
-  *ioOffset = maxYPos + kGapUnderLine;
+  NSRect dataRect = NSMakeRect(xPos, 0.0f, NSWidth([self frame]) - xPos - kLabelLeftOffset, 100.0f);
+  NSTextField* dataField = [self textFieldWithInitialFrame:[lineContainer subviewRectFromTopRelativeRect:dataRect] stringValue:inData autoSizing:YES small:YES bold:NO];
+  [lineContainer addSubview:dataField];
+  return lineContainer;
 }
 
-- (void)addScrollingTextFieldWithLabelKey:(NSString*)inLabelKey data:(NSString*)inData atOffset:(float*)ioOffset ignoreBlankLines:(BOOL)inIgnoreBlank
+- (NSView*)scrollingTextFieldWithLabelKey:(NSString*)inLabelKey data:(NSString*)inData ignoreBlankLines:(BOOL)inIgnoreBlank
 {
   if (inIgnoreBlank && [inData length] == 0)
-    return;
+    return nil;
   
-  float labelOffset = kGroupHeaderLeftOffset + kDisclosureButtonSize + kDisclosureLabelGap;
-  NSRect labelRect = NSMakeRect(labelOffset, *ioOffset, NSWidth([self frame]) - labelOffset - kGeneralRightGap, 100.0f);
-  
-  NSString* theLabel = NSLocalizedStringFromTable(inLabelKey, @"CertificateDialogs", @"");
-  NSTextField* labelField = [self textFieldWithInitialFrame:labelRect stringValue:theLabel small:YES bold:NO];
-  [mContentView addSubview:labelField];
+  NSView* lineContainer = [self containerViewWithTopPadding:0.0f bottomPadding:kGapUnderLine];
+  [self addLineLabelWithKey:inLabelKey toView:lineContainer];
 
   float xPos = kLabelLeftOffset + [self labelColumnWidth] + kLabelGutterWidth;
-  NSRect dataRect = NSMakeRect(xPos, *ioOffset, NSWidth([self frame]) - xPos - kLabelLeftOffset, 56.0f);
-  
+  NSRect dataRect = NSMakeRect(xPos, 0.0f, NSWidth([self frame]) - xPos - kLabelLeftOffset, 56.0f);
+  dataRect = [lineContainer subviewRectFromTopRelativeRect:dataRect];
+
   NSScrollView* dataScrollView = [[[NSScrollView alloc] initWithFrame:dataRect] autorelease];
   NSTextView* scrolledTextView = [[[NSTextView alloc] initWithFrame:dataRect] autorelease];
   [dataScrollView setHasVerticalScroller:YES];
   [dataScrollView setBorderType:NSBezelBorder];
-  [dataScrollView setAutoresizingMask:NSViewWidthSizable | NSViewMaxYMargin];
+  [dataScrollView setAutoresizingMask:NSViewWidthSizable | NSViewMinYMargin];
   [[dataScrollView verticalScroller] setControlSize:NSSmallControlSize];
 
   if (inData)
     [[[scrolledTextView textStorage] mutableString] setString:[inData stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
   [scrolledTextView setFont:[NSFont fontWithName:@"Monaco" size:10.0f]];
   [scrolledTextView setEditable:NO];
-  [dataScrollView setAutoresizingMask:NSViewWidthSizable];
   [dataScrollView setDocumentView:scrolledTextView];
 
-  [mContentView addSubview:dataScrollView];
-
-  float labelBottom = NSMaxY([labelField frame]);
-  float dataBottom  = NSMaxY([dataScrollView frame]);
-  float maxYPos = (dataBottom > labelBottom) ? dataBottom : labelBottom;
-  
-  *ioOffset = maxYPos + kGapUnderLine;
+  [lineContainer addSubview:dataScrollView];
+  return lineContainer;
 }
 
-- (NSButton*)addButtonLineWithLabelKey:(NSString*)inLabelKey buttonLabelKey:(NSString*)buttonKey action:(SEL)inAction atOffset:(float*)ioOffset
+- (NSView*)buttonLineWithLabelKey:(NSString*)inLabelKey buttonLabelKey:(NSString*)buttonKey action:(SEL)inAction button:(NSButton**)outButton
 {
-  float labelOffset = kGroupHeaderLeftOffset + kDisclosureButtonSize + kDisclosureLabelGap;
-  NSRect labelRect = NSMakeRect(labelOffset, *ioOffset, NSWidth([self frame]) - labelOffset - kGeneralRightGap, 100.0f);
-  
-  NSString* theLabel = NSLocalizedStringFromTable(inLabelKey, @"CertificateDialogs", @"");
-  NSTextField* labelField = [self textFieldWithInitialFrame:labelRect stringValue:theLabel small:YES bold:NO];
-  [mContentView addSubview:labelField];
+  NSView* lineContainer = [self containerViewWithTopPadding:0.0f bottomPadding:kGapUnderLine];
+  [self addLineLabelWithKey:inLabelKey toView:lineContainer];
 
   float xPos = kLabelLeftOffset + [self labelColumnWidth] + kLabelGutterWidth;
-  NSRect buttonRect = NSMakeRect(xPos, *ioOffset, NSWidth([self frame]) - xPos - kLabelLeftOffset, 100.0f);
-  NSButton* theButton = [[[NSButton alloc] initWithFrame:buttonRect] autorelease];
+  NSRect buttonRect = NSMakeRect(xPos, 0.0f, NSWidth([self frame]) - xPos - kLabelLeftOffset, 100.0f);
+  NSButton* theButton = [[[NSButton alloc] initWithFrame:[lineContainer subviewRectFromTopRelativeRect:buttonRect]] autorelease];
 
   [theButton setTitle:NSLocalizedStringFromTable(buttonKey, @"CertificateDialogs", @"")];
   [theButton setBezelStyle:NSRoundedBezelStyle];
   [theButton setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
   [[theButton cell] setControlSize:NSSmallControlSize];
-  [theButton sizeToFit];
+  //[theButton sizeToFit];
   
+  NSSize theCellSize = [[theButton cell] cellSizeForBounds:[theButton frame]];
+  [theButton setFrameSizeMaintainingTopLeftOrigin:theCellSize];
+  
+  [theButton setAutoresizingMask:NSViewMinYMargin];
+
   [theButton setAction:inAction];
   [theButton setTarget:self];
-  [mContentView addSubview:theButton];
+  [lineContainer addSubview:theButton];
 
-  float labelBottom = NSMaxY([labelField frame]);
-  float buttonBottom  = NSMaxY([theButton frame]);
-  float maxYPos = (buttonBottom > labelBottom) ? buttonBottom : labelBottom;
-  
-  *ioOffset = maxYPos + kGapUnderLine;
-  return theButton;
+  if (outButton)
+    *outButton = theButton;
+    
+  return lineContainer;
 }
 
-- (NSButton*)addCheckboxLineWithLabelKey:(NSString*)inLabelKey buttonLabelKey:(NSString*)buttonKey action:(SEL)inAction atOffset:(float*)ioOffset
+- (NSView*)checkboxLineWithLabelKey:(NSString*)inLabelKey buttonLabelKey:(NSString*)buttonKey action:(SEL)inAction button:(NSButton**)outButton
 {
-  float labelOffset = kGroupHeaderLeftOffset + kDisclosureButtonSize + kDisclosureLabelGap;
-  NSRect labelRect = NSMakeRect(labelOffset, *ioOffset, NSWidth([self frame]) - labelOffset - kGeneralRightGap, 100.0f);
-  
-  NSString* theLabel = NSLocalizedStringFromTable(inLabelKey, @"CertificateDialogs", @"");
-  NSTextField* labelField = [self textFieldWithInitialFrame:labelRect stringValue:theLabel small:YES bold:NO];
-  [mContentView addSubview:labelField];
+  NSView* lineContainer = [self containerViewWithTopPadding:0.0f bottomPadding:kGapUnderCheckboxLine];
+
+  if ([inLabelKey length] > 0)
+    [self addLineLabelWithKey:inLabelKey toView:lineContainer];
 
   float xPos = kLabelLeftOffset + [self labelColumnWidth] + kLabelGutterWidth;
-  NSRect buttonRect = NSMakeRect(xPos, *ioOffset, NSWidth([self frame]) - xPos - kLabelLeftOffset, 100.0f);
-  NSButton* theButton = [[[NSButton alloc] initWithFrame:buttonRect] autorelease];
+  NSRect buttonRect = NSMakeRect(xPos, 0.0f, NSWidth([self frame]) - xPos - kLabelLeftOffset, 100.0f);
+  NSButton* theButton = [[[NSButton alloc] initWithFrame:[lineContainer subviewRectFromTopRelativeRect:buttonRect]] autorelease];
 
   [theButton setTitle:NSLocalizedStringFromTable(buttonKey, @"CertificateDialogs", @"")];
   [theButton setButtonType:NSSwitchButton];
   [theButton setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
   [[theButton cell] setControlSize:NSSmallControlSize];
-  [theButton sizeToFit];
-  [theButton setAutoresizingMask:NSViewWidthSizable | NSViewMaxYMargin];
+  // resize maintaining the width
+  NSRect wideButtonRect = buttonRect;
+  wideButtonRect.size.width = 1000.0f;    // if the width is narrow, -cellSizeForBounds: returns a greater height, which we don't want.
+  NSSize theCellSize = [[theButton cell] cellSizeForBounds:wideButtonRect];
+  theCellSize.width = NSWidth(buttonRect);
+  [theButton setFrameSizeMaintainingTopLeftOrigin:theCellSize];
+
+  [theButton setAutoresizingMask:NSViewWidthSizable | NSViewMinYMargin];
   
   [theButton setAction:inAction];
   [theButton setTarget:self];
-  [mContentView addSubview:theButton];
+  [lineContainer addSubview:theButton];
 
-  float labelBottom = NSMaxY([labelField frame]);
-  float buttonBottom  = NSMaxY([theButton frame]);
-  float maxYPos = (buttonBottom > labelBottom) ? buttonBottom : labelBottom;
-  
-  *ioOffset = maxYPos + kGapUnderLine;
-  return theButton;
+  if (outButton)
+    *outButton = theButton;
+
+  return lineContainer;
 }
 
-- (float)rebuildDetails:(float)inOffset
+- (void)rebuildDetails
 {
-  float curOffset = inOffset;
-  [self addGroupingWithKey:@"CertDetailsGroupHeader" expanded:mDetailsExpanded action:@selector(toggleDetails:) atOffset:&curOffset];
-  curOffset += kGapUnderHeader;
+  mDetailsItemsView = [self groupingWithKey:@"CertDetailsGroupHeader" expanded:mDetailsExpanded action:@selector(toggleDetails:)];
+  [mContentView addSubview:mDetailsItemsView];
 
   if (!mDetailsExpanded)
-    return curOffset;
-  
-  [self addHeaderWithKey:@"IssuedTo" atOffset:&curOffset];
+    return;
+
+  // 
+  // NOTE: add label string keys to the array in -labelColumnWidth if you add new ones.
+  // 
+  [mDetailsItemsView addSubview:[self headerWithKey:@"IssuedTo"]];
 
   // Owner stuff
-  [self addLineWithLabelKey:@"OwnerCommonName"    data:[mCertItem commonName]          atOffset:&curOffset ignoreBlankLines:YES];
-  [self addLineWithLabelKey:@"OwnerEmailAddress"  data:[mCertItem emailAddress]        atOffset:&curOffset ignoreBlankLines:YES];
-  [self addLineWithLabelKey:@"OwnerOrganization"  data:[mCertItem organization]        atOffset:&curOffset ignoreBlankLines:YES];
-  [self addLineWithLabelKey:@"OwnerOrgUnit"       data:[mCertItem organizationalUnit]  atOffset:&curOffset ignoreBlankLines:YES];
-  [self addLineWithLabelKey:@"Version"            data:[mCertItem version]             atOffset:&curOffset ignoreBlankLines:YES];
-  [self addLineWithLabelKey:@"SerialNumber"       data:[mCertItem serialNumber]        atOffset:&curOffset ignoreBlankLines:YES];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"OwnerCommonName"    data:[mCertItem commonName]          ignoreBlankLines:YES]];
+
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"OwnerEmailAddress"  data:[mCertItem emailAddress]        ignoreBlankLines:YES]];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"OwnerOrganization"  data:[mCertItem organization]        ignoreBlankLines:YES]];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"OwnerOrgUnit"       data:[mCertItem organizationalUnit]  ignoreBlankLines:YES]];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"Version"            data:[mCertItem version]             ignoreBlankLines:YES]];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"SerialNumber"       data:[mCertItem serialNumber]        ignoreBlankLines:YES]];
 
   // Issuer stuff
-  curOffset += kGapUnderGroup;
-  [self addHeaderWithKey:@"IssuedBy" atOffset:&curOffset];
+  [mDetailsItemsView addSubview:[self headerWithKey:@"IssuedBy"]];
 
-  [self addLineWithLabelKey:@"IssuerCommonName"   data:[mCertItem issuerCommonName]          atOffset:&curOffset ignoreBlankLines:YES];
-  [self addLineWithLabelKey:@"IssuerOrganization" data:[mCertItem issuerOrganization]        atOffset:&curOffset ignoreBlankLines:YES];
-  [self addLineWithLabelKey:@"IssuerOrgUnit"      data:[mCertItem issuerOrganizationalUnit]  atOffset:&curOffset ignoreBlankLines:YES];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"IssuerCommonName"   data:[mCertItem issuerCommonName]          ignoreBlankLines:YES]];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"IssuerOrganization" data:[mCertItem issuerOrganization]        ignoreBlankLines:YES]];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"IssuerOrgUnit"      data:[mCertItem issuerOrganizationalUnit]  ignoreBlankLines:YES]];
 
   nsCOMPtr<nsIX509Cert> issuerCert;
   nsIX509Cert* thisCert = [mCertItem cert];
@@ -521,93 +614,83 @@ const float kGapUnderLine       = 5.0f;
     thisCert->GetIssuer(getter_AddRefs(issuerCert));
   if (issuerCert && ![mCertItem isSameCertAs:issuerCert])
   {
-    [self addButtonLineWithLabelKey:@"ShowIssuerCertLabel"
-                                 buttonLabelKey:@"ShowIssuerCertButton"
-                                         action:@selector(showIssuerCert:)
-                                       atOffset:&curOffset];
+    [mDetailsItemsView addSubview:[self buttonLineWithLabelKey:@"ShowIssuerCertLabel"
+                                                buttonLabelKey:@"ShowIssuerCertButton"
+                                                        action:@selector(showIssuerCert:)
+                                                        button:NULL]];
   }
 
   // validity
-  curOffset += kGapUnderGroup;
-  [self addHeaderWithKey:@"Validity" atOffset:&curOffset];
+  [mDetailsItemsView addSubview:[self headerWithKey:@"Validity"]];
 
-  [self addLineWithLabelKey:@"NotBeforeLocalTime" data:[mCertItem longValidFromString]  atOffset:&curOffset ignoreBlankLines:NO];
-  [self addLineWithLabelKey:@"NotAfterLocalTime"  data:[mCertItem longExpiresString]    atOffset:&curOffset ignoreBlankLines:NO];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"NotBeforeLocalTime" data:[mCertItem longValidFromString]  ignoreBlankLines:NO]];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"NotAfterLocalTime"  data:[mCertItem longExpiresString]    ignoreBlankLines:NO]];
 
   // signature
-  [self addLineWithLabelKey:@"SigAlgorithm"       data:[mCertItem signatureAlgorithm]   atOffset:&curOffset ignoreBlankLines:NO];
-  [self addScrollingTextFieldWithLabelKey:@"Signature" data:[mCertItem signatureValue]  atOffset:&curOffset ignoreBlankLines:NO];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"SigAlgorithm"       data:[mCertItem signatureAlgorithm]   ignoreBlankLines:NO]];
+  [mDetailsItemsView addSubview:[self scrollingTextFieldWithLabelKey:@"Signature" data:[mCertItem signatureValue]  ignoreBlankLines:NO]];
 
   // public key info
-  curOffset += kGapUnderGroup;
-  [self addHeaderWithKey:@"PublicKeyInfo" atOffset:&curOffset];
-  [self addLineWithLabelKey:@"PublicKeyAlgorithm" data:[mCertItem publicKeyAlgorithm]   atOffset:&curOffset ignoreBlankLines:NO];
-  //[self addLineWithLabelKey:@"PublicKeySize"      data:[mCertItem publicKeySizeBits]    atOffset:&curOffset ignoreBlankLines:NO];
-  [self addScrollingTextFieldWithLabelKey:@"PublicKey" data:[mCertItem publicKey]       atOffset:&curOffset ignoreBlankLines:NO];
+  [mDetailsItemsView addSubview:[self headerWithKey:@"PublicKeyInfo"]];
+
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"PublicKeyAlgorithm" data:[mCertItem publicKeyAlgorithm]   ignoreBlankLines:NO]];
+  //[self lineWithLabelKey:@"PublicKeySize"      data:[mCertItem publicKeySizeBits]    ignoreBlankLines:NO];
+  [mDetailsItemsView addSubview:[self scrollingTextFieldWithLabelKey:@"PublicKey" data:[mCertItem publicKey]       ignoreBlankLines:NO]];
     
   // usages
   NSArray* certUsages = [mCertItem validUsages];
   if ([certUsages count])
   {
-    curOffset += kGapUnderGroup;
-    [self addHeaderWithKey:@"UsagesTitle" atOffset:&curOffset];
+    [mDetailsItemsView addSubview:[self headerWithKey:@"UsagesTitle"]];
     for (unsigned int i = 0; i < [certUsages count]; i ++)
     {
       NSString* labelKey = (i == 0) ? @"Usages" : @"";
-      [self addLineWithLabelKey:labelKey data:[certUsages objectAtIndex:i] atOffset:&curOffset ignoreBlankLines:NO];
+      [mDetailsItemsView addSubview:[self lineWithLabelKey:labelKey data:[certUsages objectAtIndex:i] ignoreBlankLines:NO]];
     }
   }
 
   // fingerprints
-  curOffset += kGapUnderGroup;
-  [self addHeaderWithKey:@"Fingerprints" atOffset:&curOffset];
+  [mDetailsItemsView addSubview:[self headerWithKey:@"Fingerprints"]];
 
-  [self addLineWithLabelKey:@"SHA1Fingerprint"  data:[mCertItem sha1Fingerprint] atOffset:&curOffset ignoreBlankLines:NO];
-  [self addLineWithLabelKey:@"MD5Fingerprint"   data:[mCertItem md5Fingerprint]  atOffset:&curOffset ignoreBlankLines:NO];
-
-  curOffset += kGapUnderGroup;
-  return curOffset;
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"SHA1Fingerprint"  data:[mCertItem sha1Fingerprint] ignoreBlankLines:NO]];
+  [mDetailsItemsView addSubview:[self lineWithLabelKey:@"MD5Fingerprint"   data:[mCertItem md5Fingerprint]  ignoreBlankLines:NO]];
 }
 
-- (float)rebuildTrustSettings:(float)inOffset
+- (void)rebuildTrustSettings
 {
-  float curOffset = inOffset;
-
-  [self addGroupingWithKey:@"CertTrustGroupHeader" expanded:mTrustExpanded action:@selector(toggleTrustSettings:) atOffset:&curOffset];
-  curOffset += kGapUnderHeader;
+  mTrustItemsView = [self groupingWithKey:@"CertTrustGroupHeader" expanded:mTrustExpanded action:@selector(toggleTrustSettings:)];
+  [mContentView addSubview:mTrustItemsView];
 
   if (!mTrustExpanded)
-    return curOffset;
+    return;
 
   // XXX do we need a more comprehensive check than this?
   BOOL enableCheckboxes = YES;  // [mCertItem isValid] || [mCertItem isUntrustedRootCACert];
   
   // XXX only show relevant checkboxes? (see nsNSSCertificateDB::SetCertTrust)
   // XXX only show checkboxes for allowed usages?
-  [self addLineWithLabelKey:@"TrustSettingsLabel" data:@"" atOffset:&curOffset ignoreBlankLines:NO];
-  mTrustForWebSitesCheckbox = [self addCheckboxLineWithLabelKey:@""
-                                                 buttonLabelKey:@"TrustWebSitesCheckboxLabel"
-                                                         action:@selector(trustCheckboxClicked:)
-                                                       atOffset:&curOffset];
+  [mTrustItemsView addSubview:[self wholeLineLabelWithKey:@"TrustSettingsLabel"]];
+  [mTrustItemsView addSubview:[self checkboxLineWithLabelKey:@""
+                                              buttonLabelKey:@"TrustWebSitesCheckboxLabel"
+                                                      action:@selector(trustCheckboxClicked:)
+                                                      button:&mTrustForWebSitesCheckbox]];
+
   [mTrustForWebSitesCheckbox setState:mTrustedForWebSites];
   [mTrustForWebSitesCheckbox setEnabled:enableCheckboxes];
   
-  mTrustForEmailCheckbox = [self addCheckboxLineWithLabelKey:@""
+  [mTrustItemsView addSubview:[self checkboxLineWithLabelKey:@""
                                               buttonLabelKey:@"TrustEmailUsersCheckboxLabel"
                                                       action:@selector(trustCheckboxClicked:)
-                                                    atOffset:&curOffset];
+                                                      button:&mTrustForEmailCheckbox]];
   [mTrustForEmailCheckbox setState:mTrustedForEmail];
   [mTrustForEmailCheckbox setEnabled:enableCheckboxes];
 
-  mTrustForObjSigningCheckbox = [self addCheckboxLineWithLabelKey:@""
-                                                   buttonLabelKey:@"TrustObjectSignersCheckboxLabel"
-                                                           action:@selector(trustCheckboxClicked:)
-                                                         atOffset:&curOffset];
+  [mTrustItemsView addSubview:[self checkboxLineWithLabelKey:@""
+                                              buttonLabelKey:@"TrustObjectSignersCheckboxLabel"
+                                                      action:@selector(trustCheckboxClicked:)
+                                                      button:&mTrustForObjSigningCheckbox]];
   [mTrustForObjSigningCheckbox setState:mTrustedForObjectSigning];
   [mTrustForObjSigningCheckbox setEnabled:enableCheckboxes];
-
-  curOffset += kGapUnderGroup;
-  return curOffset;
 }
 
 - (void)refreshView
@@ -620,58 +703,63 @@ const float kGapUnderLine       = 5.0f;
   mTrustForEmailCheckbox = nil;
   mTrustForObjSigningCheckbox = nil;
   
-  float headerHeight = [self rebuildCertHeader];
-
-  NSRect contentFrame = [self bounds];
-  NSRect headerRect, contentsRect;
-  NSDivideRect(contentFrame, &headerRect, &contentsRect, headerHeight, NSMinYEdge);
-  
-  mContentView = [[CertificateContentsView alloc] initWithFrame:contentsRect];
+  mContentView = [[CHStackView alloc] initWithFrame:[self bounds]];
   [mContentView setAutoresizingMask:NSViewWidthSizable | NSViewMaxYMargin];
+  
+  [self setIntrinsicPadding:0.0f forEdge:NSMinXEdge];
+  [self setIntrinsicPadding:0.0f forEdge:NSMinYEdge];
+  [self setIntrinsicPadding:0.0f forEdge:NSMaxXEdge];
+  [self setIntrinsicPadding:0.0f forEdge:NSMaxYEdge];
+  
   [self addSubview:mContentView];
 
+  [self rebuildCertHeader];
   [self rebuildCertContent];
 }
 
-- (float)rebuildCertHeader
+- (void)rebuildCertHeader
 {
   // We do all this laborious manual view construction to avoid having to load a nib file each
   // time. This way, we can just have a single custom view in the nib, and do everything in code.
   
-  // cert image
-  NSRect certImageFrame = NSMakeRect(kGroupHeaderLeftOffset, kGroupHeaderLeftOffset, kCertImageViewSize, kCertImageViewSize);
-  NSImageView* certImageView = [[[NSImageView alloc] initWithFrame:certImageFrame] autorelease];
-  [certImageView setImage:[NSImage imageNamed:@"certificate"]];
-  [self addSubview:certImageView];
-
-  // description
+  // container for the header
   float headerFieldsLeftEdge = kGroupHeaderLeftOffset + kCertImageViewSize + kGroupHeaderLeftOffset;
   float headerFieldYOffset   = kGroupHeaderLeftOffset;
   float headerFieldWith      = NSWidth([self frame]) - headerFieldYOffset - kCertHeaderFieldRightGap;
 
+  NSView* headerContainer = [self containerViewWithTopPadding:0.0f bottomPadding:kGapUnderGroup];
+  
+  // cert image
+  NSRect certImageFrame = NSMakeRect(0.0f, 0.0f, kCertImageViewSize, kCertImageViewSize);
+  NSImageView* certImageView = [[[NSImageView alloc] initWithFrame:[headerContainer subviewRectFromTopRelativeRect:certImageFrame]] autorelease];
+  [certImageView setImage:[NSImage imageNamed:@"certificate"]];
+  [certImageView setAutoresizingMask:NSViewMinYMargin];
+  [headerContainer addSubview:certImageView];
+
+  // description
   NSRect decriptionRect = NSMakeRect(headerFieldsLeftEdge, headerFieldYOffset, headerFieldWith, 100.0f);
-  NSTextField* descField = [self textFieldWithInitialFrame:decriptionRect stringValue:[mCertItem displayName] small:NO bold:NO];
-  [self addSubview:descField];
+  NSTextField* descField = [self textFieldWithInitialFrame:[headerContainer subviewRectFromTopRelativeRect:decriptionRect] stringValue:[mCertItem displayName] autoSizing:NO small:NO bold:NO];
+  [headerContainer addSubview:descField];
   headerFieldYOffset += NSHeight([descField frame]) + kCertHeaderFieldVerticalGap;
 
   // issuer info
   NSRect issuerRect = NSMakeRect(headerFieldsLeftEdge, headerFieldYOffset, headerFieldWith, 100.0f);
   NSString* formatString = NSLocalizedStringFromTable(@"IssuedByHeaderFormat", @"CertificateDialogs", @"");
   NSString* issuerString = [NSString stringWithFormat:formatString, [mCertItem issuerCommonName]];
-  NSTextField* issuerField = [self textFieldWithInitialFrame:issuerRect stringValue:issuerString small:YES bold:NO];
-  [self addSubview:issuerField];
+  NSTextField* issuerField = [self textFieldWithInitialFrame:[headerContainer subviewRectFromTopRelativeRect:issuerRect] stringValue:issuerString autoSizing:NO small:YES bold:NO];
+  [headerContainer addSubview:issuerField];
   headerFieldYOffset += NSHeight([issuerField frame]) + kCertHeaderFieldVerticalGap;
 
   // expiry info
   NSRect expiryRect = NSMakeRect(headerFieldsLeftEdge, headerFieldYOffset, headerFieldWith, 100.0f);
   formatString = NSLocalizedStringFromTable(@"ExpiresHeaderFormat", @"CertificateDialogs", @"");
   NSString* expiryString = [NSString stringWithFormat:formatString, [mCertItem longExpiresString]];
-  NSTextField* expiryField = [self textFieldWithInitialFrame:expiryRect stringValue:expiryString small:YES bold:NO];
-  [self addSubview:expiryField];
+  NSTextField* expiryField = [self textFieldWithInitialFrame:[headerContainer subviewRectFromTopRelativeRect:expiryRect] stringValue:expiryString autoSizing:NO small:YES bold:NO];
+  [headerContainer addSubview:expiryField];
   headerFieldYOffset += NSHeight([expiryField frame]) + kCertHeaderFieldVerticalGap;
 
   NSRect statusImageRect = NSMakeRect(headerFieldsLeftEdge, headerFieldYOffset, kStatusImageSize, kStatusImageSize);
-  NSImageView* statusImageView = [[[NSImageView alloc] initWithFrame:statusImageRect] autorelease];
+  NSImageView* statusImageView = [[[NSImageView alloc] initWithFrame:[headerContainer subviewRectFromTopRelativeRect:statusImageRect]] autorelease];
   
   NSString* imageName = @"";
   if ([mCertItem isUntrustedRootCACert])
@@ -682,44 +770,34 @@ const float kGapUnderLine       = 5.0f;
     imageName = @"mini_cert_invalid";
    
   [statusImageView setImage:[NSImage imageNamed:imageName]];
-  [self addSubview:statusImageView];
+  [statusImageView setAutoresizingMask:NSViewMinYMargin];
+  [headerContainer addSubview:statusImageView];
 
   // status info
   float statusLeftEdge  = headerFieldsLeftEdge + kStatusImageSize + kGroupHeaderLeftOffset;
   float statusFieldWith = NSWidth([self frame]) - statusLeftEdge - kCertHeaderFieldRightGap;
   
   NSRect statusRect = NSMakeRect(statusLeftEdge, headerFieldYOffset, statusFieldWith, 100.0f);
-  NSTextField* statusField = [self textFieldWithInitialFrame:statusRect stringValue:@"" small:YES bold:NO];
+  NSTextField* statusField = [self textFieldWithInitialFrame:[headerContainer subviewRectFromTopRelativeRect:statusRect] stringValue:@"" autoSizing:NO small:YES bold:NO];
   [statusField setAttributedStringValue:[mCertItem attributedLongValidityString]];
-  [statusField sizeToFit];
-  [self addSubview:statusField];
+  [headerContainer addSubview:statusField];
 
-  headerFieldYOffset += NSHeight([statusField frame]) + kCertHeaderFieldVerticalGap;
-  return headerFieldYOffset;
+  [mContentView addSubview:headerContainer];
 }
 
 - (void)rebuildCertContent
 {
   // blow away the subviews of the content view
-  [mContentView removeAllSubviews];
+  [mTrustItemsView removeFromSuperviewWithoutNeedingDisplay];
+  mTrustItemsView = nil;
+
+  [mDetailsItemsView removeFromSuperviewWithoutNeedingDisplay];
+  mDetailsItemsView = nil;
   
-  float curHeight = 0.0f;
   if ([self showTrustSettings])
-    curHeight = [self rebuildTrustSettings:curHeight];
+    [self rebuildTrustSettings];
 
-  curHeight = [self rebuildDetails:curHeight];
-  
-  // make sure the details view is big enough to contain all its subviews
-  NSSize curSize = [mContentView frame].size;
-  curSize.height = curHeight;
-  [mContentView setFrameSize:curSize];
-
-  // and then resize us too
-  NSRect contentViewFrame = [mContentView frame];
-  float myHeight = NSHeight(contentViewFrame) + NSMinY(contentViewFrame);
-  curSize = [self frame].size;
-  curSize.height = myHeight;
-  [self setFrameSize:curSize];
+  [self rebuildDetails];
 }
 
 - (void)certificateChanged:(NSNotification*)inNotification

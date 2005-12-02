@@ -37,13 +37,18 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <AppKit/AppKit.h>
+#import "CHStackView.h"
 
 @class CertificateItem;
 
 // this is a view that builds its contents dynamically from the cert.
-@interface CertificateView : NSView
+@interface CertificateView : CHShrinkWrapView
 {
-  NSView*                   mContentView;       // created dynamically, retained
+  CHStackView*              mContentView;       // created dynamically, retained
+  
+  NSView*                   mTrustItemsView;    // weak
+  NSView*                   mDetailsItemsView;  // weak
+  
   BOOL                      mDetailsExpanded;
   BOOL                      mTrustExpanded;
 

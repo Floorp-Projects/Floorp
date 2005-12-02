@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,12 +14,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Josh Aas.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Josh Aas <josha@mac.com>
+ *   Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,34 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #import <AppKit/AppKit.h>
-#import "ProgressViewController.h"
 
-extern NSString* const kDownloadInstanceSelectedNotificationName;
-extern NSString* const kDownloadInstanceOpenedNotificationName;
+#import "NSString+Utils.h"  // for ETruncationType
 
 //
-// interface ProgressView
-//
-// A NSView representing the state of a download in the download manager. There
-// will be two of these per download: one for while it's downloading, the other
-// for after it complete.
+// TruncatingTextFieldCell
+// 
+// Text field cell that can be used to truncate text in a text field.
+// 
+// Use by creating one and setting it as the cell on an NSTextField.
 //
 
-@interface ProgressView : NSView
+@interface TruncatingTextFieldCell : NSTextFieldCell
 {
-@private
-  int mLastModifier;
-  ProgressViewController* mProgressController;     // WEAK reference
+  NSString*           mOriginalStringValue;   // copy of the whole string
+  ETruncationType     mTruncationPosition;
 }
 
-// returns the most recent modifier key used during the last 
-// click on this view
--(int)lastModifier;
+- (id)initTextCell:(NSString*)inTextValue truncation:(ETruncationType)truncType;
 
-// get/set our owning controller, to which we maintain a weak link
--(void)setController:(ProgressViewController*)controller;
--(ProgressViewController*)getController;
+- (void)setTruncationPosition:(ETruncationType)truncType;
+- (ETruncationType)truncationPosition;
 
 @end
