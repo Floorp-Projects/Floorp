@@ -22,7 +22,6 @@
  *   Ian McGreer <mcgreer@netscape.com>
  *   Javier Delgadillo <javi@netscape.com>
  *   John Gardiner Myers <jgmyers@speakeasy.net>
- *   Martin v. Loewis <martin@v.loewis.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,43 +54,6 @@
  
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
-/* Object Identifier constants */
-#define CONST_OID static const unsigned char
-#define MICROSOFT_OID 0x2b, 0x6, 0x1, 0x4, 0x1, 0x82, 0x37
-CONST_OID msCertExtCerttype[]      = { MICROSOFT_OID, 20, 2};
-CONST_OID msNTPrincipalName[]      = { MICROSOFT_OID, 20, 2, 3 };
-CONST_OID msCertsrvCAVersion[]     = { MICROSOFT_OID, 21, 1 };
-CONST_OID msNTDSReplication[]      = { MICROSOFT_OID, 25, 1 };
-
-#define OI(x) { siDEROID, (unsigned char *)x, sizeof x }
-#define OD(oid,desc,mech,ext) {OI(oid), SEC_OID_UNKNOWN, desc, mech, ext}
-#define SEC_OID(tag) more_oids[tag].offset
-
-static SECOidData more_oids[] = {
-    /* Microsoft OIDs */
-    #define MS_CERT_EXT_CERTTYPE 0
-    OD( msCertExtCerttype,
-        "Microsoft Certificate Type", 
-        CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
-
-    #define MS_NT_PRINCIPAL_NAME 1
-    OD( msNTPrincipalName,
-        "Microsoft NT User Principal Name", 
-        CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
-
-    #define MS_CERTSERV_CA_VERSION 2
-    OD( msCertsrvCAVersion,
-        "Microsoft CA Version", 
-        CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
-
-    #define MS_NTDS_REPLICATION 3
-    OD( msNTDSReplication,
-        "Microsoft Domain GUID", 
-        CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
-};
-
-static const unsigned int numOids = (sizeof more_oids) / (sizeof more_oids[0]);
 
 static nsresult
 GetIntValue(SECItem *versionItem, 
@@ -196,8 +158,7 @@ ProcessSerialNumberDER(SECItem         *serialItem,
 
 static nsresult
 GetDefaultOIDFormat(SECItem *oid,
-                    nsAString &outString,
-		    char separator)
+                    nsAString &outString)
 {
   char buf[300];
   unsigned int len;
@@ -206,7 +167,7 @@ GetDefaultOIDFormat(SECItem *oid,
   unsigned long val  = oid->data[0];
   unsigned int  i    = val % 40;
   val /= 40;
-  written = PR_snprintf(buf, 300, "%lu%c%u", val, separator, i);
+  written = PR_snprintf(buf, 300, "%lu %u ", val, i);
   if (written < 0)
     return NS_ERROR_FAILURE;	
   len = written;
@@ -225,8 +186,7 @@ GetDefaultOIDFormat(SECItem *oid,
     val = (val << 7) | (j & 0x7f);
     if (j & 0x80)
       continue;
-    written = PR_snprintf(&buf[len], sizeof(buf)-len, "%c%lu", 
-			  separator, val);
+    written = PR_snprintf(&buf[len], sizeof(buf)-len, "%lu ", val);
     if (written < 0)
       return NS_ERROR_FAILURE;
 
@@ -382,23 +342,14 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text)
   case SEC_OID_PKCS9_EMAIL_ADDRESS:
     bundlekey = "CertDumpPK9Email";
     break;
-  default: 
-    if (oidTag == SEC_OID(MS_CERT_EXT_CERTTYPE)) {
-      bundlekey = "CertDumpMSCerttype";
-      break;
-    }
-    if (oidTag == SEC_OID(MS_CERTSERV_CA_VERSION)) {
-      bundlekey = "CertDumpMSCAVersion";
-      break;
-    }
-    /* fallthrough */
+  default: ;
   }
 
   if (bundlekey) {
     rv = nssComponent->GetPIPNSSBundleString(bundlekey, text);
   } else {
     nsAutoString text2;
-    rv = GetDefaultOIDFormat(oid, text2, ' ');
+    rv = GetDefaultOIDFormat(oid, text2);
     if (NS_FAILED(rv))
       return rv;
 
@@ -543,129 +494,22 @@ ProcessKeyUsageExtension(SECItem *extData, nsAString &text,
 }
 
 static nsresult
-ProcessBasicConstraints(SECItem  *extData, 
-                        nsAString &text,
-                        nsINSSComponent *nssComponent)
-{
-  nsAutoString local;
-  CERTBasicConstraints value;
-  SECStatus rv;
-  nsresult rv2;
-
-  rv = CERT_DecodeBasicConstraintValue (&value, extData);
-  if (rv != SECSuccess) {
-    NS_ASSERTION(0,"Could not decode basic constraints");
-    return NS_ERROR_FAILURE;
-  }
-  if (value.isCA)
-    rv2 = nssComponent->GetPIPNSSBundleString("CertDumpIsCA", local);
-  else
-    rv2 = nssComponent->GetPIPNSSBundleString("CertDumpIsNotCA", local);
-  if (NS_FAILED(rv2))
-    return rv2;
-  text.Append(local.get());
-  if (value.pathLenConstraint >= 0) {
-    nsAutoString depth;
-    depth.AppendInt(value.pathLenConstraint);
-    const PRUnichar *params[1] = {depth.get()};
-    rv2 = nssComponent->PIPBundleFormatStringFromName("CertDumpPathLen",
-                                                      params, 1, local);
-    if (NS_FAILED(rv2))
-      return rv2;
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
-    text.Append(local.get());
-  }
-  return NS_OK;
-}
-
-static nsresult
-ProcessExtKeyUsage(SECItem  *extData, 
-                   nsAString &text,
-                   nsINSSComponent *nssComponent)
-{
-  nsAutoString local;
-  CERTOidSequence *extKeyUsage = NULL;
-  SECItem **oids;
-  SECItem *oid;
-  nsresult rv;
-  
-  extKeyUsage = CERT_DecodeOidSequence(extData);
-  if (extKeyUsage == NULL)
-    return NS_ERROR_FAILURE;
-
-  oids = extKeyUsage->oids;
-  while (oids != NULL && *oids != NULL) {
-    // For each OID, try to find a bundle string
-    // of the form CertDumpEKU_<underlined-OID>
-    nsAutoString oidname;
-    oid = *oids;
-    rv = GetDefaultOIDFormat(oid, oidname, '_');
-    if (NS_FAILED(rv))
-      return rv;
-    nsAutoString bundlekey = NS_LITERAL_STRING("CertDumpEKU_")+ oidname;
-    NS_ConvertUTF16toUTF8 bk_ascii(bundlekey);
-    
-    rv = nssComponent->GetPIPNSSBundleString(bk_ascii.get(), local);
-    if (NS_FAILED(rv))
-      // If there is no bundle string, just display the OID itself
-      rv = GetDefaultOIDFormat(oid, local, ' ');
-    if (NS_FAILED(rv))
-      return rv;
-
-    text.Append(local.get());
-    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
-    oids++;
-  }
-
-  CERT_DestroyOidSequence(extKeyUsage);
-  return NS_OK;
-}
-
-static nsresult
-ProcessRDN(CERTRDN* rdn, nsAString &finalString, nsINSSComponent *nssComponent)
-{
-  nsresult rv;
-  CERTAVA** avas;
-  CERTAVA* ava;
-  SECItem *decodeItem = nsnull;
-  nsString avavalue;
-  nsString type;
-  nsAutoString temp;
-  const PRUnichar *params[2];
-
-  avas = rdn->avas;
-  while ((ava = *avas++) != 0) {
-    rv = GetOIDText(&ava->type, nssComponent, type);
-    if (NS_FAILED(rv))
-      return rv;
-    
-    //This function returns a string in UTF8 format.
-    decodeItem = CERT_DecodeAVAValue(&ava->value);
-    if(!decodeItem) {
-      return NS_ERROR_FAILURE;
-    }
-    avavalue = NS_ConvertUTF8toUTF16((char*)decodeItem->data, decodeItem->len);
-    
-    SECITEM_FreeItem(decodeItem, PR_TRUE);
-    params[0] = type.get();
-    params[1] = avavalue.get();
-    nssComponent->PIPBundleFormatStringFromName("AVATemplate",
-                                                  params, 2, temp);
-    finalString += temp + NS_LITERAL_STRING("\n");
-  }
-  return NS_OK;
-}
-
-static nsresult
 ProcessName(CERTName *name, nsINSSComponent *nssComponent, PRUnichar **value)
 {
   CERTRDN** rdns;
   CERTRDN** rdn;
+  CERTAVA** avas;
+  CERTAVA* ava;
+  SECItem *decodeItem = nsnull;
   nsString finalString;
 
   rdns = name->rdns;
 
+  nsString type;
   nsresult rv;
+  const PRUnichar *params[2];
+  nsString avavalue;
+  nsAutoString temp;
   CERTRDN **lastRdn;
   lastRdn = rdns;
 
@@ -690,634 +534,28 @@ ProcessName(CERTName *name, nsINSSComponent *nssComponent, PRUnichar **value)
    * value portion of the AVA and could cause trouble when parsing.
    */
   for (rdn = lastRdn; rdn >= rdns; rdn--) {
-    rv = ProcessRDN(*rdn, finalString, nssComponent);
-    if (NS_FAILED(rv))
-      return rv;
+    avas = (*rdn)->avas;
+    while ((ava = *avas++) != 0) {
+      rv = GetOIDText(&ava->type, nssComponent, type);
+      if (NS_FAILED(rv))
+        return rv;
+
+      //This function returns a string in UTF8 format.
+      decodeItem = CERT_DecodeAVAValue(&ava->value);
+      if(!decodeItem) {
+         return NS_ERROR_FAILURE;
+      }
+      avavalue = NS_ConvertUTF8toUTF16((char*)decodeItem->data, decodeItem->len);
+
+      SECITEM_FreeItem(decodeItem, PR_TRUE);
+      params[0] = type.get();
+      params[1] = avavalue.get();
+      nssComponent->PIPBundleFormatStringFromName("AVATemplate",
+                                                  params, 2, temp);
+      finalString += temp + NS_LITERAL_STRING("\n");
+    }
   }
   *value = ToNewUnicode(finalString);    
-  return NS_OK;
-}
-
-static nsresult
-ProcessIA5String(SECItem  *extData, 
-		 nsAString &text,
-		 nsINSSComponent *nssComponent)
-{
-  SECItem item;
-  nsAutoString local;
-  if (SECSuccess != SEC_ASN1DecodeItem(nsnull, &item, 
-				       SEC_IA5StringTemplate,
-				       extData))
-    return NS_ERROR_FAILURE;
-  local.AssignASCII((char*)item.data, item.len);
-  nsMemory::Free(item.data);
-  text.Append(local);
-  return NS_OK;
-}
-
-static nsresult
-AppendBMPtoUTF16(PRArenaPool *arena,
-		 unsigned char* data, unsigned int len,
-		 nsAString& text)
-{
-  unsigned int   utf8ValLen;
-  unsigned char *utf8Val;
-
-  if (len % 2 != 0)
-    return NS_ERROR_FAILURE;
-
-  /* XXX instead of converting to and from UTF-8, it would
-     be sufficient to just swap bytes, or do nothing */
-  utf8ValLen = len * 3 + 1;
-  utf8Val = (unsigned char*)PORT_ArenaZAlloc(arena, utf8ValLen);
-  if (!PORT_UCS2_UTF8Conversion(PR_FALSE, data, len,
-				utf8Val, utf8ValLen, &utf8ValLen))
-    return NS_ERROR_FAILURE;
-  AppendUTF8toUTF16((char*)utf8Val, text);
-  return NS_OK;
-}
-
-static nsresult
-ProcessBMPString(SECItem  *extData, 
-		 nsAString &text,
-		 nsINSSComponent *nssComponent)
-{
-  SECItem item;
-  PRArenaPool *arena;
-  nsresult rv = NS_ERROR_FAILURE;
-  
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
-
-  if (SECSuccess == SEC_ASN1DecodeItem(arena, &item, 
-				       SEC_BMPStringTemplate,
-				       extData))
-    rv = AppendBMPtoUTF16(arena, item.data, item.len, text);
-  PORT_FreeArena(arena, PR_FALSE);
-  return rv;
-}
-
-static nsresult
-ProcessGeneralName(PRArenaPool *arena,
-		   CERTGeneralName *current,
-		   nsAString &text,
-		   nsINSSComponent *nssComponent)
-{
-  nsAutoString key;
-  nsXPIDLString value;
-  nsresult rv = NS_OK;
-
-  switch (current->type) {
-  case certOtherName: {
-    SECOidTag oidTag = SECOID_FindOIDTag(&current->name.OthName.oid);
-    if (oidTag == SEC_OID(MS_NT_PRINCIPAL_NAME)) {
-	/* The type of this name is apparently nowhere explicitly
-	   documented. However, in the generated templates, it is always
-	   UTF-8. So try to decode this as UTF-8; if that fails, dump the
-	   raw data. */
-	SECItem decoded;
-	nssComponent->GetPIPNSSBundleString("CertDumpMSNTPrincipal", key);
-	if (SEC_ASN1DecodeItem(arena, &decoded, 
-			       SEC_ASN1_GET(SEC_UTF8StringTemplate), 
-			       &current->name.OthName.name) == SECSuccess) {
-	  AppendUTF8toUTF16(nsCAutoString((char*)decoded.data, decoded.len),
-			    value);
-	} else {
-	  ProcessRawBytes(&current->name.OthName.name, value);
-	}
-	break;
-    } else if (oidTag == SEC_OID(MS_NTDS_REPLICATION)) {
-	/* This should be a 16-byte GUID */
-	SECItem guid;
-	nssComponent->GetPIPNSSBundleString("CertDumpMSDomainGUID", key);
-	if (SEC_ASN1DecodeItem(arena, &guid,
-			       SEC_ASN1_GET(SEC_OctetStringTemplate),
-			       &current->name.OthName.name) == SECSuccess
-	    && guid.len == 16) {
-	  char buf[40];
-	  unsigned char *d = guid.data;
-	  PR_snprintf(buf, sizeof(buf), 
-		      "{%.2x%.2x%.2x%.2x-%.2x%.2x-%.2x%.2x-%.2x%.2x-%.2x%.2x%.2x%.2x%.2x%.2x}",
-		      d[3], d[2], d[1], d[0], d[5], d[4], d[7], d[6],
-		      d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15]);
-	  value.AssignASCII(buf);
-	} else {
-	  ProcessRawBytes(&current->name.OthName.name, value);
-	}
-    } else {
-      rv = GetDefaultOIDFormat(&current->name.OthName.oid, key, ' ');
-      if (NS_FAILED(rv))
-	goto finish;
-      ProcessRawBytes(&current->name.OthName.name, value);
-    }
-    break;
-  }
-  case certRFC822Name:
-    nssComponent->GetPIPNSSBundleString("CertDumpRFC822Name", key);
-    value.AssignASCII((char*)current->name.other.data, current->name.other.len);
-    break;
-  case certDNSName:
-    nssComponent->GetPIPNSSBundleString("CertDumpDNSName", key);
-    value.AssignASCII((char*)current->name.other.data, current->name.other.len);
-    break;
-  case certX400Address:
-    nssComponent->GetPIPNSSBundleString("CertDumpX400Address", key);
-    ProcessRawBytes(&current->name.other, value);
-    break;
-  case certDirectoryName:
-    nssComponent->GetPIPNSSBundleString("CertDumpDirectoryName", key);
-    rv = ProcessName(&current->name.directoryName, nssComponent, 
-		     getter_Copies(value));
-    if (NS_FAILED(rv))
-      goto finish;
-    break;
-  case certEDIPartyName:
-    nssComponent->GetPIPNSSBundleString("CertDumpEDIPartyName", key);
-    ProcessRawBytes(&current->name.other, value);
-    break;
-  case certURI:
-    nssComponent->GetPIPNSSBundleString("CertDumpURI", key);
-    value.AssignASCII((char*)current->name.other.data, current->name.other.len);
-    break;
-  case certIPAddress:
-    {
-// kengert: hotfix to fix bustage, will clean up soon
-#ifndef INET6_ADDRSTRLEN
-#define INET6_ADDRSTRLEN 46
-#endif
-      char buf[INET6_ADDRSTRLEN];
-      nssComponent->GetPIPNSSBundleString("CertDumpIPAddress", key);
-      if (current->name.other.len == 4)
-	inet_ntop(AF_INET, current->name.other.data, buf, sizeof(buf));
-      else if (current->name.other.len == 16)
-	inet_ntop(AF_INET6, current->name.other.data, buf, sizeof(buf));
-      else
-	strcpy(buf, "Invalid IP address");
-      value.AssignASCII(buf);
-      break;
-    }
-  case certRegisterID:
-    nssComponent->GetPIPNSSBundleString("CertDumpRegisterID", key);
-    rv = GetDefaultOIDFormat(&current->name.other, value, '.');
-    if (NS_FAILED(rv))
-      goto finish;
-    break;
-  }
-  text.Append(key);
-  text.Append(NS_LITERAL_STRING(": "));
-  text.Append(value);
-  text.Append(NS_LITERAL_STRING(SEPARATOR));
- finish:
-    return rv;
-}
-
-static nsresult
-ProcessGeneralNames(PRArenaPool *arena,
-		    CERTGeneralName *nameList,
-		    nsAString &text,
-		    nsINSSComponent *nssComponent)
-{
-  CERTGeneralName *current = nameList;
-  nsresult rv;
-
-  do {
-    rv = ProcessGeneralName(arena, current, text, nssComponent);
-    if (NS_FAILED(rv))
-      break;
-    current = CERT_GetNextGeneralName(current);
-  } while (current != nameList);
-  return rv;
-}
-
-static nsresult
-ProcessAltName(SECItem  *extData, 
-	       nsAString &text,
-	       nsINSSComponent *nssComponent)
-{
-  nsresult rv = NS_OK;
-  PRArenaPool *arena;
-  CERTGeneralName *nameList;
-
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
-
-  nameList = CERT_DecodeAltNameExtension(arena, extData);
-  if (!nameList)
-    goto finish;
-
-  rv = ProcessGeneralNames(arena, nameList, text, nssComponent);
-
- finish:
-  PORT_FreeArena(arena, PR_FALSE);
-  return rv;
-}
-
-static nsresult
-ProcessSubjectKeyId(SECItem  *extData, 
-		    nsAString &text,
-		    nsINSSComponent *nssComponent)
-{
-  PRArenaPool *arena;
-  nsresult rv = NS_OK;
-  SECItem decoded;
-  nsAutoString local;
-
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
-
-  if (SEC_QuickDERDecodeItem(arena, &decoded, 
-			     SEC_OctetStringTemplate, 
-			     extData) != SECSuccess) {
-    rv = NS_ERROR_FAILURE;
-    goto finish;
-  }
-  
-  nssComponent->GetPIPNSSBundleString("CertDumpKeyID", local);
-  text.Append(local);
-  text.Append(NS_LITERAL_STRING(": "));
-  ProcessRawBytes(&decoded, text);
-
- finish:
-  PORT_FreeArena(arena, PR_FALSE);
-  return rv;
-}
-
-static nsresult
-ProcessAuthKeyId(SECItem  *extData, 
-		 nsAString &text,
-		 nsINSSComponent *nssComponent)
-{
-  CERTAuthKeyID *ret;
-  PRArenaPool *arena;
-  nsresult rv = NS_OK;
-  nsAutoString local;
-
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
-
-  ret = CERT_DecodeAuthKeyID (arena, extData);
-
-  if (ret->keyID.len > 0) {
-    nssComponent->GetPIPNSSBundleString("CertDumpKeyID", local);
-    text.Append(local);
-    text.Append(NS_LITERAL_STRING(": "));
-    ProcessRawBytes(&ret->keyID, text);
-    text.Append(NS_LITERAL_STRING(SEPARATOR));
-  }
-
-  if (ret->authCertIssuer) {
-    nssComponent->GetPIPNSSBundleString("CertDumpIssuer", local);
-    text.Append(local);
-    text.Append(NS_LITERAL_STRING(": "));
-    rv = ProcessGeneralNames(arena, ret->authCertIssuer, text, nssComponent);
-    if (NS_FAILED(rv))
-      goto finish;
-  }
-
-  if (ret->authCertSerialNumber.len > 0) {
-    nssComponent->GetPIPNSSBundleString("CertDumpSerialNo", local);
-    text.Append(local);
-    text.Append(NS_LITERAL_STRING(": "));
-    ProcessRawBytes(&ret->authCertSerialNumber, text);
-  }
-
- finish:
-  PORT_FreeArena(arena, PR_FALSE);
-  return rv;
-}
-
-enum DisplayTextForm { VisibleForm, BMPForm, UTF8Form };
-
-struct DisplayText {
-  DisplayTextForm variant;
-  SECItem value;
-};
-
-const SEC_ASN1Template DisplayTextTemplate[] = {
-    { SEC_ASN1_CHOICE,
-      offsetof(DisplayText, variant), NULL,
-      sizeof(DisplayText) },
-    { SEC_ASN1_VISIBLE_STRING, 
-      offsetof(DisplayText, value), NULL, VisibleForm },
-    { SEC_ASN1_BMP_STRING, 
-      offsetof(DisplayText, value), NULL, BMPForm },
-    { SEC_ASN1_UTF8_STRING, 
-      offsetof(DisplayText, value), NULL, UTF8Form },
-    { 0 }
-};
-
-static nsresult
-ProcessUserNotice(SECItem *der_notice,
-		  nsAString &text,
-		  nsINSSComponent *nssComponent)
-{
-  nsresult rv = NS_OK;
-  CERTUserNotice *notice = NULL;
-  SECItem **itemList;
-  DisplayText display;
-  PRArenaPool *arena;
-  char *buf;
-
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
-
-  notice = CERT_DecodeUserNotice(der_notice);
-  /* XXX: currently, polcyxtn.c assumes that organization
-     is an IA5String, whereas it really ought to be a
-     choice of VisibleString, BMPString, and UTF8String.
-     So if decoding of the user notice fails, it is most likely
-     that the organization was encoded in an unexpected way.
-     Make this function return "something" in this case,
-     instead letting the decode for the entire certificate
-     fail.
-  */
-  if (notice == NULL) {
-    text.Append(NS_LITERAL_STRING("<implementation limitation>"));
-    goto finish;
-  }
-
-  if (notice->noticeReference.organization.len != 0) {
-    rv = ProcessIA5String(&notice->noticeReference.organization,
-			  text, nssComponent);
-    if (NS_FAILED(rv))
-      goto finish;
-
-    itemList = notice->noticeReference.noticeNumbers;
-    while (*itemList) {
-      unsigned long number;
-      char buffer[60];
-      if (SEC_ASN1DecodeInteger(*itemList, &number) != SECSuccess) {
-	rv = NS_ERROR_FAILURE;
-	goto finish;
-      }
-      PR_snprintf(buffer, sizeof(buffer), "%d ", number);
-      AppendASCIItoUTF16(buffer, text);
-      itemList++;
-    }
-  }
-  if (notice->displayText.len != 0) {
-    if (SEC_QuickDERDecodeItem(arena, &display,
-			       DisplayTextTemplate,
-			       &notice->displayText) != SECSuccess) {
-      rv = NS_ERROR_FAILURE;
-      goto finish;
-    }
-    switch (display.variant) {
-    case VisibleForm:
-      /* Need to null-terminate string before appending it. */
-      buf = (char*)PORT_ArenaAlloc(arena, display.value.len+1);
-      PORT_Memcpy(buf, display.value.data, display.value.len);
-      buf[display.value.len] = '\0';
-      text.AppendASCII(buf);
-      break;
-    case BMPForm:
-      AppendBMPtoUTF16(arena, display.value.data, display.value.len,
-		       text);
-      break;
-    case UTF8Form:
-      buf = (char*)PORT_ArenaAlloc(arena, display.value.len+1);
-      PORT_Memcpy(buf, display.value.data, display.value.len);
-      buf[display.value.len] = '\0';
-      AppendUTF8toUTF16(buf, text);
-      break;
-    }
-  }
- finish:
-  if (notice)
-    CERT_DestroyUserNotice(notice);
-  PORT_FreeArena(arena, PR_FALSE);
-  return rv;
-}
-
-static nsresult
-ProcessCertificatePolicies(SECItem  *extData, 
-			   nsAString &text,
-			   nsINSSComponent *nssComponent)
-{
-  CERTCertificatePolicies *policies;
-  CERTPolicyInfo **policyInfos, *policyInfo;
-  CERTPolicyQualifier **policyQualifiers, *policyQualifier;
-  nsAutoString local;
-  nsresult rv = NS_OK;
-
-  policies = CERT_DecodeCertificatePoliciesExtension(extData);
-  if ( policies == NULL )
-    return NS_ERROR_FAILURE;
-
-  policyInfos = policies->policyInfos;
-  while (*policyInfos != NULL ) {
-    policyInfo = *policyInfos++;
-    switch (policyInfo->oid) {
-    case SEC_OID_VERISIGN_USER_NOTICES:
-      nssComponent->GetPIPNSSBundleString("CertDumpVerisignNotices", local);
-      text.Append(local);
-      break;
-    default:
-      GetDefaultOIDFormat(&policyInfo->policyID, local, '.');
-      text.Append(local);
-    }
-    if (policyInfo->policyQualifiers) {
-      /* Add all qualifiers on separate lines, indented */
-      policyQualifiers = policyInfo->policyQualifiers;
-      text.Append(NS_LITERAL_STRING(":"));
-      text.Append(NS_LITERAL_STRING(SEPARATOR));
-      while (*policyQualifiers != NULL) {
-	text.Append(NS_LITERAL_STRING("  "));
-	policyQualifier = *policyQualifiers++;
-	switch(policyQualifier->oid) {
-	case SEC_OID_PKIX_CPS_POINTER_QUALIFIER:
-	  nssComponent->GetPIPNSSBundleString("CertDumpCPSPointer", local);
-	  text.Append(local);
-	  text.Append(NS_LITERAL_STRING(":"));
-	  text.Append(NS_LITERAL_STRING(SEPARATOR));
-	  text.Append(NS_LITERAL_STRING("    "));
-	  /* The CPS pointer ought to be the cPSuri alternative
-	     of the Qualifier choice. */
-	  rv = ProcessIA5String(&policyQualifier->qualifierValue,
-				text, nssComponent);
-	  if (NS_FAILED(rv))
-	    goto finish;
-	  break;
-	case SEC_OID_PKIX_USER_NOTICE_QUALIFIER:
-	  nssComponent->GetPIPNSSBundleString("CertDumpUserNotice", local);
-	  text.Append(local);
-	  text.Append(NS_LITERAL_STRING(": "));
-	  rv = ProcessUserNotice(&policyQualifier->qualifierValue,
-				 text, nssComponent);
-	  break;
-	default:
-	  GetDefaultOIDFormat(&policyQualifier->qualifierID, local, '.');
-	  text.Append(local);
-	  text.Append(NS_LITERAL_STRING(": "));
-	  ProcessRawBytes(&policyQualifier->qualifierValue, text);
-	}
-	text.Append(NS_LITERAL_STRING(SEPARATOR));
-      } /* while policyQualifiers */
-    } /* if policyQualifiers */
-    text.Append(NS_LITERAL_STRING(SEPARATOR));
-  }
-
- finish:
-  CERT_DestroyCertificatePoliciesExtension(policies);
-  return rv;
-}
-
-static nsresult
-ProcessCrlDistPoints(SECItem  *extData, 
-		     nsAString &text,
-		     nsINSSComponent *nssComponent)
-{
-  CERTCrlDistributionPoints *crldp;
-  CRLDistributionPoint **points, *point;
-  PRArenaPool *arena;
-  nsresult rv = NS_OK;
-  nsAutoString local;
-  int reasons, comma;
-
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
-
-  crldp = CERT_DecodeCRLDistributionPoints(arena, extData);
-  if (!crldp || !crldp->distPoints) {
-    rv = NS_ERROR_FAILURE;
-    goto finish;
-  }
-
-  for(points = crldp->distPoints; *points; points++) {
-    point = *points;
-    switch (point->distPointType) {
-    case generalName:
-      rv = ProcessGeneralName(arena, point->distPoint.fullName,
-			      text, nssComponent);
-      if (NS_FAILED(rv))
-	goto finish;
-      break;
-    case relativeDistinguishedName:
-      rv = ProcessRDN(&point->distPoint.relativeName, 
-		      text, nssComponent);
-      if (NS_FAILED(rv))
-	goto finish;
-      break;
-    }
-    if (point->reasons.len) { 
-      reasons = point->reasons.data[0];
-      text.Append(NS_LITERAL_STRING(" "));
-      comma = 0;
-      if (reasons & RF_UNUSED) {
-	nssComponent->GetPIPNSSBundleString("CertDumpUnused", local);
-	text.Append(local); comma = 1;
-      }
-      if (reasons & RF_KEY_COMPROMISE) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
-	nssComponent->GetPIPNSSBundleString("CertDumpKeyCompromise", local);
-	text.Append(local); comma = 1;
-      }
-      if (reasons & RF_CA_COMPROMISE) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
-	nssComponent->GetPIPNSSBundleString("CertDumpCACompromise", local);
-	text.Append(local); comma = 1;
-      }
-      if (reasons & RF_AFFILIATION_CHANGED) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
-	nssComponent->GetPIPNSSBundleString("CertDumpAffiliationChanged", local);
-	text.Append(local); comma = 1;
-      }
-      if (reasons & RF_SUPERSEDED) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
-	nssComponent->GetPIPNSSBundleString("CertDumpSuperseded", local);
-	text.Append(local); comma = 1;
-      }
-      if (reasons & RF_CESSATION_OF_OPERATION) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
-	nssComponent->GetPIPNSSBundleString("CertDumpCessation", local);
-	text.Append(local); comma = 1;
-      }
-      if (reasons & RF_CERTIFICATE_HOLD) {
-	if (comma) text.Append(NS_LITERAL_STRING(", "));
-	nssComponent->GetPIPNSSBundleString("CertDumpHold", local);
-	text.Append(local); comma = 1;
-      }
-    }
-    if (point->crlIssuer) {
-      nssComponent->GetPIPNSSBundleString("CertDumpIssuer", local);
-      text.Append(local);
-      text.Append(NS_LITERAL_STRING(": "));
-      rv = ProcessGeneralNames(arena, point->crlIssuer,
-			       text, nssComponent);
-      if (NS_FAILED(rv))
-	goto finish;
-    }
-    text.Append(NS_LITERAL_STRING(SEPARATOR));
-  }
-  
- finish:
-  PORT_FreeArena(arena, PR_FALSE);
-  return NS_OK;
-}
-
-static nsresult
-ProcessAuthInfoAccess(SECItem  *extData, 
-		      nsAString &text,
-		      nsINSSComponent *nssComponent)
-{
-  CERTAuthInfoAccess **aia, *desc;
-  PRArenaPool *arena;
-  nsresult rv = NS_OK;
-  nsAutoString local;
-
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_FAILURE;
-
-  aia = CERT_DecodeAuthInfoAccessExtension(arena, extData);
-  if (aia == NULL)
-    goto finish;
-
-  while (*aia != NULL) {
-    desc = *aia++;
-    switch (SECOID_FindOIDTag(&desc->method)) {
-    case SEC_OID_PKIX_CA_ISSUERS:
-      nssComponent->GetPIPNSSBundleString("CertDumpCAIssuers", text);
-      break;
-    default:
-      rv = GetDefaultOIDFormat(&desc->method, text, '.');
-      if (NS_FAILED(rv))
-	goto finish;
-    }
-    text.Append(local);
-    text.Append(NS_LITERAL_STRING(": "));
-    rv = ProcessGeneralName(arena, desc->location, text, nssComponent);
-    if (NS_FAILED(rv))
-      goto finish;
-    text.Append(NS_LITERAL_STRING(SEPARATOR));
-  }
-
- finish:
-  PORT_FreeArena(arena, PR_FALSE);
-  return rv;
-}
-
-static nsresult
-ProcessMSCAVersion(SECItem  *extData, 
-		   nsAString &text,
-		   nsINSSComponent *nssComponent)
-{
-  unsigned long version;
-  nsresult rv;
-  char buf[50];
-
-  rv = GetIntValue(extData, &version);
-  if (NS_FAILED(rv))
-    return rv;
-
-  PR_snprintf(buf, sizeof(buf), "0x%x", version);
-  text.AppendASCII(buf);
   return NS_OK;
 }
 
@@ -1333,52 +571,7 @@ ProcessExtensionData(SECOidTag oidTag, SECItem *extData,
   case SEC_OID_X509_KEY_USAGE:
     rv = ProcessKeyUsageExtension(extData, text, nssComponent);
     break;
-  case SEC_OID_X509_BASIC_CONSTRAINTS:
-    rv = ProcessBasicConstraints(extData, text, nssComponent);
-    break;
-  case SEC_OID_X509_EXT_KEY_USAGE:
-    rv = ProcessExtKeyUsage(extData, text, nssComponent);
-    break;
-  case SEC_OID_X509_ISSUER_ALT_NAME:
-  case SEC_OID_X509_SUBJECT_ALT_NAME:
-    rv = ProcessAltName(extData, text, nssComponent);
-    break;
-  case SEC_OID_X509_SUBJECT_KEY_ID:
-    rv = ProcessSubjectKeyId(extData, text, nssComponent);
-    break;
-  case SEC_OID_X509_AUTH_KEY_ID:
-    rv = ProcessAuthKeyId(extData, text, nssComponent);
-    break;
-  case SEC_OID_X509_CERTIFICATE_POLICIES:
-    rv = ProcessCertificatePolicies(extData, text, nssComponent);
-    break;
-  case SEC_OID_X509_CRL_DIST_POINTS:
-    rv = ProcessCrlDistPoints(extData, text, nssComponent);
-    break;
-  case SEC_OID_X509_AUTH_INFO_ACCESS:
-    rv = ProcessAuthInfoAccess(extData, text, nssComponent);
-    break;
-  case SEC_OID_NS_CERT_EXT_BASE_URL:
-  case SEC_OID_NS_CERT_EXT_REVOCATION_URL:
-  case SEC_OID_NS_CERT_EXT_CA_REVOCATION_URL:
-  case SEC_OID_NS_CERT_EXT_CA_CERT_URL:
-  case SEC_OID_NS_CERT_EXT_CERT_RENEWAL_URL:
-  case SEC_OID_NS_CERT_EXT_CA_POLICY_URL:
-  case SEC_OID_NS_CERT_EXT_HOMEPAGE_URL:
-  case SEC_OID_NS_CERT_EXT_COMMENT:
-  case SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME:
-  case SEC_OID_NS_CERT_EXT_LOST_PASSWORD_URL:
-    rv = ProcessIA5String(extData, text, nssComponent);
-    break;
   default:
-    if (oidTag == SEC_OID(MS_CERT_EXT_CERTTYPE)) {
-      rv = ProcessBMPString(extData, text, nssComponent);
-      break;
-    }
-    if (oidTag == SEC_OID(MS_CERTSERV_CA_VERSION)) {
-      rv = ProcessMSCAVersion(extData, text, nssComponent);
-      break;
-    }
     rv = ProcessRawBytes(extData, text);
     break; 
   }
@@ -1575,27 +768,6 @@ ProcessExtensions(CERTCertExtension **extensions,
   return NS_OK;
 }
 
-static bool registered;
-static SECStatus RegisterDynamicOids()
-{
-  unsigned int i;
-  SECStatus rv = SECSuccess;
-
-  if (registered)
-    return rv;
-
-  for (i = 0; i < numOids; i++) {
-    SECOidTag tag = SECOID_AddEntry(&more_oids[i]);
-    if (tag == SEC_OID_UNKNOWN) {
-      rv = SECFailure;
-      continue;
-    }
-    more_oids[i].offset = tag;
-  }
-  registered = true;
-  return rv;
-}
-
 nsresult
 nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
                                                  nsINSSComponent *nssComponent)
@@ -1603,9 +775,6 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
-
-  if (RegisterDynamicOids() != SECSuccess)
-    return NS_ERROR_FAILURE;
 
   //
   //   TBSCertificate  ::=  SEQUENCE  {
