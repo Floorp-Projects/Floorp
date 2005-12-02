@@ -1,0 +1,7 @@
+//
+// Prefix header for all source files of the 'CaminoViewsFrame' target in the 'CaminoViewsPalette' project
+//
+
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+#endif

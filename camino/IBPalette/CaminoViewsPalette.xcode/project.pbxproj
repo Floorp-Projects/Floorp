@@ -7,6 +7,8 @@
 	objects = {
 		0259C573FE90428111CA0C5A = {
 			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.2;
+				SDKROOT = /Developer/SDKs/MacOSX10.2.8.sdk;
 			};
 			buildStyles = (
 				2E58F360FFB2326E11CA0CBA,
@@ -112,6 +114,15 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		0F4523E509401BB100F61E1E = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = CaminoViewsFramework_Prefix.pch;
+			path = src/CaminoViewsFramework_Prefix.pch;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		0F67D8CF09397D1C00A84327 = {
 			isa = PBXFileReference;
@@ -464,6 +475,7 @@
 		32DBCF9F0370C38200C91783 = {
 			children = (
 				32DBCF980370C29C00C91783,
+				0F4523E509401BB100F61E1E,
 			);
 			isa = PBXGroup;
 			name = "Other Sources";
@@ -529,7 +541,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_VERSION = A;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				GCC_PREFIX_HEADER = src/CaminoViewsFramework_Prefix.pch;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "CaminoViewsPaletteFramework-Info.plist";
