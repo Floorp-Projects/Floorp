@@ -412,7 +412,6 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INFOPLIST_FILE = resources/Info.plist;
 				PREBINDING = NO;
 				ZERO_LINK = NO;
 			};
@@ -750,7 +749,7 @@
 				GCC_PREFIX_HEADER = src/CaminoViewsPalette_Prefix.pch;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_FILE = resources/Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Palettes";
 				OTHER_LDFLAGS = "-bundle";
 				PREBINDING = NO;
