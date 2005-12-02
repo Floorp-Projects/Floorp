@@ -55,6 +55,7 @@ class nsIDragHelperService;
 class nsIPrintSettings;
 class nsIURI;
 class nsISupports;
+class nsISecureBrowserUI;
 
 // Protocol implemented by anyone interested in progress
 // related to a BrowserView. A listener should explicitly
@@ -164,6 +165,7 @@ enum {
 - (void)removeListener:(id <CHBrowserListener>)listener;
 - (void)setContainer:(NSView<CHBrowserListener, CHBrowserContainer>*)container;
 - (nsIDOMWindow*)getContentWindow;	// addrefs
+- (nsISecureBrowserUI*)getSecureBrowserUI; // addrefs
 
 // nsIWebNavigation methods
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags allowPopups:(BOOL)inAllowPopups;

@@ -360,6 +360,18 @@ const long NSFindPanelActionSetFindString = 7;
   return window;
 }
 
+// addrefs return value
+- (nsISecureBrowserUI*)getSecureBrowserUI
+{
+  nsISecureBrowserUI* secureUI = nsnull;
+  
+  nsIDocShell* docShell = [self getDocShell];
+  if (docShell)
+    docShell->GetSecurityUI(&secureUI);
+
+  return secureUI;
+}
+
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags allowPopups:(BOOL)inAllowPopups
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
