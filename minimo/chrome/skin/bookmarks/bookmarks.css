@@ -1,0 +1,23 @@
+
+       div.item {
+		font-family:verdana;
+		font-size:74%;
+		-moz-border-radius:4px;
+		background-color:#ffffff;
+		margin:4px;
+ 	 } 
+	 div.item a {
+		text-decoration:none;
+		color:black;
+	 }
+
+	bookmarks {
+		background-color:#dddddd;
+
+	}
+	
+	body {
+
+		padding:0px;margin:0px;
+	}
+
