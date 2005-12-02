@@ -329,7 +329,7 @@ PR_STATIC_CALLBACK(void)
 contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 {
     nsContractIDTableEntry* entry = NS_STATIC_CAST(nsContractIDTableEntry*, aHdr);
-    if (!entry->mFactoryEntry->mLoaderType == NS_LOADER_TYPE_INVALID &&
+    if (entry->mFactoryEntry->mLoaderType == NS_LOADER_TYPE_INVALID &&
         entry->mFactoryEntry->mCid.Equals(kEmptyCID)) {
         // this object is owned by the hash.
         // nsFactoryEntry is arena allocated. So we don't delete it.

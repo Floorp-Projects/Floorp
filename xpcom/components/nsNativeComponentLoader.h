@@ -61,6 +61,8 @@ class nsNativeModuleLoader : public nsIModuleLoader
  private:
     struct NativeLoadData
     {
+        NativeLoadData() : library(nsnull) { }
+
         nsCOMPtr<nsIModule>  module;
         PRLibrary           *library;
     };
