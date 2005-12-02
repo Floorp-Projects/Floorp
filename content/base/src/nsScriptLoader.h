@@ -84,9 +84,9 @@ public:
 protected:
   PRBool InNonScriptingContainer(nsIScriptElement* aScriptElement);
   PRBool IsScriptEventHandler(nsIScriptElement* aScriptElement);
-  nsresult FireErrorNotification(nsresult aResult,
-                                 nsIScriptElement* aElement,
-                                 nsIScriptLoaderObserver* aObserver);
+  void FireErrorNotification(nsresult aResult,
+                             nsIScriptElement* aElement,
+                             nsIScriptLoaderObserver* aObserver);
   nsresult ProcessRequest(nsScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult,
                            nsScriptLoadRequest* aRequest,
@@ -96,6 +96,13 @@ protected:
   nsresult EvaluateScript(nsScriptLoadRequest* aRequest,
                           const nsAFlatString& aScript);
   void ProcessPendingReqests();
+
+  // The guts of ProcessScriptElement.  If aFireErrorNotification is
+  // true, FireErrorNotification should be called with the return
+  // value of this method.
+  nsresult DoProcessScriptElement(nsIScriptElement *aElement,
+                                  nsIScriptLoaderObserver *aObserver,
+                                  PRBool* aFireErrorNotification);
 
   nsIDocument* mDocument;                   // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
