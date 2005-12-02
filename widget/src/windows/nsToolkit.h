@@ -161,11 +161,11 @@ class MouseTrailer
 public:
     static MouseTrailer  &GetSingleton() { return mSingleton; }
     
-    nsWindow             *GetMouseTrailerWindow() { return mHoldMouseWindow; }
-    nsWindow             *GetCaptureWindow() { return mCaptureWindow; }
+    HWND                  GetMouseTrailerWindow() { return mMouseTrailerWindow; }
+    HWND                  GetCaptureWindow() { return mCaptureWindow; }
 
-    void                  SetMouseTrailerWindow(nsWindow * aNSWin);
-    void                  SetCaptureWindow(nsWindow * aNSWin);
+    void                  SetMouseTrailerWindow(HWND aWnd);
+    void                  SetCaptureWindow(HWND aWnd);
     void                  IgnoreNextCycle() { mIgnoreNextCycle = PR_TRUE; } 
     void                  DestroyTimer();
                           ~MouseTrailer();
@@ -180,15 +180,12 @@ private:
     // Global nsToolkit Instance
     static MouseTrailer   mSingleton;
 
-    // information for mouse enter/exit events
-    // last window
-    nsWindow             *mHoldMouseWindow;
-    nsWindow             *mCaptureWindow;
+    // Information for mouse enter/exit events
+    HWND                  mMouseTrailerWindow;
+    HWND                  mCaptureWindow;
     PRBool                mIsInCaptureMode;
     PRBool                mIgnoreNextCycle;
-    // timer
     nsCOMPtr<nsITimer>    mTimer;
-
 };
 
 //-------------------------------------------------------------------------
