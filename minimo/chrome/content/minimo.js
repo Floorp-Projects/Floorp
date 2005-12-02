@@ -39,6 +39,7 @@
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
 
+var gBookmarksDoc=null; 
 var gURLBar = null;
 var gBrowserStatusHandler;
 var gSelectedTab=null;
@@ -260,12 +261,14 @@ function MiniNavStartup()
     gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
                           .getService(Components.interfaces.nsIURIFixup);
 
+    var bookmarkstore=null; 
 
     try {
       gPref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
 
       var page = gPref.getCharPref("browser.startup.homepage");
+      var bookmarkstore = gPref.getCharPref("browser.bookmark.store");
 
       if (page != null)
       {
@@ -279,6 +282,7 @@ function MiniNavStartup()
   }
 
   loadURI(homepage);
+  loadBookmarks(bookmarkstore);
   
   /*
    * We add event handler to catch the right and left keys on the main_MenuPopup 
@@ -771,6 +775,28 @@ function BrowserPopupShowing () {
       }
     }
   }
+}
+
+
+/* Bookmarks */ 
+
+function BrowserBookmarkThis() {
+
+    var currentURI=getBrowser().selectedBrowser.webNavigation.currentURI.spec;
+    var newLi=gBookmarksDoc.createElement("li");
+    var bmContent=gBookmarksDoc.createTextNode(currentURI);
+    newLi.appendChild(bmContent);
+    gBookmarksDoc.getElementsByTagName("bm")[0].appendChild(newLi);
+    storeBookmarks();	
+
+}
+
+function BrowserBookmark() {
+    try {  
+      getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/bookmarks/bmview.xhtml');   
+      browserInit(getBrowser().selectedTab);
+      } catch (e) {
+      }  
 }
 
 /* Toolbar specific code - to be removed from here */ 

@@ -97,11 +97,13 @@
     <command id="cmd_BrowserZoomMinus"        oncommand="BrowserResetZoomMinus()" />
     <command id="cmd_UIZoomPlus"              oncommand="BrowserUIResetZoomPlus()" />
     <command id="cmd_UIZoomMinus"             oncommand="BrowserUIResetZoomMinus()" />
-    <command id="cmd_DoPanelPreferences"       oncommand="DoPanelPreferences()" /> 
+    <command id="cmd_DoPanelPreferences"      oncommand="DoPanelPreferences()" /> 
     <command id="cmd_DoBrowserRSS"            oncommand="DoBrowserRSS()" />
     <command id="cmd_BrowserMenu"             oncommand="BrowserMenuPopup()" />
     <command id="cmd_BrowserMenuContextual"   oncommand="BrowserMenuPopupContextualMenu()" />
     <command id="cmd_Quit"                    oncommand="window.close();" />
+    <command id="cmd_BrowserBookmark"         oncommand="BrowserBookmark()" />
+    <command id="cmd_BrowserBookmarkThis"     oncommand="BrowserBookmarkThis()" />
 
     <!-- Keyboard Focus Handler Controls --> 
     <!-- This entire focusnavigation set is not XBLized yet, 
@@ -202,6 +204,9 @@
 		<menuitem id="item-forwardbutton" label="&forwardButton.label;" command="cmd_BrowserForward"  hidden="true"/>
 		<menuitem id="item-reloadbutton"  label="&reloadButton.label;"  command="cmd_BrowserReload"   hidden="true"/>
 
+        <menuitem id="item-bookmark-page" label="&bookmarkthispage.label;" insertbefore="context-sep-view"  command="cmd_BrowserBookmarkThis" hidden="false"/>
+        <menuitem id="item-bookmark"      label="&bookmarks.label;" command="cmd_BrowserBookmark" hidden="true"/>
+        
 		<menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand="" hidden="true"/>
 
 		<menuitem id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
