@@ -118,16 +118,7 @@ const PRUint8 kPresContext_DefaultFixedFont_ID    = 0x01; // kGenericFont_moz_fi
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 
-// hack to make egcs / gcc 2.95.2 happy
-class nsPresContext_base : public nsIObserver
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRESCONTEXT_IID)
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsPresContext_base, NS_IPRESCONTEXT_IID)
-
-class nsPresContext : public nsPresContext_base {
+class nsPresContext : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER

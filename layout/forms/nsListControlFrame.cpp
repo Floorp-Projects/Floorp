@@ -561,8 +561,8 @@ NS_IMETHODIMP nsListControlFrame::GetAccessible(nsIAccessible** aAccessible)
 
   if (accService) {
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    return accService->CreateHTMLListboxAccessible(node, GetPresContext(),
-                                                   aAccessible);
+    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(GetPresContext()->PresShell()));
+    return accService->CreateHTMLListboxAccessible(node, weakShell, aAccessible);
   }
 
   return NS_ERROR_FAILURE;

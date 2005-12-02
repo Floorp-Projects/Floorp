@@ -374,7 +374,7 @@ public:
 
 protected:
   nsString  mURLSpec;
-  nsCOMPtr<nsMediaList> mMedia;
+  nsRefPtr<nsMediaList> mMedia;
   nsCOMPtr<nsICSSStyleSheet> mChildSheet;
 };
 
@@ -513,7 +513,8 @@ CSSImportRuleImpl::SetSheet(nsICSSStyleSheet* aSheet)
   nsCOMPtr<nsIDOMMediaList> mediaList;
   rv = sheet->GetMedia(getter_AddRefs(mediaList));
   NS_ENSURE_SUCCESS(rv, rv);
-  mMedia = do_QueryInterface(mediaList);
+  mMedia = NS_STATIC_CAST(nsMediaList*,
+           NS_STATIC_CAST(nsIDOMMediaList*, mediaList.get()));
   
   return NS_OK;
 }
@@ -604,7 +605,7 @@ CSSImportRuleImpl::GetMedia(nsIDOMMediaList * *aMedia)
     return NS_OK;
   }
 
-  return CallQueryInterface(mMedia, aMedia);
+  return CallQueryInterface(mMedia.get(), aMedia);
 }
 
 NS_IMETHODIMP

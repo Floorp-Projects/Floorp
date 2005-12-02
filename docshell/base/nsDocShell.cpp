@@ -4497,7 +4497,7 @@ nsDocShell::SuspendRefreshURIs()
 
             timer->Cancel();
 
-            nsCOMPtr<nsRefreshTimer> rt = do_QueryInterface(callback);
+            nsCOMPtr<nsITimerCallback> rt = do_QueryInterface(callback);
             NS_ASSERTION(rt, "RefreshURIList timer callbacks should only be RefreshTimer objects");
 
             mRefreshURIList->ReplaceElementAt(rt, i);
@@ -4544,13 +4544,13 @@ nsDocShell::RefreshURIFromQueue()
     while (n) {
         nsCOMPtr<nsISupports> element;
         mRefreshURIList->GetElementAt(--n, getter_AddRefs(element));
-        nsCOMPtr<nsRefreshTimer> refreshInfo(do_QueryInterface(element));
+        nsCOMPtr<nsITimerCallback> refreshInfo(do_QueryInterface(element));
 
         if (refreshInfo) {   
             // This is the nsRefreshTimer object, waiting to be
             // setup in a timer object and fired.                         
             // Create the timer and  trigger it.
-            PRUint32 delay = refreshInfo->GetDelay();
+            PRUint32 delay = NS_STATIC_CAST(nsRefreshTimer*, NS_STATIC_CAST(nsITimerCallback*, refreshInfo))->GetDelay();
             nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
             if (timer) {    
                 // Replace the nsRefreshTimer element in the queue with

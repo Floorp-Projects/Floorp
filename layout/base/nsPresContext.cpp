@@ -267,7 +267,7 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mLangGroup);
 }
 
-NS_IMPL_ISUPPORTS2(nsPresContext, nsPresContext, nsIObserver)
+NS_IMPL_ISUPPORTS1(nsPresContext, nsIObserver)
 
 #define MAKE_FONT_PREF_KEY(_pref, _s0, _s1) \
  _pref.Assign(_s0); \
