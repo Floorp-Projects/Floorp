@@ -44,6 +44,9 @@
 #include "nsSVGLengthList.h"
 #include "nsISVGSVGElement.h"
 #include "nsSVGCoordCtxProvider.h"
+#include "nsISVGTextContentMetrics.h"
+#include "nsIFrame.h"
+#include "nsIDocument.h"
 
 typedef nsSVGGraphicElement nsSVGTSpanElementBase;
 
@@ -79,6 +82,8 @@ public:
   virtual void ParentChainChanged();
 
 protected:
+
+  already_AddRefed<nsISVGTextContentMetrics> GetTextContentMetrics();
 
   // nsIDOMSVGTextPositioning properties:
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> mX;
@@ -297,8 +302,12 @@ NS_IMETHODIMP nsSVGTSpanElement::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSV
 /* nsIDOMSVGRect getExtentOfChar (in unsigned long charnum); */
 NS_IMETHODIMP nsSVGTSpanElement::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
-  NS_NOTYETIMPLEMENTED("nsSVGTSpanElement::GetExtentOfChar");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = nsnull;
+  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+
+  if (!metrics) return NS_ERROR_FAILURE;
+
+  return metrics->GetExtentOfChar(charnum, _retval);
 }
 
 /* float getRotationOfChar (in unsigned long charnum); */
@@ -401,3 +410,32 @@ void nsSVGTSpanElement::ParentChainChanged()
   // recurse into child content:
   nsSVGTSpanElementBase::ParentChainChanged();
 }  
+
+//----------------------------------------------------------------------
+// implementation helpers:
+
+already_AddRefed<nsISVGTextContentMetrics>
+nsSVGTSpanElement::GetTextContentMetrics()
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) {
+    NS_ERROR("no document");
+    return nsnull;
+  }
+  
+  nsIPresShell* presShell = doc->GetShellAt(0);
+  if (!presShell) {
+    NS_ERROR("no presshell");
+    return nsnull;
+  }
+
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+
+  if (!frame) {
+    return nsnull;
+  }
+  
+  nsISVGTextContentMetrics* metrics;
+  CallQueryInterface(frame, &metrics);
+  return metrics;
+}

@@ -59,6 +59,7 @@
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsIDOMSVGRect.h"
 #include "nsISVGOuterSVGFrame.h"
+#include "nsISVGTextContentMetrics.h"
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
 #include "nsINameSpaceManager.h"
@@ -73,6 +74,7 @@ class nsSVGTSpanFrame : public nsSVGTSpanFrameBase,
                         public nsISVGChildFrame,
                         public nsISVGContainerFrame,
                         public nsISVGValueObserver,
+                        public nsISVGTextContentMetrics,
                         public nsSupportsWeakReference
 {
   friend nsIFrame*
@@ -126,6 +128,9 @@ public:
                                      nsISVGValue::modificationType aModType);
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
                                      nsISVGValue::modificationType aModType);
+
+  // nsISVGTextContentMetrics
+  NS_IMETHOD GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval);
 
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference

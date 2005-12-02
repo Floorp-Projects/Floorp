@@ -382,12 +382,10 @@ nsSVGPathElement::GetPathFlatten()
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 
   if (!frame) {
-    NS_ERROR("no frame");
     return nsnull;
   }
   
   nsISVGPathFlatten* flattener;
   CallQueryInterface(frame, &flattener);
-  NS_ASSERTION(flattener, "wrong frame type");
   return flattener;
 }

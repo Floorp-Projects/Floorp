@@ -38,6 +38,7 @@
 
 #include "nsSVGTSpanFrame.h"
 #include "nsSVGUtils.h"
+#include "nsDOMError.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -168,6 +169,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGTSpanFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISVGTextContentMetrics)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrameBase)
 
 
@@ -293,6 +295,17 @@ nsSVGTSpanFrame::DidModifySVGObservable (nsISVGValue* observable,
     text_frame->NotifyGlyphMetricsChange(this);
   
   return NS_OK;
+}
+
+
+//----------------------------------------------------------------------
+// nsISVGTextContentMetrics
+NS_IMETHODIMP
+nsSVGTSpanFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
+{
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+  if (!node) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  return nsSVGUtils::GetExtentOfChar(node, charnum, _retval);
 }
 
 
