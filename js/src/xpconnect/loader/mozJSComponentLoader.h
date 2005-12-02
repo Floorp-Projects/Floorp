@@ -156,6 +156,8 @@ class mozJSComponentLoader : public nsIModuleLoader,
         char                *location;
     };
 
+    friend class ModuleEntry;
+
     nsClassHashtable<nsHashableHashKey, ModuleEntry> mModules;
 
     PRBool mInitialized;
