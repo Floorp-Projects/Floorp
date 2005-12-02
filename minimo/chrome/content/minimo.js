@@ -801,7 +801,7 @@ function BrowserBookmarkThis() {
     newLi.appendChild(bmContent);
     gBookmarksDoc.getElementsByTagName("bm")[0].appendChild(newLi);
     storeBookmarks();	
-
+	refreshBookmarks();
 }
 
 function BrowserBookmark() {
