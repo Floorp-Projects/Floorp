@@ -488,7 +488,7 @@ function CheckCardRequiredDataPresence(doc)
 {
   // Bug 314995 We require at least one of the following fields to be
   // filled in: email address, first name, last name, display name,
-  //            organisation (company name).
+  //            organization (company name).
   var primaryEmail = doc.getElementById("PrimaryEmail");
   if (primaryEmail.textLength == 0 &&
       doc.getElementById("FirstName").textLength == 0 &&
