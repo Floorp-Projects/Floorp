@@ -98,6 +98,7 @@ NSSCleanupAutoPtrClass(PK11SlotInfo, PK11_FreeSlot)
 NSSCleanupAutoPtrClass(CERTCertNicknames, CERT_FreeNicknames)
 
 #include "nsNSSShutDown.h"
+#include "nsNSSCertHelper.h"
 
 /*
  * These are the most common error strings that are returned
@@ -2079,9 +2080,6 @@ void signTextOutputCallback(void *arg, const char *buf, unsigned long len)
   ((nsCString*)arg)->Append(buf, len);
 }
 
-#define NICKNAME_EXPIRED_STRING " (expired)"
-#define NICKNAME_NOT_YET_VALID_STRING " (not yet valid)"
-
 NS_IMETHODIMP
 nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
                    nsAString& aResult)
@@ -2236,9 +2234,8 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
     ++numberOfCerts;
   }
 
-  CERTCertNicknames* nicknames =
-    CERT_NicknameStringsFromCertList(certList, NICKNAME_EXPIRED_STRING,
-                                     NICKNAME_NOT_YET_VALID_STRING);
+  CERTCertNicknames* nicknames = getNSSCertNicknamesFromCertList(certList);
+
   if (!nicknames) {
     aResult.Append(internalError);
 
