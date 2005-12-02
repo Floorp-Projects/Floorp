@@ -957,7 +957,10 @@ ns4xPluginInstance::GetDOMWindow()
     return nsnull;
   }
 
-  return doc->GetWindow();
+  nsPIDOMWindow *window = doc->GetWindow();
+  NS_IF_ADDREF(window);
+
+  return window;
 }
 
 ////////////////////////////////////////////////////////////////////////
