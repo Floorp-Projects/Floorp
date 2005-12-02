@@ -842,6 +842,10 @@ ProcessGeneralName(PRArenaPool *arena,
     break;
   case certIPAddress:
     {
+// kengert: hotfix to fix bustage, will clean up soon
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 46
+#endif
       char buf[INET6_ADDRSTRLEN];
       nssComponent->GetPIPNSSBundleString("CertDumpIPAddress", key);
       if (current->name.other.len == 4)
