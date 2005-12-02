@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,13 +39,14 @@
 #ifndef nsMenuItemX_h__
 #define nsMenuItemX_h__
 
-
 #include "nsIMenuItem.h"
 #include "nsString.h"
 #include "nsIMenuListener.h"
 #include "nsIChangeManager.h"
 #include "nsWeakReference.h"
 #include "nsIWidget.h"
+
+#include <Cocoa/Cocoa.h>
 
 class nsIMenu;
 
@@ -66,9 +68,9 @@ public:
   NS_DECL_NSICHANGEOBSERVER
 
   // nsIMenuItem Methods
-  NS_IMETHOD Create ( nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
-                        EMenuItemType aItemType, PRBool aEnabled, 
-                        nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode ) ;
+  NS_IMETHOD Create (nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
+                     EMenuItemType aItemType, PRBool aEnabled, 
+                     nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode);
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetShortcutChar(const nsString &aText);
   NS_IMETHOD GetShortcutChar(nsString &aText);
@@ -91,7 +93,7 @@ public:
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
-                                void * menuNode, void * aDocShell);
+                              void * menuNode, void * aDocShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   nsEventStatus CheckRebuild(PRBool & aMenuEvent);
   nsEventStatus SetRebuild(PRBool aMenuEvent);
@@ -100,8 +102,10 @@ protected:
 
   void UncheckRadioSiblings ( nsIContent* inCheckedElement ) ;
 
-  nsString        mLabel;
-  nsString        mKeyEquivalent;
+  NSMenuItem*               mNativeMenuItem;       // strong ref, we own
+  
+  nsString                  mLabel;
+  nsString                  mKeyEquivalent;
 
   nsIMenu*                  mMenuParent;          // weak, parent owns us
   nsIChangeManager*         mManager;             // weak

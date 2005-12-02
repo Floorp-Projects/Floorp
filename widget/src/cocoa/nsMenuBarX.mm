@@ -905,3 +905,16 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
   
   return status;
 }
+
+NSString* MenuHelpersX::CreateTruncatedCocoaLabel(nsString itemLabel)
+{
+  // ::TruncateThemeText() doesn't take the number of characters to truncate to, it takes a pixel with
+  // to fit the string in. Ugh. I talked it over with sfraser and we couldn't come up with an 
+  // easy way to compute what this should be given the system font, etc, so we're just going
+  // to hard code it to something reasonable and bigger fonts will just have to deal.
+  const short kMaxItemPixelWidth = 300;
+  CFMutableStringRef labelRef = ::CFStringCreateMutable(kCFAllocatorDefault, itemLabel.Length());
+  ::CFStringAppendCharacters(labelRef, (UniChar*)itemLabel.get(), itemLabel.Length());
+  ::TruncateThemeText(labelRef, kThemeMenuItemFont, kThemeStateActive, kMaxItemPixelWidth, truncMiddle, NULL);
+  return (NSString*)labelRef; // caller releases
+}

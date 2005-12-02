@@ -63,6 +63,7 @@ namespace MenuHelpersX
   nsresult DocShellToPresContext(nsIDocShell* inDocShell, nsPresContext** outContext);
   nsEventStatus DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
                                   nsIContent* aTargetContent);
+  NSString* CreateTruncatedCocoaLabel(nsString itemLabel);
 }
 
 
