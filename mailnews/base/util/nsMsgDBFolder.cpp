@@ -456,8 +456,9 @@ NS_IMETHODIMP nsMsgDBFolder::ClearNewMessages()
       m_saveNewMsgs.RemoveAll();
       m_saveNewMsgs.Add(newMessageKeys, numNewKeys);
     }
-    m_newMsgs.RemoveAll();
+    mDatabase->ClearNewList(PR_TRUE);
   }
+  m_newMsgs.RemoveAll();
   mNumNewBiffMessages = 0;
   return rv;
 }
@@ -5154,10 +5155,8 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
         else if (FindInReadable(NS_LITERAL_CSTRING("text/plain"), curLine,
                                 nsCaseInsensitiveCStringComparator()))
           /* bodyFollowsHeaders = PR_TRUE */;
-        else if (FindInReadable(NS_LITERAL_CSTRING("multipart/mixed"), curLine,
-                                nsCaseInsensitiveCStringComparator())
-          || FindInReadable(NS_LITERAL_CSTRING("multipart/alternative"), curLine,
-                            nsCaseInsensitiveCStringComparator()))
+        else if (FindInReadable(NS_LITERAL_CSTRING("multipart/"), curLine,
+                                nsCaseInsensitiveCStringComparator()))
         {
           lookingForBoundary = PR_TRUE;
         }
