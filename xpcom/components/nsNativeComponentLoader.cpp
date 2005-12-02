@@ -117,7 +117,7 @@ nsNativeModuleLoader::LoadModule(nsILocalFile* aFile, nsIModule* *aResult)
         return NS_NOINTERFACE;
     }
 
-    NativeLoadData data = { nsnull, nsnull };
+    NativeLoadData data;
 
     if (mLibraries.Get(hashedFile, &data)) {
         NS_ASSERTION(data.module, "Corrupt mLibraries hash");
