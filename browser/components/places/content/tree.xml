@@ -23,7 +23,8 @@
           item = item.parent;
         item.QueryInterface(Ci.nsIInterfaceRequestor);
         this._browserWindow = item.getInterface(Ci.nsIDOMWindowInternal);
-        
+
+        this._makeBookmarkObserver();
         this._bms = 
           Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
           getService(Ci.nsINavBookmarksService);
@@ -45,6 +46,40 @@
           this.supportedDropOnTypes = viewConfig.dropOnTypes;
           this.filterOptions = viewConfig.filterOptions;
           this.firstDropIndex = viewConfig.firstDropIndex;
+        ]]></body>
+      </method>
+      
+      <field name="_bookmarkObserver"/>
+      <method name="_makeBookmarkObserver">
+        <body><![CDATA[ 
+          var BMO = {
+            _numBatches: 0,
+            _self: this,
+            
+            _reloadView: function PT_BMO__reloadView() {
+              var result = this._self.getResult();
+              this._self.load(result.getQueries({ }), result.queryOptions);
+            },
+            
+            onBeginUpdateBatch: function PT_BMO_onBeginUpdateBatch() {
+              ++this._numBatches;
+            },
+            onEndUpdateBatch: function PT_BMO_onEndUpdateBatch() {
+              if (!--this._numBatches)
+                this._reloadView();
+            },
+            get wantAllDetails() { 
+              return false;
+            },
+            onItemAdded: function PT_O_onItemAdded() {
+              if (!this._numBatches)
+                this._reloadView();
+            }
+          };
+          BMO.onItemRemoved = BMO.onItemMoved = BMO.onItemChanged = 
+            BMO.onItemReplaced = BMO.onFolderAdded = BMO.onFolderRemoved = 
+            BMO.onFolderMoved = BMO.onFolderChanged = BMO.onItemAdded;
+          this._bookmarkObserver = BMO;
         ]]></body>
       </method>
       
@@ -303,7 +338,7 @@
               // nsINavHistoryResult
               container = lastSelected.parent;
               var lsi = PlacesController.getIndexOfNode(lastSelected);
-              if (lsi < container.childCount)
+              if (lsi < container.childCount - 1)
                 index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
               else
                 index = orientation == NHRVO.DROP_BEFORE ? lsi - 1 : lsi;
@@ -338,29 +373,79 @@
         ]]></body>
       </method>
       
-      <field name="_DNDObserver"><![CDATA[({
-        // XXXben ew.
-        _self: this,
-        onDragStart: function TV_DO_onDragStart(event, xferData, dragAction) {
-          if (this._self.getAttribute("sortActive") == "true")
+      <!-- nsDragAndDrop -->
+      <method name="onDragStart">
+        <parameter name="event"/>
+        <parameter name="xferData"/>
+        <parameter name="dragAction"/>
+        <body><![CDATA[ 
+          if (this.getAttribute("sortActive") == "true")
             throw Components.results.NS_OK;
           xferData.data = PlacesController.getTransferData();
           // XXXben - the drag wrapper should do this automatically. 
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
-        },
-        canDrop: function TV_DO_canDrop(event, session) {
-          return this._self._viewObserver.canDrop(-1, -1);
-        },
-        onDragOver: function TV_DO_onDragOver(event, flavor, session) {
-        },
-        getSupportedFlavours: function TV_DO_getSupportedFlavours() {
+        ]]></body>
+      </method>
+      
+      <!-- nsDragAndDrop -->
+      <method name="canDrop">
+        <parameter name="event"/>
+        <parameter name="session"/>
+        <body><![CDATA[ 
+          return this._viewObserver.canDrop(-1, -1);
+        ]]></body>
+      </method>
+      
+      <!-- nsDragAndDrop -->
+      <method name="onDragOver">
+        <parameter name="event"/>
+        <parameter name="flavor"/>
+        <parameter name="session"/>
+        <body><![CDATA[ ]]></body>
+      </method>
+      
+      <!-- nsDragAndDrop -->
+      <method name="getSupportedFlavours">
+        <body><![CDATA[
           var flavorSet = new FlavourSet();
           for (var i = 0; i < this._self.supportedDropTypes.length; ++i)
             flavorSet.appendFlavour(this._self.supportedDropTypes[i]);
           return flavorSet;
-        },
-      })]]></field>
+        ]]></body>
+      </method>
+      
+      <method name="_getInsertionNode">
+        <parameter name="insertionPoint"/>
+        <parameter name="filterOptions"/>
+        <body><![CDATA[ 
+          var result = 
+            PlacesController.getFolderContents(insertionPoint.folderId, 
+                                               filterOptions);
+          var index = insertionPoint.index;
+          if (insertionPoint.index == 0) 
+            index = 0;
+          else if (insertionPoint.index == -1)
+            index = result.childCount - 1;
+          return index > -1 ? result.getChild(index) : null;
+        ]]></body>
+      </method>
+      
+      <method name="_getInsertionIndex">
+        <parameter name="insertionPoint"/>
+        <body><![CDATA[
+          const NHRVO = Ci.nsINavHistoryResultViewObserver;
+          // Insert index of insertion and number of rows to insert
+          var filterOptions = this.filterOptions;
+          // This is a bit of a hack. Assume any container you drop into is 
+          // itself showing all item types, not just folders or items. 
+          if (insertionPoint.orientation == NHRVO.DROP_ON)
+            filterOptions = ViewConfig.GENERIC_FILTER_OPTIONS;
+          var node = this._getInsertionNode(insertionPoint, filterOptions);
+          // This is the insertion index of the pivot. 
+          return this.getResult().treeIndexForNode(node);
+        ]]></body>
+      </method>
       
       <field name="_viewObserver"><![CDATA[({
         _self: this,
@@ -374,6 +459,26 @@
               orientation != Ci.nsINavHistoryResultViewObserver.DROP_ON)
             return false;
           return PlacesControllerDragHelper.canDrop(this._self, orientation);
+        },
+        
+        _adjustInsertionPoint: function VO__adjustInsertionPoint(insertionPoint) {
+          var index = this._self._getInsertionIndex(insertionPoint);
+        
+          var selection = this._self.view.selection;
+          var rc = selection.getRangeCount();
+          
+          var selectionAbove = 0;
+          for (var i = 0; i < rc; ++i) {
+            var min = { }, max = { };
+            selection.getRangeAt(i, min, max);
+            if (min.value > index)
+              break;
+            if (max.value >= index)
+              selectionAbove += index - min.value;
+            else
+              selectionAbove += max.value - min.value + 1;
+          }
+          insertionPoint.index -= selectionAbove;
         },
         
         onDrop: function VO_onDrop(index, orientation) {
@@ -402,17 +507,25 @@
           // parameters into a container id and index within the container, 
           // since this information is specific to the tree view. 
           var ip = this._self._getInsertionPoint(index, orientation);
+          if (sourceView == this._self) {
+            // We are moving nodes within the same view, we need to adjust the
+            // insertion point to take into account the fact that rows may
+            // disappear above it, causing its index to be incorrect. 
+            this._adjustInsertionPoint(ip);
+          }
           PlacesControllerDragHelper.onDrop(sourceView, this._self, ip, 
                                             visibleInsertCount);
         },
         
-        _states: { },
         onToggleOpenState: function VO_onToggleOpenState(index) { 
           // XXXben we will probably have to implement this to refresh Live 
           //        Bookmarks.
           var view = this._self.view;
-          if (view.isContainer(index))
-            this._states[index] = view.isContainerOpen(index);
+          if (view.isContainer(index)) {
+            if (!this._self._openStates)
+              this._self._openStates = { };
+            this._self._openStates[index] = !view.isContainerOpen(index);
+          }
         },
         onSelectionChanged: function VO_onSelectionChanged() { },
         onCycleHeader: function VO_onCycleHeader(column) { },
@@ -422,66 +535,18 @@
         onPerformActionOnCell: function VO_onPerformActionOnCell(action, row, column) { },      
       })]]></field>
       
-      <method name="_reloadView">
-        <body><![CDATA[ 
-          var result = this.getResult();
-          if (PlacesController.nodeIsFolder(result))
-            this.loadFolder(result.folderId);
-          else
-            this.load(result.getQueries({ }), result.queryOptions);
-        ]]></body>
-      </method>
-      
-      <!-- nsINavBookmarkObserver -->
-      <field name="_bookmarkObserver"><![CDATA[({
-        _numBatches: 0,
-        _self: this,
-        onBeginUpdateBatch: function PT_O_onBeginUpdateBatch() {
-          ++this._numBatches;
-        },
-        onEndUpdateBatch: function PT_O_onEndUpdateBatch() {
-          if (!--this._numBatches)
-            this._self._reloadView();
-        },
-        get wantAllDetails() { 
-          return false;
-        },
-        onItemAdded: function PT_O_onItemAdded(bookmark, folder, index) {
-          if (!this._numBatches)
-            this._self._reloadView();
-        },
-        onItemRemoved: function PT_O_onItemRemoved(bookmark, folder, index) {
-          if (!this._numBatches)
-            this._self._reloadView();
-        },
-        onItemMoved: function PT_O_onItemMoved(bookmark, folder, oldIndex, newIndex) {
-          if (!this._numBatches)
-            this._self._reloadView();
-        },
-        onItemChanged: function PT_O_onItemChanged(bookmark, property) {
-          if (!this._numBatches)
-            this._self._reloadView();
-        },
-        onFolderAdded: function PT_O_onFolderAdded(folder, parent, index) {
-          if (!this._numBatches)
-            this._self._reloadView();
-        },
-        onFolderRemoved: function PT_O_onFolderRemoved(folder, parent, index) {
-          if (!this._numBatches)
-            this._self._reloadView();
-        },
-        onFolderMoved: function PT_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
-          if (!this._numBatches)
-            this._self._reloadView();
-        },
-        onFolderChanged: function PT_O_onFolderChanged(folder, property) {
-          if (!this._numBatches)
-            this._self._reloadView();
-        },
-      })]]></field>
-      
       <field name="suppressSelection">false</field>
       <field name="_selection">null</field>
+      <field name="_openStates">null</field>
+      
+      <method name="_restoreOpenState">
+        <body><![CDATA[
+          for (var row in this._openStates) {
+            if (this._openStates[row])
+              this.view.toggleOpenState(row);
+          }
+        ]]></body>
+      </method>
       
       <method name="willReloadView">
         <parameter name="action"/>
@@ -494,8 +559,7 @@
           var rc = selection.getRangeCount();
           if (view != this)
             action = RELOAD_ACTION_NOTHING;
-          
-          const NHRVO = Ci.nsINavHistoryResultViewObserver;
+            
           switch (action) {
           case RELOAD_ACTION_NOTHING:
             for (var i = 0; i < rc; ++i) {
@@ -505,38 +569,12 @@
             }
             break;
           case RELOAD_ACTION_MOVE:
-            // Drop before selection    A
-            // Drop in selection        B
-            // Drop after selection     C
-            // 
-            // Drop Point:            Index Computation:
-            // Before Selection       index
-            // Inside Selection
-            // After Selection        index 
-          
-            // Insert index of insertion and number of rows to insert
-            var filterOptions = this.filterOptions;
-            if (insertionPoint.orientation == NHRVO.DROP_ON)
-              filterOptions = ViewConfig.GENERIC_FILTER_OPTIONS;
-            var result = PlacesController.getFolderContents(insertionPoint.folderId, 
-                                                            filterOptions);
-            var node = null;
-            if (insertionPoint.index > -1)
-              node = result.getChild(insertionPoint.index - 1);
-            else
-              node = result.getChild(result.childCount - 1);
-            var index = this.getResult().treeIndexForNode(node);
-            var max = index + count - 1;            
-            this._selection = [{ min: index, max: max }];
+            var index = this._getInsertionIndex(insertionPoint);
+            this._selection = [{ min: index, max: index + count - 1 }];
             break;
           case RELOAD_ACTION_INSERT:
             // Insert index of insertion and number of rows to insert
-            var filterOptions = this.filterOptions;
-            if (insertionPoint.orientation == NHRVO.DROP_ON)
-              filterOptions = ViewConfig.GENERIC_FILTER_OPTIONS;
-            var node = PlacesController.getInsertionNode(insertionPoint, 
-                                                         filterOptions);
-            var index = this.getResult().treeIndexForNode(node);
+            var index = this._getInsertionIndex(insertionPoint);
             if (insertionPoint.index == 0)
               this._selection = [{ min: index, max: index + count - 1 }];
             else 
@@ -558,6 +596,8 @@
       <method name="didReloadView">
         <parameter name="view"/>
         <body><![CDATA[ 
+          this._restoreOpenState();
+        
           var selection = this.view.selection;
           if (view != this.view)
             this.suppressSelection = true;
@@ -596,11 +636,11 @@
       <handler event="draggesture"><![CDATA[
         // XXXben ew.
         if (event.target.localName == "treechildren")
-          nsDragAndDrop.startDrag(event, this._DNDObserver);
+          nsDragAndDrop.startDrag(event, this);
       ]]></handler>
       <handler event="dragover"><![CDATA[
         if (event.target.localName == "treechildren")
-          nsDragAndDrop.dragOver(event, this._DNDObserver);
+          nsDragAndDrop.dragOver(event, this);
       ]]></handler>
     </handlers>
   </binding>
