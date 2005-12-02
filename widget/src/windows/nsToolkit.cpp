@@ -920,7 +920,7 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
 //
 //
 //-------------------------------------------------------------------------
-MouseTrailer::MouseTrailer() : mHoldMouseWindow(nsnull), mCaptureWindow(nsnull),
+MouseTrailer::MouseTrailer() : mMouseTrailerWindow(nsnull), mCaptureWindow(nsnull),
   mIsInCaptureMode(PR_FALSE), mIgnoreNextCycle(PR_FALSE)
 {
 }
@@ -931,24 +931,33 @@ MouseTrailer::MouseTrailer() : mHoldMouseWindow(nsnull), mCaptureWindow(nsnull),
 MouseTrailer::~MouseTrailer()
 {
   DestroyTimer();
-  NS_IF_RELEASE(mHoldMouseWindow);
-  NS_IF_RELEASE(mCaptureWindow);
 }
 //-------------------------------------------------------------------------
 //
 //
 //-------------------------------------------------------------------------
-void MouseTrailer::SetMouseTrailerWindow(nsWindow * aNSWin) 
+void MouseTrailer::SetMouseTrailerWindow(HWND aWnd) 
 {
-  nsWindow *topWin = aNSWin ? aNSWin->GetTopLevelWindow() : nsnull;
-  if (mHoldMouseWindow != topWin && mTimer) {
+  if (mMouseTrailerWindow != aWnd && mTimer) {
     // Make sure TimerProc is fired at least once for the old window
     TimerProc(nsnull, nsnull);
   }
-  NS_IF_RELEASE(mHoldMouseWindow);
-  mHoldMouseWindow = topWin;
+  mMouseTrailerWindow = aWnd;
   CreateTimer();
 }
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void MouseTrailer::SetCaptureWindow(HWND aWnd) 
+{ 
+  mCaptureWindow = aWnd;
+  if (mCaptureWindow) {
+    mIsInCaptureMode = PR_TRUE;
+  }
+}
+
 //-------------------------------------------------------------------------
 //
 //
@@ -967,7 +976,6 @@ nsresult MouseTrailer::CreateTimer()
                                       nsITimer::TYPE_REPEATING_SLACK);
 }
 
-
 //-------------------------------------------------------------------------
 //
 //
@@ -979,18 +987,7 @@ void MouseTrailer::DestroyTimer()
     mTimer = nsnull;
   }
 }
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-void MouseTrailer::SetCaptureWindow(nsWindow * aNSWin) 
-{ 
-  NS_IF_RELEASE(mCaptureWindow);
-  mCaptureWindow = aNSWin ? aNSWin->GetTopLevelWindow() : nsnull;
-  if (nsnull != mCaptureWindow) {
-    mIsInCaptureMode = PR_TRUE;
-  }
-}
+
 //-------------------------------------------------------------------------
 //
 //
@@ -998,26 +995,26 @@ void MouseTrailer::SetCaptureWindow(nsWindow * aNSWin)
 void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
 {
   // Check to see if we are in mouse capture mode,
-  // Once capture ends we could still get back one more timer event 
-  // Capture could end outside our window
+  // Once capture ends we could still get back one more timer event.
+  // Capture could end outside our window.
   // Also, for some reason when the mouse is on the frame it thinks that
   // it is inside the window that is being captured.
-  if (nsnull != mSingleton.mCaptureWindow) {
-    if (mSingleton.mCaptureWindow != mSingleton.mHoldMouseWindow) {
+  if (mSingleton.mCaptureWindow) {
+    if (mSingleton.mCaptureWindow != mSingleton.mMouseTrailerWindow) {
       return;
     }
   } else {
     if (mSingleton.mIsInCaptureMode) {
-      // The mHoldMouse could be bad from rolling over the frame, so clear 
-      // it if we were capturing and now this is the first timer call back 
+      // mMouseTrailerWindow could be bad from rolling over the frame, so clear 
+      // it if we were capturing and now this is the first timer callback 
       // since we canceled the capture
-      NS_IF_RELEASE(mSingleton.mHoldMouseWindow);
+      mSingleton.mMouseTrailerWindow = nsnull;
       mSingleton.mIsInCaptureMode = PR_FALSE;
       return;
     }
   }
 
-  if (mSingleton.mHoldMouseWindow && ::IsWindow(mSingleton.mHoldMouseWindow->GetWindowHandle())) {
+  if (mSingleton.mMouseTrailerWindow && ::IsWindow(mSingleton.mMouseTrailerWindow)) {
     if (mSingleton.mIgnoreNextCycle) {
       mSingleton.mIgnoreNextCycle = PR_FALSE;
     }
@@ -1027,24 +1024,24 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
       mp.x = GET_X_LPARAM(pos);
       mp.y = GET_Y_LPARAM(pos);
 
-      // Need to get the top level wnd's here. Although mHoldMouseWindow is top level,
-      // the actual top level window handle might be something else
-      HWND mouseWnd = nsWindow::GetTopLevelHWND(::WindowFromPoint(mp), PR_TRUE);
-      HWND holdWnd = nsWindow::GetTopLevelHWND(mSingleton.mHoldMouseWindow->GetWindowHandle(), PR_TRUE);
-      if (mouseWnd != holdWnd) {
-        //notify someone that a mouse exit happened
-        if (nsnull != mSingleton.mHoldMouseWindow) {
-          mSingleton.mHoldMouseWindow->DispatchMouseEvent(NS_MOUSE_EXIT, NULL, NULL);
-        }
+      HWND mouseWnd = WindowFromPoint(mp);
+      if (mSingleton.mMouseTrailerWindow != mouseWnd) {
+#ifndef WINCE
+        // Notify someone that a mouse exit happened.
+        // This must be posted to the toplevel window. Otherwise event state
+        // manager might think the mouse is still within window bounds and 
+        // convert this to a move message.
+        PostMessage(mSingleton.mMouseTrailerWindow, WM_MOUSELEAVE, NULL, NULL);
+#endif
 
-        // we are out of this window and of any window, destroy timer
+        // we are out of this window, destroy timer
         mSingleton.DestroyTimer();
-        NS_IF_RELEASE(mSingleton.mHoldMouseWindow);
+        mSingleton.mMouseTrailerWindow = nsnull;
       }
     }
   } else {
     mSingleton.DestroyTimer();
-    NS_IF_RELEASE(mSingleton.mHoldMouseWindow);
+    mSingleton.mMouseTrailerWindow = nsnull;
   }
 }
 
