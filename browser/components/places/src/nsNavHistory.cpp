@@ -1023,6 +1023,7 @@ nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
       scheme.EqualsLiteral("imap") ||
       scheme.EqualsLiteral("news") ||
       scheme.EqualsLiteral("mailbox") ||
+      scheme.EqualsLiteral("moz-anno") ||
       scheme.EqualsLiteral("view-source") ||
       scheme.EqualsLiteral("chrome") ||
       scheme.EqualsLiteral("data")) {
