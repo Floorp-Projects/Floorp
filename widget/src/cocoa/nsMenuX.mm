@@ -146,7 +146,6 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   NS_ASSERTION(menubar || menu, "Menu parent not a menu bar or menu!");
 
   SetLabel(aLabel);
-  SetAccessKey(aAccessKey);
 
   nsAutoString hiddenValue, collapsedValue;
   mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
@@ -222,40 +221,17 @@ NS_IMETHODIMP nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   if (!aMenuItem)
     return NS_ERROR_NULL_POINTER;
 
-  PRUint32 currItemIndex = mMenuItemsArray.Count();
   mMenuItemsArray.AppendObject(aMenuItem); // owning ref
 
-  nsAutoString label;
-  aMenuItem->GetLabel(label);
-  InsertMenuItemWithTruncation(label, currItemIndex);
-  NSMenuItem *newNativeMenuItem = [mMacMenu itemAtIndex:currItemIndex];
-  
+  // add the menu item to this menu
+  NSMenuItem* newNativeMenuItem;
+  aMenuItem->GetNativeData((void*&)newNativeMenuItem);
+  [mMacMenu addItem:newNativeMenuItem];
+
   // set up target/action
   [newNativeMenuItem setTarget:mMenuDelegate];
   [newNativeMenuItem setAction:@selector(menuItemHit:)];
   
-  // set up shortcut keys
-  nsAutoString geckoKeyEquivalent(NS_LITERAL_STRING(" "));
-  aMenuItem->GetShortcutChar(geckoKeyEquivalent);
-  NSString *keyEquivalent = [[NSString stringWithCharacters:(unichar*)geckoKeyEquivalent.get()
-                                                     length:geckoKeyEquivalent.Length()] lowercaseString];
-  if (![keyEquivalent isEqualToString:@" "])
-    [newNativeMenuItem setKeyEquivalent:keyEquivalent];
-  
-  // set up shortcut key modifiers
-  PRUint8 modifiers;
-  aMenuItem->GetModifiers(&modifiers);
-  unsigned int macModifiers = 0;
-  if (knsMenuItemShiftModifier & modifiers)
-    macModifiers |= NSShiftKeyMask;
-  if (knsMenuItemAltModifier & modifiers)
-    macModifiers |= NSAlternateKeyMask;
-  if (knsMenuItemControlModifier & modifiers)
-    macModifiers |= NSControlKeyMask;
-  if (knsMenuItemCommandModifier & modifiers)
-    macModifiers |= NSCommandKeyMask;
-  [newNativeMenuItem setKeyEquivalentModifierMask:macModifiers];
-
   // set its command. we get the unique command id from the menubar
   nsCOMPtr<nsIMenuCommandDispatcher> dispatcher(do_QueryInterface(mManager));
   if (dispatcher) {
@@ -265,20 +241,6 @@ NS_IMETHODIMP nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
       [newNativeMenuItem setTag:commandID];
   }
   
-  PRBool isEnabled;
-  aMenuItem->GetEnabled(&isEnabled);
-  if (isEnabled)
-    [newNativeMenuItem setEnabled:YES];
-  else
-    [newNativeMenuItem setEnabled:NO];
-
-  PRBool isChecked;
-  aMenuItem->GetChecked(&isChecked);
-  if (isChecked)
-    [newNativeMenuItem setState:NSOnState];
-  else
-    [newNativeMenuItem setState:NSOffState];
-
   return NS_OK;
 }
 
@@ -296,48 +258,20 @@ NS_IMETHODIMP nsMenuX::AddMenu(nsIMenu * aMenu)
   PRUint32 currItemIndex = mMenuItemsArray.Count();
   mMenuItemsArray.AppendObject(supports); // owning ref
 
-  // We have to add it as a menu item and then associate it with the item
+  // We have to add a menu item and then associate the menu with it
   nsAutoString label;
   aMenu->GetLabel(label);
-  InsertMenuItemWithTruncation(label, currItemIndex);
-
-  PRBool isEnabled;
-  aMenu->GetEnabled(&isEnabled);
-  if (isEnabled) {
-    [[mMacMenu itemAtIndex:currItemIndex] setEnabled:YES];
-  }
-  else {
-    [[mMacMenu itemAtIndex:currItemIndex] setEnabled:NO];   
-  }
+  NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(mLabel);
+  NSMenuItem* newNativeMenuItem= [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:NULL keyEquivalent:@""];
+  [newCocoaLabelString release];
+  [mMacMenu addItem:newNativeMenuItem];
+  
   NSMenu* childMenu;
   if (aMenu->GetNativeData((void**)&childMenu) == NS_OK) {
     [[mMacMenu itemAtIndex:currItemIndex] setSubmenu:childMenu];
   }
   return NS_OK;
 }
-
-
-//
-// InsertMenuItemWithTruncation
-//
-// Insert a new item in this menu with index |inItemIndex| with the text |inItemLabel|,
-// middle-truncated to a certain pixel width with an elipsis.
-//
-void
-nsMenuX::InsertMenuItemWithTruncation(nsAutoString & inItemLabel, PRUint32 inItemIndex)
-{
-  // ::TruncateThemeText() doesn't take the number of characters to truncate to, it takes a pixel with
-  // to fit the string in. Ugh. I talked it over with sfraser and we couldn't come up with an 
-  // easy way to compute what this should be given the system font, etc, so we're just going
-  // to hard code it to something reasonable and bigger fonts will just have to deal.
-  const short kMaxItemPixelWidth = 300;
-
-  CFMutableStringRef labelRef = ::CFStringCreateMutable(kCFAllocatorDefault, inItemLabel.Length());
-  ::CFStringAppendCharacters(labelRef, (UniChar*)inItemLabel.get(), inItemLabel.Length());
-  ::TruncateThemeText(labelRef, kThemeMenuItemFont, kThemeStateActive, kMaxItemPixelWidth, truncMiddle, NULL);
-  [mMacMenu insertItem:[[[NSMenuItem alloc] initWithTitle:(NSString*)labelRef action:NULL keyEquivalent:@""] autorelease] atIndex:(inItemIndex)];
-  ::CFRelease(labelRef);
-} // InsertMenuItemWithTruncation
 
 
 NS_IMETHODIMP nsMenuX::AddSeparator()
@@ -682,6 +616,10 @@ NSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle)
   NSMenu* myMenu = [[NSMenu alloc] initWithTitle:title];
   [myMenu setDelegate:mMenuDelegate];
   
+  // We don't want this menu to auto-enable menu items because then Cocoa
+  // overrides our decisions and things get incorrectly enabled/disabled.
+  [myMenu setAutoenablesItems:NO];
+  
   // we used to install Carbon event handlers here, but since NSMenu* doesn't
   // create its underlying MenuRef until just before display, we delay until
   // that happens. Now we install the event handlers when Cocoa notifies
@@ -819,9 +757,9 @@ nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuItemContent)
     nsAutoString disabled;
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, disabled);
     if (disabled.EqualsLiteral("true"))
-      pnsMenu->SetEnabled (PR_FALSE);
+      pnsMenu->SetEnabled(PR_FALSE);
     else
-      pnsMenu->SetEnabled (PR_TRUE);
+      pnsMenu->SetEnabled(PR_TRUE);
 
     // Make nsMenu a child of parent nsMenu. The parent takes ownership
     nsCOMPtr<nsISupports> supports2(do_QueryInterface(pnsMenu));
@@ -873,7 +811,7 @@ nsMenuX::OnCreate()
     rv = dispatchTo->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
       return PR_FALSE;
- }
+  }
 
   // the menu is going to show and the oncreate handler has executed. We
   // now need to walk our menu items, checking to see if any of them have
@@ -1161,10 +1099,9 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
       // reuse the existing menu, to avoid rebuilding the root menu bar.
       NS_ASSERTION(mMacMenu != NULL, "nsMenuX::AttributeChanged: invalid menu handle.");
       RemoveAll();
-      CFStringRef titleRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)mLabel.get(), mLabel.Length());
-      NS_ASSERTION(titleRef, "nsMenuX::AttributeChanged: CFStringCreateWithCharacters failed.");
-      [mMacMenu setTitle:(NSString*)titleRef];
-      ::CFRelease(titleRef);
+      NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(mLabel);
+      [mMacMenu setTitle:newCocoaLabelString];
+      [newCocoaLabelString release];
     }
   }
   else if (aAttribute == nsWidgetAtoms::hidden || aAttribute == nsWidgetAtoms::collapsed) {

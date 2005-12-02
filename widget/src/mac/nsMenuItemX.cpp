@@ -276,34 +276,29 @@ NS_METHOD nsMenuItemX::DoCommand()
    //-------------------------------------------------------------------------
 NS_METHOD nsMenuItemX::GetModifiers(PRUint8 * aModifiers) 
 {
-    nsresult res = NS_OK;
     *aModifiers = mModifiers; 
-    return res; 
+    return NS_OK; 
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItemX::SetModifiers(PRUint8 aModifiers)
 {
-    nsresult res = NS_OK;
-    
     mModifiers = aModifiers;
-    return res;
+    return NS_OK;
 }
  
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItemX::SetShortcutChar(const nsString &aText)
 {
-    nsresult res = NS_OK;
     mKeyEquivalent = aText;
-    return res;
+    return NS_OK;
 } 
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItemX::GetShortcutChar(nsString &aText)
 {
-    nsresult res = NS_OK;
     aText = mKeyEquivalent;
-    return res;
+    return NS_OK;
 } 
 
 //
