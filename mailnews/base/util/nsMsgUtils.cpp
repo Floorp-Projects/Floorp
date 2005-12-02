@@ -1125,3 +1125,57 @@ void Seconds2PRTime(PRUint32 seconds, PRTime *prTime)
   LL_UI2L(intermediateResult, seconds);
   LL_MUL((*prTime), intermediateResult, microSecondsPerSecond);
 }
+
+nsresult GetSummaryFileLocation(nsIFile* fileLocation, nsIFile** summaryLocation)
+{
+  nsIFile* newSummaryLocation;
+
+  nsresult rv = fileLocation->Clone(&newSummaryLocation);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString fileName;
+
+  rv = newSummaryLocation->GetNativeLeafName(fileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  fileName.Append(NS_LITERAL_CSTRING(SUMMARY_SUFFIX));
+
+  rv = newSummaryLocation->SetNativeLeafName(fileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *summaryLocation = newSummaryLocation;
+  return NS_OK;
+}
+
+nsresult GetSummaryFileLocation(nsIFileSpec* fileLocation, nsIFileSpec** summaryLocation)
+{
+  nsIFileSpec* newSummaryLocation;
+  nsresult rv = NS_NewFileSpec(&newSummaryLocation);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = newSummaryLocation->FromFileSpec(fileLocation);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString fileName;
+
+  rv = newSummaryLocation->GetLeafName(getter_Copies(fileName));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  fileName.Append(NS_LITERAL_CSTRING(SUMMARY_SUFFIX));
+  
+  rv = newSummaryLocation->SetLeafName(fileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *summaryLocation = newSummaryLocation;
+  return NS_OK;
+}
+
+nsresult GetSummaryFileLocation(nsIFileSpec* fileLocation, nsFileSpec* summaryLocation)
+{
+  nsCOMPtr<nsIFileSpec> summaryIFile;
+  nsresult rv = GetSummaryFileLocation(fileLocation, getter_AddRefs(summaryIFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return summaryIFile->GetFileSpec(summaryLocation);
+}
+

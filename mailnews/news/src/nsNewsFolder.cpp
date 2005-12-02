@@ -597,30 +597,33 @@ NS_IMETHODIMP nsMsgNewsFolder::Delete()
     mDatabase = nsnull;
   }
   
-  nsCOMPtr<nsIFileSpec> pathSpec;
-  rv = GetPath(getter_AddRefs(pathSpec));
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsILocalFile> folderPath;
+  rv = GetFilePath(getter_AddRefs(folderPath));
 
-  nsFileSpec path;
-  rv = pathSpec->GetFileSpec(&path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIFile> summaryPath;
+    rv = GetSummaryFileLocation(folderPath, getter_AddRefs(summaryPath));
+    if (NS_SUCCEEDED(rv))
+    {
+      PRBool exists = PR_FALSE;
+      rv = folderPath->Exists(&exists);
 
-  // delete local store, if it exists
-  if (path.Exists())
-    path.Delete(PR_FALSE);
+      if (NS_SUCCEEDED(rv) && exists)
+        rv = folderPath->Remove(PR_FALSE);
 
-  // Remove summary file.	
-  nsXPIDLCString summaryFile;
-  rv = pathSpec->GetLeafName(getter_Copies(summaryFile));
-  NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv))
+        NS_WARNING("Failed to remove News Folder");
 
-  summaryFile.Append(SUMMARY_SUFFIX);
+      rv = summaryPath->Exists(&exists);
 
-  rv = pathSpec->SetLeafName(summaryFile.get());
-  NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_SUCCEEDED(rv) && exists)
+        rv = summaryPath->Remove(PR_FALSE);
 
-  rv = pathSpec->Delete(PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv))
+        NS_WARNING("Failed to remove News Folder Summary File");
+    }
+  }
 
   nsCOMPtr <nsINntpIncomingServer> nntpServer;
   rv = GetNntpServer(getter_AddRefs(nntpServer));

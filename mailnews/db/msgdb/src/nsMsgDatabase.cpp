@@ -64,7 +64,6 @@
 #include "prprf.h"
 #include "nsTime.h"
 #include "nsIFileSpec.h"
-#include "nsLocalFolderSummarySpec.h"
 #include "nsMsgDBCID.h"
 #include "nsILocale.h"
 #include "nsLocaleCID.h"
@@ -75,6 +74,7 @@
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
 #include "MailNewsTypes2.h"
+#include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 
@@ -176,19 +176,17 @@ NS_IMETHODIMP nsMsgDBService::OpenFolderDB(nsIMsgFolder *aFolder, PRBool aCreate
 
 NS_IMETHODIMP nsMsgDBService::OpenMailDBFromFileSpec(nsIFileSpec *aFolderName, PRBool aCreate, PRBool aLeaveInvalidDB, nsIMsgDatabase** pMessageDB)
 {
-  nsFileSpec  folderName;
-  
   if (!aFolderName)
     return NS_ERROR_NULL_POINTER;
-  aFolderName->GetFileSpec(&folderName);
-  nsLocalFolderSummarySpec summarySpec(folderName);
 
-  nsFileSpec dbPath(summarySpec);
+  nsFileSpec dbPath;
+  nsresult rv = GetSummaryFileLocation(aFolderName, &dbPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   *pMessageDB = (nsMsgDatabase *) nsMsgDatabase::FindInCache(dbPath);
   if (*pMessageDB)
     return NS_OK;
 
-  nsresult rv;
   nsCOMPtr <nsIMsgDatabase> msgDB = do_CreateInstance(NS_MAILBOXDB_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = msgDB->Open(aFolderName, aCreate, aLeaveInvalidDB);
@@ -819,15 +817,16 @@ nsMsgDatabase* nsMsgDatabase::FindInCache(nsFileSpec &dbName)
 //----------------------------------------------------------------------
 nsIMsgDatabase* nsMsgDatabase::FindInCache(nsIMsgFolder *folder)
 {
-  nsCOMPtr <nsIFileSpec> folderPath;
-  nsFileSpec  folderName;
+  nsCOMPtr<nsIFileSpec> folderPath;
+
   nsresult rv = folder->GetPath(getter_AddRefs(folderPath));
   NS_ENSURE_SUCCESS(rv, nsnull);
-  folderPath->GetFileSpec(&folderName);
-  nsLocalFolderSummarySpec summarySpec(folderName);
 
-  nsFileSpec dbPath(summarySpec);
-  return (nsIMsgDatabase *) FindInCache(dbPath);
+  nsFileSpec summaryFile;
+  rv = GetSummaryFileLocation(folderPath, &summaryFile);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return (nsIMsgDatabase *) FindInCache(summaryFile);
 }
 
 //----------------------------------------------------------------------
@@ -1086,29 +1085,32 @@ NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBo
   if (!aFolderName)
     return NS_ERROR_NULL_POINTER;
   
-  nsFileSpec		folderName;
-  aFolderName->GetFileSpec(&folderName);
-  nsLocalFolderSummarySpec	summarySpec(folderName);
-  
+  nsCOMPtr<nsIFileSpec> folderName;
+  nsresult err = GetSummaryFileLocation(aFolderName, getter_AddRefs(folderName));
+  NS_ENSURE_SUCCESS(err, err);
+
+  nsFileSpec summaryFile;
+  err = folderName->GetFileSpec(&summaryFile);
+  NS_ENSURE_SUCCESS(err, err);
+
   nsIDBFolderInfo	*folderInfo = nsnull;
   
 #if defined(DEBUG_bienvenu)
+
   printf("really opening db in nsImapMailDatabase::Open(%s, %s, %p, %s) -> %s\n",
     (const char*)folderName, aCreate ? "TRUE":"FALSE",
     this, aLeaveInvalidDB ? "TRUE":"FALSE", (const char*)folderName);
 #endif
   // if the old summary doesn't exist, we're creating a new one.
-  if ((!summarySpec.Exists() || !summarySpec.GetFileSize()) && aCreate)
+  if ((!summaryFile.Exists() || !summaryFile.GetFileSize()) && aCreate)
     newFile = PR_TRUE;
   
   // stat file before we open the db, because if we've latered
   // any messages, handling latered will change time stamp on
   // folder file.
-  summaryFileExists = summarySpec.Exists()  && summarySpec.GetFileSize() > 0;
+  summaryFileExists = summaryFile.Exists()  && summaryFile.GetFileSize() > 0;
   
-  nsresult err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
-  
-  err = OpenMDB((const char *) summarySpec, aCreate);
+  err = OpenMDB((const char *) summaryFile, aCreate);
   
   if (NS_SUCCEEDED(err))
   {
@@ -1148,7 +1150,7 @@ NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBo
     NS_IF_RELEASE(m_dbFolderInfo);
     ForceClosed();
     if (err == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
-      summarySpec.Delete(PR_FALSE);
+      summaryFile.Delete(PR_FALSE);
   }
   if (err != NS_OK || newFile)
   {
@@ -1161,7 +1163,7 @@ NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBo
     else if (err != NS_OK && err != NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
     {
       Close(PR_FALSE);
-      summarySpec.Delete(PR_FALSE);  // blow away the db if it's corrupt.
+      summaryFile.Delete(PR_FALSE);  // blow away the db if it's corrupt.
     }
   }
   if (err == NS_OK || err == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
@@ -1298,17 +1300,15 @@ nsresult nsMsgDatabase::CloseMDB(PRBool commit)
 NS_IMETHODIMP nsMsgDatabase::ForceFolderDBClosed(nsIMsgFolder *aFolder)
 {
   NS_ENSURE_ARG(aFolder);
-  nsCOMPtr <nsIFileSpec> folderPath;
-  nsFileSpec		folderName;
 
+  nsCOMPtr<nsIFileSpec> folderPath;
   nsresult rv = aFolder->GetPath(getter_AddRefs(folderPath));
   NS_ENSURE_SUCCESS(rv, rv);
-  folderPath->GetFileSpec(&folderName);
-  nsLocalFolderSummarySpec	summarySpec(folderName);
-  
-  
-  nsFileSpec dbPath(summarySpec);
-  
+
+  nsFileSpec dbPath;
+  rv = GetSummaryFileLocation(folderPath, &dbPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsIMsgDatabase *mailDB = (nsMsgDatabase *) FindInCache(dbPath);
   if (mailDB)
   {

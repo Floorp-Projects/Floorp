@@ -45,6 +45,7 @@
 #include "nsCOMPtr.h"
 #include "MailNewsTypes2.h"
 
+class nsFileSpec;
 class nsIFileSpec;
 class nsILocalFile;
 class nsIPrefBranch;
@@ -137,6 +138,19 @@ NS_MSG_BASE nsresult MSGApopMD5(const char *text, PRInt32 text_len, const char *
 NS_MSG_BASE void PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
 NS_MSG_BASE void PRTime2Seconds(PRTime prTime, PRInt32 *seconds);
 NS_MSG_BASE void Seconds2PRTime(PRUint32 seconds, PRTime *prTime);
+
+// Appends the correct summary file extension onto the supplied fileLocation
+// and returns it in summaryLocation.
+NS_MSG_BASE nsresult GetSummaryFileLocation(nsIFile* fileLocation,
+                                            nsIFile** summaryLocation);
+// XXX This function is provided temporarily whilst we are still working
+// on bug 33451 to remove nsIFileSpec from mailnews.
+NS_MSG_BASE nsresult GetSummaryFileLocation(nsIFileSpec* fileLocation,
+                                            nsIFileSpec** summaryLocation);
+// XXX This function is provided temporarily whilst we are still working
+// on bug 33451 to remove nsIFileSpec from mailnews.
+NS_MSG_BASE nsresult GetSummaryFileLocation(nsIFileSpec* fileLocation,
+                                            nsFileSpec* summaryLocation);
 
 #endif
 

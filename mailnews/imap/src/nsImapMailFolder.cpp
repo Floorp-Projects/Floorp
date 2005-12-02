@@ -1495,17 +1495,22 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
         mDatabase = nsnull;
     }
 
-    nsCOMPtr<nsIFileSpec> pathSpec;
-    rv = GetPath(getter_AddRefs(pathSpec));
+    nsCOMPtr<nsILocalFile> path;
+    rv = GetFilePath(getter_AddRefs(path));
     if (NS_SUCCEEDED(rv))
     {
-        nsFileSpec fileSpec;
-        rv = pathSpec->GetFileSpec(&fileSpec);
+        nsCOMPtr<nsIFile> summaryLocation;
+        rv = GetSummaryFileLocation(path, getter_AddRefs(summaryLocation));
         if (NS_SUCCEEDED(rv))
         {
-            nsLocalFolderSummarySpec summarySpec(fileSpec);
-            if (summarySpec.Exists())
-                summarySpec.Delete(PR_FALSE);
+          PRBool exists = PR_FALSE;
+          rv = summaryLocation->Exists(&exists);
+          if (NS_SUCCEEDED(rv) && exists)
+          {
+            rv = summaryLocation->Remove(PR_FALSE);
+            if (NS_FAILED(rv))
+              NS_WARNING("failed to remove imap summary file");
+          }
         }
     }
     if (mPath)
