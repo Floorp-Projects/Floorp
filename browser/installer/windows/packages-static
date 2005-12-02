@@ -133,6 +133,7 @@ bin\components\necko_socket.xpt
 bin\components\necko_viewsource.xpt
 bin\components\oji.xpt
 bin\components\passwordmgr.xpt
+bin\components\places.xpt
 bin\components\plugin.xpt
 bin\components\pref.xpt
 bin\components\prefetch.xpt
