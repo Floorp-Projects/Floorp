@@ -279,7 +279,7 @@ function getContentAreaFrameCount()
 function contentAreaFrameFocus()
 {
   const focusedWindow = document.commandDispatcher.focusedWindow;
-  if (focusedWindow.top == window.content) {
+  if (focusedWindow && focusedWindow.top == window.content) {
     gFocusedURL = focusedWindow.location.href;
     gFocusedDocument = focusedWindow.document;
   }

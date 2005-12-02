@@ -86,7 +86,13 @@ function toJavaConsole()
 
 function toOpenWindow( aWindow )
 {
-  aWindow.document.commandDispatcher.focusedWindow.focus();
+  try {
+    // Try to focus the previously focused window e.g. message compose body
+    aWindow.document.commandDispatcher.focusedWindow.focus();
+  } catch (e) {
+    // e.g. full-page plugin or non-XUL document; just raise the top window
+    aWindow.focus();
+  }
 }
 
 function toOpenWindowByType( inType, uri )
