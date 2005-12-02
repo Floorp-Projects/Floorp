@@ -1836,3 +1836,33 @@ getCertType(CERTCertificate *cert)
     return nsIX509Cert::EMAIL_CERT;
   return nsIX509Cert::SERVER_CERT;
 }
+
+CERTCertNicknames *
+getNSSCertNicknamesFromCertList(CERTCertList *certList)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  nsAutoString expiredString, notYetValidString;
+  nsAutoString expiredStringLeadingSpace, notYetValidStringLeadingSpace;
+
+  nssComponent->GetPIPNSSBundleString("NicknameExpired", expiredString);
+  nssComponent->GetPIPNSSBundleString("NicknameNotYetValid", notYetValidString);
+
+  expiredStringLeadingSpace.Append(NS_LITERAL_STRING(" "));
+  expiredStringLeadingSpace.Append(expiredString);
+
+  notYetValidStringLeadingSpace.Append(NS_LITERAL_STRING(" "));
+  notYetValidStringLeadingSpace.Append(notYetValidString);
+
+  NS_ConvertUCS2toUTF8 aUtf8ExpiredString(expiredStringLeadingSpace);
+  NS_ConvertUCS2toUTF8 aUtf8NotYetValidString(notYetValidStringLeadingSpace);
+
+  return CERT_NicknameStringsFromCertList(certList,
+                                          NS_CONST_CAST(char*, aUtf8ExpiredString.get()),
+                                          NS_CONST_CAST(char*, aUtf8NotYetValidString.get()));
+  
+}

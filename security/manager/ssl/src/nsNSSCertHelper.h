@@ -44,4 +44,7 @@
 PRUint32
 getCertType(CERTCertificate *cert);
 
+CERTCertNicknames *
+getNSSCertNicknamesFromCertList(CERTCertList *certList);
+
 #endif
