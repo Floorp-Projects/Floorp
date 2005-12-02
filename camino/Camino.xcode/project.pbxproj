@@ -3493,56 +3493,56 @@
 		3F42EFA705EC13F90045A30C = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.png;
-			name = "throbber-01.png";
-			path = "resources/images/throbber/throbber-01.png";
+			name = "throbber-01.tif";
+			path = "resources/images/throbber/throbber-01.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
 		3F42EFA805EC13F90045A30C = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.gif;
-			name = "throbber-07.gif";
-			path = "resources/images/throbber/throbber-07.gif";
+			name = "throbber-07.tif";
+			path = "resources/images/throbber/throbber-07.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
 		3F42EFA905EC13F90045A30C = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.gif;
-			name = "throbber-08.gif";
-			path = "resources/images/throbber/throbber-08.gif";
+			name = "throbber-08.tif";
+			path = "resources/images/throbber/throbber-08.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
 		3F42EFAA05EC13F90045A30C = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.gif;
-			name = "throbber-09.gif";
-			path = "resources/images/throbber/throbber-09.gif";
+			name = "throbber-09.tif";
+			path = "resources/images/throbber/throbber-09.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
 		3F42EFAB05EC13F90045A30C = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.gif;
-			name = "throbber-10.gif";
-			path = "resources/images/throbber/throbber-10.gif";
+			name = "throbber-10.tif";
+			path = "resources/images/throbber/throbber-10.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
 		3F42EFAC05EC13F90045A30C = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.gif;
-			name = "throbber-11.gif";
-			path = "resources/images/throbber/throbber-11.gif";
+			name = "throbber-11.tif";
+			path = "resources/images/throbber/throbber-11.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
 		3F42EFAD05EC13F90045A30C = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.gif;
-			name = "throbber-12.gif";
-			path = "resources/images/throbber/throbber-12.gif";
+			name = "throbber-12.tif";
+			path = "resources/images/throbber/throbber-12.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -14285,40 +14285,40 @@
 		F50EA33F02BAAAB701000103 = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.gif;
-			name = "throbber-02.gif";
-			path = "resources/images/throbber/throbber-02.gif";
+			name = "throbber-02.tif";
+			path = "resources/images/throbber/throbber-02.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
 		F50EA34002BAAAB701000103 = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.gif;
-			name = "throbber-03.gif";
-			path = "resources/images/throbber/throbber-03.gif";
+			name = "throbber-03.tif";
+			path = "resources/images/throbber/throbber-03.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
 		F50EA34102BAAAB701000103 = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.gif;
-			name = "throbber-04.gif";
-			path = "resources/images/throbber/throbber-04.gif";
+			name = "throbber-04.tif";
+			path = "resources/images/throbber/throbber-04.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
 		F50EA34202BAAAB701000103 = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.gif;
-			name = "throbber-05.gif";
-			path = "resources/images/throbber/throbber-05.gif";
+			name = "throbber-05.tif";
+			path = "resources/images/throbber/throbber-05.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
 		F50EA34302BAAAB701000103 = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.gif;
-			name = "throbber-06.gif";
-			path = "resources/images/throbber/throbber-06.gif";
+			name = "throbber-06.tif";
+			path = "resources/images/throbber/throbber-06.tif";
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
