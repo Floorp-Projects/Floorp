@@ -25,6 +25,8 @@
 <!ENTITY stopCmd.label                "Stop">
 <!ENTITY reloadCmd.label              "Reload">
 <!ENTITY linknewtab.label             "Open link in New Tab">
+<!ENTITY bookmarks.label              "Bookmarks">
+<!ENTITY bookmarkthispage.label      "Bookmark This Page">
 
 <!-- menu urlabr view options --> 
 
