@@ -61,9 +61,15 @@ use constant SHUTDOWNHTML_EXIT_SILENTLY => [
 # message to the user about the downtime and log out.  Scripts listed in 
 # SHUTDOWNHTML_EXEMPT are exempt from this message.
 #
+# Because this is code which is run live from perl "use" commands of other
+# scripts, we're skipping this part if we get here during a perl syntax check
+# -- runtests.pl compiles scripts without running them, so we need to make sure
+# that this check doesn't apply to 'perl -c' calls.
+#
 # This code must go here. It cannot go anywhere in Bugzilla::CGI, because
 # it uses Template, and that causes various dependency loops.
-if (Param("shutdownhtml") 
+if (!$^C
+    && Param("shutdownhtml") 
     && lsearch(SHUTDOWNHTML_EXEMPT, basename($0)) == -1) 
 {
     # Allow non-cgi scripts to exit silently (without displaying any
