@@ -1102,16 +1102,19 @@ var PlacesControllerDragHelper = {
                                       insertionPoint, dropCount);
     }
     else {
-      if (sourceView)
+      if (sourceView && "willReloadView" in sourceView)
         sourceView.willReloadView(RELOAD_ACTION_REMOVE, sourceView, null, 
                                   dropCount);
       var action = visibleInsertCount == 0 ? RELOAD_ACTION_NOTHING 
                                            : RELOAD_ACTION_INSERT;
-      targetView.willReloadView(action, targetView, insertionPoint, dropCount);
+      if ("willReloadView" in targetView)
+        targetView.willReloadView(action, targetView, insertionPoint, 
+                                  dropCount);
     }
     var txn = new PlacesAggregateTransaction("DropItems", transactions);
     PlacesController._hist.transactionManager.doTransaction(txn);
-    if (sourceView && sourceView != targetView)
+    if (sourceView && sourceView != targetView && 
+        "didReloadView" in sourceView)
       sourceView.didReloadView(sourceView);
     PlacesController.didReloadView(targetView);
   }
