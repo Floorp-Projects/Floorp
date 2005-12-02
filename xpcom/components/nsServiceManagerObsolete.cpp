@@ -38,6 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsIServiceManagerObsolete.h"
 #include "nsComponentManager.h"
+#include "nsIModule.h"
 
 extern PRBool gXPCOMShuttingDown;
 
