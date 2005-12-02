@@ -556,7 +556,7 @@
               var focusedWindow = document.commandDispatcher.focusedWindow;
               var saveFocus = false;
 
-              if (focusedWindow.top == window.content) {
+              if (focusedWindow && focusedWindow.top == window.content) {
                 saveFocus = true;
               } else {
                 var contentWindow = window;
