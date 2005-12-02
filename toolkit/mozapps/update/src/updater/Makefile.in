@@ -67,6 +67,7 @@ OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32)
 ifndef GNU_CC
 RCFLAGS += -I$(srcdir)
 else
+OS_LIBS += $(call EXPAND_LIBNAME,gdi32)
 RCFLAGS += --include-dir $(srcdir)
 DEFINES += -D_WIN32_IE=0x300
 endif
