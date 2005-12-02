@@ -174,11 +174,24 @@ nsBrowserStatusHandler.prototype =
 		}
 
      } else {
-      domWindow = aWebProgress.DOMWindow;
-      // Update urlbar only if there was a load on the root docshell
-      if (domWindow == domWindow.top) {
-        this.urlBar.value = aLocation.spec;
-      }
+        domWindow = aWebProgress.DOMWindow;
+        // Update urlbar only if there was a load on the root docshell
+        if (domWindow == domWindow.top) {
+          this.urlBar.value = aLocation.spec;
+        }
+        
+        if(aWebProgress.canGoBack) {
+            document.getElementById("back-button").disabled=false;
+        } else {
+            document.getElementById("back-button").disabled=true;	
+        }
+        
+        if(aWebProgress.canGoForward) {
+            document.getElementById("forward-button").disabled=false;
+        } else {
+            document.getElementById("forward-button").disabled=true;
+        }
+        
     }
 
     BrowserUpdateFeeds();
