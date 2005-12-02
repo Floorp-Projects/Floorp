@@ -331,30 +331,43 @@ NS_IMETHODIMP
 nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
                                      nsIScriptLoaderObserver *aObserver)
 {
-  NS_ENSURE_ARG(aElement);
-
-  nsresult rv = NS_OK;
-
-  // We need a document to evaluate scripts.
-  if (!mDocument) {
-    return FireErrorNotification(NS_ERROR_FAILURE, aElement, aObserver);
+  PRBool fireErrorNotification;
+  nsresult rv = DoProcessScriptElement(aElement, aObserver,
+                                       &fireErrorNotification);
+  if (fireErrorNotification) {
+    // Note that rv _can_ be a success code here.  It just can't be NS_OK.
+    NS_ASSERTION(rv != NS_OK, "Firing error notification for NS_OK?");
+    FireErrorNotification(rv, aElement, aObserver);
   }
 
+  return rv;  
+}
+
+nsresult
+nsScriptLoader::DoProcessScriptElement(nsIScriptElement *aElement,
+                                       nsIScriptLoaderObserver *aObserver,
+                                       PRBool* aFireErrorNotification)
+{
+  // Default to firing the error notification until we've actually gotten to
+  // loading or running the script.
+  *aFireErrorNotification = PR_TRUE;
+  
+  NS_ENSURE_ARG(aElement);
+
+  // We need a document to evaluate scripts.
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+
   // Check to see that the element is not in a container that
-  // suppresses script evaluation within it.
-  if (!mEnabled || InNonScriptingContainer(aElement)) {
-    return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
+  // suppresses script evaluation within it and that we should be
+  // evaluating scripts for this document in the first place.
+  if (!mEnabled || !mDocument->IsScriptEnabled() ||
+      InNonScriptingContainer(aElement)) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Check that the script is not an eventhandler
   if (IsScriptEventHandler(aElement)) {
-    return FireErrorNotification(NS_CONTENT_SCRIPT_IS_EVENTHANDLER, aElement,
-                                 aObserver);
-  }
-
-  // Check whether we should be executing scripts at all for this document
-  if (!mDocument->IsScriptEnabled()) {
-    return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
+    return NS_CONTENT_SCRIPT_IS_EVENTHANDLER;
   }
 
   // Script evaluation can also be disabled in the current script
@@ -367,8 +380,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
     // If scripts aren't enabled in the current context, there's no
     // point in going on.
     if (context && !context->GetScriptsEnabled()) {
-      return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement,
-                                   aObserver);
+      return NS_ERROR_NOT_AVAILABLE;
     }
   }
 
@@ -397,6 +409,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
       jsVersionString = ::JS_VersionToString(JSVERSION_DEFAULT);
     }
   }
+
+  nsresult rv = NS_OK;
 
   // Check the type attribute to determine language and version.
   aElement->GetScriptType(type);
@@ -475,30 +489,24 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
   // XXX How and where should we deal with other scripting languages?
   //     See bug 255942 (https://bugzilla.mozilla.org/show_bug.cgi?id=255942).
   if (!isJavaScript) {
-    return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Create a request object for this script
   nsRefPtr<nsScriptLoadRequest> request = new nsScriptLoadRequest(aElement, aObserver, jsVersionString, hasE4XOption);
-  if (!request) {
-    return FireErrorNotification(NS_ERROR_OUT_OF_MEMORY, aElement, aObserver);
-  }
+  NS_ENSURE_TRUE(request, NS_ERROR_OUT_OF_MEMORY);
 
   // First check to see if this is an external script
   nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
   if (scriptURI) {
     // Check that the containing page is allowed to load this URI.
     nsIPrincipal *docPrincipal = mDocument->GetPrincipal();
-    if (!docPrincipal) {
-      return FireErrorNotification(NS_ERROR_UNEXPECTED, aElement, aObserver);
-    }
+    NS_ENSURE_TRUE(docPrincipal, NS_ERROR_UNEXPECTED);
     rv = nsContentUtils::GetSecurityManager()->
       CheckLoadURIWithPrincipal(docPrincipal, scriptURI,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
 
-    if (NS_FAILED(rv)) {
-      return FireErrorNotification(rv, aElement, aObserver);
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // After the security manager, the content-policy stuff gets a veto
     if (globalObject) {
@@ -514,11 +522,9 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
                                      nsContentUtils::GetContentPolicy());
       if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
         if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
-          return FireErrorNotification(NS_ERROR_CONTENT_BLOCKED, aElement,
-                                       aObserver);
+          return NS_ERROR_CONTENT_BLOCKED;
         }
-        return FireErrorNotification(NS_ERROR_CONTENT_BLOCKED_SHOW_ALT,
-                                     aElement, aObserver);
+        return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
       }
 
       request->mURI = scriptURI;
@@ -554,8 +560,12 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
       }
       if (NS_FAILED(rv)) {
         mPendingRequests.RemoveObject(request);
-        return FireErrorNotification(rv, aElement, aObserver);
+        return rv;
       }
+
+      // At this point we've successfully started the load, so we need not call
+      // FireErrorNotification anymore.
+      *aFireErrorNotification = PR_FALSE;
     }
   } else {
     request->mLoading = PR_FALSE;
@@ -568,12 +578,17 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
     // to this list.
     if (mPendingRequests.Count() > 0) {
       request->mWasPending = PR_TRUE;
-      mPendingRequests.AppendObject(request);
+      NS_ENSURE_TRUE(mPendingRequests.AppendObject(request),
+                     NS_ERROR_OUT_OF_MEMORY);
     }
     else {
       request->mWasPending = PR_FALSE;
       rv = ProcessRequest(request);
     }
+
+    // We're either going to, or have run this inline script, so we shouldn't
+    // call FireErrorNotification for it.
+    *aFireErrorNotification = PR_FALSE;
   }
 
   return rv;
@@ -590,7 +605,7 @@ nsScriptLoader::GetCurrentScript(nsIScriptElement **aElement)
   return NS_OK;
 }
 
-nsresult
+void
 nsScriptLoader::FireErrorNotification(nsresult aResult,
                                       nsIScriptElement* aElement,
                                       nsIScriptLoaderObserver* aObserver)
@@ -613,8 +628,6 @@ nsScriptLoader::FireErrorNotification(nsresult aResult,
                                nsnull, 0,
                                EmptyString());
   }
-
-  return aResult;
 }
 
 nsresult
