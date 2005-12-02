@@ -215,10 +215,6 @@ PLDHashOperator
 nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
                                    NativeLoadData& aLoadData, void*)
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
-#endif
-
     if (PR_LOG_TEST(nsNativeModuleLoaderLog, PR_LOG_DEBUG)) {
         nsCOMPtr<nsIFile> file(do_QueryInterface(aHashedFile));
 
@@ -229,8 +225,16 @@ nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
             ("nsNativeModuleLoader::UnloaderFunc(\"%s\")", filePath.get()));
     }
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
+#endif
+
+#if 0
+    // XXXbsmedberg: do this as soon as the static-destructor crash(es)
+    // are fixed
     PRStatus ret = PR_UnloadLibrary(aLoadData.library);
     NS_ASSERTION(ret == PR_SUCCESS, "Failed to unload library");
+#endif
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
