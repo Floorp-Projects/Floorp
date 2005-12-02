@@ -41,6 +41,8 @@
       
       <field name="_selection">null</field>
       
+      <field name="_openedMenuButton">null</field>
+      
       <field name="_result">null</field>
       <method name="getResult">
         <body><![CDATA[
@@ -74,12 +76,17 @@
             this.appendChild(button);
           }
           
+          var overflowPadder = document.createElementNS(XULNS, "hbox");
+          overflowPadder.setAttribute("mousethrough", "always");
+          overflowPadder.setAttribute("flex", "1");
+          overflowPadder.setAttribute("pack", "end");
+          this.appendChild(overflowPadder);
           this._chevron = document.createElementNS(XULNS, "toolbarbutton");
           this._chevron.setAttribute("type", "menu");
           this._chevron.setAttribute("class", "chevron");
           this._chevron.setAttribute("mousethrough", "never");
           this._chevron.setAttribute("collapsed", "true");
-          this.appendChild(this._chevron);
+          overflowPadder.appendChild(this._chevron);
           var popup = document.createElementNS(XULNS, "menupopup");
           popup.setAttribute("type", "places");
           popup.folderId = this._result.folderId;
@@ -338,6 +345,26 @@
       <handler event="dragdrop"><![CDATA[
         // XXXben ew.
         nsDragAndDrop.drop(event, this._DNDObserver);
+      ]]></handler>
+      <handler event="popupshowing"><![CDATA[
+        if (event.target.parentNode.localName == "toolbarbutton")
+          this._openedMenuButton = event.target.parentNode;
+      ]]></handler>
+      <handler event="popuphidden"><![CDATA[
+        if (event.target.parentNode.localName == "toolbarbutton")
+          this._openedMenuButton = null;
+      ]]></handler>
+      <handler event="mousemove"><![CDATA[
+        if (this._openedMenuButton == null)
+          return;
+      
+        var target = event.target;
+        if (this._openedMenuButton != target &&
+            target.nodeName == "toolbarbutton" &&
+            target.type == "menu") {
+          this._openedMenuButton.open = false;
+          target.open = true;
+        }
       ]]></handler>
     </handlers>
   </binding>
