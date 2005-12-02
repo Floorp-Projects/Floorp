@@ -81,7 +81,7 @@ EmbedEventListener::Init(NativeBrowserControl *aOwner)
 }
 
 // All of the event listeners below return NS_OK to indicate that the
-// event should not be consumed in the default case.
+// event should not be consumed in the default case.  
 
 NS_IMETHODIMP
 EmbedEventListener::HandleEvent(nsIDOMEvent* aDOMEvent)
