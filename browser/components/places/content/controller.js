@@ -118,6 +118,12 @@ ViewConfig.GENERIC_FILTER_OPTIONS = Ci.nsINavHistoryQuery.INCLUDE_ITEMS +
  * The Master Places Controller
  */
 var PlacesController = {
+  /**
+   * Makes a URI from a spec.
+   * @param   spec
+   *          The string spec of the URI
+   * @returns A URI object for the spec. 
+   */
   _uri: function PC__uri(spec) {
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
@@ -125,6 +131,9 @@ var PlacesController = {
     return ios.newURI(spec, null, null);
   },
   
+  /**
+   * The Bookmarks Service.
+   */
   __bms: null,
   get _bms() {
     if (!this.__bms) {
@@ -135,6 +144,9 @@ var PlacesController = {
     return this.__bms;
   },
 
+  /**
+   * The Nav History Service.
+   */
   __hist: null,
   get _hist() {
     if (!this.__hist) {
@@ -163,26 +175,8 @@ var PlacesController = {
   },
   
   /**
-   * Get the pivot node for a given insertion point in a container populated 
-   * with the specified filter options. 
-   * @param   insertionPoint
-   *          The point at which content is to be inserted
-   * @param   filterOptions
-   *          Filter options for the view/container. See documentation in
-   *          nsINavHistoryQuery for the |itemTypes| property. 
-   * @returns A HistoryResultNode at which content is to be inserted. 
+   * The currently active Places view. 
    */
-  getInsertionNode: 
-  function PC_getInsertionNode(insertionPoint, filterOptions) {
-    var result = this.getFolderContents(insertionPoint.folderId, filterOptions);
-    var index = insertionPoint.index - 1;
-    if (insertionPoint.index == 0) 
-      index = 0;
-    else if (insertionPoint.index == -1)
-      index = result.childCount - 1;
-    return index > -1 ? result.getChild(index) : null;
-  },
-
   _activeView: null,
   get activeView() {
     return this._activeView;
@@ -210,6 +204,13 @@ var PlacesController = {
     LOG("onEvent: " + eventName);
   },
   
+  /**
+   * Updates the enabled state of a command element. 
+   * @param   command
+   *          The id of the command element to update
+   * @param   enabled
+   *          Whether or not the command element should be enabled.
+   */
   _setEnabled: function PC__setEnabled(command, enabled) {
     var command = document.getElementById(command);
     // Prevents excessive setAttributes
@@ -740,14 +741,9 @@ var PlacesController = {
         new PlacesCreateFolderTransaction(folderTitle, container, index);
       transactions.push(createTxn);
     
-      // set up a query for the folder's children
-      var query = hist.getNewQuery();
-      query.setFolders([folderId], 1);
-      var queryOptions = hist.getNewQueryOptions();
-      queryOptions.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-      // queryOptions.setExpandPlaces(); ?
-
-      var kids = hist.executeQuery(query, options);
+      // Get the folder's children
+      var kids = this.getFolderContents(folderId, 
+                                        ViewConfig.GENERIC_FILTER_OPTIONS);
       var cc = kids.childCount;
       for (var i = 0; i < cc; ++i) {
         var node = kids.getChild(i);
@@ -959,7 +955,16 @@ var PlacesController = {
     this.didReloadView(this._activeView);
   },
   
+  /**
+   * An array of observers that we notify as the view reloads.
+   */
   _viewObservers: [],
+  
+  /**
+   * Adds a view reload observer
+   * @param   observer
+   *          The view reload observer to add
+   */
   addViewObserver: function PC_addTransactionObserver(observer) {
     for (var i = 0; i < this._viewObservers.length; ++i) {
       if (this._viewObservers[i] == observer)
@@ -968,6 +973,11 @@ var PlacesController = {
     this._viewObservers.push(observer);
   },
   
+  /**
+   * Removes a view reload observer
+   * @param   observer
+   *          The view reload observer to remove
+   */
   removeViewObserver: function PC_removeTransactionObserver(observer) {
     for (var i = 0; i < this._viewObservers.length; ++i) {
       if (this._viewObservers[i] == observer)
@@ -975,6 +985,19 @@ var PlacesController = {
     }
   },
   
+  /**
+   * Notifies all observers that the view is about to be reloaded (i.e. 
+   * save selection now)
+   * @param   action
+   *          The reload action (see top of this file)
+   * @param   view
+   *          The view that is being reloaded
+   * @param   insertionPoint
+   *          The insertion point at which elements are being moved to,
+   *          inserted to or removed from
+   * @param   count
+   *          The number of items being moved, inserted or removed. 
+   */
   willReloadView: function PC_willReloadView(action, view, insertionPoint, 
                                              count) {
     for (var i = 0; i < this._viewObservers.length; ++i)
@@ -982,6 +1005,12 @@ var PlacesController = {
                                             count);
   },
   
+  /**
+   * Notifies all observers that the view was just reloaded (i.e. restore
+   * selection now)
+   * @param   view
+   *          The view that was just reloaded. 
+   */
   didReloadView: function PC_didReloadView(view) {
     for (var i = 0; i < this._viewObservers.length; ++i)
       this._viewObservers[i].didReloadView(view);
@@ -1079,7 +1108,7 @@ var PlacesControllerDragHelper = {
     var xferable = this._initTransferable(targetView, 
                                           insertionPoint.orientation);
     var dropCount = session.numDropItems;
-    for (var i = 0; i < dropCount; ++i) {
+    for (var i = dropCount - 1; i >= 0; --i) {
       session.getData(xferable, i);
     
       var data = { }, flavor = { };

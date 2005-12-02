@@ -100,10 +100,10 @@ function ViewConfig(dropTypes, dropOnTypes, filterOptions, firstDropIndex) {
   this.filterOptions = filterOptions;
   this.firstDropIndex = firstDropIndex;
 }
-ViewConfig.GENERIC_DROP_TYPES = [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE,
-                                 TYPE_X_MOZ_URL];
-ViewConfig.GENERIC_FILTER_OPTIONS = [Ci.nsINavHistoryQuery.INCLUDE_ITEMS +
-                                     Ci.nsINavHistoryQuery.INCLUDE_QUERIES];
+ViewConfig.GENERIC_DROP_TYPES = 
+  [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL];
+ViewConfig.GENERIC_FILTER_OPTIONS = 
+  Ci.nsINavHistoryQuery.INCLUDE_ITEMS + Ci.nsINavHistoryQuery.INCLUDE_QUERIES;
 
 var PlacesPage = {
   _content: null,
