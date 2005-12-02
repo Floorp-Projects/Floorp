@@ -598,15 +598,9 @@ nsAccessibilityService::CreateHTMLCheckboxAccessibleXBL(nsIDOMNode *aNode, nsIAc
 }
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateHTMLComboboxAccessible(nsIDOMNode* aDOMNode, nsISupports* aPresShell, nsIAccessible **_retval)
+nsAccessibilityService::CreateHTMLComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aPresShell, nsIAccessible **_retval)
 {
-  nsCOMPtr<nsIPresShell> presShell(do_QueryInterface(aPresShell));
-  NS_ASSERTION(presShell,"Error non prescontext passed to accessible factory!!!");
-
-  nsCOMPtr<nsIWeakReference> weakShell =
-    do_GetWeakReference(presShell);
-
-  *_retval = new nsHTMLComboboxAccessible(aDOMNode, weakShell);
+  *_retval = new nsHTMLComboboxAccessible(aDOMNode, aPresShell);
   if (! *_retval)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -683,15 +677,9 @@ nsAccessibilityService::CreateHTMLGroupboxAccessible(nsISupports *aFrame, nsIAcc
 }
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsISupports* aPresContext, nsIAccessible **_retval)
+nsAccessibilityService::CreateHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aPresShell, nsIAccessible **_retval)
 {
-  nsCOMPtr<nsPresContext> presContext(do_QueryInterface(aPresContext));
-  NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
-
-  nsCOMPtr<nsIWeakReference> weakShell =
-    do_GetWeakReference(presContext->PresShell());
-
-  *_retval = new nsHTMLSelectListAccessible(aDOMNode, weakShell);
+  *_retval = new nsHTMLSelectListAccessible(aDOMNode, aPresShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -797,16 +785,10 @@ nsAccessibilityService::CreateHTMLRadioButtonAccessibleXBL(nsIDOMNode *aNode, ns
 NS_IMETHODIMP 
 nsAccessibilityService::CreateHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, 
                                                          nsIAccessible *aParent, 
-                                                         nsISupports* aPresContext, 
+                                                         nsIWeakReference* aPresShell, 
                                                          nsIAccessible **_retval)
 {
-  nsCOMPtr<nsPresContext> presContext(do_QueryInterface(aPresContext));
-  NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
-
-  nsCOMPtr<nsIWeakReference> weakShell =
-    do_GetWeakReference(presContext->PresShell());
-
-  *_retval = new nsHTMLSelectOptionAccessible(aDOMNode, weakShell);
+  *_retval = new nsHTMLSelectOptionAccessible(aDOMNode, aPresShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 

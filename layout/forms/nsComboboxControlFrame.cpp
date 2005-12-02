@@ -397,7 +397,8 @@ NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
 
   if (accService) {
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    return accService->CreateHTMLComboboxAccessible(node, GetPresContext()->PresShell(), aAccessible);
+    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(GetPresContext()->PresShell()));
+    return accService->CreateHTMLComboboxAccessible(node, weakShell, aAccessible);
   }
 
   return NS_ERROR_FAILURE;

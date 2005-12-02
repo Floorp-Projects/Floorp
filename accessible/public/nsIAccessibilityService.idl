@@ -45,7 +45,7 @@ interface nsIFrame;
 interface nsObjectFrame;
 interface nsIContent;
 
-[scriptable, uuid(0e80f152-d676-4fba-8862-9dc4eb761442)]
+[scriptable, uuid(09a39069-a138-40dd-91dd-79ce45742b52)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -61,17 +61,17 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHTMLLIAccessible(in nsISupports aFrame, in nsISupports aBulletFrame, in AString aBulletText);
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLCheckboxAccessibleXBL(in nsIDOMNode aNode);
-  nsIAccessible createHTMLComboboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
+  nsIAccessible createHTMLComboboxAccessible(in nsIDOMNode aNode, in nsIWeakReference aPresShell);
   nsIAccessible createHTMLGenericAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLGroupboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLHRAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLLabelAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLListboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
+  nsIAccessible createHTMLListboxAccessible(in nsIDOMNode aNode, in nsIWeakReference aPresShell);
   nsIAccessible createHTMLObjectFrameAccessible(in nsObjectFrame aFrame);
   nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLRadioButtonAccessibleXBL(in nsIDOMNode aNode);
-  nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsISupports aPresShell);
+  nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsIWeakReference aPresShell);
   nsIAccessible createHTMLTableAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTableCellAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTableCaptionAccessible(in nsIDOMNode aDOMNode);
