@@ -64,7 +64,7 @@ RegisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString previous;
-    return catman->AddCategoryEntry("component-loader",
+    return catman->AddCategoryEntry("module-loader",
                                     MOZJSCOMPONENTLOADER_TYPE_NAME,
                                     MOZJSCOMPONENTLOADER_CONTRACTID,
                                     PR_TRUE, PR_TRUE, getter_Copies(previous));
@@ -80,14 +80,14 @@ UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString jsLoader;
-    rv = catman->GetCategoryEntry("component-loader",
+    rv = catman->GetCategoryEntry("module-loader",
                                   MOZJSCOMPONENTLOADER_TYPE_NAME,
                                   getter_Copies(jsLoader));
     if (NS_FAILED(rv)) return rv;
 
     // only unregister if we're the current JS component loader
     if (!strcmp(jsLoader, MOZJSCOMPONENTLOADER_CONTRACTID)) {
-        return catman->DeleteCategoryEntry("component-loader",
+        return catman->DeleteCategoryEntry("module-loader",
                                            MOZJSCOMPONENTLOADER_TYPE_NAME,
                                            PR_TRUE);
     }
