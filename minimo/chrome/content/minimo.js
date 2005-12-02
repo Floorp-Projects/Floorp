@@ -54,6 +54,7 @@ var gDeckMenuChecked=null; // to keep the state of the checked URLBAR selector m
 
 var gPref = null;                    // so far snav toggles on / off via direct access to pref.
                                      // See bugzilla.mozilla.org/show_bug.cgi?id=311287#c1
+var gPrefAdded=false; // shall be used to flush the pref. 
 
 var gSNAV=-1; 
 
@@ -547,6 +548,15 @@ function browserInit(refTab)
 function MiniNavShutdown()
 {
   if (gBrowserStatusHandler) gBrowserStatusHandler.destroy();
+  if(gPrefAdded) {
+	try {
+		var psvc = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefService);
+
+		psvc.savePrefFile(null);
+
+	} catch (e) { alert(e); }
+  } 
 }
 
 function getBrowser()
@@ -800,6 +810,8 @@ function BrowserBookmarkThis() {
     var bmContent=gBookmarksDoc.createTextNode(currentURI);
     newLi.appendChild(bmContent);
     gBookmarksDoc.getElementsByTagName("bm")[0].appendChild(newLi);
+    gPrefAdded=true;
+    
     storeBookmarks();	
 	refreshBookmarks();
 }
