@@ -49,15 +49,21 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xforms
 LIBRARY_NAME	= xforms
 IS_COMPONENT	= 1
+ifndef MINIMO
 # Do not set EXPORT_LIBRARY as we do not want xforms in the static libs list
 #EXPORT_LIBRARY	= 1
 FORCE_SHARED_LIB = 1
+else
+MODULE_NAME	= xforms
+EXPORT_LIBRARY	= 1
+endif
 MOZILLA_INTERNAL_API = 1
 
 # Also build schema-validation
 DIRS			= ../schema-validation \
 		  	  $(NULL)
 
+ifndef MINIMO
 ifdef MOZ_XUL_APP
 # XPI settings
 # XPI_NAME is exported to include schema-validation in xforms package
@@ -77,6 +83,7 @@ XULAPP_DEFINES = \
 
 # Include these in the XPI
 DIST_FILES = install.rdf install.js
+endif
 endif
 
 # XForms depends
