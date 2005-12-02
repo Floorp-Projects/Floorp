@@ -543,7 +543,7 @@
 				GCC_PREFIX_HEADER = src/CaminoViewsFramework_Prefix.pch;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "CaminoViewsPaletteFramework-Info.plist";
+				INFOPLIST_FILE = "resources/CaminoViewsPaletteFramework-Info.plist";
 				INSTALL_PATH = "$(HOME)/Library/Frameworks";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-framework Foundation -framework AppKit";
