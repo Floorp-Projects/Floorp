@@ -381,7 +381,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
 
     PRUint32 num = marks.Count();
 
-    if (markerStart) {
+    if (num && markerStart) {
       nsCOMPtr<nsISVGRendererRegion> mark;
       mark = markerStart->RegionMark(this, (nsSVGMark *)marks[0], strokeWidth);
 
@@ -391,7 +391,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
       }
     }
 
-    if (markerMid)
+    if (num && markerMid)
       for (PRUint32 i = 1; i < num - 1; i++) {
         nsCOMPtr<nsISVGRendererRegion> mark;
         mark = markerMid->RegionMark(this, (nsSVGMark *)marks[i], strokeWidth);
@@ -402,7 +402,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
         }
       }
 
-    if (markerEnd) {
+    if (num && markerEnd) {
       nsCOMPtr<nsISVGRendererRegion> mark;
       mark = markerEnd->RegionMark(this, (nsSVGMark *)marks[num-1], strokeWidth);
 
