@@ -909,7 +909,7 @@ js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale, co
 {
     const JSErrorFormatString *errorString = NULL;
 
-    if (cx->localeCallbacks) {
+    if (cx->localeCallbacks && cx->localeCallbacks->localeGetErrorMessage) {
         errorString = cx->localeCallbacks
                         ->localeGetErrorMessage(userRef, locale, errorNumber);
     }
