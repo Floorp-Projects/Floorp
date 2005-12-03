@@ -106,7 +106,7 @@ nsAddrDatabase::nsAddrDatabase()
     : m_mdbEnv(nsnull), m_mdbStore(nsnull),
       m_mdbPabTable(nsnull), 
       m_mdbDeletedCardsTable(nsnull),
-      m_dbName(""), m_mdbTokensInitialized(PR_FALSE), 
+      m_mdbTokensInitialized(PR_FALSE), 
       m_ChangeListeners(nsnull),
       m_PabTableKind(0),
       m_MailListTableKind(0),
