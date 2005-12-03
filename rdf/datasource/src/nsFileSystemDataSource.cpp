@@ -1423,7 +1423,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 
 #ifdef  XP_BEOS
     // under BEOS, try and get the "META:title" attribute (if its a file)
-    if (strstr(uri, netPositiveDir) != 0)
+    if (strstr(uri, netPositiveDir.get()) != 0)
     {
         PRBool value;
         if ((NS_SUCCEEDED(aFileLocal->IsFile(&value) && value)) ||
@@ -1596,9 +1596,9 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, PRBool *isFavorite, nsIRDFL
 
 #ifdef  XP_BEOS
     // under BEOS, try and get the "META:url" attribute
-    if (netPositiveDir)
+    if (!netPositiveDir.IsEmpty())
     {
-        if (strstr(uri.get(), netPositiveDir) != 0)
+        if (strstr(uri.get(), netPositiveDir.get()) != 0)
         {
             if (isFavorite) *isFavorite = PR_TRUE;
             rv = getNetPositiveURL(source, url, aResult);
