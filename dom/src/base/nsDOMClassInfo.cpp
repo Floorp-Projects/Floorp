@@ -132,6 +132,7 @@
 #include "nsIPluginInstance.h"
 #include "nsIPluginInstanceInternal.h"
 #include "nsIObjectFrame.h"
+#include "nsIObjectLoadingContent.h"
 #include "nsIScriptablePlugin.h"
 #include "nsIPluginHost.h"
 #include "nsPIPluginHost.h"
@@ -8554,40 +8555,10 @@ nsHTMLExternalObjSH::GetPluginInstance(nsIXPConnectWrappedNative *wrapper,
   nsCOMPtr<nsIContent> content(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDocument> doc = content->GetDocument();
-
-  if (!doc) {
-    // No document, no plugin.
-
-    return NS_OK;
-  }
-
-  // Have to flush layout, since plugin instance instantiation
-  // currently happens in reflow!  That's just uncool.
-  doc->FlushPendingNotifications(Flush_Layout);
-
-  // See if we have a frame.
-  nsIPresShell *shell = doc->GetShellAt(0);
-
-  if (!shell) {
-    return NS_OK;
-  }
-
-  nsIFrame* frame = shell->GetPrimaryFrameFor(content);
-
-  if (!frame) {
-    // No frame, no plugin
-
-    return NS_OK;
-  }
-
-  nsIObjectFrame* objectFrame = nsnull;
-  CallQueryInterface(frame, &objectFrame);
-  if (!objectFrame) {
-    return NS_OK;
-  }
-
-  return objectFrame->GetPluginInstance(*_result);
+  // Make sure that there is a plugin
+  nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(content));
+  NS_ASSERTION(objlc, "Object nodes must implement nsIObjectLoadingContent");
+  return objlc->EnsureInstantiation(_result);
 }
 
 // Check if proto is already in obj's prototype chain.
@@ -8648,7 +8619,7 @@ nsHTMLExternalObjSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
 
   if (IsObjInProtoChain(cx, obj, pi_obj)) {
     // We must have re-entered ::PostCreate() from nsObjectFrame()
-    // (through the FlushPendingNotifications() call in
+    // (through the EnsureInstantiation() call in
     // GetPluginInstance()), this means that we've already done what
     // we're about to do in this function so we can just return here.
 

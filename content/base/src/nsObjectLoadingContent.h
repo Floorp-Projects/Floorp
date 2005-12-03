@@ -51,6 +51,7 @@
 struct nsAsyncInstantiateEvent;
 class  AutoNotifier;
 class  AutoFallback;
+class  AutoSetInstantiatingToFalse;
 
 /**
  * INVARIANTS OF THIS CLASS
@@ -66,6 +67,9 @@ class  AutoFallback;
  *   contract)
  * - mFrameLoader is null while this node is not in a document (XXX this
  *   invariant only exists due to nsFrameLoader suckage and needs to go away)
+ * - mInstantiating is true while in ObjectURIChanged (it may be true in other
+ *   cases as well). Only the function that set mInstantiating should trigger
+ *   frame construction or notifications like ContentStatesChanged or flushes.
  */
 class nsObjectLoadingContent : public nsImageLoadingContent
                              , public nsIStreamListener
@@ -79,6 +83,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 {
   friend class AutoNotifier;
   friend class AutoFallback;
+  friend class AutoSetInstantiatingToFalse;
 
   public:
     // This enum's values must be the same as the constants on
