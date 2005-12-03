@@ -60,7 +60,7 @@ static NS_DEFINE_CID(kmozStorageServiceCID, MOZ_STORAGE_SERVICE_CID);
 static NS_DEFINE_CID(kmozStorageConnectionCID, MOZ_STORAGE_CONNECTION_CID);
 
 NS_IMPL_ISUPPORTS1(nsAnnotationService,
-                   nsIAnnotationService);
+                   nsIAnnotationService)
 
 // nsAnnotationService::nsAnnotationService
 
