@@ -63,7 +63,7 @@
 #include "nsISupportsUtils.h"
 #include "nsTraceRefcntImpl.h"
 
-#if defined(__GNUC__) && (defined(__i386) || defined(__x86_64__))
+#if defined(__GNUC__) && defined(__i386)
 #  define DebugBreak() { asm("int $3"); }
 #elif defined(__APPLE__) && defined(TARGET_CARBON)
 #  include "MacTypes.h"

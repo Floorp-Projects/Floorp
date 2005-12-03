@@ -61,12 +61,13 @@ interface nsIComponentRegistrar : nsISupports
      * 
      * @param aSpec    : Filename spec for component file's location. If aSpec 
      *                   is a directory, then every component file in the
-     *                   directory will be registered. 
-     *                   If aSpec is null, static components, GRE components,
-     *                   and the application's component directories will be
-     *                   registered. See NS_GRE_DIR, NS_XPCOM_COMPONENT_DIR,
-     *                   and NS_XPCOM_COMPONENT_DIR_LIST in
-     *                   nsDirectoryServiceDefs.h.
+     *                   directory will be registered.  
+     *                   If the aSpec is null, then the application component's
+     *                   directory as defined by NS_XPCOM_COMPONENT_DIR will be 
+     *                   registered  (see nsIDirectoryService.idl)
+     *
+     * @return NS_OK   : Registration was successful.
+     *         NS_ERROR: Method failure.
      */
     void autoRegister(in nsIFile aSpec);
 

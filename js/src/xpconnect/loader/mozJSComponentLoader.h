@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -39,12 +39,14 @@
 
 #include "plhash.h"
 #include "jsapi.h"
-#include "nsIModuleLoader.h"
+#include "nsIComponentLoader.h"
+#include "nsIComponentLoaderManager.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIJSContextStack.h"
 #include "nsISupports.h"
 #include "nsIXPConnect.h"
 #include "nsIModule.h"
+#include "nsSupportsArray.h"
 #include "nsIFile.h"
 #include "nsAutoPtr.h"
 #include "nsIFastLoadService.h"
@@ -52,7 +54,6 @@
 #include "nsIObjectOutputStream.h"
 #include "nsITimer.h"
 #include "nsIObserver.h"
-#include "nsClassHashtable.h"
 #ifndef XPCONNECT_STANDALONE
 #include "nsIPrincipal.h"
 #endif
@@ -88,26 +89,29 @@ class nsXPCFastLoadIO : public nsIFastLoadFileIO
 };
 
 
-class mozJSComponentLoader : public nsIModuleLoader,
+class mozJSComponentLoader : public nsIComponentLoader,
                              public nsIObserver
 {
  public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIMODULELOADER
+    NS_DECL_NSICOMPONENTLOADER
     NS_DECL_NSIOBSERVER
 
     mozJSComponentLoader();
     virtual ~mozJSComponentLoader();
 
  protected:
-    static mozJSComponentLoader* sSelf;
-
     nsresult ReallyInit();
-    void UnloadModules();
-
-    nsresult GlobalForLocation(nsILocalFile *aComponent,
-                               JSObject **aGlobal,
-                               char **location);
+    nsresult AttemptRegistration(nsIFile *component, PRBool deferred);
+    nsresult UnregisterComponent(nsIFile *component);
+    nsresult RegisterComponentsInDir(PRInt32 when, nsIFile *dir);
+    nsresult GlobalForLocation(const char *aLocation, nsIFile *aComponent,
+                               JSObject **aGlobal);
+    nsIModule* ModuleForLocation(const char *aLocation, nsIFile *component,
+                                 nsresult *status);
+    PRBool HasChanged(const char *registryLocation, nsIFile *component);
+    nsresult SetRegistryInfo(const char *registryLocation, nsIFile *component);
+    nsresult RemoveRegistryInfo(nsIFile *component, const char *registryLocation);
 
     nsresult StartFastLoad(nsIFastLoadService *flSvc);
     nsresult ReadScript(nsIFastLoadService *flSvc, const char *nativePath,
@@ -119,6 +123,7 @@ class mozJSComponentLoader : public nsIModuleLoader,
     void CloseFastLoad();
 
     nsCOMPtr<nsIComponentManager> mCompMgr;
+    nsCOMPtr<nsIComponentLoaderManager> mLoaderManager;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
     nsCOMPtr<nsIFile> mFastLoadFile;
     nsRefPtr<nsXPCFastLoadIO> mFastLoadIO;
@@ -130,35 +135,9 @@ class mozJSComponentLoader : public nsIModuleLoader,
 #endif
     JSRuntime *mRuntime;
     JSContext *mContext;
-
-    class ModuleEntry
-    {
-    public:
-        ModuleEntry() {
-            global = nsnull;
-            location = nsnull;
-        }
-
-        ~ModuleEntry() {
-            module = nsnull;
-
-            if (global) {
-                JS_ClearScope(sSelf->mContext, global);
-                JS_RemoveRoot(sSelf->mContext, &global);
-            }
-
-            if (location)
-                NS_Free(location);
-        }
-
-        nsCOMPtr<nsIModule>  module;
-        JSObject            *global;
-        char                *location;
-    };
-
-    friend class ModuleEntry;
-
-    nsClassHashtable<nsHashableHashKey, ModuleEntry> mModules;
+    PLHashTable *mModules;
+    PLHashTable *mGlobals;
 
     PRBool mInitialized;
+    nsSupportsArray mDeferredComponents;
 };
