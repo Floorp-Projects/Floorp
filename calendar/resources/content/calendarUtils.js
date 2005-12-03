@@ -303,6 +303,14 @@ function guessSystemTimezone()
     }
     try {
         var stringBundleTZ = gCalendarBundle.getString("likelyTimezone");
+
+        if (stringBundleTZ.indexOf("/mozilla.org/") == -1) {
+            // This happens if the l10n team didn't know how to get a time from
+            // tzdata.c.  To convert an Olson time to a ics-timezone-string we
+            // need to append this prefix.
+            stringBundleTZ = "/mozilla.org/20050126_1/" + stringBundleTZ;
+        }
+
         switch (checkTZ(stringBundleTZ)) {
             case 0: break;
             case 1: 
