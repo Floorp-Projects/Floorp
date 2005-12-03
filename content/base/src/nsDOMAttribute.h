@@ -80,6 +80,10 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  // nsIDOMGCParticipant interface methods
+  virtual nsIDOMGCParticipant* GetSCCIndex();
+  virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
+
   // nsIDOMNode interface
   NS_DECL_NSIDOMNODE
 

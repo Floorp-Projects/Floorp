@@ -80,6 +80,10 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
+  // nsIDOMGCParticipant
+  virtual nsIDOMGCParticipant* GetSCCIndex();
+  virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
+
   // nsPIWindowRoot
   NS_IMETHOD GetFocusController(nsIFocusController** aResult);
 

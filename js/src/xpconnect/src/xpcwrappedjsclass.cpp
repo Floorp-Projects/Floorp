@@ -247,6 +247,10 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     AUTO_MARK_JSVAL(ccx, fun);
 
     // Ensure that we are asking for a scriptable interface.
+    // NB:  It's important for security that this check is here rather
+    // than later, since it prevents untrusted objects from implementing
+    // some interfaces in JS and aggregating a trusted object to
+    // implement intentionally (for security) unscriptable interfaces.
     // We so often ask for nsISupports that we can short-circuit the test...
     if(!aIID.Equals(NS_GET_IID(nsISupports)))
     {

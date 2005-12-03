@@ -74,7 +74,9 @@ nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
     delete mHandler;
 }
 
-NS_IMPL_ISUPPORTS1(nsXBLWindowKeyHandler, nsIDOMKeyListener)
+NS_IMPL_ISUPPORTS2(nsXBLWindowKeyHandler,
+                   nsIDOMKeyListener,
+                   nsIDOMEventListener)
 
 static void
 BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)

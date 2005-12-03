@@ -45,12 +45,22 @@
 #include "nsIDOM3EventTarget.h"
 #include "nsHashtable.h"
 #include "nsIScriptContext.h"
+#include "nsJSUtils.h"
 
 class nsIDOMEvent;
 class nsIAtom;
 
 typedef struct {
-  nsIDOMEventListener* mListener;
+  // The nsMarkedJSFunctionHolder does magic to avoid holding strong
+  // references to listeners implemented in JS.  Instead, it protects
+  // them from garbage collection using nsDOMClassInfo::PreserveWrapper,
+  // which protects the event listener from garbage collection as long
+  // as it is still reachable from JS using C++ getters.  (It exposes
+  // reachability information to the JS GC instead of treating the C++
+  // reachability information as own-in root-out, which creates roots
+  // that cause reference cycles to entrain garbage.)
+  nsMarkedJSFunctionHolder<nsIDOMEventListener> mListener;
+
   PRUint16 mFlags;
   PRUint16 mGroupFlags;
   PRUint8  mSubType;
@@ -196,6 +206,7 @@ public:
 
 protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
+                              nsIDOMEventListener* aListener,
                               nsIDOMEvent* aDOMEvent,
                               nsIDOMEventTarget* aCurrentTarget,
                               PRUint32 aSubType,

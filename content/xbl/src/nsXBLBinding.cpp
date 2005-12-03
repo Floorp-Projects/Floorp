@@ -103,7 +103,7 @@
 
 #include "prprf.h"
 
-nsresult NS_DOMClassInfo_PreserveWrapper(nsIXPConnectWrappedNative *aWrapper);
+nsresult NS_DOMClassInfo_PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);
 
 // Helper classes
 
@@ -1164,7 +1164,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName,
       do_QueryInterface(wrapper);
 
     if (native_wrapper) {
-      NS_DOMClassInfo_PreserveWrapper(native_wrapper);
+      NS_DOMClassInfo_PreserveNodeWrapper(native_wrapper);
     }
   }
 

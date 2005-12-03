@@ -3315,7 +3315,9 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocumen
 }
 
 //nsDocViewerFocusListener
-NS_IMPL_ISUPPORTS1(nsDocViewerFocusListener, nsIDOMFocusListener)
+NS_IMPL_ISUPPORTS2(nsDocViewerFocusListener,
+                   nsIDOMFocusListener,
+                   nsIDOMEventListener)
 
 nsDocViewerFocusListener::nsDocViewerFocusListener()
 :mDocViewer(nsnull)

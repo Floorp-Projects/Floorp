@@ -83,6 +83,7 @@ nsDOMAttribute::~nsDOMAttribute()
 NS_INTERFACE_MAP_BEGIN(nsDOMAttribute)
   NS_INTERFACE_MAP_ENTRY(nsIDOMAttr)
   NS_INTERFACE_MAP_ENTRY(nsIAttribute)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMAttr)
@@ -92,6 +93,22 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsDOMAttribute)
 NS_IMPL_RELEASE(nsDOMAttribute)
+
+// nsIDOMGCParticipant methods
+nsIDOMGCParticipant*
+nsDOMAttribute::GetSCCIndex()
+{
+  PRBool spec;
+  if (NS_SUCCEEDED(GetSpecified(&spec)) && spec) {
+    return GetContentInternal()->GetSCCIndex();
+  }
+  return this;
+}
+
+void
+nsDOMAttribute::AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray)
+{
+}
 
 void
 nsDOMAttribute::SetMap(nsDOMAttributeMap *aMap)

@@ -50,6 +50,7 @@
 #include "nsIInterfaceInfoManager.idl"
 #include "nsIExceptionService.idl"
 #include "nsIVariant.idl"
+#include "nsIWeakReference.idl"
 
 %{ C++
 #include "jspubtd.h"
@@ -232,7 +233,7 @@ do_QueryWrappedNative(nsIXPConnectWrappedNative *aWrappedNative,
 
 %}
 
-[uuid(BED52030-BCA6-11d2-BA79-00805F8A5DD7)]
+[uuid(a052e197-7ba4-494e-b735-8786ac091164)]
 interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
@@ -243,6 +244,27 @@ interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
 
     void aggregatedQueryInterface(in nsIIDRef uuid,
                                   [iid_is(uuid),retval] out nsQIResult result);
+
+    /* This method has the same signature and the same semantics as the
+     * one method on nsISupportsWeakReference.  However, it exists here
+     * so that callers who need to manage JS garbage collection for
+     * wrapped objects themselves can get a weak reference to the
+     * wrapped JS object:  in other words, it's for callers who know
+     * that they're dealing with a wrapper, and want a weak reference to
+     * the wrapper rather than the wrapped object.
+     */
+    nsIWeakReference GetWeakReference();
+};
+
+/**
+ * This interface is a complete hack.  It is used by the DOM code to
+ * call QueryReferent on a weak reference to a wrapped JS object without
+ * causing reference counting, which would add and remove GC roots
+ * (which can't be done in the middle of GC).
+ */
+[uuid(3f32871c-d014-4f91-b358-3ece74cbebaa)]
+interface nsWeakRefToIXPConnectWrappedJS : nsIXPConnectWrappedJS
+{
 };
 
 /***************************************************************************/

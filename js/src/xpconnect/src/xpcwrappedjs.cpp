@@ -88,6 +88,13 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_OK;
     }
 
+    // This interface is a hack that says "don't AddRef me".
+    if(aIID.Equals(NS_GET_IID(nsWeakRefToIXPConnectWrappedJS)))
+    {
+        *aInstancePtr = NS_STATIC_CAST(nsWeakRefToIXPConnectWrappedJS*, this);
+        return NS_OK;
+    }
+
     nsISupports* outer = GetAggregatedNativeObject();
     if(outer)
         return outer->QueryInterface(aIID, aInstancePtr);
@@ -189,10 +196,7 @@ do_decrement:
 NS_IMETHODIMP
 nsXPCWrappedJS::GetWeakReference(nsIWeakReference** aInstancePtr)
 {
-    if(mRoot != this)
-        return mRoot->GetWeakReference(aInstancePtr);
-
-    return nsSupportsWeakReference::GetWeakReference(aInstancePtr);
+    return mRoot->nsSupportsWeakReference::GetWeakReference(aInstancePtr);
 }
 
 NS_IMETHODIMP
