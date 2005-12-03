@@ -1813,45 +1813,54 @@ extern JS_PUBLIC_API(JSBool)
 JS_MakeStringImmutable(JSContext *cx, JSString *str);
 
 /*
- * Return JS_TRUE if all strings are UTF-8. The source must be compiled
- * with JS_STRINGS_ARE_UTF8 defined to get UTF-8 support.
+ * Return JS_TRUE if C (char []) strings passed via the API and internally
+ * are UTF-8. The source must be compiled with JS_STRINGS_ARE_UTF8 defined
+ * to get UTF-8 support.
  */
 JS_PUBLIC_API(JSBool)
-JS_StringsAreUTF8();
+JS_CStringsAreUTF8();
 
 /*
- * Character encoding support
- * For both JS_EncodeCharacters and JS_DecodeBytes, set *dstlenp to the size 
- * of the destination buffer before the call; on return, it contains the number of 
- * bytes (JS_EncodeCharacters) or jschars (JS_DecodeBytes) actually stored. 
- * To determine the necessary destination buffer size, set the destination buffer 
- * pointer to NULL. On errors, the functions report an error. In that case, 
- * *dstlenp contains the number of characters or bytes transferred so far. 
- * If cx is NULL, no error is reported on a failure, and the functions just 
- * return JS_FALSE. Both functions do NOT store an additional 0-byte 
- * (or 0-jschar) behind the string.
+ * Character encoding support.
+ *
+ * For both JS_EncodeCharacters and JS_DecodeBytes, set *dstlenp to the size
+ * of the destination buffer before the call; on return, *dstlenp contains the
+ * number of bytes (JS_EncodeCharacters) or jschars (JS_DecodeBytes) actually
+ * stored.  To determine the necessary destination buffer size, make a sizing
+ * call that passes NULL for dst.
+ *
+ * On errors, the functions report the error. In that case, *dstlenp contains
+ * the number of characters or bytes transferred so far.  If cx is NULL, no
+ * error is reported on failure, and the functions simply return JS_FALSE.
+ *
+ * NB: Neither function stores an additional zero byte or jschar after the
+ * transcoded string.
+ *
  * If the source has been compiled with the #define JS_STRINGS_ARE_UTF8 to
- * enable UTF-8 support, JS_EncodeCharacters() encodes to UTF-8, and 
- * JS_DecodeBytes() decodes from UTF-8, which may create addititional
- * errors if the character sequence is malformed. If UTF-8 support is
- * disabled, the functions exland bytes to jschars and vice versa.
+ * enable UTF-8 interpretation of C char[] strings, then JS_EncodeCharacters
+ * encodes to UTF-8, and JS_DecodeBytes decodes from UTF-8, which may create
+ * addititional errors if the character sequence is malformed.  If UTF-8
+ * support is disabled, the functions deflate and inflate, respectively.
  */
 JS_PUBLIC_API(JSBool)
-JS_EncodeCharacters(JSContext *cx, const jschar* src, size_t srclen, char* dst, size_t* dstlenp);
+JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst,
+                    size_t *dstlenp);
 
 JS_PUBLIC_API(JSBool)
-JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar* dst, size_t* dstlenp);
+JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst,
+               size_t *dstlenp);
 
 /************************************************************************/
 
 /*
- * Locale specific string conversion callback.
+ * Locale specific string conversion and error message callbacks.
  */
 struct JSLocaleCallbacks {
     JSLocaleToUpperCase     localeToUpperCase;
     JSLocaleToLowerCase     localeToLowerCase;
     JSLocaleCompare         localeCompare;
     JSLocaleToUnicode       localeToUnicode;
+    JSErrorCallback         localeGetErrorMessage;
 };
 
 /*
