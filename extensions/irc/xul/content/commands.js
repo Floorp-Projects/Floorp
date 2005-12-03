@@ -852,15 +852,24 @@ function cmdBan(e)
 function cmdCancel(e)
 {
     var network = e.network;
-
-    if ((network.state != NET_CONNECTING) && (network.state != NET_WAITING))
+    
+    if ((network.state == NET_ONLINE) && network.isRunningList())
+    {
+        // We're running a /list, terminate the output so we return to sanity
+        display(MSG_CANCELLING_LIST);
+        network.abortList();
+    }
+    else if ((network.state == NET_CONNECTING) || 
+             (network.state == NET_WAITING))
+    {
+        // We're trying to connect to a network, and want to cancel. Do so:
+        display(getMsg(MSG_CANCELLING, network.unicodeName));
+        network.cancel();
+    }
+    else
     {
         display(MSG_NOTHING_TO_CANCEL, MT_ERROR);
-        return;
     }
-
-    display(getMsg(MSG_CANCELLING, network.unicodeName));
-    network.cancel();
 }
 
 function cmdChanUserMode(e)

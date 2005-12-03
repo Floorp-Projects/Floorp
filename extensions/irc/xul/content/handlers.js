@@ -1256,6 +1256,12 @@ function my_263 (e)
     return true;
 }
 
+CIRCNetwork.prototype.isRunningList = 
+function my_running_list()
+{
+    return (("_list" in this) && !this._list.done && !this._list.cancelled);
+}
+
 CIRCNetwork.prototype.list =
 function my_list(word, file)
 {
@@ -1308,6 +1314,27 @@ function my_list_init ()
     {
         const CHUNK_SIZE = 5;
         var list = network._list;
+        if (list.cancelled)
+        {
+            if (list.done)
+            {
+                /* The server is no longer throwing stuff at us, so now
+                 * we can safely kill the list.
+                 */
+                network.display(getMsg(MSG_LIST_END, 
+                                       [list.displayed, list.count]));
+                delete network._list;
+            }
+            else
+            {
+                /* We cancelled the list, but we're still getting data.
+                 * Handle that data, but don't display, and do it more
+                 * slowly, so we cause less lag.
+                 */
+                setTimeout(outputList, 1000, network);
+            }
+            return;
+        }
         if (list.length > list.displayed)
         {
             var start = list.displayed;
@@ -1365,6 +1392,12 @@ function my_list_init ()
     this._list.endTimeout = setTimeout(checkEndList, 5000, this);
 }
 
+CIRCNetwork.prototype.abortList =
+function my_abortList()
+{
+    this._list.cancelled = true;
+}
+
 CIRCNetwork.prototype.on321 = /* LIST reply header */
 function my_321 (e)
 {
@@ -1397,6 +1430,13 @@ function my_listrply (e)
         this.listInit();
 
     ++this._list.count;
+
+    /* If the list has been cancelled, don't bother adding all this info
+     * anymore. Do increase the count (above), otherwise we never truly notice 
+     * the list being finished.
+     */
+    if (this._list.cancelled)
+        return;
 
     var chanName = e.decodeParam(2);
     var topic = e.decodeParam(4);
