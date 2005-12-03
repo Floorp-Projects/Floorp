@@ -710,9 +710,8 @@ public:
 
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
-                                           nsIDocument *aNewDocument,
-                                           nsIDocument *aOldDocument,
                                            JSContext *cx,
+                                           JSObject *aOldGlobal,
                                            JSObject *parent_obj);
 
   static nsresult EnsureStringBundle(PropertiesFile aFile);
