@@ -35,45 +35,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsNativeModuleLoader_h__
-#define nsNativeModuleLoader_h__
-
 #include "nsISupports.h"
-#include "nsIModuleLoader.h"
+#include "nsIComponentLoader.h"
+#include "nsIComponentManager.h"
+#include "nsDirectoryService.h"
+#include "nsCOMPtr.h"
+#include "nsHashtable.h"
 #include "nsVoidArray.h"
-#include "nsDataHashtable.h"
-#include "nsHashKeys.h"
-#include "prlink.h"
+#include "xcDll.h"
 
-class nsNativeModuleLoader : public nsIModuleLoader
+#ifndef nsNativeComponentLoader_h__
+#define nsNativeComponentLoader_h__
+
+class nsNativeComponentLoader : public nsIComponentLoader
 {
+
  public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIMODULELOADER
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICOMPONENTLOADER
 
-    nsNativeModuleLoader() {}
-    ~nsNativeModuleLoader() {}
-
-    nsresult Init();
-
-    void UnloadLibraries();
+    nsNativeComponentLoader();
+ 
+    nsIComponentManager* mCompMgr;      // weak reference -- backpointer
 
  private:
-    struct NativeLoadData
-    {
-        NativeLoadData() : library(nsnull) { }
+    nsObjectHashtable   mDllStore;
+    nsVoidArray mDeferredComponents;
 
-        nsCOMPtr<nsIModule>  module;
-        PRLibrary           *library;
-    };
+    ~nsNativeComponentLoader() {}
 
-    static PLDHashOperator
-    ReleaserFunc(nsIHashable* aHashedFile, NativeLoadData &aLoadData, void*);
+    NS_IMETHOD RegisterComponentsInDir(PRInt32 when, nsIFile *dir);
 
-    static PLDHashOperator
-    UnloaderFunc(nsIHashable* aHashedFile, NativeLoadData &aLoadData, void*);
+    nsresult CreateDll(nsIFile *aSpec, const char *aLocation, nsDll **aDll);
+    nsresult SelfRegisterDll(nsDll *dll, const char *registryLocation,
+                             PRBool deferred);
+    nsresult SelfUnregisterDll(nsDll *dll);
+    nsresult GetFactoryFromModule(nsDll *aDll, const nsCID &aCID,
+                                  nsIFactory **aFactory);
 
-    nsDataHashtable<nsHashableHashKey, NativeLoadData> mLibraries;
+    nsresult DumpLoadError(nsDll *dll, 
+                           const char *aCallerName,
+                           const char *aNsprErrorMsg);
 };
 
-#endif /* nsNativeModuleLoader_h__ */
+#endif /* nsNativeComponentLoader_h__ */
+

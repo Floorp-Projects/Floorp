@@ -36,14 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsStaticComponentLoader.h"
+#include "nsXPCOMPrivate.h"
 
-#include "nsComponentManager.h"
-#include "nsCOMPtr.h"
-#include "pldhash.h"
-
+#include "nsIComponentLoader.h"
 #include "nsIModule.h"
 
+#include "nsVoidArray.h"
+#include "pldhash.h"
 #include NEW_H
 #include "prlog.h"
 
@@ -63,6 +62,37 @@ struct StaticModuleInfo : public PLDHashEntryHdr {
     StaticModuleInfo   *next;
 };
 
+class nsStaticComponentLoader : public nsIComponentLoader
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICOMPONENTLOADER
+
+    nsStaticComponentLoader() :
+        mAutoRegistered(PR_FALSE),
+        mFirst(nsnull)
+    { }
+
+    nsresult Init(nsStaticModuleInfo const *aStaticModules,
+                  PRUint32 aModuleCount);
+
+private:
+    ~nsStaticComponentLoader() {
+        if (mInfoHash.ops)
+            PL_DHashTableFinish(&mInfoHash);
+    }
+
+protected:
+    nsresult GetInfoFor(const char *aLocation, StaticModuleInfo **retval);
+
+    PRBool                        mAutoRegistered;
+    nsCOMPtr<nsIComponentManager> mComponentMgr;
+    PLDHashTable                  mInfoHash;
+    static PLDHashTableOps        sInfoHashOps;
+    nsVoidArray                   mDeferredComponents;
+    StaticModuleInfo             *mFirst;
+};
+
 PR_STATIC_CALLBACK(void)
 info_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
@@ -79,16 +109,18 @@ info_InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
     return PR_TRUE;
 }
 
-/* static */ PLDHashTableOps nsStaticModuleLoader::sInfoHashOps = {
+/* static */ PLDHashTableOps nsStaticComponentLoader::sInfoHashOps = {
     PL_DHashAllocTable,    PL_DHashFreeTable,
     PL_DHashGetKeyStub,    PL_DHashStringKey, PL_DHashMatchStringKey,
     PL_DHashMoveEntryStub, info_ClearEntry,
     PL_DHashFinalizeStub,  info_InitEntry
 };
 
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsStaticComponentLoader, nsIComponentLoader)
+
 nsresult
-nsStaticModuleLoader::Init(nsStaticModuleInfo const *aStaticModules,
-                           PRUint32 aModuleCount)
+nsStaticComponentLoader::Init(nsStaticModuleInfo const *aStaticModules,
+                              PRUint32 aModuleCount)
 {
     if (!PL_DHashTableInit(&mInfoHash, &sInfoHashOps, nsnull,
                            sizeof(StaticModuleInfo), 1024)) {
@@ -121,26 +153,9 @@ nsStaticModuleLoader::Init(nsStaticModuleInfo const *aStaticModules,
     return NS_OK;
 }
 
-void
-nsStaticModuleLoader::EnumerateModules(StaticLoaderCallback cb,
-                                       nsTArray<DeferredModule> &deferred)
-{
-    for (StaticModuleInfo *c = mFirst; c; c = c->next) {
-        if (!c->module) {
-            nsresult rv = c->info.
-                getModule(nsComponentManagerImpl::gComponentManager, nsnull,
-                          getter_AddRefs(c->module));
-            LOG(("nSCL: EnumerateModules(): %lx\n", rv));
-            if (NS_FAILED(rv))
-                continue;
-        }
-        cb(c->info.name, c->module, deferred);
-    }
-}
-
 nsresult
-nsStaticModuleLoader::GetModuleFor(const char *aLocation,
-                                   nsIModule* *aResult)
+nsStaticComponentLoader::GetInfoFor(const char *aLocation,
+                                    StaticModuleInfo **retval)
 {
     nsresult rv;
     StaticModuleInfo *info = 
@@ -152,14 +167,146 @@ nsStaticModuleLoader::GetModuleFor(const char *aLocation,
         return NS_ERROR_FACTORY_NOT_REGISTERED;
 
     if (!info->module) {
-        rv = info->info.
-            getModule(nsComponentManagerImpl::gComponentManager, nsnull,
-                      getter_AddRefs(info->module));
-        LOG(("nSCL: GetModuleForFor(\"%s\"): %lx\n", aLocation, rv));
+        rv = info->info.getModule(mComponentMgr, nsnull,
+                             getter_AddRefs(info->module));
+        LOG(("nSCL: GetInfoFor(\"%s\"): %lx\n", aLocation, rv));
         if (NS_FAILED(rv))
             return rv;
     }
 
-    NS_ADDREF(*aResult = info->module);
+    *retval = info;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStaticComponentLoader::Init(nsIComponentManager *mgr, nsISupports *aReg)
+{
+    mComponentMgr = mgr;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStaticComponentLoader::AutoRegisterComponents(PRInt32 when, nsIFile *dir)
+{
+    if (mAutoRegistered)
+        return NS_OK;
+
+    // if a directory has been explicitly specified, then return early.  we
+    // don't load static components from disk ;)
+    if (dir)
+        return NS_OK;
+
+    nsresult rv;
+    StaticModuleInfo *info = mFirst;
+
+    while (info) {
+        if (!info->module) {
+            rv = info->info.getModule(mComponentMgr, nsnull, getter_AddRefs(info->module));
+            LOG(("nSCL: getModule(\"%s\"): %lx\n", info->info.name, rv));
+            if (NS_FAILED(rv) || !info->module)
+                continue; // oh well
+        }
+
+        rv = info->module->RegisterSelf(mComponentMgr, nsnull, info->info.name,
+                                        staticComponentType);
+        LOG(("nSCL: autoreg of \"%s\": %lx\n", info->info.name, rv));
+
+        if (rv == NS_ERROR_FACTORY_REGISTER_AGAIN)
+            mDeferredComponents.AppendElement(info);
+
+        info = info->next;
+    }
+
+    mAutoRegistered = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStaticComponentLoader::AutoUnregisterComponent(PRInt32 when, 
+                                                 nsIFile *component,
+                                                 PRBool *retval)
+{
+    *retval = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStaticComponentLoader::AutoRegisterComponent(PRInt32 when, nsIFile *component,
+                                               PRBool *retval)
+{
+    *retval = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStaticComponentLoader::RegisterDeferredComponents(PRInt32 when,
+                                                    PRBool *aRegistered)
+{
+    *aRegistered = PR_FALSE;
+    if (!mDeferredComponents.Count())
+        return NS_OK;
+
+    for (int i = mDeferredComponents.Count() - 1; i >= 0; i--) {
+        StaticModuleInfo *info = NS_STATIC_CAST(StaticModuleInfo *,
+                                                mDeferredComponents[i]);
+        nsresult rv = info->module->RegisterSelf(mComponentMgr, nsnull,
+                                                 info->info.name,
+                                                 staticComponentType);
+        if (rv != NS_ERROR_FACTORY_REGISTER_AGAIN) {
+            if (NS_SUCCEEDED(rv))
+                *aRegistered = PR_TRUE;
+            mDeferredComponents.RemoveElementAt(i);
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStaticComponentLoader::OnRegister(const nsCID &aCID, const char *aType,
+                                    const char *aClassName,
+                                    const char *aContractID,
+                                    const char *aLocation,
+                                    PRBool aReplace, PRBool aPersist)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStaticComponentLoader::UnloadAll(PRInt32 aWhen)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStaticComponentLoader::GetFactory(const nsCID &aCID, const char *aLocation,
+                                    const char *aType, nsIFactory **_retval)
+{
+    StaticModuleInfo *info;
+    nsresult rv;
+
+    if (NS_FAILED(rv = GetInfoFor(aLocation, &info)))
+        return rv;
+
+    return info->module->GetClassObject(mComponentMgr, aCID,
+                                        NS_GET_IID(nsIFactory),
+                                        (void **)_retval);
+}
+
+nsresult
+NewStaticComponentLoader(nsStaticModuleInfo const *aStaticModules,
+                         PRUint32 aStaticModuleCount,
+                         nsIComponentLoader **retval)
+{
+    nsCOMPtr<nsStaticComponentLoader> lthis = new nsStaticComponentLoader();
+    if (!lthis)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = ((nsStaticComponentLoader*) lthis)->
+        Init(aStaticModules, aStaticModuleCount);
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    NS_ADDREF(*retval = lthis);
     return NS_OK;
 }

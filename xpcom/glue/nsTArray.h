@@ -380,18 +380,6 @@ class nsTArray : public nsTArray_base {
       return ReplaceElementsAt(index, 0, &elem, 1);
     }
 
-    // Insert a new element without copy-constructing. This is useful to avoid
-    // temporaries.
-    // @return A pointer to the newly inserted element, or null on OOM.
-    elem_type* InsertElementAt(index_type index) {
-      if (!EnsureCapacity(Length() + 1, sizeof(elem_type)))
-         return nsnull;
-      ShiftData(index, 0, 1, sizeof(elem_type));
-      elem_type *elem = Elements() + index;
-      elem_traits::Construct(elem);
-      return elem;
-    }
-
     // This method appends elements to the end of this array.
     // @param array     The elements to append to this array.
     // @param arrayLen  The number of elements to append to this array.
@@ -412,18 +400,6 @@ class nsTArray : public nsTArray_base {
     // A variation on the AppendElements method defined above.
     PRBool AppendElement(const elem_type& elem) {
       return AppendElements(&elem, 1);
-    }
-
-    // Append a new element without copy-constructing. This is useful to avoid
-    // temporaries.
-    // @return A pointer to the newly appended element, or null on OOM.
-    elem_type* AppendElement() {
-      if (!EnsureCapacity(Length() + 1, sizeof(elem_type)))
-         return nsnull;
-      elem_type *elem = Elements() + Length();
-      elem_traits::Construct(elem);
-      ++mLength;
-      return elem;
     }
 
     // This method removes a range of elements from this array.

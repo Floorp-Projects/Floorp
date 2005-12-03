@@ -268,4 +268,9 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 #endif
 #endif
 
+nsresult
+NewStaticComponentLoader(nsStaticModuleInfo const *aStaticModules,
+                         PRUint32 aStaticModuleCount,
+                         nsIComponentLoader **retval);
+
 #endif
