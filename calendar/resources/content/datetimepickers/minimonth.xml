@@ -160,7 +160,7 @@
           this.mValue = null;
           this.mEditorDate = null; // set only in showMonth
           this.kMonthNames = new Array(12);
-          var tempDate = new Date();
+          var tempDate = new Date(2005, 0, 1);
           for (var month = 0; month < 12; month++) {
             tempDate.setMonth(month);
             this.kMonthNames[month] = tempDate.toLocaleFormat("%B");
