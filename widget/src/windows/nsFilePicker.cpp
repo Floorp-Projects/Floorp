@@ -88,6 +88,7 @@ nsFilePicker::~nsFilePicker()
 //
 //-------------------------------------------------------------------------
 
+#ifndef WINCE
 int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
   if (uMsg == BFFM_INITIALIZED)
@@ -99,9 +100,9 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
       nsCRT::free(filePath);
     }
   }
-
   return 0;
 }
+#endif
 
 NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 {
@@ -131,6 +132,8 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
   }
 
   mUnicodeFile.Truncate();
+
+#ifndef WINCE
 
   if (mMode == modeGetFolder) {
     PRUnichar dirBuffer[MAX_PATH+1];
@@ -169,7 +172,9 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       CoTaskMemFree(list);
     }
   }
-  else {
+  else 
+#endif // WINCE
+  {
 
     OPENFILENAMEW ofn;
     memset(&ofn, 0, sizeof(ofn));
@@ -218,7 +223,9 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       }
     }
 
+#ifndef WINCE
     try {
+#endif
       if (mMode == modeOpen) {
         // FILE MUST EXIST!
         ofn.Flags |= OFN_FILEMUSTEXIST;
@@ -256,6 +263,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       else {
         NS_ASSERTION(0, "unsupported mode"); 
       }
+#ifndef WINCE
     }
     catch(...) {
       MessageBox(ofn.hwndOwner,
@@ -264,6 +272,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
                  MB_ICONERROR);
       result = PR_FALSE;
     }
+#endif
   
     if (result == PR_TRUE) {
       // Remember what filter type the user selected
