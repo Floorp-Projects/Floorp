@@ -670,16 +670,6 @@ enum BWCOpenDest {
   // it only works if it's here.
   [[[self window] undoManager] removeAllActions];
 
-  // release top-level nib items
-  [mPageMenu release];
-  [mImageMenu release];
-  [mInputMenu release];
-  [mLinkMenu release];
-  [mMailToLinkMenu release];
-  [mImageLinkMenu release];
-  [mImageMailToLinkMenu release];
-  [mTabMenu release];
-  
   // active Gecko connections have already been shut down in |windowWillClose|
   // so we don't need to worry about that here. We only have to be careful
   // not to access anything related to the document, as it's been destroyed. The
