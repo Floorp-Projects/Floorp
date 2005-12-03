@@ -8415,6 +8415,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aParentFrame,
 {
   if ((NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == aSiblingDisplay) ||
       (NS_STYLE_DISPLAY_TABLE_COLUMN       == aSiblingDisplay) ||
+      (NS_STYLE_DISPLAY_TABLE_CAPTION      == aSiblingDisplay) ||
       (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aSiblingDisplay) ||
       (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aSiblingDisplay) ||
       (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == aSiblingDisplay)) {
@@ -8431,6 +8432,8 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aParentFrame,
       return (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == aDisplay);
     case NS_STYLE_DISPLAY_TABLE_COLUMN:
       return (NS_STYLE_DISPLAY_TABLE_COLUMN == aDisplay);
+    case NS_STYLE_DISPLAY_TABLE_CAPTION:
+      return (NS_STYLE_DISPLAY_TABLE_CAPTION == aDisplay);
     default: // all of the row group types
       return (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aDisplay) ||
              (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aDisplay) ||
@@ -8438,22 +8441,14 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aParentFrame,
              (NS_STYLE_DISPLAY_TABLE_CAPTION      == aDisplay);
     }
   }
-  else if (NS_STYLE_DISPLAY_TABLE_CAPTION == aSiblingDisplay) {
-    // Nothing can be a sibling of a caption since there can only be one caption.
-    // But this check is necessary since a row group and caption are siblings
-    // from a content perspective (they share the table content as parent)
-    return PR_FALSE;
-  }
-  else {
-    if (nsLayoutAtoms::fieldSetFrame == aParentFrame->GetType()) {
-      // Legends can be sibling of legends but not of other content in the fieldset
-      nsIAtom* sibType = aSibling.GetType();
-      nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(&aContent));
+  else if (nsLayoutAtoms::fieldSetFrame == aParentFrame->GetType()) {
+    // Legends can be sibling of legends but not of other content in the fieldset
+    nsIAtom* sibType = aSibling.GetType();
+    nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(&aContent));
 
-      if ((legendContent  && (nsLayoutAtoms::legendFrame != sibType)) ||
-          (!legendContent && (nsLayoutAtoms::legendFrame == sibType)))
-        return PR_FALSE;
-    }
+    if ((legendContent  && (nsLayoutAtoms::legendFrame != sibType)) ||
+        (!legendContent && (nsLayoutAtoms::legendFrame == sibType)))
+      return PR_FALSE;
   }
 
   return PR_TRUE;
@@ -8879,15 +8874,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   // the outer table frame's additional child list. 
   nsFrameItems captionItems;
   
-  PRBool hasCaption = PR_FALSE;
-  if (nsLayoutAtoms::tableFrame == frameType) {
-    nsIFrame* outerTable = parentFrame->GetParent();
-    if (outerTable) { 
-      if (outerTable->GetFirstChild(nsLayoutAtoms::captionList)) {
-        hasCaption = PR_TRUE;
-      }
-    }  
-  }
   PRUint32 i;
   count = aContainer->GetChildCount();
   for (i = aNewIndexInContainer; i < count; i++) {
@@ -8895,19 +8881,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     // lookup the table child frame type as it is much more difficult to remove a frame
     // and all it descendants (abs. pos. for instance) than to prevent the frame creation.
     if (nsLayoutAtoms::tableFrame == frameType) {
-      if (hasCaption) {
-        // Resolve the style context and get its display
-        nsRefPtr<nsStyleContext> childStyleContext;
-        childStyleContext = ResolveStyleContext(parentFrame, childContent);
-        if (childStyleContext->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)
-          continue; //don't create a table caption frame and its descendants
-      }
       nsFrameItems tempItems;
       ConstructFrame(state, childContent, parentFrame, tempItems);
       if (tempItems.childList) {
         if (nsLayoutAtoms::tableCaptionFrame == tempItems.childList->GetType()) {
-          NS_ASSERTION(!captionItems.childList, "don't append twice a caption");
-          hasCaption = PR_TRUE; // remember that we have a caption now
           captionItems.AddChild(tempItems.childList);        
         }
         else {
@@ -9031,7 +9008,8 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIContent*     aParent1,
   if (aChild->IsContentOfType(nsIContent::eELEMENT)) {
     nsRefPtr<nsStyleContext> styleContext;
     styleContext = ResolveStyleContext(aParentFrame, aChild);
-    childIsBlock = styleContext->GetStyleDisplay()->IsBlockLevel();
+    const nsStyleDisplay* display = styleContext->GetStyleDisplay();
+    childIsBlock = display->IsBlockLevel() || IsTableRelated(display->mDisplay, PR_TRUE);
   }
   nsIFrame* prevParent; // parent of prev sibling
   nsIFrame* nextParent; // parent of next sibling
@@ -9368,15 +9346,6 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                 GetFloatContainingBlock(parentFrame),
                                 aFrameState);
 
-  PRBool hasCaption = PR_FALSE;
-  if (nsLayoutAtoms::tableFrame == parentFrame->GetType()) {
-    nsIFrame* outerTable = parentFrame->GetParent();
-    if (outerTable) {
-      if (outerTable->GetFirstChild(nsLayoutAtoms::captionList)) {
-        hasCaption = PR_TRUE;
-      }
-    }
-  }
 
   // Recover state for the containing block - we need to know if
   // it has :first-letter or :first-line style applied to it. The
@@ -9464,13 +9433,6 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       if (childStyleContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)
         return NS_OK; //don't create anything else than columns below a colgroup  
   }
-  else if (parentFrame->GetType() == nsLayoutAtoms::tableFrame && hasCaption) {
-    // Resolve the style context and get its display
-    nsRefPtr<nsStyleContext> childStyleContext;
-    childStyleContext = ResolveStyleContext(parentFrame, aChild);
-    if (childStyleContext->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)
-      return NS_OK; //don't create a second table caption frame and its descendants
-  }
 
   // if the container is a table and a caption will be appended, it needs to be
   // put in the outer table frame's additional child list.
@@ -9549,13 +9511,16 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
         // will get lost
         NS_ASSERTION(nsLayoutAtoms::tableOuterFrame == outerTableFrame->GetType(),
                      "Pseudo frame construction failure, a caption can be only a child of a outer table frame");
-        // the double caption creation was prevented above, so we are sure
-        // that we can append
-        NS_ASSERTION(!outerTableFrame->GetFirstChild(nsLayoutAtoms::captionList),
-                     "No double captions please");
-        state.mFrameManager->AppendFrames(outerTableFrame,
-                                          nsLayoutAtoms::captionList,
-                                          newCaptionFrame);
+        if (isAppend) {
+          state.mFrameManager->AppendFrames(outerTableFrame,
+                                            nsLayoutAtoms::captionList,
+                                            newCaptionFrame);
+        }
+        else {
+          state.mFrameManager->InsertFrames(outerTableFrame,
+                                            nsLayoutAtoms::captionList,
+                                            prevSibling, newCaptionFrame);
+        }
       }
     }
   }
@@ -10710,40 +10675,12 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell*    aPresShe
     nsFrameItems  newChildFrames;
 
     nsIFrame* childFrame = aFrame->GetFirstChild(nsnull);
-    while (childFrame) {
-      // See if it's the inner table frame
-      if (nsLayoutAtoms::tableFrame == childFrame->GetType()) {
-        nsIFrame* continuingTableFrame;
-
-        // It's the inner table frame, so create a continuing frame
-        CreateContinuingFrame(aPresContext, childFrame, newFrame, &continuingTableFrame);
-        newChildFrames.AddChild(continuingTableFrame);
-      } else {
-        // XXX remove this code and the above checks. We don't want to replicate 
-        // the caption (that is what the thead is for). This code is not executed 
-        // anyway, because the caption was put in a different child list.
-        nsStyleContext*       captionStyle = childFrame->GetStyleContext();
-        nsIContent*           caption = childFrame->GetContent();
-        NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_CAPTION ==
-                       captionStyle->GetStyleDisplay()->mDisplay,
-                     "expected caption");
-
-        // Replicate the caption frame
-        // XXX We have to do it this way instead of calling ConstructFrameByDisplayType(),
-        // because of a bug in the way ConstructTableFrame() handles the initial child
-        // list...
-        nsIFrame*    captionFrame = NS_NewTableCaptionFrame(aPresShell);
-        nsFrameItems childItems;
-        nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
-                                      GetAbsoluteContainingBlock(newFrame),
-                                      captionFrame);
-        captionFrame->Init(aPresContext, caption, newFrame, captionStyle, nsnull);
-        ProcessChildren(state, caption, captionFrame, PR_TRUE, childItems,
-                        PR_TRUE);
-        captionFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
-        newChildFrames.AddChild(captionFrame);
-      }
-      childFrame = childFrame->GetNextSibling();
+    if (childFrame) {
+      nsIFrame* continuingTableFrame;
+      CreateContinuingFrame(aPresContext, childFrame, newFrame, &continuingTableFrame);
+      newChildFrames.AddChild(continuingTableFrame);
+      
+      NS_ASSERTION(!childFrame->GetNextSibling(),"there can be only one inner table frame");
     }
 
     // Set the outer table's initial child list

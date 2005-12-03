@@ -74,10 +74,7 @@ nsTableCaptionFrame::~nsTableCaptionFrame()
 NS_IMETHODIMP
 nsTableOuterFrame::Destroy(nsPresContext* aPresContext)
 {
-  if (mCaptionFrame) {
-    mCaptionFrame->Destroy(aPresContext);
-  }
-
+  mCaptionFrames.DestroyFrames(aPresContext);
   return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
@@ -168,7 +165,7 @@ nsIFrame*
 nsTableOuterFrame::GetFirstChild(nsIAtom* aListName) const
 {
   if (nsLayoutAtoms::captionList == aListName) {
-    return mCaptionFrame;
+    return mCaptionFrames.FirstChild();
   }
   if (!aListName) {
     return mFrames.FirstChild();
@@ -192,7 +189,8 @@ nsTableOuterFrame::SetInitialChildList(nsPresContext* aPresContext,
 {
   if (nsLayoutAtoms::captionList == aListName) {
     // the frame constructor already checked for table-caption display type
-    mCaptionFrame = aChildList;
+    mCaptionFrames.SetFrames(aChildList);
+    mCaptionFrame  = mCaptionFrames.FirstChild();
   }
   else {
     mFrames.SetFrames(aChildList);
@@ -213,23 +211,18 @@ nsTableOuterFrame::AppendFrames(nsIAtom*        aListName,
 {
   nsresult rv;
 
-  // We only have two child frames: the inner table and one caption frame.
+  // We only have two child frames: the inner table and a caption frame.
   // The inner frame is provided when we're initialized, and it cannot change
   if (nsLayoutAtoms::captionList == aListName) {
-    NS_PRECONDITION(!mCaptionFrame, "already have a caption frame");
-    // We only support having a single caption frame
-    if (mCaptionFrame || (LengthOf(aFrameList) > 1)) {
-      rv = NS_ERROR_UNEXPECTED;
-    } else {
-      // Insert the caption frame into the child list
-      mCaptionFrame = aFrameList;
+    mCaptionFrames.AppendFrames(this, aFrameList);
+    mCaptionFrame = mCaptionFrames.FirstChild();
 
-      // Reflow the new caption frame. It's already marked dirty, so generate a reflow
-      // command that tells us to reflow our dirty child frames
-      rv = GetPresContext()->
-          PresShell()->AppendReflowCommand(this, eReflowType_ReflowDirty,
+    // Reflow the new caption frame. It's already marked dirty, so generate a reflow
+    // command that tells us to reflow our dirty child frames
+    rv = GetPresContext()->
+        PresShell()->AppendReflowCommand(this, eReflowType_ReflowDirty,
                                            nsnull);
-    }
+    
   }
   else {
     NS_PRECONDITION(PR_FALSE, "unexpected child frame type");
@@ -244,8 +237,14 @@ nsTableOuterFrame::InsertFrames(nsIAtom*        aListName,
                                 nsIFrame*       aPrevFrame,
                                 nsIFrame*       aFrameList)
 {
-  NS_PRECONDITION(!aPrevFrame, "invalid previous frame");
-  return AppendFrames(aListName, aFrameList);
+  if (nsLayoutAtoms::captionList == aListName) {
+    mCaptionFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+    mCaptionFrame = mCaptionFrames.FirstChild();
+  }
+  else {
+    NS_PRECONDITION(!aPrevFrame, "invalid previous frame");
+    return AppendFrames(aListName, aFrameList);
+  }
 }
 
 NS_IMETHODIMP
@@ -255,7 +254,6 @@ nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
   // We only have two child frames: the inner table and one caption frame.
   // The inner frame can't be removed so this should be the caption
   NS_PRECONDITION(nsLayoutAtoms::captionList == aListName, "can't remove inner frame");
-  NS_PRECONDITION(aOldFrame == mCaptionFrame, "invalid caption frame");
 
   PRUint8 captionSide = GetCaptionSide();
 
@@ -268,12 +266,11 @@ nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
     mInnerTableFrame->AddStateBits(NS_FRAME_IS_DIRTY);
   }
 
-  // Remove the caption frame and destroy it
-  if (mCaptionFrame && (mCaptionFrame == aOldFrame)) {
-    mCaptionFrame->Destroy(GetPresContext());
-    mCaptionFrame = nsnull;
-    mMinCaptionWidth = 0;
-  }
+  // Remove the frame and destroy it
+  mCaptionFrames.DestroyFrame(GetPresContext(), aOldFrame);
+  mCaptionFrame = mCaptionFrames.FirstChild();
+  
+  mMinCaptionWidth = 0;
 
   // Generate a reflow command so we get reflowed
   GetPresContext()->PresShell()->AppendReflowCommand(this,
