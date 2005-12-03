@@ -308,7 +308,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
     } // if (runLength <= 0)
 
     if (nsLayoutAtoms::directionalFrame == frameType) {
-      delete frame;
+      frame->Destroy(aPresContext);
       ++lineOffset;
     }
     else {
@@ -778,7 +778,7 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
   for (index = aLastIndex; index > aFirstIndex; index--) {
     frame = (nsIFrame*) mLogicalFrames[index];
     if (nsLayoutAtoms::directionalFrame == frame->GetType()) {
-      delete frame;
+      frame->Destroy(aPresContext);
       ++aOffset;
     }
     else {
