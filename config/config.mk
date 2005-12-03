@@ -468,6 +468,11 @@ DEFINES += \
 		-DIMPL_NS_NET \
 		$(NULL)
 endif
+
+ifdef WINCE
+DEFINES += -D_BUILD_NSPR_STATIC_
+endif
+
 endif
 
 # Force _all_ exported methods to be |_declspec(dllexport)| when we're
