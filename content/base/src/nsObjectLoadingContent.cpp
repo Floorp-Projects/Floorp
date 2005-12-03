@@ -255,6 +255,18 @@ class AutoFallback {
     const nsresult* mResult;
 };
 
+/**
+ * A class that automatically sets mInstantiating to false when it goes
+ * out of scope.
+ */
+class AutoSetInstantiatingToFalse {
+  public:
+    AutoSetInstantiatingToFalse(nsObjectLoadingContent* objlc) : mContent(objlc) {}
+    ~AutoSetInstantiatingToFalse() { mContent->mInstantiating = PR_FALSE; }
+  private:
+    nsObjectLoadingContent* mContent;
+};
+
 // helper functions
 static PRBool
 IsSupportedImage(const nsCString& aMimeType)
@@ -501,6 +513,69 @@ nsObjectLoadingContent::GetDisplayedType(PRUint32* aType)
 
 
 NS_IMETHODIMP
+nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
+{
+  // Must set our out parameter to null as we have various early returns with
+  // an NS_OK result.
+  *aInstance = nsnull;
+
+  if (mType != eType_Plugin) {
+    return NS_OK;
+  }
+
+  nsIObjectFrame* frame = GetFrame();
+  if (frame) {
+    // If we have a frame, we may have pending instantiate events; revoke
+    // them.
+    nsCOMPtr<nsIEventQueue> eventQ;
+    NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+    if (eventQ) {
+      LOG(("OBJLC [%p]: Revoking events\n", this));
+      eventQ->RevokeEvents(this);
+    }
+  } else {
+    // mInstantiating is true if we're in ObjectURIChanged; we shouldn't
+    // recreate frames in that case, we'd confuse that function.
+    if (mInstantiating) {
+      return NS_OK;
+    }
+
+    // Trigger frame construction
+    mInstantiating = PR_TRUE;
+
+    nsCOMPtr<nsIContent> thisContent = 
+      do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    NS_ASSERTION(thisContent, "must be a content");
+
+    nsIDocument* doc = thisContent->GetCurrentDoc();
+    PRUint32 numShells = doc->GetNumberOfShells();
+    for (PRUint32 i = 0; i < numShells; ++i) {
+      nsIPresShell* shell = doc->GetShellAt(i);
+      shell->RecreateFramesFor(thisContent);
+    }
+
+    mInstantiating = PR_FALSE;
+
+    frame = GetFrame();
+    if (!frame) {
+      return NS_OK;
+    }
+  }
+
+  // We may have a plugin instance already; if so, do nothing
+  nsresult rv = frame->GetPluginInstance(*aInstance);
+  if (!*aInstance) {
+    rv = Instantiate(mContentType, mURI);
+    if (NS_SUCCEEDED(rv)) {
+      rv = frame->GetPluginInstance(*aInstance);
+    } else {
+      Fallback(PR_TRUE);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
 nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
 {
   LOG(("OBJLC [%p]: Got frame %p (mInstantiating=%i)\n", this, aFrame,
@@ -609,6 +684,8 @@ nsObjectLoadingContent::ObjectURIChanged(const nsAString& aURI,
   LOG(("OBJLC [%p]: Loading object: URI string=<%s> notify=%i type=<%s> forcetype=%i forceload=%i\n",
        this, NS_ConvertUTF16toUTF8(aURI).get(), aNotify, aTypeHint.get(), aForceType, aForceLoad));
 
+  NS_ASSERTION(!mInstantiating, "ObjectURIChanged was reentered?");
+
   // Avoid StringToURI in order to use the codebase attribute as base URI
   nsCOMPtr<nsIContent> thisContent = 
     do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
@@ -662,6 +739,13 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
   }
 
   AutoNotifier notifier(this, aNotify);
+
+  // AutoSetInstantiatingToFalse is instantiated after AutoNotifier, so that if the
+  // AutoNotifier triggers frame construction, events can be posted as
+  // appropriate.
+  NS_ASSERTION(!mInstantiating, "ObjectURIChanged was reentered?");
+  mInstantiating = PR_TRUE;
+  AutoSetInstantiatingToFalse autoset(this);
 
   mUserDisabled = mSuppressed = PR_FALSE;
 
@@ -746,7 +830,6 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
     if (newType != mType) {
       LOG(("OBJLC [%p]: (aForceType) Changing type from %u to %u\n", this, mType, newType));
 
-      mInstantiating = PR_TRUE;
       UnloadContent();
 
       // Must have a frameloader before creating a frame, or the frame will
@@ -754,14 +837,12 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
       if (!mFrameLoader && newType == eType_Document) {
         if (!thisContent->IsInDoc()) {
           // XXX frameloaders can't deal with not being in a document
-          mInstantiating = PR_FALSE;
           mURI = nsnull;
           return NS_OK;
         }
 
         mFrameLoader = new nsFrameLoader(thisContent);
         if (!mFrameLoader) {
-          mInstantiating = PR_FALSE;
           return NS_ERROR_OUT_OF_MEMORY;
         }
       }
@@ -772,7 +853,6 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
       mType = newType;
       if (aNotify)
         notifier.Notify();
-      mInstantiating = PR_FALSE;
     }
     switch (newType) {
       case eType_Image:
@@ -798,7 +878,6 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
     return NS_OK;
   }
 
-  mInstantiating = PR_TRUE;
   // If the class ID specifies a supported plugin, or if we have no explicit URI
   // but a type, immediately instantiate the plugin.
   PRBool isSupportedClassID = PR_FALSE;
@@ -844,14 +923,12 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
     }
 
     rv = Instantiate(mContentType, mURI);
-    mInstantiating = PR_FALSE;
     return NS_OK;
   }
   // If we get here, and we had a class ID, then it must have been unsupported.
   // Fallback in that case.
   if (hasID) {
     LOG(("OBJLC [%p]: invalid classid\n", this));
-    mInstantiating = PR_FALSE;
     rv = NS_ERROR_NOT_AVAILABLE;
     return NS_OK;
   }
@@ -859,7 +936,6 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
   if (!aURI) {
     // No URI and no type... nothing we can do.
     LOG(("OBJLC [%p]: no URI\n", this));
-    mInstantiating = PR_FALSE;
     rv = NS_ERROR_NOT_AVAILABLE;
     return NS_OK;
   }
@@ -872,11 +948,8 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
       notifier.Notify();
 
     rv = Instantiate(aTypeHint, aURI);
-    mInstantiating = PR_FALSE;
     return NS_OK;
   }
-
-  mInstantiating = PR_FALSE;
 
   nsCOMPtr<nsILoadGroup> group = doc->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> chan;

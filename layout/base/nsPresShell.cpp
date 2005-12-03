@@ -152,6 +152,7 @@
 #include "nsIFocusController.h"
 #include "nsIPluginInstance.h"
 #include "nsIObjectFrame.h"
+#include "nsIObjectLoadingContent.h"
 #include "nsNetUtil.h"
 
 // Drag & Drop, Clipboard
@@ -6185,15 +6186,6 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
   if (!objectFrame)
     return;
 
-  nsCOMPtr<nsIPluginInstance> instance;
-  objectFrame->GetPluginInstance(*getter_AddRefs(instance));
-  if (!instance)
-    return;
-
-  // Note on the frame that it used to have a plugin instance, since
-  // we're about to make said instance go away
-  frame->SetProperty(nsLayoutAtoms::objectFrame, NS_INT32_TO_PTR(1));
-
   objectFrame->StopPlugin();
 }
 
@@ -6229,20 +6221,10 @@ PresShell::Freeze()
 static void
 StartPluginInstance(PresShell *aShell, nsIContent *aContent)
 {
-  // For now we just reconstruct the frame, but only if the element
-  // had a plugin instance before we stopped it.  Other types of
-  // embedded content (eg SVG) become unhappy if we do a frame
-  // reconstruct here.
-  nsIFrame *frame = aShell->GetPrimaryFrameFor(aContent);
-  if (frame) {
-    nsIObjectFrame *objFrame = nsnull;
-    CallQueryInterface(frame, &objFrame);
-    if (objFrame && frame->GetProperty(nsLayoutAtoms::objectFrame)) {
-      // Note: no need to remove the property here, since we're about
-      // to blow away the frame
-      aShell->RecreateFramesFor(aContent);
-    }
-  }
+  nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(aContent));
+  NS_ASSERTION(objlc, "Object nodes must implement nsIObjectLoadingContent");
+  nsCOMPtr<nsIPluginInstance> inst;
+  objlc->EnsureInstantiation(getter_AddRefs(inst));
 }
 
 PR_STATIC_CALLBACK(PRBool)
