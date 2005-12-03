@@ -401,6 +401,7 @@ protected:
 private:
   // used to keep track of this frame's children. They are redundant with mFrames, but more convient
   nsTableFrame* mInnerTableFrame; 
+  nsFrameList   mCaptionFrames;
   nsIFrame*     mCaptionFrame;
 
   // used to track caption max element size 
