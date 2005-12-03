@@ -150,15 +150,6 @@ typedef struct DIR_Filter
 	PRUint32 flags;
 } DIR_Filter;
 
-/* Callback list structure */
-typedef struct DIR_Callback
-{
-	DIR_NOTIFICATION_FN  fn;
-	PRUint32               flags;
-	void                *data;
-	struct DIR_Callback *next;
-} DIR_Callback;
-
 /* Codeset type */
 #define SINGLEBYTE   0x0000 /* 0000 0000 0000 0000 =    0 */
 #define MULTIBYTE    0x0100 /* 0000 0001 0000 0000 =  256 */
@@ -217,7 +208,6 @@ static DIR_Server *dir_MatchServerPrefToServer(nsVoidArray *wholeList, const cha
 static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fullprefname);
 
 static PRInt32      dir_UserId = 0;
-static DIR_Callback *dir_CallbackList = nsnull;
 nsVoidArray  *dir_ServerList = nsnull;
 
 /*****************************************************************************
@@ -275,17 +265,7 @@ NS_IMETHODIMP DirPrefObserver::Observe(nsISupports *aSubject, const char *aTopic
         server->position = position;
         if (dir_IsServerDeleted(server))
           DIR_SetServerPosition(dir_ServerList, server, DIR_POS_DELETE);
-        else
-          DIR_SendNotification(server, DIR_NOTIFY_PROPERTY_CHANGE, idPosition);
       }
-    }
-    /* Some pref other position changed, reload the server and send a property
-     * changed notification.
-     */
-    else if (dir_CallbackList != nsnull)
-    {
-      DIR_GetPrefsForOneServer(server, PR_TRUE, PR_FALSE);
-      DIR_SendNotification(server, DIR_NOTIFY_PROPERTY_CHANGE, id);
     }
   }
   /* If the server is not in the unified list, we may need to add it.  Servers
@@ -573,27 +553,6 @@ nsresult DIR_InitServer (DIR_Server *server)
   }
   return NS_OK;
 }
-
-DIR_DescriptionCode DIR_ValidateDirectoryDescription(nsVoidArray * wholeList, DIR_Server * serverToValidate)
-{
-  /* right now the only invalid description is a duplicate...so check for duplicates */
-  if (wholeList && serverToValidate && serverToValidate->description)
-  {
-    PRInt32 numItems = wholeList->Count();
-    PRInt32 i;
-    for (i = 0; i < numItems; i++)
-    {
-      DIR_Server *s = (DIR_Server *)(dir_ServerList->ElementAt(i));
-      /* don't check the description if it is the same directory as the one we are comparing against */
-      if (s != serverToValidate && s->description && !nsCRT::strcasecmp(s->description, serverToValidate->description))
-        return DIR_DuplicateDescription;
-    }
-    
-  }
-  
-  return DIR_ValidDescription;
-}
-
 
 /*****************************************************************************
  * Functions for cloning DIR_Servers
@@ -934,9 +893,6 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
        server->position = 1;
      
      wholeList->AppendElement(server);
-     
-     if (wholeList == dir_ServerList)
-       DIR_SendNotification(server, DIR_NOTIFY_ADD, idNone);
      break;
      
    case DIR_POS_DELETE:
@@ -981,9 +937,6 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
          resort = PR_TRUE;
          wholeList->RemoveElement(server);
        }
-       
-       if (wholeList == dir_ServerList)
-         DIR_SendNotification(server, DIR_NOTIFY_DELETE, idNone);
      }
      break;
      
@@ -1005,9 +958,6 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
        server->position = position;
        wholeList->AppendElement(server);
        resort = PR_TRUE;
-       
-       if (wholeList == dir_ServerList)
-         DIR_SendNotification(server, DIR_NOTIFY_ADD, idNone);
      }
      
      /* Servers with locked position values cannot be moved.
@@ -1115,132 +1065,6 @@ static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fu
 
 	return rc;
 }
-
-PRBool DIR_RegisterNotificationCallback(DIR_NOTIFICATION_FN fn, PRUint32 flags, void *inst_data)
-{
-	DIR_Callback *cb;
-
-	for (cb = dir_CallbackList; cb; cb = cb->next)
-	{
-		if (cb->fn == fn)
-		{
-			cb->flags = flags;
-			return PR_TRUE;
-		}
-	}
-
-	cb = (DIR_Callback *)PR_Malloc(sizeof(DIR_Callback));
-	if (!cb)
-		return PR_FALSE;
-
-	cb->fn    = fn;
-	cb->flags = flags;
-	cb->data  = inst_data;
-	cb->next  = dir_CallbackList;
-	dir_CallbackList = cb;
-
-	return PR_TRUE;
-}
-
-PRBool DIR_DeregisterNotificationCallback(DIR_NOTIFICATION_FN fn, void *inst_data)
-{
-	DIR_Callback *cb, *cbPrev=nsnull;
-
-	for (cb = dir_CallbackList; cb && cb->fn != fn && cb->data != inst_data; cb = cb->next)
-		cbPrev = cb;
-
-	if (cb == nsnull)
-		return PR_FALSE;
-
-	if (cb == dir_CallbackList)
-		dir_CallbackList = cb->next;
-	else
-		cbPrev->next = cb->next;
-
-	PR_Free(cb);
-	return PR_TRUE;
-}
-
-PRBool DIR_SendNotification(DIR_Server *server, PRUint32 flag, DIR_PrefId id)
-{
-	PRBool sent = PR_FALSE;
-	DIR_Callback *cb, *cbNext;
-
-	for (cb = dir_CallbackList; cb; cb = cbNext)
-	{
-		cbNext = cb->next;
-
-		if (cb->flags & flag)
-		{
-			sent = PR_TRUE;
-			cb->fn(server, flag, id, cb->data);
-		}
-	}
-
-	return sent;
-}
-
-
-char *DIR_CopyServerStringPref(DIR_Server *server, DIR_PrefId prefid, int16 csid)
-{
-	char *pref;
-
-	if (!server)
-		return nsnull;
-
-	switch (prefid) {
-	case idAuthDn:
-		pref = server->authDn;
-		break;
-	case idPassword:
-		pref = server->password;
-		break;
-	case idSearchBase:
-		pref = server->searchBase;
-		break;
-	default:
-		PR_ASSERT(0);
-		pref = nsnull;
-		break;
-	}
-
-	if (pref)
-		pref = DIR_ConvertFromServerCharSet(server, pref, csid);
-
-	return pref;
-}
-
-PRBool DIR_SetServerStringPref(DIR_Server *server, DIR_PrefId prefid, char *pref, PRInt16 csid)
-{
-	PRBool rc = PR_TRUE;
-
-	if (!server || !pref)
-		return PR_FALSE;
-
-	pref = DIR_ConvertToServerCharSet(server, pref, csid);
-
-	switch (prefid) {
-	case idAuthDn:
-		PR_FREEIF(server->authDn);
-		server->authDn = pref;
-		break;
-	case idPassword:
-		PR_FREEIF(server->password);
-		server->password = pref;
-		break;
-	case idSearchBase:
-		PR_FREEIF(server->searchBase);
-		server->searchBase = pref;
-		break;
-	default:
-		PR_ASSERT(0);
-		rc = PR_FALSE;
-		break;
-	}
-
-	return PR_FALSE;
-}
-
 
 DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 {
@@ -1563,33 +1387,6 @@ static PRBool dir_AreServersSame (DIR_Server *first, DIR_Server *second, PRBool 
 	return PR_FALSE;
 }
 
-PRBool	DIR_AreServersSame (DIR_Server *first, DIR_Server *second)
-{
-	return dir_AreServersSame(first, second, PR_TRUE);
-}
-
-DIR_Server *DIR_LookupServer(char *serverName, PRInt32 port, char *searchBase)
-{
-	PRInt32 i;
-	DIR_Server *server;
-
-	if (!serverName || !searchBase || !dir_ServerList)
-		return nsnull;
-
-	for (i = dir_ServerList->Count() - 1; i >= 0; i--)
-	{
-		server = (DIR_Server *)dir_ServerList->ElementAt(i);
-		if (   server->port == port
-            && server->serverName && nsCRT::strcasecmp(server->serverName, serverName) == 0
-            && server->searchBase && nsCRT::strcasecmp(server->searchBase, searchBase) == 0)
-		{
-			return server;
-		}
-	}
-
-	return nsnull;
-}
-
 /*****************************************************************************
  * Functions for destroying DIR_Servers 
  */
@@ -1805,16 +1602,6 @@ nsresult DIR_DeleteServerList(nsVoidArray *wholeList)
 	return NS_OK;
 }
 
-
-nsresult DIR_CleanUpServerPreferences(nsVoidArray *deletedList)
-{
-	/* OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE */
-	PR_ASSERT(PR_FALSE);
-	return NS_OK;
-	/* OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE */
-}
-
-
 /*****************************************************************************
  * Functions for retrieving subsets of the DIR_Server list 
  */
@@ -1829,60 +1616,11 @@ nsresult DIR_CleanUpServerPreferences(nsVoidArray *deletedList)
 		 && !DIR_TestFlag(s, DIR_REPLICATE_NEVER))                                        \
     )
 
-nsresult DIR_GetDirServerSubset(nsVoidArray *wholeList, nsVoidArray *subList, PRUint32 flags)
-{
-	if (wholeList && subList && flags)
-	{
-		PRInt32 i;
-		PRInt32 numItems = wholeList->Count();
-
-		for (i = 0; i < numItems; i++)
-		{
-			DIR_Server *s = (DIR_Server*) wholeList->ElementAt(i);
-			if (DIR_SUBSET_MATCH(s, flags))
-			{
-				subList->AppendElement(s);
-			}
-		}
-		return NS_OK;
-	}
-	return NS_ERROR_FAILURE;
-}
-
-PRInt32 DIR_GetDirServerSubsetCount(nsVoidArray * wholeList, PRUint32 flags)
-{
-	PRInt32 count = 0;
-
-	if (wholeList && flags)
-	{
-		PRInt32 i;
-		PRInt32 numItems = wholeList->Count();
-
-		for (i = 0; i < numItems; i++)
-		{
-			DIR_Server *s = (DIR_Server*) wholeList->ElementAt(i);
-			if (DIR_SUBSET_MATCH(s, flags))
-			{
-				count++;
-			}
-		}
-	}
-
-	return count;
-}
-
 nsresult DIR_GetComposeNameCompletionAddressBook (nsVoidArray *wholeList, DIR_Server **cab)
 {
 	/* OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE */
 	PR_ASSERT(PR_FALSE);
     return NS_ERROR_FAILURE;
-	/* OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE */
-}
-
-nsresult DIR_GetLdapServers (nsVoidArray *wholeList, nsVoidArray *subList)
-{
-	/* OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE */
-	return DIR_GetDirServerSubset(wholeList, subList, DIR_SUBSET_LDAP_ALL);
 	/* OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE */
 }
 
@@ -3927,344 +3665,6 @@ const char *DIR_GetFirstAttributeString (DIR_Server *server, DIR_AttributeId id)
 	return array[0];
 }
 
-const char *DIR_GetReplicationFilter (DIR_Server *server)
-{
-	if (server && server->replInfo)
-		return server->replInfo->filter;
-	else
-		return nsnull;
-}
-
-const char *DIR_GetFilterString (DIR_Server *server)
-{
-	if (!server)
-		return nsnull;
-
-	DIR_Filter *filter = (DIR_Filter *)server->customFilters->SafeElementAt(0);
-	if (filter)
-		return filter->string;
-	return nsnull;
-}
-
-
-static DIR_Filter *DIR_LookupFilter (DIR_Server *server, const char *filter)
-{
-	if (!server)
-		return nsnull;
-
-	nsVoidArray *list = server->customFilters;
-	DIR_Filter *walkFilter = nsnull;
-
-	PRInt32  count = list->Count();
-	PRInt32  i;
-	for (i = 0; i < count; i++)
-	{
-		if ((walkFilter = (DIR_Filter *)list->ElementAt(i)) != nsnull)
-            if (!nsCRT::strcasecmp(filter, walkFilter->string))
-				return walkFilter;
-	}
-	return nsnull;
-}
-
-
-PRBool DIR_RepeatFilterForTokens (DIR_Server *server, const char *filter)
-{
-	if (!server)
-		return nsnull;
-
-	DIR_Filter *f;
-	
-	if (!filter)
-		f = (DIR_Filter *)server->customFilters->SafeElementAt(0);
-	else
-		f = DIR_LookupFilter (server, filter);
-
-	return f ? (f->flags & DIR_F_REPEAT_FILTER_FOR_TOKENS) != 0 : kDefaultRepeatFilterForTokens;
-}
-
-
-PRBool DIR_SubstStarsForSpaces (DIR_Server *server, const char *filter)
-{
-	const DIR_Filter *filterStruct = DIR_LookupFilter (server, filter);
-	if (filterStruct)
-		return (filterStruct->flags & DIR_F_SUBST_STARS_FOR_SPACES) != 0;
-
-	return kDefaultSubstStarsForSpaces;
-}
-
-
-const char *DIR_GetTokenSeparators (DIR_Server *server)
-{
-	return server->tokenSeps ? server->tokenSeps : kDefaultTokenSeps;
-}
-
-PRBool DIR_UseCustomAttribute (DIR_Server *server, DIR_AttributeId id)
-{
-	nsVoidArray *list = server->customAttributes;
-	DIR_Attribute *walkList = nsnull;
-
-	PRInt32  count = list->Count();
-	PRInt32  i;
-	for (i = 0; i < count; i++)
-	{
-		if ((walkList = (DIR_Attribute *)list->ElementAt(i)) != nsnull)
-			if (walkList->id == id)
-				return PR_TRUE;
-	}
-	return PR_FALSE;
-}
-
-
-PRBool DIR_IsDnAttribute (DIR_Server *s, const char *attrib)
-{
-	if (s && s->dnAttributes)
-	{
-		/* Look in the server object to see if there are prefs to tell
-		 * us which attributes contain DNs
-		 */
-		PRInt32 i;
-		for (i = 0; i < s->dnAttributesCount; i++)
-		{
-            if (!nsCRT::strcasecmp(attrib, s->dnAttributes[i]))
-				return PR_TRUE;
-		}
-	}
-	else
-	{
-		/* We have some default guesses about what attributes 
-		 * are likely to contain DNs 
-		 */
-		switch (tolower(attrib[0]))
-		{
-		case 'm':
-            if (!nsCRT::strcasecmp(attrib, "manager") || 
-                !nsCRT::strcasecmp(attrib, "member"))
-				return PR_TRUE;
-			break;
-		case 'o':
-            if (!nsCRT::strcasecmp(attrib, "owner"))
-				return PR_TRUE;
-			break;
-		case 'u':
-            if (!nsCRT::strcasecmp(attrib, "uniquemember"))
-				return PR_TRUE;
-			break;
-		}
-	}
-	return PR_FALSE;
-}
-
-
-PRBool DIR_IsAttributeExcludedFromHtml (DIR_Server *s, const char *attrib)
-{
-	if (s && s->suppressedAttributes)
-	{
-		/* Look in the server object to see if there are prefs to tell
-		 * us which attributes shouldn't be shown in HTML
-		 */
-		PRInt32 i;
-		for (i = 0; i < s->suppressedAttributesCount; i++)
-		{
-            if (!nsCRT::strcasecmp(attrib, s->suppressedAttributes[i]))
-				return PR_TRUE;
-		}
-	}
-	/* else don't exclude it. By default we show everything */
-
-	return PR_FALSE;
-}
-
-PRBool DIR_IsUriAttribute (DIR_Server *s, const char *attrib)
-{
-	if (s && s->uriAttributes)
-	{
-		/* Look in the server object to see if there are prefs to tell
-		 * us which attributes are URLs
-		 */
-		PRInt32 i;
-		for (i = 0; i < s->uriAttributesCount; i++)
-		{
-            if (!nsCRT::strcasecmp(attrib, s->uriAttributes[i]))
-				return PR_TRUE;
-		}
-	}
-	else
-	{
-		/* We have some default guesses about what attributes 
-		 * are likely to contain URLs
-		 */
-		switch (tolower(attrib[0]))
-		{
-		case 'l':
-            if (   !nsCRT::strcasecmp(attrib, "labeleduri")
-                || !nsCRT::strcasecmp(attrib, "labeledurl"))
-				return PR_TRUE;
-			break;
-		case 'u':
-            if (!nsCRT::strcasecmp(attrib, "url"))
-				return PR_TRUE;
-			break;
-		}
-	}
-	return PR_FALSE;
-}
-
-void DIR_SetAuthDN (DIR_Server *s, const char *dn)
-{
-	char *tmp = nsnull;
-
-	PR_ASSERT(dn && s);
-	if (!dn || !s)
-		return;
-	if (s->authDn && !PL_strcmp(dn, s->authDn))
-		return; /* no change - no need to broadcast */
-
-    tmp = nsCRT::strdup (dn);
-	if (tmp)
-	{
-		/* Always remember the authDn in the DIR_Server, so that users only
-		 * have to authenticate to the server once during a session. Whether
-		 * or not we push the authDN into the prefs is a separate issue, and 
-		 * is covered by the prefs read/write code
-		 */
-		PR_FREEIF(s->authDn);
-		s->authDn = tmp;
-	}
-	if (s->savePassword)
-		DIR_SavePrefsForOneServer (s);
-}
-
-
-void DIR_SetPassword (DIR_Server *s, const char *password)
-{
-	char *tmp = nsnull;
-
-	PR_ASSERT(password && s);
-	if (!password || !s)
-		return; 
-	if (s->password && !PL_strcmp(password, s->password))
-		return; /* no change - no need to broadcast */
-
-    tmp = nsCRT::strdup (password);
-	if (tmp)
-	{
-		/* Always remember the password in the DIR_Server, so that users only
-		 * have to authenticate to the server once during a session. Whether
-		 * or not we push the password into the prefs is a separate issue, and 
-		 * is covered by the prefs read/write code
-		 */
-		PR_FREEIF(s->password);
-		s->password = tmp;
-	}
-	if (s->savePassword)
-		DIR_SavePrefsForOneServer (s);
-}
-
-
-PRBool DIR_IsEscapedAttribute (DIR_Server *s, const char *attrib)
-{
-	/* We're not exposing this setting in JS prefs right now, but in case we
-	 * might want to in the future, leave the DIR_Server* in the prototype.
-	 */
-
-	switch (tolower(attrib[0]))
-	{
-	case 'p':
-        if (!nsCRT::strcasecmp(attrib, "postaladdress"))
-			return PR_TRUE;
-		break;
-	case 'f': 
-        if (!nsCRT::strcasecmp(attrib, "facsimiletelephonenumber"))
-			return PR_TRUE;
-		break;
-	case 'o':
-        if (!nsCRT::strcasecmp(attrib, "othermail"))
-			return PR_TRUE;
-		break;
-	}
-	return PR_FALSE;
-}
-
-
-char *DIR_Unescape (const char *src, PRBool makeHtml)
-{
-/* Borrowed from libnet\mkparse.c */
-#define UNHEX(C) \
-	((C >= '0' && C <= '9') ? C - '0' : \
-	((C >= 'A' && C <= 'F') ? C - 'A' + 10 : \
-	((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)))
-
-	char *dest = nsnull;
-	PRUint32 destLength = 0;
-
-	PRUint32 dollarCount = 0;
-	PRUint32 convertedLengthOfDollar = makeHtml ? 4 : 1;
-
-	const char *tmpSrc = src;
-
-	while (*tmpSrc)
-		if (*tmpSrc++ == '$')
-			dollarCount++;
-
-	destLength = PL_strlen(src) + (dollarCount * convertedLengthOfDollar);
-	dest = (char*) PR_Malloc (destLength + 1);
-	if (dest)
-	{
-		char *tmpDst = dest;
-		*dest = '\0';
-		tmpSrc = src;
-
-		while (*tmpSrc)
-		{
-			switch (*tmpSrc)
-			{
-			case '$':
-				/* A dollar sign is a linebreak. This is easy for HTML, but if we're converting
-				 * for the Address Book or something without multiple lines, just put in a space
-				 */
-				if (makeHtml)
-				{
-					*tmpDst++ = '<';
-					*tmpDst++ = 'B';
-					*tmpDst++ = 'R';
-					*tmpDst++ = '>';
-				}
-				else
-					*tmpDst++ = ' ';
-				break;
-			case '\\': {
-				/* A backslash indicates that two hex digits follow, which we're supposed to
-				 * convert. The spec sez that '$', '#' and '\'' (single quote) must be encoded
-				 * this way. 
-				 */
-				PRBool didEscape = PR_FALSE;
-				char c1 = *(tmpSrc + 1);
-				if (c1 && (nsCRT::IsAsciiDigit(c1) || nsCRT::IsAsciiAlpha(c1)))
-				{
-					char c2 = *(tmpSrc + 2);
-					if (c2 && (nsCRT::IsAsciiDigit(c2) || nsCRT::IsAsciiAlpha(c2)))
-					{
-						*tmpDst++ = (UNHEX(c1) << 4) | UNHEX(c2);
-						tmpSrc +=2;
-						didEscape = PR_TRUE;
-					}
-				}
-				if (!didEscape)
-					*tmpDst++ = *tmpSrc;
-			}
-			break;
-			default:
-				/* Just a plain old char -- copy it over */
-				*tmpDst++ = *tmpSrc;
-			}
-			tmpSrc++;
-		}
-		*tmpDst = '\0';
-	}
-
-	return dest;
-}
-
 #endif /* #if !defined(MOZADDRSTANDALONE) */
 
 PRBool DIR_TestFlag (DIR_Server *server, PRUint32 flag)
@@ -4299,25 +3699,4 @@ void DIR_ForceFlag (DIR_Server *server, PRUint32 flag, PRBool setIt)
 		else
 			server->flags &= ~flag;
 	}
-}
-
-
-/* Centralize this charset conversion so everyone can do the UTF8 conversion
- * in the same way. Also, if someone ever makes us do T.61 or some other silly
- * thing, we can use these bottlenecks.
- */
-
-char *DIR_ConvertToServerCharSet(DIR_Server *server, char *src, PRInt16 srcCSID)
-{
-	return DIR_ConvertString(srcCSID, (PRInt16)(server ? server->csid : CS_DEFAULT), src);
-}
-
-char *DIR_ConvertFromServerCharSet(DIR_Server *server, char *src, PRInt16 dstCSID)
-{
-	return DIR_ConvertString((PRInt16)(server ? server->csid : CS_DEFAULT), dstCSID, src);
-}
-
-char *DIR_ConvertString(PRInt16 srcCSID, PRInt16 dstCSID, const char *string)
-{
-    return nsCRT::strdup(string);
 }

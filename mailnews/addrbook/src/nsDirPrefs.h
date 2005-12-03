@@ -291,11 +291,6 @@ nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir);
 nsresult DIR_DecrementServerRefCount (DIR_Server *);
 nsresult DIR_IncrementServerRefCount (DIR_Server *);
 
-/* We are trying to phase out use of FE_GetDirServers. The back end is now managing the dir server list. So you should
-	be calling DIR_GetDirServers instead. */
-
-nsVoidArray * FE_GetDirServers(void);
-
 /* Since the strings in DIR_Server are allocated, we have bottleneck
  * routines to help with memory mgmt
  */
@@ -303,8 +298,6 @@ nsVoidArray * FE_GetDirServers(void);
 nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType);
 nsresult DIR_InitServer (DIR_Server *);
 nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out);
-PRBool	DIR_AreServersSame (DIR_Server *first, DIR_Server *second);
-DIR_Server *DIR_LookupServer(char *serverName, PRInt32 port, char *searchBase);
 
 nsresult DIR_DeleteServer (DIR_Server *);
 nsresult DIR_DeleteServerFromList (DIR_Server *);
@@ -322,21 +315,6 @@ nsresult DIR_SaveServerPreferences(nsVoidArray *wholeList);
 void    DIR_GetPrefsForOneServer(DIR_Server *server, PRBool reinitialize, PRBool oldstyle);
 void    DIR_SavePrefsForOneServer(DIR_Server *server);
 
-/* This routine will clean up files for deleted directories */
-
-/* you should never need to call this function!!! Just set the clear
-	flag for the entry you want cleaned up. When all references to
-	the server are released, the object will be cleaned up */
-nsresult DIR_CleanUpServerPreferences(nsVoidArray *deletedList);
-
-/* Returns an allocated list of a subset of the unified list of DIR servers.
- */
-nsresult DIR_GetDirServerSubset(nsVoidArray *wholeList, nsVoidArray *subList, PRUint32 flags);
-PRInt32  DIR_GetDirServerSubsetCount(nsVoidArray *wholeList, PRUint32 flags);
-
-/* We need to validate directory descriptions to make sure they are unique. They can use this API for that */
-DIR_DescriptionCode DIR_ValidateDirectoryDescription(nsVoidArray * wholeList, DIR_Server * serverToValidate);
-
 char   *DIR_CreateServerPrefName (DIR_Server *server, char *name);
 void	DIR_SetServerFileName(DIR_Server* pServer, const char* leafName);
 
@@ -348,32 +326,8 @@ void	DIR_SetServerFileName(DIR_Server* pServer, const char* leafName);
 const char  *DIR_GetAttributeName (DIR_Server *server, DIR_AttributeId id);
 const char **DIR_GetAttributeStrings (DIR_Server *server, DIR_AttributeId id);
 const char  *DIR_GetFirstAttributeString (DIR_Server *server, DIR_AttributeId id);
-const char  *DIR_GetFilterString (DIR_Server *server);
-const char  *DIR_GetReplicationFilter (DIR_Server *server);
-const char  *DIR_GetTokenSeparators (DIR_Server *server);
-PRBool	     DIR_RepeatFilterForTokens (DIR_Server *server, const char *filter);
-PRBool	     DIR_SubstStarsForSpaces (DIR_Server *server, const char *filter);
-PRBool       DIR_UseCustomAttribute (DIR_Server *server, DIR_AttributeId id);
-
-PRBool      DIR_IsDnAttribute (DIR_Server *s, const char *attr);
-PRBool      DIR_IsAttributeExcludedFromHtml (DIR_Server *s, const char *attr);
-PRBool      DIR_IsUriAttribute (DIR_Server *s, const char *attrib);
 
 nsresult DIR_AttributeNameToId (DIR_Server *server, const char *attrName, DIR_AttributeId *id);
-
-/* APIs for authentication */
-void		DIR_SetAuthDN (DIR_Server *s, const char *dn);
-void		DIR_SetPassword (DIR_Server *s, const char *password);
-
-/* APIs for unescaping LDAP special chars */
-char   *DIR_Unescape (const char *src, PRBool makeHtml);
-PRBool DIR_IsEscapedAttribute (DIR_Server *s, const char *attrib);
-
-/* API for building a URL */
-char *DIR_BuildUrl (DIR_Server *s, const char *dn, PRBool forAddToAB);
-
-/* Walks the list enforcing the rule that only one LDAP server can be configured for autocomplete */
-void DIR_SetAutoCompleteEnabled (nsVoidArray *list, DIR_Server *server, PRBool enabled);
 
 /* Callback Notification Flags/Types/Functions */
 #define DIR_NOTIFY_ADD                     0x00000001 
@@ -384,13 +338,7 @@ void DIR_SetAutoCompleteEnabled (nsVoidArray *list, DIR_Server *server, PRBool e
 
 typedef PRInt32 (*DIR_NOTIFICATION_FN)(DIR_Server *server, PRUint32 flag, DIR_PrefId id, void *inst_data);
 
-PRBool DIR_RegisterNotificationCallback(DIR_NOTIFICATION_FN fn, PRUint32 flags, void *inst_data);
-PRBool DIR_DeregisterNotificationCallback(DIR_NOTIFICATION_FN fn, void *inst_data);
-PRBool DIR_SendNotification(DIR_Server *server, PRUint32 flag, DIR_PrefId id);
-
 DIR_PrefId  DIR_AtomizePrefName(const char *prefname);
-char       *DIR_CopyServerStringPref(DIR_Server *server, DIR_PrefId prefid, PRInt16 csid);
-PRBool     DIR_SetServerStringPref(DIR_Server *server, DIR_PrefId prefid, char *pref, PRInt16 csid);
 
 /* Flags manipulation
  */
@@ -440,9 +388,5 @@ PRBool DIR_TestFlag  (DIR_Server *server, PRUint32 flag);
 void    DIR_SetFlag   (DIR_Server *server, PRUint32 flag);
 void    DIR_ClearFlag (DIR_Server *server, PRUint32 flag);
 void    DIR_ForceFlag (DIR_Server *server, PRUint32 flag, PRBool forceOnOrOff);
-
-char *DIR_ConvertToServerCharSet   (DIR_Server *s, char *src, PRInt16 srcCsid);
-char *DIR_ConvertFromServerCharSet (DIR_Server *s, char *src, PRInt16 dstCsid);
-char *DIR_ConvertString(PRInt16 srcCSID, PRInt16 dstCSID, const char *string);
 
 #endif /* dirprefs.h */
