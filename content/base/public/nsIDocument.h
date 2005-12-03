@@ -37,7 +37,7 @@
 #ifndef nsIDocument_h___
 #define nsIDocument_h___
 
-#include "nsISupports.h"
+#include "nsIDOMGCParticipant.h"
 #include "nsEvent.h"
 #include "nsStringGlue.h"
 #include "nsCOMArray.h"
@@ -92,9 +92,10 @@ class nsIVariant;
 class nsIDOMUserDataHandler;
 
 // IID for the nsIDocument interface
-#define NS_IDOCUMENT_IID      \
-{ 0xbcb48147, 0xed60, 0x490e, \
- { 0xa2, 0x47, 0xe2, 0x35, 0x3c, 0xf7, 0xc8, 0x68 } }
+// a5d8343d-9b0a-40a8-a47e-893065749f0b
+#define NS_IDOCUMENT_IID \
+{ 0xa5d8343d, 0x9b0a, 0x40a8, \
+  { 0xa4, 0x7e, 0x89, 0x30, 0x65, 0x74, 0x9f, 0x0b } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -103,7 +104,7 @@ class nsIDOMUserDataHandler;
 
 // Document interface.  This is implemented by all document objects in
 // Gecko.
-class nsIDocument : public nsISupports
+class nsIDocument : public nsIDOMGCParticipant
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)

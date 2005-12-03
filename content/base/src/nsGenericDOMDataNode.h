@@ -174,6 +174,10 @@ public:
   nsresult ReplaceData(PRUint32 aOffset, PRUint32 aCount,
                        const nsAString& aArg);
 
+  // nsIDOMGCParticipant interface methods
+  virtual nsIDOMGCParticipant* GetSCCIndex();
+  virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
+
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,

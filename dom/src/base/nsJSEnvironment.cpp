@@ -78,6 +78,7 @@
 #include "nsIAtom.h"
 #include "nsContentUtils.h"
 #include "jscntxt.h"
+#include "nsIDOMGCParticipant.h"
 
 // For locale aware string methods
 #include "plstr.h"
@@ -87,6 +88,7 @@
 #include "nsILocaleService.h"
 #include "nsICollation.h"
 #include "nsCollationCID.h"
+#include "nsDOMClassInfo.h"
 
 #ifdef NS_DEBUG
 #include "jsgc.h"       // for WAY_TOO_MUCH_GC, if defined for GC debugging
@@ -2145,12 +2147,10 @@ nsJSContext::ScriptExecuted()
   return NS_OK;
 }
 
-nsresult NS_DOMClassInfo_PreserveWrapper(nsIXPConnectWrappedNative *aWrapper);
-
 NS_IMETHODIMP
 nsJSContext::PreserveWrapper(nsIXPConnectWrappedNative *aWrapper)
 {
-  return NS_DOMClassInfo_PreserveWrapper(aWrapper);
+  return nsDOMClassInfo::PreserveNodeWrapper(aWrapper);
 }
 
 NS_IMETHODIMP

@@ -1017,6 +1017,37 @@ nsGenericElement::InitHashes()
   return NS_OK;
 }
 
+/**
+ * During the Mark phase of the GC, we need to mark all of the preserved
+ * wrappers that are reachable via DOM APIs.  Since reachability for DOM
+ * nodes is symmetric, if one DOM node is reachable from another via DOM
+ * APIs, then they are in the same strongly connected component.
+ * (Strongly connected components are never reachable from each other
+ * via DOM APIs.)  We can refer to each strongly connected component by
+ * walking up to the top of the parent chain.  This function finds that
+ * root node for any DOM node.
+ */
+nsIDOMGCParticipant*
+nsGenericElement::GetSCCIndex()
+{
+  // This is an optimized way of walking nsIDOMNode::GetParentNode to
+  // the top of the tree.
+  nsIDOMGCParticipant *result = GetCurrentDoc();
+  if (!result) {
+    nsIContent *top = this;
+    while (top->GetParent())
+      top = top->GetParent();
+    result = top;
+  }
+
+  return result;
+}
+
+void
+nsGenericElement::AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray)
+{
+}
+
 NS_IMETHODIMP
 nsGenericElement::GetNodeName(nsAString& aNodeName)
 {
@@ -3694,6 +3725,7 @@ nsGenericElement::RemoveChild(nsIDOMNode *aOldChild, nsIDOMNode **aReturn)
 
 NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventReceiver,
                                  nsDOMEventRTTearoff::Create(this))

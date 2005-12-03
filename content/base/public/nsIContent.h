@@ -46,6 +46,7 @@
 #include "nsPropertyTable.h"
 #include "nsCaseTreatment.h"
 #include "nsChangeHint.h"
+#include "nsIDOMGCParticipant.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsINodeInfo.h"
@@ -67,15 +68,16 @@ class nsRuleWalker;
 class nsAttrValue;
 
 // IID for the nsIContent interface
-#define NS_ICONTENT_IID       \
-{ 0x5d098839, 0x389d, 0x41db, \
- { 0x8f, 0x53, 0x59, 0x07, 0xbf, 0x90, 0x0d, 0x4e } }
+// ffc6f2b8-bcdc-4cf7-b72f-e843860f14a6
+#define NS_ICONTENT_IID \
+{ 0xffc6f2b8, 0xbcdc, 0x4cf7, \
+  { 0xb7, 0x2f, 0xe8, 0x43, 0x86, 0x0f, 0x14, 0xa6 } }
 
 /**
  * A node of content in a document's content model. This interface
  * is supported by all content objects.
  */
-class nsIContent : public nsISupports {
+class nsIContent : public nsIDOMGCParticipant {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 

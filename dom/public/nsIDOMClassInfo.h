@@ -196,10 +196,6 @@ enum nsDOMClassInfoID {
   // DOM Traversal classes
   eDOMClassInfo_TreeWalker_id,
 
-  // We are now trying to preserve binary compat in classinfo.  No
-  // more putting things in those categories up there.  New entries
-  // are to be added right before eDOMClassInfoIDCount.
-
   // Rect object used by getComputedStyle
   eDOMClassInfo_CSSRect_id,
 
@@ -364,6 +360,13 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_XPathExpression_id,
   eDOMClassInfo_XPathNSResolver_id,
   eDOMClassInfo_XPathResult_id,
+
+  eDOMClassInfo_WindowRoot_id,
+
+  // We are now trying to preserve binary compat in classinfo.  No more
+  // putting things in those categories up there.  New entries are to be
+  // added here, which is the end of the things that are currently on by
+  // default.
 
   // Define this near the end so that enabling/disabling foreignobject doesn't
   // break binary compatibility

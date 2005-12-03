@@ -44,6 +44,7 @@
 #include "nsINodeInfo.h"
 #include "nsIContent.h"
 #include "nsPropertyTable.h"
+#include "nsIDOMGCParticipant.h"
 
 class nsIAtom;
 class nsDOMAttributeMap;
@@ -52,7 +53,7 @@ class nsDOMAttributeMap;
  {0x4940cc50, 0x2ede, 0x4883,        \
  {0x95, 0xf5, 0x53, 0xdb, 0x50, 0x50, 0x13, 0x3e}}
 
-class nsIAttribute : public nsISupports
+class nsIAttribute : public nsIDOMGCParticipant
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IATTRIBUTE_IID)

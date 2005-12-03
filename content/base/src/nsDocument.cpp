@@ -797,6 +797,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentXBL)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
@@ -3322,6 +3323,23 @@ nsDocument::SetDir(const nsAString& aDirection)
   }
 
   return NS_OK;
+}
+
+//
+// nsIDOMGCParticipant methods
+//
+nsIDOMGCParticipant*
+nsDocument::GetSCCIndex()
+{
+  return this;
+}
+
+void
+nsDocument::AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray)
+{
+  nsCOMPtr<nsIDOMGCParticipant> gcp = do_QueryInterface(mScriptGlobalObject);
+  if (gcp)
+    aArray.AppendObject(gcp);
 }
 
 
