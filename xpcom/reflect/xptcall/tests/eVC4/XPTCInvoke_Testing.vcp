@@ -149,7 +149,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /i "C:\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4" /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "DEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /d "ARMV4" /r
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D "ARMV4" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /Yu"stdafx.h" /M$(CECrtMTDebug) /c
-# ADD CPP /nologo /W3 /Zi /Od /I "..\..\..\..\..\arm_ppc\dist\include" /I "..\..\..\..\..\arm_ppc\dist\include\xpcom" /I "..\..\..\..\..\arm_ppc\dist\sdk\include" /I "C:\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4" /D "$(CePlatform)" /D "ARM" /D "ARMV4" /D CANT_RESOLVE_CPP_CONST_AMBIGUITY=1 /D CROSS_COMPILE=1 /D "DEBUG" /D "DEBUG_dougt" /D D_INO=d_ino /D gid_t=int /D HAVE_COMPAT_H=1 /D HAVE_GETOPT_H=1 /D HAVE_GNU_LIBC_VERSION_H=1 /D HAVE_LIBM=1 /D HAVE_MALLOC_H=1 /D HAVE_MEMMOVE=1 /D HAVE_MEMORY_H=1 /D HAVE_MMINTRIN_H=1 /D HAVE_NL_TYPES_H=1 /D HAVE_SNPRINTF=1 /D HAVE_SYS_BITYPES_H=1 /D HAVE_SYS_STATFS_H=1 /D HAVE_SYS_STATVFS_H=1 /D HAVE_UINT=1 /D HAVE_UNISTD_H=1 /D HAVE_X11_XKBLIB_H=1 /D HW_THREADS=1 /D IBMBIDI=1 /D JS_THREADSAFE=1 /D mode_t=int /D "MOZILLA_CLIENT" /D MOZILLA_LOCALE_VERSION=\"1.8b2\" /D MOZILLA_REGION_VERSION=\"1.8b2\" /D MOZILLA_SKIN_VERSION=\"1.5\" /D MOZILLA_VERSION=\"1.8b2\" /D MOZ_APP_NAME=\"mozilla\" /D MOZ_BUILD_APP=suite /D MOZ_DEFAULT_TOOLKIT=\"windows\" /D MOZ_DISTRIBUTION_ID=\"org.mozilla\" /D MOZ_DLL_SUFFIX=\".dll\" /D MOZ_ENABLE_COREXFONTS=1 /D MOZ_USER_DIR=\"Mozilla\" /D MOZ_V1_STRING_ABI=1 /D MOZ_VIEW_SOURCE=1 /D MOZ_XTF=1 /D NEED_CPP_DERIVED_TEMPLATE_OPERATORS=1 /D NEED_CPP_TEMPLATE_CAST_TO_BASE=1 /D NO_MINUS_C_MINUS_O=1 /D NO_X11=1 /D NSCAP_DONT_PROVIDE_NONCONST_OPEQ=1 /D NS_DISABLE_LOGGING=1 /D NS_PRINTING=1 /D NS_PRINT_PREVIEW=1 /D off_t=long /D OJI=1 /D OSARCH=\"WINCE\" /D OSTYPE=\"WINCE420\" /D pid_t=int /D size_t=unsigned /D STDC_HEADERS=1 /D "TRACING" /D "TRIMMED" /D uid_t=int /D UNDER_CE=$(CEVersion) /D "UNICODE" /D UNIX_ASYNC_DNS=1 /D WIN32=1 /D WIN32_LEAN_AND_MEAN=1 /D XP_WIN32=1 /D XP_WIN=1 /D X_DISPLAY_MISSING=1 /D "_ARM_" /D "_DEBUG" /D "_IMPL_NS_GFX" /D "_IMPL_NS_MSG_BASE" /D "_IMPL_NS_WIDGET" /D "_MOZILLA_CONFIG_H_" /D "_UNICODE" /D _WIN32=1 /D _WIN32_WCE=$(CEVersion) /D _WINDOWS=1 /Yu"stdafx.h" /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /I "c:/builds/minimo/arm-build-minimo-opt-t/dist/include/string" /I "../../public" /I "c:/builds/minimo/arm-build-minimo-opt-t/dist/include/" /I "c:/builds/minimo/arm-build-minimo-opt-t/dist/include/xpcom" /I "c:/builds/minimo/arm-build-minimo-opt-t/dist\sdk\include" /I "C:\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4" /D "$(CePlatform)" /D "ARM" /D "ARMV4" /D CANT_RESOLVE_CPP_CONST_AMBIGUITY=1 /D CROSS_COMPILE=1 /D "DEBUG" /D "DEBUG_dougt" /D D_INO=d_ino /D gid_t=int /D HAVE_COMPAT_H=1 /D HAVE_GETOPT_H=1 /D HAVE_GNU_LIBC_VERSION_H=1 /D HAVE_LIBM=1 /D HAVE_MALLOC_H=1 /D HAVE_MEMMOVE=1 /D HAVE_MEMORY_H=1 /D HAVE_MMINTRIN_H=1 /D HAVE_NL_TYPES_H=1 /D HAVE_SNPRINTF=1 /D HAVE_SYS_BITYPES_H=1 /D HAVE_SYS_STATFS_H=1 /D HAVE_SYS_STATVFS_H=1 /D HAVE_UINT=1 /D HAVE_UNISTD_H=1 /D HAVE_X11_XKBLIB_H=1 /D HW_THREADS=1 /D IBMBIDI=1 /D JS_THREADSAFE=1 /D mode_t=int /D "MOZILLA_CLIENT" /D MOZILLA_LOCALE_VERSION=\"1.8b2\" /D MOZILLA_REGION_VERSION=\"1.8b2\" /D MOZILLA_SKIN_VERSION=\"1.5\" /D MOZILLA_VERSION=\"1.8b2\" /D MOZ_APP_NAME=\"mozilla\" /D MOZ_BUILD_APP=suite /D MOZ_DEFAULT_TOOLKIT=\"windows\" /D MOZ_DISTRIBUTION_ID=\"org.mozilla\" /D MOZ_DLL_SUFFIX=\".dll\" /D MOZ_ENABLE_COREXFONTS=1 /D MOZ_USER_DIR=\"Mozilla\" /D MOZ_V1_STRING_ABI=1 /D MOZ_VIEW_SOURCE=1 /D MOZ_XTF=1 /D NEED_CPP_DERIVED_TEMPLATE_OPERATORS=1 /D NEED_CPP_TEMPLATE_CAST_TO_BASE=1 /D NO_MINUS_C_MINUS_O=1 /D NO_X11=1 /D NSCAP_DONT_PROVIDE_NONCONST_OPEQ=1 /D NS_DISABLE_LOGGING=1 /D NS_PRINTING=1 /D NS_PRINT_PREVIEW=1 /D off_t=long /D OJI=1 /D OSARCH=\"WINCE\" /D OSTYPE=\"WINCE420\" /D pid_t=int /D size_t=unsigned /D STDC_HEADERS=1 /D "TRACING" /D "TRIMMED" /D uid_t=int /D UNDER_CE=$(CEVersion) /D "UNICODE" /D UNIX_ASYNC_DNS=1 /D WIN32=1 /D WIN32_LEAN_AND_MEAN=1 /D XP_WIN32=1 /D XP_WIN=1 /D X_DISPLAY_MISSING=1 /D "_ARM_" /D "_DEBUG" /D "_IMPL_NS_GFX" /D "_IMPL_NS_MSG_BASE" /D "_IMPL_NS_WIDGET" /D "_MOZILLA_CONFIG_H_" /D "_UNICODE" /D _WIN32=1 /D _WIN32_WCE=$(CEVersion) /D _WINDOWS=1 /D "_IMPL_NS_COM" /D "_IMPL_NS_STRINGAPI" /D "EXPORT_XPT_API" /D "EXPORT_XPTC_API" /D "EXPORT_XPTI_API" /D "MOZILLA_INTERNAL_API" /Yu"stdafx.h" /M$(CECrtMTDebug) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -158,7 +158,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib aygshell.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib coredll.lib aygshell.lib xpcom_core.lib nspr4.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /libpath:"..\..\..\..\..\arm_ppc\dist\lib" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib aygshell.lib Ceshell.lib xpcom_core.lib nspr4.lib plc4.lib plds4.lib shunt.lib embed_base_s.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /libpath:"c:/builds/minimo/arm-build-minimo-opt-t/dist/lib" /libpath:"C:\builds\minimo\mozilla\build\wince\shunt\build\ARMV4Rel" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 
 !ENDIF 
 
@@ -213,162 +213,151 @@ SOURCE=.\TestXPTCInvokeInIDE.cpp
 !IF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Release"
 
 DEP_CPP_TESTX=\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nscore.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsDebug.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsError.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIClassInfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsID.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIInterfaceInfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIMemory.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIProgrammingLanguage.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupports.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsBase.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsImpl.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsUtils.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsMemory.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsrootidl.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsTraceRefcnt.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOM.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOMCID.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpcom-config.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_arena.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_struct.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcall.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcstubsdecl.inc"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptinfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\obsolete\protypes.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\pratom.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prcpucfg.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prinrval.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlock.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlong.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prthread.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtime.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtypes.h"\
+	".\StdAfx.h"\
 	
 NODEP_CPP_TESTX=\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\protypes.h"\
+	".\nsMemory.h"\
+	".\prinrval.h"\
+	".\prlong.h"\
+	".\xptcall.h"\
 	
 
 !ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Debug"
 
 DEP_CPP_TESTX=\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nscore.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsDebug.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsError.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIClassInfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsID.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIInterfaceInfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIMemory.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIProgrammingLanguage.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupports.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsBase.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsImpl.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsUtils.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsMemory.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsrootidl.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsTraceRefcnt.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOM.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOMCID.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpcom-config.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_arena.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_struct.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcall.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcstubsdecl.inc"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptinfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\obsolete\protypes.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\pratom.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prcpucfg.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prinrval.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlock.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlong.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prthread.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtime.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtypes.h"\
+	".\StdAfx.h"\
 	
 NODEP_CPP_TESTX=\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\protypes.h"\
+	".\nsMemory.h"\
+	".\prinrval.h"\
+	".\prlong.h"\
+	".\xptcall.h"\
 	
 
 !ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Release"
 
 DEP_CPP_TESTX=\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nscore.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsDebug.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsError.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIClassInfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsID.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIInterfaceInfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIMemory.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIProgrammingLanguage.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupports.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsBase.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsImpl.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsUtils.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsMemory.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsrootidl.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsTraceRefcnt.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOM.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOMCID.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpcom-config.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_arena.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_struct.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcall.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcstubsdecl.inc"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptinfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\obsolete\protypes.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\pratom.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prcpucfg.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prinrval.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlock.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlong.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prthread.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtime.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtypes.h"\
+	".\StdAfx.h"\
 	
 NODEP_CPP_TESTX=\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\protypes.h"\
+	".\nsMemory.h"\
+	".\prinrval.h"\
+	".\prlong.h"\
+	".\xptcall.h"\
 	
 
 !ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Debug"
 
 DEP_CPP_TESTX=\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nscore.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsDebug.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsError.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIClassInfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsID.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIInterfaceInfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIMemory.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsIProgrammingLanguage.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupports.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsBase.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsImpl.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsISupportsUtils.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsMemory.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsrootidl.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsTraceRefcnt.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOM.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\nsXPCOMCID.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpcom-config.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_arena.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xpt_struct.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcall.h"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptcstubsdecl.inc"\
-	"..\..\..\..\..\arm_ppc\dist\include\xpcom\xptinfo.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\obsolete\protypes.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\pratom.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prcpucfg.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prinrval.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlock.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prlong.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prthread.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtime.h"\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\prtypes.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsAlgorithm.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsAString.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsCharTraits.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsDependentString.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsDependentSubstring.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsLiteralString.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsObsoleteAString.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsPromiseFlatString.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsReadableUtils.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsString.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsStringFwd.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsStringIterator.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsSubstring.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsSubstringTuple.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsTAString.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsTDependentString.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsTDependentSubstring.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsTObsoleteAString.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsTPromiseFlatString.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsTString.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsTSubstring.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\nsTSubstringTuple.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\string-template-def-char.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\string-template-def-unichar.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\string\string-template-undef.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsAutoPtr.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsComponentManagerUtils.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsCOMPtr.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nscore.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsDebug.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsError.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsIClassInfo.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsIComponentManager.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsID.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsIEventQueue.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsIEventQueueService.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsIEventTarget.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsIFactory.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsIInterfaceInfo.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsIMemory.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsIProgrammingLanguage.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsIProxyObjectManager.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsIServiceManagerObsolete.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsISupports.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsISupportsBase.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsISupportsImpl.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsISupportsUtils.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsMemory.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsProxyEvent.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsrootidl.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsTraceRefcnt.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsXPCOM.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\nsXPCOMCID.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\plevent.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\xpcom-config.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\xpt_arena.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\xpt_struct.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\xptcall.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\xptcstubsdecl.inc"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\include\xpcom\xptinfo.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsCOMPtr.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nscore.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsDebug.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsDirectoryServiceUtils.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsEmbedAPI.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsError.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsIClassInfo.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsID.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsIDirectoryService.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsIFile.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsILocalFile.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsIProgrammingLanguage.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsIProperties.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsIServiceManager.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsISupports.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsISupportsBase.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsISupportsImpl.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsISupportsUtils.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsrootidl.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsServiceManagerUtils.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsTraceRefcnt.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsXPCOM.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\nsXPCOMCID.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\obsolete\protypes.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\plhash.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\pratom.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prclist.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prcpucfg.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prcvar.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prinet.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prinrval.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prio.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prlink.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prlock.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prlong.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prmon.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prthread.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prtime.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\prtypes.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\xpcom-config.h"\
+	"..\..\public\xptcall.h"\
+	"..\..\public\xptcstubsdecl.inc"\
+	".\InvokeTestTargetInterface.h"\
 	".\StdAfx.h"\
 	
 NODEP_CPP_TESTX=\
-	"..\..\..\..\..\arm_ppc\dist\sdk\include\protypes.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\macsocket.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\os2.h"\
+	"..\..\..\..\..\..\arm-build-minimo-opt-t\dist\sdk\include\protypes.h"\
 	
 
 !ENDIF 
@@ -381,50 +370,53 @@ SOURCE=.\XPTCInvoke_Testing.cpp
 !IF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Release"
 
 DEP_CPP_XPTCI=\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\aygshell.h"\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\sipapi.h"\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\winuserm.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\aygshell.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\sipapi.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\winuserm.h"\
 	".\StdAfx.h"\
 	".\XPTCInvoke_Testing.h"\
 	
 NODEP_CPP_XPTCI=\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\vibrate.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\vibrate.h"\
 	
 
 !ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE emulator) Debug"
 
 DEP_CPP_XPTCI=\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\aygshell.h"\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\sipapi.h"\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\winuserm.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\aygshell.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\sipapi.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\winuserm.h"\
 	".\StdAfx.h"\
 	".\XPTCInvoke_Testing.h"\
 	
 NODEP_CPP_XPTCI=\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\vibrate.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Emulator\vibrate.h"\
 	
 
 !ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Release"
 
 DEP_CPP_XPTCI=\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\aygshell.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\sipapi.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\winuserm.h"\
 	".\StdAfx.h"\
 	".\XPTCInvoke_Testing.h"\
 	
 NODEP_CPP_XPTCI=\
-	".\ipapi.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\vibrate.h"\
 	
 
 !ELSEIF  "$(CFG)" == "XPTCInvoke_Testing - Win32 (WCE ARMV4) Debug"
 
 DEP_CPP_XPTCI=\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\aygshell.h"\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\sipapi.h"\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\winuserm.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\aygshell.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\sipapi.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\winuserm.h"\
 	".\StdAfx.h"\
 	".\XPTCInvoke_Testing.h"\
 	
 NODEP_CPP_XPTCI=\
-	"..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\vibrate.h"\
+	"..\..\..\..\..\..\..\..\Program Files\Windows CE Tools\wce420\POCKET PC 2003\Include\Armv4\vibrate.h"\
 	
 
 !ENDIF 

@@ -46,6 +46,14 @@
 #include "prlong.h"
 #include "prinrval.h"
 #include "nsMemory.h"
+#include "nsXPCOM.h"
+#include "nsID.h"
+#include "nsIProxyObjectManager.h"
+#include "nsEmbedAPI.h"
+#include "nsString.h"
+
+#include "InvokeTestTargetInterface.h"
+static NS_DEFINE_IID(kTheCID, INVOKETESTTARGETINTERFACE_IID);
 
 
 void MyOutputFunction(const char *str, ...);
@@ -57,108 +65,44 @@ static void DoMultipleInheritenceTest();
 static void DoMultipleInheritenceTest2();
 static void DoSpeedTest();
 
-// {AAC1FB90-E099-11d2-984E-006008962422}
-#define INVOKETESTTARGET_IID \
-{ 0xaac1fb90, 0xe099, 0x11d2, \
-  { 0x98, 0x4e, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-
-
-class InvokeTestTargetInterface : public nsISupports
-{
-public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(INVOKETESTTARGET_IID)
-    NS_IMETHOD AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval) = 0;
-    NS_IMETHOD MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval) = 0;
-    NS_IMETHOD AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval) = 0;
-    NS_IMETHOD MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval) = 0;
-
-    NS_IMETHOD AddManyInts(PRInt32 p1, PRInt32 p2, PRInt32 p3, PRInt32 p4,
-                           PRInt32 p5, PRInt32 p6, PRInt32 p7, PRInt32 p8,
-                           PRInt32 p9, PRInt32 p10, PRInt32* retval) = 0;
-
-    NS_IMETHOD AddTwoFloats(float p1, float p2, float* retval) = 0;
-
-    NS_IMETHOD AddManyDoubles(double p1, double p2, double p3, double p4,
-                              double p5, double p6, double p7, double p8,
-                              double p9, double p10, double* retval) = 0;
-
-    NS_IMETHOD AddManyFloats(float p1, float p2, float p3, float p4,
-                             float p5, float p6, float p7, float p8,
-                             float p9, float p10, float* retval) = 0;
-
-    NS_IMETHOD AddManyManyFloats(float p1, float p2, float p3, float p4,
-                                 float p5, float p6, float p7, float p8,
-                                 float p9, float p10, float p11, float p12, 
-                                 float p13, float p14, float p15, float p16, 
-                                 float p17, float p18, float p19, float p20, 
-                                 float *retval) = 0;
-
-    NS_IMETHOD AddMixedInts(PRInt64 p1, PRInt32 p2, PRInt64 p3, PRInt32 p4,
-                            PRInt32 p5, PRInt64 p6, PRInt32 p7, PRInt32 p8,
-                            PRInt64 p9, PRInt32 p10, PRInt64* retval) = 0;
-
-    NS_IMETHOD AddMixedInts2(PRInt32 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
-                             PRInt64 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
-                             PRInt32 p9, PRInt64 p10, PRInt64* retval) = 0;
-
-    NS_IMETHOD AddMixedFloats(float p1, float p2, double p3, double p4,
-                              float p5, float p6, double p7, double p8,
-                              float p9, double p10, float p11,
-                              double *retval) = 0;
-
-    NS_IMETHOD PassTwoStrings(const char* s1, const char* s2, char** retval) = 0;
-
-};
 
 class InvokeTestTarget : public InvokeTestTargetInterface
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_IMETHOD AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval);
-    NS_IMETHOD MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval);
-    NS_IMETHOD AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval);
-    NS_IMETHOD MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval);
-
-    NS_IMETHOD AddManyInts(PRInt32 p1, PRInt32 p2, PRInt32 p3, PRInt32 p4,
-                           PRInt32 p5, PRInt32 p6, PRInt32 p7, PRInt32 p8,
-                           PRInt32 p9, PRInt32 p10, PRInt32* retval);
-
-    NS_IMETHOD AddTwoFloats(float p1, float p2, float* retval);
-
-    NS_IMETHOD AddManyDoubles(double p1, double p2, double p3, double p4,
-                              double p5, double p6, double p7, double p8,
-                              double p9, double p10, double* retval);
-
-    NS_IMETHOD AddManyFloats(float p1, float p2, float p3, float p4,
-                             float p5, float p6, float p7, float p8,
-                             float p9, float p10, float* retval);
-
-    NS_IMETHOD AddMixedInts(PRInt64 p1, PRInt32 p2, PRInt64 p3, PRInt32 p4,
-			    PRInt32 p5, PRInt64 p6, PRInt32 p7, PRInt32 p8,
-			    PRInt64 p9, PRInt32 p10, PRInt64* retval);
-
-    NS_IMETHOD AddMixedInts2(PRInt32 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
-			     PRInt64 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
-			     PRInt32 p9, PRInt64 p10, PRInt64* retval);
-
-    NS_IMETHOD AddMixedFloats(float p1, float p2, double p3, double p4,
-                              float p5, float p6, double p7, double p8,
-                              float p9, double p10, float p11,
-                              double *retval);
-
-    NS_IMETHOD AddManyManyFloats(float p1, float p2, float p3, float p4,
-                                 float p5, float p6, float p7, float p8,
-                                 float p9, float p10, float p11, float p12, 
-                                 float p13, float p14, float p15, float p16, 
-                                 float p17, float p18, float p19, float p20, 
-                                 float *retval);
-
-    NS_IMETHOD PassTwoStrings(const char* s1, const char* s2, char** retval);
+	NS_DECL_ISUPPORTS
+	NS_DECL_INVOKETESTTARGETINTERFACE
 
     InvokeTestTarget();
 };
 
-NS_IMPL_ISUPPORTS1(InvokeTestTarget, InvokeTestTargetInterface)
+NS_IMETHODIMP
+InvokeTestTarget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aInstancePtr = NULL;
+
+
+  if (aIID.Equals(kTheCID)) {
+    *aInstancePtr = (void*) NS_STATIC_CAST(InvokeTestTargetInterface*,this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
+    *aInstancePtr = (void*) NS_STATIC_CAST(nsISupports*,
+                                           NS_STATIC_CAST(InvokeTestTargetInterface*,this));
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMPL_ADDREF(InvokeTestTarget)
+NS_IMPL_RELEASE(InvokeTestTarget)
+
 
 InvokeTestTarget::InvokeTestTarget()
 {
@@ -294,7 +238,7 @@ InvokeTestTarget::AddMixedInts2(PRInt32 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
 }
 
 NS_IMETHODIMP
-InvokeTestTarget::PassTwoStrings(const char* s1, const char* s2, char** retval)
+InvokeTestTarget::PassTwoStrings(const char *ignore, const char* s1, const char* s2, char** retval)
 {
     const char milk[] = "milk";
     char *ret = (char*)nsMemory::Alloc(sizeof(milk));
@@ -308,6 +252,37 @@ InvokeTestTarget::PassTwoStrings(const char* s1, const char* s2, char** retval)
 
 int main()
 {
+
+	NS_InitEmbedding(NULL, NULL);
+
+    InvokeTestTarget *test = new InvokeTestTarget();
+
+    /* here we make the global 'check for alloc failure' checker happy */
+    if(!test)
+        return 1;
+
+
+    InvokeTestTargetInterface* proxy;
+    NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                         kTheCID, 
+                         test, 
+                         PROXY_SYNC | PROXY_ALWAYS, 
+                         (void**)(&proxy));
+
+
+	char* buffer;
+	proxy->PassTwoStrings("", "a", "b", &buffer);
+
+
+    NS_RELEASE(test);
+
+	extern int x_main();
+	x_main();
+    return NS_OK;
+}
+
+int x_main()
+{
     InvokeTestTarget *test = new InvokeTestTarget();
 
     /* here we make the global 'check for alloc failure' checker happy */
@@ -317,6 +292,7 @@ int main()
     PRInt32 out, tmp32 = 0;
     PRInt64 out64;
     printf("calling direct:\n");
+
     if(NS_SUCCEEDED(test->AddTwoInts(1,1,&out)))
         printf("\t1 + 1 = %d\n", out);
     else
@@ -394,7 +370,7 @@ int main()
      else
          printf("\tFAILED");
 
-     if (NS_SUCCEEDED(test->PassTwoStrings("moo","cow",&outS))) {
+     if (NS_SUCCEEDED(test->PassTwoStrings("", "moo","cow",&outS))) {
        printf(" = %s\n", outS);
         nsMemory::Free(outS);
       } else
@@ -894,20 +870,24 @@ int main()
     else
         printf("\tFAILED");
 
-    var[0].val.p = (void*)"moo";
+	var[0].val.p = (void*)"";
     var[0].type = nsXPTType::T_CHAR_STR;
     var[0].flags = 0;
 
-    var[1].val.p = (void*)"cow";
+    var[1].val.p = (void*)"moo";
     var[1].type = nsXPTType::T_CHAR_STR;
     var[1].flags = 0;
-    
-    var[2].val.p = 0;
+
+    var[2].val.p = (void*)"cow";
     var[2].type = nsXPTType::T_CHAR_STR;
-    var[2].flags = nsXPTCVariant::PTR_IS_DATA;
-    var[2].ptr = &var[2].val.p;
+    var[2].flags = 0;
     
-    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 15, 3, var)))
+    var[3].val.p = 0;
+    var[3].type = nsXPTType::T_CHAR_STR;
+    var[3].flags = nsXPTCVariant::PTR_IS_DATA;
+    var[3].ptr = &var[2].val.p;
+    
+    if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 15, 4, var)))
         printf(" = %s\n", var[2].val.p);
     else
         printf("\tFAILED");
