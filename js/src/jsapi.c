@@ -4403,19 +4403,21 @@ JS_MakeStringImmutable(JSContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_EncodeCharacters(JSContext *cx, const jschar* src, size_t srclen, char* dst, size_t* dstlenP)
+JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst,
+                    size_t *dstlenp)
 {
-    return js_DeflateStringToBuffer (cx, src, srclen, dst, dstlenP);
+    return js_DeflateStringToBuffer(cx, src, srclen, dst, dstlenp);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar* dst, size_t* dstlenP)
+JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst,
+               size_t *dstlenp)
 {
-    return js_InflateStringToBuffer (cx, src, srclen, dst, dstlenP);
+    return js_InflateStringToBuffer(cx, src, srclen, dst, dstlenp);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_StringsAreUTF8 ()
+JS_CStringsAreUTF8()
 {
 #ifdef JS_STRINGS_ARE_UTF8
     return JS_TRUE;

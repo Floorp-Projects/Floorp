@@ -263,23 +263,6 @@ js_ErrorFromException(JSContext *cx, jsval exn)
     return privateData->errorReport;
 }
 
-/*
- * This must be kept in synch with the exceptions array below.
- * XXX use a jsexn.tbl file a la jsopcode.tbl
- */
-typedef enum JSExnType {
-    JSEXN_NONE = -1,
-      JSEXN_ERR,
-        JSEXN_INTERNALERR,
-        JSEXN_EVALERR,
-        JSEXN_RANGEERR,
-        JSEXN_REFERENCEERR,
-        JSEXN_SYNTAXERR,
-        JSEXN_TYPEERR,
-        JSEXN_URIERR,
-        JSEXN_LIMIT
-} JSExnType;
-
 struct JSExnSpec {
     int protoIndex;
     const char *name;
@@ -921,12 +904,19 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     return protos[0];
 }
 
-static JSExnType errorToExceptionNum[] = {
-#define MSG_DEF(name, number, count, exception, format) \
-    exception,
-#include "js.msg"
-#undef MSG_DEF
-};
+const JSErrorFormatString* 
+js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale, const uintN errorNumber)
+{
+    const JSErrorFormatString *errorString = NULL;
+
+    if (cx->localeCallbacks) {
+        errorString = cx->localeCallbacks
+                        ->localeGetErrorMessage(userRef, locale, errorNumber);
+    }
+    if (!errorString)
+        errorString = js_GetErrorMessage(userRef, locale, errorNumber);
+    return errorString;
+}
 
 #if defined ( DEBUG_mccabe ) && defined ( PRINTNAMES )
 /* For use below... get character strings for error name and exception name */
@@ -948,6 +938,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     JSString *messageStr, *filenameStr;
     uintN lineno;
     JSExnPrivate *privateData;
+    const JSErrorFormatString *errorString;
 
     /*
      * Tell our caller to report immediately if cx has no active frames, or if
@@ -959,7 +950,8 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
 
     /* Find the exception index associated with this error. */
     errorNumber = (JSErrNum) reportp->errorNumber;
-    exn = errorToExceptionNum[errorNumber];
+    errorString = js_GetLocalizedErrorMessage(cx, NULL, NULL, errorNumber);
+    exn = errorString ? errorString->exnType : JSEXN_NONE;
     JS_ASSERT(exn < JSEXN_LIMIT);
 
 #if defined( DEBUG_mccabe ) && defined ( PRINTNAMES )

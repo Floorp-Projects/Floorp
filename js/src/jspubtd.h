@@ -546,9 +546,28 @@ typedef void
 (* JS_DLL_CALLBACK JSErrorReporter)(JSContext *cx, const char *message,
                                     JSErrorReport *report);
 
+/*
+ * Possible exception types. These types are part of a JSErrorFormatString 
+ * structure. They define which error to throw in case of a runtime error.
+ * JSEXN_NONE marks an unthrowable error.
+ */
+typedef enum JSExnType {
+    JSEXN_NONE = -1,
+      JSEXN_ERR,
+        JSEXN_INTERNALERR,
+        JSEXN_EVALERR,
+        JSEXN_RANGEERR,
+        JSEXN_REFERENCEERR,
+        JSEXN_SYNTAXERR,
+        JSEXN_TYPEERR,
+        JSEXN_URIERR,
+        JSEXN_LIMIT
+} JSExnType;
+
 typedef struct JSErrorFormatString {
-    const char *format;
-    uintN argCount;
+    const char *format;  /* the error message (may be UTF-8 if compiled with JS_STRINGS_ARE_UTF8) */
+    uint16 argCount;     /* the number of arguments to convert in the error message */
+    uint16 exnType;      /* One of the JSExnType constants above */
 } JSErrorFormatString;
 
 typedef const JSErrorFormatString *

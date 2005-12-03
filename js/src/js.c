@@ -555,12 +555,6 @@ Options(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-static void
-my_LoadErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
-
-static void
-my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
-
 static JSBool
 Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -570,7 +564,6 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScript *script;
     JSBool ok;
     jsval result;
-    JSErrorReporter older;
     uint32 oldopts;
 
     for (i = 0; i < argc; i++) {
@@ -580,7 +573,6 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         argv[i] = STRING_TO_JSVAL(str);
         filename = JS_GetStringBytes(str);
         errno = 0;
-        older = JS_SetErrorReporter(cx, my_LoadErrorReporter);
         oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
         script = JS_CompileFile(cx, obj, filename);
@@ -593,7 +585,6 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JS_DestroyScript(cx, script);
         }
         JS_SetOptions(cx, oldopts);
-        JS_SetErrorReporter(cx, older);
         if (!ok)
             return JS_FALSE;
     }
@@ -1572,9 +1563,10 @@ ToInt32(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
-StringsAreUtf8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+StringsAreUtf8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+               jsval *rval)
 {
-    *rval = JS_StringsAreUTF8 () ? JSVAL_TRUE : JSVAL_FALSE;
+    *rval = JS_CStringsAreUTF8() ? JSVAL_TRUE : JSVAL_FALSE;
     return JS_TRUE;
 }
 
@@ -1986,22 +1978,6 @@ my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
     if ((errorNumber > 0) && (errorNumber < JSShellErr_Limit))
         return &jsShell_ErrorFormatString[errorNumber];
     return NULL;
-}
-
-static void
-my_LoadErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
-{
-    if (!report) {
-        fprintf(gErrFile, "%s\n", message);
-        return;
-    }
-
-    /* Ignore any exceptions */
-    if (JSREPORT_IS_EXCEPTION(report->flags))
-        return;
-
-    /* Otherwise, fall back to the ordinary error reporter. */
-    my_ErrorReporter(cx, message, report);
 }
 
 static void
