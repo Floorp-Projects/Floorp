@@ -4,7 +4,25 @@
 <overlay id="platformMailnewsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<!-- Delete Key -->
-	<key id="cmd_shiftDelete" keycode="VK_DELETE"  xulkey="false" modifiers="shift"/>
+    <!-- Delete Key -->
+    <key id="cmd_shiftDelete" keycode="VK_DELETE"  xulkey="false" modifiers="shift"/>
+
+    <!-- Go submenus (Next, Previous) -->
+    <menuitem id="nextMsgMenuItem" key="key_nextMsg"/>
+    <menuitem id="nextUnreadMsgMenuItem" key="key_nextUnreadMsg"/>
+    <menuitem id="nextUnreadThreadMenuItem" key="key_nextUnreadThread"/>
+
+    <menuitem id="prevMsgMenuItem" key="key_previousMsg"/>
+    <menuitem id="prevUnreadMsgMenuItem" key="key_previousUnreadMsg"/>
+
+    <!-- Message submenu (Mark) -->
+    <menuitem id="markReadMenuItem" key="key_toggleRead"/>
+    <menuitem id="markThreadReadMenuItem" key="key_markThreadAsRead"/>
+    <menuitem id="markReadByDateMenuItem" key="key_markReadByDate"/>
+    <menuitem id="markFlaggedMenuItem" key="key_toggleFlagged"/>
+    <menuitem id="markAsJunkMenuItem" key="key_markJunk"/>
+    <menuitem id="markAsNotJunkMenuItem" key="key_markNotJunk"/>
+    <menuitem id="markAsShowRemoteMenuitem" key="key_markShowRemote"/>
+    <menuitem id="markAsNotPhishMenuItem" key="key_markNotPhish"/>
 
 </overlay>		
