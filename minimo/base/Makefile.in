@@ -78,7 +78,7 @@ REQUIRES	= xpcom					 \
 		      embedcomponents		 \
 		      appcomps				 \
 		      phone					 \
-		      $(NULL)				 \
+		      $(NULL)
 
 CPPSRCS	    = Minimo.cpp		  \
 		      WindowCreator.cpp	  \
@@ -95,8 +95,11 @@ ifdef WINCE
 RCINCLUDE  = wince/SplashScreen.rc
 endif
 
-LIBS	  = $(NSPR_LIBS) \
-			$(NULL)
+LIBS =
+
+ifndef WINCE
+LIBS	  += $(NSPR_LIBS)
+endif
 
 ifdef MOZ_ENABLE_GTK2
 LIBS	 += $(XLDFLAGS)	 \
@@ -153,6 +156,7 @@ endif
 
 export::
 	$(NSINSTALL) $(topsrcdir)/xpfe/browser/src/nsBrowserStatusFilter.cpp .
+
 
 GARBAGE += nsBrowserStatusFilter.cpp
 

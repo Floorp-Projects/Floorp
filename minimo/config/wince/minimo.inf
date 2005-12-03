@@ -27,14 +27,7 @@ CEShortcuts=Shortcuts
 [SourceDisksFiles]
 minimo.exe=1
 minimo_runner.exe=1
-nspr4.dll=1
-nss3.dll=1
-nssckbi.dll=1
-plc4.dll=1
-plds4.dll=1
 shunt.dll=1
-softokn3.dll=1
-ssl3.dll=1
 
 classic.jar=2
 classic.manifest=2
@@ -96,14 +89,7 @@ Shortcuts=0,%CE11% ; Start Menuz
 [Files.minimo]
 minimo.exe,,,0
 minimo_runner.exe,,,0
-nspr4.dll,,,0
-nss3.dll,,,0
-nssckbi.dll,,,0
-plc4.dll,,,0
-plds4.dll,,,0
 shunt.dll,,,0
-softokn3.dll,,,0
-ssl3.dll,,,0
 
 [Files.chrome]
 classic.jar,,,0

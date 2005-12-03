@@ -23,11 +23,10 @@ mork
 tkitcmps
 xmlextra
 websrvcs
-pipboot
-pipnss
 gkplugin
 softkey
 phone
 snav
 ssr
 perms
+native_ssl

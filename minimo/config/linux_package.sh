@@ -21,7 +21,6 @@ rm -f minimo.tar.gz
 echo Copying over files from OBJDIR
 
 mkdir minimo
-cp -pRL bin/libmozjs.so                                    minimo
 cp -pRL bin/minimo                                         minimo
 cp -pRL bin/libnspr4.so                                    minimo
 cp -pRL bin/libplc4.so                                     minimo
