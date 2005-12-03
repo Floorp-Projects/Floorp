@@ -2560,10 +2560,6 @@ function my_dccdisconnect(e)
 CIRCDCCFileTransfer.prototype.onInit =
 function my_dccfileinit(e)
 {
-    /* FIXME: we're currently 'borrowing' the client views' prefs until we have
-     * our own pref manager.
-     */
-    this.prefs = client.prefs;
     this.busy = false;
     this.progress = -1;
     updateProgress();
