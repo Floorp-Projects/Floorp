@@ -268,7 +268,7 @@ BookmarkContentSink::Init(PRBool aAllowRootChanges,
 
 NS_IMPL_ISUPPORTS2(BookmarkContentSink,
                    nsIContentSink,
-                   nsIHTMLContentSink);
+                   nsIHTMLContentSink)
 
 // nsIContentSink **************************************************************
 

@@ -280,7 +280,7 @@ nsNavHistoryQueryNode::BuildChildren()
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsNavHistoryResult, nsNavHistoryResultNode,
                              nsINavHistoryResult,
-                             nsITreeView);
+                             nsITreeView)
 
 
 // nsNavHistoryResult::nsNavHistoryResult
