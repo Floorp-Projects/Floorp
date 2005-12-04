@@ -43,7 +43,7 @@
 class nsGNOMEShellService : public nsIShellService
 {
 public:
-  nsGNOMEShellService() { }
+  nsGNOMEShellService() : mCheckedThisSession(PR_FALSE) { }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHELLSERVICE
@@ -55,7 +55,8 @@ private:
 
   NS_HIDDEN_(PRBool) KeyMatchesAppName(const char *aKeyValue) const;
 
-  PRBool mUseLocaleFilenames;
+  PRPackedBool mCheckedThisSession;
+  PRPackedBool mUseLocaleFilenames;
   nsCString    mAppPath;
 };
 

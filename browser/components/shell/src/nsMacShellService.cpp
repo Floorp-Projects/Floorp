@@ -79,7 +79,7 @@ extern "C" {
 NS_IMPL_ISUPPORTS3(nsMacShellService, nsIMacShellService, nsIShellService, nsIWebProgressListener)
 
 NS_IMETHODIMP
-nsMacShellService::IsDefaultBrowser(PRBool* aIsDefaultBrowser)
+nsMacShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrowser)
 {
   *aIsDefaultBrowser = PR_TRUE;
 
@@ -134,6 +134,12 @@ nsMacShellService::IsDefaultBrowser(PRBool* aIsDefaultBrowser)
   // release the idetifiers strings
   ::CFRelease(firefoxID);
 
+  // If this is the first browser window, maintain internal state that we've
+  // checked this session (so that subsequent window opens don't show the 
+  // default browser dialog).
+  if (aStartupCheck)
+    mCheckedThisSession = PR_TRUE;
+
   return rv;
 }
 
@@ -161,6 +167,39 @@ nsMacShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
   ::_LSSaveAndRefresh();
 
   ::CFRelease(firefoxURL);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMacShellService::GetShouldCheckDefaultBrowser(PRBool* aResult)
+{
+  // If we've already checked, the browser has been started and this is a 
+  // new window open, and we don't want to check again.
+  if (mCheckedThisSession) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPrefBranch> prefs;
+  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pserve)
+    pserve->GetBranch("", getter_AddRefs(prefs));
+
+  prefs->GetBoolPref(PREF_CHECKDEFAULTBROWSER, aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMacShellService::SetShouldCheckDefaultBrowser(PRBool aShouldCheck)
+{
+  nsCOMPtr<nsIPrefBranch> prefs;
+  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pserve)
+    pserve->GetBranch("", getter_AddRefs(prefs));
+
+  prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, aShouldCheck);
+
   return NS_OK;
 }
 
