@@ -126,7 +126,7 @@ nsHTMLHRElement::ParseAttribute(PRInt32 aNamespaceID,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)
 {
-  if (aAttribute == kNameSpaceID_None) {
+  if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsHTMLAtoms::width) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
