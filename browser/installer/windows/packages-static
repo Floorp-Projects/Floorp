@@ -148,6 +148,7 @@ bin\components\search.xpt
 bin\components\shistory.xpt
 bin\components\sidebar.xpt
 bin\components\signonviewer.xpt
+bin\components\storage.xpt
 bin\components\toolkitprofile.xpt
 bin\components\txtsvc.xpt
 bin\components\txmgr.xpt
