@@ -249,14 +249,7 @@ function unifinderMouseDownToDo( event )
 function checkboxClick(thisTodo, completed)
 {
     var newTodo = thisTodo.clone().QueryInterface(Components.interfaces.calITodo);
-    if(completed) {
-        newTodo.completedDate = jsDateToDateTime(new Date());
-        newTodo.percentComplete = 100;
-    } else {
-        newTodo.completedDate = null;
-        if (newTodo.percentComplete == 100)
-            newTodo.percentComplete = 0;
-    }
+    newTodo.isCompleted = completed;
    
     doTransaction('modify', newTodo, newTodo.calendar, thisTodo, null);
 }
@@ -269,9 +262,8 @@ completed, overdue, duetoday, inprogress, future
 function ToDoProgressAtom( aTodo )
 {
   var now = new Date();
-  var completed = (aTodo.percentComplete == 100);
 
-  if (completed)
+  if (aTodo.isCompleted)
       return "completed";
 
   if (aTodo.dueDate && aTodo.dueDate.isValid) {
@@ -586,13 +578,14 @@ function contextChangeProgress( event, Progress )
           newItem.percentComplete = Progress;
           switch (Progress) {
               case 0:
-                  newItem.status = "NONE";
+                  newItem.isCompleted = false;
                   break;
               case 100:
-                  newItem.status = "COMPLETED";
+                  newItem.isCompleted = true;
                   break;
               default:
                   newItem.status = "IN-PROCESS";
+                  newItem.completedDate = null;
                   break;
           }
           doTransaction('modify', newItem, newItem.calendar, toDoItem, null);
