@@ -198,7 +198,7 @@ BrowserGlue.prototype = {
     if (!shell.isDefaultBrowser()) {
 
       if (aUserInitiated) {
-        // Don't show the checkbox if this dialog is forced
+        // Don't show the checkbox
         checkboxLabel = null;
         checkEveryTime = {};
       }
