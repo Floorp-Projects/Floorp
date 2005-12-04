@@ -1,4 +1,4 @@
-# $Id: SimpleParse.pm,v 1.1 1998/06/11 23:56:20 jwz Exp $
+# $Id: SimpleParse.pm,v 1.2 2005/12/04 14:40:04 timeless%mozdev.org Exp $
 
 use strict;
 
@@ -77,7 +77,7 @@ sub nextfrag {
 
 	last if $#frags < 0;
 	
-	unless ($frags[0]) {
+	unless (length $frags[0]) {
 	    shift(@frags);
 
 	} elsif (defined($frag)) {
