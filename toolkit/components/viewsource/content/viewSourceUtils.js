@@ -224,7 +224,7 @@ var gViewSourceUtils = {
           gViewSourceUtils.handleCallBack(this.callBack, true, this.data);
         } catch (ex) {
           // we failed loading it with the external editor.
-          this.handleCallBack(this.callBack, false, this.data);
+          gViewSourceUtils.handleCallBack(this.callBack, false, this.data);
         } finally {
           this.destroy();
         }
