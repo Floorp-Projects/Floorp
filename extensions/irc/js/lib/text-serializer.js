@@ -233,7 +233,7 @@ function ts_deserialize()
         }
 
         // Split each line into "command params...".
-        var parts = this._lines[0].match(/^\s*(\w+)(?:\s+(.*))?$/);
+        var parts = this._lines[0].match(/^\s*(\S+)(?:\s+(.*))?$/);
         var command = parts[1];
         var params = parts[2];
 
