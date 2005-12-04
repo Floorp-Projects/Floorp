@@ -56,15 +56,29 @@ interface nsIDOMWindow;
  *
  */ 
 
-[scriptable, uuid(6d340848-9bc1-49a3-9073-99932bbc2a11)]
+[scriptable, uuid(7bef1130-e2ca-4721-8272-6e6e5e7fc994)]
 interface nsIBrowserGlue : nsISupports
 {
   /** 
    * Deletes privacy sensitive data according to user preferences
    *
-   * @param aParentWindow an optionally null window which is the parent of the 
+   * @param aParentWindow Optional: a window to be used as the parent of the
    *        sanitization dialog (if it has to be shown per user preferences)
    *
    */
   void sanitize(in nsIDOMWindow aParentWindow);
+
+  /** 
+   * Checks whether the browser is set as the system default, and if not,
+   * prompts the user to make it the default.
+   *
+   * @param aUserInitiated a boolean value indicating whether an alert should be 
+   *        displayed if the browser is already registered as the system
+   *        default. Also controls whether or not the "Should check at startup"
+   *        checkbox appears in the confirmation prompt.
+   * @param aParentWindow Optional: a window to be used as the parent of the
+   *        prompts and alerts
+   *
+   */
+  void checkDefaultBrowser(in boolean aUserInitiated, in nsIDOMWindow aParentWindow);
 };
