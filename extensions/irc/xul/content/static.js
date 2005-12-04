@@ -43,7 +43,7 @@ const __cz_version   = "0.9.67+";
 const __cz_condition = "green";
 const __cz_suffix    = "";
 const __cz_guid      = "59c81df5-4b7a-477b-912d-4e0fdf64e5f2";
-const __cz_locale    = "0.9.67.3";
+const __cz_locale    = "0.9.67.4";
 
 var warn;
 var ASSERT;
@@ -116,6 +116,8 @@ client.inputHistory = new Array();
 client.lastHistoryReferenced = -1;
 client.incompleteLine = "";
 client.lastTabUp = new Date();
+client.awayMsgs = new Array();
+client.awayMsgCount = 5;
 
 CIRCNetwork.prototype.INITIAL_CHANNEL = "";
 CIRCNetwork.prototype.MAX_MESSAGES = 100;
@@ -342,6 +344,34 @@ function initStatic()
     client.logFile = null;
     setInterval("onNotifyTimeout()", client.NOTIFY_TIMEOUT);
     setInterval("onWhoTimeout()", client.AWAY_TIMEOUT);
+
+    client.awayMsgs = [{ message: MSG_AWAY_DEFAULT }];
+    var awayFile = new nsLocalFile(client.prefs["profilePath"]);
+    awayFile.append("awayMsgs.txt");
+    if (awayFile.exists())
+    {
+        var awayLoader = new TextSerializer(awayFile);
+        if (awayLoader.open("<"))
+        {
+            // Load the first item from the file.
+            var item = awayLoader.deserialize();
+            if (item instanceof Array)
+            {
+                // If the first item is an array, it is the entire thing.
+                client.awayMsgs = item;
+            }
+            else
+            {
+                /* Not an array, so we have the old format of a single object
+                 * per entry.
+                 */
+                client.awayMsgs = [item];
+                while ((item = awayLoader.deserialize()))
+                    client.awayMsgs.push(item);
+            }
+            awayLoader.close();
+        }
+    }
 
     client.defaultCompletion = client.COMMAND_CHAR + "help ";
 

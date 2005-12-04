@@ -13,6 +13,7 @@ chatzilla.jar:
 	content/chatzilla/lib/js/irc-debug.js        (js/lib/irc-debug.js)
 	content/chatzilla/lib/js/file-utils.js       (js/lib/file-utils.js)
 	content/chatzilla/lib/js/dcc.js              (js/lib/dcc.js) 
+	content/chatzilla/lib/js/text-serializer.js  (js/lib/text-serializer.js)
 	content/chatzilla/lib/xul/munger.js          (xul/lib/munger.js) 
 	content/chatzilla/lib/xul/tree-utils.js      (xul/lib/tree-utils.js) 
 	content/chatzilla/chatzilla.xul              (xul/content/chatzilla.xul) 

@@ -2572,6 +2572,38 @@ function cmdAway(e)
         if (!e.reason)
             e.reason = MSG_AWAY_DEFAULT;
 
+        // Update away list (remove from current location).
+        for (var i = 0; i < client.awayMsgs.length; i++)
+        {
+            if (client.awayMsgs[i].message == e.reason)
+            {
+                client.awayMsgs.splice(i, 1);
+                break;
+            }
+        }
+        // Always put new item at start.
+        var newMsg = { message: e.reason };
+        client.awayMsgs.unshift(newMsg);
+        // Make sure we've not exceeded the limit set.
+        if (client.awayMsgs.length > client.awayMsgCount)
+            client.awayMsgs.splice(client.awayMsgCount);
+        // And now, to save the list!
+        try
+        {
+            var awayFile = new nsLocalFile(client.prefs["profilePath"]);
+            awayFile.append("awayMsgs.txt");
+            var awayLoader = new TextSerializer(awayFile);
+            if (awayLoader.open(">"))
+            {
+                awayLoader.serialize(client.awayMsgs);
+                awayLoader.close();
+            }
+        }
+        catch(ex)
+        {
+            display(getMsg(MSG_ERR_AWAY_SAVE, formatException(ex)), MT_ERROR);
+        }
+
         if (e.server)
         {
             if (e.network.state == NET_ONLINE)
