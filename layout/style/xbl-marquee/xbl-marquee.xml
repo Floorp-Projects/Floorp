@@ -88,8 +88,7 @@
       <property name="trueSpeed">
         <getter>
           <![CDATA[
-          if (!this.hasAttribute("truespeed") || this.getAttribute('truespeed') == '' ||
-              this.getAttribute('truespeed') == 0)
+          if (!this.hasAttribute("truespeed"))
             return false;
 
           return true;
@@ -159,15 +158,10 @@
 
       <method name="_set_scrollDelay">
         <parameter name="aValue"/>
-        <parameter name="aCanGenerateError"/>
         <body>
         <![CDATA[
-          if (aValue <= 0 || isNaN(aValue) || aValue == null) {
-            if (aCanGenerateError)
-              throw new Error("Invalid argument for Marquee::scrollDelay");
-            else
-              aValue = 85; //default value for scrollDelay
-          }
+          if (aValue <= 0 || isNaN(aValue) || aValue == null)
+            return false;
 
           if (aValue < 60) {
             if (this.trueSpeed == true)
@@ -178,78 +172,52 @@
           else {
             this._scrollDelay = aValue;
           }
+          return true;
         ]]>
         </body>
       </method>
 
       <method name="_set_scrollAmount">
         <parameter name="aValue"/>
-        <parameter name="aCanGenerateError"/>
         <body>
         <![CDATA[
-          if (aValue < 0 || isNaN(aValue) || aValue == null) {
-            if (aCanGenerateError && aValue < 0)
-              throw new Error("Invalid argument for Marquee::scrollAmount");
-            if (!aCanGenerateError)
-              aValue = 6; //default value for scrollAmount
-            else
-              aValue = 0;
-          }
+          if (aValue < 0 || isNaN(aValue) || aValue == null)
+            return false;
 
           this._scrollAmount = aValue;
+          return true;
         ]]>
         </body>
       </method>
 
       <method name="_set_behavior">
         <parameter name="aValue"/>
-        <parameter name="aCanGenerateError"/>
         <body>
         <![CDATA[
           if (typeof aValue == 'string')
             aValue = aValue.toLowerCase();
-          if (aValue != 'alternate' && aValue != 'slide' && aValue != 'scroll' && aValue != null) {
-            if (aCanGenerateError)
-              throw new Error("Invalid argument for Marquee::behavior");
-            return;
-          }
+          if (aValue != 'alternate' && aValue != 'slide' && aValue != 'scroll')
+            return false;
 
-          //default to "scroll" when removeAttribute is called (aValue == null)
-          aValue = aValue ? aValue : "scroll";
-
-          if (aValue != this._behavior) {
-            this.startNewDirection = true;
-            this._behavior = aValue;
-            switch (aValue) {
-              case "alternate":
-              case "slide":
-                this.stop();
-                this._doMove(true);
-                break;
-            }      
-          }
+          this._behavior = aValue;
+          return true;
         ]]>
         </body>
       </method>
 
       <method name="_set_direction">
         <parameter name="aValue"/>
-        <parameter name="aCanGenerateError"/>
         <body>
         <![CDATA[
           if (typeof aValue == 'string')
             aValue = aValue.toLowerCase();
-          if (aValue != 'left' && aValue != 'right' && aValue != 'up' && aValue != 'down' && aValue != null) {
-            if (aCanGenerateError)
-              throw new Error("Invalid argument for Marquee::direction");
-            return;
-          }
+          if (aValue != 'left' && aValue != 'right' && aValue != 'up' && aValue != 'down')
+            return false;
 
-          //default to "left" when removeAttribute is called (aValue == null)
-          aValue = aValue ? aValue : "left";
           if (aValue != this._direction)
             this.startNewDirection = true;
-          this._direction = aValue; 
+          this._direction = aValue;
+          return true;
         ]]>
         </body>
       </method>
@@ -295,7 +263,7 @@
                 this.innerDiv.style.padding = height + " 0";
                 this.dirsign = 1;
                 this.startAt = (this._behavior == 'alternate') ? (this.originalHeight - corrvalue) : 0;
-                this.stopAt  = (this._behavior == 'alternate') ? 
+                this.stopAt  = (this._behavior == 'alternate' || this._behavior == 'slide') ? 
                                 (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
               break;
 
@@ -308,16 +276,18 @@
                 this.dirsign = -1;
                 this.startAt  = (this._behavior == 'alternate') ?
                                 (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
-                this.stopAt = (this._behavior == 'alternate') ? (this.originalHeight - corrvalue) : 0;
+                this.stopAt = (this._behavior == 'alternate' || this._behavior == 'slide') ? 
+                              (this.originalHeight - corrvalue) : 0;
               break;
 
               case "right":
                 if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth)
                     corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
                 this.dirsign = -1;
-                this.stopAt  = (this._behavior != 'alternate') ? 0 : (this.innerDiv.offsetWidth - corrvalue);
-                this.startAt = this.outerDiv.offsetWidth + ((this._behavior != 'alternate') ? 
-                               (this.innerDiv.offsetWidth + this.stopAt) : corrvalue);   
+                this.stopAt  = (this._behavior == 'alternate' || this._behavior == 'slide') ? 
+                               (this.innerDiv.offsetWidth - corrvalue) : 0;
+                this.startAt = this.outerDiv.offsetWidth + ((this._behavior == 'alternate') ? 
+                               corrvalue : (this.innerDiv.offsetWidth + this.stopAt));   
               break;
 
               case "left":
@@ -325,9 +295,10 @@
                 if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth)
                     corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
                 this.dirsign = 1;
-                this.startAt = (this._behavior != 'alternate') ? 0 : (this.innerDiv.offsetWidth - corrvalue);
-                this.stopAt  = this.outerDiv.offsetWidth + ((this._behavior != 'alternate') ? 
-                               (this.innerDiv.offsetWidth + this.startAt) : corrvalue);
+                this.startAt = (this._behavior == 'alternate') ? (this.innerDiv.offsetWidth - corrvalue) : 0;
+                this.stopAt  = this.outerDiv.offsetWidth + 
+                               ((this._behavior == 'alternate' || this._behavior == 'slide') ? 
+                               corrvalue : (this.innerDiv.offsetWidth + this.startAt));
             }
 
             if (aResetPosition)
@@ -339,19 +310,26 @@
           if ((this.dirsign == 1 && this.newPosition > this.stopAt) ||
               (this.dirsign == -1 && this.newPosition < this.stopAt))
           {
-            if (this._behavior == "alternate")
+            switch (this._behavior) 
             {
-              // lets start afresh
-              this.startNewDirection = true;
+              case 'alternate':
+                // lets start afresh
+                this.startNewDirection = true;
 
-              // swap direction
-              const swap = {left: "right", down: "up", up: "down", right: "left"};
-              this._direction = swap[this._direction];
-              this.newPosition = this.stopAt + (this.dirsign * this._scrollAmount);
-            }
-            else
-            {
-              this.newPosition = this.startAt;
+                // swap direction
+                const swap = {left: "right", down: "up", up: "down", right: "left"};
+                this._direction = swap[this._direction];
+                this.newPosition = this.stopAt + (this.dirsign * this._scrollAmount);
+              break;
+
+              case 'slide':
+                if (this.newPosition == this.stopAt)
+                  return;
+                this.newPosition = this.stopAt;
+              break;
+
+              default:
+                this.newPosition = this.startAt;
             }
           }
 
@@ -387,10 +365,10 @@
           var myThis = this;
           var lambda = function myScopeFunction() { myThis.init(); }
 
-          this._set_direction(this.getAttribute('direction'), false);
-          this._set_behavior(this.getAttribute('behavior'), false);
-          this._set_scrollDelay(this.getAttribute('scrolldelay'), false);
-          this._set_scrollAmount(this.getAttribute('scrollamount'), false);
+          this._set_direction(this.getAttribute('direction'));
+          this._set_behavior(this.getAttribute('behavior'));
+          this._set_scrollDelay(this.getAttribute('scrolldelay'));
+          this._set_scrollAmount(this.getAttribute('scrollamount'))
           this.startNewDirection = true;
 
           // init needs to be run after the page has loaded in order to calculate
@@ -406,10 +384,10 @@
           var attrName = event.attrName.toLowerCase();
           var oldValue = event.prevValue.toLowerCase();
           var newValue = event.newValue.toLowerCase();
-          var canGenerateError = true;
+          var attributeRemoval = false;
           if (event.attrChange == event.REMOVAL) {
             newValue = null;
-            canGenerateError = false;
+            attributeRemoval = true;
           };
 
           if (oldValue != newValue) {
@@ -418,24 +396,51 @@
                 //XXX needs implementing
                 break;
               case "scrollamount":
-               this._set_scrollAmount(newValue, canGenerateError);
+                if (!this._set_scrollAmount(newValue)) {
+                  if (attributeRemoval)
+                    this._scrollAmount = 6;
+                  else
+                    throw new Error("Invalid argument for Marquee::scrollAmount");
+                }
                 break;
               case "scrolldelay":
-                this._set_scrollDelay(newValue, canGenerateError);
+                if (!this._set_scrollDelay(newValue)) {
+                  if (attributeRemoval)
+                    this._scrollDelay = 85;
+                  else
+                    throw new Error("Invalid argument for Marquee::scrollDelay");
+                }
                 this.stop();
                 this.start();
                 break;
               case "truespeed":
                 //needed to update this._scrollDelay
                 var myThis = this;
-                var lambda = function() {myThis._set_scrollDelay(myThis.getAttribute('scrolldelay'), false);}
+                var lambda = function() {myThis._set_scrollDelay(myThis.getAttribute('scrolldelay'));}
                 window.setTimeout(lambda, 0);
                 break;
               case "behavior":
-                this._set_behavior(newValue, canGenerateError);
+                if (!this._set_behavior(newValue)) {
+                  if (attributeRemoval)
+                    this._behavior = "scroll";
+                  else
+                    throw new Error("Invalid argument for Marquee::behavior");
+                }
+
+                this.startNewDirection = true;
+                if ((oldValue == "slide" && this.newPosition == this.stopAt) ||
+                    newValue == "alternate" || newValue == "slide") {
+                  this.stop();
+                  this._doMove(true);
+                }
                 break;
               case "direction":
-                this._set_direction(newValue, canGenerateError);
+                if (!this._set_direction(newValue)) {
+                  if (attributeRemoval)
+                    this._direction = "left";
+                  else
+                    throw new Error("Invalid argument for Marquee::direction");
+                }
                 break;
               case "width":
               case "height":
