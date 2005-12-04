@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <stuart.parmenter@oracle.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -103,6 +104,16 @@ interface calIDuration : nsISupports
    * Add a duration
    */
   void addDuration(in calIDuration aDuration);
+
+  /**
+   * Compare with another duration
+   *
+   * @param    aOther     to be compared with this object
+   * 
+   * @return   -1, 0, 1 if this < aOther, this == aOther, or this > aOther,
+   *           respectively.
+   */
+  long compare(in calIDuration aOther);
 
   /**
    * Reset this duration to 0

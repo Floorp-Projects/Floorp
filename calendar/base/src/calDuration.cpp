@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <stuart.parmenter@oracle.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -319,3 +320,24 @@ calDuration::SetIcalString(const nsACString& aIcalString)
     mDuration = icaldurationtype_from_string(nsPromiseFlatCString(aIcalString).get());
     return NS_OK;
 }
+
+NS_IMETHODIMP
+calDuration::Compare(calIDuration *aOther, PRInt32 *aResult)
+{
+    PRInt32 thisInSeconds, otherInSeconds;
+
+    // cast to void because these calls can't fail
+    (void)GetInSeconds(&thisInSeconds);
+    (void)aOther->GetInSeconds(&otherInSeconds);
+
+    if ( thisInSeconds < otherInSeconds ) {
+      *aResult = -1;
+    } else if ( thisInSeconds > otherInSeconds ) {
+      *aResult = 1;
+    } else {
+      *aResult = 0;
+    }
+
+    return NS_OK;
+}
+
