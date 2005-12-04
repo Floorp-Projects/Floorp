@@ -164,9 +164,12 @@ nsGNOMEShellService::KeyMatchesAppName(const char *aKeyValue) const
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::IsDefaultBrowser(PRBool* aIsDefaultBrowser)
+nsGNOMEShellService::IsDefaultBrowser(PRBool aStartupCheck,
+                                      PRBool* aIsDefaultBrowser)
 {
   *aIsDefaultBrowser = PR_FALSE;
+  if (aStartupCheck)
+    mCheckedThisSession = PR_TRUE;
 
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
 
@@ -303,6 +306,39 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
 
     vfs->SyncAppRegistry();
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGNOMEShellService::GetShouldCheckDefaultBrowser(PRBool* aResult)
+{
+  // If we've already checked, the browser has been started and this is a 
+  // new window open, and we don't want to check again.
+  if (mCheckedThisSession) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPrefBranch> prefs;
+  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pserve)
+    pserve->GetBranch("", getter_AddRefs(prefs));
+
+  prefs->GetBoolPref(PREF_CHECKDEFAULTBROWSER, aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGNOMEShellService::SetShouldCheckDefaultBrowser(PRBool aShouldCheck)
+{
+  nsCOMPtr<nsIPrefBranch> prefs;
+  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pserve)
+    pserve->GetBranch("", getter_AddRefs(prefs));
+
+  prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, aShouldCheck);
 
   return NS_OK;
 }

@@ -291,6 +291,7 @@ nsWindowsShellService::Register(nsIComponentManager *aCompMgr, nsIFile *aPath, c
 }
 
 nsWindowsShellService::nsWindowsShellService()
+:mCheckedThisSession(PR_FALSE)
 {
   nsCOMPtr<nsIObserverService> obsServ (do_GetService("@mozilla.org/observer-service;1"));
   obsServ->AddObserver(this, "quit-application", PR_FALSE);
@@ -322,7 +323,7 @@ nsWindowsShellService::UnregisterDDESupport()
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::IsDefaultBrowser(PRBool* aIsDefaultBrowser)
+nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrowser)
 {
   SETTING* settings;
   SETTING* end = gSettings + sizeof(gSettings)/sizeof(SETTING);
@@ -377,6 +378,12 @@ nsWindowsShellService::IsDefaultBrowser(PRBool* aIsDefaultBrowser)
       }
     }
   }
+
+  // If this is the first browser window, maintain internal state that we've
+  // checked this session (so that subsequent window opens don't show the 
+  // default browser dialog).
+  if (aStartupCheck)
+    mCheckedThisSession = PR_TRUE;
 
   return NS_OK;
 }
@@ -599,6 +606,39 @@ nsWindowsShellService::SetRegKey(const char* aKeyName, const char* aValueName,
   
   // Close the key we opened.
   ::RegCloseKey(theKey);
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::GetShouldCheckDefaultBrowser(PRBool* aResult)
+{
+  // If we've already checked, the browser has been started and this is a 
+  // new window open, and we don't want to check again.
+  if (mCheckedThisSession) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPrefBranch> prefs;
+  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pserve)
+    pserve->GetBranch("", getter_AddRefs(prefs));
+
+  prefs->GetBoolPref(PREF_CHECKDEFAULTBROWSER, aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::SetShouldCheckDefaultBrowser(PRBool aShouldCheck)
+{
+  nsCOMPtr<nsIPrefBranch> prefs;
+  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pserve)
+    pserve->GetBranch("", getter_AddRefs(prefs));
+
+  prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, aShouldCheck);
+
+  return NS_OK;
 }
 
 static nsresult
@@ -978,7 +1018,7 @@ nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const P
 {
   if (!nsCRT::strcmp("app-startup", aTopic)) {
     PRBool isDefault;
-    IsDefaultBrowser(&isDefault);
+    IsDefaultBrowser(PR_FALSE, &isDefault);
     if (!isDefault)
       return NS_OK;
 
@@ -986,7 +1026,7 @@ nsWindowsShellService::Observe(nsISupports* aObject, const char* aTopic, const P
   }
   else if (!nsCRT::strcmp("quit-application", aTopic)) {
     PRBool isDefault;
-    IsDefaultBrowser(&isDefault);
+    IsDefaultBrowser(PR_FALSE, &isDefault);
     if (!isDefault)
       return NS_OK;
 

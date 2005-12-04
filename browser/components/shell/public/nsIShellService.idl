@@ -39,15 +39,19 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(f0a0e17d-87bb-4a44-8f6a-11908927b647)]
+[scriptable, uuid(d6f62053-3769-46f6-bd2b-0a1440d6c394)]
 interface nsIShellService : nsISupports
 {
   /**
    * Determines whether or not Firefox is the "Default Browser."
    * This is simply whether or not Firefox is registered to handle 
    * http links. 
+   * 
+   * @param aStartupCheck true if this is the check being performed
+   *                      by the first browser window at startup, 
+   *                      false otherwise. 
    */
-  boolean isDefaultBrowser();
+  boolean isDefaultBrowser(in boolean aStartupCheck);
 
   /**
    * Registers Firefox as the "Default Browser."
@@ -60,6 +64,14 @@ interface nsIShellService : nsISupports
    *                       users on a multi-user system. 
    */
   void setDefaultBrowser(in boolean aClaimAllTypes, in boolean aForAllUsers);
+
+  /** 
+   * Used to determine whether or not to show a "Set Default Browser"
+   * query dialog. This attribute is true if the application is starting
+   * up and "browser.shell.checkDefaultBrowser" is true, otherwise it
+   * is false.
+   */
+  attribute boolean shouldCheckDefaultBrowser;
 
   /** 
    * Flags for positioning/sizing of the Desktop Background image.
