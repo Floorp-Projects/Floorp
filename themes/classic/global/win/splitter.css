@@ -47,7 +47,7 @@
 splitter {
   -moz-box-align: center;
   -moz-box-pack: center;
-  cursor: e-resize;
+  cursor: ew-resize;
   border: 2px solid;
   -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
@@ -64,7 +64,7 @@ splitter[state="dragging"] {
 /* ::::: splitter (horizontal) ::::: */
 
 splitter[orient="vertical"] {
-  cursor: n-resize;
+  cursor: ns-resize;
   -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight;
   -moz-border-right-colors: ThreeDShadow ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
