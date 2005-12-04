@@ -154,19 +154,25 @@ function dcc_addip(ip, auth)
 CIRCDCC.prototype.getMatches =
 function dcc_getmatches(nickname, filename, types, dirs, states)
 {
+    function matchNames(name, otherName)
+    {
+        return ((name.match(new RegExp(otherName, "i"))) ||
+                (name.toLowerCase().indexOf(otherName.toLowerCase()) != -1));
+    };
+
     var k;
     var list = new Array();
     if (!types)
         types = ["chat", "file"];
 
-    var n = new RegExp(nickname, "i");
-    var f = new RegExp(filename, "i");
+    var n = nickname;
+    var f = filename;
 
     if (arrayIndexOf(types, "chat") >= 0)
     {
         for (k = 0; k < this.chats.length; k++)
         {
-            if ((!nickname || this.chats[k].user.unicodeName.match(n)) &&
+            if ((!nickname || matchNames(this.chats[k].user.unicodeName, n)) &&
                 (!dirs || arrayIndexOf(dirs, this.chats[k].state.dir) >= 0) &&
                 (!states || arrayIndexOf(states, this.chats[k].state.state) >= 0))
             {
@@ -178,8 +184,8 @@ function dcc_getmatches(nickname, filename, types, dirs, states)
     {
         for (k = 0; k < this.files.length; k++)
         {
-            if ((!nickname || this.files[k].user.unicodeName.match(n)) &&
-                (!filename || this.files[k].fileName.match(f)) &&
+            if ((!nickname || matchNames(this.files[k].user.unicodeName, n)) &&
+                (!filename || matchNames(this.files[k].fileName, f)) &&
                 (!dirs || arrayIndexOf(dirs, this.files[k].state.dir) >= 0) &&
                 (!states || arrayIndexOf(states, this.files[k].state.state) >= 0))
             {
