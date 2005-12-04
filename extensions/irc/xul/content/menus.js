@@ -399,9 +399,12 @@ function initMenus()
          ["nick"],
          ["-"],
          ["back", {type: "checkbox", checkedif: net + " and !" + netAway}],
-         ["away", {type: "checkbox", checkedif: net + " and " + netAwayIsDef}],
-         ["custom-away",
-                  {type: "checkbox", checkedif: net + " and !" + netAwayIsDef}]
+         ["away", {type: "checkbox",
+                     checkedif: "cx.sourceObject.prefs.away == item.message",
+                     repeatfor: "client.awayMsgs",
+                     repeatmap: "cx.reason = item.message" }],
+         ["-"],
+         ["custom-away"]
         ]
     };
 
