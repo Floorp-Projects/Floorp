@@ -1452,7 +1452,7 @@ function getSelectedNicknames(tree)
 
 function setSelectedNicknames(tree, nicknameAry)
 {
-    if (!nicknameAry)
+    if (!tree || !tree.view || !tree.view.selection || !nicknameAry)
         return;
     var item, unicodeName, resultAry = [];
     // Clear selection:
