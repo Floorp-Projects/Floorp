@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-
 // Constructor
 
 function BrowserGlue() {
@@ -44,14 +42,17 @@ function BrowserGlue() {
 }
 
 BrowserGlue.prototype = {
-  QueryInterface: function(iid) 
+
+  mPrefService: null,
+
+  QueryInterface: function nsBG_QI(iid) 
   {
      xpcomCheckInterfaces(iid, kServiceIIds, Components.results.NS_ERROR_NO_INTERFACE);
      return this;
-  }
-,
+  },
+
   // nsIObserver implementation 
-  observe: function(subject, topic, data) 
+  observe: function nsBG_observe(subject, topic, data) 
   {
     switch(topic) {
       case "xpcom-shutdown":
@@ -64,10 +65,10 @@ BrowserGlue.prototype = {
         this._onProfileStartup();
         break;
     }
-  }
-, 
+  },
+
   // initialization (called on application startup) 
-  _init: function() 
+  _init: function nsBG_init() 
   {
     // observer registration
     const osvr = Components.classes['@mozilla.org/observer-service;1']
@@ -78,7 +79,7 @@ BrowserGlue.prototype = {
   },
 
   // cleanup (called on application shutdown)
-  _dispose: function() 
+  _dispose: function nsBG_dispose() 
   {
     // observer removal 
     const osvr = Components.classes['@mozilla.org/observer-service;1']
@@ -89,11 +90,16 @@ BrowserGlue.prototype = {
   },
 
   // profile startup handler (contains profile initialization routines)
-  _onProfileStartup: function() 
+  _onProfileStartup: function nsBG_onProfileStartup() 
   {
+    if (this.prefService.getBoolPref("browser.shell.checkDefaultBrowser"))
+      this.checkDefaultBrowser();
+
     this.Sanitizer.onStartup();
+
     // check if we're in safe mode
-    var app = Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULAppInfo)
+    var app = Components.classes["@mozilla.org/xre/app-info;1"]
+                        .getService(Components.interfaces.nsIXULAppInfo)
                         .QueryInterface(Components.interfaces.nsIXULRuntime);
     if (app.inSafeMode) {
       var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
@@ -104,7 +110,7 @@ BrowserGlue.prototype = {
   },
 
   // profile shutdown handler (contains profile cleanup routines)
-  _onProfileShutdown: function() 
+  _onProfileShutdown: function nsBG_onProfileShutdown() 
   {
     // here we enter last survival area, in order to avoid multiple
     // "quit-application" notifications caused by late window closings
@@ -131,18 +137,91 @@ BrowserGlue.prototype = {
     }
     return Sanitizer;
   },
-  
+
+  get prefService()
+  {
+    if (!this.mPrefService) 
+      this.mPrefService =
+                   Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch2);
+
+    return this.mPrefService;
+  },
+
   // ------------------------------
   // public nsIBrowserGlue members
   // ------------------------------
-  
-  sanitize: function(aParentWindow) 
+
+  sanitize: function nsBG_sanitize(aParentWindow) 
   {
     this.Sanitizer.sanitize(aParentWindow);
+  },
+
+  checkDefaultBrowser: function nsBG_checkDefaultBrowser(aUserInitiated,
+                                                         aParentWindow)
+  {
+    var shell;
+    try {
+      shell = Components.classes["@mozilla.org/browser/shell-service;1"]
+                        .getService(Components.interfaces.nsIShellService);
+    } catch (ex) { }
+
+    if (!shell)
+      return;
+
+    const cID     = "@mozilla.org/intl/stringbundle;1";
+    const nsISBS  = Components.interfaces.nsIStringBundleService;
+    var bundleSvc = Components.classes[cID].getService(nsISBS);
+
+    const brandURL = "chrome://branding/locale/brand.properties";
+    var brandBundle = bundleSvc.createBundle(brandURL);
+    const shellURL = "chrome://browser/locale/shellservice.properties";
+    var shellBundle = bundleSvc.createBundle(shellURL);
+
+    var brandShortName = brandBundle.GetStringFromName("brandShortName");
+
+    var promptTitle = shellBundle.GetStringFromName("setDefaultBrowserTitle");
+    var promptMessage =
+                 shellBundle.formatStringFromName("setDefaultBrowserMessage",
+                                                  [brandShortName], 1);
+    var checkboxLabel =
+                   shellBundle.formatStringFromName("setDefaultBrowserDontAsk",
+                                                    [brandShortName], 1);
+    var checkEveryTime = { value: true };
+
+    const nsIPS = Components.interfaces.nsIPromptService;
+    var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                       .getService(nsIPS);
+
+    var parentWindow = aParentWindow || null;
+
+    if (!shell.isDefaultBrowser()) {
+
+      if (aUserInitiated) {
+        // Don't show the checkbox if this dialog is forced
+        checkboxLabel = null;
+        checkEveryTime = {};
+      }
+
+      var rv = ps.confirmEx(parentWindow, promptTitle, promptMessage,
+                            (nsIPS.BUTTON_TITLE_YES * nsIPS.BUTTON_POS_0) +
+                            (nsIPS.BUTTON_TITLE_NO * nsIPS.BUTTON_POS_1),
+                            null, null, null, checkboxLabel, checkEveryTime);
+
+      if (rv == 0)
+        shell.setDefaultBrowser(true, false);
+
+      if (!aUserInitiated)
+        this.prefService.setBoolPref("browser.shell.checkDefaultBrowser",
+                                     checkEveryTime.value);
+
+    } else if (aUserInitiated) {
+      promptMessage = shellBundle.formatStringFromName("alreadyDefaultBrowser",
+                                                       [brandShortName], 1);
+      ps.alert(parentWindow, promptTitle, promptMessage);
+    }
   }
-
 }
-
 
 // XPCOM Scaffolding code
 
@@ -191,7 +270,7 @@ function xpcomCheckInterfaces(iid, iids, ex) {
 
 var Module = {
   registered: false,
-  
+
   registerSelf: function(compMgr, fileSpec, location, type) 
   {
     if (!this.registered) {
@@ -212,7 +291,7 @@ var Module = {
       this.registered = true;
     } 
   },
-  
+
   unregisterSelf: function(compMgr, fileSpec, location) 
   {
     compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar)
@@ -224,7 +303,7 @@ var Module = {
       catman.deleteCategoryEntry(kServiceCats[j], kServiceCtrId, true);
     }
   },
-  
+
   getClassObject: function(compMgr, cid, iid) 
   {
     if(cid.equals(kServiceCId))
@@ -237,7 +316,7 @@ var Module = {
     ];
     
   },
-  
+
   canUnload: function(compMgr) 
   {
     return true;

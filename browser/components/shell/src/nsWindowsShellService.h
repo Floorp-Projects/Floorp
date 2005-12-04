@@ -71,8 +71,6 @@ protected:
   nsresult  RegisterDDESupport();
   nsresult  UnregisterDDESupport();
 
-private:
-  PRBool    mCheckedThisSession;
 };
 
 #endif // nswindowsshellservice_h____
