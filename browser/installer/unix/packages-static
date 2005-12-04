@@ -143,6 +143,7 @@ bin/components/satchel.xpt
 bin/components/search.xpt
 bin/components/shistory.xpt
 bin/components/sidebar.xpt
+bin/components/storage.xpt
 bin/components/profile.xpt
 bin/components/toolkitprofile.xpt
 bin/components/txtsvc.xpt
