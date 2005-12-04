@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -542,7 +543,18 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
         mTimezone.AssignLiteral("floating");
 
     // reconstruct nativetime
+    //
+    // Gross hack alert: the reason that we muck with mIsDate here is
+    // because we don't want icaltime_as_timet_with_zone() to force the
+    // hours/mins/seconds to UTC-based 0: since we're not moving the 
+    // existing date to UTC, but merely representing it a UTC-based way.
+    if (mIsDate) {
+        icalt->is_date = 0;
+    }
     time_t tt = icaltime_as_timet_with_zone(*icalt, icaltimezone_get_utc_timezone());
+    if (mIsDate) {
+        icalt->is_date = 1;
+    }
     PRInt64 temp, million;
     LL_I2L(million, PR_USEC_PER_SEC);
     LL_I2L(temp, tt);

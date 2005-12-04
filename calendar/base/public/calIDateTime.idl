@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -79,6 +80,10 @@ interface calIDateTime : nsISupports
    * @warning: When the timezone is set to 'floating', this will return
    * the nativeTime as-if the timezone was UTC. Take this into account
    * when comparing values.
+   * 
+   * @note on objects that are pinned to a timezone and have isDate set,
+   * nativeTime will be 00:00:00 in the timezone of that date, not 00:00:00 in 
+   * UTC.
    */
   attribute PRTime nativeTime;
 
