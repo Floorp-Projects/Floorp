@@ -299,9 +299,16 @@ calStorageCalendar.prototype = {
             this.mDBTwo = dbService.openDatabase (fileURL.file);
         } else if (aURI.scheme == "moz-profile-calendar") {
             dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
-            this.mDB = dbService.openSpecialDatabase("profile");
-            this.mDBTwo = dbService.openSpecialDatabase("profile");
-        }
+	    if ( "getProfileStorage" in dbService ) {
+	      // 1.8 branch
+	      this.mDB = dbService.getProfileStorage("profile");
+	      this.mDBTwo = dbService.getProfileStorage("profile");
+	    } else {
+	      // trunk 
+	      this.mDB = dbService.openSpecialDatabase("profile");
+	      this.mDBTwo = dbService.openSpecialDatabase("profile");
+	    }
+	}
 
         this.initDB();
 
