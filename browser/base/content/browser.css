@@ -8,6 +8,10 @@ toolbar[printpreview="true"] {
   -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
 }
 
+menuitem.spell-suggestion {
+  font-weight:bold;
+}
+
 #noPreviewAvailable 
 {
   background-color: white !important;

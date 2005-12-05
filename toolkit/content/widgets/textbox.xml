@@ -83,12 +83,56 @@
       <property name="selectionEnd"   onset="this.inputField.selectionEnd = val; return val;"
                                       onget="return this.inputField.selectionEnd;"/>
 
+      <!-- use this property "spellCheckerUI" instead of "InlineSpellCheckUI",
+           because this object does the lazy creation and initialization
+           you need -->
+      <property name="spellCheckerUI" readonly="true">
+        <getter><![CDATA[
+          if (! this.InlineSpellCheckerUI) {
+            var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].
+              getService(Components.interfaces.mozIJSSubScriptLoader);
+            loader.loadSubScript("chrome://global/content/inlineSpellCheckUI.js", this);
+            // watch out - that could have failed
+            if (this.InlineSpellCheckerUI)
+              this.InlineSpellCheckerUI.init(this.inputField);
+          }
+          return this.InlineSpellCheckerUI;
+        ]]></getter>
+      </property>
+
       <method name="setSelectionRange">
         <parameter name="aSelectionStart"/>
         <parameter name="aSelectionEnd"/>
         <body>
           this.inputField.setSelectionRange( aSelectionStart, aSelectionEnd );
         </body>
+      </method>
+
+      <constructor><![CDATA[
+        var str = this.boxObject.getProperty("value");
+        if (str) {
+          this.inputField.value=str;
+          this.boxObject.removeProperty("value");
+        }
+        str = this.getAttribute("spellcheck");
+        if (str == "true") {
+          // the problem is that we can't initialize the spell checker in the
+          // constructor because not everything is initialized and the editor
+          // will fail to create the inline spell checker object.
+          setTimeout(this._delayedInitSpellCheck, 0, this)
+        }
+      ]]></constructor>
+      <destructor action="if (this.inputField.value) this.boxObject.setProperty('value', this.inputField.value);"/>
+
+      <method name="_delayedInitSpellCheck">
+        <parameter name="me"/>
+        <body><![CDATA[
+          // called by the constructor to turn on spell checking
+          var spellui = me.spellCheckerUI;
+          if (spellui) {
+            spellui.enabled = true;
+          }
+        ]]></body>
       </method>
 
       <constructor>
@@ -216,8 +260,20 @@
       <xul:menupopup anonid="input-box-contextmenu"
                      onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild)
                                        this.parentNode.firstChild.focus();
-                                     this.parentNode.doPopupItemEnabling(this);"
-                     oncommand="this.parentNode.doCommand(event.originalTarget.getAttribute('cmd'));event.preventBubble();">
+                                     this.parentNode._doPopupItemEnabling(this);"
+                     onpopuphiding="this.parentNode._doPopupItemDisabling(this);"
+                     oncommand="var cmd = event.originalTarget.getAttribute('cmd'); if(cmd) { this.parentNode.doCommand(cmd); event.preventBubble(); }">
+        <xul:menuitem label="&spellNoSuggestions.label;" anonid="spell-no-suggestions" disabled="true"/>
+        <xul:menuseparator anonid="spell-suggestions-separator"/>
+        <xul:menuitem label="&spellAddToDictionary.label;" accesskey="&spellAddToDictionary.accesskey;" anonid="spell-add-to-dictionary" oncommand="this.parentNode.parentNode.spellui.addToDictionary();"/>
+        <xul:menuitem label="&spellEnable.label;" accesskey="&spellEnable.accesskey;" anonid="spell-check-enabled" oncommand="this.parentNode.parentNode.spellui.toggleEnabled();"/>
+        <xul:menu label="&spellDictionaries.label;" accesskey="&spellDictionaries.accesskey;" anonid="spell-dictionaries">
+          <xul:menupopup anonid="spell-dictionaries-menu"
+            onpopupshowing="event.stopPropagation();"
+            onpopuphiding="event.stopPropagation();">
+          </xul:menupopup>
+        </xul:menu>
+        <xul:menuseparator anonid="spell-check-separator"/>
         <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
         <xul:menuseparator/>
         <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"/>
@@ -230,7 +286,7 @@
     </content>
 
     <implementation>
-      <method name="doPopupItemEnabling">
+      <method name="_doPopupItemEnabling">
         <parameter name="popupNode"/> 
         <body>
           <![CDATA[
@@ -246,8 +302,79 @@
                   children[i].setAttribute("disabled", "true");               
               }
             }
+
+            // -- spell checking --
+            var textboxElt = popupNode;
+            do {
+              if (textboxElt.localName == "textbox")
+                break;
+              textboxElt = textboxElt.parentNode;
+            } while (textboxElt);
+            if (! textboxElt || textboxElt.localName != "textbox") {
+              // can't find it, give up
+              this._setNoSpellCheckingAllowed();
+              return;
+            }
+            var spellui = textboxElt.spellCheckerUI;
+            this.spellui = spellui;
+
+            if (! spellui.canSpellCheck)
+            {
+              this._setNoSpellCheckingAllowed();
+              return;
+            }
+
+            spellui.initFromEvent(document.popupEvent);
+
+            var enabled = spellui.enabled;
+            document.getAnonymousElementByAttribute(this, "anonid",
+              "spell-check-enabled").setAttribute("checked", enabled);
+
+            var overMisspelling = spellui.overMisspelling;
+            this._setMenuItemVisibility("spell-add-to-dictionary", overMisspelling);
+            this._setMenuItemVisibility("spell-suggestions-separator", overMisspelling);
+
+            // suggestion list
+            var spellSeparator = document.getAnonymousElementByAttribute(this,
+              "anonid", "spell-suggestions-separator");
+            var numsug = spellui.addSuggestionsToMenu(popupNode, spellSeparator, 5);
+            this._setMenuItemVisibility("spell-no-suggestions", overMisspelling && numsug == 0);
+
+            // dictionary list
+            var dictmenu = document.getAnonymousElementByAttribute(this, "anonid",
+              "spell-dictionaries-menu");
+            var numdicts = spellui.addDictionaryListToMenu(dictmenu, null);
+            this._setMenuItemVisibility("spell-dictionaries", enabled && numdicts > 1);
           ]]>
         </body>
+      </method>
+      <method name="_doPopupItemDisabling">
+        <parameter name="popupNode"/>
+        <body><![CDATA[
+          if (this.spellui) {
+            this.spellui.clearSuggestionsFromMenu();
+            this.spellui.clearDictionaryListFromMenu();
+          }
+        ]]></body>
+      </method>
+
+      <method name="_setMenuItemVisibility">
+        <parameter name="anonid"/>
+        <parameter name="visible"/>
+        <body><![CDATA[
+          document.getAnonymousElementByAttribute(this, "anonid", anonid).
+            hidden = ! visible;
+        ]]></body>
+      </method>
+      <method name="_setNoSpellCheckingAllowed">
+        <body><![CDATA[
+          this._setMenuItemVisibility("spell-no-suggestions", false);
+          this._setMenuItemVisibility("spell-check-enabled", false);
+          this._setMenuItemVisibility("spell-check-separator", false);
+          this._setMenuItemVisibility("spell-add-to-dictionary", false);
+          this._setMenuItemVisibility("spell-suggestions-separator", false);
+          this._setMenuItemVisibility("spell-dictionaries", false);
+        ]]></body>
       </method>
 
       <method name="doCommand">

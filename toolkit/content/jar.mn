@@ -26,6 +26,7 @@ toolkit.jar:
 *+ content/global/fontpackage.js              (fontpackage.js)
 *+ content/global/fontpackage.xul             (fontpackage.xul)
 *+ content/global/globalOverlay.js            (globalOverlay.js)
+*+ content/global/inlineSpellCheckUI.js       (inlineSpellCheckUI.js)
 +  content/global/mozilla.xhtml               (mozilla.xhtml)
 *+ content/global/nsDragAndDrop.js            (nsDragAndDrop.js)
 +  content/global/nsTransferable.js           (nsTransferable.js)

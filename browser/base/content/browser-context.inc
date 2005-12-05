@@ -37,7 +37,30 @@
 
     <popup id="contentAreaContextMenu"
            onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
-           onpopuphiding="if (event.target == this) gContextMenu = null;">
+           onpopuphiding="if (event.target == this) { gContextMenu.hiding(); gContextMenu = null; }">
+      <menuitem id="spell-no-suggestions"
+                disabled="true"
+                label="&spellNoSuggestions.label;"/>
+      <menuseparator id="spell-suggestions-separator"/>
+      <menuitem id="spell-add-to-dictionary"
+                label="&spellAddToDictionary.label;"
+                accesskey="&spellAddToDictionary.accesskey;"
+                oncommand="InlineSpellCheckerUI.addToDictionary();"/>
+      <menuitem id="spell-check-enabled"
+                label="&spellEnable.label;"
+                accesskey="&spellEnable.accesskey;"
+                oncommand="InlineSpellCheckerUI.toggleEnabled();"/>
+      <menu id="spell-dictionaries"
+            label="&spellDictionaries.label;"
+            accesskey="&spellDictionaries.accesskey;">
+          <menupopup id="spell-dictionaries-menu">
+              <menuseparator id="spell-language-separator"/>
+              <menuitem id="spell-add-dictionaries"
+                        label="&spellAddDictionaries.label;"
+                        accesskey="&spellAddDictionaries.accesskey;"/>
+          </menupopup>
+      </menu>
+      <menuseparator id="spell-separator"/>
       <menuitem id="context-openlink"
                 label="&openLinkCmd.label;"
                 accesskey="&openLinkCmd.accesskey;"
