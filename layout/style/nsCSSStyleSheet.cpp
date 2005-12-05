@@ -3503,12 +3503,16 @@ PR_STATIC_CALLBACK(PRBool) StateEnumFunc(void* aSelector, void* aData)
   StateRuleProcessorData *data = enumData->data;
   nsCSSSelector* selector = NS_STATIC_CAST(nsCSSSelector*, aSelector);
 
-  if (SelectorMatches(*data, selector, data->mStateMask, nsnull) &&
+  nsReStyleHint possibleChange = IsSiblingOperator(selector->mOperator) ?
+    eReStyle_LaterSiblings : eReStyle_Self;
+
+  // If enumData->change already includes all the bits of possibleChange, don't
+  // bother calling SelectorMatches, since even if it returns false
+  // enumData->change won't change.
+  if ((possibleChange & ~(enumData->change)) &&
+      SelectorMatches(*data, selector, data->mStateMask, nsnull) &&
       SelectorMatchesTree(*data, selector->mNext)) {
-    if (IsSiblingOperator(selector->mOperator))
-      enumData->change = nsReStyleHint(enumData->change | eReStyle_LaterSiblings);
-    else
-      enumData->change = nsReStyleHint(enumData->change | eReStyle_Self);
+    enumData->change = nsReStyleHint(enumData->change | possibleChange);
   }
 
   return PR_TRUE;
@@ -3553,12 +3557,16 @@ PR_STATIC_CALLBACK(PRBool) AttributeEnumFunc(void* aSelector, void* aData)
   AttributeRuleProcessorData *data = enumData->data;
   nsCSSSelector* selector = NS_STATIC_CAST(nsCSSSelector*, aSelector);
 
-  if (SelectorMatches(*data, selector, 0, data->mAttribute) &&
+  nsReStyleHint possibleChange = IsSiblingOperator(selector->mOperator) ?
+    eReStyle_LaterSiblings : eReStyle_Self;
+
+  // If enumData->change already includes all the bits of possibleChange, don't
+  // bother calling SelectorMatches, since even if it returns false
+  // enumData->change won't change.
+  if ((possibleChange & ~(enumData->change)) &&
+      SelectorMatches(*data, selector, 0, data->mAttribute) &&
       SelectorMatchesTree(*data, selector->mNext)) {
-    if (IsSiblingOperator(selector->mOperator))
-      enumData->change = nsReStyleHint(enumData->change | eReStyle_LaterSiblings);
-    else
-      enumData->change = nsReStyleHint(enumData->change | eReStyle_Self);
+    enumData->change = nsReStyleHint(enumData->change | possibleChange);
   }
 
   return PR_TRUE;
@@ -3584,6 +3592,8 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
     data.change = nsReStyleHint(data.change | eReStyle_Self);
   }
   // XXX What about XLinks?
+  // XXXbz now that :link and :visited are also states, do we need a
+  // similar optimization in HasStateDependentStyle?
 
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
