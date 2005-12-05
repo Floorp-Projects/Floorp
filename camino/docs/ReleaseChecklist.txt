@@ -1,4 +1,4 @@
-Checklist of things to do before releasing a new Chimera version:
+Checklist of things to do before releasing a new Camino version:
 
 - Update version number in project file (both Camino and CaminoStatic targets)
 - Update version number in all-camino.js
@@ -16,5 +16,5 @@ Checklist of things to do before releasing a new Chimera version:
 - Test Talkback
 - Move the build to releases/
 - Flip the wizard UI switch back to off on the Talkback server
-- Update version number in chimera.js to (N.n+)
+- Update version number in all-camino.js to (N.n+)
 

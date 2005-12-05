@@ -1267,7 +1267,7 @@ enum BWCOpenDest {
   }
   else if ([itemIdent isEqual:SendURLToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"SendLink", @"Send Link")];
-    [toolbarItem setPaletteLabel:NSLocalizedString(@"SendLink", @"Send Link")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"SendLinkPaletteLabel", @"Email Page Location")];
     [toolbarItem setToolTip:NSLocalizedString(@"SendLinkToolTip", @"Send current URL")];
     [toolbarItem setImage:[NSImage imageNamed:@"sendLink.tif"]];
     [toolbarItem setTarget:self];
