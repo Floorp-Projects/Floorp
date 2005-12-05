@@ -272,7 +272,6 @@ pref("capability.policy.default.Navigator.preferenceinternal.set", "UniversalPre
 pref("capability.policy.default.Window.blur.get", "allAccess");
 pref("capability.policy.default.Window.close.get", "allAccess");
 pref("capability.policy.default.Window.closed", "allAccess");
-pref("capability.policy.default.Window.Components", "allAccess");
 pref("capability.policy.default.Window.document", "allAccess");
 pref("capability.policy.default.Window.focus.get", "allAccess");
 pref("capability.policy.default.Window.frames", "allAccess");

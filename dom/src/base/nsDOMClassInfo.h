@@ -289,7 +289,6 @@ protected:
   static jsval sParent_id;
   static jsval sScrollbars_id;
   static jsval sLocation_id;
-  static jsval sComponents_id;
   static jsval sConstructor_id;
   static jsval s_content_id;
   static jsval sContent_id;
