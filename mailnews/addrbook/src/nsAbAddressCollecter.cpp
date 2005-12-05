@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -128,8 +128,18 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *aAddress, PRBool 
 
     nsCOMPtr <nsIAbCard> existingCard;
     nsCOMPtr <nsIAbCard> cardInstance;
+    PRBool emailAddressIn2ndEmailColumn = PR_FALSE;
 
     rv = GetCardFromAttribute(kPriEmailColumn, curAddress, getter_AddRefs(existingCard));
+    // We've not found a card, but is this address actually in the additional
+    // email column?
+    if (!existingCard)
+    {
+      rv = GetCardFromAttribute(k2ndEmailColumn, curAddress, getter_AddRefs(existingCard));
+      if (existingCard)
+        emailAddressIn2ndEmailColumn = PR_TRUE;
+    }
+
     if (!existingCard && aCreateCard)
     {
       nsCOMPtr<nsIAbCard> senderCard = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID, &rv);
@@ -155,7 +165,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *aAddress, PRBool 
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add card");
       }
     }
-    else if (existingCard) { 
+    else if (existingCard && !emailAddressIn2ndEmailColumn) { 
       // address is already in the AB, so update the names
       PRBool setNames = PR_FALSE;
       rv = SetNamesForCard(existingCard, unquotedName.get(), &setNames);
