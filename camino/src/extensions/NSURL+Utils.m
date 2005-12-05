@@ -66,6 +66,14 @@
       
       CloseResFile(resRef);
     }
+
+    if (!ret) { // Look for valid plist data.
+      NSDictionary *plist;
+      if ((plist = [[NSDictionary alloc] initWithContentsOfFile:inFile])) {
+        ret = [NSURL URLWithString:[plist objectForKey:@"URL"]];
+        [plist release];
+      }
+    }
   }
   
   return ret;
