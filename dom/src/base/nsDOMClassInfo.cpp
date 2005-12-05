@@ -1127,7 +1127,6 @@ jsval nsDOMClassInfo::sTop_id             = JSVAL_VOID;
 jsval nsDOMClassInfo::sParent_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sScrollbars_id      = JSVAL_VOID;
 jsval nsDOMClassInfo::sLocation_id        = JSVAL_VOID;
-jsval nsDOMClassInfo::sComponents_id      = JSVAL_VOID;
 jsval nsDOMClassInfo::sConstructor_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::s_content_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sContent_id         = JSVAL_VOID;
@@ -1314,7 +1313,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sParent_id,          cx, "parent");
   SET_JSVAL_TO_STRING(sScrollbars_id,      cx, "scrollbars");
   SET_JSVAL_TO_STRING(sLocation_id,        cx, "location");
-  SET_JSVAL_TO_STRING(sComponents_id,      cx, "Components");
   SET_JSVAL_TO_STRING(sConstructor_id,     cx, "constructor");
   SET_JSVAL_TO_STRING(s_content_id,        cx, "_content");
   SET_JSVAL_TO_STRING(sContent_id,         cx, "content");
@@ -3575,7 +3573,6 @@ nsDOMClassInfo::ShutDown()
   sParent_id          = JSVAL_VOID;
   sScrollbars_id      = JSVAL_VOID;
   sLocation_id        = JSVAL_VOID;
-  sComponents_id      = JSVAL_VOID;
   sConstructor_id     = JSVAL_VOID;
   s_content_id        = JSVAL_VOID;
   sContent_id         = JSVAL_VOID;
@@ -3738,13 +3735,6 @@ nsDOMClassInfo::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
                                       PRUint32 accessMode, PRBool isWindow)
 {
   if (!sSecMan) {
-    return NS_OK;
-  }
-
-  // Don't check when getting the Components property, since we check
-  // its properties anyway. This will help performance.
-  if (id == sComponents_id &&
-      accessMode == nsIXPCSecurityManager::ACCESS_GET_PROPERTY && isWindow) {
     return NS_OK;
   }
 
