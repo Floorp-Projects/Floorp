@@ -650,6 +650,9 @@ sub MessageToMTA {
     }
 
     my @args;
+    if (Param("mail_delivery_method") eq "sendmail") {
+        push @args, "-i";
+    }
     if (Param("mail_delivery_method") eq "sendmail" && !Param("sendmailnow")) {
         push @args, "-ODeliveryMode=deferred";
     }
