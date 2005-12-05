@@ -1262,12 +1262,13 @@ nsEditor::MarkNodeDirty(nsIDOMNode* aNode)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsEditor::GetInlineSpellChecker(nsIInlineSpellChecker ** aInlineSpellChecker)
+NS_IMETHODIMP nsEditor::GetInlineSpellChecker(PRBool autoCreate,
+                                              nsIInlineSpellChecker ** aInlineSpellChecker)
 {
   NS_ENSURE_ARG_POINTER(aInlineSpellChecker);
   nsresult rv;
 
-  if (!mInlineSpellChecker) {
+  if (!mInlineSpellChecker && autoCreate) {
     mInlineSpellChecker = do_CreateInstance(MOZ_INLINESPELLCHECKER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 

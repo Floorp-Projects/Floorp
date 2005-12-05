@@ -52,9 +52,9 @@ class nsIController;
 class nsIControllers;
 class nsAString;
 
-// {AC71F479-17E1-4ee0-8EFD-0ECF2AA2F827}
+// {f9004db3-5272-4a8c-8b19-70a4adb8f8b6}
 #define NS_IFOCUSCONTROLLER_IID \
-{ 0xac71f479, 0x17e1, 0x4ee0, { 0x8e, 0xfd, 0xe, 0xcf, 0x2a, 0xa2, 0xf8, 0x27 } }
+{ 0xf9004db3, 0x5272, 0x4a8c, { 0x8b, 0x19, 0x70, 0xa4, 0xad, 0xb8, 0xf8, 0xb6 } }
 
 class nsIFocusController : public nsISupports {
 public:
@@ -77,6 +77,9 @@ public:
 
   NS_IMETHOD GetPopupNode(nsIDOMNode** aNode)=0;
   NS_IMETHOD SetPopupNode(nsIDOMNode* aNode)=0;
+
+  NS_IMETHOD GetPopupEvent(nsIDOMEvent** aEvent)=0;
+  NS_IMETHOD SetPopupEvent(nsIDOMEvent* aEvent)=0;
 
   NS_IMETHOD GetControllerForCommand(const char * aCommand, nsIController** aResult)=0;
   NS_IMETHOD GetControllers(nsIControllers** aResult)=0;

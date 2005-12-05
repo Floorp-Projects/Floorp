@@ -1623,6 +1623,34 @@ nsXULDocument::SetPopupNode(nsIDOMNode* aNode)
 }
 
 NS_IMETHODIMP
+nsXULDocument::GetPopupEvent(nsIDOMEvent** aEvent)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIFocusController> focusController;
+    GetFocusController(getter_AddRefs(focusController));
+    NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+
+    rv = focusController->GetPopupEvent(aEvent);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsXULDocument::SetPopupEvent(nsIDOMEvent* aEvent)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIFocusController> focusController;
+    GetFocusController(getter_AddRefs(focusController));
+    NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
+
+    rv = focusController->SetPopupEvent(aEvent);
+
+    return rv;
+}
+
+NS_IMETHODIMP
 nsXULDocument::GetTooltipNode(nsIDOMNode** aNode)
 {
     if (mTooltipNode && !nsContentUtils::CanCallerAccess(mTooltipNode)) {

@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  webshell \
 		  editor \
+		  txtsvc \
 		  intl \
 		  uconv \
 		  txmgr \

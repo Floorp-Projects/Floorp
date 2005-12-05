@@ -591,4 +591,19 @@ nsFocusController::SetPopupNode(nsIDOMNode* aNode)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFocusController::GetPopupEvent(nsIDOMEvent** aEvent)
+{
+  *aEvent = mPopupEvent;
+  NS_IF_ADDREF(*aEvent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFocusController::SetPopupEvent(nsIDOMEvent* aEvent)
+{
+  mPopupEvent = aEvent;
+  return NS_OK;
+}
+
   
