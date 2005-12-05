@@ -548,6 +548,11 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
     NS_ASSERTION(thisContent, "must be a content");
 
     nsIDocument* doc = thisContent->GetCurrentDoc();
+    if (!doc) {
+      // Nothing we can do while plugin loading is done in layout...
+      return NS_OK;
+    }
+
     PRUint32 numShells = doc->GetNumberOfShells();
     for (PRUint32 i = 0; i < numShells; ++i) {
       nsIPresShell* shell = doc->GetShellAt(i);
@@ -740,8 +745,8 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
 
   AutoNotifier notifier(this, aNotify);
 
-  // AutoSetInstantiatingToFalse is instantiated after AutoNotifier, so that if the
-  // AutoNotifier triggers frame construction, events can be posted as
+  // AutoSetInstantiatingToFalse is instantiated after AutoNotifier, so that if
+  // the AutoNotifier triggers frame construction, events can be posted as
   // appropriate.
   NS_ASSERTION(!mInstantiating, "ObjectURIChanged was reentered?");
   mInstantiating = PR_TRUE;
