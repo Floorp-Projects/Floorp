@@ -629,7 +629,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 #endif
 
 extern void
-js_ReportOutOfMemory(JSContext *cx, JSErrorCallback errorCallback);
+js_ReportOutOfMemory(JSContext *cx);
 
 /*
  * Report an exception using a previously composed JSErrorReport.

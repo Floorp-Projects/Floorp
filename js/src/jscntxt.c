@@ -712,14 +712,15 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
  * type message, and then hope the process ends swiftly.
  */
 void
-js_ReportOutOfMemory(JSContext *cx, JSErrorCallback callback)
+js_ReportOutOfMemory(JSContext *cx)
 {
     JSStackFrame *fp;
     JSErrorReport report;
     JSErrorReporter onError = cx->errorReporter;
 
     /* Get the message for this error, but we won't expand any arguments. */
-    const JSErrorFormatString *efs = callback(NULL, NULL, JSMSG_OUT_OF_MEMORY);
+    const JSErrorFormatString *efs = 
+        js_GetLocalizedErrorMessage(cx, NULL, NULL, JSMSG_OUT_OF_MEMORY);
     const char *msg = efs ? efs->format : "Out of memory";
 
     /* Fill out the report, but don't do anything that requires allocation. */
@@ -876,7 +877,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 jschar *buffer, *fmt, *out;
                 int expandedArgs = 0;
                 size_t expandedLength;
-                size_t len = strlen (efs->format);
+                size_t len = strlen(efs->format);
 
                 buffer = fmt = js_InflateString (cx, efs->format, &len);
                 if (!buffer)
