@@ -72,6 +72,10 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
 }
 
+menuitem.spell-suggestion {
+  font-weight:bold;
+}
+
 /* ..... internal content .... */
 
 .menu-accel,

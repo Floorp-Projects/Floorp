@@ -4075,7 +4075,7 @@ nsContextMenu.prototype = {
         this.menu = popup;
 
         // Get contextual info.
-        this.setTarget( document.popupNode );
+        this.setTarget( document.popupNode, document.popupEvent );
 
         this.isTextSelected = this.isTextSelection();
         this.isContentSelected = this.isContentSelection();
@@ -4088,6 +4088,7 @@ nsContextMenu.prototype = {
         this.initNavigationItems();
         this.initViewItems();
         this.initMiscItems();
+        this.initSpellingItems();
         this.initSaveItems();
         this.initClipboardItems();
         this.initMetadataItems();
@@ -4200,6 +4201,35 @@ nsContextMenu.prototype = {
         // Only show the block image item if the image can be blocked
         this.showItem( "context-blockimage", this.onImage && hostLabel);
     },
+    initSpellingItems : function () {
+        var canSpell = InlineSpellCheckerUI.canSpellCheck;
+        var onMisspelling = InlineSpellCheckerUI.overMisspelling;
+        this.showItem("spell-check-enabled", canSpell);
+        this.showItem("spell-separator", canSpell);
+        if (canSpell)
+            document.getElementById("spell-check-enabled").setAttribute("checked",
+                                                                        InlineSpellCheckerUI.enabled);
+        this.showItem("spell-add-to-dictionary", onMisspelling);
+
+        // suggestion list
+        this.showItem("spell-suggestions-separator", onMisspelling);
+        if (onMisspelling) {
+            var menu = document.getElementById("contentAreaContextMenu");
+            var suggestionsSeparator = document.getElementById("spell-suggestions-separator");
+            var numsug = InlineSpellCheckerUI.addSuggestionsToMenu(menu, suggestionsSeparator, 5);
+            this.showItem("spell-no-suggestions", numsug == 0);
+        } else {
+            this.showItem("spell-no-suggestions", false);
+        }
+
+        // dictionary list
+        this.showItem("spell-dictionaries", InlineSpellCheckerUI.enabled);
+        if (canSpell) {
+            var dictMenu = document.getElementById("spell-dictionaries-menu");
+            var dictSep = document.getElementById("spell-language-separator");
+            InlineSpellCheckerUI.addDictionaryListToMenu(dictMenu, dictSep);
+        }
+    },
     initClipboardItems : function () {
 
         // Copy depends on whether there is selected text.
@@ -4243,8 +4273,13 @@ nsContextMenu.prototype = {
         // Show if user clicked on something which has metadata.
         this.showItem( "context-metadata", this.onMetaDataItem );
     },
+    // called when the menu is going away
+    hiding : function() {
+        InlineSpellCheckerUI.clearSuggestionsFromMenu();
+        InlineSpellCheckerUI.clearDictionaryListFromMenu();
+    },
     // Set various context menu attributes based on the state of the world.
-    setTarget : function ( node ) {
+    setTarget : function ( node, event ) {
         const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
         if ( node.namespaceURI == xulNS ) {
           this.shouldDisplay = false;
@@ -4267,6 +4302,7 @@ nsContextMenu.prototype = {
         this.inFrame           = false;
         this.hasBGImage        = false;
         this.bgImageURL        = "";
+        InlineSpellCheckerUI.uninit();
 
         // Remember the node that was clicked.
         this.target = node;
@@ -4291,9 +4327,18 @@ nsContextMenu.prototype = {
                    this.onStandaloneImage = true;
             } else if ( this.target instanceof HTMLInputElement ) {
                this.onTextInput = this.isTargetATextBox(this.target);
+               // allow spellchecking UI on all writable text boxes except passwords
+               if (this.onTextInput && ! this.target.readOnly && this.target.type != "password") {
+                   InlineSpellCheckerUI.init(this.target);
+                   InlineSpellCheckerUI.initFromEvent(event);
+               }
                this.onKeywordField = this.isTargetAKeywordField(this.target);
             } else if ( this.target instanceof HTMLTextAreaElement ) {
                  this.onTextInput = true;
+                 if (! this.target.readOnly) {
+                     InlineSpellCheckerUI.init(this.target);
+                     InlineSpellCheckerUI.initFromEvent(event);
+                 }
             } else if ( this.target instanceof HTMLHtmlElement ) {
                // pages with multiple <body>s are lame. we'll teach them a lesson.
                var bodyElt = this.target.ownerDocument.getElementsByTagName("body")[0];

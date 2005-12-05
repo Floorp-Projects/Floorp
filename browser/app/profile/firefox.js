@@ -435,5 +435,9 @@ pref("bidi.browser.ui", false);
 // 2 and other values, nothing
 pref("browser.backspace_action", 0);
 
+// this will automatically enable inline spellchecking (if it is available) for
+// multi-line text entry controls <textarea>s in HTML
+pref("layout.textarea.spellcheckDefault", true);
+
 pref("view_source.editor.path", "");
 pref("view_source.editor.external", false);

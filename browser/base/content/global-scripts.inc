@@ -46,4 +46,5 @@
 <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksMenu.js"/>
 <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
+<script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
 <script type="application/x-javascript" src="chrome://global/content/viewSourceUtils.js"/>
