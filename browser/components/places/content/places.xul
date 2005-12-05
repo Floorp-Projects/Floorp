@@ -57,7 +57,7 @@
         <treechildren id="placesListChildren" view="placesList"  flex="1"/>
       </tree>
       <vbox id="historyCalendar" 
-            onselectionchanged="LOG('FIXME: do history query');"/>
+            onselectionchanged="return PlacesPage.rangeSelected()"/>
       <hbox class="commands">
         <button id="newPlace" view="placesList" command="placesCmd_new:folder"/>
       </hbox>

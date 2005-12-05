@@ -119,7 +119,7 @@ var PlacesPage = {
     this._places.init(new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER],
                                      ViewConfig.GENERIC_DROP_TYPES,
                                      Ci.nsINavHistoryQuery.INCLUDE_QUERIES,
-                                     ViewConfig.GENERIC_FILTER_OPTIONS, 2));
+                                     ViewConfig.GENERIC_FILTER_OPTIONS, 4));
     this._content.init(new ViewConfig(ViewConfig.GENERIC_DROP_TYPES,
                                       ViewConfig.GENERIC_DROP_TYPES,
                                       ViewConfig.GENERIC_FILTER_OPTIONS, 0));
@@ -147,6 +147,34 @@ var PlacesPage = {
   setFilterCollection: function PP_setFilterCollection(collectionName) {
     var searchFilter = document.getElementById("searchFilter");
     searchFilter.setAttribute("collection", collectionName);
+  },
+  
+  /**
+   * A range has been selected from the calendar picker. Update the view
+   * to show only those results within the selected range. 
+   */
+  rangeSelected: function PP_rangeSelected() {
+    var result = this._content.getResult();
+    var queries = result.getQueries({ });
+    
+    var calendar = document.getElementById("historyCalendar");
+    var begin = calendar.beginrange.getTime();
+    var end = calendar.endrange.getTime();
+    if (begin == end) {
+      const DAY_MSEC = 86400000;
+      end = begin + DAY_MSEC;
+    }    
+    var newQueries = [];
+    for (var i = 0; i < queries.length; ++i) {
+      var query = queries[i].clone();
+      query.beginTime = begin * 1000;
+      query.endTime = end * 1000;
+      newQueries.push(query);
+    }
+    
+    this._content.load(newQueries, result.queryOptions);
+    
+    return true;
   },
 
   applyFilter: function PP_applyFilter(filterString) {
@@ -186,6 +214,45 @@ var PlacesPage = {
   },
   
   /**
+   * Updates the calendar widget to show the range of dates selected in the
+   * current result. 
+   */
+  _updateCalendar: function PP__updateCalendar() {
+    // Make sure that by updating the calendar widget we don't fire selection
+    // events and cause the UI to infinitely reload.
+    var calendar = document.getElementById("historyCalendar");
+    calendar.suppressRangeEvents = true;
+
+    var result = this._content.getResult();
+    var queries = result.getQueries({ });
+    if (!queries.length)
+      return;
+    
+    // Query values are OR'ed together, so just use the first. 
+    var query = queries[0];
+    
+    const NOW = new Date();
+    var begin = Math.floor(query.beginTime / 1000);
+    var end = Math.floor(query.endTime / 1000);
+    if (query.beginTimeReference == Ci.nsINavHistoryQuery.TIME_RELATIVE_TODAY) {
+      if (query.beginTime == 0) {
+        var d = new Date();
+        d.setFullYear(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+        d.setHours(0, 0, 0, 0);
+        begin += d.getTime();
+      }
+      else
+        begin += NOW.getTime();
+      end += NOW.getTime();
+    }
+    calendar.beginrange = new Date(begin);
+    calendar.endrange = new Date(end);
+    
+    // Allow user selection events once again. 
+    calendar.suppressRangeEvents = false;
+  },
+  
+  /**
    * Update the Places UI when the content of the right tree changes. 
    */
   onContentChanged: function PP_onContentChanged() {
@@ -204,6 +271,10 @@ var PlacesPage = {
 
     // Hide the Calendar for Bookmark queries. 
     document.getElementById("historyCalendar").setAttribute("hidden", isBookmarks);
+    
+    // Update the calendar with the current date range, if applicable. 
+    if (!isBookmarks)
+      this._updateCalendar();
   },
 };
 

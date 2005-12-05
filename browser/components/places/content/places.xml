@@ -197,8 +197,8 @@
         </getter>
         <setter>
           this._selectBegin = val;
-          updateSelection();
-          fireRangeEvent();
+          this.updateSelection(this._selectBegin, this._selectEnd);
+          this.fireRangeEvent();
         </setter>
       </property>
       <property name="endrange">
@@ -210,8 +210,8 @@
         </getter>
         <setter>
           this._selectEnd = val;
-          updateSelection();
-          fireRangeEvent();
+          this.updateSelection(this._selectBegin, this._selectEnd);
+          this.fireRangeEvent();
         </setter>
       </property>
 
@@ -290,8 +290,13 @@
         </body>
       </method>
 
+      <!--===== suppressRangeEvents =====-->
+      <field name="suppressRangeEvents">false</field>
+      
       <!--===== fireRangeEvent =====-->
       <method name="fireRangeEvent"><body><![CDATA[
+        if (this.suppressRangeEvents)
+          return true;
         var event = document.createEvent("Events");
         event.initEvent("selectionchanged", false, true);
 
@@ -323,7 +328,7 @@
         } else {
           endIndex = this.daysBetweenDates(this._selectEnd, this._cell0Date);
         }
-
+        
         for (var i = 0; i < this._numCells; i ++) {
           var sel = (i >= beginIndex && i <= endIndex);
           if (sel != this._selected[i]) {
