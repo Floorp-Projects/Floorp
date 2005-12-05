@@ -38,7 +38,7 @@
  * Pretty-print some well-known BER or DER encoded data (e.g. certificates,
  * keys, pkcs7)
  *
- * $Id: pp.c,v 1.7 2004/09/30 00:49:36 wchang0222%aol.com Exp $
+ * $Id: pp.c,v 1.8 2005/12/05 23:09:38 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "secutil.h"
@@ -169,6 +169,7 @@ int main(int argc, char **argv)
     } else {
 	fprintf(stderr, "%s: don't know how to print out '%s' files\n",
 		progName, typeTag);
+	SECU_PrintAny(outFile, &data, "File contains", 0);
 	return -1;
     }
 
