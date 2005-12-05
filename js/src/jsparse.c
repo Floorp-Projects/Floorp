@@ -4346,6 +4346,8 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
           case TOK_XMLSPACE:
           case TOK_XMLTEXT:
           case TOK_STRING:
+            if (pn->pn_arity == PN_LIST)
+                goto cantfold;
             str = ATOM_TO_STRING(pn2->pn_atom);
             break;
 
@@ -4368,6 +4370,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
                 return JS_FALSE;
             break;
 
+          cantfold:
           default:
             JS_ASSERT(*pnp == pn1);
             if ((tt == TOK_XMLSTAGO || tt == TOK_XMLPTAGC) &&
