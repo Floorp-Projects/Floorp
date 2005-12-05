@@ -2915,7 +2915,8 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
 }
 
 JSBool
-js_DeflateStringToBuffer(JSContext *cx, const jschar* src, size_t srclen, char* dst, size_t* dstlenp)
+js_DeflateStringToBuffer(JSContext *cx, const jschar *src, size_t srclen,
+                         char *dst, size_t *dstlenp)
 {
     size_t i, utf8Len, dstlen = *dstlenp, origDstlen = dstlen;
     jschar c, c2;
@@ -2979,13 +2980,16 @@ badSurrogate:
 
 bufferTooSmall:
     *dstlenp = (origDstlen - dstlen);
-    if (cx)
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
+    if (cx) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BUFFER_TOO_SMALL);
+    }
     return JS_FALSE;
 }
 
 JSBool
-js_InflateStringToBuffer(JSContext *cx, const char *src, size_t srclen, jschar* dst, size_t* dstlenp)
+js_InflateStringToBuffer(JSContext *cx, const char *src, size_t srclen,
+                         jschar *dst, size_t *dstlenp)
 {
     uint32 v;
     size_t offset = 0, j, n, dstlen = *dstlenp, origDstlen = dstlen;
