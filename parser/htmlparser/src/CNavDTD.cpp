@@ -1662,6 +1662,15 @@ CNavDTD::HandleEndToken(CToken* aToken)
         } else {
           eHTMLTags theParentTag = mBodyContext->Last();
 
+          // First open transient styles, so that we see any autoclosed style
+          // tags.
+          if (nsHTMLElement::IsResidualStyleTag(theChildTag)) {
+            result = OpenTransientStyles(theChildTag);
+            if (NS_FAILED(result)) {
+              return result;
+            }
+          }
+
           if (kNotFound ==
                 nsHTMLElement::GetIndexOfChildOrSynonym(*mBodyContext,
                                                         theChildTag)) {
@@ -1688,8 +1697,9 @@ CNavDTD::HandleEndToken(CToken* aToken)
             if (gHTMLElements[theChildTag].HasSpecialProperty(kHandleStrayTag) &&
                 mDTDMode != eDTDMode_full_standards &&
                 mDTDMode != eDTDMode_almost_standards) {
-              // Oh boy!! we found a "stray" tag. Nav4.x and IE introduce line break in
-              // such cases. So, let's simulate that effect for compatibility.
+              // Oh boy!! we found a "stray" tag. Nav4.x and IE introduce line
+              // break in such cases. So, let's simulate that effect for
+              // compatibility.
               // Ex. <html><body>Hello</P>There</body></html>
               PRBool theParentContains = -1;
               if (!CanOmit(theParentTag, theChildTag, theParentContains)) {
@@ -1723,12 +1733,6 @@ CNavDTD::HandleEndToken(CToken* aToken)
               FindAutoCloseTargetForEndTag(theChildTag, *mBodyContext,
                                            mDTDMode);
             if (eHTMLTag_unknown != theTarget) {
-              if (nsHTMLElement::IsResidualStyleTag(theChildTag)) {
-                result = OpenTransientStyles(theChildTag);
-                if (NS_FAILED(result)) {
-                  return result;
-                }
-              }
               result = CloseContainersTo(theTarget, PR_FALSE);
             }
           }
