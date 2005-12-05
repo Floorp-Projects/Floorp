@@ -1048,9 +1048,9 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 
   if (window)
   {
-    BrowserWindow* browserWin = [browser window];
+    BrowserWindow* browserWin = (BrowserWindow*)[browser window];
     [browserWin setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
-    [browserWin orderWindow: NSWindowBelow relativeTo: [window windowNumber]];
+    [browserWin orderWindow:NSWindowBelow relativeTo:[window windowNumber]];
     [browserWin setSuppressMakeKeyFront:NO];
   }
   else
@@ -1063,7 +1063,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   if ([MainController isBlankURL:aURL])
     [browser disableLoadPage];
   else
-    [browser loadURL: aURL referrer:aReferrer activate:YES allowPopups:inAllowPopups];
+    [browser loadURL:aURL referrer:aReferrer activate:YES allowPopups:inAllowPopups];
 
   return browser;
 }
@@ -1074,14 +1074,14 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 
   if (window)
   {
-    BrowserWindow* browserWin = [browser window];
+    BrowserWindow* browserWin = (BrowserWindow*)[browser window];
     [browserWin setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
     [browserWin orderWindow: NSWindowBelow relativeTo: [window windowNumber]];
     [browserWin setSuppressMakeKeyFront:NO];
   }
   else
   {
-    [browser showWindow: self];
+    [browser showWindow:self];
   }
 
   [browser openURLArray:urlArray tabOpenPolicy:eReplaceTabs allowPopups:inAllowPopups];
@@ -1109,20 +1109,19 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   // them or we may get this event at startup before we've had time to load
   // our window.
   BrowserWindowController* controller = (BrowserWindowController*)[[self getFrontmostBrowserWindow] windowController];
-  if (reuseWindow > kOpenNewWindowOnAE && controller) {
-    if (reuseWindow == kOpenNewTabOnAE) {
+  BOOL tabOrWindowIsAvailable = (controller && [[controller getBrowserWrapper] isEmpty] && ![[controller getBrowserWrapper] isBusy]);
+  if (controller) {
+    BOOL tabOrWindowIsAvailable = ([[controller getBrowserWrapper] isEmpty] && ![[controller getBrowserWrapper] isBusy]);
+
+    if (tabOrWindowIsAvailable || reuseWindow == kReuseWindowOnAE)
+      [controller loadURL:inURLString referrer:nil activate:YES allowPopups:NO];
+    else if (reuseWindow == kOpenNewTabOnAE)
       [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
-    }
     else
-      [controller loadURL: inURLString referrer:nil activate:YES allowPopups:NO];
+      [controller openNewWindowWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
   }
-  else {
-    // should use BrowserWindowController openNewWindowWithURL, but that method
-    // really needs to be on the MainController
-    controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer behind:nil allowPopups:NO];
-  }
-  
-  [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
+  else
+    controller = [self openBrowserWindowWithURL:inURLString andReferrer:aReferrer behind:nil allowPopups:NO];
 }
 
 // Bookmarks menu actions.
