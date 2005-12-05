@@ -245,11 +245,10 @@ public:
     return 0;
   }
 private:
-  static unsigned ThreadMain(void *p)
+  static void ThreadMain(void *p)
   {
     Thread *self = (Thread *) p;
     self->mThreadFunc(self->mThreadParam);
-    return 0;
   }
   int        mThread;
   ThreadFunc mThreadFunc;
