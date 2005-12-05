@@ -103,6 +103,7 @@ REQUIRES	= xpcom \
 		  commandhandler \
 		  webbrwsr \
 		  uconv \
+		  txtsvc \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -56,6 +56,12 @@ class mozInlineSpellChecker : public nsIInlineSpellChecker, nsIEditActionListene
 {
 private:
 
+  // Access with CanEnableInlineSpellChecking
+  enum SpellCheckingState { SpellCheck_Uninitialized = -1,
+                            SpellCheck_NotAvailable = 0,
+                            SpellCheck_Available = 1};
+  static SpellCheckingState gCanEnableSpellChecking;
+
   nsWeakPtr mEditor; 
   nsCOMPtr<nsIEditorSpellCheck> mSpellCheck;
   nsCOMPtr<nsITextServicesDocument> mTextServicesDocument;
@@ -112,6 +118,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEDITACTIONLISTENER
   NS_DECL_NSIINLINESPELLCHECKER
+
+  // returns true if it looks likely that we can enable real-time spell checking
+  static PRBool CanEnableInlineSpellChecking();
 
   /*BEGIN implementations of mouseevent handler interface*/
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);

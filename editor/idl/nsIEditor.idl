@@ -63,7 +63,7 @@ typedef short EDirection;
 [ptr] native nsIPresShellPtr(nsIPresShell);
 [ptr] native nsIContentPtr(nsIContent);
 
-[scriptable, uuid(D4882FFB-E927-408b-96BE-D4391B456FA9)]
+[scriptable, uuid(e7cb6526-0809-47ee-b484-a6f297e536c0)]
 
 interface nsIEditor  : nsISupports
 {
@@ -285,7 +285,15 @@ interface nsIEditor  : nsISupports
 
   /* ------------ Inline Spell Checking methods -------------- */
 
-  readonly attribute nsIInlineSpellChecker inlineSpellChecker;
+  /** Returns the inline spell checker associated with this object. The spell
+    * checker is lazily created, so this function may create the object for
+    * you during this call.
+    * @param  autoCreate  If true, this will create a spell checker object
+    *                     if one does not exist yet for this editor. If false
+    *                     and the object has not been created, this function
+    *                     WILL RETURN NULL.
+    */
+  nsIInlineSpellChecker getInlineSpellChecker(in boolean autoCreate);
 
   /* ------------ Clipboard methods -------------- */
 

@@ -51,7 +51,7 @@ var InlineSpellChecker =
   Init : function (editor, enable)
   {
     this.editor = editor;
-    this.inlineSpellChecker = editor.inlineSpellChecker;
+    this.inlineSpellChecker = editor.getInlineSpellChecker(true);
     this.inlineSpellChecker.enableRealTimeSpell = enable;
   },
 

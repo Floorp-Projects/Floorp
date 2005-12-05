@@ -42,10 +42,17 @@
 interface nsIDOMXULCommandDispatcher;
 interface nsIObserver;
 
-[scriptable, uuid(e64bb081-13ba-430e-ab70-73a9f1d3de58)]
+[scriptable, uuid(868685b1-f4bc-4080-9c44-ecd5a3f1bac8)]
 interface nsIDOMXULDocument : nsISupports
 {
            attribute nsIDOMNode                 popupNode;
+
+           /**
+            * The event that triggered the popup. This is only valid during
+            * the popup showing event.
+            */
+           attribute nsIDOMEvent                popupEvent;
+
            attribute nsIDOMNode                 tooltipNode;
 
   readonly attribute nsIDOMXULCommandDispatcher commandDispatcher;

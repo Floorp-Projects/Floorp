@@ -290,6 +290,9 @@ private:
   nsresult SelectAllContents();
   nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd);
   
+  void SetEnableRealTimeSpell(PRBool aEnabled);
+  void SyncRealTimeSpell();
+
 private:
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsISelectionController> mSelCon;

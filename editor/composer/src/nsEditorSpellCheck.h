@@ -69,6 +69,8 @@ protected:
   nsStringArray  mSuggestedWordList;
   PRInt32        mSuggestedWordIndex;
 
+  // these are the words in the current personal dictionary,
+  // GetPersonalDictionary must be called to load them.
   nsStringArray  mDictionaryList;
   PRInt32        mDictionaryIndex;
 
