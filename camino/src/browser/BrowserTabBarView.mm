@@ -41,6 +41,7 @@
 #import "TabButtonCell.h"
 #import "ImageAdditions.h"
 
+#import "NSArray+Utils.h"
 #import "NSPasteboard+Utils.h"
 #import "NSMenu+Utils.h"
 
@@ -49,6 +50,7 @@
 -(void)layoutButtons;
 -(void)loadImages;
 -(void)drawTabBarBackgroundInRect:(NSRect)rect withActiveTabRect:(NSRect)tabRect;
+-(void)drawTabBarBackgroundHiliteRectInRect:(NSRect)rect;
 -(TabButtonCell*)buttonAtPoint:(NSPoint)clickPoint;
 -(void)registerTabButtonsForTracking;
 -(void)unregisterTabButtonsForTracking;
@@ -58,6 +60,8 @@
 @end
 
 static const float kTabBarDefaultHeight = 22.0;
+static const float kTabBottomPad = 4.0;
+
 
 @implementation BrowserTabBarView
 
@@ -135,7 +139,7 @@ static const int kOverflowButtonMargin = 1;
     BrowserTabViewItem *nextTab = [tabEnumerator nextObject];
     
     NSRect tabButtonFrame = [tabButton frame];
-    if (NSIntersectsRect(tabButtonFrame,rect) && NSMaxX(tabButtonFrame) <= NSMaxX(tabsRect))
+    if (NSIntersectsRect(tabButtonFrame, rect) && NSMaxX(tabButtonFrame) <= NSMaxX(tabsRect))
       [tabButton drawWithFrame:tabButtonFrame inView:self];
 
     // draw the first divider.
@@ -145,6 +149,9 @@ static const int kOverflowButtonMargin = 1;
     prevButton = tabButton;
     tab = nextTab;
   }
+  
+  if (mDragOverBar && !mDragDestButton)
+    [self drawTabBarBackgroundHiliteRectInRect:rect];
 }
 
 -(void)setFrame:(NSRect)frameRect
@@ -214,7 +221,7 @@ static const int kOverflowButtonMargin = 1;
   return nil;
 }
 
--(void) drawTabBarBackgroundInRect:(NSRect)rect withActiveTabRect:(NSRect)tabRect
+-(void)drawTabBarBackgroundInRect:(NSRect)rect withActiveTabRect:(NSRect)tabRect
 {
   // draw tab bar background, omitting the selected Tab
   NSRect barFrame = [self bounds];
@@ -224,14 +231,16 @@ static const int kOverflowButtonMargin = 1;
   // first, fill to the left of the active tab
   fillRect = NSMakeRect(barFrame.origin.x, barFrame.origin.y, 
                         (tabRect.origin.x - barFrame.origin.x), barFrame.size.height);
-  if (NSIntersectsRect(fillRect,rect)) {
+  if (NSIntersectsRect(fillRect, rect)) {
     // make sure we're not drawing to the left or right of the actual rectangle we were asked to draw
     if (fillRect.origin.x < NSMinX(rect)) {
       fillRect.size.width -= NSMinX(rect) - fillRect.origin.x;
       fillRect.origin.x = NSMinX(rect);
     }
+
     if (NSMaxX(fillRect) > NSMaxX(rect))
       fillRect.size.width -= NSMaxX(fillRect) - NSMaxX(rect);
+
     [mBackgroundImage drawTiledInRect:fillRect origin:patternOrigin operation:NSCompositeSourceOver];
   }
 
@@ -244,11 +253,49 @@ static const int kOverflowButtonMargin = 1;
         fillRect.size.width -= NSMinX(rect) - fillRect.origin.x;
         fillRect.origin.x = NSMinX(rect);
       }
+
       if (NSMaxX(fillRect) > NSMaxX(rect))
         fillRect.size.width -= NSMaxX(fillRect) - NSMaxX(rect);
         
       [mBackgroundImage drawTiledInRect:fillRect origin:patternOrigin operation:NSCompositeSourceOver];
    }
+}
+
+-(void)drawDragHiliteInRect:(NSRect)rect
+{
+  NSRect fillRect;
+  NSRect junk;
+  NSDivideRect(rect, &junk, &fillRect, kTabBottomPad, NSMinYEdge);
+
+  NSGraphicsContext* gc = [NSGraphicsContext currentContext];
+  [gc saveGraphicsState];
+  [[[NSColor colorForControlTint:NSDefaultControlTint] colorWithAlphaComponent:0.3] set];
+  NSRectFillUsingOperation(fillRect, NSCompositeSourceOver);
+  [gc restoreGraphicsState];
+}
+
+
+-(void)drawTabBarBackgroundHiliteRectInRect:(NSRect)rect
+{
+  NSRect barBounds = [self bounds];
+
+  BrowserTabViewItem* thisTab        = [[mTabView tabViewItems] firstObject];
+  TabButtonCell*      tabButton      = [thisTab tabButtonCell];
+  NSRect              tabButtonFrame = [tabButton frame];
+
+  NSRect junk;
+  NSRect backgroundRect;
+  NSDivideRect(barBounds, &backgroundRect, &junk, NSMinX(tabButtonFrame), NSMinXEdge);
+  if (NSIntersectsRect(backgroundRect, rect))
+    [self drawDragHiliteInRect:backgroundRect];
+
+  thisTab         = [[mTabView tabViewItems] lastObject];
+  tabButton       = [thisTab tabButtonCell];
+  tabButtonFrame  = [tabButton frame];
+
+  NSDivideRect(barBounds, &junk, &backgroundRect, NSMaxX(tabButtonFrame), NSMinXEdge);
+  if (!NSIsEmptyRect(backgroundRect) && NSIntersectsRect(backgroundRect, rect))
+    [self drawDragHiliteInRect:backgroundRect];
 }
 
 -(void)loadImages
@@ -299,7 +346,7 @@ static const int kOverflowButtonMargin = 1;
         NSRect trackingRect = [tabButton frame];
         // only track tabs that are onscreen
         if (NSMaxX(trackingRect) <= NSMaxX([self tabsRect]))
-          [tabButton addTrackingRectInView: self withFrame:trackingRect cursorLocation:local];
+          [tabButton addTrackingRectInView:self withFrame:trackingRect cursorLocation:local];
       }
     }
   }
@@ -475,24 +522,27 @@ static const int kOverflowButtonMargin = 1;
 // NSDraggingDestination destination methods
 -(unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
 {
+  mDragOverBar = YES;
+  [self setNeedsDisplay:YES];
+
   TabButtonCell * button = [self buttonAtPoint:[self convertPoint:[sender draggingLocation] fromView:nil]];
   if (!button) {
     // if the mouse isn't over a button, it'd be nice to give the user some indication that something will happen
     // if the user releases the mouse here. Try to indicate copy.
     if ([sender draggingSourceOperationMask] & NSDragOperationCopy)
       return NSDragOperationCopy;
-    else
-      return NSDragOperationGeneric;
+
+    return NSDragOperationGeneric;
   }
+
   NSView * dragDest = [[button tabViewItem] tabItemContentsView];
   mDragDestButton = button;
-  unsigned int rv = [ dragDest draggingEntered:sender];
-  if (NSDragOperationNone != rv) {
+  unsigned int dragOp = [dragDest draggingEntered:sender];
+  if (NSDragOperationNone != dragOp) {
     [button setDragTarget:YES];
-    [self setNeedsDisplay:YES];
   }
   [self unregisterTabButtonsForTracking];
-  return rv;
+  return dragOp;
 }
 
 -(unsigned int)draggingUpdated:(id <NSDraggingInfo>)sender
@@ -506,21 +556,23 @@ static const int kOverflowButtonMargin = 1;
     }
     if ([sender draggingSourceOperationMask] & NSDragOperationCopy)
       return NSDragOperationCopy;
-    else
-      return NSDragOperationGeneric;
+
+    return NSDragOperationGeneric;
   }
+
   if (mDragDestButton != button) {
     [mDragDestButton setDragTarget:NO];
     [self setNeedsDisplay:YES];
     mDragDestButton = button;
   }
+
   NSView * dragDest = [[button tabViewItem] tabItemContentsView];
-  unsigned int rv = [dragDest draggingUpdated:sender];
-  if (NSDragOperationNone != rv) {
+  unsigned int dragOp = [dragDest draggingUpdated:sender];
+  if (NSDragOperationNone != dragOp) {
     [button setDragTarget:YES];
     [self setNeedsDisplay:YES];
   }
-  return rv;
+  return dragOp;
 }
 
 -(void)draggingExited:(id <NSDraggingInfo>)sender
@@ -529,6 +581,7 @@ static const int kOverflowButtonMargin = 1;
     [mDragDestButton setDragTarget:NO];
     mDragDestButton = nil;
   }
+  mDragOverBar = NO;
   [self setNeedsDisplay:YES];
   [self registerTabButtonsForTracking];
 }
@@ -553,6 +606,8 @@ static const int kOverflowButtonMargin = 1;
 
 -(BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
+  mDragOverBar = NO;
+
   TabButtonCell * button = [self buttonAtPoint:[self convertPoint:[sender draggingLocation] fromView:nil]];
   if (!button) {
     if (mDragDestButton)

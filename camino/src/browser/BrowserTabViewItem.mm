@@ -68,8 +68,8 @@ const int kMenuTruncationChars = 60;
 @interface BrowserTabItemContainerView : NSView
 {
   BrowserTabViewItem*           mTabViewItem;
-  TruncatingTextAndImageCell* mLabelCell;
-  TabButtonCell* mTabButtonCell;
+  TruncatingTextAndImageCell*   mLabelCell;
+  TabButtonCell*                mTabButtonCell;
   
   BOOL           mIsDropTarget;
   BOOL           mSelectTabOnMouseUp;
@@ -337,6 +337,7 @@ const int kMenuTruncationChars = 60;
     // create close button. keep a strong ref as view goes in and out of view hierarchy
     mCloseButton = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 16, 16)];
     [mCloseButton setImage:[BrowserTabViewItem closeIcon]];
+    [mCloseButton setTitle:NSLocalizedString(@"CloseTabButtonTitle", @"")];   // doesn't show, but used for accessibility
     [mCloseButton setAlternateImage:[BrowserTabViewItem closeIconPressed]];
     [mCloseButton setImagePosition:NSImageOnly];
     [mCloseButton setBezelStyle:NSShadowlessSquareBezelStyle];

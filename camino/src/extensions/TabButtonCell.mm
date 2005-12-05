@@ -155,9 +155,10 @@ static NSImage* gTabButtonDividerImage = nil;
   }
   // TODO: Make this look nicer
   if ([self dragTarget]) {
-    [[NSColor colorWithCalibratedRed:0.7 green:0.8 blue:1.0 alpha:1.0] set];
     rect.origin.y += kTabBottomPad;
-    NSRectFill(rect);
+    NSBezierPath* dropTargetOutline = [NSBezierPath bezierPathWithRoundCorneredRect:rect cornerRadius:2.0f];
+    [[[NSColor colorForControlTint:NSDefaultControlTint] colorWithAlphaComponent:0.5] set];
+    [dropTargetOutline fill];
   }
   if (controlView != [mCloseButton superview]) {
     [controlView addSubview:mCloseButton];
@@ -190,11 +191,11 @@ static NSImage* gTabButtonDividerImage = nil;
 
 +(void)loadImages
 {
-  if (!gTabLeft) gTabLeft = [[NSImage imageNamed:@"tab_left_side"] retain];
-  if (!gTabRight) gTabRight = [[NSImage imageNamed:@"tab_right_side"] retain];
-  if (!gActiveTabBg) gActiveTabBg = [[NSImage imageNamed:@"tab_active_bg"] retain];
-  if (!gTabMouseOverBg) gTabMouseOverBg = [[NSImage imageNamed:@"tab_hover"] retain];
-  if (!gTabButtonDividerImage) gTabButtonDividerImage = [[NSImage imageNamed:@"tab_button_divider"] retain];
+  if (!gTabLeft)                gTabLeft                = [[NSImage imageNamed:@"tab_left_side"] retain];
+  if (!gTabRight)               gTabRight               = [[NSImage imageNamed:@"tab_right_side"] retain];
+  if (!gActiveTabBg)            gActiveTabBg            = [[NSImage imageNamed:@"tab_active_bg"] retain];
+  if (!gTabMouseOverBg)         gTabMouseOverBg         = [[NSImage imageNamed:@"tab_hover"] retain];
+  if (!gTabButtonDividerImage)  gTabButtonDividerImage  = [[NSImage imageNamed:@"tab_button_divider"] retain];
 }
 
 

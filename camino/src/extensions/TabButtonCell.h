@@ -40,10 +40,11 @@
 #import "RolloverTrackingCell.h"
 #import "BrowserTabViewItem.h"
 
-@interface TabButtonCell : RolloverTrackingCell {
-  BrowserTabViewItem *mTabViewItem;
-  BOOL mNeedsDivider;
-  NSButton * mCloseButton;
+@interface TabButtonCell : RolloverTrackingCell
+{
+  BrowserTabViewItem*   mTabViewItem;
+  BOOL                  mNeedsDivider;
+  NSButton*             mCloseButton;
 }
 
 -(id)initFromTabViewItem:(BrowserTabViewItem*)tabViewItem;
