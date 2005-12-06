@@ -2169,12 +2169,14 @@ nsJSContext::Notify(nsITimer *timer)
 void
 nsJSContext::FireGCTimer()
 {
+  // Always clear the newborn roots.  If there's already a timer, this
+  // will let the GC from that timer clean up properly.  If we're going
+  // to create a timer, we still want to do this now so that XPCOM
+  // shutdown can clean up properly.
+  ::JS_ClearNewbornRoots(mContext);
+
   if (sGCTimer) {
-    // There's already a timer for GC'ing, just clear newborn roots
-    // and return
-
-    ::JS_ClearNewbornRoots(mContext);
-
+    // There's already a timer for GC'ing, just return
     return;
   }
 
