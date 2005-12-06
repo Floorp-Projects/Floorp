@@ -123,6 +123,15 @@
     <keyset id="viewZoomKeys"/>
     <keyset id="navigationKeys"/>  
     <keyset id="tasksKeys"/>
+
+    <!-- Tab reordering keys -->
+    <key id="key_moveTabLeft" keycode="VK_LEFT" modifiers="accel" oncommand="gBrowser.moveTabLeft()"/>
+    <key id="key_moveTabRight" keycode="VK_RIGHT" modifiers="accel" oncommand="gBrowser.moveTabRight()"/>
+    <key id="key_moveTabBackward" keycode="VK_UP" modifiers="accel" oncommand="gBrowser.moveTabBackward()"/>
+    <key id="key_moveTabForward" keycode="VK_DOWN" modifiers="accel" oncommand="gBrowser.moveTabForward()"/>
+    <key id="key_moveTabToStart" keycode="VK_HOME" modifiers="accel" oncommand="gBrowser.moveTabToStart()"/>
+    <key id="key_moveTabToEnd" keycode="VK_END" modifiers="accel" oncommand="gBrowser.moveTabToEnd()"/>
+
   </keyset>
 
   <commandset id="commands">
