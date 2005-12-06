@@ -1303,8 +1303,6 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
     return rv;
 
   PRBool windowless = (window->type == nsPluginWindowType_Drawable);
-  if (windowless)
-    return rv;
 
   nsPoint origin = GetWindowOriginInPixels(windowless);
 
@@ -1541,7 +1539,9 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
                     
                   // next, get our plugin's rect so we can intersect it with the visible rect so we
                   // can tell the plugin where and how much to paint
-                  origin = GetWindowOriginInPixels(window->type);
+                  NS_ASSERTION(window->type == nsPluginWindowType_Drawable,
+                               "What happened to our window type?");
+                  origin = GetWindowOriginInPixels(PR_TRUE);
                   nsRect winlessRect = nsRect(origin, nsSize(window->width, window->height));
                   winlessRect.IntersectRect(winlessRect, visibleRect);
 
