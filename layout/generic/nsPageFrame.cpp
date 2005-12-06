@@ -47,7 +47,7 @@
 #include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
 #include "nsPageContentFrame.h"
-#include "nsTextFrame.h" // for function BinarySearchForPosition
+#include "nsLayoutUtils.h" // for function BinarySearchForPosition
 
 #include "nsIView.h" // view flags for clipping
 #include "nsCSSRendering.h"
@@ -442,7 +442,7 @@ nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
       return; // bail is empty string
     }
     // find how much text fits, the "position" is the size of the available area
-    if (BinarySearchForPosition(&aRenderingContext, text, 0, 0, 0, len,
+    if (nsLayoutUtils::BinarySearchForPosition(&aRenderingContext, text, 0, 0, 0, len,
                                 PRInt32(contentWidth), indx, textWidth)) {
       if (indx < len-1 ) {
         // we can't fit in all the text
