@@ -5090,7 +5090,8 @@ nsDOMClassInfo::MarkReachablePreservedWrappers(nsIDOMGCParticipant *aParticipant
   nsCOMArray<nsIDOMGCParticipant> reachable;
   SCCIndex->AppendReachableList(reachable);
   for (PRInt32 i = 0, i_end = reachable.Count(); i < i_end; ++i) {
-    MarkReachablePreservedWrappers(reachable[i], cx, arg);
+    if (reachable[i])
+      MarkReachablePreservedWrappers(reachable[i], cx, arg);
   }
 
   for (PreservedWrapperEntry *pwe = entry->first; pwe; pwe = pwe->next) {
