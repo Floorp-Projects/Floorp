@@ -1,4 +1,5 @@
 /* -*- Mode: c++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -443,29 +444,7 @@ nsContentDLF::CreateDocument(const char* aCommand,
   return rv;
 }
 
-// ...common work for |CreateRDFDocument| and |CreateXULDocumentFromStream|
-nsresult
-nsContentDLF::CreateRDFDocument(nsISupports* aExtraInfo,
-                                nsCOMPtr<nsIDocument>* doc,
-                                nsCOMPtr<nsIDocumentViewer>* docv)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-    
-  // Create the XUL document
-  *doc = do_CreateInstance(kXULDocumentCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // Create the image content viewer...
-  rv = NS_NewDocumentViewer(getter_AddRefs(*docv));
-  if (NS_FAILED(rv)) return rv;
-
-  // Load the UA style sheet if we haven't already done that
-  (*docv)->SetUAStyleSheet(gUAStyleSheet);
-
-  return NS_OK;
-}
-
-// ...note, this RDF document _may_ be XUL :-)
+// ...note, this RDF document is a XUL document :-)
 nsresult
 nsContentDLF::CreateRDFDocument(const char* aCommand,
                                 nsIChannel* aChannel,
@@ -476,12 +455,16 @@ nsContentDLF::CreateRDFDocument(const char* aCommand,
                                 nsIStreamListener** aDocListener,
                                 nsIContentViewer** aDocViewer)
 {
-  nsCOMPtr<nsIDocument> doc;
+  nsresult rv;
+  nsCOMPtr<nsIDocument> doc = do_CreateInstance(kXULDocumentCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
   nsCOMPtr<nsIDocumentViewer> docv;
-  nsresult rv = CreateRDFDocument(aExtraInfo, address_of(doc), address_of(docv));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  rv = NS_NewDocumentViewer(getter_AddRefs(docv));
+  if (NS_FAILED(rv)) return rv;
+
+  // Load the UA style sheet if we haven't already done that
+  docv->SetUAStyleSheet(gUAStyleSheet);
 
   nsCOMPtr<nsIURI> aURL;
   rv = aChannel->GetURI(getter_AddRefs(aURL));

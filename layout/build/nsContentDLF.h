@@ -81,10 +81,6 @@ public:
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aDocViewer);
 
-  nsresult CreateRDFDocument(nsISupports*,
-                             nsCOMPtr<nsIDocument>*,
-                             nsCOMPtr<nsIDocumentViewer>*);
-
   static nsICSSStyleSheet* gUAStyleSheet;
 
 #ifdef MOZ_SVG
