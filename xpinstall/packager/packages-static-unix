@@ -98,6 +98,7 @@ bin/components/dom_events.xpt
 bin/components/dom_loadsave.xpt
 bin/components/dom_html.xpt
 bin/components/dom_range.xpt
+bin/components/dom_sidebar.xpt
 bin/components/dom_stylesheets.xpt
 bin/components/dom_traversal.xpt
 bin/components/dom_views.xpt

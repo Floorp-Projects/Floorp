@@ -50,6 +50,7 @@ DIRS =						\
 	events					\
 	stylesheets				\
 	views					\
+	sidebar                                 \
 	css					\
 	traversal				\
 	range					\

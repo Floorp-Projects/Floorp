@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src
+DIRS		= src
 
 include $(topsrcdir)/config/rules.mk
 
