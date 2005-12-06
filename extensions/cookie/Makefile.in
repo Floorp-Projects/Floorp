@@ -74,7 +74,6 @@ CPPSRCS		= \
 		$(NULL)
 
 XPIDLSRCS	= \
-		nsIPermission.idl \
 		nsICookieAcceptDialog.idl \
 		nsICookiePromptService.idl \
 		$(NULL)
