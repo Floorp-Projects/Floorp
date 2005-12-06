@@ -1696,7 +1696,15 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
 
   // finish up
   if (NS_SUCCEEDED(rv)) {
-    NotifyContentObjectWrapper();
+    nsCOMPtr<nsIPluginInstance> inst;
+    mInstanceOwner->GetInstance(*getter_AddRefs(inst));
+    if (inst) {
+      // The plugin may have set up new interfaces; we need to mess with our JS
+      // wrapper.  Note that we DO NOT want to call this if there is no plugin
+      // instance!  That would just reenter Instantiate(), trying to create
+      // said plugin instance.
+      NotifyContentObjectWrapper();
+    }
   }
 
   return rv;
