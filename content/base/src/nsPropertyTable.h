@@ -206,7 +206,15 @@ class nsPropertyTable
   NS_HIDDEN_(void) Enumerate(const void *aObject, PRUint32 aCategory,
                              NSPropertyFunc aCallback, void *aData);
 
-  ~nsPropertyTable() NS_HIDDEN;
+  /**
+   * Deletes all of the properties for all objects in the property
+   * table, calling the destructor function for each property.
+   */
+  NS_HIDDEN_(void) DeleteAllProperties();
+  
+  ~nsPropertyTable() {
+    DeleteAllProperties();
+  }
 
   struct PropertyList;
 
