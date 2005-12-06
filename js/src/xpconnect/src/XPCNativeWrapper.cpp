@@ -820,6 +820,9 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
   }
 
+  // Make sure memberval doesn't go away while we mess with it.
+  AUTO_MARK_JSVAL(ccx, memberval);
+  
   JSString *str = JSVAL_TO_STRING(id);
   if (!str) {
     return ThrowException(NS_ERROR_UNEXPECTED, cx);
