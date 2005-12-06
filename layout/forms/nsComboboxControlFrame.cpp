@@ -2479,20 +2479,19 @@ nsComboboxControlFrame::OnContentReset()
 // nsIStatefulFrame
 //--------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::SaveState(nsPresContext* aPresContext,
+nsComboboxControlFrame::SaveState(SpecialStateID aStateID,
                                   nsPresState** aState)
 {
-  nsCOMPtr<nsIStatefulFrame> stateful(do_QueryInterface(mListControlFrame));
-  NS_ASSERTION(stateful, "Couldn't cast list frame to stateful frame!!!");
-  if (stateful) {
-    return stateful->SaveState(aPresContext, aState);
-  }
-  return NS_OK;
+  if (!mListControlFrame)
+    return NS_ERROR_FAILURE;
+
+  nsIStatefulFrame* stateful;
+  CallQueryInterface(mListControlFrame, &stateful);
+  return stateful->SaveState(aStateID, aState);
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::RestoreState(nsPresContext* aPresContext,
-                                     nsPresState* aState)
+nsComboboxControlFrame::RestoreState(nsPresState* aState)
 {
   if (!mListControlFrame)
     return NS_ERROR_FAILURE;
@@ -2500,7 +2499,7 @@ nsComboboxControlFrame::RestoreState(nsPresContext* aPresContext,
   nsIStatefulFrame* stateful;
   nsresult rv = CallQueryInterface(mListControlFrame, &stateful);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Must implement nsIStatefulFrame");
-  rv = stateful->RestoreState(aPresContext, aState);
+  rv = stateful->RestoreState(aState);
   return rv;
 }
 

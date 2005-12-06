@@ -145,50 +145,45 @@ nsIsIndexFrame::UpdatePromptLabel()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsIsIndexFrame::GetInputFrame(nsPresContext* aPresContext,
-                              nsIFormControlFrame** oFrame)
+nsresult
+nsIsIndexFrame::GetInputFrame(nsIFormControlFrame** oFrame)
 {
-  nsIPresShell *presShell = aPresContext->GetPresShell();
+  nsIPresShell *presShell = GetPresContext()->GetPresShell();
   if (!mInputContent) NS_WARNING("null content - cannot restore state");
   if (presShell && mInputContent) {
     nsIFrame *frame = presShell->GetPrimaryFrameFor(mInputContent);
     if (frame) {
-      return frame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**) oFrame);
+      return CallQueryInterface(frame, oFrame);
     }
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsIsIndexFrame::GetInputValue(nsPresContext* aPresContext,
-                              nsString& oString)
+void
+nsIsIndexFrame::GetInputValue(nsString& oString)
 {
   nsIFormControlFrame* frame = nsnull;
-  GetInputFrame(aPresContext, &frame);
+  GetInputFrame(&frame);
   if (frame) {
     ((nsNewFrame*)frame)->GetValue(oString, PR_FALSE);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsIsIndexFrame::SetInputValue(nsPresContext* aPresContext,
-                              const nsString aString)
+void
+nsIsIndexFrame::SetInputValue(const nsString& aString)
 {
   nsIFormControlFrame* frame = nsnull;
-  GetInputFrame(aPresContext, &frame);
+  GetInputFrame(&frame);
   if (frame) {
     ((nsNewFrame*)frame)->SetValue(aString);
   }
-  return NS_OK;
 }
 
 void 
 nsIsIndexFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   nsIFormControlFrame* frame = nsnull;
-  GetInputFrame(GetPresContext(), &frame);
+  GetInputFrame(&frame);
   if (frame) {
     frame->SetFocus(aOn, aRepaint);
   }
@@ -371,7 +366,7 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
      encoder = nsnull;
 
   nsAutoString value;
-  GetInputValue(aPresContext, value);
+  GetInputValue(value);
   URLEncode(value, encoder, data);
   // End ProcessAsURLEncoded
 
@@ -554,15 +549,15 @@ nsIsIndexFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder, n
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsIsIndexFrame::SaveState(nsPresContext* aPresContext, nsPresState** aState)
+nsIsIndexFrame::SaveState(SpecialStateID aStateID, nsPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
   // Get the value string
   nsAutoString stateString;
-  nsresult res =  GetInputValue(aPresContext, stateString);
-  NS_ENSURE_SUCCESS(res, res);
+  GetInputValue(stateString);
 
+  nsresult res = NS_OK;
   if (! stateString.IsEmpty()) {
 
     // Construct a pres state and store value in it.
@@ -575,7 +570,7 @@ nsIsIndexFrame::SaveState(nsPresContext* aPresContext, nsPresState** aState)
 }
 
 NS_IMETHODIMP
-nsIsIndexFrame::RestoreState(nsPresContext* aPresContext, nsPresState* aState)
+nsIsIndexFrame::RestoreState(nsPresState* aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
@@ -584,5 +579,6 @@ nsIsIndexFrame::RestoreState(nsPresContext* aPresContext, nsPresState* aState)
   nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("value"), stateString);
   NS_ENSURE_SUCCESS(res, res);
 
-  return SetInputValue(aPresContext, stateString);
+  SetInputValue(stateString);
+  return NS_OK;
 }
