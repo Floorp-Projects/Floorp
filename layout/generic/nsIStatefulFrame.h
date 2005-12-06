@@ -7,8 +7,8 @@ class nsPresContext;
 class nsPresState;
 
 #define NS_ISTATEFULFRAME_IID \
-{0x26254ab7, 0xdea3, 0x4375, \
-{0xb0, 0x1d, 0xbd, 0x11, 0xa1, 0x4b, 0x54, 0xbc}}
+{ 0x25c232cf, 0x40ba, 0x4394, \
+ { 0x84, 0xe4, 0x73, 0xa2, 0xf7, 0x4d, 0x8b, 0x64 } }
 
 class nsIStatefulFrame : public nsISupports {
  public: 
@@ -19,8 +19,14 @@ class nsIStatefulFrame : public nsISupports {
   // a special ID by which to refer to that type.
   enum SpecialStateID {eNoID=0, eDocumentScrollState};
 
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState) = 0;
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsPresState* aState) = 0;
+  // Save the state for this frame.  Some implementations may choose to return
+  // different states depending on the value of aStateID.  If this method
+  // succeeds, the caller is responsible for deleting the resulting state when
+  // done with it.
+  NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState) = 0;
+
+  // Restore the state for this frame from aState
+  NS_IMETHOD RestoreState(nsPresState* aState) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIStatefulFrame, NS_ISTATEFULFRAME_IID)

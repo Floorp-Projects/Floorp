@@ -129,8 +129,8 @@ public:
   NS_IMETHOD OnSubmit(nsPresContext* aPresContext);
 
   //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState);
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsPresState* aState);
+  NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState);
+  NS_IMETHOD RestoreState(nsPresState* aState);
 
 protected:
   nsCOMPtr<nsITextContent> mTextContent;
@@ -138,9 +138,9 @@ protected:
 
 private:
   NS_IMETHOD UpdatePromptLabel();
-  NS_IMETHOD GetInputFrame(nsPresContext* aPresContext, nsIFormControlFrame** oFrame);
-  NS_IMETHOD GetInputValue(nsPresContext* aPresContext, nsString& oString);
-  NS_IMETHOD SetInputValue(nsPresContext* aPresContext, const nsString aString);
+  nsresult GetInputFrame(nsIFormControlFrame** oFrame);
+  void GetInputValue(nsString& oString);
+  void SetInputValue(const nsString& aString);
 
   void GetSubmitCharset(nsCString& oCharset);
   NS_IMETHOD GetEncoder(nsIUnicodeEncoder** encoder);

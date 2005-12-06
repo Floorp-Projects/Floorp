@@ -2614,8 +2614,14 @@ nsGfxScrollFrameInner::GetVScrollbarHintFromGlobalHistory(PRBool* aVScrollbarNee
 }
 
 nsPresState*
-nsGfxScrollFrameInner::SaveState()
+nsGfxScrollFrameInner::SaveState(nsIStatefulFrame::SpecialStateID aStateID)
 {
+  // Don't save "normal" state for the root scrollframe; that's
+  // handled via the eDocumentScrollState state id
+  if (mIsRoot && aStateID == nsIStatefulFrame::eNoID) {
+    return nsnull;
+  }
+  
   nsCOMPtr<nsIScrollbarMediator> mediator;
   nsIFrame* first = GetScrolledFrame();
   mediator = do_QueryInterface(first);

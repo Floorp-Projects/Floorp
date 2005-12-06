@@ -1440,8 +1440,7 @@ nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
 
   // Capture the state, exit early if we get null (nothing to save)
   nsAutoPtr<nsPresState> frameState;
-  nsresult rv = statefulFrame->SaveState(GetPresContext(),
-                                         getter_Transfers(frameState));
+  nsresult rv = statefulFrame->SaveState(aID, getter_Transfers(frameState));
   if (!frameState) {
     return;
   }
@@ -1529,7 +1528,7 @@ nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
   }
 
   // Restore it
-  rv = statefulFrame->RestoreState(GetPresContext(), frameState);
+  rv = statefulFrame->RestoreState(frameState);
   if (NS_FAILED(rv)) {
     return;
   }

@@ -204,8 +204,8 @@ public:
   virtual nsIScrollableView* GetScrollableView();
 
   //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState);
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsPresState* aState);
+  NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState);
+  NS_IMETHOD RestoreState(nsPresState* aState);
 
   static PRBool ToolkitHasNativePopup();
 

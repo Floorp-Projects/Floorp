@@ -109,7 +109,7 @@ public:
 
   void ScrollToRestoredPosition();
 
-  nsPresState* SaveState();
+  nsPresState* SaveState(nsIStatefulFrame::SpecialStateID aStateID);
   void RestoreState(nsPresState* aState);
   void SaveVScrollbarStateToGlobalHistory();
   nsresult GetVScrollbarHintFromGlobalHistory(PRBool* aVScrollbarNeeded);
@@ -264,12 +264,12 @@ public:
   virtual void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
 
   // nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState) {
+  NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState) {
     NS_ENSURE_ARG_POINTER(aState);
-    *aState = mInner.SaveState();
+    *aState = mInner.SaveState(aStateID);
     return NS_OK;
   }
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsPresState* aState) {
+  NS_IMETHOD RestoreState(nsPresState* aState) {
     NS_ENSURE_ARG_POINTER(aState);
     mInner.RestoreState(aState);
     return NS_OK;
@@ -433,12 +433,12 @@ public:
   virtual void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
 
   // nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState) {
+  NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState) {
     NS_ENSURE_ARG_POINTER(aState);
-    *aState = mInner.SaveState();
+    *aState = mInner.SaveState(aStateID);
     return NS_OK;
   }
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsPresState* aState) {
+  NS_IMETHOD RestoreState(nsPresState* aState) {
     NS_ENSURE_ARG_POINTER(aState);
     mInner.RestoreState(aState);
     return NS_OK;
