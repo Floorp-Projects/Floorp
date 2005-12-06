@@ -46,7 +46,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "nsTextFrame.h"
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
 #include "nsSplittableFrame.h"
@@ -76,6 +75,9 @@
 #include "nsCompatibility.h"
 #include "nsCSSColorUtils.h"
 #include "nsLayoutUtils.h"
+#include "nsFrame.h"
+#include "nsTextTransformer.h"
+#include "nsITextContent.h"
 
 #include "nsTextFragment.h"
 #include "nsHTMLAtoms.h"
@@ -127,6 +129,440 @@ static NS_DEFINE_CID(kLECID, NS_ULE_CID);
 //----------------------------------------------------------------------
 
 #define TEXT_BUF_SIZE 100
+
+//----------------------------------------
+
+struct nsAutoIndexBuffer;
+struct nsAutoPRUint8Buffer;
+
+class nsTextStyle {
+public:
+  const nsStyleFont* mFont;
+  const nsStyleText* mText;
+  nsIFontMetrics* mNormalFont;
+  nsIFontMetrics* mSmallFont;
+  nsIFontMetrics* mLastFont;
+  PRBool mSmallCaps;
+  nscoord mWordSpacing;
+  nscoord mLetterSpacing;
+  nscoord mSpaceWidth;
+  nscoord mAveCharWidth;
+  PRBool mJustifying;
+  PRBool mPreformatted;
+  PRInt32 mNumJustifiableCharacterToRender;
+  PRInt32 mNumJustifiableCharacterToMeasure;
+  nscoord mExtraSpacePerJustifiableCharacter;
+  PRInt32 mNumJustifiableCharacterReceivingExtraJot;
+
+  nsTextStyle(nsPresContext* aPresContext,
+              nsIRenderingContext& aRenderingContext,
+              nsStyleContext* sc);
+
+  ~nsTextStyle();
+};
+
+// Contains extra style data needed only for painting (not reflowing)
+class nsTextPaintStyle : public nsTextStyle {
+public:
+  enum{
+    eNormalSelection =
+      nsISelectionController::SELECTION_NORMAL,
+    eIMESelections =
+      nsISelectionController::SELECTION_IME_RAWINPUT |
+      nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT |
+      nsISelectionController::SELECTION_IME_CONVERTEDTEXT |
+      nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT,
+    eAllSelections =
+      eNormalSelection | eIMESelections
+  };
+
+  const nsStyleColor* mColor;
+
+  nsTextPaintStyle(nsPresContext* aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   nsStyleContext* aStyleContext,
+                   nsIContent* aContent,
+                   PRInt16 aSelectionStatus);
+  ~nsTextPaintStyle();
+
+  nscolor GetTextColor();
+  void GetSelectionColors(nscolor* aForeColor,
+                          nscolor* aBackColor,
+                          PRBool*  aBackIsTransparent);
+  void GetIMESelectionColors(SelectionType aSelectionType,
+                             nscolor*      aForeColor,
+                             nscolor*      aBackColor,
+                             PRBool*       aBackIsTransparent);
+  // if this returns PR_FALSE, we don't need to draw underline.
+  PRBool GetIMEUnderline(SelectionType aSelectionType,
+                         nscolor*      aLineColor,
+                         float*        aRelativeSize);
+protected:
+  nsPresContext* mPresContext;
+  nsStyleContext* mStyleContext;
+  nsIContent* mContent;
+  PRInt16 mSelectionStatus; // see nsIDocument.h SetDisplaySelection()
+
+  // Common colors
+  PRBool mInitCommonColors;
+
+  PRInt32 mSufficientContrast;
+  nscolor mFrameBackgroundColor;
+
+  // Selection colors
+  PRBool mInitSelectionColors;
+
+  nscolor mSelectionTextColor;
+  nscolor mSelectionBGColor;
+  PRBool  mSelectionBGIsTransparent;
+
+  // IME selection colors and underline info
+  struct nsIMEColor {
+    PRBool mInit;
+    nscolor mTextColor;
+    nscolor mBGColor;
+    nscolor mBGIsTransparent;
+    nscolor mUnderlineColor;
+  };
+  nsIMEColor mIMEColor[4];
+  // indexs
+  enum {
+    eIndexRawInput = 0,
+    eIndexSelRawText,
+    eIndexConvText,
+    eIndexSelConvText
+  };
+  float mIMEUnderlineRelativeSize;
+
+  // Color initializations
+  PRBool InitCommonColors();
+  PRBool InitSelectionColors();
+
+  nsIMEColor* GetIMEColor(SelectionType aSelectionType);
+  PRBool InitIMEColors(SelectionType aSelectionType, nsIMEColor*);
+
+  PRBool EnsureSufficientContrast(nscolor *aForeColor, nscolor *aBackColor);
+
+  nscolor GetResolvedForeColor(nscolor aColor, nscolor aDefaultForeColor,
+                               nscolor aBackColor);
+};
+
+class nsTextFrame : public nsFrame {
+public:
+  nsTextFrame();
+  
+  // nsIFrame
+  NS_IMETHOD Paint(nsPresContext*      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const                nsRect& aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags);
+  
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  
+  NS_IMETHOD GetCursor(const nsPoint& aPoint,
+                       nsIFrame::Cursor& aCursor);
+  
+  NS_IMETHOD CharacterDataChanged(nsPresContext* aPresContext,
+                                  nsIContent*     aChild,
+                                  PRBool          aAppend);
+  
+  virtual nsIFrame* GetNextInFlow() const {
+    return mNextInFlow;
+  }
+  NS_IMETHOD SetNextInFlow(nsIFrame* aNextInFlow) {
+    mNextInFlow = aNextInFlow;
+    return NS_OK;
+  }
+  virtual nsIFrame* GetLastInFlow() const;
+  
+  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const {
+    aIsSplittable = NS_FRAME_SPLITTABLE;
+    return NS_OK;
+  }
+  
+  /**
+    * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::textFrame
+   */
+  virtual nsIAtom* GetType() const;
+  
+#ifdef DEBUG
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+  NS_IMETHOD_(nsFrameState) GetDebugStateBits() const ;
+#endif
+  
+  NS_IMETHOD GetPosition(nsPresContext*  aPresContext,
+                         const nsPoint&  aPoint,
+                         nsIContent **   aNewContent,
+                         PRInt32&        aContentOffset,
+                         PRInt32&        aContentOffsetEnd);
+  
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aPresContext,
+                                           const nsPoint&  aPoint,
+                                           nsIContent **   aNewContent,
+                                           PRInt32&        aContentOffset,
+                                           PRInt32&        aContentOffsetEnd,
+                                           PRBool&         aBeginFrameContent);
+  
+  NS_IMETHOD GetPositionSlowly(nsPresContext*  aPresContext,
+                               nsIRenderingContext * aRendContext,
+                               const nsPoint&        aPoint,
+                               nsIContent **         aNewContent,
+                               PRInt32&              aOffset);
+  
+  
+  NS_IMETHOD SetSelected(nsPresContext* aPresContext,
+                         nsIDOMRange *aRange,
+                         PRBool aSelected,
+                         nsSpread aSpread);
+  
+  NS_IMETHOD PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos);
+  NS_IMETHOD CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
+  
+  NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
+                                 nsGUIEvent *    aEvent,
+                                 nsEventStatus*  aEventStatus);
+  
+  NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end)const;
+  
+  virtual void AdjustOffsetsForBidi(PRInt32 start, PRInt32 end);
+  
+  NS_IMETHOD GetPointFromOffset(nsPresContext*         inPresContext,
+                                nsIRenderingContext*    inRendContext,
+                                PRInt32                 inOffset,
+                                nsPoint*                outPoint);
+  
+  NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,
+                                            PRBool                  inHint,
+                                            PRInt32*                outFrameContentOffset,
+                                            nsIFrame*               *outChildFrame);
+  
+  NS_IMETHOD IsVisibleForPainting(nsPresContext *     aPresContext, 
+                                  nsIRenderingContext& aRenderingContext,
+                                  PRBool               aCheckVis,
+                                  PRBool*              aIsVisible);
+  
+  virtual PRBool IsEmpty();
+  virtual PRBool IsSelfEmpty() { return IsEmpty(); }
+  
+  /**
+   * @return PR_TRUE if this text frame ends with a newline character.  It
+   * should return PR_FALSE if this is not a text frame.
+   */
+  virtual PRBool HasTerminalNewline() const;
+  
+#ifdef ACCESSIBILITY
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#endif
+  
+  // nsIHTMLReflow
+  NS_IMETHOD Reflow(nsPresContext* aPresContext,
+                    nsHTMLReflowMetrics& aMetrics,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
+  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
+  NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
+  NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
+                                    nsIRenderingContext& aRC,
+                                    nscoord& aDeltaWidth,
+                                    PRBool& aLastCharIsJustifiable);
+
+  struct TextReflowData {
+    PRInt32             mX;                   // OUT
+    PRInt32             mOffset;              // IN/OUT How far along we are in the content
+    nscoord             mMaxWordWidth;        // OUT
+    nscoord             mAscent;              // OUT
+    nscoord             mDescent;             // OUT
+    PRPackedBool        mWrapping;            // IN
+    PRPackedBool        mSkipWhitespace;      // IN
+    PRPackedBool        mMeasureText;         // IN
+    PRPackedBool        mInWord;              // IN
+    PRPackedBool        mFirstLetterOK;       // IN
+    PRPackedBool        mCanBreakBefore;         // IN
+    PRPackedBool        mComputeMaxWordWidth; // IN
+    PRPackedBool        mTrailingSpaceTrimmed; // IN/OUT
+    
+    TextReflowData(PRInt32 aStartingOffset,
+                   PRBool  aWrapping,
+                   PRBool  aSkipWhitespace,
+                   PRBool  aMeasureText,
+                   PRBool  aInWord,
+                   PRBool  aFirstLetterOK,
+                   PRBool  aCanBreakBefore,
+                   PRBool  aComputeMaxWordWidth,
+                   PRBool  aTrailingSpaceTrimmed)
+      : mX(0),
+      mOffset(aStartingOffset),
+      mMaxWordWidth(0),
+      mAscent(0),
+      mDescent(0),
+      mWrapping(aWrapping),
+      mSkipWhitespace(aSkipWhitespace),
+      mMeasureText(aMeasureText),
+      mInWord(aInWord),
+      mFirstLetterOK(aFirstLetterOK),
+      mCanBreakBefore(aCanBreakBefore),
+      mComputeMaxWordWidth(aComputeMaxWordWidth),
+      mTrailingSpaceTrimmed(aTrailingSpaceTrimmed)
+    {}
+  };
+  
+  nsIDocument* GetDocument(nsPresContext* aPresContext);
+  
+  void PrepareUnicodeText(nsTextTransformer& aTransformer,
+                          nsAutoIndexBuffer* aIndexBuffer,
+                          nsAutoTextBuffer* aTextBuffer,
+                          PRInt32* aTextLen,
+                          PRBool aForceArabicShaping = PR_FALSE,
+                          PRIntn* aJustifiableCharCount = nsnull);
+  void ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingContext,
+                                        nsTextStyle& aTextStyle,
+                                        PRUnichar* aBuffer, PRInt32 aLength, PRInt32 aNumJustifiableCharacter);
+  
+  void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
+                            nsStyleContext* aStyleContext,
+                            nsPresContext* aPresContext,
+                            nsTextPaintStyle& aStyle,
+                            nscoord aX, nscoord aY, nscoord aWidth,
+                            PRUnichar* aText = nsnull,
+                            SelectionDetails *aDetails = nsnull,
+                            PRUint32 aIndex = 0,
+                            PRUint32 aLength = 0,
+                            const nscoord* aSpacing = nsnull);
+  
+  void PaintTextSlowly(nsPresContext* aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       nsStyleContext* aStyleContext,
+                       nsTextPaintStyle& aStyle,
+                       nscoord aX, nscoord aY);
+  
+  // The passed-in rendering context must have its color set to the color the
+  // text should be rendered in.
+  void RenderString(nsIRenderingContext& aRenderingContext,
+                    nsStyleContext* aStyleContext,
+                    nsPresContext* aPresContext,
+                    nsTextPaintStyle& aStyle,
+                    PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
+                    nscoord aX, nscoord aY,
+                    nscoord aWidth,
+                    SelectionDetails *aDetails = nsnull);
+  
+  void MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
+                            nsTextStyle& aStyle,
+                            PRUnichar* aWord,
+                            PRInt32 aWordLength,
+                            PRBool aIsEndOfFrame,
+                            nsTextDimensions* aDimensionsResult);
+  
+  PRUint32 EstimateNumChars(PRUint32 aAvailableWidth,
+                            PRUint32 aAverageCharWidth);
+  
+  nsReflowStatus MeasureText(nsPresContext*          aPresContext,
+                             const nsHTMLReflowState& aReflowState,
+                             nsTextTransformer&       aTx,
+                             nsTextStyle&               aTs,
+                             TextReflowData&          aTextData);
+  
+  void GetTextDimensions(nsIRenderingContext& aRenderingContext,
+                         nsTextStyle& aStyle,
+                         PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
+                         nsTextDimensions* aDimensionsResult);
+  
+  //this returns the index into the PAINTBUFFER of the x coord aWidth(based on 0 as far left) 
+  //also note: this is NOT added to mContentOffset since that would imply that this return is
+  //meaningful to content yet. use index buffer from prepareunicodestring to find the content offset.
+  PRInt32 GetLengthSlowly(nsIRenderingContext& aRenderingContext,
+                          nsTextStyle& aStyle,
+                          PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
+                          nscoord aWidth);
+  
+  PRBool IsTextInSelection(nsPresContext* aPresContext,
+                           nsIRenderingContext& aRenderingContext);
+  
+  nsresult GetTextInfoForPainting(nsPresContext*          aPresContext,
+                                  nsIRenderingContext&     aRenderingContext,
+                                  nsIPresShell**           aPresShell,
+                                  nsISelectionController** aSelectionController,
+                                  PRBool&                  aDisplayingSelection,
+                                  PRBool&                  aIsPaginated,
+                                  PRBool&                  aIsSelected,
+                                  PRBool&                  aHideStandardSelection,
+                                  PRInt16&                 aSelectionValue);
+
+  nsresult GetSelectionStatus(nsPresContext* aPresContext,
+                              PRInt16&       aSelectionValue);
+
+  void PaintUnicodeText(nsPresContext* aPresContext,
+                        nsIRenderingContext& aRenderingContext,
+                        nsStyleContext* aStyleContext,
+                        nsTextPaintStyle& aStyle,
+                        nscoord dx, nscoord dy);
+  
+  void PaintAsciiText(nsPresContext* aPresContext,
+                      nsIRenderingContext& aRenderingContext,
+                      nsStyleContext* aStyleContext,
+                      nsTextPaintStyle& aStyle,
+                      nscoord dx, nscoord dy);
+  
+  nsTextDimensions ComputeTotalWordDimensions(nsPresContext* aPresContext,
+                                              nsLineLayout& aLineLayout,
+                                              const nsHTMLReflowState& aReflowState,
+                                              nsIFrame* aNextFrame,
+                                              const nsTextDimensions& aBaseDimensions,
+                                              PRUnichar* aWordBuf,
+                                              PRUint32   aWordBufLen,
+                                              PRUint32   aWordBufSize,
+                                              PRBool     aCanBreakBefore);
+  
+  nsTextDimensions ComputeWordFragmentDimensions(nsPresContext* aPresContext,
+                                                 nsLineLayout& aLineLayout,
+                                                 const nsHTMLReflowState& aReflowState,
+                                                 nsIFrame* aNextFrame,
+                                                 nsIContent* aContent,
+                                                 nsITextContent* aText,
+                                                 PRBool* aStop,
+                                                 const PRUnichar* aWordBuf,
+                                                 PRUint32 &aWordBufLen,
+                                                 PRUint32 aWordBufSize,
+                                                 PRBool aCanBreakBefore);
+  
+#ifdef DEBUG
+  void ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const;
+#endif
+  
+protected:
+    virtual ~nsTextFrame();
+  
+  nsIFrame* mNextInFlow;
+  PRInt32   mContentOffset;
+  PRInt32   mContentLength;
+  PRInt32   mColumn;
+  nscoord   mAscent;
+  //factored out method for GetTextDimensions and getlengthslowly. if aGetTextDimensions is non-zero number then measure to the width field and return the length. else shove total dimensions into result
+  PRInt32 GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
+                                    nsTextStyle& aStyle,
+                                    PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
+                                    nsTextDimensions* aDimensionsResult,
+                                    PRBool aGetTextDimensions/* true=get dimensions false = return length up to aDimensionsResult->width size*/);
+  nsresult GetContentAndOffsetsForSelection(nsPresContext*  aPresContext,nsIContent **aContent, PRInt32 *aOffset, PRInt32 *aLength);
+  
+  void AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
+                                    PRInt32 textLength,
+                                    PRBool isRTLChars,
+                                    PRBool isOddLevel,
+                                    PRBool isBidiSystem);
+  
+  void SetOffsets(PRInt32 start, PRInt32 end);
+  
+  PRBool IsChineseJapaneseLangGroup();
+  PRBool IsJustifiableCharacter(PRUnichar aChar, PRBool aLangIsCJ);
+  
+  nsresult FillClusterBuffer(nsPresContext *aPresContext, const PRUnichar *aText,
+                             PRUint32 aLength, nsAutoPRUint8Buffer& aClusterBuffer);
+};
 
 //----------------------------------------
 
@@ -3590,65 +4026,6 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
   }
 }
 
-//---------------------------------------------------
-// Also defined for external use in nsTextFrame.h
-//
-// Uses a binary search for find where the cursor falls in the line of text
-// It also keeps track of the part of the string that has already been measured
-// so it doesn't have to keep measuring the same text over and over
-//
-// Param "aBaseWidth" contains the width in twips of the portion 
-// of the text that has already been measured, and aBaseInx contains
-// the index of the text that has already been measured.
-//
-// aTextWidth returns the (in twips) the length of the text that falls before the cursor
-// aIndex contains the index of the text where the cursor falls
-PRBool
-BinarySearchForPosition(nsIRenderingContext* aRendContext, 
-                        const PRUnichar* aText,
-                        PRInt32    aBaseWidth,
-                        PRInt32    aBaseInx,
-                        PRInt32    aStartInx, 
-                        PRInt32    aEndInx, 
-                        PRInt32    aCursorPos, 
-                        PRInt32&   aIndex,
-                        PRInt32&   aTextWidth)
-{
-  PRInt32 range = aEndInx - aStartInx;
-  if ((range == 1) || (range == 2 && IS_HIGH_SURROGATE(aText[aStartInx]))) {
-    aIndex   = aStartInx + aBaseInx;
-    aRendContext->GetWidth(aText, aIndex, aTextWidth);
-    return PR_TRUE;
-  }
-
-  PRInt32 inx = aStartInx + (range / 2);
-
-  // Make sure we don't leave a dangling low surrogate
-  if (IS_HIGH_SURROGATE(aText[inx-1]))
-    inx++;
-
-  PRInt32 textWidth = 0;
-  aRendContext->GetWidth(aText, inx, textWidth);
-
-  PRInt32 fullWidth = aBaseWidth + textWidth;
-  if (fullWidth == aCursorPos) {
-    aTextWidth = textWidth;
-    aIndex = inx;
-    return PR_TRUE;
-  } else if (aCursorPos < fullWidth) {
-    aTextWidth = aBaseWidth;
-    if (BinarySearchForPosition(aRendContext, aText, aBaseWidth, aBaseInx, aStartInx, inx, aCursorPos, aIndex, aTextWidth)) {
-      return PR_TRUE;
-    }
-  } else {
-    aTextWidth = fullWidth;
-    if (BinarySearchForPosition(aRendContext, aText, aBaseWidth, aBaseInx, inx, aEndInx, aCursorPos, aIndex, aTextWidth)) {
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
 //---------------------------------------------------------------------------
 // Uses a binary search to find the position of the cursor in the text.
 // The "indices array is used to map from the compressed text back to the 
@@ -3752,13 +4129,13 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
         nscoord posX = (getReversedPos) ?
                        (mRect.width) - (aPoint.x) : aPoint.x;
 
-        PRBool found = BinarySearchForPosition(rendContext, text, 0, 0, 0,
+        PRBool found = nsLayoutUtils::BinarySearchForPosition(rendContext, text, 0, 0, 0,
                                                PRInt32(textLength),
                                                PRInt32(posX) , //go to local coordinates
                                                indx, textWidth);
 
 #else
-        PRBool found = BinarySearchForPosition(rendContext, text, 0, 0, 0,
+        PRBool found = nsLayoutUtils::BinarySearchForPosition(rendContext, text, 0, 0, 0,
                                                PRInt32(textLength),
                                                PRInt32(aPoint.x) , //go to local coordinates
                                                indx, textWidth);
@@ -6493,6 +6870,10 @@ nsTextFrame::SetOffsets(PRInt32 aStart, PRInt32 aEnd)
   mContentLength = aEnd - aStart;
 }
 
+/**
+ * @return PR_TRUE if this text frame ends with a newline character.  It should return
+ * PR_FALSE if it is not a text frame.
+ */
 PRBool
 nsTextFrame::HasTerminalNewline() const
 {

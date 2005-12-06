@@ -111,7 +111,6 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsBoxLayoutState.h"
 #include "nsBlockFrame.h"
-#include "nsTextFrame.h"
 
 static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
@@ -3460,9 +3459,8 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
   }
 
   // If this is preformatted text frame, see if this frame ends with a newline
-  if (aFrame->GetType() == nsLayoutAtoms::textFrame &&
-      aFrame->GetStyleContext()->GetStyleText()->WhiteSpaceIsSignificant() &&
-      ((nsTextFrame*)aFrame)->HasTerminalNewline()) {
+  if (aFrame->HasTerminalNewline() &&
+      aFrame->GetStyleContext()->GetStyleText()->WhiteSpaceIsSignificant()) {
     PRInt32 startOffset, endOffset;
     aFrame->GetOffsets(startOffset, endOffset);
     result.mContent = aFrame->GetContent();
@@ -4665,6 +4663,16 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
     *aTabIndex = tabIndex;
   }
   return isFocusable;
+}
+
+/**
+ * @return PR_TRUE if this text frame ends with a newline character.  It
+ * should return PR_FALSE if this is not a text frame.
+ */
+PRBool
+nsIFrame::HasTerminalNewline() const
+{
+  return PR_FALSE;
 }
 
 /* static */
