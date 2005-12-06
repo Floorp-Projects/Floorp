@@ -4697,6 +4697,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #if JS_HAS_XML_SUPPORT
       case TOK_XMLATTR:
+      case TOK_XMLSPACE:
       case TOK_XMLTEXT:
       case TOK_XMLCDATA:
       case TOK_XMLCOMMENT:
