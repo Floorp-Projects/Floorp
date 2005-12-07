@@ -1119,6 +1119,9 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
       [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
     else
       [controller openNewWindowWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
+
+    if (!loadInBackground)
+      [[controller window] makeKeyAndOrderFront:nil];
   }
   else
     controller = [self openBrowserWindowWithURL:inURLString andReferrer:aReferrer behind:nil allowPopups:NO];
