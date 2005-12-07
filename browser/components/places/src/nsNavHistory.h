@@ -109,8 +109,6 @@ protected:
   PRBool mOnlyBookmarked;
   PRBool mDomainIsHost;
   nsString mDomain;
-  PRInt32 mGroupingMode;
-  PRInt32 mSortingMode;
   nsTArray<PRInt64> mFolders;
   PRUint32 mItemTypes;
 };
