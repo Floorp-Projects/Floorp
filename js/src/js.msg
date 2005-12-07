@@ -114,7 +114,7 @@ MSG_DEF(JSMSG_BAD_INSTANCEOF_RHS,      31, 1, JSEXN_TYPEERR, "invalid 'instanceo
 MSG_DEF(JSMSG_BAD_BYTECODE,            32, 1, JSEXN_INTERNALERR, "unimplemented JavaScript bytecode {0}")
 MSG_DEF(JSMSG_BAD_RADIX,               33, 1, JSEXN_ERR, "illegal radix {0}")
 MSG_DEF(JSMSG_NAN,                     34, 1, JSEXN_ERR, "{0} is not a number")
-MSG_DEF(JSMSG_CANT_CONVERT,            35, 1, JSEXN_NONE, "can't convert {0} to an integer")
+MSG_DEF(JSMSG_CANT_CONVERT,            35, 1, JSEXN_ERR, "can't convert {0} to an integer")
 MSG_DEF(JSMSG_CYCLIC_VALUE,            36, 1, JSEXN_ERR, "cyclic {0} value")
 MSG_DEF(JSMSG_PERMANENT,               37, 1, JSEXN_ERR, "{0} is permanent")
 MSG_DEF(JSMSG_CANT_CONVERT_TO,         38, 2, JSEXN_TYPEERR, "can't convert {0} to {1}")
