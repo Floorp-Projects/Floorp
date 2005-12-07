@@ -71,6 +71,8 @@ extern NSString* const kStackViewResizedNotificationName;
 // padding will normally be calculated automatically from the subview positions,
 // but you can set it explicilty if you wish.
 - (void)setIntrinsicPadding:(float)inPadding forEdge:(NSRectEdge)inEdge;
+// shortcut to set no padding on all edges
+- (void)setNoIntrinsicPadding;
 - (float)paddingForEdge:(NSRectEdge)inEdge;
 
 - (void)adaptToSubviews;

@@ -115,6 +115,15 @@
   mPaddingSetManually = YES;
 }
 
+- (void)setNoIntrinsicPadding
+{
+  mIntrinsicPadding[NSMinXEdge] = 0.0f;
+  mIntrinsicPadding[NSMinYEdge] = 0.0f;
+  mIntrinsicPadding[NSMaxXEdge] = 0.0f;
+  mIntrinsicPadding[NSMaxYEdge] = 0.0f;
+  mPaddingSetManually = YES;
+}
+
 - (float)paddingForEdge:(NSRectEdge)inEdge
 {
   if ((int)inEdge < 0 || (int)inEdge > 3)

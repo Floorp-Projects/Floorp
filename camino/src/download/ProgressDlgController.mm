@@ -103,6 +103,11 @@ static id gSharedProgressController = nil;
     mAwaitingTermination = NO;
     mShouldCloseWindow   = NO;
     
+    // we "know" that the superview of the stack view is a CHFlippedShrinkWrapView
+    // (it has to be, because NSScrollViews have to contain a flipped view)
+    if ([[mStackView superview] respondsToSelector:@selector(setNoIntrinsicPadding)])
+      [[mStackView superview] setNoIntrinsicPadding];
+
     // We provide the views for the stack view, from mProgressViewControllers
     [mStackView setShowsSeparators:YES];
     [mStackView setDataSource:self];
