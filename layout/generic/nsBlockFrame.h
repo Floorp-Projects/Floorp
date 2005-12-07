@@ -206,9 +206,6 @@ public:
                                           PRBool            aConsiderSelf);
   virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
                                      nsFramePaintLayer aWhichLayer);
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
-                         nsGUIEvent*     aEvent,
-                         nsEventStatus*  aEventStatus);
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
   NS_IMETHOD IsVisibleForPainting(nsPresContext *     aPresContext, 
@@ -228,21 +225,6 @@ public:
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
-
-#ifdef DO_SELECTION
-  NS_IMETHOD  HandleEvent(nsPresContext* aPresContext,
-                          nsGUIEvent* aEvent,
-                          nsEventStatus* aEventStatus);
-
-  NS_IMETHOD  HandleDrag(nsPresContext* aPresContext, 
-                         nsGUIEvent*     aEvent,
-                         nsEventStatus*  aEventStatus);
-
-  nsIFrame * FindHitFrame(nsBlockFrame * aBlockFrame, 
-                          const nscoord aX, const nscoord aY,
-                          const nsPoint & aPoint);
-
-#endif
 
   virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
                                      nsIFrame*       aNextInFlow);
@@ -311,16 +293,6 @@ protected:
                                         nscoord aOffset,
                                         nscoord aAscent,
                                         nscoord aSize);
-
-  /**
-   * GetClosestLine will return the line that VERTICALLY owns the point closest to aPoint.y
-   * aPoint is the point to search for, relative to the origin of the frame that aLI
-   * iterates over.
-   * aClosestLine is the result.
-   */
-  nsresult GetClosestLine(nsILineIterator *aLI,
-                          const nsPoint &aPoint,
-                          PRInt32 &aClosestLine);
 
   void TryAllLines(nsLineList::iterator* aIterator,
                    nsLineList::iterator* aEndIterator,

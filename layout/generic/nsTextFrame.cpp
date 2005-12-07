@@ -294,21 +294,12 @@ public:
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const ;
 #endif
   
-  NS_IMETHOD GetPosition(nsPresContext*  aPresContext,
-                         const nsPoint&  aPoint,
+  NS_IMETHOD GetPositionHelper(const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd);
   
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aPresContext,
-                                           const nsPoint&  aPoint,
-                                           nsIContent **   aNewContent,
-                                           PRInt32&        aContentOffset,
-                                           PRInt32&        aContentOffsetEnd,
-                                           PRBool&         aBeginFrameContent);
-  
-  NS_IMETHOD GetPositionSlowly(nsPresContext*  aPresContext,
-                               nsIRenderingContext * aRendContext,
+  NS_IMETHOD GetPositionSlowly(nsIRenderingContext * aRendContext,
                                const nsPoint&        aPoint,
                                nsIContent **         aNewContent,
                                PRInt32&              aOffset);
@@ -321,10 +312,6 @@ public:
   
   NS_IMETHOD PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos);
   NS_IMETHOD CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
-  
-  NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
-                                 nsGUIEvent *    aEvent,
-                                 nsEventStatus*  aEventStatus);
   
   NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end)const;
   
@@ -3065,22 +3052,21 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
 
 //measure Spaced Textvoid
 nsresult
-nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
-                               nsIRenderingContext* aRendContext,
+nsTextFrame::GetPositionSlowly(nsIRenderingContext* aRendContext,
                                const nsPoint& aPoint,
                                nsIContent** aNewContent,
                                PRInt32& aOffset)
 
 {
   // pre-condition tests
-  NS_PRECONDITION(aPresContext && aRendContext && aNewContent, "null arg");
-  if (!aPresContext || !aRendContext || !aNewContent) {
+  NS_PRECONDITION(aRendContext && aNewContent, "null arg");
+  if (!aRendContext || !aNewContent) {
     return NS_ERROR_NULL_POINTER;
   }
   // initialize out param
   *aNewContent = nsnull;
 
-  nsTextStyle ts(aPresContext, *aRendContext, mStyleContext);
+  nsTextStyle ts(GetPresContext(), *aRendContext, mStyleContext);
   if (!ts.mSmallCaps && !ts.mWordSpacing && !ts.mLetterSpacing && !ts.mJustifying) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -3119,7 +3105,7 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
   }
 
   // Transform text from content into renderable form
-  nsTextTransformer tx(aPresContext);
+  nsTextTransformer tx(GetPresContext());
   PRInt32 textLength;
   PRIntn numJustifiableCharacter;
 
@@ -3148,29 +3134,6 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
 #endif // IBMBIDI
 
   ComputeExtraJustificationSpacing(*aRendContext, ts, paintBuffer.mBuffer, textLength, numJustifiableCharacter);
-
-//IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
-  PRInt32 prefInt =
-    nsContentUtils::GetIntPref("browser.drag_out_of_frame_style");
-
-  PRBool outofstylehandled = PR_FALSE;
-
-  if (prefInt)
-  {
-    if (aPoint.y < 0)//above rectangle
-    {
-      aOffset = mContentOffset;
-      outofstylehandled = PR_TRUE;
-    }
-    else if (aPoint.y > mRect.height)
-    {
-      aOffset = mContentOffset + mContentLength;
-      outofstylehandled = PR_TRUE;
-    }
-  }
-
-  if (!outofstylehandled) //then we drag to closest X point and dont worry about the 'Y'
-//END STYLE RULE
   {
     //the following will first get the index into the PAINTBUFFER then the actual content
     nscoord adjustedX = PR_MAX(0,aPoint.x);
@@ -4033,16 +3996,15 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
 // display of selection is based on the compressed text.
 //---------------------------------------------------------------------------
 NS_IMETHODIMP
-nsTextFrame::GetPosition(nsPresContext*  aPresContext,
-                         const nsPoint&  aPoint,
+nsTextFrame::GetPositionHelper(const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd)
 
 {
   // pre-condition tests
-  NS_PRECONDITION(aPresContext && aNewContent, "null arg");
-  if (!aPresContext || !aNewContent) {
+  NS_PRECONDITION(aNewContent, "null arg");
+  if (!aNewContent) {
     return NS_ERROR_NULL_POINTER;
   }
   // initialize out param
@@ -4052,14 +4014,14 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
   if (mState & NS_FRAME_IS_DIRTY)
     return NS_ERROR_UNEXPECTED;
 
-  nsIPresShell *shell = aPresContext->GetPresShell();
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
   if (shell) {
     nsCOMPtr<nsIRenderingContext> rendContext;      
     nsresult rv = shell->CreateRenderingContext(this, getter_AddRefs(rendContext));
     if (NS_SUCCEEDED(rv)) {
-      nsTextStyle ts(aPresContext, *rendContext, mStyleContext);
+      nsTextStyle ts(GetPresContext(), *rendContext, mStyleContext);
       if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing || ts.mJustifying) {
-        nsresult result = GetPositionSlowly(aPresContext, rendContext, aPoint, aNewContent,
+        nsresult result = GetPositionSlowly(rendContext, aPoint, aNewContent,
                                  aContentOffset);
         aContentOffsetEnd = aContentOffset;
         return result;
@@ -4077,39 +4039,17 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
       SetFontFromStyle(rendContext, mStyleContext);
 
       // Get the renderable form of the text
-      nsTextTransformer tx(aPresContext);
+      nsTextTransformer tx(GetPresContext());
       PRInt32 textLength;
       // no need to worry about justification, that's always on the slow path
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
-
-//IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
-      PRInt32 prefInt =
-        nsContentUtils::GetIntPref("browser.drag_out_of_frame_style");
-      PRBool outofstylehandled = PR_FALSE;
-
-      if (prefInt)
-      {
-        if (aPoint.y < 0)//above rectangle
-        {
-          aContentOffset = mContentOffset;
-          aContentOffsetEnd = aContentOffset;
-          outofstylehandled = PR_TRUE;
-        }
-        else if (aPoint.y > mRect.height)
-        {
-          aContentOffset = mContentOffset + mContentLength;
-          aContentOffsetEnd = aContentOffset;
-          outofstylehandled = PR_TRUE;
-        }
-      }
 
       if (textLength <= 0) {
         aContentOffset = mContentOffset;
         aContentOffsetEnd = aContentOffset;
       }
-      else if (!outofstylehandled) //then we need to track based on the X coord only
+      else
       {
-//END STYLE IF
         PRInt32* ip = indexBuffer.mBuffer;
 
         PRInt32 indx;
@@ -4195,42 +4135,6 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsTextFrame::GetContentAndOffsetsFromPoint(nsPresContext*  aPresContext,
-                                           const nsPoint&  aPoint,
-                                           nsIContent **   aNewContent,
-                                           PRInt32&        aContentOffset,
-                                           PRInt32&        aContentOffsetEnd,
-                                           PRBool&         aBeginFrameContent)
-{
-  if (!aNewContent)
-    return NS_ERROR_NULL_POINTER;
-  *aNewContent = nsnull;//initialize
-  aContentOffset = 0;
-  aContentOffsetEnd = 0;
-  aBeginFrameContent = 0;
-
-  DEBUG_VERIFY_NOT_DIRTY(mState);
-  if (mState & NS_FRAME_IS_DIRTY)
-    return NS_ERROR_UNEXPECTED;
-
-  nsPoint newPoint;
-  newPoint.y = aPoint.y;
-  if (aPoint.x < 0)
-    newPoint.x = 0;
-  else
-    newPoint.x = aPoint.x;
-  nsresult rv = GetPosition(aPresContext, newPoint, aNewContent, aContentOffset, aContentOffsetEnd);
-  if (NS_FAILED(rv))
-    return rv;
-  if (aContentOffset == mContentOffset)
-    aBeginFrameContent = PR_TRUE;
-  else
-    aBeginFrameContent = PR_FALSE;
-  return rv;
-}
-
 
 // [HACK] Foward Declarations
 void ForceDrawFrame(nsFrame * aFrame);
@@ -5119,38 +5023,6 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
   return result;
 }
-
-NS_IMETHODIMP
-nsTextFrame::HandleMultiplePress(nsPresContext* aPresContext, 
-                                 nsGUIEvent*     aEvent,
-                                 nsEventStatus*  aEventStatus)
-{
-  if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
-    return NS_OK;
-  }
-
-  nsMouseEvent *me = (nsMouseEvent *)aEvent;
-  if (!me) return NS_OK;
-
-  // Triple- and greater click counts are handled by nsFrame.
-  if (me->clickCount > 2)
-    return nsFrame::HandleMultiplePress(aPresContext, aEvent, aEventStatus);
-
-  // Double-click: word selection, handled here:
-  PRInt32 startPos = 0;
-  PRInt32 contentOffsetEnd = 0;
-  nsCOMPtr<nsIContent> newContent;
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
-  nsresult rv = GetPosition(aPresContext, pt,
-                            getter_AddRefs(newContent), startPos,
-                            contentOffsetEnd);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return PeekBackwardAndForward(eSelectWord, eSelectWord, startPos,
-                                aPresContext, PR_FALSE);
-}
-
 
 NS_IMETHODIMP
 nsTextFrame::CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval)

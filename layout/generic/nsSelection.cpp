@@ -340,9 +340,6 @@ public:
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
   NS_IMETHOD CommonPageMove(PRBool aForward, PRBool aExtend, nsIScrollableView *aScrollableView, nsIFrameSelection *aFrameSel);
 
-  NS_IMETHOD AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
-        nsIContent** outContent, PRInt32* outStartOffset, PRInt32* outEndOffset);
-  
   NS_IMETHOD SetHint(HINT aHintRight);
   NS_IMETHOD GetHint(HINT *aHintRight);
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
@@ -461,9 +458,6 @@ private:
   void         SetDirty(PRBool aDirty=PR_TRUE){if (mBatching) mChangesDuringBatching = aDirty;}
 
   nsresult     NotifySelectionListeners(SelectionType aType);     // add parameters to say collapsed etc?
-
-  // utility method to lookup frame style
-  nsresult      FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSelectionStyle, nsIFrame* *foundFrame);
 
   nsTypedSelection *mDomSelections[nsISelectionController::NUM_SELECTIONTYPES];
 
@@ -2468,21 +2462,6 @@ nsSelection::HandleDrag(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& 
        AdjustForMaintainedSelection(newContent, startPos))
     return NS_OK;
 
-  // do we have CSS that changes selection behaviour?
-  {
-    //add scope for nsCOMPtr
-    PRBool    changeSelection;
-    nsCOMPtr<nsIContent>  selectContent;
-    PRInt32   newStart, newEnd;
-    if (NS_SUCCEEDED(AdjustOffsetsFromStyle(newFrame, &changeSelection, getter_AddRefs(selectContent), &newStart, &newEnd))
-      && changeSelection)
-    {
-      newContent = selectContent;
-      startPos = newStart;
-      contentOffsetEnd = newEnd;
-    }
-  }
-
   if (NS_SUCCEEDED(result))
   {
 #ifdef VISUALSELECTION
@@ -3055,27 +3034,6 @@ nsSelection::NotifySelectionListeners(SelectionType aType)
   }
   return NS_ERROR_FAILURE;
 }
-
-nsresult
-nsSelection::FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSelectionStyle, nsIFrame* *foundFrame)
-{
-  nsIFrame* thisFrame = aFrame;
-  
-  while (thisFrame)
-  {
-    if (thisFrame->GetStyleUIReset()->mUserSelect == aSelectionStyle)
-    {
-      *foundFrame = thisFrame;
-      return NS_OK;
-    }
-  
-    thisFrame = thisFrame->GetParent();
-  }
-  
-  *foundFrame = nsnull;
-  return NS_OK;
-}
-
 
 // Start of Table Selection methods
 
@@ -4092,59 +4050,6 @@ nsSelection::CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset)
 }
 
 // End of Table Selection
-
-NS_IMETHODIMP
-nsSelection::AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
-      nsIContent** outContent, PRInt32* outStartOffset, PRInt32* outEndOffset)
-{
-  
-  *changeSelection = PR_FALSE;
-  *outContent = nsnull;
-  
-  nsresult  rv;  
-  nsIFrame*   selectAllFrame;
-  rv = FrameOrParentHasSpecialSelectionStyle(aFrame, NS_STYLE_USER_SELECT_ALL, &selectAllFrame);
-  if (NS_FAILED(rv)) return rv;
-  
-  if (!selectAllFrame)
-    return NS_OK;
-  
-  nsIContent* selectAllContent = selectAllFrame->GetContent();
-  if (selectAllContent)
-  {
-    nsCOMPtr<nsIContent> parentContent = selectAllContent->GetParent();
-    if (parentContent)
-    {
-      PRInt32 startOffset = parentContent->IndexOf(selectAllContent);
-
-      if (startOffset < 0)
-      {
-        // hrmm, this is probably anonymous content. Let's go up another level
-        // do we need to do this if we get the right frameSelection to start with?
-        nsCOMPtr<nsIContent> superParent = parentContent->GetParent();
-        if (superParent)
-        {
-          PRInt32 superStartOffset = superParent->IndexOf(parentContent);
-          if (superStartOffset < 0)
-            return NS_ERROR_FAILURE;    // give up
-        
-          parentContent = superParent;
-          startOffset = superStartOffset;
-        }
-      }
-      
-      NS_IF_ADDREF(*outContent = parentContent);
-
-      *outStartOffset = startOffset;
-      *outEndOffset = startOffset + 1;
-
-      *changeSelection = PR_TRUE;
-    }    
-  }
-
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsSelection::SetHint(HINT aHintRight)
