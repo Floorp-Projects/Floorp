@@ -185,7 +185,7 @@ function dcc_getmatches(nickname, filename, types, dirs, states)
         for (k = 0; k < this.files.length; k++)
         {
             if ((!nickname || matchNames(this.files[k].user.unicodeName, n)) &&
-                (!filename || matchNames(this.files[k].fileName, f)) &&
+                (!filename || matchNames(this.files[k].filename, f)) &&
                 (!dirs || arrayIndexOf(dirs, this.files[k].state.dir) >= 0) &&
                 (!states || arrayIndexOf(states, this.files[k].state.state) >= 0))
             {
