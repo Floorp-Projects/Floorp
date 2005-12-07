@@ -634,6 +634,12 @@ mozStorageStatement::GetBlob(PRUint32 aIndex, PRUint32 *aDataSize, PRUint8 **aDa
         return NS_ERROR_FAILURE;
 
     int blobsize = sqlite3_column_bytes (mDBStatement, aIndex);
+    if (blobsize == 0) {
+      // empty column
+      *aData = nsnull;
+      *aDataSize = 0;
+      return NS_OK;
+    }
     const void *blob = sqlite3_column_blob (mDBStatement, aIndex);
 
     void *blobcopy = nsMemory::Clone(blob, blobsize);
