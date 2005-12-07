@@ -863,6 +863,9 @@ function cmdCancel(e)
              (network.state == NET_WAITING))
     {
         // We're trying to connect to a network, and want to cancel. Do so:
+        if (e.deleteWhenDone)
+            e.network.deleteWhenDone = true;
+
         display(getMsg(MSG_CANCELLING, network.unicodeName));
         network.cancel();
     }
@@ -1485,9 +1488,18 @@ function cmdDeleteView(e)
         e.view = e.sourceObject;
 
     if (e.view.TYPE == "IRCChannel" && e.view.active)
-        e.view.part();
+    {
+        e.view.dispatch("part", { deleteWhenDone: true });
+        return;
+    }
     if (e.view.TYPE == "IRCDCCChat" && e.view.active)
         e.view.disconnect();
+    if (e.view.TYPE == "IRCNetwork" && (e.view.state == NET_CONNECTING || 
+                                        e.view.state == NET_WAITING))
+    {
+        e.view.dispatch("cancel", { deleteWhenDone: true });
+        return;
+    }
 
     if (client.viewsArray.length < 2)
     {
@@ -1659,7 +1671,7 @@ function cmdRejoin(e)
     {
         if (!e.reason)
             e.reason = "";
-        e.channel.dispatch("part", { reason: e.reason, noDelete: true });
+        e.channel.dispatch("part", { reason: e.reason, deleteWhenDone: false });
     }
 
     e.channel.join(e.channel.mode.key);
@@ -2280,13 +2292,15 @@ function cmdLeave(e)
         }
     }
 
+    if (!("deleteWhenDone" in e))
+        e.deleteWhenDone = client.prefs["deleteOnPart"];
+
     /* If it's not active, we're not actually in it, even though the view is
      * still here.
      */
     if (e.channel.active)
     {
-        if (e.noDelete)
-            e.channel.noDelete = true;
+        e.channel.deleteWhenDone = e.deleteWhenDone;
 
         if (!e.reason)
             e.reason = "";
@@ -2296,8 +2310,8 @@ function cmdLeave(e)
     }
     else
     {
-        if (!e.noDelete && client.prefs["deleteOnPart"])
-            e.channel.dispatch("delete");
+        if (e.deleteWhenDone)
+            e.channel.dispatch("delete-view");
     }
 }
 

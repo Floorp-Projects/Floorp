@@ -264,16 +264,28 @@ function net_quit (reason)
 CIRCNetwork.prototype.cancel =
 function net_cancel()
 {
+    // We're online, pull the plug on the current connection, or...
     if (this.state == NET_ONLINE)
     {
-        // Pull the plug on the current connection, or...
         this.quit();
     }
-    else if ((this.state == NET_CONNECTING) || (this.state == NET_WAITING))
+    // We're waiting for the 001, too late to throw a reconnect, or...
+    else if (this.state == NET_CONNECTING)
     {
         this.state = NET_CANCELLING;
-
-        // ...try a reconnect (which will fail us).
+        this.primServ.connection.disconnect();
+        // Throw the necessary error events:
+        ev = new CEvent ("network", "error", this, "onError");
+        ev.server = this;
+        ev.debug = "Connect sequence was cancelled.";
+        ev.errorCode = JSIRC_ERR_CANCELLED;
+        this.eventPump.addEvent(ev);
+    }
+    // We're waiting for onDoConnect, so try a reconnect (which will fail us)
+    else if (this.state == NET_WAITING)
+    {
+        this.state = NET_CANCELLING;
+        // onDoConnect will throw the error events for us, as it will fail
         this.immediateConnect();
     }
     else
@@ -980,7 +992,7 @@ function serv_disconnect(e)
 CIRCServer.prototype.onSendData =
 function serv_onsenddata (e)
 {
-    if (!this.isConnected)
+    if (!this.isConnected || (this.parent.state == NET_CANCELLING))
     {
         dd ("Can't send to disconnected socket");
         this.flushSendQueue();
@@ -1046,7 +1058,8 @@ function serv_poll(e)
 
     try
     {
-        line = this.connection.readData(this.READ_TIMEOUT);
+        if (this.parent.state != NET_CANCELLING)
+            line = this.connection.readData(this.READ_TIMEOUT);
     }
     catch (ex)
     {

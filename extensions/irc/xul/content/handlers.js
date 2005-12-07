@@ -1807,7 +1807,14 @@ function my_neterror (e)
         updateProgress();
     }
 
+
     this.display(msg, type);
+
+    if (this.deleteWhenDone)
+        this.dispatch("delete-view");
+
+    delete this.deleteWhenDone;
+
 }
 
 
@@ -1874,10 +1881,11 @@ function my_netdisconnect (e)
     {
         this.busy = false;
         updateProgress();
-
-        this.displayHere(msg, msgType);
+        if (this.state != NET_CANCELLING)
+            this.displayHere(msg, msgType);
     }
-    else
+    // Don't do anything if we're cancelling.
+    else if (this.state != NET_CANCELLING)
     {
         for (var v in client.viewsArray)
         {
@@ -2258,10 +2266,10 @@ function my_cpart (e)
             /* redisplay the tree */
             client.rdf.setTreeRoot("user-list", this.getGraphResource());
 
-        if ("noDelete" in this)
-            delete this.noDelete;
-        else if (client.prefs["deleteOnPart"])
-            this.dispatch("delete");
+        if (this.deleteWhenDone)
+            this.dispatch("delete-view");
+
+        delete this.deleteWhenDone;
     }
     else
     {
