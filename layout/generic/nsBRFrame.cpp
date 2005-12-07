@@ -61,12 +61,11 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 #endif
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
-                         const nsPoint& aPoint,
-                         nsIContent** aNewContent,
-                         PRInt32& aContentOffset,
-                         PRInt32& aContentOffsetEnd,
-                         PRBool&  aBeginFrameContent);
+  NS_IMETHOD GetPositionHelper(const nsPoint&  aPoint,
+                         nsIContent **   aNewContent,
+                         PRInt32&        aContentOffset,
+                         PRInt32&        aContentOffsetEnd);
+
   NS_IMETHOD PeekOffset(nsPresContext* aPresContext, 
                          nsPeekOffsetStruct *aPos);
 
@@ -210,22 +209,21 @@ BRFrame::GetType() const
   return nsLayoutAtoms::brFrame;
 }
 
-NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
-                                                     const nsPoint&  aPoint,
-                                                     nsIContent **   aContent,
-                                                     PRInt32&        aOffsetBegin,
-                                                     PRInt32&        aOffsetEnd,
-                                                     PRBool&         aBeginFrameContent)
+NS_IMETHODIMP BRFrame::GetPositionHelper(const nsPoint&  aPoint,
+                                   nsIContent **   aNewContent,
+                                   PRInt32&        aContentOffset,
+                                   PRInt32&        aContentOffsetEnd)
 {
   if (!mContent)
     return NS_ERROR_NULL_POINTER;
-  NS_IF_ADDREF(*aContent = mContent->GetParent());
+  NS_IF_ADDREF(*aNewContent = mContent->GetParent());
 
-  if (*aContent)
-    aOffsetBegin = (*aContent)->IndexOf(mContent);
-  aOffsetEnd = aOffsetBegin;
-  aBeginFrameContent = PR_TRUE;
-  return NS_OK;
+  if (*aNewContent) {
+    aContentOffset = (*aNewContent)->IndexOf(mContent);
+    aContentOffsetEnd = aContentOffset;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP BRFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)

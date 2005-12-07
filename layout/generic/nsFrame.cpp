@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Uri Bernstein <uriber@gmail.com>
+ *   Eli Friedman <sharparrow1@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1112,28 +1113,6 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection,
   return NS_OK;
 }
 
-/*
-NS_IMETHODIMP
-nsFrame::FrameOrParentHasSpecialSelectionStyle(PRUint8 aSelectionStyle, nsIFrame* *foundFrame)
-{
-  nsIFrame* thisFrame = this;
-  
-  while (thisFrame)
-  {
-    if (thisFrame->GetStyleUserInterface()->mUserSelect == aSelectionStyle)
-    {
-      *foundFrame = thisFrame;
-      return NS_OK;
-    }
-  
-    thisFrame = thisFrame->GetParent();
-  }
-  
-  *foundFrame = nsnull;
-  return NS_OK;
-}
-*/
-
 NS_IMETHODIMP
 nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
 {
@@ -1197,58 +1176,6 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
   if (mState & NS_FRAME_GENERATED_CONTENT)
     *aSelectable = PR_FALSE;
   return NS_OK;
-}
-
-PRBool
-ContentContainsPoint(nsPresContext *aPresContext,
-                     nsIContent *aContent,
-                     const nsPoint &aPoint,
-                     nsIView *aRelativeView)
-{
-  nsIPresShell *presShell = aPresContext->GetPresShell();
-
-  if (!presShell) return PR_FALSE;
-
-  nsIFrame *frame = presShell->GetPrimaryFrameFor(aContent);
-
-  if (!frame) return PR_FALSE;
-
-  nsIView *frameView = nsnull;
-  nsPoint offsetPoint;
-
-  // Get the view that contains the content's frame.
-
-  nsresult rv = frame->GetOffsetFromView(offsetPoint, &frameView);
-
-  if (NS_FAILED(rv) || !frameView) return PR_FALSE;
-
-  // aPoint is relative to aRelativeView's upper left corner! Make sure
-  // that our point is in the same view space our content frame's
-  // rects are in.
-
-  nsPoint point = aPoint + aRelativeView->GetOffsetTo(frameView);
-
-  // Now check to see if the point is within the bounds of the
-  // content's primary frame, or any of it's continuation frames.
-
-  while (frame) {
-    // Get the frame's rect and make it relative to the
-    // upper left corner of its parent view.
-
-    nsRect frameRect = frame->GetRect();
-    frameRect.x = offsetPoint.x;
-    frameRect.y = offsetPoint.y;
-
-    if (frameRect.Contains(point)) {
-      // point is within this frame's rect!
-      return PR_TRUE;
-    }
-
-    frame = frame->GetNextInFlow();
-
-  }
-
-  return PR_FALSE;
 }
 
 /**
@@ -1366,19 +1293,6 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   rv = GetContentAndOffsetsFromPoint(aPresContext, pt, getter_AddRefs(content),
                                      startOffset, endOffset,
                                      beginFrameContent);
-  // do we have CSS that changes selection behaviour?
-  PRBool changeSelection = PR_FALSE;
-  {
-    nsCOMPtr<nsIContent>  selectContent;
-    PRInt32   newStart, newEnd;
-    if (NS_SUCCEEDED(frameselection->AdjustOffsetsFromStyle(this, &changeSelection, getter_AddRefs(selectContent), &newStart, &newEnd))
-      && changeSelection)
-    {
-      content = selectContent;
-      startOffset = newStart;
-      endOffset = newEnd;
-    }
-  }
 
   if (NS_FAILED(rv))
     return rv;
@@ -1475,83 +1389,16 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   if (isEditor && !me->isShift && (endOffset - startOffset) == 1)
   {
     // A single node is selected and we aren't extending an existing
-    // selection, which means the user clicked directly on an object.
-    // Check if the user clicked in a -moz-user-select:all subtree,
-    // image, or hr. If so, we want to give the drag and drop
-    // code a chance to execute so we need to turn off selection extension
-    // when processing mouse move/drag events that follow this mouse
-    // down event.
-
-    PRBool disableDragSelect = PR_FALSE;
-
-    if (changeSelection)
-    {
-      // The click hilited a -moz-user-select:all subtree.
-      //
-      // XXX: We really should be able to just do a:
-      //
-      //        disableDragSelect = PR_TRUE;
-      //
-      //      but we are working around the fact that in some cases,
-      //      selection selects a -moz-user-select:all subtree even
-      //      when the click was outside of the subtree. An example of
-      //      this case would be when the subtree is at the end of a
-      //      line and the user clicks to the right of it. In this case
-      //      I would expect the caret to be placed next to the root of
-      //      the subtree, but right now the whole subtree gets selected.
-      //      This means that we have to do geometric frame containment
-      //      checks on the point to see if the user truly clicked
-      //      inside the subtree.
-      
-      nsIView *view = nsnull;
-      nsPoint dummyPoint;
-
-      // aEvent->point is relative to the upper left corner of the
-      // frame's parent view. Unfortunately, the only way to get
-      // the parent view is to call GetOffsetFromView().
-
-      nsPoint pt = nsLayoutUtils::
-                     GetEventCoordinatesForNearestView(aEvent, this, &view);
-
-      GetOffsetFromView(dummyPoint, &view);
-
-      // Now check to see if the point is truly within the bounds
-      // of any of the frames that make up the -moz-user-select:all subtree:
-
-      if (view)
-        disableDragSelect = ContentContainsPoint(aPresContext, content,
-                                                 pt, view);
-    }
-    else
-    {
-      // Check if click was in an image.
-
-      nsIContent* frameContent = GetContent();
-      nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(frameContent));
-
-      disableDragSelect = img != nsnull;
-
-      if (!img)
-      {
-        // Check if click was in an hr.
-
-        nsCOMPtr<nsIDOMHTMLHRElement> hr(do_QueryInterface(frameContent));
-        disableDragSelect = hr != nsnull;
-      }
-    }
-
-    if (disableDragSelect)
-    {
-      // Click was in one of our draggable objects, so disable
-      // selection extension during mouse moves.
-
-      rv = frameselection->SetMouseDownState( PR_FALSE );
-    }
+    // selection, which means the user clicked directly on an object (either
+    // -moz-user-select: all or a non-text node without children).
+    // Therefore, disable selection extension during mouse moves.
+    // XXX This is a bit hacky; shouldn't editor be able to deal with this?
+    rv = frameselection->SetMouseDownState( PR_FALSE );
   }
 
   return rv;
 }
- 
+
 /**
   * Multiple Mouse Press -- line or paragraph selection -- for the frame.
   * Wouldn't it be nice if this didn't have to be hardwired into Frame code?
@@ -1575,28 +1422,31 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   // If browser.triple_click_selects_paragraph is true, triple-click selects paragraph.
   // Otherwise, triple-click selects line, and quadruple-click selects paragraph
   // (on platforms that support quadruple-click).
-  PRBool selectPara = PR_FALSE;
+  nsSelectionAmount beginAmount, endAmount;
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
   if (!me) return NS_OK;
 
-  if (me->clickCount == 4)
-    selectPara = PR_TRUE;
-  else if (me->clickCount == 3)
-  {
-    selectPara =
-      nsContentUtils::GetBoolPref("browser.triple_click_selects_paragraph");
-  }
-  else
+  if (me->clickCount == 4) {
+    beginAmount = endAmount = eSelectParagraph;
+  } else if (me->clickCount == 3) {
+    if (nsContentUtils::GetBoolPref("browser.triple_click_selects_paragraph")) {
+      beginAmount = endAmount = eSelectParagraph;
+    } else {
+      beginAmount = eSelectBeginLine;
+      endAmount = eSelectEndLine;
+    }
+  } else if (me->clickCount == 2) {
+    // We only want inline frames; PeekBackwardAndForward dislikes blocks
+    beginAmount = endAmount = eSelectWord;
+  } else {
     return NS_OK;
+  }
 
-  // Line or paragraph selection:
   PRInt32 startPos = 0;
   PRInt32 contentOffsetEnd = 0;
   nsCOMPtr<nsIContent> newContent;
   PRBool beginContent = PR_FALSE;
-
   nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
-
   rv = GetContentAndOffsetsFromPoint(aPresContext,
                                      pt,
                                      getter_AddRefs(newContent),
@@ -1604,13 +1454,19 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
                                      contentOffsetEnd,
                                      beginContent);
   if (NS_FAILED(rv)) return rv;
-  
-  
-  return PeekBackwardAndForward(selectPara ? eSelectParagraph
-                                           : eSelectBeginLine,
-                                selectPara ? eSelectParagraph
-                                           : eSelectEndLine,
-                                startPos, aPresContext, PR_TRUE);
+
+  nsIFrame* result;
+  PRInt32 offset;
+  // Maybe make this a static helper?
+  rv = GetPresContext()->GetPresShell()->FrameSelection()->
+    GetFrameForNodeOffset(newContent, startPos,
+                          nsIFrameSelection::HINT(beginContent),
+                          &result, &offset);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsFrame* frame = NS_STATIC_CAST(nsFrame*, result);
+
+  return frame->PeekBackwardAndForward(beginAmount, endAmount,
+                                       startPos, aPresContext, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -1711,6 +1567,9 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   PRBool  selectable;
   PRUint8 selectStyle;
   IsSelectable(&selectable, &selectStyle);
+  // XXX Do we really need to exclude non-selectable content here?
+  // GetContentAndOffsetsFromPoint can handle it just fine, although some
+  // other stuff might not like it.
   if (!selectable)
     return NS_OK;
   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
@@ -1851,20 +1710,6 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
                                                beginFrameContent);
         if (NS_FAILED(result)) return result;
 
-      // do we have CSS that changes selection behaviour?
-      {
-        PRBool    changeSelection;
-        nsCOMPtr<nsIContent>  selectContent;
-        PRInt32   newStart, newEnd;
-        if (NS_SUCCEEDED(frameselection->AdjustOffsetsFromStyle(this, &changeSelection, getter_AddRefs(selectContent), &newStart, &newEnd))
-          && changeSelection)
-        {
-          content = selectContent;
-          startOffset = newStart;
-          endOffset = newEnd;
-        }
-      }
-
         result = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
         if (NS_FAILED(result)) return result;
       }
@@ -1897,139 +1742,431 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+struct ContentOffsets {
+  ContentOffsets(nsIContent* aContent, PRInt32 aStart, PRInt32 aEnd) :
+    content(aContent), start(aStart), end(aEnd) { }
+  nsCOMPtr<nsIContent> content;
+  PRInt32 start;
+  PRInt32 end;
+};
+
+// Retrieve the content offsets of a frame
+static ContentOffsets GetOffsetsOfFrame(nsIFrame* aFrame) {
+  nsCOMPtr<nsIContent> content, parent;
+  NS_ASSERTION(aFrame->GetContent(), "No content?!");
+  content = aFrame->GetContent();
+  if (aFrame->GetType() == nsLayoutAtoms::textFrame) {
+    PRInt32 offset, offsetEnd;
+    aFrame->GetOffsets(offset, offsetEnd);
+    return ContentOffsets(content, offset, offsetEnd);
+  }
+  // Loop to deal with anonymous content, which has no index; this loop
+  // probably won't run more than twice under normal conditions
+  do {
+    parent  = content->GetParent();
+    if (parent) {
+      PRInt32 beginOffset = parent->IndexOf(content);
+      if (beginOffset >= 0)
+        return ContentOffsets(parent, beginOffset, beginOffset + 1);
+      content = parent;
+    }
+  } while (parent);
+
+  // The root content node must act differently
+  return ContentOffsets(content, 0, content->GetChildCount());
+}
+
+// The FrameTarget represents the closest frame to a point that can be selected
+// The frame is the frame represented, frameEdge says whether one end of the
+// frame is the result (in which case different handling is needed), and
+// afterFrame says which end is repersented if frameEdge is true
+struct FrameTarget {
+  FrameTarget(nsIFrame* aFrame, PRBool aFrameEdge, PRBool aAfterFrame) :
+    frame(aFrame), frameEdge(aFrameEdge), afterFrame(aAfterFrame) { }
+  static FrameTarget Null() {
+    return FrameTarget(nsnull, PR_FALSE, PR_FALSE);
+  }
+  PRBool IsNull() {
+    return !frame;
+  }
+  nsIFrame* frame;
+  PRPackedBool frameEdge;
+  PRPackedBool afterFrame;
+};
+
+// See function implementation for information
+static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint);
+
+static PRBool SelfIsSelectable(nsIFrame* aFrame)
+{
+  return !(aFrame->IsGeneratedContentFrame() ||
+           aFrame->GetStyleUIReset()->mUserSelect == NS_STYLE_USER_SELECT_NONE);
+}
+
+static PRBool SelectionDescendToKids(nsIFrame* aFrame) {
+  PRUint8 style = aFrame->GetStyleUIReset()->mUserSelect;
+  nsIFrame* parent = aFrame->GetParent();
+  // If we are only near (not directly over) then don't traverse
+  // frames with independent selection (e.g. text and list controls)
+  // unless we're already inside such a frame (see bug 268497).  Note that this
+  // prevents any of the users of this method from entering form controls.
+  // XXX We might want some way to allow using the up-arrow to go into a form
+  // control, but the focus didn't work right anyway; it'd probably be enough
+  // if the left and right arrows could enter textboxes (which I don't believe
+  // they can at the moment)
+  return !aFrame->IsGeneratedContentFrame() &&
+         style != NS_STYLE_USER_SELECT_ALL  &&
+         style != NS_STYLE_USER_SELECT_NONE &&
+         ((parent->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) ||
+          !(aFrame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION));
+}
+
+static FrameTarget GetSelectionClosestFrameForChild(nsIFrame* aChild,
+                                                    nsPoint aPoint)
+{
+  nsIFrame* parent = aChild->GetParent();
+  if (SelectionDescendToKids(aChild)) {
+    nsPoint pt = aPoint - aChild->GetOffsetTo(parent);
+    return GetSelectionClosestFrame(aChild, pt);
+  }
+  return FrameTarget(aChild, PR_FALSE, PR_FALSE);
+}
+
+// When the cursor needs to be at the beginning of a block, it shouldn't be
+// before the first child.  A click on a block whose first child is a block
+// should put the cursor in the child.  The cursor shouldn't be between the
+// blocks, because that's not where it's expected.
+// Note that this method is guaranteed to succeed.
+static FrameTarget DrillDownToSelectionFrame(nsIFrame* aFrame,
+                                             PRBool aEndFrame) {
+  if (SelectionDescendToKids(aFrame)) {
+    nsIFrame* result = nsnull;
+    nsIFrame *frame = aFrame->GetFirstChild(nsnull);
+    if (!aEndFrame) {
+      while (frame && (!SelfIsSelectable(frame) ||
+                        frame->IsEmpty()))
+        frame = frame->GetNextSibling();
+      if (frame)
+        result = frame;
+    } else {
+      // Because the frame tree is singly linked, to find the last frame,
+      // we have to iterate through all the frames
+      // XXX I have a feeling this could be slow for long blocks, although
+      //     I can't find any slowdowns
+      while (frame) {
+        if (!frame->IsEmpty() && SelfIsSelectable(frame))
+          result = frame;
+        frame = frame->GetNextSibling();
+      }
+    }
+    if (result)
+      return DrillDownToSelectionFrame(result, aEndFrame);
+  }
+  // If the current frame has no targetable children, target the current frame
+  return FrameTarget(aFrame, PR_TRUE, aEndFrame);
+}
+
+// This method finds the closest valid FrameTarget on a given line; if there is
+// no valid FrameTarget on the line, it returns a null FrameTarget
+static FrameTarget GetSelectionClosestFrameForLine(
+                      nsBlockFrame* aParent,
+                      nsBlockFrame::line_iterator aLine,
+                      nsPoint aPoint)
+{
+  nsIFrame *frame = aLine->mFirstChild;
+  // Account for end of lines (any iterator from the block is valid)
+  if (aLine == aParent->end_lines())
+    return DrillDownToSelectionFrame(aParent, PR_TRUE);
+  nsIFrame *closestFromLeft = nsnull, *closestFromRight = nsnull;
+  nsRect rect = aLine->mBounds;
+  nscoord closestLeft = rect.x, closestRight = rect.XMost();
+  for (PRInt32 n = aLine->GetChildCount(); n;
+       --n, frame = frame->GetNextSibling()) {
+    if (!SelfIsSelectable(frame) || frame->IsEmpty())
+      continue;
+    nsRect frameRect = frame->GetRect();
+    if (aPoint.x >= frameRect.x) {
+      if (aPoint.x < frameRect.XMost()) {
+        return GetSelectionClosestFrameForChild(frame, aPoint);
+      }
+      if (frameRect.XMost() >= closestLeft) {
+        closestFromLeft = frame;
+        closestLeft = frameRect.XMost();
+      }
+    } else {
+      if (frameRect.x <= closestRight) {
+        closestFromRight = frame;
+        closestRight = frameRect.x;
+      }
+    }
+  }
+  if (!closestFromLeft && !closestFromRight) {
+    // We should only get here if there are no selectable frames on a line
+    // XXX Do we need more elaborate handling here?
+    return FrameTarget::Null();
+  }
+  if (closestFromLeft &&
+      (!closestFromRight ||
+       (abs(aPoint.x - closestLeft) <= abs(aPoint.x - closestRight)))) {
+    return GetSelectionClosestFrameForChild(closestFromLeft, aPoint);
+  }
+  return GetSelectionClosestFrameForChild(closestFromRight, aPoint);
+}
+
+// This method is for the special handling we do for block frames; they're
+// special because they represent paragraphs and because they are organized
+// into lines, which have bounds that are not stored elsewhere in the
+// frame tree.  Returns a null FrameTarget for frames which are not
+// blocks or blocks with no lines.
+static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
+                                                    nsPoint aPoint)
+{
+  nsresult rv;
+  nsBlockFrame* bf; // used only for QI
+  rv = aFrame->QueryInterface(kBlockFrameCID, (void**)&bf);
+  if (NS_FAILED(rv))
+    return FrameTarget::Null();
+
+  // This code searches for the correct line
+  nsBlockFrame::line_iterator firstLine = bf->begin_lines();
+  nsBlockFrame::line_iterator end = bf->end_lines();
+  if (firstLine == end)
+    return FrameTarget::Null();
+  nsBlockFrame::line_iterator curLine = firstLine;
+  nsBlockFrame::line_iterator closestLine = end;
+  while (curLine != end) {
+    // Check to see if our point lies with the line's Y bounds
+    nscoord y = aPoint.y - curLine->mBounds.y;
+    nscoord height = curLine->mBounds.height;
+    if (y >= 0 && y < height) {
+      closestLine = curLine;
+      break; // We found the line; stop looking
+    }
+    if (y < 0)
+      break;
+    ++curLine;
+  }
+
+  if (closestLine == end) {
+    nsBlockFrame::line_iterator prevLine = curLine.prev();
+    nsBlockFrame::line_iterator nextLine = curLine;
+    // Avoid empty lines
+    while (nextLine != end && nextLine->IsEmpty())
+      ++nextLine;
+    while (prevLine != end && prevLine->IsEmpty())
+      --prevLine;
+
+    // This hidden pref dictates whether a point above or below all lines comes
+    // up with a line or the beginning or end of the frame; 0 on Windows,
+    // 1 on other platforms by default at the writing of this code
+    PRInt32 dragOutOfFrame =
+            nsContentUtils::GetIntPref("browser.drag_out_of_frame_style");
+
+    if (prevLine == end) {
+      if (dragOutOfFrame == 1 || nextLine == end)
+        return DrillDownToSelectionFrame(aFrame, PR_FALSE);
+      closestLine = nextLine;
+    } else if (nextLine == end) {
+      if (dragOutOfFrame == 1)
+        return DrillDownToSelectionFrame(aFrame, PR_TRUE);
+      closestLine = prevLine;
+    } else { // Figure out which line is closer
+      if (aPoint.y - prevLine->mBounds.YMost() < nextLine->mBounds.y - aPoint.y)
+        closestLine = prevLine;
+      else
+        closestLine = nextLine;
+    }
+  }
+
+  do {
+    FrameTarget target = GetSelectionClosestFrameForLine(bf, closestLine,
+                                                         aPoint);
+    if (!target.IsNull())
+      return target;
+    ++closestLine;
+  } while (closestLine != end);
+  // Fall back to just targeting the last targetable place
+  return DrillDownToSelectionFrame(aFrame, PR_TRUE);
+}
+
+// GetSelectionClosestFrame is the helper function that calculates the closest
+// frame to the given point.
+// It doesn't completely account for offset styles, so needs to be used in
+// restricted environments.
+// Cannot handle overlapping frames correctly, so it should recieve the output
+// of GetFrameForPoint
+// Guaranteed to return a valid FrameTarget
+static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint)
+{
+  {
+    // Handle blocks; if the frame isn't a block, the method fails
+    FrameTarget target = GetSelectionClosestFrameForBlock(aFrame, aPoint);
+    if (!target.IsNull())
+      return target;
+  }
+
+  nsIFrame *kid = aFrame->GetFirstChild(nsnull);
+
+  if (kid) {
+    // Go through all the child frames to find the closest one
+
+    // Large number to force the comparison to succeed
+    const nscoord HUGE_DISTANCE = nscoord_MAX;
+    nscoord closestXDistance = HUGE_DISTANCE;
+    nscoord closestYDistance = HUGE_DISTANCE;
+    nsIFrame *closestFrame = nsnull;
+
+    do {
+      if (!SelfIsSelectable(kid) || kid->IsEmpty())
+        continue;
+
+      nsRect rect = kid->GetRect();
+
+      nscoord fromLeft = aPoint.x - rect.x;
+      nscoord fromRight = aPoint.x - rect.XMost();
+
+      nscoord xDistance;
+      if (fromLeft >= 0 && fromRight <= 0) {
+        xDistance = 0;
+      } else {
+        xDistance = PR_MIN(abs(fromLeft), abs(fromRight));
+      }
+
+      if (xDistance <= closestXDistance)
+      {
+        if (xDistance < closestXDistance)
+          closestYDistance = HUGE_DISTANCE;
+
+        nscoord fromTop = aPoint.y - rect.y;
+        nscoord fromBottom = aPoint.y - rect.YMost();
+
+        nscoord yDistance;
+        if (fromTop >= 0 && fromBottom <= 0)
+          yDistance = 0;
+        else
+          yDistance = PR_MIN(abs(fromTop), abs(fromBottom));
+
+        if (yDistance < closestYDistance)
+        {
+          closestXDistance = xDistance;
+          closestYDistance = yDistance;
+          closestFrame = kid;
+        }
+      }
+    } while (kid = kid->GetNextSibling());
+    if (closestFrame);
+      return GetSelectionClosestFrameForChild(closestFrame, aPoint);
+  }
+  return FrameTarget(aFrame, PR_FALSE, PR_FALSE);
+}
 
 nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                                                 const nsPoint&  aPoint,
                                                 nsIContent **   aNewContent,
                                                 PRInt32&        aContentOffset,
                                                 PRInt32&        aContentOffsetEnd,
-                                                PRBool&         aBeginFrameContent)
+                                                PRBool&         aKeepWithAbove)
 {
   if (!aNewContent)
     return NS_ERROR_NULL_POINTER;
 
-  // Traverse through children and look for the best one to give this
-  // to if it fails the getposition call, make it yourself also only
-  // look at primary list
-  nsIFrame *closestFrame = nsnull;
-  nsIFrame *kid = GetFirstChild(nsnull);
+  // This section of code deals with special selection styles.  Note that
+  // -moz-none and -moz-all exist, even though they don't need to be explicitly
+  // handled.
+  // The offset is forced not to end up in generated content; content offsets
+  // cannot represent content outside of the document's content tree.
 
-  if (kid) {
-#define HUGE_DISTANCE 999999 //some HUGE number that will always fail first comparison
-
-    PRInt32 closestXDistance = HUGE_DISTANCE;
-    PRInt32 closestYDistance = HUGE_DISTANCE;
-
-    while (nsnull != kid) {
-
-      // Skip over generated content kid frames, or frames
-      // that don't have a proper parent-child relationship!
-
-      PRBool skipThisKid = (kid->GetStateBits() & NS_FRAME_GENERATED_CONTENT) != 0;
-
-      if (skipThisKid) {
-        kid = kid->GetNextSibling();
-        continue;
-      }
-
-      // Kid frame has content that has a proper parent-child
-      // relationship. Now see if the aPoint inside it's bounding
-      // rect or close by.
-
-      nsRect rect = kid->GetRect();
-
-      nscoord fromTop = aPoint.y - rect.y;
-      nscoord fromBottom = aPoint.y - rect.y - rect.height;
-
-      PRInt32 yDistance;
-      if (fromTop > 0 && fromBottom < 0)
-        yDistance = 0;
-      else
-        yDistance = PR_MIN(abs(fromTop), abs(fromBottom));
-
-      if (yDistance <= closestYDistance && rect.width > 0 && rect.height > 0)
-      {
-        if (yDistance < closestYDistance)
-          closestXDistance = HUGE_DISTANCE;
-
-        nscoord fromLeft = aPoint.x - rect.x;
-        nscoord fromRight = aPoint.x - rect.x - rect.width;
-
-        PRInt32 xDistance;
-        if (fromLeft > 0 && fromRight < 0)
-          xDistance = 0;
-        else
-          xDistance = PR_MIN(abs(fromLeft), abs(fromRight));
-
-        if (xDistance == 0 && yDistance == 0)
-        {
-          closestFrame = kid;
-          break;
-        }
-
-        if (xDistance < closestXDistance || (xDistance == closestXDistance && rect.x <= aPoint.x))
-        {
-          // If we are only near (not directly over) then don't traverse a frame with independent
-          // selection (e.g. text and list controls) unless we're already inside such a frame,
-          // except in "browsewithcaret" mode, bug 268497.
-          if (!(kid->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) ||
-              (GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) ||
-              nsContentUtils::GetBoolPref("accessibility.browsewithcaret")) {
-            closestXDistance = xDistance;
-            closestYDistance = yDistance;
-            closestFrame     = kid;
-          }
-        }
-        // else if (xDistance > closestXDistance)
-        //   break;//done
-      }
-    
-      kid = kid->GetNextSibling();
-    }
-    if (closestFrame) {
-
-      // If we cross a view boundary, we need to adjust
-      // the coordinates because GetPosition() expects
-      // them to be relative to the closest view.
-
-      nsPoint newPoint = aPoint - closestFrame->GetOffsetTo(this);
-      return closestFrame->GetContentAndOffsetsFromPoint(aCX, newPoint,
-                                                         aNewContent,
-                                                         aContentOffset,
-                                                         aContentOffsetEnd,
-                                                         aBeginFrameContent);
+  nsIFrame* adjustedFrame = this;
+  PRBool frameAdjusted = PR_FALSE;
+  for (nsIFrame* frame = this; frame; frame = frame->GetParent())
+  {
+    // These are the conditions that make all children not able to handle
+    // a cursor.
+    if (frame->GetStyleUIReset()->mUserSelect == NS_STYLE_USER_SELECT_NONE || 
+        frame->GetStyleUIReset()->mUserSelect == NS_STYLE_USER_SELECT_ALL || 
+        frame->IsGeneratedContentFrame()) {
+      adjustedFrame = frame;
+      frameAdjusted = PR_TRUE;
     }
   }
 
-  if (!mContent)
-    return NS_ERROR_NULL_POINTER;
+  // -moz-user-select: all needs special handling, because clicking on it
+  // should lead to the whole frame being selected
+  if (adjustedFrame->GetStyleUIReset()->mUserSelect ==
+      NS_STYLE_USER_SELECT_ALL) {
+    ContentOffsets selectOffset = GetOffsetsOfFrame(adjustedFrame);
 
-  NS_IF_ADDREF(*aNewContent = mContent->GetParent());
-  if (*aNewContent){
-    
-    PRInt32 contentOffset(aContentOffset); //temp to hold old value in case of failure
-    
-    contentOffset = (*aNewContent)->IndexOf(mContent);
-    if (contentOffset < 0) 
-    {
-      return NS_ERROR_FAILURE;
+    NS_IF_ADDREF(*aNewContent = selectOffset.content);
+    aContentOffset = selectOffset.start;
+    aContentOffsetEnd = selectOffset.end;
+    aKeepWithAbove = PR_FALSE;
+    return NS_OK;
+  }
+  // For other cases, try to find a closest frame starting from the parent of
+  // the unselectable frame
+  if (frameAdjusted)
+    adjustedFrame = adjustedFrame->GetParent();
+
+  nsPoint adjustedPoint = aPoint + this->GetOffsetTo(adjustedFrame);
+  FrameTarget closest = GetSelectionClosestFrame(adjustedFrame, adjustedPoint);
+
+  ContentOffsets offset = GetOffsetsOfFrame(closest.frame);
+  // If the correct offset is at one end of a frame, use offset-based
+  // calculation method
+  if (closest.frameEdge) {
+    NS_ADDREF(*aNewContent = offset.content);
+    if (closest.afterFrame) {
+      aContentOffset = offset.end;
+      aKeepWithAbove = PR_FALSE;
+    } else {
+      aContentOffset = offset.start;
+      aKeepWithAbove = PR_TRUE;
     }
-    aContentOffset = contentOffset; //its clear save the result
+    aContentOffsetEnd = aContentOffset;
+    return NS_OK;
+  }
+  nsPoint pt = aPoint - closest.frame->GetOffsetTo(this);
+  nsresult rv = closest.frame->GetPositionHelper(pt, aNewContent,
+                                                 aContentOffset,
+                                                 aContentOffsetEnd);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    aBeginFrameContent = PR_TRUE;
-    nsRect thisRect(nsPoint(0, 0), GetSize());
-    if (thisRect.Contains(aPoint))
-      aContentOffsetEnd = aContentOffset +1;
-    else 
-    {
-      //if we are a collapsed frame then dont check to see if we need to skip past this content
-      //see bug http://bugzilla.mozilla.org/show_bug.cgi?id=103888
-      if (thisRect.width && thisRect.height && ((thisRect.x + thisRect.width) < aPoint.x  || thisRect.y > aPoint.y))
-      {
-        aBeginFrameContent = PR_FALSE;
-        aContentOffset++;
-      }
-      aContentOffsetEnd = aContentOffset;
+  // XXX should I add some kind of offset standardization?
+  // consider <b>xxxxx</b><i>zzzzz</i>; should any click between the last
+  // x and first z put the cursor in the same logical position in addition
+  // to the same visual position?
+
+  NS_ASSERTION(*aNewContent == offset.content,
+               "There should only be one possible content base");
+  aKeepWithAbove = (aContentOffset == offset.start);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFrame::GetPositionHelper(const nsPoint&  aPoint,
+                                   nsIContent **   aNewContent,
+                                   PRInt32&        aContentOffset,
+                                   PRInt32&        aContentOffsetEnd)
+{
+  ContentOffsets offset = GetOffsetsOfFrame(this);
+
+  NS_IF_ADDREF(*aNewContent = offset.content);
+  // Figure out whether the offsets should be over, after, or before the frame
+  nsRect rect(nsPoint(0, 0), GetSize());
+
+  if (rect.Contains(aPoint)) {
+    aContentOffset    = offset.start;
+    aContentOffsetEnd = offset.end;
+  } else {
+    PRBool isBlock = (GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE);
+    PRBool isRtl = (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL);
+    if ((isBlock && rect.y < aPoint.y) ||
+        (!isBlock && ((isRtl  && rect.x + rect.width < aPoint.x) || 
+                      (!isRtl && rect.x < aPoint.x)))) {
+      aContentOffset    = offset.end;
+      aContentOffsetEnd = offset.end;
+    } else {
+      aContentOffset    = offset.start;
+      aContentOffsetEnd = offset.start;
     }
   }
   return NS_OK;

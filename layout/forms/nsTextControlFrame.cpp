@@ -597,8 +597,6 @@ public:
   NS_IMETHOD GetLimiter(nsIContent **aLimiterContent);
   NS_IMETHOD GetTableCellSelection(PRBool *aState);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
-  NS_IMETHOD AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
-      nsIContent** outContent, PRInt32* outStartOffset, PRInt32* outEndOffset);
   NS_IMETHOD GetHint(nsIFrameSelection::HINT *aHint);
   NS_IMETHOD SetHint(nsIFrameSelection::HINT aHint);
   NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollableView);
@@ -1146,13 +1144,6 @@ NS_IMETHODIMP
 nsTextInputSelectionImpl::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)
 {
   return mFrameSelection->GetFrameForNodeOffset(aNode, aOffset, aHint,aReturnFrame,aReturnOffset);
-}
-
-NS_IMETHODIMP
-nsTextInputSelectionImpl::AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
-      nsIContent** outContent, PRInt32* outStartOffset, PRInt32* outEndOffset)
-{
-  return mFrameSelection->AdjustOffsetsFromStyle(aFrame, changeSelection, outContent, outStartOffset, outEndOffset);
 }
 
 NS_IMETHODIMP nsTextInputSelectionImpl::GetHint(nsIFrameSelection::HINT *aHint)

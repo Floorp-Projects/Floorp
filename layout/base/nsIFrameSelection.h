@@ -56,9 +56,8 @@ class nsIPresShell;
 
 // IID for the nsIFrameSelection interface
 #define NS_IFRAMESELECTION_IID      \
-{ 0x18477ed4, 0x01ff, 0x4319, \
-  { 0x95, 0xc0, 0x63, 0x9e, 0xe4, 0x33, 0xbe, 0x92 } }
-
+{ 0xe5d9fe4f, 0xf430, 0x41ab, \
+  { 0x95, 0xab, 0x1e, 0x7c, 0x86, 0x80, 0x2d, 0xd7 } }
 
 //----------------------------------------------------------------------
 
@@ -289,18 +288,6 @@ public:
    */
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)=0;
 
-  /** AdjustOffsetsFromStyle. Called after detecting that a click or drag will
-   *  select the frame, this function looks for user-select style on that frame or a parent
-   *  frame, and adjust the content and offsets accordingly.
-   * @param aFrame the frame that was clicked
-   * @param outContent content node to be selected
-   * @param outStartOffset selection start offset
-   * @param outEndOffset selection end offset
-   */
-  NS_IMETHOD AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
-        nsIContent** outContent, PRInt32* outStartOffset, PRInt32* outEndOffset)=0;
-  
-  
   NS_IMETHOD GetHint(HINT *aHint)=0;
   NS_IMETHOD SetHint(HINT aHint)=0;
 

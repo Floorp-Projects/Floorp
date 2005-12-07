@@ -760,6 +760,11 @@ public:
                                            PRInt32&        aContentOffset,
                                            PRInt32&        aContentOffsetEnd,
                                            PRBool&         aBeginFrameContent) = 0;
+  // Helper for GetContentAndOffsetsFromPoint
+  NS_IMETHOD GetPositionHelper(const nsPoint&  aPoint,
+                               nsIContent **   aNewContent,
+                               PRInt32&        aContentOffset,
+                               PRInt32&        aContentOffsetEnd) = 0;
 
   /**
    * This structure holds information about a cursor. mContainer represents a
