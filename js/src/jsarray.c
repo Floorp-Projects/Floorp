@@ -396,6 +396,10 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToSringOp op,
     he = js_EnterSharpObject(cx, obj, NULL, &chars);
     if (!he)
         return JS_FALSE;
+#ifdef DEBUG
+    growth = (size_t) -1;
+#endif
+
     if (op == TO_SOURCE) {
         if (IS_SHARP(he)) {
 #if JS_HAS_SHARP_VARS
@@ -434,7 +438,6 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToSringOp op,
         JS_ASSERT(sep == NULL);
         sepstr = NULL;  /* indicates to use ", " as separator */
         seplen = 2;
-
     } else {
         /*
          * Free any sharp variable definition in chars.  Normally, we would
@@ -586,7 +589,7 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToSringOp op,
         return JS_FALSE;
     }
     chars[nchars] = 0;
-    JS_ASSERT((nchars + 1) * sizeof(jschar) == growth);
+    JS_ASSERT(growth == (size_t)-1 || (nchars + 1) * sizeof(jschar) == growth);
     str = js_NewString(cx, chars, nchars, 0);
     if (!str) {
         free(chars);
