@@ -642,12 +642,37 @@ function onInputCompleteLine(e)
     }
 }
 
-function onNotifyTimeout ()
+function onNotifyTimeout()
 {
+    /* Workaround: bug 291386 - timers sometimes fire way too quickly.
+     * This catches us out, as it causes the notify code (this) and the who
+     * code (below) to fire continuously, which completely floods the
+     * sendQueue. We work around this for now by reporting the probable
+     * error condition here, but don't attempt to stop it.
+     */
+
     for (var n in client.networks)
     {
         var net = client.networks[n];
         if (net.isConnected()) {
+            // WORKAROUND BEGIN //
+            if (!("bug291386" in client) &&
+                (net.primServ.sendQueue.length >= 1000))
+            {
+                client.bug291386 = 10;
+                display(MSG_BUG291386_WARNING, MT_WARN);
+                window.getAttention();
+                return;
+            }
+            else if (("bug291386" in client) && (client.bug291386 > 0) &&
+                     (net.primServ.sendQueue.length >= (1000 * client.bug291386)))
+            {
+                client.bug291386++;
+                display(MSG_BUG291386_ERROR, MT_ERROR);
+                window.getAttention();
+                return;
+            }
+            // WORKAROUND END //
             if (net.prefs["notifyList"].length > 0) {
                 var isonList = client.networks[n].prefs["notifyList"];
                 net.primServ.sendData ("ISON " + isonList.join(" ") + "\n");
@@ -1256,7 +1281,7 @@ function my_263 (e)
     return true;
 }
 
-CIRCNetwork.prototype.isRunningList = 
+CIRCNetwork.prototype.isRunningList =
 function my_running_list()
 {
     return (("_list" in this) && !this._list.done && !this._list.cancelled);
@@ -1321,7 +1346,7 @@ function my_list_init ()
                 /* The server is no longer throwing stuff at us, so now
                  * we can safely kill the list.
                  */
-                network.display(getMsg(MSG_LIST_END, 
+                network.display(getMsg(MSG_LIST_END,
                                        [list.displayed, list.count]));
                 delete network._list;
             }
@@ -1432,7 +1457,7 @@ function my_listrply (e)
     ++this._list.count;
 
     /* If the list has been cancelled, don't bother adding all this info
-     * anymore. Do increase the count (above), otherwise we never truly notice 
+     * anymore. Do increase the count (above), otherwise we never truly notice
      * the list being finished.
      */
     if (this._list.cancelled)
@@ -2154,7 +2179,7 @@ function my_cjoin (e)
     if (userIsMe(e.user))
     {
         var params = [e.user.unicodeName, e.channel.unicodeName];
-        this.display(getMsg(MSG_YOU_JOINED, params), "JOIN", 
+        this.display(getMsg(MSG_YOU_JOINED, params), "JOIN",
                      e.server.me, this);
         if (client.globalHistory)
             client.globalHistory.addPage(this.getURL());
@@ -2273,7 +2298,7 @@ function my_ckick (e)
         else
         {
             this.display (getMsg(MSG_YOURE_GONE,
-                                 [e.lamer.unicodeName, e.channel.unicodeName, 
+                                 [e.lamer.unicodeName, e.channel.unicodeName,
                                   MSG_SERVER, e.reason]),
                           "KICK", (void 0), this);
         }
