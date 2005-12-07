@@ -85,6 +85,8 @@ interface mozIStorageValueArray : nsISupports {
   double getDouble(in unsigned long aIndex);
   AUTF8String getUTF8String(in unsigned long aIndex);
   AString getString(in unsigned long aIndex);
+
+  // data will be NULL if dataSize = 0
   void getBlob(in unsigned long aIndex, out unsigned long aDataSize, [array,size_is(aDataSize)] out octet aData);
   boolean getIsNull(in unsigned long aIndex);
 
