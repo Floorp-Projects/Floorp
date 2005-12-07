@@ -48,17 +48,20 @@
 #import "Bookmark.h"
 #import "BookmarkFolder.h"
 #import "NSPasteboard+Utils.h"
-
+#import "NSBezierPath+Utils.h"
 
 #define CHInsertNone 0
 #define CHInsertInto  1
 #define CHInsertBefore  2
 #define CHInsertAfter  3
 
+static const float kButtonRectHPadding = 3.0f;
+static const float kButtonRectVPadding = 4.0f;
+
 @interface BookmarkToolbar(Private)
 
 - (void)setButtonInsertionPoint:(id <NSDraggingInfo>)sender;
-- (NSRect)insertionRectForButton:(NSView*)aButton position:(int)aPosition;
+- (NSRect)insertionHiliteRectForButton:(NSView*)aButton position:(int)aPosition;
 - (BookmarkButton*)makeNewButtonWithItem:(BookmarkItem*)aItem;
 - (void)managerStarted:(NSNotification*)inNotify;
 - (BOOL)anchorFoundAtPoint:(NSPoint)testPoint forButton:(NSButton*)sourceButton;
@@ -168,8 +171,49 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   // draw a separator at drag n drop insertion point if there is one
   if (mDragInsertionPosition)
   {
-    [[[NSColor controlShadowColor] colorWithAlphaComponent:0.6] set];
-    NSRectFill([self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]);
+    NSRect buttonRect = [self insertionHiliteRectForButton:mDragInsertionButton position:mDragInsertionPosition];
+    if (mDragInsertionPosition == CHInsertInto)
+    {
+      buttonRect = NSInsetRect(buttonRect, kButtonRectHPadding - 1.0f, kButtonRectVPadding - 1.0f);
+      NSBezierPath* dropTargetOutline = [NSBezierPath bezierPathWithRoundCorneredRect:buttonRect cornerRadius:3.0f];
+
+      [[NSColor colorWithCalibratedRed:0.12 green:0.36 blue:0.81 alpha:1.0f] set];
+      [dropTargetOutline setLineWidth:2.0f];
+      [dropTargetOutline stroke];
+
+      [[[NSColor colorForControlTint:NSDefaultControlTint] colorWithAlphaComponent:0.5] set];
+      [dropTargetOutline fill];
+    }
+    else
+    {
+      // rect is a 5-pixel rect before or after the button, offset a little so this draws
+      // in the right place. We take care to keep our drawing inside the rect returned from
+      // -insertionHiliteRectForButton, since that rect is used to do invalidations.
+      NSBezierPath* insertionPointPath = [NSBezierPath bezierPath];
+      float insertionPos = floorf(NSMidX(buttonRect));    // avoid drawing at fractional offsets
+      buttonRect = NSInsetRect(buttonRect, 0.0f, 2.0f);
+
+      // top Y
+      const float kTipsXOffset = 3.0f;
+      const float kTipsYOffset = 2.0f;
+      [insertionPointPath moveToPoint:NSMakePoint(insertionPos - kTipsXOffset, NSMinY(buttonRect))];
+      [insertionPointPath lineToPoint:NSMakePoint(insertionPos, NSMinY(buttonRect) + kTipsYOffset)];
+      [insertionPointPath lineToPoint:NSMakePoint(insertionPos + kTipsXOffset, NSMinY(buttonRect))];
+
+      // line
+      [insertionPointPath moveToPoint:NSMakePoint(insertionPos, NSMinY(buttonRect) + kTipsYOffset)];
+      [insertionPointPath lineToPoint:NSMakePoint(insertionPos, NSMaxY(buttonRect) - kTipsYOffset)];
+
+      // bottom Y
+      [insertionPointPath moveToPoint:NSMakePoint(insertionPos - kTipsXOffset, NSMaxY(buttonRect))];
+      [insertionPointPath lineToPoint:NSMakePoint(insertionPos, NSMaxY(buttonRect) - kTipsYOffset)];
+      [insertionPointPath lineToPoint:NSMakePoint(insertionPos + kTipsXOffset, NSMaxY(buttonRect))];
+      
+      [[NSColor colorWithCalibratedRed:0.12 green:0.36 blue:0.81 alpha:1.0f] set];
+      [insertionPointPath setLineCapStyle:NSRoundLineCapStyle];
+      [insertionPointPath setLineWidth:2.0f];
+      [insertionPointPath stroke];
+    }
   }
 }
 
@@ -554,7 +598,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 - (void)draggingExited:(id <NSDraggingInfo>)sender
 {
   if (mDragInsertionPosition)
-    [self setNeedsDisplayInRect:[self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
+    [self setNeedsDisplayInRect:[self insertionHiliteRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
 
   mDragInsertionButton = nil;
   mDragInsertionPosition = CHInsertNone;
@@ -563,7 +607,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 - (unsigned int)draggingUpdated:(id <NSDraggingInfo>)sender
 {
   if (mDragInsertionPosition)
-    [self setNeedsDisplayInRect:[self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
+    [self setNeedsDisplayInRect:[self insertionHiliteRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
 
   // we have to set the drag target before we can test for drop validation
   [self setButtonInsertionPoint:sender];
@@ -575,7 +619,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   }
 
   if (mDragInsertionPosition)
-    [self setNeedsDisplayInRect:[self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
+    [self setNeedsDisplayInRect:[self insertionHiliteRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
 
   NSDragOperation dragOpMask = [sender draggingSourceOperationMask];
   // see if the user forced copy by holding the appropriate modifier - the OS will AND the mask with the Copy flag
@@ -653,20 +697,28 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   return dropHandled;
 }
 
-- (NSRect)insertionRectForButton:(NSView*)aButton position:(int) aPosition
+- (NSRect)insertionHiliteRectForButton:(NSView*)aButton position:(int) aPosition
 {
-  if (aPosition == CHInsertInto) {
-    return NSMakeRect([aButton frame].origin.x, [aButton frame].origin.y, [aButton frame].size.width, [aButton frame].size.height);
-  } else if (aPosition == CHInsertAfter) {
-    return NSMakeRect([aButton frame].origin.x+[aButton frame].size.width, [aButton frame].origin.y, 2, [aButton frame].size.height);
-  } else {// if (aPosition == BookmarksService::CHInsertBefore) {
-    return NSMakeRect([aButton frame].origin.x - 2, [aButton frame].origin.y, 2, [aButton frame].size.height);
-  }
-  }
+  NSRect buttonFrame = [aButton frame];
+
+  if (aPosition == CHInsertInto)
+    return NSInsetRect(buttonFrame, -kButtonRectHPadding, -kButtonRectVPadding);
+  
+  // we fudge the rect for before/after so that it's equivalent to the space between buttons,
+  // and covers the insertion indicate that we draw (since we use this rect to refresh)
+  NSRect gapRect;
+  if (aPosition == CHInsertAfter)
+    gapRect = NSMakeRect(buttonFrame.origin.x + buttonFrame.size.width, buttonFrame.origin.y, kBookmarkButtonHorizPadding, buttonFrame.size.height);
+  else
+    gapRect = NSMakeRect(buttonFrame.origin.x - kBookmarkButtonHorizPadding, buttonFrame.origin.y, kBookmarkButtonHorizPadding, buttonFrame.size.height);
+   
+  gapRect.origin.x -= 1.0f;   // tweak to prevent the insertion point drawing over favicons
+  return NSInsetRect(gapRect, -2.0f, -2.0f);
+}
 
 - (BookmarkButton*)makeNewButtonWithItem:(BookmarkItem*)aItem
 {
-  return [[[BookmarkButton alloc] initWithFrame: NSMakeRect(2, 1, 100, 17) item:aItem] autorelease];
+  return [[[BookmarkButton alloc] initWithFrame: NSMakeRect(2.0f, 1.0f, 100.0f, 17.0f) item:aItem] autorelease];
 }
 
 #pragma mark -
