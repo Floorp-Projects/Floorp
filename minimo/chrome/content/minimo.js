@@ -180,20 +180,9 @@ nsBrowserStatusHandler.prototype =
         if (domWindow == domWindow.top) {
           this.urlBar.value = aLocation.spec;
         }
-        
-        if(aWebProgress.canGoBack) {
-            document.getElementById("back-button").disabled=false;
-        } else {
-            document.getElementById("back-button").disabled=true;	
-        }
-        
-        if(aWebProgress.canGoForward) {
-            document.getElementById("forward-button").disabled=false;
-        } else {
-            document.getElementById("forward-button").disabled=true;
-        }
-        
     }
+    
+    BrowserUpdateBackForwardState();
 
     BrowserUpdateFeeds();
 },
@@ -408,6 +397,25 @@ function BrowserUpdateFeeds() {
 
 //		feedButton.setAttribute("tooltiptext", gNavigatorBundle.getString("feedHasFeeds"));
 	}
+}
+
+/* 
+ * For now, this updates via DOM the top menu. Context menu should be here as well. 
+ */
+function BrowserUpdateBackForwardState() {
+
+       if(getBrowser().webNavigation.canGoBack) {
+            document.getElementById("back-button").setAttribute("disabled","false");
+        } else {
+            document.getElementById("back-button").setAttribute("disabled","true");
+        }
+        
+        if(getBrowser().webNavigation.canGoForward) {
+            document.getElementById("forward-button").setAttribute("disabled","false");
+        } else {
+            document.getElementById("forward-button").setAttribute("disabled","true");
+        }
+
 }
 
 
