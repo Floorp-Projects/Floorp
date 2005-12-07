@@ -1438,6 +1438,12 @@ function getSelectedNicknames(tree)
         // If they == -1, we've got no selection, so bail.
         if ((start.value == -1) && (end.value == -1))
             continue;
+        /* Workaround: Because we use select(-1) instead of clearSelection()
+         * (see bug 197667) the tree will then give us selection ranges
+         * starting from -1 instead of 0! (See bug 319066.)
+         */
+        if (start.value == -1)
+            start.value = 0;
 
         // Loop through the contents of the current selection range.
         for (var k = start.value; k <= end.value; ++k)
