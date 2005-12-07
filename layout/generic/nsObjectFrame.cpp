@@ -2796,6 +2796,10 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   nsINodeInfo *ni = content->NodeInfo();
 
+  // Making DOM method calls can cause our frame to go away, which
+  // might kill us...
+  nsCOMPtr<nsIPluginInstanceOwner> kungFuDeathGrip(this);
+  
   if (ni->NamespaceEquals(kNameSpaceID_XHTML)) {
     // For XHTML elements we need to take the namespace URI into
     // account when looking for param elements.
@@ -2861,6 +2865,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
       }
     }
   }
+
+  // We're done with DOM method calls now; make sure we still have a frame.
+  NS_ENSURE_TRUE(mOwner, NS_ERROR_OUT_OF_MEMORY);
 
   PRUint32 cparams;
   ourParams->Count(&cparams); // unsigned 32 bits to unsigned 16 bits conversion
