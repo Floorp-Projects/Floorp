@@ -121,6 +121,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (BookmarkFolder*)selectedContainerFolder;
 
 - (void)selectItems:(NSArray*)items expandingContainers:(BOOL)expandContainers scrollIntoView:(BOOL)scroll;
+- (BookmarkItem*)selectedBookmarkItem;
 
 - (id)itemTreeRootContainer;   // something that responds to NSArray-like selectors
 
@@ -602,10 +603,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 -(IBAction)showBookmarkInfo:(id)aSender
 {
   BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController];
-  BookmarkItem* item = nil;
-
-  int index = [mBookmarksOutlineView selectedRow];
-  item = [mBookmarksOutlineView itemAtRow: index];
+  BookmarkItem* item = [self selectedBookmarkItem];
 
   [bic setBookmark:item];
   [bic showWindow:bic];
@@ -777,8 +775,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
   if ([mBookmarksOutlineView numberOfSelectedRows] == 1)
   {
-    int row = [mBookmarksOutlineView selectedRow];
-    BookmarkItem *item = [mBookmarksOutlineView itemAtRow:row];
+    BookmarkItem *item = [self selectedBookmarkItem];
     // if it's a folder, use it
     if ([item isKindOfClass:[BookmarkFolder class]])
     {
@@ -1527,16 +1524,13 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 -(void)outlineViewSelectionDidChange: (NSNotification*) aNotification
 {
-  BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController];
-  if ([mBookmarksOutlineView numberOfSelectedRows] == 1) {
-    //[mInfoButton setEnabled:YES];
-    if ([[bic window] isVisible]) {
-      [bic setBookmark:[mBookmarksOutlineView itemAtRow:[mBookmarksOutlineView selectedRow]]];
-    }
-  }
-  else {
-    //[mInfoButton setEnabled:NO];
-    [bic close];
+  BookmarkInfoController* bic = [BookmarkInfoController existingSharedBookmarkInfoController];
+  if ([[bic window] isVisible])
+  {
+    if ([mBookmarksOutlineView numberOfSelectedRows] == 1)
+        [bic setBookmark:[self selectedBookmarkItem]];
+    else
+        [bic setBookmark:nil];
   }
 }
 
@@ -1552,7 +1546,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
       return (![activeCollection isRoot] && ![activeCollection isSmartFolder]);
     }
 
-    BookmarkItem* selItem = [mBookmarksOutlineView itemAtRow:[mBookmarksOutlineView selectedRow]];
+    BookmarkItem* selItem = [self selectedBookmarkItem];
 
     if (action == @selector(openBookmark:))
       return (selItem != nil);
@@ -1699,6 +1693,14 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   {
     [self revealItem:item scrollIntoView:scroll selecting:YES byExtendingSelection:YES];
   }
+}
+
+- (BookmarkItem*)selectedBookmarkItem
+{
+  int index = [mBookmarksOutlineView selectedRow];
+  if (index == -1) return nil;
+
+  return (BookmarkItem*)[mBookmarksOutlineView itemAtRow:index];
 }
 
 - (id)itemTreeRootContainer

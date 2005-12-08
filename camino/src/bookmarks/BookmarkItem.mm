@@ -222,6 +222,7 @@ static BOOL gSuppressAllUpdates = NO;
     [aDescription retain];
     [mDescription release];
     mDescription = aDescription;
+    [self itemUpdatedNote:kBookmarkItemDescriptionChangedMask];
   }
 }
 
@@ -235,6 +236,7 @@ static BOOL gSuppressAllUpdates = NO;
     [aKeyword retain];
     [mKeyword release];
     mKeyword = aKeyword;
+    [self itemUpdatedNote:kBookmarkItemKeywordChangedMask];
   }
 }
 

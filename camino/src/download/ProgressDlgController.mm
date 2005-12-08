@@ -56,7 +56,7 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 -(void)rebuildViews;
 -(NSArray*)selectedProgressViewControllers;
 -(void)deselectDLInstancesInArray:(NSArray*)instances;
--(void)scrollInfoView:(ProgressViewController*)controller;
+-(void)scrollIntoView:(ProgressViewController*)controller;
 -(void)killDownloadTimer;
 -(void)setupDownloadTimer;
 -(BOOL)shouldAllowCancelAction;
@@ -373,7 +373,7 @@ static id gSharedProgressController = nil;
         {
           ProgressViewController* dlToSelect = [mProgressViewControllers objectAtIndex:instanceToSelect];
           [dlToSelect setSelected:YES];
-          [self scrollInfoView:dlToSelect];
+          [self scrollIntoView:dlToSelect];
           if (!shiftKeyDown)
             mSelectionPivotIndex = instanceToSelect;
         }
@@ -404,7 +404,7 @@ static id gSharedProgressController = nil;
         {
           ProgressViewController* dlToSelect = [mProgressViewControllers objectAtIndex:instanceToSelect];
           [dlToSelect setSelected:YES];
-          [self scrollInfoView:dlToSelect];
+          [self scrollIntoView:dlToSelect];
           if (!shiftKeyDown)
             mSelectionPivotIndex = instanceToSelect;
         }
@@ -424,14 +424,14 @@ static id gSharedProgressController = nil;
     case NSPageUpFunctionKey:
       if ([mProgressViewControllers count] > 0) {
         // make the first instance completely visible
-        [self scrollInfoView:((ProgressViewController*)[mProgressViewControllers objectAtIndex:0])];
+        [self scrollIntoView:((ProgressViewController*)[mProgressViewControllers objectAtIndex:0])];
       }
       break;
 
     case NSPageDownFunctionKey:
       if ([mProgressViewControllers count] > 0) {
         // make the last instance completely visible
-        [self scrollInfoView:((ProgressViewController*)[mProgressViewControllers lastObject])];
+        [self scrollIntoView:((ProgressViewController*)[mProgressViewControllers lastObject])];
       }
       break;
 
@@ -464,7 +464,7 @@ static id gSharedProgressController = nil;
   return selectedArray;
 }
 
--(void)scrollInfoView:(ProgressViewController*)controller
+-(void)scrollIntoView:(ProgressViewController*)controller
 {
   NSView* dlView = [controller view];
   NSRect instanceFrame = [[mScrollView contentView] convertRect:[dlView bounds] fromView:dlView];
@@ -499,7 +499,7 @@ static id gSharedProgressController = nil;
   [(ProgressViewController*)progressDisplay setSelected:YES];
   
   // make sure new download is visible
-  [self scrollInfoView:progressDisplay];
+  [self scrollIntoView:progressDisplay];
 }
 
 -(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay withSuccess:(BOOL)completedOK statusCode:(nsresult)status
