@@ -349,10 +349,12 @@ class PyXPCOM_GatewayWeakReference;
 // We also allow the underlying PyObject to be extracted
 class nsIInternalPython : public nsISupports {
 public: 
-	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IINTERNALPYTHON_IID)
+	NS_DECLARE_STATIC_IID_ACCESSOR(NS_IINTERNALPYTHON_IID)
 	// Get the underlying Python object with new reference added
 	virtual PyObject *UnwrapPythonObject(void) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIInternalPython, NS_IINTERNALPYTHON_IID)
 
 // This is roughly equivalent to PyGatewayBase in win32com
 //
