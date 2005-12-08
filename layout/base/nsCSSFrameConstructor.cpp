@@ -6446,20 +6446,32 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       if (rootFrame)
         rootFrame = rootFrame->GetFirstChild(nsnull);
       nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
-      NS_ASSERTION(rootBox, "unexpected null pointer");
+      PRBool added = PR_FALSE;
       if (rootBox) {
         nsIFrame* popupSetFrame = rootBox->GetPopupSetFrame();
         NS_ASSERTION(popupSetFrame, "unexpected null pointer");
         if (popupSetFrame) {
           nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
           NS_ASSERTION(popupSet, "unexpected null pointer");
-          if (popupSet)
+          if (popupSet) {
+            added = PR_TRUE;
             popupSet->AddPopupFrame(newFrame);
+          }
         }
       }
 
-      // Add the placeholder frame to the flow
-      aFrameItems.AddChild(placeholderFrame);
+      if (added) {
+        // Add the placeholder frame to the flow
+        aFrameItems.AddChild(placeholderFrame);
+      } else {
+        // Didn't add the popup set frame...  Need to clean up and
+        // just not construct a frame here.
+        aState.mFrameManager->UnregisterPlaceholderFrame(NS_STATIC_CAST(nsPlaceholderFrame*, placeholderFrame));
+        newFrame->Destroy(aState.mPresContext);
+        placeholderFrame->Destroy(aState.mPresContext);
+        *aHaltProcessing = PR_TRUE;
+        return NS_OK;        
+      }
     } else {
 #endif
       // Add the new frame to our list of frame items.  Note that we
