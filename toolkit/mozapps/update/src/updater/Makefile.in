@@ -52,11 +52,11 @@ CPPSRCS = \
 
 PROGRAM = updater$(BIN_SUFFIX)
 
-REQUIRES = libmar \
-	   $(BZ2_REQUIRES)
+REQUIRES = libmar libbz2
 
 LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -119,6 +119,3 @@ ifeq ($(OS_ARCH),WINNT)
 # Pick up nsWindowsRestart.cpp
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 endif
-
-CXXFLAGS += $(MOZ_BZ2_CFLAGS)
-LIBS += $(MOZ_BZ2_LIBS)
