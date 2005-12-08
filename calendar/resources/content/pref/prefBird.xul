@@ -33,7 +33,7 @@
 			flex="1"
 			seltype="single"
 			hidecolumnpicker="true"
-			onselect="hPrefWindow();">
+			onselect="hPrefWindow.switchPage();">
 			<treecols>
 				<treecol id="categoryCol"
 					flex="1"
