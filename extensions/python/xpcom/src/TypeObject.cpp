@@ -141,7 +141,8 @@ PyXPCOM_TypeObject::Py_repr(PyObject *self)
 	Py_nsISupports *pis = (Py_nsISupports *)self;
 	// Try and get the IID name.
 	char *iid_repr;
-	nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+	nsCOMPtr<nsIInterfaceInfoManager> iim(do_GetService(
+	                      NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
 	if (iim!=nsnull)
 		iim->GetNameForIID(&pis->m_iid, &iid_repr);
 	if (iid_repr==nsnull)
