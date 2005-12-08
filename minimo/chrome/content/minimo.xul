@@ -132,15 +132,16 @@
 
         <textbox tabindex="5" 
                  id="urlbar" 
-                 flex="100%" 
+                 flex="1" 
                  type="autocomplete"
                  enablehistory="true"
                  autocompletesearch="history" 
                  completeselectedindex="true"
                  autocompletepopup="PopupAutoComplete"
-                 onfocus="URLBarFocusHandler();"
-                 ontextentered="return URLBarEntered();">
-				
+                 ontextentered="return URLBarEntered();"
+                 onfocus="URLBarFocusHandler(event, this);"
+                 onmousedown="URLBarMouseDownHandler(event, this);"
+                 onclick="URLBarClickHandler(event, this);">				
 			<deck id='proxy-deck'>
 				<image id="urlbar-deck"  />  
 			</deck>

@@ -41,6 +41,9 @@ const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
 
 var gBookmarksDoc=null; 
 var gURLBar = null;
+var gClickSelectsAll = true;
+var gIgnoreFocus = false;
+var gIgnoreClick = false;
 var gBrowserStatusHandler;
 var gSelectedTab=null;
 var gFullScreen=false;
@@ -239,6 +242,8 @@ function MiniNavStartup()
   try {
 
     gURLBar = document.getElementById("urlbar");
+    gURLBar.setAttribute("completedefaultindex", "true");
+    
     var currentTab=getBrowser().selectedTab;
     browserInit(currentTab);
     gSelectedTab=currentTab;
@@ -1076,9 +1081,29 @@ function URLBarEntered()
   return true;
 }
 
-function URLBarFocusHandler()
+
+function URLBarFocusHandler(aEvent, aElt)
 {
+  if (gIgnoreFocus)
+    gIgnoreFocus = false;
+  else if (gClickSelectsAll)
+    aElt.select();
+
+  gURLBar.setAttribute("open", "true"); 
   gURLBar.showHistoryPopup();
+}
+
+function URLBarMouseDownHandler(aEvent, aElt)
+{
+  gIgnoreFocus = true;
+  gIgnoreClick = false;
+  aElt.setSelectionRange(0, 0);
+}
+
+function URLBarClickHandler(aEvent, aElt)
+{
+  if (!gIgnoreClick && aElt.selectionStart == aElt.selectionEnd)
+    aElt.select();
 }
 
 var gRotationDirection = true;
