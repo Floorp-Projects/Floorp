@@ -162,7 +162,6 @@ ec_pts_mul_simul_w2(const mp_int *k1, const mp_int *k2, const mp_int *px,
 {
 	mp_err res = MP_OKAY;
 	mp_int precomp[4][4][2];
-	mp_digit precomp_arr[ECL_MAX_FIELD_SIZE_DIGITS * 4 * 4 * 2], *t;
 	const mp_int *a, *b;
 	int i, j;
 	int ai, bi, d;
@@ -180,23 +179,18 @@ ec_pts_mul_simul_w2(const mp_int *k1, const mp_int *k2, const mp_int *px,
 	}
 
 	/* initialize precomputation table */
-	t = precomp_arr;
 	for (i = 0; i < 4; i++) {
 		for (j = 0; j < 4; j++) {
-			/* x co-ord */
-			MP_SIGN(&precomp[i][j][0]) = MP_ZPOS;
-			MP_ALLOC(&precomp[i][j][0]) = ECL_MAX_FIELD_SIZE_DIGITS;
-			MP_USED(&precomp[i][j][0]) = 1;
-			*t = 0;
-			MP_DIGITS(&precomp[i][j][0]) = t;
-			t += ECL_MAX_FIELD_SIZE_DIGITS;
-			/* y co-ord */
-			MP_SIGN(&precomp[i][j][1]) = MP_ZPOS;
-			MP_ALLOC(&precomp[i][j][1]) = ECL_MAX_FIELD_SIZE_DIGITS;
-			MP_USED(&precomp[i][j][1]) = 1;
-			*t = 0;
-			MP_DIGITS(&precomp[i][j][1]) = t;
-			t += ECL_MAX_FIELD_SIZE_DIGITS;
+			MP_DIGITS(&precomp[i][j][0]) = 0;
+			MP_DIGITS(&precomp[i][j][1]) = 0;
+		}
+	}
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			 MP_CHECKOK( mp_init_size(&precomp[i][j][0],
+						 ECL_MAX_FIELD_SIZE_DIGITS) );
+			 MP_CHECKOK( mp_init_size(&precomp[i][j][1],
+						 ECL_MAX_FIELD_SIZE_DIGITS) );
 		}
 	}
 
@@ -298,6 +292,12 @@ ec_pts_mul_simul_w2(const mp_int *k1, const mp_int *k2, const mp_int *px,
 	}
 
   CLEANUP:
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 4; j++) {
+			mp_clear(&precomp[i][j][0]);
+			mp_clear(&precomp[i][j][1]);
+		}
+	}
 	return res;
 }
 
