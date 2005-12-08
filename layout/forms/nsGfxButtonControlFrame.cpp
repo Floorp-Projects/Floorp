@@ -370,10 +370,6 @@ nsGfxButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
                                       nsGUIEvent*     aEvent,
                                       nsEventStatus*  aEventStatus)
 {
-  // temp fix until Bug 124990 gets fixed
-  if (aPresContext->IsPaginated() && NS_IS_MOUSE_EVENT(aEvent)) {
-    return NS_OK;
-  }
   // Override the HandleEvent to prevent the nsFrame::HandleEvent
   // from being called. The nsFrame::HandleEvent causes the button label
   // to be selected (Drawn with an XOR rectangle over the label)
