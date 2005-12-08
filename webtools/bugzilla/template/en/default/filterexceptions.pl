@@ -451,8 +451,8 @@
 ],
 
 'attachment/edit.html.tmpl' => [
-  'attachid', 
-  'bugid', 
+  'attachment.id', 
+  'attachment.bug_id', 
   'a', 
 ],
 

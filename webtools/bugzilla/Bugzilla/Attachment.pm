@@ -236,6 +236,21 @@ sub ispatch {
 
 =over
 
+=item C<isurl>
+
+whether or not the attachment is a URL
+
+=back
+
+=cut
+
+sub isurl {
+    my $self = shift;
+    return $self->{isurl};
+}
+
+=over
+
 =item C<isobsolete>
 
 whether or not the attachment is obsolete

@@ -17,14 +17,19 @@
   # Rights Reserved.
   #
   # Contributor(s): Myk Melez <myk@mozilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
 
 [%# Define strings that will serve as the title and header of this page %]
-[% title = BLOCK %]Edit Attachment #[% attachid %] for [% terms.Bug %] #[% bugid %][% END %]
-[% h1 = BLOCK %]Edit Attachment #[% attachid %] for
-  [%+ GetBugLink(bugid, "$terms.Bug $bugid") %][% END %]
+[% title = BLOCK %]
+  Edit Attachment [% attachment.id %] for [% terms.Bug %] [%+ attachment.bug_id %]
+[% END %]
+[% h1 = BLOCK %]
+  Edit Attachment [% attachment.id %] for
+  [%+ GetBugLink(attachment.bug_id, "$terms.Bug ${attachment.bug_id}") %]
+[% END %]
 [% h2 = BLOCK %][% bugsummary FILTER html %][% END %]
 
 [% PROCESS global/header.html.tmpl
@@ -99,7 +104,7 @@
       if (!has_viewed_as_diff) {
         var viewDiffFrame = document.getElementById('viewDiffFrame');
         viewDiffFrame.src =
-            'attachment.cgi?id=[% attachid %]&action=diff&headers=0';
+            'attachment.cgi?id=[% attachment.id %]&action=diff&headers=0';
         has_viewed_as_diff = 1;
       }
     }
@@ -197,7 +202,7 @@
 </script>
 
 <form method="post" action="attachment.cgi" onsubmit="normalizeComments();">
-  <input type="hidden" name="id" value="[% attachid %]">
+  <input type="hidden" name="id" value="[% attachment.id %]">
   <input type="hidden" name="action" value="update">
   <input type="hidden" name="contenttypemethod" value="manual">
 
@@ -207,33 +212,40 @@
       <td width="25%">
         <small>
         <b>Description:</b><br>
-          <textarea rows="3" cols="25" name="description" wrap="soft">[% description FILTER html %]</textarea><br>
+          <textarea rows="3" cols="25" name="description" wrap="soft">
+            [%- attachment.description FILTER html %]</textarea><br>
 
-        [% IF isurl %]
-            <input type="hidden" name="filename" value="[% filename FILTER html %]"><br>
-            <input type="hidden" name="contenttypeentry" value="[% contenttype FILTER html %]"><br>
+        [% IF attachment.isurl %]
+            <input type="hidden" name="filename"
+                   value="[% attachment.filename FILTER html %]"><br>
+            <input type="hidden" name="contenttypeentry"
+                   value="[% attachment.contenttype FILTER html %]"><br>
         [% ELSE %]
           <b>Filename:</b><br>
-            <input type="text" size="20" name="filename" value="[% filename FILTER html %]"><br>
-          <b>Size: </b>[% datasize FILTER unitconvert %]<br>
+            <input type="text" size="20" name="filename"
+                   value="[% attachment.filename FILTER html %]"><br>
+          <b>Size: </b>[% attachment.datasize FILTER unitconvert %]<br>
 
           <b>MIME Type:</b><br>
-            <input type="text" size="20" name="contenttypeentry" value="[% contenttype FILTER html %]"><br>
+            <input type="text" size="20" name="contenttypeentry"
+                   value="[% attachment.contenttype FILTER html %]"><br>
 
           <input type="checkbox" id="ispatch" name="ispatch" value="1"
-                 [% 'checked="checked"' IF ispatch %]>
+                 [% 'checked="checked"' IF attachment.ispatch %]>
           <label for="ispatch">patch</label>
         [% END %]
           <input type="checkbox" id="isobsolete" name="isobsolete" value="1"
-                 [% 'checked="checked"' IF isobsolete %]>
+                 [% 'checked="checked"' IF attachment.isobsolete %]>
           <label for="isobsolete">obsolete</label><br>
           [% IF (Param("insidergroup") && UserInGroup(Param("insidergroup"))) %]
-            <input type="checkbox" name="isprivate" value="1"[% " checked" IF isprivate %]> private<br><br>
+            <input type="checkbox" name="isprivate" value="1"
+                   [% " checked" IF attachment.isprivate %]> private<br><br>
           [% ELSE %]<br>
           [% END %]
 
         [% IF flag_types.size > 0 %]
-          [% PROCESS "flag/list.html.tmpl" bug_id=bugid attach_id=attachid %]<br>
+          [% PROCESS "flag/list.html.tmpl" bug_id = attachment.bug_id
+                                           attach_id = attachment.id %]<br>
         [% END %]
 
         <div id="smallCommentFrame">
@@ -243,19 +255,20 @@
 
         <input type="submit" value="Submit"><br><br>
         <strong>Actions:</strong>
-        <a href="attachment.cgi?id=[% attachid %]">View</a>
-        [% IF ispatch && patchviewerinstalled %]
-         | <a href="attachment.cgi?id=[% attachid %]&action=diff">Diff</a>
+        <a href="attachment.cgi?id=[% attachment.id %]">View</a>
+        [% IF attachment.ispatch && patchviewerinstalled %]
+         | <a href="attachment.cgi?id=[% attachment.id %]&action=diff">Diff</a>
         [% END %]
         </small>
       </td>
 
       [% IF isviewable %]
         <td width="75%">
-          <textarea id="editFrame" name="comment" style="height: 400px; width: 100%; display: none;" cols="80" wrap="soft"></textarea>
-          <iframe id="viewFrame" src="attachment.cgi?id=[% attachid %]" style="height: 400px; width: 100%;">
+          <textarea id="editFrame" name="comment" wrap="soft" cols="80"
+                    style="height: 400px; width: 100%; display: none;"></textarea>
+          <iframe id="viewFrame" src="attachment.cgi?id=[% attachment.id %]" style="height: 400px; width: 100%;">
             <b>You cannot view the attachment while editing it because your browser does not support IFRAMEs.
-            <a href="attachment.cgi?id=[% attachid %]">View the attachment on a separate page</a>.</b>
+            <a href="attachment.cgi?id=[% attachment.id %]">View the attachment on a separate page</a>.</b>
           </iframe>
           <script type="text/javascript">
             <!--
@@ -274,15 +287,15 @@
             //-->
           </script>
         </td>
-      [% ELSIF isurl %]
+      [% ELSIF attachment.isurl %]
         <td width="75%">
-          <a href="[% thedata FILTER html %]">
-            [% IF datasize < 120 %]
-              [% thedata FILTER html %]
+          <a href="[% attachment.data FILTER html %]">
+            [% IF attachment.datasize < 120 %]
+              [% attachment.data FILTER html %]
             [% ELSE %]
-              [% thedata FILTER truncate(80) FILTER html %]
+              [% attachment.data FILTER truncate(80) FILTER html %]
               &nbsp;...
-              [% thedata.match(".*(.{20})$").0 FILTER html %]
+              [% attachment.data.match(".*(.{20})$").0 FILTER html %]
             [% END %]
           </a>
         </td>
@@ -290,11 +303,11 @@
         <td id="noview" width="50%">
           <p><b>
             Attachment is not viewable in your browser because its MIME type 
-            ([% contenttype FILTER html %]) is not one that your browser is 
+            ([% attachment.contenttype FILTER html %]) is not one that your browser is 
             able to display.
           </b></p>
           <p><b>
-            <a href="attachment.cgi?id=[% attachid %]">Download the attachment</a>.
+            <a href="attachment.cgi?id=[% attachment.id %]">Download the attachment</a>.
           </b></p>
         </td>
       [% END %]
@@ -305,10 +318,10 @@
 
   Attachments on this [% terms.Bug %]:
   [% FOREACH a = attachments %]
-    [% IF a == attachid %]
-      #[% a %]
+    [% IF a == attachment.id %]
+      [% a %]
     [% ELSE %]
-      <a href="attachment.cgi?id=[% a %]&amp;action=edit">#[% a %]</a>
+      <a href="attachment.cgi?id=[% a %]&amp;action=edit">[% a %]</a>
     [% END %]
     [% " |" UNLESS loop.last() %]
   [% END %]

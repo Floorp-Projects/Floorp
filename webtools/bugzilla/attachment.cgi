@@ -25,6 +25,7 @@
 #                 Alexander J. Vincent <ajvincent@juno.com>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Greg Hendricks <ghendricks@novell.com>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 ################################################################################
 # Script Initialization
@@ -37,9 +38,9 @@ use lib qw(.);
 
 # Include the Bugzilla CGI and general utility library.
 require "globals.pl";
-use Bugzilla::Config qw(:locations);
 
-# Use these modules to handle flags.
+use Bugzilla;
+use Bugzilla::Config qw(:locations);
 use Bugzilla::Constants;
 use Bugzilla::Flag; 
 use Bugzilla::FlagType; 
@@ -47,10 +48,12 @@ use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Bug;
 use Bugzilla::Field;
+use Bugzilla::Attachment;
 
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
@@ -1107,64 +1110,40 @@ sub insert
 # Any user is allowed to access this page, unless the attachment
 # is private and the user does not belong to the insider group.
 # Validations are done later when the user submits changes.
-sub edit
-{
-  # Retrieve and validate parameters
+sub edit {
   my ($attach_id) = validateID();
+  my $dbh = Bugzilla->dbh;
 
-  # Retrieve the attachment from the database.
-  SendSQL("SELECT description, mimetype, filename, bug_id, ispatch, isurl,
-                  isobsolete, isprivate, LENGTH(thedata)
-           FROM attachments
-           INNER JOIN attach_data
-           ON id = attach_id
-           WHERE attach_id = $attach_id");
-  my ($description, $contenttype, $filename, $bugid, $ispatch, $isurl, $isobsolete, $isprivate, $datasize) = FetchSQLData();
-
-  my $isviewable = !$isurl && isViewable($contenttype);
-  my $thedata;
-  if ($isurl) {
-      SendSQL("SELECT thedata FROM attach_data WHERE id = $attach_id");
-      ($thedata) = FetchSQLData();
-  }
+  my $attachment = Bugzilla::Attachment->get($attach_id);
+  my $isviewable = !$attachment->isurl && isViewable($attachment->contenttype);
 
   # Retrieve a list of attachments for this bug as well as a summary of the bug
   # to use in a navigation bar across the top of the screen.
-  SendSQL("SELECT attach_id FROM attachments WHERE bug_id = $bugid ORDER BY attach_id");
-  my @bugattachments;
-  push(@bugattachments, FetchSQLData()) while (MoreSQLData());
-  SendSQL("SELECT short_desc FROM bugs WHERE bug_id = $bugid");
-  my ($bugsummary) = FetchSQLData();
-  
+  my $bugattachments =
+      $dbh->selectcol_arrayref('SELECT attach_id FROM attachments
+                                WHERE bug_id = ? ORDER BY attach_id',
+                                undef, $attachment->bug_id);
+
+  my ($bugsummary, $product_id, $component_id) =
+      $dbh->selectrow_array('SELECT short_desc, product_id, component_id
+                               FROM bugs
+                              WHERE bug_id = ?', undef, $attachment->bug_id);
+
   # Get a list of flag types that can be set for this attachment.
-  SendSQL("SELECT product_id, component_id FROM bugs WHERE bug_id = $bugid");
-  my ($product_id, $component_id) = FetchSQLData();
   my $flag_types = Bugzilla::FlagType::match({ 'target_type'  => 'attachment' ,
                                                'product_id'   => $product_id ,
                                                'component_id' => $component_id });
   foreach my $flag_type (@$flag_types) {
     $flag_type->{'flags'} = Bugzilla::Flag::match({ 'type_id'   => $flag_type->{'id'},
-                                                    'attach_id' => $attach_id,
+                                                    'attach_id' => $attachment->id,
                                                     'is_active' => 1 });
   }
   $vars->{'flag_types'} = $flag_types;
   $vars->{'any_flags_requesteeble'} = grep($_->{'is_requesteeble'}, @$flag_types);
-  
-  # Define the variables and functions that will be passed to the UI template.
-  $vars->{'attachid'} = $attach_id; 
-  $vars->{'description'} = $description; 
-  $vars->{'contenttype'} = $contenttype; 
-  $vars->{'filename'} = $filename;
-  $vars->{'bugid'} = $bugid; 
+  $vars->{'attachment'} = $attachment;
   $vars->{'bugsummary'} = $bugsummary; 
-  $vars->{'ispatch'} = $ispatch; 
-  $vars->{'isurl'} = $isurl; 
-  $vars->{'isobsolete'} = $isobsolete; 
-  $vars->{'isprivate'} = $isprivate; 
-  $vars->{'datasize'} = $datasize;
-  $vars->{'thedata'} = $thedata;
   $vars->{'isviewable'} = $isviewable; 
-  $vars->{'attachments'} = \@bugattachments; 
+  $vars->{'attachments'} = $bugattachments; 
   $vars->{'GetBugLink'} = \&GetBugLink;
 
   # Determine if PatchReader is installed
