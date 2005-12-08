@@ -2252,14 +2252,12 @@ nsComboboxControlFrame::SetInitialChildList(nsPresContext* aPresContext,
          child = child->GetNextSibling()) {
       nsIFormControlFrame* fcFrame = nsnull;
       CallQueryInterface(child, &fcFrame);
-      if (fcFrame) {
-        if (fcFrame->GetFormControlType() == NS_FORM_INPUT_BUTTON) {
-          mButtonFrame = child;
-        }
-      } else {
-        mDisplayFrame = child;
+      if (fcFrame && fcFrame->GetFormControlType() == NS_FORM_INPUT_BUTTON) {
+        mButtonFrame = child;
+        break;
       }
     }
+    NS_ASSERTION(mButtonFrame, "missing button frame in initial child list");
   }
   return rv;
 }
