@@ -56,7 +56,7 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 -(void)rebuildViews;
 -(NSArray*)selectedProgressViewControllers;
 -(void)deselectDLInstancesInArray:(NSArray*)instances;
--(void)makeDLInstanceVisibleIfItsNotAlready:(ProgressViewController*)controller;
+-(void)scrollInfoView:(ProgressViewController*)controller;
 -(void)killDownloadTimer;
 -(void)setupDownloadTimer;
 -(BOOL)shouldAllowCancelAction;
@@ -373,7 +373,7 @@ static id gSharedProgressController = nil;
         {
           ProgressViewController* dlToSelect = [mProgressViewControllers objectAtIndex:instanceToSelect];
           [dlToSelect setSelected:YES];
-          [self makeDLInstanceVisibleIfItsNotAlready:dlToSelect];
+          [self scrollInfoView:dlToSelect];
           if (!shiftKeyDown)
             mSelectionPivotIndex = instanceToSelect;
         }
@@ -404,7 +404,7 @@ static id gSharedProgressController = nil;
         {
           ProgressViewController* dlToSelect = [mProgressViewControllers objectAtIndex:instanceToSelect];
           [dlToSelect setSelected:YES];
-          [self makeDLInstanceVisibleIfItsNotAlready:dlToSelect];
+          [self scrollInfoView:dlToSelect];
           if (!shiftKeyDown)
             mSelectionPivotIndex = instanceToSelect;
         }
@@ -424,14 +424,14 @@ static id gSharedProgressController = nil;
     case NSPageUpFunctionKey:
       if ([mProgressViewControllers count] > 0) {
         // make the first instance completely visible
-        [self makeDLInstanceVisibleIfItsNotAlready:((ProgressViewController*)[mProgressViewControllers objectAtIndex:0])];
+        [self scrollInfoView:((ProgressViewController*)[mProgressViewControllers objectAtIndex:0])];
       }
       break;
 
     case NSPageDownFunctionKey:
       if ([mProgressViewControllers count] > 0) {
         // make the last instance completely visible
-        [self makeDLInstanceVisibleIfItsNotAlready:((ProgressViewController*)[mProgressViewControllers lastObject])];
+        [self scrollInfoView:((ProgressViewController*)[mProgressViewControllers lastObject])];
       }
       break;
 
@@ -464,12 +464,12 @@ static id gSharedProgressController = nil;
   return selectedArray;
 }
 
--(void)makeDLInstanceVisibleIfItsNotAlready:(ProgressViewController*)controller
+-(void)scrollInfoView:(ProgressViewController*)controller
 {
-  NSRect instanceFrame = [[controller view] frame];
+  NSView* dlView = [controller view];
+  NSRect instanceFrame = [[mScrollView contentView] convertRect:[dlView bounds] fromView:dlView];
   NSRect visibleRect = [[mScrollView contentView] documentVisibleRect];
-  // for some reason there is a 1 pixel discrepancy we need to get rid of here
-  instanceFrame.size.width -= 1;
+
   if (!NSContainsRect(visibleRect, instanceFrame)) { // if instance isn't completely visible
     if (instanceFrame.origin.y < visibleRect.origin.y) { // if the dl instance is at least partly above visible rect
       // just go to the instance's frame origin point
@@ -478,7 +478,7 @@ static id gSharedProgressController = nil;
     else { // if the dl instance is at least partly below visible rect
       // take  instance's frame origin y, subtract content view height, 
       // add instance view height, no parenthesizing
-      NSPoint adjustedPoint = NSMakePoint(0,(instanceFrame.origin.y - [[mScrollView contentView] frame].size.height) + instanceFrame.size.height);
+      NSPoint adjustedPoint = NSMakePoint(0, (instanceFrame.origin.y - NSHeight([[mScrollView contentView] frame])) + NSHeight(instanceFrame));
       [[mScrollView contentView] scrollToPoint:adjustedPoint];
     }
     [mScrollView reflectScrolledClipView:[mScrollView contentView]];
@@ -499,7 +499,7 @@ static id gSharedProgressController = nil;
   [(ProgressViewController*)progressDisplay setSelected:YES];
   
   // make sure new download is visible
-  [self makeDLInstanceVisibleIfItsNotAlready:progressDisplay];
+  [self scrollInfoView:progressDisplay];
 }
 
 -(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay withSuccess:(BOOL)completedOK statusCode:(nsresult)status
