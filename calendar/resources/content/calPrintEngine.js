@@ -172,6 +172,13 @@ function OnLoadPrintEngine(){
   var args = window.arguments[0];
   gContent = document.getElementById("content");
 
+  var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                      .getService(Components.interfaces.nsIStringBundleService);
+  
+  var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+  var windowTitle = props.formatStringFromName("PrintPreviewWindowTitle", [args.title], 1);
+  document.title = windowTitle;
+
   var htmlexporter = Components.classes["@mozilla.org/calendar/export;1?type=html"].createInstance(Components.interfaces.calIExporter);
 
   // Fail-safe check to not init twice, to prevent leaking files
