@@ -1534,7 +1534,12 @@ tools are selected during the Xcode/Developer Tools installation.])
 
     case "$target_cpu" in
     i*86)
+	if test -n "$USE_64"; then
+	    AC_DEFINE(_AMD64_)
+	    AC_DEFINE(_M_AMD64)    
+	else		
 	    AC_DEFINE(_X86_)
+	fi
         ;;
     alpha)
 	    AC_DEFINE(_ALPHA_)
