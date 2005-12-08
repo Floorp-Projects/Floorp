@@ -52,7 +52,6 @@
 #include "archivereader.h"
 #include "errors.h"
 #include "bzlib.h"
-#include "nscore.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -122,7 +121,7 @@ void LaunchChild(int argc, char **argv);
 
 // This variable lives in libbz2.  It's declared in bzlib_private.h, so we just
 // declare it here to avoid including that entire header file.
-extern "C" NS_IMPORT_(unsigned int) BZ2_crc32Table[256];
+extern "C" unsigned int BZ2_crc32Table[256];
 
 static unsigned int
 crc32(const unsigned char *buf, unsigned int len)
