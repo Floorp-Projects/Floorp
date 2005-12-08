@@ -258,9 +258,13 @@ interface nsINavHistoryResult : nsINavHistoryResultNode
 
   /**
    * Add a Tree Builder Observer to handle Tree View methods that the 
-   * HistoryResult object does not implement. 
+   * HistoryResult object does not implement. If ownsWeak is false, then
+   * the result will hold a strong reference to the observer.  If ownsWeak
+   * is true, then the observer must implement nsISupportsWeakReference, and
+   * the result will hold a weak reference to the observer.
    */
-  void addObserver(in nsINavHistoryResultViewObserver observer);
+  void addObserver(in nsINavHistoryResultViewObserver observer,
+                   in boolean ownsWeak);
 
   /**
    * Remove a tree builder observer.
@@ -613,15 +617,17 @@ interface nsINavHistory : nsISupports
     in nsINavHistoryQueryOptions options);
 
   /**
-   * Adds a history observer. The history service will keep an owning
-   * reference to the observer.
+   * Adds a history observer. If ownsWeak is false, the history service will
+   * keep an owning reference to the observer.  If ownsWeak is true, then
+   * aObserver must implement nsISupportsWeakReference, and the history service
+   * will keep a weak reference to the observer.
    */
-  void addObserver(in nsINavHistoryObserver aObserver);
+  void addObserver(in nsINavHistoryObserver observer, in boolean ownsWeak);
 
   /**
    * Removes a history observer.
    */
-  void removeObserver(in nsINavHistoryObserver aObserver);
+  void removeObserver(in nsINavHistoryObserver observer);
 
   /**
    * Causes observers to be notified of a beginUpdateBatch when a lot of things

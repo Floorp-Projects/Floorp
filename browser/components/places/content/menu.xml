@@ -17,7 +17,7 @@
           Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
           getService(Ci.nsINavBookmarksService);
           
-        this._bms.addObserver(this._observer);
+        this._bms.addObserver(this._observer, false);
       ]]></constructor>
       
       <destructor><![CDATA[ 

@@ -612,20 +612,16 @@ nsNavHistoryResult::TreeIndexForNode(nsINavHistoryResultNode* aNode,
 
 
 NS_IMETHODIMP 
-nsNavHistoryResult::AddObserver(nsINavHistoryResultViewObserver* aObserver)
+nsNavHistoryResult::AddObserver(nsINavHistoryResultViewObserver* aObserver,
+                                PRBool aOwnsWeak)
 {
-  NS_ENSURE_ARG_POINTER(aObserver);
-
-  if (mObservers.IndexOf(aObserver) != -1)
-    return NS_OK;
-  return mObservers.AppendObject(aObserver) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return mObservers.AppendWeakElement(aObserver, aOwnsWeak);
 }
 
 NS_IMETHODIMP
 nsNavHistoryResult::RemoveObserver(nsINavHistoryResultViewObserver* aObserver)
 {
-  mObservers.RemoveObject(aObserver);
-  return NS_OK;
+  return mObservers.RemoveWeakElement(aObserver);
 }
 
 
@@ -1115,11 +1111,15 @@ NS_IMETHODIMP nsNavHistoryResult::IsSorted(PRBool *_retval)
 NS_IMETHODIMP nsNavHistoryResult::CanDrop(PRInt32 index, PRInt32 orientation,
                                           PRBool *_retval)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; ++i) {
-    mObservers[i]->CanDrop(index, orientation, _retval);
-    if (*_retval)
-      break;
+  PRUint32 count = mObservers.Length();
+  for (PRUint32 i = 0; i < count; ++i) {
+    const nsCOMPtr<nsINavHistoryResultViewObserver> &obs = mObservers[i];
+    if (obs) {
+      obs->CanDrop(index, orientation, _retval);
+      if (*_retval) {
+        break;
+      }
+    }
   }
   return NS_OK;
 }
@@ -1131,9 +1131,8 @@ NS_IMETHODIMP nsNavHistoryResult::CanDrop(PRInt32 index, PRInt32 orientation,
 
 NS_IMETHODIMP nsNavHistoryResult::Drop(PRInt32 row, PRInt32 orientation)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; ++i)
-    mObservers[i]->OnDrop(row, orientation);
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryResultViewObserver,
+                      OnDrop(row, orientation))
   return NS_OK;
 }
 
@@ -1298,9 +1297,8 @@ NS_IMETHODIMP nsNavHistoryResult::ToggleOpenState(PRInt32 index)
   if (index < 0 || index >= mVisibleElements.Count())
     return NS_ERROR_INVALID_ARG;
 
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; ++i)
-    mObservers[i]->OnToggleOpenState(index);
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryResultViewObserver,
+                      OnToggleOpenState(index))
 
   nsNavHistoryResultNode* curNode = VisibleElementAt(index);
   if (curNode->mExpanded) {
@@ -1340,9 +1338,8 @@ NS_IMETHODIMP nsNavHistoryResult::ToggleOpenState(PRInt32 index)
 
 NS_IMETHODIMP nsNavHistoryResult::CycleHeader(nsITreeColumn *col)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; ++i)
-    mObservers[i]->OnCycleHeader(col);
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryResultViewObserver,
+                      OnCycleHeader(col))
 
   PRInt32 colIndex;
   col->GetIndex(&colIndex);
@@ -1383,18 +1380,16 @@ NS_IMETHODIMP nsNavHistoryResult::CycleHeader(nsITreeColumn *col)
 /* void selectionChanged (); */
 NS_IMETHODIMP nsNavHistoryResult::SelectionChanged()
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; ++i)
-    mObservers[i]->OnSelectionChanged();
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryResultViewObserver,
+                      OnSelectionChanged())
   return NS_OK;
 }
 
 /* void cycleCell (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP nsNavHistoryResult::CycleCell(PRInt32 row, nsITreeColumn *col)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; ++i)
-    mObservers[i]->OnCycleCell(row, col);
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryResultViewObserver,
+                      OnCycleCell(row, col))
   return NS_OK;
 }
 
@@ -1419,27 +1414,24 @@ NS_IMETHODIMP nsNavHistoryResult::SetCellText(PRInt32 row, nsITreeColumn *col, c
 /* void performAction (in wstring action); */
 NS_IMETHODIMP nsNavHistoryResult::PerformAction(const PRUnichar *action)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; ++i)
-    mObservers[i]->OnPerformAction(action);
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryResultViewObserver,
+                      OnPerformAction(action))
   return NS_OK;
 }
 
 /* void performActionOnRow (in wstring action, in long row); */
 NS_IMETHODIMP nsNavHistoryResult::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; ++i)
-    mObservers[i]->OnPerformActionOnRow(action, row);
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryResultViewObserver,
+                      OnPerformActionOnRow(action, row))
   return NS_OK;
 }
 
 /* void performActionOnCell (in wstring action, in long row, in nsITreeColumn col); */
 NS_IMETHODIMP nsNavHistoryResult::PerformActionOnCell(const PRUnichar *action, PRInt32 row, nsITreeColumn *col)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; ++i)
-    mObservers[i]->OnPerformActionOnCell(action, row, col);
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryResultViewObserver,
+                      OnPerformActionOnCell(action, row, col))
   return NS_OK;
 }
 

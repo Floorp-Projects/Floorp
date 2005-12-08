@@ -28,7 +28,7 @@
         this._bms = 
           Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
           getService(Ci.nsINavBookmarksService);
-        this._bms.addObserver(this._bookmarkObserver);
+        this._bms.addObserver(this._bookmarkObserver, false);
         
         PlacesController.addViewObserver(this);
       ]]></constructor>
@@ -123,7 +123,7 @@
           if (result)
             result.removeObserver(this._viewObserver);
           this.treeBoxObject.view = val;
-          this.getResult().addObserver(this._viewObserver);          
+          this.getResult().addObserver(this._viewObserver, false);
         ]]></setter>        
       </property>
       

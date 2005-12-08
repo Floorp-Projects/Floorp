@@ -79,6 +79,7 @@ CPPSRCS = \
           nsNavHistoryQuery.cpp \
           nsNavHistoryResult.cpp \
           nsNavBookmarks.cpp \
+          nsMaybeWeakPtr.cpp \
           $(NULL)
 
 include $(topsrcdir)/config/rules.mk
