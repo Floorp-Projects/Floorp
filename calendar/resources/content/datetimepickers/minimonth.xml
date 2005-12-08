@@ -511,6 +511,22 @@
           }
         ]]>
       </handler>            
+      <handler event="DOMMouseScroll">
+        <![CDATA[
+          var rows = event.detail;
+          if (rows == NSUIEvent.SCROLL_PAGE_UP) {
+            rows = -1;
+          } else if (rows == NSUIEvent.SCROLL_PAGE_DOWN) {
+            rows = 1;
+          } else { 
+            // In this case event.detail contains the default number of lines
+            // to scroll.  We always want to only scroll 1 month though
+            rows = (rows > 0) ? 1 : -1;
+          }
+
+          this.advanceMonth(rows);
+        ]]>
+      </handler>
     </handlers>
   </binding>
 

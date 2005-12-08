@@ -271,7 +271,8 @@
                       onkeypress="if (event.keyCode == 13) this.kTimePicker.parseTextBoxTime(true);"
                       xbl:inherits="disabled">
           <xul:menupopup popupalign="topright" popupanchor="bottomright"
-                         onpopupshowing="onPopup(this)">
+                         onpopupshowing="onPopup(this)"
+                         onpopuphiding="onHide(this)">
             <xul:timepicker-grids />
           </xul:menupopup>
         </xul:menulist>
@@ -337,6 +338,16 @@
         </body>
       </method>
 
+      <method name="onHide">
+        <parameter name="aPopup"/>
+        <body>
+          <![CDATA[
+            // This is the timepicker grid.  Why aren't we using anonid?
+            aPopup.childNodes[0].onPopupHiding();
+          ]]>
+        </body>
+      </method>
+
       <method name="select">
         <body>
           <![CDATA[
@@ -373,6 +384,23 @@
       </xul:vbox>
       <xul:spacer flex="1"/>
     </content>
+    <handlers>
+      <handler event="DOMMouseScroll">
+        <![CDATA[
+          var rows = event.detail;
+          if (rows == NSUIEvent.SCROLL_PAGE_UP) {
+            rows = -1;
+          } else if (rows == NSUIEvent.SCROLL_PAGE_DOWN) {
+            rows = 1;
+          } else { 
+            // In this case event.detail contains the default number of lines
+            // to scroll.  We always want to only scroll 1 hour though
+            rows = (rows > 0) ? 1 : -1;
+          }
+          moveHours(rows);
+        ]]>
+      </handler>
+    </handlers>
   </binding>
 
   <binding id="timepicker-minute">
@@ -386,6 +414,23 @@
       </xul:vbox>
       <xul:spacer flex="1"/>
     </content>
+    <handlers>
+      <handler event="DOMMouseScroll">
+        <![CDATA[
+          var rows = event.detail;
+          if (rows == NSUIEvent.SCROLL_PAGE_UP) {
+            rows = -1;
+          } else if (rows == NSUIEvent.SCROLL_PAGE_DOWN) {
+            rows = 1;
+          } else { 
+            // In this case event.detail contains the default number of lines
+            // to scroll.  We always want to only scroll 1 minute though
+            rows = (rows > 0) ? 1 : -1;
+          }
+          moveMinutes(rows);
+        ]]>
+      </handler>
+    </handlers>
   </binding>
 
   <binding id="timepicker-grids" extends="xul:box">
@@ -737,6 +782,15 @@
         </body>
       </method>
 
+      <method name="onPopupHiding">
+        <body>
+          <![CDATA[
+            if (this.hasChanged)
+                this.timeSelected();
+          ]]>
+        </body>
+      </method>
+
       <!-- Called when the more tab is clicked, and possibly at startup -->
       <method name="clickMore">
         <body>
@@ -784,7 +838,7 @@
             // Change the hour in the selected time. 
             this.mSelectedTime.setHours( hourNumber );
 
-            this.timeSelected();
+            this.hasChanged = true;
           ]]>
         </body>
       </method>
@@ -799,7 +853,7 @@
             // set the minutes in the selected time
             this.mSelectedTime.setMinutes(minuteNumber);
             this.selectMinuteItem(minuteItem);
-            this.timeSelected();
+            this.hasChanged = true;
             // remove the popup grid
             this.mPopup.hidePopup();
           ]]>
@@ -869,6 +923,74 @@
             minuteItem.setAttribute( "selected" , "true" );
             // remember the selected item so we can deselect it
             this.mSelectedMinuteItem = minuteItem;
+          ]]>
+        </body>
+      </method>
+      <method name="moveMinutes">
+        <parameter name="aNumber"/>
+        <body>
+          <![CDATA[
+            if (!this.mSelectedTime)
+              return;
+
+            var idPrefix = "time-picker-one-minute-box-";
+
+            // Everything above assumes that we are showing the one-minute-grid,
+            // If not, we need to do these corrections;
+            var fiveMinuteBox = document.getAnonymousElementByAttribute(
+                                this, "anonid", "time-picker-five-minute-grid-box");
+
+            if (fiveMinuteBox.getAttribute("hidden") == 'false') {
+              aNumber *= 5;
+              idPrefix = "time-picker-five-minute-box-";
+
+              // If the detailed view was shown before, then mSelectedTime.getMinutes
+              // might not be a multiple of 5.
+              this.mSelectedTime.setMinutes(this.calcNearestFiveMinutes(this.mSelectedTime));
+            }
+
+            var newMinutes = this.mSelectedTime.getMinutes() + aNumber;
+
+            // Handle rollover cases
+            if (newMinutes < 0)
+                newMinutes += 60;
+            if (newMinutes > 59)
+                newMinutes -= 60;
+
+            this.mSelectedTime.setMinutes(newMinutes);
+
+            var minuteItemId = idPrefix + this.mSelectedTime.getMinutes();
+            var minuteItem = document.getAnonymousElementByAttribute(this, "anonid", minuteItemId);
+
+            this.selectMinuteItem(minuteItem);
+            this.mPicker.kTextBox.value = this.mPicker.formatTime(this.mSelectedTime);
+            this.hasChanged = true;
+          ]]>
+        </body>
+      </method>
+      <method name="moveHours">
+        <parameter name="aNumber"/>
+        <body>
+          <![CDATA[
+            if (!this.mSelectedTime)
+              return;
+
+            var newHours = this.mSelectedTime.getHours() + aNumber;
+
+            // Handle rollover cases
+            if (newHours < 0)
+                newHours += 24;
+            if (newHours > 23)
+                newHours -= 24;
+
+            this.mSelectedTime.setHours(newHours);
+
+            var hourItemId = "time-picker-hour-box-" + this.mSelectedTime.getHours();
+            var hourItem = document.getAnonymousElementByAttribute(this, "anonid", hourItemId);
+
+            this.selectHourItem(hourItem);
+            this.mPicker.kTextBox.value = this.mPicker.formatTime(this.mSelectedTime);
+            this.hasChanged = true;
           ]]>
         </body>
       </method>
