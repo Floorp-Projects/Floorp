@@ -331,6 +331,59 @@ nsAnnotationService::GetAnnotationInfo(nsIURI* aURI,
 }
 
 
+// nsAnnotationService::GetPagesWithAnnotation
+
+NS_IMETHODIMP
+nsAnnotationService::GetPagesWithAnnotation(const nsACString& aName,
+                                            PRUint32* aResultCount,
+                                            nsIURI*** aResults)
+{
+  if (aName.IsEmpty() || ! aResultCount || ! aResults)
+    return NS_ERROR_INVALID_ARG;
+  *aResultCount = 0;
+  *aResults = nsnull;
+
+  // this probably isn't a common operation, so we don't have a precompiled
+  // statement. Perhaps this should change.
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT h.url FROM moz_anno a JOIN moz_history h ON a.page = h.id WHERE a.name = ?1"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindUTF8StringParameter(0, aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore = PR_FALSE;
+  nsCOMArray<nsIURI> results;
+  while (NS_SUCCEEDED(rv = statement->ExecuteStep(&hasMore)) && hasMore) {
+    nsCAutoString uristring;
+    rv = statement->GetUTF8String(0, uristring);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), uristring);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool added = results.AppendObject(uri);
+    NS_ENSURE_TRUE(added, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  // convert to raw array
+  if (results.Count() == 0)
+    return NS_OK;
+  *aResults = NS_STATIC_CAST(nsIURI**,
+                             nsMemory::Alloc(results.Count() * sizeof(nsIURI*)));
+  if (! aResults)
+    return NS_ERROR_OUT_OF_MEMORY;
+  *aResultCount = results.Count();
+  for (PRUint32 i = 0; i < *aResultCount; i ++) {
+    (*aResults)[i] = results[i];
+    NS_ADDREF((*aResults)[i]);
+  }
+  return NS_OK;
+}
+
+
 // nsAnnotationService::HasAnnotation
 
 NS_IMETHODIMP
