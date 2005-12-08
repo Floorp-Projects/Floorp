@@ -2054,7 +2054,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint)
         }
       }
     } while (kid = kid->GetNextSibling());
-    if (closestFrame);
+    if (closestFrame)
       return GetSelectionClosestFrameForChild(closestFrame, aPoint);
   }
   return FrameTarget(aFrame, PR_FALSE, PR_FALSE);
