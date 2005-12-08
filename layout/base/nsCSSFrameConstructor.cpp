@@ -12030,7 +12030,10 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   nsStyleSet *styleSet = mPresShell->StyleSet();
 
   letterFrame = NS_NewFirstLetterFrame(mPresShell);  
-  InitAndRestoreFrame(aState, aTextContent, aParentFrame, aStyleContext,
+  InitAndRestoreFrame(aState, aTextContent,
+                      aState.GetGeometricParent(aStyleContext->GetStyleDisplay(),
+                                                aParentFrame),
+                      aStyleContext,
                       nsnull, letterFrame);
 
   // Init the text frame to refer to the letter frame. Make sure we
