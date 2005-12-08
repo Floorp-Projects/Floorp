@@ -171,7 +171,8 @@ Py_nsIID::PyTypeMethod_getattr(PyObject *self, char *name)
 	Py_nsIID *me = (Py_nsIID *)self;
 	if (strcmp(name, "name")==0) {
 		char *iid_repr = nsnull;
-		nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+		nsCOMPtr<nsIInterfaceInfoManager> iim(do_GetService(
+		               NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
 		if (iim!=nsnull)
 			iim->GetNameForIID(&me->m_iid, &iid_repr);
 		if (iid_repr==nsnull)

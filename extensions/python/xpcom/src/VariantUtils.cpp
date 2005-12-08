@@ -2083,7 +2083,8 @@ PyObject *PyXPCOM_GatewayVariantHelper::MakeSingleParam(int index, PythonTypeDes
 
 nsresult PyXPCOM_GatewayVariantHelper::GetArrayType(PRUint8 index, PRUint8 *ret)
 {
-	nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+	nsCOMPtr<nsIInterfaceInfoManager> iim(do_GetService(
+	                     NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
 	NS_ABORT_IF_FALSE(iim != nsnull, "Cant get interface from IIM!");
 	if (iim==nsnull)
 		return NS_ERROR_FAILURE;
@@ -2136,8 +2137,8 @@ PRBool PyXPCOM_GatewayVariantHelper::GetIIDForINTERFACE_ID(int index, const nsII
 nsIInterfaceInfo *PyXPCOM_GatewayVariantHelper::GetInterfaceInfo()
 {
 	if (!m_interface_info) {
-		nsCOMPtr<nsIInterfaceInfoManager> iim = 
-				dont_AddRef(XPTI_GetInterfaceInfoManager());
+		nsCOMPtr<nsIInterfaceInfoManager> iim(do_GetService(
+		                NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
 		if (iim)
 			iim->GetInfoForIID(&m_gateway->m_iid, getter_AddRefs(m_interface_info));
 	}

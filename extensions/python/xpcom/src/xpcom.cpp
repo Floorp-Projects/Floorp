@@ -220,17 +220,15 @@ PyXPCOMMethod_XPTI_GetInterfaceInfoManager(PyObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	nsIInterfaceInfoManager* im;
-	Py_BEGIN_ALLOW_THREADS;
-	im = XPTI_GetInterfaceInfoManager();
-	Py_END_ALLOW_THREADS;
+	nsCOMPtr<nsIInterfaceInfoManager> im(do_GetService(
+	                      NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
 	if ( im == nsnull )
 		return PyXPCOM_BuildPyException(NS_ERROR_FAILURE);
 
 	/* Return a type based on the IID (with no extra ref) */
 	// Can not auto-wrap the interface info manager as it is critical to
 	// building the support we need for autowrap.
-	return Py_nsISupports::PyObjectFromInterface(im, NS_GET_IID(nsIInterfaceInfoManager), PR_FALSE, PR_FALSE);
+	return Py_nsISupports::PyObjectFromInterface(im, NS_GET_IID(nsIInterfaceInfoManager), PR_TRUE, PR_FALSE);
 }
 
 static PyObject *

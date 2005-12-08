@@ -69,7 +69,8 @@ PyXPCOM_XPTStub::GetInterfaceInfo(nsIInterfaceInfo** info)
 	// Simply get the XPCOM runtime to provide this
 	// (but there must be some reason why they don't get it themselves!?)
 	// Maybe because they don't know the IID?
-	nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+	nsCOMPtr<nsIInterfaceInfoManager> iim(do_GetService(
+	                     NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
 	NS_ABORT_IF_FALSE(iim != nsnull, "Cant get interface from IIM!");
 	if (iim==nsnull)
 		return NS_ERROR_FAILURE;
