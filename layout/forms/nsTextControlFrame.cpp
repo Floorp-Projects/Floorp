@@ -3312,9 +3312,8 @@ nsTextControlFrame::GetWidthInCharacters() const
     }
   }
 
-  // otherwise, see if CSS has a width specified.  If so, work backwards to get the 
-  // number of characters this width represents.
- 
+  // XXX: otherwise, see if CSS has a width specified.  If so, work backwards
+  // to get the number of characters this width represents.
   
   // otherwise, the default is just returned.
   return DEFAULT_COLUMN_WIDTH;
@@ -3344,22 +3343,6 @@ nsTextControlFrame::SetValueChanged(PRBool aValueChanged)
   if (elem) {
     elem->SetValueChanged(aValueChanged);
   }
-}
-
-NS_IMETHODIMP 
-nsTextControlFrame::HandleEvent(nsPresContext* aPresContext, 
-                                       nsGUIEvent*     aEvent,
-                                       nsEventStatus*  aEventStatus)
-{
-  NS_ENSURE_ARG_POINTER(aEventStatus);
-
-  // temp fix until Bug 124990 gets fixed
-  if (aPresContext->IsPaginated() && NS_IS_MOUSE_EVENT(aEvent)) {
-    return NS_OK;
-  }
-
-  return nsStackFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-    
 }
 
 /* static */ void

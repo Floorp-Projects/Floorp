@@ -1405,10 +1405,6 @@ nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
                                 nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
-  // temp fix until Bug 124990 gets fixed
-  if (aPresContext->IsPaginated() && NS_IS_MOUSE_EVENT(aEvent)) {
-    return NS_OK;
-  }
 
   /*const char * desc[] = {"NS_MOUSE_MOVE", 
                           "NS_MOUSE_LEFT_BUTTON_UP",
