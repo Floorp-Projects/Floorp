@@ -1379,27 +1379,30 @@
             return;
         }
 
-	if (this.mLastClickTime && (evTime - this.mLastClickTime < 350)) {
-            // double click
+        // start 'single click edit' timeout
+        if (this.selected) {
+            var self = this;
             if (this.editingTimer) {
                 clearTimeout(this.editingTimer);
-                this.editingTimer = null;
             }
+            this.editingTimer = setTimeout(function () { self.startEditing(); }, 350);
+        } else {
+            this.calendarView.selectedItem = this.mOccurrence;
+        }
+      ]]></handler>
 
-            if (this.calendarView.controller && this.mOccurrence) {
-                var occurrence = (event.ctrlKey) ? this.mOccurrence.parentItem : this.mOccurrence;
-                this.calendarView.controller.modifyOccurrence(occurrence);
-            }
-	} else {
-            // start single click timeout
-            if (this.selected) {
-                var self = this;
-                if (this.editingTimer) clearTimeout(this.editingTimer);
-                this.editingTimer = setTimeout(function () { self.startEditing(); }, 350);
-            } else {
-                this.calendarView.selectedItem = this.mOccurrence;
-            }
-            this.mLastClickTime = evTime;
+      <handler event="dblclick"><![CDATA[
+        event.stopPropagation();
+
+        // stop 'single click edit' timeout (if started)
+        if (this.editingTimer) {
+            clearTimeout(this.editingTimer);
+            this.editingTimer = null;
+        }
+
+        if (this.calendarView.controller && this.mOccurrence) {
+            var occurrence = (event.ctrlKey) ? this.mOccurrence.parentItem : this.mOccurrence;
+            this.calendarView.controller.modifyOccurrence(occurrence);
         }
       ]]></handler>
 
