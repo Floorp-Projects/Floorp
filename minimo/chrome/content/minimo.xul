@@ -141,8 +141,9 @@
                  ontextentered="return URLBarEntered();"
                  onfocus="URLBarFocusHandler(event, this);"
                  onmousedown="URLBarMouseDownHandler(event, this);"
-                 onclick="URLBarClickHandler(event, this);">				
-			<deck id='proxy-deck'>
+                 onclick="URLBarClickHandler(event, this);">
+				
+			<deck onclick="PageProxyClickHandler(event)" id='proxy-deck' >
 				<image id="urlbar-deck"  />  
 			</deck>
 			
@@ -216,6 +217,11 @@
 		<menuitem id="item-paste"  label="Paste" oncommand="DoClipPaste()"/>
        
 	</popup>
+
+      <popup id="urlbarModeSelector" onpopuphidden="PageProxyHidden()">
+		<menuitem id="command_ViewDeckSearch"  type="checkbox" label="&decksearch.label;"  command="cmd_ViewDeckSearch"/>
+		<menuitem id="command_ViewDeckSB"  type="checkbox"  label="&decksb.label;"  command="cmd_ViewDeckSB" />
+      </popup>
 	
 	 <!-- somehow tabbedbrowser needs this. Have to check its implementation and eliminate --> 
 	 <popup id="menu_FilePopup"> 
@@ -231,9 +237,6 @@
 -->
         <menuitem id="command_DoPanelPreferences" command="cmd_DoPanelPreferences" label="&prefs.label;"  /> 
         <!-- separator for now in CSS - need to redesign -->
-
-        <menuitem id="command_ViewDeckSB"    class="separator-menu"    type="checkbox" command="cmd_ViewDeckSB"     label="&decksb.label;"  /> 
-        <menuitem id="command_ViewDeckSearch"  type="checkbox" command="cmd_ViewDeckSearch" label="&decksearch.label;"  /> 
 
         <menuitem id="command_ViewOptions" type="checkbox" command="cmd_ViewOptions" label="&zoom.label;"  /> 
         <menuitem id="command_ViewFind"    type="checkbox" command="cmd_ViewFind" label="&findToolbar.label;"  /> 
