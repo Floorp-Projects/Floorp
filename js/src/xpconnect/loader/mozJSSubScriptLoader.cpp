@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -239,7 +240,22 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
 #ifdef DEBUG_rginda
         fprintf (stderr, "\n");
 #endif  
-        
+    }
+
+    // Innerize the target_obj so that we compile the loaded script in the
+    // correct (inner) scope.
+    JSClass *target_class = JS_GET_CLASS(cx, target_obj);
+    if (target_class->flags & JSCLASS_IS_EXTENDED)
+    {
+        JSExtendedClass *extended = (JSExtendedClass*)target_class;
+        if (extended->innerObject)
+        {
+            target_obj = extended->innerObject(cx, target_obj);
+            if (!target_obj) return NS_ERROR_FAILURE;
+#ifdef DEBUG_rginda
+            fprintf (stderr, "Final global: %p\n", target_obj);
+#endif
+        }
     }
 
     /* load up the url.  From here on, failures are reflected as ``custom''
