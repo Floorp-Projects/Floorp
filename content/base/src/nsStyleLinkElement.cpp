@@ -189,7 +189,8 @@ const PRBool kBlockByDefault=PR_TRUE;
 
 NS_IMETHODIMP
 nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
-                                     nsICSSLoaderObserver* aObserver)
+                                     nsICSSLoaderObserver* aObserver,
+                                     PRBool aForceUpdate)
 {
   if (mStyleSheet && aOldDocument) {
     // We're removing the link element from the document, unload the
@@ -228,7 +229,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
   PRBool isInline;
   GetStyleSheetURL(&isInline, getter_AddRefs(uri));
 
-  if (mStyleSheet && !isInline && uri) {
+  if (!aForceUpdate && mStyleSheet && !isInline && uri) {
     nsCOMPtr<nsIURI> oldURI;
 
     mStyleSheet->GetSheetURI(getter_AddRefs(oldURI));

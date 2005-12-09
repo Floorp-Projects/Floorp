@@ -295,7 +295,12 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                               aValue, aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
+    UpdateStyleSheet(nsnull, nsnull,
+                     aNameSpaceID == kNameSpaceID_None &&
+                     (aName == nsHTMLAtoms::rel ||
+                      aName == nsHTMLAtoms::title ||
+                      aName == nsHTMLAtoms::media ||
+                      aName == nsHTMLAtoms::type));
   }
 
   return rv;
@@ -308,7 +313,12 @@ nsHTMLLinkElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
                                                 aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
+    UpdateStyleSheet(nsnull, nsnull,
+                     aNameSpaceID == kNameSpaceID_None &&
+                     (aAttribute == nsHTMLAtoms::rel ||
+                      aAttribute == nsHTMLAtoms::title ||
+                      aAttribute == nsHTMLAtoms::media ||
+                      aAttribute == nsHTMLAtoms::type));
   }
 
   return rv;

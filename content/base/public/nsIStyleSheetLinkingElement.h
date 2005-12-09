@@ -90,9 +90,11 @@ public:
    *                     from one document to another).
    * @param aObserver    observer to notify once the stylesheet is loaded.
    *                     It might be notified before the function returns.
+   * @param aForceUpdate If true, force the update even if the URI did not change
    */
   NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument,
-                              nsICSSLoaderObserver* aObserver) = 0;
+                              nsICSSLoaderObserver* aObserver,
+                              PRBool aForceUpdate = PR_FALSE) = 0;
 
   /**
    * Tells this element whether to update the stylesheet when the
