@@ -56,6 +56,7 @@ class nsIDocument;
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsString.h"
+#include "nsICSSLoader.h"
 #include "nsIZipReader.h"
 #include "nsCOMArray.h"
      
@@ -257,6 +258,7 @@ protected:
   nsCOMPtr<nsIRDFResource> mDisabled;
   nsCOMPtr<nsIRDFResource> mXPCNativeWrappers;
 
+  nsCOMPtr<nsICSSLoader> mCSSLoader;
   nsCOMPtr<nsIZipReader> mOverrideJAR;
   nsCString              mOverrideJARURL;
   

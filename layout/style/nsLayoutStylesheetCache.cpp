@@ -142,6 +142,7 @@ nsLayoutStylesheetCache::UserChromeSheet()
 void
 nsLayoutStylesheetCache::Shutdown()
 {
+  NS_IF_RELEASE(gCSSLoader);
   NS_IF_RELEASE(gStyleCache);
 }
 
@@ -163,6 +164,7 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
 
 nsLayoutStylesheetCache::~nsLayoutStylesheetCache()
 {
+  gCSSLoader = nsnull;
   gStyleCache = nsnull;
 }
 
@@ -214,8 +216,6 @@ nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsCOMPtr<nsICSSStyleSheet
   LoadSheet(uri, aSheet);
 }
 
-static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
-
 void
 nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI, nsCOMPtr<nsICSSStyleSheet> &aSheet)
 {
@@ -224,13 +224,15 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI, nsCOMPtr<nsICSSStyleSheet> &aSh
     return;
   }
 
-  // note: CSS Loader is treated as a service here... slightly unusual,
-  // but within the rules.
-  nsCOMPtr<nsICSSLoader> cssLoader = do_GetService(kCSSLoaderCID);
-  if (!cssLoader) return;
+  if (!gCSSLoader)
+    NS_NewCSSLoader(&gCSSLoader);
 
-  cssLoader->LoadSheetSync(aURI, getter_AddRefs(aSheet));
+  if (gCSSLoader)
+    gCSSLoader->LoadSheetSync(aURI, getter_AddRefs(aSheet));
 }  
 
 nsLayoutStylesheetCache*
 nsLayoutStylesheetCache::gStyleCache = nsnull;
+
+nsICSSLoader*
+nsLayoutStylesheetCache::gCSSLoader = nsnull;

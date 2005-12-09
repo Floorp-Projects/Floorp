@@ -71,7 +71,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIStyleSheet.h"
-#include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIPresShell.h"
 #include "nsIDocShell.h"
@@ -2984,10 +2983,13 @@ nsresult nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet*
 {
   *aSheet = nsnull;
 
-  nsCOMPtr<nsICSSLoader> cssLoader = do_GetService(kCSSLoaderCID);
-  if (!cssLoader) return NS_ERROR_FAILURE;
+  if (!mCSSLoader) {
+    nsresult rv;
+    mCSSLoader = do_CreateInstance(kCSSLoaderCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-  return cssLoader->LoadSheetSync(aURL, aSheet);
+  return mCSSLoader->LoadSheetSync(aURL, aSheet);
 }
 
 nsresult nsChromeRegistry::LoadInstallDataSource()
