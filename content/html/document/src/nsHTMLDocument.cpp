@@ -2149,6 +2149,7 @@ nsHTMLDocument::Close()
     }
     --mWriteLevel;
     mIsWriting = 0;
+    mParser->Terminate();
     mParser = nsnull;
 
     // XXX Make sure that all the document.written content is
