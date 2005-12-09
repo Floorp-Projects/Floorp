@@ -627,7 +627,7 @@ DOMViewer.prototype =
   rebuild: function()
   {
     var selNode = this.getNodeFromRowIndex(this.mDOMTree.currentIndex);
-    this.mDOMView.selection.select(null);
+    this.mDOMTree.view.selection.select(null);
     
     var opened = [];
     var i;
