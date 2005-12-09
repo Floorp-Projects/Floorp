@@ -602,6 +602,8 @@ NS_ConsumeStream(nsIInputStream *stream, PRUint32 maxCount, nsACString &result)
         }
         if (avail == 0)
             break;
+        if (avail > maxCount)
+            avail = maxCount;
 
         // resize result buffer
         PRUint32 length = result.Length();
