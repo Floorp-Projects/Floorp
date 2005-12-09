@@ -24,6 +24,7 @@
     <RDF:li resource="chrome://editor/content/editorTasksOverlay.xul"/>
     <RDF:li resource="chrome://browser/content/browser.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
+    <RDF:li resource="chrome://communicator/content/pref/pref-appearance.xul"/>
   </RDF:Seq>
 
   <RDF:Seq about="chrome://browser/content/browser.xul">
@@ -35,6 +36,10 @@
   </RDF:Seq>
 
   <RDF:Seq about="chrome://communicator/content/pref/preftree.xul">
+    <RDF:li>chrome://chatzilla/content/prefsOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://communicator/content/pref/pref-appearance.xul">
     <RDF:li>chrome://chatzilla/content/prefsOverlay.xul</RDF:li>
   </RDF:Seq>
 

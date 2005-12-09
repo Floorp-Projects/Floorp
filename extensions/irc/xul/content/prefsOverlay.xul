@@ -40,6 +40,7 @@
 
 <overlay id="ovCZPrefs" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <!-- Tree entry -->
   <treechildren id="panelChildren">
     <treeitem container="false" id="chatzillaItem" insertbefore="advancedItem">
       <treerow>
@@ -48,6 +49,21 @@
       </treerow>
     </treeitem>
   </treechildren>
+
+  <!-- Startup option -->
+  <script type="application/x-javascript">
+    <![CDATA[
+        var panel;
+        if (panel != undefined && 
+            (panel == "chrome://communicator/content/pref/pref-appearance.xul"))
+            _elementIDs.push("generalStartupChat");
+    ]]>
+  </script>
+  <groupbox id="generalStartupPreferences">
+    <checkbox id="generalStartupChat" label="&startup.chat.label;"
+              accesskey="&startup.chat.accesskey;" pref="true" preftype="bool"
+              prefstring="general.startup.chat" prefattribute="checked"
+              wsm_persist="true"/>
+  </groupbox>
 </overlay>
 
-        
