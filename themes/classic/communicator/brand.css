@@ -51,6 +51,7 @@
   padding: 1px;
   min-width: 0;
   list-style-image: url("chrome://communicator/skin/brand/throbber-single.gif");
+  background-color: transparent;
   -moz-appearance:none !important;
 }
 
