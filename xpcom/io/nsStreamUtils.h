@@ -38,7 +38,7 @@
 #ifndef nsStreamUtils_h__
 #define nsStreamUtils_h__
 
-#include "nscore.h"
+#include "nsStringFwd.h"
 
 class nsIInputStream;
 class nsIOutputStream;
@@ -107,6 +107,33 @@ NS_AsyncCopy(nsIInputStream         *aSource,
              PRUint32                aChunkSize = 4096,
              nsAsyncCopyCallbackFun  aCallbackFun = nsnull,
              void                   *aCallbackClosure = nsnull);
+
+/**
+ * This function copies all of the available data from the stream (up to at
+ * most aMaxCount bytes) into the given buffer.  The buffer is truncated at
+ * the start of the function.
+ *
+ * If an error occurs while reading from the stream or while attempting to
+ * resize the buffer, then the corresponding error code is returned from this
+ * function, and any data that has already been read will be returned in the
+ * output buffer.  This allows one to use this function with a non-blocking
+ * input stream that may return NS_BASE_STREAM_WOULD_BLOCK if it only has
+ * partial data available.
+ *
+ * @param aSource
+ *        The input stream to read.
+ * @param aMaxCount
+ *        The maximum number of bytes to consume from the stream.  Pass the
+ *        value PR_UINT32_MAX to consume the entire stream.  The number of
+ *        bytes actually read is given by the length of aBuffer upon return.
+ * @param aBuffer
+ *        The string object that will contain the stream data upon return.
+ *        Note: The data copied to the string may contain null bytes and may
+ *        contain non-ASCII values.
+ */
+extern NS_COM nsresult
+NS_ConsumeStream(nsIInputStream *aSource, PRUint32 aMaxCount,
+                 nsACString &aBuffer);
 
 /**
  * This function tests whether or not the input stream is buffered.  A buffered
