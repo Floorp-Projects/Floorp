@@ -67,6 +67,8 @@ pref("browser.tabs.loadOnNewTab", 0);
 pref("browser.windows.loadOnNewWindow", 1);
 
 pref("browser.link.open_newwindow", 3);
+pref("browser.link.open_external", 3)
+pref("browser.link.open_newwindow.restriction", 2);
 
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
