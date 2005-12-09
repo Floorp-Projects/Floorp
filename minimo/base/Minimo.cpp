@@ -496,53 +496,6 @@ void OverrideComponents()
   }
 }
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- *   Complete hack below.  We to ensure that the layout of all
- *   of the shared libaries are at tightly packed as possible.
- *   We do this by explictly loading all of the modules we
- *   know about at compile time.  This seams to work for our
- *   purposes.  Ultimately, we should statically link all of
- *   these libraries.
- *
- *   If you are building this to put on a ROM where XIP exists.
- *
- *   For more information:
- *   1) http://msdn.microsoft.com/library/default.asp?url=/ \
-        library/en-us/dncenet/html/advmemmgmt.asp
- *
- * * * * * * * * * * * * * * *  * * * * * * * * * * * * * * * * * * * */
-#ifdef WINCE
-#define HACKY_PRE_LOAD_LIBRARY 1
-#endif
-
-#ifdef HACKY_PRE_LOAD_LIBRARY
-typedef struct _library
-{
-	const unsigned short* name;
-	HMODULE module;
-} _library;
-
-_library Libraries[] =
-{
-  {  L"nssckbi.dll",    NULL },
-  {  NULL, NULL },
-};
-
-void LoadKnownLibs()
-{
-  for (int i=0; Libraries[i].name; i++)
-    Libraries[i].module = LoadLibraryW(Libraries[i].name);
-}
-
-void UnloadKnownLibs()
-{
-  for (int i=0; Libraries[i].name; i++)
-    if (Libraries[i].module)
-      FreeLibrary(Libraries[i].module);
-}
-#endif // HACKY_PRE_LOAD_LIBRARY
-
 int main(int argc, char *argv[])
 {
 #ifdef MOZ_WIDGET_GTK2
@@ -551,10 +504,6 @@ int main(int argc, char *argv[])
 #endif
   
   CreateSplashScreen();
-  
-#ifdef HACKY_PRE_LOAD_LIBRARY
-  LoadKnownLibs();
-#endif
   
 #ifdef _BUILD_STATIC_BIN
   NS_InitEmbedding(nsnull, nsnull, kPStaticModules, kStaticModuleCount);
@@ -628,9 +577,6 @@ int main(int argc, char *argv[])
   // Close down Embedding APIs
   NS_TermEmbedding();
   
-#ifdef HACKY_PRE_LOAD_LIBRARY
-  UnloadKnownLibs();
-#endif
   return NS_OK;
 }
 
