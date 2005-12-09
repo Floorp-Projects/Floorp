@@ -1,0 +1,22 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 306534</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+        span::first-letter { float:left; }
+        span               { display:list-item; list-style-position:inside; }
+
+        span::before       { content: 'Hello '}
+    </style>
+</head>
+<body>
+
+<span>Kitty</span>
+
+</body>
+</html>
