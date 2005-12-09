@@ -583,7 +583,7 @@ nsSoftKeyBoard::HandleEvent(nsIDOMEvent* aEvent)
   
   if (eventType.EqualsLiteral("focus"))
   {
-    if (popupConditions == PR_FALSE)
+    //    if (popupConditions == PR_FALSE)
       OpenSIP();
   }
   else
