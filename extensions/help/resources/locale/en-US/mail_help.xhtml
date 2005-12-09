@@ -785,6 +785,8 @@
     before you send it. You can also click Spell.</li>
   <li><strong>Spellcheck As You Type:</strong> Choose this option to have the
     spelling of the message text checked as you type.</li>
+  <li><strong>Quote Message:</strong> Choose this option to have the selection
+    of the message text shown as quoted text.</li>
   <li><strong>Rewrap:</strong> If you are composing a message using the
     plain-text editor, you can use the Rewrap command to rewrap long lines of
     quoted text to fit the Compose window. This command rewraps selected quoted
@@ -820,6 +822,8 @@
     <span class="noMac">Edit</span> menu.</li>
   <li><strong>Priority:</strong> Choose a priority to indicate whether the
     message has lowest, low, normal, high, or highest priority.</li>
+  <li><strong>Character Encoding:</strong> Choose a character encoding used for
+    this message.</li>
   <li><strong>Send a Copy To:</strong> Choose this if you want to file an
     additional copy of the sent message in a different folder than your default
     Sent folder. Then select the folder you want.</li>
@@ -1465,12 +1469,7 @@
 <p>By default, the Collected Address Book automatically collects the email
   addresses contained in outgoing mail messages. Addresses from outgoing
   messages are stored in the Collected Address Book as soon as you click
-  Send. The Collected Address Book can also save the sender&apos;s address
-  in each incoming message. To enable this feature, you must change the
-  <a href="#addressing_preferences">preferences for email address
-  collection</a>. The preferences also let you choose which types of
-  addresses you want to collect (only addresses from mail messages or
-  addresses from both mail and newsgroup messages).</p>
+  Send.</p>
 
 <h4>LDAP Directory (if available)</h4>
 
@@ -1489,14 +1488,11 @@
   <li>Under the Mail &amp; Newsgroups category, click Addressing. (If no
     subcategories are visible, double-click Mail &amp; Newsgroups to expand the
     list.)</li>
-  <li>Under Email Address Collection, choose whether you want to:
+  <li>Under Email Address Collection, select <q>Add email addresses to my</q>
+    and choose whether you want:
     <ul>
-      <li>Use this feature for incoming or outgoing messages, or both.</li>
-      <li>Use this feature for newsgroup messages.</li>
-      <li>Limit the size of the Collected Address book. The default size is
-        700 cards. If you add a new card that exceeds the limit, the oldest
-        card is removed and the new card is added, keeping the total number
-        of cards the same.</li>
+      <li>Personal Address Book.</li>
+      <li>Collected Addresses.</li>
     </ul>
   </li>
   <li>Click OK.</li>
@@ -2423,7 +2419,7 @@
       header correctly, since Mail will only find entries that exactly match
       what you type.</p>
   </li>
-  <li>Click More to add criteria and Fewer to remove them.</li>
+  <li>Click <q>+</q> to add criteria and <q>-</q> to remove them.</li>
   <li>Use the list to choose the action you want the filter to perform on the
     messages (for example, Move to Folder).
 
@@ -2698,6 +2694,8 @@ to filter unwanted mail.</p>
         old junk messages after a grace period.</li>
     </ul>
   </li>
+  <li><strong>Mark messages determined to be Junk as read</strong>: Select this
+    option to mark junk messages as read, so they will not show up as new.</li>
   <li><strong>When I manually mark messages as Junk</strong>: Choose this to
     set what you want &brandShortName; to do when you manually mark messages
     as Junk.
@@ -4130,13 +4128,13 @@ to filter unwanted mail.</p>
   panel</a> to specify how you want to sign your email messages:</p>
 
 <ul>
-  <li><strong>Digitally sign messages:</strong> Select this checkbox if you
-    want to digitally sign all the messages you send. (A personal certificate
-    must be specified below before you can select this checkbox.)</li>
   <li><strong>Use this certificate to digitally sign messages you
     send:</strong> If this field is empty or if it displays the wrong
     certificate, click Select to choose from the certificates you have on
     file.</li>
+  <li><strong>Digitally sign messages:</strong> Select this checkbox if you
+    want to digitally sign all the messages you send. (A personal certificate
+    must be specified below before you can select this checkbox.)</li>
 </ul>
 
 <p>Regardless of whether the <q>Digitally sign messages</q> checkbox is
@@ -4157,16 +4155,16 @@ to filter unwanted mail.</p>
   messages:</p>
 
 <ul>
+  <li><strong>Use this certificate to encrypt &amp; decrypt messages sent to
+    you:</strong> If this field is empty or if it displays the wrong
+    certificate, click Select to choose from the certificates you have on
+    file.</li>
   <li><strong>Never:</strong> Select this option if you never want to use
     encryption, or only occasionally.</li>
   <li><strong>Required:</strong> Select this option if you always want to use
     encryption. If you don&apos;t have all the necessary certificates, the
     message won&apos;t be sent unless you explicitly turn off encryption for
     that message only.</li>
-  <li><strong>Use this certificate to encrypt &amp; decrypt messages sent to
-    you:</strong> If this field is empty or if it displays the wrong
-    certificate, click Select to choose from the certificates you have on
-    file.</li>
 </ul>
 
 <p>Regardless of which encryption option you select, you can change your mind
