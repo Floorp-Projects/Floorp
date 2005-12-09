@@ -219,7 +219,7 @@ caption {
  */ 
  
 #urlbar-deck {
-
+  list-style-image: url("chrome://minimo/skin/extensions/icon-urlbar.png");
 }
 
 #urlbar-deck.sb {
