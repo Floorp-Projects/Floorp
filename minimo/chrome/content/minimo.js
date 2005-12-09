@@ -1081,16 +1081,23 @@ function URLBarEntered()
   return true;
 }
 
+function PageProxyClickHandler(aEvent) {
+   document.getElementById("urlbarModeSelector").showPopup(document.getElementById("proxy-deck"),-1,-1,"popup","bottomleft", "topleft");
+}
+
 
 function URLBarFocusHandler(aEvent, aElt)
 {
+
   if (gIgnoreFocus)
     gIgnoreFocus = false;
   else if (gClickSelectsAll)
     aElt.select();
 
-  gURLBar.setAttribute("open", "true"); 
-  gURLBar.showHistoryPopup();
+ // gURLBar.setAttribute("open", "true"); 
+ // gURLBar.showHistoryPopup();
+
+
 }
 
 function URLBarMouseDownHandler(aEvent, aElt)
