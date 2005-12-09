@@ -211,7 +211,11 @@ nsSVGStyleElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsresult rv = nsSVGStyleElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
                                                aValue, aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
+    UpdateStyleSheet(nsnull, nsnull,
+                     aNameSpaceID == kNameSpaceID_None &&
+                     (aName == nsSVGAtoms::title ||
+                      aName == nsSVGAtoms::media ||
+                      aName == nsSVGAtoms::type));
   }
 
   return rv;
@@ -224,7 +228,11 @@ nsSVGStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   nsresult rv = nsSVGStyleElementBase::UnsetAttr(aNameSpaceID, aAttribute,
                                                  aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
+    UpdateStyleSheet(nsnull, nsnull,
+                     aNameSpaceID == kNameSpaceID_None &&
+                     (aAttribute == nsSVGAtoms::title ||
+                      aAttribute == nsSVGAtoms::media ||
+                      aAttribute == nsSVGAtoms::type));
   }
 
   return rv;

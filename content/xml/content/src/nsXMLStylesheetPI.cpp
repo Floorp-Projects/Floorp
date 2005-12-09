@@ -138,7 +138,7 @@ nsXMLStylesheetPI::SetNodeValue(const nsAString& aNodeValue)
 {
   nsresult rv = nsGenericDOMDataNode::SetNodeValue(aNodeValue);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
+    UpdateStyleSheet(nsnull, nsnull, PR_TRUE);
   }
   return rv;
 }

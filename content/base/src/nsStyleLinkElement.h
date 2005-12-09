@@ -64,8 +64,12 @@ public:
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
   NS_IMETHOD InitStyleLinkElement(nsIParser *aParser, PRBool aDontLoadStyle);
+  // If aForceUpdate == PR_TRUE will force the update even if the URI has not
+  // changed.  This should be used in cases when something about the content
+  // that affects the resulting sheet changed but the URI may not have changed.
   NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument = nsnull,
-                              nsICSSLoaderObserver* aObserver = nsnull);
+                              nsICSSLoaderObserver* aObserver = nsnull,
+                              PRBool aForceUpdate = PR_FALSE);
   NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates);
   NS_IMETHOD GetCharset(nsAString& aCharset);
   virtual void SetLineNumber(PRUint32 aLineNumber);
