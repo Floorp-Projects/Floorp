@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  necko \
 		  content \
+		  layout \
 		  xuldoc \
 		  jar \
 		  $(NULL)

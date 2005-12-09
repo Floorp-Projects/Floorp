@@ -54,6 +54,7 @@
 
 struct PRFileDesc;
 class nsIAtom;
+class nsICSSLoader;
 class nsICSSStyleSheet;
 class nsIDOMWindowInternal;
 class nsILocalFile;
@@ -96,8 +97,6 @@ public:
 protected:
   nsresult GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay, nsISimpleEnumerator **aResult);
 
-  static nsresult LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet);
-
   nsresult LoadInstallDataSource();
   nsresult LoadProfileDataSource();
 
@@ -105,7 +104,8 @@ protected:
   void FlushAllCaches();
 
 private:
-  static nsresult RefreshWindow(nsIDOMWindowInternal* aWindow);
+  static nsresult RefreshWindow(nsIDOMWindowInternal* aWindow,
+                                nsICSSLoader* aCSSLoader);
   static nsresult GetProviderAndPath(nsIURL* aChromeURL,
                                      nsACString& aProvider, nsACString& aPath);
 

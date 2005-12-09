@@ -2095,8 +2095,6 @@ DocumentViewerImpl::RequestWindowClose(PRBool* aCanClose)
   return NS_OK;
 }
 
-NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
-
 PR_STATIC_CALLBACK(PRBool)
 AppendAgentSheet(nsIStyleSheet *aSheet, void *aData)
 {
@@ -2151,7 +2149,6 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   PRBool shouldOverride = PR_FALSE;
   nsCOMPtr<nsIDocShell> ds(do_QueryInterface(docShell));
   nsCOMPtr<nsIChromeEventHandler> chromeHandler;
-  nsCOMPtr<nsICSSLoader> cssLoader( do_GetService(kCSSLoaderCID) );
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsICSSStyleSheet> csssheet;
 
@@ -2165,6 +2162,9 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
       nsAutoString sheets;
       elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);
       if (!sheets.IsEmpty() && baseURI) {
+        nsCOMPtr<nsICSSLoader> cssLoader;
+        NS_NewCSSLoader(getter_AddRefs(cssLoader));
+
         char *str = ToNewCString(sheets);
         char *newStr = str;
         char *token;
