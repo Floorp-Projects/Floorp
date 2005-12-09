@@ -1992,9 +1992,6 @@ nsJSContext::InitClasses(JSObject *aGlobalObj)
   rv = InitializeLiveConnectClasses(aGlobalObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsDOMClassInfo::InitDOMJSClass(mContext, aGlobalObj);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Initialize the options object and set default options in mContext
   JSObject *optionsObj = ::JS_DefineObject(mContext, aGlobalObj, "_options",
                                            &OptionsClass, nsnull, 0);

@@ -1474,6 +1474,31 @@ public:
   NS_DECL_NSIXPCFUNCTIONTHISTRANSLATOR
 };
 
+class nsDOMConstructorSH : public nsDOMGenericSH
+{
+protected:
+  nsDOMConstructorSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsDOMConstructorSH()
+  {
+  }
+
+public:
+  NS_IMETHOD Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                       JSObject *obj, PRUint32 argc, jsval *argv,
+                       jsval *vp, PRBool *_retval);
+
+  NS_IMETHOD HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval val, PRBool *bp,
+                         PRBool *_retval);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsDOMConstructorSH(aData);
+  }
+};
 
 void InvalidateContextAndWrapperCache();
 
