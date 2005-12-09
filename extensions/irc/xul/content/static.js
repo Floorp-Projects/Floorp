@@ -2196,8 +2196,11 @@ function gotoIRCURL (url)
                  * NOTE: This is always a "#" so that URLs may be compared
                  * properly without involving the server (e.g. off-line).
                  */
-                if (arrayIndexOf(serv.channelTypes, target[0]) == -1)
+                if ((arrayIndexOf(["#", "&", "+", "!"], target[0]) == -1) &&
+                    (arrayIndexOf(serv.channelTypes, target[0]) == -1))
+                {
                     target = "#" + target;
+                }
 
                 var chan = new CIRCChannel(serv, null, target);
 

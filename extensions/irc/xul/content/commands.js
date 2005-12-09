@@ -2206,8 +2206,11 @@ function cmdJoin(e)
         return chan;
     }
 
-    if (arrayIndexOf(e.server.channelTypes, e.channelName[0]) == -1)
+    if ((arrayIndexOf(["#", "&", "+", "!"], e.channelName[0]) == -1) &&
+        (arrayIndexOf(e.server.channelTypes, e.channelName[0]) == -1))
+    {
         e.channelName = e.server.channelTypes[0] + e.channelName;
+    }
 
     var charset = e.charset ? e.charset : e.network.prefs["charset"];
     e.channel = e.server.addChannel(e.channelName, charset);
