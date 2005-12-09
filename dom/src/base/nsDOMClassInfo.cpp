@@ -4612,7 +4612,7 @@ nsDOMConstructor::~nsDOMConstructor()
 {
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                             JSObject * obj, PRUint32 argc, jsval * argv,
                             jsval * vp, PRBool *_retval)
@@ -4650,7 +4650,7 @@ nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
   return BaseStubConstructor(name_struct, cx, obj, argc, argv, vp);
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
                               JSContext * cx, JSObject * obj,
                               jsval v, PRBool *bp, PRBool *_retval)
