@@ -41,6 +41,7 @@
 #include "nsIPipe.h"
 #include "nsIEventTarget.h"
 #include "nsAutoLock.h"
+#include "nsString.h"
 
 //-----------------------------------------------------------------------------
 
@@ -579,6 +580,46 @@ NS_AsyncCopy(nsIInputStream         *source,
     NS_ADDREF(copier);
     rv = copier->Start(source, sink, target, callback, closure, chunkSize);
     NS_RELEASE(copier);
+
+    return rv;
+}
+
+//-----------------------------------------------------------------------------
+
+NS_COM nsresult
+NS_ConsumeStream(nsIInputStream *stream, PRUint32 maxCount, nsACString &result)
+{
+    nsresult rv = NS_OK;
+    result.Truncate();
+
+    while (maxCount) {
+        PRUint32 avail;
+        rv = stream->Available(&avail);
+        if (NS_FAILED(rv)) {
+            if (rv == NS_BASE_STREAM_CLOSED)
+                rv = NS_OK;
+            break;
+        }
+        if (avail == 0)
+            break;
+
+        // resize result buffer
+        PRUint32 length = result.Length();
+        result.SetLength(length + avail);
+        if (result.Length() != (length + avail))
+            return NS_ERROR_OUT_OF_MEMORY;
+        char *buf = result.BeginWriting() + length;
+        
+        PRUint32 n;
+        rv = stream->Read(buf, avail, &n);
+        if (NS_FAILED(rv))
+            break;
+        if (n != avail)
+            result.SetLength(length + n);
+        if (n == 0)
+            break;
+        maxCount -= n;
+    }
 
     return rv;
 }
