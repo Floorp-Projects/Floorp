@@ -2447,11 +2447,8 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 #if JS_HAS_LVALUE_RETURN
       case TOK_LP:
-        if (pn2->pn_op == JSOP_CALL) {
-            pn2->pn_op = JSOP_SETCALL;
-            break;
-        }
-        /* FALL THROUGH */
+        pn2->pn_op = JSOP_SETCALL;
+        break;
 #endif
 #if JS_HAS_XML_SUPPORT
       case TOK_UNARYOP:
