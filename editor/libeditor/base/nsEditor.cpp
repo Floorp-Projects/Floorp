@@ -43,6 +43,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIEventListenerManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
@@ -56,7 +57,6 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventGroup.h"
 #include "nsIDOMMouseListener.h"
@@ -160,7 +160,6 @@ nsEditor::nsEditor()
 ,  mActionListeners(nsnull)
 ,  mEditorObservers(nsnull)
 ,  mDocDirtyState(-1)
-,  mGotDOMEventReceiver(PR_FALSE)
 ,  mDocWeak(nsnull)
 ,  mPhonetic(nsnull)
 {
@@ -360,15 +359,19 @@ nsEditor::InstallEventListeners()
 
   nsresult rv = NS_OK;
 
-  // register the event listeners with the DOM event reveiver
-  nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
+  // register the event listeners with the listener manager
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
   erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
+  nsCOMPtr<nsIEventListenerManager> elmP;
+  erP->GetListenerManager(getter_AddRefs(elmP));
 
-  if (sysGroup)
+  if (sysGroup && elmP)
   {
-    rv = dom3Targ->AddGroupedEventListener(NS_LITERAL_STRING("keypress"),
-                                           mKeyListenerP, PR_FALSE, sysGroup);
+    rv = elmP->AddEventListenerByType(mKeyListenerP,
+                                      NS_LITERAL_STRING("keypress"),
+                                      NS_EVENT_FLAG_BUBBLE |
+                                      NS_PRIV_EVENT_UNTRUSTED_PERMITTED,
+                                      sysGroup);
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "failed to register key listener in system group");
   }
@@ -411,13 +414,15 @@ nsEditor::RemoveEventListeners()
     {
       nsCOMPtr<nsIDOMEventGroup> sysGroup;
       erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
-      if (sysGroup)
+      nsCOMPtr<nsIEventListenerManager> elmP;
+      erP->GetListenerManager(getter_AddRefs(elmP));
+      if (sysGroup && elmP)
       {
-        nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
-
-        dom3Targ->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"),
-                                             mKeyListenerP, PR_FALSE,
-                                             sysGroup);
+        elmP->RemoveEventListenerByType(mKeyListenerP,
+                                        NS_LITERAL_STRING("keypress"),
+                                        NS_EVENT_FLAG_BUBBLE |
+                                        NS_PRIV_EVENT_UNTRUSTED_PERMITTED,
+                                        sysGroup);
       }
     }
 
@@ -5330,59 +5335,33 @@ nsEditor::HandleInlineSpellCheck(PRInt32 action,
 already_AddRefed<nsIDOMEventReceiver>
 nsEditor::GetDOMEventReceiver()
 {
-  if (mDOMEventReceiver)
+  nsIDOMEventReceiver *erp = mDOMEventReceiver;
+  if (erp)
   {
-    nsIDOMEventReceiver *erp = mDOMEventReceiver;
     NS_ADDREF(erp);
     return erp;
-  }      
-
-  nsIDOMEventReceiver *erp = nsnull;
-  
-  if (!mGotDOMEventReceiver)
-  {
-    // Look for one
-    nsIDOMElement *rootElement = GetRoot();
-
-    // Now hack to make sure we are not anonymous content.
-    // If we are grab the parent of root element for our observer.
-
-    nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement);
-
-    if (content)
-    {
-      nsIContent* parent = content->GetParent();
-      if (parent)
-      {
-        if (parent->IndexOf(content) < 0)
-        {
-          // this will put listener on the form element basically
-          CallQueryInterface(parent, &erp);
-        }
-      }
-    }
   }
 
-  if (!erp)
+  nsIDOMElement *rootElement = GetRoot();
+
+  // Now hack to make sure we are not anonymous content.
+  // If we are grab the parent of root element for our observer.
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement);
+
+  if (content && content->IsNativeAnonymous())
+  {
+    mDOMEventReceiver = do_QueryInterface(content->GetParent());
+    erp = mDOMEventReceiver;
+    NS_IF_ADDREF(erp);
+  }
+  else
   {
     // Don't use getDocument here, because we have no way of knowing
     // if Init() was ever called.  So we need to get the document
     // ourselves, if it exists.
-
-    nsCOMPtr<nsIDOMDocument> domdoc = do_QueryReferent(mDocWeak);
-    if (domdoc)
-    {
-      CallQueryInterface(domdoc, &erp);
-    }
+    CallQueryReferent(mDocWeak.get(), &erp);
   }
-  else
-  {
-    // We got a DOM event receiver from our content.  Cache it.
-    mDOMEventReceiver = erp;
-  }
-
-  // If we found something, make a note of that.
-  mGotDOMEventReceiver = mGotDOMEventReceiver || erp;
 
   return erp;
 }

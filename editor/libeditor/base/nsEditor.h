@@ -617,12 +617,8 @@ protected:
   nsCOMPtr<nsISupportsArray>    mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
 
   PRInt8                        mDocDirtyState;		// -1 = not initialized
-  PRPackedBool                  mGotDOMEventReceiver;  // True if we've gotten our DOMEventReceiver once
   nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument
-  // When mGotDOMEventReceiver is set, a null mDOMEventReceiver means we didn't
-  // find one (and hence should be using the document).  We cache the event
-  // receiver when we get it off anonymous content because during document
-  // teardown the anonymous content can get unhooked before we get unhooked.
+  // The form field as an event receiver
   nsCOMPtr<nsIDOMEventReceiver> mDOMEventReceiver;
 
   nsString* mPhonetic;
