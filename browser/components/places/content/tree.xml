@@ -23,21 +23,7 @@
           item = item.parent;
         item.QueryInterface(Ci.nsIInterfaceRequestor);
         this._browserWindow = item.getInterface(Ci.nsIDOMWindowInternal);
-
-        this._makeBookmarkObserver();
-        this._bms = 
-          Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-          getService(Ci.nsINavBookmarksService);
-        this._bms.addObserver(this._bookmarkObserver, false);
-        
-        PlacesController.addViewObserver(this);
       ]]></constructor>
-      
-      <destructor><![CDATA[ 
-        this._bms.removeObserver(this._bookmarkObserver);
-        
-        PlacesController.removeViewObserver(this);
-      ]]></destructor>
       
       <method name="init">
         <parameter name="viewConfig"/>
@@ -46,40 +32,6 @@
           this.supportedDropOnTypes = viewConfig.dropOnTypes;
           this.filterOptions = viewConfig.filterOptions;
           this.firstDropIndex = viewConfig.firstDropIndex;
-        ]]></body>
-      </method>
-      
-      <field name="_bookmarkObserver"/>
-      <method name="_makeBookmarkObserver">
-        <body><![CDATA[ 
-          var BMO = {
-            _numBatches: 0,
-            _self: this,
-            
-            _reloadView: function PT_BMO__reloadView() {
-              var result = this._self.getResult();
-              this._self.load(result.getQueries({ }), result.queryOptions);
-            },
-            
-            onBeginUpdateBatch: function PT_BMO_onBeginUpdateBatch() {
-              ++this._numBatches;
-            },
-            onEndUpdateBatch: function PT_BMO_onEndUpdateBatch() {
-              if (!--this._numBatches)
-                this._reloadView();
-            },
-            get wantAllDetails() { 
-              return false;
-            },
-            onItemAdded: function PT_O_onItemAdded() {
-              if (!this._numBatches)
-                this._reloadView();
-            }
-          };
-          BMO.onItemRemoved = BMO.onItemMoved = BMO.onItemChanged = 
-            BMO.onItemReplaced = BMO.onFolderAdded = BMO.onFolderRemoved = 
-            BMO.onFolderMoved = BMO.onFolderChanged = BMO.onItemAdded;
-          this._bookmarkObserver = BMO;
         ]]></body>
       </method>
       
@@ -338,10 +290,7 @@
               // nsINavHistoryResult
               container = lastSelected.parent;
               var lsi = PlacesController.getIndexOfNode(lastSelected);
-              if (lsi < container.childCount - 1)
-                index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
-              else
-                index = orientation == NHRVO.DROP_BEFORE ? lsi - 1 : lsi;
+              index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
             }
           }
           return new InsertionPoint(container.folderId, index, orientation);
@@ -520,12 +469,6 @@
         onToggleOpenState: function VO_onToggleOpenState(index) { 
           // XXXben we will probably have to implement this to refresh Live 
           //        Bookmarks.
-          var view = this._self.view;
-          if (view.isContainer(index)) {
-            if (!this._self._openStates)
-              this._self._openStates = { };
-            this._self._openStates[index] = !view.isContainerOpen(index);
-          }
         },
         onSelectionChanged: function VO_onSelectionChanged() { },
         onCycleHeader: function VO_onCycleHeader(column) { },
@@ -537,80 +480,6 @@
       
       <field name="suppressSelection">false</field>
       <field name="_selection">null</field>
-      <field name="_openStates">null</field>
-      
-      <method name="_restoreOpenState">
-        <body><![CDATA[
-          for (var row in this._openStates) {
-            if (this._openStates[row])
-              this.view.toggleOpenState(row);
-          }
-        ]]></body>
-      </method>
-      
-      <method name="willReloadView">
-        <parameter name="action"/>
-        <parameter name="view"/>
-        <parameter name="insertionPoint"/>
-        <parameter name="count"/>
-        <body><![CDATA[ 
-          this._selection = [];
-          var selection = this.view.selection;
-          var rc = selection.getRangeCount();
-          if (view != this)
-            action = RELOAD_ACTION_NOTHING;
-            
-          switch (action) {
-          case RELOAD_ACTION_NOTHING:
-            for (var i = 0; i < rc; ++i) {
-              var min = { }, max = { };
-              selection.getRangeAt(i, min, max);
-              this._selection.push({ min: min.value, max: max.value });
-            }
-            break;
-          case RELOAD_ACTION_MOVE:
-            var index = this._getInsertionIndex(insertionPoint);
-            this._selection = [{ min: index, max: index + count - 1 }];
-            break;
-          case RELOAD_ACTION_INSERT:
-            // Insert index of insertion and number of rows to insert
-            var index = this._getInsertionIndex(insertionPoint);
-            if (insertionPoint.index == 0)
-              this._selection = [{ min: index, max: index + count - 1 }];
-            else 
-              this._selection = [{ min: index + 1, max: index + count }];
-            break;
-          case RELOAD_ACTION_REMOVE:
-            min = { }, max = { };
-            selection.getRangeAt(0, min, max);
-            if (min.value == this.view.rowCount - count) 
-              --min.value;
-            this._selection = [{ min: min.value, max: min.value }];
-            break;
-          }
-          //if (this._selection.length)
-          //  LOG("SET UP RANGE: " + this._selection[0].toSource() + " for " + this.id + " action = " + action);
-        ]]></body>
-      </method>
-      
-      <method name="didReloadView">
-        <parameter name="view"/>
-        <body><![CDATA[ 
-          this._restoreOpenState();
-        
-          var selection = this.view.selection;
-          if (view != this.view)
-            this.suppressSelection = true;
-          selection.clearSelection();
-          for (var i = 0; i < this._selection.length; ++i) {
-            var range = this._selection[i];
-            //LOG("RESELECTING RANGE: " + range.min + "," + range.max + " in: " + this.id);
-            selection.rangedSelect(range.min, range.max, true);
-          }
-          if (view != this.view)
-            this.suppressSelection = false;
-        ]]></body>
-      </method>
     </implementation>
     <handlers>
       <handler event="focus"><![CDATA[

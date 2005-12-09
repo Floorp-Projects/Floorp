@@ -588,11 +588,9 @@ var PlacesController = {
     var value = { value: bundle.getString("newFolderDefault") };
     if (ps.prompt(window, title, text, value, null, { })) {
       var ip = view.insertionPoint;
-      this.willReloadView(RELOAD_ACTION_INSERT, this._activeView, ip, 1);
       var txn = new PlacesCreateFolderTransaction(value.value, ip.folderId, 
                                                   ip.index);
       this._hist.transactionManager.doTransaction(txn);
-      this.didReloadView(this._activeView);
       this._activeView.focus();
     }
   },
@@ -620,11 +618,8 @@ var PlacesController = {
                                                   index));
       }
     }
-    this.willReloadView(RELOAD_ACTION_REMOVE, this._activeView, null, 
-                        nodes.length);
     var txn = new PlacesAggregateTransaction(txnName || "RemoveItems", txns);
     this._hist.transactionManager.doTransaction(txn);
-    this.didReloadView(this._activeView);
   },
 
   /**
@@ -949,71 +944,8 @@ var PlacesController = {
       transactions.push(this.makeTransaction(data[i], type.value, 
                                              ip.folderId, ip.index, true));
     
-    this.willReloadView(RELOAD_ACTION_INSERT, this._activeView, ip, data.length);
     var txn = new PlacesAggregateTransaction("Paste", transactions);
     this._hist.transactionManager.doTransaction(txn);
-    this.didReloadView(this._activeView);
-  },
-  
-  /**
-   * An array of observers that we notify as the view reloads.
-   */
-  _viewObservers: [],
-  
-  /**
-   * Adds a view reload observer
-   * @param   observer
-   *          The view reload observer to add
-   */
-  addViewObserver: function PC_addTransactionObserver(observer) {
-    for (var i = 0; i < this._viewObservers.length; ++i) {
-      if (this._viewObservers[i] == observer)
-        return;
-    }
-    this._viewObservers.push(observer);
-  },
-  
-  /**
-   * Removes a view reload observer
-   * @param   observer
-   *          The view reload observer to remove
-   */
-  removeViewObserver: function PC_removeTransactionObserver(observer) {
-    for (var i = 0; i < this._viewObservers.length; ++i) {
-      if (this._viewObservers[i] == observer)
-        this._viewObservers.splice(i, 1);
-    }
-  },
-  
-  /**
-   * Notifies all observers that the view is about to be reloaded (i.e. 
-   * save selection now)
-   * @param   action
-   *          The reload action (see top of this file)
-   * @param   view
-   *          The view that is being reloaded
-   * @param   insertionPoint
-   *          The insertion point at which elements are being moved to,
-   *          inserted to or removed from
-   * @param   count
-   *          The number of items being moved, inserted or removed. 
-   */
-  willReloadView: function PC_willReloadView(action, view, insertionPoint, 
-                                             count) {
-    for (var i = 0; i < this._viewObservers.length; ++i)
-      this._viewObservers[i].willReloadView(action, view, insertionPoint, 
-                                            count);
-  },
-  
-  /**
-   * Notifies all observers that the view was just reloaded (i.e. restore
-   * selection now)
-   * @param   view
-   *          The view that was just reloaded. 
-   */
-  didReloadView: function PC_didReloadView(view) {
-    for (var i = 0; i < this._viewObservers.length; ++i)
-      this._viewObservers[i].didReloadView(view);
   },
 };
 
@@ -1123,29 +1055,8 @@ var PlacesControllerDragHelper = {
                         insertionPoint.index, copy));
     }
     
-    if (sourceView == targetView) {
-      // When we're rearranging the contents of the current view, we 
-      // invoke separate handling that takes care not to count the 
-      // dropCount as added rows - they just changed index.
-      PlacesController.willReloadView(RELOAD_ACTION_MOVE, targetView,
-                                      insertionPoint, dropCount);
-    }
-    else {
-      if (sourceView && "willReloadView" in sourceView)
-        sourceView.willReloadView(RELOAD_ACTION_REMOVE, sourceView, null, 
-                                  dropCount);
-      var action = visibleInsertCount == 0 ? RELOAD_ACTION_NOTHING 
-                                           : RELOAD_ACTION_INSERT;
-      if ("willReloadView" in targetView)
-        targetView.willReloadView(action, targetView, insertionPoint, 
-                                  dropCount);
-    }
     var txn = new PlacesAggregateTransaction("DropItems", transactions);
     PlacesController._hist.transactionManager.doTransaction(txn);
-    if (sourceView && sourceView != targetView && 
-        "didReloadView" in sourceView)
-      sourceView.didReloadView(sourceView);
-    PlacesController.didReloadView(targetView);
   }
 };
 
