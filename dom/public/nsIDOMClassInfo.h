@@ -54,6 +54,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_BarProp_id,
   eDOMClassInfo_History_id,
   eDOMClassInfo_Screen_id,
+  eDOMClassInfo_Constructor_id,
 
   // Core classes
   eDOMClassInfo_XMLDocument_id,

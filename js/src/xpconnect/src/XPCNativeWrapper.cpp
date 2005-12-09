@@ -935,9 +935,42 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  jsval *rval)
 {
+  // The object given to us by the JS engine is actually a stub object (the
+  // "new" object). This isn't any help to us, so instead use the function
+  // object of the constructor that we're calling (which is the native
+  // wrapper).
+  obj = JSVAL_TO_OBJECT(argv[-2]);
+
   XPC_NW_BYPASS_TEST(cx, obj, construct, (cx, obj, argc, argv, rval));
 
-  return JS_TRUE;
+  XPCWrappedNative *wrappedNative =
+    XPCNativeWrapper::GetWrappedNative(cx, obj);
+  if (!wrappedNative) {
+    return JS_TRUE;
+  }
+
+  JSBool retval = JS_TRUE;
+
+  if (!NATIVE_HAS_FLAG(wrappedNative, WantConstruct)) {
+    return ThrowException(NS_ERROR_INVALID_ARG, cx);
+  }
+
+  nsresult rv = wrappedNative->GetScriptableInfo()->
+    GetCallback()->Construct(wrappedNative, cx, obj, argc, argv, rval,
+                             &retval);
+  if (NS_FAILED(rv)) {
+    return ThrowException(rv, cx);
+  }
+
+  if (!retval) {
+    return JS_FALSE;
+  }
+
+  if (JSVAL_IS_PRIMITIVE(*rval)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  return RewrapIfDeepWrapper(cx, obj, *rval, rval);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
