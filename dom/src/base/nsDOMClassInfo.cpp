@@ -4807,7 +4807,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
 NS_IMETHODIMP
 nsDOMConstructor::ToString(nsAString &aResult)
 {
-  aResult.Assign(PRUnichar('['));
+  aResult.AssignLiteral("[object ");
   aResult.Append(mClassName);
   aResult.Append(PRUnichar(']'));
 
