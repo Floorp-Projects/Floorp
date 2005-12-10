@@ -607,6 +607,7 @@ static const int kOverflowButtonMargin = 1;
 -(BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
   mDragOverBar = NO;
+  [self setNeedsDisplay:YES];
 
   TabButtonCell * button = [self buttonAtPoint:[self convertPoint:[sender draggingLocation] fromView:nil]];
   if (!button) {
@@ -615,9 +616,9 @@ static const int kOverflowButtonMargin = 1;
     mDragDestButton = nil;
     return [mTabView performDragOperation:sender];
   }
+
   [mDragDestButton setDragTarget:NO];
   [button setDragTarget:NO];
-  [self setNeedsDisplay:YES];
   NSView * dragDest = [[button tabViewItem] tabItemContentsView];
   [self registerTabButtonsForTracking];
   mDragDestButton = nil;
