@@ -258,6 +258,12 @@ if (observer._folderMoved != workFolder ||
     observer._folderMovedNewIndex != 4) {
   dump("moveFolder notification FAILED\n");
 }
+if (bmsvc.indexOfItem(root, uri("http://google.com/")) != 1) {
+  dump("indexOfItem FAILED\n");
+}
+if (bmsvc.indexOfFolder(root, workFolder) != 4) {
+  dump("indexOfFolder FAILED\n");
+}
 
 ///  EXPECTED TABLE RESULTS
 ///  moz_bookmarks:
@@ -311,8 +317,8 @@ if (observer._folderMoved != workFolder ||
 ///  id            name
 ///  --            -----------------------
 ///  1
-///  2             Bookmarks Toolbar
-///  3             Bookmarks Menu
+///  2             Bookmarks Menu
+///  3             Bookmarks Toolbar
 ///  4             Firefox and Mozilla Links
 ///  5             Work
 ///  6             Home
