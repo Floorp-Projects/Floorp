@@ -916,10 +916,13 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_TRUE;
     slot = JSVAL_TO_INT(id);
 
-    /* No valid function object should lack private data, but check anyway. */
-    fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
-    if (!fun)
-        return JS_TRUE;
+    /* Loop because getter and setter can be delegated from another class. */
+    while (!(fun = (JSFunction *)
+                   JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL))) {
+        obj = OBJ_GET_PROTO(cx, obj);
+        if (!obj)
+            return JS_TRUE;
+    }
 
     /* Find fun's top-most activation record. */
     for (fp = cx->fp; fp && (fp->fun != fun || (fp->flags & JSFRAME_SPECIAL));
