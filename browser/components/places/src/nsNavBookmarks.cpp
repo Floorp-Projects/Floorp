@@ -268,18 +268,20 @@ nsNavBookmarks::InitRoots()
     nsCOMPtr<nsIFile> bookmarksFile;
     rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE,
                                 getter_AddRefs(bookmarksFile));
-    PRBool bookmarksFileExists;
-    rv = bookmarksFile->Exists(&bookmarksFileExists);
-    if (NS_SUCCEEDED(rv) && bookmarksFileExists) {
-      nsCOMPtr<nsIIOService> ioservice = do_GetService(
+    if (bookmarksFile) {
+      PRBool bookmarksFileExists;
+      rv = bookmarksFile->Exists(&bookmarksFileExists);
+      if (NS_SUCCEEDED(rv) && bookmarksFileExists) {
+        nsCOMPtr<nsIIOService> ioservice = do_GetService(
                                     "@mozilla.org/network/io-service;1", &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-      nsCOMPtr<nsIURI> bookmarksFileURI;
-      rv = ioservice->NewFileURI(bookmarksFile,
-                                 getter_AddRefs(bookmarksFileURI));
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = ImportBookmarksHTMLInternal(bookmarksFileURI, PR_FALSE);
-      NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsIURI> bookmarksFileURI;
+        rv = ioservice->NewFileURI(bookmarksFile,
+                                   getter_AddRefs(bookmarksFileURI));
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = ImportBookmarksHTMLInternal(bookmarksFileURI, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
   }
   return NS_OK;
