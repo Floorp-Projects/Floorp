@@ -37,6 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "mozView.h"
+#import "NSWorkspace+Utils.h"
+
 #import "BrowserWindow.h"
 #import "BrowserWindowController.h"
 #import "AutoCompleteTextField.h"

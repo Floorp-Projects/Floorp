@@ -398,7 +398,7 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
         if ([aBookmark isKindOfClass:[Bookmark class]])
           return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[aBookmark url]];
         else if ([aBookmark isKindOfClass:[BookmarkFolder class]]) {
-          [[[self window] windowController] openURLArray:[aBookmark childURLs] tabOpenPolicy:(overTabViewItem ? eReplaceTabs : eAppendTabs) allowPopups:NO];
+          [[[self window] windowController] openURLArray:[aBookmark childURLs] tabOpenPolicy:((overTabViewItem || overContentArea) ? eReplaceTabs : eAppendTabs) allowPopups:NO];
           return YES;
         }
       } else if ([draggedItems count] > 1) {
