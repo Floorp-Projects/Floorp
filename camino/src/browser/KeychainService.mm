@@ -1096,7 +1096,7 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
   // "autocomplete=off" attribute on the form. 
   nsAutoString autocomplete;
   inFormElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-  if ( autocomplete.EqualsIgnoreCase("off") && !autoCompleteOverride )
+  if (autocomplete.EqualsIgnoreCase("off") && !autoCompleteOverride)
     return NS_OK;
   
   //
@@ -1110,7 +1110,7 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
   nsCOMPtr<nsIDOMHTMLCollection> elements;
   nsresult rv = inFormElement->GetElements(getter_AddRefs(elements));
   if (NS_FAILED(rv) || !elements) 
-  return NS_OK;
+    return NS_OK;
 
   PRUint32 numElements;
   elements->GetLength(&numElements);
