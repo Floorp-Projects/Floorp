@@ -676,6 +676,7 @@ function refreshEventTree( eventArray )
 function refreshEventTreeInternal(eventArray)
 {
    var searchText = document.getElementById( "unifinder-search-field" ).value;
+   searchText = searchText.toLowerCase();
 
    // XXX match for strings with only whitespace. Skip those too
    if (searchText.length) {
