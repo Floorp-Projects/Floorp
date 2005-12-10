@@ -552,18 +552,26 @@ function onOKCommand()
     var cats = getElementValue("categories-field");
     if (cats)
         event.setProperty("CATEGORIES", cats);
+    else
+        event.deleteProperty("CATEGORIES");
 
     var desc = getElementValue("description-field");
     if (desc)
         event.setProperty("DESCRIPTION", desc);
+    else
+        event.deleteProperty("DESCRIPTION");
 
     var location = getElementValue("location-field");
     if (location)
         event.setProperty("LOCATION", location);
+    else
+        event.deleteProperty("LOCATION");
 
     var url = getElementValue("uri-field") ;
     if (url)
         event.setProperty("URL", url);
+    else
+        event.deleteProperty("URL");
 
 
     // PRIVACY -----------------------------------------------------------
