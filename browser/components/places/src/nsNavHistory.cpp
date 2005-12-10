@@ -2414,7 +2414,7 @@ nsNavHistory::QueryToSelectClause(nsINavHistoryQuery* aQuery, // const
     if (! aClause->IsEmpty())
       *aClause += NS_LITERAL_CSTRING(" AND ");
 
-    *aClause += NS_LITERAL_CSTRING("EXISTS (SELECT b.item_child FROM moz_bookmarks_assoc b WHERE b.item_child = id)");
+    *aClause += NS_LITERAL_CSTRING("EXISTS (SELECT b.item_child FROM moz_bookmarks b WHERE b.item_child = id)");
   }
 
   // domain
