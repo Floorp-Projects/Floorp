@@ -148,15 +148,17 @@ var observer = {
   _wantAllDetails: true
 };
 
-bmsvc.addObserver(observer);
+bmsvc.addObserver(observer, false);
 
 var root = bmsvc.bookmarksRoot;
 
-// add some bookmarks and folders
+// add some bookmarks and folders. note that the bookmarks menu starts
+// with a single folder from the default bookmarks
+// ("Firefox and Mozilla links")
 
 bmsvc.insertItem(root, uri("http://google.com/"), -1);
 if (observer._itemAdded.spec != "http://google.com/" ||
-    observer._itemAddedFolder != root || observer._itemAddedIndex != 0) {
+    observer._itemAddedFolder != root || observer._itemAddedIndex != 1) {
   dump("insertItem notification FAILED\n");
 }
 bmsvc.setItemTitle(uri("http://google.com/"), "Google");
@@ -165,10 +167,10 @@ if (observer._itemChanged.spec != "http://google.com/" ||
   dump("setItemTitle notification FAILED\n");
 }
 
-var workFolder = bmsvc.createFolder(root, "Work", 1);
+var workFolder = bmsvc.createFolder(root, "Work", 2);
 if (observer._folderAdded != workFolder ||
     observer._folderAddedParent != root ||
-    observer._folderAddedIndex != 1) {
+    observer._folderAddedIndex != 2) {
   dump("createFolder notification FAILED\n");
 }
 bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), 0);
@@ -225,7 +227,7 @@ if (observer._itemReplaced.spec != "http://developer.mozilla.org/" ||
 }
 var homeFolder = bmsvc.createFolder(root, "Home", -1);
 if (observer._folderAdded != homeFolder ||
-    observer._folderAddedParent != root || observer._folderAddedIndex != 2) {
+    observer._folderAddedParent != root || observer._folderAddedIndex != 3) {
   dump("createFolder notification FAILED\n");
 }
 bmsvc.insertItem(homeFolder, uri("http://espn.com/"), 0);
@@ -240,7 +242,7 @@ if (observer._itemChanged.spec != "http://espn.com/" ||
 }
 bmsvc.insertItem(root, uri("place:domain=google.com&group=1"), -1);
 if (observer._itemAdded.spec != "place:domain=google.com&group=1" ||
-    observer._itemAddedFolder != root || observer._itemAddedIndex != 3) {
+    observer._itemAddedFolder != root || observer._itemAddedIndex != 4) {
   dump("insertItem notification FAILED\n");
 }
 bmsvc.setItemTitle(uri("place:domain=google.com&group=1"), "Google Sites");
@@ -251,41 +253,67 @@ if (observer._itemChanged.spec != "place:domain=google.com&group=1" ||
 bmsvc.moveFolder(workFolder, root, -1);
 if (observer._folderMoved != workFolder ||
     observer._folderMovedOldParent != root ||
-    observer._folderMovedOldIndex != 1 ||
+    observer._folderMovedOldIndex != 2 ||
     observer._folderMovedNewParent != root ||
-    observer._folderMovedNewIndex != 3) {
+    observer._folderMovedNewIndex != 4) {
   dump("moveFolder notification FAILED\n");
 }
 
 ///  EXPECTED TABLE RESULTS
-///  moz_bookmarks_assoc:
+///  moz_bookmarks:
 ///  item_child    folder_child    parent    position
 ///  ----------    ------------    ------    --------
-///                1
-///                2               1         0
-///                3               1         1
-///  1                             2         0
-///                4               2         3
-///  3                             4         0
-///  2                             4         1
-///                5               2         1
-///  4                             5         0
-///  5                             2         2
+///                1               0         0
+///                2               1         4
+///                3               1         3
+///  1                             1         0
+///  2                             1         1
+///  3                             1         2
+///                4               2         0
+///  4                             4         0
+///  5                             4         1
+///  6                             4         2
+///  7                             4         3
+///  8                             4         4
+///  9                             4         5
+///  10                            4         6
+///  11                            4         7
+///  12                            2         1
+///                5               2         4
+///  14                            5         0
+///  15                            5         1
+///                6               2         2
+///  16                            6         0
+///  17                            2         3
 ///
 ///  moz_history:
 ///  id            url
 ///  --            ------------------------
-///  1             http://google.com/
-///  2             http://developer.mozilla.org/devnews/
-///  3             http://msdn.microsoft.com/
-///  4             http://espn.com/
-///  5             place:domain=google.com&group=1
+///  1             place:  // Viewed today
+///  2             place:  // Viewed past week
+///  3             place:  // All pages
+///  4             http://start.mozilla.org/firefox
+///  5             http://www.mozilla.org/products/firefox/central.html
+///  6             http://addons.mozilla.org/?application=firefox
+///  7             http://getfirefox.com/
+///  8             http://www.mozilla.org/
+///  9             http://www.mozillazine.org/
+///  10            http://store.mozilla.org/
+///  11            http://www.spreadfirefox.com/
+///  12            http://google.com/
+///  13            http://developer.mozilla.org/
+///  14            http://msdn.microsoft.com/
+///  15            http://developer.mozilla.org/devnews/
+///  16            http://espn.com/
+///  17            place:  // Google Sites
 ///
-///  moz_bookmarks_containers:
+///  moz_bookmarks_folders:
 ///  id            name
 ///  --            -----------------------
 ///  1
-///  2             Bookmarks
-///  3             Personal Toolbar Folder
-///  4             Work
-///  5             Home
+///  2             Bookmarks Toolbar
+///  3             Bookmarks Menu
+///  4             Firefox and Mozilla Links
+///  5             Work
+///  6             Home
+
