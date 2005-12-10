@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsAnnotationService_h___
+#define nsAnnotationService_h___
+
 #include "nsIAnnotationService.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
@@ -63,6 +66,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBGetAnnotation;
   nsCOMPtr<mozIStorageStatement> mDBGetAnnotationFromURI;
   nsCOMPtr<mozIStorageStatement> mDBAddAnnotation;
+  nsCOMPtr<mozIStorageStatement> mDBRemoveAnnotation;
 
   nsCOMArray<nsIAnnotationObserver> mObservers;
 
@@ -84,3 +88,5 @@ protected:
                               mozIStorageStatement** aStatement);
   void CallSetObservers(nsIURI* aURI, const nsACString& aName);
 };
+
+#endif /* nsAnnotationService_h___ */
