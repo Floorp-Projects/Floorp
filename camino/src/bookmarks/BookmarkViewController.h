@@ -151,6 +151,8 @@
 -(IBAction) paste:(id)aSender;
 -(IBAction) delete:(id)aSender;
 
+-(IBAction) copyURLs:(id)aSender;
+
 -(IBAction) quicksearchPopupChanged:(id)aSender;
 - (void)resetSearchField;
 
@@ -176,5 +178,6 @@
 
 -(BOOL) canPasteFromPasteboard:(NSPasteboard*)aPasteboard;
 -(void) copyBookmarks:(NSArray*)bookmarkItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard;
+-(void) copyBookmarksURLs:(NSArray*)bookmarkItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard;
 
 @end

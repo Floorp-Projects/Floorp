@@ -99,7 +99,7 @@ enum {
 // Reading bookmark files
 - (BOOL)readBookmarks;
 
-// these versions assume that we're readinog all the bookmarks from the file (i.e. not an import into a subfolder)
+// these versions assume that we're reading all the bookmarks from the file (i.e. not an import into a subfolder)
 - (BOOL)readPListBookmarks:(NSString *)pathToFile;    // camino or safari
 - (BOOL)readCaminoPListBookmarks:(NSDictionary *)plist;
 - (BOOL)readSafariPListBookmarks:(NSDictionary *)plist;
@@ -680,7 +680,18 @@ static BookmarkManager* gBookmarkManager = nil;
   menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) keyEquivalent:@""] autorelease];
   [menuItem setTarget:target];
   [contextMenu addItem:menuItem];
-  
+
+  [contextMenu addItem:[NSMenuItem separatorItem]];
+
+  // copy URL(s) to clipboard
+  if (itemsContainsFolder || multipleItems)
+    menuTitle = NSLocalizedString(@"Copy URLs to Clipboard", @"");
+  else
+    menuTitle = NSLocalizedString(@"Copy URL to Clipboard", @"");
+  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(copyURLs:) keyEquivalent:@""] autorelease];
+  [menuItem setTarget:target];
+  [contextMenu addItem:menuItem];
+
   if (!outlineView || ([items count] == 1)) {
     [contextMenu addItem:[NSMenuItem separatorItem]];
     menuTitle = NSLocalizedString(@"Get Info", @"");
@@ -812,7 +823,7 @@ static BookmarkManager* gBookmarkManager = nil;
   if (!userInfo)
     return;
 
-	NSImage*  iconImage     = [userInfo objectForKey:SiteIconLoadImageKey];
+  NSImage*  iconImage    = [userInfo objectForKey:SiteIconLoadImageKey];
   NSString* siteIconURI  = [userInfo objectForKey:SiteIconLoadURIKey];
   NSString* pageURI      = [userInfo objectForKey:SiteIconLoadUserDataKey];
   pageURI = [BookmarkManager canonicalBookmarkURL:pageURI];
@@ -1743,6 +1754,24 @@ static BookmarkManager* gBookmarkManager = nil;
 {
   NSLog(@"fileManager:shouldProceedAfterError:%@", errorInfo);
   return NO;
+}
+
+//
+// -clearAllVisits:
+//
+// resets all bookmarks visit counts to zero as part of Reset Camino
+//
+
+-(void)clearAllVisits
+{
+    NSEnumerator* bookmarksEnum = [[self rootBookmarks] objectEnumerator];
+    BookmarkItem* curItem;
+    while (curItem = [bookmarksEnum nextObject])
+    {
+	  if ([curItem isKindOfClass:[Bookmark class]]) {
+        [(Bookmark*)curItem setNumberOfVisits:0];
+	  }
+    }
 }
 
 @end

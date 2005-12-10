@@ -683,6 +683,11 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [self deleteBookmarks:aSender];
 }
 
+- (IBAction)copyURLs:(id)aSender
+{
+  [self copyBookmarksURLs:[mBookmarksOutlineView selectedItems] toPasteboard:[NSPasteboard generalPasteboard]];
+}
+
 -(IBAction)quicksearchPopupChanged:(id)aSender
 {
   // do the search again (we'll pick up the new popup item tag)
@@ -1065,17 +1070,38 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   // category takes care of working out what formats to write.
   NSMutableArray* urlList = [NSMutableArray array];
   NSMutableArray* titleList = [NSMutableArray array];
-  for ( unsigned int i = 0; i < [bookmarkItemsToCopy count]; ++i ) {
-    BookmarkItem* bookmarkItem = [bookmarkItemsToCopy objectAtIndex:i];
-    if ([bookmarkItem isKindOfClass:[Bookmark class]]) {
-      Bookmark* bookmark = (Bookmark*) bookmarkItem;
-      [urlList addObject:[bookmark url]];
-      [titleList addObject:[bookmark title]];
+  NSEnumerator* bookmarkItemsEnum = [bookmarkItemsToCopy objectEnumerator];
+  BookmarkItem* curItem;
+  while (curItem = [bookmarkItemsEnum nextObject])
+  {
+    if ([curItem isKindOfClass:[Bookmark class]]) {
+      [urlList addObject:[(Bookmark*)curItem url]];
+      [titleList addObject:[(Bookmark*)curItem title]];
     }
   }
   [aPasteboard setURLs:urlList withTitles:titleList];
 }
 
+//
+// Copy a set of bookmarks URLs to the specified pasteboard.
+// We don't care about item titles here, nor do we care about format.
+//
+- (void) copyBookmarksURLs:(NSArray*)bookmarkItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard
+{
+  // handle URLs, and nothing else, for simplicity.
+  [aPasteboard declareTypes:[NSArray arrayWithObject:kCorePasteboardFlavorType_url] owner:self];
+
+  NSMutableArray* urlList = [NSMutableArray array];
+  NSEnumerator* bookmarkItemsEnum = [bookmarkItemsToCopy objectEnumerator];
+  BookmarkItem* curItem;
+  while (curItem = [bookmarkItemsEnum nextObject])
+  {
+    if ([curItem isKindOfClass:[Bookmark class]]) {
+      [urlList addObject:[(Bookmark*)curItem url]];
+    }
+  }
+  [aPasteboard setURLs:urlList withTitles:nil];
+}
 
 -(BOOL) canPasteFromPasteboard:(NSPasteboard*)aPasteboard
 {

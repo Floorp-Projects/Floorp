@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "NSMenu+Utils.h"
+#import "NSPasteboard+Utils.h"
 
 #import "HistoryItem.h"
 #import "HistoryDataSource.h"
@@ -301,6 +302,12 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
   [[NSApp delegate] openBrowserWindowWithURLs:urlArray behind:behindWindow allowPopups:NO];
 }
 
+- (IBAction)copyURLs:(id)aSender
+{
+  [self copyHistoryURLs:[mHistoryOutlineView selectedItems] toPasteboard:[NSPasteboard generalPasteboard]];
+}
+
+
 #pragma mark -
 
 - (IBAction)groupByDate:(id)sender
@@ -422,6 +429,17 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
   // space
   [contextMenu addItem:[NSMenuItem separatorItem]];
 
+  if (numSiteItems > 1)
+    menuTitle = NSLocalizedString(@"Copy URLs to Clipboard", @"");
+  else
+    menuTitle = NSLocalizedString(@"Copy URL to Clipboard", @"");
+  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(copyURLs:) keyEquivalent:@""] autorelease];
+  [menuItem setTarget:self];
+  [contextMenu addItem:menuItem];
+
+  // space
+  [contextMenu addItem:[NSMenuItem separatorItem]];
+
   // delete
   menuTitle = NSLocalizedString(@"Delete", @"");
   menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(deleteHistoryItems:) keyEquivalent:@""] autorelease];
@@ -469,6 +487,9 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
   if (action == @selector(deleteHistoryItems:))
     return [self anyHistorySiteItemsSelected];
 
+  if (action == @selector(copyURLs:))
+    return [self anyHistorySiteItemsSelected];
+
   return YES;
 }
 
@@ -507,6 +528,28 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
     }
   }
 }
+
+//
+// Copy a set of history URLs to the specified pasteboard.
+// We don't care about item titles here, nor do we care about format.
+//
+- (void) copyHistoryURLs:(NSArray*)historyItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard
+{
+  // handle URLs, and nothing else, for simplicity.
+  [aPasteboard declareTypes:[NSArray arrayWithObject:kCorePasteboardFlavorType_url] owner:self];
+
+  NSMutableArray* urlList = [NSMutableArray array];
+  NSEnumerator* historyItemsEnum = [historyItemsToCopy objectEnumerator];
+  HistoryItem* curItem;
+  while (curItem = [historyItemsEnum nextObject])
+  {
+    if ([curItem isKindOfClass:[HistorySiteItem class]]) {
+      [urlList addObject:[(HistorySiteItem*)curItem url]];
+    }
+  }
+  [aPasteboard setURLs:urlList withTitles:nil];
+}
+
 
 - (HistoryDataSource*)historyDataSource
 {

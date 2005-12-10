@@ -67,12 +67,16 @@
 - (void)searchFor:(NSString*)searchString inFieldWithTag:(int)tag;
 - (void)clearSearchResults;
 
+- (void)copyHistoryURLs:(NSArray*)historyItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard;
+
 - (IBAction)openHistoryItem:(id)sender;
 - (IBAction)openHistoryItemInNewWindow:(id)aSender;
 - (IBAction)openHistoryItemInNewTab:(id)aSender;
 - (IBAction)openHistoryItemsInTabsInNewWindow:(id)aSender;
 
 - (IBAction)deleteHistoryItems:(id)sender;
+
+- (IBAction)copyURLs:(id)sender;
 
 - (IBAction)groupByDate:(id)sender;
 - (IBAction)groupBySite:(id)sender;
