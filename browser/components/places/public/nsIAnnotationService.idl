@@ -127,6 +127,14 @@ interface nsIAnnotationService : nsISupports
                             in PRInt32 aValue, in PRInt32 aFlags,
                             in PRInt32 aExpiration);
 
+    /**
+     * Sets an annotation just like setAnnotation, but takes an Int64 as input
+     * for convenience.
+     */
+    void setAnnotationInt64(in nsIURI aURI, in AUTF8String aName,
+                            in PRInt64 aValue, in PRInt32 aFlags,
+                            in PRInt32 aExpiration);
+
     /*
      * Sets an annotation just like setAnnotation, but takes binary data as
      * input. You MUST supply a valid MIME type.
@@ -154,6 +162,14 @@ interface nsIAnnotationService : nsISupports
      * change in the future if we start caching stuff).
      */
     PRInt32 getAnnotationInt32(in nsIURI aURI, in AUTF8String aName);
+
+    /**
+     * Same as getAnnotation but a convenience function for C++ for int64s. If
+     * the value doesn't look like an int, returns 0. (this is current sqlite
+     * behavior when asking for an int when there is not one, it will likely
+     * change in the future if we start caching stuff).
+     */
+    PRInt64 getAnnotationInt64(in nsIURI aURI, in AUTF8String aName);
 
     /**
      * Same as getAnnotation but for binary data. This also returns the

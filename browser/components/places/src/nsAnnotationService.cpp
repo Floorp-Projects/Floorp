@@ -108,6 +108,9 @@ nsAnnotationService::Init()
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_anno (page, name, mime_type, content, flags, expiration) VALUES (?2, ?3, ?4, ?5, ?6, ?7)"),
                                 getter_AddRefs(mDBAddAnnotation));
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_anno WHERE page = ?1 AND name = ?2"),
+                                getter_AddRefs(mDBRemoveAnnotation));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -177,6 +180,38 @@ nsAnnotationService::SetAnnotationInt32(nsIURI* aURI,
   mozStorageStatementScoper statementResetter(statement);
 
   rv = statement->BindInt32Parameter(kAnnoIndex_Content, aValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindNullParameter(kAnnoIndex_MimeType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+  transaction.Commit();
+
+  // should reset the statement; observers may call our service back to get
+  // annotation values!
+  statement->Reset();
+  statementResetter.Abandon();
+  CallSetObservers(aURI, aName);
+  return NS_OK;
+}
+
+
+// nsAnnotationService::SetAnnotationInt64
+
+NS_IMETHODIMP
+nsAnnotationService::SetAnnotationInt64(nsIURI* aURI,
+                                        const nsACString& aName,
+                                        PRInt64 aValue,
+                                        PRInt32 aFlags, PRInt32 aExpiration)
+{
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+  mozIStorageStatement* statement; // class var, not owned by this function
+  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration, &statement);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mozStorageStatementScoper statementResetter(statement);
+
+  rv = statement->BindInt64Parameter(kAnnoIndex_Content, aValue);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindNullParameter(kAnnoIndex_MimeType);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -281,6 +316,22 @@ nsAnnotationService::GetAnnotationInt32(nsIURI* aURI,
   if (NS_FAILED(rv))
     return rv;
   *_retval = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Content);
+  mDBGetAnnotationFromURI->Reset();
+  return NS_OK;
+}
+
+
+// nsAnnotationService::GetAnnotationInt64
+
+NS_IMETHODIMP
+nsAnnotationService::GetAnnotationInt64(nsIURI* aURI,
+                                        const nsACString& aName,
+                                        PRInt64 *_retval)
+{
+  nsresult rv = StartGetAnnotationFromURI(aURI, aName);
+  if (NS_FAILED(rv))
+    return rv;
+  *_retval = mDBGetAnnotationFromURI->AsInt64(kAnnoIndex_Content);
   mDBGetAnnotationFromURI->Reset();
   return NS_OK;
 }
@@ -409,8 +460,34 @@ NS_IMETHODIMP
 nsAnnotationService::RemoveAnnotation(nsIURI* aURI,
                                       const nsACString& aName)
 {
-  // FIXME
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_FAILURE);
+
+  PRInt64 uriID;
+  rv = history->GetUrlIdFor(aURI, &uriID, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (uriID == 0) // Check if URI exists.
+    return NS_OK;
+  
+  mozStorageStatementScoper resetter(mDBRemoveAnnotation);
+
+  rv = mDBRemoveAnnotation->BindInt64Parameter(0, uriID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBRemoveAnnotation->BindUTF8StringParameter(1, aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBRemoveAnnotation->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  resetter.Abandon();
+  
+  // Update observers
+  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
+    mObservers[i]->OnAnnotationRemoved(aURI, aName);
+
+  return NS_OK;
 }
 
 
