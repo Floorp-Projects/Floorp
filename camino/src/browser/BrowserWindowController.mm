@@ -2765,10 +2765,12 @@ enum BWCOpenDest {
   return mBrowserView;
 }
 
--(void)openNewWindowWithURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground:(BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups
+// this should really be a class method
+-(BrowserWindowController*)openNewWindowWithURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground:(BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups
 {
   BrowserWindowController* browser = [self openNewWindow:aLoadInBG];
-  [browser loadURL: aURLSpec referrer:aReferrer activate:!aLoadInBG allowPopups:inAllowPopups];
+  [browser loadURL:aURLSpec referrer:aReferrer activate:!aLoadInBG allowPopups:inAllowPopups];
+  return browser;
 }
 
 //
@@ -2776,6 +2778,8 @@ enum BWCOpenDest {
 //
 // open a new window, but doesn't load anything into it. Must be matched
 // with a call to do that.
+// 
+// this should really be a class method
 //
 - (BrowserWindowController*)openNewWindow:(BOOL)aLoadInBG
 {
@@ -2791,7 +2795,7 @@ enum BWCOpenDest {
     [browserWin setSuppressMakeKeyFront:NO];
   }
   else
-    [browser showWindow:self];
+    [browser showWindow:nil];
 
   return browser;
 }

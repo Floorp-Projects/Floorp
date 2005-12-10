@@ -1118,8 +1118,10 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     else if (reuseWindow == kOpenNewTabOnAE)
       [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
     else
-      [controller openNewWindowWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
-
+    {
+      // note that we're opening a new window here
+      controller = [controller openNewWindowWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
+    }
     if (!loadInBackground)
       [[controller window] makeKeyAndOrderFront:nil];
   }
