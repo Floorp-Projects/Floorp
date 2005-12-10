@@ -119,7 +119,7 @@ void XXXNeverCalled()
     NS_NewInputStreamReadyEvent(nsnull, nsnull, nsnull);
     NS_NewOutputStreamReadyEvent(nsnull, nsnull, nsnull);
     NS_AsyncCopy(nsnull, nsnull, nsnull, NS_ASYNCCOPY_VIA_READSEGMENTS, 0, nsnull, nsnull);
-    NS_ConsumeStream(nsnull, nsCString());
+    NS_ConsumeStream(nsnull, 0, nsCString());
     NS_InputStreamIsBuffered(nsnull);
     NS_OutputStreamIsBuffered(nsnull);
     PL_DHashStubEnumRemove(nsnull, nsnull, nsnull, nsnull);
