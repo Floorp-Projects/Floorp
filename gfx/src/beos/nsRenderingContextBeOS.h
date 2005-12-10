@@ -223,7 +223,7 @@ protected:
 	BView *mView;
 	nscolor mCurrentColor;
 	rgb_color mRGB_color;
-	BFont *mCurrentFont;
+	BFont *mCurrentBFont;
 	nsLineStyle mCurrentLineStyle;
 	float mP2T;
 };
