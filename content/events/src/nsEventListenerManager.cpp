@@ -1377,8 +1377,8 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
         rv = context->CompileEventHandler(scriptObject, aName, eventName,
                                           aBody,
                                           url.get(), lineNo,
-                                          (handlerOwner != nsnull),
-                                          &handler);
+                                          PR_FALSE,
+                                          nsnull);
       }
       if (NS_FAILED(rv)) return rv;
     }
