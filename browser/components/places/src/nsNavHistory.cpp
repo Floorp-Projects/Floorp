@@ -368,6 +368,10 @@ nsNavHistory::InitDB()
       " FROM moz_history h LEFT JOIN moz_historyvisit v ON h.id = v.page_id LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE h.url = ?1 GROUP BY h.id"),
                                 getter_AddRefs(mDBGetURLPageInfoFull));
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date)"
+      " FROM moz_history h LEFT JOIN moz_historyvisit v ON h.id = v.page_id LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE h.id = ?1 GROUP BY h.id"),
+                                getter_AddRefs(mDBGetIdPageInfoFull));
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.url, h.title, h.visit_count, h.typed FROM moz_history h JOIN moz_historyvisit v ON h.id = v.page_id WHERE h.hidden <> 1 GROUP BY h.id ORDER BY h.visit_count LIMIT ?1"),
                                 getter_AddRefs(mDBFullAutoComplete));
   NS_ENSURE_SUCCESS(rv, rv);
