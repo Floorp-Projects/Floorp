@@ -702,7 +702,7 @@
               this.mNeedToFinish = false;
             } else if (this.mTransientValue || 
                        !(this.forceComplete || this.mDefaultMatchFilled) ||
-                       !(this.forceComplete || aForceComplete)) ||
+                       !(this.forceComplete || aForceComplete) ||
                        !(this.mNeedToComplete || aForceComplete)) {
               this.mNeedToFinish = false;
             } else if (this.isWaiting) {
