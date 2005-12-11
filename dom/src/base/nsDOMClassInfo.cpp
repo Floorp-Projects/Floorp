@@ -4587,7 +4587,8 @@ public:
 
   nsresult Install(JSContext *cx, JSObject *target, jsval thisAsVal)
   {
-    if (!::JS_DefineUCProperty(cx, target, mClassName,
+    if (!::JS_DefineUCProperty(cx, target,
+                               NS_REINTERPRET_CAST(const jschar *, mClassName),
                                nsCRT::strlen(mClassName), thisAsVal, nsnull,
                                nsnull, 0)) {
       return NS_ERROR_UNEXPECTED;
@@ -5215,7 +5216,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     // direct DOM class, create a constructor object...
 
     nsRefPtr<nsDOMConstructor> constructor =
-      new nsDOMConstructor(::JS_GetStringChars(str));
+      new nsDOMConstructor(NS_REINTERPRET_CAST(PRUnichar *,
+                                               ::JS_GetStringChars(str)));
     if (!constructor) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -5274,7 +5276,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       }
     }
 
-    const PRUnichar *name = ::JS_GetStringChars(str);
+    const PRUnichar *name = NS_REINTERPRET_CAST(PRUnichar *,
+                                                ::JS_GetStringChars(str));
     nsRefPtr<nsDOMConstructor> constructor = new nsDOMConstructor(name);
     if (!constructor) {
       return NS_ERROR_OUT_OF_MEMORY;
