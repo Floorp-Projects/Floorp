@@ -963,30 +963,6 @@ nsSimplePageSequenceFrame::SetClipRect(nsPresContext*  aPresContext, nsRect* aRe
 }
 
 //------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsSimplePageSequenceFrame::Paint(nsPresContext*      aPresContext,
-                                 nsIRenderingContext& aRenderingContext,
-                                 const nsRect&        aDirtyRect,
-                                 nsFramePaintLayer    aWhichLayer)
-{
-  aRenderingContext.PushState();
-  aRenderingContext.SetColor(NS_RGB(255,255,255));
-
-
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    nsRect rect = mRect;
-    aRenderingContext.SetColor(NS_RGB(255,255,255));
-    rect.x = 0;
-    rect.y = 0;
-    aRenderingContext.FillRect(rect);
-  }
-
-  nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-
-  aRenderingContext.PopState();
-  return rv;
-}
-
 nsIAtom*
 nsSimplePageSequenceFrame::GetType() const
 {
