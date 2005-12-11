@@ -144,6 +144,7 @@ public:
 	                               PRInt32 aWidth,
 	                               PRInt32 aHeight,
 	                               PRBool   aRepaint);
+	NS_IMETHOD              SetModal(PRBool aModal);
 	NS_IMETHOD              Enable(PRBool aState);
 	NS_IMETHOD              IsEnabled(PRBool *aState);
 	NS_IMETHOD              SetFocus(PRBool aRaise);
@@ -223,6 +224,7 @@ protected:
 	nsViewBeOS*      mView;
 	PRInt32          mPreferredWidth;
 	PRInt32          mPreferredHeight;
+	window_feel      mBWindowFeel;
 
 	//Just for saving space we use packed bools.
 	PRPackedBool           mIsTopWidgetWindow;
