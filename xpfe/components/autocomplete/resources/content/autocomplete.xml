@@ -700,7 +700,9 @@
             if (val) {
               this.setTextValue(val);
               this.mNeedToFinish = false;
-            } else if (this.mTransientValue || !this.forceComplete ||
+            } else if (this.mTransientValue || 
+                       !(this.forceComplete || this.mDefaultMatchFilled) ||
+                       !(this.forceComplete || aForceComplete)) ||
                        !(this.mNeedToComplete || aForceComplete)) {
               this.mNeedToFinish = false;
             } else if (this.isWaiting) {
