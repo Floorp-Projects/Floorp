@@ -1328,10 +1328,10 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 			gCursorArray.InsertElementAt((void*) new BCursor(cursorHyperlink),0);
 			gCursorArray.InsertElementAt((void*) new BCursor(cursorHorizontalDrag),1);
 			gCursorArray.InsertElementAt((void*) new BCursor(cursorVerticalDrag),2);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorUpperRight),3);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorLowerLeft),4);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorUpperLeft),5);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorLowerRight),6);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorUpperLeft),3);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorLowerRight),4);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorUpperRight),5);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorLowerLeft),6);
 			gCursorArray.InsertElementAt((void*) new BCursor(cursorCrosshair),7);
 			gCursorArray.InsertElementAt((void*) new BCursor(cursorHelp),8);
 			gCursorArray.InsertElementAt((void*) new BCursor(cursorGrab),9);
@@ -1342,8 +1342,8 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 			gCursorArray.InsertElementAt((void*) new BCursor(cursorCell),14);
 			gCursorArray.InsertElementAt((void*) new BCursor(cursorZoomIn),15);
 			gCursorArray.InsertElementAt((void*) new BCursor(cursorZoomOut),16);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorRight),17);
-			gCursorArray.InsertElementAt((void*) new BCursor(cursorLeft),18);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorLeft),17);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorRight),18);
 			gCursorArray.InsertElementAt((void*) new BCursor(cursorTop),19);
 			gCursorArray.InsertElementAt((void*) new BCursor(cursorBottom),20);
 		}
