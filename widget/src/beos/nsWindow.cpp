@@ -292,6 +292,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mUpdateArea = do_CreateInstance(kRegionCID);
 	mForeground = NS_RGBA(0xFF,0xFF,0xFF,0xFF);
 	mBackground = mForeground;
+	mBWindowFeel        = B_NORMAL_WINDOW_FEEL;
 	if (mUpdateArea)
 	{
 		mUpdateArea->Init();
@@ -544,7 +545,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 	// Default mode for window, everything switched off.
 	uint32 flags = B_NOT_RESIZABLE | B_NOT_MINIMIZABLE | B_NOT_ZOOMABLE | B_NOT_CLOSABLE | B_ASYNCHRONOUS_CONTROLS;
 	window_look look = B_NO_BORDER_WINDOW_LOOK;
-	window_feel feel = B_NORMAL_WINDOW_FEEL;
 	switch (mWindowType)
  	{
 		//handle them as childviews until I know better. Shame on me.
@@ -624,7 +624,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 			if (eWindowType_popup==mWindowType)
 				flags |= B_AVOID_FOCUS | B_NO_WORKSPACE_ACTIVATION;
 
-			nsWindowBeOS * w = new nsWindowBeOS(this, winrect, "", look, feel, flags);
+			nsWindowBeOS * w = new nsWindowBeOS(this, winrect, "", look, mBWindowFeel, flags);
 			if (!w)
 				return NS_ERROR_OUT_OF_MEMORY;
 
@@ -634,7 +634,27 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 				return NS_ERROR_OUT_OF_MEMORY;
 	
 			w->AddChild(mView);
- 
+			if (eWindowType_dialog==mWindowType && mParent)
+			{
+				nsIWidget * topparent = nsnull;
+				for (topparent = mParent; nsnull != topparent->GetParent(); topparent = topparent->GetParent());
+				BWindow* subsetparent = NULL;
+				if (topparent)
+					subsetparent = (BWindow *)(topparent->GetNativeData(NS_NATIVE_WINDOW));
+
+				if (subsetparent)
+				{
+					mBWindowFeel = B_FLOATING_SUBSET_WINDOW_FEEL;
+					w->SetFeel(mBWindowFeel);
+					w->AddToSubset(subsetparent);
+				}
+			} 
+			else if (eWindowType_popup==mWindowType && aNativeParent && ((BView *)aNativeParent)->Window())
+			{
+				w->AddToSubset(((BView *)aNativeParent)->Window());
+			}
+
+			
 			DispatchStandardEvent(NS_CREATE);
 			return NS_OK;
 		}
@@ -765,7 +785,7 @@ nsIWidget* nsWindow::GetParent(void)
 {
 	//We cannot addref mParent directly
 	nsIWidget	*widget = 0;
-	if (mIsTopWidgetWindow || mIsDestroying || mOnDestroyCalled)
+	if (mIsDestroying || mOnDestroyCalled)
 		return nsnull;
 	widget = (nsIWidget *)mParent;
 	NS_IF_ADDREF(widget);
@@ -1154,7 +1174,35 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 	return NS_OK;
 }
 
-
+NS_METHOD nsWindow::SetModal(PRBool aModal)
+{
+	if(!(mView && mView->Window()))
+		return NS_ERROR_FAILURE;
+	if(aModal)
+	{
+		window_feel newfeel;
+		switch(mBWindowFeel)
+		{
+			case B_FLOATING_SUBSET_WINDOW_FEEL:
+				newfeel = B_MODAL_SUBSET_WINDOW_FEEL;
+				break;
+ 			case B_FLOATING_APP_WINDOW_FEEL:
+				newfeel = B_MODAL_APP_WINDOW_FEEL;
+				break;
+ 			case B_FLOATING_ALL_WINDOW_FEEL:
+				newfeel = B_MODAL_ALL_WINDOW_FEEL;
+				break;				
+			default:
+				return NS_OK;
+		}
+		mView->Window()->SetFeel(newfeel);
+	}
+	else
+	{
+		mView->Window()->SetFeel(mBWindowFeel);
+	}
+	return NS_OK;
+}
 //-------------------------------------------------------------------------
 //
 // Enable/disable this component
@@ -1163,23 +1211,6 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 NS_METHOD nsWindow::Enable(PRBool aState)
 {
 	//TODO: Needs real corect implementation in future
-	if (mView && mView->LockLooper()) 
-	{
-		if (mView->Window()) 
-		{
-			uint flags = mView->Window()->Flags();
-			if (aState == PR_TRUE)
-			{
-				flags &= ~B_AVOID_FOCUS;
-			}
-			else
-			{
-				flags |= B_AVOID_FOCUS;
-			}
-			mView->Window()->SetFlags(flags);
-		}
-		mView->UnlockLooper();
-	}
 	mEnabled = aState;
 	return NS_OK;
 }
