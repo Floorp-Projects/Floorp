@@ -211,8 +211,6 @@ public:
 
 protected:
 
-  NS_IMETHOD CreateDisplayFrame(nsPresContext* aPresContext);
-
 #ifdef DO_NEW_REFLOW
   NS_IMETHOD ReflowItems(nsPresContext* aPresContext,
                          const nsHTMLReflowState& aReflowState,
@@ -281,7 +279,6 @@ protected:
   //nscoord               mItemDisplayHeight;
 
   PRPackedBool          mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
-  PRPackedBool          mGoodToGo;
   PRPackedBool          mInRedisplayText;
   PRPackedBool          mRedisplayTextEventPosted;
 
