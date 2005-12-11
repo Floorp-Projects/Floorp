@@ -255,8 +255,8 @@ function cmgr_instkeys (document, commands)
     if (!parentElem)
     {
         parentElem = document.createElement("keyset");
-        parentElem.setAttribute ("id", "dynamic-keys");
-        document.firstChild.appendChild (parentElem);
+        parentElem.setAttribute("id", "dynamic-keys");
+        document.documentElement.appendChild(parentElem);
     }
 
     if (!commands)
