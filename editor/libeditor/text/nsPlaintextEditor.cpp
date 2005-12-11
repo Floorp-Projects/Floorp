@@ -106,31 +106,7 @@ nsPlaintextEditor::~nsPlaintextEditor()
   
   // Remove event listeners. Note that if we had an HTML editor,
   //  it installed its own instead of these
-  nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
-  if (erP) 
-  {
-    nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
-    nsCOMPtr<nsIDOMEventGroup> sysGroup;
-    if (NS_SUCCEEDED(erP->GetSystemEventGroup(getter_AddRefs(sysGroup)))) {
-      dom3Targ->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"), mKeyListenerP, PR_FALSE, sysGroup);
-    }
-
-    if (mMouseListenerP) {
-      erP->RemoveEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
-    }
-    if (mTextListenerP) {
-      erP->RemoveEventListenerByIID(mTextListenerP, NS_GET_IID(nsIDOMTextListener));
-    }
-     if (mCompositionListenerP) {
-      erP->RemoveEventListenerByIID(mCompositionListenerP, NS_GET_IID(nsIDOMCompositionListener));
-    }
-    if (mFocusListenerP) {
-      erP->RemoveEventListenerByIID(mFocusListenerP, NS_GET_IID(nsIDOMFocusListener));
-    }
-    if (mDragListenerP) {
-        erP->RemoveEventListenerByIID(mDragListenerP, NS_GET_IID(nsIDOMDragListener));
-    }
-  }
+  RemoveEventListeners();
 }
 
 NS_IMPL_ADDREF_INHERITED(nsPlaintextEditor, nsEditor)
