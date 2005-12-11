@@ -250,7 +250,7 @@ static PageInfoWindowController* gSingletonPageInfoController;
   
   if (isBroken)
   {
-    [mConnectionTextField setStringValue:NSLocalizedString(@"WebSiteNotVerified", @"")];
+    [mConnectionTextField setStringValue:NSLocalizedString(@"ConnectionMixedContent", @"")];
     [mConnectionDetailsField setStringValue:NSLocalizedString(@"ConnectionMixedContentDetails", @"")];
     [mConnectionImageView setImage:[NSImage imageNamed:@"security_broken"]];  // XXX need "mixed" lock
   }
