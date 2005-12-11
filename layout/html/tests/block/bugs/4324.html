@@ -12,8 +12,7 @@
 <OL type=upper-roman><LI>first list item</UL>
 <OL type=lower-roman><LI>first list item</UL>
 <SCRIPT TYPE="text/javascript">
-var body=document.firstChild.childNodes.item(1);
-var bodyKids = body.childNodes;
+var bodyKids = document.body.childNodes;
 for (i = 0; i < bodyKids.length; i++) {
   var it = bodyKids.item(i);
   if (it.nodeType == Node.ELEMENT_NODE) {
