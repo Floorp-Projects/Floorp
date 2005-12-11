@@ -147,6 +147,12 @@ RCFLAGS += -DMOZ_STATIC_BUILD
 endif
 endif
 
+ifeq ($(OS_ARCH),BeOS)
+ifdef BUILD_STATIC_LIBS
+OS_LIBS += -ltracker -lgame
+endif
+endif
+
 ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
 endif
