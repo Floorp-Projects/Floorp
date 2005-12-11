@@ -77,8 +77,8 @@ class nsIDocument;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x207fe64a, 0x7123, 0x43d0, \
-  { 0x91, 0x1d, 0x51, 0x19, 0x35, 0x9a, 0xb5, 0x77 } }
+{ 0xabb217ba, 0x2528, 0x467e, \
+ { 0xaa, 0x29, 0xdd, 0x84, 0x2d, 0x97, 0x3c, 0x78 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -278,6 +278,15 @@ public:
   nsPIDOMWindow *GetCurrentInnerWindow() const
   {
     return mInnerWindow;
+  }
+
+  nsPIDOMWindow *EnsureInnerWindow()
+  {
+    NS_ASSERTION(IsOuterWindow(), "EnsureInnerWindow called on inner window");
+    // GetDocument forces inner window creation if there isn't one already
+    nsCOMPtr<nsIDOMDocument> doc;
+    GetDocument(getter_AddRefs(doc));
+    return GetCurrentInnerWindow();
   }
 
   PRBool IsInnerWindow() const

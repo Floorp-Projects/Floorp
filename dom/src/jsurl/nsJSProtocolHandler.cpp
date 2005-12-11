@@ -150,12 +150,9 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
 
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(global));
 
-    // Get the document out of the window to make sure we create a new
-    // inner window if one doesn't already exist (see bug 306630).
-    nsCOMPtr<nsIDOMDocument> doc;
-    win->GetDocument(getter_AddRefs(doc));
-
-    nsPIDOMWindow *innerWin = win->GetCurrentInnerWindow();
+    // Make sure we create a new inner window if one doesn't already exist (see
+    // bug 306630).
+    nsPIDOMWindow *innerWin = win->EnsureInnerWindow();
 
     if (!innerWin) {
         return NS_ERROR_UNEXPECTED;
@@ -176,15 +173,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         rv = BringUpConsole(domWindow);
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
-    }
-
-    // Now get the DOM Document.  Accessing the document will create one
-    // if necessary.  So, basically, this call ensures that a document gets
-    // created -- if necessary.
-    rv = domWindow->GetDocument(getter_AddRefs(doc));
-    NS_ASSERTION(doc, "No DOMDocument!");
-    if (NS_FAILED(rv)) {
-        return NS_ERROR_FAILURE;
     }
 
     nsCOMPtr<nsIScriptContext> scriptContext = global->GetContext();
