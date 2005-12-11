@@ -50,6 +50,13 @@ client, supporting advanced junk mail detection and other useful features.">
 <!ENTITY feat_labels.label "Customizable Labels and Mail Views">
 <!ENTITY feat_integration.label
 "Tight integration with the &brandShortName; application suite">
+<!ENTITY dict.title "Dictionaries">
+<!ENTITY dict_intro.label "Dictionaries are used to check the spelling of your messages.">
+<!ENTITY dict_info.label
+'Many additional languages can be 
+<a href="http://dictionaries.mozdev.org/installation.html">installed</a> from 
+the <a href="http://dictionaries.mozdev.org/">dictionaries</a> project on 
+<a href="http://www.mozdev.org/">mozdev</a>.'>
 <!ENTITY info.title "More Information">
 <!ENTITY info_bugs.label
 '<a href="http://www.mozilla.org/mailnews/">We</a> welcome bug reports and feature
