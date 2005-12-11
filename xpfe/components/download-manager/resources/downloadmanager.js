@@ -48,7 +48,8 @@ var gFileHandler = null;
 var gStatusBar = null;
 var gCannotLaunch = ((navigator.platform.indexOf("Win") == -1) &&
                      (navigator.platform.indexOf("OS/2") == -1) &&
-                     (navigator.platform.indexOf("Mac") == -1));
+                     (navigator.platform.indexOf("Mac") == -1) &&
+                     (navigator.platform.indexOf("BeOS") == -1));
 
 const dlObserver = {
   observe: function(subject, topic, state) {
@@ -261,8 +262,8 @@ var downloadViewController = {
         // on unix, open a browser window rooted at the parent
         if ((navigator.platform.indexOf("Win") == -1) &&
             (navigator.platform.indexOf("Mac") == -1) &&
-            (navigator.platform.indexOf("OS/2") == -1)) {
-          file = file.QueryInterface(Components.interfaces.nsIFile);
+            (navigator.platform.indexOf("OS/2") == -1) &&
+            (navigator.platform.indexOf("BeOS") == -1)) {
           var parent = file.parent;
           if (parent) {
             const browserURL = "chrome://navigator/content/navigator.xul";
