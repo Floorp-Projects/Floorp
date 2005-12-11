@@ -59,10 +59,11 @@ static MVPreferencesController *gSharedInstance = nil;
 
 NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
+static NSString* const kPrefsWindowLocationDefaultsKey  = @"CaminoWindow TopLeftLocation PreferencesWindow";
+
 static NSString* const CacheInfoPaneImageKey  = @"MVPreferencePaneImage";
 static NSString* const CacheInfoPaneLabelKey  = @"MVPreferencePaneLabel";
 static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // NSNumber with bool
-
 
 @interface NSToolbar (NSToolbarPrivate)
 
@@ -75,6 +76,9 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
 @interface MVPreferencesController (MVPreferencesControllerPrivate)
 
 + (NSString*)applicationSupportPathForDomain:(short)inDomain;
+
++ (NSDictionary*)dictionaryWithPoint:(NSPoint)inPoint;
++ (BOOL)point:(NSPoint*)outPoint fromDictionary:(NSDictionary*)inDict;
 
 - (void)loadPreferencePanesAtPath:(NSString*)inFolderPath;
 - (void)buildPrefPaneIdentifierList;
@@ -161,11 +165,9 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
 
 - (void) awakeFromNib
 {
-  NSToolbar *toolbar = [[[NSToolbar alloc] initWithIdentifier:@"preferences.toolbar.1"] autorelease];
-
   [mWindow setDelegate:self];
-  [mWindow setFrameAutosaveName:@"CaminoPreferenceWindowFrame"];
 
+  NSToolbar *toolbar = [[[NSToolbar alloc] initWithIdentifier:@"preferences.toolbar.1"] autorelease];
   [toolbar setAllowsUserCustomization:NO];
   [toolbar setAutosavesConfiguration:NO];
   [toolbar setDelegate:self];
@@ -173,6 +175,15 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
   [toolbar setShowsContextMenu:NO];
   [mWindow setToolbar:toolbar];
   [toolbar setDisplayMode:NSToolbarDisplayModeIconAndLabel];
+
+  // save/restore the top-left window frame (because our size changes confuse the standard frame saving)
+  // (Cocoa will ensure that the window isn't placed totally offscreen)
+  id prefsLocation = [[NSUserDefaults standardUserDefaults] dictionaryForKey:kPrefsWindowLocationDefaultsKey];
+  NSPoint topLeftPoint;
+  if ([[self class] point:&topLeftPoint fromDictionary:prefsLocation])
+    [[self window] setFrameTopLeftPoint:topLeftPoint];
+  else
+    [[self window] center];
 }
 
 - (NSWindow *)window
@@ -287,7 +298,13 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
   // the current pref pane selected per Apple's recommendation.
   [[self currentPane] willUnselect];
   [[self currentPane] didUnselect];
-  
+
+  // save frame location
+  NSRect windowFrame = [[self window] frame];
+  NSPoint topLeftPoint = windowFrame.origin;  // bottom left
+  topLeftPoint.y += NSHeight(windowFrame);    // top left
+  [[NSUserDefaults standardUserDefaults] setObject:[[self class] dictionaryWithPoint:topLeftPoint] forKey:kPrefsWindowLocationDefaultsKey];
+
   // write out prefs and user defaults
   nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
   NS_ASSERTION(prefService, "Could not get pref service, prefs unsaved");
@@ -369,6 +386,29 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
   }
   
   return nil;
+}
+
+
++ (NSDictionary*)dictionaryWithPoint:(NSPoint)inPoint
+{
+  return [NSDictionary dictionaryWithObjectsAndKeys:
+               [NSNumber numberWithFloat:inPoint.x], @"x",
+               [NSNumber numberWithFloat:inPoint.y], @"y",
+                                                     nil];
+}
+
++ (BOOL)point:(NSPoint*)outPoint fromDictionary:(NSDictionary*)inDict
+{
+  *outPoint = NSZeroPoint;
+  id xValue, yValue;
+  if ((xValue = [inDict objectForKey:@"x"]) && (yValue = [inDict objectForKey:@"y"]) &&
+      ([xValue isKindOfClass:[NSNumber class]] && [yValue isKindOfClass:[NSNumber class]]))
+  {
+    *outPoint = NSMakePoint([xValue floatValue], [yValue floatValue]);
+    return YES;
+  }
+  
+  return NO;
 }
 
 - (IBAction)selectPreferencePane:(id) sender
