@@ -218,8 +218,10 @@ function initCalendarManager()
     if (calMgr.getCalendars({}).length == 0) {
         var homeCalendar = calMgr.createCalendar("storage", makeURL("moz-profile-calendar://"));
         calMgr.registerCalendar(homeCalendar);
-        // XXX Localize me
-        homeCalendar.name = "Home";
+        var name = srGetStrBundle("chrome://calendar/locale/calendar.properties")
+                                 .GetStringFromName("homeCalendarName");
+                                 
+        homeCalendar.name = name;
         composite.addCalendar(homeCalendar);
     }
     calMgr.addObserver(calCalendarManagerObserver);
