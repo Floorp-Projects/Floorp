@@ -47,6 +47,12 @@ sub init_modules {
           chop;
           
           if (/^\s+/) {
+               # Replace any leading whitespace with a single space before 
+               # appending to curline. This is necessary for long All lines
+               # which get split over reads from the CVSCOMMAND.
+               # The match of oldlist and newlist in find_dirs will fail 
+               # if this is not done.
+               s/^\s+/ /;
                $curline .= $_;
           } else {
                add_module($curline) if ($curline);
