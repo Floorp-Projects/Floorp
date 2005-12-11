@@ -1009,7 +1009,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
         JS_free(cx, message);
     if (report.messageArgs) {
         /*
-         * js_ExpandErrorArguments only owns its messageArgs if it had to
+         * js_ExpandErrorArguments owns its messageArgs only if it had to
          * inflate the arguments (from regular |char *|s).
          */
         if (charArgs) {
