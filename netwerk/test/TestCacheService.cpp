@@ -61,7 +61,6 @@ static NS_DEFINE_CID(kCacheServiceCID,           NS_CACHESERVICE_CID);
 
 nsCOMPtr<nsIEventQueue>   gEventQ;
 nsCOMPtr<nsICacheService> gCacheService;
-nsCOMPtr<nsICacheSession> gSession;
 
 class AsyncCacheRequest
 {
