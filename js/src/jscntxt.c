@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -1007,9 +1008,15 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     if (message)
         JS_free(cx, message);
     if (report.messageArgs) {
-        int i = 0;
-        while (report.messageArgs[i])
-            JS_free(cx, (void *)report.messageArgs[i++]);
+        /*
+         * js_ExpandErrorArguments only owns its messageArgs if it had to
+         * inflate the arguments (from regular |char *|s).
+         */
+        if (charArgs) {
+            int i = 0;
+            while (report.messageArgs[i])
+                JS_free(cx, (void *)report.messageArgs[i++]);
+        }
         JS_free(cx, (void *)report.messageArgs);
     }
     if (report.ucmessage)
