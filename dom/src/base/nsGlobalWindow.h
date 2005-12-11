@@ -266,6 +266,11 @@ public:
     return NS_STATIC_CAST(nsGlobalWindow *, mInnerWindow);
   }
 
+  nsGlobalWindow *EnsureInnerWindowInternal()
+  {
+    return NS_STATIC_CAST(nsGlobalWindow *, EnsureInnerWindow());
+  }
+
   PRBool IsFrozen() const
   {
     return mIsFrozen;
