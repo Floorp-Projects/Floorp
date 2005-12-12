@@ -51,6 +51,7 @@
 #include "nsIDocumentEncoder.h"
 #include "nsString.h"
 #include "nsIParser.h"
+#include "nsHashtable.h"
 
 class mozSanitizingHTMLSerializer : public nsIContentSerializer,
                                     public nsIHTMLContentSink,
