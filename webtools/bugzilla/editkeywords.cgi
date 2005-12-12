@@ -53,6 +53,14 @@ sub Validate {
     $_[1] = $description;
 }
 
+sub ValidateKeyID {
+    my $id = shift;
+
+    $id = trim($id || 0);
+    detaint_natural($id) || ThrowCodeError('invalid_keyword_id');
+    return $id;
+}
+
 
 #
 # Preliminary checks:
@@ -165,8 +173,7 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'edit') {
-    my $id = trim($cgi->param('id'));
-    detaint_natural($id);
+    my $id = ValidateKeyID(scalar $cgi->param('id'));
 
     # get data of keyword
     my ($name, $description) =
@@ -201,8 +208,7 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    my $id = $cgi->param('id');
-    detaint_natural($id);
+    my $id = ValidateKeyID(scalar $cgi->param('id'));
 
     my $name  = trim($cgi->param('name') || '');
     my $description  = trim($cgi->param('description')  || '');
@@ -234,8 +240,7 @@ if ($action eq 'update') {
 
 
 if ($action eq 'delete') {
-    my $id = $cgi->param('id');
-    detaint_natural($id);
+    my $id = ValidateKeyID(scalar $cgi->param('id'));
 
     my $name = $dbh->selectrow_array('SELECT name FROM keyworddefs
                                       WHERE id= ?', undef, $id);
