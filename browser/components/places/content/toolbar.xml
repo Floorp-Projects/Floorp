@@ -61,9 +61,10 @@
             var child = this._result.getChild(i);
             var button = document.createElementNS(XULNS, "toolbarbutton");
             button.setAttribute("label", child.title);
-            if (PlacesController.nodeIsURL(child))
-              button.setAttribute("url", child.url)
-            else if (PlacesController.nodeIsFolder(child)) {
+            if (PlacesController.nodeIsURL(child)) {
+              button.setAttribute("url", child.url);
+              button.setAttribute("image", child.icon.spec);
+            } else if (PlacesController.nodeIsFolder(child)) {
               button.setAttribute("type", "menu");
               button.setAttribute("container", "true");
               var popup = document.createElementNS(XULNS, "menupopup");
@@ -71,7 +72,7 @@
               button.appendChild(popup);
               popup.folderId = child.folderId;
             }
-            button.className = "bookmark-item";
+            button.className = "menuitem-iconic bookmark-item";
             button.node = child;
             this.appendChild(button);
           }
