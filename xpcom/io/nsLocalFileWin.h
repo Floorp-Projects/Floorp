@@ -105,8 +105,9 @@ private:
     nsCString mResolvedPath;
     
     PRFileInfo64 mFileInfo64;
+    PRUint32 mHashCode;
 
-    void MakeDirty() { mDirty = PR_TRUE; }
+    void MakeDirty() { mDirty = PR_TRUE; mHashCode = 0; }
 
     nsresult ResolveAndStat();
     nsresult ResolveShortcut();
