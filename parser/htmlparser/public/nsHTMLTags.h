@@ -79,4 +79,9 @@ public:
 
 #define eHTMLTags nsHTMLTag
 
+#ifdef DEBUG
+// tag table verification function
+void TestTagTable();
+#endif // DEBUG
+
 #endif /* nsHTMLTags_h___ */
