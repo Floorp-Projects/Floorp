@@ -2208,6 +2208,17 @@ function SetPageProxyState(aState)
 
 function PageProxySetIcon (aURL)
 {
+#ifdef MOZ_PLACES
+  // Save this favicon in the favicon service
+  if (aURL) {
+    var faviconService = Components.classes["@mozilla.org/browser/favicon-service;1"].
+      getService(Components.interfaces.nsIFaviconService);
+    var uri = Components.classes["@mozilla.org/network/io-service;1"]
+        .getService(Components.interfaces.nsIIOService).newURI(aURL, null, null);
+    faviconService.setAndLoadFaviconForPage(gBrowser.currentURI, uri, false);
+  }
+#endif
+
   if (!gProxyFavIcon)
     return;
 
