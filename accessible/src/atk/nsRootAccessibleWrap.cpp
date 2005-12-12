@@ -23,6 +23,8 @@
  *
  * Original Author: Bolian Yin (bolian.yin@sun.com)
  *
+ * Contributor(s): Ginn Chen (ginn.chen@sun.com)
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -40,6 +42,9 @@
 #include "nsMai.h"
 #include "nsRootAccessibleWrap.h"
 #include "nsAppRootAccessible.h"
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "nsIFocusController.h"
 
 nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode,
                                            nsIWeakReference* aShell):
@@ -76,5 +81,24 @@ NS_IMETHODIMP nsRootAccessibleWrap::GetParent(nsIAccessible **  aParent)
 NS_IMETHODIMP nsRootAccessibleWrap::GetRole(PRUint32 *_retval)
 {
     *_retval = ROLE_FRAME;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsRootAccessibleWrap::GetExtState(PRUint32 *aState)
+{
+    nsAccessibleWrap::GetExtState(aState);
+    
+    nsCOMPtr<nsIDOMWindow> domWin;
+    GetWindow(getter_AddRefs(domWin));
+    nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
+    if (privateDOMWindow) {
+        nsIFocusController *focusController =
+            privateDOMWindow->GetRootFocusController();
+        PRBool isActive = PR_FALSE;
+        focusController->GetActive(&isActive);
+        if (isActive) {
+            *aState |= EXT_STATE_ACTIVE;
+        }
+    }
     return NS_OK;
 }
