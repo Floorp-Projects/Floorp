@@ -38,7 +38,7 @@
 #define nsILoggingSink_h___
 
 #include "nsIHTMLContentSink.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "prprf.h"
 
 // IID for nsILoggingSink

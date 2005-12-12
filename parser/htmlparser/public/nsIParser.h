@@ -51,7 +51,7 @@
 #include "nsIStreamListener.h"
 #include "nsIDTD.h"
 #include "nsIInputStream.h"
-#include "nsHashtable.h"
+#include "nsStringGlue.h"
 #include "nsVoidArray.h"
 
 // {22039D29-2798-4412-9EA6-A11B41BA27D0}

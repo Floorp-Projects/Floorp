@@ -38,7 +38,7 @@
 #ifndef nsHTMLTags_h___
 #define nsHTMLTags_h___
 
-#include "nsAString.h"
+#include "nsStringGlue.h"
 
 class nsIAtom;
 

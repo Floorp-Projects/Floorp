@@ -57,7 +57,7 @@
 
 #include "nsISupports.h"
 #include "prtypes.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsDebug.h"
 
 //#define HEAP_ALLOCATED_NODES 
