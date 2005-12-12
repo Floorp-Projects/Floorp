@@ -37,6 +37,8 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"
+#include "nsServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
 
 #include "nsNetCID.h"
 #include "nsCOMPtr.h"
@@ -49,8 +51,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static nsIEventQueue* gEventQ = nsnull;
 
-#include "nsString.h"
-#include "nsReadableUtils.h"
+#include "nsStringAPI.h"
 #include "nsCRT.h"
 #include "prprf.h"
 
@@ -178,7 +179,7 @@ public:
 
   nsresult Init(nsILocalFile *aDirectory);
 
-  nsresult Grab(const nsAFlatCString& aURL);
+  nsresult Grab(const nsCString& aURL);
 
 protected:
   nsILocalFile* NextFile(const char* aExtension);
@@ -216,7 +217,7 @@ PageGrabber::NextFile(const char* aExtension)
 }
 
 nsresult
-PageGrabber::Grab(const nsAFlatCString& aURL)
+PageGrabber::Grab(const nsCString& aURL)
 {
   nsresult rv;
   // Create the Event Queue for this thread...
@@ -240,7 +241,7 @@ PageGrabber::Grab(const nsAFlatCString& aURL)
   fputs(aURL.get(), stdout);
   nsAutoString path;
   file->GetPath(path);
-  NS_ConvertUCS2toUTF8 cpath(path);
+  NS_ConvertUTF16toUTF8 cpath(path);
   printf(" to %s\n", cpath.get());
 
   // Create the URL object...

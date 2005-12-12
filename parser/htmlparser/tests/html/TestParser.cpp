@@ -37,10 +37,12 @@
 
 #include "nsXPCOM.h"
 #include "nsIComponentManager.h"
+#include "nsComponentManagerUtils.h"
 #include "nsParserCIID.h"
 #include "nsIParser.h"
 #include "nsILoggingSink.h"
 #include "nsIInputStream.h"
+#include "nsCOMPtr.h"
 
 // Class IID's
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
@@ -94,7 +96,7 @@ nsresult ParseData(char* anInputStream,char* anOutputStream) {
   while(!done) {
     length = PR_Read(in, buffer, sizeof(buffer));
     if (length != 0) {
-      stream.AppendWithConversion(buffer, length);
+      stream.Append(NS_ConvertUTF8toUTF16(buffer, length));
     }
     else {
       done=PR_TRUE;
