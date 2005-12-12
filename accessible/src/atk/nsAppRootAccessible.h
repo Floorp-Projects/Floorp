@@ -23,7 +23,7 @@
  *
  * Original Author: Bolian Yin (bolian.yin@sun.com)
  *
- * Contributor(s): 
+ * Contributor(s): Ginn Chen (ginn.chen@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -80,6 +80,7 @@ public:
     NS_IMETHOD GetName(nsAString & aName);
     NS_IMETHOD GetDescription(nsAString & aDescription);
     NS_IMETHOD GetRole(PRUint32 *aRole);
+    NS_IMETHOD GetFinalRole(PRUint32 *aFinalRole);
     NS_IMETHOD GetParent(nsIAccessible * *aParent);
     NS_IMETHOD GetNextSibling(nsIAccessible * *aNextSibling);
     NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);

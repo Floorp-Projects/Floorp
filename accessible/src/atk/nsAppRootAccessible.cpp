@@ -23,7 +23,7 @@
  *
  * Original Author: Bolian Yin (bolian.yin@sun.com)
  *
- * Contributor(s): 
+ * Contributor(s): Ginn Chen (ginn.chen@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -582,6 +582,11 @@ NS_IMETHODIMP nsAppRootAccessible::GetRole(PRUint32 *aRole)
 {
     *aRole = ROLE_APPLICATION;
     return NS_OK;
+}
+
+NS_IMETHODIMP nsAppRootAccessible::GetFinalRole(PRUint32 *aFinalRole)
+{
+    return GetRole(aFinalRole);
 }
 
 NS_IMETHODIMP nsAppRootAccessible::GetParent(nsIAccessible **  aParent)
