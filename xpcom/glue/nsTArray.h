@@ -154,6 +154,18 @@ class nsQuickSortComparator {
     }
 };
 
+// The default comparator used by nsTArray
+template<class A, class B>
+class nsDefaultComparator {
+  public:
+    PRBool Equals(const A& a, const B& b) const {
+      return a == b;
+    }
+    PRBool LessThan(const A& a, const B& b) const {
+      return a < b;
+    }
+};
+
 //
 // The templatized array class that dynamically resizes its storage as elements
 // are added.  This class is designed to behave a bit like std::vector.
@@ -270,16 +282,16 @@ class nsTArray : public nsTArray_base {
 
     // This method searches for the offset of the first element in this
     // array that is equal to the given element.
-    // @param elem   The element to search for.
+    // @param item   The item to search for.
     // @param comp   The Comparator used to determine element equality.
     // @param start  The index to start from.
     // @return       The index of the found element or NoIndex if not found.
-    template<class Comparator>
-    index_type IndexOf(const elem_type& elem, const Comparator& comp,
+    template<class Item, class Comparator>
+    index_type IndexOf(const Item& item, const Comparator& comp,
                        index_type start = 0) const {
       const elem_type* iter = Elements() + start, *end = iter + Length();
       for (; iter != end; ++iter) {
-        if (comp.Equals(*iter, elem))
+        if (comp.Equals(*iter, item))
           return iter - Elements();
       }
       return NoIndex;
@@ -288,29 +300,30 @@ class nsTArray : public nsTArray_base {
     // This method searches for the offset of the first element in this
     // array that is equal to the given element.  This method assumes
     // that 'operator==' is defined for elem_type.
-    // @param elem   The element to search for.
+    // @param item   The item to search for.
     // @param start  The index to start from.
     // @return       The index of the found element or NoIndex if not found.
-    index_type IndexOf(const elem_type& elem, index_type start = 0) const {
-      return IndexOf(elem, DefaultComparator(), start);
+    template<class Item>
+    index_type IndexOf(const Item& item, index_type start = 0) const {
+      return IndexOf(item, nsDefaultComparator<elem_type, Item>(), start);
     }
 
     // This method searches for the offset of the last element in this
     // array that is equal to the given element.
-    // @param elem   The element to search for.
+    // @param item   The item to search for.
     // @param comp   The Comparator used to determine element equality.
     // @param start  The index to start from.  If greater than or equal to the
     //               length of the array, then the entire array is searched.
     // @return       The index of the found element or NoIndex if not found.
-    template<class Comparator>
-    index_type LastIndexOf(const elem_type& elem,
+    template<class Item, class Comparator>
+    index_type LastIndexOf(const Item& item,
                            const Comparator& comp,
                            index_type start = NoIndex) const {
       if (start >= Length())
         start = Length() - 1;
       const elem_type* end = Elements() - 1, *iter = end + start + 1;
       for (; iter != end; --iter) {
-        if (comp.Equals(*iter, elem))
+        if (comp.Equals(*iter, item))
           return iter - Elements();
       }
       return NoIndex;
@@ -319,13 +332,14 @@ class nsTArray : public nsTArray_base {
     // This method searches for the offset of the last element in this
     // array that is equal to the given element.  This method assumes
     // that 'operator==' is defined for elem_type.
-    // @param elem   The element to search for.
+    // @param item   The item to search for.
     // @param start  The index to start from.  If greater than or equal to the
     //               length of the array, then the entire array is searched.
     // @return       The index of the found element or NoIndex if not found.
-    index_type LastIndexOf(const elem_type& elem,
+    template<class Item>
+    index_type LastIndexOf(const Item& item,
                            index_type start = NoIndex) const {
-      return LastIndexOf(elem, DefaultComparator(), start);
+      return LastIndexOf(item, nsDefaultComparator<elem_type, Item>(), start);
     }
 
     //
@@ -446,19 +460,20 @@ class nsTArray : public nsTArray_base {
 
     // This helper function combines IndexOf with RemoveElementAt to "search
     // and destroy" the first element that is equal to the given element.
-    // @param elem  The element to search for.
+    // @param item  The item to search for.
     // @param comp  The Comparator used to determine element equality.
-    template<class Comparator>
-    void RemoveElement(const elem_type& elem, const Comparator& comp) {
-      index_type i = IndexOf(elem, comp);
+    template<class Item, class Comparator>
+    void RemoveElement(const Item& item, const Comparator& comp) {
+      index_type i = IndexOf(item, comp);
       if (i >= 0) 
         RemoveElementAt(i);
     }
 
     // A variation on the RemoveElement method defined above that assumes
     // that 'operator==' is defined for elem_type.
-    void RemoveElement(const elem_type& elem) {
-      RemoveElement(elem, DefaultComparator());
+    template<class Item>
+    void RemoveElement(const Item& item) {
+      RemoveElement(item, nsDefaultComparator<elem_type, Item>());
     }
 
     //
@@ -520,21 +535,10 @@ class nsTArray : public nsTArray_base {
     // A variation on the Sort method defined above that assumes that
     // 'operator<' is defined for elem_type.
     void Sort() {
-      Sort(DefaultComparator());
+      Sort(nsDefaultComparator<elem_type, elem_type>());
     }
 
   protected:
-
-    // The default comparator
-    class DefaultComparator {
-      public:
-        PRBool Equals(const elem_type& a, const elem_type& b) const {
-          return a == b;
-        }
-        PRBool LessThan(const elem_type& a, const elem_type& b) const {
-          return a < b;
-        }
-    };
 
     // This method invokes elem_type's destructor on a range of elements.
     // @param start  The index of the first element to destroy.

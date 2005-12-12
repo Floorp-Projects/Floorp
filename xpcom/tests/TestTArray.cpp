@@ -229,6 +229,10 @@ static PRBool test_autoptr_array() {
 
 //----
 
+static PRBool operator==(const nsCString &a, const char *b) {
+  return a.Equals(b);
+}
+
 static PRBool test_string_array() {
   nsTArray<nsCString> strArray;
   const char kdata[] = "hello world";
@@ -241,6 +245,10 @@ static PRBool test_string_array() {
     if (strArray[i].CharAt(0) != kdata[i])
       return PR_FALSE;
   }
+
+  if (strArray.IndexOf("e") != 1)
+    return PR_FALSE;
+
   strArray.Sort();
   const char ksorted[] = "\0 dehllloorw";
   for (i = 0; i < NS_ARRAY_LENGTH(kdata)-1; ++i) {
@@ -257,8 +265,18 @@ static PRBool test_string_array() {
 
 //----
 
+typedef nsCOMPtr<nsIFile> FilePointer;
+
+class nsFileNameComparator {
+  public:
+    PRBool Equals(const FilePointer &a, const char *b) const {
+      nsCAutoString name;
+      a->GetNativeLeafName(name);
+      return name.Equals(b);
+    }
+};
+
 static PRBool test_comptr_array() {
-  typedef nsCOMPtr<nsIFile> FilePointer;
   FilePointer tmpDir;
   NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpDir));
   if (!tmpDir)
@@ -277,9 +295,52 @@ static PRBool test_comptr_array() {
       return PR_FALSE;
     fileArray.AppendElement(f);
   }
+
+  if (fileArray.IndexOf(kNames[1], nsFileNameComparator()) != 1)
+    return PR_FALSE;
+
   // It's unclear what 'operator<' means for nsCOMPtr, but whatever...
   return test_basic_array(fileArray.Elements(), fileArray.Length(), 
                           tmpDir);
+}
+
+//----
+
+class RefcountedObject {
+  public:
+    RefcountedObject() : rc(0) {}
+    void AddRef() {
+      ++rc;
+    }
+    void Release() {
+      if (--rc == 0)
+        delete this;
+    }
+  private:
+    ~RefcountedObject() {}
+    PRInt32 rc;
+};
+
+static PRBool test_refptr_array() {
+  PRBool rv = PR_TRUE;
+
+  nsTArray< nsRefPtr<RefcountedObject> > objArray;
+
+  RefcountedObject *a = new RefcountedObject(); a->AddRef();
+  RefcountedObject *b = new RefcountedObject(); b->AddRef();
+  RefcountedObject *c = new RefcountedObject(); c->AddRef();
+
+  objArray.AppendElement(a);
+  objArray.AppendElement(b);
+  objArray.AppendElement(c);
+
+  if (objArray.IndexOf(b) != 1)
+    rv = PR_FALSE;
+
+  a->Release();
+  b->Release();
+  c->Release();
+  return rv;
 }
 
 //----
@@ -298,6 +359,7 @@ static const struct Test {
   DECL_TEST(test_object_array),
   DECL_TEST(test_string_array),
   DECL_TEST(test_comptr_array),
+  DECL_TEST(test_refptr_array),
   { nsnull, nsnull }
 };
 
