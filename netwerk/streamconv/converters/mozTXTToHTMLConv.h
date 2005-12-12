@@ -319,8 +319,6 @@ private:
   PRBool ShouldLinkify(const nsCString& aURL);
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(mozTXTToHTMLConv, MOZITXTTOHTMLCONV_IID)
-
 // It's said, that Win32 and Mac don't like static const members
 const PRInt32 mozTXTToHTMLConv_lastMode = 4;
 	                        // Needed (only) by mozTXTToHTMLConv::FindURL
