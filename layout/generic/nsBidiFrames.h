@@ -69,6 +69,8 @@ private:
   PRUnichar mChar;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsDirectionalFrame, NS_DIRECTIONAL_FRAME_IID)
+
 #endif /* nsBidiFrames_h___ */
 #endif /* IBMBIDI */
 
