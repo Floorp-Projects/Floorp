@@ -247,7 +247,14 @@ var nsBrowserContentHandler = {
       try {
         var a = /^\s*(\w+)\(([^\)]*)\)\s*$/.exec(remoteCommand);
         var remoteVerb = a[1].toLowerCase();
-        var remoteParams = a[2].split(",");
+        var remoteParams = [];
+        var sepIndex = a[2].lastIndexOf(",");
+        if (sepIndex == -1)
+          remoteParams[0] = a[2];
+        else {
+          remoteParams[0] = a[2].substring(0, sepIndex - 1);
+          remoteParams[1] = a[2].substring(sepIndex + 1);
+        }
 
         switch (remoteVerb) {
         case "openurl":
