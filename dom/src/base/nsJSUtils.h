@@ -141,7 +141,7 @@ public:
     nsMarkedJSFunctionHolder_base::Set(aPotentialFunction, aParticipant);
   }
   already_AddRefed<T> Get() {
-    return already_AddRefed<T>(NS_STATIC_CAST(T*, nsMarkedJSFunctionHolder_base::Get(NS_GET_IID(T)).get()));
+    return already_AddRefed<T>(NS_STATIC_CAST(T*, nsMarkedJSFunctionHolder_base::Get(NS_GET_TEMPLATE_IID(T)).get()));
   }
 };
 
