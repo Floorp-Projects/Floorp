@@ -82,8 +82,8 @@
 <!ENTITY newevent.start.label        "Début" >
 <!ENTITY newevent.date.label         "Date" >
 <!ENTITY newevent.startdate.label    "Début" >
-<!ENTITY newevent.from.label         "De" >
-<!ENTITY newevent.to.label           "Pour" >
+<!ENTITY newevent.from.label         "Du" >
+<!ENTITY newevent.to.label           "Au" >
 <!ENTITY newevent.enddate.label      "Fin" >
 <!ENTITY newevent.set.label          "définir…" >
 <!ENTITY newevent.settings.label     "Paramètres généraux" >
@@ -105,7 +105,7 @@
 <!ENTITY newevent.invite.label       "Inviter" >
 <!ENTITY newevent.details.label      "Détails" >
 <!ENTITY newevent.email.label        "Envoyer l'alarme par courriel à :" >
-<!ENTITY newevent.beforealarm.label  "avant cet événement" >
+<!ENTITY newevent.beforealarm.label  "avant que cet événement" >
 <!ENTITY newevent.begin.label        "débute" >
 <!ENTITY newevent.end.label          "s'achève" >
 <!ENTITY newevent.isdue.label        "est terminé" >
@@ -205,7 +205,7 @@
 <!ENTITY newtodo.starttime.warning "La date de début a lieu après la date prévue.">
 <!ENTITY newtodo.cancelled.label "Annulé">
 <!ENTITY newtodo.status.label "Statut">
-<!ENTITY newtodo.beforealarm.label  "avant cette tâche">
+<!ENTITY newtodo.beforealarm.label  "avant que cette tâche">
 <!ENTITY newtodo.beforealarmends.label  "avant que la tâche ne soit terminée">
 <!ENTITY newtodo.newtodo.tab.label "Tâche">
 <!ENTITY newtodo.status.longlabel  "Statut de la tâche">

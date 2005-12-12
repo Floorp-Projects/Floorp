@@ -231,7 +231,7 @@
 <!ENTITY aboutCmd.accesskey                     "p">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
+<!ENTITY windowMenu.label                       "Fenêtre">
 <!ENTITY minimizeWindow.label                   "Réduire">
 <!ENTITY zoomWindow.label                       "Zoom">
 <!ENTITY minimizeWindow.key                     "M">

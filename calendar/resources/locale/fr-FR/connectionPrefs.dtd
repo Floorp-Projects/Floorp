@@ -1,6 +1,6 @@
 <!--LOCALIZATION NOTE : FILE The Proxies preferences dialog -->
 <!ENTITY  lHeader                       "Paramètres de connexion">
-<!ENTITY  proxyTitle.label              "Configurer les proxies pour accéder à Internet">
+<!ENTITY  proxyTitle.label              "Configurer le proxy pour accéder à Internet">
 <!ENTITY  directTypeRadio.label         "Connexion directe à Internet">
 <!ENTITY  directTypeRadio.accesskey     "d">
 <!ENTITY  manualTypeRadio.label         "Configuration manuelle du proxy">
