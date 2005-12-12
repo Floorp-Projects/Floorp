@@ -68,13 +68,6 @@ nsDirectionalFrame::GetType() const
   return nsLayoutAtoms::directionalFrame; 
 }
   
-const nsIID&
-nsDirectionalFrame::GetIID()
-{
-  static nsIID iid = NS_DIRECTIONAL_FRAME_IID;
-  return iid;
-}
-
 NS_IMETHODIMP
 nsDirectionalFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {

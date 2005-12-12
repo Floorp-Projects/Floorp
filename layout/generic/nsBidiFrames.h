@@ -57,7 +57,7 @@ protected:
 public:
   nsDirectionalFrame(PRUnichar aChar);
 
-  static const nsIID& GetIID();
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DIRECTIONAL_FRAME_IID)
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
