@@ -45,7 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= TestXPC
 SIMPLE_PROGRAMS = TestXPC$(BIN_SUFFIX)
-MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= xpconnect \
 		  xpcom \
@@ -54,11 +53,16 @@ REQUIRES	= xpconnect \
 		  xpconnect_tests \
 		  $(NULL)
 
-DIRS		= idl components
+DIRS		= idl
+
+ifndef MOZ_ENABLE_LIBXUL
+DIRS += components
+endif
 
 CPPSRCS		= TestXPC.cpp
 
 LIBS		= \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(LIBS_DIR) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \

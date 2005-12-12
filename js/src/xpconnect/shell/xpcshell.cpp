@@ -45,6 +45,8 @@
 /* XPConnect JavaScript interactive shell. */
 
 #include <stdio.h>
+#include "nsServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 #include "nsIInterfaceInfo.h"
