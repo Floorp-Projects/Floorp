@@ -1262,6 +1262,8 @@ unless ($switch{'no_templates'}) {
 
         foreach my $dir (@files) {
             next if($dir =~ /^CVS$/i);
+            -d "$templatedir/$dir/custom" || -d "$templatedir/$dir/default"
+                || next;
             local $ENV{'HTTP_ACCEPT_LANGUAGE'} = $dir;
             SetParam("languages", "$dir,en");
             $::template = Bugzilla::Template->create(clean_cache => 1);
