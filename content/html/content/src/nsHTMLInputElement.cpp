@@ -84,6 +84,7 @@
 #include "nsLinebreakConverter.h" //to strip out carriage returns
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsLayoutUtils.h"
 
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMEventReceiver.h"
@@ -607,7 +608,7 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
     }
 
     if (frameOwnsValue) {
-      formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
+      formControlFrame->GetFormProperty(nsHTMLAtoms::value, aValue);
     } else {
       if (!GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) || !mValue) {
         GetDefaultValue(aValue);
@@ -695,8 +696,7 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
     }
     // If the frame owns the value, set the value in the frame
     if (frameOwnsValue) {
-      nsCOMPtr<nsPresContext> presContext = GetPresContext();
-      formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
+      formControlFrame->SetFormProperty(nsHTMLAtoms::value, aValue);
       return NS_OK;
     }
 
@@ -1075,7 +1075,7 @@ nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
     if (formControlFrame) {
       formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-      formControlFrame->ScrollIntoView(aPresContext);
+      nsLayoutUtils::ScrollIntoView(formControlFrame);
     }
   }
 }
@@ -1170,8 +1170,7 @@ nsHTMLInputElement::SelectAll(nsPresContext* aPresContext)
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    formControlFrame->SetProperty(aPresContext, nsHTMLAtoms::select,
-                                  EmptyString());
+    formControlFrame->SetFormProperty(nsHTMLAtoms::select, EmptyString());
   }
 }
 
@@ -2094,10 +2093,6 @@ nsHTMLInputElement::Reset()
       break;
   }
 
-  // Notify frame that it has been reset
-  if (formControlFrame) {
-    formControlFrame->OnContentReset();
-  }
   return rv;
 }
 

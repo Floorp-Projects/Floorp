@@ -69,6 +69,7 @@
 #include "nsIDOMText.h"
 #include "nsReadableUtils.h"
 #include "nsITextContent.h"
+#include "nsLayoutUtils.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
@@ -253,7 +254,7 @@ nsHTMLTextAreaElement::SetFocus(nsPresContext* aPresContext)
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
     if (formControlFrame) {
       formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-      formControlFrame->ScrollIntoView(aPresContext);
+      nsLayoutUtils::ScrollIntoView(formControlFrame);
     }
   }
 }
@@ -311,8 +312,7 @@ nsHTMLTextAreaElement::SelectAll(nsPresContext* aPresContext)
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
-    formControlFrame->SetProperty(aPresContext, nsHTMLAtoms::select,
-                                  EmptyString());
+    formControlFrame->SetFormProperty(nsHTMLAtoms::select, EmptyString());
   }
 
   return NS_OK;
@@ -404,8 +404,7 @@ nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
     textControlFrame->OwnsValue(&frameOwnsValue);
   }
   if (frameOwnsValue) {
-    formControlFrame->SetProperty(GetPresContext(),
-                                  nsHTMLAtoms::value, aValue);
+    formControlFrame->SetFormProperty(nsHTMLAtoms::value, aValue);
   }
   else {
     if (mValue) {
@@ -766,7 +765,6 @@ nsHTMLTextAreaElement::Reset()
     GetDefaultValue(resetVal);
     rv = SetValue(resetVal);
     NS_ENSURE_SUCCESS(rv, rv);
-    formControlFrame->OnContentReset();
   }
   SetValueChanged(PR_FALSE);
   return NS_OK;

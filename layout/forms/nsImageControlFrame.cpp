@@ -98,29 +98,10 @@ public:
 
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,
                        nsIFrame::Cursor& aCursor);
-
-  NS_IMETHOD_(PRInt32) GetFormControlType() const;
-
-  NS_IMETHOD GetName(nsAString* aName);
-
-  void SetFocus(PRBool aOn, PRBool aRepaint);
-  void ScrollIntoView(nsPresContext* aPresContext);
-
-  NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  virtual nscoord GetVerticalInsidePadding(nsPresContext* aPresContext,
-                                           float aPixToTwip,
-                                           nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsPresContext* aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerWidth,
-                                             nscoord aCharWidth) const;
-
-
-        // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
-  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
-  NS_IMETHOD OnContentReset();
+  // nsIFormContromFrame
+  virtual void SetFocus(PRBool aOn, PRBool aRepaint);
+  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
+  virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
 
   // nsIImageControlFrame
   NS_IMETHOD GetClickedX(PRInt32* aX);
@@ -269,32 +250,6 @@ nsImageControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
 }
 
-void
-nsImageControlFrame::ScrollIntoView(nsPresContext* aPresContext)
-{
-  if (aPresContext) {
-    nsIPresShell *presShell = aPresContext->GetPresShell();
-    if (presShell) {
-      presShell->ScrollFrameIntoView(this,
-                   NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
-    }
-  }
-}
-
-NS_IMETHODIMP_(PRInt32)
-nsImageControlFrame::GetFormControlType() const
-{
-  return NS_FORM_INPUT_IMAGE;
-}
-
-NS_IMETHODIMP
-nsImageControlFrame::GetName(nsAString* aResult)
-{
-  nsFormControlHelper::GetName(mContent, aResult);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsImageControlFrame::GetCursor(const nsPoint&    aPoint,
                                nsIFrame::Cursor& aCursor)
@@ -310,55 +265,18 @@ nsImageControlFrame::GetCursor(const nsPoint&    aPoint,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsImageControlFrame::GetFormContent(nsIContent*& aContent) const
-{
-  aContent = GetContent();
-  NS_IF_ADDREF(aContent);
-  return NS_OK;
-}
-
-nscoord 
-nsImageControlFrame::GetVerticalInsidePadding(nsPresContext* aPresContext,
-                                              float aPixToTwip, 
-                                              nscoord aInnerHeight) const
-{
-   return 0;
-}
-
-nscoord 
-nsImageControlFrame::GetHorizontalInsidePadding(nsPresContext* aPresContext,
-                                               float aPixToTwip, 
-                                               nscoord aInnerWidth,
-                                               nscoord aCharWidth) const
-{
-  return 0;
-}
-
-NS_IMETHODIMP nsImageControlFrame::SetProperty(nsPresContext* aPresContext,
-                                               nsIAtom* aName,
-                                               const nsAString& aValue)
+nsresult
+nsImageControlFrame::SetFormProperty(nsIAtom* aName,
+                                     const nsAString& aValue)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageControlFrame::GetProperty(nsIAtom* aName,
-                                               nsAString& aValue)
+nsresult
+nsImageControlFrame::GetFormProperty(nsIAtom* aName,
+                                     nsAString& aValue) const
 {
   aValue.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsImageControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
-{
-//  mSuggestedWidth = aWidth;
-//  mSuggestedHeight = aHeight;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageControlFrame::OnContentReset()
-{
   return NS_OK;
 }
 

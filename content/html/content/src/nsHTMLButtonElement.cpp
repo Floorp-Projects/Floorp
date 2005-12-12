@@ -56,7 +56,7 @@
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
-
+#include "nsLayoutUtils.h"
 
 class nsHTMLButtonElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLButtonElement,
@@ -250,7 +250,7 @@ nsHTMLButtonElement::SetFocus(nsPresContext* aPresContext)
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
     if (formControlFrame) {
       formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-      formControlFrame->ScrollIntoView(aPresContext);
+      nsLayoutUtils::ScrollIntoView(formControlFrame);
     }
   }
 }

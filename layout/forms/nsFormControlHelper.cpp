@@ -118,7 +118,6 @@ void nsFormControlHelper::GetBoolString(const PRBool aValue,
     aResult.Assign(NS_STRING_FALSE);
 }
 
-
 nsresult nsFormControlHelper::GetFrameFontFM(nsIFrame* aFrame,
                                              nsIFontMetrics** aFontMet)
 {
@@ -317,26 +316,6 @@ nsFormControlHelper::PaintCheckMark(nsIRenderingContext& aRenderingContext,
   }
   
   aRenderingContext.FillPolygon(checkedPolygon, checkpoints);
-}
-
-PRBool
-nsFormControlHelper::GetName(nsIContent* aContent, nsAString* aResult)
-{
-  NS_PRECONDITION(aResult, "Null pointer bad!");
-  return aContent->IsContentOfType(nsIContent::eHTML) &&
-         aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, *aResult);
-}
-
-PRInt32
-nsFormControlHelper::GetType(nsIContent* aContent)
-{
-  nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aContent));
-  if (formControl) {
-    return formControl->GetType();
-  }
-
-  NS_ERROR("Form control not implementing nsIFormControl, assuming TEXT type");
-  return NS_FORM_INPUT_TEXT;
 }
 
 PRBool

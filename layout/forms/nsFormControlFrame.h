@@ -150,10 +150,6 @@ public:
     */
   virtual const nsIID& GetIID(); 
 
-  NS_IMETHOD_(PRInt32) GetFormControlType() const;
-  NS_IMETHOD GetName(nsAString* aName);
-  NS_IMETHOD GetValue(nsAString* aName);
-
   /**
     * Respond to a enter key being pressed
     */
@@ -164,13 +160,7 @@ public:
     */
   virtual void ControlChanged(nsPresContext* aPresContext) {}
 
-  /**
-    * Chance to Initialize to a default value
-    */
-  virtual void InitializeControl(nsPresContext* aPresContext);
-
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
-  virtual void ScrollIntoView(nsPresContext* aPresContext);
 
   /**
     * Perform opertations before the widget associated with this frame has been
@@ -187,8 +177,6 @@ public:
 
   virtual void SetClickPoint(nscoord aX, nscoord aY);
 
-  NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-
    /**
     * Get the width and height of this control based on CSS 
     * @param aPresContext the presentation context
@@ -199,11 +187,12 @@ public:
                             const nsHTMLReflowState& aReflowState,
                             nsSize& aSize);
 
-    // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
+  // nsIFormControlFrame
+  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
 
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
-  // Resize Reflow Optimiaztion Methods
+  virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
+  
+  // Resize Reflow Optimization Methods
   static void SetupCachedSizes(nsSize& aCacheSize,
                                nscoord& aCachedAscent,
                                nscoord& aCachedMaxElementWidth,
@@ -253,9 +242,6 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
-
-  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
-
 //
 //-------------------------------------------------------------------------------------
 //  Utility methods for managing checkboxes and radiobuttons
@@ -268,12 +254,10 @@ protected:
     */
 
   void GetCurrentCheckState(PRBool* aState);
- 
+
   nsSize       mWidgetSize;
   PRBool       mDidInit;
   nsPoint      mLastClickPoint;
-  nscoord      mSuggestedWidth;
-  nscoord      mSuggestedHeight;
 
   // Reflow Optimization
   nsSize       mCacheSize;

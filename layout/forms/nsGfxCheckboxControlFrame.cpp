@@ -284,8 +284,3 @@ nsGfxCheckboxControlFrame::Reflow(nsPresContext*          aPresContext,
 }
 #endif
 
-NS_IMETHODIMP
-nsGfxCheckboxControlFrame::OnContentReset()
-{
-  return NS_OK;
-}

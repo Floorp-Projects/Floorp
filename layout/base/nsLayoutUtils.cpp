@@ -37,6 +37,7 @@
 
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
+#include "nsIFormControlFrame.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsFrameList.h"
@@ -595,5 +596,22 @@ nsLayoutUtils::BinarySearchForPosition(nsIRenderingContext* aRendContext,
     }
   }
   return PR_FALSE;
+}
+
+void
+nsLayoutUtils::ScrollIntoView(nsIFormControlFrame* aFormFrame)
+{
+  NS_ASSERTION(aFormFrame, "Null frame passed into ScrollIntoView");
+  nsIFrame* frame = nsnull;
+  CallQueryInterface(aFormFrame, &frame);
+  NS_ASSERTION(frame, "Form frame did not implement nsIFrame.");
+  if (frame) {
+    nsIPresShell* presShell = frame->GetPresContext()->GetPresShell();
+    if (presShell) {
+      presShell->ScrollFrameIntoView(frame,
+                                     NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
+                                     NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
+    }
+  }
 }
 

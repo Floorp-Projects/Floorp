@@ -254,13 +254,6 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
-NS_IMETHODIMP_(PRInt32)
-nsFileControlFrame::GetFormControlType() const
-{
-  return NS_FORM_INPUT_FILE;
-}
-
-
 void 
 nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
@@ -269,18 +262,6 @@ nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     nsIContent* content = mTextFrame->GetContent();
     if (content) {
       content->SetFocus(GetPresContext());
-    }
-  }
-}
-
-void
-nsFileControlFrame::ScrollIntoView(nsPresContext* aPresContext)
-{
-  if (aPresContext) {
-    nsIPresShell *presShell = aPresContext->GetPresShell();
-    if (presShell) {
-      presShell->ScrollFrameIntoView(this,
-                   NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
     }
   }
 }
@@ -332,7 +313,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 
   // Set default directry and filename
   nsAutoString defaultName;
-  GetProperty(nsHTMLAtoms::value, defaultName);
+  GetFormProperty(nsHTMLAtoms::value, defaultName);
 
   nsCOMPtr<nsILocalFile> currentFile = do_CreateInstance("@mozilla.org/file/local;1");
   if (currentFile && !defaultName.IsEmpty()) {
@@ -378,8 +359,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     nsAutoString unicodePath;
     result = localFile->GetPath(unicodePath);
     if (!unicodePath.IsEmpty()) {
-      mTextFrame->SetProperty(GetPresContext(), nsHTMLAtoms::value, 
-                              unicodePath);
+      mTextFrame->SetFormProperty(nsHTMLAtoms::value, unicodePath);
       // May need to fire an onchange here
       mTextFrame->CheckFireOnChange();
       return NS_OK;
@@ -402,9 +382,9 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
 
   if (eReflowReason_Initial == aReflowState.reason) {
     mTextFrame = GetTextControlFrame(aPresContext, this);
-    if (!mTextFrame) return NS_ERROR_UNEXPECTED;
+    NS_ENSURE_TRUE(mTextFrame, NS_ERROR_UNEXPECTED);
     if (mCachedState) {
-      mTextFrame->SetProperty(aPresContext, nsHTMLAtoms::value, *mCachedState);
+      mTextFrame->SetFormProperty(nsHTMLAtoms::value, *mCachedState);
       delete mCachedState;
       mCachedState = nsnull;
     }
@@ -524,15 +504,6 @@ nsFileControlFrame::GetSkipSides() const
   return 0;
 }
 
-
-NS_IMETHODIMP
-nsFileControlFrame::GetName(nsAString* aResult)
-{
-  nsFormControlHelper::GetName(mContent, aResult);
-
-  return NS_OK;
-}
-
 void
 nsFileControlFrame::SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRInt32 aWhichControls)
@@ -604,49 +575,23 @@ nsFileControlFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-NS_IMETHODIMP
-nsFileControlFrame::GetFormContent(nsIContent*& aContent) const
-{
-  aContent = GetContent();
-  NS_IF_ADDREF(aContent);
-  return NS_OK;
-}
-
-nscoord 
-nsFileControlFrame::GetVerticalInsidePadding(nsPresContext* aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerHeight) const
-{
-   return 0;
-}
-
-nscoord 
-nsFileControlFrame::GetHorizontalInsidePadding(nsPresContext* aPresContext,
-                                               float aPixToTwip, 
-                                               nscoord aInnerWidth,
-                                               nscoord aCharWidth) const
-{
-  return 0;
-}
-
-NS_IMETHODIMP nsFileControlFrame::SetProperty(nsPresContext* aPresContext,
-                                              nsIAtom* aName,
+NS_IMETHODIMP nsFileControlFrame::SetFormProperty(nsIAtom* aName,
                                               const nsAString& aValue)
 {
-  nsresult rv = NS_OK;
   if (nsHTMLAtoms::value == aName) {
     if (mTextFrame) {
       mTextFrame->SetValue(aValue);
     } else {
       if (mCachedState) delete mCachedState;
       mCachedState = new nsString(aValue);
-      if (!mCachedState) rv = NS_ERROR_OUT_OF_MEMORY;
+      NS_ENSURE_TRUE(mCachedState, NS_ERROR_OUT_OF_MEMORY);
     }
   }
-  return rv;
+  return NS_OK;
 }      
 
-NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
+nsresult
+nsFileControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
 {
   aValue.Truncate();  // initialize out param
 
@@ -681,8 +626,3 @@ nsFileControlFrame::Paint(nsPresContext*      aPresContext,
   return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
-NS_IMETHODIMP
-nsFileControlFrame::OnContentReset()
-{
-  return NS_OK;
-}

@@ -46,8 +46,8 @@ class nsIContent;
 
 // IID for the nsIListControlFrame class
 #define NS_ILISTCONTROLFRAME_IID    \
-{ 0xf44db101, 0xa73c, 0x11d2,  \
-  { 0x8d, 0xcf, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } }
+  { 0xa28ca6f, 0x6850, 0x11da, \
+      { 0x95, 0x2c, 0x0, 0xe0, 0x81, 0x61, 0x16, 0x5f } }
 
 /** 
   * nsIListControlFrame is the interface for frame-based listboxes.
@@ -124,6 +124,11 @@ public:
    * @param aIndex the index to actually select
    */
   NS_IMETHOD ComboboxFinish(PRInt32 aIndex) = 0;
+
+  /**
+   * Notification that the content has been reset
+   */
+  virtual void OnContentReset() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIListControlFrame, NS_ILISTCONTROLFRAME_IID)

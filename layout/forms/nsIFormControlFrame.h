@@ -39,17 +39,15 @@
 #define nsIFormControlFrame_h___
 
 #include "nsISupports.h"
-#include "nsFont.h"
-class nsPresContext;
 class nsAString;
 class nsIContent;
 class nsIAtom;
-
+struct nsSize;
 
 // IID for the nsIFormControlFrame class
 #define NS_IFORMCONTROLFRAME_IID    \
-  { 0xf1911a34, 0xcdf7, 0x4f10, \
-      { 0xbc, 0x2a, 0x77, 0x1f, 0x68, 0xce, 0xbc, 0x54 } }
+  { 0x189e1565, 0x44f, 0x11da, \
+      { 0x94, 0xfc, 0x0, 0xe0, 0x81, 0x61, 0x16, 0x5f } }
 
 /** 
   * nsIFormControlFrame is the common interface for frames of form controls. It
@@ -61,32 +59,12 @@ class nsIFormControlFrame : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMCONTROLFRAME_IID)
 
-  NS_IMETHOD_(PRInt32) GetFormControlType() const =  0;
-
-  NS_IMETHOD GetName(nsAString* aName) = 0;
-
+  /**
+   * 
+   * @param aOn
+   * @param aRepaint
+   */
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE) = 0;
-
-  virtual void ScrollIntoView(nsPresContext* aPresContext) = 0;  
-
-  /**
-   * Set the suggested size for the form element. 
-   * This is used to control the size of the element during reflow if it hasn't had its size
-   * explicitly set.
-   * @param aWidth width of the form element
-   * @param aHeight height of the form element
-   * @returns NS_OK 
-   */
-
-  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight) = 0;
-  
-  /**
-   * Get the content object associated with this frame. Adds a reference to
-   * the content object so the caller must do a release.
-   *
-   * @see nsISupports#Release()
-   */
-  NS_IMETHOD GetFormContent(nsIContent*& aContent) const = 0;
 
   /**
    * Set a property on the form control frame.
@@ -95,24 +73,17 @@ public:
    * @param aValue value of the property
    * @returns NS_OK if the property name is valid, otherwise an error code
    */
-  
-  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue) = 0;
+  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) = 0;
   
   /**
    * Get a property from the form control frame
    *
-   * @param aName name of the property to get
-   * @param aValue value of the property
-   * @returns NS_OK if the property name is valid, otherwise an error code
+   * @param aName name of the property to get.
+   * @param aValue Value to set.
+   * @returns NS_OK if the property name is valid, otherwise an error code.
    */
 
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue) = 0; 
-
-  /**
-   * Notification that the content has been reset
-   */
-  NS_IMETHOD OnContentReset() = 0;
-
+  virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControlFrame, NS_IFORMCONTROLFRAME_IID)

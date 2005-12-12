@@ -169,29 +169,6 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetAccessible(nsIAccessible** aAccessibl
 }
 #endif
 
-
-NS_IMETHODIMP_(PRInt32)
-nsHTMLButtonControlFrame::GetFormControlType() const
-{
-  return nsFormControlHelper::GetType(mContent);
-}
-
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetName(nsAString* aResult)
-{
-  nsFormControlHelper::GetName(mContent, aResult);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetValue(nsAString* aResult)
-{
-  nsFormControlHelper::GetValueAttr(mContent, aResult);
-
-  return NS_OK;
-}
-
 void
 nsHTMLButtonControlFrame::ReParentFrameList(nsFrameManager* aFrameManager,
                                             nsIFrame* aFrameList)
@@ -234,19 +211,6 @@ nsHTMLButtonControlFrame::IsSubmit(PRInt32 type)
 void 
 nsHTMLButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-}
-
-void
-nsHTMLButtonControlFrame::ScrollIntoView(nsPresContext* aPresContext)
-{
-  if (aPresContext) {
-    nsIPresShell *presShell = aPresContext->GetPresShell();
-    if (presShell) {
-     presShell->ScrollFrameIntoView(this,
-                   NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
-
-    }
-  }
 }
 
 NS_IMETHODIMP
@@ -555,33 +519,7 @@ nsHTMLButtonControlFrame::GetSkipSides() const
   return 0;
 }
 
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetFormContent(nsIContent*& aContent) const
-{
-  aContent = GetContent();
-  NS_IF_ADDREF(aContent);
-  return NS_OK;
-}
-
-nscoord 
-nsHTMLButtonControlFrame::GetVerticalInsidePadding(nsPresContext* aPresContext,
-                                                   float aPixToTwip, 
-                                                   nscoord aInnerHeight) const
-{
-   return 0;
-}
-
-nscoord 
-nsHTMLButtonControlFrame::GetHorizontalInsidePadding(nsPresContext* aPresContext,
-                                               float aPixToTwip, 
-                                               nscoord aInnerWidth,
-                                               nscoord aCharWidth) const
-{
-  return 0;
-}
-
-NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsPresContext* aPresContext,
-                                                    nsIAtom* aName, const nsAString& aValue)
+nsresult nsHTMLButtonControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aValue)
 {
   if (nsHTMLAtoms::value == aName) {
     return mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
@@ -590,7 +528,7 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
+nsresult nsHTMLButtonControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
 {
   if (nsHTMLAtoms::value == aName)
     mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
@@ -610,16 +548,6 @@ nsHTMLButtonControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 {
   mRenderer.SetStyleContext(aIndex, aStyleContext);
 }
-
-
-NS_IMETHODIMP nsHTMLButtonControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
-{
-//  mSuggestedWidth = aWidth;
-//  mSuggestedHeight = aHeight;
-  return NS_OK;
-}
-
-
 
 NS_IMETHODIMP 
 nsHTMLButtonControlFrame::AppendFrames(nsIAtom*        aListName,
@@ -652,10 +580,4 @@ nsHTMLButtonControlFrame::ReplaceFrame(nsIAtom*        aListName,
 {
   ReParentFrameList(GetPresContext()->FrameManager(), aNewFrame);
   return mFrames.FirstChild()->ReplaceFrame(aListName, aOldFrame, aNewFrame);
-}
-
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::OnContentReset()
-{
-  return NS_OK;
 }

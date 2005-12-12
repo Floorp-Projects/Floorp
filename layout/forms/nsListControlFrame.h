@@ -130,23 +130,9 @@ public:
 #endif
 
     // nsIFormControlFrame
-  NS_IMETHOD_(PRInt32) GetFormControlType() const;
-  NS_IMETHOD GetName(nsAString* aName);
-  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
-  NS_IMETHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
-  NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  NS_IMETHOD OnContentReset();
-
+  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
+  virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
-  virtual void ScrollIntoView(nsPresContext* aPresContext);
-  virtual nscoord GetVerticalInsidePadding(nsPresContext* aPresContext,
-                                           float aPixToTwip,
-                                           nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsPresContext* aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerWidth,
-                                             nscoord aCharWidth) const;
 
   virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
 
@@ -164,7 +150,6 @@ public:
   NS_IMETHOD GetOptionText(PRInt32 aIndex, nsAString & aStr);
   NS_IMETHOD CaptureMouseEvents(nsPresContext* aPresContext, PRBool aGrabMouseEvents);
   NS_IMETHOD GetMaximumSize(nsSize &aSize);
-  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions);  
   NS_IMETHOD SyncViewWithFrame();
   NS_IMETHOD AboutToDropDown();
@@ -173,6 +158,7 @@ public:
   NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; return NS_OK; }
   NS_IMETHOD FireOnChange();
   NS_IMETHOD ComboboxFinish(PRInt32 aIndex);
+  virtual void OnContentReset();
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsPresContext* aPresContext, PRInt32 index);
@@ -213,7 +199,7 @@ public:
 #endif
 
 protected:
-
+  PRBool     GetMultiple(nsIDOMHTMLSelectElement* aSelect = nsnull) const;
   void       DropDownToggleKey(nsIDOMEvent* aKeyEvent);
   nsresult   IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled);
   nsresult   ScrollToFrame(nsIContent * aOptElement);
@@ -231,9 +217,9 @@ protected:
   nsresult GetSizeAttribute(PRInt32 *aSize);
   nsIContent* GetOptionFromContent(nsIContent *aContent);
   nsresult GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent, PRInt32& aCurIndex);
-  already_AddRefed<nsIContent> GetOptionContent(PRInt32 aIndex);
-  PRBool   IsContentSelected(nsIContent* aContent);
-  PRBool   IsContentSelectedByIndex(PRInt32 aIndex);
+  already_AddRefed<nsIContent> GetOptionContent(PRInt32 aIndex) const;
+  PRBool   IsContentSelected(nsIContent* aContent) const;
+  PRBool   IsContentSelectedByIndex(PRInt32 aIndex) const;
   PRBool   IsOptionElement(nsIContent* aContent);
   PRBool   CheckIfAllFramesHere();
   PRInt32  GetIndexFromContent(nsIContent *aContent);

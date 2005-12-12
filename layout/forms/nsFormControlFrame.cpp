@@ -108,8 +108,6 @@ nsFormControlFrame::nsFormControlFrame()
   : nsLeafFrame()
 {
   mDidInit        = PR_FALSE;
-  mSuggestedWidth = NS_FORMSIZE_NOTSET;
-  mSuggestedHeight = NS_FORMSIZE_NOTSET;
 
   // Reflow Optimization
   mCacheSize.width             = kSizeNotSet;
@@ -529,7 +527,7 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   if (!mDidInit) {
-    InitializeControl(aPresContext);
+    RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     mDidInit = PR_TRUE;
   }
 
@@ -581,26 +579,8 @@ nsFormControlFrame::RegUnRegAccessKey(nsPresContext* aPresContext, nsIFrame * aF
 }
 
 void 
-nsFormControlFrame::InitializeControl(nsPresContext* aPresContext)
-{
-  RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-}
-
-void 
 nsFormControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-}
-
-void
-nsFormControlFrame::ScrollIntoView(nsPresContext* aPresContext)
-{
-  if (aPresContext) {
-    nsIPresShell *presShell = aPresContext->GetPresShell();
-    if (presShell) {
-      presShell->ScrollFrameIntoView(this,
-                   NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
-    }
-  }
 }
 
 /*
@@ -620,30 +600,6 @@ nsFormControlFrame::GetCID()
   static NS_DEFINE_IID(kButtonCID, NS_BUTTON_CID);
   return kButtonCID;
 }
-
-NS_IMETHODIMP_(PRInt32)
-nsFormControlFrame::GetFormControlType() const
-{
-  return nsFormControlHelper::GetType(mContent);
-}
-
-NS_IMETHODIMP
-nsFormControlFrame::GetName(nsAString* aResult)
-{
-  nsFormControlHelper::GetName(mContent, aResult);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsFormControlFrame::GetValue(nsAString* aResult)
-{
-  nsFormControlHelper::GetValueAttr(mContent, aResult);
-
-  return NS_OK;
-}
-
 
 NS_METHOD
 nsFormControlFrame::HandleEvent(nsPresContext* aPresContext, 
@@ -697,14 +653,6 @@ nsFormControlFrame::GetStyleSize(nsPresContext* aPresContext,
   }
 }
 
-NS_IMETHODIMP
-nsFormControlFrame::GetFormContent(nsIContent*& aContent) const
-{
-  aContent = GetContent();
-  NS_IF_ADDREF(aContent);
-  return NS_OK;
-}
-
 void
 nsFormControlFrame::GetCurrentCheckState(PRBool *aState)
 {
@@ -714,24 +662,16 @@ nsFormControlFrame::GetCurrentCheckState(PRBool *aState)
   }
 }
 
-NS_IMETHODIMP
-nsFormControlFrame::SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
+nsresult
+nsFormControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aValue)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFormControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
+nsresult
+nsFormControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
 {
   aValue.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
-{
-  mSuggestedWidth = aWidth;
-  mSuggestedHeight = aHeight;
   return NS_OK;
 }
 
