@@ -1014,7 +1014,7 @@ if ($my_create_htaccess) {
     open HTACCESS, '>', '.htaccess';
     print HTACCESS <<'END';
 # don't allow people to retrieve non-cgi executable files or our private data
-<FilesMatch ^(.*\.pl|.*localconfig.*)$>
+<FilesMatch ^(.*\.pm|.*\.pl|.*localconfig.*)$>
   deny from all
 </FilesMatch>
 END
@@ -1028,7 +1028,15 @@ END
       $oldaccess .= $_;
     }
     close HTACCESS;
+    my $repaired = 0;
     if ($oldaccess =~ s/\|localconfig\|/\|.*localconfig.*\|/) {
+        $repaired = 1;
+    }
+    if ($oldaccess !~ /\(\.\*\\\.pm\|/) {
+        $oldaccess =~ s/\(/(.*\\.pm\|/;
+        $repaired = 1;
+    }
+    if ($repaired) {
       print "Repairing .htaccess...\n";
       open HTACCESS, '>', '.htaccess';
       print HTACCESS $oldaccess;
