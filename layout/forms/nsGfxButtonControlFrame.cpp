@@ -60,10 +60,9 @@
 
 const nscoord kSuggestedNotSet = -1;
 
-nsGfxButtonControlFrame::nsGfxButtonControlFrame()
+nsGfxButtonControlFrame::nsGfxButtonControlFrame():
+mSuggestedSize(kSuggestedNotSet, kSuggestedNotSet)
 {
-  mSuggestedWidth  = kSuggestedNotSet;
-  mSuggestedHeight = kSuggestedNotSet;
 }
 
 nsIFrame*
@@ -126,11 +125,11 @@ NS_IMETHODIMP
 nsGfxButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
                                                                const nsHTMLReflowState& aSuggestedReflowState)
 {
-  if (kSuggestedNotSet == mSuggestedWidth) {
+  if (kSuggestedNotSet == mSuggestedSize.width) {
     aDesiredSize.width  += aSuggestedReflowState.mComputedBorderPadding.left + aSuggestedReflowState.mComputedBorderPadding.right;
   }
 
-  if (kSuggestedNotSet == mSuggestedHeight) {
+  if (kSuggestedNotSet == mSuggestedSize.height) {
     aDesiredSize.height += aSuggestedReflowState.mComputedBorderPadding.top + aSuggestedReflowState.mComputedBorderPadding.bottom;
   }
   return NS_OK;
@@ -144,10 +143,10 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 {
   // Get the text from the "value" attribute.
   // If it is zero length, set it to a default value (localized)
-  nsAutoString initvalue;
-  GetValue(&initvalue);
+  nsAutoString initValue;
+  nsFormControlHelper::GetValueAttr(mContent, &initValue);
   nsXPIDLString value;
-  value.Assign(initvalue);
+  value.Assign(initValue);
   if (value.IsEmpty()) {
     // Generate localized label.
     // We can't make any assumption as to what the default would be
@@ -274,8 +273,10 @@ else {
 nsresult
 nsGfxButtonControlFrame::GetDefaultLabel(nsXPIDLString& aString) 
 {
-  nsresult rv = NS_OK;
-  PRInt32 type = GetFormControlType();
+  nsCOMPtr<nsIFormControl> form = do_QueryInterface(mContent);
+  NS_ENSURE_TRUE(form, NS_ERROR_UNEXPECTED);
+
+  PRInt32 type = form->GetType();
   const char *prop;
   if (type == NS_FORM_INPUT_RESET) {
     prop = "Reset";
@@ -334,17 +335,17 @@ nsGfxButtonControlFrame::Reflow(nsPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsGfxButtonControlFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  if ((kSuggestedNotSet != mSuggestedWidth) || 
-      (kSuggestedNotSet != mSuggestedHeight)) {
+  if ((kSuggestedNotSet != mSuggestedSize.width) || 
+      (kSuggestedNotSet != mSuggestedSize.height)) {
     nsHTMLReflowState suggestedReflowState(aReflowState);
 
       // Honor the suggested width and/or height.
-    if (kSuggestedNotSet != mSuggestedWidth) {
-      suggestedReflowState.mComputedWidth = mSuggestedWidth;
+    if (kSuggestedNotSet != mSuggestedSize.width) {
+      suggestedReflowState.mComputedWidth = mSuggestedSize.width;
     }
 
-    if (kSuggestedNotSet != mSuggestedHeight) {
-      suggestedReflowState.mComputedHeight = mSuggestedHeight;
+    if (kSuggestedNotSet != mSuggestedSize.height) {
+      suggestedReflowState.mComputedHeight = mSuggestedSize.height;
     }
 
     return nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, suggestedReflowState, aStatus);
@@ -356,13 +357,11 @@ nsGfxButtonControlFrame::Reflow(nsPresContext*          aPresContext,
   return nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-NS_IMETHODIMP 
-nsGfxButtonControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
+void
+nsGfxButtonControlFrame::SetSuggestedSize(const nsSize& aSize)
 {
-  mSuggestedWidth = aWidth;
-  mSuggestedHeight = aHeight;
+  mSuggestedSize = aSize;
   //mState |= NS_FRAME_IS_DIRTY;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

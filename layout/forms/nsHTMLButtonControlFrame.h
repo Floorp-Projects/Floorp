@@ -126,27 +126,10 @@ public:
   }
 #endif
 
-  NS_IMETHOD_(PRInt32) GetFormControlType() const;
-  NS_IMETHOD GetName(nsAString* aName);
-  NS_IMETHOD GetValue(nsAString* aName);
-  NS_IMETHOD OnContentReset();
-
-  void SetFocus(PRBool aOn, PRBool aRepaint);
-  void ScrollIntoView(nsPresContext* aPresContext);
-
-  NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  virtual nscoord GetVerticalInsidePadding(nsPresContext* aPresContext,
-                                           float aPixToTwip,
-                                           nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsPresContext* aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerWidth,
-                                             nscoord aCharWidth) const;
-
   // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
-  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
+  void SetFocus(PRBool aOn, PRBool aRepaint);
+  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
+  virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
 
   // Inserted child content gets its frames parented by our child block
   virtual nsIFrame* GetContentInsertionFrame() {

@@ -260,8 +260,3 @@ nsGfxRadioControlFrame::Reflow(nsPresContext*          aPresContext,
 }
 #endif
 
-NS_IMETHODIMP
-nsGfxRadioControlFrame::OnContentReset()
-{
-  return NS_OK;
-}

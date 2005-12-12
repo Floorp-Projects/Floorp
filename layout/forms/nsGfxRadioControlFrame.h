@@ -91,9 +91,6 @@ public:
                         nsIRenderingContext& aRenderingContext,
                         const nsRect& aDirtyRect);
 
-  // nsIFormControlFrame
-  NS_IMETHOD OnContentReset();
-
   ///XXX: End o the temporary methods
 #ifdef DEBUG_rodsXXX
   NS_IMETHOD Reflow(nsPresContext*          aCX,

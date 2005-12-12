@@ -84,9 +84,6 @@ public:
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,
                                          nsStyleContext* aStyleContext);
 
-    // nsIFormControlFrame
-  NS_IMETHOD OnContentReset();
-
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
 #ifdef DEBUG_rodsXXX

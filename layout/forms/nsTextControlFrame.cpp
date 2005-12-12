@@ -270,8 +270,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
                                 nsISelectionListener::KEYPRESS_REASON |
                                 nsISelectionListener::SELECTALL_REASON)))
   {
-    nsCOMPtr<nsIContent> content;
-    mFrame->GetFormContent(*getter_AddRefs(content));
+    nsIContent* content = mFrame->GetContent();
     if (content) 
     {
       nsCOMPtr<nsIDocument> doc = content->GetDocument();
@@ -1275,8 +1274,6 @@ nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell)
   mUseEditor = PR_FALSE;
   mIsProcessing = PR_FALSE;
   mNotifyOnInput = PR_TRUE;
-  mSuggestedWidth = NS_FORMSIZE_NOTSET;
-  mSuggestedHeight = NS_FORMSIZE_NOTSET;
   mScrollableView = nsnull;
   mDidPreDestroy = PR_FALSE;
 }
@@ -1449,8 +1446,12 @@ nsTextControlFrame::GetType() const
 // XXX: wouldn't it be nice to get this from the style context!
 PRBool nsTextControlFrame::IsSingleLineTextControl() const
 {
-  PRInt32 type = GetFormControlType();
-  return (type == NS_FORM_INPUT_TEXT) || (type == NS_FORM_INPUT_PASSWORD);
+  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mContent);
+  if (formControl) {
+    PRInt32 type = formControl->GetType();
+    return (type == NS_FORM_INPUT_TEXT) || (type == NS_FORM_INPUT_PASSWORD);
+  }
+  return PR_FALSE;
 }
 
 PRBool nsTextControlFrame::IsTextArea() const
@@ -1467,7 +1468,8 @@ PRBool nsTextControlFrame::IsPlainTextControl() const
 
 PRBool nsTextControlFrame::IsPasswordTextControl() const
 {
-  return GetFormControlType() == NS_FORM_INPUT_PASSWORD;
+  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mContent);
+  return formControl && formControl->GetType() == NS_FORM_INPUT_PASSWORD;
 }
 
 
@@ -2243,20 +2245,7 @@ nsTextControlFrame::IsLeaf() const
   return PR_TRUE;
 }
 
-//IMPLEMENTING NS_IFORMCONTROLFRAME
-NS_IMETHODIMP
-nsTextControlFrame::GetName(nsAString* aResult)
-{
-  nsFormControlHelper::GetName(mContent, aResult);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(PRInt32)
-nsTextControlFrame::GetFormControlType() const
-{
-  return nsFormControlHelper::GetType(mContent);
-}
 
 static PRBool
 IsFocusedContent(nsPresContext* aPresContext, nsIContent* aContent)
@@ -2267,7 +2256,8 @@ IsFocusedContent(nsPresContext* aPresContext, nsIContent* aContent)
   return focusedContent == aContent;
 }
 
-void    nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
+//IMPLEMENTING NS_IFORMCONTROLFRAME
+void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   if (!aOn || !mSelCon)
     return;
@@ -2307,54 +2297,7 @@ void    nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     docSel->RemoveAllRanges();
 }
 
-void    nsTextControlFrame::ScrollIntoView(nsPresContext* aPresContext)
-{
-  if (aPresContext) {
-    nsIPresShell *presShell = aPresContext->GetPresShell();
-    if (presShell) {
-      presShell->ScrollFrameIntoView(this,
-                   NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
-    }
-  }
-}
-
-nscoord 
-nsTextControlFrame::GetVerticalInsidePadding(nsPresContext* aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerHeight) const
-{
-   return NSIntPixelsToTwips(0, aPixToTwip); 
-}
-
-
-//---------------------------------------------------------
-nscoord 
-nsTextControlFrame::GetHorizontalInsidePadding(nsPresContext* aPresContext,
-                                               float aPixToTwip, 
-                                               nscoord aInnerWidth,
-                                               nscoord aCharWidth) const
-{
-  return GetVerticalInsidePadding(aPresContext, aPixToTwip, aInnerWidth);
-}
-
-
-NS_IMETHODIMP 
-nsTextControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
-{
-  mSuggestedWidth = aWidth;
-  mSuggestedHeight = aHeight;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextControlFrame::GetFormContent(nsIContent*& aContent) const
-{
-  aContent = GetContent();
-  NS_IF_ADDREF(aContent);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTextControlFrame::SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
+nsresult nsTextControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aValue)
 {
   if (!mIsProcessing)//some kind of lock.
   {
@@ -2386,8 +2329,8 @@ NS_IMETHODIMP nsTextControlFrame::SetProperty(nsPresContext* aPresContext, nsIAt
   return NS_OK;
 }      
 
-NS_IMETHODIMP
-nsTextControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
+nsresult
+nsTextControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
 {
   // Return the value of the property from the widget it is not null.
   // If widget is null, assume the widget is GFX-rendered and return a member variable instead.
@@ -3022,8 +2965,8 @@ nsresult
 nsTextControlFrame::FireOnChange()
 {
   // Dispatch th1e change event
-  nsCOMPtr<nsIContent> content;
-  if (NS_SUCCEEDED(GetFormContent(*getter_AddRefs(content))))
+  nsIContent* content = GetContent();
+  if (content)
   {
     nsEventStatus status = nsEventStatus_eIgnore;
     nsInputEvent event(PR_TRUE, NS_FORM_CHANGE, nsnull);
@@ -3042,7 +2985,7 @@ nsTextControlFrame::FireOnChange()
 //privates
 
 NS_IMETHODIMP
-nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
+nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap) const
 {
   aValue.Truncate();  // initialize out param
   nsresult rv = NS_OK;
@@ -3328,12 +3271,6 @@ PRBool
 nsTextControlFrame::IsScrollable() const
 {
   return !IsSingleLineTextControl();
-}
-
-NS_IMETHODIMP
-nsTextControlFrame::OnContentReset()
-{
-  return NS_OK;
 }
 
 void

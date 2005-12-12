@@ -39,6 +39,7 @@
 #define nsLayoutUtils_h__
 
 class nsIFrame;
+class nsIFormControlFrame;
 class nsPresContext;
 class nsIContent;
 class nsIAtom;
@@ -321,6 +322,12 @@ public:
                           PRInt32    aCursorPos, 
                           PRInt32&   aIndex,
                           PRInt32&   aTextWidth);
+
+  /**
+   * Scroll the given form control frame into view.
+   * @param aFormFrame Frame to scroll into view.
+   */
+  static void ScrollIntoView(nsIFormControlFrame* aFormFrame);
 };
 
 #endif // nsLayoutUtils_h__

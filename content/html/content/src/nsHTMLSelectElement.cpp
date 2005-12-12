@@ -48,6 +48,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
+#include "nsLayoutUtils.h"
 #include "nsMappedAttributes.h"
 #include "nsIForm.h"
 #include "nsIFormSubmission.h"
@@ -77,6 +78,8 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
+#include "nsIComboboxControlFrame.h"
+#include "nsIListControlFrame.h"
 #include "nsIFrame.h"
 
 #include "nsDOMError.h"
@@ -410,6 +413,12 @@ protected:
     GetMultiple(&isMultiple);
     return !isMultiple && size <= 1;
   }
+
+  /**
+   * Helper method for dispatching ContentReset notifications to list
+   * and combo box frames.
+   */
+  void DispatchContentReset();
 
   /** The options[] array */
   nsHTMLOptionCollection* mOptions;
@@ -1566,7 +1575,7 @@ nsHTMLSelectElement::SetFocus(nsPresContext* aPresContext)
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
     if (formControlFrame) {
       formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-      formControlFrame->ScrollIntoView(aPresContext);
+      nsLayoutUtils::ScrollIntoView(formControlFrame);
     }
   }
 }
@@ -1844,10 +1853,7 @@ nsHTMLSelectElement::RestoreState(nsPresState* aState)
 
     // Don't flush, if the frame doesn't exist yet it doesn't care if
     // we're reset or not.
-    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-    if (formControlFrame) {
-      formControlFrame->OnContentReset();
-    }
+    DispatchContentReset();
   }
 
   return PR_FALSE;
@@ -1943,10 +1949,7 @@ nsHTMLSelectElement::Reset()
   // Don't flush, if there's no frame yet it won't care about us being
   // reset even if we forced it to be created now.
   //
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-  if (formControlFrame) {
-    formControlFrame->OnContentReset();
-  }
+  DispatchContentReset();
 
   return NS_OK;
 }
@@ -2024,6 +2027,27 @@ nsHTMLSelectElement::DispatchDOMEvent(const nsAString& aName)
   nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
                                        NS_STATIC_CAST(nsIContent*, this),
                                        aName, PR_TRUE, PR_TRUE);
+}
+
+void nsHTMLSelectElement::DispatchContentReset() {
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+  if (formControlFrame) {
+    // Only dispatch content reset notification if this is a list control
+    // frame or combo box control frame.
+    if (IsCombobox()) {
+      nsIComboboxControlFrame* comboFrame = nsnull;
+      CallQueryInterface(formControlFrame, &comboFrame);
+      if (comboFrame) {
+        comboFrame->OnContentReset();
+      }
+    } else {
+      nsIListControlFrame* listFrame = nsnull;
+      CallQueryInterface(formControlFrame, &listFrame);
+      if (listFrame) {
+        listFrame->OnContentReset();
+      }
+    }
+  }
 }
 
 //----------------------------------------------------------------------

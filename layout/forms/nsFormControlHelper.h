@@ -94,20 +94,7 @@ public:
   static PRBool GetDisabled(nsIContent* aContent) {
     return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled);
   };
-  /**
-   * Get the name of the form control
-   * @param aContent the content to get the name of
-   * @param aResult the returned name of the form control [OUT]
-   * @return PR_TRUE if things go well
-   *         PR_FALSE if the name attribute is undefined
-   */
-  static PRBool GetName(nsIContent* aContent, nsAString* aResult);
-  /**
-   * Get the type of the form control (if it's not obvious from the frame type)
-   * @param aContent the content to get the name of
-   * @return the returned type of the form control [OUT]
-   */
-  static PRInt32 GetType(nsIContent* aContent);
+
   /**
    * Get the value of the form control (if it's just living in an attr)
    * @param aContent the content to get the name of
@@ -137,6 +124,7 @@ public:
    *        if aValue equals PR_TRUE, "0" if aValue equals PR_FALSE.
    */
   static void  GetBoolString(const PRBool aValue, nsAString& aResult);
+  
 
   static void GetRepChars(char& char1, char& char2) {
     char1 = 'W';

@@ -78,8 +78,6 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-   // nsFormControlFrame
-  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
@@ -98,6 +96,14 @@ public:
                               PRInt32         aModType);
 
   virtual PRBool IsLeaf() const;
+
+  /**
+   * Set the suggested size of the button.
+   * @note This is NOT a virtual function, it will be called 
+   * directly on an instance of this class.
+   * @param aSize The suggested size.
+   */
+  void SetSuggestedSize(const nsSize& aSize);
   
 protected:
   NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
@@ -110,8 +116,7 @@ private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 
-  nscoord mSuggestedWidth;
-  nscoord mSuggestedHeight;
+  nsSize mSuggestedSize;
   nsCOMPtr<nsITextContent> mTextContent;
 };
 

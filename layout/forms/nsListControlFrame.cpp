@@ -968,9 +968,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
         // We add in the height of optgroup labels (within the constraint above), bug 300474.
         visibleHeight = ::GetOptGroupLabelsHeight(GetPresContext(), mContent, heightOfARow);
 
-        PRBool multipleSelections = PR_FALSE;
-        GetMultiple(&multipleSelections);
-        if (multipleSelections) {
+        if (GetMultiple()) {
           if (length < 2) {
             // Add in 1 heightOfARow also when length==0 to match how we calculate the desired size.
             visibleHeight = heightOfARow + PR_MAX(heightOfARow, visibleHeight);
@@ -1113,15 +1111,6 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
   NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
-}
-
-//---------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::GetFormContent(nsIContent*& aContent) const
-{
-  aContent = GetContent();
-  NS_IF_ADDREF(aContent);
   return NS_OK;
 }
 
@@ -1285,11 +1274,9 @@ nsListControlFrame::PerformSelection(PRInt32 aClickedIndex,
 {
   PRBool wasChanged = PR_FALSE;
 
-  PRBool isMultiple;
-  GetMultiple(&isMultiple);
-
   if (aClickedIndex == kNothingSelected) {
-  } else if (isMultiple) {
+  }
+  else if (GetMultiple()) {
     if (aIsShift) {
       // Make sure shift+click actually does something expected when
       // the user has never clicked on the select
@@ -1528,47 +1515,29 @@ nsListControlFrame::Init(nsPresContext*  aPresContext,
   return result;
 }
 
-
-//---------------------------------------------------------
-nscoord 
-nsListControlFrame::GetVerticalInsidePadding(nsPresContext* aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerHeight) const
-{
-   return NSIntPixelsToTwips(0, aPixToTwip); 
-}
-
-
-//---------------------------------------------------------
-nscoord 
-nsListControlFrame::GetHorizontalInsidePadding(nsPresContext* aPresContext,
-                                               float aPixToTwip, 
-                                               nscoord aInnerWidth,
-                                               nscoord aCharWidth) const
-{
-  return GetVerticalInsidePadding(aPresContext, aPixToTwip, aInnerWidth);
-}
-
-
 //---------------------------------------------------------
 // Returns whether the nsIDOMHTMLSelectElement supports 
 // mulitple selection
 //---------------------------------------------------------
-NS_IMETHODIMP 
-nsListControlFrame::GetMultiple(PRBool* aMultiple, nsIDOMHTMLSelectElement* aSelect)
+PRBool
+nsListControlFrame::GetMultiple(nsIDOMHTMLSelectElement* aSelect) const
 {
-  if (!aSelect) {
-    nsIDOMHTMLSelectElement* selectElement = nsnull;
-    nsresult result = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
-                                               (void**)&selectElement);
-    if (NS_SUCCEEDED(result) && selectElement) {
-      result = selectElement->GetMultiple(aMultiple);
-      NS_RELEASE(selectElement);
-    } 
-    return result;
+  PRBool multiple = PR_FALSE;
+  nsresult rv = NS_OK;
+  if (aSelect) {
+    rv = aSelect->GetMultiple(&multiple);
   } else {
-    return aSelect->GetMultiple(aMultiple);
+    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = 
+       do_QueryInterface(mContent);
+  
+    if (selectElement) {
+      rv = selectElement->GetMultiple(&multiple);
+    }
   }
+  if (NS_SUCCEEDED(rv)) {
+    return multiple;
+  }
+  return PR_FALSE;
 }
 
 
@@ -1614,7 +1583,7 @@ nsListControlFrame::GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection,
 // from the select
 //---------------------------------------------------------
 already_AddRefed<nsIContent> 
-nsListControlFrame::GetOptionContent(PRInt32 aIndex)
+nsListControlFrame::GetOptionContent(PRInt32 aIndex) const
   
 {
   nsCOMPtr<nsIDOMHTMLOptionsCollection> options =
@@ -1678,7 +1647,7 @@ nsListControlFrame::GetOption(nsIDOMHTMLOptionsCollection* aCollection,
 // return PR_TRUE if it is, PR_FALSE if it is NOT
 //---------------------------------------------------------
 PRBool 
-nsListControlFrame::IsContentSelected(nsIContent* aContent)
+nsListControlFrame::IsContentSelected(nsIContent* aContent) const
 {
   PRBool isSelected = PR_FALSE;
 
@@ -1694,7 +1663,7 @@ nsListControlFrame::IsContentSelected(nsIContent* aContent)
 // For a given index is return whether the content is selected
 //---------------------------------------------------------
 PRBool 
-nsListControlFrame::IsContentSelectedByIndex(PRInt32 aIndex) 
+nsListControlFrame::IsContentSelectedByIndex(PRInt32 aIndex) const 
 {
   nsCOMPtr<nsIContent> content = GetOptionContent(aIndex);
   NS_ASSERTION(content, "Failed to retrieve option content");
@@ -1726,17 +1695,10 @@ nsListControlFrame::GetSkipSides() const
 }
 
 //---------------------------------------------------------
-NS_IMETHODIMP_(PRInt32)
-nsListControlFrame::GetFormControlType() const
-{
-  return NS_FORM_SELECT;
-}
-
-NS_IMETHODIMP
+void
 nsListControlFrame::OnContentReset()
 {
   ResetList(PR_TRUE);
-  return NS_OK;
 }
 
 //---------------------------------------------------------
@@ -1773,17 +1735,7 @@ nsListControlFrame::ResetList(PRBool aAllowScrolling)
 
   // Combobox will redisplay itself with the OnOptionSelected event
 } 
-
-//---------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::GetName(nsAString* aResult)
-{
-  nsFormControlHelper::GetName(mContent, aResult);
-
-  return NS_OK;
-}
  
-
 //---------------------------------------------------------
 void 
 nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
@@ -1805,20 +1757,6 @@ void nsListControlFrame::ComboboxFocusSet()
 {
   gLastKeyTime = 0;
 }
-
-//---------------------------------------------------------
-void 
-nsListControlFrame::ScrollIntoView(nsPresContext* aPresContext)
-{
-  if (aPresContext) {
-    nsIPresShell *presShell = aPresContext->GetPresShell();
-    if (presShell) {
-      presShell->ScrollFrameIntoView(this,
-                   NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
-    }
-  }
-}
-
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
@@ -2169,8 +2107,8 @@ nsListControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
 //----------------------------------------------------------------------
 
 //---------------------------------------------------------
-NS_IMETHODIMP 
-nsListControlFrame::SetProperty(nsPresContext* aPresContext, nsIAtom* aName,
+nsresult
+nsListControlFrame::SetFormProperty(nsIAtom* aName,
                                 const nsAString& aValue)
 {
   if (nsHTMLAtoms::selected == aName) {
@@ -2187,8 +2125,8 @@ nsListControlFrame::SetProperty(nsPresContext* aPresContext, nsIAtom* aName,
 }
 
 //---------------------------------------------------------
-NS_IMETHODIMP 
-nsListControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
+nsresult 
+nsListControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
 {
   // Get the selected value of option from local cache (optimization vs. widget)
   if (nsHTMLAtoms::selected == aName) {
@@ -2318,14 +2256,6 @@ nsListControlFrame::GetMaximumSize(nsSize &aSize)
 {
   aSize.width  = mMaxWidth;
   aSize.height = mMaxHeight;
-  return NS_OK;
-}
-
-
-//---------------------------------------------------------
-NS_IMETHODIMP 
-nsListControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
-{
   return NS_OK;
 }
 
@@ -3097,11 +3027,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
                     keycode == nsIDOMKeyEvent::DOM_VK_LEFT ||
                     keycode == nsIDOMKeyEvent::DOM_VK_DOWN ||
                     keycode == nsIDOMKeyEvent::DOM_VK_RIGHT)) {
-    PRBool isMultiple;
-    GetMultiple(&isMultiple);
     // Don't go into multiple select mode unless this list can handle it
-    mControlSelectMode = isMultiple;
-    isControl = isMultiple;
+    isControl = mControlSelectMode = GetMultiple();
   } else if (charcode != ' ') {
     mControlSelectMode = PR_FALSE;
   }

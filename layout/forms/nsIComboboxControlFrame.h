@@ -50,8 +50,8 @@ class nsCSSFrameConstructor;
 
 // IID for the nsIComboboxControlFrame class
 #define NS_ICOMBOBOXCONTROLFRAME_IID    \
-{ 0x6961f791, 0xa662, 0x11d2,  \
-  { 0x8d, 0xcf, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } }
+  { 0x23f75e9c, 0x6850, 0x11da, \
+      { 0x95, 0x2c, 0x0, 0xe0, 0x81, 0x61, 0x16, 0x5f } }
 
 /** 
   * nsIComboboxControlFrame is the common interface for frames of form controls. It
@@ -108,6 +108,11 @@ public:
    */
   NS_IMETHOD GetAbsoluteRect(nsRect* aRect) = 0;
 
+  /**
+   * Notification that the content has been reset
+   */
+  virtual void OnContentReset() = 0;
+  
   /**
    * This returns the index of the item that is currently being displayed
    * in the display area. It may differ from what the currently Selected index

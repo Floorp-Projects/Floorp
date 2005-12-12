@@ -143,26 +143,10 @@ public:
 
   virtual nsIFrame* GetContentInsertionFrame();
 
-     // nsIFormControlFrame
-  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
-  NS_IMETHOD GetName(nsAString* aName);
-  NS_IMETHOD_(PRInt32) GetFormControlType() const;
-  NS_IMETHOD SetProperty(nsPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 
-  void       SetFocus(PRBool aOn, PRBool aRepaint);
-  void       ScrollIntoView(nsPresContext* aPresContext);
-  virtual void InitializeControl(nsPresContext* aPresContext);
-  NS_IMETHOD OnContentReset();
-  NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetVerticalInsidePadding(nsPresContext* aPresContext,
-                                           float aPixToTwip,
-                                           nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsPresContext* aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerWidth,
-                                             nscoord aCharWidth) const;
+  // nsIFormControlFrame
+  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);
+  virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const; 
+  virtual void SetFocus(PRBool aOn, PRBool aRepaint);
 
   //nsIComboboxControlFrame
   NS_IMETHOD IsDroppedDown(PRBool * aDoDropDown) { *aDoDropDown = mDroppedDown; return NS_OK; }
@@ -175,6 +159,7 @@ public:
   NS_IMETHOD GetIndexOfDisplayArea(PRInt32* aSelectedIndex);
   NS_IMETHOD RedisplaySelectedText();
   NS_IMETHOD_(PRInt32) UpdateRecentIndex(PRInt32 aIndex);
+  virtual void OnContentReset();
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsPresContext* aPresContext, PRInt32 index);
@@ -237,7 +222,7 @@ public:
 protected:
   void ShowPopup(PRBool aShowPopup);
   void ShowList(nsPresContext* aPresContext, PRBool aShowList);
-  void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
+  void SetButtonFrameSize(const nsSize& aSize);
   void CheckFireOnChange();
   void FireValueChangeEvent();
   nsresult RedisplayText(PRInt32 aIndex);
@@ -251,7 +236,6 @@ protected:
                       nsHTMLReflowMetrics&     aDesiredSize,
                       nsReflowStatus&          aStatus,
                       nsIFrame *               aDisplayFrame,
-                      nsIFrame *               aDropDownBtn,
                       nscoord&                 aDisplayWidth,
                       nscoord                  aBtnWidth,
                       const nsMargin&          aBorderPadding,
