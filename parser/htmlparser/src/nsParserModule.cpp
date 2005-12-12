@@ -115,6 +115,10 @@ Initialize(nsIModule* aSelf)
     gInitialized = PR_TRUE;
   }
 
+#ifdef DEBUG
+  TestTagTable();
+#endif
+
   return nsParser::Init();
 }
 

@@ -454,14 +454,9 @@ nsHTMLTags::GetAtom(nsHTMLTag aEnum)
   return kTagAtomTable[aEnum - 1];
 }
 
-
-#ifdef NS_DEBUG
-
-// tag table verification class.
-
-class nsTestTagTable {
-public:
-   nsTestTagTable() {
+#ifdef DEBUG
+void TestTagTable()
+{
      const PRUnichar *tag;
      nsHTMLTag id;
 
@@ -489,9 +484,6 @@ public:
      NS_ASSERTION(!tag, "found past max enum");
 
      nsHTMLTags::ReleaseTable();
-   }
-};
+}
 
-static const nsTestTagTable validateTagTable;
-
-#endif
+#endif // DEBUG
