@@ -1591,14 +1591,14 @@ nsSchemaLoader::ProcessComplexTypeBody(nsIWebServiceErrorHandler* aErrorHandler,
       }
       if (NS_FAILED(rv)) {
         return rv;
-      }        
+      }
     }
     else if ((tagName == nsSchemaAtoms::sAttribute_atom) ||
              (tagName == nsSchemaAtoms::sAttributeGroup_atom) ||
              (tagName == nsSchemaAtoms::sAnyAttribute_atom)) {
       nsCOMPtr<nsISchemaAttributeComponent> attribute;
-      
-      rv = ProcessAttributeComponent(aErrorHandler, aSchema, 
+
+      rv = ProcessAttributeComponent(aErrorHandler, aSchema,
                                      childElement, tagName,
                                      getter_AddRefs(attribute));
       if (NS_FAILED(rv)) {
@@ -1728,7 +1728,7 @@ nsSchemaLoader::ProcessSimpleContent(nsIWebServiceErrorHandler* aErrorHandler,
 
         return NS_ERROR_SCHEMA_MISSING_TYPE;
       }
-      
+
       rv = GetNewOrUsedType(aSchema, childElement, baseStr, 
                             getter_AddRefs(baseType));
       if (NS_FAILED(rv)) {
@@ -2790,9 +2790,10 @@ nsSchemaLoader::ProcessAttribute(nsIWebServiceErrorHandler* aErrorHandler,
 
   nsCOMPtr<nsISchemaAttribute> attribute;
 
-  nsAutoString defaultValue, fixedValue;
+  nsAutoString defaultValue, fixedValue, formValue;
   aElement->GetAttribute(NS_LITERAL_STRING("default"), defaultValue);
   aElement->GetAttribute(NS_LITERAL_STRING("fixed"), fixedValue);
+  aElement->GetAttribute(NS_LITERAL_STRING("form"), formValue);
 
   PRUint16 use;
   GetUse(aElement, &use);
@@ -2812,6 +2813,19 @@ nsSchemaLoader::ProcessAttribute(nsIWebServiceErrorHandler* aErrorHandler,
 
     attributeRef->SetConstraints(defaultValue, fixedValue);
     attributeRef->SetUse(use);
+
+    // set the qualified form
+    if (formValue.EqualsLiteral("qualified")) {
+      attributeRef->SetAttributeFormQualified(PR_TRUE);
+    }
+    else if (formValue.EqualsLiteral("unqualified")) {
+      attributeRef->SetAttributeFormQualified(PR_FALSE);
+    }
+    else {
+      // get default
+      PRBool defaultvalue = aSchema->IsAttributeFormDefaultQualified();
+      attributeRef->SetAttributeFormQualified(defaultvalue);
+    }
   }
   else {
     nsAutoString name;
@@ -2826,6 +2840,19 @@ nsSchemaLoader::ProcessAttribute(nsIWebServiceErrorHandler* aErrorHandler,
 
     attributeInst->SetConstraints(defaultValue, fixedValue);
     attributeInst->SetUse(use);
+
+    // set the qualified form
+    if (formValue.EqualsLiteral("qualified")) {
+      attributeInst->SetAttributeFormQualified(PR_TRUE);
+    }
+    else if (formValue.EqualsLiteral("unqualified")) {
+      attributeInst->SetAttributeFormQualified(PR_FALSE);
+    }
+    else {
+      // get default
+      PRBool defaultvalue = aSchema->IsAttributeFormDefaultQualified();
+      attributeInst->SetAttributeFormQualified(defaultvalue);
+    }
 
     nsCOMPtr<nsISchemaSimpleType> simpleType;
 

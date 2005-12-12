@@ -77,7 +77,7 @@ interface nsISchemaComponent : nsISupports {
   void clear();
 };
 
-[scriptable, uuid(3c14a021-6f4e-11d5-9b46-000064657374)]
+[scriptable, uuid(236ce1d7-213e-42e7-96ad-79f4cb3282a9)]
 interface nsISchema : nsISchemaComponent {
   /* Is this necessary? */
   readonly attribute AString schemaNamespace;
@@ -292,7 +292,7 @@ interface nsISchemaAttributeComponent : nsISchemaComponent {
   readonly attribute unsigned short componentType;
 };
 
-[scriptable, uuid(3c14a02e-6f4e-11d5-9b46-000064657374)]
+[scriptable, uuid(47241e70-ca2c-4372-a6b2-5c84d32cc739)]
 interface nsISchemaAttribute : nsISchemaAttributeComponent {
   const unsigned short USE_OPTIONAL = 1;
   const unsigned short USE_PROHIBITED = 2;
@@ -303,6 +303,8 @@ interface nsISchemaAttribute : nsISchemaAttributeComponent {
   readonly attribute AString defaultValue;
   readonly attribute AString fixedValue;
   readonly attribute unsigned short use;
+
+  readonly attribute AString qualifiedNamespace;
 };
 
 [scriptable, uuid(3c14a02f-6f4e-11d5-9b46-000064657374)]
