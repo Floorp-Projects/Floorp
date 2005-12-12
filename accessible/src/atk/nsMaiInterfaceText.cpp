@@ -23,7 +23,7 @@
  *
  * Original Author: Bolian Yin (bolian.yin@sun.com)
  *
- * Contributor(s):
+ * Contributor(s): Ginn Chen (ginn.chen@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -358,7 +358,7 @@ getCharacterExtentsCB(AtkText *aText, gint aOffset,
     nsCOMPtr<nsIAccessibleText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
                             getter_AddRefs(accText));
-    if (accText)
+    if (!accText)
         return;
 
     PRInt32 extY = 0, extX = 0;
