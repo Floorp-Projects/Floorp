@@ -72,9 +72,10 @@
 #include "nsIAnnotationService.h"
 #include "nsIFile.h"
 #include "nsIHTMLContentSink.h"
-#include "nsNavBookmarks.h"
 #include "nsIParser.h"
 #include "nsIServiceManager.h"
+#include "nsFaviconService.h"
+#include "nsNavBookmarks.h"
 #include "nsNavHistory.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
@@ -233,6 +234,8 @@ protected:
   }
   nsresult NewFrame();
   nsresult PopFrame();
+
+  nsresult SetFaviconForURI(nsIURI* aURI, nsCString aData);
 };
 
 
@@ -518,9 +521,13 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
     return; // invalid link
   }
 
+  // create the bookmarks
   mBookmarksService->InsertItem(frame.mContainerID, frame.mPreviousLink, -1);
 
-  // FIXME: save the favicon
+  // save the favicon, ignore errors
+  if (! icon.IsEmpty())
+    SetFaviconForURI(frame.mPreviousLink, NS_ConvertUTF16toUTF8(icon));
+
   // FIXME: save the last charset
 }
 
@@ -621,6 +628,90 @@ BookmarkContentSink::PopFrame()
   }
   mFrames.RemoveElementAt(mFrames.Length() - 1);
   return NS_OK;
+}
+
+
+// BookmarkContentSink::SetFaviconForURI
+//
+//    aData is a string that is a data URI for the favicon. Our job is to
+//    decode it and store it in the favicon service. We have to make up a URI
+//    for this favicon so that it can be stored in the service. The real one
+//    will be set the next time the user visits the page. Our made up one
+//    should get expired when the page no longer references it.
+
+nsresult
+BookmarkContentSink::SetFaviconForURI(nsIURI* aURI, nsCString aData)
+{
+  nsresult rv;
+
+  // some bookmarks have placeholder URIs that contain just "data:"
+  // ignore these
+  if (aData.Length() <= 5)
+    return NS_OK;
+
+  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+  if (! faviconService)
+    return NS_ERROR_NO_INTERFACE;
+
+  // make up favicon URL
+  static PRUint32 serialNumber = 0;
+  nsCAutoString faviconSpec;
+  faviconSpec.AssignLiteral("http://www.mozilla.org/2005/made-up-favicon/");
+  faviconSpec.AppendInt(serialNumber);
+  faviconSpec.AppendLiteral("-");
+  faviconSpec.AppendInt(PR_Now());
+  nsCOMPtr<nsIURI> faviconURI;
+  rv = NS_NewURI(getter_AddRefs(faviconURI), faviconSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  serialNumber ++;
+
+  nsCOMPtr<nsIURI> dataURI;
+  rv = NS_NewURI(getter_AddRefs(dataURI), aData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // use the data: protocol handler to convert the data
+  nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIProtocolHandler> protocolHandler;
+  rv = ioService->GetProtocolHandler("data", getter_AddRefs(protocolHandler));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = protocolHandler->NewChannel(dataURI, getter_AddRefs(channel));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // blocking stream is OK for data URIs
+  nsCOMPtr<nsIInputStream> stream;
+  rv = channel->Open(getter_AddRefs(stream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 available;
+  rv = stream->Available(&available);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (available == 0)
+    return NS_ERROR_FAILURE;
+
+  // read all the decoded data
+  PRUint8* buffer = NS_STATIC_CAST(PRUint8*,
+                                   nsMemory::Alloc(sizeof(PRUint8) * available));
+  if (! buffer)
+    return NS_ERROR_OUT_OF_MEMORY;
+  PRUint32 numRead;
+  rv = stream->Read(NS_REINTERPRET_CAST(char*, buffer), available, &numRead);
+  if (NS_FAILED(rv) || numRead != available) {
+    nsMemory::Free(buffer);
+    return rv;
+  }
+
+  nsCAutoString mimeType;
+  rv = channel->GetContentType(mimeType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // save in service
+  rv = faviconService->SetFaviconData(faviconURI, buffer, available, mimeType, 0);
+  nsMemory::Free(buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return faviconService->SetFaviconUrlForPage(aURI, faviconURI);
 }
 
 

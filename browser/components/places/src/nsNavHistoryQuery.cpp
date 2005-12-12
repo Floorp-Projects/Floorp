@@ -346,8 +346,14 @@ FreeTokenList(nsVoidArray* aTokens)
 nsresult
 TokenizeQueryString(const nsACString& aQuery, nsVoidArray* aTokens)
 {
-  // Strip of the "place:" prefix
-  const nsCSubstring &query = Substring(aQuery, strlen("place:"));
+  // Strip off the "place:" prefix
+  const PRUint32 prefixlen = 6; // = strlen("place:");
+  nsCString query;
+  if (aQuery.Length() > prefixlen &&
+      Substring(aQuery, 0, prefixlen).EqualsLiteral("place:"))
+    query = Substring(aQuery, prefixlen);
+  else
+    query = aQuery;
 
   PRInt32 keyFirstIndex = 0;
   PRInt32 equalsIndex = 0;

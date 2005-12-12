@@ -80,6 +80,7 @@ Extra:
 #include "nsCRT.h"
 #include "nsDebug.h"
 #include "nsEnumeratorUtils.h"
+#include "nsFaviconService.h"
 #include "nsIComponentManager.h"
 #include "nsILocalFile.h"
 #include "nsIPrefBranch2.h"
@@ -146,6 +147,9 @@ static PRInt32 GetTLDCharCount(const nsString& aHost);
 static PRInt32 GetTLDType(const nsString& aHostTail);
 static void GetUnreversedHostname(const nsString& aBackward,
                                   nsAString& aForward);
+static PRBool GetUpdatedHiddenState(nsIURI* aURI, PRBool aOldHiddenState,
+                             PRBool aOldTypedState,
+                             PRBool aRedirect, PRBool aToplevel);
 static PRBool IsNumericHostName(const nsString& aHost);
 static void ParseSearchQuery(const nsString& aQuery, nsStringArray* aTerms);
 
@@ -181,12 +185,15 @@ protected:
   nsNavHistory& mNavHistory;
 };
 
+// if adding a new one, be sure to update nsNavBookmarks statements and
+// its kGetChildrenIndex_* constants
 const PRInt32 nsNavHistory::kGetInfoIndex_PageID = 0;
 const PRInt32 nsNavHistory::kGetInfoIndex_URL = 1;
 const PRInt32 nsNavHistory::kGetInfoIndex_Title = 2;
 const PRInt32 nsNavHistory::kGetInfoIndex_RevHost = 3;
 const PRInt32 nsNavHistory::kGetInfoIndex_VisitCount = 4;
 const PRInt32 nsNavHistory::kGetInfoIndex_VisitDate = 5;
+const PRInt32 nsNavHistory::kGetInfoIndex_FaviconURL = 6;
 
 const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
@@ -309,6 +316,7 @@ nsresult
 nsNavHistory::InitDB()
 {
   nsresult rv;
+  PRBool tableExists;
 
   // init DB
   mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
@@ -321,62 +329,116 @@ nsNavHistory::InitDB()
     mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA cache_size=10000;"));
   }
 
-  // history table
+  // moz_history
+  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_history"), &tableExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (! tableExists) {
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_history ("
+        "id INTEGER PRIMARY KEY, "
+        "url LONGVARCHAR, "
+        "title LONGVARCHAR, "
+        "rev_host LONGVARCHAR, "
+        "visit_count INTEGER DEFAULT 0, "
+        "hidden INTEGER DEFAULT 0 NOT NULL, "
+        "typed INTEGER DEFAULT 0 NOT NULL, "
+        "favicon INTEGER)"));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE moz_history (id INTEGER PRIMARY KEY, url LONGVARCHAR, title LONGVARCHAR, rev_host LONGVARCHAR, visit_count INTEGER DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed INTEGER DEFAULT 0 NOT NULL)"));
-  //NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_history_urlindex ON moz_history (url)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_history_hostindex ON moz_history (rev_host)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_history_visitcount ON moz_history (visit_count)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_history_urlindex ON moz_history (url)"));
-  //NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_history_hostindex ON moz_history (rev_host)"));
-  //NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_history_visitcount ON moz_history (visit_count)"));
-  //NS_ENSURE_SUCCESS(rv, rv);
+  // moz_historyvisit
+  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_history"), &tableExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (! tableExists) {
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_historyvisit ("
+        "visit_id INTEGER PRIMARY KEY, "
+        "from_visit INTEGER, "
+        "page_id INTEGER, "
+        "visit_date INTEGER, "
+        "visit_type INTEGER, "
+        "session INTEGER)"));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  // history visit table
-
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE moz_historyvisit (visit_id INTEGER PRIMARY KEY, from_visit INTEGER, page_id INTEGER, visit_date INTEGER, visit_type INTEGER, session INTEGER)"));
-  //NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_fromindex ON moz_historyvisit (from_visit)"));
-  //NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_pageindex ON moz_historyvisit (page_id)"));
-  //NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_dateindex ON moz_historyvisit (visit_date)"));
-  //NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_sessionindex ON moz_historyvisit (session)"));
-  //NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_fromindex ON moz_historyvisit (from_visit)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_pageindex ON moz_historyvisit (page_id)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_dateindex ON moz_historyvisit (visit_date)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_sessionindex ON moz_historyvisit (session)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // functions (must happen after table creation)
 
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, v.visit_date FROM moz_historyvisit v, moz_history h WHERE v.visit_id = ?1 AND h.id = v.page_id"),
-                               getter_AddRefs(mDBGetVisitPageInfo));
+  // mDBGetVisitPageInfo
+  /*
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, v.visit_date "
+      "FROM moz_historyvisit v, moz_history h "
+      "WHERE v.visit_id = ?1 AND h.id = v.page_id"),
+    getter_AddRefs(mDBGetVisitPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count FROM moz_history h WHERE h.url = ?1"),
-                               getter_AddRefs(mDBGetURLPageInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date)"
-      " FROM moz_history h LEFT JOIN moz_historyvisit v ON h.id = v.page_id LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE h.url = ?1 GROUP BY h.id"),
-                                getter_AddRefs(mDBGetURLPageInfoFull));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date)"
-      " FROM moz_history h LEFT JOIN moz_historyvisit v ON h.id = v.page_id LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE h.id = ?1 GROUP BY h.id"),
-                                getter_AddRefs(mDBGetIdPageInfoFull));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.url, h.title, h.visit_count, h.typed FROM moz_history h JOIN moz_historyvisit v ON h.id = v.page_id WHERE h.hidden <> 1 GROUP BY h.id ORDER BY h.visit_count LIMIT ?1"),
-                                getter_AddRefs(mDBFullAutoComplete));
+  */
+
+  // mDBGetURLPageInfo
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count "
+      "FROM moz_history h "
+      "WHERE h.url = ?1"),
+    getter_AddRefs(mDBGetURLPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return rv;
+  // mDBGetURLPageInfoFull
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date), f.url "
+      "FROM moz_history h "
+      "LEFT JOIN moz_historyvisit v ON h.id = v.page_id "
+      "LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id "
+      "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
+      "WHERE h.url = ?1 "
+      "GROUP BY h.id"),
+    getter_AddRefs(mDBGetURLPageInfoFull));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBGetIdPageInfoFull
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date), f.url "
+      "FROM moz_history h LEFT JOIN moz_historyvisit v ON h.id = v.page_id "
+      "LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id "
+      "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
+      "WHERE h.id = ?1 GROUP BY h.id"),
+    getter_AddRefs(mDBGetIdPageInfoFull));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBFullAutoComplete
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT h.url, h.title, h.visit_count, h.typed "
+      "FROM moz_history h "
+      "JOIN moz_historyvisit v ON h.id = v.page_id "
+      "WHERE h.hidden <> 1 "
+      "GROUP BY h.id "
+      "ORDER BY h.visit_count "
+      "LIMIT ?1"),
+    getter_AddRefs(mDBFullAutoComplete));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // the favicon tables must also be initialized, since we depend on those in
+  // some of our queries
+  return nsFaviconService::InitTables(mDBConn);
 }
 
 
@@ -600,14 +662,9 @@ nsNavHistory::InternalAdd(nsIURI* aURI, PRInt64 aSessionID,
     rv = dbUpdateStatement->BindInt32Parameter(0, oldVisitCount + 1);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // ...if the column was marked as typed, we should unhide it. If you type
-    // a new page, it gets added to the DB but marked as hidden typed. When
-    // the page is actually loaded, we get here, and need to unhide it since
-    // we know it's valid.
-    if (oldTypedState)
-      dbUpdateStatement->BindInt32Parameter(1, 0); // hidden = 0
-    else
-      dbUpdateStatement->BindInt32Parameter(1, oldHiddenState);
+    rv = dbUpdateStatement->BindInt32Parameter(1,
+        GetUpdatedHiddenState(aURI, oldHiddenState, oldTypedState,
+                              aRedirect, aToplevel));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = dbUpdateStatement->BindInt64Parameter(3, pageID);
@@ -619,20 +676,8 @@ nsNavHistory::InternalAdd(nsIURI* aURI, PRInt64 aSessionID,
 
     // must free the previous statement before we can make a new one
     dbSelectStatement = nsnull;
-
-    // If this is a JS url, or a redirected URI or in a frame, hide it in
-    // global history so that it doesn't show up in the autocomplete dropdown.
-    // Adding an existing page above unhides pages that were typed regardless
-    // of Javascript, etc. disposition. Typed URIs are always existing because
-    // the "typed" notification comes *before* the AddURI, which is called only
-    // if the page actually is loadeing. See bug 197127 and bug 161531 for
-    // detailst.
-    PRBool isJavascript;
-    rv = aURI->SchemeIs("javascript", &isJavascript);
-    NS_ENSURE_SUCCESS(rv, rv);
-    PRBool hidden = PR_FALSE;
-    if (isJavascript || aRedirect || !aToplevel)
-      hidden = PR_TRUE;
+    PRBool hidden = GetUpdatedHiddenState(aURI, PR_TRUE, PR_FALSE,
+                                          aRedirect, aToplevel);
 
     // set as not typed, visited once
     rv = InternalAddNewPage(aURI, aTitle, hidden, PR_FALSE, 1, &pageID);
@@ -855,15 +900,18 @@ nsNavHistory::VacuumDB()
   rv = visitDelete->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // delete history entries with no visits that are not bookmarked
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_history WHERE id IN (SELECT id FROM moz_history h "
+      "LEFT OUTER JOIN moz_historyvisit v ON h.id = v.page_id "
+      "LEFT OUTER JOIN moz_bookmarks b ON h.id = b.item_child "
+      "WHERE v.visit_id IS NULL AND b.item_child IS NULL)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // FIXME: delete annotations for expiring pages
 
-  // FIXME: delete favicons when no pages reference them
-
-  // delete history entries with no visits
-  nsCOMPtr<mozIStorageStatement> historyDelete;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_history WHERE id IN (SELECT id FROM moz_history h LEFT OUTER JOIN moz_historyvisit v ON h.id = v.page_id WHERE v.visit_id IS NULL)"),
-      getter_AddRefs(historyDelete));
+  // delete favicons that no pages reference
+  rv = nsFaviconService::VacuumFavicons(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // compress the tables
@@ -876,6 +924,8 @@ nsNavHistory::VacuumDB()
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_historyvisit"));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_anno"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_favicon"));
   NS_ENSURE_SUCCESS(rv, rv);
   */
 
@@ -1136,26 +1186,38 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
 
   // conditions we want on all history queries, this just selects history
   // entries that are "active"
-  //const nsCString commonConditions("h.visit_count > 0 AND h.hidden <> 1");
   NS_NAMED_LITERAL_CSTRING(commonConditions,
                            "h.visit_count > 0 AND h.hidden <> 1");
 
   // Query string: Output parameters should be in order of kGetInfoIndex_*
+  // WATCH OUT: nsNavBookmarks::Init also creates some statements that share
+  // these same indices for passing to RowToResult. If you add something to
+  // this, you also need to update the bookmark statements to keep them in
+  // sync!
   nsCAutoString queryString;
   nsCAutoString groupBy;
   if (asVisits) {
     // if we want visits, this is easy, just combine all possible matches
     // between the history and visits table and do our query.
-    queryString = NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, v.visit_date,"
-      " FROM moz_history h JOIN moz_historyvisit v ON h.id = v.page_id WHERE ");
+    queryString = NS_LITERAL_CSTRING(
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, v.visit_date, f.url "
+      "FROM moz_history h "
+      "JOIN moz_historyvisit v ON h.id = v.page_id "
+      "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
+      "WHERE ");
   } else {
     // For URLs, it is more complicated. Because we want each URL once. The
     // GROUP BY clause gives us this. However, we also want the most recent
     // visit time, so we add ANOTHER join with the visit table (this one does
     // not have any restrictions on it from the query) and do MAX() to get the
     // max visit time.
-    queryString = NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date)"
-      " FROM moz_history h JOIN moz_historyvisit v ON h.id = v.page_id JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE ");
+    queryString = NS_LITERAL_CSTRING(
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date), f.url "
+      "FROM moz_history h "
+      "JOIN moz_historyvisit v ON h.id = v.page_id "
+      "JOIN moz_historyvisit fullv ON h.id = fullv.page_id "
+      "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
+      "WHERE ");
     groupBy = NS_LITERAL_CSTRING(" GROUP BY h.id");
   }
 
@@ -2838,7 +2900,13 @@ nsNavHistory::FillURLResult(mozIStorageValueArray *aRow,
   if (!revHost.IsEmpty()) {
     GetUnreversedHostname(revHost, aNode->mHost);
   }
-  return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // favicon
+  aRow->GetUTF8String(kGetInfoIndex_FaviconURL, aNode->mFaviconURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 
@@ -3199,6 +3267,46 @@ GetUnreversedHostname(const nsString& aBackward, nsAString& aForward)
     NS_WARNING("Malformed reversed host name: no trailing dot");
     ReverseString(aBackward, aForward);
   }
+}
+
+
+// GetUpdatedHiddenState
+//
+//    Computes what the new hidden state for a new/updated URL with the given
+//    properties. For new URLs, pass aOldHiddenState = PR_TRUE and
+//    aOldTypedState = PR_FALSE
+//
+//    If this is a JS url, or a redirected URI or in a frame, hide it in global
+//    history so that it doesn't show up in the autocomplete dropdown.  Adding
+//    an existing page above unhides pages that were typed regardless of
+//    Javascript, etc. disposition. Typed URIs are always existing because the
+//    "typed" notification comes *before* the AddURI, which is called only if
+//    the page actually is loadeing. See bug 197127 and bug 161531 for details.
+
+PRBool GetUpdatedHiddenState(nsIURI* aURI, PRBool aOldHiddenState,
+                             PRBool aOldTypedState,
+                             PRBool aRedirect, PRBool aToplevel)
+{
+  // never hide things that were already unhidden
+  if (! aOldHiddenState)
+    return aOldHiddenState;
+
+  // things that are typed should always be displayed (When you type something,
+  // it will be marked as typed hidden. When you visit the page, we go to
+  // InternalAdd, and we should unhide it now that we know its valid.)
+  if (aOldTypedState)
+    return PR_FALSE;
+
+  PRBool isJavascript;
+  if (NS_SUCCEEDED(aURI->SchemeIs("javascript", &isJavascript)) && isJavascript)
+    return PR_TRUE;
+
+  // FIXME: redirects???
+
+  if (! aToplevel)
+    return PR_TRUE;
+
+  return PR_FALSE;
 }
 
 

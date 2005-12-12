@@ -67,6 +67,7 @@ REQUIRES = xpcom \
            htmlparser \
            content \
            txmgr \
+           nkcache \
            $(NULL)
 
 LOCAL_INCLUDES = -I$(srcdir)/../../build
@@ -75,6 +76,7 @@ CPPSRCS = \
           nsAnnoProtocolHandler.cpp \
           nsAnnotationService.cpp \
           nsBookmarksHTML.cpp \
+          nsFaviconService.cpp \
           nsNavHistory.cpp \
           nsNavHistoryQuery.cpp \
           nsNavHistoryResult.cpp \

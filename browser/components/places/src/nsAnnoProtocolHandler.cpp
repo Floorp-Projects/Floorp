@@ -38,10 +38,15 @@
 
 /**
  * Implementation of moz-anno: URLs for accessing annotation values. This just
- * reads binary data from the annotation service
+ * reads binary data from the annotation service.
+ *
+ * There is a special case for favicons. Annotation URLs with the name "favicon"
+ * will be sent to the favicon service. If the favicon service doesn't have the
+ * data, a stream containing the default favicon will be returned.
  */
 
 #include "nsAnnoProtocolHandler.h"
+#include "nsFaviconService.h"
 #include "nsIChannel.h"
 #include "nsIInputStreamChannel.h"
 #include "nsILoadGroup.h"
@@ -124,10 +129,6 @@ nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
                               "@mozilla.org/browser/annotation-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIStringInputStream> stream = do_CreateInstance(
-                                          NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // annotation info
   nsCOMPtr<nsIURI> annoURI;
   nsCAutoString annoName;
@@ -138,14 +139,41 @@ nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
   PRUint8* data;
   PRUint32 dataLen;
   nsCAutoString mimeType;
-  rv = annotationService->GetAnnotationBinary(annoURI, annoName, &data,
-                                               &dataLen, mimeType);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (mimeType.IsEmpty()) {
+
+  if (annoName.EqualsLiteral(FAVICON_ANNOTATION_NAME)) {
+    // special handling for favicons: ask favicon service
+    nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+    if (! faviconService) {
+      NS_WARNING("Favicon service is unavailable.");
+      return GetDefaultIcon(_retval);
+    }
+    rv = faviconService->GetFaviconData(annoURI, mimeType, &dataLen, &data);
+    if (NS_FAILED(rv))
+      return GetDefaultIcon(_retval);
+
+    // don't allow icons without MIME types
+    if (mimeType.IsEmpty()) {
+      NS_Free(data);
+      return GetDefaultIcon(_retval);
+    }
+  } else {
+    // normal handling for annotations
+    rv = annotationService->GetAnnotationBinary(annoURI, annoName, &data,
+                                                &dataLen, mimeType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // disallow annotations with no MIME types
-    NS_NOTREACHED("Attempting to create a channel on a URI that has no MIME type");
+    if (mimeType.IsEmpty()) {
+      NS_Free(data);
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
+  nsCOMPtr<nsIStringInputStream> stream = do_CreateInstance(
+                                          NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
     NS_Free(data);
-    return NS_ERROR_NOT_AVAILABLE;
+    return rv;
   }
   rv = stream->AdoptData((char*)data, dataLen);
   if (NS_FAILED(rv)) {
@@ -198,4 +226,19 @@ nsAnnoProtocolHandler::ParseAnnoURI(nsIURI* aURI,
 
   aName = Substring(path, 0, firstColon);
   return NS_OK;
+}
+
+
+// nsAnnoProtocolHandler::GetDefaultIcon
+//
+//    This creates a channel for the default web page favicon.
+
+nsresult
+nsAnnoProtocolHandler::GetDefaultIcon(nsIChannel** aChannel)
+{
+  nsresult rv;
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING(FAVICON_DEFAULT_URL));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_NewChannel(aChannel, uri);
 }
