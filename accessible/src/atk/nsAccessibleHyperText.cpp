@@ -20,7 +20,7 @@
  *
  * Original Author: Kyle Yuan (kyle.yuan@sun.com)
 
- * Contributor(s):
+ * Contributor(s): Ginn Chen (ginn.chen@sun.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -341,14 +341,14 @@ NS_IMETHODIMP nsAccessibleHyperText::GetAttributeRange(PRInt32 aOffset, PRInt32 
   return NS_OK;
 }
 
-/* void getCharacterExtents (in long offset, out long x, out long y, out long length, out long width, in nsAccessibleCoordType coordType); */
-NS_IMETHODIMP nsAccessibleHyperText::GetCharacterExtents(PRInt32 aOffset, PRInt32 *aX, PRInt32 *aY, PRInt32 *aLength, PRInt32 *aWidth, nsAccessibleCoordType aCoordType)
+/* void getCharacterExtents (in long offset, out long x, out long y, out long width, out long height, in nsAccessibleCoordType coordType); */
+NS_IMETHODIMP nsAccessibleHyperText::GetCharacterExtents(PRInt32 aOffset, PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight, nsAccessibleCoordType aCoordType)
 {
   PRInt32 beforeLength;
   nsIDOMNode* domNode = FindTextNodeByOffset(aOffset, beforeLength);
   if (domNode) {
     nsAccessibleText accText(domNode);
-    return accText.GetCharacterExtents(aOffset - beforeLength, aX, aY, aLength, aWidth, aCoordType);
+    return accText.GetCharacterExtents(aOffset - beforeLength, aX, aY, aWidth, aHeight, aCoordType);
   }
 
   return NS_ERROR_INVALID_ARG;
