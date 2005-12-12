@@ -92,10 +92,12 @@
           <tr>
             <td align="left">
               <b><a name="c0" href="show_bug.cgi?id=[% bug.bug_id %]#c0">
-                Description</a>:</b>&nbsp;&nbsp;<script 
-                type="text/javascript"><!-- 
-                  addReplyLink(0);
-                //--></script>
+                Description</a>:</b>&nbsp;&nbsp;
+                [% IF mode == "edit" %]
+                  [%%]<script type="text/javascript"><!-- 
+                    addReplyLink(0);
+                  //--></script>
+                [% END %]
             </td>
             <td align="left" width="30%">
               <b>Opened:</b> [% bug.creation_ts FILTER time %]
