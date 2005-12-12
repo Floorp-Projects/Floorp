@@ -69,19 +69,21 @@ my $showbugcounts = (defined $cgi->param('showbugcounts'));
 #
 
 unless ($product_name) {
-
-    my @products = Bugzilla::Product::get_all_products();
-
+    $vars->{'products'} = $user->get_selectable_products;
     $vars->{'showbugcounts'} = $showbugcounts;
-    $vars->{'products'} = \@products;
-    $template->process("admin/versions/select-product.html.tmpl",
-                       $vars)
-      || ThrowTemplateError($template->error());
 
+    $template->process("admin/versions/select-product.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
     exit;
 }
 
+# First make sure the product name is valid.
 my $product = Bugzilla::Product::check_product($product_name);
+
+# Then make sure the user is allowed to edit properties of this product.
+$user->can_see_product($product->name)
+  || ThrowUserError('product_access_denied', {product => $product->name});
+
 
 #
 # action='' -> Show nice list of versions

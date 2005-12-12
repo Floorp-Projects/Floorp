@@ -452,12 +452,15 @@ sub can_see_product {
 
 sub get_selectable_products {
     my $self = shift;
+    my $classification_id = shift;
 
     if (defined $self->{selectable_products}) {
         return $self->{selectable_products};
     }
 
     my $dbh = Bugzilla->dbh;
+    my @params = ();
+
     my $query = "SELECT id " .
                 "FROM products " .
                 "LEFT JOIN group_control_map " .
@@ -470,9 +473,17 @@ sub get_selectable_products {
     }
     $query .= "AND group_id NOT IN(" . 
                $self->groups_as_string . ") " .
-              "WHERE group_id IS NULL ORDER BY name";
+              "WHERE group_id IS NULL ";
 
-    my $prod_ids = $dbh->selectcol_arrayref($query);
+    if (Param('useclassification') && $classification_id) {
+        $query .= "AND classification_id = ? ";
+        detaint_natural($classification_id);
+        push(@params, $classification_id);
+    }
+
+    $query .= "ORDER BY name";
+
+    my $prod_ids = $dbh->selectcol_arrayref($query, undef, @params);
     my @products;
     foreach my $prod_id (@$prod_ids) {
         push(@products, new Bugzilla::Product($prod_id));
@@ -1603,9 +1614,12 @@ method should be called in such a case to force reresolution of these groups.
 
 =item C<get_selectable_products>
 
- Description: Returns all products the user is allowed to access.
+ Description: Returns all products the user is allowed to access. This list
+              is restricted to some given classification if $classification_id
+              is given.
 
- Params:      none
+ Params:      $classification_id - (optional) The ID of the classification
+                                   the products belong to.
 
  Returns:     An array of product objects, sorted by the product name.
 

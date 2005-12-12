@@ -1015,6 +1015,10 @@
     create the milestone '[% defaultmilestone FILTER html %]'</a> before
     it can be made the default milestone for product '[% product FILTER html %]'.
 
+  [% ELSIF error == "product_access_denied" %]
+    [% title = "Product Access Denied" %]
+    You are not allowed to edit properties of product '[% product FILTER html %]'.
+
   [% ELSIF error == "product_blank_name" %]
     [% title = "Blank Product Name Not Allowed" %]
     You must enter a name for the new product.

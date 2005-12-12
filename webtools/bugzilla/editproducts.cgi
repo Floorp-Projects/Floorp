@@ -82,15 +82,10 @@ if (Param('useclassification')
     && !$classification_name
     && !$product_name)
 {
-    my @classifications =
-        Bugzilla::Classification::get_all_classifications();
+    $vars->{'classifications'} = $user->get_selectable_classifications;
     
-    $vars->{'classifications'} = \@classifications;
-    
-    $template->process("admin/products/list-classifications.html.tmpl",
-                       $vars)
+    $template->process("admin/products/list-classifications.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
-
     exit;
 }
 
@@ -101,19 +96,19 @@ if (Param('useclassification')
 #
 
 if (!$action && !$product_name) {
-    my @products;
+    my $products;
 
     if (Param('useclassification')) {
         my $classification = 
             Bugzilla::Classification::check_classification($classification_name);
 
-        @products = @{$classification->products};
+        $products = $user->get_selectable_products($classification->id);
         $vars->{'classification'} = $classification;
     } else {
-        @products = Bugzilla::Product::get_all_products;
+        $products = $user->get_selectable_products;
     }
 
-    $vars->{'products'} = \@products;
+    $vars->{'products'} = $products;
     $vars->{'showbugcounts'} = $showbugcounts;
 
     $template->process("admin/products/list.html.tmpl", $vars)
@@ -327,8 +322,12 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    
+    # First make sure the product name is valid.
     my $product = Bugzilla::Product::check_product($product_name);
+
+    # Then make sure the user is allowed to edit properties of this product.
+    $user->can_see_product($product->name)
+      || ThrowUserError('product_access_denied', {product => $product->name});
 
     if (Param('useclassification')) {
         my $classification = 
@@ -353,8 +352,12 @@ if ($action eq 'del') {
 #
 
 if ($action eq 'delete') {
-    
+    # First make sure the product name is valid.
     my $product = Bugzilla::Product::check_product($product_name);
+
+    # Then make sure the user is allowed to edit properties of this product.
+    $user->can_see_product($product->name)
+      || ThrowUserError('product_access_denied', {product => $product->name});
     
     $vars->{'product'} = $product;
 
@@ -425,8 +428,12 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit' || (!$action && $product_name)) {
-
+    # First make sure the product name is valid.
     my $product = Bugzilla::Product::check_product($product_name);
+
+    # Then make sure the user is allowed to edit properties of this product.
+    $user->can_see_product($product->name)
+      || ThrowUserError('product_access_denied', {product => $product->name});
 
     if (Param('useclassification')) {
         my $classification; 
@@ -476,8 +483,13 @@ if ($action eq 'edit' || (!$action && $product_name)) {
 #
 
 if ($action eq 'updategroupcontrols') {
-
+    # First make sure the product name is valid.
     my $product = Bugzilla::Product::check_product($product_name);
+
+    # Then make sure the user is allowed to edit properties of this product.
+    $user->can_see_product($product->name)
+      || ThrowUserError('product_access_denied', {product => $product->name});
+
     my @now_na = ();
     my @now_mandatory = ();
     foreach my $f ($cgi->param()) {
@@ -739,7 +751,12 @@ if ($action eq 'update') {
 
     my $checkvotes = 0;
 
+    # First make sure the product name is valid.
     my $product_old = Bugzilla::Product::check_product($product_old_name);
+
+    # Then make sure the user is allowed to edit properties of this product.
+    $user->can_see_product($product_old->name)
+      || ThrowUserError('product_access_denied', {product => $product_old->name});
 
     if (Param('useclassification')) {
         my $classification; 
@@ -971,7 +988,13 @@ if ($action eq 'update') {
 #
 
 if ($action eq 'editgroupcontrols') {
+    # First make sure the product name is valid.
     my $product = Bugzilla::Product::check_product($product_name);
+
+    # Then make sure the user is allowed to edit properties of this product.
+    $user->can_see_product($product->name)
+      || ThrowUserError('product_access_denied', {product => $product->name});
+
     # Display a group if it is either enabled or has bugs for this product.
     my $groups = $dbh->selectall_arrayref(
         'SELECT id, name, entry, membercontrol, othercontrol, canedit,
