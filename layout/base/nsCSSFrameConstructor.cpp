@@ -12363,14 +12363,17 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   }
 
   // First find out where (in the content) the placeholder frames
-  // text is and its previous sibling frame, if any.
-  nsIFrame* prevSibling = nsnull;
-
-  nsIContent* container = parentFrame->GetContent();
-  if (container && textContent) {
-    PRInt32 ix = container->IndexOf(textContent);
-    prevSibling = FindPreviousSibling(container, aBlockFrame, ix);
-  }
+  // text is and its previous sibling frame, if any.  Note that:
+  // 1)  The placeholder had better be in the principal child list of
+  //     parentFrame.
+  // 2)  It's probably near the beginning (since we're a first-letter frame),
+  //     so just doing a linear search for the prevSibling is ok.
+  // 3)  Trying to use FindPreviousSibling will fail if the first-letter is in
+  //     anonymous content (eg generated content).
+  nsFrameList siblingList(parentFrame->GetFirstChild(nsnull));
+  NS_ASSERTION(siblingList.ContainsFrame(placeholderFrame),
+               "Placeholder not in parent's principal child list?");
+  nsIFrame* prevSibling = siblingList.GetPrevSiblingFor(placeholderFrame);
 
   // Now that everything is set...
 #ifdef NOISY_FIRST_LETTER
