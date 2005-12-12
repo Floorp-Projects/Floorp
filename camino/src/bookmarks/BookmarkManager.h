@@ -115,11 +115,17 @@ extern NSString* const kBookmarksMenuFolderIdentifier;
 -(NSUndoManager *) undoManager;
 -(void) setRootBookmarks:(BookmarkFolder *)anArray;
 
+// clear visit count on all bookmarks
+-(void)clearAllVisits;
+
 // Informational things
 -(NSArray *)resolveBookmarksKeyword:(NSString *)keyword;
 -(NSArray *)searchBookmarksContainer:(BookmarkFolder*)container forString:(NSString *)searchString inFieldWithTag:(int)tag;
 -(BOOL) isDropValid:(NSArray *)items toFolder:(BookmarkFolder *)parent;
 -(NSMenu *)contextMenuForItems:(NSArray*)items fromView:(BookmarkOutlineView *)outlineView target:(id)target;
+
+// Utilities
+- (void)copyBookmarksURLs:(NSArray*)bookmarkItems toPasteboard:(NSPasteboard*)aPasteboard;
 
 // Importing bookmarks
 - (void)startImportBookmarks;

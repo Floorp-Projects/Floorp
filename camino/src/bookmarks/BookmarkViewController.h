@@ -178,6 +178,5 @@
 
 -(BOOL) canPasteFromPasteboard:(NSPasteboard*)aPasteboard;
 -(void) copyBookmarks:(NSArray*)bookmarkItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard;
--(void) copyBookmarksURLs:(NSArray*)bookmarkItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard;
 
 @end

@@ -281,6 +281,7 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
 
 - (void)bookmarkChanged:(NSNotification *)note
 {
+  // XXX look at change flags
   BookmarkItem *anItem = [note object];
   if ([anItem isKindOfClass:[Bookmark class]]) {
     [self checkForNewTop10:anItem];

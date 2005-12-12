@@ -48,6 +48,7 @@
 #import "NSThread+Utils.h"
 #import "NSFileManager+Utils.h"
 #import "NSWorkspace+Utils.h"
+#import "NSPasteboard+Utils.h"
 
 #import "PreferenceManager.h"
 #import "BookmarkManager.h"
@@ -566,6 +567,25 @@ static BookmarkManager* gBookmarkManager = nil;
   }
 }
 
+//
+// -clearAllVisits:
+//
+// resets all bookmarks visit counts to zero as part of Reset Camino
+//
+
+-(void)clearAllVisits
+{
+  // XXX this will fire a lot of changed notifications.
+  NSEnumerator* bookmarksEnum = [[self rootBookmarks] objectEnumerator];
+  BookmarkItem* curItem;
+  while (curItem = [bookmarksEnum nextObject])
+  {
+    if ([curItem isKindOfClass:[Bookmark class]])
+      [(Bookmark*)curItem setNumberOfVisits:0];
+  }
+}
+
+
 -(NSArray *)resolveBookmarksKeyword:(NSString *)keyword
 {
   NSArray *resolvedArray = nil;
@@ -708,11 +728,8 @@ static BookmarkManager* gBookmarkManager = nil;
   }
   
   BOOL allowNewFolder = NO;
-  if ([target isKindOfClass:[BookmarkViewController class]]) {
-    if (![[target activeCollection] isSmartFolder])
-      allowNewFolder = YES;
-  } else
-    allowNewFolder = YES;
+  if ([target isKindOfClass:[BookmarkViewController class]])
+    allowNewFolder = ![[target activeCollection] isSmartFolder];
 
   if (allowNewFolder) {
     // space
@@ -739,6 +756,28 @@ static BookmarkManager* gBookmarkManager = nil;
   }
   return contextMenu;
 }
+
+
+//
+// Copy a set of bookmarks URLs to the specified pasteboard.
+// We don't care about item titles here, nor do we care about format.
+//
+- (void)copyBookmarksURLs:(NSArray*)bookmarkItems toPasteboard:(NSPasteboard*)aPasteboard
+{
+  // handle URLs, and nothing else, for simplicity.
+  [aPasteboard declareTypes:[NSArray arrayWithObject:kCorePasteboardFlavorType_url] owner:nil];
+
+  NSMutableArray* urlList = [NSMutableArray array];
+  NSEnumerator* bookmarkItemsEnum = [bookmarkItems objectEnumerator];
+  BookmarkItem* curItem;
+  while (curItem = [bookmarkItemsEnum nextObject])
+  {
+    if ([curItem isKindOfClass:[Bookmark class]])
+      [urlList addObject:[(Bookmark*)curItem url]];
+  }
+  [aPasteboard setURLs:urlList withTitles:nil];
+}
+
 
 #pragma mark -
 
@@ -1754,24 +1793,6 @@ static BookmarkManager* gBookmarkManager = nil;
 {
   NSLog(@"fileManager:shouldProceedAfterError:%@", errorInfo);
   return NO;
-}
-
-//
-// -clearAllVisits:
-//
-// resets all bookmarks visit counts to zero as part of Reset Camino
-//
-
--(void)clearAllVisits
-{
-    NSEnumerator* bookmarksEnum = [[self rootBookmarks] objectEnumerator];
-    BookmarkItem* curItem;
-    while (curItem = [bookmarksEnum nextObject])
-    {
-	  if ([curItem isKindOfClass:[Bookmark class]]) {
-        [(Bookmark*)curItem setNumberOfVisits:0];
-	  }
-    }
 }
 
 @end

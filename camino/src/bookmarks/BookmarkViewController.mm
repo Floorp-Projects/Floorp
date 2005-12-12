@@ -685,7 +685,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (IBAction)copyURLs:(id)aSender
 {
-  [self copyBookmarksURLs:[mBookmarksOutlineView selectedItems] toPasteboard:[NSPasteboard generalPasteboard]];
+  [[BookmarkManager sharedBookmarkManager] copyBookmarksURLs:[mBookmarksOutlineView selectedItems] toPasteboard:[NSPasteboard generalPasteboard]];
 }
 
 -(IBAction)quicksearchPopupChanged:(id)aSender
@@ -1080,27 +1080,6 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     }
   }
   [aPasteboard setURLs:urlList withTitles:titleList];
-}
-
-//
-// Copy a set of bookmarks URLs to the specified pasteboard.
-// We don't care about item titles here, nor do we care about format.
-//
-- (void) copyBookmarksURLs:(NSArray*)bookmarkItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard
-{
-  // handle URLs, and nothing else, for simplicity.
-  [aPasteboard declareTypes:[NSArray arrayWithObject:kCorePasteboardFlavorType_url] owner:self];
-
-  NSMutableArray* urlList = [NSMutableArray array];
-  NSEnumerator* bookmarkItemsEnum = [bookmarkItemsToCopy objectEnumerator];
-  BookmarkItem* curItem;
-  while (curItem = [bookmarkItemsEnum nextObject])
-  {
-    if ([curItem isKindOfClass:[Bookmark class]]) {
-      [urlList addObject:[(Bookmark*)curItem url]];
-    }
-  }
-  [aPasteboard setURLs:urlList withTitles:nil];
 }
 
 -(BOOL) canPasteFromPasteboard:(NSPasteboard*)aPasteboard
@@ -1874,6 +1853,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (void)bookmarkChanged:(NSNotification *)note
 {
+  // XXX look at change flags
   [self reloadDataForItem:[note object] reloadChildren:NO];
 }
 

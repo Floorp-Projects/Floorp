@@ -743,6 +743,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 
 - (void)bookmarkChanged:(NSNotification *)aNote
 {
+  // XXX look at change flags
   [self updateButton:[aNote object]];
 }
 

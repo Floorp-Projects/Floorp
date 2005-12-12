@@ -180,17 +180,23 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 
 - (void) setLastVisit:(NSDate *)aDate
 {
-  if (aDate) {
+  if (aDate && ![mLastVisit isEqual:aDate])
+  {
     [aDate retain];
     [mLastVisit release];
     mLastVisit = aDate;
+
+    [self itemUpdatedNote:kBookmarkItemLastVisitChangedMask];
   }
 }
 
 -(void) setNumberOfVisits:(unsigned)aNumber
 {
-  mNumberOfVisits = aNumber;
-  [self itemUpdatedNote:kBookmarkItemLastVisitChangedMask];
+  if (mNumberOfVisits != aNumber)
+  {
+    mNumberOfVisits = aNumber;
+    [self itemUpdatedNote:kBookmarkItemNumVisitsChangedMask];
+  }
 }
 
 -(void) setIsSeparator:(BOOL)aBool
