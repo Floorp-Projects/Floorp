@@ -90,17 +90,16 @@
         [% END %]
         <tr>
           <th>[% product.name FILTER html %]</th>
-          <td></td>
-          [% IF product.maxperbug < product.maxvotes AND
-                product.maxperbug > 1 %]
-            <td>
+          <td colspan="3">
+            [% IF product.maxperbug < product.maxvotes AND
+                  product.maxperbug > 1 %]
               <font size="-1">
                 (Note: only [% product.maxperbug %] vote
                 [% "s" IF product.maxperbug != 1 %] allowed per [% terms.bug %] in
                 this product.)
               </font>
-            </td>
-          [% END %]
+            [% END %]
+          </td>
         </tr>
 
         [% FOREACH bug = product.bugs %]
