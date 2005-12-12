@@ -402,11 +402,24 @@
         canDrop: function VO_canDrop(index, orientation) {
           var root = this._self.getResult();
           var node = index != -1 ? root.nodeForTreeIndex(index) : root;
+          const DROP_ON = Ci.nsINavHistoryResultViewObserver.DROP_ON;
           // Cannot drop before fixed items in the list. 
           if (node.parent == root && 
               PlacesController.getIndexOfNode(node) < this._self.firstDropIndex &&
-              orientation != Ci.nsINavHistoryResultViewObserver.DROP_ON)
+              orientation != DROP_ON)
             return false;
+
+          // Cannot drop into a read-only container
+          if (orientation == DROP_ON) {
+            if (node.containerReadOnly) {
+              return false;
+            }
+          } else {
+            if (node.parent && node.parent.containerReadOnly) {
+              return false;
+            }
+          }
+
           return PlacesControllerDragHelper.canDrop(this._self, orientation);
         },
         
