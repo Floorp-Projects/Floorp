@@ -264,6 +264,9 @@ if (bmsvc.indexOfItem(root, uri("http://google.com/")) != 1) {
 if (bmsvc.indexOfFolder(root, workFolder) != 4) {
   dump("indexOfFolder FAILED\n");
 }
+bmsvc.setFolderReadonly(workFolder, true);
+bmsvc.setFolderReadonly(homeFolder, true);
+bmsvc.setFolderReadonly(homeFolder, false);
 
 ///  EXPECTED TABLE RESULTS
 ///  moz_bookmarks:
@@ -312,6 +315,8 @@ if (bmsvc.indexOfFolder(root, workFolder) != 4) {
 ///  15            http://developer.mozilla.org/devnews/
 ///  16            http://espn.com/
 ///  17            place:  // Google Sites
+///  18            place:folder=5&group=3
+///  19            place:folder=6&group=3
 ///
 ///  moz_bookmarks_folders:
 ///  id            name
@@ -322,4 +327,8 @@ if (bmsvc.indexOfFolder(root, workFolder) != 4) {
 ///  4             Firefox and Mozilla Links
 ///  5             Work
 ///  6             Home
-
+///
+///  moz_anno:
+///  id       page     name                  content    expiration
+///  --       ----     ------------------    -------    ----------
+///  1        18       bookmarks/readonly    1          4
