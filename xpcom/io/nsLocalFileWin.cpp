@@ -452,6 +452,7 @@ NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
 nsLocalFile::nsLocalFile()
   : mDirty(PR_TRUE)
   , mFollowSymlinks(PR_FALSE)
+  , mHashCode(0)
 {
 }
 
@@ -494,6 +495,7 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
   : mDirty(PR_TRUE)
   , mFollowSymlinks(other.mFollowSymlinks)
   , mWorkingPath(other.mWorkingPath)
+  , mHashCode(0)
 {
 }
 
@@ -2545,17 +2547,20 @@ nsLocalFile::Equals(nsIHashable* aOther, PRBool *aResult)
 NS_IMETHODIMP
 nsLocalFile::GetHashCode(PRUint32 *aResult)
 {
-    // In order for short and long path names to hash to the same value we
-    // always hash on the short pathname.
+    if (!mHashCode) {
+        // In order for short and long path names to hash to the same value we
+        // always hash on the short pathname.
 
-    char thisshort[MAX_PATH];
-    DWORD thisr = GetShortPathName(mWorkingPath.get(),
-                                   thisshort, sizeof(thisshort));
-    if (thisr < sizeof(thisshort))
-        *aResult = nsCRT::HashCode(thisshort);
-    else
-        *aResult = nsCRT::HashCode(mWorkingPath.get());
+        char thisshort[MAX_PATH];
+        DWORD thisr = GetShortPathName(mWorkingPath.get(),
+                                       thisshort, sizeof(thisshort));
+        if (thisr < sizeof(thisshort))
+            mHashCode = nsCRT::HashCode(thisshort);
+        else
+            mHashCode = nsCRT::HashCode(mWorkingPath.get());
+    }
 
+    *aResult = mHashCode;
     return NS_OK;
 }
 
