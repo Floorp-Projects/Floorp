@@ -42,6 +42,8 @@
 
 #include <stdio.h>
 
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIScriptError.h"
 #include "nsIServiceManager.h"
@@ -52,8 +54,9 @@
 #include "nsMemory.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsICategoryManager.h"
-#include "nsString.h"
 #include "nsIVariant.h"
+#include "nsStringAPI.h"
+#include "nsEmbedString.h"
 
 #include "jsapi.h"
 
@@ -515,7 +518,7 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
         goto out;
     }
 
-    if(d_in != d_out)
+    if(!d_in.Equals(d_out))
     {
         printf(" JS to native for %%is returned the wrong value -- FAILED!\n");
         goto out;
