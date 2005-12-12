@@ -49,7 +49,7 @@
  * about more, which is the IHTMLContentSink interface. (See that file for details).
  */
 #include "nsISupports.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "mozFlushType.h"
 
 class nsIParser;

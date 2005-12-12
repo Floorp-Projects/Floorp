@@ -54,7 +54,7 @@
  * */
 
 #include "nsISupports.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "prtypes.h"
 #include "nsITokenizer.h"
 
