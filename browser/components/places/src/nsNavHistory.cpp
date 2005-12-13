@@ -324,6 +324,12 @@ nsNavHistory::InitDB()
   rv = mDBService->OpenSpecialDatabase("profile", getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  
+  // the favicon tables must be initialized, since we depend on those in
+  // some of our queries
+  rv = nsFaviconService::InitTables(mDBConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+
 // REMOVE ME FIXME TODO XXX
   {
     mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA cache_size=10000;"));
@@ -356,7 +362,7 @@ nsNavHistory::InitDB()
   }
 
   // moz_historyvisit
-  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_history"), &tableExists);
+  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_historyvisit"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! tableExists) {
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_historyvisit ("
@@ -436,9 +442,7 @@ nsNavHistory::InitDB()
     getter_AddRefs(mDBFullAutoComplete));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // the favicon tables must also be initialized, since we depend on those in
-  // some of our queries
-  return nsFaviconService::InitTables(mDBConn);
+  return NS_OK;
 }
 
 
