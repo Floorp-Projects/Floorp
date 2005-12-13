@@ -22,6 +22,8 @@
   # classification: Bugzilla::Classifiation object; classification product is in.
   #%]
 
+[% PROCESS "global/field-descs.none.tmpl" %]
+
 [% IF Param('useclassification') %]
   <tr>
     <th align="right"><b>Classification:</b></th>
@@ -91,7 +93,8 @@
   <th align="right">
     Number of votes [% terms.abug %] in this product needs to
     automatically get out of the
-    <a href="page.cgi?id=fields.html#status">UNCONFIRMED</a> state:
+    <a href="page.cgi?id=fields.html#status">[% status_descs.UNCONFIRMED FILTER html %]</a>
+    state:
   </th>
   <td><input size="5" maxlength="5" name="votestoconfirm" 
              value="[% product.votestoconfirm FILTER html %]">
