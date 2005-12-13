@@ -93,6 +93,7 @@ if (defined $cgi->param('product')) {
 
 if (defined $cgi->param('maketemplate')) {
     $vars->{'url'} = $cgi->query_string();
+    $vars->{'short_desc'} = $cgi->param('short_desc');
     
     print $cgi->header();
     $template->process("bug/create/make-template.html.tmpl", $vars)
