@@ -798,8 +798,12 @@ GrowStringBuffer(JSStringBuffer *sb, size_t newlength)
     jschar *bp;
 
     offset = PTRDIFF(sb->ptr, sb->base, jschar);
-    newlength += offset;
-    bp = (jschar *) realloc(sb->base, (newlength + 1) * sizeof(jschar));
+    JS_ASSERT(offset >= 0);
+    newlength += offset + 1;
+    if ((size_t)offset < newlength && newlength < ~(size_t)0 / sizeof(jschar))
+        bp = realloc(sb->base, newlength * sizeof(jschar));
+    else
+        bp = NULL;
     if (!bp) {
         free(sb->base);
         sb->base = STRING_BUFFER_ERROR_BASE;
@@ -807,7 +811,7 @@ GrowStringBuffer(JSStringBuffer *sb, size_t newlength)
     }
     sb->base = bp;
     sb->ptr = bp + offset;
-    sb->limit = bp + newlength;
+    sb->limit = bp + newlength - 1;
     return JS_TRUE;
 }
 
