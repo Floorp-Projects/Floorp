@@ -764,6 +764,10 @@ div.error {
     display: none;
 }
 
+#notification {
+    display: none;
+}
+
 #printheader {
     display: none;
 }
@@ -935,10 +939,10 @@ table.category h1 {
     font-size: 1.1em;
 }
 
-input.button {
-    font-size: 0.9em;
-    margin-top: 5px;
-}    
+input.category {
+    font-size: 1em;
+    margin: 5px 0px 0px 0px;
+}
 
 div.advSearchForm {
     padding: 0px;

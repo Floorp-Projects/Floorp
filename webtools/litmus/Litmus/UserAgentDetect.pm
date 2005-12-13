@@ -101,6 +101,21 @@ sub buildid {
     return $1; 
 }
 
+sub locale {
+    my $self = shift;
+    my $ua = $self->{ua};
+    
+    # mozilla products only
+    unless ($ua =~ /Mozilla\/5\.0/) {
+        return undef;
+    }
+
+    # Format (e.g.): 
+    # Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8) Gecko/20051111 Firefox/1.5
+    $ua =~ /Mozilla\/5\.0 \([^;]*; [^;]*; [^;]*; ([^;]*); [^;]*\)/;
+    return $1; 
+}
+
 sub platform {
     my $self = shift;
     my $product = shift; # optionally, just lookup for one product

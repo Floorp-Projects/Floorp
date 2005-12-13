@@ -71,7 +71,7 @@ Results submitted
         [% ELSE %]
             [% count = 0 %]
         [% END %]
-        <tr class="[% curresult FILTER lower %]">
+        <tr class="[% curresult.search('unclear') ? 'unclear' : curresult FILTER lower %]">
         <td><strong>[% curresult FILTER html %]:</strong></td>
         <td>[% count FILTER html %]</td>
         </tr>
@@ -93,10 +93,7 @@ Results submitted
   [% IF return %]
     <a href="[% return | html | uri %]">Go Back</a> or 
   [% END %]
-    <a href="run_tests.cgi?product=[% product.productid | html | uri %]
-      &continuetesting=1&defaulttestgroup=
-      [% testgroup.testgroupid | html | uri %]">
-Run Some More Tests</a>
+    <a href="run_tests.cgi?product=[% product.productid | html | uri %]&continuetesting=1&defaulttestgroup=[% testgroup.testgroupid | html | uri %]">Run Some More Tests</a>
 </p>
 
       </div> <!--END section-content-->
@@ -109,6 +106,11 @@ Run Some More Tests</a>
 
 [% INCLUDE global/litmus_footer.tmpl %]
 [% INCLUDE global/html_footer.tmpl %]
+
+
+
+
+
 
 
 

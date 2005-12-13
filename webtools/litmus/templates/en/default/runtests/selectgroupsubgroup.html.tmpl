@@ -58,7 +58,7 @@
 
    <td>
     <div class="dh">Product:</div><div class="dv">[% sysconfig.product.name FILTER html %]</div>
-    <div class="t_link"><a href="run_tests.cgi">Change Configuration</a></div>
+    <div class="dh">Locale:</div><div class="dv">[% sysconfig.locale.name FILTER html %] ([% sysconfig.locale.abbrev FILTER html %])</div>
    </td>
    <td>
     <div class="dh">Platform:</div><div class="dv">[% sysconfig.platform.name FILTER html %]</div>
@@ -68,6 +68,11 @@
     <div class="dh">Branch:</div><div class="dv">[% sysconfig.branch.name FILTER html %]</div>
     <div class="dh">Build ID:</div><div class="dv">[% sysconfig.buildid FILTER html %]</div>
    </td>
+  </tr>
+  <tr>
+  <td colspan="3">
+    <div class="t_link"><a href="run_tests.cgi">Change Configuration</a></div>
+  </td>
   </tr>
   </table>
 
@@ -109,8 +114,8 @@ Select Testing Group
 [% END %]
 [% FOREACH curgroup = groups %]
 
-  [% community_completed = curgroup.community_coverage(sysconfig.platform, sysconfig.buildid, 0) %]
-  [% personal_completed = curgroup.personal_coverage(sysconfig.platform, sysconfig.buildid, 0, user) %]
+  [% community_completed = curgroup.community_coverage(sysconfig.platform, sysconfig.buildid, sysconfig.locale, 0) %]
+  [% personal_completed = curgroup.personal_coverage(sysconfig.platform, sysconfig.buildid, sysconfig.locale, 0, user) %]
 
   [% IF community_completed == 100 OR completed == 'N/A' %]
     [% groupstyle = 'completegroup' %]
@@ -183,8 +188,8 @@ Please select a testing group with testcases, or that has not yet been tested in
             [% select_first_avail_subgroup=1 %] 
             [% FOREACH cursubgroup = cursubgrouplist %]
 
-            [% community_completed = cursubgroup.community_coverage(sysconfig.platform, sysconfig.buildid, 0) %]
-            [% personal_completed = cursubgroup.personal_coverage(sysconfig.platform, sysconfig.buildid, 0, user) %]
+            [% community_completed = cursubgroup.community_coverage(sysconfig.platform, sysconfig.buildid, sysconfig.locale, 0) %]
+            [% personal_completed = cursubgroup.personal_coverage(sysconfig.platform, sysconfig.buildid, sysconfig.locale, 0, user) %]
 
             [% IF community_completed == 100 OR completed == 'N/A' %]
                 [% groupstyle = 'completegroup' %]
@@ -200,7 +205,7 @@ Please select a testing group with testcases, or that has not yet been tested in
                 <td align="left"><input [% IF personal_completed == 100 OR personal_completed == 'N/A' %]disabled [% ELSIF select_first_avail_subgroup==1 %][% select_first_avail_subgroup=0 %]checked [% END %]type="radio" name="subgroup_[% curgroup FILTER html %]" 
                     value="[% cursubgroup.id FILTER html %]">
                     [% cursubgroup.name FILTER html %]</input></td>
-                <td align="center">[% counttests = cursubgroup.tests %]
+                <td align="center">[% counttests = cursubgroup.tests('status_id',1) %]
                     [% IF ! counttests %] 0 
                     [% ELSIF ! counttests.testid %][% counttests.list.size %]
                     [% ELSE %]

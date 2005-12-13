@@ -1,10 +1,52 @@
+<script type="text/javascript">
+function checkAddPlatformForm(f) {
+   return (
+           checkString(f.new_platform_name,"platform name",false) &&
+           checkProduct(f.platform_add_product) &&
+           checkString(f.new_platform_detect_regexp,"detect regexp",false) &&
+           checkString(f.new_platform_icon_path,"icon path",true)
+          );
+}
+
+function getPlatformByName(platformName) {
+    http.open('get', 'rpc.cgi?action=getPlatformByName&platformName='+platformName);
+    http.onreadystatechange = updatePlatformForm;
+    http.send(null);
+}
+
+function updatePlatformForm() {
+    if(http.readyState == 4){
+        var response = http.responseText;
+        var update = new Array();
+
+        var em = document.getElementById("notification-content")
+        if(response.indexOf('|' != -1)) {
+            update = response.split('|');
+            document.getElementById("modify_platform_id").value = update[0];
+            document.getElementById("modify_platform_name").disabled = false;
+            document.getElementById("modify_platform_name").value = update[1];
+            // lookup product
+            document.getElementById("modify_platform_detect_regexp").disabled = false;
+            document.getElementById("modify_platform_detect_regexp").value = update[2];
+            document.getElementById("modify_platform_icon_path").disabled = false;
+            document.getElementById("modify_platform_icon_path").value = update[3];
+            document.getElementById("delete_platform").disabled = false;
+            document.getElementById("update_platform").disabled = false;
+        } else {
+            document.getElementById("notification").style.display = 'block';
+            em.innerHTML = response;
+        }
+    }
+}
+</script>
+
 <div id="platforms" class="category">
 
 <h2>Platforms</h2>
 
 <h3 class="display platform_add"><a name="#platform_add">Add&nbsp;&raquo;</a></h3>
 <div id="platform_add" class="collapsable">
-<form name="platform_add">
+<form name="platform_add_form" id="platform_add_form" action="edit_categories.cgi" method="post" onSubmit="return checkAddPlatformForm(this);">
 <table class="category">
 <tr>
 <td>Name:</td>
@@ -18,11 +60,11 @@
 </tr>
 <tr>
 <td>Detect Regexp:</td>
-<td><input name="new_detect_regexp" type="text" size="30"></td>
+<td><input name="new_platform_detect_regexp" type="text" size="30"></td>
 </tr>
 <tr>
 <td>Icon Path:</td>
-<td><input name="new_icon_path" type="text" size="30"></td>
+<td><input name="new_platform_icon_path" type="text" size="30"></td>
 </tr>
 <tr>
 <td colspan="2" align="right">
@@ -35,12 +77,13 @@
 
 <h3 class="display platform_modify"><a name="#platform_modify">Modify / Delete&nbsp;&raquo;</a></h3>
 <div id="platform_modify" class="collapsable">
-<form name="platform_modify">
+<form id="platform_modify_form" name="platform_modify_form" action="edit_categories.cgi" method="post">
+<input id="modify_platform_id" name="modify_platform_id" type="hidden" value="">
 <table class="category">
 <tr>
 <td colspan="2" align="left">
 Select Existing Platform:<br/>
-[% INCLUDE form_widgets/select_platform.tmpl size=5 name="platform_modify_existing" %]
+[% INCLUDE form_widgets/select_platform.tmpl size=5 name="platform_modify_existing" onChange="getPlatformByName(this.options[this.selectedIndex].value);" %]
 </td>
 </tr>
 <tr>
@@ -55,11 +98,11 @@ Select Existing Platform:<br/>
 </tr>
 <tr>
 <td>Detect Regexp:</td>
-<td><input disabled name="modify_detect_regexp" type="text" size="30"></td>
+<td><input disabled name="modify_platform_detect_regexp" type="text" size="30"></td>
 </tr>
 <tr>
 <td>Icon Path:</td>
-<td><input disabled name="modify_icon_path" type="text" size="30"></td>
+<td><input disabled name="modify_platform_icon_path" type="text" size="30"></td>
 </tr>
 <tr>
 <td colspan="2" align="right">

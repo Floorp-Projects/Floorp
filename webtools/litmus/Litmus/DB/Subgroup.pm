@@ -55,6 +55,7 @@ sub community_coverage() {
   my $self = shift;
   my $platform = shift;
   my $build_id = shift;
+  my $locale = shift;
   my $community_only = shift;
   
   my @tests;
@@ -73,7 +74,7 @@ sub community_coverage() {
   if (@tests == 0) { return "N/A" }
   my $num_completed = 0;
   foreach my $curtest (@tests) {
-    if ($curtest->is_completed($platform,$build_id)) {
+    if ($curtest->is_completed($platform,$build_id,$locale)) {
       $num_completed++;
     }
   }
@@ -91,6 +92,7 @@ sub personal_coverage() {
   my $self = shift;
   my $platform = shift;
   my $build_id = shift;
+  my $locale = shift;
   my $community_only = shift;
   my $user = shift;
   
@@ -110,7 +112,7 @@ sub personal_coverage() {
   if (@tests == 0) { return "N/A" }
   my $num_completed = 0;
   foreach my $curtest (@tests) {
-    if ($curtest->is_completed($platform,$build_id,$user)) {
+    if ($curtest->is_completed($platform,$build_id,$locale,$user)) {
       $num_completed++;
     }
   }

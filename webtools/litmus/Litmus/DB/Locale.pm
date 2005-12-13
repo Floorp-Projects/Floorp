@@ -30,20 +30,17 @@
 
 =cut
 
-package Litmus::DB::Product;
+package Litmus::DB::Locale;
 
 use strict;
 use base 'Litmus::DBI';
 
-Litmus::DB::Product->table('products');
+Litmus::DB::Locale->table('locale_lookup');
 
-Litmus::DB::Product->columns(All => qw/product_id name iconpath enabled/);
+Litmus::DB::Locale->columns(All => qw/abbrev name/);
 
-Litmus::DB::Product->column_alias("product_id", "productid");
+Litmus::DB::Locale->column_alias("abbrev", "locale");
 
-Litmus::DB::Product->has_many(tests => "Litmus::DB::Test");
-Litmus::DB::Product->has_many(testgroups => "Litmus::DB::Testgroup");
-Litmus::DB::Product->has_many(branches => "Litmus::DB::Branch");
-Litmus::DB::Product->has_many(platforms => "Litmus::DB::Platform");
+Litmus::DB::Locale->has_many(test_results => "Litmus::DB::Testresult");
 
 1;

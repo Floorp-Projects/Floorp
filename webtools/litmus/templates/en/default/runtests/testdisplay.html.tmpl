@@ -55,28 +55,28 @@
   <table class="test-config">
   <tr>
 
-   <td> 
+   <td>
     <div class="dh">Product:</div><div class="dv">[% sysconfig.product.name FILTER html %]</div>
-    <div class="t_link"><a href="run_tests.cgi">Change Configuration</a></div>
+    <div class="dh">Locale:</div><div class="dv">[% sysconfig.locale.name FILTER html %] ([% sysconfig.locale.abbrev FILTER html %])</div>
    </td>
    <td>
     <div class="dh">Platform:</div><div class="dv">[% sysconfig.platform.name FILTER html %]</div>
-
     <div class="dh">Opsys:</div><div class="dv">[% sysconfig.opsys.name FILTER html %]</div>
    </td>
    <td>
     <div class="dh">Branch:</div><div class="dv">[% sysconfig.branch.name FILTER html %]</div>
     <div class="dh">Build ID:</div><div class="dv">[% sysconfig.buildid FILTER html %]</div>
    </td>
-
-   <td>
-    <div class="dh">Group:</div><div class="dv">[% group.name FILTER html %]</div>
-    <div class="dh">Subgroup:</div><div class="dv">[% subgroup.name FILTER html %]</div>
-   </td>
+  </tr>
+  <tr>
+  <td colspan="3">
+    <div class="t_link"><a href="run_tests.cgi">Change Configuration</a></div>
+  </td>
   </tr>
   </table>
 
-  </div>
+</div> <!--END sum-->
+
 </div>
 
 <form action="process_test.cgi" method="post" name="form" id="form">
@@ -214,4 +214,3 @@ var tmp_menub=new Array([% i=1 %][% FOREACH test_id=test_ids %]"mb[% i %]",[% i=
 
 [% INCLUDE global/litmus_footer.tmpl %]
 [% INCLUDE global/html_footer.tmpl %]
-

@@ -150,6 +150,7 @@ foreach my $curtestid (@tests) {
                                            opsys     => $sysconfig->opsys(),
                                            branch    => $sysconfig->branch(),
                                            buildid   => $sysconfig->buildid(),
+                                           locale_abbrev => $sysconfig->locale(),
                                           });
   
   # if there's a note, create an entry in the comments table for it

@@ -95,6 +95,26 @@
     </select>
 [% END %]
 
+[% # locale dropdown box
+   # defaultlocale - default locale selection
+   #                  (can be either a single object or a list)
+   # test (optional) - if given, the select name will be locale_localeid
+%]
+[% BLOCK localebox %]
+    [% IF test %] [% testidflag = "_$test.testid" %] 
+    [% ELSE %] [% testidflag = "" %][% END %]
+    [% IF defaultbranch %]
+    [% valuelist = defaultlocale.list.join(',') %]
+    <input name="locale[%testidflag FILTER html %]_default" 
+        id="locale[%testidflag FILTER html %]_default" 
+        type="hidden" 
+        value="[%valuelist FILTER html%]">
+    [% END %]
+    <select name="locale[%testidflag FILTER html%]" id="locale[%testidflag FILTER html%]" 
+        class="select_locale">
+    </select>
+[% END %]
+
 [% # testgroup drowndown box
    # default (optional) - the default selection
    #                     (can be either a single object or a list)

@@ -44,8 +44,18 @@
 [% PROCESS global/selects.none.tmpl %]
 
 [% includeselects=1 %]
-[% INCLUDE global/html_header.tmpl js_files=['js/SelectBoxes.js'] %]
+[% INCLUDE global/html_header.tmpl js_files=['js/SelectBoxes.js','js/FormValidation.js'] %]
 [% INCLUDE global/litmus_header.tmpl %]
+
+<script type="text/javascript">
+
+function checkFormContents(f) { 
+   return (
+           checkBuildId(f.buildid) &&
+           checkEmail(f.email)
+          );
+}
+</script>
 
 <div id="page">
 
@@ -62,7 +72,7 @@ System Information
   <div class="section-content">
 
 <p>To run tests, please enter some information about your system configuration.</p>
-<form action="[% goto | html %]" method="post" name="form" id="form">
+<form action="[% goto | html %]" method="post" name="sysconfig_form" id="sysconfig_form" onSubmit="return checkFormContents(this);">
 <input name="isSysConfig" type="hidden" value="1">
 <input name="testgroup" type="hidden" value="[% testgroup | html %]">
 
@@ -113,6 +123,10 @@ System Information
 <td>[% INCLUDE branchbox branches=branches defaultbranch=ua.branch(product) %]</td>
 </tr>
 <tr>
+<td><div align="right">Locale: </div></td>
+<td>[% INCLUDE form_widgets/select_locale.tmpl name="locale" defaults.locale=ua.locale %]</td>
+</tr>
+<tr>
 <td><div align="right">Build ID:</div></td>
 <td><input type="text" id="buildid" name="buildid" size="25" value="[% ua.buildid FILTER html %]"></td>
 </tr>
@@ -125,7 +139,7 @@ System Information
 <td>PRIVACY NOTICE: Like <a href="https://bugzilla.mozilla.org/">Bugzilla</a>, Litmus is an open system. All testing results you submit will be visible to the public, including the email addresses of those involved. Although steps are taken to hide addresses from email harvesters, the spammers are continually getting better technology and it is almost guaranteed that the address you use with Litmus will get spam. We recommend using a free web email service (such as Yahoo or Hotmail or similar) and not your primary email address if this concerns you. There are solutions being worked on to allow you to hide your email address from other users, but that option is not yet available.
 <tr>
 <td colspan="2">
-<input class="button" type="submit" name="Submit" value="Submit">
+<input class="category" type="submit" name="Submit" value="Submit">
 </td>
 </tr>
 </table>

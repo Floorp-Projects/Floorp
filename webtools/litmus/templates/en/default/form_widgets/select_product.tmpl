@@ -1,4 +1,4 @@
-<select name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %]>
+<select name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %][% IF onChange %] onChange="[% onChange %]"[% END %]>
     [% IF placeholder %]<option value="">-Product-</option>[% END %]
 [% IF products %]
 [% FOREACH product=products %]

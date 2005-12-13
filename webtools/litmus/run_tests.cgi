@@ -101,7 +101,7 @@ sub page_pickGroupSubgroup {
    
         print $c->header(-cookie => [$sysconfig->setCookie(), Litmus::Auth::setCookie($user)]);
     }
-    
+
     # get all groups for the product:
     my @groups = Litmus::DB::Testgroup->search(product => $sysconfig->product(), obsolete => 'No');
     
@@ -155,6 +155,8 @@ sub page_test {
     # get all possible test results:
     my @results = Litmus::DB::Result->retrieve_all();
 
+    my $sysconfig = Litmus::SysConfig->getCookie($tests[0]->product());
+    
     my $vars = {
         title => $title,
         sysconfig => Litmus::SysConfig->getCookie($tests[0]->product()),

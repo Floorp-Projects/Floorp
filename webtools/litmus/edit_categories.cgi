@@ -35,8 +35,8 @@ $|++;
 
 use Litmus;
 use Litmus::Auth;
+use Litmus::Cache;
 use Litmus::Error;
-use Litmus::DB::Testresult;
 use Litmus::FormWidget;
 
 use CGI;
@@ -44,16 +44,56 @@ use Time::Piece::MySQL;
 
 use diagnostics;
 
-my ($criteria,$results) = Litmus::DB::Testresult->getDefaultTestResults;
+my $c = new CGI;
+print $c->header();
+
+if ($c->param) {
+  my $product;
+  my $rebuild_cache;
+  if ($c->param('add_product')) {
+    my $name = $c->param('new_product_name');
+    my $icon_path = $c->param('new_icon_path') || "";
+    my $enabled = $c->param('new_enabled') ? 'Yes' : 'No';
+    eval {
+      $product = Litmus::DB::Product->create({
+                                              name => $name,
+                                              iconpath => $icon_path,
+                                              enabled => $enabled,
+                                             });
+      $rebuild_cache = 1;
+    };
+  }
+  if ($c->param('delete_product')) {
+    $product = Litmus::DB::Product->retrieve($c->param('modify_product_id'));
+    $product->delete;
+    $rebuild_cache = 1;
+  }
+  if ($c->param('update_product')) {
+    $product = Litmus::DB::Product->retrieve($c->param('modify_product_id'));
+    $product->name($c->param('modify_product_name'));
+    $product->iconpath($c->param('modify_icon_path'));
+    if ($c->param('modify_enabled')) {
+      $product->enabled('Yes');
+    } else {
+      $product->enabled('No');
+    }
+    eval {
+      $product->update;
+      $rebuild_cache = 1;
+    };
+  }
+
+  if ($rebuild_cache) {
+    use Litmus::Cache;
+    rebuildCache();
+  }
+}
 
 my $products = Litmus::FormWidget->getProducts();
 my $platforms = Litmus::FormWidget->getPlatforms();
 my $branches = Litmus::FormWidget->getBranches();
 my $opsyses = Litmus::FormWidget->getOpsyses();
 my $log_types = Litmus::FormWidget->getLogTypes();
-
-my $c = new CGI;
-print $c->header();
 
 my $vars = {
             title => 'Edit Categories',

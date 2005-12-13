@@ -52,6 +52,7 @@ sub community_coverage {
   my $self = shift;
   my $platform = shift;
   my $build_id = shift;
+  my $locale = shift;
   my $community_only = shift;
 
   my $percent_completed = 0;
@@ -62,6 +63,7 @@ sub community_coverage {
     my $subgroup_percent = $subgroup->community_coverage(
                                                          $platform, 
                                                          $build_id, 
+                                                         $locale,
                                                          $community_only
                                                         );
     if ($subgroup_percent eq "N/A") {
@@ -85,6 +87,7 @@ sub personal_coverage {
   my $self = shift;
   my $platform = shift;
   my $build_id = shift;
+  my $locale = shift;
   my $community_only = shift;
   my $user = shift;
 
@@ -96,6 +99,7 @@ sub personal_coverage {
     my $subgroup_percent = $subgroup->personal_coverage(
                                                         $platform, 
                                                         $build_id, 
+                                                        $locale,
                                                         $community_only,
                                                         $user,
                                                        );
@@ -116,3 +120,11 @@ sub personal_coverage {
 }
 
 1;
+
+
+
+
+
+
+
+

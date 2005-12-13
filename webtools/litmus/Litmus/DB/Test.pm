@@ -79,7 +79,7 @@ sub isrecent {
 }
 
 #########################################################################
-# is_completed($$$$)
+# is_completed($$$$$)
 #
 # Check whether we have test results for the current test that correspond
 # to the provided platform, build_id, and user(optional).
@@ -89,6 +89,7 @@ sub is_completed {
   my $self = shift;
   my $platform = shift;
   my $build_id = shift;
+  my $locale = shift;
   my $user = shift;        # optional
 
   my @results;
@@ -96,12 +97,14 @@ sub is_completed {
     @results = $self->testresults(
                                   platform => $platform,
                                   buildid => $build_id,
+                                  locale => $locale,
                                   user => $user,
                                  );
   } else {
     @results = $self->testresults(
                                   platform => $platform,
                                   buildid => $build_id,
+                                  locale => $locale,
                                  );
   }
   

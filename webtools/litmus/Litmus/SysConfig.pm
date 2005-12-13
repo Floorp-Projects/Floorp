@@ -36,6 +36,7 @@ use strict;
 
 require Exporter;
 use Litmus;
+use Litmus::DB::Locale;
 use Litmus::DB::Product;
 use Litmus::Error;
 use Litmus::Utils;
@@ -47,7 +48,7 @@ our @EXPORT = qw();
 my $configcookiename = $Litmus::Config::sysconfig_cookiename;
 
 sub new {
-    my ($class, $product, $platform, $opsys, $branch, $buildid) = @_;
+    my ($class, $product, $platform, $opsys, $branch, $buildid, $locale) = @_;
 
     my $self = {};
     bless($self);
@@ -55,8 +56,9 @@ sub new {
     $self->{"product"}  = $product;
     $self->{"platform"} = $platform;
     $self->{"opsys"}    = $opsys;
-    $self->{"branch"}    = $branch;
+    $self->{"branch"}   = $branch;
     $self->{"buildid"}  = $buildid;
+    $self->{"locale"}   = $locale;
     
     return $self;
 }
@@ -70,7 +72,7 @@ sub setCookie {
     my $cookie = $c->cookie( 
         -name   => $configcookiename.'_'.$self->{"product"}->productid(),
         -value  => join('|', $self->{"product"}->productid(), $self->{"platform"}->platformid(),
-             $self->{"opsys"}->opsysid(), $self->{"branch"}->branchid(), $self->{"buildid"}),
+             $self->{"opsys"}->opsysid(), $self->{"branch"}->branchid(), $self->{"buildid"}, $self->{"locale"}->abbrev()),
         -domain => $main::ENV{"HTTP_HOST"},
     );
     
@@ -95,6 +97,7 @@ sub getCookie() {
                Litmus::DB::Opsys->retrieve($sysconfig[2]), 
                Litmus::DB::Branch->retrieve($sysconfig[3]), 
                $sysconfig[4],
+               Litmus::DB::Locale->retrieve($sysconfig[5])
                );    
 }
 
@@ -128,6 +131,13 @@ sub buildid() {
     return $self->{"buildid"};
 }
 
+sub locale() {
+    my $self = shift;
+    
+    return $self->{"locale"};
+}
+
+
 # display the system configuration form
 # optionally takes the product to configure for 
 # and requires a url to load when done. this 
@@ -151,8 +161,13 @@ sub displayForm {
         # we need to ask the user for the product then
         @products = Litmus::DB::Product->retrieve_all();
     }
+
+    my @locales = Litmus::DB::Locale->retrieve_all(
+                                                   { order_by => 'abbrev' }
+                                                  );
     
     my $vars = {
+        locales    => \@locales,        
         products   => \@products,
         ua         => Litmus::UserAgentDetect->new(),
         "goto" => $goto,
@@ -166,6 +181,7 @@ sub displayForm {
         $vars->{"defaultplatform"} = $sysconfig->platform();
         $vars->{"defaultopsys"} = $sysconfig->opsys();
         $vars->{"defaultbranch"} = $sysconfig->branch();
+        $vars->{"defaultlocale"} = $sysconfig->locale();
     }
     
     my $cookie =  Litmus::Auth::getCookie();
@@ -189,12 +205,14 @@ sub processForm {
     my $opsys = Litmus::DB::Opsys->retrieve($c->param("opsys"));
     my $branch = Litmus::DB::Branch->retrieve($c->param("branch"));
     my $buildid = $c->param("buildid");
+    my $locale = Litmus::DB::Locale->retrieve($c->param("locale"));
     
     requireField("product", $product);
     requireField("platform", $platform);
     requireField("opsys", $opsys);
     requireField("branch", $branch);
     requireField("buildid", $buildid);
+    requireField("locale", $locale);
     
     # set a cookie with the user's testing details:
     my $prod =  Litmus::DB::Product->retrieve($c->param("product"));
@@ -203,9 +221,13 @@ sub processForm {
                             $platform, 
                             $opsys,
                             $branch,
-                            $buildid
+                            $buildid,
+                            $locale
                             );
                                     
     return $sysconfig;
 }
 1;
+
+
+
