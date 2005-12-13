@@ -296,7 +296,7 @@ static PRBool test_comptr_array() {
     fileArray.AppendElement(f);
   }
 
-  if (fileArray.IndexOf(kNames[1], nsFileNameComparator()) != 1)
+  if (fileArray.IndexOf(kNames[1], 0, nsFileNameComparator()) != 1)
     return PR_FALSE;
 
   // It's unclear what 'operator<' means for nsCOMPtr, but whatever...
