@@ -86,6 +86,7 @@ EXTRA_DEPS = \
 	$(NULL)
 
 NO_DIST_INSTALL = 1
+NO_INSTALL = 1
 
 include $(topsrcdir)/config/rules.mk
 

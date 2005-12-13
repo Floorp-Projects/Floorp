@@ -50,6 +50,7 @@ REQUIRES = xpcom \
            $(NULL)
 
 NO_DIST_INSTALL = 1
+NO_INSTALL = 1
 
 CPPSRCS = nsScriptablePeer.cpp \
           plugin.cpp \
