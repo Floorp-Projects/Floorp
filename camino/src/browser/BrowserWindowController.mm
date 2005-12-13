@@ -151,6 +151,7 @@ public:
 
   BWCDataOwner()
   : mContextMenuFlags(0)
+  , mGotOnContextMenu(false)
   {
     mGlobalHistory = do_GetService("@mozilla.org/browser/global-history;2");
     mURIFixer      = do_GetService("@mozilla.org/docshell/urifixup;1");
@@ -162,6 +163,7 @@ public:
   int                           mContextMenuFlags;
   nsCOMPtr<nsIDOMEvent>         mContextMenuEvent;
   nsCOMPtr<nsIDOMNode>          mContextMenuNode;
+  bool                          mGotOnContextMenu;
 };
 
 
@@ -1053,7 +1055,7 @@ enum BWCOpenDest {
 }
 
 // XXX use a dictionary to speed up the following?
-
+// Better to just read it from a plist.
 - (NSToolbarItem *) toolbar:(NSToolbar *)toolbar
       itemForItemIdentifier:(NSString *)itemIdent
   willBeInsertedIntoToolbar:(BOOL)willBeInserted
@@ -2983,6 +2985,7 @@ enum BWCOpenDest {
     mDataOwner->mContextMenuFlags = flags;
     mDataOwner->mContextMenuNode  = aNode;
     mDataOwner->mContextMenuEvent = aEvent;
+    mDataOwner->mGotOnContextMenu = true;
   }
   
   // There is no simple way of getting a callback when the context menu handling
@@ -3005,6 +3008,7 @@ enum BWCOpenDest {
     mDataOwner->mContextMenuFlags = 0;
     mDataOwner->mContextMenuNode  = nsnull;
     mDataOwner->mContextMenuEvent = nsnull;
+    mDataOwner->mGotOnContextMenu = false;
   }
 }
 
@@ -3096,6 +3100,9 @@ enum BWCOpenDest {
 
 - (NSMenu*)getContextMenu
 {
+  if (!mDataOwner->mGotOnContextMenu)
+    return nil;
+
   BOOL showFrameItems = NO;
   
   NSMenu* menuPrototype = nil;
