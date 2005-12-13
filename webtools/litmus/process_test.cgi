@@ -167,8 +167,10 @@ foreach my $curtestid (@tests) {
   
   if ($bugs and
       $bugs ne '') {
+    $bugs =~ s/[^0-9,]//g;
     my @new_bugs = split(/,/,$bugs);
     foreach my $new_bug (@new_bugs) {
+      next if ($new_bug eq '0');
       my $bug = Litmus::DB::Resultbug->create({
                                                testresult => $tr,
                                                last_updated => $time,

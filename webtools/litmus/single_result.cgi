@@ -61,8 +61,12 @@ if ($c->param && $c->param('id')) {
     if ($user and 
         $c->param('new_bugs') and
         $c->param('new_bugs') ne '') {
-      my @new_bugs = split(/,/,$c->param('new_bugs'));
+
+      my $new_bug_string = $c->param('new_bugs');
+      $new_bug_string =~ s/[^0-9,]//g;
+      my @new_bugs = split(/,/,$new_bug_string);
       foreach my $new_bug (@new_bugs) {
+        next if ($new_bug eq '0');
         if (!Litmus::DB::Resultbug->search(test_result_id =>$c->param('id'),
                                            bug_id => $new_bug)) {
           my $bug = Litmus::DB::Resultbug->create({
