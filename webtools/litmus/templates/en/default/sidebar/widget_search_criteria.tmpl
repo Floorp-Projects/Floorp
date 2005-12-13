@@ -2,5 +2,9 @@
     <div>
     <h3>Search Criteria</h3>
     <p>[% criteria | none %]</p>
+    [% IF results AND results.size > 0 %]
+    <hr/>
+    <p># results: [% results.size %]</p>
+    [% END %]
     </div>
   </div>
