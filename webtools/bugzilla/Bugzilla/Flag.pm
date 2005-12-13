@@ -19,7 +19,7 @@
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
 #                 Jouni Heikniemi <jouni@heikniemi.net>
-#                 Frédéric Buclin <LpSolit@gmail.com>
+#                 FrÃ©dÃ©ric Buclin <LpSolit@gmail.com>
 
 =head1 NAME
 
@@ -552,12 +552,13 @@ sub create {
                         $timestamp)");
     
     # Send an email notifying the relevant parties about the flag creation.
-    if (($flag->{'requestee'} 
-         && $flag->{'requestee'}->wants_mail([EVT_FLAG_REQUESTED]))
-         || $flag->{'type'}->{'cc_list'})
+    if ($flag->{'requestee'} 
+          && $flag->{'requestee'}->wants_mail([EVT_FLAG_REQUESTED]))
     {
-        notify($flag, "request/email.txt.tmpl");
+        $flag->{'addressee'} = $flag->{'requestee'};
     }
+
+    notify($flag, "request/email.txt.tmpl");
 }
 
 =pod
@@ -685,14 +686,25 @@ sub modify {
                                modification_date = $sql_timestamp ,
                                is_active = 1
                         WHERE  id = $flag->{'id'}");
-            
-            # Send an email notifying the relevant parties about the fulfillment.
-            if ($flag->{'setter'}->wants_mail([EVT_REQUESTED_FLAG]) 
-                || $flag->{'type'}->{'cc_list'})
-            {
-                $flag->{'status'} = $status;
-                notify($flag, "request/email.txt.tmpl");
+
+            # If the status of the flag was "?", we have to notify
+            # the requester (if he wants to).
+            my $requester;
+            if ($flag->{'status'} eq '?') {
+                $requester = $flag->{'setter'};
             }
+            # Now update the flag object with its new values.
+            $flag->{'setter'} = $setter;
+            $flag->{'requestee'} = undef;
+            $flag->{'status'} = $status;
+
+            # Send an email notifying the relevant parties about the fulfillment,
+            # including the requester.
+            if ($requester && $requester->wants_mail([EVT_REQUESTED_FLAG])) {
+                $flag->{'addressee'} = $requester;
+            }
+
+            notify($flag, "request/email.txt.tmpl");
         }
         elsif ($status eq '?') {
             # Get the requestee, if any.
@@ -700,6 +712,11 @@ sub modify {
             if ($requestee_email) {
                 $requestee_id = login_to_id($requestee_email);
                 $flag->{'requestee'} = new Bugzilla::User($requestee_id);
+            }
+            else {
+                # If the status didn't change but we only removed the
+                # requestee, we have to clear the requestee field.
+                $flag->{'requestee'} = undef;
             }
 
             # Update the database with the changes.
@@ -710,14 +727,19 @@ sub modify {
                                modification_date = $sql_timestamp ,
                                is_active = 1
                         WHERE  id = $flag->{'id'}");
-            
+
+            # Now update the flag object with its new values.
+            $flag->{'setter'} = $setter;
+            $flag->{'status'} = $status;
+
             # Send an email notifying the relevant parties about the request.
-            if ($flag->{'requestee'} 
-                && ($flag->{'requestee'}->wants_mail([EVT_FLAG_REQUESTED]) 
-                    || $flag->{'type'}->{'cc_list'}))
+            if ($flag->{'requestee'}
+                  && $flag->{'requestee'}->wants_mail([EVT_FLAG_REQUESTED]))
             {
-                notify($flag, "request/email.txt.tmpl");
+                $flag->{'addressee'} = $flag->{'requestee'};
             }
+
+            notify($flag, "request/email.txt.tmpl");
         }
         # The user unset the flag; set is_active = 0
         elsif ($status eq 'X') {
@@ -751,12 +773,24 @@ sub clear {
     &::SendSQL("UPDATE flags SET is_active = 0 WHERE id = $id");
     &::PopGlobalSQLState();
 
+    # If we cancel a pending request, we have to notify the requester
+    # (if he wants to).
+    my $requester;
+    if ($flag->{'status'} eq '?') {
+        $requester = $flag->{'setter'};
+    }
+
+    # Now update the flag object to its new values. The last
+    # requester/setter and requestee are kept untouched (for the
+    # record). Else we could as well delete the flag completely.
     $flag->{'exists'} = 0;    
-    # Set the flag's status to "cleared" so the email template
-    # knows why email is being sent about the request.
     $flag->{'status'} = "X";
-    
-    notify($flag, "request/email.txt.tmpl") if $flag->{'requestee'};
+
+    if ($requester && $requester->wants_mail([EVT_REQUESTED_FLAG])) {
+        $flag->{'addressee'} = $requester;
+    }
+
+    notify($flag, "request/email.txt.tmpl");
 }
 
 
@@ -932,7 +966,8 @@ sub get_target {
 
 =item C<notify($flag, $template_file)>
 
-Sends an email notification about a flag being created or fulfilled.
+Sends an email notification about a flag being created, fulfilled
+or deleted.
 
 =back
 
@@ -943,7 +978,10 @@ sub notify {
 
     my $template = Bugzilla->template;
     my $vars = {};
-    
+
+    # There is nobody to notify.
+    return unless ($flag->{'addressee'} || $flag->{'type'}->{'cc_list'});
+
     my $attachment_is_private = $flag->{'target'}->{'attachment'} ?
       $flag->{'target'}->{'attachment'}->{'isprivate'} : undef;
 
@@ -966,8 +1004,9 @@ sub notify {
         $flag->{'type'}->{'cc_list'} = join(", ", @new_cc_list);
     }
 
-    $flag->{'requestee'}->{'email'} .= Param('emailsuffix');
-    $flag->{'setter'}->{'email'} .= Param('emailsuffix');
+    # If there is nobody left to notify, return.
+    return unless ($flag->{'addressee'} || $flag->{'type'}->{'cc_list'});
+
     $vars->{'flag'} = $flag;
     
     my $message;

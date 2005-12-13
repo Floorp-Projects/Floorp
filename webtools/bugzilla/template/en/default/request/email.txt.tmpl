@@ -18,6 +18,7 @@
   #
   # Contributor(s):     Myk Melez <myk@mozilla.org>
   #                     Jeff Hedlund <jeff.hedlund@matrixsi.com>
+  #                     Frédéric Buclin <LpSolit@gmail.com>
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -28,18 +29,16 @@
 [% statuses = { '+' => "granted" , '-' => 'denied' , 'X' => "cancelled" ,
                 '?' => "asked" } %]
 [% IF flag.status == '?' %]
-   [% to_email = flag.requestee.email 
-                 IF flag.requestee.wants_mail([constants.EVT_FLAG_REQUESTED]) %]
-   [% to_identity = flag.requestee.identity %]
-   [% subject_status = "requested" %]
+  [% to_identity = flag.addressee.identity _ " for" %]
+  [% subject_status = "requested" %]
 [% ELSE %]
-   [% to_email = flag.setter.email 
-                    IF flag.setter.wants_mail([constants.EVT_REQUESTED_FLAG]) %]
-   [% to_identity = flag.setter.identity _ "'s request" %]
-   [% subject_status = statuses.${flag.status} %]
+  [% IF flag.addressee %]
+    [% to_identity = flag.addressee.identity _ "'s request for" %]
+  [% END %]
+  [% subject_status = statuses.${flag.status} %]
 [% END %]
 From: bugzilla-request-daemon
-To: [% to_email %]
+To: [% flag.addressee.email %]
 CC: [% flag.type.cc_list %]
 Subject: [% flag.type.name %] [%+ subject_status %]: [[% terms.Bug %] [%+ flag.target.bug.id %]] [% flag.target.bug.summary %]
 [%- IF flag.target.attachment.exists %] :
@@ -48,7 +47,7 @@ Subject: [% flag.type.name %] [%+ subject_status %]: [[% terms.Bug %] [%+ flag.t
 [%+ USE wrap -%]
 [%- FILTER bullet = wrap(80) -%]
 
-[% user.identity %] has [% statuses.${flag.status} %] [%+ to_identity %] for [% flag.type.name %]:
+[% user.identity %] has [% statuses.${flag.status} %] [%+ to_identity %] [%+ flag.type.name %]:
 
 [% terms.Bug %] [%+ bugidsummary %]
 [% END %]
