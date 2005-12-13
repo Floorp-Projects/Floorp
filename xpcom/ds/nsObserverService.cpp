@@ -238,18 +238,6 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports *aSubject,
             nsCOMPtr<nsIObserver> observer = do_QueryInterface(observerRef);
             if (observer) 
                 observer->Observe(aSubject, aTopic, someData);
-            else
-            {  // check for weak reference.
-                nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(observerRef);     
-                if (weakRef)                                                              
-                    weakRef->QueryReferent(NS_GET_IID(nsIObserver), getter_AddRefs(observer));
-
-                if (observer) 
-                    observer->Observe(aSubject, aTopic, someData);
-
-                PR_LOG(observerServiceLog, PR_LOG_DEBUG, ("Notification - %s\n", aTopic ? aTopic : "undefined"));
-
-            }
         }
     } while (observers);
     return NS_OK;
