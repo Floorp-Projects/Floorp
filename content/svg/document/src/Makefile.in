@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= svg_doc
+MODULE		= content
 LIBRARY_NAME	= gkconsvgdoc_s
 LIBXUL_LIBRARY	= 1
 REQUIRES	= content \
