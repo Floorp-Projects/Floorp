@@ -575,8 +575,9 @@ nsFileControlFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-NS_IMETHODIMP nsFileControlFrame::SetFormProperty(nsIAtom* aName,
-                                              const nsAString& aValue)
+nsresult
+nsFileControlFrame::SetFormProperty(nsIAtom* aName,
+                                    const nsAString& aValue)
 {
   if (nsHTMLAtoms::value == aName) {
     if (mTextFrame) {
