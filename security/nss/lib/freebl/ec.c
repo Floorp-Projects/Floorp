@@ -397,7 +397,7 @@ EC_NewKey(ECParams *ecParams, ECPrivateKey **privKey)
     CHECK_MPI_OK( mp_sub(&order_1, &one, &order_1) );
     CHECK_MPI_OK( mp_mod(&privKeyVal, &order_1, &privKeyVal) );
     CHECK_MPI_OK( mp_add(&privKeyVal, &one, &privKeyVal) );
-    CHECK_MPI_OK( mp_to_unsigned_octets(&privKeyVal, privKeyBytes, len) );
+    CHECK_MPI_OK( mp_to_fixlen_octets(&privKeyVal, privKeyBytes, len) );
     /* generate public key */
     CHECK_SEC_OK( ec_NewKey(ecParams, privKey, privKeyBytes, len) );
 
