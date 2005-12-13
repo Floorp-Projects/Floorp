@@ -305,8 +305,16 @@ nsXFormsModelElement::RemoveModelFromDocument()
   RemoveFromModelList(domDoc, this);
 
   nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(domDoc);
-  if (targ)
+  if (targ) {
     targ->RemoveEventListener(NS_LITERAL_STRING("DOMContentLoaded"), this, PR_TRUE);
+
+    nsCOMPtr<nsIDOMWindowInternal> window;
+    nsXFormsUtils::GetWindowFromDocument(domDoc, getter_AddRefs(window));
+    targ = do_QueryInterface(window);
+    if (targ) {
+      targ->RemoveEventListener(NS_LITERAL_STRING("unload"), this, PR_TRUE);
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -321,10 +329,6 @@ NS_IMETHODIMP
 nsXFormsModelElement::WillChangeDocument(nsIDOMDocument* aNewDocument)
 {
   RemoveModelFromDocument();
-  if(!aNewDocument) {
-    // can't send this much later or the model won't still be in the document!
-    nsXFormsUtils::DispatchEvent(mElement, eEvent_ModelDestruct);
-  }
   return NS_OK;
 }
 
@@ -337,8 +341,16 @@ nsXFormsModelElement::DocumentChanged(nsIDOMDocument* aNewDocument)
   AddToModelList(aNewDocument, this);
 
   nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(aNewDocument);
-  if (targ)
+  if (targ) {
     targ->AddEventListener(NS_LITERAL_STRING("DOMContentLoaded"), this, PR_TRUE);
+
+    nsCOMPtr<nsIDOMWindowInternal> window;
+    nsXFormsUtils::GetWindowFromDocument(aNewDocument, getter_AddRefs(window));
+    targ = do_QueryInterface(window);
+    if (targ) {
+      targ->AddEventListener(NS_LITERAL_STRING("unload"), this, PR_TRUE);
+    }
+  }
   
   return NS_OK;
 }
@@ -924,62 +936,12 @@ nsXFormsModelElement::HandleEvent(nsIDOMEvent* aEvent)
 
   nsAutoString type;
   aEvent->GetType(type);
-  if (!type.EqualsLiteral("DOMContentLoaded"))
-    return NS_OK;
 
-  if (!mInstancesInitialized) {
-    // XXX This is for Bug 308106. In Gecko 1.8 DoneAddingChildren is not
-    //     called in XUL if the element doesn't have any child nodes.
-    InitializeInstances();
+  if (type.EqualsLiteral("DOMContentLoaded")) {
+    return HandleLoad(aEvent);
+  }else if (type.EqualsLiteral("unload")) {
+    return HandleUnload(aEvent);
   }
-
-  mDocumentLoaded = PR_TRUE;
-
-  // dispatch xforms-model-construct, xforms-rebuild, xforms-recalculate,
-  // xforms-revalidate
-
-  // We wait until DOMContentLoaded to dispatch xforms-model-construct,
-  // since the model may have an action handler for this event and Mozilla
-  // doesn't register XML Event listeners until the document is loaded.
-
-  // xforms-model-construct is not cancellable, so always proceed.
-
-  nsXFormsUtils::DispatchEvent(mElement, eEvent_ModelConstruct);
-
-  if (mPendingInlineSchemas.Count() > 0) {
-    nsCOMPtr<nsIDOMElement> el;
-    nsresult rv;
-    for (PRInt32 i=0; i<mPendingInlineSchemas.Count(); ++i) {
-      GetSchemaElementById(mElement, *mPendingInlineSchemas[i],
-                           getter_AddRefs(el));
-      if (!el) {
-        rv = NS_ERROR_UNEXPECTED;
-      } else {
-        nsCOMPtr<nsISchema> schema;
-        // no need to observe errors via the callback.  instead, rely on
-        // this method returning a failure code when it encounters errors.
-        rv = mSchemas->ProcessSchemaElement(el, nsnull,
-                                            getter_AddRefs(schema));
-        if (NS_SUCCEEDED(rv))
-          mSchemaCount++;
-      }
-      if (NS_FAILED(rv)) {
-        // this is a fatal error (XXX)
-        nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaLoadError"), mElement);
-        nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
-        return NS_OK;
-      }
-    }
-    if (IsComplete()) {
-      rv = FinishConstruction();
-      NS_ENSURE_SUCCESS(rv, rv);
-      nsXFormsUtils::DispatchEvent(mElement, eEvent_Refresh);
-    }
-    mPendingInlineSchemas.Clear();
-  }
-
-  // We may still be waiting on external documents to load.
-  MaybeNotifyCompletion();
 
   return NS_OK;
 }
@@ -1818,6 +1780,74 @@ nsXFormsModelElement::ProcessDeferredBinds(nsIDOMDocument *aDoc)
 
     doc->DeleteProperty(nsXFormsAtoms::deferredBindListProperty);
   }
+}
+
+nsresult
+nsXFormsModelElement::HandleLoad(nsIDOMEvent* aEvent)
+{
+  if (!mInstancesInitialized) {
+    // XXX This is for Bug 308106. In Gecko 1.8 DoneAddingChildren is not
+    //     called in XUL if the element doesn't have any child nodes.
+    InitializeInstances();
+  }
+
+  mDocumentLoaded = PR_TRUE;
+
+  // dispatch xforms-model-construct, xforms-rebuild, xforms-recalculate,
+  // xforms-revalidate
+
+  // We wait until DOMContentLoaded to dispatch xforms-model-construct,
+  // since the model may have an action handler for this event and Mozilla
+  // doesn't register XML Event listeners until the document is loaded.
+
+  // xforms-model-construct is not cancellable, so always proceed.
+
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_ModelConstruct);
+
+  if (mPendingInlineSchemas.Count() > 0) {
+    nsCOMPtr<nsIDOMElement> el;
+    nsresult rv;
+    for (PRInt32 i=0; i<mPendingInlineSchemas.Count(); ++i) {
+      GetSchemaElementById(mElement, *mPendingInlineSchemas[i],
+                           getter_AddRefs(el));
+      if (!el) {
+        rv = NS_ERROR_UNEXPECTED;
+      } else {
+        nsCOMPtr<nsISchema> schema;
+        // no need to observe errors via the callback.  instead, rely on
+        // this method returning a failure code when it encounters errors.
+        rv = mSchemas->ProcessSchemaElement(el, nsnull,
+                                            getter_AddRefs(schema));
+        if (NS_SUCCEEDED(rv))
+          mSchemaCount++;
+      }
+      if (NS_FAILED(rv)) {
+        // this is a fatal error (XXX)
+        nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaLoadError"), mElement);
+        nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
+        return NS_OK;
+      }
+    }
+    if (IsComplete()) {
+      rv = FinishConstruction();
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsXFormsUtils::DispatchEvent(mElement, eEvent_Refresh);
+    }
+    mPendingInlineSchemas.Clear();
+  }
+
+  // We may still be waiting on external documents to load.
+  MaybeNotifyCompletion();
+
+  return NS_OK;
+}
+
+nsresult
+nsXFormsModelElement::HandleUnload(nsIDOMEvent* aEvent)
+{
+  // due to fastback changes, had to move this notification out from under
+  // model's WillChangeDocument override.
+  return nsXFormsUtils::DispatchEvent(mElement, eEvent_ModelDestruct);
 }
 
 nsresult

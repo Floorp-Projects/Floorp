@@ -80,19 +80,13 @@ nsXFormsLoadElement::HandleAction(nsIDOMEvent* aEvent,
     return NS_OK;
 
   nsCOMPtr<nsIDOMDocument> doc;
+  nsCOMPtr<nsIDOMWindowInternal> internal;
   mElement->GetOwnerDocument(getter_AddRefs(doc));
-
-  nsCOMPtr<nsIDOMDocumentView> dview(do_QueryInterface(doc));
-  if (!dview)
+  nsXFormsUtils::GetWindowFromDocument(doc, getter_AddRefs(internal));
+  if (!internal) {
+    NS_ASSERTION(internal, "No AbstractView or it isn't an nsIDOMWindowInternal");
     return NS_OK;
-
-  nsCOMPtr<nsIDOMAbstractView> aview;
-  dview->GetDefaultView(getter_AddRefs(aview));
-
-  nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aview));
-  NS_ASSERTION(internal, "No AbstractView or it isn't an nsIDOMWindowInternal");
-  if (!internal)
-    return NS_OK;
+  }
   
   PRBool openNew = PR_FALSE;
   nsAutoString show;

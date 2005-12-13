@@ -230,6 +230,16 @@ private:
   PRBool IsComplete() const { return (mSchemaTotal == mSchemaCount
                                       && mPendingInstanceCount == 0);  }
 
+  /**
+   * Called by HandleEvent.  Event handler for the 'DOMContentLoaded' event.
+   */
+  NS_HIDDEN_(nsresult) HandleLoad(nsIDOMEvent *aEvent);
+
+  /**
+   * Called by HandleEvent.  Event handler for the 'unload' event.
+   */
+  NS_HIDDEN_(nsresult) HandleUnload(nsIDOMEvent *aEvent);
+
   nsIDOMElement            *mElement;
   nsCOMPtr<nsISchemaLoader> mSchemas;
   nsStringArray             mPendingInlineSchemas;

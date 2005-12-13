@@ -198,12 +198,9 @@ nsXFormsUploadElement::PickFile()
 
   // get nsIDOMWindowInternal
   nsCOMPtr<nsIDOMDocument> doc;
+  nsCOMPtr<nsIDOMWindowInternal> internal;
   mElement->GetOwnerDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMDocumentView> dview = do_QueryInterface(doc);
-  NS_ENSURE_STATE(dview);
-  nsCOMPtr<nsIDOMAbstractView> aview;
-  dview->GetDefaultView(getter_AddRefs(aview));
-  nsCOMPtr<nsIDOMWindowInternal> internal = do_QueryInterface(aview);
+  rv = nsXFormsUtils::GetWindowFromDocument(doc, getter_AddRefs(internal));
   NS_ENSURE_STATE(internal);
 
   // init filepicker

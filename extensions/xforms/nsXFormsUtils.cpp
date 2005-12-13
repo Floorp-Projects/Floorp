@@ -1610,16 +1610,12 @@ nsXFormsUtils::HandleBindingException(nsIDOMElement *aElement)
     return PR_FALSE;
 
   // Get nsIDOMWindowInternal
-  nsCOMPtr<nsIDOMDocumentView> dview(do_QueryInterface(doc));
-  if (!dview)
+  nsCOMPtr<nsIDOMWindowInternal> internal;
+  rv = nsXFormsUtils::GetWindowFromDocument(doc, getter_AddRefs(internal));
+  if (NS_FAILED(rv) || !internal) {
     return PR_FALSE;
+  }
 
-  nsCOMPtr<nsIDOMAbstractView> aview;
-  dview->GetDefaultView(getter_AddRefs(aview));
-
-  nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aview));
-  if (!internal)
-    return PR_FALSE;
 
   // Show popup
   nsCOMPtr<nsIDOMWindow> messageWindow;
@@ -1990,4 +1986,28 @@ nsXFormsUtils::AreNodesEqual(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNode,
 
   return PR_TRUE;
 
+}
+
+
+/* static */
+nsresult
+nsXFormsUtils::GetWindowFromDocument(nsIDOMDocument         *aDoc,
+                                     nsIDOMWindowInternal  **aWindow)
+{
+  NS_ENSURE_ARG(aDoc);
+  NS_ENSURE_ARG_POINTER(aWindow);
+  *aWindow = nsnull;
+
+  // Get nsIDOMWindowInternal
+  nsCOMPtr<nsIDOMDocumentView> dview(do_QueryInterface(aDoc));
+  NS_ENSURE_STATE(dview);
+
+  nsCOMPtr<nsIDOMAbstractView> aview;
+  dview->GetDefaultView(getter_AddRefs(aview));
+
+  nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aview));
+  NS_ENSURE_STATE(internal);
+
+  NS_ADDREF(*aWindow = internal);
+  return NS_OK;
 }

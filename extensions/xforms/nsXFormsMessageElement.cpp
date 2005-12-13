@@ -457,20 +457,12 @@ PRBool
 nsXFormsMessageElement::HandleInlineAlert(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMDocument> doc;
+  nsCOMPtr<nsIDOMWindowInternal> internal;
   mElement->GetOwnerDocument(getter_AddRefs(doc));
-  
-  nsCOMPtr<nsIDOMDocumentView> dview(do_QueryInterface(doc));
-  if (!dview)
+  nsXFormsUtils::GetWindowFromDocument(doc, getter_AddRefs(internal));
+  if (!internal) {
     return PR_FALSE;
-
-  nsCOMPtr<nsIDOMAbstractView> aview;
-  dview->GetDefaultView(getter_AddRefs(aview));
-  if (!aview)
-    return PR_FALSE;
-
-  nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aview));
-  if (!internal)
-    return PR_FALSE;
+  }
 
   nsCOMPtr<nsIDOMViewCSS> cssView(do_QueryInterface(internal));
   if (!cssView)
@@ -601,16 +593,11 @@ nsresult
 nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
                                                       nsAString& aLevel)
 {
-  nsCOMPtr<nsIDOMDocumentView> dview(do_QueryInterface(aDoc));
-  if (!dview)
+  nsCOMPtr<nsIDOMWindowInternal> internal;
+  nsXFormsUtils::GetWindowFromDocument(aDoc, getter_AddRefs(internal));
+  if (!internal) {
     return NS_OK;
-
-  nsCOMPtr<nsIDOMAbstractView> aview;
-  dview->GetDefaultView(getter_AddRefs(aview));
-
-  nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aview));
-  if (!internal)
-    return NS_OK;
+  }
 
   nsAutoString instanceData;
   PRBool hasBinding = nsXFormsUtils::GetSingleNodeBindingValue(mElement,

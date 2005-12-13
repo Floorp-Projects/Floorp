@@ -48,6 +48,7 @@
 #include "nsIModelElementPrivate.h"
 #include "nsIScriptError.h"
 #include "nsVoidArray.h"
+#include "nsIDOMWindowInternal.h"
 
 class nsIDOMElement;
 class nsIXFormsModelElement;
@@ -498,6 +499,15 @@ public:
   static NS_HIDDEN_(PRBool) AreNodesEqual(nsIDOMNode *aFirstNode,
                                           nsIDOMNode *aSecondNode,
                                           PRBool      aAlreadyNormalized = PR_FALSE);
+
+  /**
+   * Retrieve the window object from the given document
+   *
+   * @param aDoc              The document to get window object from
+   * @param aWindow           The found window object
+   */
+  static NS_HIDDEN_(nsresult) GetWindowFromDocument(nsIDOMDocument        *aDoc,
+                                                    nsIDOMWindowInternal **aWindow);
 };
 
 #endif
