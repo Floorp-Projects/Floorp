@@ -436,6 +436,9 @@ if ($action eq 'search') {
     $vars->{'bugs_activity'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM bugs_activity WHERE who = ?',
         undef, $otherUserID);
+    $vars->{'email_setting'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM email_setting WHERE user_id = ?',
+        undef, $otherUserID);
     $vars->{'flags'}{'requestee'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM flags WHERE requestee_id = ? AND is_active = 1',
         undef, $otherUserID);
@@ -447,6 +450,9 @@ if ($action eq 'search') {
         undef, $otherUserID);
     $vars->{'namedqueries'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM namedqueries WHERE userid = ?',
+        undef, $otherUserID);
+    $vars->{'profile_setting'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM profile_setting WHERE user_id = ?',
         undef, $otherUserID);
     $vars->{'profiles_activity'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM profiles_activity WHERE who = ? AND userid != ?',
@@ -499,6 +505,8 @@ if ($action eq 'search') {
                          'logincookies WRITE',
                          'profiles WRITE',
                          'profiles_activity WRITE',
+                         'email_setting WRITE',
+                         'profile_setting WRITE',
                          'groups READ',
                          'bug_group_map READ',
                          'user_group_map WRITE',
@@ -568,8 +576,12 @@ if ($action eq 'search') {
     }
 
     # Simple deletions in referred tables.
+    $dbh->do('DELETE FROM email_setting WHERE user_id = ?', undef,
+             $otherUserID);
     $dbh->do('DELETE FROM logincookies WHERE userid = ?', undef, $otherUserID);
     $dbh->do('DELETE FROM namedqueries WHERE userid = ?', undef, $otherUserID);
+    $dbh->do('DELETE FROM profile_setting WHERE user_id = ?', undef,
+             $otherUserID);
     $dbh->do('DELETE FROM profiles_activity WHERE userid = ? OR who = ?', undef,
              ($otherUserID, $otherUserID));
     $dbh->do('DELETE FROM tokens WHERE userid = ?', undef, $otherUserID);

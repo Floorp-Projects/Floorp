@@ -235,9 +235,9 @@
     [% display_warning = 1 %]
   [% END %]
 
-  [% IF assignee_or_qa || cc || flags.requestee || namedqueries ||
-        series || votes || watch.watched || watch.watcher ||
-        whine_events || whine_schedules %]
+  [% IF assignee_or_qa || cc || email_setting || flags.requestee ||
+        namedqueries || profile_setting || series || votes || watch.watched ||
+        watch.watcher || whine_events || whine_schedules %]
     <div class="warningmessages">
       <p>The following deletions are <b>safe</b> and will not generate
       referential integrity inconsistencies.</p>
@@ -270,6 +270,12 @@
               [%+ cc %] [%+ terms.bugs %]
             [% END %]</a>.
             If you delete the user account, it will be removed from these CC lists.
+          </li>
+        [% END %]
+        [% IF email_setting %]
+          <li>
+            The user's e-mail settings will be deleted along with the user
+            account.
           </li>
         [% END %]
         [% IF flags.requestee %]
@@ -306,6 +312,12 @@
               These named queries
             [% END %]
             will be deleted along with the user account.
+          </li>
+        [% END %]
+        [% IF profile_setting %]
+          <li>
+            The user's preference settings will be deleted along with the user
+            account.
           </li>
         [% END %]
         [% IF series %]
