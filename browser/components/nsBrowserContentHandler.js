@@ -252,7 +252,7 @@ var nsBrowserContentHandler = {
         if (sepIndex == -1)
           remoteParams[0] = a[2];
         else {
-          remoteParams[0] = a[2].substring(0, sepIndex - 1);
+          remoteParams[0] = a[2].substring(0, sepIndex);
           remoteParams[1] = a[2].substring(sepIndex + 1);
         }
 
