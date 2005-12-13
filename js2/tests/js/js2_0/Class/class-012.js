@@ -1,54 +1,72 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   pschwartau@netscape.com
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 /*
-* The contents of this file are subject to the Netscape Public
-* License Version 1.1 (the "License"); you may not use this file
-* except in compliance with the License. You may obtain a copy of
-* the License at http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an
-* "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either expressed
-* or implied. See the License for the specific language governing
-* rights and limitations under the License.
-*
-* The Original Code is mozilla.org code.
-*
-* The Initial Developer of the Original Code is Netscape
-* Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation.
-* All Rights Reserved.
-*
-* Contributor(s): pschwartau@netscape.com
-* Date: 2001-07-02
-*
-* SUMMARY: An instance of a class C should have type 'object'
-* Waldemar answered a few questions on this as follows :
-*
-* >Given user defined classes C, & 'D extends C'
-* >
-* >var c:C;
-* >
-* >Does 'typeof c' return "C" or "undefined"?
-*
-* typeof operates on whatever the current value in c is,
-* which will be null if you haven't initialized the variable
-* (null instead of undefined because undefined is not a valid value
-* of type C). The type of the variable c is irrelevant here
-* except to the extent it affects the value that is in c.
-* Since c is null, typeof c is "object".
-* 
-* 
-* >c  = new D;
-* >
-* >How about 'typeof c' now?
-* >
-*
-* It's still "object" for compatibility with ECMA Edition 3.
-* We might want to deprecate typeof.
-*
-* The Edition 4 operator that returns the class of something is c.class.
-* In your first example c.class will be the class Null,
-* while in the second example c.class will be D.
-*
-*/
+ * Date: 2001-07-02
+ *
+ * SUMMARY: An instance of a class C should have type 'object'
+ * Waldemar answered a few questions on this as follows :
+ *
+ * >Given user defined classes C, & 'D extends C'
+ * >
+ * >var c:C;
+ * >
+ * >Does 'typeof c' return "C" or "undefined"?
+ *
+ * typeof operates on whatever the current value in c is,
+ * which will be null if you haven't initialized the variable
+ * (null instead of undefined because undefined is not a valid value
+ * of type C). The type of the variable c is irrelevant here
+ * except to the extent it affects the value that is in c.
+ * Since c is null, typeof c is "object".
+ * 
+ * 
+ * >c  = new D;
+ * >
+ * >How about 'typeof c' now?
+ * >
+ *
+ * It's still "object" for compatibility with ECMA Edition 3.
+ * We might want to deprecate typeof.
+ *
+ * The Edition 4 operator that returns the class of something is c.class.
+ * In your first example c.class will be the class Null,
+ * while in the second example c.class will be D.
+ *
+ */
 //-------------------------------------------------------------------------------------------------
 var UBound = 0;
 var bug = '(none)';

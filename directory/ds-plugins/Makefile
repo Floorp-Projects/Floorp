@@ -1,5 +1,5 @@
 ###############################################################################
-# $Id: Makefile,v 1.4 2004/04/25 21:07:10 gerv%gerv.net Exp $
+# $Id: Makefile,v 1.5 2005/12/13 13:25:32 gerv%gerv.net Exp $
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -16,7 +16,7 @@
 #
 # The Original Code is Netscape DS Plugins. 
 #
-# The Initial Developer of the  Original Code is Leif Hedstrom and Netscape 
+# The Initial Developer of the Original Code is Leif Hedstrom and Netscape
 # Communications Corp. 
 # Portions created by the Initial Developer are Copyright (C) 2001
 # the Initial Developer. All Rights Reserved.
