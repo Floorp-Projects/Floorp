@@ -2593,8 +2593,8 @@ nsXULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver)
     }
     PRBool shouldReturn;
     rv = LoadOverlayInternal(uri, PR_TRUE, &shouldReturn);
-    if (NS_FAILED(rv))
-      mOverlayLoadObservers.Remove(uri); // remove the observer if LoadOverlayInternal generated an error
+    if (NS_FAILED(rv) && mOverlayLoadObservers.IsInitialized())
+        mOverlayLoadObservers.Remove(uri); // remove the observer if LoadOverlayInternal generated an error
     return rv;
 }
 
