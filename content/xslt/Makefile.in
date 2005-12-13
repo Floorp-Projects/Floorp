@@ -44,4 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = public src
 
+ifdef ENABLE_TESTS
+DIRS += tests/buster
+endif
+
 include $(topsrcdir)/config/rules.mk
