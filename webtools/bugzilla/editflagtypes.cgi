@@ -498,9 +498,17 @@ sub validateCCList {
                         { cc_list => $cc_list });
 
     my @addresses = split(/[, ]+/, $cc_list);
+    # We do not call Util::validate_email_syntax because these
+    # addresses do not require to match 'emailregexp' and do not
+    # depend on 'emailsuffix'. So we limit ourselves to a simple
+    # sanity check:
+    # - match the syntax of a fully qualified email address;
+    # - do not contain any illegal character.
     foreach my $address (@addresses) {
-        validate_email_syntax($address)
-          || ThrowUserError('illegal_email_address', {addr => $address});
+        ($address =~ /^[\w\.\+\-=]+@[\w\.\-]+\.[\w\-]+$/
+           && $address !~ /[\\\(\)<>&,;:"\[\] \t\r\n]/)
+          || ThrowUserError('illegal_email_address',
+                            {addr => $address, default => 1});
     }
     trick_taint($cc_list);
     return $cc_list;
