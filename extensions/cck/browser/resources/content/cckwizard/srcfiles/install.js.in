@@ -106,7 +106,11 @@ addDirectory("", "%version%", "components", cckextensiondir, "components", true)
 %plugins%
 %searchplugins%
 addFile("", "%version%", "chrome.manifest", cckextensiondir, "", true);
-addFile("", "%version%", "install.rdf", cckextensiondir, "", true);
+// addFile("", "%version%", "install.rdf", cckextensiondir, "", true);
+
+// For now, do to a Firefox 1.5 bug, we have to put install.rdf in a subdir and install
+// it from there. So the installer needs a different XPI.
+addDirectory("", "%version%", "installrdf", cckextensiondir, "", true);
 
 err = getLastError();
 if (err==SUCCESS)

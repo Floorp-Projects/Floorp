@@ -583,6 +583,15 @@ function CreateCCK()
 
   CCKCopyChromeToFile("chrome.manifest", destdir)
   CCKWriteInstallRDF(destdir);
+// For now, do to a Firefox 1.5 bug, we have to put install.rdf in a subdir and install
+// it from there. So the installer needs a different XPI.
+  var installrdfdir = destdir.clone();
+  installrdfdir.append("installrdf");
+  try {
+    installrdfdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
+  } catch(ex) {}
+  CCKWriteInstallRDF(installrdfdir);
+
   CCKWriteInstallJS(destdir);  
   var filename = document.getElementById("filename").value;
   if (filename.length == 0)
@@ -592,6 +601,18 @@ function CreateCCK()
   CCKZip(filename, destdir,
          "chrome", "components", "defaults", "plugins", "searchplugins", "chrome.manifest", "install.rdf", "install.js");
   var bundle = document.getElementById("bundle_cckwizard");
+  
+// For now, do to a Firefox 1.5 bug, we have to put install.rdf in a subdir and install
+// it from there. So the installer needs a different XPI.
+  var installerfilename = document.getElementById("filename").value;
+  if (installerfilename.length == 0)
+    installerfilename = "cck";
+  installerfilename += "-installer.xpi";
+
+  CCKZip(installerfilename, destdir,
+         "chrome", "components", "defaults", "plugins", "searchplugins", "chrome.manifest", "installrdf", "install.js");
+  var bundle = document.getElementById("bundle_cckwizard");
+
   gPromptService.alert(window, bundle.getString("windowTitle"),
                        bundle.getString("outputLocation") + destdir.path + "\\" + filename);
 }
@@ -1123,6 +1144,7 @@ function CCKWriteInstallRDF(destdir)
 
 
   var file = destdir.clone();
+
   file.append("install.rdf");
   try {
     file.remove(false);                         
