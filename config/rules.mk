@@ -700,17 +700,15 @@ install:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)
 
-install:: $(EXPORTS)
 ifndef NO_INSTALL
-ifdef EXPORTS
+ifneq (,$(EXPORTS))
+install:: $(EXPORTS)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(includedir)/$(MODULE)
 endif
-endif
 
+ifneq (,$(SDK_HEADERS))
 install:: $(SDK_HEADERS)
-ifndef NO_INSTALL
-ifdef SDK_HEADERS
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(includedir)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(includedir)/$(MODULE)
 endif
 endif
 
@@ -1204,22 +1202,20 @@ export::
 	@if test ! -d $(FINAL_TARGET); then echo Creating $(FINAL_TARGET); rm -fr $(FINAL_TARGET); $(NSINSTALL) -D $(FINAL_TARGET); else true; fi
 endif
 
-ifneq ($(EXPORTS),)
 ifndef NO_DIST_INSTALL
+ifneq ($(EXPORTS),)
 export:: $(EXPORTS) $(PUBLIC)
 	$(INSTALL) $(IFLAGS1) $^
-endif # NO_DIST_INSTALL
 endif 
 
 ifneq ($(SDK_HEADERS),)
-ifndef NO_DIST_INSTALL
-export:: $(PUBLIC) $(SDK_PUBLIC)
+export:: $(SDK_HEADERS) $(SDK_PUBLIC)
+	$(INSTALL) $(IFLAGS1) $^
 
-export:: $(SDK_HEADERS) 
-	$(INSTALL) $(IFLAGS1) $^ $(PUBLIC)
-	$(INSTALL) $(IFLAGS1) $^ $(SDK_PUBLIC)
-endif # NO_DIST_INSTALL
+export:: $(SDK_HEADERS) $(PUBLIC)
+	$(INSTALL) $(IFLAGS1) $^
 endif 
+endif # NO_DIST_INSTALL
 
 ################################################################################
 # Copy each element of PREF_JS_EXPORTS
@@ -1347,27 +1343,21 @@ GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
 endif # XPIDLSRCS || SDK_XPIDLSRCS
 
 ifneq ($(XPIDLSRCS),)
-ifndef NO_DIST_INSTALL
 # export .idl files to $(IDL_DIR)
+ifndef NO_DIST_INSTALL
 export:: $(XPIDLSRCS) $(IDL_DIR)
 	$(INSTALL) $(IFLAGS1) $^
 
-export:: $(PUBLIC)
-endif
-
-export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) 
-ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS1) $^ $(PUBLIC)
+export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(PUBLIC)
+	$(INSTALL) $(IFLAGS1) $^ 
 endif # NO_DIST_INSTALL
 
 
-install:: $(XPIDLSRCS)
 ifndef NO_INSTALL
+install:: $(XPIDLSRCS)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(idldir)
-endif
 
 install:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS))
-ifndef NO_INSTALL
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(includedir)/$(MODULE)
 endif
 
@@ -1402,27 +1392,25 @@ endif
 ifneq ($(SDK_XPIDLSRCS),)
 # export .idl files to $(IDL_DIR) & $(SDK_IDL_DIR)
 ifndef NO_DIST_INSTALL
-export:: $(IDL_DIR) $(SDK_IDL_DIR) $(PUBLIC) $(SDK_PUBLIC)
+export:: $(SDK_XPIDLSRCS) $(IDL_DIR)
+	$(INSTALL) $(IFLAGS1) $^
 
-export:: $(SDK_XPIDLSRCS)
-	$(INSTALL) $(IFLAGS1) $^ $(IDL_DIR)
-	$(INSTALL) $(IFLAGS1) $^ $(SDK_IDL_DIR)
-endif # NO_DIST_INSTALL
+export:: $(SDK_XPIDLSRCS) $(SDK_IDL_DIR)
+	$(INSTALL) $(IFLAGS1) $^
 
-export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(SDK_XPIDLSRCS))
-ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS1) $^ $(PUBLIC)
-	$(INSTALL) $(IFLAGS1) $^ $(SDK_PUBLIC)
+export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(SDK_XPIDLSRCS)) $(PUBLIC)
+	$(INSTALL) $(IFLAGS1) $^
+
+export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(SDK_XPIDLSRCS)) $(SDK_PUBLIC)
+	$(INSTALL) $(IFLAGS1) $^
 endif
 
-install:: $(SDK_XPIDLSRCS)
 ifndef NO_INSTALL
+install:: $(SDK_XPIDLSRCS)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(idldir)
-endif
 
 install:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(SDK_XPIDLSRCS))
-ifndef NO_INSTALL
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(includedir)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(includedir)/$(MODULE)
 endif
 
 endif # SDK_XPIDLSRCS

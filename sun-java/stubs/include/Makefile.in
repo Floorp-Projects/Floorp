@@ -42,12 +42,7 @@ EXPORTS		= \
 		javaString.h \
 		javaThreads.h \
 		jmc.h \
-		jni.h \
-		jni_md.h \
-		jri.h \
-		jri_md.h \
 		jriext.h \
-		jritypes.h \
 		nspr_md.h \
 		oobj.h \
 		sysmacros_md.h \
