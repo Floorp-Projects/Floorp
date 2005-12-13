@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,14 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org Code.
+ * The Original Code is mozilla.org Code. This file was copied
+ * from nsStaticComponentLoader.cpp
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Portions created by the Initial Developer are Copyright (C) 2000
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,45 +37,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsNativeModuleLoader_h__
-#define nsNativeModuleLoader_h__
+#ifndef nsStaticModuleLoader_h__
+#define nsStaticModuleLoader_h__
 
-#include "nsISupports.h"
-#include "nsIModuleLoader.h"
-#include "nsVoidArray.h"
-#include "nsDataHashtable.h"
-#include "nsHashKeys.h"
-#include "prlink.h"
+#include "nsXPCOM.h"
+#include "pldhash.h"
+#include "nsTArray.h"
 
-class nsNativeModuleLoader : public nsIModuleLoader
+class nsIModule;
+struct StaticModuleInfo;
+class nsComponentManagerImpl;
+struct DeferredModule;
+
+typedef void (*StaticLoaderCallback)(const char               *key,
+                                     nsIModule*                module,
+                                     nsTArray<DeferredModule> &deferred);
+
+class nsStaticModuleLoader
 {
- public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIMODULELOADER
+public:
+    nsStaticModuleLoader() :
+        mFirst(nsnull)
+    { }
 
-    nsNativeModuleLoader() {}
-    ~nsNativeModuleLoader() {}
+    nsresult Init(nsStaticModuleInfo const *aStaticModules,
+                  PRUint32 aModuleCount);
 
-    nsresult Init();
+    ~nsStaticModuleLoader() {
+        if (mInfoHash.ops)
+            PL_DHashTableFinish(&mInfoHash);
+    }
 
-    void UnloadLibraries();
+    void EnumerateModules(StaticLoaderCallback      cb,
+                          nsTArray<DeferredModule> &deferred);
+    nsresult GetModuleFor(const char *key, nsIModule* *aResult);
 
- private:
-    struct NativeLoadData
-    {
-        NativeLoadData() : library(nsnull) { }
-
-        nsCOMPtr<nsIModule>  module;
-        PRLibrary           *library;
-    };
-
-    static PLDHashOperator
-    ReleaserFunc(nsIHashable* aHashedFile, NativeLoadData &aLoadData, void*);
-
-    static PLDHashOperator
-    UnloaderFunc(nsIHashable* aHashedFile, NativeLoadData &aLoadData, void*);
-
-    nsDataHashtable<nsHashableHashKey, NativeLoadData> mLibraries;
+private:
+    PLDHashTable                  mInfoHash;
+    static PLDHashTableOps        sInfoHashOps;
+    StaticModuleInfo             *mFirst;
 };
 
-#endif /* nsNativeModuleLoader_h__ */
+#endif
