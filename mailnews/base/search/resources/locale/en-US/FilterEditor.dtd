@@ -28,7 +28,7 @@
 <!ENTITY highPriorityCmd.label "High">
 <!ENTITY highestPriorityCmd.label "Highest">
 
-<!ENTITY conditionDesc.label "For incoming messages that:">
+<!ENTITY conditionDesc.label "For incoming messages which:">
 <!ENTITY filterActionDesc.label "Perform these actions:">
 <!ENTITY filterActionDesc.accesskey "P">
 
