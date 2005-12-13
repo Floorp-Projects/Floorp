@@ -99,3 +99,9 @@
 
 #define NS_NAVBOOKMARKSSERVICE_CONTRACTID \
   "@mozilla.org/browser/nav-bookmarks-service;1"
+
+#define NS_FAVICONSERVICE_CID \
+{ 0x984e3259, 0x9266, 0x49cf, { 0xb6, 0x05, 0x60, 0xb0, 0x22, 0xa0, 0x07, 0x56 } }
+
+#define NS_FAVICONSERVICE_CONTRACTID \
+  "@mozilla.org/browser/favicon-service;1"
