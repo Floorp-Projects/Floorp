@@ -12,7 +12,7 @@
 ** This file contains C code routines that are called by the parser
 ** to handle UPDATE statements.
 **
-** $Id: update.c,v 1.108 2005/06/12 21:35:53 drh Exp $
+** $Id: update.c,v 1.112 2005/09/20 17:42:23 drh Exp $
 */
 #include "sqliteInt.h"
 
@@ -47,7 +47,11 @@ void sqlite3ColumnDefault(Vdbe *v, Table *pTab, int i){
     u8 enc = sqlite3VdbeDb(v)->enc;
     Column *pCol = &pTab->aCol[i];
     sqlite3ValueFromExpr(pCol->pDflt, enc, pCol->affinity, &pValue);
-    sqlite3VdbeChangeP3(v, -1, (const char *)pValue, P3_MEM);
+    if( pValue ){
+      sqlite3VdbeChangeP3(v, -1, (const char *)pValue, P3_MEM);
+    }else{
+      VdbeComment((v, "# %s.%s", pTab->zName, pCol->zName));
+    }
   }
 }
 
@@ -255,13 +259,13 @@ void sqlite3Update(
   if( pParse->nested==0 ) sqlite3VdbeCountChanges(v);
   sqlite3BeginWriteOperation(pParse, 1, pTab->iDb);
 
-  /* If we are trying to update a view, construct that view into
-  ** a temporary table.
+  /* If we are trying to update a view, realize that view into
+  ** a ephemeral table.
   */
   if( isView ){
     Select *pView;
     pView = sqlite3SelectDup(pTab->pSelect);
-    sqlite3Select(pParse, pView, SRT_TempTable, iCur, 0, 0, 0, 0);
+    sqlite3Select(pParse, pView, SRT_VirtualTab, iCur, 0, 0, 0, 0);
     sqlite3SelectDelete(pView);
   }
 
@@ -273,7 +277,7 @@ void sqlite3Update(
   /* Remember the index of every item to be updated.
   */
   sqlite3VdbeAddOp(v, OP_Rowid, iCur, 0);
-  sqlite3VdbeAddOp(v, OP_ListWrite, 0, 0);
+  sqlite3VdbeAddOp(v, OP_FifoWrite, 0, 0);
 
   /* End the database scan loop.
   */
@@ -295,8 +299,7 @@ void sqlite3Update(
 
     /* The top of the update loop for when there are triggers.
     */
-    sqlite3VdbeAddOp(v, OP_ListRewind, 0, 0);
-    addr = sqlite3VdbeAddOp(v, OP_ListRead, 0, 0);
+    addr = sqlite3VdbeAddOp(v, OP_FifoRead, 0, 0);
 
     if( !isView ){
       sqlite3VdbeAddOp(v, OP_Dup, 0, 0);
@@ -389,8 +392,7 @@ void sqlite3Update(
     ** So make the cursor point at the old record.
     */
     if( !triggers_exist ){
-      sqlite3VdbeAddOp(v, OP_ListRewind, 0, 0);
-      addr = sqlite3VdbeAddOp(v, OP_ListRead, 0, 0);
+      addr = sqlite3VdbeAddOp(v, OP_FifoRead, 0, 0);
       sqlite3VdbeAddOp(v, OP_Dup, 0, 0);
     }
     sqlite3VdbeAddOp(v, OP_NotExists, iCur, addr);
@@ -467,8 +469,7 @@ void sqlite3Update(
   ** all record selected by the WHERE clause have been updated.
   */
   sqlite3VdbeAddOp(v, OP_Goto, 0, addr);
-  sqlite3VdbeChangeP2(v, addr, sqlite3VdbeCurrentAddr(v));
-  sqlite3VdbeAddOp(v, OP_ListReset, 0, 0);
+  sqlite3VdbeJumpHere(v, addr);
 
   /* Close all tables if there were no FOR EACH ROW triggers */
   if( !triggers_exist ){

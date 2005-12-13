@@ -14,7 +14,7 @@
 ** other files are for internal use by SQLite and should not be
 ** accessed by users of the library.
 **
-** $Id: main.c,v 1.293 2005/05/26 16:23:34 drh Exp $
+** $Id: main.c,v 1.302 2005/09/17 15:20:27 drh Exp $
 */
 #include "sqliteInt.h"
 #include "os.h"
@@ -234,7 +234,6 @@ const char *sqlite3ErrStr(int rc){
     case SQLITE_DONE:
     case SQLITE_OK:         z = "not an error";                          break;
     case SQLITE_ERROR:      z = "SQL logic error or missing database";   break;
-    case SQLITE_INTERNAL:   z = "internal SQLite implementation flaw";   break;
     case SQLITE_PERM:       z = "access permission denied";              break;
     case SQLITE_ABORT:      z = "callback requested query abort";        break;
     case SQLITE_BUSY:       z = "database is locked";                    break;
@@ -244,13 +243,11 @@ const char *sqlite3ErrStr(int rc){
     case SQLITE_INTERRUPT:  z = "interrupted";                           break;
     case SQLITE_IOERR:      z = "disk I/O error";                        break;
     case SQLITE_CORRUPT:    z = "database disk image is malformed";      break;
-    case SQLITE_NOTFOUND:   z = "table or record not found";             break;
-    case SQLITE_FULL:       z = "database is full";                      break;
+    case SQLITE_FULL:       z = "database or disk is full";              break;
     case SQLITE_CANTOPEN:   z = "unable to open database file";          break;
     case SQLITE_PROTOCOL:   z = "database locking protocol failure";     break;
     case SQLITE_EMPTY:      z = "table contains no data";                break;
     case SQLITE_SCHEMA:     z = "database schema has changed";           break;
-    case SQLITE_TOOBIG:     z = "too much data for one table row";       break;
     case SQLITE_CONSTRAINT: z = "constraint failed";                     break;
     case SQLITE_MISMATCH:   z = "datatype mismatch";                     break;
     case SQLITE_MISUSE:     z = "library routine called out of sequence";break;
@@ -298,13 +295,32 @@ static int sqliteDefaultBusyCallback(
   sqlite3OsSleep(delay);
   return 1;
 #else
-  int timeout = (int)Timeout;
+  int timeout = ((sqlite3 *)ptr)->busyTimeout;
   if( (count+1)*1000 > timeout ){
     return 0;
   }
   sqlite3OsSleep(1000);
   return 1;
 #endif
+}
+
+/*
+** Invoke the given busy handler.
+**
+** This routine is called when an operation failed with a lock.
+** If this routine returns non-zero, the lock is retried.  If it
+** returns 0, the operation aborts with an SQLITE_BUSY error.
+*/
+int sqlite3InvokeBusyHandler(BusyHandler *p){
+  int rc;
+  if( p==0 || p->xFunc==0 || p->nBusy<0 ) return 0;
+  rc = p->xFunc(p->pArg, p->nBusy);
+  if( rc==0 ){
+    p->nBusy = -1;
+  }else{
+    p->nBusy++;
+  }
+  return rc; 
 }
 
 /*
@@ -321,6 +337,7 @@ int sqlite3_busy_handler(
   }
   db->busyHandler.xFunc = xBusy;
   db->busyHandler.pArg = pArg;
+  db->busyHandler.nBusy = 0;
   return SQLITE_OK;
 }
 
@@ -454,6 +471,7 @@ int sqlite3_create_function(
 
   p = sqlite3FindFunction(db, zFunctionName, nName, nArg, enc, 1);
   if( p==0 ) return SQLITE_NOMEM;
+  p->flags = 0;
   p->xFunc = xFunc;
   p->xStep = xStep;
   p->xFinalize = xFinal;
@@ -491,13 +509,14 @@ int sqlite3_create_function16(
 }
 #endif
 
+#ifndef SQLITE_OMIT_TRACE
 /*
 ** Register a trace function.  The pArg from the previously registered trace
 ** is returned.  
 **
 ** A NULL trace function means that no tracing is executes.  A non-NULL
 ** trace is a pointer to a function that is invoked at the start of each
-** sqlite3_exec().
+** SQL statement.
 */
 void *sqlite3_trace(sqlite3 *db, void (*xTrace)(void*,const char*), void *pArg){
   void *pOld = db->pTraceArg;
@@ -505,6 +524,25 @@ void *sqlite3_trace(sqlite3 *db, void (*xTrace)(void*,const char*), void *pArg){
   db->pTraceArg = pArg;
   return pOld;
 }
+/*
+** Register a profile function.  The pArg from the previously registered 
+** profile function is returned.  
+**
+** A NULL profile function means that no profiling is executes.  A non-NULL
+** profile is a pointer to a function that is invoked at the conclusion of
+** each SQL statement that is run.
+*/
+void *sqlite3_profile(
+  sqlite3 *db,
+  void (*xProfile)(void*,const char*,sqlite_uint64),
+  void *pArg
+){
+  void *pOld = db->pProfileArg;
+  db->xProfile = xProfile;
+  db->pProfileArg = pArg;
+  return pOld;
+}
+#endif /* SQLITE_OMIT_TRACE */
 
 /*** EXPERIMENTAL ***
 **
@@ -530,11 +568,11 @@ void *sqlite3_commit_hook(
 ** opened and used.  If zFilename is the magic name ":memory:" then
 ** the database is stored in memory (and is thus forgotten as soon as
 ** the connection is closed.)  If zFilename is NULL then the database
-** is for temporary use only and is deleted as soon as the connection
-** is closed.
+** is a "virtual" database for transient use only and is deleted as
+** soon as the connection is closed.
 **
-** A temporary database can be either a disk file (that is automatically
-** deleted when the file is closed) or a set of red-black trees held in memory,
+** A virtual database can be either a disk file (that is automatically
+** deleted when the file is closed) or it an be held entirely in memory,
 ** depending on the values of the TEMP_STORE compile-time macro and the
 ** db->temp_store variable, according to the following chart:
 **
@@ -676,6 +714,7 @@ static int openDatabase(
 ){
   sqlite3 *db;
   int rc, i;
+  CollSeq *pColl;
 
   /* Allocate the sqlite data structure */
   db = sqliteMalloc( sizeof(sqlite3) );
@@ -711,6 +750,13 @@ static int openDatabase(
 
   /* Also add a UTF-8 case-insensitive collation sequence. */
   sqlite3_create_collation(db, "NOCASE", SQLITE_UTF8, 0, nocaseCollatingFunc);
+
+  /* Set flags on the built-in collating sequences */
+  db->pDfltColl->type = SQLITE_COLL_BINARY;
+  pColl = sqlite3FindCollSeq(db, SQLITE_UTF8, "NOCASE", 6, 0);
+  if( pColl ){
+    pColl->type = SQLITE_COLL_NOCASE;
+  }
 
   /* Open the backend database driver */
   rc = sqlite3BtreeFactory(db, zFilename, 0, MAX_PAGES, &db->aDb[0].pBt);
@@ -829,7 +875,7 @@ int sqlite3_reset(sqlite3_stmt *pStmt){
     rc = SQLITE_OK;
   }else{
     rc = sqlite3VdbeReset((Vdbe*)pStmt);
-    sqlite3VdbeMakeReady((Vdbe*)pStmt, -1, 0, 0, 0, 0);
+    sqlite3VdbeMakeReady((Vdbe*)pStmt, -1, 0, 0, 0);
   }
   return rc;
 }
@@ -883,7 +929,7 @@ int sqlite3_create_collation(
 
   pColl = sqlite3FindCollSeq(db, (u8)enc, zName, strlen(zName), 1);
   if( 0==pColl ){
-   rc = SQLITE_NOMEM;
+    rc = SQLITE_NOMEM;
   }else{
     pColl->xCmp = xCompare;
     pColl->pUser = pCtx;
@@ -1001,3 +1047,14 @@ recover_out:
 int sqlite3_get_autocommit(sqlite3 *db){
   return db->autoCommit;
 }
+
+#ifdef SQLITE_DEBUG
+/*
+** The following routine is subtituted for constant SQLITE_CORRUPT in
+** debugging builds.  This provides a way to set a breakpoint for when
+** corruption is first detected.
+*/
+int sqlite3Corrupt(void){
+  return SQLITE_CORRUPT;
+}
+#endif

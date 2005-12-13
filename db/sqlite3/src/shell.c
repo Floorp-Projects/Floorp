@@ -12,7 +12,7 @@
 ** This file contains code to implement the "sqlite" command line
 ** utility for accessing SQLite databases.
 **
-** $Id: shell.c,v 1.122 2005/02/23 12:35:41 drh Exp $
+** $Id: shell.c,v 1.128 2005/09/11 02:03:04 drh Exp $
 */
 #include <stdlib.h>
 #include <string.h>
@@ -313,7 +313,7 @@ static void output_c_string(FILE *out, const char *z){
       fputc('\\', out);
       fputc('r', out);
     }else if( !isprint(c) ){
-      fprintf(out, "\\%03o", c);
+      fprintf(out, "\\%03o", c&0xff);
     }else{
       fputc(c, out);
     }
@@ -656,10 +656,14 @@ static int dump_callback(void *pArg, int nArg, char **azArg, char **azCol){
   zType = azArg[1];
   zSql = azArg[2];
   
-  if( strcmp(zTable,"sqlite_sequence")!=0 ){
-    fprintf(p->out, "%s;\n", zSql);
-  }else{
+  if( strcmp(zTable, "sqlite_sequence")==0 ){
     fprintf(p->out, "DELETE FROM sqlite_sequence;\n");
+  }else if( strcmp(zTable, "sqlite_stat1")==0 ){
+    fprintf(p->out, "ANALYZE sqlite_master;\n");
+  }else if( strncmp(zTable, "sqlite_", 7)==0 ){
+    return 0;
+  }else{
+    fprintf(p->out, "%s;\n", zSql);
   }
 
   if( strcmp(zType, "table")==0 ){
@@ -984,10 +988,10 @@ static int do_meta_command(char *zLine, struct callback_data *p){
       p->showHeader = 1;
       memset(p->colWidth,0,ArraySize(p->colWidth));
       p->colWidth[0] = 4;
-      p->colWidth[1] = 12;
+      p->colWidth[1] = 14;
       p->colWidth[2] = 10;
       p->colWidth[3] = 10;
-      p->colWidth[4] = 35;
+      p->colWidth[4] = 33;
     }else if (p->explainPrev.valid) {
       p->explainPrev.valid = 0;
       p->mode = p->explainPrev.mode;
@@ -1093,6 +1097,7 @@ static int do_meta_command(char *zLine, struct callback_data *p){
           }
         }
       }
+      *z = 0;
       if( i+1!=nCol ){
         fprintf(stderr,"%s line %d: expected %d columns of data but found %d\n",
            zFile, lineno, nCol, i+1);
@@ -1289,7 +1294,7 @@ static int do_meta_command(char *zLine, struct callback_data *p){
          "SELECT sql FROM "
          "  (SELECT * FROM sqlite_master UNION ALL"
          "   SELECT * FROM sqlite_temp_master) "
-         "WHERE type!='meta' AND sql NOTNULL "
+         "WHERE type!='meta' AND sql NOTNULL AND name NOT LIKE 'sqlite_%'"
          "ORDER BY substr(type,2,1), name",
          callback, &data, &zErrMsg
       );
@@ -1333,7 +1338,7 @@ static int do_meta_command(char *zLine, struct callback_data *p){
     if( nArg==1 ){
       rc = sqlite3_get_table(p->db,
         "SELECT name FROM sqlite_master "
-        "WHERE type IN ('table','view') "
+        "WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%'"
         "UNION ALL "
         "SELECT name FROM sqlite_temp_master "
         "WHERE type IN ('table','view') "
@@ -1696,6 +1701,13 @@ int main(int argc, char **argv){
     zFirstCmd = argv[i++];
   }
   data.out = stdout;
+
+#ifdef SQLITE_OMIT_MEMORYDB
+  if( data.zDbFilename==0 ){
+    fprintf(stderr,"%s: no database filename specified\n", argv[0]);
+    exit(1);
+  }
+#endif
 
   /* Go ahead and open the database file if it already exists.  If the
   ** file does not exist, delay opening it.  This prevents empty database
