@@ -1279,6 +1279,8 @@ endif
 
 ifneq ($(XPIDLSRCS)$(SDK_XPIDLSRCS),)
 
+export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS))
+
 ifndef XPIDL_MODULE
 XPIDL_MODULE		= $(MODULE)
 endif
