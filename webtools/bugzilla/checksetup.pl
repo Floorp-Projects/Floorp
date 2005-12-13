@@ -3210,10 +3210,9 @@ if ($dbh->bz_table_info("attachstatuses")
     print "Converting attachment statuses to flags...\n";
     
     # Get IDs for the old attachment status and new flag fields.
-    $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " . 
-                         "WHERE name='attachstatusdefs.name'");
-    $sth->execute();
-    my $old_field_id = $sth->fetchrow_arrayref()->[0] || 0;
+    my ($old_field_id) = $dbh->selectrow_array(
+        "SELECT fieldid FROM fielddefs WHERE name='attachstatusdefs.name'")
+        || 0;
     
     $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " . 
                          "WHERE name='flagtypes.name'");
