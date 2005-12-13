@@ -283,12 +283,12 @@ class nsTArray : public nsTArray_base {
     // This method searches for the offset of the first element in this
     // array that is equal to the given element.
     // @param item   The item to search for.
-    // @param comp   The Comparator used to determine element equality.
     // @param start  The index to start from.
+    // @param comp   The Comparator used to determine element equality.
     // @return       The index of the found element or NoIndex if not found.
     template<class Item, class Comparator>
-    index_type IndexOf(const Item& item, const Comparator& comp,
-                       index_type start = 0) const {
+    index_type IndexOf(const Item& item, index_type start,
+                       const Comparator& comp) const {
       const elem_type* iter = Elements() + start, *end = iter + Length();
       for (; iter != end; ++iter) {
         if (comp.Equals(*iter, item))
@@ -305,20 +305,19 @@ class nsTArray : public nsTArray_base {
     // @return       The index of the found element or NoIndex if not found.
     template<class Item>
     index_type IndexOf(const Item& item, index_type start = 0) const {
-      return IndexOf(item, nsDefaultComparator<elem_type, Item>(), start);
+      return IndexOf(item, start, nsDefaultComparator<elem_type, Item>());
     }
 
     // This method searches for the offset of the last element in this
     // array that is equal to the given element.
     // @param item   The item to search for.
-    // @param comp   The Comparator used to determine element equality.
     // @param start  The index to start from.  If greater than or equal to the
     //               length of the array, then the entire array is searched.
+    // @param comp   The Comparator used to determine element equality.
     // @return       The index of the found element or NoIndex if not found.
     template<class Item, class Comparator>
-    index_type LastIndexOf(const Item& item,
-                           const Comparator& comp,
-                           index_type start = NoIndex) const {
+    index_type LastIndexOf(const Item& item, index_type start,
+                           const Comparator& comp) const {
       if (start >= Length())
         start = Length() - 1;
       const elem_type* end = Elements() - 1, *iter = end + start + 1;
@@ -339,7 +338,7 @@ class nsTArray : public nsTArray_base {
     template<class Item>
     index_type LastIndexOf(const Item& item,
                            index_type start = NoIndex) const {
-      return LastIndexOf(item, nsDefaultComparator<elem_type, Item>(), start);
+      return LastIndexOf(item, start, nsDefaultComparator<elem_type, Item>());
     }
 
     //
@@ -464,7 +463,7 @@ class nsTArray : public nsTArray_base {
     // @param comp  The Comparator used to determine element equality.
     template<class Item, class Comparator>
     void RemoveElement(const Item& item, const Comparator& comp) {
-      index_type i = IndexOf(item, comp);
+      index_type i = IndexOf(item, 0, comp);
       if (i >= 0) 
         RemoveElementAt(i);
     }
