@@ -134,6 +134,13 @@ sub getBranches()
 }
 
 #########################################################################
+sub getLocales()
+{
+    my $sql = "SELECT DISTINCT(abbrev) FROM locale_lookup ORDER BY abbrev";
+    return _getValues($sql);
+}
+
+#########################################################################
 sub getOpsyses()
 {
     my $sql = "SELECT DISTINCT(name) FROM opsyses ORDER BY name";
@@ -183,6 +190,8 @@ sub getFields()
                     display_string => "Build ID", },
                   { name => 'comment',
                     display_string => "Comments", }, 
+                  { name => 'locale',
+                    display_string => "Locale", }, 
                   { name => 'opsys',
                     display_string => "Operating System", }, 
                   { name => 'platform',
@@ -251,6 +260,8 @@ sub getSortFields()
                          display_string => "Status"},
                        { name => "branch", 
                          display_string => "Branch"},
+                       { name => "locale", 
+                         display_string => "Locale"},
                        );
     return \@sort_fields;
 }

@@ -69,6 +69,11 @@ if ($c->param) {
             push @where, {field => $param,
                           value => $value};
             $where_criteria .= "Branch is \'".$c->param($param)."\'<br/>";
+        } elsif ($param eq 'locale') {
+            my $value = quotemeta($c->param($param));
+            push @where, {field => 'locale_abbrev',
+                          value => $value};
+            $where_criteria .= "Branch is \'".$c->param($param)."\'<br/>";
         } elsif ($param eq 'product') {
             my $value = quotemeta($c->param($param));
             push @where, {field => $param,

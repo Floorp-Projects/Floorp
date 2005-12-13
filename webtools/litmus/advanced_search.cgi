@@ -125,6 +125,12 @@ if ($c->param) {
                           value => $value};
             $where_criteria .= "Branch is \'".$c->param($param)."\'<br/>";
             $defaults->{branch} =  $c->param($param);
+        } elsif ($param eq 'locale') {
+            my $value = $c->param($param);
+            push @where, {field => 'locale',
+                          value => $value};
+            $where_criteria .= "Locale is \'".$c->param($param)."\'<br/>";
+            $defaults->{locale} =  $c->param($param);
         } elsif ($param eq 'product') {
             my $value = $c->param($param);
             push @where, {field => $param,
@@ -195,6 +201,7 @@ my $test_groups = Litmus::FormWidget->getTestGroups;
 my $test_ids = Litmus::FormWidget->getTestIDs;
 my $result_statuses = Litmus::FormWidget->getResultStatuses;
 my $branches = Litmus::FormWidget->getBranches;
+my $locales = Litmus::FormWidget->getLocales;
 
 my $fields = Litmus::FormWidget->getFields;
 my $match_criteria = Litmus::FormWidget->getMatchCriteria;
@@ -211,6 +218,7 @@ my $vars = {
     test_ids => $test_ids,
     result_statuses => $result_statuses,
     branches => $branches,
+    locales => $locales,
     fields => $fields,
     match_criteria => $match_criteria,
     sort_fields => $sort_fields,
