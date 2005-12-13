@@ -284,8 +284,8 @@ static PRBool CheckUpdateFile()
         return PR_FALSE;
     }
 
-    // Don't need to check whether compreg exists; if it doesn't
-    // we won't even be here.
+    if (NS_FAILED(compregFile->Exists(&exists)) || !exists)
+        return PR_TRUE;
 
     PRInt64 compregModTime, autoregModTime;
     compregFile->GetLastModifiedTime(&compregModTime);
@@ -619,98 +619,18 @@ NS_InitXPCOM3(nsIServiceManager* *result,
                                        NS_INIPARSERFACTORY_CONTRACTID, 
                                        iniParserFactory);
     }
-    rv = nsComponentManagerImpl::gComponentManager->ReadPersistentRegistry();
-#ifdef DEBUG    
-    if (NS_FAILED(rv)) {
-        printf("No Persistent Registry Found.\n");        
-    }
-#endif
 
-    if ( NS_FAILED(rv) || CheckUpdateFile()) {
-        // if we find no persistent registry, we will try to autoregister
-        // the default components directory.
-        nsComponentManagerImpl::gComponentManager->AutoRegister(nsnull);
-
-        // If the application is using a GRE, then, 
-        // auto register components in the GRE directory as well.
-        //
-        // The application indicates that it's using an GRE by
-        // returning a valid nsIFile when queried (via appFileLocProvider)
-        // for the NS_GRE_DIR atom as shown below
-        //
-
-        if ( appFileLocationProvider ) {
-            nsCOMPtr<nsIFile> greDir;
-            PRBool persistent = PR_TRUE;
-
-            appFileLocationProvider->GetFile(NS_GRE_DIR, &persistent, getter_AddRefs(greDir));
-
-            if (greDir) {
-#ifdef DEBUG_dougt
-                printf("start - Registering GRE components\n");
-#endif
-                rv = nsDirectoryService::gService->Get(NS_GRE_COMPONENT_DIR,
-                                                       NS_GET_IID(nsIFile),
-                                                       getter_AddRefs(greDir));
-                if (NS_FAILED(rv)) {
-                    NS_ERROR("Could not get GRE components directory!");
-                    return rv;
-                }
-
-                // If the GRE contains any loaders, we want to know about it so that we can cause another
-                // autoregistration of the applications component directory.
-                int loaderCount = nsComponentManagerImpl::gComponentManager->GetLoaderCount();
-                rv = nsComponentManagerImpl::gComponentManager->AutoRegister(greDir);
-                
-                if (loaderCount != nsComponentManagerImpl::gComponentManager->GetLoaderCount()) 
-                    nsComponentManagerImpl::gComponentManager->AutoRegisterNonNativeComponents(nsnull);        
-
-#ifdef DEBUG_dougt
-                printf("end - Registering GRE components\n");
-#endif          
-                if (NS_FAILED(rv)) {
-                    NS_ERROR("Could not AutoRegister GRE components");
-                    return rv;
-                }
-            }
-        }
-
-        //
-        // If additional component directories have been specified, then
-        // register them as well.
-        //
-
-        nsCOMPtr<nsISimpleEnumerator> dirList;
-        nsDirectoryService::gService->Get(NS_XPCOM_COMPONENT_DIR_LIST,
-                                          NS_GET_IID(nsISimpleEnumerator),
-                                          getter_AddRefs(dirList));
-        if (dirList) {
-            PRBool hasMore;
-            while (NS_SUCCEEDED(dirList->HasMoreElements(&hasMore)) && hasMore) {
-                nsCOMPtr<nsISupports> elem;
-                dirList->GetNext(getter_AddRefs(elem));
-                if (elem) {
-                    nsCOMPtr<nsIFile> dir = do_QueryInterface(elem);
-                    if (dir)
-                        nsComponentManagerImpl::gComponentManager->AutoRegister(dir);
-
-                    // XXX should we worry about new component loaders being
-                    // XXX defined by this process?
-                }
-            }
-        }
-
-
-        // Make sure the compreg file's mod time is current.
-        nsCOMPtr<nsIFile> compregFile;
-        rv = nsDirectoryService::gService->Get(NS_XPCOM_COMPONENT_REGISTRY_FILE,
-                                               NS_GET_IID(nsIFile),
-                                               getter_AddRefs(compregFile));
-        compregFile->SetLastModifiedTime(PR_Now() / 1000);
-    }
-    
     // Pay the cost at startup time of starting this singleton.
-    (void) xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
+    nsIInterfaceInfoManager* iim =
+        xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
+
+    if (CheckUpdateFile() || NS_FAILED(
+        nsComponentManagerImpl::gComponentManager->ReadPersistentRegistry())) {
+        // If the component registry is out of date, malformed, or incomplete,
+        // autoregister the default component directories.
+        (void) iim->AutoRegisterInterfaces();
+        nsComponentManagerImpl::gComponentManager->AutoRegister(nsnull);
+    }
 
     // After autoreg, but before we actually instantiate any components,
     // add any services listed in the "xpcom-directory-providers" category
@@ -852,16 +772,16 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // here again:
     NS_IF_RELEASE(servMgr);
 
-    // Shutdown global servicemanager
-    if (nsComponentManagerImpl::gComponentManager) {
-        nsComponentManagerImpl::gComponentManager->FreeServices();
-    }
-
     if (currentQ) {
         currentQ->ProcessPendingEvents();
         currentQ = 0;
     }
     
+    // Shutdown global servicemanager
+    if (nsComponentManagerImpl::gComponentManager) {
+        nsComponentManagerImpl::gComponentManager->FreeServices();
+    }
+
     nsProxyObjectManager::Shutdown();
 
     // Release the directory service
