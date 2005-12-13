@@ -15,7 +15,7 @@
 #
 # The Original Code is ``func-by-addr.sh''
 #
-# The Initial Developer of the Original Code Netscape Communications Corp.
+# The Initial Developer of the Original Code is Netscape Communications Corp.
 # Portions created by the Initial Developer are Copyright (C) 2001
 # the Initial Developer. All Rights Reserved.
 #

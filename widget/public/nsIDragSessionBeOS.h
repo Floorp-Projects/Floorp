@@ -19,8 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Paul Ashford <arougthopher@lizardland.net>
- * Fredrik Holmqvist <thesuckiestemail@yahoo.se>
+ *   Paul Ashford <arougthopher@lizardland.net>
+ *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
