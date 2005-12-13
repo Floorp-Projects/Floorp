@@ -112,8 +112,7 @@ public:
     }
 
     // specialized operator to make sure we make room for mValues
-    void* operator new (size_t size, const nsCOMArray_base& aArray,
-                        PRBool aReverse) CPP_THROW_NEW;
+    void* operator new (size_t size, const nsCOMArray_base& aArray) CPP_THROW_NEW;
     void operator delete(void* ptr) {
         ::operator delete(ptr);
     }
@@ -173,8 +172,7 @@ nsCOMArrayEnumerator::GetNext(nsISupports** aResult)
 }
 
 void*
-nsCOMArrayEnumerator::operator new (size_t size, const nsCOMArray_base& aArray,
-                                    PRBool aReverse)
+nsCOMArrayEnumerator::operator new (size_t size, const nsCOMArray_base& aArray)
     CPP_THROW_NEW
 {
     // create enough space such that mValueArray points to a large
@@ -186,20 +184,15 @@ nsCOMArrayEnumerator::operator new (size_t size, const nsCOMArray_base& aArray,
     nsCOMArrayEnumerator * result =
         NS_STATIC_CAST(nsCOMArrayEnumerator*, ::operator new(size));
 
-    if (!result)
-        return result;
-
     // now need to copy over the values, and addref each one
     // now this might seem like a lot of work, but we're actually just
     // doing all our AddRef's ahead of time since GetNext() doesn't
     // need to AddRef() on the way out
+    PRUint32 i;
     PRUint32 max = result->mArraySize = aArray.Count();
-    PRUint32 cur = aReverse ? max - 1 : 0;
-    PRUint32 incr = aReverse ? -1 : 1;
-
-    for (PRUint32 i = 0; i < max; ++i, cur += incr) {
-        result->mValueArray[cur] = aArray[i];
-        NS_IF_ADDREF(result->mValueArray[cur]);
+    for (i = 0; i<max; i++) {
+        result->mValueArray[i] = aArray[i];
+        NS_IF_ADDREF(result->mValueArray[i]);
     }
 
     return result;
@@ -207,11 +200,9 @@ nsCOMArrayEnumerator::operator new (size_t size, const nsCOMArray_base& aArray,
 
 extern NS_COM nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator* *aResult,
-                      const nsCOMArray_base& aArray,
-                      PRBool aReverse)
+                      const nsCOMArray_base& aArray)
 {
-    nsCOMArrayEnumerator *enumerator =
-        new (aArray, aReverse) nsCOMArrayEnumerator();
+    nsCOMArrayEnumerator *enumerator = new (aArray) nsCOMArrayEnumerator();
     if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*aResult = enumerator);

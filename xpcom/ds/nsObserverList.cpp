@@ -39,10 +39,11 @@
 
 #include "pratom.h"
 #include "nsAutoLock.h"
-#include "nsIObserver.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsIObserver.h"
+#include "nsISimpleEnumerator.h"
 #include "nsIWeakReference.h"
-#include "nsArrayEnumerator.h"
 
 nsObserverList::nsObserverList(nsresult &rv)
 {
@@ -115,10 +116,69 @@ nsObserverList::RemoveObserver(nsIObserver* anObserver)
     return NS_OK;
 }
 
+class nsObserverEnumerator : public nsISimpleEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    nsObserverEnumerator(nsCOMArray<nsISupports> &aObservers);
+
+private:
+    ~nsObserverEnumerator() { }
+
+    PRUint32 mIndex; // Counts down, ends at 0
+    nsCOMArray<nsISupports> mObservers;
+};
+
 nsresult
 nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
 {
     nsAutoLock lock(mLock);
 
-    return NS_NewArrayEnumerator(anEnumerator, mObservers, PR_TRUE);
+    nsRefPtr<nsObserverEnumerator> e(new nsObserverEnumerator(mObservers));
+    if (!e)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*anEnumerator = e);
+    return NS_OK;
+}
+
+nsObserverEnumerator::nsObserverEnumerator(nsCOMArray<nsISupports> &aObservers)
+{
+    for (PRInt32 i = aObservers.Count() - 1; i >= 0; --i) {
+        nsCOMPtr<nsIWeakReference> weak(do_QueryInterface(aObservers[i]));
+        if (weak) {
+            nsCOMPtr<nsISupports> strong(do_QueryReferent(weak));
+            if (strong)
+                mObservers.AppendObject(strong);
+        }
+        else {
+            mObservers.AppendObject(aObservers[i]);
+        }
+    }
+
+    mIndex = mObservers.Count();
+}
+
+NS_IMPL_ISUPPORTS1(nsObserverEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP
+nsObserverEnumerator::HasMoreElements(PRBool *aResult)
+{
+    *aResult = (mIndex > 0);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsObserverEnumerator::GetNext(nsISupports* *aResult)
+{
+    if (!mIndex) {
+        NS_ERROR("Enumerating after HasMoreElements returned false.");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    --mIndex;
+    NS_ADDREF(*aResult = mObservers[mIndex]);
+    return NS_OK;
 }
