@@ -943,7 +943,7 @@ nsNavHistory::VacuumDB(PRTime aTimeAgo, PRBool aCompress)
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_favicon"));
     NS_ENSURE_SUCCESS(rv, rv);
-    }
+  }
 
   return NS_OK;
 }
@@ -1554,20 +1554,14 @@ nsNavHistory::RemovePage(nsIURI *aURI)
     // FIXME: delete annotations
 
     // delete main history entries
-    nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_TRUE(bookmarks, NS_ERROR_UNEXPECTED);
-    PRBool bookmarked;
-    bookmarks->IsBookmarked(aURI, &bookmarked);
-    if (!bookmarked) {
-      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-          "DELETE FROM moz_history WHERE url = ?1"),
-          getter_AddRefs(statement));
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = BindStatementURI(statement, 0, aURI);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = statement->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "DELETE FROM moz_history WHERE url = ?1"),
+        getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = BindStatementURI(statement, 0, aURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Observers: Be sure to finish transaction before calling observers. Note also
@@ -2024,20 +2018,18 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     gPrefService->SavePrefFile(nsnull);
 
     // compute how long ago to expire from
-    PRInt64 secsPerDay;     LL_I2L(secsPerDay, 24*60*60);
-    PRInt64 usecsPerSec;    LL_I2L(usecsPerSec, 1000000);
-    PRInt64 usecsPerDay;    LL_MUL(usecsPerDay, secsPerDay, usecsPerSec);
-    PRInt64 expireDaysAgo;  LL_I2L(expireDaysAgo, mExpireDays);
-    PRInt64 expireUsecsAgo; LL_MUL(expireUsecsAgo, expireDaysAgo, usecsPerDay);
+    const PRInt64 secsPerDay = 24*60*60;
+    const PRInt64 usecsPerSec = 1000000;
+    const PRInt64 usecsPerDay = secsPerDay * usecsPerSec;
+    const PRInt64 expireUsecsAgo = mExpireDays * usecsPerDay;
 
-    // FIXME: should be vacuum sometimes?
+    // FIXME: should we compress sometimes? It's slow, so we shouldn't do it
+    // every time.
     VacuumDB(expireUsecsAgo, PR_FALSE);
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
     LoadPrefs();
   }
 
-  //nsCOMPtr<nsIObserver> ob = do_QueryInterface(globalHistory);
-  //return ob->Observe(aSubject, aTopic, aData);
   return NS_OK;
 }
 
