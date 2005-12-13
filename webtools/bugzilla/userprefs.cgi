@@ -420,9 +420,11 @@ sub SaveSavedSearches {
 my $cgi = Bugzilla->cgi;
 
 # This script needs direct access to the username and password CGI variables,
-# so we save them before their removal in Bugzilla->login
+# so we save them before their removal in Bugzilla->login, and delete them 
+# prior to login if we might possibly be in an sudo session.
 my $bugzilla_login    = $cgi->param('Bugzilla_login');
 my $bugzilla_password = $cgi->param('Bugzilla_password');
+$cgi->delete('Bugzilla_login', 'Bugzilla_password') if ($cgi->cookie('sudo'));
 
 Bugzilla->login(LOGIN_REQUIRED);
 $cgi->param('Bugzilla_login', $bugzilla_login);
