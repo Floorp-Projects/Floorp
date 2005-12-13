@@ -205,8 +205,6 @@ static const char* gQuitApplicationMessage = "quit-application";
 
 // annotation names
 const char nsNavHistory::kAnnotationTitle[] = "history/title";
-const char nsNavHistory::kAnnotationFavIconName[] = "history/iconurl";
-const char nsNavHistory::kAnnotationFavIconData[] = "history/icondata";
 const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
 
 nsIAtom* nsNavHistory::sMenuRootAtom = nsnull;
@@ -861,8 +859,13 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 
 // nsNavHistory::VacuumDB
 //
-//    Deletes everything from the database that is older than the expiration
-//    time. It is called on app shutdown.
+//    Deletes everything from the database that is old. It is called on app
+//    shutdown and when you clear history.
+//
+//    "Old" is anything older than now - aTimeAgo. On app shutdown, aTimeAgo is
+//    the time in preferences for history expiration. If aTimeAgo is 0
+//    (everything older than now), all history will be deleted (everything
+//    older than now).
 //
 //    We DO NOT notify observers that the items are being deleted. I can't think
 //    of any reason why anybody would need to know (we are shutting down, after
@@ -876,33 +879,45 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 //    history table), even when there is no corresponding right-hand table.
 //    Then we just pick those items where there was no corresponding right-hand
 //    one (i.e., a moz_history entry with no visits), and delete it.
+//
+//    Compressing space is extremely slow, so it is optional. I don't think
+//    it's very critical. Maybe we should just do it every X times the app
+//    exits. I'm unsure if the freed up space is always lost, or whether it
+//    will be used when new stuff is added.
 
 nsresult
-nsNavHistory::VacuumDB()
+nsNavHistory::VacuumDB(PRTime aTimeAgo, PRBool aCompress)
 {
+  nsresult rv;
+
   // go ahead and commit on error, only some things will get deleted, which,
   // if you are trying to clear your history, is probably better than nothing.
   mozStorageTransaction transaction(mDBConn, PR_TRUE);
 
-  // find the threshold for deleting old visits
-  PRTime now = GetNow();
-  PRInt64 secsPerDay;     LL_I2L(secsPerDay, 24*60*60);
-  PRInt64 usecsPerSec;    LL_I2L(usecsPerSec, 1000000);
-  PRInt64 usecsPerDay;    LL_MUL(usecsPerDay, secsPerDay, usecsPerSec);
-  PRInt64 expireDaysAgo;  LL_I2L(expireDaysAgo, mExpireDays);
-  PRInt64 expireUsecsAgo; LL_MUL(expireUsecsAgo, expireDaysAgo, usecsPerDay);
-  PRInt64 expirationTime; LL_SUB(expirationTime, now, expireUsecsAgo);
+  if (aTimeAgo) {
+    // find the threshold for deleting old visits
+    PRTime now = GetNow();
+    PRInt64 expirationTime = now - aTimeAgo;
 
-  // delete expired visits
-  nsCOMPtr<mozIStorageStatement> visitDelete;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisit WHERE visit_date < ?1"),
-      getter_AddRefs(visitDelete));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = visitDelete->BindInt64Parameter(0, expirationTime);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = visitDelete->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
+    // delete expired visits
+    nsCOMPtr<mozIStorageStatement> visitDelete;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "DELETE FROM moz_historyvisit WHERE visit_date < ?1"),
+        getter_AddRefs(visitDelete));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = visitDelete->BindInt64Parameter(0, expirationTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = visitDelete->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // delete everything
+    nsCOMPtr<mozIStorageStatement> visitDelete;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "DELETE FROM moz_historyvisit"), getter_AddRefs(visitDelete));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = visitDelete->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // delete history entries with no visits that are not bookmarked
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -919,19 +934,16 @@ nsNavHistory::VacuumDB()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // compress the tables
-  /* This is commented out because it is extremely-weemely slow. I don't think
-   * it's very critical. Maybe we should just do it every X times the app
-   * exits. I'm unsure if the freed up space is always lost, or whether it will
-   * be used when new stuff is added.
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_history"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_historyvisit"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_anno"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_favicon"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  */
+  if (aCompress) {
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_history"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_historyvisit"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_anno"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_favicon"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    }
 
   return NS_OK;
 }
@@ -1510,8 +1522,6 @@ nsNavHistory::GetCount(PRUint32 *aCount)
 //
 //    Removes all visits and the main history entry for the given URI.
 //    Silently fails if we have no knowledge of the page.
-//
-//    UNTESTED
 
 NS_IMETHODIMP
 nsNavHistory::RemovePage(nsIURI *aURI)
@@ -1520,7 +1530,7 @@ nsNavHistory::RemovePage(nsIURI *aURI)
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
   nsCOMPtr<mozIStorageStatement> statement;
 
-  // visits
+  // delete all visits for this page
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_historyvisit WHERE page_id IN (SELECT id FROM moz_history WHERE url = ?1)"),
       getter_AddRefs(statement));
@@ -1530,20 +1540,34 @@ nsNavHistory::RemovePage(nsIURI *aURI)
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // history entries
-  nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_UNEXPECTED);
-  PRBool bookmarked;
-  bookmarks->IsBookmarked(aURI, &bookmarked);
-  if (!bookmarked) {
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_history WHERE url = ?1"),
-        getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = BindStatementURI(statement, 0, aURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsNavBookmarks* bookmarksService = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarksService, NS_ERROR_FAILURE);
+  PRBool bookmarked = PR_FALSE;
+  rv = bookmarksService->IsBookmarked(aURI, &bookmarked);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (! bookmarked) {
+    // Only delete everything else if the page is not bookmarked.  Note that we
+    // do NOT delete favicons. Any unreferenced favicons will be deleted next
+    // time the browser is shut down.
+
+    // FIXME: delete annotations
+
+    // delete main history entries
+    nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bookmarks, NS_ERROR_UNEXPECTED);
+    PRBool bookmarked;
+    bookmarks->IsBookmarked(aURI, &bookmarked);
+    if (!bookmarked) {
+      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+          "DELETE FROM moz_history WHERE url = ?1"),
+          getter_AddRefs(statement));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = BindStatementURI(statement, 0, aURI);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // Observers: Be sure to finish transaction before calling observers. Note also
@@ -1561,22 +1585,19 @@ nsNavHistory::RemovePage(nsIURI *aURI)
 //    given host. If aEntireDomain is set, we will also delete pages from
 //    sub hosts (so if we are passed in "microsoft.com" we delete
 //    "www.microsoft.com", "msdn.microsoft.com", etc.). An empty host name
-//    means local files, or you can also pass in the localized "(local files)"
-//    title given to you from a history query.
+//    means local files and anything else with no host name. You can also pass
+//    in the localized "(local files)" title given to you from a history query.
 //
 //    Silently fails if we have no knowledge of the host
 //
 //    This function is actually pretty simple, it just boils down to a DELETE
 //    statement, but is out of control due to observers and the two types of
 //    similar delete operations that we need to supports.
-//
-//    UNTESTED
 
 NS_IMETHODIMP
 nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 {
   nsresult rv;
-  UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to obsrvrs.
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   // Local files don't have any host name. We don't want to delete all files in
@@ -1607,145 +1628,133 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   revHostSlash.Append(NS_LITERAL_STRING("/"));
 
   // see if we have to pass all deletes to the observers
-  nsCOMArray<nsINavHistoryObserver> detailObservers;
+  PRBool hasObservers = PR_FALSE;
   for (PRUint32 i = 0; i < mObservers.Length(); ++i) {
     const nsCOMPtr<nsINavHistoryObserver> &obs = mObservers[i];
     if (obs) {
       PRBool allDetails = PR_FALSE;
       obs->GetWantAllDetails(&allDetails);
-      if (allDetails && !detailObservers.AppendObject(obs)) {
-        return NS_ERROR_OUT_OF_MEMORY;
+      if (allDetails) {
+        hasObservers = PR_TRUE;
+        break;
       }
     }
   }
 
-  // Tell the observers about everything we are about to delete. Since this is a
-  // two-step process, if we get an error, we may tell them we will delete
-  // something but then not actually delete it. Too bad.
+  // how we are selecting host names
+  nsCAutoString conditionString;
+  if (aEntireDomain)
+    conditionString.AssignLiteral("WHERE h.rev_host >= ?1 AND h.rev_host < ?2 ");
+  else
+    conditionString.AssignLiteral("WHERE h.rev_host = ?1");
+
+  // Tell the observers about the non-hidden items we are about to delete.
+  // Since this is a two-step process, if we get an error, we may tell them we
+  // will delete something but then not actually delete it. Too bad.
+  //
+  // Note also that we *include* bookmarked items here. We generally want to
+  // send out delete notifications for bookmarked items since in general,
+  // deleting the visits (like we always do) will cause the item to disappear
+  // from history views.
+  nsCStringArray deletedURIs;
   nsCOMPtr<mozIStorageStatement> statement;
-  if (detailObservers.Count() != 0) {
+  if (hasObservers) {
     // create statement depending on delete type
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT url FROM moz_history h ") + conditionString,
+      getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindStringParameter(0, revHostDot);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (aEntireDomain) {
-      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT url FROM moz_history WHERE rev_host >= ?1 AND rev_host < ?2"),
-          getter_AddRefs(statement));
-      NS_ENSURE_SUCCESS(rv, rv);
       rv = statement->BindStringParameter(1, revHostSlash);
-    } else {
-      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT url FROM moz_history WHERE rev_host = ?1"),
-          getter_AddRefs(statement));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindStringParameter(0, revHostDot);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    // do notifications for all results
     PRBool hasMore = PR_FALSE;
-    nsCOMPtr<mozIStorageValueArray> dbRow = do_QueryInterface(statement);
-    nsCOMPtr<nsIURI> thisURI;
     while ((statement->ExecuteStep(&hasMore) == NS_OK) && hasMore) {
-      nsAutoString thisURIString;
-      if (NS_FAILED(dbRow->GetString(0, thisURIString)) || 
-          thisURIString.IsEmpty() == 0)
+      nsCAutoString thisURIString;
+      if (NS_FAILED(statement->GetUTF8String(0, thisURIString)) || 
+          thisURIString.IsEmpty())
         continue; // no URI
-      if (NS_FAILED(NS_NewURI(getter_AddRefs(thisURI), thisURIString,
-                              nsnull, nsnull)))
-        continue; // bad URI
-      for (PRInt32 j = 0; j < detailObservers.Count(); ++j)
-        detailObservers[j]->OnDeleteURI(thisURI);
+      if (! deletedURIs.AppendCString(thisURIString))
+        return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
+  // first, delete all the visits
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_historyvisit WHERE page_id IN (SELECT id FROM moz_history h ") + conditionString + NS_LITERAL_CSTRING(")"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(0, revHostDot);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (aEntireDomain) {
-    // first, delete the visits
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_historyvisit WHERE page_id IN (SELECT id FROM moz_history WHERE rev_host >= ?1 AND rev_host < ?2)"),
-        getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindStringParameter(0, revHostDot);
-    NS_ENSURE_SUCCESS(rv, rv);
     rv = statement->BindStringParameter(1, revHostSlash);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // now delete the actual history entries
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_history WHERE rev_host >= ?1 AND rev_host < ?2"),
-        getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindStringParameter(0, revHostDot);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindStringParameter(1, revHostSlash);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // this is deleting a specific host: we require an exact match
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_historyvisit WHERE page_id IN (SELECT id FROM moz_history WHERE rev_host = ?1)"),
-        getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindStringParameter(0, revHostDot);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // now delete the actual history entries
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_history WHERE rev_host = ?1"),
-        getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindStringParameter(0, revHostDot);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
   }
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // FIXME: delete annotations
+
+  // now, delete the actual history entries that are not bookmarked
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_history WHERE id IN "
+      "(SELECT id from moz_history h "
+      " LEFT OUTER JOIN moz_bookmarks b ON h.id = b.item_child ")
+      + conditionString +
+      NS_LITERAL_CSTRING("AND b.item_child IS NULL)"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(0, revHostDot);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aEntireDomain) {
+    rv = statement->BindStringParameter(1, revHostSlash);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   transaction.Commit();
+
+  // notify observers
+  UpdateBatchScoper batch(*this); // sends Begin/EndUpdateBatch to obsrvrs.
+  if (deletedURIs.Count()) {
+    nsCOMPtr<nsIURI> thisURI;
+    for (PRUint32 observerIndex = 0; observerIndex < mObservers.Length();
+         observerIndex ++) {
+      const nsCOMPtr<nsINavHistoryObserver> &obs = mObservers.ElementAt(observerIndex);
+      if (! obs)
+        continue;
+      PRBool allDetails = PR_FALSE;
+      obs->GetWantAllDetails(&allDetails);
+      if (! allDetails)
+        continue;
+
+      // send it all the URIs
+      for (PRInt32 i = 0; i < deletedURIs.Count(); i ++) {
+        if (NS_FAILED(NS_NewURI(getter_AddRefs(thisURI), *deletedURIs[i],
+                                nsnull, nsnull)))
+          continue; // bad URI
+        obs->OnDeleteURI(thisURI);
+      }
+    }
+  }
   return NS_OK;
 }
 
 
 // nsNavHistory::RemoveAllPages
 //
-//    This function is used to clear history. Notice that we always vacuum the
-//    DB, which will compress out the unused space. I'm worried that the freed
-//    rows will still be in the DB file after they are deleted, which is
-//    probably not what people have in mind when they clear their history.
+//    This function is used to clear history.
 
 NS_IMETHODIMP
 nsNavHistory::RemoveAllPages()
 {
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
-
-  // delete visits
-  nsCOMPtr<mozIStorageStatement> visitDelete;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisit"), getter_AddRefs(visitDelete));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = visitDelete->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // delete history entries
-  nsCOMPtr<mozIStorageStatement> historyDelete;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_history"), getter_AddRefs(historyDelete));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = historyDelete->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // the transaction must complete before the vacuums or they will fail
-  transaction.Commit();
-
-  // compress unused space
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_history"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_historyvisit"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  transaction.Commit();
+  // expire everything, compress DB (compression is slow, but since the user
+  // requested it, they either want the disk space or to cover their tracks).
+  VacuumDB(0, PR_TRUE);
 
   // notify observers
   ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnClearHistory())
@@ -2013,7 +2022,16 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
       gTldTypes = nsnull;
     }
     gPrefService->SavePrefFile(nsnull);
-    VacuumDB();
+
+    // compute how long ago to expire from
+    PRInt64 secsPerDay;     LL_I2L(secsPerDay, 24*60*60);
+    PRInt64 usecsPerSec;    LL_I2L(usecsPerSec, 1000000);
+    PRInt64 usecsPerDay;    LL_MUL(usecsPerDay, secsPerDay, usecsPerSec);
+    PRInt64 expireDaysAgo;  LL_I2L(expireDaysAgo, mExpireDays);
+    PRInt64 expireUsecsAgo; LL_MUL(expireUsecsAgo, expireDaysAgo, usecsPerDay);
+
+    // FIXME: should be vacuum sometimes?
+    VacuumDB(expireUsecsAgo, PR_FALSE);
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
     LoadPrefs();
   }
