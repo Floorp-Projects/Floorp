@@ -263,8 +263,9 @@ NS_IMETHODIMP nsMenuX::AddMenu(nsIMenu * aMenu)
   aMenu->GetLabel(label);
   NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(mLabel);
   NSMenuItem* newNativeMenuItem= [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:NULL keyEquivalent:@""];
-  [newCocoaLabelString release];
   [mMacMenu addItem:newNativeMenuItem];
+  [newCocoaLabelString release];
+  [newNativeMenuItem release];
   
   NSMenu* childMenu;
   if (aMenu->GetNativeData((void**)&childMenu) == NS_OK) {
