@@ -6,7 +6,7 @@
 #   value  params     params
 #  ------  ------     ------                         ---------------
      0      _     -c_1000_-C_A             Stress SSL2 RC4 128 with MD5
-     0      _     -c_1000_-C_c             Stress SSL3 RC4 128 with MD5
+     0      _     -c_1000_-C_c_-T          Stress SSL3 RC4 128 with MD5
      0      _     -c_1000_-C_c             Stress TLS  RC4 128 with MD5
 #
 # ECC ciphers
@@ -14,9 +14,11 @@
 # but works ok for ECDHE-RSA ciphers. With session reuse turned off
 # setting up 1000 connections would take too long so use only 10 connections
 #
-     0      -c_H  -c_10_-C_H_-N     Stress TLS ECDH-ECDSA RC4 128 with SHA (no reuse)
-     0      -c_S  -c_10_-C_S_-N     Stress TLS ECDHE-ECDSA AES 128 CBC with SHA (no reuse)
-     0      -c_T  -c_1000_-C_T      Stress TLS ECDHE-RSA AES 128 CBC with SHA
+     0      -c_:C009  -c_10_-C_:C009_-N_-T Stress SSL3 ECDHE-ECDSA AES 128 CBC with SHA (no reuse)
+     0      -c_:C013  -c_100_-C_:C013_-T  Stress SSL3 ECDHE-RSA AES 128 CBC with SHA
+     0      -c_:C004  -c_10_-C_:C004_-N    Stress TLS ECDH-ECDSA AES 128 CBC with SHA (no reuse)
+     0      -c_:C00E  -c_10_-C_:C00E_-N    Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse)
+     0      -c_:C013  -c_100_-C_:C013     Stress TLS ECDHE-RSA AES 128 CBC with SHA
 
 #
 # add client auth versions here...

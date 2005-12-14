@@ -147,7 +147,7 @@ wait_for_selfserv()
       echo "               -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
       tstclnt -p ${PORT} -h ${HOSTADDR} ${CLIENT_OPTIONS} -q \
               -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
-  elif [ sparam = "-c ABCDEFabcdefghijklmnvy" ] ; then # "$1" = "cov" ] ; then
+  elif [ sparam = "-c ABCDEFcdefgijklmnvyz" ] ; then # "$1" = "cov" ] ; then
       html_passed "<TR><TD> Wait for Server"
   fi
   is_selfserv_alive
@@ -224,7 +224,7 @@ ssl_cov()
   html_head "SSL Cipher Coverage $NORM_EXT - $BYPASS_STRING"
 
   testname=""
-  sparam="-c ABCDEFabcdefghijklmnvyz"
+  sparam="-c ABCDEFcdefgijklmnvyz"
   start_selfserv # Launch the server
                
   p=""
