@@ -805,7 +805,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   }
 
   nsListenerStruct* ls;
-  PRBool listenerRemoved = PR_FALSE;
+  aFlags &= ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
 
   for (PRInt32 i=0; i<listeners->Count(); i++) {
     ls = (nsListenerStruct*)listeners->ElementAt(i);
@@ -816,7 +816,6 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
       if (ls->mSubType == NS_EVENT_BITS_NONE) {
         listeners->RemoveElement((void*)ls);
         delete ls;
-        listenerRemoved = PR_TRUE;
       }
       break;
     }
