@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.304 $ ';
+$::UtilsVersion = '$Revision: 1.305 $ ';
 
 package TinderUtils;
 
@@ -1740,6 +1740,10 @@ sub run_all_tests {
             # Set security prefs to allow us to close our own window,
             # pageloader test (and possibly other tests) needs this on.
             set_pref($pref_file, 'dom.allow_scripts_to_close_windows', 'true');
+
+            # Set security prefs to allow us to resize our windows.
+            # DHTML perf test (and possibly other tests) needs this off.
+            set_pref($pref_file, 'dom.disable_window_flip', 'false');
 
             # Suppress firefox's popup blocking
             if ($Settings::BinaryName =~ /^firefox/) {
