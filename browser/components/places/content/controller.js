@@ -407,7 +407,7 @@ var PlacesController = {
    * @returns true if the node is a Query item, false otherwise
    */
   nodeIsQuery: function PC_nodeIsQuery(node) {
-    node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
+    return node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
   },
   
   /**
