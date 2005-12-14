@@ -191,7 +191,8 @@ interface nsINavBookmarksService : nsISupports
   readonly attribute PRInt64 toolbarRoot;
 
   /**
-   * Inserts a child item into the given folder.
+   * Inserts a child item into the given folder. If this item already exists in
+   * the given folder, it will be moved to the new position.
    *  @param folder     The id of the parent folder
    *  @param item       The URI to insert
    *  @param index      The index to insert at, or -1 to append
