@@ -17,7 +17,7 @@
 <h1 id="using_the_cookie_manager">Using the Cookie Manager</h1>
 
 <p>A cookie is a small amount of information on your computer that is used by
-  some websites. For a brief overview, see
+  some sites. For a brief overview, see
   <a href="privacy_help.xhtml#what_are_cookies_and_how_do_they_work">What Are
   Cookies and How Do They Work?</a></p>
 
@@ -25,12 +25,12 @@
   page&apos;s cookies by doing two things:</p>
 
 <ul>
-  <li>Accepts or rejects any requests by the website to <strong>set</strong>
+  <li>Accepts or rejects any requests by the site to <strong>set</strong>
     (store) one or more cookies on your computer.</li>
-  <li>Accepts or rejects any requests by the website to <strong>read</strong>
-    cookies it previously stored on your computer. A website can&apos;t
+  <li>Accepts or rejects any requests by the site to <strong>read</strong>
+    cookies it previously stored on your computer. A site can&apos;t
     actually read cookies or any other data on your computer&mdash;instead,
-    your browser gets the cookies and sends them back to the website.</li>
+    your browser gets the cookies and sends them back to the site.</li>
 </ul>
 
 <div class="contentsBox">In this section:
@@ -49,7 +49,7 @@
 <h2 id="enabling_and_disabling_cookies">Enabling &amp; Disabling Cookies</h2>
 
 <p>You can specify how cookies should be handled by setting your Cookies
-  preferences. The default setting is <q>Enable all cookies</q>.</p>
+  preferences. The default setting is <q>Allow all cookies</q>.</p>
 
 <p>To change your Cookies preferences:</p>
 
@@ -70,24 +70,53 @@
 
 <h2 id="managing_cookies_site-by-site">Managing Cookies Site-By-Site</h2>
 
-<p>To control cookies on a site-by-site basis:</p>
+<p>To set cookie permissions for the current site:</p>
 
 <ol>
   <li>Open the Tools menu and choose Cookie Manager.</li>
-  <li>Choose <q>Unblock Cookies from this Site</q> or <q>Block Cookies
-    from this Site</q>.</li>
+  <li>Choose one of the following items:
+    <ul>
+      <li><strong>Block Cookies from this Site</strong>: Block the
+          current site from setting cookies.</li>
+      <li><strong>Use Default Cookie Permissions</strong>: Reset
+          cookie permission for the current site and use the
+          <a href="#cookie_manager_settings">default settings</a>.</li>
+      <li><strong>Allow Session Cookies from this Site</strong>: Allow
+          the current site to set session cookies. Persistent cookies from
+          this site will be downgraded to session cookies.</li>
+      <li><strong>Allow Cookies from this Site</strong>: Allow the
+          current site to set cookies.</li>
+    </ul>
+  </li>
 </ol>
 
-<p>Alternatively, if you have selected <q>Warn me before storing a
-  cookie</q> in <a href="#cookies">Privacy &amp; Security Preferences -
-  Cookies</a>, you will be warned (while browsing) that a website is asking to
-  set a cookie. When you see such a warning, you can click Yes to allow or No
-  to deny the cookie. You can also select the option for your browser to
-  <q>Remember this decision</q>.</p>
+<p>To <a href="#add_cookie_sites">set cookie permission</a> for several sites
+  or a site you are not viewing, use the Cookie Manager.</p>
+
+<p>If you have selected <q>Ask for each cookie</q> in
+  <a href="#cookie_manager_settings">Privacy &amp; Security Preferences -
+  Cookies</a>, you will be warned (while browsing) that a web site is asking to
+  set a cookie. When you see such a warning, you can choose to
+  Allow, Allow for Session, or Deny the cookie.</p>
+
+<p>Other dialog options:</p>
+<ul>
+  <li><strong>Use my choice for all cookies from this site</strong>:
+    If you check this option, you will not be warned the next time
+    that site tries to set or modify a cookie, and your <q>allow</q> or
+    <q>deny</q> response will still be in effect.</li>
+  <li><strong>Show Details</strong>/<strong>Hide Details</strong>:
+    Click the button to show or hide <a href="#viewing_cookies">detailed
+    information</a> of the cookie.</li>
+</ul>
+
+<p>If you want to change a remembered response later, use the Cookie Manager
+to edit <a href="#stored_cookies">stored cookies</a> and
+<a href="#cookie_sites">add or remove cookie sites</a>.</p>
 
 <p>If you select <q>Remember this decision</q>, you will not be warned the
-  next time that site tries to set or modify a cookie, and your <q>yes</q>
-  or <q>no</q> response will still be in effect.</p>
+  next time that site tries to set or modify a cookie, and your <q>Yes</q>
+  or <q>No</q> response will still be in effect.</p>
 
 <p>If you want to change a remembered response later, use Cookie Manager to
   edit your list of automatically stored cookies.</p>
@@ -98,7 +127,7 @@
   <li>Open the Tools menu and choose Cookie Manager.</li>
   <li>Choose Manage Stored Cookies from the submenu. The Cookie Manager window
     opens with a list of all the cookies stored on your computer.</li>
-  <li>Click the Cookie Sites tab. The websites for which you have allowed or
+  <li>Click the Cookie Sites tab. The sites for which you have allowed or
     denied cookies are listed.</li>
   <li>Click to select the site from which you no longer want to automatically
     accept cookies, and then click Remove Cookie.</li>
@@ -114,7 +143,7 @@
   <li>Open the Tools menu and choose Cookie Manager.</li>
   <li>Choose Manage Stored Cookies from the submenu. The Cookie Manager window
     opens with a list of all the cookies stored on your computer.</li>
-  <li>To see details for a particular cookie, click it.</li>
+  <li>Select a cookie to see its details.</li>
 </ol>
 
 <p>For more information about the information displayed, see
@@ -138,11 +167,11 @@
 </ol>
 
 <p>Even though you&apos;ve removed the cookies now, you will reacquire those
-  same cookies the next time you return to the website.</p>
+  same cookies the next time you return to the site.</p>
 
 <p>To prevent that from happening, select the checkbox labeled <q>Don&apos;t
   allow sites that set removed cookies to set future cookies</q>. When this
-  checkbox is selected, websites for the cookies that you are removing are
+  checkbox is selected, sites for the cookies that you are removing are
   added to the list of sites whose cookies will automatically be rejected.</p>
 
 <p>You must click OK for your changes to take effect.</p>
@@ -151,25 +180,25 @@
 
 <h2 id="setting_privacy_levels">Setting Privacy Levels</h2>
 
-<p>Many websites develop and publish their privacy policies based on the
+<p>Many sites develop and publish their privacy policies based on the
   Platform for Privacy Preferences (P3P) standard. The information that follows
-  applies only to websites that post a privacy policy based on the P3P standard
+  applies only to sites that post a privacy policy based on the P3P standard
   and the browser&apos;s implementation of that standard. The browser&apos;s
   implementation may not be, in all cases, identical to the standard published
   by the World Wide Web Consortium.</p>
 
-<p>A website&apos;s P3P privacy policy describes, in a standardized way, what
+<p>A site&apos;s P3P privacy policy describes, in a standardized way, what
   kind of information the site collects, to whom it gives that information, and
-  how it uses the information. For information about viewing a website&apos;s
+  how it uses the information. For information about viewing a site&apos;s
   privacy policy, see <a href="#viewing_privacy_policies">Viewing Privacy
   Policies</a>.</p>
 
-<p>Navigator&apos;s implementation of the P3P standard defines three levels of
-  privacy: low, medium, and high (the default is medium). You can select one of
-  these predefined privacy levels, or you can specify your own custom privacy
-  settings in detail. Once you have set your preferred privacy level, your
-  browser can compare your preferences with the website&apos;s P3P policy
-  (if any) and accept or reject cookies accordingly.</p>
+<p>&brandShortName;&apos;s implementation of the P3P standard defines three
+  levels of privacy: low, medium, and high (the default is medium). You can
+  select one of these predefined privacy levels, or you can specify your own
+  custom privacy settings in detail. Once you have set your preferred privacy
+  level, your browser can compare your preferences with the site&apos;s P3P
+  policy (if any) and accept or reject cookies accordingly.</p>
 
 <p>For example, your privacy settings may require the browser to reject cookies
   that collect personal information without informing you. Alternatively, you
@@ -177,7 +206,7 @@
   cookie is used in this way, while allowing the action to take place.</p>
 
 <p>To control the privacy settings you want your browser to enforce for all
-  websites:</p>
+  sites:</p>
 
 <ol>
   <li>Open the <span class="mac">&brandShortName;</span>
@@ -185,7 +214,7 @@
   <li>Under the Privacy &amp; Security category, click Cookies. (If no
     subcategories are visible, double-click Privacy &amp; Security to expand
     the list.)</li>
-  <li>Select the option labeled <q>Enable cookies based on privacy
+  <li>Select the option labeled <q>Allow cookies based on privacy
     settings</q>.</li>
   <li>Click View.</li>
   <li>In the Privacy Settings dialog box, select the level of privacy you want,
@@ -211,7 +240,7 @@
   Cookie Manager displays the cookie notification icon
   (<img alt="cookie notification icon"
   src="chrome://cookie/content/taskbar-cookie.gif"/>)
-  near the lower-right corner of the browser window whenever a website that
+  near the lower-right corner of the browser window whenever a site that
   fits the category sets a cookie. When this icon is displayed, you can click
   it to get information about the affected cookies.</p>
 
@@ -230,8 +259,7 @@
   aspects of cookie handling.</p>
 
 <p>For step-by-step descriptions of various tasks related to cookies, see
-  <a href="#using_the_cookie_manager">Using the Cookie
-  Manager</a>.</p>
+  <a href="#using_the_cookie_manager">Using the Cookie Manager</a>.</p>
 
 <div class="contentsBox">In this section:
   <ul>
@@ -258,7 +286,7 @@
     the list.)</li>
 </ol>
 
-<p>Cookies help websites keep track of information for you, such as the
+<p>Cookies help sites keep track of information for you, such as the
   contents of your on-line shopping cart or which cities&apos; weather you want
   to know about. For a brief overview, see
   <a href="privacy_help.xhtml#what_are_cookies_and_how_do_they_work">What Are
@@ -267,46 +295,49 @@
 <p>You can select one of these options:</p>
 
 <ul>
-  <li><strong>Disable cookies:</strong> Select this option to refuse all
+  <li><strong>Block cookies:</strong> Select this option to refuse all
     cookies.</li>
-  <li><strong>Enable cookies for the originating website only:</strong> Select
+  <li><strong>Allow cookies for the originating website only:</strong> Select
     this option if you don&apos;t want to accept or return
     <a href="privacy_help.xhtml#what_are_third-party_cookies">foreign
     cookies</a>.</li>
-  <li><strong>Enable cookies based on privacy settings:</strong> Select this
+  <li><strong>Allow cookies based on privacy settings:</strong> Select this
     option if you handle cookies based on your privacy settings. If you select
-    this option, click the View button to confirm or modify your privacy
-    settings.</li>
-  <li><strong>Enable all cookies:</strong> This is the default option. Select
-    this option to permit all websites not explicitly blocked to set cookies on
-    your computer.
-
-    <p><strong>Note:</strong> If you select this option and later choose to
-      disable all cookies, you may still have old cookies stored on your
-      computer (though no new ones will be set).</p>
-  </li>
+    this option, click the View Privacy Settings button to confirm or modify
+    your privacy settings.</li>
+  <li><strong>Allow all cookies:</strong> This is the default option. Select
+    this option to permit all sites not explicitly blocked to set cookies on
+    your computer.</li>
 </ul>
 
-<p>If you enable cookies or do not change the default setting, you can also
+<p><strong>Note:</strong> Blocking cookies does not remove old cookies. By
+  blocking cookies you only block sites from setting new cookies, and old
+  cookies will still be sent to sites. To completely block a site from receiving
+  old cookies, you need to <a href="#removing_cookies">remove its cookies</a>.
+</p>
+
+<p><strong>Note:</strong> <a href="#cookie_sites">Per-site cookie permission</a>
+  supersedes default cookie setting. For example, if you allow a site to set
+  cookies, the site can set cookies even if you choose <q>Block cookies</q>.
+</p>
+
+<p>If you allow cookies or do not change the default setting, you can also
   select the following preferences:</p>
 
 <ul>
-  <li><strong>Disable cookies in Mail &amp; Newsgroups:</strong> Select this
+  <li><strong>Accept cookies normally:</strong> Select this
     if you want Cookie Manager to disable cookies received when a message
     contains a web page.</li>
-  <li><strong>Ask me before storing a cookie:</strong> Select this if you want
-    Cookie Manager to warn you each time a website is about to store a cookie
-    on your computer.</li>
-  <li><strong>Limit maximum lifetime of cookies to:</strong> Select this if you
-    want to limit the length of time any cookie can remain on your computer.
-    Then choose one of these options:
-    <ul>
-      <li><strong>current session:</strong> Choose this to delete the cookie
-        the next time you exit your browser.</li>
-      <li><strong>__ days:</strong> Choose this to specify cookie lifetime in
-        days, then type the number of days.</li>
-    </ul>
-  </li>
+  <li><strong>Accept for current session only:</strong> Select this to delete
+    the cookie the next time you exit your browser.</li>
+  <li><strong>Accept cookies for __ days:</strong> Select this if you
+    want to limit the length of time any cookie can remain on your computer,
+    then type the number of days.</li>
+  <li><strong>Ask for each cookie:</strong> Select this if you want
+    Cookie Manager to warn you each time a site is about to store a cookie.
+    In addition, you can choose <strong>except for session cookies:</strong> so
+    that &brandShortName; will not warn you if the site is setting cookies
+    which will be deleted when you exit your browser.</li>
 </ul>
 
 <p>You can also get more information about your stored cookies:</p>
@@ -323,12 +354,9 @@
   Manager. If you&apos;re not already viewing it, follow these steps:</p>
 
 <ol>
-  <li>Open the <span class="mac">&brandShortName;</span>
-    <span class="noMac">Edit</span> menu and choose Preferences.</li>
-  <li>Under the Privacy &amp; Security category, click Cookies. (If no
-    subcategories are visible, double-click Privacy &amp; Security to expand
-    the list.)</li>
-  <li>Click Manage Stored Cookies.</li>
+  <li>Open the Tools menu and choose Cookie Manager.</li>
+  <li>Choose Manage Stored Cookies from the submenu. The Cookie Manager window
+    opens with a list of all the cookies stored on your computer.</li>
 </ol>
 
 <p>The Stored Cookies tab lists all the cookies stored on your computer, the
@@ -356,9 +384,9 @@
     </tr>
     <tr class="even">
       <td>Information</td>
-      <td>A string of characters containing the information a website tracks
+      <td>A string of characters containing the information a site tracks
         for you. It might contain a user key or name by which you are
-        identified to the website, information about your interests, and so
+        identified to the site, information about your interests, and so
         forth.</td>
     </tr>
     <tr>
@@ -395,14 +423,6 @@
       <td>The date and time at which the cookie will be deactivated. The
         browser regularly removes expired cookies from your computer.</td>
     </tr>
-    <tr>
-      <td>Policy</td>
-      <td>The type of privacy policy information that the site has explicitly
-        declared that it publishes. (Even if this field is blank, it may still
-        be possible to view the site&apos;s policy; see
-        <a href="#viewing_privacy_policies">Viewing Privacy Policies</a>
-        for details.)</td>
-    </tr>
   </tbody>
 </table>
 
@@ -424,12 +444,12 @@
 </ul>
 
 <p>Even if you remove cookies now, you will reacquire those same cookies the
-  next time you return to the website. To prevent that from happening, select
-  this checkbox. When this checkbox is selected, websites for the cookies that
+  next time you return to the site. To prevent that from happening, select
+  this checkbox. When this checkbox is selected, sites for the cookies that
   you are removing are added to the list of sites whose cookies will
   automatically be rejected.</p>
 
-<p>You must click OK for your changes to take effect.</p>
+<p>You must click Close for your changes to take effect.</p>
 
 <h2 id="cookie_sites">Cookie Sites</h2>
 
@@ -437,26 +457,39 @@
   Manager. If you&apos;re not already viewing it, follow these steps:</p>
 
 <ol>
-  <li>Open the <span class="mac">&brandShortName;</span>
-    <span class="noMac">Edit</span> menu and choose Preferences.</li>
-  <li>Under the Privacy &amp; Security category, click Cookies. (If no
-    subcategories are visible, double-click Privacy &amp; Security to expand
-    the list.)</li>
-  <li>Click Manage Stored Cookies.</li>
+  <li>Open the Tools menu and choose Cookie Manager.</li>
+  <li>Choose Manage Stored Cookies from the submenu. The Cookie Manager window
+    opens with a list of all the cookies stored on your computer.</li>
   <li>Click the Cookie Sites tab.</li>
 </ol>
 
-<p>If the <q>Warn me before storing a cookie</q> option is selected in
-  <a href="#cookies">Privacy &amp; Security Preferences - Cookies</a>, you will
-  be warned (while browsing) each time a website requests permission to set a
-  cookie. The warning allows you to accept or deny the cookie. The warning also
-  allows you to select an option for your browser to <q>Remember this
-  decision</q>.</p>
-
 <p>The Cookie Sites tab of the Cookie Manager lists the sites for which your
   decisions have been remembered, and what your decisions were. It also allows
-  you to remove sites from the list, so that the Cookie Manager no longer
-  remembers your decisions about them:</p>
+  you to add and remove sites from the list.</p>
+
+<h3 id="add_cookie_sites">Adding Cookie Sites</h3>
+
+<p>To add cookies sites manually:</p>
+
+<ul>
+  <li>Enter the site address, e.g. <tt>www.mozilla.org</tt></li>
+  <li>Set the site cookie permission:
+    <ul>
+      <li><strong>Block</strong>: Click this button to add the site as a site
+        blocked from setting cookies.</li>
+      <li><strong>Session</strong>: Click this button to add the site as a site
+        that can set session cookies. Persistent cookies from this site will
+        be downgraded to session cookies.</li>
+      <li><strong>Allow</strong>: Click this button to add the site as a
+        site that can set cookies.</li>
+    </ul>
+  </li>
+  <li>Repeat the steps to add additional sites.</li>
+</ul>
+
+<h3 id="remove_cookie_sites">Removing Cookie Sites</h3>
+
+<p>To remove a cookie site:</p>
 
 <ul>
   <li><strong>Remove Site:</strong> Removes the selected site or sites from the
@@ -465,10 +498,9 @@
 </ul>
 
 <p>Once you&apos;ve removed a site from this list, Cookie Manager remembers
-  nothing about it. If the <q>Warn me before storing a cookie</q> option
-  is selected in the Cookies preferences panel, you will be again be warned
-  when the website you removed from this list requests permission to set a
-  cookie.</p>
+  nothing about it. If the <q>Ask for each cookie</q> option is selected in
+  the Cookies preferences panel, you will be warned when any site not in this
+  list requests permission to set a cookie.</p>
 
 <h2 id="privacy_settings">Privacy Settings</h2>
 
@@ -481,9 +513,9 @@
   <li>Under the Privacy &amp; Security category, click Cookies. (If no
     subcategories are visible, double-click Privacy &amp; Security to expand
     the list.)</li>
-  <li>Select the radio button labeled <q>Enable cookies based on privacy
+  <li>Select the radio button labeled <q>Allow cookies based on privacy
     settings</q>.</li>
-  <li>Click View.</li>
+  <li>Click View Privacy Settings.</li>
 </ol>
 
 <p>For more information about using privacy settings, see
@@ -500,7 +532,7 @@
 
 <p>The level of privacy you set here determines how your browser treats cookies
   according to privacy policies based on the P3P standard that published by
-  some websites and on the settings displayed under Cookie Acceptance Policy
+  some sites and on the settings displayed under Cookie Acceptance Policy
   for first-party and third-party cookies.</p>
 
 <p><q>First party cookies</q> are cookies set by the site you are
@@ -577,7 +609,7 @@
   lower-right corner of the browser window. You can click it to get information
   about the affected cookies or modify your privacy settings.</p>
 
-<p>Websites are classified in four categories for each of the two types
+<p>Sites are classified in four categories for each of the two types
   (first-party and third-party) of cookies:</p>
 
 <ul>
@@ -601,7 +633,7 @@
 <p>The cookie notification icon (<img alt="cookie notification icon"
   src="chrome://cookie/content/taskbar-cookie.gif"/>) is displayed in the
   status bar near the lower-right corner of the browser window. It appears when
-  a website has used a cookie in a way that requires you to be notified
+  a site has used a cookie in a way that requires you to be notified
   according to your current <a href="#privacy_settings">Privacy
   Settings</a>.</p>
 
@@ -620,7 +652,7 @@
     and identify the cookies that caused the notification icon to appear.</li>
   <li><strong>View Privacy Settings:</strong> Click this button to open the
     Privacy Settings dialog box. The settings in this dialog box determine how
-    websites can use cookies on your computer and what actions cause the cookie
+    sites can use cookies on your computer and what actions cause the cookie
     notification icon to be displayed.</li>
   <li><strong>Close:</strong> Click this button to exit the Cookie Notification
     dialog box without taking any action.</li>
@@ -631,8 +663,8 @@
 
 <h1 id="using_the_password_manager">Using the Password Manager</h1>
 
-<p>Many websites require you to type a user name and password before you can
-  enter the site. For instance, personalized pages and websites containing your
+<p>Many sites require you to type a user name and password before you can
+  enter the site. For instance, personalized pages and sites containing your
   financial information usually require you to log in.</p>
 
 <p>The user name and password you use at a particular site can be read by the
@@ -667,13 +699,13 @@
   opportunity to save user names and passwords on your hard drive that you
   enter while using the Internet.</p>
 
-<p>For example, after you log onto a website from a page that requests a user
+<p>For example, after you log onto a site from a page that requests a user
   name and password, a dialog box appears asking, <q>Do you want Password
   Manager to remember this logon?</q> When you see this dialog box, you can
   click one of the following buttons:</p>
 
 <ul>
-  <li><strong>Yes:</strong> The next time you return to the website you&apos;ll
+  <li><strong>Yes:</strong> The next time you return to the site you&apos;ll
     see that your user name and password are already filled in. All you have to
     do is click the Login button (or equivalent) to send them to the
     server.</li>
@@ -706,7 +738,7 @@
 
 <p>If the Password Manager dialog box described above does not appear when you
   click Submit after typing your user name and password, Password Manager may
-  be turned off or the website may disallow its use.</p>
+  be turned off or the site may disallow its use.</p>
 
 <p>To check whether Password Manager is currently active, see
   <a href="#turning_password_manager_on_and_off">Turning Password Manager On
@@ -723,7 +755,7 @@
 
 <ul>
   <li>You use Password Manager to remember your user name and password for a
-    website (using the three-button dialog box described in
+    site (using the three-button dialog box described in
     <a href=
     "#using_password_manager_to_remember_user_names_and_passwords">Using
     Password Manager to Remember User Names and Passwords</a>).
@@ -778,7 +810,7 @@
   Passwords</h2>
 
 <p>To see the user names and passwords you have stored and to display a list of
-  websites from which logon information never is saved:</p>
+  sites from which logon information never is saved:</p>
 
 <ul>
   <li>Open the Tools menu, choose Password Manager, and then choose Manage
@@ -789,14 +821,14 @@
         choice.</li>
       <li>To hide your passwords, click Hide Passwords.</li>
       <li>To remove an entry from the list, click it and then click Remove. The
-        next time you visit the website, you will need to enter your user name
+        next time you visit the site, you will need to enter your user name
         and password again, since Password Manager will no longer have the
         information.</li>
     </ul>
-    Click the Passwords Never Saved tab to see a list of the websites for which
+    Click the Passwords Never Saved tab to see a list of the sites for which
     you instructed Password Manager never to store user names and passwords. To
-    remove a website from this list, click it and then click Remove. The next
-    time you log into the website, you can use the stored user name and
+    remove a site from this list, click it and then click Remove. The next
+    time you log into the site, you can use the stored user name and
     password (if available) or indicate that you want Password Manager to save
     the information for that site.</li>
 </ul>
@@ -811,7 +843,7 @@
 
 <p>Form Manager can save the personal data you enter into online forms, such as
   your name, address, phone, credit card numbers, and so on. This information
-  is stored on your hard drive. Then, when a website presents you with a form,
+  is stored on your hard drive. Then, when a site presents you with a form,
   Form Manager can fill it in automatically.</p>
 
 <div class="contentsBox">In this section:
@@ -932,19 +964,19 @@
   reasons:</p>
 
 <ul>
-  <li>Prefill Form Data can help you prevent malicious websites from collecting
+  <li>Prefill Form Data can help you prevent malicious sites from collecting
     data you are not aware of. 
 
-    <p>For example, it&apos;s possible for a website to hide a field on a form
+    <p>For example, it&apos;s possible for a site to hide a field on a form
       where you can&apos;t see it and specify that field to be a credit card
       number. If you prefill the form without first examining the information
       displayed in the Prefill Form Data dialog box, you may end up providing
-      your credit card number to such a website without realizing it. Prefill
+      your credit card number to such a site without realizing it. Prefill
       Form Data lets you see every value that will be provided to the site,
       allowing you to detect such tricks.</p>
   </li>
   <li>Prefill Form Data allows you to select which of several saved values for
-    a given field you want to use for a particular website.</li>
+    a given field you want to use for a particular site.</li>
 </ul>
 
 <p>For a detailed description of the Prefill Form Data dialog box, see
@@ -1011,7 +1043,7 @@
     names would be stored here together rather than separately in those
     individual categories.</li>
   <li><strong>URL-Specific</strong> lists fields and the values to use for each
-    of them that are applicable only for the website where you entered
+    of them that are applicable only for the site where you entered
     them.</li>
 </ul>
 
@@ -1053,29 +1085,29 @@
 <h2 id="viewing_privacy_policies">Viewing Privacy Policies</h2>
 
 <p>When you provide personal information such as your name, phone number, or
-  email address to a website, or when the site collects personal information in
+  email address to a site, or when the site collects personal information in
   other ways, the site can use the information for its own purposes (such as
   shipping you a product or customizing your browsing experience) and can
   potentially share it with others.</p>
 
 <p>Before providing personal information on an online form, you must decide
-  whether or not you trust the website&mdash;just as you judge whether or not
+  whether or not you trust the site&mdash;just as you judge whether or not
   you trust a catalog company before you provide your credit card number on the
   company&apos;s order form.</p>
 
-<p>One way to evaluate a website&apos;s trustworthiness is to examine its
-  published privacy policy. Websites publish privacy statements online, and
+<p>One way to evaluate a site&apos;s trustworthiness is to examine its
+  published privacy policy. Sites publish privacy statements online, and
   some of them publish such statements based on the Platform for Privacy
   Preferences (P3P) standard and the browser&apos;s implementation of that
   standard.</p>
 
-<p>A website&apos;s privacy policy describes what kind of information the site
+<p>A site&apos;s privacy policy describes what kind of information the site
   collects, to whom it gives that information, and how it uses the information.
-  Websites publish privacy policies in both human-readable form and as a file
+  Sites publish privacy policies in both human-readable form and as a file
   that can be interpreted by the browser according to your
   <a href="#privacy_settings">Privacy Settings</a>.</p>
 
-<p>To view a website&apos;s privacy policy, browse to the site and follow these
+<p>To view a site&apos;s privacy policy, browse to the site and follow these
   steps:</p>
 
 <ul>
@@ -1172,7 +1204,7 @@
       still available. You can still open the Edit Menu and choose Fill in Form
       or Save Form Info.</p>
   </li>
-  <li><strong>Manage Stored Form Data.</strong> Click this button to examine or
+  <li><strong>Manage Stored Form Data:</strong> Click this button to examine or
     edit personal data that Form Manager has saved. For details, see
     <a href="#form_manager_data">Form Manager - Data</a>.</li>
   <li><strong>Manage Sites:</strong> Click this button to view site-specific
@@ -1316,8 +1348,8 @@
     deselect any that you don&apos;t want filled in automatically.</li>
   <li><strong>Bypass this screen when prefilling this form in the
     future:</strong> Select this checkbox to avoid seeing this window the next
-    time you visit this website. This can be convenient; for example, if you
-    frequently need to enter the same data at the same website.
+    time you visit this site. This can be convenient; for example, if you
+    frequently need to enter the same data at the same site.
 
     <p><strong>Important:</strong> If you bypass this screen, you risk filling
       in personal information (such as your credit card number) inadvertently.
@@ -1325,7 +1357,7 @@
       Forms Automatically</a>.</p>
 
     <p>If you change your mind about this decision, you can restore the
-      Prefill Form Data window for this website. For details, see
+      Prefill Form Data window for this site. For details, see
       <a href="#form_manager_sites">Form Manager - Sites</a>.</p>
   </li>
   <li><strong>View Stored Form Data:</strong> Click this button to examine or
@@ -1570,7 +1602,7 @@
     animation.</li>
 </ul>
 
-<p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
+<p>Copyright &copy; 2003-2005 The Mozilla Foundation.</p>
 
 </body>
 </html>
