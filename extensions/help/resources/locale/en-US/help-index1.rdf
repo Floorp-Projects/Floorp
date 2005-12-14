@@ -192,7 +192,8 @@
        <rdf:Description ID="Composer"
          nc:name="Composer"
          nc:link="composer_help.xhtml"/>
-     </rdf:li><rdf:li>
+     </rdf:li>
+     <rdf:li>
        <rdf:Description ID="Cookie_Manager"
          nc:name="Cookie Manager"
          nc:link="using_priv_help.xhtml#using_the_cookie_manager"/>
@@ -2134,6 +2135,11 @@
        <rdf:Description ID="Tabbed_Browsing:introduction"
          nc:name="using tabbed browsing"
          nc:link="nav_help.xhtml#using_tabbed_browsing"/>
+     </rdf:li>
+     <rdf:li>
+       <rdf:Description ID="Tabbed_Browsing:moving_tabs"
+         nc:name="moving tabs"
+         nc:link="customize_help.xhtml#moving_tabs"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Tabbed_Browsing:opening_tabs"
