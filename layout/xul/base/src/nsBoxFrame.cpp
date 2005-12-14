@@ -210,7 +210,7 @@ nsBoxFrame::Init(nsPresContext*  aPresContext,
 
   nsresult  rv = nsContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  // see if we need a widget. Get our parent. Querty interface the parent we are given. 
+  // see if we need a widget
   if (aParent && aParent->IsBoxFrame()) {
     PRBool needsWidget = PR_FALSE;
     aParent->ChildrenMustHaveWidgets(needsWidget);
