@@ -316,6 +316,7 @@ bin/chrome/chromelist.txt
 ; window icons
 bin/chrome/icons/default/bmPropsWindow*.xpm
 bin/chrome/icons/default/bookmark-window*.xpm
+bin/chrome/icons/default/default*.xpm
 bin/chrome/icons/default/downloadManager*.xpm
 bin/chrome/icons/default/editorWindow*.xpm
 bin/chrome/icons/default/findBookmarkWindow*.xpm
@@ -323,6 +324,7 @@ bin/chrome/icons/default/findHistoryWindow*.xpm
 bin/chrome/icons/default/history-window*.xpm
 bin/chrome/icons/default/jsconsoleWindow*.xpm
 bin/chrome/icons/default/main-window*.xpm
+bin/chrome/icons/default/seamonkey.png
 
 ; all the pref files must be part of base
 ; to prevent migration bugs
