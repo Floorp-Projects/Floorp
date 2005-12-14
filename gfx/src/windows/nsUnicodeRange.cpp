@@ -206,7 +206,7 @@ const char *gUnicodeRangeToLangGroupTable[] =
 
 
 
-#define NUM_OF_SUBTABLES      7
+#define NUM_OF_SUBTABLES      8
 #define SUBTABLE_SIZE         16
 
 static PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] = 
@@ -339,8 +339,26 @@ static PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
                              //                CJK compatibility forms, 
                              //                small form variants
     
-    kRangeSetCJK,            //uffxx, halfwidth and fullwidth forms, includes Special
-  }
+    kRangeTableBase+7,       //uffxx, halfwidth and fullwidth forms, includes Special
+  },
+  { //table for 0xff00 - 0xffff
+    kRangeSetCJK,            //uff0x, fullwidth latin
+    kRangeSetCJK,            //uff1x, fullwidth latin
+    kRangeSetCJK,            //uff2x, fullwidth latin
+    kRangeSetCJK,            //uff3x, fullwidth latin
+    kRangeSetCJK,            //uff4x, fullwidth latin
+    kRangeSetCJK,            //uff5x, fullwidth latin
+    kRangeSetCJK,            //uff6x, halfwidth katakana
+    kRangeSetCJK,            //uff7x, halfwidth katakana
+    kRangeSetCJK,            //uff8x, halfwidth katakana
+    kRangeSetCJK,            //uff9x, halfwidth katakana
+    kRangeSetCJK,            //uffax, halfwidth hangul jamo
+    kRangeSetCJK,            //uffbx, halfwidth hangul jamo
+    kRangeSetCJK,            //uffcx, halfwidth hangul jamo
+    kRangeSetCJK,            //uffdx, halfwidth hangul jamo
+    kRangeSetCJK,            //uffex, fullwidth symbols
+    kRangeSpecials,          //ufffx, Specials
+  },
 };
 
 // Most scripts between U+0700 and U+16FF are assigned a chunk of 128 (0x80) 
@@ -407,9 +425,11 @@ PRUint32 FindCharUnicodeRange(PRUnichar ch)
 
   // otherwise, we have one more table to look at
   range = gUnicodeSubrangeTable[range - kRangeTableBase][(ch & 0x0f00) >> 8];
+  if (range < kRangeTableBase)
+    return range;
   if (range < kRangeTertiaryTable)
-    return range;     
+    return gUnicodeSubrangeTable[range - kRangeTableBase][(ch & 0x00f0) >> 4];
 
   // Yet another table to look at : U+0700 - U+16FF : 128 code point blocks
-  return  gUnicodeTertiaryRangeTable[(ch - 0x0700) >> 7];
+  return gUnicodeTertiaryRangeTable[(ch - 0x0700) >> 7];
 }

@@ -1307,7 +1307,7 @@ static PRUint8 gBitToUnicodeRange[] =
  /* 66 */ kRangeArabic,                 // fe50 - fe6f     Small Form Variants
  /* 67 */ kRangeArabic,                 // fe70 - fefe     Arabic Presen. FormsB
  /* 68 */ kRangeSetCJK,                 // ff00 - ffef     Half/Fullwidth Forms
- /* 69 */ kRangeSetCJK,                 // fff0 - fffd     Specials
+ /* 69 */ kRangeSpecials,               // fff0 - fffd     Specials
  /* 70 */ kRangeTibetan,                // 0f00 - 0fcf     Tibetan
  /* 71 */ kRangeSyriac,                 // 0700 - 074f     Syriac
  /* 72 */ kRangeThaana,                 // 0780 - 07bf     Thaana
@@ -2730,6 +2730,9 @@ nsFontMetricsWin::SameAsPreviousMap(int aIndex)
     if (tmp->flags & NS_GLOBALFONT_SKIP) {
       continue;
     }
+    if (!tmp->ccmap) {
+      continue;
+    }
     if (tmp->ccmap == font->ccmap) {
       font->flags |= NS_GLOBALFONT_SKIP;
       return 1;
@@ -2744,6 +2747,24 @@ nsFontMetricsWin::SameAsPreviousMap(int aIndex)
   return 0;
 }
 
+#ifndef WINCE
+static
+void BitFromUnicodeRange(PRUint32 range, DWORD* usb)
+{
+  for (int i = 0, dword = 0; dword < 3; ++dword) {
+    for (int bit = 0; bit < sizeof(DWORD) * 8; ++bit, ++i) {
+      if (range == gBitToUnicodeRange[i]) {
+        usb[dword] |= 1 << bit;
+      }
+    }
+  }
+}
+#endif
+
+#ifdef DEBUG_emk
+static LARGE_INTEGER freq, prev;
+#endif
+
 nsFontWin*
 nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUint32 c)
 {
@@ -2753,6 +2774,12 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUint32 c)
       return nsnull;
     }
   }
+#ifndef WINCE
+  PRUint32 range = (c <= 0xFFFF) ? FindCharUnicodeRange(c) : kRangeSurrogate;
+  DWORD usb[4];
+  memset(usb, 0, sizeof(usb));
+  BitFromUnicodeRange(range, usb);
+#endif
   int count = gGlobalFonts->Count();
   for (int i = 0; i < count; ++i) {
     nsGlobalFont* font = (nsGlobalFont*)gGlobalFonts->ElementAt(i);
@@ -2760,6 +2787,15 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUint32 c)
       continue;
     }
     if (!font->ccmap) {
+#ifndef WINCE
+      // bail out if Unicode range indicates the font have no glyph
+      if (font->flags & NS_GLOBALFONT_TRUETYPE &&
+          !(font->signature.fsUsb[0] & usb[0]) &&
+          !(font->signature.fsUsb[1] & usb[1]) &&
+          !(font->signature.fsUsb[2] & usb[2])) {
+        continue;
+      }
+#endif
       // don't adjust here, we just want to quickly get the CMAP. Adjusting
       // is meant to only happen when loading the final font in LoadFont()
       HFONT hfont = ::CreateFontIndirect(&font->logFont);
@@ -2775,14 +2811,28 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUint32 c)
         font->flags |= NS_GLOBALFONT_SKIP;
         continue;
       }
+#ifdef DEBUG_emk
+      LARGE_INTEGER now;
+      QueryPerformanceCounter(&now);
+      printf("CCMAP loaded: %g sec, %s [%08X][%08X][%08X]\n", (now.QuadPart - prev.QuadPart) / (double)freq.QuadPart,
+        font->logFont.lfFaceName, font->signature.fsUsb[0], font->signature.fsUsb[1], font->signature.fsUsb[2]);
+      prev = now;
+#endif
       if (SameAsPreviousMap(i)) {
         continue;
       }
     }
     if (CCMAP_HAS_CHAR_EXT(font->ccmap, c)) {
+#ifdef DEBUG_emk
+      printf("font found:[%s]\n", font->logFont.lfFaceName);
+      printf("U+%04X (%d)[%08X][%08X][%08X]\n", c, range, usb[0], usb[1], usb[2]);
+#endif
       return LoadGlobalFont(aDC, font);
     }
   }
+#ifdef DEBUG_emk
+  printf("U+%04X (%d)[%08X][%08X][%08X]\n", c, range, usb[0], usb[1], usb[2]);
+#endif
   return nsnull;
 }
 
@@ -3555,6 +3605,11 @@ nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
 nsFontWin*
 nsFontMetricsWin::FindFont(HDC aDC, PRUint32 aChar)
 {
+#ifdef DEBUG_emk
+  LARGE_INTEGER start, end;
+  QueryPerformanceFrequency(&freq);
+  QueryPerformanceCounter(&start);
+#endif
   // the first font should be for invisible ignorable characters
   if (mLoadedFonts.Count() < 1)
     mLoadedFonts.AppendElement(gFontForIgnorable);
@@ -3569,8 +3624,15 @@ nsFontMetricsWin::FindFont(HDC aDC, PRUint32 aChar)
       if (!font) {
         font = FindPrefFont(aDC, aChar);
         if (!font) {
+#ifdef DEBUG_emk
+          QueryPerformanceCounter(&prev);
+#endif
           font = FindGlobalFont(aDC, aChar);
           if (!font) {
+#ifdef DEBUG_emk
+            QueryPerformanceCounter(&end);
+            printf("%g sec.\n", (end.QuadPart - start.QuadPart) / (double)freq.QuadPart);
+#endif
             font = FindSubstituteFont(aDC, aChar);
           }
         }

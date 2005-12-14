@@ -102,6 +102,7 @@ const PRUint8   kRangeDingbats             = 53;
 const PRUint8   kRangeBraillePattern       = 54;
 const PRUint8   kRangeYi                   = 55;
 const PRUint8   kRangeCombiningDiacriticalMarks = 56;
+const PRUint8   kRangeSpecials             = 57;
 
 const PRUint8   kRangeTableBase   = 128;    //values over 127 are reserved for internal use only
 const PRUint8   kRangeTertiaryTable  = 145; // leave room for 16 subtable 
