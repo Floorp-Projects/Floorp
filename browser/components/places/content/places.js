@@ -42,6 +42,7 @@ var PlacesUIHook = {
   _tabbrowser: null,
   _topWindow: null,
   _placesURI: "chrome://browser/content/places/places.xul",
+  _bundle: null,
   
   init: function PUIH_init(placesList) {
     try {
@@ -61,6 +62,8 @@ var PlacesUIHook = {
     catch (e) { 
     }
     
+    this._bundle = document.getElementById("placeBundle");
+    
     // Stop the browser from handling certain types of events. 
     function onDragEvent(event) {
       event.stopPropagation();
@@ -68,6 +71,34 @@ var PlacesUIHook = {
     window.addEventListener("draggesture", onDragEvent, false);
     window.addEventListener("dragover", onDragEvent, false);
     window.addEventListener("dragdrop", onDragEvent, false);
+  },
+
+  this._commands = ["Browser:SavePage", "Browser:SaveFrame", "Browser:SendLink", 
+                    "cmd_pageSetup", "cmd_print", "cmd_printPreview", 
+                    "cmd_findAgain", "cmd_switchTextDirection", "Browser:Stop",
+                    "Browser:Reload", "viewTextZoomMenu", "pageStyleMenu", 
+                    "charsetMenu", "View:PageSource", "View:FullScreen", 
+                    "documentDirection-swap", "Browser:AddBookmarkAs", 
+                    "Browser:ShowPlaces", "View:PageInfo", "cmd_toggleTaskbar"],
+  
+  /**
+   * Disable commands that are not relevant to the Places page, so that all 
+   * applicable UI becomes inactive. 
+   */
+  _disableCommands: function PUIH__disableCommands() {
+    for (var i = 0; i < this._commands.length; ++i)
+      this._topWindow.document.getElementById(this._commands[i]).
+        setAttribute("disabled", true);
+  },
+  
+  /**
+   * Enable commands that aren't updated automatically by the command updater
+   * when we switch away from the Places page. 
+   */
+  _enableCommands: function PUIH__enableCommands() {
+    for (var i = 0; i < this._commands.length; ++i)
+      this._topWindow.document.getElementById(this._commands[i]).
+        removeAttribute("disabled");
   },
   
   uninit: function PUIH_uninit() {
@@ -88,12 +119,19 @@ var PlacesUIHook = {
     var statusbar = this._topElement("status-bar");
     this._oldStatusBarState = statusbar.hidden;
     statusbar.hidden = true;
+    this._disableCommands();
+    
+    var findItem = this._topWindow.document.getElementById("menu_find");
+    findItem.setAttribute("label", this._bundle.getString("findPlaceLabel"));
   },
 
   _hidePlacesUI: function PP__hidePlacesUI() {
     this._tabbrowser.removeAttribute("places");
-    var statusbar = this._topElement("status-bar");
     statusbar.hidden = this._oldStatusBarState;
+    this._enableCommands();
+
+    var findItem = this._topWindow.document.getElementById("menu_find");
+    findItem.setAttribute("label", this._bundle.getString("findPageLabel"));
   },
 };
 
