@@ -102,6 +102,7 @@ function InsertionPoint(folderId, index, orientation) {
 
 /**
  * Initialization Configuration for a View
+ * @constructor
  */
 function ViewConfig(dropTypes, dropOnTypes, filterOptions, firstDropIndex) {
   this.dropTypes = dropTypes;
@@ -113,6 +114,82 @@ ViewConfig.GENERIC_DROP_TYPES = [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE,
                                  TYPE_X_MOZ_URL];
 ViewConfig.GENERIC_FILTER_OPTIONS = Ci.nsINavHistoryQuery.INCLUDE_ITEMS +
                                      Ci.nsINavHistoryQuery.INCLUDE_QUERIES;
+
+/**
+ * Manages grouping options for a particular view type. 
+ * @param   pref
+ *          The preference that stores these grouping options. 
+ * @param   defaultGroupings
+ *          The default groupings to be used for views of this type. 
+ * @param   serializable
+ *          An object bearing a serialize and deserialize method that
+ *          read and write the object's string representation from/to
+ *          preferences.
+ * @constructor
+ */
+function PrefHandler(pref, defaultValue, serializable) {
+  this._pref = pref;
+  this._defaultValue = defaultValue;
+  this._serializable = serializable;
+
+  this._pb = 
+    Cc["@mozilla.org/preferences-service;1"].
+    getService(Components.interfaces.nsIPrefBranch2);
+  this._pb.addObserver(this._pref, this, false);
+}
+PrefHandler.prototype = {
+  /**
+   * Clean up when the window is going away to avoid leaks. 
+   */
+  destroy: function PC_PH_destroy() {
+    this._pb.removeObserver(this._pref, this);
+  },
+
+  /** 
+   * Observes changes to the preferences.
+   * @param   subject
+   * @param   topic
+   *          The preference changed notification
+   * @param   data
+   *          The preference that changed
+   */
+  observe: function PC_PH_observe(subject, topic, data) {
+    if (topic == "nsPref:changed" && data == this._pref)
+      this._value = null;
+  },
+  
+  /**
+   * The cached value, null if it needs to be rebuilt from preferences.
+   */
+  _value: null,
+
+  /** 
+   * Get the preference value, reading from preferences if necessary. 
+   */
+  get value() { 
+    if (!this._value) {
+      if (this._pb.prefHasUserValue(this._pref)) {
+        var valueString = this._pb.getCharPref(this._pref);
+        this._value = this._serializable.deserialize(valueString);
+      }
+      else
+        this._value = this._defaultValue;
+    }
+    return this._value;
+  },
+  
+  /**
+   * Stores a value in preferences. 
+   * @param   value
+   *          The data to be stored. 
+   */
+  set value(value) {
+    if (value != this._value)
+      this._pb.setCharPref(this._pref, this._serializable.serialize(value));
+    return value;
+  },
+};
+
 
 /**
  * The Master Places Controller
@@ -175,6 +252,20 @@ var PlacesController = {
   },
   
   /**
+   * Gets a place: URI for the given queries and options. 
+   * @param   queries
+   *          An array of NavHistoryQueries
+   * @param   options
+   *          A NavHistoryQueryOptions object
+   * @returns A place: URI encoding the parameters. 
+   */
+  getPlaceURI: function PC_getPlaceURI(queries, options) {
+    var queryString = this._hist.queriesToQueryString(queries, queries.length,
+                                                      options);
+    return this._uri(queryString);
+  },
+  
+  /**
    * The currently active Places view. 
    */
   _activeView: null,
@@ -184,6 +275,18 @@ var PlacesController = {
   set activeView(activeView) {
     this._activeView = activeView;
     return this._activeView;
+  },
+  
+  /**
+   * The current groupable Places view.
+   */
+  _groupableView: null,
+  get groupableView() {
+    return this._groupableView;
+  },
+  set groupableView(groupableView) {
+    this._groupableView = groupableView;
+    return this._groupableView;
   },
   
   isCommandEnabled: function PC_isCommandEnabled(command) {
@@ -542,27 +645,51 @@ var PlacesController = {
   },
   
   /**
+   * A hash of groupers that supply grouping options for queries of a given 
+   * type. This is an override of grouping options that might be encoded in
+   * a saved place: URI
+   */
+  groupers: { },
+  
+  /**
    * Rebuilds the view using a new set of grouping options.
-   * @param   options
+   * @param   groupings
    *          An array of grouping options, see nsINavHistoryQueryOptions
    *          for details.
    */
-  setGroupingMode: function PC_setGroupingOptions(options) {
-    var result = this._activeView.view.QueryInterface(Ci.nsINavHistoryResult);
+  setGroupingMode: function PC_setGroupingOptions(groupings) {
+    if (!this._groupableView)
+      return;
+    var result = this._groupableView.getResult();
     var queries = result.getQueries({ });
     var newOptions = result.queryOptions.clone();
-    newOptions.setGroupingMode(options, options.length);
     
-    this._activeView.load(queries, newOptions);
+    // Update the grouping mode only after persisting, so that the URI is not 
+    // changed. 
+    newOptions.setGroupingMode(groupings, groupings.length);
+    
+    // Persist this selection
+    if (this._groupableView.isBookmarks && "bookmark" in this.groupers)
+      this.groupers.bookmark.value = groupings;
+    else if ("generic" in this.groupers)
+      this.groupers.generic.value = groupings;
+
+    // Reload the view 
+    this._groupableView.load(queries, newOptions);
   },
   
   /**
    * Group the current content view by domain
    */
   groupBySite: function PC_groupBySite() {
-    var modes = [Ci.nsINavHistoryQueryOptions.GROUP_BY_DOMAIN, 
-    Ci.nsINavHistoryQueryOptions.GROUP_BY_HOST];
-    this.setGroupingMode(modes);
+    this.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_DOMAIN]);
+  },
+  
+  /**
+   * Group the current content view by folder
+   */
+  groupByFolder: function PC_groupByFolder() {
+    this.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER]);
   },
   
   /**

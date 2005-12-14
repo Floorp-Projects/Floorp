@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const PREF_PLACES_GROUPING_GENERIC = "browser.places.grouping.generic";
+const PREF_PLACES_GROUPING_BOOKMARK = "browser.places.grouping.bookmark";
+
 var PlacesUIHook = {
   _tabbrowser: null,
   _topWindow: null,
@@ -94,17 +97,6 @@ var PlacesUIHook = {
   },
 };
 
-function ViewConfig(dropTypes, dropOnTypes, filterOptions, firstDropIndex) {
-  this.dropTypes = dropTypes;
-  this.dropOnTypes = dropOnTypes;
-  this.filterOptions = filterOptions;
-  this.firstDropIndex = firstDropIndex;
-}
-ViewConfig.GENERIC_DROP_TYPES = 
-  [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL];
-ViewConfig.GENERIC_FILTER_OPTIONS = 
-  Ci.nsINavHistoryQuery.INCLUDE_ITEMS + Ci.nsINavHistoryQuery.INCLUDE_QUERIES;
-
 var PlacesPage = {
   _content: null,
   _places: null,
@@ -123,6 +115,23 @@ var PlacesPage = {
     this._content.init(new ViewConfig(ViewConfig.GENERIC_DROP_TYPES,
                                       ViewConfig.GENERIC_DROP_TYPES,
                                       ViewConfig.GENERIC_FILTER_OPTIONS, 0));
+                                      
+    PlacesController.groupableView = this._content;
+
+    var GroupingSerializer = {
+      serialize: function GS_serialize(raw) {
+        return raw.join(",");
+      },
+      deserialize: function GS_deserialize(str) {
+        return str === "" ? [] : str.split(",");
+      }
+    };
+    PlacesController.groupers.generic = 
+      new PrefHandler(PREF_PLACES_GROUPING_GENERIC, 
+        [Ci.nsINavHistoryQueryOptions.GROUP_BY_DOMAIN], GroupingSerializer);
+    PlacesController.groupers.bookmark = 
+      new PrefHandler(PREF_PLACES_GROUPING_BOOKMARK,
+        [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], GroupingSerializer);
     
     // Hook the browser UI
     PlacesUIHook.init(this._content);
@@ -196,7 +205,7 @@ var PlacesPage = {
       break;
     }
   },
-
+  
   /**
    * Called when a place folder is selected in the left pane.
    */
@@ -205,12 +214,21 @@ var PlacesPage = {
     if (!node || this._places.suppressSelection)
       return;
     var queries = node.getQueries({});
-    if (PlacesController.nodeIsFolder(node))
-      this._content.loadFolder(node.folderId);
-    else { // XXXben, this is risky, need to filter out TYPE_DAY/TYPE_HOST
-      var queries = node.getQueries({ });
-      this._content.load(queries, node.queryOptions);
+    var newQueries = [];
+    for (var i = 0; i < queries.length; ++i) {
+      var query = queries[i].clone();
+      query.itemTypes |= this._content.filterOptions;
+      newQueries.push(query);
     }
+    var newOptions = node.queryOptions.clone();
+
+    var groupings = PlacesController.groupers.generic.value;
+    var isBookmark = PlacesController.nodeIsFolder(node);
+    if (isBookmark)
+      groupings = PlacesController.groupers.bookmark.value;
+
+    newOptions.setGroupingMode(groupings, groupings.length);
+    this._content.load(newQueries, newOptions);
   },
   
   /**
@@ -258,7 +276,7 @@ var PlacesPage = {
   onContentChanged: function PP_onContentChanged() {
     var panelID = "commands_history";
     var filterButtonID = "filterList_history";
-    var isBookmarks = PlacesController.nodeIsFolder(this._content.getResult());
+    var isBookmarks = this._content.isBookmarks;
     if (isBookmarks) {
       // if (query.annotation == "feed") {
       panelID = "commands_bookmark";

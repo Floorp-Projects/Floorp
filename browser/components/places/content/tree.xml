@@ -173,6 +173,12 @@
           this._fireEvent("reloaded");
         ]]></body>
       </method>
+      
+      <property name="isBookmarks">
+        <getter><![CDATA[ 
+          return PlacesController.nodeIsFolder(this.getResult());
+        ]]></getter>
+      </property>
     
       <!-- AVI Method -->
       <property name="hasSelection">
