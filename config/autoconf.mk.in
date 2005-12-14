@@ -202,6 +202,8 @@ MOZ_ENABLE_CANVAS = @MOZ_ENABLE_CANVAS@
 MOZ_CAIRO_CFLAGS = @MOZ_CAIRO_CFLAGS@
 MOZ_XSLT_STANDALONE = @MOZ_XSLT_STANDALONE@
 
+MOZ_PREF_EXTENSIONS = @MOZ_PREF_EXTENSIONS@
+
 # Mac's don't like / in a #include, so we include the libart
 # headers locally if we're using the external library
 ifdef MOZ_LIBART_CFLAGS

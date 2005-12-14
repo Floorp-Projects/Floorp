@@ -145,6 +145,12 @@
 #define XREMOTE_MODULES
 #endif
 
+#ifdef MOZ_ENABLE_GTK2
+#define SYSTEMPREF_MODULES MODULE(system-pref)
+#else
+#define SYSTEMPREF_MODULES
+#endif
+
 #define XUL_MODULES                          \
     MODULE(xpcomObsoleteModule)              \
     MODULE(xpconnect)                        \
@@ -190,6 +196,8 @@
     MODULE(PKI)                              \
     MODULE(BOOT)                             \
     MODULE(NSS)                              \
+    MODULE(autoconfig)                       \
+    SYSTEMPREF_MODULES                       \
     /* end of list */
 
 #define MODULE(_name) \

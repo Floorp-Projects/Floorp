@@ -48,7 +48,7 @@ endif
 EXPORT_LIBRARY   = 1
 IS_COMPONENT     = 1
 MODULE_NAME      = nsAutoConfigModule
-MOZILLA_INTERNAL_API = 1
+LIBXUL_LIBRARY   = 1
 
 PACKAGE_FILE     = autoconfig.pkg
 
