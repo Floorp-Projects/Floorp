@@ -107,6 +107,7 @@ COMPONENT_LIBS += \
 	pippki \
 	pipboot \
 	pipnss \
+	autoconfig \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -138,6 +139,7 @@ endif
 
 ifdef MOZ_ENABLE_GTK2
 COMPONENT_LIBS += widget_gtk2
+COMPONENT_LIBS += system-pref
 endif
 
 ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
