@@ -1019,10 +1019,7 @@
                 this.mStrip.collapsed = true;
             }
 
-            var index;
-            for (index = 0; index < this.mTabs.length; index++)
-              if (this.mTabs[index] == aTab) 
-                break;
+            var index = this.getTabIndex(aTab);
 
             // Remove the tab's filter and progress listener.
             const filter = this.mTabFilters[index];
@@ -1151,6 +1148,19 @@
         </body>
       </method>
 
+      <method name="getTabIndex">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            for (var i = 0; i < this.mTabs.length; ++i)
+              if (this.mTabs[i] == aTab) 
+                return i;
+
+            throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+          ]]>
+        </body>
+      </method>
+
       <property name="tabContainer">
         <getter>
           return this.mTabContainer;
@@ -1195,11 +1205,6 @@
           <![CDATA[
             if (aEvent.target.localName == "tab") {
               aXferData.data = new TransferData();
-              var index;
-              for (index = 0; index < this.mTabs.length; index++)
-                if (this.mTabs[index] == aEvent.target) 
-                  break;
-              aXferData.data.addDataForFlavour("text/x-moz-tab", index);
 
               var URI = aEvent.target.linkedBrowser.currentURI;
               var title = aEvent.target.linkedBrowser.contentTitle || URI.spec;
@@ -1211,19 +1216,40 @@
         </body>
       </method>
 
+      <method name="canDrop">
+        <parameter name="aEvent"/>
+        <parameter name="aDragSession"/>
+        <body>
+          <![CDATA[
+            if (aDragSession.sourceNode.parentNode == this.mTabContainer) {
+              var newIndex = this.getDropIndex(aEvent);
+              var tabIndex = this.getTabIndex(aDragSession.sourceNode);
+              if (newIndex == tabIndex || newIndex == tabIndex + 1)
+                return false;
+            }
+            return true;
+          ]]>
+        </body>
+      </method>
+
       <method name="onDragOver">
         <parameter name="aEvent"/>
         <parameter name="aFlavour"/>
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            if (aDragSession.canDrop && aDragSession.sourceNode.parentNode == this.mTabContainer) {
-              var newIndex = this.getDropIndex(aEvent);
-
+            if (aDragSession.sourceNode.parentNode == this.mTabContainer) {
               var ib = document.getAnonymousElementByAttribute(this, "class", "tab-drop-indicator-bar");
-              var ind = document.getAnonymousElementByAttribute(this, "class", "tab-drop-indicator");
-              ib.hidden = false;
 
+              if (!aDragSession.canDrop)
+              {
+                ib.hidden = true;
+                return;
+              }
+
+              var ind = document.getAnonymousElementByAttribute(this, "class", "tab-drop-indicator");
+
+              var newIndex = this.getDropIndex(aEvent);
               var tabAtPrevIndex = (newIndex > 0) ? this.mTabs[newIndex - 1] : null;
 
               if (window.getComputedStyle(this, null).direction == "ltr") {
@@ -1232,8 +1258,7 @@
                                          tabAtPrevIndex.boxObject.width - this.boxObject.x + 'px';
                 }
                 else {
-                  var tabAtNewIndex = this.mTabs[newIndex];
-                  ind.style.marginLeft = tabAtNewIndex.boxObject.x - this.boxObject.x + 'px';
+                  ind.style.marginLeft = this.mTabs[newIndex].boxObject.x - this.boxObject.x + 'px';
                 }            
               } else {
                 if (newIndex == this.mTabs.length) {
@@ -1247,6 +1272,8 @@
                                           tabAtNewIndex.boxObject.width + 'px';
                 }
               }
+
+              ib.hidden = false;
             }
           ]]>
         </body>
@@ -1260,10 +1287,10 @@
           <![CDATA[
             if (aDragSession.sourceNode && aDragSession.sourceNode.parentNode == this.mTabContainer) {
               var newIndex = this.getDropIndex(aEvent);
-              if (newIndex > aXferData.data)
+              var tabIndex = this.getTabIndex(aDragSession.sourceNode);
+              if (newIndex > tabIndex)
                 newIndex--;
-              if (newIndex != aXferData.data) 
-                this.moveTabTo(aXferData.data, newIndex);
+              this.moveTabTo(tabIndex, newIndex);
             } else {
               var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
 
@@ -1300,9 +1327,19 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            var ib = document.getAnonymousElementByAttribute(this, "class", "tab-drop-indicator-bar");
-            ib.hidden = true;
-           ]]>
+            if (aDragSession.sourceNode.parentNode == this.mTabContainer) {
+              var target = aEvent.relatedTarget;
+              while (target && target != this.mStrip)
+                target = target.parentNode;
+
+              if (target)
+                return;
+
+              document.getAnonymousElementByAttribute(this, "class",
+                                                      "tab-drop-indicator-bar")
+                      .hidden = true;
+            }
+          ]]>
         </body>
       </method>
 
@@ -1310,7 +1347,6 @@
         <body>
           <![CDATA[
             var flavourSet = new FlavourSet();
-            flavourSet.appendFlavour("text/x-moz-tab"); // this has to be first to support DnD reordering
             flavourSet.appendFlavour("text/x-moz-url");
             flavourSet.appendFlavour("text/unicode");
             flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
