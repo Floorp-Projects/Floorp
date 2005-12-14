@@ -56,15 +56,33 @@
  *   HREF is the destination of the bookmark
  *   LAST_CHARSET should be stored as an annotation (FIXME TODO) so that the
  *     next time we go to that page we remember the user's preference.
- *   ICON should be stored in the annotation service (FIXME TODO)
+ *   ICON will be stored in the favicon service
  *   Text of the <a> container is the name of the bookmark
  *   Ignored: ADD_DATE, LAST_VISIT, LAST_MODIFIED, ID
  * Bookmark comment := dd
  *   This affects the previosly added bookmark
  * Separator := hr
- *   Insert a separator into the current container
+ *   Insert a separator into the current container (FIXME TODO)
  * The folder hierarchy is defined by <dl>/<ul>/<menu> (the old importing code
  *     handles all these cases, when we write, use <dl>).
+ *
+ * Overall design
+ * --------------
+ *
+ * We need to emulate a recursive parser. A "Bookmark import frame" is created
+ * corresponding to each folder we encounter. These are arranged in a stack,
+ * and contain all the state we need to keep track of.
+ *
+ * A frame is created when we find a heading, which defines a new container.
+ * The frame also keeps track of the nesting of <DL>s, (in well-formed
+ * bookmarks files, these will have a 1-1 correspondence with frames, but we
+ * try to be a little more flexible here). When the nesting count decreases
+ * to 0, then we know a frame is complete and to pop back to the previous
+ * frame.
+ *
+ * Note that a lot of things happen when tags are CLOSED because we need to
+ * get the text from the content of the tag. For example, link and heading tags
+ * both require the content (= title) before actually creating it.
  */
 
 #include "nsBrowserCompsCID.h"

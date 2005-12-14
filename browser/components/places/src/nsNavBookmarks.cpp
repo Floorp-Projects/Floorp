@@ -166,14 +166,13 @@ nsNavBookmarks::Init()
   // item_child, and folder_child from moz_bookmarks.  This selects only
   // _item_ children which are in moz_history.
   NS_NAMED_LITERAL_CSTRING(selectItemChildren,
-    "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(fullv.visit_date), f.url, a.position, a.item_child, a.folder_child, null "
+    "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+      "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
+      "f.url, a.position, a.item_child, a.folder_child, null "
     "FROM moz_bookmarks a "
     "JOIN moz_history h ON a.item_child = h.id "
     "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
-    "LEFT JOIN moz_historyvisit v ON h.id = v.page_id "
-    "LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id "
-    "WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3 "
-    "GROUP BY h.id");
+    "WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3 ");
 
   // Construct a result where the first columns are padded out to the width
   // of mDBGetVisitPageInfo, containing additional columns for position,
@@ -504,7 +503,35 @@ nsNavBookmarks::InsertItem(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex)
   nsresult rv = History()->GetUrlIdFor(aItem, &childID, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // see if this item is already in the folder
+  PRBool hasItem = PR_FALSE;
+  PRInt32 previousIndex = -1;
+  { // scope the mDBIndexOfItem statement
+    mozStorageStatementScoper scoper(mDBIndexOfItem);
+    rv = mDBIndexOfItem->BindInt64Parameter(0, childID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBIndexOfItem->BindInt64Parameter(1, aFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBIndexOfItem->ExecuteStep(&hasItem);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (hasItem)
+      previousIndex = mDBIndexOfItem->AsInt32(0);
+  }
+
   PRInt32 index = (aIndex == -1) ? FolderCount(aFolder) : aIndex;
+
+  if (hasItem && index == previousIndex)
+    return NS_OK; // item already at its desired position: nothing to do
+
+  if (hasItem) {
+    // remove any old items
+    rv = RemoveItem(aFolder, aItem);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // since we just removed the item, everything after it shifts back by one
+    if (aIndex > previousIndex)
+      aIndex --;
+  }
 
   rv = AdjustIndices(aFolder, index, PR_INT32_MAX, 1);
   NS_ENSURE_SUCCESS(rv, rv);
