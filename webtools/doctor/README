@@ -7,6 +7,16 @@ can get via CPAN:
 
 perl -MCPAN -e"install Template, AppConfig, File::Temp, Text::Diff, Email::Valid, MIME::Entity"
 
+If you want to use the WYSIWYG editing capabilities of doctor, download
+the htmlarea package (latest release or 3.0rc1) from the following site:
+
+http://www.dynarch.com/projects/htmlarea/
+
+Expand the package, then rename the directory it creates to "htmlarea"
+and move it into the root directory of your web site.  Finally, create
+a symlink called "htmlarea" inside the doctor directory that points to
+the "htmlarea" directory.
+
 Then configure your web server to serve Doctor files correctly.  See the
 .htaccess file for an explanation of the configuration options, but note that
 you should add the options to the global Apache configuration file if you have

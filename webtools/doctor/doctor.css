@@ -68,6 +68,7 @@ body.new button.tab#originalTab, body.new button.tab#diffTab {
   width: 98%;
   height: 84%;
   visibility: hidden;
+  display: none;
   overflow: scroll;
 }
 

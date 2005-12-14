@@ -103,6 +103,8 @@ function updateTabState() {
       visibility = gActiveTab == "edit" || gActiveTab == "hack";
     }
     panel.style.visibility = visibility ? "visible" : "hidden";
+    // XXX We have to also toggle the "display" property because of bug 226933.
+    panel.style.display = visibility ? "block" : "none";
   }
 }
 
