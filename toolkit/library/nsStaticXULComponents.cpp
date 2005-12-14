@@ -196,7 +196,7 @@
     MODULE(PKI)                              \
     MODULE(BOOT)                             \
     MODULE(NSS)                              \
-    MODULE(autoconfig)                       \
+    MODULE(nsAutoConfigModule)               \
     SYSTEMPREF_MODULES                       \
     /* end of list */
 
