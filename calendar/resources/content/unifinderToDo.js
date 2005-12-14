@@ -646,6 +646,10 @@ function changeContextMenuForToDo(event)
        tree.taskView.contextTask = null;
    }
 
+   // make progress and priority popup menu visible
+   document.getElementById("is_editable").removeAttribute("hidden");
+
+   // enable/disable progress and priority popup menus
    if (toDoItem)
    {
       document.getElementById("is_editable").removeAttribute("disabled");
