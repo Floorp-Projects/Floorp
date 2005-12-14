@@ -62,14 +62,23 @@
 NS_IMPL_ISUPPORTS3(nsBinaryOutputStream, nsIObjectOutputStream, nsIBinaryOutputStream, nsIOutputStream)
 
 NS_IMETHODIMP
-nsBinaryOutputStream::Flush() { return mOutputStream->Flush(); }
+nsBinaryOutputStream::Flush() 
+{ 
+    NS_ENSURE_STATE(mOutputStream);
+    return mOutputStream->Flush(); 
+}
 
 NS_IMETHODIMP
-nsBinaryOutputStream::Close() { return mOutputStream->Close(); }
+nsBinaryOutputStream::Close() 
+{ 
+    NS_ENSURE_STATE(mOutputStream);
+    return mOutputStream->Close(); 
+}
 
 NS_IMETHODIMP
 nsBinaryOutputStream::Write(const char *aBuf, PRUint32 aCount, PRUint32 *aActualBytes)
 {
+    NS_ENSURE_STATE(mOutputStream);
     return mOutputStream->Write(aBuf, aCount, aActualBytes);
 }
 
@@ -90,12 +99,15 @@ nsBinaryOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRU
 NS_IMETHODIMP
 nsBinaryOutputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
+    NS_ENSURE_STATE(mOutputStream);
     return mOutputStream->IsNonBlocking(aNonBlocking);
 }
 
 nsresult
 nsBinaryOutputStream::WriteFully(const char *aBuf, PRUint32 aCount)
 {
+    NS_ENSURE_STATE(mOutputStream);
+
     nsresult rv;
     PRUint32 bytesWritten;
 
@@ -295,12 +307,14 @@ NS_IMPL_ISUPPORTS3(nsBinaryInputStream, nsIObjectInputStream, nsIBinaryInputStre
 NS_IMETHODIMP
 nsBinaryInputStream::Available(PRUint32* aResult)
 {
+    NS_ENSURE_STATE(mInputStream);
     return mInputStream->Available(aResult);
 }
 
 NS_IMETHODIMP
 nsBinaryInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
 {
+    NS_ENSURE_STATE(mInputStream);
     return mInputStream->Read(aBuffer, aCount, aNumRead);
 }
 
@@ -338,6 +352,8 @@ ReadSegmentForwardingThunk(nsIInputStream* aStream,
 NS_IMETHODIMP
 nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
 {
+    NS_ENSURE_STATE(mInputStream);
+
     ReadSegmentsClosure thunkClosure = { this, closure, writer };
     
     return mInputStream->ReadSegments(ReadSegmentForwardingThunk, &thunkClosure, count, _retval);
@@ -346,11 +362,16 @@ nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUi
 NS_IMETHODIMP
 nsBinaryInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
+    NS_ENSURE_STATE(mInputStream);
     return mInputStream->IsNonBlocking(aNonBlocking);
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::Close() { return mInputStream->Close(); }
+nsBinaryInputStream::Close() 
+{ 
+    NS_ENSURE_STATE(mInputStream);
+    return mInputStream->Close(); 
+}
 
 NS_IMETHODIMP
 nsBinaryInputStream::SetInputStream(nsIInputStream *aInputStream)
