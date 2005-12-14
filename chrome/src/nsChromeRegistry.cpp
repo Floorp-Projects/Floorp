@@ -2018,6 +2018,16 @@ CheckVersionFlag(const nsSubstring& aFlag, const nsSubstring& aData,
   return PR_TRUE;
 }
 
+static void
+EnsureLowerCase(char *aBuf)
+{
+  for (; *aBuf; ++aBuf) {
+    char ch = *aBuf;
+    if (ch >= 'A' && ch <= 'Z')
+      *aBuf = ch + 'a' - 'A';
+  }
+}
+
 nsresult
 nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
                                         nsILocalFile* aManifest,
@@ -2082,6 +2092,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
                               "Warning: Malformed content registration.");
         continue;
       }
+
+      EnsureLowerCase(package);
 
       // NOTE: We check for platform and xpcnativewrappers modifiers on
       // content packages, but they are *applied* to content|skin|locale.
@@ -2157,6 +2169,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         continue;
       }
 
+      EnsureLowerCase(package);
+
       TriState stAppVersion = eUnspecified;
       TriState stApp = eUnspecified;
 
@@ -2204,6 +2218,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
                               "Warning: Malformed skin registration.");
         continue;
       }
+
+      EnsureLowerCase(package);
 
       TriState stAppVersion = eUnspecified;
       TriState stApp = eUnspecified;
