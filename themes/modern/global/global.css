@@ -122,6 +122,7 @@ iframe {
 
 statusbar {
   border-top: 1px solid #C7D0D9;
+  min-height: 15px;
   min-width: 1px; /* DON'T DELETE!
     Prevents hiding of scrollbars in browser when window is made smaller.*/
   background-color: #C7D0D9;

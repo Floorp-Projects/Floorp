@@ -110,3 +110,8 @@
 #helpsidebar-box {
   min-width: 18em;
 }
+
+/* Mac-only */
+#statusbarDummy {
+  min-height: 15px !important;
+}

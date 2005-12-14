@@ -137,3 +137,8 @@
   min-width: 18em;
   background-color: #BDC7D6;
 }
+
+/* Mac-only */
+#statusbarDummy {
+  border-top: none;
+}
