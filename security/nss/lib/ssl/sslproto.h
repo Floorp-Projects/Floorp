@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslproto.h,v 1.9 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
+/* $Id: sslproto.h,v 1.10 2005/12/14 01:49:39 wtchang%redhat.com Exp $ */
 
 #ifndef __sslproto_h_
 #define __sslproto_h_
@@ -166,26 +166,35 @@
 #define TLS_DHE_DSS_WITH_RC4_128_SHA            0x0066
 
 #ifdef NSS_ENABLE_ECC
-/* "Experimental" ECC cipher suites. 
-** XXX These numbers might change before the current IETF draft
-** on ECC cipher suites for TLS becomes an RFC.
-*/
-#define TLS_ECDH_ECDSA_WITH_NULL_SHA            0x0047
-#define TLS_ECDH_ECDSA_WITH_RC4_128_SHA         0x0048
-#define TLS_ECDH_ECDSA_WITH_DES_CBC_SHA         0x0049
-#define TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA    0x004A
-#define TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA     0x004B
-#define TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA     0x004C
+#define TLS_ECDH_ECDSA_WITH_NULL_SHA            0xC001
+#define TLS_ECDH_ECDSA_WITH_RC4_128_SHA         0xC002
+#define TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA    0xC003
+#define TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA     0xC004
+#define TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA     0xC005
 
-#define TLS_ECDH_RSA_WITH_NULL_SHA              0x004D
-#define TLS_ECDH_RSA_WITH_RC4_128_SHA           0x004E
-#define TLS_ECDH_RSA_WITH_DES_CBC_SHA           0x004F
-#define TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA      0x0050
-#define TLS_ECDH_RSA_WITH_AES_128_CBC_SHA       0x0051
-#define TLS_ECDH_RSA_WITH_AES_256_CBC_SHA       0x0052
+#define TLS_ECDHE_ECDSA_WITH_NULL_SHA           0xC006
+#define TLS_ECDHE_ECDSA_WITH_RC4_128_SHA        0xC007
+#define TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA   0xC008
+#define TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA    0xC009
+#define TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA    0xC00A
 
-#define TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA    0x0077
-#define TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA      0x0078
+#define TLS_ECDH_RSA_WITH_NULL_SHA              0xC00B
+#define TLS_ECDH_RSA_WITH_RC4_128_SHA           0xC00C
+#define TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA      0xC00D
+#define TLS_ECDH_RSA_WITH_AES_128_CBC_SHA       0xC00E
+#define TLS_ECDH_RSA_WITH_AES_256_CBC_SHA       0xC00F
+
+#define TLS_ECDHE_RSA_WITH_NULL_SHA             0xC010
+#define TLS_ECDHE_RSA_WITH_RC4_128_SHA          0xC011
+#define TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA     0xC012
+#define TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA      0xC013
+#define TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA      0xC014
+
+#define TLS_ECDH_anon_WITH_NULL_SHA             0xC015
+#define TLS_ECDH_anon_WITH_RC4_128_SHA          0xC016
+#define TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA     0xC017
+#define TLS_ECDH_anon_WITH_AES_128_CBC_SHA      0xC018
+#define TLS_ECDH_anon_WITH_AES_256_CBC_SHA      0xC019
 #endif /* NSS_ENABLE_ECC */
 
 /* Netscape "experimental" cipher suites. */

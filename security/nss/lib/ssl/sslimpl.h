@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.42 2005/09/16 21:28:20 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: sslimpl.h,v 1.43 2005/12/14 01:49:39 wtchang%redhat.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -270,9 +270,9 @@ typedef struct {
 } ssl3CipherSuiteCfg;
 
 #ifdef NSS_ENABLE_ECC
-#define ssl_V3_SUITES_IMPLEMENTED 40
+#define ssl_V3_SUITES_IMPLEMENTED 43
 #else
-#define ssl_V3_SUITES_IMPLEMENTED 26
+#define ssl_V3_SUITES_IMPLEMENTED 23
 #endif /* NSS_ENABLE_ECC */
 
 typedef struct sslOptionsStr {

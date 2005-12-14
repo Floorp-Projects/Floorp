@@ -141,7 +141,7 @@ wait_for_selfserv()
       echo "RETRY: tstclnt -p ${PORT} -h ${HOSTADDR} -q \\"
       echo "               -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
       tstclnt -p ${PORT} -h ${HOSTADDR} -q -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
-  elif [ sparam = "-c ABCDEFGHIJKLMNOPQRSTabcdefghijklmnvy" ] ; then # "$1" = "cov" ] ; then
+  elif [ sparam = "-c ABCDEF:C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014cdefgijklmnvyz" ] ; then # "$1" = "cov" ] ; then
       html_passed "<TR><TD> Wait for Server"
   fi
   is_selfserv_alive
@@ -203,7 +203,7 @@ ssl_cov()
   html_head "SSL Cipher Coverage $NORM_EXT"
 
   testname=""
-  sparam="-c ABCDEFGHIJKLMNOPQRSTabcdefghijklmnvyz"
+  sparam="-c ABCDEF:C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014cdefgijklmnvyz"
   start_selfserv # Launch the server
                
   p=""

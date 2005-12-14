@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Douglas Stebila <douglas@stebila.ca>, Sun Microsystems Laboratories
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -368,6 +369,17 @@ client_main(unsigned short      port,
 	destroy_thread_data(&threadMGR);
 }
 
+#define HEXCHAR_TO_INT(c, i) \
+    if (((c) >= '0') && ((c) <= '9')) { \
+	i = (c) - '0'; \
+    } else if (((c) >= 'a') && ((c) <= 'f')) { \
+	i = (c) - 'a' + 10; \
+    } else if (((c) >= 'A') && ((c) <= 'F')) { \
+	i = (c) - 'A' + 10; \
+    } else { \
+	Usage(progName); \
+    }
+
 int
 main(int argc, char **argv)
 {
@@ -436,16 +448,36 @@ main(int argc, char **argv)
 	    disableAllSSLCiphers();
 
 	    while (0 != (ndx = *cipherString++)) {
-		int *cptr;
 		int  cipher;
 
-		if (! isalpha(ndx))
-		    Usage(progName);
-		cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
-		for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; )
-		    /* do nothing */;
+		if (ndx == ':') {
+		    int ctmp;
+
+		    cipher = 0;
+		    HEXCHAR_TO_INT(*cipherString, ctmp)
+		    cipher |= (ctmp << 12);
+		    cipherString++;
+		    HEXCHAR_TO_INT(*cipherString, ctmp)
+		    cipher |= (ctmp << 8);
+		    cipherString++;
+		    HEXCHAR_TO_INT(*cipherString, ctmp)
+		    cipher |= (ctmp << 4);
+		    cipherString++;
+		    HEXCHAR_TO_INT(*cipherString, ctmp)
+		    cipher |= ctmp;
+		    cipherString++;
+		} else {
+		    const int *cptr;
+		    if (! isalpha(ndx))
+			Usage(progName);
+		    cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
+		    for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; )
+			/* do nothing */;
+		}
 		if (cipher > 0) {
 		    SSL_CipherPrefSetDefault(cipher, PR_TRUE);
+		} else {
+		    Usage(progName);
 		}
 	    }
 	}

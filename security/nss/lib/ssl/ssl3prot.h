@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3prot.h,v 1.10 2005/08/18 23:37:31 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: ssl3prot.h,v 1.11 2005/12/14 01:49:39 wtchang%redhat.com Exp $ */
 
 #ifndef __ssl3proto_h_
 #define __ssl3proto_h_
@@ -210,7 +210,8 @@ typedef enum {
     kea_ecdh_ecdsa,
     kea_ecdhe_ecdsa,
     kea_ecdh_rsa,
-    kea_ecdhe_rsa
+    kea_ecdhe_rsa,
+    kea_ecdh_anon
 } SSL3KeyExchangeAlgorithm;
      
 typedef struct {
@@ -250,13 +251,9 @@ typedef enum {
     ct_DSS_fixed_DH 	=  4, 
     ct_RSA_ephemeral_DH =  5, 
     ct_DSS_ephemeral_DH =  6,
-    /* XXX The numbers assigned to the following EC-based 
-     * certificate types might change before the ECC in TLS
-     * draft becomes an IETF RFC.
-     */
-    ct_ECDSA_sign	=  7, 
-    ct_RSA_fixed_ECDH	=  8, 
-    ct_ECDSA_fixed_ECDH	=  9 
+    ct_ECDSA_sign	=  64, 
+    ct_RSA_fixed_ECDH	=  65, 
+    ct_ECDSA_fixed_ECDH	=  66 
 
 } SSL3ClientCertificateType;
      
