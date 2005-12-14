@@ -3823,15 +3823,6 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   if (aUpdateMaximumWidth) {
     availWidth = NS_UNCONSTRAINEDSIZE;
   }
-#ifdef IBMBIDI
-  else {
-    nscoord rightEdge = aState.mReflowState.mRightEdge;
-    if ( (rightEdge != NS_UNCONSTRAINEDSIZE)
-         && (availWidth < rightEdge) ) {
-      availWidth = rightEdge;
-    }
-  }
-#endif // IBMBIDI
   aLineLayout.BeginLineReflow(x, aState.mY,
                               availWidth, availHeight,
                               impactedByFloats,
