@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -1006,7 +1007,9 @@ static const char kXMLVersion[] = "<?xml version=\"1.0\"?>\n";
 
         rv = rdf_BlockingWrite(aStream, NS_LITERAL_CSTRING("=\""));
         if (NS_FAILED(rv)) return rv;
-        rv = rdf_BlockingWrite(aStream, entry->mURI);
+        nsCAutoString uri(entry->mURI);
+        rdf_EscapeAttributeValue(uri);
+        rv = rdf_BlockingWrite(aStream, uri);
         if (NS_FAILED(rv)) return rv;
         rv = rdf_BlockingWrite(aStream, NS_LITERAL_CSTRING("\""));
         if (NS_FAILED(rv)) return rv;
