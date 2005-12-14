@@ -20,7 +20,7 @@
   # %]
 
 [% is_new = (file.version == "new" ? 1 : 0) %]
-[% wysiwyg = content.match("<\?doctor enable_wysiwyg_mode \?>") %]
+[% wysiwyg = file.content.search('<\?doctor enable_wysiwyg_mode \?>') %]
 
 <html>
 

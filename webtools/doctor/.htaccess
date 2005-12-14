@@ -17,6 +17,6 @@
 # users from accessing the configuration file, which may contain sensitive CVS
 # authentication info (i.e. username, password).
 # Requires "AllowOverride Limit" to be enabled for this directory.
-#<Files doctor.conf>
+#<FilesMatch "^doctor\.conf~?$">
 #  Deny from all
-#</Files>
+#</FilesMatch>
