@@ -146,7 +146,7 @@ nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
 
 nsObserverEnumerator::nsObserverEnumerator(nsCOMArray<nsISupports> &aObservers)
 {
-    for (PRInt32 i = aObservers.Count() - 1; i >= 0; --i) {
+    for (PRInt32 i = 0; i < aObservers.Count(); ++i) {
         nsCOMPtr<nsIWeakReference> weak(do_QueryInterface(aObservers[i]));
         if (weak) {
             nsCOMPtr<nsISupports> strong(do_QueryReferent(weak));
