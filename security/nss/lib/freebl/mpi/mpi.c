@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi.c,v 1.43 2005/08/16 19:25:48 saul.edwards%sun.com Exp $ */
+/* $Id: mpi.c,v 1.44 2005/12/14 02:18:35 wtchang%redhat.com Exp $ */
 
 #include "mpi-priv.h"
 #if defined(OSF1)
@@ -4759,6 +4759,8 @@ mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, mp_size maxlen)
       str[pos++] = x;
     }
   }
+  if (!pos)
+    str[pos++] = 0;
   return pos;
 } /* end mp_to_unsigned_octets() */
 /* }}} */
@@ -4797,6 +4799,8 @@ mp_to_signed_octets(const mp_int *mp, unsigned char *str, mp_size maxlen)
       str[pos++] = x;
     }
   }
+  if (!pos)
+    str[pos++] = 0;
   return pos;
 } /* end mp_to_signed_octets() */
 /* }}} */
@@ -4832,6 +4836,8 @@ mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, mp_size length)
       str[pos++] = x;
     }
   }
+  if (!pos)
+    str[pos++] = 0;
   return MP_OKAY;
 } /* end mp_to_fixlen_octets() */
 /* }}} */
