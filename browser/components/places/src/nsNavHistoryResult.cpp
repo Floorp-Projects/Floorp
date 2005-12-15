@@ -368,7 +368,14 @@ nsNavHistoryResultNode::Rebuild()
   rv = statement->ExecuteStep(&results);
   NS_ASSERTION(results, "node must be in history!");
 
-  return history->FillURLResult(statement, this);
+  // get the concrete options class that generated this node
+  nsCOMPtr<nsINavHistoryQueryOptions> optionsInterface;
+  rv = GetResult()->GetQueryOptions(getter_AddRefs(optionsInterface));
+  nsCOMPtr<nsNavHistoryQueryOptions> options =
+    do_QueryInterface(optionsInterface, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return history->FillURLResult(statement, options, this);
 }
 
 // nsNavHistoryQueryNode ******************************************************

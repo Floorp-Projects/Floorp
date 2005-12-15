@@ -552,11 +552,9 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
 
 // BookmarkContentSink::HandleLinkEnd
 //
-//    Saves the title for the given bookmark. This will overwrite an existing
-//    title in the history, which may not be the right thing since we'd like to
-//    keep the original title in there if we already had it, and only save the
-//    custom title as an annotation. Doing this shouldn't affect anything,
-//    however.
+//    Saves the title for the given bookmark. This only writes the user title.
+//    Any previous title will be untouched. If this is a new entry, it will have
+//    an empty "official" title until you visit it.
 
 void
 BookmarkContentSink::HandleLinkEnd()
@@ -564,11 +562,8 @@ BookmarkContentSink::HandleLinkEnd()
   BookmarkImportFrame& frame = CurFrame();
   frame.mPreviousText.Trim(kWhitespace);
   if (! frame.mPreviousText.IsEmpty() && frame.mPreviousLink) {
-    nsCOMPtr<nsIGlobalHistory2> globalHistory =
-      do_QueryInterface(mHistoryService);
-    globalHistory->SetPageTitle(frame.mPreviousLink, frame.mPreviousText);
-    mAnnotationService->SetAnnotationString(frame.mPreviousLink,
-          nsCString(nsNavHistory::kAnnotationTitle), frame.mPreviousText, 0, 0);
+    mHistoryService->SetPageUserTitle(frame.mPreviousLink,
+                                      frame.mPreviousText);
   }
   frame.mPreviousText.Truncate(0);
 }
