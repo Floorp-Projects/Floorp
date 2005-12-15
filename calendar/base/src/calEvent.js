@@ -216,6 +216,19 @@ calEvent.prototype = {
             this.endDate.addDuration(event.duration);
         }
         
+        // If endDate is still invalid neither a end time nor a duration is set
+        // on the event. We have to set endDate ourselves.
+        // If the start time is a date-time the event ends on the same calendar
+        // date and time of day. If the start time is a date the events
+        // non-inclusive end is the end of the calendar date.
+        if (!this.endDate.isValid) {
+            this.endDate = this.startDate.clone();
+            if (this.startDate.isDate) {
+                this.endDate.day += 1;
+                this.endDate.normalize();
+            }
+        }
+        
         // Importing didn't really change anything
         this.mDirty = false;
     },
