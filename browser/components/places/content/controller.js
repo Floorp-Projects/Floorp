@@ -409,7 +409,17 @@ var PlacesController = {
   nodeIsQuery: function PC_nodeIsQuery(node) {
     return node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
   },
-  
+
+  /**
+   * Determines whether or not a ResultNode is a host folder or not
+   * @param   node
+   *          A NavHistoryResultNode
+   * @returns true if the node is a host item, false otherwise
+   */
+  nodeIsHost: function PC_nodeIsHost(node) {
+    return node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST;
+  },
+
   /**
    * Updates commands on focus/selection change to reflect the enabled/
    * disabledness of commands in relation to the state of the selection. 
@@ -730,23 +740,38 @@ var PlacesController = {
    */
   remove: function PC_remove(txnName) {
     var nodes = this._activeView.getSelectionNodes();
-    var txns = [];
-    for (var i = 0; i < nodes.length; ++i) {
-      var node = nodes[i];
-      var index = this.getIndexOfNode(node);
-      if (this.nodeIsFolder(node)) {
-        txns.push(new PlacesRemoveFolderTransaction(node.folderId, 
-                                                    node.parent.folderId, 
+    if (this.activeView.isBookmarks) {
+      // delete bookmarks
+      var txns = [];
+      for (var i = 0; i < nodes.length; ++i) {
+        var node = nodes[i];
+        var index = this.getIndexOfNode(node);
+        if (this.nodeIsFolder(node)) {
+          txns.push(new PlacesRemoveFolderTransaction(node.folderId, 
+                                                      node.parent.folderId, 
+                                                      index));
+        }
+        else {
+          txns.push(new PlacesRemoveItemTransaction(this._uri(node.url),
+                                                    node.parent.folderId,
                                                     index));
+        }
       }
-      else {
-        txns.push(new PlacesRemoveItemTransaction(this._uri(node.url),
-                                                  node.parent.folderId,
-                                                  index));
+      var txn = new PlacesAggregateTransaction(txnName || "RemoveItems", txns);
+      this._hist.transactionManager.doTransaction(txn);
+    } else {
+      // delete history items: these are unfortunately not undoable.
+      var hist = Cc["@mozilla.org/browser/nav-history;1"].
+              getService(Ci.nsIBrowserHistory);
+      for (var i = 0; i < nodes.length; ++i) {
+        var node = nodes[i];
+        if (this.nodeIsHost(node)) {
+          hist.removePagesFromHost(node.title, true);
+        } else {
+          hist.removePage(this._uri(node.url));
+        }
       }
     }
-    var txn = new PlacesAggregateTransaction(txnName || "RemoveItems", txns);
-    this._hist.transactionManager.doTransaction(txn);
   },
 
   /**
