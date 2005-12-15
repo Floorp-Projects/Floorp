@@ -18,6 +18,7 @@
 
   <commandset id="mainCommandSet">
 #include ../content/commands.inc
+    <command id="Browser:ShowPlaces" oncommand="PlacesBrowserShim.showPlaces();"/>
   </commandset>
   
   <popupset id="mainPopupSet">
@@ -39,17 +40,6 @@
              toolbarname="Places Toolbar"
              customizable="true"/>
   </toolbox>
-  
-  <menubar id="main-menubar">
-    <menu id="bookmarksMenu" insertafter="go-menu" label="Bookmarks">
-      <menupopup id="bookmarksMenuPopup" type="places">
-        <menuitem label="Add Bookmark" command="Browser:AddBookmarkAs"
-                  key="addBookmarkAsKb"/>
-        <menuitem label="Show Places" oncommand="PlacesBrowserShim.showPlaces();"/>
-        <menuseparator builder="start"/>
-      </menupopup>
-    </menu>
-  </menubar>
 
 </overlay>
 

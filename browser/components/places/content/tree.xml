@@ -410,6 +410,7 @@
           var node = index != -1 ? root.nodeForTreeIndex(index) : root;
           const DROP_ON = Ci.nsINavHistoryResultViewObserver.DROP_ON;
           // Cannot drop before fixed items in the list. 
+          LOG("FDI: " + this._self.firstDropIndex + ", GIN: " + PlacesController.getIndexOfNode(node));
           if (node.parent == root && 
               PlacesController.getIndexOfNode(node) < this._self.firstDropIndex &&
               orientation != DROP_ON)
