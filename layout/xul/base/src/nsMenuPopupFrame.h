@@ -209,8 +209,6 @@ protected:
 
 
   nsIMenuFrame* mCurrentMenu; // The current menu that is active.
-  // XXX Hack
-  nsPresContext* mPresContext;  // weak reference
 
   nsMenuListener* mKeyboardNavigator; // The listener that tells us about key events.
   nsIDOMEventReceiver* mTarget;

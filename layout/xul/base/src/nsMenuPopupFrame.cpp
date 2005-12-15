@@ -165,9 +165,6 @@ nsMenuPopupFrame::Init(nsPresContext*  aPresContext,
   aPresContext->LookAndFeel()->
     GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, tempBool);
   mMenuCanOverlapOSBar = tempBool;
-  
-  // XXX Hack
-  mPresContext = aPresContext;
 
   CreateViewForFrame(aPresContext, this, aContext, PR_TRUE);
 
@@ -247,13 +244,14 @@ nsMenuPopupFrame::MarkStyleChange(nsBoxLayoutState& aState)
   if (menuFrame)
      return parent->RelayoutDirtyChild(aState, this);
   else {
-    nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
+    nsPresContext* presContext = GetPresContext();
+    nsIPopupSetFrame* popupSet = GetPopupSetFrame(presContext);
     NS_ASSERTION(popupSet, "popup frame created without a popup set or menu");
     if (popupSet) {
       nsIFrame *frame;
       CallQueryInterface(popupSet, &frame);
       if (frame->IsBoxFrame()) {
-        nsBoxLayoutState state(mPresContext);
+        nsBoxLayoutState state(presContext);
         frame->MarkDirtyChildren(state); // Mark the popupset as dirty.
       }
       else {
@@ -298,13 +296,14 @@ nsMenuPopupFrame::MarkDirty(nsBoxLayoutState& aState)
   if (menuFrame)
      return parent->RelayoutDirtyChild(aState, this);
   else {
-    nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
+    nsPresContext* presContext = GetPresContext();
+    nsIPopupSetFrame* popupSet = GetPopupSetFrame(presContext);
     NS_ASSERTION(popupSet, "popup frame created without a popup set or menu");
     if (popupSet) {
       nsIFrame *frame;
       CallQueryInterface(popupSet, &frame);
       if (frame->IsBoxFrame()) {
-        nsBoxLayoutState state(mPresContext);
+        nsBoxLayoutState state(presContext);
         frame->MarkDirtyChildren(state); // Mark the popupset as dirty.
       }
       else {
@@ -339,13 +338,14 @@ nsMenuPopupFrame::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
     if (menuFrame)
       return parent->RelayoutDirtyChild(aState, this);
     else {
-      nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
+      nsPresContext* presContext = GetPresContext();
+      nsIPopupSetFrame* popupSet = GetPopupSetFrame(presContext);
       NS_ASSERTION(popupSet, "popup frame created without a popup set or menu");
       nsIFrame *frame = nsnull;
       if (popupSet)
         CallQueryInterface(popupSet, &frame);
       if (frame && frame->IsBoxFrame()) {
-        nsBoxLayoutState state(mPresContext);
+        nsBoxLayoutState state(presContext);
         frame->MarkDirtyChildren(state); // Mark the popupset as dirty.
       }
       else 
@@ -1095,7 +1095,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   nsBoxFrame::SetPosition(frameOrigin);
 
   if (sizedToPopup) {
-      nsBoxLayoutState state(mPresContext);
+      nsBoxLayoutState state(GetPresContext());
       SetBounds(state, nsRect(mRect.x, mRect.y, parentRect.width, mRect.height));
   }
     
@@ -1123,7 +1123,8 @@ static void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aFrame, nsIFrame* 
 nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart)
 {
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(mPresContext->PresShell(), this, nsnull, &immediateParent);
+  GetInsertionPoint(GetPresContext()->PresShell(), this, nsnull,
+                    &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -1173,7 +1174,8 @@ nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart)
 nsMenuPopupFrame::GetPreviousMenuItem(nsIMenuFrame* aStart)
 {
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(mPresContext->PresShell(), this, nsnull, &immediateParent);
+  GetInsertionPoint(GetPresContext()->PresShell(), this, nsnull,
+                    &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -1364,7 +1366,7 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
       KillCloseTimer(); // Ensure we don't have another stray waiting closure.
       PRInt32 menuDelay = 300;   // ms
 
-      mPresContext->LookAndFeel()->
+      GetPresContext()->LookAndFeel()->
         GetMetric(nsILookAndFeel::eMetric_SubmenuDelay, menuDelay);
 
       // Kick off the timer.
@@ -1399,7 +1401,7 @@ nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
     // Get the context menu parent.
     nsIFrame* childFrame;
     CallQueryInterface(contextMenu, &childFrame);
-    nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(mPresContext);
+    nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(GetPresContext());
     if (popupSetFrame)
       // Destroy the popup.
       popupSetFrame->DestroyPopup(childFrame, PR_FALSE);
@@ -1465,7 +1467,8 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
 
   // Enumerate over our list of frames.
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(mPresContext->PresShell(), this, nsnull, &immediateParent);
+  GetInsertionPoint(GetPresContext()->PresShell(), this, nsnull,
+                    &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -1767,7 +1770,7 @@ nsMenuPopupFrame::HideChain()
   if (frame) {
     nsIMenuFrame* menuFrame;
     if (NS_FAILED(CallQueryInterface(frame, &menuFrame))) {
-      nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(mPresContext);
+      nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(GetPresContext());
       if (popupSetFrame)
         // Hide the popup.
         popupSetFrame->HidePopup(this);
@@ -1802,7 +1805,7 @@ nsMenuPopupFrame::DismissChain()
     nsIMenuFrame *menuFrame = nsnull;
     CallQueryInterface(frame, &menuFrame);
     if (!menuFrame) {
-      nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(mPresContext);
+      nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(GetPresContext());
       if (popupSetFrame) {
         // make sure the menu is not highlighted
         if (mCurrentMenu) {

@@ -506,7 +506,7 @@ nsListBoxBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
   // if the row height changed then mark everything as a style change. 
   // That will dirty the entire listbox
   if (mRowHeightWasSet) {
-     nsBoxLayoutState state(mPresContext);
+     nsBoxLayoutState state(GetPresContext());
      MarkStyleChange(state);
      PRInt32 pos = mCurrentIndex * mRowHeight;
      if (mYPosition != pos) 
@@ -613,7 +613,7 @@ nsListBoxBodyFrame::ScrollByLines(PRInt32 aNumLines)
     
   // I'd use Composite here, but it doesn't always work.
   // vm->Composite();
-  mPresContext->GetViewManager()->ForceUpdate();
+  GetPresContext()->GetViewManager()->ForceUpdate();
 
   return NS_OK;
 }
@@ -720,7 +720,7 @@ nsListBoxBodyFrame::SetRowHeight(nscoord aRowHeight)
       PRInt32 dummy;
       PRInt32 count = rows.ToInteger(&dummy);
       float t2p;
-      t2p = mPresContext->TwipsToPixels();
+      t2p = GetPresContext()->TwipsToPixels();
       PRInt32 rowHeight = NSTwipsToIntPixels(aRowHeight, t2p);
       nsAutoString value;
       value.AppendInt(rowHeight*count);
@@ -842,7 +842,7 @@ nsListBoxBodyFrame::PostReflowCallback()
 {
   if (!mReflowCallbackPosted) {
     mReflowCallbackPosted = PR_TRUE;
-    mPresContext->PresShell()->PostReflowCallback(this);
+    GetPresContext()->PresShell()->PostReflowCallback(this);
   }
 }
 
@@ -899,7 +899,8 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
   if (aDelta == 0)
     return NS_OK;
 
-  nsBoxLayoutState state(mPresContext);
+  nsPresContext *presContext = GetPresContext();
+  nsBoxLayoutState state(presContext);
 
   // begin timing how long it takes to scroll a row
   PRTime start = PR_Now();
@@ -908,7 +909,7 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
 
   PRInt32 visibleRows = 0;
   if (mRowHeight)
-	  visibleRows = GetAvailableHeight()/mRowHeight;
+    visibleRows = GetAvailableHeight()/mRowHeight;
   
   if (aDelta < visibleRows) {
     PRInt32 loseRows = aDelta;
@@ -943,7 +944,7 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
   MarkDirtyChildren(state);
   // Flush calls CreateRows
   // XXXbz there has to be a better way to do this than flushing!
-  mPresContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
+  presContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
   mScrolling = PR_FALSE;
   
   VerticalScroll(mYPosition);
@@ -1057,7 +1058,7 @@ nsListBoxBodyFrame::DestroyRows(PRInt32& aRowsToLose)
   // We need to destroy frames until our row count has been properly
   // reduced.  A reflow will then pick up and create the new frames.
   nsIFrame* childFrame = GetFirstFrame();
-  nsBoxLayoutState state(mPresContext);
+  nsBoxLayoutState state(GetPresContext());
 
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
@@ -1077,7 +1078,7 @@ nsListBoxBodyFrame::ReverseDestroyRows(PRInt32& aRowsToLose)
   // We need to destroy frames until our row count has been properly
   // reduced.  A reflow will then pick up and create the new frames.
   nsIFrame* childFrame = GetLastFrame();
-  nsBoxLayoutState state(mPresContext);
+  nsBoxLayoutState state(GetPresContext());
 
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
@@ -1143,7 +1144,7 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
     // XXX check here if frame was even created, it may not have been if
     //     display: none was on listitem content
     PRBool isAppend = mRowsToPrepend <= 0;
-    mFrameConstructor->CreateListBoxContent(mPresContext, this, nsnull, startContent,
+    mFrameConstructor->CreateListBoxContent(GetPresContext(), this, nsnull, startContent,
                                             &mTopFrame, isAppend, PR_FALSE, nsnull);
     
     if (mTopFrame) {
@@ -1188,7 +1189,7 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
       // Either append the new frame, or insert it after the current frame
       PRBool isAppend = result != mLinkupFrame && mRowsToPrepend <= 0;
       nsIFrame* prevFrame = isAppend ? nsnull : aBox;
-      mFrameConstructor->CreateListBoxContent(mPresContext, this, prevFrame,
+      mFrameConstructor->CreateListBoxContent(GetPresContext(), this, prevFrame,
                                               nextContent, &result, isAppend,
                                               PR_FALSE, nsnull);
 
@@ -1225,7 +1226,7 @@ nsListBoxBodyFrame::ContinueReflow(nscoord height)
       // We have some hangers on (probably caused by shrinking the size of the window).
       // Nuke them.
       nsIFrame* currFrame = startingPoint->GetNextSibling();
-      nsBoxLayoutState state(mPresContext);
+      nsBoxLayoutState state(GetPresContext());
 
       while (currFrame) {
         nsIFrame* nextFrame = currFrame->GetNextSibling();
@@ -1245,7 +1246,7 @@ NS_IMETHODIMP
 nsListBoxBodyFrame::ListBoxAppendFrames(nsIFrame* aFrameList)
 {
   // append them after
-  nsBoxLayoutState state(mPresContext);
+  nsBoxLayoutState state(GetPresContext());
   mFrames.AppendFrames(nsnull, aFrameList);
   if (mLayoutManager)
     mLayoutManager->ChildrenAppended(this, state, aFrameList);
@@ -1258,7 +1259,7 @@ NS_IMETHODIMP
 nsListBoxBodyFrame::ListBoxInsertFrames(nsIFrame* aPrevFrame, nsIFrame* aFrameList)
 {
   // insert the frames to our info list
-  nsBoxLayoutState state(mPresContext);
+  nsBoxLayoutState state(GetPresContext());
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
   if (mLayoutManager)
     mLayoutManager->ChildrenInserted(this, state, aPrevFrame, aFrameList);
@@ -1431,7 +1432,7 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
   mFrames.RemoveFrame(aFrame);
   if (mLayoutManager)
     mLayoutManager->ChildrenRemoved(this, aState, aFrame);
-  aFrame->Destroy(mPresContext);
+  aFrame->Destroy(GetPresContext());
 }
 
 // Creation Routines ///////////////////////////////////////////////////////////////////////

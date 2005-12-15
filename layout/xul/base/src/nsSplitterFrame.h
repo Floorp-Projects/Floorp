@@ -113,8 +113,6 @@ private:
 
   friend class nsSplitterFrameInner;
   nsSplitterFrameInner* mInner;
-  // XXX Hack
-  nsPresContext* mPresContext;  // weak reference
 
 }; // class nsSplitterFrame
 

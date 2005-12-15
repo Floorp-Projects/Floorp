@@ -150,7 +150,6 @@ nsMenuFrame::nsMenuFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
     mChecked(PR_FALSE),
     mType(eMenuType_Normal),
     mMenuParent(nsnull),
-    mPresContext(nsnull),
     mLastPref(-1,-1)
 {
 
@@ -178,8 +177,6 @@ nsMenuFrame::Init(nsPresContext*  aPresContext,
                      nsStyleContext*  aContext,
                      nsIFrame*        aPrevInFlow)
 {
-  mPresContext = aPresContext; // Don't addref it.  Our lifetime is shorter.
-
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   nsIFrame* currFrame = aParent;
@@ -744,6 +741,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
   if (!mIsMenu)
     return;
 
+  nsPresContext* presContext = GetPresContext();
+  
   if (aActivateFlag) {
     // Execute the oncreate handler
     if (!OnCreate())
@@ -806,14 +805,14 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
           popupAlign.AssignLiteral("topleft");
       }
 
-      nsBoxLayoutState state(mPresContext);
+      nsBoxLayoutState state(presContext);
 
       // if height never set we need to do an initial reflow.
       if (mLastPref.height == -1)
       {
          menuPopup->MarkDirty(state);
 
-         mPresContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
+         presContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
       }
 
       nsRect curRect(menuPopup->GetRect());
@@ -824,14 +823,14 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       if (vm) {
         vm->SetViewVisibility(view, nsViewVisibility_kHide);
       }
-      menuPopup->SyncViewWithFrame(mPresContext, popupAnchor, popupAlign, this, -1, -1);
+      menuPopup->SyncViewWithFrame(presContext, popupAnchor, popupAlign, this, -1, -1);
       nscoord newHeight = menuPopup->GetRect().height;
 
       // if the height is different then reflow. It might need scrollbars force a reflow
       if (curRect.height != newHeight || mLastPref.height != newHeight)
       {
          menuPopup->MarkDirty(state);
-         mPresContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
+         presContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
       }
 
       ActivateMenu(PR_TRUE);
@@ -882,7 +881,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       // mouse_enter/mouse_exit event will be fired to clear current hover state, we should clear it manually.
       // This code may not the best solution, but we can leave it here until we find the better approach.
 
-      nsIEventStateManager *esm = mPresContext->EventStateManager();
+      nsIEventStateManager *esm = presContext->EventStateManager();
 
       PRInt32 state;
       esm->GetContentState(menuPopup->GetContent(), state);
@@ -1632,9 +1631,10 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   // important below.  We want the pres shell to get released before the
   // associated view manager on exit from this function.
   // See bug 54233.
-  nsCOMPtr<nsIViewManager> kungFuDeathGrip = mPresContext->GetViewManager();
+  nsPresContext* presContext = GetPresContext();
+  nsCOMPtr<nsIViewManager> kungFuDeathGrip = presContext->GetViewManager();
   // keep a reference so we can safely use this after dispatching the DOM event
-  nsCOMPtr<nsIPresShell> shell = mPresContext->GetPresShell();
+  nsCOMPtr<nsIPresShell> shell = presContext->GetPresShell();
   nsIFrame* me = this;
   if (shell) {
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
@@ -1670,7 +1670,7 @@ nsMenuFrame::OnCreate()
   
   nsresult rv = NS_OK;
 
-  nsIPresShell *shell = mPresContext->GetPresShell();
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
   if (shell) {
     if (child) {
       rv = shell->HandleDOMEventWithTarget(child, &event, &status);
@@ -1759,7 +1759,7 @@ nsMenuFrame::OnCreated()
   GetMenuChildrenElement(getter_AddRefs(child));
   
   nsresult rv = NS_OK;
-  nsIPresShell *shell = mPresContext->GetPresShell();
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
   if (shell) {
     if (child) {
       rv = shell->HandleDOMEventWithTarget(child, &event, &status);
@@ -1786,7 +1786,7 @@ nsMenuFrame::OnDestroy()
   GetMenuChildrenElement(getter_AddRefs(child));
   
   nsresult rv = NS_OK;
-  nsIPresShell *shell = mPresContext->GetPresShell();
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
   if (shell) {
     if (child) {
       rv = shell->HandleDOMEventWithTarget(child, &event, &status);
@@ -1813,7 +1813,7 @@ nsMenuFrame::OnDestroyed()
   GetMenuChildrenElement(getter_AddRefs(child));
   
   nsresult rv = NS_OK;
-  nsIPresShell *shell = mPresContext->GetPresShell();
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
   if (shell) {
     if (child) {
       rv = shell->HandleDOMEventWithTarget(child, &event, &status);
@@ -2003,7 +2003,7 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
 
   nsCOMPtr<nsIContent> child(do_QueryInterface(aChild));
   
-  nsIFrame* kid = mPresContext->PresShell()->GetPrimaryFrameFor(child);
+  nsIFrame* kid = GetPresContext()->PresShell()->GetPrimaryFrameFor(child);
   if (!kid)
     return NS_ERROR_FAILURE;
   nsIMenuFrame *menuFrame;
