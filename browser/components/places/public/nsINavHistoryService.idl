@@ -78,6 +78,13 @@ interface nsINavHistoryResultNode : nsISupports
   readonly attribute PRInt64 folderId;
 
   /**
+   * Type of the folder corresponding to this node.
+   * Only valid for RESULT_TYPE_QUERY nodes where exactly one folder
+   * has been specified in the query.  0 in all other cases.
+   */
+  readonly attribute AString folderType;
+
+  /**
    * Get the queries which build this node's children.
    * Only valid for RESULT_TYPE_QUERY nodes.
    */

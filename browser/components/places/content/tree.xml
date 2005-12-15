@@ -486,9 +486,22 @@
                                             visibleInsertCount);
         },
         
-        onToggleOpenState: function VO_onToggleOpenState(index) { 
-          // XXXben we will probably have to implement this to refresh Live 
-          //        Bookmarks.
+        onToggleOpenState: function VO_onToggleOpenState(index) {
+          // Alert containers about the toggle
+          var result = this._self.getResult();
+          var node = result.nodeForTreeIndex(index);
+          if (PlacesController.nodeIsContainer(node)) {
+            var serv = Cc[node.folderType].getService(Ci.nsIBookmarksContainer);
+            // This notification happens before the container is actually
+            // opened or closed, so the open state is the opposite of what
+            // we're notifying.
+            if (this._self.view.isContainerOpen(index)) {
+              serv.onContainerClosed(node.folderId);
+            } else {
+              if (serv.onContainerOpening(node.folderId))
+                this._self.loadFolder(node.folderId);
+            }            
+          }
         },
         onSelectionChanged: function VO_onSelectionChanged() { },
         onCycleHeader: function VO_onCycleHeader(column) { },

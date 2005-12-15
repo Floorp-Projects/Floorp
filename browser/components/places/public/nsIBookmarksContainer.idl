@@ -1,0 +1,95 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Places.
+ *
+ * The Initial Developer of the Original Code is
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Annie Sullivan <annie.sullivan@gmail.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+/**
+ * The Bookmarks Container interface provides a base class
+ * for services that want to provide containers for bookmarks.
+ * Some examples of possible services are the livemarks service and
+ * the filesystem.  Containers are implemented as bookmarked folders.
+ */
+
+[scriptable, uuid(45bf2020-9683-498c-9638-f08130c4151d)]
+interface nsIBookmarksContainer : nsISupports
+{
+
+  /**
+   * Called when the given container is about to be shown,
+   * so that the service can populate the container if necessary.
+   * @returns true if the data for the node has changed, false otherwise.
+   * @param container   The folderId of the bookmark folder 
+   *                    representing the container.
+   */
+  boolean onContainerOpening(in PRInt64 container);
+
+  /**
+   * Called when the given container has just been hidden,
+   * so that the service can do any necessary cleanup.
+   * @param container   The folderId of the bookmark folder 
+   *                    representing the container.
+   */
+  void onContainerClosed(in PRInt64 container);
+  
+  /**
+   * Called when the given container is about to be deleted, so
+   * that the service can do any necessary cleanup.
+   * Called BEFORE the container is deleted, so that the service
+   * can still reference it.
+   * @param container   The folderId of the bookmark folder 
+   *                    representing the container to be deleted.
+   */
+  void onContainerRemoving(in PRInt64 container);
+  
+  /**
+   * Called when the given container has just been moved, in case
+   * the service needs to do any bookkeeping.
+   * Called AFTER the container has been moved, so the service can
+   * get the new URI.
+   * @param container   The folderId of the bookmark folder 
+   *                    representing the container to be moved.
+   * @param newFolder   The folderId of the new parent folder
+   *                    for the container.
+   * @param newIndex    The index the container will be inserted at,
+   *                    or -1 for append.
+   */
+  void onContainerMoved(in PRInt64 container,
+                        in PRInt64 newFolder, in PRInt32 newIndex);
+};
