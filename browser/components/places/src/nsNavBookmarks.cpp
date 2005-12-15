@@ -372,6 +372,8 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
                               PRInt32 aStartIndex, PRInt32 aEndIndex,
                               PRInt32 aDelta)
 {
+  NS_ASSERTION(aStartIndex <= aEndIndex, "start index must be <= end index");
+
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
@@ -894,29 +896,50 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
     return NS_OK;
   }
 
+  // First we remove the item from its old position.
+  buffer.AssignLiteral("DELETE FROM moz_bookmarks WHERE folder_child = ");
+  buffer.AppendInt(aFolder);
+  rv = dbConn->ExecuteSimpleSQL(buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now renumber to account for the move
   if (parent == aNewParent) {
-    // We can optimize the updates if moving within the same container
+    // We can optimize the updates if moving within the same container.
+    // We only shift the items between the old and new positions, since the
+    // insertion will offset the deletion.
     if (oldIndex > newIndex) {
       rv = AdjustIndices(parent, newIndex, oldIndex - 1, 1);
     } else {
       rv = AdjustIndices(parent, oldIndex + 1, newIndex, -1);
     }
   } else {
+    // We're moving between containers, so this happens in two steps.
+    // First, fill the hole from the deletion.
     rv = AdjustIndices(parent, oldIndex + 1, PR_INT32_MAX, -1);
     NS_ENSURE_SUCCESS(rv, rv);
+    // Now, make room in the new parent for the insertion.
     rv = AdjustIndices(aNewParent, newIndex, PR_INT32_MAX, 1);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  buffer.AssignLiteral("UPDATE moz_bookmarks SET parent = ");
-  buffer.AppendInt(aNewParent);
-  buffer.AppendLiteral(", position = ");
-  buffer.AppendInt(newIndex);
-  buffer.AppendLiteral(" WHERE folder_child = ");
-  buffer.AppendInt(aFolder);
+  {
+    nsCOMPtr<mozIStorageStatement> statement;
+    rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
+         "INSERT INTO moz_bookmarks (folder_child, parent, position) "
+         "VALUES (?1, ?2, ?3)"),
+                                 getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = dbConn->ExecuteSimpleSQL(buffer);
-  NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt64Parameter(0, aFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt64Parameter(1, aNewParent);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt32Parameter(2, newIndex);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
