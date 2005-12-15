@@ -995,8 +995,8 @@
 
             var hidden = !tree.enableColumnDrag;
             const anonids = ["menuseparator", "menuitem"];
-            for (var anonid in anonids) {
-              var element = document.getAnonymousElementByAttribute(this, "anonid", anonids[anonid]);
+            for (var i = 0; i < anonids.length; i++) {
+              var element = document.getAnonymousElementByAttribute(this, "anonid", anonids[i]);
               element.hidden = hidden;
             }
           ]]>
