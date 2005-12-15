@@ -1395,6 +1395,16 @@ if [ "$MOZ_STATIC_COMPONENTS" -o "$MOZ_META_COMPONENTS" ]; then
 fi
 fi
 
+if [ "$MOZ_PREF_EXTENSIONS" ]; then
+    MAKEFILES_extensions="$MAKEFILES_extensions
+        extensions/pref/Makefile
+        extensions/pref/autoconfig/Makefile
+        extensions/pref/autoconfig/public/Makefile
+        extensions/pref/autoconfig/src/Makefile
+        extensions/pref/autoconfig/resources/Makefile
+"
+fi
+
 for extension in $MOZ_EXTENSIONS; do
     case "$extension" in
         access-builtin ) MAKEFILES_extensions="$MAKEFILES_extensions
@@ -1449,13 +1459,6 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/p3p/Makefile
             extensions/p3p/public/Makefile
             extensions/p3p/src/Makefile
-            " ;;
-        pref ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/pref/Makefile
-            extensions/pref/autoconfig/Makefile
-            extensions/pref/autoconfig/public/Makefile
-            extensions/pref/autoconfig/src/Makefile
-            extensions/pref/autoconfig/resources/Makefile
             " ;;
         reporter ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/reporter/Makefile
