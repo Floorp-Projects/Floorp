@@ -272,6 +272,13 @@ bin\res\svg.css
 bin\res\svg.properties
 bin\components\dom_svg.xpt
 
+; spellchecker (may not be present)
+bin\components\myspell.dll
+bin\components\spellchecker.xpt
+bin\components\spellchk.dll
+;; XXX these two files are bogus, they should not be in components\myspell...
+bin\components\myspell\*
+
 ; [Personal Security Manager]
 ;
 bin\nssckbi.dll
