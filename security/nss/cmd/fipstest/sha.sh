@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# A Bourne shell script for running the NIST AES Algorithm Validation Suite
+# A Bourne shell script for running the NIST SHA Algorithm Validation Suite
 #
 # Before you run the script, set your PATH, LD_LIBRARY_PATH, ... environment
 # variables appropriately so that the fipstest command and the NSPR and NSS
