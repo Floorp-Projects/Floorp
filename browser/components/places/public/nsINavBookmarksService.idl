@@ -224,10 +224,29 @@ interface nsINavBookmarksService : nsISupports
   PRInt64 createFolder(in PRInt64 parent, in AString name, in PRInt32 index);
 
   /**
+   * Wrapper for container services.  Creates a folder under the given
+   * parent and sets the container type.
+   *  @param parent     The id of the parent folder
+   *  @param name       The name of the new folder
+   *  @param index      The index to insert at, or -1 to append
+   *  @param type       The type of container to insert
+   *  @returns the ID of the newly-inserted folder
+   */
+  PRInt64 createContainer(in PRInt64 parent, in AString name,
+                          in PRInt32 index, in AString type);
+
+  /**
    * Removes a folder from the bookmarks tree.
    *  @param folder     The id of the folder to remove.
    */
   void removeFolder(in PRInt64 folder);
+
+  /**
+   * Convenience function for container services.  Removes
+   * all children of the given folder.
+   *  @param folder     The id of the folder to remove children from.
+   */
+  void removeFolderChildren(in PRInt64 folder);
 
   /**
    * Moves a folder to a different container, preserving its contents.
@@ -274,6 +293,13 @@ interface nsINavBookmarksService : nsISupports
    *  @returns          The title for the folder
    */
   AString getFolderTitle(in PRInt64 folder);
+
+  /**
+   * Get the place: url for a bookmark folder.
+   * @param folder      The folder whose URI should be retrieved
+   * @returns           The URI for the folder
+   */
+  nsIURI getFolderURI(in PRInt64 folder);
 
   /**
    * Marks a folder as having read-only children.

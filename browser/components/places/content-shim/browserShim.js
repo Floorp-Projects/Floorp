@@ -37,6 +37,7 @@
 
 var PlacesBrowserShim = {
   _bms: null,
+  _lms: null,
   _history: null,
 };
 
@@ -47,6 +48,13 @@ PlacesBrowserShim.init = function PBS_init() {
   this._bms = 
       Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
       getService(Ci.nsINavBookmarksService);
+
+  this._lms = 
+      Cc["@mozilla.org/browser/livemark-service;1"].
+      getService(Ci.nsILivemarkService);
+
+  // Override the old addLivemark function
+  BookmarksUtils.addLivemark = function(a,b,c,d) {PlacesBrowserShim.addLivemark(a,b,c,d);};
   
   var newMenuPopup = document.getElementById("bookmarksMenuPopup");
   newMenuPopup.folderId = this._bms.bookmarksRoot;
@@ -66,6 +74,19 @@ function PBS__bookmarkURI(folder, uri, title) {
 
 PlacesBrowserShim.showPlaces = function PBS_showPlaces() {
   loadURI("chrome://browser/content/places/places.xul", null, null);
+};
+
+PlacesBrowserShim.addLivemark = function PBS_addLivemark(aURL, aFeedURL, aTitle, aDescription) {
+  // TODO -- put in nice confirmation dialog.
+  var ios = 
+      Cc["@mozilla.org/network/io-service;1"].
+      getService(Ci.nsIIOService);
+
+  this._lms.createLivemark(this._bms.toolbarRoot,
+                          aTitle,
+                          ios.newURI(aURL, null, null),
+                          ios.newURI(aFeedURL, null, null),
+                          -1);
 };
 
 addEventListener("load", function () { PlacesBrowserShim.init(); }, false);

@@ -35,6 +35,16 @@
         var options = this._places.getNewQueryOptions();
         options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
         this._result = this._places.executeQuery(query, options);
+                                                     
+        // Check if the new query needs a show event.
+        if (PlacesController.nodeIsContainer(this._result)) {
+          var serv = Cc[this._result.folderType]
+                     .getService(Ci.nsIBookmarksContainer);
+          if (serv.onContainerOpening(this._result.folderId))
+            this._result = this._places.executeQueries(queries, queries.length,
+                                                       options);
+        }
+                                                         
         this._rebuild();
         ]]></body>
       </method>
@@ -153,9 +163,25 @@
       <method name="load">
         <parameter name="queries"/>
         <parameter name="options"/>
-        <body><![CDATA[ 
+        <body><![CDATA[
+          // Check if the old query needs a hidden event.
+          if (PlacesController.nodeIsContainer(this._result)) {
+            var serv = Cc[this._result.folderType]
+                       .getService(Ci.nsIBookmarksContainer);
+            serv.onContainerClosed(this._result.folderId);
+          }
+          
           this._result = this._places.executeQueries(queries, queries.length,
                                                      options);
+
+          // Check if the new query needs a show event.
+          if (PlacesController.nodeIsContainer(this._result)) {
+            var serv = Cc[this._result.folderType]
+                       .getService(Ci.nsIBookmarksContainer);
+            if (serv.onContainerOpening(this._result.folderId))
+              this._result = this._places.executeQueries(queries, queries.length,
+                                                         options);
+          }
           this._rebuild();
         ]]></body>
       </method>

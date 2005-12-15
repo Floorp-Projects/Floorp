@@ -36,6 +36,15 @@
         options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
         // options.setExpandPlaces();  ?
         this._result = this._places.executeQuery(query, options);
+        
+        // If this is a container, notify the service.
+        if (PlacesController.nodeIsContainer(this._result)) {
+          var serv = Cc[this._result.folderType]
+                     .getService(Ci.nsIBookmarksContainer);
+          if (serv.onContainerOpening(this._result.folderId))
+            this._result = this._places.executeQuery(query, options);
+        }
+        
         this._rebuild();
         if (this.popupShowingCallback)
           this.popupShowingCallback();
@@ -240,8 +249,19 @@
     </implementation>
     <handlers>
       <handler event="popupshowing">
-        if (event.target == this)
+        if (event.target == this) {
           this.onPopupShowing();
+        }
+      </handler>
+      <handler event="popuphidden">
+        if (event.target == this) {
+          // If this is a container, notify the service.
+          if (PlacesController.nodeIsContainer(this._result)) {
+            var serv = Cc[this._result.folderType]
+                       .getService(Ci.nsIBookmarksContainer);
+            serv.onContainerClosed(this._result.folderId);
+          }
+        }
       </handler>
       <handler event="click">
         if (event.target.localName != "menuitem")

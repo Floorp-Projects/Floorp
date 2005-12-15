@@ -421,6 +421,16 @@ var PlacesController = {
   },
 
   /**
+   * Determines whether or not a ResultNode is a container item or not
+   * @param   node
+   *          A NavHistoryResultNode
+   * @returns true if the node is a container item, false otherwise
+   */
+  nodeIsContainer: function PC_nodeIsContainer(node) {
+    return node.folderType != "";
+  },
+  
+  /**
    * Updates commands on focus/selection change to reflect the enabled/
    * disabledness of commands in relation to the state of the selection. 
    */
@@ -480,7 +490,7 @@ var PlacesController = {
    *    is-mutable    "mutable"
    *    is-removable  "removable"
    *    is-multiselect"multiselect"
-   *    is-livemark   "livemark"
+   *    is-container  "container"
    * @returns an object with each of the properties above set if the selection
    *          matches that rule. 
    */
@@ -493,6 +503,8 @@ var PlacesController = {
     var selectedNode = this._activeView.selectedNode;
     if (this.nodeIsFolder(selectedNode) && hasSingleSelection)
       metadata["folder"] = true;
+    if (this.nodeIsContainer(selectedNode) && hasSingleSelection)
+      metadata["container"] = true;
     
     var foundNonLeaf = false;
     var nodes = this._activeView.getSelectionNodes();
@@ -500,8 +512,7 @@ var PlacesController = {
       var node = nodes[i];
       if (node.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_URL)
         foundNonLeaf = true;
-      // XXXben check for livemarkness
-      if (!node.readonly)
+      if (!node.readonly && node.folderType == "")
         metadata["mutable"] = true;
     }
     if (this._activeView.getAttribute("seltype") != "single")

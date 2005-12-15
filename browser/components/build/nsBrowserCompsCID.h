@@ -105,3 +105,9 @@
 
 #define NS_FAVICONSERVICE_CONTRACTID \
   "@mozilla.org/browser/favicon-service;1"
+
+#define NS_LIVEMARKSERVICE_CID \
+{ 0xb1257934, 0x86cf, 0x4143, { 0x83, 0x86, 0x73, 0x4a, 0xc3, 0x52, 0xb6, 0xba } }
+
+#define NS_LIVEMARKSERVICE_CONTRACTID \
+  "@mozilla.org/browser/livemark-service;1"
