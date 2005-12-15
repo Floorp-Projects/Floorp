@@ -777,7 +777,7 @@ public:
         break;
 
       case nsXPTType::T_VOID:
-        rv = out->Write("int", 3, &count);
+        rv = out->Write("long", 4, &count);
         break;
 
       case nsXPTType::T_ARRAY:
