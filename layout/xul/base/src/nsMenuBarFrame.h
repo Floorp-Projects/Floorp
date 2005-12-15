@@ -152,9 +152,6 @@ protected:
 
   nsIDOMEventReceiver* mTarget;
 
-  // XXX Hack
-  nsPresContext* mPresContext;  // weak reference
-
 private:
   PRBool mCaretWasVisible;
 

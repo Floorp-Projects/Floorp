@@ -233,7 +233,6 @@ protected:
 
   nsIMenuParent* mMenuParent; // Our parent menu.
   nsCOMPtr<nsITimer> mOpenTimer;
-  nsPresContext* mPresContext; // Our pres context.
   nsString mGroupName;
   nsSize mLastPref;
   

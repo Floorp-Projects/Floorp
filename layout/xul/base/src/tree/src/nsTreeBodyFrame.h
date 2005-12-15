@@ -328,9 +328,6 @@ protected:
   static void ScrollCallback(nsITimer *aTimer, void *aClosure);
 
 protected: // Data Members
-  // Our cached pres context.
-  nsPresContext* mPresContext;
-
   // The cached box object parent.
   nsCOMPtr<nsITreeBoxObject> mTreeBoxObject;
 

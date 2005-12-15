@@ -6257,8 +6257,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
           NS_NewListBoxLayout(mPresShell, layout);
 
           newFrame = NS_NewListBoxBodyFrame(mPresShell,  PR_FALSE, layout);
-          ((nsListBoxBodyFrame*)newFrame)->InitGroup(this,
-                                                     aState.mPresContext);
+          ((nsListBoxBodyFrame*)newFrame)->InitGroup(this);
         }
         else
         {

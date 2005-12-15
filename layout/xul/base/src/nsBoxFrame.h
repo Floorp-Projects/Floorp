@@ -306,8 +306,6 @@ private:
 
     eMouseThrough mMouseThrough;
 
-    nsPresContext* mPresContext;
-
 #ifdef DEBUG_LAYOUT
     static PRBool gDebug;
     static nsIBox* mDebugChild;

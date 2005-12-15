@@ -141,8 +141,6 @@ protected:
 #endif
 
   nsPopupFrameList* mPopupList;
-  
-  nsPresContext* mPresContext; // Our pres context.
 
 }; // class nsPopupSetFrame
 

@@ -132,9 +132,6 @@ nsMenuBarFrame::Init(nsPresContext*  aPresContext,
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  // XXX hack
-  mPresContext = aPresContext;
-
   // Create the menu bar listener.
   mMenuBarListener = new nsMenuBarListener(this);
   NS_IF_ADDREF(mMenuBarListener);
@@ -193,7 +190,7 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
   // The caret distracts screen readers and other assistive technologies from the menu selection
   // There is 1 caret per document, we need to find the focused document and toggle its caret 
   do {
-    nsIPresShell *presShell = mPresContext->GetPresShell();
+    nsIPresShell *presShell = GetPresContext()->GetPresShell();
     if (!presShell)
       break;
 
@@ -299,7 +296,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
 
   // Enumerate over our list of frames.
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(mPresContext->PresShell(), this, nsnull, &immediateParent);
+  GetInsertionPoint(GetPresContext()->PresShell(), this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -424,7 +421,7 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
 nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart)
 {
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(mPresContext->PresShell(), this, nsnull, &immediateParent);
+  GetInsertionPoint(GetPresContext()->PresShell(), this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -474,7 +471,7 @@ nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart)
 nsMenuBarFrame::GetPreviousMenuItem(nsIMenuFrame* aStart)
 {
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(mPresContext->PresShell(), this, nsnull, &immediateParent);
+  GetInsertionPoint(GetPresContext()->PresShell(), this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -714,7 +711,7 @@ nsMenuBarFrame::GetWidget(nsIWidget **aWidget)
 #if DONT_WANT_TO_DO_THIS
   // Get parent view
   nsIView * view = nsnull;
-  nsMenuPopupFrame::GetNearestEnclosingView(mPresContext, this, &view);
+  nsMenuPopupFrame::GetNearestEnclosingView(GetPresContext(), this, &view);
   if (!view)
     return NS_OK;
 

@@ -136,8 +136,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 //
 // nsPopupSetFrame cntr
 //
-nsPopupSetFrame::nsPopupSetFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
-mPresContext(nsnull)
+nsPopupSetFrame::nsPopupSetFrame(nsIPresShell* aShell):nsBoxFrame(aShell)
 {
 
 } // cntr
@@ -149,7 +148,6 @@ nsPopupSetFrame::Init(nsPresContext*  aPresContext,
                      nsStyleContext*  aContext,
                      nsIFrame*        aPrevInFlow)
 {
-  mPresContext = aPresContext; // Don't addref it.  Our lifetime is shorter.
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   nsIRootBox *rootBox;
@@ -357,7 +355,7 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
   entry->mYPos = aYPos;
 
   // If a frame exists already, go ahead and use it.
-  entry->mPopupFrame = mPresContext->PresShell()
+  entry->mPopupFrame = GetPresContext()->PresShell()
     ->GetPrimaryFrameFor(aPopupContent);
 
 #ifdef DEBUG_PINK
@@ -405,7 +403,7 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
     // menupopup, then hiding us should also hide the parent menu
     // popup.
     if (entry->mElementContent->Tag() == nsXULAtoms::menupopup) {
-      nsIFrame* popupFrame = mPresContext->PresShell()
+      nsIFrame* popupFrame = GetPresContext()->PresShell()
         ->GetPrimaryFrameFor(entry->mElementContent);
       if (popupFrame) {
         nsIMenuParent *menuParent;
@@ -436,7 +434,7 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain)
       // menupopup, then destroying us should also dismiss the parent
       // menu popup.
       if (entry->mElementContent->Tag() == nsXULAtoms::menupopup) {
-        nsIFrame* popupFrame = mPresContext->PresShell()
+        nsIFrame* popupFrame = GetPresContext()->PresShell()
           ->GetPrimaryFrameFor(entry->mElementContent);
         if (popupFrame) {
           nsIMenuParent *menuParent;
@@ -523,7 +521,7 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
     OnDestroyed(aEntry->mPopupContent);
   }
 
-  nsBoxLayoutState state(mPresContext);
+  nsBoxLayoutState state(GetPresContext());
   MarkDirtyChildren(state); // Mark ourselves dirty.
 }
 
@@ -584,7 +582,7 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
   event.refPoint.y = aY;
 
   if (aPopupContent) {
-    nsIPresShell *shell = mPresContext->GetPresShell();
+    nsIPresShell *shell = GetPresContext()->GetPresShell();
     if (shell) {
       nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
                                                     &status);
@@ -663,7 +661,7 @@ nsPopupSetFrame::OnCreated(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
   //event.point.y = aY;
 
   if (aPopupContent) {
-    nsIPresShell *shell = mPresContext->GetPresShell();
+    nsIPresShell *shell = GetPresContext()->GetPresShell();
     if (shell) {
       nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
                                                     &status);
@@ -684,7 +682,7 @@ nsPopupSetFrame::OnDestroy(nsIContent* aPopupContent)
                      nsMouseEvent::eReal);
 
   if (aPopupContent) {
-    nsIPresShell *shell = mPresContext->GetPresShell();
+    nsIPresShell *shell = GetPresContext()->GetPresShell();
     if (shell) {
       nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
                                                     &status);
@@ -704,7 +702,7 @@ nsPopupSetFrame::OnDestroyed(nsIContent* aPopupContent)
                      nsMouseEvent::eReal);
 
   if (aPopupContent) {
-    nsIPresShell *shell = mPresContext->GetPresShell();
+    nsIPresShell *shell = GetPresContext()->GetPresShell();
     if (shell) {
       nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
                                                     &status);
@@ -738,6 +736,7 @@ nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
   // get the popup out of our list, so we don't reflow it later.
   nsPopupFrameList* currEntry = mPopupList;
   nsPopupFrameList* temp = nsnull;
+  nsPresContext* presContext = GetPresContext();
   while (currEntry) {
     if (currEntry->mPopupFrame == aPopup) {
       // Remove this entry.
@@ -747,7 +746,7 @@ nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
         mPopupList = currEntry->mNextPopup;
       
       // Destroy the frame.
-      currEntry->mPopupFrame->Destroy(mPresContext);
+      currEntry->mPopupFrame->Destroy(presContext);
 
       // Delete the entry.
       currEntry->mNextPopup = nsnull;

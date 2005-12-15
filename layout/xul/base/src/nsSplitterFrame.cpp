@@ -349,9 +349,6 @@ nsSplitterFrame::Init(nsPresContext*  aPresContext,
 
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  // XXX Hack because we need the pres context in some of the event handling functions...
-  mPresContext = aPresContext; 
-
   nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
   nsIView* view = GetView();
 
@@ -672,7 +669,7 @@ nsSplitterFrameInner::MouseUp(nsIDOMEvent* aMouseEvent)
 {  
   mPressed = PR_FALSE;
 
-  mOuter->CaptureMouse(mOuter->mPresContext, PR_FALSE);
+  mOuter->CaptureMouse(mOuter->GetPresContext(), PR_FALSE);
 
   return NS_OK;
 }
@@ -695,7 +692,8 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   if (disabled.EqualsLiteral("true"))
     return NS_OK;
 
-  nsBoxLayoutState state(mOuter->mPresContext);
+  nsPresContext* outerPresContext = mOuter->GetPresContext();
+  nsBoxLayoutState state(outerPresContext);
   mCurrentPos = 0;
   mPressed = PR_TRUE;
 
@@ -704,8 +702,8 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   mOuter->GetParentBox(&mParentBox);
   
   // get our index
-  nscoord childIndex = nsFrameNavigator::IndexOf(mOuter->mPresContext, mParentBox, mOuter);
-  PRInt32 childCount = nsFrameNavigator::CountFrames(mOuter->mPresContext, mParentBox);
+  nscoord childIndex = nsFrameNavigator::IndexOf(outerPresContext, mParentBox, mOuter);
+  PRInt32 childCount = nsFrameNavigator::CountFrames(outerPresContext, mParentBox);
 
   // if its 0 or the last index then stop right here.
   if (childIndex == 0 || childIndex == childCount-1) {
@@ -852,10 +850,10 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   }
 
   mDragStart = c;
-    
+
   //printf("Pressed mDragStart=%d\n",mDragStart);
 
-  mOuter->CaptureMouse(mOuter->mPresContext, PR_TRUE);
+  mOuter->CaptureMouse(outerPresContext, PR_TRUE);
 
   return NS_OK;
 }
@@ -866,8 +864,8 @@ nsSplitterFrameInner::MouseMove(nsIDOMEvent* aMouseEvent)
   //printf("Mouse move\n");
 
   if (!mPressed)
-      return NS_OK;
-  
+    return NS_OK;
+
   if (mDragging)
     return NS_OK;
 
@@ -927,7 +925,7 @@ nsSplitterFrameInner::UpdateState()
     nsIBox* splitter = mOuter;
     // Find the splitter's immediate sibling.
     nsIBox* splitterSibling =
-      nsFrameNavigator::GetChildBeforeAfter(mOuter->mPresContext, splitter,
+      nsFrameNavigator::GetChildBeforeAfter(mOuter->GetPresContext(), splitter,
                                             (direction == Before));
     if (splitterSibling) {
       nsIContent* sibling = splitterSibling->GetContent();

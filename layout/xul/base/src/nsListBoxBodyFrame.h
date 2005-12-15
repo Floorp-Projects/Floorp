@@ -128,10 +128,9 @@ public:
 
   void PostReflowCallback();
 
-  void InitGroup(nsCSSFrameConstructor* aFC, nsPresContext* aContext) 
+  void InitGroup(nsCSSFrameConstructor* aFC) 
   {
     mFrameConstructor = aFC;
-    mPresContext = aContext;
   }
 
 protected:
@@ -140,7 +139,6 @@ protected:
 
   // We don't own this. (No addref/release allowed, punk.)
   nsCSSFrameConstructor* mFrameConstructor;
-  nsPresContext* mPresContext;
 
   // row height
   PRInt32 mRowCount;

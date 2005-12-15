@@ -206,8 +206,6 @@ nsBoxFrame::Init(nsPresContext*  aPresContext,
                  nsStyleContext*  aContext,
                  nsIFrame*        aPrevInFlow)
 {
-  mPresContext = aPresContext;
-
   nsresult  rv = nsContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // see if we need a widget
@@ -2123,18 +2121,19 @@ nsBoxFrame::GetInset(nsMargin& margin)
   margin.SizeTo(0,0,0,0);
 
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
-     nsMargin debugMargin(0,0,0,0);
-     nsMargin debugBorder(0,0,0,0);
-     nsMargin debugPadding(0,0,0,0);
-     GetDebugBorder(debugBorder);
-     PixelMarginToTwips(mPresContext, debugBorder);
-     GetDebugMargin(debugMargin);
-     PixelMarginToTwips(mPresContext, debugMargin);
-     GetDebugMargin(debugPadding);
-     PixelMarginToTwips(mPresContext, debugPadding);
-     margin += debugBorder;
-     margin += debugMargin;
-     margin += debugPadding;
+    nsPresContext* presContext = GetPresContext();
+    nsMargin debugMargin(0,0,0,0);
+    nsMargin debugBorder(0,0,0,0);
+    nsMargin debugPadding(0,0,0,0);
+    GetDebugBorder(debugBorder);
+    PixelMarginToTwips(presContext, debugBorder);
+    GetDebugMargin(debugMargin);
+    PixelMarginToTwips(presContext, debugMargin);
+    GetDebugMargin(debugPadding);
+    PixelMarginToTwips(presContext, debugPadding);
+    margin += debugBorder;
+    margin += debugMargin;
+    margin += debugPadding;
   }
 
   return NS_OK;
@@ -2527,12 +2526,13 @@ void
 nsBoxFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
 {
   nsIContent *content = aContent ? aContent : mContent;
-  if (content && mPresContext) {
+  nsPresContext *presContext = GetPresContext();
+  if (content && presContext) {
     // Fire a DOM event
     nsCOMPtr<nsIDOMEvent> event;
     nsCOMPtr<nsIEventListenerManager> manager;
     content->GetListenerManager(getter_AddRefs(manager));
-    if (manager && NS_SUCCEEDED(manager->CreateEvent(mPresContext, nsnull,
+    if (manager && NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull,
                                                      NS_LITERAL_STRING("Events"),
                                                      getter_AddRefs(event)))) {
       event->InitEvent(aDOMEventName, PR_TRUE, PR_TRUE);
@@ -2541,7 +2541,7 @@ nsBoxFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
       privateEvent->SetTrusted(PR_TRUE);
 
       PRBool defaultActionEnabled;
-      mPresContext->EventStateManager()->
+      presContext->EventStateManager()->
         DispatchNewEvent(content, event, &defaultActionEnabled);
     }
   }
