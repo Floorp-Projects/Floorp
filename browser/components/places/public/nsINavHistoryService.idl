@@ -540,7 +540,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   const PRInt32 RESULT_TYPE_VISIT = 1;
 
   /**
-   * Set the grouping mode to be used for this query.
+   * The grouping mode to be used for this query.
    * Grouping mode is an array of GROUP_BY_* values that specifies the structure
    * of the tree you want. For example, an array consisting of
    * [GROUP_BY_DAY, GROUP_BY_DOMAIN] will give you a tree whose first level is
@@ -548,26 +548,36 @@ interface nsINavHistoryQueryOptions : nsISupports
    * third level is a list of pages in those domains. If you don't want a tree,
    * you can specify an empty array.
    */
+  void getGroupingMode(out PRUint32 groupCount,
+                       [retval,array,size_is(groupCount)] out PRInt32 groupingMode);
   void setGroupingMode([const,array,size_is(groupCount)] in PRInt32 groupingMode,
                        in PRUint32 groupCount);
 
   /**
-   * Set the sorting mode to be used for this query.
+   * The sorting mode to be used for this query.
    * mode is one of SORT_BY_*
    */
-  void setSortingMode(in PRInt32 mode);
+  attribute PRInt32 sortingMode;
 
   /**
    * Sets the result type. One of RESULT_TYPE_*.
    */
-  void setResultType(in PRInt32 type);
+  attribute PRInt32 resultType;
 
   /**
    * When set, allows items with "place:" URIs to appear as containers,
    * with the container's contents filled in from the stored query.
    * If not set, these will appear as normal items.
    */
-  void setExpandPlaces(in boolean expand);
+  attribute boolean expandPlaces;
+
+  /**
+   * Normally the title of a result will be the user's custom title if there is
+   * one, falling back on the default page title. If this is set, we will not
+   * do this operation and always use the original page title extracted from
+   * the HTML of the page.
+   */
+  attribute boolean forceOriginalTitle;
 
   /**
    * Creates a new options item with the same parameters of this one.
@@ -585,6 +595,12 @@ interface nsINavHistory : nsISupports
    * a lot of history (it must enumerate each item). This is pretty fast.
    */
   readonly attribute boolean hasHistoryEntries;
+
+  /**
+   * This sets the user-defined title of the page. Silently fails if we have
+   * no knowledge of this page.
+   */
+  void setPageUserTitle(in nsIURI aURI, in AString aUserTitle);
 
   /**
    * Returns true if this URI would be added to the history. You don't have to
