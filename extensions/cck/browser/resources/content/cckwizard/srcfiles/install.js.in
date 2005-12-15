@@ -103,6 +103,7 @@ var cckextensiondir = getFolder(extensionsdir, "%id%");
 
 addDirectory("", "%version%", "chrome", cckextensiondir, "chrome", true);
 addDirectory("", "%version%", "components", cckextensiondir, "components", true);
+addDirectory("", "%version%", "defaults", cckextensiondir, "defaults", true);
 %plugins%
 %searchplugins%
 addFile("", "%version%", "chrome.manifest", cckextensiondir, "", true);
