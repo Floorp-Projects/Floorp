@@ -836,8 +836,10 @@ function delayedStartup()
     bt.database.AddObserver(BookmarksToolbarRDFObserver);
   }
   window.addEventListener("resize", BookmarksToolbar.resizeFunc, false);
+#ifndef MOZ_PLACES
   document.getElementById("PersonalToolbar")
           .controllers.appendController(BookmarksMenuController);
+#endif
 
   // called when we go into full screen, even if it is
   // initiated by a web page script
