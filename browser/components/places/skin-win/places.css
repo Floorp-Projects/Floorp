@@ -1,3 +1,7 @@
+#places {
+  list-style-image: url("chrome://browser/skin/places/icons.png");
+}
+
 /* Root View */
 #placesView {
   -moz-appearance: tabpanels;
