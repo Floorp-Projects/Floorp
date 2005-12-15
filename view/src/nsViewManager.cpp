@@ -4485,6 +4485,33 @@ nsViewManager::SynthesizeMouseMove(PRBool aFromScroll)
   return NS_OK;
 }
 
+/**
+ * Find the first floating view with a widget in a postorder traversal of the
+ * view tree that contains the point. Thus more deeply nested floating views
+ * are preferred over their ancestors, and floating views earlier in the
+ * view hierarchy (i.e., added later) are preferred over their siblings.
+ * This is adequate for finding the "topmost" floating view under a point,
+ * given that floating views don't supporting having a specific z-index.
+ * 
+ * We cannot exit early when aPt is outside the view bounds, because floating
+ * views aren't necessarily included in their parent's bounds, so this could
+ * traverse the entire view hierarchy --- use carefully.
+ */
+static nsView* FindFloatingViewContaining(nsView* aView, nsPoint aPt)
+{
+  for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
+    nsView* r = FindFloatingViewContaining(v, aPt - v->GetOffsetTo(aView));
+    if (r)
+      return r;
+  }
+
+  if (aView->GetFloating() && aView->HasWidget() &&
+      aView->GetDimensions().Contains(aPt) && IsViewVisible(aView))
+    return aView;
+    
+  return nsnull;
+}
+
 void
 nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
 {
@@ -4507,14 +4534,28 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
          this, mMouseLocation.x, mMouseLocation.y);
 #endif
 
-  nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, mRootView->GetWidget(),
+  nsPoint pt = mMouseLocation;
+  pt.x = NSToCoordRound(mMouseLocation.x*mPixelsToTwips);
+  pt.y = NSToCoordRound(mMouseLocation.y*mPixelsToTwips);
+  // This could be a bit slow (traverses entire view hierarchy)
+  // but it's OK to do it once per synthetic mouse event
+  nsView* view = FindFloatingViewContaining(mRootView, pt);
+  nsPoint offset(0, 0);
+  if (!view) {
+    view = mRootView;
+  } else {
+    offset = view->GetOffsetTo(mRootView);
+    offset.x = NSToIntRound(offset.x*mTwipsToPixels);
+    offset.y = NSToIntRound(offset.y*mTwipsToPixels);
+  }
+  nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, view->GetWidget(),
                      nsMouseEvent::eSynthesized);
-  event.refPoint = mMouseLocation;
+  event.refPoint = mMouseLocation - offset;
   event.time = PR_IntervalNow();
   // XXX set event.isShift, event.isControl, event.isAlt, event.isMeta ?
 
   nsEventStatus status;
-  DispatchEvent(&event, &status);
+  view->GetViewManager()->DispatchEvent(&event, &status);
 
   if (!aFromScroll)
     mSynthMouseMoveEventQueue = nsnull;
