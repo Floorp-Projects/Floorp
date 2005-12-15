@@ -2214,12 +2214,42 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
                                             nsEvent* aEvent,
                                             nsIDOMEvent** aDOMEvent)
 {
+  nsIPresShell* shell = aPresContext->PresShell();
+  nsresult ret = NS_OK;
+
+  if (nsnull == *aDOMEvent) {
+    // If we're here because of the key-equiv for showing context menus, we
+    // have to twiddle with the NS event to make sure the context menu comes
+    // up in the upper left of the relevant content area before we create
+    // the DOM event. Since we never call InitMouseEvent() on the event, 
+    // the client X/Y will be 0,0. We can make use of that if the widget is null.
+    if (aEvent->message == NS_CONTEXTMENU_KEY) {
+      NS_IF_RELEASE(((nsGUIEvent*)aEvent)->widget);
+      aPresContext->GetViewManager()->GetWidget(&((nsGUIEvent*)aEvent)->widget);
+      aEvent->refPoint.x = 0;
+      aEvent->refPoint.y = 0;
+    }
+    ret = NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsInputEvent*, aEvent));
+    NS_ENSURE_SUCCESS(ret, ret);
+  }
+
+  // see if we should use the caret position for the popup
+  if (aEvent->message == NS_CONTEXTMENU_KEY) {
+    nsPoint caretPoint;
+    if (PrepareToUseCaretPosition(((nsGUIEvent*)aEvent)->widget,
+                                  shell, caretPoint)) {
+      // caret position is good
+      aEvent->refPoint.x = caretPoint.x;
+      aEvent->refPoint.y = caretPoint.y;
+      return NS_OK;
+    }
+  }
+
   // If we're here because of the key-equiv for showing context menus, we
   // have to reset the event target to the currently focused element. Get it
   // from the focus controller.
   nsCOMPtr<nsIDOMEventTarget> currentTarget(aCurrentTarget);
   nsCOMPtr<nsIDOMElement> currentFocus;
-  nsIPresShell* shell = aPresContext->PresShell();
 
   if (aEvent->message == NS_CONTEXTMENU_KEY) {
     nsIDocument *doc = shell->GetDocument();
@@ -2234,32 +2264,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
     }
   }
 
-  nsresult ret = NS_OK;
-
-  if (nsnull == *aDOMEvent) {        
-    // If we're here because of the key-equiv for showing context menus, we
-    // have to twiddle with the NS event to make sure the context menu comes
-    // up in the upper left of the relevant content area before we create
-    // the DOM event. Since we never call InitMouseEvent() on the event, 
-    // the client X/Y will be 0,0. We can make use of that if the widget is null.
-    if (aEvent->message == NS_CONTEXTMENU_KEY)
-      NS_IF_RELEASE(((nsGUIEvent*)aEvent)->widget);   // nulls out widget
-    ret = NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsInputEvent*, aEvent));
-    NS_ENSURE_SUCCESS(ret, ret);
-  }
-
-  // see if we should use the caret position for the popup
-  PRBool useCaretPosition = PR_FALSE;
-  nsPoint caretPoint;
-  if (aEvent->message == NS_CONTEXTMENU_KEY) {
-    useCaretPosition = PrepareToUseCaretPosition(((nsGUIEvent*)aEvent)->widget,
-                                                 shell, caretPoint);
-  }
-
-  if (useCaretPosition) {
-    aEvent->refPoint.x = caretPoint.x;
-    aEvent->refPoint.y = caretPoint.y;
-  } else if (currentFocus) {
+  if (currentFocus) {
     // Reset event coordinates relative to focused frame in view
     nsPoint targetPt;
     GetCoordinatesFor(currentFocus, aPresContext, shell, targetPt);
@@ -2375,6 +2380,7 @@ nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
   // in case the view used for caret coordinates was something else, we need
   // to bring those coordinates into the space of the widget view
   nsIView* widgetView = nsIView::GetViewFor(aEventWidget);
+  NS_ENSURE_TRUE(widgetView, PR_FALSE);
   nsPoint viewToWidget;
   widgetView->GetNearestWidget(&viewToWidget);
   nsPoint viewDelta = view->GetOffsetTo(widgetView) + viewToWidget;
