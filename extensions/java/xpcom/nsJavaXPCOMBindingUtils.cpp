@@ -97,24 +97,6 @@ PRLock* gJavaXPCOMLock = nsnull;
 
 
 /******************************
- *  JNI Load & Unload
- ******************************/
-extern "C" JX_EXPORT jint JNICALL
-JNI_OnLoad(JavaVM* vm, void* reserved)
-{
-  // Save pointer to JavaVM, which is valid across threads.
-  gCachedJVM = vm;
-
-  // Let the JVM know that we are using JDK 1.2 JNI features.
-  return JNI_VERSION_1_2;
-}
-
-extern "C" JX_EXPORT void JNICALL
-JNI_OnUnload(JavaVM* vm, void* reserved)
-{
-}
-
-/******************************
  *  InitializeJavaGlobals
  ******************************/
 PRBool
@@ -122,6 +104,13 @@ InitializeJavaGlobals(JNIEnv *env)
 {
   if (gJavaXPCOMInitialized)
     return PR_TRUE;
+
+  // Save pointer to JavaVM, which is valid across threads.
+  jint rc = env->GetJavaVM(&gCachedJVM);
+  if (rc != 0) {
+    NS_WARNING("Failed to get JavaVM");
+    goto init_error;
+  }
 
   jclass clazz;
   if (!(clazz = env->FindClass("java/lang/Object")) ||
@@ -912,23 +901,12 @@ ThrowException(JNIEnv* env, const nsresult aErrorCode, const char* aMessage)
 
   // Create parameters and method signature. Max of 2 params.  The error code
   // comes before the message string.
-  PRUint32 index = 0;
-  jvalue* args = new jvalue[2];
-  if (!args) {
-    ThrowException(env, NS_ERROR_OUT_OF_MEMORY,
-                   "Out of memory while throwing another exception");
-    return;
-  }
-
-  nsCAutoString methodSig("(");
-  if (aErrorCode) {
-    args[index++].j = aErrorCode;
-    methodSig.Append('J');
-  }
+  PRInt64 errorCode = aErrorCode ? aErrorCode : NS_ERROR_FAILURE;
+  nsCAutoString methodSig("(J");
+  jstring message = nsnull;
   if (aMessage) {
-    args[index].l = env->NewStringUTF(aMessage);
-    if (args[index].l == nsnull) {
-      delete[] args;
+    message = env->NewStringUTF(aMessage);
+    if (!message) {
       return;
     }
     methodSig.AppendLiteral("Ljava/lang/String;");
@@ -941,8 +919,9 @@ ThrowException(JNIEnv* env, const nsresult aErrorCode, const char* aMessage)
   // reset it temporarily in order to throw the appropriate exception.
   if (xpcomExceptionClass == nsnull) {
     xpcomExceptionClass = env->FindClass("org/mozilla/xpcom/XPCOMException");
-    if (!xpcomExceptionClass)
+    if (!xpcomExceptionClass) {
       return;
+    }
   }
 
   // create exception object
@@ -950,7 +929,8 @@ ThrowException(JNIEnv* env, const nsresult aErrorCode, const char* aMessage)
   jmethodID mid = env->GetMethodID(xpcomExceptionClass, "<init>",
                                    methodSig.get());
   if (mid) {
-    throwObj = (jthrowable) env->NewObjectA(xpcomExceptionClass, mid, args);
+    throwObj = (jthrowable) env->NewObject(xpcomExceptionClass, mid, errorCode,
+                                           message);
   }
   NS_ASSERTION(throwObj, "Failed to create XPCOMException object");
 
@@ -958,9 +938,6 @@ ThrowException(JNIEnv* env, const nsresult aErrorCode, const char* aMessage)
   if (throwObj) {
     env->Throw(throwObj);
   }
-
-  // cleanup
-  delete[] args;
 }
 
 nsAString*

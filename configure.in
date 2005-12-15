@@ -4042,6 +4042,7 @@ MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc help p3p venkman inspec
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
 MOZ_IPCD=
+MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_JSLOADER=1
 MOZ_LDAP_XPCOM=
@@ -4239,6 +4240,7 @@ xulrunner)
   MOZ_XULRUNNER=1
   MOZ_ENABLE_LIBXUL=1
   MOZ_APP_VERSION=$MOZILLA_VERSION
+  MOZ_JAVAXPCOM=1
   MOZ_EXTENSIONS_DEFAULT=" xml-rpc universalchardet webservices gnomevfs auth"
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
@@ -4894,6 +4896,61 @@ MOZ_ARG_DISABLE_BOOL(pref-extensions,
   MOZ_PREF_EXTENSIONS=1 )
 
 dnl ========================================================
+dnl Javaconnect
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(javaconnect,
+[  --enable-javaxpcom
+                          Enable Java-XPCOM bridge],
+    MOZ_JAVAXPCOM=1,
+    MOZ_JAVAXPCOM= )
+
+if test -n "${MOZ_JAVAXPCOM}"; then
+  case "$host_os" in
+    cygwin*|msvc*|mks*)
+      if test -n "$JAVA_HOME"; then
+        JAVA_HOME=`cygpath -u \`cygpath -m -s "$JAVA_HOME"\``
+      fi
+      ;;
+  esac
+
+  if test -n "${JAVA_INCLUDE_PATH}"; then
+    dnl Make sure jni.h exists in the given include path.
+    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
+      AC_MSG_ERROR([jni.h was not found in given include path $JAVA_INCLUDE_PATH.])
+    fi
+  else
+    case "$target_os" in
+      darwin*)
+        dnl Default to java system location
+        JAVA_INCLUDE_PATH=/System/Library/Frameworks/JavaVM.framework/Headers
+        ;;
+      *)
+        dnl Try $JAVA_HOME
+        JAVA_INCLUDE_PATH="$JAVA_HOME/include"
+        ;;
+    esac
+    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
+      AC_MSG_ERROR([The header jni.h was not found.  Set \$JAVA_HOME or use --with-java-include-path={java-include-dir}.])
+    fi
+  fi
+
+  if test -n "${JAVA_BIN_PATH}"; then
+    dnl Look for javac and jar in the specified path.
+    JAVA_PATH="$JAVA_BIN_PATH"
+  else
+    dnl No path specified, so look for javac and jar in $JAVA_HOME & $PATH.
+    JAVA_PATH="$JAVA_HOME/bin:$PATH"
+  fi
+
+  AC_PATH_PROG(JAVAC, javac, :, $JAVA_PATH)
+  AC_PATH_PROG(JAR, jar, :, $JAVA_PATH)
+  if test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
+    AC_MSG_ERROR([The programs javac and jar were not found.  Set \$JAVA_HOME or use --with-java-bin-path={java-bin-dir}.])
+  fi
+fi
+
+
+dnl ========================================================
 dnl = Enable compilation of specific extension modules
 dnl ========================================================
 
@@ -4974,54 +5031,9 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c pref` -ne 0; then
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|pref||g'`
 fi
 
-MOZ_ENABLE_JAVAXPCOM=
-JAVAC=
-JAR=
 if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
-  MOZ_ENABLE_JAVAXPCOM=1
-
-  case "$host_os" in
-    cygwin*|msvc*|mks*)
-      if test -n "$JAVA_HOME"; then
-        JAVA_HOME=`cygpath -u \`cygpath -m -s "$JAVA_HOME"\``
-      fi
-      ;;
-  esac
-
-  if test -n "${JAVA_INCLUDE_PATH}"; then
-    dnl Make sure jni.h exists in the given include path.
-    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
-      AC_MSG_ERROR([jni.h was not found in given include path $JAVA_INCLUDE_PATH.])
-    fi
-  else
-    case "$target_os" in
-      darwin*)
-        dnl Default to java system location
-        JAVA_INCLUDE_PATH=/System/Library/Frameworks/JavaVM.framework/Headers
-        ;;
-      *)
-        dnl Try $JAVA_HOME
-        JAVA_INCLUDE_PATH="$JAVA_HOME/include"
-        ;;
-    esac
-    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
-      AC_MSG_ERROR([The header jni.h was not found.  Set \$JAVA_HOME or use --with-java-include-path={java-include-dir}.])
-    fi
-  fi
-
-  if test -n "${JAVA_BIN_PATH}"; then
-    dnl Look for javac and jar in the specified path.
-    JAVA_PATH="$JAVA_BIN_PATH"
-  else
-    dnl No path specified, so look for javac and jar are in $JAVA_HOME & $PATH.
-    JAVA_PATH="$JAVA_HOME/bin:$PATH"
-  fi
-
-  AC_PATH_PROG(JAVAC, javac, :, $JAVA_PATH)
-  AC_PATH_PROG(JAR, jar, :, $JAVA_PATH)
-  if test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
-    AC_MSG_ERROR([The programs javac and jar were not found.  Set \$JAVA_HOME or use --with-java-bin-path={java-bin-dir}.])
-  fi
+    AC_MSG_WARN([java is no longer an extension, use --enable-javaxpcom to enable.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|java||g'`
 fi
 
 dnl Remove dupes
@@ -6853,7 +6865,7 @@ AC_SUBST(MOZ_PLACES)
 AC_SUBST(MOZ_STORAGE)
 AC_SUBST(NS_PRINTING)
 
-AC_SUBST(MOZ_ENABLE_JAVAXPCOM)
+AC_SUBST(MOZ_JAVAXPCOM)
 AC_SUBST(JAVA_INCLUDE_PATH)
 AC_SUBST(JAVAC)
 AC_SUBST(JAR)

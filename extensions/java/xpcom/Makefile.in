@@ -42,7 +42,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = tools/genifaces interfaces src
+DIRS = src
+
+TOOL_DIRS = \
+	tools/genifaces \
+	interfaces \
+	glue \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
+tools::
+	$(MAKE) -C src jarfile
