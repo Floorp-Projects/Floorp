@@ -1774,152 +1774,6 @@ void write_compact_string(FILE *out, unsigned char *hash, unsigned int len)
     fseek(out, 0, SEEK_END);
 }
 
-void do_shs_type3(FILE *out, unsigned char *M, unsigned int len)
-{
-    int i, j, a;
-    unsigned char zero[30];
-    unsigned char iword[4];
-    unsigned int l = len;
-    char hashstr[41];
-    SHA1Context *cx;
-    memset(zero, 0, sizeof zero);
-    for (j=0; j<100; j++) {
-	cx = SHA1_NewContext();
-	for (i=1; i<=50000; i++) {
-	    SHA1_Begin(cx);
-	    SHA1_Update(cx, M, l);
-	    a = j/4 + 3;
-	    SHA1_Update(cx, zero, a);
-	    iword[3] = (char)i;
-	    iword[2] = (char)(i >> 8);
-	    iword[1] = (char)(i >> 16);
-	    iword[0] = (char)(i >> 24);
-	    SHA1_Update(cx, iword, 4);
-	    SHA1_End(cx, M, &l, 20);
-	}
-	SHA1_DestroyContext(cx, PR_TRUE);
-	to_hex_str_cap(hashstr, M, l);
-	hashstr[40] = '\0';
-	fprintf(out, "%s ^", hashstr);
-	if (j<99) fprintf(out, "\n");
-    }
-}
-
-void
-shs_test(char *reqfn)
-{
-    char buf[80];
-    FILE *shareq, *sharesp;
-    char readbuf[64];
-    int i, nr;
-    int newline, skip, r_z, r_b, r_n, r, b, z, n, reading;
-    unsigned char hash[20];
-    char hashstr[41];
-    unsigned char input[13000];
-    int next_bit = 0;
-    int shs_type = 0;
-    shareq = fopen(reqfn, "r");
-    sharesp = stdout;
-    newline = 1;
-    reading = skip = r_z = r_b = r_n = z = r = n = 0;
-    while ((nr = fread(buf, 1, sizeof buf, shareq)) > 0) {
-	for (i=0; i<nr; i++) {
-	    if (newline) {
-		if (buf[i] == '#' || buf[i] == 'D' || buf[i] == '<') {
-		    skip = 1;
-		} else if (buf[i] == 'H') {
-		    skip = 0;
-		    shs_type++;
-		    fprintf(sharesp, "H>SHS Type %d Hashes<H", shs_type);
-		} else if (isdigit(buf[i])) {
-		    r_z = 1;
-		    readbuf[r++] = buf[i];
-		}
-		newline =  (buf[i] == '\n') ? 1 : 0;
-	    } else {
-		if (buf[i] == '\n' && !r_n) {
-		    skip = r_z = r_n = 0;
-		    newline = 1;
-		} else if (r_z) {
-		    if (buf[i] == ' ') {
-			r_z = 0;
-			readbuf[r] = '\0';
-			z = atoi(readbuf);
-			r_b = 1;
-			r = 0;
-		    } else if (isdigit(buf[i])) {
-			readbuf[r++] = buf[i];
-		    }
-		} else if (r_b) {
-		    if (buf[i] == ' ') {
-			r_b = 0;
-			readbuf[r] = '\0';
-			b = atoi(readbuf);
-			r_n = 1;
-			r = 0;
-		    } else if (isdigit(buf[i])) {
-			readbuf[r++] = buf[i];
-		    }
-		} else if (r_n) {
-		    if (buf[i] == ' ') {
-			readbuf[r++] = '\0';
-			n = atoi(readbuf);
-			if (b == 0) {
-			    next_bit += n;
-			    b = 1;
-			} else {
-			    int next_byte = next_bit / 8;
-			    int shift = next_bit % 8;
-			    unsigned char m = 0xff;
-			    if (n < 8 - shift) {
-				m <<= (8 - n);
-				m >>= shift;
-				input[next_byte] |= m;
-				next_bit += n;
-			    } else {
-				m >>= shift;
-				input[next_byte++] |= m;
-				next_bit += 8 - shift;
-				n -= (8 - shift);
-				while (n > 8) {
-				    m = 0xff;
-				    input[next_byte++] |= m;
-				    next_bit += 8;
-				    n -= 8;
-				}
-				if (n > 0) {
-				    m = 0xff << (8 - n);
-				    input[next_byte] |= m;
-				    next_bit += n;
-				}
-			    }
-			    b = 0;
-			}
-			r = 0;
-		    } else if (buf[i] == '^') {
-			r_n = 0;
-			if (shs_type < 3) {
-			    SHA1_HashBuf(hash, input, next_bit/8);
-			    to_hex_str_cap(hashstr, hash, sizeof hash);
-			    hashstr[40] = '\0';
-			    fprintf(sharesp, "%s ^", hashstr);
-			    memset(input, 0, sizeof input);
-			    next_bit = 0;
-			} else {
-			    do_shs_type3(sharesp, input, next_bit/8);
-			}
-		    } else if (isdigit(buf[i])) {
-			readbuf[r++] = buf[i];
-		    }
-		}
-	    }
-	    if (skip || newline) {
-		fprintf(sharesp, "%c", buf[i]);
-	    }
-	}
-    }
-}
-
 int get_next_line(FILE *req, char *key, char *val, FILE *rsp)
 {
     int ignore = 0;
@@ -2321,6 +2175,215 @@ void do_random()
     }
 }
 
+/*
+ * Calculate the SHA Message Digest 
+ *
+ * MD = Message digest 
+ * MDLen = length of Message Digest and SHA_Type
+ * msg = message to digest 
+ * msgLen = length of message to digest
+ */
+SECStatus sha_calcMD(unsigned char *MD, unsigned int MDLen, unsigned char *msg, unsigned int msgLen) 
+{    
+    SECStatus   sha_status = SECFailure;
+
+    if (MDLen == SHA1_LENGTH) {
+        sha_status = SHA1_HashBuf(MD, msg, msgLen);
+    } else if (MDLen == SHA256_LENGTH) {
+        sha_status = SHA256_HashBuf(MD, msg, msgLen);
+    } else if (MDLen == SHA384_LENGTH) {
+        sha_status = SHA384_HashBuf(MD, msg, msgLen);
+    } else if (MDLen == SHA512_LENGTH) {
+        sha_status = SHA512_HashBuf(MD, msg, msgLen);
+    }
+
+    return sha_status;
+}
+
+/*
+ * Perform the SHA Monte Carlo Test
+ *
+ * MDLen = length of Message Digest and SHA_Type
+ * seed = input seed value
+ * resp = is the output response file. 
+ */
+SECStatus sha_mct_test(unsigned int MDLen, unsigned char *seed, FILE *resp) 
+{
+    unsigned char MD_i3[HASH_LENGTH_MAX];  /* MD[i-3] */
+    unsigned char MD_i2[HASH_LENGTH_MAX];  /* MD[i-2] */
+    unsigned char MD_i1[HASH_LENGTH_MAX];  /* MD[i-1] */
+    unsigned char MD_i[HASH_LENGTH_MAX];   /* MD[i] */
+    unsigned int msgLen = MDLen*3;
+    unsigned char msg[HASH_LENGTH_MAX*3];
+    char buf[HASH_LENGTH_MAX + 6];  /* MAX buf MD = MD[HASH_LENGTH_MAX] */
+
+
+    for (int j=0; j<100; j++) {
+        /* MD_0 = MD_1 = MD_2 = seed */
+        memcpy(MD_i3, seed, MDLen);
+        memcpy(MD_i2, seed, MDLen);
+        memcpy(MD_i1, seed, MDLen);
+
+        for (int i=3; i < 1003; i++) {
+            /* Mi = MD[i-3] || MD [i-2] || MD [i-1] */
+            memcpy(msg, MD_i3, MDLen);
+            memcpy(&msg[MDLen], MD_i2, MDLen);
+            memcpy(&msg[MDLen*2], MD_i1,MDLen); 
+
+            /* MDi = SHA(Msg) */
+            if (sha_calcMD(MD_i, MDLen,   
+                           msg, msgLen) != SECSuccess) {
+                return SECFailure;
+            }
+
+            /* save MD[i-3] MD[i-2]  MD[i-1] */
+            memcpy(MD_i3, MD_i2, MDLen);
+            memcpy(MD_i2, MD_i1, MDLen);
+            memcpy(MD_i1, MD_i, MDLen);
+
+        }
+
+        /* seed = MD_i */
+        memcpy(seed, MD_i, MDLen);
+
+        sprintf(buf, "COUNT = %d\n", j);
+        fputs(buf, resp);
+
+        /* output MD_i */
+        fputs("MD = ", resp);
+        to_hex_str(buf, MD_i, MDLen);
+        fputs(buf, resp);
+        fputc('\n', resp);
+    }
+
+    return SECSuccess;
+}
+
+/*
+ * Perform the SHA Tests.
+ *
+ * reqfn is the pathname of the input REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void sha_test(char *reqfn) 
+{
+    int i, j;
+    unsigned int MDlen;   /* the length of the Message Digest in Bytes  */
+    unsigned int msgLen;  /* the length of the input Message in Bytes */
+    char *msg = NULL;      /* holds the message to digest.*/
+    size_t bufSize = 25608; /*MAX buffer size */
+    char *buf = NULL;      /* holds one line from the input REQUEST file.*/
+    unsigned char seed[HASH_LENGTH_MAX];   /* max size of seed 64 bytes */
+    unsigned char MD[HASH_LENGTH_MAX];     /* message digest */
+
+    FILE *req;       /* input stream from the REQUEST file */
+    FILE *resp;      /* output stream to the RESPONSE file */
+
+    buf = PORT_ZAlloc(bufSize);
+    if (buf == NULL) {
+        goto loser;
+    }      
+
+    /* zeroize the variables for the test with this data set */
+    memset(seed, 0, sizeof seed);
+
+    req = fopen(reqfn, "r");
+    resp = stdout;
+    while (fgets(buf, bufSize, req) != NULL) {
+
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, resp);
+            continue;
+        }
+        /* [L = Length of the Message Digest and sha_type */
+        if (buf[0] == '[') {
+            if (strncmp(&buf[1], "L ", 1) == 0) {
+                i = 2;
+                while (isspace(buf[i]) || buf[i] == '=') {
+                    i++;
+                }
+                MDlen = atoi(&buf[i]);
+                fputs(buf, resp);
+                continue;
+            }
+        }
+        /* Len = Length of the Input Message Length  ... */
+        if (strncmp(buf, "Len", 3) == 0) {
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            if (msg) {
+                PORT_ZFree(msg,msgLen);
+                msg = NULL;
+            }
+            msgLen = atoi(&buf[i]); /* in bits */
+            msgLen = msgLen/8; /* convert to bytes */
+            fputs(buf, resp);
+            msg = PORT_Realloc(msg, msgLen);
+            memset(msg, 0, msgLen);
+            if (msg == NULL) {
+                goto loser;
+            } 
+            continue;
+        }
+        /* MSG = ... */
+        if (strncmp(buf, "Msg", 3) == 0) {
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j< msgLen; i+=2,j++) {
+                hex_from_2char(&buf[i], &msg[j]);
+            }
+           fputs(buf, resp);
+           /* calculate the Message Digest */ 
+           memset(MD, 0, sizeof MD);
+           if (sha_calcMD(MD, MDlen,   
+                          msg, msgLen) != SECSuccess) {
+               goto loser;
+           }
+
+           fputs("MD = ", resp);
+           to_hex_str(buf, MD, MDlen);
+           fputs(buf, resp);
+           fputc('\n', resp);
+
+           continue;
+        }
+        /* Seed = ... */
+        if (strncmp(buf, "Seed", 4) == 0) {
+            i = 4;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<sizeof seed; i+=2,j++) {
+                hex_from_2char(&buf[i], &seed[j]);
+            }                                     
+
+            fputs(buf, resp);
+            fputc('\n', resp);
+
+            /* do the Monte Carlo test */
+            if (sha_mct_test(MDlen, seed, resp) != SECSuccess) {
+                goto loser; 
+            }
+
+            continue;
+        }
+    }
+loser:
+    fclose(req);
+    if (buf) {
+        PORT_ZFree(buf, bufSize);
+    }
+    if (msg) {
+        PORT_ZFree(msg, msgLen);
+    }
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2) exit (-1);
@@ -2368,10 +2431,10 @@ int main(int argc, char **argv)
 	    }
 	}
     /*************/
-    /*   SHS     */
+    /*   SHA     */
     /*************/
-    } else if (strcmp(argv[1], "shs") == 0) {
-	shs_test(argv[2]);
+    } else if (strcmp(argv[1], "sha") == 0) {
+        sha_test(argv[2]);
     /*************/
     /*   DSS     */
     /*************/
