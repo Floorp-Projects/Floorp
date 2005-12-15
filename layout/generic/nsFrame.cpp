@@ -1466,7 +1466,8 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   nsFrame* frame = NS_STATIC_CAST(nsFrame*, result);
 
   return frame->PeekBackwardAndForward(beginAmount, endAmount,
-                                       startPos, aPresContext, PR_TRUE);
+                                       startPos, aPresContext,
+                                       beginAmount != eSelectWord);
 }
 
 NS_IMETHODIMP
