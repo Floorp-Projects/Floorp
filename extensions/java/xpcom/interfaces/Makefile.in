@@ -80,7 +80,7 @@ RUN = $(DIST)/bin/run-mozilla.sh
 OUTPUT_DIR = $(CURDIR)/_javagen/org/mozilla/xpcom
 endif
 
-_javagen/org/mozilla/xpcom/.iface_done: $(JAVA_SRCS)
+_javagen/org/mozilla/xpcom/.iface_done: $(JAVA_SRCS) $(DIST)/bin/GenerateJavaInterfaces$(BIN_SUFFIX)
 	@if test ! -d _javagen/org/mozilla/xpcom; then \
 		touch .done; \
 		$(INSTALL) -m 644 .done _javagen/org/mozilla/xpcom; \
