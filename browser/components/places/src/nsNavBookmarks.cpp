@@ -532,8 +532,8 @@ nsNavBookmarks::InsertItem(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // since we just removed the item, everything after it shifts back by one
-    if (aIndex > previousIndex)
-      aIndex --;
+    if (index > previousIndex)
+      index --;
   }
 
   rv = AdjustIndices(aFolder, index, PR_INT32_MAX, 1);
