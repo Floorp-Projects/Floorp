@@ -4946,6 +4946,10 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
     childReflowState.reason = reason;
     childReflowState.path   = path;
 
+    // a line layout from outside the box shouldn't be used for inline
+    // frames inside the box
+    childReflowState.mLineLayout = nsnull;
+
     // do the nasty.
     rv = BoxReflow(aState,
                    presContext, 
@@ -5378,6 +5382,10 @@ nsFrame::BoxReflow(nsBoxLayoutState& aState,
                                   eReflowReason_Resize);
     reflowState.reason = reason;
     reflowState.path   = path;
+
+    // a line layout from outside the box shouldn't be used for inline
+    // frames inside the box
+    reflowState.mLineLayout = nsnull;
 
     // XXX this needs to subtract out the border and padding of mFrame since it is content size
     reflowState.mComputedWidth = size.width;
