@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,30 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.xpcom.internal;
-
-import java.io.*;
-import org.mozilla.xpcom.*;
+#include "nsJavaInterfaces.h"
 
 
-public class GREImpl implements IGRE {
+void XXXNeverCalled_javaxpcom()
+{
+  GRE_NATIVE(initEmbedding) (nsnull, nsnull, nsnull, nsnull, nsnull);
 
-  public void initEmbedding(File aLibXULDirectory, File aAppDirectory,
-                            IAppFileLocProvider aAppDirProvider) {
-    // load JNI library
-    String path = "";
-    if (aLibXULDirectory != null) {
-      path = aLibXULDirectory + File.separator;
-    }
-    System.load(path + System.mapLibraryName("javaxpcomglue"));
+  GRE_NATIVE(termEmbedding) (nsnull, nsnull);
 
-    initEmbeddingNative(aLibXULDirectory, aAppDirectory, aAppDirProvider);
-  }
+  XPCOM_NATIVE(initXPCOM) (nsnull, nsnull, nsnull, nsnull);
 
-  public native void initEmbeddingNative(File aLibXULDirectory,
-          File aAppDirectory, IAppFileLocProvider aAppDirProvider);
+  XPCOM_NATIVE(shutdownXPCOM) (nsnull, nsnull, nsnull);
 
-  public native void termEmbedding();
+  XPCOM_NATIVE(newLocalFile) (nsnull, nsnull, nsnull, nsnull);
 
+  XPCOM_NATIVE(getComponentManager) (nsnull, nsnull);
+
+  XPCOM_NATIVE(getComponentRegistrar) (nsnull, nsnull);
+
+  XPCOM_NATIVE(getServiceManager) (nsnull, nsnull);
+
+  JAVAPROXY_NATIVE(callXPCOMMethod) (nsnull, nsnull, nsnull, nsnull, nsnull);
+
+  JAVAPROXY_NATIVE(finalizeProxy) (nsnull, nsnull, nsnull);
 }
 

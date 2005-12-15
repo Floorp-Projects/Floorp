@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,19 +11,19 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla libxul
+# The Original Code is Java XPCOM Bindings.
 #
 # The Initial Developer of the Original Code is
-# Benjamin Smedberg <benjamin@smedbergs.us>
-#
+# IBM Corporation.
 # Portions created by the Initial Developer are Copyright (C) 2005
-# the Initial Developer. All Rights Reserved.
+# IBM Corporation. All Rights Reserved.
 #
 # Contributor(s):
+#   Javier Pedemonte (jhpedemonte@gmail.com)
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either of the GNU General Public License Version 2 or later (the "GPL"),
-# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,59 +35,38 @@
 #
 # ***** END LICENSE BLOCK *****
 
-EXTRA_DSO_LDOPTS += \
-	$(MOZ_FIX_LINK_PATHS) \
-	$(LIBS_DIR) \
-	$(JPEG_LIBS) \
-	$(PNG_LIBS) \
-	$(MOZ_JS_LIBS) \
-	$(NSS_LIBS) \
-	$(NULL)
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-ifdef MOZ_NATIVE_ZLIB
-EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= javaxpcomglue
+LIBRARY_NAME	= javaxpcomglue
+
+# On Mac OS X, JNI libraries must end with a '.jnilib' extension
+ifeq ($(OS_ARCH),Darwin)
+DLL_SUFFIX = .jnilib
+endif
+
+CPPSRCS	= nsJavaXPCOMGlue.cpp
+
+DEFINES += -DXPCOM_GLUE
+
+LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)
+
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/win32
 else
-EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
+LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
 endif
 
-LOCAL_INCLUDES += -I$(topsrcdir)/config
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
 
-OS_LIBS += $(LIBICONV)
-
-DEFINES += \
-	-D_IMPL_NS_COM \
-	-D_IMPL_NS_STRINGAPI \
-	-DEXPORT_XPT_API \
-	-DEXPORT_XPTC_API \
-	-D_IMPL_NS_COM_OBSOLETE \
-	-D_IMPL_NS_GFX \
-	-D_IMPL_NS_WIDGET \
+EXTRA_DSO_LDOPTS = \
+	$(XPCOM_STANDALONE_GLUE_LDOPTS) \
 	$(NULL)
 
-ifdef MOZ_SVG_RENDERER_GDIPLUS
-OS_LIBS += Gdiplus.lib
-endif
-
-ifdef MOZ_SVG_RENDERER_LIBART
-EXTRA_DSO_LDOPTS += $(MOZ_LIBART_LIBS)
-endif
-
-ifneq (,$(MOZ_ENABLE_CANVAS)$(MOZ_SVG_RENDERER_CAIRO))
-EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
-endif
-
-export:: dlldeps.cpp dlldeps-obs.cpp
-
-dlldeps.cpp: $(topsrcdir)/xpcom/build/dlldeps.cpp
-	$(INSTALL) $^ .
-
-dlldeps-obs.cpp: $(topsrcdir)/xpcom/obsolete/dlldeps-obs.cpp
-	$(INSTALL) $^ .
-
-ifdef MOZ_JAVAXPCOM
-export:: dlldeps-javaxpcom.cpp
-
-dlldeps-javaxpcom.cpp: $(topsrcdir)/extensions/java/xpcom/src/dlldeps-javaxpcom.cpp
-	$(INSTALL) $^ .
-endif
+include $(topsrcdir)/config/rules.mk
 

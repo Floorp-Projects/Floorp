@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,30 +35,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.xpcom.internal;
+#ifndef _nsJavaInterfaces_h_
+#define _nsJavaInterfaces_h_
 
-import java.io.*;
-import org.mozilla.xpcom.*;
+#include "jni.h"
+#include "nscore.h"
+
+#define GRE_NATIVE(func) Java_org_mozilla_xpcom_internal_GREImpl_##func
+#define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_internal_XPCOMImpl_##func
+#define JAVAPROXY_NATIVE(func) \
+          Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_##func
 
 
-public class GREImpl implements IGRE {
+extern "C" NS_EXPORT void
+GRE_NATIVE(initEmbedding) (JNIEnv* env, jobject, jobject aLibXULDirectory,
+                           jobject aAppDirectory, jobject aAppDirProvider);
 
-  public void initEmbedding(File aLibXULDirectory, File aAppDirectory,
-                            IAppFileLocProvider aAppDirProvider) {
-    // load JNI library
-    String path = "";
-    if (aLibXULDirectory != null) {
-      path = aLibXULDirectory + File.separator;
-    }
-    System.load(path + System.mapLibraryName("javaxpcomglue"));
+extern "C" NS_EXPORT void
+GRE_NATIVE(termEmbedding) (JNIEnv *env, jobject);
 
-    initEmbeddingNative(aLibXULDirectory, aAppDirectory, aAppDirProvider);
-  }
+extern "C" NS_EXPORT jobject
+XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jobject, jobject aMozBinDirectory,
+                         jobject aAppFileLocProvider);
 
-  public native void initEmbeddingNative(File aLibXULDirectory,
-          File aAppDirectory, IAppFileLocProvider aAppDirProvider);
+extern "C" NS_EXPORT void
+XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jobject, jobject aServMgr);
 
-  public native void termEmbedding();
+extern "C" NS_EXPORT jobject
+XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jobject, jstring aPath,
+                            jboolean aFollowLinks);
 
-}
+extern "C" NS_EXPORT jobject
+XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jobject);
 
+extern "C" NS_EXPORT jobject
+XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jobject);
+
+extern "C" NS_EXPORT jobject
+XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jobject);
+
+extern "C" NS_EXPORT jobject
+JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
+                                   jstring aMethodName, jobjectArray aParams);
+
+extern "C" NS_EXPORT void
+JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy);
+
+#endif // _nsJavaInterfaces_h_

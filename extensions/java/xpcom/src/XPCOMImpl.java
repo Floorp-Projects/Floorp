@@ -43,18 +43,30 @@ import org.mozilla.xpcom.*;
 
 public class XPCOMImpl implements IXPCOM {
 
+  public nsIServiceManager initXPCOM(File aMozBinDirectory,
+          IAppFileLocProvider aAppFileLocProvider) {
+    // load JNI library
+    String path = "";
+    if (aMozBinDirectory != null) {
+      path = aMozBinDirectory + File.separator;
+    }
+    System.load(path + System.mapLibraryName("javaxpcomglue"));
+
+    return initXPCOMNative(aMozBinDirectory, aAppFileLocProvider);
+  }
+
+  public native nsIServiceManager initXPCOMNative(File aMozBinDirectory,
+          IAppFileLocProvider aAppFileLocProvider);
+
+  public native void shutdownXPCOM(nsIServiceManager aServMgr);
+
   public native nsIComponentManager getComponentManager();
 
   public native nsIComponentRegistrar getComponentRegistrar();
 
   public native nsIServiceManager getServiceManager();
 
-  public native nsIServiceManager initXPCOM(File aMozBinDirectory,
-          IAppFileLocProvider aAppFileLocProvider);
-
   public native nsILocalFile newLocalFile(String aPath, boolean aFollowLinks);
-
-  public native void shutdownXPCOM(nsIServiceManager aServMgr);
 
 }
 

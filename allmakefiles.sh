@@ -1356,6 +1356,17 @@ if [ "$MOZ_XMLEXTRAS" ]; then
 "
 fi
 
+if [ "$MOZ_JAVAXPCOM" ]; then
+    MAKEFILES_javaxpcom="
+        extensions/java/Makefile
+        extensions/java/xpcom/Makefile
+        extensions/java/xpcom/interfaces/Makefile
+        extensions/java/xpcom/src/Makefile
+        extensions/java/xpcom/glue/Makefile
+        extensions/java/xpcom/tools/genifaces/Makefile
+"
+fi
+
 # directory/xpcom
 if [ "$MOZ_LDAP_XPCOM" ]; then
     MAKEFILES_ldap="
@@ -1420,13 +1431,6 @@ for extension in $MOZ_EXTENSIONS; do
         inspector ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_inspector"
             ;;
-        java ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/java/Makefile
-            extensions/java/xpcom/Makefile
-            extensions/java/xpcom/build/Makefile
-            extensions/java/xpcom/tests/Makefile
-            extensions/java/xpcom/tools/genifaces/Makefile
-            " ;;
         spatialnavigation ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_spatialnavigation"
             ;;
@@ -1576,7 +1580,7 @@ $MAKEFILES_gfx
 $MAKEFILES_accessible
 $MAKEFILES_htmlparser
 $MAKEFILES_intl
-$MAKEFILES_java_supplement
+$MAKEFILES_javaxpcom
 $MAKEFILES_ldap
 $MAKEFILES_leaky
 $MAKEFILES_jpeg
