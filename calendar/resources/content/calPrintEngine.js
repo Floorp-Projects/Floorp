@@ -174,7 +174,7 @@ function OnLoadPrintEngine(){
 
   var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                       .getService(Components.interfaces.nsIStringBundleService);
-  
+
   var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
   var windowTitle = props.formatStringFromName("PrintPreviewWindowTitle", [args.title], 1);
   document.title = windowTitle;
