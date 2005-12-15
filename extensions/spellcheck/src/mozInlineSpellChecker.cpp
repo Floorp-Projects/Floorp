@@ -802,6 +802,8 @@ nsresult mozInlineSpellChecker::GenerateRangeForSurroundingWord(nsIDOMNode * aNo
   textLength = text.Length();
   if (aOffset == -1 || aOffset >= textLength) 
     aOffset = textLength - 1;
+  if (aOffset < 0)
+    aOffset = 0;
 
   PRInt32 currentOffset = aOffset;
   if (currentOffset && textChars[currentOffset] == ' ')
