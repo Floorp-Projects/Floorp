@@ -53,10 +53,10 @@ const PRInt32 nsNavBookmarks::kGetFolderInfoIndex_FolderID = 0;
 const PRInt32 nsNavBookmarks::kGetFolderInfoIndex_Title = 1;
 
 // These columns sit to the right of the kGetInfoIndex_* columns.
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 7;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_ItemChild = 8;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderChild = 9;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderTitle = 10;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 8;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_ItemChild = 9;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderChild = 10;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderTitle = 11;
 
 nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 
@@ -166,7 +166,7 @@ nsNavBookmarks::Init()
   // item_child, and folder_child from moz_bookmarks.  This selects only
   // _item_ children which are in moz_history.
   NS_NAMED_LITERAL_CSTRING(selectItemChildren,
-    "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+    "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
       "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
       "f.url, a.position, a.item_child, a.folder_child, null "
     "FROM moz_bookmarks a "
@@ -180,7 +180,7 @@ nsNavBookmarks::Init()
   // moz_bookmarks_folders.  This selects only _folder_ children which are
   // in moz_bookmarks_folders.
   NS_NAMED_LITERAL_CSTRING(selectFolderChildren,
-    "SELECT null, null, null, null, null, null, null, a.position, a.item_child, a.folder_child, c.name "
+    "SELECT null, null, null, null, null, null, null, null, a.position, a.item_child, a.folder_child, c.name "
     "FROM moz_bookmarks a "
     "JOIN moz_bookmarks_folders c ON c.id = a.folder_child "
     "WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3");
@@ -1119,7 +1119,10 @@ nsNavBookmarks::QueryFolderChildren(nsINavHistoryQuery *aQuery,
         rv = ResultNodeForFolder(folder, aQuery,
                                  aOptions, getter_AddRefs(node));
       } else {
-        rv = History()->RowToResult(mDBGetChildren, PR_FALSE,
+        // need the concrete options for RowToResult
+        nsCOMPtr<nsNavHistoryQueryOptions> options =
+          do_QueryInterface(aOptions, &rv);
+        rv = History()->RowToResult(mDBGetChildren, options,
                                     getter_AddRefs(node));
         PRBool isQuery = IsQueryURI(node->URL());
         if ((isQuery && !includeQueries) || (!isQuery && !includeItems)) {
