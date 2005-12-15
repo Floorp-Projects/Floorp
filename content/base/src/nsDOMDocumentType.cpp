@@ -120,6 +120,7 @@ nsDOMDocumentType::~nsDOMDocumentType()
 // QueryInterface implementation for nsDOMDocumentType
 NS_INTERFACE_MAP_BEGIN(nsDOMDocumentType)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentType)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
