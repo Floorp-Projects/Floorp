@@ -462,7 +462,7 @@ $::use_dom = 0;
 # MSIE chokes on |type="application/x-javascript"| so if we detect MSIE, we
 # we should send |type="text/javascript"|.  While we're at it, we should send
 # |language="JavaScript"| for any browser that is "Mozilla/4" or older.
-$::script_type = '"language="JavaScript""';
+$::script_type = 'language="JavaScript"';
 if (defined $ENV{HTTP_USER_AGENT}) {
     my $user_agent = $ENV{HTTP_USER_AGENT};
     if ($user_agent =~ m@^Mozilla/4.@ && $user_agent !~ /MSIE/) {
