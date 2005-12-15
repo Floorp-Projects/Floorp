@@ -73,13 +73,13 @@ var PlacesUIHook = {
     window.addEventListener("dragdrop", onDragEvent, false);
   },
 
-  this._commands = ["Browser:SavePage", "Browser:SaveFrame", "Browser:SendLink", 
-                    "cmd_pageSetup", "cmd_print", "cmd_printPreview", 
-                    "cmd_findAgain", "cmd_switchTextDirection", "Browser:Stop",
-                    "Browser:Reload", "viewTextZoomMenu", "pageStyleMenu", 
-                    "charsetMenu", "View:PageSource", "View:FullScreen", 
-                    "documentDirection-swap", "Browser:AddBookmarkAs", 
-                    "Browser:ShowPlaces", "View:PageInfo", "cmd_toggleTaskbar"],
+  _commands: ["Browser:SavePage", "Browser:SaveFrame", "Browser:SendLink", 
+              "cmd_pageSetup", "cmd_print", "cmd_printPreview", 
+              "cmd_findAgain", "cmd_switchTextDirection", "Browser:Stop",
+              "Browser:Reload", "viewTextZoomMenu", "pageStyleMenu", 
+              "charsetMenu", "View:PageSource", "View:FullScreen", 
+              "documentDirection-swap", "Browser:AddBookmarkAs", 
+              "Browser:ShowPlaces", "View:PageInfo", "cmd_toggleTaskbar"],
   
   /**
    * Disable commands that are not relevant to the Places page, so that all 
@@ -117,7 +117,6 @@ var PlacesUIHook = {
   _showPlacesUI: function PP__showPlacesUI() {
     this._tabbrowser.setAttribute("places", "true");
     var statusbar = this._topElement("status-bar");
-    this._oldStatusBarState = statusbar.hidden;
     statusbar.hidden = true;
     this._disableCommands();
     
@@ -127,7 +126,16 @@ var PlacesUIHook = {
 
   _hidePlacesUI: function PP__hidePlacesUI() {
     this._tabbrowser.removeAttribute("places");
-    statusbar.hidden = this._oldStatusBarState;
+    
+    // Approaches that cache the value of the status bar before the Places page
+    // is loaded and the status bar hidden are unreliable. This is because the
+    // cached state can get confused when tabs are opened and switched to. Thus,
+    // always read the user's actual preferred value (held in the checked state
+    // of the menuitem, not what state the status bar was in "last" - because 
+    // "last" may not be a state we want to restore to. See bug 318820. 
+    var statusbarMenu = this._topWindow.document.getElementById("toggle_taskbar");
+    var statusbar = this._topElement("status-bar");
+    statusbar.hidden = statusbarMenu.getAttribute("checked") != "true";
     this._enableCommands();
 
     var findItem = this._topWindow.document.getElementById("menu_find");

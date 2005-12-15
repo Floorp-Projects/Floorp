@@ -48,9 +48,6 @@ PlacesBrowserShim.init = function PBS_init() {
       Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
       getService(Ci.nsINavBookmarksService);
   
-  var oldMenu = document.getElementById("bookmarks-menu");
-  oldMenu.parentNode.removeChild(oldMenu);
-  
   var newMenuPopup = document.getElementById("bookmarksMenuPopup");
   newMenuPopup.folderId = this._bms.bookmarksRoot;
 };
