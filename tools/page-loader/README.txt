@@ -79,7 +79,9 @@ for (@modules) {
    installed Apache 1.3.20 with mod_perl 1.24 and perl 5.6.0. I then ran the
    CPAN shell (`perl -MCPAN -e shell') and after completing configuration, I
    did 'install Bundle::CPAN', 'install Bundle::LWP' and 'install DBI' to
-   upgrade tose modules and their dependencies.
+   upgrade tose modules and their dependencies. These instructions work on OSX
+   as well, make sure you run the CPAN shell with sudo so you have sufficient
+   privs to install the files.
 
    CGI::Request seems to have disappeared from CPAN, but you can get a copy
    from <http://stein.cshl.org/WWW/software/CGI::modules/> and then install
@@ -139,6 +141,20 @@ Options +ExecCGI
 </Location>
 --8<--------------------------------------------------------------------
 
+    [MacOSX note: The CGI folder lives in /Library/WebServer/CGI-Executables/
+    so the Alias line above should instead read:
+
+      Alias /page-loader/  /Library/WebServer/CGI-Executables/page-loader
+    
+    Case is important (even though the file system is case-insensitive) and
+    if you type it incorrectly you will get "Forbidden" HTTP errors.
+    
+    In addition, perl (and mod_perl) aren't enabled by default. You need to 
+    uncomment two lines in httpd.conf:
+      LoadModule perl_module        libexec/httpd/libperl.so
+      AddModule mod_perl.c
+    (basically just search for "perl" and uncomment the lines you find).]
+  
 5b) If you're using Apache 2.x and mod_perl 1.99/2.x (tested with Red Hat 9),
     place this in your perl.conf or httpd.conf:
 
@@ -163,7 +179,7 @@ Options +ExecCGI
 
 5c) When you're finished, restart Apache.  Now you can run this as
     'http://yourserver.domain.com/page-loader/loader.pl'
-
+    
 6) You need to create a subdirectory call 'db' under the 'page-loader'
    directory. This subdirectory 'db' must be writeable by UID that Apache
    executes as (e.g., 'nobody' or 'apache'). [You may want to figure out some
@@ -185,6 +201,9 @@ Options +ExecCGI
    or URLs that did not get changed to point to the local content. [One way to
    check for this is tweak this simple proxy server to check your links:
    http://www.stonehenge.com/merlyn/WebTechniques/col34.listing.txt)
+   
+   [MacOSX note: The web files live in /Library/WebServer/Documents, so you will
+   need to modify urllist.txt to have the appropriate FILEBASE and HTTPBASE.]
 
 8) The "hook" into the content is a single line in each top-level document like this:
       <!-- MOZ_INSERT_CONTENT_HOOK -->
