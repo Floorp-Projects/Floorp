@@ -593,7 +593,7 @@ interface nsINavHistoryQueryOptions : nsISupports
 };
 
 [scriptable, uuid(C51F54CB-5E89-4B20-A37C-1343888935B7)]
-interface nsINavHistory : nsISupports
+interface nsINavHistoryService : nsISupports
 {
   /**
    * True if there is any history. This can be used in UI to determine whether

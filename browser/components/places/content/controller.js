@@ -228,7 +228,7 @@ var PlacesController = {
   get _hist() {
     if (!this.__hist) {
       this.__hist =
-        Cc["@mozilla.org/browser/nav-history;1"].getService(Ci.nsINavHistory);
+        Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
     }
     return this.__hist;
   },
@@ -772,7 +772,7 @@ var PlacesController = {
       this._hist.transactionManager.doTransaction(txn);
     } else {
       // delete history items: these are unfortunately not undoable.
-      var hist = Cc["@mozilla.org/browser/nav-history;1"].
+      var hist = Cc["@mozilla.org/browser/nav-history-service;1"].
               getService(Ci.nsIBrowserHistory);
       for (var i = 0; i < nodes.length; ++i) {
         var node = nodes[i];

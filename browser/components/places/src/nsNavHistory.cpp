@@ -123,7 +123,7 @@ Extra:
 #define HISTORY_EXPIRE_NOW_TIMEOUT (3 * PR_MSEC_PER_SEC)
 
 NS_IMPL_ISUPPORTS6(nsNavHistory,
-                   nsINavHistory,
+                   nsINavHistoryService,
                    nsIGlobalHistory2,
                    nsIBrowserHistory,
                    nsIObserver,
