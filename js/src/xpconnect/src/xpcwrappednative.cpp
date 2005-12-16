@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -288,7 +289,8 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // we'll provide a default one
     if(isIDispatch && !info)
     {
-        info = dont_AddRef(XPCIDispatchClassInfo::GetSingleton());
+        info = dont_AddRef(NS_STATIC_CAST(nsIClassInfo*,
+                                          XPCIDispatchClassInfo::GetSingleton()));
     }
 #endif
 
