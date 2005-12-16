@@ -401,6 +401,7 @@ nsLivemarkService::OnContainerMoved(PRInt64 aContainer,
                                                0,
                                                nsIAnnotationService::EXPIRE_NEVER);
   NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
 }
 
 
