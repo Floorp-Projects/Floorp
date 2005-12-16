@@ -43,6 +43,7 @@
 #include "nsVoidArray.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
+#include "nsIModule.h"
 #include "prlink.h"
 
 class nsNativeModuleLoader : public nsIModuleLoader
