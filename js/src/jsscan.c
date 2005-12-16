@@ -1249,7 +1249,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
                  * so escape " if it is expressed directly in a single-quoted
                  * attribute value.
                  */
-                if (c == '"') {
+                if (c == '"' && !(ts->flags & TSF_XMLONLYMODE)) {
                     JS_ASSERT(qc == '\'');
                     js_AppendCString(&ts->tokenbuf, js_quot_entity_str);
                     continue;
