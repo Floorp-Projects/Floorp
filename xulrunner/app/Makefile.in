@@ -63,6 +63,10 @@ PROGRAM = xulrunner-bin$(BIN_SUFFIX)
 endif
 DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
 
+ifdef MOZ_JAVAXPCOM
+DEFINES += -DMOZ_JAVAXPCOM
+endif
+
 REQUIRES = \
         xpcom \
         string \

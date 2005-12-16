@@ -619,8 +619,9 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
       const GREProperty *propsEnd = properties + propertiesLength;
       for (; ok && props < propsEnd; ++props) {
         pathlen = sizeof(pathbuf);
-        if (!::RegQueryValueEx(subKey, props->property, NULL, &pathtype,
-                               (BYTE*) pathbuf, &pathlen) ||
+
+        if (::RegQueryValueEx(subKey, props->property, NULL, &pathtype,
+                              (BYTE*) pathbuf, &pathlen) != ERROR_SUCCESS ||
             strcmp(pathbuf, props->value))
           ok = PR_FALSE;
       }

@@ -39,6 +39,7 @@
 #include "nsINIParser.h"
 #include "prtypes.h"
 #include "nsXPCOMPrivate.h" // for XP MAXPATHLEN
+#include "nsMemory.h" // for NS_ARRAY_LENGTH
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -153,8 +154,13 @@ main(int argc, char **argv)
     if (NS_SUCCEEDED(rv))
       range.upperInclusive = PR_TRUE;
 
-    rv = GRE_GetGREPathWithProperties(&range, 1, nsnull, 0,
-                                    greDir, sizeof(greDir));
+    static const GREProperty kProperties[] = {
+      { "xulrunner", "true" }
+    };
+
+    rv = GRE_GetGREPathWithProperties(&range, 1,
+                                      kProperties, NS_ARRAY_LENGTH(kProperties),
+                                      greDir, sizeof(greDir));
     if (NS_FAILED(rv)) {
       // XXXbsmedberg: Do something much smarter here: notify the
       // user/offer to download/?
