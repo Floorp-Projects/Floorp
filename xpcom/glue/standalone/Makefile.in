@@ -61,7 +61,7 @@ endif
 ifeq (WINNT,$(OS_ARCH))
 LINKSRC = nsGlueLinkingWin.cpp
 endif
-ifneq (,$(filter AIX DragonFly FreeBSD Linux NetBSD OpenBSD,$(OS_ARCH)))
+ifneq (,$(filter AIX DragonFly FreeBSD Linux NetBSD OpenBSD SunOS,$(OS_ARCH)))
 LINKSRC = nsGlueLinkingDlopen.cpp
 endif
 ifeq (OS2,$(OS_ARCH))
