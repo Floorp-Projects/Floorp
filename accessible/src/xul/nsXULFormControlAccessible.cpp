@@ -144,12 +144,12 @@ NS_IMETHODIMP nsXULButtonAccessible::GetState(PRUint32 *aState)
     element->HasAttribute(NS_LITERAL_STRING("default"), &isDefault) ;
     if (isDefault)
       *aState |= STATE_DEFAULT;
-  }
 
-  nsAutoString type;
-  element->GetAttribute(NS_LITERAL_STRING("type"), type);
-  if (type.EqualsLiteral("menu") || type.EqualsLiteral("menu-button")) {
-    *aState |= STATE_HASPOPUP;
+    nsAutoString type;
+    element->GetAttribute(NS_LITERAL_STRING("type"), type);
+    if (type.EqualsLiteral("menu") || type.EqualsLiteral("menu-button")) {
+      *aState |= STATE_HASPOPUP;
+    }
   }
 
   return NS_OK;
