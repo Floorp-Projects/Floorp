@@ -11,8 +11,8 @@
     <implementation>
       <constructor><![CDATA[ 
         this._places = 
-          Cc["@mozilla.org/browser/nav-history;1"].
-          getService(Ci.nsINavHistory);
+          Cc["@mozilla.org/browser/nav-history-service;1"].
+          getService(Ci.nsINavHistoryService);
         this._bms = 
           Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
           getService(Ci.nsINavBookmarksService);

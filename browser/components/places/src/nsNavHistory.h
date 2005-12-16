@@ -48,7 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsIAtom.h"
-#include "nsINavHistory.h"
+#include "nsINavHistoryService.h"
 #include "nsIAutoCompleteSearch.h"
 #include "nsIAutoCompleteResult.h"
 #include "nsIAutoCompleteResultTypes.h"
@@ -440,7 +440,7 @@ class AutoCompleteIntermediateResultSet;
 // nsNavHistory
 
 class nsNavHistory : public nsSupportsWeakReference,
-                     public nsINavHistory,
+                     public nsINavHistoryService,
                      public nsIObserver,
                      public nsIBrowserHistory,
                      public nsIAutoCompleteSearch
@@ -451,7 +451,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_DECL_NSINAVHISTORY
+  NS_DECL_NSINAVHISTORYSERVICE
   NS_DECL_NSIGLOBALHISTORY2
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
@@ -468,7 +468,7 @@ public:
   {
     if (! gHistoryService) {
       nsresult rv;
-      nsCOMPtr<nsINavHistory> serv(do_GetService("@mozilla.org/browser/nav-history;1", &rv));
+      nsCOMPtr<nsINavHistoryService> serv(do_GetService("@mozilla.org/browser/nav-history-service;1", &rv));
       NS_ENSURE_SUCCESS(rv, nsnull);
 
       // our constructor should have set the static variable. If it didn't,

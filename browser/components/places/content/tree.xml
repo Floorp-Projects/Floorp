@@ -10,8 +10,8 @@
     <implementation implements="nsINavHistoryResultViewObserver">
       <constructor><![CDATA[
         this._places = 
-          Cc["@mozilla.org/browser/nav-history;1"].
-          getService(Ci.nsINavHistory);
+          Cc["@mozilla.org/browser/nav-history-service;1"].
+          getService(Ci.nsINavHistoryService);
         
         // Let's all do the happy QI/IRQ dance. 
         // Go from window->docshell->window.
@@ -131,7 +131,7 @@
           var queries = result.getQueries({ });
           var options = result.queryOptions;
 
-          const NH = Ci.nsINavHistory;
+          const NH = Ci.nsINavHistoryService;
           return this._places.queriesToQueryString(queries, queries.length,
                                                   options);
         ]]></getter>

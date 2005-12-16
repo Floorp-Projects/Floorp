@@ -134,17 +134,17 @@ static const nsModuleComponentInfo components[] =
 
 #if defined(MOZ_PLACES)
   { "Browser Navigation History",
-    NS_NAVHISTORY_CID,
-    NS_NAVHISTORY_CONTRACTID,
+    NS_NAVHISTORYSERVICE_CID,
+    NS_NAVHISTORYSERVICE_CONTRACTID,
     nsNavHistoryConstructor },
 
   { "Browser Navigation History",
-    NS_NAVHISTORY_CID,
+    NS_NAVHISTORYSERVICE_CID,
     "@mozilla.org/browser/global-history;2",
     nsNavHistoryConstructor },
 
   { "Browser Navigation History",
-    NS_NAVHISTORY_CID,
+    NS_NAVHISTORYSERVICE_CID,
     "@mozilla.org/autocomplete/search;1?name=history",
     nsNavHistoryConstructor },
 
