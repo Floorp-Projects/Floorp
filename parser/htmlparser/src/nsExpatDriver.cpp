@@ -876,7 +876,7 @@ nsExpatDriver::ParseBuffer(const char* aBuffer,
           NS_ASSERTION(parserBytesConsumed == -1,
                        "Unexpected negative value?");
           // Consumed everything.
-          startOffset = aLength;
+          startOffset = aLength / sizeof(PRUnichar);
         }
         else {
           // Consumed something, but not all
