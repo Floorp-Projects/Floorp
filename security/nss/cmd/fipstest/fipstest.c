@@ -2384,6 +2384,194 @@ loser:
     }
 }
 
+/****************************************************/
+/* HMAC SHA-X calc                                  */
+/* hmac_computed - the computed HMAC                */
+/* hmac_length - the length of the computed HMAC    */
+/* secret_key - secret key to HMAC                  */
+/* secret_key_length - length of secret key,        */
+/* message - message to HMAC                        */
+/* message_length - length ofthe message            */
+/****************************************************/
+static SECStatus
+hmac_calc(unsigned char *hmac_computed,
+          const unsigned int hmac_length,
+          const char *secret_key,
+          const unsigned int secret_key_length,
+          const char *message,
+          const unsigned int message_length,
+          const HASH_HashType hashAlg )
+{
+    SECStatus hmac_status = SECFailure;
+    HMACContext *cx = NULL;
+    SECHashObject *hashObj = NULL;
+    unsigned int bytes_hashed = 0;
+
+    hashObj = (SECHashObject *) HASH_GetRawHashObject(hashAlg);
+ 
+    if (!hashObj) 
+        return( SECFailure );
+
+    cx = HMAC_Create(hashObj, secret_key, 
+                     secret_key_length, 
+                     PR_TRUE);  /* PR_TRUE for in FIPS mode */
+
+    if (cx == NULL) 
+        return( SECFailure );
+
+    HMAC_Begin(cx);
+    HMAC_Update(cx, message, message_length);
+    hmac_status = HMAC_Finish(cx, hmac_computed, &bytes_hashed, 
+                              hmac_length);
+
+    HMAC_Destroy(cx, PR_TRUE);
+
+    return( hmac_status );
+}
+
+/*
+ * Perform the HMAC Tests.
+ *
+ * reqfn is the pathname of the input REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void hmac_test(char *reqfn) 
+{
+    int i, j;
+    size_t bufSize =      288;    /* MAX buffer size */
+    char *buf = NULL;  /* holds one line from the input REQUEST file.*/
+    unsigned int keyLen;          /* Key Length */  
+    char key[140];                /* key MAX size = 140 */
+    unsigned int msgLen = 128;    /* the length of the input  */
+                                  /*  Message is always 128 Bytes */
+    char *msg = NULL;             /* holds the message to digest.*/
+    unsigned int HMACLen;         /* the length of the HMAC Bytes  */
+    unsigned char HMAC[HASH_LENGTH_MAX];  /* computed HMAC */
+    HASH_HashType hash_alg;       /* HMAC type */
+
+    FILE *req;       /* input stream from the REQUEST file */
+    FILE *resp;      /* output stream to the RESPONSE file */
+
+    buf = PORT_ZAlloc(bufSize);
+    if (buf == NULL) {
+        goto loser;
+    }      
+    msg = PORT_ZAlloc(msgLen);
+    memset(msg, 0, msgLen);
+    if (msg == NULL) {
+        goto loser;
+    } 
+
+    req = fopen(reqfn, "r");
+    resp = stdout;
+    while (fgets(buf, bufSize, req) != NULL) {
+
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, resp);
+            continue;
+        }
+        /* [L = Length of the MAC and HASH_type */
+        if (buf[0] == '[') {
+            if (strncmp(&buf[1], "L ", 1) == 0) {
+                i = 2;
+                while (isspace(buf[i]) || buf[i] == '=') {
+                    i++;
+                }
+                /* HMACLen will get reused for Tlen */
+                HMACLen = atoi(&buf[i]);
+                /* set the HASH algorithm for HMAC */
+                if (HMACLen == SHA1_LENGTH) {
+                    hash_alg = HASH_AlgSHA1;
+                } else if (HMACLen == SHA256_LENGTH) {
+                    hash_alg = HASH_AlgSHA256;
+                } else if (HMACLen == SHA384_LENGTH) {
+                    hash_alg = HASH_AlgSHA384;
+                } else if (HMACLen == SHA512_LENGTH) {
+                    hash_alg = HASH_AlgSHA512;
+                } else {
+                    goto loser;
+                }
+                fputs(buf, resp);
+                continue;
+            }
+        }
+        /* Count = test iteration number*/
+        if (strncmp(buf, "Count ", 5) == 0) {    
+            /* count can just be put into resp file */
+            fputs(buf, resp);
+            /* zeroize the variables for the test with this data set */
+            keyLen = 0; 
+            HMACLen = 0;
+            memset(key, 0, sizeof key);     
+            memset(msg, 0, sizeof msg);  
+            memset(HMAC, 0, sizeof HMAC);
+            continue;
+        }
+        /* KLen = Length of the Input Secret Key ... */
+        if (strncmp(buf, "Klen", 4) == 0) {
+            i = 4;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            keyLen = atoi(&buf[i]); /* in bytes */
+            fputs(buf, resp);
+            continue;
+        }
+        /* key = the secret key for the key to MAC */
+        if (strncmp(buf, "Key", 3) == 0) {
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j< keyLen; i+=2,j++) {
+                hex_from_2char(&buf[i], &key[j]);
+            }
+           fputs(buf, resp);
+        }
+        /* TLen = Length of the calculated HMAC */
+        if (strncmp(buf, "Tlen", 4) == 0) {
+            i = 4;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            HMACLen = atoi(&buf[i]); /* in bytes */
+            fputs(buf, resp);
+            continue;
+        }
+        /* MSG = to HMAC always 128 bytes for these tests */
+        if (strncmp(buf, "Msg", 3) == 0) {
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j< msgLen; i+=2,j++) {
+                hex_from_2char(&buf[i], &msg[j]);
+            }
+           fputs(buf, resp);
+           /* calculate the HMAC and output */ 
+           if (hmac_calc(HMAC, HMACLen, key, keyLen,   
+                         msg, msgLen, hash_alg) != SECSuccess) {
+               goto loser;
+           }
+           fputs("MAC = ", resp);
+           to_hex_str(buf, HMAC, HMACLen);
+           fputs(buf, resp);
+           fputc('\n', resp);
+           continue;
+        }
+    }
+loser:
+    fclose(req);
+    if (buf) {
+        PORT_ZFree(buf, bufSize);
+    }
+    if (msg) {
+        PORT_ZFree(msg, msgLen);
+    }
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2) exit (-1);
@@ -2435,6 +2623,11 @@ int main(int argc, char **argv)
     /*************/
     } else if (strcmp(argv[1], "sha") == 0) {
         sha_test(argv[2]);
+    /*************/
+    /*   HMAC    */
+    /*************/
+    } else if (strcmp(argv[1], "hmac") == 0) {
+        hmac_test(argv[2]);
     /*************/
     /*   DSS     */
     /*************/
