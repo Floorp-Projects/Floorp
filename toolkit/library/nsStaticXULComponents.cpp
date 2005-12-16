@@ -158,6 +158,7 @@
     MODULE(nsUConvModule)                    \
     MODULE(nsI18nModule)                     \
     INTL_COMPAT_MODULES                      \
+    MODULE(nsUniversalCharDetModule)         \
     MODULE(necko)                            \
     IPC_MODULE                               \
     MODULE(nsJarModule)                      \

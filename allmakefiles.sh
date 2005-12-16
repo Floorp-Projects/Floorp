@@ -254,6 +254,16 @@ intl/ctl/src/hindiShaper/Makefile
 "
 fi
 
+if [ "$MOZ_UNIVERSALCHARDET" ] ; then
+MAKEFILES_intl="$MAKEFILES_intl
+extensions/universalchardet/Makefile
+extensions/universalchardet/src/Makefile
+extensions/universalchardet/src/base/Makefile
+extensions/universalchardet/src/xpcom/Makefile
+extensions/universalchardet/tests/Makefile
+"
+fi
+
 MAKEFILES_js="
 js/Makefile
 js/src/Makefile
@@ -1483,11 +1493,6 @@ for extension in $MOZ_EXTENSIONS; do
         tridentprofile ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_tridentprofile"
             ;;
-        universalchardet ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/universalchardet/Makefile
-            extensions/universalchardet/src/Makefile
-            extensions/universalchardet/tests/Makefile
-            " ;;
         venkman ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/venkman/Makefile
             extensions/venkman/resources/Makefile
