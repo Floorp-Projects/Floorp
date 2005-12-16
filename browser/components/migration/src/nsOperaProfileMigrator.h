@@ -52,6 +52,8 @@ class nsILocalFile;
 class nsINIParser;
 class nsIPermissionManager;
 class nsIPrefBranch;
+class nsIBookmarksService;
+class nsIRDFResource;
 
 class nsOperaProfileMigrator : public nsIBrowserProfileMigrator
 {
