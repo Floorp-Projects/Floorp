@@ -203,6 +203,10 @@ protected:
   friend class nsCellMap;
   friend class BCMapCellIterator;
   friend class BCMapBorderIterator;
+/** Insert a row group cellmap after aPrevMap, if aPrefMap is null insert it
+  * at the beginning, the ordering of the cellmap corresponds to the ordering of
+  * rowgroups once OrderRowGroups has been called
+  */
   void InsertGroupCellMap(nsCellMap* aPrevMap,
                           nsCellMap& aNewMap);
   void DeleteRightBottomBorders();

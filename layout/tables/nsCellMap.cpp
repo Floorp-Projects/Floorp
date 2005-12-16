@@ -2111,8 +2111,24 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
 void nsCellMap::Dump(PRBool aIsBorderCollapse) const
 {
   printf("\n  ***** START GROUP CELL MAP DUMP ***** %p\n", this);
+  nsTableRowGroupFrame* rg = GetRowGroup();
+  const nsStyleDisplay* display = rg->GetStyleDisplay();
+  switch (display->mDisplay) {
+  case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
+    printf("  thead ");
+    break;
+  case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
+    printf("  tfoot ");
+    break;
+  case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
+    printf("  tbody ");
+    break;
+  default:
+    printf("HUH? wrong display type on rowgroup");
+  }
   PRInt32 mapRowCount = mRows.Count();
-  printf("  mapRowCount=%d tableRowCount=%d \n", mapRowCount, mRowCount);
+  printf("mapRowCount=%d tableRowCount=%d\n", mapRowCount, mRowCount);
+  
 
   PRInt32 rowIndex, colIndex;
   for (rowIndex = 0; rowIndex < mapRowCount; rowIndex++) {
