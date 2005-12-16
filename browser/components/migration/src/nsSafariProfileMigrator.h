@@ -46,6 +46,8 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
+class nsIRDFDataSource;
+
 class nsSafariProfileMigrator : public nsIBrowserProfileMigrator
 {
 public:
