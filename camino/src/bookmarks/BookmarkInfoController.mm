@@ -129,8 +129,19 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
   [super dealloc];
 }
 
+// We intercept the tab key in order to let the user tab to/from the bookmark 
+// description textfield (even though it's a textview)
+-(BOOL)textView:(NSTextView *)textView doCommandBySelector:(SEL)command
+{
+  if (command == @selector(insertTab:)) {
+    [[self window] selectNextKeyView:nil];
+    return YES;
+  }
+  return NO;
+}
+    
 // for the NSTextFields
--(void)controlTextDidEndEditing: (NSNotification*) aNotification
+-(void)controlTextDidEndEditing:(NSNotification *)aNotification
 {
   [self commitChanges:[aNotification object]];
   [[mFieldEditor undoManager] removeAllActions];
