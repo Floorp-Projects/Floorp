@@ -4183,10 +4183,8 @@ nsSelection::SetDelayedCaretData(nsMouseEvent *aMouseEvent)
     mDelayedMouseEventValid = PR_TRUE;
     mDelayedMouseEvent      = *aMouseEvent;
 
-    // XXX: Hmmm, should we AddRef mDelayedMouseEvent->widget?
-    //      Doing so might introduce a leak if things in the app
-    //      are not released in the correct order though, so for now
-    //      don't do anything.
+    // Don't cache the widget.  We don't need it and it could go away.
+    mDelayedMouseEvent.widget = nsnull;
   }
   else
     mDelayedMouseEventValid = PR_FALSE;
