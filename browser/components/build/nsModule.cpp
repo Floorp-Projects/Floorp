@@ -39,8 +39,6 @@
 #include "nsIGenericFactory.h"
 
 #include "nsBrowserCompsCID.h"
-#include "nsBookmarksService.h"
-#include "nsForwardProxyDataSource.h"
 #ifdef MOZ_PLACES
 #include "nsAnnoProtocolHandler.h"
 #include "nsAnnotationService.h"
@@ -48,6 +46,9 @@
 #include "nsNavBookmarks.h"
 #include "nsFaviconService.h"
 #include "nsLivemarkService.h"
+#else
+#include "nsBookmarksService.h"
+#include "nsForwardProxyDataSource.h"
 #endif
 #ifdef XP_WIN
 #include "nsWindowsShellService.h"
@@ -78,8 +79,6 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsForwardProxyDataSource, Init)
 #ifdef MOZ_PLACES
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAnnoProtocolHandler)
@@ -87,6 +86,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAnnotationService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavBookmarks, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFaviconService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLivemarkService, Init)
+#else
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsForwardProxyDataSource, Init)
 #endif
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsShellService)
@@ -172,7 +174,7 @@ static const nsModuleComponentInfo components[] =
     NS_LIVEMARKSERVICE_CID,
     NS_LIVEMARKSERVICE_CONTRACTID,
     nsLivemarkServiceConstructor },
-#endif
+#else
 
   { "Bookmarks",
     NS_BOOKMARKS_SERVICE_CID,
@@ -188,6 +190,8 @@ static const nsModuleComponentInfo components[] =
     NS_RDF_FORWARDPROXY_INFER_DATASOURCE_CID,
     NS_RDF_INFER_DATASOURCE_CONTRACTID_PREFIX "forward-proxy",
     nsForwardProxyDataSourceConstructor },
+
+#endif
 
   { "Profile Migrator",
     NS_FIREFOX_PROFILEMIGRATOR_CID,

@@ -52,7 +52,6 @@ OS_LIBS += $(call EXPAND_LIBNAME,version)
 endif
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX) \
 	$(NULL)
 
@@ -78,6 +77,10 @@ REQUIRES += \
 
 LOCAL_INCLUDES += -I$(srcdir)/../places/src
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)places_s.$(LIB_SUFFIX)
+else
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
+	$(NULL)
 endif
 
 # Link to gkgfx for GNOME shell service
