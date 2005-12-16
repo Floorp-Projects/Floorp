@@ -178,8 +178,7 @@ public:
                                 PRBool          aIsScrollbar,
                                 nsILayoutHistoryState* aFrameState);
 
-  nsresult RemoveMappingsForFrameSubtree(nsIFrame*              aRemovedFrame,
-                                         nsILayoutHistoryState* aFrameState);
+  nsresult RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame);
 
   nsIFrame* GetInitialContainingBlock() { return mInitialContainingBlock; }
   nsIFrame* GetPageSequenceFrame() { return mPageSequenceFrame; }

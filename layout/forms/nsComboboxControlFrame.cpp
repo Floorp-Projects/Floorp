@@ -2061,7 +2061,7 @@ nsComboboxControlFrame::Destroy(nsPresContext* aPresContext)
   nsCSSFrameConstructor* fc = aPresContext->PresShell()->FrameConstructor();
   // Cleanup frames in popup child list
   for (nsIFrame* child = mPopupFrames.FirstChild(); child; child = child->GetNextSibling()) {
-    fc->RemoveMappingsForFrameSubtree(child, nsnull);
+    fc->RemoveMappingsForFrameSubtree(child);
   }
   mPopupFrames.DestroyFrames(aPresContext);
 
