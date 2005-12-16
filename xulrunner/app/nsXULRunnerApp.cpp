@@ -349,6 +349,13 @@ InstallXULApp(nsIFile* aXULRunnerDir,
   return 0;
 }
 
+static const GREProperty kGREProperties[] = {
+  { "xulrunner", "true" }
+#ifdef MOZ_JAVAXPCOM
+  , { "javaxpcom", "1" }
+#endif
+};
+
 int main(int argc, char* argv[])
 {
   if (argc > 1 && (IsArg(argv[1], "h") ||
@@ -379,7 +386,9 @@ int main(int argc, char* argv[])
       if (NS_FAILED(rv))
         return 2;
 
-      return RegisterXULRunner(registerGlobal, regDir) ? 0 : 2;
+      return RegisterXULRunner(registerGlobal, regDir,
+                               kGREProperties,
+                               NS_ARRAY_LENGTH(kGREProperties)) ? 0 : 2;
     }
 
     registerGlobal = IsArg(argv[1], "unregister-global");
@@ -405,11 +414,16 @@ int main(int argc, char* argv[])
       }
 
       char path[MAXPATHLEN];
-      const GREVersionRange vr = {
+      static const GREVersionRange vr = {
         argv[2], PR_TRUE,
         argv[2], PR_TRUE
       };
-      nsresult rv = GRE_GetGREPathWithProperties(&vr, 1, nsnull, 0,
+      static const GREProperty kProperties[] = {
+        { "xulrunner", "true" }
+      };
+
+      nsresult rv = GRE_GetGREPathWithProperties(&vr, 1, kProperties,
+                                                 NS_ARRAY_LENGTH(kProperties),
                                                  path, sizeof(path));
       if (NS_FAILED(rv))
         return 1;
