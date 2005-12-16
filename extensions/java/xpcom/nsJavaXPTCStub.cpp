@@ -1481,7 +1481,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
         java_obj = env->GetObjectArrayElement((jobjectArray) aJValue.l, 0);
       }
 
-      nsISupports** variant = NS_STATIC_CAST(nsISupports**, aVariant.val.p);
+      nsISupports* xpcom_obj = nsnull;
       if (java_obj) {
         // Get IID for this param
         nsID iid;
@@ -1502,7 +1502,6 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
           isWeakRef = PR_FALSE;
         }
 
-        nsISupports* xpcom_obj;
         PRBool isXPTCStub;
         rv = GetNewOrUsedXPCOMObject(env, java_obj, iid, &xpcom_obj,
                                      &isXPTCStub);
@@ -1538,25 +1537,21 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
               xpcom_obj = nsnull;
             }
           }
-
-        } else if (!isXPTCStub) { // if is native XPCOM object
-          xpcom_obj->Release();
         }
-
-//        } else if (isXPTCStub) {
-          // nothing to do
-
-        if (*variant && !aParamInfo.IsRetval()) {
-          NS_RELEASE(*variant);
-        }
-        *variant = xpcom_obj;
-      } else {
-        // If were passed in an object, release it now, and set to null.
-        if (*variant && !aParamInfo.IsRetval()) {
-          NS_RELEASE(*variant);
-        }
-        *variant = nsnull;
       }
+
+      // For 'inout' params, if the resulting xpcom value is different than the
+      // one passed in, then we must release the incoming xpcom value.
+      nsISupports** variant = NS_STATIC_CAST(nsISupports**, aVariant.val.p);
+      if (aParamInfo.IsIn() && *variant) {
+        nsCOMPtr<nsISupports> in = do_QueryInterface(*variant);
+        nsCOMPtr<nsISupports> out = do_QueryInterface(xpcom_obj);
+        if (in != out) {
+          NS_RELEASE(*variant);
+        }
+      }
+
+      *variant = xpcom_obj;
     }
     break;
 
@@ -1585,7 +1580,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
           string->Assign(wchar_ptr);
         } else {
           // If the argument that was passed in was null, then we need to
-          // create a new nsID.
+          // create a new string.
           nsString* embedStr = new nsString(wchar_ptr);
           if (embedStr) {
             *variant = embedStr;
