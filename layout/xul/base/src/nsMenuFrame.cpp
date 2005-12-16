@@ -313,7 +313,7 @@ nsMenuFrame::DestroyPopupFrames(nsPresContext* aPresContext)
     aPresContext->PresShell()->FrameConstructor();
   nsIFrame* curFrame = mPopupFrames.FirstChild();
   while (curFrame) {
-    frameConstructor->RemoveMappingsForFrameSubtree(curFrame, nsnull);
+    frameConstructor->RemoveMappingsForFrameSubtree(curFrame);
     curFrame = curFrame->GetNextSibling();
   }
 

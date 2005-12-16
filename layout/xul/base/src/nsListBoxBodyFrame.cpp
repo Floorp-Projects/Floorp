@@ -1144,8 +1144,11 @@ nsListBoxBodyFrame::GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated)
     // XXX check here if frame was even created, it may not have been if
     //     display: none was on listitem content
     PRBool isAppend = mRowsToPrepend <= 0;
-    mFrameConstructor->CreateListBoxContent(GetPresContext(), this, nsnull, startContent,
-                                            &mTopFrame, isAppend, PR_FALSE, nsnull);
+    
+    nsPresContext* presContext = GetPresContext();
+    nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
+    fc->CreateListBoxContent(presContext, this, nsnull, startContent,
+                             &mTopFrame, isAppend, PR_FALSE, nsnull);
     
     if (mTopFrame) {
       if (aCreated)
@@ -1189,9 +1192,11 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
       // Either append the new frame, or insert it after the current frame
       PRBool isAppend = result != mLinkupFrame && mRowsToPrepend <= 0;
       nsIFrame* prevFrame = isAppend ? nsnull : aBox;
-      mFrameConstructor->CreateListBoxContent(GetPresContext(), this, prevFrame,
-                                              nextContent, &result, isAppend,
-                                              PR_FALSE, nsnull);
+      
+      nsPresContext* presContext = GetPresContext();
+      nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
+      fc->CreateListBoxContent(presContext, this, prevFrame, nextContent,
+                               &result, isAppend, PR_FALSE, nsnull);
 
       if (result) {
         if (aCreated)
@@ -1427,12 +1432,14 @@ void
 nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
                                      nsIFrame         *aFrame)
 {
-  mFrameConstructor->RemoveMappingsForFrameSubtree(aFrame, nsnull);
+  nsPresContext* presContext = GetPresContext();
+  nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
+  fc->RemoveMappingsForFrameSubtree(aFrame);
 
   mFrames.RemoveFrame(aFrame);
   if (mLayoutManager)
     mLayoutManager->ChildrenRemoved(this, aState, aFrame);
-  aFrame->Destroy(GetPresContext());
+  aFrame->Destroy(presContext);
 }
 
 // Creation Routines ///////////////////////////////////////////////////////////////////////

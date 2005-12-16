@@ -6255,9 +6255,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       
         if (aTag == nsXULAtoms::listboxbody) {
           NS_NewListBoxLayout(mPresShell, layout);
-
           newFrame = NS_NewListBoxBodyFrame(mPresShell,  PR_FALSE, layout);
-          ((nsListBoxBodyFrame*)newFrame)->InitGroup(this);
         }
         else
         {
@@ -9749,8 +9747,7 @@ DeletingFrameSubtree(nsPresContext*  aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame, 
-                                                     nsILayoutHistoryState* aFrameState)
+nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame)
 {
   // Save the frame tree's state before deleting it
   CaptureStateFor(aRemovedFrame, mTempFrameTreeState);

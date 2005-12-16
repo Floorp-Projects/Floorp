@@ -49,7 +49,6 @@
 #include "nsPresContext.h"
 #include "nsBoxLayoutState.h"
 
-class nsCSSFrameConstructor;
 class nsListScrollSmoother;
 nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, 
                                  PRBool aIsRoot = PR_FALSE,
@@ -128,17 +127,9 @@ public:
 
   void PostReflowCallback();
 
-  void InitGroup(nsCSSFrameConstructor* aFC) 
-  {
-    mFrameConstructor = aFC;
-  }
-
 protected:
   void ComputeTotalRowCount();
   void RemoveChildFrame(nsBoxLayoutState &aState, nsIFrame *aChild);
-
-  // We don't own this. (No addref/release allowed, punk.)
-  nsCSSFrameConstructor* mFrameConstructor;
 
   // row height
   PRInt32 mRowCount;
