@@ -112,3 +112,12 @@ IXPCOMError.java: $(topsrcdir)/xpcom/base/nsError.h gen-nsError.pl Makefile Make
 
 export:: IXPCOMError.java
 
+# Temporarily copy these not only to dist/sdk/lib but to dist/bin/sdk/lib
+
+TEMP_SDK_DIR = $(DIST)/bin/sdk/lib
+
+$(TEMP_SDK_DIR)::
+	$(NSINSTALL) -D $@
+
+libs:: $(JARFILE) $(JARFILE_SRC) $(TEMP_SDK_DIR)
+	$(INSTALL) $(IFLAGS2) $^
