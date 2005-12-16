@@ -697,6 +697,12 @@ nsWindow::SetFocus(PRBool aRaise)
     if (!GTK_WIDGET_HAS_FOCUS(owningWidget)) {
         LOGFOCUS(("  grabbing focus for the toplevel [%p]\n", (void *)this));
         owningWindow->mContainerBlockFocus = PR_TRUE;
+        
+        // Set focus to the window
+        if (gRaiseWindows && aRaise && toplevelWidget &&
+            !GTK_WIDGET_HAS_FOCUS(toplevelWidget))
+          gtk_window_present(GTK_WINDOW(owningWindow->mShell));
+        
         gtk_widget_grab_focus(owningWidget);
         owningWindow->mContainerBlockFocus = PR_FALSE;
 
