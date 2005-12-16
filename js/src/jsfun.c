@@ -894,7 +894,7 @@ JSClass js_CallClass = {
 #endif /* JS_HAS_CALL_OBJECT */
 
 /*
- * ECMCA-262 specifies that length is a property of function object instances,
+ * ECMA-262 specifies that length is a property of function object instances,
  * but we can avoid that space cost by delegating to a prototype property that
  * is JSPROP_PERMANENT and JSPROP_SHARED.  Each fun_getProperty call computes
  * a fresh length value based on the arity of the individual function object's
