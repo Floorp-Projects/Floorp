@@ -38,7 +38,7 @@
 #define NSSCKFWT_H
 
 #ifdef DEBUG
-static const char NSSCKFWT_CVS_ID[] = "@(#) $RCSfile: nssckfwt.h,v $ $Revision: 1.4 $ $Date: 2005/01/20 02:25:45 $";
+static const char NSSCKFWT_CVS_ID[] = "@(#) $RCSfile: nssckfwt.h,v $ $Revision: 1.5 $ $Date: 2005/12/16 00:48:01 $";
 #endif /* DEBUG */
 
 /*
@@ -80,6 +80,15 @@ struct NSSCKFWMechanismStr;
 typedef struct NSSCKFWMechanismStr NSSCKFWMechanism;
 
 /*
+ * NSSCKFWCryptoOperation
+ *
+ */
+
+struct NSSCKFWCryptoOperationStr;
+typedef struct NSSCKFWCryptoOperationStr NSSCKFWCryptoOperation;
+
+
+/*
  * NSSCKFWSession
  *
  */
@@ -115,5 +124,23 @@ typedef enum {
     SingleThreaded,
     MultiThreaded
 } CryptokiLockingState ;
+
+/* used as an index into an array, make sure it starts at '0' */
+typedef enum {
+    NSSCKFWCryptoOperationState_EncryptDecrypt = 0,
+    NSSCKFWCryptoOperationState_SignVerify,
+    NSSCKFWCryptoOperationState_Digest,
+    NSSCKFWCryptoOperationState_Max
+} NSSCKFWCryptoOperationState;
+
+typedef enum {
+    NSSCKFWCryptoOperationType_Encrypt,
+    NSSCKFWCryptoOperationType_Decrypt,
+    NSSCKFWCryptoOperationType_Digest,
+    NSSCKFWCryptoOperationType_Sign,
+    NSSCKFWCryptoOperationType_Verify,
+    NSSCKFWCryptoOperationType_SignRecover,
+    NSSCKFWCryptoOperationType_VerifyRecover
+} NSSCKFWCryptoOperationType;
 
 #endif /* NSSCKFWT_H */
