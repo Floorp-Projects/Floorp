@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cfind.c,v $ $Revision: 1.2 $ $Date: 2005/11/15 00:13:58 $";
+static const char CVS_ID[] = "@(#) $RCSfile: cfind.c,v $ $Revision: 1.3 $ $Date: 2005/12/16 00:48:02 $";
 #endif /* DEBUG */
 
 #ifndef CKCAPI_H
@@ -358,17 +358,40 @@ collect_class(
     /* first filter out non user certs if we are looking for keys */
     if (isKey) {
       /* make sure there is a Key Provider Info property */
-      CRYPT_KEY_PROV_INFO key_prov;
-      DWORD size = sizeof(CRYPT_KEY_PROV_INFO);
+      CRYPT_KEY_PROV_INFO *keyProvInfo;
+      DWORD size = 0;
       BOOL rv;
       rv =CertGetCertificateContextProperty(certContext,
-        CERT_KEY_PROV_INFO_PROP_ID, &key_prov, &size);
+        CERT_KEY_PROV_INFO_PROP_ID, NULL, &size);
       if (!rv) {
 	int reason = GetLastError();
         /* we only care if it exists, we don't really need to fetch it yet */
 	if (reason == CRYPT_E_NOT_FOUND) {
 	  continue;
 	}
+      }
+      /* filter out the non-microsoft providers */
+      keyProvInfo = (CRYPT_KEY_PROV_INFO *)nss_ZAlloc(NULL, size);
+      if (keyProvInfo) {
+        rv =CertGetCertificateContextProperty(certContext,
+          CERT_KEY_PROV_INFO_PROP_ID, keyProvInfo, &size);
+        if (rv) {
+	  char *provName = nss_ckcapi_WideToUTF8(keyProvInfo->pwszProvName);
+          nss_ZFreeIf(keyProvInfo);
+
+	  if (provName && 
+		(strncmp(provName, "Microsoft", sizeof("Microsoft")-1) != 0)) {
+	    continue;
+	  }
+	} else {
+	  int reason = GetLastError();
+          /* we only care if it exists, we don't really need to fetch it yet */
+          nss_ZFreeIf(keyProvInfo);
+	  if (reason == CRYPT_E_NOT_FOUND) {
+	   continue;
+	  }
+	  
+        }
       }
     }
     
@@ -419,8 +442,8 @@ nss_ckcapi_collect_all_certs(
 {
   count = collect_class(CKO_CERTIFICATE, "My", PR_TRUE, pTemplate, 
 			ulAttributeCount, listp, sizep, count, pError);
-  count = collect_class(CKO_CERTIFICATE, "AddressBook", PR_FALSE, pTemplate, 
-                        ulAttributeCount, listp, sizep, count, pError);
+  /*count = collect_class(CKO_CERTIFICATE, "AddressBook", PR_FALSE, pTemplate, 
+                        ulAttributeCount, listp, sizep, count, pError); */
   count = collect_class(CKO_CERTIFICATE, "CA", PR_FALSE, pTemplate, 
 			ulAttributeCount, listp, sizep, count, pError);
   count = collect_class(CKO_CERTIFICATE, "Root", PR_FALSE, pTemplate, 

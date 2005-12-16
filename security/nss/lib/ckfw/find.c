@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.6 $ $Date: 2005/01/20 02:25:45 $";
+static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.7 $ $Date: 2005/12/16 00:48:01 $";
 #endif /* DEBUG */
 
 /*
@@ -356,11 +356,19 @@ nssCKFWFindObjects_Next
 
  wrap:
   /*
-   * This is less than ideal-- we should determine if it's a token
+   * This seems is less than ideal-- we should determine if it's a token
    * object or a session object, and use the appropriate arena.
    * But that duplicates logic in nssCKFWObject_IsTokenObject.
-   * Worry about that later.  For now, be conservative, and use
-   * the token arena.
+   * Also we should lookup the real session the object was created on
+   * if the object was a session object... however this code is actually
+   * correct because nssCKFWObject_Create will return a cached version of
+   * the object from it's hash. This is necessary because 1) we don't want
+   * to create an arena style leak (where our arena grows with every search),
+   * and 2) we want the same object to always have the same ID. This means
+   * the only case the nssCKFWObject_Create() will need the objArena and the
+   * Session is in the case of token objects (session objects should already
+   * exist in the cache from their initial creation). So this code is correct,
+   * but it depends on nssCKFWObject_Create caching all objects.
    */
   objArena = nssCKFWToken_GetArena(fwFindObjects->fwToken, pError);
   if( (NSSArena *)NULL == objArena ) {
@@ -371,7 +379,7 @@ nssCKFWFindObjects_Next
   }
 
   fwObject = nssCKFWObject_Create(objArena, mdObject,
-               fwFindObjects->fwSession, fwFindObjects->fwToken, 
+               NULL, fwFindObjects->fwToken, 
                fwFindObjects->fwInstance, pError);
   if( (NSSCKFWObject *)NULL == fwObject ) {
     if( CKR_OK == *pError ) {

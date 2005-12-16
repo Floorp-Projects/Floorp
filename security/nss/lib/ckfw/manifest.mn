@@ -34,11 +34,11 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.8 $ $Date: 2005/08/25 20:08:26 $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.9 $ $Date: 2005/12/16 00:48:01 $"
 
 CORE_DEPTH = ../../..
 
-DIRS = builtins
+DIRS = builtins 
 
 PRIVATE_EXPORTS = \
 	ck.h		  \
@@ -64,6 +64,7 @@ EXPORTS =	   \
 MODULE = nss
 
 CSRCS =		   \
+	crypto.c   \
 	find.c	   \
 	hash.c	   \
 	instance.c \

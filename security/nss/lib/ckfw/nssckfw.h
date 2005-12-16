@@ -38,7 +38,7 @@
 #define NSSCKFW_H
 
 #ifdef DEBUG
-static const char NSSCKFW_CVS_ID[] = "@(#) $RCSfile: nssckfw.h,v $ $Revision: 1.4 $ $Date: 2005/01/20 02:25:45 $";
+static const char NSSCKFW_CVS_ID[] = "@(#) $RCSfile: nssckfw.h,v $ $Revision: 1.5 $ $Date: 2005/12/16 00:48:01 $";
 #endif /* DEBUG */
 
 /*
@@ -242,7 +242,7 @@ NSSCKFWToken_GetMDSlot
  */
 
 NSS_EXTERN CK_STATE
-NSSCKFWSession_GetSessionState
+NSSCKFWToken_GetSessionState
 (
   NSSCKFWToken *fwToken
 );
@@ -285,6 +285,7 @@ NSSCKFWMechanism_GetParameter
  *  NSSCKFWSession_CallNotification
  *  NSSCKFWSession_IsRWSession
  *  NSSCKFWSession_IsSO
+ *  NSSCKFWSession_GetCurrentCryptoOperation
  *
  */
 
@@ -343,6 +344,18 @@ NSS_EXTERN CK_BBOOL
 NSSCKFWSession_IsSO
 (
   NSSCKFWSession *fwSession
+);
+
+/*
+ * NSSCKFWSession_GetCurrentCryptoOperation
+ *
+ */
+
+NSS_EXTERN NSSCKFWCryptoOperation *
+NSSCKFWSession_GetCurrentCryptoOperation
+(
+  NSSCKFWSession *fwSession,
+  NSSCKFWCryptoOperationState state
 );
 
 /*

@@ -38,7 +38,7 @@
 #define NSSCKMDT_H
 
 #ifdef DEBUG
-static const char NSSCKMDT_CVS_ID[] = "@(#) $RCSfile: nssckmdt.h,v $ $Revision: 1.5 $ $Date: 2005/01/20 02:25:45 $";
+static const char NSSCKMDT_CVS_ID[] = "@(#) $RCSfile: nssckmdt.h,v $ $Revision: 1.6 $ $Date: 2005/12/16 00:48:01 $";
 #endif /* DEBUG */
 
 /*
@@ -64,6 +64,7 @@ typedef struct NSSCKMDInstanceStr NSSCKMDInstance;
 typedef struct NSSCKMDSlotStr NSSCKMDSlot;
 typedef struct NSSCKMDTokenStr NSSCKMDToken;
 typedef struct NSSCKMDSessionStr NSSCKMDSession;
+typedef struct NSSCKMDCryptoOperationStr NSSCKMDCryptoOperation;
 typedef struct NSSCKMDFindObjectsStr NSSCKMDFindObjects;
 typedef struct NSSCKMDMechanismStr NSSCKMDMechanism;
 typedef struct NSSCKMDObjectStr NSSCKMDObject;
@@ -856,8 +857,8 @@ struct NSSCKMDTokenStr {
     NSSCKFWToken *fwToken,
     NSSCKMDInstance *mdInstance,
     NSSCKFWInstance *fwInstance,
-    NSSCKFWMechanism *fwMechanism,
-    CK_MECHANISM_TYPE which
+    CK_MECHANISM_TYPE which,
+    CK_RV *pError
   );
 
   /*
@@ -1221,6 +1222,198 @@ struct NSSCKMDFindObjectsStr {
 };
 
 /*
+ * NSSCKMDCryptoOperaion
+ *
+ * This is the basic handle for an encryption, decryption,
+ * sign, verify, or hash opertion.
+ * created by NSSCKMDMechanism->XXXXInit, and may be
+ * obtained from the Framework's corresponding object.
+ * It contains a pointer for use by the Module, to store
+ * any intermediate data, and it contains the EPV for a
+ * set of routines which the Module may implement for use
+ * by the Framework.  Some of these routines are optional.
+ */
+
+struct NSSCKMDCryptoOperationStr {
+  /*
+   * The Module may use this pointer for its own purposes.
+   */
+  void *etc;
+
+  /*
+   * This routine is called by the Framework clean up the mdCryptoOperation
+   * structure.
+   * This routine is optional; if unimplemented, it will be ignored.
+   */
+  void (PR_CALLBACK *Destroy)(
+    NSSCKMDCryptoOperation *mdCryptoOperation,
+    NSSCKFWCryptoOperation *fwCryptoOperation,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance
+  );
+
+
+  /*
+   * how many bytes do we need to finish this buffer?
+   * must be implemented if Final is implemented.
+   */
+  CK_ULONG (PR_CALLBACK *GetFinalLength)(
+    NSSCKMDCryptoOperation *mdCryptoOperation,
+    NSSCKFWCryptoOperation *fwCryptoOperation,
+    NSSCKMDSession *mdSession,
+    NSSCKFWSession *fwSession,
+    NSSCKMDToken *mdToken,
+    NSSCKFWToken *fwToken,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    CK_RV *pError
+  );
+
+  /*
+   * how many bytes do we need to complete the next operation.
+   * used in both Update and UpdateFinal.
+   */
+  CK_ULONG (PR_CALLBACK *GetOperationLength)(
+    NSSCKMDCryptoOperation *mdCryptoOperation,
+    NSSCKFWCryptoOperation *fwCryptoOperation,
+    NSSCKMDSession *mdSession,
+    NSSCKFWSession *fwSession,
+    NSSCKMDToken *mdToken,
+    NSSCKFWToken *fwToken,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    const NSSItem   *inputBuffer,
+    CK_RV *pError
+  );
+
+  /*
+   * This routine is called by the Framework to finish a
+   * search operation.  Note that the Framework may finish
+   * a search before it has completed.  This routine is
+   * optional; if unimplemented, it merely won't be called.
+   * The respective final call with fail with CKR_FUNCTION_FAILED
+   * Final should not free the mdCryptoOperation.
+   */
+  CK_RV(PR_CALLBACK *Final)(
+    NSSCKMDCryptoOperation *mdCryptoOperation,
+    NSSCKFWCryptoOperation *fwCryptoOperation,
+    NSSCKMDSession *mdSession,
+    NSSCKFWSession *fwSession,
+    NSSCKMDToken *mdToken,
+    NSSCKFWToken *fwToken,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    NSSItem       *outputBuffer
+  );
+
+
+  /*
+   * This routine is called by the Framework to complete the
+   * next step in an encryption/decryption operation.
+   * This routine is optional; if unimplemented, the respective
+   * update call with fail with CKR_FUNCTION_FAILED.
+   * Update should not be implemented for signing/verification/digest
+   * mechanisms.
+   */
+  CK_RV(PR_CALLBACK *Update)(
+    NSSCKMDCryptoOperation *mdCryptoOperation,
+    NSSCKFWCryptoOperation *fwCryptoOperation,
+    NSSCKMDSession *mdSession,
+    NSSCKFWSession *fwSession,
+    NSSCKMDToken *mdToken,
+    NSSCKFWToken *fwToken,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    const NSSItem   *inputBuffer,
+    NSSItem   *outputBuffer
+  );
+
+  /*
+   * This routine is called by the Framework to complete the
+   * next step in a signing/verification/digest operation.
+   * This routine is optional; if unimplemented, the respective
+   * update call with fail with CKR_FUNCTION_FAILED
+   * Update should not be implemented for encryption/decryption
+   * mechanisms.
+   */
+  CK_RV(PR_CALLBACK *DigestUpdate)(
+    NSSCKMDCryptoOperation *mdCryptoOperation,
+    NSSCKFWCryptoOperation *fwCryptoOperation,
+    NSSCKMDSession *mdSession,
+    NSSCKFWSession *fwSession,
+    NSSCKMDToken *mdToken,
+    NSSCKFWToken *fwToken,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    const NSSItem   *inputBuffer
+  );
+
+  /*
+   * This routine is called by the Framework to complete a
+   * single step operation. This routine is optional; if unimplemented, 
+   * the framework will use the Update and Final functions to complete
+   * the operation.
+   */
+  CK_RV(PR_CALLBACK *UpdateFinal)(
+    NSSCKMDCryptoOperation *mdCryptoOperation,
+    NSSCKFWCryptoOperation *fwCryptoOperation,
+    NSSCKMDSession *mdSession,
+    NSSCKFWSession *fwSession,
+    NSSCKMDToken *mdToken,
+    NSSCKFWToken *fwToken,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    const NSSItem   *inputBuffer,
+    NSSItem   *outputBuffer
+  );
+
+  /*
+   * This routine is called by the Framework to complete next
+   * step in a combined operation. The Decrypt/Encrypt mechanism
+   * should define and drive the combo step.
+   * This routine is optional; if unimplemented, 
+   * the framework will use the appropriate Update functions to complete
+   * the operation.
+   */
+  CK_RV(PR_CALLBACK *UpdateCombo)(
+    NSSCKMDCryptoOperation *mdCryptoOperation,
+    NSSCKFWCryptoOperation *fwCryptoOperation,
+    NSSCKMDCryptoOperation *mdPeerCryptoOperation,
+    NSSCKFWCryptoOperation *fwPeerCryptoOperation,
+    NSSCKMDSession *mdSession,
+    NSSCKFWSession *fwSession,
+    NSSCKMDToken *mdToken,
+    NSSCKFWToken *fwToken,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    const NSSItem   *inputBuffer,
+    NSSItem   *outputBuffer
+  );
+
+  /*
+   * Hash a key directly into the digest
+   */
+  CK_RV(PR_CALLBACK *DigestKey)(
+    NSSCKMDCryptoOperation *mdCryptoOperation,
+    NSSCKFWCryptoOperation *fwCryptoOperation,
+    NSSCKMDToken *mdToken,
+    NSSCKFWToken *fwToken,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    NSSCKMDObject *mdKey,
+    NSSCKFWObject *fwKey
+  );
+
+  /*
+   * This object may be extended in future versions of the
+   * NSS Cryptoki Framework.  To allow for some flexibility
+   * in the area of binary compatibility, this field should
+   * be NULL.
+   */
+  void *null;
+};
+
+/*
  * NSSCKMDMechanism
  *
  */
@@ -1230,6 +1423,19 @@ struct NSSCKMDMechanismStr {
    * The Module may use this pointer for its own purposes.
    */
   void *etc;
+
+  /*
+   * This also frees the fwMechanism if appropriate.
+   * If it is not supplied, the Framework will assume that the Token
+   * Manages a static list of mechanisms and the function will not be called.
+   */
+  void (PR_CALLBACK *Destroy)(
+    NSSCKMDMechanism *mdMechanism,
+    NSSCKFWMechanism *fwMechanism,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance
+  );
+
 
   /*
    * This routine returns the minimum key size allowed for
@@ -1288,26 +1494,25 @@ struct NSSCKMDMechanismStr {
    * method to feed data to the operation, and a Final method to
    * obtain the final result.  Single-part operations involve
    * one method, to perform the crypto operation all at once.
+   *
    * The NSS Cryptoki Framework can implement the single-part
    * operations in terms of the streaming operations on behalf
    * of the Module.  There are a few variances.
+   *
+   * Only the Init Functions are defined by the mechanism. Each
+   * init function will return a NSSCKFWCryptoOperation which
+   * can supply update, final, the single part updateFinal, and
+   * the combo updateCombo functions.
    * 
    * For simplicity, the routines are listed in summary here:
    *
-   *  EncryptInit, EncryptUpdate, EncryptFinal; Encrypt
-   *  DecryptInit, DecryptUpdate, DecryptFinal; Decrypt
-   *  DigestInit, DigestUpdate, DigestKey, DigestFinal; Digest
-   *  SignInit, SignUpdate, SignFinal; Sign
-   *  SignRecoverInit; SignRecover
-   *  VerifyInit, VerifyUpdate, VerifyFinal; Verify
-   *  VerifyRecoverInit; VerifyRecover
-   * 
-   * Also, there are some combined-operation calls:
-   * 
-   *  DigestEncryptUpdate
-   *  DecryptDigestUpdate
-   *  SignEncryptUpdate
-   *  DecryptVerifyUpdate
+   *  EncryptInit,
+   *  DecryptInit,
+   *  DigestInit,
+   *  SignInit, 
+   *  SignRecoverInit;
+   *  VerifyInit,
+   *  VerifyRecoverInit;
    *
    * The key-management routines are
    *
@@ -1317,59 +1522,16 @@ struct NSSCKMDMechanismStr {
    *  UnwrapKey
    *  DeriveKey
    *
-   * All of these routines based directly on the Cryptoki API; 
+   * All of these routines based on the Cryptoki API; 
    * see PKCS#11 for further information.
    */
 
   /*
    */
-  CK_RV (PR_CALLBACK *EncryptInit)(
+  NSSCKMDCryptoOperation * (PR_CALLBACK *EncryptInit)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSCKMDObject *mdKey,
-    NSSCKFWObject *fwKey
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *EncryptUpdate)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *data, 
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *EncryptFinal)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *Encrypt)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,
@@ -1378,59 +1540,15 @@ struct NSSCKMDMechanismStr {
     NSSCKFWInstance *fwInstance,
     NSSCKMDObject *mdKey,
     NSSCKFWObject *fwKey,
-    NSSItem *data, 
-    NSSItem *buffer
+    CK_RV *pError
   );
 
   /*
    */
-  CK_RV (PR_CALLBACK *DecryptInit)(
+  NSSCKMDCryptoOperation * (PR_CALLBACK *DecryptInit)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSCKMDObject *mdKey,
-    NSSCKFWObject *fwKey
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *DecryptUpdate)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *data, 
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *DecryptFinal)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *Decrypt)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,
@@ -1439,130 +1557,31 @@ struct NSSCKMDMechanismStr {
     NSSCKFWInstance *fwInstance,
     NSSCKMDObject *mdKey,
     NSSCKFWObject *fwKey,
-    NSSItem *data, 
-    NSSItem *buffer
+    CK_RV *pError
   );
 
   /*
    */
-  CK_RV (PR_CALLBACK *DigestInit)(
+  NSSCKMDCryptoOperation * (PR_CALLBACK *DigestInit)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *DigestUpdate)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,
     NSSCKFWToken *fwToken,
     NSSCKMDInstance *mdInstance,
     NSSCKFWInstance *fwInstance,
-    NSSItem *data
+    CK_RV *pError
   );
+
 
   /*
    */
-  CK_RV (PR_CALLBACK *DigestKey)(
+  NSSCKMDCryptoOperation * (PR_CALLBACK *SignInit)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSCKMDObject *mdKey,
-    NSSCKFWObject *fwKey
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *DigestFinal)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *Digest)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *data, 
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *SignInit)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSCKMDObject *mdKey,
-    NSSCKFWObject *fwKey
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *SignUpdate)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *data,
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *SignFinal)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *Sign)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,
@@ -1571,73 +1590,15 @@ struct NSSCKMDMechanismStr {
     NSSCKFWInstance *fwInstance,
     NSSCKMDObject *mdKey,
     NSSCKFWObject *fwKey,
-    NSSItem *data,
-    NSSItem *buffer
+    CK_RV *pError
   );
 
   /*
    */
-  CK_RV (PR_CALLBACK *VerifyInit)(
+  NSSCKMDCryptoOperation * (PR_CALLBACK *VerifyInit)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSCKFWObject *key
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *VerifyUpdate)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *data
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *VerifyFinish)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *Verify)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSCKFWObject *key,
-    NSSItem *data,
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *SignRecover)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,
@@ -1646,15 +1607,15 @@ struct NSSCKMDMechanismStr {
     NSSCKFWInstance *fwInstance,
     NSSCKMDObject *mdKey,
     NSSCKFWObject *fwKey,
-    NSSItem *data,
-    NSSItem *buffer
+    CK_RV *pError
   );
 
   /*
    */
-  CK_RV (PR_CALLBACK *VerifyRecover)(
+  NSSCKMDCryptoOperation * (PR_CALLBACK *SignRecoverInit)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,
@@ -1663,68 +1624,24 @@ struct NSSCKMDMechanismStr {
     NSSCKFWInstance *fwInstance,
     NSSCKMDObject *mdKey,
     NSSCKFWObject *fwKey,
-    NSSItem *data,
-    NSSItem *buffer
+    CK_RV *pError
   );
 
   /*
    */
-  CK_RV (PR_CALLBACK *DigestEncryptUpdate)(
+  NSSCKMDCryptoOperation * (PR_CALLBACK *VerifyRecoverInit)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,
     NSSCKFWToken *fwToken,
     NSSCKMDInstance *mdInstance,
     NSSCKFWInstance *fwInstance,
-    NSSItem *data,
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *DecryptDigestUpdate)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *data,
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *SignEncryptUpdate)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *data,
-    NSSItem *buffer
-  );
-
-  /*
-   */
-  CK_RV (PR_CALLBACK *DecryptVerifyUpdate)(
-    NSSCKMDMechanism *mdMechanism,
-    NSSCKFWMechanism *fwMechanism,
-    NSSCKMDSession *mdSession,
-    NSSCKFWSession *fwSession,
-    NSSCKMDToken *mdToken,
-    NSSCKFWToken *fwToken,
-    NSSCKMDInstance *mdInstance,
-    NSSCKFWInstance *fwInstance,
-    NSSItem *data,
-    NSSItem *buffer
+    NSSCKMDObject *mdKey,
+    NSSCKFWObject *fwKey,
+    CK_RV *pError
   );
 
   /*
@@ -1738,6 +1655,7 @@ struct NSSCKMDMechanismStr {
   NSSCKMDObject *(PR_CALLBACK *GenerateKey)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,
@@ -1755,6 +1673,7 @@ struct NSSCKMDMechanismStr {
   CK_RV (PR_CALLBACK *GenerateKeyPair)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,
@@ -1772,9 +1691,10 @@ struct NSSCKMDMechanismStr {
   /*
    * This routine wraps a key.
    */
-  CK_RV (PR_CALLBACK *WrapKey)(
+  CK_ULONG (PR_CALLBACK *GetWrapKeyLength)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,
@@ -1785,7 +1705,27 @@ struct NSSCKMDMechanismStr {
     NSSCKFWObject *fwWrappingKey,
     NSSCKMDObject *mdWrappedKey,
     NSSCKFWObject *fwWrappedKey,
-    NSSItem *buffer
+    CK_RV *pError
+  );
+
+  /*
+   * This routine wraps a key.
+   */
+  CK_RV (PR_CALLBACK *WrapKey)(
+    NSSCKMDMechanism *mdMechanism,
+    NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
+    NSSCKMDSession *mdSession,
+    NSSCKFWSession *fwSession,
+    NSSCKMDToken *mdToken,
+    NSSCKFWToken *fwToken,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    NSSCKMDObject *mdWrappingKey,
+    NSSCKFWObject *fwWrappingKey,
+    NSSCKMDObject *mdKeyObject,
+    NSSCKFWObject *fwKeyObject,
+    NSSItem *wrappedKey
   );
 
   /*
@@ -1795,6 +1735,7 @@ struct NSSCKMDMechanismStr {
   NSSCKMDObject *(PR_CALLBACK *UnwrapKey)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,
@@ -1816,6 +1757,7 @@ struct NSSCKMDMechanismStr {
   NSSCKMDObject *(PR_CALLBACK *DeriveKey)(
     NSSCKMDMechanism *mdMechanism,
     NSSCKFWMechanism *fwMechanism,
+    CK_MECHANISM_PTR  pMechanism,
     NSSCKMDSession *mdSession,
     NSSCKFWSession *fwSession,
     NSSCKMDToken *mdToken,

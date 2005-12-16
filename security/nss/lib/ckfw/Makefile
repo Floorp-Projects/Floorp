@@ -34,7 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.7 $ $Date: 2005/01/20 02:25:45 $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.8 $ $Date: 2005/12/16 00:48:01 $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -56,3 +56,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 export:: private_export
 
+# can't do this in manifest.mn because OS_TARGET isn't defined there.
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+DIRS += capi
+endif
