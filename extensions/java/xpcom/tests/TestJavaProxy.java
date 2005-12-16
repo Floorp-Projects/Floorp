@@ -41,12 +41,12 @@ import java.io.File;
 
 /**
  * Tests that if calls to XPCOM functions return the same object, then
- * the Javaconnect interface creates the proper Java proxies.
+ * the JavaXPCOM interface creates the proper Java proxies.
  * <p>
  * The XPCOM call to <code>nsISupports supp = entries.getNext()</code> returns
  * an object, for which we create an <code>nsISupports</code> Java proxy.  Then,
  * the XPCOM call to <code>supp.queryInterface(nsIFile.NS_IFILE_IID)</code>
- * will return the same object (same address).  Javaconnect needs to be smart
+ * will return the same object (same address).  JavaXPCOM needs to be smart
  * enough to create a new <code>nsIFile</code> proxy, rather than reusing the
  * <code>nsISupports</code> one that was previously created.
  * </p>

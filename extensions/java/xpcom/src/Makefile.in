@@ -65,7 +65,7 @@ CPPSRCS		= \
 		nsJavaXPCOMBindingUtils.cpp \
 		$(NULL)
 
-JARFILE = javaconnect.jar
+JARFILE = javaxpcom.jar
 JARFILE_SRC = $(patsubst %.jar,%-src.jar,$(JARFILE))
 
 JAVA_SRCS = \
