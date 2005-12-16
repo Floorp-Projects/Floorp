@@ -118,9 +118,9 @@ extern PRLock* gJavaXPCOMLock;
 extern PRBool gJavaXPCOMInitialized;
 
 /**
- * Initialize global structures used by Javaconnect.
+ * Initialize global structures used by JavaXPCOM.
  * @param env   Java environment pointer
- * @return PR_TRUE if Javaconnect is initialized; PR_FALSE if an error occurred
+ * @return PR_TRUE if JavaXPCOM is initialized; PR_FALSE if an error occurred
  */
 PRBool InitializeJavaGlobals(JNIEnv *env);
 

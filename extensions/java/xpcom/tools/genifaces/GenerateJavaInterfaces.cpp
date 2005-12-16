@@ -106,7 +106,7 @@ public:
 
     } else {
 
-      // In Javaconnect, we handle weak references internally; no need for the
+      // In JavaXPCOM, we handle weak references internally; no need for the
       // |nsIWeakReference| interface.  So just return |nsISupports|.
       if (iid->Equals(NS_GET_IID(nsIWeakReference))) {
         *aResult = (char*) nsMemory::Clone(isupp_str, sizeof(isupp_str));

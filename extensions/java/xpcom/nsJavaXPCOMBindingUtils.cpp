@@ -914,7 +914,7 @@ ThrowException(JNIEnv* env, const nsresult aErrorCode, const char* aMessage)
   methodSig.AppendLiteral(")V");
 
   // In some instances (such as in shutdownXPCOM() and termEmbedding()), we
-  // will need to throw an exception when Javaconnect has already been
+  // will need to throw an exception when JavaXPCOM has already been
   // terminated.  In such a case, 'xpcomExceptionClass' will be null.  So we
   // reset it temporarily in order to throw the appropriate exception.
   if (xpcomExceptionClass == nsnull) {

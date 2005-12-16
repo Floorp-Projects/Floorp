@@ -41,7 +41,7 @@ import java.util.*;
 
 
 /**
- * Simple testcase that uses the nsIProperties interface to test the Javaconnect
+ * Simple testcase that uses the nsIProperties interface to test the JavaXPCOM
  * code.  In particular, it tests for 'out' and 'array' params (see method call
  * to getKeys).
  */

@@ -63,7 +63,7 @@ JNI_OnUnload(JavaVM* vm, void* reserved)
 }
 
 /********************************
- *  Javaconnect JNI interfaces
+ *  JavaXPCOM JNI interfaces
  ********************************/
 
 typedef void     (*JX_InitEmbeddingFunc) (JNIEnv*, jobject, jobject, jobject,
@@ -132,7 +132,7 @@ GetJavaFilePath(JNIEnv* env, jobject aFile)
 
 
 // Calls XPCOMGlueStartup using the given java.io.File object, and loads
-// the Javaconnect methods from the XUL shared library.
+// the JavaXPCOM methods from the XUL shared library.
 nsresult
 Initialize(JNIEnv* env, jobject aXPCOMPath)
 {
