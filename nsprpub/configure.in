@@ -1876,10 +1876,10 @@ mips-sony-newsos*)
         if `$CC -print-prog-name=ld` -v 2>&1 | grep -c GNU >/dev/null; then
             GCC_USE_GNU_LD=1
         fi
-        DSO_LDOPTS='-shared -Wl,-h,$(notdir $@),-z,combreloc,-z,defs' 
+        DSO_LDOPTS='-shared -Wl,-h,$(notdir $@),-z,combreloc,-z,defs,-z,ignore' 
     else
         DSO_CFLAGS=-KPIC
-        DSO_LDOPTS='-G -h $(notdir $@) -z combreloc -z defs'
+        DSO_LDOPTS='-G -h $(notdir $@) -z combreloc -z defs -z ignore'
     fi
     if test -n "$GNU_CC"; then
         CFLAGS="$CFLAGS -Wall"
