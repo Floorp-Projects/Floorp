@@ -2753,7 +2753,6 @@ then
 			dnl -pthread links in -lc_r, so don't specify it explicitly.
 			if test "$ac_cv_have_dash_pthread" = "yes"; then
                 _PTHREAD_LDFLAGS="-pthread"
-                LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
 			fi
 			;;
 
@@ -2785,6 +2784,7 @@ then
 			fi
 			;;
 	esac
+    LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
 fi
 
 dnl ========================================================
