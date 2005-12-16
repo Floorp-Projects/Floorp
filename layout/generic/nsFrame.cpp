@@ -1697,14 +1697,22 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
 
       if (NS_SUCCEEDED(result) && !mouseDown && me && me->clickCount < 2)
       {
-        // We are doing this to simulate what we would have done on HandlePress
+        // We are doing this to simulate what we would have done on HandlePress.
+        // We didn't do it there to give the user an opportunity to drag
+        // the text, but since they didn't drag, we want to place the
+        // caret.
+        // However, we'll use the mouse position from the release, since:
+        //  * it's easier
+        //  * that's the normal click position to use (although really, in
+        //    the normal case, small movements that don't count as a drag
+        //    can do selection)
         result = frameselection->SetMouseDownState( PR_TRUE );
 
         nsCOMPtr<nsIContent> content;
         PRInt32 startOffset = 0, endOffset = 0;
         PRBool  beginFrameContent = PR_FALSE;
 
-        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(me, this);
+        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
         result = GetContentAndOffsetsFromPoint(aPresContext, pt,
                                                getter_AddRefs(content),
                                                startOffset, endOffset, 
