@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 NO_PKG_FILES = \
 	firefox-config \
+	firefox-bin.elf \
 	regchrome* \
 	regxpcom* \
 	xpcshell* \
