@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: crypto.c,v $ $Revision: 1.1 $ $Date: 2005/12/16 00:48:01 $";
+static const char CVS_ID[] = "@(#) $RCSfile: crypto.c,v $ $Revision: 1.2 $ $Date: 2005/12/16 01:57:41 $";
 #endif /* DEBUG */
 
 /*
@@ -308,11 +308,9 @@ nssCKFWCryptoOperation_DigestKey
     return CKR_FUNCTION_FAILED;
   }
   mdObject = nssCKFWObject_GetMDObject(fwObject);
-  return fwOperation->mdOperation->DigestUpdate(
+  return fwOperation->mdOperation->DigestKey(
                 fwOperation->mdOperation,
                 fwOperation,
-                fwOperation->mdSession,
-                fwOperation->fwSession,
                 fwOperation->mdToken,
                 fwOperation->fwToken,
                 fwOperation->mdInstance,
