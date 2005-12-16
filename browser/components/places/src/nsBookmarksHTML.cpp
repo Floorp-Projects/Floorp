@@ -54,6 +54,7 @@
  *   of the bookmark container.
  * Bookmark := a
  *   HREF is the destination of the bookmark
+ *   FEEDURL is the URI of the RSS feed if this is a livemark.
  *   LAST_CHARSET should be stored as an annotation (FIXME TODO) so that the
  *     next time we go to that page we remember the user's preference.
  *   ICON will be stored in the favicon service
@@ -90,6 +91,7 @@
 #include "nsIAnnotationService.h"
 #include "nsIFile.h"
 #include "nsIHTMLContentSink.h"
+#include "nsILivemarkService.h"
 #include "nsIParser.h"
 #include "nsIServiceManager.h"
 #include "nsFaviconService.h"
@@ -108,6 +110,7 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_BOOKMARKSMENU_LOWER "bookmarks_menu"
 #define KEY_PLACESROOT_LOWER "places_root"
 #define KEY_HREF_LOWER "href"
+#define KEY_FEEDURL_LOWER "feedurl"
 #define KEY_LASTCHARSET_LOWER "last_charset"
 #define KEY_ICON_LOWER "icon"
 
@@ -170,6 +173,9 @@ public:
   // with a bookmark, but to keep it until 
   nsCOMPtr<nsIURI> mPreviousLink;
 
+  // contains the URL of the previous livemark, so that when the link ends,
+  // and the livemark title is known, we can create it.
+  nsCOMPtr<nsIURI> mPreviousFeed;
 
   void ConsumeHeading(nsAString* aHeading, ContainerType* aContainerType)
   {
@@ -224,6 +230,7 @@ protected:
   nsCOMPtr<nsINavBookmarksService> mBookmarksService;
   nsCOMPtr<nsINavHistoryService> mHistoryService;
   nsCOMPtr<nsIAnnotationService> mAnnotationService;
+  nsCOMPtr<nsILivemarkService> mLivemarkService;
 
   // if set, we will move root items to where we find them. This should be
   // set when we are loading the default places html file, and should be
@@ -272,6 +279,8 @@ BookmarkContentSink::Init(PRBool aAllowRootChanges,
   mHistoryService = do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   mAnnotationService = do_GetService(NS_ANNOTATIONSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mLivemarkService = do_GetService(NS_LIVEMARKSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mAllowRootChanges = aAllowRootChanges;
@@ -508,6 +517,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
 
   // get the attributes we care about
   nsAutoString href;
+  nsAutoString feedUrl;
   nsAutoString icon;
   nsAutoString lastCharset;
   PRInt32 attrCount = node.GetAttributeCount();
@@ -515,6 +525,8 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
     const nsAString& key = node.GetKeyAt(i);
     if (key.LowerCaseEqualsLiteral(KEY_HREF_LOWER)) {
       href = node.GetValueAt(i);
+    } else if (key.LowerCaseEqualsLiteral(KEY_FEEDURL_LOWER)) {
+      feedUrl = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_ICON_LOWER)) {
       icon = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_LASTCHARSET_LOWER)) {
@@ -522,6 +534,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
     }
   }
   href.Trim(kWhitespace);
+  feedUrl.Trim(kWhitespace);
   icon.Trim(kWhitespace);
   lastCharset.Trim(kWhitespace);
 
@@ -537,6 +550,15 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   if (NS_FAILED(rv)) {
     frame.mPreviousLink = nsnull;
     return; // invalid link
+  }
+  
+  // if there is a feedURL, this is a livemark, which is a special case
+  // that we handle in HandleLinkBegin()
+  if (!feedUrl.IsEmpty() &&
+      NS_SUCCEEDED(NS_NewURI(getter_AddRefs(frame.mPreviousFeed),
+                    NS_ConvertUTF16toUTF8(feedUrl), nsnull)))
+  {
+    return;
   }
 
   // create the bookmarks
@@ -561,7 +583,19 @@ BookmarkContentSink::HandleLinkEnd()
 {
   BookmarkImportFrame& frame = CurFrame();
   frame.mPreviousText.Trim(kWhitespace);
-  if (! frame.mPreviousText.IsEmpty() && frame.mPreviousLink) {
+  if (frame.mPreviousFeed) {
+    // The bookmark is actually a livemark.  Create it here.
+    // (It gets created here instead of in HandleLinkBegin()
+    // because we need to know the title before creating it.)
+    PRInt64 folderId;
+    mLivemarkService->CreateLivemark(frame.mContainerID,
+                                     frame.mPreviousText,
+                                     frame.mPreviousLink,
+                                     frame.mPreviousFeed,
+                                     -1,
+                                     &folderId);
+  }
+  else if (! frame.mPreviousText.IsEmpty() && frame.mPreviousLink) {
     mHistoryService->SetPageUserTitle(frame.mPreviousLink,
                                       frame.mPreviousText);
   }
