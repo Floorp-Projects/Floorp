@@ -893,15 +893,25 @@ JSClass js_CallClass = {
 
 #endif /* JS_HAS_CALL_OBJECT */
 
-/* SHARED because fun_getProperty always computes a new value. */
-#define FUNCTION_PROP_ATTRS (JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED)
+/*
+ * ECMCA-262 specifies that length is a property of function object instances,
+ * but we can avoid that space cost by delegating to a prototype property that
+ * is JSPROP_PERMANENT and JSPROP_SHARED.  Each fun_getProperty call computes
+ * a fresh length value based on the arity of the individual function object's
+ * private data.
+ *
+ * The extensions below other than length, i.e., the ones not in ECMA-262,
+ * are neither JSPROP_READONLY nor JSPROP_SHARED, because for compatibility
+ * with ECMA we must allow a delegating object to override them.
+ */
+#define LENGTH_PROP_ATTRS (JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED)
 
 static JSPropertySpec function_props[] = {
-    {js_arguments_str, CALL_ARGUMENTS, FUNCTION_PROP_ATTRS,0,0},
-    {js_arity_str,     FUN_ARITY,      FUNCTION_PROP_ATTRS,0,0},
-    {js_length_str,    ARGS_LENGTH,    FUNCTION_PROP_ATTRS,0,0},
-    {js_name_str,      FUN_NAME,       FUNCTION_PROP_ATTRS,0,0},
-    {js_caller_str,    FUN_CALLER,     FUNCTION_PROP_ATTRS,0,0},
+    {js_arguments_str, CALL_ARGUMENTS, JSPROP_PERMANENT,  0,0},
+    {js_arity_str,     FUN_ARITY,      JSPROP_PERMANENT,  0,0},
+    {js_caller_str,    FUN_CALLER,     JSPROP_PERMANENT,  0,0},
+    {js_length_str,    ARGS_LENGTH,    LENGTH_PROP_ATTRS, 0,0},
+    {js_name_str,      FUN_NAME,       JSPROP_PERMANENT,  0,0},
     {0,0,0,0,0}
 };
 
@@ -916,9 +926,30 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_TRUE;
     slot = JSVAL_TO_INT(id);
 
-    /* Loop because getter and setter can be delegated from another class. */
+    /*
+     * Loop because getter and setter can be delegated from another class,
+     * but loop only for ARGS_LENGTH because we must pretend that f.length
+     * is in each function instance f, per ECMA-262, instead of only in the
+     * Function.prototype object (we use JSPROP_PERMANENT with JSPROP_SHARED
+     * to make it appear so).
+     *
+     * This code couples tightly to the attributes for the function_props[]
+     * initializers above, and to js_SetProperty and js_HasOwnPropertyHelper.
+     *
+     * It's important to allow delegating objects, even though they inherit
+     * this getter (fun_getProperty), to override arguments, arity, caller,
+     * and name.  If we didn't return early for slot != ARGS_LENGTH, we would
+     * clobber *vp with the native property value, instead of letting script
+     * override that value in delegating objects.
+     *
+     * Note how that clobbering is what simulates JSPROP_READONLY for all of
+     * the non-standard properties when the directly addressed object (obj)
+     * is a function object (i.e., when this loop does not iterate).
+     */
     while (!(fun = (JSFunction *)
                    JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL))) {
+        if (slot != ARGS_LENGTH)
+            return JS_TRUE;
         obj = OBJ_GET_PROTO(cx, obj);
         if (!obj)
             return JS_TRUE;
