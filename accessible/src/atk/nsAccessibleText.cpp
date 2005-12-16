@@ -729,23 +729,25 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
   rc->GetFontMetrics(fm);
   NS_ENSURE_TRUE(fm, NS_ERROR_FAILURE);
 
-  PRUnichar ch;
-  if (NS_FAILED(GetCharacterAtOffset(aOffset, &ch))) {
-    return NS_ERROR_FAILURE;
-  }
-
   float t2p = context->TwipsToPixels();
 
-  //Getting width
-  nscoord tmpWidth;
-  if (NS_SUCCEEDED(rc->GetWidth(ch, tmpWidth))) {
-    *aWidth = NSTwipsToIntPixels(tmpWidth, t2p);
-  }
+  PRUnichar ch;
+  if (NS_SUCCEEDED(GetCharacterAtOffset(aOffset, &ch))) {
+    //Getting width
+    nscoord tmpWidth;
+    if (NS_SUCCEEDED(rc->GetWidth(ch, tmpWidth))) {
+      *aWidth = NSTwipsToIntPixels(tmpWidth, t2p);
+    }
 
-  //Getting height
-  nscoord tmpHeight;
-  if (NS_SUCCEEDED(fm->GetHeight(tmpHeight))) {
-    *aHeight = NSTwipsToIntPixels(tmpHeight, t2p);
+    //Getting height
+    nscoord tmpHeight;
+    if (NS_SUCCEEDED(fm->GetHeight(tmpHeight))) {
+      *aHeight = NSTwipsToIntPixels(tmpHeight, t2p);
+    }
+  }
+  else {
+    //GetCharacterAtOffset() will fail when there is no text
+    *aWidth = *aHeight = 0;
   }
 
   //add the width of the string before current char
