@@ -82,6 +82,7 @@ CPPSRCS = \
           nsBookmarksHTML.cpp \
           nsFaviconService.cpp \
           nsNavHistory.cpp \
+          nsNavHistoryAutoComplete.cpp \
           nsNavHistoryQuery.cpp \
           nsNavHistoryResult.cpp \
           nsNavBookmarks.cpp \
