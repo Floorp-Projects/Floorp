@@ -4038,7 +4038,7 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_LIBXUL=
-MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc help p3p venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs auth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter"
+MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc help p3p venkman inspector irc typeaheadfind webservices spellcheck gnomevfs auth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter"
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
 MOZ_IPCD=
@@ -4074,6 +4074,7 @@ MOZ_SINGLE_PROFILE=
 MOZ_STATIC_MAIL_BUILD=
 MOZ_TIMELINE=
 MOZ_UI_LOCALE=en-US
+MOZ_UNIVERSALCHARDET=1
 MOZ_USE_NATIVE_UCONV=
 MOZ_V1_STRING_ABI=1
 MOZ_VIEW_SOURCE=1
@@ -4126,7 +4127,7 @@ suite)
   MOZ_SUITE=1
   MOZ_PROFILESHARING=
   MOZ_APP_VERSION=$SEAMONKEY_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc help p3p venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs auth sroaming permissions reporter"
+  MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc help p3p venkman inspector irc typeaheadfind webservices spellcheck gnomevfs auth sroaming permissions reporter"
   AC_DEFINE(MOZ_SUITE)
   ;;
 
@@ -4137,7 +4138,7 @@ browser)
   MOZ_UPDATER=1
   MOZ_PHOENIX=1
   MOZ_APP_VERSION=$FIREFOX_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc universalchardet webservices inspector gnomevfs auth permissions reporter"
+  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc webservices inspector gnomevfs auth permissions reporter"
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
@@ -4170,6 +4171,7 @@ minimo)
   MOZ_PROFILELOCKING=
   MOZ_PROFILESHARING=
   MOZ_SINGLE_PROFILE=1
+  MOZ_UNIVERSALCHARDET=
   MOZ_UPDATER=
   MOZ_USE_NATIVE_UCONV=1
   MOZ_V1_STRING_ABI=
@@ -4205,7 +4207,7 @@ mail)
   MOZ_STATIC_MAIL_BUILD=1
   MOZ_COMPOSER=1
   MOZ_APP_VERSION=$THUNDERBIRD_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" wallet spellcheck webservices universalchardet auth"
+  MOZ_EXTENSIONS_DEFAULT=" wallet spellcheck webservices auth"
   AC_DEFINE(MOZ_THUNDERBIRD)
   ;;
 
@@ -4229,6 +4231,7 @@ calendar)
   MOZ_CALENDAR=1
   MOZ_APP_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
   MOZ_EXTENSIONS_DEFAULT=" pref"
+  MOZ_UNIVERSALCHARDET=
   AC_DEFINE(MOZ_SUNBIRD)
   ;;
 
@@ -4241,7 +4244,7 @@ xulrunner)
   MOZ_ENABLE_LIBXUL=1
   MOZ_APP_VERSION=$MOZILLA_VERSION
   MOZ_JAVAXPCOM=1
-  MOZ_EXTENSIONS_DEFAULT=" xml-rpc universalchardet webservices gnomevfs auth"
+  MOZ_EXTENSIONS_DEFAULT=" xml-rpc webservices gnomevfs auth"
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
 
@@ -4249,7 +4252,7 @@ macbrowser)
   MOZ_APP_NAME=mozilla
   MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie universalchardet typeaheadfind permissions"
+  MOZ_EXTENSIONS_DEFAULT=" cookie typeaheadfind permissions"
   MOZ_PREF_EXTENSIONS=
   AC_DEFINE(MOZ_MACBROWSER)
   ;;
@@ -4896,6 +4899,15 @@ MOZ_ARG_DISABLE_BOOL(pref-extensions,
   MOZ_PREF_EXTENSIONS=1 )
 
 dnl ========================================================
+dnl = Universalchardet
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(universalchardet,
+[  --disable-universalchardet
+                          Disable universal encoding detection],
+  MOZ_UNIVERSALCHARDET=,
+  MOZ_UNIVERSALCHARDET=1 )
+
+dnl ========================================================
 dnl Javaconnect
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(javaconnect,
@@ -4948,7 +4960,6 @@ if test -n "${MOZ_JAVAXPCOM}"; then
     AC_MSG_ERROR([The programs javac and jar were not found.  Set \$JAVA_HOME or use --with-java-bin-path={java-bin-dir}.])
   fi
 fi
-
 
 dnl ========================================================
 dnl = Enable compilation of specific extension modules
@@ -5029,6 +5040,11 @@ fi
 if test `echo "$MOZ_EXTENSIONS" | grep -c pref` -ne 0; then
     AC_MSG_WARN([pref is no longer an extension, use --disable-pref-extensions to disable.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|pref||g'`
+fi
+
+if test `echo "$MOZ_EXTENSIONS" | grep -c universalchardet` -ne 0; then
+    AC_MSG_WARN([universalchardet is no longer an extension, use --disable-universalchardet to disable.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|universalchardet||g'`
 fi
 
 if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
@@ -6890,6 +6906,7 @@ AC_SUBST(MOZ_ENABLE_LIBXUL)
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
 AC_SUBST(SUNCTL)
+AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_XPINSTALL)
 AC_SUBST(MOZ_VIEW_SOURCE)
