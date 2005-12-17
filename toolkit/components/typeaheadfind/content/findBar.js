@@ -23,6 +23,7 @@
 #     Blake Ross <blake@cs.stanford.edu> (Original Author)
 #     Masayuki Nakano <masayuki@d-toybox.com>
 #     Ben Basson <contact@cusser.net>
+#     Jason Barnabe <jason_barnabe@fastmail.fm>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -288,6 +289,7 @@ var gFindBar = {
     finder.caseSensitive =
       document.getElementById("find-case-sensitive").checked;
 
+    var textFound = false;
     while((retRange = finder.Find(word, this.mSearchRange,
                                   this.mStartPt, this.mEndPt))) {
       // Highlight
@@ -296,7 +298,14 @@ var gFindBar = {
       this.mStartPt = node.ownerDocument.createRange();
       this.mStartPt.setStart(node, node.childNodes.length);
       this.mStartPt.setEnd(node, node.childNodes.length);
+
+      textFound = true;
     }
+
+    // We have to update the status because we might still have the status
+    // of another tab (bug 313653)
+    this.updateStatus(textFound ? Components.interfaces.nsITypeAheadFind.FIND_FOUND : 
+                      Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND, false);
 
     this.mLastHighlightString = word;
   },
