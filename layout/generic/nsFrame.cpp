@@ -4538,7 +4538,6 @@ IsTablePseudo(nsIAtom* aPseudo)
     aPseudo == nsCSSAnonBoxes::tableRowGroup ||
     aPseudo == nsCSSAnonBoxes::tableRow ||
     aPseudo == nsCSSAnonBoxes::tableCell ||
-    aPseudo == nsCSSAnonBoxes::cellContent ||
     aPseudo == nsCSSAnonBoxes::tableColGroup ||
     aPseudo == nsCSSAnonBoxes::tableCol;
 }
