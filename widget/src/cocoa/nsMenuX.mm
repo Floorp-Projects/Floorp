@@ -309,18 +309,7 @@ NS_IMETHODIMP nsMenuX::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem
 
 NS_IMETHODIMP nsMenuX::RemoveItem(const PRUint32 aPos)
 {
-  if (mMacMenu != NULL) {
-    // clear command id
-    nsCOMPtr<nsIMenuCommandDispatcher> dispatcher(do_QueryInterface(mManager));
-    if (dispatcher) {
-      dispatcher->Unregister((PRUint32)[[mMacMenu itemAtIndex:aPos] tag]);
-    }
-    // get rid of Cocoa menu item
-    [mMacMenu removeItemAtIndex:aPos];
-  }
-  // get rid of Gecko menu items
-  mMenuItemsArray.RemoveObjectAt(aPos);
-
+  NS_WARNING("Not implemented");
   return NS_OK;
 }
 
