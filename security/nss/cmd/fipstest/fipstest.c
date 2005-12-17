@@ -2209,22 +2209,23 @@ SECStatus sha_calcMD(unsigned char *MD, unsigned int MDLen, unsigned char *msg, 
  */
 SECStatus sha_mct_test(unsigned int MDLen, unsigned char *seed, FILE *resp) 
 {
+    int i, j;
+    unsigned int msgLen = MDLen*3;
     unsigned char MD_i3[HASH_LENGTH_MAX];  /* MD[i-3] */
     unsigned char MD_i2[HASH_LENGTH_MAX];  /* MD[i-2] */
     unsigned char MD_i1[HASH_LENGTH_MAX];  /* MD[i-1] */
     unsigned char MD_i[HASH_LENGTH_MAX];   /* MD[i] */
-    unsigned int msgLen = MDLen*3;
     unsigned char msg[HASH_LENGTH_MAX*3];
     char buf[HASH_LENGTH_MAX + 6];  /* MAX buf MD = MD[HASH_LENGTH_MAX] */
 
 
-    for (int j=0; j<100; j++) {
+    for (j=0; j<100; j++) {
         /* MD_0 = MD_1 = MD_2 = seed */
         memcpy(MD_i3, seed, MDLen);
         memcpy(MD_i2, seed, MDLen);
         memcpy(MD_i1, seed, MDLen);
 
-        for (int i=3; i < 1003; i++) {
+        for (i=3; i < 1003; i++) {
             /* Mi = MD[i-3] || MD [i-2] || MD [i-1] */
             memcpy(msg, MD_i3, MDLen);
             memcpy(&msg[MDLen], MD_i2, MDLen);
