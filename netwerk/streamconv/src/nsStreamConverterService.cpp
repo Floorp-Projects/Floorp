@@ -53,6 +53,7 @@
 #include "nsStreamConverterService.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIAtom.h"
@@ -472,7 +473,42 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
 
 
 /////////////////////////////////////////////////////
-// nsIStreamConverter methods
+// nsIStreamConverterService methods
+NS_IMETHODIMP
+nsStreamConverterService::CanConvert(const char* aFromType,
+                                     const char* aToType,
+                                     PRBool* _retval) {
+    nsCOMPtr<nsIComponentRegistrar> reg;
+    nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(reg));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCAutoString contractID;
+    contractID.AssignLiteral(NS_ISTREAMCONVERTER_KEY "?from=");
+    contractID.Append(aFromType);
+    contractID.AppendLiteral("&to=");
+    contractID.Append(aToType);
+
+    // See if we have a direct match
+    rv = reg->IsContractIDRegistered(contractID.get(), _retval);
+    if (NS_FAILED(rv))
+        return rv;
+    if (*_retval)
+        return NS_OK;
+
+    // Otherwise try the graph.
+    rv = BuildGraph();
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCStringArray *converterChain = nsnull;
+    rv = FindConverter(contractID.get(), &converterChain);
+    *_retval = NS_SUCCEEDED(rv);
+
+    delete converterChain;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsStreamConverterService::Convert(nsIInputStream *aFromStream,
                                   const char *aFromType, 

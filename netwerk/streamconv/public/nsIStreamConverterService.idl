@@ -55,11 +55,17 @@
  * @author Jud Valeski
  * @see nsIStreamConverter
  */
-[scriptable, uuid(e086e1e2-40ff-4193-8b8c-bd548babe70d)]
+[scriptable, uuid(f2b1ab53-f0bd-4adb-9365-e59b1701a258)]
 interface nsIStreamConverterService : nsISupports {
+    /**
+     * Tests whether conversion between the two specified types is possible.
+     * This is cheaper than calling convert()/asyncConvertData(); it is not
+     * necessary to call this function before calling one of those, though.
+     */
+    boolean canConvert(in string aFromType, in string aToType);
 
     /**
-     * <b>SYNCRONOUS VERSION</b>
+     * <b>SYNCHRONOUS VERSION</b>
      * Converts a stream of one type, to a stream of another type.
      *
      * Use this method when you have a stream you want to convert.
@@ -81,7 +87,7 @@ interface nsIStreamConverterService : nsISupports {
                            in nsISupports aContext);
 
     /**
-     * <b>ASYNCRONOUS VERSION</b>
+     * <b>ASYNCHRONOUS VERSION</b>
      * Retrieves a nsIStreamListener that receives the original/raw data via its
      * nsIStreamListener::OnDataAvailable() callback, then converts and pushes 
      * the data to aListener.
