@@ -4529,6 +4529,20 @@ GetIBSpecialSibling(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+static PRBool
+IsTablePseudo(nsIAtom* aPseudo)
+{
+  return
+    aPseudo == nsCSSAnonBoxes::tableOuter ||
+    aPseudo == nsCSSAnonBoxes::table ||
+    aPseudo == nsCSSAnonBoxes::tableRowGroup ||
+    aPseudo == nsCSSAnonBoxes::tableRow ||
+    aPseudo == nsCSSAnonBoxes::tableCell ||
+    aPseudo == nsCSSAnonBoxes::cellContent ||
+    aPseudo == nsCSSAnonBoxes::tableColGroup ||
+    aPseudo == nsCSSAnonBoxes::tableCol;
+}
+
 /**
  * Get the parent, corrected for the mangled frame tree resulting from
  * having a block within an inline.  The result only differs from the
@@ -4546,17 +4560,22 @@ GetCorrectedParent(nsPresContext* aPresContext, nsIFrame* aFrame,
   nsIFrame *parent = aFrame->GetParent();
   *aSpecialParent = parent;
   if (parent) {
-    nsIAtom* parentPseudo = parent->GetStyleContext()->GetPseudoType();
+    nsIAtom* pseudo = aFrame->GetStyleContext()->GetPseudoType();
 
     // if this frame itself is not scrolled-content, then skip any scrolled-content
     // parents since they're basically anonymous as far as the style system goes
-    if (parentPseudo == nsCSSAnonBoxes::scrolledContent) {
-      nsIAtom* pseudo = aFrame->GetStyleContext()->GetPseudoType();
-      if (pseudo != nsCSSAnonBoxes::scrolledContent) {
-        do {
-          parent = parent->GetParent();
-          parentPseudo = parent->GetStyleContext()->GetPseudoType();
-        } while (parentPseudo == nsCSSAnonBoxes::scrolledContent);
+    if (pseudo != nsCSSAnonBoxes::scrolledContent) {
+      while (parent->GetStyleContext()->GetPseudoType() ==
+             nsCSSAnonBoxes::scrolledContent) {
+        parent = parent->GetParent();
+      }
+    }
+
+    // If the frame is not a table pseudo frame, we want to move up
+    // the tree till we get to a non-table-pseudo frame.
+    if (!IsTablePseudo(pseudo)) {
+      while (IsTablePseudo(parent->GetStyleContext()->GetPseudoType())) {
+        parent = parent->GetParent();
       }
     }
 
