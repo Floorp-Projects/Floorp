@@ -48,6 +48,7 @@
 #include "nsHashKeys.h"
 #include "nsIWeakReference.h"
 #include <stdio.h>
+#include <ctype.h>
 
 #ifdef WIN32
 #define snprintf  _snprintf
