@@ -435,7 +435,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
     case eMetric_IsScreenReaderActive:
       BOOL isScreenReaderActive;
-      aMetric = SUCCEEDED(SystemParametersInfo(SPI_GETSCREENREADER, 0, &isScreenReaderActive, 0)) && 
+      aMetric = SystemParametersInfo(SPI_GETSCREENREADER, 0, &isScreenReaderActive, 0) && 
                 isScreenReaderActive;
       break;
 #endif
