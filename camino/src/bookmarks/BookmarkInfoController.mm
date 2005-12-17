@@ -137,6 +137,12 @@ static BookmarkInfoController* gSharedBookmarkInfoController = nil;
     [[self window] selectNextKeyView:nil];
     return YES;
   }
+  
+  if (command == @selector(insertBacktab:)) {
+    [[self window] selectPreviousKeyView:nil];
+    return YES;
+  }
+  
   return NO;
 }
     
