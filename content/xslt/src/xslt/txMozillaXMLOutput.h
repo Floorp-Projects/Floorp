@@ -106,6 +106,7 @@ public:
 
 private:
     void closePrevious(PRInt8 aAction);
+    nsresult createTxWrapper();
     void startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML);
     void endHTMLElement(nsIDOMElement* aElement);
     void processHTTPEquiv(nsIAtom* aHeader, const nsAString& aValue);

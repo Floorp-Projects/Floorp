@@ -74,6 +74,7 @@
 #include "nsICharsetAlias.h"
 #include "nsIHTMLContentSink.h"
 #include "nsContentUtils.h"
+#include "txXMLUtils.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_CID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
@@ -480,50 +481,9 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
             // We already have a document element, but the XSLT spec allows this.
             // As a workaround, create a wrapper object and use that as the
             // document element.
-            nsCOMPtr<nsIDOMElement> wrapper;
-
-            rv = mDocument->CreateElementNS(NS_LITERAL_STRING(kTXNameSpaceURI),
-                                            NS_LITERAL_STRING(kTXWrapper),
-                                            getter_AddRefs(wrapper));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create wrapper element");
-
-            nsCOMPtr<nsIDOMNode> child, resultNode;
-            PRUint32 i, j, childCount = document->GetChildCount();
-            for (i = 0, j = 0; i < childCount; ++i) {
-                nsCOMPtr<nsIContent> childContent = document->GetChildAt(j);
-                if (childContent == mRootContent) {
-                    document->SetRootContent(nsnull);
-                }
-                child = do_QueryInterface(childContent);
-                PRUint16 nodeType;
-                child->GetNodeType(&nodeType);
-                switch (nodeType) {
-                    case nsIDOMNode::ELEMENT_NODE:
-                    case nsIDOMNode::TEXT_NODE:
-                    case nsIDOMNode::CDATA_SECTION_NODE:
-                    case nsIDOMNode::ENTITY_REFERENCE_NODE:
-                    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
-                    case nsIDOMNode::COMMENT_NODE:
-                    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
-                    {
-                        rv = wrapper->AppendChild(child,
-                                                  getter_AddRefs(resultNode));
-                        if (NS_FAILED(rv)) {
-                            // XXX Need to notify about this!
-                            ++j;
-                        }
-                    }
-                    default:
-                    {
-                        ++j;
-                    }
-                }
-            }
-
-            mParentNode = wrapper;
-            mRootContent = do_QueryInterface(wrapper);
-            // XXXbz what to do on failure here?
-            document->SetRootContent(mRootContent);
+            
+            // XXX Need to propagate error.
+            createTxWrapper();
         }
 
         if (mDontAddCurrent && !mNonAddedParent) {
@@ -559,6 +519,17 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
         mParentNode = nsnull;
     }
     else if ((aAction & eFlushText) && !mText.IsEmpty()) {
+        // Text can't appear in the root of a document
+        if (mDocument == mCurrentNode) {
+            if (XMLUtils::isWhitespace(mText)) {
+                mText.Truncate();
+                
+                return;
+            }
+
+            // XXX Need to propagate error.
+            createTxWrapper();
+        }
         nsCOMPtr<nsIDOMText> text;
         rv = mDocument->CreateTextNode(mText, getter_AddRefs(text));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create text node");
@@ -569,6 +540,65 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
 
         mText.Truncate();
     }
+}
+
+nsresult
+txMozillaXMLOutput::createTxWrapper()
+{
+    NS_ASSERTION(mParentNode ? mDocument == mParentNode :
+                               mDocument == mCurrentNode,
+                 "creating wrapper when document isn't parent");
+
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(mDocument);
+    nsCOMPtr<nsIDOMElement> wrapper;
+    nsresult rv =
+      mDocument->CreateElementNS(NS_LITERAL_STRING(kTXNameSpaceURI),
+                                 NS_LITERAL_STRING(kTXWrapper),
+                                 getter_AddRefs(wrapper));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMNode> child, resultNode;
+    PRUint32 i, j, childCount = document->GetChildCount();
+    for (i = 0, j = 0; i < childCount; ++i) {
+        nsIContent* childContent = document->GetChildAt(j);
+        child = do_QueryInterface(childContent);
+        if (childContent == mRootContent) {
+            document->SetRootContent(nsnull);
+        }
+        PRUint16 nodeType;
+        child->GetNodeType(&nodeType);
+        switch (nodeType) {
+            case nsIDOMNode::ELEMENT_NODE:
+            case nsIDOMNode::TEXT_NODE:
+            case nsIDOMNode::CDATA_SECTION_NODE:
+            case nsIDOMNode::ENTITY_REFERENCE_NODE:
+            case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+            case nsIDOMNode::COMMENT_NODE:
+            {
+                // XXX need to propagate error
+                rv = wrapper->AppendChild(child,
+                                          getter_AddRefs(resultNode));
+                if (NS_FAILED(rv) && document->IndexOf(childContent) >= 0) {
+                    // Failed to remove the content, skip it in next iteration
+                    ++j;
+                }
+            }
+            default:
+            {
+                ++j;
+            }
+        }
+    }
+
+    if (mParentNode) {
+        mParentNode = wrapper;
+    }
+    else {
+        mCurrentNode = wrapper;
+    }
+        
+    mRootContent = do_QueryInterface(wrapper);
+    return document->SetRootContent(mRootContent);
 }
 
 void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML)
