@@ -48,7 +48,8 @@
 #include "nsIPresShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIURIContentListener.h"
+#include "nsIStreamConverterService.h"
+#include "nsIURILoader.h"
 #include "nsIURL.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebNavigationInfo.h"
@@ -58,6 +59,7 @@
 #include "prlog.h"
 
 #include "nsAutoPtr.h"
+#include "nsCURILoader.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsDocShellCID.h"
@@ -342,7 +344,8 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
   // UnloadContent will set our type to null; need to be sure to only set it to
   // the real value on success
   ObjectType newType = GetTypeOfContent(mContentType);
-  LOG(("OBJLC [%p]: OnStartRequest: Old type=%u New Type=%u\n", this, mType, newType));
+  LOG(("OBJLC [%p]: OnStartRequest: Content Type=<%s> Old type=%u New Type=%u\n",
+       this, mContentType.get(), mType, newType));
   if (mType != newType) {
     UnloadContent();
   }
@@ -386,23 +389,15 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
       nsCOMPtr<nsIDocShell> docShell;
       rv = mFrameLoader->GetDocShell(getter_AddRefs(docShell));
       NS_ENSURE_SUCCESS(rv, rv);
-      nsCOMPtr<nsIURIContentListener> listener(do_GetInterface(docShell));
-      NS_ASSERTION(listener, "No content listener on the docshell?");
 
-#ifdef DEBUG
-      // Since this is a supported document type, the docshell must support it.
-      nsXPIDLCString str;
-      PRBool canHandle;
-      rv = listener->CanHandleContent(mContentType.get(), PR_TRUE,
-                                      getter_Copies(str), &canHandle);
-      NS_ASSERTION(NS_FAILED(rv) || canHandle, "Docshell should handle this!");
-#endif
+      nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(docShell));
+      NS_ASSERTION(req, "Docshell must be an ifreq");
 
-      PRBool abort;
-      rv = listener->DoContent(mContentType.get(), PR_TRUE, aRequest,
-                               getter_AddRefs(mFinalListener), &abort);
+      nsCOMPtr<nsIURILoader>
+        uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID, &rv));
       NS_ENSURE_SUCCESS(rv, rv);
-      NS_ASSERTION(!abort, "Docshell content listeners shouldn't abort loads");
+      rv = uriLoader->OpenChannel(chan, nsIURILoader::DONT_RETARGET, req,
+                                  getter_AddRefs(mFinalListener));
       break;
     }
     case eType_Plugin:
@@ -1088,9 +1083,27 @@ nsObjectLoadingContent::IsSupportedDocument(const nsCString& aMimeType)
     rv = info->IsTypeSupported(aMimeType, webNav, &supported);
   }
 
-  return NS_SUCCEEDED(rv) &&
-    supported != nsIWebNavigationInfo::UNSUPPORTED &&
-    supported != nsIWebNavigationInfo::PLUGIN;
+  if (NS_SUCCEEDED(rv)) {
+    if (supported == nsIWebNavigationInfo::UNSUPPORTED) {
+      // Try a stream converter
+      // NOTE: We treat any type we can convert from as a supported type. If a
+      // type is not actually supported, the URI loader will detect that and
+      // return an error, and we'll fallback.
+      nsCOMPtr<nsIStreamConverterService> convServ =
+        do_GetService("@mozilla.org/streamConverters;1");
+      PRBool canConvert = PR_FALSE;
+      if (convServ) {
+        rv = convServ->CanConvert(aMimeType.get(), "*/*", &canConvert);
+      }
+
+      return NS_SUCCEEDED(rv) && canConvert;
+    }
+
+    // Don't want to support plugins as documents
+    return supported != nsIWebNavigationInfo::PLUGIN;
+  }
+
+  return PR_FALSE;
 }
 
 void
