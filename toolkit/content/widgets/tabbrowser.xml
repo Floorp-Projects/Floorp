@@ -755,8 +755,7 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            if (event.button != 1 || event.target.localName != 'tab' ||
-                this.mPrefs.getBoolPref("middlemouse.contentLoadURL"))
+            if (event.button != 1 || event.target.localName != 'tab')
               return;
 
             this.removeTab(event.target);
