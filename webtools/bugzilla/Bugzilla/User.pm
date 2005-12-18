@@ -69,10 +69,20 @@ use constant MATCH_SKIP_CONFIRM  => 1;
 
 sub new {
     my $invocant = shift;
-    if (scalar @_ == 0) {
+    my $user_id = shift;
+
+    if ($user_id) {
+        my $uid = $user_id;
+        detaint_natural($user_id)
+          || ThrowCodeError('invalid_numeric_argument',
+                            {argument => 'userID',
+                             value    => $uid,
+                             function => 'Bugzilla::User::new'});
+        return $invocant->_create("userid=?", $user_id);
+    }
+    else {
         return $invocant->_create;
     }
-    return $invocant->_create("userid=?", @_);
 }
 
 # This routine is sort of evil. Nothing except the login stuff should
@@ -85,8 +95,10 @@ sub new {
 # in the id its already had to validate (or the User.pm object, of course)
 sub new_from_login {
     my $invocant = shift;
+    my $login = shift;
+
     my $dbh = Bugzilla->dbh;
-    return $invocant->_create($dbh->sql_istrcmp('login_name', '?'), @_);
+    return $invocant->_create($dbh->sql_istrcmp('login_name', '?'), $login);
 }
 
 # Internal helper for the above |new| methods
