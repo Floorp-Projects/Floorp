@@ -262,6 +262,17 @@ sub bz_setup_database {
         print "\nISAM->MyISAM table conversion done.\n\n";
     }
 
+    # There is a bug in MySQL 4.1.0 - 4.1.15 that makes certain SELECT
+    # statements fail after a SHOW TABLE STATUS: 
+    # http://bugs.mysql.com/bug.php?id=13535
+    # This is a workaround, a dummy SELECT to reset the LAST_INSERT_ID.
+    my @tables = $self->bz_table_list_real();
+    if (lsearch(\@tables, 'bugs') != -1
+        && $self->bz_column_info_real("bugs", "bug_id"))
+    {
+        $self->do('SELECT 1 FROM bugs WHERE bug_id IS NULL');
+    }
+
     # Versions of Bugzilla before the existence of Bugzilla::DB::Schema did 
     # not provide explicit names for the table indexes. This means
     # that our upgrades will not be reliable, because we look for the name
@@ -277,7 +288,6 @@ sub bz_setup_database {
     # has existed at least since Bugzilla 2.8, and probably earlier.
     # For fixing the inconsistent naming of Schema indexes,
     # we also check for one of those inconsistently-named indexes.
-    my @tables = $self->bz_table_list_real();
     if ( scalar(@tables) && 
          ($self->bz_index_info_real('bugs', 'assigned_to') ||
           $self->bz_index_info_real('flags', 'flags_bidattid_idx')) )
