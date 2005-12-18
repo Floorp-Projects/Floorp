@@ -119,6 +119,7 @@ nsAnnoProtocolHandler::NewURI(const nsACString& aSpec,
 NS_IMETHODIMP
 nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   nsresult rv;
 
   nsCAutoString path;

@@ -118,6 +118,7 @@ NS_IMETHODIMP
 nsLDAPProtocolHandler::NewChannel(nsIURI* uri, 
                                   nsIChannel* *result)
 {
+    NS_ENSURE_ARG_POINTER(uri);
     nsresult rv;
     nsLDAPChannel *channel;
 

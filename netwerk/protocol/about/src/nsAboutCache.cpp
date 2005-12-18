@@ -75,6 +75,7 @@ NS_IMPL_ISUPPORTS2(nsAboutCache, nsIAboutModule, nsICacheVisitor)
 NS_IMETHODIMP
 nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
+    NS_ENSURE_ARG_POINTER(aURI);
     nsresult rv;
     PRUint32 bytesWritten;
 

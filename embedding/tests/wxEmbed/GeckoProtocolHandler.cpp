@@ -245,6 +245,7 @@ NS_IMETHODIMP GeckoProtocolHandlerImpl::NewURI(const nsACString & aSpec, const c
 /* nsIChannel newChannel (in nsIURI aURI); */
 NS_IMETHODIMP GeckoProtocolHandlerImpl::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
+    NS_ENSURE_ARG_POINTER(aURI);
     GeckoProtocolChannel *channel = new GeckoProtocolChannel;
     if (!channel)
     {

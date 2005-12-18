@@ -940,6 +940,7 @@ nsGnomeVFSProtocolHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsGnomeVFSProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **aResult)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   nsresult rv;
 
   nsCAutoString spec;

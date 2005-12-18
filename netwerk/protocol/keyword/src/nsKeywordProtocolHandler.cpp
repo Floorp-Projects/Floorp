@@ -164,6 +164,7 @@ nsKeywordProtocolHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsKeywordProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
+    NS_ENSURE_ARG_POINTER(uri);
     nsresult rv;
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;

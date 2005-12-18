@@ -60,6 +60,7 @@ NS_IMPL_ISUPPORTS2(nsAboutCacheEntry,
 NS_IMETHODIMP
 nsAboutCacheEntry::NewChannel(nsIURI *uri, nsIChannel **result)
 {
+    NS_ENSURE_ARG_POINTER(uri);
     nsresult rv;
 
     nsCOMPtr<nsIInputStream> stream;

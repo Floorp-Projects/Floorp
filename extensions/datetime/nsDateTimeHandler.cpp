@@ -125,6 +125,7 @@ NS_IMETHODIMP
 nsDateTimeHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo,
                                      nsIChannel* *result)
 {
+    NS_ENSURE_ARG_POINTER(url);
     nsresult rv;
     
     nsDateTimeChannel *chan = new nsDateTimeChannel();

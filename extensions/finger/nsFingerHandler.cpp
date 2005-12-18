@@ -127,6 +127,7 @@ NS_IMETHODIMP
 nsFingerHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo,
                                    nsIChannel* *result)
 {
+    NS_ENSURE_ARG_POINTER(url);
     nsresult rv;
     
     nsFingerChannel *chan = new nsFingerChannel();

@@ -345,6 +345,7 @@ NS_IMETHODIMP nsSmtpService::NewURI(const nsACString &aSpec,
 
 NS_IMETHODIMP nsSmtpService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   // create an empty pipe for use with the input stream channel.
   nsCOMPtr<nsIInputStream> pipeIn;
   nsCOMPtr<nsIOutputStream> pipeOut;

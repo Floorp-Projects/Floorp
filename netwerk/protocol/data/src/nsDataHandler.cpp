@@ -117,6 +117,7 @@ nsDataHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsDataHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
+    NS_ENSURE_ARG_POINTER(uri);
     nsDataChannel* channel = new nsDataChannel(uri);
     if (!channel)
         return NS_ERROR_OUT_OF_MEMORY;

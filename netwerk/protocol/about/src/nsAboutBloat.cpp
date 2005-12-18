@@ -60,6 +60,7 @@ NS_IMPL_ISUPPORTS1(nsAboutBloat, nsIAboutModule)
 NS_IMETHODIMP
 nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
+    NS_ENSURE_ARG_POINTER(aURI);
     nsresult rv;
     nsCAutoString path;
     rv = aURI->GetPath(path);

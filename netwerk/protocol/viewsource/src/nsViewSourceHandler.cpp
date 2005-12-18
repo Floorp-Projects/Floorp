@@ -115,6 +115,7 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsViewSourceHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
+    NS_ENSURE_ARG_POINTER(uri);
     nsViewSourceChannel *channel = new nsViewSourceChannel();
     if (!channel)
         return NS_ERROR_OUT_OF_MEMORY;

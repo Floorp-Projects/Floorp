@@ -76,7 +76,7 @@ static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);
 NS_IMETHODIMP
 nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
-    NS_ASSERTION(aURI, "must not be null");
+    NS_ENSURE_ARG_POINTER(aURI);
     NS_ASSERTION(result, "must not be null");
 
     nsresult rv;

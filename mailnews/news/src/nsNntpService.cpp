@@ -24,7 +24,7 @@
  *   Scott MacGregor <mscott@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Håkan Waara <hwaara@chello.se>
- *   David Bienvenu < bienvenu@nventure.com>
+ *   David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1416,11 +1416,12 @@ NS_IMETHODIMP nsNntpService::NewURI(const nsACString &aSpec,
 
 NS_IMETHODIMP nsNntpService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   nsresult rv = NS_OK;
   nsCOMPtr <nsINNTPProtocol> nntpProtocol;
   rv = GetProtocolForUri(aURI, nsnull, getter_AddRefs(nntpProtocol));
   if (NS_SUCCEEDED(rv))
-	  rv = nntpProtocol->Initialize(aURI, nsnull);
+    rv = nntpProtocol->Initialize(aURI, nsnull);
   if (NS_FAILED(rv)) return rv;
 
   return CallQueryInterface(nntpProtocol, _retval);

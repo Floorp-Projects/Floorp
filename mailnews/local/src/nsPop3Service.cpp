@@ -415,6 +415,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
 
 NS_IMETHODIMP nsPop3Service::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   nsresult rv = NS_OK;
   nsPop3Protocol * protocol = new nsPop3Protocol(aURI);
   if (protocol)

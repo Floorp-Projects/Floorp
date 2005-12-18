@@ -562,6 +562,7 @@ NS_IMETHODIMP nsMailboxService::NewURI(const nsACString &aSpec,
 
 NS_IMETHODIMP nsMailboxService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   nsresult rv = NS_OK;
   nsMailboxProtocol * protocol = new nsMailboxProtocol(aURI);
   if (protocol)
