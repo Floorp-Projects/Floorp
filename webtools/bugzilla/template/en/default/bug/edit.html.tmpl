@@ -31,28 +31,30 @@
 
   /* Outputs a link to call replyToComment(); used to reduce HTML output */
   function addReplyLink(id) {
-    /* XXX this should really be updated to use the DOM Core's
-     * createElement, but finding a container isn't trivial */
-    document.write('[<a href="#add_comment" onclick="replyToComment(' + 
-        id + ');">reply<' + '/a>]');
+      /* XXX this should really be updated to use the DOM Core's
+       * createElement, but finding a container isn't trivial.
+       */
+      document.write('[<a href="#add_comment" onclick="replyToComment(' + 
+                     id + ');">reply<' + '/a>]');
   }
 
   /* Adds the reply text to the `comment' textarea */
   function replyToComment(id) {
-    /* pre id="comment_name_N" */
-    var text_elem = document.getElementById('comment_text_'+id);
-    var text = getText(text_elem);
+      /* pre id="comment_name_N" */
+      var text_elem = document.getElementById('comment_text_'+id);
+      var text = getText(text_elem);
 
-    /* make sure we split on all newlines -- IE or Moz use \r and \n
-     * respectively */
-    text = text.split(/\r|\n/);
+      /* make sure we split on all newlines -- IE or Moz use \r and \n
+       * respectively.
+       */
+      text = text.split(/\r|\n/);
 
-    var replytext = "";
-    for (var i=0; i < text.length; i++) {
-        replytext += "> " + text[i] + "\n"; 
-    }
+      var replytext = "";
+      for (var i=0; i < text.length; i++) {
+          replytext += "> " + text[i] + "\n"; 
+      }
 
-    replytext = "(In reply to comment #" + id + ")\n" + replytext + "\n";
+      replytext = "(In reply to comment #" + id + ")\n" + replytext + "\n";
 
     [% IF Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
       if (document.getElementById('isprivate-'+id).checked) {
@@ -60,66 +62,67 @@
       }
     [% END %]
 
-    /* <textarea id="comment"> */
-    var textarea = document.getElementById('comment');
-    textarea.value += replytext;
+      /* <textarea id="comment"> */
+      var textarea = document.getElementById('comment');
+      textarea.value += replytext;
 
-    textarea.focus();
+      textarea.focus();
   }
 
-  if (!Node) {
-    /* MSIE doesn't define Node, so provide a compatibility array */
-    var Node = {
-        TEXT_NODE: 3,
-        ENTITY_REFERENCE_NODE: 5
-    };
+  if (typeof Node == 'undefined') {
+      /* MSIE doesn't define Node, so provide a compatibility object */
+      window.Node = {
+          TEXT_NODE: 3,
+          ENTITY_REFERENCE_NODE: 5
+      };
   }
 
   /* Concatenates all text from element's childNodes. This is used
    * instead of innerHTML because we want the actual text (and
-   * innerText is non-standard) */
+   * innerText is non-standard).
+   */
   function getText(element) {
-    var child, text = "";
-    for (var i=0; i < element.childNodes.length; i++) {
-        child = element.childNodes[i];
-        var type = child.nodeType;
-        if (type == Node.TEXT_NODE || type == Node.ENTITY_REFERENCE_NODE) {
-            text += child.nodeValue;
-        } else {
-            /* recurse into nodes of other types */
-            text += getText(child);
-        }
-    }
-    return text;
+      var child, text = "";
+      for (var i=0; i < element.childNodes.length; i++) {
+          child = element.childNodes[i];
+          var type = child.nodeType;
+          if (type == Node.TEXT_NODE || type == Node.ENTITY_REFERENCE_NODE) {
+              text += child.nodeValue;
+          } else {
+              /* recurse into nodes of other types */
+              text += getText(child);
+          }
+      }
+      return text;
   }
 
 [% IF UserInGroup(Param('timetrackinggroup')) %]
   var fRemainingTime = [% bug.remaining_time %]; // holds the original value
   function adjustRemainingTime() {
-     // subtracts time spent from remaining time
-     var new_time;
+      // subtracts time spent from remaining time
+      var new_time;
 
-     // prevent negative values if work_time > fRemainingTime
-     new_time =
-        Math.max(fRemainingTime - document.changeform.work_time.value, 0.0);
-     // get upto 2 decimal places
-     document.changeform.remaining_time.value =
+      // prevent negative values if work_time > fRemainingTime
+      new_time =
+          Math.max(fRemainingTime - document.changeform.work_time.value, 0.0);
+      // get upto 2 decimal places
+      document.changeform.remaining_time.value =
           Math.round(new_time * 100)/100;
   }
 
   function updateRemainingTime() {
-     // if the remaining time is changed manually, update fRemainingTime
-     fRemainingTime = document.changeform.remaining_time.value;
+      // if the remaining time is changed manually, update fRemainingTime
+      fRemainingTime = document.changeform.remaining_time.value;
   }
 
 [% END %]
 
   function updateCommentTagControl(checkbox, form) {
-    if (checkbox.checked) {
-      form.comment.className='bz_private';
-    } else {
-      form.comment.className='';
-    }
+      if (checkbox.checked) {
+          form.comment.className='bz_private';
+      } else {
+          form.comment.className='';
+      }
   }
 
   //-->
