@@ -329,6 +329,7 @@ sub bz_setup_database {
             milestones => ['PRIMARY'],
             profiles_activity => ['profiles_activity_when_idx'],
             group_control_map => ['group_control_map_gid_idx', 'PRIMARY'],
+            groups => ['PRIMARY'],
             user_group_map => ['PRIMARY'],
             group_group_map => ['PRIMARY'],
             email_setting => ['PRIMARY'],
