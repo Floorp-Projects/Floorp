@@ -289,6 +289,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mEnabled            = PR_TRUE;
 	mIsScrolling        = PR_FALSE;
 	mParent             = nsnull;
+	mWindowParent       = nsnull;
 	mUpdateArea = do_CreateInstance(kRegionCID);
 	mForeground = NS_RGBA(0xFF,0xFF,0xFF,0xFF);
 	mBackground = mForeground;
@@ -538,6 +539,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 	}
 
 	mParent = aParent;
+	// Useful shortcut, wondering if we can use it also in GetParent() instead nsIWidget* type mParent.
+	mWindowParent = (nsWindow *)aParent;
 	SetBounds(aRect);
 
 	BRect winrect = BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
@@ -634,14 +637,14 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 				return NS_ERROR_OUT_OF_MEMORY;
 	
 			w->AddChild(mView);
-			if (eWindowType_dialog==mWindowType && mParent)
+			// I'm wondering if we can move part of that code to above
+			if (eWindowType_dialog == mWindowType && mWindowParent) 
 			{
-				nsIWidget * topparent = nsnull;
-				for (topparent = mParent; nsnull != topparent->GetParent(); topparent = topparent->GetParent());
-				BWindow* subsetparent = NULL;
-				if (topparent)
-					subsetparent = (BWindow *)(topparent->GetNativeData(NS_NATIVE_WINDOW));
-
+				nsWindow *topparent = mWindowParent;
+				while(topparent->mWindowParent)
+					topparent = topparent->mWindowParent;
+				// may be got via mView and mView->Window() of topparent explicitly	
+				BWindow* subsetparent = (BWindow *)topparent->GetNativeData(NS_NATIVE_WINDOW);
 				if (subsetparent)
 				{
 					mBWindowFeel = B_FLOATING_SUBSET_WINDOW_FEEL;
@@ -649,11 +652,16 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 					w->AddToSubset(subsetparent);
 				}
 			} 
-			else if (eWindowType_popup==mWindowType && aNativeParent && ((BView *)aNativeParent)->Window())
+			else if (eWindowType_popup == mWindowType  && aNativeParent)
 			{
-				w->AddToSubset(((BView *)aNativeParent)->Window());
+				// Due poor BeOS capability to control windows hierarchy/z-order we use this workaround
+				// to show eWindowType_popup (e.g. drop-downs) over floating (subset) parent window.
+				if (((BView *)aNativeParent)->Window() &&  ((BView *)aNativeParent)->Window()->IsFloating())
+				{
+					mBWindowFeel = B_FLOATING_ALL_WINDOW_FEEL;
+					w->SetFeel(mBWindowFeel);
+				}
 			}
-
 			
 			DispatchStandardEvent(NS_CREATE);
 			return NS_OK;
@@ -738,11 +746,12 @@ NS_METHOD nsWindow::Destroy()
 	{
 		// prevent the widget from causing additional events
 		mEventCallback = nsnull;
-
+	
 		if (mView->LockLooper())
 		{
 			// destroy from inside
 			BWindow	*w = mView->Window();
+			// Do we need here null-check for w ?
 			w->Sync();
 			if (mView->Parent())
 			{
@@ -771,7 +780,8 @@ NS_METHOD nsWindow::Destroy()
 			nsBaseWidget::Destroy();
 		}
 	}
-	mParent = 0;
+	mParent = nsnull;
+	mWindowParent = nsnull;
 	return NS_OK;
 }
 
@@ -2072,7 +2082,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			return false;
 		if ((BWindow *)info->args[1] != mView->Window())
 			return false;
-		if (*mEventCallback || eWindowType_child == mWindowType)
+		if (mEventCallback || eWindowType_child == mWindowType )
 		{
 			bool active = (bool)info->args[0];
 			if (!active) 
@@ -2080,10 +2090,15 @@ bool nsWindow::CallMethod(MethodInfo *info)
 				if (eWindowType_dialog == mWindowType || 
 				    eWindowType_toplevel == mWindowType)
 					DealWithPopups(ONACTIVATE,nsPoint(0,0));
-
 				//Testing if BWindow is really deactivated.
 				if (!mView->Window()->IsActive())
 				{
+					// BeOS is poor in windows hierarchy and variations support. In lot of aspects.
+					// Here is workaround for flacky Activate() handling for B_FLOATING windows.
+					// We should force parent (de)activation to allow main window to regain control after closing floating dialog.
+					if (mWindowParent &&  mView->Window()->IsFloating())
+						mWindowParent->DispatchFocus(NS_ACTIVATE);
+
 					DispatchFocus(NS_DEACTIVATE);
 #if defined(BeIME)
 					nsIMEBeOS::GetIME()->DispatchCancelIME();
@@ -2092,11 +2107,17 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			} 
 			else 
 			{
+
 				if (mView->Window()->IsActive())
-					DispatchFocus(NS_ACTIVATE);
+				{
+					// See comment above.
+					if (mWindowParent &&  mView->Window()->IsFloating())
+						mWindowParent->DispatchFocus(NS_DEACTIVATE);
 					
-				if (mView && mView->Window())
-					gLastActiveWindow = mView->Window();
+					DispatchFocus(NS_ACTIVATE);
+					if (mView && mView->Window())
+						gLastActiveWindow = mView->Window();
+				}
 			}
 		}
 		break;
