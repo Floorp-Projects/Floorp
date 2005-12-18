@@ -153,12 +153,25 @@ sub _get_create_index_ddl {
 # MySQL has a simpler ALTER TABLE syntax than ANSI.
 sub get_alter_column_ddl {
     my ($self, $table, $column, $new_def, $set_nulls_to) = @_;
-    my $new_ddl = $self->get_type_ddl($new_def);
+    my $old_def = $self->get_column($table, $column);
+    my %new_def_copy = %$new_def;
+    if ($old_def->{PRIMARYKEY} && $new_def->{PRIMARYKEY}) {
+        # If a column stays a primary key do NOT specify PRIMARY KEY in the
+        # ALTER TABLE statement. This avoids a MySQL error that two primary
+        # keys are not allowed.
+        delete $new_def_copy{PRIMARYKEY};
+    }
+
+    my $new_ddl = $self->get_type_ddl(\%new_def_copy);
     my @statements;
     push(@statements, "UPDATE $table SET $column = $set_nulls_to
                         WHERE $column IS NULL") if defined $set_nulls_to;
     push(@statements, "ALTER TABLE $table CHANGE COLUMN 
                        $column $column $new_ddl");
+    if ($old_def->{PRIMARYKEY} && !$new_def->{PRIMARYKEY}) {
+        # Dropping a PRIMARY KEY needs an explicit DROP PRIMARY KEY
+        push(@statements, "ALTER TABLE $table DROP PRIMARY KEY");
+    }
     return @statements;
 }
 
