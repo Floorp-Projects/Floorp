@@ -68,10 +68,6 @@ GARBAGE_DIRS += _javagen org
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_DEBUG
-JAVAC_FLAGS = -g
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 RUN =
 OUTPUT_DIR = $(shell cygpath -w $(CURDIR)/_javagen/org/mozilla/xpcom)
