@@ -189,11 +189,6 @@
                 onset="this.setAttribute('showpopup', val); return val;"
                 onget="return this.getAttribute('showpopup') == 'true';"/>
 
-      <!-- option to keep the popup open while typing, even when there are no matches -->
-      <property name="alwaysOpenPopup"
-                onset="this.setAttribute('alwaysopenpopup', val); return val;"
-                onget="return this.getAttribute('alwaysopenpopup') == 'true';"/>
-
       <!-- option to allow scrolling through the list via the tab key, rather than
            tab moving focus out of the textbox -->
       <property name="tabScrolling"
@@ -639,7 +634,7 @@
           
           // if all searches are done and they all failed...
           if (this.mSessionReturns == 0 && this.mFailureCount == this.sessionCount) {
-            if (this.alwaysOpenPopup) {
+            if (this.minResultsForPopup == 0) {
               this.clearResults(true); // clear data and repaint empty
               
               if (this.value) {
@@ -979,7 +974,7 @@
                  this.processInput();
                  return true;
               }
-              if (!this.view.rowCount && !this.alwaysOpenPopup)
+              if (this.view.rowCount < this.minResultsForPopup)
                 return false;
 
               this.mNeedToFinish = true;
