@@ -118,7 +118,7 @@ _javagen/org/mozilla/xpcom/internal/.iface_done: $(JAVA_SRCS)
 # Use find and xargs for passing list of Java files to JAVAC.  This avoids the
 # "argument list too long" error on Windows when using *.java
 org/mozilla/xpcom/internal/.class_done: _javagen/org/mozilla/xpcom/internal/.iface_done
-	@echo Compiling Java interface classes
+	@echo Compiling Java implementation classes
 	find _javagen -name "*.java" | xargs $(JAVAC) $(JAVAC_FLAGS) \
 			-classpath ".$(SEP)../interfaces/MozillaInterfaces.jar" \
       -d . -sourcepath _javagen
