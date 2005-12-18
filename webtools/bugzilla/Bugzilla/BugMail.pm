@@ -138,7 +138,7 @@ sub ProcessOneBug {
 
     my %values = %{$dbh->selectrow_hashref(
         'SELECT ' . join(',', @::log_columns) . ',
-                lastdiffed AS start, NOW() AS end
+                lastdiffed AS start, LOCALTIMESTAMP(0) AS end
            FROM bugs WHERE bug_id = ?',
         undef, $id)};
     
