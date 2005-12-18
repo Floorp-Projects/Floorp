@@ -1423,7 +1423,7 @@ sub init {
     foreach my $field (@fields, @orderby) {
         next if ($field =~ /(AVG|SUM|COUNT|MAX|MIN|VARIANCE)\s*\(/i ||
                  $field =~ /^\d+$/ || $field eq "bugs.bug_id" ||
-                 $field =~ /^relevance/);
+                 $field =~ /^(relevance|actual_time|percentage_complete)/);
         # The structure of fields is of the form:
         # [foo AS] {bar | bar.baz} [ASC | DESC]
         # Only the mandatory part bar OR bar.baz is of interest
