@@ -21,7 +21,7 @@
 */
 
 /* BEGIN MOZILLA CHANGE (https://bugzilla.mozilla.org/show_bug.cgi?id=297604) */
-// #if defined(__GNUC__) && defined(__i386__)
+/* #if defined(__GNUC__) && defined(__i386__) */
 #if defined(__GNUC__) && defined(__i386__) && !defined(XP_MACOSX)
 /* END MOZILLA CHANGE */
 /* We'll use this version by default only where we know it helps.
