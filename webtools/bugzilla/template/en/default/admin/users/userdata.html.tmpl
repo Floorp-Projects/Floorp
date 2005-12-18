@@ -46,6 +46,7 @@
   <td>
     [% IF editusers %]
       <input size="64" maxlength="255" name="name"
+             autocomplete="off"
              id="name" value="[% otheruser.name FILTER html %]" />
       [% IF editform %]
         <input type="hidden" name="nameold"
@@ -61,6 +62,7 @@
     <th><label for="password">Password:</label></th>
     <td>
       <input type="password" size="16" maxlength="16" name="password"
+             autocomplete="off"
              id="password" value="" />
       [% IF editform %]<br />
         (Enter new password to change.)
