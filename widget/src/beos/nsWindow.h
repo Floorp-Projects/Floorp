@@ -218,6 +218,7 @@ protected:
 
 
 	nsCOMPtr<nsIWidget> mParent;
+	nsWindow*        mWindowParent;
 	nsCOMPtr<nsIRegion> mUpdateArea;
 	nsIFontMetrics*  mFontMetrics;
 
