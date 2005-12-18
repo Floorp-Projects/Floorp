@@ -52,5 +52,9 @@ TOOL_DIRS = \
 
 include $(topsrcdir)/config/rules.mk
 
+libs::
+	@echo WARNING: temporary. remove next line.
+	rm -rf src/org interfaces/org
+
 tools::
 	$(MAKE) -C src jarfile
