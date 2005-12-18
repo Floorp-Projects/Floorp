@@ -106,6 +106,7 @@ NS_IMETHODIMP nsIconProtocolHandler::NewURI(const nsACString &aSpec,
 
 NS_IMETHODIMP nsIconProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
+  NS_ENSURE_ARG_POINTER(url);
   nsIconChannel* channel = new nsIconChannel;
   if (!channel)
     return NS_ERROR_OUT_OF_MEMORY;

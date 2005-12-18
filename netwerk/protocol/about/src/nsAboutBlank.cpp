@@ -49,6 +49,7 @@ static const char kBlankPage[] = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 
 NS_IMETHODIMP
 nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
+    NS_ENSURE_ARG_POINTER(aURI);
     nsresult rv;
     nsIChannel* channel;
 

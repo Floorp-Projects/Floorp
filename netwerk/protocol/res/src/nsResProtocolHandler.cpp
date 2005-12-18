@@ -236,6 +236,7 @@ nsResProtocolHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsResProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
+    NS_ENSURE_ARG_POINTER(uri);
     nsresult rv;
     nsCAutoString spec;
 

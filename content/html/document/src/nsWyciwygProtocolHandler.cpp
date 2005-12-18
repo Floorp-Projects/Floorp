@@ -109,6 +109,7 @@ nsWyciwygProtocolHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsWyciwygProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
+  NS_ENSURE_ARG_POINTER(url);
   nsresult rv;
     
   nsWyciwygChannel* channel = new nsWyciwygChannel();

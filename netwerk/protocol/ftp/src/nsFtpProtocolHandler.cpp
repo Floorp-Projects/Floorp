@@ -213,6 +213,7 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 NS_IMETHODIMP
 nsFtpProtocolHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo, nsIChannel* *result)
 {
+    NS_ENSURE_ARG_POINTER(url);
     nsFTPChannel *channel = new nsFTPChannel();
     if (!channel)
         return NS_ERROR_OUT_OF_MEMORY;

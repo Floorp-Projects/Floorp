@@ -136,6 +136,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
+    NS_ENSURE_ARG_POINTER(uri);
     // about:what you ask?
     nsresult rv;
     nsCAutoString contractID;
