@@ -78,8 +78,8 @@ include $(topsrcdir)/config/rules.mk
 
 %.class: %.java Makefile Makefile.in
 	$(REPORT_BUILD)
-	$(ELOG) $(CYGWIN_WRAPPER) $(JAVAC) -classpath $(_JAVA_CLASSPATH) -d . \
-			$(_VPATH_SRCS)
+	$(ELOG) $(CYGWIN_WRAPPER) $(JAVAC) $(JAVAC_FLAGS) \
+			-classpath $(_JAVA_CLASSPATH) -d . $(_VPATH_SRCS)
 
 # make sure to rebuild Java interfaces if our XPIDLSRCS change
 $(REBUILD_JAR): $(XPIDLSRCS)

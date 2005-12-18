@@ -898,3 +898,14 @@ DEFINES += -DBUILD_ID=$(BUILD_ID)
 ifeq (,$(filter WINCE WINNT OS2,$(OS_ARCH)))
 RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
 endif
+
+#
+# Java macros
+#
+
+# Make sure any compiled classes work with at least JVM 1.4
+JAVAC_FLAGS += -source 1.4
+
+ifdef MOZ_DEBUG
+JAVAC_FLAGS += -g
+endif
