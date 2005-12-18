@@ -362,6 +362,9 @@ isTargetable(PRBool focusDocuments, nsIFrame* frame)
   if (isContentOfType(currentContent, "map"))
     return PR_TRUE;
 
+  if (isContentOfType(currentContent, "button"))
+    return PR_TRUE;
+
   if (isContentOfType(currentContent, "a"))
   {
     // an anchor isn't targetable unless it has a non-null href.
