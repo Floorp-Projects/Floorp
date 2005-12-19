@@ -90,6 +90,8 @@ protected:
     
     nsresult            GetFSRefInternal(FSRef& aFSSpec, PRBool bForceUpdateCache = PR_TRUE);
     nsresult            GetPathInternal(nsACString& path);  // Returns path WRT mFollowLinks
+    nsresult            EqualsInternal(nsISupports* inFile,
+                                       PRBool aUpdateCache, PRBool *_retval);
 
     nsresult            MoveCopy(nsIFile* newParentDir, const nsAString &newName, PRBool isCopy, PRBool followLinks);
 
