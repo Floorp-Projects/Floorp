@@ -680,13 +680,23 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
                             PR_MAX(childSize.width, aState.mScrollPortRect.width),
                             PR_MAX(childSize.height, aState.mScrollPortRect.height));
   mInner.mScrolledFrame->SetRect(childRect);
-
+  
+  nsRect overflowRect = mInner.mScrolledFrame->GetOverflowRect();
+  overflowRect.width = PR_MAX(overflowRect.width, aState.mScrollPortRect.width);
+  overflowRect.height = PR_MAX(overflowRect.height, aState.mScrollPortRect.height);
   nsContainerFrame::SyncFrameViewAfterReflow(mInner.mScrolledFrame->GetPresContext(),
                                              mInner.mScrolledFrame,
                                              mInner.mScrolledFrame->GetView(),
-                                             &childRect,
+                                             &overflowRect,
                                              NS_FRAME_NO_MOVE_VIEW);
-                                             
+
+  // Store the new overflow area. Note that this changes where an outline
+  // of the scrolled frame would be painted, but scrolled frames can't have
+  // outlines (the outline would go on this scrollframe instead).
+  nsRect* overflowArea = mInner.mScrolledFrame->GetOverflowAreaProperty(PR_TRUE); 
+  NS_ASSERTION(overflowArea, "should have created rect");
+  *overflowArea = overflowRect;
+
   mInner.PostOverflowEvents();
 }
 
