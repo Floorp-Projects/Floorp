@@ -68,7 +68,6 @@ CPPSRCS= \
 	PyGWeakReference.cpp \
 	PyIClassInfo.cpp \
 	PyIComponentManager.cpp \
-	PyIComponentManagerObsolete.cpp \
 	PyIInputStream.cpp \
 	PyIEnumerator.cpp \
 	PyIID.cpp \

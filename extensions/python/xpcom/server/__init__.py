@@ -72,16 +72,13 @@ def UnwrapObject(ob):
         ret = tracer_unwrap(ret)
     return ret
 
-# Create the main module for the Python loader.
-# This is a once only init process, and the returned object
-# if used to load all other Python components.
-
-# This means that we keep all factories, modules etc implemented in
-# Python!
+# Create the (Python implemented) module for the Python loader.  This
+# Python loader will then (indirectly) create other modules for any found
+# .py file components
 def NS_GetModule( serviceManager, nsIFile ):
-    import loader
+    import loader, module
     iid = _xpcom.IID_nsIModule
-    return WrapObject(loader.MakePythonComponentLoaderModule(serviceManager, nsIFile), iid, bWrapClient = 0)
+    return WrapObject(module.Module([loader.ModuleLoader]), iid, bWrapClient = 0)
 
 def _shutdown():
     from policy import _shutdown

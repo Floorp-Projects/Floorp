@@ -37,18 +37,11 @@
 
 import xpcom
 from xpcom import components
+import xpcom.shutdown
 
 import module
 
-import glob, os, types
-import traceback
-
-from xpcom.client import Component
-
-# Until we get interface constants.
-When_Startup = 0
-When_Component = 1
-When_Timer = 2
+import os, types
 
 def _has_good_attr(object, attr):
     # Actually allows "None" to be specified to disable inherited attributes.
@@ -66,26 +59,37 @@ def FindCOMComponents(py_module):
     return comps
 
 def register_self(klass, compMgr, location, registryLocation, componentType):
-    pcl = PythonComponentLoader
+    pcl = ModuleLoader
     from xpcom import _xpcom
     svc = _xpcom.GetServiceManager().getServiceByContractID("@mozilla.org/categorymanager;1", components.interfaces.nsICategoryManager)
-    svc.addCategoryEntry("component-loader", pcl._reg_component_type_, pcl._reg_contractid_, 1, 1)
+    # The category 'module-loader' is special - the component manager uses it
+    # to create the nsIModuleLoader for a given component type.
+    svc.addCategoryEntry("module-loader", pcl._reg_component_type_, pcl._reg_contractid_, 1, 1)
 
-class PythonComponentLoader:
-    _com_interfaces_ = components.interfaces.nsIComponentLoader
-    _reg_clsid_ = "{63B68B1E-3E62-45f0-98E3-5E0B5797970C}" # Never copy these!
-    _reg_contractid_ = "moz.pyloader.1"
-    _reg_desc_ = "Python component loader"
+# The Python module loader.  Called by the component manager when it finds
+# a component of type self._reg_component_type_.  Responsible for returning
+# an nsIModule for the file.
+class ModuleLoader:
+    _com_interfaces_ = components.interfaces.nsIModuleLoader
+    _reg_clsid_ = "{945BFDA9-0226-485e-8AE3-9A2F68F6116A}" # Never copy these!
+    _reg_contractid_ = "@mozilla.org/module-loader/python;1"
+    _reg_desc_ = "Python module loader"
     # Optional function which performs additional special registration
-    # Appears that no special unregistration is needed for ComponentLoaders, hence no unregister function.
+    # Appears that no special unregistration is needed for ModuleLoaders, hence no unregister function.
     _reg_registrar_ = (register_self,None)
-    # Custom attributes for ComponentLoader registration.
-    _reg_component_type_ = "script/python"
+    # Custom attributes for ModuleLoader registration.
+    _reg_component_type_ = "application/x-python"
 
     def __init__(self):
         self.com_modules = {} # Keyed by module's FQN as obtained from nsIFile.path
         self.moduleFactory = module.Module
-        self.num_modules_this_register = 0
+        xpcom.shutdown.register(self._on_shutdown)
+
+    def _on_shutdown(self):
+        self.com_modules.clear()
+
+    def loadModule(self, aFile):
+        return self._getCOMModuleForLocation(aFile)
 
     def _getCOMModuleForLocation(self, componentFile):
         fqn = componentFile.path
@@ -98,7 +102,7 @@ class PythonComponentLoader:
 
         module_name_in_sys = "component:%s" % (base_name,)
         stuff = loader.find_module(base_name, [componentFile.parent.path])
-        assert stuff is not None, "Couldnt find the module '%s'" % (base_name,)
+        assert stuff is not None, "Couldn't find the module '%s'" % (base_name,)
         py_mod = loader.load_module( module_name_in_sys, stuff )
 
         # Make and remember the COM module.
@@ -107,119 +111,3 @@ class PythonComponentLoader:
         
         self.com_modules[fqn] = mod
         return mod
-        
-    def getFactory(self, clsid, location, type):
-        # return the factory
-        assert type == self._reg_component_type_, "Being asked to create an object not of my type:%s" % (type,)
-        # FIXME: how to do this without obsolete component manager?
-        cmo = components.manager.queryInterface(components.interfaces.nsIComponentManagerObsolete)	
-        file_interface = cmo.specForRegistryLocation(location)
-        # delegate to the module.
-        m = self._getCOMModuleForLocation(file_interface)
-        return m.getClassObject(components.manager, clsid, components.interfaces.nsIFactory)
-
-    def init(self, comp_mgr, registry):
-        # void
-        self.comp_mgr = comp_mgr
-        if xpcom.verbose:
-            print "Python component loader init() called"
-
-     # Called when a component of the appropriate type is registered,
-     # to give the component loader an opportunity to do things like
-     # annotate the registry and such.
-    def onRegister (self, clsid, type, className, proId, location, replace, persist):
-        if xpcom.verbose:
-            print "Python component loader - onRegister() called"
-
-    def autoRegisterComponents (self, when, directory):
-        directory_path = directory.path
-        self.num_modules_this_register = 0
-        if xpcom.verbose:
-            print "Auto-registering all Python components in", directory_path
-
-        # ToDo - work out the right thing here
-        # eg - do we recurse?
-        # - do we support packages?
-        entries = directory.directoryEntries
-        while entries.HasMoreElements():
-            entry = entries.GetNext(components.interfaces.nsIFile)
-            if os.path.splitext(entry.path)[1]==".py":
-                try:
-                    self.autoRegisterComponent(when, entry)
-                # Handle some common user errors
-                except xpcom.COMException, details:
-                    from xpcom import nsError
-                    # If the interface name does not exist, suppress the traceback
-                    if details.errno==nsError.NS_ERROR_NO_INTERFACE:
-                        print "** Registration of '%s' failed\n %s" % (entry.leafName,details.message,)
-                    else:
-                        print "** Registration of '%s' failed!" % (entry.leafName,)
-                        traceback.print_exc()
-                except SyntaxError, details:
-                    # Syntax error in source file - no useful traceback here either.
-                    print "** Registration of '%s' failed!" % (entry.leafName,)
-                    traceback.print_exception(SyntaxError, details, None)
-                except:
-                    # All other exceptions get the full traceback.
-                    print "** Registration of '%s' failed!" % (entry.leafName,)
-                    traceback.print_exc()
-
-    def autoRegisterComponent (self, when, componentFile):
-        # bool return
-        
-        # Check if we actually need to do anything
-        modtime = componentFile.lastModifiedTime
-        loader_mgr = components.manager.queryInterface(components.interfaces.nsIComponentLoaderManager)
-        if not loader_mgr.hasFileChanged(componentFile, None, modtime):
-            return 1
-
-        if self.num_modules_this_register == 0:
-            # New components may have just installed new Python
-            # modules into the main python directory (including new .pth files)
-            # So we ask Python to re-process our site directory.
-            # Note that the pyloader does the equivalent when loading.
-            try:
-                from xpcom import _xpcom
-                import site
-                NS_XPCOM_CURRENT_PROCESS_DIR="XCurProcD"
-                dirname = _xpcom.GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR)
-                dirname.append("python")
-                site.addsitedir(dirname.path)
-            except:
-                print "PyXPCOM loader failed to process site directory before component registration"
-                traceback.print_exc()
-
-        self.num_modules_this_register += 1
-
-        # auto-register via the module.
-        m = self._getCOMModuleForLocation(componentFile)
-        m.registerSelf(components.manager, componentFile, None, self._reg_component_type_)
-        loader_mgr = components.manager.queryInterface(components.interfaces.nsIComponentLoaderManager)
-        loader_mgr.saveFileInfo(componentFile, None, modtime)
-        return 1
-
-    def autoUnregisterComponent (self, when, componentFile):
-        # bool return
-        # auto-unregister via the module.
-        m = self._getCOMModuleForLocation(componentFile)
-        loader_mgr = components.manager.queryInterface(components.interfaces.nsIComponentLoaderManager)
-        try:
-            m.unregisterSelf(components.manager, componentFile)
-        finally:
-            loader_mgr.removeFileInfo(componentFile, None)
-        return 1
-
-    def registerDeferredComponents (self, when):
-        # bool return
-        if xpcom.verbose:
-            print "Python component loader - registerDeferred() called"
-        return 0 # no more to register
-    def unloadAll (self, when):
-        if xpcom.verbose:
-            print "Python component loader being asked to unload all components!"
-        self.comp_mgr = None
-        self.com_modules = {}
-
-def MakePythonComponentLoaderModule(serviceManager, nsIFile):
-    import module
-    return module.Module( [PythonComponentLoader] )

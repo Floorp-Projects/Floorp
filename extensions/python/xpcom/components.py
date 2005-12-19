@@ -220,21 +220,15 @@ del _ComponentCollection
 # The ID function
 ID = _xpcom.IID
 
-# A helper to cleanup our namespace as xpcom shuts down.
-class _ShutdownObserver:
-    _com_interfaces_ = interfaces.nsIObserver
-    def observe(self, service, topic, extra):
-        global manager, registrar, classes, interfaces, interfaceInfoManager, _shutdownObserver, serviceManager, _constants_by_iid_map
-        manager = registrar = classes = interfaces = interfaceInfoManager = _shutdownObserver = serviceManager = _constants_by_iid_map = None
-        xpcom.client._shutdown()
-        xpcom.server._shutdown()
+def _on_shutdown():
+    global manager, registrar, classes, interfaces, interfaceInfoManager, serviceManager, _constants_by_iid_map
+    manager = registrar = classes = interfaces = interfaceInfoManager = serviceManager = _constants_by_iid_map = None
+    # for historical reasons we call these manually.
+    xpcom.client._shutdown()
+    xpcom.server._shutdown()
 
-svc = _xpcom.GetServiceManager().getServiceByContractID("@mozilla.org/observer-service;1", interfaces.nsIObserverService)
-# Observers will be QI'd for a weak-reference, so we must keep the
-# observer alive ourself, and must keep the COM object alive,
-# _not_ just the Python instance!!!
-_shutdownObserver = xpcom.server.WrapObject(_ShutdownObserver(), interfaces.nsIObserver)
-# Say we want a weak ref due to an assertion failing.  If this is fixed, we can pass 0,
-# and remove the lifetime hacks above!  See http://bugzilla.mozilla.org/show_bug.cgi?id=99163
-svc.addObserver(_shutdownObserver, "xpcom-shutdown", 1)
-del svc, _ShutdownObserver
+# import xpcom.shutdown late as it depends on us!
+import shutdown
+shutdown.register(_on_shutdown)
+
+del _on_shutdown, shutdown

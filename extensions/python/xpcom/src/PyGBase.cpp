@@ -48,7 +48,6 @@
 
 #include "PyXPCOM_std.h"
 #include <nsIModule.h>
-#include <nsIComponentLoader.h>
 #include <nsIInputStream.h>
 
 static PRInt32 cGateways = 0;
@@ -58,7 +57,6 @@ PRInt32 _PyXPCOM_GetGatewayCount(void)
 }
 
 extern PyG_Base *MakePyG_nsIModule(PyObject *);
-extern PyG_Base *MakePyG_nsIComponentLoader(PyObject *instance);
 extern PyG_Base *MakePyG_nsIInputStream(PyObject *instance);
 
 static char *PyXPCOM_szDefaultGatewayAttributeName = "_com_instance_default_gateway_";
@@ -77,8 +75,6 @@ PyG_Base::CreateNew(PyObject *pPyInstance, const nsIID &iid, void **ppResult)
 	// Hack for few extra gateways we support.
 	if (iid.Equals(NS_GET_IID(nsIModule)))
 		ret = MakePyG_nsIModule(pPyInstance);
-	else if (iid.Equals(NS_GET_IID(nsIComponentLoader)))
-		ret = MakePyG_nsIComponentLoader(pPyInstance);
 	else if (iid.Equals(NS_GET_IID(nsIInputStream)))
 		ret = MakePyG_nsIInputStream(pPyInstance);
 	else

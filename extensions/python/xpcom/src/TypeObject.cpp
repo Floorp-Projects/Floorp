@@ -102,7 +102,6 @@ PyXPCOM_TypeObject::Py_setattr(PyObject *op, char *name, PyObject *v)
 /*static*/int
 PyXPCOM_TypeObject::Py_cmp(PyObject *self, PyObject *other)
 {
-	// @comm NOTE: Copied from COM - have not confirmed these rules are true for XPCOM
 	// @comm As per the XPCOM rules for object identity, both objects are queried for nsISupports, and these values compared.
 	// The only meaningful test is for equality - the result of other comparisons is undefined
 	// (ie, determined by the object's relative addresses in memory.
