@@ -517,7 +517,7 @@ endif
 # Map mozilla targets to standard automake target
 
 export_tier_%:
-	@echo "$@"
+	@echo "$@" $(if $(tier_$*_dirs),,$(error Tier $* not present))
 	@$(MAKE) $(addsuffix /Makefile,$(filter-out $(STATIC_MAKEFILES),$(tier_$*_dirs)))
 	@$(EXIT_ON_ERROR) \
 	for d in $(tier_$*_dirs); do \
@@ -526,7 +526,7 @@ export_tier_%:
 	done
 
 libs_tier_%:
-	@echo "$@"
+	@echo "$@" $(if $(tier_$*_dirs),,$(error Tier $* not present))
 	@$(MAKE) $(addsuffix /Makefile,$(filter-out $(STATIC_MAKEFILES),$(tier_$*_dirs)))
 	@$(EXIT_ON_ERROR) \
 	for d in $(tier_$*_dirs); do \
@@ -535,7 +535,7 @@ libs_tier_%:
 	done
 
 tools_tier_%:
-	@echo "$@"
+	@echo "$@" $(if $(tier_$*_dirs),,$(error Tier $* not present))
 	@$(MAKE) $(addsuffix /Makefile,$(filter-out $(STATIC_MAKEFILES),$(tier_$*_dirs)))
 	@$(EXIT_ON_ERROR) \
 	for d in $(tier_$*_dirs); do \
@@ -554,7 +554,7 @@ tier_50:
 endif
 
 tier_%:
-	@echo "$@: $($@_dirs)"
+	@echo "$@: $(if $($@_dirs),$($@_dirs),$(error Tier $* not present.))"
 	$(MAKE) export_$@
 	$(MAKE) libs_$@
 
