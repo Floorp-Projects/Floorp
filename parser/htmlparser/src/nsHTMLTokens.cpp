@@ -2028,7 +2028,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 
 
     if (NS_OK==result) {
       if (mTextValue.str().Length() == 0 && mTextKey.Length() == 0 && 
-          mNewlineCount == 0) {
+          mNewlineCount == 0 && !mHasEqualWithoutValue) {
         //This attribute contains no useful information for us, so there is no
         //use in keeping it around. Attributes that are otherwise empty, but
         //have newlines in them are passed on the the DTD so it can get line
