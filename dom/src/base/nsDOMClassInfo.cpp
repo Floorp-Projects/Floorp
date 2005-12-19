@@ -3822,7 +3822,7 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   // after the wrapper is found.
 
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nativeObj));
-  NS_WARN_IF_FALSE(sgo, "nativeObj not a node!");
+  NS_WARN_IF_FALSE(sgo, "nativeObj not a global object!");
 
   if (sgo) {
     *parentObj = sgo->GetGlobalJSObject();
@@ -6236,7 +6236,15 @@ nsLocationSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   // Thing.
   *parentObj = globalObj;
 
-  nsLocation *loc = (nsLocation *)(nsIDOMLocation *)nativeObj;
+  nsCOMPtr<nsIDOMLocation> safeLoc(do_QueryInterface(nativeObj));
+  if (!safeLoc) {
+    // Oops, this wasn't really a location object. This can happen if someone
+    // tries to use our scriptable helper as a real object and tries to wrap
+    // it, see bug 319296
+    return NS_OK;
+  }
+
+  nsLocation *loc = (nsLocation *)safeLoc.get();
   nsIDocShell *ds = loc->GetDocShell();
   if (!ds) {
     NS_WARNING("Refusing to create a location in the wrong scope");
@@ -6268,7 +6276,15 @@ nsNavigatorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   // created too long.
   *parentObj = globalObj;
 
-  nsNavigator *nav = (nsNavigator *)(nsIDOMNavigator *)nativeObj;
+  nsCOMPtr<nsIDOMNavigator> safeNav(do_QueryInterface(nativeObj));
+  if (!safeNav) {
+    // Oops, this wasn't really a navigator object. This can happen if someone
+    // tries to use our scriptable helper as a real object and tries to wrap
+    // it, see bug 319296.
+    return NS_OK;
+  }
+
+  nsNavigator *nav = (nsNavigator *)safeNav.get();
   nsIDocShell *ds = nav->GetDocShell();
   if (!ds) {
     NS_WARNING("Refusing to create a navigator in the wrong scope");
@@ -7029,7 +7045,9 @@ nsContentListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   nsContentList *contentList =
     NS_STATIC_CAST(nsContentList*, NS_STATIC_CAST(nsIDOMNodeList*, nodeList));
 
-  NS_ASSERTION(contentList, "Why does something not implementing nsIDOMNodeList use nsContentListSH??");
+  if (!contentList) {
+    return NS_OK;
+  }
 
   nsISupports *native_parent = contentList->GetParentObject();
 
