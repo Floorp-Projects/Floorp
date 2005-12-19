@@ -54,6 +54,7 @@ PYSRCS_XPCOM = \
 	file.py \
 	nsError.py \
 	register.py \
+	shutdown.py \
 	xpcom_consts.py \
 	xpt.py \
 	$(NULL)

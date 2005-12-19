@@ -100,9 +100,8 @@ class Module:
             if ok:
                 print "Successfully unregistered", klass.__name__
             else:
-                print "Unregistration of", klass.__name__, "failed. (probably just not already registered)"
-        
+                print "Unregistration of", klass.__name__, "failed (not previously registered?)"
+
     def canUnload(self, compMgr):
         # single bool result
         return 0 # we can never unload!
-

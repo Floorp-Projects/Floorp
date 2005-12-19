@@ -49,7 +49,6 @@
 #undef HAVE_LONG_LONG
 #endif
 
-#include "nsIComponentLoader.h"
 #include "nsISupports.h"
 #include "nsIModule.h"
 #include "nsDirectoryServiceDefs.h"

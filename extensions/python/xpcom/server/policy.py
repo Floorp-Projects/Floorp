@@ -140,7 +140,10 @@ class DefaultPolicy:
         self._iid_ = iid
         if ni is None:
             raise ValueError, "The object '%r' can not be used as a COM object" % (instance,)
-        # This is really only a check for the user
+        # This is really only a check for the user - the same thing is
+        # done by the framework.
+        # XXXmarkh - this should probably die now we have better error
+        # reporting in the framework!
         if __debug__:
             if iid != IID_nsISupports and iid not in ni:
                 # The object may delegate QI.
