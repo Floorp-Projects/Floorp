@@ -593,7 +593,7 @@ protected:
   static const PRInt32 kAutoCompleteIndex_VisitCount;
   static const PRInt32 kAutoCompleteIndex_Typed;
 
-  nsCOMPtr<mozIStorageStatement> mDBRecentVisitOfURL; // converts URL into most recent visit ID
+  nsCOMPtr<mozIStorageStatement> mDBRecentVisitOfURL; // converts URL into most recent visit ID/session ID
   nsCOMPtr<mozIStorageStatement> mDBInsertVisit; // used by AddVisit
 
   nsresult InitDB();
@@ -613,7 +613,7 @@ protected:
                               PRBool aHidden, PRBool aTyped,
                               PRInt32 aVisitCount, PRInt64* aPageID);
   nsresult AddVisit(nsIURI* aReferrer, PRInt64 aPageID, PRTime aTime,
-                    PRInt32 aTransitionType, PRInt64 aSessionID);
+                    PRInt32 aTransitionType);
   PRBool IsURIStringVisited(const nsACString& url);
   nsresult VacuumDB(PRTime aTimeAgo, PRBool aCompress);
   nsresult LoadPrefs();
@@ -664,6 +664,18 @@ protected:
 
   // annotation service : MAY BE NULL!
   //nsCOMPtr<mozIAnnotationService> mAnnotationService;
+
+  // recent events
+  typedef nsDataHashtable<nsCStringHashKey, PRInt64> RecentEventHash;
+  RecentEventHash mRecentTyped;
+  RecentEventHash mRecentBookmark;
+
+  PRBool CheckIsRecentEvent(RecentEventHash* hashTable,
+                            const nsACString& url);
+  void ExpireNonrecentEvents(RecentEventHash* hashTable);
+
+  // session tracking
+  PRInt64 mLastSessionID;
 
   //
   // AutoComplete stuff
