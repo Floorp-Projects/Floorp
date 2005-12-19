@@ -994,7 +994,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   return mFilterView;
 }
 
--(NSArray*)browserWindows
+- (NSArray*)browserWindows
 {
   NSEnumerator* windowEnum = [[NSApp orderedWindows] objectEnumerator];
   NSMutableArray* windowArray = [NSMutableArray array];
@@ -1006,7 +1006,8 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     // an empty chrome mask, or ones with a toolbar, status bar, and resize control
     // to be real top-level browser windows for purposes of saving size and 
     // loading urls in. Others are popups and are transient.
-    if ([[curWindow windowController] isMemberOfClass:[BrowserWindowController class]] &&
+    if ([curWindow isVisible] &&
+        [[curWindow windowController] isMemberOfClass:[BrowserWindowController class]] &&
         [[curWindow windowController] hasFullBrowserChrome])
     {
       [windowArray addObject:curWindow];
@@ -1016,8 +1017,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   return windowArray;
 }
 
-
--(NSWindow*)getFrontmostBrowserWindow
+- (NSWindow*)getFrontmostBrowserWindow
 {
   // for some reason, [NSApp mainWindow] doesn't always work, so we have to
   // do this manually
@@ -1031,7 +1031,8 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     // an empty chrome mask, or ones with a toolbar, status bar, and resize control
     // to be real top-level browser windows for purposes of saving size and 
     // loading urls in. Others are popups and are transient.
-    if ([[curWindow windowController] isMemberOfClass:[BrowserWindowController class]] &&
+    if ([curWindow isVisible] &&
+        [[curWindow windowController] isMemberOfClass:[BrowserWindowController class]] &&
         [[curWindow windowController] hasFullBrowserChrome]) 
     {
       foundWindow = curWindow;
@@ -1681,8 +1682,11 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 //
 - (IBAction)emptyCache:(id)sender
 {
-  if (NSRunCriticalAlertPanel(NSLocalizedString(@"EmptyCacheTitle", nil), NSLocalizedString(@"EmptyCacheMessage", nil),
-         NSLocalizedString(@"EmptyButton", nil), NSLocalizedString(@"CancelButtonText", nil), nil) == NSAlertDefaultReturn) {
+  if (NSRunCriticalAlertPanel(NSLocalizedString(@"EmptyCacheTitle", nil),
+                              NSLocalizedString(@"EmptyCacheMessage", nil),
+                              NSLocalizedString(@"EmptyButton", nil),
+                              NSLocalizedString(@"CancelButtonText", nil), nil) == NSAlertDefaultReturn)
+  {
     // remove cache
     nsCOMPtr<nsICacheService> cacheServ (do_GetService("@mozilla.org/network/cache-service;1"));
     if (cacheServ)
@@ -1697,21 +1701,32 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 // - warn user about what is going to happen
 // - if its OK...
 // - close all open windows, delete cache, history, cookies, site permissions,
-//    downloads, saved names and passwords
+//    downloads, saved names and passwords, and clear Top 10 group in bookmarks
 //
 - (IBAction)resetBrowser:(id)sender
 {
-  if (NSRunCriticalAlertPanel(NSLocalizedString(@"Reset Camino Title", @"Are you sure you want to reset Camino?"),
-                      NSLocalizedString(@"Reset Warning Message",
-                      @"Resetting Camino will erase your browsing history, empty the cache, clear downloads, clear all cookies, clear all site permissions, and remove all remembered usernames and passwords. This action cannot be undone."),
-                      NSLocalizedString(@"Reset Camino", @"Reset Camino"),
-                      NSLocalizedString(@"CancelButtonText", @"Cancel"),
-                      nil) == NSAlertDefaultReturn) {
+  if (NSRunCriticalAlertPanel(NSLocalizedString(@"Reset Camino Title", nil),
+                      NSLocalizedString(@"Reset Warning Message", nil),
+                      NSLocalizedString(@"Reset Camino", nil),
+                      NSLocalizedString(@"CancelButtonText", nil),
+                      nil) == NSAlertDefaultReturn)
+  {
     
     // close all windows
-    NSArray *windows = [NSApp orderedWindows];
-    for (unsigned int i = 0; i < [windows count]; i++) {
-      [[windows objectAtIndex:i] performClose:self];
+    {
+      NSArray* openWindows = [[NSApp orderedWindows] copy];
+      NSEnumerator* windowEnum = [openWindows objectEnumerator];
+      NSWindow* curWindow;
+      while ((curWindow = [windowEnum nextObject]))
+      {
+        // we don't want the "you are closing a window with multiple tabs" warning to show up.
+        if ([[curWindow windowController] isMemberOfClass:[BrowserWindowController class]])
+          [(BrowserWindowController*)[curWindow windowController] setWindowClosesQuietly:YES];
+        
+        if ([curWindow isVisible])
+          [curWindow performClose:self];
+      }
+      [openWindows release];
     }
     
     // remove cache
@@ -1739,9 +1754,14 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     // remove downloads
     [[ProgressDlgController sharedDownloadController] clearAllDownloads];
 
+#if 0   // disable this for now (see bug 3202080>
     // remove saved names and passwords
     [[KeychainService instance] removeAllUsernamesAndPasswords];
-    
+#endif
+
+    // re-set all bookmarks visit counts to zero
+    [[BookmarkManager sharedBookmarkManager] clearAllVisits];
+
     // open a new window
     [self newWindow:self];
   }
@@ -1759,8 +1779,10 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
   return [[item1 objectForKey:@"protocol"] compare:[item2 objectForKey:@"protocol"] options:NSCaseInsensitiveSearch];
 }
 
+//
 // NetworkServicesClient implementation
-
+// XXX maybe just use the bookmarks smart folder for this menu?
+//
 - (void)availableServicesChanged:(NSNotification *)note
 {
   // rebuild the submenu, leaving the first item

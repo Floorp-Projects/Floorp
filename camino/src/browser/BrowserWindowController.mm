@@ -89,7 +89,6 @@
 #include "nsIClipboardCommands.h"
 #include "nsICommandManager.h"
 #include "nsICommandParams.h"
-#include "nsIContentViewerEdit.h"
 #include "nsIWebBrowser.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -425,6 +424,7 @@ enum BWCOpenDest {
 
 - (void)setupToolbar;
 - (void)setGeckoActive:(BOOL)inActive;
+- (BOOL)isResponderGeckoView:(NSResponder*) responder;
 - (NSString*)getContextMenuNodeDocumentURL;
 - (void)loadSourceOfURL:(NSString*)urlStr;
 - (void)transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch;
@@ -481,12 +481,6 @@ enum BWCOpenDest {
   return self;
 }
 
-- (BOOL)isResponderGeckoView:(NSResponder*) responder
-{
-  return ([responder isKindOfClass:[NSView class]] &&
-          [(NSView*)responder isDescendantOf:[mBrowserView getBrowserView]]);
-}
-
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
   BOOL windowWithMultipleTabs = ([mTabBrowser numberOfTabViewItems] > 1);
@@ -525,12 +519,18 @@ enum BWCOpenDest {
   }
 }
 
+- (BOOL)isResponderGeckoView:(NSResponder*) responder
+{
+  return ([responder isKindOfClass:[NSView class]] &&
+          [(NSView*)responder isDescendantOf:[mBrowserView getBrowserView]]);
+}
+
 - (void)windowDidChangeMain
 {
   // On 10.4, the unified title bar and toolbar is used, and the bookmark
   // toolbar's appearance is tweaked to better match the unified look.
   // Its active/inactive state needs to change along with the toolbar's.
-  BrowserWindow* browserWin = [self window];
+  BrowserWindow* browserWin = (BrowserWindow*)[self window];
   if ([browserWin hasUnifiedToolbarAppearance]) {
     BookmarkToolbar* bookmarkToolbar = [self bookmarkToolbar];
     if (bookmarkToolbar)
@@ -582,7 +582,8 @@ enum BWCOpenDest {
 
 - (BOOL)windowShouldClose:(id)sender 
 {
-  if ([[PreferenceManager sharedInstance] getBooleanPref:"camino.warn_when_closing" withSuccess:NULL])
+  if (!mWindowClosesQuietly &&
+      [[PreferenceManager sharedInstance] getBooleanPref:"camino.warn_when_closing" withSuccess:NULL])
   {
     unsigned int numberOfTabs = [mTabBrowser numberOfTabViewItems];
     if (numberOfTabs > 1)
@@ -851,7 +852,7 @@ enum BWCOpenDest {
     const int kWindowStaggerOffset = 22;
     
     NSWindow* lastBrowser = [[NSApp delegate] getFrontmostBrowserWindow];
-    if ( lastBrowser != [self window] ) {
+    if ( lastBrowser && lastBrowser != [self window] ) {
       NSRect screenRect = [[lastBrowser screen] visibleFrame];
       NSRect testBrowserFrame = [lastBrowser frame];
       NSPoint previousOrigin = testBrowserFrame.origin;
@@ -2791,7 +2792,7 @@ enum BWCOpenDest {
   BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
   if (aLoadInBG)
   {
-    BrowserWindow* browserWin = [browser window];
+    BrowserWindow* browserWin = (BrowserWindow*)[browser window];
     [browserWin setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
     [browserWin orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
     [browserWin setSuppressMakeKeyFront:NO];
@@ -3322,6 +3323,16 @@ enum BWCOpenDest {
 - (void)hideProgressIndicator
 {
   [mProgress removeFromSuperview];
+}
+
+- (BOOL)windowClosesQuietly
+{
+  return mWindowClosesQuietly;
+}
+
+- (void)setWindowClosesQuietly:(BOOL)inClosesQuietly
+{
+  mWindowClosesQuietly = inClosesQuietly;
 }
 
 //

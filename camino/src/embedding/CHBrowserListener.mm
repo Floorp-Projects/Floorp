@@ -244,6 +244,7 @@ CHBrowserListener::GetChromeFlags(PRUint32 *aChromeFlags)
   *aChromeFlags = mChromeFlags;
   return NS_OK;
 }
+
 NS_IMETHODIMP 
 CHBrowserListener::SetChromeFlags(PRUint32 aChromeFlags)
 {

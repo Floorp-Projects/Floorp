@@ -160,6 +160,8 @@ typedef enum
   BOOL mShouldAutosave;
   BOOL mShouldLoadHomePage;
 
+  BOOL mWindowClosesQuietly;  // if YES, don't warn on multi-tab window close
+  
   unsigned int mChromeMask; // Indicates which parts of the window to show (e.g., don't show toolbars)
 
   // C++ object that holds owning refs to XPCOM objects (and related data)
@@ -326,7 +328,8 @@ typedef enum
 - (void) showProgressIndicator;
 - (void) hideProgressIndicator;
 
-- (BOOL) isResponderGeckoView:(NSResponder*) responder;
+- (BOOL)windowClosesQuietly;
+- (void)setWindowClosesQuietly:(BOOL)inClosesQuietly;
 
 // called when the internal window focus has changed
 // this allows us to dispatch activate and deactivate events as necessary
