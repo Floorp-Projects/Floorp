@@ -72,7 +72,7 @@ cvs -d /path/to/repos2 init
 
 despotdaemon%foo.com:$1$2Zjkl2kjjgvGGapOsss7CLmocwX620:cvsadm
 
-# make sure they repositories are owned by the cvsadm user
+# make sure the repositories are owned by the cvsadm user
 # and group.  turn on the setgid bit on all directories for appropriate
 # group inheritance semantics (assuming your unix supports this).
 
