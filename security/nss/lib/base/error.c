@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: error.c,v $ $Revision: 1.6 $ $Date: 2005/01/20 02:25:45 $";
+static const char CVS_ID[] = "@(#) $RCSfile: error.c,v $ $Revision: 1.7 $ $Date: 2005/12/19 17:53:28 $";
 #endif /* DEBUG */
 
 /*
@@ -96,8 +96,7 @@ static PRCallOnceType error_call_once;
 static PRStatus
 error_once_function ( void)
 {
-  return nss_NewThreadPrivateIndex(&error_stack_index,PR_Free);
-  /* return PR_NewThreadPrivateIndex(&error_stack_index, PR_Free); */
+  return PR_NewThreadPrivateIndex(&error_stack_index, PR_Free);
 }
 
 /*
@@ -124,7 +123,7 @@ error_get_my_stack ( void)
     }
   }
 
-  rv = (error_stack *)nss_GetThreadPrivate(error_stack_index);
+  rv = (error_stack *)PR_GetThreadPrivate(error_stack_index);
   if( (error_stack *)NULL == rv ) {
     /* Doesn't exist; create one */
     new_size = 16;
@@ -149,7 +148,7 @@ error_get_my_stack ( void)
   }
 
   /* Set the value, whether or not the allocation worked */
-  nss_SetThreadPrivate(error_stack_index, new_stack);
+  PR_SetThreadPrivate(error_stack_index, new_stack);
   return new_stack;
 }
 
