@@ -198,6 +198,12 @@
           } else {
             daylabel.setAttribute("value", aDate.day);
           }
+
+          // Remove all the old events
+          this.mItemData = new Array();
+          while(this.hasChildNodes()) {
+                this.dayitems.removeChild(this.dayitems.lastChild);
+          }
         ]]></body>
       </method>
 
@@ -666,35 +672,96 @@
               return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
           }
 
-	  var gridrows = this.monthgridrows;
+          if (this.mSelectedItem) {
+            this.selectedItem = null;
+          }
+	  
+	  // Clear out the old selection, since it won't be valid after relayout
+          if (this.mSelectedDayBox) {
+            this.mSelectedDayBox.box.selected = false;
+          }
 
-          // XXX - reuse the grid boxes!
-          // clear out the grid
-          if (this.mSelectedItem)
-            this.mSelectedItem = null;
+          if (!this.mStartDate || !this.mEndDate)
+            throw NS_ERROR_FAILURE;
 
-          if (this.mSelectedDayBox)
-            this.mSelectedDayBox = null;
+          // If we've already drawn a view once, then in almost all cases we
+          // can resuse most of the grid.  We may need to add or subtract a row
+          // but this is still much faster than recreating all rows.
+          var canReuse = false;
+          if (this.mDateBoxes) {
+            canReuse = true;
+            var oldDuration = this.mDateBoxes[this.mDateBoxes.length-1].date.subtractDate(this.mDateBoxes[0].date);
+            var newDuration = this.mEndDate.subtractDate(this.mStartDate);
+            newDuration.isNegative = true;
+            newDuration.normalize();
+            newDuration.addDuration(oldDuration);
 
-          while (gridrows.lastChild)
+            switch (newDuration.days + newDuration.weeks*7) {
+              case 0: // Perfect!
+                break;
+              case -7:
+                // The new month takes up an extra week, so we need to create
+                // a new row and fill it with day-boxes
+                var newGridRow =  createXULElement("row");
+                newGridRow.setAttribute("flex", "1");
+                newGridRow.setAttribute("class", "calendar-month-view-grid-row");
+                this.monthgridrows.appendChild(newGridRow);
+                for (var i = 0; i < 7; i++) {
+                  var box = createXULElement("calendar-month-day-box");
+                  box.setAttribute("context", this.getAttribute("context"));
+                  box.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
+                  box.setAttribute("class", boxClass);
+                  box.monthView = this;
+                  newGridRow.appendChild(box);
+                  var boxdata = {
+                    date: null,
+                    row: curRow,
+                    box: box
+                  };
+                  this.mDateBoxes.push(boxdata);
+                }
+                break;
+              case 7:
+                // The old month took up an extra week, so remove a row
+                this.monthgridrows.removeChild(this.monthgridrows.lastChild);
+                this.mDateBoxes.splice(this.mDateBoxes.length - 7, 7);
+                break;
+              default: //Right now, this can never happen, but some day it might
+                canReuse = false;
+                break;
+            }
+          }
+
+          if (canReuse) {
+            this.reuseExistingGrid();
+          } else {
+            this.createDayGrid();
+          }
+	]]></body>
+      </method>
+
+      <method name="createDayGrid">
+        <body><![CDATA[
+          function createXULElement(el) {
+              return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
+          }
+
+          // clear out the old grid, if one exists
+          var gridrows = this.monthgridrows;
+          while (gridrows.hasChildNodes()) {
             gridrows.removeChild(gridrows.lastChild);
-
-	  if (!this.mStartDate || !this.mEndDate)
-            return;
-
-	  // we're going to cheat and make sure that the first full
-	  // month is "even".  The only time when this wouldn't be
-	  // valid is if the first of the month actually falls to
-	  // whatever the first weekday is that we're displaying.
-
-	  var isEven = 0;
-	  if (this.mStartDate.day == 1)
-            isEven = 1;
+          }
 
           var dateBoxes = [];
 
-          var first = true;
-          var lastMonth = this.mStartDate.month;
+          // Days that are not in the main month on display are displayed with
+          // a gray background.  Unless the month actually starts on a Sunday,
+          // this means that mStartDate.month is 1 month less than the main month
+          var mainMonth = this.mStartDate.month;
+          if (this.mStartDate.day != 1) {
+            mainMonth++;
+          }
+
           var lastWeekNo = null;
           var curRow = null;
 
@@ -703,16 +770,11 @@
             box.setAttribute("context", this.getAttribute("context"));
             box.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
 
-            if (lastMonth != date.month && !first) {
-              isEven = !isEven;
-              lastMonth = date.month;
-            }
-
             // XXX take into account real start week
             var weekno = Math.floor ((date.yearday - date.weekday) / 7);
 
             if (weekno != lastWeekNo) {
-              // start a new row
+              // start adding to a new row
               curRow = createXULElement("row");
               curRow.setAttribute("flex", "1");
               curRow.setAttribute("class", "calendar-month-view-grid-row");
@@ -721,8 +783,11 @@
               lastWeekNo = weekno;
             }
 
+            //XXX rename these css classes
+            // Set the box-class depending on if this box displays a day in the
+            // main month being shown or not.
             var boxClass = "calendar-month-day-box-" + 
-                           (isEven ? "even" : "odd");
+                           (mainMonth == date.month ? "even" : "odd");
             // XXX isWeekend?
             if (date.weekday == 0 || date.weekday == 6)
               boxClass = "calendar-month-day-box-weekend " + boxClass;
@@ -732,19 +797,79 @@
             box.setDate(date);
             box.monthView = this;
 
+            // add the box and its data to our stored array
             var boxdata = {
               date: date,
               row: curRow,
               box: box
             };
 
-            first = false;
-
             dateBoxes.push(boxdata);
           }
 
+          // Store these, so that we can access them later
           this.mDateBoxes = dateBoxes;
-	]]></body>
+        ]]></body>
+      </method>
+
+      <method name="reuseExistingGrid">
+        <body><![CDATA[
+          // These counters keep track of where we are in the iteration
+          // of old rows/boxes, so we know which one to update
+          var dateBoxCount = 0;
+          var gridRowCount = 0;
+
+          var lastWeekNo = null;
+          var curRow = null;
+
+          // Days that are not in the main month on display are displayed with
+          // a gray background.  Unless the month actually starts on a Sunday,
+          // this means that mStartDate.month is 1 month less than the main month
+          var mainMonth = this.mStartDate.month;
+          if (this.mStartDate.day != 1) {
+            mainMonth++;
+          }
+
+          for each (var date in this.getDateList({})) {
+            var box;
+            // Get the next box that we haven't updated from the previously
+            // stored array of boxes/data.
+            this.mDateBoxes[dateBoxCount].date = date;
+            box = this.mDateBoxes[dateBoxCount].box;
+
+            // These might have changed.  Since we don't expose a 'refresh'
+            // method, make sure we set them again.
+            box.setAttribute("context", this.getAttribute("context"));
+            box.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
+
+            // XXX take into account real start week
+            var weekno = Math.floor ((date.yearday - date.weekday) / 7);
+
+            if (weekno != lastWeekNo) {
+              // start adding to the next row
+              curRow = gridrows.childNodes[gridRowCount];
+              gridRowCount++;
+
+              lastWeekNo = weekno;
+            }
+
+            //XXX rename these css classes
+            // Set the box-class depending on if this box displays a day in the
+            // main month being shown or not.
+            var boxClass = "calendar-month-day-box-" + 
+                           ((mainMonth == date.month) ? "even" : "odd");
+
+            if (date.weekday == 0 || date.weekday == 6)
+              boxClass = "calendar-month-day-box-weekend " + boxClass;
+            box.setAttribute("class", boxClass);
+
+            box.setDate(date);
+
+            // The box and its data is already in the array.  We fixed the
+            // date at the beginning, when we got it from the array.
+            dateBoxCount++;
+          }
+        ]]></body>
       </method>
 
       <method name="findBoxForDate">
