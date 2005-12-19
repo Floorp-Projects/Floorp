@@ -223,12 +223,20 @@ protected:
   nsresult SetTarget(nsIURI* aTarget);
   nsresult SetDisplayName(const PRUnichar* aDisplayName);
   nsresult SetSource(nsIURI* aSource);
-  nsresult GetTransferInformation(PRInt32* aCurr, PRInt32* aMax);
   nsresult SetMIMEInfo(nsIMIMEInfo* aMIMEInfo);
   nsresult SetStartTime(PRInt64 aStartTime);
 
   void Pause(PRBool aPaused);
   PRBool IsPaused();
+
+  struct TransferInformation {
+    PRInt64 mCurrBytes, mMaxBytes;
+    TransferInformation(PRInt64 aCurr, PRInt64 aMax) :
+      mCurrBytes(aCurr),
+      mMaxBytes(aMax)
+      {}
+  };
+  TransferInformation GetTransferInformation();
 
   nsDownloadManager* mDownloadManager;
   nsCOMPtr<nsIURI> mTarget;

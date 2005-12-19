@@ -45,7 +45,7 @@ interface nsICancelable;
 interface nsIWebProgressListener;
 interface nsIMIMEInfo;
 
-[scriptable, uuid(9e1fd9f2-9727-4926-85cd-f16c375bba6d)]
+[scriptable, uuid(a60c9199-2e21-434f-a43b-ab954ea2f6b7)]
 interface nsIDownload : nsITransfer {
     
     /**
@@ -60,12 +60,12 @@ interface nsIDownload : nsITransfer {
     readonly attribute PRInt32 percentComplete;
 
     /**
-     * The amount of kbytes downloaded so far.
+     * The amount of bytes downloaded so far.
      */
     readonly attribute PRUint64 amountTransferred;
 
     /**
-     * The size of file in kbytes.
+     * The size of file in bytes.
      * Unknown size is represented by 0.
      */
     readonly attribute PRUint64 size;

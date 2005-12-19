@@ -459,9 +459,12 @@ nsDownloadManager::AssertProgressInfoFor(const PRUnichar* aPath)
   if (NS_FAILED(rv)) return rv;
 
   // update transferred
-  PRInt32 current = 0;
-  PRInt32 max = 0;
-  internalDownload->GetTransferInformation(&current, &max);
+  nsDownload::TransferInformation transferInfo =
+                                 internalDownload->GetTransferInformation();
+
+  // convert from bytes to kbytes for progress display
+  PRInt64 current = (PRFloat64)transferInfo.mCurrBytes / 1024 + .5;
+  PRInt64 max = (PRFloat64)transferInfo.mMaxBytes / 1024 + .5;
  
   nsAutoString currBytes; currBytes.AppendInt(current);
   nsAutoString maxBytes; maxBytes.AppendInt(max);
@@ -1934,12 +1937,10 @@ nsDownload::SetDisplayName(const PRUnichar* aDisplayName)
   return NS_OK;
 }
 
-nsresult
-nsDownload::GetTransferInformation(PRInt32* aCurr, PRInt32* aMax)
+nsDownload::TransferInformation
+nsDownload::GetTransferInformation()
 {
-  *aCurr = mCurrBytes;
-  *aMax = mMaxBytes;
-  return NS_OK;
+  return TransferInformation(mCurrBytes, mMaxBytes);
 }
 
 nsresult
@@ -1993,8 +1994,8 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
   else
     mPercentComplete = -1;
 
-  mCurrBytes = (PRInt32)((PRFloat64)aCurTotalProgress / 1024.0 + .5);
-  mMaxBytes = (PRInt32)((PRFloat64)aMaxTotalProgress / 1024 + .5);
+  mCurrBytes = aCurTotalProgress;
+  mMaxBytes = aMaxTotalProgress;
 
   if (mDownloadManager->NeedsUIUpdate()) {
     nsCOMPtr<nsIDownloadProgressListener> dpl;
@@ -2095,10 +2096,16 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       else
         mDownloadState = nsIXPInstallManagerUI::INSTALL_FINISHED;
 
+      //  Set file size at the end of a tranfer (for unknown transfer amounts)
+      if (mMaxBytes == -1)
+        mMaxBytes = mCurrBytes;
+
       // Files less than 1Kb shouldn't show up as 0Kb.
-      if (mMaxBytes==0)
-        mMaxBytes = 1;
-      mCurrBytes = mMaxBytes;
+      if (mMaxBytes < 1024) {
+        mCurrBytes = 1024;
+        mMaxBytes  = 1024;
+      }
+
       mPercentComplete = 100;
 
       nsAutoString path;

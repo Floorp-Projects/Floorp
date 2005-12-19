@@ -396,9 +396,13 @@ nsDownloadManager::AssertProgressInfoFor(const nsACString& aTargetPath)
   // update transferred
   nsDownload::TransferInformation transferInfo =
                                  internalDownload->GetTransferInformation();
- 
-  nsAutoString currBytes; currBytes.AppendInt(transferInfo.mCurrBytes);
-  nsAutoString maxBytes; maxBytes.AppendInt(transferInfo.mMaxBytes);
+
+  // convert from bytes to kbytes for progress display
+  PRInt64 current = (PRFloat64)transferInfo.mCurrBytes / 1024 + .5;
+  PRInt64 max = (PRFloat64)transferInfo.mMaxBytes / 1024 + .5;
+
+  nsAutoString currBytes; currBytes.AppendInt(current);
+  nsAutoString maxBytes; maxBytes.AppendInt(max);
   const PRUnichar *strings[] = {
     currBytes.get(),
     maxBytes.get()
@@ -1045,8 +1049,8 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
   else
     mPercentComplete = -1;
 
-  mCurrBytes = ((PRFloat64)aCurTotalProgress / 1024.0 + .5);
-  mMaxBytes = ((PRFloat64)aMaxTotalProgress / 1024 + .5);
+  mCurrBytes = aCurTotalProgress;
+  mMaxBytes = aMaxTotalProgress;
 
   if (mDownloadManager->MustUpdateUI()) {
     nsCOMPtr<nsIDownloadProgressListener> internalListener;
@@ -1205,10 +1209,17 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   if (aStateFlags & STATE_STOP) {
     if (mDownloadState == DOWNLOADING || mDownloadState == NOTSTARTED) {
       mDownloadState = FINISHED;
+
+      //  Set file size at the end of a tranfer (for unknown transfer amounts)
+      if (mMaxBytes == -1)
+        mMaxBytes = mCurrBytes;
+
       // Files less than 1Kb shouldn't show up as 0Kb.
-      if (mMaxBytes==0)
-        mMaxBytes = 1;
-      mCurrBytes = mMaxBytes;
+      if (mMaxBytes < 1024) {
+        mCurrBytes = 1024;
+        mMaxBytes  = 1024;
+      }
+
       mPercentComplete = 100;
 
       // Play a sound or show an alert when the download finishes
