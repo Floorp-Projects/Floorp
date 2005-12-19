@@ -193,32 +193,40 @@ nsMenuPopupFrame::Init(nsPresContext*  aPresContext,
   // is fixed.
   viewManager->SetViewContentTransparency(ourView, PR_FALSE);
 
+  // XXX make sure we are hidden (shouldn't this be done automatically?)
+  viewManager->SetViewVisibility(ourView, nsViewVisibility_kHide);
+  if (!ourView->HasWidget()) {
+    CreateWidgetForView(ourView);
+  }
+
+  MoveToAttributePosition();
+
+  return rv;
+}
+
+nsresult
+nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
+{
   // Create a widget for ourselves.
   nsWidgetInitData widgetData;
   widgetData.mWindowType = eWindowType_popup;
   widgetData.mBorderStyle = eBorderStyle_default;
   widgetData.clipSiblings = PR_TRUE;
 
-  nsIContent* parentContent = aContent->GetParent();
+  nsIContent* parentContent = GetContent()->GetParent();
   nsIAtom *tag = nsnull;
   if (parentContent)
     tag = parentContent->Tag();
   widgetData.mDropShadow = !(tag && tag == nsXULAtoms::menulist);
   
-  // XXX make sure we are hidden (shouldn't this be done automatically?)
-  viewManager->SetViewVisibility(ourView, nsViewVisibility_kHide);
 #if defined(XP_MACOSX) 
   static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
-  ourView->CreateWidget(kCPopupCID, &widgetData, nsnull, PR_TRUE, PR_TRUE, 
-                        eContentTypeUI);
+  aView->CreateWidget(kCPopupCID, &widgetData, nsnull, PR_TRUE, PR_TRUE, 
+                      eContentTypeUI);
 #else
   static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
-  ourView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE);
+  aView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE);
 #endif   
-
-  MoveToAttributePosition();
-
-  return rv;
 }
 
 NS_IMETHODIMP

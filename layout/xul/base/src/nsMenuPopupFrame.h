@@ -136,6 +136,8 @@ public:
   virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
                                      nsFramePaintLayer aWhichLayer);
 
+  virtual nsresult CreateWidgetForView(nsIView* aView);
+
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState);
   NS_IMETHOD MarkDirty(nsBoxLayoutState& aState);
   NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild);
