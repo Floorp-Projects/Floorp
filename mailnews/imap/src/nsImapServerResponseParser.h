@@ -162,7 +162,7 @@ protected:
   virtual void	  internal_date();
   virtual nsresult BeginMessageDownload(const char *content_type);
 
-  virtual void    response_data(PRBool advanceToNextLine);
+  virtual void    response_data();
   virtual void    resp_text();
   virtual void    resp_cond_state();
   virtual void    text_mime2();
@@ -209,7 +209,6 @@ protected:
   // Overridden from the nsIMAPGenericParser, to retrieve the next line
   // from the open socket.
   virtual PRBool  GetNextLineForParser(char **nextLine);
-  virtual void    end_of_line();
   // overriden to do logging
   virtual void    SetSyntaxError(PRBool error);
 

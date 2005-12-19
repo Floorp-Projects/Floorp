@@ -137,19 +137,6 @@ PRBool nsImapServerResponseParser::GetNextLineForParser(char **nextLine)
   return rv;
 }
 
-// This should probably be in the base class...
-void nsImapServerResponseParser::end_of_line()
-{
-  // if current commands failed, don't reset the lex analyzer
-  // we need the info for the user
-  if (!fAtEndOfLine)
-    SetSyntaxError(PR_TRUE);
-  else if (fProcessingTaggedResponse && !fCurrentCommandFailed)
-    ResetLexAnalyzer();	// no more tokens until we send a command
-  else if (!fCurrentCommandFailed)
-    AdvanceToNextToken();
-}
-
 PRBool	nsImapServerResponseParser::CommandFailed()
 {
   return fCurrentCommandFailed;
@@ -240,18 +227,23 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
     
     if (ContinueParse())
     {
-      // Clears any syntax error lines
-      SetSyntaxError(PR_FALSE);
       ResetLexAnalyzer();
       
       do {
         AdvanceToNextToken();
         while (ContinueParse() && !PL_strcmp(fNextToken, "*") )
         {
-          response_data(!inIdle);
+          response_data();
+          if (ContinueParse())
+          {
+            if (!fAtEndOfLine)
+              SetSyntaxError(PR_TRUE);
+            else if (!inIdle && !fCurrentCommandFailed)
+              AdvanceToNextToken();
+          }
         }
         
-        if (*fNextToken == '+')	// never pipeline APPEND or AUTHENTICATE
+        if (ContinueParse() && *fNextToken == '+')	// never pipeline APPEND or AUTHENTICATE
         {
           NS_ASSERTION((fNumberOfTaggedResponsesExpected - numberOfTaggedResponsesReceived) == 1, 
             " didn't get the number of tagged responses we expected");
@@ -549,7 +541,7 @@ Instead of comparing lots of strings and make function calls, try to pre-flight
 the possibilities based on the first letter of the token.
 
 */
-void nsImapServerResponseParser::response_data(PRBool advanceToNextLine)
+void nsImapServerResponseParser::response_data()
 {
   AdvanceToNextToken();
   
@@ -762,11 +754,7 @@ void nsImapServerResponseParser::response_data(PRBool advanceToNextLine)
     }
     
     if (ContinueParse())
-    {
       PostProcessEndOfLine();
-      if (advanceToNextLine)
-        end_of_line();
-    }
   }
 }
 
@@ -2005,7 +1993,12 @@ void nsImapServerResponseParser::resp_text_code()
      fProcessingTaggedResponse = PR_TRUE;
      resp_cond_state();
      if (ContinueParse())
-       end_of_line();
+     {
+       if (!fAtEndOfLine)
+         SetSyntaxError(PR_TRUE);
+       else if (!fCurrentCommandFailed)
+         ResetLexAnalyzer();
+     }
    }
  }
  
@@ -2016,11 +2009,7 @@ void nsImapServerResponseParser::resp_text_code()
    // eat the "*"
    AdvanceToNextToken();
    if (ContinueParse())
-   {
      resp_cond_bye();
-     if (ContinueParse())
-       end_of_line();
-   }
  }
 /*
 resp_cond_bye   ::= "BYE" SPACE resp_text
@@ -2030,7 +2019,6 @@ void nsImapServerResponseParser::resp_cond_bye()
 {
   SetConnected(PR_FALSE);
   fIMAPstate = kNonAuthenticated;
-  skip_to_CRLF();
 }
 
 
