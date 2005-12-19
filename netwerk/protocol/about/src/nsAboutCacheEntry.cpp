@@ -44,8 +44,65 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsIStorageStream.h"
 #include "nsNetUtil.h"
+#include "nsAutoPtr.h"
+#include "prprf.h"
 #include "prtime.h"
 #include "nsEscape.h"
+
+#define HEXDUMP_MAX_ROWS 16
+
+static void
+HexDump(PRUint32 *state, const char *buf, PRInt32 n, nsCString &result)
+{
+  char temp[16];
+
+  const unsigned char *p;
+  while (n) {
+    PR_snprintf(temp, sizeof(temp), "%08x:  ", *state);
+    result.Append(temp);
+    *state += HEXDUMP_MAX_ROWS;
+
+    p = (const unsigned char *) buf;
+
+    PRInt32 i, row_max = PR_MIN(HEXDUMP_MAX_ROWS, n);
+
+    // print hex codes:
+    for (i = 0; i < row_max; ++i) {
+      PR_snprintf(temp, sizeof(temp), "%02x  ", *p++);
+      result.Append(temp);
+    }
+    for (i = row_max; i < HEXDUMP_MAX_ROWS; ++i) {
+      result.AppendLiteral("    ");
+    }
+
+    // print ASCII glyphs if possible:
+    p = (const unsigned char *) buf;
+    for (i = 0; i < row_max; ++i, ++p) {
+      switch (*p) {
+      case '<':
+        result.AppendLiteral("&lt;");
+        break;
+      case '>':
+        result.AppendLiteral("&gt;");
+        break;
+      case '&':
+        result.AppendLiteral("&amp;");
+        break;
+      default:
+        if (*p < 0x7F && *p > 0x1F) {
+          result.Append(*p);
+        } else {
+          result.Append('.');
+        }
+      }
+    }
+
+    result.Append('\n');
+
+    buf += row_max;
+    n -= row_max;
+  }
+}
 
 //-----------------------------------------------------------------------------
 // nsAboutCacheEntry::nsISupports
@@ -266,8 +323,9 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
 
     // Data Size
     s.Truncate();
-    descriptor->GetDataSize(&u);
-    s.AppendInt((PRInt32)u);     // XXX nsICacheEntryInfo interfaces should be fixed.
+    PRUint32 dataSize;
+    descriptor->GetDataSize(&dataSize);
+    s.AppendInt((PRInt32)dataSize);     // XXX nsICacheEntryInfo interfaces should be fixed.
     APPEND_ROW("Data size", s);
 
     // Storage Policy
@@ -310,10 +368,30 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     mBuffer = &buffer;  // make it available for VisitMetaDataElement()
     descriptor->VisitMetaData(this);
     mBuffer = nsnull;
-    
 
-    buffer.AppendLiteral("</table>\n");
+    buffer.AppendLiteral("</table>\n"
+                         "<hr />\n<pre>");
+    outputStream->Write(buffer.get(), buffer.Length(), &n);
 
+    buffer.Truncate();
+
+    // Provide a hexdump of the data
+    nsCOMPtr<nsIInputStream> stream;
+    descriptor->OpenInputStream(0, getter_AddRefs(stream));
+    if (stream) {
+        PRUint32 hexDumpState = 0;
+        char chunk[4096];
+        while (dataSize) {
+            PRUint32 count = PR_MIN(dataSize, sizeof(chunk));
+            if (NS_FAILED(stream->Read(chunk, count, &n)) || n == 0)
+                break;
+            HexDump(&hexDumpState, chunk, n, buffer);
+            outputStream->Write(buffer.get(), buffer.Length(), &n);
+            dataSize -= n;
+        }
+    }
+
+    buffer.AssignLiteral("</pre>");
     outputStream->Write(buffer.get(), buffer.Length(), &n);
     return NS_OK;
 }
