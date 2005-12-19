@@ -596,6 +596,32 @@ interface nsINavHistoryQueryOptions : nsISupports
 interface nsINavHistoryService : nsISupports
 {
   /**
+   * This transition type means the user follwed a link and got a new toplevel
+   * window. It is not true when 
+   */
+  const PRUint32 TRANSITION_LINK = 1;
+
+  /**
+   * This transition type means that the user typed the page's URL in the
+   * URL bar.
+   */
+  const PRUint32 TRANSITION_TYPED = 2;
+
+  /**
+   * This transition is set when the user followed a bookmark to get to the
+   * page.
+   */
+  const PRUint32 TRANSITION_BOOKMARK = 3;
+
+  /**
+   * This transition type is set when some inner content is loaded. This is
+   * true of all images on a page, and the contents of the iframe. It is also
+   * true of any content in a frame, regardless if whether or not the user
+   * clicked something to get there.
+   */
+  const PRUint32 TRANSITION_EMBED = 4;
+
+  /**
    * True if there is any history. This can be used in UI to determine whether
    * the "clear history" button should be enabled or not. This is much better
    * than using BrowserHistory.count since that can be very slow if there is
@@ -605,9 +631,19 @@ interface nsINavHistoryService : nsISupports
 
   /**
    * This sets the user-defined title of the page. Silently fails if we have
-   * no knowledge of this page.
+   * no knowledge of this page. Set to empty string to clear the user title and
+   * only use the "real" title as declared on the page.
    */
   void setPageUserTitle(in nsIURI aURI, in AString aUserTitle);
+
+  /**
+   * This is just like markPageAsTyped (in nsIBrowserHistory, also implemented
+   * by the history service), but for bookmarks. It declares that the given URL
+   * is being opened as a result of following a bookmark. If this URL is loaded
+   * soon after this message has been received, that transition will be marked
+   * as following a bookmark.
+   */
+  void markPageAsFollowedBookmark(in nsIURI aURI);
 
   /**
    * Returns true if this URI would be added to the history. You don't have to
