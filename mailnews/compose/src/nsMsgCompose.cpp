@@ -121,7 +121,8 @@
 #include "plbase64.h"
 #include "nsIUTF8ConverterService.h"
 #include "nsUConvCID.h"
-#include "nsIUnicodeNormalizer.h"                                               
+#include "nsIUnicodeNormalizer.h"
+#include "nsIMsgAccountManager.h"
 #include "nsIMsgProgress.h"
 #include "nsMsgFolderFlags.h"
 
@@ -1469,7 +1470,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   }
   else // check if we're dealing with a displayed message/rfc822 attachment
   {
-    PRInt32 typeIndex = typeIndex = msgUri.Find("&type=application/x-message-display");
+    PRInt32 typeIndex = msgUri.Find("&type=application/x-message-display");
     if (typeIndex != kNotFound)
     {
       msgUri.Cut(typeIndex, sizeof("&type=application/x-message-display") - 1);
@@ -1574,7 +1575,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
   // If we don't have an original message URI, nothing else to do...
   if (!originalMsgURI || *originalMsgURI == 0)
-    return rv;
+    return NS_OK;
 
   // store the original message URI so we can extract it after we send the message to properly
   // mark any disposition flags like replied or forwarded on the message.
@@ -1772,11 +1773,75 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
               rv = parser->ExtractHeaderAddressMailboxes(nsnull, author.get(), 
                                                             getter_Copies(authorEmailAddress));
             }
-            nsXPIDLCString curIdentityEmail;
-            m_identity->GetEmail(getter_Copies(curIdentityEmail));
+
+            PRBool replyToSelfCheckAll = PR_FALSE;
+            nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+            if (NS_SUCCEEDED(rv)) 
+              prefBranch->GetBoolPref("mailnews.reply_to_self_check_all_ident", &replyToSelfCheckAll);
+
+            nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv,rv);
+
+            nsCOMPtr<nsISupportsArray> identities;
+            nsXPIDLCString accountKey;
+            msgHdr->GetAccountKey(getter_Copies(accountKey));
+            if(replyToSelfCheckAll)
+            {
+              // check all avaliable identities if the pref was set
+              accountManager->GetAllIdentities(getter_AddRefs(identities));
+            }
+            else if (!accountKey.IsEmpty())
+            {
+               // check headers to see which account the message came in from (only works for pop3)
+              nsCOMPtr<nsIMsgAccount> account;
+              accountManager->GetAccount(accountKey, getter_AddRefs(account));
+
+              if(account)
+                account->GetIdentities(getter_AddRefs(identities));
+            } 
+            else 
+            {
+              // check identities only for the server of the folder that the message is in 
+              nsCOMPtr <nsIMsgFolder> msgFolder;
+              rv = msgHdr->GetFolder(getter_AddRefs(msgFolder));
+
+              if (NS_SUCCEEDED(rv) && msgFolder){ 
+                nsCOMPtr<nsIMsgIncomingServer> nsIMsgIncomingServer;
+                rv = msgFolder->GetServer(getter_AddRefs(nsIMsgIncomingServer));
+
+                if(NS_SUCCEEDED(rv) && nsIMsgIncomingServer) 
+                  accountManager->GetIdentitiesForServer(nsIMsgIncomingServer, getter_AddRefs(identities));
+              }
+            }
+
+            PRBool isReplyToOwnMsg = PR_FALSE;
+            if(identities)
+            {
+              // go through the identities to see if any of them is the author of the email
+              nsCOMPtr<nsIMsgIdentity> lookupIdentity;
+
+              PRUint32 count = 0;
+              identities->Count(&count);
+
+              for (PRUint32 i = 0; i < count; i++) 
+              {
+                rv = identities->QueryElementAt(i, NS_GET_IID(nsIMsgIdentity),
+                                          getter_AddRefs(lookupIdentity));
+                if (NS_FAILED(rv))
+                  continue;
+
+                nsXPIDLCString curIdentityEmail;
+                lookupIdentity->GetEmail(getter_Copies(curIdentityEmail));
+                if (curIdentityEmail.Equals(authorEmailAddress))
+                {
+                  isReplyToOwnMsg = PR_TRUE;
+                  break;
+                }
+              }
+            }
 
             nsXPIDLCString toField;
-            if (curIdentityEmail.Equals(authorEmailAddress))
+            if (isReplyToOwnMsg)
               msgHdr->GetRecipients(getter_Copies(toField));
             else
               toField.Assign(author);

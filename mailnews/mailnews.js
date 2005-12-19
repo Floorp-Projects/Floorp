@@ -205,6 +205,8 @@ pref("mailnews.reply_header_separator",     ", ");
 pref("mailnews.reply_header_colon",         ":");
 pref("mailnews.reply_header_originalmessage",   "chrome://messenger/locale/messengercompose/composeMsgs.properties");
 
+pref("mailnews.reply_to_self_check_all_ident", false);
+
 pref("mail.purge_threshhold",                100);
 pref("mail.prompt_purge_threshhold",             false);   
 
