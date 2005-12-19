@@ -235,16 +235,6 @@ struct SECKEYPrivateKeyStr {
 };
 typedef struct SECKEYPrivateKeyStr SECKEYPrivateKey;
 
-/* Despite the name, this struct isn't used by any pkcs5 code.
-** It's used by pkcs7 and pkcs12 code.
-*/
-typedef struct {
-    SECItem *pwitem;
-    PK11SymKey *key;
-    PK11SlotInfo *slot;
-    void *wincx;
-} SEC_PKCS5KeyAndPassword;
-
 typedef struct {
     PRCList links;
     SECKEYPrivateKey *key;
