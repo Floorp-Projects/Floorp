@@ -22,7 +22,7 @@
 #
 
 #
-# $Id: genstats.cgi,v 1.14 2001/10/02 22:56:49 terry%mozilla.org Exp $ 
+# $Id: genstats.cgi,v 1.15 2005/12/19 00:47:50 timeless%mozdev.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -49,7 +49,7 @@ use Date::Format;
 	["New checkers-in (source)",
 						# statistic title
 	 "mozusers",				# database
-	 "changes.when",			# timestamp field
+	 "changes.changed_when",		# timestamp field
 	 "changes.email",			# email addr field
 	 "select distinct id from changes,users where changes.field=" .
 		"'cvs_group' and changes.email=users.email ".
@@ -59,7 +59,7 @@ use Date::Format;
 	["New checkers-in (docs)",
 						# statistic title
 	 "mozusers",				# database
-	 "changes.when",			# timestamp field
+	 "changes.changed_when",		# timestamp field
 	 "changes.email",			# email addr field
 	 "select distinct id from changes,users where changes.field=" .
 		"'gila_group' and changes.email=users.email ".

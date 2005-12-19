@@ -121,8 +121,8 @@ create table changes (
     oldvalue varchar(255),
     newvalue varchar(255),
     who varchar(32) not null,
-    when timestamp not null,
-    index(when)
+    changed_when timestamp not null,
+    index(changed_when)
 );
 
 
