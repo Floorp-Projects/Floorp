@@ -1690,9 +1690,6 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFl
  */
 CAttributeToken::CAttributeToken() : CHTMLToken(eHTMLTag_unknown) {
   mHasEqualWithoutValue=PR_FALSE;
-#ifdef DEBUG
-  mLastAttribute = PR_FALSE;
-#endif
 }
 
 /*
@@ -1705,9 +1702,6 @@ CAttributeToken::CAttributeToken() : CHTMLToken(eHTMLTag_unknown) {
 CAttributeToken::CAttributeToken(const nsAString& aName) : CHTMLToken(eHTMLTag_unknown) {
   mTextValue.writable().Assign(aName);
   mHasEqualWithoutValue=PR_FALSE;
-#ifdef DEBUG
-  mLastAttribute = PR_FALSE;
-#endif
 }
 
 /*
@@ -1722,9 +1716,6 @@ CAttributeToken::CAttributeToken(const nsAString& aKey, const nsAString& aName) 
   mTextValue.writable().Assign(aName);
   mTextKey.Rebind(aKey);
   mHasEqualWithoutValue=PR_FALSE;
-#ifdef DEBUG
-  mLastAttribute = PR_FALSE;
-#endif
 }
 
 /*
@@ -2044,11 +2035,6 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 
         //numbering right.
         return NS_ERROR_HTMLPARSER_BADATTRIBUTE;
       }
-
-#ifdef DEBUG
-      result = aScanner.Peek(aChar);
-      mLastAttribute = (kGreaterThan == aChar || kEOF == result);
-#endif
     }
   }//if
 

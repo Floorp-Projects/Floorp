@@ -76,26 +76,6 @@ enum eHTMLTokenTypes {
   eToken_last //make sure this stays the last token...
 };
 
-enum eHTMLCategory {
-  eHTMLCategory_unknown=0,
-  eHTMLCategory_inline,
-  eHTMLCategory_block,
-  eHTMLCategory_blockAndInline,
-  eHTMLCategory_list,
-  eHTMLCategory_table,
-  eHTMLCategory_tablepart,
-  eHTMLCategory_tablerow,
-  eHTMLCategory_tabledata,
-  eHTMLCategory_head,
-  eHTMLCategory_html,
-  eHTMLCategory_body,
-  eHTMLCategory_form,
-  eHTMLCategory_options,
-  eHTMLCategory_frameset,
-  eHTMLCategory_text
-};
-
-
 nsresult      ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
 nsresult      ConsumeAttributeText(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
 const PRUnichar* GetTagName(PRInt32 aTag);
@@ -382,9 +362,6 @@ public:
 
   PRPackedBool mHasEqualWithoutValue;
 protected:
-#ifdef DEBUG
-  PRPackedBool mLastAttribute;
-#endif
   nsScannerSharedSubstring mTextValue;
   nsScannerSubstring mTextKey;
 };
