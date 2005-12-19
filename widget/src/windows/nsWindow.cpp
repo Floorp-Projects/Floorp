@@ -4799,37 +4799,49 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         newWidth = PRInt32(r.right - r.left);
         newHeight = PRInt32(r.bottom - r.top);
         nsRect rect(wp->x, wp->y, newWidth, newHeight);
-        if (newWidth > mLastSize.width)
-        {
-          RECT drect;
 
-          //getting wider
-          drect.left = wp->x + mLastSize.width;
-          drect.top = wp->y;
-          drect.right = drect.left + (newWidth - mLastSize.width);
-          drect.bottom = drect.top + newHeight;
-
-          ::RedrawWindow(mWnd, &drect, NULL,
-                         RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
-        }
-        if (newHeight > mLastSize.height)
-        {
-          RECT drect;
-
-          //getting taller
-          drect.left = wp->x;
-          drect.top = wp->y + mLastSize.height;
-          drect.right = drect.left + newWidth;
-          drect.bottom = drect.top + (newHeight - mLastSize.height);
-
-          ::RedrawWindow(mWnd, &drect, NULL,
-                         RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
-        }
+        PRBool needInvalidate = PR_TRUE;
 
 #ifdef MOZ_XUL
         if (mIsTranslucent)
+        {
           ResizeTranslucentWindow(newWidth, newHeight);
+        
+          if (IsAlphaTranslucencySupported())
+            needInvalidate = PR_FALSE;
+        }
 #endif
+
+        if (needInvalidate)
+        {
+          if (newWidth > mLastSize.width)
+          {
+            RECT drect;
+
+            //getting wider
+            drect.left = wp->x + mLastSize.width;
+            drect.top = wp->y;
+            drect.right = drect.left + (newWidth - mLastSize.width);
+            drect.bottom = drect.top + newHeight;
+
+            ::RedrawWindow(mWnd, &drect, NULL,
+                           RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
+          }
+          if (newHeight > mLastSize.height)
+          {
+            RECT drect;
+
+            //getting taller
+            drect.left = wp->x;
+            drect.top = wp->y + mLastSize.height;
+            drect.right = drect.left + newWidth;
+            drect.bottom = drect.top + (newHeight - mLastSize.height);
+
+            ::RedrawWindow(mWnd, &drect, NULL,
+                           RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
+          }
+        }
+
         mBounds.width  = newWidth;
         mBounds.height = newHeight;
         mLastSize.width = newWidth;
@@ -5685,6 +5697,12 @@ PRBool nsWindow::OnPaint(HDC aDC)
   PAINTSTRUCT ps;
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
+#ifdef MOZ_XUL
+  // For layered translucent windows all drawing should go to memory DC.
+  if (!aDC && mIsTranslucent && IsAlphaTranslucencySupported())
+    return PR_TRUE;
+#endif
+
   mPainting = PR_TRUE;
 
 #ifdef NS_DEBUG
@@ -5703,6 +5721,10 @@ PRBool nsWindow::OnPaint(HDC aDC)
   RECT paintRect;
 
 #ifdef MOZ_XUL
+  // For Win9x 1-bit transparency we have to repaint entire window client area,
+  // because window clipping region might have been changed after invalidation.
+  // As result there could be some areas that are not included in window paint
+  // region, because previously they were outside old clipping region. 
   if (aDC || mIsTranslucent) {
 #else
   if (aDC) {
