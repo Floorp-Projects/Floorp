@@ -51,6 +51,7 @@
 #include "plbase64.h"
 #include "prmem.h"
 #include "nsCRT.h"
+#include "nsHashKeys.h"
 
 #include "MoreFilesX.h"
 #include "FSCopyObject.h"
@@ -987,6 +988,13 @@ NS_IMETHODIMP nsLocalFile::Clone(nsIFile **_retval)
 /* boolean equals (in nsIFile inFile); */
 NS_IMETHODIMP nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 {
+    return EqualsInternal(inFile, PR_TRUE, _retval);
+}
+
+nsresult
+nsLocalFile::EqualsInternal(nsISupports* inFile, PRBool aUpdateCache,
+                            PRBool *_retval)
+{
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
   
@@ -994,10 +1002,13 @@ NS_IMETHODIMP nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
   if (!inFile)
     return NS_OK;
     
+  nsLocalFile* inLF =
+      NS_STATIC_CAST(nsLocalFile*, (nsILocalFileMac*) inMacFile);
+
   // If both exist, compare FSRefs
   FSRef thisFSRef, inFSRef;
-  nsresult rv1 = GetFSRef(&thisFSRef);
-  nsresult rv2 = inMacFile->GetFSRef(&inFSRef);
+  nsresult rv1 = GetFSRefInternal(thisFSRef, aUpdateCache);
+  nsresult rv2 = inLF->GetFSRefInternal(inFSRef, aUpdateCache);
   if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2)) {
     *_retval = (thisFSRef == inFSRef);
     return NS_OK;
@@ -2027,14 +2038,12 @@ nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutS
   CFIndex charsConverted = ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen),
                               kCFStringEncodingUTF8, 0, PR_FALSE, nsnull, 0, &usedBufLen);
   if (charsConverted == inStrLen) {
-    nsAutoBuffer<UInt8, FILENAME_BUFFER_SIZE> buffer;
-    if (buffer.EnsureElemCapacity(usedBufLen + 1)) {
-      ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen),
-          kCFStringEncodingUTF8, 0, false, buffer.get(), usedBufLen, &usedBufLen);
-      buffer.get()[usedBufLen] = '\0';
-      aOutStr.Assign(nsDependentCString((char*)buffer.get()));
-      rv = NS_OK;
-    }
+    aOutStr.SetLength(charsConverted);
+    UInt8 *buffer = (UInt8*) aOutStr.BeginWriting();
+
+    ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen),
+                       kCFStringEncodingUTF8, 0, false, buffer, usedBufLen, &usedBufLen);
+    rv = NS_OK;
   }
   return rv;
 }
@@ -2044,20 +2053,16 @@ nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutS
 NS_IMETHODIMP
 nsLocalFile::Equals(nsIHashable* aOther, PRBool *aResult)
 {
-    nsCOMPtr<nsIFile> otherfile(do_QueryInterface(aOther));
-    if (!otherfile) {
-        *aResult = PR_FALSE;
-        return NS_OK;
-    }
-
-    return Equals(otherfile, aResult);
+    return EqualsInternal(aOther, PR_FALSE, aResult);
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetHashCode(PRUint32 *aResult)
 {
-    CFURLRef whichURLRef = mFollowLinks ? mTargetRef : mBaseRef;
-    *aResult = CFHash(whichURLRef);
+    CFStringRef pathStrRef = ::CFURLCopyFileSystemPath(mBaseRef, kCFURLPOSIXPathStyle);
+    nsCAutoString path;
+    CFStringReftoUTF8(pathStrRef, path);
+    *aResult = HashString(path);
     return NS_OK;
 }
 
