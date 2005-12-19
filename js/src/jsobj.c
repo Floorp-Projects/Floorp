@@ -1385,7 +1385,22 @@ js_HasOwnPropertyHelper(JSContext *cx, JSObject *obj, JSLookupPropOp lookup,
         if (xclasp && xclasp->outerObject &&
             xclasp->outerObject(cx, obj2) == obj) {
             *rval = JSVAL_TRUE;
-        } else if (OBJ_IS_NATIVE(obj2)) {
+        } else if (OBJ_IS_NATIVE(obj2) && OBJ_GET_CLASS(cx, obj2) == clasp) {
+            /*
+             * The combination of JSPROP_SHARED and JSPROP_PERMANENT in a
+             * delegated property makes that property appear to be direct in
+             * all delegating instances of the same native class.  This hack
+             * avoids bloating every function instance with its own 'length'
+             * (AKA 'arity') property.  But it must not extend across class
+             * boundaries, to avoid making hasOwnProperty lie (bug 320854).
+             *
+             * It's not really a hack, of course: a permanent property can't
+             * be deleted, and JSPROP_SHARED means "don't allocate a slot in
+             * any instance, prototype or delegating".  Without a slot, and
+             * without the ability to remove and recreate (with differences)
+             * the property, there is no way to tell whether it is directly
+             * owned, or indirectly delegated.
+             */
             sprop = (JSScopeProperty *)prop;
             *rval = BOOLEAN_TO_JSVAL(SPROP_IS_SHARED_PERMANENT(sprop));
         } else {
