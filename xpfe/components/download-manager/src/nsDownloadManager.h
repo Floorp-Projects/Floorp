@@ -138,8 +138,8 @@ public:
   }
 
   struct TransferInformation {
-    PRInt32 mCurrBytes, mMaxBytes;
-    TransferInformation(PRInt32 aCurr, PRInt32 aMax) :
+    PRInt64 mCurrBytes, mMaxBytes;
+    TransferInformation(PRInt64 aCurr, PRInt64 aMax) :
       mCurrBytes(aCurr),
       mMaxBytes(aMax)
       {}
