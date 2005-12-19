@@ -821,7 +821,6 @@ sec_pkcs12_decoder_asafes_notify(void *arg, PRBool before, void *dest,
 	    }
 	    p12dcx->currentASafeP7Dcx = NULL;
 	}
-	p12dcx->currentASafeP7Dcx = NULL;
     }
 
 
