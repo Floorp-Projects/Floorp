@@ -47,7 +47,13 @@ printStatus('This test only runs in the browser');
 
 if (typeof clearTimeout === 'function')
 {
-  clearTimeout('foo');
+  try
+  {
+    clearTimeout('foo');
+  }
+  catch(ex)
+  {
+  }
 }
   
 reportCompare(expect, actual, summary);
