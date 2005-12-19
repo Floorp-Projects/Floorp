@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Yuh-Ruey Chen
+ * Contributor(s): Brendan Eich
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,27 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
-var bug = 313570;
-var summary = 'length of objects whose prototype chain includes a function';
+var bug = 320854;
+var summary = 'o.hasOwnProperty("length") should not lie when o has function in proto chain';
 var actual = '';
 var expect = '';
 
 printBugNumber (bug);
 printStatus (summary);
 
-function tmp() {}
-tmp.prototype = function(a, b, c) {};
-var obj = new tmp();
+var o = {__proto__:function(){}}; 
 
-// arity
-expect = 3;
-actual = obj.length;
-reportCompare(expect, actual, summary + ': arity');
-
-// immutable
-obj.length = 10;
-
-expect = 3;
-actual = obj.length;
-reportCompare(expect, actual, summary + ': immutable');
-
+expect = false;
+actual = o.hasOwnProperty('length')
+  
+reportCompare(expect, actual, summary);
