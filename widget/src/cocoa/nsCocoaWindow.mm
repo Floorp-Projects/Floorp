@@ -148,6 +148,9 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     if (mWindowType == eWindowType_popup || mWindowType == eWindowType_invisible)
       features = 0;
 
+    if (mWindowType == eWindowType_popup)
+      return NS_OK;
+
     mWindow = [[NSWindow alloc] initWithContentRect:rect styleMask:features 
                                 backing:NSBackingStoreBuffered defer:NO];
     
