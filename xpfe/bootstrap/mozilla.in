@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.9 2005/09/20 21:11:35 dbaron%dbaron.org Exp $
+## $Id: mozilla.in,v 1.10 2005/12/19 23:56:29 bugzilla%arlen.demon.co.uk Exp $
 ## 
 ## Usage:
 ##
@@ -132,6 +132,7 @@ else
     # Check default compile-time libdir
     if [ -x "$moz_libdir/run-mozilla.sh" ]; then
       dist_bin=$moz_libdir
+      run_moz="$moz_libdir/run-mozilla.sh"
     else 
       echo "Cannot find %MOZ_APP_DISPLAYNAME% runtime directory. Exiting."
       exit 1
