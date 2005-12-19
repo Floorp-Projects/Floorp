@@ -53,8 +53,7 @@ fLineOfTokens(nsnull),
 fStartOfLineOfTokens(nsnull),
 fCurrentTokenPlaceHolder(nsnull),
 fAtEndOfLine(PR_FALSE),
-fSyntaxError(PR_FALSE),
-fDisconnected(PR_FALSE)
+fParserState(stateOK)
 {
 }
 
@@ -80,33 +79,24 @@ void nsIMAPGenericParser::ResetLexAnalyzer()
 
 PRBool nsIMAPGenericParser::LastCommandSuccessful()
 {
-	return Connected() && !SyntaxError();
+  return fParserState == stateOK;
 }
 
 void nsIMAPGenericParser::SetSyntaxError(PRBool error)
 {
-  fSyntaxError = error;
+  if (error)
+      fParserState |= stateSyntaxErrorFlag;
+  else
+      fParserState &= ~stateSyntaxErrorFlag;
   NS_ASSERTION(!error, "syntax error in generic parser");	
-}
-
-PRBool nsIMAPGenericParser::SyntaxError()
-{
-  return fSyntaxError;
 }
 
 void nsIMAPGenericParser::SetConnected(PRBool connected)
 {
-  fDisconnected = !connected;
-}
-
-PRBool nsIMAPGenericParser::Connected()
-{
-  return !fDisconnected;
-}
-
-PRBool nsIMAPGenericParser::ContinueParse()
-{
-  return !fSyntaxError && !fDisconnected;
+  if (connected)
+      fParserState &= ~stateDisconnectedFlag;
+  else
+      fParserState |= stateDisconnectedFlag;
 }
 
 void nsIMAPGenericParser::skip_to_CRLF()

@@ -54,17 +54,13 @@ public:
 	nsIMAPGenericParser();
 	virtual ~nsIMAPGenericParser();
 
-  // Connected() && !SyntaxError()
-	// Add any specific stuff in the derived class
+  // Add any specific stuff in the derived class
   virtual PRBool     LastCommandSuccessful();
-    
-  PRBool     SyntaxError();
-  virtual PRBool     ContinueParse();
-    
-  // if we get disconnected, end the current url processing and report to the
-  // the user.
-  PRBool			    Connected();
-  virtual void        SetConnected(PRBool error);
+
+  PRBool SyntaxError() { return (fParserState & stateSyntaxErrorFlag) != 0; }
+  PRBool ContinueParse() { return fParserState == stateOK; }
+  PRBool Connected() { return !(fParserState & stateDisconnectedFlag); }
+  void SetConnected(PRBool error);
     
 protected:
 
@@ -77,20 +73,20 @@ protected:
 	virtual PRBool	GetNextLineForParser(char **nextLine) = 0;	
 
   virtual void	HandleMemoryFailure();
-  virtual void    skip_to_CRLF();
-  virtual void    skip_to_close_paren();
-	virtual char	*CreateString();
-	virtual char	*CreateAstring();
-	virtual char	*CreateNilString();
-  virtual char    *CreateLiteral();
-	virtual char	*CreateAtom();
-  virtual char    *CreateQuoted(PRBool skipToEnd = PR_TRUE);
-	virtual char	*CreateParenGroup();
+  void skip_to_CRLF();
+  void skip_to_close_paren();
+  char *CreateString();
+  char *CreateAstring();
+  char *CreateNilString();
+  char *CreateLiteral();
+  char *CreateAtom();
+  char *CreateQuoted(PRBool skipToEnd = PR_TRUE);
+  char *CreateParenGroup();
   virtual void        SetSyntaxError(PRBool error);
 
   void AdvanceToNextToken();
   void AdvanceToNextLine();
-	void AdvanceTokenizerStartingPoint (int32 bytesToAdvance);
+  void AdvanceTokenizerStartingPoint(int32 bytesToAdvance);
   void ResetLexAnalyzer();
 
 protected:
@@ -101,11 +97,12 @@ protected:
   char           *fStartOfLineOfTokens;
   char           *fCurrentTokenPlaceHolder;
   PRBool          fAtEndOfLine;
-  PRBool          fSyntaxError;
+
 private:
-  PRBool          fDisconnected;
-
-
+  enum nsIMAPGenericParserState { stateOK = 0,
+                                  stateSyntaxErrorFlag = 0x1,
+                                  stateDisconnectedFlag = 0x2 };
+  PRUint32 fParserState;
 };
 
 #endif
