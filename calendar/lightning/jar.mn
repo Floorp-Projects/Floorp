@@ -16,6 +16,7 @@ lightning.jar:
   content/lightning/todo-list.js			(content/todo-list.js)
   content/lightning/calendar-todo-list.css		(content/calendar-todo-list.css)
   content/lightning/calendar-todo-list.xml		(content/calendar-todo-list.xml)
+  content/lightning/toolkit-overlay-custombar.xul       (content/toolkit-overlay-custombar.xul)
 
 en-US.jar:
   locale/en-US/lightning/lightning.dtd				(locale/lightning.dtd)
