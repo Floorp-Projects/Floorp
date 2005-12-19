@@ -51,8 +51,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         onload="searchOnLoad();"
-        onunload="searchOnUnload();"
-        onclose="onSearchStop();"
+        onunload="onSearchStop(); searchOnUnload();"
         windowtype="mailnews:search"
         title="&searchDialogTitle.label;"
         style="width: 52em; height: 34em;"
@@ -85,11 +84,13 @@
       <command id="file_message_button"/>
       <command id="cmd_delete"/>
     </commandset>
+    <command id="cmd_close" oncommand="window.close();"/>
   </commands>
 
   <keyset id="mailKeys">
     <key id="key_delete" oncommand="goDoCommand('cmd_delete');"/>
     <key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete');"/>
+    <key id="key_close"/>
   </keyset>
 
   <broadcasterset id="mailBroadcasters">

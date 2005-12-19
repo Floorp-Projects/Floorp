@@ -41,6 +41,7 @@
 <?xml-stylesheet href="chrome://messenger/skin/filterDialog.css" type="text/css"?>
 
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterListDialog.dtd">
 
@@ -50,16 +51,21 @@
   windowtype="mailnews:filterlist"
   style="width: 45em; height: 31em;"
   onload="onLoad();"
+  onunload="onFilterUnload();"
   onclose="return onFilterClose();"
   persist="width height screenX screenY"
   title="&window.title;">
 
   <script type="application/x-javascript" src="chrome://messenger/content/FilterListDialog.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
   <stringbundle id="bundle_filter" src="chrome://messenger/locale/filter.properties"/>
 
-  <keyset id="dialogKeys"/>
+  <commandset id="filterListCommands">
+    <command id="cmd_close" oncommand="if (onFilterClose()) window.close();"/>
+  </commandset>
+
+  <keyset id="filterListKeys">
+    <key id="key_close"/>
+  </keyset>
 
   <hbox align="center">
     <label value="&filtersForPrefix.label;" 

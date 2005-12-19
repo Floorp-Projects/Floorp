@@ -53,8 +53,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         onload="searchOnLoad();"
-        onunload="searchOnUnload();"
-        onclose="onSearchStop();"
+        onunload="onSearchStop(); searchOnUnload();"
         windowtype="mailnews:absearch"
         title="&abSearchDialogTitle.label;"
         style="width: 52em; height: 34em;"
@@ -77,6 +76,14 @@
   <script src="chrome://messenger/content/addressbook/abCommon.js"/>
 
   <broadcaster id="Communicator:WorkMode"/>
+
+  <commandset id="abSearchDialogCommands">
+    <command id="cmd_close" oncommand="window.close();"/>
+  </commandset>
+
+  <keyset id="abSearchDialogKeys">
+    <key id="key_close"/>
+  </keyset>
 
   <dummy class="usesMailWidgets"/>
     
