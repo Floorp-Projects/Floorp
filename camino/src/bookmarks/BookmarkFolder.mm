@@ -51,6 +51,28 @@ NSString* const BookmarkFolderChildIndexKey             = @"bf_ik";
 NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 
+struct BookmarkSortData
+{
+  SEL       mSortSelector;
+  NSNumber* mReverseSort;
+
+  SEL       mSecondarySortSelector;
+  NSNumber* mSecondaryReverseSort;
+};
+
+
+static int BookmarkItemSort(id firstItem, id secondItem, void* context)
+{
+  BookmarkSortData* sortData = (BookmarkSortData*)context;
+  int comp = (int)[firstItem performSelector:sortData->mSortSelector withObject:secondItem withObject:sortData->mReverseSort];
+
+  if (comp == 0 && sortData->mSecondarySortSelector)
+    comp = (int)[firstItem performSelector:sortData->mSecondarySortSelector withObject:secondItem withObject:sortData->mSecondaryReverseSort];
+
+  return comp;
+}
+
+
 @interface BookmarksEnumerator : NSEnumerator
 {
   BookmarkFolder*   mRootFolder;
@@ -92,6 +114,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 // notification methods
 -(void) itemAddedNote:(BookmarkItem *)theItem atIndex:(unsigned)anIndex;
 -(void) itemRemovedNote:(BookmarkItem *)theItem;
+-(void) itemChangedNote:(BookmarkItem *)theItem;
 -(void) dockMenuChanged:(NSNotification *)note;
 
 // aids in searching
@@ -153,22 +176,21 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   // we're at the end of this folder.
   while (1)
   {
+    if (mCurFolder == mRootFolder)  // we're done
+    {
+      mCurFolder = nil;
+      break;
+    }
+
     // back up to parent folder, next index
     BookmarkFolder* newCurFolder = [mCurFolder parent];
     mCurChildIndex = [newCurFolder indexOfObject:mCurFolder] + 1;
     mCurFolder = newCurFolder;
-    
     if (mCurChildIndex < (int)[newCurFolder count])
     {
       BookmarkItem* nextItem = [mCurFolder objectAtIndex:mCurChildIndex];
       [self setupNextForItem:nextItem];
       return nextItem;
-    }
-    
-    if (mCurFolder == mRootFolder)  // we finished
-    {
-      mCurFolder = nil;
-      break;
     }
   }
   
@@ -323,9 +345,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(BOOL) isSpecial
 {
-  if ([self isToolbar] || [self isRoot] || [self isSmartFolder] || [self isDockMenu])
-    return YES;
-  return NO;
+  return ([self isToolbar] || [self isRoot] || [self isSmartFolder] || [self isDockMenu]);
 }
 
 -(BOOL) isToolbar
@@ -487,20 +507,77 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 //
 // Smart folder utilities - we don't set ourself as parent
 //
--(void) insertIntoSmartFolderChild:(BookmarkItem *)aItem
+- (void)insertIntoSmartFolderChild:(BookmarkItem *)aItem
 {
   if ([self isSmartFolder]) {
     [[self childArray] addObject:aItem];
-    [self itemAddedNote:aItem atIndex:([self count]-1)];
+    [self itemAddedNote:aItem atIndex:([self count] - 1)];
   }
 }
--(void) deleteFromSmartFolderChildAtIndex:(unsigned)index
+
+- (void)insertIntoSmartFolderChild:(BookmarkItem *)aItem atIndex:(unsigned)inIndex
+{
+  if ([self isSmartFolder]) {
+    [[self childArray] insertObject:aItem atIndex:inIndex];
+    [self itemAddedNote:aItem atIndex:inIndex];
+  }
+}
+
+- (void)deleteFromSmartFolderChildAtIndex:(unsigned)index
 {
   if ([self isSmartFolder]) {
     BookmarkItem *item = [[[self childArray] objectAtIndex:index] retain];
     [[self childArray] removeObjectAtIndex:index];
     [self itemRemovedNote:[item autorelease]];
   }   
+}
+
+- (void)sortChildrenUsingSelector:(SEL)inSelector reverseSort:(BOOL)inReverse sortDeep:(BOOL)inDeep
+{
+  BookmarkSortData sortData = { inSelector, [NSNumber numberWithBool:inReverse], NULL, nil };
+  [mChildArray sortUsingFunction:BookmarkItemSort context:&sortData];
+  
+  // notify
+  [self itemChangedNote:self];
+  
+  if (inDeep)
+  {
+    NSEnumerator *enumerator = [mChildArray objectEnumerator];
+    id childItem;
+    while ((childItem = [enumerator nextObject]))
+    {
+      if ([childItem isKindOfClass:[BookmarkFolder class]])
+        [childItem sortChildrenUsingSelector:inSelector reverseSort:inReverse sortDeep:inDeep];
+    }
+  }
+}
+
+- (void)sortChildrenUsingPrimarySelector:(SEL)inSelector primaryReverseSort:(BOOL)inReverse
+                       secondarySelector:(SEL)inSecondarySelector secondaryReverseSort:(BOOL)inSecondaryReverse
+                                sortDeep:(BOOL)inDeep
+{
+  BookmarkSortData sortData = { inSelector,           [NSNumber numberWithBool:inReverse],
+                                inSecondarySelector,  [NSNumber numberWithBool:inSecondaryReverse]
+                              };
+  [mChildArray sortUsingFunction:BookmarkItemSort context:&sortData];
+  
+  // notify
+  [self itemChangedNote:self];
+  
+  if (inDeep)
+  {
+    NSEnumerator *enumerator = [mChildArray objectEnumerator];
+    id childItem;
+    while ((childItem = [enumerator nextObject]))
+    {
+      if ([childItem isKindOfClass:[BookmarkFolder class]])
+        [childItem sortChildrenUsingPrimarySelector:inSelector
+                                 primaryReverseSort:inReverse
+                                  secondarySelector:inSecondarySelector
+                               secondaryReverseSort:inSecondaryReverse
+                                           sortDeep:inDeep];
+    }
+  }
 }
 
 //
@@ -970,6 +1047,11 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   [[NSNotificationCenter defaultCenter] postNotification:note];
 }
 
+-(void) itemChangedNote:(BookmarkItem *)theItem
+{
+  [self itemUpdatedNote:kBookmarkItemChildrenChangedMask];
+}
+
 -(void) dockMenuChanged:(NSNotification *)note
 {
   if (([self isDockMenu]) && ([note object] != self))
@@ -977,10 +1059,11 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 }
 
 
+#pragma mark -
+
 //
 // reading/writing from/to disk
 //
-#pragma mark -
 
 -(BOOL) readNativeDictionary:(NSDictionary *)aDict
 {
@@ -1332,6 +1415,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   [self removeFromChildArrayAtIndex:aIndex];
   [self insertChild:aItem atIndex:aIndex isMove:NO];
 }
+
 //
 // child bookmark stuff
 //
@@ -1369,6 +1453,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   [self removeFromChildBookmarksAtIndex:aIndex];
   [self insertInChildBookmarks:aItem atIndex:aIndex];
 }
+
 //
 // child bookmark folder stuff
 //
@@ -1377,7 +1462,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   NSArray *folderArray = [self childFolders];
   BookmarkFolder *aFolder;
   unsigned realIndex;
-  if (aIndex < [folderArray count])  {
+  if (aIndex < [folderArray count]) {
     aFolder = [folderArray objectAtIndex:aIndex];
     realIndex = [[self childArray] indexOfObject:aFolder];
   } else {
@@ -1434,11 +1519,14 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     NSRelativePosition relPos = [relSpec relativePosition];
     if (baseSpec == nil)
       return nil;
+
     if ([kiddies count] == 0)
       return [NSArray array];
+
     if ([baseKey isEqualToString:@"childBookmarks"] ||
         [baseKey isEqualToString:@"childArray"] ||
-        [baseKey isEqualToString:@"childFolders"] ){
+        [baseKey isEqualToString:@"childFolders"] )
+    {
       unsigned baseIndex;
       id baseObject = [baseSpec objectsByEvaluatingWithContainers:self];
       if ([baseObject isKindOfClass:[NSArray class]]) {
@@ -1446,16 +1534,17 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
         if (baseCount == 0) 
           baseObject = nil;
         else {
-          if (relPos == NSRelativeBefore){
+          if (relPos == NSRelativeBefore)
             baseObject = [baseObject objectAtIndex:0];
-          } else {
+          else
             baseObject = [baseObject objectAtIndex:(baseCount-1)];
-          }
         }
       }
+
       if (!baseObject) 
         // Oops.  We could not find the base object.
         return nil;
+
       baseIndex = [kiddies indexOfObjectIdenticalTo:baseObject];
       if (baseIndex == NSNotFound) 
         // Oops.  We couldn't find the base object in the child array.  This should not happen.
@@ -1470,7 +1559,9 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
           baseIndex--;
       else 
           baseIndex++;
-      while ((baseIndex >= 0) && (baseIndex < kiddiesCount)) {
+
+      while ((baseIndex >= 0) && (baseIndex < kiddiesCount))
+      {
         if (keyIsArray) {
           [result addObject:[NSNumber numberWithInt:baseIndex]];
           break;
@@ -1482,12 +1573,13 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
             break;
           }
         }
+
         if (relPos == NSRelativeBefore)
           baseIndex--;
         else
           baseIndex++;
       }
-        return result;
+      return result;
     }
   }
   return nil;

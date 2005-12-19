@@ -93,6 +93,18 @@ NSString* const CaminoTrueKey = @"true";
 
 static BOOL gSuppressAllUpdates = NO;
 
+
++ (BOOL)bookmarkChangedNotificationUserInfo:(NSDictionary*)inUserInfo containsFlags:(unsigned int)inFlags
+{
+  unsigned int changeFlags = kBookmarkItemEverythingChangedMask;  // assume everything changed
+  NSNumber* noteChangeFlags = [inUserInfo objectForKey:BookmarkItemChangedFlagsKey];
+  if (noteChangeFlags)
+    changeFlags = [noteChangeFlags unsignedIntValue];
+
+  return ((changeFlags & inFlags) != 0);
+}
+
+
 //Initialization
 -(id) init
 {
@@ -132,6 +144,7 @@ static BOOL gSuppressAllUpdates = NO;
   [super dealloc];
 }
 
+@class BookmarkFolder;
 
 // Basic properties
 -(id) parent
@@ -403,6 +416,41 @@ static BOOL gSuppressAllUpdates = NO;
 - (id)savedUUID
 {
   return mUUID ? mUUID : @"";
+}
+
+#pragma mark -
+
+// sorting
+
+- (NSComparisonResult)compareURL:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  return NSOrderedSame;
+}
+
+- (NSComparisonResult)compareTitle:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  NSComparisonResult result = [[self title] compare:[aItem title] options:NSCaseInsensitiveSearch];
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
+}
+
+- (NSComparisonResult)compareType:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  return NSOrderedSame;
+}
+
+- (NSComparisonResult)compareVisitCount:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  return NSOrderedSame;
+}
+
+- (NSComparisonResult)compareLastVisitDate:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  return NSOrderedSame;
+}
+
+- (NSComparisonResult)compareForTop10:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  return NSOrderedSame;
 }
 
 @end

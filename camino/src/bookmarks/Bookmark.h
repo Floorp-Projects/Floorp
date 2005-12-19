@@ -77,3 +77,20 @@
 - (id)savedFaviconURL;
 
 @end
+
+
+@interface RendezvousBookmark : Bookmark
+{
+  int       mServiceID;
+  BOOL      mResolved;
+}
+
+- (id)initWithServiceID:(int)inServiceID;
+- (void)setServiceID:(int)inServiceID;
+- (int)serviceID;
+
+- (BOOL)resolved;
+- (void)setResolved:(BOOL)inResolved;
+
+@end
+

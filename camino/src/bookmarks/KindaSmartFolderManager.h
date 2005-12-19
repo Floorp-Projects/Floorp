@@ -54,7 +54,6 @@
   BookmarkFolder*       mAddressBookFolder;
   BookmarkFolder*       mRendezvousFolder;
   AddressBookManager*   mAddressBookManager;
-  unsigned              mFewestVisits;
 }
 
 -(id)initWithBookmarkManager:(BookmarkManager *)manager;

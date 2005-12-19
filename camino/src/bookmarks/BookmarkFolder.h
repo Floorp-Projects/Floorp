@@ -121,7 +121,14 @@ enum {
 
 // Smart Folder only methods
 -(void) insertIntoSmartFolderChild:(BookmarkItem *)aItem;
+-(void) insertIntoSmartFolderChild:(BookmarkItem *)aItem atIndex:(unsigned)inIndex;
 -(void) deleteFromSmartFolderChildAtIndex:(unsigned)index;
+
+// sorting
+- (void)sortChildrenUsingSelector:(SEL)inSelector reverseSort:(BOOL)inReverse sortDeep:(BOOL)inDeep;
+- (void)sortChildrenUsingPrimarySelector:(SEL)inSelector primaryReverseSort:(BOOL)inReverse
+                       secondarySelector:(SEL)inSecondarySelector secondaryReverseSort:(BOOL)inSecondaryReverse
+                                sortDeep:(BOOL)inDeep;
 
 // generation menus
 -(void) buildFlatFolderList:(NSMenu *)menu depth:(unsigned)pad;

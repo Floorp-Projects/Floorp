@@ -53,6 +53,9 @@ enum
   kBookmarkItemLastVisitChangedMask     = (1 << 6),
   kBookmarkItemStatusChangedMask        = (1 << 7),   // really "flags", like separator vs. bookmark
   kBookmarkItemNumVisitsChangedMask     = (1 << 8),
+
+  // flags for bookmark folder changes
+  kBookmarkItemChildrenChangedMask      = (1 << 9),
   
   // mask of flags that require a save of the bookmarks
   kBookmarkItemSignificantChangeFlagsMask = kBookmarkItemTitleChangedMask |
@@ -77,6 +80,9 @@ enum
   NSImage*        mIcon;
   unsigned int    mPendingChangeFlags;
 }
+
+// returns YES if any of the supplied flags are set in the userInfo
++ (BOOL)bookmarkChangedNotificationUserInfo:(NSDictionary*)inUserInfo containsFlags:(unsigned int)inFlags;
 
 // Setters/Getters
 -(id) parent;
@@ -136,6 +142,16 @@ enum
 - (id)savedItemDescription;    // don't use "description"
 - (id)savedKeyword;
 - (id)savedUUID;    // does not generate a new UUID if UUID is not set
+
+// sorting
+
+// we put sort comparators on the base class for convenience
+- (NSComparisonResult)compareURL:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareTitle:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareType:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareVisitCount:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareLastVisitDate:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareForTop10:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
 
 @end
 

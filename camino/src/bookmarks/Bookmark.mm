@@ -475,4 +475,121 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
     return nil;
 }
 
+#pragma mark -
+
+// sorting
+
+- (NSComparisonResult)compareURL:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  NSComparisonResult result;
+  // sort folders before sites
+  if ([aItem isKindOfClass:[BookmarkFolder class]])
+    result = NSOrderedDescending;
+  else
+    result = [[self url] compare:[(Bookmark*)aItem url] options:NSCaseInsensitiveSearch];
+
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
+}
+
+// base class does the title compare
+
+- (NSComparisonResult)compareType:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  NSComparisonResult result;
+  // sort folders before other stuff, and separators before bookmarks
+  if ([aItem isKindOfClass:[BookmarkFolder class]])
+    result = NSOrderedDescending;
+  else
+    result = (NSComparisonResult)((int)[self isSeparator] - (int)[(Bookmark*)aItem isSeparator]);
+
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
+}
+
+- (NSComparisonResult)compareVisitCount:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  NSComparisonResult result;
+  // sort folders before other stuff
+  if ([aItem isKindOfClass:[BookmarkFolder class]])
+    result = NSOrderedDescending;
+  else
+  {
+    int myVisits    = [self numberOfVisits];
+    int otherVisits = [(Bookmark*)aItem numberOfVisits];
+    if (myVisits == otherVisits)
+      result = NSOrderedSame;
+    else
+      result = (otherVisits > myVisits) ? NSOrderedAscending : NSOrderedDescending;
+  }
+  
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
+}
+
+- (NSComparisonResult)compareLastVisitDate:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  NSComparisonResult result;
+  // sort categories before sites
+  if ([aItem isKindOfClass:[BookmarkFolder class]])
+    result = NSOrderedDescending;
+  else
+    result = [mLastVisit compare:[(Bookmark*)aItem lastVisit]];
+
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
+}
+
+- (NSComparisonResult)compareForTop10:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  NSComparisonResult result;
+  // sort folders before other stuff
+  if ([aItem isKindOfClass:[BookmarkFolder class]])
+    result = NSOrderedDescending;
+  else
+  {
+    int myVisits    = [self numberOfVisits];
+    int otherVisits = [(Bookmark*)aItem numberOfVisits];
+    if (myVisits == otherVisits)
+      result = [mLastVisit compare:[(Bookmark*)aItem lastVisit]];
+    else
+      result = (otherVisits > myVisits) ? NSOrderedAscending : NSOrderedDescending;
+  }
+  
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
+}
+
 @end 
+
+#pragma mark -
+
+@implementation RendezvousBookmark
+
+- (id)initWithServiceID:(int)inServiceID
+{
+  if ((self = [super init]))
+  {
+    mServiceID = inServiceID;
+    mResolved = NO;
+  }
+  return self;
+}
+
+- (void)setServiceID:(int)inServiceID
+{
+  mServiceID = inServiceID;
+}
+
+- (int)serviceID
+{
+  return mServiceID;
+}
+
+- (BOOL)resolved
+{
+  return mResolved;
+}
+
+- (void)setResolved:(BOOL)inResolved
+{
+  mResolved = inResolved;
+}
+
+@end
+

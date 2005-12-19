@@ -56,6 +56,8 @@
 -(void)rebuildTop10List;
 @end
 
+const unsigned kNumTop10Items = 10;   // well, 10, duh!
+
 @implementation KindaSmartFolderManager
 
 -(id)initWithBookmarkManager:(BookmarkManager *)manager
@@ -65,12 +67,11 @@
     mTop10Folder = [[manager top10Folder] retain];
     mAddressBookFolder = [[manager addressBookFolder] retain];
     mRendezvousFolder = [[manager rendezvousFolder] retain];
-    mFewestVisits = 0;
+
     // client notifications
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
     [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
     [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
-    [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkIconChangedNotification object:nil];
   }
   return self;
 }
@@ -94,15 +95,11 @@
     [nc addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
     [nc addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
   }
+
   if (mAddressBookFolder)
     [self setupAddressBook];
-  // get top 10 list started
-  NSArray *bookmarkArray = [[manager rootBookmarks] allChildBookmarks];
-  unsigned i, j = [bookmarkArray count];
-  for (i=0; i < j; i++) {
-    Bookmark *aBookmark = [bookmarkArray objectAtIndex:i];
-    [self checkForNewTop10:aBookmark];
-  }
+
+  [self rebuildTop10List];
 }
 
 -(void) setupAddressBook
@@ -118,56 +115,110 @@
 -(void)rebuildTop10List
 {
   unsigned i, count = [mTop10Folder count];
-  for (i=0;i < count;i++)
+  for (i = 0; i < count; i++)
     [mTop10Folder deleteFromSmartFolderChildAtIndex:0];
-  mFewestVisits = 0;
-  // get top 10 list started
-  BookmarkManager *manager = [BookmarkManager sharedBookmarkManager];
-  NSArray *bookmarkArray = [[manager rootBookmarks] allChildBookmarks];
-  count = [bookmarkArray count];
-  for (i=0; i < count; i++) {
-    Bookmark *aBookmark = [bookmarkArray objectAtIndex:i];
-    [self checkForNewTop10:aBookmark];
-  }
-}
 
+  BookmarkManager *manager = [BookmarkManager sharedBookmarkManager];
+  BookmarkItem* curItem;
+
+  // We don't use rootBookmarks, because that will include the top10 folder,
+  // so we do the menu and toolbar folders manually. This also allows us to
+  // skip Rendezvous and Address Book folders, for which we don't store
+  // visit counts anyway. However, we will skip any other custom bookmark
+  // container folders that the user has created.
+  NSEnumerator* bookmarksEnum = [[manager bookmarkMenuFolder] objectEnumerator];
+  while ((curItem = [bookmarksEnum nextObject]))
+  {
+    if ([curItem isKindOfClass:[Bookmark class]])
+      [self checkForNewTop10:curItem];
+  }
+
+  bookmarksEnum = [[manager toolbarFolder] objectEnumerator];
+  while ((curItem = [bookmarksEnum nextObject]))
+  {
+    if ([curItem isKindOfClass:[Bookmark class]])
+      [self checkForNewTop10:curItem];
+  }
+  
+  // This is somewhat broken. -checkForNewTop10 doesn't insert based on visit count,
+  // it just assumes that later added bookmarks should replace earlier ones (with
+  // the same visit count).
+  [mTop10Folder sortChildrenUsingPrimarySelector:@selector(compareVisitCount:sortDescending:)
+                              primaryReverseSort:YES
+                               secondarySelector:@selector(compareLastVisitDate:sortDescending:)
+                            secondaryReverseSort:YES
+                                        sortDeep:NO];
+}
 
 -(void)checkForNewTop10:(Bookmark *)aBookmark
 {
-  unsigned smallVisit = [aBookmark numberOfVisits];
-  if (smallVisit == 0) {
-    if ([mTop10Folder indexOfObjectIdenticalTo:aBookmark] != NSNotFound)
-      //whoops.  we just cleared the visits on a top 10 item.  rebuild from scratch.
-      [self rebuildTop10List];
+  NSMutableArray* top10ItemsArray = [mTop10Folder childArray];
+
+//  NSLog(@"checkForNewTop10 %@ (%d items)", aBookmark, [top10ItemsArray count]);
+
+  // if it's already in the list
+  unsigned curIndex   = [top10ItemsArray indexOfObjectIdenticalTo:aBookmark];
+  unsigned visitCount = [aBookmark numberOfVisits];
+
+  // if it's not in the list, and the visit count is zero, nothing to do
+  if (curIndex == NSNotFound && visitCount == 0)
     return;
+
+  // we assume the list is sorted here
+  unsigned currentMinVisits = 1;
+  if ([top10ItemsArray count] == kNumTop10Items)
+    currentMinVisits = [[top10ItemsArray lastObject] numberOfVisits];
+
+  if (curIndex != NSNotFound) // it's already in the list
+  {
+    if (visitCount < currentMinVisits)
+    {
+      // the item dropped off the list. rather than grovel for the next highest item, just rebuild the list
+      // (this could be optimized)
+      [self rebuildTop10List]; // XXX potential recursion!
+    }
+    else
+    {
+      // just resort
+      [mTop10Folder sortChildrenUsingPrimarySelector:@selector(compareVisitCount:sortDescending:)
+                                  primaryReverseSort:YES
+                                   secondarySelector:@selector(compareLastVisitDate:sortDescending:)
+                                secondaryReverseSort:YES
+                                            sortDeep:NO];
+    }
   }
-  if (([mTop10Folder indexOfObjectIdenticalTo:aBookmark] != NSNotFound))
-    return;
-  // cycle through list of children
-  // find item with fewest visits, mark it for destruction
-  // if the URL from the new bookmark is already present in the
-  // list, we bail out
-  NSMutableArray *childArray = [mTop10Folder childArray];
-  unsigned i, kidVisit, count = [childArray count]; //j should be 10
-  if ((count >=10) && (smallVisit < mFewestVisits))
-    return;
-  Bookmark *aKid = nil;
-  NSString *newURL = [aBookmark url];
-  int doomedKidIndex = -1;
-  for (i=0; i< count; i++) {
-    aKid = [childArray objectAtIndex:i];
-    if ([newURL isEqualToString:[aKid url]])
-      return;
-    kidVisit = [aKid numberOfVisits];
-    if (kidVisit == mFewestVisits)
-      doomedKidIndex = i;
-    else if (smallVisit > kidVisit)
-      smallVisit = kidVisit;
+  else if (visitCount >= currentMinVisits)
+  {
+    // enter it into the list using insertion sort. it will go before other items with the same visit
+    // count (thus maintaining the visit count/last visit sort).
+    unsigned numItems = [top10ItemsArray count];
+    int insertionIndex = -1;
+      
+    NSString* newItemURL = [aBookmark url];
+    NSNumber* reverseSort = [NSNumber numberWithBool:YES];
+    
+    // we check the entire list to look for items with a duplicate url
+    for (unsigned i = 0; i < numItems; i ++)
+    {
+      Bookmark* curChild = [top10ItemsArray objectAtIndex:i];
+      if ([newItemURL isEqualToString:[curChild url]])
+        return;
+
+      // add before the first item with the same or lower visit count
+      if (([aBookmark compareForTop10:curChild sortDescending:reverseSort] != NSOrderedDescending) && insertionIndex == -1)
+        insertionIndex = i;
+    }
+    
+    if (insertionIndex == -1 && [top10ItemsArray count] < kNumTop10Items)
+      insertionIndex = [top10ItemsArray count];
+
+    if (insertionIndex != -1)
+    {
+      [mTop10Folder insertIntoSmartFolderChild:aBookmark atIndex:insertionIndex];
+      if ([top10ItemsArray count] > kNumTop10Items)
+        [mTop10Folder deleteFromSmartFolderChildAtIndex:[top10ItemsArray count] - 1];
+    }
   }
-  if ((doomedKidIndex != -1) && (count >= 10))
-    [mTop10Folder deleteFromSmartFolderChildAtIndex:doomedKidIndex];
-  [mTop10Folder insertIntoSmartFolderChild:aBookmark];
-  mFewestVisits = smallVisit;
 }
 
 
@@ -181,6 +232,7 @@
   if (index == NSNotFound)
     [aFolder insertIntoSmartFolderChild:aBookmark];
 }
+
 //
 // if we have this item, remove it
 // 
@@ -209,29 +261,37 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
   unsigned int i, count = [mRendezvousFolder count];
   for (i = 0; i < count; i++)
     [mRendezvousFolder deleteChild:[mRendezvousFolder objectAtIndex:0]];
+
   NetworkServices *netserv = [note object];
   NSEnumerator* keysEnumerator = [netserv serviceEnumerator];
   NSMutableArray* servicesArray = [[NSMutableArray alloc] initWithCapacity:10];
   id key;
-  while ((key = [keysEnumerator nextObject])) {
+  while ((key = [keysEnumerator nextObject]))
+  {
     NSDictionary* serviceDict = [NSDictionary dictionaryWithObjectsAndKeys:
-      key, @"id",
-      [netserv serviceName:[key intValue]], @"name",
-      [netserv serviceProtocol:[key intValue]], @"protocol",
-      nil];
+                                                    key, @"id",
+                   [netserv serviceName:[key intValue]], @"name",
+               [netserv serviceProtocol:[key intValue]], @"protocol",
+                                                         nil];
     [servicesArray addObject:serviceDict];
   }
-  if ([servicesArray count] != 0) {
+
+  if ([servicesArray count] != 0)
+  {
     // sort on protocol, then name
     [servicesArray sortUsingFunction:SortByProtocolAndName context:NULL];
+    
+    // make bookmarks
     unsigned int numServices = [servicesArray count];
     for (i = 0; i < numServices; i ++)
     {
       NSDictionary* serviceDict = [servicesArray objectAtIndex:i];
       NSString* itemName = [[serviceDict objectForKey:@"name"] stringByAppendingString:NSLocalizedString([serviceDict objectForKey:@"protocol"], @"")];
-      Bookmark *aBookmark = [mRendezvousFolder addBookmark];
-      [aBookmark setTitle:itemName];
-      [aBookmark setParent:[serviceDict objectForKey:@"id"]];
+      
+      RendezvousBookmark* serviceBookmark = [[RendezvousBookmark alloc] initWithServiceID:[[serviceDict objectForKey:@"id"] intValue]];
+      [serviceBookmark setTitle:itemName];
+      [mRendezvousFolder appendChild:serviceBookmark];
+      [serviceBookmark release];
     }
   }
   [servicesArray release];
@@ -240,20 +300,25 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
 - (void)serviceResolved:(NSNotification *)note
 {
   NSDictionary *dict = [note userInfo];
-  id aClient = [dict objectForKey:NetworkServicesClientKey];
-  if ([aClient isKindOfClass:[Bookmark class]]) {
-    Bookmark *aKid;
+  id client = [dict objectForKey:NetworkServicesClientKey];
+  if ([client isKindOfClass:[Bookmark class]])
+  {
+    // I'm not sure why we have to check to see that the client is a child
+    // of the rendezvous folder. Maybe just see if it's a RendezvousBookmark?
     NSEnumerator* enumerator = [[mRendezvousFolder childArray] objectEnumerator];
-    while ((aKid = [enumerator nextObject])) {
-      if (aKid == aClient)
+    Bookmark *curChild;
+    while ((curChild = [enumerator nextObject]))
+    {
+      if (curChild == client)
       {
-        [aClient setUrl:[dict objectForKey:NetworkServicesResolvedURLKey]];
-        [aClient setParent:mRendezvousFolder];
+        [client setUrl:[dict objectForKey:NetworkServicesResolvedURLKey]];
+        [client setResolved:YES];
       }
     }
   }
   return;
 }
+
 - (void)serviceResolutionFailed:(NSNotification *)note
 {
   return;
@@ -261,6 +326,7 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
 
 
 #pragma mark -
+
 //
 // BookmarkClient protocol
 //
@@ -281,10 +347,12 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
 
 - (void)bookmarkChanged:(NSNotification *)note
 {
-  // XXX look at change flags
-  BookmarkItem *anItem = [note object];
-  if ([anItem isKindOfClass:[Bookmark class]]) {
-    [self checkForNewTop10:anItem];
+  BOOL visitCountChanged = [BookmarkItem bookmarkChangedNotificationUserInfo:[note userInfo] containsFlags:kBookmarkItemNumVisitsChangedMask];
+  if (visitCountChanged)
+  {
+    BookmarkItem *anItem = [note object];
+    if ([anItem isKindOfClass:[Bookmark class]])
+      [self checkForNewTop10:anItem];
   }
 }
 

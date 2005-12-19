@@ -279,6 +279,7 @@ static BookmarkManager* gBookmarkManager = nil;
   // All interested parties haven't been init'd yet, and/or will receive the
   // managerStartedNotification when setup is actually complete.
   [BookmarkItem setSuppressAllUpdateNotifications:YES];
+
   BOOL bookmarksReadOK = [self readBookmarks];
   if (!bookmarksReadOK)
   {
@@ -339,14 +340,14 @@ static BookmarkManager* gBookmarkManager = nil;
   [[self toolbarFolder] refreshIcon];
 
   NSArray* allBookmarks = [[self rootBookmarks] allChildBookmarks];
-
+  
   NSEnumerator* bmEnum = [allBookmarks objectEnumerator];
   Bookmark* thisBM;
   while ((thisBM = [bmEnum nextObject]))
   {
     [self registerBookmarkForLoads:thisBM];
   }
-
+  
   // load favicons (w/out hitting the network, cache only). Spread it out so that we only get
   // ten every three seconds to avoid locking up the UI with large bookmark lists.
   // XXX probably want a better way to do this. This sets up a timer (internally) for every
@@ -790,8 +791,9 @@ static BookmarkManager* gBookmarkManager = nil;
   NSMutableSet* urlSet = [urlMap objectForKey:inURL];
   if (!urlSet)
   {
-    urlSet = [NSMutableSet setWithCapacity:1];
+    urlSet = [[NSMutableSet alloc] initWithCapacity:1];
     [urlMap setObject:urlSet forKey:inURL];
+    [urlSet release];
   }
   [urlSet addObject:inBookmark];
 }
@@ -843,7 +845,9 @@ static BookmarkManager* gBookmarkManager = nil;
   [BookmarkManager addItem:inBookmark toURLMap:mBookmarkURLMap usingURL:bookmarkURL];
 
   // and add it to the site icon map
-  [BookmarkManager addItem:inBookmark toURLMap:mBookmarkFaviconURLMap usingURL:[BookmarkManager faviconURLForBookmark:inBookmark]];
+  NSString* faviconURL = [BookmarkManager faviconURLForBookmark:inBookmark];
+  if ([faviconURL length] > 0)
+    [BookmarkManager addItem:inBookmark toURLMap:mBookmarkFaviconURLMap usingURL:faviconURL];
 }
 
 - (void)unregisterBookmarkForLoads:(Bookmark*)inBookmark ignoringURL:(BOOL)inIgnoreURL
@@ -851,7 +855,9 @@ static BookmarkManager* gBookmarkManager = nil;
   NSString* bookmarkURL = inIgnoreURL ? nil : [BookmarkManager canonicalBookmarkURL:[inBookmark url]];
   [BookmarkManager removeItem:inBookmark fromURLMap:mBookmarkURLMap usingURL:bookmarkURL];
   
-  [BookmarkManager removeItem:inBookmark fromURLMap:mBookmarkFaviconURLMap usingURL:[BookmarkManager faviconURLForBookmark:inBookmark]];
+  NSString* faviconURL = [BookmarkManager faviconURLForBookmark:inBookmark];
+  if ([faviconURL length] > 0)
+    [BookmarkManager removeItem:inBookmark fromURLMap:mBookmarkFaviconURLMap usingURL:faviconURL];
 }
 
 

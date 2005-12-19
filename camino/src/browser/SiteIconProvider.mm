@@ -265,32 +265,6 @@ NeckoCacheHelper::ClearCache()
 
 #pragma mark -
 
-static nsresult
-MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
-{
-  outFaviconURI.Truncate(0);
-  
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), inURIString);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // check for http/https
-  PRBool isHTTP = PR_FALSE, isHTTPS = PR_FALSE;
-  uri->SchemeIs("http", &isHTTP);
-  uri->SchemeIs("https", &isHTTPS);
-  if (!isHTTP && !isHTTPS)
-    return NS_OK;
-
-  nsCAutoString faviconURI;
-  uri->GetPrePath(faviconURI);
-  faviconURI.Append("/favicon.ico");
-
-  outFaviconURI.Assign(NS_ConvertUTF8toUCS2(faviconURI));
-  return NS_OK;
-}
-
-
 @interface SiteIconProvider(Private)
 
 - (void)addToMissedIconsCache:(NSString*)inURI withExpirationSeconds:(unsigned int)inExpSeconds;
@@ -567,7 +541,6 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
   return sIconProvider;
 }
 
-
 + (NSString*)defaultFaviconLocationStringFromURI:(NSString*)inURI
 {
   // about: urls are special
@@ -579,12 +552,26 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
   if ([inURI compare:@"file://" options:NSCaseInsensitiveSearch range:NSMakeRange(0, 7)] == NSOrderedSame)
     return @"about:local_file";
 
-  nsAutoString uriString;
-  [inURI assignTo_nsAString:uriString];
+  // we use nsIURI here, rather than NSURL, because the former does
+  // a better job with suspect urls (e.g. those containing |), and 
+  // allows us go keep the port
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), [inURI UTF8String]);
+  if (NS_FAILED(rv))
+    return @"";
 
-  nsAutoString faviconURIString;
-  MakeFaviconURIFromURI(uriString, faviconURIString);
-  return [NSString stringWith_nsAString:faviconURIString];
+  // check for http/https
+  PRBool isHTTP = PR_FALSE, isHTTPS = PR_FALSE;
+  uri->SchemeIs("http", &isHTTP);
+  uri->SchemeIs("https", &isHTTPS);
+  if (!isHTTP && !isHTTPS)
+    return @"";
+
+  nsCAutoString faviconURI;
+  uri->GetPrePath(faviconURI);
+  faviconURI.Append("/favicon.ico");
+
+  return [NSString stringWith_nsACString:faviconURI];
 }
 
 @end
