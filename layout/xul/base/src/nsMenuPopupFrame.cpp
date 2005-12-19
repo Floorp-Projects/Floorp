@@ -226,7 +226,8 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
 #else
   static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
   aView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE);
-#endif   
+#endif
+  return NS_OK;
 }
 
 NS_IMETHODIMP
