@@ -139,15 +139,6 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
     if ([curItem isKindOfClass:[Bookmark class]])
       [self checkForNewTop10:curItem];
   }
-  
-  // This is somewhat broken. -checkForNewTop10 doesn't insert based on visit count,
-  // it just assumes that later added bookmarks should replace earlier ones (with
-  // the same visit count).
-  [mTop10Folder sortChildrenUsingPrimarySelector:@selector(compareVisitCount:sortDescending:)
-                              primaryReverseSort:YES
-                               secondarySelector:@selector(compareLastVisitDate:sortDescending:)
-                            secondaryReverseSort:YES
-                                        sortDeep:NO];
 }
 
 -(void)checkForNewTop10:(Bookmark *)aBookmark
@@ -180,11 +171,9 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
     else
     {
       // just resort
-      [mTop10Folder sortChildrenUsingPrimarySelector:@selector(compareVisitCount:sortDescending:)
-                                  primaryReverseSort:YES
-                                   secondarySelector:@selector(compareLastVisitDate:sortDescending:)
-                                secondaryReverseSort:YES
-                                            sortDeep:NO];
+      [mTop10Folder sortChildrenUsingSelector:@selector(compareForTop10:sortDescending:)
+                                  reverseSort:YES
+                                     sortDeep:NO];
     }
   }
   else if (visitCount >= currentMinVisits)

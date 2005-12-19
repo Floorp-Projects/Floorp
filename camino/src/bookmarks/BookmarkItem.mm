@@ -144,8 +144,6 @@ static BOOL gSuppressAllUpdates = NO;
   [super dealloc];
 }
 
-@class BookmarkFolder;
-
 // Basic properties
 -(id) parent
 {
