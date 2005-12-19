@@ -147,11 +147,6 @@ Select Testing Group
     <td align="center">[% community_completed FILTER html %][% IF community_completed != 'N/A' %]%[% END %]</td>
 </tr>
 [% END %]
-[% # for some boneheaded reason, our js breaks if there is only one group, 
-   # so we create a fake dummy group if this is the case: %]
-[% IF groups.size == 1 %]
-    <input type="radio" name="group" value="null" style="visibility: hidden;">
-[% END %]
 
 </table>
 

@@ -35,10 +35,15 @@ function showsubgroup() {
 
   var num_subgroups_enabled = 0;
   var subgroupselect = MM_findObj("subgroup_"+selnum);
-  for (var i=0; i<subgroupselect.length; i++) {
-    if (!subgroupselect[i].disabled) {
-      num_subgroups_enabled++;
+  
+  if (subgroupselect instanceof NodeList) {
+    for (var i=0; i<subgroupselect.length; i++) {
+      if (!subgroupselect[i].disabled) {
+        num_subgroups_enabled++;
+      }
     }
+  } else if (subgroupselect instanceof HTMLInputElement) {
+    num_subgroups_enabled=1;
   }
 
   obj.style.display = "";
