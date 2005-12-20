@@ -1737,7 +1737,7 @@ function GenericSendMessage( msgType )
             var checkbox = {value:false};
             var okToProceed = gPromptService.confirmCheck(
                                   window,
-                                  sComposeMsgsBundle.getString("subjectDlogTitle"),
+                                  sComposeMsgsBundle.getString("sendMsgTitle"),
                                   sComposeMsgsBundle.getString("recipientDlogMessage"),
                                   sComposeMsgsBundle.getString("CheckMsg"),
                                   checkbox);
