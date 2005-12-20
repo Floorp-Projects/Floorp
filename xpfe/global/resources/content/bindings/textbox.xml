@@ -91,11 +91,30 @@
         </body>
       </method>
 
-      <constructor action="var str = this.boxObject.getProperty('value'); 
-                                                if (str) {
-                                                  this.inputField.value=str;
-                                                  this.boxObject.removeProperty('value');
-                                                }"/>
+      <constructor><![CDATA[
+        var str = this.boxObject.getProperty('value');
+        if (str) {
+          this.inputField.value = str;
+          this.boxObject.removeProperty('value');
+        }
+
+        str = this.getAttribute('newlines');
+        if (str) {
+          const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
+          const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
+          for (var x in nsIPlaintextEditor) {
+            if (/^eNewlines/.test(x)) {
+              if (str == RegExp.rightContext.toLowerCase()) {
+                this.inputField.QueryInterface(nsIDOMNSEditableElement)
+                    .editor.QueryInterface(nsIPlaintextEditor)
+                    .newlineHandling = nsIPlaintextEditor[x];
+                break;
+              }
+            }
+          }
+        }
+      ]]></constructor>
+
       <destructor action="if (this.inputField.value) this.boxObject.setProperty('value', this.inputField.value);"/>
    
     </implementation>
