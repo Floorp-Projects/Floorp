@@ -184,6 +184,10 @@ ifdef MOZ_XMLEXTRAS
 tier_9_dirs += extensions/xmlextras
 endif
 
+ifdef MOZ_WEBSERVICES
+tier_9_dirs += extensions/webservices
+endif
+
 ifdef MOZ_UNIVERSALCHARDET
 tier_9_dirs += extensions/universalchardet
 endif

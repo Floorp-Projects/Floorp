@@ -174,6 +174,7 @@
     MODULE(nsPluginModule)                   \
     MODULE(nsLayoutModule)                   \
     MODULE(nsXMLExtrasModule)                \
+    MODULE(nsWebServicesModule)              \
     MODULE(docshell_provider)                \
     MODULE(embedcomponents)                  \
     MODULE(Browser_Embedding_Module)         \

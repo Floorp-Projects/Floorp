@@ -4115,6 +4115,7 @@ MOZ_UNIVERSALCHARDET=1
 MOZ_USE_NATIVE_UCONV=
 MOZ_V1_STRING_ABI=1
 MOZ_VIEW_SOURCE=1
+MOZ_WEBSERVICES=1
 MOZ_XMLEXTRAS=1
 MOZ_XPFE_COMPONENTS=1
 MOZ_XPINSTALL=1
@@ -4164,7 +4165,7 @@ suite)
   MOZ_SUITE=1
   MOZ_PROFILESHARING=
   MOZ_APP_VERSION=$SEAMONKEY_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc help p3p venkman inspector irc typeaheadfind webservices spellcheck gnomevfs auth sroaming permissions reporter"
+  MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc help p3p venkman inspector irc typeaheadfind spellcheck gnomevfs auth sroaming permissions reporter"
   AC_DEFINE(MOZ_SUITE)
   ;;
 
@@ -4175,7 +4176,7 @@ browser)
   MOZ_UPDATER=1
   MOZ_PHOENIX=1
   MOZ_APP_VERSION=$FIREFOX_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc webservices inspector gnomevfs auth permissions reporter"
+  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc inspector gnomevfs auth permissions reporter"
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
@@ -4190,7 +4191,7 @@ minimo)
   MOZ_APP_VERSION=`cat $topsrcdir/minimo/config/version.txt`
   MOZ_COMPOSER=
   MOZ_ENABLE_POSTSCRIPT=
-  MOZ_EXTENSIONS_DEFAULT="xml-rpc webservices permissions spatialnavigation"
+  MOZ_EXTENSIONS_DEFAULT="xml-rpc permissions spatialnavigation"
   MOZ_IMG_DECODERS_DEFAULT="png gif jpeg"
   MOZ_IMG_ENCODERS_DEFAULT=
   MOZ_IMG_ENCODERS=
@@ -4244,7 +4245,7 @@ mail)
   MOZ_STATIC_MAIL_BUILD=1
   MOZ_COMPOSER=1
   MOZ_APP_VERSION=$THUNDERBIRD_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" wallet spellcheck webservices auth"
+  MOZ_EXTENSIONS_DEFAULT=" wallet spellcheck auth"
   AC_DEFINE(MOZ_THUNDERBIRD)
   ;;
 
@@ -4281,7 +4282,7 @@ xulrunner)
   MOZ_ENABLE_LIBXUL=1
   MOZ_APP_VERSION=$MOZILLA_VERSION
   MOZ_JAVAXPCOM=1
-  MOZ_EXTENSIONS_DEFAULT=" xml-rpc webservices gnomevfs auth"
+  MOZ_EXTENSIONS_DEFAULT=" xml-rpc gnomevfs auth"
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
 
@@ -4291,6 +4292,7 @@ macbrowser)
   MOZ_APP_VERSION=$MOZILLA_VERSION
   MOZ_EXTENSIONS_DEFAULT=" cookie typeaheadfind permissions"
   MOZ_PREF_EXTENSIONS=
+  MOZ_WEBSERVICES=
   AC_DEFINE(MOZ_MACBROWSER)
   ;;
 
@@ -4926,6 +4928,14 @@ MOZ_ARG_DISABLE_BOOL(xmlextras,
     MOZ_XMLEXTRAS=1 )
 
 dnl ========================================================
+dnl Webservices
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(webservices,
+[  --disable-webservices Disable Webservices/SOAP support ],
+    MOZ_WEBSERVICES=,
+    MOZ_WEBSERVICES=1 )
+
+dnl ========================================================
 dnl Pref extensions (autoconfig and system-pref)
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(pref-extensions,
@@ -5072,6 +5082,11 @@ fi
 if test `echo "$MOZ_EXTENSIONS" | grep -c xmlextras` -ne 0; then
     AC_MSG_WARN([xmlextras is no longer an extension, use --disable-xmlextras to disable.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xmlextras||g'`
+fi
+
+if test `echo "$MOZ_EXTENSIONS" | grep -c webservices` -ne 0; then
+    AC_MSG_WARN([webservices is no longer an extension, use --disable-webservices to disable.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|webservices||g'`
 fi
 
 if test `echo "$MOZ_EXTENSIONS" | grep -c pref` -ne 0; then
@@ -6868,6 +6883,7 @@ AC_SUBST(MINIMO)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_XMLEXTRAS)
+AC_SUBST(MOZ_WEBSERVICES)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_SVG)
 AC_SUBST(MOZ_SVG_FOREIGNOBJECT)
