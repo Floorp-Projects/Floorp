@@ -348,7 +348,7 @@ bool nsRenderingContextBeOS::LockAndUpdateView()
 		if (mCurrentBFont == nsnull)
 		{ 
 			if (mFontMetrics)
-				mFontMetrics->GetFontHandle((nsFontHandle)mCurrentBFont);
+				mFontMetrics->GetFontHandle((nsFontHandle&)mCurrentBFont);
 
 			if (mCurrentBFont)
 				mView->SetFont(mCurrentBFont);
