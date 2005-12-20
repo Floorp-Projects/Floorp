@@ -2216,8 +2216,7 @@ SECStatus sha_mct_test(unsigned int MDLen, unsigned char *seed, FILE *resp)
     unsigned char MD_i1[HASH_LENGTH_MAX];  /* MD[i-1] */
     unsigned char MD_i[HASH_LENGTH_MAX];   /* MD[i] */
     unsigned char msg[HASH_LENGTH_MAX*3];
-    char buf[HASH_LENGTH_MAX + 6];  /* MAX buf MD = MD[HASH_LENGTH_MAX] */
-
+    char buf[HASH_LENGTH_MAX*2 + 1];  /* MAX buf MD_i as a hex string */
 
     for (j=0; j<100; j++) {
         /* MD_0 = MD_1 = MD_2 = seed */
