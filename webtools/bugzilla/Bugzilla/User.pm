@@ -1349,6 +1349,10 @@ sub insert_new_user {
                  "(user_id, relationship, event) " . 
                  "VALUES ($userid, " . REL_ANY . ", $event)");
     }
+
+    my $user = new Bugzilla::User($userid);
+    $user->derive_regexp_groups();
+
     
     # Return the password to the calling code so it can be included
     # in an email sent to the user.
