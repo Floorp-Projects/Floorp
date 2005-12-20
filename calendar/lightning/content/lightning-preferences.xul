@@ -37,8 +37,11 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE prefwindow SYSTEM "chrome://calendar/locale/prefs.dtd">
-
+<!DOCTYPE prefwindow 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/prefs.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd2;
+]>
 
 
 <overlay id="LightningPaneOverlay"
@@ -53,6 +56,7 @@
       <preference id="calendar.alarms.defaultsnoozelength" name="calendar.alarms.defaultsnoozelength" type="int"/>
       <preference id="calendar.event.defaultstarthour" name="calendar.event.defaultstarthour" type="int"/>
       <preference id="calendar.event.defaultendhour" name="calendar.event.defaultendhour" type="int"/>
+      <preference id="calendar.week.start" name="calendar.week.start" type="int"/>
       <preference id="calendar.timezone.local" name="calendar.timezone.local" type="string"/>
     </preferences>
 
@@ -107,6 +111,20 @@
               <row align="center">
                 <label value="&pref.calendar.view.endtime.label;"/>
                 <textbox preference="calendar.event.defaultendhour"/>
+              </row>
+              <row align="center">
+                <description>&pref.weekstarts.label;</description>
+                <menulist id="weekstarts" preference="calendar.week.start">
+                  <menupopup id="weekstarts">
+                    <menuitem label="&day.1.name;" value="0"/>
+                    <menuitem label="&day.2.name;" value="1"/>
+                    <menuitem label="&day.3.name;" value="2"/>
+                    <menuitem label="&day.4.name;" value="3"/>
+                    <menuitem label="&day.5.name;" value="4"/>
+                    <menuitem label="&day.6.name;" value="5"/>
+                    <menuitem label="&day.7.name;" value="6" selected="true"/>
+                  </menupopup>
+                </menulist> 
               </row>
             </rows>
           </grid>

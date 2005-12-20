@@ -67,4 +67,6 @@ endif
 
 DEFINES += -DTHEME=$(THEME)
 
+PREF_JS_EXPORTS = $(srcdir)/content/lightning.js
+
 include $(topsrcdir)/config/rules.mk
