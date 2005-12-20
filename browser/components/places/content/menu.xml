@@ -93,33 +93,43 @@
           this._cleanMenu();
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           var cc = this._result.childCount;
-          for (var i = 0; i < cc; ++i) {
-            var child = this._result.getChild(i);
+          if (cc > 0) {
+            for (var i = 0; i < cc; ++i) {
+              var child = this._result.getChild(i);
+              var element = null;
+              if (PlacesController.nodeIsURL(child)) {
+                element = document.createElementNS(XULNS, "menuitem");
+                element.setAttribute("label", child.title);
+                element.setAttribute("url", child.url);
+                element.setAttribute("statustext", child.url);
+                element.setAttribute("image", child.icon.spec);
+                element.className = "menuitem-iconic bookmark-item";
+              }
+              else if (PlacesController.nodeIsFolder(child)) {
+                element = document.createElementNS(XULNS, "menu");
+                element.setAttribute("type", "menu");
+                element.setAttribute("container", "true");
+                element.setAttribute("label", child.title);
+                var popup = document.createElementNS(XULNS, "menupopup");
+                popup.setAttribute("type", "places");
+                element.appendChild(popup);
+                popup.folderId = child.folderId;
+                element.className = "menu-iconic bookmark-item";
+              }
+              // else if (nodeIsQuery) ... add menu to build kids
+              if (element) {
+                element.node = child;
+                this.appendChild(element);
+              }
+            }
+          } else {
+            var bundle = document.getElementById("placeBundle");
+            var label = bundle.getString("bookmarksMenuEmptyFolder");
             var element = null;
-            if (PlacesController.nodeIsURL(child)) {
-              element = document.createElementNS(XULNS, "menuitem");
-              element.setAttribute("label", child.title);
-              element.setAttribute("url", child.url);
-              element.setAttribute("statustext", child.url);
-              element.setAttribute("image", child.icon.spec);
-              element.className = "menuitem-iconic bookmark-item";
-            }
-            else if (PlacesController.nodeIsFolder(child)) {
-              element = document.createElementNS(XULNS, "menu");
-              element.setAttribute("type", "menu");
-              element.setAttribute("container", "true");
-              element.setAttribute("label", child.title);
-              var popup = document.createElementNS(XULNS, "menupopup");
-              popup.setAttribute("type", "places");
-              element.appendChild(popup);
-              popup.folderId = child.folderId;
-              element.className = "menu-iconic bookmark-item";
-            }
-            // else if (nodeIsQuery) ... add menu to build kids
-            if (element) {
-              element.node = child;
-              this.appendChild(element);
-            }
+            element = document.createElementNS(XULNS, "menuitem");
+            element.setAttribute("label", label);
+            element.setAttribute("disabled", true);
+            this.appendChild(element);
           }
         ]]></body>
       </method>
