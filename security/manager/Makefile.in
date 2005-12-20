@@ -46,6 +46,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = psm
 
 PACKAGE_FILE = psm.pkg
+
+ifndef MOZ_NATIVE_NSS
 PACKAGE_VARS += \
 	NSS3_LIB \
 	SMIME3_LIB \
@@ -57,6 +59,7 @@ PACKAGE_VARS += \
 	$(NULL)
 
 LOADABLE_ROOT_MODULE = $(DLL_PREFIX)nssckbi$(DLL_SUFFIX)
+endif
 
 NSS3_LIB = $(DLL_PREFIX)nss3$(DLL_SUFFIX)
 SMIME3_LIB = $(DLL_PREFIX)smime3$(DLL_SUFFIX)
@@ -150,6 +153,7 @@ include $(topsrcdir)/config/rules.mk
 export:: .nss.cleaned
 
 .nss.cleaned: .nss.checkout
+ifndef MOZ_NATIVE_NSS
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
 ifndef SKIP_CHK
@@ -157,9 +161,12 @@ ifndef SKIP_CHK
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
 endif
 	touch $@
+endif
 
 .nss.checkout:
+ifndef MOZ_NATIVE_NSS
 	touch $(srcdir)/$@
+endif
 
 dependclean export packages chrome::
 	$(MAKE) -C boot $@
@@ -170,12 +177,15 @@ ifdef MOZ_XUL
 endif
 
 libs::
+ifndef MOZ_NATIVE_NSS
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
+endif
 ifeq ($(OS_ARCH),WINNT)
 	cd $(DIST)/lib; cp -f $(LIB_PREFIX)dbm$(MOZ_BITS).$(LIB_SUFFIX) $(LIB_PREFIX)dbm.$(LIB_SUFFIX)
 else
 	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) $(LIB_PREFIX)dbm.$(LIB_SUFFIX); $(RANLIB) $(LIB_PREFIX)dbm.$(LIB_SUFFIX)
 endif
+ifndef MOZ_NATIVE_NSS
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 ifndef SKIP_CHK
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
@@ -195,6 +205,7 @@ ifdef HAVE_FREEBL_MODULES
 	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_HYBRID_CHK) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(DIST)/bin
 endif
+endif
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
 	$(MAKE) -C locales $@
@@ -203,6 +214,7 @@ ifdef MOZ_XUL
 endif
 
 install::
+ifndef MOZ_NATIVE_NSS
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DESTDIR)$(mozappdir)
 ifndef SKIP_CHK
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DESTDIR)$(mozappdir)
@@ -216,6 +228,7 @@ ifdef HAVE_FREEBL_MODULES
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_PURE32_MODULE) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_HYBRID_CHK) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(DESTDIR)$(mozappdir)
+endif
 endif
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
@@ -231,11 +244,13 @@ clean clobber clobber_all realclean distclean depend::
 ifdef MOZ_XUL
 	$(MAKE) -C pki $@
 endif
+ifndef MOZ_NATIVE_NSS
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
 ifndef SKIP_CHK
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
+endif
 endif
 
 echo-requires-recursive::
@@ -243,3 +258,4 @@ echo-requires-recursive::
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 	$(MAKE) -C locales $@
+

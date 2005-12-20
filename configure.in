@@ -86,6 +86,7 @@ MOZJPEG=62
 MOZPNG=10207
 MOZZLIB=1.2.3
 NSPR_VERSION=4
+NSS_VERSION=3
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
@@ -3558,6 +3559,42 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     fi
 fi
 
+dnl ========================================================
+dnl = If NSS was not detected in the system, 
+dnl = use the one in the source tree (mozilla/security/nss)
+dnl ========================================================
+
+MOZ_ARG_WITH_BOOL(system-nss,
+[  --with-system-nss      Use system installed NSS],
+    _USE_SYSTEM_NSS=1 )
+
+if test -n "$_USE_SYSTEM_NSS"; then
+    AM_PATH_NSS(3.0.0, [MOZ_NATIVE_NSS=1], [MOZ_NATIVE_NSS=])
+fi
+
+if test -n "$MOZ_NATIVE_NSS"; then
+   NSS_LIBS="$NSS_LIBS -lcrmf"
+else
+   NSS_CFLAGS='-I$(DIST)/public/nss'
+   NSS_DEP_LIBS='\\\
+        $(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \\\
+        $(DIST)/lib/$(DLL_PREFIX)smime'$NSS_VERSION'$(DLL_SUFFIX) \\\
+        $(DIST)/lib/$(DLL_PREFIX)ssl'$NSS_VERSION'$(DLL_SUFFIX) \\\
+        $(DIST)/lib/$(DLL_PREFIX)nss'$NSS_VERSION'$(DLL_SUFFIX) \\\
+        $(DIST)/lib/$(DLL_PREFIX)softokn'$NSS_VERSION'$(DLL_SUFFIX)'
+
+   if test -z "$GNU_CC" && test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "WINCE" -o "$OS_ARCH" = "OS2"; then
+       NSS_LIBS='\\\
+        $(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \\\
+        $(DIST)/lib/$(DLL_PREFIX)smime'$NSS_VERSION'$(IMPORT_LIB_SUFFIX) \\\
+        $(DIST)/lib/$(DLL_PREFIX)ssl'$NSS_VERSION'$(IMPORT_LIB_SUFFIX) \\\
+        $(DIST)/lib/$(DLL_PREFIX)nss'$NSS_VERSION'$(IMPORT_LIB_SUFFIX) \\\
+        $(DIST)/lib/$(DLL_PREFIX)softokn'$NSS_VERSION'$(IMPORT_LIB_SUFFIX)'
+   else
+       NSS_LIBS='-L$(LIBS_DIR)'" -lcrmf -lsmime$NSS_VERSION -lssl$NSS_VERSION -lnss$NSS_VERSION -lsoftokn$NSS_VERSION"
+   fi
+fi
+
 if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl system JPEG support
 dnl ========================================================
@@ -7001,6 +7038,11 @@ AC_SUBST(MOZ_PNG_LIBS)
 AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
 AC_SUBST(MOZ_NATIVE_NSPR)
+
+AC_SUBST(NSS_CFLAGS)
+AC_SUBST(NSS_LIBS)
+AC_SUBST(NSS_DEP_LIBS)
+AC_SUBST(MOZ_NATIVE_NSS)
 
 AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)

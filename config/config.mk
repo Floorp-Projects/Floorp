@@ -136,39 +136,6 @@ FINAL_LINK_LIBS = $(DEPTH)/config/final-link-libs
 FINAL_LINK_COMPS = $(DEPTH)/config/final-link-comps
 FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 
-# 
-# NSS libs needed for final link in static build
-# 
-
-NSS_LIBS	= \
-	$(LIBS_DIR) \
-	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
-	-lsmime3 \
-	-lssl3 \
-	-lnss3 \
-	-lsoftokn3 \
-	$(NULL)
-
-ifneq (,$(filter OS2 WINNT WINCE, $(OS_ARCH)))
-ifndef GNU_CC
-NSS_LIBS	= \
-	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)smime3.$(IMPORT_LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)ssl3.$(IMPORT_LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)nss3.$(IMPORT_LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)softokn3.$(IMPORT_LIB_SUFFIX) \
-	$(NULL)
-endif
-endif
-
-NSS_DEP_LIBS	= \
-	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(DLL_PREFIX)smime3$(DLL_SUFFIX) \
-	$(DIST)/lib/$(DLL_PREFIX)ssl3$(DLL_SUFFIX) \
-	$(DIST)/lib/$(DLL_PREFIX)nss3$(DLL_SUFFIX) \
-	$(DIST)/lib/$(DLL_PREFIX)softokn3$(DLL_SUFFIX) \
-	$(NULL)
-
 MOZ_UNICHARUTIL_LIBS = $(DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFIX)
 MOZ_REGISTRY_LIBS          = $(DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX)
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)

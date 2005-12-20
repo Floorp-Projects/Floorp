@@ -123,8 +123,7 @@ EXTRA_DEPS = $(NSS_DEP_LIBS)
 
 # Use local includes because they are inserted before INCLUDES
 # so that Mozilla's nss.h is used, not glibc's
-LOCAL_INCLUDES += -I$(DIST)/public/nss \
-                  $(NULL)
+LOCAL_INCLUDES = $(NSS_CFLAGS)
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_UNICHARUTIL_LIBS) \
