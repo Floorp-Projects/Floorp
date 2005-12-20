@@ -97,16 +97,18 @@ sub SaveAccount {
             $cgi->param('new_password1')
               || ThrowUserError("new_password_missing");
             ValidatePassword($pwd1, $pwd2);
-        
-            my $cryptedpassword = bz_crypt($pwd1);
-            trick_taint($cryptedpassword); # Only used in a placeholder
-            $dbh->do(q{UPDATE profiles
-                          SET cryptpassword = ?
-                        WHERE userid = ?},
-                     undef, ($cryptedpassword, $user->id));
 
-            # Invalidate all logins except for the current one
-            Bugzilla->logout(LOGOUT_KEEP_CURRENT);
+            if ($cgi->param('Bugzilla_password') ne $pwd1) {
+                my $cryptedpassword = bz_crypt($pwd1);
+                trick_taint($cryptedpassword); # Only used in a placeholder
+                $dbh->do(q{UPDATE profiles
+                              SET cryptpassword = ?
+                            WHERE userid = ?},
+                         undef, ($cryptedpassword, $user->id));
+
+                # Invalidate all logins except for the current one
+                Bugzilla->logout(LOGOUT_KEEP_CURRENT);
+            }
         }
     }
 
