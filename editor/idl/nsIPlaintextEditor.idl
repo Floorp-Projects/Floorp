@@ -37,13 +37,9 @@
  
 #include "nsISupports.idl"
 
-%{C++
-#include "nsIDOMKeyEvent.h"
-%}
+interface nsIDOMKeyEvent;
 
-[ptr] native nsIDOMKeyEvent(nsIDOMKeyEvent);
-
-[scriptable, uuid(b5f39ed4-1dd1-11b2-9d00-fd54d6f54962)]
+[scriptable, uuid(28dbb4d0-5fea-43f4-aca7-344fc2ecc4f9)]
 interface nsIPlaintextEditor : nsISupports
 {
 
@@ -72,6 +68,18 @@ interface nsIPlaintextEditor : nsISupports
   const long eEditorWidgetMask               = 512;
   const long eEditorNoCSSMask                = 1024;
 
+  /*
+   * The valid values for newlines handling.
+   * Can't change the values unless we remove
+   * use of the pref.
+   */
+  const long eNewlinesPasteIntact                = 0;
+  const long eNewlinesPasteToFirst               = 1;
+  const long eNewlinesReplaceWithSpaces          = 2;
+  const long eNewlinesStrip                      = 3;
+  const long eNewlinesReplaceWithCommas          = 4;
+  const long eNewlinesStripSurroundingWhitespace = 5;
+
   /**
     * The length of the contents in characters.
     * XXX change this type to 'unsigned long'
@@ -92,11 +100,17 @@ interface nsIPlaintextEditor : nsISupports
     */
   attribute long wrapWidth;
 
+  /** Get and set newline handling.
+   *
+   *  Values are the constants defined above.
+   */
+  attribute long newlineHandling;
+
   /** 
    * EditorKeyPress consumes a keyevent.
    * @param aKeyEvent    key event to consume
    */
-  [noscript]void handleKeyPress(in nsIDOMKeyEvent aKeyEvent);
+  void handleKeyPress(in nsIDOMKeyEvent aKeyEvent);
 
   /**
    * Inserts a string at the current location,

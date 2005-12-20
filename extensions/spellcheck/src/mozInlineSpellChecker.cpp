@@ -46,6 +46,7 @@
 #include "mozISpellI18NManager.h"
 #include "mozInlineSpellChecker.h"
 
+#include "nsIDOMKeyEvent.h"
 #include "nsIPlaintextEditor.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentRange.h"
