@@ -740,7 +740,7 @@ nsMsgProtocol::OnTransportStatus(nsITransport *transport, nsresult status,
 
 NS_IMETHODIMP nsMsgProtocol::IsPending(PRBool *result)
 {
-    *result = PR_TRUE;
+    *result = m_channelListener != nsnull;
     return NS_OK; 
 }
 
