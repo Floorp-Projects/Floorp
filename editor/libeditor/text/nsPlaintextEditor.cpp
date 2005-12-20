@@ -94,6 +94,7 @@ nsPlaintextEditor::nsPlaintextEditor()
 , mWrapColumn(0)
 , mMaxTextLength(-1)
 , mInitTriggerCounter(0)
+, mNewlineHandling(nsIPlaintextEditor::eNewlinesPasteToFirst)
 {
 } 
 
@@ -135,7 +136,13 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
     // Init the base editor
     res = nsEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
   }
-  
+
+  // check the "single line editor newline handling" pref
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch)
+    prefBranch->GetIntPref("editor.singleLine.pasteNewlines",
+                           &mNewlineHandling);
+
   if (NS_FAILED(rulesRes)) return rulesRes;
   return res;
 }
@@ -1014,7 +1021,28 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   return rootElement->SetAttribute(styleName, styleValue);
 }
 
+//
+// Get the newline handling for this editor
+//
+NS_IMETHODIMP 
+nsPlaintextEditor::GetNewlineHandling(PRInt32 *aNewlineHandling)
+{
+  NS_ENSURE_ARG_POINTER(aNewlineHandling);
 
+  *aNewlineHandling = mNewlineHandling;
+  return NS_OK;
+}
+
+//
+// Change the newline handling for this editor
+// 
+NS_IMETHODIMP 
+nsPlaintextEditor::SetNewlineHandling(PRInt32 aNewlineHandling)
+{
+  mNewlineHandling = aNewlineHandling;
+  
+  return NS_OK;
+}
 
 #ifdef XP_MAC
 #pragma mark -

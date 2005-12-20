@@ -223,6 +223,7 @@ protected:
   PRInt32 mWrapColumn;
   PRInt32 mMaxTextLength;
   PRInt32 mInitTriggerCounter;
+  PRInt32 mNewlineHandling;
 
 // friends
 friend class nsHTMLEditRules;

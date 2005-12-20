@@ -555,61 +555,73 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
 
   // People have lots of different ideas about what text fields
   // should do with multiline pastes.  See bugs 21032, 23485, 23485, 50935.
-  // The four possible options are:
+  // The six possible options are:
   // 0. paste newlines intact
-  // 1. paste up to the first newline
+  // 1. paste up to the first newline (default)
   // 2. replace newlines with spaces
   // 3. strip newlines
   // 4. replace with commas
+  // 5. strip newlines and surrounding whitespace
   // So find out what we're expected to do:
-  enum {
-    ePasteIntact = 0, ePasteFirstLine = 1,
-    eReplaceWithSpaces = 2, eStripNewlines = 3, 
-    eReplaceWithCommas = 4
-  };
-  PRInt32 singleLineNewlineBehavior = 1;
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &res);
-  if (NS_SUCCEEDED(res) && prefBranch)
-    res = prefBranch->GetIntPref("editor.singleLine.pasteNewlines",
-                                 &singleLineNewlineBehavior);
-
   if (nsIPlaintextEditor::eEditorSingleLineMask & mFlags)
   {
     nsAutoString tString(*outString);
 
-    if (singleLineNewlineBehavior == eReplaceWithSpaces)
+    switch(mEditor->mNewlineHandling)
     {
-      //nsAString destString;
-      //NormalizeCRLF(outString,destString);
-
+    case nsIPlaintextEditor::eNewlinesReplaceWithSpaces:
       tString.ReplaceChar(CRLF, ' ');
-    }
-    else if (singleLineNewlineBehavior == eStripNewlines)
+      break;
+    case nsIPlaintextEditor::eNewlinesStrip:
       tString.StripChars(CRLF);
-    else if (singleLineNewlineBehavior == ePasteFirstLine)
-    {
-      PRInt32 firstCRLF = tString.FindCharInSet(CRLF);
-
-      // we get first *non-empty* line.
-      PRInt32 offset = 0;
-      while (firstCRLF == offset)
+      break;
+    case nsIPlaintextEditor::eNewlinesPasteToFirst:
+    default:
       {
-        offset++;
-        firstCRLF = tString.FindCharInSet(CRLF, offset);
+        PRInt32 firstCRLF = tString.FindCharInSet(CRLF);
+
+        // we get first *non-empty* line.
+        PRInt32 offset = 0;
+        while (firstCRLF == offset)
+        {
+          offset++;
+          firstCRLF = tString.FindCharInSet(CRLF, offset);
+        }
+        if (firstCRLF > 0)
+          tString.Truncate(firstCRLF);
+        if (offset > 0)
+          tString.Cut(0, offset);
       }
-      if (firstCRLF > 0)
-        tString.Truncate(firstCRLF);
-      if (offset > 0)
-        tString.Cut(0, offset);
-    }
-    else if (singleLineNewlineBehavior == eReplaceWithCommas)
-    {
+      break;
+    case nsIPlaintextEditor::eNewlinesReplaceWithCommas:
       tString.Trim(CRLF, PR_TRUE, PR_TRUE);
       tString.ReplaceChar(CRLF, ',');
-    }
-    else // even if we're pasting newlines, don't paste leading/trailing ones
+      break;
+    case nsIPlaintextEditor::eNewlinesStripSurroundingWhitespace:
+      {
+        // find each newline, and strip all the whitespace before
+        // and after it
+        PRInt32 firstCRLF = tString.FindCharInSet(CRLF);
+        while (firstCRLF >= 0)
+        {
+          PRUint32 wsBegin = firstCRLF, wsEnd = firstCRLF + 1;
+          // look backwards for the first non-whitespace char
+          while (wsBegin > 0 && NS_IS_SPACE(tString[wsBegin - 1]))
+            --wsBegin;
+          while (wsEnd < tString.Length() && NS_IS_SPACE(tString[wsEnd]))
+            ++wsEnd;
+          // now cut this range out of the string
+          tString.Cut(wsBegin, wsEnd - wsBegin);
+          // look for another CR or LF
+          firstCRLF = tString.FindCharInSet(CRLF);
+        }
+      }
+      break;
+    case nsIPlaintextEditor::eNewlinesPasteIntact:
+      // even if we're pasting newlines, don't paste leading/trailing ones
       tString.Trim(CRLF, PR_TRUE, PR_TRUE);
+      break;
+    }
 
     outString->Assign(tString);
   }
@@ -691,7 +703,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         {
           if (nsIPlaintextEditor::eEditorSingleLineMask & mFlags)
           {
-            NS_ASSERTION((singleLineNewlineBehavior == ePasteIntact),
+            NS_ASSERTION((mEditor->mNewlineHandling == nsIPlaintextEditor::eNewlinesPasteIntact),
                   "Newline improperly getting into single-line edit field!");
             res = mEditor->InsertTextImpl(subStr, address_of(curNode), &curOffset, doc);
           }
