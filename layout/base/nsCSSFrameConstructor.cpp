@@ -654,7 +654,8 @@ MarkIBSpecialPrevSibling(nsPresContext* aPresContext,
 // Helper function that recursively removes content to frame mappings and
 // undisplayed content mappings.
 // This differs from DeletingFrameSubtree() because the frames have not yet been
-// added to the frame hierarchy
+// added to the frame hierarchy.
+// XXXbz it would really help if we merged the two methods somehow... :(
 static void
 DoCleanupFrameReferences(nsPresContext*  aPresContext,
                          nsFrameManager*  aFrameManager,
@@ -670,7 +671,7 @@ DoCleanupFrameReferences(nsPresContext*  aPresContext,
 
     // And don't forget to unregister the placeholder mapping.  Note that this
     // means it's the caller's responsibility to actually destroy the
-    // out-of-flow pointed to placeholder, since after this point the
+    // out-of-flow pointed to by the placeholder, since after this point the
     // out-of-flow is not reachable via the placeholder.
     aFrameManager->UnregisterPlaceholderFrame(placeholder);
   }
@@ -681,14 +682,19 @@ DoCleanupFrameReferences(nsPresContext*  aPresContext,
   aFrameManager->ClearAllUndisplayedContentIn(content);
 
   // Recursively walk the child frames.
-  // Note: we only need to look at the principal child list
-  nsIFrame* childFrame = aFrameIn->GetFirstChild(nsnull);
-  while (childFrame) {
-    DoCleanupFrameReferences(aPresContext, aFrameManager, childFrame);
+  nsIAtom* childListName = nsnull;
+  PRInt32 childListIndex = 0;
+  do {
+    nsIFrame* childFrame = aFrameIn->GetFirstChild(childListName);
+    while (childFrame) {
+      DoCleanupFrameReferences(aPresContext, aFrameManager, childFrame);
     
-    // Get the next sibling child frame
-    childFrame = childFrame->GetNextSibling();
-  }
+      // Get the next sibling child frame
+      childFrame = childFrame->GetNextSibling();
+    }
+
+    childListName = aFrameIn->GetAdditionalChildListName(childListIndex++);
+  } while (childListName);
 }
 
 // Helper function that walks a frame list and calls DoCleanupFrameReference()
