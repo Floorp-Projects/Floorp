@@ -295,7 +295,7 @@ function BuildTOC(update)
         }
         else {
           // we can keep the list itself but let's get rid of the TOC entries
-          while (toc.hasChildNodes()) {
+          while (toc.hasChildNodes()) 
             toc.removeChild(toc.lastChild);
         }
       }
