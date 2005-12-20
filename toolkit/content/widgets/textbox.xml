@@ -111,9 +111,26 @@
       <constructor><![CDATA[
         var str = this.boxObject.getProperty("value");
         if (str) {
-          this.inputField.value=str;
+          this.inputField.value = str;
           this.boxObject.removeProperty("value");
         }
+
+        str = this.getAttribute("newlines");
+        if (str) {
+          const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
+          const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
+          for (var x in nsIPlaintextEditor) {
+            if (/^eNewlines/.test(x)) {
+              if (str == RegExp.rightContext.toLowerCase()) {
+                this.inputField.QueryInterface(nsIDOMNSEditableElement)
+                    .editor.QueryInterface(nsIPlaintextEditor)
+                    .newlineHandling = nsIPlaintextEditor[x];
+                break;
+              }
+            }
+          }
+        }
+
         str = this.getAttribute("spellcheck");
         if (str == "true") {
           // the problem is that we can't initialize the spell checker in the
@@ -122,7 +139,14 @@
           setTimeout(this._delayedInitSpellCheck, 0, this)
         }
       ]]></constructor>
-      <destructor action="if (this.inputField.value) this.boxObject.setProperty('value', this.inputField.value);"/>
+
+      <destructor>
+        <![CDATA[
+          if (this.inputField.value)
+            this.boxObject.setProperty('value', this.inputField.value);
+          this.mInputField = null;
+        ]]>
+      </destructor>
 
       <method name="_delayedInitSpellCheck">
         <parameter name="me"/>
@@ -135,23 +159,6 @@
         ]]></body>
       </method>
 
-      <constructor>
-        <![CDATA[
-          var str = this.boxObject.getProperty('value'); 
-          if (str) {
-            this.inputField.value = str;
-            this.boxObject.removeProperty('value');
-          }
-        ]]>
-      </constructor>
-      <destructor>
-        <![CDATA[
-          if (this.inputField.value) 
-            this.boxObject.setProperty('value', this.inputField.value);
-          this.mInputField = null;
-        ]]>
-      </destructor>
-   
     </implementation>
     
     <handlers>
