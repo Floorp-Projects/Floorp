@@ -63,6 +63,9 @@ pref("update.extensions.wsdl", "chrome://mozapps/locale/extensions/extensions.pr
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+
+pref("extensions.dss.enabled", false);    // Dynamic Skin Switching
+
 // Automatically download and install updates to themes and extensions.
 pref("update.extensions.autoUpdate", false);
 
