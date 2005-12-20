@@ -1764,10 +1764,16 @@ static ContentOffsets GetOffsetsOfFrame(nsIFrame* aFrame) {
   nsCOMPtr<nsIContent> content, parent;
   NS_ASSERTION(aFrame->GetContent(), "No content?!");
   content = aFrame->GetContent();
-  if (aFrame->GetType() == nsLayoutAtoms::textFrame) {
+  nsIAtom* type = aFrame->GetType();
+  if (type == nsLayoutAtoms::textFrame) {
     PRInt32 offset, offsetEnd;
     aFrame->GetOffsets(offset, offsetEnd);
     return ContentOffsets(content, offset, offsetEnd);
+  }
+  if (type == nsLayoutAtoms::brFrame) {
+    parent = content->GetParent();
+    PRInt32 beginOffset = parent->IndexOf(content);
+    return ContentOffsets(parent, beginOffset, beginOffset);
   }
   // Loop to deal with anonymous content, which has no index; this loop
   // probably won't run more than twice under normal conditions
