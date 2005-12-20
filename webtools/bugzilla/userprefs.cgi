@@ -309,12 +309,12 @@ sub SaveEmail {
  
        # The new information given to us by the user.
         my @new_watch_names = split(/[,\s]+/, $cgi->param('watchedusers'));
-        my @new_watch_ids = ();
+        my %new_watch_ids;
         foreach my $username (@new_watch_names) {
             my $watched_userid = DBNameToIdAndCheck(trim($username));
-            push(@new_watch_ids, $watched_userid);
+            $new_watch_ids{$watched_userid} = 1;
         }
-        my ($removed, $added) = diff_arrays($old_watch_ids, \@new_watch_ids);
+        my ($removed, $added) = diff_arrays($old_watch_ids, [keys %new_watch_ids]);
 
         # Remove people who were removed.
         my $delete_sth = $dbh->prepare('DELETE FROM watch WHERE watched = ?'
