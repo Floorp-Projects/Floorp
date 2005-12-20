@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
+R<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
 
 <!-- ***** BEGIN LICENSE BLOCK *****
  Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -130,7 +130,10 @@
         <toolbarbutton tabindex="3" accessrule="focus_nav-bar" class="forward-button" id="forward-button" command="cmd_BrowserForward" />  
         <toolbarbutton tabindex="4" accessrule="focus_nav-bar" class="stop-button"  id="reload-stop-button" command="cmd_BrowserReload"/>
 
-        <textbox tabindex="5" 
+
+        <!-- WARNING: don't add tabindex to the following element. Somehow it conflicts with the popup history open --> 
+        
+        <textbox  
                  id="urlbar" 
                  flex="1" 
                  type="autocomplete"
