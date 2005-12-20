@@ -485,14 +485,6 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
 }
 
 
-#ifdef XP_MAC
-#ifdef DEBUG
-#define LOADABLE_CERTS_MODULE NS_LITERAL_CSTRING("NSSckbiDebug.shlb")
-#else
-#define LOADABLE_CERTS_MODULE NS_LITERAL_CSTRING("NSSckbi.shlb")
-#endif /*DEBUG*/ 
-#endif /*XP_MAC*/
-
 static void setOCSPOptions(nsIPrefBranch * pref);
 
 NS_IMETHODIMP
@@ -686,40 +678,42 @@ nsNSSComponent::InstallLoadableRoots()
 
     const char *possible_ckbi_locations[] = {
       NS_GRE_DIR,
-      NS_XPCOM_CURRENT_PROCESS_DIR
+      NS_XPCOM_CURRENT_PROCESS_DIR,
+      0 // This special value means: 
+        //   search for ckbi in the directories on the shared
+        //   library/DLL search path
     };
-    
+
     for (size_t il = 0; il < sizeof(possible_ckbi_locations)/sizeof(const char*); ++il) {
       nsCOMPtr<nsILocalFile> mozFile;
-      directoryService->Get( possible_ckbi_locations[il],
-                             NS_GET_IID(nsILocalFile), 
-                             getter_AddRefs(mozFile));
+      char *fullModuleName = nsnull;
+
+      if (!possible_ckbi_locations[il])
+      {
+        fullModuleName = PR_GetLibraryName(nsnull, "nssckbi");
+      }
+      else
+      {
+        directoryService->Get( possible_ckbi_locations[il],
+                               NS_GET_IID(nsILocalFile), 
+                               getter_AddRefs(mozFile));
     
-      if (!mozFile) {
-        continue;
+        if (!mozFile) {
+          continue;
+        }
+
+        nsCAutoString processDir;
+        mozFile->GetNativePath(processDir);
+        fullModuleName = PR_GetLibraryName(processDir.get(), "nssckbi");
       }
 
-      char *fullModuleName = nsnull;
-#ifdef XP_MAC
-      nsCAutoString nativePath;
-      mozFile->AppendNative(NS_LITERAL_CSTRING("Essential Files"));
-      mozFile->AppendNative(LOADABLE_CERTS_MODULE);
-      mozFile->GetNativePath(nativePath);    
-      fullModuleName = (char *) nativePath.get();
-#else
-      nsCAutoString processDir;
-      mozFile->GetNativePath(processDir);
-      fullModuleName = PR_GetLibraryName(processDir.get(), "nssckbi");
-#endif
       /* If a module exists with the same name, delete it. */
       NS_ConvertUCS2toUTF8 modNameUTF8(modName);
       int modType;
       SECMOD_DeleteModule(NS_CONST_CAST(char*, modNameUTF8.get()), &modType);
       SECStatus rv_add = 
         SECMOD_AddNewModule(NS_CONST_CAST(char*, modNameUTF8.get()), fullModuleName, 0, 0);
-#ifndef XP_MAC
-      PR_Free(fullModuleName); // allocated by NSPR
-#endif
+      PR_FreeLibraryName(fullModuleName); // allocated by NSPR
       if (SECSuccess == rv_add) {
         // found a module, no need to try other directories
         break;
