@@ -49,7 +49,6 @@ EXPORT_LIBRARY = 1
 XPIDL_MODULE	= wsproxytest
 IS_COMPONENT	= 1
 MODULE_NAME	= WSPProxyTestModule
-MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= xpcom \
 		  string \
@@ -73,9 +72,11 @@ LOCAL_INCLUDES	= \
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
-		$(MOZ_COMPONENT_LIBS) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+		$(XPCOM_LIBS) \
 		$(ZLIB_LIBS) \
 		$(MOZ_JS_LIBS) \
+		$(NSPR_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

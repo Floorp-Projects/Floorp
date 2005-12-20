@@ -42,8 +42,11 @@
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsIScriptNameSpaceManager.h"
-#include "nsXPIDLString.h"
+#include "nsStringAPI.h"
 #include "wspproxytest.h"
+#include "nsXPCOMCID.h"
+#include "nsServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(WSPProxyTest)
 NS_DECL_CLASSINFO(WSPProxyTest)
@@ -63,7 +66,7 @@ RegisterWSPProxyTest(nsIComponentManager *aCompMgr,
   if (NS_FAILED(rv))
     return rv;
 
-  nsXPIDLCString previous;
+  nsCString previous;
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
                                 "WebServiceProxyTest",
                                 NS_WSPPROXYTEST_CONTRACTID,

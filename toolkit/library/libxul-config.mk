@@ -89,6 +89,7 @@ COMPONENT_LIBS += \
 	gkplugin \
 	gklayout \
 	xmlextras \
+	websrvcs \
 	docshell \
 	embedcomponents \
 	webbrwsr \
