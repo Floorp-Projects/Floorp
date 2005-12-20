@@ -515,6 +515,8 @@ if (!$params->param('query_format')) {
 #       "DESC" is added to the end of the field to sort in descending order, 
 #       and the redundant short_desc column is removed when the client
 #       requests "all" columns.
+# Note: For column names using aliasing (SQL "<field> AS <alias>"), the column
+#       ID needs to be identical to the field ID for list ordering to work.
 
 my $columns = {};
 sub DefineColumn {
@@ -757,7 +759,7 @@ if ($order) {
                 $fragment = trim($fragment);
                 # Accept an order fragment matching a column name, with
                 # asc|desc optionally following (to specify the direction)
-                if (grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @columnnames)) {
+                if (grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @columnnames, keys(%$columns))) {
                     next if $fragment =~ /\brelevance\b/ && !$fulltext;
                     push(@order, $fragment);
                 }
@@ -784,21 +786,29 @@ else {
     $order = "bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
 }
 
+# Make sure ORDER BY columns are included in the field list.
 foreach my $fragment (split(/,/, $order)) {
     $fragment = trim($fragment);
     if (!grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @selectnames)) {
         # Add order columns to selectnames
         # The fragment has already been validated
         $fragment =~ s/\s+(asc|desc)$//;
-        # This fixes an issue where columns being used in the ORDER BY statement
-        # can have the SQL that generates the value changed to become invalid -
-        # mainly affects time tracking.
+
+        # While newer fragments contain IDs for aliased columns, older
+        # LASTORDER cookies (or bookmarks) may contain full names.
+        # Convert them to an ID here.
         if ($fragment =~ / AS (\w+)/) {
-            $fragment = $columns->{$1}->{'name'};
+            $fragment = $columns->{$1}->{'id'};
         }
-        else {
-            $fragment =~ tr/a-zA-Z\.0-9\-_//cd;
+
+        $fragment =~ tr/a-zA-Z\.0-9\-_//cd;
+
+        # If the order fragment is an ID, we need its corresponding name
+        # to be in the field list.
+        if (exists($columns->{$fragment})) {
+            $fragment = $columns->{$fragment}->{'name'};
         }
+
         push @selectnames, $fragment;
     }
 }
