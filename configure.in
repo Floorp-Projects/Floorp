@@ -3586,10 +3586,10 @@ else
    if test -z "$GNU_CC" && test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "WINCE" -o "$OS_ARCH" = "OS2"; then
        NSS_LIBS='\\\
         $(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \\\
-        $(DIST)/lib/$(DLL_PREFIX)smime'$NSS_VERSION'$(IMPORT_LIB_SUFFIX) \\\
-        $(DIST)/lib/$(DLL_PREFIX)ssl'$NSS_VERSION'$(IMPORT_LIB_SUFFIX) \\\
-        $(DIST)/lib/$(DLL_PREFIX)nss'$NSS_VERSION'$(IMPORT_LIB_SUFFIX) \\\
-        $(DIST)/lib/$(DLL_PREFIX)softokn'$NSS_VERSION'$(IMPORT_LIB_SUFFIX)'
+        $(DIST)/lib/$(LIB_PREFIX)smime'$NSS_VERSION'.$(IMPORT_LIB_SUFFIX) \\\
+        $(DIST)/lib/$(LIB_PREFIX)ssl'$NSS_VERSION'.$(IMPORT_LIB_SUFFIX) \\\
+        $(DIST)/lib/$(LIB_PREFIX)nss'$NSS_VERSION'.$(IMPORT_LIB_SUFFIX) \\\
+        $(DIST)/lib/$(LIB_PREFIX)softokn'$NSS_VERSION'.$(IMPORT_LIB_SUFFIX)'
    else
        NSS_LIBS='-L$(LIBS_DIR)'" -lcrmf -lsmime$NSS_VERSION -lssl$NSS_VERSION -lnss$NSS_VERSION -lsoftokn$NSS_VERSION"
    fi
