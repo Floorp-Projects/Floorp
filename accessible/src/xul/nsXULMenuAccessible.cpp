@@ -62,7 +62,8 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
 
   // Focused?
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(element, "No DOM element for menu  node!");
+  if (!element)
+    return NS_ERROR_FAILURE;
   PRBool isFocused = PR_FALSE;
   element->HasAttribute(NS_LITERAL_STRING("_moz-menuactive"), &isFocused); 
   if (isFocused)
@@ -111,7 +112,9 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
 NS_IMETHODIMP nsXULMenuitemAccessible::GetName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(element, "No DOM element for menu  node!");
+  if (!element) {
+    return NS_ERROR_FAILURE;
+  }
   element->GetAttribute(NS_LITERAL_STRING("label"), _retval); 
 
   return NS_OK;

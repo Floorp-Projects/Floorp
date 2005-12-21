@@ -138,7 +138,6 @@ NS_IMETHODIMP nsXULButtonAccessible::GetState(PRUint32 *aState)
   }
 
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(element, "No nsIDOMElement for button node!");
   if (element) {
     PRBool isDefault = PR_FALSE;
     element->HasAttribute(NS_LITERAL_STRING("default"), &isDefault) ;
