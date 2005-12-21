@@ -838,6 +838,7 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
   buffer.AppendInt(aFolder);
   rv = dbConn->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
 }
 
 
@@ -1476,21 +1477,16 @@ nsNavBookmarks::OnEndUpdateBatch()
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetWantAllDetails(PRBool *aWant)
-{
-  *aWant = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::OnAddURI(nsIURI *aURI, PRTime aTime)
+nsNavBookmarks::OnVisit(nsIURI *aURI, PRInt64 aVisitID, PRTime aTime,
+                        PRInt64 aSessionID, PRInt64 aReferringID,
+                        PRUint32 aTransitionType)
 {
   // If the page is bookmarked, we need to notify observers
-  PRBool bookmarked;
+  PRBool bookmarked = PR_FALSE;
   IsBookmarked(aURI, &bookmarked);
   if (bookmarked) {
     ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                        OnItemChanged(aURI, NS_LITERAL_CSTRING("time")))
+                        OnItemVisited(aURI, aTime))
   }
   return NS_OK;
 }
@@ -1499,11 +1495,12 @@ NS_IMETHODIMP
 nsNavBookmarks::OnDeleteURI(nsIURI *aURI)
 {
   // If the page is bookmarked, we need to notify observers
-  PRBool bookmarked;
+  PRBool bookmarked = PR_FALSE;
   IsBookmarked(aURI, &bookmarked);
   if (bookmarked) {
     ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                        OnItemChanged(aURI, NS_LITERAL_CSTRING("time")))
+                        OnItemChanged(aURI, NS_LITERAL_CSTRING("cleartime"),
+                                      EmptyString()))
   }
   return NS_OK;
 }
@@ -1516,13 +1513,41 @@ nsNavBookmarks::OnClearHistory()
 }
 
 NS_IMETHODIMP
+nsNavBookmarks::OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,
+                               const nsAString& aUserTitle,
+                               PRBool aIsUserTitleChanged)
+{
+  PRBool bookmarked = PR_FALSE;
+  IsBookmarked(aURI, &bookmarked);
+  if (bookmarked) {
+    if (aUserTitle.IsVoid()) {
+      // use "real" title because the user title is NULL. Either the user title
+      // was "unset" or the page title changed.
+      ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                          OnItemChanged(aURI, NS_LITERAL_CSTRING("title"),
+                                        aPageTitle));
+    } else if (aIsUserTitleChanged) {
+      // there is a user title and it changed
+      ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                          OnItemChanged(aURI, NS_LITERAL_CSTRING("title"),
+                                        aUserTitle));
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNavBookmarks::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
                               const nsAString &aValue)
 {
-  if (aWhat == ATTRIBUTE_TITLE) {
-    ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                        OnItemChanged(aURI, NS_LITERAL_CSTRING("title")))
+  PRBool bookmarked = PR_FALSE;
+  IsBookmarked(aURI, &bookmarked);
+  if (bookmarked) {
+    if (aWhat == nsINavHistoryObserver::ATTRIBUTE_FAVICON) {
+      ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                          OnItemChanged(aURI, NS_LITERAL_CSTRING("favicon"),
+                                        aValue));
+    }
   }
-
   return NS_OK;
 }

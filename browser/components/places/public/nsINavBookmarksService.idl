@@ -117,8 +117,25 @@ interface nsINavBookmarkObserver : nsISupports
    *
    * @param bookmark The bookmark which changed.
    * @param property The property which changed.
+   *
+   * property = "cleartime" (history was deleted, there is no last visit date):
+   *                        value = none
+   * property = "title": value = new title
+   * property = "favicon": value = new "moz-anno" URL of favicon image
    */
-  void onItemChanged(in nsIURI bookmark, in ACString property);
+  void onItemChanged(in nsIURI bookmark, in ACString property,
+                     in AString value);
+
+  /**
+   * Notify that the item was visited. Normally in bookmarks we use the last
+   * visit date, and normally the time will be a new visit that will be more
+   * recent, but this is not guaranteed. You should check to see if it's
+   * actually more recent before using this new time.
+   *
+   * @see onItemChanged properth = "cleartime" for when all visit dates are
+   * deleted for the URI.
+   */
+  void onItemVisited(in nsIURI bookmark, in PRTime time);
 
   /**
    * Notify this observer that a bookmark has been replaced.

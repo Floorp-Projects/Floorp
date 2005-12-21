@@ -727,7 +727,9 @@ nsNavHistory::InternalAdd(nsIURI* aURI, nsIURI* aReferrer, PRInt64 aSessionID,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = AddVisit(aReferrer, pageID, aVisitDate, aTransitionType);
+  PRInt64 visitID, referringID;
+  rv = AddVisit(aReferrer, pageID, aVisitDate, aTransitionType,
+                &visitID, &referringID);
 
   if (aPageID)
     *aPageID = pageID;
@@ -748,7 +750,8 @@ nsNavHistory::InternalAdd(nsIURI* aURI, nsIURI* aReferrer, PRInt64 aSessionID,
   // case they need to use the DB
   transaction.Commit();
   ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
-                      OnAddURI(aURI, aVisitDate))
+                      OnVisit(aURI, visitID, aVisitDate, aSessionID,
+                              referringID, aTransitionType));
 
   return NS_OK;
 }
@@ -832,9 +835,13 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
 //    page and use it as the parent. This will get messed up if one page is
 //    open in more than one tab/window at once, but should be good enough for
 //    most cases.
+//
+//    The visit ID of the referrer that this function computes will be put
+//    into referringID.
 
 nsresult nsNavHistory::AddVisit(nsIURI* aReferrer, PRInt64 aPageID,
-                                PRTime aTime, PRInt32 aTransitionType)
+                                PRTime aTime, PRInt32 aTransitionType,
+                                PRInt64* visitID, PRInt64 *referringID)
 {
   nsresult rv;
   PRInt64 fromStep = 0;
@@ -858,6 +865,7 @@ nsresult nsNavHistory::AddVisit(nsIURI* aReferrer, PRInt64 aPageID,
     mLastSessionID ++;
     sessionID = mLastSessionID;
   }
+  *referringID = fromStep;
 
   mozStorageStatementScoper scoper(mDBInsertVisit);
 
@@ -874,7 +882,8 @@ nsresult nsNavHistory::AddVisit(nsIURI* aReferrer, PRInt64 aPageID,
 
   rv = mDBInsertVisit->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+
+  return mDBConn->GetLastInsertRowID(visitID);
 }
 
 
@@ -1121,16 +1130,7 @@ nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
 NS_IMETHODIMP
 nsNavHistory::SetPageUserTitle(nsIURI* aURI, const nsAString& aUserTitle)
 {
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_history SET user_title = ?2 WHERE url = ?1"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = BindStatementURI(statement, 0, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindStringParameter(1, aUserTitle);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return statement->Execute();
+  return SetPageTitleInternal(aURI, PR_TRUE, aUserTitle);
 }
 
 
@@ -1311,7 +1311,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
   // conditions we want on all history queries, this just selects history
   // entries that are "active"
   NS_NAMED_LITERAL_CSTRING(commonConditions,
-                           "h.visit_count > 0 AND h.hidden <> 1");
+                           "h.visit_count > 0 ");
 
   // Query string: Output parameters should be in order of kGetInfoIndex_*
   // WATCH OUT: nsNavBookmarks::Init also creates some statements that share
@@ -1362,9 +1362,11 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     }
   }
   queryString += commonConditions;
+  if (! options->IncludeHidden())
+    queryString += NS_LITERAL_CSTRING("AND h.hidden <> 1 ");
   if (! conditions.IsEmpty()) {
-    queryString += NS_LITERAL_CSTRING(" AND (") + conditions +
-                   NS_LITERAL_CSTRING(")");
+    queryString += NS_LITERAL_CSTRING("AND (") + conditions +
+                   NS_LITERAL_CSTRING(") ");
   }
   queryString += groupBy;
 
@@ -1378,6 +1380,12 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     case nsINavHistoryQueryOptions::SORT_BY_TITLE_DESCENDING:
       // the DB doesn't have indices on titles, and we need to do special
       // sorting for locales. This type of sorting is done only at the end.
+      //
+      // If the user wants few results, we limit them by date, necessitating
+      // a sort by date here (see the IDL definition for maxResults). We'll
+      // still do the official sort by title later.
+      if (options->MaxResults() > 0)
+        queryString += NS_LITERAL_CSTRING(" ORDER BY v.visit_date DESC");
       break;
     case nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING:
       queryString += NS_LITERAL_CSTRING(" ORDER BY v.visit_date ASC");
@@ -1400,6 +1408,14 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     default:
       NS_NOTREACHED("Invalid sorting mode");
   }
+
+  // limit clause if there are 'maxResults'
+  if (options->MaxResults() > 0) {
+    queryString += NS_LITERAL_CSTRING(" LIMIT ");
+    queryString.AppendInt(options->MaxResults());
+    queryString.AppendLiteral(" ");
+  }
+
   printf("Constructed the query: %s\n", PromiseFlatCString(queryString).get());
 
   // Put this in a transaction. Even though we are only reading, this will
@@ -1728,20 +1744,6 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   revHostSlash.Truncate(revHostSlash.Length() - 1);
   revHostSlash.Append(NS_LITERAL_STRING("/"));
 
-  // see if we have to pass all deletes to the observers
-  PRBool hasObservers = PR_FALSE;
-  for (PRUint32 i = 0; i < mObservers.Length(); ++i) {
-    const nsCOMPtr<nsINavHistoryObserver> &obs = mObservers[i];
-    if (obs) {
-      PRBool allDetails = PR_FALSE;
-      obs->GetWantAllDetails(&allDetails);
-      if (allDetails) {
-        hasObservers = PR_TRUE;
-        break;
-      }
-    }
-  }
-
   // how we are selecting host names
   nsCAutoString conditionString;
   if (aEntireDomain)
@@ -1756,31 +1758,31 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   // Note also that we *include* bookmarked items here. We generally want to
   // send out delete notifications for bookmarked items since in general,
   // deleting the visits (like we always do) will cause the item to disappear
-  // from history views.
+  // from history views. This will also cause all visit dates to be deleted,
+  // which affects many bookmark views
   nsCStringArray deletedURIs;
   nsCOMPtr<mozIStorageStatement> statement;
-  if (hasObservers) {
-    // create statement depending on delete type
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT url FROM moz_history h ") + conditionString,
-      getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindStringParameter(0, revHostDot);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (aEntireDomain) {
-      rv = statement->BindStringParameter(1, revHostSlash);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
 
-    PRBool hasMore = PR_FALSE;
-    while ((statement->ExecuteStep(&hasMore) == NS_OK) && hasMore) {
-      nsCAutoString thisURIString;
-      if (NS_FAILED(statement->GetUTF8String(0, thisURIString)) || 
-          thisURIString.IsEmpty())
-        continue; // no URI
-      if (! deletedURIs.AppendCString(thisURIString))
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+  // create statement depending on delete type
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT url FROM moz_history h ") + conditionString,
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(0, revHostDot);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aEntireDomain) {
+    rv = statement->BindStringParameter(1, revHostSlash);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  PRBool hasMore = PR_FALSE;
+  while ((statement->ExecuteStep(&hasMore) == NS_OK) && hasMore) {
+    nsCAutoString thisURIString;
+    if (NS_FAILED(statement->GetUTF8String(0, thisURIString)) || 
+        thisURIString.IsEmpty())
+      continue; // no URI
+    if (! deletedURIs.AppendCString(thisURIString))
+      return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // first, delete all the visits
@@ -1828,10 +1830,6 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
       const nsCOMPtr<nsINavHistoryObserver> &obs = mObservers.ElementAt(observerIndex);
       if (! obs)
         continue;
-      PRBool allDetails = PR_FALSE;
-      obs->GetWantAllDetails(&allDetails);
-      if (! allDetails)
-        continue;
 
       // send it all the URIs
       for (PRInt32 i = 0; i < deletedURIs.Count(); i ++) {
@@ -1872,6 +1870,8 @@ nsNavHistory::RemoveAllPages()
 NS_IMETHODIMP
 nsNavHistory::HidePage(nsIURI *aURI)
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
+  /*
   // for speed to save disk accesses
   mozStorageTransaction transaction(mDBConn, PR_FALSE,
                                   mozIStorageConnection::TRANSACTION_EXCLUSIVE);
@@ -1930,6 +1930,7 @@ nsNavHistory::HidePage(nsIURI *aURI)
                                     EmptyString()))
 
   return NS_OK;
+  */
 }
 
 
@@ -2041,44 +2042,32 @@ nsNavHistory::IsVisited(nsIURI *aURI, PRBool *_retval)
 
 
 // nsNavHistory::SetPageTitle
+//
+//    This sets the page "real" title. Use nsINavHistory::SetPageUserTitle to
+//    set any user-defined title.
 
 NS_IMETHODIMP
 nsNavHistory::SetPageTitle(nsIURI *aURI,
                            const nsAString & aTitle)
 {
-  nsresult rv;
-
-  nsCOMPtr<mozIStorageStatement> dbModStatement;
-  rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("UPDATE moz_history SET title = ?1 WHERE url = ?2"),
-      getter_AddRefs(dbModStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // title
-  dbModStatement->BindStringParameter(0, aTitle);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // url
-  rv = BindStatementURI(dbModStatement, 1, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = dbModStatement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // observers
-  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
-                      OnPageChanged(aURI,
-                                    nsINavHistoryObserver::ATTRIBUTE_TITLE,
-                                    aTitle))
-
-  return NS_OK;
+  return SetPageTitleInternal(aURI, PR_FALSE, aTitle);
 }
+
+
+// nsNavHistory::GetURIGeckoFlags
+//
+//    FIXME: should we try to use annotations for this stuff?
 
 NS_IMETHODIMP
 nsNavHistory::GetURIGeckoFlags(nsIURI* aURI, PRUint32* aResult)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
+// nsNavHistory::SetURIGeckoFlags
+//
+//    FIXME: should we try to use annotations for this stuff?
 
 NS_IMETHODIMP
 nsNavHistory::SetURIGeckoFlags(nsIURI* aURI, PRUint32 aFlags)
@@ -2684,6 +2673,111 @@ nsNavHistory::TitleForDomain(const nsString& domain, nsAString& aTitle)
     aTitle = value;
   else
     aTitle.Truncate(0);
+}
+
+
+// nsNavHistory::SetPageTitleInternal
+//
+//    Called to set either the user-defined title (aIsUserTitle=true) or the
+//    "real" page title (aIsUserTitle=false) for the given URI. Used as a
+//    backend for SetPageUserTitle and SetTitle
+//
+//    Will fail for pages that are not in the DB. To clear the corresponding
+//    title, use aTitle.SetIsVoid(). Sending an empty string will save an
+//    empty string instead of clearing it.
+
+nsresult
+nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
+                                   const nsAString& aTitle)
+{
+  nsresult rv;
+
+  mozStorageTransaction transaction(mDBConn, PR_TRUE);
+
+  // first, make sure the page exists, and fetch the old title (we need the one
+  // that isn't changing to send notifications)
+  nsAutoString title;
+  nsAutoString userTitle;
+  { // scope for statement
+    mozStorageStatementScoper infoScoper(mDBGetURLPageInfo);
+    rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool hasURL = PR_FALSE;
+    rv = mDBGetURLPageInfo->ExecuteStep(&hasURL);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (! hasURL) {
+      // we don't have the URL, give up
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    // page title
+    PRInt32 titleType;
+    rv = mDBGetURLPageInfo->GetTypeOfIndex(kGetInfoIndex_Title, &titleType);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (titleType == mozIStorageValueArray::VALUE_TYPE_NULL) {
+      title.SetIsVoid(PR_TRUE);
+    } else {
+      rv = mDBGetURLPageInfo->GetString(kGetInfoIndex_Title, title);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // user title
+    rv = mDBGetURLPageInfo->GetTypeOfIndex(kGetInfoIndex_UserTitle, &titleType);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (titleType == mozIStorageValueArray::VALUE_TYPE_NULL) {
+      userTitle.SetIsVoid(PR_TRUE);
+    } else {
+      rv = mDBGetURLPageInfo->GetString(kGetInfoIndex_UserTitle, userTitle);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  // It is actually common to set the title to be the same thing it used to
+  // be. For example, going to any web page will always cause a title to be set,
+  // even though it will often be unchanged since the last visit. In these
+  // cases, we can avoid DB writing and (most significantly) observer overhead.
+  if (aIsUserTitle && aTitle.IsVoid() == userTitle.IsVoid() &&
+      aTitle == userTitle)
+    return NS_OK;
+  if (! aIsUserTitle && aTitle.IsVoid() == title.IsVoid() &&
+      aTitle == title)
+    return NS_OK;
+
+  nsCOMPtr<mozIStorageStatement> dbModStatement;
+  if (aIsUserTitle) {
+    userTitle = aTitle;
+    rv = mDBConn->CreateStatement(
+        NS_LITERAL_CSTRING("UPDATE moz_history SET user_title = ?1 WHERE url = ?2"),
+        getter_AddRefs(dbModStatement));
+  } else {
+    title = aTitle;
+    rv = mDBConn->CreateStatement(
+        NS_LITERAL_CSTRING("UPDATE moz_history SET title = ?1 WHERE url = ?2"),
+        getter_AddRefs(dbModStatement));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // title
+  if (aTitle.IsVoid())
+    dbModStatement->BindNullParameter(0);
+  else
+    dbModStatement->BindStringParameter(0, aTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // url
+  rv = BindStatementURI(dbModStatement, 1, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = dbModStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+  transaction.Commit();
+
+  // observers (have to check first if it's bookmarked)
+  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+                      OnTitleChanged(aURI, title, userTitle, aIsUserTitle))
+
+  return NS_OK;
+
 }
 
 
@@ -3496,6 +3590,34 @@ NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetForceOriginalTitle(PRBool aForce)
 {
   mForceOriginalTitle = aForce;
+  return NS_OK;
+}
+
+// includeHidden
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetIncludeHidden(PRBool* aIncludeHidden)
+{
+  *aIncludeHidden = mIncludeHidden;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetIncludeHidden(PRBool aIncludeHidden)
+{
+  mIncludeHidden = aIncludeHidden;
+  return NS_OK;
+}
+
+// maxResults
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetMaxResults(PRUint32* aMaxResults)
+{
+  *aMaxResults = mMaxResults;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetMaxResults(PRUint32 aMaxResults)
+{
+  mMaxResults = aMaxResults;
   return NS_OK;
 }
 
