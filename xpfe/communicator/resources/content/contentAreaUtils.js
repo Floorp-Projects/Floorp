@@ -69,13 +69,20 @@ function getContentFrameURI(aFocusedWindow)
   return contentFrame.location.href;
 }
 
+function getContentFrameDocument(aFocusedWindow)
+{
+  var contentFrame = isContentFrame(aFocusedWindow) ?
+                       aFocusedWindow : window.content;
+  return contentFrame.document;
+}
+
 function getReferrer(doc)
 {
   var focusedWindow = doc.commandDispatcher.focusedWindow;
-  var sourceURL = getContentFrameURI(focusedWindow);
+  var sourceDocument = getContentFrameDocument(focusedWindow);
 
   try {
-    return makeURI(sourceURL);
+    return makeURI(sourceDocument.location.href, sourceDocument.characterSet);
   } catch (e) {
     return null;
   }
@@ -301,7 +308,13 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
   if (aChosenData)
     file = aChosenData.file;
   else {
-    initFileInfo(fileInfo, aURL, aDocument, aContentType, aContentDisposition);
+    var charset = null;
+    if (aDocument)
+      charset = aDocument.characterSet;
+    else if (aReferrer)
+      charset = aReferrer.originCharset;
+    initFileInfo(fileInfo, aURL, charset, aDocument,
+                 aContentType, aContentDisposition);
     var fpParams = {
       fpTitleKey: aFilePickerTitleKey,
       isDocument: isDocument,
@@ -441,19 +454,20 @@ function FileInfo(aSuggestedFileName, aFileName, aFileBaseName, aFileExt, aUri) 
  * for confirmation in the file picker dialog.
  * @param aFI A FileInfo structure into which we'll put the results of this method.
  * @param aURL The String representation of the URL of the document being saved
+ * @param aURLCharset The charset of aURL.
  * @param aDocument The document to be saved
  * @param aContentType The content type we're saving, if it could be
  *        determined by the caller.
  * @param aContentDisposition The content-disposition header for the object
  *        we're saving, if it could be determined by the caller.
  */
-function initFileInfo(aFI, aURL, aDocument, aContentType, aContentDisposition)
+function initFileInfo(aFI, aURL, aURLCharset, aDocument,
+                      aContentType, aContentDisposition)
 {
-  var docCharset = (aDocument ? aDocument.characterSet : null);
   try {
     // Get an nsIURI object from aURL if possible:
     try {
-      aFI.uri = makeURI(aURL, docCharset);
+      aFI.uri = makeURI(aURL, aURLCharset);
       // Assuming nsiUri is valid, calling QueryInterface(...) on it will
       // populate extra object fields (eg filename and file extension).
       var url = aFI.uri.QueryInterface(Components.interfaces.nsIURL);
