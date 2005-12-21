@@ -50,8 +50,9 @@
 #include "nsIXULAppInstall.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
-#include "nsNativeCharsetUtils.h"
 #include "nsBuildID.h"
+#include "nsStringAPI.h"
+#include "nsServiceManagerUtils.h"
 #include "plstr.h"
 #include "prprf.h"
 #include "prenv.h"
@@ -172,7 +173,7 @@ static int LoadAppData(const char* appDataFile, nsXREAppData* aResult,
   // TODO: If these version checks fail, then look for a compatible XULRunner
   //       version on the system, and launch it instead.
 
-  nsCAutoString gkVersion;
+  nsCString gkVersion;
   rv = parser.GetString("Gecko", "MinVersion", gkVersion);
 
   if (NS_FAILED(rv) || !CheckMinVersion(gkVersion.get())) {
@@ -310,7 +311,7 @@ InstallXULApp(nsIFile* aXULRunnerDir,
 {
   nsCOMPtr<nsILocalFile> appLocation;
   nsCOMPtr<nsILocalFile> installTo;
-  nsAutoString leafName;
+  nsString leafName;
 
   nsresult rv = XRE_GetFileFromPath(aAppLocation, getter_AddRefs(appLocation));
   if (NS_FAILED(rv))
@@ -323,7 +324,8 @@ InstallXULApp(nsIFile* aXULRunnerDir,
   }
 
   if (aLeafName)
-    NS_CopyNativeToUnicode(nsDependentCString(aLeafName), leafName);
+    NS_CStringToUTF16(nsDependentCString(aLeafName),
+                      NS_CSTRING_ENCODING_NATIVE_FILESYSTEM, leafName);
 
   rv = NS_InitXPCOM2(nsnull, aXULRunnerDir, nsnull);
   if (NS_FAILED(rv))
@@ -503,7 +505,7 @@ int main(int argc, char* argv[])
     PR_SetEnv(kAppEnv);
   }
 
-  nsCAutoString vendor, name, version, buildID, appID, copyright;
+  nsCString vendor, name, version, buildID, appID, copyright;
 
   nsXREAppData appData = { sizeof(nsXREAppData), 0 };
 
