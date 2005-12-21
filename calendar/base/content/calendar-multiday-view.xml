@@ -719,7 +719,7 @@
           // array indicating one vertical line of events.  If an event can't be placed
           // in the first line, it should be placed in the next, and so on.
 
-          this.mEvents.sort(function (a,b) {
+          this.mEvents.sort(function eventComparator(a,b) {
                                 var comp = a.startMinute - b.startMinute;
                                 if (comp != 0) return comp;
                                 return b.endMinute - a.endMinute;
@@ -1223,8 +1223,9 @@
          if (orient == "vertical") otherorient = "horizontal";
 
          var self = this;
-         this.eventNameInput.onblur = function() { self.stopEditing(true); };
-         this.eventNameInput.onkeypress = function(event) {
+         this.eventNameInput.onblur = 
+             function onBlur() { self.stopEditing(true); };
+         this.eventNameInput.onkeypress = function onKeyPress(event) {
              // save on enter
              if (event.keyCode == 13)
                  self.stopEditing(true);
@@ -1480,7 +1481,7 @@
       <field name="mResizeHandler">null</field>
       <constructor><![CDATA[
         var self = this;
-        this.mResizeHandler = function() { self.onResize(); };
+        this.mResizeHandler = function resizeHandler() { self.onResize(); };
         window.addEventListener("resize", this.mResizeHandler, true);
 	this.reorient();
       ]]></constructor>
@@ -1542,7 +1543,7 @@
       <field name="mObserver"><![CDATA[
         // the calIObserver, and calICompositeObserver
         ({
-            QueryInterface: function (aIID) {
+            QueryInterface: function QueryInterface(aIID) {
                 if (!aIID.equals(Components.interfaces.calIObserver) &&
                     !aIID.equals(Components.interfaces.calICompositeObserver) &&
                     !aIID.equals(Components.interfaces.nsISupports)) {
@@ -1554,19 +1555,19 @@
 
             calView: this,
 
-            onStartBatch: function() {
+            onStartBatch: function onStartBatch() {
                 this.calView.mBatchCount++;
             },
-            onEndBatch: function() {
+            onEndBatch: function onEndBatch() {
                 this.mBatchCount--;
                 if (this.mBatchCount == 0) {
                     this.calView.refresh();
                 }
             },
-            onLoad: function() {
+            onLoad: function onLoad() {
                 this.calView.refresh();
             },
-            onAddItem: function (aItem) {
+            onAddItem: function onAddItem(aItem) {
                 //dump ("++ AddItem " + aItem + "\n");
                 if (!(aItem instanceof Components.interfaces.calIEvent))
                     return;
@@ -1580,7 +1581,7 @@
                     this.calView.doAddEvent(occ);
                 }
             },
-            onModifyItem: function (aNewItem, aOldItem) {
+            onModifyItem: function onModifyItem(aNewItem, aOldItem) {
                 //dump ("++ ModifyItem\n");
                 if (!(aOldItem instanceof Components.interfaces.calIEvent))
                     return;
@@ -1603,7 +1604,7 @@
                     this.calView.doAddEvent(occ);
                 }
             },
-            onDeleteItem: function (aItem) {
+            onDeleteItem: function onDeleteItem(aItem) {
                 //dump ("++ DeleteItem\n");
                 if (!(aItem instanceof Components.interfaces.calIEvent))
                     return;
@@ -1616,24 +1617,25 @@
                 }
             },
             //XXXvv Alarm could, in theory, flash the event or something
-            onAlarm: function (aAlarmItem) { },
-            onError: function (aErrNo, aMessage) { },
+            onAlarm: function onAlarm(aAlarmItem) { },
+            onError: function onError(aErrNo, aMessage) { },
 
             //
             // calICompositeObserver stuff
             // XXXvv we can be smarter about how we handle this stuff
             //
-            onCalendarAdded: function (aCalendar) {
+            onCalendarAdded: function onCalendarAdded(aCalendar) {
                 //dump ("view onCalendarAdded\n");
                 this.calView.refresh();
             },
 
-            onCalendarRemoved: function (aCalendar) {
+            onCalendarRemoved: function onCalendarRemoved(aCalendar) {
                 //dump ("view onCalendarRemoved\n");
                 this.calView.refresh();
             },
 
-            onDefaultCalendarChanged: function (aNewDefaultCalendar) {
+            onDefaultCalendarChanged: 
+            function onDefaultCalendarChanged(aNewDefaultCalendar) {
                 // don't care, for now
             }
         })
@@ -1643,11 +1645,15 @@
       ({
           calView: this,
 
-          onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+          onOperationComplete: 
+          function onOperationComplete(aCalendar, aStatus, aOperationType, 
+                                       aId, aDetail) {
               // nothing to do
               //dump ("+++ OnOperationComplete (detail: " + aDetail + ")\n");
           },
-          onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
+          onGetResult: 
+          function onGetResult(aCalendar, aStatus, aItemType, aDetail,
+                               aCount, aItems) {
               if (!Components.isSuccessCode(aStatus))
                   return;
 
@@ -1777,7 +1783,7 @@
           } else {
               aDates.sort (function(a, b) { return a.compare(b); });
               this.mDateList = aDates.map(
-                  function (d) {
+                  function dateMapper(d) {
                       if (d.isDate && !d.isMutable)
                           return d;
 
