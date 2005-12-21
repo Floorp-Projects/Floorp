@@ -560,7 +560,13 @@ DefineColumn("keywords"          , "bugs.keywords"              , "Keywords"    
 DefineColumn("estimated_time"    , "bugs.estimated_time"        , "Estimated Hours"  );
 DefineColumn("remaining_time"    , "bugs.remaining_time"        , "Remaining Hours"  );
 DefineColumn("actual_time"       , "(SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) AS actual_time", "Actual Hours");
-DefineColumn("percentage_complete","(100*((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))/((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))+bugs.remaining_time))) AS percentage_complete", "% Complete"); 
+DefineColumn("percentage_complete",
+    "(CASE WHEN (SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) " .
+    "            + bugs.remaining_time = 0.0 " .
+    "THEN 0.0 " .
+    "ELSE 100*((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) " .
+    "     /((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) + bugs.remaining_time)) " .
+    "END) AS percentage_complete"                               , "% Complete"); 
 DefineColumn("relevance"         , "relevance"                  , "Relevance"        );
 DefineColumn("deadline"          , $dbh->sql_date_format('bugs.deadline', '%Y-%m-%d') . " AS deadline", "Deadline");
 
