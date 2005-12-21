@@ -657,19 +657,9 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
 static nsIFrame*
 GetNearestContainingBlock(nsIFrame* aFrame, nsMargin& aContentArea)
 {
-  aFrame = aFrame->GetParent();
-  while (aFrame) {
-    nsIAtom*  frameType = aFrame->GetType();
-    // XXXldb Should this use nsIFrame::IsContainingBlock ?
-    PRBool    isBlock =
-      (frameType == nsLayoutAtoms::blockFrame) ||
-      (frameType == nsLayoutAtoms::areaFrame);
-
-    if (isBlock) {
-      break;
-    }
-    aFrame = aFrame->GetParent();
-  }
+  for (aFrame = aFrame->GetParent(); aFrame && !aFrame->IsContainingBlock();
+       aFrame = aFrame->GetParent())
+    /* do nothing */;
 
   if (aFrame) {
     nsSize  size = aFrame->GetSize();
@@ -827,7 +817,7 @@ static PRBool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
 void
 nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
                                             nsIFrame*          aPlaceholderFrame,
-                                            nsIFrame*          aBlockFrame,
+                                            nsIFrame*          aContainingBlock,
                                             nsMargin&          aBlockContentArea,
                                             const nsHTMLReflowState* cbrs,
                                             nsHypotheticalBox& aHypotheticalBox)
@@ -890,20 +880,21 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   }
   
   // Get the 'direction' of the block
-  const nsStyleVisibility* blockVis = aBlockFrame->GetStyleVisibility();
+  const nsStyleVisibility* blockVis = aContainingBlock->GetStyleVisibility();
 
   // Get the placeholder x-offset and y-offset in the coordinate
   // space of the block frame that contains it
   // XXXbz the placeholder is not fully reflown yet if our containing block is
   // relatively positioned...
-  nsPoint placeholderOffset = aPlaceholderFrame->GetOffsetTo(aBlockFrame);
+  nsPoint placeholderOffset = aPlaceholderFrame->GetOffsetTo(aContainingBlock);
 
   // First, determine the hypothetical box's mTop
-  if (aBlockFrame) {
+  nsBlockFrame* blockFrame;
+  if (NS_SUCCEEDED(aContainingBlock->QueryInterface(kBlockFrameCID,
+                                  NS_REINTERPRET_CAST(void**, &blockFrame)))) {
     // We need the immediate child of the block frame, and that may not be
     // the placeholder frame
-    nsBlockFrame* blockFrame = NS_STATIC_CAST(nsBlockFrame*, aBlockFrame);
-    nsIFrame *blockChild = FindImmediateChildOf(aBlockFrame, aPlaceholderFrame);
+    nsIFrame *blockChild = FindImmediateChildOf(blockFrame, aPlaceholderFrame);
     nsBlockFrame::line_iterator lineBox = blockFrame->FindLineFor(blockChild);
 
     // How we determine the hypothetical box depends on whether the element
@@ -947,6 +938,11 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
         aHypotheticalBox.mTop = placeholderOffset.y;
       }
     }
+  } else {
+    // The containing block is not a block, so it's probably something
+    // like a XUL box, etc.
+    // Just use the placeholder's y-offset
+    aHypotheticalBox.mTop = placeholderOffset.y;
   }
 
   // Second, determine the hypothetical box's mLeft & mRight
@@ -1002,17 +998,17 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   // that may have happened;
   nsPoint cbOffset;
   if (mStyleDisplay->mPosition == NS_STYLE_POSITION_FIXED) {
-    // In this case, cbrs->frame will always be an ancestor of aBlockFrame, so
-    // can just walk our way up the frame tree.
+    // In this case, cbrs->frame will always be an ancestor of
+    // aContainingBlock, so can just walk our way up the frame tree.
     cbOffset.MoveTo(0, 0);
     do {
-      cbOffset += aBlockFrame->GetPosition();
-      aBlockFrame = aBlockFrame->GetParent();
-      NS_ASSERTION(aBlockFrame,
+      cbOffset += aContainingBlock->GetPosition();
+      aContainingBlock = aContainingBlock->GetParent();
+      NS_ASSERTION(aContainingBlock,
                    "Should hit cbrs->frame before we run off the frame tree!");
-    } while (aBlockFrame != cbrs->frame);
+    } while (aContainingBlock != cbrs->frame);
   } else {
-    cbOffset = aBlockFrame->GetOffsetTo(cbrs->frame);
+    cbOffset = aContainingBlock->GetOffsetTo(cbrs->frame);
   }
   aHypotheticalBox.mLeft += cbOffset.x;
   aHypotheticalBox.mTop += cbOffset.y;
@@ -1044,9 +1040,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
   // Find the nearest containing block frame to the placeholder frame,
   // and return its content area left, top, right, and bottom edges
-  nsMargin  blockContentArea;
-  nsIFrame* blockFrame = GetNearestContainingBlock(placeholderFrame,
-                                                   blockContentArea);
+  nsMargin  cbContentArea;
+  nsIFrame* cbFrame = GetNearestContainingBlock(placeholderFrame,
+                                                cbContentArea);
   
   // If both 'left' and 'right' are 'auto' or both 'top' and 'bottom' are
   // 'auto', then compute the hypothetical box of where the element would
@@ -1057,8 +1053,8 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
       ((eStyleUnit_Auto == mStylePosition->mOffset.GetTopUnit()) &&
        (eStyleUnit_Auto == mStylePosition->mOffset.GetBottomUnit()))) {
 
-    CalculateHypotheticalBox(aPresContext, placeholderFrame, blockFrame,
-                             blockContentArea, cbrs, hypotheticalBox);
+    CalculateHypotheticalBox(aPresContext, placeholderFrame, cbFrame,
+                             cbContentArea, cbrs, hypotheticalBox);
   }
 
   // Initialize the 'left' and 'right' computed offsets

@@ -418,7 +418,7 @@ protected:
 
   void CalculateHypotheticalBox(nsPresContext*    aPresContext,
                                 nsIFrame*          aPlaceholderFrame,
-                                nsIFrame*          aBlockFrame,
+                                nsIFrame*          aContainingBlock,
                                 nsMargin&          aBlockContentArea,
                                 const nsHTMLReflowState* cbrs,
                                 nsHypotheticalBox& aHypotheticalBox);
