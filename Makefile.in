@@ -180,6 +180,10 @@ tier_9_dirs	+= \
 		xpfe/appshell \
 		$(NULL)
 
+ifdef MOZ_AUTH_EXTENSION
+tier_9_dirs += extensions/auth
+endif
+
 ifdef MOZ_XMLEXTRAS
 tier_9_dirs += extensions/xmlextras
 endif

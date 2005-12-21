@@ -477,6 +477,12 @@ $MAKEFILES_js
 modules/libpref/public/Makefile
 "
 
+if [ "$MOZ_AUTH_EXTENSION" ]; then
+    MAKEFILES_netwerk="$MAKEFILES_netwerk
+        extensions/auth/Makefile
+    "
+fi
+
 MAKEFILES_uriloader="
 uriloader/Makefile
 uriloader/base/Makefile
@@ -1458,9 +1464,6 @@ for extension in $MOZ_EXTENSIONS; do
             " ;;
         finger ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/finger/Makefile
-            " ;;
-        auth ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/auth/Makefile
             " ;;
         gnomevfs ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/gnomevfs/Makefile
