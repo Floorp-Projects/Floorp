@@ -48,7 +48,6 @@ RESFILE		= MozillaControl.res
 DEFFILE		= L_mozctl.def
 EXPORT_LIBRARY	= 1
 FORCE_SHARED_LIB= 1
-GRE_MODULE	= 1
 
 REQUIRES = \
     xpcom \
@@ -95,11 +94,11 @@ CPPSRCS = \
 
 
 EXTRA_DSO_LDOPTS = \
-	$(DIST)/lib/$(LIB_PREFIX)gkgfx.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ax_common_s.$(LIB_SUFFIX) \
 	$(MOZ_UNICHARUTIL_LIBS) \
-	$(XPCOM_LIBS) \
+	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+	$(XPCOM_FROZEN_LDOPTS) \
 	$(NSPR_LIBS) \
 	$(NULL)
 

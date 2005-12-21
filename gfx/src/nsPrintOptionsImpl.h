@@ -45,6 +45,8 @@
 #include "nsIPrintOptions.h"
 #include "nsIPrintSettingsService.h"
 #include "nsIPrefBranch.h"
+#include "nsString.h"
+#include "nsFont.h"
 
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
