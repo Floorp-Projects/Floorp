@@ -112,7 +112,7 @@ CPPSRCS		= \
 LIBS		= $(DIST)/lib/$(LIB_PREFIX)profdirserviceprovidersa_s.$(LIB_SUFFIX)
 
 ifdef NS_TRACE_MALLOC
-LIBS		+= tracemalloc
+LIBS		+= $(DIST)/lib/$(LIB_PREFIX)tracemalloc.$(LIB_SUFFIX)
 endif
 
 LIBS		+= \
