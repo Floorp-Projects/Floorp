@@ -790,6 +790,9 @@ nsresult nsComponentManagerImpl::Shutdown(void)
 
     mLoaderData.Clear();
 
+    // Free staticm modules
+    mStaticModuleLoader.ReleaseModules();
+
     // Unload libraries
     mNativeModuleLoader.UnloadLibraries();
 
