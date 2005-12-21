@@ -41,13 +41,9 @@
 
 #include "nsBaseDragService.h"
 #include "nsIDragSessionBeOS.h"
-#include "nsWindow.h"
-#include <Message.h>
-#include <Rect.h>
 #include <String.h>
-#include <View.h>
 
-class nsDragView;
+class BMessage;
 
 /**
  * Native BeOS DragService wrapper
