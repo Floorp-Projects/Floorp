@@ -153,6 +153,8 @@ static PRInt32 GetTLDType(const nsString& aHostTail);
 static void GetUnreversedHostname(const nsString& aBackward,
                                   nsAString& aForward);
 static PRBool IsNumericHostName(const nsString& aHost);
+static PRBool IsSimpleBookmarksQuery(nsINavHistoryQuery** aQueries,
+                                     PRUint32 aQueryCount);
 static void ParseSearchQuery(const nsString& aQuery, nsStringArray* aTerms);
 
 inline void ReverseString(const nsString& aInput, nsAString& aReversed)
@@ -1273,38 +1275,8 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
   // In the simple case where we're just querying children of a single bookmark
   // folder, we can avoid the complexity of the grouper and just hand back
   // the results.
-  do {
-    if (aQueryCount != 1) break;
-    
-    nsINavHistoryQuery *query = aQueries[0];
-    PRUint32 folderCount;
-    query->GetFolderCount(&folderCount);
-    if (folderCount != 1) break;
-
-    PRBool hasIt;
-    query->GetHasBeginTime(&hasIt);
-    if (hasIt) break;
-    query->GetHasEndTime(&hasIt);
-    if (hasIt) break;
-    query->GetHasDomain(&hasIt);
-    if (hasIt) break;
-
-    nsRefPtr<nsNavHistoryResult> result = NewHistoryResult(aQueries,
-                                                           aQueryCount,
-                                                           options);
-    NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
-
-    rv = result->Init();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = nsNavBookmarks::GetBookmarksService()->
-      QueryFolderChildren(aQueries[0], options, result->GetTopLevel());
-
-    NS_ENSURE_SUCCESS(rv, rv);
-    result->FilledAllResults();
-    NS_STATIC_CAST(nsRefPtr<nsINavHistoryResult>, result).swap(*_retval);
-    return NS_OK;
-  } while (0);
+  if (IsSimpleBookmarksQuery(aQueries, aQueryCount))
+    return FillSimpleBookmarksQuery(aQueries, aQueryCount, options, _retval);
 
   PRBool asVisits = options->ResultType() == nsINavHistoryQueryOptions::RESULT_TYPE_VISIT;
 
@@ -2253,6 +2225,37 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
 }
 
 
+// nsNavHistory::FillSimpleBookmarksQuery
+//
+//    When we know we have a simple bookmarks query, which consists of a single
+//    clause for a bookmark folder with no other sorting or grouping, this
+//    function can quickly compute the results and avoid overhead of general
+//    DB queries and grouping.
+
+nsresult
+nsNavHistory::FillSimpleBookmarksQuery(nsINavHistoryQuery** aQueries,
+                                       PRUint32 aQueryCount,
+                                       nsNavHistoryQueryOptions* aOptions,
+                                       nsINavHistoryResult** _retval)
+{
+  nsRefPtr<nsNavHistoryResult> result = NewHistoryResult(aQueries,
+                                                         aQueryCount,
+                                                         aOptions);
+  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = result->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = nsNavBookmarks::GetBookmarksService()->
+    QueryFolderChildren(aQueries[0], aOptions, result->GetTopLevel());
+
+  NS_ENSURE_SUCCESS(rv, rv);
+  result->FilledAllResults();
+  NS_STATIC_CAST(nsRefPtr<nsINavHistoryResult>, result).swap(*_retval);
+  return NS_OK;
+}
+
+
 // nsNavHistory::ResultsAsList
 //
 
@@ -3105,6 +3108,39 @@ PRBool IsNumericHostName(const nsString& aHost)
       return PR_FALSE;
   }
   return (periodCount == 3);
+}
+
+
+// IsSimpleBookmarksQuery
+//
+//    Determines if this set of queries is a simple bookmarks query for a
+//    folder with no other constraints. In these common cases, we can more
+//    efficiently compute the results.
+
+static PRBool IsSimpleBookmarksQuery(nsINavHistoryQuery** aQueries,
+                                     PRUint32 aQueryCount)
+{
+  if (aQueryCount != 1)
+    return PR_FALSE;
+
+  nsINavHistoryQuery *query = aQueries[0];
+  PRUint32 folderCount;
+  query->GetFolderCount(&folderCount);
+  if (folderCount != 1)
+    return PR_FALSE;
+
+  PRBool hasIt;
+  query->GetHasBeginTime(&hasIt);
+  if (hasIt)
+    return PR_FALSE;
+  query->GetHasEndTime(&hasIt);
+  if (hasIt)
+    return PR_FALSE;
+  query->GetHasDomain(&hasIt);
+  if (hasIt)
+    return PR_FALSE;
+
+  return PR_TRUE;
 }
 
 
