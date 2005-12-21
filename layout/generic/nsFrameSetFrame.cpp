@@ -992,7 +992,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
   nscoord height = (aDesiredSize.height <= aReflowState.availableHeight)
     ? aDesiredSize.height : aReflowState.availableHeight;
 
-  PRBool firstTime = (eReflowReason_Initial == aReflowState.reason);
+  PRBool firstTime = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
   if (firstTime) {
     nsContentUtils::RegisterPrefCallback(kFrameResizePref,
                                          FrameResizePrefCallback, this);
