@@ -425,9 +425,9 @@ xptcstubs_asm_x86_solaris_SUNW.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs
 	  -e 's/^\(STUB_ENTRY\)(\([0-9]\))/\11\(\2\)/' \
 	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9]\))/\12\(\2\)/' \
 	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9][0-9]\))/\13\(\2\)/' \
-	$(PUBLIC)/xptcstubsdef.inc > $(srcdir)/xptcstubsdef_asm.solx86
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(srcdir)/xptcstubs_asm_x86_solaris_SUNW.s
-	@rm -f $(srcdir)/xptcstubsdef_asm.solx86
+	$(PUBLIC)/xptcstubsdef.inc > ./xptcstubsdef_asm.solx86
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) -I./ $(srcdir)/xptcstubs_asm_x86_solaris_SUNW.s
+	@rm -f ./xptcstubsdef_asm.solx86
 endif
 endif
 endif
