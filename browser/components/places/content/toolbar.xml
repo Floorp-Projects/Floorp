@@ -282,8 +282,14 @@
         onItemMoved: function TB_O_onItemMoved(bookmark, folder, oldIndex, newIndex) {
           this._self.init();
         },
-        onItemChanged: function TB_O_onItemChanged(bookmark, property) {
+        onItemChanged: function TB_O_onItemChanged(bookmark, property, value) {
           this._self.init();
+        },
+        onItemVisited: function TB_0_onItemVisited(bookmark, time) {
+          //this._self.init();
+        },
+        onItemReplaced: function TB_0_onItemReplaced(filder, item, newItem) {
+          // this._self.init();
         },
         onFolderAdded: function TB_O_onFolderAdded(folder, parent, index) {
           this._self.init();

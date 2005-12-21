@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsNavBookmarks_h_
+#define nsNavBookmarks_h_
+
 #include "nsINavBookmarksService.h"
 #include "nsIStringBundle.h"
 #include "nsNavHistory.h"
@@ -145,3 +148,5 @@ private:
   nsresult ImportBookmarksHTMLInternal(nsIURI* aURL,
                                        PRBool aAllowRootChanges);
 };
+
+#endif // nsNavBookmarks_h_
