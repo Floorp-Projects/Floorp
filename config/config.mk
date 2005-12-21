@@ -747,6 +747,7 @@ endif
 # import lib, because that import lib will collide with the name of a
 # static version of the same library.
 ifeq ($(GNU_LD)$(OS_ARCH),WINNT)
+GARBAGE += fake-import fake-import.exp
 ifdef IS_COMPONENT
 LDFLAGS += -IMPLIB:fake-import
 DELETE_AFTER_LINK = fake-import.exp
