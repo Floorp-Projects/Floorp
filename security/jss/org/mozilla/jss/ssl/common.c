@@ -453,14 +453,10 @@ Java_org_mozilla_jss_ssl_SocketBase_socketClose(JNIEnv *env, jobject self)
     /* get the FD */
     if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) {
         /* exception was thrown */
-        goto finish;
+        return;
     }
 
     JSSL_DestroySocketData(env, sock);
-
-finish:
-    EXCEPTION_CHECK(env, sock)
-    return;
 }
 
 JNIEXPORT void JNICALL
