@@ -36,7 +36,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= mfcEmbedComponents
 RESFILE		= Dialogs.res
-MOZILLA_INTERNAL_API = 1
 
 REQUIRES = \
 	xpcom \
@@ -70,6 +69,7 @@ EXTRA_DSO_LIBS = gkgfx
 
 EXTRA_DSO_LDOPTS += \
 	$(EXTRA_DSO_LIBS) \
+	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
