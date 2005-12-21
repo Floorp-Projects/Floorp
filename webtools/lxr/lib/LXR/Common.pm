@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.27 2005/11/20 22:10:38 timeless%mozdev.org Exp $
+# $Id: Common.pm,v 1.28 2005/12/21 05:28:13 timeless%mozdev.org Exp $
 
 package LXR::Common;
 
@@ -27,10 +27,13 @@ $SIG{__DIE__}  = 'fatal';
 	  'string',	"'",		"'",
 	  'include',	'#include',	"\n");
 
+my %alreadywarned = ();
 
 sub warning {
+    return if defined $_[1] && $_[1] && defined $alreadywarned{$_[1]};
     print(STDERR "[",scalar(localtime),"] warning: $_[0]\n");
     print("<h4 align=\"center\"><i>** Warning: $_[0]</i></h4>\n") if $wwwdebug;
+    $alreadywarned{$_[1]} = 1;
 }
 
 
@@ -183,7 +186,7 @@ sub markupstring {
 
     # Look for identifiers and create links with identifier search query.
     tie (%xref, "DB_File", $Conf->dbdir."/xref", O_RDONLY, 0664, $DB_HASH)
-        || &warning("Cannot open xref database.");
+        || &warning("Cannot open xref database.", 'xref-db');
     $string =~ s#(^|\s)([a-zA-Z_~][a-zA-Z0-9_]*)\b#
                 $1.(is_linkworthy($2) ? &idref($2,$2) : $2)#ge;
     untie(%xref);
@@ -241,7 +244,7 @@ sub markupfile {
 	&SimpleParse::init($INFILE, @cterm);
 	
 	tie (%xref, "DB_File", $Conf->dbdir."/xref", O_RDONLY, 0664, $DB_HASH)
-	    || &warning("Cannot open xref database.");
+	    || &warning("Cannot open xref database.", 'xref-db');
 
 	&$outfun(# "<pre>\n".
 		 #"<a name=\"".$line++.'"></a>');
@@ -739,7 +742,6 @@ sub varexpand {
     return($varex);
 }
 
-
 sub makeheader {
     local $who = shift;
     $template = undef;
@@ -747,32 +749,32 @@ sub makeheader {
 
     if ($who eq "sourcedir" && $Conf->sourcedirhead) {
 	if (!open(TEMPL, $Conf->sourcedirhead)) {
-	    &warning("Template ".$Conf->sourcedirhead." does not exist.");
+	    &warning("Template ".$Conf->sourcedirhead." does not exist.", 'sourcedirhead');
 	    $template = $def_templ;
 	}
     } elsif (($who eq "source" || $who eq 'sourcedir') && $Conf->sourcehead) {
 	if (!open(TEMPL, $Conf->sourcehead)) {
-	    &warning("Template ".$Conf->sourcehead." does not exist.");
+	    &warning("Template ".$Conf->sourcehead." does not exist.", 'sourcehead');
 	    $template = $def_templ;
 	}
     } elsif ($who eq "find" && $Conf->findhead) {
 	if (!open(TEMPL, $Conf->findhead)) {
-	    &warning("Template ".$Conf->findhead." does not exist.");
+	    &warning("Template ".$Conf->findhead." does not exist.", 'findhead');
 	    $template = $def_templ;
 	}
     } elsif ($who eq "ident" && $Conf->identhead) {
 	if (!open(TEMPL, $Conf->identhead)) {
-	    &warning("Template ".$Conf->identhead." does not exist.");
+	    &warning("Template ".$Conf->identhead." does not exist.", 'identhead');
 	    $template = $def_templ;
 	}
     } elsif ($who eq "search" && $Conf->searchhead) {
 	if (!open(TEMPL, $Conf->searchhead)) {
-	    &warning("Template ".$Conf->searchhead." does not exist.");
+	    &warning("Template ".$Conf->searchhead." does not exist.", 'searchhead');
 	    $template = $def_templ;
 	}
     } elsif ($Conf->htmlhead) {
 	if (!open(TEMPL, $Conf->htmlhead)) {
-	    &warning("Template ".$Conf->htmlhead." does not exist.");
+	    &warning("Template ".$Conf->htmlhead." does not exist.", 'htmlhead');
 	    $template = $def_templ;
 	}
     }
@@ -813,32 +815,32 @@ sub makefooter {
 
     if ($who eq "sourcedir" && $Conf->sourcedirtail) {
 	if (!open(TEMPL, $Conf->sourcedirtail)) {
-	    &warning("Template ".$Conf->sourcedirtail." does not exist.");
+	    &warning("Template ".$Conf->sourcedirtail." does not exist.", 'sourcedirtail');
 	    $template = $def_templ;
 	}
     } elsif (($who eq "source" || $who eq 'sourcedir') && $Conf->sourcetail) {
 	if (!open(TEMPL, $Conf->sourcetail)) {
-	    &warning("Template ".$Conf->sourcetail." does not exist.");
+	    &warning("Template ".$Conf->sourcetail." does not exist.", 'sourcetail');
 	    $template = $def_templ;
 	}
     } elsif ($who eq "find" && $Conf->findtail) {
 	if (!open(TEMPL, $Conf->findtail)) {
-	    &warning("Template ".$Conf->findtail." does not exist.");
+	    &warning("Template ".$Conf->findtail." does not exist.", 'findtail');
 	    $template = $def_templ;
 	}
     } elsif ($who eq "ident" && $Conf->identtail) {
 	if (!open(TEMPL, $Conf->identtail)) {
-	    &warning("Template ".$Conf->identtail." does not exist.");
+	    &warning("Template ".$Conf->identtail." does not exist.", 'identtail');
 	    $template = $def_templ;
 	}
     } elsif ($who eq "search" && $Conf->searchtail) {
 	if (!open(TEMPL, $Conf->searchtail)) {
-	    &warning("Template ".$Conf->searchtail." does not exist.");
+	    &warning("Template ".$Conf->searchtail." does not exist.", 'searchtail');
 	    $template = $def_templ;
 	}
     } elsif ($Conf->htmltail) {
 	if (!open(TEMPL, $Conf->htmltail)) {
-	    &warning("Template ".$Conf->htmltail." does not exist.");
+	    &warning("Template ".$Conf->htmltail." does not exist.", 'htmltail');
 	    $template = $def_templ;
 	}
     }
