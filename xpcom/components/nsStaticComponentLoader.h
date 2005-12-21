@@ -60,10 +60,12 @@ public:
         mFirst(nsnull)
     { }
 
+    ~nsStaticModuleLoader() { }
+
     nsresult Init(nsStaticModuleInfo const *aStaticModules,
                   PRUint32 aModuleCount);
 
-    ~nsStaticModuleLoader() {
+    void ReleaseModules() {
         if (mInfoHash.ops)
             PL_DHashTableFinish(&mInfoHash);
     }
