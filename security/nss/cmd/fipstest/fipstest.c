@@ -47,7 +47,7 @@
 
 #define ENCRYPT 1
 #define DECRYPT 0
-                  
+#define BYTE unsigned char
 
 SECStatus
 hex_from_2char(unsigned char *c2, unsigned char *byteval)
@@ -430,6 +430,18 @@ loser:
 }
 
 /*
+* Set the parity bit for the given byte
+*/
+BYTE odd_parity( BYTE in)
+{
+    BYTE out = in;
+    in ^= in >> 4;
+    in ^= in >> 2;
+    in ^= in >> 1;
+    return (BYTE)(out ^ !(in & 1));
+}
+
+/*
  * Generate Keys [i+1] from Key[i], PT/CT[j-2], PT/CT[j-1], and PT/CT[j] 
  * for TDEA Monte Carlo Test (MCT) in ECB and CBC modes.
  */
@@ -472,6 +484,10 @@ tdea_mct_next_keys(unsigned char *key,
             key[k] ^= text_2[k-16];
         }
     }
+    //set the parity bits             
+    for (k=0; k<24; k++) {
+        key[k] = odd_parity(key[k]);
+    }
 }
 
 /*
@@ -489,11 +505,10 @@ tdea_mct_test(int mode, unsigned char* key, unsigned int numKeys,
               unsigned int crypt, unsigned char* inputtext, 
               unsigned int inputlength, unsigned char* iv, FILE *resp) { 
 
-    int i, j, k;
+    int i, j;
     unsigned char outputtext_1[8];      /* PT/CT[j-1] */
     unsigned char outputtext_2[8];      /* PT/CT[j-2] */
     char buf[80];       /* holds one line from the input REQUEST file. */
-    unsigned char tempKey[8];
     unsigned int outputlen;
     unsigned char outputtext[8];
     
@@ -516,20 +531,17 @@ tdea_mct_test(int mode, unsigned char* key, unsigned int numKeys,
         fputs(buf, resp);
         /* Output KEY1[i] */
         fputs("KEY1 = ", resp);
-        for (j=0; j < 8; j++) tempKey[j] = key[j];
-        to_hex_str(buf, tempKey, 8);
+        to_hex_str(buf, key, 8);
         fputs(buf, resp);
         fputc('\n', resp);
         /* Output KEY2[i] */
         fputs("KEY2 = ", resp);
-        for (j=0; j < 8; j++) tempKey[j] = key[j+8];
-        to_hex_str(buf, tempKey, 8);
+        to_hex_str(buf, &key[8], 8);
         fputs(buf, resp);
         fputc('\n', resp);
         /* Output KEY3[i] */
         fputs("KEY3 = ", resp);
-        for (j=0; j < 8; j++) tempKey[j] = key[j+16];
-        to_hex_str(buf, tempKey, 8);
+        to_hex_str(buf, &key[16], 8);
         fputs(buf, resp);
         fputc('\n', resp);
         if (mode == NSS_DES_EDE3_CBC) {
@@ -584,15 +596,17 @@ tdea_mct_test(int mode, unsigned char* key, unsigned int numKeys,
                     } else {
                         /* p[j+1] = C[j-1] */
                         memcpy(inputtext, outputtext_1, 8);
-                        /* save C[j-1] */
-                        memcpy(outputtext_1, outputtext, 8);
                     }
                     /* CV[j+1] = C[j] */
                     memcpy(iv, outputtext, 8);
+                    if (j != 9999) {
+                        /* save C[j-1] */
+                        memcpy(outputtext_1, outputtext, 8);
+                    }
                 } else { /* DECRYPT */
                     /* CV[j+1] = C[j] */
                     memcpy(iv, inputtext, 8);
-                    /*C[j+1] = P[j] */
+                    /* C[j+1] = P[j] */
                     memcpy(inputtext, outputtext, 8);
                 }
             } else {
@@ -601,7 +615,7 @@ tdea_mct_test(int mode, unsigned char* key, unsigned int numKeys,
             }
 
             /* Save PT/CT[j-2] and PT/CT[j-1] */
-            if (j==9997) memcpy(outputtext_2, outputtext_1, 8);
+            if (j==9997) memcpy(outputtext_2, outputtext, 8);
             if (j==9998) memcpy(outputtext_1, outputtext, 8);
             /* done at the end of the for(j) loop */
         }
@@ -625,16 +639,14 @@ tdea_mct_test(int mode, unsigned char* key, unsigned int numKeys,
                            outputtext_1, outputtext, numKeys);
 
         if (mode == NSS_DES_EDE3_CBC) {
+            /* taken care of in the j=9999 iteration */
             if (crypt == ENCRYPT) {
                 /* P[i] = C[j-1] */
-                memcpy(inputtext, outputtext_1, 8);
-                /*CV[i] = C[j] */
-                memcpy(iv, outputtext, 8);
+                /* CV[i] = C[j] */
             } else {
-                /*CV[i] = C[j] */
-                memcpy(iv, inputtext, 8);
-                /*C[i] = P[j]  */
-                memcpy(inputtext, outputtext, 8);
+                /* taken care of in the j=9999 iteration */
+                /* CV[i] = C[j] */
+                /* C[i] = P[j]  */
             }
         } else {
             /* ECB PT/CT[i] = PT/CT[j]  */
@@ -702,7 +714,6 @@ tdea_mct(int mode, char *reqfn)
                 i++;
             }
             numKeys = atoi(&buf[i]);
-            fputs(buf, resp);
             continue;
         }
         /* KEY1 = ... */
@@ -714,7 +725,6 @@ tdea_mct(int mode, char *reqfn)
             for (j=0; isxdigit(buf[i]); i+=2,j++) {
                 hex_from_2char(&buf[i], &key[j]);
             }
-            fputs(buf, resp);
             continue;
         }
         /* KEY2 = ... */
@@ -726,7 +736,6 @@ tdea_mct(int mode, char *reqfn)
             for (j=8; isxdigit(buf[i]); i+=2,j++) {
                 hex_from_2char(&buf[i], &key[j]);
             }
-            fputs(buf, resp);
             continue;
         }
         /* KEY3 = ... */
@@ -738,7 +747,6 @@ tdea_mct(int mode, char *reqfn)
             for (j=16; isxdigit(buf[i]); i+=2,j++) {
                 hex_from_2char(&buf[i], &key[j]);
             }
-            fputs(buf, resp);
             continue;
         }
 
@@ -751,9 +759,8 @@ tdea_mct(int mode, char *reqfn)
             for (j=0; j<sizeof iv; i+=2,j++) {
                 hex_from_2char(&buf[i], &iv[j]);
             }
-           fputs(buf, resp);
-           continue;
-       }
+            continue;
+        }
 
        /* PLAINTEXT = ... */
        if (strncmp(buf, "PLAINTEXT", 9) == 0) {
@@ -770,9 +777,6 @@ tdea_mct(int mode, char *reqfn)
             for (j=0; j<sizeof plaintext; i+=2,j++) {
                 hex_from_2char(&buf[i], &plaintext[j]);
             }                                     
-
-            fputs(buf, resp);
-            fputc('\n', resp);
 
             /* do the Monte Carlo test */
             if (mode==NSS_DES_EDE3) {
@@ -797,9 +801,6 @@ tdea_mct(int mode, char *reqfn)
                 hex_from_2char(&buf[i], &ciphertext[j]);
             }
             
-            fputs(buf, resp);
-            fputc('\n', resp);
-
             /* do the Monte Carlo test */
             if (mode==NSS_DES_EDE3) {
                 tdea_mct_test(NSS_DES_EDE3, key, numKeys, crypt, ciphertext, sizeof ciphertext, NULL, resp); 
