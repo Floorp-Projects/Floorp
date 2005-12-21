@@ -484,7 +484,7 @@ tdea_mct_next_keys(unsigned char *key,
             key[k] ^= text_2[k-16];
         }
     }
-    //set the parity bits             
+    /* set the parity bits */             
     for (k=0; k<24; k++) {
         key[k] = odd_parity(key[k]);
     }
