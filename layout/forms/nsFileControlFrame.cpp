@@ -412,7 +412,9 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
           txtRect.height != aDesiredSize.height) {
         nsHTMLReflowMetrics txtKidSize(PR_TRUE);
         nsSize txtAvailSize(aReflowState.availableWidth, aDesiredSize.height);
-        nsHTMLReflowState   txtKidReflowState(aPresContext, aReflowState, this, txtAvailSize,
+        nsHTMLReflowState   txtKidReflowState(aPresContext,
+                                              *aReflowState.parentReflowState,
+                                              this, txtAvailSize,
                                               eReflowReason_Resize);
         txtKidReflowState.mComputedHeight = aDesiredSize.height;
         rv = nsAreaFrame::WillReflow(aPresContext);
