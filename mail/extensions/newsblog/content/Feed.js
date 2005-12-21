@@ -206,7 +206,13 @@ Feed.prototype =
     if (feed.downloadCallback) 
     {
       // if the http status code is a 304, then the feed has not been modified since we last downloaded it.
-      feed.downloadCallback.downloaded(feed, request.status == 304 ? kNewsBlogNoNewItems : kNewsBlogRequestFailure);
+      var error = kNewsBlogRequestFailure;
+      try
+      {
+        if (request.status == 304)
+          error = kNewsBlogNoNewItems;
+      } catch (ex) {}
+      feed.downloadCallback.downloaded(feed, error);
     }
     
     FeedCache.removeFeed(url);
