@@ -44,7 +44,8 @@ sub LoadConfig() {
         close CONFIG;
 
         package Settings;
-        eval $config;
+        eval $config or 
+            die "Malformed multi-config.pl: $@\n";
 
     } else {
         warn "Error: Need tinderbox config file, multi-config.pl\n";
