@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsToolkit.h"
-#include "nsWindow.h"
 #include "prmon.h"
 #include "prtime.h"
 #include "nsGUIEvent.h"

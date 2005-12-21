@@ -78,8 +78,4 @@ protected:
 	port_id		eventport;
 };
 
-#define WM_CALLMETHOD   'CAme'
-
-class  nsWindow;
-
 #endif  // TOOLKIT_H

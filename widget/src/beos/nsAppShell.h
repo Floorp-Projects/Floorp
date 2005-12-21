@@ -41,9 +41,11 @@
 #include "nsCOMPtr.h"
 #include "nsIAppShell.h"
 #include "nsIEventQueue.h"
-#include "nsSwitchToUIThread.h"
 #include <OS.h>
 #include <List.h>
+
+
+struct MethodInfo;
 
 /**
  * Native BeOS Application shell wrapper

@@ -66,6 +66,9 @@
 #include <DataIO.h>
 #include <Mime.h>
 #include <Rect.h>
+#include <Region.h>
+#include <String.h>
+#include <View.h>
 
 #include "prlog.h"
 #include "nsIPresShell.h"

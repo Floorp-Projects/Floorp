@@ -236,33 +236,7 @@ protected:
 	PRPackedBool           mListenForResizes;
 	
 public:	// public on BeOS to allow BViews to access it
-	// Enumeration of the methods which are accessable on the "main GUI thread"
-	// via the CallMethod(...) mechanism...
-	// see nsSwitchToUIThread
-	enum
-	{
-	    CREATE       = 0x0101,
-	    CREATE_NATIVE,
-	    DESTROY,
-	    SET_FOCUS,
-	    GOT_FOCUS,
-	    KILL_FOCUS,
-	    ONMOUSE,
-	    ONDROP,
-	    ONWHEEL,
-	    ONPAINT,
-	    ONRESIZE,
-	    CLOSEWINDOW,
-	    ONKEY,
-	    BTNCLICK,
-	    ONACTIVATE,
-	    ONMOVE,
-	    ONWORKSPACE
-#if defined(BeIME)
-	    ,
-		ONIME
-#endif
-	};
+
 	nsToolkit *GetToolkit() { return (nsToolkit *)nsBaseWidget::GetToolkit(); }
 };
 

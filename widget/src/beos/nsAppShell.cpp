@@ -44,7 +44,6 @@
 #include "nsIServiceManager.h"
 #include "nsIWidget.h"
 #include "nsIAppShell.h"
-#include "nsWindow.h"
 #include "nsSwitchToUIThread.h"
 #include "plevent.h"
 #include "prprf.h"
@@ -481,15 +480,15 @@ void nsAppShell::RetrieveAllEvents(bool blockable)
         {
           MethodInfo *mInfo = (MethodInfo *)newitem->ifdata.data;
           switch( mInfo->methodId ) {
-          case nsWindow::ONKEY :
+          case nsSwitchToUIThread::ONKEY :
             events[PRIORITY_SECOND].AddItem(newitem);
             break;
-          case nsWindow::ONMOUSE:
+          case nsSwitchToUIThread::ONMOUSE:
             ConsumeRedundantMouseMoveEvent(mInfo);
             events[PRIORITY_THIRD].AddItem(newitem);
             break;
-          case nsWindow::ONWHEEL :
-          case nsWindow::BTNCLICK :
+          case nsSwitchToUIThread::ONWHEEL :
+          case nsSwitchToUIThread::BTNCLICK :
             events[PRIORITY_THIRD].AddItem(newitem);
             break;
           default:
