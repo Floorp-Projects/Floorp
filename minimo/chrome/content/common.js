@@ -56,9 +56,12 @@ function syncUIZoom() {
 function loadBookmarks(storeStr) {
 
 	var aDOMParser = new DOMParser();
-	gBookmarksDoc = aDOMParser.parseFromString(storeStr,"text/xml");
-
-	if(gBookmarksDoc&&gBookmarksDoc.firstChild&&gBookmarksDoc.firstChild.nodeName=="bm") {
+	
+	if(storeStr) {
+		gBookmarksDoc = aDOMParser.parseFromString(storeStr,"text/xml");
+	}
+	
+	if(storeStr&&gBookmarksDoc&&gBookmarksDoc.firstChild&&gBookmarksDoc.firstChild.nodeName=="bm") {
 		refreshBookmarks();
 	} else {
 		var bookmarkEmpty="<bm></bm>";
