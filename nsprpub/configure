@@ -4980,7 +4980,7 @@ if test -z "$SKIP_LIBRARY_CHECKS"; then
 
 
 case $target in
-*-darwin*)
+*-darwin*|*-beos*)
     ;;
 *)
     echo $ac_n "checking for dlopen in -ldl""... $ac_c" 1>&6
