@@ -1,0 +1,9 @@
+# You MUST define [your path]/inc as an include_path!
+# Going to have to change this, bub.
+php_value include_path /home/morgamic/public_html/v2/inc:.:/usr/share/pear:/home/morgamic/public_html/v2/lib
+
+# Init script to set up required libraries.
+php_value auto_prepend_file init.php
+
+# Finish script that calls $tpl->display for global Smarty object.
+php_value auto_append_file finish.php
