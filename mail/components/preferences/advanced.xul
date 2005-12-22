@@ -127,7 +127,7 @@
 
           <vbox>
             <hbox align="center" pack="start">
-              <label value="&reuseExp.label;"/>
+              <label value="&openMsgIn.label;"/>
             </hbox>
           
             <hbox class="indent">  
