@@ -78,7 +78,7 @@ static char _progname[1024] = "huh?";
 #if defined(LINUX) && defined(DEBUG) && (defined(__i386) || defined(PPC))
 #define CRAWL_STACK_ON_SIGSEGV
 #endif
- 
+
 #ifdef MOZ_WIDGET_PHOTON
 void abnormal_exit_handler(int signum)
 {
@@ -105,7 +105,7 @@ void abnormal_exit_handler(int signum)
 #endif
 
   _exit(1);
-} 
+}
 #elif defined(CRAWL_STACK_ON_SIGSEGV)
 
 #include <unistd.h>
@@ -115,12 +115,11 @@ void abnormal_exit_handler(int signum)
 void
 ah_crap_handler(int signum)
 {
-
   printf("\nProgram %s (pid = %d) received signal %d.\n",
          _progname,
          getpid(),
          signum);
-  
+
   printf("Stack:\n");
   DumpStackToFile(stdout);
 
@@ -153,11 +152,10 @@ void beos_signal_handler(int signum) {
 	// Exit the appshell so that the app can shutdown normally
 	appStartup->Quit(nsIAppStartup::eAttemptQuit);
 }
-#endif 
+#endif
 
 void InstallUnixSignalHandlers(const char *ProgramName)
 {
-
   PL_strncpy(_progname,ProgramName, (sizeof(_progname)-1) );
 
 #if defined(MOZ_WIDGET_PHOTON)
@@ -177,11 +175,11 @@ void InstallUnixSignalHandlers(const char *ProgramName)
 #endif // CRAWL_STACK_ON_SIGSEGV
 
 #if defined(DEBUG) && defined(LINUX)
-  char *text = PR_GetEnv("MOZ_MEM_LIMIT");
-  if (text) 
+  const char *memLimit = PR_GetEnv("MOZ_MEM_LIMIT");
+  if (memLimit && *memLimit)
   {
-    long m = atoi(text);
-    m *= (1024*1024);    
+    long m = atoi(memLimit);
+    m *= (1024*1024);
     struct rlimit r;
     r.rlim_cur = m;
     r.rlim_max = m;
@@ -190,8 +188,7 @@ void InstallUnixSignalHandlers(const char *ProgramName)
 #endif
 
 #if defined(SOLARIS)
-
-    #define NOFILES 512
+#define NOFILES 512
 
     // Boost Solaris file descriptors
     {
