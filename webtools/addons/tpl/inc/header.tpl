@@ -12,38 +12,56 @@
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/cavendish/template.css" title="Cavendish" media="screen">
     <link rel="home" title="Home" href="https://addons.mozilla.org/">
     <link rel="alternate" type="application/rss+xml" title="New Firefox Extensions Additions" href="{$config.webpath}/rss/?app=firefox&amp;type=E&amp;list=newest">
-    <link rel="icon" href="/favicon.ico" type="image/png">
+    <link rel="icon" href="{$config.webpath}/favicon.ico" type="image/png">
+    <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
+    <script src="{$config.webpath}/js/search-plugin.js" type="text/javascript"></script>
 </head>
 
-<body id="update-mozilla-org">
+<body>
 <div id="container">
 
 <p class="skipLink"><a href="#firefox-feature" accesskey="2">Skip to main content</a></p>
-<div id="mozilla-org"><a href="http://www.mozilla.org/">Visit Mozilla.org</a></div>
 
+<div id="mozilla-com"><a href="http://www.mozilla.com/">Visit Mozilla.com</a></div>
 <div id="header">
 
-<div id="key-title">
-    <h1><a href="{$config.webpath}/" title="Return to home page" accesskey="1">Mozilla Update: Beta</a></h1>
-    <ul>
-        <li><a href="{$config.webpath}/login.php" title="Log in to MyUpdate">Login</a></li>
-        <li><a href="{$config.webpath}/register.php" title="Register your MyUpdate account">Register</a></li>
-        <li><a href="{$config.webpath}/faq.php" title="Frequently Asked Questions">FAQ</a></li>
-        <li><a href="{$config.webpath}/search.php" title="Find an Addon">Search</a></li>
-    </ul>
-</div>
-<!-- end key-title -->
+    <div id="key-title">
 
-<div id="key-menu" class="earth"> 
-    <form id="search" method="get" action="{$config.webpath}/search.php" title="Search Mozilla Update">
-    <div>
-        <input type="text" id="q" name="q" accesskey="s" size="10" value="{$clean.q}">
-        <input type="submit" id="submit" value="Search Addons">
+{assign var="app" value=$smarty.get.app|lower|default:"firefox"}
+
+{if $app eq "firefox"}
+        <h1><a href="{$config.webpath}/?app=firefox" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-firefox.gif" width="276" height="54" alt="Firefox Add-ons Beta"></a></h1>
+{elseif $app eq "thunderbird"}
+        <h1><a href="{$config.webpath}/?app=thunderbird" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-thunderbird.gif" width="355" height="54" alt="Thunderbird Add-ons Beta"></a></h1>
+{elseif $app eq "mozilla"}
+        <h1><a href="{$config.webpath}/?app=mozilla" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-suite.gif" width="370" height="54" alt="Mozilla Suite Add-ons Beta"></a></h1>
+{/if}
+
+		<form id="search" method="get" action="{$config.webpath}/quicksearch.php" title="Search Mozilla Update">
+		<div>
+		<label for="q" title="Search Mozilla Update">search:</label>
+		<input type="text" id="q" name="q" accesskey="s" size="10">
+		<select name="section" id="sectionsearch">
+		  <option value="A">Entire Site</option>
+		  <option value="E">Extensions</option>
+		  <option value="T">Themes</option>
+		</select>
+        <input type="hidden" name="app" value="{$app}">
+		<input type="submit" id="submit" value="Go">
+		</div>
+		</form>
+	</div>
+
+	<div id="key-menu">	
+        <ul id="menu-firefox">
+            <li{if $currentTab eq "home"} class="current"{/if}><a href="{$config.webpath}/?app={$app}">Home</a></li>
+            <li{if $currentTab eq "extensions"} class="current"{/if}><a href="{$config.webpath}/extensions/?app={$app}">Extensions</a></li>
+            <li{if $currentTab eq "pfs"} class="current"{/if}><a href="https://pfs.mozilla.org/plugins/?app={$app}">Plugins</a></li>
+            <li{if $currentTab eq "search-engines"} class="current"{/if}><a href="{$config.webpath}/search-engines.php?app={$app}">Search Engines</a></li>
+            <li{if $currentTab eq "themes"} class="current"{/if}><a href="{$config.webpath}/themes/?app={$app}">Themes</a></li>
+        </ul>
     </div>
-    </form>
-    <div class="ie-clear-menu">&nbsp;</div>
-</div>
-<!-- end key-menu -->
+    <!-- end key-menu -->
 
 </div>
 <!-- end header -->

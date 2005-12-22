@@ -9,8 +9,6 @@
 </div>
 {/if}
 
-<div id="mBody">
-
 {if $content}
 {include file=$content}
 {else}
@@ -23,13 +21,10 @@
 
 <hr class="hide">
 
-</div>
-<!-- close mBody -->
+{include file="inc/footer.tpl"}
 
 </div>
 <!-- close container -->
-
-{include file="inc/footer.tpl"}
 
 </body>
 </html>

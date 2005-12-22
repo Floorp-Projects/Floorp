@@ -1,16 +1,17 @@
 body {
 	min-width: 700px;
-	margin: 0 30px 2em 30px;
+	margin: 0 0 2em 0;
+	padding: 0;
 }
 
 #container {
-	max-width: 70em;
+	width: 740px;
 	margin: 0 auto;
 }
 
 #mBody {
 	clear: both;
-	padding: 1em 0;
+	padding: .2em 0;
 }
 
 .sidebar_content {
@@ -52,7 +53,7 @@ body {
 
 p.security-update {
 	padding-left: 35px;
-	background: url(../../img/security-update.png) no-repeat;
+	background: url(../../images/security-update.png) no-repeat;
 	margin-top: 0;
 	min-height: 30px;
 }
@@ -62,25 +63,25 @@ p.security-update {
 #nav:before {
 	line-height: 0.1;
 	font-size: 1px;
-	background: transparent url("../../img/menu_tr.gif") no-repeat top right;
+	background: transparent url("../../images/menu_tr.gif") no-repeat top right;
 	margin: 0;
 	height: 9px;
 	display: block;
 	border-bottom: 1px solid #ddd;
-	content: url("../../img/key-point_tl.gif");
+	content: url("../../images/key-point_tl.gif");
 }
 #nav {
-	background: #E0E9E9 url("../../img/menu_back.gif") right repeat-y;
+	background: #E0E9E9 url("../../images/menu_back.gif") right repeat-y;
 }
 #nav:after {
 	display: block;
 	padding-top: 0;
 	line-height: 0.1;
 	font-size: 1px;
-	content:  url("../../img/key-point_bl.gif");
+	content:  url("../../images/key-point_bl.gif");
 	margin: 0 0 0 0;
 	height: 8px;
-	background: transparent url("../../img/menu_br.gif") scroll no-repeat bottom right ;
+	background: transparent url("../../images/menu_br.gif") scroll no-repeat bottom right ;
 	border-top: 1px solid #fff;
 }
 
@@ -129,40 +130,10 @@ p.security-update {
 	padding: 4px 8px 4px 20px;
 }
 
-.tabs {
-    height: 2em;
-    margin: .5em 0;
-    padding: 0;
+.clear-both {
+    clear: both;
 }
 
-.tabs ul {
-    font: 11px verdana, arial, sans-serif;
-    list-style-type: none;
-    padding: 0 0 24px 7px;
-    border-bottom: 1px solid #000;
-    margin: 0;
-}
-.tabs ul li {
-    float: left;
-    margin: 0;
-    padding: 0;
-}
-.tabs a.active-tab {
-    border-bottom: 1px solid #fff;
-    background-color: #fff;
-    color: #000;
-}
-.tabs a {
-    float: left;
-    font-weight:bold;
-    display: inline;
-    border: 1px solid #000;
-    background-color: #69c;
-    color: #333;
-    text-decoration: none;
-    margin: 0 5px;
-    padding: 5px 7px;
-}
-.tabs a:hover {
-    background: #fff;
+.center {
+    text-align: center;
 }

@@ -38,8 +38,6 @@ $db->query("
     SELECT DISTINCT
         TM.ID ID, 
         TM.Name name, 
-        TM.Rating,
-        LEFT(TM.Description,96) as Description,
         TM.downloadcount dc
     FROM
         main TM
@@ -59,81 +57,13 @@ $db->query("
 
 $popularExtensions = $db->record;
 
-// Get most popular themes based on application.
-$db->query("
-    SELECT DISTINCT
-        TM.ID ID, 
-        TM.Name name, 
-        TM.Rating,
-        LEFT(TM.Description,96) as Description,
-        TM.downloadcount dc
-    FROM
-        main TM
-    INNER JOIN version TV ON TM.ID = TV.ID
-    INNER JOIN applications TA ON TV.AppID = TA.AppID
-    INNER JOIN os TOS ON TV.OSID = TOS.OSID
-    WHERE
-        AppName = '{$sql['app']}' AND 
-        downloadcount > '0' AND
-        approved = 'YES' AND
-        Type = 'T'
-    ORDER BY
-        downloadcount DESC 
-    LIMIT 
-        5 
-", SQL_ALL, SQL_ASSOC);
-
-$popularThemes = $db->record;
-
-// Get newest addons based on application.
-$db->query("
-    SELECT 
-        TM.ID,
-        TM.Type,
-        TM.Name,
-        TM.Rating,
-        LEFT(TM.Description,96) as Description,
-        MAX(TV.Version) Version,
-        MAX(TV.DateAdded) DateAdded
-    FROM  
-        `main` TM
-    INNER JOIN version TV ON TM.ID = TV.ID
-    INNER JOIN applications TA ON TV.AppID = TA.AppID
-    INNER JOIN os TOS ON TV.OSID = TOS.OSID
-    WHERE
-        AppName = '{$sql['app']}' AND 
-        `approved` = 'YES' 
-    GROUP BY
-        TM.ID
-    ORDER BY
-        DateAdded DESC
-    LIMIT
-        5
-", SQL_ALL, SQL_ASSOC);
-
-$newest = $db->record;
-
-$tabs = array(
-    array(
-        'app' => 'Firefox'
-    ),
-    array(
-        'app' => 'Thunderbird'
-    ),
-    array(
-        'app' => 'Mozilla'
-    )
-);
 
 // Assign template variables.
 $tpl->assign(
-    array(  'popularExtensions' => $popularExtensions,
-            'popularThemes'     => $popularThemes,
-            'newest'            => $newest,
-            'app'               => $clean['app'],
+    array(  'popularExtensions'     => $popularExtensions,
             'title'             => $clean['app'].' Addons',
-            'tabs'              => $tabs,
-            'content'           => 'index.tpl')
+            'content'           => 'index.tpl',
+            'currentTab'        => 'home')
 );
 
 $wrapper = 'inc/wrappers/nonav.tpl';

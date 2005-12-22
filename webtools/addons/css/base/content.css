@@ -40,6 +40,8 @@ a:active { color: #000; }
 
 img.imgright {
 	float: right;
+    margin: .3em .3em .3em 0;
+    padding: .3em .3em .3em 0;
 }
 
 img {
@@ -96,4 +98,18 @@ img.rss {
 #side > h5:first-child,
 #side > h6:first-child {
 	margin-top: 0;
+}
+
+.appversions {
+    border: 1px solid #ccc;
+    margin: .5em 0;
+}
+
+.appversions th {
+    background-color: #ccc;
+    padding: .2em;
+}
+
+.appversions .row1 {
+    background-color: #eee;
 }
