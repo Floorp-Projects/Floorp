@@ -74,17 +74,21 @@ bmProcessor.prototype.setTargetElement = function (targetEle) {
 }
 
 bmProcessor.prototype.apply = function () {
-	if(this.xmlLoadedState&&this.xslLoadedState) {
-		
-		var xsltProcessor = new XSLTProcessor();
-		var htmlFragment=null;
-		try {
-			xsltProcessor.importStylesheet(this.xslRef);
-			htmlFragment = xsltProcessor.transformToFragment(this.xmlRef, this.targetDocument);
-		} catch (e) {
-		}
+
+    if(this.xmlRef.getElementsByTagName("li").length<1) {
+        this.targetDocument.getElementById("message-empty").style.display="block";
+    } else {
+        if(this.xmlLoadedState&&this.xslLoadedState) {	
+            var xsltProcessor = new XSLTProcessor();
+            var htmlFragment=null;
+            try {
+              xsltProcessor.importStylesheet(this.xslRef);
+              htmlFragment = xsltProcessor.transformToFragment(this.xmlRef, this.targetDocument);
+            } catch (e) {
+            }
             this.targetElement.appendChild(htmlFragment.firstChild);
-	}
+        }
+    }
 }
 
 bmProcessor.prototype.run = function () {
