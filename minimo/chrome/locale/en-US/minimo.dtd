@@ -31,8 +31,8 @@
 
 <!-- menu urlabr view options --> 
 
-<!ENTITY decksb.label                  "Search By Tag" >
-<!ENTITY decksearch.label              "Search Mode" >
+<!ENTITY decksb.label                  "Search del.icio.us" >
+<!ENTITY decksearch.label              "Google Search" >
 
 <!-- toolbar view options --> 
 
