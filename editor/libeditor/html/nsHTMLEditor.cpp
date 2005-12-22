@@ -4166,7 +4166,14 @@ nsHTMLEditor::IsContainer(nsIDOMNode *aNode)
   nsresult rv = aNode->GetNodeName(stringTag);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-  PRInt32 tagEnum = sParserService->HTMLStringTagToId(stringTag);
+  PRInt32 tagEnum;
+  // XXX Should this handle #cdata-section too?
+  if (stringTag.EqualsLiteral("#text")) {
+    tagEnum = eHTMLTag_text;
+  }
+  else {
+    tagEnum = sParserService->HTMLStringTagToId(stringTag);
+  }
 
   return nsHTMLEditUtils::IsContainer(tagEnum);
 }
