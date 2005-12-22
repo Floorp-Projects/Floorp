@@ -1,0 +1,75 @@
+# Status: working beta
+# Mozilla/Netscape 6+ plugin for A9.com
+# by Christian Gosselin <chr_gosselin@yahoo.ca>
+#  
+# Created: April 14, 2004
+# Last updated: April 24, 2004
+# Updated by: Paul Millar (dazzle@edazzle.net)
+#
+# Updated:
+# Now displays web, (if open), and book results, (if open), and Search history if logged in. 
+
+<search
+   version="7.1"
+   name="A9"
+   description="A9.com Search - Web Results and Search Inside The Book" 
+   action="http://a9.com/"
+   searchForm="http://a9.com/"
+   queryEncoding="UTF-8"
+   queryCharset="UTF-8"
+   method="GET" >
+
+<input name="q" user>
+<input name="sourceid" value="mozilla-search">
+
+<interpret	
+
+        browserResultType="result"
+        
+	resultListStart="<a onclick="return collapseColumn(event)" href="?a=cw" class="wl-b">Web Results </a>"
+	resultListEnd="<a href="/-/company/help.jsp#websearch" class="about">About</a>"
+	
+	resultItemStart="<div style="margin-bottom: 1em;" align="left">"
+	resultItemEnd="</div>"
+	
+>
+
+<interpret	
+
+        browserResultType="result"
+        
+	resultListStart="<span id="bookPageMsg"></span>"
+	resultListEnd="           <td align="right"><a href="/-/company/help.jsp#booksearch" class="about">About</a>"
+	resultItemStart="<a class="r-a""
+	resultsItemEnd="</a>"
+	
+>
+
+<interpret	
+
+        browserResultType="result"
+        
+	resultListStart="<ul>"
+	resultListEnd="</ul>"
+	resultItemStart="<li>"
+	resultsItemEnd="</li>"
+	
+>
+
+<interpret	
+
+        browserResultType="result"
+        
+	resultListStart="Searches within:"
+	resultListEnd="<td></td><td>"
+	resultItemStart="<td align="left">"
+	resultsItemEnd="</a>"
+	
+>
+</search>
+
+<browser
+   update="http://mycroft.mozdev.org/plugins/a9.src" 
+   updateIcon="http://mycroft.mozdev.org/plugins/a9.png" 
+   updateCheckDays="3"		
+>

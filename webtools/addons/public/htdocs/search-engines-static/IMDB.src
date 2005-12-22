@@ -1,0 +1,47 @@
+# Mozilla Search Plugin for IMDB - The Internet Movie Database
+#
+# by Aaron Bronow <adwb.no-ip.com>
+# Original source by Yoav Ben-Yaar  <yoav_by at hotmail dot com>
+# Last updated: 20 April, 2004 by Aaron Bronow <adwb.no-ip.com>
+#
+
+<SEARCH
+   version = "7.1"
+   name = "IMDB"
+   description = "IMDB Movie Search"
+   method = "GET"
+   action = "http://www.imdb.com/find"
+   searchForm = "http://www.imdb.com/"
+>
+
+<INPUT NAME="q" user>
+<INPUT NAME="sourceid" VALUE="mozilla-search">
+
+
+# searching all
+<INTERPRET
+   browserResultType = "result"
+   resultListStart = "Matches"
+   resultListEnd = '</table>'
+   resultItemStart = "<td "
+   resultItemEnd = "</td>"
+>
+
+# searching specific results
+<INTERPRET
+   browserResultType = "result"
+   resultListStart = "<H1>"
+   resultListEnd = '<p class="footer" align="center">'
+   resultItemStart = "<LI>"
+   resultItemEnd = "</LI>"
+>
+
+</SEARCH>
+
+
+<BROWSER
+   alsomatch = "http://www.imdb.com/find http://www.imdb.com/Find http://us.imdb.com/find http://us.imdb.com/Find"
+   update = "http://mycroft.mozdev.org/plugins/IMDB.src"
+   updateIcon = "http://mycroft.mozdev.org/plugins/IMDB.png"
+   updateCheckDays = "3"
+>

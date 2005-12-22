@@ -1,0 +1,41 @@
+# 
+# Mozilla/Netscape 6+ search plugin for MSN (msn.com)
+# Original Author: Alan Bramley
+# Modified by Charles Caygill, Kurt Krampmeier
+#
+# Country: WW
+# Language: en
+#
+# Known issues: Not guaranteeing the sidebar search will be 100%
+#
+
+<SEARCH
+  version = "7.1"
+  name="MSN"
+  description="Welcome to MSN.com. Search the Web"
+  method="GET"
+  action="http://search.msn.com/results.aspx"
+  searchform="http://www.msn.com"
+  queryCharset="UTF-8"
+>
+
+<input name="q" user>
+<input name="sourceid" value="Mozilla-search">
+
+<INTERPRET
+  browserResultType="result"
+  charset="UTF-8"
+  resultListStart='<div id="content"><div id="header"><h1>Web Results</h1>'
+  resultListEnd=' </ul></li> </ul></div>'
+  resultItemStart="<h3>"
+  resultItemEnd="</h3>"
+>
+
+
+</SEARCH>
+
+<BROWSER
+        update="http://mycroft.mozdev.org/update.php/id0/MSN.src" 
+        updateicon="http://mycroft.mozdev.org/update.php/id0/MSN.png" 
+        updateCheckDays="10"
+>

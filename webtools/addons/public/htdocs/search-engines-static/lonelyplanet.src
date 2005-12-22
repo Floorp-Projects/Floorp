@@ -1,0 +1,36 @@
+#---------------------------------------------------------------------#
+# Author: LouCypher                                                   #
+# Website: http://mozilla.wikicities.com/                             #
+#---------------------------------------------------------------------#
+
+<search
+  version="7.1"
+  name="Lonely Planet Online"
+  description="The world's best travel guides"
+  method="get"
+  action="http://search.lonelyplanet.com/query.html"
+  searchForm="http://search.lonelyplanet.com/query.html"
+  queryEncoding='UTF-8'
+  queryCharset='UTF-8'
+>
+
+<input name="qt" user>
+<input name="nh" value="20">
+<input name="sourceid" value="mozilla-search">
+
+<interpret
+  browserResultType='result'
+  resultListStart='<div class=results>'
+  resultListEnd='</div>'
+  resultItemStart='<b class=title>'
+  resultItemEnd='</b>'
+  charset='UTF-8'
+>
+
+</search>
+
+<browser
+  update="http://mycroft.mozdev.org/plugins/lonelyplanet.src"
+  updateicon="http://mycroft.mozdev.org/plugins/lonelyplanet.png"
+  updatecheckdays="3"
+>

@@ -1,0 +1,23 @@
+#Technorati search plugin
+#Created by Todd Higginbotham - mark923@gmail.com
+#Thanks to Nagu for the original Technorati Beta plugin
+#Last Updated: Sun Aug 07, 2005 21:44 UTC/GMT
+
+<search
+  version="7.1"
+  name = "Technorati"
+  description="Technorati Search"
+  action="http://www.technorati.com/search.php"
+  searchForm="http://www.technorati.com"
+  method="GET"
+  queryCharset="UTF-8"
+>
+</search>
+
+<input name="s" user>
+
+<browser 
+  update="http://mycroft.mozdev.org/update.php/id0/technorati-new.src" 
+  updateicon="http://mycroft.mozdev.org/update.php/id0/technorati-new.gif" 
+  updateCheckDays="7"
+>

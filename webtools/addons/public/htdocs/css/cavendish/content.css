@@ -1,0 +1,413 @@
+#mBody h2 {
+	font: 140% arial,helvetica,verdana,sans-serif;
+	border-bottom: 1px solid #ccc;
+	margin-bottom: 0;
+}
+
+#mBody h2 a {
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+}
+
+#mBody h3 {
+	font: 120% arial,helvetica,verdana,sans-serif;
+	border-bottom: 1px solid #ccc;
+	margin-bottom: 0;
+}
+
+#mBody h1 {
+	font: 180% arial,helvetica,sans-serif;
+	border-bottom: 1px solid #ccc;
+	margin-bottom: 0;
+}
+
+.key-point:before {
+	line-height: 0.1;
+	font-size: 1px;
+	background: transparent url("../../images/key-point_tr.gif") no-repeat top right;
+	margin: -15px -15px 0 -15px;
+	height: 15px;
+	display: block;
+	border: none;
+	content: url("../../images/key-point_tl.gif");
+}
+.key-point {
+	background: #EFF8CE url("../../images/key-point_back.gif") right repeat-y;
+	padding: 15px;
+	margin-top: 18px;
+}
+.key-point:after {
+	display: block;
+	padding-top: 15px;
+	line-height: 0.1;
+	font-size: 1px;
+	content:  url("../../images/key-point_bl.gif");
+	margin: -15px;
+	height: 8px;
+	background: transparent url("../../images/key-point_br.gif") scroll no-repeat bottom right ;
+}
+
+#header form #submit {
+	font-size: 100%;
+	padding: 1px;
+	font-family: tahoma, arial, sans-serif;
+}
+
+#header form #q {
+	width: 10em;
+	font-size: 100%;
+	font-weight: normal;
+	border:	1px solid #9097A2;
+	padding: 2px;
+	font-family: tahoma, arial, sans-serif;
+}
+
+#sectionsearch {
+	font-size: 100%;
+	font-weight: normal;
+	font-family: tahoma, arial, sans-serif;
+} 
+
+.popularlist {
+	font-size: 85%;
+}
+
+.popularlist span {
+	color: #666;
+	white-space: nowrap;
+}
+
+.install a {
+	background: url(../../images/install.png) no-repeat;
+	padding: 3px 0 8px 30px;
+	display: block;
+	text-decoration: none;
+}
+
+.install a strong {
+	text-decoration: underline;
+}
+
+.install-box {
+	width: 18em;
+}
+
+#opinions h4 {
+	margin: 0;
+}
+
+.opinions-info {
+	font-size: 85%;
+	margin: 0 0 0.5em 0;
+}
+
+.opinions-info a {
+	text-decoration: none;
+	color: #666;
+}
+
+.opinions-info a:hover {
+	text-decoration: underline;
+}
+
+.opinions-text {
+	margin: 0;
+}
+
+.opinions-rating img {
+	vertical-align: middle;
+}
+
+.rating {
+	float: right;
+	font-size: 85%;
+	font-weight: bold;
+}
+
+.rating img {
+	vertical-align: middle;
+}
+
+.more-links {
+	margin: 0.5em 0 0 0;
+	padding: 0;
+}
+
+.more-links li {
+	display: inline;
+	margin: 0;
+	padding: 5px;
+}
+
+.screenshot {
+	float: right;
+	background: #fff;
+	padding: 0 0 2em 2em;
+}
+
+.screenshot a {
+	text-align: center;
+	display: block;
+}
+
+/* Remaining Original Update Styles */
+
+.item {
+	border: #D2D6D6 1px solid;
+    padding-left: 5px;
+    padding-right: 6px;
+    MARGIN-bottom: 10px;
+    -moz-border-radius: 10px;
+}
+
+.item a {
+	color: #00129c;
+    text-decoration: none;
+}
+.item a:visited {
+	color: #00129c;
+    text-decoration: none;
+}
+.item a:hover {
+	color: #fc5900;
+}
+
+.item h2 {
+    margin-top: 0.2em;
+}
+
+.recommended-download h3 {
+	font: small tahoma, verdana, sans-serif;
+	margin: 5px 0 0 0;
+	background: url("../../images/download.gif") 0 100%;
+    font-size: small;
+	padding-bottom: 5px;
+}
+
+.recommended-download h3 a {
+	display: block;
+	background: url("../../images/download.gif") 0 0;
+    font-size: 65%;
+    font-weight: bold;
+	width: 165px;
+	padding: 12px 25px 5px 10px;
+	text-decoration: none;
+	color: #5A9A3B;
+}
+
+.recommended-download h3 a:hover {
+	text-decoration: underline;
+	color: #275113;
+}
+
+.recommended-download {
+    clear: left;
+	width: 200px;
+    padding: 5px;
+    float: left;
+}
+
+.recommended-img {
+    border: 2px outset #eee;
+    float: left;
+    margin: 1em 1em 0 0;
+}
+
+.recommended h2 {
+    padding-top: 1em;
+}
+
+.iconbar {
+	padding-right: 15px;
+    float: left;
+    width: auto;
+    height: 34px;
+}
+
+.iconbar img {
+    float:left;
+}
+
+.iconbar a {
+    text-decoration: none;
+}
+
+.selected a, .selected a:visited {
+	 color: #fc5900;
+}
+
+.baseline {
+    clear: right;
+	margin-top: 5px;
+    border-top: #ccc 1px solid;
+    padding: 3px;
+    padding-left: 10px;
+    font-size: 8pt;
+    color: #333;
+}
+
+#opinions {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+
+#opinions h4 {
+
+   border-top: 1px solid #999;
+    clear: right;
+
+   margin: 0;
+
+   padding: .5em 0 0 0;
+
+}
+
+.opinions-info {
+
+   color: #666;
+    margin: 0;
+    padding: 0 0 .5em 0;
+
+}
+
+.opinions-info a {
+    text-decoration: none;
+    color: #666;
+}
+
+.opinions-info a:hover {
+    text-decoration: underline;
+}
+
+.opinions-text {
+
+   margin: .8em 0 0 0;
+    padding: 0;
+}
+
+.opinions-vote {
+    background-color: #cfc;
+    border: 1px solid #000;
+    float: left;
+    font-style: italic;
+    font-weight: bold;
+    font-size: x-large;
+    padding: 5px;
+    margin: 4px;
+    text-align: center;
+
+}
+
+
+.opinions-caption {
+    display: block;
+    font-size: x-small;
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+
+}
+
+
+.opinions-rating {
+
+   margin: 0;
+    padding: .5em 0;
+}
+
+.opinions-helpful {
+
+   font-style: italic;
+
+   border: 1px dashed #eee;
+    padding: .2em;
+    margin: .7em 0;
+
+}
+
+.tooltip {
+    cursor: help;
+    border-bottom: 1px dotted;
+}
+
+.pages {
+    color: #999;
+    font-weight: bold;
+    height: 2em;
+}
+
+.next {
+    border-left: 1px solid #000;
+    display: inline;
+    padding-left: 5px;
+}
+
+.prev {
+    display: inline;
+}
+
+.pages a {
+    color: blue;
+    text-decoration: none;
+}
+
+#comment-rate {
+    margin: .5em;
+    padding: .5em;
+    background-color: #eee;
+    border: 1px solid #999;
+}
+
+#search-block:before {
+    line-height: 0.1;
+    font-size: 1px;
+    background: transparent url("../../img/key-point_tr.gif") no-repeat top right;
+    margin: -10px -10px 0 -10px;
+    height: 10px;
+    display: block;
+    border: none;
+    content: url("../../img/key-point_tl.gif");
+}
+
+#search-block{
+    background: #EFF8CE url("../../img/key-point_back.gif") right repeat-y;
+    padding: 10px;
+}
+
+#search-block label{
+    font-weight: bold;
+}
+
+#search-block select {
+    width: 13em;
+}
+
+#search-block input[type=text] {
+    width: 9.2em;
+}
+
+.right #search-block select {
+    width: 20em;
+}
+
+.right #search-block input[type=text] {
+    width: 16.2em;
+}
+
+#search-block:after {
+    display: block;
+    padding-top: 10px;
+    line-height: 0.1;
+    font-size: 1px;
+    content:  url("../../img/key-point_bl.gif");
+    margin: -10px;
+    height: 8px;
+    background: transparent url("../../img/key-point_br.gif") scroll no-repeat bottom right ;
+}
+
+#search-side {
+    padding: 10px;
+}

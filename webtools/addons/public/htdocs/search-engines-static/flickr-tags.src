@@ -1,0 +1,34 @@
+#---------------------------------------------------------------------#
+# Author: LouCypher                                                   #
+# Website: http://mozilla.wikicities.com/                             #
+#---------------------------------------------------------------------#
+
+<search
+  version="7.1"
+  name="Flickr Tags"
+  description="Find tags"
+  method="get"
+  action="http://www.flickr.com/photos/tags/"
+  searchForm="http://www.flickr.com/"
+  queryEncoding='UTF-8'
+  queryCharset='UTF-8'
+>
+
+<input name="q" user >
+<input name="sourceid" value="firefox">
+
+<interpret
+  browserResultType='result'
+  resultListStart='<div id="tagThumbs">'
+  resultListEnd='</div>'
+  resultItemStart='<p class="StreamList">'
+  charset='UTF-8'
+>
+
+</search>
+
+<browser
+  update="http://mycroft.mozdev.org/plugins/flickr-tags.src"
+  updateicon="http://mycroft.mozdev.org/plugins/flickr-tags.png"
+  updatecheckdays="3"
+>

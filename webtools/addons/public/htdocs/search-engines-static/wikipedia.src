@@ -1,0 +1,43 @@
+# Mozilla search plugin for English Wikipedia en.wikipedia.org
+# by Carey Evans <carey.evans@gmail.com>.
+# http://carey.geek.nz/code/wikipedia-searchplugin/
+# This file is released into the public domain.
+# Thanks: Michael Franz, Dwayne C. Litzenberger.
+#
+# Version: 1.4.2 (2005-07-27)
+# Country: WW
+# Language: en
+
+<search
+	version="7.1"
+	name="Wikipedia (EN)"
+	description="English Wikipedia"
+	sourceTextEncoding="0"
+	method="GET"
+	action="http://en.wikipedia.org/wiki/Special:Search"
+	queryCharset="UTF-8"
+	searchForm="http://en.wikipedia.org/"
+>
+
+<input name="search" user>
+<input name="fulltext" value="fulltext">
+<input name="sourceid" value="mozilla-search">
+
+<interpret
+	browserResultType="result"
+	charset="UTF-8"
+	language="en"
+	resultListStart="<div id='results'></div>"
+	resultListEnd="<hr/>"
+	resultItemStart="<li style='padding-bottom: 1em'>"
+	resultItemEnd="</li>"
+>
+
+</search>
+
+<browser
+	alsomatch="http://en.wikipedia.org/w/index.php?title=Special:Search"
+	update="http://mycroft.mozdev.org/update.php/id0/wikipedia.src"
+	updateicon="http://mycroft.mozdev.org/update.php/id0/wikipedia.png"
+	updateCheckDays="7"
+>
