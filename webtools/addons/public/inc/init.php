@@ -8,7 +8,7 @@
  */
 // Include config file.
 require_once('config.php');
-require_once('/usr/local/lib/php/Smarty/Smarty.class.php');  // Smarty
+require_once(SMARTY_BASEDIR.'/Smarty.class.php');  // Smarty
 
 // Set runtime options.
 ini_set('display_errors',DISPLAY_ERRORS);
@@ -46,8 +46,8 @@ function startProcessing($aTplName, $aPageType)
     $tpl = new AMO_Smarty();
 
     if ($tpl->is_cached($aTplName)) {
-      include ("finish.php");
-      exit;
+        require_once('finish.php');
+        exit;
     }
 }
 
