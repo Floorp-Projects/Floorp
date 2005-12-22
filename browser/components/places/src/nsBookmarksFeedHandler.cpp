@@ -69,6 +69,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOM3Node.h"
 
 // These are defined in nsLivemarkService.cpp
 extern nsIRDFResource       *kLMRDF_type;
@@ -512,6 +513,7 @@ nsLivemarkLoadListener::TryParseAsSimpleRSS ()
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDOMDocument> xmldoc;
+  parser->SetBaseURI(mLivemark->feedURI);
   rv = parser->ParseFromBuffer ((const PRUint8*) mBody.get(), mBody.Length(), "text/xml", getter_AddRefs(xmldoc));
   if (NS_FAILED(rv)) return rv;
 
@@ -649,6 +651,23 @@ nsLivemarkLoadListener::TryParseAsSimpleRSS ()
                 {
                   rv = linkElem->GetAttribute(NS_LITERAL_STRING("href"), linkStr);
                   if (NS_FAILED(rv)) break; // out of while(childNode) loop
+
+                  nsCOMPtr<nsIDOM3Node> linkElem3 = do_QueryInterface(childNode);
+                  if (linkElem3) {
+                    // get the BaseURI (as string)
+                    nsAutoString base;
+                    rv = linkElem3->GetBaseURI(base);
+                    if (NS_SUCCEEDED(rv) && !base.IsEmpty()) {
+                      // convert a baseURI (string) to a nsIURI
+                      nsCOMPtr<nsIURI> baseURI;
+                      rv = NS_NewURI(getter_AddRefs(baseURI), base);
+                      if (baseURI) {
+                        nsString absLinkStr;
+                        if (NS_SUCCEEDED(NS_MakeAbsoluteURI(absLinkStr, linkStr, baseURI)))
+                          linkStr = absLinkStr;
+                      }
+                    }
+                  }
                 }
               } else if (linkStr.IsEmpty()) {
                 // in node's TEXT
