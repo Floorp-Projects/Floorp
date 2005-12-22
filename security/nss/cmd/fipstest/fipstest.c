@@ -41,16 +41,23 @@
 #include "secitem.h"
 #include "blapi.h"
 #include "nss.h"
+#include "secerr.h"
+#include "secoidt.h"
+#include "keythi.h"
+#include "ec.h"
 #if 0
 #include "../../lib/freebl/mpi/mpi.h"
 #endif
+
+extern SECStatus
+EC_DecodeParams(const SECItem *encodedParams, ECParams **ecparams);
 
 #define ENCRYPT 1
 #define DECRYPT 0
 #define BYTE unsigned char
 
 SECStatus
-hex_from_2char(unsigned char *c2, unsigned char *byteval)
+hex_from_2char(const unsigned char *c2, unsigned char *byteval)
 {
     int i;
     unsigned char offset;
@@ -99,12 +106,67 @@ to_hex_str(char *str, const unsigned char *buf, unsigned int len)
 }
 
 void
-to_hex_str_cap(char *str, unsigned char *buf, unsigned int len)
+to_hex_str_cap(char *str, const unsigned char *buf, unsigned int len)
 {
     unsigned int i;
     for (i=0; i<len; i++) {
 	char2_from_hex(buf[i], &str[2*i], 'A');
     }
+    str[2*len] = '\0';
+}
+
+/*
+ * Convert a string of hex digits (str) to an array (buf) of len bytes.
+ * Return PR_TRUE if the hex string can fit in the byte array.  Return
+ * PR_FALSE if the hex string is empty or is too long.
+ */
+PRBool
+from_hex_str(unsigned char *buf, unsigned int len, const char *str)
+{
+    unsigned int nxdigit;  /* number of hex digits in str */
+    unsigned int i;  /* index into buf */
+    unsigned int j;  /* index into str */
+
+    /* count the hex digits */
+    nxdigit = 0;
+    for (nxdigit = 0; isxdigit(str[nxdigit]); nxdigit++) {
+	/* empty body */
+    }
+    if (nxdigit == 0) {
+	return PR_FALSE;
+    }
+    if (nxdigit > 2*len) {
+	/*
+	 * The input hex string is too long, but we allow it if the
+	 * extra digits are leading 0's.
+	 */
+	for (j = 0; j < nxdigit-2*len; j++) {
+	    if (str[j] != '0') {
+		return PR_FALSE;
+	    }
+	}
+	/* skip leading 0's */
+	str += nxdigit-2*len;
+	nxdigit = 2*len;
+    }
+    for (i=0, j=0; i< len; i++) {
+	if (2*i < 2*len-nxdigit) {
+	    /* Handle a short input as if we padded it with leading 0's. */
+	    if (2*i+1 < 2*len-nxdigit) {
+		buf[i] = 0;
+	    } else {
+		char tmp[2];
+		tmp[0] = '0';
+		tmp[1] = str[j];
+		hex_from_2char(tmp, &buf[i]);
+		j++;
+	    }
+	} else {
+	    hex_from_2char(&str[j], &buf[i]);
+	    j += 2;
+	}
+    }
+    return PR_TRUE;
 }
 
 SECStatus
@@ -2163,6 +2225,684 @@ do_sigver:
     fclose(rsp);
 }
 
+typedef struct curveNameTagPairStr {
+    char *curveName;
+    SECOidTag curveOidTag;
+} CurveNameTagPair;
+
+#define DEFAULT_CURVE_OID_TAG  SEC_OID_SECG_EC_SECP192R1
+/* #define DEFAULT_CURVE_OID_TAG  SEC_OID_SECG_EC_SECP160R1 */
+
+static CurveNameTagPair nameTagPair[] =
+{ 
+  { "sect163k1", SEC_OID_SECG_EC_SECT163K1},
+  { "nistk163", SEC_OID_SECG_EC_SECT163K1},
+  { "sect163r1", SEC_OID_SECG_EC_SECT163R1},
+  { "sect163r2", SEC_OID_SECG_EC_SECT163R2},
+  { "nistb163", SEC_OID_SECG_EC_SECT163R2},
+  { "sect193r1", SEC_OID_SECG_EC_SECT193R1},
+  { "sect193r2", SEC_OID_SECG_EC_SECT193R2},
+  { "sect233k1", SEC_OID_SECG_EC_SECT233K1},
+  { "nistk233", SEC_OID_SECG_EC_SECT233K1},
+  { "sect233r1", SEC_OID_SECG_EC_SECT233R1},
+  { "nistb233", SEC_OID_SECG_EC_SECT233R1},
+  { "sect239k1", SEC_OID_SECG_EC_SECT239K1},
+  { "sect283k1", SEC_OID_SECG_EC_SECT283K1},
+  { "nistk283", SEC_OID_SECG_EC_SECT283K1},
+  { "sect283r1", SEC_OID_SECG_EC_SECT283R1},
+  { "nistb283", SEC_OID_SECG_EC_SECT283R1},
+  { "sect409k1", SEC_OID_SECG_EC_SECT409K1},
+  { "nistk409", SEC_OID_SECG_EC_SECT409K1},
+  { "sect409r1", SEC_OID_SECG_EC_SECT409R1},
+  { "nistb409", SEC_OID_SECG_EC_SECT409R1},
+  { "sect571k1", SEC_OID_SECG_EC_SECT571K1},
+  { "nistk571", SEC_OID_SECG_EC_SECT571K1},
+  { "sect571r1", SEC_OID_SECG_EC_SECT571R1},
+  { "nistb571", SEC_OID_SECG_EC_SECT571R1},
+  { "secp160k1", SEC_OID_SECG_EC_SECP160K1},
+  { "secp160r1", SEC_OID_SECG_EC_SECP160R1},
+  { "secp160r2", SEC_OID_SECG_EC_SECP160R2},
+  { "secp192k1", SEC_OID_SECG_EC_SECP192K1},
+  { "secp192r1", SEC_OID_SECG_EC_SECP192R1},
+  { "nistp192", SEC_OID_SECG_EC_SECP192R1},
+  { "secp224k1", SEC_OID_SECG_EC_SECP224K1},
+  { "secp224r1", SEC_OID_SECG_EC_SECP224R1},
+  { "nistp224", SEC_OID_SECG_EC_SECP224R1},
+  { "secp256k1", SEC_OID_SECG_EC_SECP256K1},
+  { "secp256r1", SEC_OID_SECG_EC_SECP256R1},
+  { "nistp256", SEC_OID_SECG_EC_SECP256R1},
+  { "secp384r1", SEC_OID_SECG_EC_SECP384R1},
+  { "nistp384", SEC_OID_SECG_EC_SECP384R1},
+  { "secp521r1", SEC_OID_SECG_EC_SECP521R1},
+  { "nistp521", SEC_OID_SECG_EC_SECP521R1},
+
+  { "prime192v1", SEC_OID_ANSIX962_EC_PRIME192V1 },
+  { "prime192v2", SEC_OID_ANSIX962_EC_PRIME192V2 },
+  { "prime192v3", SEC_OID_ANSIX962_EC_PRIME192V3 },
+  { "prime239v1", SEC_OID_ANSIX962_EC_PRIME239V1 },
+  { "prime239v2", SEC_OID_ANSIX962_EC_PRIME239V2 },
+  { "prime239v3", SEC_OID_ANSIX962_EC_PRIME239V3 },
+
+  { "c2pnb163v1", SEC_OID_ANSIX962_EC_C2PNB163V1 },
+  { "c2pnb163v2", SEC_OID_ANSIX962_EC_C2PNB163V2 },
+  { "c2pnb163v3", SEC_OID_ANSIX962_EC_C2PNB163V3 },
+  { "c2pnb176v1", SEC_OID_ANSIX962_EC_C2PNB176V1 },
+  { "c2tnb191v1", SEC_OID_ANSIX962_EC_C2TNB191V1 },
+  { "c2tnb191v2", SEC_OID_ANSIX962_EC_C2TNB191V2 },
+  { "c2tnb191v3", SEC_OID_ANSIX962_EC_C2TNB191V3 },
+  { "c2onb191v4", SEC_OID_ANSIX962_EC_C2ONB191V4 },
+  { "c2onb191v5", SEC_OID_ANSIX962_EC_C2ONB191V5 },
+  { "c2pnb208w1", SEC_OID_ANSIX962_EC_C2PNB208W1 },
+  { "c2tnb239v1", SEC_OID_ANSIX962_EC_C2TNB239V1 },
+  { "c2tnb239v2", SEC_OID_ANSIX962_EC_C2TNB239V2 },
+  { "c2tnb239v3", SEC_OID_ANSIX962_EC_C2TNB239V3 },
+  { "c2onb239v4", SEC_OID_ANSIX962_EC_C2ONB239V4 },
+  { "c2onb239v5", SEC_OID_ANSIX962_EC_C2ONB239V5 },
+  { "c2pnb272w1", SEC_OID_ANSIX962_EC_C2PNB272W1 },
+  { "c2pnb304w1", SEC_OID_ANSIX962_EC_C2PNB304W1 },
+  { "c2tnb359v1", SEC_OID_ANSIX962_EC_C2TNB359V1 },
+  { "c2pnb368w1", SEC_OID_ANSIX962_EC_C2PNB368W1 },
+  { "c2tnb431r1", SEC_OID_ANSIX962_EC_C2TNB431R1 },
+
+  { "secp112r1", SEC_OID_SECG_EC_SECP112R1},
+  { "secp112r2", SEC_OID_SECG_EC_SECP112R2},
+  { "secp128r1", SEC_OID_SECG_EC_SECP128R1},
+  { "secp128r2", SEC_OID_SECG_EC_SECP128R2},
+
+  { "sect113r1", SEC_OID_SECG_EC_SECT113R1},
+  { "sect113r2", SEC_OID_SECG_EC_SECT113R2},
+  { "sect131r1", SEC_OID_SECG_EC_SECT131R1},
+  { "sect131r2", SEC_OID_SECG_EC_SECT131R2},
+};
+
+static SECKEYECParams * 
+getECParams(const char *curve)
+{
+    SECKEYECParams *ecparams;
+    SECOidData *oidData = NULL;
+    SECOidTag curveOidTag = SEC_OID_UNKNOWN; /* default */
+    int i, numCurves;
+
+    if (curve != NULL) {
+        numCurves = sizeof(nameTagPair)/sizeof(CurveNameTagPair);
+	for (i = 0; ((i < numCurves) && (curveOidTag == SEC_OID_UNKNOWN)); 
+	     i++) {
+	    if (PL_strcmp(curve, nameTagPair[i].curveName) == 0)
+	        curveOidTag = nameTagPair[i].curveOidTag;
+	}
+    }
+
+    /* Return NULL if curve name is not recognized */
+    if ((curveOidTag == SEC_OID_UNKNOWN) || 
+	(oidData = SECOID_FindOIDByTag(curveOidTag)) == NULL) {
+        fprintf(stderr, "Unrecognized elliptic curve %s\n", curve);
+	return NULL;
+    }
+
+    ecparams = SECITEM_AllocItem(NULL, NULL, (2 + oidData->oid.len));
+
+    /* 
+     * ecparams->data needs to contain the ASN encoding of an object ID (OID)
+     * representing the named curve. The actual OID is in 
+     * oidData->oid.data so we simply prepend 0x06 and OID length
+     */
+    ecparams->data[0] = SEC_ASN1_OBJECT_ID;
+    ecparams->data[1] = oidData->oid.len;
+    memcpy(ecparams->data + 2, oidData->oid.data, oidData->oid.len);
+
+    return ecparams;
+}
+
+/*
+ * Perform the ECDSA Key Pair Generation Test.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+ecdsa_keypair_test(char *reqfn)
+{
+    char buf[256];      /* holds one line from the input REQUEST file
+                         * or to the output RESPONSE file.
+                         * needs to be large enough to hold the longest
+                         * line "Qx = <144 hex digits>\n".
+                         */
+    FILE *ecdsareq;     /* input stream from the REQUEST file */
+    FILE *ecdsaresp;    /* output stream to the RESPONSE file */
+    char curve[16];     /* "nistxddd" */
+    ECParams *ecparams;
+    int N;
+    int i;
+    unsigned int len;
+
+    ecdsareq = fopen(reqfn, "r");
+    ecdsaresp = stdout;
+    strcpy(curve, "nist");
+    while (fgets(buf, sizeof buf, ecdsareq) != NULL) {
+	/* a comment or blank line */
+	if (buf[0] == '#' || buf[0] == '\n') {
+	    fputs(buf, ecdsaresp);
+	    continue;
+	}
+	/* [X-ddd] */
+	if (buf[0] == '[') {
+	    const char *src;
+	    char *dst;
+	    SECKEYECParams *encodedparams;
+
+	    src = &buf[1];
+	    dst = &curve[4];
+	    *dst++ = tolower(*src);
+	    src += 2;  /* skip the hyphen */
+	    *dst++ = *src++;
+	    *dst++ = *src++;
+	    *dst++ = *src++;
+	    *dst = '\0';
+	    encodedparams = getECParams(curve);
+	    if (encodedparams == NULL) {
+		goto loser;
+	    }
+	    if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
+		goto loser;
+	    }
+	    SECITEM_FreeItem(encodedparams, PR_TRUE);
+	    fputs(buf, ecdsaresp);
+	    continue;
+	}
+	/* N = x */
+	if (buf[0] == 'N') {
+	    if (sscanf(buf, "N = %d", &N) != 1) {
+		goto loser;
+	    }
+	    for (i = 0; i < N; i++) {
+		ECPrivateKey *ecpriv;
+
+		if (EC_NewKey(ecparams, &ecpriv) != SECSuccess) {
+		    goto loser;
+		}
+		fputs("d = ", ecdsaresp);
+		to_hex_str(buf, ecpriv->privateValue.data,
+			   ecpriv->privateValue.len);
+		fputs(buf, ecdsaresp);
+		fputc('\n', ecdsaresp);
+		if (EC_ValidatePublicKey(ecparams, &ecpriv->publicValue)
+		    != SECSuccess) {
+		    goto loser;
+		}
+		len = ecpriv->publicValue.len;
+		if (len%2 == 0) {
+		    goto loser;
+		}
+		len = (len-1)/2;
+		if (ecpriv->publicValue.data[0]
+		    != EC_POINT_FORM_UNCOMPRESSED) {
+		    goto loser;
+		}
+		fputs("Qx = ", ecdsaresp);
+		to_hex_str(buf, &ecpriv->publicValue.data[1], len);
+		fputs(buf, ecdsaresp);
+		fputc('\n', ecdsaresp);
+		fputs("Qy = ", ecdsaresp);
+		to_hex_str(buf, &ecpriv->publicValue.data[1+len], len);
+		fputs(buf, ecdsaresp);
+		fputc('\n', ecdsaresp);
+		fputc('\n', ecdsaresp);
+		PORT_FreeArena(ecpriv->ecParams.arena, PR_TRUE);
+	    }
+	    PORT_FreeArena(ecparams->arena, PR_TRUE);
+	    continue;
+	}
+    }
+loser:
+    fclose(ecdsareq);
+}
+
+/*
+ * Perform the ECDSA Public Key Validation Test.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+ecdsa_pkv_test(char *reqfn)
+{
+    char buf[256];      /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "Qx = <144 hex digits>\n".
+                         */
+    FILE *ecdsareq;     /* input stream from the REQUEST file */
+    FILE *ecdsaresp;    /* output stream to the RESPONSE file */
+    char curve[16];     /* "nistxddd" */
+    ECParams *ecparams = NULL;
+    SECItem pubkey;
+    unsigned int i;
+    unsigned int len;
+    PRBool keyvalid = PR_TRUE;
+
+    ecdsareq = fopen(reqfn, "r");
+    ecdsaresp = stdout;
+    strcpy(curve, "nist");
+    pubkey.data = NULL;
+    while (fgets(buf, sizeof buf, ecdsareq) != NULL) {
+	/* a comment or blank line */
+	if (buf[0] == '#' || buf[0] == '\n') {
+	    fputs(buf, ecdsaresp);
+	    continue;
+	}
+	/* [X-ddd] */
+	if (buf[0] == '[') {
+	    const char *src;
+	    char *dst;
+	    SECKEYECParams *encodedparams;
+
+	    src = &buf[1];
+	    dst = &curve[4];
+	    *dst++ = tolower(*src);
+	    src += 2;  /* skip the hyphen */
+	    *dst++ = *src++;
+	    *dst++ = *src++;
+	    *dst++ = *src++;
+	    *dst = '\0';
+	    if (ecparams != NULL) {
+		PORT_FreeArena(ecparams->arena, PR_TRUE);
+		ecparams = NULL;
+	    }
+	    encodedparams = getECParams(curve);
+	    if (encodedparams == NULL) {
+		goto loser;
+	    }
+	    if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
+		goto loser;
+	    }
+	    SECITEM_FreeItem(encodedparams, PR_TRUE);
+	    len = (ecparams->fieldID.size + 7) >> 3;
+	    if (pubkey.data != NULL) {
+		PORT_Free(pubkey.data);
+		pubkey.data = NULL;
+	    }
+	    SECITEM_AllocItem(NULL, &pubkey, 2*len+1);
+	    if (pubkey.data == NULL) {
+		goto loser;
+	    }
+	    pubkey.data[0] = EC_POINT_FORM_UNCOMPRESSED;
+	    fputs(buf, ecdsaresp);
+	    continue;
+	}
+	/* Qx = ... */
+	if (strncmp(buf, "Qx", 2) == 0) {
+	    fputs(buf, ecdsaresp);
+	    i = 2;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    keyvalid = from_hex_str(&pubkey.data[1], len, &buf[i]);
+	    continue;
+	}
+	/* Qy = ... */
+	if (strncmp(buf, "Qy", 2) == 0) {
+	    fputs(buf, ecdsaresp);
+	    if (!keyvalid) {
+		fputs("Result = F\n", ecdsaresp);
+		continue;
+	    }
+	    i = 2;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    keyvalid = from_hex_str(&pubkey.data[1+len], len, &buf[i]);
+	    if (!keyvalid) {
+		fputs("Result = F\n", ecdsaresp);
+		continue;
+	    }
+	    if (EC_ValidatePublicKey(ecparams, &pubkey) == SECSuccess) {
+		fputs("Result = P\n", ecdsaresp);
+	    } else if (PORT_GetError() == SEC_ERROR_BAD_KEY) {
+		fputs("Result = F\n", ecdsaresp);
+	    } else {
+		goto loser;
+	    }
+	    continue;
+	}
+    }
+loser:
+    if (ecparams != NULL) {
+	PORT_FreeArena(ecparams->arena, PR_TRUE);
+    }
+    if (pubkey.data != NULL) {
+	PORT_Free(pubkey.data);
+    }
+    fclose(ecdsareq);
+}
+
+/*
+ * Perform the ECDSA Signature Generation Test.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+ecdsa_siggen_test(char *reqfn)
+{
+    char buf[1024];     /* holds one line from the input REQUEST file
+                         * or to the output RESPONSE file.
+                         * needs to be large enough to hold the longest
+                         * line "Msg = <256 hex digits>\n".
+                         */
+    FILE *ecdsareq;     /* input stream from the REQUEST file */
+    FILE *ecdsaresp;    /* output stream to the RESPONSE file */
+    char curve[16];     /* "nistxddd" */
+    ECParams *ecparams = NULL;
+    int i, j;
+    unsigned int len;
+    unsigned char msg[512];  /* message to be signed (<= 128 bytes) */
+    unsigned int msglen;
+    unsigned char sha1[20];  /* SHA-1 hash (160 bits) */
+    unsigned char sig[2*MAX_ECKEY_LEN];
+    SECItem signature, digest;
+
+    ecdsareq = fopen(reqfn, "r");
+    ecdsaresp = stdout;
+    strcpy(curve, "nist");
+    while (fgets(buf, sizeof buf, ecdsareq) != NULL) {
+	/* a comment or blank line */
+	if (buf[0] == '#' || buf[0] == '\n') {
+	    fputs(buf, ecdsaresp);
+	    continue;
+	}
+	/* [X-ddd] */
+	if (buf[0] == '[') {
+	    const char *src;
+	    char *dst;
+	    SECKEYECParams *encodedparams;
+
+	    src = &buf[1];
+	    dst = &curve[4];
+	    *dst++ = tolower(*src);
+	    src += 2;  /* skip the hyphen */
+	    *dst++ = *src++;
+	    *dst++ = *src++;
+	    *dst++ = *src++;
+	    *dst = '\0';
+	    if (ecparams != NULL) {
+		PORT_FreeArena(ecparams->arena, PR_TRUE);
+		ecparams = NULL;
+	    }
+	    encodedparams = getECParams(curve);
+	    if (encodedparams == NULL) {
+		goto loser;
+	    }
+	    if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
+		goto loser;
+	    }
+	    SECITEM_FreeItem(encodedparams, PR_TRUE);
+	    fputs(buf, ecdsaresp);
+	    continue;
+	}
+	/* Msg = ... */
+	if (strncmp(buf, "Msg", 3) == 0) {
+	    ECPrivateKey *ecpriv;
+
+	    i = 3;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
+		hex_from_2char(&buf[i], &msg[j]);
+	    }
+	    msglen = j;
+	    if (SHA1_HashBuf(sha1, msg, msglen) != SECSuccess) {
+		goto loser;
+	    }
+	    fputs(buf, ecdsaresp);
+
+	    if (EC_NewKey(ecparams, &ecpriv) != SECSuccess) {
+		goto loser;
+	    }
+	    if (EC_ValidatePublicKey(ecparams, &ecpriv->publicValue)
+		!= SECSuccess) {
+		goto loser;
+	    }
+	    len = ecpriv->publicValue.len;
+	    if (len%2 == 0) {
+		goto loser;
+	    }
+	    len = (len-1)/2;
+	    if (ecpriv->publicValue.data[0] != EC_POINT_FORM_UNCOMPRESSED) {
+		goto loser;
+	    }
+	    fputs("Qx = ", ecdsaresp);
+	    to_hex_str(buf, &ecpriv->publicValue.data[1], len);
+	    fputs(buf, ecdsaresp);
+	    fputc('\n', ecdsaresp);
+	    fputs("Qy = ", ecdsaresp);
+	    to_hex_str(buf, &ecpriv->publicValue.data[1+len], len);
+	    fputs(buf, ecdsaresp);
+	    fputc('\n', ecdsaresp);
+
+	    digest.type = siBuffer;
+	    digest.data = sha1;
+	    digest.len = sizeof sha1;
+	    signature.type = siBuffer;
+	    signature.data = sig;
+	    signature.len = sizeof sig;
+	    if (ECDSA_SignDigest(ecpriv, &signature, &digest) != SECSuccess) {
+		goto loser;
+	    }
+	    len = signature.len;
+	    if (len%2 != 0) {
+		goto loser;
+	    }
+	    len = len/2;
+	    fputs("R = ", ecdsaresp);
+	    to_hex_str(buf, &signature.data[0], len);
+	    fputs(buf, ecdsaresp);
+	    fputc('\n', ecdsaresp);
+	    fputs("S = ", ecdsaresp);
+	    to_hex_str(buf, &signature.data[len], len);
+	    fputs(buf, ecdsaresp);
+	    fputc('\n', ecdsaresp);
+
+	    PORT_FreeArena(ecpriv->ecParams.arena, PR_TRUE);
+	    continue;
+	}
+    }
+loser:
+    if (ecparams != NULL) {
+	PORT_FreeArena(ecparams->arena, PR_TRUE);
+    }
+    fclose(ecdsareq);
+}
+
+/*
+ * Perform the ECDSA Signature Verification Test.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+ecdsa_sigver_test(char *reqfn)
+{
+    char buf[1024];     /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "Msg = <256 hex digits>\n".
+                         */
+    FILE *ecdsareq;     /* input stream from the REQUEST file */
+    FILE *ecdsaresp;    /* output stream to the RESPONSE file */
+    char curve[16];     /* "nistxddd" */
+    ECParams *ecparams = NULL;
+    ECPublicKey ecpub;
+    unsigned int i, j;
+    unsigned int flen;  /* length in bytes of the field size */
+    unsigned int olen;  /* length in bytes of the base point order */
+    unsigned char msg[512];  /* message that was signed (<= 128 bytes) */
+    unsigned int msglen;
+    unsigned char sha1[20];  /* SHA-1 hash (160 bits) */
+    unsigned char sig[2*MAX_ECKEY_LEN];
+    SECItem signature, digest;
+    PRBool keyvalid = PR_TRUE;
+    PRBool sigvalid = PR_TRUE;
+
+    ecdsareq = fopen(reqfn, "r");
+    ecdsaresp = stdout;
+    ecpub.publicValue.type = siBuffer;
+    ecpub.publicValue.data = NULL;
+    ecpub.publicValue.len = 0;
+    strcpy(curve, "nist");
+    while (fgets(buf, sizeof buf, ecdsareq) != NULL) {
+	/* a comment or blank line */
+	if (buf[0] == '#' || buf[0] == '\n') {
+	    fputs(buf, ecdsaresp);
+	    continue;
+	}
+	/* [X-ddd] */
+	if (buf[0] == '[') {
+	    const char *src;
+	    char *dst;
+	    SECKEYECParams *encodedparams;
+
+	    src = &buf[1];
+	    dst = &curve[4];
+	    *dst++ = tolower(*src);
+	    src += 2;  /* skip the hyphen */
+	    *dst++ = *src++;
+	    *dst++ = *src++;
+	    *dst++ = *src++;
+	    *dst = '\0';
+	    if (ecparams != NULL) {
+		PORT_FreeArena(ecparams->arena, PR_TRUE);
+		ecparams = NULL;
+	    }
+	    encodedparams = getECParams(curve);
+	    if (encodedparams == NULL) {
+		goto loser;
+	    }
+	    if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
+		goto loser;
+	    }
+	    SECITEM_FreeItem(encodedparams, PR_TRUE);
+	    ecpub.ecParams = *ecparams;
+	    flen = (ecparams->fieldID.size + 7) >> 3;
+	    olen = ecparams->order.len;
+	    if (2*olen > sizeof sig) {
+		goto loser;
+	    }
+	    if (ecpub.publicValue.data != NULL) {
+		SECITEM_FreeItem(&ecpub.publicValue, PR_FALSE);
+	    }
+	    SECITEM_AllocItem(NULL, &ecpub.publicValue, 2*flen+1);
+	    if (ecpub.publicValue.data == NULL) {
+		goto loser;
+	    }
+	    ecpub.publicValue.data[0] = EC_POINT_FORM_UNCOMPRESSED;
+	    fputs(buf, ecdsaresp);
+	    continue;
+	}
+	/* Msg = ... */
+	if (strncmp(buf, "Msg", 3) == 0) {
+	    i = 3;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
+		hex_from_2char(&buf[i], &msg[j]);
+	    }
+	    msglen = j;
+	    if (SHA1_HashBuf(sha1, msg, msglen) != SECSuccess) {
+		goto loser;
+	    }
+	    fputs(buf, ecdsaresp);
+
+	    digest.type = siBuffer;
+	    digest.data = sha1;
+	    digest.len = sizeof sha1;
+
+	    continue;
+	}
+	/* Qx = ... */
+	if (strncmp(buf, "Qx", 2) == 0) {
+	    fputs(buf, ecdsaresp);
+	    i = 2;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    keyvalid = from_hex_str(&ecpub.publicValue.data[1], flen,
+				    &buf[i]);
+	    continue;
+	}
+	/* Qy = ... */
+	if (strncmp(buf, "Qy", 2) == 0) {
+	    fputs(buf, ecdsaresp);
+	    if (!keyvalid) {
+		continue;
+	    }
+	    i = 2;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    keyvalid = from_hex_str(&ecpub.publicValue.data[1+flen], flen,
+				    &buf[i]);
+	    if (!keyvalid) {
+		continue;
+	    }
+	    if (EC_ValidatePublicKey(ecparams, &ecpub.publicValue)
+		!= SECSuccess) {
+		if (PORT_GetError() == SEC_ERROR_BAD_KEY) {
+		    keyvalid = PR_FALSE;
+		} else {
+		    goto loser;
+		}
+	    }
+	    continue;
+	}
+	/* R = ... */
+	if (buf[0] == 'R') {
+	    fputs(buf, ecdsaresp);
+	    i = 1;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    sigvalid = from_hex_str(sig, olen, &buf[i]);
+	    continue;
+	}
+	/* S = ... */
+	if (buf[0] == 'S') {
+	    fputs(buf, ecdsaresp);
+	    i = 1;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    if (sigvalid) {
+		sigvalid = from_hex_str(&sig[olen], olen, &buf[i]);
+	    }
+	    signature.type = siBuffer;
+	    signature.data = sig;
+	    signature.len = 2*olen;
+
+	    if (!keyvalid || !sigvalid) {
+		fputs("Result = F\n", ecdsaresp);
+	    } else if (ECDSA_VerifyDigest(&ecpub, &signature, &digest)
+		== SECSuccess) {
+		fputs("Result = P\n", ecdsaresp);
+	    } else {
+		fputs("Result = F\n", ecdsaresp);
+	    }
+	    continue;
+	}
+    }
+loser:
+    if (ecparams != NULL) {
+	PORT_FreeArena(ecparams->arena, PR_TRUE);
+    }
+    if (ecpub.publicValue.data != NULL) {
+	SECITEM_FreeItem(&ecpub.publicValue, PR_FALSE);
+    }
+    fclose(ecdsareq);
+}
+
 void do_random()
 {
     int i, j, k = 0;
@@ -2633,6 +3373,24 @@ int main(int argc, char **argv)
     /*************/
     } else if (strcmp(argv[1], "dss") == 0) {
 	dss_test(argv[2], argv[3]);
+    /*************/
+    /*   ECDSA   */
+    /*************/
+    } else if (strcmp(argv[1], "ecdsa") == 0) {
+	/* argv[2]=keypair|pkv|siggen|sigver argv[3]=<test name>.req */
+	if (       strcmp(argv[2], "keypair") == 0) {
+	    /* Key Pair Generation Test */
+	    ecdsa_keypair_test(argv[3]);
+	} else if (strcmp(argv[2], "pkv") == 0) {
+	    /* Public Key Validation Test */
+	    ecdsa_pkv_test(argv[3]);
+	} else if (strcmp(argv[2], "siggen") == 0) {
+	    /* Signature Generation Test */
+	    ecdsa_siggen_test(argv[3]);
+	} else if (strcmp(argv[2], "sigver") == 0) {
+	    /* Signature Verification Test */
+	    ecdsa_sigver_test(argv[3]);
+	}
     /*************/
     /*   RNG     */
     /*************/
