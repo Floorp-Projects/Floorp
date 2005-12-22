@@ -13,8 +13,8 @@
 <!ENTITY sortBy.lastVisitDate.label "Last Visited">
 
 <!ENTITY sortOrder.label "Sort order:">
-<!ENTITY sortOrder.ascending.label "A > Z">
-<!ENTITY sortOrder.descending.label "Z > A">
+<!ENTITY sortAscending.label "Ascending">
+<!ENTITY sortDescending.label "Descending">
 
 <!ENTITY sortFoldersFirst.label "Sort folders first">
 <!ENTITY sortRecursively.label "Sort recursively">
