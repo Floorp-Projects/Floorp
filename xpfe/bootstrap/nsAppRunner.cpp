@@ -305,7 +305,7 @@ nsresult NS_CreateSplashScreen(nsISplashScreen **aResult)
 {
     nsresult rv = NS_OK;
     if (aResult) {
-        *aResult = 0;
+        *aResult = nsnull;
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
@@ -340,7 +340,7 @@ nsresult NS_CreateNativeAppSupport(nsINativeAppSupport **aResult)
 {
     nsresult rv = NS_OK;
     if (aResult) {
-        *aResult = 0;
+        *aResult = nsnull;
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
@@ -922,7 +922,7 @@ static void ShowOSAlertFromFile(int argc, char **argv, const char *alert_filenam
     if (NS_SUCCEEDED(rv) && fileName) {
       fileName->AppendNative(NS_LITERAL_CSTRING("res"));
       fileName->AppendNative(nsDependentCString(alert_filename));
-      PRFileDesc* fd = 0;
+      PRFileDesc* fd = nsnull;
       fileName->OpenNSPRFileDesc(PR_RDONLY, 0664, &fd);
       if (fd) {
         numRead = PR_Read(fd, message, sizeof(message)-1);
@@ -1365,14 +1365,12 @@ static nsresult DumpVersion(char *appname)
 // from main - just to keep types consistent
 static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
 {
-  int i = 0;
+  const char *profile = nsnull;
+  const char *program = nsnull;
+  const char *remote = nsnull;
+  const char *username = nsnull;
 
-  const char *remote = 0;
-  const char *profile = 0;
-  const char *program = 0;
-  const char *username = 0;
-
-  for (i=1; i < argc; i++) {
+  for (int i = 1; i < argc; ++i) {
     if (PL_strcasecmp(argv[i], "-remote") == 0) {
       // someone used a -remote flag
       *aArgUsed = PR_TRUE;
@@ -1601,7 +1599,8 @@ int main(int argc, char* argv[])
    * (currently this is only for testing, future builds may use this by
    * default) */
   PRBool x11threadsafe;
-  if (PR_GetEnv("MOZILLA_X11_XINITTHREADS"))
+  const char *xInitThreads = PR_GetEnv("MOZILLA_X11_XINITTHREADS");
+  if (xInitThreads && *xInitThreads)
     x11threadsafe = PR_TRUE;
   else {
     x11threadsafe = PR_FALSE;
@@ -1681,7 +1680,7 @@ int main(int argc, char* argv[])
   // Try to allocate "native app support."
   // Note: this object is not released here.  It is passed to main1 which
   //       has responsibility to release it.
-  nsINativeAppSupport *nativeApp = 0;
+  nsINativeAppSupport *nativeApp = nsnull;
   rv = NS_CreateNativeAppSupport(&nativeApp);
 
   // See if we can run.
@@ -1700,7 +1699,7 @@ int main(int argc, char* argv[])
   }
   // Note: this object is not released here.  It is passed to main1 which
   //       has responsibility to release it.
-  nsISplashScreen *splash = 0;
+  nsISplashScreen *splash = nsnull;
   PRBool dosplash = GetWantSplashScreen(argc, argv);
 
   if (dosplash && !nativeApp) {
