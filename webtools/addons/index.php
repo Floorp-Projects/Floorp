@@ -9,6 +9,11 @@
  * @todo Get main template spruced up.
  */
 
+startProcessing('index.tpl', 'nonav');
+
+// init the stuff we need to generate content
+require_once('includes.php');
+
 // Arrays to store clean inputs.
 $clean = array();  // General array for verified inputs.
 $sql = array();  // Trusted for SQL.
@@ -62,9 +67,8 @@ $popularExtensions = $db->record;
 $tpl->assign(
     array(  'popularExtensions'     => $popularExtensions,
             'title'             => $clean['app'].' Addons',
-            'content'           => 'index.tpl',
             'currentTab'        => 'home')
 );
 
-$wrapper = 'inc/wrappers/nonav.tpl';
+
 ?>

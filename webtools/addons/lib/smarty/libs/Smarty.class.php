@@ -30,7 +30,7 @@
  * @version 2.6.8
  */
 
-/* $Id: Smarty.class.php,v 1.1 2005/07/11 23:52:14 mike.morgan%oregonstate.edu Exp $ */
+/* $Id: Smarty.class.php,v 1.2 2005/12/22 18:55:30 mconnor%steelgryphon.com Exp $ */
 
 /**
  * DIR_SEP isn't used anymore, but third party apps might
@@ -138,7 +138,7 @@ class Smarty
      *
      * @var boolean
      */
-    var $compile_check   =  true;
+    var $compile_check   =  false;
 
     /**
      * This forces templates to compile every time. Useful for development
@@ -157,7 +157,7 @@ class Smarty
      * </ul>
      * @var integer
      */
-    var $caching         =  0;
+    var $caching         = 2;
 
     /**
      * The name of the directory for cache files.

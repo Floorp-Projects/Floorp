@@ -6,6 +6,8 @@
  * @subpackage docs
  */
 
+startProcessing('addon.tpl');
+
 // Arrays to store clean inputs.
 $clean = array();  // General array for verified inputs.
 $sql = array();  // Trusted for SQL.

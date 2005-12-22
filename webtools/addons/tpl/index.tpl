@@ -3,8 +3,8 @@
     <div class="split-feature-one">
         <div class="feature-download">
             <!-- Feature Image must be 200px wide... any height is fine, but around 170-200 is preferred -->
-            <a href="./addon.php?id=1532"><img src="./images/features/del.icio.us.png" width="200" height="213" alt="del.icio.us Extension"></a>
-            <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/del.icio.us/del.icio.us-1.0.2-fx.xpi" onclick="return install(event,'del.icio.us 1.0.2', '/images/default.png');" title="Install del.icio.us 1.0.2 (Right-Click to Download)">Install Extension (62 KB)</a> </h3>
+            <a href="./addon.php?id=1532"><img src="images/features/del.icio.us.png" width="200" height="213" alt="del.icio.us Extension"></a>
+            <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/del.icio.us/del.icio.us-1.0.2-fx.xpi" onclick="return install(event,'del.icio.us 1.0.2', '{$config.webpath}/images/default.png');" title="Install del.icio.us 1.0.2 (Right-Click to Download)">Install Extension (62 KB)</a> </h3>
 
         </div>
         <h2>Featured Extension</h2>
