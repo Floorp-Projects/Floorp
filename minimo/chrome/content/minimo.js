@@ -810,6 +810,8 @@ function BrowserPopupShowing () {
     if(document.commandDispatcher.focusedElement.nodeName=="INPUT"||document.commandDispatcher.focusedElement.nodeName=="TEXTAREA") {
       if(DoClipCheckPaste()) {
         document.getElementById("item-paste").style.display="block";	
+      } else {
+        document.getElementById("item-paste").style.display="none";	
       }
     }
   }
