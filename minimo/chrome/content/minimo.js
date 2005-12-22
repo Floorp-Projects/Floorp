@@ -796,9 +796,11 @@ function BrowserPopupShowing () {
   var selectedRange=getBrowser().selectedBrowser.contentDocument.getSelection();
  
   /* Enable Copy */
-  if(selectedRange.toString()) {
 
+  if(selectedRange.toString()) {
     document.getElementById("item-copy").style.display="block";
+  } else {
+    document.getElementById("item-copy").style.display="none";
   }
   
   /* Enable Paste - Can paste only if the focused element has a value attribute. :) 
