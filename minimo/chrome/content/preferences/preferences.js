@@ -147,6 +147,7 @@ function sanitizeAll()
 function sanitizeBookmarks() {
 	// in Common.
 	BookmarksDeleteAllAndSync();
+    document.getElementById("bookmarksSanitize").disabled=true;
 }
 
 /*
