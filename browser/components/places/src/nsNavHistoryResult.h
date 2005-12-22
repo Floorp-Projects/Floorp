@@ -45,6 +45,7 @@
 #ifndef nsNavHistoryResult_h_
 #define nsNavHistoryResult_h_
 
+class nsNavHistory;
 class nsNavHistoryResult;
 class nsIDateTimeFormat;
 class nsNavHistoryQueryOptions;
