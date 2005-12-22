@@ -1073,6 +1073,10 @@ CallNPMethod(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!JSValToNPVariant(npp, cx, argv[i], npargs + i)) {
       ThrowJSException(cx, "Error converting jsvals to NPVariants!");
 
+      if (npargs != npargs_buf) {
+        PR_Free(npargs);
+      }
+
       return JS_FALSE;
     }
   }
