@@ -81,7 +81,7 @@ Litmus::DB::Testresult->has_many(bugs => "Litmus::DB::Resultbug", {order_by => '
 Litmus::DB::Testresult->autoinflate(dates => 'Time::Piece');
 
 Litmus::DB::Testresult->set_sql(DefaultTestResults => qq{
-    SELECT tr.testresult_id,tr.test_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name result_status_class,b.name AS branch_name,tg.name AS test_group_name
+    SELECT tr.testresult_id,tr.test_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev
     FROM test_results tr, tests t, platforms p, opsyses o, branches b, products
 pr, test_result_status_lookup trsl, test_groups tg, subgroups sg
     WHERE tr.test_id=t.test_id AND tr.platform_id=p.platform_id AND tr.opsys_id=o.opsys_id AND tr.branch_id=b.branch_id AND b.product_id=pr.product_id AND tr.result_id=trsl.result_status_id AND t.subgroup_id=sg.subgroup_id AND sg.testgroup_id=tg.testgroup_id 
@@ -176,7 +176,7 @@ sub getDefaultTestResults($) {
 sub getTestResults($\@\@$) {
     my ($self,$where_criteria,$order_by_criteria,$limit_value) = @_;
     
-    my $select = 'SELECT tr.testresult_id,tr.test_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name AS result_status_class,b.name AS branch_name,tg.name AS test_group_name';
+    my $select = 'SELECT tr.testresult_id,tr.test_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name AS result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev';
     
     my $from = 'FROM test_results tr, tests t, platforms p, opsyses o, branches b, products pr, test_result_status_lookup trsl, test_groups tg, subgroups sg';
     

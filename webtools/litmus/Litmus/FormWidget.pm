@@ -120,9 +120,16 @@ sub getProducts()
 }
 
 #########################################################################
-sub getPlatforms()
+sub getUniquePlatforms()
 {
     my $sql = "SELECT DISTINCT(name) FROM platforms ORDER BY name";
+    return _getValues($sql);
+}
+
+#########################################################################
+sub getPlatforms()
+{
+    my $sql = "SELECT pl.name AS platform_name, pr.name AS product_name, pl.platform_id AS platform_id FROM platforms pl, products pr WHERE pl.product_id=pr.product_id ORDER BY pl.name, pr.name";
     return _getValues($sql);
 }
 
@@ -180,6 +187,15 @@ sub getTestIDs()
 {
     my $sql = "SELECT test_id FROM tests ORDER BY test_id";
     return _getValues($sql);
+}
+
+#########################################################################
+sub getLocales()
+{
+  my @locales = Litmus::DB::Locale->retrieve_all(
+                                                 { order_by => 'abbrev' }
+                                                );
+  return \@locales;
 }
 
 #########################################################################

@@ -47,7 +47,7 @@ use diagnostics;
 my ($criteria,$results) = Litmus::DB::Testresult->getDefaultTestResults;
 
 my $products = Litmus::FormWidget->getProducts();
-my $platforms = Litmus::FormWidget->getPlatforms();
+my $platforms = Litmus::FormWidget->getUniquePlatforms();
 my $test_groups = Litmus::FormWidget->getTestGroups();
 my $result_statuses = Litmus::FormWidget->getResultStatuses;
 my $branches = Litmus::FormWidget->getBranches();

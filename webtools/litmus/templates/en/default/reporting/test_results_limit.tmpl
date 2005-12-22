@@ -78,6 +78,12 @@ function init()
         <option[% IF order_bys.branch == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
         <option[% IF order_bys.branch == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
       </select></td>
+
+  <td class="search"><select name="order_by_locale">
+        <option value="">-Sort-</option>
+        <option[% IF order_bys.locale == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
+        <option[% IF order_bys.locale == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+      </select></td>
 </tr>
 
 <!--# Add a row to order the results by each field. -->
@@ -88,8 +94,9 @@ function init()
   <td class="search">[% INCLUDE form_widgets/input_summary.tmpl %]</td>
   <td class="search">[% INCLUDE form_widgets/select_test_group.tmpl name="test_group" placeholder=1 %]</td>
   <td class="search">[% INCLUDE form_widgets/select_product.tmpl name="product" placeholder=1 %]</td>
-  <td class="search">[% INCLUDE form_widgets/select_platform.tmpl name="platform" placeholder=1 %]</td>
+  <td class="search">[% INCLUDE form_widgets/select_unique_platform.tmpl name="platform" placeholder=1 %]</td>
   <td class="search">[% INCLUDE form_widgets/select_branch.tmpl name="branch" placeholder=1 %]</td>
+  <td class="search">[% INCLUDE form_widgets/select_locale.tmpl name="locale" placeholder=1 %]</td>
 </tr>
 
 <tr class="search">
@@ -97,7 +104,7 @@ function init()
 Limit to</td>
   <td class="search">
   <input type="text" name="limit" value="[% limit | html %]" size="5"> results</td>
-  <td class="search-submit" colspan="6">
+  <td class="search-submit" colspan="7">
   <input class="button" type="reset" onclick="FormInit(this.parent, '');">&nbsp;
   <input class="button" type="submit" value="Show Results">
 </td>

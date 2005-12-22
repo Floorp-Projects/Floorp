@@ -196,7 +196,7 @@ if ($c->param) {
 # Populate each of our form widgets for select/input.
 # Set a default value as appropriate.
 my $products = Litmus::FormWidget->getProducts;
-my $platforms = Litmus::FormWidget->getPlatforms;
+my $platforms = Litmus::FormWidget->getUniquePlatforms;
 my $test_groups = Litmus::FormWidget->getTestGroups;
 my $test_ids = Litmus::FormWidget->getTestIDs;
 my $result_statuses = Litmus::FormWidget->getResultStatuses;

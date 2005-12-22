@@ -71,9 +71,9 @@ if ($c->param) {
             $where_criteria .= "Branch is \'".$c->param($param)."\'<br/>";
         } elsif ($param eq 'locale') {
             my $value = quotemeta($c->param($param));
-            push @where, {field => 'locale_abbrev',
+            push @where, {field => 'locale',
                           value => $value};
-            $where_criteria .= "Branch is \'".$c->param($param)."\'<br/>";
+            $where_criteria .= "Locale is \'".$c->param($param)."\'<br/>";
         } elsif ($param eq 'product') {
             my $value = quotemeta($c->param($param));
             push @where, {field => $param,
@@ -147,10 +147,11 @@ if ($c->param) {
 # Populate each of our form widgets for select/input.
 # Set a default value as appropriate.
 my $products = Litmus::FormWidget->getProducts;
-my $platforms = Litmus::FormWidget->getPlatforms;
+my $platforms = Litmus::FormWidget->getUniquePlatforms;
 my $test_groups = Litmus::FormWidget->getTestGroups;
 my $result_statuses = Litmus::FormWidget->getResultStatuses;
 my $branches = Litmus::FormWidget->getBranches;
+my $locales = Litmus::FormWidget->getLocales;
 
 my $title = 'Search Test Results';
 
@@ -162,6 +163,7 @@ my $vars = {
     test_groups => $test_groups,
     result_statuses => $result_statuses,
     branches => $branches,
+    locales => $locales,
     limit => $limit,
 };
 

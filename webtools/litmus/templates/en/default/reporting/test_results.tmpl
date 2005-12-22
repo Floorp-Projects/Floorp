@@ -61,6 +61,7 @@
     <td class="header">Product</td>
     <td class="header">Platform</td>
     <td class="header">Branch</td>
+    <td class="header">Locale</td>
   </tr>
 <tr>
 
@@ -82,9 +83,11 @@
   <td align="center">[% result.product_name | html %]</td>
   <td align="center">[% result.platform_name | html %]</td>
   <td align="center">[% result.branch_name | html %]</td>
+  <td align="center">[% result.locale_abbrev | html %]</td>
 </tr>
   [% subscript=subscript+1 %]
   [% END %]
+
 [% ELSE %]
   <tr>
     <td class="no-results" colspan="8">No test results match the search criteria.</td>

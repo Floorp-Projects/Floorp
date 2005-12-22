@@ -101,11 +101,18 @@ sub is_completed {
                                   user => $user,
                                  );
   } else {
-    @results = $self->testresults(
-                                  platform => $platform,
-                                  buildid => $build_id,
-                                  locale => $locale,
-                                 );
+    @results = Litmus::DB::Testresult->retrieve_from_sql(
+                      "platform_id = " . $platform->{'platform_id'} . " AND " .
+                      "buildid LIKE \'\%" . $build_id . "\%\' AND " .
+                      "locale_abbrev = \'" . $locale->{'abbrev'} . "\' AND " .
+                      "test_id = " . $self->{'test_id'}
+                                                        );
+                            
+#    @results = $self->testresults(
+#                                  platform => $platform,
+#                                  buildid => $build_id,
+#                                  locale => $locale,
+#                                 );
   }
   
   return scalar @results;  
