@@ -2323,8 +2323,7 @@ void sha_test(char *reqfn)
             msgLen = atoi(&buf[i]); /* in bits */
             msgLen = msgLen/8; /* convert to bytes */
             fputs(buf, resp);
-            msg = PORT_Realloc(msg, msgLen);
-            memset(msg, 0, msgLen);
+            msg = PORT_ZAlloc(msgLen);
             if (msg == NULL && msgLen != 0) {
                 goto loser;
             } 
