@@ -48,10 +48,10 @@ function init()
 
   <td class="search"></td> 
 
-  <td class="search"><select name="order_by_summary">
+  <td class="search"><select name="order_by_test_id">
         <option value="">-Sort-</option>
-        <option[% IF order_bys.summary == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
-        <option[% IF order_bys.summary == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+        <option[% IF order_bys.test_id == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
+        <option[% IF order_bys.test_id == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
       </select></td>
 
   <td class="search"><select name="order_by_test_group">
