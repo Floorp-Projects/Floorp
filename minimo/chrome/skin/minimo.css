@@ -120,6 +120,14 @@ caption {
 
 }
 
+#item-copy {
+	display:none;
+}
+
+#item-paste {
+	display:none;
+}
+
 .menu-button
   {
     background: url("chrome://minimo/skin/m-color.png") no-repeat 50% 50%;
