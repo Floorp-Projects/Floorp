@@ -2538,11 +2538,14 @@ esac
 
 dnl We don't want to link with libdl even if it's present on OS X, since
 dnl it's not used and not part of the default installation.
+dnl The same goes for BeOS.
 dnl We don't want to link against libm or libpthread on Darwin since
 dnl they both are just symlinks to libSystem and explicitly linking
 dnl against libSystem causes issues when debugging (see bug 299601).
 case $target in
 *-darwin*)
+    ;;
+*-beos*)
     ;;
 *)
     AC_CHECK_LIB(m, atan)
@@ -2950,7 +2953,7 @@ if test "$ac_cv_func_gnu_get_libc_version" = "yes"; then
 fi
 
 case $target_os in
-    os2*|msvc*|mks*|cygwin*|mingw*|darwin*|wince*)
+    os2*|msvc*|mks*|cygwin*|mingw*|darwin*|wince*|beos*)
         ;;
     *)
     
