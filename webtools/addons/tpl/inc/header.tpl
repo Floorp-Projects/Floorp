@@ -12,7 +12,7 @@
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/cavendish/template.css" title="Cavendish" media="screen">
     <link rel="home" title="Home" href="https://addons.mozilla.org/">
     <link rel="alternate" type="application/rss+xml" title="New Firefox Extensions Additions" href="{$config.webpath}/rss/?app=firefox&amp;type=E&amp;list=newest">
-    <link rel="icon" href="{$config.webpath}/favicon.ico" type="image/png">
+    <link rel="icon" href="{$config.webpath}/images/favicon.ico" type="image/png">
     <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
     <script src="{$config.webpath}/js/search-plugin.js" type="text/javascript"></script>
 </head>
