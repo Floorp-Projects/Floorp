@@ -53,6 +53,10 @@ include config.mk
 
 #NS_USE_NATIVE = 1
 
+ifdef NARCISSUS
+DEFINES += -DNARCISSUS
+endif
+
 ifdef USE_MSVC
 OTHER_LIBS += fdlibm/$(OBJDIR)/fdlibm.lib
 else
