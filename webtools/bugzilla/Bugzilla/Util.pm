@@ -42,7 +42,7 @@ use base qw(Exporter);
                              format_time format_time_decimal validate_date
                              file_mod_time is_7bit_clean
                              bz_crypt generate_random_password
-                             validate_email_syntax clean_text);
+                             validate_email_syntax);
 
 use Bugzilla::Config;
 use Bugzilla::Constants;
@@ -390,12 +390,6 @@ sub is_7bit_clean {
     return $_[0] !~ /[^\x20-\x7E\x0A\x0D]/;
 }
 
-sub clean_text {
-    my ($dtext) = shift;
-    $dtext =~  s/[\x00-\x1F\x7F]/ /g;   # change control characters to spaces
-    return $dtext;
-}
-
 1;
 
 __END__
@@ -644,10 +638,6 @@ into the string.
 
 Returns true is the string contains only 7-bit characters (ASCII 32 through 126,
 ASCII 10 (LineFeed) and ASCII 13 (Carrage Return).
-
-=item C<clean_text($str)>
-Returns the parameter "cleaned" by exchanging non-printable characters with spaces.
-Specifically characters (ASCII 0 through 31) and (ASCII 127) will become ASCII 32 (Space).
 
 =back
 
