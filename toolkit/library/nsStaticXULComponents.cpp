@@ -160,6 +160,7 @@
     INTL_COMPAT_MODULES                      \
     MODULE(nsUniversalCharDetModule)         \
     MODULE(necko)                            \
+    MODULE(nsAuthModule)                     \
     IPC_MODULE                               \
     MODULE(nsJarModule)                      \
     MODULE(nsPrefModule)                     \

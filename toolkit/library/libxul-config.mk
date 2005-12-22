@@ -77,6 +77,7 @@ COMPONENT_LIBS += \
 	xpcom_compat_c \
 	xpconnect \
 	necko \
+	auth \
 	uconv \
 	i18n \
 	universalchardet \
