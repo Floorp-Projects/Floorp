@@ -3,6 +3,7 @@
 <!ENTITY prefs.label                  "Preferences...">
 <!ENTITY quit.label                   "Quit">
 <!ENTITY newtab.label                 "New Tab">
+<!ENTITY bookmarks.label              "Bookmarks">
 
 <!-- Toolbar -->
 

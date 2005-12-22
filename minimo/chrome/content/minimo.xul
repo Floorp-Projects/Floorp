@@ -235,6 +235,8 @@
     <menupopup id="menu_MainPopup" onpopupshowing="MenuPopupShowing()"  onpopuphidden="MenuPopupHidden()">
     
         <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="&newtab.label;"  /> 
+		<menuitem id="command_BrowserBookmark" command="cmd_BrowserBookmark" label="&bookmark.label;" />
+		
 <!--    not working just yet.
 		<menuitem id="command_BrowserScreenRotate" command="cmd_BrowserScreenRotate" label="Rotate Screen"  /> 
 -->
