@@ -15,6 +15,7 @@
 <!-- Privacy pane -->
 
 <!ENTITY sanitizeButton.label        "Sanitize All">
+<!ENTITY sanitizeBookmarks.label     "Delete all Bookmarks">
 
 <!-- ConnectionsDialogPane --> 
 
