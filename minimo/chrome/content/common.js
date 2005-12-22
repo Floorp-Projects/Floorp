@@ -53,6 +53,9 @@ function syncUIZoom() {
     document.styleSheets[1].cssRules[1].style.fontSize=currentUILevel+"px";
 }
 
+
+/* All these Bookmarks  to be renamed to Bookmarks*Stuff function name space */ 
+
 function loadBookmarks(storeStr) {
 
 	var aDOMParser = new DOMParser();
@@ -84,5 +87,9 @@ function storeBookmarks() {
       gPref.setCharPref("browser.bookmark.store",encodedList);
 }
 
+function BookmarksDeleteAllAndSync() {
+		var bookmarkEmpty="<bm></bm>";
+		gPref.setCharPref("browser.bookmark.store",bookmarkEmpty);
+}
 
 
