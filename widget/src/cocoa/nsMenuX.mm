@@ -261,7 +261,7 @@ NS_IMETHODIMP nsMenuX::AddMenu(nsIMenu * aMenu)
   // We have to add a menu item and then associate the menu with it
   nsAutoString label;
   aMenu->GetLabel(label);
-  NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(mLabel);
+  NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(label);
   NSMenuItem* newNativeMenuItem= [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:NULL keyEquivalent:@""];
   [mMacMenu addItem:newNativeMenuItem];
   [newCocoaLabelString release];
