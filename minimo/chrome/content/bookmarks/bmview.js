@@ -84,10 +84,6 @@ bmProcessor.prototype.apply = function () {
 		} catch (e) {
 		}
             this.targetElement.appendChild(htmlFragment.firstChild);
-
-
-		document.getElementById("loadmessage").style.display="none";
-
 	}
 }
 
