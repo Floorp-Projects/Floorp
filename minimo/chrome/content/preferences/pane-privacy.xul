@@ -59,15 +59,29 @@
           
         <groupbox flex="1" class="box-floatoptions scrolling" >
             <caption label="&privacy.label;" /> 
-            <box class="box-prefpadding">
 
-                <button id="privacySanitize" tabindex="40"
-                        class='box-prefgroupitem'
-                        label="&sanitizeButton.label;" accessrule="privacy-pane"
-                        oncommand="sanitizeAll();"/>
-
-            </box>
+            <hbox flex="1" >
+                    <vbox flex="1" style="padding:4px ! important">
+                        <groupbox class='box-prefgroupitem' id='sanitize-box'>
+			            <box class="box-prefpadding">
+      			          <button id="privacySanitize" tabindex="40"
+			                        class='box-prefgroupitem'
+			                        label="&sanitizeButton.label;" 
+			                        oncommand="sanitizeAll();"/>
+			            </box>
+				</groupbox>
+            	      <groupbox class='box-prefgroupitem' id='bookmarks-box'>
+			            <box class="box-prefpadding">
+      			          <button id="bookmarksSanitize" tabindex="45"
+			                        class='box-prefgroupitem'
+			                        label="&sanitizeBookmarks.label;" accessrule="privacy-pane"
+			                        oncommand="sanitizeBookmarks();"/>
+			            </box>
+				</groupbox>
+			</vbox>
+		</hbox>
         </groupbox> 
+
     </hbox>
 
 </box>
