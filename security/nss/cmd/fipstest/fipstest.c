@@ -484,7 +484,7 @@ tdea_mct_next_keys(unsigned char *key,
             key[k] ^= text_2[k-16];
         }
     }
-    /* set the parity bits */             
+    /* set the parity bits */            
     for (k=0; k<24; k++) {
         key[k] = odd_parity(key[k]);
     }
@@ -2325,7 +2325,7 @@ void sha_test(char *reqfn)
             fputs(buf, resp);
             msg = PORT_Realloc(msg, msgLen);
             memset(msg, 0, msgLen);
-            if (msg == NULL) {
+            if (msg == NULL && msgLen != 0) {
                 goto loser;
             } 
             continue;
