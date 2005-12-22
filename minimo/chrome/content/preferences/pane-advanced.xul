@@ -113,7 +113,7 @@
 
 	                		    <checkbox tabindex="35" id="enablePreFetching"
 	                              label="&enablePreFetching.label;"
-	                              preference="network.prefetch-next" accessrule="advanced-pane"
+	                              preference="network.prefetch-next" 
 	                              onclick="syncPref(this)" />
 	                              
 					</vbox>
@@ -124,15 +124,15 @@
 
                                 <vbox class="box-prefpadding">
 
-	                    <checkbox tabindex="33" id="skey"
+	                    <checkbox tabindex="37" id="skey"
 	                              label="&useSWKeyboard.label;"
 	                              preference="skey.enabled"
 	                              onclick="syncPref(this)" />
 	                              
-	                    <checkbox tabindex="34"
+	                    <checkbox tabindex="39"
 	                              id="dumpJS"
 	                              label="&dumpJSConsole.label;"
-	                              preference="config.wince.dumpJSConsole"
+	                              preference="config.wince.dumpJSConsole" accessrule="advanced-pane"
 	                              onclick="syncPref(this)" />
 
 					</vbox>
