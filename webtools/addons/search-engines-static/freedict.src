@@ -1,0 +1,27 @@
+# Mozilla/Netscape/Firebird search plugin for The Free Dictionary by Paul Millar dazzle@edazzle.net
+# 
+# Created: 16 April 2004
+
+<SEARCH
+   version = "7.1" 
+   name="The Free Dictionary"
+   description="English, Medical, Legal, and Computer Dictionaries, Thesaurus, Encyclopedia, a Literature Reference Library, and a Search Engine all in one!"
+   method="GET"
+   action="http://www.thefreedictionary.com/dict.asp"
+>
+
+<input name="Word" user>
+
+<interpret 
+    browserResultType="result" 
+    resultListStart="<div class=Txt id=MainText>"
+    resultListEnd="<br></td></tr></table></td></tr></table>"
+>
+
+</search>
+
+<BROWSER
+update="http://mycroft.mozdev.org/plugins/freedict.src" 
+updateIcon="http://mycroft.mozdev.org/plugins/freedict.png" 
+updateCheckDays="3"
+>

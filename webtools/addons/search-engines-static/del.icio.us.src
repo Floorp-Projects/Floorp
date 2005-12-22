@@ -1,0 +1,26 @@
+<!-- del.icio.us search plugin
+     Author: Alessandro Macilenti
+     Email: alessandro.macilenti@gmail.com
+     Created on: June 15th, 2005
+-->
+
+<search name="del.icio.us tag" 
+	description="A plugin to search del.icio.us tags"
+	action="http://del.icio.us/tag/"
+	searchForm="http://del.icio.us/tag/"
+	method="GET"
+	version="7.1"
+>
+	<input name="tags" user="">
+	<interpret
+		resultListStart="delMain"
+		resultListEnd="/html"
+		resultItemStart="delPost"
+		resultItemEnd="/div"
+	>
+</search>
+<browser
+	update="http://mycroft.mozdev.org/update.php/id0/del.icio.us.src"
+	updateicon="http://mycroft.mozdev.org/update.php/id0/del.icio.us.png"
+	updateCheckDays="7"
+>

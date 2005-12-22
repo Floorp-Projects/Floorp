@@ -1,0 +1,24 @@
+#:::::::::::::::::::::::::::::::::::::::::::::::
+# Search Odeo
+# Author: Mat Costa - www.matcosta.com
+# Created: 07/19/2005
+#:::::::::::::::::::::::::::::::::::::::::::::::
+
+<search
+version="7.1"
+name="Odeo"
+description="Search odeo.com"
+action="http://www.odeo.com/search/query/"
+searchForm="http://www.odeo.com"
+method="GET"
+>
+<input name="sourceid" value="Mozilla-search">
+<input name="q" user="">
+
+</search>
+
+<browser
+   update="http://mycroft.mozdev.org/update.php/id0/odeo.src" 
+   updateicon="http://mycroft.mozdev.org/update.php/id0/odeo.png" 
+   updateCheckDays="7"		
+>
