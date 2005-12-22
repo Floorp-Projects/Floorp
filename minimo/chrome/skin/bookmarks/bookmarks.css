@@ -1,23 +1,34 @@
 
-       div.item {
-		font-family:verdana;
-		font-size:74%;
-		-moz-border-radius:4px;
-		background-color:#ffffff;
-		margin:4px;
- 	 } 
-	 div.item a {
-		text-decoration:none;
-		color:black;
-	 }
+div.item {
+    font-family:verdana;
+    font-size:74%;
+    -moz-border-radius:4px;
+    background-color:#ffffff;
+    margin:4px;
+} 
+ 	 
+div.item a {
+    text-decoration:none;
+    color:black;
+}
 
-	bookmarks {
-		background-color:#dddddd;
-
-	}
+bookmarks {
+    background-color:#dddddd;
+}
 	
-	body {
+body {
+    padding:0px;margin:0px;
+}
 
-		padding:0px;margin:0px;
-	}
-
+.warning  {	
+    background: url("chrome://global/skin/icons/Warning.png") no-repeat 0 0;	
+    display:none; 
+    font-family:verdana;
+    font-size:74%;
+    -moz-border-radius:6px;
+    border:1px solid black;
+    background-color:#ffffff;
+    padding:.5em;
+    padding-left:36px;
+    margin:.5em;
+}
