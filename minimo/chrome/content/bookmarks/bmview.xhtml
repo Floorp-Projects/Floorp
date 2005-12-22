@@ -38,7 +38,10 @@
  ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://minimo/skin/bookmarks/bookmarks.css" type="text/css"?>
-
+<!DOCTYPE bookmarks [
+<!ENTITY % minimoDTD SYSTEM "chrome://minimo/locale/bookmarks.dtd" >
+%minimoDTD;
+]>
 <bookmarks xmlns:html="http://www.w3.org/1999/xhtml"
      xmlns:xlink="http://www.w3.org/1999/xlink">
 
@@ -47,6 +50,10 @@
 <html:link rel="icon" href="chrome://minimo/skin/bookmarks-favicon.png" type="image/png" />
 <html:title>Bookmarks</html:title>
 </html:head>
-<html:body  onload='bmInit(document,document.body)' />
+
+<html:body  onload='bmInit(document,document.body)' >
+    <html:div id="message-empty" class="warning" >&bookmarksEmpty.label;</html:div>
+</html:body>
+
 <html:script src="bmview.js" />
 </bookmarks>
