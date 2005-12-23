@@ -43,44 +43,37 @@
 {/if}
 
 {if $method == 'html'}
-
-{if $count > 0}
-<div class="navigation">
-{strip}
-    {math equation="($count/$show)" assign="totalPages"}
-
-    <a href="?{$continuityParams}&amp;page=1">&lt;</a>
-
-    {if ($page+20) > $totalPages}
-        {math equation="$page-($totalPages-($page-20))" assign="start"}
-        {math equation="$totalPages" assign="max"}
-    {else}
-        {math equation="$page" assign="start"}
-        {math equation="$page+20" assign="max"}
+    {if $count > $show}
+        <div class="navigation">
+            {strip}
+            {if $page > 1}
+                <a href="?{$continuity_params}&amp;page={$page-1}">&lt;</a>
+            {/if}
+            {/strip}
+            {section name=pageLoop start=$start loop=$start+$amt step=$step}
+                {strip}&nbsp; <a href="{$base_url}/app/query/?{$continuity_params}&amp;page={$smarty.section.pageLoop.index}"
+                    {if $smarty.section.pageLoop.index == $page}class="currentPage"{/if}
+                       >{$smarty.section.pageLoop.index}</a>
+                {/strip}
+            {/section}
+            {strip}
+                {if $page < $pages}
+                     &nbsp; <a href="{$base_url}/app/query/?{$continuity_params}&amp;page={$page+1}">&gt;</a>
+                {/if}
+            {/strip}
+            <hr />
+            {*
+            <pre>
+            Count:    {$count}
+            Page:     {$page}
+            Show:     {$show}
+            Start:    {$start}
+            Max:      {$max}
+            TotPage:  {$pages}
+            </pre>
+            *}
+            <br />
+            <p><small>Your query returned {$count} reports</small></p>
+        </div>
     {/if}
-{/strip}
-{section name=pagelisting start=$start loop=$max step=1}
-{strip}&nbsp; <a href="{$base_url}/app/query/?{$continuityParams}&amp;page={$smarty.section.pagelisting.index}"
-       {if $smarty.section.pagelisting.index == $page}class="currentPage"{/if}
-       >{$smarty.section.pagelisting.index}</a>
-{/strip}
-{/section}
-{strip}
-    {if $page+20 < $count/$show}
-         &nbsp; <a href="{$base_url}/app/query/?{$continuityParams}&amp;page={$totalPages}">&gt;</a>
-    {/if}
-{/strip}
-{*
-<hr />
-<pre>
-Count:    {$count}
-Page:     {$page}
-Show:     {$show}
-TotPage:  {$totalPages}
-</pre>
-*}
-<br />
-<p><small>Your query returned {$count} reports</small></p>
-</div>
-{/if}
 {/if}
