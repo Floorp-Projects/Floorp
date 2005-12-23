@@ -224,7 +224,7 @@
 
       <popup id="urlbarModeSelector" onpopuphidden="PageProxyHidden()">
 		<menuitem image="chrome://minimo/skin/extensions/icon-google.png" class="menuitem-iconic" id="command_ViewDeckSearch"  label="&decksearch.label;"   command="cmd_ViewDeckSearch"/>
-		<menuitem image="chrome://minimo/skin/extensions/icon-delicious.png" class="menuitem-iconic" id="command_ViewDeckSB"      label="&decksb.label;"       command="cmd_ViewDeckSB" />
+<!--		<menuitem image="chrome://minimo/skin/extensions/icon-delicious.png" class="menuitem-iconic" id="command_ViewDeckSB"      label="&decksb.label;"       command="cmd_ViewDeckSB" />-->
 		<menuitem image="chrome://minimo/skin/extensions/icon-urlbar.png" class="menuitem-iconic" id="command_ViewDeckDefault" label="&deckdefault.label;"  command="cmd_ViewDeckDefault" />
       </popup>
 	
