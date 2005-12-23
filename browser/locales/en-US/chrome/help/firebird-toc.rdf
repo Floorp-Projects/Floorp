@@ -408,13 +408,13 @@
   <rdf:Description about="#prefs-privacy">
     <nc:subheadings>
       <rdf:Seq>
+        <rdf:li> <rdf:Description ID="prefs-clear-private-data" nc:name="Clear Private Data Settings" nc:link="prefs.xhtml#clear_private_data"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-history" nc:name="History" nc:link="prefs.xhtml#privacy_history"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-saved-forms" nc:name="Saved Forms" nc:link="prefs.xhtml#privacy_saved_forms"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-passwords" nc:name="Passwords" nc:link="prefs.xhtml#privacy_passwords"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-download-history" nc:name="Download History" nc:link="prefs.xhtml#privacy_download_history"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-cookies" nc:name="Cookies" nc:link="prefs.xhtml#privacy_cookies"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-cache" nc:name="Cache" nc:link="prefs.xhtml#privacy_cache"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-clear-private-data" nc:name="Clear Private Data Settings" nc:link="prefs.xhtml#clear_private_data"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
