@@ -87,6 +87,7 @@
     -->
     <command id="cmd_ViewDeckSB"              oncommand="BrowserViewDeckSB()"/>
     <command id="cmd_ViewDeckSearch"          oncommand="BrowserViewDeckSearch()"/>
+    <command id="cmd_ViewDeckDefault"         oncommand="BrowserViewDeckDefault()"/>
     <command id="cmd_ViewFind"                oncommand="BrowserViewFind()"/>
     <command id="cmd_BrowserOpenLinkAsNewTab" oncommand="BrowserOpenLinkAsTab()" />
     <command id="cmd_BrowserBack"             oncommand="BrowserBack()" />
@@ -222,8 +223,9 @@
 	</popup>
 
       <popup id="urlbarModeSelector" onpopuphidden="PageProxyHidden()">
-		<menuitem id="command_ViewDeckSearch"  type="checkbox" label="&decksearch.label;"  command="cmd_ViewDeckSearch"/>
-		<menuitem id="command_ViewDeckSB"  type="checkbox"  label="&decksb.label;"  command="cmd_ViewDeckSB" />
+		<menuitem image="chrome://minimo/skin/extensions/icon-google.png" class="menuitem-iconic" id="command_ViewDeckSearch"  label="&decksearch.label;"   command="cmd_ViewDeckSearch"/>
+		<menuitem image="chrome://minimo/skin/extensions/icon-delicious.png" class="menuitem-iconic" id="command_ViewDeckSB"      label="&decksb.label;"       command="cmd_ViewDeckSB" />
+		<menuitem image="chrome://minimo/skin/extensions/icon-urlbar.png" class="menuitem-iconic" id="command_ViewDeckDefault" label="&deckdefault.label;"  command="cmd_ViewDeckDefault" />
       </popup>
 	
 	 <!-- somehow tabbedbrowser needs this. Have to check its implementation and eliminate --> 
