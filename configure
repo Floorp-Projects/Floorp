@@ -14704,15 +14704,15 @@ if test "${enable_universalchardet+set}" = set; then
 fi
 
 
-# Check whether --enable-javaconnect or --disable-javaconnect was given.
-if test "${enable_javaconnect+set}" = set; then
-  enableval="$enable_javaconnect"
+# Check whether --enable-javaxpcom or --disable-javaxpcom was given.
+if test "${enable_javaxpcom+set}" = set; then
+  enableval="$enable_javaxpcom"
   if test "$enableval" = "yes"; then
     MOZ_JAVAXPCOM=1
   elif test "$enableval" = "no"; then
     MOZ_JAVAXPCOM= 
   else
-    { echo "configure: error: Option, javaconnect, does not take an argument ($enableval)." 1>&2; exit 1; }
+    { echo "configure: error: Option, javaxpcom, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
 fi
 
