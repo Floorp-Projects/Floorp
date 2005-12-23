@@ -2097,7 +2097,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // profile was started with.  The format of the version stamp is defined
   // by the BuildVersion function.
   PRBool versionOK = CheckCompatibility(profD, version,
-                                        dirProvider.GetAppDir(),
+                                        dirProvider.GetGREDir(),
                                         gAppData->directory);
 
   // Every time a profile is loaded by a build with a different version,
@@ -2110,7 +2110,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   if (gSafeMode) {
     RemoveComponentRegistries(profD, profLD, PR_FALSE);
     WriteVersion(profD, NS_LITERAL_CSTRING("Safe Mode"),
-                 dirProvider.GetAppDir(), gAppData->directory);
+                 dirProvider.GetGREDir(), gAppData->directory);
   }
   else if (versionOK) {
     if (ComponentsListChanged(profD)) {
@@ -2135,7 +2135,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     // Write out version
     WriteVersion(profD, version,
-                 dirProvider.GetAppDir(), gAppData->directory);
+                 dirProvider.GetGREDir(), gAppData->directory);
   }
 
   PRBool needsRestart = PR_FALSE;

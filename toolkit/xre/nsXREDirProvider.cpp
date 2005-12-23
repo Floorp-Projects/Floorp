@@ -115,13 +115,13 @@ nsXREDirProvider::Initialize(nsIFile *aXULAppDir)
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIFile> appDir;
-  rv = lf->GetParent(getter_AddRefs(appDir));
+  nsCOMPtr<nsIFile> greDir;
+  rv = lf->GetParent(getter_AddRefs(greDir));
   if (NS_FAILED(rv))
     return rv;
 
-  mAppDir = do_QueryInterface(appDir);
-  if (!mAppDir)
+  mGREDir = do_QueryInterface(greDir);
+  if (!mGREDir)
     return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -177,12 +177,13 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
 {
   *aPersistent = PR_TRUE;
 
+  if (!strcmp(aProperty, NS_GRE_DIR)) {
+    return mGREDir->Clone(aFile);
+  }
+
   if (!strcmp(aProperty, NS_OS_CURRENT_PROCESS_DIR) ||
       !strcmp(aProperty, NS_APP_INSTALL_CLEANUP_DIR)) {
-    // NOTE: this should be *different* than NS_XPCOM_CURRENT_PROCESS_DIR.
-    // This should point to the application dir.
-    // NS_XPCOM_CURRENT_PROCESS_DIR points to the toolkit. But we suck.
-    return mAppDir->Clone(aFile);
+    return GetAppDir()->Clone(aFile);
   }
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -194,7 +195,9 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
   }
   else if (!strcmp(aProperty, NS_APP_PREF_DEFAULTS_50_DIR))
   {
-    rv = mAppDir->Clone(getter_AddRefs(file));
+    // return the GRE default prefs directory here, and the app default prefs
+    // directory (if applicable) in NS_APP_PREFS_DEFAULTS_DIR_LIST.
+    rv = mGREDir->Clone(getter_AddRefs(file));
     if (NS_SUCCEEDED(rv)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("defaults"));
       if (NS_SUCCEEDED(rv))
@@ -235,8 +238,8 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     if (NS_SUCCEEDED(rv))
       file = lf;
   }
-  else if (mXULAppDir && !strcmp(aProperty, "resource:app")) {
-    rv = mXULAppDir->Clone(getter_AddRefs(file));
+  else if (!strcmp(aProperty, "resource:app")) {
+    rv = GetAppDir()->Clone(getter_AddRefs(file));
   }
   else if (mProfileDir) {
     // We need to allow component, xpt, and chrome registration to
@@ -488,7 +491,7 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
     nsCOMArray<nsIFile> manifests;
 
     nsCOMPtr<nsIFile> manifest;
-    mAppDir->Clone(getter_AddRefs(manifest));
+    mGREDir->Clone(getter_AddRefs(manifest));
     manifest->AppendNative(NS_LITERAL_CSTRING("chrome"));
     manifests.AppendObject(manifest);
 
@@ -891,13 +894,13 @@ nsXREDirProvider::EnsureProfileFileExists(nsIFile *aFile)
 nsresult
 nsXREDirProvider::GetProfileDefaultsDir(nsIFile* *aResult)
 {
-  NS_ASSERTION(mAppDir, "nsXREDirProvider not initialized.");
+  NS_ASSERTION(mGREDir, "nsXREDirProvider not initialized.");
   NS_PRECONDITION(aResult, "Null out-param");
 
   nsresult rv;
   nsCOMPtr<nsIFile> defaultsDir;
 
-  rv = mAppDir->Clone(getter_AddRefs(defaultsDir));
+  rv = GetAppDir()->Clone(getter_AddRefs(defaultsDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = defaultsDir->AppendNative(NS_LITERAL_CSTRING("defaults"));

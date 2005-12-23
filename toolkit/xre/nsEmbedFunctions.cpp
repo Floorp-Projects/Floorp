@@ -193,7 +193,9 @@ XRE_InitEmbedding(nsILocalFile *aLibXULDirectory,
     return NS_OK;
 
   NS_ENSURE_ARG(aLibXULDirectory);
-  NS_ENSURE_ARG(aAppDirectory);
+
+  if (!aAppDirectory)
+    aAppDirectory = aLibXULDirectory;
 
   nsresult rv;
 
