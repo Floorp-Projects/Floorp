@@ -15,7 +15,7 @@
 		<tr>
 			<td class="label"><label for="report_description">Description:</label></td>
  			<td><input id="report_description" name="report_description" type="text" size="35" value="{$report_description}"></td>
-			<td rowspan="4">
+			<td rowspan="5">
 				<table>
 					<tr>
 						<td class="label"><label for="report_useragent">User Agent:</label></td>
