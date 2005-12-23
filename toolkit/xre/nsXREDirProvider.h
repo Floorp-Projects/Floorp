@@ -78,14 +78,19 @@ public:
   }
 
   /* make sure you clone it, if you need to do stuff to it */
-  nsIFile* GetAppDir() { return mAppDir; }
+  nsIFile* GetGREDir() { return mGREDir; }
+  nsIFile* GetAppDir() { 
+    if (mXULAppDir)
+      return mXULAppDir;
+    return mGREDir;
+  }
 
 protected:
   static nsresult GetUserDataDirectory(nsILocalFile* *aFile, PRBool aLocal);
   static nsresult EnsureDirectoryExists(nsIFile* aDirectory);
   void EnsureProfileFileExists(nsIFile* aFile);
 
-  nsCOMPtr<nsILocalFile> mAppDir;
+  nsCOMPtr<nsILocalFile> mGREDir;
   nsCOMPtr<nsIFile>      mXULAppDir;
   nsCOMPtr<nsIFile>      mProfileDir;
   nsCOMPtr<nsIFile>      mProfileLocalDir;
