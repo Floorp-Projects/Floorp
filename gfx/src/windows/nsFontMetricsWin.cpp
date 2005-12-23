@@ -5691,7 +5691,23 @@ SignatureMatchesLangGroup(FONTSIGNATURE* aSignature,
 static int
 FontMatchesGenericType(nsGlobalFont* aFont, const char* aGeneric)
 {
-  switch (aFont->logFont.lfPitchAndFamily & 0xF0) {
+  PRUint8 family = aFont->logFont.lfPitchAndFamily & 0xF0;
+  PRUint8 pitch = aFont->logFont.lfPitchAndFamily & 0x0F;
+
+  // Japanese 'Mincho' fonts do not belong to FF_MODERN even if
+  // they are fixed pitch because they have variable stroke width.
+  if (family == FF_ROMAN && pitch & FIXED_PITCH) {
+    return !strcmp(aGeneric, "monospace");
+  }
+
+  // Japanese 'Gothic' fonts do not belong to FF_SWISS even if
+  // they are variable pitch because they have constant stroke width.
+  if (family == FF_MODERN && pitch & VARIABLE_PITCH) {
+    return !strcmp(aGeneric, "sans-serif");
+  }
+
+  // All other fonts will be grouped correctly using family...
+  switch (family) {
     case FF_DONTCARE:   return 1;
     case FF_ROMAN:      return !strcmp(aGeneric, "serif");
     case FF_SWISS:      return !strcmp(aGeneric, "sans-serif");
