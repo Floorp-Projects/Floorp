@@ -921,7 +921,7 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
 //
 //-------------------------------------------------------------------------
 MouseTrailer::MouseTrailer() : mMouseTrailerWindow(nsnull), mCaptureWindow(nsnull),
-  mIsInCaptureMode(PR_FALSE), mIgnoreNextCycle(PR_FALSE)
+  mIsInCaptureMode(PR_FALSE), mEnabled(PR_TRUE)
 {
 }
 //-------------------------------------------------------------------------
@@ -964,7 +964,7 @@ void MouseTrailer::SetCaptureWindow(HWND aWnd)
 //-------------------------------------------------------------------------
 nsresult MouseTrailer::CreateTimer()
 {
-  if (mTimer) {
+  if (mTimer || !mEnabled) {
     return NS_OK;
   } 
 
@@ -1015,29 +1015,24 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
   }
 
   if (mSingleton.mMouseTrailerWindow && ::IsWindow(mSingleton.mMouseTrailerWindow)) {
-    if (mSingleton.mIgnoreNextCycle) {
-      mSingleton.mIgnoreNextCycle = PR_FALSE;
-    }
-    else {
-      POINT mp;
-      DWORD pos = ::GetMessagePos();
-      mp.x = GET_X_LPARAM(pos);
-      mp.y = GET_Y_LPARAM(pos);
+    POINT mp;
+    DWORD pos = ::GetMessagePos();
+    mp.x = GET_X_LPARAM(pos);
+    mp.y = GET_Y_LPARAM(pos);
 
-      HWND mouseWnd = WindowFromPoint(mp);
-      if (mSingleton.mMouseTrailerWindow != mouseWnd) {
+    HWND mouseWnd = ::WindowFromPoint(mp);
+    if (mSingleton.mMouseTrailerWindow != mouseWnd) {
 #ifndef WINCE
-        // Notify someone that a mouse exit happened.
-        // This must be posted to the toplevel window. Otherwise event state
-        // manager might think the mouse is still within window bounds and 
-        // convert this to a move message.
-        PostMessage(mSingleton.mMouseTrailerWindow, WM_MOUSELEAVE, NULL, NULL);
+      // Notify someone that a mouse exit happened.
+      // This must be posted to the toplevel window. Otherwise event state
+      // manager might think the mouse is still within window bounds and 
+      // convert this to a move message.
+      PostMessage(mSingleton.mMouseTrailerWindow, WM_MOUSELEAVE, NULL, NULL);
 #endif
 
-        // we are out of this window, destroy timer
-        mSingleton.DestroyTimer();
-        mSingleton.mMouseTrailerWindow = nsnull;
-      }
+      // we are out of this window, destroy timer
+      mSingleton.DestroyTimer();
+      mSingleton.mMouseTrailerWindow = nsnull;
     }
   } else {
     mSingleton.DestroyTimer();
