@@ -28,8 +28,8 @@
 [% icon="<img class=icon src='images/star1.gif' title='This result has comments' alt='*'>" %]
 
 [% IF results %]
-<script src="js/Comments.js"></script>
-<script>
+<script type="text/javascript" src="js/Comments.js"></script>
+<script type="text/javascript">
   var comments = new Array();
   [% subscript=0 %]
   [% FOREACH result=results %]
@@ -57,13 +57,18 @@
     <td colspan="2" class="header">Submission Date</td>
     <td class="header">Result ID#</td>    
     <td class="header">Testcase ID#: Summary</td>
+    [% IF show_admin==1 %]<td class="header">Submitted By</td>[% END %]
     <td class="header">Testgroup</td>
     <td class="header">Product</td>
     <td class="header">Platform</td>
     <td class="header">Branch</td>
     <td class="header">Locale</td>
   </tr>
-<tr>
+
+[% colspan=9 %]
+[% IF show_admin==1 %]
+  [% colspan=10 %]
+[% END %]
 
 [% IF results AND results.size > 0 %]
   [% subscript=0 %]
@@ -79,6 +84,7 @@
     </td>
   <td align="left"><a href="show_test.cgi?id=[% result.test_id | html | uri %]">
     [% result.test_id | html %]</a>: [% result.summary | html %]</td> 
+  [% IF show_admin==1 %]<td align="center">[% result.email FILTER html | uri | email %]</td>[% END %]
   <td align="center">[% result.test_group_name | html %]</td>
   <td align="center">[% result.product_name | html %]</td>
   <td align="center">[% result.platform_name | html %]</td>
@@ -90,13 +96,12 @@
 
 [% ELSE %]
   <tr>
-    <td class="no-results" colspan="8">No test results match the search criteria.</td>
+    <td class="no-results" colspan="[% colspan %]">No test results match the search criteria.</td>
   </tr>
 [% END %]
 
 [% IF include_limit_criteria==1 %]
   [% INCLUDE reporting/test_results_limit.tmpl %]
 [% END %]
-
 </table>
 

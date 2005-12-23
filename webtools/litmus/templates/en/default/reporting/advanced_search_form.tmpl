@@ -29,7 +29,7 @@
 
 <form id="advanced_search" name="advanced_search" method="get" action="advanced_search.cgi">
 
-<script>
+<script type="text/javascript">
 function init()
 {
     FormInit(document.forms['advanced_search'], document.location.search);
@@ -48,32 +48,38 @@ Limit your search to specific values of visible fields.
 </td>
 </tr>
 <tr>
-<td class="heading">Product:</td>
-<td>[% INCLUDE form_widgets/select_product.tmpl name="product" placeholder=1 %]</td>
-</tr>
-<tr>
-<td class="heading">Platform:</td>
-<td>[% INCLUDE form_widgets/select_unique_platform.tmpl name="platform" placeholder=1 %]</td>
-</tr>
-<tr>
-<td class="heading">Testgroup:</td>
-<td>[% INCLUDE form_widgets/select_test_group.tmpl name="test_group" placeholder=1 %]</td>
-</tr>
-<tr>
-<td class="heading">Testcase ID#:</td>
-<td>[% INCLUDE form_widgets/select_test_id.tmpl name="test_id" placeholder=1 %]</td>
-</tr>
-<tr>
-<td class="heading">Status:</td>
-<td>[% INCLUDE form_widgets/select_result_status.tmpl name="result_status" placeholder=1 %]</td>
-</tr>
-<tr>
 <td class="heading">Branch:</td>
 <td>[% INCLUDE form_widgets/select_branch.tmpl name="branch" placeholder=1 %]</td>
 </tr>
 <tr>
 <td class="heading">Locale:</td>
 <td>[% INCLUDE form_widgets/select_locale.tmpl name="locale" placeholder=1 %]</td>
+</tr>
+<tr>
+<td class="heading">Platform:</td>
+<td>[% INCLUDE form_widgets/select_unique_platform.tmpl name="platform" placeholder=1 %]</td>
+</tr>
+<tr>
+<td class="heading">Product:</td>
+<td>[% INCLUDE form_widgets/select_product.tmpl name="product" placeholder=1 %]</td>
+</tr>
+<tr>
+<td class="heading">Status:</td>
+<td>[% INCLUDE form_widgets/select_result_status.tmpl name="result_status" placeholder=1 %]</td>
+</tr>
+[% IF show_admin==1 %]
+<tr>
+<td class="heading">Submitted By:</td>
+<td>[% INCLUDE form_widgets/select_email.tmpl name="email" placeholder=1 %]</td>
+</tr>
+[% END %]
+<tr>
+<td class="heading">Testcase ID#:</td>
+<td>[% INCLUDE form_widgets/select_test_id.tmpl name="test_id" placeholder=1 %]</td>
+</tr>
+<tr>
+<td class="heading">Testgroup:</td>
+<td>[% INCLUDE form_widgets/select_test_group.tmpl name="test_group" placeholder=1 %]</td>
 </tr>
 </table>
   </div>
@@ -86,15 +92,15 @@ Limit your search to specific values of visible fields.
   <div class="section-content">
 <table class="advanced-search">
 <tr>
-<td colspan="2" class="instructions">Display only results between these two dates.</p><p>NOTE: the preferred format for dates is YYYYMMDDhhmmss, although the search engine will do its best (within reason) to parse dates from whatever is submitted.</td>
+<td colspan="2" class="instructions"><p>Display only results between these two dates.</p><p>NOTE: the preferred format for dates is YYYYMMDDhhmmss, although the search engine will do its best (within reason) to parse dates from whatever is submitted.</p></td>
 </tr>
 <tr>
 <td class="heading">Start Date:</td>
-<td><input type="text" name="start_date" value=""></td>
+<td><input type="text" name="start_date" value="" /></td>
 </tr>
 <tr>
 <td class="heading">End Date:</td>
-<td><input type="text" name="end_date" value="Now"></td>
+<td><input type="text" name="end_date" value="Now" /></td>
 </tr>
 </table>
   </div>
@@ -114,22 +120,22 @@ Perform more elaborate pattern matching against all fields.
 <tr>
 <td>[% INCLUDE form_widgets/select_search_field.tmpl name="search_field1" %]</td>
 <td>[% INCLUDE form_widgets/select_match_criteria.tmpl name="match_criteria1" %]</td>
-<td><input type="text" name="search_value1" value=""></td>
+<td><input type="text" name="search_value1" value="" /></td>
 </tr>
 <tr>
 <td>[% INCLUDE form_widgets/select_search_field.tmpl name="search_field2" %]</td>
 <td>[% INCLUDE form_widgets/select_match_criteria.tmpl name="match_criteria2" %]</td>
-<td><input type="text" name="search_value2" value=""></td>
+<td><input type="text" name="search_value2" value="" /></td>
 </tr>
 <tr>
 <td>[% INCLUDE form_widgets/select_search_field.tmpl name="search_field3" %]</td>
 <td>[% INCLUDE form_widgets/select_match_criteria.tmpl name="match_criteria3" %]</td>
-<td><input type="text" name="search_value3" value=""></td>
+<td><input type="text" name="search_value3" value="" /></td>
 </tr>
 <tr>
 <td>[% INCLUDE form_widgets/select_search_field.tmpl name="search_field4" %]</td>
 <td>[% INCLUDE form_widgets/select_match_criteria.tmpl name="match_criteria4" %]</td>
-<td><input type="text" name="search_value4" value=""></td>
+<td><input type="text" name="search_value4" value="" /></td>
 </tr>
 </table>
   </div>
@@ -181,7 +187,8 @@ Define the sort order for your results.
 Use this to limit the number of results displayed.
 </td>
 </tr>
-<td colspan="2">Limit to <input type="text" name="limit" value="15" size="5"> results</td>
+<tr>
+<td colspan="2">Limit to <input type="text" name="limit" value="15" size="5" /> results</td>
 </tr>
 </table>
   </div>
@@ -198,14 +205,15 @@ Use this to limit the number of results displayed.
 Admin-specific limiting criteria go here. These criteria are not available to regular users.
 </td>
 </tr>
-<td colspan="2"><input type="checkbox" name="trusted_only">&nbsp;Display only test results from trusted sources</td>
+<tr>
+<td colspan="2"><input type="checkbox" name="trusted_only" />&nbsp;Display only test results from trusted sources</td>
 </tr>
 </table>
   </div>
 </div>
 
-<div>
-<input class="button" type="reset" onclick="FormInit(this.parent, '');">&nbsp;<input class="button" type="submit">
+<div class="formButtons">
+<input class="button" type="reset" onclick="FormInit(this.parent, '');" />&nbsp;<input class="button" type="submit" />
 </div>
 
 </form>

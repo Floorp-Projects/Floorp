@@ -92,7 +92,6 @@ if ($c->param) {
                            'search_field' => $search_field,
                            'match_criteria' => $match_criteria,
                            'value' => $value};
-
             $where_criteria .= "$search_field $match_criteria '$value'<br/>";
 
         } elsif ($param eq 'start_date') {
@@ -130,6 +129,12 @@ if ($c->param) {
             push @where, {field => 'locale',
                           value => $value};
             $where_criteria .= "Locale is \'".$c->param($param)."\'<br/>";
+            $defaults->{locale} =  $c->param($param);
+        } elsif ($param eq 'email') {
+            my $value = $c->param($param);
+            push @where, {field => 'email',
+                          value => $value};
+            $where_criteria .= "Submitted By is \'".$c->param($param)."\'<br/>";
             $defaults->{locale} =  $c->param($param);
         } elsif ($param eq 'product') {
             my $value = $c->param($param);
@@ -202,6 +207,7 @@ my $test_ids = Litmus::FormWidget->getTestIDs;
 my $result_statuses = Litmus::FormWidget->getResultStatuses;
 my $branches = Litmus::FormWidget->getBranches;
 my $locales = Litmus::FormWidget->getLocales;
+my $users = Litmus::FormWidget->getUsers;
 
 my $fields = Litmus::FormWidget->getFields;
 my $match_criteria = Litmus::FormWidget->getMatchCriteria;
@@ -219,6 +225,7 @@ my $vars = {
     result_statuses => $result_statuses,
     branches => $branches,
     locales => $locales,
+    users => $users,
     fields => $fields,
     match_criteria => $match_criteria,
     sort_fields => $sort_fields,

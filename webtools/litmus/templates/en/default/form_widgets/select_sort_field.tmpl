@@ -2,8 +2,10 @@
     <option value="">-Sort Field-</option>
 [% IF sort_fields %]
 [% FOREACH sort_field=sort_fields %]
+    [% IF sort_field.name!='email' || show_admin==1 %]
     <option value="[% sort_field.name | html %]">
       [% sort_field.display_string | html %]</option>
+    [% END %]
 [% END %]
 [% END %]
 </select>

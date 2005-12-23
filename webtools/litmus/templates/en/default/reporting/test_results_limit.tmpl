@@ -27,9 +27,9 @@
 
 [% PROCESS global/selects.none.tmpl %]
 
-<form name="search_results" method="get" action="search_results.cgi" onSubmit="if(this.summary.value=='-Summary-'){this.summary.value = '';}">
+<form name="search_results" method="get" action="search_results.cgi" onSubmit="if(this.summary.value=='-Summary-'){this.summary.value = '';}if(this.email.value=='-Submitted By-'){this.email.value = '';}">
 
-<script>
+<script type="text/javascript">
 function init()
 {
     FormInit(document.forms['search_results'], document.location.search);
@@ -53,6 +53,16 @@ function init()
         <option[% IF order_bys.test_id == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
         <option[% IF order_bys.test_id == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
       </select></td>
+
+  [% colspan=7 %]
+  [% IF show_admin==1 %]
+  [% colspan=8 %]
+  <td class="search"><select name="order_by_email">
+        <option value="">-Sort-</option>
+        <option[% IF order_bys.email == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
+        <option[% IF order_bys.email == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+      </select></td>
+  [% END %]
 
   <td class="search"><select name="order_by_test_group">
         <option value="">-Sort-</option>
@@ -92,6 +102,7 @@ function init()
   <td class="search">[% INCLUDE form_widgets/select_timespan.tmpl %]</td>
   <td class="search"></td>
   <td class="search">[% INCLUDE form_widgets/input_summary.tmpl %]</td>
+  [% IF show_admin==1 %]<td class="search">[% INCLUDE form_widgets/input_email.tmpl %]</td>[% END %]
   <td class="search">[% INCLUDE form_widgets/select_test_group.tmpl name="test_group" placeholder=1 %]</td>
   <td class="search">[% INCLUDE form_widgets/select_product.tmpl name="product" placeholder=1 %]</td>
   <td class="search">[% INCLUDE form_widgets/select_unique_platform.tmpl name="platform" placeholder=1 %]</td>
@@ -103,10 +114,10 @@ function init()
   <td class="search-heading" align="center">
 Limit to</td>
   <td class="search">
-  <input type="text" name="limit" value="[% limit | html %]" size="5"> results</td>
-  <td class="search-submit" colspan="7">
-  <input class="button" type="reset" onclick="FormInit(this.parent, '');">&nbsp;
-  <input class="button" type="submit" value="Show Results">
+  <input type="text" name="limit" value="[% limit | html %]" size="5" /> results</td>
+  <td class="search-submit" colspan="[% colspan %]">
+  <input class="button" type="reset" onclick="FormInit(this.parent, '');" />&nbsp;
+  <input class="button" type="submit" value="Show Results" />
 </td>
 </tr>
 

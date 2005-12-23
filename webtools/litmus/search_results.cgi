@@ -99,6 +99,11 @@ if ($c->param) {
             push @where, {field => $param,
                           value => $value};
             $where_criteria .= "Summary like \'".$c->param($param)."\'<br/>";
+        } elsif ($param eq 'email') {
+            my $value = quotemeta($c->param($param));
+            push @where, {field => $param,
+                          value => $value};
+            $where_criteria .= "Submitted By like \'".$c->param($param)."\'<br/>";
         } elsif ($param eq 'result_status') {
             my $value = quotemeta($c->param($param));
             push @where, {field => $param,

@@ -939,13 +939,23 @@ table.category h1 {
     font-size: 1.1em;
 }
 
-input.category {
+input.category, input.button {
     font-size: 1em;
     margin: 5px 0px 0px 0px;
 }
+
+input.textbox {
+    font-size: .9em;
+    margin: 5px 0px 0px 0px;
+}    
 
 div.advSearchForm {
     padding: 0px;
     margin: 0px;
     border: 0px;
 }
+
+div.formButtons {
+    padding-bottom: 15px;
+}
+

@@ -81,10 +81,10 @@ Litmus::DB::Testresult->has_many(bugs => "Litmus::DB::Resultbug", {order_by => '
 Litmus::DB::Testresult->autoinflate(dates => 'Time::Piece');
 
 Litmus::DB::Testresult->set_sql(DefaultTestResults => qq{
-    SELECT tr.testresult_id,tr.test_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev
+    SELECT tr.testresult_id,tr.test_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev, u.email
     FROM test_results tr, tests t, platforms p, opsyses o, branches b, products
-pr, test_result_status_lookup trsl, test_groups tg, subgroups sg
-    WHERE tr.test_id=t.test_id AND tr.platform_id=p.platform_id AND tr.opsys_id=o.opsys_id AND tr.branch_id=b.branch_id AND b.product_id=pr.product_id AND tr.result_id=trsl.result_status_id AND t.subgroup_id=sg.subgroup_id AND sg.testgroup_id=tg.testgroup_id 
+pr, test_result_status_lookup trsl, test_groups tg, subgroups sg, users u
+    WHERE tr.test_id=t.test_id AND tr.platform_id=p.platform_id AND tr.opsys_id=o.opsys_id AND tr.branch_id=b.branch_id AND b.product_id=pr.product_id AND tr.result_id=trsl.result_status_id AND t.subgroup_id=sg.subgroup_id AND sg.testgroup_id=tg.testgroup_id AND tr.user_id=u.user_id
     ORDER BY tr.submission_time DESC
     LIMIT $_num_results_default 
 });
@@ -165,7 +165,7 @@ sub istrusted {
 sub getDefaultTestResults($) {
     my $self = shift;
     my @rows = $self->search_DefaultTestResults();
-    my $criteria = "Default<br/>Ordered by Created<br>Limit to $_num_results_default results";
+    my $criteria = "Default<br/>Ordered by Created<br/>Limit to $_num_results_default results";
     return $criteria, \@rows;
 }
 
@@ -176,11 +176,11 @@ sub getDefaultTestResults($) {
 sub getTestResults($\@\@$) {
     my ($self,$where_criteria,$order_by_criteria,$limit_value) = @_;
     
-    my $select = 'SELECT tr.testresult_id,tr.test_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name AS result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev';
+    my $select = 'SELECT tr.testresult_id,tr.test_id,t.summary,tr.submission_time AS created,p.name AS platform_name,pr.name as product_name,trsl.name AS result_status,trsl.class_name AS result_status_class,b.name AS branch_name,tg.name AS test_group_name, tr.locale_abbrev, u.email';
     
-    my $from = 'FROM test_results tr, tests t, platforms p, opsyses o, branches b, products pr, test_result_status_lookup trsl, test_groups tg, subgroups sg';
+    my $from = 'FROM test_results tr, tests t, platforms p, opsyses o, branches b, products pr, test_result_status_lookup trsl, test_groups tg, subgroups sg, users u';
     
-    my $where = 'WHERE tr.test_id=t.test_id AND tr.platform_id=p.platform_id AND tr.opsys_id=o.opsys_id AND tr.branch_id=b.branch_id AND b.product_id=pr.product_id AND tr.result_id=trsl.result_status_id AND t.subgroup_id=sg.subgroup_id AND sg.testgroup_id=tg.testgroup_id';
+    my $where = 'WHERE tr.test_id=t.test_id AND tr.platform_id=p.platform_id AND tr.opsys_id=o.opsys_id AND tr.branch_id=b.branch_id AND b.product_id=pr.product_id AND tr.result_id=trsl.result_status_id AND t.subgroup_id=sg.subgroup_id AND sg.testgroup_id=tg.testgroup_id AND tr.user_id=u.user_id';
     
     my $limit = 'LIMIT ';
 
@@ -199,6 +199,8 @@ sub getTestResults($\@\@$) {
             $where .= " AND tr.test_id='" . $criterion->{'value'} . "'";
         } elsif ($criterion->{'field'} eq 'summary') {
             $where .= ' AND t.summary LIKE \'%%' . $criterion->{'value'} . '%%\'';
+        } elsif ($criterion->{'field'} eq 'email') {
+            $where .= ' AND u.email LIKE \'%%' . $criterion->{'value'} . '%%\'';
         } elsif ($criterion->{'field'} eq 'result_status') {
             $where .= " AND trsl.class_name='" . $criterion->{'value'} . "'";
         } elsif ($criterion->{'field'} eq 'trusted_only') {            
@@ -259,6 +261,8 @@ sub getTestResults($\@\@$) {
             $order_by .= "b.name $criterion->{'direction'},";
         } elsif ($criterion->{'field'} eq 'locale') {
             $order_by .= "tr.locale_abbrev $criterion->{'direction'},";
+        } elsif ($criterion->{'field'} eq 'email') {
+            $order_by .= "u.email $criterion->{'direction'},";
         } else {
             # Skip unknown field
         }

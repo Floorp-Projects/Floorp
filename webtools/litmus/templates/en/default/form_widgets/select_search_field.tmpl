@@ -2,8 +2,10 @@
     <option value="">-Field-</option>
 [% IF fields %]
 [% FOREACH field=fields %]
+    [% IF field.name!='email' || show_admin==1 %]
     <option value="[% field.name | html %]">
       [% field.display_string | html %]</option>
+    [% END %]
 [% END %]
 [% END %]
 </select>

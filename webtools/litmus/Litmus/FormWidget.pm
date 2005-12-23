@@ -141,13 +141,6 @@ sub getBranches()
 }
 
 #########################################################################
-sub getLocales()
-{
-    my $sql = "SELECT DISTINCT(abbrev) FROM locale_lookup ORDER BY abbrev";
-    return _getValues($sql);
-}
-
-#########################################################################
 sub getOpsyses()
 {
     my $sql = "SELECT DISTINCT(name) FROM opsyses ORDER BY name";
@@ -199,6 +192,15 @@ sub getLocales()
 }
 
 #########################################################################
+sub getUsers()
+{
+  my @users = Litmus::DB::User->retrieve_all(
+                                             { order_by => 'email' }
+                                            );
+  return \@users;
+}
+
+#########################################################################
 sub getFields()
 {
     my @fields = (
@@ -219,7 +221,7 @@ sub getFields()
                   { name => 'subgroup',
                     display_string => "Subgroup", },
                   { name => 'email',
-                    display_string => "Submitter", },
+                    display_string => "Submitted By", },
                   { name => 'summary',
                     display_string => "Summary", }, 
                   { name => 'test_group',
@@ -260,24 +262,26 @@ sub getMatchCriteria()
 sub getSortFields()
 {
     my @sort_fields = (
+                       { name => "branch", 
+                         display_string => "Branch"},
                        { name => "created", 
                          display_string => "Date"},
-                       { name => "product", 
-                         display_string => "Product"},
+                       { name => "locale", 
+                         display_string => "Locale"},
                        { name => "platform", 
                          display_string => "Platform"},
-                       { name => "test_group", 
-                         display_string => "Testgroup"},
-                       { name => "test_id", 
-                         display_string => "Testcase ID#"},
+                       { name => "product", 
+                         display_string => "Product"},
+                       { name => "email", 
+                         display_string => "Submitted By"},
                        { name => "summary", 
                          display_string => "Summary"},
                        { name => "result_status", 
                          display_string => "Status"},
-                       { name => "branch", 
-                         display_string => "Branch"},
-                       { name => "locale", 
-                         display_string => "Locale"},
+                       { name => "test_id", 
+                         display_string => "Testcase ID#"},
+                       { name => "test_group", 
+                         display_string => "Testgroup"},
                        );
     return \@sort_fields;
 }
