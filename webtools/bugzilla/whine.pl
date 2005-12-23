@@ -404,7 +404,7 @@ sub mail {
 
     # now produce a ready-to-mail mime-encoded message
 
-    $args->{'boundary'} = "-----=====-----" . $$ . "--" . time() . "-----";
+    $args->{'boundary'} = "----------" . $$ . "--" . time() . "-----";
 
     $template->process("whine/multipart-mime.txt.tmpl", $args, \$msg)
         or die($template->error());
