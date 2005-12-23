@@ -55,22 +55,19 @@
  * This allocator is thread safe.
  *
  * CAVEATS: As the number of buckets increases, this allocators performance
- *          will drop. As a general guideline, don't use this for more
- *          than NS_MAX_BLOCKS
+ *          will drop, as the list of freed items is a linked list sorted on size.
  */
 
 #ifndef nsRecyclingAllocator_h__
 #define nsRecyclingAllocator_h__
 
 #include "nscore.h"
-#include "pratom.h"
 #include "prlock.h"
 #include "nsIRecyclingAllocator.h"
 #include "nsIGenericFactory.h"
 
 #define NS_DEFAULT_RECYCLE_TIMEOUT 10  // secs
-#define NS_MAX_BLOCKS              24
-#define NS_ALLOCATOR_OVERHEAD_BYTES (sizeof(Block)) // bytes
+#define NS_ALLOCATOR_OVERHEAD_BYTES (sizeof(PRSize)) // bytes
 
 class nsITimer;
 class nsIMemory;
@@ -79,40 +76,23 @@ class NS_COM nsRecyclingAllocator {
  protected:
     struct Block {
       PRSize bytes;
-    };
-
-    // Make |BlockStoreNode| a |friend| so it can access |Block|.
-    struct BlockStoreNode;
-    friend struct BlockStoreNode;
-
-    struct BlockStoreNode {
-      BlockStoreNode() : bytes(0), block(nsnull), next(nsnull) {};
-      PRSize bytes;
-      Block *block;
-      BlockStoreNode *next;
+      Block *next;
     };
 
 #define DATA(block) ((void *)(((char *)block) + NS_ALLOCATOR_OVERHEAD_BYTES))
 #define DATA_TO_BLOCK(data) ((Block *)((char *)(data) - NS_ALLOCATOR_OVERHEAD_BYTES))
 
-    // mMaxBlocks: Maximum number of blocks that can be allocated
+    // mMaxBlocks: Maximum number of blocks that are kept in the mFreeList for recycling
     PRUint32 mMaxBlocks;
 
-    // mBlocks:
-    //  All blocks used or not.
-    BlockStoreNode *mBlocks;
+    // mFreeListCount: Current number of blocks in the mFreeList
+    PRUint32 mFreeListCount;
 
-    // mFreeList
-    //  A linked list of free blocks sorted by increasing order of size
-    BlockStoreNode* mFreeList;
+    // mFreeList: linked list of free blocks sorted by increasing order of size
+    Block* mFreeList;
 
-    // mNotUsedList
-    //  A linked list of BlockStoreNodes that are not used to store
-    //  any block information. When we add blocks into mFreeList, we
-    //  take BlockStoreNode from here.
-    BlockStoreNode* mNotUsedList;
-
-    // mLock: Thread safety of mFreeList and mNotUsedList
+    // mLock: Thread safety for the member variables:
+    //  mFreeList, mFreeListCount, mRecycleTimer, and mTouched
     PRLock *mLock;
 
     // Timer for freeing unused memory
@@ -124,16 +104,16 @@ class NS_COM nsRecyclingAllocator {
     PRUint32 mRecycleAfter;
 
     // mTouched:
-    //  says if the allocator touched any bucket. If allocator didn't touch
-    //  any bucket over a time time interval, timer will call FreeUnusedBuckets()
-    PRInt32 mTouched;
+    //  says if the allocator touched the freelist. If allocator didn't touch
+    //  the freelist over a time time interval, timer will call ClearFreeList()
+    PRBool mTouched;
 
+#ifdef DEBUG
     // mId:
     //  a string for identifying the user of nsRecyclingAllocator
     //  User mainly for debug prints
     const char *mId;
 
-#ifdef DEBUG
     // mNAllocated: Number of blocks allocated
     PRInt32 mNAllocated;
 #endif
@@ -158,32 +138,13 @@ class NS_COM nsRecyclingAllocator {
         return Malloc(items * size, PR_TRUE);
     }
 
-    // FreeUnusedBuckets - Frees any bucket memory that isn't in use
-    void FreeUnusedBuckets();
+    // ClearFreeList - Frees all blocks kept by mFreelist, and stops the timer
+    void ClearFreeList();
 
  protected:
 
     // Timer callback to trigger unused memory
     static void nsRecycleTimerCallback(nsITimer *aTimer, void *aClosure);
-
-    // Freelist management
-    // FindFreeBlock: return a free block that can hold bytes (best fit)
-    Block* FindFreeBlock(PRSize bytes);
-    // AddToFreeList: adds block into our freelist for future retrieval.
-    //  Returns PR_TRUE is addition was successful. PR_FALSE otherewise.
-    PRBool AddToFreeList(Block* block);
-
-    // Touch will mark that someone used this allocator
-    // Timer based release will free unused memory only if allocator
-    // was not touched for mRecycleAfter seconds.
-    void Touch() {
-        if (!mTouched)
-            PR_AtomicSet(&mTouched, 1);
-    }
-    void Untouch() {
-        PR_AtomicSet(&mTouched, 0);
-    }
-
     friend void nsRecycleTimerCallback(nsITimer *aTimer, void *aClosure);
 };
 
