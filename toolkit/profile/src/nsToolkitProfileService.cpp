@@ -846,15 +846,17 @@ nsToolkitProfileService::LockFactory(PRBool aVal)
 nsresult
 NS_NewToolkitProfileService(nsIToolkitProfileService* *aResult)
 {
-    nsToolkitProfileService* aThis = new nsToolkitProfileService();
-    nsresult rv = aThis->Init();
+    nsToolkitProfileService* profileService = new nsToolkitProfileService();
+    if (!profileService)
+        return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = profileService->Init();
     if (NS_FAILED(rv)) {
         NS_ERROR("nsToolkitProfileService::Init failed!");
-        delete aThis;
+        delete profileService;
         return rv;
     }
 
-    NS_ADDREF(*aResult = aThis);
+    NS_ADDREF(*aResult = profileService);
     return NS_OK;
 }
 
