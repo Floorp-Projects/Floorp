@@ -48,23 +48,57 @@ header("Cache-control: private"); //IE 6 Fix
 printheaders();
 
 $content = initializeTemplate();
-$content->assign('report_description',          $_GET['report_description']);
-$content->assign('report_useragent',            $_GET['report_useragent']);
-$content->assign('report_gecko',                $_GET['report_gecko']);
-$content->assign('report_language',             $_GET['report_language']);
-$content->assign('report_platform',             $_GET['report_platform']);
-$content->assign('report_oscpu',                $_GET['report_oscpu']);
-$content->assign('product_options',             $config['products']);
-$content->assign('report_product',              $_GET['report_product']);
-$content->assign('report_file_date_start',      $_GET['report_file_date_start']);
-$content->assign('report_file_date_end',        $_GET['report_file_date_end']);
-$content->assign('show',                        $_GET['show']);
-$content->assign('count',                       $_GET['count']);
-$content->assign('host_hostname',               $_GET['host_hostname']);
-$content->assign('report_problem_type',         $_GET['report_problem_type']);
-$content->assign('report_behind_login',         $_GET['report_behind_login']);
-$content->assign('products',                    $products);
-$content->assign('problem_types',               $problemTypes);
+if(isset($_GET['report_description'])){
+    $content->assign('report_description',          $_GET['report_description']);
+}
+if(isset($_GET['report_useragent'])){
+    $content->assign('report_useragent',            $_GET['report_useragent']);
+}
+if(isset($_GET['report_gecko'])){
+    $content->assign('report_gecko',                $_GET['report_gecko']);
+}
+if(isset($_GET['report_language'])){
+    $content->assign('report_language',             $_GET['report_language']);
+}
+if(isset($_GET['report_platform'])){
+    $content->assign('report_platform',             $_GET['report_platform']);
+}
+if(isset($_GET['report_oscpu'])){
+    $content->assign('report_oscpu',                $_GET['report_oscpu']);
+}
+if(isset($config['products'])){
+    $content->assign('product_options',             $config['products']);
+}
+if(isset($_GET['report_product'])){
+    $content->assign('report_product',              $_GET['report_product']);
+}
+if(isset($_GET['report_file_date_start'])){
+    $content->assign('report_file_date_start',      $_GET['report_file_date_start']);
+}
+if(isset($_GET['report_file_date_end'])){
+    $content->assign('report_file_date_end',        $_GET['report_file_date_end']);
+}
+if(isset($_GET['show'])){
+    $content->assign('show',                        $_GET['show']);
+}
+if(isset($_GET['count'])){
+    $content->assign('count',                       $_GET['count']);
+}
+if(isset($_GET['host_hostname'])){
+    $content->assign('host_hostname',               $_GET['host_hostname']);
+}
+if(isset($_GET['report_problem_type'])){
+    $content->assign('report_problem_type',         $_GET['report_problem_type']);
+}
+if(isset($_GET['report_behind_login'])){
+    $content->assign('report_behind_login',         $_GET['report_behind_login']);
+}
+if(isset($products)){
+    $content->assign('products',                    $products);
+}
+if(isset($problemTypes)){
+    $content->assign('problem_types',               $problemTypes);
+}
 
 // Remove fields that you can't manually select
 foreach ($config['unselectablefields'] as $unselectableChild){
@@ -72,7 +106,7 @@ foreach ($config['unselectablefields'] as $unselectableChild){
 }
 
 $content->assign('selected_options',            $config['fields']);
-if ($_GET['selected']){
+if (isset($_GET['selected'])){
     $content->assign('selected',               	$_GET['selected']);
 }
 else {

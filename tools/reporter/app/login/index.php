@@ -48,7 +48,7 @@ session_start();
 header("Cache-control: private"); //IE 6 Fix
 printheaders();
 
-if ($_SESSION['login'] != true){
+if (!isset($_SESSION['login']) || $_SESSION['login'] != true){
     if(isset($_POST['do_login'])){
         $login = false;
 

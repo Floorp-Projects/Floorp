@@ -61,7 +61,7 @@ class securitylib {
     }
 
     function isLoggedIn(){
-        if ($_SESSION['user_username'] && $_SESSION['login'] == true){
+        if (isset($_SESSION['user_username']) && $_SESSION['login'] == true){
            return true;
         }
         return false;

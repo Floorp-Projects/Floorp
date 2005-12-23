@@ -49,10 +49,12 @@ class query
     function getQueryInputs(){
         global $config;
 
+        $artificialReportID = false;
+
         /*******************
          * ASCDESC
          *******************/
-        if (strtolower($_GET['ascdesc']) == 'asc' || strtolower($_GET['ascdesc']) == 'asc'){
+        if (isset($_GET['ascdesc']) && (strtolower($_GET['ascdesc']) == 'asc' || strtolower($_GET['ascdesc']) == 'asc')){
             $ascdesc = $_GET['ascdesc'];
         } else {
             $ascdesc = 'desc';
@@ -61,21 +63,21 @@ class query
         /*******************
          * SHOW (really "Limit")
          *******************/
-        if (!$_GET['show']){
+        if (!isset($_GET['show']) ||
+             $_GET['show'] == null ||
+             $_GET['show'] > 200)
+        {
             $show = $config['show'];
         } else {
             $show = $_GET['show'];
         }
 
-        // no more than 200 results per page
-        if (!$_GET['show'] > 200){
-            $show = 200;
-        }
-
         /*******************
          * PAGE (really other part of "Limit"
          *******************/
-        if (!$_GET['page']){
+        if (!isset($_GET['page']) ||
+            $_GET['page'] == null)
+        {
             $page = 1;
         } else {
             $page = $_GET['page'];
@@ -84,6 +86,7 @@ class query
         /*******************
          * Count
          *******************/
+        $count = null;
         if (isset($_GET['count'])){
             $count = 'host_id'; // XX limitation for now
         }
@@ -98,7 +101,7 @@ class query
            If user defines what to select and were not counting, just
            use their input.
         */
-        if ($_GET['selected'] && !isset($_GET['count'])){
+        if (isset($_GET['selected']) && !isset($_GET['count'])){
             foreach($_GET['selected'] as $selectedChild){
                 if(in_array(strtolower($selectedChild), $this->approved_selects)){
                     $selected[$selectedChild] = $config['fields'][$selectedChild];
@@ -115,7 +118,7 @@ class query
        * ORDER BY
        *******************/
         $orderby = array();
-        if(in_array(strtolower($_GET['orderby']), $this->approved_selects)){
+        if(isset($_GET['orderby']) && in_array(strtolower($_GET['orderby']), $this->approved_selects)){
             $orderby[] = $_GET['orderby'];
         }
         $orderby = array_merge($orderby, $this->calcOrderBy($selected));
@@ -220,15 +223,15 @@ class query
             $sql_where .= $where_child[0].' '.$where_child[1].' '.$db->quote($where_child[2]).' AND ';
         }
 
-        // Dates ar special
+        // Dates aar special
         // if the user didn't delete the default YYYY-MM-DD mask, we do it for them
-        if ($_GET['report_file_date_start'] == 'YYYY-MM-DD'){
+        if (isset($_GET['report_file_date_start']) && $_GET['report_file_date_start'] == 'YYYY-MM-DD'){
             $_GET['report_file_date_start'] = null;
         }
-        if ($_GET['report_file_date_end'] == 'YYYY-MM-DD'){
+        if (isset($_GET['report_file_date_end']) && $_GET['report_file_date_end'] == 'YYYY-MM-DD'){
             $_GET['report_file_date_end'] = null;
         }
-        if (($_GET['report_file_date_start'] != null)  || ($_GET['report_file_date_end'] != null)){
+        if (isset($_GET['report_file_date_start']) &&(($_GET['report_file_date_start'] != null)  || ($_GET['report_file_date_end'] != null))){
 
             // if we have both, we do a BETWEEN
             if ($_GET['report_file_date_start'] && $_GET['report_file_date_end']){
@@ -274,11 +277,12 @@ class query
         /*******************
          * Count
          *******************/
+        $sql_groupby = null;
         if (isset($_GET['count'])){
             $sql_groupby = 'GROUP BY host_id DESC ';
         }
 
-        $sql = $sql_select." \r".$sql_from." \r".$sql_where." \r".$sql_groupby.$sql_orderby." \r".$sql_subOrder;
+        $sql = $sql_select." \r".$sql_from." \r".$sql_where." \r".$sql_groupby.$sql_orderby;
 
         // Calculate Start
         $start = ($page-1)*$show;
@@ -316,9 +320,10 @@ class query
 
     function continuityParams($query_input){
         reset($query_input['where']);
+        $standard = '';
+        $complete = '';
         foreach($query_input['where'] as $node => $item){
-            if($item[0] == 'report_id' && $query_input['artificialReportID']){
-            } else {
+            if(!($item[0] == 'report_id' && $query_input['artificialReportID'])){
                 if(is_numeric($item[2])){
                     $standard .= $item[0].'='.$item[2].'&amp;';;
                 } else {
@@ -326,17 +331,17 @@ class query
                 }
             }
         }
-        foreach($query_input['selected'] as $selected_node => $selected_item){
-            if($selected_node == 'report_id' && $query_input['artificialReportID']){
-            } else {
-                if($selected_node == 'count'){
-                    $complete .= 'selected%5B%5D='.$selected_node.'&amp;';
-                } else {
-                    $standard .= 'selected%5B%5D='.$selected_node.'&amp;';
+        if(isset($query_input['selected']) && sizeof($query_input['selected']) > 0){
+            foreach($query_input['selected'] as $selected_node => $selected_item){
+                if(!($selected_node == 'report_id' && $query_input['artificialReportID'])){
+                    if($selected_node == 'count'){
+                        $complete .= 'selected%5B%5D='.$selected_node.'&amp;';
+                    } else {
+                        $standard .= 'selected%5B%5D='.$selected_node.'&amp;';
+                    }
                 }
             }
         }
-
         // make complete = standard + complete
         $complete = $standard.$complete;
 

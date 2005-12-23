@@ -63,6 +63,10 @@ $db->SetFetchMode(ADODB_FETCH_ASSOC);
 $query = new query;
 $query_input = $query->getQueryInputs();
 
+$continuity_params = $query->continuityParams($query_input);
+
+$columnHeaders = $query->columnHeaders($query_input, $continuity_params);
+
 $result = $query->doQuery($query_input['selected'],
                           $query_input['where'],
                           $query_input['orderby'],
@@ -71,8 +75,6 @@ $result = $query->doQuery($query_input['selected'],
                           $query_input['page'],
                           $query_input['count']
           );
-
-$continuity_params = $query->continuityParams($query_input);
 
 $output = $query->outputHTML($result, $query_input, $continuity_params, $columnHeaders);
 
@@ -98,7 +100,7 @@ if($result['totalResults'] < 2000){
 }
 
 $content->assign('continuity_params',  $continuity_params);
-$content->assign('column',             $query->columnHeaders($query_input, $continuity_params));
+$content->assign('column',             $columnHeaders);
 $content->assign('row',                $output['data']);
 $content->assign('continuityParams',   $continuity_params[1]);
 $content->assign('count',              $result['totalResults']);

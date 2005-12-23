@@ -62,8 +62,6 @@ $query =& $db->Execute("SELECT *
 // disconnect database
 $db->Close();
 
-$title = "Report for - ".$query->fields['host_hostname'];
-
 $content = initializeTemplate();
 
 if (!$query->fields){
@@ -72,6 +70,7 @@ if (!$query->fields){
     exit;
 }
 
+$title = "Report for ".$query->fields['host_hostname']." - ".$query->fields['report_id'];
 $content->assign('report_id',              $query->fields['report_id']);
 $content->assign('report_url',             $query->fields['report_url']);
 $content->assign('host_url',               $config['base_url'].'/app/query/?host_hostname='.$query->fields['host_hostname'].'&amp;submit_query=Query');
@@ -125,8 +124,6 @@ if(isset($_SESSION['reportList'])){
 } else {
     $content->assign('showReportNavigation',          false);
 }
-
-$title = 'Mozilla Reporter: '.$query->fields['report_id'];
 
 displayPage($content, 'report', 'report.tpl', $title);
 ?>
