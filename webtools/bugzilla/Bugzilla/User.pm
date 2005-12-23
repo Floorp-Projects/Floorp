@@ -26,6 +26,7 @@
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Gervase Markham <gerv@gerv.net>
 #                 Lance Larsh <lance.larsh@oracle.com>
+#                 Justin C. De Vries <judevries@novell.com>
 
 ################################################################################
 # Module Initialization
@@ -209,35 +210,28 @@ sub queries {
     return [] unless $self->id;
 
     my $dbh = Bugzilla->dbh;
-    my $sth = $dbh->prepare(q{ SELECT
-                             DISTINCT name, query, linkinfooter, query_type,
-                                      CASE WHEN whine_queries.id IS NOT NULL
-                                      THEN 1 ELSE 0 END,
-                                      UPPER(name) AS uppername 
-                                 FROM namedqueries
-                            LEFT JOIN whine_events
-                                   ON whine_events.owner_userid =
-                                      namedqueries.userid
-                            LEFT JOIN whine_queries
-                                   ON whine_queries.query_name =
-                                      namedqueries.name
-                                  AND whine_queries.eventid = 
-                                      whine_events.id
-                                WHERE namedqueries.userid=?
-                             ORDER BY uppername});
-    $sth->execute($self->{id});
+    my $used_in_whine_ref = $dbh->selectcol_arrayref(q{
+                    SELECT DISTINCT query_name
+                      FROM whine_events we
+                INNER JOIN whine_queries wq
+                        ON we.id = wq.eventid
+                     WHERE we.owner_userid = ?}, undef, $self->{id});
 
-    my @queries;
-    while (my $row = $sth->fetch) {
-        push (@queries, {
-                          name         => $row->[0],
-                          query        => $row->[1],
-                          linkinfooter => $row->[2],
-                          query_type   => $row->[3],
-                          usedinwhine  => $row->[4],
-                        });
+    my $queries_ref = $dbh->selectall_arrayref(q{
+                    SELECT name, query, linkinfooter, query_type
+                      FROM namedqueries 
+                     WHERE userid = ?
+                  ORDER BY UPPER(name)},{'Slice'=>{}}, $self->{id});
+
+    foreach my $name (@$used_in_whine_ref) { 
+        foreach my $queries_hash (@$queries_ref) {
+            if ($queries_hash->{name} eq $name) {
+                $queries_hash->{usedinwhine} = 1;
+                last;
+            }
+        }
     }
-    $self->{queries} = \@queries;
+    $self->{queries} = $queries_ref;
 
     return $self->{queries};
 }
