@@ -426,7 +426,7 @@ $vars->{'default'} = \%default;
 $vars->{'format'} = $cgi->param('format');
 $vars->{'query_format'} = $cgi->param('query_format');
 
-# Set default page to "specific" if none proviced
+# Set default page to "specific" if none provided
 if (!($cgi->param('query_format') || $cgi->param('format'))) {
     if (defined $cgi->cookie('DEFAULTFORMAT')) {
         $vars->{'format'} = $cgi->cookie('DEFAULTFORMAT');
