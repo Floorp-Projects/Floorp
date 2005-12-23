@@ -213,13 +213,14 @@ caption {
   margin-right: 1px !important;
 }
 
-
+/*
 #feed-button[feeds] {
   list-style-image: url("chrome://minimo/skin/rssfavicon.png");
 }
 #feed-button[chromedir="rtl"][feeds] {
   list-style-image: url("chrome://minimo/skin/rssfavicon.png");
 }
+*/
 
 /*
  * urlbar selector icons, these are extensions
@@ -234,7 +235,7 @@ caption {
   list-style-image: url("chrome://minimo/skin/extensions/icon-delicious.png");
 }
 
-#urlbar-deck.search {
+#urlbar-deck.search {	
   list-style-image: url("chrome://minimo/skin/extensions/icon-google.png");
 }
 
