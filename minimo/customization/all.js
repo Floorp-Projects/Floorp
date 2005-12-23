@@ -1,4 +1,4 @@
-pref("general.useragent.extra.minimo", "Minimo/0.011");
+pref("general.useragent.extra.minimo", "Minimo/0.012");
 
 pref("browser.cache.disk.enable",           false);
 pref("browser.cache.disk.capacity",         1024);

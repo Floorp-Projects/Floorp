@@ -28,5 +28,4 @@ SoftKeyBoardModule
 nsPhoneSupportModule
 SpatialNavigationModule
 SSRModule
-nsPermissionsModule
 nsNativeSSLModule

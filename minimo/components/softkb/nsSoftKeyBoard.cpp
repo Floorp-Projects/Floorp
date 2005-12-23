@@ -908,7 +908,6 @@ static const nsModuleComponentInfo components[] =
     SoftKeyBoardServiceRegistration,
     SoftKeyBoardServiceUnregistration
   }
-  
 };
 
 NS_IMPL_NSGETMODULE(SoftKeyBoardModule, components)
