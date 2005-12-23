@@ -1066,11 +1066,13 @@ function URLBarEntered()
     // SB mode
     if(gDeckMode==1) {
 	DoBrowserSB(gURLBar.value);
+      BrowserSetDeck(0,document.getElementById("command_ViewDeckDefault"));
 	return;
     }
 
     if(gDeckMode==2) {
 	DoBrowserSearchURLBAR(gURLBar.value);
+      BrowserSetDeck(0,document.getElementById("command_ViewDeckDefault"));
       return;
     }
     /* Other normal cases */ 
