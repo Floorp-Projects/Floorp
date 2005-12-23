@@ -242,9 +242,9 @@
 
           <tr>
             <td align="right">
-              <b><u>V</u>ersion:</b>
+              <b>Version:</b>
             </td>
-            [% PROCESS select selname => "version" accesskey => "v" %]
+            [% PROCESS select selname => "version" %]
           </tr>
 
           <tr>
@@ -256,9 +256,9 @@
 
           <tr>
             <td align="right">
-              <b><a href="page.cgi?id=fields.html#bug_severity">S<u>e</u>verity</a>:</b>
+              <b><a href="page.cgi?id=fields.html#bug_severity">Severity</a>:</b>
             </td>
-            [% PROCESS select selname = "bug_severity" accesskey => "e" %]
+            [% PROCESS select selname = "bug_severity" %]
           </tr>
 
           [% IF Param("usetargetmilestone") && bug.target_milestone %]
@@ -268,10 +268,10 @@
                   [% IF bug.milestoneurl %]
                     <a href="[% bug.milestoneurl FILTER html %]">
                   [% END %]
-                  <u>T</u>arget Milestone[% "</a>" IF bug.milestoneurl %]:
+                  Target Milestone[% "</a>" IF bug.milestoneurl %]:
                 </b>
               </td>
-              [% PROCESS select selname = "target_milestone" accesskey => "t" %]
+              [% PROCESS select selname = "target_milestone" %]
             </tr>
           [% END %]
 
@@ -510,8 +510,8 @@
 
   <table>
     <tr>
-    [% PROCESS dependencies accesskey = "d"
-       dep = { title => "<u>d</u>epends on", fieldname => "dependson" } %]
+    [% PROCESS dependencies
+       dep = { title => "depends on", fieldname => "dependson" } %]
       <td rowspan="2">
         <a href="showdependencytree.cgi?id=[% bug.bug_id %]">Show
         dependency tree</a>
