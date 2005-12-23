@@ -1,16 +1,18 @@
 <fieldset>
 	<legend>Look up Report</legend>
-	<form method="get" action ="{$app_url}/report/" ID="Form1">
-		<label for="report_id">Report ID</label>
-		<input type="text" id="report_id" name="report_id" />
-		<input type="submit" id="submit_reportID" name="submit_reportID" value="Lookup Report" />
+	<form method="get" action ="{$app_url}/report/" id="getReport">
+		<p>
+			<label for="report_id">Report ID</label>
+			<input type="text" id="report_id" name="report_id" />
+			<input type="submit" id="submit_reportID" name="submit_reportID" value="Lookup Report" />
+		</p>
 	</form>
 </fieldset>
 
 <!-- Query -->
 <fieldset>
 	<legend>Search for a Report</legend>
-	<form method="get" action="{$app_url}/query/">
+	<form method="get" action="{$app_url}/query/" id="detailQuery">
 	<table id="reporterSearch">
 		<tr>
 			<td class="label"><label for="report_description">Description:</label></td>
@@ -51,7 +53,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td class="label"><label for="report_oscpu" title="oscpu">OS:</td>
+						<td class="label"><label for="report_oscpu" title="oscpu">OS:</label></td>
 						<td><input id="report_oscpu" name="report_oscpu" type="text" size="35" value="{$report_oscpu}"></td>
 					</tr>
 					<tr>
@@ -83,22 +85,22 @@
 			</td>
 		</tr>
 		<tr>
-			<td class="label"><label for="host_hostname">Host:</td>
+			<td class="label"><label for="host_hostname">Host:</label></td>
 			<td><input id="host_hostname" name="host_hostname" type="text" size="35" value="{$host_hostname}"></td>
 		</tr>
 		<tr>
 			<td class="label"><label for="report_problem_type">Problem Type:</label></td>
 			<td>
-				<input type="radio" name="report_problem_type" id="0" value="0" {if $report_problem_type == '0' || $report_problem_type == null}checked="true"{/if}><label for="0">All types</label><br>
+				<input type="radio" name="report_problem_type" id="0" value="0" {if $report_problem_type == '0' || $report_problem_type == null}checked="checked"{/if}><label for="0">All types</label><br>
 				{html_radios name="report_problem_type" options=$problem_types selected=$report_problem_type separator="<br />"}
 			</td>
 		</tr>
 		<tr>
-			<td class="label"><label for="report_behind_login">Site requires login:</label></td>
+			<td class="label">Site requires login:</td>
 			<td>
-				<input type="radio" name="report_behind_login" id="behind_login_null" value="-1" {if $report_behind_login == '-1' || $report_behind_login == ''}checked="true"{/if}><label for="behind_login_null">Any</label>
-				<input type="radio" name="report_behind_login" id="behind_login_yes" value="0" {if $report_behind_login == '0'}checked="true"{/if}><label for="behind_login_yes">Yes</label>
-				<input type="radio" name="report_behind_login" id="behind_login_no" value="1" {if $report_behind_login == '1'}checked="true"{/if}><label for="behind_login_no">No</label>
+				<input type="radio" name="report_behind_login" id="behind_login_null" value="-1" {if $report_behind_login == '-1' || $report_behind_login == ''}checked="checked"{/if}><label for="behind_login_null">Any</label>
+				<input type="radio" name="report_behind_login" id="behind_login_yes" value="0" {if $report_behind_login == '0'}checked="checked"{/if}><label for="behind_login_yes">Yes</label>
+				<input type="radio" name="report_behind_login" id="behind_login_no" value="1" {if $report_behind_login == '1'}checked="checked"{/if}><label for="behind_login_no">No</label>
 			</td>
 		</tr>
 		<tr>
