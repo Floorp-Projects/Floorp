@@ -33,6 +33,7 @@
 
 <!ENTITY decksb.label                  "Search del.icio.us" >
 <!ENTITY decksearch.label              "Google Search" >
+<!ENTITY deckdefault.label             "Browse Sites" >
 
 <!-- toolbar view options --> 
 
