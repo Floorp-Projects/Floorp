@@ -133,6 +133,12 @@ sub sql_istring {
     return $string;
 }
 
+sub sql_from_days {
+    my ($self, $days) = @_;
+
+    return "FROM_DAYS($days)";
+}
+
 sub sql_to_days {
     my ($self, $date) = @_;
 

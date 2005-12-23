@@ -1124,6 +1124,13 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
  Returns:     formatted SQL for limiting number of rows returned from query
               with optional offset (e.g. LIMIT 1, 1) (scalar)
 
+=item C<sql_from_days>
+
+ Description: Outputs SQL syntax for converting Julian days to date.
+              Abstract method, should be overriden by database specific code.
+ Params:      $days = days to convert to date
+ Returns:     formatted SQL for returning Julian days in dates. (scalar)
+
 =item C<sql_to_days>
 
  Description: Outputs SQL syntax for converting date to Julian days.
