@@ -1226,9 +1226,9 @@
               
             this.mSelectedIndex = aRow;
             
-            this.mBoxObject.invalidateRow(aRow);
-            
             if (aRow != null) {
+              this.mBoxObject.invalidateRow(aRow);
+
               this.mBoxObject.ensureRowIsVisible(aRow);
               // Fire select event on xul:tree so that accessibility API 
               // support layer can fire appropriate accessibility events.
@@ -1497,8 +1497,7 @@
         <parameter name="aAmount"/>
         <body><![CDATA[
           try {
-            var bx = this.tree.treeBoxObject;
-            var view = bx.view;
+            var view = this.textbox.view;
             this.selectedIndex = this.getNextIndex(aDir, aAmount, this.selectedIndex, view.rowCount-1);
   
             return this.selectedIndex;
@@ -1574,35 +1573,39 @@
       <property name="textbox"
                 onget="return this.__AUTOCOMPLETE_BOX__;"/>
 
-      <field name="mLastMoveTime">new Date()</field>
+      <field name="mLastMoveTime">Date.now()</field>
 
-      <method name="getHoverCell">
+      <method name="getHoverRow">
         <parameter name="aEvent"/>
         <body><![CDATA[
-           var row = {}; var col = {}; var obj = {};
            // XXXbz We really want client*, but event.client* is bogus inside a
            // popup!
            var x = aEvent.screenX - document.documentElement.boxObject.screenX;
            var y = aEvent.screenY - document.documentElement.boxObject.screenY;
-           this.textbox.view.treeBoxObject.getCellAt(x, y, row, col, obj);
-           if (row.value >= 0)
-             return {row: row.value, column: col.value.id};
-           else
-            return null;
+           var row = this.textbox.view.treeBoxObject.getRowAt(x, y);
+           if (row >= 0)
+             return row;
+           return null;
         ]]></body>
       </method>
     </implementation>
     
     <handlers>
       <handler event="mouseout" action="this.textbox.view.selectedIndex = null;"/>
-      <handler event="mouseup" action="this.textbox.onResultClick();"/>
+      <handler event="mouseup"><![CDATA[
+        var rc = this.getHoverRow(event);
+        if (rc != null) {
+          this.textbox.view.selectedIndex = rc;
+          this.textbox.onResultClick();
+        }
+      ]]></handler>
 
       <handler event="mousemove"><![CDATA[
-        if (new Date() - this.mLastMoveTime > 30) {
-         var rc = this.getHoverCell(event);
-         if (rc && rc.row != this.textbox.view.selectedIndex) 
-            this.textbox.view.selectedIndex = rc.row;
-          this.mLastMoveTime = new Date();
+        if (Date.now() - this.mLastMoveTime > 30) {
+          var rc = this.getHoverRow(event);
+          if (rc != null && rc != this.textbox.view.selectedIndex) 
+            this.textbox.view.selectedIndex = rc;
+          this.mLastMoveTime = Date.now();
         }
       ]]></handler>
     </handlers>
