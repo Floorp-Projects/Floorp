@@ -347,9 +347,16 @@ class query
 
         // finish off complete
         if($query_input['count']){
-             $complete .= '&amp;count=on';
+             $complete .= 'count=on';
         }
 
+        // strip off any remaining &amp; that may be on the end
+        if(substr($standard, -5) == '&amp;'){
+            $standard = substr($standard, 0, -5);
+        }
+        if(substr($complete, -5) == '&amp;'){
+            $complete = substr($complete, 0, -5);
+        }
         // lets return
         return array($standard, $complete);
     }
