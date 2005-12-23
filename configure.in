@@ -4969,9 +4969,9 @@ MOZ_ARG_DISABLE_BOOL(universalchardet,
   MOZ_UNIVERSALCHARDET=1 )
 
 dnl ========================================================
-dnl Javaconnect
+dnl JavaXPCOM
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(javaconnect,
+MOZ_ARG_ENABLE_BOOL(javaxpcom,
 [  --enable-javaxpcom
                           Enable Java-XPCOM bridge],
     MOZ_JAVAXPCOM=1,
