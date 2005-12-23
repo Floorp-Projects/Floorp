@@ -667,6 +667,10 @@ nsXULDocument::SetPrincipal(nsIPrincipal *aPrincipal)
 void
 nsXULDocument::EndLoad()
 {
+    // This can happen if an overlay fails to load
+    if (!mCurrentPrototype)
+        return;
+
     nsresult rv;
 
     // Whack the prototype document into the cache so that the next
@@ -2737,6 +2741,9 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic, PRBool* aSho
         nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
         rv = NS_OpenURI(listener, nsnull, aURI, nsnull, group);
         if (NS_FAILED(rv)) {
+            // Abandon this prototype
+            mCurrentPrototype = nsnull;
+
             // The parser won't get an OnStartRequest and
             // OnStopRequest, so it needs a Terminate.
             parser->Terminate();
@@ -3080,6 +3087,9 @@ nsXULDocument::ResumeWalk()
             nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
             rv = NS_OpenURI(listener, nsnull, uri, nsnull, group);
             if (NS_FAILED(rv)) {
+                // Abandon this prototype
+                mCurrentPrototype = nsnull;
+
                 // The parser won't get an OnStartRequest and
                 // OnStopRequest, so it needs a Terminate.
                 parser->Terminate();
