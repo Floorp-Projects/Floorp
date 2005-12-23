@@ -107,4 +107,8 @@ TEST_XML(8, "", x);
 x = new XML(undefined);
 TEST_XML(9, "", x);
 
+// see bug 320008
+x = new XML("<hello a='\"' />");
+TEST_XML(10, "<hello a=\"&quot;\"/>", x);
+
 END();
