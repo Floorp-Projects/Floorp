@@ -2050,15 +2050,15 @@ NS_IMETHODIMP SimpleDirectoryProvider::GetFile(const char *prop, PRBool *persist
     nsCOMPtr<nsILocalFile> localFile;
     nsresult rv = NS_ERROR_FAILURE;
 
-    if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
+    if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
     {
         localFile = mApplicationRegistryDir;
     }
-    else if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_FILE) == 0)
+    else if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_FILE) == 0)
     {
         localFile = mApplicationRegistryFile;
     }
-    else if (nsCRT::strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
+    else if (strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
     {
         localFile = mUserProfileDir;
     }
