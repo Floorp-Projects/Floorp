@@ -285,6 +285,13 @@
         this.setInitialSelection();
       ]]></constructor>
 
+      <property name="editor" readonly="true">
+        <getter><![CDATA[
+          const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
+          return this.inputField.QueryInterface(nsIDOMNSEditableElement).editor;
+        ]]></getter>
+      </property>
+
       <method name="_selectInputFieldValueInList">
         <body>
         <![CDATA[

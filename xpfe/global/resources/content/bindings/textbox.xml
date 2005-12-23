@@ -70,6 +70,13 @@
                 onset="if (val) this.setAttribute('clickSelectsAll', 'true');
                        else this.removeAttribute('clickSelectsAll'); return val;" />
 
+      <property name="editor" readonly="true">
+        <getter><![CDATA[
+          const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
+          return this.inputField.QueryInterface(nsIDOMNSEditableElement).editor;
+        ]]></getter>
+      </property>
+
       <method name="select">
         <body>
           this.inputField.select();
@@ -101,12 +108,10 @@
         str = this.getAttribute('newlines');
         if (str) {
           const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
-          const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
           for (var x in nsIPlaintextEditor) {
             if (/^eNewlines/.test(x)) {
               if (str == RegExp.rightContext.toLowerCase()) {
-                this.inputField.QueryInterface(nsIDOMNSEditableElement)
-                    .editor.QueryInterface(nsIPlaintextEditor)
+                this.editor.QueryInterface(nsIPlaintextEditor)
                     .newlineHandling = nsIPlaintextEditor[x];
                 break;
               }
