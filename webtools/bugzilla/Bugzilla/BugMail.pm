@@ -639,8 +639,16 @@ sub MessageToMTA {
         $headers = new Mail::Header \@header_lines, Modify => 0;
     }
 
+    my $from = $headers->get('from');
+
     if (Param("mail_delivery_method") eq "sendmail" && $^O =~ /MSWin32/i) {
-        open(SENDMAIL, '|' . SENDMAIL_EXE . ' -t -i') ||
+        my $cmd = '|' . SENDMAIL_EXE . ' -t -i';
+        if ($from) {
+            # We're on Windows, thus no danger of command injection
+            # via $from. In other words, it is safe to embed $from.
+            $cmd .= qq# -f"$from"#;
+        }
+        open(SENDMAIL, $cmd) ||
             die "Failed to execute " . SENDMAIL_EXE . ": $!\n";
         print SENDMAIL $headers->as_string;
         print SENDMAIL "\n";
@@ -652,12 +660,18 @@ sub MessageToMTA {
     my @args;
     if (Param("mail_delivery_method") eq "sendmail") {
         push @args, "-i";
+        if ($from) {
+            push(@args, "-f$from");
+        }
     }
     if (Param("mail_delivery_method") eq "sendmail" && !Param("sendmailnow")) {
         push @args, "-ODeliveryMode=deferred";
     }
     if (Param("mail_delivery_method") eq "smtp") {
         push @args, Server => Param("smtpserver");
+        if ($from) {
+            $ENV{'MAILADDRESS'} = $from;
+        }
     }
     my $mailer = new Mail::Mailer Param("mail_delivery_method"), @args;
     if (Param("mail_delivery_method") eq "testfile") {
