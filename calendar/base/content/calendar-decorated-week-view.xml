@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+<!--
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Calendar view code.
+   -
+   - The Initial Developer of the Original Code is
+   -   Joey Minta <jminta@gmail.com>
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK *****
+-->
+
+<bindings id="calendar-specific-view-bindings"
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:xbl="http://www.mozilla.org/xbl">
+
+    <binding id="calendar-decorated-week-view" extends="chrome://calendar/content/calendar-decorated-base.xml#calendar-decorated-base-view">
+        <content>
+             <xul:vbox anonid="main-box" flex="1">
+                <xul:calendar-navigation-buttons anonid="nav-control" flex="1"/>
+                <xul:box style="overflow: auto;" flex="1">
+                    <xul:calendar-multiday-view anonid="view-element" flex="1" orient="vertical" xbl:inherits="context"/>
+                </xul:box>
+            </xul:vbox>
+        </content>
+
+        <implementation implements="calIDecoratedView">
+            <property name="observerID">
+                <getter><![CDATA[
+                    return "week-view-observer";
+                ]]></getter>
+            </property>
+
+            <!--Public methods-->
+            <method name="goToDay">
+                <parameter name="aDate"/>
+                <body><![CDATA[
+                    var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
+	            viewElement.tasksInView = this.mTasksInView;
+
+                    // Get the preferences that we'll need
+                    var prefService = Components.classes[
+                                      "@mozilla.org/preferences-service;1"]
+                                      .getService(Components.interfaces.nsIPrefService);
+                    var calBranch = prefService.getBranch("calendar.");
+                    var weekStartOffset = calBranch.getIntPref("week.start");
+
+                    var d1 = aDate.startOfWeek.clone();
+                    var d2 = aDate.endOfWeek.clone();
+
+                    // startOfWeek always returns a Sunday.  Adjust if the user
+                    // chose a different day to start weeks on.
+                    if (weekStartOffset != 0) {
+                        d1.day += weekStartOffset;
+                        d2.day += weekStartOffset;
+                        if (aDate.weekday < weekStartOffset) {
+                            d1.day -= 7;
+                            d2.day -= 7;
+                        }
+                        d1.normalize();
+                        d2.normalize();
+                    }
+
+                    document.getAnonymousElementByAttribute(this, "anonid", "view-element").setDateRange(d1, d2);
+
+                    viewElement.selectedDay = aDate;
+                    if (this.mWorkdaysOnly) {
+                        this.removeNonWorkdays();
+                    }
+                    this.setNavLabels(aDate);
+                ]]></body>
+            </method>
+            <method name="moveView">
+                <parameter name="aNumber"/>
+                <body><![CDATA[
+                    var d1 = this.selectedDay.clone();
+                    d1.day += 7*aNumber;
+                    d1.normalize();
+                    this.goToDay(d1);
+                ]]></body>
+            </method>
+            <method name="setNavLabels">
+                <parameter name="aDate"/>
+                <body><![CDATA[
+                    var nameArray = new Array();
+                    for (var i = -2; i < 3; i++) {
+                        var date = aDate.clone();
+                        // Add/subtract i number of weeks
+                        date.day = aDate.day + i*7;
+                        date.normalize();
+
+                        //XXX This isn't quite right, but it's close.  We need
+                        //    to get some better dateUtils into calDateTime
+                        var weekno = Math.floor ((date.yearday - date.weekday) / 7);
+
+                        //XXX l10n love needed
+                        nameArray.push("Week " + weekno);
+                    }
+                    document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
+                ]]></body>
+            </method>
+            <method name="removeNonWorkdays">
+                <body><![CDATA[
+                    var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element")
+                    var dateList = viewElement.getDateList({});
+
+                    var prefService = Components.classes[
+                                      "@mozilla.org/preferences-service;1"]
+                                      .getService(Components.interfaces.nsIPrefService);
+                    var weekBranch = prefService.getBranch("calendar.week.");
+                    var prefNames = ["d0sundaysoff", "d1mondaysoff", "d2tuesdaysoff",
+                                     "d3wednesdaysoff", "d4thursdaysoff",
+                                     "d5fridaysoff", "d6saturdaysoff"];
+                    function getPrefValue(prefName) {
+                        return weekBranch.getBoolPref(prefName)
+                    }
+                    var prefValueArray = prefNames.map(getPrefValue);
+                    var newDateList = new Array();
+
+                    for each(date in dateList) {
+                        if (!prefValueArray[date.weekday]) {
+                            newDateList.push(date);
+                        }
+                    }
+                    viewElement.setDateList(newDateList.length, newDateList);
+                ]]></body>
+            </method>
+        </implementation>
+    </binding>
+</bindings>

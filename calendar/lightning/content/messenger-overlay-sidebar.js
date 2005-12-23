@@ -265,6 +265,10 @@ var ltnPrefObserver =
    }
 }
 
+function onMouseOverItem(event) {
+//set the item's context-menu text here
+}
+
 document.getElementById("displayDeck").
     addEventListener("select", LtnObserveDisplayDeckChange, true);
 

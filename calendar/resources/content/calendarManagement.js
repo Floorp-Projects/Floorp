@@ -324,9 +324,10 @@ function updateStyleSheetForObject(object) {
     var color;
     if (object.uri) {
         color = getCalendarManager().getCalendarPref(object, 'color');
+        if (!color)
+            color = "#4e84c2";
         rule.style.backgroundColor = color;
-        if (color)
-            rule.style.color = getContrastingTextColor(color);
+        rule.style.color = getContrastingTextColor(color);
         return;
     }
     var categoryPrefBranch = prefService.getBranch("calendar.category.color.");
@@ -335,8 +336,7 @@ function updateStyleSheetForObject(object) {
     }
     catch(ex) { return; }
 
-    rule.style.borderColor = color;
-    rule.style.borderWidth = "2px";
+    rule.style.border = color + " solid 2px";
 }
 
 var categoryPrefObserver =

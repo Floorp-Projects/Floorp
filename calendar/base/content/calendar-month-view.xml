@@ -118,7 +118,12 @@
         if (this.calendarView)
             this.calendarView.selectedItem = this.item;
       ]]></handler>
-
+      <handler event="mouseover"><![CDATA[
+        if (this.calendarView && this.calendarView.controller) {
+            event.preventBubble();
+            onMouseOverItem(event);
+        }
+      ]]></handler>
       <handler event="dblclick"><![CDATA[
         if (this.calendarView && this.calendarView.controller) {
             event.preventBubble();
@@ -338,11 +343,25 @@
               box.setAttribute("context", this.getAttribute("item-context") || this.getAttribute("context"));
               box.setAttribute("class", "calendar-item");
               box.setAttribute("item-calendar", itd.item.calendar.uri.spec);
+              box.setAttribute("tooltip", "itemTooltip");
+
+              var categoriesSelectorList = "";
+              if (itd.item.getProperty("CATEGORIES") != null) {
+                var categoriesList = itd.item.getProperty("CATEGORIES").split(",");
+                for (var i = 0; i < categoriesList.length; i++ ) {
+                  // Remove illegal chars.
+                  categoriesList[i] = categoriesList[i].replace(' ','_');
+                  categoriesList[i] = categoriesList[i].toLowerCase();
+                }
+                categoriesSelectorList = categoriesList.join(" ");
+              }
+              box.setAttribute("item-category", categoriesSelectorList);
 
               this.dayitems.insertBefore(box, before);
 
               box.calendarView = this.monthView;
               box.item = itd.item;
+              box.occurrence = itd.item;
               itd.box = box;
             }
           }
@@ -460,6 +479,26 @@
       <field name="mSelectedDayBox">null</field>
 
       <field name="mShowDaysOutsideMonth">true</field>
+      <field name="mTasksInView">true</field>
+
+      <field name="mSelectionObserver"><![CDATA[
+      ({  calView: this,
+          onSelectionChanged: function selectionObserverCallback(itemSelectionArray) {
+	       // The selection manager is smart enough to call this only when
+	       // the selection really did change, so don't bother checking
+               if (this.calView.mSelectedItem) {
+                   var oldbox = this.calView.findBoxForItem(this.calView.mSelectedItem);
+                   if (oldbox)
+                       oldbox.box.unselectItem(this.calView.mSelectedItem);
+               }
+               this.calView.mSelectedItem = itemSelectionArray[0];
+
+               var newbox = this.calView.findBoxForItem(this.calView.mSelectedItem);
+               if (newbox)
+                   newbox.box.selectItem(this.calView.mSelectedItem);
+          }
+      })
+      ]]></field>
 
       <!-- other methods -->
       <method name="setAttribute">
@@ -493,6 +532,7 @@
         <setter><![CDATA[
            if (this.mCalendar != val) {
              this.mCalendar = val;
+             this.mCalendar.addObserver(this.mObserver);
              this.refresh();
            }
            return val;
@@ -528,6 +568,15 @@
         ]]></getter>
       </property>
 
+      <property name="tasksInView">
+        <getter><![CDATA[
+          return this.mTasksInView;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mTasksInView = val;
+        ]]></setter>
+      </property>    
+
       <property name="selectedItem">
         <getter><![CDATA[
           return this.mSelectedItem;
@@ -535,14 +584,18 @@
         <setter><![CDATA[
           if (this.mSelectedItem) {
               var oldbox = this.findBoxForItem(this.mSelectedItem);
-              oldbox.box.unselectItem(this.mSelectedItem);
+              if (oldbox)
+                  oldbox.box.unselectItem(this.mSelectedItem);
           }
 
           this.mSelectedItem = val;
 
           if (this.mSelectedItem) {
               var newbox = this.findBoxForItem(this.mSelectedItem);
-              newbox.box.selectItem(this.mSelectedItem);
+              if (newbox)
+                  newbox.box.selectItem(this.mSelectedItem);
+              if (this.mController.selectionManager)
+                  this.mController.selectionManager.replaceSelection(this.mSelectedItem);
           }
         ]]></setter>
       </property>
@@ -656,9 +709,15 @@
           if (!this.mCalendar)
             return;
 
-          this.mCalendar.getItems(this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
-                                  this.mCalendar.ITEM_FILTER_TYPE_ALL |
-                                  this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES,
+          var filter = this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
+                       this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES;
+
+          if (this.mTasksInView)
+            filter |= this.mCalendar.ITEM_FILTER_TYPE_ALL; 
+          else
+            filter |= this.mCalendar.ITEM_FILTER_TYPE_EVENT;
+
+          this.mCalendar.getItems(filter,
                                   0,
                                   this.startDate,
                                   this.queryEndDate,
@@ -760,9 +819,13 @@
           var mainMonth = this.mStartDate.month;
           if (this.mStartDate.day != 1) {
             mainMonth++;
+            mainMonth = mainMonth % 12;
           }
 
-          var lastWeekNo = null;
+          // Right now, we always show 7 days in a week.  Everytime this
+          // reaches 0, we start a new week, so this will need to change once
+          // removing days off is implemented.
+          var dayCount = 7;
           var curRow = null;
 
           for each (var date in this.getDateList({})) {
@@ -770,18 +833,17 @@
             box.setAttribute("context", this.getAttribute("context"));
             box.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
 
-            // XXX take into account real start week
-            var weekno = Math.floor ((date.yearday - date.weekday) / 7);
-
-            if (weekno != lastWeekNo) {
+            if (dayCount == 7) {
               // start adding to a new row
               curRow = createXULElement("row");
               curRow.setAttribute("flex", "1");
               curRow.setAttribute("class", "calendar-month-view-grid-row");
 
               gridrows.appendChild(curRow);
-              lastWeekNo = weekno;
+              dayCount = 0;
             }
+
+            dayCount++;
 
             //XXX rename these css classes
             // Set the box-class depending on if this box displays a day in the
@@ -819,7 +881,10 @@
           var dateBoxCount = 0;
           var gridRowCount = 0;
 
-          var lastWeekNo = null;
+          // Right now, we always show 7 days in a week.  Everytime this
+          // reaches 0, we start a new week, so this will need to change once
+          // removing days off is implemented.
+          var dayCount = 7;
           var curRow = null;
 
           // Days that are not in the main month on display are displayed with
@@ -828,6 +893,7 @@
           var mainMonth = this.mStartDate.month;
           if (this.mStartDate.day != 1) {
             mainMonth++;
+            mainMonth = mainMonth % 12;
           }
 
           for each (var date in this.getDateList({})) {
@@ -842,16 +908,15 @@
             box.setAttribute("context", this.getAttribute("context"));
             box.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
 
-            // XXX take into account real start week
-            var weekno = Math.floor ((date.yearday - date.weekday) / 7);
-
-            if (weekno != lastWeekNo) {
+            if (dayCount == 7) {
               // start adding to the next row
               curRow = gridrows.childNodes[gridRowCount];
               gridRowCount++;
 
-              lastWeekNo = weekno;
+              dayCount = 0;
             }
+
+            dayCount ++;
 
             //XXX rename these css classes
             // Set the box-class depending on if this box displays a day in the
@@ -921,7 +986,7 @@
           if (this.mSelectedItem == aItem)
               this.mSelectedItem = null;
 
-          box.deleteItem(aItem);
+          box.box.deleteItem(aItem);
         ]]></body>
       </method>
 
@@ -941,8 +1006,10 @@
           },
   
           onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
-            // nothing to do
-            //dump ("+++ OnOperationComplete (detail: " + aDetail + ")\n");
+              if (this.calView.controller.selectionManager &&
+                  this.calView.controller.selectionManager.selectedEvents[0])
+                this.calView.selectedItem = (this.calView.controller
+                                             .selectionManager.selectedEvents[0]);
           },
           onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             if (!Components.isSuccessCode(aStatus))
@@ -1011,7 +1078,7 @@
                                                    this.calView.queryEndDate,
                                                    {});
             for each (var occ in occs) {
-              this.calView.doDeleteEvent(occ);
+              this.calView.doDeleteItem(occ);
             }
           },
           //XXXvv Alarm could, in theory, flash the event or something

@@ -48,14 +48,13 @@
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
 
+<?xml-stylesheet href="chrome://calendar/content/calendar-multiday-view.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/calendar-month-view.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/calendar-decorated-views.css" type="text/css"?>
+
 <!-- Overlays -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/menuOverlay.xul"?>
-
-<?xul-overlay href="chrome://calendar/content/dayView.xul"?>
-<?xul-overlay href="chrome://calendar/content/weekView.xul"?>
-<?xul-overlay href="chrome://calendar/content/monthView.xul"?>
-<?xul-overlay href="chrome://calendar/content/multiweekView.xul"?>
 
 <!-- DTDs -->
 
@@ -122,9 +121,14 @@
   <command id="publish_calendar" oncommand="publishEntireCalendar()"/>
   <command id="publish_events_command" oncommand="publishCalendarData()" disabled="true" disabledwhennoeventsselected="true"/>
 
-<!--
-  <command id="change_display_todo_in_view" oncommand="" checked="true"/>
--->
+  <command id="toggle_tasks_in_view" 
+           oncommand="changeDisplayToDoInViewCheckbox()" 
+           checked="true" 
+           persist="checked"/>
+  <command id="toggle_workdays_only" 
+           oncommand="changeOnlyWorkdayCheckbox()"
+           persist="checked"/>
+
   <command id="close_calendar_command" oncommand="closeCalendar()"/>
 
   <command id="wizard_command" oncommand="launchWizard()" collapsed="true"/>
@@ -203,9 +207,6 @@
 </script>  
 
 <!-- Javascript includes -->
-
-<!-- NEEDED FOR DRAG AND DROP SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/dragDrop.js"/>
 
 <!-- NEEDED FOR MULTIPLE CALENDAR SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarManagement.js"/>
@@ -312,16 +313,12 @@
             type="checkbox"
             label="&calendar.onlyworkday.checkbox.label;"
             accesskey="&calendar.onlyworkday.checkbox.accesskey;"
-            oncommand="changeOnlyWorkdayCheckbox(2);"
-            persist="checked"
-            disabled="true"/>
+            observes="toggle_workdays_only"/>
   <menuitem id="display-todo-inview-checkbox-2"
             type="checkbox"
             label="&calendar.displaytodos.checkbox.label;"
             accesskey="&calendar.displaytodos.checkbox.accesskey;"
-            oncommand="changeDisplayToDoInViewCheckbox(2);"
-            persist="checked"
-            disabled="true"/>
+            observes="toggle_tasks_in_view"/>
 
   <menuseparator/>
   <menuitem label="&calendar.context.emailevent.label;"
@@ -492,7 +489,7 @@
          onpopupshowing="return onMouseOverTaskTree( this, event )"
          noautohide="true"/>
 
-<tooltip id="gridOccurrenceTooltip"
+<tooltip id="itemTooltip"
          noautohide="true"/>
 
 <!-- V I S I B L E  C O N T E N T  -->
@@ -735,22 +732,12 @@
         <grippy class="sidebar-splitter-grippy"/>
       </splitter>
 
-      <!-- Begin Day/Month/Week Deck -->
-      <deck id="calendar-deck" persist="selectedIndex" flex="1">
-
-        <!-- Calendar Month View -->
-        <vbox id="month-view-box"/>
-
-        <!-- Calendar Week View -->
-        <vbox id="week-view-box"/>
-
-        <!-- Calendar Day View -->
-        <vbox id="day-view-box"/>
-                      
-        <!-- Calendar Near Future View -->
-        <vbox id="multiweek-view-box"/>
-
-      </deck>  <!-- End: Day/Month/Week Deck -->
+      <deck id="view-deck" flex="1" persist="selectedIndex">
+          <calendar-decorated-day-view id="day-view" flex="1"/>
+          <calendar-decorated-week-view id="week-view" flex="1"/>
+          <calendar-decorated-multiweek-view id="multiweek-view" flex="1"/>
+          <calendar-decorated-month-view id="month-view" flex="1"/>
+      </deck>
 
     </vbox>
   </hbox> <!-- End: box with unifinder on left, calendar on right -->

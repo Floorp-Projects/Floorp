@@ -56,21 +56,29 @@
 *  Used by all grid views.
 */
 
-function onMouseOverGridOccurrence( occurrenceBoxMouseEvent )
+function onMouseOverItem( occurrenceBoxMouseEvent )
 {
   if ("occurrence" in occurrenceBoxMouseEvent.currentTarget) {
     // occurrence of repeating event or todo
     var occurrence = occurrenceBoxMouseEvent.currentTarget.occurrence;
     var item = occurrence;
-    var start = occurrence.startDate.jsDate;
-    var endEx = occurrence.endDate.jsDate;
+    var start;
+    var endEx;
+    if (occurrence.startDate) {
+        start = occurrence.startDate.jsDate;
+        endEx = occurrence.endDate.jsDate;
+    }
+    if (occurrence.entryDate) {
+        start = occurrence.entryDate.jsDate;
+        endEx = occurrence.dueDate.jsDate;
+    }
 
-    const toolTip = document.getElementById( "gridOccurrenceTooltip" );
+    const toolTip = document.getElementById("itemTooltip");
     var holderBox = null;
     if (isEvent(item)) {
       holderBox = getPreviewForEvent(item, start, endEx);
     } else if (isToDo(item)) {
-      holderBox = getPreviewForToDo(item, start, endEx);
+      holderBox = getPreviewForTask(item, start, endEx);
     }
     if (holderBox) {
       setToolTipContent(toolTip, holderBox);

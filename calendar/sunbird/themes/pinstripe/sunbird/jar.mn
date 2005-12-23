@@ -1,9 +1,7 @@
 calendar.jar:
 +  skin/classic/calendar/calendar.css
-   skin/classic/calendar/calendar-views.css
    skin/classic/calendar/toolbar-large.png
    skin/classic/calendar/toolbar-small.png
-   skin/classic/calendar/pageupdown.png
    skin/classic/calendar/prevnextarrow.png
 +  skin/classic/calendar/synch_animated.gif
    skin/classic/calendar/pref/Options.png                           (pref/Options.png)

@@ -46,8 +46,6 @@
 # ***** END LICENSE BLOCK *****
 */
 
-@import url("chrome://calendar/skin/calendar-views.css");
-
 /*--------------------------------------------------------------------
  *   Top bar, with name, image and buttons
  *-------------------------------------------------------------------*/
@@ -782,5 +780,74 @@ description.tooltipBody
  *-------------------------------------------------------------------*/
 toolbar[printpreview="true"] {
   -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
+}
+
+/*--------------------------------------------------------------------
+ * View controls
+ *-------------------------------------------------------------------*/
+
+.nav-buttons{
+    list-style-image: url("chrome://calendar/skin/prevnextarrow.png");
+}
+
+.nav-buttons[direction="next"] {
+    -moz-box-align:end;
+    -moz-image-region: rect(18px 18px 36px 0px);
+    cursor:pointer;
+}
+
+.next-button:hover:active {
+    margin: 6px 14px 4px 16px;
+}
+
+.nav-buttons[direction="prev"] {
+    -moz-box-align:start;
+    -moz-image-region: rect(0px 18px 18px 0px);
+    cursor:pointer;
+}
+
+.prev-button:hover:active {
+    margin: 6px 14px 4px 16px;
+}
+
+.title-container {
+    -moz-box-align: center;
+    -moz-box-pack: center;
+    margin: 0px 15px 0px 15px;
+}
+
+.title2 {
+    font-size:1.2em;
+    color: #4e84c2;
+    margin:0px;
+    padding:0px;
+    cursor:pointer;
+    -moz-appearance: none;
+    border: 0px;
+}
+
+.title1 {
+    font-size:1.5em;
+    color: #4e84c2;
+    cursor:pointer;
+    -moz-appearance: none;
+    border: 0px;
+}
+
+.title0 {
+    font-size:2.0em;
+    color: #2e4e73;
+    font-weight:bold;
+    margin:0px;
+    padding:0px;
+    -moz-appearance: none;
+    border: 0px;
+}
+
+.view-title-label-box
+{
+    width: 10em !important;
+    -moz-box-align: center;
+    -moz-box-pack: end;
 }
 

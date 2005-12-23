@@ -53,9 +53,6 @@
   <script type="application/x-javascript" src="chrome://calendar/content/hiddenWindow.js"/>
 #endif
 
-  <!-- NEEDED FOR DRAG AND DROP SUPPORT -->
-  <script type="application/x-javascript" src="chrome://calendar/content/dragDrop.js"/>
-
   <!-- NEEDED FOR MULTIPLE CALENDAR SUPPORT -->
   <script type="application/x-javascript" src="chrome://calendar/content/calendarManagement.js"/>
 

@@ -410,7 +410,7 @@
 
           if (aOccurrence) {
               var chunk = this.findChunkForOccurrence(aOccurrence);
-              if (!chunk) {
+              if (!chunk || !chunk.eventbox) {
                   dump ("++ Couldn't find chunk to select!!!\n");
                   return;
               }
@@ -657,6 +657,20 @@
                       // chunkBox.setAttribute("style", "background: #eeeeff; padding: 0px 1px 0px 1px");
 
                       // chunkBox.setAttribute("flex", "1");
+
+                      chunkBox.setAttribute("tooltip", "itemTooltip");
+
+                      var categoriesSelectorList = "";
+                      if (chunk.event.event.getProperty("CATEGORIES") != null) {
+                        var categoriesList = chunk.event.event.getProperty("CATEGORIES").split(",");
+                        for (var i = 0; i < categoriesList.length; i++ ) {
+                          // Remove illegal chars.
+                          categoriesList[i] = categoriesList[i].replace(' ','_');
+                          categoriesList[i] = categoriesList[i].toLowerCase();
+                        }
+                        categorySelectorList = categoriesList.join(" ");
+                      }
+                      chunkBox.setAttribute("item-category", categoriesSelectorList);
 
                       if (orient == "vertical")
                           chunkBox.setAttribute("height", duration * this.mPixPerMin);
@@ -1450,6 +1464,13 @@
 
         this.mInMouseDown = false;
       ]]></handler>
+
+      <handler event="mouseover"><![CDATA[
+        if (this.calendarView && this.calendarView.controller) {
+            event.preventBubble();
+            onMouseOverItem(event);
+        }
+      ]]></handler>
     </handlers>
   </binding>
 
@@ -1539,6 +1560,32 @@
 
       <field name="mStartMin">8*60</field>
       <field name="mEndMin">20*60</field>
+      <field name="mTasksInView">true</field>
+
+      <field name="mSelectionObserver"><![CDATA[
+      ({  calView: this,
+          onSelectionChanged: function selectionObserverCallback(itemSelectionArray) {
+	       // The selection manager should be smart enough to only call this
+	       // when the selection really did change, so just do it.
+               if (this.calView.mSelectedItem) {
+                   var col = this.calView.findColumnForItem(this.calView.mSelectedItem);
+                   if (col) 
+                       col.column.selectOccurrence(null);
+               }
+               this.calView.mSelectedItem = itemSelectionArray[0];
+               if (!this.calView.mSelectedItem)
+                  return;
+               if (this.calView.mSelectedItem.startDate)
+                   this.calView.showDate(this.calView.mSelectedItem.startDate);
+               if (this.calView.mSelectedItem.entryDate)
+                   this.calView.showDate(this.calView.mSelectedItem.entryDate);
+               var col = this.calView.findColumnForItem(this.calView.mSelectedItem);
+               if (col) 
+                   col.column.selectOccurrence(this.calView.mSelectedItem);
+          }
+      })
+      ]]></field>
+
 
       <field name="mObserver"><![CDATA[
         // the calIObserver, and calICompositeObserver
@@ -1648,8 +1695,10 @@
           onOperationComplete: 
           function onOperationComplete(aCalendar, aStatus, aOperationType, 
                                        aId, aDetail) {
-              // nothing to do
-              //dump ("+++ OnOperationComplete (detail: " + aDetail + ")\n");
+              if (this.calView.controller.selectionManager &&
+                  this.calView.controller.selectionManager.selectedEvents[0])
+                this.calView.selectedItem = (this.calView.controller
+                                             .selectionManager.selectedEvents[0]);
           },
           onGetResult: 
           function onGetResult(aCalendar, aStatus, aItemType, aDetail,
@@ -1719,6 +1768,15 @@
 
           return end;
         ]]></getter>
+      </property>
+
+      <property name="tasksInView">
+        <getter><![CDATA[
+          return this.mTasksInView;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mTasksInView = val;
+        ]]></setter>
       </property>
 
 
@@ -1863,7 +1921,7 @@
         <setter><![CDATA[
           if (this.mSelectedItem != val) {
               if (this.mSelectedItem) {
-                  var col = this.findColumnForEvent(this.mSelectedItem);
+                  var col = this.findColumnForItem(this.mSelectedItem);
                   if (col) {
                       col.column.selectOccurrence(null);
                   } else {
@@ -1872,11 +1930,14 @@
               }
 
               if (val) {
-                  var col = this.findColumnForEvent(val);
-                  if (col)
+                  var col = this.findColumnForItem(val);
+                  if (col) {
                       col.column.selectOccurrence(val);
-                  else
+                      if(this.mController.selectionManager)
+                          this.mController.selectionManager.replaceSelection(val);
+                  } else {
                       val = null;
+                  }
               }
 
               return (this.mSelectedItem = val);
@@ -2059,6 +2120,15 @@
           // we get all the items, and just filter out the ones we don't
           // care about in addItem
 
+          var filter = this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
+                       this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES;
+
+          if(this.mTasksInView) 
+            filter |= this.mCalendar.ITEM_FILTER_TYPE_ALL;
+          else
+            filter |= this.mCalendar.ITEM_FILTER_TYPE_EVENT;
+
+          //XXX Once tasks are supported use filter here instead of this list
           this.mCalendar.getItems(this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
                                   this.mCalendar.ITEM_FILTER_TYPE_EVENT |
                                   this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES,
@@ -2162,9 +2232,12 @@
               
               labeldaybox.appendChild(labelbox);
 
-              d.isDate = true;
+              // We don't want to actually mess with our original dates, plus
+              // they're likely to be immutable.
+              var d2 = d.clone();
+              d2.isDate = true;
 
-              this.mDateColumns.push ( { date: d, column: dayEventsBox, header: dayHeaderBox } );
+              this.mDateColumns.push ( { date: d2, column: dayEventsBox, header: dayHeaderBox } );
           }
 
           // fix pixels-per-minute
@@ -2187,10 +2260,20 @@
       </method>
 
 
-      <method name="findColumnForEvent">
-        <parameter name="aEvent"/>
+      <method name="findColumnForItem">
+        <parameter name="aItem"/>
         <body><![CDATA[
-          return this.findColumnForDate(aEvent.startDate);
+          var estart;
+          if(aItem.startDate) 
+              estart = aItem.startDate;
+          //XXX This isn't really good yet.  It may need to be changed once
+          //    tasks are fully implemented.
+          if(aItem.entryDate)
+              estart = aItem.entryDate;
+          if(!estart)
+              return null;
+
+          return this.findColumnForDate(estart);
         ]]></body>
       </method>
 
@@ -2218,7 +2301,7 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           //dump ("++ doAddevent\n");
-          var col = this.findColumnForEvent(aEvent);
+          var col = this.findColumnForItem(aEvent);
           if (!col)
               return;
 
@@ -2237,7 +2320,7 @@
       <method name="doDeleteEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          var col = this.findColumnForEvent(aEvent);
+          var col = this.findColumnForItem(aEvent);
           if (!col)
               return;
 

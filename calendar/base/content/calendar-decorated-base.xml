@@ -1,0 +1,219 @@
+<?xml version="1.0"?>
+<!--
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Calendar view code.
+   -
+   - The Initial Developer of the Original Code is
+   -   Joey Minta <jminta@gmail.com>
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK *****
+-->
+
+<bindings id="calendar-specific-view-bindings"
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:xbl="http://www.mozilla.org/xbl">
+
+    <binding id="calendar-navigation-buttons">
+        <content>
+            <xul:hbox anonid="controls-box" flex="1">
+                <xul:vbox class="previous-button-box">
+                    <xul:spacer flex="1" />
+                    <xul:image direction="prev"
+                               class="nav-buttons"
+                               onclick="moveView(-1)"/>
+                    <xul:spacer flex="1" />
+                </xul:vbox>
+                <xul:vbox anonid="title-container" flex="1">
+                    <xul:hbox anonid="title-box" flex="1">
+                        <xul:spacer flex="1" />
+                        <xul:vbox class="title-label-box" flex="1">
+                            <xul:button anonid="title--2"  class="title2" oncommand="moveView(-2)"/>
+                        </xul:vbox>
+                        <xul:vbox class="title-label-box" flex="1">
+                            <xul:button anonid="title--1" class="title1" oncommand="moveView(-1)"/>
+                        </xul:vbox>
+                        <xul:vbox class="title-label-box" flex="1">
+                            <xul:button anonid="title-0" class="title0"/>
+                        </xul:vbox>
+                        <xul:vbox class="title-label-box" flex="1">
+                             <xul:button anonid="title-1" class="title1" oncommand="moveView(1)"/>
+                        </xul:vbox>
+                        <xul:vbox class="title-label-box" flex="1">
+                             <xul:button anonid="title-2" class="title2" oncommand="moveView(2)"/>
+                        </xul:vbox>
+                        <xul:spacer flex="1" />
+                    </xul:hbox>
+                </xul:vbox>
+                <xul:vbox anonid="next-button-box">
+                    <xul:spacer flex="1" />
+                    <xul:image direction="next"
+                               class="nav-buttons"
+                               onclick="moveView(1)"/>
+                    <xul:spacer flex="1" />
+                </xul:vbox>
+            </xul:hbox>
+        </content>
+
+        <implementation>
+            <method name="setNames">
+                <parameter name="aNameArray"/>
+                <body><![CDATA[
+                    for (var i = -2; i < 3; i++) {
+                        document.getAnonymousElementByAttribute(this, "anonid", "title-"+i)
+                                .setAttribute("label", aNameArray[i+2]);
+                    }
+                ]]></body>
+            </method>
+            <method name="moveView">
+                <parameter name="aNumber"/>
+                <body><![CDATA[
+                    this.mValue = aNumber;
+                    var event = document.createEvent('Events');
+                    event.initEvent('move', false, true);
+                    event.detail = aNumber;
+                    this.dispatchEvent(event);
+                ]]></body>
+            </method>
+        </implementation>
+    </binding>
+
+    <binding id="calendar-decorated-base-view">
+        <content>
+            <xul:vbox>
+                <xul:calendar-navigation-buttons />
+                <xul:box style="overflow: auto;" flex="1">
+                    <xul:calendar-multiday-view anonid="view-element" flex="1" orient="vertical" xbl:inherits="context"/>
+                </xul:box>
+            </xul:vbox>
+        </content>
+
+        <implementation implements="calIDecoratedView">
+            <field name="mTasksInView">true</field>
+            <field name="mWorkdaysOnly">false</field>
+
+            <property name="workdaysOnly">
+                <getter><![CDATA[
+                    return this.mWorkdaysOnly;
+                ]]></getter>
+                <setter><![CDATA[
+                    this.mWorkdaysOnly = val;
+                ]]></setter>
+            </property>
+
+            <property name="selectedDay">
+                <getter><![CDATA[
+                    return document.getAnonymousElementByAttribute(this, "anonid", "view-element").selectedDay;
+                ]]></getter>
+            </property>
+
+            <property name="tasksInView">
+                <getter><![CDATA[
+                    return this.mTasksInView;
+                ]]></getter>
+                <setter><![CDATA[
+                    this.mTasksInView = val;
+                ]]></setter>
+            </property>
+
+            <property name="controller">
+                <getter><![CDATA[
+                    return document.getAnonymousElementByAttribute(this, "anonid", "view-element").controller;
+                ]]></getter>
+                <setter><![CDATA[
+                    document.getAnonymousElementByAttribute(this, "anonid", "view-element").controller = val;
+                ]]></setter>
+            </property>
+
+            <property name="displayCalendar">
+                <getter><![CDATA[
+                    return document.getAnonymousElementByAttribute(this, "anonid", "view-element").displayCalendar;
+                ]]></getter>
+                <setter><![CDATA[
+                    document.getAnonymousElementByAttribute(this, "anonid", "view-element").displayCalendar = val;
+                ]]></setter>
+            </property>
+
+            <property name="selectionObserver">
+                <getter><![CDATA[
+                    return document.getAnonymousElementByAttribute(this, "anonid", "view-element").mSelectionObserver;
+                ]]></getter>
+            </property>
+
+            <property name="startDay">
+                <getter><![CDATA[
+                    return document.getAnonymousElementByAttribute(this, "anonid", "view-element").startDate;
+                ]]></getter>
+            </property>
+
+            <property name="endDay">
+                <getter><![CDATA[
+                    return document.getAnonymousElementByAttribute(this, "anonid", "view-element").endDate;
+                ]]></getter>
+            </property>
+
+            <property name="observerID">
+                <getter><![CDATA[
+                    return "base-view-observer";
+                ]]></getter>
+            </property>
+
+            <!--Public methods-->
+            <method name="goToDay">
+                <parameter name="aDate"/>
+                <body><![CDATA[
+                    var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
+                    viewElement.showDate(aDate);
+                ]]></body>
+            </method>
+            <method name="moveView">
+                <parameter name="aNumber"/>
+                <body><![CDATA[
+                    throw NS_ERROR_NOT_IMPLEMENTED;
+                ]]></body>
+            </method>
+            <method name="removeNonWorkdays">
+                <body><![CDATA[
+                    // No op
+                    return;
+                ]]></body>
+            </method>
+        </implementation>
+        <handlers>
+          <handler event="move">
+            <![CDATA[
+              this.moveView(event.detail);
+            ]]>
+          </handler>
+        </handlers>
+    </binding>
+</bindings>

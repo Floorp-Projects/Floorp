@@ -67,53 +67,12 @@
 *  G L O B A L     V A R I A B L E S
 */
 
-var gCalendar = null;
-
-//the next line needs XX-DATE-XY but last X instead of Y
-var gDateMade = "2002052213-cal"
-
-// turn on debugging
-var gDebugCalendar = false;
-
 // single global instance of CalendarWindow
 var gCalendarWindow;
-
-//an array of indexes to boxes for the week view
-var gHeaderDateItemArray = null;
-
-//Show only the working days (changed in different menus)
-var gOnlyWorkdayChecked ;
-// ShowToDoInView
-var gDisplayToDoInViewChecked ;
-
-// DAY VIEW VARIABLES
-var kDayViewHourLeftStart = 105;
-
-var kDaysInWeek = 7;
-
-const kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW = "8"; //the maximum number of dots that fit in the month view
 
 var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefService);
 var rootPrefNode = prefService.getBranch(null); // preferences root node
-
-/*To log messages in the JSconsole */
-var logMessage;
-if( gDebugCalendar == true ) {
-  var aConsoleService = Components.classes["@mozilla.org/consoleservice;1"].
-    getService(Components.interfaces.nsIConsoleService);
-  logMessage = aConsoleService.logStringMessage ;
-} else 
-{
-  logMessage = function(){} ;  
-}
-
-/*To recognize the application running calendar*/
-var applicationName = navigator.vendor ;
-if(applicationName == "" ) applicationName = "Mozilla" ;
-logMessage("application : " + applicationName);
-
-var calendarsToPublish = new Array();
 
 
 /*-----------------------------------------------------------------
@@ -129,13 +88,27 @@ function calendarInit()
    // set up the CalendarWindow instance
    
    gCalendarWindow = new CalendarWindow();
-   
-   //when you switch to a view, it takes care of refreshing the events, so that call is not needed.
-   gCalendarWindow.currentView.switchTo( gCalendarWindow.currentView );
 
-   // set up the checkboxes variables
-   gOnlyWorkdayChecked = document.getElementById( "only-workday-checkbox-1" ).getAttribute("checked") ;
-   gDisplayToDoInViewChecked = document.getElementById( "display-todo-inview-checkbox-1" ).getAttribute("checked") ;
+   // Set up the checkbox variables.  Do not use the typical change*() functions
+   // because those will actually toggle the current value.
+   if (document.getElementById("toggle_workdays_only").getAttribute("checked")
+       == 'true') {
+       var deck = document.getElementById("view-deck")
+       for each (view in deck.childNodes) {
+           view.workdaysOnly = true;
+       }
+       deck.selectedPanel.goToDay(deck.selectedPanel.selectedDay);
+   }
+
+   // tasksInView is true by default
+   if (document.getElementById("toggle_tasks_in_view").getAttribute("checked")
+       != 'true') {
+       var deck = document.getElementById("view-deck")
+       for each (view in deck.childNodes) {
+           view.tasksInView = false;
+       }
+       deck.selectedPanel.goToDay(deck.selectedPanel.selectedDay);
+   }
 
    // set up the unifinder
    
@@ -214,329 +187,11 @@ function calendarFinish()
 
 function launchPreferences()
 {
-    if (applicationName == "Mozilla" || applicationName == "Firebird")
+    var applicationName = navigator.vendor;
+    if (applicationName == "Mozilla" || applicationName == "Firebird" || applicationName == "")
         goPreferences( "calendarPanel", "chrome://calendar/content/pref/calendarPref.xul", "calendarPanel" );
     else
         window.openDialog("chrome://calendar/content/pref/prefBird.xul", "PrefWindow", "chrome,titlebar,resizable,modal");
-}
-
-/** 
-* Called on double click in the day view all-day area
-* Could be used for week view too...
-*
-*/
-function dayAllDayDoubleClick( event )
-{
-  if( event ) {
-    if( event.button == 0 )
-      newEvent( null, null, true );
-    event.stopPropagation();
-  }
-}
-
-/** 
-* Called on single click in the day view, select an event
-*
-* PARAMETERS
-*    hourNumber - 0-23 hard-coded in the XUL
-*    event      - the click event, Not used yet 
-*/
-
-function dayEventItemClick( eventBox, event )
-{
-   //do this check, otherwise on double click you get into an infinite loop
-   if( event.detail == 1 )
-      gCalendarWindow.EventSelection.replaceSelection( eventBox.event );
-   
-   if ( event ) 
-   {
-      event.stopPropagation();
-   }
-}
-
-
-/** 
-* Called on double click in the day view, edit an existing event
-* or create a new one.
-*
-* PARAMETERS
-*    hourNumber - 0-23 hard-coded in the XUL
-*    event      - the click event, Not used yet 
-*/
-
-function dayEventItemDoubleClick( eventBox, event )
-{
-   // we only care about button 0 (left click) events
-   if (event.button != 0) return;
-   
-   editEvent( eventBox.event.parentItem );
-
-   if ( event ) 
-   {
-      event.stopPropagation();
-   }
-}
-
-
-/** 
-* Called on single click in the hour area in the day view
-*
-* PARAMETERS
-*    hourNumber - 0-23 hard-coded in the XUL
-*    event      - the click event, Not used yet 
-*/
-
-function dayViewHourClick( event )
-{
-   if( event.detail == 1 )
-      gCalendarWindow.setSelectedHour( event.target.getAttribute( "hour" ) );
-}
-
-
-/** 
-* Called on single click in the hour area in the day view
-*
-* PARAMETERS
-*    hourNumber - 0-23 hard-coded in the XUL
-*    event      - the click event, Not used yet 
-*/
-
-function dayViewHourContextClick( event )
-{
-   var dayIndex = event.target.getAttribute( "day" );
-
-   gNewDateVariable = gCalendarWindow.getSelectedDate();
-   
-   gNewDateVariable.setHours( event.target.getAttribute( "hour" ) );
-
-   gNewDateVariable.setMinutes( 0 );
-}
-
-
-/**
-* Called on double click of an hour box.
-*/
-
-function dayViewHourDoubleClick( event )
-{
-   // we only care about button 0 (left click) events
-   if (event.button != 0) return;
-   
-   var startDate = gCalendarWindow.dayView.getNewEventDate();
-   
-   newEvent( startDate );
-}
-
-
-/** 
-* Called on single click in the day view, select an event
-*
-* PARAMETERS
-*    hourNumber - 0-23 hard-coded in the XUL
-*    event      - the click event, Not used yet 
-*/
-
-function weekEventItemClick(eventBox, event)
-{
-    //do this check, otherwise on double click you get into an infinite loop
-    if (event.detail == 1) {
-        var calEvent = eventBox.event;
-
-        gCalendarWindow.EventSelection.replaceSelection(calEvent);
-
-        var newDate = new Date(calEvent.startDate.jsDate);
-
-        gCalendarWindow.setSelectedDate(newDate, false);
-    }
-
-    if (event) {
-        event.stopPropagation();
-    }
-}
-
-
-/** 
-* Called on double click in the day view, edit an existing event
-* or create a new one.
-*
-* PARAMETERS
-*    hourNumber - 0-23 hard-coded in the XUL
-*    event      - the click event, Not used yet 
-*/
-
-function weekEventItemDoubleClick( eventBox, event )
-{
-   // we only care about button 0 (left click) events
-   if (event.button != 0) return;
-   
-   editEvent( eventBox.event.parentItem );
-
-   if ( event ) 
-   {
-      event.stopPropagation();
-   }
-}
-
-/** ( event )
-* Called on single click in the hour area in the day view
-*
-* PARAMETERS
-*    hourNumber - 0-23 hard-coded in the XUL
-*    event      - the click event, Not used yet 
-*/
-
-function weekViewHourClick( event )
-{
-   if( event.detail == 1 )
-   {
-      var dayIndex = event.target.getAttribute( "day" );
-
-      var newDate = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
-
-      newDate.setHours( event.target.getAttribute( "hour" ) );
-
-      gCalendarWindow.setSelectedDate( newDate );
-   }
-}
-
-
-/** ( event )
-* Called on single click in the hour area in the day view
-*
-* PARAMETERS
-*    hourNumber - 0-23 hard-coded in the XUL
-*    event      - the click event, Not used yet 
-*/
-
-function weekViewContextClick( event )
-{
-   var dayIndex = event.target.getAttribute( "day" );
-
-   gNewDateVariable = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
-   
-   gNewDateVariable.setHours( event.target.getAttribute( "hour" ) );
-}
-
-
-/**
-* Called on double click of an hour box.
-*/
-
-function weekViewHourDoubleClick( event )
-{
-   // we only care about button 0 (left click) events
-   if (event.button != 0) return;
-        
-   var startDate = gCalendarWindow.weekView.getNewEventDate();
-   
-   newEvent( startDate );
-}
-
-
-/** 
-* Called on single click on an event box in the month view
-*
-* PARAMETERS
-*    eventBox - The XUL box clicked on
-*    event      - the click event
-*/
-
-function monthEventBoxClickEvent( eventBox, event )
-{
-   //do this check, otherwise on double click you get into an infinite loop
-   if( event.detail == 1 )
-   {
-      gCalendarWindow.EventSelection.replaceSelection( eventBox.event );
-      
-      var newDate = gCalendarWindow.getSelectedDate();
-
-      newDate.setDate( eventBox.event.startDate.day );
-
-      gCalendarWindow.setSelectedDate( newDate, false );
-   }
-
-   if ( event ) 
-   {
-      event.stopPropagation();
-   }
-}
-
-
-/** 
-* Called on double click on an event box in the month view, 
-* launches the edit dialog on the event
-*
-* PARAMETERS
-*    eventBox - The XUL box clicked on
-*/
-
-function monthEventBoxDoubleClickEvent( eventBox, event )
-{
-   // we only care about button 0 (left click) events
-   if (event.button != 0) return;
-   
-   gCalendarWindow.monthView.clearSelectedDate();
-   
-   editEvent( eventBox.event.parentItem );
-
-   if ( event ) 
-   {
-      event.stopPropagation();
-   }
-}
-   
-
-/** 
-* Called on single click on an todo box in the multiweek view
-*
-* PARAMETERS
-*    todoBox - The XUL box clicked on
-*    event      - the click event
-*/
-
-function multiweekToDoBoxClickEvent( todoBox, event )
-{
-   //do this check, otherwise on double click you get into an infinite loop
-   if( event.detail == 1 )
-   {
-      gCalendarWindow.EventSelection.replaceSelection( todoBox.calendarToDo );
-      
-      var newDate = gCalendarWindow.getSelectedDate();
-
-      newDate.setDate( todoBox.calendarToDo.due.day );
-
-      gCalendarWindow.setSelectedDate( newDate, false );
-   }
-
-   if ( event ) 
-   {
-      event.stopPropagation();
-   }
-}
-
-
-/** 
-* Called on double click on an todo box in the multiweek view
-* launches the edit dialog on the event
-*
-* PARAMETERS
-*    todoBox - The XUL box clicked on
-*    event      - the click event
-*/
-
-function multiweekToDoBoxDoubleClickEvent( todoBox, event )
-{
-   // we only care about button 0 (left click) events
-   if (event.button != 0) return;
-   
-   gCalendarWindow.multiweekView.clearSelectedDate();
-   
-   editEvent( todoBox.calendarToDo.parentItem );
-
-   if ( event ) 
-   {
-      event.stopPropagation();
-   }
 }
 
 /** 
@@ -597,60 +252,6 @@ function deleteCalendar(event)
     calMgr.unregisterCalendar(cal);
     // Delete file?
     //calMgr.deleteCalendar(cal);
-}
-
-
-function appendCalendars(to, froms, listener)
-{
-    var getListener = {
-        onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
-        {
-            if (listener)
-                listener.onOperationComplete(aCalendar, aStatus, aOperationType,
-                                             aId, aDetail);
-        },
-        onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
-        {
-            if (!Components.isSuccessCode(aStatus)) {
-                aborted = true;
-                return;
-            }
-            if (aCount) {
-                for (var i=0; i<aCount; ++i) {
-                    // Store a (short living) reference to the item.
-                    var itemCopy = aItems[i].clone();
-                    to.addItem(itemCopy, null);
-                }  
-            }
-        }
-    };
-
-
-    for each(var from in froms) {
-        from.getItems(Components.interfaces.calICalendar.ITEM_FILTER_TYPE_ALL,
-                      0, null, null, getListener);
-    }
-}
-
-
-
-/* 
-* returns true if lastModified match
-*
-*If a client for some reason modifies the item without
-*touching lastModified this will obviously fail
-*/
-function compareItems( aObject1, aObject2 ){
-   if ( aObject1 == null || aObject2 == null){
-      return false;
-   }
-   //workaround Bug 270644, normally I should only check lastModified
-   //but on new events such property throws an error and need a try
-   try{ 
-      return (aObject1.lastModified == aObject2.lastModified);
-   }catch(er){
-      return (aObject1.stamp.getTime() == aObject2.stamp.getTime());
-   }
 }
 
 /** 
@@ -938,9 +539,7 @@ function deleteEventCommand( DoNotConfirm )
 {
    var SelectedItems = gCalendarWindow.EventSelection.selectedEvents;
    deleteItems( SelectedItems, DoNotConfirm );
-   for ( i in  SelectedItems) {
-      gCalendarWindow.clearSelectedEvent( SelectedItems[i] );
-   }
+   gCalendarWindow.EventSelection.emptySelection();
 }
 
 
@@ -982,12 +581,8 @@ function goFindNewCalendars()
 
 function selectAllEvents()
 {
-   // I'd like to just add these events to the selection, but hacks in the
-   // unifinder code prevent that from working.
-   var eventsInCurrentView = new Array();
-   for each(var event in gCalendarWindow.currentView.eventList)  
-       eventsInCurrentView.push(event.event);
-   gCalendarWindow.EventSelection.setArrayToSelection(eventsInCurrentView);
+    //XXX
+    throw "Broken by the switch to the new views"; 
 }
 
 function closeCalendar()
@@ -1058,54 +653,39 @@ function SetUnicharPref(aPrefObj, aPrefName, aPrefValue)
 }
 
 /* Change the only-workday checkbox */
-function changeOnlyWorkdayCheckbox( menuindex ) {
-  var check = document.getElementById( "only-workday-checkbox-" + menuindex ).getAttribute("checked") ;
-  var changemenu ;
-  switch(menuindex){
-  case 1:
-    changemenu = 2 ;
-    break;
-  case 2:
-    changemenu = 1 ;
-    break;
-  default:
-    return;
-  }
-  if(check == "true") {
-    document.getElementById( "only-workday-checkbox-" + changemenu ).setAttribute("checked","true");
-    gOnlyWorkdayChecked = "true" ;
-  }
-  else {
-    document.getElementById( "only-workday-checkbox-" + changemenu ).removeAttribute("checked");
-    gOnlyWorkdayChecked = "false" ;
-  }
-  gCalendarWindow.currentView.refreshDisplay( );
-  gCalendarWindow.currentView.refreshEvents( );
+function changeOnlyWorkdayCheckbox() {
+    var oldValue = (document.getElementById("toggle_workdays_only")
+                           .getAttribute("checked") == 'true');
+    document.getElementById("toggle_workdays_only")
+            .setAttribute("checked", !oldValue);
+
+    // This does NOT make the views refresh themselves
+    for each (view in document.getElementById("view-deck").childNodes) {
+        view.workdaysOnly = !oldValue;
+    }
+
+    // No point in updating views that aren't shown.  They'll notice the change
+    // next time we call their goToDay function, just update the current view
+    var currentView = document.getElementById("view-deck").selectedPanel;
+    currentView.goToDay(currentView.selectedDay);
 }
 
 /* Change the display-todo-inview checkbox */
-function changeDisplayToDoInViewCheckbox( menuindex ) {
-  var check = document.getElementById( "display-todo-inview-checkbox-" + menuindex ).getAttribute("checked") ;
-  var changemenu ;
-  switch(menuindex){
-  case 1:
-    changemenu = 2 ;
-    break;
-  case 2:
-    changemenu = 1 ;
-    break;
-  default:
-    return;
-  }
-  if(check == "true") {
-    document.getElementById( "display-todo-inview-checkbox-" + changemenu ).setAttribute("checked","true");
-    gDisplayToDoInViewChecked = "true" ;
-  }
-  else {
-    document.getElementById( "display-todo-inview-checkbox-" + changemenu ).removeAttribute("checked");
-    gDisplayToDoInViewChecked = "false" ;
-  }
-  gCalendarWindow.currentView.refreshEvents( );
+function changeDisplayToDoInViewCheckbox() {
+    var oldValue = (document.getElementById("toggle_tasks_in_view")
+                           .getAttribute("checked") == 'true');
+    document.getElementById("toggle_tasks_in_view")
+            .setAttribute("checked", !oldValue);
+
+    // This does NOT make the views refresh themselves
+    for each (view in document.getElementById("view-deck").childNodes) {
+        view.tasksInView = !oldValue;
+    }
+
+    // No point in updating views that aren't shown.  They'll notice the change
+    // next time we call their goToDay function, just update the current view
+    var currentView = document.getElementById("view-deck").selectedPanel;
+    currentView.goToDay(currentView.selectedDay);
 }
 
 // about Calendar dialog

@@ -55,6 +55,7 @@ XPIDLSRCS	= calIAlarmService.idl \
 		  calICalendarView.idl \
 		  calICalendarViewController.idl \
 		  calIDateTime.idl   \
+		  calIDecoratedView.idl   \
 		  calIDuration.idl   \
 		  calIErrors.idl     \
 		  calIEvent.idl      \

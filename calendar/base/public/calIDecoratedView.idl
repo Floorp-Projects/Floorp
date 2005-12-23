@@ -1,0 +1,125 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Calendar views.
+ *
+ * The Initial Developer of the Original Code is
+ *   Joey Minta <jminta@gmail.com>
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+
+#include "nsISupports.idl"
+
+interface calICalendar;
+interface calIDateTime;
+interface calICalendarViewController;
+interface calIItemBase;
+/**
+ * calIDecoratedView is an interface for modifying/extending the standard
+ * calICalendarView, typically to add specific navigation functions while
+ * removing the unnecessary code duplication this would generally require.
+ * Because it contains a calICalendarView as an anonymous node, not easily
+ * accessible, it must therefore expose several of that interface's methods and
+ * attributes, as well as its own.
+ */
+
+[scriptable, uuid(229049e0-e36f-4706-9fe1-37eb370273b9)]
+interface calIDecoratedView : nsISupports
+{
+  /**
+   * Oftentimes other elements in the DOM in which a calIDecoratedView is
+   * used want to be aware of whether or not the view is selected.  An element
+   * whose ID is observerID can be included in that DOM, and will be set to be
+   * enabled or disabled depending on whether the view is selected.
+   */
+  readonly attribute AUTF8String observerID;
+
+  /**
+   * The displayCalendar of the calICalendarView that is embedded
+   */
+  attribute calICalendar displayCalender;
+
+  /**
+   * The controller of the calICalendarView that is embedded
+   */
+  attribute calICalendarViewController controller;
+
+  /**
+   * If this is set to 'true', the view should not display days specified to be
+   * non-workdays.  The implementor is responsible for obtaining what those
+   * days are on its own.
+   */
+  attribute boolean workdaysOnly;
+
+  /**
+   * Whether or not tasks are to be displayed in the calICalendarView
+   */
+  attribute boolean tasksInView;
+
+  /**
+   * The selectedDay in the embedded view.  Use the goToDay function to set a
+   * particular day to be selected.
+   */
+  readonly attribute calIDateTime selectedDay;
+
+  // XXX-Probably need to make the selectionManager/selectionObserver into
+  // real interfaces
+  //readonly attribute calISelectionObserver selectionObserver
+
+  /**
+   * The first day shown in the embedded view
+   */
+  readonly attribute calIDateTime startDay;
+
+  /**
+   * The last day shown in the embedded view
+   */
+  readonly attribute calIDateTime endDay;
+
+  /**
+   * Ensures that the given date is visible, and that the view is centered
+   * around this date.  aDate becomes the selectedDay of the view.  Calling
+   * this function with the current selectedDay effectively refreshes the view
+   *
+   * @param aDate       the date that must be shown in the view and becomes 
+   *                    the selected day
+   */
+  void goToDay(in calIDateTime aDate);
+
+  /**
+   * Moves the view a specific number of pages.  Negative numbers correspond to
+   * moving the view backwards.  Note that it is up to the view to determine
+   * how the selected day ought to move as well.
+   *
+   * @param aNumber       the number of pages to move the view 
+   */
+  void moveView(in long aNumber);
+};
