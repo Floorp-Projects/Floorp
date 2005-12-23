@@ -4969,6 +4969,9 @@ nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper)
 {
   nsCOMPtr<nsIDOMGCParticipant> participant =
     do_QueryInterface(aWrapper->Native());
+  if (!participant)
+    // nsJSContext::PreserveWrapper needs us to null-check
+    return NS_OK;
 
   return nsDOMClassInfo::PreserveWrapper(aWrapper, IdentityKeyToWrapperFunc,
                                          participant);
