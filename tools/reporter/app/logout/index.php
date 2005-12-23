@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 require_once('../../config.inc.php');
-require_once($config['app_path'].'/includes/iolib.inc.php');
+require_once($config['base_path'].'/includes/iolib.inc.php');
 
 // start the session
 session_name('reportSessID');
@@ -48,16 +48,10 @@ printheaders();
 $_SESSION = array();
 session_destroy();
 
-if (isset($_GET['redirect'])){
-	$redirect = $_GET['redirect'];
-} else {
-	$redirect = $config['app_url'];
-}
-
 if($_SESSION['username']){
-    // not sure if this could ever happen, but just incase.
+    // not sure if this could ever happen, but just in case.
     echo 'Failed to logout';
 } else {
-	header("Location: ".$redirect);
+    header("Location: ".$config['base_url']);
 }
 ?> 

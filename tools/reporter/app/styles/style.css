@@ -1,140 +1,139 @@
 body {
-    margin: 0 30px 2em 30px;
-    color: #333;
-    background: #fff url("img/body_back.gif") repeat-x;
-    font-size: 100%;
+	margin: 0 30px 2em 30px;
+	color: #333;
+	background: #fff url("img/body_back.gif") repeat-x;
+	font-size: 100%;
 }
 
 body, td, th, h3, input, pre { /* redundant rules for bad browsers  */
-    font-family: verdana, sans-serif;
-    voice-family: "\"}\"";
-    voice-family: inherit;
+	font-family: verdana, sans-serif;
+	voice-family: "\"}\"";
+	voice-family: inherit;
 }
 
 #container {
-    width: 100%;
-    margin: 0 auto;
+	width: 100%;
+	margin: 0 auto;
 }
 
 #page {
-    padding: 15px 0 0 0;
+	padding: 15px 0 0 0;
 }
 
 #content {
-    background: url("img/page-background.gif") repeat-x top left;
-    font-size: 0.8em;
+	background: url("img/page-background.gif") repeat-x top left;
+	font-size: 0.8em;
 }
 
 #mozilla-org {
-    position: relative;
-    height: 25px;
+	position: relative;
+	height: 25px;
 }
 
 #mozilla-org a {
-    position: absolute;
-    right: 0;
-    top: 0;
-    display: block;
-    width: 110px;
-    height: 25px;
-    background: url("img/mozilla-org.gif") no-repeat;
-    text-decoration: none;
-    text-indent: -5000em;
+	position: absolute;
+	right: 0;
+	top: 0;
+	display: block;
+	width: 110px;
+	height: 25px;
+	background: url("img/mozilla-org.gif") no-repeat;
+	text-decoration: none;
+	text-indent: -5000em;
 }
 
 .skipLink {
-  display: none;
+	display: none;
 }
 
 
 #reporterSearch label {
-  font-weight: bold;
+	font-weight: bold;
 }
 
 #reporterSearch .label {
-  text-align: right;
+	text-align: right;
 }
 
 #reporterQuery {
-  font-size: 0.9em;
+	font-size: 0.9em;
 }
 
 #reporterQuery .header {
-   background-color: #ddd;
-   color: #666;
-   text-align: left;
+	 background-color: #ddd;
+	color: #666;
+	 text-align: left;
 }
 
 #reporterQuery .header a {
-  color: #666;
-  text-decoration: none;
+	color: #666;
+	text-decoration: none;
 }
 
 #reporterQuery td {
-    border-bottom: 1px solid #eee;
-    padding: 1px 0 1px 0;
-    font-size: 0.9em;
+	border-bottom: 1px solid #eee;
+	padding: 1px 0 1px 0;
+	font-size: 0.9em;
 }
 
 #reporterReport .header{
-  background-color: #eee;
-  width: 100%;
-  text-align: center;
-  font-weight: bold;
-  padding: 4px 0 4px 0;
+	background-color: #eee;
+	width: 100%;
+	text-align: center;
+	font-weight: bold;
+	padding: 4px 0 4px 0;
 }
 
 #reporterReport div {
-    margin-bottom: 3px;
+	margin-bottom: 3px;
 }
 #reporterReport .title {
-    float: left;
-    width: 9em;
-    padding: 0 .5em;
-    text-align: right;
-    font-weight: bold;
+	float: left;
+	width: 9em;
+	padding: 0 .5em;
+	text-align: right;
+	font-weight: bold;
 }
 
 #reporterReport .data {
-    overflow: auto;
+	overflow: auto;
 }
 
-    #header{
-        margin: 20px 0 16px 0;
-        bottom: 1px solid #eee;
-    }
-    #header h1 {
-        display: inline;
-        font-size: 2.2em;
-    }
+#header{
+	margin: 20px 0 16px 0;
+	bottom: 1px solid #eee;
+}
+#header h1 {
+	display: inline;
+	font-size: 2.2em;
+}
+#header #logo {
+	margin: 0;
+	float: left;
+	width: 500px;
+}
 
-    #header #logo {
-        margin: 0;
-        float: left;
-        width: 500px;
-    }
-    
-    #header #logo a {
-        text-decoration: none;
-        color: #000;
-    }
+#header #logo a {
+	text-decoration: none;
+	color: #000;
+}
 
-    #header a img {
-        border: 0;
-    }
-    #header #navbox {
-        float: right;
-        margin-top: 8px;
-        margin-right: 15px;
+#header a img {
+		border: 0;
+}
+#header #navbox {
+	float: right;
+	margin-top: 8px;
+	margin-right: 15px;
 	background-color: #eee;
 	border: 1px solid #333;
 	font-size: 0.8em;
-    }
+	}
 
-    #navbox ul {
-       padding: 0 0 0 8px;
-    }
-    #navbox li {
+	#navbox ul {
+	   padding: 0 0 0 8px;
+	}
+	#navbox li {
 	display: inline;
 	margin: 0;
 	padding: 0 8px 0 0;
@@ -143,22 +142,44 @@ body, td, th, h3, input, pre { /* redundant rules for bad browsers  */
 }
 
 .navigation {
-    text-align: center;
-    margin: 12px auto 5px auto;
+	text-align: center;
+	margin: 12px auto 5px auto;
 }
 
 .navigation .currentPage {
-   font-weight: bold;
+	font-weight: bold;
 }
 
 .navigation a {
-   text-decoration: none;
-   color: #000;
+	text-decoration: none;
+	color: #000;
 }
 .navigation a:hover {
-    border-bottom: 2px solid #000;
+	border-bottom: 2px solid #000;
+}
+
+#login_form label{
+	float: left;
+	width: 9em;
+	padding: 0 .5em;
+	text-align: right;
+	font-weight: bold;
+}
+
+#login_leftcol{
+	float: left;
+	width: 45%;
+	padding: 2px 9px 5px 9px;
+
+}
+
+#login_rightcol {
+	float: right;
+	width: 45%;
+	padding: 2px 9px 5px 9px;
 }
 /*
+
 
 
 #reporter_note {

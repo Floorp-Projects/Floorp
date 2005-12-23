@@ -35,85 +35,44 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-require_once("../../config.inc.php");
-require_once('DB.php');
-require_once($config['app_path'].'/includes/iolib.inc.php');
-require_once($config['app_path'].'/includes/security.inc.php');
 
-// Start Session
+require_once('../../config.inc.php');
+require_once($config['base_path'].'/includes/iolib.inc.php');
+require_once($config['base_path'].'/includes/db.inc.php');
+require_once($config['base_path'].'/includes/contrib/smarty/libs/Smarty.class.php');
+require_once($config['base_path'].'/includes/security.inc.php');
+
 // start the session
 session_name('reportSessID');
 session_start();
 header("Cache-control: private"); //IE 6 Fix
 printheaders();
 
-include($config['app_path'].'/includes/header.inc.php');
-include($config['app_path'].'/includes/message.inc.php');
-
-if (isset($_POST['redirect'])){
-	$redirect = $_POST['redirect'];
-}
-else if (isset($_GET['redirect'])){
-	$redirect = $_GET['redirect'];
-}
-else {
-	$redirect = $config['app_url'];
-}
-
-
 if ($_SESSION['login'] != true){
-	// submit form?
-	if (isset($_POST['submit_login'])){
+    if(isset($_POST['do_login'])){
+        $login = false;
 
-		// Open DB
-		PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'handleErrors');
-		$db =& DB::connect($config['db_dsn']);
+        $db = NewDBConnection($config['db_dsn']);
+        $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
-		$loginCheck = false;		
-		$loginCheck = $userlib->login($_POST['username'], $_POST['password']);
+        $login = $securitylib->login($_POST['username'], $_POST['password']);
 
-		// disconnect database
-       $db->disconnect();
+        $db->Close();
 
-		if ($loginCheck[0] == true){
-			header("Location: ".$redirect);
-			exit;
-		} else {
-			$error = true;
-			?>Login Failed<?php
-		}
-	}
-		?>
-		<table>
-			<tr>
-				<td>
-					<fieldset>
-						<legend>Login</legend>
-						<form method="post" action ="<?php print $config['app_url']; ?>/login/" ID="login">
-							<table>
-								<tr>
-									<td><label for="username">Username: </label></td>
-									<td><input type="text" id="username" name="username" <?php if ($error == true){ print 'value="'.$_POST['username'].'" ';}?>/></td>
-								</tr>
-								<tr>
-									<td><label for="password">Password: </label></td>
-									<td><input type="password" id="password" name="password" /></td>
-								</tr>
-							</table>
-			 				<input type="hidden" id="redirect" name="redirect" value="<?php print $redirect; ?>" />
-							<input type="submit" id="submit_login" name="submit_login" value="Login" />
-						</form>
-					</fieldset>		
-				</td>
-				<td valign="top">
-					<h5>Administrator Login</h5>
-					<p>Contact <a href="http://robert.accettura.com/contact/?subject=Reporter%20Access%20Request">Robert Accettura</a> if you need an admin account.  This is for special circumstances only.</p>
-				</td>
-			</tr>
-		</table>
-		<?
+        if($login === true){
+            header('Location: '.$config['base_url']);
+            exit;
+        }
+        $content = initializeTemplate();
+        $content->assign('error', 'Incorrect Username or Password');
+    }
+
+    if(!isset($content)){
+        $content = initializeTemplate();
+    }
+    displayPage($content, 'login', 'login.tpl');
+    exit;
 } else {
-	header("Location: ".$redirect);
+    header('Location: '.$config['base_url']);
 }
-include($config['app_path'].'/includes/footer.inc.php');
 ?>

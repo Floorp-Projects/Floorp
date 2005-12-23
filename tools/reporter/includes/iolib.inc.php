@@ -61,12 +61,12 @@ function initializeTemplate(){
 
 
 function templateStandardVars($object){
-    global $config, $userlib;
+    global $config, $securitylib;
 
     $object->assign('base_url', $config['base_url']);
     $object->assign('app_url', $config['base_url'].'/app');
     $object->assign('charset', 'utf-8');
-    $object->assign('is_admin', $userlib->isLoggedIn());
+    $object->assign('is_admin', $securitylib->isLoggedIn());
     return $object;
 }
 
@@ -117,7 +117,7 @@ function strMiddleReduceWordSensitive($string, $max = 50, $rep = '[...]') {
    }
    return $return;
    return substr($string, 0, $start) . $rep . substr($string, - $end);
-} 
+}
 
 function resolveProblemTypes($q){
   global $problemTypes;

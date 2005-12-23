@@ -53,11 +53,11 @@
 {if $is_admin == true}
 <div>
 	<div class="title">Email:</div>
-	<div class="data">{$report_email}</div>
+	<div class="data">{$report_email}&nbsp; {*this space at the end fixes some formatting issues with no text in this optional field *}</div>
 </div>
 <div>
 	<div class="title">IP Address:</div>
-	<div class="data"><a href="http://ws.arin.net/cgi-bin/whois.pl?queryinput={$report_ip}" rel="external" target="_blank" title="Lookup IP: {$report_ip}">{$report_ip}</a></div>
+	<div class="data"><a href="http://ws.arin.net/cgi-bin/whois.pl?queryinput={$report_ip}" rel="external" target="_blank" title="Lookup IP: {$report_ip}">{$report_ip}</a>&nbsp; {*this space at the end fixes some formatting issues with no text in this optional field *}</div>
 </div>
 {/if}
 <div>
