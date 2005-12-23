@@ -119,10 +119,11 @@ class query
        *******************/
         $orderby = array();
         if(isset($_GET['orderby']) && in_array(strtolower($_GET['orderby']), $this->approved_selects)){
-            $orderby[] = $_GET['orderby'];
+            $orderby[$_GET['orderby']] = $ascdesc;
         }
-        $orderby = array_merge($orderby, $this->calcOrderBy($selected));
-
+        if(!isset($_GET['count'])){
+            $orderby = array_merge($orderby, $this->calcOrderBy($selected));
+        }
         // If we are counting, we need to add A column for it
         if (isset($_GET['count'])){
             // set the count variable
@@ -137,9 +138,15 @@ class query
             /*******************
              * ORDER BY
              *******************/
-            if (!isset($orderby)){
-                $orderby = 'count';
+            if (isset($_GET['count'])){
+                if(!isset($orderby['count'])){
+                    $orderby['count'] = 'desc'; // initially hardcode to desc
+                }
+                if(!isset($orderby['host_hostname'])){
+                    $orderby['host_hostname'] = 'desc';
+                }
             }
+print_r($orderby);
         }
         else {
             if(!isset($selected['report_id'])){
@@ -199,7 +206,9 @@ class query
             // we sanitize on our own
             if ($select_child == 'count'){
                 $sql_select .= 'COUNT( '.$count.' ) AS count';
-                $orderby = array_merge(array('count'), $orderby);
+                if(!isset($orderby['count'])){
+                    $orderby = array_merge(array('count'=> 'DESC'), $orderby);
+                }
             } else {
                 $sql_select .= $select_child;
             }
@@ -259,19 +268,11 @@ class query
          *******************/
          if(isset($orderby)){
              $sql_orderby = 'ORDER BY ';
-             $orderbyCounter =0;
-             foreach($orderby as $orderChild){
-                 $sql_orderby .= $orderChild;
-                 if($orderbyCounter == 0){
-                     $sql_orderby .= ' '.$ascdesc;
-                 }
+             foreach($orderby as $orderChild => $orderDir){
+                 $sql_orderby .= $orderChild.' '.$orderDir;
                  $sql_orderby .= ',';
-                 $orderbyCounter++;
              }
              $sql_orderby = substr($sql_orderby,0,-1).' ';
-             if(sizeof($orderby) > 1){
-                 $sql_orderby .= ' DESC ';
-             }
          }
 
         /*******************
@@ -306,7 +307,7 @@ class query
             $totalQuery = $db->Execute("SELECT `report_id`
                                         FROM `report`, `host`
                                         $sql_where");
-            $totalResults = array();                            
+            $totalResults = array();
             if($totalQuery){
                 while(!$totalQuery->EOF){
                     $totalResults[] = $totalQuery->fields['report_id'];
@@ -398,7 +399,7 @@ class query
                 // Prepend if new_front;
                 $data[$rowNum][0]['text'] = 'Detail';
                 if (isset($row['count'])){
-                    $data[$rowNum][0]['url']  = '/query/?host_hostname='.$row['host_hostname'].'&amp;'.$continuity_params[0];
+                    $data[$rowNum][0]['url']  = '/query/?host_hostname='.$row['host_hostname'].'&amp;selected%5B%5D=host_hostname&amp;'.$continuity_params[0];
                 }
                 else {
                     $data[$rowNum][0]['url']  = '/report/?report_id='.$row['report_id'].'&amp;'.$continuity_params[0];
@@ -435,7 +436,7 @@ class query
         $result = array();
         foreach($this->approved_selects as $selectNode){
             if(array_key_exists($selectNode, $query)){
-                $result[] = $selectNode;
+                $result[$selectNode] = 'desc';
             }
         }
         return $result;
