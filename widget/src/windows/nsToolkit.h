@@ -166,7 +166,8 @@ public:
 
     void                  SetMouseTrailerWindow(HWND aWnd);
     void                  SetCaptureWindow(HWND aWnd);
-    void                  IgnoreNextCycle() { mIgnoreNextCycle = PR_TRUE; } 
+    void                  Disable() { mEnabled = PR_FALSE; DestroyTimer(); }
+    void                  Enable() { mEnabled = PR_TRUE; CreateTimer(); }
     void                  DestroyTimer();
                           ~MouseTrailer();
 
@@ -184,7 +185,7 @@ private:
     HWND                  mMouseTrailerWindow;
     HWND                  mCaptureWindow;
     PRBool                mIsInCaptureMode;
-    PRBool                mIgnoreNextCycle;
+    PRBool                mEnabled;
     nsCOMPtr<nsITimer>    mTimer;
 };
 

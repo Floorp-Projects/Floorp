@@ -6027,6 +6027,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
     result = DispatchWindowEvent(&event);
 
     if (aEventType == NS_MOUSE_MOVE) {
+      MouseTrailer::GetSingleton().Disable();
       if (!mIsInMouseCapture) {
         MouseTrailer::GetSingleton().SetMouseTrailerWindow(mWnd);
       }
@@ -6038,7 +6039,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
       if (rect.Contains(event.refPoint)) {
         if (gCurrentWindow == NULL || gCurrentWindow != this) {
           if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
-            MouseTrailer::GetSingleton().IgnoreNextCycle();
             LPARAM pos = gCurrentWindow->lParamToClient(lParamToScreen(lParam));
             gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, wParam, pos);
           }
@@ -6049,6 +6049,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
           }
         }
       }
+      MouseTrailer::GetSingleton().Enable();
     } else if (aEventType == NS_MOUSE_EXIT) {
       if (gCurrentWindow == this) {
         gCurrentWindow = nsnull;
