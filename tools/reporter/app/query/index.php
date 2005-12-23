@@ -121,6 +121,10 @@ if($query_input['page'] < 10){
 
 $content->assign('start',              $start);
 $content->assign('step',               1);
-$content->assign('amt',                ceil($result['totalResults']/$query_input['show']));
+if(ceil($result['totalResults']/$query_input['show']) < 20){
+    $content->assign('amt',            ceil($result['totalResults']/$query_input['show']));
+} else {
+    $content->assign('amt',            20);
+}
 displayPage($content, 'query', 'query.tpl');
 ?>
