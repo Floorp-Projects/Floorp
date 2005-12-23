@@ -239,5 +239,18 @@ caption {
 }
 
  
+/* 
+ * popup for urlmore 
+ */
+#urlbarModeSelector {
+   padding:.3em ! important;
+}
+
+
+
+#menu_MainPopup {
+   padding:.3em ! important;
+}
+ 
 
 
