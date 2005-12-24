@@ -28,6 +28,7 @@
 
 package grendel.ui;
 
+import grendel.ui.addressbook2.Addressbook;
 import java.awt.Component;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
@@ -40,14 +41,12 @@ import javax.swing.JFrame;
 import javax.swing.ToolTipManager;
 
 import grendel.prefs.base.UIPrefs;
-import grendel.prefs.ui.Identities;
-import grendel.prefs.ui.Servers;
-import grendel.prefs.ui.General;
-import grendel.prefs.ui.UI;
+import grendel.ui.prefs.Identities;
+import grendel.ui.prefs.Servers;
+import grendel.ui.prefs.General;
+import grendel.ui.prefs.UI;
 import grendel.storage.MailDrop;
 import grendel.search.SearchFrame;
-
-import grendel.addressbook.AddressBook;
 
 /* Temporarily removed because FilterMaster is broken (edwin)
 import grendel.filters.FilterMaster;
@@ -242,8 +241,8 @@ class ShowAddressBookAction extends Event {
   }
 
   public void actionPerformed(ActionEvent aEvent) {
-    AddressBook AddressBookFrame = new AddressBook();
-    AddressBookFrame.setVisible(true);
+    Addressbook AddressbookFrame = new Addressbook();
+    AddressbookFrame.setVisible(true);
   }
 }
 

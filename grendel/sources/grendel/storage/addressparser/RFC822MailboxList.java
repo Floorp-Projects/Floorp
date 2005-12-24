@@ -23,9 +23,9 @@
  */
 
 package grendel.storage.addressparser;
-
-import java.io.*;
 import java.util.*;
+import javax.mail.Address;
+import javax.mail.internet.InternetAddress;
 
 
 /**
@@ -41,9 +41,19 @@ import java.util.*;
  */
 public class RFC822MailboxList extends RFC822AddressList
 {
-  private Vector mailbox_list;
-  private RFC822Mailbox mailboxes[];
-
+  private Vector<MailboxToken> mailbox_list;
+  private List<RFC822Mailbox> mailboxes = new ArrayList<RFC822Mailbox>();
+  
+  public RFC822MailboxList()
+  {
+      
+  }
+  
+  public RFC822MailboxList(RFC822MailboxList base)
+  {
+      mailboxes = new ArrayList<RFC822Mailbox>(base.mailboxes);
+  }
+  
   public RFC822MailboxList(String str)
   {
     super(str);
@@ -64,7 +74,7 @@ public class RFC822MailboxList extends RFC822AddressList
    */
   public RFC822Mailbox[] getMailboxArray()
   {
-    return(this.mailboxes);
+    return mailboxes.toArray(new RFC822Mailbox[0]);
   }
 
   /*
@@ -97,15 +107,15 @@ public class RFC822MailboxList extends RFC822AddressList
   {
     int cnt = this.mailbox_list.size();
 
-    this.mailboxes = new RFC822Mailbox[cnt];
+    this.mailboxes.clear();
     for (int i=0; i<cnt; i++)
     {
       MailboxToken mailbox;
       Vector parser_tokens = this.parser.getTokenList();
 
       mailbox = (MailboxToken)this.mailbox_list.elementAt(i);
-      this.mailboxes[i] = new RFC822Mailbox(mailbox.getName(parser_tokens),
-                                            mailbox.getAddress(parser_tokens));
+      this.mailboxes.add(new RFC822Mailbox(mailbox.getName(parser_tokens),
+                                            mailbox.getAddress(parser_tokens)));
     }
   }
 
@@ -132,14 +142,14 @@ public class RFC822MailboxList extends RFC822AddressList
     for (int a=0; a < list_size; a++)
     {
       MailboxToken mailbox;
-      Vector group_mboxes;
+      Vector<MailboxToken> group_mboxes;
       int mbox_cnt;
 
       address = (MailAddressToken)address_list.elementAt(a);
       mailbox = address.getMailbox();
       if (mailbox != null)
       {
-        this.mailbox_list.addElement((Object)mailbox);
+        this.mailbox_list.addElement(mailbox);
         continue;
       }
 

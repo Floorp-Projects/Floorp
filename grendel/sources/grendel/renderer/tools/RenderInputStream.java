@@ -41,7 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 package grendel.renderer.tools;
 
-import grendel.renderer.HTMLUtils;
+import grendel.renderer.html.HTMLUtils;
 import grendel.renderer.ObjectRender;
 
 import java.io.InputStream;
@@ -99,7 +99,7 @@ public class RenderInputStream implements ObjectRender
     StringBuilder buf=new StringBuilder();
 
     if (p.getContentType().contains("text/")) {
-      buf.append("<br>\n<hr>\n<br>\n");
+      //buf.append("<br>\n<hr>\n<br>\n");
       buf.append("<table border=\"1\" cellspacing=\"0\">");
 
       Enumeration enumm=p.getAllHeaders();

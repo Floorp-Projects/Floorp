@@ -23,12 +23,19 @@
  */
 package grendel;
 
+import grendel.addressbook.jdbc.JDBCRegister;
+
+import grendel.messaging.ExceptionNotice;
+import grendel.messaging.NoticeBoard;
+
 import grendel.prefs.base.UIPrefs;
 
 import grendel.ui.MessageDisplayManager;
 import grendel.ui.MultiMessageDisplayManager;
 import grendel.ui.Splash;
 import grendel.ui.UnifiedMessageDisplayManager;
+
+import java.io.IOException;
 
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
@@ -39,43 +46,31 @@ import javax.swing.UIManager;
  */
 public class Main
 {
-  static MessageDisplayManager fManager;
-
   public static void main(String[] argv)
   {
-    System.setProperty(
-                       "java.protocol.handler.pkgs",
-                       (System.getProperty("java.protocol.handler.pkgs")+
-                       "|grendel.renderer.URL"));
-
-    Splash splash=new Splash();
-
-    UIPrefs prefs=UIPrefs.GetMaster();
-
-    UIManager.LookAndFeelInfo[] info=UIManager.getInstalledLookAndFeels();
-    LookAndFeel laf;
-
-    for (int i=0; i<info.length; i++) {
-      try {
-        String name=info[i].getClassName();
-        Class c=Class.forName(name);
-        laf=(LookAndFeel) c.newInstance();
-
-        if (laf.getDescription().equals(prefs.getLookAndFeel())) {
-          UIManager.setLookAndFeel(laf);
+    Splash splash = new Splash();
+    
+    System.setProperty("java.protocol.handler.pkgs",
+        ("grendel.URL|" + System.getProperty("java.protocol.handler.pkgs")));
+        try {
+            
+            /*long t = System.currentTimeMillis();
+            try
+            {
+              Class.forName("grendel.TaskManager");
+            } catch (ClassNotFoundException ex)
+            {
+              ex.printStackTrace();
+            }
+            System.out.println("d = "+(System.currentTimeMillis()-t));*/
+            //TaskManager.runStartup();
+            TaskList.getStartupList().run();
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
-      } catch (Exception e) {
-      }
-    }
-
-    if (prefs.getDisplayManager().equals("multi")) {
-      fManager=new MultiMessageDisplayManager();
-    } else {
-      fManager=new UnifiedMessageDisplayManager();
-    }
-
-    MessageDisplayManager.SetDefaultManager(fManager);
-    fManager.displayMaster();
+    
+    
+    
     splash.dispose();
   }
 }

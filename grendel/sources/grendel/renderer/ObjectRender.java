@@ -58,7 +58,6 @@ public interface ObjectRender
   public Class acceptable();
 
   public StringBuilder objectRenderer(
-                                      Object o, String index, Part p,
-                                      Renderer master)
-                               throws MessagingException, IOException;
+    Object o, String index, Part p, Renderer master)
+    throws MessagingException, IOException;
 }

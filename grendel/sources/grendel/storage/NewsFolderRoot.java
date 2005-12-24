@@ -89,9 +89,11 @@ class NewsFolderRoot extends Folder {
         match = false;
       } else if (pattern.equals("%") || pattern.equals("*")) {
         match = true;
+      } else if (pattern.equals(n.name())) {
+        match = true;
       } else {
-        // #### I'm not really expected to write a regexp matcher, am I?
-        Assert.NotYetImplemented("NewsFolderRoot.list(String pattern)");
+        // XXX I'm not really expected to write a regexp matcher, am I? 
+        ///Assert.NotYetImplemented("NewsFolderRoot.list(String pattern)");
         match = false;
       }
 

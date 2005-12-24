@@ -28,8 +28,11 @@ import calypso.util.NetworkDate;
 
 import calypso.util.Assert;
 import calypso.util.ByteBuf;
+import grendel.messaging.ExceptionNotice;
+import grendel.messaging.NoticeBoard;
 
 import java.io.*;
+import java.net.URLConnection;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Enumeration;
@@ -802,10 +805,20 @@ public abstract class MessageBase extends MessageReadOnly implements MessageExtr
   
   public DataHandler getDataHandler() throws MessagingException {
     if (data_handler==null) {
-      String type = "text/plain";  //XXX lie to it...
+      String type = "text/plain"; //As a default
       String[] content_types = getHeader("Content-Type");
       if ((content_types!=null)&&(content_types.length>0)) {
         type = content_types[0];
+      } else {
+        try {
+          InputStream is = getInputStream();
+          if (!is.markSupported()) {
+            is = new BufferedInputStream(is);
+          }
+          type = URLConnection.guessContentTypeFromStream(is);
+        } catch (IOException ioe) {
+          NoticeBoard.publish(new ExceptionNotice(ioe));
+        }
       }
       data_handler = new DataHandler(getContentAsString(),type);
     }
@@ -851,6 +864,7 @@ public abstract class MessageBase extends MessageReadOnly implements MessageExtr
       }
     }
     return full_headers;
+//    return new InternetHeaders(getInputStreamWithHeaders());
   }
   
 }

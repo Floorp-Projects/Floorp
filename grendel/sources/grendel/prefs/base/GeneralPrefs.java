@@ -12,54 +12,67 @@
  *
  * The Original Code is the Grendel mail/news client.
  *
- * The Initial Developer of the Original Code is Edwin Woudt 
+ * The Initial Developer of the Original Code is Edwin Woudt
  * <edwin@woudt.nl>.  Portions created by Edwin Woudt are
  * Copyright (C) 1999 Edwin Woudt. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 package grendel.prefs.base;
-
-import calypso.util.Preferences;
-import calypso.util.PreferencesFactory;
+import grendel.prefs.accounts.Account_SMTP;
+import grendel.prefs.Preferences;
 
 public class GeneralPrefs {
-
-  private static GeneralPrefs MasterGeneralPrefs;
-  
-  public static synchronized GeneralPrefs GetMaster() {
-    if (MasterGeneralPrefs == null) {
-      MasterGeneralPrefs = new GeneralPrefs();
+    
+    private static GeneralPrefs MasterGeneralPrefs;
+    
+    /**
+     *
+     * @deprecated New preferences architecture does not require this method.
+     */
+    public static synchronized GeneralPrefs GetMaster() {
+        if (MasterGeneralPrefs == null) {
+            MasterGeneralPrefs = new GeneralPrefs();
+        }
+        return MasterGeneralPrefs;
     }
-    return MasterGeneralPrefs;
-  }
-
-  Preferences prefs;
-  
-  private GeneralPrefs() {
-    prefs = PreferencesFactory.Get();
-    readPrefs();
-  }
-
-  public void readPrefs() {
-    setSMTPServer(prefs.getString("general.smtpserver",""));
-    writePrefs();
-  }
-  
-  public void writePrefs() {
-    prefs.putString("general.smtpserver",getSMTPServer());
-  }
-  
-  String mySMTPServer;
-  
-  public String getSMTPServer() {
-    return mySMTPServer;
-  }
-  
-  public void setSMTPServer(String aSMTPServer) {
-    mySMTPServer = aSMTPServer;
-  }
-  
+    
+    /*Preferences prefs;*/
+    /**
+     *
+     * @deprecated New preferences architecture does not require this method.
+     */
+    private GeneralPrefs() {
+        /*prefs = PreferencesFactory.Get();
+        readPrefs();*/
+    }
+    /**
+     *
+     * @deprecated New preferences architecture does not require this method.
+     */
+    public void readPrefs() {
+        //setSMTPServer(prefs.getString("general.smtpserver",""));
+        //writePrefs();
+    }
+    /**
+     *
+     * @deprecated New preferences architecture does not require this method.
+     */
+    public void writePrefs() {
+        //prefs.putString("general.smtpserver",getSMTPServer());
+        Preferences.save();
+    }
+    
+    public String getSMTPServer() {
+        Account_SMTP a = (Account_SMTP) Preferences.getPreferances().getAccounts().getAccount(0);
+        return a.getHost();
+    }
+    
+    public void setSMTPServer(String aSMTPServer) {
+        Account_SMTP a = (Account_SMTP) Preferences.getPreferances().getAccounts().getAccount(0);
+        a.setHost(aSMTPServer);
+    }
+    
 }

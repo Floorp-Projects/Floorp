@@ -36,34 +36,66 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<project name="Grendel" default="build" basedir=".">
-    <property name="version" value="0.1" />
-
-    <property name="base" value="."/>
-    <property name="lib" value="${base}/extlib"/>
-    <property name="src" value="sources"/>
-    <property name="dist" value="${base}/dist"/>
-    <property name="docs" value="${test.base}/docs"/>
+<project name="Grendel" default="build" basedir="." xmlns:artifact="urn:maven-artifact-ant">
+    <import file="distro.xml"/>
+    <import file="fragment.xml"/>
     
     
-    <target name="build" description="Compiles Grendel.">
-        <mkdir dir="${dist}"/>
-        <antcall target="unzipResources"/>
+    <target name="-init" depends="-init-base">
+        <property name="version" value="0.1" />
+        
+        <property name="lib" value="${base}/extlib"/>
+        <property name="lib.build" value="${base}/buildlib"/>
+        <property name="src" value="${base}/sources"/>
+        <property name="dist" value="${base.dep}/dist"/>
+        <property name="docs" value="${base.dep}/docs"/>
+        
+        <property name="dist.frag" value="${base.dep}/fragment"/>
+        <property name="dist.frag.bin" value="${dist.frag}/bin"/>
+        <property name="dist.zip" value="${base.dep}/grendel${dist.zip.postfix}.zip"/>
+    
+        <property name="test.base" value="${base}/tests"/>
+        <property name="test.base.dep" value="${base.dep}/tests"/>
+        <property name="test.reports" value="${test.base.dep}/report/"/>
+        <property name="test.reports.style" value="${test.base}/style/"/>
+        <property name="test.src" value="${test.base}/src"/>
+        <property name="test.dist" value="${test.base.dep}/dist"/>
+    </target>
+    
+    <target name="-init-base">
+        <property name="base" value="."/>
+        <property name="base.dep" value="${base}"/>
+        <property name="dist.zip.postfix" value=""/>
+    </target>
 
+    <target name="build" description="Compiles Grendel." depends="-init,-compile,defaults,-fragment" />
+    
+    <target name="-compile">        
         <echo message="-- Compiling Grendel"/>
-        <javac srcdir="." destdir="${dist}"
+        <mkdir dir="${dist}"/>
+        <javac srcdir="${src}" destdir="${dist}"
             optimize="false"
-            debug="true"
-            includes="${src}/**/*.java">
+            debug="true">
+            <include name="**/*.java"/>
             <classpath>
                 <fileset dir="${lib}" includes="*.jar"/>
             </classpath>
         </javac>
+        <copy todir="${dist}">
+            <fileset dir="${src}/grendel">
+                <include name="META-INF/*"/>
+            </fileset>
+            <fileset dir="${src}">
+                <include name="**/*.properties"/>
+                <include name="**/*.tl"/>
+                <include name="**/ui/**2/*.png"/>
+            </fileset>
+        </copy>
     </target>
 
-    <target name="unzipResources">
-
+    <target name="-copyResources" depends="-init">
         <echo message="-- Copying resource files..."/>
+        <mkdir dir="${dist}"/>
         <copy todir="${dist}">
             <fileset dir="${src}/grendel">
                 <include name="**/*.gif"/>
@@ -79,40 +111,21 @@
         <copy todir="${dist}">
             <fileset dir="${src}">
                 <include name="**/*.properties"/>
+                <include name="**/*.tl"/>
+                <include name="**/ui/**2/*.png"/>
             </fileset>
         </copy>
     </target>
-
-    <target name="makeJar" description="Pumps all the libs into one big JAR for distribution. Grendel must be built before running this.">
-        <echo message="-- Creating Grendel JAR file"/>
-        <jar destfile="${dist}/grendel.jar">
-            <fileset dir="${dist}">
-                <include name="**/*.*"/>
-            </fileset>
-            <manifest>
-                <attribute name="Main-Class" value="grendel.Main"/>
-            </manifest>
-        </jar>
-
-        <echo message="-- Creating grendel.zip"/>
-        <zip destfile="${dist}/grendel.zip">
-            <fileset dir="${src}/grendel">
-                <include name="**/*.gif"/>
-                <include name="**/*.png"/>
-                <include name="**/*.jpg"/>
-                <include name="**/*.tmpl"/>
-                <include name="**/*.xml"/>
-                <include name="**/*.dtd"/>
-            </fileset>
-            <fileset dir="${src}">
-                <include name="**/*.properties"/>
-            </fileset>
+        
+    <target name="makeZip" description="Makes the distribution, and creates a zip of it" depends="-init,build">
+        <echo message="-- Creating Grendel zip"/>
+        <zip destfile="${dist.zip}" compress="true">
+            <fileset dir="${dist.frag}"/>
         </zip>
-
     </target>
-
-    <target name="run" description="Runs Grendel after compiling.">
-        <java classname="grendel.Main" fork="true" dir="${dist}">
+    
+    <target name="run" description="Runs Grendel after compiling and jar'ing"  depends="-init,build">
+        <java classname="GrendelLauncher" fork="true" dir="${dist.frag}">
             <classpath>
                 <fileset dir="${lib}" includes="*.jar"/>
                 <path path="${dist}" />
@@ -120,12 +133,98 @@
         </java>
     </target>
 
-    <target name="clean" description="Cleans up generated class files.">
-        <delete dir="${dist}"/>
+    <target name="pmd" depends="-init">
+        <taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask">
+            <classpath>
+                <fileset dir="${lib}" includes="*.jar"/>
+                <fileset dir="${lib.build}" includes="*.jar"/>
+            </classpath>
+        </taskdef>
+        <pmd shortfilenames="true">
+            <ruleset>rulesets/basic.xml,
+            rulesets/braces.xml,
+            rulesets/clone.xml,
+            rulesets/codesize.xml,
+            <!--rulesets/controversial.xml,-->
+            rulesets/coupling.xml,
+            rulesets/design.xml,
+            rulesets/finalizers.xml,
+            rulesets/imports.xml,
+            rulesets/javabeans.xml,
+            rulesets/junit.xml,
+            rulesets/logging-java.xml,
+            rulesets/naming.xml,
+            rulesets/optimizations.xml,
+            rulesets/strictexception.xml,
+            rulesets/strings.xml,
+            rulesets/sunsecure.xml,
+            rulesets/unusedcode.xml,
+            rulesets/logging-jakarta-commons.xml</ruleset>
+            <!--
+            linkprefix="http://lxr.mozilla.org/mozilla/source/grendel/sources/"-->
+            <formatter type="html" toFile="${docs}/pmd.html"/>
+            <fileset dir="${src}">
+                <include name="**/*.java"/>
+            </fileset>
+        </pmd>
+    </target>
+    
+    <target name="cpd" depends="-init">
+        <taskdef name="cpd" classname="net.sourceforge.pmd.cpd.CPDTask">
+            <classpath>
+                <fileset dir="${lib}" includes="*.jar"/>      
+                <fileset dir="${lib.build}" includes="*.jar"/>
+            </classpath>
+        </taskdef>
+    
+        <cpd minimumTokenCount="100" outputFile="${docs}/cpd.txt">
+            <fileset dir="${src}">
+                <include name="**/*.java"/>
+            </fileset>
+        </cpd>
+    </target>
+    
+    <target name="profiler_run" description="Profile Project">
+        <fail unless="netbeans.home">This target can only run inside the NetBeans IDE.</fail>
+
+        <nbprofiledirect>
+            <classpath path="dist"/>
+        </nbprofiledirect>
+        <!--dir="${profiler.session.working.dir}"-->
+        <property environment="env"/>
+        <java fork="true" classname="grendel.addressbook.ldap.LDAPTest" dir="dist"
+            jvm="${profiler.info.jvm}">
+            <jvmarg value="${profiler.info.jvmargs.agent}"/>
+            <jvmarg line="${profiler.info.jvmargs}"/>
+            <env key="Path" path="${profiler.info.agentpath}:${env.Path}"/>
+            <classpath path="dist"/>
+        </java>
+    </target>
+              
+    
+    <target name="defaults" description="generates Grendel Default Preferances" depends="-init,-compile">
+        <java classname="grendel.prefs.BuildDefaults" fork="true" dir="dist">
+            <classpath>
+                <fileset dir="${lib}" includes="*.jar"/>
+                <path path="${dist}" />
+            </classpath>
+        </java>
+    </target>
+    
+    <target name="clean" description="Cleans up generated class files." depends="-init,-fragment-clean">
+        <!--<delete dir="${dist}"/>-->
+        <delete includeemptydirs="true">
+            <fileset dir="${dist}">
+                <exclude name="CVS"/>
+                <exclude name="CVS/**"/>
+                <exclude name="classes"/>
+                <exclude name="classes/**"/>
+            </fileset>
+        </delete>
         <delete file="${dist}/grendel.jar"/>
     </target>
 
-    <target name="javadoc" description="Generate JavaDoc API information">
+    <target name="javadoc" description="Generate JavaDoc API information" depends="-init">
         <mkdir dir="docs"/>
         <javadoc destdir="${docs}" classpath="${dist}" private="true" windowtitle="Grendel" author="true" version="true" use="true" linksource="true" >
             <doctitle>Grendel JavaDoc</doctitle>
@@ -138,22 +237,7 @@
         </javadoc>
     </target>
         
-    <target name="-test-init" description="Setup for JUnit Tests">
-        <property name="test.base" value="tests"/>
-        <property name="test.reports" value="${test.base}/report/"/>
-        <property name="test.reports.style" value="${test.base}/style/"/>
-        <property name="test.src" value="${test.base}/src"/>
-        <property name="test.dist" value="${test.base}/dist"/>
-        <path id="classpath.test">
-            <pathelement location="${test.base}/junit.jar" />
-            <pathelement path="${test.dist}" />
-            <pathelement path="${dist}" />
-            <fileset dir="${lib}" includes="*.jar"/>
-        </path>
-        <property environment="classpath" classpathref="classpath.test"/>
-    </target>
-    
-    <target name="test-compile" depends="-test-init">
+    <target name="-test-compile" depends="-init">
         <mkdir dir="${test.dist}" />
         <delete>
             <fileset dir="${test.dist}" includes="**/*.class" />
@@ -163,9 +247,21 @@
         </javac>
     </target>
 
-    <target name="test" depends="-test-init,test-compile,test-run,test-report"  description="Run JUnit Tests"/>
+    <target name="-test-init" depends="-init">
+        <path id="classpath.test">
+            <pathelement location="${test.base}/junit.jar" />
+            <pathelement path="${test.dist}" />
+            <pathelement path="${dist}" />
+            <fileset dir="${lib}" includes="*.jar"/>
+        </path>
+        <property environment="classpath" classpathref="classpath.test"/>
+        
+        <mkdir dir="${test.reports}"/>
+    </target>
     
-    <target name="test-run" depends="-test-init">
+    <target name="test" depends="-init,-test-init,-test-compile,-test-run,-test-report"  description="Run JUnit Tests"/>
+    
+    <target name="-test-run" depends="-init">
         <junit fork="yes" printsummary="no" haltonfailure="no">
             <classpath refid="classpath.test" />
             <formatter type="plain" usefile="false" />
@@ -178,7 +274,7 @@
         </junit>
     </target>
     
-    <target name="test-report" depends="-test-init">
+    <target name="-test-report" depends="-init">
         <junitreport todir="${test.reports}">
             <fileset dir="${test.reports}">
                 <include name="TEST-*.xml" />

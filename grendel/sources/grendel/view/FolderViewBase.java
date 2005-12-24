@@ -74,10 +74,12 @@ class FolderViewBase implements FolderView, MessageChangedListener,
         }
       }
       messages = fFolder.getMessages();
-      FetchProfile fp = new FetchProfile();
+      /*FetchProfile fp = new FetchProfile();
       fp.add(FetchProfile.Item.ENVELOPE);
-      f.fetch(messages, fp);
+      f.fetch(messages, fp);*/
     } catch (MessagingException e) {
+        e.printStackTrace();
+       
     }
 
     if (messages != null) {

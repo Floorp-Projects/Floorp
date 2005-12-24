@@ -41,7 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 package grendel.renderer.tools;
 
-import grendel.renderer.HTMLUtils;
+import grendel.renderer.html.HTMLUtils;
 import grendel.renderer.ObjectRender;
 import grendel.renderer.Renderer;
 
@@ -85,12 +85,13 @@ public class RenderString implements ObjectRender
                                throws javax.mail.MessagingException
   {
     StringBuilder buf=new StringBuilder();
-
+    
     if (p.getContentType().contains("text/html")) {
-      buf.append("<br>\n<hr>\n<br>\n");
+        master.putBar(buf);
       buf.append(HTMLUtils.cleanHTML((String) o));
     } else if (p.getContentType().contains("text/plain")) {
-      buf.append(HTMLUtils.quoteToHTML((String) o));
+        master.putBar(buf);
+        buf.append(HTMLUtils.quoteToHTML((String) o));
     } else {
       try {
         String s=(String) o;

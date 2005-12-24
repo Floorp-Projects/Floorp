@@ -1,0 +1,5 @@
+*.class
+*.pref
+META-INF
+calypso
+grendel

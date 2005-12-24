@@ -36,15 +36,13 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JDialog;
 import javax.swing.JTabbedPane;
 import javax.swing.JPanel;
 
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
-
-import grendel.prefs.Prefs;
+import grendel.prefs.xml.XMLPreferences;
 
 /**
  * This class handles preference dialog box handling for Grendel. Why
@@ -64,8 +62,8 @@ public class PrefsDialog
   }
 
   public PrefsDialog(JFrame aParent) {
-    Object objs[] = {new Prefs()};
-    propertyEditorDialog(aParent, new Prefs());
+    Object objs[] = {new XMLPreferences()};
+    propertyEditorDialog(aParent, new XMLPreferences());
   }
 
   public static boolean ValidPrefs() {
@@ -144,10 +142,10 @@ public class PrefsDialog
     
     public void actionPerformed(ActionEvent event) {
       String command = event.getActionCommand();
-      Prefs prefs = new Prefs();
+      XMLPreferences prefs = new XMLPreferences();
       if (command.equals(PrefsDialog.OK)) {
         for (int i = 0; i < editors.length; i++) {
-          prefs.set(editors[i].getValue());
+          //prefs.set(editors[i].getValue()); //XXX Fix this
         }
       }
       dialog.setVisible(false);

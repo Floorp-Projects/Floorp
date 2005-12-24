@@ -68,7 +68,7 @@ public class Attachment
   {
     this.p=p;
     this.url=url;
-    grendel.renderer.URL.attachment.Handler.registerAttachment(url, this);
+    grendel.URL.attachment.Handler.registerAttachment(url, this);
   }
 
   /**
@@ -80,7 +80,7 @@ public class Attachment
    * @exception MessagingException
    */
   public java.util.Enumeration getAllHeaders()
-                                      throws javax.mail.MessagingException
+    throws javax.mail.MessagingException
   {
     return p.getAllHeaders();
   }
@@ -137,7 +137,7 @@ public class Attachment
    * @exception               MessagingException
    */
   public String[] getHeader(String header_name)
-                     throws javax.mail.MessagingException
+    throws javax.mail.MessagingException
   {
     return p.getHeader(header_name);
   }
@@ -159,8 +159,7 @@ public class Attachment
    * @see javax.activation.DataHandler#getInputStream
    */
   public java.io.InputStream getInputStream()
-                                     throws java.io.IOException, 
-                                            javax.mail.MessagingException
+    throws java.io.IOException, javax.mail.MessagingException
   {
     return p.getInputStream();
   }

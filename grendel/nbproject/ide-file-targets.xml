@@ -2,7 +2,7 @@
 <project basedir=".." name="Grendel-IDE">
     <property name="ant.script" value="build.xml"/>
     <import file="../build.xml"/>
-    <target name="compile-selected-files-in-sources">
+    <target name="compile-selected-files-in-sources" depends="-init">
         <fail unless="files">Must set property 'files'</fail>
         <echo message="File- ${files}"/>
         <mkdir dir="${dist}"/>

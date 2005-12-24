@@ -31,9 +31,9 @@ import java.util.*;
 class GroupToken extends AddressToken
 {
   private AddressToken phrase;
-  private Vector mailboxes;
+  private Vector<MailboxToken> mailboxes;
 
-  public GroupToken(AddressToken phrase, Vector mailboxes, int end)
+  public GroupToken(AddressToken phrase, Vector<MailboxToken> mailboxes, int end)
   {
     this.phrase = phrase;
     this.mailboxes = mailboxes;
@@ -43,7 +43,7 @@ class GroupToken extends AddressToken
   }
 
 
-  public Vector getMailboxList()
+  public Vector<MailboxToken> getMailboxList()
   {
     return(this.mailboxes);
   }

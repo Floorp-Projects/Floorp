@@ -184,21 +184,6 @@ public class MasterPanel extends GeneralPanel {
 
     add(scrollPane);
 
-    // ###HACKHACKHACK  Remove me when javamail fixes their stuff.
-    java.io.File mailcapfile = new java.io.File("mailcap");
-    if (!mailcapfile.exists()) {
-      try {
-        (new java.io.RandomAccessFile(mailcapfile, "rw")).close();
-        System.out.println("*** Created empty mailcap file in current");
-        System.out.println("*** directory (to work around buggy javamail");
-        System.out.println("*** software from JavaSoft).");
-      } catch (java.io.IOException e) {
-        System.out.println("*** Couldn't create empty mailcap file: " + e);
-        System.out.println("*** Imminent crash is likely due to buggy");
-        System.out.println("*** javamail software from JavaSoft.");
-      }
-    }
-
     fModel = new FolderModel();
     ViewedStore stores[] = StoreFactory.Instance().getStores();
     fStores = new ViewedStore[stores.length];

@@ -12,42 +12,39 @@
  *
  * The Original Code is the Grendel mail/news client.
  *
- * The Initial Developer of the Original Code is Edwin Woudt 
+ * The Initial Developer of the Original Code is Edwin Woudt
  * <edwin@woudt.nl>.  Portions created by Edwin Woudt are
  * Copyright (C) 1999 Edwin Woudt. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 package grendel.prefs.base;
-
-import java.util.Vector;
-
-import calypso.util.Preferences;
-import calypso.util.PreferencesFactory;
+import grendel.prefs.Preferences;
+import grendel.prefs.accounts.Account;
 
 public class ServerArray {
-
-  private static ServerArray MasterServerArray;
-  
-  public static synchronized ServerArray GetMaster() {
-    if (MasterServerArray == null) {
-      MasterServerArray = new ServerArray();
+    
+    private static ServerArray MasterServerArray;
+    
+    public static synchronized ServerArray GetMaster() {
+        if (MasterServerArray == null) {
+            MasterServerArray = new ServerArray();
+        }
+        return MasterServerArray;
     }
-    return MasterServerArray;
-  }
-
-  Vector svs = new Vector();
-  Preferences prefs;
-  
-  private ServerArray() {
-    prefs = PreferencesFactory.Get();
-    readPrefs();
-  }
-  
-  public void readPrefs () {
-
+    /*
+    Vector svs = new Vector();
+    Preferences prefs;
+     */
+    private ServerArray() {
+        /*prefs = PreferencesFactory.Get();
+        readPrefs();*/
+    }
+    
+    public void readPrefs() {
+/*
     for (int i=0; i<prefs.getInt("server.count",1); i++) {
       ServerStructure sv = new ServerStructure();
       sv.setDescription           (prefs.getString ("server."+i+".description","Default Server"));
@@ -62,17 +59,17 @@ public class ServerArray {
       sv.setPOP3LeaveMailOnServer (prefs.getBoolean("server."+i+".pop3.leavemailonserver",false));
       add(sv);
     }
-    
+ 
     writePrefs();
-
-  }
-  
-  public void writePrefs () {
+ */
+    }
     
+    public void writePrefs() {
+    /*
     prefs.putInt("server.count",size());
-    
+     
     for (int i=0; i<size(); i++) {
-      
+     
       prefs.putString ("server."+i+".description"           ,get(i).getDescription());
       prefs.putString ("server."+i+".host"                  ,get(i).getHost());
       prefs.putInt    ("server."+i+".port"                  ,get(i).getPort());
@@ -83,25 +80,32 @@ public class ServerArray {
       prefs.putString ("server."+i+".berkeley.directory"    ,get(i).getBerkeleyDirectory());
       prefs.putBoolean("server."+i+".pop3.showasimap"       ,get(i).getPOP3ShowAsImap());
       prefs.putBoolean("server."+i+".pop3.leavemailonserver",get(i).getPOP3LeaveMailOnServer());
-      
+     
+    }*/
+        Preferences.save();
     }
     
-  }
-  
-  public ServerStructure get (int Index) {
-    return (ServerStructure)svs.elementAt(Index);
-  }
-  
-  public void add (ServerStructure aServer) {
-    svs.addElement(aServer);
-  }
-  
-  public void remove (int Index) {
-    svs.removeElementAt(Index);
-  }
-  
-  public int size () {
-    return svs.size();
-  }
-
+    public ServerStructure get(int Index) {
+        Account a = Preferences.getPreferances().getAccounts().getReciveAccounts().get(Index);
+        if (Index<0) Index=0;
+        if (Index>Preferences.getPreferances().getAccounts().getReciveAccounts().size()) Index=0;
+        if (a == null) {
+            return get(Index +1);
+        }
+        ServerStructure ss = new ServerStructure(a);
+        return ss;
+    }
+    
+    public void add(ServerStructure aServer) {
+        Preferences.getPreferances().getAccounts().addAccount(aServer.getAccount());
+    }
+    
+    public void remove(int Index) {
+        Preferences.getPreferances().getAccounts().removeAccount(Index);
+    }
+    
+    public int size() {
+        return Preferences.getPreferances().getAccounts().getReciveAccounts().size();
+    }
+    
 }

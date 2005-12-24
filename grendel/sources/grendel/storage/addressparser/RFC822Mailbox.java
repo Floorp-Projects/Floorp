@@ -17,15 +17,13 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Eric Bina <ebina@netscape.com>, 30 Oct 1997.
  */
 
 package grendel.storage.addressparser;
-
-import java.io.*;
-import java.util.*;
+import javax.mail.internet.InternetAddress;
 
 
 /**
@@ -44,54 +42,48 @@ import java.util.*;
  * @see         RFC822MailboxList
  * @author      Eric Bina
  */
-public class RFC822Mailbox
-{
-  private String name, address;
-
-  /**
-   * Should be created only by the <b>RFC822MailboxList</b> class.
-   *
-   * @see         RFC822MailboxList
-   */
-  public RFC822Mailbox(String name, String address)
-  {
-    this.name = name;
-    this.address = address;
-  }
-
-
-  public String getName()
-  {
-    return(this.name);
-  }
-
-
-  public String getAddress()
-  {
-    return(this.address);
-  }
-
-
-  /**
-   * Creates a valid RFC822 mailbox.  Since we don't like to lose
-   * the comment information, this will reform addresses like:
-   * <br><tt> (Eric Bina) ebina@netscape.com </tt><br>
-   * to addresses like:
-   * <br><tt> "Eric Bina" &lt;ebina@netscape.com&gt; </tt><br>
-   */
-  public String getMailboxString()
-  {
-    String mailbox = null;
-
-    if ((this.name != null)&&(this.name.equalsIgnoreCase("") == false))
-    {
-      mailbox = this.name + " <" + this.address + ">";
+public class RFC822Mailbox extends InternetAddress {
+    //private String name, address;
+    
+    /**
+     * Should be created only by the <b>RFC822MailboxList</b> class.
+     *
+     * @see         RFC822MailboxList
+     */
+    public RFC822Mailbox(String personal, String address) {
+        this.address = address;
+        this.personal = personal;
+        this.encodedPersonal = null;
     }
-    else
-    {
-      mailbox = this.address;
+    
+    public RFC822Mailbox(String address) {
+        this("",address);
     }
-    return(mailbox);
-  }
+    
+    public String getName() {
+        return getPersonal();
+    }
+    
+    /**
+     * Creates a valid RFC822 mailbox.  Since we don't like to lose
+     * the comment information, this will reform addresses like:
+     * <br><tt> (Eric Bina) ebina@netscape.com </tt><br>
+     * to addresses like:
+     * <br><tt> "Eric Bina" &lt;ebina@netscape.com&gt; </tt><br>
+     */
+    public String getMailboxString() {
+        String mailbox = null;
+        
+        if ((this.personal != null)&&(this.personal.equalsIgnoreCase("") == false)) {
+            mailbox = this.personal + " <" + this.address + ">";
+        } else {
+            mailbox = this.address;
+        }
+        return(mailbox);
+    }
+    
+    public String toString() {
+        return getMailboxString();
+    }
 }
 

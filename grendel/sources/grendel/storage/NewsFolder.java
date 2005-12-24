@@ -122,7 +122,7 @@ class NewsFolder extends FolderBase {
   public boolean exists() {
     return !bogus_group_p;
   }
-
+ 
   protected void getMessageCounts() {
     int counts[] = store.getGroupCounts(this);
     if (counts == null) {

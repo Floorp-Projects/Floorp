@@ -30,12 +30,13 @@ package grendel.ui;
 import com.trfenv.parsers.Event;
 
 import grendel.renderer.Renderer;
-import grendel.renderer.StHyperlinkListener;
+import grendel.URL.StHyperlinkListener;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.widgets.StatusEvent;
 
 import java.awt.Font;
+import java.io.File;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -98,12 +99,12 @@ public class MessagePanel extends GeneralPanel
     fTextArea.setBorder(BorderFactory.createLoweredBevelBorder());
 
     try {
-      fTextArea.setPage(getClass().getResource("/start.html"));
+      fTextArea.setPage(new File("start.html").toURL());
     } catch (IOException ioe) {
       ioe.printStackTrace();
     }
 
-    fTextArea.addHyperlinkListener(new StHyperlinkListener(fTextArea));
+    fTextArea.addHyperlinkListener(new StHyperlinkListener());
     add(new JScrollPane(fTextArea));
   }
 
@@ -278,10 +279,11 @@ public class MessagePanel extends GeneralPanel
               fTextArea.read(stream, null);
             } catch (IOException e) {
               e.printStackTrace();
+              fTextArea.setText("<strong>IO Error!</strong>");
             }
           } else {
             fTextArea.setText("");
-            fTextArea.setPage(getClass().getResource("/start.html"));
+            fTextArea.setPage(new File("start.html").toURL());
           }
         }
       } catch (Exception e) {

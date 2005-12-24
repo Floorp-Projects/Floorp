@@ -1,4 +1,6 @@
 ## Stores
+#if the user selected the mbox provider
+protocol=mbox; type=store; class=gnu.mail.providers.mbox.MboxStore; vendor=dog@gnu.org;
 
 # POP3 default
 protocol=pop3;     type=store; class=com.sun.mail.pop3.POP3Store;         vendor=Sun Microsystems, Inc;
@@ -6,11 +8,20 @@ protocol=pop3;     type=store; class=com.sun.mail.pop3.POP3Store;         vendor
 protocol=spop3;    type=store; class=com.sun.mail.pop3.POP3Store;         vendor=Sun Microsystems, Inc
 protocol=gpop3;    type=store; class=grendel.storage.PopStore;            vendor=Mozilla.org, Grendel
 
+#if the user selected the maildir provider
+protocol=maildir; type=store; class=gnu.mail.providers.maildir.MaildirStore; vendor=dog@gnu.org;
+
 # News default
-protocol=news;     type=store; class=grendel.storage.NewsStore;           vendor=Mozilla.org, Grendel
+# protocol=nntp;     type=store; class=grendel.storage.NewsStore;           vendor=Mozilla.org, Grendel
+
 # Two News choices
-protocol=gnews;    type=store; class=grendel.storage.NewsStore;           vendor=Mozilla.org, Grendel
-protocol=dnews;    type=store; class=dog.mail.nntp.NNTPStore;             vendor=dog@dog.net.uk;
+# protocol=gnews;    type=store; class=grendel.storage.NewsStore;           vendor=Mozilla.org, Grendel
+# protocol=dnews;    type=store; class=dog.mail.nntp.NNTPStore;             vendor=dog@dog.net.uk;
+
+#NNTP
+protocol=nntp; type=store; class=gnu.mail.providers.nntp.NNTPStore; vendor=dog@gnu.org;
+protocol=nntp-post; type=transport; class=gnu.mail.providers.nntp.NNTPTransport; vendor=dog@gnu.org;
+# protocol=news; type=transport; class=gnu.mail.providers.nntp.NNTPTransport; vendor=dog@gnu.org;
 
 # Berkeley local store
 protocol=berkeley; type=store; class=grendel.storage.BerkeleyStore;       vendor=Mozilla.org, Grendel

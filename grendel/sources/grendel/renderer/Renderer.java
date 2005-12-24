@@ -42,7 +42,10 @@
 package grendel.renderer;
 
 import com.sun.mail.imap.IMAPNestedMessage;
+import grendel.messaging.ExceptionNotice;
+import grendel.messaging.NoticeBoard;
 
+import grendel.renderer.html.HTMLUtils;
 import grendel.renderer.tools.RenderMessage;
 
 import grendel.storage.MessageExtra;
@@ -73,88 +76,94 @@ import javax.mail.internet.MimeMultipart;
  *
  * @author hash9
  */
-public class Renderer implements Runnable
-{
+public class Renderer implements Runnable {
   static {
     renderers=new HashMap<Class,ObjectRender>();
     buildParseTree();
   }
-
+  
   private static HashMap<Class,ObjectRender> renderers;
   protected Message message;
-  protected MessageExtra message_extra;
   protected PipedInputStream inpipe;
   protected PipedOutputStream outpipe;
-
-  private Renderer(Message message) throws IOException
-  {
+  protected boolean reply;
+  
+  private Renderer(Message message, boolean reply) throws IOException {
     this.message=message;
-    this.message_extra=MessageExtraFactory.Get(message);
+    this.reply = reply;
     inpipe=new PipedInputStream();
     outpipe=new PipedOutputStream(inpipe);
-
+    
     Thread t=new Thread(this);
     t.start();
   }
-
-  public static InputStream render(Message message) throws IOException
-  {
-    Renderer r=new Renderer(message);
-
+  
+  public static InputStream render(Message message, boolean reply) throws IOException {
+    Renderer r=new Renderer(message, reply);
+    
     return r.inpipe;
   }
-
+  
+  public static InputStream render(Message message) throws IOException {
+    return render(message,false);
+  }
+  
   public Attachment makeAttachment(String index, Part p)
-                            throws MessagingException
-  {
+  throws MessagingException {
     StringBuilder url=new StringBuilder();
     url.append("attachment://");
     url.append(message.getFolder().getURLName().toString());
     url.append("/");
-    url.append(message_extra.getMessageID());
-
-    //url.append("/");
+    String[] list=message.getHeader("Message-ID");
+    if ((list==null)||(list.length<1)) {
+      url.append("null");
+    } else {
+      url.append(list[0]);
+    }
     url.append(index);
-
+    
     return new Attachment(p, url.toString());
   }
-
+  
   public StringBuilder makeAttachmentBox(String index, Part p)
-                                  throws MessagingException
-  {
+  throws MessagingException {
+    
     StringBuilder buf=new StringBuilder();
-    buf.append("<br>\n<hr>\n<br>\n");
-
-    Attachment a=makeAttachment(index, p);
-    buf.append("<table border=\"1\" cellspacing=\"0\">");
-    buf.append("<tr><td>");
-    buf.append(HTMLUtils.genHRef("<img src=\"image.jpg\">", a.getURL()));
-    buf.append("</td><td><table border=\"0\">\n");
-
-    if (p.getFileName()!=null) {
-      buf.append(HTMLUtils.genRow("Name", p.getFileName(), a.getURL()));
+    if (! reply) {
+      //buf.append("<br>\n<hr>\n<br>\n");
+      putBar(buf);
+      
+      Attachment a=makeAttachment(index, p);
+      buf.append("<table border=\"1\" cellspacing=\"0\">");
+      buf.append("<tr><td>");
+      buf.append(HTMLUtils.genHRef("<img src=\"image.jpg\">", a.getURL()));
+      buf.append("</td><td><table border=\"0\">\n");
+      
+      if (p.getFileName()!=null) {
+        buf.append(HTMLUtils.genRow("Name", p.getFileName(), a.getURL()));
+      }
+      
+      if (p.getContentType()!=null) {
+        buf.append(HTMLUtils.genRow("Type", p.getContentType(), a.getURL()));
+      }
+      
+      if (p.getDescription()!=null) {
+        buf.append(
+            HTMLUtils.genRow("Description", p.getDescription(), a.getURL()));
+      }
+      
+      buf.append("</table></td></tr>\n");
+      buf.append("</table>\n");
+      
     }
-
-    if (p.getContentType()!=null) {
-      buf.append(HTMLUtils.genRow("Type", p.getContentType(), a.getURL()));
-    }
-
-    if (p.getDescription()!=null) {
-      buf.append(HTMLUtils.genRow(
-                                  "Description", p.getDescription(), a.getURL()));
-    }
-
-    buf.append("</table></td></tr>\n");
-    buf.append("</table>\n");
-
     return buf;
+    
   }
-
+  
   public StringBuilder objectRenderer(Object o, String index, Part p)
-                               throws MessagingException
-  {
+  throws MessagingException {
     StringBuilder buf=new StringBuilder();
-
+    //buf.append("<br>\n<hr>\n<br>\n");
     try {
       if (o instanceof MimeMultipart) {
         MimeMultipart mm_i=(MimeMultipart) o;
@@ -162,35 +171,35 @@ public class Renderer implements Runnable
         buf.append(sb);
       } else if (o instanceof IMAPNestedMessage) {
         Object o_1=((Message) o).getContent();
-
+        
         if (o_1 instanceof String) {
           String s=(String) o_1;
-          buf.append("<br>\n<hr>\n<br>\n");
-
+          //buf.append("<br>\n<hr>\n<br>\n");
+          
           Message m=new MimeMessage(
-                                    Session.getInstance(new Properties()),
-                                    new ByteArrayInputStream(s.getBytes()));
+              Session.getInstance(new Properties()),
+              new ByteArrayInputStream(s.getBytes()));
           buf.append(objectRenderer(m, index, m));
         } else if (o_1 instanceof MimeMultipart) {
-          buf.append(new RenderMessage().objectRenderer(
-                                                        (Message) o, index,
-                                                        (Message) o, this));
+          buf.append(
+              new RenderMessage().objectRenderer(
+              (Message) o, index, (Message) o, this));
         }
       } else {
         ObjectRender or=renderers.get(o.getClass());
-
+        
         if (or==null) {
           Set<Class> classes=renderers.keySet();
-
+          
           for (Class c : classes) {
             if (c.isAssignableFrom(o.getClass())) {
               or=renderers.get(c);
-
+              
               break;
             }
           }
         }
-
+        
         if (or==null) {
           buf.append(makeAttachmentBox(index, p));
         } else {
@@ -198,12 +207,13 @@ public class Renderer implements Runnable
         }
       }
     } catch (IOException ioe) {
+      ioe.printStackTrace();
       throw new MessagingException("I/O error", ioe);
     }
-
+    
     return buf;
   }
-
+  
   /**
    * When an object implementing interface <code>Runnable</code> is used
    * to create a thread, starting the thread causes the object's
@@ -215,53 +225,52 @@ public class Renderer implements Runnable
    *
    * @see     java.lang.Thread#run()
    */
-  public void run()
-  {
+  public void run() {
     PrintStream ps=new PrintStream(outpipe, true);
     ps.println("<html>");
     ps.println("<head>");
     ps.println("</head>");
     ps.println("<body>");
-
+    
     try {
       ps.println(objectRenderer(message, null, message).toString());
     } catch (Exception e) {
-      e.printStackTrace();
+      NoticeBoard.publish(new ExceptionNotice(e));
+      //e.printStackTrace();
       e.printStackTrace(ps);
     }
-
+    
     ps.println("</body>");
     ps.println("</html>");
     ps.close();
   }
-
-  private static void buildParseTree()
-  {
+  
+  private static void buildParseTree() {
     try {
       String name="/grendel/renderer/tools";
-
+      
       // Get a File object for the package
       String s=Renderer.class.getResource(name).getFile();
       s=s.replace("%20", " ");
-
+      
       File directory=new File(s);
-      System.out.println("dir: "+directory.toString());
-
+      //System.out.println("dir: "+directory.toString());
+      
       if (directory.exists()) {
         // Get the list of the files contained in the package
         String[] files=directory.list();
-
+        
         for (int i=0; i<files.length; i++) {
           // we are only interested in .class files
           if (files[i].endsWith(".class")) {
             // removes the .class extension
             String classname=files[i].substring(0, files[i].length()-6);
-
+            
             try {
               // Try to create an instance of the object
               Object o=Class.forName("grendel.renderer.tools."+classname)
-                       .newInstance();
-
+              .newInstance();
+              
               if (o instanceof ObjectRender) {
                 ObjectRender or=(ObjectRender) o;
                 renderers.put(or.acceptable(), or);
@@ -282,19 +291,34 @@ public class Renderer implements Runnable
       e.printStackTrace();
     }
   }
-
+  
   private StringBuilder decend(MimeMultipart mm, String index)
-                        throws MessagingException, IOException
-  {
+  throws MessagingException, IOException {
     StringBuilder buf=new StringBuilder();
     int max=mm.getCount();
-
+    
     for (int i=0; i<max; i++) {
       BodyPart bp=mm.getBodyPart(i);
       Object o=bp.getContent();
       buf.append(objectRenderer(o, index+"/"+i, bp));
     }
-
+    
     return buf;
   }
+  
+  public boolean isReply() {
+    return reply;
+  }
+  
+  private boolean putbar = false;
+  
+  public void putBar(StringBuilder buf) {
+    if (putbar) {
+      buf.append("<br>\n<hr>\n<br>\n");
+    } else {
+      putbar = true;
+    }
+  }
+  
+  
 }

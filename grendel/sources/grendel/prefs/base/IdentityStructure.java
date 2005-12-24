@@ -12,80 +12,112 @@
  *
  * The Original Code is the Grendel mail/news client.
  *
- * The Initial Developer of the Original Code is Edwin Woudt 
+ * The Initial Developer of the Original Code is Edwin Woudt
  * <edwin@woudt.nl>.  Portions created by Edwin Woudt are
  * Copyright (C) 1999 Edwin Woudt. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *      Hash9 <hash9@eternal.undonet.com>
  */
 
 package grendel.prefs.base;
 
+import grendel.prefs.accounts.Identity;
+
+
 public class IdentityStructure {
-
-  String myDescription = "";
-  String myName = "";
-  String myEMail = "";
-  String myReplyTo = "";
-  String myOrganization = "";
-  String mySignature = "";
-  
-  public IdentityStructure() {
-  }
-
-  public IdentityStructure(String aDescription) {
+    private Identity id;
+    /*private Prefs parent;*/
+    public IdentityStructure() {
+        id = new Identity();
+    }
     
-    myDescription = aDescription;
+    public IdentityStructure(Identity id/*, Prefs parent*/) {
+        this.id = id;
+        /*this.parent = parent;*/
+    }
     
-  }
-  
-  public String getDescription() {
-    return myDescription;
-  }
-
-  public String getName() {
-    return myName;
-  }
-
-  public String getEMail() {
-    return myEMail;
-  }
-
-  public String getReplyTo() {
-    return myReplyTo;
-  }
-
-  public String getOrganization() {
-    return myOrganization;
-  }
-
-  public String getSignature() {
-    return mySignature;
-  }
-  
-  public void setDescription(String aDescription) {
-    myDescription = aDescription;
-  }
-
-  public void setName(String aName) {
-    myName = aName;
-  }
-
-  public void setEMail(String aEMail) {
-    myEMail = aEMail;
-  }
-
-  public void setReplyTo(String aReplyTo) {
-    myReplyTo = aReplyTo;
-  }
-
-  public void setOrganization(String aOrganization) {
-    myOrganization = aOrganization;
-  }
-
-  public void setSignature(String aSignature) {
-    mySignature = aSignature;
-  }
-
+    public IdentityStructure(String aDescription) {
+        id = new Identity();
+        id.setDescription(aDescription);
+    }
+    
+    public String getOrganization() {
+        return id.getOrganisation();
+    }
+    
+    public String getSignature() {
+        String s = id.getSigs().getProperty(Integer.toString(0),"");
+        if (s == null) {
+            return "";
+        } else {
+            return s;
+        }
+    }
+    
+    public void setOrganization(String aOrganization) {
+        id.setOrganisation(aOrganization);
+    }
+    
+    public void setSignature(String aSignature) {
+        id.getSigs().setProperty(Integer.toString(0),aSignature);
+    }
+    
+    public void setName(String name) {
+        id.setName(name);
+    }
+    
+    public void setEMail(String email) {
+        id.setEMail(email);
+    }
+    
+    public void setOrganisation(String organisation) {
+        id.setOrganisation(organisation);
+    }
+    
+    public void setDescription(String description) {
+        /*if (parent != null) {
+            Object o = parent.getProperty(getDescription());
+            parent.remove(getDescription());
+            parent.put(description,o);
+        }*/
+        id.setDescription(description);
+    }
+    
+    public void setReplyTo(String reply_to) {
+        id.setReplyTo(reply_to);
+    }
+    public String getName() {
+        return id.getName();
+    }
+    
+    public String getDescription() {
+        return id.getDescription();
+    }
+    
+    public String getReplyTo() {
+        return id.getReplyTo();
+    }
+    
+    public String getOrganisation() {
+        return id.getOrganisation();
+    }
+    
+    public String getEMail() {
+        return id.getEMail();
+    }
+    
+    public Identity getID() {
+        return id;
+    }
+    
+    /*public Prefs getParent() {
+        return parent;
+    }*/
+    
+    /*public void setParent(Prefs p) {
+        parent = p;
+    }**/
+    
 }

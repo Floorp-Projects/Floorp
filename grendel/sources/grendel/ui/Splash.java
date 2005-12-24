@@ -22,31 +22,69 @@
 
 package grendel.ui;
 
+import java.awt.AWTException;
 import javax.swing.JWindow;
 import javax.swing.JLabel;
 import javax.swing.ImageIcon;
-
-import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.Robot;
 import java.awt.Toolkit;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 /**
  *Default screen to be shown while application is initializing. Run the
  *dispose method on this class when you're ready to close the splash screen.
  */
 public class Splash extends JWindow {
-
-  public Splash() {
-    super();
-    ImageIcon image = new ImageIcon("ui/images/GrendelSplash.jpg");
-    JLabel splashLabel = new JLabel(image);
-    getContentPane().add(splashLabel);
-
-    Dimension screensize = Toolkit.getDefaultToolkit().getScreenSize();
-    setLocation(screensize.width/2 - 150, screensize.height/2 - 150);
-
-    pack();
-    validate();
-    setVisible(true);
-  }
+    private Image img;
+    private ImageIcon image;
+    private Robot r;
+    
+    public Splash() {
+        super();
+        capture();
+        image= new ImageIcon("ui/images/GrendelSplash.png");
+        setSize(image.getIconWidth(),image.getIconHeight());
+        
+        Dimension screensize = Toolkit.getDefaultToolkit().getScreenSize();
+        setLocation(screensize.width/2 - 150, screensize.height/2 - 150);
+        
+        setVisible(true);
+    }
+    
+    
+    public void capture() {
+        Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+        if (r ==null) {
+            try {
+                r = new Robot();
+            } catch (AWTException awte) {
+                awte.printStackTrace();
+            }
+        }
+        img = r.createScreenCapture(new Rectangle(0, 0, d.width, d.height));
+    }
+    
+    public void paint(Graphics g) {
+        Rectangle rect = g.getClipBounds();
+        g.drawImage(img, 0, 0, getWidth(), getHeight(), getX(), getY(),
+                getX() + getWidth(), getY() + getHeight(), null);
+        //g.drawImage(screen, 0, 0, getWidth(), getHeight(),Color.BLUE, null);
+        image.paintIcon(this,g,0,0);
+    }
+    
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new Splash();
+            }
+        });
+    }
 }
