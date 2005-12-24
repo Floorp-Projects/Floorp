@@ -78,7 +78,7 @@
 <!ENTITY stopCmd.macCommandKey        ".">
 <!ENTITY stopButton.tooltip           "Stop loading this page">
 <!ENTITY goButton.label               "Go">
-<!ENTITY goButton.tooltip             "Type a location in the address field, then click Go">
+<!ENTITY goButton.tooltip             "Type a location in the Location Bar, then click Go">
 <!ENTITY printButton.label            "Print">
 <!ENTITY printButton.tooltip          "Print this page">
 
