@@ -138,7 +138,6 @@ calAlarmMonitor.prototype = {
 
 var myModule = {
     registerSelf: function (compMgr, fileSpec, location, type) {
-        debug("*** Registering Calendar alarm monitor\n");
         compMgr = compMgr.QueryInterface(CI.nsIComponentRegistrar);
         compMgr.registerFactoryLocation(this.myCID,
                                         "Calendar Alarm Monitor",

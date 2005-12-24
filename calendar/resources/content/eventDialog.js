@@ -81,8 +81,6 @@
 *   W I N D O W      V A R I A B L E S
 */
 
-var gDebugEnabled=true;
-
 var gReadOnlyMode;
 var gOnOkFunction;   // function to be called when user clicks OK
 var gDurationMSec;   // current duration, for updating end date when start date is changed
@@ -642,7 +640,6 @@ function onOKCommand()
     
     if (getElementValue("repeat-checkbox", "checked")) {
         var recurrenceInfo = createRecurrenceInfo();
-        debug("** recurrenceInfo: " + recurrenceInfo);
         recurrenceInfo.item = event;
 
         var recRule = new calRecurrenceRule();
@@ -707,7 +704,6 @@ function onOKCommand()
         // Finally, set the recurrenceInfo
         event.recurrenceInfo = recurrenceInfo;
     }
-    debug("RECURRENCE INFO ON EVENT: " + event.recurrenceInfo);
 
 
     // INVITEES ----------------------------------------------------------
@@ -1510,7 +1506,6 @@ function processAlarmType()
     var componentType = getElementValue("component-type");
     if( alarmMenu.selectedItem ) {
         if( componentType == "event" ) {
-            debug("processAlarmType: EVENT " + alarmMenu.selectedItem.value );
             switch( alarmMenu.selectedItem.value ) {
             case "none":
                 disableElement("alarm-length-field");
@@ -1539,7 +1534,6 @@ function processAlarmType()
                 break;
             }
         } else if( componentType == "todo" ) {
-            debug("processAlarmType: TODO " + alarmMenu.selectedItem.value );
             var startChecked = getElementValue("start-checkbox", "checked");
             var dueChecked = getElementValue("due-checkbox", "checked");
 
@@ -1608,7 +1602,6 @@ function processAlarmType()
 
 function processComponentType(componentType)
 {
-    debug("processComponentType: " + componentType );
     switch( componentType ) {
     case "event":
          // Hide and show the appropriate fields and widgets
@@ -1694,7 +1687,6 @@ function changeTitleBar(componentType)
           title = document.getElementById("data-" + componentType + "-title-new" ).getAttribute("value");
         else
           title = document.getElementById("data-" + componentType + "-title-edit").getAttribute("value");
-        debug("changeTitleBar: "+title);
         document.title = title;
     } else {
         dump("changeTitleBar: ERROR! Tried to change titlebar to invalid value: "+componentType+"\n");

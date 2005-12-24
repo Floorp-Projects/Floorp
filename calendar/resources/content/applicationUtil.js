@@ -158,7 +158,6 @@ function goOpenExtensions(aOpenMode)
     if (needToOpen) {
         const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
         const EMFEATURES = "chrome,dialog=no,resizable";
-        debug("EMURL: "+EMURL+"\n");
         window.openDialog(EMURL, "", EMFEATURES);
     }
 }
@@ -167,7 +166,6 @@ function goOpenExtensions(aOpenMode)
 function showElement(elementId)
 {
     try {
-        debug("showElement: showing " + elementId);
         document.getElementById(elementId).removeAttribute("hidden");
     } catch (e) {
         dump("showElement: Couldn't remove hidden attribute from " + elementId + "\n");
@@ -178,7 +176,6 @@ function showElement(elementId)
 function hideElement(elementId)
 {
     try {
-        debug("hideElement: hiding " + elementId);
         document.getElementById(elementId).setAttribute("hidden", "true");
     } catch (e) {
         dump("hideElement: Couldn't set hidden attribute on " + elementId + "\n");
@@ -189,7 +186,6 @@ function hideElement(elementId)
 function enableElement(elementId)
 {
     try {
-        debug("enableElement: enabling " + elementId);
         //document.getElementById(elementId).setAttribute("disabled", "false");
 
         // call remove attribute beacuse some widget code checks for the presense of a 
@@ -204,7 +200,6 @@ function enableElement(elementId)
 function disableElement(elementId)
 {
     try {
-        debug("disableElement: disabling " + elementId);
         document.getElementById(elementId).setAttribute( "disabled", "true");
     } catch (e) {
         dump("disableElement: Couldn't set disabled attribute to true on " +
@@ -399,18 +394,4 @@ function hasPositiveIntegerValue(elementId)
         return true;
     return false;
 }
-
-function debug(text)
-{
-    if(gDebugEnabled)
-        dump(text + "\n");
-}
-
-
-function debugVar(variable)
-{
-    if(gDebugEnabled)
-        dump(variable + ": " + variable + "\n");
-}
-
 
