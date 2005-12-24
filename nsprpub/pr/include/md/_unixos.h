@@ -46,7 +46,8 @@
  * Linux: FD_SETSIZE is defined in /usr/include/sys/select.h and should
  * not be redefined.
  */
-#if !defined(LINUX) && !defined(DARWIN) && !defined(NEXTSTEP)
+#if !defined(LINUX) && !defined(__GNU__) && !defined(__GLIBC__) \
+    && !defined(DARWIN) && !defined(NEXTSTEP)
 #ifndef FD_SETSIZE
 #define FD_SETSIZE  4096
 #endif
