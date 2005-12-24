@@ -1232,8 +1232,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_EXCEPTION:
                 /*
-                 * The only other JSOP_EXCEPTION case occurs as part of a code
-                 * sequence that follows a SRC_CATCH-annotated JSOP_NOP.
+                 * The only other JSOP_EXCEPTION cases occur as part of a code
+                 * sequence that follows a SRC_CATCH-annotated JSOP_NOP or
+                 * precedes a SRC_HIDDEN-annotated JSOP_POP emitted when
+                 * returning from within a finally clause.
                  */
                 sn = js_GetSrcNote(jp->script, pc);
                 LOCAL_ASSERT(sn && SN_TYPE(sn) == SRC_HIDDEN);

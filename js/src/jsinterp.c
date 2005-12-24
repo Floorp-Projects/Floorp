@@ -2099,6 +2099,7 @@ interrupt:
           END_CASE(JSOP_LEAVEWITH)
 
           BEGIN_CASE(JSOP_SETRVAL)
+            JS_ASSERT(!cx->throwing);
             fp->rval = POP_OPND();
           END_CASE(JSOP_SETRVAL)
 
@@ -2108,6 +2109,7 @@ interrupt:
             /* FALL THROUGH */
 
           BEGIN_CASE(JSOP_RETRVAL)    /* fp->rval already set */
+            JS_ASSERT(!cx->throwing);
             if (inlineCallCount)
           inline_return:
             {

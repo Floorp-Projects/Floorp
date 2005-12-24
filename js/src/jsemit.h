@@ -305,9 +305,12 @@ extern JSBool
 js_SetJumpOffset(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc,
                  ptrdiff_t off);
 
-/* Test whether we're in a with statement. */
+/* Test whether we're in a statement of given type. */
 extern JSBool
-js_InWithStatement(JSTreeContext *tc);
+js_InStatement(JSTreeContext *tc, JSStmtType type);
+
+/* Test whether we're in a with statement. */
+#define js_InWithStatement(tc)      js_InStatement(tc, STMT_WITH)
 
 /* Test whether we're in a catch block with exception named by atom. */
 extern JSBool

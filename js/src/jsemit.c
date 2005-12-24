@@ -1193,12 +1193,12 @@ js_SetJumpOffset(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc,
 }
 
 JSBool
-js_InWithStatement(JSTreeContext *tc)
+js_InStatement(JSTreeContext *tc, JSStmtType type)
 {
     JSStmtInfo *stmt;
 
     for (stmt = tc->topStmt; stmt; stmt = stmt->down) {
-        if (stmt->type == STMT_WITH)
+        if (stmt->type == type)
             return JS_TRUE;
     }
     return JS_FALSE;
@@ -3872,6 +3872,20 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_RETURN:
+        /*
+         * If we're in a finally clause, then returning must clear any pending
+         * exception state.  Failure to do so could cause a subsequent
+         * non-throwing API failure or native use of JS_IsPendingException to
+         * mislead.
+         */
+        if (js_InStatement(&cg->treeContext, STMT_SUBROUTINE) &&
+            (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
+             js_Emit1(cx, cg, JSOP_EXCEPTION) < 0 ||
+             js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
+             js_Emit1(cx, cg, JSOP_POP) < 0)) {
+            return JS_FALSE;
+        }
+
         /* Push a return value */
         pn2 = pn->pn_kid;
         if (pn2) {
