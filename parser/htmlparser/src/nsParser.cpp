@@ -1774,7 +1774,7 @@ nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk,
 
     if (mParserContext->mDTD) {
       mParserContext->mDTD->WillResumeParse(mSink);
-      PRBool theIterationIsOk = allowIteration || !mParserContext->mPrevContext;
+      PRBool theIterationIsOk = PR_TRUE;
 
       while (result == NS_OK && theIterationIsOk) {
         if (!mUnusedInput.IsEmpty() && mParserContext->mScanner) {
