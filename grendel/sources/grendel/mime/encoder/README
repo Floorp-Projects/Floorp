@@ -1,6 +1,0 @@
-This is Grendel -- a Java mail/news client.
-
-The grendel.mime.encoder package implements encoding of MIME objects,
-including the various MIME content-transfer-encodings.
-
-See http://www.mozilla.org/projects/grendel/ for more info.

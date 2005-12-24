@@ -1,6 +1,0 @@
-This is Grendel -- a Java mail/news client.
-
-The grendel.mime.parser package is the implementation of the low-level
-logic of the MIME parser.
-
-See http://www.mozilla.org/projects/grendel/ for more info.

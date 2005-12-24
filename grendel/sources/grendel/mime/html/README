@@ -1,7 +1,0 @@
-This is Grendel -- a Java mail/news client.
-
-The grendel.mime.extractor package implements an IMimeOperator that
-knows how to convert a compound MIME object to an HTML representation
-suitable for display.
-
-See http://www.mozilla.org/projects/grendel/ for more info.

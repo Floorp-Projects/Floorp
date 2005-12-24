@@ -32,7 +32,7 @@ public class DragSourceDropEvent
   public DragSourceDropEvent(Object aSource, boolean cancelled,
                              boolean successful) {
     super(aSource);
-    fSucessful = sucessful;
+    fSuccessful = successful;
     fCancelled = cancelled;
   }
 
