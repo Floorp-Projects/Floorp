@@ -63,7 +63,7 @@ TARGETS	= $(OBJS)
 INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
 
 # For Dl_info and dladdr.
-ifeq (,$(filter-out Linux GNU GNU_kFreeBSD GNU_kNetBSD,$(OS_TARGET)))
+ifeq (,$(filter-out Linux GNU GNU_%,$(OS_TARGET)))
 DEFINES    += -D_GNU_SOURCE
 endif
 
