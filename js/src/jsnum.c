@@ -503,7 +503,6 @@ static JSConstDoubleSpec number_constants[] = {
 
 static jsdouble NaN;
 
-
 #if (defined XP_WIN || defined XP_OS2) &&                                     \
     !defined WINCE &&                                                         \
     !defined __MWERKS__ &&                                                    \
