@@ -108,7 +108,7 @@ PRLock *_pr_dnsLock = NULL;
 #define _PR_HAVE_GETPROTO_R_INT
 #endif
 
-#if (defined(LINUX) && defined(__GLIBC__) && __GLIBC__ >= 2)
+#if (defined(__GLIBC__) && __GLIBC__ >= 2)
 #define _PR_HAVE_GETPROTO_R
 #define _PR_HAVE_5_ARG_GETPROTO_R
 #endif

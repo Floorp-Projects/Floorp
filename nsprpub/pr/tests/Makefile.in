@@ -376,14 +376,10 @@ ifeq ($(OS_ARCH), NEWS-OS)
     EXTRA_LIBS = -lsocket -lnsl -lgen -lresolv
 endif
 
-ifeq ($(OS_ARCH), Linux)
-    ifeq ($(OS_RELEASE), 1.2)
-        EXTRA_LIBS = -ldl
-    else
-        LDOPTS += -Xlinker -rpath $(ABSOLUTE_LIB_DIR)
-        ifeq ($(USE_PTHREADS),1)
-            EXTRA_LIBS = -lpthread
-        endif
+ifeq (,$(filter-out Linux GNU GNU_kFreeBSD GNU_kNetBSD,$(OS_ARCH)))
+    LDOPTS += -Xlinker -rpath $(ABSOLUTE_LIB_DIR)
+    ifeq ($(USE_PTHREADS),1)
+        EXTRA_LIBS = -lpthread
     endif
 endif
 

@@ -205,7 +205,8 @@ static PRBool _pr_ipv6_v6only_on_by_default;
 #define _PRSelectFdSetArg_t void *
 #elif defined(IRIX) || (defined(AIX) && !defined(AIX4_1)) \
     || defined(OSF1) || defined(SOLARIS) \
-    || defined(HPUX10_30) || defined(HPUX11) || defined(LINUX) \
+    || defined(HPUX10_30) || defined(HPUX11) \
+    || defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
     || defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
     || defined(BSDI) || defined(VMS) || defined(NTO) || defined(DARWIN) \
     || defined(UNIXWARE) || defined(RISCOS)
@@ -289,7 +290,7 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
  * most current systems.
  */
 #if defined(HAVE_SOCKLEN_T) \
-    || (defined(LINUX) && defined(__GLIBC__) && __GLIBC__ >= 2)
+    || (defined(__GLIBC__) && __GLIBC__ >= 2)
 typedef socklen_t pt_SockLen;
 #elif (defined(AIX) && !defined(AIX4_1)) \
     || defined(VMS)
@@ -3230,7 +3231,8 @@ static PRIOMethods _pr_socketpollfd_methods = {
 };
 
 #if defined(HPUX) || defined(OSF1) || defined(SOLARIS) || defined (IRIX) \
-    || defined(AIX) || defined(LINUX) || defined(FREEBSD) || defined(NETBSD) \
+    || defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
+    || defined(AIX) || defined(FREEBSD) || defined(NETBSD) \
     || defined(OPENBSD) || defined(BSDI) || defined(VMS) || defined(NTO) \
     || defined(DARWIN) || defined(UNIXWARE) || defined(RISCOS)
 #define _PR_FCNTL_FLAGS O_NONBLOCK
@@ -4727,7 +4729,8 @@ PR_IMPLEMENT(PRInt32) PR_FD_NISSET(PRInt32 fd, PR_fd_set *set)
 
 #include <sys/types.h>
 #include <sys/time.h>
-#if !defined(SUNOS4) && !defined(HPUX) && !defined(LINUX)
+#if !defined(SUNOS4) && !defined(HPUX) \
+    && !defined(LINUX) && !defined(__GNU__) && !defined(__GLIBC__)
 #include <sys/select.h>
 #endif
 

@@ -1336,7 +1336,7 @@ tools are selected during the Xcode/Developer Tools installation.])
 	esac
     ;;
 
-*-linux*)
+*-linux*|*-gnu*|*-k*bsd*-gnu)
     if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
         IMPL_STRATEGY=_PTH
@@ -1347,7 +1347,11 @@ tools are selected during the Xcode/Developer Tools installation.])
     AC_DEFINE(_SVID_SOURCE)
     AC_DEFINE(_LARGEFILE64_SOURCE)
     AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-    AC_DEFINE(LINUX)
+    case "${target_os}" in
+    linux*)
+        AC_DEFINE(LINUX)
+        ;;
+    esac
     CFLAGS="$CFLAGS -ansi -Wall"
     CXXFLAGS="$CXXFLAGS -ansi -Wall"
     MDCPUCFG_H=_linux.cfg
@@ -2442,7 +2446,7 @@ if test -n "$USE_PTHREADS"; then
             _PTHREAD_LDFLAGS=-pthread
         fi
         ;;
-    *-linux*)
+    *-linux*|*-gnu*|*-k*bsd*-gnu)
         AC_DEFINE(_REENTRANT)
         ;;
     esac
@@ -2526,7 +2530,7 @@ case "$target" in
         fi
     fi
     ;;
-*-linux*)
+*-linux*|*-gnu*|*-k*bsd*-gnu)
     if test -n "$USE_NSPR_THREADS"; then
         AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
