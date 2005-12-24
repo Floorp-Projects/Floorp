@@ -657,10 +657,14 @@
       </splitter>
 
       <deck id="view-deck" flex="1" persist="selectedIndex">
-          <calendar-decorated-day-view id="day-view" flex="1"/>
-          <calendar-decorated-week-view id="week-view" flex="1"/>
-          <calendar-decorated-multiweek-view id="multiweek-view" flex="1"/>
-          <calendar-decorated-month-view id="month-view" flex="1"/>
+          <calendar-decorated-day-view id="day-view" flex="1" 
+                                       context="context-menu"/>
+          <calendar-decorated-week-view id="week-view" flex="1" 
+                                        context="context-menu"/>
+          <calendar-decorated-multiweek-view id="multiweek-view" flex="1" 
+                                             context="context-menu"/>
+          <calendar-decorated-month-view id="month-view" flex="1" 
+                                         context="context-menu"/>
       </deck>
 
     </vbox>
