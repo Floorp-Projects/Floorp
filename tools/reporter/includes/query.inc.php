@@ -95,35 +95,44 @@ class query
         /*******************
          * SELECT
          *******************/
-        $selected = array();
-
         /*
            If user defines what to select and were not counting, just
            use their input.
         */
+        $selected = array();
         if (isset($_GET['selected']) && !isset($_GET['count'])){
+            $selected = array();
             foreach($_GET['selected'] as $selectedChild){
                 if(in_array(strtolower($selectedChild), $this->approved_selects)){
-                    $selected[$selectedChild] = $config['fields'][$selectedChild];
+                    $selected[] = array('field' => $selectedChild,
+                                        'title' => $config['fields'][$selectedChild]);
                 }
             }
         } else {
-
             // Otherwise, we do it for  them
-            $selected = array('report_id' => 'Report ID', 'host_hostname' => 'Host');
+            $selected[] = array('field' => 'host_hostname',
+                                'title' => 'Host');
         }
-
+        if(!isset($_GET['count']) &&
+           $this->_searchQueryInput($selected, 'report_id') === false){
+            $artificialReportID = true;
+            $selected[] = array('field' => 'report_id',
+                                'title' => 'Report ID');
+        }
 
       /*******************
        * ORDER BY
        *******************/
         $orderby = array();
+        // The first priority is those who were recently specified (such as a menu header clicked).
         if(isset($_GET['orderby']) && in_array(strtolower($_GET['orderby']), $this->approved_selects)){
             $orderby[$_GET['orderby']] = $ascdesc;
         }
+        // After, we append those who werere selected previously and order desc.
         if(!isset($_GET['count'])){
-            $orderby = array_merge($orderby, $this->calcOrderBy($selected));
+            $orderby = array_merge($orderby, $this->_calcOrderBy($selected, $orderby));
         }
+
         // If we are counting, we need to add A column for it
         if (isset($_GET['count'])){
             // set the count variable
@@ -146,14 +155,6 @@ class query
                     $orderby['host_hostname'] = 'desc';
                 }
             }
-print_r($orderby);
-        }
-        else {
-            if(!isset($selected['report_id'])){
-                $selected['report_id'] = "Report ID";
-                $artificialReportID = true;
-            }
-//            $selected['report_file_date'] = "Date";
         }
         /*******************
          * WHERE
@@ -186,7 +187,6 @@ print_r($orderby);
         return array('selected'               => $selected,
                      'where'                  => $where,
                      'orderby'                => $orderby,
-                     'ascdesc'                => $ascdesc,
                      'show'                   => $show,
                      'page'                   => $page,
                      'count'                  => $count,
@@ -194,14 +194,14 @@ print_r($orderby);
         );
     }
 
-    function doQuery($select, $where, $orderby, $ascdesc, $show, $page, $count){
+    function doQuery($select, $where, $orderby, $show, $page, $count){
         global $db;
 
         /************
          * SELECT
          ************/
         $sql_select = 'SELECT ';
-        foreach($select as $select_child => $select_child_title){
+        foreach($select as $select_child){
             // we don't $db->quote here since unless it's in our approved array (exactly), we drop it anyway. i.e. report_id is on our list, 'report_id' is not.
             // we sanitize on our own
             if ($select_child == 'count'){
@@ -210,7 +210,7 @@ print_r($orderby);
                     $orderby = array_merge(array('count'=> 'DESC'), $orderby);
                 }
             } else {
-                $sql_select .= $select_child;
+                $sql_select .= $select_child['field'];
             }
             $sql_select .= ', ';
         }
@@ -266,7 +266,8 @@ print_r($orderby);
         /*******************
          * ORDER BY
          *******************/
-         if(isset($orderby)){
+         $sql_orderby = '';
+         if(isset($orderby) && sizeof($orderby) > 0){
              $sql_orderby = 'ORDER BY ';
              foreach($orderby as $orderChild => $orderDir){
                  $sql_orderby .= $orderChild.' '.$orderDir;
@@ -319,66 +320,81 @@ print_r($orderby);
         return array('data' => $dbResult, 'totalResults' => sizeof($totalResults), 'reportList' => $totalResults);
     }
 
-    function continuityParams($query_input){
+    function continuityParams($query_input, $omit){
         reset($query_input['where']);
         $standard = '';
-        $complete = '';
-        foreach($query_input['where'] as $node => $item){
-            if(!($item[0] == 'report_id' && $query_input['artificialReportID'])){
-                if(is_numeric($item[2])){
-                    $standard .= $item[0].'='.$item[2].'&amp;';;
-                } else {
-                    $standard .= $item[0].'='.urlencode($item[2]).'&amp;';;
-                }
-            }
-        }
-        if(isset($query_input['selected']) && sizeof($query_input['selected']) > 0){
-            foreach($query_input['selected'] as $selected_node => $selected_item){
-                if(!($selected_node == 'report_id' && $query_input['artificialReportID'])){
-                    if($selected_node == 'count'){
-                        $complete .= 'selected%5B%5D='.$selected_node.'&amp;';
-                    } else {
-                        $standard .= 'selected%5B%5D='.$selected_node.'&amp;';
+        
+        // if $omit is empty, make it a blank array
+        if($omit == null){ $omit = array(); }
+
+        // Where
+        if(isset($query_input['where']) && sizeof($query_input['where']) > 0){
+            foreach($query_input['where'] as $node => $item){
+                if(!($item[0] == 'report_id' && $query_input['artificialReportID'])){
+                    if(!in_array($item[0], $omit)){
+                        if(is_numeric($item[2])){
+                            $standard .= $item[0].'='.$item[2].'&amp;';;
+                        } else {
+                            $standard .= $item[0].'='.urlencode($item[2]).'&amp;';;
+                        }
                     }
                 }
             }
         }
-        // make complete = standard + complete
-        $complete = $standard.$complete;
+        // Selected
+        if(isset($query_input['selected']) && sizeof($query_input['selected']) > 0 && !in_array('selected', $omit)){
+            foreach($query_input['selected'] as $selectedNode){
+                if(!($selectedNode['field'] == 'report_id' && $query_input['artificialReportID'])){
+                    $standard .= 'selected%5B%5D='.$selectedNode['field'].'&amp;';
+                }
+            }
+        }
 
-        // finish off complete
-        if($query_input['count']){
-             $complete .= 'count=on';
+        // Orderby
+
+        // Count
+        if(isset($query_input['count']) && !in_array('count', $omit)){
+             $standard .= 'count=on'.'&amp;';
+        }
+
+        // Show
+        if(isset($query_input['show']) && !in_array('show', $omit)){
+             $standard .= 'show='.$query_input['show'].'&amp;';
+        }
+
+        // Page
+        if(isset($query_input['page']) && !in_array('page', $omit)){
+             $standard .= 'page='.$query_input['page'].'&amp;';
         }
 
         // strip off any remaining &amp; that may be on the end
         if(substr($standard, -5) == '&amp;'){
             $standard = substr($standard, 0, -5);
         }
-        if(substr($complete, -5) == '&amp;'){
-            $complete = substr($complete, 0, -5);
-        }
+
         // lets return
-        return array($standard, $complete);
+        return $standard;
     }
 
-    function columnHeaders($query_input, $continuity_params){
+    function columnHeaders($query_input, $continuityParams){
         $columnCount = 0;
         $column[$columnCount]['text'] = 'Detail';
         $columnCount++;
-        foreach($query_input['selected'] as $title_name => $title){
-            if($title_name == 'report_id' && $query_input['artificialReportID']){
-            } else {
-                $column[$columnCount]['text'] = $title;
 
-                $o_orderby = $title_name;
-                if ($query_input['ascdesc'] == 'desc'){
+        foreach($query_input['selected'] as $selectedChild){
+            if(!($selectedChild['field'] == 'report_id' && $query_input['artificialReportID'])){
+                $column[$columnCount]['text'] = $selectedChild['title'];
+
+                $o_orderby = $selectedChild['field'];
+                // Figure out if it should be an asc or desc link
+                if($selectedChild['field'] == $this->_firstChildKey($query_input['orderby']) && $query_input['orderby'][$selectedChild['field']] == 'desc'){
                     $o_ascdesc = 'asc';
                 } else {
                     $o_ascdesc = 'desc';
                 }
+
                 if((isset($query_input['count']) && $title_name == 'count') || !isset($query_input['count'])){
-                    $column[$columnCount]['url'] = '?'.$continuity_params[1].'&amp;orderby='.$o_orderby.'&amp;ascdesc='.$o_ascdesc;
+                    $column[$columnCount]['url'] = '?'.$continuityParams.'&amp;orderby='.$o_orderby.'&amp;ascdesc='.$o_ascdesc;
                 }
                 $columnCount++;
             }
@@ -431,15 +447,41 @@ print_r($orderby);
     function outputCSV(){}
     function outputXLS(){}
     function outputRSS(){}
-    
-    function calcOrderBy($query){
+
+    function _calcOrderBy($selected, $orderby){
         $result = array();
-        foreach($this->approved_selects as $selectNode){
-            if(array_key_exists($selectNode, $query)){
-                $result[$selectNode] = 'desc';
+        foreach($this->approved_selects as $selectedChild){
+            if($this->_searchQueryInput($selected, $selectedChild) !== false &&
+               !array_key_exists($selectedChild, $orderby))
+            {
+                $result[$selectedChild] = 'desc';
             }
         }
+
+/*
+        foreach($selected as $selectedChild){
+            if(in_array($selectedChild['field'], $this->approved_selects) &&
+               !array_key_exists($selectedChild['field'], $orderby))
+            {
+                $result[$selectedChild['field']] = 'desc';
+            }
+        }
+*/
         return $result;
+    }
+
+    function _searchQueryInput($input, $query){
+        for($i=0; $i< sizeof($input); $i++){
+            if ($input[$i]['field'] == $query){
+                return $i;
+            }
+        }
+        return false;
+    }
+
+    function _firstChildKey($keyOf){
+        $key = array_keys($keyOf);
+        return $key[0];
     }
 }
 ?>
