@@ -298,6 +298,27 @@ sub bz_setup_database {
          ($self->bz_index_info_real('bugs', 'assigned_to') ||
           $self->bz_index_info_real('flags', 'flags_bidattid_idx')) )
     {
+
+        # This is a check unrelated to the indexes, to see if people are
+        # upgrading from 2.18 or below, but somehow have a bz_schema table
+        # already. This only happens if they have done a mysqldump into
+        # a database without doing a DROP DATABASE first.
+        # We just do the check here since this check is a reliable way
+        # of telling that we are upgrading from a version pre-2.20.
+        if (grep($_ eq 'bz_schema', $self->bz_table_list_real())) {
+            die("\nYou are upgrading from a version before 2.20, but the"
+              . " bz_schema\ntable already exists. This means that you"
+              . " restored a mysqldump into\nthe Bugzilla database without"
+              . " first dropping the already-existing\nBugzilla database,"
+              . " at some point. Whenever you restore a Bugzilla\ndatabase"
+              . " backup, you must always drop the entire database first.\n\n"
+              . "Please drop your Bugzilla database and restore it from a"
+              . " backup that\ndoes not contain the bz_schema table. If for"
+              . " some reason you cannot\ndo this, you can connect to your"
+              . " MySQL database and drop the bz_schema\ntable, as a last"
+              . " resort.\n");
+        }
+
         my $bug_count = $self->selectrow_array("SELECT COUNT(*) FROM bugs");
         # We estimate one minute for each 3000 bugs, plus 3 minutes just
         # to handle basic MySQL stuff.
