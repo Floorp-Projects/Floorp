@@ -225,6 +225,7 @@ function initPrefs()
          ["username",           "chatzilla", ".ident"],
          ["usermode",           "+i",     ".ident"],
          ["userHeader",         true,     "global.header"],
+         ["userlistLeft",       true,     "appearance.userlist"],
          ["userLog",            false,    "global.log"],
          ["userMaxLines",       200,      "global.maxLines"],
          ["warnOnClose",        true,     "global"]
@@ -669,6 +670,10 @@ function onPrefChanged(prefName, newValue, oldValue)
 
         case "userMaxLines":
             CIRCChanUser.prototype.MAX_MESSAGES = newValue;
+            break;
+
+        case "userlistLeft":
+            updateUserlistSide(newValue);
             break;
 
         case "debugMode":

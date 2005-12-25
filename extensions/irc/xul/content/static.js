@@ -179,6 +179,9 @@ function init()
     if (client.prefs["log"])
         client.openLogFile(client);
 
+    // Make sure the userlist is on the correct side.
+    updateUserlistSide(client.prefs["userlistLeft"]);
+
     client.display(MSG_WELCOME, "HELLO");
     client.dispatch("set-current-view", { view: client });
 
@@ -2416,6 +2419,27 @@ function updateTitle (obj)
 
     document.title = tstring;
     client.statusBar["server-nick"].setAttribute("label", nick);
+}
+
+// Where 'right' is orientation, not wrong/right:
+function updateUserlistSide(shouldBeLeft)
+{
+    var listParent = document.getElementById("tabpanels-contents-box");
+    var isLeft = (listParent.childNodes[0].id == "user-list-box");
+    if (isLeft == shouldBeLeft)
+        return;
+    if (shouldBeLeft) // Move from right to left.
+    {
+        listParent.insertBefore(listParent.childNodes[1], listParent.childNodes[0]);
+        listParent.insertBefore(listParent.childNodes[2], listParent.childNodes[0]);
+        listParent.childNodes[1].setAttribute("collapse", "before");
+    }
+    else // Move from left to right.
+    {
+        listParent.appendChild(listParent.childNodes[1]);
+        listParent.appendChild(listParent.childNodes[0]);
+        listParent.childNodes[1].setAttribute("collapse", "after");
+    }
 }
 
 function multilineInputMode (state)
