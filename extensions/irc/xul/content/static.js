@@ -2254,16 +2254,13 @@ function updateProgress()
     if ("progress" in client.currentObject)
         progress = client.currentObject.progress;
 
+    if (!busy)
+        progress = 0;
+
     client.progressPanel.collapsed = !busy;
-    if (busy && (progress >= 0))
-    {
+    client.progressBar.mode = (progress < 0 ? "undetermined" : "determined");
+    if (progress >= 0)
         client.progressBar.value = progress;
-        client.progressBar.mode = "determined";
-    }
-    else
-    {
-        client.progressBar.mode = "undetermined";
-    }
 }
 
 function updateSecurityIcon()
