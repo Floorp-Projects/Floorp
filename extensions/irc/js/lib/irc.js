@@ -3095,6 +3095,8 @@ function usr_banmask()
     var hostmask = this.host;
     if (!/^\d+\.\d+\.\d+\.\d+$/.test(hostmask))
         hostmask = hostmask.replace(/^[^.]+/, "*");
+    else
+        hostmask = hostmask.replace(/[^.]+$/, "*");
     return "*!" + this.name + "@" + hostmask;
 }
 
