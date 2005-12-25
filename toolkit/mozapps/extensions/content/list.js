@@ -108,7 +108,7 @@ function init() {
       button.label = buttons[buttonType].label;
       if (buttons[buttonType].focused)
         button.focus();
-      document.addEventListener(kDialog + buttonType, handleButtonCommand, false);
+      document.addEventListener(kDialog + buttonType, handleButtonCommand, true);
     }
   }
 }
