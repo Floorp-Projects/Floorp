@@ -6753,7 +6753,7 @@ nsTextFrame::HasTerminalNewline() const
   if (tc && mContentLength > 0) {
     const nsTextFragment* frag = tc->Text();
     PRUnichar ch = frag->CharAt(mContentOffset + mContentLength - 1);
-    if (ch == '\n' || ch == '\r')
+    if (ch == '\n')
       return PR_TRUE;
   }
   return PR_FALSE;
