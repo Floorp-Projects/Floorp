@@ -1740,7 +1740,13 @@ nsDocShell::GetLoadedTransIndex(PRInt32 *aLoadedTransIndex)
 NS_IMETHODIMP
 nsDocShell::HistoryPurged(PRInt32 aNumEntries)
 {
+    // These indices are used for fastback cache eviction, to determine
+    // which session history entries are candidates for content viewer
+    // eviction.  We need to adjust by the number of entries that we
+    // just purged from history, so that we look at the right session history
+    // entries during eviction.
     mPreviousTransIndex = PR_MAX(-1, mPreviousTransIndex - aNumEntries);
+    mLoadedTransIndex = PR_MAX(0, mLoadedTransIndex - aNumEntries);
 
     PRInt32 count = mChildList.Count();
     for (PRInt32 i = 0; i < count; ++i) {
