@@ -112,5 +112,4 @@
                     event: event pasteboard: pboard source: self slideBack: YES];
 }
 
-
 @end

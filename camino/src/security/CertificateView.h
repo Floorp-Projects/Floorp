@@ -49,6 +49,7 @@
   NSView*                   mTrustItemsView;    // weak
   NSView*                   mDetailsItemsView;  // weak
   
+  BOOL                      mForceShowTrust;         // even if we can't read the trust settings, allow the user to set them
   BOOL                      mDetailsExpanded;
   BOOL                      mTrustExpanded;
 
@@ -74,11 +75,14 @@
 - (void)setDelegate:(id)inDelegate;
 - (id)delegate;
 
+- (void)setShowTrust:(BOOL)inShowTrust;
+
 // trust settings will be shown for EMAIL_CERT and CA_CERT, not otherwise
 - (void)setCertTypeForTrustSettings:(unsigned int)inCertType;
 
 - (void)setDetailsInitiallyExpanded:(BOOL)inExpanded;
 - (void)setTrustInitiallyExpanded:(BOOL)inExpanded;
+
 
 - (IBAction)toggleDetails:(id)sender;
 - (IBAction)toggleTrustSettings:(id)sender;

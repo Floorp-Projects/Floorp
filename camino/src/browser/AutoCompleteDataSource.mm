@@ -40,9 +40,12 @@
 #import "NSString+Utils.h"
 
 #import <AppKit/AppKit.h>
-#import "AutoCompleteTextField.h"
+#import "AutoCompleteDataSource.h"
+
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nsIAutoCompleteResults.h"
+
 
 @implementation AutoCompleteDataSource
 
@@ -50,7 +53,7 @@
 {
   if ((self = [super init])) {
     mResults = nil;
-    mIconImage = [NSImage imageNamed:@"globe_ico"]; 
+    mIconImage = [[NSImage imageNamed:@"globe_ico"] retain];
   }
   return self;
 }
@@ -58,25 +61,30 @@
 -(void)dealloc
 {
   NS_IF_RELEASE(mResults);
+  [mIconImage release];
+  [mErrorMessage release];
   [super dealloc];
 }
 
 - (void) setErrorMessage: (NSString*) error
 {
-  [self setResults:nsnull];
-  mErrorMessage = error;
+  [self setResults:nsnull]; // releases mErrorMessage
+
+  mErrorMessage = [error retain];
 }
 
 - (NSString*) errorMessage
 {
-    return mErrorMessage;
+  return mErrorMessage;
 }
 
 - (void) setResults:(nsIAutoCompleteResults*)aResults
 {
   NS_IF_RELEASE(mResults);
   
+  [mErrorMessage release];
   mErrorMessage = nil;
+  
   mResults = aResults;
   NS_IF_ADDREF(mResults);
 }
@@ -101,7 +109,7 @@
 
 - (id) resultString:(int)aRow column:(NSString *)aColumn
 {
-  NSString *result = @"";
+  NSString* result = @"";
   
   if (!mResults)
     return result;

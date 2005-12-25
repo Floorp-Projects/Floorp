@@ -46,6 +46,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowserSetup.h"
+#include "nsIWebProgressListener.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIDocCharset.h"
 
@@ -89,10 +90,19 @@
 #include "SaveHeaderSniffer.h"
 #include "nsIWebPageDescriptor.h"
 
+// security
+#include "nsISecureBrowserUI.h"
+#include "nsISSLStatusProvider.h"
+#include "nsISSLStatus.h"
+#include "nsIX509Cert.h"
+
 #import "CHBrowserView.h"
 
 #import "CHBrowserService.h"
 #import "CHBrowserListener.h"
+
+// this adds a dependency on camino/src/security
+#import "CertificateItem.h"
 
 #import "mozView.h"
 
@@ -140,6 +150,12 @@ const long NSFindPanelActionSetFindString = 7;
 - (NSString*)locationFromDOMWindow:(nsIDOMWindow*)inDOMWindow;
 - (void)ensurePrintSettings;
 - (void)savePrintSettings;
+
+- (already_AddRefed<nsISecureBrowserUI>)getSecureBrowserUI;
+
+  // given a point in window coordinates, find the Gecko event sink of the ChildView the
+  // point is over.
+- (void) findEventSink:(nsIEventSink**)outSink forPoint:(NSPoint)inPoint inWindow:(NSWindow*)inWind;
 
 @end
 
@@ -235,7 +251,7 @@ const long NSFindPanelActionSetFindString = 7;
     if (!clickListener)
       return nil;
     
-    nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([self getContentWindow]);
+    nsCOMPtr<nsIDOMWindow> contentWindow = [self getContentWindow];
     nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(contentWindow));
     nsIChromeEventHandler *chromeHandler = piWindow->GetChromeEventHandler();
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(chromeHandler));
@@ -350,7 +366,7 @@ const long NSFindPanelActionSetFindString = 7;
 }
 
 // addrefs return value
-- (nsIDOMWindow*)getContentWindow
+- (already_AddRefed<nsIDOMWindow>)getContentWindow
 {
   nsIDOMWindow* window = nsnull;
 
@@ -361,7 +377,7 @@ const long NSFindPanelActionSetFindString = 7;
 }
 
 // addrefs return value
-- (nsISecureBrowserUI*)getSecureBrowserUI
+- (already_AddRefed<nsISecureBrowserUI>)getSecureBrowserUI
 {
   nsISecureBrowserUI* secureUI = nsnull;
   
@@ -378,7 +394,7 @@ const long NSFindPanelActionSetFindString = 7;
 
   // if |inAllowPopups|, temporarily allow popups for the load. We allow them for trusted things like
   // bookmarks.
-  nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([self getContentWindow]);
+  nsCOMPtr<nsIDOMWindow> contentWindow = [self getContentWindow];
   nsCOMPtr<nsPIDOMWindow> piWindow;
   if (inAllowPopups)
     piWindow = do_QueryInterface(contentWindow);
@@ -475,7 +491,7 @@ const long NSFindPanelActionSetFindString = 7;
   }  
 }
 
-- (void)gotoIndex:(int)index
+- (void)goToSessionHistoryIndex:(int)index
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
   if ( !nav )
@@ -493,7 +509,16 @@ const long NSFindPanelActionSetFindString = 7;
   if ( !nav )
     return;
 
-  nsresult rv = nav->Stop(flags);
+  PRUint32 stopFlags = 0;
+  switch (flags)
+  {
+    case NSStopLoadNetwork:   stopFlags = nsIWebNavigation::STOP_NETWORK;   break;
+    case NSStopLoadContent:   stopFlags = nsIWebNavigation::STOP_CONTENT;   break;
+    default:
+    case NSStopLoadAll:       stopFlags = nsIWebNavigation::STOP_ALL;       break;
+  }
+  
+  nsresult rv = nav->Stop(stopFlags);
   if (NS_FAILED(rv)) {
     // XXX need to throw
   }    
@@ -525,14 +550,14 @@ const long NSFindPanelActionSetFindString = 7;
 
 - (NSString*)pageLocation
 {
-  nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([self getContentWindow]);
+  nsCOMPtr<nsIDOMWindow> contentWindow = [self getContentWindow];
   NSString* location = [self locationFromDOMWindow:contentWindow];
   return location ? location : @"";
 }
 
 - (NSString*)pageLocationHost
 {
-  nsCOMPtr<nsIDOMWindow> domWindow = getter_AddRefs([self getContentWindow]);
+  nsCOMPtr<nsIDOMWindow> domWindow = [self getContentWindow];
   if (!domWindow) return @"";
   nsCOMPtr<nsIDOMDocument> domDocument;
   domWindow->GetDocument(getter_AddRefs(domDocument));
@@ -551,7 +576,7 @@ const long NSFindPanelActionSetFindString = 7;
 
 - (NSString*)pageTitle
 {
-  nsCOMPtr<nsIDOMWindow> window = getter_AddRefs([self getContentWindow]);
+  nsCOMPtr<nsIDOMWindow> window = [self getContentWindow];
   if (!window)
     return @"";
   
@@ -569,7 +594,7 @@ const long NSFindPanelActionSetFindString = 7;
 
 - (NSDate*)pageLastModifiedDate
 {
-  nsCOMPtr<nsIDOMWindow> domWindow = getter_AddRefs([self getContentWindow]);
+  nsCOMPtr<nsIDOMWindow> domWindow = [self getContentWindow];
 
   nsCOMPtr<nsIDOMDocument> domDocument;
   domWindow->GetDocument(getter_AddRefs(domDocument));
@@ -1473,6 +1498,127 @@ const long NSFindPanelActionSetFindString = 7;
   }
   return nil;
 }
+
+#pragma mark -
+
+- (BOOL)hasSSLStatus
+{
+  nsCOMPtr<nsISecureBrowserUI> secureUI([self getSecureBrowserUI]);
+  nsCOMPtr<nsISSLStatusProvider> statusProvider = do_QueryInterface(secureUI);
+  if (!statusProvider) return NO;
+
+  nsCOMPtr<nsISupports> secStatus;
+  statusProvider->GetSSLStatus(getter_AddRefs(secStatus));
+  nsCOMPtr<nsISSLStatus> sslStatus = do_QueryInterface(secStatus);
+  return (sslStatus.get() != NULL);
+}
+
+- (unsigned int)secretKeyLength
+{
+  nsCOMPtr<nsISecureBrowserUI> secureUI([self getSecureBrowserUI]);
+  nsCOMPtr<nsISSLStatusProvider> statusProvider = do_QueryInterface(secureUI);
+  if (!statusProvider) return 0;
+
+  nsCOMPtr<nsISupports> secStatus;
+  statusProvider->GetSSLStatus(getter_AddRefs(secStatus));
+  nsCOMPtr<nsISSLStatus> sslStatus = do_QueryInterface(secStatus);
+
+  PRUint32 sekritKeyLength = 0;
+  if (sslStatus)
+    sslStatus->GetSecretKeyLength(&sekritKeyLength);
+  
+  return sekritKeyLength;
+}
+
+- (NSString*)cipherName
+{
+  nsCOMPtr<nsISecureBrowserUI> secureUI([self getSecureBrowserUI]);
+  nsCOMPtr<nsISSLStatusProvider> statusProvider = do_QueryInterface(secureUI);
+  if (!statusProvider) return @"";
+
+  nsCOMPtr<nsISupports> secStatus;
+  statusProvider->GetSSLStatus(getter_AddRefs(secStatus));
+  nsCOMPtr<nsISSLStatus> sslStatus = do_QueryInterface(secStatus);
+
+  NSString* cipherNameString = @"";
+  if (sslStatus)
+  {
+    nsXPIDLCString cipherName;
+    sslStatus->GetCipherName(getter_Copies(cipherName));
+    cipherNameString = [NSString stringWith_nsACString:cipherName];
+  }
+    
+  return cipherNameString;
+}
+
+- (CHSecurityStatus)securityStatus
+{
+  nsCOMPtr<nsISecureBrowserUI> secureUI([self getSecureBrowserUI]);
+  if (!secureUI) return CHSecurityInsecure;
+  
+  PRUint32 pageState;
+  nsresult rv = secureUI->GetState(&pageState);
+  if (NS_FAILED(rv))
+    return CHSecurityBroken;
+
+  if (pageState & nsIWebProgressListener::STATE_IS_BROKEN)
+    return CHSecurityBroken;
+
+  if (pageState & nsIWebProgressListener::STATE_IS_SECURE)
+    return CHSecuritySecure;
+
+  // return insecure by default
+  // if (pageState & nsIWebProgressListener::STATE_IS_INSECURE)
+  return CHSecurityInsecure;
+}
+
+- (CHSecurityStrength)securityStrength
+{
+  nsCOMPtr<nsISecureBrowserUI> secureUI([self getSecureBrowserUI]);
+  if (!secureUI) return CHSecurityNone;
+  
+  PRUint32 pageState;
+  nsresult rv = secureUI->GetState(&pageState);
+  if (NS_FAILED(rv))
+    return CHSecurityNone;
+
+  if (!(pageState & nsIWebProgressListener::STATE_IS_SECURE))
+    return CHSecurityNone;
+
+  if (pageState & nsIWebProgressListener::STATE_SECURE_HIGH)
+    return CHSecurityHigh;
+
+  if (pageState & nsIWebProgressListener::STATE_SECURE_MED) // seems to be unused
+    return CHSecurityMedium;
+
+  if (pageState & nsIWebProgressListener::STATE_SECURE_LOW)
+    return CHSecurityLow;
+
+  return CHSecurityNone;
+}
+
+- (CertificateItem*)siteCertificate
+{
+  nsCOMPtr<nsISecureBrowserUI> secureUI([self getSecureBrowserUI]);
+  nsCOMPtr<nsISSLStatusProvider> statusProvider = do_QueryInterface(secureUI);
+  if (!statusProvider) return nil;
+
+  nsCOMPtr<nsISupports> secStatus;
+  statusProvider->GetSSLStatus(getter_AddRefs(secStatus));
+  nsCOMPtr<nsISSLStatus> sslStatus = do_QueryInterface(secStatus);
+
+  nsCOMPtr<nsIX509Cert> serverCert;
+  if (sslStatus)
+    sslStatus->GetServerCert(getter_AddRefs(serverCert));
+
+  if (serverCert)
+    return [CertificateItem certificateItemWithCert:serverCert];
+
+  return nil;
+}
+
+#pragma mark -
+
 
 - (already_AddRefed<nsISupports>)getPageDescriptor
 {

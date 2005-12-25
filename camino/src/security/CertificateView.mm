@@ -175,6 +175,11 @@ const float kGapUnderCheckboxLine = 3.0f;
   return mDelegate;
 }
 
+- (void)setShowTrust:(BOOL)inShowTrust
+{
+  mForceShowTrust = inShowTrust;
+}
+
 - (void)setCertTypeForTrustSettings:(unsigned int)inCertType
 {
   mCertTrustType = inCertType;
@@ -192,9 +197,10 @@ const float kGapUnderCheckboxLine = 3.0f;
 
 - (BOOL)showTrustSettings
 {
-  return (mCertTrustType == nsIX509Cert::CA_CERT ||
-          mCertTrustType == nsIX509Cert::SERVER_CERT ||
-          mCertTrustType == nsIX509Cert::EMAIL_CERT);
+  return ((mForceShowTrust || [mCertItem canGetTrust]) &&
+           (mCertTrustType == nsIX509Cert::CA_CERT ||
+            mCertTrustType == nsIX509Cert::SERVER_CERT ||
+            mCertTrustType == nsIX509Cert::EMAIL_CERT));
 }
 
 - (IBAction)trustCheckboxClicked:(id)inSender

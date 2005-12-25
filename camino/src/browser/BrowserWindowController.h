@@ -312,6 +312,7 @@ typedef enum
 
 - (IBAction)showPageInfo:(id)sender;
 - (IBAction)showBookmarksInfo:(id)sender;
+- (IBAction)showSiteCertificate:(id)sender;
 
 - (IBAction)addBookmark:(id)aSender;
 - (IBAction)addBookmarkForLink:(id)aSender;

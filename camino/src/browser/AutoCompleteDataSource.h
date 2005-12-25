@@ -38,17 +38,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <AppKit/AppKit.h>
-#import "AutoCompleteTextField.h"
-#include "nsIAutoCompleteResults.h"
 
 @class AutoCompleteTextField;
+class nsIAutoCompleteResults;
 
 @interface AutoCompleteDataSource : NSObject
 {
-  NSImage *mIconImage;
-  
-  NSString* mErrorMessage;
-  nsIAutoCompleteResults *mResults;
+  NSImage*      mIconImage;     // owned
+  NSString*     mErrorMessage;  // owned
+
+  nsIAutoCompleteResults* mResults;   // owned
 }
 
 - (id) init;

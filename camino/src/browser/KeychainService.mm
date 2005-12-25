@@ -1017,7 +1017,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
     return;
   
   // prime the pump with the top dom window.
-  nsCOMPtr<nsIDOMWindow> domWin = getter_AddRefs([mBrowserView getContentWindow]);
+  nsCOMPtr<nsIDOMWindow> domWin = [mBrowserView getContentWindow];
   if (!domWin)
     return;
   

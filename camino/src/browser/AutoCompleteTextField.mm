@@ -148,7 +148,7 @@ static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x7
 // -drawingRectForBounds:
 //
 // Overridden to adjust the bounds we draw into inside the full rectangle. The proxy icon
-// takes away space on the left side (always) and the secure icon (if visilbe) takes away space
+// takes away space on the left side (always) and the secure icon (if visible) takes away space
 // on the right side. The remainder in the middle is where we're allowed to draw the text of
 // the text field.
 //
@@ -173,6 +173,24 @@ static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x7
 {
   mDisplaySecureIcon = inIsVisible;
   [(NSControl*)[self controlView] calcSize];
+}
+
+@end
+
+@interface LockImageView : NSImageView
+@end
+
+@implementation LockImageView
+
++ (NSMenu *)defaultMenu
+{
+  // we need to return something here to get the NSToolbar to forward context clicks to our view.
+  return [[[NSMenu alloc] initWithTitle:@"Dummy"] autorelease];
+}
+
+- (NSMenu *)menuForEvent:(NSEvent *)theEvent
+{
+  return [self menu];
 }
 
 @end
@@ -280,10 +298,12 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   // window and mark this view that it needs to resize its subviews so it will automagically move the
   // secure icon when it's visible.
   mSecureBackgroundColor = [[NSColor colorWithDeviceRed:1.0 green:1.0 blue:0.777 alpha:1.0] retain];
-  mLock = [[NSImageView alloc] initWithFrame:NSMakeRect([self bounds].size.width - kSecureIconRightOffset, 
+  mLock = [[LockImageView alloc] initWithFrame:NSMakeRect([self bounds].size.width - kSecureIconRightOffset, 
                                                           kSecureIconYOrigin, kSecureIconSize, kSecureIconSize)];  // we own this
   [mLock setAutoresizingMask:(NSViewNotSizable | NSViewMinXMargin)];
   [self setAutoresizesSubviews:YES];
+
+  [mLock setMenu:mLockIconContextMenu];
 
   // create the text columns
   column = [[[NSTableColumn alloc] initWithIdentifier:@"col1"] autorelease];

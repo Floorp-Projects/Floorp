@@ -64,7 +64,15 @@
 #import "MainController.h"
 #import "DraggableImageAndTextCell.h"
 #import "MVPreferencesController.h"
+#import "ViewCertificateDialogController.h"
 #import "wallet.h"
+
+#include "nsString.h"
+#include "nsCRT.h"
+#include "nsServiceManagerUtils.h"
+
+#include "CHBrowserService.h"
+#include "GeckoUtils.h"
 
 #include "nsIWebNavigation.h"
 #include "nsISHistory.h"
@@ -77,21 +85,17 @@
 #include "nsIDOMEvent.h"
 #include "nsIContextMenuListener.h"
 #include "nsIDOMWindow.h"
-#include "CHBrowserService.h"
-#include "nsString.h"
-#include "nsCRT.h"
-#include "GeckoUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsNetUtil.h"
 #include "nsIPref.h"
+#include "nsISupportsArray.h"
 
 #include "nsIClipboardCommands.h"
 #include "nsICommandManager.h"
 #include "nsICommandParams.h"
 #include "nsIWebBrowser.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsServiceManagerUtils.h"
 #include "nsIURI.h"
 #include "nsIURIFixup.h"
 #include "nsIBrowserHistory.h"
@@ -104,7 +108,7 @@
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIFocusController.h"
-
+#include "nsIX509Cert.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 
@@ -657,7 +661,7 @@ enum BWCOpenDest {
   int numTabs = [mTabBrowser numberOfTabViewItems];
   for (int i = 0; i < numTabs; i++) {
     NSTabViewItem* item = [mTabBrowser tabViewItemAtIndex: i];
-    [[[item view] getBrowserView] stop: nsIWebNavigation::STOP_ALL];
+    [[[item view] getBrowserView] stop:NSStopLoadAll];
   }
 }
 
@@ -2339,7 +2343,7 @@ enum BWCOpenDest {
 
 - (IBAction)stop:(id)aSender
 {
-  [[mBrowserView getBrowserView] stop: nsIWebNavigation::STOP_ALL];
+  [[mBrowserView getBrowserView] stop:NSStopLoadAll];
 }
 
 - (IBAction)home:(id)aSender
@@ -3151,7 +3155,7 @@ enum BWCOpenDest {
     nsCOMPtr<nsIDOMDocument> ownerDoc;
     mDataOwner->mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
   
-    nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([[mBrowserView getBrowserView] getContentWindow]);
+    nsCOMPtr<nsIDOMWindow> contentWindow = [[mBrowserView getBrowserView] getContentWindow];
 
     nsCOMPtr<nsIDOMDocument> contentDoc;
     if (contentWindow)
@@ -3302,6 +3306,16 @@ enum BWCOpenDest {
     BookmarkViewController* bookmarksController = [self bookmarkViewControllerForCurrentTab];
     [bookmarksController ensureBookmarks];
     [bookmarksController showBookmarkInfo:sender];
+}
+
+- (IBAction)showSiteCertificate:(id)sender
+{
+  CertificateItem* certItem = [[self activeBrowserView] siteCertificate];
+  if (certItem)
+  {
+    [ViewCertificateDialogController showCertificateWindowWithCertificateItem:certItem
+                                                         certTypeForTrustSettings:nsIX509Cert::SERVER_CERT];
+  }
 }
 
 - (BookmarkToolbar*) bookmarkToolbar
@@ -3635,7 +3649,7 @@ enum BWCOpenDest {
 - (IBAction)fillForm:(id)sender
 {
   CHBrowserView* browser = [[self getBrowserWrapper] getBrowserView];
-  nsCOMPtr<nsIDOMWindow> domWindow = dont_AddRef([browser getContentWindow]);
+  nsCOMPtr<nsIDOMWindow> domWindow = [browser getContentWindow];
   nsCOMPtr<nsIDOMWindowInternal> internalDomWindow (do_QueryInterface(domWindow));
   
   Wallet_Prefill(internalDomWindow);

@@ -40,12 +40,7 @@
 #include "nsXPIDLString.h"
 
 #include "nsIDOMWindow.h"
-
-#include "nsISecureBrowserUI.h"
-#include "nsISSLStatusProvider.h"
-#include "nsISSLStatus.h"
 #include "nsIX509Cert.h"
-#include "nsIWebProgressListener.h"
 
 #import "CHBrowserView.h"
 
@@ -91,7 +86,6 @@ static PageInfoWindowController* gSingletonPageInfoController;
 
 - (void)dealloc
 {
-  NSLog(@"%@ dealloc", self);
   [mCertificateItem release];
   [super dealloc];
 }
@@ -123,7 +117,7 @@ static PageInfoWindowController* gSingletonPageInfoController;
   if (mCertificateItem)
   {
     [ViewCertificateDialogController showCertificateWindowWithCertificateItem:mCertificateItem
-                                                         certTypeForTrustSettings:nsIX509Cert::CA_CERT];
+                                                         certTypeForTrustSettings:nsIX509Cert::SERVER_CERT];
   }
 }
 
@@ -196,92 +190,97 @@ static PageInfoWindowController* gSingletonPageInfoController;
 
 - (void)updateSecurityInfoFromBrowserView:(CHBrowserView*)inBrowserView
 {
-  // let's see how many hoops we have to jump through
-  nsCOMPtr<nsISecureBrowserUI> secureBrowserUI = [inBrowserView getSecureBrowserUI];
+  CHSecurityStatus  securityStatus = [inBrowserView securityStatus];
+  CertificateItem*  serverCert = [inBrowserView siteCertificate];
   
-  nsCOMPtr<nsISSLStatusProvider> statusProvider = do_QueryInterface(secureBrowserUI);
-  if (!statusProvider) return;
-  
-  nsCOMPtr<nsIX509Cert> serverCert;
-  PRUint32 sekritKeyLength = 0;
-  NSString* cipherNameString = @"";
-  
-  nsCOMPtr<nsISupports> secStatus;
-  statusProvider->GetSSLStatus(getter_AddRefs(secStatus));
-  nsCOMPtr<nsISSLStatus> sslStatus = do_QueryInterface(secStatus);
-  if (sslStatus)
+  // XXX ideally we should tell the user if the cert has expired, or whether
+  // it has a domain mismatch here too.
+  switch (securityStatus)
   {
-    sslStatus->GetServerCert(getter_AddRefs(serverCert));
-    sslStatus->GetSecretKeyLength(&sekritKeyLength);
-    
-    nsXPIDLCString cipherName;
-    sslStatus->GetCipherName(getter_Copies(cipherName));
-    cipherNameString = [NSString stringWith_nsACString:cipherName];
-  }
-  
-  // encryption info
-  PRUint32 pageState;
-  nsresult rv = secureBrowserUI->GetState(&pageState);
-  BOOL isBroken = NS_FAILED(rv) || (pageState == nsIWebProgressListener::STATE_IS_BROKEN);
-  
-  if (serverCert)
-  {
-    [mSiteVerifiedTextField setStringValue:NSLocalizedString(@"WebSiteVerified", @"")];
-    
-    CertificateItem* certItem = [CertificateItem certificateItemWithCert:serverCert];
-    NSString* issuerOrg = [certItem issuerOrganization];
-    if ([issuerOrg length] == 0)
-      issuerOrg = [certItem issuerName];
+    case CHSecurityInsecure:
+      [mSiteVerifiedImageView setImage:[NSImage imageNamed:@"security_broken"]];
+      [mSiteVerifiedTextField setStringValue:NSLocalizedString(@"WebSiteNotVerified", @"")];
+      [mSiteVerifiedDetailsField setStringValue:@""];
 
-    NSString* detailsString = [NSString stringWithFormat:NSLocalizedString(@"WebSiteVerifiedDetailsFormat", @""),
-                                                         [inBrowserView pageLocationHost],
-                                                         issuerOrg];
+      [mConnectionImageView setImage:[NSImage imageNamed:@"security_broken"]];
+      [mConnectionTextField setStringValue:NSLocalizedString(@"ConnectionNoneEncryption", @"")];
+      [mConnectionDetailsField setStringValue:NSLocalizedString(@"ConnectionNoneEncryptionDetails", @"")];
+      break;
+      
+    case CHSecurityBroken:    // or mixed
+      {
+        if (serverCert)
+        {
+          NSString* issuerOrg = [serverCert issuerOrganization];
+          if ([issuerOrg length] == 0)
+            issuerOrg = [serverCert issuerName];
 
-    [mSiteVerifiedDetailsField setStringValue:detailsString];
-    [mSiteVerifiedImageView setImage:[NSImage imageNamed:@"security_lock"]];
-    [self setCertificateItem:certItem];
-  }
-  else
-  {
-    [mSiteVerifiedImageView setImage:[NSImage imageNamed:@"security_broken"]];
-    [mSiteVerifiedTextField setStringValue:NSLocalizedString(@"WebSiteNotVerified", @"")];
-    [mSiteVerifiedDetailsField setStringValue:@""];
-  }
-  
-  if (isBroken)
-  {
-    [mConnectionTextField setStringValue:NSLocalizedString(@"ConnectionMixedContent", @"")];
-    [mConnectionDetailsField setStringValue:NSLocalizedString(@"ConnectionMixedContentDetails", @"")];
-    [mConnectionImageView setImage:[NSImage imageNamed:@"security_broken"]];  // XXX need "mixed" lock
-  }
-  else if (sekritKeyLength >= 90)
-  {
-    NSString* connectionString = [NSString stringWithFormat:NSLocalizedString(@"ConnectionStrongEncryptionFormat", @""),
-                                                         cipherNameString,
-                                                         sekritKeyLength];
-    [mConnectionTextField setStringValue:connectionString];
-    [mConnectionDetailsField setStringValue:NSLocalizedString(@"ConnectionStrongEncryptionDetails", @"")];
-    [mConnectionImageView setImage:[NSImage imageNamed:@"security_lock"]];
-  }
-  else if (sekritKeyLength > 0)
-  {
-    NSString* connectionString = [NSString stringWithFormat:NSLocalizedString(@"ConnectionWeakEncryptionFormat", @""),
-                                                         cipherNameString,
-                                                         sekritKeyLength];
-    [mConnectionTextField setStringValue:connectionString];
-    [mConnectionDetailsField setStringValue:NSLocalizedString(@"ConnectionWeakEncryptionDetails", @"")];
-    [mConnectionImageView setImage:[NSImage imageNamed:@"security_lock"]];    // XXX nead "weak" lock
-  }
-  else
-  {
-    [mConnectionTextField setStringValue:NSLocalizedString(@"ConnectionNoneEncryption", @"")];
-    [mConnectionDetailsField setStringValue:NSLocalizedString(@"ConnectionNoneEncryptionDetails", @"")];
-    [mConnectionImageView setImage:[NSImage imageNamed:@"security_broken"]];
-  }
-}
+          NSString* detailsString = [NSString stringWithFormat:NSLocalizedString(@"WebSiteVerifiedMixedDetailsFormat", @""),
+                                                               [inBrowserView pageLocationHost],
+                                                               issuerOrg];
 
-- (void)autosaveWindowFrame
-{
+          [mSiteVerifiedImageView setImage:[NSImage imageNamed:@"security_lock"]];    // XXX need "mixed" lock
+          [mSiteVerifiedDetailsField setStringValue:detailsString];
+          [mSiteVerifiedTextField setStringValue:NSLocalizedString(@"WebSiteVerifiedMixed", @"")];
+          [self setCertificateItem:serverCert];
+        }
+        else
+        {
+          [mSiteVerifiedImageView setImage:[NSImage imageNamed:@"security_broken"]];
+          [mSiteVerifiedTextField setStringValue:NSLocalizedString(@"WebSiteNotVerified", @"")];
+          [mSiteVerifiedDetailsField setStringValue:@""];
+        }
+        
+        [mConnectionImageView setImage:[NSImage imageNamed:@"security_broken"]];  // XXX need "mixed" lock
+        [mConnectionTextField setStringValue:NSLocalizedString(@"ConnectionMixedContent", @"")];
+        [mConnectionDetailsField setStringValue:NSLocalizedString(@"ConnectionMixedContentDetails", @"")];
+      }
+      break;
+      
+    case CHSecuritySecure:
+      {
+        NSString* issuerOrg = [serverCert issuerOrganization];
+        if ([issuerOrg length] == 0)
+          issuerOrg = [serverCert issuerName];
+
+        NSString* detailsString = [NSString stringWithFormat:NSLocalizedString(@"WebSiteVerifiedDetailsFormat", @""),
+                                                             [inBrowserView pageLocationHost],
+                                                             issuerOrg];
+
+        [mSiteVerifiedImageView setImage:[NSImage imageNamed:@"security_lock"]];
+        [mSiteVerifiedTextField setStringValue:NSLocalizedString(@"WebSiteVerified", @"")];
+        [mSiteVerifiedDetailsField setStringValue:detailsString];
+        [self setCertificateItem:serverCert];
+
+        CHSecurityStrength strength = [inBrowserView securityStrength];
+        if (strength == CHSecurityHigh)
+        {
+          [mConnectionImageView setImage:[NSImage imageNamed:@"security_lock"]];
+          NSString* connectionString = [NSString stringWithFormat:NSLocalizedString(@"ConnectionStrongEncryptionFormat", @""),
+                                                               [inBrowserView cipherName],
+                                                               [inBrowserView secretKeyLength]];
+          [mConnectionTextField setStringValue:connectionString];
+          [mConnectionDetailsField setStringValue:NSLocalizedString(@"ConnectionStrongEncryptionDetails", @"")];
+        }
+        else if (strength == CHSecurityMedium || strength == CHSecurityLow)
+        {
+          // "medium" seems to be unused
+          [mConnectionImageView setImage:[NSImage imageNamed:@"security_lock"]];    // XXX nead "weak" lock
+          NSString* connectionString = [NSString stringWithFormat:NSLocalizedString(@"ConnectionWeakEncryptionFormat", @""),
+                                                               [inBrowserView cipherName],
+                                                               [inBrowserView secretKeyLength]];
+          [mConnectionTextField setStringValue:connectionString];
+          [mConnectionDetailsField setStringValue:NSLocalizedString(@"ConnectionWeakEncryptionDetails", @"")];
+        }
+        else  // this should never happen
+        {
+          [mConnectionImageView setImage:[NSImage imageNamed:@"security_broken"]];
+          [mConnectionTextField setStringValue:NSLocalizedString(@"ConnectionNoneEncryption", @"")];
+          [mConnectionDetailsField setStringValue:NSLocalizedString(@"ConnectionNoneEncryptionDetails", @"")];
+        }
+      }
+      break;
+  }
 }
 
 @end

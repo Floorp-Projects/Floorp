@@ -130,6 +130,7 @@ extern NSString* const CertificateChangedNotificationName;
 - (NSAttributedString*)attributedShortValidityString;
 - (NSAttributedString*)attributedLongValidityString;
 
+- (BOOL)canGetTrust;
 - (unsigned int)trustMaskForType:(unsigned int)inType;
 - (BOOL)trustedFor:(unsigned int)inUsage asType:(unsigned int)inType;
 - (BOOL)trustedForSSLAsType:(unsigned int)inType;

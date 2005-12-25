@@ -369,7 +369,9 @@ const int kReuseWindowOnAE = 2;
   [[BookmarkManager sharedBookmarkManagerDontCreate] shutdown];
 
   // Autosave one of the windows.
-  [[[mApplication mainWindow] windowController] autosaveWindowFrame];
+  NSWindow* curMainWindow = [mApplication mainWindow];
+  if (curMainWindow && [[curMainWindow windowController] respondsToSelector:@selector(autosaveWindowFrame)])
+    [[curMainWindow windowController] autosaveWindowFrame];
   
   // Cancel outstanding site icon loads
   [[RemoteDataProvider sharedRemoteDataProvider] cancelOutstandingRequests];
@@ -614,9 +616,9 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 {
   // If we have a key window, have it autosave its dimensions before
   // we open a new window.  That ensures the size ends up matching.
-  NSWindow* mainWindow = [mApplication mainWindow];
-  if (mainWindow && [[mainWindow windowController] respondsToSelector:@selector(autosaveWindowFrame)])
-    [[mainWindow windowController] autosaveWindowFrame];
+  NSWindow* curMainWindow = [mApplication mainWindow];
+  if (curMainWindow && [[curMainWindow windowController] respondsToSelector:@selector(autosaveWindowFrame)])
+    [[curMainWindow windowController] autosaveWindowFrame];
 
   // Now open the new window.
   NSString* homePage = mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePageUsingStartPage:YES];

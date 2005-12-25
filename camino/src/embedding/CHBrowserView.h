@@ -45,6 +45,8 @@
 #include "nsCOMPtr.h"
 
 @class CHBrowserView;
+@class CertificateItem;
+
 class CHBrowserListener;
 class nsIDOMWindow;
 class nsIWebBrowser;
@@ -136,6 +138,19 @@ enum {
   NSStopLoadAll       = 0x03  
 };
 
+typedef enum {
+  CHSecurityInsecure     = 0,
+  CHSecuritySecure       = 1,
+  CHSecurityBroken       = 2     // or mixed content
+} CHSecurityStatus;
+
+typedef enum {
+  CHSecurityNone          = 0,
+  CHSecurityLow           = 1,
+  CHSecurityMedium        = 2,     // key strength < 90 bit
+  CHSecurityHigh          = 3
+} CHSecurityStrength;
+
 @interface CHBrowserView : NSView 
 {
   nsIWebBrowser*        _webBrowser;
@@ -164,18 +179,17 @@ enum {
 - (void)addListener:(id <CHBrowserListener>)listener;
 - (void)removeListener:(id <CHBrowserListener>)listener;
 - (void)setContainer:(NSView<CHBrowserListener, CHBrowserContainer>*)container;
-- (nsIDOMWindow*)getContentWindow;	// addrefs
-- (nsISecureBrowserUI*)getSecureBrowserUI; // addrefs
+- (already_AddRefed<nsIDOMWindow>)getContentWindow;	// addrefs
 
 // nsIWebNavigation methods
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags allowPopups:(BOOL)inAllowPopups;
 - (void)reload:(unsigned int)flags;
-- (BOOL)canGoBack;
-- (BOOL)canGoForward;
 - (void)goBack;
+- (BOOL)canGoBack;
 - (void)goForward;
-- (void)gotoIndex:(int)index;
-- (void)stop:(unsigned int)flags;
+- (BOOL)canGoForward;
+- (void)stop:(unsigned int)flags;   // NSStop flags
+- (void)goToSessionHistoryIndex:(int)index;
 
 - (NSString*)getCurrentURI;
 
@@ -241,12 +255,17 @@ enum {
 
 - (NSString*)getFocusedURLString;
 
-  // given a point in window coordinates, find the Gecko event sink of the ChildView the
-  // point is over.
-- (void) findEventSink:(nsIEventSink**)outSink forPoint:(NSPoint)inPoint inWindow:(NSWindow*)inWind;
-
+// charset
 - (IBAction)reloadWithNewCharset:(NSString*)charset;
 - (NSString*)currentCharset;
+
+// security
+- (BOOL)hasSSLStatus;   // if NO, then the following methods all return empty values.
+- (unsigned int)secretKeyLength;
+- (NSString*)cipherName;
+- (CHSecurityStatus)securityStatus;
+- (CHSecurityStrength)securityStrength;
+- (CertificateItem*)siteCertificate;
 
 - (already_AddRefed<nsISupports>)getPageDescriptor;
 - (void)setPageDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType;

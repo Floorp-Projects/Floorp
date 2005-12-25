@@ -204,6 +204,7 @@ static BrowserSecurityUIProvider* gBrowserSecurityUIProvider;
   NSString* messageFormatString = NSLocalizedStringFromTable(@"ConfirmCAMessageFormat", @"CertificateDialogs", @"");
   [mMessageField setStringValue:[NSString stringWithFormat:messageFormatString, [inCert displayName]]];
 
+  [mCertificateView setShowTrust:YES];
   [mCertificateView setDetailsInitiallyExpanded:NO];
   [mCertificateView setTrustInitiallyExpanded:YES];
   [mCertificateView setCertTypeForTrustSettings:nsIX509Cert::CA_CERT];

@@ -2,10 +2,9 @@
     IBClasses = (
         {CLASS = AutoCompleteDataSource; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
-            ACTIONS = {onBlur = id; onResize = id; }; 
             CLASS = AutoCompleteTextField; 
             LANGUAGE = ObjC; 
-            OUTLETS = {mProxyIcon = PageProxyIcon; }; 
+            OUTLETS = {mLockIconContextMenu = NSMenu; mProxyIcon = PageProxyIcon; }; 
             SUPERCLASS = NSTextField; 
         }, 
         {CLASS = BookmarkManagerView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
@@ -143,6 +142,7 @@
                 sendURLFromLink = id; 
                 showBookmarksInfo = id; 
                 showPageInfo = id; 
+                showSiteCertificate = id; 
                 smallerTextSize = id; 
                 stop = id; 
                 unblockAllSites = id; 

@@ -49,13 +49,15 @@
 #import "PageProxyIcon.h"
 #import "KeychainService.h"
 #import "AutoCompleteTextField.h"
+
 #include "CHBrowserService.h"
+#include "ContentClickListener.h"
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsISupportsArray.h"
 #include "nsIURI.h"
 #include "nsIIOService.h"
-#include "ContentClickListener.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIWebBrowser.h"
@@ -67,6 +69,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIWebProgressListener.h"
+
 
 static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
@@ -332,7 +335,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     if (!clickListener)
       return;
     
-    nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([[self getBrowserView] getContentWindow]);
+    nsCOMPtr<nsIDOMWindow> contentWindow = [[self getBrowserView] getContentWindow];
     nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(contentWindow));
     nsIChromeEventHandler *chromeHandler = piWindow->GetChromeEventHandler();
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(chromeHandler));
@@ -811,7 +814,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   BOOL showBlocker = [[PreferenceManager sharedInstance] getBooleanPref:"browser.popups.showPopupBlocker" withSuccess:NULL];
 
   if (showBlocker) {
-    nsCOMPtr<nsIDOMWindow> domWindow = getter_AddRefs([mBrowserView getContentWindow]);
+    nsCOMPtr<nsIDOMWindow> domWindow = [mBrowserView getContentWindow];
     nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(domWindow));
     if (piWindow->IsLoadingOrRunningTimeout()) {
       // A popup is being opened while the page is currently loading.  Offer to block the

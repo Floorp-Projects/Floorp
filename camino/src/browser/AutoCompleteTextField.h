@@ -51,6 +51,7 @@ class nsIAutoCompleteListener;
 @interface AutoCompleteTextField : NSTextField
 {
   IBOutlet PageProxyIcon*   mProxyIcon;
+  IBOutlet NSMenu*          mLockIconContextMenu;
 
   NSWindow*                 mPopupWin;
   NSTableView*              mTableView;

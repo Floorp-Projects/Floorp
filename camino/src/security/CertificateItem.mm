@@ -611,6 +611,18 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
   return stateKey;
 }
 
+- (BOOL)canGetTrust
+{
+  PRUint32 trustMask = nsIX509CertDB::UNTRUSTED;
+  nsCOMPtr<nsIX509CertDB> certDB = do_GetService("@mozilla.org/security/x509certdb;1");
+  if (!certDB) return NO;
+
+  PRBool trusted;
+  // really we are just testing if CERT_GetCertTrust() succeeds. The arguments don't matter.
+  nsresult rv = certDB->IsCertTrusted(mCert, nsIX509Cert::CA_CERT, nsIX509CertDB::TRUSTED_SSL, &trusted);
+  return NS_SUCCEEDED(rv);
+}
+
 - (unsigned int)trustMaskForType:(unsigned int)inType
 {
   PRUint32 trustMask = nsIX509CertDB::UNTRUSTED;
@@ -638,6 +650,10 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
   
   PRBool trusted;
   nsresult rv = certDB->IsCertTrusted(mCert, inType, inUsage, &trusted);
+#if DEBUG
+  if (NS_FAILED(rv))
+    NSLog(@"IsCertTrusted failed for %@", self);
+#endif
   return NS_SUCCEEDED(rv) && trusted;
 }
 
