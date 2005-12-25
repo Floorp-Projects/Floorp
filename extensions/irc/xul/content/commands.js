@@ -1440,11 +1440,6 @@ function cmdSSLServer(e)
 
 function cmdQuit(e)
 {
-    if ((typeof e.reason != "string") || !e.reason)
-        e.reason = client.prefs["defaultQuitMsg"];
-    if (!e.reason)
-        e.reason = client.userAgent;
-
     client.quit(e.reason);
     window.close();
 }
@@ -1458,7 +1453,7 @@ function cmdQuitMozilla(e)
 function cmdDisconnect(e)
 {
     if ((typeof e.reason != "string") || !e.reason)
-        e.reason = client.prefs["defaultQuitMsg"];
+        e.reason = e.network.prefs["defaultQuitMsg"];
     if (!e.reason)
         e.reason = client.userAgent;
 
@@ -1467,6 +1462,7 @@ function cmdDisconnect(e)
 
 function cmdDisconnectAll(e)
 {
+    var netReason;
     if (confirmEx(MSG_CONFIRM_DISCONNECT_ALL, ["!yes", "!no"]) != 0)
         return;
 
@@ -1477,13 +1473,14 @@ function cmdDisconnectAll(e)
         return;
     }
 
-    if ((typeof e.reason != "string") || !e.reason)
-        e.reason = client.prefs["defaultQuitMsg"];
-    if (!e.reason)
-        e.reason = client.userAgent;
-
     for (var i = 0; i < conNetworks.length; i++)
-        conNetworks[i].quit(e.reason);
+    {
+        netReason = e.reason;
+        if ((typeof netReason != "string") || !netReason)
+            netReason = conNetworks[i].prefs["defaultQuitMsg"];
+        netReason = (netReason ? netReason : client.userAgent);
+        conNetworks[i].quit(netReason);
+    }
 }
 
 function cmdDeleteView(e)

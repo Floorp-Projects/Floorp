@@ -148,7 +148,7 @@ function onClose()
     {
         client.userClose = true;
         display(MSG_CLOSING);
-        client.quit(client.userAgent);
+        client.quit();
     }
     return false;
 }

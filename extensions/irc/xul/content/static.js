@@ -4243,10 +4243,16 @@ function cli_gccount ()
 client.quit =
 function cli_quit (reason)
 {
+    var net, netReason;
     for (var n in client.networks)
     {
-        if (client.networks[n].isConnected())
-            client.networks[n].quit(reason);
+        net = client.networks[n];
+        if (net.isConnected())
+        {
+            netReason = (reason ? reason : net.prefs["defaultQuitMsg"]);
+            netReason = (netReason ? netReason : client.userAgent);
+            net.quit(netReason);
+        }
     }
 }
 
