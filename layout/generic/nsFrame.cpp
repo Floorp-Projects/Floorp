@@ -1762,8 +1762,11 @@ struct ContentOffsets {
 // Retrieve the content offsets of a frame
 static ContentOffsets GetOffsetsOfFrame(nsIFrame* aFrame) {
   nsCOMPtr<nsIContent> content, parent;
-  NS_ASSERTION(aFrame->GetContent(), "No content?!");
   content = aFrame->GetContent();
+  if (!content) {
+    NS_WARNING("Frame has no content");
+    return ContentOffsets(nsnull, -1, -1);
+  }
   nsIAtom* type = aFrame->GetType();
   if (type == nsLayoutAtoms::textFrame) {
     PRInt32 offset, offsetEnd;
@@ -2110,8 +2113,10 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
   if (adjustedFrame->GetStyleUIReset()->mUserSelect ==
       NS_STYLE_USER_SELECT_ALL) {
     ContentOffsets selectOffset = GetOffsetsOfFrame(adjustedFrame);
+    if (!selectOffset.content)
+      return NS_ERROR_NULL_POINTER;
 
-    NS_IF_ADDREF(*aNewContent = selectOffset.content);
+    NS_ADDREF(*aNewContent = selectOffset.content);
     aContentOffset = selectOffset.start;
     aContentOffsetEnd = selectOffset.end;
     aKeepWithAbove = PR_FALSE;
@@ -2126,6 +2131,8 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
   FrameTarget closest = GetSelectionClosestFrame(adjustedFrame, adjustedPoint);
 
   ContentOffsets offset = GetOffsetsOfFrame(closest.frame);
+  if (!offset.content)
+    return NS_ERROR_NULL_POINTER;
   // If the correct offset is at one end of a frame, use offset-based
   // calculation method
   if (closest.frameEdge) {
