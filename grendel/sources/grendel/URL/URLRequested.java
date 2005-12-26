@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-package grendel.renderer.URL;
+package grendel.URL;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -54,30 +54,35 @@ import java.net.URLStreamHandler;
  *
  * @author hash9
  */
-public class URLExtWrapper
-{
-  private URL url;
-
-  /** Creates a new instance of URLExtWrapper */
-  public URLExtWrapper(URL url)
-  {
-    this.url=url;
-  }
-
-  public void openInBrowser()
-  {
-    try {
-      Process p=Runtime.getRuntime().exec("C:\\Program Files\\Mozilla Firefox\\firefox.exe "+
-                                          url.toExternalForm());
-      BufferedInputStream bis=new BufferedInputStream(p.getErrorStream());
-      int i=0;
-
-      while (i!=-1) {
-        i=bis.read();
-        System.err.write(i);
+public class URLRequested implements URLRequestedListener{
+  public void URLRequested(URLRequestedEvent e) {
+    if (! e.isConsumed()) {
+      // Wait incase some where else consumes the event
+      synchronized(this) {
+        try {
+          this.wait(100);
+        } catch (InterruptedException ex) {
+          ex.printStackTrace();
+        }
       }
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
+      if (! e.isConsumed()) {
+        try {
+          Process p=Runtime.getRuntime().exec(
+              "C:\\Program Files\\Mozilla Firefox\\firefox.exe "+
+              e.getUrl().toExternalForm());
+          BufferedInputStream bis=new BufferedInputStream(p.getErrorStream());
+          int i=0;
+          
+          while (i!=-1) {
+            i=bis.read();
+            System.err.write(i);
+          }
+        } catch (IOException ioe) {
+          ioe.printStackTrace();
+        }
+      }
     }
   }
 }
+
+
