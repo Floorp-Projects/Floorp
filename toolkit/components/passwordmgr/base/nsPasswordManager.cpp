@@ -273,7 +273,7 @@ nsPasswordManager::Init()
   obsService->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
 
   nsCOMPtr<nsIWebProgress> progress = do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
-  NS_ASSERTION(docLoaderService, "No web progress service");
+  NS_ASSERTION(progress, "No web progress service");
 
   progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
 
