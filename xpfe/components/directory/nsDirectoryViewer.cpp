@@ -57,7 +57,6 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsEscape.h"
-#include "nsIDocumentLoader.h"
 #include "nsIEnumerator.h"
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"

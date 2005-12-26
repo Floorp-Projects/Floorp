@@ -45,7 +45,6 @@
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIDocumentViewer.h"
-#include "nsIDocumentLoader.h"
 #include "nsDOMClassInfo.h"
 
 

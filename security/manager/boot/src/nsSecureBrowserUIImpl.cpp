@@ -56,7 +56,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
-#include "nsIDocumentLoader.h"
 #include "nsCURILoader.h"
 #include "nsIDocShell.h"
 #include "nsIDocumentViewer.h"

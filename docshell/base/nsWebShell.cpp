@@ -43,7 +43,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgress.h"
-#include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIMarkupDocumentViewer.h"

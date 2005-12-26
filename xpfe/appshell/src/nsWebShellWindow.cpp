@@ -42,7 +42,6 @@
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "nsIWeakReference.h"
-#include "nsIDocumentLoader.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -96,7 +95,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
-#include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIObserverService.h"
 #include "prprf.h"

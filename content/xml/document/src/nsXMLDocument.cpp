@@ -49,7 +49,6 @@
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIDocumentLoader.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"

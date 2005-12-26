@@ -42,7 +42,6 @@
 #include "nsIMsgAccountManager.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIDocumentLoader.h"
 #include "nsILoadGroup.h"
 #include "nsIDocShell.h"
 #include "nsIWebProgress.h"

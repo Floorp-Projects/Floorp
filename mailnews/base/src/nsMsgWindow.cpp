@@ -46,7 +46,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsTransactionManagerCID.h"
 #include "nsIComponentManager.h"
-#include "nsIDocumentLoader.h"
 #include "nsILoadGroup.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIInterfaceRequestor.h"

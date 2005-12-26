@@ -53,7 +53,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDocument.h"
 
-#include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderFactory.h"
 
 #include "nsIURL.h"

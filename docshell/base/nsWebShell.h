@@ -46,7 +46,6 @@
 #include "nsICommandManager.h"
 #include "nsIIOService.h"
 #include "nsCRT.h"
-#include "nsIDocumentLoader.h"
 
 class nsIEventQueue;
 class nsIController;

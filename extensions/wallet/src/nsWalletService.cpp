@@ -48,7 +48,6 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDocumentLoader.h"
 #include "nsCURILoader.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIFormControl.h"
@@ -308,19 +307,17 @@ nsresult nsWalletlibService::Init()
     svc->AddObserver(this, "login-failed", PR_TRUE);
   }
   else
-    NS_ASSERTION(PR_FALSE, "Could not get nsIObserverService");
+    NS_ERROR("Could not get nsIObserverService");
 
   // Get the global document loader service...
-  nsCOMPtr<nsIDocumentLoader> docLoaderService =
+  nsCOMPtr<nsIWebProgress> progress =
            do_GetService(kDocLoaderServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && docLoaderService) {
-    nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(docLoaderService, &rv));
-    if (NS_SUCCEEDED(rv))
-        (void) progress->AddProgressListener((nsIWebProgressListener*)this,
-                                        nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+  if (NS_SUCCEEDED(rv)) {
+    (void) progress->AddProgressListener((nsIWebProgressListener*)this,
+                                    nsIWebProgress::NOTIFY_STATE_DOCUMENT);
   }
   else
-    NS_ASSERTION(PR_FALSE, "Could not get nsIDocumentLoader");
+    NS_ERROR("Could not get nsIWebProgress");
 
   /* initialize the expire-master-password feature */
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));

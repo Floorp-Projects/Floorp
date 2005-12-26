@@ -41,7 +41,6 @@
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIDocumentLoader.h"
 #include "nsCURILoader.h"
 #include "nsNetUtil.h"
 #include "nsIURL.h"

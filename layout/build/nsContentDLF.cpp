@@ -42,7 +42,6 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsICategoryManager.h"
-#include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
