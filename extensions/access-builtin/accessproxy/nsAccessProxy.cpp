@@ -42,7 +42,6 @@
 #include "nsIObserverService.h"
 #include "nsIGenericFactory.h"
 #include "nsIWebProgress.h"
-#include "nsIDocumentLoader.h"
 #include "nsCURILoader.h"
 #include "nsIDocShell.h"
 #include "nsIDOMWindow.h"

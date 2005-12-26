@@ -52,7 +52,6 @@
 #include "nsArray.h"
 #include "nsICategoryManager.h"
 #include "nsIObserverService.h"
-#include "nsIDocumentLoader.h"
 #include "nsIWebProgress.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
@@ -273,11 +272,8 @@ nsPasswordManager::Init()
 
   obsService->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
 
-  nsCOMPtr<nsIDocumentLoader> docLoaderService = do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
-  NS_ASSERTION(docLoaderService, "No document loader service");
-
-  nsCOMPtr<nsIWebProgress> progress = do_QueryInterface(docLoaderService);
-  NS_ASSERTION(progress, "docloader service does not implement nsIWebProgress");
+  nsCOMPtr<nsIWebProgress> progress = do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
+  NS_ASSERTION(docLoaderService, "No web progress service");
 
   progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
 

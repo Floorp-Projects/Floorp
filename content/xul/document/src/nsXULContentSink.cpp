@@ -61,7 +61,6 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
-#include "nsIDocumentLoader.h"
 #include "nsIFormControl.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsINameSpaceManager.h"
