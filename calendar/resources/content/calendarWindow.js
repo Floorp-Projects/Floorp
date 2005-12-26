@@ -128,15 +128,6 @@ function CalendarWindow( )
    //global date formater
    this.dateFormater = new DateFormater( this );
 
-   var viewIDarray = ["day-view", "week-view", "multiweek-view", "month-view"];
-   for each (id in viewIDarray) {
-       var element = document.getElementById(id);
-       element.controller = gViewController;
-       element.timezone = calendarDefaultTimezone();
-       element.displayCalendar = getDisplayComposite();
-       this.EventSelection.addObserver(element.selectionObserver);
-   }
-
    /** This object only exists to keep too many things from breaking during the
     *   switch to the new views
    **/
@@ -348,6 +339,16 @@ CalendarWindow.prototype.getSelectedDate = function calWin_getSelectedDate( )
 
 CalendarWindow.prototype.switchToView = function calWin_switchToView( newView )
 {
+    var viewElement = document.getElementById(newView);
+
+    // If this is the first time we've shown the view, (or if someone changed
+    // our composite), then we need to set all this stuff.
+    if (viewElement.displayCalendar != getDisplayComposite()) {
+        viewElement.controller = gViewController;
+        viewElement.displayCalendar = getDisplayComposite();
+        this.EventSelection.addObserver(viewElement.selectionObserver);
+    }
+
     var deck = document.getElementById("view-deck");
     var day;
     try {
@@ -357,7 +358,7 @@ CalendarWindow.prototype.switchToView = function calWin_switchToView( newView )
     // Should only happen on first startup
     if (!day)
         day = now();
-    deck.selectedPanel = document.getElementById(newView);
+    deck.selectedPanel = viewElement;
     deck.selectedPanel.goToDay(day);
 }
 
