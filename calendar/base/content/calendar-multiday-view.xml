@@ -1178,9 +1178,14 @@
       <!-- mouse down handler, in empty event column regions.  Starts sweeping out a new
          - event.
         -->
-      <handler event="mousedown" button="0"><![CDATA[
+      <handler event="mousedown"><![CDATA[
         // select this column
         this.calendarView.selectedDay = this.mDate;
+
+        // Only start sweeping out an event if the left button was clicked
+        if (event.button != 0) {
+            return;
+        }
 
         // snap to 15 minute intervals
         var interval = this.mPixPerMin * 15;

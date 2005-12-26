@@ -370,7 +370,7 @@
     </implementation>
 
     <handlers>
-      <handler event="mousedown" button="0"><![CDATA[
+      <handler event="mousedown"><![CDATA[
         event.preventBubble();
 
         if (this.mDate)
