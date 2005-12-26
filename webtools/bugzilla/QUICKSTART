@@ -4,13 +4,13 @@ Bugzilla Quick Start Guide
 Christian Reis <kiko@async.com.br>
 
 This express installation guide is for "normal" Bugzilla installations,
-which means a Linux or Unix system on which Apache, Perl, MySQL and
-Sendmail are available. For other configurations, please see Section 4
-of the Bugzilla Guide in the docs/ directory. 
+which means a Linux or Unix system on which Apache, Perl, MySQL or PostgreSQL
+and a Sendmail compatible MTA are available. For other configurations, please
+see Section 4 of the Bugzilla Guide in the docs/ directory. 
 
 1. Decide from which URL and directory under your webserver root you
    will be serving the Bugzilla webpages from.
-   
+
 2. Unpack distribution into the chosen directory (there is no copying or
    installation involved). 
 
@@ -18,7 +18,8 @@ of the Bugzilla Guide in the docs/ directory.
    You can run checksetup as many times as necessary to check if
    everything required is installed.
 
-   This will usually include assorted Perl modules, MySQL and sendmail.
+   This will usually include assorted Perl modules, MySQL or PostgreSQL,
+   and a MTA.
 
    After a successful dependency check, checksetup should complain that
    localconfig needs to be edited.
@@ -36,7 +37,8 @@ of the Bugzilla Guide in the docs/ directory.
 
    If you are not familiar with MySQL permissions, it's a good idea to
    use the mysql_setpermission script that is installed with the MySQL
-   distribution, and be sure to read section 4.1.6 in the Bugzilla Guide.
+   distribution, and be sure to read Bugzilla Security - MySQL section
+   in the Bugzilla Guide or PostgreSQL documentation.
 
 6. Run checksetup.pl once more; if all goes well, it should set up the
    Bugzilla database for you. If not, move back to step 5.
@@ -48,15 +50,15 @@ of the Bugzilla Guide in the docs/ directory.
 7. Configure Apache (or install and configure, if you don't have it up
    yet) to point to the Bugzilla directory. You should enable and
    activate mod_cgi, and add the configuration entries
-    
+
         Options +ExecCGI
         AllowOverride Limit 
         DirectoryIndex index.cgi
-        
+
    to your Bugzilla <Directory> block. You may also need
-   
+
         AddHandler cgi-script .cgi
-        
+
    if you don't have that in your Apache configuration file yet.
 
 8. Visit the URL you chose for Bugzilla. Your browser should display the
@@ -82,5 +84,4 @@ Support and installation questions should be directed to the
 mozilla-webtools@mozilla.org mailing list -- don't write to the
 developer mailing list: your post *will* be ignored if you do.
 
-Further support information is at http://www.bugzilla.org/discussion.html
-
+Further support information is at http://www.bugzilla.org/support/
