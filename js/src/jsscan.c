@@ -1199,7 +1199,12 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
             ADD_TO_TOKENBUF(c);
             while ((c = GetChar(ts)) != EOF && JS_ISXMLNAME(c)) {
                 if (c == ':') {
-                    if (sawColon || !JS_ISXMLNAME(PeekChar(ts))) {
+                    int nextc;
+
+                    if (sawColon ||
+                        (nextc = PeekChar(ts),
+                         ((ts->flags & TSF_XMLONLYMODE) || nextc != '{') &&
+                         !JS_ISXMLNAME(nextc))) {
                         js_ReportCompileErrorNumber(cx, ts,
                                                     JSREPORT_TS |
                                                     JSREPORT_ERROR,
