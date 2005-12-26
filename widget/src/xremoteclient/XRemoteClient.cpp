@@ -67,6 +67,14 @@
 #define MOZILLA_PROFILE_PROP   "_MOZILLA_PROFILE"
 #define MOZILLA_PROGRAM_PROP   "_MOZILLA_PROGRAM"
 
+#ifdef IS_BIG_ENDIAN
+#define TO_LITTLE_ENDIAN32(x) \
+    ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >> 8) | \
+    (((x) & 0x0000ff00) << 8) | (((x) & 0x000000ff) << 24))
+#else
+#define TO_LITTLE_ENDIAN32(x) (x)
+#endif
+    
 #ifndef MAX_PATH
 #define MAX_PATH 1024
 #endif
@@ -691,19 +699,19 @@ XRemoteClient::DoSendCommandLine(Window aWindow, PRInt32 argc, char **argv,
   if (!buffer)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  buffer[0] = argc;
+  buffer[0] = TO_LITTLE_ENDIAN32(argc);
 
   char *bufend = (char*) (buffer + argc + 1);
 
   bufend = estrcpy(cwdbuf, bufend);
 
   for (int i = 0; i < argc; ++i) {
-    buffer[i + 1] = bufend - ((char*) buffer);
+    buffer[i + 1] = TO_LITTLE_ENDIAN32(bufend - ((char*) buffer));
     bufend = estrcpy(argv[i], bufend);
   }
 
 #ifdef DEBUG_bsmedberg
-  PRInt32   debug_argc   = *buffer;
+  PRInt32   debug_argc   = TO_LITTLE_ENDIAN32(*buffer);
   char *debug_workingdir = (char*) (buffer + argc + 1);
 
   printf("Sending command line:\n"
@@ -715,7 +723,7 @@ XRemoteClient::DoSendCommandLine(Window aWindow, PRInt32 argc, char **argv,
   PRInt32  *debug_offset = buffer + 1;
   for (int debug_i = 0; debug_i < debug_argc; ++debug_i)
     printf("  argv[%i]:\t%s\n", debug_i,
-           ((char*) buffer) + debug_offset[debug_i]);
+           ((char*) buffer) + TO_LITTLE_ENDIAN32(debug_offset[debug_i]));
 #endif
 
   XChangeProperty (mDisplay, aWindow, mMozCommandLineAtom, XA_STRING, 8,
