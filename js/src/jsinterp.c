@@ -870,6 +870,20 @@ LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
 #endif /* DUMP_CALL_TABLE */
 
 /*
+ * Conditional assert to detect failure to clear a pending exception that is
+ * suppressed (or unintentional suppression of a wanted exception).
+ */
+#if defined DEBUG_brendan || defined DEBUG_mrbkap || defined DEBUG_shaver
+# define DEBUG_NOT_THROWING 1
+#endif
+
+#ifdef DEBUG_NOT_THROWING
+# define ASSERT_NOT_THROWING(cx) JS_ASSERT(!(cx)->throwing)
+#else
+# define ASSERT_NOT_THROWING(cx) /* nothing */
+#endif
+
+/*
  * Find a function reference and its 'this' object implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
  * required arguments, allocate declared local variables, and pop everything
@@ -1200,6 +1214,10 @@ have_fun:
 
     /* Call the function, either a native method or an interpreted script. */
     if (native) {
+#ifdef DEBUG_NOT_THROWING
+        JSBool alreadyThrowing = cx->throwing;
+#endif
+
 #if JS_HAS_LVALUE_RETURN
         /* Set by JS_SetCallReturnValue2, used to return reference types. */
         cx->rval2set = JS_FALSE;
@@ -1210,6 +1228,10 @@ have_fun:
         frame.scopeChain = fp->scopeChain;
         ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
+#ifdef DEBUG_NOT_THROWING
+        if (ok && !alreadyThrowing)
+            ASSERT_NOT_THROWING(cx);
+#endif
     } else if (script) {
 #ifdef DUMP_CALL_TABLE
         LogCall(cx, *vp, argc, frame.argv);
@@ -2099,7 +2121,7 @@ interrupt:
           END_CASE(JSOP_LEAVEWITH)
 
           BEGIN_CASE(JSOP_SETRVAL)
-            JS_ASSERT(!cx->throwing);
+            ASSERT_NOT_THROWING(cx);
             fp->rval = POP_OPND();
           END_CASE(JSOP_SETRVAL)
 
@@ -2109,7 +2131,7 @@ interrupt:
             /* FALL THROUGH */
 
           BEGIN_CASE(JSOP_RETRVAL)    /* fp->rval already set */
-            JS_ASSERT(!cx->throwing);
+            ASSERT_NOT_THROWING(cx);
             if (inlineCallCount)
           inline_return:
             {
