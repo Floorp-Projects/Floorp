@@ -32,9 +32,9 @@
          changes to<BR>this directory<BR>in the last:
         </TD>
         <TD NOWRAP>
-         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=day">day</A><BR>
-         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=week">week</A><BR>
-         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=month">month</A><BR>
+         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsversion&file=mozilla$pathname&date=day">day</A><BR>
+         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsversion&file=mozilla$pathname&date=week">week</A><BR>
+         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsversion&file=mozilla$pathname&date=month">month</A><BR>
         </TD>
        </TR>
       </TABLE>

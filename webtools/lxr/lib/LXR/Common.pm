@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.28 2005/12/21 05:28:13 timeless%mozdev.org Exp $
+# $Id: Common.pm,v 1.29 2005/12/27 16:23:20 timeless%mozdev.org Exp $
 
 package LXR::Common;
 
@@ -569,10 +569,61 @@ sub bannerexpand {
     }
 }
 
-sub pathname {
-    return $Path->{'virtf'};
+sub cvsentriesexpand {
+    my ($entryrev, $entrybranch);
+    local $,=" | ";
+    my ($entriespath, $entryname) = split m|/(?!.*/)|, $Path->{'realf'};
+    if (open(CVSENTRIES, "$entriespath/CVS/Entries")) {
+        while (<CVSENTRIES>) {
+            next unless m|^/\Q$entryname\E/([^/]*)/[^/]*/[^/]*/(.*)|;
+            ($entryrev,$entrybranch)=($1,$2);
+            $entrybranch =~ s/^T//;
+            $entrybranch ||= 'HEAD';
+        }
+        close(CVSENTRIES);
+    }
+    return ($entryrev, $entrybranch);
 }
 
+sub cvstagexpand {
+    my $entrybranch;
+    if (open(CVSTAG, " $Path->{'real'}/CVS/Tag")) {
+        while (<CVSTAG>) {
+            next unless m|^T(.*)$|;
+            $entrybranch = $1;
+        }
+        close(CVSTAG);
+    }
+    return $entrybranch || 'HEAD';
+}
+
+sub cvsversionexpand {
+    if ($who eq 'source') {
+        my ($entryrev,undef) = cvsentriesexpand();
+        return $entryrev;
+    }
+    if ($who eq 'sourcedir') {
+        return cvstagexpand();
+    }
+    return('');
+}
+
+sub cvsbranchexpand {
+    if ($who eq 'source') {
+        my (undef,$entrybranch) = cvsentriesexpand();
+        return $entrybranch;
+    }
+    if ($who eq 'sourcedir') {
+       return cvstagexpand();
+    }
+    return('');
+}
+
+sub pathname {
+    my $prefix = '';
+    $prefix = '/' . $Conf->prefix if defined $Conf->prefix;
+    return (url_quote ($prefix . $Path->{'virtf'}));
+}
 
 sub treename {
     return $Conf->{'treename'};
@@ -804,6 +855,8 @@ sub makeheader {
 			  ('treename',		\&treename),
     			  ('modes',		\&modeexpand),
     			  ('bonsaicvsroot',	\&bonsaicvsroot),
+    			  ('cvsversion',	\&cvsversionexpand),
+    			  ('cvsbranch',		\&cvsbranchexpand),
     			  ('variables',		\&varexpand)));
 }
 

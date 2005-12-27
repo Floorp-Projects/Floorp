@@ -26,8 +26,8 @@
    <TABLE BORDER CELLPADDING=12 CELLSPACING=0>
     <TR>
      <TD NOWRAP BGCOLOR="#FAFAFA">
-      <A HREF="http://bonsai.mozilla.org/cvslog.cgi?file=mozilla$pathname">CVS Log</A><BR>
-      <A HREF="http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla$pathname">CVS Blame</A><BR>
+      <A HREF="http://bonsai.mozilla.org/cvslog.cgi?file=mozilla$pathname&rev=$cvsbranch&mark=$cvsversion">CVS Log</A><BR>
+      <A HREF="http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla$pathname&rev=$cvsversion">CVS Blame</A><BR>
       <BR>
      </TD>
     </TR>
@@ -44,9 +44,9 @@
          changes to<BR>this file in<BR>the last:
         </TD>
         <TD NOWRAP>
-         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=day">day</A><BR>
-         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=week">week</A><BR>
-         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=HEAD&file=mozilla$pathname&date=month">month</A><BR>
+         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsbranch&file=mozilla$pathname&date=day">day</A><BR>
+         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsbranch&file=mozilla$pathname&date=week">week</A><BR>
+         <A HREF="http://bonsai.mozilla.org/cvsquery.cgi?branch=$cvsbranch&file=mozilla$pathname&date=month">month</A><BR>
         </TD>
        </TR>
       </TABLE>
