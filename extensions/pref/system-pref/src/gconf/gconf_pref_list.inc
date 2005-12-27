@@ -13,7 +13,7 @@
     {"network.proxy.ssl_port", "/system/proxy/secure_port"},
     {"network.proxy.socks", "/system/proxy/socks_host"},
     {"network.proxy.socks_port", "/system/proxy/socks_port"},
-    {"network.proxy.no_proxies_on", "/system/proxy/ignore_hosts"},
+    {"network.proxy.no_proxies_on", "/system/http_proxy/ignore_hosts"},
     {"network.proxy.autoconfig_url", "/system/proxy/autoconfig_url"},
     {"network.proxy.type", "/system/proxy/mode"}, 
     {"config.use_system_prefs.accessibility", "/desktop/gnome/interface/accessibility"},
