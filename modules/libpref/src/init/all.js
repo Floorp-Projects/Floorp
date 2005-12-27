@@ -937,6 +937,9 @@ pref("layout.enable_japanese_specific_transform", false);
 // pref to force frames to be resizable
 pref("layout.frames.force_resizability", false);
 
+// pref to report CSS errors to the error console
+pref("layout.css.report_errors", true);
+
 // pref to permit users to make verified SOAP calls by default
 pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");
 
