@@ -2133,7 +2133,7 @@ function handleURLBarCommand(aTriggeringEvent)
 
 function canonizeUrl(aTriggeringEvent, aPostDataRef)
 {
-  if (!gURLBar)
+  if (!gURLBar || !gURLBar.value)
     return;
 
   var url = gURLBar.value;
