@@ -794,7 +794,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
                                               *socketHost, socketPort, proxyInfo,
                                               getter_AddRefs(m_transport));
         }
-        if (m_transport)
+        if (m_transport && m_mockChannel)
         {
           // Ensure that the socket can get the notification callbacks
           SetSecurityCallbacksFromChannel(m_transport, m_mockChannel);
