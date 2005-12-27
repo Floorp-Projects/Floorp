@@ -4001,8 +4001,10 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
     } else {
         str = js_ValueToString(cx, argv[0]);
-        if (!str)
+        if (!str) {
+            ok = JS_FALSE;
             goto out;
+        }
         argv[0] = STRING_TO_JSVAL(str);
     }
 
