@@ -81,6 +81,7 @@ bin\components\dom_css.xpt
 bin\components\dom_events.xpt
 bin\components\dom_html.xpt
 bin\components\dom_range.xpt
+bin\components\dom_sidebar.xpt
 bin\components\dom_stylesheets.xpt
 bin\components\dom_traversal.xpt
 bin\components\dom_views.xpt
@@ -146,7 +147,6 @@ bin\components\related.xpt
 bin\components\satchel.xpt
 bin\components\search.xpt
 bin\components\shistory.xpt
-bin\components\sidebar.xpt
 bin\components\signonviewer.xpt
 bin\components\storage.xpt
 bin\components\toolkitprofile.xpt
