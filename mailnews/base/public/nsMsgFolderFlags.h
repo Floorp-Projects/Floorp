@@ -149,4 +149,5 @@
 
 #define MSG_FOLDER_FLAG_JUNK 0x40000000 /* this folder is for spam messages */
 
+#define MSG_FOLDER_FLAG_FAVORITE 0x80000000 /* this folder is in favorites view */
 #endif
