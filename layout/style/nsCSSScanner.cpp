@@ -52,6 +52,7 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
+#include "nsContentUtils.h"
 
 // Don't bother collecting whitespace characters in token's mIdent buffer
 #undef COLLECT_WHITESPACE
@@ -69,6 +70,7 @@ static PRBool gLexTableSetup = PR_FALSE;
 PRUint8 nsCSSScanner::gLexTable[256];
 
 #ifdef CSS_REPORT_PARSE_ERRORS
+static PRBool gReportErrors = PR_TRUE;
 static nsIConsoleService *gConsoleService;
 static nsIFactory *gScriptErrorFactory;
 static nsIStringBundle *gStringBundle;
@@ -206,6 +208,16 @@ nsCSSScanner::~nsCSSScanner()
   }
 }
 
+#ifdef CSS_REPORT_PARSE_ERRORS
+#define CSS_ERRORS_PREF "layout.css.report_errors"
+
+PR_STATIC_CALLBACK(int) CSSErrorsPrefChanged(const char *aPref, void *aClosure)
+{
+  gReportErrors = nsContentUtils::GetBoolPref(CSS_ERRORS_PREF, PR_TRUE);
+  return NS_OK;
+}
+#endif
+
 /* static */ PRBool nsCSSScanner::InitGlobals()
 {
 #ifdef CSS_REPORT_PARSE_ERRORS
@@ -219,6 +231,9 @@ nsCSSScanner::~nsCSSScanner()
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   NS_ASSERTION(gConsoleService && gScriptErrorFactory,
                "unexpected null pointer without failure");
+
+  nsContentUtils::RegisterPrefCallback(CSS_ERRORS_PREF, CSSErrorsPrefChanged, nsnull);
+  CSSErrorsPrefChanged(CSS_ERRORS_PREF, nsnull);
 #endif
   return PR_TRUE;
 }
@@ -226,6 +241,7 @@ nsCSSScanner::~nsCSSScanner()
 /* static */ void nsCSSScanner::ReleaseGlobals()
 {
 #ifdef CSS_REPORT_PARSE_ERRORS
+  nsContentUtils::UnregisterPrefCallback(CSS_ERRORS_PREF, CSSErrorsPrefChanged, nsnull);
   NS_IF_RELEASE(gConsoleService);
   NS_IF_RELEASE(gScriptErrorFactory);
   NS_IF_RELEASE(gStringBundle);
@@ -312,7 +328,7 @@ void nsCSSScanner::OutputError()
 
   // Log it to the JavaScript console
 
-  if (InitGlobals()) {
+  if (InitGlobals() && gReportErrors) {
     nsresult rv;
     nsCOMPtr<nsIScriptError> errorObject =
       do_CreateInstance(gScriptErrorFactory, &rv);
@@ -322,7 +338,7 @@ void nsCSSScanner::OutputError()
                              EmptyString().get(),
                              mErrorLineNumber,
                              mErrorColNumber,
-                             0,
+                             nsIScriptError::warningFlag,
                              "CSS Parser");
       if (NS_SUCCEEDED(rv))
         gConsoleService->LogMessage(errorObject);
