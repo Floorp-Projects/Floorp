@@ -87,6 +87,9 @@ extern "C" {
                                                 GError **err);
     typedef PRInt32 (*GConfClientGetIntType) (void *client, const gchar *key,
                                               GError **err);
+    typedef GSList* (*GConfClientGetListType) (void *client, const gchar *key,
+                                               GConfValueType list_type,
+                                               GError **err);
     typedef  void (*GConfClientNotifyFuncType) (void* client, guint cnxn_id,
                                                 void *entry, 
                                                 gpointer user_data);
@@ -170,6 +173,7 @@ private:
     GConfClientGetBoolType GConfClientGetBool;
     GConfClientGetStringType GConfClientGetString;
     GConfClientGetIntType GConfClientGetInt;
+    GConfClientGetListType GConfClientGetList;
     GConfClientNotifyAddType GConfClientNotifyAdd;
     GConfClientNotifyRemoveType GConfClientNotifyRemove;
     GConfClientAddDirType GConfClientAddDir;
@@ -563,6 +567,7 @@ GCONF_FUNCS_POINTER_BEGIN
     GCONF_FUNCS_POINTER_ADD("gconf_value_get_bool")      //10
     GCONF_FUNCS_POINTER_ADD("gconf_value_get_string")     //11
     GCONF_FUNCS_POINTER_ADD("gconf_value_get_int")       //12
+    GCONF_FUNCS_POINTER_ADD("gconf_client_get_list")       //13
 GCONF_FUNCS_POINTER_END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -689,12 +694,30 @@ GConfProxy::GetCharPref(const char *aMozKey, char **retval)
 {
     NS_ENSURE_TRUE(mInitialized, NS_ERROR_FAILURE);
 
-    gchar *str = GConfClientGetString(mGConfClient,
-                                      MozKey2GConfKey(aMozKey), NULL);
-    if (str) {
-        *retval = PL_strdup(str);
-        g_free(str);
+    const gchar *gconfkey = MozKey2GConfKey(aMozKey);
+
+    if (!strcmp (aMozKey, "network.proxy.no_proxies_on")) {
+        GSList *s;
+        nsCString noproxy;
+        GSList *gslist = GConfClientGetList(mGConfClient, gconfkey,
+                                            GCONF_VALUE_STRING, NULL);
+
+        for (s = gslist; s; s = g_slist_next(s)) {
+            noproxy += (char *)s->data;
+            noproxy += ", ";
+            g_free ((char *)s->data);
+        }
+        g_slist_free (gslist);
+
+        *retval = PL_strdup(noproxy.get());
+    } else {
+        gchar *str = GConfClientGetString(mGConfClient, gconfkey, NULL);
+        if (str) {
+            *retval = PL_strdup(str);
+            g_free (str);
+        }
     }
+
     return NS_OK;
 }
 
@@ -815,6 +838,10 @@ GConfProxy::InitFuncPtrs()
     GConfValueGetBool = (GConfValueGetBoolType) sGConfFuncList[10].FuncPtr;
     GConfValueGetString = (GConfValueGetStringType) sGConfFuncList[11].FuncPtr;
     GConfValueGetInt = (GConfValueGetIntType) sGConfFuncList[12].FuncPtr;
+
+    //gconf client list func
+    GConfClientGetList =
+        (GConfClientGetListType) sGConfFuncList[13].FuncPtr;
 }
 
 void
