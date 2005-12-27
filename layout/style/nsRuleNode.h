@@ -285,31 +285,24 @@ struct nsCachedStyleData
 
 class nsRuleNode {
 public:
-    // for purposes of the RuleDetail (and related code),
-    //  * a non-inherited value is one that is specified as a
-    //    non-"inherit" value or as an "inherit" value that is reflected
-    //    in the struct and to the user of the style system with an
-    //    eCSSUnit_Inherit value
-    //  * an inherited value is one that is specified as "inherit" and
-    //    where the inheritance is computed by the style system
   enum RuleDetail {
     eRuleNone, // No props have been specified at all.
-    eRulePartialReset, // At least one prop with a non-inherited value
+    eRulePartialReset, // At least one prop with a non-"inherit" value
                        // has been specified.  No props have been
-                       // specified with an inherited value.  At least
+                       // specified with an "inherit" value.  At least
                        // one prop remains unspecified.
-    eRulePartialMixed, // At least one prop with a non-inherited value
+    eRulePartialMixed, // At least one prop with a non-"inherit" value
                        // has been specified.  Some props may also have
-                       // been specified with an inherited value.  At
+                       // been specified with an "inherit" value.  At
                        // least one prop remains unspecified.
-    eRulePartialInherited, // Only props with inherited values have
+    eRulePartialInherited, // Only props with "inherit" values have
                            // have been specified.  At least one prop
                            // remains unspecified.
     eRuleFullReset, // All props have been specified.  None has an
-                    // inherited value.
+                    // "inherit" value.
     eRuleFullMixed, // All props have been specified.  At least one has
-                    // a non-inherited value.
-    eRuleFullInherited, // All props have been specified with inherited
+                    // a non-"inherit" value.
+    eRuleFullInherited, // All props have been specified with "inherit"
                         // values.
     eRuleUnknown // Information unknown (used as a result from a check
                  // callback to trigger the normal checking codepath)
