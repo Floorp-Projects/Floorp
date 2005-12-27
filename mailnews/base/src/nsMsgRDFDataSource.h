@@ -53,7 +53,7 @@
 class nsMsgRDFDataSource : public nsIRDFDataSource,
                            public nsIObserver,
                            public nsSupportsWeakReference,
-  						   public nsIMsgRDFDataSource
+                           public nsIMsgRDFDataSource
 {
  public:
   nsMsgRDFDataSource();
@@ -78,7 +78,7 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
                             nsIRDFNode *newObject, nsIRDFNode *oldObject, 
                             PRBool assert, PRBool change);
 
-  nsresult NotifyPropertyChanged(nsIRDFResource *resource, 
+  virtual nsresult NotifyPropertyChanged(nsIRDFResource *resource, 
                     nsIRDFResource *propertyResource, nsIRDFNode *newNode, 
                     nsIRDFNode *oldNode = nsnull);
   nsresult GetTransactionManager(nsISupportsArray *sources, nsITransactionManager **aTransactionManager);

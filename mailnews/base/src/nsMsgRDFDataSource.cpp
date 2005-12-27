@@ -438,30 +438,29 @@ nsMsgRDFDataSource::changeEnumFunc(nsISupports *aElement, void *aData)
 nsresult 
 nsMsgRDFDataSource::GetTransactionManager(nsISupportsArray *aSources, nsITransactionManager **aTransactionManager)
 {
-	if(!aTransactionManager)
-		return NS_ERROR_NULL_POINTER;
-
-	*aTransactionManager = nsnull;
-	nsresult rv = NS_OK;
-
-	nsCOMPtr<nsITransactionManager> transactionManager;
-
-	PRUint32 cnt;
-
-	rv = aSources->Count(&cnt);
-	if (NS_FAILED(rv)) return rv;
-
-	if (cnt > 0)
-	{
-		transactionManager = do_QueryElementAt(aSources, 0, &rv);
-		if (NS_SUCCEEDED(rv) && transactionManager)
-		{
-			aSources->RemoveElementAt(0);
-			*aTransactionManager = transactionManager;
-			NS_IF_ADDREF(*aTransactionManager);
-		}
-	}
-
-	return NS_OK;	
+  if(!aTransactionManager)
+    return NS_ERROR_NULL_POINTER;
+  
+  *aTransactionManager = nsnull;
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsITransactionManager> transactionManager;
+  
+  PRUint32 cnt;
+  
+  rv = aSources->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (cnt > 0)
+  {
+    transactionManager = do_QueryElementAt(aSources, 0, &rv);
+    if (NS_SUCCEEDED(rv) && transactionManager)
+    {
+      aSources->RemoveElementAt(0);
+      NS_IF_ADDREF(*aTransactionManager = transactionManager);
+    }
+  }
+  
+  return NS_OK;	
 }
 
