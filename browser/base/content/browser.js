@@ -327,7 +327,7 @@ const gPopupBlockerObserver = {
     var perm = shouldBlock ? this._kIPM.DENY_ACTION : this._kIPM.ALLOW_ACTION;
     pm.add(currentURI, "popup", perm);
 
-    gBrowser.hideMessage(gBrowser.selectedBrowser, "top");
+    gBrowser.hideMessage(null, "top");
   },
 
   fillPopupList: function (aEvent)
@@ -467,7 +467,7 @@ const gPopupBlockerObserver = {
 
     gPrefService.setBoolPref("privacy.popups.showBrowserMessage", !showMessage);
 
-    gBrowser.hideMessage(gBrowser.selectedBrowser, "top");
+    gBrowser.hideMessage(null, "top");
   },
 
   _displayPageReportFirstTime: function ()
@@ -508,7 +508,7 @@ const gXPInstallObserver = {
   {
     var brandBundle = document.getElementById("bundle_brand");
     var browserBundle = document.getElementById("bundle_browser");
-    var browser, webNav, wm, tabbrowser;
+    var browser, webNav, wm;
     switch (aTopic) {
     case "xpinstall-install-blocked":
       var shell = aSubject.QueryInterface(Components.interfaces.nsIDocShell);
@@ -555,8 +555,7 @@ const gXPInstallObserver = {
       break;
     case "xpinstall-install-edit-prefs":
       openPreferences("paneContent");
-      tabbrowser = getBrowser();
-      tabbrowser.hideMessage(tabbrowser.selectedBrowser, "top");
+      getBrowser().hideMessage(null, "top");
       break;
     case "xpinstall-install-edit-permissions":
       browser = this._getBrowser(aSubject.QueryInterface(Components.interfaces.nsIDocShell));
@@ -581,8 +580,7 @@ const gXPInstallObserver = {
           window.openDialog("chrome://browser/content/preferences/permissions.xul",
                             "_blank", "resizable,dialog=no,centerscreen", params);
 
-        tabbrowser = getBrowser();
-        tabbrowser.hideMessage(tabbrowser.selectedBrowser, "top");
+        getBrowser().hideMessage(null, "top");
       }
       break;
     }
@@ -3482,8 +3480,7 @@ nsBrowserStatusHandler.prototype =
       if (newIndexOfHash != -1)
         newSpec = newSpec.substr(0, newSpec.indexOf("#"));
       if (newSpec != oldSpec) {
-        var tabbrowser = getBrowser();
-        tabbrowser.hideMessage(tabbrowser.selectedBrowser, "both");
+        getBrowser().hideMessage(null, "both");
       }
     }
     selectedBrowser.lastURI = aLocation;
