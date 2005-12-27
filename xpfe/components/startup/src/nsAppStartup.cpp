@@ -587,6 +587,22 @@ nsAppStartup::CreateStartupState(PRInt32 aWindowWidth, PRInt32 aWindowHeight,
   NS_ENSURE_ARG_POINTER(_retval);
   nsresult rv;
   
+  // If starting up in server mode, then we do things differently.
+  nsCOMPtr<nsINativeAppSupport> nativeApp;
+  rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
+  if (NS_SUCCEEDED(rv)) {
+      PRBool isServerMode = PR_FALSE;
+      nativeApp->GetIsServerMode(&isServerMode);
+      if (isServerMode) {
+          nativeApp->StartServerMode();
+      }
+      PRBool shouldShowUI = PR_TRUE;
+      nativeApp->GetShouldShowUI(&shouldShowUI);
+      if (!shouldShowUI) {
+          return NS_OK;
+      }
+  }  
+
   nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (!prefService)
     return NS_ERROR_FAILURE;
@@ -622,23 +638,7 @@ NS_IMETHODIMP
 nsAppStartup::Ensure1Window(nsICmdLineService *aCmdLineService)
 {
   nsresult rv;
-
-  // If starting up in server mode, then we do things differently.
-  nsCOMPtr<nsINativeAppSupport> nativeApp;
-  rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
-  if (NS_SUCCEEDED(rv)) {
-      PRBool isServerMode = PR_FALSE;
-      nativeApp->GetIsServerMode(&isServerMode);
-      if (isServerMode) {
-          nativeApp->StartServerMode();
-      }
-      PRBool shouldShowUI = PR_TRUE;
-      nativeApp->GetShouldShowUI(&shouldShowUI);
-      if (!shouldShowUI) {
-          return NS_OK;
-      }
-  }
-  
+ 
   nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
