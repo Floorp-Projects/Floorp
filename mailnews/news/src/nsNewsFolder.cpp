@@ -251,8 +251,9 @@ nsMsgNewsFolder::AddNewsgroup(const nsACString &name, const char *setStr,
   rv = Count(&numExistingGroups);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // add 1000 to prevent this problem:  1,10,11,2,3,4,5
-  rv = folder->SetSortOrder(numExistingGroups + 1000);
+  // add 9000 to prevent this problem:  1,10,11,2,3,4,5
+  // We use 9000 instead of 1000 so newsgroups will sort to bottom of flat folder views
+  rv = folder->SetSortOrder(numExistingGroups + 9000);
   NS_ENSURE_SUCCESS(rv,rv);
   
   //convert to an nsISupports before appending
