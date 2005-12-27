@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.29 2005/12/27 16:23:20 timeless%mozdev.org Exp $
+# $Id: Common.pm,v 1.30 2005/12/27 18:03:03 timeless%mozdev.org Exp $
 
 package LXR::Common;
 
@@ -569,6 +569,10 @@ sub bannerexpand {
     }
 }
 
+sub pathname {
+    return $Path->{'virtf'};
+}
+
 sub cvsentriesexpand {
     my ($entryrev, $entrybranch);
     local $,=" | ";
@@ -617,12 +621,6 @@ sub cvsbranchexpand {
        return cvstagexpand();
     }
     return('');
-}
-
-sub pathname {
-    my $prefix = '';
-    $prefix = '/' . $Conf->prefix if defined $Conf->prefix;
-    return (url_quote ($prefix . $Path->{'virtf'}));
 }
 
 sub treename {
