@@ -48,7 +48,12 @@ expect = 'true';
 runtest('{}', 'Object');
 runtest('new Object()', 'Object');
 
-runtest('function (){}', 'Function');
+// see https://bugzilla.mozilla.org/show_bug.cgi?id=321669
+// for why this test is not contained in a function.
+actual = (function (){}).__proto__ == Function.prototype;
+reportCompare('true', actual+'', 
+              '(function (){}).__proto__ == Function.prototype');
+
 runtest('new Function(";")', 'Function');
 
 runtest('[]', 'Array');
