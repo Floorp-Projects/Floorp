@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mailprofilemigration
 XPIDL_MODULE	= mailprofilemigration
 
+EXPORTS = nsMailMigrationCID.h
+
 XPIDLSRCS	= nsIMailProfileMigrator.idl
 
 include $(topsrcdir)/config/rules.mk

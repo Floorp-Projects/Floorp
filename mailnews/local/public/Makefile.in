@@ -44,6 +44,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msglocal
 
+EXPORTS		= \
+		nsMsgLocalCID.h \
+		$(NULL)
+
 XPIDLSRCS	= \
 		nsIPop3IncomingServer.idl \
 		nsIPop3Service.idl \

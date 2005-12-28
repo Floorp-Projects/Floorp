@@ -44,6 +44,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgnews
 
+EXPORTS		= \
+		nsMsgNewsCID.h \
+		$(NULL)
+
 XPIDLSRCS	= \
 		nsIMsgOfflineNewsState.idl \
 		nsINNTPArticleList.idl \

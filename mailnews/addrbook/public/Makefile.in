@@ -83,4 +83,8 @@ XPIDLSRCS       += \
 		$(NULL)
 endif
 
+EXPORTS		= \
+		nsAbBaseCID.h \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk

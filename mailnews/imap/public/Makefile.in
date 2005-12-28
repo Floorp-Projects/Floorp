@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msgimap
 
 EXPORTS		= \
+		nsMsgImapCID.h \
 		nsIIMAPHostSessionList.h \
 		nsIImapExtensionSink.h \
 		nsIImapMiscellaneousSink.h \

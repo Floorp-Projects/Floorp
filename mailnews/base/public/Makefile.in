@@ -46,6 +46,7 @@ MODULE		= msgbase
 
 EXPORTS		= \
 		msgCore.h \
+		nsMsgBaseCID.h \
 		nsMsgFolderFlags.h \
 		nsMsgHeaderMasks.h \
 		nsMsgMessageFlags.h \

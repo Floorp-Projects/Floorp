@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mime
 
 EXPORTS		= \
+                nsMsgMimeCID.h \
 		nsIMimeObjectClassAccess.h \
 		nsMailHeaders.h \
 		nsIMimeContentTypeHandler.h \

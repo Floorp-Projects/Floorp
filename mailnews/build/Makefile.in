@@ -158,6 +158,9 @@ LOCAL_INCLUDES = -I$(srcdir) \
                  -I$(srcdir)/../compose/src \
                  -I$(srcdir)/../base/search/src \
                  -I$(srcdir)/../news/src \
+                 -I$(srcdir)/../extensions/bayesian-spam-filter/src \
+                 -I$(srcdir)/../extensions/mailviews/src \
+                 -I$(srcdir)/../extensions/mdn/src \
                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

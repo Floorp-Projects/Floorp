@@ -168,7 +168,6 @@ endif
 endif
 
 EXPORTS = \
-		nsMsgBaseCID.h \
 		nsMsgRDFDataSource.h \
 		nsMsgRDFUtils.h \
 		$(NULL)

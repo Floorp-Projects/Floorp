@@ -88,10 +88,6 @@ CPPSRCS		= \
 		nsNewsDownloader.cpp \
 		$(NULL)
 
-EXPORTS		= \
-		nsMsgNewsCID.h \
-		$(NULL)
-
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \

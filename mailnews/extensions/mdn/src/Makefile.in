@@ -67,11 +67,6 @@ CPPSRCS		= \
                 nsMsgMdnGenerator.cpp \
 		$(NULL)
 
-EXPORTS		= \
-		nsMsgMdnCID.h \
-		nsMsgMdnGenerator.h \
-		$(NULL)
-
 EXTRA_COMPONENTS =  mdn-service.js
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

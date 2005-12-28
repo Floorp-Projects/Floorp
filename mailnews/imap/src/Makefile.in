@@ -78,7 +78,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 EXPORTS = \
-		nsMsgImapCID.h \
 		nsImapCore.h \
 		$(NULL)
 

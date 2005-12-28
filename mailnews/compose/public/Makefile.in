@@ -47,6 +47,10 @@ ifeq ($(OS_ARCH),WINNT)
 XPIDL_MODULE	= msgcompo
 endif
 
+EXPORTS		= \
+		nsMsgCompCID.h \
+		$(NULL)
+
 XPIDLSRCS	= \
 		nsIMsgAttachment.idl \
 		nsIMsgComposeProgressParams.idl \

@@ -66,13 +66,6 @@ CPPSRCS		= \
                 nsEncryptedSMIMEURIsService.cpp \
 		$(NULL)
 
-EXPORTS		= \
-		nsMsgSMIMECID.h \
-		nsMsgComposeSecure.h \
-		nsSMimeJSHelper.h \
-		nsEncryptedSMIMEURIsService.h \
-		$(NULL)
-
 EXTRA_COMPONENTS = smime-service.js
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

@@ -28,8 +28,6 @@ REQUIRES = \
 	mailnews \
 	$(NULL)
 
-EXPORTS = nsMailMigrationCID.h
-
 CPPSRCS = \
 	nsProfileMigrator.cpp \
 	nsMailProfileMigratorUtils.cpp \

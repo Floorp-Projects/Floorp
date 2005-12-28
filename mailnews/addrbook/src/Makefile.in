@@ -109,7 +109,6 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
-		nsAbBaseCID.h \
 		nsDirPrefs.h \
 		nsAbCardProperty.h \
 		nsAbMDBCardProperty.h \
