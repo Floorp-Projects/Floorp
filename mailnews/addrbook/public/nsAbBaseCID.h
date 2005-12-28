@@ -451,4 +451,11 @@
 #define NS_MSGVCARDSERVICE_CONTRACTID \
  "@mozilla.org/addressbook/msgvcardservice;1"
 
+#define NS_MSGVCARDSTREAMLISTENER_CID \
+{ 0xf4045da, 0x6187, 0x42ff, \
+ { 0x9d, 0xf4, 0x80, 0x65, 0x44, 0xf, 0x76, 0x21 }}
+
+#define NS_MSGVCARDSTREAMLISTENER_CONTRACTID \
+ "@mozilla.org/addressbook/msgvcardstreamlistener;1"
+
 #endif // nsAbBaseCID_h__
