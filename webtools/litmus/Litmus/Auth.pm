@@ -46,6 +46,24 @@ our @EXPORT = qw();
 
 my $logincookiename = $Litmus::Config::user_cookiename;
 
+# (XXX) stub
+# Given a username and password, validate the login. Returns the 
+# Lutmus::DB::User object associated with the username if the login 
+# is sucuessful. Returns false otherwise.
+sub validate_login($$) {
+	my $username = shift;
+	my $password = shift;
+	
+	# we'll fill this in later once we actually _have_ passwords. 
+	# for now, just return the user object or false:
+	my @usrobjs = Litmus::DB::User->search(email => $username);
+	if (@usrobjs) {
+		return $usrobjs[0];
+	} else {
+		return 0;
+	}
+}
+
 sub setCookie {
   my $user = shift;
   my $expires = shift;
