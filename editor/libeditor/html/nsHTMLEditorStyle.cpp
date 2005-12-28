@@ -786,7 +786,7 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
   PRUint32 i, attrCount = content->GetAttrCount();
   for (i = 0; i < attrCount; ++i) {
     nsAutoString attrString;
-    const nsAttrName name = content->GetAttrNameAt(i);
+    const nsAttrName* name = content->GetAttrNameAt(i);
     if (!name->NamespaceEquals(kNameSpaceID_None)) {
       return PR_FALSE;
     }
