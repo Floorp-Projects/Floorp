@@ -6,75 +6,10 @@
 
 #include <string.h>
 
-#include <Processes.h>
-#include <Gestalt.h>
-#include <CodeFragments.h>
-#include <Timer.h>
-#include <Resources.h>
-#include <ToolUtils.h>
-
-#define XP_MAC 1
-
-//
-// A4Stuff.h contains the definition of EnterCodeResource and 
-// EnterCodeResource, used for setting up the code resource’s
-// globals for 68K (analagous to the function SetCurrentA5
-// defined by the toolbox).
-//
-// A4Stuff does not exist as of CW 7. Define them to nothing.
-//
-
-#if (defined(__MWERKS__) && (__MWERKS__ >= 0x2400)) || defined(__GNUC__)
-	#define EnterCodeResource()
-	#define ExitCodeResource()
-#else
-    #include <A4Stuff.h>
-#endif
+#include <Carbon/Carbon.h>
 
 #include "npapi.h"
-
-//
-// The Mixed Mode procInfos defined in npupp.h assume Think C-
-// style calling conventions.  These conventions are used by
-// Metrowerks with the exception of pointer return types, which
-// in Metrowerks 68K are returned in A0, instead of the standard
-// D0. Thus, since NPN_MemAlloc and NPN_UserAgent return pointers,
-// Mixed Mode will return the values to a 68K plugin in D0, but 
-// a 68K plugin compiled by Metrowerks will expect the result in
-// A0.  The following pragma forces Metrowerks to use D0 instead.
-//
-#ifdef __MWERKS__
-#ifndef powerc
-#pragma pointers_in_D0
-#endif
-#endif
-
 #include "npupp.h"
-
-#ifdef __MWERKS__
-#ifndef powerc
-#pragma pointers_in_A0
-#endif
-#endif
-
-// The following fix for static initializers (which fixes a previous
-// incompatibility with some parts of PowerPlant, was submitted by 
-// Jan Ulbrich.
-#ifdef __MWERKS__
-	#ifdef __cplusplus
-	extern "C" {
-	#endif
-		#ifndef powerc
-			extern void	__InitCode__(void);
-		#else
-			extern void __sinit(void);
-			#define __InitCode__ __sinit
-		#endif
-		extern void	__destroy_global_chain(void);
-	#ifdef __cplusplus
-	}
-	#endif // __cplusplus
-#endif // __MWERKS__
 
 //
 // Define PLUGIN_TRACE to 1 to have the wrapper functions emit
@@ -96,7 +31,7 @@ struct TFPtoTVGlue{
     void* glue[2];
 };
 
-struct {
+struct pluginFuncsGlueTable {
     TFPtoTVGlue     newp;
     TFPtoTVGlue     destroy;
     TFPtoTVGlue     setwindow;
@@ -128,7 +63,7 @@ struct TTVtoFPGlue {
     uint32 glue[6];
 };
 
-struct {
+struct netscapeFuncsGlueTable {
     TTVtoFPGlue             geturl;
     TTVtoFPGlue             posturl;
     TTVtoFPGlue             requestread;
@@ -184,9 +119,6 @@ static void* SetupTVtoFPGlue(TTVtoFPGlue* functionGlue, void* tvp)
 //
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-#if !TARGET_API_MAC_CARBON
-QDGlobals*		gQDPtr;				// Pointer to Netscape’s QuickDraw globals
-#endif
 short			gResFile;			// Refnum of the plugin’s resource file
 NPNetscapeFuncs	gNetscapeFuncs;		// Function table for procs in Netscape called by plugin
 
@@ -411,140 +343,90 @@ jobject		Private_GetJavaClass(void);
 
 NPError Private_Initialize(void)
 {
-	NPError err;
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pInitialize;g;");
-	err = NPP_Initialize();
-	ExitCodeResource();
-	return err;
+	return NPP_Initialize();
 }
 
 void Private_Shutdown(void)
 {
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pShutdown;g;");
 	NPP_Shutdown();
-
-#ifdef __MWERKS__
-	__destroy_global_chain();
-#endif
-
-	ExitCodeResource();
 }
 
 
 NPError	Private_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved)
 {
-	EnterCodeResource();
-	NPError ret = NPP_New(pluginType, instance, mode, argc, argn, argv, saved);
 	PLUGINDEBUGSTR("\pNew;g;");
-	ExitCodeResource();
-	return ret;	
+	return NPP_New(pluginType, instance, mode, argc, argn, argv, saved);
 }
 
 NPError Private_Destroy(NPP instance, NPSavedData** save)
 {
-	NPError err;
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pDestroy;g;");
-	err = NPP_Destroy(instance, save);
-	ExitCodeResource();
-	return err;
+	return NPP_Destroy(instance, save);
 }
 
 NPError Private_SetWindow(NPP instance, NPWindow* window)
 {
-	NPError err;
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pSetWindow;g;");
-	err = NPP_SetWindow(instance, window);
-	ExitCodeResource();
-	return err;
+	return NPP_SetWindow(instance, window);
 }
 
 NPError Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype)
 {
-	NPError err;
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pNewStream;g;");
-	err = NPP_NewStream(instance, type, stream, seekable, stype);
-	ExitCodeResource();
-	return err;
+	return NPP_NewStream(instance, type, stream, seekable, stype);
 }
 
 int32 Private_WriteReady(NPP instance, NPStream* stream)
 {
-	int32 result;
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pWriteReady;g;");
-	result = NPP_WriteReady(instance, stream);
-	ExitCodeResource();
-	return result;
+	return NPP_WriteReady(instance, stream);
 }
 
 int32 Private_Write(NPP instance, NPStream* stream, int32 offset, int32 len, void* buffer)
 {
-	int32 result;
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pWrite;g;");
-	result = NPP_Write(instance, stream, offset, len, buffer);
-	ExitCodeResource();
-	return result;
+	return NPP_Write(instance, stream, offset, len, buffer);
 }
 
 void Private_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
 {
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pStreamAsFile;g;");
 	NPP_StreamAsFile(instance, stream, fname);
-	ExitCodeResource();
 }
 
 
 NPError Private_DestroyStream(NPP instance, NPStream* stream, NPError reason)
 {
-	NPError err;
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pDestroyStream;g;");
-	err = NPP_DestroyStream(instance, stream, reason);
-	ExitCodeResource();
-	return err;
+	return NPP_DestroyStream(instance, stream, reason);
 }
 
 int16 Private_HandleEvent(NPP instance, void* event)
 {
-	int16 result;
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pHandleEvent;g;");
-	result = NPP_HandleEvent(instance, event);
-	ExitCodeResource();
-	return result;
+	return NPP_HandleEvent(instance, event);
 }
 
 void Private_Print(NPP instance, NPPrint* platformPrint)
 {
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pPrint;g;");
 	NPP_Print(instance, platformPrint);
-	ExitCodeResource();
 }
 
 void Private_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 {
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pURLNotify;g;");
 	NPP_URLNotify(instance, url, reason, notifyData);
-	ExitCodeResource();
 }
 
 #ifdef OJI
 jobject Private_GetJavaClass(void)
 {
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pGetJavaClass;g;");
 
     jobject clazz = NPP_GetJavaClass();
-    ExitCodeResource();
     if (clazz)
     {
 		JRIEnv* env = NPN_GetJavaEnv();
@@ -557,125 +439,19 @@ jobject Private_GetJavaClass(void)
 void SetUpQD(void);
 void SetUpQD(void)
 {
-#if !TARGET_API_MAC_CARBON
-	ProcessSerialNumber PSN;
-	FSSpec				myFSSpec;
-	Str63				name;
-	ProcessInfoRec		infoRec;
-	OSErr				result = noErr;
-	CFragConnectionID	connID;
-	Str255 				errName;
-#endif	
-
 	//
 	// Memorize the plugin’s resource file 
 	// refnum for later use.
 	//
 	gResFile = CurResFile();
-	
-#if !TARGET_API_MAC_CARBON
-	//
-	// Ask the system if CFM is available.
-	//
-	long response;
-	OSErr err = Gestalt(gestaltCFMAttr, &response);
-	Boolean hasCFM = BitTst(&response, 31-gestaltCFMPresent);
-
-	ProcessInfoRec infoRec;
-	if (hasCFM)
-	{
-		//
-		// GetProcessInformation takes a process serial number and 
-		// will give us back the name and FSSpec of the application.
-		// See the Process Manager in IM.
-		//
-		Str63 name;
-		FSSpec myFSSpec;
-		infoRec.processInfoLength = sizeof(ProcessInfoRec);
-		infoRec.processName = name;
-		infoRec.processAppSpec = &myFSSpec;
-		
-		ProcessSerialNumber PSN;
-		PSN.highLongOfPSN = 0;
-		PSN.lowLongOfPSN = kCurrentProcess;
-		
-		result = GetProcessInformation(&PSN, &infoRec);
-		if (result != noErr)
-			PLUGINDEBUGSTR("\pFailed in GetProcessInformation");
-		}
-	else
-		//
-		// If no CFM installed, assume it must be a 68K app.
-		//
-		result = -1;		
-		
-	CFragConnectionID connID;
-	if (result == noErr)
-	{
-		//
-		// Now that we know the app name and FSSpec, we can call GetDiskFragment
-		// to get a connID to use in a subsequent call to FindSymbol (it will also
-		// return the address of “main” in app, which we ignore).  If GetDiskFragment 
-		// returns an error, we assume the app must be 68K.
-		//
-		Ptr mainAddr; 	
-		Str255 errName;
-		result =  GetDiskFragment(infoRec.processAppSpec, 0L, 0L, infoRec.processName,
-								  kLoadCFrag, &connID, (Ptr*)&mainAddr, errName);
-	}
-
-	if (result == noErr) 
-	{
-		//
-		// The app is a PPC code fragment, so call FindSymbol
-		// to get the exported “qd” symbol so we can access its
-		// QuickDraw globals.
-		//
-		CFragSymbolClass symClass;
-		result = FindSymbol(connID, "\pqd", (Ptr*)&gQDPtr, &symClass);
-		if (result != noErr) {	// this fails if we are in NS 6
-			gQDPtr = &qd;		// so we default to the standard QD globals
-		}
-	}
-	else
-	{
-		//
-		// The app is 68K, so use its A5 to compute the address
-		// of its QuickDraw globals.
-		//
-		gQDPtr = (QDGlobals*)(*((long*)SetCurrentA5()) - (sizeof(QDGlobals) - sizeof(GrafPtr)));
-	}
-#endif
 }
 
 
-#ifdef __GNUC__
-// gcc requires that main have an 'int' return type
 int main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs, NPP_ShutdownUPP* unloadUpp);
-#else
-NPError main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs, NPP_ShutdownUPP* unloadUpp);
-#endif
 
-#if !TARGET_API_MAC_CARBON
-#pragma export on
-#if GENERATINGCFM
-RoutineDescriptor mainRD = BUILD_ROUTINE_DESCRIPTOR(uppNPP_MainEntryProcInfo, main);
-#endif
-#pragma export off
-#endif /* !TARGET_API_MAC_CARBON */
-
-#ifdef __GNUC__
 DEFINE_API_C(int) main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs, NPP_ShutdownUPP* unloadUpp)
-#else
-DEFINE_API_C(NPError) main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs, NPP_ShutdownUPP* unloadUpp)
-#endif
 {
-	EnterCodeResource();
 	PLUGINDEBUGSTR("\pmain");
-
-#ifdef __MWERKS__
-	__InitCode__();
-#endif
 
 	NPError err = NPERR_NO_ERROR;
 	
@@ -778,6 +554,5 @@ DEFINE_API_C(NPError) main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs,
 		err = Private_Initialize();
 	}
 	
-	ExitCodeResource();
 	return err;
 }

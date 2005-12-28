@@ -36,22 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#ifndef _NPAPI_H_
 #include "npapi.h"
-#endif
 
-#ifdef XP_MACOSX
-#undef DARWIN
+#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
-#else
-#include <Gestalt.h>
-#include <Icons.h>
-#include <Resources.h>
-#include <Processes.h>
-#include <Script.h>
-#include <TextUtils.h>
-#include <CFPreferences.h>
-#endif
 
 #include <string.h>
 #include <ctype.h>
@@ -146,10 +134,6 @@ Boolean		CPlugin::sRunningOnOSX		= false;
 
 extern short 		gResFile;
 
-#if !TARGET_API_MAC_CARBON
-extern QDGlobals*	gQDPtr;
-#endif
-
 // 'cicn'
 const short rBrokenPluginIcon = 326;
 
@@ -168,34 +152,6 @@ const short rTypeListStrings = 129;
 
 static const char szPluginFinderCommandBeginning[] = PLUGINFINDER_COMMAND_BEGINNING;
 static const char szPluginFinderCommandEnd[] = PLUGINFINDER_COMMAND_END;
-
-//#ifndef XP_MACOSX
-
-//------------------------------------------------------------------------------------
-// strcasecomp: Why don't the MW C libraries have this??
-//------------------------------------------------------------------------------------
-#define XP_TO_LOWER(i) 	((((unsigned int) (i)) > 0x7f) ? (int) (i) : tolower(i))
-int strcasecmp (const char* one, const char *two);
-
-int strcasecmp (const char* one, const char *two)
-{
-	const char *pA;
-	const char *pB;
-
-	for(pA=one, pB=two; *pA && *pB; pA++, pB++) 
-	{
-		int tmp = XP_TO_LOWER(*pA) - XP_TO_LOWER(*pB);
-		if (tmp) 
-			return tmp;
-	}
-	if (*pA) 
-		return 1;	
-	if (*pB) 
-		return -1;
-	return 0;	
-}
-
-//#endif // XP_MACOSX
 
 
 //------------------------------------------------------------------------------------
@@ -740,12 +696,8 @@ void CPlugin::Draw(HiliteState hilite)
 	RGBForeColor(&black);
 	RGBBackColor(&white);
 
-#if !TARGET_API_MAC_CARBON
-	FillRect(&drawRect, &(gQDPtr->white));
-#else
 	Pattern qdWhite;
 	FillRect(&drawRect, GetQDGlobalsWhite(&qdWhite));
-#endif
 
 	if (hilite == kHilited) {
 		hiliteColor.red = 0xFFFF;
@@ -835,11 +787,7 @@ Boolean CPlugin::FocusDraw()
 		GetPort(&fSavePort);
 		SetPort((GrafPtr) ourPort);
 		Rect portRect;
-#if !TARGET_API_MAC_CARBON
-		portRect = ourPort->portRect;
-#else
 		GetPortBounds(ourPort, &portRect);
-#endif
 		fSavePortTop = portRect.top;
 		fSavePortLeft = portRect.left;
 		GetClip(fSaveClip);
@@ -1193,12 +1141,8 @@ void CPlugin::AskAndLoadURL()
 
 		// NOTE: We need to set the cursor because almost always we will have set it to the
 		// hand cursor before we get here.
-#if !TARGET_API_MAC_CARBON
-		SetCursor(&(gQDPtr->arrow));
-#else
 		Cursor qdArrow;
 		SetCursor(GetQDGlobalsArrow(&qdArrow));
-#endif
 
 		// Now that we’ve queried the user about this mime type,
 		// add it to our list so we won’t bug them again.
