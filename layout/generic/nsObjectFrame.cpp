@@ -2919,11 +2919,10 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
     increment = 1;
   }
   for (PRInt16 index = start; index != end; index += increment) {
-    const nsAttrName* name = content->GetAttrNameAt(index);
-    PRInt32 nameSpaceID = name->NamespaceID();
-    nsIAtom* atom = name->LocalName();
+    const nsAttrName* attrName = content->GetAttrNameAt(index);
+    nsIAtom* atom = attrName->LocalName();
     nsAutoString value;
-    content->GetAttr(nameSpaceID, atom, value);
+    content->GetAttr(attrName->NamespaceID(), atom, value);
     nsAutoString name;
     atom->ToString(name);
 
