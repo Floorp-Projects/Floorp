@@ -1166,12 +1166,22 @@ nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aSearchIndex)
 nsresult
 nsAutoCompleteController::CompleteValue(nsString &aValue, PRBool selectDifference)
 {
-  nsString::const_iterator start, end, iter;
+  nsString::const_iterator start, end, iter, skip;
   PRInt32 startSelect, endSelect;
+
+  mSearchString.BeginReading(start);
+  mSearchString.EndReading(end);
+  PRBool searchScheme = FindInReadable(NS_LITERAL_STRING("://"), start, end);
 
   aValue.BeginReading(start);
   aValue.EndReading(end);
   iter = start;
+
+  // Skip "://"-suffixed scheme unless explicitly searched for (bug 202992).
+  if (!searchScheme) {
+    skip = end;
+    iter = FindInReadable(NS_LITERAL_STRING("://"), iter, skip) ? skip : start;
+  }
 
   FindInReadable(mSearchString, iter, end,
          nsCaseInsensitiveStringComparator());
