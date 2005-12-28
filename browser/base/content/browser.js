@@ -386,6 +386,7 @@ const gPopupBlockerObserver = {
         menuitem.setAttribute("requestingWindowURI", pageReport[i].requestingWindowURI.spec);
         menuitem.setAttribute("popupWindowURI", popupURIspec);
         menuitem.setAttribute("popupWindowFeatures", pageReport[i].popupWindowFeatures);
+        menuitem.setAttribute("popupWindowName", pageReport[i].popupWindowName);
         menuitem.setAttribute("oncommand", "gPopupBlockerObserver.showBlockedPopup(event);");
         aEvent.target.appendChild(menuitem);
       }
@@ -414,14 +415,14 @@ const gPopupBlockerObserver = {
 
     var popupWindowURI = aEvent.target.getAttribute("popupWindowURI");
     var features = aEvent.target.getAttribute("popupWindowFeatures");
+    var name = aEvent.target.getAttribute("popupWindowName");
 
     var shell = findChildShell(null, gBrowser.selectedBrowser.docShell,
                                requestingWindowURI);
     if (shell) {
       var ifr = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
       var dwi = ifr.getInterface(Components.interfaces.nsIDOMWindowInternal);
-      // XXXben - nsIDOMPopupBlockedEvent needs to store target, too!
-      dwi.open(popupWindowURI, "", features);
+      dwi.open(popupWindowURI, name, features);
     }
   },
 
