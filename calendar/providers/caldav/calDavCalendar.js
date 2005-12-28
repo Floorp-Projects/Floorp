@@ -315,9 +315,10 @@ calDavCalendar.prototype = {
         listener.onOperationComplete = function(aStatusCode, aResource,
                                                 aOperation, aClosure) {
 
+            // 201 = HTTP "Created"
             // 204 = HTTP "No Content"
             //
-            if (aStatusCode == 204) {
+            if (aStatusCode == 204 || aStatusCode == 201) {
                 debug("Item modified successfully.\n");
                 var retVal = Components.results.NS_OK;
 
