@@ -224,4 +224,23 @@
 #define NS_MSG_POPSTRINGSERVICE_CONTRACTID \
   NS_MAILNEWS_STRINGSERVICE_CONTRACTID_PREFIX NS_POP3INCOMINGSERVER_TYPE
 
+#define NS_RSSSERVICE_CONTRACTID \
+  "@mozilla.org/messenger/rssservice;1"
+
+#define NS_RSSPROTOCOLINFO_CONTRACTID \
+  NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX "rss"
+
+#define NS_RSSSERVICE_CID								\
+{ /* 44aef4ce-475b-42e3-bc42-7730d5ce7365 */			\
+ 0x44aef4ce, 0x475b, 0x42e3,							\
+ { 0xbc, 0x42, 0x77, 0x30, 0xd5, 0xce, 0x73, 0x65 }}
+
+#define NS_RSSINCOMINGSERVER_CONTRACTID \
+  NS_MSGINCOMINGSERVER_CONTRACTID_PREFIX "rss"
+
+#define NS_RSSINCOMINGSERVER_CID									\
+{ /* 3a874285-5520-41a0-bcda-a3dee3dbf4f3 */			\
+ 0x3a874285, 0x5520, 0x41a0,											\
+ {0xbc, 0xda, 0xa3, 0xde, 0xe3, 0xdb, 0xf4, 0xf3 }}
+
 #endif // nsMsgLocalCID_h__
