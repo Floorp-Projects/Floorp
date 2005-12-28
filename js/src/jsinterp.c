@@ -2066,10 +2066,7 @@ interrupt:
             goto out;
 
           EMPTY_CASE(JSOP_NOP)
-
-          BEGIN_CASE(JSOP_GROUP)
-            obj = NULL;
-          END_CASE(JSOP_GROUP)
+          EMPTY_CASE(JSOP_GROUP)
 
           BEGIN_CASE(JSOP_PUSH)
             PUSH_OPND(JSVAL_VOID);
@@ -2808,6 +2805,7 @@ interrupt:
                 goto out;
             sp--;
             STORE_OPND(-1, rval);
+            obj = NULL;
           END_CASE(JSOP_SETNAME)
 
 #define INTEGER_OP(OP, EXTRA_CODE)                                            \
@@ -3611,6 +3609,7 @@ interrupt:
             PROPERTY_OP(-2, CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval)));
             sp--;
             STORE_OPND(-1, rval);
+            obj = NULL;
           END_CASE(JSOP_SETPROP)
 
           BEGIN_CASE(JSOP_GETELEM)
@@ -3624,6 +3623,7 @@ interrupt:
             ELEMENT_OP(-2, CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval)));
             sp -= 2;
             STORE_OPND(-1, rval);
+            obj = NULL;
           END_CASE(JSOP_SETELEM)
 
           BEGIN_CASE(JSOP_ENUMELEM)
@@ -4506,6 +4506,7 @@ interrupt:
                 GC_POKE(cx, obj->slots[slot]);
                 OBJ_SET_SLOT(cx, obj, slot, rval);
             }
+            obj = NULL;
           END_CASE(JSOP_SETGVAR)
 
           BEGIN_CASE(JSOP_DEFCONST)
@@ -4987,6 +4988,7 @@ interrupt:
             if (!ok)
                 goto out;
 
+            obj = NULL;
             sp += i;
             if (js_CodeSpec[op2].ndefs)
                 STORE_OPND(-1, rval);
@@ -5336,6 +5338,7 @@ interrupt:
                 goto out;
             sp -= 2;
             STORE_OPND(-1, rval);
+            obj = NULL;
           END_CASE(JSOP_SETXMLNAME)
 
           BEGIN_CASE(JSOP_XMLNAME)
@@ -5527,6 +5530,7 @@ interrupt:
                 goto out;
             --sp;
             STORE_OPND(-1, rval);
+            obj = NULL;
           END_LITOPX_CASE(JSOP_SETMETHOD)
 
           BEGIN_CASE(JSOP_GETFUNNS)
