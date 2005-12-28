@@ -450,9 +450,12 @@ nsUnknownContentTypeDialog.prototype = {
     
     _timer: null,
     notify: function (aTimer) {
-      if (!this._blurred)
-        this.mDialog.document.documentElement.getButton('accept').disabled = false;
+      try { // The user may have already canceled the dialog.
+        if (!this._blurred)
+          this.mDialog.document.documentElement.getButton('accept').disabled = false;
+      } catch (ex) {}
       this._delayExpired = true;
+      this._timer = null; // the timer won't release us, so we have to release it
     },
     
     postShowCallback: function () {
