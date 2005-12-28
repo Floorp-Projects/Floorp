@@ -3365,10 +3365,7 @@ function cli_say(msg)
 
         default:
             if (msg != "")
-            {
-                display(getMsg(MSG_ERR_NO_DEFAULT, client.currentObject.TYPE),
-                        MT_ERROR);
-            }
+                display(MSG_ERR_NO_DEFAULT, MT_ERROR);
             break;
     }
 }
