@@ -1329,10 +1329,9 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            if (aEvent.button == 0 && aEvent.originalTarget.localName != 'tab' &&
-                // Workaround to Bug 224002, the preventBubble() call in the tabbox binding
-                // should block this event.
-                aEvent.originalTarget.localName != "toolbarbutton") {
+            if (aEvent.button == 0 &&
+                // Only capture clicks on tabbox.xml's <spacer>
+                aEvent.originalTarget.localName == "spacer") {
               var e = document.createEvent("Events");
               e.initEvent("NewTab", false, true);
               this.dispatchEvent(e);
