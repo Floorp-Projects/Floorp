@@ -596,7 +596,7 @@ function BrowserStartup()
 
   var uriToLoad = null;
   // Check for window.arguments[0]. If present, use that for uriToLoad.
-  if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
+  if ("arguments" in window && window.arguments[0])
     uriToLoad = window.arguments[0];
 
   gIsLoadingBlank = uriToLoad == "about:blank";
@@ -607,15 +607,13 @@ function BrowserStartup()
 #ifdef ENABLE_PAGE_CYCLER
   appCore.startPageCycler();
 #else
-  // only load url passed in when we're not page cycling
-
+# only load url passed in when we're not page cycling
   if (uriToLoad && !gIsLoadingBlank) {
-    if ("arguments" in window && window.arguments.length >= 3)
-      loadURI(uriToLoad, window.arguments[2], null);
+    if (window.arguments.length >= 3)
+      loadURI(uriToLoad, window.arguments[2], window.arguments[3] || null);
     else
       loadOneOrMoreURIs(uriToLoad);
   }
-
 #endif
 
   var sidebarSplitter;
