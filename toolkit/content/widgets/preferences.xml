@@ -606,6 +606,20 @@
       ]]>
       </constructor>
 
+      <destructor>
+      <![CDATA[
+        // Release timers to avoid reference cycles.
+        if (this._animateTimer) {
+          this._animateTimer.cancel();
+          this._animateTimer = null;
+        }
+        if (this._fadeTimer) {
+          this._fadeTimer.cancel();
+          this._fadeTimer = null;
+        }
+      ]]>
+      </destructor>
+
       <field name="instantApply">false</field>
       
       <property name="preferencePanes"
@@ -806,10 +820,10 @@
               this._setUpFadeTimer();
             }
           } else if (aTimer == this._fadeTimer) {
-            var lastSelectedPane = document.getElementById(this.lastSelected);
             var elt = document.getElementById(this.lastSelected);
-            if (parseFloat(window.getComputedStyle(lastSelectedPane, "").opacity) < (1.0 - this._fadeIncrement))
-              elt.style.opacity = parseFloat(window.getComputedStyle(elt, "").opacity) + this._fadeIncrement;
+            var newOpacity = parseFloat(window.getComputedStyle(elt, "").opacity) + this._fadeIncrement;
+            if (newOpacity < 1.0)
+              elt.style.opacity = newOpacity;
             else {
               aTimer.cancel();
               elt.style.opacity = 1.0;

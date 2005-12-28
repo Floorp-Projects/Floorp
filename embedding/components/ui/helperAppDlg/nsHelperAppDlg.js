@@ -381,8 +381,10 @@ nsHelperAppDialog.prototype = {
 
     _timer: null,
     notify: function (aTimer) {
-        if (!this._blurred)
-          this.mDialog.document.documentElement.getButton('accept').disabled = false;
+        try { // The user may have already canceled the dialog.
+          if (!this._blurred)
+            this.mDialog.document.documentElement.getButton('accept').disabled = false;
+        } catch (ex) {}
         this._timer = null;
     },
 
