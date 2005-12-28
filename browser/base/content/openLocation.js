@@ -106,7 +106,7 @@ function open()
         browser.loadURI(url, null, postData.value);
         break;
       case "1":
-        window.opener.delayedOpenWindow(getBrowserURL(), "all,dialog=no", url, postData);
+        window.opener.delayedOpenWindow(getBrowserURL(), "all,dialog=no", url, postData.value);
         break;
       case "3":
         if (browser.getBrowser && browser.getBrowser().localName == "tabbrowser")
