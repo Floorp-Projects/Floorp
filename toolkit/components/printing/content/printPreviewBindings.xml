@@ -172,7 +172,7 @@
         // support multiple devicecontext to be used concurrently
         // (e.g. printing and printpreview at the same time; required as 
         // legacy support for unices.'s PostScript module (Xprint
-        // on unices.does not have problems with that))
+        // on unices. does not have problems with that))
         // XXX the scaling widgets, and the orientation widgets on unices.
         var canPrint = true;
         try
@@ -331,8 +331,7 @@
 
           aValue = new Number(aValue);
 
-          var inx = -1;
-          for (var i=0;i<scaleValues.length;i++) {
+          for (var i = 0; i < scaleValues.length; i++) {
             if (aValue == scaleValues[i]) {
               this.mScaleCombobox.selectedIndex = i;
               return;
@@ -347,7 +346,6 @@
         <parameter name="aValue"/>
         <body>
         <![CDATA[
-          var print = PrintUtils.getWebBrowserPrint();
           var settings = PrintUtils.getPrintSettings();
           if (aValue == "ShrinkToFit") {
             if (!settings.shrinkToFit) {
@@ -371,10 +369,13 @@
           this.setScaleCombobox(aValue);
           this.mScaleCombobox.setAttribute('lastValidInx', this.mScaleCombobox.selectedIndex);
 
-          settings.shrinkToFit = false;
-          settings.scaling = aValue;
-          this.savePrintSettings(settings, settings.kInitSaveShrinkToFit | settings.kInitSaveScaling);
-          PrintUtils.printPreview();
+          if (settings.scaling != aValue)
+          {
+            settings.shrinkToFit = false;
+            settings.scaling = aValue;
+            this.savePrintSettings(settings, settings.kInitSaveShrinkToFit | settings.kInitSaveScaling);
+            PrintUtils.printPreview();
+          }
         ]]>
         </body>
       </method>
@@ -383,26 +384,16 @@
         <parameter name="aOrientation"/>
         <body>
         <![CDATA[
-          var orientValue;
           const kIPrintSettings = Components.interfaces.nsIPrintSettings;
-          if (aOrientation == "portrait")
-          {
-            this.mPortaitButton.checked = true;
-            this.mLandscapeButton.checked = false;
-            orientValue = kIPrintSettings.kPortraitOrientation;
-          } 
-          else
-          {
-            this.mPortaitButton.checked = false;
-            this.mLandscapeButton.checked = true;
-            orientValue = kIPrintSettings.kLandscapeOrientation;
-          }
-
-          var print = PrintUtils.getWebBrowserPrint();
+          var orientValue = (aOrientation == "portrait") ? kIPrintSettings.kPortraitOrientation :
+                                                           kIPrintSettings.kLandscapeOrientation;
           var settings = PrintUtils.getPrintSettings();
-          settings.orientation = orientValue;
-          this.savePrintSettings(settings, settings.kInitSaveOrientation);
-          PrintUtils.printPreview();
+          if (settings.orientation != orientValue)
+          {
+            settings.orientation = orientValue;
+            this.savePrintSettings(settings, settings.kInitSaveOrientation);
+            PrintUtils.printPreview();
+          }
         ]]>
         </body>
       </method>
@@ -423,6 +414,9 @@
           } else {
             this.setScaleCombobox(settings.scaling);
           }
+
+          this.mTotalPages.value = print.printPreviewNumPages;
+          this.mPageTextBox.value = 1;
         ]]>
         </body>
       </method>
