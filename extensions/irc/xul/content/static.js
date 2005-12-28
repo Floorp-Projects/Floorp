@@ -279,6 +279,11 @@ function initStatic()
         setListMode("symbol");
     else
         setListMode("graphic");
+
+    var tree = document.getElementById('user-list');
+    tree.setAttribute("ondraggesture",
+                      "nsDragAndDrop.startDrag(event, userlistDNDObserver);");
+
     setDebugMode(client.prefs["debugMode"]);
 
     var ver = __cz_version + (__cz_suffix ? "-" + __cz_suffix : "");
@@ -3221,6 +3226,20 @@ function tabdnd_dstart (aEvent, aXferData, aDragAction)
     aXferData.data.addDataForFlavour("text/unicode", href);
     aXferData.data.addDataForFlavour("text/html", "<a href='" + href + "'>" +
                                      name + "</a>");
+}
+
+var userlistDNDObserver = new Object();
+
+userlistDNDObserver.onDragStart =
+function userlistdnd_dstart(event, transferdata, dragAction)
+{
+    var tree = document.getElementById('user-list');
+    var index = tree.treeBoxObject.getRowAt(event.clientX, event.clientY);
+    var user = tree.contentView.getItemAtIndex(index).firstChild.firstChild;
+    var nickname = user.getAttribute("unicodeName");
+
+    transferdata.data = new TransferData();
+    transferdata.data.addDataForFlavour("text/unicode", nickname);
 }
 
 function deleteTab (tb)
