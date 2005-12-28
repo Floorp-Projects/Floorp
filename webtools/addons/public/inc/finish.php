@@ -6,16 +6,16 @@
  * @subpackage inc
  */
 
-if (!isset($pageType))
+if (empty($pageType)) {
   $pageType = "default";
+}
 
-// Set our wrapper if it has not been set.
-//$wrapper = (!isset($wrapper)) ? 'inc/wrappers/default.tpl' : $wrapper;
+// Display our page header.
 $tpl->display('inc/wrappers/' . $pageType . '-header.tpl');
-// Display output.
+
+// Display page content..
 $tpl->display($content);
 
+// Display our page footer.
 $tpl->display('inc/wrappers/' . $pageType . '-footer.tpl');
-// Disconnect from our database.
-//$db->disconnect();
 ?>
