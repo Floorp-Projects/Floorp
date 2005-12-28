@@ -365,20 +365,34 @@ function onConfigUnload()
 
 function FilterPrefs()
 {
-  var substring = document.getElementById("textbox").value.toLowerCase();
+  var substring = document.getElementById("textbox").value;
+  var rex;
+  // Check for "/regex/[i]"
+  if (substring.charAt(0) == '/') {
+    var r = substring.match(/^\/(.*)\/(i?)$/);
+    try {
+      rex = RegExp(r[1], r[2]);
+    }
+    catch (e) {
+      return; // Do nothing on incomplete or bad RegExp
+    }
+  }
+
   var prefCol = view.selection.currentIndex < 0 ? null : gPrefView[view.selection.currentIndex].prefCol;
-  var array = gPrefView;
+  var oldlen = gPrefView.length;
   gPrefView = gPrefArray;
   if (substring) {
     gPrefView = [];
+    if (!rex)
+      rex = RegExp(substring.replace(/([^* \w])/g, "\\$1").replace(/[*]/g, ".*"), "i");
     for (var i = 0; i < gPrefArray.length; ++i)
-      if (gPrefArray[i].prefCol.toLowerCase().indexOf(substring) >= 0)
+      if (rex.test(gPrefArray[i].prefCol + ";" + gPrefArray[i].valueCol))
         gPrefView.push(gPrefArray[i]);
     if (gFastIndex < gPrefArray.length)
       gPrefView.sort(gSortFunction);
   }
   view.treebox.invalidate();
-  view.treebox.rowCountChanged(array.length, gPrefView.length - array.length);
+  view.treebox.rowCountChanged(oldlen, gPrefView.length - oldlen);
   gotoPref(prefCol);
   document.getElementById("button").disabled = !substring;
 }
