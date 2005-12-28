@@ -483,7 +483,8 @@
 
             var obj = { requestingWindowURI: evt.requestingWindowURI,
                         popupWindowURI: evt.popupWindowURI,
-                        popupWindowFeatures: evt.popupWindowFeatures };
+                        popupWindowFeatures: evt.popupWindowFeatures,
+                        popupWindowName: evt.popupWindowName };
             this.pageReport.push(obj);
             this.updatePageReport()
           ]]> 
