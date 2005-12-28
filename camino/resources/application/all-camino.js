@@ -86,15 +86,13 @@ pref("browser.enable_automatic_image_resizing", true);
 // this is just the emergency fall-back)
 pref("intl.accept_languages", "en-us, en" );
 
-// Scrolling overrides.  For vertical: Command for size, control for history,
-// and alt for a line at a time.  Shift and modifierless scrolls the document.
-// If it's a shift-scroll that comes from a mouse that only scrolls vertically,
-// we get from the system as a horizontal scroll.
-pref("mousewheel.withmetakey.action", 3);
-pref("mousewheel.withmetakey.sysnumlines", false);
-pref("mousewheel.withcontrolkey.action", 2);
+// Scrolling overrides.  For vertical: control for size, option for history.
+// Shift, command, and modifierless scroll the document.  If it's a
+// shift-scroll that comes from a mouse that only scrolls vertically, we get
+// it from the system as a (shifted) horizontal scroll.
+pref("mousewheel.withcontrolkey.action", 3);
 pref("mousewheel.withcontrolkey.sysnumlines", false);
-pref("mousewheel.withaltkey.action", 0);
+pref("mousewheel.withaltkey.action", 2);
 pref("mousewheel.withaltkey.sysnumlines", false);
 
 // We want to make sure mail URLs are handled externally...
