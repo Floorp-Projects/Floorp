@@ -50,10 +50,43 @@
 
 #define NS_MAILNEWSFOLDERDATASOURCE_CID                    \
 { /* 2B8ED4A4-F684-11d2-8A5D-0060B0FC04D2 */         \
-    0x2b8ed4a4,                                      \
-    0xf684,                                          \
-    0x11d2,                                          \
-    {0x8a, 0x5d, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2} \
+  0x2b8ed4a4,                                      \
+  0xf684,                                          \
+  0x11d2,                                          \
+  {0x8a, 0x5d, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2} \
+}
+
+#define NS_MAILNEWSUNREADFOLDERDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "mailnewsunreadfolders"
+
+#define NS_MAILNEWSUNREADFOLDERDATASOURCE_CID \
+{ /* 39b6b638-5b9d-45aa-b645-77fe56bbddb7 */ \
+  0x39b6b638, \
+  0x5b9d, \
+  0x45aa, \
+  {0xb6, 0x45, 0x77, 0xfe, 0x56, 0xbb, 0xdd, 0xb7} \
+}
+
+#define NS_MAILNEWSFAVORITEFOLDERDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "mailnewsfavefolders"
+
+#define NS_MAILNEWSFAVORITEFOLDERDATASOURCE_CID \
+{ /* dfdedc28-1b0c-4b7a-bbff-c98808034242 */ \
+  0xdfdedc28, \
+  0x1b0c, \
+  0x4b7a, \
+  {0xbb, 0xff, 0xc9, 0x88, 0x08, 0x03, 0x42, 0x42} \
+}
+
+#define NS_MAILNEWSRECENTFOLDERDATASOURCE_CONTRACTID \
+  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "mailnewsrecentfolders"
+
+#define NS_MAILNEWSRECENTFOLDERDATASOURCE_CID \
+{ /* 64921b82-24bb-4473-ada9-dc89426129a6 */ \
+  0x64921b82, \
+  0x24bb, \
+  0x4473, \
+  {0xad, 0xa9, 0xdc, 0x89, 0x42, 0x61, 0x29, 0xa6} \
 }
 
 //
