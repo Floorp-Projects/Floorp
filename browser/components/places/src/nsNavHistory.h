@@ -207,6 +207,9 @@ public:
                         OnPageChanged(aURI, aWhat, aValue));
   }
 
+  // current time optimization
+  PRTime GetNow();
+
   // well-known annotations used by the history and bookmarks systems
   static const char kAnnotationPreviousEncoding[];
 
@@ -273,7 +276,6 @@ protected:
   PRTime mLastNow;
   PRBool mNowValid;
   nsCOMPtr<nsITimer> mExpireNowTimer;
-  PRTime GetNow();
   static void expireNowTimerCallback(nsITimer* aTimer, void* aClosure);
   PRTime NormalizeTime(PRUint32 aRelative, PRTime aOffset);
 
