@@ -508,6 +508,6 @@
  {0xb9, 0x6b, 0xf5, 0x9e, 0x39, 0x24, 0x73, 0xb0}}
 
 #define NS_MESSENGERCONTENTHANDLER_CONTRACTID   \
-  NS_CONTENT_HANDLER_CONTRACTID_PREFIX "x-message-display"
+  NS_CONTENT_HANDLER_CONTRACTID_PREFIX "application/x-message-display"
 
 #endif // nsMessageBaseCID_h__
