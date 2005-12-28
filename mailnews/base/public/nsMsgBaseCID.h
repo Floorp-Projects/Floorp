@@ -249,6 +249,8 @@
   "@mozilla.org/appshell/component/messenger;1"
 #define NS_MAILSTARTUPHANDLER_CONTRACTID \
   "@mozilla.org/commandlinehandler/general-startup;1?type=mail"
+#define NS_MAILOPTIONSTARTUPHANDLER_CONTRACTID \
+  "@mozilla.org/commandlinehandler/general-startup;1?type=options"
 #define NS_MESSENGERWINDOWSERVICE_CONTRACTID \
   "@mozilla.org/messenger/windowservice;1"
 #define NS_MESSENGERWINDOWSERVICE_CID \
