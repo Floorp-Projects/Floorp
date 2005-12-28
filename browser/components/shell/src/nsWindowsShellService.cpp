@@ -249,11 +249,15 @@ static SETTING gSettings[] = {
   { MAKE_KEY_NAME1(SMI, "%APPEXE%\\shell\\properties\\command"),
     "", 
     "%APPPATH% -preferences",   
+    PATH_SUBSTITUTION | EXE_SUBSTITUTION | NON_ESSENTIAL },
+  { MAKE_KEY_NAME1(SMI, "%APPEXE%\\shell\\safemode\\command"),
+    "", 
+    "%APPPATH% -safe-mode",   
     PATH_SUBSTITUTION | EXE_SUBSTITUTION | NON_ESSENTIAL }
 
-  // The value of the menu must be set by hand, since it contains a localized
-  // string.
+  // These values must be set by hand, since they contain localized strings.
   //     firefox.exe\shell\properties        (default)   REG_SZ  Firefox &Options
+  //     firefox.exe\shell\safemode          (default)   REG_SZ  Firefox &Safe Mode
 };
 
 static SETTING gDDESettings[] = {
@@ -446,37 +450,51 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   rv = bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Set the Start Menu item subtitle
+  // Create the Start Menu item if it doesn't exist
   nsXPIDLString brandFullName;
   brandBundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
                                  getter_Copies(brandFullName));
+  nsCAutoString nativeFullName;
+  // For the now, we use 'A' APIs (see bug 240272, 239279)
+  NS_CopyUnicodeToNative(brandFullName, nativeFullName);
+
   nsCAutoString key1(NS_LITERAL_CSTRING(SMI));
   key1.Append(exeName);
   key1.Append("\\");
-  nsCAutoString nativeFullName;
-  // For the now, we use 'A' APIs (see bug 240272,  239279)
-  NS_CopyUnicodeToNative(brandFullName, nativeFullName);
   SetRegKey(key1.get(), "", nativeFullName.get(), PR_TRUE, 
             backupKey, aClaimAllTypes, aForAllUsers);
-  
-  // Set the Options menu item title
+
+  // Set the Options and Safe Mode start menu context menu item labels
+  nsCAutoString optionsKey(NS_LITERAL_CSTRING(SMI "%APPEXE%\\shell\\properties"));
+  optionsKey.ReplaceSubstring("%APPEXE%", exeName.get());
+
+  nsCAutoString safeModeKey(NS_LITERAL_CSTRING(SMI "%APPEXE%\\shell\\safemode"));
+  safeModeKey.ReplaceSubstring("%APPEXE%", exeName.get());
+
   nsXPIDLString brandShortName;
   brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
                                  getter_Copies(brandShortName));
+
   const PRUnichar* brandNameStrings[] = { brandShortName.get() };
+
+  // Set the Options menu item
   nsXPIDLString optionsTitle;
   bundle->FormatStringFromName(NS_LITERAL_STRING("optionsLabel").get(),
                                brandNameStrings, 1, getter_Copies(optionsTitle));
+  // Set the Safe Mode menu item
+  nsXPIDLString safeModeTitle;
+  bundle->FormatStringFromName(NS_LITERAL_STRING("safeModeLabel").get(),
+                               brandNameStrings, 1, getter_Copies(safeModeTitle));
 
-  
-  nsCAutoString key2(NS_LITERAL_CSTRING(SMI "%APPEXE%\\shell\\properties"));
-  PRInt32 offset = key2.Find("%APPEXE%");
-  key2.Replace(offset, 8, exeName);
+  // Set the registry keys
   nsCAutoString nativeTitle;
   // For the now, we use 'A' APIs (see bug 240272,  239279)
   NS_CopyUnicodeToNative(optionsTitle, nativeTitle);
-  
-  SetRegKey(key2.get(), "", nativeTitle.get(), PR_TRUE, backupKey,
+  SetRegKey(optionsKey.get(), "", nativeTitle.get(), PR_TRUE, backupKey,
+            aClaimAllTypes, aForAllUsers);
+  // For the now, we use 'A' APIs (see bug 240272,  239279)
+  NS_CopyUnicodeToNative(safeModeTitle, nativeTitle);
+  SetRegKey(safeModeKey.get(), "", nativeTitle.get(), PR_TRUE, backupKey,
             aClaimAllTypes, aForAllUsers);
 
   // Close the key we opened.
