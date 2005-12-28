@@ -462,8 +462,7 @@ nsAttrAndChildArray::GetSafeAttrNameAt(PRUint32 aPos) const
   }
 
   aPos -= mapped;
-  PRUint32 slotCount = AttrSlotCount();
-  if (aPos < slotCount) {
+  if (aPos >= AttrSlotCount()) {
     return nsnull;
   }
 
