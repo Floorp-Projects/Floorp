@@ -820,15 +820,10 @@ nsGenericDOMDataNode::HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const
   return PR_FALSE;
 }
 
-nsresult
-nsGenericDOMDataNode::GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
-                                    nsIAtom** aName, nsIAtom** aPrefix) const
+const nsAttrName*
+nsGenericDOMDataNode::GetAttrNameAt(PRUint32 aIndex) const
 {
-  *aNameSpaceID = kNameSpaceID_None;
-  *aName = nsnull;
-  *aPrefix = nsnull;
-
-  return NS_ERROR_ILLEGAL_VALUE;
+  return nsnull;
 }
 
 PRUint32

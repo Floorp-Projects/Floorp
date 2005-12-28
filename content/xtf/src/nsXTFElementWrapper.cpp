@@ -53,11 +53,14 @@
 #include "nsIXTFService.h"
 #include "nsDOMAttributeMap.h"
 #include "nsUnicharUtils.h"
+#include "nsLayoutAtoms.h"
 
 nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo)
     : nsXTFElementWrapperBase(aNodeInfo),
       mNotificationMask(0),
-      mIntrinsicState(0)
+      mIntrinsicState(0),
+      mTmpAttrName(nsLayoutAtoms::wildcard) // XXX this is a hack, but names
+                                            // have to have a value
 {
 }
 
@@ -400,9 +403,8 @@ nsXTFElementWrapper::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
   return rv;
 }
 
-nsresult
-nsXTFElementWrapper::GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
-                                   nsIAtom** aName, nsIAtom** aPrefix) const
+const nsAttrName*
+nsXTFElementWrapper::GetAttrNameAt(PRUint32 aIndex) const
 {
   PRUint32 innerCount=0;
   if (mAttributeHandler) {
@@ -410,13 +412,15 @@ nsXTFElementWrapper::GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
   }
   
   if (aIndex < innerCount) {
-    *aNameSpaceID = kNameSpaceID_None;
-    *aPrefix = nsnull;
-    return mAttributeHandler->GetAttributeNameAt(aIndex, aName);
+    nsCOMPtr<nsIAtom> localName;
+    nsresult rv = mAttributeHandler->GetAttributeNameAt(aIndex, getter_AddRefs(localName));
+    NS_ENSURE_SUCCESS(rv, nsnull);
+
+    NS_CONST_CAST(nsXTFElementWrapper*, this)->mTmpAttrName.SetTo(localName);
+    return &mTmpAttrName;
   }
   else { // wrapper handles attrib
-    return nsXTFElementWrapperBase::GetAttrNameAt(aIndex - innerCount, aNameSpaceID,
-                                                  aName, aPrefix);
+    return nsXTFElementWrapperBase::GetAttrNameAt(aIndex - innerCount);
   }
 }
 

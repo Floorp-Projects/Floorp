@@ -63,6 +63,7 @@
 #include "nsMathMLContainerFrame.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
+#include "nsCSSFrameConstructor.h"
 
 NS_DEFINE_CID(kInlineFrameCID, NS_INLINE_FRAME_CID);
 
@@ -987,7 +988,10 @@ nsMathMLContainerFrame::RemoveFrame(nsIAtom*        aListName,
     return NS_ERROR_INVALID_ARG;
   }
   // remove the child frame
-  mFrames.DestroyFrame(GetPresContext(), aOldFrame);
+  nsPresContext* presContext = GetPresContext();
+  presContext->PresShell()->FrameConstructor()->
+    RemoveMappingsForFrameSubtree(aOldFrame);
+  mFrames.DestroyFrame(presContext, aOldFrame);
   return ChildListChanged(nsIDOMMutationEvent::REMOVAL);
 }
 

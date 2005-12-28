@@ -101,8 +101,7 @@ public:
                              nsCaseTreatment aCaseSensitive) const;
   nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
                      PRBool aNotify);
-  nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
-                         nsIAtom** aName, nsIAtom** aPrefix) const;
+  const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   PRUint32 GetAttrCount() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
 
@@ -149,6 +148,9 @@ protected:
    * @see nsIContent::IntrinsicState()
    */
   PRInt32 mIntrinsicState;
+
+  // Temporary owner used by GetAttrNameAt
+  nsAttrName mTmpAttrName;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXTFElementWrapper, NS_XTFELEMENTWRAPPER_IID)

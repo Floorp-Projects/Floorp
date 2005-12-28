@@ -66,6 +66,7 @@ class nsIURI;
 class nsICSSStyleRule;
 class nsRuleWalker;
 class nsAttrValue;
+class nsAttrName;
 
 // IID for the nsIContent interface
 // ffc6f2b8-bcdc-4cf7-b72f-e843860f14a6
@@ -410,14 +411,15 @@ public:
   /**
    * Get the namespace / name / prefix of a given attribute.
    * 
-   * @param aIndex the index of the attribute name
-   * @param aNameSpace the name space ID of the attribute name [OUT]
-   * @param aName the attribute name [OUT]
-   * @param aPrefix the attribute prefix [OUT]
-   *
+   * @param   aIndex the index of the attribute name
+   * @returns The name at the given index, or null if the index is
+   *          out-of-bounds.
+   * @note    The document returned by NodeInfo()->GetDocument() (if one is
+   *          present) is *not* neccesarily the owner document of the element.
+   * @note    The pointer returned by this function is only valid until the
+   *          next call of either GetAttrNameAt or SetAttr on the element.
    */
-  virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
-                                 nsIAtom** aName, nsIAtom** aPrefix) const = 0;
+  virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const = 0;
 
   /**
    * Get the number of all specified attributes.

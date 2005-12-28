@@ -119,6 +119,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
 #include "nsIStringBundle.h"
+#include "nsAttrName.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -2918,12 +2919,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
     increment = 1;
   }
   for (PRInt16 index = start; index != end; index += increment) {
-    PRInt32 nameSpaceID;
-    nsCOMPtr<nsIAtom> atom;
-    nsCOMPtr<nsIAtom> prefix;
-    content->GetAttrNameAt(index, &nameSpaceID,
-                           getter_AddRefs(atom),
-                           getter_AddRefs(prefix));
+    const nsAttrName* name = content->GetAttrNameAt(index);
+    PRInt32 nameSpaceID = name->NamespaceID();
+    nsIAtom* atom = name->LocalName();
     nsAutoString value;
     content->GetAttr(nameSpaceID, atom, value);
     nsAutoString name;

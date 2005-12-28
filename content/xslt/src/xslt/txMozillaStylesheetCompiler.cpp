@@ -66,6 +66,7 @@
 #include "txMozillaXSLTProcessor.h"
 #include "txStylesheetCompiler.h"
 #include "txXMLUtils.h"
+#include "nsAttrName.h"
 
 static const char kLoadAsData[] = "loadAsData";
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
@@ -628,9 +629,10 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
                 PRUint32 counter;
                 for (counter = 0; counter < attsCount; ++counter) {
                     txStylesheetAttr& att = atts[counter];
-                    element->GetAttrNameAt(counter, &att.mNamespaceID,
-                                           getter_AddRefs(att.mLocalName),
-                                           getter_AddRefs(att.mPrefix));
+                    const nsAttrName* name = element->GetAttrNameAt(counter);
+                    att.mNamespaceID = name->NamespaceID();
+                    att.mLocalName = name->LocalName();
+                    att.mPrefix = name->GetPrefix();
                     element->GetAttr(att.mNamespaceID, att.mLocalName, att.mValue);
                 }
             }

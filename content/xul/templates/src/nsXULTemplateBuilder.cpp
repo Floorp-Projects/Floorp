@@ -2083,30 +2083,21 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
 
     PRBool hasContainerTest = PR_FALSE;
 
-    PRUint32 count = aRuleElement->GetAttrCount();
-
     // Add constraints for the LHS
-    for (PRUint32 i = 0; i < count; ++i) {
-        PRInt32 attrNameSpaceID;
-        nsCOMPtr<nsIAtom> attr, prefix;
-        rv = aRuleElement->GetAttrNameAt(i, &attrNameSpaceID,
-                                         getter_AddRefs(attr),
-                                         getter_AddRefs(prefix));
-        if (NS_FAILED(rv)) return rv;
-
+    const nsAttrName* name;
+    for (PRUint32 i = 0; (name = aRuleElement->GetAttrNameAt(i)); ++i) {
         // Note: some attributes must be skipped on XUL template rule subtree
 
-        // never compare against rdf:property attribute
-        if ((attr.get() == nsXULAtoms::property) && (attrNameSpaceID == kNameSpaceID_RDF))
+        // never compare against rdf:property, rdf:instanceOf, {}:id or {}:parsetype attribute
+        if (name->Equals(nsXULAtoms::property, kNameSpaceID_RDF) ||
+            name->Equals(nsXULAtoms::instanceOf, kNameSpaceID_RDF) ||
+            name->Equals(nsXULAtoms::id, kNameSpaceID_None) ||
+            name->Equals(nsXULAtoms::parsetype, kNameSpaceID_None)) {
             continue;
-        // never compare against rdf:instanceOf attribute
-        else if ((attr.get() == nsXULAtoms::instanceOf) && (attrNameSpaceID == kNameSpaceID_RDF))
-            continue;
-        // never compare against {}:id attribute
-        else if ((attr.get() == nsXULAtoms::id) && (attrNameSpaceID == kNameSpaceID_None))
-            continue;
-        else if ((attr.get() == nsXULAtoms::parsetype) && (attrNameSpaceID == kNameSpaceID_None))
-            continue;
+        }
+
+        PRInt32 attrNameSpaceID = name->NamespaceID();
+        nsIAtom* attr = name->LocalName();
 
         nsAutoString value;
         aRuleElement->GetAttr(attrNameSpaceID, attr, value);
@@ -2116,8 +2107,8 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
         if (CompileSimpleAttributeCondition(attrNameSpaceID, attr, value, aParentNode, &testnode)) {
             // handled by subclass
         }
-        else if (((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == nsXULAtoms::iscontainer)) ||
-                 ((attrNameSpaceID == kNameSpaceID_None) && (attr.get() == nsXULAtoms::isempty))) {
+        else if (name->Equals(nsXULAtoms::iscontainer, kNameSpaceID_None) ||
+                 name->Equals(nsXULAtoms::isempty, kNameSpaceID_None)) {
             // Tests about containerhood and emptiness. These can be
             // globbed together, mostly. Check to see if we've already
             // added a container test: we only need one.
@@ -2248,14 +2239,10 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule, nsIContent* a
         PRUint32 count = element->GetAttrCount();
 
         for (i = 0; i < count; ++i) {
-            PRInt32 nameSpaceID;
-            nsCOMPtr<nsIAtom> attr, prefix;
-
-            element->GetAttrNameAt(i, &nameSpaceID, getter_AddRefs(attr),
-                                   getter_AddRefs(prefix));
+            const nsAttrName* name = element->GetAttrNameAt(i);
 
             nsAutoString value;
-            element->GetAttr(nameSpaceID, attr, value);
+            element->GetAttr(name->NamespaceID(), name->LocalName(), value);
 
             // Scan the attribute for variables, adding a binding for
             // each one.

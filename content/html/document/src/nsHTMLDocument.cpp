@@ -83,6 +83,7 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableView.h"
+#include "nsAttrName.h"
 
 #include "nsNetCID.h"
 #include "nsIIOService.h"
@@ -1970,13 +1971,8 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
     // Remove all attributes from the root element
     while (count-- > 0) {
-      nsCOMPtr<nsIAtom> name, prefix;
-      PRInt32 nsid;
-
-      root->GetAttrNameAt(count, &nsid, getter_AddRefs(name),
-                          getter_AddRefs(prefix));
-
-      root->UnsetAttr(nsid, name, PR_FALSE);
+      const nsAttrName* name = root->GetAttrNameAt(count);
+      root->UnsetAttr(name->NamespaceID(), name->LocalName(), PR_FALSE);
     }
 
     // Remove the root from the childlist

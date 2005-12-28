@@ -58,6 +58,7 @@
 #include "nsIEnumerator.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
+#include "nsAttrName.h"
 
 
 NS_IMETHODIMP nsHTMLEditor::AddDefaultProperty(nsIAtom *aProperty, 
@@ -782,25 +783,20 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (!content) return PR_FALSE;  // ooops
   
-  PRInt32 nameSpaceID;
-  nsCOMPtr<nsIAtom> attrName, prefix;
-
   PRUint32 i, attrCount = content->GetAttrCount();
-  
-  for (i = 0; i < attrCount; ++i)
-  {
-    content->GetAttrNameAt(i, &nameSpaceID, getter_AddRefs(attrName),
-                           getter_AddRefs(prefix));
-    nsAutoString attrString, tmp;
-    if (!attrName) continue;  // ooops
-    attrName->ToString(attrString);
-    // if it's the attribute we know about, keep looking
-    if (attrString.Equals(*aAttribute,nsCaseInsensitiveStringComparator())) continue;
-    // if it's a special _moz... attribute, keep looking
-    attrString.Left(tmp,4);
-    if (tmp.LowerCaseEqualsLiteral("_moz")) continue;
-    // otherwise, it's another attribute, so return false
-    return PR_FALSE;
+  for (i = 0; i < attrCount; ++i) {
+    nsAutoString attrString;
+    const nsAttrName name = content->GetAttrNameAt(i);
+    if (!name->NamespaceEquals(kNameSpaceID_None)) {
+      return PR_FALSE;
+    }
+    name->LocalName()->ToString(attrString);
+    // if it's the attribute we know about, or a special _moz attribute,
+    // keep looking
+    if (!attrString.Equals(*aAttribute, nsCaseInsensitiveStringComparator()) &&
+        !StringBeginsWith(attrString, NS_LITERAL_STRING("_moz"))) {
+      return PR_FALSE;
+    }
   }
   // if we made it through all of them without finding a real attribute
   // other than aAttribute, then return PR_TRUE

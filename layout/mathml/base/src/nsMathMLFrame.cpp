@@ -57,6 +57,7 @@
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsStyleUtil.h"
+#include "nsAttrName.h"
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 
 
@@ -599,14 +600,13 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
   nsCOMPtr<nsICSSStyleSheet> cssSheet;
   nsCOMPtr<nsIDOMCSSStyleSheet> domSheet;
 
-  PRInt32 nameSpaceID;
-  nsCOMPtr<nsIAtom> prefix;
-  nsCOMPtr<nsIAtom> attrAtom;
   PRInt32 ruleCount = 0;
   for (PRUint32 i = 0; i < attrCount; ++i) {
-    aContent->GetAttrNameAt(i, &nameSpaceID,
-                            getter_AddRefs(attrAtom),
-                            getter_AddRefs(prefix));
+    const nsAttrName* name = aContent->GetAttrNameAt(i);
+    if (name->NamespaceID() != kNameSpaceID_None)
+      continue;
+
+    nsIAtom* attrAtom = name->LocalName();
 
     // lookup the equivalent CSS property
     const nsCSSMapping* map = kCSSMappingTable;
@@ -617,7 +617,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
     nsAutoString cssProperty(NS_ConvertASCIItoUCS2(map->cssProperty));
 
     nsAutoString attrValue;
-    aContent->GetAttr(nameSpaceID, attrAtom, attrValue);
+    aContent->GetAttr(kNameSpaceID_None, attrAtom, attrValue);
     if (attrValue.IsEmpty())
       continue;
     nsAutoString escapedAttrValue;

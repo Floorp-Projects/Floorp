@@ -95,6 +95,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsAttrValue.h"
+#include "nsAttrName.h"
 
 struct RuleValue {
   /**
@@ -3144,20 +3145,12 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           // have a chance at matching, of course, are ones that the element
           // actually has attributes in), short-circuiting if we ever match.
           PRUint32 attrCount = data.mContent->GetAttrCount();
-          PRInt32 nameSpaceID;
-          nsCOMPtr<nsIAtom> name;
-          nsCOMPtr<nsIAtom> prefix;
           result = PR_FALSE;
           for (PRUint32 i = 0; i < attrCount; ++i) {
-#ifdef DEBUG
-            nsresult attrState =
-#endif
-              data.mContent->GetAttrNameAt(i, &nameSpaceID,
-                                           getter_AddRefs(name),
-                                           getter_AddRefs(prefix));
-            NS_ASSERTION(NS_SUCCEEDED(attrState),
-                         "GetAttrCount lied or GetAttrNameAt failed");
-            if (name != attr->mAttr) {
+            const nsAttrName* attrName =
+              data.mContent->GetAttrNameAt(i);
+            NS_ASSERTION(attrName, "GetAttrCount lied or GetAttrNameAt failed");
+            if (attrName->LocalName() != attr->mAttr) {
               continue;
             }
             if (attr->mFunction == NS_ATTR_FUNC_SET) {
@@ -3167,7 +3160,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 #ifdef DEBUG
               PRBool hasAttr =
 #endif
-                data.mContent->GetAttr(nameSpaceID, name, value);
+                data.mContent->GetAttr(attrName->NamespaceID(),
+                                       attrName->LocalName(), value);
               NS_ASSERTION(hasAttr, "GetAttrNameAt lied");
               result = AttrMatchesValue(attr, value);
             }

@@ -202,8 +202,7 @@ public:
   virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                          nsAString& aResult) const;
   virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const;
-  virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
-                                 nsIAtom** aName, nsIAtom** aPrefix) const;
+  virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   virtual PRUint32 GetAttrCount() const;
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;

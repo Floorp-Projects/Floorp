@@ -58,6 +58,7 @@
 #include "nsIParserService.h"
 #include "nsContentUtils.h"
 #include "nsLWBrkCIID.h"
+#include "nsAttrName.h"
 
 #define kIndentStr NS_LITERAL_STRING("  ")
 #define kLessThan NS_LITERAL_STRING("<")
@@ -540,8 +541,6 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
   nsresult rv;
   PRUint32 index, count;
   nsAutoString nameStr, valueStr;
-  PRInt32 namespaceID;
-  nsCOMPtr<nsIAtom> attrName, attrPrefix;
 
   count = aContent->GetAttrCount();
 
@@ -552,10 +551,9 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
   // index is unsigned, hence index >= 0 is always true.
   for (index = count; index > 0; ) {
     --index;
-    aContent->GetAttrNameAt(index, 
-                            &namespaceID,
-                            getter_AddRefs(attrName),
-                            getter_AddRefs(attrPrefix));
+    const nsAttrName* name = aContent->GetAttrNameAt(index);
+    PRInt32 namespaceID = name->NamespaceID();
+    nsIAtom* attrName = name->LocalName();
 
     // Filter out any attribute starting with [-|_]moz
     const char* sharedName;

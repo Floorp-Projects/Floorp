@@ -149,13 +149,9 @@ public:
   {
     return NS_OK;
   }
-  virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
-                                 nsIAtom** aName, nsIAtom** aPrefix) const
+  virtual nsAttrName* GetAttrNameAt(PRUint32 aIndex) const
   {
-    *aNameSpaceID = kNameSpaceID_None;
-    *aName = nsnull;
-    *aPrefix = nsnull;
-    return NS_ERROR_ILLEGAL_VALUE;
+    return nsnull;
   }
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,

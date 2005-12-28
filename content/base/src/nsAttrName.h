@@ -147,6 +147,13 @@ public:
     return IsAtom() ? kNameSpaceID_None : NodeInfo()->NamespaceID();
   }
 
+  PRInt32 NamespaceEquals(PRInt32 aNamespaceID) const
+  {
+    return aNamespaceID == kNameSpaceID_None ?
+           IsAtom() :
+           (!IsAtom() && NodeInfo()->NamespaceEquals(aNamespaceID));
+  }
+
   nsIAtom* LocalName() const
   {
     return IsAtom() ? Atom() : NodeInfo()->NameAtom();

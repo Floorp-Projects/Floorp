@@ -601,18 +601,15 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
     }
 
     // copy attributes
+    const nsAttrName* name;
     PRUint32 i;
-    for (i = 0; i < newcontent->GetAttrCount(); i++) {
-      PRInt32 nsID;
-      nsCOMPtr<nsIAtom> name;
-      nsCOMPtr<nsIAtom> prefix;
+    for (i = 0; (name = newcontent->GetAttrNameAt(i)); i++) {
       nsAutoString value;
+      PRInt32 nsID = name->NamespaceID();
+      nsIAtom* lname = name->LocalName();
 
-      newcontent->GetAttrNameAt(i, &nsID,
-                                getter_AddRefs(name),
-                                getter_AddRefs(prefix));
-      newcontent->GetAttr(nsID, name, value);
-      svgNode->SetAttr(nsID, name, prefix, value, PR_FALSE);
+      newcontent->GetAttr(nsID, lname, value);
+      svgNode->SetAttr(nsID, lname, name->GetPrefix(), value, PR_FALSE);
     }
 
     // move the children over
