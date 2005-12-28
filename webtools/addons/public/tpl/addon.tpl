@@ -21,12 +21,12 @@ released on {$addon->VersionDateAdded|date_format}
 <p>{$addon->Description}</p>
 
 <p class="requires">
-Requires: {$addon->AppName} {$addon->MinAppVer} - {$addon->MaxAppVer} <img src="{$config.webpath}/img/{$addon->AppName|lower}_icon.png" width="34" height="34" alt="{$addon->AppName}">
+Requires: {$addon->AppName} {$addon->MinAppVer} - {$addon->MaxAppVer} <img src="{$config.webpath}/images/{$addon->AppName|lower}_icon.png" width="34" height="34" alt="{$addon->AppName}">
 </p>
 
 <div class="key-point install-box">
 <div class="install">
-<b><a href="{$addon->URI}" onclick="return install(event,'{$addon->AppName|escape} {$addon->Version|escape}', '{$config.webpath}/img/default.png');" TITLE="Install {$addon->AppName|escape} {$addon->Version|escape} (Right-Click to Download)">Install Now</a></b> ({$addon->Size|escape} KB File)</div></div>
+<b><a href="{$addon->URI}" onclick="return install(event,'{$addon->AppName|escape} {$addon->Version|escape}', '{$config.webpath}/images/default.png');" TITLE="Install {$addon->AppName|escape} {$addon->Version|escape} (Right-Click to Download)">Install Now</a></b> ({$addon->Size|escape} KB File)</div></div>
 
 <h3 id="user-comments">User Comments</h3>
 

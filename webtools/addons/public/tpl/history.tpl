@@ -14,8 +14,8 @@ Released on {$addon->History[version].VerDateAdded|date_format:"%B %d, %Y"}<br>
 {/if}
 
     <div style="height: 34px">
-        <div class="iconbar"><img src="{$config.webpath}/img/download.png" height="34" width="34" title="Install {$addon->History[version].Name} (Right-Click to Download)" alt="">Install</a><br><span class="filesize">Size: {$addon->History[version].Size|escape} kb</span></div>
-        <div class="iconbar"><img src="{$config.webpath}/img/{$addon->History[version].AppName|lower}_icon.png" width="34" height="34" alt="{$addon->History[version].AppName}"> For {$addon->History[version].AppName}:<BR>&nbsp;&nbsp;{$addon->History[version].MinAppVer} - {$addon->History[version].MaxAppVer}</div>
+        <div class="iconbar"><img src="{$config.webpath}/images/download.png" height="34" width="34" title="Install {$addon->History[version].Name} (Right-Click to Download)" alt="">Install</a><br><span class="filesize">Size: {$addon->History[version].Size|escape} kb</span></div>
+        <div class="iconbar"><img src="{$config.webpath}/images/{$addon->History[version].AppName|lower}_icon.png" width="34" height="34" alt="{$addon->History[version].AppName}"> For {$addon->History[version].AppName}:<BR>&nbsp;&nbsp;{$addon->History[version].MinAppVer} - {$addon->History[version].MaxAppVer}</div>
     </div>
 </div>
 <hr>

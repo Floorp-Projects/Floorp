@@ -122,12 +122,12 @@ Next Page &raquo;
     <p class="first">{$results[r]->Description}</p>
     <div style="margin-top: 30px; height: 34px">
         <div class="iconbar">
-            <a href="{$results[r]->URI}" onclick="return install(event,'{$results[r]->Name}', '{$config.webpath}/img/default.png');">
-            <img src="{$config.webpath}/img/download.png" height="32" width="32" title="Install {$results[r]->Name}" ALT="">Install</a><br>
+            <a href="{$results[r]->URI}" onclick="return install(event,'{$results[r]->Name}', '{$config.webpath}/images/default.png');">
+            <img src="{$config.webpath}/images/download.png" height="32" width="32" title="Install {$results[r]->Name}" ALT="">Install</a><br>
             <span class="filesize">&nbsp;&nbsp;{$results[r]->Size} kb</span>
         </div>
         <div class="iconbar">
-            <img src="{$config.webpath}/img/{$results[r]->AppName|lower}_icon.png" height="34" width="34" ALT="">&nbsp;For {$results[r]->AppName}:<BR>&nbsp;&nbsp;{$results[r]->MinAppVer} - {$results[r]->MaxAppVer}
+            <img src="{$config.webpath}/images/{$results[r]->AppName|lower}_icon.png" height="34" width="34" ALT="">&nbsp;For {$results[r]->AppName}:<BR>&nbsp;&nbsp;{$results[r]->MinAppVer} - {$results[r]->MaxAppVer}
         </div>
     </div>
     <div class="baseline">Last Update:  {$results[r]->DateUpdated|date_format} | Downloads Last 7 Days: {$results[r]->downloadcount} | Total Downloads: {$results[r]->TotalDownloads}</DIV>
