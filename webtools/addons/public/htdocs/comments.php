@@ -6,6 +6,9 @@
  * @subpackage docs
  */
 
+startProcessing('comments.tpl');
+require_once('includes.php');
+
 // Arrays to store clean inputs.
 $clean = array();  // General array for verified inputs.
 $sql = array();  // Trusted for SQL.

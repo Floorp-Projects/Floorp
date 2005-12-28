@@ -8,6 +8,9 @@
  * @todo talk to cbeard and rebron about establishing the policy document.
  */
 
+startProcessing('policy.tpl');
+require_once('includes.php');
+
 $links = array(
     array(  'href'  => './faq.php',
             'title' => 'Frequently Asked Questions', 

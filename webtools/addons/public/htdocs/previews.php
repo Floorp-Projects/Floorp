@@ -5,6 +5,9 @@
  * @package amo
  * @subpackage docs
  */
+
+startProcessing('previews.tpl');
+require_once('includes.php');
  
 // Arrays to store clean inputs.
 $clean = array();  // General array for verified inputs.

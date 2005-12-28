@@ -12,6 +12,9 @@
  * @todo fix CSS so the pull-downs look symmetrical before design freaks start crying.
  */
 
+startProcessing('search.tpl','nonav');
+require_once('includes.php');
+
 // Array to store clean inputs.
 $clean = array();
 $sql = array();

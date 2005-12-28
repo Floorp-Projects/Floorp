@@ -7,6 +7,10 @@
  *
  * @todo FAQ search?
  */
+
+startProcessing('faq.tpl');
+require_once('includes.php');
+
 $db->query("
     SELECT
         `title`,

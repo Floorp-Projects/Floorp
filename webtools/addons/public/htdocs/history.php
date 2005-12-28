@@ -9,6 +9,9 @@
  * @todo break this into a simpler design, probably a smaller table with an abbreviated desc.
  * @todo do we still want to allow users access to old versions?
  */
+
+startProcessing('history.tpl');
+require_once('includes.php');
  
 // Arrays to store clean inputs.
 $clean = array();  // General array for verified inputs.

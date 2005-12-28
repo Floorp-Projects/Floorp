@@ -9,6 +9,9 @@
  * @todo Get main template spruced up.
  */
 
+startProcessing('search-engines.tpl','nonav');
+require_once('includes.php');
+
 // Assign template variables.
 $tpl->assign(
     array(  'title'             => 'Search Engines',

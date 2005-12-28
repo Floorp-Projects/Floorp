@@ -10,8 +10,6 @@
  */
 
 startProcessing('index.tpl', 'nonav');
-
-// Init only the stuff we need to generate content.
 require_once('includes.php');
 
 // Arrays to store clean inputs.

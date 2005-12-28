@@ -36,7 +36,7 @@ class AMO_Smarty extends Smarty
     }
 }
 
-function startProcessing($aTplName, $aPageType)
+function startProcessing($aTplName, $aPageType='default')
 {
     // Global template object.
     global $tpl, $pageType, $content;

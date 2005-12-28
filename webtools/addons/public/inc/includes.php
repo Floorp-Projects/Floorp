@@ -1,5 +1,4 @@
 <?php
-
 // Include required libraries and classes.
 require_once('DB.php');  // PEAR::DB
 require_once('Auth.php');  // PEAR::Auth
@@ -49,7 +48,4 @@ if (USE_DB_SESSIONS)
     array(&$amo_session_handler, '_destroy'),
     array(&$amo_session_handler, '_gc'));
 }
-
-
-
 ?>
