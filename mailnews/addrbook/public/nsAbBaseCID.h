@@ -450,4 +450,11 @@
 #define NS_MSGVCARDSERVICE_CONTRACTID \
  "@mozilla.org/addressbook/msgvcardservice;1"
 
+#define NS_ABLDIFSERVICE_CID \
+{ 0xdb6f46da, 0x8de3, 0x478d, \
+ { 0xb5, 0x39, 0x80, 0x13, 0x98, 0x65, 0x6c, 0xf6 }}
+
+#define NS_ABLDIFSERVICE_CONTRACTID \
+ "@mozilla.org/addressbook/abldifservice;1"
+
 #endif // nsAbBaseCID_h__
