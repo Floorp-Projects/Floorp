@@ -44,6 +44,7 @@
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
 #include "nsNodeInfoManager.h"
+#include "nsAttrName.h"
 
 //----------------------------------------------------------------------
 
@@ -316,27 +317,23 @@ NS_IMETHODIMP
 nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
-  PRInt32 nameSpaceID;
-  nsCOMPtr<nsIAtom> nameAtom, prefix;
 
-  nsresult rv = NS_OK;
-  if (mContent &&
-      NS_SUCCEEDED(mContent->GetAttrNameAt(aIndex,
-                                           &nameSpaceID,
-                                           getter_AddRefs(nameAtom),
-                                           getter_AddRefs(prefix)))) {
+  const nsAttrName* name;
+  if (mContent && (name = mContent->GetAttrNameAt(aIndex))) {
+    // Don't use the nodeinfo even if one exists since it can
+    // have the wrong owner document.
     nsCOMPtr<nsINodeInfo> ni;
     mContent->NodeInfo()->NodeInfoManager()->
-      GetNodeInfo(nameAtom, prefix, nameSpaceID, getter_AddRefs(ni));
+      GetNodeInfo(name->LocalName(), name->GetPrefix(), name->NamespaceID(),
+                  getter_AddRefs(ni));
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
-    rv = GetAttribute(ni, aReturn);
-  }
-  else {
-    *aReturn = nsnull;
+    return GetAttribute(ni, aReturn);
   }
 
-  return rv;
+  *aReturn = nsnull;
+
+  return NS_OK;
 }
 
 nsresult
@@ -389,15 +386,16 @@ nsDOMAttributeMap::GetNamedItemNSInternal(const nsAString& aNamespaceURI,
 
   PRUint32 i, count = mContent->GetAttrCount();
   for (i = 0; i < count; ++i) {
-    PRInt32 attrNS;
-    nsCOMPtr<nsIAtom> nameAtom, prefix;
-    mContent->GetAttrNameAt(i, &attrNS, getter_AddRefs(nameAtom),
-                            getter_AddRefs(prefix));
+    const nsAttrName* name = mContent->GetAttrNameAt(i);
+    PRInt32 attrNS = name->NamespaceID();
+    nsIAtom* nameAtom = name->LocalName();
+
     if (nameSpaceID == attrNS &&
         nameAtom->EqualsUTF8(utf8Name)) {
       nsCOMPtr<nsINodeInfo> ni;
       mContent->NodeInfo()->NodeInfoManager()->
-        GetNodeInfo(nameAtom, prefix, nameSpaceID, getter_AddRefs(ni));
+        GetNodeInfo(nameAtom, name->GetPrefix(), nameSpaceID,
+                    getter_AddRefs(ni));
       NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
       return GetAttribute(ni, aReturn, aRemove);

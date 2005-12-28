@@ -66,6 +66,7 @@
 #include "nsIScriptContext.h"
 #include "nsIHTMLDocument.h"
 #include "nsCRT.h"
+#include "nsAttrName.h"
 
 #include "nsIJSContextStack.h"
 // XXX Temporary inclusion to deal with fragment parsing
@@ -2337,7 +2338,6 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
     
     parent->GetNodeType(&nodeType);
     if (nsIDOMNode::ELEMENT_NODE == nodeType) {
-      PRInt32 namespaceID;
       nsAutoString tagName, uriStr;
       parent->GetNodeName(tagName);
 
@@ -2348,23 +2348,18 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
       if (count > 0) {
         PRUint32 index;
         nsAutoString nameStr, prefixStr, valueStr;
-        nsCOMPtr<nsIAtom> attrName, attrPrefix;
 
         for (index = 0; index < count; index++) {
-    
-          content->GetAttrNameAt(index,
-                                &namespaceID,
-                                getter_AddRefs(attrName),
-                                getter_AddRefs(attrPrefix));
-    
-          if (namespaceID == kNameSpaceID_XMLNS) {
-            content->GetAttr(namespaceID, attrName, uriStr);
+
+          const nsAttrName* name = content->GetAttrNameAt(index);
+          if (name->NamespaceEquals(kNameSpaceID_XMLNS)) {
+            content->GetAttr(kNameSpaceID_XMLNS, name->LocalName(), uriStr);
 
             // really want something like nsXMLContentSerializer::SerializeAttr()
             tagName.Append(NS_LITERAL_STRING(" xmlns")); // space important
-            if (attrPrefix) {
+            if (name->GetPrefix()) {
               tagName.Append(PRUnichar(':'));
-              attrName->ToString(nameStr);
+              name->LocalName()->ToString(nameStr);
               tagName.Append(nameStr);
             }
             else {

@@ -54,6 +54,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIServiceManager.h"
+#include "nsAttrName.h"
 
 /// the accessible library and cached methods
 HINSTANCE nsAccessNodeWrap::gmAccLib = nsnull;
@@ -191,21 +192,17 @@ STDMETHODIMP nsAccessNodeWrap::get_attributes(
     numAttribs = aMaxAttribs;
   *aNumAttribs = NS_STATIC_CAST(unsigned short, numAttribs);
 
-  PRInt32 nameSpaceID;
-  nsCOMPtr<nsIAtom> nameAtom, prefixAtom;
-
   for (PRUint32 index = 0; index < numAttribs; index++) {
     aNameSpaceIDs[index] = 0; aAttribValues[index] = aAttribNames[index] = nsnull;
     nsAutoString attributeValue;
     const char *pszAttributeName; 
 
-    if (NS_SUCCEEDED(content->GetAttrNameAt(index, &nameSpaceID, getter_AddRefs(nameAtom), getter_AddRefs(prefixAtom)))) {
-      aNameSpaceIDs[index] = NS_STATIC_CAST(short, nameSpaceID);
-      nameAtom->GetUTF8String(&pszAttributeName);
-      aAttribNames[index] = ::SysAllocString(NS_ConvertUTF8toUCS2(pszAttributeName).get());
-      content->GetAttr(nameSpaceID, nameAtom, attributeValue);
-      aAttribValues[index] = ::SysAllocString(attributeValue.get());
-    }
+    const nsAttrName* name = content->GetAttrNameAt(index);
+    aNameSpaceIDs[index] = NS_STATIC_CAST(short, name->NamespaceID());
+    name->LocalName()->GetUTF8String(&pszAttributeName);
+    aAttribNames[index] = ::SysAllocString(NS_ConvertUTF8toUCS2(pszAttributeName).get());
+    content->GetAttr(name->NamespaceID(), name->LocalName(), attributeValue);
+    aAttribValues[index] = ::SysAllocString(attributeValue.get());
   }
 
   return S_OK; 

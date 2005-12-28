@@ -470,10 +470,6 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAtom> name, prefix;
-  PRInt32 namespace_id;
-  nsAutoString ns;
-
   // Trace up the content parent chain looking for the namespace
   // declaration that defines the aNamespaceURI namespace. Once found,
   // return the prefix (i.e. the attribute localName).
@@ -482,16 +478,14 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
     PRUint32 attrCount = content->GetAttrCount();
 
     for (PRUint32 i = 0; i < attrCount; ++i) {
-      content->GetAttrNameAt(i, &namespace_id, getter_AddRefs(name),
-                             getter_AddRefs(prefix));
+      const nsAttrName* name = content->GetAttrNameAt(i);
 
-      if (namespace_id == kNameSpaceID_XMLNS) {
-        if (content->AttrValueIs(namespace_id, name, aNamespaceURI,
-                                 eCaseMatters)) {
-          name->ToString(aPrefix);
+      if (name->NamespaceEquals(kNameSpaceID_XMLNS) &&
+          content->AttrValueIs(kNameSpaceID_XMLNS, name->LocalName(),
+                               aNamespaceURI, eCaseMatters)) {
+        name->LocalName()->ToString(aPrefix);
 
-          return NS_OK;
-        }
+        return NS_OK;
       }
     }
   }
@@ -4330,24 +4324,10 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return NS_OK;
 }
 
-nsresult
-nsGenericElement::GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
-                                nsIAtom** aName, nsIAtom** aPrefix) const
+const nsAttrName*
+nsGenericElement::GetAttrNameAt(PRUint32 aIndex) const
 {
-  const nsAttrName* name = mAttrsAndChildren.GetSafeAttrNameAt(aIndex);
-  if (name) {
-    *aNameSpaceID = name->NamespaceID();
-    NS_ADDREF(*aName = name->LocalName());
-    NS_IF_ADDREF(*aPrefix = name->GetPrefix());
-
-    return NS_OK;
-  }
-
-  *aNameSpaceID = kNameSpaceID_None;
-  *aName = nsnull;
-  *aPrefix = nsnull;
-
-  return NS_ERROR_ILLEGAL_VALUE;
+  return mAttrsAndChildren.GetSafeAttrNameAt(aIndex);
 }
 
 PRUint32

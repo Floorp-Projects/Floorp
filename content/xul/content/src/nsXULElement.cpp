@@ -1484,9 +1484,8 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     return NS_OK;
 }
 
-nsresult
-nsXULElement::GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
-                            nsIAtom** aName, nsIAtom** aPrefix) const
+const nsAttrName*
+nsXULElement::GetAttrNameAt(PRUint32 aIndex) const
 {
 #ifdef DEBUG_ATTRIBUTE_STATS
     int proto = mPrototype ? mPrototype->mNumAttributes : 0;
@@ -1496,15 +1495,10 @@ nsXULElement::GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
 
     PRUint32 localAttrCount = mAttrsAndChildren.AttrCount();
     if (aIndex < localAttrCount) {
-        const nsAttrName* name = mAttrsAndChildren.GetSafeAttrNameAt(aIndex);
-
-        *aNameSpaceID = name->NamespaceID();
-        NS_ADDREF(*aName = name->LocalName());
-        NS_IF_ADDREF(*aPrefix = name->GetPrefix());
 #ifdef DEBUG_ATTRIBUTE_STATS
         fprintf(stderr, " local!\n");
 #endif
-        return NS_OK;
+        return mAttrsAndChildren.GetSafeAttrNameAt(aIndex);
     }
 
     aIndex -= localAttrCount;
@@ -1529,11 +1523,7 @@ nsXULElement::GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
 #ifdef DEBUG_ATTRIBUTE_STATS
             fprintf(stderr, " proto[%d]!\n", aIndex);
 #endif
-            *aNameSpaceID = attr->mName.NamespaceID();
-            NS_ADDREF(*aName = attr->mName.LocalName());
-            NS_IF_ADDREF(*aPrefix = attr->mName.GetPrefix());
-
-            return NS_OK;
+            return &(attr->mName);
         }
         // else, we are out of attrs to return, fall-through
     }
@@ -1542,11 +1532,7 @@ nsXULElement::GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
     fprintf(stderr, " not found\n");
 #endif
 
-    *aNameSpaceID = kNameSpaceID_None;
-    *aName = nsnull;
-    *aPrefix = nsnull;
-
-    return NS_ERROR_ILLEGAL_VALUE;
+    return nsnull;
 }
 
 PRUint32
@@ -1623,27 +1609,15 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
     PRUint32 nattrs = GetAttrCount();
 
     for (i = 0; i < nattrs; ++i) {
-        nsCOMPtr<nsIAtom> attr;
-        nsCOMPtr<nsIAtom> prefix;
-        PRInt32 nameSpaceID;
-        GetAttrNameAt(i, &nameSpaceID, getter_AddRefs(attr),
-                      getter_AddRefs(prefix));
+        const nsAttrName* name = GetAttrNameAt(i);
 
         nsAutoString v;
-        GetAttr(nameSpaceID, attr, v);
+        GetAttr(name->NamespaceID(), name->LocalName(), v);
 
         fputs(" ", out);
 
         nsAutoString s;
-
-        if (prefix) {
-            prefix->ToString(s);
-
-            fputs(NS_LossyConvertUCS2toASCII(s).get(), out);
-            fputs(":", out);
-        }
-
-        attr->ToString(s);
+        name->GetQualifiedName(s);
 
         fputs(NS_LossyConvertUCS2toASCII(s).get(), out);
         fputs("=", out);

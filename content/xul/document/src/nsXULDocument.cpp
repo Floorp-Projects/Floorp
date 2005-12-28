@@ -837,12 +837,9 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
     if (aAttr.EqualsLiteral("*")) {
         PRUint32 count = broadcaster->GetAttrCount();
         while (count-- > 0) {
-            PRInt32 nameSpaceID;
-            nsCOMPtr<nsIAtom> name;
-            nsCOMPtr<nsIAtom> prefix;
-            broadcaster->GetAttrNameAt(count, &nameSpaceID,
-                                       getter_AddRefs(name),
-                                       getter_AddRefs(prefix));
+            const nsAttrName* attrName = broadcaster->GetAttrNameAt(count);
+            PRInt32 nameSpaceID = attrName->NamespaceID();
+            nsIAtom* name = attrName->LocalName();
 
             // _Don't_ push the |id|, |ref|, or |persist| attribute's value!
             if (! CanBroadcast(nameSpaceID, name))
@@ -850,7 +847,8 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
 
             nsAutoString value;
             broadcaster->GetAttr(nameSpaceID, name, value);
-            listener->SetAttr(nameSpaceID, name, prefix, value, PR_FALSE);
+            listener->SetAttr(nameSpaceID, name, attrName->GetPrefix(), value,
+                              PR_FALSE);
 
 #if 0
             // XXX we don't fire the |onbroadcast| handler during
@@ -3859,19 +3857,16 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 
     // Merge attributes from the overlay content node to that of the
     // actual document.
-    PRUint32 i, attrCount = aOverlayNode->GetAttrCount();
-
-    for (i = 0; i < attrCount; ++i) {
-        PRInt32 nameSpaceID;
-        nsCOMPtr<nsIAtom> attr, prefix;
-        rv = aOverlayNode->GetAttrNameAt(i, &nameSpaceID,
-                                         getter_AddRefs(attr),
-                                         getter_AddRefs(prefix));
-        if (NS_FAILED(rv)) return rv;
-
+    PRUint32 i;
+    const nsAttrName* name;
+    for (i = 0; (name = aOverlayNode->GetAttrNameAt(i)); ++i) {
         // We don't want to swap IDs, they should be the same.
-        if (nameSpaceID == kNameSpaceID_None && attr.get() == nsXULAtoms::id)
+        if (name->Equals(nsXULAtoms::id))
             continue;
+
+        PRInt32 nameSpaceID = name->NamespaceID();
+        nsIAtom* attr = name->LocalName();
+        nsIAtom* prefix = name->GetPrefix();
 
         nsAutoString value;
         aOverlayNode->GetAttr(nameSpaceID, attr, value);

@@ -71,6 +71,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
+#include "nsAttrName.h"
 
 #include "jsapi.h"
 #include "pldhash.h"
@@ -711,13 +712,9 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             PRUint32 numAttribs = tmplKid->GetAttrCount();
 
             for (PRUint32 attr = 0; attr < numAttribs; attr++) {
-                PRInt32 attribNameSpaceID;
-                nsCOMPtr<nsIAtom> attribName, prefix;
-
-                rv = tmplKid->GetAttrNameAt(attr, &attribNameSpaceID,
-                                            getter_AddRefs(attribName),
-                                            getter_AddRefs(prefix));
-                if (NS_FAILED(rv)) return rv;
+                const nsAttrName* name = tmplKid->GetAttrNameAt(attr);
+                PRInt32 attribNameSpaceID = name->NamespaceID();
+                nsIAtom* attribName = name->LocalName();
 
                 if (! IsIgnoreableAttribute(attribNameSpaceID, attribName)) {
                     // Create a buffer here, because there's a good
@@ -897,15 +894,12 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
     // check all attributes on the template node; if they reference a resource,
     // update the equivalent attribute on the content node
 
-    PRUint32 numAttribs = aTemplateNode->GetAttrCount();
+    const nsAttrName* name;
+    PRUint32 loop;
+    for (loop = 0; (name = aTemplateNode->GetAttrNameAt(loop)); ++loop) {
 
-    for (PRUint32 loop = 0; loop < numAttribs; ++loop) {
-        PRInt32    attribNameSpaceID;
-        nsCOMPtr<nsIAtom> attribName, prefix;
-        rv = aTemplateNode->GetAttrNameAt(loop, &attribNameSpaceID,
-                                          getter_AddRefs(attribName),
-                                          getter_AddRefs(prefix));
-        if (NS_FAILED(rv)) break;
+        PRInt32 attribNameSpaceID = name->NamespaceID();
+        nsIAtom* attribName = name->LocalName();
 
         // See if it's one of the attributes that we unilaterally
         // ignore. If so, on to the next one...

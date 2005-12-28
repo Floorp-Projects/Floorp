@@ -1918,18 +1918,14 @@ nsGenericHTMLElement::ListAttributes(FILE* out) const
 
   for (index = 0; index < count; index++) {
     // name
-    nsCOMPtr<nsIAtom> attr;
-    nsCOMPtr<nsIAtom> prefix;
-    PRInt32 nameSpaceID;
-    GetAttrNameAt(index, &nameSpaceID, getter_AddRefs(attr),
-                  getter_AddRefs(prefix));
+    const nsAttrName* name = GetAttrNameAt(index);
 
     nsAutoString buffer;
-    attr->ToString(buffer);
+    name->LocalName()->ToString(buffer);
 
     // value
     nsAutoString value;
-    GetAttr(nameSpaceID, attr, value);
+    GetAttr(name->NamespaceID(), name->LocalName(), value);
     buffer.AppendLiteral("=\"");
     for (int i = value.Length(); i >= 0; --i) {
       if (value[i] == PRUnichar('"'))

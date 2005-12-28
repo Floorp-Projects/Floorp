@@ -56,6 +56,7 @@
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsLayoutAtoms.h"
+#include "nsAttrName.h"
 
 typedef struct {
   nsString mPrefix;
@@ -580,21 +581,17 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   aElement->GetLocalName(tagLocalName);
   aElement->GetNamespaceURI(tagNamespaceURI);
 
-  PRInt32 namespaceID;
-    
   PRUint32 index, count;
   nsAutoString nameStr, prefixStr, uriStr, valueStr;
-  nsCOMPtr<nsIAtom> attrName, attrPrefix;
 
   count = content->GetAttrCount();
 
   // First scan for namespace declarations, pushing each on the stack
   for (index = 0; index < count; index++) {
     
-    content->GetAttrNameAt(index,
-                           &namespaceID,
-                           getter_AddRefs(attrName),
-                           getter_AddRefs(attrPrefix));
+    const nsAttrName* name = content->GetAttrNameAt(index);
+    PRInt32 namespaceID = name->NamespaceID();
+    nsIAtom *attrName = name->LocalName();
     
     if (namespaceID == kNameSpaceID_XMLNS ||
         // Also push on the stack attrs named "xmlns" in the null
@@ -606,7 +603,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
          attrName == nsLayoutAtoms::xmlnsNameSpace)) {
       content->GetAttr(namespaceID, attrName, uriStr);
 
-      if (!attrPrefix) {
+      if (!name->GetPrefix()) {
         // Default NS attribute does not have prefix (and the name is "xmlns")
         PushNameSpaceDecl(EmptyString(), uriStr, aElement);
       } else {
@@ -646,10 +643,10 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   // XXX Unfortunately we need a namespace manager to get
   // attribute URIs.
   for (index = 0; index < count; index++) {
-    content->GetAttrNameAt(index,
-                           &namespaceID,
-                           getter_AddRefs(attrName),
-                           getter_AddRefs(attrPrefix));
+    const nsAttrName* name = content->GetAttrNameAt(index);
+    PRInt32 namespaceID = name->NamespaceID();
+    nsIAtom* attrName = name->LocalName();
+    nsIAtom* attrPrefix = name->GetPrefix();
 
     if (attrPrefix) {
       attrPrefix->ToString(prefixStr);

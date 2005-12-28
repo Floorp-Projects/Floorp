@@ -56,6 +56,7 @@
 #include "nsUnicharUtils.h"
 #include "nsHTMLCSSUtils.h"
 #include "nsColor.h"
+#include "nsAttrName.h"
 
 static
 void ProcessBValue(const nsAString * aInputString, nsAString & aOutputString,
@@ -658,14 +659,7 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, cons
     }
     else if (1 == attrCount) {
       // incredible hack in case the only remaining attribute is a _moz_dirty...
-      PRInt32 nameSpaceID;
-      nsCOMPtr<nsIAtom> attrName, prefix;
-      res = content->GetAttrNameAt(0, &nameSpaceID, getter_AddRefs(attrName),
-                                   getter_AddRefs(prefix));
-      if (NS_FAILED(res)) return res;
-      nsAutoString attrString, tmp;
-      attrName->ToString(attrString);
-      if (attrString.EqualsLiteral("_moz_dirty")) {
+      if (content->GetAttrNameAt(0)->Equals(nsEditProperty::mozdirty)) {
         res = mHTMLEditor->RemoveContainer(aNode);
         if (NS_FAILED(res)) return res;
       }

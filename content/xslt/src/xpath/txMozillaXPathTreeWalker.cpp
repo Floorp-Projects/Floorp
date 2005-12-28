@@ -54,6 +54,7 @@
 #include "txXMLUtils.h"
 #include "txLog.h"
 #include "nsUnicharUtils.h"
+#include "nsAttrName.h"
 
 const PRUint32 kUnknownIndex = PRUint32(-1);
 
@@ -136,17 +137,12 @@ txXPathTreeWalker::moveToValidAttribute(PRUint32 aStartIndex)
         return PR_FALSE;
     }
 
-    PRInt32 namespaceID;
-    nsCOMPtr<nsIAtom> name, prefix;
-
     PRUint32 index;
     for (index = aStartIndex; index < total; ++index) {
-        mPosition.mContent->GetAttrNameAt(index, &namespaceID,
-                                          getter_AddRefs(name),
-                                          getter_AddRefs(prefix));
+        const nsAttrName* name = mPosition.mContent->GetAttrNameAt(index);
 
         // We need to ignore XMLNS attributes.
-        if (namespaceID != kNameSpaceID_XMLNS) {
+        if (name->NamespaceID() != kNameSpaceID_XMLNS) {
             mPosition.mIndex = index;
 
             return PR_TRUE;
@@ -382,11 +378,8 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
         return nsnull;
     }
 
-    nsIAtom* localName;
-    nsCOMPtr<nsIAtom> prefix;
-    PRInt32 namespaceID;
-    aNode.mContent->GetAttrNameAt(aNode.mIndex, &namespaceID, &localName,
-                                  getter_AddRefs(prefix));
+    nsIAtom* localName = aNode.mContent->GetAttrNameAt(aNode.mIndex)->LocalName();
+    NS_ADDREF(localName);
 
     return localName;
 }
@@ -428,12 +421,8 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
         return;
     }
 
-    nsCOMPtr<nsIAtom> prefix, localName;
-    PRInt32 namespaceID;
-    aNode.mContent->GetAttrNameAt(aNode.mIndex, &namespaceID,
-                                  getter_AddRefs(localName),
-                                  getter_AddRefs(prefix));
-    localName->ToString(aLocalName);
+    aNode.mContent->GetAttrNameAt(aNode.mIndex)->LocalName()->
+      ToString(aLocalName);
 
     // Check for html
     if (aNode.mContent->NodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
@@ -479,24 +468,7 @@ txXPathNodeUtils::getNodeName(const txXPathNode& aNode, nsAString& aName)
         return;
     }
 
-    nsCOMPtr<nsIAtom> name, prefix;
-    PRInt32 namespaceID;
-    aNode.mContent->GetAttrNameAt(aNode.mIndex, &namespaceID,
-                                  getter_AddRefs(name),
-                                  getter_AddRefs(prefix));
-
-
-    if (prefix) {
-        prefix->ToString(aName);
-        aName.Append(PRUnichar(':'));
-    }
-    else {
-        aName.Truncate();
-    }
-
-    const char* attrName;
-    name->GetUTF8String(&attrName);
-    AppendUTF8toUTF16(attrName, aName);
+    aNode.mContent->GetAttrNameAt(aNode.mIndex)->GetQualifiedName(aName);
 
     // Check for html
     if (aNode.mContent->NodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
@@ -517,12 +489,7 @@ txXPathNodeUtils::getNamespaceID(const txXPathNode& aNode)
         return aNode.mContent->GetNameSpaceID();
     }
 
-    nsCOMPtr<nsIAtom> name, prefix;
-    PRInt32 namespaceID;
-    aNode.mContent->GetAttrNameAt(aNode.mIndex, &namespaceID,
-                                  getter_AddRefs(name),
-                                  getter_AddRefs(prefix));
-    return namespaceID;
+    return aNode.mContent->GetAttrNameAt(aNode.mIndex)->NamespaceID();
 }
 
 /* static */
@@ -572,14 +539,10 @@ void
 txXPathNodeUtils::appendNodeValue(const txXPathNode& aNode, nsAString& aResult)
 {
     if (aNode.isAttribute()) {
-        nsCOMPtr<nsIAtom> name, prefix;
-        PRInt32 namespaceID;
-        aNode.mContent->GetAttrNameAt(aNode.mIndex, &namespaceID,
-                                      getter_AddRefs(name),
-                                      getter_AddRefs(prefix));
+        const nsAttrName* name = aNode.mContent->GetAttrNameAt(aNode.mIndex);
 
         nsAutoString result;
-        aNode.mContent->GetAttr(namespaceID, name, result);
+        aNode.mContent->GetAttr(name->NamespaceID(), name->LocalName(), result);
         aResult.Append(result);
 
         return;
@@ -885,14 +848,10 @@ txXPathNativeNode::createXPathNode(nsIDOMNode* aNode)
             return nsnull;
         }
 
-        nsCOMPtr<nsIAtom> attName, attPrefix;
-        PRInt32 attNS;
-
         PRUint32 i, total = parent->GetAttrCount();
         for (i = 0; i < total; ++i) {
-            parent->GetAttrNameAt(i, &attNS, getter_AddRefs(attName),
-                                  getter_AddRefs(attPrefix));
-            if (nodeInfo->Equals(attName, attNS)) {
+            const nsAttrName* name = parent->GetAttrNameAt(i);
+            if (nodeInfo->Equals(name->LocalName(), name->NamespaceID())) {
                 return new txXPathNode(parent, i);
             }
         }
@@ -931,15 +890,11 @@ txXPathNativeNode::getNode(const txXPathNode& aNode, nsIDOMNode** aResult)
         return CallQueryInterface(aNode.mContent, aResult);
     }
 
-    PRInt32 namespaceID;
-    nsCOMPtr<nsIAtom> name, prefix;
-    aNode.mContent->GetAttrNameAt(aNode.mIndex, &namespaceID,
-                                  getter_AddRefs(name),
-                                  getter_AddRefs(prefix));
+    const nsAttrName* name = aNode.mContent->GetAttrNameAt(aNode.mIndex);
 
     nsAutoString namespaceURI, localname;
-    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(namespaceID, namespaceURI);
-    name->ToString(localname);
+    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(name->NamespaceID(), namespaceURI);
+    name->LocalName()->ToString(localname);
 
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode.mContent);
     nsCOMPtr<nsIDOMAttr> attr;

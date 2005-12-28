@@ -85,6 +85,7 @@
 #include "nsIDOMMutationListener.h"
 #include "nsIDOMContextMenuListener.h"
 #include "nsIDOMEventGroup.h"
+#include "nsAttrName.h"
 
 #include "nsXBLAtoms.h"
 #include "nsXULAtoms.h"
@@ -615,15 +616,10 @@ nsXBLBinding::GenerateAnonymousContent()
   // Always check the content element for potential attributes.
   // This shorthand hack always happens, even when we didn't
   // build anonymous content.
-  PRUint32 length = content->GetAttrCount();
-
-  PRInt32 namespaceID;
-  nsCOMPtr<nsIAtom> name;
-  nsCOMPtr<nsIAtom> prefix;
-
-  for (PRUint32 i = 0; i < length; ++i) {
-    content->GetAttrNameAt(i, &namespaceID, getter_AddRefs(name),
-                           getter_AddRefs(prefix));
+  const nsAttrName* attrName;
+  for (PRUint32 i = 0; (attrName = content->GetAttrNameAt(i)); ++i) {
+    PRInt32 namespaceID = attrName->NamespaceID();
+    nsIAtom* name = attrName->LocalName();
 
     if (name != nsXBLAtoms::includes) {
       nsAutoString value;
