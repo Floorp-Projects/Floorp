@@ -14,6 +14,7 @@ classic.jar:
   skin/classic/mozapps/extensions/about.css                       (extensions/about.css)
   skin/classic/mozapps/extensions/extensions.css                  (extensions/extensions.css)
   skin/classic/mozapps/extensions/update.css                      (extensions/update.css)
+  skin/classic/mozapps/plugins/missingPlugin.css                  (plugins/missingPlugin.css)
   skin/classic/mozapps/pref/check.gif                             (pref/check.gif)
   skin/classic/mozapps/pref/dot.gif                               (pref/dot.gif)
   skin/classic/mozapps/pref/pref.css                              (pref/pref.css)

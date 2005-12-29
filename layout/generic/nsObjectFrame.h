@@ -130,20 +130,9 @@ public:
 
   void FixUpURLS(const nsString &name, nsAString &value);
 
-  void PluginNotAvailable(const char *aMimeType);
-
-  // Returns true if this object frame links to content that we have
-  // no enabled plugin for, that means not even the default plugin.
-  PRBool IsBroken() const
-  {
-    return mIsBrokenPlugin;
-  }
-
   virtual PRBool IsContainingBlock() const
   {
-    // Broken plugins are containing blocks.
-
-    return IsBroken();
+    return PR_FALSE;
   }
 
 protected:
@@ -171,12 +160,6 @@ protected:
    */
   void FixupWindow(const nsSize& aSize);
 
-  nsresult HandleChild(nsPresContext* aPresContext,
-                       nsHTMLReflowMetrics& aMetrics,
-                       const nsHTMLReflowState& aReflowState,
-                       nsReflowStatus& aStatus,
-                       nsIFrame* child);
- 
   PRBool IsFocusable(PRInt32 *aTabIndex = nsnull, PRBool aWithMouse = PR_FALSE);
 
   // check attributes and optionally CSS to see if we should display anything
@@ -185,10 +168,6 @@ protected:
   void NotifyContentObjectWrapper();
 
   nsPoint GetWindowOriginInPixels(PRBool aWindowless);
-
-  void CreateDefaultFrames(nsPresContext *aPresContext,
-                           nsHTMLReflowMetrics& aMetrics,
-                           const nsHTMLReflowState& aReflowState);
 
   /**
    * Makes sure that mInstanceOwner is valid and without a current plugin
@@ -207,8 +186,6 @@ private:
   // to the underlying problem described in bug 136927.
   PRBool mInstantiating;
 #endif
-
-  PRPackedBool          mIsBrokenPlugin;
 };
 
 

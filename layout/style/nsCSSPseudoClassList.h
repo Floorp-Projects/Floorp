@@ -82,6 +82,9 @@ CSS_PSEUDO_CLASS(mozBroken, ":-moz-broken")
 CSS_PSEUDO_CLASS(mozUserDisabled, ":-moz-user-disabled")
 CSS_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed")
 CSS_PSEUDO_CLASS(mozLoading, ":-moz-loading")
+CSS_PSEUDO_CLASS(mozTypeUnsupported, ":-moz-type-unsupported")
+
+CSS_PSEUDO_CLASS(mozHasHandlerRef, ":-moz-has-handlerref")
 
 // CSS 3 UI
 // http://www.w3.org/TR/2004/CR-css3-ui-20040511/#pseudo-classes

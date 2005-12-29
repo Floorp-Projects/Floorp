@@ -1,0 +1,35 @@
+/*
+ * This file's style only applies to broken objects, not the rest
+ * of the page.
+ */
+
+@namespace html url(http://www.w3.org/1999/xhtml);
+
+html|object > *|*,
+html|embed > *|*,
+html|applet > *|* {
+  width: inherit;
+  height: inherit;
+}
+
+html|a {
+  text-align: -moz-center;
+  overflow: -moz-hidden-unscrollable;
+  display: block;
+  border: 1px outset;
+  padding: 5px;
+  font-size: 12px;
+  font-family: sans-serif;
+  background: white;
+  -moz-user-select: none;
+  text-decoration: none;
+  color: black;
+}
+
+#missingPluginPlaceholder {
+  list-style-image: url(chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png);
+  display: block;
+  border: 0px;
+  width: 32px;
+  height: 32px;
+}

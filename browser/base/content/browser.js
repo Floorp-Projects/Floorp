@@ -713,7 +713,9 @@ function prepareForStartup()
   gNavigatorBundle = document.getElementById("bundle_browser");
   gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
   gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
-  gBrowser.addEventListener("PluginNotFound", gMissingPluginInstaller.newMissingPlugin, false);
+  // Note: we need to listen to untrusted events, because the pluginfinder XBL
+  // binding can't fire trusted ones (runs with page privileges).
+  gBrowser.addEventListener("PluginNotFound", gMissingPluginInstaller.newMissingPlugin, false, true);
   gBrowser.addEventListener("NewTab", BrowserOpenTab, false);
 
   var webNavigation;
@@ -5877,6 +5879,11 @@ missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
 }
 
 missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
+  // Since we are expecting also untrusted events, make sure
+  // that the target is a plugin
+  if (!(aEvent.target instanceof Components.interfaces.nsIObjectLoadingContent))
+    return;
+
   // For broken non-object plugin tags, register a click handler so
   // that the user can click the plugin replacement to get the new
   // plugin. Object tags can, and often do, deal with that themselves,
