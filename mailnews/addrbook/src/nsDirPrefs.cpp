@@ -2985,14 +2985,14 @@ static void DIR_SetStringPref(const char *prefRoot, const char *prefLeaf, const 
     nsXPIDLCString userPref;
     if (NS_SUCCEEDED(pPref->GetCharPref (prefLocation.get(), getter_Copies(userPref))))
 		{
-      if (value && (defaultValue ? nsCRT::strcasecmp(prefLocation.get(), defaultValue) : value != defaultValue))
+      if (value && (defaultValue ? nsCRT::strcasecmp(value, defaultValue) : value != defaultValue))
         rv = pPref->SetCharPref (prefLocation.get(), value);
       else
         rv = pPref->ClearUserPref(prefLocation.get());
 		}
 		else
 		{
-      if (value && (defaultValue ? nsCRT::strcasecmp(prefLocation.get(), defaultValue) : value != defaultValue))
+      if (value && (defaultValue ? nsCRT::strcasecmp(value, defaultValue) : value != defaultValue))
         rv = pPref->SetCharPref (prefLocation.get(), value); 
 		}
 	}
