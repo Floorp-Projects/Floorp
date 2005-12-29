@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -69,6 +70,7 @@
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
 #include "nsIPrompt.h"
+#include "nsIMsgAccountManager.h"
 
 #define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
 
@@ -109,6 +111,9 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_ImapShared = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Synchronize = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SyncDisabled = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanSearchMessages = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_UnreadFolders = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_FavoriteFolders = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_RecentFolders = nsnull;
 
 // commands
 nsIRDFResource* nsMsgFolderDataSource::kNC_Delete= nsnull;
@@ -161,6 +166,10 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_NAME),    &kNC_Name);
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_OPEN),    &kNC_Open);
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_FOLDERTREENAME),    &kNC_FolderTreeName);
+    rdf->GetResource(NS_LITERAL_CSTRING("mailnewsunreadfolders:/"),    &kNC_UnreadFolders);
+    rdf->GetResource(NS_LITERAL_CSTRING("mailnewsfavefolders:/"),    &kNC_FavoriteFolders);
+    rdf->GetResource(NS_LITERAL_CSTRING("mailnewsrecentfolders:/"),    &kNC_RecentFolders);
+
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_FOLDERTREESIMPLENAME),    &kNC_FolderTreeSimpleName);
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_NAME_SORT),    &kNC_NameSort);
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_FOLDERTREENAME_SORT),    &kNC_FolderTreeNameSort);
@@ -1128,13 +1137,17 @@ nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
   return NS_OK;
 }
 
+nsresult nsMsgFolderDataSource::GetFolderDisplayName(nsIMsgFolder *folder, PRUnichar **folderName)
+{
+  return folder->GetAbbreviatedName(folderName);
+}
 
 nsresult 
 nsMsgFolderDataSource::createFolderTreeNameNode(nsIMsgFolder *folder,
                                                 nsIRDFNode **target)
 {
   nsXPIDLString name;
-  nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
+  nsresult rv = GetFolderDisplayName(folder, getter_Copies(name));
   if (NS_FAILED(rv)) return rv;
   nsAutoString nameString(name);
   PRInt32 unreadMessages;
@@ -1150,7 +1163,7 @@ nsMsgFolderDataSource::createFolderTreeNameNode(nsIMsgFolder *folder,
 nsresult nsMsgFolderDataSource::createFolderTreeSimpleNameNode(nsIMsgFolder * folder, nsIRDFNode **target)
 {
   nsXPIDLString name;
-  nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
+  nsresult rv = GetFolderDisplayName(folder, getter_Copies(name));
   if (NS_FAILED(rv)) return rv;
 
   createNode(name.get(), target, getRDFService());
@@ -1772,7 +1785,7 @@ nsresult
 nsMsgFolderDataSource::NotifyFolderTreeSimpleNameChanged(nsIMsgFolder* aFolder, nsIRDFResource *folderResource)
 {
   nsXPIDLString abbreviatedName;
-  nsresult rv = aFolder->GetAbbreviatedName(getter_Copies(abbreviatedName));
+  nsresult rv = GetFolderDisplayName(aFolder, getter_Copies(abbreviatedName));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIRDFNode> newNameNode;
     createNode(abbreviatedName.get(), getter_AddRefs(newNameNode), getRDFService());
@@ -1788,7 +1801,7 @@ nsMsgFolderDataSource::NotifyFolderTreeNameChanged(nsIMsgFolder* aFolder,
                                                    PRInt32 aUnreadMessages)
 {
   nsXPIDLString name;
-  nsresult rv = aFolder->GetAbbreviatedName(getter_Copies(name));
+  nsresult rv = GetFolderDisplayName(aFolder, getter_Copies(name));
   if (NS_SUCCEEDED(rv)) {
     nsAutoString newNameString(name);
 			
@@ -2257,4 +2270,383 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
   return rv;
   
   
+}
+
+nsMsgFlatFolderDataSource::nsMsgFlatFolderDataSource()
+{
+}
+
+nsMsgFlatFolderDataSource::~nsMsgFlatFolderDataSource()
+{
+}
+
+nsresult nsMsgFlatFolderDataSource::Init()
+{
+  nsCOMPtr<nsIMsgAccountManager> am;
+
+  // get a weak ref to the account manager
+  if (!mAccountManager) 
+  {
+    nsresult rv;
+    am = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mAccountManager = do_GetWeakReference(am);
+  }
+  else
+    am = do_QueryReferent(mAccountManager);
+  return nsMsgFolderDataSource::Init();
+}
+
+void nsMsgFlatFolderDataSource::Cleanup()
+{
+  m_folders.Clear();
+  nsMsgFolderDataSource::Cleanup();
+}
+
+NS_IMETHODIMP nsMsgFlatFolderDataSource::GetTarget(nsIRDFResource* source,
+                       nsIRDFResource* property,
+                       PRBool tv,
+                       nsIRDFNode** target)
+{
+  return (property == kNC_Child) 
+    ? NS_RDF_NO_VALUE
+    : nsMsgFolderDataSource::GetTarget(source, property, tv, target);
+}
+
+
+NS_IMETHODIMP nsMsgFlatFolderDataSource::GetTargets(nsIRDFResource* source,
+                                                nsIRDFResource* property,    
+                                                PRBool tv,
+                                                nsISimpleEnumerator** targets)
+{
+  if (kNC_Child != property)
+    return nsMsgFolderDataSource::GetTargets(source, property, tv, targets);
+
+  nsresult rv = NS_RDF_NO_VALUE;
+  if(!targets)
+    return NS_ERROR_NULL_POINTER;
+
+  if (ResourceIsOurRoot(source))
+  {
+    // need an enumerator that gives all folders with unread
+    nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsISupportsArray> allServers;
+    rv = accountManager->GetAllServers(getter_AddRefs(allServers));
+    nsCOMPtr <nsISupportsArray> allFolders = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);;
+    if (NS_SUCCEEDED(rv) && allServers)
+    {
+      PRUint32 count = 0;
+      allServers->Count(&count);
+      PRUint32 i;
+      for (i = 0; i < count; i++) 
+      {
+        nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(allServers, i);
+        if (server)
+        {
+          nsCOMPtr <nsIMsgFolder> rootFolder;
+          server->GetRootFolder(getter_AddRefs(rootFolder));
+          if (rootFolder)
+          {
+            nsCOMPtr<nsIEnumerator> subFolders;
+            rv = rootFolder->GetSubFolders(getter_AddRefs(subFolders));
+
+            PRUint32 lastEntry;
+            allFolders->Count(&lastEntry);
+            rv = rootFolder->ListDescendents(allFolders);
+            PRUint32 newLastEntry;
+            allFolders->Count(&newLastEntry);
+            for (PRUint32 newEntryIndex = lastEntry; newEntryIndex < newLastEntry;)
+            {
+              nsCOMPtr <nsIMsgFolder> curFolder = do_QueryElementAt(allFolders, newEntryIndex);
+              if (!WantsThisFolder(curFolder))
+              {
+                allFolders->RemoveElementAt(newEntryIndex);
+                newLastEntry--;
+              }
+              else
+              {
+                // unfortunately, we need a separate array for this since
+                // ListDescendents takes an nsISupportsArray. But we want
+                // to use an nsCOMArrray for the DS since that's the 
+                // preferred mechanism.
+                m_folders.AppendObject(curFolder);
+                newEntryIndex++;
+              }
+            }
+          }
+        }
+      }
+      return NS_NewArrayEnumerator(targets, allFolders);
+    }
+  }
+  nsSingletonEnumerator* cursor = new nsSingletonEnumerator(property);
+  if (cursor == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*targets = cursor);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMsgFlatFolderDataSource::GetURI(char* *aUri)
+{
+  nsCAutoString uri("rdf:");
+  uri.Append(m_dsName);
+  return (*aUri = ToNewCString(uri))
+    ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP nsMsgFlatFolderDataSource::HasAssertion(nsIRDFResource* source,
+                            nsIRDFResource* property,
+                            nsIRDFNode* target,
+                            PRBool tv,
+                            PRBool* hasAssertion)
+{
+  nsresult rv;
+  
+  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
+  // we need to check if the folder belongs in this datasource.
+  if (NS_SUCCEEDED(rv) && property != kNC_Open && property != kNC_Child)
+  {
+    if (WantsThisFolder(folder) && (kNC_Child != property))
+      return DoFolderHasAssertion(folder, property, target, tv, hasAssertion);
+  }
+  else if (property == kNC_Child && ResourceIsOurRoot(source)) // check if source is us
+  {
+    folder = do_QueryInterface(target);
+    if (WantsThisFolder(folder))
+    {
+      *hasAssertion = PR_TRUE;
+      return NS_OK;
+    }
+  }
+  *hasAssertion = PR_FALSE;
+  return NS_OK;
+}
+
+PRBool nsMsgFlatFolderDataSource::ResourceIsOurRoot(nsIRDFResource *resource)
+{
+  const char *uri;
+  nsCAutoString dsUri(m_dsName);
+  dsUri.Append(":/");
+
+  resource->GetValueConst(&uri);
+  return dsUri.Equals(uri);
+}
+
+PRBool nsMsgFlatFolderDataSource::WantsThisFolder(nsIMsgFolder *folder)
+{
+  NS_ASSERTION(PR_FALSE, "must be overridden");
+  return PR_FALSE;
+}
+
+nsresult nsMsgFlatFolderDataSource::GetFolderDisplayName(nsIMsgFolder *folder, PRUnichar **folderName)
+{
+  nsXPIDLString curFolderName;
+  folder->GetName(getter_Copies(curFolderName));
+  PRUint32 foldersCount = m_folders.Count();
+  nsXPIDLString otherFolderName;
+  for (PRUint32 index = 0; index < foldersCount; index++)
+  {
+    if (folder == m_folders[index]) // ignore ourselves.
+      continue;
+    m_folders[index]->GetName(getter_Copies(otherFolderName));
+    if (otherFolderName.Equals(curFolderName))
+    {
+      nsCOMPtr <nsIMsgIncomingServer> server;
+      folder->GetServer(getter_AddRefs(server));
+      if (server)
+      {
+        nsXPIDLString serverName;
+        server->GetPrettyName(getter_Copies(serverName));
+        curFolderName.Append(NS_LITERAL_STRING(" - "));
+        curFolderName.Append(serverName);
+        *folderName = ToNewUnicode(curFolderName);
+        return (*folderName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+  // check if folder name is unique - if not, append account name
+  return folder->GetAbbreviatedName(folderName);
+}
+
+
+PRBool nsMsgUnreadFoldersDataSource::WantsThisFolder(nsIMsgFolder *folder)
+{
+  PRInt32 numUnread;
+  folder->GetNumUnread(PR_FALSE, &numUnread);
+  return numUnread > 0;
+}
+
+nsresult nsMsgUnreadFoldersDataSource::NotifyPropertyChanged(nsIRDFResource *resource, 
+                    nsIRDFResource *property, nsIRDFNode *newNode, 
+                    nsIRDFNode *oldNode)
+{
+  // check if it's the has unread property that's changed; if so, see if we need
+  // to add this folder to the view.
+  // Then, call base class.
+  if (kNC_HasUnreadMessages == property)
+  {
+    nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(resource));
+    if (folder)
+    {
+      PRInt32 numUnread;
+      folder->GetNumUnread(PR_FALSE, &numUnread);
+      if (numUnread > 0)
+      {
+        if (m_folders.IndexOf(folder) == kNotFound)
+          m_folders.AppendObject(folder);
+        NotifyObservers(kNC_UnreadFolders, kNC_Child, resource, nsnull, PR_TRUE, PR_FALSE);
+      }
+    }
+  }
+  return nsMsgFolderDataSource::NotifyPropertyChanged(resource, property, 
+                                                newNode, oldNode);
+}
+
+PRBool nsMsgFavoriteFoldersDataSource::WantsThisFolder(nsIMsgFolder *folder)
+{
+  PRUint32 folderFlags;
+  folder->GetFlags(&folderFlags);
+  return folderFlags & MSG_FOLDER_FLAG_FAVORITE;
+}
+
+
+void nsMsgRecentFoldersDataSource::Cleanup()
+{
+  m_builtRecentFolders = PR_FALSE;
+  m_cutOffDate = 0;
+  nsMsgFlatFolderDataSource::Cleanup();
+}
+
+
+PRBool nsMsgRecentFoldersDataSource::WantsThisFolder(nsIMsgFolder *folder)
+{
+  if (!m_builtRecentFolders)
+  {
+    nsresult rv;
+    nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsISupportsArray> allServers;
+    rv = accountManager->GetAllServers(getter_AddRefs(allServers));
+    nsCOMPtr <nsISupportsArray> allFolders = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);;
+    if (NS_SUCCEEDED(rv) && allServers)
+    {
+      PRUint32 count = 0;
+      allServers->Count(&count);
+      PRUint32 i;
+      for (i = 0; i < count; i++) 
+      {
+        nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(allServers, i);
+        if (server)
+        {
+          nsCOMPtr <nsIMsgFolder> rootFolder;
+          server->GetRootFolder(getter_AddRefs(rootFolder));
+          if (rootFolder)
+          {
+            nsCOMPtr<nsIEnumerator> subFolders;
+            rv = rootFolder->GetSubFolders(getter_AddRefs(subFolders));
+
+            PRUint32 lastEntry;
+            allFolders->Count(&lastEntry);
+            rv = rootFolder->ListDescendents(allFolders);
+            PRUint32 newLastEntry;
+            allFolders->Count(&newLastEntry);
+            for (PRUint32 newEntryIndex = lastEntry; newEntryIndex < newLastEntry; newEntryIndex++)
+            {
+              nsCOMPtr <nsIMsgFolder> curFolder = do_QueryElementAt(allFolders, newEntryIndex);
+              nsXPIDLCString dateStr;
+              PRInt32 err;
+              curFolder->GetStringProperty("MRUTime", getter_Copies(dateStr));
+              PRUint32 curFolderDate = (PRUint32) dateStr.ToInteger(&err);
+              if (err)
+                curFolderDate = 0;
+              if (curFolderDate > m_cutOffDate)
+              {
+                // if m_folders is "full", replace oldest folder with this folder,
+                // and adjust m_cutOffDate so that it's the mrutime 
+                // of the "new" oldest folder.
+                PRUint32 curFaveFoldersCount = m_folders.Count();
+                if (curFaveFoldersCount > m_maxNumFolders)
+                {
+                  PRUint32 indexOfOldestFolder = 0;
+                  PRUint32 oldestFaveDate = 0;
+                  PRUint32 newOldestFaveDate = 0;
+                  for (PRUint32 index = 0; index < curFaveFoldersCount; )
+                  {
+                    nsXPIDLCString curFaveFolderDateStr;
+                    m_folders[index]->GetStringProperty("MRUTime", getter_Copies(curFaveFolderDateStr));
+                    PRUint32 curFaveFolderDate = (PRUint32) curFaveFolderDateStr.ToInteger(&err);
+                    if (!oldestFaveDate || curFaveFolderDate < oldestFaveDate)
+                    {
+                      indexOfOldestFolder = index;
+                      newOldestFaveDate = oldestFaveDate;
+                      oldestFaveDate = curFaveFolderDate;
+                    }
+                    if (!newOldestFaveDate || (index != indexOfOldestFolder
+                                                && curFaveFolderDate < newOldestFaveDate))
+                      newOldestFaveDate = curFaveFolderDate;
+                    index++;
+                  }
+                  if (curFolderDate > oldestFaveDate && m_folders.IndexOf(curFolder) == kNotFound)
+                    m_folders.ReplaceObjectAt(curFolder, indexOfOldestFolder);
+
+                  NS_ASSERTION(newOldestFaveDate >= m_cutOffDate, "cutoff date should be getting bigger");
+                  m_cutOffDate = newOldestFaveDate;
+                }
+                else if (m_folders.IndexOf(curFolder) == kNotFound)
+                  m_folders.AppendObject(curFolder);
+              }
+#ifdef DEBUG_David_Bienvenu
+              else
+              {
+                for (PRUint32 index = 0; index < m_folders.Count(); index++)
+                {
+                  nsXPIDLCString curFaveFolderDateStr;
+                  m_folders[index]->GetStringProperty("MRUTime", getter_Copies(curFaveFolderDateStr));
+                  PRUint32 curFaveFolderDate = (PRUint32) curFaveFolderDateStr.ToInteger(&err);
+                  NS_ASSERTION(curFaveFolderDate > curFolderDate, "folder newer then faves but not added");
+                }
+              }
+#endif
+            }
+          }
+        }
+      }
+    }
+  }
+  m_builtRecentFolders = PR_TRUE;
+  return m_folders.IndexOf(folder) != kNotFound;
+}
+
+
+
+nsresult nsMsgRecentFoldersDataSource::NotifyPropertyChanged(nsIRDFResource *resource, 
+                    nsIRDFResource *property, nsIRDFNode *newNode, 
+                    nsIRDFNode *oldNode)
+{
+  // check if it's the has new property that's changed; if so, see if we need
+  // to add this folder to the view.
+  // Then, call base class.
+  if (kNC_NewMessages == property)
+  {
+    nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(resource));
+    if (folder)
+    {
+      PRBool hasNewMessages;
+      folder->GetHasNewMessages(&hasNewMessages);
+      if (hasNewMessages > 0)
+      {
+        if (m_folders.IndexOf(folder) == kNotFound)
+        {
+          m_folders.AppendObject(folder);
+          NotifyObservers(kNC_RecentFolders, kNC_Child, resource, nsnull, PR_TRUE, PR_FALSE);
+        }
+      }
+    }
+  }
+  return nsMsgFolderDataSource::NotifyPropertyChanged(resource, property, 
+                                                newNode, oldNode);
 }

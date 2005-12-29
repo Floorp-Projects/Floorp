@@ -296,6 +296,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerMigrator, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAccount)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgIdentity)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgFolderDataSource, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgUnreadFoldersDataSource, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgFavoriteFoldersDataSource, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgRecentFoldersDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgAccountManagerDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchTerm)
@@ -671,6 +674,18 @@ static const nsModuleComponentInfo gComponents[] = {
     { "Mail/News Folder Data Source", NS_MAILNEWSFOLDERDATASOURCE_CID,
       NS_MAILNEWSFOLDERDATASOURCE_CONTRACTID,
       nsMsgFolderDataSourceConstructor,
+    },
+    { "Mail/News Unread Folder Data Source", NS_MAILNEWSUNREADFOLDERDATASOURCE_CID,
+      NS_MAILNEWSUNREADFOLDERDATASOURCE_CONTRACTID,
+      nsMsgUnreadFoldersDataSourceConstructor,
+    },
+    { "Mail/News Favorite Folder Data Source", NS_MAILNEWSFAVORITEFOLDERDATASOURCE_CID,
+      NS_MAILNEWSFAVORITEFOLDERDATASOURCE_CONTRACTID,
+      nsMsgFavoriteFoldersDataSourceConstructor,
+    },
+    { "Mail/News Recent Folder Data Source", NS_MAILNEWSRECENTFOLDERDATASOURCE_CID,
+      NS_MAILNEWSRECENTFOLDERDATASOURCE_CONTRACTID,
+      nsMsgRecentFoldersDataSourceConstructor,
     },
     { "Mail/News Account Manager Data Source", NS_MSGACCOUNTMANAGERDATASOURCE_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX "msgaccountmanager",
