@@ -18,6 +18,8 @@
 # Rights Reserved.
 #
 # Contributor(s): Gervase Markham <gerv@gerv.net>
+#                 Albert Ting <altlst@sonic.net>
+#                 A. Karl Kornel <karl@kornel.name>
 
 use strict;
 use lib ".";
@@ -207,6 +209,7 @@ sub data {
 sub readData {
     my $self = shift;
     my @data;
+    my @maxvals;
 
     # Note: you get a bad image if getSeriesIDs returns nothing
     # We need to handle errors better.
@@ -254,10 +257,15 @@ sub readData {
     my $gt_index = $self->{'gt'} ? scalar(@{$self->{'lines'}}) : undef;
     my $line_index = 0;
 
+    $maxvals[$gt_index] = 0 if $gt_index;
+
+    my @datediff_total;
+
     foreach my $line (@{$self->{'lines'}}) {        
         # Even if we end up with no data, we need an empty arrayref to prevent
         # errors in the PNG-generating code
         $data[$line_index] = [];
+        $maxvals[$line_index] = 0;
 
         foreach my $series (@$line) {
 
@@ -274,18 +282,69 @@ sub readData {
                 my ($datediff, $value) = @$point;
                 $data[$line_index][$datediff] ||= 0;
                 $data[$line_index][$datediff] += $value;
+                if ($data[$line_index][$datediff] > $maxvals[$line_index]) {
+                    $maxvals[$line_index] = $data[$line_index][$datediff];
+                }
+
+                $datediff_total[$datediff] += $value;
 
                 # Add to the grand total, if we are doing that
                 if ($gt_index) {
                     $data[$gt_index][$datediff] ||= 0;
                     $data[$gt_index][$datediff] += $value;
+                    if ($data[$gt_index][$datediff] > $maxvals[$gt_index]) {
+                        $maxvals[$gt_index] = $data[$gt_index][$datediff];
+                    }
                 }
             }
         }
 
+        # We are done with the series making up this line, go to the next one
         $line_index++;
     }
 
+    # calculate maximum y value
+    if ($self->{'cumulate'}) {
+        # Make sure we do not try to take the max of an array with undef values
+        my @processed_datediff;
+        while (@datediff_total) {
+            my $datediff = shift @datediff_total;
+            push @processed_datediff, $datediff if defined($datediff);
+        }
+        $self->{'y_max_value'} = Bugzilla::Util::max(@processed_datediff);
+    }
+    else {
+        $self->{'y_max_value'} = Bugzilla::Util::max(@maxvals);
+    }
+    $self->{'y_max_value'} |= 1; # For log()
+
+    # Align the max y value:
+    #  For one- or two-digit numbers, increase y_max_value until divisible by 8
+    #  For larger numbers, see the comments below to figure out what's going on
+    if ($self->{'y_max_value'} < 100) {
+        do {
+            ++$self->{'y_max_value'};
+        } while ($self->{'y_max_value'} % 8 != 0);
+    }
+    else {
+        #  First, get the # of digits in the y_max_value
+        my $num_digits = 1+int(log($self->{'y_max_value'})/log(10));
+
+        # We want to zero out all but the top 2 digits
+        my $mask_length = $num_digits - 2;
+        $self->{'y_max_value'} /= 10**$mask_length;
+        $self->{'y_max_value'} = int($self->{'y_max_value'});
+        $self->{'y_max_value'} *= 10**$mask_length;
+
+        # Add 10^$mask_length to the max value
+        # Continue to increase until it's divisible by 8 * 10^($mask_length-1)
+        # (Throwing in the -1 keeps at least the smallest digit at zero)
+        do {
+            $self->{'y_max_value'} += 10**$mask_length;
+        } while ($self->{'y_max_value'} % (8*(10**($mask_length-1))) != 0);
+    }
+
+        
     # Add the x-axis labels into the data structure
     my $date_progression = generateDateProgression($datefrom, $dateto);
     unshift(@data, $date_progression);
