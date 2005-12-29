@@ -39,8 +39,8 @@
 pref("calendar.alarms.playsound", false);
 pref("calendar.alarms.playfile", "");
 pref("calendar.alarms.defaultsnoozelength", 5);
-pref("calendar.event.defaultstarthour", 8);
-pref("calendar.event.defaultendhour", 17);
+pref("calendar.view.defaultstarthour", 8);
+pref("calendar.view.defaultendhour", 17);
 
 // 0=Sunday, 1=Monday, 2=Tuesday, etc.  One day we might want to move this to
 // a locale specific file.

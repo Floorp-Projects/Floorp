@@ -112,7 +112,7 @@
 <hbox flex="1" align="center">
 	<description flex="1" >&pref.calendar.view.restrict.label;</description>
 	<description>&pref.calendar.view.starttime.label;</description>
-	 <menulist id="daystarthour" preftype="int" prefstring="calendar.event.defaultstarthour"  value="8">
+	 <menulist id="daystarthour" preftype="int" prefstring="calendar.view.defaultstarthour"  value="8">
 		 <menupopup id="daystarthour">
 			 <menuitem label="&pref.hour.00;"    value="0"/>
 			 <menuitem label="&pref.hour.01;"    value="1"/>
@@ -141,7 +141,7 @@
 		</menupopup>
 	</menulist>
 	<description>&pref.calendar.view.endtime.label;</description>
-	 <menulist id="dayendhour" preftype="int" prefstring="calendar.event.defaultendhour"  value="17">
+	 <menulist id="dayendhour" preftype="int" prefstring="calendar.view.defaultendhour"  value="17">
 		 <menupopup id="dayendhour">
 			 <menuitem label="&pref.hour.00;"    value="0"/>
 			 <menuitem label="&pref.hour.01;"    value="1"/>

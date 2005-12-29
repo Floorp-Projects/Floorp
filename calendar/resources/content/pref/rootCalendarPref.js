@@ -59,8 +59,8 @@ calendarPrefObserver.prototype =
         // when calendar pref was changed, we reinitialize 
         switch( prefName )
         {
-            case "calendar.event.defaultstarthour":
-            case "calendar.event.defaultendhour":
+            case "calendar.view.defaultstarthour":
+            case "calendar.view.defaultendhour":
             case "calendar.previousweeks.inview":
             case "calendar.week.d0sundaysoff":
             case "calendar.week.d1mondaysoff":
@@ -161,8 +161,8 @@ function calendarPreferences( CalendarWindow )
    getIntPref( this.calendarPref, "alarms.defaultsnoozelength", calendarStringBundle.GetStringFromName("defaultSnoozeAlarmLength" ) );
    getIntPref( this.calendarPref, "date.format", calendarStringBundle.GetStringFromName("dateFormat" ) );
    getBoolPref( this.calendarPref, "dateformat.storeingmt", calendarStringBundle.GetStringFromName("storeInGmt") );
-   getIntPref( this.calendarPref, "event.defaultstarthour", calendarStringBundle.GetStringFromName("defaultStartHour" ) );
-   getIntPref( this.calendarPref, "event.defaultendhour", calendarStringBundle.GetStringFromName("defaultEndHour" ) );
+   getIntPref( this.calendarPref, "view.defaultstarthour", calendarStringBundle.GetStringFromName("defaultStartHour" ) );
+   getIntPref( this.calendarPref, "view.defaultendhour", calendarStringBundle.GetStringFromName("defaultEndHour" ) );
    getIntPref( this.calendarPref, "week.start", calendarStringBundle.GetStringFromName("defaultWeekStart" ) );
    getBoolPref( this.calendarPref, "week.d0sundaysoff", "true"==calendarStringBundle.GetStringFromName("defaultWeekSundaysOff" ) );
    getBoolPref( this.calendarPref, "week.d1mondaysoff", "true"==calendarStringBundle.GetStringFromName("defaultWeekMondaysOff" ) );

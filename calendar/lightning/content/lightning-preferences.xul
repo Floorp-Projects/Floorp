@@ -54,8 +54,8 @@
       <preference id="calendar.alarms.playsound" name="calendar.alarms.playsound" type="bool"/>
       <preference id="calendar.alarms.playfile" name="calendar.alarms.playfile" type="string"/>
       <preference id="calendar.alarms.defaultsnoozelength" name="calendar.alarms.defaultsnoozelength" type="int"/>
-      <preference id="calendar.event.defaultstarthour" name="calendar.event.defaultstarthour" type="int"/>
-      <preference id="calendar.event.defaultendhour" name="calendar.event.defaultendhour" type="int"/>
+      <preference id="calendar.view.defaultstarthour" name="calendar.view.defaultstarthour" type="int"/>
+      <preference id="calendar.view.defaultendhour" name="calendar.view.defaultendhour" type="int"/>
       <preference id="calendar.week.start" name="calendar.week.start" type="int"/>
       <preference id="calendar.timezone.local" name="calendar.timezone.local" type="string"/>
     </preferences>
@@ -106,11 +106,11 @@
             <rows>
               <row align="center">
                 <label value="&pref.calendar.view.starttime.label;"/>
-                <textbox preference="calendar.event.defaultstarthour"/>
+                <textbox preference="calendar.view.defaultstarthour"/>
               </row>
               <row align="center">
                 <label value="&pref.calendar.view.endtime.label;"/>
-                <textbox preference="calendar.event.defaultendhour"/>
+                <textbox preference="calendar.view.defaultendhour"/>
               </row>
               <row align="center">
                 <description>&pref.weekstarts.label;</description>
