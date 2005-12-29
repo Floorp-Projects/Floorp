@@ -8,10 +8,6 @@
 
 require_once('includes.php');
 
-// Arrays to store clean inputs.
-$clean = array();  // General array for verified inputs.
-$sql = array();  // Trusted for SQL.
-
 // If some of the inputs don't exist, throw an error and exit
 if (empty($_GET['aid']) || empty($_GET['cid']) || empty($_GET['r'])) {
     triggerError('Missing required parameter(s).  Script cannot continue.');

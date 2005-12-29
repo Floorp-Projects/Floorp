@@ -5,16 +5,14 @@
  * @subpackage docs
  */
 
-startProcessing('author.tpl');
-require_once('includes.php');
-
-// Arrays to store clean inputs.
-$clean = array();  // General array for verified inputs.
-$sql = array();  // Trusted for SQL.
-
 // Get our addon ID.
 $clean['UserID'] = intval($_GET['id']);
 $sql['UserID'] =& $clean['UserID'];
+
+$cacheId = $clean['UserID'];
+
+startProcessing('author.tpl',$cacheId,$compileId);
+require_once('includes.php');
 
 $user = new User($sql['UserID']);
 

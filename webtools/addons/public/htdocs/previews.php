@@ -6,17 +6,13 @@
  * @subpackage docs
  */
 
-startProcessing('previews.tpl');
-require_once('includes.php');
- 
-// Arrays to store clean inputs.
-$clean = array();  // General array for verified inputs.
-$sql = array();  // Trusted for SQL.
-
-// Get our addon ID.
+// Get the int value of our addon ID.
 $clean['ID'] = intval($_GET['id']);
 $sql['ID'] =& $clean['ID'];
 
+startProcessing('previews.tpl',$cacheId,$compileId);
+require_once('includes.php');
+ 
 $addon = new AddOn($sql['ID']);
 $addon->getPreviews();
 

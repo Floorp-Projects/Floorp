@@ -8,7 +8,7 @@
  * @todo FAQ search?
  */
 
-startProcessing('faq.tpl');
+startProcessing('faq.tpl',null,$compileId);
 require_once('includes.php');
 
 $db->query("
@@ -44,7 +44,4 @@ $tpl->assign(
             'content'   => 'faq.tpl',
             'title'     => 'Frequently Asked Questions')
 );
-
-// No need to set wrapper, since the left-nav wrapper is default.
-// $wrapper = 'inc/wrappers/default.tpl';
 ?>

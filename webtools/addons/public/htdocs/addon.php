@@ -6,18 +6,16 @@
  * @subpackage docs
  */
 
-startProcessing('addon.tpl');
-require_once('includes.php');
-
-// Arrays to store clean inputs.
-$clean = array();  // General array for verified inputs.
-$sql = array();  // Trusted for SQL.
-
 // Get the int value of our addon ID.
 $clean['ID'] = intval($_GET['id']);
-
-// Since it is guaranteed to be just an int, we can reference it.
 $sql['ID'] =& $clean['ID'];
+
+// Set the cachId so we have a unique cache for each AddOn ID.
+$cacheId = $clean['ID'];
+
+startProcessing('addon.tpl',$cacheId,$compileId);
+require_once('includes.php');
+
 
 // Create our AddOn object using the ID.
 $addon = new AddOn($sql['ID']);

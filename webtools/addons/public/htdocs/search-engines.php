@@ -9,15 +9,15 @@
  * @todo Get main template spruced up.
  */
 
-startProcessing('search-engines.tpl','nonav');
+$currentTab = 'search-engines';
+
+startProcessing('search-engines.tpl',null,$compileId,'nonav');
 require_once('includes.php');
 
 // Assign template variables.
 $tpl->assign(
     array(  'title'             => 'Search Engines',
-            'currentTab'        => 'search-engines',
+            'currentTab'        => $currentTab,
             'content'           => 'search-engines.tpl')
 );
-
-$wrapper = 'inc/wrappers/nonav.tpl';
 ?>

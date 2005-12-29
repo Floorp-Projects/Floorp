@@ -12,12 +12,8 @@
  * @todo fix CSS so the pull-downs look symmetrical before design freaks start crying.
  */
 
-startProcessing('search.tpl','nonav');
+startProcessing('search.tpl',null,null,'nonav');
 require_once('includes.php');
-
-// Array to store clean inputs.
-$clean = array();
-$sql = array();
 
 // Array to store our page information.
 $page = array();
@@ -52,6 +48,8 @@ if (isset($_GET['date'])&&$_GET['date']!='null'&&ctype_alpha($_GET['date'])) {
 // Application.
 if (isset($_GET['app'])&&$_GET['app']!='null'&&ctype_alpha($_GET['app'])) {
     $clean['app'] = $_GET['app'];
+} elseif ($_GET['app']=='null') {
+    unset($clean['app']);
 }
 
 // Query.
@@ -282,7 +280,4 @@ $tpl->assign(
         'title'         => 'Search'
     )
 );
-
-// Set a non-default wrapper.
-$wrapper = 'inc/wrappers/nonav.tpl';
 ?>

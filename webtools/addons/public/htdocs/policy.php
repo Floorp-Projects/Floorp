@@ -8,7 +8,7 @@
  * @todo talk to cbeard and rebron about establishing the policy document.
  */
 
-startProcessing('policy.tpl');
+startProcessing('policy.tpl',null,$compileId);
 require_once('includes.php');
 
 $links = array(

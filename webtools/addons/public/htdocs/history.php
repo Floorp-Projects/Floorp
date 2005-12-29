@@ -10,16 +10,14 @@
  * @todo do we still want to allow users access to old versions?
  */
 
-startProcessing('history.tpl');
-require_once('includes.php');
- 
-// Arrays to store clean inputs.
-$clean = array();  // General array for verified inputs.
-$sql = array();  // Trusted for SQL.
-
 // Get our addon ID.
 $clean['ID'] = intval($_GET['id']);
 $sql['ID'] =& $clean['ID'];
+
+$cacheId = $clean['ID'];
+
+startProcessing('history.tpl',$cacheId,$compileId);
+require_once('includes.php');
 
 $addon = new AddOn($sql['ID']);
 $addon->getHistory();
