@@ -283,6 +283,16 @@ math_pow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     if (!js_ValueToNumber(cx, argv[1], &y))
         return JS_FALSE;
+#if !JS_USE_FDLIBM_MATH
+    /*
+     * Because C99 and ECMA specify different behavior for pow(),
+     * we need to wrap the libm call to make it ECMA compliant.
+     */
+    if (!JSDOUBLE_IS_FINITE(y) && (x == 1.0 || x == -1.0)) {
+        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+        return JS_TRUE;
+    }
+#endif
     z = fd_pow(x, y);
     return js_NewNumberValue(cx, z, rval);
 }
