@@ -332,6 +332,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // Blocking status from content policy
     PRBool                      mUserDisabled  : 1;
     PRBool                      mSuppressed    : 1;
+    // Whether we fell back because of an unsupported type
+    PRBool                      mTypeUnsupported:1;
 
     friend struct nsAsyncInstantiateEvent;
 };

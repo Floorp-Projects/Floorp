@@ -245,16 +245,28 @@ class AutoNotifier {
 class AutoFallback {
   public:
     AutoFallback(nsObjectLoadingContent* aContent, const nsresult* rv)
-      : mContent(aContent), mResult(rv) {}
+      : mContent(aContent), mResult(rv), mTypeUnsupported(PR_FALSE) {}
     ~AutoFallback() {
       if (NS_FAILED(*mResult)) {
         LOG(("OBJLC [%p]: rv=%08x, falling back\n", mContent, *mResult));
         mContent->Fallback(PR_FALSE);
+        if (mTypeUnsupported) {
+          mContent->mTypeUnsupported = PR_TRUE;
+        }
       }
+    }
+
+    /**
+     * This function can be called to indicate that, after falling back,
+     * mTypeUnsupported should be set to true.
+     */
+    void TypeUnsupported() {
+      mTypeUnsupported = PR_TRUE;
     }
   private:
     nsObjectLoadingContent* mContent;
     const nsresult* mResult;
+    PRBool mTypeUnsupported;
 };
 
 /**
@@ -301,6 +313,7 @@ nsObjectLoadingContent::nsObjectLoadingContent()
   , mInstantiating(PR_FALSE)
   , mUserDisabled(PR_FALSE)
   , mSuppressed(PR_FALSE)
+  , mTypeUnsupported(PR_FALSE)
 {
 }
 
@@ -422,11 +435,18 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
     case eType_Loading:
       NS_NOTREACHED("Should not have a loading type here!");
     case eType_Null:
+      LOG(("OBJLC [%p]: Unsupported type, falling back\n", this));
+      // Need to fallback here (instead of using the case below), so that we can
+      // set mTypeUnsupported without it being overwritten. This is also why we
+      // return early.
+      Fallback(PR_FALSE);
+
       // Do nothing, but fire the plugin not found event if needed
       if (IsUnsupportedPlugin(thisContent)) {
         FirePluginNotFound(thisContent);
       }
-      break;
+      mTypeUnsupported = PR_TRUE;
+      return NS_BINDING_ABORTED;
   }
 
   if (mFinalListener) {
@@ -664,9 +684,13 @@ nsObjectLoadingContent::ObjectState() const
         return NS_EVENT_STATE_SUPPRESSED;
       if (mUserDisabled)
         return NS_EVENT_STATE_USERDISABLED;
-      
-      // Otherwise, just broken
-      return NS_EVENT_STATE_BROKEN;
+
+      // Otherwise, broken
+      PRInt32 state = NS_EVENT_STATE_BROKEN;
+      if (mTypeUnsupported) {
+        state |= NS_EVENT_STATE_TYPE_UNSUPPORTED;
+      }
+      return state;
   };
   NS_NOTREACHED("unknown type?");
   // this return statement only exists to avoid a compile warning
@@ -872,6 +896,7 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
         if (IsUnsupportedPlugin(thisContent)) {
           FirePluginNotFound(thisContent);
         }
+        fallback.TypeUnsupported();
 
         break;
     };
@@ -1116,7 +1141,7 @@ nsObjectLoadingContent::UnloadContent()
     mFrameLoader = nsnull;
   }
   mType = eType_Null;
-  mUserDisabled = mSuppressed = PR_FALSE;
+  mUserDisabled = mSuppressed = mTypeUnsupported = PR_FALSE;
 }
 
 void

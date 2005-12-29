@@ -182,5 +182,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
 // Content is still loading such that there is nothing to show the
 // user (eg an image which hasn't started coming in yet)
 #define NS_EVENT_STATE_LOADING       0x00100000
+// Content is of a type that gecko can't handle
+#define NS_EVENT_STATE_TYPE_UNSUPPORTED \
+                                     0x00200000
 
 #endif // nsIEventStateManager_h__

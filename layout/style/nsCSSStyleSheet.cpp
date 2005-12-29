@@ -2940,6 +2940,25 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                  child->Tag()->Equals(nsDependentString(pseudoClass->mString)))));
       result = (child == nsnull);
     }
+    else if (nsCSSPseudoClasses::mozHasHandlerRef == pseudoClass->mAtom) {
+      nsIContent *child = nsnull;
+      nsIContent *element = data.mContent;
+      PRInt32 index = -1;
+
+      result = PR_FALSE;
+      if (element) {
+        do {
+          child = element->GetChildAt(++index);
+          if (child && child->IsContentOfType(nsIContent::eHTML) &&
+              child->Tag() == nsHTMLAtoms::param &&
+              child->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name,
+                                 NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
+            result = PR_TRUE;
+            break;
+          }
+        } while (child);
+      }
+    }
     else if (nsCSSPseudoClasses::root == pseudoClass->mAtom) {
       result = (data.mParentContent == nsnull);
     }
@@ -3059,6 +3078,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     }
     else if (nsCSSPseudoClasses::mozLoading == pseudoClass->mAtom) {
       stateToCheck = NS_EVENT_STATE_LOADING;
+    }
+    else if (nsCSSPseudoClasses::mozTypeUnsupported == pseudoClass->mAtom) {
+      stateToCheck = NS_EVENT_STATE_TYPE_UNSUPPORTED;
     }
     else if (nsCSSPseudoClasses::required == pseudoClass->mAtom) {
       stateToCheck = NS_EVENT_STATE_REQUIRED;
