@@ -96,6 +96,7 @@ public:
   // nsIAttribute interface
   void SetMap(nsDOMAttributeMap *aMap);
   nsIContent *GetContent() const;
+  nsresult SetOwnerDocument(nsIDocument* aDocument);
 
   // Property functions, see nsPropertyTable.h
   virtual void* GetProperty(nsIAtom  *aPropertyName,

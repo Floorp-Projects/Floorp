@@ -819,6 +819,8 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                      aParent->GetBindingParent() == GetBindingParent()),
                     "Already have a binding parent.  Unbind first!");
 
+    nsresult rv;
+
     if (!aBindingParent && aParent) {
         aBindingParent = aParent->GetBindingParent();
     }
@@ -875,6 +877,13 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                 NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
                 mNodeInfo.swap(newNodeInfo);
             }
+
+            // set a new nodeinfo on attribute nodes
+            nsDOMSlots *slots = GetExistingDOMSlots();
+            if (slots && slots->mAttributeMap) {
+              rv = slots->mAttributeMap->SetOwnerDocument(aDocument);
+              NS_ENSURE_SUCCESS(rv, rv);
+            }
         }
 
         // we need to (re-)initialize several attributes that are dependant on
@@ -913,10 +922,9 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     PRUint32 i, n = GetChildCount();
 
     for (i = 0; i < n; ++i) {
-        nsresult rv =
-            mAttrsAndChildren.ChildAt(i)->BindToTree(aDocument, this,
-                                                     aBindingParent,
-                                                     aCompileEventHandlers);
+        rv = mAttrsAndChildren.ChildAt(i)->BindToTree(aDocument, this,
+                                                      aBindingParent,
+                                                      aCompileEventHandlers);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 

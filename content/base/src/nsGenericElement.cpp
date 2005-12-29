@@ -1939,6 +1939,13 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
         NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
         mNodeInfo.swap(newNodeInfo);
       }
+
+      // set a new nodeinfo on attribute nodes
+      nsDOMSlots *slots = GetExistingDOMSlots();
+      if (slots && slots->mAttributeMap) {
+        rv = slots->mAttributeMap->SetOwnerDocument(aDocument);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
   }
 

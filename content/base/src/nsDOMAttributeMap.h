@@ -48,6 +48,7 @@
 class nsIContent;
 class nsDOMAttribute;
 class nsINodeInfo;
+class nsIDocument;
 
 /**
  * Structure used to cache nsDOMAttributes with.
@@ -133,6 +134,12 @@ public:
   {
     return mContent;
   }
+
+  /**
+   * Called when mContent is moved into a new document.
+   * Updates the nodeinfos of all owned nodes.
+   */
+  nsresult SetOwnerDocument(nsIDocument* aDocument);
 
   /**
    * Drop an attribute from the map's cache (does not remove the attribute
