@@ -84,7 +84,7 @@ var tms = new Array();
  */
 function doOnSelectProduct(selectmode) {
     var f = document.forms[queryform];
-    milestone = (typeof(f.target_milestone) == "undefined" ? 
+    var milestone = (typeof(f.target_milestone) == "undefined" ? 
                                                null : f.target_milestone);
     if (selectmode == 0) {
         if (useclassification) {
