@@ -540,6 +540,38 @@ sub bz_setup_database {
 }
 
 
+sub bz_enum_initial_values {
+    my ($self, $enum_defaults) = @_;
+    my %enum_values = %$enum_defaults;
+    # Get a complete description of the 'bugs' table; with DBD::MySQL
+    # there isn't a column-by-column way of doing this.  Could use
+    # $dbh->column_info, but it would go slower and we would have to
+    # use the undocumented mysql_type_name accessor to get the type
+    # of each row.
+    my $sth = $self->prepare("DESCRIBE bugs");
+    $sth->execute();
+    # Look for the particular columns we are interested in.
+    while (my ($thiscol, $thistype) = $sth->fetchrow_array()) {
+        if (defined $enum_values{$thiscol}) {
+            # this is a column of interest.
+            my @value_list;
+            if ($thistype and ($thistype =~ /^enum\(/)) {
+                # it has an enum type; get the set of values.
+                while ($thistype =~ /'([^']*)'(.*)/) {
+                    push(@value_list, $1);
+                    $thistype = $2;
+                }
+            }
+            if (@value_list) {
+                # record the enum values found.
+                $enum_values{$thiscol} = \@value_list;
+            }
+        }
+    }
+
+    return \%enum_values;
+}
+
 #####################################################################
 # MySQL-specific Database-Reading Methods
 #####################################################################

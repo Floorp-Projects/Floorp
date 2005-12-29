@@ -773,22 +773,6 @@ my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
 my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
 my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
-# mkanat@bugzilla.org - bug 17453
-# The following values have been removed from localconfig.
-# However, if we are upgrading from a Bugzilla with enums to a 
-# Bugzilla without enums, we use these values one more time so 
-# that we correctly populate the tables.
-my @my_severities;
-@my_severities = @{*{$main::{'severities'}}{ARRAY}} 
-    if exists($main::{'severities'});
-my @my_priorities;
-@my_priorities = @{*{$main::{'priorities'}}{ARRAY}}
-    if exists($main::{'priorities'});
-my @my_platforms;
-@my_platforms = @{*{$main::{'platforms'}}{ARRAY}}
-    if exists($main::{'platforms'});
-my @my_opsys;
-@my_opsys = @{*{$main::{'opsys'}}{ARRAY}} if exists($main::{'opsys'});
 
 if ($my_webservergroup && !$silent) {
     if ($^O !~ /MSWin32/i) {
@@ -1809,9 +1793,12 @@ AddFDef($new_field_name, $field_description, 0);
 # Detect changed local settings
 ###########################################################################
 
-# mkanat@bugzilla.org - bug 17453
-# Create the values for the tables that hold what used to be enum types.
-# Don't populate the tables if the table isn't empty.
+# Nick Barnes nb+bz@ravenbrook.com 2005-10-05
+# 
+# PopulateEnumTable($table, @values): if the table $table has no
+# entries, fill it with the entries in the list @values, in the same
+# order as that list.
+
 sub PopulateEnumTable {
     my ($table, @valuelist) = @_;
 
@@ -1840,37 +1827,36 @@ sub PopulateEnumTable {
     }
 }
 
-# mkanat@bugzilla.org - bug 17453
-# Set default values for what used to be the enum types.
-# These values are no longer stored in localconfig.
-# However, if we are upgrading from a Bugzilla with enums to a 
-# Bugzilla without enums, we use the localconfig values one more time.
-
+# Set default values for what used to be the enum types.  These values
+# are no longer stored in localconfig.  If we are upgrading from a
+# Bugzilla with enums to a Bugzilla without enums, we use the
+# enum values.
+#
 # The values that you see here are ONLY DEFAULTS. They are only used
-# the FIRST time you run checksetup. After that, they are either 
-# controlled through the Bugzilla UI or through the DB.
-@my_severities = ('blocker','critical','major','normal','minor',
-                 'trivial','enhancement') if !@my_severities;
-@my_priorities = ("P1","P2","P3","P4","P5") if !@my_priorities;
-@my_opsys = ("All","Windows","Mac OS","Linux","Other") if !@my_opsys;
-@my_platforms = ("All","PC","Macintosh","Other") if !@my_platforms;
+# the FIRST time you run checksetup, IF you are NOT upgrading from a
+# Bugzilla with enums. After that, they are either controlled through
+# the Bugzilla UI or through the DB.
 
-PopulateEnumTable('bug_severity', @my_severities);
-PopulateEnumTable('priority', @my_priorities);
-PopulateEnumTable('op_sys', @my_opsys);
-PopulateEnumTable('rep_platform', @my_platforms);
+my $enum_defaults = {
+    bug_severity  => ['blocker', 'critical', 'major', 'normal',
+                      'minor', 'trivial', 'enhancement'],
+    priority     => ["P1","P2","P3","P4","P5"],
+    op_sys       => ["All","Windows","Mac OS","Linux","Other"],
+    rep_platform => ["All","PC","Macintosh","Other"],
+    bug_status   => ["UNCONFIRMED","NEW","ASSIGNED","REOPENED","RESOLVED",
+                     "VERIFIED","CLOSED"],
+    resolution   => ["","FIXED","INVALID","WONTFIX","LATER","REMIND",
+                     "DUPLICATE","WORKSFORME","MOVED"],
+};
 
-# The resolution and bug_status lists are absolute. On an upgrade from
-# a Bugzilla with enums, whatever is in the enum will be replaced with
-# this. This is because Bugzilla depends on the exact names of these 
-# resolutions in order to function properly.
-my @states = ("UNCONFIRMED","NEW","ASSIGNED","REOPENED","RESOLVED",
-             "VERIFIED","CLOSED");
-my @resolutions = ("","FIXED","INVALID","WONTFIX","LATER","REMIND",
-                  "DUPLICATE","WORKSFORME","MOVED");
-PopulateEnumTable('bug_status', @states);
-PopulateEnumTable('resolution', @resolutions);
+# Get all the enum column values for the existing database, or the
+# defaults if the columns are not enums.
+my $enum_values = $dbh->bz_enum_initial_values($enum_defaults);
 
+# Populate the enum tables.
+while (my ($table, $values) = each %$enum_values) {
+    PopulateEnumTable($table, @$values);
+}
 
 ###########################################################################
 # Create initial test product if there are no products present.
