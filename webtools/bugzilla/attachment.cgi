@@ -1048,7 +1048,8 @@ sub insert
   
   if ($cgi->param('takebug') && UserInGroup("editbugs")) {
       
-      my @fields = ("assigned_to", "bug_status", "resolution", "login_name");
+      my @fields = ("assigned_to", "bug_status", "resolution", "everconfirmed",
+                    "login_name");
       
       # Get the old values, for the bugs_activity table
       SendSQL("SELECT " . join(", ", @fields) . " " .
@@ -1058,25 +1059,25 @@ sub insert
               "WHERE bugs.bug_id = $bugid");
       
       my @oldvalues = FetchSQLData();
-      my @newvalues = ($userid, "ASSIGNED", "", Bugzilla->user->login);
+      my @newvalues = ($userid, "ASSIGNED", "", 1, Bugzilla->user->login);
       
       # Make sure the person we are taking the bug from gets mail.
-      $owner = $oldvalues[3];  
+      $owner = $oldvalues[4];  
                   
       @oldvalues = map(SqlQuote($_), @oldvalues);
       @newvalues = map(SqlQuote($_), @newvalues);
                
       # Update the bug record. Note that this doesn't involve login_name.
       SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp, " . 
-              join(", ", map("$fields[$_] = $newvalues[$_]", (0..2))) . 
+              join(", ", map("$fields[$_] = $newvalues[$_]", (0..3))) . 
               " WHERE bug_id = $bugid");
       
       # We store email addresses in the bugs_activity table rather than IDs.
-      $oldvalues[0] = $oldvalues[3];
-      $newvalues[0] = $newvalues[3];
+      $oldvalues[0] = $oldvalues[4];
+      $newvalues[0] = $newvalues[4];
       
       # Add the changes to the bugs_activity table
-      for (my $i = 0; $i < 3; $i++) {
+      for (my $i = 0; $i < 4; $i++) {
           if ($oldvalues[$i] ne $newvalues[$i]) {
               my $fieldid = get_field_id($fields[$i]);
               SendSQL("INSERT INTO bugs_activity " .
