@@ -111,11 +111,6 @@ typedef enum
 
 #endif /* #if !defined(MOZADDRSTANDALONE) */
 
-#define XP_FILE_URL_PATH char *
-#define XP_FILE_NATIVE_PATH char *
-
-XP_FILE_URL_PATH	XP_PlatformFileToURL (const XP_FILE_NATIVE_PATH ) {return NULL;}
-
 /*****************************************************************************
  * Private structs and stuff
  */
@@ -191,9 +186,6 @@ typedef struct DIR_Filter
 #define kDefaultReplicaChangeNumber -1
 #define kDefaultReplicaFilter "(objectclass=*)"
 #define kDefaultReplicaExcludedAttributes nsnull
-
-#define kDefaultPABColumnHeaders "cn,mail,o,nickname,telephonenumber,l"  /* default column headers for the address book window */
-#define kDefaultLDAPColumnHeaders "cn,mail,o,telephonenumber,l,nickname"
 
 static PRBool dir_IsServerDeleted(DIR_Server * server);
 static DIR_DefaultAttribute *DIR_GetDefaultAttribute (DIR_AttributeId id);
@@ -515,25 +507,14 @@ nsresult DIR_IncrementServerRefCount (DIR_Server *server)
 nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType)
 {
   NS_ENSURE_ARG_POINTER(server);
-  DIR_InitServer(server);
+  nsresult rv = DIR_InitServer(server);
+
   server->dirType = dirType;
-  if (dirType == LDAPDirectory)
-  {
-    server->columnAttributes = nsCRT::strdup(kDefaultLDAPColumnHeaders);
-    server->isOffline = PR_TRUE;
-    server->csid = CS_UTF8;
-    server->locale = nsnull;
-  }
-  else if (dirType == PABDirectory || dirType == MAPIDirectory)
-  {
-    server->columnAttributes = nsCRT::strdup(kDefaultPABColumnHeaders);
-    server->isOffline = PR_FALSE;
-    server->csid = CS_UTF8;
-    //		server->csid = INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel);
-    server->locale = nsnull; /* get the locale we are going to use with this AB */
-    /*		server->locale = INTL_GetCollationKeyLocale(nsnull); */
-  }
-  return NS_OK;
+  server->csid = CS_UTF8;
+  server->locale = nsnull;
+  server->isOffline = (dirType == LDAPDirectory);
+
+  return rv;
 }
 
 nsresult DIR_InitServer (DIR_Server *server)
@@ -683,13 +664,6 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 					err = NS_ERROR_OUT_OF_MEMORY;
  			}
 
-			if (in->columnAttributes)
-			{
-                (*out)->columnAttributes = nsCRT::strdup(in->columnAttributes);
-				if (!(*out)->columnAttributes)
-					err = NS_ERROR_OUT_OF_MEMORY;
-			}
-
 			if (in->locale)
 			{
                 (*out)->locale = nsCRT::strdup(in->locale);
@@ -805,8 +779,6 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 			dir_CopyTokenList (in->uriAttributes, in->uriAttributesCount,
 				&(*out)->uriAttributes, &(*out)->uriAttributesCount);
 
-			if (in->customDisplayUrl)
-                (*out)->customDisplayUrl = nsCRT::strdup (in->customDisplayUrl);
 			if (in->searchPairList)
                 (*out)->searchPairList = nsCRT::strdup (in->searchPairList);
 
@@ -1142,12 +1114,6 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 			break;
 		case 's': /* the new csid pref that replaced char set */
 			rc = idCSID;
-			break;
-		case 'o': /* columns */
-			rc = idColumnAttributes;
-			break;
-		case 'u': /* customDisplayUrl */
-			rc = idCustomDisplayUrl;
 			break;
 		}
 		break;
@@ -1486,7 +1452,6 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 		PR_FREEIF (server->tokenSeps);
 		PR_FREEIF (server->authDn);
 		PR_FREEIF (server->password);
-		PR_FREEIF (server->columnAttributes);
 		PR_FREEIF (server->locale);
         PR_FREEIF (server->uri);
 
@@ -1524,7 +1489,6 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 		if (server->replInfo)
 			dir_DeleteReplicationInfo (server);
 
-		PR_FREEIF (server->customDisplayUrl);
 		PR_FREEIF (server->searchPairList);
 	}
 	return NS_OK;
@@ -2574,12 +2538,6 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
     server->saveResults = PR_TRUE; /* never let someone delete their PAB this way */
   }
 
-  /* load in the column attributes */
-  if (server->dirType == PABDirectory || server->dirType == MAPIDirectory)
-    server->columnAttributes = DIR_GetStringPref(prefstring, "columns", kDefaultPABColumnHeaders);
-  else
-    server->columnAttributes = DIR_GetStringPref(prefstring, "columns", kDefaultLDAPColumnHeaders);
-  
   server->fileName = DIR_GetStringPref (prefstring, "filename", "");
   if ( (!server->fileName || !*(server->fileName)) && !oldstyle) /* if we don't have a file name and this is the new branch get a file name */
     DIR_SetServerFileName (server, server->serverName);
@@ -2658,8 +2616,6 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
   prefBool = DIR_GetBoolPref (prefstring, "vlvDisabled", kDefaultVLVDisabled);
   DIR_ForceFlag (server, DIR_LDAP_VLV_DISABLED | DIR_LDAP_ROOTDSE_PARSED, prefBool);
   
-  server->customDisplayUrl = DIR_GetStringPref (prefstring, "customDisplayUrl", "");
-
   if (!oldstyle /* we don't care about saving old directories */ && forcePrefSave && !dir_IsServerDeleted(server) )
     DIR_SavePrefsForOneServer(server); 
 }
@@ -3350,12 +3306,6 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
   if (server->dirType == LDAPDirectory)
     DIR_SetStringPref(prefstring, "uri", server->uri, "");
 
-  /* save the column attributes */
-  if (server->dirType == PABDirectory || server->dirType == MAPIDirectory)
-    DIR_SetStringPref(prefstring, "columns", server->columnAttributes, kDefaultPABColumnHeaders);
-  else
-    DIR_SetStringPref(prefstring, "columns", server->columnAttributes, kDefaultLDAPColumnHeaders);
-
   DIR_SetBoolPref(prefstring, "autoComplete.enabled", DIR_TestFlag(server, DIR_AUTO_COMPLETE_ENABLED), kDefaultAutoCompleteEnabled);
   DIR_SetStringPref(prefstring, "autoComplete.filter", server->autoCompleteFilter, nsnull);
   DIR_SetBoolPref(prefstring, "autoComplete.never", DIR_TestFlag(server, DIR_AUTO_COMPLETE_NEVER), kDefaultAutoCompleteNever);
@@ -3413,8 +3363,6 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
 	
   DIR_SetIntPref (prefstring, "PalmCategoryId", server->PalmCategoryId, -1);
   DIR_SetIntPref (prefstring, "PalmSyncTimeStamp", server->PalmSyncTimeStamp, 0);
-
-  DIR_SetStringPref (prefstring, "customDisplayUrl", server->customDisplayUrl, "");
 
   DIR_ClearFlag(server, DIR_SAVING_SERVER);
 }

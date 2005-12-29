@@ -115,14 +115,6 @@ typedef enum
 	homephone
 } DIR_AttributeId;
 
-/* these enumerated types are returned by DIR_ValidateDirectoryDescription for validating a description name */
-typedef enum
-{
-	DIR_ValidDescription = 0,
-	DIR_DuplicateDescription,
-	DIR_InvalidDescription
-} DIR_DescriptionCode;
-
 typedef enum
 {
 	idNone = 0,					/* Special value                          */ 
@@ -156,7 +148,6 @@ typedef enum
 	idAutoCompleteEnabled,
 	idAutoCompleteFilter,
 	idTokenSeps,
-	idColumnAttributes,
 	idDnAttributes,
     idDnAttributesCount,
 	idSuppressedAttributes,
@@ -165,7 +156,6 @@ typedef enum
 	idUriAttributesCount,
 	idBasicSearchAttributes,
 	idBasicSearchAttributesCount,
-	idCustomDisplayUrl,
 	idAuthDn,
 	idPassword,
 	idSearchPairList,
@@ -239,9 +229,6 @@ typedef struct DIR_Server
 	char *tokenSeps;
 	char *autoCompleteFilter;
 
-	/* site-configurable display column attributes */
-	char *columnAttributes;     /* comma separated list of display columns */
-
 	/* site-configurable list of attributes whose values are DNs */
 	char **dnAttributes;
     PRInt32 dnAttributesCount;
@@ -257,9 +244,6 @@ typedef struct DIR_Server
 	/* site-configurable list of attributes for the Basic Search dialog */
 	DIR_AttributeId *basicSearchAttributes;
 	PRInt32 basicSearchAttributesCount;
-
-	/* site-configurable URL to open LDAP results */
-	char *customDisplayUrl;
 
 	/* authentication fields */
 	char *authDn;				/* DN to give to authenticate as			*/
