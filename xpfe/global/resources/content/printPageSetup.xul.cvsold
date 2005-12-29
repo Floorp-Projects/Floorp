@@ -1,0 +1,199 @@
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
+
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s): 
+  Masaki Katakai <katakai@japan.sun.com>
+  Dan Rosen <dr@netscape.com>
+  Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+  Asko Tontti <atontti@cc.hut.fi>
+
+-->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://global/locale/printPageSetup.dtd">
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="onLoad();"
+  ondialogaccept="return onAccept();"
+  title="&printSetup.title;"
+  persist="screenX screenY"
+  screenX="24" screenY="24">
+
+  <script type="application/x-javascript" src="chrome://global/content/printPageSetup.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+
+  <vbox>
+  <grid>
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+
+    <rows>
+      <row>
+        <label id="paperLabel" value="&paperInput.label;"/>
+        <menulist id="paperList" flex ="1">
+          <menupopup/>
+        </menulist>
+      </row>
+
+     <row>
+       <label id="orientationLabel" value="&orientationGroup.label;"/>
+        <menulist id="orientation" flex ="1">
+          <menupopup>
+            <menuitem label="&portraitItem.label;" value="0"/>
+            <menuitem label="&landscapeItem.label;" value="1"/>
+          </menupopup>
+        </menulist>
+     </row>
+
+    </rows>
+  </grid>
+
+  <hbox>
+    <checkbox id="printBGColors" label="&printBGColorsInput.label;"/>
+    <checkbox id="printBGImages" label="&printBGImagesInput.label;"/>
+  </hbox>
+
+  <grid>
+    <columns>
+      <column/>
+    </columns>
+    <rows>
+      <row>
+       <groupbox flex="1">
+        <caption label="&marginInput.label;"/>
+        <hbox>
+          <hbox align="center">
+            <label id="topLabel" control="topInput" value="&topInput.label;"/>
+            <textbox id="topInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="bottomLabel" control="bottomInput" value="&bottomInput.label;"/>
+            <textbox id="bottomInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="leftLabel" control="leftInput" value="&leftInput.label;"/>
+            <textbox id="leftInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="rightLabel" control="rightInput" value="&rightInput.label;"/>
+            <textbox id="rightInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
+          </hbox>
+        </hbox>
+        </groupbox>
+      </row>
+
+    </rows>
+  </grid>
+
+  <hbox flex="1">
+    <grid>
+      <columns>
+        <column/>
+      </columns>
+      <rows>
+        <row>
+         <groupbox flex="1">
+          <caption label="&headerInput.label;"/>
+          <grid>
+            <columns>
+              <column/>
+              <column/>
+            </columns>
+            <rows>
+              <row>
+                <label id="hLeftLabel" control="hLeftInput" value="&leftInput.label;"/>
+                <textbox id="hLeftInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+              </row>
+              <row>
+                <label id="hCenterLabel" control="hCenterInput" value="&centerInput.label;"/>
+                <textbox id="hCenterInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+              </row>
+              <row>
+                <label id="hRightLabel" control="hRightInput" value="&rightInput.label;"/>
+                <textbox id="hRightInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+              </row>
+            </rows>
+          </grid>
+          </groupbox>
+        </row>
+
+      </rows>
+    </grid>
+    <grid>
+      <columns>
+        <column/>
+      </columns>
+      <rows>
+        <row>
+         <groupbox flex="1">
+          <caption label="&footerInput.label;"/>
+          <grid>
+            <columns>
+              <column/>
+              <column/>
+            </columns>
+            <rows>
+              <row>
+                <label id="fLeftLabel" control="fLeftInput" value="&leftInput.label;"/>
+                <textbox id="fLeftInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+              </row>
+              <row>
+                <label id="fCenterLabel" control="fCenterInput" value="&centerInput.label;"/>
+                <textbox id="fCenterInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+              </row>
+              <row>
+                <label id="fRightLabel" control="fRightInput" value="&rightInput.label;"/>
+                <textbox id="fRightInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+              </row>
+            </rows>
+          </grid>
+          </groupbox>
+        </row>
+
+      </rows>
+    </grid>
+    </hbox>
+
+    <hbox>
+     <groupbox>
+      <caption label="&scalingGroup.label;" disabled="true"/>
+      <grid>
+        <columns>
+          <column/>
+          <column/>
+          <column/>
+        </columns>
+        <rows>
+          <row>
+            <label id="scalingLabel" control="scalingInput" value="&scalingInput.label;" disabled="true"/>
+            <textbox id="scalingInput" style="width:4em;" onkeyup="checkValid(this.id)" disabled="true"/>
+            <label id="scalingLabelPost" control="scalingInputPost" value="&scalingInputPost.label;" disabled="true"/>
+          </row>
+        </rows>
+      </grid>
+      </groupbox>
+    </hbox>
+  </vbox>
+
+</dialog>
+
