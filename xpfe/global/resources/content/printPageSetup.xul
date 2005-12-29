@@ -76,27 +76,39 @@
           <vbox>
             <hbox align="center">
               <label value="&orientation.label;"/>
-              <radiogroup id="orientation" oncommand="setOrientation()">
+              <radiogroup id="orientation" oncommand="setOrientation();">
                 <hbox align="center">
-                  <radio id="portrait"  class="portrait-page"  label="&portrait;"/>
-                  <radio id="landscape" class="landscape-page" label="&landscape;"/>
+                  <radio id="portrait" class="portrait-page"
+                         label="&portrait.label;"
+                         accesskey="&portrait.accesskey;"/>
+                  <radio id="landscape" class="landscape-page"
+                         label="&landscape.label;" 
+                         accesskey="&landscape.accesskey;"/>
                 </hbox>
               </radiogroup>
             </hbox>
             <separator/>
             <hbox align="center">
-              <label value="&scale.label;"/>
-              <textbox id="scalingInput" size="4" onfocus="this.select()" oninput="checkDouble(this)"/>
+              <label control="scalingInput"
+                     value="&scale.label;"
+                     accesskey="&scale.accesskey;"/>
+              <textbox id="scalingInput" size="4"
+                       onfocus="this.select();" oninput="checkDouble(this);"/>
               <label value="&scalePercent;"/>
               <separator/>
-              <checkbox id="shrinkToFit" label="&shrinkToFit.label;"
-                        oncommand="gDialog.scalingInput.disabled=gDialog.scalingLabel.disabled=this.checked"/>
+              <checkbox id="shrinkToFit"
+                        oncommand="gDialog.scalingInput.disabled =
+                                   gDialog.scalingLabel.disabled =
+                                   this.checked;"
+                        label="&shrinkToFit.label;"
+                        accesskey="&shrinkToFit.accesskey;"/>
             </hbox>
           </vbox>
         </groupbox>
         <groupbox>
           <caption label="&optionsGroup.label;"/>
-          <checkbox id="printBG" label="&printBG.label;"/>
+          <checkbox id="printBG" tabindex="1"
+                    label="&printBG.label;" accesskey="&printBG.accesskey;"/>
         </groupbox>
       </tabpanel>
       <tabpanel orient="vertical">
@@ -105,11 +117,15 @@
           <vbox>
             <hbox align="center">
               <spacer flex="1"/>
-              <label value="&marginTop.label;" control="topInput"/>
-              <textbox id="topInput" size="5" oninput="changeMargin(this)" onfocus="this.select()"/>
-              <!-- This invisible label (with same content as the visible one!) is used
-                   to ensure that the <textbox> is centered above the page.  The same
-                   technique is deployed for the bottom/left/right input fields, below. -->
+              <label control="topInput"
+                     value="&marginTop.label;"
+                     accesskey="&marginTop.accesskey;"/>
+              <textbox id="topInput" size="5"
+                       oninput="changeMargin(this);" onfocus="this.select();"/>
+              <!-- This invisible label (with same content as the visible one!)
+                   is used to ensure that the <textbox> is centered above the
+                   page. The same technique is deployed for the
+                   bottom/left/right input fields, below. -->
               <label value="&marginTop.label;" style="visibility: hidden;"/>
               <spacer flex="1"/>
             </hbox>
@@ -117,38 +133,54 @@
               <spacer flex="1"/>
               <vbox>
                 <spacer flex="1"/>
-                <label value="&marginLeft.label;" control="leftInput"/>
-                <textbox id="leftInput" size="5" oninput="changeMargin(this)" onfocus="this.select()"/>
-                <label value="&marginLeft.label;" style="visibility: hidden;"/>
+                <label control="leftInput"
+                       value="&marginLeft.label;"
+                       accesskey="&marginLeft.accesskey;"/>
+                <textbox id="leftInput" size="5"
+                         oninput="changeMargin(this);"
+                         onfocus="this.select();"/>
+                <label style="visibility: hidden;" value="&marginLeft.label;"/>
                 <spacer flex="1"/>
               </vbox>
-              <!-- The "margin page" draws a simulated printout page with dashed lines
-                   for the margins.  The height/width style attributes of the marginTop,
-                   marginBottom, marginLeft, and marginRight elements are set by
-                   the JS code dynamically based on the user input. -->
+              <!-- The "margin page" draws a simulated printout page with dashed
+                   lines for the margins. The height/width style attributes of
+                   the marginTop, marginBottom, marginLeft, and marginRight
+                   elements are set by the JS code dynamically based on the user
+                   input. -->
               <vbox id="marginPage" style="height:29.7mm;">
                 <box id="marginTop" style="height:0.05in;"/>
                 <hbox flex="1">
                   <box id="marginLeft" style="width:0.025in;"/>
-                  <box style="border: 1px; border-style: dashed; border-color: gray;" flex="1"/>
+                  <box style="border: 1px;
+                              border-style: dashed;
+                              border-color: gray;"
+                       flex="1"/>
                   <box id="marginRight" style="width:0.025in;"/>
                 </hbox>
                 <box id="marginBottom" style="height:0.05in;"/>
               </vbox>
               <vbox>
                 <spacer flex="1"/>
-                <label value="&marginRight.label;" control="rightInput"/>
-                <textbox id="rightInput" size="5" oninput="changeMargin(this)" onfocus="this.select()"/>
-                <label value="&marginRight.label;" style="visibility: hidden;"/>
+                <label control="rightInput"
+                       value="&marginRight.label;"
+                       accesskey="&marginRight.accesskey;"/>
+                <textbox id="rightInput" size="5"
+                         oninput="changeMargin(this);"
+                         onfocus="this.select();"/>
+                <label style="visibility: hidden;" value="&marginRight.label;"/>
                 <spacer flex="1"/>
               </vbox>
               <spacer flex="1"/>
             </hbox>
             <hbox align="center">
               <spacer flex="1"/>
-              <label value="&marginBottom.label;" control="bottomInput"/>
-              <textbox id="bottomInput" size="5" oninput="changeMargin(this)" onfocus="this.select()"/>
-              <label value="&marginBottom.label;" style="visibility: hidden;"/>
+              <label control="bottomInput"
+                     value="&marginBottom.label;"
+                     accesskey="&marginBottom.accesskey;"/>
+              <textbox id="bottomInput" size="5"
+                       oninput="changeMargin(this);"
+                       onfocus="this.select();"/>
+              <label style="visibility: hidden;" value="&marginBottom.label;" />
               <spacer flex="1"/>
             </hbox>
           </vbox>
@@ -163,7 +195,8 @@
             </columns>
             <rows>
               <row>
-                <menulist id="hLeftOption" oncommand="customize(this)" tooltiptext="&headerLeft.tip;">
+                <menulist id="hLeftOption" oncommand="customize(this);"
+                          tooltiptext="&headerLeft.tip;">
                   <menupopup>
                     <menuitem value="0" label="&hfBlank;"/>
                     <menuitem value="1" label="&hfTitle;"/>
@@ -174,7 +207,8 @@
                     <menuitem value="6" label="&hfCustom;"/>
                   </menupopup>
                 </menulist>
-                <menulist id="hCenterOption" oncommand="customize(this)" tooltiptext="&headerCenter.tip;">
+                <menulist id="hCenterOption" oncommand="customize(this);"
+                          tooltiptext="&headerCenter.tip;">
                   <menupopup>
                     <menuitem value="0" label="&hfBlank;"/>
                     <menuitem value="1" label="&hfTitle;"/>
@@ -185,7 +219,8 @@
                     <menuitem value="6" label="&hfCustom;"/>
                   </menupopup>
                 </menulist>
-                <menulist id="hRightOption" oncommand="customize(this)" tooltiptext="&headerRight.tip;">
+                <menulist id="hRightOption" oncommand="customize(this);"
+                          tooltiptext="&headerRight.tip;">
                   <menupopup>
                     <menuitem value="0" label="&hfBlank;"/>
                     <menuitem value="1" label="&hfTitle;"/>
@@ -209,7 +244,8 @@
                 </vbox>
               </row>
               <row>
-                <menulist id="fLeftOption" oncommand="customize(this)" tooltiptext="&footerLeft.tip;">
+                <menulist id="fLeftOption" oncommand="customize(this);"
+                          tooltiptext="&footerLeft.tip;">
                   <menupopup>
                     <menuitem value="0" label="&hfBlank;"/>
                     <menuitem value="1" label="&hfTitle;"/>
@@ -220,7 +256,8 @@
                     <menuitem value="6" label="&hfCustom;"/>
                   </menupopup>
                 </menulist>
-                <menulist id="fCenterOption" oncommand="customize(this)" tooltiptext="&footerCenter.tip;">
+                <menulist id="fCenterOption" oncommand="customize(this);"
+                          tooltiptext="&footerCenter.tip;">
                   <menupopup>
                     <menuitem value="0" label="&hfBlank;"/>
                     <menuitem value="1" label="&hfTitle;"/>
@@ -231,7 +268,8 @@
                     <menuitem value="6" label="&hfCustom;"/>
                   </menupopup>
                 </menulist>
-                <menulist id="fRightOption" oncommand="customize(this)" tooltiptext="&footerRight.tip;">
+                <menulist id="fRightOption" oncommand="customize(this);"
+                          tooltiptext="&footerRight.tip;">
                   <menupopup>
                     <menuitem value="0" label="&hfBlank;"/>
                     <menuitem value="1" label="&hfTitle;"/>
