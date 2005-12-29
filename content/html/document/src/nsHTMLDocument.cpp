@@ -2015,7 +2015,10 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
   // Zap the old title -- otherwise it would hang around until document.close()
   // (which might never come) if the new document doesn't explicitly set one.
+  // Void the title to make sure that we actually respect any titles set by the
+  // new document.
   SetTitle(EmptyString());
+  mDocumentTitle.SetIsVoid(PR_TRUE);
 
   // Store the security info of the caller now that we're done
   // resetting the document.
