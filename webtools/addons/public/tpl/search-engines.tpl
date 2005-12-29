@@ -36,9 +36,9 @@
 <dt><img src="./search-engines-static/webster.gif" alt=""/> <a href="javascript:addEngine('webster','gif','Language dictionary','0')">Merriam-Webster</a></dt><dd>English dictionary search.</dd>
 <dt><img src="./search-engines-static/msn.png" alt=""/> <a href="javascript:addEngine('MSN','png','General','3796')">MSN</a></dt><dd>MSN search engine.</dd>
 <dt><img src="./search-engines-static/odeo.png" alt=""/> <a href="javascript:addEngine('odeo','png','Music','2069')">Odeo</a></dt><dd>Explore the world of podcasting.</dd>
-<dt><img src="./search-engines-static/technorati.gif" alt=""/> <a href="javascript:addEngine('technorati-new','gif','Weblogs','2662')">Technorati</a></dt><dd>A real-time search engine that keeps track of what is going on in the blogosphere</dd>
+<dt><img src="./search-engines-static/technorati-new.gif" alt=""/> <a href="javascript:addEngine('technorati-new','gif','Weblogs','2662')">Technorati</a></dt><dd>A real-time search engine that keeps track of what is going on in the blogosphere</dd>
 
-<dt><img src="./search-engines-static/weatherchannel.png" alt=""/> <a href="javascript:addEngine('weather','png','Weather','0')">Weather Channel</a></dt><dd>Enter city, state or zip code to find your weather information.</dd>
+<dt><img src="./search-engines-static/weatherchannel.png" alt=""/> <a href="javascript:addEngine('weatherchannel','png','Weather','0')">Weather Channel</a></dt><dd>Enter city, state or zip code to find your weather information.</dd>
 <dt><img src="./search-engines-static/WebMD.png" alt=""/> <a href="javascript:addEngine('WebMD','png','Health','0')">WebMD</a></dt><dd>WebMD provides health information and tools for managing your health.</dd>
 <dt><img src="./search-engines-static/wikipedia.png" alt=""/> <a href="javascript:addEngine('wikipedia','png','Reference','2286')">Wikipedia</a></dt><dd>The incredible free encyclopedia.</dd>
 <dt><img src="./search-engines-static/yahooligans.png" alt=""/> <a href="javascript:addEngine('yahooligans','png','Kids and Teens','0')">Yahooligans</a></dt><dd>Search engine for kids and teens.</dd>
