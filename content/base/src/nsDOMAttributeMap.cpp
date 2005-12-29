@@ -97,6 +97,25 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDOMAttributeMap)
 NS_IMPL_RELEASE(nsDOMAttributeMap)
 
+PLDHashOperator
+SetOwnerDocumentFunc(nsAttrHashKey::KeyType aKey, nsCOMPtr<nsIDOMNode>& aData,
+                     void* aUserArg)
+{
+  nsCOMPtr<nsIAttribute> attr(do_QueryInterface(aData));
+  NS_ASSERTION(attr, "non-nsIAttribute somehow made it into the hashmap?!");
+  nsresult rv = attr->SetOwnerDocument(NS_STATIC_CAST(nsIDocument*, aUserArg));
+
+  return NS_FAILED(rv) ? PL_DHASH_STOP : PL_DHASH_NEXT;
+}
+
+nsresult
+nsDOMAttributeMap::SetOwnerDocument(nsIDocument* aDocument)
+{
+  PRUint32 n = mAttributeCache.Enumerate(SetOwnerDocumentFunc, aDocument);
+  NS_ENSURE_TRUE(n == mAttributeCache.Count(), NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
 
 void
 nsDOMAttributeMap::DropAttribute(PRInt32 aNamespaceID, nsIAtom* aLocalName)
@@ -212,37 +231,43 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
     }
 
     // Check that attribute is not owned by somebody else
-    nsCOMPtr<nsIDOMElement> owner;
-    attribute->GetOwnerElement(getter_AddRefs(owner));
+    nsDOMAttributeMap* owner = iAttribute->GetMap();
     if (owner) {
-      nsCOMPtr<nsISupports> ownerSupports = do_QueryInterface(owner);
-      nsCOMPtr<nsISupports> thisSupports = do_QueryInterface(mContent);
-      if (ownerSupports != thisSupports) {
+      if (owner != this) {
         return NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR;
       }
+
+      // setting a preexisting attribute is a no-op, just return the same
+      // node.
+      NS_ADDREF(*aReturn = aNode);
+      
+      return NS_OK;
     }
 
-    nsCOMPtr<nsINodeInfo> ni;
+    // update nodeinfo if needed
+    nsIDocument* myDoc = mContent->GetOwnerDoc();
+    if (myDoc && myDoc != iAttribute->GetOwnerDoc()) {
+      rv = iAttribute->SetOwnerDocument(myDoc);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Get nodeinfo and preexisting attribute (if it exists)
     nsAutoString name;
-    attribute->GetName(name);
+    nsCOMPtr<nsINodeInfo> ni;
 
     // SetNamedItemNS()
     if (aWithNS) {
       // Return existing attribute, if present
-      nsAutoString nsURI;
-      attribute->GetNamespaceURI(nsURI);
-
-      rv = mContent->NodeInfo()->NodeInfoManager()->
-        GetNodeInfo(name, nsURI, getter_AddRefs(ni));
-      NS_ENSURE_SUCCESS(rv, rv);
+      ni = iAttribute->NodeInfo();
 
       if (mContent->HasAttr(ni->NamespaceID(), ni->NameAtom())) {
         rv = GetAttribute(ni, getter_AddRefs(tmpReturn), PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-
     }
     else { // SetNamedItem()
+      attribute->GetName(name);
+
       // get node-info of old attribute
       ni = mContent->GetExistingAttrNameFromQName(name);
       if (ni) {
@@ -266,7 +291,7 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
       // attribute name for HTML
       nsCOMPtr<nsIDOMElement> ourElement(do_QueryInterface(mContent));
       NS_ASSERTION(ourElement, "HTML content that's not an element?");
-      ourElement->SetAttribute(name, value);
+      rv = ourElement->SetAttribute(name, value);
     }
     else {
       // It's OK to just use SetAttr

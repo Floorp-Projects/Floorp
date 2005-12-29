@@ -130,6 +130,27 @@ nsDOMAttribute::GetContent() const
 }
 
 nsresult
+nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
+{
+  NS_ASSERTION(aDocument, "Missing document");
+
+  nsIDocument *doc = GetOwnerDoc();
+  NS_ASSERTION(doc != aDocument, "bad call to nsDOMAttribute::SetOwnerDocument");
+  if (doc)
+    doc->PropertyTable()->DeleteAllPropertiesFor(this);
+
+  nsCOMPtr<nsINodeInfo> newNodeInfo;
+  nsresult rv = aDocument->NodeInfoManager()->
+    GetNodeInfo(mNodeInfo->NameAtom(), mNodeInfo->GetPrefixAtom(),
+                mNodeInfo->NamespaceID(), getter_AddRefs(newNodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
+  mNodeInfo.swap(newNodeInfo);
+
+  return NS_OK;
+}
+
+nsresult
 nsDOMAttribute::GetName(nsAString& aName)
 {
   mNodeInfo->GetQualifiedName(aName);

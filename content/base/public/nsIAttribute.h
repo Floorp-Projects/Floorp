@@ -74,8 +74,7 @@ public:
 
   nsIDocument *GetOwnerDoc() const
   {
-    nsIContent* content = GetContent();
-    return content ? content->GetOwnerDoc() : mNodeInfo->GetDocument();
+    return mNodeInfo->GetDocument();
   }
 
   /*
@@ -93,6 +92,12 @@ public:
 
   virtual void* UnsetProperty(nsIAtom  *aPropertyName,
                               nsresult *aStatus = nsnull) = 0;
+
+  /**
+   * Called when our ownerElement is moved into a new document.
+   * Updates the nodeinfo of this node.
+   */
+  virtual nsresult SetOwnerDocument(nsIDocument* aDocument) = 0;
 
 protected:
   nsIAttribute(nsDOMAttributeMap *aAttrMap, nsINodeInfo *aNodeInfo)
