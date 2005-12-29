@@ -8,8 +8,20 @@ const kDefaultLDAPPort = 389;
 const kDefaultSecureLDAPPort = 636;
 const kLDAPDirectory = 0;  // defined in nsDirPrefs.h
 
+var ldapOfflineObserver = {
+  observe: function(subject, topic, state)
+  {
+    // sanity checks
+    if (topic != "network:offline-status-changed") return;
+    setDownloadOfflineOnlineState(state == "offline");
+  }
+}
+
 function Startup()
 {
+  gPrefInt = Components.classes["@mozilla.org/preferences-service;1"]
+    .getService(Components.interfaces.nsIPrefBranch);
+
   if ( "arguments" in window && window.arguments[0] ) {
     gCurrentDirectory = window.arguments[0].selectedDirectory;
     gCurrentDirectoryString = window.arguments[0].selectedDirectoryString;
@@ -19,8 +31,38 @@ function Startup()
       dump("pref-directory-add.js:Startup(): fillSettings() exception: " 
            + ex + "\n");
     }
+
+    // Only set up the download button for online/offline status toggling
+    // if the pref isn't locked to disable the button.
+    if (!gPrefInt.prefIsLocked(gCurrentDirectoryString + ".disable_button_download")) {
+      // Now connect to the offline/online observer
+      var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                      .getService(Components.interfaces.nsIObserverService);
+      observerService.addObserver(ldapOfflineObserver,
+                                  "network:offline-status-changed", false);
+
+      // Now set the initial offline/online state.
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService);
+      // And update the state
+      setDownloadOfflineOnlineState(ioService.offline);
+    }
   } else {
     fillDefaultSettings();
+    // Don't add observer here as it doesn't make any sense.
+  }
+}
+
+function onUnload()
+{
+  if ("arguments" in window && 
+      window.arguments[0] &&
+      !gPrefInt.prefIsLocked(gCurrentDirectoryString + ".disable_button_download")) {
+    // Remove the observer that we put in on dialog startup
+    var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                    .getService(Components.interfaces.nsIObserverService);
+    observerService.removeObserver(ldapOfflineObserver,
+                                   "network:offline-status-changed");
   }
 }
 
@@ -36,9 +78,6 @@ function DownloadNow()
 //
 function fillSettings()
 {
-  gPrefInt = Components.classes["@mozilla.org/preferences-service;1"]
-    .getService(Components.interfaces.nsIPrefBranch);
-
   var ldapUrl = Components.classes["@mozilla.org/network/ldap-url;1"];
   ldapUrl = ldapUrl.createInstance().
     QueryInterface(Components.interfaces.nsILDAPURL);
@@ -135,7 +174,10 @@ function fillDefaultSettings()
 
   // Disable the download button and add some text indicating why.
   document.getElementById("download").disabled = true;
-  document.getElementById("downloadDisabledMsg").hidden = false;
+  document.getElementById("downloadWarningMsg").hidden = false;
+  document.getElementById("downloadWarningMsg").textContent = document.
+                                      getElementById("bundle_addressBook").
+                                      getString("abReplicationSaveSettings");
 }
 
 function hasOnlyWhitespaces(string)
@@ -279,4 +321,19 @@ function onCancel()
 function doHelpButton()
 {
   openHelp("mail-ldap-properties");
+}
+
+// Sets the download button state for offline or online.
+// This function should only be called for ldap edit dialogs.
+function setDownloadOfflineOnlineState(isOffline)
+{
+  if (isOffline)
+  {
+    // Disable the download button and add some text indicating why.
+    document.getElementById("downloadWarningMsg").textContent = document.
+      getElementById("bundle_addressBook").
+      getString("abReplicationOfflineWarning");
+  }
+  document.getElementById("downloadWarningMsg").hidden = !isOffline;
+  document.getElementById("download").disabled = isOffline;
 }

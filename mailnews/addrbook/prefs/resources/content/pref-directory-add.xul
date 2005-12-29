@@ -48,6 +48,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newDirectoryTitle.label;"
         onload="Startup();"
+        onunload="onUnload();"
         buttons="accept,cancel,help"
         ondialogaccept="return onAccept();"
         ondialogcancel="return onCancel();"
@@ -129,9 +130,7 @@
                       oncommand="DownloadNow();"/>
                   <spacer flex="1"/>
               </hbox>
-              <description id="downloadDisabledMsg"
-                           hidden="true"
-                           class="error">&downloadDisabledMsg.label;</description>
+              <description id="downloadWarningMsg" hidden="true" class="error"/>
           </vbox>
           <grid>
              <columns>
