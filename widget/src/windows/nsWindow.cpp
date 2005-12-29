@@ -5699,9 +5699,17 @@ PRBool nsWindow::OnPaint(HDC aDC)
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
 #ifdef MOZ_XUL
-  // For layered translucent windows all drawing should go to memory DC.
   if (!aDC && mIsTranslucent && IsAlphaTranslucencySupported())
+  {
+    // For layered translucent windows all drawing should go to memory DC and no
+    // WM_PAINT messages be generated. 
+    // But once such unexpected WM_PAINT message is received, it still has to be
+    // handled, to make Windows think that invalid area is painted. Otherwise it
+    // will continue sending the same message endlessly.
+    ::BeginPaint(mWnd, &ps);
+    ::EndPaint(mWnd, &ps);
     return PR_TRUE;
+  }
 #endif
 
   mPainting = PR_TRUE;
