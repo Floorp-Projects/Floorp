@@ -130,6 +130,9 @@ if ($action eq 'new') {
     # Cleanups and valididy checks
     $version_name || ThrowUserError('version_blank_name');
 
+    # Remove unprintable characters
+    $version_name = clean_text($version_name);
+
     my $version = new Bugzilla::Version($product->id, $version_name);
     if ($version) {
         ThrowUserError('version_already_exists',
@@ -242,6 +245,10 @@ if ($action eq 'edit') {
 if ($action eq 'update') {
 
     $version_name || ThrowUserError('version_not_specified');
+
+    # Remove unprintable characters
+    $version_name = clean_text($version_name);
+
     my $version_old_name = trim($cgi->param('versionold') || '');
     my $version_old =
         Bugzilla::Version::check_version($product,
