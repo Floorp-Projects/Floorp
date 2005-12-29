@@ -1919,9 +1919,12 @@ NS_IMETHODIMP
 nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
                      PRBool aToplevel, nsIURI *aReferrer)
 {
-  // add to main DB
-  PRInt64 pageid = 0;
-  PRTime now = GetNow();
+  // Note that here we should NOT use the GetNow function. That function caches
+  // the value of "now" until next time the event loop runs. This gives better
+  // performance, but here we may get many notifications without running the
+  // event loop. We must preserve these events' ordering. This most commonly
+  // happens on redirects.
+  PRTime now = PR_Now();
 
   // check for transition types
   PRUint32 transitionType = 0;
@@ -1956,6 +1959,7 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
     }
   }
 
+  PRInt64 pageid = 0;
   nsresult rv = InternalAdd(aURI, aReferrer, 0, transitionType, nsnull, now,
                             aRedirect, aToplevel, &pageid);
   NS_ENSURE_SUCCESS(rv, rv);
