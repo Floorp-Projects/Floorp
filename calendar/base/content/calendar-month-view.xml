@@ -93,7 +93,7 @@
 
           var str = null;
           if (val instanceof Components.interfaces.calIEvent) {
-            str = formatTime(val.startDate) + " " + val.title;
+            str = formatTime(val.startDate.getInTimezone(this.calendarView.mTimezone)) + " " + val.title;
           } else if (val instanceof Components.interfaces.calITodo) {
             // yeah, this should really be a little picture instead of a "*"
             str = "* " + val.title;
@@ -474,6 +474,7 @@
       <field name="mStartDate">null</field>
       <field name="mEndDate">null</field>
       <field name="mDateBoxes">null</field>
+      <field name="mTimezone">"floating"</field>
 
       <field name="mSelectedItem">null</field>
       <field name="mSelectedDayBox">null</field>
@@ -639,6 +640,10 @@
         <body><![CDATA[
           this.mStartDate = aStartDate.startOfWeek;
           this.mEndDate = aEndDate.endOfWeek;
+
+          if (this.mTimezone != aStartDate.timezone) {
+            this.mTimezone = aStartDate.timezone;
+          }
 
           this.refresh();
         ]]></body>
