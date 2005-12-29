@@ -988,10 +988,7 @@ nsMathMLContainerFrame::RemoveFrame(nsIAtom*        aListName,
     return NS_ERROR_INVALID_ARG;
   }
   // remove the child frame
-  nsPresContext* presContext = GetPresContext();
-  presContext->PresShell()->FrameConstructor()->
-    RemoveMappingsForFrameSubtree(aOldFrame);
-  mFrames.DestroyFrame(presContext, aOldFrame);
+  mFrames.DestroyFrame(GetPresContext(), aOldFrame);
   return ChildListChanged(nsIDOMMutationEvent::REMOVAL);
 }
 
