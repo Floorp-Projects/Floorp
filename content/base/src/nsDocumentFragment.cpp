@@ -149,7 +149,7 @@ public:
   {
     return NS_OK;
   }
-  virtual nsAttrName* GetAttrNameAt(PRUint32 aIndex) const
+  virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const
   {
     return nsnull;
   }
