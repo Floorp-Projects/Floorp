@@ -300,9 +300,6 @@ private:
     return (nsNavHistoryResultNode*)mVisibleElements[index];
   }
 
-  // keep track of sorting state
-  PRUint32 mCurrentSort;
-
   void FillTreeStats(nsNavHistoryResultNode* aResult, PRInt32 aLevel);
   void InitializeVisibleList();
   void RebuildList();
