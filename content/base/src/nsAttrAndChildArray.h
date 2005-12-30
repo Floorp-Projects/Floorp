@@ -97,7 +97,13 @@ public:
   nsresult SetAndTakeAttr(nsIAtom* aLocalName, nsAttrValue& aValue);
   nsresult SetAndTakeAttr(nsINodeInfo* aName, nsAttrValue& aValue);
   nsresult RemoveAttrAt(PRUint32 aPos);
+
+  // Returns attribute name at given position, *not* out-of-bounds safe
+  const nsAttrName* AttrNameAt(PRUint32 aPos) const;
+
+  // Returns attribute name at given position or null if aPos is out-of-boundss
   const nsAttrName* GetSafeAttrNameAt(PRUint32 aPos) const;
+
   // aName is UTF-8 encoded
   const nsAttrName* GetExistingAttrNameFromQName(const nsACString& aName) const;
   PRInt32 IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;

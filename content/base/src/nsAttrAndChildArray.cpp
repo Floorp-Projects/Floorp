@@ -454,6 +454,20 @@ nsAttrAndChildArray::RemoveAttrAt(PRUint32 aPos)
 }
 
 const nsAttrName*
+nsAttrAndChildArray::AttrNameAt(PRUint32 aPos) const
+{
+  NS_ASSERTION(aPos < AttrCount(),
+               "out-of-bounds access in nsAttrAndChildArray");
+
+  PRUint32 mapped = MappedAttrCount();
+  if (aPos < mapped) {
+    return mImpl->mMappedAttrs->NameAt(aPos);
+  }
+
+  return &ATTRS(mImpl)[aPos - mapped].mName;
+}
+
+const nsAttrName*
 nsAttrAndChildArray::GetSafeAttrNameAt(PRUint32 aPos) const
 {
   PRUint32 mapped = MappedAttrCount();

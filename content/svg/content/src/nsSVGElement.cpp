@@ -546,7 +546,7 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
     return NS_ERROR_UNEXPECTED;
   }
 
-  const nsAttrName* attrName = mMappedAttributes.GetSafeAttrNameAt(i);
+  const nsAttrName* attrName = mMappedAttributes.AttrNameAt(i);
   PRBool modification = PR_FALSE;
   PRBool hasListeners = PR_FALSE;
   if (IsInDoc()) {
@@ -660,7 +660,7 @@ nsSVGElement::UpdateContentStyleRule()
 
   PRUint32 attrCount = mAttrsAndChildren.AttrCount();
   for (PRUint32 i = 0; i < attrCount; ++i) {
-    const nsAttrName* attrName = mAttrsAndChildren.GetSafeAttrNameAt(i);
+    const nsAttrName* attrName = mAttrsAndChildren.AttrNameAt(i);
     if (!attrName->IsAtom() || !IsAttributeMapped(attrName->Atom()))
       continue;
 

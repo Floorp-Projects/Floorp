@@ -3864,7 +3864,7 @@ nsGenericElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep) const
   for (i = 0; i < count; ++i) {
     // XXX Once we have access to existing nsDOMAttributes for this element, we
     //     should call CloneNode or ImportNode on them.
-    const nsAttrName* name = mAttrsAndChildren.GetSafeAttrNameAt(i);
+    const nsAttrName* name = mAttrsAndChildren.AttrNameAt(i);
     const nsAttrValue* value = mAttrsAndChildren.AttrAt(i);
     nsAutoString valStr;
     value->ToString(valStr);
@@ -4190,7 +4190,7 @@ nsGenericElement::GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const
 
   PRInt32 index = mAttrsAndChildren.IndexOfAttr(aName, aNamespaceID);
   if (index >= 0) {
-    return nsAttrInfo(mAttrsAndChildren.GetSafeAttrNameAt(index),
+    return nsAttrInfo(mAttrsAndChildren.AttrNameAt(index),
                       mAttrsAndChildren.AttrAt(index));
   }
 
@@ -4363,7 +4363,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
     nsAutoString buffer;
 
     // name
-    mAttrsAndChildren.GetSafeAttrNameAt(index)->GetQualifiedName(buffer);
+    mAttrsAndChildren.AttrNameAt(index)->GetQualifiedName(buffer);
 
     // value
     buffer.AppendLiteral("=");
