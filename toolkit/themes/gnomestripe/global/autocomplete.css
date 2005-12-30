@@ -170,21 +170,3 @@ toolbarpaletteitem > toolbaritem > textbox > hbox > hbox > html|*.textbox-input 
 toolbarpaletteitem > toolbaritem > * > textbox > hbox > hbox > html|*.textbox-input {
   visibility: hidden;
 }
-
-/* ::::: browser urlbar styles :::::: */
-
-#urlbar > .autocomplete-textbox-container {
-  -moz-binding: url(chrome://browser/skin/browser.xml#autocomplete-security-wrapper);
-}
-
-#autocomplete-security-wrapper {
-  -moz-box-align: center;
-}
-
-#urlbar[level="high"] #autocomplete-security-wrapper,
-#urlbar[level="low"] #autocomplete-security-wrapper,
-#urlbar[level="broken"] #autocomplete-security-wrapper {
-  background-color: #F5F6BE; /* #F7F898; */
-  color: #000000;
-}
-

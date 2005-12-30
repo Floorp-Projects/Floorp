@@ -924,6 +924,23 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   list-style-image: url("chrome://browser/skin/Security-broken.png");
 }
 
+%ifdef MOZ_WIDGET_GTK2
+#urlbar > .autocomplete-textbox-container {
+  -moz-binding: url(chrome://browser/skin/browser.xml#autocomplete-security-wrapper);
+}
+
+#autocomplete-security-wrapper {
+  -moz-box-align: center;
+}
+
+#urlbar[level="high"] #autocomplete-security-wrapper,
+#urlbar[level="low"] #autocomplete-security-wrapper,
+#urlbar[level="broken"] #autocomplete-security-wrapper {
+  background-color: #F5F6BE; /* #F7F898; */
+  color: #000000;
+}
+%endif
+
 #feed-button, #feed-button > .button-box,
 #feed-button:hover:active > .button-box {
   padding: 0px;
