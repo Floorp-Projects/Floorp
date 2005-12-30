@@ -38,7 +38,6 @@
 #
 # ***** END LICENSE BLOCK ***** */
 #
-#ifdef XP_UNIX
 
 var dialog;
 var gPrintSettings = null;
@@ -972,5 +971,3 @@ function onAccept()
 
   return true;
 }
-
-#endif
