@@ -17,7 +17,7 @@ if (empty($pageType)) {
 //  and corresponds to the selected tab in the header.tpl template.
 //
 // $compileId is set in init.php and corresponds to the current app.
-$tpl->display('inc/wrappers/' . $pageType . '-header.tpl',$currentTab,$compileId);
+$tpl->display('inc/wrappers/' . $pageType . '-header.tpl', $GLOBALS['currentTab'], $GLOBALS['compileId']);
 
 // Display page content.
 //
