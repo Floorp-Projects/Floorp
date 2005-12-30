@@ -43,4 +43,4 @@ pref("inspector.blink.speed", 100);
 pref("inspector.blink.invert", false);
 pref("inspector.dom.showAnon", true);
 pref("inspector.dom.showWhitespaceNodes", true);
-
+pref("inspector.showChrome", false);
