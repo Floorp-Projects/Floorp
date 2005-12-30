@@ -20,7 +20,6 @@
     <command id="cmdShowPrefsDialog" oncommand="inspector.showPrefsDialog()"/>
   
     <command id="cmdToggleBrowser" oncommand="inspector.toggleBrowser(true)"/>
-    <command id="cmdToggleChrome" oncommand="inspector.toggleChrome()"/>
 
     <command id="cmdEditUndo" global="true" oncommand="inspector.doViewerCommand('cmdEditUndo');"/>
     <command id="cmdEditRedo" global="true" oncommand="inspector.doViewerCommand('cmdEditRedo');"/>

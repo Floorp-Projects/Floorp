@@ -20,7 +20,6 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
- *   Jason Barnabe <jason_barnabe@fastmail.fm>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,11 +48,10 @@ var inspector;
 
 const kSearchRegURL        = "resource:///res/inspector/search-registry.rdf";
 
+const kWindowDataSourceCID = "@mozilla.org/rdf/datasource;1?name=window-mediator";
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
 const kPromptServiceCID    = "@mozilla.org/embedcomp/prompt-service;1";
 const nsIWebNavigation     = Components.interfaces.nsIWebNavigation;
-const nsIDocShellTreeItem  = Components.interfaces.nsIDocShellTreeItem;
-const nsIDocShell          = Components.interfaces.nsIDocShell;
 
 //////////////////////////////////////////////////
 
@@ -123,11 +121,6 @@ InspectorApp.prototype =
     this.mPanelSet = document.getElementById("bxPanelSet");
     this.mPanelSet.addObserver("panelsetready", this, false);
     this.mPanelSet.initialize();
-
-    this.mInspectDocumentMenu = document.getElementById("listDocuments-popup");
-
-    document.getElementById("cmdToggleChrome").setAttribute("checked",
-                                               PrefUtils.getPref("inspector.showChrome"));
 
     if (aURI) {
       this.gotoURL(aURI);
@@ -212,17 +205,6 @@ InspectorApp.prototype =
       this.openSplitter("Browser", aValue);
     var cmd = document.getElementById("cmdToggleBrowser");
     cmd.setAttribute("checked", aValue);
-  },
-
- /** 
-  * Toggles inspector.showChrome
-  */
-  toggleChrome: function()
-  {
-    var newValue = !PrefUtils.getPref("inspector.showChrome");
-    PrefUtils.setPref("inspector.showChrome", newValue);
-    var cmd = document.getElementById("cmdToggleChrome");
-    cmd.setAttribute("checked", newValue);
   },
 
   toggleSearch: function(aToggleSplitter)
@@ -369,120 +351,25 @@ InspectorApp.prototype =
     }
   },
 
- /** 
-  * Creates the submenu for Inspect Document
-  */
-  showInspectDocumentList: function()
+  goToWindow: function(aMenuitem)
   {
-    const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    var showChrome = PrefUtils.getPref("inspector.showChrome");
-    var ww = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
-    var windows = ww.getXULWindowEnumerator(null);
-    var contentDocs = [];
-    var chromeDocs = [];
-
-    while (windows.hasMoreElements()) {
-      try {
-        // Get the window's main docshell
-        var windowDocShell = windows.getNext()
-                            .QueryInterface(Components.interfaces.nsIXULWindow).docShell;
-
-        // Put the window's documents into the appropriate arrays
-        this.appendContainedDocuments(contentDocs, windowDocShell, 
-                                      nsIDocShellTreeItem.typeContent);
-        if (showChrome) {
-          this.appendContainedDocuments(chromeDocs, windowDocShell, 
-                                        nsIDocShellTreeItem.typeChrome);
-        }
-      }
-      catch (ex) {
-        // We've failed with this window somehow, but we're catching the error so the
-        // others will still work
-        dump(ex + "\n");
-      }
-    }
-
-    // Now add what we found to the menu
-    var docNumber = 0;
-    for (var i = 0; i < contentDocs.length; i++) {
-      this.addInspectDocumentMenuItem(contentDocs[i], ++docNumber);
-    }
-    if (showChrome) {
-      // Put a seperator in if there were content docs
-      if (contentDocs.length > 0) {
-        this.mInspectDocumentMenu.appendChild(document.createElementNS(XULNS, "menuseparator"));
-      }
-      for (var i = 0; i < chromeDocs.length; i++) {
-        this.addInspectDocumentMenuItem(chromeDocs[i], ++docNumber);
-      }
-    } else {
-      // If we're not showing chrome, there's a possibility there are no documents
-      // at all.
-      if (contentDocs.length == 0) {
-        var noneMenuItem = document.createElementNS(XULNS, "menuitem");
-        noneMenuItem.setAttribute("label", this.mPanelSet.stringBundle
-                                               .getString("inspectWindow.noDocuments.message"));
-        noneMenuItem.setAttribute("disabled", true);
-        this.mInspectDocumentMenu.appendChild(noneMenuItem);
-      }
-    }
+    this.setTargetWindowById(aMenuitem.id);
   },
 
- /** 
-  * Appends to the array the documents contained in docShell (including the passed
-  * docShell itself).
-  *
-  * @param array the array to append to
-  * @param docShell the docshell to look for documents in
-  * @param type one of the types defined in nsIDocShellTreeItem
-  */
-  appendContainedDocuments: function(array, docShell, type)
+  setTargetWindowById: function(aResId)
   {
-    // Load all the window's content docShells
-    var containedDocShells = docShell.getDocShellEnumerator(type, 
-                                      nsIDocShell.ENUMERATE_FORWARDS);
-    while (containedDocShells.hasMoreElements()) {
-      try {
-        // Get the corresponding document for this docshell
-        var childDoc = containedDocShells.getNext().QueryInterface(nsIDocShell)
-                                         .contentViewer.DOMDocument;
+    var windowManager = XPCU.getService(kWindowDataSourceCID, "nsIWindowDataSource");
+    var win = windowManager.getWindowForResource(aResId);
 
-        // Ignore the DOM Insector's browser docshell if it's not being used
-        if (docShell.contentViewer.DOMDocument.location.href != document.location.href ||
-            childDoc.location.href != "about:blank") {
-          array.push(childDoc);
-        }
-      }
-      catch (ex) {
-        // We've failed with this document somehow, but we're catching the error so
-        // the others will still work
-        dump(ex + "\n");
-      }
-    }
-  },
-
- /** 
-  * Creates a menu item for Inspect Document.
-  *
-  * @param doc document related to this menu item
-  * @param docNumber the position of the document
-  */
-  addInspectDocumentMenuItem: function(doc, docNumber)
-  {
-    const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    var menuItem = document.createElementNS(XULNS, "menuitem");
-    menuItem.doc = doc;
-    // Use the URL if there's no title
-    var title = doc.title || doc.location.href;
-    // The first ten items get numeric access keys
-    if (docNumber < 10) {
-      menuItem.setAttribute("label", docNumber + " " + title);
-      menuItem.setAttribute("accesskey", docNumber);
+    if (win) {
+      this.setTargetWindow(win);
+      this.setBrowser(false, true);
     } else {
-      menuItem.setAttribute("label", title);
+      var bundle = this.mPanelSet.stringBundle;
+      var msg = bundle.getString("inspectWindow.error.message");
+      var title = bundle.getString("inspectWindow.error.title");
+      this.mPromptService.alert(window, title, msg);
     }
-    this.mInspectDocumentMenu.appendChild(menuItem);
   },
 
   setTargetWindow: function(aWindow)

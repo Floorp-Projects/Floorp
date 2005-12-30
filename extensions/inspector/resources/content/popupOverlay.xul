@@ -27,10 +27,16 @@
   </popupset>
 
   <menupopup id="menu_FilePopup">
-    <menu oncommand="inspector.setTargetDocument(event.target.doc);" id="mnInspectDocumentFile" label="&mnInspectDocument.label;"
-          accesskey="&mnInspectDocument.accesskey;">
-      <menupopup id="listDocuments-popup" onpopupshowing="inspector.showInspectDocumentList()"
-                 onpopuphiding="inspector.emptyChildren(this);"/>
+    <menu oncommand="inspector.goToWindow(event.target);"
+      id="mnWindowsFile" label="&mnWindows.label;" accesskey="&mnWindows.accesskey;"
+      datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+      <template>
+        <rule>
+          <menupopup>
+            <menuitem uri="rdf:*" label="&NC-rdf;KeyIndex &NC-rdf;Name" accesskey="&NC-rdf;KeyIndex"/>
+          </menupopup>
+        </rule>
+      </template>
     </menu>
     <menuitem label="&cmdShowOpenURLDialog.label;" accesskey="&cmdShowOpenURLDialog.accesskey;"
               observes="cmdShowOpenURLDialog"/>
@@ -62,10 +68,8 @@
     -->
   </menupopup>
 
-  <menupopup id="mppView">
+  <menupopup id="mppView" >
     <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleBrowser.label;" observes="cmdToggleBrowser"/>
-    <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleChrome.label;" observes="cmdToggleChrome"
-              accesskey="&cmdToggleChrome.accesskey;"/>
     <!--
     <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleSearch.label;" observes="cmdToggleSearch"/>
     -->
