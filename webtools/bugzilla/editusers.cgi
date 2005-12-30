@@ -138,7 +138,8 @@ if ($action eq 'search') {
             my $grouplist = join(',',
                 @{Bugzilla::User->flatten_group_membership($group->id)});
             $query .= " $nextCondition profiles.userid = ugm.user_id " .
-                      "AND ugm.group_id IN($grouplist)";
+                      "AND ugm.group_id IN($grouplist) " .
+                      "AND ugm.isbless = 0";
         }
         $query .= ' ORDER BY profiles.login_name';
 
