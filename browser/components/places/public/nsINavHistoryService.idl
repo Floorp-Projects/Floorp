@@ -682,6 +682,45 @@ interface nsINavHistoryService : nsISupports
   boolean canAddURI(in nsIURI aURI);
 
   /**
+   * Call to set the full information for a given page. If the page does not
+   * exist, it will be added to the database. If it does, the existing values
+   * WILL BE OVERWRITTEN. This is an updated version of addPageWithDetails
+   * for backup/restore type operations.
+   *
+   * @param aURI        Page to add/change.
+   * @param aTitle      Title as specified by the page.
+   * @param aUserTitle  Custom title provided by user. Set to NULL if none.
+   * @param aVisitCount Number of times this page has been visited. Setting this
+   *                    to 0 may make the page invisible in some views.
+   * @param aHidden     Whether the page is hidden. If the page has only
+   *                    TRANSITION_EMBED visits, this will be true, otherwise
+   *                    false.
+   * @param aTyped      True if this URL has ever been typed.
+   */
+  void setPageDetails(in nsIURI aURI, in AString aTitle, in AString aUserTitle,
+                      in PRUint32 aVisitCount, in boolean aHidden,
+                      in boolean aTyped);
+
+  /**
+   * Call to manually add a visit for a specific page. This will probably not
+   * be commonly used other than for backup/restore type operations. If the URI
+   * does not have an entry in the history database already, one will be created
+   * with no visits, no title, hidden, not typed.
+   *
+   * @param aURI             Visited page
+   * @param aTime            Time page was visited (microseconds)
+   * @param aReferrer        The ID of the visit that generated this one. Use 0
+   *                         for no referrer. This must be a valid visit already
+   *                         in the DB or 0.
+   * @param aTranstitionType Type of transition: one of TRANSITION_* above
+   * @param aSession         The session ID that this page belongs to. Use 0 for
+   *                         no session.
+   * @returns The ID of the created visit
+   */
+  PRInt64 addVisit(in nsIURI aURI, in PRTime aTime, in PRInt64 aReferrer,
+                   in PRInt32 aTransitionType, in PRInt64 aSession);
+
+  /**
    * This returns a new query object that you can pass to executeQuer[y/ies].
    * It will be initialized to all empty (so using it will give you all history).
    */
