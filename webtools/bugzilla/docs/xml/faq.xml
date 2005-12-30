@@ -896,6 +896,8 @@ password=mypassword
         <answer>
           <para>
             To disable email, set the
+            <option>mail_delivery_method</option> parameter to
+            <literal>none</literal> (2.20 and later), or
             <programlisting>$enableSendMail</programlisting> parameter to '0'
             in either <filename>BugMail.pm</filename> (2.18 and later) or 
             <filename>processmail</filename> (up to 2.16.x).

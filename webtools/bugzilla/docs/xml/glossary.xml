@@ -269,10 +269,11 @@
 
       <glossdef>
         <para>A Message Transport Agent is used to control the flow of email
-        on a system. Many unix based systems use
-        <ulink url="http://www.sendmail.org">sendmail</ulink> which is what
-        Bugzilla expects to find by default at <filename>/usr/sbin/sendmail</filename>.
-        Many other MTA's will work, but they all require that the
+        on a system. The <ulink url="http://search.cpan.org/dist/MailTools/Mail/Mailer.pm">Mail::Mailer</ulink>
+        Perl module, which Bugzilla uses to send email, can be configured to
+        use many different underlying implementations for actually sending the
+        mail using the <option>mail_delivery_method</option> parameter.
+        Implementations other than <literal>sendmail</literal> require that the
         <option>sendmailnow</option> param be set to <literal>on</literal>.
         </para>
       </glossdef>
