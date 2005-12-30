@@ -101,7 +101,7 @@ public:
   // Returns attribute name at given position, *not* out-of-bounds safe
   const nsAttrName* AttrNameAt(PRUint32 aPos) const;
 
-  // Returns attribute name at given position or null if aPos is out-of-boundss
+  // Returns attribute name at given position or null if aPos is out-of-bounds
   const nsAttrName* GetSafeAttrNameAt(PRUint32 aPos) const;
 
   // aName is UTF-8 encoded
