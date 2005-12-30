@@ -38,8 +38,7 @@
   [% subject_status = statuses.${flag.status} %]
 [% END %]
 From: bugzilla-request-daemon
-To: [% flag.addressee.email %]
-CC: [% flag.type.cc_list %]
+To: [% to %]
 Subject: [% flag.type.name %] [%+ subject_status %]: [[% terms.Bug %] [%+ flag.target.bug.id %]] [% flag.target.bug.summary %]
 [%- IF flag.target.attachment.exists %] :
   [Attachment [% flag.target.attachment.id %]] [% flag.target.attachment.summary %][% END %]

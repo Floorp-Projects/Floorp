@@ -977,7 +977,6 @@ sub notify {
     my ($flag, $template_file) = @_;
 
     my $template = Bugzilla->template;
-    my $vars = {};
 
     # There is nobody to notify.
     return unless ($flag->{'addressee'} || $flag->{'type'}->{'cc_list'});
@@ -1007,17 +1006,21 @@ sub notify {
     # If there is nobody left to notify, return.
     return unless ($flag->{'addressee'} || $flag->{'type'}->{'cc_list'});
 
-    $vars->{'flag'} = $flag;
-    
-    my $message;
-    my $rv = 
-      $template->process($template_file, $vars, \$message);
-    if (!$rv) {
-        Bugzilla->cgi->header();
-        ThrowTemplateError($template->error());
-    }
+    # Process and send notification for each recipient
+    foreach my $to ($flag->{'addressee'} ? $flag->{'addressee'}->email : '',
+                    split(/[, ]+/, $flag->{'type'}->{'cc_list'}))
+    {
+        next unless $to;
+        my $vars = { 'flag' => $flag, 'to' => $to };
+        my $message;
+        my $rv = $template->process($template_file, $vars, \$message);
+        if (!$rv) {
+            Bugzilla->cgi->header();
+            ThrowTemplateError($template->error());
+        }
 
-    Bugzilla::BugMail::MessageToMTA($message);
+        Bugzilla::BugMail::MessageToMTA($message);
+    }
 }
 
 # Cancel all request flags from the attachment being obsoleted.
