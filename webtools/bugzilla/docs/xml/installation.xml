@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.105 2005/11/19 22:06:46 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.106 2005/12/30 15:25:11 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1197,6 +1197,19 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
         After two days have passed you'll be able to view bug graphs from
         the Reports page.
       </para>
+
+      <para>
+        When upgrading Bugzilla, this format may change.
+        To create new status data, (re)move old data and run the following 
+        commands:
+      </para>
+
+      <screen>
+        <prompt>bash$</prompt>
+        <command>cd &lt;your-bugzilla-directory&gt;</command>
+        <prompt>bash$</prompt>
+        <command>./collectstats.pl --regenerate</command>
+      </screen>
 
       <note>
         <para>
