@@ -2125,8 +2125,6 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
         return form_frame;
       }
     }
-        
-    NS_ERROR("Form control has a frame, but it's not a form frame");
   }
 
   return nsnull;
