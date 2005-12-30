@@ -301,6 +301,15 @@ nsScrollbarsProp::GetVisible(PRBool *aVisible)
 NS_IMETHODIMP
 nsScrollbarsProp::SetVisible(PRBool aVisible)
 {
+  PRBool   enabled = PR_FALSE;
+
+  nsCOMPtr<nsIScriptSecurityManager>
+           securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+  if (securityManager)
+    securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+  if (!enabled)
+    return NS_OK;
+
   /* Scrollbars, unlike the other barprops, implement visibility directly
      rather than handing off to the superclass (and from there to the
      chrome window) because scrollbar visibility uniquely applies only
