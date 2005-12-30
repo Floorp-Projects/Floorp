@@ -282,7 +282,7 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep) const
   for (i = 0; i < count; ++i) {
     // XXX Once we have access to existing nsDOMAttributes for this element, we
     //     should call CloneNode or ImportNode on them.
-    const nsAttrName *name = mAttrsAndChildren.GetSafeAttrNameAt(i);
+    const nsAttrName *name = mAttrsAndChildren.AttrNameAt(i);
     const nsAttrValue *value = mAttrsAndChildren.AttrAt(i);
     if (name->Equals(nsHTMLAtoms::style, kNameSpaceID_None) &&
         value->Type() == nsAttrValue::eCSSStyleRule) {
