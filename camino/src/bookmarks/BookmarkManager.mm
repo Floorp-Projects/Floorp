@@ -1443,7 +1443,7 @@ static BookmarkManager* gBookmarkManager = nil;
         tokenScanner = [[NSScanner alloc] initWithString:tokenString];
         [tokenScanner scanUpToString:@"href=\"" intoString:nil];  // tokenScanner now contains HREF="[URL]">[TITLE]
         // check for a menu spacer, which will look like this: HREF="">&lt;Menu Spacer&gt; (bug 309008)
-        if ([[tokenString substringFromIndex:([tokenScanner scanLocation]+8)] isEqualToString:@"&lt;Menu Spacer&gt;"])  {
+        if (![tokenScanner isAtEnd] && [[tokenString substringFromIndex:([tokenScanner scanLocation]+8)] isEqualToString:@"&lt;Menu Spacer&gt;"])  {
           currentItem = [currentArray addBookmark];
           [(Bookmark *)currentItem setIsSeparator:YES];
           [tokenScanner release];
