@@ -1,0 +1,108 @@
+The files in this directory follow several conventions:
+
+  * Each .pm which has multiple implementations (optional features or
+    alternate implementation) has a directory of the same name as the
+    module.  The alternate/optional implementations are found in that
+    directory.
+
+  * Configuration of the system need only take place in the
+    TinderConfig.pm file and by variable substitution at the time the
+    Makefile is built.
+
+  * Most users should be able to configure the system by editing only
+    the files:
+
+        TinderConfig.pm
+        TreeData.pm
+
+    and perhaps the file:
+
+        FileStructure.pm
+
+  * More advanced users will find that most of the changes they need to
+    make are parameterized within the individual modules.  The constants
+    coded in TinderConfig are also coded within the modules so that you
+    need not use TinderConfig if you prefer not to.  However not using
+    TinderConfig this will require you to perform a CVS merge to update
+    your sources from the master CVS repository.
+
+  * Lib files have the following structure:
+      - A mode line telling emacs the language the code was written in.
+      - A brief discription of what is found in this module
+      - CVS keyword comments, for tracking after code is deployed
+      - The Mozilla Public License
+      - Any uses which will be required by the module, these are 
+        split into two groups where the first group are the standard
+        Perl modules the second group are Tinderbox2 specific modules
+      - Configurable parameters
+      - The actual code of the module
+
+  * There is no code run at the time of loading except for the setting
+    of static variables and the calling of main::require_modules(@IMPLS)
+    to load implementation specific modules defined by a string.
+
+
+The library files in this directory:
+
+  MailProcess.pm
+      All the functions which are used by more then one mail
+      processing program.
+
+  Persistence.pm
+      An abstract interface to save the data structures to
+      disk and load the data back.  An effort is made to ensure files are
+      updated atomically.  This interface allows us to easily change the
+      perl module we use to store the data (Data::Dumper, Storable, etc).
+      You will have choices between Data::Dumper which is slow but text
+      files allows great debugging capabilities and Storable (not yet
+      implemented) which is much faster but binary format.
+
+      Testing is ongoing into this function.
+
+      Data::Dumper module has an implicit eval and should not be used
+      for security sensitive issues.
+
+  Utils.pm
+      General purpose utility functions.  Every project needs a
+      kludge bucket for common access.
+
+  Summaries.pm
+      Generate the summary pages which show the current
+      state of the tree in various formats.  Few (if any) of these pages
+      make use of the popup window because we want the largest audience
+      possible to view them.
+
+  TinderDB.pm
+      The persistant storage for Tinderbox2.
+      This package allows the user to define which features (columns of
+      the status table) are available and provide a consistant interface
+      to store/load the data and render the HTML to display the data.
+
+      This interface controls the table columns values:
+          - Time Column,
+          - Version Control (VC) checkin lists, 
+          - Notice board display,
+          - build display (colored squares)
+
+  TinderHeader.pm
+      The persistant storage for Tinderbox2 administrative settings.
+      This package allows the adminstrator to set and retrieve their values
+      for the status pages.
+
+      This interface controls the scalar values:
+          - TreeState,
+          - Build,
+          - IgnoreBuilds,
+          - MOTD,
+          - Images
+
+  VCDisplay.pm
+      Describes how Tinderbox2 should prepeare URLS to show the source
+      tree allow VC queries.  Currently there are two implementations
+      one for users of the bonsai system (cvsquery, cvsguess, cvsblame)
+      and one for users who have no web based access to their version
+      control repository.  Future plans include a VCDisplay module for CVSWeb.
+
+  PVCSGetData.pm
+      Helper code to isolate the calls to oracle for PVCS
+

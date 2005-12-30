@@ -1,0 +1,6 @@
+A collection of tools for simulating version control systems so that
+the behavor of tinderbox can be tested in environments where these
+programs are not installed.  To use these programs you will need to
+adjust the PATH of tinderbox to find these programs or adjust the
+config.out file so that the *.pm can be found.
+

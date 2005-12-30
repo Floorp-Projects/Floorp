@@ -1,0 +1,55 @@
+All the Tinderbox2 executables are found in this directory.
+
+The web server will only run programs which end in '.cgi'.  Programs
+which begin with 'processmail' are run by the MTA whenever there is
+new mail for that program. The Makefile will separate out the cgi
+programs into a cgibins directory and put the other programs into a
+bins directory.
+
+For security you may wish to ensure that the two directories are
+separated.
+
+
+The programs in this directory:
+
+  tinder.cgi
+      The main program which generates all the static web pages
+      which display the state of development.
+
+  addnote.cgi
+      The cgi program which allows users to create notes to be
+      displayed on the notice board and tells tinder.cgi about
+      the new data.
+
+  admintree.cgi
+      An administrative page for adding Messages of the Day
+      or turning off various build columns.
+
+  gunzip.cgi
+      Uncompresses the HTML log files and sends them to the
+      stdout so that the web server can display them.  It accepts
+      log file discriptions in an abreiviated format so that URL's
+      do not get too long.
+
+  processmail_bugs
+      The mail delivery agent which bug ticket mail will be processed.
+
+  processmail_builds
+      The mail delivery agent which build logs will be processed.
+
+  processmail_null
+      The mail delivery agent which throws away mail delivered to it.
+      This is sometimes useful for debugging or maintenance tasks.
+
+  rmlogs
+      A script to be run via cron which will remove old log files
+      from the disk so that it does not fill up.
+
+  bustagestats.cgi
+      Generates a "bustage" stats page (???)
+
+  gifsize
+      Adds HEIGHT= and WIDTH= to images referenced in specified HTML file.
+
+  regenerate.cgi
+      (???)
