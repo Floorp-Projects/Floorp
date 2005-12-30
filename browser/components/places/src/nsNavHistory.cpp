@@ -698,8 +698,8 @@ nsNavHistory::InternalAdd(nsIURI* aURI, nsIURI* aReferrer, PRInt64 aSessionID,
   }
 
   PRInt64 visitID, referringID;
-  rv = AddVisit(aReferrer, pageID, aVisitDate, aTransitionType,
-                &visitID, &referringID);
+  rv = InternalAddVisit(aReferrer, pageID, aVisitDate, aTransitionType,
+                        &visitID, &referringID);
 
   if (aPageID)
     *aPageID = pageID;
@@ -795,7 +795,7 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
 }
 
 
-// nsNavHistory::AddVisit
+// nsNavHistory::InternalAddVisit
 //
 //    Just a wrapper for inserting a new visit in the DB.
 //
@@ -809,9 +809,9 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
 //    The visit ID of the referrer that this function computes will be put
 //    into referringID.
 
-nsresult nsNavHistory::AddVisit(nsIURI* aReferrer, PRInt64 aPageID,
-                                PRTime aTime, PRInt32 aTransitionType,
-                                PRInt64* visitID, PRInt64 *referringID)
+nsresult nsNavHistory::InternalAddVisit(nsIURI* aReferrer, PRInt64 aPageID,
+                                        PRTime aTime, PRInt32 aTransitionType,
+                                        PRInt64* visitID, PRInt64 *referringID)
 {
   nsresult rv;
   PRInt64 fromStep = 0;
@@ -1181,6 +1181,71 @@ nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
   }
   *canAdd = PR_TRUE;
   return NS_OK;
+}
+
+
+// nsNavHistory::SetPageDetails
+
+NS_IMETHODIMP
+nsNavHistory::SetPageDetails(nsIURI* aURI, const nsAString& aTitle,
+                             const nsAString& aUserTitle, PRUint32 aVisitCount,
+                             PRBool aHidden, PRBool aTyped)
+{
+  // look up the page ID, creating a new one if necessary
+  PRInt64 pageID;
+  nsresult rv = GetUrlIdFor(aURI, &pageID, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_history "
+      "SET title = ?2, "
+          "user_title = ?3, "
+          "visit_count = ?4, "
+          "hidden = ?5, "
+          "typed = ?6 "
+       "WHERE id = ?1"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt64Parameter(0, pageID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  statement->BindStringParameter(1, aTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
+  statement->BindStringParameter(2, aUserTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
+  statement->BindInt32Parameter(3, aVisitCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  statement->BindInt32Parameter(4, aHidden ? 1 : 0);
+  NS_ENSURE_SUCCESS(rv, rv);
+  statement->BindInt32Parameter(5, aTyped ? 1 : 0);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
+// nsNavHistory::AddVisit
+
+NS_IMETHODIMP
+nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferrer,
+                       PRInt32 aTransitionType, PRInt64 aSession,
+                       PRInt64* aVisitID)
+{
+  // look up the page ID
+  PRInt64 pageID;
+  nsresult rv = GetUrlIdFor(aURI, &pageID, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // FIXME(brettw) we ignore the referrer ID, this should be hooked up. (This
+  // is pending a redo of the way sessions and referrers are handled coming
+  // from the docshell that will necessitate a rework of all of the visit
+  // creation code.)
+  PRInt64 referringID; // don't care about this
+  return InternalAddVisit(nsnull, pageID, aTime, aTransitionType, aVisitID,
+                   &referringID);
 }
 
 
