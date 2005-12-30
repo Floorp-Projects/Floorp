@@ -11,45 +11,42 @@
 <!-- MAIN MENU ITEMS -->
 
 <!ENTITY mnFile.label "File">
+<!ENTITY mnWindows.label "Inspect a Window">
 <!ENTITY mnWindows.accesskey "w">
-<!ENTITY mnFile.accesskey "F">
-  <!ENTITY mnInspectDocument.label "Inspect Document">
-  <!ENTITY mnInspectDocument.accesskey "D">
+<!ENTITY mnFile.accesskey "f">
   <!ENTITY cmdShowOpenURLDialog.label "Inspect a URL...">
-  <!ENTITY cmdShowOpenURLDialog.accesskey "U">
+  <!ENTITY cmdShowOpenURLDialog.accesskey "u">
   <!ENTITY cmdClose.label "Close">
-  <!ENTITY cmdClose.accesskey "C">
+  <!ENTITY cmdClose.accesskey "c">
   <!ENTITY cmdExit.label "Exit">
   <!ENTITY cmdExit.accesskey "x">
 
 <!ENTITY mnEdit.label "Edit">
-<!ENTITY mnEdit.accesskey "E">
+<!ENTITY mnEdit.accesskey "e">
   <!ENTITY cmdUndo.label "Undo">
-  <!ENTITY cmdUndo.accesskey "U">
+  <!ENTITY cmdUndo.accesskey "u">
   <!ENTITY cmdRedo.label "Redo">
-  <!ENTITY cmdRedo.accesskey "R">
+  <!ENTITY cmdRedo.accesskey "r">
   <!ENTITY cmdCut.label "Cut">
   <!ENTITY cmdCut.accesskey "t">
   <!ENTITY cmdCopy.label "Copy">
-  <!ENTITY cmdCopy.accesskey "C">
+  <!ENTITY cmdCopy.accesskey "c">
   <!ENTITY cmdPaste.label "Paste">
-  <!ENTITY cmdPaste.accesskey "P">
+  <!ENTITY cmdPaste.accesskey "p">
   <!ENTITY cmdDelete.label "Delete">
-  <!ENTITY cmdDelete.accesskey "D">
+  <!ENTITY cmdDelete.accesskey "d">
 
 <!ENTITY mnSearch.label "Search">
-<!ENTITY mnSearch.accesskey "S">
+<!ENTITY mnSearch.accesskey "s">
   <!ENTITY mnSearchPlugins.label "Extensions">
-  <!ENTITY mnSearchPlugins.accesskey "E">
+  <!ENTITY mnSearchPlugins.accesskey "e">
     <!ENTITY cmdRunSearch.label "Run...">
-    <!ENTITY cmdRunSearch.accesskey "R">
+    <!ENTITY cmdRunSearch.accesskey "r">
 
 <!ENTITY mnView.label "View">
 <!ENTITY mnView.accesskey "v">
   <!ENTITY cmdToggleBrowser.label "Browser">
   <!ENTITY cmdToggleSearch.label "Search Results">
-  <!ENTITY cmdToggleChrome.label "Chrome">
-  <!ENTITY cmdToggleChrome.accesskey "C">
 
 <!ENTITY cmdViewSearchItem.label "View...">
 <!ENTITY cmdEditSearchItem.label "Edit...">
