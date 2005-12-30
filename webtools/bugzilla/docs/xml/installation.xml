@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.106 2005/12/30 15:25:11 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.107 2005/12/30 15:39:01 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -352,13 +352,25 @@
             Text::Wrap (&min-text-wrap-ver;)
           </para>
         </listitem>
-        
+
         <listitem>
           <para>
             Mail::Mailer (&min-mail-mailer-ver;)
           </para>
         </listitem>
-        
+
+        <listitem>
+          <para>
+            MIME::Base64 (&min-mime-base64-ver;)
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            MIME::Parser (&min-mime-parser-ver;)
+          </para>
+        </listitem>
+
         <listitem>
           <para>
             Storable (&min-storable-ver;)
@@ -409,11 +421,10 @@
             (&min-patchreader-ver;) for pretty HTML view of patches
           </para>
         </listitem>
-        
+
         <listitem>
           <para>
-            <link linkend="install-modules-mime-parser">MIME::Parser</link>
-            (&min-mime-parser-ver;) for the optional email interface
+            Image::Magick (&min-image-magick-ver;) for converting BMP image attachments to PNG
           </para>
         </listitem>
       </orderedlist>          
@@ -509,25 +520,16 @@
         </para>
       </section>
 
-      <section id="install-modules-mime-parser">
-        <title>MIME::Parser (&min-mime-parser-ver;)</title>
-
-        <para>The MIME::Parser module is only required if you want to use the 
-        email interface
-        located in the <filename class="directory">contrib</filename> directory.
-        </para>
-      </section>
-
       <section id="install-modules-patchreader">
         <title>PatchReader (&min-patchreader-ver;)</title>
 
-        <para>The PatchReader module is only required if you want to use 
+        <para>The PatchReader module is only required if you want to use
         Patch Viewer, a
         Bugzilla feature to show code patches in your web browser in a more
-        readable form. 
+        readable form.
         </para>
       </section>
-    </section>    
+    </section>
     <section id="install-MTA">
       <title>Mail Transfer Agent (MTA)</title>
     

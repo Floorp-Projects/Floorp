@@ -57,7 +57,9 @@
 <!ENTITY min-dbi-ver "1.38">
 <!ENTITY min-date-format-ver "2.21">
 <!ENTITY min-cgi-ver "2.93">
-<!ENTITY min-mail-mailer-ver "1.65">
+<!ENTITY min-mail-mailer-ver "1.67">
+<!ENTITY min-mime-base64-ver "3.01">
+<!ENTITY min-mime-parser-ver "5.406">
 <!ENTITY min-storable-ver "any">
 <!-- Optional modules -->
 <!ENTITY min-gd-ver "1.20">
@@ -65,8 +67,8 @@
 <!ENTITY min-gd-text-align-ver "any">
 <!ENTITY min-chart-base-ver "1.0">
 <!ENTITY min-xml-parser-ver "any">
-<!ENTITY min-mime-parser-ver "any">
 <!ENTITY min-patchreader-ver "0.9.4">
+<!ENTITY min-image-magick-ver "any">
 
 ]>
 
