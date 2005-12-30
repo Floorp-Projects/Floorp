@@ -22,7 +22,7 @@
 #                 Joel Peshkin <bugreport@peshkin.net>
 #                 Jacob Steenhagen <jake@bugzilla.org>
 #                 Vlad Dascalu <jocuri@softhome.net>
-#                 Frédéric Buclin <LpSolit@gmail.com>
+#                 FrÃ©dÃ©ric Buclin <LpSolit@gmail.com>
 
 # Code derived from editowners.cgi and editusers.cgi
 
@@ -77,6 +77,34 @@ sub RederiveRegexp
         } else {
             $sthdel->execute($uid, $gid, GRANT_REGEXP) if $present;
         }
+    }
+}
+
+# Add missing entries in bug_group_map for bugs created while
+# a mandatory group was disabled and which is now enabled again.
+sub fix_bug_permissions {
+    my $gid = shift;
+    my $dbh = Bugzilla->dbh;
+
+    detaint_natural($gid);
+    return unless $gid;
+
+    my $bug_ids =
+      $dbh->selectcol_arrayref('SELECT bugs.bug_id
+                                  FROM bugs
+                            INNER JOIN group_control_map
+                                    ON group_control_map.product_id = bugs.product_id
+                             LEFT JOIN bug_group_map
+                                    ON bug_group_map.bug_id = bugs.bug_id
+                                   AND bug_group_map.group_id = group_control_map.group_id
+                                 WHERE group_control_map.group_id = ?
+                                   AND group_control_map.membercontrol = ?
+                                   AND bug_group_map.group_id IS NULL',
+                                 undef, ($gid, CONTROLMAPMANDATORY));
+
+    my $sth = $dbh->prepare('INSERT INTO bug_group_map (bug_id, group_id) VALUES (?, ?)');
+    foreach my $bug_id (@$bug_ids) {
+        $sth->execute($bug_id, $gid);
     }
 }
 
@@ -530,7 +558,8 @@ sub doGroupChanges {
     my $dbh = Bugzilla->dbh;
 
     $dbh->bz_lock_tables('groups WRITE', 'group_group_map WRITE',
-                         'user_group_map WRITE', 'profiles READ',
+                         'bug_group_map WRITE', 'user_group_map WRITE',
+                         'group_control_map READ', 'bugs READ', 'profiles READ',
                          'namedqueries READ', 'whine_queries READ');
 
     # Check that the given group ID and regular expression are valid.
@@ -572,6 +601,11 @@ sub doGroupChanges {
             $chgs = 1;
             $dbh->do('UPDATE groups SET isactive = ? WHERE id = ?',
                       undef, ($isactive, $gid));
+            # If the group was mandatory for some products before
+            # we deactivated it and we now activate this group again,
+            # we have to add all bugs created while this group was
+            # disabled in bug_group_map to correctly protect them.
+            if ($isactive) { fix_bug_permissions($gid); }
         }
     }
     if ($regexp ne $cgi->param('oldregexp')) {
