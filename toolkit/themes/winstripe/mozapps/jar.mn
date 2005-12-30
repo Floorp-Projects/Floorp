@@ -19,7 +19,7 @@ classic.jar:
         skin/classic/mozapps/pref/check.gif                           (pref/check.gif)
         skin/classic/mozapps/pref/dot.gif                             (pref/dot.gif)
         skin/classic/mozapps/pref/pref.css                            (pref/pref.css)
-        skin/classic/mozapps/profile/profileicon.gif                  (profile/profileicon.gif)
+        skin/classic/mozapps/profile/profileicon.png                  (profile/profileicon.png)
         skin/classic/mozapps/profile/profileSelection.css             (profile/profileSelection.css)
         skin/classic/mozapps/shared/itemFader.png                     (shared/itemFader.png)
         skin/classic/mozapps/shared/itemSelected.png                  (shared/itemSelected.png)
