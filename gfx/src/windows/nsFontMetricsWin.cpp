@@ -4719,27 +4719,40 @@ GenerateSingleByte(nsCharsetInfo* aSelf)
   int i;
 
   memset(map, 0, sizeof(map));
-  memset(mb + 128, 0, 160 - 128);
-  for (i = 0; i < 127; ++i) {
-    mb[i] = i;
-  }
-  mb[145] = 145;
-  mb[146] = 146;
+  if (UseAFunctions()) {
+    // A-functions use this function for TrueType
+    for (i = 0; i <= 255; ++i) {
+      mb[i] = i;
+    }
+  } else {
+    memset(mb + 128, 0, 160 - 128);
+    for (i = 0; i <= 127; ++i) {
+      mb[i] = i;
+    }
+    mb[145] = 145;
+    mb[146] = 146;
 
-  if (aSelf->mCodePage == 1250) {
-    mb[138] = 138;
-    mb[140] = 140;
-    mb[141] = 141;
-    mb[142] = 142;
-    mb[143] = 143;
-    mb[154] = 154;
-    mb[156] = 156;
-    mb[158] = 158;
-    mb[159] = 159;
-  }
+    if (aSelf->mCodePage == 1250) {
+      mb[138] = 138;
+      mb[140] = 140;
+      mb[141] = 141;
+      mb[142] = 142;
+      mb[143] = 143;
+      mb[154] = 154;
+      mb[156] = 156;
+      mb[158] = 158;
+      mb[159] = 159;
+    }
 
-  for (i = 160; i < 255; ++i) {
-    mb[i] = i;
+    for (i = 160; i <= 255; ++i) {
+      mb[i] = i;
+    }
+
+    //win95/98 have problem in some raster fonts (MS Sans Serif and MS Serif) in
+    //rendering 0xb7. So let's skip this in charmap, that will let system resort 
+    //to other fonts.  
+    if (IsWin95OrWin98())
+      mb[0xb7] = 0;
   }
 
   int len = MultiByteToWideChar(aSelf->mCodePage, 0, (char*) mb, 256, wc, 256);
@@ -4748,12 +4761,7 @@ GenerateSingleByte(nsCharsetInfo* aSelf)
     printf("%s: MultiByteToWideChar returned %d\n", aSelf->mName, len);
   }
 #endif
-  for (i = 0; i < 256; ++i) {
-    //win95/98 have problem in some raster fonts (MS Sans Serif and MS Serif) in
-    //rendering 0xb7. So let's skip this in charmap, that will let system resort 
-    //to other fonts.  
-    if ( i == 0x00b7 && IsWin95OrWin98() && !UseAFunctions())
-      continue;
+  for (i = 0; i <= 255; ++i) {
     ADD_GLYPH(map, wc[i]);
   }
   return MapToCCMap(map);
