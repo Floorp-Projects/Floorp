@@ -879,7 +879,18 @@ sub pad_digit {
 }
 
 sub pushit {
-  my ($ssh_server,$upload_path,$upload_directory,$cachebuild) = @_;
+  my %args = @_;
+
+  my $ssh_server = $args{'server'};
+  my $remote_path = $args{'remote_path'};
+  my $package_name = $args{'package_name'};
+  my $store_path = $args{'store_path'};
+  my $store_path_packages = $args{'store_path_packages'};
+  my $cachebuild = $args{'cachebuild'};
+
+  my $upload_directory = $store_path . "/" . $store_path_packages;
+
+  my @cmds;
 
   unless ( -d $upload_directory) {
     TinderUtils::print_log "No $upload_directory to upload\n";
@@ -891,8 +902,8 @@ sub pushit {
     $upload_directory = `cygpath -u $upload_directory`;
   }
   chomp($upload_directory);
-  my $short_ud = `basename $upload_directory`;
-  chomp ($short_ud);
+
+  my $short_ud = $package_name;
 
   my $ssh_opts = "";
   my $scp_opts = "";
@@ -921,24 +932,49 @@ sub pushit {
   $Settings::ReleaseToLatest = 1 if !defined($Settings::ReleaseToLatest);
 
   if ( $Settings::ReleaseToDated ) {
-    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path/$short_ud";
-    TinderUtils::run_shell_command "rsync -av -e \"ssh $ssh_opts\" $upload_directory/ $Settings::ssh_user\@$ssh_server:$upload_path/$short_ud/";
-    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/$short_ud";
+    push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $remote_path/$short_ud");
+    push(@cmds,"rsync -av -e \"ssh $ssh_opts\" $upload_directory/ $Settings::ssh_user\@$ssh_server:$remote_path/$short_ud/");
+    push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $remote_path/$short_ud");
     if ($Settings::ReleaseGroup ne '') {
-      TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chgrp -R $Settings::ReleaseGroup $upload_path/$short_ud";
+      push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server chgrp -R $Settings::ReleaseGroup $remote_path/$short_ud");
     }
 
     if ( $cachebuild and $Settings::ReleaseToLatest ) {
-      TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server cp -dpf $upload_path/$short_ud/* $upload_path/latest-$Settings::milestone/";
+      push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server  rsync -avz $remote_path/$short_ud/ $remote_path/latest-$Settings::milestone/");
     }
   } elsif ( $Settings::ReleaseToLatest ) {
-    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path";
-    TinderUtils::run_shell_command "scp $scp_opts -r $upload_directory/* $Settings::ssh_user\@$ssh_server:$upload_path/latest-$Settings::milestone/";
-    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/latest-$Settings::milestone/";
+    push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $remote_path");
+    push(@cmds,"scp $scp_opts -r $upload_directory/* $Settings::ssh_user\@$ssh_server:$remote_path/latest-$Settings::milestone/");
+    push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $remote_path/latest-$Settings::milestone/");
     if ($Settings::ReleaseGroup ne '') {
-      TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chgrp -R $Settings::ReleaseGroup $upload_path/latest-$Settings::milestone/";
+      push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server chgrp -R $Settings::ReleaseGroup $remote_path/latest-$Settings::milestone/");
     }
   }
+
+  my $oldwd = getcwd();
+  chdir($store_path);
+
+  my $upload_script_filename = "upload-packages.sh";
+  open(UPLOAD_SCRIPT, ">$upload_script_filename") or die "ERROR: Couldn't create $upload_script_filename: $!";
+  print UPLOAD_SCRIPT "#!/bin/sh\n\n";
+
+  for my $c (@cmds) {
+    print UPLOAD_SCRIPT "echo $c\n";
+    print UPLOAD_SCRIPT "$c\n";
+    print UPLOAD_SCRIPT "if [ \$? != 0 ]; then\n";
+    print UPLOAD_SCRIPT "  echo \"command failed!\"\n";
+    print UPLOAD_SCRIPT "  exit 1\n";
+    print UPLOAD_SCRIPT "fi\n";
+    print UPLOAD_SCRIPT "echo\n\n";
+  }
+
+  print UPLOAD_SCRIPT "exit 0\n";
+  close(UPLOAD_SCRIPT);
+
+  TinderUtils::run_shell_command "chmod 755 $upload_script_filename";
+  TinderUtils::run_shell_command "./$upload_script_filename";
+
+  chdir($oldwd);
 
   return 1;
 }
@@ -1143,26 +1179,31 @@ sub main {
     TinderUtils::run_shell_command "unix2dos $mozilla_build_dir/mozilla/browser/EULA";
   }
 
-  my $upload_directory;
+  my($package_dir, $store_name, $local_build_dir);
+
+  my $buildid = `cd $objdir/config/ && cat build_number`;
+  chomp($buildid);
 
   if ($cachebuild) {
     TinderUtils::print_log "uploading nightly release build\n";
-    $upload_directory = "$datestamp";
-    $url_path         = $url_path . "/" . $upload_directory;
+    $store_name = $buildid;
+    $package_dir = "$datestamp";
+    $url_path         = $url_path . "/" . $package_dir;
   } else {
     $ftp_path   = $Settings::tbox_ftp_path;
-    $upload_directory = shorthost() . "-" . "$Settings::milestone";
-    $url_path   = $Settings::tbox_url_path . "/" . $upload_directory;
+    $package_dir = shorthost() . "-" . "$Settings::milestone";
+    $store_name = $package_dir;
+    $url_path   = $Settings::tbox_url_path . "/" . $package_dir;
   }
 
   if (!is_os2()) {
     processtalkback($cachebuild && $Settings::shiptalkback, $objdir, "$mozilla_build_dir/${Settings::Topsrcdir}");
   }
 
-  $upload_directory = $package_location . "/" . $upload_directory;
+  $local_build_dir = $package_location . "/" . $package_dir;
 
   if (!$Settings::ConfigureOnly) {
-    unless (packit($package_creation_path,$package_location,$url_path,$upload_directory,$objdir,$cachebuild)) {
+    unless (packit($package_creation_path,$package_location,$url_path,$local_build_dir,$objdir,$cachebuild)) {
       cleanup();
       return returnStatus("Packaging failed", ("testfailed"));
     }
@@ -1179,20 +1220,28 @@ sub main {
       }
     }
 
-    packit_l10n($srcdir,$objdir,$package_creation_path,$package_location,$url_path,$upload_directory,$cachebuild);
+    packit_l10n($srcdir,$objdir,$package_creation_path,$package_location,$url_path,$local_build_dir,$cachebuild);
   }
 
-  unless (pushit($Settings::ssh_server,
-                 $ftp_path,$upload_directory, $cachebuild)) {
-    cleanup();
-    return returnStatus("Pushing package $upload_directory failed", ("testfailed"));
-  }
+  my $store_home;
+  $store_home = "$mozilla_build_dir/$store_name";
+
+  # save the current build in the appropriate store directory
+  TinderUtils::run_shell_command "mkdir -p $store_home/packages";
+  TinderUtils::run_shell_command "rsync -avz $local_build_dir/ $store_home/packages/";
 
   if ($cachebuild) { 
     # remove saved builds older than a week and save current build
     TinderUtils::run_shell_command "find $mozilla_build_dir -type d -name \"200*-*\" -maxdepth 1 -prune -mtime +7 -print | xargs rm -rf";
-    TinderUtils::run_shell_command "cp -rpf $upload_directory $mozilla_build_dir/$datestamp";
+  }
 
+  unless (pushit(server => $Settings::ssh_server, remote_path => $ftp_path, package_name => $package_dir,
+                 store_path => $store_home, store_path_packages => "packages", cachebuild => $cachebuild)) {
+    cleanup();
+    return returnStatus("Pushing package $local_build_dir failed", ("testfailed"));
+  }
+
+  if ($cachebuild) { 
     # Above, we created last-built.new at the start of the cachebuild cycle.
     # If the last-built.new file still exists, move it to the last-built file.
 
