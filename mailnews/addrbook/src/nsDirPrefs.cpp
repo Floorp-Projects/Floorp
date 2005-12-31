@@ -52,7 +52,6 @@
 #include "nsCOMPtr.h"
 #include "nsAbBaseCID.h"
 #include "nsIAddrBookSession.h"
-#include "nsICharsetConverterManager.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -134,17 +133,6 @@ typedef struct DIR_DefaultAttribute
 	const char *name;
 } DIR_DefaultAttribute;
 
-/* DIR_Filter.flags */
-#define DIR_F_SUBST_STARS_FOR_SPACES   0x00000001
-#define DIR_F_REPEAT_FILTER_FOR_TOKENS 0x00000002
-
-/* DIR_Server.filters is a list of DIR_Filter structures */
-typedef struct DIR_Filter
-{
-	char *string;
-	PRUint32 flags;
-} DIR_Filter;
-
 /* Codeset type */
 #define SINGLEBYTE   0x0000 /* 0000 0000 0000 0000 =    0 */
 #define MULTIBYTE    0x0100 /* 0000 0001 0000 0000 =  256 */
@@ -159,13 +147,6 @@ typedef struct DIR_Filter
 #define CS_UNKNOWN    (SINGLEBYTE         | 255) /* 255 */
 
 /* Default settings for site-configurable prefs */
-#define kDefaultTokenSeps " ,."
-#define kDefaultSubstStarsForSpaces PR_TRUE
-#define kDefaultRepeatFilterForTokens PR_TRUE
-#define kDefaultEfficientWildcards PR_TRUE
-#define kDefaultFilter "(cn=*%s*)"
-#define kDefaultEfficientFilter "(|(givenname=%s)(sn=%s))"
-#define kDefaultStopOnHit PR_TRUE
 #define kDefaultMaxHits 100
 #define kDefaultIsOffline PR_TRUE
 #define kDefaultEnableAuth PR_FALSE
@@ -522,8 +503,6 @@ nsresult DIR_InitServer (DIR_Server *server)
   if (server)
   {
     memset(server, 0, sizeof(DIR_Server));
-    server->saveResults = PR_TRUE;
-    server->efficientWildcards = kDefaultEfficientWildcards;
     server->port = LDAP_PORT;
     server->maxHits = kDefaultMaxHits;
     server->isOffline = kDefaultIsOffline;
@@ -563,18 +542,6 @@ static DIR_Attribute *DIR_CopyAttribute (DIR_Attribute *inAttribute)
 		}
 	}
 	return outAttribute;
-}
-
-
-static DIR_Filter *DIR_CopyFilter (DIR_Filter *inFilter)
-{
-	DIR_Filter *outFilter = (DIR_Filter*) PR_Malloc(sizeof(DIR_Filter));
-	if (outFilter)
-	{
-		outFilter->flags = inFilter->flags;
-        outFilter->string = nsCRT::strdup(inFilter->string);
-	}
-	return outFilter;
 }
 
 
@@ -675,9 +642,7 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 			(*out)->port = in->port;
 			(*out)->maxHits = in->maxHits;
 			(*out)->isSecure = in->isSecure;
-			(*out)->saveResults = in->saveResults;
 			(*out)->isOffline = in->isOffline;
-			(*out)->efficientWildcards = in->efficientWildcards;
 			(*out)->dirType = in->dirType;
 			(*out)->csid = in->csid;
 
@@ -724,40 +689,6 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 					err = NS_ERROR_OUT_OF_MEMORY;
 			}
 
-			if (in->customFilters)
-			{
-				(*out)->customFilters = new nsVoidArray();
-				if ((*out)->customFilters)
-				{
-					nsVoidArray *list = in->customFilters;
-					DIR_Filter *filter = nsnull;
-
-					PRInt32 count = list->Count();
-					PRInt32 i;
-					for (i = 0; i < count; i++)
-					{
-						filter = (DIR_Filter *)list->ElementAt(i);
-						if (filter)
-						{
-							DIR_Filter *outFilter = DIR_CopyFilter (filter);
-							if (outFilter)
-								((*out)->customFilters)->AppendElement(outFilter);
-							else
-								err = NS_ERROR_OUT_OF_MEMORY;
-						}
-					}
-				}
-				else
-					err = NS_ERROR_OUT_OF_MEMORY;
-			}
-
-			if (in->autoCompleteFilter)
-			{
-                (*out)->autoCompleteFilter = nsCRT::strdup(in->autoCompleteFilter);
-				if (!(*out)->autoCompleteFilter)
-					err = NS_ERROR_OUT_OF_MEMORY;
-			}
-
 			if (in->replInfo)
 				(*out)->replInfo = dir_CopyReplicationInfo (in->replInfo);
 
@@ -778,9 +709,6 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 				&(*out)->suppressedAttributes, &(*out)->suppressedAttributesCount);
 			dir_CopyTokenList (in->uriAttributes, in->uriAttributesCount,
 				&(*out)->uriAttributes, &(*out)->uriAttributesCount);
-
-			if (in->searchPairList)
-                (*out)->searchPairList = nsCRT::strdup (in->searchPairList);
 
 			(*out)->refCount = 1;
 		}
@@ -1068,9 +996,6 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 			case 'e': /* autoComplete.enabled */
 				rc = idAutoCompleteEnabled;
 				break;
-			case 'f':
-				rc = idAutoCompleteFilter;
-				break;
 			case 'n':
 				rc = idAutoCompleteNever;
 				break;
@@ -1129,24 +1054,9 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 		}
 		break;
 
-	case 'e':
-		switch (prefname[1]) {
-		case 'e': /* efficientWildcards */
-			rc = idEfficientWildcards;
-			break;
-		}
-		break;
-
-	case 'f':
-		if (PL_strstr(prefname, "filter") == prefname)
-		{
-			rc = idCustomFilters;
-		}
-		else
-		{
-			rc = idFileName;
-		}
-		break;
+  case 'f':
+    rc = idFileName;
+    break;
 
 	case 'h':
 		if (PL_strstr(prefname, "html.") == prefname)
@@ -1248,11 +1158,7 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 		break;
 
 	case 's':
-		switch (prefname[1]) {
-		case 'a': /* saveResults */
-			rc = idSaveResults;
-			break;
-		case 'e':
+    if (prefname[1] == 'e') {
 			switch (prefname[2]) {
 			case 'a':
 				switch (prefname[6]) {
@@ -1275,8 +1181,6 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 	case 'u': /* uri */
 		rc = idUri;
 		break;
-
-
 
 	case 'v': /* vlvDisabled */
 		rc = idVLVDisabled;
@@ -1381,16 +1285,6 @@ static void dir_DeleteTokenList (char **tokenList, PRInt32 tokenListCount)
 	PR_Free(tokenList);
 }
 
-
-static nsresult DIR_DeleteFilter (DIR_Filter *filter)
-{
-	if (filter->string)
-		PR_Free(filter->string);
-	PR_Free(filter);
-	return NS_OK;
-}
-
-
 static nsresult DIR_DeleteAttribute (DIR_Attribute **attribute)
 {
   PRInt32 i = 0;
@@ -1406,7 +1300,6 @@ static nsresult DIR_DeleteAttribute (DIR_Attribute **attribute)
   *attribute = nsnull;
   return NS_OK;
 }
-
 
 static void dir_DeleteReplicationInfo (DIR_Server *server)
 {
@@ -1455,16 +1348,6 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 		PR_FREEIF (server->locale);
         PR_FREEIF (server->uri);
 
-		if (server->customFilters)
-		{
-			PRInt32 count = server->customFilters->Count();
-			for (i = 0; i < count; i++)
-				DIR_DeleteFilter ((DIR_Filter*) server->customFilters->ElementAt(i));
-			delete server->customFilters;
-		}
-
-		PR_FREEIF (server->autoCompleteFilter);
-
     if (server->customAttributes)
     {
       nsVoidArray *list = server->customAttributes;
@@ -1488,8 +1371,6 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 		PR_FREEIF (server->basicSearchAttributes);
 		if (server->replInfo)
 			dir_DeleteReplicationInfo (server);
-
-		PR_FREEIF (server->searchPairList);
 	}
 	return NS_OK;
 }
@@ -1580,25 +1461,6 @@ nsresult DIR_DeleteServerList(nsVoidArray *wholeList)
 /*****************************************************************************
  * Functions for retrieving subsets of the DIR_Server list 
  */
-
-#define DIR_SUBSET_MATCH(_SERVER, _FLAGS)                                                 \
-	(   (   (_FLAGS & DIR_SUBSET_PAB_ALL          ) && PABDirectory  == _SERVER->dirType) \
-	 || (   (_FLAGS & DIR_SUBSET_HTML_ALL         ) && HTMLDirectory == _SERVER->dirType) \
-	 || (   (_FLAGS & DIR_SUBSET_LDAP_ALL         ) && LDAPDirectory == _SERVER->dirType) \
-	 || (   (_FLAGS & DIR_SUBSET_LDAP_AUTOCOMPLETE) && LDAPDirectory == _SERVER->dirType  \
-		 && !DIR_TestFlag(s, DIR_AUTO_COMPLETE_NEVER))                                    \
-	 || (   (_FLAGS & DIR_SUBSET_LDAP_REPLICATE   ) && LDAPDirectory == _SERVER->dirType  \
-		 && !DIR_TestFlag(s, DIR_REPLICATE_NEVER))                                        \
-    )
-
-nsresult DIR_GetComposeNameCompletionAddressBook (nsVoidArray *wholeList, DIR_Server **cab)
-{
-	/* OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE */
-	PR_ASSERT(PR_FALSE);
-    return NS_ERROR_FAILURE;
-	/* OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE  OBSOLETE */
-}
-
 nsresult DIR_GetPersonalAddressBook(nsVoidArray *wholeList, DIR_Server **pab)
 {
 	if (wholeList && pab)
@@ -2209,77 +2071,6 @@ static nsresult DIR_GetCustomAttributePrefs(const char *prefstring, DIR_Server *
 	return NS_OK;
 }
 
-
-/* Called at startup-time to read whatever overrides the LDAP site administrator has
- * done to the filtering logic
- */
-static nsresult DIR_GetCustomFilterPrefs(const char *prefstring, DIR_Server *server)
-{
-  nsresult rv = NS_OK;
-  PRBool keepGoing = PR_TRUE;
-  PRInt32 filterNum = 1;
-  nsCAutoString prefLocation;
-
-  server->tokenSeps = DIR_GetStringPref(prefstring, "wordSeparators", kDefaultTokenSeps);
-	
-  do {
-    char **childList = nsnull;
-
-    prefLocation = prefstring;
-    prefLocation.AppendLiteral(".filter");
-    prefLocation.AppendInt(filterNum);
-
-    nsCAutoString branch(prefLocation);
-    branch.Append(".");
-
-    PRUint32 prefCount;
-    rv = dir_GetChildList(branch, &prefCount, &childList);
-    if (NS_SUCCEEDED(rv))
-    {
-      if (prefCount > 0)
-      {
-        DIR_Filter *filter = (DIR_Filter*) PR_Malloc (sizeof(DIR_Filter));
-        if (filter)
-        {
-          PRBool tempBool;
-          memset(filter, 0, sizeof(DIR_Filter));
-
-          /* Pull per-filter preferences out of JS values */
-          filter->string = DIR_GetStringPref (prefLocation.get(), "string",
-            server->efficientWildcards ? kDefaultFilter : kDefaultEfficientFilter);
-          tempBool = DIR_GetBoolPref (prefLocation.get(), "repeatFilterForWords", kDefaultRepeatFilterForTokens);
-          if (tempBool)
-            filter->flags |= DIR_F_REPEAT_FILTER_FOR_TOKENS;
-          tempBool = DIR_GetBoolPref (prefLocation.get(), "substituteStarsForSpaces", kDefaultSubstStarsForSpaces);
-          if (tempBool)
-            filter->flags |= DIR_F_SUBST_STARS_FOR_SPACES;
-
-          /* Add resulting DIR_Filter to the list */
-          if (!server->customFilters)
-            server->customFilters = new nsVoidArray();
-          if (server->customFilters)
-            server->customFilters->AppendElement(filter);
-          else
-          {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            PR_FREEIF(filter);
-          }
-        }
-        else
-          rv = NS_ERROR_OUT_OF_MEMORY;
-        filterNum++;
-      }
-      else
-        keepGoing = PR_FALSE;
-      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, childList);
-    }
-    else
-      keepGoing = PR_FALSE;
-  } while (keepGoing && NS_SUCCEEDED(rv));
-
-  return rv;
-}
-
 /* This will convert from the old preference that was a path and filename */
 /* to a just a filename */
 static void DIR_ConvertServerFileName(DIR_Server* pServer)
@@ -2510,8 +2301,6 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
   DIR_ForceFlag(server, DIR_UNDELETABLE | DIR_POSITION_LOCKED, bIsLocked);
 
   server->isSecure = DIR_GetBoolPref (prefstring, "isSecure", PR_FALSE);
-  server->saveResults = DIR_GetBoolPref (prefstring, "saveResults", PR_TRUE);				
-  server->efficientWildcards = DIR_GetBoolPref (prefstring, "efficientWildcards", PR_TRUE);				
   server->port = DIR_GetIntPref (prefstring, "port", server->isSecure ? LDAPS_PORT : LDAP_PORT);
   if (server->port == 0)
     server->port = server->isSecure ? LDAPS_PORT : LDAP_PORT;
@@ -2535,7 +2324,6 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
     /* make sure there is a PR_TRUE PAB */
     if (!server->serverName || !*server->serverName)
       server->isOffline = PR_FALSE;
-    server->saveResults = PR_TRUE; /* never let someone delete their PAB this way */
   }
 
   server->fileName = DIR_GetStringPref (prefstring, "filename", "");
@@ -2551,9 +2339,8 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 
   server->lastSearchString = DIR_GetStringPref (prefstring, "searchString", "");
 
-  /* This is where site-configurable attributes and filters are read from JavaScript */
+  /* This is where site-configurable attributes are read from JavaScript */
   DIR_GetCustomAttributePrefs (prefstring, server);
-  DIR_GetCustomFilterPrefs (prefstring, server);
 
   /* The replicated attributes and basic search attributes can only be
 	 * attributes which are in our predefined set (DIR_AttributeId) so
@@ -2579,7 +2366,6 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
   DIR_ForceFlag (server, DIR_AUTO_COMPLETE_ENABLED, prefBool);
   prefBool = DIR_GetBoolPref (prefstring, "autoComplete.never", kDefaultAutoCompleteNever);
   DIR_ForceFlag (server, DIR_AUTO_COMPLETE_NEVER, prefBool);
-  server->autoCompleteFilter = DIR_GetStringPref (prefstring, "autoComplete.filter", nsnull);
   
   /* read in the I18N preferences for the directory --> locale and csid */
   
@@ -3182,44 +2968,6 @@ static nsresult DIR_SaveCustomAttributes (const char *prefRoot, DIR_Server *serv
   return NS_OK;
 }
 
-
-static nsresult DIR_SaveCustomFilters (const char *prefRoot, DIR_Server *server)
-{
-  nsCAutoString prefLocation(prefRoot);
-
-  prefLocation.AppendLiteral(".filter1");
-
-  if (server->customFilters)
-  {
-    /* Save the custom filters into the JS prefs */
-    DIR_Filter *filter = nsnull;
-    nsVoidArray *walkList = server->customFilters;
-    PRInt32 count = walkList->Count();
-    PRInt32 i;
-    for (i = 0; i < count; i++)
-    {
-      if ((filter = (DIR_Filter *)walkList->ElementAt(i)) != nsnull)
-      {
-        DIR_SetBoolPref(prefLocation.get(), "repeatFilterForWords", 
-          (filter->flags & DIR_F_REPEAT_FILTER_FOR_TOKENS) != 0, kDefaultRepeatFilterForTokens);
-        DIR_SetStringPref(prefLocation.get(), "string", filter->string, kDefaultFilter);
-      }
-    }
-  }
-  else
-  {
-    /* The DIR_Server object doesn't think it has any custom filters,
-     * so make sure the prefs settings are empty too
-     */
-    DIR_SetBoolPref(prefLocation.get(), "repeatFilterForWords", 
-      kDefaultRepeatFilterForTokens, kDefaultRepeatFilterForTokens);
-    DIR_SetStringPref(prefLocation.get(), "string", kDefaultFilter, kDefaultFilter);
-  }
-
-  return NS_OK;
-}
-
-
 static nsresult dir_SaveReplicationInfo(const char *prefRoot, DIR_Server *server)
 {
   nsresult err = NS_OK;
@@ -3297,8 +3045,6 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
   DIR_SetIntPref(prefstring, "port", server->port, server->isSecure ? LDAPS_PORT : LDAP_PORT);
   DIR_SetIntPref(prefstring, "maxHits", server->maxHits, kDefaultMaxHits);
   DIR_SetBoolPref(prefstring, "isSecure", server->isSecure, PR_FALSE);
-  DIR_SetBoolPref(prefstring, "saveResults", server->saveResults, PR_TRUE);
-  DIR_SetBoolPref(prefstring, "efficientWildcards", server->efficientWildcards, PR_TRUE);
   DIR_SetStringPref(prefstring, "searchString", server->lastSearchString, "");
   DIR_SetIntPref(prefstring, "dirType", server->dirType, LDAPDirectory);
   DIR_SetBoolPref(prefstring, "isOffline", server->isOffline, kDefaultIsOffline);
@@ -3307,7 +3053,6 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
     DIR_SetStringPref(prefstring, "uri", server->uri, "");
 
   DIR_SetBoolPref(prefstring, "autoComplete.enabled", DIR_TestFlag(server, DIR_AUTO_COMPLETE_ENABLED), kDefaultAutoCompleteEnabled);
-  DIR_SetStringPref(prefstring, "autoComplete.filter", server->autoCompleteFilter, nsnull);
   DIR_SetBoolPref(prefstring, "autoComplete.never", DIR_TestFlag(server, DIR_AUTO_COMPLETE_NEVER), kDefaultAutoCompleteNever);
 
   /* save the I18N information for the directory */
@@ -3357,7 +3102,6 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
                     "3");
 
   DIR_SaveCustomAttributes (prefstring, server);
-  DIR_SaveCustomFilters (prefstring, server);
 
   dir_SaveReplicationInfo (prefstring, server);
 	
