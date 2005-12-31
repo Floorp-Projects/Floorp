@@ -115,6 +115,7 @@ public:
 
   // The dismissal listener gets created and attached to the window.
   NS_IMETHOD CreateDismissalListener();
+  NS_IMETHOD AttachedDismissalListener();
 
   // Overridden methods
   NS_IMETHOD Init(nsPresContext*  aPresContext,
@@ -180,6 +181,7 @@ public:
   void GetAutoPosition(PRBool* aShouldAutoPosition);
   void SetAutoPosition(PRBool aShouldAutoPosition);
   void EnableRollup(PRBool aShouldRollup);
+  void SetConsumeRollupEvent(PRUint32 aConsumeMode);
 
   nsIScrollableView* GetScrollableView(nsIFrame* aStart);
   
@@ -224,6 +226,7 @@ protected:
 
   PRPackedBool mShouldAutoPosition; // Should SyncViewWithFrame be allowed to auto position popup?
   PRPackedBool mShouldRollup; // Should this menupopup be allowed to dismiss automatically?
+  PRPackedBool mConsumeRollupEvent; // Should the rollup event be consumed?
 
   nsString     mIncrementalString;  // for incremental typing navigation
 

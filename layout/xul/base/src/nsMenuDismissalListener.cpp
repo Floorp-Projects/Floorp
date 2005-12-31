@@ -39,6 +39,7 @@
 #include "nsMenuDismissalListener.h"
 #include "nsIMenuParent.h"
 #include "nsMenuFrame.h"
+#include "nsIPopupBoxObject.h"
 
 /*
  * nsMenuDismissalListener implementation
@@ -46,7 +47,13 @@
 
 NS_IMPL_ADDREF(nsMenuDismissalListener)
 NS_IMPL_RELEASE(nsMenuDismissalListener)
-NS_IMPL_QUERY_INTERFACE3(nsMenuDismissalListener, nsIDOMMouseListener, nsIMenuRollup, nsIRollupListener)
+NS_INTERFACE_MAP_BEGIN(nsMenuDismissalListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsIMenuRollup)
+  NS_INTERFACE_MAP_ENTRY(nsIRollupListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMouseListener)
+NS_INTERFACE_MAP_END
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -99,6 +106,7 @@ nsMenuDismissalListener::SetCurrentMenuParent(nsIMenuParent* aMenuParent)
   mWidget = widget;
 
   NS_ADDREF(nsMenuFrame::sDismissalListener = this);
+  aMenuParent->AttachedDismissalListener();
 }
 
 NS_IMETHODIMP

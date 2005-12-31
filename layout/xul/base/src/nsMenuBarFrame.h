@@ -104,6 +104,7 @@ public:
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
   // The dismissal listener gets created and attached to the window.
   NS_IMETHOD CreateDismissalListener();
+  NS_IMETHOD AttachedDismissalListener() { return NS_OK; }
 
   NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,

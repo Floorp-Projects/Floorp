@@ -85,7 +85,7 @@
 
       <constructor><![CDATA[
         mController = Components.classes["@mozilla.org/autocomplete/controller;1"].
-                        createInstance(Components.interfaces.nsIAutoCompleteController);
+                        getService(Components.interfaces.nsIAutoCompleteController);
       ]]></constructor>
 
       <!-- =================== nsIAccessibleProvider =================== -->
@@ -333,6 +333,10 @@
 
       <method name="showHistoryPopup">
         <body><![CDATA[
+          // This is an autocomplete widget, but we want the rollup event
+          // to be consumed, as if we were a menulist.
+          this.popup.popupBoxObject.setConsumeRollupEvent(Components.interfaces.nsIPopupBoxObject.ROLLUP_CONSUME);
+
           this.maxRows = 14;
           this.attachController();
           this.mController.startSearch("");
@@ -724,13 +728,6 @@
         ]]></body>
       </method>
       
-      <method name="clearOpenProperty">
-        <parameter name="aPopupNode"/>
-        <body><![CDATA[
-          aPopupNode.mPopupOpen = false;
-        ]]></body>
-      </method>
-
     </implementation>
 
     <handlers>
@@ -739,7 +736,7 @@
       </handler>
 
       <handler event="popuphiding">
-        setTimeout(this.clearOpenProperty, 0, this);
+        this.mPopupOpen = false;
         this.mInput.maxRows = 6;
       </handler>
     </handlers>
@@ -823,9 +820,7 @@
       <method name="showPopup">
         <body><![CDATA[
           var textbox = document.getBindingParent(this);
-          if (!textbox.popup.mPopupOpen) { 
-            textbox.showHistoryPopup();
-          }
+          textbox.showHistoryPopup();
         ]]></body>
       </method>
     </implementation>
