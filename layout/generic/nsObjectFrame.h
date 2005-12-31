@@ -52,16 +52,13 @@ class nsIAccessible;
 
 class nsPluginInstanceOwner;
 
-#define nsObjectFrameSuper nsHTMLContainerFrame
+#define nsObjectFrameSuper nsFrame
 
 class nsObjectFrame : public nsObjectFrameSuper, public nsIObjectFrame {
 public:
   // nsISupports 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom* aListName,
-                                 nsIFrame* aChildList);
   NS_IMETHOD Init(nsPresContext* aPresContext,
                   nsIContent* aContent,
                   nsIFrame* aParent,
@@ -89,8 +86,6 @@ public:
   virtual PRBool NeedsView() { return PR_TRUE; }
   virtual nsresult CreateWidgetForView(nsIView* aView);
 
-  virtual PRBool IsLeaf() const;
-  
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
@@ -130,19 +125,12 @@ public:
 
   void FixUpURLS(const nsString &name, nsAString &value);
 
-  virtual PRBool IsContainingBlock() const
-  {
-    return PR_FALSE;
-  }
-
 protected:
   // nsISupports
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
   virtual ~nsObjectFrame();
-
-  virtual PRIntn GetSkipSides() const;
 
   // NOTE:  This frame class does not inherit from |nsLeafFrame|, so
   // this is not a virtual method implementation.

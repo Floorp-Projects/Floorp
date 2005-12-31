@@ -488,32 +488,7 @@ static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_CID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
-PRIntn
-nsObjectFrame::GetSkipSides() const
-{
-  return 0;
-}
-
 // #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
-NS_IMETHODIMP
-nsObjectFrame::SetInitialChildList(nsPresContext*  aPresContext,
-                                   nsIAtom*        aListName,
-                                   nsIFrame*       aChildList)
-{
-  // we don't want to call this if it is already set (image)
-  nsresult rv = NS_OK;
-  if (mFrames.IsEmpty())
-    rv = nsObjectFrameSuper::SetInitialChildList(aPresContext, aListName, aChildList);
-  return rv;
-}
-
-static void
-FirePluginNotFoundEvent(nsIContent *aTarget)
-{
-  nsContentUtils::DispatchTrustedEvent(aTarget->GetDocument(), aTarget,
-                                       NS_LITERAL_STRING("PluginNotFound"),
-                                       PR_TRUE, PR_TRUE);
-}
 
 NS_IMETHODIMP 
 nsObjectFrame::Init(nsPresContext*   aPresContext,
@@ -572,16 +547,6 @@ nsObjectFrame::CreateWidgetForView(nsIView* aView)
   nsWidgetInitData initData;
   initData.mUnicode = PR_FALSE;
   return aView->CreateWidget(kWidgetCID, &initData);
-}
-
-PRBool
-nsObjectFrame::IsLeaf() const
-{
-  // We're actually a leaf.  We inherit from nsContainerFrame for
-  // convenience for now, but we construct our own kids and the frame
-  // constructor shouldn't be messing with them.
-  // XXXbz ideally, we wouldn't have this child frame thing at all.
-  return PR_TRUE;
 }
 
 nsresult
