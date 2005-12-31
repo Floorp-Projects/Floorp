@@ -98,7 +98,7 @@ nsFormFillController::nsFormFillController() :
   mForceComplete(PR_FALSE),
   mSuppressOnInput(PR_FALSE)
 {
-  mController = do_CreateInstance("@mozilla.org/autocomplete/controller;1");
+  mController = do_GetService("@mozilla.org/autocomplete/controller;1");
 
   mDocShells = do_CreateInstance("@mozilla.org/supports-array;1");
   mPopups = do_CreateInstance("@mozilla.org/supports-array;1");

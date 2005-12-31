@@ -42,7 +42,7 @@
 interface nsIDOMElement;
 
 
-[scriptable, uuid(33C60E14-5150-4876-9A96-2732557E6895)]
+[scriptable, uuid(116ffbea-336d-4ff1-a978-7335f54d11da)]
 interface nsIPopupBoxObject : nsISupports
 {
   void showPopup(in nsIDOMElement srcContent, in nsIDOMElement popupContent,
@@ -66,6 +66,17 @@ interface nsIPopupBoxObject : nsISupports
    * Enable automatic popup dismissal
    */
   void enableRollup(in boolean enableRollup);
+
+  /**
+   * Control whether the event that caused the popup to be automatically
+   * dismissed ("rolled up") should be consumed, or dispatched as a
+   * normal event.  This should be set immediately before calling showPopup()
+   * if non-default behavior is desired.
+   */
+  const PRUint32 ROLLUP_DEFAULT = 0;   /* widget/platform default */
+  const PRUint32 ROLLUP_CONSUME = 1;   /* consume the rollup event */
+  const PRUint32 ROLLUP_NO_CONSUME = 2; /* don't consume the rollup event */
+  void setConsumeRollupEvent(in PRUint32 consume);
 
   /** 
    * Size the popup to the given dimensions

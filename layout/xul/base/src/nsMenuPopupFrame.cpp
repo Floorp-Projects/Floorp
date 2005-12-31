@@ -75,6 +75,7 @@
 #include "nsUnicharUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIBoxLayout.h"
+#include "nsIPopupBoxObject.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #endif
@@ -144,7 +145,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 //
 nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell)
   :nsBoxFrame(aShell), mCurrentMenu(nsnull), mTimerMenu(nsnull), mCloseTimer(nsnull),
-    mMenuCanOverlapOSBar(PR_FALSE), mShouldAutoPosition(PR_TRUE), mShouldRollup(PR_TRUE)
+   mMenuCanOverlapOSBar(PR_FALSE), mShouldAutoPosition(PR_TRUE), mShouldRollup(PR_TRUE),
+   mConsumeRollupEvent(nsIPopupBoxObject::ROLLUP_DEFAULT)
 {
   SetIsContextMenu(PR_FALSE);   // we're not a context menu by default
 } // ctor
@@ -1256,6 +1258,12 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
    *
    */
 
+  // If the popup has explicitly set a consume mode, honor that.
+  if (mConsumeRollupEvent != nsIPopupBoxObject::ROLLUP_DEFAULT) {
+    aConsumeOutsideClicks = mConsumeRollupEvent == nsIPopupBoxObject::ROLLUP_CONSUME;
+    return NS_OK;
+  }
+
   aConsumeOutsideClicks = PR_TRUE;
 
   nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
@@ -1867,6 +1875,13 @@ nsMenuPopupFrame::CreateDismissalListener()
 }
 
 NS_IMETHODIMP
+nsMenuPopupFrame::AttachedDismissalListener()
+{
+  mConsumeRollupEvent = nsIPopupBoxObject::ROLLUP_DEFAULT;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMenuPopupFrame::InstallKeyboardNavigator()
 {
   if (mKeyboardNavigator)
@@ -2124,3 +2139,8 @@ nsMenuPopupFrame::EnableRollup(PRBool aShouldRollup)
     CreateDismissalListener();
 }
 
+void
+nsMenuPopupFrame::SetConsumeRollupEvent(PRUint32 aConsumeMode)
+{
+  mConsumeRollupEvent = aConsumeMode;
+}

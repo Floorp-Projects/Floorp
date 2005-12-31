@@ -40,9 +40,9 @@
 #define nsIMenuParent_h___
 
 
-// {0D1F2281-A530-419c-AE2C-21672590A9EC}
+// {33f700c8-976a-4cdb-8f6c-d9f4cfee8366}
 #define NS_IMENUPARENT_IID \
-{ 0x0d1f2281, 0xa530, 0x419c, { 0xae, 0x2c, 0x21, 0x67, 0x25, 0x90, 0xa9, 0xec } }
+{ 0x33f700c8, 0x976a, 0x4cdb, { 0x8f, 0x6c, 0xd9, 0xf4, 0xcf, 0xee, 0x83, 0x66 } }
 
 class nsIMenuFrame;
 class nsIDOMKeyEvent;
@@ -159,6 +159,7 @@ public:
   NS_IMETHOD CancelPendingTimers() = 0;
 
   NS_IMETHOD CreateDismissalListener() = 0;
+  NS_IMETHOD AttachedDismissalListener() = 0;
 
   NS_IMETHOD InstallKeyboardNavigator() = 0;
   NS_IMETHOD RemoveKeyboardNavigator() = 0;
