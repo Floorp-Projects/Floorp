@@ -185,23 +185,21 @@ if ($action eq 'new') {
     # For localisation reasons, we get the title of the queries from the
     # submitted form.
     my $open_name = $cgi->param('open_name');
-    my $closed_name = $cgi->param('closed_name');
-    my @openedstatuses = OpenStates();
-    my $statuses = 
-                  join("&", map { "bug_status=" . url_quote($_) } @openedstatuses) . 
-                  $prodcomp;
-    my $resolved = "field0-0-0=resolution&type0-0-0=notequals&value0-0-0=---" . 
-                   $prodcomp;
+    my $nonopen_name = $cgi->param('nonopen_name');
+    my $open_query = "field0-0-0=resolution&type0-0-0=notregexp&value0-0-0=." .
+                     $prodcomp;
+    my $nonopen_query = "field0-0-0=resolution&type0-0-0=regexp&value0-0-0=." .
+                        $prodcomp;
 
     # trick_taint is ok here, as these variables aren't used as a command
     # or in SQL unquoted
     trick_taint($open_name);
-    trick_taint($closed_name);
-    trick_taint($statuses);
-    trick_taint($resolved);
+    trick_taint($nonopen_name);
+    trick_taint($open_query);
+    trick_taint($nonopen_query);
 
-    push(@series, [$open_name, $statuses]);
-    push(@series, [$closed_name, $resolved]);
+    push(@series, [$open_name, $open_query]);
+    push(@series, [$nonopen_name, $nonopen_query]);
 
     foreach my $sdata (@series) {
         my $series = new Bugzilla::Series(undef, $product->name,

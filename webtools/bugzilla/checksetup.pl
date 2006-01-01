@@ -34,6 +34,7 @@
 #                 Joel Peshkin <bugreport@peshkin.net>
 #                 Lance Larsh <lance.larsh@oracle.com>
 #                 A. Karl Kornel <karl@kornel.name>
+#                 Marc Schumann <wurblzap@gmail.com>
 #
 #
 #
@@ -4087,6 +4088,128 @@ if ($dbh->bz_column_info("attachments", "thedata")) {
     $dbh->do("INSERT INTO attach_data (id, thedata) 
                    SELECT attach_id, thedata FROM attachments");
     $dbh->bz_drop_column("attachments", "thedata");    
+}
+
+# 2005-11-26 - wurblzap@gmail.com - Bug 300473
+# Repair broken automatically generated series queries for non-open bugs.
+my $broken_series_indicator =
+    'field0-0-0=resolution&type0-0-0=notequals&value0-0-0=---';
+my $broken_nonopen_series =
+    $dbh->selectall_arrayref("SELECT series_id, query FROM series
+                               WHERE query LIKE '$broken_series_indicator%'");
+if (@$broken_nonopen_series) {
+    print 'Repairing broken series...';
+    my $sth_nuke =
+        $dbh->prepare('DELETE FROM series_data WHERE series_id = ?');
+    # This statement is used to repair a series by replacing the broken query
+    # with the correct one.
+    my $sth_repair =
+        $dbh->prepare('UPDATE series SET query = ? WHERE series_id = ?');
+    # The corresponding series for open bugs look like one of these two
+    # variations (bug 225687 changed the order of bug states).
+    # This depends on the set of bug states representing open bugs not to have
+    # changed since series creation.
+    my $open_bugs_query_base_old = 
+        join("&", map { "bug_status=" . url_quote($_) }
+                      ('UNCONFIRMED', 'NEW', 'ASSIGNED', 'REOPENED'));
+    my $open_bugs_query_base_new = 
+        join("&", map { "bug_status=" . url_quote($_) } OpenStates());
+    my $sth_openbugs_series =
+        $dbh->prepare("SELECT series_id FROM series
+                        WHERE query IN (?, ?)");
+    # Statement to find the series which has collected the most data.
+    my $sth_data_collected =
+        $dbh->prepare('SELECT count(*) FROM series_data WHERE series_id = ?');
+    # Statement to select a broken non-open bugs count data entry.
+    my $sth_select_broken_nonopen_data =
+        $dbh->prepare('SELECT series_date, series_value FROM series_data' .
+                      ' WHERE series_id = ?');
+    # Statement to select an open bugs count data entry.
+    my $sth_select_open_data =
+        $dbh->prepare('SELECT series_value FROM series_data' .
+                      ' WHERE series_id = ? AND series_date = ?');
+    # Statement to fix a broken non-open bugs count data entry.
+    my $sth_fix_broken_nonopen_data =
+        $dbh->prepare('UPDATE series_data SET series_value = ?' .
+                      ' WHERE series_id = ? AND series_date = ?');
+    # Statement to delete an unfixable broken non-open bugs count data entry.
+    my $sth_delete_broken_nonopen_data =
+        $dbh->prepare('DELETE FROM series_data' .
+                      ' WHERE series_id = ? AND series_date = ?');
+
+    foreach (@$broken_nonopen_series) {
+        my ($broken_series_id, $nonopen_bugs_query) = @$_;
+
+        # Determine the product-and-component part of the query.
+        if ($nonopen_bugs_query =~ /^$broken_series_indicator(.*)$/) {
+            my $prodcomp = $1;
+
+            # If there is more than one series for the corresponding open-bugs
+            # series, we pick the one with the most data, which should be the
+            # one which was generated on creation.
+            # It's a pity we can't do subselects.
+            $sth_openbugs_series->execute($open_bugs_query_base_old . $prodcomp,
+                                          $open_bugs_query_base_new . $prodcomp);
+            my ($found_open_series_id, $datacount) = (undef, -1);
+            foreach my $open_series_id ($sth_openbugs_series->fetchrow_array()) {
+                $sth_data_collected->execute($open_series_id);
+                my ($this_datacount) = $sth_data_collected->fetchrow_array();
+                if ($this_datacount > $datacount) {
+                    $datacount = $this_datacount;
+                    $found_open_series_id = $open_series_id;
+                }
+            }
+
+            if ($found_open_series_id) {
+                # Move along corrupted series data and correct it. The
+                # corruption consists of it being the number of all bugs
+                # instead of the number of non-open bugs, so we calculate the
+                # correct count by subtracting the number of open bugs.
+                # If there is no corresponding open-bugs count for some reason
+                # (shouldn't happen), we drop the data entry.
+                print " $broken_series_id...";
+                $sth_select_broken_nonopen_data->execute($broken_series_id);
+                while (my $rowref =
+                       $sth_select_broken_nonopen_data->fetchrow_arrayref()) {
+                    my ($date, $broken_value) = @$rowref;
+                    my ($openbugs_value) =
+                        $dbh->selectrow_array($sth_select_open_data, undef,
+                                              $found_open_series_id, $date);
+                    if (defined($openbugs_value)) {
+                        $sth_fix_broken_nonopen_data->execute
+                            ($broken_value - $openbugs_value,
+                             $broken_series_id, $date);
+                    }
+                    else {
+                        print "\nWARNING - During repairs of series " .
+                              "$broken_series_id, the irreparable data\n" .
+                              "entry for date $date was encountered and is " .
+                              "being deleted.\n" .
+                              "Continuing repairs...";
+                        $sth_delete_broken_nonopen_data->execute
+                            ($broken_series_id, $date);
+                    }
+                }
+
+                # Fix the broken query so that it collects correct data in the
+                # future.
+                $nonopen_bugs_query =~
+                    s/^$broken_series_indicator/field0-0-0=resolution&type0-0-0=regexp&value0-0-0=./;
+                $sth_repair->execute($nonopen_bugs_query, $broken_series_id);
+            }
+            else {
+                print "\nWARNING - Series $broken_series_id was meant to\n" .
+                      "collect non-open bug counts, but it has counted\n" .
+                      "all bugs instead. It cannot be repaired\n" .
+                      "automatically because no series that collected open\n" .
+                      "bug counts was found. You'll probably want to delete\n" .
+                      "or repair collected data for series $broken_series_id " .
+                      "manually.\n" .
+                      "Continuing repairs...";
+            }
+        }
+    }
+    print " done.\n";
 }
 
 # 2005-09-15 lance.larsh@oracle.com Bug 308717
