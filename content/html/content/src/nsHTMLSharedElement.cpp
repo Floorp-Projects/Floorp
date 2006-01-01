@@ -532,11 +532,11 @@ nsHTMLSharedElement::BindToTree(nsIDocument* aDocument,
     nsAutoString uri;
     if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri)) {
       // Don't notify: We aren't in a document yet, so we have no frames
-      ObjectURIChanged(uri, PR_FALSE, NS_ConvertUTF16toUTF8(type), PR_TRUE);
+      LoadObject(uri, PR_FALSE, NS_ConvertUTF16toUTF8(type), PR_TRUE);
     } else {
       // Sometimes, code uses <embed> with no src attributes, for example using
       // code="...". Handle that case.
-      ObjectURIChanged(nsnull, PR_FALSE, NS_ConvertUTF16toUTF8(type), PR_TRUE);
+      LoadObject(nsnull, PR_FALSE, NS_ConvertUTF16toUTF8(type), PR_TRUE);
     }
   }
   return rv;
@@ -560,16 +560,16 @@ nsHTMLSharedElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              PRBool aNotify)
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
-    // If we plan to call ObjectURIChanged, we want to do it first so that the
+    // If we plan to call LoadObject, we want to do it first so that the
     // image load kicks off _before_ the reflow triggered by the SetAttr.  But if
     // aNotify is false, we are coming from the parser or some such place; we'll
     // get bound after all the attributes have been set, so we'll do the
-    // object load from BindToTree.  Skip the ObjectURIChanged call in that case.
+    // object load from BindToTree.  Skip the LoadObject call in that case.
     if (aNotify &&
         aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::src) {
       nsAutoString type;
       GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-      ObjectURIChanged(aValue, aNotify, NS_ConvertUTF16toUTF8(type), PR_TRUE, PR_TRUE);
+      LoadObject(aValue, aNotify, NS_ConvertUTF16toUTF8(type), PR_TRUE, PR_TRUE);
     }
   }
 

@@ -699,11 +699,11 @@ nsObjectLoadingContent::ObjectState() const
 
 // <protected>
 nsresult
-nsObjectLoadingContent::ObjectURIChanged(const nsAString& aURI,
-                                         PRBool aNotify,
-                                         const nsCString& aTypeHint,
-                                         PRBool aForceType,
-                                         PRBool aForceLoad)
+nsObjectLoadingContent::LoadObject(const nsAString& aURI,
+                                   PRBool aNotify,
+                                   const nsCString& aTypeHint,
+                                   PRBool aForceType,
+                                   PRBool aForceLoad)
 {
   LOG(("OBJLC [%p]: Loading object: URI string=<%s> notify=%i type=<%s> forcetype=%i forceload=%i\n",
        this, NS_ConvertUTF16toUTF8(aURI).get(), aNotify, aTypeHint.get(), aForceType, aForceLoad));
@@ -730,15 +730,15 @@ nsObjectLoadingContent::ObjectURIChanged(const nsAString& aURI,
     return NS_OK;
   }
 
-  return ObjectURIChanged(uri, aNotify, aTypeHint, aForceType, aForceLoad);
+  return LoadObject(uri, aNotify, aTypeHint, aForceType, aForceLoad);
 }
 
 nsresult
-nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
-                                         PRBool aNotify,
-                                         const nsCString& aTypeHint,
-                                         PRBool aForceType,
-                                         PRBool aForceLoad)
+nsObjectLoadingContent::LoadObject(nsIURI* aURI,
+                                   PRBool aNotify,
+                                   const nsCString& aTypeHint,
+                                   PRBool aForceType,
+                                   PRBool aForceLoad)
 {
   LOG(("OBJLC [%p]: Loading object: URI=<%p> notify=%i type=<%s> forcetype=%i forceload=%i\n",
        this, aURI, aNotify, aTypeHint.get(), aForceType, aForceLoad));
@@ -881,7 +881,7 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
     switch (newType) {
       case eType_Image:
         // Don't notify, because we will take care of that ourselves.
-        rv = ImageURIChanged(aURI, aForceLoad, PR_FALSE);
+        rv = LoadImage(aURI, aForceLoad, PR_FALSE);
         break;
       case eType_Plugin:
         rv = Instantiate(aTypeHint, aURI);
@@ -1034,7 +1034,7 @@ nsObjectLoadingContent::RemovedFromDocument()
     mFrameLoader->Destroy();
     mFrameLoader = nsnull;
 
-    // Clear the current URI, so that ObjectURIChanged doesn't think that we
+    // Clear the current URI, so that LoadObject doesn't think that we
     // have already loaded the content.
     mURI = nsnull;
   }

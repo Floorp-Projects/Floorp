@@ -111,7 +111,7 @@ public:
 
 protected:
   /**
-   * Calls ObjectURIChanged with the correct arguments to start the plugin
+   * Calls LoadObject with the correct arguments to start the plugin
    * load.
    */
   NS_HIDDEN_(void) StartObjectLoad(PRBool aNotify);
@@ -223,17 +223,17 @@ nsHTMLObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aPrefix, const nsAString& aValue,
                              PRBool aNotify)
 {
-  // If we plan to call ObjectURIChanged, we want to do it first so that the
+  // If we plan to call LoadObject, we want to do it first so that the
   // object load kicks off _before_ the reflow triggered by the SetAttr.  But if
   // aNotify is false, we are coming from the parser or some such place; we'll
   // get bound after all the attributes have been set, so we'll do the
   // object load from BindToTree/DoneAddingChildren.
-  // Skip the ObjectURIChanged call in that case.
+  // Skip the LoadObject call in that case.
   if (aNotify &&
       aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::data) {
     nsAutoString type;
     GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-    ObjectURIChanged(aValue, aNotify, NS_ConvertUTF16toUTF8(type), PR_FALSE, PR_TRUE);
+    LoadObject(aValue, aNotify, NS_ConvertUTF16toUTF8(type), PR_FALSE, PR_TRUE);
   }
 
 
@@ -426,9 +426,9 @@ nsHTMLObjectElement::StartObjectLoad(PRBool aNotify)
   // That handles the case where no URI is specified. An empty string would get
   // interpreted as the page itself, instead of absence of URI.
   if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, uri)) {
-    ObjectURIChanged(nsnull, aNotify, ctype);
+    LoadObject(nsnull, aNotify, ctype);
   } else {
-    ObjectURIChanged(uri, aNotify, ctype);
+    LoadObject(uri, aNotify, ctype);
   }
 }
 

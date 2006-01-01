@@ -108,7 +108,7 @@ public:
   virtual PRUint32 GetCapabilities() const;
 protected:
   /**
-   * Calls ObjectURIChanged with the correct arguments to start the plugin
+   * Calls LoadObject with the correct arguments to start the plugin
    * load.
    */
   NS_HIDDEN_(void) StartAppletLoad(PRBool aNotify);
@@ -278,15 +278,15 @@ nsHTMLAppletElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aPrefix, const nsAString& aValue,
                              PRBool aNotify)
 {
-  // If we plan to call ObjectURIChanged, we want to do it first so that the
+  // If we plan to call LoadObject, we want to do it first so that the
   // object load kicks off _before_ the reflow triggered by the SetAttr.  But if
   // aNotify is false, we are coming from the parser or some such place; we'll
   // get bound after all the attributes have been set, so we'll do the
   // object load from BindToTree/DoneAddingChildren.
-  // Skip the ObjectURIChanged call in that case.
+  // Skip the LoadObject call in that case.
   if (aNotify &&
       aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::code) {
-    ObjectURIChanged(aValue, aNotify,
+    LoadObject(aValue, aNotify,
                      NS_LITERAL_CSTRING("application/x-java-vm"),
                      PR_TRUE, PR_TRUE);
   }
@@ -301,10 +301,10 @@ nsHTMLAppletElement::StartAppletLoad(PRBool aNotify)
 {
   nsAutoString uri;
   if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, uri)) {
-    ObjectURIChanged(uri, aNotify,
-                     NS_LITERAL_CSTRING("application/x-java-vm"), PR_TRUE);
+    LoadObject(uri, aNotify,
+               NS_LITERAL_CSTRING("application/x-java-vm"), PR_TRUE);
   } else {
-    // The constructor set the type to eType_Plugin; but if we have no code
+    // The constructor set the type to eType_Loading; but if we have no code
     // attribute, then we aren't really a plugin
     Fallback(aNotify);
   }
