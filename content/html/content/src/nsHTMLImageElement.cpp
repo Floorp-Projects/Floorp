@@ -550,11 +550,11 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                             nsIAtom* aPrefix, const nsAString& aValue,
                             PRBool aNotify)
 {
-  // If we plan to call ImageURIChanged, we want to do it first so that the
+  // If we plan to call LoadImage, we want to do it first so that the
   // image load kicks off _before_ the reflow triggered by the SetAttr.  But if
   // aNotify is false, we are coming from the parser or some such place; we'll
   // get bound after all the attributes have been set, so we'll do the
-  // image load from BindToTree.  Skip the ImageURIChanged call in that case.
+  // image load from BindToTree.  Skip the LoadImage call in that case.
   if (aNotify &&
       aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::src) {
 
@@ -569,7 +569,7 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     // Force image loading here, so that we'll try to load the image from
     // network if it's set to be not cacheable...
-    ImageURIChanged(aValue, PR_TRUE, aNotify);
+    LoadImage(aValue, PR_TRUE, aNotify);
 
     if (mCurrentRequest && !mPendingRequest &&
         oldCurrentRequest != mCurrentRequest) {
@@ -604,7 +604,7 @@ nsHTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri)) {
     // Note: no need to notify here; since we're just now being bound
     // we don't have any frames or anything yet.
-    ImageURIChanged(uri, PR_FALSE, PR_FALSE);
+    LoadImage(uri, PR_FALSE, PR_FALSE);
   }
 
   return rv;

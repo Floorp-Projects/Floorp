@@ -387,7 +387,7 @@ nsSVGImageElement::DidModifySVGObservable(nsISVGValue* aObservable,
       return NS_OK;
     }
 
-    ImageURIChanged(href, PR_TRUE, PR_TRUE);
+    LoadImage(href, PR_TRUE, PR_TRUE);
   }
 
   return nsSVGImageElementBase::DidModifySVGObservable(aObservable, aModType);

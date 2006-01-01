@@ -419,9 +419,9 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
  */
 
 nsresult
-nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
-                                       PRBool aForce,
-                                       PRBool aNotify)
+nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
+                                 PRBool aForce,
+                                 PRBool aNotify)
 {
   if (!mLoadingEnabled) {
     FireEvent(NS_LITERAL_STRING("error"));
@@ -440,14 +440,14 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
   NS_ENSURE_SUCCESS(rv, rv);
   // XXXbiesi fire onerror if that failed?
 
-  return ImageURIChanged(imageURI, aForce, aNotify, doc);
+  return LoadImage(imageURI, aForce, aNotify, doc);
 }
 
 nsresult
-nsImageLoadingContent::ImageURIChanged(nsIURI* aNewURI,
-                                       PRBool aForce,
-                                       PRBool aNotify,
-                                       nsIDocument* aDocument)
+nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
+                                 PRBool aForce,
+                                 PRBool aNotify,
+                                 nsIDocument* aDocument)
 {
   if (!mLoadingEnabled) {
     return NS_OK;
@@ -555,7 +555,7 @@ nsImageLoadingContent::UpdateImageState(PRBool aNotify)
     // Ignore this call; we'll update our state when the state changer is
     // destroyed.  Need this to work around the fact that some libpr0n stuff is
     // actually sync and hence we can get OnStopDecode called while we're still
-    // under ImageURIChanged, and OnStopDecode doesn't know anything about
+    // under LoadImage, and OnStopDecode doesn't know anything about
     // aNotify
     return;
   }

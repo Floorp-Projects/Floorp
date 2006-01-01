@@ -68,7 +68,7 @@ public:
 
 protected:
   /**
-   * ImageURIChanged is called by subclasses when the appropriate
+   * LoadImage is called by subclasses when the appropriate
    * attributes (eg 'src' for <img> tags) change.  The string passed
    * in is the new uri string; this consolidates the code for getting
    * the charset, constructing URI objects, and any other incidentals
@@ -80,8 +80,8 @@ protected:
    * @param aNotify If true, nsIDocumentObserver state change notifications
    *                will be sent as needed.
    */
-  nsresult ImageURIChanged(const nsAString& aNewURI, PRBool aForce,
-                           PRBool aNotify);
+  nsresult LoadImage(const nsAString& aNewURI, PRBool aForce,
+                     PRBool aNotify);
 
   /**
    * ImageState is called by subclasses that are computing their content state.
@@ -96,7 +96,7 @@ protected:
   PRInt32 ImageState() const;
 
   /**
-   * ImageURIChanged is called by subclasses when the appropriate
+   * LoadImage is called by subclasses when the appropriate
    * attributes (eg 'src' for <img> tags) change. If callers have an
    * URI object already available, they should use this method.
    *
@@ -108,8 +108,8 @@ protected:
    * @param aDocument Optional parameter giving the document this node is in.
    *        This is purely a performance optimization.
    */
-  nsresult ImageURIChanged(nsIURI* aNewURI, PRBool aForce, PRBool aNotify,
-                           nsIDocument* aDocument = nsnull);
+  nsresult LoadImage(nsIURI* aNewURI, PRBool aForce, PRBool aNotify,
+                     nsIDocument* aDocument = nsnull);
 
   /**
    * helper to get the document for this content (from the nodeinfo
@@ -130,7 +130,7 @@ protected:
   /**
    * UseAsPrimaryRequest is called by subclasses when they have an existing
    * imgIRequest that they want this nsImageLoadingContent to use.  This may
-   * effectively be called instead of ImageURIChanged or LoadImageWithChannel.
+   * effectively be called instead of LoadImage or LoadImageWithChannel.
    * If aNotify is true, this method will notify on state changes.
    */
   nsresult UseAsPrimaryRequest(imgIRequest* aRequest, PRBool aNotify);

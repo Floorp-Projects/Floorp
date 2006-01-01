@@ -431,7 +431,7 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     } else if (aNotify && aName == nsHTMLAtoms::src &&
                aValue && mType == NS_FORM_INPUT_IMAGE) {
       // Null value means the attr got unset; don't trigger on that
-      ImageURIChanged(*aValue, PR_TRUE, aNotify);
+      LoadImage(*aValue, PR_TRUE, aNotify);
     } else if (aNotify && aName == nsHTMLAtoms::disabled) {
       SET_BOOLBIT(mBitField, BF_DISABLED_CHANGED, PR_TRUE);
     }
@@ -525,7 +525,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         // whether we have an image to load;
         nsAutoString src;
         if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src)) {
-          ImageURIChanged(src, PR_FALSE, aNotify);
+          LoadImage(src, PR_FALSE, aNotify);
         }
       }
     }
@@ -1685,7 +1685,7 @@ nsHTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri)) {
       // Note: no need to notify here; since we're just now being bound
       // we don't have any frames or anything yet.
-      ImageURIChanged(uri, PR_FALSE, PR_FALSE);
+      LoadImage(uri, PR_FALSE, PR_FALSE);
     }
   }
 
