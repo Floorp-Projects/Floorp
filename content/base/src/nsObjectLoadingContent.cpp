@@ -549,7 +549,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
       eventQ->RevokeEvents(this);
     }
   } else {
-    // mInstantiating is true if we're in ObjectURIChanged; we shouldn't
+    // mInstantiating is true if we're in LoadObject; we shouldn't
     // recreate frames in that case, we'd confuse that function.
     if (mInstantiating) {
       return NS_OK;
@@ -708,7 +708,7 @@ nsObjectLoadingContent::LoadObject(const nsAString& aURI,
   LOG(("OBJLC [%p]: Loading object: URI string=<%s> notify=%i type=<%s> forcetype=%i forceload=%i\n",
        this, NS_ConvertUTF16toUTF8(aURI).get(), aNotify, aTypeHint.get(), aForceType, aForceLoad));
 
-  NS_ASSERTION(!mInstantiating, "ObjectURIChanged was reentered?");
+  NS_ASSERTION(!mInstantiating, "LoadObject was reentered?");
 
   // Avoid StringToURI in order to use the codebase attribute as base URI
   nsCOMPtr<nsIContent> thisContent = 
@@ -767,7 +767,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   // AutoSetInstantiatingToFalse is instantiated after AutoNotifier, so that if
   // the AutoNotifier triggers frame construction, events can be posted as
   // appropriate.
-  NS_ASSERTION(!mInstantiating, "ObjectURIChanged was reentered?");
+  NS_ASSERTION(!mInstantiating, "LoadObject was reentered?");
   mInstantiating = PR_TRUE;
   AutoSetInstantiatingToFalse autoset(this);
 
