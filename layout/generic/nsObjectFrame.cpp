@@ -262,8 +262,6 @@ public:
 
   NS_IMETHOD GetValue(nsPluginInstancePeerVariable variable, void *value);
 
-  NS_IMETHOD PluginNotAvailable(const char *aMimeType);
-
   //nsIPluginTagInfo interface
 
   NS_IMETHOD GetAttributes(PRUint16& n, const char*const*& names,
@@ -1919,12 +1917,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsPluginInstanceOwner::PluginNotAvailable(const char *aMimeType)
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)

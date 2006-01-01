@@ -3857,11 +3857,6 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
     if (fileExtension.IsEmpty() ||
         !(pluginTag = FindPluginEnabledForExtension(fileExtension.get(),
                                                     mimetype))) {
-
-      if (mDefaultPluginDisabled) {
-        aOwner->PluginNotAvailable(aMimeType ? aMimeType : mimetype);
-      }
-
       return NS_ERROR_FAILURE;
     }
   }
