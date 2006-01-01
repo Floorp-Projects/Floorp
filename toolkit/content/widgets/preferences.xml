@@ -534,9 +534,6 @@
       <xul:hbox>
         <children/>
       </xul:hbox>
-      <xul:keyset>
-        <xul:key anonid="keyClose" key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
-      </xul:keyset>
     </content>
     <implementation implements="nsITimerCallback">
       <constructor>
@@ -563,16 +560,6 @@
             cancelButton.accesskey = docElt.getAttribute("closebuttonaccesskey");
 #endif
           }
-          else {
-            // No Cmd+W in non-instant-apply preferences windows
-            var keyClose = document.getAnonymousElementByAttribute(this, "anonid", "keyClose");
-            keyClose.parentNode.removeChild(keyClose);
-          }
-        }
-        else {
-          // No Cmd+W in child dialogs
-          var keyClose = document.getAnonymousElementByAttribute(this, "anonid", "keyClose");
-          keyClose.parentNode.removeChild(keyClose);          
         }
         var panes = this.preferencePanes;
 
@@ -1055,6 +1042,11 @@
           var pane = document.getElementById(event.originalTarget.getAttribute("pane"));
           event.originalTarget.parentNode.parentNode.showPane(pane);
         }
+      </handler>
+
+      <handler event="keypress" key="&windowClose.key;" modifiers="accel" phase="capturing">
+        if (this.instantApply)
+          window.close();
       </handler>
     </handlers>
   </binding>
