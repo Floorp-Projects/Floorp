@@ -67,7 +67,7 @@ class  AutoSetInstantiatingToFalse;
  *   contract)
  * - mFrameLoader is null while this node is not in a document (XXX this
  *   invariant only exists due to nsFrameLoader suckage and needs to go away)
- * - mInstantiating is true while in ObjectURIChanged (it may be true in other
+ * - mInstantiating is true while in LoadObject (it may be true in other
  *   cases as well). Only the function that set mInstantiating should trigger
  *   frame construction or notifications like ContentStatesChanged or flushes.
  */
