@@ -66,72 +66,15 @@
 #define LDAP_PORT 389
 #define LDAPS_PORT 636
 
-#if !defined(MOZADDRSTANDALONE)
-
-typedef enum
-{
-	MK_ADDR_PAB,
-	MK_LDAP_COMMON_NAME,
-	MK_LDAP_GIVEN_NAME,
-	MK_LDAP_SURNAME,
-	MK_LDAP_EMAIL_ADDRESS,
-	MK_LDAP_PHONE_NUMBER,
-	MK_LDAP_ORGANIZATION, 
-	MK_LDAP_ORG_UNIT, 
-	MK_LDAP_LOCALITY,
-	MK_LDAP_STREET,
-	MK_LDAP_CUSTOM1, 
-	MK_LDAP_CUSTOM2,
-	MK_LDAP_CUSTOM3, 
-	MK_LDAP_CUSTOM4,
-	MK_LDAP_CUSTOM5,
-	MK_LDAP_DESCRIPTION,   
-	MK_LDAP_EMPLOYEE_TYPE, 
-	MK_LDAP_FAX_NUMBER,    
-	MK_LDAP_MANAGER,       
-	MK_LDAP_OBJECT_CLASS,       
-	MK_LDAP_POSTAL_ADDRESS,
-	MK_LDAP_POSTAL_CODE,   
-	MK_LDAP_SECRETARY,
-	MK_LDAP_TITLE,
-	MK_LDAP_CAR_LICENSE,
-	MK_LDAP_BUSINESS_CAT,
-	MK_LDAP_DEPT_NUMBER,
-	MK_LDAP_REPL_QUERY_RESYNC,
-	MK_LDAP_NICK_NAME,
-	MK_LDAP_HOMEPHONE,
-	MK_LDAP_MOBILEPHONE,
-	MK_LDAP_PAGER
-} DIR_ResourceID;
-
-#else
+#if defined(MOZADDRSTANDALONE)
 
 #define NS_ERROR_OUT_OF_MEMORY -1;
 
 #endif /* #if !defined(MOZADDRSTANDALONE) */
 
 /*****************************************************************************
- * Private structs and stuff
+ * Private definitions
  */
-
-/* DIR_Server.customAttributes is a list of DIR_Attribute structures */
-typedef struct DIR_Attribute
-{
-	DIR_AttributeId id;
-	char *prettyName;
-	char **attrNames;
-} DIR_Attribute;
-
-/* Our internal view of a default attribute is a resourceId for the pretty
- * name and the real attribute name. These are catenated to create a string
- * of the form "Pretty Name:attrname"
- */
-typedef struct DIR_DefaultAttribute
-{
-	DIR_AttributeId id;
-	PRInt32 resourceId;
-	const char *name;
-} DIR_DefaultAttribute;
 
 /* Codeset type */
 #define SINGLEBYTE   0x0000 /* 0000 0000 0000 0000 =    0 */
@@ -166,10 +109,8 @@ typedef struct DIR_DefaultAttribute
 #define kDefaultReplicaDescription nsnull
 #define kDefaultReplicaChangeNumber -1
 #define kDefaultReplicaFilter "(objectclass=*)"
-#define kDefaultReplicaExcludedAttributes nsnull
 
 static PRBool dir_IsServerDeleted(DIR_Server * server);
-static DIR_DefaultAttribute *DIR_GetDefaultAttribute (DIR_AttributeId id);
 static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, const char *defaultValue);
 static char *DIR_GetLocalizedStringPref(const char *prefRoot, const char *prefLeaf, const char *defaultValue);
 static PRInt32 DIR_GetIntPref(const char *prefRoot, const char *prefLeaf, PRInt32 defaultValue);
@@ -522,49 +463,6 @@ nsresult DIR_InitServer (DIR_Server *server)
  * Functions for cloning DIR_Servers
  */
 
-static DIR_Attribute *DIR_CopyAttribute (DIR_Attribute *inAttribute)
-{
-	DIR_Attribute *outAttribute = (DIR_Attribute*) PR_Malloc(sizeof(DIR_Attribute));
-	if (outAttribute)
-	{
-		PRInt32 count = 0;
-		outAttribute->id = inAttribute->id;
-        outAttribute->prettyName = nsCRT::strdup(inAttribute->prettyName);
-		while (inAttribute->attrNames[count])
-			count++;
-		outAttribute->attrNames = (char**) PR_Malloc((count + 1) * sizeof(char*));
-		if (outAttribute->attrNames)
-		{
-			PRInt32 i;
-			for (i = 0; i < count; i++)
-                outAttribute->attrNames[i] = nsCRT::strdup(inAttribute->attrNames[i]);
-			outAttribute->attrNames[i] = nsnull;
-		}
-	}
-	return outAttribute;
-}
-
-
-static nsresult dir_CopyTokenList (char **inList, PRInt32 inCount, char ***outList, PRInt32 *outCount)
-{
-	nsresult status = NS_OK;
-	if (0 != inCount && nsnull != inList)
-	{
-		*outList = (char**) PR_Malloc(inCount * sizeof(char*));
-		if (*outList)
-		{
-			PRInt32 i;
-			for (i = 0; i < inCount; i++)
-                (*outList)[i] = nsCRT::strdup (inList[i]);
-			*outCount = inCount;
-		}
-		else
-			status = NS_ERROR_OUT_OF_MEMORY;
-	}
-	return status;
-}
-
-
 static DIR_ReplicationInfo *dir_CopyReplicationInfo (DIR_ReplicationInfo *inInfo)
 {
 	DIR_ReplicationInfo *outInfo = (DIR_ReplicationInfo*) PR_Calloc (1, sizeof(DIR_ReplicationInfo));
@@ -581,8 +479,6 @@ static DIR_ReplicationInfo *dir_CopyReplicationInfo (DIR_ReplicationInfo *inInfo
             outInfo->syncURL = nsCRT::strdup (inInfo->syncURL);
 		if (inInfo->filter)
             outInfo->filter = nsCRT::strdup (inInfo->filter);
-		dir_CopyTokenList (inInfo->excludedAttributes, inInfo->excludedAttributesCount,
-			&outInfo->excludedAttributes, &outInfo->excludedAttributesCount);
 	}
 	return outInfo;
 }
@@ -663,52 +559,8 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 					err = NS_ERROR_OUT_OF_MEMORY;
 			}
 
-			if (in->customAttributes)
-			{
-				(*out)->customAttributes = new nsVoidArray();
-				if ((*out)->customAttributes)
-				{
-					nsVoidArray *list = in->customAttributes;
-					DIR_Attribute *attribute = nsnull;
-					PRInt32 count = list->Count();
-					PRInt32 i;
-					for (i = 0; i < count; i++)
-					{
-						attribute = (DIR_Attribute *)list->ElementAt(i);
-						if (attribute)
-						{
-							DIR_Attribute *outAttr = DIR_CopyAttribute (attribute);
-							if (outAttr)
-								((*out)->customAttributes)->AppendElement(outAttr);
-							else
-								err = NS_ERROR_OUT_OF_MEMORY;
- 						}
-					}
-				}
-				else
-					err = NS_ERROR_OUT_OF_MEMORY;
-			}
-
 			if (in->replInfo)
 				(*out)->replInfo = dir_CopyReplicationInfo (in->replInfo);
-
-			if (in->basicSearchAttributesCount > 0)
-			{
-				PRInt32 bsaLength = in->basicSearchAttributesCount * sizeof(DIR_AttributeId);
-				(*out)->basicSearchAttributes = (DIR_AttributeId*) PR_Malloc(bsaLength);
-				if ((*out)->basicSearchAttributes)
-				{
-					memcpy((*out)->basicSearchAttributes, in->basicSearchAttributes, bsaLength);
-					(*out)->basicSearchAttributesCount = in->basicSearchAttributesCount;
-				}
-			}
-
-			dir_CopyTokenList (in->dnAttributes, in->dnAttributesCount,
-				&(*out)->dnAttributes, &(*out)->dnAttributesCount);
-			dir_CopyTokenList (in->suppressedAttributes, in->suppressedAttributesCount,
-				&(*out)->suppressedAttributes, &(*out)->suppressedAttributesCount);
-			dir_CopyTokenList (in->uriAttributes, in->uriAttributesCount,
-				&(*out)->uriAttributes, &(*out)->uriAttributesCount);
 
 			(*out)->refCount = 1;
 		}
@@ -1018,18 +870,10 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 				break;
 			}
 		}
-		else if (PL_strstr(prefname, "attributes.") == prefname)
-		{
-			rc = idCustomAttributes;
-		}
     else if (PL_strstr(prefname, "attrmap.") == prefname)
     {
       rc = idAttributeMap;
     }
-		break;
-
-	case 'b':
-		rc = idBasicSearchAttributes;
 		break;
 
 	case 'c':
@@ -1058,23 +902,6 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
     rc = idFileName;
     break;
 
-	case 'h':
-		if (PL_strstr(prefname, "html.") == prefname)
-		{
-			switch (prefname[5]) {
-			case 'd':
-				rc = idDnAttributes;
-				break;
-			case 's':
-				rc = idSuppressedAttributes;
-				break;
-			case 'u':
-				rc = idUriAttributes;
-				break;
-			}
-		}
-		break;
-		
 	case 'i':
 		switch (prefname[2]) {
 		case 'O': /* filename */
@@ -1125,13 +952,8 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 				}
 				break;
 			case 'e':
-				switch (prefname[13]) {
-				case 'n': /* replication.enabled */
+        if (prefname[13] == 'n') {
 					rc = idReplEnabled;
-					break;
-				case 'x': /* replication.excludedAttributes */
-					rc = idReplExcludedAttributes;
-					break;
 				}
 				break;
 			case 'f':
@@ -1161,13 +983,8 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
     if (prefname[1] == 'e') {
 			switch (prefname[2]) {
 			case 'a':
-				switch (prefname[6]) {
-				case 'B': /* searchBase */
+        if (prefname[6] == 'B') { /* searchBase */
 					rc = idSearchBase;
-					break;
-				case 'S': /* searchString */
-					rc = idLastSearchString;
-					break;
 				}
 				break;
 			case 'r': /* serverName */
@@ -1277,37 +1094,11 @@ static PRBool dir_IsServerDeleted(DIR_Server * server)
 		return PR_FALSE;
 }
 
-static void dir_DeleteTokenList (char **tokenList, PRInt32 tokenListCount)
-{
-	PRInt32 tokenIdx;
-	for (tokenIdx = 0; tokenIdx < tokenListCount; tokenIdx++)
-		PR_Free(tokenList[tokenIdx]);
-	PR_Free(tokenList);
-}
-
-static nsresult DIR_DeleteAttribute (DIR_Attribute **attribute)
-{
-  PRInt32 i = 0;
-  if ((*attribute)->prettyName)
-    PR_Free((*attribute)->prettyName);
-  if ((*attribute)->attrNames)
-  {
-    while ((*attribute)->attrNames[i])
-      PR_Free((char**)(*attribute)->attrNames[i++]);
-    PR_Free((*attribute)->attrNames);
-  }
-  PR_Free(*attribute);
-  *attribute = nsnull;
-  return NS_OK;
-}
-
 static void dir_DeleteReplicationInfo (DIR_Server *server)
 {
 	DIR_ReplicationInfo *info = nsnull;
 	if (server && (info = server->replInfo) != nsnull)
 	{
-		dir_DeleteTokenList (info->excludedAttributes, info->excludedAttributesCount);
-		
 		PR_FREEIF(info->description);
 		PR_FREEIF(info->fileName);
 		PR_FREEIF(info->dataVersion);
@@ -1323,8 +1114,6 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 {
 	if (server)
 	{
-		PRInt32 i;
-
 		/* when destroying the server check its clear flag to see if things need cleared */
 #ifdef XP_FileRemove
 		if (DIR_TestFlag(server, DIR_CLEAR_SERVER))
@@ -1341,34 +1130,11 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 		PR_FREEIF (server->serverName);
 		PR_FREEIF (server->searchBase);
 		PR_FREEIF (server->fileName);
-		PR_FREEIF (server->lastSearchString);
-		PR_FREEIF (server->tokenSeps);
 		PR_FREEIF (server->authDn);
 		PR_FREEIF (server->password);
 		PR_FREEIF (server->locale);
         PR_FREEIF (server->uri);
 
-    if (server->customAttributes)
-    {
-      nsVoidArray *list = server->customAttributes;
-      DIR_Attribute *walkAttrStruct = nsnull;
-      PRInt32 count = list->Count();
-      for (i = 0; i < count; i++)
-      {
-        walkAttrStruct = (DIR_Attribute *)list->ElementAt(i);
-        if (walkAttrStruct != nsnull)
-        DIR_DeleteAttribute (&walkAttrStruct);
-      }
-      delete server->customAttributes;
-    }
-
-		if (server->uriAttributes)
-			dir_DeleteTokenList (server->uriAttributes, server->uriAttributesCount);
-		if (server->suppressedAttributes)
-			dir_DeleteTokenList (server->suppressedAttributes, server->suppressedAttributesCount);
-		if (server->dnAttributes)
-			dir_DeleteTokenList (server->dnAttributes, server->dnAttributesCount);
-		PR_FREEIF (server->basicSearchAttributes);
 		if (server->replInfo)
 			dir_DeleteReplicationInfo (server);
 	}
@@ -1682,294 +1448,6 @@ static PRBool DIR_GetBoolPref(const char *prefRoot, const char *prefLeaf, PRBool
 	return value;
 }
 
-
-nsresult DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_AttributeId *id)
-{
-  NS_ENSURE_ARG_POINTER(attrName);
-
-	nsresult status = NS_OK;
-
-	/* Look for a default attribute with a matching name.
-	 */
-	switch (attrName[0])
-	{
-	case 'a':
-        if (!nsCRT::strcasecmp(attrName, "auth"))
-			*id = auth;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'b':
-        if (!nsCRT::strcasecmp(attrName, "businesscategory"))
-			*id = businesscategory;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'c' :
-        if (!nsCRT::strcasecmp(attrName, "cn"))
-			*id = cn;
-        else if (!nsCRT::strcasecmp(attrName, "carlicense"))
-			*id = carlicense;
-        else if (!nsCRT::strncasecmp(attrName, "custom", 6))
-		{
-			switch (attrName[6])
-			{
-			case '1': *id = custom1; break;
-			case '2': *id = custom2; break;
-			case '3': *id = custom3; break;
-			case '4': *id = custom4; break;
-			case '5': *id = custom5; break;
-			default: status = NS_ERROR_FAILURE; 
-			}
-		}
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'd':
-        if (!nsCRT::strcasecmp(attrName, "departmentnumber"))
-			*id = departmentnumber;
-		else
-            if (!nsCRT::strcasecmp(attrName, "description"))
-				*id = description;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'e':
-        if (!nsCRT::strcasecmp(attrName, "employeetype"))
-			*id = employeetype;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'f':
-        if (!nsCRT::strcasecmp(attrName, "facsimiletelephonenumber"))
-			*id = facsimiletelephonenumber;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'g':
-        if (!nsCRT::strcasecmp(attrName, "givenname"))
-			*id = givenname; 
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'h':
-        if (!nsCRT::strcasecmp(attrName, "homephone"))
-			*id = homephone;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'l':
-        if (!nsCRT::strcasecmp(attrName, "l"))
-			*id = l;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'm':
-        if (!nsCRT::strcasecmp(attrName, "mail"))
-			*id = mail;
-        else if (!nsCRT::strcasecmp(attrName, "manager"))
-			*id = manager;
-        else if (!nsCRT::strcasecmp(attrName, "mobiletelephonenumber"))
-			*id = mobiletelephonenumber;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'n':
-        if (!nsCRT::strcasecmp(attrName, "nickname"))
-			*id = nickname;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'o':
-        if (!nsCRT::strcasecmp(attrName, "o"))
-			*id = o;
-        else if (!nsCRT::strcasecmp(attrName, "ou"))
-			*id = ou;
-        else if (!nsCRT::strcasecmp(attrName, "objectclass"))
-			*id = objectclass;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 'p':
-        if (!nsCRT::strcasecmp(attrName, "pager"))
-			*id = pager;
-        else if (!nsCRT::strcasecmp(attrName, "postalcode"))
-			*id = postalcode;
-        else if (!nsCRT::strcasecmp(attrName, "postaladdress"))
-			*id = postaladdress;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 's': 
-        if (!nsCRT::strcasecmp(attrName, "street"))
-			*id = street;
-        else if (!nsCRT::strcasecmp(attrName, "sn"))
-			*id = sn;
-        else if (!nsCRT::strcasecmp(attrName, "secretary"))
-			*id = secretary;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	case 't':
-        if (!nsCRT::strcasecmp(attrName, "telephonenumber"))
-			*id = telephonenumber;
-        else if (!nsCRT::strcasecmp(attrName, "title"))
-			*id = title;
-		else
-			status = NS_ERROR_FAILURE;
-		break;
-	default:
-		status = NS_ERROR_FAILURE;
-	}
-
-	return status;
-}
-
-static nsresult DIR_AddCustomAttribute(DIR_Server *server, const char *attrName, char *jsAttr)
-{
-	nsresult status = NS_OK;
-	char *jsCompleteAttr = nsnull;
-	char *jsAttrForTokenizing = jsAttr;
-
-	DIR_AttributeId id;
-	status = DIR_AttributeNameToId(server, attrName, &id);
-
-	/* If the string they gave us doesn't have a ':' in it, assume it's one or more
-	 * attributes without a pretty name. So find the default pretty name, and generate
-	 * a "complete" string to use for tokenizing.
-	 */
-	if (NS_SUCCEEDED(status) && !PL_strchr(jsAttr, ':'))
-	{
-		const char *defaultPrettyName = DIR_GetAttributeName (server, id);
-		if (defaultPrettyName)
-		{
-			jsCompleteAttr = PR_smprintf ("%s:%s", defaultPrettyName, jsAttr);
-			if (jsCompleteAttr)
-				jsAttrForTokenizing = jsCompleteAttr;
-			else
-				status = NS_ERROR_OUT_OF_MEMORY;
-		}
-	}
-
-	if (NS_SUCCEEDED(status))
-	{
-        char *scratchAttr = nsCRT::strdup(jsAttrForTokenizing);
-		DIR_Attribute *attrStruct = (DIR_Attribute*) PR_Malloc(sizeof(DIR_Attribute));
-		if (!server->customAttributes)
-			server->customAttributes = new nsVoidArray();
-
-		if (attrStruct && server->customAttributes && scratchAttr)
-		{
-			char *attrToken = nsnull;
-			PRUint32 attrCount = 0;
-
-			memset(attrStruct, 0, sizeof(DIR_Attribute));
-
-			/* Try to pull out the pretty name into the struct */
-			attrStruct->id = id;
-            attrStruct->prettyName = nsCRT::strdup(strtok(scratchAttr, ":")); 
-
-			/* Count up the attribute names */
-			while ((attrToken = strtok(nsnull, ", ")) != nsnull)
-				attrCount++;
-
-			/* Pull the attribute names into the struct */
-			PL_strcpy(scratchAttr, jsAttrForTokenizing);
-			strtok(scratchAttr, ":"); 
-			attrStruct->attrNames = (char**) PR_Malloc((attrCount + 1) * sizeof(char*));
-			if (attrStruct->attrNames)
-			{
-				PRInt32 i = 0;
-				while ((attrToken = strtok(nsnull, ", ")) != nsnull)
-                    attrStruct->attrNames[i++] = nsCRT::strdup(attrToken);
-				attrStruct->attrNames[i] = nsnull; /* null-terminate the array */
-			}
-
-			if (NS_SUCCEEDED(status)) /* status is always NS_OK! */
-				server->customAttributes->AppendElement(attrStruct);
-			else
-        DIR_DeleteAttribute(&attrStruct);
-    }
-    else
-    {
-      status = NS_ERROR_OUT_OF_MEMORY;
-      DIR_DeleteAttribute(&attrStruct);
-    }
-    PR_FREEIF(scratchAttr);
-  }
-
-	if (jsCompleteAttr)
-		PR_smprintf_free(jsCompleteAttr);
-
-	return status;
-}
-
-static nsresult dir_CreateTokenListFromWholePref(const char *pref, char ***outList, PRInt32 *outCount)
-{
-    nsresult result;
-    nsCOMPtr<nsIPrefBranch> pPref(do_GetService(NS_PREFSERVICE_CONTRACTID, &result));
-    if (NS_FAILED(result)) 
-		return result;
-
-	char *commaSeparatedList = nsnull;
-
-  if (NS_SUCCEEDED(pPref->GetCharPref(pref, &commaSeparatedList)) && commaSeparatedList)
-	{
-		char *tmpList = commaSeparatedList;
-		*outCount = 1;
-		while (*tmpList)
-			if (*tmpList++ == ',')
-				(*outCount)++;
-
-		*outList = (char**) PR_Malloc(*outCount * sizeof(char*));
-		if (*outList)
-		{
-			PRInt32 i;
-			char *token = strtok(commaSeparatedList, ", ");
-			for (i = 0; i < *outCount; i++)
-			{
-                (*outList)[i] = nsCRT::strdup(token);
-				token = strtok(nsnull, ", ");
-			}
-		}
-		else
-			result = NS_ERROR_OUT_OF_MEMORY;
-
-		PR_Free (commaSeparatedList);
-	}
-	else
-		result = NS_ERROR_FAILURE;
-	return result;
-}
-
-
-static nsresult dir_CreateTokenListFromPref
-(const char *prefBase, const char *prefLeaf, char ***outList, PRInt32 *outCount)
-{
-    nsCAutoString prefName(prefBase);
-    prefName.Append(".");
-    prefName.Append(prefLeaf);
-
-    return dir_CreateTokenListFromWholePref(prefName.get(), outList, outCount);
-}
-
-
-static nsresult dir_ConvertTokenListToIdList
-(DIR_Server *server, char **tokenList, PRInt32 tokenCount, DIR_AttributeId **outList)
-{
-	*outList = (DIR_AttributeId*) PR_Malloc(sizeof(DIR_AttributeId) * tokenCount);
-	if (*outList)
-	{
-		PRInt32 i;
-		for (i = 0; i < tokenCount; i++)
-			DIR_AttributeNameToId(server, tokenList[i], &(*outList)[i]);
-	}
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
-	return NS_OK;
-}
-
-
 static void dir_GetReplicationInfo(const char *prefstring, DIR_Server *server)
 {
   PR_ASSERT(server->replInfo == nsnull);
@@ -1992,9 +1470,6 @@ static void dir_GetReplicationInfo(const char *prefstring, DIR_Server *server)
     server->replInfo->syncURL = DIR_GetStringPref(replPrefName.get(), "syncURL", nsnull);
     server->replInfo->filter = DIR_GetStringPref(replPrefName.get(), "filter", kDefaultReplicaFilter);
 
-    dir_CreateTokenListFromPref(replPrefName.get(), "excludedAttributes", &server->replInfo->excludedAttributes, 
-		                            &server->replInfo->excludedAttributesCount);
-
     /* The file name and data version must be set or we ignore the
      * remaining replication prefs.
      */
@@ -2007,69 +1482,6 @@ static void dir_GetReplicationInfo(const char *prefstring, DIR_Server *server)
   }
 }
 
-
-/* Called at startup-time to read whatever overrides the LDAP site administrator has
- * done to the attribute names
- */
-static nsresult DIR_GetCustomAttributePrefs(const char *prefstring, DIR_Server *server)
-{
-    nsresult rv;
-    nsCOMPtr<nsIPrefBranch> pPref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-      return rv;
-
-    char **tokenList = nsnull;
-    char **childList = nsnull;
-
-    nsCAutoString branch(prefstring);
-    branch.AppendLiteral(".attributes.");
-
-    PRUint32 branchLen = branch.Length();
-
-    PRUint32 prefCount;
-    rv = dir_GetChildList(branch, &prefCount, &childList);
-    if (NS_SUCCEEDED(rv))
-	{
-        for (PRUint32 i = 0; i < prefCount; ++i)
-		{
-            char *jsValue = nsnull;
-
-            rv = pPref->GetCharPref(childList[i], &jsValue);
-            if (NS_SUCCEEDED(rv))
-			{
-                if (jsValue && jsValue[0])
-				{
-                    char *attrName = childList[i] + branchLen;
-                    DIR_AddCustomAttribute (server, attrName, jsValue);
-				}
-                PR_FREEIF(jsValue);
-			}
-		}
-
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, childList);
-	}
-
-    if (0 == dir_CreateTokenListFromPref (prefstring, "basicSearchAttributes",
-		&tokenList, &server->basicSearchAttributesCount))
-	{
-		dir_ConvertTokenListToIdList (server, tokenList, server->basicSearchAttributesCount, 
-			&server->basicSearchAttributes);
-		dir_DeleteTokenList (tokenList, server->basicSearchAttributesCount);
-	}
-
-	/* The DN, suppressed and url attributes can be attributes that
-	 * we've never heard of, so they're stored by name, so we can match 'em
-	 * as we get 'em from the server
-	 */
-    dir_CreateTokenListFromPref (prefstring, "html.dnAttributes", 
-		&server->dnAttributes, &server->dnAttributesCount);
-    dir_CreateTokenListFromPref (prefstring, "html.excludedAttributes", 
-		&server->suppressedAttributes, &server->suppressedAttributesCount);
-    dir_CreateTokenListFromPref (prefstring, "html.uriAttributes",
-		&server->uriAttributes, &server->uriAttributesCount);
-
-	return NS_OK;
-}
 
 /* This will convert from the old preference that was a path and filename */
 /* to a just a filename */
@@ -2337,15 +1749,6 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
   s.Append (server->fileName);
   server->uri = DIR_GetStringPref (prefstring, "uri", s.get ());
 
-  server->lastSearchString = DIR_GetStringPref (prefstring, "searchString", "");
-
-  /* This is where site-configurable attributes are read from JavaScript */
-  DIR_GetCustomAttributePrefs (prefstring, server);
-
-  /* The replicated attributes and basic search attributes can only be
-	 * attributes which are in our predefined set (DIR_AttributeId) so
-         * store those in an array of IDs for more convenient access
-	 */
   dir_GetReplicationInfo (prefstring, server);
 
   server->PalmCategoryId = DIR_GetIntPref (prefstring, "PalmCategoryId", -1);
@@ -2865,109 +2268,6 @@ static void DIR_SetBoolPref(const char *prefRoot, const char *prefLeaf, PRBool v
 }
 
 
-static nsresult DIR_ConvertAttributeToPrefsString (DIR_Attribute *attrib, char **ppPrefsString)
-{
-	nsresult err = NS_OK;
-
-	/* Compute size in bytes req'd for prefs string */
-	PRUint32 length = PL_strlen(attrib->prettyName);
-	PRInt32 i = 0;
-	while (attrib->attrNames[i])
-	{
-		length += PL_strlen(attrib->attrNames[i]) + 1; /* +1 for comma separator */
-		i++;
-	}
-	length += 1; /* +1 for colon */
-
-	/* Allocate prefs string */
-	*ppPrefsString = (char*) PR_Malloc(length + 1); /* +1 for null term */
-
-	/* Unravel attrib struct back out into prefs */
-	if (*ppPrefsString)
-	{
-    PRInt32 j;
-    PRUint32 pos;
-
-    pos = PR_snprintf(*ppPrefsString, length +1, "%s:", attrib->prettyName);
-
-    for (j = 0; attrib->attrNames[j]; ++j)
-      pos += PR_snprintf(*ppPrefsString + pos, length - pos + 1,
-                         "%s,", attrib->attrNames[j]);
-
-    if ((*ppPrefsString)[pos-1] == ',')
-      (*ppPrefsString)[pos-1] = 0;
-	}
-	else
-		err = NS_ERROR_OUT_OF_MEMORY;
-
-	return err;
-}
-
-
-static nsresult DIR_SaveOneCustomAttribute (const char *prefRoot, DIR_Server *server, DIR_AttributeId id)
-{
-  const char *name = DIR_GetDefaultAttribute (id)->name;
-  nsresult err = NS_OK;
-
-  if (server->customAttributes)
-  {
-    DIR_Attribute *attrib = nsnull;
-    nsVoidArray *walkList = server->customAttributes;
-    PRInt32  count = walkList->Count();
-    PRInt32  i;
-    for (i = 0; i < count; i++)
-    {
-      if ((attrib = (DIR_Attribute *)walkList->ElementAt(i)) != nsnull)
-      {
-        if (attrib->id == id)
-        {
-          char *jsString = nsnull;
-          if (NS_SUCCEEDED(DIR_ConvertAttributeToPrefsString(attrib, &jsString)))
-          {
-            DIR_SetStringPref (prefRoot, name, jsString, "");
-            PR_Free(jsString);
-            return err;
-          }
-        }
-      }
-    }
-  }
-
-  /* This server doesn't have a custom attribute for the requested ID
-   * so set it to the null string just in case there's an ALL.JS setting
-   * or had a previous user value
-   */
-  DIR_SetStringPref (prefRoot, name, "", "");
-
-  return err;
-}
-
-
-static nsresult DIR_SaveCustomAttributes (const char *prefRoot, DIR_Server *server)
-{
-  nsCAutoString prefLocation(prefRoot);
-
-  prefLocation.AppendLiteral(".attributes");
-
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, cn);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, givenname);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, sn);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, mail);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, telephonenumber);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, o);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, ou);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, l);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, street);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, custom1);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, custom2);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, custom3);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, custom4);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, custom5);
-  DIR_SaveOneCustomAttribute(prefLocation.get(), server, auth);
-
-  return NS_OK;
-}
-
 static nsresult dir_SaveReplicationInfo(const char *prefRoot, DIR_Server *server)
 {
   nsresult err = NS_OK;
@@ -2979,29 +2279,6 @@ static nsresult dir_SaveReplicationInfo(const char *prefRoot, DIR_Server *server
 
 	if (server->replInfo)
 	{
-		char *excludedList = nsnull;
-		PRInt32 i;
-		PRInt32 excludedLength = 0;
-		for (i = 0; i < server->replInfo->excludedAttributesCount; i++)
-			excludedLength += PL_strlen (server->replInfo->excludedAttributes[i]) + 2; /* +2 for ", " */
-		if (excludedLength)
-		{
-			excludedList = (char*) PR_Malloc (excludedLength + 1);
-			if (excludedList)
-			{
-				excludedList[0] = '\0';
-				for (i = 0; i < server->replInfo->excludedAttributesCount; i++)
-				{
-					PL_strcat (excludedList, server->replInfo->excludedAttributes[i]);
-					PL_strcat (excludedList, ", ");
-				}
-			}
-			else
-				err = NS_ERROR_OUT_OF_MEMORY;
-		}
-
-    DIR_SetStringPref(prefLocation.get(), "excludedAttributes", excludedList, kDefaultReplicaExcludedAttributes);
-
     DIR_SetStringPref(prefLocation.get(), "description", server->replInfo->description, kDefaultReplicaDescription);
     DIR_SetStringPref(prefLocation.get(), "fileName", server->replInfo->fileName, kDefaultReplicaFileName);
     DIR_SetStringPref(prefLocation.get(), "filter", server->replInfo->filter, kDefaultReplicaFilter);
@@ -3045,7 +2322,6 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
   DIR_SetIntPref(prefstring, "port", server->port, server->isSecure ? LDAPS_PORT : LDAP_PORT);
   DIR_SetIntPref(prefstring, "maxHits", server->maxHits, kDefaultMaxHits);
   DIR_SetBoolPref(prefstring, "isSecure", server->isSecure, PR_FALSE);
-  DIR_SetStringPref(prefstring, "searchString", server->lastSearchString, "");
   DIR_SetIntPref(prefstring, "dirType", server->dirType, LDAPDirectory);
   DIR_SetBoolPref(prefstring, "isOffline", server->isOffline, kDefaultIsOffline);
 
@@ -3101,8 +2377,6 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
                     DIR_TestFlag(server, DIR_LDAP_VERSION3) ? "3" : "2",
                     "3");
 
-  DIR_SaveCustomAttributes (prefstring, server);
-
   dir_SaveReplicationInfo (prefstring, server);
 	
   DIR_SetIntPref (prefstring, "PalmCategoryId", server->PalmCategoryId, -1);
@@ -3134,228 +2408,6 @@ nsresult DIR_SaveServerPreferences (nsVoidArray *wholeList)
 	}
 
 	return NS_OK;
-}
-
-/*****************************************************************************
- * Functions for getting site-configurable preferences, from JavaScript if
- * the site admin has provided them, else out of thin air.
- */
-
-static DIR_DefaultAttribute *DIR_GetDefaultAttribute (DIR_AttributeId id)
-{
-	PRInt32 i = 0;
-
-	static DIR_DefaultAttribute defaults[32];
-
-	if (defaults[0].name == nsnull)
-	{
-		defaults[0].id = cn;
-		defaults[0].resourceId = MK_LDAP_COMMON_NAME;
-		defaults[0].name = "cn";
-	
-		defaults[1].id = givenname;
-		defaults[1].resourceId = MK_LDAP_GIVEN_NAME;
-		defaults[1].name = "givenname";
-	
-		defaults[2].id = sn;
-		defaults[2].resourceId = MK_LDAP_SURNAME;
-		defaults[2].name = "sn";
-	
-		defaults[3].id = mail;
-		defaults[3].resourceId = MK_LDAP_EMAIL_ADDRESS;
-		defaults[3].name = "mail";
-	
-		defaults[4].id = telephonenumber;
-		defaults[4].resourceId = MK_LDAP_PHONE_NUMBER;
-		defaults[4].name = "telephonenumber";
-	
-		defaults[5].id = o;
-		defaults[5].resourceId = MK_LDAP_ORGANIZATION;
-		defaults[5].name = "o";
-	
-		defaults[6].id = ou;
-		defaults[6].resourceId = MK_LDAP_ORG_UNIT;
-		defaults[6].name = "ou";
-	
-		defaults[7].id = l;
-		defaults[7].resourceId = MK_LDAP_LOCALITY;
-		defaults[7].name = "l";
-	
-		defaults[8].id = street;
-		defaults[8].resourceId = MK_LDAP_STREET;
-		defaults[8].name = "street";
-	
-		defaults[9].id = custom1;
-		defaults[9].resourceId = MK_LDAP_CUSTOM1;
-		defaults[9].name = "custom1";
-	
-		defaults[10].id = custom2;
-		defaults[10].resourceId = MK_LDAP_CUSTOM2;
-		defaults[10].name = "custom2";
-	
-		defaults[11].id = custom3;
-		defaults[11].resourceId = MK_LDAP_CUSTOM3;
-		defaults[11].name = "custom3";
-	
-		defaults[12].id = custom4;
-		defaults[12].resourceId = MK_LDAP_CUSTOM4;
-		defaults[12].name = "custom4";
-	
-		defaults[13].id = custom5;
-		defaults[13].resourceId = MK_LDAP_CUSTOM5;
-		defaults[13].name = "custom5";
-
-		defaults[14].id = auth;
-		defaults[14].resourceId = MK_LDAP_EMAIL_ADDRESS;
-		defaults[14].name = "mail";
-
-		defaults[15].id = carlicense;
-		defaults[15].resourceId = MK_LDAP_CAR_LICENSE;
-		defaults[15].name = "carlicense";
-
-		defaults[16].id = businesscategory;
-		defaults[16].resourceId = MK_LDAP_BUSINESS_CAT;
-		defaults[16].name = "businesscategory";
-
-		defaults[17].id = departmentnumber;
-		defaults[17].resourceId = MK_LDAP_DEPT_NUMBER;
-		defaults[17].name = "businesscategory";
-
-		defaults[18].id = description;
-		defaults[18].resourceId = MK_LDAP_DESCRIPTION;
-		defaults[18].name = "description";
-
-		defaults[19].id = employeetype;
-		defaults[19].resourceId = MK_LDAP_EMPLOYEE_TYPE;
-		defaults[19].name = "employeetype";
-
-		defaults[20].id = facsimiletelephonenumber;
-		defaults[20].resourceId = MK_LDAP_FAX_NUMBER;
-		defaults[20].name = "facsimiletelephonenumber";
-
-		defaults[21].id = manager;
-		defaults[21].resourceId = MK_LDAP_MANAGER;
-		defaults[21].name = "manager";
-
-		defaults[22].id = objectclass;
-		defaults[22].resourceId = MK_LDAP_OBJECT_CLASS;
-		defaults[22].name = "objectclass";
-
-		defaults[23].id = postaladdress;
-		defaults[23].resourceId = MK_LDAP_POSTAL_ADDRESS;
-		defaults[23].name = "postaladdress";
-
-		defaults[24].id = postalcode;
-		defaults[24].resourceId = MK_LDAP_POSTAL_CODE;
-		defaults[24].name = "postalcode";
-
-		defaults[25].id = secretary;
-		defaults[25].resourceId = MK_LDAP_SECRETARY;
-		defaults[25].name = "secretary";
-
-		defaults[26].id = title;
-		defaults[26].resourceId = MK_LDAP_TITLE;
-		defaults[26].name = "title";
-
-		defaults[27].id = nickname;
-		defaults[27].resourceId = MK_LDAP_NICK_NAME;
-		defaults[27].name = "nickname";
-
-		defaults[28].id = homephone;
-		defaults[28].resourceId = MK_LDAP_HOMEPHONE;
-		defaults[28].name = "homephone";
-
-		defaults[29].id = pager;
-		defaults[29].resourceId = MK_LDAP_PAGER;
-		defaults[29].name = "pager";
-
-		defaults[30].id = mobiletelephonenumber;
-		defaults[30].resourceId = MK_LDAP_MOBILEPHONE;
-		defaults[30].name = "mobiletelephonenumber";
-
-		defaults[31].id = cn;
-		defaults[31].resourceId = 0;
-		defaults[31].name = nsnull;
-	}
-
-	while (defaults[i].name)
-	{
-		if (defaults[i].id == id)
-			return &defaults[i];
-		i++;
-	}
-
-	return nsnull;
-}
-
-const char *DIR_GetAttributeName (DIR_Server *server, DIR_AttributeId id)
-{
-	char *result = nsnull;
-
-	/* First look in the custom attributes in case the attribute is overridden */
-	nsVoidArray *list = server->customAttributes;
-	DIR_Attribute *walkList = nsnull;
-
-	PRInt32  count = list->Count();
-	PRInt32  i;
-	for (i = 0; i < count; i++)
-	{
-		if ((walkList = (DIR_Attribute *)list->ElementAt(i)) != nsnull)
-		{
-			if (walkList->id == id)
-				result = walkList->prettyName;
-		}
-	}
-
-	/* If we didn't find it, look in our own static list of attributes */
-//	if (!result)
-//	{
-//		DIR_DefaultAttribute *def;
-//		if ((def = DIR_GetDefaultAttribute(id)) != nsnull)
-//			result = (char*)XP_GetString(def->resourceId);
-//	}
-
-	return result;
-}
-
-
-const char **DIR_GetAttributeStrings (DIR_Server *server, DIR_AttributeId id)
-{
-	const char **result = nsnull;
-
-	if (server && server->customAttributes)
-	{
-		/* First look in the custom attributes in case the attribute is overridden */
-		nsVoidArray *list = server->customAttributes;
-		DIR_Attribute *walkList = nsnull;
-		PRInt32  count = list->Count();
-		PRInt32  i;
-		for (i = 0; i < count; i++)
-		{
-			while ((walkList = (DIR_Attribute *)list->ElementAt(i)) != nsnull)
-			{
-				if (walkList->id == id)
-					result = (const char**)walkList->attrNames;
-			}
-		}
-	}
-
-	/* If we didn't find it, look in our own static list of attributes */
-	if (!result)
-	{
-		static const char *array[2];
-		array[0] = DIR_GetDefaultAttribute(id)->name;
-		array[1] = nsnull;
-		result = (const char**)array;
-	}
-	return result;
-}
-
-
-const char *DIR_GetFirstAttributeString (DIR_Server *server, DIR_AttributeId id)
-{
-  const char **array = DIR_GetAttributeStrings (server, id);
-  return array ? array[0] : nsnull;
 }
 
 #endif /* #if !defined(MOZADDRSTANDALONE) */
