@@ -79,9 +79,9 @@ extern nsIWidget         * gRollupWidget;
 // These are only initial guesses. Real values are filled in
 // after window creation.
 const short kWindowTitleBarHeight = 22;
-const short kWindowMarginWidth = 6;
-const short kDialogTitleBarHeight = 26;
-const short kDialogMarginWidth = 6;
+const short kWindowMarginWidth = 0;
+const short kDialogTitleBarHeight = 22;
+const short kDialogMarginWidth = 0;
 
 #if 0
 
@@ -493,11 +493,12 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
     mWindowMadeHere = PR_TRUE;
 
-    Rect content, structure;
+    // Getting kWindowContentRgn can give back bad values on Panther
+    // (fixed on Tiger), but wRect is already set to the content rect anyway.
+    Rect structure;
     ::GetWindowBounds(mWindowPtr, kWindowStructureRgn, &structure);
-    ::GetWindowBounds(mWindowPtr, kWindowContentRgn, &content);
-    mBoundsOffset.v = content.top - structure.top;
-    mBoundsOffset.h = content.left - structure.left;
+    mBoundsOffset.v = wRect.top - structure.top;
+    mBoundsOffset.h = wRect.left - structure.left;
   }
   else
   {
