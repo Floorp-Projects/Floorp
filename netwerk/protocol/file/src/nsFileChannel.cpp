@@ -226,7 +226,7 @@ nsFileUploadContentStream::ReadSegments(nsWriteSegmentFun fun, void *closure,
   *result = 0;  // nothing is ever actually read from this stream
 
   if (IsClosed())
-    return Status();
+    return NS_OK;
 
   if (IsNonBlocking()) {
     // Inform the caller that they will have to wait for the copy operation to

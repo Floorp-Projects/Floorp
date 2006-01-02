@@ -38,7 +38,7 @@
 #include "nsAboutBloat.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
-#include "nsIStringStream.h"
+#include "nsStringStream.h"
 #include "nsXPIDLString.h"
 #include "nsIURI.h"
 #include "prtime.h"
