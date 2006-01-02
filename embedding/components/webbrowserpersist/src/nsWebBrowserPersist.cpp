@@ -3277,14 +3277,6 @@ nsWebBrowserPersist::StoreURI(
     return NS_OK;
 }
 
-inline nsresult
-nsWebBrowserPersist::StoreURIAttribute(
-   nsIDOMNode *aNode, const char *aAttribute, PRBool aNeedsPersisting,
-   URIData **aData)
-{
-    return StoreURIAttributeNS(aNode, "", aAttribute, aNeedsPersisting, aData);
-}
-
 nsresult
 nsWebBrowserPersist::StoreURIAttributeNS(
     nsIDOMNode *aNode, const char *aNamespaceURI, const char *aAttribute,
@@ -3393,13 +3385,6 @@ nsWebBrowserPersist::FixupURI(nsAString &aURI)
 
     aURI = newValue;
     return NS_OK;
-}
-
-inline nsresult
-nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
-                                        const char *aAttribute)
-{
-    return FixupNodeAttributeNS(aNode, "", aAttribute);
 }
 
 nsresult
