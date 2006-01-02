@@ -3213,24 +3213,37 @@ nsListAddressEnumerator::HasMoreElements(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
-    *aResult = PR_FALSE;
+  *aResult = PR_FALSE;
 
-    if (!mDbTable || !mDb->GetEnv())
+  if (!mDbTable || !mDb->GetEnv())
+  {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  // In some cases it is possible that GetAddressRowByPos returns success,
+  // but currentRow is null. This is typically due to the fact that a card
+  // has been deleted from the parent and not the list. Whilst we have fixed
+  // that there are still a few dbs around there that we need to support
+  // correctly. Therefore, whilst processing lists ensure that we don't return
+  // false if the only thing stopping us is a blank row, just skip it and try
+  // the next one.
+  while (mAddressPos < mAddressTotal)
+  {
+    nsCOMPtr<nsIMdbRow> currentRow;
+    nsresult rv = mDb->GetAddressRowByPos(mListRow, mAddressPos + 1,
+                                          getter_AddRefs(currentRow));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (currentRow)
     {
-        return NS_ERROR_NULL_POINTER;
+      *aResult = PR_TRUE;
+      break;
     }
 
-    if (mAddressPos + 1 <= mAddressTotal)
-    {
-        nsCOMPtr<nsIMdbRow> currentRow;
-        nsresult rv = mDb->GetAddressRowByPos(mListRow, mAddressPos + 1,
-                                              getter_AddRefs(currentRow));
-        NS_ENSURE_SUCCESS(rv, rv);
+    ++mAddressPos;
+  }
 
-        *aResult = currentRow != nsnull;
-    }
-
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
