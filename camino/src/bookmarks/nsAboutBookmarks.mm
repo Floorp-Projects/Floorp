@@ -40,7 +40,7 @@
 
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
-#include "nsIStringStream.h"
+#include "nsStringStream.h"
 #include "nsNetUtil.h"
 
 #import "NSString+Utils.h"
