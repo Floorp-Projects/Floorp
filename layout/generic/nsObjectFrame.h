@@ -114,10 +114,6 @@ public:
 
   //local methods
   nsresult CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly);
-  nsIURI* GetFullURL()
-  {
-    return mFullURL;
-  }
 
   // for a given aRoot, this walks the frame tree looking for the next outFrame
   static nsIObjectFrame* GetNextObjectFrame(nsPresContext* aPresContext,
@@ -166,7 +162,6 @@ protected:
   friend class nsPluginInstanceOwner;
 private:
   nsPluginInstanceOwner *mInstanceOwner;
-  nsCOMPtr<nsIURI>      mFullURL;
   nsRect                mWindowlessRect;
 
 #ifdef DEBUG
