@@ -100,6 +100,10 @@
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLDocument.h"
+#ifdef MOZ_SVG
+#include "nsIDOMSVGImageElement.h"
+#include "nsIDOMSVGScriptElement.h"
+#endif // MOZ_SVG
 
 #include "nsIImageLoadingContent.h"
 
@@ -2729,6 +2733,15 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
         return NS_OK;
     }
 
+#ifdef MOZ_SVG
+    nsCOMPtr<nsIDOMSVGImageElement> nodeAsSVGImage = do_QueryInterface(aNode);
+    if (nodeAsSVGImage)
+    {
+        StoreURIAttributeNS(aNode, "http://www.w3.org/1999/xlink", "href");
+        return NS_OK;
+    }
+#endif // MOZ_SVG
+
     nsCOMPtr<nsIDOMHTMLBodyElement> nodeAsBody = do_QueryInterface(aNode);
     if (nodeAsBody)
     {
@@ -2763,7 +2776,16 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
         StoreURIAttribute(aNode, "src");
         return NS_OK;
     }
-    
+
+#ifdef MOZ_SVG
+    nsCOMPtr<nsIDOMSVGScriptElement> nodeAsSVGScript = do_QueryInterface(aNode);
+    if (nodeAsSVGScript)
+    {
+        StoreURIAttributeNS(aNode, "http://www.w3.org/1999/xlink", "href");
+        return NS_OK;
+    }
+#endif // MOZ_SVG
+
     nsCOMPtr<nsIDOMHTMLEmbedElement> nodeAsEmbed = do_QueryInterface(aNode);
     if (nodeAsEmbed)
     {
@@ -3069,7 +3091,27 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
         }
         return rv;
     }
-    
+
+#ifdef MOZ_SVG
+    nsCOMPtr<nsIDOMSVGImageElement> nodeAsSVGImage = do_QueryInterface(aNodeIn);
+    if (nodeAsSVGImage)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            // Disable image loads
+            nsCOMPtr<nsIImageLoadingContent> imgCon =
+                do_QueryInterface(*aNodeOut);
+            if (imgCon)
+                imgCon->SetLoadingEnabled(PR_FALSE);
+
+            // FixupAnchor(*aNodeOut);  // XXXjwatt: is this line needed?
+            FixupNodeAttributeNS(*aNodeOut, "http://www.w3.org/1999/xlink", "href");
+        }
+        return rv;
+    }
+#endif MOZ_SVG
+
     nsCOMPtr<nsIDOMHTMLScriptElement> nodeAsScript = do_QueryInterface(aNodeIn);
     if (nodeAsScript)
     {
@@ -3080,7 +3122,20 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
         }
         return rv;
     }
-    
+
+#ifdef MOZ_SVG
+    nsCOMPtr<nsIDOMSVGScriptElement> nodeAsSVGScript = do_QueryInterface(aNodeIn);
+    if (nodeAsSVGScript)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttributeNS(*aNodeOut, "http://www.w3.org/1999/xlink", "href");
+        }
+        return rv;
+    }
+#endif // MOZ_SVG
+
     nsCOMPtr<nsIDOMHTMLEmbedElement> nodeAsEmbed = do_QueryInterface(aNodeIn);
     if (nodeAsEmbed)
     {
@@ -3222,12 +3277,21 @@ nsWebBrowserPersist::StoreURI(
     return NS_OK;
 }
 
-nsresult
+inline nsresult
 nsWebBrowserPersist::StoreURIAttribute(
-    nsIDOMNode *aNode, const char *aAttribute, PRBool aNeedsPersisting,
-    URIData **aData)
+   nsIDOMNode *aNode, const char *aAttribute, PRBool aNeedsPersisting,
+   URIData **aData)
+{
+    return StoreURIAttributeNS(aNode, "", aAttribute, aNeedsPersisting, aData);
+}
+
+nsresult
+nsWebBrowserPersist::StoreURIAttributeNS(
+    nsIDOMNode *aNode, const char *aNamespaceURI, const char *aAttribute,
+    PRBool aNeedsPersisting, URIData **aData)
 {
     NS_ENSURE_ARG_POINTER(aNode);
+    NS_ENSURE_ARG_POINTER(aNamespaceURI);
     NS_ENSURE_ARG_POINTER(aAttribute);
 
     nsresult rv = NS_OK;
@@ -3240,8 +3304,9 @@ nsWebBrowserPersist::StoreURIAttribute(
     rv = aNode->GetAttributes(getter_AddRefs(attrMap));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
+    NS_ConvertASCIItoUTF16 namespaceURI(aNamespaceURI);
     NS_ConvertASCIItoUTF16 attribute(aAttribute);
-    rv = attrMap->GetNamedItem(attribute, getter_AddRefs(attrNode));
+    rv = attrMap->GetNamedItemNS(namespaceURI, attribute, getter_AddRefs(attrNode));
     if (attrNode)
     {
         nsAutoString oldValue;
@@ -3330,11 +3395,20 @@ nsWebBrowserPersist::FixupURI(nsAString &aURI)
     return NS_OK;
 }
 
-nsresult
+inline nsresult
 nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
                                         const char *aAttribute)
 {
+    return FixupNodeAttributeNS(aNode, "", aAttribute);
+}
+
+nsresult
+nsWebBrowserPersist::FixupNodeAttributeNS(nsIDOMNode *aNode,
+                                        const char *aNamespaceURI,
+                                        const char *aAttribute)
+{
     NS_ENSURE_ARG_POINTER(aNode);
+    NS_ENSURE_ARG_POINTER(aNamespaceURI);
     NS_ENSURE_ARG_POINTER(aAttribute);
 
     nsresult rv = NS_OK;
@@ -3348,7 +3422,8 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     NS_ConvertASCIItoUTF16 attribute(aAttribute);
-    rv = attrMap->GetNamedItem(attribute, getter_AddRefs(attrNode));
+    NS_ConvertASCIItoUTF16 namespaceURI(aNamespaceURI);
+    rv = attrMap->GetNamedItemNS(namespaceURI, attribute, getter_AddRefs(attrNode));
     if (attrNode)
     {
         nsString uri;
