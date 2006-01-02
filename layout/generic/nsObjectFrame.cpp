@@ -482,7 +482,6 @@ NS_IMETHODIMP nsObjectFrame::GetPluginPort(HWND *aPort)
 
 
 static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
-static NS_DEFINE_CID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 // #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
@@ -736,16 +735,16 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
                                  nsIURI* aURI)
 {
 
-  mFullURL = aURI;
-
 #ifdef DEBUG
   mInstantiating = PR_TRUE;
 #endif
 
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = mInstanceOwner->GetDocument(getter_AddRefs(doc));
+  NS_ASSERTION(mContent, "We should have a content node.");
+
+  nsIDocument* doc = mContent->GetOwnerDoc();
   nsCOMPtr<nsIPluginDocument> pDoc (do_QueryInterface(doc));
 
+  nsresult rv;
   if (pDoc) {  /* full-page mode */
     nsCOMPtr<nsIStreamListener> stream;
     rv = aPluginHost->InstantiateFullPagePlugin(aMimeType, aURI,
@@ -960,7 +959,7 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
     // for THIS content node in order to call ->Print() on the right plugin
 
     // first, we need to get the document
-    nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
+    nsIDocument* doc = mContent->GetCurrentDoc();
     NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
     // now we need to get the shell for the screen
@@ -988,8 +987,6 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
     // now we need to setup the correct location for printing
     nsresult rv;
     nsPluginWindow    window;
-    nsPoint           origin;
-    float             t2p;
     window.window =   nsnull;
 
     // prepare embedded mode printing struct
@@ -1004,10 +1001,11 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
     // Get the offset of the DC
     nsTransform2D* rcTransform;
     aRenderingContext.GetCurrentTransform(rcTransform);
+    nsPoint           origin;
     rcTransform->GetTranslationCoord(&origin.x, &origin.y);
     
     // Get the conversion factor between pixels and twips
-    t2p = aPresContext->TwipsToPixels();
+    float t2p = aPresContext->TwipsToPixels();
 
     // set it all up
     // XXX is windowless different?
@@ -1271,8 +1269,6 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
 
   // This must be done before instantiating the plugin
   FixupWindow(mRect.Size());
-
-  aChannel->GetURI(getter_AddRefs(mFullURL));
 
   rv = pluginHost->InstantiatePluginForChannel(aChannel, mInstanceOwner, aStreamListener);
 
@@ -1734,22 +1730,15 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
   NS_ENSURE_TRUE(lh, NS_ERROR_FAILURE);
 
-  nsAutoString  unitarget; unitarget.AssignASCII(aTarget); // XXX could this be nonascii?
+  nsAutoString  unitarget;
+  unitarget.AssignASCII(aTarget); // XXX could this be nonascii?
 
-  nsCOMPtr<nsIURI> baseURL;
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = GetDocument(getter_AddRefs(doc));
-  if (NS_SUCCEEDED(rv) && doc) {
-    // XXX should this really be the document base URL?  Or the
-    // content's base URL?
-    baseURL = doc->GetBaseURI();  // gets the document's url
-  } else {
-    baseURL = mOwner->GetFullURL(); // gets the plugin's content url
-  }
+  NS_ASSERTION(mOwner->GetContent(), "Must have a content");
+  nsCOMPtr<nsIURI> baseURI = mOwner->GetContent()->GetBaseURI();
 
   // Create an absolute URL
   nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), aURL, baseURL);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, baseURI);
 
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   nsIContent* content = mOwner->GetContent();
@@ -1840,9 +1829,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
 
   *aDocument = nsnull;
   if (mOwner) {
-    nsIPresShell *shell = mOwner->GetPresContext()->GetPresShell();
-    if (shell)
-      NS_IF_ADDREF(*aDocument = shell->GetDocument());
+    nsIDocument* doc = mOwner->GetContent()->GetCurrentDoc();
+    NS_IF_ADDREF(*aDocument = doc);
   }
   return NS_OK;
 }
@@ -2032,14 +2020,12 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
       return NS_ERROR_FAILURE;
     }
 
-    nsIPresShell* shell = mOwner->GetPresContext()->PresShell();
-    rv = NS_ERROR_FAILURE;
-    if (shell) {
-      nsIDocument* doc = shell->GetDocument();
-      if (doc) {
-        rv = doc->GetBaseURI()->GetSpec(mDocumentBase);
-      }
-    }
+    NS_ASSERTION(mOwner && mOwner->GetContent(),
+                 "Must have an owner and a content");
+
+    nsIDocument* doc = mOwner->GetContent()->GetOwnerDoc();
+    NS_ASSERTION(doc, "Must have an owner doc");
+    rv = doc->GetBaseURI()->GetSpec(mDocumentBase);
   }
   if (NS_SUCCEEDED(rv))
     *result = ToNewCString(mDocumentBase);
@@ -2117,6 +2103,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
   *result = nsnull;
 
   nsresult rv;
+  // XXX sXBL/XBL2 issue: current doc or owner doc?
   nsCOMPtr<nsIDocument> doc;
   rv = GetDocument(getter_AddRefs(doc));
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get document");
