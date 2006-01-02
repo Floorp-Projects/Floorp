@@ -44,6 +44,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsJSProtocolHandler.h"
+#include "nsStringStream.h"
 #include "nsNetUtil.h"
 
 #include "nsIComponentManager.h"
@@ -57,7 +58,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIStringStream.h"
 #include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
