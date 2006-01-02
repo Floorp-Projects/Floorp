@@ -51,7 +51,7 @@
 #include "nsEscape.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamConverter.h"
-#include "nsIStringStream.h"
+#include "nsStringStream.h"
 #include "nsIRequestObserver.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
