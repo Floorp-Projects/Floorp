@@ -54,6 +54,7 @@
 // JBK added for submit move from content frame
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsStringStream.h"
 #include "nsIFormProcessor.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"

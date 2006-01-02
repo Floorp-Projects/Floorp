@@ -95,10 +95,6 @@ nsBaseContentStream::Available(PRUint32 *result)
 NS_IMETHODIMP
 nsBaseContentStream::Read(char *buf, PRUint32 count, PRUint32 *result)
 {
-  if (IsClosed()) {
-    *result = 0;
-    return mStatus;
-  }
   return ReadSegments(NS_CopySegmentToBuffer, buf, count, result); 
 }
 
@@ -107,6 +103,10 @@ nsBaseContentStream::ReadSegments(nsWriteSegmentFun fun, void *closure,
                                   PRUint32 count, PRUint32 *result)
 {
   *result = 0;
+
+  if (mStatus == NS_BASE_STREAM_CLOSED)
+    return NS_OK;
+
   return mStatus;
 }
 
@@ -126,12 +126,8 @@ nsBaseContentStream::CloseWithStatus(nsresult status)
   if (IsClosed())
     return NS_OK;
 
-  // This means we were closed without error.
-  if (status == NS_BASE_STREAM_CLOSED)
-    status = NS_OK;
-
+  NS_ENSURE_ARG(NS_FAILED(status));
   mStatus = status;
-  mClosed = PR_TRUE;
 
   DispatchCallback();
   return NS_OK;

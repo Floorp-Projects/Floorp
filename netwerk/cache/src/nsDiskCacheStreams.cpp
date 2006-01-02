@@ -131,7 +131,7 @@ nsDiskCacheInputStream::Close()
 NS_IMETHODIMP
 nsDiskCacheInputStream::Available(PRUint32 * bytesAvailable)
 {
-    if (mClosed)  return NS_ERROR_NOT_AVAILABLE;
+    if (mClosed)  return NS_BASE_STREAM_CLOSED;
     if (mStreamEnd < mPos)  return NS_ERROR_UNEXPECTED;
     
     *bytesAvailable = mStreamEnd - mPos;
@@ -142,9 +142,11 @@ nsDiskCacheInputStream::Available(PRUint32 * bytesAvailable)
 NS_IMETHODIMP
 nsDiskCacheInputStream::Read(char * buffer, PRUint32 count, PRUint32 * bytesRead)
 {
-    if (mClosed)  return NS_ERROR_NOT_AVAILABLE;
-    
     *bytesRead = 0;
+
+    if (mClosed)
+        return NS_OK;
+    
     if (mPos == mStreamEnd)  return NS_OK;
     if (mPos > mStreamEnd)   return NS_ERROR_UNEXPECTED;
     
@@ -246,7 +248,7 @@ nsDiskCacheOutputStream::Close()
 NS_IMETHODIMP
 nsDiskCacheOutputStream::Flush()
 {
-    if (mClosed)  return NS_ERROR_NOT_AVAILABLE;
+    if (mClosed)  return NS_BASE_STREAM_CLOSED;
     // yeah, yeah, well get to it...eventually...
     return NS_OK;
 }
@@ -255,7 +257,7 @@ nsDiskCacheOutputStream::Flush()
 NS_IMETHODIMP
 nsDiskCacheOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *bytesWritten)
 {
-    if (mClosed)  return NS_ERROR_NOT_AVAILABLE;
+    if (mClosed)  return NS_BASE_STREAM_CLOSED;
     return mStreamIO->Write(buf, count, bytesWritten);
 }
 

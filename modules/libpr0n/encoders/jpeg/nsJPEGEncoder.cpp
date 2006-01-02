@@ -40,11 +40,15 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "nsString.h"
+#include "nsStreamUtils.h"
 
 #include <setjmp.h>
 #include "jerror.h"
 
-NS_IMPL_ISUPPORTS2(nsJPEGEncoder, imgIEncoder, nsIInputStream)
+// Input streams that do not implement nsIAsyncInputStream should be threadsafe
+// so that they may be used with nsIInputStreamPump and nsIInputStreamChannel,
+// which read such a stream on a background thread.
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsJPEGEncoder, imgIEncoder, nsIInputStream)
 
 // used to pass error info through the JPEG library
 struct encoder_error_mgr {
@@ -184,10 +188,10 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
   jpeg_destroy_compress(&cinfo);
 
   // if output callback can't get enough memory, it will free our buffer
-  if (mImageBuffer)
-    return NS_OK;
-  else
+  if (!mImageBuffer)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
 }
 
 
@@ -199,6 +203,7 @@ NS_IMETHODIMP nsJPEGEncoder::Close()
     mImageBuffer = nsnull;
     mImageBufferSize = 0;
     mImageBufferUsed = 0;
+    mImageBufferReadPoint = 0;
   }
   return NS_OK;
 }
@@ -206,49 +211,47 @@ NS_IMETHODIMP nsJPEGEncoder::Close()
 /* unsigned long available (); */
 NS_IMETHODIMP nsJPEGEncoder::Available(PRUint32 *_retval)
 {
+  if (!mImageBuffer)
+    return NS_BASE_STREAM_CLOSED;
+
   *_retval = mImageBufferUsed - mImageBufferReadPoint;
   return NS_OK;
 }
 
 /* [noscript] unsigned long read (in charPtr aBuf, in unsigned long aCount); */
-NS_IMETHODIMP nsJPEGEncoder::Read(char * aBuf, PRUint32 aCount, PRUint32 *_retval)
+NS_IMETHODIMP nsJPEGEncoder::Read(char * aBuf, PRUint32 aCount,
+                                  PRUint32 *_retval)
 {
-  if (mImageBufferReadPoint >= mImageBufferUsed) {
-    // done reading
-    *_retval = 0;
-    return NS_OK;
-  }
-
-  PRUint32 toRead = mImageBufferUsed - mImageBufferReadPoint;
-  if (aCount < toRead)
-    toRead = aCount;
-
-  memcpy(aBuf, &mImageBuffer[mImageBufferReadPoint], toRead);
-
-  mImageBufferReadPoint += toRead;
-  *_retval = toRead;
-  return NS_OK;
+  return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, _retval);
 }
 
 /* [noscript] unsigned long readSegments (in nsWriteSegmentFun aWriter, in voidPtr aClosure, in unsigned long aCount); */
 NS_IMETHODIMP nsJPEGEncoder::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure, PRUint32 aCount, PRUint32 *_retval)
 {
-  if (mImageBufferUsed == 0)
-    return NS_ERROR_FAILURE;
-
-  PRUint32 writeCount = 0;
-  aWriter(this, aClosure, (const char*)mImageBuffer, 0, mImageBufferUsed, &writeCount);
-
-  if (writeCount > 0)
+  PRUint32 maxCount = mImageBufferUsed - mImageBufferReadPoint;
+  if (maxCount == 0) {
+    *_retval = 0;
     return NS_OK;
-  else
-    return NS_ERROR_FAILURE; // some problem with callback
+  }
+
+  if (aCount > maxCount)
+    aCount = maxCount;
+  nsresult rv = aWriter(this, aClosure,
+                        NS_REINTERPRET_CAST(const char*, mImageBuffer),
+                        0, aCount, _retval);
+  if (NS_SUCCEEDED(rv)) {
+    NS_ASSERTION(*_retval <= aCount, "bad write count");
+    mImageBufferReadPoint += *_retval;
+  }
+
+  // errors returned from the writer end here!
+  return NS_OK;
 }
 
 /* boolean isNonBlocking (); */
 NS_IMETHODIMP nsJPEGEncoder::IsNonBlocking(PRBool *_retval)
 {
-  *_retval = PR_TRUE;
+  *_retval = PR_FALSE;  // We don't implement nsIAsyncInputStream
   return NS_OK;
 }
 

@@ -39,7 +39,7 @@
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIByteArrayInputStream.h"
+#include "nsIStringStream.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStreamPump.h"
 #include "nsEmbedString.h"
@@ -369,10 +369,14 @@ GeckoProtocolChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aCont
                 mURI, NS_STATIC_CAST(nsIChannel *,this), mContentType, &mData, &mContentLength);
             if (NS_FAILED(rv)) return rv;
             
-            nsCOMPtr<nsIByteArrayInputStream> stream;
-            rv = NS_NewByteArrayInputStream(getter_AddRefs(stream), (char *) mData, mContentLength);
-            if (NS_FAILED(rv)) return rv;
-            mContentStream = do_QueryInterface(stream);
+            rv = NS_NewByteInputStream(getter_AddRefs(mContentStream),
+                                       (char *) mData, mContentLength,
+                                       NS_ASSIGNMENT_ADOPT);
+            if (NS_FAILED(rv)) {
+                nsMemory::Free(mData);
+                mData = nsnull;
+                return rv;
+            }
 
             mListenerContext = aContext;
             mListener = aListener;

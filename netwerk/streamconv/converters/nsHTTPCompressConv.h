@@ -40,7 +40,7 @@
 #define	__nsHTTPCompressConv__h__	1
 
 #include "nsIStreamConverter.h"
-#include "nsIFactory.h"
+#include "nsIStringStream.h"
 #include "nsCOMPtr.h"
 
 #include "zlib.h"
@@ -97,8 +97,11 @@ private:
     PRUint32	mInpBufferLen;
 	
     nsCOMPtr<nsISupports>   mAsyncConvContext;
+    nsCOMPtr<nsIStringInputStream>  mStream;
 
-    nsresult do_OnDataAvailable (nsIRequest *request, nsISupports *aContext, PRUint32 aSourceOffset, char *buffer, PRUint32 aCount);
+    nsresult do_OnDataAvailable (nsIRequest *request, nsISupports *aContext,
+                                 PRUint32 aSourceOffset, const char *buffer,
+                                 PRUint32 aCount);
 
     PRBool      mCheckHeaderDone;
     PRBool      mStreamEnded;

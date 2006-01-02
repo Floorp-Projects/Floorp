@@ -47,9 +47,10 @@
 
 class nsDirectoryIndexStream : public nsIInputStream
 {
-protected:
+private:
     nsCAutoString mBuf;
     PRInt32 mOffset;
+    nsresult mStatus;
 
     PRInt32 mPos;
     nsVoidArray mArray;
@@ -64,7 +65,7 @@ protected:
      * aDir will only be used on the calling thread.
      */ 
     nsresult Init(nsIFile* aDir);
-    virtual ~nsDirectoryIndexStream();
+    ~nsDirectoryIndexStream();
 
 public:
     /**

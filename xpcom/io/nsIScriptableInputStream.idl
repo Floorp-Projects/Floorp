@@ -41,7 +41,8 @@
 interface nsIInputStream;
 
 /**
- * nsIScriptableInputStream provides scriptable access to the nsIInputStream.  
+ * nsIScriptableInputStream provides scriptable access to an nsIInputStream
+ * instance.
  *
  * @status FROZEN
  */
@@ -53,21 +54,34 @@ interface nsIScriptableInputStream : nsISupports
      */
     void close();
 
-    /** Wrap the given nsIInputStream with this nsIScriptableInputStream. 
-     *  @param aInputStream [in] parameter providing the stream to wrap 
+    /**
+     * Wrap the given nsIInputStream with this nsIScriptableInputStream. 
+     *
+     * @param aInputStream parameter providing the stream to wrap 
      */ 
     void init(in nsIInputStream aInputStream); 
 
-    /** Return the number of bytes currently available in the stream 
-     *  @param _retval [out] parameter to hold the number of bytes 
-     *         if an error occurs, the parameter will be undefined 
-     *  @return error status 
+    /**
+     * Return the number of bytes currently available in the stream 
+     *
+     * @return the number of bytes 
+     *
+     * @throws NS_BASE_STREAM_CLOSED if called after the stream has been closed
      */ 
     unsigned long available(); 
 
-    /** Read data from the stream. 
-     *  @param aCount [in] the maximum number of bytes to read 
-     *  @param _retval [out] the data
+    /**
+     * Read data from the stream.
+     *
+     * WARNING: If the data contains a null byte, then this method will return
+     * a truncated string.
+     *
+     * @param aCount the maximum number of bytes to read 
+     *
+     * @return the data, which will be an empty string if the stream is at EOF.
+     *
+     * @throws NS_BASE_STREAM_CLOSED if called after the stream has been closed
+     * @throws NS_ERROR_NOT_INITIALIZED if init was not called
      */ 
     string read(in unsigned long aCount); 
 }; 

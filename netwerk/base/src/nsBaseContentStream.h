@@ -74,13 +74,12 @@ public:
 
   nsBaseContentStream(PRBool nonBlocking)
     : mStatus(NS_OK)
-    , mNonBlocking(nonBlocking)
-    , mClosed(PR_FALSE) {
+    , mNonBlocking(nonBlocking) {
   }
 
   nsresult Status() { return mStatus; }
   PRBool IsNonBlocking() { return mNonBlocking; }
-  PRBool IsClosed() { return mClosed; }
+  PRBool IsClosed() { return NS_FAILED(mStatus); }
 
   // Called to test if the stream has a pending callback.
   PRBool HasPendingCallback() { return mCallback != nsnull; }
@@ -102,7 +101,6 @@ private:
   nsCOMPtr<nsIEventTarget>         mCallbackTarget;
   nsresult                         mStatus;
   PRPackedBool                     mNonBlocking;
-  PRPackedBool                     mClosed;
 };
 
 #endif // nsBaseContentStream_h__

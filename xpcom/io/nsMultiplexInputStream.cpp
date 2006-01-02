@@ -44,7 +44,8 @@
 #include "nsMultiplexInputStream.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsISeekableStream.h"
-#include "nsSupportsArray.h"
+#include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsInt64.h"
 
 class nsMultiplexInputStream : public nsIMultiplexInputStream,
@@ -58,11 +59,8 @@ public:
     NS_DECL_NSIMULTIPLEXINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
 
-    static NS_METHOD Create(nsISupports *outer, REFNSIID iid, void **result);
-
 private:
     ~nsMultiplexInputStream() {}
-
 
     struct ReadSegmentsState {
         nsIInputStream* mThisStream;
@@ -76,9 +74,10 @@ private:
                                const char* aFromRawSegment, PRUint32 aToOffset,
                                PRUint32 aCount, PRUint32 *aWriteCount);
     
-    nsSupportsArray mStreams;
+    nsCOMArray<nsIInputStream> mStreams;
     PRUint32 mCurrentStream;
     PRBool mStartedReadingCurrent;
+    nsresult mStatus;
 };
 
 
@@ -89,7 +88,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsMultiplexInputStream,
 
 nsMultiplexInputStream::nsMultiplexInputStream()
     : mCurrentStream(0),
-      mStartedReadingCurrent(PR_FALSE)
+      mStartedReadingCurrent(PR_FALSE),
+      mStatus(NS_OK)
 {
 }
 
@@ -97,7 +97,7 @@ nsMultiplexInputStream::nsMultiplexInputStream()
 NS_IMETHODIMP
 nsMultiplexInputStream::GetCount(PRUint32 *aCount)
 {
-    mStreams.Count(aCount);
+    *aCount = mStreams.Count();
     return NS_OK;
 }
 
@@ -105,55 +105,57 @@ nsMultiplexInputStream::GetCount(PRUint32 *aCount)
 NS_IMETHODIMP
 nsMultiplexInputStream::AppendStream(nsIInputStream *aStream)
 {
-    return mStreams.AppendElement(aStream);
+    return mStreams.AppendObject(aStream) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 /* void insertStream (in nsIInputStream stream, in unsigned long index); */
 NS_IMETHODIMP
 nsMultiplexInputStream::InsertStream(nsIInputStream *aStream, PRUint32 aIndex)
 {
-    nsresult rv = mStreams.InsertElementAt(aStream, aIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool result = mStreams.InsertObjectAt(aStream, aIndex);
+    NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
     if (mCurrentStream > aIndex ||
         (mCurrentStream == aIndex && mStartedReadingCurrent))
         ++mCurrentStream;
-    return rv;
+    return NS_OK;
 }
 
 /* void removeStream (in unsigned long index); */
 NS_IMETHODIMP
 nsMultiplexInputStream::RemoveStream(PRUint32 aIndex)
 {
-    nsresult rv = mStreams.RemoveElementAt(aIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool result = mStreams.RemoveObjectAt(aIndex);
+    NS_ENSURE_TRUE(result, NS_ERROR_NOT_AVAILABLE);
     if (mCurrentStream > aIndex)
         --mCurrentStream;
     else if (mCurrentStream == aIndex)
         mStartedReadingCurrent = PR_FALSE;
 
-    return rv;
+    return NS_OK;
 }
 
 /* nsIInputStream getStream (in unsigned long index); */
 NS_IMETHODIMP
 nsMultiplexInputStream::GetStream(PRUint32 aIndex, nsIInputStream **_retval)
 {
-    return mStreams.QueryElementAt(aIndex,
-                                   NS_GET_IID(nsIInputStream),
-                                   (void**)_retval);
+    *_retval = mStreams.SafeObjectAt(aIndex);
+    NS_ENSURE_TRUE(*_retval, NS_ERROR_NOT_AVAILABLE);
+
+    NS_ADDREF(*_retval);
+    return NS_OK;
 }
 
 /* void close (); */
 NS_IMETHODIMP
 nsMultiplexInputStream::Close()
 {
-    PRUint32 len, i;
+    mStatus = NS_BASE_STREAM_CLOSED;
+
     nsresult rv = NS_OK;
 
-    mStreams.Count(&len);
-    for (i = 0; i < len; ++i) {
-        nsCOMPtr<nsIInputStream> stream(do_QueryElementAt(&mStreams, i));
-        nsresult rv2 = stream->Close();
+    PRUint32 len = mStreams.Count();
+    for (PRUint32 i = 0; i < len; ++i) {
+        nsresult rv2 = mStreams[i]->Close();
         // We still want to close all streams, but we should return an error
         if (NS_FAILED(rv2))
             rv = rv2;
@@ -165,15 +167,16 @@ nsMultiplexInputStream::Close()
 NS_IMETHODIMP
 nsMultiplexInputStream::Available(PRUint32 *_retval)
 {
-    nsresult rv;
-    PRUint32 i, len, avail = 0;
+    if (NS_FAILED(mStatus))
+        return mStatus;
 
-    mStreams.Count(&len);
-    for (i = mCurrentStream; i < len; i++) {
-        nsCOMPtr<nsIInputStream> stream(do_QueryElementAt(&mStreams, i));
-        
+    nsresult rv;
+    PRUint32 avail = 0;
+
+    PRUint32 len = mStreams.Count();
+    for (PRUint32 i = mCurrentStream; i < len; i++) {
         PRUint32 streamAvail;
-        rv = stream->Available(&streamAvail);
+        rv = mStreams[i]->Available(&streamAvail);
         NS_ENSURE_SUCCESS(rv, rv);
         avail += streamAvail;
     }
@@ -185,19 +188,28 @@ nsMultiplexInputStream::Available(PRUint32 *_retval)
 NS_IMETHODIMP
 nsMultiplexInputStream::Read(char * aBuf, PRUint32 aCount, PRUint32 *_retval)
 {
-    nsresult rv = NS_OK;
-    PRUint32 len, read;
-
+    // It is tempting to implement this method in terms of ReadSegments, but
+    // that would prevent this class from being used with streams that only
+    // implement Read (e.g., file streams).
+ 
     *_retval = 0;
 
-    mStreams.Count(&len);
+    if (mStatus == NS_BASE_STREAM_CLOSED)
+        return NS_OK;
+    if (NS_FAILED(mStatus))
+        return mStatus;
+ 
+    nsresult rv = NS_OK;
+
+    PRUint32 len = mStreams.Count();
     while (mCurrentStream < len && aCount) {
-        nsCOMPtr<nsIInputStream> stream(do_QueryElementAt(&mStreams,
-                                                          mCurrentStream));
-        rv = stream->Read(aBuf, aCount, &read);
+        PRUint32 read;
+        rv = mStreams[mCurrentStream]->Read(aBuf, aCount, &read);
 
         // XXX some streams return NS_BASE_STREAM_CLOSED to indicate EOF.
+        // (This is a bug in those stream implementations)
         if (rv == NS_BASE_STREAM_CLOSED) {
+            NS_NOTREACHED("Input stream's Read method returned NS_BASE_STREAM_CLOSED");
             rv = NS_OK;
             read = 0;
         }
@@ -226,6 +238,13 @@ NS_IMETHODIMP
 nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
                                      PRUint32 aCount, PRUint32 *_retval)
 {
+    if (mStatus == NS_BASE_STREAM_CLOSED) {
+        *_retval = 0;
+        return NS_OK;
+    }
+    if (NS_FAILED(mStatus))
+        return mStatus;
+
     NS_ASSERTION(aWriter, "missing aWriter");
 
     nsresult rv = NS_OK;
@@ -236,16 +255,15 @@ nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
     state.mClosure = aClosure;
     state.mDone = PR_FALSE;
     
-    PRUint32 len;
-    mStreams.Count(&len);
+    PRUint32 len = mStreams.Count();
     while (mCurrentStream < len && aCount) {
-        nsCOMPtr<nsIInputStream> stream(do_QueryElementAt(&mStreams,
-                                                          mCurrentStream));
         PRUint32 read;
-        rv = stream->ReadSegments(ReadSegCb, &state, aCount, &read);
+        rv = mStreams[mCurrentStream]->ReadSegments(ReadSegCb, &state, aCount, &read);
 
         // XXX some streams return NS_BASE_STREAM_CLOSED to indicate EOF.
+        // (This is a bug in those stream implementations)
         if (rv == NS_BASE_STREAM_CLOSED) {
+            NS_NOTREACHED("Input stream's Read method returned NS_BASE_STREAM_CLOSED");
             rv = NS_OK;
             read = 0;
         }
@@ -295,15 +313,13 @@ nsMultiplexInputStream::ReadSegCb(nsIInputStream* aIn, void* aClosure,
 NS_IMETHODIMP
 nsMultiplexInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
-    nsresult rv;
-    PRUint32 i, len;
-
-    mStreams.Count(&len);
-    for (i = 0; i < len; ++i) {
-        nsCOMPtr<nsIInputStream> stream(do_QueryElementAt(&mStreams, i));
-        rv = stream->IsNonBlocking(aNonBlocking);
+    PRUint32 len = mStreams.Count();
+    for (PRUint32 i = 0; i < len; ++i) {
+        nsresult rv = mStreams[i]->IsNonBlocking(aNonBlocking);
         NS_ENSURE_SUCCESS(rv, rv);
         // If one is non-blocking the entire stream becomes non-blocking
+        // (except that we don't implement nsIAsyncInputStream, so there's
+        //  not much for the caller to do if Read returns "would block")
         if (*aNonBlocking)
             return NS_OK;
     }
@@ -314,6 +330,9 @@ nsMultiplexInputStream::IsNonBlocking(PRBool *aNonBlocking)
 NS_IMETHODIMP
 nsMultiplexInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
 {
+    if (NS_FAILED(mStatus))
+        return mStatus;
+
     nsresult rv;
 
     // rewinding to start is easy, and should be the most common case
@@ -322,7 +341,7 @@ nsMultiplexInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
         PRUint32 i, last;
         last = mStartedReadingCurrent ? mCurrentStream+1 : mCurrentStream;
         for (i = 0; i < last; ++i) {
-            nsCOMPtr<nsISeekableStream> stream(do_QueryElementAt(&mStreams, i));
+            nsCOMPtr<nsISeekableStream> stream = do_QueryInterface(mStreams[i]);
             NS_ENSURE_TRUE(stream, NS_ERROR_NO_INTERFACE);
 
             rv = stream->Seek(NS_SEEK_SET, 0);
@@ -341,12 +360,15 @@ nsMultiplexInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
 NS_IMETHODIMP
 nsMultiplexInputStream::Tell(PRInt64 *_retval)
 {
+    if (NS_FAILED(mStatus))
+        return mStatus;
+
     nsresult rv;
     nsInt64 ret64 = 0;
     PRUint32 i, last;
     last = mStartedReadingCurrent ? mCurrentStream+1 : mCurrentStream;
     for (i = 0; i < last; ++i) {
-        nsCOMPtr<nsISeekableStream> stream(do_QueryElementAt(&mStreams, i));
+        nsCOMPtr<nsISeekableStream> stream = do_QueryInterface(mStreams[i]);
         NS_ENSURE_TRUE(stream, NS_ERROR_NO_INTERFACE);
 
         PRInt64 pos;

@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sts=4 sw=4 cin et: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -47,12 +48,14 @@
 
 #include "nsStorageStream.h"
 #include "nsSegmentedBuffer.h"
+#include "nsStreamUtils.h"
 #include "nsCOMPtr.h"
 #include "prbit.h"
 #include "nsIInputStream.h"
 #include "nsISeekableStream.h"
 #include "prlog.h"
 #include "nsInt64.h"
+
 #if defined(PR_LOGGING)
 //
 // Log module for StorageStream logging...
@@ -65,32 +68,21 @@
 // this enables PR_LOG_DEBUG level information and places all output in
 // the file nspr.log
 //
-PRLogModuleInfo* StorageStreamLog = nsnull;
-
-#endif /* PR_LOGGING */
+static PRLogModuleInfo* sLog = PR_NewLogModule("nsStorageStream");
+#endif
+#define LOG(args) PR_LOG(sLog, PR_LOG_DEBUG, args)
 
 nsStorageStream::nsStorageStream()
     : mSegmentedBuffer(0), mSegmentSize(0), mWriteInProgress(PR_FALSE),
       mLastSegmentNum(-1), mWriteCursor(0), mSegmentEnd(0), mLogicalLength(0)
 {
-#if defined(PR_LOGGING)
-    //
-    // Initialize the global PRLogModule for socket transport logging 
-    // if necessary...
-    //
-    if (nsnull == StorageStreamLog) {
-        StorageStreamLog = PR_NewLogModule("StorageStreamLog");
-    }
-#endif /* PR_LOGGING */
-
-  PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
-         ("Creating nsStorageStream [%x].\n", this));
+    LOG(("Creating nsStorageStream [%p].\n", this));
 }
 
 nsStorageStream::~nsStorageStream()
 {
-	if (mSegmentedBuffer)
-	    delete mSegmentedBuffer;
+    if (mSegmentedBuffer)
+        delete mSegmentedBuffer;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsStorageStream,
@@ -161,9 +153,8 @@ nsStorageStream::Close()
     mWriteCursor = 0;
     mSegmentEnd = 0;
 
-    PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
-           ("nsStorageStream [%x] Close mWriteCursor=%x mSegmentEnd=%x\n",
-            this, mWriteCursor, mSegmentEnd));
+    LOG(("nsStorageStream [%p] Close mWriteCursor=%x mSegmentEnd=%x\n",
+        this, mWriteCursor, mSegmentEnd));
 
     return NS_OK;
 }
@@ -186,9 +177,8 @@ nsStorageStream::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWritt
     NS_ENSURE_ARG_POINTER(aNumWritten);
     NS_ENSURE_ARG(aBuffer);
 
-    PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
-           ("nsStorageStream [%x] Write mWriteCursor=%x mSegmentEnd=%x aCount=%d\n",
-            this, mWriteCursor, mSegmentEnd, aCount));
+    LOG(("nsStorageStream [%p] Write mWriteCursor=%x mSegmentEnd=%x aCount=%d\n",
+        this, mWriteCursor, mSegmentEnd, aCount));
 
     remaining = aCount;
     readCursor = aBuffer;
@@ -204,9 +194,8 @@ nsStorageStream::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWritt
             mLastSegmentNum++;
             mSegmentEnd = mWriteCursor + mSegmentSize;
             availableInSegment = mSegmentEnd - mWriteCursor;
-            PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
-                   ("nsStorageStream [%x] Write (new seg) mWriteCursor=%x mSegmentEnd=%x\n",
-                    this, mWriteCursor, mSegmentEnd));
+            LOG(("nsStorageStream [%p] Write (new seg) mWriteCursor=%x mSegmentEnd=%x\n",
+                this, mWriteCursor, mSegmentEnd));
         }
 	
         count = PR_MIN(availableInSegment, remaining);
@@ -214,18 +203,16 @@ nsStorageStream::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWritt
         remaining -= count;
         readCursor += count;
         mWriteCursor += count;
-        PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
-               ("nsStorageStream [%x] Writing mWriteCursor=%x mSegmentEnd=%x count=%d\n",
-                this, mWriteCursor, mSegmentEnd, count));
+        LOG(("nsStorageStream [%p] Writing mWriteCursor=%x mSegmentEnd=%x count=%d\n",
+            this, mWriteCursor, mSegmentEnd, count));
     };
 
  out:
     *aNumWritten = aCount - remaining;
     mLogicalLength += *aNumWritten;
 
-    PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
-           ("nsStorageStream [%x] Wrote mWriteCursor=%x mSegmentEnd=%x numWritten=%d\n",
-            this, mWriteCursor, mSegmentEnd, *aNumWritten));
+    LOG(("nsStorageStream [%p] Wrote mWriteCursor=%x mSegmentEnd=%x numWritten=%d\n",
+        this, mWriteCursor, mSegmentEnd, *aNumWritten));
     return rv;
 }
 
@@ -313,9 +300,8 @@ nsStorageStream::Seek(PRInt32 aPosition)
     if (aPosition == 0) {
         mWriteCursor = 0;
         mSegmentEnd = 0;
-        PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
-               ("nsStorageStream [%x] Seek mWriteCursor=%x mSegmentEnd=%x\n",
-                this, mWriteCursor, mSegmentEnd));
+        LOG(("nsStorageStream [%p] Seek mWriteCursor=%x mSegmentEnd=%x\n",
+            this, mWriteCursor, mSegmentEnd));
         return NS_OK;
     }
 
@@ -333,9 +319,8 @@ nsStorageStream::Seek(PRInt32 aPosition)
     else
         mWriteCursor += segmentOffset;
     
-    PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
-           ("nsStorageStream [%x] Seek mWriteCursor=%x mSegmentEnd=%x\n",
-            this, mWriteCursor, mSegmentEnd));
+    LOG(("nsStorageStream [%p] Seek mWriteCursor=%x mSegmentEnd=%x\n",
+        this, mWriteCursor, mSegmentEnd));
     return NS_OK;
 }
 
@@ -349,7 +334,8 @@ public:
     nsStorageInputStream(nsStorageStream *aStorageStream, PRUint32 aSegmentSize)
         : mStorageStream(aStorageStream), mReadCursor(0),
           mSegmentEnd(0), mSegmentNum(0),
-          mSegmentSize(aSegmentSize), mLogicalCursor(0)
+          mSegmentSize(aSegmentSize), mLogicalCursor(0),
+          mStatus(NS_OK)
 	{
         NS_ADDREF(mStorageStream);
 	}
@@ -376,6 +362,7 @@ private:
     PRUint32         mSegmentNum;    // Segment number containing read cursor
     PRUint32         mSegmentSize;   // All segments, except the last, are of this size
     PRUint32         mLogicalCursor; // Logical offset into stream
+    nsresult         mStatus;
 
     PRUint32 SegNum(PRUint32 aPosition)    {return aPosition >> mStorageStream->mSegmentSizeLog2;}
     PRUint32 SegOffset(PRUint32 aPosition) {return aPosition & (mSegmentSize - 1);}
@@ -409,12 +396,16 @@ nsStorageStream::NewInputStream(PRInt32 aStartingOffset, nsIInputStream* *aInput
 NS_IMETHODIMP
 nsStorageInputStream::Close()
 {
+    mStatus = NS_BASE_STREAM_CLOSED;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsStorageInputStream::Available(PRUint32 *aAvailable)
 {
+    if (NS_FAILED(mStatus))
+        return mStatus;
+
     *aAvailable = mStorageStream->mLogicalLength - mLogicalCursor;
     return NS_OK;
 }
@@ -422,46 +413,19 @@ nsStorageInputStream::Available(PRUint32 *aAvailable)
 NS_IMETHODIMP
 nsStorageInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
 {
-    char* writeCursor;
-    PRUint32 count, availableInSegment, remainingCapacity;
-
-    remainingCapacity = aCount;
-    writeCursor = aBuffer;
-    while (remainingCapacity) {
-        availableInSegment = mSegmentEnd - mReadCursor;
-        if (!availableInSegment) {
-            PRUint32 available = mStorageStream->mLogicalLength - mLogicalCursor;
-            if (!available)
-                goto out;
-	    
-            mReadCursor = mStorageStream->mSegmentedBuffer->GetSegment(++mSegmentNum);
-            mSegmentEnd = mReadCursor + PR_MIN(mSegmentSize, available);
-        }
-	
-        count = PR_MIN(availableInSegment, remainingCapacity);
-        memcpy(writeCursor, mReadCursor, count);
-        remainingCapacity -= count;
-        mReadCursor += count;
-        writeCursor += count;
-        mLogicalCursor += count;
-    };
-
- out:
-    *aNumRead = aCount - remainingCapacity;
-
-    PRBool isWriteInProgress = PR_FALSE;
-    if (NS_FAILED(mStorageStream->GetWriteInProgress(&isWriteInProgress)))
-        isWriteInProgress = PR_FALSE;
-
-    if (*aNumRead == 0 && isWriteInProgress)
-        return NS_BASE_STREAM_WOULD_BLOCK;
-    else
-        return NS_OK;
+    return ReadSegments(NS_CopySegmentToBuffer, aBuffer, aCount, aNumRead);
 }
 
 NS_IMETHODIMP 
 nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 aCount, PRUint32 *aNumRead)
 {
+    if (mStatus == NS_BASE_STREAM_CLOSED) {
+        *aNumRead = 0;
+        return NS_OK;
+    }
+    if (NS_FAILED(mStatus))
+        return mStatus;
+
     PRUint32 count, availableInSegment, remainingCapacity, bytesConsumed;
     nsresult rv;
 
@@ -479,7 +443,8 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRU
         }
 	
         count = PR_MIN(availableInSegment, remainingCapacity);
-        rv = writer(this, closure, mReadCursor, mLogicalCursor, count, &bytesConsumed);
+        rv = writer(this, closure, mReadCursor, aCount - remainingCapacity,
+                    count, &bytesConsumed);
         if (NS_FAILED(rv) || (bytesConsumed == 0))
           break;
         remainingCapacity -= bytesConsumed;
@@ -495,14 +460,17 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRU
         isWriteInProgress = PR_FALSE;
 
     if (*aNumRead == 0 && isWriteInProgress)
-      return NS_BASE_STREAM_WOULD_BLOCK;
-    else
-      return NS_OK;
+        return NS_BASE_STREAM_WOULD_BLOCK;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsStorageInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
+    // TODO: This class should implement nsIAsyncInputStream so that callers
+    // have some way of dealing with NS_BASE_STREAM_WOULD_BLOCK errors.
+ 
     *aNonBlocking = PR_TRUE;
     return NS_OK;
 }
@@ -510,7 +478,10 @@ nsStorageInputStream::IsNonBlocking(PRBool *aNonBlocking)
 NS_IMETHODIMP
 nsStorageInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
 {
-    nsInt64 pos = aOffset;
+    if (NS_FAILED(mStatus))
+        return mStatus;
+
+    PRInt64 pos = aOffset;
 
     switch (aWhence) {
     case NS_SEEK_SET:
@@ -525,8 +496,7 @@ nsStorageInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
         NS_NOTREACHED("unexpected whence value");
         return NS_ERROR_UNEXPECTED;
     }
-    nsInt64 logicalCursor(mLogicalCursor);
-    if (pos == logicalCursor)
+    if (pos == PRInt64(mLogicalCursor))
         return NS_OK;
 
     return Seek(pos);
@@ -535,6 +505,9 @@ nsStorageInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
 NS_IMETHODIMP
 nsStorageInputStream::Tell(PRInt64 *aResult)
 {
+    if (NS_FAILED(mStatus))
+        return mStatus;
+
     LL_UI2L(*aResult, mLogicalCursor);
     return NS_OK;
 }

@@ -40,7 +40,7 @@
 #include "nsPNGEncoder.h"
 #include "prmem.h"
 #include "nsString.h"
-#include "nsDependentSubstring.h"
+#include "nsStreamUtils.h"
 
 // Bug 308126 - AIX defines jmpbuf in sys/context.h which conflicts with the
 // definition of jmpbuf in the png.h header file.
@@ -48,7 +48,10 @@
 #undef jmpbuf
 #endif
 
-NS_IMPL_ISUPPORTS2(nsPNGEncoder, imgIEncoder, nsIInputStream)
+// Input streams that do not implement nsIAsyncInputStream should be threadsafe
+// so that they may be used with nsIInputStreamPump and nsIInputStreamChannel,
+// which read such a stream on a background thread.
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsPNGEncoder, imgIEncoder, nsIInputStream)
 
 nsPNGEncoder::nsPNGEncoder() : mImageBuffer(nsnull), mImageBufferSize(0),
                                  mImageBufferUsed(0), mImageBufferReadPoint(0)
@@ -187,10 +190,10 @@ NS_IMETHODIMP nsPNGEncoder::InitFromData(const PRUint8* aData,
   png_destroy_write_struct(&png_ptr, &info_ptr);
 
   // if output callback can't get enough memory, it will free our buffer
-  if (mImageBuffer)
-    return NS_OK;
-  else
+  if (!mImageBuffer)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
 }
 
 
@@ -202,6 +205,7 @@ NS_IMETHODIMP nsPNGEncoder::Close()
     mImageBuffer = nsnull;
     mImageBufferSize = 0;
     mImageBufferUsed = 0;
+    mImageBufferReadPoint = 0;
   }
   return NS_OK;
 }
@@ -209,49 +213,49 @@ NS_IMETHODIMP nsPNGEncoder::Close()
 /* unsigned long available (); */
 NS_IMETHODIMP nsPNGEncoder::Available(PRUint32 *_retval)
 {
+  if (!mImageBuffer)
+    return NS_BASE_STREAM_CLOSED;
+
   *_retval = mImageBufferUsed - mImageBufferReadPoint;
   return NS_OK;
 }
 
 /* [noscript] unsigned long read (in charPtr aBuf, in unsigned long aCount); */
-NS_IMETHODIMP nsPNGEncoder::Read(char * aBuf, PRUint32 aCount, PRUint32 *_retval)
+NS_IMETHODIMP nsPNGEncoder::Read(char * aBuf, PRUint32 aCount,
+                                 PRUint32 *_retval)
 {
-  if (mImageBufferReadPoint >= mImageBufferUsed) {
-    // done reading
+  return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, _retval);
+}
+
+/* [noscript] unsigned long readSegments (in nsWriteSegmentFun aWriter, in voidPtr aClosure, in unsigned long aCount); */
+NS_IMETHODIMP nsPNGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
+                                         void *aClosure, PRUint32 aCount,
+                                         PRUint32 *_retval)
+{
+  PRUint32 maxCount = mImageBufferUsed - mImageBufferReadPoint;
+  if (maxCount == 0) {
     *_retval = 0;
     return NS_OK;
   }
 
-  PRUint32 toRead = mImageBufferUsed - mImageBufferReadPoint;
-  if (aCount < toRead)
-    toRead = aCount;
+  if (aCount > maxCount)
+    aCount = maxCount;
+  nsresult rv = aWriter(this, aClosure,
+                        NS_REINTERPRET_CAST(const char*, mImageBuffer),
+                        0, aCount, _retval);
+  if (NS_SUCCEEDED(rv)) {
+    NS_ASSERTION(*_retval <= aCount, "bad write count");
+    mImageBufferReadPoint += *_retval;
+  }
 
-  memcpy(aBuf, &mImageBuffer[mImageBufferReadPoint], toRead);
-
-  mImageBufferReadPoint += toRead;
-  *_retval = toRead;
+  // errors returned from the writer end here!
   return NS_OK;
-}
-
-/* [noscript] unsigned long readSegments (in nsWriteSegmentFun aWriter, in voidPtr aClosure, in unsigned long aCount); */
-NS_IMETHODIMP nsPNGEncoder::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure, PRUint32 aCount, PRUint32 *_retval)
-{
-  if (mImageBufferUsed == 0)
-    return NS_ERROR_FAILURE;
-
-  PRUint32 writeCount = 0;
-  aWriter(this, aClosure, (const char*)mImageBuffer, 0, mImageBufferUsed, &writeCount);
-
-  if (writeCount > 0)
-    return NS_OK;
-  else
-    return NS_ERROR_FAILURE; // some problem with callback
 }
 
 /* boolean isNonBlocking (); */
 NS_IMETHODIMP nsPNGEncoder::IsNonBlocking(PRBool *_retval)
 {
-  *_retval = PR_TRUE;
+  *_retval = PR_FALSE;  // We don't implement nsIAsyncInputStream
   return NS_OK;
 }
 

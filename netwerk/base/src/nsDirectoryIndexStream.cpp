@@ -82,7 +82,7 @@ static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 //#define THREADSAFE_I18N
 
 nsDirectoryIndexStream::nsDirectoryIndexStream()
-    : mOffset(0), mPos(0)
+    : mOffset(0), mStatus(NS_OK), mPos(0)
 {
 #ifdef PR_LOGGING
     if (! gLog)
@@ -280,12 +280,16 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDirectoryIndexStream, nsIInputStream)
 NS_IMETHODIMP
 nsDirectoryIndexStream::Close()
 {
+    mStatus = NS_BASE_STREAM_CLOSED;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDirectoryIndexStream::Available(PRUint32* aLength)
 {
+    if (NS_FAILED(mStatus))
+        return mStatus;
+
     // If there's data in our buffer, use that
     if (mOffset < (PRInt32)mBuf.Length()) {
         *aLength = mBuf.Length() - mOffset;
@@ -300,6 +304,13 @@ nsDirectoryIndexStream::Available(PRUint32* aLength)
 NS_IMETHODIMP
 nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 {
+    if (mStatus == NS_BASE_STREAM_CLOSED) {
+        *aReadCount = 0;
+        return NS_OK;
+    }
+    if (NS_FAILED(mStatus))
+        return mStatus;
+
     PRUint32 nread = 0;
 
     // If anything is enqueued (or left-over) in mBuf, then feed it to

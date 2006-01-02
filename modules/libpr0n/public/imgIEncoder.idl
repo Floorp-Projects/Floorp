@@ -42,7 +42,6 @@
 /**
  * imgIEncoder interface
  */
-
 [scriptable, uuid(CCC5B3AD-3E67-4e3d-97E1-B06B2E96FEF8)]
 interface imgIEncoder : nsIInputStream
 {
@@ -86,5 +85,3 @@ interface imgIEncoder : nsIInputStream
                     in PRUint32 inputFormat,
                     in AString outputOptions);
 };
-
-

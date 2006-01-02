@@ -250,31 +250,6 @@ PRBool nsRandomAccessInputStream::readline(char* s, PRInt32 n)
 } // nsRandomAccessInputStream::readline
 
 //========================================================================================
-//          nsInputStringStream
-//========================================================================================
-
-//----------------------------------------------------------------------------------------
-nsInputStringStream::nsInputStringStream(const char* stringToRead)
-//----------------------------------------------------------------------------------------
-{
-	nsCOMPtr<nsIInputStream> stream;
-	if (NS_FAILED(NS_NewCharInputStream(getter_AddRefs(stream), stringToRead)))
-		return;
-	mInputStream = stream;
-	mStore = do_QueryInterface(stream);
-}
-
-//----------------------------------------------------------------------------------------
-nsInputStringStream::nsInputStringStream(const nsString& stringToRead)
-//----------------------------------------------------------------------------------------
-{
-	if (NS_FAILED(NS_NewStringInputStream(getter_AddRefs(mInputStream), stringToRead)))
-		return;
-	mStore = do_QueryInterface(mInputStream);
-}
-
-
-//========================================================================================
 //          nsInputFileStream
 //========================================================================================
 

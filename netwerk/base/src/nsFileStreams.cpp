@@ -317,7 +317,8 @@ NS_IMETHODIMP
 nsFileInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aResult)
 {
     if (!mFD) {
-        return NS_BASE_STREAM_CLOSED;
+        *aResult = 0;
+        return NS_OK;
     }
 
     PRInt32 bytesRead = PR_Read(mFD, aBuf, aCount);

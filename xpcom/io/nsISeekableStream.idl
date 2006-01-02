@@ -81,6 +81,8 @@ interface nsISeekableStream : nsISupports
      *                 with the 'whence' parameter to set the stream offset of the 
      *                 implementing stream.  A negative value causes seeking in 
      *                 the reverse direction.
+     *
+     *   @throws NS_BASE_STREAM_CLOSED if called on a closed stream.
      */
     void seek(in long whence, in long long offset);
 
@@ -89,6 +91,8 @@ interface nsISeekableStream : nsISupports
      *
      *  This method reports the current offset, in bytes, from the start of the 
      *  stream. 
+     *
+     *   @throws NS_BASE_STREAM_CLOSED if called on a closed stream.
      */
     long long tell();
 
@@ -97,6 +101,8 @@ interface nsISeekableStream : nsISupports
      *  setEOF
      *
      *  This method truncates the stream at the current offset.
+     *
+     *   @throws NS_BASE_STREAM_CLOSED if called on a closed stream.
      */
     void setEOF();
 };
