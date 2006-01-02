@@ -685,6 +685,8 @@
     [%+ field_descs.product FILTER html %]
     [% IF bug_id %]
       for [% terms.bug %] '[% bug_id FILTER html %]'.
+    [% ELSIF new %]
+      and may not be included on a new [% terms.bug %].
     [% ELSE %]
       for at least one [% terms.bug %] being changed.
     [% END %]

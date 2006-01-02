@@ -257,6 +257,28 @@ if ($cgi->param('keywords') && UserInGroup("editbugs")) {
     }
 }
 
+if (Param("strict_isolation")) {
+    my @blocked_users = ();
+    my %related_users = %ccids;
+    $related_users{$cgi->param('assigned_to')} = 1;
+    if (Param('useqacontact') && $cgi->param('qa_contact')) {
+        $related_users{$cgi->param('qa_contact')} = 1;
+    }
+    foreach my $pid (keys %related_users) {
+        my $related_user = Bugzilla::User->new($pid);
+        if (!$related_user->can_edit_product($product_id)) {
+            push (@blocked_users, $related_user->login);
+        }
+    }
+    if (scalar(@blocked_users)) {
+        ThrowUserError("invalid_user_group", 
+            {'users' => \@blocked_users,
+             'new' => 1,
+             'product' => $product
+            });
+    }
+}
+
 # Check for valid dependency info. 
 foreach my $field ("dependson", "blocked") {
     if (UserInGroup("editbugs") && $cgi->param($field)) {
