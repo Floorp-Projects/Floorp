@@ -37,7 +37,7 @@
 
 #include "nsTXTToHTMLConv.h"
 #include "nsNetUtil.h"
-#include "nsIStringStream.h"
+#include "nsStringStream.h"
 #include "nsAutoPtr.h"
 
 #define TOKEN_DELIMITERS NS_LITERAL_STRING("\t\r\n ").get()
