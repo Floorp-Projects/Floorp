@@ -1891,7 +1891,7 @@ function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType)
   var dataStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
                             .createInstance(Components.interfaces.nsIStringInputStream);
   aStringData = aStringData.replace(/%s/g, aEncKeyword).replace(/%S/g, aKeyword);
-  dataStream.setData(aStringData, aStringData.length);
+  dataStream.data = aStringData;
 
   var mimeStream = Components.classes["@mozilla.org/network/mime-input-stream;1"]
                               .createInstance(Components.interfaces.nsIMIMEInputStream);
