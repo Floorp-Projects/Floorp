@@ -46,7 +46,7 @@
 #include "nsISocketTransport.h"
 #include "nsIServiceManager.h"
 #include "nsISSLSocketControl.h"
-#include "nsIStringStream.h"
+#include "nsStringStream.h"
 #include "netCore.h"
 #include "nsNetCID.h"
 #include "nsAutoLock.h"

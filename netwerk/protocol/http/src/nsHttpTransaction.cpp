@@ -50,10 +50,10 @@
 #include "pratom.h"
 #include "plevent.h"
 
-#include "nsIStringStream.h"
 #include "nsISeekableStream.h"
 #include "nsISocketTransport.h"
 #include "nsMultiplexInputStream.h"
+#include "nsStringStream.h"
 
 #include "nsComponentManagerUtils.h" // do_CreateInstance
 
