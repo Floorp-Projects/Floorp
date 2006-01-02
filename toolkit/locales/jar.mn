@@ -82,7 +82,6 @@
   locale/@AB_CD@/mozapps/preferences/fontscaling.dtd              (%chrome/mozapps/preferences/fontscaling.dtd)
   locale/@AB_CD@/mozapps/preferences/changemp.dtd                 (%chrome/mozapps/preferences/changemp.dtd)
   locale/@AB_CD@/mozapps/preferences/removemp.dtd                 (%chrome/mozapps/preferences/removemp.dtd)
-  locale/@AB_CD@/mozapps/preferences/update.dtd                   (%chrome/mozapps/preferences/update.dtd)
   locale/@AB_CD@/mozapps/preferences/preferences.properties       (%chrome/mozapps/preferences/preferences.properties)
   locale/@AB_CD@/mozapps/profile/createProfileWizard.dtd          (%chrome/mozapps/profile/createProfileWizard.dtd)
   locale/@AB_CD@/mozapps/profile/profileSelection.properties      (%chrome/mozapps/profile/profileSelection.properties)
