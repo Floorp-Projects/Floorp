@@ -138,12 +138,17 @@ private:
         nsIDOMNode *aNode, const char *aAttribute,
         PRBool aNeedsPersisting = PR_TRUE,
         URIData **aData = nsnull);
+    nsresult StoreURIAttributeNS(
+        nsIDOMNode *aNode, const char *aNamespaceURI, const char *aAttribute,
+        PRBool aNeedsPersisting = PR_TRUE,
+        URIData **aData = nsnull);
     PRBool GetQuotedAttributeValue(
     const nsAString &aSource, const nsAString &aAttribute, nsAString &aValue);
 
     nsresult GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
     nsresult FixupURI(nsAString &aURI);
     nsresult FixupNodeAttribute(nsIDOMNode *aNode, const char *aAttribute);
+    nsresult FixupNodeAttributeNS(nsIDOMNode *aNode, const char *aNamespaceURI, const char *aAttribute);
     nsresult FixupAnchor(nsIDOMNode *aNode);
     nsresult FixupXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, const nsAString &aHref);
     nsresult GetXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, nsAString &aHref);
