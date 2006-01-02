@@ -47,7 +47,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStringEnumerator.h"
 #include "nsCRT.h"
-#include "nsIStringStream.h"
+#include "nsStringStream.h"
 
 #include "calIEvent.h"
 #include "calBaseCID.h"
