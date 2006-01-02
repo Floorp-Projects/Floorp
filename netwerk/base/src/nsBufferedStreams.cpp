@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBufferedStreams.h"
+#include "nsStreamUtils.h"
 #include "nsCRT.h"
 
 #ifdef DEBUG_brendan
@@ -110,6 +111,7 @@ nsBufferedStream::Close()
         mBufferSize = 0;
         mBufferStartOffset = 0;
         mCursor = 0;
+        mFillPoint = 0;
     }
 #ifdef METERING
     {
@@ -298,46 +300,35 @@ nsBufferedInputStream::Available(PRUint32 *result)
 NS_IMETHODIMP
 nsBufferedInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
 {
-    nsresult rv;
     if (mBufferDisabled) {
-        NS_ENSURE_TRUE(mStream, NS_BASE_STREAM_CLOSED);
-        rv = Source()->Read(buf, count, result);
+        if (!mStream) {
+            *result = 0;
+            return NS_OK;
+        }
+        nsresult rv = Source()->Read(buf, count, result);
         if (NS_SUCCEEDED(rv))
             mBufferStartOffset += *result;  // so nsBufferedStream::Tell works
         return rv;
     }
 
-    rv = NS_OK;
-    PRUint32 read = 0;
-    while (count > 0) {
-        PRUint32 amt = PR_MIN(count, mFillPoint - mCursor);
-        if (amt > 0) {
-            memcpy(buf + read, mBuffer + mCursor, amt);
-            read += amt;
-            count -= amt;
-            mCursor += amt;
-        }
-        else {
-            rv = Fill();
-            if (NS_FAILED(rv) || mFillPoint == mCursor)
-                break;
-        }
-    }
-    METER(if (read > 0) bufstats.mBytesReadFromBuffer += read);
-    *result = read;
-    return (read > 0) ? NS_OK : rv;
+    return ReadSegments(NS_CopySegmentToBuffer, buf, count, result);
 }
 
 NS_IMETHODIMP
-nsBufferedInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *result)
+nsBufferedInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
+                                    PRUint32 count, PRUint32 *result)
 {
-    nsresult rv = NS_OK;
     *result = 0;
+
+    if (!mStream)
+        return NS_OK;
+
+    nsresult rv = NS_OK;
     while (count > 0) {
         PRUint32 amt = PR_MIN(count, mFillPoint - mCursor);
         if (amt > 0) {
             PRUint32 read = 0;
-            rv = writer(this, closure, mBuffer + mCursor, mCursor, amt, &read);
+            rv = writer(this, closure, mBuffer + mCursor, *result, amt, &read);
             if (NS_FAILED(rv)) {
                 // errors returned from the writer end here!
                 rv = NS_OK;
@@ -369,7 +360,7 @@ nsBufferedInputStream::Fill()
 {
     if (mBufferDisabled)
         return NS_OK;
-    NS_ENSURE_TRUE(mStream, NS_BASE_STREAM_CLOSED);
+    NS_ENSURE_TRUE(mStream, NS_ERROR_NOT_INITIALIZED);
 
     nsresult rv;
     PRInt32 rem = PRInt32(mFillPoint - mCursor);

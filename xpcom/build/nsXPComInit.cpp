@@ -100,8 +100,10 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsCategoryManager.h"
 #include "nsICategoryManager.h"
-#include "nsStringStream.h"
 #include "nsMultiplexInputStream.h"
+
+#include "nsStringStream.h"
+extern NS_METHOD nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **);
 
 #include "nsFastLoadService.h"
 

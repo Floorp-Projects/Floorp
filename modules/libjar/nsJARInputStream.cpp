@@ -56,16 +56,20 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputStream, nsIInputStream)
 NS_IMETHODIMP 
 nsJARInputStream::Available(PRUint32 *_retval)
 {
+    if (!mJAR)
+        return NS_BASE_STREAM_CLOSED;
+
     *_retval = mReadInfo.Available();
-    
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARInputStream::Read(char* buf, PRUint32 count, PRUint32 *bytesRead)
 {
-    if (!mJAR)
-        return NS_BASE_STREAM_CLOSED;
+    if (!mJAR) {
+        *bytesRead = 0;
+        return NS_OK;
+    }
     
     PRInt32 err = mReadInfo.Read(buf, count, bytesRead);
     return err == ZIP_OK ? NS_OK : NS_ERROR_FAILURE;

@@ -152,7 +152,14 @@ nsSyncStreamListener::Close()
 {
     mStatus = NS_BASE_STREAM_CLOSED;
     mDone = PR_TRUE;
-    // XXX shouldn't we cancel the nsIRequest at this point?
+
+    // It'd be nice if we could explicitly cancel the request at this point,
+    // but we don't have a reference to it, so the best we can do is close the
+    // pipe so that the next OnDataAvailable event will fail.
+    if (mPipeIn) {
+        mPipeIn->Close();
+        mPipeIn = nsnull;
+    }
     return NS_OK;
 }
 
@@ -176,6 +183,11 @@ nsSyncStreamListener::Read(char     *buf,
                            PRUint32  bufLen,
                            PRUint32 *result)
 {
+    if (mStatus == NS_BASE_STREAM_CLOSED) {
+        *result = 0;
+        return NS_OK;
+    }
+
     PRUint32 avail;
     if (NS_FAILED(Available(&avail)))
         return mStatus;
@@ -191,6 +203,11 @@ nsSyncStreamListener::ReadSegments(nsWriteSegmentFun  writer,
                                    PRUint32           count,
                                    PRUint32          *result)
 {
+    if (mStatus == NS_BASE_STREAM_CLOSED) {
+        *result = 0;
+        return NS_OK;
+    }
+
     PRUint32 avail;
     if (NS_FAILED(Available(&avail)))
         return mStatus;

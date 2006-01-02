@@ -44,9 +44,9 @@
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
-#include "nsIByteArrayInputStream.h"
-#include "nsIStringStream.h"
 #include "nsNetError.h"
+#include "nsStringStream.h"
+#include "nsComponentManagerUtils.h"
 
 static NS_METHOD
 DiscardSegments(nsIInputStream *input,
@@ -61,7 +61,7 @@ DiscardSegments(nsIInputStream *input,
 }
 
 // nsISupports implementation
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPCompressConv, nsIStreamConverter, nsIStreamListener)
+NS_IMPL_ISUPPORTS2(nsHTTPCompressConv, nsIStreamConverter, nsIStreamListener)
 
 // nsFTPDirListingConv methods
 nsHTTPCompressConv::nsHTTPCompressConv()
@@ -368,27 +368,25 @@ nsHTTPCompressConv::Convert(nsIInputStream *aFromStream,
 } 
 
 nsresult
-nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request, nsISupports *aContext, PRUint32 aSourceOffset, char *buffer, PRUint32 aCount)
+nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
+                                       nsISupports *context, PRUint32 offset,
+                                       const char *buffer, PRUint32 count)
 {
-    nsresult rv;
+    if (!mStream) {
+        mStream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID);
+        NS_ENSURE_STATE(mStream);
+    }
 
-    nsCOMPtr<nsIByteArrayInputStream> convertedStreamSup;
+    mStream->ShareData(buffer, count);
 
-    char *lBuf = (char *) nsMemory::Alloc (aCount);
-    if (lBuf == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = mListener->OnDataAvailable(request, context, mStream,
+                                             offset, count);
 
-    memcpy(lBuf, buffer, aCount);
+    // Make sure the stream no longer references |buffer| in case our listener
+    // is crazy enough to try to read from |mStream| after ODA.
+    mStream->ShareData("", 0);
 
-    rv = NS_NewByteArrayInputStream(getter_AddRefs(convertedStreamSup), lBuf, aCount);
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIInputStream> convertedStream = do_QueryInterface(convertedStreamSup, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return mListener->OnDataAvailable(request, aContext, convertedStream, aSourceOffset, aCount);
+    return rv;
 }
 
 #define ASCII_FLAG   0x01 /* bit 0 set: file probably ascii text */

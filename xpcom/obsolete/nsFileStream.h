@@ -484,31 +484,6 @@ private:
 }; // class nsRandomAccessInputStream
 
 //========================================================================================
-class NS_COM_OBSOLETE nsInputStringStream
-//========================================================================================
-: public nsRandomAccessInputStream
-{
-public:
-                                      nsInputStringStream(const char* stringToRead);
-                                      nsInputStringStream(const nsString& stringToRead);
-
-    // Input streamers.  Unfortunately, they don't inherit!
-    nsInputStream&                    operator >> (char& ch)
-                                         { return nsInputStream::operator >>(ch); }
-    nsInputStream&                    operator >> (nsInputStream& (*pf)(nsInputStream&))
-                                         { return nsInputStream::operator >>(pf); }
-
-
-private:
-
-    // private and unimplemented to disallow copies and assigns
-                                      nsInputStringStream(const nsInputStringStream& rhs);
-    nsInputStringStream&              operator=(const nsInputStringStream& rhs);
-
-
-}; // class nsInputStringStream
-
-//========================================================================================
 class NS_COM_OBSOLETE nsInputFileStream
 // Please read the comments at the top of this file
 //========================================================================================

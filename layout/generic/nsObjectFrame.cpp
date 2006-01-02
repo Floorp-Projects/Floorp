@@ -75,7 +75,6 @@
 #include "nsIEventListener.h"
 #include "nsIScrollableView.h"
 #include "nsIScrollPositionListener.h"
-#include "nsIStringStream.h" // for NS_NewCharInputStream
 #include "nsITimer.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDocShellTreeItem.h"

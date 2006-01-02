@@ -845,6 +845,12 @@ nsPipeInputStream::Seek(PRInt32 whence, PRInt64 offset)
 NS_IMETHODIMP
 nsPipeInputStream::Tell(PRInt64 *offset)
 {
+    nsAutoMonitor mon(mPipe->mMonitor);
+
+    // return error if pipe closed
+    if (!mAvailable && NS_FAILED(mPipe->mStatus))
+        return mPipe->mStatus;
+
     *offset = mLogicalOffset;
     return NS_OK;
 }
@@ -1210,6 +1216,11 @@ nsPipeOutputStream::Seek(PRInt32 whence, PRInt64 offset)
 NS_IMETHODIMP
 nsPipeOutputStream::Tell(PRInt64 *offset)
 {
+    nsAutoMonitor mon(mPipe->mMonitor);
+
+    if (NS_FAILED(mPipe->mStatus))
+        return mPipe->mStatus;
+
     *offset = mLogicalOffset;
     return NS_OK;
 }

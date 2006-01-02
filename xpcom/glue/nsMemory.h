@@ -156,6 +156,14 @@ public:
 #define NS_ARRAY_LENGTH(array_) \
   (sizeof(array_)/sizeof(array_[0]))
 
+/**
+ * An enumeration type used to represent a method of assignment.
+ */
+enum nsAssignmentType {
+    NS_ASSIGNMENT_COPY,   // copy by value
+    NS_ASSIGNMENT_DEPEND, // copy by reference
+    NS_ASSIGNMENT_ADOPT   // copy by reference (take ownership of resource)
+};
 
 #endif // nsMemory_h__
 

@@ -39,8 +39,9 @@
 #ifndef nsStringStream_h__
 #define nsStringStream_h__
 
-#include "nsISeekableStream.h"
 #include "nsIStringStream.h"
+#include "nsStringGlue.h"
+#include "nsMemory.h"
 
 /**
  * nsStringInputStream : nsIStringInputStream
@@ -56,8 +57,50 @@
     0x4790,                                          \
     {0xaf, 0x28, 0x61, 0xb3, 0xba, 0x17, 0xc2, 0x95} \
 }
-extern NS_METHOD nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **);
 
+/**
+ * Factory method to get an nsInputStream from a byte buffer.  Result will
+ * implement nsIStringInputStream and nsISeekableStream.
+ *
+ * If aAssignment is NS_ASSIGNMENT_COPY, then the resulting stream holds a copy
+ * of the given buffer (aStringToRead), and the caller is free to discard
+ * aStringToRead after this function returns.
+ *
+ * If aAssignment is NS_ASSIGNMENT_DEPEND, then the resulting stream refers
+ * directly to the given buffer (aStringToRead), so the caller must ensure that
+ * the buffer remains valid for the lifetime of the stream object.  Use with
+ * care!!
+ *
+ * If aAssignment is NS_ASSIGNMENT_ADOPT, then the resulting stream refers
+ * directly to the given buffer (aStringToRead) and will free aStringToRead
+ * once the stream is closed.
+ *
+ * If aLength is less than zero, then the length of aStringToRead will be
+ * determined by scanning the buffer for the first null byte.
+ */
+extern NS_COM nsresult
+NS_NewByteInputStream(nsIInputStream** aStreamResult,
+                      const char* aStringToRead, PRInt32 aLength = -1,
+                      nsAssignmentType aAssignment = NS_ASSIGNMENT_DEPEND);
 
+/**
+ * Factory method to get an nsInputStream from an nsAString.  Result will
+ * implement nsIStringInputStream and nsISeekableStream.
+ *
+ * The given string data will be converted to a single-byte data buffer via
+ * truncation (i.e., the high-order byte of each character will be discarded).
+ * This could result in data-loss, so be careful when using this function.
+ */
+extern NS_COM nsresult
+NS_NewStringInputStream(nsIInputStream** aStreamResult,
+                        const nsAString& aStringToRead);
+
+/**
+ * Factory method to get an nsInputStream from an nsACString.  Result will
+ * implement nsIStringInputStream and nsISeekableStream.
+ */
+extern NS_COM nsresult
+NS_NewCStringInputStream(nsIInputStream** aStreamResult,
+                         const nsACString& aStringToRead);
 
 #endif // nsStringStream_h__

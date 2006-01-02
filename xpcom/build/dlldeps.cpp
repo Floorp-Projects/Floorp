@@ -43,7 +43,6 @@
 #include "nsVoidArray.h"
 #include "nsValueArray.h"
 #include "nsIAtom.h"
-#include "nsIByteArrayInputStream.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsRecyclingAllocator.h"
 #include "nsIThread.h"
@@ -69,6 +68,7 @@
 #include "nsWeakReference.h"
 #include "nsTextFormatter.h"
 #include "nsIStorageStream.h"
+#include "nsStringStream.h"
 #include "nsLinebreakConverter.h"
 #include "nsIBinaryInputStream.h"
 #include "nsIInterfaceRequestor.h"
@@ -125,6 +125,9 @@ void XXXNeverCalled()
     }
     NS_InputStreamIsBuffered(nsnull);
     NS_OutputStreamIsBuffered(nsnull);
+    NS_NewByteInputStream(nsnull, nsnull, 0, NS_ASSIGNMENT_COPY);
+    NS_NewCStringInputStream(nsnull, nsCString());
+    NS_NewStringInputStream(nsnull, nsString());
     PL_DHashStubEnumRemove(nsnull, nsnull, nsnull, nsnull);
     nsIDHashKey::HashKey(nsnull);
     nsFixedSizeAllocator a;
@@ -154,7 +157,6 @@ void XXXNeverCalled()
     NS_NewGenericModule2(nsnull, nsnull);
     NS_GetWeakReference(nsnull);
     nsCOMPtr<nsISupports> dummyFoo(do_GetInterface(nsnull));
-    NS_NewByteArrayInputStream(nsnull, nsnull, 0);
     NS_NewStorageStream(0,0, nsnull);
     nsString foo;
     nsPrintfCString bar("");

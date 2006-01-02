@@ -23,7 +23,7 @@
  *   mcmullen@netscape.com (original author)
  *   scc@mozilla.org
  *   davidm@netscape.com
- *   darin@netscape.com
+ *   darin@meer.net
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,10 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * Based on original code from nsIStringStream.h
- */
-
 #include "nsIInputStream.idl"
 
 /**
@@ -50,10 +46,23 @@
  *
  * Provides scriptable and specialized C++ only methods for initializing a
  * nsIInputStream implementation with a simple character array.
+ *
+ * @status UNDER_REVIEW
  */
-[scriptable, uuid(450cd2d4-f0fd-424d-b365-b1251f80fd53)]
+[scriptable, uuid(8f6053fc-0944-4270-89e1-12c3113d44e8)]
 interface nsIStringInputStream : nsIInputStream
 {
+    /**
+     * Set or get this stream's data.  The data may contain null characters.
+     *
+     * NOTE: JS callers should understand that assigning a JS string to this
+     * attribute results in the high-byte of each character being discarded.
+     * Likewise, assigning this attribute into a JS string results in the
+     * high-byte of each character in the resulting JS string being set to
+     * zero.
+     */
+    attribute ACString data;
+
     /**
      * SetData - assign data to the input stream (copied on assignment).
      *
@@ -62,6 +71,11 @@ interface nsIStringInputStream : nsIInputStream
      *
      * NOTE: C++ code should consider using AdoptData or ShareData to avoid
      * making an extra copy of the stream data.
+     *
+     * NOTE: For JS callers, the given data must not contain null characters
+     * (other than a null terminator) because a null character in the middle of
+     * the data string will be seen as a terminator when the data is converted
+     * from a JS string to a C++ character array.
      */
     void setData(in string data, in long dataLen);
 
@@ -90,42 +104,3 @@ interface nsIStringInputStream : nsIInputStream
      */
     [noscript] void shareData(in string data, in long dataLen);
 };
-
-%{C++
-
-//-----------------------------------------------------------------------------
-// C++ factory methods
-//-----------------------------------------------------------------------------
-
-#include "nsIInputStream.h"
-#include "nsStringGlue.h"
-
-//-----------------------------------------------------------------------------
-// Factory method to get an nsInputStream from an nsAString.  Result will
-// implement nsIStringInputStream and nsISeekableStream
-extern "C" NS_COM nsresult
-NS_NewStringInputStream(nsIInputStream** aStreamResult,
-                        const nsAString& aStringToRead);
-
-//-----------------------------------------------------------------------------
-// Factory method to get an nsInputStream from an nsACString.  Result will
-// implement nsIStringInputStream and nsISeekableStream 
-extern "C" NS_COM nsresult
-NS_NewCStringInputStream(nsIInputStream** aStreamResult,
-                         const nsACString& aStringToRead);
-
-//-----------------------------------------------------------------------------
-// Factory method to get an nsInputStream from a string.  Result will
-// implement nsIStringInputStream and nsISeekableStream
-extern "C" NS_COM nsresult
-NS_NewCharInputStream(nsIInputStream** aStreamResult,
-                      const char* aStringToRead);
-
-//-----------------------------------------------------------------------------
-// Factory method to get an nsInputStream from a byte buffer.  Result will
-// implement nsIStringInputStream and nsISeekableStream
-extern "C" NS_COM nsresult
-NS_NewByteInputStream(nsIInputStream** aStreamResult,
-                      const char* aStringToRead,
-                      PRInt32 aLength);
-%}
