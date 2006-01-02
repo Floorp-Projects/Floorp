@@ -121,15 +121,20 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryAuthDN(const nsACString & aValueUsedT
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsresult rv = NS_OK; 
+    nsresult rv = NS_OK;
 
-    CharPtrArrayGuard attributes;
-    *attributes.GetSizeAddr() = 2;
-    *attributes.GetArrayAddr() = NS_STATIC_CAST(char **, nsMemory::Alloc((*attributes.GetSizeAddr()) * sizeof(char *)));
-    attributes.GetArray()[0] = ToNewCString(nsDependentCString(DIR_GetFirstAttributeString(mDirServer, cn)));
-    attributes.GetArray()[1] = nsnull;
-    
-    nsCAutoString filter(DIR_GetFirstAttributeString(mDirServer, auth));
+    nsCOMPtr<nsIAbLDAPAttributeMapService> mapSvc = 
+      do_GetService("@mozilla.org/addressbook/ldap-attribute-map-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIAbLDAPAttributeMap> attrMap;
+    rv = mapSvc->GetMapForPrefBranch(nsDependentCString(mDirServer->prefName), getter_AddRefs(attrMap));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString filter;
+    rv = attrMap->GetFirstAttribute(NS_LITERAL_CSTRING("PrimaryEmail"), filter);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     filter += '=';
     filter += aValueUsedToFindDn;
 
@@ -141,8 +146,10 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryAuthDN(const nsACString & aValueUsedT
     rv = CreateNewLDAPOperation();
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // XXX We really should be using LDAP_NO_ATTRS here once its exposed via
+    // the XPCOM layer of the directory code.
     return mOperation->SearchExt(dn, nsILDAPURL::SCOPE_SUBTREE, filter, 
-                               attributes.GetSize(), attributes.GetArray(),
+                               0, nsnull,
                                0, 0);
 }
 
