@@ -20,7 +20,7 @@
   #                 Gervase Markham <gerv@gerv.net>
   #%]
 
-[% PROCESS global/variables.none.tmpl %]
+[% PROCESS "global/field-descs.none.tmpl" %]
 
 [% PROCESS global/header.html.tmpl
   title = "Full Text $terms.Bug Listing"
@@ -78,8 +78,10 @@
     <tr>
       [% PROCESS cell attr = { description => "OS/Version",
                                name => "op_sys" } %]
-      [% PROCESS cell attr = { description => "Status",
-                               name => "bug_status" } %]
+      <td>
+        <b>Status:</b>&nbsp;
+        [% status_descs.${bug.bug_status} FILTER html %]
+      </td>
       [% PROCESS cell attr = { description => "Severity",
                                name => "bug_severity" } %]
       [% PROCESS cell attr = { description => "Priority",
@@ -87,8 +89,10 @@
     </tr>
 
     <tr>
-      [% PROCESS cell attr = { description => "Resolution",
-                               name => "resolution" } %]
+      <td>
+        <b>Resolution:</b>&nbsp;
+        [% resolution_descs.${bug.resolution} FILTER html %]
+      </td>
       <td>
         <b>Assigned To:</b>&nbsp;
         [% bug.assigned_to.login FILTER html %]
