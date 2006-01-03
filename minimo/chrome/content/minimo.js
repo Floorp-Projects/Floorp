@@ -36,9 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+const nsCI               = Components.interfaces;
+const nsIWebNavigation = nsCI.nsIWebNavigation;
+const nsIWebProgressListener = nsCI.nsIWebProgressListener;
 
+var gBrowser = null;
 var gBookmarksDoc=null; 
 var gURLBar = null;
 var gClickSelectsAll = true;
@@ -69,9 +71,9 @@ nsBrowserStatusHandler.prototype =
 {
   QueryInterface : function(aIID)
   {
-    if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-        aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-        aIID.equals(Components.interfaces.nsISupports))
+    if (aIID.equals(nsCI.nsIWebProgressListener) ||
+        aIID.equals(nsCI.nsISupportsWeakReference) ||
+        aIID.equals(nsCI.nsISupports))
     {
       return this;
     }
@@ -140,7 +142,7 @@ nsBrowserStatusHandler.prototype =
         // 
         //        try {
         //          var imageCache = Components.classes["@mozilla.org/image/cache;1"]
-        //                                   .getService(Components.interfaces.imgICache);
+        //                                   .getService(nsCI.imgICache);
         //          imageCache.clearCache(false);
         //        }
         //        catch(e) {}
@@ -251,7 +253,9 @@ function MiniNavStartup()
     var BrowserStatusHandler = new nsBrowserStatusHandler();
     BrowserStatusHandler.init();
 
-    getBrowser().addProgressListener(BrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+    window.QueryInterface(nsCI.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
+
+    getBrowser().addProgressListener(BrowserStatusHandler, nsCI.nsIWebProgress.NOTIFY_ALL);
   
     // Current build was not able to get it. Taking it from the tab browser element. 
     // var webNavigation=getBrowser().webNavigation;
@@ -259,21 +263,21 @@ function MiniNavStartup()
     var refBrowser=getBrowser().getBrowserForTab(currentTab);
     var webNavigation=refBrowser.webNavigation;
     
-    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
+    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(nsCI.nsISHistory);
 
-    getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
+    getBrowser().docShell.QueryInterface(nsCI.nsIDocShellHistory).useGlobalHistory = true;
 
     gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-                               .getService(Components.interfaces.nsIBrowserHistory);
+                               .getService(nsCI.nsIBrowserHistory);
   
     gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
-                          .getService(Components.interfaces.nsIURIFixup);
+                          .getService(nsCI.nsIURIFixup);
 
     var bookmarkstore=null; 
 
     try {
       gPref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
+                         .getService(nsCI.nsIPrefBranch);
 
       var page = gPref.getCharPref("browser.startup.homepage");
       var bookmarkstore = gPref.getCharPref("browser.bookmark.store");
@@ -296,15 +300,6 @@ function MiniNavStartup()
    * We add event handler to catch the right and left keys on the main_MenuPopup 
    */
   document.addEventListener("keypress",eventHandlerMenu,true);
-
-  /* 
-   * Override the title attribute <title /> in this doc with a setter.
-   * This is our workaround solution so that when the tabbrowser::updateTitle
-   * tries to update this document's title, nothing happens. Bug 311564
-   */ 
-   
-  document.__defineSetter__("title",function(x){}); // Stays with the titled defined by the XUL element. 
-  
   
   /*
    * Sync UI zoom level 
@@ -319,7 +314,6 @@ function MiniNavStartup()
   getBrowser().mStrip.addEventListener("click",BrowserWithoutSNAV,false);
   document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
   
-
   getBrowser().addEventListener("DOMLinkAdded", BrowserLinkAdded, false);
 
 }
@@ -425,14 +419,14 @@ function BrowserUpdateBackForwardState() {
 
 
 function findChildShell(aDocument, aDocShell, aSoughtURI) {
-		aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation);
-		aDocShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-		var doc = aDocShell.getInterface(Components.interfaces.nsIDOMDocument);
+		aDocShell.QueryInterface(nsCI.nsIWebNavigation);
+		aDocShell.QueryInterface(nsCI.nsIInterfaceRequestor);
+		var doc = aDocShell.getInterface(nsCI.nsIDOMDocument);
 		if ((aDocument && doc == aDocument) || 
 			(aSoughtURI && aSoughtURI.spec == aDocShell.currentURI.spec))
 			return aDocShell;
  
-		var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeNode);
+		var node = aDocShell.QueryInterface(nsCI.nsIDocShellTreeNode);
 		for (var i = 0; i < node.childCount; ++i) {
 			var docShell = node.getChildAt(i);
 			docShell = findChildShell(aDocument, docShell, aSoughtURI);
@@ -548,7 +542,6 @@ function browserInit(refTab)
   
   refBrowser.addEventListener("focus", BrowserWithSNAV , true);
   
-  
   try {
     refBrowser.markupDocumentViewer.textZoom = .90;
   } catch (e) {
@@ -564,7 +557,7 @@ function MiniNavShutdown()
   if(gPrefAdded) {
 	try {
 		var psvc = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefService);
+                         .getService(nsCI.nsIPrefService);
 
 		psvc.savePrefFile(null);
 
@@ -574,7 +567,9 @@ function MiniNavShutdown()
 
 function getBrowser()
 {
-  return document.getElementById("content");
+  if (!gBrowser)
+    gBrowser = document.getElementById("content");
+  return gBrowser;
 }
 
 function getWebNavigation()
@@ -965,7 +960,7 @@ function DoPanelPreferences() {
   Testing the SMS and Call Services 
 */
 function DoTestSendCall(toCall) {
-  var phoneInterface= Components.classes["@mozilla.org/phone/support;1"].createInstance(Components.interfaces.nsIPhoneSupport);
+  var phoneInterface= Components.classes["@mozilla.org/phone/support;1"].createInstance(nsCI.nsIPhoneSupport);
   phoneInterface.makeCall(toCall,"");
 }
 
@@ -992,14 +987,14 @@ function DoFullScreen()
 function DoClipCopy()
 {
   var copytext=getBrowser().selectedBrowser.contentDocument.getSelection().toString();
-  var str = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
+  var str = Components.classes["@mozilla.org/supports-string;1"].createInstance(nsCI.nsISupportsString);
   if (!str) return false;
   str.data = copytext;
-  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(nsCI.nsITransferable);
   if (!trans) return false;
   trans.addDataFlavor("text/unicode");
   trans.setTransferData("text/unicode",str,copytext.length * 2);
-  var clipid = Components.interfaces.nsIClipboard;
+  var clipid = nsCI.nsIClipboard;
   var clip = Components.classes["@mozilla.org/widget/clipboard;1"].getService(clipid);
   if (!clip) return false;
   clip.setData(trans,null,clipid.kGlobalClipboard);
@@ -1010,9 +1005,9 @@ function DoClipCopy()
  */
 function DoClipCheckPaste()
 {
-  var clip = Components.classes["@mozilla.org/widget/clipboard;1"].getService(Components.interfaces.nsIClipboard);
+  var clip = Components.classes["@mozilla.org/widget/clipboard;1"].getService(nsCI.nsIClipboard);
   if (!clip) return false;
-  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(nsCI.nsITransferable);
   if (!trans) return false;
   trans.addDataFlavor("text/unicode");
   clip.getData(trans,clip.kGlobalClipboard);
@@ -1020,7 +1015,7 @@ function DoClipCheckPaste()
   var strLength = new Object();
   var pastetext = null;
   trans.getTransferData("text/unicode",str,strLength);
-  if (str) str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
+  if (str) str = str.value.QueryInterface(nsCI.nsISupportsString);
   if (str) pastetext = str.data.substring(0,strLength.value / 2);
   if(pastetext) {
     return pastetext;
@@ -1129,7 +1124,7 @@ var gRotationDirection = true;
 function BrowserScreenRotate()
 {
   try {
-  var deviceSupport = Components.classes["@mozilla.org/device/support;1"].getService(Components.interfaces.nsIDeviceSupport);
+  var deviceSupport = Components.classes["@mozilla.org/device/support;1"].getService(nsCI.nsIDeviceSupport);
   
   deviceSupport.rotateScreen(gRotationDirection);
   gRotationDirection != gRotationDirection;
@@ -1180,4 +1175,104 @@ function BrowserSetDeck(dMode,menuElement) {
 }
 
 
+// ripped from browser.js, this should be shared in toolkit.
+function nsBrowserAccess()
+{
+}
 
+nsBrowserAccess.prototype =
+{
+  QueryInterface : function(aIID)
+  {
+    if (aIID.equals(nsCI.nsIBrowserDOMWindow) ||
+        aIID.equals(nsCI.nsISupports))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  },
+
+  openURI : function(aURI, aOpener, aWhere, aContext)
+  {
+    var newWindow = null;
+    var referrer = null;
+    var isExternal = (aContext == nsCI.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+
+    if (isExternal && aURI && aURI.schemeIs("chrome")) {
+      dump("use -chrome command-line option to load external chrome urls\n");
+      return null;
+    }
+
+    var loadflags = isExternal ?
+                       nsCI.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
+                       nsCI.nsIWebNavigation.LOAD_FLAGS_NONE;
+    var location;
+    if (aWhere == nsCI.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
+      switch (aContext) {
+        case nsCI.nsIBrowserDOMWindow.OPEN_EXTERNAL :
+          aWhere = gPref.getIntPref("browser.link.open_external");
+          break;
+        default : // OPEN_NEW or an illegal value
+          aWhere = gPref.getIntPref("browser.link.open_newwindow");
+      }
+    }
+    var url = aURI ? aURI.spec : "about:blank";
+    switch(aWhere) {
+      case nsCI.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
+        newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url);
+        break;
+      case nsCI.nsIBrowserDOMWindow.OPEN_NEWTAB :
+        var newTab = gBrowser.addTab("about:blank");
+        if (!gPref.getBoolPref("browser.tabs.loadDivertedInBackground"))
+          gBrowser.selectedTab = newTab;
+        newWindow = gBrowser.getBrowserForTab(newTab).docShell
+                            .QueryInterface(nsCI.nsIInterfaceRequestor)
+                            .getInterface(nsCI.nsIDOMWindow);
+        try {
+          if (aOpener) {
+            location = aOpener.location;
+            referrer =
+                    Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(nsCI.nsIIOService)
+                              .newURI(location, null, null);
+          }
+          newWindow.QueryInterface(nsCI.nsIInterfaceRequestor)
+                   .getInterface(nsCI.nsIWebNavigation)
+                   .loadURI(url, loadflags, referrer, null, null);
+        } catch(e) {
+        }
+        break;
+      default : // OPEN_CURRENTWINDOW or an illegal value
+        try {
+          if (aOpener) {
+            newWindow = aOpener.top;
+            location = aOpener.location;
+            referrer =
+                    Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(nsCI.nsIIOService)
+                              .newURI(location, null, null);
+
+            newWindow.QueryInterface(nsCI.nsIInterfaceRequestor)
+                     .getInterface(nsIWebNavigation)
+                     .loadURI(url, loadflags, referrer, null, null);
+          } else {
+            newWindow = gBrowser.selectedBrowser.docShell
+                                .QueryInterface(nsCI.nsIInterfaceRequestor)
+                                .getInterface(nsCI.nsIDOMWindow);
+            getWebNavigation().loadURI(url, loadflags, null, null, null);
+          }
+          if(!gPref.getBoolPref("browser.tabs.loadDivertedInBackground"))
+            content.focus();
+        } catch(e) {
+        }
+    }
+    return newWindow;
+  },
+
+  isTabContentWindow : function(aWindow)
+  {
+    var browsers = gBrowser.browsers;
+    for (var ctr = 0; ctr < browsers.length; ctr++)
+      if (browsers.item(ctr).contentWindow == aWindow)
+        return true;
+    return false;
+  }
+}

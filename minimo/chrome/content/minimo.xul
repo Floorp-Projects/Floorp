@@ -59,11 +59,13 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   orient="vertical"
+  contenttitlesetting="false"
   title="Minimo"
   titlemodifier="Minimo"
   titlemenuseparator=" - "
   onload="MiniNavStartup()"
-  onunload="MiniNavShutdown()">
+  onunload="MiniNavShutdown()"
+  windowtype="navigator:browser">
 
   <script type="application/x-javascript" src="chrome://minimo/content/minimo.js"/>
   <script type="application/x-javascript" src="chrome://minimo/content/common.js"/>
@@ -169,11 +171,10 @@
   <hbox flex="1" >
     <hbox id="appcontent" flex="100%">
       <hbox id="browser" context="context" flex="1">
-        <tabbrowser contentcontextmenu="contentAreaContextMenu"
-                    context="context" disablehistory="false"
+        <tabbrowser id="content" 
+                    contentcontextmenu="contentAreaContextMenu"
+                    disablehistory="false"
                     accessrule="access_content" 
-                    type="content-primary"
-                    id="content" 
                     src="about:blank"
                     flex="1" 
                     autocompletepopup="PopupAutoComplete"

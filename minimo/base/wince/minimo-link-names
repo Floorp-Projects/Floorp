@@ -29,3 +29,5 @@ nsPhoneSupportModule
 SpatialNavigationModule
 SSRModule
 nsNativeSSLModule
+nsCookieModule
+nsPermissionsModule

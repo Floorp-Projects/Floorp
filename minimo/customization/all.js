@@ -67,8 +67,8 @@ pref("browser.tabs.loadOnNewTab", 0);
 pref("browser.windows.loadOnNewWindow", 1);
 
 pref("browser.link.open_newwindow", 3);
-pref("browser.link.open_external", 3)
-pref("browser.link.open_newwindow.restriction", 2);
+pref("browser.link.open_external", 3);
+pref("browser.link.open_newwindow.restriction", 0);
 
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
@@ -655,6 +655,7 @@ pref("browser.formfill.enable", true);
 
 
 /* These are opts. for slower devices */
+
 pref("content.max.tokenizing.time", 2250000);
 pref("content.notify.interval", 750000);
 pref("content.switch.threshold", 750000);
