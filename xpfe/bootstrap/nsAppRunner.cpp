@@ -1349,7 +1349,7 @@ static nsresult DumpVersion(char *appname)
   nsresult rv = NS_OK;
   long buildID = NS_BUILD_ID;  // 10-digit number
 
-  printf("%s %s, Copyright (c) 2003-2005 mozilla.org", NS_STRINGIFY(MOZ_APP_DISPLAYNAME), NS_STRINGIFY(MOZ_APP_VERSION));
+  printf("%s %s, Copyright (c) 2003-2006 mozilla.org", NS_STRINGIFY(MOZ_APP_DISPLAYNAME), NS_STRINGIFY(MOZ_APP_VERSION));
 
   if(buildID) {
     printf(", build %u\n", (unsigned int)buildID);
