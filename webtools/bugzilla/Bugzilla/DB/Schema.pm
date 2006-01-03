@@ -678,7 +678,7 @@ use constant ABSTRACT_SCHEMA => {
 
     logincookies => {
         FIELDS => [
-            cookie   => {TYPE => 'MEDIUMSERIAL', NOTNULL => 1,
+            cookie   => {TYPE => 'varchar(16)', NOTNULL => 1,
                          PRIMARYKEY => 1},
             userid   => {TYPE => 'INT3', NOTNULL => 1},
             ipaddr   => {TYPE => 'varchar(40)', NOTNULL => 1},

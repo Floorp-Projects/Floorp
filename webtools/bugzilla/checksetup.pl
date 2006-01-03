@@ -4233,6 +4233,12 @@ $dbh->bz_add_column('namedqueries', 'query_type',
 $dbh->bz_alter_column('groups', 'userregexp', 
                       {TYPE => 'TINYTEXT', NOTNULL => 1, DEFAULT => "''"});
 
+# 2005-09-26 - olav@bkor.dhs.org - Bug 119524
+# Convert logincookies into a varchar
+# this allows to store a random token instead of a guessable auto_increment
+$dbh->bz_alter_column('logincookies', 'cookie',
+                      {TYPE => 'varchar(16)', PRIMARYKEY => 1, NOTNULL => 1});
+
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

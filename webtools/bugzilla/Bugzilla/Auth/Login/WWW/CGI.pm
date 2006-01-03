@@ -35,6 +35,7 @@ use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::Util;
+use Bugzilla::Token;
 
 sub login {
     my ($class, $type) = @_;
@@ -70,11 +71,12 @@ sub login {
         # subsequent login
         trick_taint($ipaddr);
 
-        $dbh->do("INSERT INTO logincookies (userid, ipaddr, lastused)
-                 VALUES (?, ?, NOW())",
+        my $logincookie = Bugzilla::Token::GenerateUniqueToken('logincookies', 'cookie');
+
+        $dbh->do("INSERT INTO logincookies (cookie, userid, ipaddr, lastused)
+                 VALUES (?, ?, ?, NOW())",
                  undef,
-                 $userid, $ipaddr);
-        my $logincookie = $dbh->bz_last_key('logincookies', 'cookie');
+                 $logincookie, $userid, $ipaddr);
 
         # Remember cookie only if admin has told so
         # or admin didn't forbid it and user told to remember.

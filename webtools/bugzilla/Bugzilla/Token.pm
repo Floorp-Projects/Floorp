@@ -155,12 +155,16 @@ sub GenerateUniqueToken {
     # the token in the "tokens" table.  Gives up if it can't come up
     # with a token after about one hundred tries.
 
+    my ($table, $column) = @_;
+    
     my $token;
     my $duplicate = 1;
     my $tries = 0;
+    $table ||= "tokens";
+    $column ||= "token";
 
     my $dbh = Bugzilla->dbh;
-    my $sth = $dbh->prepare("SELECT userid FROM tokens WHERE token = ?");
+    my $sth = $dbh->prepare("SELECT userid FROM $table WHERE $column = ?");
 
     while ($duplicate) {
         ++$tries;
