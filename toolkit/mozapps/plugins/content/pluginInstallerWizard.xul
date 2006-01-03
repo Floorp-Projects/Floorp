@@ -98,8 +98,10 @@
 
     <radiogroup id="licenseRadioGroup">
       <radio id="licenseRadioGroup1" disabled="true"
+             oncommand="gPluginInstaller.licenseRadioGroupChange(true)"
              label="&pluginWizard.licensePage.accept.label;"/>
       <radio id="licenseRadioGroup2" disabled="true" selected="true"
+             oncommand="gPluginInstaller.licenseRadioGroupChange(false)"
              label="&pluginWizard.licensePage.deny.label;"/>
     </radiogroup>
   </wizardpage>
