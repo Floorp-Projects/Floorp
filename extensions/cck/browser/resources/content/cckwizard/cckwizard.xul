@@ -45,8 +45,9 @@
 <wizard id="example-window" title="&cckWizard.title;"
   height="480"
   width="640"
-  onwizardcancel="alert('&cckWizard.oncancel;');saveconfig();"
+  onwizardcancel="CloseCCKWizard();"
   onwizardfinish="CreateCCK();"
+  onload="OpenCCKWizard();"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://cckwizard/content/cckwizard.js"/>
@@ -59,7 +60,7 @@
     </groupbox>
  </wizardpage>    
 
- <wizardpage label="&configurePage.label;" onpageshow="ShowMain();">
+ <wizardpage label="&configurePage.label;" onpageshow="ShowMain();" onpageadvanced="return ValidateFile('zipLocation');">
    <groupbox>
      <caption label="&selectConfig.label;"/>
      <description>&selectConfig.description;</description>
@@ -76,6 +77,15 @@
        <button label="&deleteConfig.label;" id="deleteconfig" oncommand="DeleteConfig();"/>
      </hbox>
    </groupbox>
+   <vbox>
+   <checkbox id="saveOnExit" label="&saveOnExit.label;" oncommand="SetSaveOnExitPref();"/>
+    <description>&zipLocation.label;</description>
+
+         <hbox align="center">
+           <textbox flex="1" id="zipLocation"/>
+           <button label="&chooseFile.label;" oncommand="choosefile('zipLocation');"/>
+         </hbox>
+  </vbox>
  </wizardpage>
 
  <wizardpage label="&customizeExt.label;" description="&customizeExt.description;"
@@ -646,7 +656,7 @@
   </wizardpage>
   
   <stringbundleset id="stringbundleset">
-    <stringbundle id="bundle_cckwizard" src="chrome://cckwizard/content/cckwizard.properties"/>
+    <stringbundle id="bundle_cckwizard" src="chrome://cckwizard/locale/cckwizard.properties"/>
   </stringbundleset>
 
 </wizard>

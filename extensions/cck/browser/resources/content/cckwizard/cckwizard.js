@@ -137,19 +137,34 @@ function DeleteConfig()
 {
   var bundle = document.getElementById("bundle_cckwizard");
 
-  var rv = gPromptService.confirmEx(window, "WizardMachine", bundle.getString("deleteConfirm"),
-                                    gPromptService.BUTTON_TITLE_YES * gPromptService.BUTTON_POS_0 +
-                                    gPromptService.BUTTON_TITLE_NO * gPromptService.BUTTON_POS_1,
-                                    null, null, null, null, {});
-  if (rv == false) {
+  var button = gPromptService.confirmEx(window, "WizardMachine", bundle.getString("deleteConfirm"),
+                                        gPromptService.BUTTON_TITLE_YES * gPromptService.BUTTON_POS_0 +
+                                        gPromptService.BUTTON_TITLE_NO * gPromptService.BUTTON_POS_1,
+                                        null, null, null, null, {});
+  if (button == 0) {
     gPrefBranch.deleteBranch("cck.config."+currentconfigname);
     updateconfiglist();
   }
 }
 
+function SetSaveOnExitPref()
+{
+    gPrefBranch.setBoolPref("cck.save_on_exit", document.getElementById("saveOnExit").checked);
+}
 
+function OpenCCKWizard()
+{
+   try {
+     document.getElementById("saveOnExit").checked = gPrefBranch.getBoolPref("cck.save_on_exit");
+   } catch (ex) {
+   }
+   try {
+     document.getElementById("zipLocation").value = gPrefBranch.getCharPref("cck.path_to_zip");
+   } catch (ex) {
+   }
+   
 
-
+}
 
 function ShowMain()
 {
@@ -224,6 +239,34 @@ function saveconfig()
   }
 
 }
+
+function CloseCCKWizard()
+{
+  var saveOnExit;
+  try {
+    saveOnExit = gPrefBranch.getBoolPref("cck.save_on_exit");
+ } catch (ex) {
+    saveOnExit = false;
+ }
+
+  var button;
+  if (!saveOnExit) {
+    var bundle = document.getElementById("bundle_cckwizard");
+
+    var button = gPromptService.confirmEx(window, "WizardMachine", bundle.getString("cancelConfirm"),
+                                          gPromptService.BUTTON_TITLE_YES * gPromptService.BUTTON_POS_0 +
+                                          gPromptService.BUTTON_TITLE_NO * gPromptService.BUTTON_POS_1,
+                                          null, null, null, null, {});
+  } else {
+    button = 0;
+  }
+  
+  if (button == 0) {
+    saveconfig();
+  }
+  gPrefBranch.setCharPref("cck.path_to_zip", document.getElementById("zipLocation").value);
+}
+
 
 function OnConfigLoad()
 {
@@ -724,6 +767,11 @@ function CCKZip(zipfile, location)
     }
     return;
   }
+  
+  var zipLocation = document.getElementById("zipLocation").value;
+  if (zipLocation.length == 0) {
+    zipLocation = "zip";
+  }
 
   platform = navigator.platform;
   var file = location.clone();
@@ -739,9 +787,9 @@ function CCKZip(zipfile, location)
   line = "cd \"" + location.path + "\"\n";
   fos.write(line, line.length);
   if (navigator.platform == "Win32")
-    line = "zip -r \"" + location.path + "\\" + zipfile + "\"";
+    line = zipLocation + " -r \"" + location.path + "\\" + zipfile + "\"";
   else
-    line = "zip -r \"" + location.path + "/" + zipfile + "\"";  
+    line = zipLocation + " -r \"" + location.path + "/" + zipfile + "\"";  
   for (var i=2; i < arguments.length; i++) {
     line += " " + arguments[i];
   }
@@ -769,7 +817,7 @@ function CCKZip(zipfile, location)
   var args = [file.path];
   
   process.run(true, args, args.length);
-  file.remove(false);
+//  file.remove(false);
 }
 
 function CCKWriteXULOverlay(destdir)
@@ -1361,8 +1409,10 @@ function CCKWriteConfigFile(destdir)
         (elements[i].nodeName == "checkbox") ||
         (elements[i].id == "RootKey1") ||
         (elements[i].id == "Type1")) {
-      var line = elements[i].getAttribute("id") + "=" + elements[i].value + "\n";
-      fos.write(line, line.length);
+      if ((elements[i].id != "saveOnExit") && (elements[i].id != "zipLocation")) {
+        var line = elements[i].getAttribute("id") + "=" + elements[i].value + "\n";
+        fos.write(line, line.length);
+      }
     } else if (elements[i].id == "prefList") {
       listbox = document.getElementById('prefList');    
       for (var j=0; j < listbox.getRowCount(); j++) {
