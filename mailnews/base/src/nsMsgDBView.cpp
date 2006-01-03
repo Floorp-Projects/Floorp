@@ -4353,12 +4353,6 @@ nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
   {
     // if unreadonly, level is 0 because we must be the only msg in the thread.
     PRInt32 levelToAdd = 0;
-#if 0 
-    if (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)) 
-    {
-      levelToAdd = FindLevelInThread(msgHdr, insertIndex);
-    }
-#endif
     
     if (m_sortOrder == nsMsgViewSortOrder::ascending)
     {
@@ -4387,12 +4381,6 @@ nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
     m_keys.InsertAt(insertIndex, msgKey);
     m_flags.InsertAt(insertIndex, flags);
     PRInt32 level = 0; 
-#if 0 
-    if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
-    {
-      level = FindLevelInThread(msgHdr, insertIndex);
-    }
-#endif
     m_levels.InsertAt(insertIndex, level);
     
     // the call to NoteChange() has to happen after we add the key
@@ -4506,11 +4494,9 @@ nsresult nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex st
       msgHdr->GetFlags(&msgFlags);
       AdjustReadFlag(msgHdr, &msgFlags);
       m_keys.InsertAt(viewIndex, msgKey);
-      // ### TODO - how about hasChildren flag?
       m_flags.InsertAt(viewIndex, msgFlags & ~MSG_VIEW_FLAGS);
-      // ### TODO this is going to be tricky - might use enumerators
-      PRInt32 level = FindLevelInThread(msgHdr, startOfThreadViewIndex, viewIndex);
-      m_levels.InsertAt(viewIndex, level); 
+      // here, we're either flat, or we're grouped - in either case, level is 1
+      m_levels.InsertAt(viewIndex, 1);
       // turn off thread or elided bit if they got turned on (maybe from new only view?)
       if (i > 0)	
         msgHdr->AndFlags(~(MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED), &newFlags);
