@@ -55,6 +55,9 @@ function nsPluginInstallerWizard(){
   // array holding pids of plugins that require a license
   this.mPluginLicenseArray = new Array();
 
+  // how many plugins are to be installed
+  this.pluginsToInstallNum = 0;
+
   this.mTab = null;
   this.mSuccessfullPluginInstallation = 0;
 
@@ -163,14 +166,14 @@ nsPluginInstallerWizard.prototype.showPluginList = function (){
 nsPluginInstallerWizard.prototype.toggleInstallPlugin = function (aPid, aCheckbox) {
   this.mPluginInfoArray[aPid].toBeInstalled = aCheckbox.checked;
 
-  // if no plugins are checked, don't allow to advance  
-  var pluginsToInstallNum = 0;
+  // if no plugins are checked, don't allow to advance
+  this.pluginsToInstallNum = 0;
   for (pluginInfoItem in this.mPluginInfoArray){
     if (this.mPluginInfoArray[pluginInfoItem].toBeInstalled)
-      pluginsToInstallNum++;
+      this.pluginsToInstallNum++;
   }
 
-  if (pluginsToInstallNum > 0)
+  if (this.pluginsToInstallNum > 0)
     this.canAdvance(true);
   else
     this.canAdvance(false);
@@ -218,7 +221,11 @@ nsPluginInstallerWizard.prototype.showLicenses = function (){
 }
 
 nsPluginInstallerWizard.prototype.enableNext = function (){
-  gPluginInstaller.canAdvance(true);
+  // if only one plugin exists, don't enable the next button until
+  // the license is accepted
+  if (gPluginInstaller.pluginsToInstallNum > 1)
+    gPluginInstaller.canAdvance(true);
+
   document.getElementById("licenseRadioGroup1").disabled = false;
   document.getElementById("licenseRadioGroup2").disabled = false;
 }
@@ -304,6 +311,12 @@ nsPluginInstallerWizard.prototype.showPreviousLicense = function (){
 nsPluginInstallerWizard.prototype.storeLicenseRadioGroup = function (){
   var pluginInfo = this.mPluginInfoArray[this.mPluginLicenseArray[this.licenseAcceptCounter]];
   pluginInfo.licenseAccepted = !document.getElementById("licenseRadioGroup").selectedIndex;
+}
+
+nsPluginInstallerWizard.prototype.licenseRadioGroupChange = function(aAccepted) {
+  // only if one plugin is to be installed should selection change the next button
+  if (this.pluginsToInstallNum == 1)
+    this.canAdvance(aAccepted);
 }
 
 nsPluginInstallerWizard.prototype.advancePage = function (aPageId, aCanAdvance, aCanRewind, aCanCancel){
@@ -503,14 +516,14 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
     var pluginRequest = this.mPluginRequestArray[pluginInfoItem];
 
     // if there is a pluginspage, show UI
-    if (pluginRequest && pluginRequest.pluginsPage) {
+    if (pluginRequest) {
       this.addPluginResultRow(
           "",
-          this.getString("pluginInstallation.unknownPlugin"),
-          pluginInfoItem,
+          this.getFormattedString("pluginInstallation.unknownPlugin", [pluginInfoItem]),
           null,
           null,
-          this.mPluginRequestArray[pluginInfoItem].pluginsPage);
+          null,
+          pluginRequest.pluginsPage);
     }
 
     notInstalledList += "&mimetype=" + pluginInfoItem;
