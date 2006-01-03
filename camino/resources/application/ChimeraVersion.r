@@ -60,7 +60,7 @@
 
 #define     VERSION_STRING          "1.0+"
 
-#define     COPYRIGHT_STRING        "© 1998-2005 Contributors"
+#define     COPYRIGHT_STRING        "© 1998-2006 Contributors"
 #define     GETINFO_VERSION         VERSION_STRING ", " COPYRIGHT_STRING
 #define     PACKAGE_NAME            "Camino " VERSION_STRING
 

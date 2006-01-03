@@ -74,7 +74,7 @@
 	<key>CFBundleExecutable</key>
 	<string>firefox-bin</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Firefox APP_VERSION, © 1998-2005 Contributors</string>
+	<string>Firefox APP_VERSION, © 1998-2006 Contributors</string>
 	<key>CFBundleIconFile</key>
 	<string>firefox</string>
 	<key>CFBundleIdentifier</key>
