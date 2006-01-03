@@ -2003,11 +2003,6 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
 {
     JSFunction *fun;
 
-    /* Allocate a function struct. */
-    fun = (JSFunction *) js_NewGCThing(cx, GCX_PRIVATE, sizeof(JSFunction));
-    if (!fun)
-        return NULL;
-
     /* If funobj is null, allocate an object for it. */
     if (funobj) {
         OBJ_SET_PARENT(cx, funobj, parent);
@@ -2016,6 +2011,14 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         if (!funobj)
             return NULL;
     }
+
+    /*
+     * Allocate fun after allocating funobj so slot allocation in js_NewObject
+     * does not wipe out fun from cx->newborn[GCX_PRIVATE].
+     */
+    fun = (JSFunction *) js_NewGCThing(cx, GCX_PRIVATE, sizeof(JSFunction));
+    if (!fun)
+        return NULL;
 
     /* Initialize all function members. */
     fun->nrefs = 0;
