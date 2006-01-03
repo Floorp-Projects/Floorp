@@ -212,7 +212,7 @@
 
       <property name="minResultsForPopup"
                 onset="this.setAttribute('minResultsForPopup', val); return val;"
-                onget="var t = parseInt(this.getAttribute('minResultsForPopup')); return t ? t : 0;"/>
+                onget="var t = this.getAttribute('minResultsForPopup'); return t ? parseInt(t) : 1;"/>
       
       <!-- state which indicates the current action being performed by the user.
            Possible values are : none, typing, scrolling -->
