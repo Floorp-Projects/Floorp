@@ -445,16 +445,12 @@ FeedParser.prototype =
       {
         var node = textElement.childNodes.item(j);
         if (node.nodeType == node.CDATA_SECTION_NODE)
-          content += node.data;
+          content += this.xmlEscape(node.data);
         else
           content += serializer.serializeToString(node);
       }
       if (textType == "html") 
-      {
-        content = content.replace(/&lt;/g, "<");
-        content = content.replace(/&gt;/g, ">");
-        content = content.replace(/&amp;/g, "&");
-      }
+        content = this.xmlUnescape(content);
     }
 
     // other parts of the code depend on this being null
@@ -487,5 +483,21 @@ FeedParser.prototype =
   stripTags: function(someHTML) 
   {
     return someHTML.replace(/<[^>]+>/g,"");
-  }
+  },
+
+  xmlUnescape: function(s)
+  {
+    s = s.replace(/&lt;/g, "<");
+    s = s.replace(/&gt;/g, ">");
+    s = s.replace(/&amp;/g, "&");
+    return s;
+  },
+
+  xmlEscape: function(s)
+  {
+    s = s.replace(/&/g, "&amp;");
+    s = s.replace(/>/g, "&gt;");
+    s = s.replace(/</g, "&lt;");
+    return s;
+   }
 };
