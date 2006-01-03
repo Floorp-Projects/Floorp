@@ -621,8 +621,7 @@ function ConvertSortTypeToColumnID(sortKey)
       columnID = "threadCol";
       break;
     case nsMsgViewSortType.byId:
-      // there is no orderReceivedCol, so return null
-      columnID = null;
+      columnID = "idCol";
       break;
     case nsMsgViewSortType.byJunkStatus:
       columnID = "junkStatusCol";
