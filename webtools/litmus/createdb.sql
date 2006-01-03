@@ -1,6 +1,6 @@
 -- MySQL dump 10.9
 --
--- Host: localhost    Database: litmus_staging
+-- Host: localhost    Database: litmus
 -- ------------------------------------------------------
 -- Server version	4.1.10a-standard
 
@@ -11,6 +11,7 @@
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+
 
 --
 -- Table structure for table `branches`
@@ -49,6 +50,18 @@ CREATE TABLE `exit_status_lookup` (
   `exit_status_id` tinyint(4) NOT NULL auto_increment,
   `name` varchar(64) collate latin1_bin NOT NULL default '',
   PRIMARY KEY  (`exit_status_id`),
+  KEY `name` (`name`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
+
+--
+-- Table structure for table `locale_lookup`
+--
+
+DROP TABLE IF EXISTS `locale_lookup`;
+CREATE TABLE `locale_lookup` (
+  `abbrev` varchar(16) collate latin1_bin NOT NULL default '',
+  `name` varchar(64) collate latin1_bin NOT NULL default '',
+  PRIMARY KEY  (`abbrev`),
   KEY `name` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
 
@@ -107,9 +120,11 @@ CREATE TABLE `products` (
   `product_id` tinyint(4) NOT NULL auto_increment,
   `name` varchar(64) collate latin1_bin NOT NULL default '',
   `iconpath` varchar(255) collate latin1_bin default NULL,
+  `enabled` enum('Yes','No') collate latin1_bin NOT NULL default 'Yes',
   PRIMARY KEY  (`product_id`),
-  KEY `name` (`name`),
-  KEY `iconpath` (`iconpath`)
+  UNIQUE KEY `name` (`name`),
+  KEY `iconpath` (`iconpath`),
+  KEY `enabled` (`enabled`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
 
 --
@@ -209,14 +224,14 @@ CREATE TABLE `test_result_logs` (
   `test_result_id` int(11) NOT NULL default '0',
   `last_updated` datetime NOT NULL default '0000-00-00 00:00:00',
   `submission_time` datetime NOT NULL default '0000-00-00 00:00:00',
+  `log_path` varchar(255) collate latin1_bin default NULL,
   `log_type_id` tinyint(4) NOT NULL default '1',
-  `log_text` longtext collate latin1_bin,
   PRIMARY KEY  (`log_id`),
   KEY `test_result_id` (`test_result_id`),
   KEY `last_updated` (`last_updated`),
   KEY `submission_time` (`submission_time`),
-  KEY `log_type_id` (`log_type_id`),
-  KEY `log_text` (`log_text`(255))
+  KEY `log_path` (`log_path`),
+  KEY `log_type_id` (`log_type_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
 
 --
@@ -227,9 +242,11 @@ DROP TABLE IF EXISTS `test_result_status_lookup`;
 CREATE TABLE `test_result_status_lookup` (
   `result_status_id` smallint(6) NOT NULL auto_increment,
   `name` varchar(64) collate latin1_bin NOT NULL default '',
+  `style` varchar(255) collate latin1_bin NOT NULL default '',
   `class_name` varchar(16) collate latin1_bin default '',
   PRIMARY KEY  (`result_status_id`),
   KEY `name` (`name`),
+  KEY `style` (`style`),
   KEY `class_name` (`class_name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
 
@@ -257,6 +274,7 @@ CREATE TABLE `test_results` (
   `talkback_id` int(11) unsigned default '0',
   `validity_id` tinyint(4) NOT NULL default '1',
   `vetting_status_id` tinyint(4) NOT NULL default '1',
+  `locale_abbrev` varchar(16) collate latin1_bin NOT NULL default 'en-US',
   PRIMARY KEY  (`testresult_id`),
   KEY `test_id` (`test_id`),
   KEY `last_updated` (`last_updated`),
@@ -273,7 +291,8 @@ CREATE TABLE `test_results` (
   KEY `duration_ms` (`duration_ms`),
   KEY `talkback_id` (`talkback_id`),
   KEY `validity_id` (`validity_id`),
-  KEY `vetting_status_id` (`vetting_status_id`)
+  KEY `vetting_status_id` (`vetting_status_id`),
+  KEY `locale_abbrev` (`locale_abbrev`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
 
 --
