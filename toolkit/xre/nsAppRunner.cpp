@@ -2114,10 +2114,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
   else if (versionOK) {
     if (ComponentsListChanged(profD)) {
-      // Remove compreg.dat and xpti.dat, forcing component re-registration,
-      // with the new list of additional components directories specified
-      // in "components.ini" which we have just discovered changed since the
-      // last time the application was run. 
+      // Remove compreg.dat and xpti.dat, forcing component re-registration.
+      // The new list of additional components directories is derived from
+      // information in "extensions.ini".
       RemoveComponentRegistries(profD, profLD, PR_FALSE);
     }
     // Nothing need be done for the normal startup case.
@@ -2129,8 +2128,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     RemoveComponentRegistries(profD, profLD, PR_TRUE);
 
     // Tell the Extension Manager it should check for incompatible 
-    // Extensions and re-write the Components manifest ("components.ini")
-    // with a list of XPCOM components for compatible extensions
+    // Extensions and re-write the "extensions.ini" file with a list of 
+    // directories for compatible extensions
     upgraded = PR_TRUE;
 
     // Write out version
