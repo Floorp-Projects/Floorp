@@ -509,7 +509,7 @@
 #ifdef XP_MACOSX
                       hidden="true"
 #endif
-                      oncommand="window.openDialog('chrome://messenger/content/aboutDialog.xul', 'About', 'modal,centerscreen,chrome,resizable=no');"/>
+                      oncommand="openAboutDialog();"/>
           </menupopup>
         </menu>
     </menubar>
