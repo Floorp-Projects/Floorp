@@ -38,16 +38,15 @@
 #include "nsInputStreamPump.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamTransportService.h"
-#include "nsIEventQueueService.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISeekableStream.h"
 #include "nsITransport.h"
 #include "nsNetUtil.h"
+#include "nsEventQueueUtils.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #if defined(PR_LOGGING)
 //
@@ -292,10 +291,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 
     // grab event queue (we must do this here by contract, since all notifications
     // must go to the thread which called AsyncRead)
-    nsCOMPtr<nsIEventQueueService> eqs = do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mEventQ));
+    rv = NS_GetCurrentEventQ(getter_AddRefs(mEventQ));
     if (NS_FAILED(rv)) return rv;
 
     rv = EnsureWaiting();
@@ -425,10 +421,12 @@ nsInputStreamPump::OnStateTransfer()
 
             // in most cases this QI will succeed (mAsyncStream is almost always
             // a nsPipeInputStream, which implements nsISeekableStream::Tell).
-            PRInt64 offsetBefore = 0;
+            PRInt64 offsetBefore;
             nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mAsyncStream);
-            if (seekable)
-                seekable->Tell(&offsetBefore);
+            if (seekable && NS_FAILED(seekable->Tell(&offsetBefore))) {
+                NS_NOTREACHED("Tell failed on readable stream");
+                offsetBefore = 0;
+            }
 
             // report the current stream offset to our listener... if we've
             // streamed more than PR_UINT32_MAX, then avoid overflowing the
