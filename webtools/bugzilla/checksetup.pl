@@ -328,7 +328,8 @@ my $modules = [
         version => '3.01'
     },
     {
-        name => 'MIME::Parser',
+        # MIME::Parser is packaged as MIME::Tools on ActiveState Perl
+        name => $^O =~ /MSWin32/i ? 'MIME::Tools' : 'MIME::Parser',
         version => '5.406'
     },
     {
@@ -352,7 +353,7 @@ my %ppm_modules = (
     'GD::Text::Align'   => 'GDTextUtil',
     'Mail::Mailer'      => 'MailTools',
     'Mail::Base64'      => 'MIME-Base64',
-    'MIME::Parser'      => 'MIME-Tools',
+    'MIME::Tools'       => 'MIME-Tools',
 );
 
 sub install_command {
