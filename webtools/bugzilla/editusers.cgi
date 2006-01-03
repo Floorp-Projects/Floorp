@@ -100,9 +100,15 @@ if ($action eq 'search') {
     } else {
         $visibleGroups = 1;
         if ($grouprestrict eq '1') {
-            $query .= ', user_group_map AS ugm';
+            $query .= qq{, user_group_map AS ugm
+                         WHERE ugm.user_id = profiles.userid
+                           AND ugm.isbless = 0
+                        };
+            $nextCondition = 'AND';
         }
-        $nextCondition = 'WHERE';
+        else {
+            $nextCondition = 'WHERE';
+        }
     }
 
     if (!$visibleGroups) {
@@ -137,9 +143,7 @@ if ($action eq 'search') {
         if ($grouprestrict eq '1') {
             my $grouplist = join(',',
                 @{Bugzilla::User->flatten_group_membership($group->id)});
-            $query .= " $nextCondition profiles.userid = ugm.user_id " .
-                      "AND ugm.group_id IN($grouplist) " .
-                      "AND ugm.isbless = 0";
+            $query .= " $nextCondition ugm.group_id IN($grouplist) ";
         }
         $query .= ' ORDER BY profiles.login_name';
 
