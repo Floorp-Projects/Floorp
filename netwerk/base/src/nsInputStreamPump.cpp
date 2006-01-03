@@ -45,7 +45,6 @@
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
-#include "nsInt64.h"
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -257,10 +256,10 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         // stream case, the stream transport service will take care of seeking
         // for us.
         // 
-        if (mAsyncStream && (mStreamOffset != nsUint64(LL_MaxUint()))) {
+        if (mAsyncStream && (mStreamOffset != LL_MAXUINT)) {
             nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mStream);
             if (seekable)
-                seekable->Seek(nsISeekableStream::NS_SEEK_SET, PRInt64(PRUint64(mStreamOffset)));
+                seekable->Seek(nsISeekableStream::NS_SEEK_SET, mStreamOffset);
         }
     }
 
@@ -271,9 +270,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsITransport> transport;
-        // Note: The casts to PRUint64 are needed to cast to PRInt64, as
-        // nsUint64 can't directly be cast to PRInt64
-        rv = sts->CreateInputTransport(mStream, PRUint64(mStreamOffset), PRUint64(mStreamLength),
+        rv = sts->CreateInputTransport(mStream, mStreamOffset, mStreamLength,
                                        mCloseWhenDone, getter_AddRefs(transport));
         if (NS_FAILED(rv)) return rv;
 
@@ -409,8 +406,8 @@ nsInputStreamPump::OnStateTransfer()
     }
     else if (NS_SUCCEEDED(rv) && avail) {
         // figure out how much data to report (XXX detect overflow??)
-        if (nsUint64(avail) + mStreamOffset > mStreamLength)
-            avail = mStreamLength - mStreamOffset;
+        if (PRUint64(avail) + mStreamOffset > mStreamLength)
+            avail = PRUint32(mStreamLength - mStreamOffset);
 
         if (avail) {
             // we used to limit avail to 16K - we were afraid some ODA handlers
@@ -428,26 +425,36 @@ nsInputStreamPump::OnStateTransfer()
 
             // in most cases this QI will succeed (mAsyncStream is almost always
             // a nsPipeInputStream, which implements nsISeekableStream::Tell).
-            PRInt64 offsetBefore;
+            PRInt64 offsetBefore = 0;
             nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mAsyncStream);
             if (seekable)
                 seekable->Tell(&offsetBefore);
 
-            LOG(("  calling OnDataAvailable [offset=%lld count=%u]\n", PRUint64(mStreamOffset), avail));
-            rv = mListener->OnDataAvailable(this, mListenerContext, mAsyncStream, mStreamOffset, avail);
+            // report the current stream offset to our listener... if we've
+            // streamed more than PR_UINT32_MAX, then avoid overflowing the
+            // stream offset.  it's the best we can do without a 64-bit stream
+            // listener API.
+            PRUint32 odaOffset =
+                mStreamOffset > PR_UINT32_MAX ?
+                PR_UINT32_MAX : PRUint32(mStreamOffset);
+
+            LOG(("  calling OnDataAvailable [offset=%lld(%u) count=%u]\n",
+                mStreamOffset, odaOffset, avail));
+
+            rv = mListener->OnDataAvailable(this, mListenerContext, mAsyncStream,
+                                            odaOffset, avail);
 
             // don't enter this code if ODA failed or called Cancel
             if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(mStatus)) {
                 // test to see if this ODA failed to consume data
                 if (seekable) {
+                    // NOTE: if Tell fails, which can happen if the stream is
+                    // now closed, then we assume that everything was read.
                     PRInt64 offsetAfter;
-                    seekable->Tell(&offsetAfter);
-                    nsUint64 offsetBefore64 = PRUint64(offsetBefore);
-                    nsUint64 offsetAfter64 = PRUint64(offsetAfter);
-                    if (offsetAfter64 > offsetBefore64) {
-                        nsUint64 offsetDelta = offsetAfter64 - offsetBefore64;
-                        mStreamOffset += offsetDelta;
-                    }
+                    if (NS_FAILED(seekable->Tell(&offsetAfter)))
+                        offsetAfter = offsetBefore + avail;
+                    if (offsetAfter > offsetBefore)
+                        mStreamOffset += (offsetAfter - offsetBefore);
                     else if (mSuspendCount == 0) {
                         //
                         // possible infinite loop if we continue pumping data!
