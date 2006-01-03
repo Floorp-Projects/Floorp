@@ -254,8 +254,8 @@
 #endif
 
 #if 0
-// This will become #ifdef MOZ_ENABLE_LIBXUL when various in-tree code is
-// fixed up. See bug 305949
+/* This will become #ifdef MOZ_ENABLE_LIBXUL when various in-tree code is
+   fixed up. See bug 305949 */
 #define NS_COM
 #elif defined(_IMPL_NS_COM)
 #define NS_COM NS_EXPORT
