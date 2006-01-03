@@ -94,6 +94,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIMIMEHeaderParam.h"
+#include "nsIExternalProtocolService.h"
+#include "nsEscape.h"
 
 // namespace literals
 #define kXMLNSNameSpaceURI \
@@ -1829,6 +1831,93 @@ nsXFormsSubmissionElement::SendData(const nsCString &uriSpec,
   NS_ENSURE_STATE(uri);
 
   nsresult rv;
+
+  // handle mailto: submission
+  if (!mIsReplaceInstance) {
+    PRBool isMailto;
+    rv = uri->SchemeIs("mailto", &isMailto);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (isMailto) {
+      nsCOMPtr<nsIExternalProtocolService> extProtService =
+        do_GetService("@mozilla.org/uriloader/external-protocol-service;1");
+      NS_ENSURE_STATE(extProtService);
+
+      PRBool hasExposedMailClient;
+      rv = extProtService->ExternalProtocolHandlerExists("mailto",
+                                                         &hasExposedMailClient);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (hasExposedMailClient) {
+        nsCAutoString mailtoUrl(uriSpec);
+
+        // A mailto url looks like this: mailto:foo@bar.com, which can be followed
+        // by parameters (subject and body).  The first parameter has to have an
+        // "?" before it, and an additional one needs to have an "&".
+        // So if "?" already exists in the string, we use "&".
+
+        if (mailtoUrl.Find("&body=") != kNotFound ||
+            mailtoUrl.Find("?body=") != kNotFound) {
+          // body parameter already exists, so report a warning
+          nsXFormsUtils::ReportError(NS_LITERAL_STRING("warnMailtoBodyParam"),
+                                     mElement, nsIScriptError::warningFlag);
+        }
+
+        if (mailtoUrl.FindChar('?') != kNotFound)
+          mailtoUrl.AppendLiteral("&body=");
+        else
+          mailtoUrl.AppendLiteral("?body=");
+
+        // get the stream contents
+        PRUint32 len, read, numReadIn = 1;
+        rv = stream->Available(&len);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        char *buf = new char[len+1];
+        if (buf == NULL) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        memset(buf, 0, len+1);
+
+        // Read returns 0 if eos
+        while (numReadIn != 0) {
+          numReadIn = stream->Read(buf, len, &read);
+          NS_EscapeURL(buf, esc_AlwaysCopy, read, mailtoUrl);
+        }
+
+        delete [] buf;
+
+        // create an nsIUri out of the string
+        nsCOMPtr<nsIURI> mailUri;
+        ios->NewURI(mailtoUrl,
+                    nsnull,
+                    nsnull,
+                    getter_AddRefs(mailUri));
+        NS_ENSURE_STATE(mailUri);
+
+        // let the OS handle the uri
+        rv = extProtService->LoadURI(mailUri, nsnull);
+
+        if (NS_FAILED(rv)) {
+          // opening an mail client failed.
+          nsXFormsUtils::ReportError(NS_LITERAL_STRING("submitMailtoFailed"),
+                                     mElement);
+          EndSubmit(PR_FALSE);
+        } else {
+          // the protocol service succeeded
+          EndSubmit(PR_TRUE);
+        }
+
+      } else {
+        // no system mail client found
+        nsXFormsUtils::ReportError(NS_LITERAL_STRING("submitMailtoInit"),
+                                   mElement);
+        EndSubmit(PR_FALSE);
+      }
+
+      return NS_OK;
+    }
+  }
 
   if (!CheckSameOrigin(doc->GetDocumentURI(), uri)) {
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("submitSendOrigin"),
