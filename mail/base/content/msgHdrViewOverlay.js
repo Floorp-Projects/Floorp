@@ -1486,8 +1486,8 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       openpopup.appendChild(menuseparator);
 
       menuitementry = document.createElement('menuitem');
-      menuitementry.attachment = attachment;
-      menuitementry.setAttribute('oncommand', 'this.attachment.detachAttachment()'); 
+      menuitementry.attachment = cloneAttachment(attachment);
+      menuitementry.setAttribute('oncommand', 'detachAttachment(this.attachment, true)'); 
       menuitementry.setAttribute('label', gDetachLabel); 
       menuitementry.setAttribute('accesskey', gDetachLabelAccesskey); 
       if (attachment.contentType == 'text/x-moz-deleted' || !canDetach)
@@ -1495,8 +1495,8 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       menuitementry = openpopup.appendChild(menuitementry);
 
       menuitementry = document.createElement('menuitem');
-      menuitementry.attachment = attachment;
-      menuitementry.setAttribute('oncommand', 'this.attachment.deleteAttachment()'); 
+      menuitementry.attachment = cloneAttachment(attachment);
+      menuitementry.setAttribute('oncommand', 'detachAttachment(this.attachment, false)'); 
       menuitementry.setAttribute('label', gDeleteLabel); 
       menuitementry.setAttribute('accesskey', gDeleteLabelAccesskey); 
       if (attachment.contentType == 'text/x-moz-deleted' || !canDetach)
