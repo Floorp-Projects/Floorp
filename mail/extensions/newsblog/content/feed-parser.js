@@ -167,6 +167,8 @@ FeedParser.prototype =
       }
 
       var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
+      if(content)
+        item.content = content;
 
       // Handle an enclosure (if present)
       var enclosureNode = itemNode.getElementsByTagNameNS(nsURI,"enclosure")[0];
@@ -212,11 +214,6 @@ FeedParser.prototype =
       items = ds.GetSources(RDF_TYPE, RSS_ITEM, true);
 
     var index = 0; 
-
-    var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
-                   .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-
     while (items.hasMoreElements()) 
     {
       var itemResource = items.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
