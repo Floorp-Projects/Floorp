@@ -113,6 +113,11 @@ nsIPrefBranch* nsGlobalHistory::gPrefBranch = nsnull;
 
 #define FIND_BY_AGEINDAYS_PREFIX "find:datasource=history&match=AgeInDays&method="
 
+// see bug #319004 -- clamp title and URL to generously-large but not too large
+// length
+#define HISTORY_URI_LENGTH_MAX 65536
+#define HISTORY_TITLE_LENGTH_MAX 4096
+
 // sync history every 10 seconds
 #define HISTORY_SYNC_TIMEOUT (10 * PR_MSEC_PER_SEC)
 //#define HISTORY_SYNC_TIMEOUT 3000 // every 3 seconds - testing only!
@@ -618,6 +623,9 @@ nsGlobalHistory::AddPageToDatabase(nsIURI* aURI, PRBool aRedirect, PRBool aTopLe
   rv = aURI->GetSpec(URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (URISpec.Length() > HISTORY_URI_LENGTH_MAX)
+     return NS_OK;
+
 #ifdef DEBUG_bsmedberg
   printf("AddURI: %s%s%s",
          URISpec.get(),
@@ -1110,7 +1118,7 @@ nsGlobalHistory::SetPageTitle(nsIURI *aURI, const nsAString& aTitle)
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aURI);
 
-  const nsAFlatString& titleString = PromiseFlatString(aTitle);
+  nsAutoString titleString(StringHead(aTitle, HISTORY_TITLE_LENGTH_MAX));
 
   // skip about: URIs to avoid reading in the db (about:blank, especially)
   PRBool isAbout;
@@ -1411,6 +1419,9 @@ nsGlobalHistory::HidePage(nsIURI *aURI)
   rv = aURI->GetSpec(URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (URISpec.Length() > HISTORY_URI_LENGTH_MAX)
+     return NS_OK;
+
 #ifdef DEBUG_bsmedberg
   printf("nsGlobalHistory::HidePage: %s\n", URISpec.get());
 #endif
@@ -1450,6 +1461,9 @@ nsGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
   if (NS_FAILED(rv))
     return rv;
   
+  if (spec.Length() > HISTORY_URI_LENGTH_MAX)
+     return NS_OK;
+
   nsCOMPtr<nsIMdbRow> row;
   rv = FindRow(kToken_URLColumn, spec.get(), getter_AddRefs(row));
   if (NS_FAILED(rv)) {
