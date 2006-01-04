@@ -92,4 +92,10 @@ interface nsIBookmarksContainer : nsISupports
    */
   void onContainerMoved(in PRInt64 container,
                         in PRInt64 newFolder, in PRInt32 newIndex);
+
+  /**
+   * Returns true if containers of this type should not expose UI for
+   * inserting, moving, or deleting children.
+   */
+  readonly attribute boolean childrenReadOnly;
 };

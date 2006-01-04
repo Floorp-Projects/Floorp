@@ -269,9 +269,7 @@ if (bmsvc.indexOfItem(root, uri("http://google.com/")) != 1) {
 if (bmsvc.indexOfFolder(root, workFolder) != 4) {
   dump("indexOfFolder FAILED\n");
 }
-bmsvc.setFolderReadonly(workFolder, true);
-bmsvc.setFolderReadonly(homeFolder, true);
-bmsvc.setFolderReadonly(homeFolder, false);
+// XXX test folderReadOnly
 
 ///  EXPECTED TABLE RESULTS
 ///  moz_bookmarks:
@@ -332,8 +330,3 @@ bmsvc.setFolderReadonly(homeFolder, false);
 ///  4             Firefox and Mozilla Links
 ///  5             Work
 ///  6             Home
-///
-///  moz_anno:
-///  id       page     name                  content    expiration
-///  --       ----     ------------------    -------    ----------
-///  1        18       bookmarks/readonly    1          4

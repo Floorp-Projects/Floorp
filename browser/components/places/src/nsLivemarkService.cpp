@@ -405,6 +405,14 @@ nsLivemarkService::OnContainerMoved(PRInt64 aContainer,
 }
 
 
+NS_IMETHODIMP
+nsLivemarkService::GetChildrenReadOnly(PRBool *aResult)
+{
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+
 void
 nsLivemarkService::FireTimer(nsITimer* aTimer, void* aClosure)
 {
