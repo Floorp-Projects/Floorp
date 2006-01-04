@@ -2657,6 +2657,7 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
                           nsNavHistoryResultNode** aResult)
 {
   *aResult = nsnull;
+  NS_ASSERTION(aRow && aOptions && aResult, "Null pointer in RowToResult");
 
   nsCAutoString spec;
   nsresult rv = aRow->GetUTF8String(kGetInfoIndex_URL, spec);
