@@ -1106,7 +1106,20 @@ nsCanvasRenderingContext2D::LineTo(float x, float y)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::QuadraticCurveTo(float cpx, float cpy, float x, float y)
 {
-    cairo_curve_to(mCairo, cpx, cpy, cpx, cpy, x, y);
+    double cx, cy;
+
+    cairo_get_current_point(mCairo, &cx, &cy);
+    if (cairo_status(mCairo))
+        return NS_ERROR_INVALID_ARG;
+
+    cairo_curve_to(mCairo,
+                   (cx + cpx * 2.0) / 3.0,
+                   (cy + cpy * 2.0) / 3.0,
+                   (cpx * 2.0 + x) / 3.0,
+                   (cpy * 2.0 + y) / 3.0,
+                   x,
+                   y);
+
     return NS_OK;
 }
 
