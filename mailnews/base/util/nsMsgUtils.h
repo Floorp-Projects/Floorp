@@ -151,6 +151,10 @@ NS_MSG_BASE nsresult GetSummaryFileLocation(nsIFileSpec* fileLocation,
 // on bug 33451 to remove nsIFileSpec from mailnews.
 NS_MSG_BASE nsresult GetSummaryFileLocation(nsIFileSpec* fileLocation,
                                             nsFileSpec* summaryLocation);
+// XXX This function is provided temporarily whilst we are still working
+// on bug 33451 to remove nsIFileSpec from mailnews.
+NS_MSG_BASE void GetSummaryFileLocation(nsFileSpec& fileLocation,
+                                        nsFileSpec* summaryLocation);
 
 #endif
 

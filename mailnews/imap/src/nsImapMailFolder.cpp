@@ -52,7 +52,6 @@
 #include "nsFileStream.h"
 #include "nsMsgDBCID.h"
 #include "nsMsgFolderFlags.h"
-#include "nsLocalFolderSummarySpec.h"
 #include "nsImapFlagAndUidState.h"
 #include "nsIEventQueueService.h"
 #include "nsIImapUrl.h"
@@ -1654,11 +1653,12 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *p
     if (cnt > 0)
         rv = CreateDirectoryForFolder(dirSpec);
 
-    nsFileSpec fileSpec;
-    oldPathSpec->GetFileSpec(&fileSpec);
-    nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
+    nsFileSpec oldSummaryFile;
+    rv = GetSummaryFileLocation(oldPathSpec, &oldSummaryFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCAutoString newNameStr;
-    oldSummarySpec.Delete(PR_FALSE);
+    oldSummaryFile.Delete(PR_FALSE);
     if (cnt > 0)
     {
        newNameStr = leafname;
@@ -2662,9 +2662,10 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       }
       mDatabase = nsnull;
       
-      nsLocalFolderSummarySpec  summarySpec(dbName);
+      nsFileSpec summaryFile;
+      GetSummaryFileLocation(dbName, &summaryFile);
       // Remove summary file.
-      summarySpec.Delete(PR_FALSE);
+      summaryFile.Delete(PR_FALSE);
       
       // Create a new summary file, update the folder message counts, and
       // Close the summary file db.
@@ -7176,7 +7177,8 @@ nsImapMailFolder::CopyFolder(nsIMsgFolder* srcFolder,
       rv = oldPathSpec->GetFileSpec(&oldPath);
       NS_ENSURE_SUCCESS(rv,rv);
   
-      nsLocalFolderSummarySpec  summarySpec(oldPath);
+      nsFileSpec summaryFile;
+      GetSummaryFileLocation(oldPath, &summaryFile);
   
       nsCOMPtr<nsIFileSpec> newPathSpec;
       rv = GetPath(getter_AddRefs(newPathSpec));
@@ -7196,7 +7198,7 @@ nsImapMailFolder::CopyFolder(nsIMsgFolder* srcFolder,
       if(NS_FAILED(rv)) 
         return rv;
   
-      rv = summarySpec.CopyToDir(newPath);
+      rv = summaryFile.CopyToDir(newPath);
       NS_ENSURE_SUCCESS(rv, rv);
   
       rv = AddSubfolder(safeFolderName, getter_AddRefs(newMsgFolder));  

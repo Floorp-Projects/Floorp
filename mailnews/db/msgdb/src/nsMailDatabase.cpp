@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,13 +41,13 @@
 #include "nsDBFolderInfo.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsFileStream.h"
-#include "nsLocalFolderSummarySpec.h"
 #include "nsFileSpec.h"
 #include "nsMsgOfflineImapOperation.h"
 #include "nsMsgFolderFlags.h"
 #include "prlog.h"
 #include "prprf.h"
 #include "nsIFileSpec.h"
+#include "nsMsgUtils.h"
 #ifdef PUTUP_ALERT_ON_INVALID_DB
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
@@ -676,10 +676,10 @@ NS_IMETHODIMP nsMailDatabase::ListAllOfflineDeletes(nsMsgKeyArray *offlineDelete
 /* static */
 nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int numunread)
 {
-  nsLocalFolderSummarySpec	summarySpec(*folderName);
-  nsFileSpec					summaryPath(summarySpec);
-  nsresult		err = NS_OK;
-  PRBool			bOpenedDB = PR_FALSE;
+  nsresult err = NS_OK;
+  PRBool bOpenedDB = PR_FALSE;
+  nsFileSpec summaryPath;
+  GetSummaryFileLocation(*folderName, &summaryPath);
   
   if (!folderName->Exists())
     return NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
@@ -692,14 +692,14 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
     if(!pMessageDB)
       return NS_ERROR_OUT_OF_MEMORY;
     
-    pMessageDB->m_folderSpec = new nsLocalFolderSummarySpec();
+    pMessageDB->m_folderSpec = new nsFileSpec();
     if(!pMessageDB->m_folderSpec)
     {
       delete pMessageDB;
       return NS_ERROR_OUT_OF_MEMORY;
     }
     
-    *(pMessageDB->m_folderSpec) = summarySpec;
+    *(pMessageDB->m_folderSpec) = summaryPath;
     // ### this does later stuff (marks latered messages unread), which may be a problem
     err = pMessageDB->OpenMDB(summaryPath, PR_FALSE);
     if (err != NS_OK)

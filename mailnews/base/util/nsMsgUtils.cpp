@@ -1179,3 +1179,18 @@ nsresult GetSummaryFileLocation(nsIFileSpec* fileLocation, nsFileSpec* summaryLo
   return summaryIFile->GetFileSpec(summaryLocation);
 }
 
+void GetSummaryFileLocation(nsFileSpec& fileLocation, nsFileSpec* summaryLocation)
+{
+  nsXPIDLCString fileName;
+
+  // First copy all the details across
+  *summaryLocation = fileLocation;
+
+  // Now work out the new file name.
+  fileName.Adopt(fileLocation.GetLeafName());
+
+  fileName.Append(NS_LITERAL_CSTRING(SUMMARY_SUFFIX));
+  
+  summaryLocation->SetLeafName(fileName);
+}
+

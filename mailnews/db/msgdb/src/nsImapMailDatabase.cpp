@@ -44,7 +44,6 @@
 #include "msgCore.h"
 #include "nsImapMailDatabase.h"
 #include "nsDBFolderInfo.h"
-#include "nsLocalFolderSummarySpec.h"
 #include "nsIFileSpec.h"
 
 const char *kPendingHdrsScope = "ns:msg:db:row:scope:pending:all";	// scope for all offine ops table

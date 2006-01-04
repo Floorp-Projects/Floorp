@@ -79,7 +79,6 @@
 #include "nsIMsgFolderCacheElement.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsLocalFolderSummarySpec.h"
 #include "nsMsgUtils.h"
 #include "nsICopyMsgStreamListener.h"
 #include "nsIMsgCopyService.h"
@@ -570,12 +569,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetDatabaseWithReparse(nsIUrlListener *aRepa
         }
         mDatabase = nsnull;
       
-        nsFileSpec dbName;
-        rv = pathSpec->GetFileSpec(&dbName);
+        nsFileSpec summaryFile;
+        rv = GetSummaryFileLocation(pathSpec, &summaryFile);
         NS_ENSURE_SUCCESS(rv, rv);
-        nsLocalFolderSummarySpec  summarySpec(dbName);
         // Remove summary file.
-        summarySpec.Delete(PR_FALSE);
+        summaryFile.Delete(PR_FALSE);
       
         // if it's out of date then reopen with upgrade.
         if (NS_FAILED(rv = msgDBService->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase)))
@@ -1050,14 +1048,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
   nsFileSpec path;
   rv = pathSpec->GetFileSpec(&path);
   if (NS_FAILED(rv)) return rv;
-  
-  nsLocalFolderSummarySpec summarySpec(path);
 
+  nsFileSpec summaryFile;
+  GetSummaryFileLocation(path, &summaryFile);
+  
   //Clean up .sbd folder if it exists.
   if(NS_SUCCEEDED(rv))
   {
     // Remove summary file.
-    summarySpec.Delete(PR_FALSE);
+    summaryFile.Delete(PR_FALSE);
       
     //Delete mailbox
     path.Delete(PR_FALSE);
@@ -1145,9 +1144,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
     return rv;
   nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parentFolder);
   
-  nsFileSpec fileSpec;
-  oldPathSpec->GetFileSpec(&fileSpec);
-  nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
+  nsFileSpec oldSummaryFile;
+  rv = GetSummaryFileLocation(oldPathSpec, &oldSummaryFile);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsFileSpec dirSpec;
   
   PRUint32 cnt = 0;
@@ -1201,7 +1200,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
   if (NS_SUCCEEDED(rv))
   {
     newDiskName += SUMMARY_SUFFIX;
-    oldSummarySpec.Rename(newDiskName.get());
+    oldSummaryFile.Rename(newDiskName.get());
   }
   else
   {
@@ -1989,8 +1988,9 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder,
   nsFileSpec oldPath;
   rv = oldPathSpec->GetFileSpec(&oldPath);
   NS_ENSURE_SUCCESS(rv,rv);
-  
-  nsLocalFolderSummarySpec  summarySpec(oldPath);
+
+  nsFileSpec summaryFile;
+  GetSummaryFileLocation(oldPath, &summaryFile);
   
   nsCOMPtr<nsIFileSpec> newPathSpec;
   rv = GetPath(getter_AddRefs(newPathSpec));
@@ -2019,11 +2019,11 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder,
   // if the filespec exist or not, if it does not that's ok, we continue 
   // without copying it. If it fails and filespec exist and is not zero sized
   // there is real problem
-  rv = summarySpec.CopyToDir(newPath);      // Copy the filespec to the new dir
+  rv = summaryFile.CopyToDir(newPath);      // Copy the filespec to the new dir
   if (! NS_SUCCEEDED(rv))                   // Test if the copy is successfull
   {                                       
     // Test if the filespec has data
-    if (summarySpec.Exists() && (summarySpec.GetFileSize() > 0))
+    if (summaryFile.Exists() && (summaryFile.GetFileSize() > 0))
       NS_ENSURE_SUCCESS(rv, rv);          // Yes, it should have worked !
     // else case is filespec is zero sized, no need to copy it, 
     // not an error
