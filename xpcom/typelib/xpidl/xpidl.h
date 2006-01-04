@@ -85,6 +85,7 @@ extern gboolean enable_warnings;
 extern gboolean verbose_mode;
 extern gboolean emit_typelib_annotations;
 extern gboolean explicit_output_filename;
+extern FILE *deps;
 
 extern PRUint8  major_version;
 extern PRUint8  minor_version;
