@@ -482,7 +482,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     // folders: FIXME use folder name???
     } else if (kvp.key.EqualsLiteral(QUERYKEY_FOLDERS)) {
       PRInt64 folder;
-      if (PR_sscanf(kvp.value.get(), "%lld", folder) == 1) {
+      if (PR_sscanf(kvp.value.get(), "%lld", &folder) == 1) {
         NS_ENSURE_TRUE(folders.AppendElement(folder), NS_ERROR_OUT_OF_MEMORY);
       } else {
         NS_WARNING("folders value in query is invalid, ignoring");
