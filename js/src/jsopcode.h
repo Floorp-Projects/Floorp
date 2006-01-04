@@ -256,7 +256,7 @@ js_puts(JSPrinter *jp, const char *s);
  */
 #include <stdio.h>
 
-extern JS_FRIEND_API(void)
+extern JS_FRIEND_API(JSBool)
 js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp);
 
 extern JS_FRIEND_API(uintN)

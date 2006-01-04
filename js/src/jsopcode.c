@@ -122,7 +122,7 @@ GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
 
 #ifdef DEBUG
 
-JS_FRIEND_API(void)
+JS_FRIEND_API(JSBool)
 js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
 {
     jsbytecode *pc, *end;
@@ -137,9 +137,10 @@ js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
                               PTRDIFF(pc, script->code, jsbytecode),
                               lines, fp);
         if (!len)
-            return;
+            return JS_FALSE;
         pc += len;
     }
+    return JS_TRUE;
 }
 
 JS_FRIEND_API(uintN)
@@ -273,6 +274,48 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
         fprintf(fp, " %s", JS_GetStringBytes(str));
         break;
 #endif
+
+      case JOF_UINT24:
+        if (op == JSOP_FINDNAME) {
+            /* Special case to avoid a JOF_FINDNAME just for this op. */
+            atom = js_GetAtom(cx, &script->atomMap, GET_LITERAL_INDEX(pc));
+            str = js_ValueToSource(cx, ATOM_KEY(atom));
+            if (!str)
+                return 0;
+            fprintf(fp, " %s", JS_GetStringBytes(str));
+            break;
+        }
+
+        JS_ASSERT(op == JSOP_UINT24 || op == JSOP_LITERAL);
+        fprintf(fp, " %u", GET_LITERAL_INDEX(pc));
+        break;
+
+      case JOF_LITOPX:
+        atom = js_GetAtom(cx, &script->atomMap, GET_LITERAL_INDEX(pc));
+        str = js_ValueToSource(cx, ATOM_KEY(atom));
+        if (!str)
+            return 0;
+
+        /*
+         * Bytecode: JSOP_LITOPX <uint24> op [<varno> if JSOP_DEFLOCALFUN].
+         * Advance pc to point at op.
+         */
+        pc += 1 + LITERAL_INDEX_LEN;
+        op = *pc;
+        cs = &js_CodeSpec[op];
+        fprintf(fp, " %s op %s", JS_GetStringBytes(str), cs->name);
+#if JS_HAS_LEXICAL_CLOSURE
+        if ((cs->format & JOF_TYPEMASK) == JOF_INDEXCONST)
+            fprintf(fp, " %u", GET_VARNO(pc));
+#endif
+
+        /*
+         * Set len to advance pc to skip op and any other immediates (namely,
+         * <varno> if JSOP_DEFLOCALFUN).
+         */
+        JS_ASSERT(cs->length > ATOM_INDEX_LEN);
+        len = cs->length - ATOM_INDEX_LEN;
+        break;
 
       default: {
         char numBuf[12];
