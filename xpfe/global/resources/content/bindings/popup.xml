@@ -23,19 +23,10 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            if (this.localName == "popup")
-              return (this.parentNode.localName == "menulist")? accService.createXULSelectListAccessible(this): accService.createXULMenupopupAccessible(this);
-            //
-            // Create accessible for menupopup when parent node is:
-            //   1. menulist: for combobox to visit its menu items
-            //   2. toolbarbutton: for which has menupopup child
-            // Otherwise, won't create accessible for menupopup, e.g.
-            //   1. menu: to avoid redundant accessible for menu
-            //   2. other situations ...
-            //
-            if (this.localName == "menupopup")
-              return ((this.parentNode.localName == "menulist") ||
-                      (this.parentNode.localName == "toolbarbutton")) ?
+            // Won't create accessible for (menu)popup if parent node is menu
+            // to avoid redundant accessible for menu
+            if (this.localName == "popup" || this.localName == "menupopup")
+              return (this.parentNode.localName != "menu") ?
                      accService.createXULMenupopupAccessible(this): null;
             else if (this.localName == "tooltip")
               return accService.createXULTooltipAccessible(this);
