@@ -164,11 +164,16 @@ printf( "\n\n\t\t\tIn nsFontMetricsPh::Init str=%s\n", str );
 	const char *cstring;
 	aLangGroup->GetUTF8String( &cstring );
 	
-	char prop[256];
-	sprintf( prop, "font.name.%s.%s", str, cstring );
-
+	char *prop = PR_smprintf( "font.name.%s.%s", str, cstring );
+		
 	char *font_default = NULL;
-	gPref->CopyCharPref( prop, &font_default );
+	if( prop )
+		{
+		gPref->CopyCharPref( prop, &font_default );
+		PR_smprintf_free( prop );
+		}
+	else gPref->CopyCharPref( "font.name.serif.x-western", &font_default );
+
 	if( font_default )
 		{
 		free (str);
