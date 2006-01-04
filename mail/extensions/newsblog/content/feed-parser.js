@@ -195,9 +195,9 @@ FeedParser.prototype =
     // Get information about the feed as a whole.
     var channel = ds.GetSource(RDF_TYPE, RSS_CHANNEL, true);
     
-    aFeed.title = aFeed.title || getRDFTargetValue(ds, channel, RSS_TITLE);
-    aFeed.description = getRDFTargetValue(ds, channel, RSS_DESCRIPTION);
-    aFeed.link = getRDFTargetValue(ds, channel, RSS_LINK);
+    aFeed.title = aFeed.title || getRDFTargetValue(ds, channel, RSS_TITLE) || aFeed.url;
+    aFeed.description = getRDFTargetValue(ds, channel, RSS_DESCRIPTION) || "";
+    aFeed.link = getRDFTargetValue(ds, channel, RSS_LINK) || aFeed.url;
 
     if (!aFeed.parseItems)
       return parsedItems;
@@ -225,6 +225,11 @@ FeedParser.prototype =
       // a relative URN.
       var uri = itemResource.Value;
       var link = getRDFTargetValue(ds, itemResource, RSS_LINK);
+
+      // XXX
+      // check for bug258465 -- entities appear escaped 
+      // in the value returned by getRDFTargetValue when they shouldn't
+      //debug("link comparison\n" + " uri: " + uri + "\nlink: " + link);
 
       item.url = link || uri;
       item.id = item.url;
