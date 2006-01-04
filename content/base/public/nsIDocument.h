@@ -475,9 +475,9 @@ public:
   }
 
   /**
-   * Get the channel that was passed to StartDocumentLoad for this
+   * Get the channel that was passed to StartDocumentLoad or Reset for this
    * document.  Note that this may be null in some cases (eg if
-   * StartDocumentLoad was never called)
+   * StartDocumentLoad or Reset were never called)
    */
   virtual nsIChannel* GetChannel() const = 0;
 
@@ -601,7 +601,12 @@ public:
     return mNodeInfoManager;
   }
 
+  /**
+   * Reset the document using the given channel and loadgroup.  This works
+   * like ResetToURI, but also sets the document's channel to aChannel.
+   */
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) = 0;
+
   /**
    * Reset this document to aURI and aLoadGroup.  aURI must not be null.
    */

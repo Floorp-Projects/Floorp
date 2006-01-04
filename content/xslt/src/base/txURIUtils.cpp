@@ -223,17 +223,9 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
         return;
     }
 
-    nsCOMPtr<nsIChannel> channel;
+    // Copy the channel and loadgroup from the source document.
     nsCOMPtr<nsILoadGroup> loadGroup = sourceDoc->GetDocumentLoadGroup();
-    nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
-    if (serv) {
-        // Create a temporary channel to get nsIDocument->Reset to
-        // do the right thing. We want the output document to get
-        // much of the input document's characteristics.
-        serv->NewChannelFromURI(sourceDoc->GetDocumentURI(),
-                                getter_AddRefs(channel));
-    }
-    aNewDoc->Reset(channel, loadGroup);
+    aNewDoc->Reset(sourceDoc->GetChannel(), loadGroup);
     aNewDoc->SetBaseURI(sourceDoc->GetBaseURI());
 
     // Copy charset

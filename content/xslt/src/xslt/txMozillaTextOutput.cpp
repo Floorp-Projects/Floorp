@@ -172,18 +172,10 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
     }
 
     // Reset and set up document
-    nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIDocument> sourceDoc = do_QueryInterface(aSourceDocument);
     nsCOMPtr<nsILoadGroup> loadGroup = sourceDoc->GetDocumentLoadGroup();
-    nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
-    if (serv) {
-        // Create a temporary channel to get nsIDocument->Reset to
-        // do the right thing. We want the output document to get
-        // much of the input document's characteristics.
-        serv->NewChannelFromURI(sourceDoc->GetDocumentURI(),
-                                getter_AddRefs(channel));
-    }
-    doc->Reset(channel, loadGroup);
+    // Copy the channel and loadgroup from the source document.
+    doc->Reset(sourceDoc->GetChannel(), loadGroup);
     doc->SetBaseURI(sourceDoc->GetBaseURI());
 
     // Set the charset
