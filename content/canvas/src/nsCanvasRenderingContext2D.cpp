@@ -1070,7 +1070,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Fill()
 {
     ApplyStyle(STYLE_FILL);
-    cairo_fill(mCairo);
+    cairo_fill_preserve(mCairo);
     return Redraw();
 }
 
@@ -1078,14 +1078,14 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Stroke()
 {
     ApplyStyle(STYLE_STROKE);
-    cairo_stroke(mCairo);
+    cairo_stroke_preserve(mCairo);
     return Redraw();
 }
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Clip()
 {
-    cairo_clip(mCairo);
+    cairo_clip_preserve(mCairo);
     return Redraw();
 }
 
