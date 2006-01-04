@@ -1644,17 +1644,19 @@ EmitAtomIndexOp(JSContext *cx, JSOp op, jsatomid atomIndex, JSCodeGenerator *cg)
     jsbytecode *pc;
 
     if (atomIndex >= JS_BIT(16)) {
-        mode = (js_CodeSpec[op].format & JOF_MODEMASK);
-        prefixOp = (mode == JOF_NAME)
-                   ? JSOP_FINDNAME
-                   : (mode == JOF_PROP)
-                   ? JSOP_LITERAL
-                   : JSOP_LITOPX;
-        off = js_EmitN(cx, cg, prefixOp, 3);
-        if (off < 0)
-            return JS_FALSE;
-        pc = CG_CODE(cg, off);
-        SET_LITERAL_INDEX(pc, atomIndex);
+        if (op != JSOP_SETNAME) {
+            mode = (js_CodeSpec[op].format & JOF_MODEMASK);
+            prefixOp = (mode == JOF_NAME)
+                       ? JSOP_FINDNAME
+                       : (mode == JOF_PROP)
+                       ? JSOP_LITERAL
+                       : JSOP_LITOPX;
+            off = js_EmitN(cx, cg, prefixOp, 3);
+            if (off < 0)
+                return JS_FALSE;
+            pc = CG_CODE(cg, off);
+            SET_LITERAL_INDEX(pc, atomIndex);
+        }
 
         switch (op) {
           case JSOP_DECNAME:    op = JSOP_DECELEM; break;
@@ -1673,6 +1675,7 @@ EmitAtomIndexOp(JSContext *cx, JSOp op, jsatomid atomIndex, JSCodeGenerator *cg)
           case JSOP_NAMEINC:    op = JSOP_ELEMINC; break;
           case JSOP_PROPDEC:    op = JSOP_ELEMDEC; break;
           case JSOP_PROPINC:    op = JSOP_ELEMINC; break;
+          case JSOP_BINDNAME:   return JS_TRUE;
           case JSOP_SETNAME:    op = JSOP_SETELEM; break;
           case JSOP_SETPROP:    op = JSOP_SETELEM; break;
           default:              JS_ASSERT(mode == 0); break;
