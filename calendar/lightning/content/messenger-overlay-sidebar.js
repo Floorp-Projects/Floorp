@@ -53,7 +53,12 @@ function ltnMinimonthPick(minimonth)
     cdt = cdt.getInTimezone(calendarDefaultTimezone());
     cdt.isDate = true;
 
-    showCalendar(cdt);
+    if (document.getElementById("displayDeck").selectedPanel != 
+        document.getElementById("calendar-view-box")) {
+        showCalenadrView('month');
+    }
+
+    currentView().goToDay(cdt);
 }
 
 function ltnOnLoad(event)
@@ -107,7 +112,7 @@ function currentView()
     return calendarViewBox.selectedPanel;
 }
 
-function showCalendar(aDate1, aDate2)
+function showCalendarView(type)
 {
     // If we got this call while a mail-view is being shown, we need to
     // hide all of the mail stuff so we have room to display the calendar
@@ -130,65 +135,32 @@ function showCalendar(aDate1, aDate2)
         msgWindow.openFolder = null;
     }
 
-    var view = currentView();
+    document.getElementById("displayDeck").selectedPanel =  calendarViewBox;
+    var calendarViewBox = document.getElementById("calendar-view-box");
+
+    var selectedDay;
+    try {
+        var selectedDay = calendarViewBox.selectedPanel.selectedDay;
+    } catch(ex) {} // This dies if no view has even been chosen this session
+
+    if (!selectedDay)
+        selectedDay = today();
+
+    calendarViewBox.selectedPanel = document.getElementById(type+"-view");
+    var view = calendarViewBox.selectedPanel;
 
     if (view.displayCalendar != getCompositeCalendar()) {
         view.displayCalendar = getCompositeCalendar();
         view.controller = ltnCalendarViewController;
     }
 
-    if (aDate1 && !aDate2)
-        view.showDate(aDate1);
-    else if (aDate1 && aDate2)
-        view.setDateRange(aDate1, aDate2);
-
-    document.getElementById("displayDeck").selectedPanel =
-        document.getElementById("calendar-view-box");
-}
-
-function switchView(type) {
-    var calendarViewBox = document.getElementById("calendar-view-box");
-
-    var monthView = document.getElementById("calendar-month-view");
-    var multidayView = document.getElementById("calendar-multiday-view");
-
-    var selectedDay = calendarViewBox.selectedPanel.selectedDay;
-
-    if (!selectedDay)
-        selectedDay = today();
-
-    var d1, d2;
-
-    switch (type) {
-    case "month": {
-        d1 = selectedDay;
-        calendarViewBox.selectedPanel = monthView;
-    }
-        break;
-    case "week": {
-        d1 = selectedDay.startOfWeek;
-        d2 = selectedDay.endOfWeek;
-        calendarViewBox.selectedPanel = multidayView;
-    }
-        break;
-    case "day":
-    default: {
-        d1 = selectedDay;
-        d2 = selectedDay;
-        calendarViewBox.selectedPanel = multidayView;
-    }
-        break;
-    }
-
-    showCalendar(d1, d2);
+    view.goToDay(selectedDay);
 
     // Set the labels for the context-menu
     var nextCommand = document.getElementById("context_next");
     nextCommand.setAttribute("label", nextCommand.getAttribute("label-"+type));
     var previousCommand = document.getElementById("context_previous")
     previousCommand.setAttribute("label", previousCommand.getAttribute("label-"+type));
-
-    calendarViewBox.selectedPanel.selectedDay = selectedDay;
 }
 
 function selectedCalendarPane(event)
@@ -201,7 +173,7 @@ function selectedCalendarPane(event)
 
     deck.selectedPanel = document.getElementById("calendar-view-box");
 
-    switchView('week');
+    showCalendarView('week');
 }
 
 function LtnObserveDisplayDeckChange(event)
@@ -218,7 +190,7 @@ function LtnObserveDisplayDeckChange(event)
     try { id = deck.selectedPanel.id } catch (e) { }
 
     // Now we're switching back to the mail view, so put everything back that
-    // we collapsed in switchView()
+    // we collapsed in showCalendarView()
     if (id != "calendar-view-box") {
         collapseElement(document.getElementById("calendar-view-box"));
         uncollapseElement(GetMessagePane());

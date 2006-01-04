@@ -46,6 +46,7 @@
     <binding id="calendar-navigation-buttons">
         <content>
             <xul:hbox anonid="controls-box" flex="1">
+                <xul:spacer flex="1"/>
                 <xul:vbox class="previous-button-box">
                     <xul:spacer flex="1" />
                     <xul:image direction="prev"
@@ -81,6 +82,7 @@
                                onclick="moveView(1)"/>
                     <xul:spacer flex="1" />
                 </xul:vbox>
+                <xul:spacer flex="1"/>
             </xul:hbox>
         </content>
 

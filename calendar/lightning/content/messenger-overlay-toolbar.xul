@@ -65,13 +65,13 @@
       <menupopup id="ltncalendarMenuPopup">
         <menuitem id="ltnChangeViewDay" 
                   label="&lightning.toolbar.dayview.label;" 
-                  oncommand="switchView('day')"/>
+                  oncommand="showCalendarView('day')"/>
         <menuitem id="ltnChangeViewWeek" 
                   label="&lightning.toolbar.weekview.label;" 
-                  oncommand="switchView('week')"/>
+                  oncommand="showCalendarView('week')"/>
         <menuitem id="ltnChangeViewMonth" 
                   label="&lightning.toolbar.monthview.label;" 
-                  oncommand="switchView('month')"/>
+                  oncommand="showCalendarView('month')"/>
       </menupopup>
     </menu>
   </menubar>
@@ -91,17 +91,17 @@
                    class="cal-toolbarbutton-1" 
                    label="&calendar.weekview.button.label;" 
                    tooltiptext="&calendar.weekview.button.tooltip;" 
-                   oncommand="switchView('week')"/>
+                   oncommand="showCalendarView('week')"/>
     <toolbarbutton id="calendar-month-view-button" 
                    class="cal-toolbarbutton-1" 
                    label="&calendar.monthview.button.label;" 
                    tooltiptext="&calendar.monthview.button.tooltip;" 
-                   oncommand="switchView('month')"/>
+                   oncommand="showCalendarView('month')"/>
     <toolbarbutton id="calendar-day-view-button" 
                    class="cal-toolbarbutton-1" 
                    label="&calendar.dayview.button.label;" 
                    tooltiptext="&calendar.dayview.button.tooltip;" 
-                   oncommand="switchView('day')"/>
+                   oncommand="showCalendarView('day')"/>
   </toolbarpalette>
 
 </overlay>
