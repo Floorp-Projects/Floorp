@@ -428,7 +428,7 @@
 
           var target = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
           if (target)
-            BookmarksCommand.openBookmark(selection, target, this.db);
+            BookmarksCommand.openBookmark(selection, target, this.db, aEvent);
         ]]></body>
       </method>
 
@@ -440,7 +440,7 @@
           if (!this._selection.isContainer[0]) {
             var target = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
             if (target)
-              BookmarksCommand.openBookmark(this._selection, target, this.db)
+              BookmarksCommand.openBookmark(this._selection, target, this.db, aEvent)
           }
         ]]></body>
       </method>

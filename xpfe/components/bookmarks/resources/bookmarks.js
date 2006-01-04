@@ -72,8 +72,6 @@ var kDSContractID;
 var kDSIID;
 var DS;
 
-var gLoadInBackground = false;
-
 // should be moved in a separate file
 function initServices()
 {
@@ -524,16 +522,16 @@ var BookmarksCommand = {
     BookmarksUtils.moveSelection("move", aSelection, target);
   },
 
-  openBookmark: function (aSelection, aTargetBrowser, aDS) 
+  openBookmark: function (aSelection, aTargetBrowser, aDS, aEvent)
   {
     if (!aTargetBrowser)
       return;
     for (var i=0; i<aSelection.length; ++i) {
       var type = aSelection.type[i];
       if (type == "Bookmark" || type == "")
-        this.openOneBookmark(aSelection.item[i].Value, aTargetBrowser, aDS);
+        this.openOneBookmark(aSelection.item[i].Value, aTargetBrowser, aDS, aEvent);
       else if (type == "FolderGroup" || type == "Folder" || type == "PersonalToolbarFolder")
-        this.openGroupBookmark(aSelection.item[i].Value, aTargetBrowser);
+        this.openGroupBookmark(aSelection.item[i].Value, aTargetBrowser, aEvent);
     }
   },
   
@@ -546,18 +544,23 @@ var BookmarksCommand = {
   },
 
   // requires utilityOverlay.js if opening in new window for getTopWin()
-  openOneBookmark: function (aURI, aTargetBrowser, aDS)
+  openOneBookmark: function (aURI, aTargetBrowser, aDS, aEvent)
   {
-    var url = BookmarksUtils.getProperty(aURI, NC_NS+"URL", aDS);
+    var w = getTopWin();
+    if (!w) // no browser window open, so we have to open in new window
+      aTargetBrowser = "window";
+
+    var url = BookmarksUtils.getProperty(aURI, NC_NS + "URL", aDS);
     // Ignore "NC:" and empty urls.
     if (url == "")
       return;
-    var w = aTargetBrowser == "window"? null:getTopWin();
-    if (!w) {
+
+    if (aTargetBrowser == "window") {
       openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
       return;
     }
-    var browser = w.document.getElementById("content");
+
+    var browser = w.getBrowser();
     switch (aTargetBrowser) {
     case "current":
       browser.loadURI(url);
@@ -565,23 +568,24 @@ var BookmarksCommand = {
       break;
     case "tab":
       var tab = browser.addTab(url);
-      if (!gLoadInBackground)
+      if (!BookmarksUtils.shouldLoadTabInBackground(aEvent))
         browser.selectedTab = tab;
       break;
     }
   },
 
-  openGroupBookmark: function (aURI, aTargetBrowser)
+  openGroupBookmark: function (aURI, aTargetBrowser, aEvent)
   {
     var w = getTopWin();
     if (!w) // no browser window open, so we have to open in new window
-      aTargetBrowser="window";
+      aTargetBrowser = "window";
 
     var resource = RDF.GetResource(aURI);
-    var urlArc   = RDF.GetResource(NC_NS+"URL");
     RDFC.Init(BMDS, resource);
     var containerChildren = RDFC.GetElements();
+
     var URIs = [];
+    var urlArc = RDF.GetResource(NC_NS + "URL");
     while (containerChildren.hasMoreElements()) {
       var res = containerChildren.getNext().QueryInterface(kRDFRSCIID);
       var target = BMDS.GetTarget(res, urlArc, true);
@@ -592,15 +596,20 @@ var BookmarksCommand = {
           URIs.push({ URI: target.QueryInterface(kRDFLITIID).Value });        
       }
     }
+
+    if (URIs.length == 0)
+      return;
+
     if (aTargetBrowser == "window") {
       // This opens the URIs in separate tabs of a new window
       openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", URIs.join("\n"));
-    } else {
-      var browser = w.getBrowser();
-      var tab = browser.loadGroup(URIs);
-      if (!gLoadInBackground)
-        browser.selectedTab = tab;
+      return;
     }
+
+    var browser = w.getBrowser();
+    var tab = browser.loadGroup(URIs);
+    if (!BookmarksUtils.shouldLoadTabInBackground(aEvent))
+      browser.selectedTab = tab;
   },
 
   findBookmark: function ()
@@ -1581,7 +1590,7 @@ var BookmarksUtils = {
   shouldLoadTabInBackground: function(aEvent)
   {
     var loadInBackground = PREF.getBoolPref("browser.tabs.loadInBackground");
-    if (aEvent.shiftKey)
+    if (aEvent && aEvent.shiftKey)
       loadInBackground = !loadInBackground;
     return loadInBackground;
   },
@@ -1590,8 +1599,6 @@ var BookmarksUtils = {
   {
     if (!aEvent)
       return null;
-
-    gLoadInBackground = this.shouldLoadTabInBackground(aEvent);
 
     switch (aEvent.type) {
     case "click":
@@ -1633,7 +1640,7 @@ var BookmarksUtils = {
 
     var rSource   = RDF.GetResource(aEvent.target.id);
     var selection = BookmarksUtils.getSelectionFromResource(rSource);
-    BookmarksCommand.openBookmark(selection, target, aDS)
+    BookmarksCommand.openBookmark(selection, target, aDS, aEvent)
   }
 }
 
