@@ -160,7 +160,6 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   if ((self = [super init]))
   {
     [NSBundle loadNibNamed:@"ProgressView" owner:self];
-    [self viewDidLoad];
   }
   return self;
 }
@@ -173,6 +172,11 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   }
   
   return self;
+}
+
+-(void)awakeFromNib
+{
+  [self viewDidLoad];
 }
 
 -(void)dealloc
@@ -213,7 +217,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
 
 -(void)viewDidLoad
 {
-                         // this isn't necessarily better. Need to profile.
+  // this isn't necessarily better. Need to profile.
   [mProgressBar setUsesThreadedAnimation:NO];
   // give the views this controller as their controller
   [mCompletedView setController:self];

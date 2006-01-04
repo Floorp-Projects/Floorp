@@ -58,6 +58,7 @@ NSString* const kDownloadInstanceOpenedNotificationName   = @"DownloadInstanceOp
   self = [super initWithFrame:frame];
   if (self) {
     mLastModifier = kNoKey;
+    mProgressController = nil;
   }
   return self;
 }
@@ -107,11 +108,19 @@ NSString* const kDownloadInstanceOpenedNotificationName   = @"DownloadInstanceOp
 
 - (BOOL)isSelected
 {
+  // make sure the controller is not nil before checking if it is selected
+  if (!mProgressController)
+    return NO;
+  
   return [mProgressController isSelected];
 }
 
 -(void)setSelected:(BOOL)inSelected
 {
+  // make sure the controller is not nil before setting its selected state
+  if (!mProgressController)
+    return;
+  
   [mProgressController setSelected:inSelected];
 }
 
