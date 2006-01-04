@@ -65,13 +65,14 @@ gboolean enable_warnings            = FALSE;
 gboolean verbose_mode               = FALSE;
 gboolean emit_typelib_annotations   = FALSE;
 gboolean explicit_output_filename   = FALSE;
+FILE *deps = NULL;
 
 /* The following globals are explained in xpt_struct.h */
 PRUint8  major_version              = XPT_MAJOR_VERSION;
 PRUint8  minor_version              = XPT_MINOR_VERSION;
 
 static char xpidl_usage_str[] =
-"Usage: %s -m mode [-w] [-v] [-t version number]\n"
+"Usage: %s -m mode [-w] [-v] [-t version number] [-d filename.pp]\n"
 "          [-I path] [-o basename | -e filename.ext] filename.idl\n"
 "       -a emit annotations to typelib\n"
 "       -w turn on warnings (recommended)\n"
@@ -80,6 +81,7 @@ static char xpidl_usage_str[] =
 "       -I add entry to start of include path for ``#include \"nsIThing.idl\"''\n"
 "       -o use basename (e.g. ``/tmp/nsIThing'') for output\n"
 "       -e use explicit output filename\n"
+"       -d write dependencies (requires -e)\n"
 "       -m specify output mode:\n";
 
 static void
@@ -227,6 +229,21 @@ int main(int argc, char *argv[])
             file_basename = argv[++i];
             explicit_output_filename = TRUE;
             break;
+          case 'd':
+            if (!explicit_output_filename) {
+                fprintf(stderr, "ERROR: -d requires -e\n");
+                xpidl_usage(argc, argv);
+                return 1;
+            }
+            if (i == argc) {
+                fprintf(stderr, "ERROR: missing filename after -d\n");
+                xpidl_usage(argc, argv);
+                return 1;
+            }
+            deps = fopen(argv[++i], "w");
+            if (deps)
+                fprintf(deps, "%s:", file_basename);
+            break;
           case 'm':
             if (i + 1 == argc) {
                 fprintf(stderr, "ERROR: missing modename after -m\n");
@@ -268,8 +285,12 @@ int main(int argc, char *argv[])
      * Don't try to process multiple files, given that we don't handle -o
      * multiply.
      */
-    if (xpidl_process_idl(argv[i], inc_head, file_basename, mode))
-        return 0;
+    i = xpidl_process_idl(argv[i], inc_head, file_basename, mode);
 
-    return 1;
+    if (deps) {
+        fprintf(deps, "\n");
+        fclose(deps);
+    }
+
+    return !i;
 }

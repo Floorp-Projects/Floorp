@@ -254,8 +254,12 @@ LIBOBJS			:= $(addsuffix \", $(LIBOBJS))
 endif
 
 ifndef MOZ_AUTO_DEPS
-ifneq (,$(OBJS)$(SIMPLE_PROGRAMS))
+ifneq (,$(OBJS)$(XPIDLSRCS)$(SDK_XPIDLSRCS)$(SIMPLE_PROGRAMS))
 MDDEPFILES		= $(addprefix $(MDDEPDIR)/,$(OBJS:.$(OBJ_SUFFIX)=.pp))
+ifndef NO_GEN_XPT
+MDDEPFILES		+= $(addprefix $(MDDEPDIR)/,$(XPIDLSRCS:.idl=.xpt)) \
+			   $(addprefix $(MDDEPDIR)/,$(SDK_XPIDLSRCS:.idl=.xpt))
+endif
 endif
 endif
 
@@ -359,7 +363,7 @@ HOST_PROGOBJS		= $(HOST_OBJS)
 endif
 
 # MAKE_DIRS: List of directories to build while looping over directories.
-ifneq (,$(OBJS)$(SIMPLE_PROGRAMS))
+ifneq (,$(OBJS)$(XPIDLSRCS)$(SDK_XPIDLSRCS)$(SIMPLE_PROGRAMS))
 MAKE_DIRS		+= $(MDDEPDIR)
 GARBAGE_DIRS		+= $(MDDEPDIR)
 endif
@@ -1318,7 +1322,7 @@ ifndef NO_GEN_XPT
 # into $(XPIDL_MODULE).xpt and export it to $(FINAL_TARGET)/components.
 $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
-	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(IDL_DIR) -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
+	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(IDL_DIR) -I$(srcdir) -e $@ -d $(MDDEPDIR)/$*.pp $(_VPATH_SRCS)
 
 # no need to link together if XPIDLSRCS contains only XPIDL_MODULE
 ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
@@ -1652,7 +1656,7 @@ $(MDDEPDIR)/%.pp: %.s
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_NOAUTO)
 
-ifneq (,$(OBJS)$(SIMPLE_PROGRAMS))
+ifneq (,$(OBJS)$(XPIDLSRCS)$(SDK_XPIDLSRCS)$(SIMPLE_PROGRAMS))
 depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MDDEPFILES)
 else
 depend:: $(SUBMAKEFILES)
@@ -1679,7 +1683,7 @@ endif # COMPILER_DEPEND
 $(MDDEPDIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
 
-ifneq (,$(OBJS)$(SIMPLE_PROGRAMS))
+ifneq (,$(OBJS)$(XPIDLSRCS)$(SDK_XPIDLSRCS)$(SIMPLE_PROGRAMS))
 MDDEPEND_FILES		:= $(strip $(wildcard $(MDDEPDIR)/*.pp))
 
 ifneq (,$(MDDEPEND_FILES))
