@@ -119,6 +119,8 @@
             return;
           }
 
+          const handleMetaAltArrows = /Mac/.test(navigator.platform);
+
           switch (event.keyCode) {
             case event.DOM_VK_TAB:
               if (event.ctrlKey && !event.altKey && !event.metaKey)
@@ -140,6 +142,26 @@
               if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
                 if (this.tabbox._tabs && this.tabbox.handleCtrlPageUpDown) {
                   this.tabbox._tabs.advanceSelectedTab(1);
+                  event.stopPropagation();
+                  event.preventDefault();
+                }
+              break;
+            case event.DOM_VK_LEFT:
+              if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
+                if (this.tabbox._tabs && handleMetaAltArrows) {
+                  var offset = window.getComputedStyle(this.tabbox, "")
+                                     .direction == "ltr" ? -1 : 1;
+                  this.tabbox._tabs.advanceSelectedTab(offset);
+                  event.stopPropagation();
+                  event.preventDefault();
+                }
+              break;
+            case event.DOM_VK_RIGHT:
+              if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
+                if (this.tabbox._tabs && handleMetaAltArrows) {
+                  var offset = window.getComputedStyle(this.tabbox, "")
+                                     .direction == "ltr" ? 1 : -1;
+                  this.tabbox._tabs.advanceSelectedTab(offset);
                   event.stopPropagation();
                   event.preventDefault();
                 }
