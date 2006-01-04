@@ -58,6 +58,16 @@ treechildren::-moz-tree-image(title, container, open, toolbar-root) {
   -moz-image-region: rect(17px, 16px, 32px, 0px);
 }
 
+treechildren::-moz-tree-row(session-start) {
+  border-top:1px dotted ThreeDShadow;
+}
+
+/* FIXME this should make the date field invisible, but only does it for
+         unselected items and maybe won't work for different color schemes. */
+treechildren::-moz-tree-cell-text(date, session-continue) {
+  color:white;
+}
+
 treechildren::-moz-tree-image(title, separator) {
   list-style-image: none;
   width: 0px !important;

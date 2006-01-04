@@ -92,6 +92,7 @@ nsNavHistoryResultNode::nsNavHistoryResultNode() :
     mID(0),
     mAccessCount(0),
     mTime(0),
+    mSessionID(0),
     mExpanded(PR_FALSE)
 {
 }
@@ -1070,7 +1071,8 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
                                        PRUint32 aQueryCount,
                                        nsNavHistoryQueryOptions* aOptions)
   : mBundle(aHistoryBundle), mHistoryService(aHistoryService),
-    mCollapseDuplicates(PR_TRUE)
+    mCollapseDuplicates(PR_TRUE),
+    mShowSessions(PR_FALSE)
 {
   NS_ASSERTION(aOptions, "must have options!");
   // Fill saved source queries with copies of the original (the caller might
@@ -1156,6 +1158,7 @@ nsNavHistoryResult::FilledAllResults()
   FillTreeStats(this, -1),
   RebuildAllListRecurse(mChildren);
   InitializeVisibleList();
+  ComputeShowSessions();
 }
 
 // nsNavHistoryResult::BuildChildrenFor
@@ -1663,6 +1666,35 @@ nsNavHistoryResult::FormatFriendlyTime(PRTime aTime, nsAString& aResult)
 }
 
 
+// nsNavHistoryResult::ComputeShowSessions
+//
+//    Computes the value of mShowSessions, which is used to see if we should
+//    try to set styles for session groupings.  We only want to do session
+//    grouping if we're in an appropriate view, which is view by visit and
+//    sorted by date.
+
+void
+nsNavHistoryResult::ComputeShowSessions()
+{
+  mShowSessions = PR_FALSE;
+  NS_ASSERTION(mOptions, "navHistoryResults must have valid options");
+  if (mOptions->ResultType() != nsINavHistoryQueryOptions::RESULT_TYPE_VISIT)
+    return; // not visits
+  if (mOptions->SortingMode() != nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING &&
+      mOptions->SortingMode() != nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING)
+    return; // not date sorting
+
+  PRUint32 groupCount;
+  const PRInt32* groups = mOptions->GroupingMode(&groupCount);
+  for (PRUint32 i = 0; i < groupCount; i ++) {
+    if (groups[i] != nsINavHistoryQueryOptions::GROUP_BY_DAY)
+      return; // non-time-based grouping
+  }
+
+  mShowSessions = PR_TRUE;
+}
+
+
 // nsNavHistoryResult::FillTreeStats
 //
 //    This basically does a recursive depth-first traversal of the tree to fill
@@ -1722,6 +1754,9 @@ void
 nsNavHistoryResult::RebuildList()
 {
   PRInt32 oldVisibleCount = mVisibleElements.Count();
+
+  // something changed, so we better update the show sessions value
+  ComputeShowSessions();
 
   mAllElements.Clear();
   mVisibleElements.Clear();
@@ -1885,7 +1920,22 @@ NS_IMETHODIMP nsNavHistoryResult::SetSelection(nsITreeSelection* aSelection)
 /* void getRowProperties (in long index, in nsISupportsArray properties); */
 NS_IMETHODIMP nsNavHistoryResult::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (! mShowSessions)
+    return NS_OK; // don't need to bother to compute session boundaries
+
+  if (index < 0 || index >= mVisibleElements.Count())
+    return NS_ERROR_INVALID_ARG;
+  nsNavHistoryResultNode *node = VisibleElementAt(index);
+
+  if (node->mSessionID != 0) {
+    if (index == 0 ||
+        node->mSessionID != VisibleElementAt(index - 1)->mSessionID) {
+      properties->AppendElement(nsNavHistory::sSessionStartAtom);
+    } else {
+      properties->AppendElement(nsNavHistory::sSessionContinueAtom);
+    }
+  }
+  return NS_OK;
 }
 
 /* void getCellProperties (in long row, in nsITreeColumn col, in nsISupportsArray properties); */
@@ -1906,6 +1956,14 @@ NS_IMETHODIMP nsNavHistoryResult::GetCellProperties(PRInt32 row, nsITreeColumn *
   else if (toolbarRootId == folderId)
     properties->AppendElement(nsNavHistory::sToolbarRootAtom);
 
+  if (mShowSessions && node->mSessionID != 0) {
+    if (row == 0 ||
+        node->mSessionID != VisibleElementAt(row - 1)->mSessionID) {
+      properties->AppendElement(nsNavHistory::sSessionStartAtom);
+    } else {
+      properties->AppendElement(nsNavHistory::sSessionContinueAtom);
+    }
+  }
   return NS_OK;
 }
 

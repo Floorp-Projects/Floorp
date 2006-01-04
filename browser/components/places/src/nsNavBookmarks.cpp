@@ -55,10 +55,10 @@ const PRInt32 nsNavBookmarks::kGetFolderInfoIndex_Title = 1;
 const PRInt32 nsNavBookmarks::kGetFolderInfoIndex_Type = 2;
 
 // These columns sit to the right of the kGetInfoIndex_* columns.
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 8;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_ItemChild = 9;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderChild = 10;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderTitle = 11;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 9;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_ItemChild = 10;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderChild = 11;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderTitle = 12;
 
 nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 
@@ -168,10 +168,11 @@ nsNavBookmarks::Init()
   // mDBGetURLPageInfo, and additionally contains columns for position,
   // item_child, and folder_child from moz_bookmarks.  This selects only
   // _item_ children which are in moz_history.
+  // Results are kGetInfoIndex_*
   NS_NAMED_LITERAL_CSTRING(selectItemChildren,
     "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count, "
       "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
-      "f.url, a.position, a.item_child, a.folder_child, null "
+      "f.url, null, a.position, a.item_child, a.folder_child, null "
     "FROM moz_bookmarks a "
     "JOIN moz_history h ON a.item_child = h.id "
     "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
@@ -181,9 +182,9 @@ nsNavBookmarks::Init()
   // of mDBGetVisitPageInfo, containing additional columns for position,
   // item_child, and folder_child from moz_bookmarks, and name from
   // moz_bookmarks_folders.  This selects only _folder_ children which are
-  // in moz_bookmarks_folders.
+  // in moz_bookmarks_folders. Results are kGetInfoIndex_* kGetChildrenIndex_*
   NS_NAMED_LITERAL_CSTRING(selectFolderChildren,
-    "SELECT null, null, null, null, null, null, null, null, a.position, a.item_child, a.folder_child, c.name "
+    "SELECT null, null, null, null, null, null, null, null, null, a.position, a.item_child, a.folder_child, c.name "
     "FROM moz_bookmarks a "
     "JOIN moz_bookmarks_folders c ON c.id = a.folder_child "
     "WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3");
