@@ -176,32 +176,50 @@ var gFindBar = {
                                      findBar_OnBrowserMouseUp, false);
   },
 
+ /**
+  * Turns highlighting on or off.
+  *
+  * @param aHighlight true to turn highlighting on
+  */
   toggleHighlight: function (aHighlight)
   {
     var word = document.getElementById("find-field").value;
     if (aHighlight) {
-      this.highlightDoc('yellow', 'black', word);
+      // We have to update the status because we might still have the status
+      // of another tab
+      if (this.highlightDoc('yellow', 'black', word))
+        this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_FOUND, false);
+      else
+        this.updateStatus(Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND, false);
     } else {
       this.highlightDoc(null, null, null);
       this.mLastHighlightString = null;
     }
   },
 
+ /**
+  * (Un)highlights each instance of the searched word in the passed window's content.
+  *
+  * @param highBackColor the background color for the highlight 
+  * @param highTextColor the text color for the highlight, or null to make it unhighlight
+  * @param word the word to search for
+  * @param win the window to search in. Passing undefined will search the current window.
+  * @return true if the text was found
+  */
   highlightDoc: function (highBackColor, highTextColor, word, win)
   {
     if (!win)
-      win = window._content; 
+      win = window.content; 
 
+    var textFound = false;
     for (var i = 0; win.frames && i < win.frames.length; i++) {
-      this.highlightDoc(highBackColor, highTextColor, word, win.frames[i]);
+      if (this.highlightDoc(highBackColor, highTextColor, word, win.frames[i]))
+        textFound = true;
     }
 
     var doc = win.document;
-    if (!document)
-      return;
-
-    if (!("body" in doc))
-      return;
+    if (!doc || !("body" in doc))
+      return textFound;
 
     var body = doc.body;
 
@@ -224,7 +242,7 @@ var gFindBar = {
       // anonymous content that nsIFind searches.
 
       if (!this.mLastHighlightString)
-        return;
+        return textFound;
 
       var retRange = null;
       var finder = Components.classes["@mozilla.org/embedcomp/rangefind;1"]
@@ -265,8 +283,10 @@ var gFindBar = {
         }
 
         this.mStartPt.collapse(true);
+
+        textFound = true;
       }
-      return;
+      return textFound;
     }
 
     var baseNode = doc.createElement("span");
@@ -276,9 +296,17 @@ var gFindBar = {
                                    " padding: 0;");
     baseNode.setAttribute("id", "__firefox-findbar-search-id");
 
-    this.highlightText(word, baseNode);
+    return this.highlightText(word, baseNode) || textFound;
   },
 
+ /**
+  * Highlights each instance of the searched word in the current range.
+  *
+  * @param word the word to search for
+  * @param baseNode a node to use as a template for what will replace the
+  *                 searched word
+  * @return true if the text was found
+  */
   highlightText: function (word, baseNode)
   {
     var retRange = null;
@@ -302,14 +330,18 @@ var gFindBar = {
       textFound = true;
     }
 
-    // We have to update the status because we might still have the status
-    // of another tab (bug 313653)
-    this.updateStatus(textFound ? Components.interfaces.nsITypeAheadFind.FIND_FOUND : 
-                      Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND, false);
-
     this.mLastHighlightString = word;
+
+    return textFound;
   },
 
+ /**
+  * Highlights the word in the passed range.
+  *
+  * @param range the range that contains the word to highlight
+  * @param node the node replace the searched word with
+  * @return the node that replaced the searched word
+  */
   highlight: function (range, node)
   {
     var startContainer = range.startContainer;
