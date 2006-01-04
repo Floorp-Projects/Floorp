@@ -258,6 +258,11 @@ if (observer._folderMoved != workFolder ||
     observer._folderMovedNewIndex != 4) {
   dump("moveFolder notification FAILED\n");
 }
+// Test expected failure of moving a folder to be its own parent
+try {
+  bmsvc.moveFolder(workFolder, workFolder, -1);
+  dump("moveFolder parameter validation FAILED\n");
+} catch (e) {}
 if (bmsvc.indexOfItem(root, uri("http://google.com/")) != 1) {
   dump("indexOfItem FAILED\n");
 }
