@@ -46,7 +46,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         onload="OnLoadPrintEngine()"
-        onunload="OnUnloadPrintEngine()"
         width="750"
         height="500"
         screenX="10" screenY="10"
@@ -62,7 +61,6 @@
   <script src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
   <script src="chrome://messenger/content/msgPrintEngine.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
 
   <!-- The main display frame -->
   <browser id="content" type="content-primary" name="content" src="about:blank" flex="1" disablehistory="true" disablesecurity="true"/>

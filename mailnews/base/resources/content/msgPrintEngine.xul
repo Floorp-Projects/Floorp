@@ -45,7 +45,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         onload="OnLoadPrintEngine()"
-        onunload="OnUnloadPrintEngine()"
         width="750"
         height="500"
         screenX="10" screenY="10"

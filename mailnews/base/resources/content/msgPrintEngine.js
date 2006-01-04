@@ -43,8 +43,6 @@ var printEngineContractID      = "@mozilla.org/messenger/msgPrintEngine;1";
 var printEngineWindow;
 var printEngine;
 var printSettings = null;
-var doingPrintPreview = false;
-var gWebProgress;
 
 const kMsgBundle = "chrome://messenger/locale/messenger.properties";
 
@@ -52,70 +50,40 @@ const kMsgBundle = "chrome://messenger/locale/messenger.properties";
 function OnLoadPrintEngine()
 {
   PrintEngineCreateGlobals();
-	InitPrintEngineWindow();
+  InitPrintEngineWindow();
   printEngine.startPrintOperation(printSettings);
-}
-
-function OnUnloadPrintEngine()
-{
-  if (printEngine.doPrintPreview) {
-    var webBrowserPrint = printEngine.webBrowserPrint;
-    webBrowserPrint.exitPrintPreview(); 
-  }
 }
 
 function PrintEngineCreateGlobals()
 {
-	/* get the print engine instance */
-	printEngine = Components.classes[printEngineContractID].createInstance();
-	printEngine = printEngine.QueryInterface(Components.interfaces.nsIMsgPrintEngine);
+  /* get the print engine instance */
+  printEngine = Components.classes[printEngineContractID].createInstance();
+  printEngine = printEngine.QueryInterface(Components.interfaces.nsIMsgPrintEngine);
+}
+
+function getEngineWebBrowserPrint()
+{
+  return printEngine.webBrowserPrint;
 }
 
 function getWebNavigation()
 {
   try {
-    return document.getElementById("content").webNavigation;
+    return getPPBrowser().webNavigation;
   } catch (e) {
     return null;
   }
 }
 
-function showPrintPreviewToolbar()
+function getNavToolbox()
 {
-  const kXULNS = 
-    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-  var printPreviewTB = document.createElementNS(kXULNS, "toolbar");
-  printPreviewTB.setAttribute("printpreview", true);
-  printPreviewTB.setAttribute("id", "print-preview-toolbar");
-
-  var navToolbox = document.getElementById("content");
-  navToolbox.parentNode.insertBefore(printPreviewTB, navToolbox);
-  
+  return document.getElementById("content");
 }
 
-function BrowserExitPrintPreview()
+function getPPBrowser()
 {
-  window.close();
+  return document.getElementById("content");
 }
-
-// This observer is called once the progress dialog has been "opened"
-var gPrintPreviewObs = {
-  observe: function(aSubject, aTopic, aData)
-  {
-    setTimeout(FinishPrintPreview, 0);
-  },
-
-  QueryInterface : function(iid)
-  {
-    if (iid.equals(Components.interfaces.nsIObserver) ||
-        iid.equals(Components.interfaces.nsISupportsWeakReference) ||
-        iid.equals(Components.interfaces.nsISupports))
-      return this;
-
-    throw Components.results.NS_NOINTERFACE;
-  }
-};
 
 function getBundle(aURI)
 {
@@ -155,76 +123,23 @@ function setPPTitle(aTitle)
   document.title = title;
 }
 
-function PrintPreview()
+function onEnterPrintPreview()
 {
-  var webBrowserPrint = printEngine.webBrowserPrint;
-
-  // Here we get the PrintingPromptService tso we can display the PP Progress from script
-  // For the browser implemented via XUL with the PP toolbar we cannot let it be
-  // automatically opened from the print engine because the XUL scrollbars in the PP window
-  // will layout before the content window and a crash will occur.
-  //
-  // Doing it all from script, means it lays out before hand and we can let printing do it's own thing
-  gWebProgress = new Object();
-
-  var printPreviewParams    = new Object();
-  var notifyOnOpen          = new Object();
-  var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
-                                  .getService(Components.interfaces.nsIPrintingPromptService);
-  if (printingPromptService) {
-    // just in case we are already printing, 
-    // an error code could be returned if the Prgress Dialog is already displayed
-    try {
-      printingPromptService.showProgress(this, webBrowserPrint, printSettings, gPrintPreviewObs, false, gWebProgress, 
-                                         printPreviewParams, notifyOnOpen);
-      if (printPreviewParams.value) {
-        var webNav = getWebNavigation();
-        printPreviewParams.value.docTitle = webNav.document.title;
-        printPreviewParams.value.docURL   = webNav.currentURI.spec;
-      }
-
-      // this tells us whether we should continue on with PP or 
-      // wait for the callback via the observer
-      if (!notifyOnOpen.value.valueOf() || gWebProgress.value == null) {
-        FinishPrintPreview();
-      }
-    } catch (e) {
-      FinishPrintPreview();
-    }
-  }
-}
-
-function FinishPrintPreview()
-{
-  var webBrowserPrint = printEngine.webBrowserPrint;
-  try {
-    if (webBrowserPrint) {
-      webBrowserPrint.printPreview(printSettings, null, gWebProgress.value);
-    }
- 
-    // show the toolbar after we go into print preview mode so
-    // that we can initialize the toolbar with total num pages
-    showPrintPreviewToolbar();
-    setPPTitle(getWebNavigation().document.title);
-
-    content.focus();
-  } catch (e) {
-    // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
-    // causing an exception to be thrown which we catch here.
-    // Unfortunately this will also consume helpful failures, so add a
-    //dump(e+"\n");
-  }
+  setPPTitle(getWebNavigation().document.title);
   printEngine.showWindow(true);
 }
 
+function onExitPrintPreview()
+{
+  window.close();
+}
 
 // Pref listener constants
 const gStartupPPObserver =
 {
-  printengine:null,
   observe: function(subject, topic, prefName)
   {
-    this.printengine.PrintPreview();
+    PrintUtils.printPreview(onEnterPrintPreview, onExitPrintPreview);
   }
 };
 
@@ -251,9 +166,7 @@ function InitPrintEngineWindow()
     }
 
     if (window.arguments[4]) {
-      doingPrintPreview = window.arguments[4];
-      //printEngine.showWindow(doingPrintPreview);
-      printEngine.doPrintPreview = doingPrintPreview;
+      printEngine.doPrintPreview = window.arguments[4];
     } else {
       printEngine.doPrintPreview = false;
     }
@@ -271,7 +184,6 @@ function InitPrintEngineWindow()
       printEngine.setParentWindow(null);
     }
 
-    gStartupPPObserver.printengine = this;
     printEngine.setStatusFeedback(statusFeedback);
     printEngine.setStartupPPObserver(gStartupPPObserver);
 
