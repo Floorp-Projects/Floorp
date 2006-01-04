@@ -73,7 +73,9 @@ protected:
   nsString mSearchTerms;
   PRBool mOnlyBookmarked;
   PRBool mDomainIsHost;
-  nsString mDomain;
+  nsCString mDomain; // Default is IsVoid, empty string is valid query
+  PRBool mUriIsPrefix;
+  nsCOMPtr<nsIURI> mUri;
   nsTArray<PRInt64> mFolders;
   PRUint32 mItemTypes;
 };
@@ -100,9 +102,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYQUERYOPTIONS
 
-  PRInt32 SortingMode() const { return mSort; }
-  PRInt32 ResultType() const { return mResultType; }
-  const PRInt32* GroupingMode(PRUint32 *count) const {
+  PRUint32 SortingMode() const { return mSort; }
+  PRUint32 ResultType() const { return mResultType; }
+  const PRUint32* GroupingMode(PRUint32 *count) const {
     *count = mGroupCount; return mGroupings;
   }
   PRBool ExpandPlaces() const { return mExpandPlaces; }
@@ -117,10 +119,10 @@ private:
 
   ~nsNavHistoryQueryOptions() { delete[] mGroupings; }
 
-  PRInt32 mSort;
-  PRInt32 mResultType;
+  PRUint32 mSort;
+  PRUint32 mResultType;
   PRUint32 mGroupCount;
-  PRInt32 *mGroupings;
+  PRUint32 *mGroupings;
   PRBool mExpandPlaces;
   PRBool mForceOriginalTitle;
   PRBool mIncludeHidden;
