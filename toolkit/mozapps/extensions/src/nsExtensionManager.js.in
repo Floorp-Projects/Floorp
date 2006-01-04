@@ -1267,8 +1267,10 @@ WinRegInstallLocation.prototype = {
                           .createInstance(nsILocalFile);
       dir.initWithPath(key.readStringValue(id));
 
-      this._IDToDirMap[id] = dir;
-      this._DirToIDMap[dir.path] = id;
+      if (dir.exists() && dir.isDirectory()) {
+        this._IDToDirMap[id] = dir;
+        this._DirToIDMap[dir.path] = id;
+      }
     }
   },
 
