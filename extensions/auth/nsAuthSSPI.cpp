@@ -290,6 +290,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                          PRUint32   *outTokenLen)
 {
     SECURITY_STATUS rc;
+    TimeStamp ignored;
 
     DWORD ctxAttr, ctxReq = 0;
     CtxtHandle *ctxIn;
@@ -354,7 +355,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                                            &mCtxt,
                                            &obd,
                                            &ctxAttr,
-                                           NULL);
+                                           &ignored);
     if (rc == SEC_I_CONTINUE_NEEDED || rc == SEC_E_OK) {
         *outToken = ob.pvBuffer;
         *outTokenLen = ob.cbBuffer;
