@@ -42,6 +42,7 @@
 #include "nsHashtable.h"
 #include "nsIPref.h"
 #include "nsReadableUtils.h"
+#include "prprf.h"
 
 #include <errno.h>
 #include <string.h>
