@@ -1108,9 +1108,13 @@ function URLBarFocusHandler(aEvent, aElt)
 
 function URLBarMouseDownHandler(aEvent, aElt)
 {
-  gIgnoreFocus = true;
-  gIgnoreClick = false;
-  aElt.setSelectionRange(0, 0);
+  if (aElt.hasAttribute("focused")) { 
+    gIgnoreClick = true;
+  } else {
+    gIgnoreFocus = true;
+    gIgnoreClick = false;
+    aElt.setSelectionRange(0, 0);
+  } 
 }
 
 function URLBarClickHandler(aEvent, aElt)
