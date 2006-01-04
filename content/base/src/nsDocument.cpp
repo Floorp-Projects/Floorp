@@ -899,6 +899,8 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 
     mPrincipal = do_QueryInterface(owner);
   }
+
+  mChannel = aChannel;
 }
 
 void
