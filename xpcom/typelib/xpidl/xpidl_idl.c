@@ -182,7 +182,7 @@ new_input_data(char **filename, IncludePathEntry *include_path)
      * if filename is fully qualified (starts with driver letter), then
      * just call fopen();  else, go with fopen_from_includes()
      */
-    if( filename[1] == ':' )
+    if( (*filename)[1] == ':' )
       inputfile = fopen(*filename, "r");
     else
       inputfile = fopen_from_includes(filename, "r", include_path);
