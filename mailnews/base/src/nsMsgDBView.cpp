@@ -1811,6 +1811,13 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     m_db->AddListener(this);
     m_folder = folder;
     m_viewFolder = folder;
+
+    PRUint32 seconds;
+    PRTime2Seconds(PR_Now(), &seconds);
+    nsCAutoString nowStr;
+    nowStr.AppendInt(seconds);
+    m_folder->SetStringProperty(MRU_TIME_PROPERTY, nowStr.get());
+
     // determine if we are in a news folder or not.
     // if yes, we'll show lines instead of size, and special icons in the thread pane
     nsCOMPtr <nsIMsgIncomingServer> server;
@@ -4067,6 +4074,7 @@ nsresult nsMsgDBView::ExpandByIndex(nsMsgViewIndex index, PRUint32 *pNumExpanded
     return NS_MSG_MESSAGE_NOT_FOUND;
   }
   rv = GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(pThread));
+  NS_ENSURE_SUCCESS(rv, rv);
   m_flags[index] = flags;
   NoteChange(index, 1, nsMsgViewNotificationCode::changed);
   if (m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)
