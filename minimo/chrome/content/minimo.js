@@ -299,7 +299,7 @@ function MiniNavStartup()
   /*
    * We add event handler to catch the right and left keys on the main_MenuPopup 
    */
-  document.addEventListener("keypress",eventHandlerMenu,true);
+//  document.addEventListener("keypress",eventHandlerMenu,true);
   
   /*
    * Sync UI zoom level 
@@ -311,8 +311,8 @@ function MiniNavStartup()
   /* 
    * Add event clicks to Minimo toolbars and also to the mStrip BOX in the tabbrowser
    */
-  getBrowser().mStrip.addEventListener("click",BrowserWithoutSNAV,false);
-  document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
+//  getBrowser().mStrip.addEventListener("click",BrowserWithoutSNAV,false);
+//  document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
   
   getBrowser().addEventListener("DOMLinkAdded", BrowserLinkAdded, false);
 
@@ -525,7 +525,7 @@ function findRuleById(outnavTarget,ruleattribute) {
   * Init stuff
   * 
   **/
-function browserInit(refTab)
+function browserInit(refTab)  
 {
   /* 
    * addRule access navigational rule to each tab 
@@ -540,7 +540,7 @@ function browserInit(refTab)
   
   /* New Browser OnFocus SNAV Toggle */
   
-  refBrowser.addEventListener("focus", BrowserWithSNAV , true);
+//  refBrowser.addEventListener("focus", BrowserWithSNAV , true);
   
   try {
     refBrowser.markupDocumentViewer.textZoom = .90;
