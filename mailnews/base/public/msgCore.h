@@ -59,6 +59,12 @@ class nsIMsgFolder;
  */
 #define SUMMARY_SUFFIX ".msf"
 
+/*
+ * These are folder property strings, which are used in several places.
+
+ */
+#define MRU_TIME_PROPERTY "MRUTime"
+
 /* NS_ERROR_MODULE_MAILNEWS is defined in mozilla/xpcom/public/nsError.h */
 
 /*

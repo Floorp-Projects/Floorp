@@ -396,6 +396,12 @@ NS_IMETHODIMP nsMsgDBFolder::SetHasNewMessages(PRBool curNewMessages)
 {
   if (curNewMessages != mNewMessages) 
   {
+    // Only change mru time if we're going from doesn't have new to has new.
+    // technically, we should probably update mru time for every new message
+    // but we would pay a performance penalty for that. If the user
+    // opens the folder, the mrutime will get updated anyway.
+    if (curNewMessages) 
+      SetMRUTime();
     /** @params
      * nsIAtom* property, PRBool oldValue, PRBool newValue
      */
@@ -5199,5 +5205,14 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
   }
   msgHdr->SetStringProperty("preview", msgBody.get());
   return rv;
+}
+
+void nsMsgDBFolder::SetMRUTime()
+{
+  PRUint32 seconds;
+  PRTime2Seconds(PR_Now(), &seconds);
+  nsCAutoString nowStr;
+  nowStr.AppendInt(seconds);
+  SetStringProperty(MRU_TIME_PROPERTY, nowStr.get());
 }
 
