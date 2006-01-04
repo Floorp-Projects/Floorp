@@ -117,6 +117,17 @@ function showCalendar(aDate1, aDate2)
         collapseElement(document.getElementById("threadpane-splitter"));
         collapseElement(gSearchBox);
         uncollapseElement(calendarViewBox);
+
+        // Thunderbird is smart.  It won't reload the message list if the user
+        // clicks the same folder that's already selected.  Therefore, we need
+        // to not only remove the tree selection (so clicking triggers an event)
+        // but also reset some of TB's internal variables.
+        var treeSel = document.getElementById("folderTree").view.selection;
+        treeSel.selectEventsSuppressed = true;
+        treeSel.clearSelection();
+        treeSel.selectEventsSuppressed = false;
+        gMsgFolderSelected = null;
+        msgWindow.openFolder = null;
     }
 
     var view = currentView();
