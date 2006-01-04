@@ -171,8 +171,10 @@ printf("\n");
   PRInt32 count = 0;
   nsIFrame* childFrame = GetFirstChild(nsnull);
   while (childFrame) {
+    nsReflowReason reason = (childFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)
+      ? eReflowReason_Initial : aReflowState.reason;
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                       childFrame, availSize);
+                                       childFrame, availSize, reason);
     rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
                      childReflowState, aStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");

@@ -197,8 +197,10 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   nsHTMLReflowMetrics indexSize(nsnull);
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
+    nsReflowReason reason = (childFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)
+      ? eReflowReason_Initial : aReflowState.reason;
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                       childFrame, availSize);
+                                       childFrame, availSize, reason);
     rv = ReflowChild(childFrame, aPresContext,
                      childDesiredSize, childReflowState, childStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");

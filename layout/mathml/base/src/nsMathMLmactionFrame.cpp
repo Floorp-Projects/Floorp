@@ -299,7 +299,9 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     nsReflowReason reason = aReflowState.reason;
-    if (mWasRestyled) {
+    if (childFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)
+      reason = eReflowReason_Initial;
+    else if (mWasRestyled) {
       mWasRestyled = PR_FALSE;
       // If we have just been restyled, make sure to reflow our
       // selected child with a StyleChange reflow reason so that
