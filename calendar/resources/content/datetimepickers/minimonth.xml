@@ -42,8 +42,8 @@
         <xul:hbox class="minimonth-month-box">
           <xul:image class="minimonth-navbtn" dir="-1"/>
           <xul:spacer flex="1"/>
-          <xul:text class="minimonth-month-name" value="Month" onclick="showPopupList('month')"/>
-          <xul:text class="minimonth-year-name" value="Year" onclick="showPopupList('year')"/>
+          <xul:text class="minimonth-month-name" value="Month" onclick="showPopupList(event, 'month')"/>
+          <xul:text class="minimonth-year-name" value="Year" onclick="showPopupList(event, 'year')"/>
           <xul:spacer flex="1"/>
           <xul:image class="minimonth-navbtn" dir="1"/>
         </xul:hbox>
@@ -332,9 +332,14 @@
       </method>
 
       <method name="showPopupList">
+        <parameter name="event"/>
         <parameter name="type"/> <!-- 'month' or 'year' -->
         <body>
           <![CDATA[
+            // Don't do anything for right/middle-clicks
+            if (event.button != 0)
+                return;
+
             // Close open popups (if any), to prevent linux crashes
             if (this.mPopup)
               this.mPopup.hidePopup();
