@@ -84,11 +84,11 @@ static nsresult ParseQueryBooleanString(const nsCString& aString,
 
 // query getters
 typedef NS_STDCALL_FUNCPROTO(nsresult, BoolQueryGetter, nsINavHistoryQuery,
-                             GetOnlyBookmarked, PRBool*);
+                             GetOnlyBookmarked, (PRBool*));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32QueryGetter, nsINavHistoryQuery,
-                             GetBeginTimeReference, PRUint32*);
+                             GetBeginTimeReference, (PRUint32*));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Int64QueryGetter, nsINavHistoryQuery,
-                             GetBeginTime, PRInt64*);
+                             GetBeginTime, (PRInt64*));
 static void AppendBoolKeyValueIfTrue(nsACString& aString,
                                      const nsCString& aName,
                                      nsINavHistoryQuery* aQuery,
@@ -104,11 +104,11 @@ static void AppendInt64KeyValueIfNonzero(nsACString& aString,
 
 // query setters
 typedef NS_STDCALL_FUNCPROTO(nsresult, BoolQuerySetter, nsINavHistoryQuery,
-                             SetOnlyBookmarked, PRBool);
+                             SetOnlyBookmarked, (PRBool));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32QuerySetter, nsINavHistoryQuery,
-                             SetBeginTimeReference, PRUint32);
+                             SetBeginTimeReference, (PRUint32));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Int64QuerySetter, nsINavHistoryQuery,
-                             SetBeginTime, PRInt64);
+                             SetBeginTime, (PRInt64));
 static void SetQueryKeyBool(const nsCString& aValue, nsINavHistoryQuery* aQuery,
                             BoolQuerySetter setter);
 static void SetQueryKeyUint32(const nsCString& aValue, nsINavHistoryQuery* aQuery,
@@ -119,10 +119,10 @@ static void SetQueryKeyInt64(const nsCString& aValue, nsINavHistoryQuery* aQuery
 // options setters
 typedef NS_STDCALL_FUNCPROTO(nsresult, BoolOptionsSetter,
                              nsINavHistoryQueryOptions,
-                             SetExpandPlaces, PRBool);
+                             SetExpandPlaces, (PRBool));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32OptionsSetter,
                              nsINavHistoryQueryOptions,
-                             SetResultType, PRUint32);
+                             SetResultType, (PRUint32));
 static void SetOptionsKeyBool(const nsCString& aValue,
                               nsINavHistoryQueryOptions* aOptions,
                               BoolOptionsSetter setter);
