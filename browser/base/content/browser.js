@@ -4426,9 +4426,25 @@ nsContextMenu.prototype = {
                     // Target is a link or a descendant of a link.
                     this.onLink = true;
                     this.onMetaDataItem = true;
+
+                    // xxxmpc: this is kind of a hack to work around a Gecko bug (see bug 266932)
+                    // we're going to walk up the DOM looking for a parent link node,
+                    // this shouldn't be necessary, but we're matching the existing behaviour for left click
+                    var realLink = elem;
+                    var parent = elem.parentNode;
+                    while (parent) {
+                      try {
+                        if ( (parent instanceof HTMLAnchorElement && elem.href) ||
+                             parent instanceof HTMLAreaElement ||
+                             parent instanceof HTMLLinkElement ||
+                             parent.getAttributeNS( "http://www.w3.org/1999/xlink", "type") == "simple")
+                          realLink = parent;
+                      } catch (e) {}
+                      parent = parent.parentNode;
+                    }
                     
                     // Remember corresponding element.
-                    this.link = elem;
+                    this.link = realLink;
                     this.linkURL = this.getLinkURL();
                     this.linkURI = this.getLinkURI();
                     this.linkProtocol = this.getLinkProtocol();
@@ -4989,6 +5005,20 @@ function asyncOpenWebPanel(event)
        target instanceof HTMLLinkElement) {
      if (target.hasAttribute("href"))
        linkNode = target;
+
+     // xxxmpc: this is kind of a hack to work around a Gecko bug (see bug 266932)
+     // we're going to walk up the DOM looking for a parent link node,
+     // this shouldn't be necessary, but we're matching the existing behaviour for left click
+     var parent = target.parentNode;
+     while (parent) {
+       if (parent instanceof HTMLAnchorElement ||
+           parent instanceof HTMLAreaElement ||
+           parent instanceof HTMLLinkElement) {
+           if (parent.hasAttribute("href"))
+             linkNode = parent;
+       }
+       parent = parent.parentNode;
+     }
    }
    else {
      linkNode = event.originalTarget;
@@ -5080,14 +5110,15 @@ function asyncOpenWebPanel(event)
      return true;
    } else {
      // Try simple XLink
-     var href;
+     var href, realHref;
      linkNode = target;
      while (linkNode) {
        if (linkNode.nodeType == Node.ELEMENT_NODE) {
          wrapper = linkNode;
 
-         href = wrapper.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-         break;
+         realHref = wrapper.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+         if (realHref)
+           href = realHref;
        }
        linkNode = linkNode.parentNode;
      }
