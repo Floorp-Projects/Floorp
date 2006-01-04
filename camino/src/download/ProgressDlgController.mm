@@ -63,6 +63,7 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 -(BOOL)shouldAllowRemoveAction;
 -(BOOL)shouldAllowPauseAction;
 -(BOOL)shouldAllowResumeAction;
+-(BOOL)shouldAllowOpenAction;
 -(BOOL)fileExistsForSelectedItems;
 -(void)maybeCloseWindow;
 
@@ -184,11 +185,11 @@ static id gSharedProgressController = nil;
     for (int i = ([mProgressViewControllers count] - 1); i >= 0; i--)
     {
       ProgressViewController* curProgressViewController = [mProgressViewControllers objectAtIndex:i];
-	    if (![curProgressViewController isSelected])
-	    {
+      if (![curProgressViewController isSelected])
+      {
           [curProgressViewController setSelected:YES];
           break;
-	    }
+      }
     }
   }
   mSelectionPivotIndex = -1; // nothing is selected any more so nothing to pivot on
@@ -225,8 +226,8 @@ static id gSharedProgressController = nil;
     ProgressViewController* curProgressViewController = [mProgressViewControllers objectAtIndex:i];
     if ((![curProgressViewController isActive]) || [curProgressViewController isCanceled])
     {
-	    [self removeDownload:curProgressViewController]; // remove the download
-	    i--; // leave index at the same position because the dl there got removed
+      [self removeDownload:curProgressViewController]; // remove the download
+      i--; // leave index at the same position because the dl there got removed
     }
   }
   mSelectionPivotIndex = -1;
@@ -456,8 +457,8 @@ static id gSharedProgressController = nil;
   unsigned selectedCount = [mProgressViewControllers count];
   for (unsigned i = 0; i < selectedCount; i++) {
     if ([[mProgressViewControllers objectAtIndex:i] isSelected]) {
-	    // insert at zero so they're in order to-down
-	    [selectedArray addObject:[mProgressViewControllers objectAtIndex:i]];
+      // insert at zero so they're in order to-down
+      [selectedArray addObject:[mProgressViewControllers objectAtIndex:i]];
     }
   }
   [selectedArray autorelease];
@@ -789,6 +790,19 @@ static id gSharedProgressController = nil;
   ProgressViewController* curController;
   while ((curController = [progViewEnum nextObject]))
   {
+    if ([curController isCanceled] || ![curController fileExists])
+      return NO;
+  }
+  
+  return YES;
+}
+
+-(BOOL)shouldAllowOpenAction
+{
+  NSEnumerator* progViewEnum = [[self selectedProgressViewControllers] objectEnumerator];
+  ProgressViewController* curController;
+  while ((curController = [progViewEnum nextObject]))
+  {
     if ([curController isActive] || [curController isCanceled] || ![curController fileExists])
       return NO;
   }
@@ -831,7 +845,10 @@ static id gSharedProgressController = nil;
   else if (action == @selector(remove:)) {
     return [self shouldAllowRemoveAction];
   }
-  else if (action == @selector(open:) || action == @selector(reveal:)) {
+  else if (action == @selector(open:)) {
+    return [self shouldAllowOpenAction];
+  }
+  else if (action == @selector(reveal:)) {
     return [self fileExistsForSelectedItems];
   }
   else if (action == @selector(pause:)) {
@@ -899,9 +916,12 @@ static id gSharedProgressController = nil;
     return NO;
   }
   else if (action == @selector(remove:)) {
-	  return [self shouldAllowRemoveAction];
+    return [self shouldAllowRemoveAction];
   }
-  else if (action == @selector(open:) || action == @selector(reveal:)) {
+  else if (action == @selector(open:)) { 
+    return [self shouldAllowOpenAction];
+  }
+  else if (action == @selector(reveal:)) {
     return [self fileExistsForSelectedItems];
   }
   else if (action == @selector(cancel:)) {
@@ -994,7 +1014,7 @@ static id gSharedProgressController = nil;
   windowFrame.size.width  = mDefaultWindowSize.width;
   
   // cocoa will ensure that the window fits onscreen for us
-	return windowFrame;
+  return windowFrame;
 }
 
 #pragma mark -
