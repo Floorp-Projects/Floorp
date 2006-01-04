@@ -848,18 +848,16 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
-  nsCAutoString buffer;
-  buffer.AssignLiteral("SELECT parent, position FROM moz_bookmarks WHERE folder_child = ");
-  buffer.AppendInt(aFolder);
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT parent, position FROM moz_bookmarks WHERE folder_child = ?1"),
+                                        getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv;
   PRInt64 parent;
-
   PRInt32 oldIndex;
-
   {
-    nsCOMPtr<mozIStorageStatement> statement;
-    rv = dbConn->CreateStatement(buffer, getter_AddRefs(statement));
+    mozStorageStatementScoper scope(statement);
+    rv = statement->BindInt64Parameter(0, aFolder);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool results;
@@ -871,6 +869,26 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
 
     parent = statement->AsInt64(0);
     oldIndex = statement->AsInt32(1);
+  }
+
+  // Make sure aNewParent is not aFolder or a subfolder of aFolder
+  {
+    mozStorageStatementScoper scope(statement);
+    PRInt64 p = aNewParent;
+
+    while (p) {
+      if (p == aFolder) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      rv = statement->BindInt64Parameter(0, p);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRBool results;
+      rv = statement->ExecuteStep(&results);
+      NS_ENSURE_SUCCESS(rv, rv);
+      p = results ? statement->AsInt64(0) : 0;
+    }
   }
 
   PRInt32 newIndex;
@@ -898,6 +916,7 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
   }
 
   // First we remove the item from its old position.
+  nsCAutoString buffer;
   buffer.AssignLiteral("DELETE FROM moz_bookmarks WHERE folder_child = ");
   buffer.AppendInt(aFolder);
   rv = dbConn->ExecuteSimpleSQL(buffer);
