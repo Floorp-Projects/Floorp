@@ -174,8 +174,13 @@ public:
   static const PRInt32 kGetInfoIndex_VisitDate;
   static const PRInt32 kGetInfoIndex_FaviconURL;
 
+  // used in execute queries to get session ID info (only for visits)
+  static const PRInt32 kGetInfoIndex_SessionId;
+
   static nsIAtom* sMenuRootAtom;
   static nsIAtom* sToolbarRootAtom;
+  static nsIAtom* sSessionStartAtom;
+  static nsIAtom* sSessionContinueAtom;
 
   // Take a row of kGetInfoIndex_* columns and construct a ResultNode.
   // The row must contain the full set of columns.
