@@ -110,7 +110,7 @@ nsBrowserStatusHandler.prototype =
 			this.startDocumentLoad(aRequest);
 		}
         this.stopreloadButton.className = "stop-button";
-        this.stopreloadButton.command = "cmd_BrowserStop";
+        this.stopreloadButton.setAttribute("command","cmd_BrowserStop");
         
         return;
       }
@@ -123,7 +123,7 @@ nsBrowserStatusHandler.prototype =
         document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
 
         this.stopreloadButton.className = "reload-button";
-        this.stopreloadButton.command= "cmd_BrowserReload";
+        this.stopreloadButton.setAttribute("command","cmd_BrowserReload");
 
         return;
       }
