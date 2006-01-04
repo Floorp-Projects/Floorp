@@ -21,9 +21,6 @@
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
             if (this.localName == "menuseparator")
               return accService.createXULMenuSeparatorAccessible(this);
-            if (this.parentNode && this.parentNode.parentNode &&
-                this.parentNode.localName == "menupopup" && this.parentNode.parentNode.localName == "menulist")
-              return accService.createXULSelectOptionAccessible(this);
             return accService.createXULMenuitemAccessible(this);
           ]]>
         </getter>
