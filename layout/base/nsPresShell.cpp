@@ -163,6 +163,7 @@
 #include "nsIURI.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
+#include "nsEventQueueUtils.h"
 #include "nsIScrollableFrame.h"
 #include "prtime.h"
 #include "prlong.h"
@@ -1879,10 +1880,11 @@ PresShell::Destroy()
   // Revoke pending events
   mReflowEventQueue = nsnull;
   nsCOMPtr<nsIEventQueue> eventQueue;
-  nsContentUtils::EventQueueService()->
-    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                         getter_AddRefs(eventQueue));
-  eventQueue->RevokeEvents(this);
+  nsresult rv = NS_GetCurrentEventQ(getter_AddRefs(eventQueue),
+                                    nsContentUtils::EventQueueService());
+  if (NS_SUCCEEDED(rv)) {
+    eventQueue->RevokeEvents(this);
+  }
 
   CancelAllReflowCommands();
 
