@@ -42,8 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOZILLA_INTERNAL_API = 1
-
 REQUIRES	= xpcom \
 		  string \
 		  xmlextras \
@@ -64,10 +62,11 @@ include $(topsrcdir)/config/config.mk
 LIBS		= \
 		$(LIBS_DIR) \
 		$(MOZ_JS_LIBS) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
-		
+
 ENABLE_CXX_EXCEPTIONS = 1
 
 include $(topsrcdir)/config/rules.mk
