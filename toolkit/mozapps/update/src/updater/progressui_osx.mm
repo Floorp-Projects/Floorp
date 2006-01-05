@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Josh Aas <josh@mozillafoundation.org>
+ *  Josh Aas <josh@mozilla.com>
  *  Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
