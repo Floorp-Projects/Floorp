@@ -495,12 +495,12 @@ function BrowserWithSNAV(e) {
  */
 function eventHandlerMenu(e) {
   
-  if( (e.keyCode==39 || e.keyCode==37) && (gShowingMenuPopup) ) {
+  if( (e.keyCode==e.DOM_VK_LEFT || e.keyCode==e.DOM_VK_RIGHT) && (gShowingMenuPopup) ) {
     BrowserMenuPopupFalse();
     document.getElementById("menu-button").focus(); // forcing state back to the menu. 
   }
   
-  if( e.keyCode==70) /*SoftKey1 or HWKey1*/ {
+  if( e.keyCode==e.DOM_VK_F23) /*SoftKey1 or HWKey1*/ {
   	document.getElementById("menu-button").focus();
 	e.preventBubble();
 	BrowserWithoutSNAV();
@@ -513,11 +513,11 @@ function eventHandlerMenu(e) {
     if(outnavTarget && (e.keyCode==40||e.keyCode==38) && !gShowingMenuPopup) {
       
       e.preventBubble();
-      if(e.keyCode==40) {
+      if(e.keyCode==e.DOM_VK_DOWN) {
         
         ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"),"accessnextrule");
       }
-      if(e.keyCode==38) {
+      if(e.keyCode==e.DOM_VK_UP) {
         
         ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"),"accessprevrule"); 
       }
