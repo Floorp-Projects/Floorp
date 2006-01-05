@@ -311,7 +311,7 @@ sub bless_groups {
     my $self = shift;
 
     return $self->{'bless_groups'} if defined $self->{'bless_groups'};
-    return {} unless $self->id;
+    return [] unless $self->id;
 
     my $dbh = Bugzilla->dbh;
     my $query;
