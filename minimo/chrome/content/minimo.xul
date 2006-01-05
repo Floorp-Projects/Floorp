@@ -75,6 +75,11 @@
     <popup type="autocomplete" id="PopupAutoComplete"/>
   </popupset>
 
+  <keyset>
+    <key id="minimo-key" keycode="VK_F23" oncommand="enableMenuAccess()"/>
+    <key id="minimo-key2" keycode="VK_F12" oncommand="enableMenuAccess()"/>
+  </keyset>
+
   <toolbox id="mini-toolbars">
 
     <command id="cmd_BrowserOpenTab"          oncommand="BrowserOpenTab()"/>
@@ -128,7 +133,7 @@
 
     <toolbar id="nav-bar" >
     
-        <toolbarbutton tabindex="1" accessrule="focus_nav-bar" class="menu-button"  id="menu-button" accesskey="m" command="cmd_BrowserMenu" />  
+        <toolbarbutton tabindex="1" accessrule="focus_nav-bar" class="menu-button"  id="menu-button" command="cmd_BrowserMenu" />  
         <toolbarbutton tabindex="2" accessrule="focus_nav-bar" class="back-button"  id="back-button" command="cmd_BrowserBack" />  
         <toolbarbutton tabindex="3" accessrule="focus_nav-bar" class="forward-button" id="forward-button" command="cmd_BrowserForward" />  
         <toolbarbutton tabindex="4" accessrule="focus_nav-bar" class="stop-button"  id="reload-stop-button" command="cmd_BrowserReload"/>
