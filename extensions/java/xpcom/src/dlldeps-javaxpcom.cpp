@@ -59,5 +59,7 @@ void XXXNeverCalled_javaxpcom()
   JAVAPROXY_NATIVE(callXPCOMMethod) (nsnull, nsnull, nsnull, nsnull, nsnull);
 
   JAVAPROXY_NATIVE(finalizeProxy) (nsnull, nsnull, nsnull);
+
+  JAVAPROXY_NATIVE(isSameXPCOMObject) (nsnull, nsnull, nsnull, nsnull);
 }
 

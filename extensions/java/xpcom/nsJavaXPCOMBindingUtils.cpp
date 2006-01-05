@@ -721,24 +721,27 @@ GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
     return NS_OK;
   }
 
+  // Get the root nsISupports of the xpcom object
+  nsCOMPtr<nsISupports> rootObject = do_QueryInterface(aXPCOMObject, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Get associated Java object from hash table
-  rv = gNativeToJavaProxyMap->Find(env, aXPCOMObject, aIID, aResult);
-  if (NS_FAILED(rv))
-    return rv;
+  rv = gNativeToJavaProxyMap->Find(env, rootObject, aIID, aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (*aResult)
     return NS_OK;
 
   // No Java object is associated with the given XPCOM object, so we
   // create a Java proxy.
-  return CreateJavaProxy(env, aXPCOMObject, aIID, aResult);
+  return CreateJavaProxy(env, rootObject, aIID, aResult);
 }
 
 nsresult
 GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
                         nsISupports** aResult, PRBool* aIsXPTCStub)
 {
-  NS_PRECONDITION(aResult != nsnull && aIsXPTCStub != nsnull, "null ptr");
-  if (!aResult || !aIsXPTCStub)
+  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv;
@@ -757,23 +760,28 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
   if (isProxy) {
     void* inst;
     rv = GetXPCOMInstFromProxy(env, aJavaObject, &inst);
-    if (NS_SUCCEEDED(rv)) {
-      *aResult = NS_STATIC_CAST(JavaXPCOMInstance*, inst)->GetInstance();
-      NS_ADDREF(*aResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsISupports* rootObject =
+              NS_STATIC_CAST(JavaXPCOMInstance*, inst)->GetInstance();
+    rv = rootObject->QueryInterface(aIID, (void**) aResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (aIsXPTCStub) {
       *aIsXPTCStub = PR_FALSE;
-      return NS_OK;
     }
+    return NS_OK;
   }
 
-  *aIsXPTCStub = PR_TRUE;
+  if (aIsXPTCStub) {
+    *aIsXPTCStub = PR_TRUE;
+  }
 
   nsJavaXPTCStub* stub;
   rv = gJavaToXPTCStubMap->Find(env, aJavaObject, aIID, &stub);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
   if (stub) {
-    // stub is already AddRef'd
+    // stub is already AddRef'd and QI'd
     *aResult = NS_STATIC_CAST(nsISupports*,
                               NS_STATIC_CAST(nsXPTCStubBase*, stub));
     return NS_OK;
@@ -791,8 +799,7 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
 
   nsCOMPtr<nsIInterfaceInfo> iinfo;
   rv = iim->GetInfoForIID(&aIID, getter_AddRefs(iinfo));
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Create XPCOM stub
   stub = new nsJavaXPTCStub(aJavaObject, iinfo);

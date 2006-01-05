@@ -165,7 +165,17 @@ public class XPCOMJavaProxy implements InvocationHandler {
    * @see Object#equals(Object)
    */
   protected static Boolean proxyEquals(Object aProxy, Object aOther) {
-    return (aProxy == aOther ? Boolean.TRUE : Boolean.FALSE);
+    // See if the two are the same Java object
+    if (aProxy == aOther) {
+      return Boolean.TRUE;
+    } else {
+      // If not, then see if they represent the same XPCOM object.  But first,
+      // we need to check if |aOther| is an XPCOMJavaProxy.
+      if (isXPCOMJavaProxy(aOther) && isSameXPCOMObject(aProxy, aOther)) {
+        return Boolean.TRUE;
+      }
+    }
+    return Boolean.FALSE;
   }
 
   /**
@@ -185,6 +195,19 @@ public class XPCOMJavaProxy implements InvocationHandler {
     }
     return false;
   }
+
+  /**
+   * Checks if the two given XPCOMJavaProxy objects are proxies for
+   * the same XPCOM object.
+   *
+   * @param aProxy1  XPCOMJavaProxy created by <code>createProxy</code>
+   * @param aProxy2  XPCOMJavaProxy created by <code>createProxy</code>
+   *
+   * @return <code>true</code> if both proxies represent the same XPCOM object;
+   *         <code>false</code> otherwise
+   */
+  protected static native boolean isSameXPCOMObject(Object aProxy1,
+          Object aProxy2);
 
   /**
    * Handles method calls of <code>java.lang.Object.toString</code>
