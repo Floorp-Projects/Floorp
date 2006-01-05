@@ -351,7 +351,7 @@ nsBrowserStatusHandler.prototype =
     gBrowser.mStrip.addEventListener("click",BrowserWithoutSNAV,false);
     document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
   
-  gBrowser.addEventListener("DOMLinkAdded", BrowserLinkAdded, false);
+    gBrowser.addEventListener("DOMLinkAdded", BrowserLinkAdded, false);
   
 }
 
@@ -475,17 +475,36 @@ function findChildShell(aDocument, aDocShell, aSoughtURI) {
 
 function BrowserWithoutSNAV(e) {
   if(gSNAV==1||gSNAV==-1) {
-	gSNAV=0;
+    gSNAV=0;
+    document.addEventListener("keypress",eventHandlerMenu,true);
     gPref.setBoolPref("snav.enabled", false);                                   
   } 
 }
 
 function BrowserWithSNAV(e) {
   if(gSNAV==0||gSNAV==-1) {
-	gSNAV=1;
+    gSNAV=1;
+    document.removeEventListener("keypress",eventHandlerMenu,true);
     gPref.setBoolPref("snav.enabled", true);                                   
   } 
 }
+
+function enableMenuAccess() {
+
+  if(document.commandDispatcher&&document.commandDispatcher.focusedElement) {
+    if (document.commandDispatcher.focusedElement.getAttribute("id")=="menu-button") {
+      BrowserWithSNAV();
+      gBrowser.contentWindow.focus();
+	return;
+    } 
+  } 
+
+  // In case focus is somewhere else..
+
+  document.getElementById("menu-button").focus();
+  BrowserWithoutSNAV(); 
+}
+
 
 /*
  *  Focus Shortcut Action. This is just a focus action dispatcher based on certain conditions 
@@ -500,17 +519,11 @@ function eventHandlerMenu(e) {
     document.getElementById("menu-button").focus(); // forcing state back to the menu. 
   }
   
-  if( e.keyCode==e.DOM_VK_F23) /*SoftKey1 or HWKey1*/ {
-  	document.getElementById("menu-button").focus();
-	e.preventBubble();
-	BrowserWithoutSNAV();
-  } 
-  
   if(document.commandDispatcher&&document.commandDispatcher.focusedElement) { 
     
     var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
     
-    if(outnavTarget && (e.keyCode==40||e.keyCode==38) && !gShowingMenuPopup) {
+    if(outnavTarget && (e.keyCode==e.DOM_VK_DOWN||e.keyCode==e.DOM_VK_UP) && !gShowingMenuPopup) {
       
       e.preventBubble();
       if(e.keyCode==e.DOM_VK_DOWN) {
@@ -531,13 +544,11 @@ function eventHandlerMenu(e) {
             if(gBrowser.mStrip.collapsed) {				
               gBrowser.contentWindow.focus();
             } 
-            
           }
         } 
         if(tempElement=="#tabContent") { 			
           gBrowser.contentWindow.focus();
         } 
-        
       } else { 
         document.getElementById(tempElement).focus();
       }
