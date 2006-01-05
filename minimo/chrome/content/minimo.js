@@ -336,7 +336,7 @@ nsBrowserStatusHandler.prototype =
   /*
    * We add event handler to catch the right and left keys on the main_MenuPopup 
    */
-  //  document.addEventListener("keypress",eventHandlerMenu,true);
+    document.addEventListener("keypress",eventHandlerMenu,true);
   
   /*
    * Sync UI zoom level 
@@ -348,8 +348,8 @@ nsBrowserStatusHandler.prototype =
   /* 
    * Add event clicks to Minimo toolbars and also to the mStrip BOX in the tabbrowser
    */
-  //  gBrowser.mStrip.addEventListener("click",BrowserWithoutSNAV,false);
-  //  document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
+    gBrowser.mStrip.addEventListener("click",BrowserWithoutSNAV,false);
+    document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
   
   gBrowser.addEventListener("DOMLinkAdded", BrowserLinkAdded, false);
   
@@ -504,7 +504,6 @@ function eventHandlerMenu(e) {
   	document.getElementById("menu-button").focus();
 	e.preventBubble();
 	BrowserWithoutSNAV();
-    
   } 
   
   if(document.commandDispatcher&&document.commandDispatcher.focusedElement) { 
@@ -577,7 +576,8 @@ function browserInit(refTab)
   
   /* New Browser OnFocus SNAV Toggle */
   
-  //  refBrowser.addEventListener("focus", BrowserWithSNAV , true);
+   refBrowser.addEventListener("focus", BrowserWithSNAV , true);
+
   
   try {
     refBrowser.markupDocumentViewer.textZoom = .90;
