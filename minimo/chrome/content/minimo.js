@@ -494,6 +494,7 @@ function enableMenuAccess() {
   if(document.commandDispatcher&&document.commandDispatcher.focusedElement) {
     if (document.commandDispatcher.focusedElement.getAttribute("id")=="menu-button") {
       BrowserWithSNAV();
+      gBrowser.focus();
       gBrowser.contentWindow.focus();
 	return;
     } 
@@ -546,7 +547,8 @@ function eventHandlerMenu(e) {
             } 
           }
         } 
-        if(tempElement=="#tabContent") { 			
+        if(tempElement=="#tabContent") { 	
+	    gBrowser.focus();		
           gBrowser.contentWindow.focus();
         } 
       } else { 
