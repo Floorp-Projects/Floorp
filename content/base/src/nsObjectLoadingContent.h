@@ -126,9 +126,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * @param aURI       The URI to load.
      * @param aNotify If true, nsIDocumentObserver state change notifications
      *                will be sent as needed.
-     * @param aTypeHint  MIME Type hint. Overridden by the server.
-     * @param aForceType Whether to always use aTypeHint as the type, instead
-     *                   of letting the server override it.
+     * @param aTypeHint  MIME Type hint. Overridden by the server unless this
+     *                   class has the eOverrideServerType capability.
      * @param aForceLoad If true, the object will be refetched even if the URI
      *                   is the same as the currently-loaded object.
      * @note Prefer the nsIURI-taking version of this function if a URI object
@@ -139,7 +138,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     nsresult LoadObject(const nsAString& aURI,
                         PRBool aNotify,
                         const nsCString& aTypeHint = EmptyCString(),
-                        PRBool aForceType = PR_FALSE,
                         PRBool aForceLoad = PR_FALSE);
     /**
      * Loads the object from the given URI.
@@ -165,16 +163,12 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * Otherwise a request to that URI is made and the type sent by the server
      * is used to find a suitable handler.
      *
-     * @param aForceType Whether the passed-in type should override
-     *                   server-supplied MIME types. Will be ignored if
-     *                   aTypeHint is empty.
      * @param aForceLoad If true, the object will be refetched even if the URI
      *                   is the same as the currently-loaded object.
      */
     nsresult LoadObject(nsIURI* aURI,
                         PRBool aNotify,
                         const nsCString& aTypeHint = EmptyCString(),
-                        PRBool aForceType = PR_FALSE,
                         PRBool aForceLoad = PR_FALSE);
 
     enum Capabilities {
@@ -186,7 +180,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 #ifdef MOZ_SVG
       eSupportSVG       = PR_BIT(3), // SVG is supported (image/svg+xml)
 #endif
-      eSupportClassID   = PR_BIT(4) // The classid attribute is supported
+      eSupportClassID   = PR_BIT(4), // The classid attribute is supported
+      eOverrideServerType = PR_BIT(5) // The server-sent MIME type is ignored
+                                      // (ignored if no type is specified)
     };
 
     /**

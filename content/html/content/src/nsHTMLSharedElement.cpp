@@ -532,11 +532,11 @@ nsHTMLSharedElement::BindToTree(nsIDocument* aDocument,
     nsAutoString uri;
     if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri)) {
       // Don't notify: We aren't in a document yet, so we have no frames
-      LoadObject(uri, PR_FALSE, NS_ConvertUTF16toUTF8(type), PR_TRUE);
+      LoadObject(uri, PR_FALSE, NS_ConvertUTF16toUTF8(type));
     } else {
       // Sometimes, code uses <embed> with no src attributes, for example using
       // code="...". Handle that case.
-      LoadObject(nsnull, PR_FALSE, NS_ConvertUTF16toUTF8(type), PR_TRUE);
+      LoadObject(nsnull, PR_FALSE, NS_ConvertUTF16toUTF8(type));
     }
   }
   return rv;
@@ -569,7 +569,7 @@ nsHTMLSharedElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::src) {
       nsAutoString type;
       GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-      LoadObject(aValue, aNotify, NS_ConvertUTF16toUTF8(type), PR_TRUE, PR_TRUE);
+      LoadObject(aValue, aNotify, NS_ConvertUTF16toUTF8(type), PR_TRUE);
     }
   }
 
@@ -580,7 +580,7 @@ nsHTMLSharedElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 PRUint32
 nsHTMLSharedElement::GetCapabilities() const
 {
-  return eSupportImages | eSupportPlugins
+  return eSupportImages | eSupportPlugins | eOverrideServerType
 #ifdef MOZ_SVG
     | eSupportSVG
 #endif

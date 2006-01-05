@@ -141,7 +141,7 @@ nsHTMLAppletElement::IsDoneAddingChildren()
 PRUint32
 nsHTMLAppletElement::GetCapabilities() const
 {
-  return eSupportPlugins;
+  return eSupportPlugins | eOverrideServerType;
 }
 
 void
@@ -286,9 +286,8 @@ nsHTMLAppletElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   // Skip the LoadObject call in that case.
   if (aNotify &&
       aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::code) {
-    LoadObject(aValue, aNotify,
-                     NS_LITERAL_CSTRING("application/x-java-vm"),
-                     PR_TRUE, PR_TRUE);
+    LoadObject(aValue, aNotify, NS_LITERAL_CSTRING("application/x-java-vm"),
+               PR_TRUE);
   }
 
 
@@ -301,8 +300,7 @@ nsHTMLAppletElement::StartAppletLoad(PRBool aNotify)
 {
   nsAutoString uri;
   if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, uri)) {
-    LoadObject(uri, aNotify,
-               NS_LITERAL_CSTRING("application/x-java-vm"), PR_TRUE);
+    LoadObject(uri, aNotify, NS_LITERAL_CSTRING("application/x-java-vm"));
   } else {
     // The constructor set the type to eType_Loading; but if we have no code
     // attribute, then we aren't really a plugin
