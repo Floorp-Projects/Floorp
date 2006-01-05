@@ -255,7 +255,7 @@ function mailCharsetLoadListener (event)
     }
 }
 
-var wintype = document.firstChild.getAttribute('windowtype');
+var wintype = document.documentElement.getAttribute('windowtype');
 if (window && (wintype == "navigator:browser"))
 {
     var contentArea = window.document.getElementById("appcontent");
