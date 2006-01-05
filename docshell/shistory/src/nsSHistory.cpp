@@ -798,9 +798,11 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
       printf("per SHistory limit: evicting content viewer: %s\n", spec.get());
 #endif
 
-      viewer->Destroy();
+      // Drop the presentation state before destroying the viewer, so that
+      // document teardown is able to correctly persist the state.
       ownerEntry->SetContentViewer(nsnull);
       ownerEntry->SyncPresentationState();
+      viewer->Destroy();
     }
 
     nsISHTransaction *temp = trans;
@@ -906,9 +908,11 @@ nsSHistory::EvictGlobalContentViewer()
       }
 #endif
 
-      evictViewer->Destroy();
+      // Drop the presentation state before destroying the viewer, so that
+      // document teardown is able to correctly persist the state.
       evictFromSHE->SetContentViewer(nsnull);
       evictFromSHE->SyncPresentationState();
+      evictViewer->Destroy();
 
       // If we only needed to evict one content viewer, then we are done.
       // Otherwise, continue evicting until we reach the max total limit.
