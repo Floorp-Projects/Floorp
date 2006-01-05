@@ -1807,12 +1807,40 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
     return NS_OK;
 }
 
+static PRBool
+CheckSaneImageSize (PRInt32 width, PRInt32 height)
+{
+    if (width <= 0 || height <= 0)
+        return PR_FALSE;
+
+    /* check to make sure we don't overflow a 32-bit */
+    PRInt32 tmp = width * height;
+    if (tmp / height != width)
+        return PR_FALSE;
+
+    tmp = tmp * 4;
+    if (tmp / 4 != width * height)
+        return PR_FALSE;
+
+    /* reject over-wide or over-tall images */
+    const PRInt32 k64KLimit = 0x0000FFFF;
+    if (width > k64KLimit || height > k64KLimit)
+        return PR_FALSE;
+
+    return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt32 aY,
                                        PRInt32 aW, PRInt32 aH, 
                                        const nsAString& aBGColor)
 {
     NS_ENSURE_ARG(aWindow != nsnull);
+
+    // protect against too-large surfaces that will cause allocation
+    // or overflow issues
+    if (!CheckSaneImageSize (aW, aH))
+        return NS_ERROR_FAILURE;
 
     // We can't allow web apps to call this until we fix at least the
     // following potential security issues:
@@ -1921,7 +1949,12 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
         NS_ERROR("Must have image frame already");
         return NS_ERROR_FAILURE;
     }
-    
+
+    // check if the dimensions are too large;
+    // if they are, we may easily overflow malloc later on
+    if (!CheckSaneImageSize (aSurfaceSize.width, aSurfaceSize.height))
+        return NS_ERROR_FAILURE;
+
     // Acquire alpha values
     nsAutoArrayPtr<PRUint8> alphas;
     nsresult rv;
