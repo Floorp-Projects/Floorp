@@ -704,8 +704,8 @@ nsObjectLoadingContent::LoadObject(const nsAString& aURI,
                                    const nsCString& aTypeHint,
                                    PRBool aForceLoad)
 {
-  LOG(("OBJLC [%p]: Loading object: URI string=<%s> notify=%i type=<%s> forcetype=%i forceload=%i\n",
-       this, NS_ConvertUTF16toUTF8(aURI).get(), aNotify, aTypeHint.get(), aForceType, aForceLoad));
+  LOG(("OBJLC [%p]: Loading object: URI string=<%s> notify=%i type=<%s> forceload=%i\n",
+       this, NS_ConvertUTF16toUTF8(aURI).get(), aNotify, aTypeHint.get(), aForceLoad));
 
   NS_ASSERTION(!mInstantiating, "LoadObject was reentered?");
 
