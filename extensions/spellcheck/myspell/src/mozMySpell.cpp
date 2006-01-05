@@ -286,39 +286,44 @@ NS_IMETHODIMP mozMySpell::GetDictionaryList(PRUnichar ***aDictionaries, PRUint32
   return NS_OK;
 }
 
+nsresult mozMySpell::ConvertCharset(const PRUnichar* aStr, char ** aDst)
+{
+  NS_ENSURE_ARG_POINTER(aDst);
+  NS_ENSURE_TRUE(mEncoder, NS_ERROR_NULL_POINTER);
+
+  PRInt32 outLength;
+  PRInt32 inLength = nsCRT::strlen(aStr);
+  nsresult rv = mEncoder->GetMaxLength(aStr, inLength, &outLength);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aDst = (char *) nsMemory::Alloc(sizeof(char) * (outLength+1));
+  NS_ENSURE_TRUE(*aDst, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = mEncoder->Convert(aStr, &inLength, *aDst, &outLength);
+  if (NS_SUCCEEDED(rv))
+    (*aDst)[outLength] = '\0'; 
+
+  return rv;
+}
+
 /* boolean Check (in wstring word); */
 NS_IMETHODIMP mozMySpell::Check(const PRUnichar *aWord, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aWord);
   NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_TRUE(mMySpell, NS_ERROR_FAILURE);
 
-  if (!mMySpell)
-    return NS_ERROR_FAILURE;
-
-  PRInt32 inLength = nsCRT::strlen(aWord);
-  PRInt32 outLength;
-  nsresult rv = mEncoder->GetMaxLength(aWord, inLength, &outLength);
-  // NS_ERROR_UENC_NOMAPPING is a NS_SUCCESS, no error.
-  if (NS_FAILED(rv) || rv == NS_ERROR_UENC_NOMAPPING) {
-    // not a word in the current charset, so likely not
-    // a word in the current language
-    return PR_FALSE;
-  }
-
-  char *charsetWord = (char *) nsMemory::Alloc(sizeof(char) * (outLength+1));
-  NS_ENSURE_TRUE(charsetWord, NS_ERROR_OUT_OF_MEMORY);
-
-  rv = mEncoder->Convert(aWord, &inLength, charsetWord, &outLength);
-  charsetWord[outLength] = '\0';
+  nsXPIDLCString charsetWord;
+  nsresult rv = ConvertCharset(aWord, getter_Copies(charsetWord));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   *aResult = mMySpell->spell(charsetWord);
 
-  if (!*aResult && mPersonalDictionary) {
+
+  if (!*aResult && mPersonalDictionary) 
     rv = mPersonalDictionary->Check(aWord, mLanguage.get(), aResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   
-  return NS_OK;
+  return rv;
 }
 
 /* void Suggest (in wstring word, [array, size_is (count)] out wstring suggestions, out PRUint32 count); */
@@ -326,40 +331,48 @@ NS_IMETHODIMP mozMySpell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggesti
 {
   NS_ENSURE_ARG_POINTER(aSuggestions);
   NS_ENSURE_ARG_POINTER(aSuggestionCount);
+  NS_ENSURE_TRUE(mMySpell, NS_ERROR_FAILURE);
 
-  if (!mMySpell)
-    return NS_ERROR_FAILURE;
-
+  nsresult rv;
   *aSuggestionCount = 0;
+  
+  nsXPIDLCString charsetWord;
+  rv = ConvertCharset(aWord, getter_Copies(charsetWord));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   char ** wlst;
-  *aSuggestionCount = mMySpell->suggest(&wlst, NS_LossyConvertUCS2toASCII(aWord).get());
+  *aSuggestionCount = mMySpell->suggest(&wlst, charsetWord);
 
-  if (*aSuggestionCount) {
-    PRUnichar **tmpPtr = (PRUnichar **)nsMemory::Alloc(*aSuggestionCount * sizeof(PRUnichar *));
-    if (!tmpPtr)
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    for (PRUint32 i = 0; i < *aSuggestionCount; ++i) {
-      // Convert the suggestion to utf16     
-      PRInt32 inLength = PL_strlen(wlst[i]);
-      PRInt32 outLength;
-      nsresult rv = mDecoder->GetMaxLength(wlst[i], inLength, &outLength);
-      NS_ENSURE_SUCCESS(rv, rv);
-      PRUnichar *dest = (PRUnichar *)malloc(sizeof(PRUnichar) * (outLength + 1));
-      if (!dest)
-        return NS_ERROR_OUT_OF_MEMORY;
-      rv = mDecoder->Convert(wlst[i], &inLength, dest, &outLength);
-      NS_ENSURE_SUCCESS(rv, rv);
-      dest[outLength] = 0;
-      free(wlst[i]);
+  if (*aSuggestionCount) {    
+    *aSuggestions  = (PRUnichar **)nsMemory::Alloc(*aSuggestionCount * sizeof(PRUnichar *));    
+    if (*aSuggestions) {
+      PRUint32 index = 0;
+      for (index = 0; index < *aSuggestionCount && NS_SUCCEEDED(rv); ++index) {
+        // Convert the suggestion to utf16     
+        PRInt32 inLength = nsCRT::strlen(wlst[index]);
+        PRInt32 outLength;
+        rv = mDecoder->GetMaxLength(wlst[index], inLength, &outLength);
+        if (NS_SUCCEEDED(rv))
+        {
+          (*aSuggestions)[index] = (PRUnichar *) nsMemory::Alloc(sizeof(PRUnichar) * (outLength+1));
+          if ((*aSuggestions)[index])
+          {
+            rv = mDecoder->Convert(wlst[index], &inLength, (*aSuggestions)[index], &outLength);
+            if (NS_SUCCEEDED(rv))
+              (*aSuggestions)[index][outLength] = 0;
+          } 
+          else
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
 
-      // XXX ewwww.
-      tmpPtr[i] = ToNewUnicode(nsDependentString(dest));
-      free(dest);
+      if (NS_FAILED(rv))
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(index, *aSuggestions); // free the PRUnichar strings up to the point at which the error occurred
     }
-    *aSuggestions = tmpPtr;
+    else // if (*aSuggestions)
+      rv = NS_ERROR_OUT_OF_MEMORY;
   }
-
-  return NS_OK;
+  
+  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(*aSuggestionCount, wlst);
+  return rv;
 }

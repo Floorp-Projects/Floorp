@@ -79,6 +79,9 @@ public:
   mozMySpell();
   virtual ~mozMySpell();
 
+  // helper method for converting a word to the charset of the dictionary
+  nsresult ConvertCharset(const PRUnichar* aStr, char ** aDst);
+
 protected:
  
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;

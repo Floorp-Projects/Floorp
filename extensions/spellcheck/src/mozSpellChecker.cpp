@@ -127,14 +127,14 @@ mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsStri
     return NS_ERROR_NULL_POINTER;
   *aIsMisspelled = PR_FALSE;
   result = mSpellCheckingEngine->Check(PromiseFlatString(aWord).get(), &correct);
-  if(NS_FAILED(result))
-    return result;
+  NS_ENSURE_SUCCESS(result, result);
   if(!correct){
     if(aSuggestions){
       PRUint32 count,i;
       PRUnichar **words;
       
-      mSpellCheckingEngine->Suggest(PromiseFlatString(aWord).get(), &words, &count);
+      result = mSpellCheckingEngine->Suggest(PromiseFlatString(aWord).get(), &words, &count);
+      NS_ENSURE_SUCCESS(result, result); 
       for(i=0;i<count;i++){
         aSuggestions->AppendString(nsDependentString(words[i]));
       }
