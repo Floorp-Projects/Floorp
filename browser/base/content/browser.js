@@ -1248,8 +1248,21 @@ function ctrlNumberTabSelection(event)
 #endif
     return;
 
-  var index = event.charCode - 49;
-  if (index < 0 || index > 8)
+  // \d in a RegExp will find any Unicode character with the "decimal digit"
+  // property (Nd)
+  var regExp = /\d/;
+  if (!regExp.test(String.fromCharCode(event.charCode)))
+    return;
+
+  // Some Unicode decimal digits are in the range U+xxx0 - U+xxx9 and some are
+  // in the range U+xxx6 - U+xxxF. Find the digit 1 corresponding to our
+  // character.
+  var digit1 = (event.charCode & 0xFFF0) | 1;
+  if (!regExp.exec(String.fromCharCode(digit1)))
+    digit1 += 6;
+
+  var index = event.charCode - digit1;
+  if (index < 0)
     return;
 
   if (index >= gBrowser.tabContainer.childNodes.length)
