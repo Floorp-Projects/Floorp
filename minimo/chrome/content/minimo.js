@@ -1182,7 +1182,11 @@ function BrowserScreenRotate()
  */ 
 
 function BrowserMenuPopup() {
-  document.getElementById("menu_MainPopup").showPopup(document.getElementById("menu-button"),-1,-1,"popup","bottomleft", "topleft");
+  if(!gShowingMenuPopup) { 
+    document.getElementById("menu_MainPopup").showPopup(document.getElementById("menu-button"),-1,-1,"popup","bottomleft", "topleft");
+  } else {
+    document.getElementById("menu_MainPopup").hidePopup();
+  } 
 }
 
 function BrowserMenuPopupFalse() {
