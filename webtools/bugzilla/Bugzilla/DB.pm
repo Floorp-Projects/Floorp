@@ -768,7 +768,7 @@ sub db_new {
     my $self = DBI->connect($dsn, $user, $pass, $attributes)
         or die "\nCan't connect to the database.\nError: $DBI::errstr\n"
         . "  Is your database installed and up and running?\n  Do you have"
-        . "the correct username and password selected in localconfig?\n\n";
+        . " the correct username and password selected in localconfig?\n\n";
 
     # RaiseError was only set to 0 so that we could catch the 
     # above "die" condition.
