@@ -79,6 +79,8 @@ protected:
     RegisterQName(nsIRDFResource* aResource);
     nsresult
     GetQName(nsIRDFResource* aResource, nsCString& aQName);
+    already_AddRefed<nsIAtom>
+    EnsureNewPrefix();
 
     nsresult
     SerializeInlineAssertion(nsIOutputStream* aStream,
