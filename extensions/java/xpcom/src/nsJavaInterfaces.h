@@ -81,4 +81,8 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
 extern "C" NS_EXPORT void
 JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy);
 
+extern "C" NS_EXPORT jboolean
+JAVAPROXY_NATIVE(isSameXPCOMObject) (JNIEnv *env, jclass that, jobject aProxy1,
+                                     jobject aProxy2);
+
 #endif // _nsJavaInterfaces_h_

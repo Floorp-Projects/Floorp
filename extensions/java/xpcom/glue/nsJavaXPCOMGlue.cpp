@@ -78,6 +78,8 @@ typedef jobject  (*JX_GetServiceManagerFunc) (JNIEnv*, jobject);
 typedef jobject  (*JX_CallXPCOMMethodFunc) (JNIEnv*, jclass, jobject, jstring,
                                             jobjectArray);
 typedef void     (*JX_FinalizeProxyFunc) (JNIEnv*, jclass, jobject);
+typedef jboolean (*JX_IsSameXPCOMObjectFunc) (JNIEnv*, jclass, jobject,
+                                              jobject);
 
 JX_InitEmbeddingFunc          InitEmbedding;
 JX_TermEmbeddingFunc          TermEmbedding;
@@ -89,6 +91,7 @@ JX_GetComponentRegistrarFunc  GetComponentRegistrar;
 JX_GetServiceManagerFunc      GetServiceManager;
 JX_CallXPCOMMethodFunc        CallXPCOMMethod;
 JX_FinalizeProxyFunc          FinalizeProxy;
+JX_IsSameXPCOMObjectFunc      IsSameXPCOMObject;
 
 static nsDynamicFunctionLoad funcs[] = {
   { "Java_org_mozilla_xpcom_internal_GREImpl_initEmbedding",
@@ -111,6 +114,8 @@ static nsDynamicFunctionLoad funcs[] = {
           (NSFuncPtr*) &CallXPCOMMethod },
   { "Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_finalizeProxy",
           (NSFuncPtr*) &FinalizeProxy },
+  { "Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_isSameXPCOMObject",
+          (NSFuncPtr*) &IsSameXPCOMObject },
   { nsnull, nsnull }
 };
 
@@ -281,5 +286,12 @@ JAVAPROXY_NATIVE(finalizeProxyNative) (JNIEnv *env, jclass that,
                                        jobject aJavaProxy)
 {
   FinalizeProxy(env, that, aJavaProxy);
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+JAVAPROXY_NATIVE(isSameXPCOMObject) (JNIEnv *env, jclass that, jobject aProxy1,
+                                     jobject aProxy2)
+{
+  return IsSameXPCOMObject(env, that, aProxy1, aProxy2);
 }
 
