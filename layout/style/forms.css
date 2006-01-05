@@ -587,7 +587,7 @@ select[multiple],
 select[size][multiple] {
   -moz-appearance: none; /* we'll draw by hand, thanks */
   border-width: 0;
-  background-color: transparent !important;
+  background-color: -moz-Field !important;
   border-style: solid;
   border-color: #737373 #999999 #999999 #999999;
   border-width: 1px;
@@ -613,6 +613,10 @@ option[disabled],
 optgroup[disabled],
 select[disabled] {
   color: GrayText !important;
+}
+
+input[type="image"] {
+  margin: 0;
 }
 
 /* margins makes sure they are aligned with the text baseline */
@@ -667,7 +671,7 @@ button[disabled]:active {
   -moz-appearance: none;
 }
 
-/* this turns off the mozilla focus ring shown inside clicked or selecetd buttons */
+/* this turns off the mozilla focus ring shown inside clicked or selected buttons */
 input[type="reset"]::-moz-focus-inner,
 input[type="button"]::-moz-focus-inner,
 input[type="submit"]::-moz-focus-inner,
