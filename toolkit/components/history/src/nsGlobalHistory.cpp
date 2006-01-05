@@ -1119,6 +1119,8 @@ nsGlobalHistory::SetPageTitle(nsIURI *aURI, const nsAString& aTitle)
   NS_ENSURE_ARG_POINTER(aURI);
 
   nsAutoString titleString(StringHead(aTitle, HISTORY_TITLE_LENGTH_MAX));
+  if (IS_HIGH_SURROGATE(titleString.Last()))
+    titleString.Truncate(titleString.Length()-1);
 
   // skip about: URIs to avoid reading in the db (about:blank, especially)
   PRBool isAbout;
