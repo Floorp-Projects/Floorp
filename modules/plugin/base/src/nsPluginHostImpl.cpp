@@ -4092,10 +4092,11 @@ static int CompareExtensions(const char *aExtensionList, const char *aExtension)
   if(pComma == nsnull)
     return PL_strcasecmp(pExt, aExtension);
 
+  int extlen = strlen(aExtension);
   while(pComma != nsnull)
   {
     int length = pComma - pExt;
-    if(0 == PL_strncasecmp(aExtension, pExt, length))
+    if(length == extlen && 0 == PL_strncasecmp(aExtension, pExt, length))
       return 0;
 
     pComma++;
