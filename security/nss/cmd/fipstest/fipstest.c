@@ -50,10 +50,8 @@
 #endif
 
 #ifdef NSS_ENABLE_ECC
-
 extern SECStatus
 EC_DecodeParams(const SECItem *encodedParams, ECParams **ecparams);
-
 #endif
 
 #define ENCRYPT 1
@@ -2229,6 +2227,7 @@ do_sigver:
     fclose(rsp);
 }
 
+#ifdef NSS_ENABLE_ECC
 typedef struct curveNameTagPairStr {
     char *curveName;
     SECOidTag curveOidTag;
@@ -2318,8 +2317,6 @@ static CurveNameTagPair nameTagPair[] =
   { "sect131r1", SEC_OID_SECG_EC_SECT131R1},
   { "sect131r2", SEC_OID_SECG_EC_SECT131R2},
 };
-
-#ifdef NSS_ENABLE_ECC
 
 static SECKEYECParams * 
 getECParams(const char *curve)
@@ -2908,8 +2905,7 @@ loser:
     }
     fclose(ecdsareq);
 }
-
-#endif
+#endif /* NSS_ENABLE_ECC */
 
 void do_random()
 {
@@ -3381,11 +3377,6 @@ int main(int argc, char **argv)
     /*************/
     } else if (strcmp(argv[1], "dss") == 0) {
 	dss_test(argv[2], argv[3]);
-    /*************/
-    /*   RNG     */
-    /*************/
-    } else if (strcmp(argv[1], "rng") == 0) {
-	do_random();
 #ifdef NSS_ENABLE_ECC
     /*************/
     /*   ECDSA   */
@@ -3405,7 +3396,12 @@ int main(int argc, char **argv)
 	    /* Signature Verification Test */
 	    ecdsa_sigver_test(argv[3]);
 	}
-#endif
+#endif /* NSS_ENABLE_ECC */
+    /*************/
+    /*   RNG     */
+    /*************/
+    } else if (strcmp(argv[1], "rng") == 0) {
+	do_random();
     }
     return 0;
 }

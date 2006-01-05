@@ -62,10 +62,9 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 include ../platlibs.mk
 
-#EXTRA_SHARED_LIBS += \
-#	-L/usr/lib \
-#	-lposix4 \
-#	$(NULL)
+ifdef NSS_ENABLE_ECC
+DEFINES += -DNSS_ENABLE_ECC
+endif
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
