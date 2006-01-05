@@ -90,6 +90,12 @@ NS_IMETHODIMP
 nsConverterOutputStream::Write(PRUint32 aCount, const PRUnichar* aChars,
                                PRBool* aSuccess)
 {
+    if (!mOutStream) {
+        NS_ASSERTION(!mConverter, "Closed streams shouldn't have converters");
+        return NS_BASE_STREAM_CLOSED;
+    }
+    NS_ASSERTION(mConverter, "Must have a converter when not closed");
+
     PRInt32 inLen = aCount;
 
     PRInt32 maxLen;
@@ -157,6 +163,9 @@ nsConverterOutputStream::Flush()
 NS_IMETHODIMP
 nsConverterOutputStream::Close()
 {
+    if (!mOutStream)
+        return NS_OK; // Already closed.
+
     nsresult rv1 = Flush();
 
     nsresult rv2 = mOutStream->Close();
