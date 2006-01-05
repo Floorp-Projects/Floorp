@@ -313,7 +313,7 @@ NS_IMETHODIMP mozMySpell::Check(const PRUnichar *aWord, PRBool *aResult)
 
   *aResult = mMySpell->spell(charsetWord);
 
-  if (!*aResult) {
+  if (!*aResult && mPersonalDictionary) {
     rv = mPersonalDictionary->Check(aWord, mLanguage.get(), aResult);
     NS_ENSURE_SUCCESS(rv, rv);
   }
