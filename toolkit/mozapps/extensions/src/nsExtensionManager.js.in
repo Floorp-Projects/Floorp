@@ -22,7 +22,7 @@
  *  Ben Goodger <ben@mozilla.org> (Google Inc.)
  *  Benjamin Smedberg <benjamin@smedbergs.us>
  *  Jens Bannmann <jens.b@web.de>
- *  Robert Strong <rob_strong@exchangecode.com>
+ *  Robert Strong <robert.bugzilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -478,6 +478,39 @@ function closeSafeFileOutputStream(stream) {
 }
 
 /**
+ * Deletes a directory and its children. First it tries nsIFile::Remove(true).
+ * If that fails it will fall back to recursing, setting the appropriate
+ * permissions, and deleting the current entry. This is needed for when we have
+ * rights to delete a directory but there are entries that have a read-only
+ * attribute (e.g. a copy restore from a read-only CD, etc.)
+ * @param   dir
+ *          A nsIFile for the directory to be deleted
+ */
+function removeDirRecursive(dir) {
+  try {
+    dir.remove(true);
+    return;
+  }
+  catch (e) {
+  }
+
+  var dirEntries = dir.directoryEntries;
+  while (dirEntries.hasMoreElements()) {
+    var entry = dirEntries.getNext().QueryInterface(Components.interfaces.nsIFile);
+
+    if (entry.isDirectory()) {
+      removeDirRecursive(entry);
+    }
+    else {
+      entry.permissions = PERMS_FILE;
+      entry.remove(false);
+    }
+  }
+  dir.permissions = PERMS_DIRECTORY;
+  dir.remove(true);
+}
+
+/**
  * Logs a string to the error console. 
  * @param   string
  *          The string to write to the error console..
@@ -916,7 +949,7 @@ function DirectoryInstallLocation(name, location, restricted, priority) {
       throw new Error("location must be a directoy!");
   }
   else {
-    location.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
+    location.create(nsILocalFile.DIRECTORY_TYPE, 0775);
   }
 
   this._location = location;
@@ -1798,7 +1831,7 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
     try {
       // Us-generated. Safe.
       if (directory && directory.exists())
-        directory.remove(true);
+        removeDirRecursive(directory);
     }
     catch (e) {
       LOG("safeInstallOperation: failed to clean up the temporary backup of the " + 
@@ -1817,7 +1850,7 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
       // one the user specified. If this fails, it'll throw, and the caller 
       // should stop installation.
       try {
-        itemLocationTrash.remove(true);
+        removeDirRecursive(itemLocationTrash);
       }
       catch (e) {
         LOG("safeFileOperation: failed to remove existing trash directory " + 
@@ -1834,7 +1867,7 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
     // Clean up the original location, if necessary. Again, this is a path we 
     // generated, so it is safe to recursively delete.
     try {
-      itemLocation.remove(true);
+      removeDirRecursive(itemLocation);
     }
     catch (e) {
       LOG("safeInstallOperation: failed to clean up item location after its contents " + 
@@ -1856,7 +1889,7 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
         "rolling back file moves and aborting installation.");
     try {
       // Us-generated. Safe.
-      itemLocation.remove(true);
+      removeDirRecursive(itemLocation);
     }
     catch (e) {
       LOG("safeInstallOperation: failed to remove the folder we failed to install " + 
@@ -3238,13 +3271,13 @@ ExtensionManager.prototype = {
     var profileDefaultTheme = getDirNoCreate(KEY_PROFILEDS, [DIR_EXTENSIONS,
                                              stripPrefix(RDFURI_DEFAULT_THEME, PREFIX_ITEM_URI)]);
     if (profileDefaultTheme && profileDefaultTheme.exists())
-      profileDefaultTheme.remove(true);
+      removeDirRecursive(profileDefaultTheme);
 
     // Version 0.9 profiles may have DOMi 1.0 with just an install.rdf
     var profileDOMi = getDirNoCreate(KEY_PROFILEDS, [DIR_EXTENSIONS,
                                      "{641d8d09-7dda-4850-8228-ac0ab65e2ac9}"]);
     if (profileDOMi && profileDOMi.exists())
-      profileDOMi.remove(true);
+      removeDirRecursive(profileDOMi);
 
     // Prepare themes for installation
     // Only enumerate directories in the app-profile and app-global locations.
