@@ -396,27 +396,6 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
   nsresult rv = DBConn()->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If we have any observers that want all details, we'll need to notify them
-  // about the renumbering.
-  nsCOMArray<nsINavBookmarkObserver> detailObservers;
-  PRUint32 i;
-  for (i = 0; i < mObservers.Length(); ++i) {
-    const nsCOMPtr<nsINavBookmarkObserver> &obs = mObservers[i];
-    if (obs) {
-      PRBool wantDetails;
-      rv = obs->GetWantAllDetails(&wantDetails);
-      if (NS_SUCCEEDED(rv) && wantDetails) {
-        if (!detailObservers.AppendObject(nsCOMPtr<nsINavBookmarkObserver>(mObservers[i]))) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-    }
-  }
-
-  if (detailObservers.Count() == 0) {
-    return transaction.Commit();
-  }
-
   RenumberItemsArray itemsArray;
   nsVoidArray *items = &itemsArray.items;
   {
@@ -459,18 +438,22 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
 
   UpdateBatcher batch;
 
-  for (PRInt32 j = 0; j < detailObservers.Count(); ++j) {
+  for (PRUint32 j = 0; j < mObservers.Length(); ++j) {
+    const nsCOMPtr<nsINavBookmarkObserver> &obs = mObservers[j];
+    if (!obs) {
+      continue;
+    }
+
     for (PRInt32 k = 0; k < items->Count(); ++k) {
       RenumberItem *item = NS_STATIC_CAST(RenumberItem*, (*items)[k]);
       PRInt32 newPosition = item->position;
       PRInt32 oldPosition = newPosition - aDelta;
       if (item->itemURI) {
         nsIURI *uri = item->itemURI;
-        detailObservers[j]->OnItemMoved(uri, aFolder, oldPosition, newPosition);
+        obs->OnItemMoved(uri, aFolder, oldPosition, newPosition);
       } else {
-        detailObservers[j]->OnFolderMoved(item->folderChild,
-                                          aFolder, oldPosition,
-                                          aFolder, newPosition);
+        obs->OnFolderMoved(item->folderChild, aFolder, oldPosition,
+                           aFolder, newPosition);
       }
     }
   }
