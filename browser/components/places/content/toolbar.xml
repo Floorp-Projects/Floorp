@@ -270,20 +270,21 @@
           if (!--this._numBatches)
             this._self.init();
         },
-        get wantAllDetails() { 
-          return false;
-        },
         onItemAdded: function TB_O_onItemAdded(bookmark, folder, index) {
-          this._self.init();
+          if (!this._numBatches)
+            this._self.init();
         },
         onItemRemoved: function TB_O_onItemRemoved(bookmark, folder, index) {
-          this._self.init();
+          if (!this._numBatches)
+            this._self.init();
         },
         onItemMoved: function TB_O_onItemMoved(bookmark, folder, oldIndex, newIndex) {
-          this._self.init();
+          if (!this._numBatches)
+            this._self.init();
         },
         onItemChanged: function TB_O_onItemChanged(bookmark, property, value) {
-          this._self.init();
+          if (!this._numBatches)
+            this._self.init();
         },
         onItemVisited: function TB_0_onItemVisited(bookmark, time) {
           //this._self.init();
@@ -292,16 +293,20 @@
           // this._self.init();
         },
         onFolderAdded: function TB_O_onFolderAdded(folder, parent, index) {
-          this._self.init();
+          if (!this._numBatches)
+            this._self.init();
         },
         onFolderRemoved: function TB_O_onFolderRemoved(folder, parent, index) {
-          this._self.init();
+          if (!this._numBatches)
+            this._self.init();
         },
         onFolderMoved: function TB_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
-          this._self.init();
+          if (!this._numBatches)
+            this._self.init();
         },
         onFolderChanged: function TB_O_onFolderChanged(folder, property) {
-          this._self.init();
+          if (!this._numBatches)
+            this._self.init();
         },
       })]]></field>
       <field name="_DNDObserver"><![CDATA[({

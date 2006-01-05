@@ -91,7 +91,6 @@ var observer = {
   onEndUpdateBatch: function() {
     this._endUpdateBatch = true;
   },
-  get wantAllDetails() { return this._wantAllDetails; },
   onItemAdded: function(uri, folder, index) {
     this._itemAdded = uri;
     this._itemAddedFolder = folder;
@@ -145,7 +144,6 @@ var observer = {
     }
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
-  _wantAllDetails: true
 };
 
 bmsvc.addObserver(observer, false);
