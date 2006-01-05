@@ -41,6 +41,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Bug;
 use Bugzilla::User;
+use Bugzilla::Product;
 require "globals.pl";
 
 use vars qw(
@@ -327,6 +328,9 @@ if ($cloned_bug_id) {
 
 # We need to check and make sure
 # that the user has permission to enter a bug against this product.
+my $prod_obj = new Bugzilla::Product({name => $product});
+# Update the product name to get the correct case.
+$product = $prod_obj->name if defined $prod_obj;
 Bugzilla->user->can_enter_product($product, 1);
 
 GetVersionTable();
