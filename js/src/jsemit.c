@@ -1644,8 +1644,8 @@ EmitAtomIndexOp(JSContext *cx, JSOp op, jsatomid atomIndex, JSCodeGenerator *cg)
     jsbytecode *pc;
 
     if (atomIndex >= JS_BIT(16)) {
+        mode = (js_CodeSpec[op].format & JOF_MODEMASK);
         if (op != JSOP_SETNAME) {
-            mode = (js_CodeSpec[op].format & JOF_MODEMASK);
             prefixOp = (mode == JOF_NAME)
                        ? JSOP_FINDNAME
                        : (mode == JOF_PROP)
