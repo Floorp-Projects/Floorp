@@ -650,6 +650,8 @@ pref("browser.display.zoomui",10);
 pref("browser.display.zoomcontent",10);
 
 pref("snav.enabled", true);
+pref("accessibility.tabfocus", 7);
+pref("accessibility.tabfocus_applies_to_xul", false);
 
 pref("browser.formfill.enable", true);
 
