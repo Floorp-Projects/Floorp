@@ -181,10 +181,7 @@ nsRDFXMLSerializer::AddNameSpace(nsIAtom* aPrefix, const nsAString& aURI)
     if (!prefix) {
         // Make up a prefix, we don't want default namespaces, so
         // that we can use QNames for elements and attributes alike.
-        nsCAutoString pref;
-        pref.AssignLiteral("NS");
-        pref.AppendInt(++mPrefixID, 10);
-        prefix = do_GetAtom(pref);
+        prefix = EnsureNewPrefix();
     }
     mNameSpaces.Put(aURI, prefix);
     return NS_OK;
@@ -221,6 +218,28 @@ rdf_BlockingWrite(nsIOutputStream* stream, const nsAString& s)
     return rdf_BlockingWrite(stream, utf8.get(), utf8.Length());
 }
 
+already_AddRefed<nsIAtom>
+nsRDFXMLSerializer::EnsureNewPrefix()
+{
+    nsCAutoString qname;
+    nsCOMPtr<nsIAtom> prefix;
+    PRBool isNewPrefix;
+    do {
+        isNewPrefix = PR_TRUE;
+        qname.AssignLiteral("NS");
+        qname.AppendInt(++mPrefixID, 10);
+        prefix = do_GetAtom(qname);
+        nsNameSpaceMap::const_iterator iter = mNameSpaces.first();
+        while (iter != mNameSpaces.last() && isNewPrefix) {
+            isNewPrefix = (iter->mPrefix != prefix);
+            ++iter;
+        } 
+    } while (!isNewPrefix);
+    nsIAtom* outPrefix = nsnull;
+    prefix.swap(outPrefix);
+    return outPrefix;
+}
+
 // This converts a property resource (like
 // "http://www.w3.org/TR/WD-rdf-syntax#Description") into a QName
 // ("RDF:Description"), and registers the namespace, if it's made up.
@@ -254,12 +273,9 @@ nsRDFXMLSerializer::RegisterQName(nsIRDFResource* aResource)
 
     // Take whatever is to the right of the '#' or '/' and call it the
     // local name, make up a prefix.
-    qname.AssignLiteral("NS");
-    qname.AppendInt(++mPrefixID, 10);
-    {
-        nsCOMPtr<nsIAtom> prefix = do_GetAtom(qname);
-        mNameSpaces.Put(StringHead(uri, i+1), prefix);
-    }
+    nsCOMPtr<nsIAtom> prefix = EnsureNewPrefix();
+    mNameSpaces.Put(StringHead(uri, i+1), prefix);
+    prefix->ToUTF8String(qname);
     qname.Append(':');
     qname += StringTail(uri, uri.Length() - (i + 1));
 
