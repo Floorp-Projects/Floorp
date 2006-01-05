@@ -217,7 +217,7 @@ sub logout {
         }
     }
     $cookie ||= $cgi->cookie("Bugzilla_logincookie");
-    detaint_natural($cookie);
+    trick_taint($cookie);
 
     # These queries use both the cookie ID and the user ID as keys. Even
     # though we know the userid must match, we still check it in the SQL
