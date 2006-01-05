@@ -139,10 +139,14 @@ NS_IMETHODIMP nsMsgFilterService::CloseFilterList(nsIMsgFilterList *filterList)
 /* save without deleting */
 NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, nsIFileSpec *filterFile)
 {
-	nsresult ret = NS_OK;
+  NS_ENSURE_ARG_POINTER(filterFile);
+  NS_ENSURE_ARG_POINTER(filterList);
+
+  nsresult ret = NS_OK;
   nsCOMPtr <nsIFileSpec> tmpFiltersFile;
   nsCOMPtr <nsIFileSpec> realFiltersFile;
   nsCOMPtr <nsIFileSpec> parentDir;
+
 
   nsSpecialSystemDirectory tmpFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
   tmpFile += "tmprules.dat";
