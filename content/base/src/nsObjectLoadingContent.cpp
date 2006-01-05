@@ -702,7 +702,6 @@ nsresult
 nsObjectLoadingContent::LoadObject(const nsAString& aURI,
                                    PRBool aNotify,
                                    const nsCString& aTypeHint,
-                                   PRBool aForceType,
                                    PRBool aForceLoad)
 {
   LOG(("OBJLC [%p]: Loading object: URI string=<%s> notify=%i type=<%s> forcetype=%i forceload=%i\n",
@@ -730,18 +729,17 @@ nsObjectLoadingContent::LoadObject(const nsAString& aURI,
     return NS_OK;
   }
 
-  return LoadObject(uri, aNotify, aTypeHint, aForceType, aForceLoad);
+  return LoadObject(uri, aNotify, aTypeHint, aForceLoad);
 }
 
 nsresult
 nsObjectLoadingContent::LoadObject(nsIURI* aURI,
                                    PRBool aNotify,
                                    const nsCString& aTypeHint,
-                                   PRBool aForceType,
                                    PRBool aForceLoad)
 {
-  LOG(("OBJLC [%p]: Loading object: URI=<%p> notify=%i type=<%s> forcetype=%i forceload=%i\n",
-       this, aURI, aNotify, aTypeHint.get(), aForceType, aForceLoad));
+  LOG(("OBJLC [%p]: Loading object: URI=<%p> notify=%i type=<%s> forceload=%i\n",
+       this, aURI, aNotify, aTypeHint.get(), aForceLoad));
 
   if (mURI && aURI && !aForceLoad) {
     PRBool equal;
@@ -849,10 +847,13 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   // change the order of the declarations!
   AutoFallback fallback(this, &rv);
 
-  if (aForceType && !aTypeHint.IsEmpty()) {
+  PRUint32 caps = GetCapabilities();
+  LOG(("OBJLC [%p]: Capabilities: %04x\n", this, caps));
+
+  if ((caps & eOverrideServerType) && !aTypeHint.IsEmpty()) {
     ObjectType newType = GetTypeOfContent(aTypeHint);
     if (newType != mType) {
-      LOG(("OBJLC [%p]: (aForceType) Changing type from %u to %u\n", this, mType, newType));
+      LOG(("OBJLC [%p]: (eOverrideServerType) Changing type from %u to %u\n", this, mType, newType));
 
       UnloadContent();
 
@@ -908,7 +909,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   PRBool isSupportedClassID = PR_FALSE;
   nsCAutoString typeForID; // Will be set iff isSupportedClassID == PR_TRUE
   PRBool hasID = PR_FALSE;
-  if (GetCapabilities() & eSupportClassID) {
+  if (caps & eSupportClassID) {
     nsAutoString classid;
     thisContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid);
     if (!classid.IsEmpty()) {

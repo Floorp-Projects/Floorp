@@ -233,7 +233,7 @@ nsHTMLObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::data) {
     nsAutoString type;
     GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-    LoadObject(aValue, aNotify, NS_ConvertUTF16toUTF8(type), PR_FALSE, PR_TRUE);
+    LoadObject(aValue, aNotify, NS_ConvertUTF16toUTF8(type), PR_TRUE);
   }
 
 
