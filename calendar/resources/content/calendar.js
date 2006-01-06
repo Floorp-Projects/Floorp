@@ -187,8 +187,13 @@ function calendarFinish()
 
 function launchPreferences()
 {
-    var applicationName = navigator.vendor;
-    if (applicationName == "Mozilla" || applicationName == "Firebird" || applicationName == "")
+    var applicationName="";
+    if (Components.classes["@mozilla.org/xre/app-info;1"]) {
+        var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                      .getService(Components.interfaces.nsIXULAppInfo);
+        applicationName = appInfo.name;
+    }
+    if (applicationName == "SeaMonkey" || applicationName == "")
         goPreferences( "calendarPanel", "chrome://calendar/content/pref/calendarPref.xul", "calendarPanel" );
     else
         window.openDialog("chrome://calendar/content/pref/prefBird.xul", "PrefWindow", "chrome,titlebar,resizable,modal");
