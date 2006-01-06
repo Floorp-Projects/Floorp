@@ -119,7 +119,7 @@ var SecurityController =
     {
       case "cmd_viewSecurityStatus":
       {
-        if (document.firstChild.getAttribute('windowtype') == "mail:messageWindow")
+        if (document.documentElement.getAttribute('windowtype') == "mail:messageWindow")
         {
           return ( gCurrentMessageUri != null);
         }

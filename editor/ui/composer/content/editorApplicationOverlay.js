@@ -103,7 +103,7 @@ function editPage(url, launchWindow, delay)
   // if the current window is a browser window, then extract the current charset menu setting from the current 
   // document and use it to initialize the new composer window...
 
-  var wintype = document.firstChild.getAttribute('windowtype');
+  var wintype = document.documentElement.getAttribute('windowtype');
   var charsetArg;
 
   if (launchWindow && (wintype == "navigator:browser") && launchWindow.content.document)

@@ -2253,7 +2253,7 @@ function OnMsgLoaded(aUrl)
     var markReadOnADelay = gPrefBranch.getBoolPref("mailnews.mark_message_read.delay");
     if (msgHdr && !msgHdr.isRead)
     {
-      var wintype = document.firstChild.getAttribute('windowtype');
+      var wintype = document.documentElement.getAttribute('windowtype');
       if (markReadOnADelay && wintype == "mail:3pane") // only use the timer if viewing using the 3-pane preview pane and the user has set the pref
         gMarkViewedMessageAsReadTimer = setTimeout(MarkCurrentMessageAsRead, gPrefBranch.getIntPref("mailnews.mark_message_read.delay.interval") * 1000);
       else
