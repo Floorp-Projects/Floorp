@@ -32,6 +32,17 @@ sub new {
     return $self;
 }
 
+# Note: because our property accessors are actually lvalue methods
+# (i.e. $self->name is really just $self->name()), they don't simply
+# interpolate in strings; instead Perl interpolates $self into something
+# like Doctor::File=HASH(0xa1701cc) and then appends the property name
+# (f.e. "->name") to it.
+#
+# To interpolate a property, you need to say: @{[$self->propname]}.
+# For example if the value of the "name" property is "foo", then
+# the string "$self->name @{[$self->propname]}" interpolates to:
+# "Doctor::File=HASH(0xa1701cc)->name foo".
+
 sub content {
     my $self = shift;
     if (!$self->{_content}) {
@@ -173,7 +184,7 @@ sub add {
     chdir $self->tempdir;
 
     # Write the content to a file.
-    open(FILE, ">$self->name") or die "Couldn't create $self->name: $!";
+    open(FILE, ">", $self->name) or die "Couldn't create @{[$self->name]}: $!";
     print FILE $content;
     close(FILE);
 
@@ -186,12 +197,12 @@ sub add {
   
     # Make the Entries file and add an entry for the new file.
     open(FILE, ">Entries") or die "Couldn't create CVS/Entries file: $!";
-    print FILE "/$self->name/0/Initial $self->name//\nD\n";
+    print FILE "/@{[$self->name]}/0/Initial @{[$self->name]}//\nD\n";
     close(FILE);
     
     # Make the Repository file, which contains the path to the directory.
     open(FILE, ">Repository") or die "couldn't create CVS/Repository file: $!";
-    print FILE "$self->path\n";
+    print FILE "@{[$self->path]}\n";
     close(FILE);
     
     # Note that we don't have to create a Root file with information about
@@ -208,7 +219,7 @@ sub patch {
     my $olddir = getcwd();
     chdir $self->tempdir;
     -e $self->spec or $self->checkout();
-    open(FILE, ">", $self->spec) or die "couldn't open $self->spec: $!";
+    open(FILE, ">", $self->spec) or die "couldn't open @{[$self->spec]}: $!";
     print FILE $newcontent;
     close(FILE);
     chdir $olddir;
@@ -233,7 +244,7 @@ sub checkout {
     if ($rv == 0) {
         # Extract the version from the CVS/Entries file.
         open(FILE, "<", $self->path . "CVS/Entries")
-          or die "Can't open " . $self->spec . "/CVS/Entries: $!";
+          or die "Can't open @{[$self->spec]}/CVS/Entries: $!";
         my $entry = <FILE>; # just the first line, which should be all there is
         close(FILE);
         $entry =~ m:^/[^/]*/([^/]*)/:;
@@ -243,7 +254,7 @@ sub checkout {
         {
             local $/ = undef;
             open(FILE, "<", $self->spec)
-              or die "Can't open " . $self->spec . ": $!";
+              or die "Can't open @{[$self->spec]}: $!";
             $self->{_content} = <FILE>;
             close(FILE);
         }
