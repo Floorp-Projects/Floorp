@@ -6527,8 +6527,9 @@ nsGlobalWindow::ClearTimeoutOrInterval()
   if (argv[0] == JSVAL_VOID || !::JS_ValueToInt32(cx, argv[0], &timer_id) ||
       timer_id <= 0) {
     // Undefined or non-positive number passed as argument, return
-    // early.
+    // early. Make sure that JS_ValueToInt32 didn't set an exception.
 
+    ::JS_ClearPendingException(cx);
     return NS_OK;
   }
 
