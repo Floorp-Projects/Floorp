@@ -1,0 +1,106 @@
+#!/bin/sh
+
+prefix=@prefix@
+
+major_version=@MOD_MAJOR_VERSION@
+minor_version=@MOD_MINOR_VERSION@
+patch_version=@MOD_PATCH_VERSION@
+
+usage()
+{
+	cat <<EOF
+Usage: svrcore-config [OPTIONS] [LIBRARIES]
+Options:
+	[--prefix[=DIR]]
+	[--includedir[=DIR]]
+	[--libdir[=DIR]]
+	[--version]
+	[--libs]
+	[--cflags]
+Static Libraries:
+	svrcore
+EOF
+	exit $1
+}
+
+if test $# -eq 0; then
+	usage 1 1>&2
+fi
+
+lib_svrcore=yes
+
+while test $# -gt 0; do
+  case "$1" in
+  -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+  *) optarg= ;;
+  esac
+
+  case $1 in
+    --prefix=*)
+      prefix=$optarg
+      ;;
+    --prefix)
+      echo_prefix=yes
+      ;;
+    --includedir=*)
+      includedir=$optarg
+      ;;
+    --includedir)
+      echo_includedir=yes
+      ;;
+    --libdir=*)
+      libdir=$optarg
+      ;;
+    --libdir)
+      echo_libdir=yes
+      ;;
+    --version)
+      echo ${major_version}.${minor_version}.${patch_version}
+      ;;
+    --cflags)
+      echo_cflags=yes
+      ;;
+    --libs)
+      echo_libs=yes
+      ;;
+    svrcore)
+      lib_svrcore=yes
+      ;;
+    *)
+      usage 1 1>&2
+      ;;
+  esac
+  shift
+done
+
+# Set variables that may be dependent upon other variables
+if test -z "$includedir"; then
+    includedir=@includedir@
+fi
+if test -z "$libdir"; then
+    libdir=@libdir@
+fi
+
+if test "$echo_prefix" = "yes"; then
+    echo $prefix
+fi
+
+if test "$echo_includedir" = "yes"; then
+    echo $includedir
+fi
+
+if test "$echo_libdir" = "yes"; then
+    echo $libdir
+fi
+
+if test "$echo_cflags" = "yes"; then
+    echo -I$includedir
+fi
+
+if test "$echo_libs" = "yes"; then
+      libdirs="-L$libdir"
+      if test -n "$lib_svrcore"; then
+	libdirs="$libdirs -lsvrcore${major_version}"
+      fi
+      echo $libdirs
+fi      
