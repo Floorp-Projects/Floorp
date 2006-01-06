@@ -670,7 +670,8 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
        if (NS_FAILED(rv))
          return PR_FALSE;
 
-       pPref->ClearUserPref(server->prefName);
+       pPref->DeleteBranch(server->prefName);
+
        // mark the server as deleted by setting its position to 0
        DIR_SetIntPref(server->prefName, "position", 0, -1);
      }
