@@ -2903,7 +2903,9 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (!pn)
             return NULL;
 
-        if (pn->pn_type == TOK_AT || pn->pn_type == TOK_DBLCOLON) {
+        if (pn->pn_type == TOK_ANYNAME ||
+            pn->pn_type == TOK_AT ||
+            pn->pn_type == TOK_DBLCOLON) {
             pn2 = NewOrRecycledNode(cx, tc);
             if (!pn2)
                 return NULL;
