@@ -2320,7 +2320,7 @@ function OnMsgLoaded(aUrl)
 
     if (msgHdr && !msgHdr.isRead)
     {
-      var wintype = document.firstChild.getAttribute('windowtype');
+      var wintype = document.documentElement.getAttribute('windowtype');
       if (markReadOnADelay && wintype == "mail:3pane") // only use the timer if viewing using the 3-pane preview pane and the user has set the pref
       {
         ClearPendingReadTimer();
