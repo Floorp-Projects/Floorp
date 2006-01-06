@@ -86,7 +86,7 @@
           ondblclick="gDownloadActionsWindow.editFileHandler();">
       <treechildren id="extensionChildren"/>
       <treecols>
-        <treecol id="fileExtension" ignoreincolumnpicker="true" fiex="true"
+        <treecol id="fileExtension" ignoreincolumnpicker="true"
                   class="sortDirectionIndicator" persist="width"
                   label="&fileExtensionColumn.label;" accesskey="&fileExtensionColumn.accesskey;"
                   onclick="gDownloadActionsWindow.sort('extension');"/>
@@ -104,6 +104,7 @@
                   class="sortDirectionIndicator" persist="width"
                   label="&fileHandlerColumn.label;" accesskey="&fileHandlerColumn.accesskey;"
                   onclick="gDownloadActionsWindow.sort('action');"/>                
+        <splitter class="tree-splitter" />
       </treecols>
     </tree>
   </vbox>
