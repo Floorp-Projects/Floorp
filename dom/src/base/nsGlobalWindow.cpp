@@ -163,6 +163,16 @@
 // belonging to the back-end like nsIContentPolicy
 #include "nsIPopupWindowManager.h"
 
+#ifdef MOZ_LOGGING
+// so we can get logging even in release builds
+#define FORCE_PR_LOG 1
+#endif
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gDOMLeakPRLog;
+#endif
+
 nsIScriptSecurityManager *nsGlobalWindow::sSecMan      = nsnull;
 nsIFactory *nsGlobalWindow::sComputedDOMStyleFactory   = nsnull;
 
@@ -323,6 +333,15 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   printf("++DOMWINDOW == %d\n", gRefCnt);
 #endif
 
+#ifdef PR_LOGGING
+  if (!gDOMLeakPRLog)
+    gDOMLeakPRLog = PR_NewLogModule("DOMLeak");
+
+  if (gDOMLeakPRLog)
+    PR_LOG(gDOMLeakPRLog, PR_LOG_DEBUG,
+           ("DOMWINDOW %p created outer=%p", this, aOuterWindow));
+#endif
+
   if (!sSecMan) {
     CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecMan);
   }
@@ -335,6 +354,12 @@ nsGlobalWindow::~nsGlobalWindow()
   }
 #ifdef DEBUG
   printf("--DOMWINDOW == %d\n", gRefCnt);
+#endif
+
+#ifdef PR_LOGGING
+  if (gDOMLeakPRLog)
+    PR_LOG(gDOMLeakPRLog, PR_LOG_DEBUG,
+           ("DOMWINDOW %p destroyed", this));
 #endif
 
   if (IsOuterWindow()) {
@@ -818,6 +843,16 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 {
   NS_WARN_IF_FALSE(mDocumentPrincipal == nsnull,
                    "mDocumentPrincipal prematurely set!");
+#ifdef PR_LOGGING
+  if (IsInnerWindow() && aDocument && gDOMLeakPRLog &&
+      PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+    nsIURI *uri = aDocument->GetDocumentURI();
+    nsCAutoString spec;
+    if (uri)
+      uri->GetSpec(spec);
+    PR_LogPrint("DOMWINDOW %p SetNewDocument %s", this, spec.get());
+  }
+#endif
 
   if (!aIsInternalCall && IsInnerWindow()) {
     if (!mOuterWindow) {
