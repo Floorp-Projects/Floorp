@@ -3112,7 +3112,8 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
           JSContext* cx;
           stack->Pop(&cx);
           NS_ASSERTION(!cx, "Unexpected JSContext popped!");
-        }        
+        }
+        return;
       }
 
       // Since this code does not handle user-generated changes to the text,
