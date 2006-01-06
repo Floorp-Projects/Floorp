@@ -463,13 +463,6 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
 
   // XXX Waiting for DOM spec to list error codes.
 
-  // Get the namespace id for the URI
-  PRInt32 namespaceId =
-    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
-  if (namespaceId == kNameSpaceID_Unknown) {
-    return NS_OK;
-  }
-
   // Trace up the content parent chain looking for the namespace
   // declaration that defines the aNamespaceURI namespace. Once found,
   // return the prefix (i.e. the attribute localName).
