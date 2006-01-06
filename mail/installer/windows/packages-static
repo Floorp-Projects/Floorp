@@ -8,7 +8,6 @@
 bin\chrome\@AB_CD@.jar
 bin\chrome\@AB_CD@.manifest
 bin\chrome\mail-locales.manifest
-bin\defaults\messenger\mailViews.dat
 
 [xpcom]
 bin\xpcom.dll
@@ -67,6 +66,7 @@ bin\README.txt
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Mail Specific Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+bin\defaults\messenger\mailViews.dat
 bin\defaults\messenger\SpamAssassin.sfd
 bin\defaults\messenger\SpamPal.sfd
 bin\defaults\profile\localstore.rdf
