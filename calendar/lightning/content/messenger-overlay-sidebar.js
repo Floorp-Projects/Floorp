@@ -55,7 +55,7 @@ function ltnMinimonthPick(minimonth)
 
     if (document.getElementById("displayDeck").selectedPanel != 
         document.getElementById("calendar-view-box")) {
-        showCalenadrView('month');
+        showCalendarView('month');
     }
 
     currentView().goToDay(cdt);
