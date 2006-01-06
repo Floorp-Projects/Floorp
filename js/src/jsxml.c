@@ -4863,9 +4863,13 @@ xml_mark_vector(JSContext *cx, JSXML **vec, uint32 len, void *arg)
             char buf[100];
             JSXMLQName *qn = elt->name;
 
-            JS_snprintf(buf, sizeof buf, "%s::%s",
-                        qn->uri ? JS_GetStringBytes(qn->uri) : "*",
-                        JS_GetStringBytes(qn->localName));
+            if (qn) {
+                JS_snprintf(buf, sizeof buf, "%s::%s",
+                            qn->uri ? JS_GetStringBytes(qn->uri) : "*",
+                            JS_GetStringBytes(qn->localName));
+            } else {
+                strcpy(buf, "#text");
+            }
 #else
             const char *buf = NULL;
 #endif
