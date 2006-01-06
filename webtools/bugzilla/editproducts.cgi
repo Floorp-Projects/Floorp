@@ -33,7 +33,6 @@
 
 use strict;
 use lib ".";
-use Bugzilla;
 use Bugzilla::Constants;
 require "globals.pl";
 use Bugzilla::Bug;

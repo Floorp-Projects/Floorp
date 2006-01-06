@@ -23,7 +23,6 @@ use lib qw(.);
 use Date::Parse;         # strptime
 use Date::Format;        # strftime
 
-use Bugzilla;
 use Bugzilla::Bug;       # EmitDependList
 use Bugzilla::Util;      # trim
 use Bugzilla::Constants; # LOGIN_*

@@ -90,8 +90,6 @@ sub fields {
         push @fields, qw(estimated_time remaining_time actual_time deadline);
     }
 
-    push(@fields, Bugzilla->custom_field_names);
-
     return @fields;
 }
 
@@ -164,11 +162,6 @@ sub initBug  {
 
   $self->{'who'} = new Bugzilla::User($user_id);
 
-    my $custom_fields = "";
-    if (length(Bugzilla->custom_field_names) > 0) {
-        $custom_fields = ", " . join(", ", Bugzilla->custom_field_names);
-    }
-
   my $query = "
     SELECT
       bugs.bug_id, alias, products.classification_id, classifications.name,
@@ -182,8 +175,7 @@ sub initBug  {
       delta_ts, COALESCE(SUM(votes.vote_count), 0),
       reporter_accessible, cclist_accessible,
       estimated_time, remaining_time, " .
-      $dbh->sql_date_format('deadline', '%Y-%m-%d') .
-      $custom_fields . "
+      $dbh->sql_date_format('deadline', '%Y-%m-%d') . "
     FROM bugs
        LEFT JOIN votes
               ON bugs.bug_id = votes.bug_id
@@ -220,8 +212,7 @@ sub initBug  {
                        "target_milestone", "qa_contact_id", "status_whiteboard",
                        "creation_ts", "delta_ts", "votes",
                        "reporter_accessible", "cclist_accessible",
-                       "estimated_time", "remaining_time", "deadline",
-                       Bugzilla->custom_field_names)
+                       "estimated_time", "remaining_time", "deadline")
       {
         $fields{$field} = shift @row;
         if (defined $fields{$field}) {
