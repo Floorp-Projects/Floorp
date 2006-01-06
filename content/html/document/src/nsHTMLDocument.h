@@ -347,6 +347,8 @@ protected:
 
   // kNameSpaceID_None for good ol' HTML documents, and
   // kNameSpaceID_XHTML for spiffy new XHTML documents.
+  // XXXbz should this be reset if someone manually calls
+  // SetContentType() on this document?
   PRInt32 mDefaultNamespaceID;
 };
 
