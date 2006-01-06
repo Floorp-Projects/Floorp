@@ -81,10 +81,11 @@ protected:
   PRExplodedTime m_lastCurExplodedTime;
   PRBool m_dayChanged;
 
-  static PRUnichar* kTodayString;
-  static PRUnichar* kYesterdayString;
-  static PRUnichar* kLastWeekString;
-  static PRUnichar* kTwoWeeksAgoString;
-  static PRUnichar* kOldMailString;
+private:
+  nsXPIDLString m_kTodayString;
+  nsXPIDLString m_kYesterdayString;
+  nsXPIDLString m_kLastWeekString;
+  nsXPIDLString m_kTwoWeeksAgoString;
+  nsXPIDLString m_kOldMailString;
 };
 
