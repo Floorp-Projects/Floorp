@@ -4860,15 +4860,25 @@ xml_mark_vector(JSContext *cx, JSXML **vec, uint32 len, void *arg)
         elt = vec[i];
         {
 #ifdef GC_MARK_DEBUG
-            char buf[100];
-            JSXMLQName *qn = elt->name;
+            char buf[120];
 
-            if (qn) {
+            if (elt->xml_class == JSXML_CLASS_LIST) {
+                strcpy(buf, js_XMLList_str);
+            } else if (JSXML_HAS_NAME(elt)) {
+                JSXMLQName *qn = elt->name;
+
                 JS_snprintf(buf, sizeof buf, "%s::%s",
                             qn->uri ? JS_GetStringBytes(qn->uri) : "*",
                             JS_GetStringBytes(qn->localName));
             } else {
-                strcpy(buf, "#text");
+                JSString *str = elt->xml_value;
+                size_t srclen = JSSTRING_LENGTH(str);
+                size_t dstlen = sizeof buf;
+
+                if (srclen >= sizeof buf / 6)
+                    srclen = sizeof buf / 6 - 1;
+                js_DeflateStringToBuffer(cx, JSSTRING_CHARS(str), srclen,
+                                         buf, &dstlen);
             }
 #else
             const char *buf = NULL;
