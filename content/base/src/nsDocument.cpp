@@ -138,6 +138,16 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
 
+#ifdef MOZ_LOGGING
+// so we can get logging even in release builds
+#define FORCE_PR_LOG 1
+#endif
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gDocumentLeakPRLog;
+#endif
+
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
@@ -677,10 +687,24 @@ nsDocument::nsDocument()
   : nsIDocument(),
     mVisible(PR_TRUE)
 {
+#ifdef PR_LOGGING
+  if (!gDocumentLeakPRLog)
+    gDocumentLeakPRLog = PR_NewLogModule("DocumentLeak");
+
+  if (gDocumentLeakPRLog)
+    PR_LOG(gDocumentLeakPRLog, PR_LOG_DEBUG,
+           ("DOCUMENT %p created", this));
+#endif
 }
 
 nsDocument::~nsDocument()
 {
+#ifdef PR_LOGGING
+  if (gDocumentLeakPRLog)
+    PR_LOG(gDocumentLeakPRLog, PR_LOG_DEBUG,
+           ("DOCUMENT %p destroyed", this));
+#endif
+
   mInDestructor = PR_TRUE;
 
   CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
@@ -907,6 +931,15 @@ void
 nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 {
   NS_PRECONDITION(aURI, "Null URI passed to ResetToURI");
+
+#ifdef PR_LOGGING
+  if (gDocumentLeakPRLog && PR_LOG_TEST(gDocumentLeakPRLog, PR_LOG_DEBUG)) {
+    nsCAutoString spec;
+    aURI->GetSpec(spec);
+    PR_LogPrint("DOCUMENT %p ResetToURI %s", this, spec.get());
+  }
+#endif
+
   mDocumentTitle.SetIsVoid(PR_TRUE);
 
   mPrincipal = nsnull;
@@ -1110,6 +1143,17 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                               nsIStreamListener **aDocListener,
                               PRBool aReset, nsIContentSink* aSink)
 {
+#ifdef PR_LOGGING
+  if (gDocumentLeakPRLog && PR_LOG_TEST(gDocumentLeakPRLog, PR_LOG_DEBUG)) {
+    nsCOMPtr<nsIURI> uri;
+    aChannel->GetURI(getter_AddRefs(uri));
+    nsCAutoString spec;
+    if (uri)
+      uri->GetSpec(spec);
+    PR_LogPrint("DOCUMENT %p StartDocumentLoad %s", this, spec.get());
+  }
+#endif
+
   if (aReset) {
     Reset(aChannel, aLoadGroup);
   }
