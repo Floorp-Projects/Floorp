@@ -228,9 +228,6 @@
           if (!--this._numBatches) ;
             //this._self.init();
         },
-        get wantAllDetails() { 
-          return false;
-        },
         onItemAdded: function TB_O_onItemAdded(bookmark, folder, index) {
           //this._self.init();
         },
