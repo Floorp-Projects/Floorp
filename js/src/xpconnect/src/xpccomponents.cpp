@@ -2246,7 +2246,11 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     if(NS_FAILED(rv))
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
-    JSObject *sandbox = JS_NewObject(cx, &SandboxClass, nsnull, nsnull);
+    XPCAutoJSContext tempcx(JS_NewContext(JS_GetRuntime(cx), 1024), PR_FALSE);
+    if (!tempcx)
+        return ThrowAndFail(NS_ERROR_OUT_OF_MEMORY, cx, _retval);
+
+    JSObject *sandbox = JS_NewObject(tempcx, &SandboxClass, nsnull, nsnull);
     if (!sandbox)
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 

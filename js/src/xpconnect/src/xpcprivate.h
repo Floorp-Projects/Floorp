@@ -388,6 +388,34 @@ private:
     static void operator delete(void* /*memory*/) {}
 };
 
+// A helper class to deal with temporary JS contexts. It destroys the context
+// when it goes out of scope.
+class XPCAutoJSContext
+{
+public:
+    XPCAutoJSContext(JSContext *aContext, PRBool aGCOnDestroy)
+        : mContext(aContext), mGCOnDestroy(aGCOnDestroy)
+    {
+    }
+
+    ~XPCAutoJSContext()
+    {
+        if(!mContext)
+            return;
+
+        if(mGCOnDestroy)
+            JS_DestroyContext(mContext);
+        else
+            JS_DestroyContextNoGC(mContext);
+    }
+
+    operator JSContext * () {return mContext;}
+
+private:
+    JSContext *mContext;
+    PRBool mGCOnDestroy;
+};
+
 /***************************************************************************
 ****************************************************************************
 *
