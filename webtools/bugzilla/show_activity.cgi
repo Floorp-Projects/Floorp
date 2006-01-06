@@ -28,6 +28,7 @@ use lib qw(.);
 
 require "globals.pl";
 
+use Bugzilla;
 use Bugzilla::Bug;
 
 my $cgi = Bugzilla->cgi;

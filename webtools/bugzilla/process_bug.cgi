@@ -855,6 +855,18 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
     }
 }
 
+# Add custom fields data to the query that will update the database.
+foreach my $field (Bugzilla->custom_field_names) {
+    if (defined $cgi->param($field)
+        && (!$cgi->param('dontchange')
+            || $cgi->param($field) ne $cgi->param('dontchange')))
+    {
+        DoComma();
+        $::query .= "$field = " . SqlQuote(trim($cgi->param($field)));
+    }
+}
+
+
 my $prod_id;
 my $prod_changed;
 my @newprod_ids;

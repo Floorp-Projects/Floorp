@@ -35,6 +35,7 @@ use Bugzilla::Template;
 use Bugzilla::User;
 use Bugzilla::Error;
 use Bugzilla::Util;
+use Bugzilla::Field;
 
 use File::Basename;
 
@@ -274,6 +275,17 @@ sub switch_to_main_db {
     # $_dbh_main may be undefined if no connection to the main DB
     # has been established yet.
     return $class->dbh;
+}
+
+sub get_fields {
+    my $class = shift;
+    my $criteria = shift;
+    return Bugzilla::Field::match($criteria);
+}
+
+sub custom_field_names {
+    # Get a list of custom fields and convert it into a list of their names.
+    return map($_->{name}, Bugzilla::Field::match({ custom=>1, obsolete=>0 }));
 }
 
 # Private methods
