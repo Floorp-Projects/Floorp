@@ -3022,7 +3022,7 @@ function toOpenDialogByTypeAndUrl(inType, relatedUrl, windowUri, features, extra
   // Check for windows matching the url
   while (windows.hasMoreElements()) {
     var currentWindow = windows.getNext();
-    if (currentWindow.document.firstChild.getAttribute("relatedUrl") == relatedUrl) {
+    if (currentWindow.document.documentElement.getAttribute("relatedUrl") == relatedUrl) {
     	currentWindow.focus();
     	return;
     }
@@ -3041,7 +3041,7 @@ function OpenBrowserWindow()
   var handler = Components.classes["@mozilla.org/browser/clh;1"]
                           .getService(Components.interfaces.nsIBrowserHandler);
   var defaultArgs = handler.defaultArgs;
-  var wintype = document.firstChild.getAttribute('windowtype');
+  var wintype = document.documentElement.getAttribute('windowtype');
 
   // if and only if the current window is a browser window and it has a document with a character
   // set, then extract the current charset menu setting from the current document and use it to
@@ -5254,7 +5254,7 @@ var contentAreaDNDObserver = {
 
       getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
 
-      switch (document.firstChild.getAttribute('windowtype')) {
+      switch (document.documentElement.getAttribute('windowtype')) {
         case "navigator:browser":
           var postData = { };
           var uri = getShortcutOrURI(url, postData);
