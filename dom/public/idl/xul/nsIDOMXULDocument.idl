@@ -42,7 +42,7 @@
 interface nsIDOMXULCommandDispatcher;
 interface nsIObserver;
 
-[scriptable, uuid(868685b1-f4bc-4080-9c44-ecd5a3f1bac8)]
+[scriptable, uuid(741d56f3-f347-4559-aa27-b8f684854baf)]
 interface nsIDOMXULDocument : nsISupports
 {
            attribute nsIDOMNode                 popupNode;
@@ -91,4 +91,16 @@ interface nsIDOMXULDocument : nsISupports
    *          - Ben Goodger (8/23/2005)
    */
   void                      loadOverlay(in DOMString url, in nsIObserver aObserver);
+
+  /**
+   * Get the popup node from this XUL document without doing a security check to
+   * make sure that the caller has access to this node. This is for use from C++
+   * callers that can indirectly be called from content.
+   */
+  [noscript] nsIDOMNode     trustedGetPopupNode();
+
+  /**
+   * Like trustedGetPopupNode, but gets the tooltip node instead.
+   */
+  [noscropt] nsIDOMNode     trustedGetTooltipNode();
 };
