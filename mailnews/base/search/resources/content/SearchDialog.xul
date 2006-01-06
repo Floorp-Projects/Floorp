@@ -133,7 +133,7 @@
       <grippy/>
     </splitter>
     
-    <vbox id="searchResultListBox" flex="4" persist="height">
+    <vbox id="searchResults" flex="4" persist="height">
        <vbox id="searchResultListBox" flex="1" >
             <tree id="threadTree" flex="1" context="threadPaneContext"/>
        </vbox>
