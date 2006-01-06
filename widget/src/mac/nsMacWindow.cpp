@@ -212,6 +212,7 @@ nsMacWindow::nsMacWindow() : Inherited()
   , mZooming(PR_FALSE)
   , mResizeIsFromUs(PR_FALSE)
   , mShown(PR_FALSE)
+  , mSheetNeedsShow(PR_FALSE)
   , mMacEventHandler(nsnull)
 {
   mMacEventHandler.reset(new nsMacEventHandler(this));
@@ -769,7 +770,7 @@ nsMacWindow::RemoveBorderlessDefProc ( WindowPtr inWindow )
 // Hide or show this window
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
+NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
 {
   // Mac OS X sheet support
   nsIWidget *parentWidget = mParent;
@@ -777,47 +778,69 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   WindowRef parentWindowRef = (parentWidget) ?
     reinterpret_cast<WindowRef>(parentWidget->GetNativeData(NS_NATIVE_DISPLAY)) : nsnull;
 
-  Inherited::Show(bState);
+  Inherited::Show(aState);
   
   // we need to make sure we call ::Show/HideWindow() to generate the 
   // necessary activate/deactivate events. Calling ::ShowHide() is
   // not adequate, unless we don't want activation (popups). (pinkerton).
-  if ( bState && !mBounds.IsEmpty() ) {
-    if ( mIsSheet && parentWindowRef ) {
+  if (aState && !mBounds.IsEmpty()) {
+    if (mIsSheet) {
+      if (parentWindowRef) {
         WindowPtr top = GetWindowTop(parentWindowRef);
-        if (piParentWidget)
-        {
+        if (piParentWidget) {
           piParentWidget->SetIgnoreDeactivate(PR_TRUE);
-          PRBool sheetFlag = PR_FALSE;
-          if (parentWindowRef &&
-            NS_SUCCEEDED(piParentWidget->GetIsSheet(&sheetFlag)) && (sheetFlag))
-          {
+
+          PRBool parentIsSheet = PR_FALSE;
+          if (NS_SUCCEEDED(piParentWidget->GetIsSheet(&parentIsSheet)) &&
+              parentIsSheet) {
+            // If this sheet is the child of another sheet, hide the parent
+            // so that this sheet can be displayed.
+            // Leave the paren't mShown and mSheetNeedsShow alone, those are
+            // only used to handle sibling sheet contention.  The parent will
+            // return once there are no more child sheets.
             ::GetSheetWindowParent(parentWindowRef, &top);
             ::HideSheetWindow(parentWindowRef);
           }
         }
-        ::ShowSheetWindow(mWindowPtr, top);
-        UpdateWindowMenubar(parentWindowRef, PR_FALSE);
-        gEventDispatchHandler.DispatchGuiEvent(this, NS_GOTFOCUS);
-        gEventDispatchHandler.DispatchGuiEvent(this, NS_ACTIVATE);
+
+        nsMacWindow* sheetShown = nsnull;
+        if (NS_SUCCEEDED(piParentWidget->GetChildSheet(PR_TRUE,
+                                                       &sheetShown)) &&
+            (!sheetShown || sheetShown == this)) {
+          ::ShowSheetWindow(mWindowPtr, top);
+          UpdateWindowMenubar(parentWindowRef, PR_FALSE);
+          gEventDispatchHandler.DispatchGuiEvent(this, NS_GOTFOCUS);
+          gEventDispatchHandler.DispatchGuiEvent(this, NS_ACTIVATE);
+          ComeToFront();
+          mShown = PR_TRUE;
+          mSheetNeedsShow = PR_FALSE;
+        }
+        else
+          // A sibling of this sheet is active, don't show this sheet yet.
+          // When the active sheet hides, its brothers and sisters that have
+          // mSheetNeedsShow set will have their opportunities to display.
+          mSheetNeedsShow = PR_TRUE;
+      }
     }
-    else
-    if ( mAcceptsActivation )
-      ::ShowWindow(mWindowPtr);
     else {
-      ::ShowHide(mWindowPtr, true);
-      ::BringToFront(mWindowPtr); // competes with ComeToFront, but makes popups work
+      if (mAcceptsActivation)
+        ::ShowWindow(mWindowPtr);
+      else {
+        ::ShowHide(mWindowPtr, true);
+        // competes with ComeToFront, but makes popups work
+        ::BringToFront(mWindowPtr);
+      }
+      ComeToFront();
+      mShown = PR_TRUE;
     }
-    mShown = PR_TRUE;
     if (mZoomOnShow) {
       SetSizeMode(nsSizeMode_Maximized);
       mZoomOnShow = PR_FALSE;
     }
-    ComeToFront();
   }
   else {
-    // when a toplevel window goes away, make sure we rollup any popups that may 
-    // be lurking. We want to catch this here because we're guaranteed that
+    // when a toplevel window goes away, make sure we rollup any popups that
+    // may be lurking. We want to catch this here because we're guaranteed that
     // we hide a window before we destroy it, and doing it here more closely
     // approximates where we do the same thing on windows.
     if ( mWindowType == eWindowType_toplevel ) {
@@ -826,55 +849,82 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
       NS_IF_RELEASE(gRollupListener);
       NS_IF_RELEASE(gRollupWidget);
     }
+
     // Mac OS X sheet support
     if (mIsSheet) {
-      if (piParentWidget)
-        piParentWidget->SetIgnoreDeactivate(PR_FALSE);
+      if (mShown) {
+        // Set mShown here because a sibling sheet may want to be activated,
+        // and mShown needs to be false in order for sibling sheets to display.
+        mShown = PR_FALSE;
 
-      // get sheet's parent *before* hiding the sheet (which breaks the linkage)
-      WindowPtr sheetParent = nsnull;
-      ::GetSheetWindowParent(mWindowPtr, &sheetParent);
+        // get sheet's parent *before* hiding the sheet (which breaks the
+        // linkage)
+        WindowPtr sheetParent = nsnull;
+        ::GetSheetWindowParent(mWindowPtr, &sheetParent);
 
-      ::HideSheetWindow(mWindowPtr);
+        ::HideSheetWindow(mWindowPtr);
 
-      gEventDispatchHandler.DispatchGuiEvent(this, NS_DEACTIVATE);
+        gEventDispatchHandler.DispatchGuiEvent(this, NS_DEACTIVATE);
 
-      // if we had several sheets open, when the last one goes away
-      // we need to ensure that the top app window is active
-      WindowPtr top = GetWindowTop(parentWindowRef);
-      piParentWidget = do_QueryInterface(parentWidget);
-
-      PRBool sheetFlag = PR_FALSE;
-      if (parentWindowRef && piParentWidget &&
-        NS_SUCCEEDED(piParentWidget->GetIsSheet(&sheetFlag)) && (sheetFlag))
-      {
-        nsCOMPtr<nsIWidget> parentWidget;
-        nsToolkit::GetTopWidget(sheetParent, getter_AddRefs(parentWidget));
+        WindowPtr top = GetWindowTop(parentWindowRef);
         piParentWidget = do_QueryInterface(parentWidget);
-        if (piParentWidget)
-          piParentWidget->SetIgnoreDeactivate(PR_TRUE);
-        ::ShowSheetWindow(parentWindowRef, sheetParent);
-      }
-      else if ( mAcceptsActivation ) {
-        ::ShowWindow(top);
-      }
-      else {
-        ::ShowHide(top, true);
-        ::BringToFront(top); // competes with ComeToFront, but makes popups work
-      }
-      ComeToFront();
+        nsMacWindow* siblingSheetToShow = nsnull;
+        PRBool parentIsSheet = PR_FALSE;
 
-      if (top == parentWindowRef) {
-        UpdateWindowMenubar(parentWindowRef, PR_TRUE);
+        if (parentWindowRef && piParentWidget &&
+            NS_SUCCEEDED(piParentWidget->GetChildSheet(PR_FALSE, 
+                                                       &siblingSheetToShow)) &&
+            siblingSheetToShow) {
+          // First, give sibling sheets an opportunity to show.
+          siblingSheetToShow->Show(PR_TRUE);
+        }
+        else if (parentWindowRef && piParentWidget &&
+                 NS_SUCCEEDED(piParentWidget->GetIsSheet(&parentIsSheet)) &&
+                 parentIsSheet) {
+          // If there are no sibling sheets, but the parent is a sheet, restore
+          // it.  It wasn't sent any deactivate events when it was hidden, so
+          // don't call through Show, just let the OS put it back up.
+          nsCOMPtr<nsIWidget> parentWidget;
+          nsToolkit::GetTopWidget(sheetParent, getter_AddRefs(parentWidget));
+          piParentWidget = do_QueryInterface(parentWidget);
+          ::ShowSheetWindow(parentWindowRef, sheetParent);
+        }
+        else {
+          // Sheet, that was hard.  No more siblings or parents, going back
+          // to a real window.
+          if (piParentWidget)
+            piParentWidget->SetIgnoreDeactivate(PR_FALSE);
+
+          // if we had several sheets open, when the last one goes away
+          // we need to ensure that the top app window is active
+          if (mAcceptsActivation)
+            ::ShowWindow(top);
+          else {
+            ::ShowHide(top, true);
+            // competes with ComeToFront, but makes popups work
+            ::BringToFront(top);
+          }
+        }
+        ComeToFront();
+
+        if (top == parentWindowRef)
+          UpdateWindowMenubar(parentWindowRef, PR_TRUE);
+      }
+      else if (mSheetNeedsShow) {
+        // This is an attempt to hide a sheet that never had a chance to
+        // be shown.  There's nothing to do other than make sure that it
+        // won't show.
+        mSheetNeedsShow = PR_FALSE;
       }
     }
-    else
-      if ( mWindowPtr ) {
+    else {
+      if (mWindowPtr)
         ::HideWindow(mWindowPtr);
-      }
       mShown = PR_FALSE;
     }
-    return NS_OK;
+  }
+
+  return NS_OK;
 }
 
 
@@ -2035,5 +2085,43 @@ nsresult nsMacWindow::GetDesktopRect(Rect* desktopRect)
 
   // *desktopRect is now clear of the menu bar and dock, if they needed
   // to be cleared.
+  return NS_OK;
+}
+
+//
+// GetChildSheet
+//
+// If aShown is true, returns the child widget associated with the sheet
+// attached to this nsMacWindow, or nsnull if none.
+//
+// If aShown is false, returns the first child widget of this nsMacWindow
+// corresponding to a sheet that wishes to be displayed, or nsnull if no
+// sheets are waiting to be shown.
+//
+NS_IMETHODIMP nsMacWindow::GetChildSheet(PRBool aShown, nsMacWindow** _retval)
+{
+  nsIWidget* child = GetFirstChild();
+
+  while (child) {
+    // nsWindow is the base widget in the Carbon widget library, this is safe
+    nsWindow* window = NS_STATIC_CAST(nsWindow*, child);
+
+    nsWindowType type;
+    if (NS_SUCCEEDED(window->GetWindowType(type)) &&
+        type == eWindowType_sheet) {
+      // if it's a sheet, it must be an nsMacWindow
+      nsMacWindow* macWindow = NS_STATIC_CAST(nsMacWindow*, window);
+
+      if ((aShown && macWindow->mShown) ||
+          (!aShown && macWindow->mSheetNeedsShow)) {
+        *_retval = macWindow;
+        return NS_OK;
+      }
+    }
+
+    child = child->GetNextSibling();
+  }
+
+  *_retval = nsnull;
   return NS_OK;
 }

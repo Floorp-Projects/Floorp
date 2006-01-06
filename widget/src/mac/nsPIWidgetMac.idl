@@ -40,6 +40,7 @@
 #include "nsISupports.idl"
 
 interface nsIMenuBar;
+interface nsMacWindow;
 
 //
 // nsPIWidgetMac
@@ -47,7 +48,7 @@ interface nsIMenuBar;
 // A private interface (unfrozen, private to the widget implementation) that
 // gives us access to some extra features on a widget/window.
 //
-[scriptable, uuid(59356b39-2031-4fd2-a856-435cda1ef700)]
+[scriptable, uuid(41C2C9C5-C6A1-4A2E-A761-ADBBF0F11E55)]
 interface nsPIWidgetMac : nsISupports
 {
     // Like OS ::BringToFront, but constrains the window to its z-level
@@ -59,6 +60,10 @@ interface nsPIWidgetMac : nsISupports
 
     // Obtain the menubar for a window
   nsIMenuBar GetMenuBar ( );
+
+    // Find the displayed child sheet (if aShown) or a child sheet that
+    // wants to be displayed (if !aShown)
+  nsMacWindow GetChildSheet ( in boolean aShown );
 
     // True if window should ignore the next deactivate event it receives
   attribute boolean ignoreDeactivate;
