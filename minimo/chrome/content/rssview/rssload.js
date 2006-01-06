@@ -6,7 +6,7 @@ function rssfetch(refTab,targetDoc, targetElement) {
 
 	var testLoad=new blenderObject();
 	//testLoad.xmlSet("http://rss.slashdot.org/Slashdot/slashdot");
-    testLoad.xmlSet("http://del.icio.us/rss/tag/"+gRSSTag);
+      testLoad.xmlSet("http://del.icio.us/rss/tag/"+gRSSTag);
 	
 	//testLoad.xslSet("chrome://minimo/content/rssview/rss_template.xml");
 
@@ -46,6 +46,8 @@ function blenderObject() {
 	this.xmlRef=document.implementation.createDocument("","",null);
 	this.xslRef=document.implementation.createDocument("http://www.w3.org/1999/XSL/Transform","stylesheet",null);
 
+
+
 	this.xmlUrl="";
 	this.xslUrl="";
 
@@ -66,7 +68,6 @@ blenderObject.prototype.xmlLoaded = function () {
 	this.xmlLoadedState=true;
 	//serialXML=new XMLSerializer();
 	//alert(serialXML.serializeToString(this.xmlRef));
-	
 	this.apply();
 }
 
@@ -93,7 +94,6 @@ blenderObject.prototype.setTargetElement = function (targetEle) {
 
 blenderObject.prototype.apply = function () {
 	if(this.xmlLoadedState&&this.xslLoadedState) {
-		
 		var xsltProcessor = new XSLTProcessor();
 		var htmlFragment=null;
 		try {
@@ -111,12 +111,25 @@ blenderObject.prototype.apply = function () {
 
 blenderObject.prototype.run = function () {
 	try {
-		this.xmlRef.load(this.xmlUrl);
+		//this.xmlRef.load(this.xmlUrl);
+
+		req = new XMLHttpRequest();
+		req.open('GET', this.xmlUrl, false); 
+		req.send(null);
+		if(req.status == 200) {
+			 this.xmlRef=req.responseXML;
+			this.xmlLoadedState=true;
+
+		}
+
+
 	} catch (e) {
+		alert(e);
 	}
 	try {
 		this.xslRef.load(this.xslUrl);
 	} catch (e) {
+		alert(e);
 	}
 
 }
