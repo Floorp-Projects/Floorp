@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -482,9 +483,9 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
 
   nsCOMPtr<nsIDOMNode> targetNode;
   if (mContent->Tag() == nsXULAtoms::tooltip)
-    inPopupDoc->GetTooltipNode(getter_AddRefs(targetNode));
+    inPopupDoc->TrustedGetTooltipNode(getter_AddRefs(targetNode));
   else
-    inPopupDoc->GetPopupNode(getter_AddRefs(targetNode));
+    inPopupDoc->TrustedGetPopupNode(getter_AddRefs(targetNode));
 
   //NS_WARN_IF_FALSE(targetNode, "no popup/tooltip node on document!");
   nsCOMPtr<nsIContent> targetAsContent ( do_QueryInterface(targetNode) );
