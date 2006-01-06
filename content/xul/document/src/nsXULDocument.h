@@ -263,6 +263,7 @@ protected:
     PRPackedBool               mIsFastLoad;
     PRPackedBool               mApplyingPersistedAttrs;
     PRPackedBool               mIsWritingFastLoad;
+    PRPackedBool               mDocumentLoaded;
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
     // Maintains the template builders that have been attached to
