@@ -68,7 +68,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)expat_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)mozexpat_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 ifdef MOZ_PERF_METRICS

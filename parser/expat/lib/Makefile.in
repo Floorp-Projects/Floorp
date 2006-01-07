@@ -43,7 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= expat
-LIBRARY_NAME	= expat_s
+LIBRARY_NAME	= mozexpat_s
 
 CSRCS		= \
 		xmlparse.c \
