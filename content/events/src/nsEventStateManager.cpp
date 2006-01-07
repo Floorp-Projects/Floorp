@@ -3231,6 +3231,11 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
         PRBool selectionWithFocus;
         MoveFocusToCaret(PR_FALSE, &selectionWithFocus);
         ignoreTabIndex = !selectionWithFocus;
+        // Refresh |selectionFrame| since MoveFocusToCaret() could have
+        // destroyed it. (bug 308086)
+        GetDocSelectionLocation(getter_AddRefs(selectionContent),
+                                getter_AddRefs(endSelectionContent),
+                                &selectionFrame, &selectionOffset);
       }
     }
   }
