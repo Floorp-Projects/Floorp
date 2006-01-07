@@ -414,7 +414,9 @@ sub ProcessOneBug {
         my $sent_mail = 0;
 
         my $user = new Bugzilla::User($user_id);
-        
+        # Deleted users must be excluded.
+        next unless $user;
+
         if ($user->can_see_bug($id))
         {
             # Go through each role the user has and see if they want mail in
