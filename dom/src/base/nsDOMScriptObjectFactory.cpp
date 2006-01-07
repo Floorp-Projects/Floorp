@@ -81,6 +81,7 @@ nsDOMScriptObjectFactory::nsDOMScriptObjectFactory()
 #ifdef MOZ_SVG
     xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_SVG);
 #endif
+    xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_DOM_XPATH);
   }
 }
 
@@ -191,6 +192,7 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
 #ifdef MOZ_SVG
       xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_SVG);
 #endif
+      xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_DOM_XPATH);
     }
   }
 
@@ -210,6 +212,8 @@ nsDOMScriptObjectFactory::GetException(nsresult result,
     case NS_ERROR_MODULE_SVG:
       return NS_NewSVGException(result, aDefaultException, _retval);
 #endif
+    case NS_ERROR_MODULE_DOM_XPATH:
+      return NS_NewXPathException(result, aDefaultException, _retval);
     default:
       return NS_NewDOMException(result, aDefaultException, _retval);
   }
