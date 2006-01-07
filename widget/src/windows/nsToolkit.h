@@ -110,6 +110,7 @@ public:
     static PRBool    mUseImeApiW;
     static PRBool    mW2KXP_CP936;
 
+    static PRBool InitVersionInfo();
     static void Startup(HINSTANCE hModule);
     static void Shutdown();
 

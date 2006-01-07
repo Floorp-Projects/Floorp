@@ -78,6 +78,7 @@ PRBool    nsToolkit::mIsNT = PR_FALSE;
 PRBool    nsToolkit::mUseImeApiW  = PR_FALSE;
 PRBool    nsToolkit::mW2KXP_CP936 = PR_FALSE;
 PRBool    nsToolkit::mIsWinXP     = PR_FALSE;
+static PRBool dummy = nsToolkit::InitVersionInfo();
 
 DEFINE_GUID(IID_IActiveIMMApp, 
 0x08c0e040, 0x62d1, 0x11d1, 0x93, 0x26, 0x0, 0x60, 0xb0, 0x67, 0xb8, 0x6e);
@@ -604,32 +605,10 @@ nsToolkit::~nsToolkit()
 #endif
 }
 
-
 void
 nsToolkit::Startup(HMODULE hModule)
 {
 #ifndef WINCE
-    //
-    // Set flag of nsToolkit::mUseImeApiW due to using Unicode API.
-    //
-
-    OSVERSIONINFOEX osversion;
-    BOOL osVersionInfoEx;
-    
-    ::ZeroMemory(&osversion, sizeof(OSVERSIONINFOEX));
-    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-
-    if (!(osVersionInfoEx = GetVersionEx((OSVERSIONINFO *)&osversion))) {
-      // if OSVERSIONINFOEX doesn't work, try OSVERSIONINFO.
-      osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-      if (!GetVersionEx((OSVERSIONINFO *)&osversion)) {
-        // maybe we are running on very old Windows OS. Assign FALSE.
-        nsToolkit::mUseImeApiW = PR_FALSE; 
-        return;
-      }
-    }
-
-    nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT);
     if (nsToolkit::mIsNT)
 #endif // #ifndef WINCE
 
@@ -662,16 +641,6 @@ nsToolkit::Startup(HMODULE hModule)
         if (!nsToolkit::mSHBrowseForFolder)
           nsToolkit::mSHBrowseForFolder = &nsSHBrowseForFolder;
       }
-      nsToolkit::mUseImeApiW = PR_TRUE;
-      // XXX Hack for stopping the crash (125573)
-      if (osversion.dwMajorVersion == 5 && (osversion.dwMinorVersion == 0 || osversion.dwMinorVersion == 1))  { 
-        nsToolkit::mIsWinXP = (osversion.dwMinorVersion == 1);
-        // "Microsoft Windows 2000 " or "Microsoft Windows XP "
-        if (936 == ::GetACP())  {  // Chinese (PRC, Singapore)
-          nsToolkit::mUseImeApiW = PR_FALSE;
-          nsToolkit::mW2KXP_CP936 = PR_TRUE;
-        }
-      }
 #endif // #ifndef WINCE
     }
     nsToolkit::mDllInstance = hModule;
@@ -691,11 +660,6 @@ nsToolkit::Startup(HMODULE hModule)
     wc.lpszMenuName     = NULL;
     wc.lpszClassName    = L"nsToolkitClass";
     VERIFY(nsToolkit::mRegisterClass(&wc));
-
-#ifdef WINCE
-    nsToolkit::mUseImeApiW  = PR_TRUE;
-#endif
-
 }
 
 
@@ -914,6 +878,56 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   }
 
   return rv;
+}
+
+
+PRBool nsToolkit::InitVersionInfo()
+{
+  static PRBool isInitialized = PR_FALSE;
+
+  if (!isInitialized)
+  {
+    isInitialized = PR_TRUE;
+
+#ifdef WINCE
+    nsToolkit::mUseImeApiW  = PR_TRUE;
+#else
+    OSVERSIONINFOEX osversion;
+    BOOL osVersionInfoEx;
+    
+    ::ZeroMemory(&osversion, sizeof(OSVERSIONINFOEX));
+    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+
+    if (!(osVersionInfoEx = GetVersionEx((OSVERSIONINFO *)&osversion))) {
+      // if OSVERSIONINFOEX doesn't work, try OSVERSIONINFO.
+      osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+      if (!GetVersionEx((OSVERSIONINFO *)&osversion)) {
+        // maybe we are running on very old Windows OS. Assign FALSE.
+        nsToolkit::mUseImeApiW = PR_FALSE; 
+        return PR_TRUE;
+      }
+    }
+
+    nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT);
+
+    if (nsToolkit::mIsNT)
+    {
+      // Set flag of nsToolkit::mUseImeApiW due to using Unicode API.
+      nsToolkit::mUseImeApiW = PR_TRUE;
+      // XXX Hack for stopping the crash (125573)
+      if (osversion.dwMajorVersion == 5 && (osversion.dwMinorVersion == 0 || osversion.dwMinorVersion == 1))  { 
+        nsToolkit::mIsWinXP = (osversion.dwMinorVersion == 1);
+        // "Microsoft Windows 2000 " or "Microsoft Windows XP "
+        if (936 == ::GetACP())  {  // Chinese (PRC, Singapore)
+          nsToolkit::mUseImeApiW = PR_FALSE;
+          nsToolkit::mW2KXP_CP936 = PR_TRUE;
+        }
+      }
+    }
+#endif
+  }
+
+  return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------

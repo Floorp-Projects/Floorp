@@ -74,8 +74,11 @@
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsKeyboardLayout.h"
 #include <windows.h>
 #include <process.h>
+
+static PRBool dummy = nsToolkit::InitVersionInfo();
 
 #ifdef WINCE
 
@@ -901,6 +904,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 HKL nsWindow::gKeyboardLayout = 0;
 UINT nsWindow::gCurrentKeyboardCP = 0;
 PRBool nsWindow::gSwitchKeyboardLayout = PR_FALSE;
+static KeyboardLayout gKbdLayout;
 
 //-------------------------------------------------------------------------
 //
@@ -3301,9 +3305,9 @@ NS_METHOD nsWindow::EnableDragDrop(PRBool aEnable)
 UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
 {
   switch (aNativeKeyCode) {
-    case 0xBA: return NS_VK_SEMICOLON;
-    case 0xBB: return NS_VK_EQUALS;
-    case 0xBD: return NS_VK_SUBTRACT;
+    case VK_OEM_1:     return NS_VK_SEMICOLON;     // 0xBA, For the US standard keyboard, the ';:' key
+    case VK_OEM_PLUS:  return NS_VK_EQUALS;        // 0xBB, For any country/region, the '+' key
+    case VK_OEM_MINUS: return NS_VK_SUBTRACT;      // 0xBD, For any country/region, the '-' key
   }
 
   return aNativeKeyCode;
@@ -3383,6 +3387,8 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 //-------------------------------------------------------------------------
 BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 {
+  gKbdLayout.OnKeyDown (aVirtualKeyCode);
+  
   UINT virtualKeyCode = sIMEIsComposing ? aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
 
 #ifdef DEBUG
@@ -3414,12 +3420,25 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   if (virtualKeyCode == NS_VK_RETURN || virtualKeyCode == NS_VK_BACK ||
       (mIsControlDown && !mIsAltDown && !mIsShiftDown &&
        (virtualKeyCode == NS_VK_ADD || virtualKeyCode == NS_VK_SUBTRACT ||
-        virtualKeyCode == NS_VK_EQUALS)))
+        virtualKeyCode == NS_VK_EQUALS)) ||
+      ((mIsControlDown || mIsAltDown) && KeyboardLayout::IsPrintableCharKey (virtualKeyCode)))
   {
-    // Remove a possible WM_CHAR or WM_SYSCHAR from the message queue
-    if (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR)) {
+    // Remove a possible WM_CHAR or WM_SYSCHAR messages from the message queue.
+    // They can be more than one because of:
+    //  * Dead-keys not pairing with base character
+    //  * Some keyboard layouts may map up to 4 characters to the single key
+
+    PRBool anyCharMessagesRemoved = PR_FALSE;
+    
+    while (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR))
+    {
       nsToolkit::mGetMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST);
-    } else if (virtualKeyCode == NS_VK_BACK) {
+      anyCharMessagesRemoved = PR_TRUE;
+
+      gotMsg = nsToolkit::mPeekMessage (&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
+    }
+
+    if (!anyCharMessagesRemoved && virtualKeyCode == NS_VK_BACK) {
       MSG imeStartCompositionMsg, imeCompositionMsg;
       if (nsToolkit::mPeekMessage(&imeStartCompositionMsg, mWnd, WM_IME_STARTCOMPOSITION, WM_IME_STARTCOMPOSITION, PM_NOREMOVE | PM_NOYIELD)
        && nsToolkit::mPeekMessage(&imeCompositionMsg, mWnd, WM_IME_COMPOSITION, WM_IME_COMPOSITION, PM_NOREMOVE | PM_NOYIELD)
@@ -3454,8 +3473,10 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
            (msg.message == WM_CHAR || msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
     // If prevent default set for keydown, do same for keypress
     nsToolkit::mGetMessage(&msg, mWnd, msg.message, msg.message);
+
     if (msg.message == WM_DEADCHAR)
       return PR_FALSE;
+
 #ifdef KE_DEBUG
     printf("%s\tchar=%c\twp=%4x\tlp=%8x\n",
            (msg.message == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR",
@@ -3464,47 +3485,54 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
     return OnChar(msg.wParam, extraFlags);
   }
 
-  WORD asciiKey = 0;
+  if (gKbdLayout.IsDeadKey ())
+    return PR_FALSE;
+           
+  PRUint8 shiftStates [5];
+  PRUint16 uniChars [5];
+  PRUint32 numOfUniChars = 0;
+  PRUint32 numOfShiftStates = 0;
 
   switch (virtualKeyCode) {
     // keys to be sent as characters
-    case NS_VK_ADD       : asciiKey = '+';  break;
-    case NS_VK_SUBTRACT  : asciiKey = '-';  break;
-    case NS_VK_SEMICOLON : asciiKey = ';';  break;
-    case NS_VK_EQUALS    : asciiKey = '=';  break;
-    case NS_VK_COMMA     : asciiKey = ',';  break;
-    case NS_VK_PERIOD    : asciiKey = '.';  break;
-    case NS_VK_QUOTE     : asciiKey = '\''; break;
-    case NS_VK_BACK_QUOTE: asciiKey = '`';  break;
-    case NS_VK_DIVIDE    :
-    case NS_VK_SLASH     : asciiKey = '/';  break;
-    case NS_VK_MULTIPLY  : asciiKey = '*';  break;
-    case NS_VK_NUMPAD0   : asciiKey = '0';  break;
-    case NS_VK_NUMPAD1   : asciiKey = '1';  break;
-    case NS_VK_NUMPAD2   : asciiKey = '2';  break;
-    case NS_VK_NUMPAD3   : asciiKey = '3';  break;
-    case NS_VK_NUMPAD4   : asciiKey = '4';  break;
-    case NS_VK_NUMPAD5   : asciiKey = '5';  break;
-    case NS_VK_NUMPAD6   : asciiKey = '6';  break;
-    case NS_VK_NUMPAD7   : asciiKey = '7';  break;
-    case NS_VK_NUMPAD8   : asciiKey = '8';  break;
-    case NS_VK_NUMPAD9   : asciiKey = '9';  break;
+    case NS_VK_ADD:       uniChars [0] = '+';  numOfUniChars = 1;  break;
+    case NS_VK_SUBTRACT:  uniChars [0] = '-';  numOfUniChars = 1;  break;
+    case NS_VK_DIVIDE:    uniChars [0] = '/';  numOfUniChars = 1;  break;
+    case NS_VK_MULTIPLY:  uniChars [0] = '*';  numOfUniChars = 1;  break;
+    case NS_VK_NUMPAD0:
+    case NS_VK_NUMPAD1:
+    case NS_VK_NUMPAD2:
+    case NS_VK_NUMPAD3:
+    case NS_VK_NUMPAD4:
+    case NS_VK_NUMPAD5:
+    case NS_VK_NUMPAD6:
+    case NS_VK_NUMPAD7:
+    case NS_VK_NUMPAD8:
+    case NS_VK_NUMPAD9:   uniChars [0] = virtualKeyCode - NS_VK_NUMPAD0 + '0';  numOfUniChars = 1;  break;
+
     default:
-      // NS_VK_0 - NS_VK_9 and NS_VK_A - NS_VK_Z match their ascii values
-      if ((NS_VK_0 <= virtualKeyCode && virtualKeyCode <= NS_VK_9) ||
-          (NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z)) {
-        asciiKey = virtualKeyCode;
-        // Take the Shift state into account
-        if (!mIsShiftDown 
-            && NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z) {
-          asciiKey += 0x20;
-        }
-      }
+      if (KeyboardLayout::IsPrintableCharKey (virtualKeyCode))
+        numOfUniChars = numOfShiftStates = gKbdLayout.GetUniChars (uniChars, shiftStates, NS_ARRAY_LENGTH (uniChars));
   }
 
-  if (asciiKey)
-    DispatchKeyEvent(NS_KEY_PRESS, asciiKey, 0, aKeyData, extraFlags);
-  else
+  if (numOfUniChars)
+  {
+    for (PRUint32 cnt = 0; cnt < numOfUniChars; cnt++)
+    {
+      if (cnt < numOfShiftStates)
+      {
+        // If key in combination with Alt and/or Ctrl produces a different character than without them
+        // then do not report these flags because it is separate keyboard layout shift state.
+        // If dead-key and base character does not produce a valid composite character then both produced
+        // dead-key character and following base character may have different modifier flags, too.
+        mIsShiftDown   = (shiftStates [cnt] & eShift) != 0;
+        mIsControlDown = (shiftStates [cnt] & eCtrl) != 0;
+        mIsAltDown     = (shiftStates [cnt] & eAlt) != 0;
+      }
+
+      DispatchKeyEvent(NS_KEY_PRESS, uniChars [cnt], 0, aKeyData, extraFlags);
+    }
+  } else
     DispatchKeyEvent(NS_KEY_PRESS, 0, virtualKeyCode, aKeyData, extraFlags);
 
   return noDefault;
@@ -6660,6 +6688,8 @@ BOOL nsWindow::OnInputLangChange(HKL aHKL, LRESULT *oRetValue)
       NS_IMM_GETPROPERTY(gKeyboardLayout, IGP_PROPERTY, imeProp);
       nsToolkit::mUseImeApiW = (imeProp & IME_PROP_UNICODE) ? PR_TRUE : PR_FALSE;
     }
+
+    gKbdLayout.LoadLayout();
   }
 
   ResetInputState();
