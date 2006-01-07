@@ -79,4 +79,12 @@ ifeq (WINNT,$(OS_ARCH))
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 endif
 
+ifndef MOZ_WINCONSOLE
+ifdef MOZ_DEBUG
+MOZ_WINCONSOLE = 1
+else
+MOZ_WINCONSOLE = 0
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
