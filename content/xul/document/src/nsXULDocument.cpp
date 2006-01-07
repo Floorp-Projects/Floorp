@@ -3106,7 +3106,7 @@ nsXULDocument::ResumeWalk()
         if (mPendingOverlayLoadNotifications.IsInitialized())
             mPendingOverlayLoadNotifications.Enumerate(FirePendingMergeNotification, (void*)&mOverlayLoadObservers);
 
-        mDocumentLoaded = true;
+        mDocumentLoaded = PR_TRUE;
     }
     else {
         if (mOverlayLoadObservers.IsInitialized()) {
