@@ -5915,8 +5915,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
     gLastMouseMovePoint.y = mpScreen.y;
   }
 
-  PRBool insideMovementThreshold = (abs(gLastMousePoint.x - mpScreen.x) < (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
-                                   (abs(gLastMousePoint.y - mpScreen.y) < (short)::GetSystemMetrics(SM_CYDOUBLECLK));
+  PRBool insideMovementThreshold = (abs(gLastMousePoint.x - eventPoint.x) < (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
+                                   (abs(gLastMousePoint.y - eventPoint.y) < (short)::GetSystemMetrics(SM_CYDOUBLECLK));
 
   BYTE eventButton;
   switch (aEventType) {
