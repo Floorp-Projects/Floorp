@@ -3827,19 +3827,24 @@ nsFontMetricsWin::RealizeFont()
   mMaxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * dev2app);
   mAveCharWidth = PR_MAX(1, NSToCoordRound(metrics.tmAveCharWidth * dev2app));
 
-  // descent position is preferred, but we need to make sure there is enough 
-  // space available. Baseline need to be raised so that underline will stay 
-  // within boundary.
-  // only do this for CJK to minimize possible risk
-  if (IsCJKLangGroupAtom(mLangGroup.get())) {
-    if (gDoingLineheightFixup && 
-        mInternalLeading+mExternalLeading > mUnderlineSize &&
+  if (gDoingLineheightFixup) {
+    if (mInternalLeading + mExternalLeading > mUnderlineSize &&
         descentPos < mUnderlineOffset) {
-      mEmAscent -= mUnderlineSize;
-      mEmDescent += mUnderlineSize;
-      mMaxAscent -= mUnderlineSize;
-      mMaxDescent += mUnderlineSize;
+      // If underline positioned is too near the text, descent position
+      // is preferred, but we need to make sure there is enough space
+      // available so that underline will stay within boundary.
       mUnderlineOffset = descentPos;
+      nscoord extra = mUnderlineSize - mUnderlineOffset - mMaxDescent;
+      if (extra > 0) {
+        mEmDescent += extra;  
+        mEmHeight += extra;
+        mMaxDescent += extra;
+        mMaxHeight += extra;
+      }
+    } else if (mUnderlineSize - mUnderlineOffset > mMaxDescent) {
+      // If underline positioned is too far from the text, descent position
+      // is preferred so that underline will stay within boundary.
+      mUnderlineOffset = mUnderlineSize - mMaxDescent;
     }
   }
   // Cache the width of a single space.
