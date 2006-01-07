@@ -329,6 +329,7 @@ pref("capability.policy.mailnews.Window.screenY.set", "noAccess");
 pref("capability.policy.mailnews.Window.sizeToContent", "noAccess");
 pref("capability.policy.mailnews.document.load", "noAccess");
 pref("capability.policy.mailnews.XMLHttpRequest.channel", "noAccess");
+pref("capability.policy.mailnews.XMLHttpRequest.getInterface", "noAccess");
 pref("capability.policy.mailnews.XMLHttpRequest.responseXML", "noAccess");
 pref("capability.policy.mailnews.XMLHttpRequest.responseText", "noAccess");
 pref("capability.policy.mailnews.XMLHttpRequest.status", "noAccess");
@@ -396,6 +397,7 @@ pref("capability.policy.mailnews.WebServiceProxyFactory.onError", "noAccess");
 
 // XMLExtras
 pref("capability.policy.default.XMLHttpRequest.channel", "noAccess");
+pref("capability.policy.default.XMLHttpRequest.getInterface", "noAccess");
 pref("capability.policy.default.DOMParser.parseFromStream", "noAccess");
 
 // Clipboard
