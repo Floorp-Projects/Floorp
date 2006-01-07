@@ -1342,18 +1342,15 @@ tools are selected during the Xcode/Developer Tools installation.])
         IMPL_STRATEGY=_PTH
     fi
     AC_DEFINE(XP_UNIX)
-    AC_DEFINE(_POSIX_SOURCE)
-    AC_DEFINE(_BSD_SOURCE)
-    AC_DEFINE(_SVID_SOURCE)
-    AC_DEFINE(_LARGEFILE64_SOURCE)
+    AC_DEFINE(_GNU_SOURCE)
     AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
     case "${target_os}" in
     linux*)
         AC_DEFINE(LINUX)
         ;;
     esac
-    CFLAGS="$CFLAGS -ansi -Wall"
-    CXXFLAGS="$CXXFLAGS -ansi -Wall"
+    CFLAGS="$CFLAGS -Wall"
+    CXXFLAGS="$CXXFLAGS -Wall"
     MDCPUCFG_H=_linux.cfg
     PR_MD_CSRCS=linux.c
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
