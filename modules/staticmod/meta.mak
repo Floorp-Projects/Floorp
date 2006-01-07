@@ -77,7 +77,7 @@ LLIBS           = $(LLIBS)                      \
                   $(DIST)\lib\png.lib           \
                   $(DIST)\lib\mng.lib           \
                   $(DIST)\lib\util.lib          \
-                  $(DIST)\lib\expat.lib         \
+                  $(DIST)\lib\mozexpat.lib         \
                   $(DIST)\lib\nsldap32v40.lib
 
 WIN_LIBS        = $(WIN_LIBS)   \

@@ -62,7 +62,7 @@ TX_LIBS = \
 	txxpath_s \
 	txxml_s \
 	txbase_s \
-	expat_s \
+	mozexpat_s \
 	$(NULL)
 
 LIBS = \
