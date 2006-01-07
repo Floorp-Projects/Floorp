@@ -746,14 +746,20 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     rv = secMan->CheckSameOrigin(nsnull, docURI);
     if (NS_FAILED(rv)) return rv;
 
-    if (!mFind)
+    if (!mFind) {
         mFind = do_CreateInstance(NS_FIND_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     (void) mFind->SetCaseSensitive(mMatchCase);
     (void) mFind->SetFindBackwards(mFindBackwards);
 
     // XXX Make and set a line breaker here, once that's implemented.
     (void) mFind->SetWordBreaker(0);
+
+    // Now make sure the content (for actual finding) and frame (for
+    // selection) models are up to date.
+    theDoc->FlushPendingNotifications(Flush_Frames);
 
     nsCOMPtr<nsISelection> sel;
     GetFrameSelection(aWindow, getter_AddRefs(sel));
