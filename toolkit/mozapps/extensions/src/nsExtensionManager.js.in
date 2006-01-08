@@ -5457,12 +5457,6 @@ RDFItemUpdater.prototype = {
       // about how we do this in all cases but Install Phone Home - which 
       // only needs to do a version check.
       this._parseV20UpdateInfo(aDatasource, aLocalItem, newestUpdate, false);
-      if (!newestUpdate.updateLink) {
-        // Firefox 0.9 update.rdf format - does not contain any metadata
-        // that can be used for version updates, so performed in the "all updates"
-        // mode only. 
-        this._parseV10UpdateInfo(aDatasource, aLocalItem, newestUpdate);
-      }
 
       newerItem = makeItem(aLocalItem.id, 
                            newestUpdate.version, 
@@ -5539,16 +5533,6 @@ RDFItemUpdater.prototype = {
     this._updater.checkForDone(item, status);
   },
 
-  // Parses Firefox 0.9 update.rdf format  
-  _parseV10UpdateInfo: function(aDataSource, aLocalItem, aUpdateData) {
-    var extensionRes  = gRDF.GetResource(getItemPrefix(aLocalItem.type) + aLocalItem.id);
-    
-    aUpdateData.version     = this._getPropertyFromResource(aDataSource, extensionRes, 
-                                                            "version", aLocalItem);
-    aUpdateData.updateLink  = this._getPropertyFromResource(aDataSource, extensionRes, 
-                                                            "updateLink", aLocalItem);
-  },
-  
   // Get a compulsory property from a resource. Reports an error if the 
   // property was not present. 
   _getPropertyFromResource: function(aDataSource, aSourceResource, aProperty, aLocalItem) {
