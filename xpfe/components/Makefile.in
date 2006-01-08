@@ -115,9 +115,8 @@ DIRS    = \
           autocomplete \
           windowds \
           console \
-	  download-manager \
+      	  download-manager \
           history/public \
-          sidebar/public \
           bookmarks/public \
           $(NULL)
 
