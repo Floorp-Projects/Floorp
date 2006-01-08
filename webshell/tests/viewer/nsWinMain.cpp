@@ -146,12 +146,16 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 int main(int argc, char **argv)
 {
-  nsresult rv;
-  rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
   nsViewerApp* app = new nsNativeViewerApp();
+  if (!app)
+    return -1;
   NS_ADDREF(app);
-  app->Initialize(argc, argv);
+  nsresult rv = app->Initialize(argc, argv);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(app);
+    return -2;
+  }
+  /* XPCOM is now initialized. we must clean it up. */
   int result = app->Run();
   app->Exit();  // this exit is needed for the -x case where the close box is never clicked
   NS_RELEASE(app);

@@ -212,59 +212,72 @@ nsViewerApp::SetupRegistry()
   nsCOMPtr<nsIServiceManager> servManager;
   rv = NS_InitXPCOM3(getter_AddRefs(servManager), nsnull, nsnull,
                      kPStaticModules, kStaticModuleCount);
+  if (NS_FAILED(rv))
+    return rv;
+  do {
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servManager);
+    NS_ASSERTION(registrar, "No nsIComponentRegistrar from get service. see dougt");
+    rv = registrar->AutoRegister(nsnull);
 
-  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servManager);
-  NS_ASSERTION(registrar, "No nsIComponentRegistrar from get service. see dougt");
-  rv = registrar->AutoRegister(nsnull);
-
-  // Register our browser window factory
-  nsIFactory* bwf;
-  NS_NewXPBaseWindowFactory(&bwf);
-  registrar->RegisterFactory(kXPBaseWindowCID, 0, 0, bwf);
-  NS_RELEASE(bwf);
-
-  // register the cookie manager
-  nsCOMPtr<nsICookieService> cookieService = 
-           do_GetService(kCookieServiceCID, &rv);
-  if (NS_FAILED(rv) || (nsnull == cookieService)) {
+    // register the cookie manager
+    nsCOMPtr<nsICookieService> cookieService = 
+             do_GetService(kCookieServiceCID, &rv);
+    if (NS_FAILED(rv) || (nsnull == cookieService)) {
 #ifdef DEBUG
-    printf("Unable to instantiate Cookie Manager\n");
+      printf("Unable to instantiate Cookie Manager\n");
 #endif
-  }
+    }
 
-  return NS_OK;
+    // Register our browser window factory
+    nsIFactory* bwf;
+    rv = NS_NewXPBaseWindowFactory(&bwf);
+    if (NS_FAILED(rv))
+      break;
+    registrar->RegisterFactory(kXPBaseWindowCID, 0, 0, bwf);
+    NS_RELEASE(bwf);
+  } while (0);
+  if (NS_FAILED(rv))
+    NS_ShutdownXPCOM(nsnull);
+
+  return rv;
 }
 
 nsresult
 nsViewerApp::Initialize(int argc, char** argv)
 {
-  nsresult rv;
-
-  rv = SetupRegistry();
+  nsresult rv = SetupRegistry();
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  InitializeWindowCreator();
+  do {
+    rv = InitializeWindowCreator();
 
-  // Create widget application shell
-  rv = CallCreateInstance(kAppShellCID, &mAppShell);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  mAppShell->Create(&argc, argv);
+    // Create widget application shell
+    rv = CallCreateInstance(kAppShellCID, &mAppShell);
+    if (NS_FAILED(rv))
+      break;
 
-  // Load preferences
-  rv = CallGetService(NS_PREFSERVICE_CONTRACTID, &mPrefService);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  mPrefService->ReadUserPrefs(nsnull);
+    rv = mAppShell->Create(&argc, argv);
+    if (NS_FAILED(rv))
+      break;
 
-  // Finally process our arguments
-  rv = ProcessArguments(argc, argv);
+    // Load preferences
+    rv = CallGetService(NS_PREFSERVICE_CONTRACTID, &mPrefService);
+    if (NS_FAILED(rv))
+      break;
+    mPrefService->ReadUserPrefs(nsnull);
 
-  mIsInitialized = PR_TRUE;
+    // Finally process our arguments
+    rv = ProcessArguments(argc, argv);
+    if (NS_FAILED(rv))
+      break;
+
+    mIsInitialized = PR_TRUE;
+  } while (0);
+  if (NS_FAILED(rv))
+    NS_ShutdownXPCOM(nsnull);
+
   return rv;
 }
 
