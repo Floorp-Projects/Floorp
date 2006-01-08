@@ -476,7 +476,11 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
       if (name->NamespaceEquals(kNameSpaceID_XMLNS) &&
           content->AttrValueIs(kNameSpaceID_XMLNS, name->LocalName(),
                                aNamespaceURI, eCaseMatters)) {
-        name->LocalName()->ToString(aPrefix);
+        // If the localName is "xmlns", the prefix we output should be
+        // null.
+        if (name->LocalName() != nsLayoutAtoms::xmlnsNameSpace) {
+          name->LocalName()->ToString(aPrefix);
+        }
 
         return NS_OK;
       }
