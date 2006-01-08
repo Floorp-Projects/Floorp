@@ -85,6 +85,7 @@ EXTRA_COMPONENTS = \
 	calItemBase.js \
 	calItemModule.js \
 	calTodo.js \
+	calDateTimeFormatter.js \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

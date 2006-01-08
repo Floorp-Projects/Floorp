@@ -121,7 +121,12 @@ const componentData =
     {cid: Components.ID("{04027036-5884-4a30-b4af-f2cad79f6edf}"),
      contractid: "@mozilla.org/calendar/recurrence-info;1",
      script: "calRecurrenceInfo.js",
-     constructor: "calRecurrenceInfo"}
+     constructor: "calRecurrenceInfo"},
+
+    {cid: Components.ID("{4123da9a-f047-42da-a7d0-cc4175b9f36a}"),
+     contractid: "@mozilla.org/calendar/datetime-formatter;1",
+     script: "calDateTimeFormatter.js",
+     constructor: "calDateTimeFormatter"}
     ];
 
 var calItemModule = {

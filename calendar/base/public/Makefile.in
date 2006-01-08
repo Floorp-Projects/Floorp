@@ -68,6 +68,7 @@ XPIDLSRCS	= calIAlarmService.idl \
 		  calIRecurrenceRule.idl \
 		  calIImportExport.idl \
 		  calITodo.idl       \
+		  calIDateTimeFormatter.idl \
 		  $(NULL)
 
 EXPORTS		= calBaseCID.h
