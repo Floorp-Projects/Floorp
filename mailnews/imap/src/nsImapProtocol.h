@@ -341,7 +341,7 @@ private:
   PRUint32              m_allocatedSize; // allocated size
   PRUint32        m_totalDataSize; // total data size
   PRUint32        m_curReadIndex;  // current read index
-  nsCAutoString   m_trashFolderName;
+  nsCString       m_trashFolderName;
   
   // Ouput stream for writing commands to the socket
   nsCOMPtr<nsISocketTransport>  m_transport; 

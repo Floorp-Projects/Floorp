@@ -84,7 +84,7 @@ const char * nsMapiRegistryUtils::thisApplication()
     return m_thisApp.get() ;
 }
 
-void nsMapiRegistryUtils::getVarValue(const PRUnichar * varName, nsAutoString & result)
+void nsMapiRegistryUtils::getVarValue(const PRUnichar * varName, nsXPIDLString & result)
 {
     nsresult rv;
     nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(
@@ -95,12 +95,9 @@ void nsMapiRegistryUtils::getVarValue(const PRUnichar * varName, nsAutoString & 
                     "chrome://branding/locale/brand.properties",
                     getter_AddRefs(brandBundle));
         if (NS_SUCCEEDED(rv)) {
-            nsXPIDLString value;
-            rv = brandBundle->GetStringFromName(
+            brandBundle->GetStringFromName(
                        varName,
-                       getter_Copies(value));
-            if (NS_SUCCEEDED(rv))
-                result = value;
+                       getter_Copies(result));
         }
     }
 }
@@ -788,7 +785,7 @@ nsresult nsMapiRegistryUtils::registerMailApp(PRBool aForceRegistration)
           appKeyName.Assign(keyName);
           appKeyName.AppendLiteral("\\shell\\properties");
 
-          nsAutoString brandShortName;
+          nsXPIDLString brandShortName;
           getVarValue(NS_LITERAL_STRING("brandShortName").get(), brandShortName);
 
           const PRUnichar* brandNameStrings[] = { brandShortName.get() };

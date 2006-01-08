@@ -55,15 +55,14 @@
 class nsMapiRegistryUtils
 {
 private :
-    nsCAutoString m_thisApp ;
-    nsAutoString m_brand ;
-    nsAutoString m_vendor ;
-    nsAutoString m_versionNo ;
+    nsCString m_thisApp;
+    nsXPIDLString m_brand;
+    nsXPIDLString m_vendor;
 
     nsCOMPtr<nsIStringBundle> m_mapiStringBundle ;
 
     // sets result to the value of varName (as defined in brand.properties)
-    void getVarValue(const PRUnichar * varName, nsAutoString & result);
+    void getVarValue(const PRUnichar * varName, nsXPIDLString & result);
 
     // verifyRestrictedAccess - Returns PR_TRUE if this user only has restricted access
     // to the registry keys we need to modify. Consumers should call the public method 

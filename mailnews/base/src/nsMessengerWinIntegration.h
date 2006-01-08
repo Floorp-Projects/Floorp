@@ -143,8 +143,8 @@ private:
   char *mInboxURI;
   char *mEmail;
 
-  nsAutoString mAppName;      
-  nsAutoString mEmailPrefix;  
+  nsString  mAppName;
+  nsString  mEmailPrefix;
   nsCString mShellDllPath;
 
 #ifdef MOZ_THUNDERBIRD

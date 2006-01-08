@@ -87,7 +87,7 @@ private:
     nsCOMPtr<nsISmtpServer> mDefaultSmtpServer;
     nsCOMPtr<nsISmtpServer> mSessionDefaultServer;
 
-    nsCAutoString mServerKeyList;
+    nsCString mServerKeyList;
 
     PRBool mSmtpServersLoaded;
 };
