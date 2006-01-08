@@ -47,6 +47,9 @@ sub sillyness {
     $zz = $F::newsgroups;
 }
 
+my $emailregexp = q/^[^"'@|&, ]*@[^"'@|&, ]*\.[^"'@|&, ]*$/;
+my $partregexp = q/^[-&:\.\w\d ]+$/;
+my $partidregexp = q/^\d+$/;
 
 use CGI::Carp qw(fatalsToBrowser);
 
@@ -77,11 +80,15 @@ if ($::disabled) {
     exit;
 }
 
+# handle bad commandline based testing
+my $server_name = defined $ENV{'SERVER_NAME'} ? $ENV{'SERVER_NAME'} : 'localhost';
+my $script_name = defined $ENV{'SCRIPT_NAME'} ? $ENV{'SCRIPT_NAME'} : 'despot.cgi';
+my $is_https = (exists $ENV{"HTTPS"} && (lc($ENV{"HTTPS"}) eq "on")) ? 1 : 0;
 if (!param()) {
     PrintHeader();
     print h1("Despot -- access control for mozilla.org.");
-    if (!exists $ENV{"HTTPS"} || lc($ENV{"HTTPS"}) ne "on") {
-        my $fixedurl = "https://$ENV{'SERVER_NAME'}$ENV{'SCRIPT_NAME'}";
+    unless ($is_https) {
+        my $fixedurl = "https://$server_name$script_name";
         print b("<font color=red>If possible, please use the " .
                 a({href=>$fixedurl}, "secure version of this form") .
                 ".</font>");
@@ -104,57 +111,9 @@ my $dsn = "DBI:mysql:host=$db_host;database=$db_name";
 $::db = DBI->connect($dsn, $db_user, $db_pass)
     || die "Can't connect to database server";
 
+my ($query, @row);
 
 $::skiptrailer = 0;
-
-if (defined $F::command) {
-    my $cmd = $F::command;
-    Authenticate() unless grep($cmd eq $_, qw(FindPartition));
-    param("command", "");
-    PrintHeader() if $cmd eq "MainMenu";
-    eval "$cmd()";
-    if ($@ ne "") {
-        die "Error executing $cmd -- $@";
-    }
-} else {
-    Authenticate();
-    PrintHeader();
-    MainMenu();
-}
-
-
-if (!$::skiptrailer) {
-    print hr();
-    print MyForm("MainMenu") . submit("Main menu") . end_form();
-}
-
-
-my $query = $::db->prepare("SELECT needed FROM syncneeded WHERE needed = 1");
-$query->execute();
-my @row = $query->fetchrow_array();
-if ($row[0]) {
-    print hr();
-    print p("Updating external machines...");
-    print "<PRE>";
-    if (!open(DOSYNC, "./syncit.pl -user $F::loginname|")) {
-        print p("Can't do sync (error $?).  Please send mail to " .
-                a({href=>$despotOwnerMailTo}, $despotOwner) . ".");
-    } else {
-        while (<DOSYNC>) {
-            if ($::despot) {
-                s/\&/\&amp;/g;
-                s/</\&lt;/g;
-                s/>/\&gt;/g;
-                print $_;
-            }
-        }
-        close(DOSYNC);
-    }
-    print "</PRE>";
-    print p("... update completed.");
-}
-
-
 
 sub Authenticate {
     my $query = $::db->prepare("SELECT passwd, despot, neednewpassword, id, disabled FROM users WHERE email = ?");
@@ -353,8 +312,8 @@ sub AddUser() {
     my $email = $F::email;
     my $query;
     my @row;
-    if ($email !~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
-        Punt("Email addresses must contain exactly one '\@', and at least one '.' after the \@, and may not contain any commas or spaces.");
+    if ($email !~ /$emailregexp/) {
+        Punt("Email addresses must contain exactly one '\@', and at least one '.' after the \@, and may not contain any pipes, ampersands, commas or spaces.");
     }
 
     $query = $::db->prepare("SELECT COUNT(*) FROM users WHERE email=?");
@@ -500,6 +459,10 @@ sub ChangeUser() {
 
 sub GeneratePassword {
     my $email = $F::email;
+    Punt("Email address is too scary for this web application") unless $email =~ /$emailregexp/;
+    my $query = $::db->prepare("SELECT id FROM users WHERE email = ?");
+    $query->execute($email);
+    Punt("$email is not an email address in the database.") unless ($query->fetchrow_array());
     my $plain = pickrandompassword();
     my $p = cryptit($plain);
     $::db->do("UPDATE users SET passwd = ?, neednewpassword='Yes' WHERE email = ?",
@@ -539,7 +502,9 @@ sub ListUsers() {
     # ListSomething("users", "email", "ListUsers", "EditUser", "email", "email,realname,gila_group,cvs_group", "users as u2", {"voucher"=>"u2.email,u2.id=users.voucher"});
     my $wherepart = "";
     if ($F::match ne "") {
-        $wherepart = "email $F::matchtype " . $::db->quote($F::match);
+        # very very narrow whitelist for matchtype.
+        my $matchtype = $F::matchtype eq 'not regexp' ? 'not regexp' : 'regexp';
+        $wherepart = "email $matchtype " . $::db->quote($F::match);
     }
     ListSomething("users", "email", "ListUsers", "EditUser", "email", "email,realname,gila_group,cvs_group", "users as u2", {"voucher"=>["if(users.voucher=0,'NONE',u2.email)", "u2.id=if(users.voucher=0,users.id,users.voucher)", "u2"]}, $wherepart);
 }
@@ -566,6 +531,10 @@ sub ListSomething {
     print h1("List of $tablename");
     my $sortorder = $defaultsortorder;
     if (defined $F::sortorder) {
+        # XXX this *absolutely* needs sanitization
+        # sort order is going to be a list of column names
+        # comma separated list of things that match stuff in the select part
+        # may or may not have " asc" or " desc" on the end of it
         $sortorder = $F::sortorder;
     }
 
@@ -827,6 +796,7 @@ sub AddPartition {
     if ($partition eq "") {
         Punt("You must enter a partition name.");
     }
+    Punt("Partition may only contain letters, numbers, spaces, dashes, ampersands, and colons") unless $partition =~ /$partregexp/;
     my $repid = $F::repid;
     my $query;
     my @row;
@@ -954,6 +924,7 @@ sub ChangePartition {
     my @row;
 
     EnsureCanChangePartition($F::partitionid);
+    my $partitionid = $F::partitionid;
 
     $::db->do("LOCK TABLES partitions WRITE, branches WRITE, files WRITE, members WRITE, users READ");
 
@@ -1068,6 +1039,7 @@ sub ChangePartition {
 
 sub DeletePartition() {
     EnsureCanChangePartition($F::partitionid);
+    my $partitionid = $F::partitionid;
 
     $::db->do("DELETE FROM partitions WHERE id = ?", undef, $F::partitionid);
     $::db->do("DELETE FROM files WHERE partitionid = ?", undef, $F::partitionid);
@@ -1194,6 +1166,7 @@ sub EnsureDespot {
 
 sub EnsureCanChangePartition {
     my ($id) = (@_);
+    Punt("Invalid partitionid.") unless $id =~ /$partidregexp/;
     if (!CanChangePartition($id)) {
         Punt("You must be an Owner or Peer of the partition to do this.");
     }
@@ -1264,3 +1237,58 @@ sub EmailToId {
     return 0;
 }
 
+{
+    my $EnableDeleteUser = 0;
+    for ( defined $F::command ? $F::command : 'MainMenu')
+    {
+        /^FindPartition$/ || do { Authenticate(); };
+        param("command", "");
+        /^AddPartition$/ && do { AddPartition(); last; };
+        /^AddUser$/ && do { AddUser(); last; };
+        /^ChangePartition$/ && do { ChangePartition(); last; };
+        /^ChangePassword$/ && do { ChangePassword(); last; };
+        /^ChangeUser$/ && do { ChangeUser(); last; };
+        /^DeletePartition$/ && do { DeletePartition(); last; };
+        /^DeleteUser$/ && $EnableDeleteUser && do { DeleteUser(); last; };
+        /^EditPartition$/ && do { EditPartition(); last; };
+        /^EditUser$/ && do { EditUser(); last; };
+        /^FindPartition$/ && do { FindPartition(); last; };
+        /^GeneratePassword$/ && do { GeneratePassword(); last; };
+        /^ListPartitions$/ && do { ListPartitions(); last; };
+        /^ListUsers$/ && do { ListUsers(); last; };
+        /^SetNewPassword$/ && do { SetNewPassword(); last; };
+        /^ViewAccount$/ && do { ViewAccount(); last; };
+        /^MainMenu$|/ && do { PrintHeader(), MainMenu(); last; };
+    }
+}
+
+
+if (!$::skiptrailer) {
+    print hr();
+    print MyForm("MainMenu") . submit("Main menu") . end_form();
+}
+
+$query = $::db->prepare("SELECT needed FROM syncneeded WHERE needed = 1");
+$query->execute();
+@row = $query->fetchrow_array();
+if ($row[0]) {
+    print hr();
+    print p("Updating external machines...");
+    print "<PRE>";
+    if (!open(DOSYNC, "./syncit.pl -user $F::loginname|")) {
+        print p("Can't do sync (error $?).  Please send mail to " .
+                a({href=>$despotOwnerMailTo}, $despotOwner) . ".");
+    } else {
+        while (<DOSYNC>) {
+            if ($::despot) {
+                s/\&/\&amp;/g;
+                s/</\&lt;/g;
+                s/>/\&gt;/g;
+                print $_;
+            }
+        }
+        close(DOSYNC);
+    }
+    print "</PRE>";
+    print p("... update completed.");
+}
