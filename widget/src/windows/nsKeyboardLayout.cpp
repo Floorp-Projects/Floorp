@@ -381,7 +381,7 @@ void KeyboardLayout::LoadLayout ()
         else
         {
           rv = ::ToAsciiEx (virtualKey, 0, kbdState, &ascii, 0, mKeyboardLayout);
-          ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, rv, &deadChar, 1);
+          ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, rv, (WCHAR*)&deadChar, 1);
         }
 
         mVirtualKeys [vki].SetDeadChar (shiftState, deadChar);
@@ -391,7 +391,7 @@ void KeyboardLayout::LoadLayout ()
           shiftStatesWithBaseChars |= 1 << shiftState;
 
         if (!nsToolkit::mIsNT)
-          rv = ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, rv, uniChars, NS_ARRAY_LENGTH (uniChars));
+          rv = ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, rv, (WCHAR*)uniChars, NS_ARRAY_LENGTH (uniChars));
 
         mVirtualKeys [vki].SetNormalChars (shiftState, uniChars, rv);
       }
@@ -654,7 +654,7 @@ PRUint32 KeyboardLayout::GetDeadKeyCombinations (PRUint8 aDeadKey, const PBYTE a
           rv = ::ToAsciiEx (virtualKey, 0, kbdState, &ascii, 0, mKeyboardLayout);
 
           if (rv == 1)
-            ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, 1, compositeChars, NS_ARRAY_LENGTH (compositeChars));
+            ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, 1, (WCHAR*)compositeChars, NS_ARRAY_LENGTH (compositeChars));
         }
 
         switch (rv)
@@ -682,7 +682,7 @@ PRUint32 KeyboardLayout::GetDeadKeyCombinations (PRUint8 aDeadKey, const PBYTE a
               rv = ::ToAsciiEx (virtualKey, 0, kbdState, &ascii, 0, mKeyboardLayout);
 
               if (rv == 1)
-                ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, 1, baseChars, NS_ARRAY_LENGTH (baseChars));
+                ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, 1, (WCHAR*)baseChars, NS_ARRAY_LENGTH (baseChars));
             }
 
             if (entries < aMaxEntries)
