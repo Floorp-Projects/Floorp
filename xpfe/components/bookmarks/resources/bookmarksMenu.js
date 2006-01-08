@@ -39,7 +39,6 @@ var BookmarksMenu = {
   _selection:null,
   _target:null,
   _orientation:null,
-  
 
   //////////////////////////////////////////////////////////////////////////
   // Fill a context menu popup with menuitems appropriate for the current
@@ -53,17 +52,17 @@ var BookmarksMenu = {
     this._target      = this.getBTTarget(target, this._orientation);
     BookmarksCommand.createContextMenu(aEvent, this._selection);
     this.onCommandUpdate();
-    aEvent.target.addEventListener("mousemove", BookmarksMenuController.onMouseMove, false)
+    aEvent.target.addEventListener("mousemove", BookmarksMenuController.onMouseMove, false);
   },
 
   /////////////////////////////////////////////////////////////////////////
   // Clean up after closing the context menu popup
   destroyContextMenu: function (aEvent)
   {
-    if (content) 
-      content.focus()
+    if (content)
+      content.focus();
     BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode); // needed on cancel
-    aEvent.target.removeEventListener("mousemove", BookmarksMenuController.onMouseMove, false)
+    aEvent.target.removeEventListener("mousemove", BookmarksMenuController.onMouseMove, false);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -277,6 +276,8 @@ var BookmarksMenu = {
       BookmarksUtils.loadBookmarkBrowser(aEvent, aDS);
   },
 
+  ////////////////////////////////////////////////
+  // loads a bookmark with the middle mouse button
   loadBookmarkMiddleClick: function (aEvent, aDS)
   {
     if (aEvent.type != "click" || aEvent.button != 1)
@@ -781,33 +782,32 @@ var BookmarksToolbar =
     }
   },
 
-  // Fill in tooltips for personal toolbar
+  // Fill in tooltips for personal toolbar (and Bookmarks menu).
   fillInBTTooltip: function (tipElement)
   {
+    // Don't show a tooltip for non bookmark related elements.
+    if (!/bookmark/.test(tipElement.className))
+      return false;
 
     var title = tipElement.label;
     var url = tipElement.statusText;
 
-    if (!title && !url) {
-      // bail out early if there is nothing to show
+    // Don't show a tooltip without any data.
+    if (!title && !url)
       return false;
-    }
 
-    var tooltipTitle = document.getElementById("btTitleText");
-    var tooltipUrl = document.getElementById("btUrlText"); 
-    if (title && title != url) {
-      tooltipTitle.removeAttribute("hidden");
-      tooltipTitle.setAttribute("value", title);
-    } else  {
-      tooltipTitle.setAttribute("hidden", "true");
-    }
-    if (url) {
-      tooltipUrl.removeAttribute("hidden");
-      tooltipUrl.setAttribute("value", url);
-    } else {
-      tooltipUrl.setAttribute("hidden", "true");
-    }
-    return true; // show tooltip
+    var tooltipElement = document.getElementById("btTitleText");
+    tooltipElement.hidden = !title || (title == url);
+    if (!tooltipElement.hidden)
+      tooltipElement.setAttribute("value", title);
+
+    tooltipElement = document.getElementById("btUrlText");
+    tooltipElement.hidden = !url;
+    if (!tooltipElement.hidden)
+      tooltipElement.setAttribute("value", url);
+
+    // Show the tooltip.
+    return true;
   }
 }
 
@@ -826,13 +826,13 @@ var BookmarksToolbarRDFObserver =
   onChange: function (aDataSource, aSource, aProperty, aOldTarget, aNewTarget) {},
   onMove: function (aDataSource, aOldSource, aNewSource, aProperty, aTarget) {},
   onBeginUpdateBatch: function (aDataSource) {},
-  onEndUpdateBatch:   function (aDataSource) {
+  onEndUpdateBatch: function (aDataSource)
+  {
     if (this._overflowTimerInEffect)
       return;
     this._overflowTimerInEffect = true;
     setTimeout(BookmarksToolbar.resizeFunc, 0, null);
   },
-
   _overflowTimerInEffect: false,
   setOverflowTimeout: function (aSource, aProperty)
   {
