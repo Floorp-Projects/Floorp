@@ -392,8 +392,8 @@ sub is_7bit_clean {
 
 sub clean_text {
     my ($dtext) = shift;
-    $dtext =~  s/[\x00-\x1F\x7F]/ /g;   # change control characters to spaces
-    return $dtext;
+    $dtext =~  s/[\x00-\x1F\x7F]+/ /g;   # change control characters into a space
+    return trim($dtext);
 }
 
 1;

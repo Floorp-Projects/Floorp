@@ -611,6 +611,7 @@ if (defined $cgi->param('id')) {
     check_form_field_defined($cgi, 'bug_file_loc');
     check_form_field_defined($cgi, 'short_desc');
     check_form_field_defined($cgi, 'longdesclength');
+    $cgi->param('short_desc', clean_text($cgi->param('short_desc')));
 
     if (trim($cgi->param('short_desc')) eq "") {
         ThrowUserError("require_summary");

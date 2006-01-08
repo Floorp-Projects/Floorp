@@ -4239,6 +4239,24 @@ $dbh->bz_alter_column('groups', 'userregexp',
 $dbh->bz_alter_column('logincookies', 'cookie',
                       {TYPE => 'varchar(16)', PRIMARYKEY => 1, NOTNULL => 1});
 
+# Fixup for Bug 101380
+# "Newlines, nulls, leading/trailing spaces are getting into summaries"
+
+my $controlchar_bugs =
+    $dbh->selectall_arrayref("SELECT short_desc, bug_id FROM bugs WHERE " .
+                             $dbh->sql_regexp('short_desc', "'[[:cntrl:]]'"));
+if (@$controlchar_bugs)
+{
+    print 'Cleaning control characters from bug summaries...';
+    foreach (@$controlchar_bugs) {
+        my ($short_desc, $bug_id) = @$_;
+        print " $bug_id...";
+        $short_desc = clean_text($short_desc);
+        $dbh->do("UPDATE bugs SET short_desc = ? WHERE bug_id = ?",
+                 undef, $short_desc, $bug_id);
+    }
+    print " done.\n";
+}
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

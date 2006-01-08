@@ -108,8 +108,11 @@ my $component_id = get_component_id($product_id,
                                     scalar($cgi->param('component')));
 $component_id || ThrowUserError("require_component");
 
+# Set the parameter to itself, but cleaned up
+$cgi->param('short_desc', clean_text($cgi->param('short_desc')));
+
 if (!defined $cgi->param('short_desc')
-    || trim($cgi->param('short_desc')) eq "") {
+    || $cgi->param('short_desc') eq "") {
     ThrowUserError("require_summary");
 }
 
