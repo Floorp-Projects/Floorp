@@ -38,10 +38,10 @@ use diagnostics;
 
 my $title = "Log out";
 
-my $c = new CGI;
-my $cookie = Litmus::Auth::logout();
+Litmus::Auth::logout();
 
-print $c->header(-cookie => $cookie);
+my $c = Litmus->cgi();
+print $c->header();
 
 my $vars = {
             title => $title,

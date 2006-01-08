@@ -41,7 +41,7 @@ use CGI;
 use Time::Piece::MySQL;
 
 
-my $c = new CGI;
+my $c = Litmus->cgi();
 print $c->header();
 
 my $results;

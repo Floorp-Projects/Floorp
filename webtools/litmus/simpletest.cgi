@@ -39,7 +39,7 @@ use Litmus::Auth;
 use CGI;
 use Time::Piece::MySQL;
 
-my $c = new CGI; 
+my $c = Litmus->cgi(); 
 
 # how old of a build do we want to allow? default is 10 days
 my $maxbuildage = 10; 

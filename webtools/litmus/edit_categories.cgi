@@ -44,7 +44,9 @@ use Time::Piece::MySQL;
 
 use diagnostics;
 
-my $c = new CGI;
+Litmus::Auth::requireAdmin("edit_categories.cgi");
+
+my $c = Litmus->cgi();
 print $c->header();
 
 if ($c->param) {
@@ -53,7 +55,7 @@ if ($c->param) {
   if ($c->param('add_product')) {
     my $name = $c->param('new_product_name');
     my $icon_path = $c->param('new_icon_path') || "";
-    my $enabled = $c->param('new_enabled') ? 'Yes' : 'No';
+    my $enabled = $c->param('new_enabled') ? 1 : 0;
     eval {
       $product = Litmus::DB::Product->create({
                                               name => $name,
@@ -73,9 +75,9 @@ if ($c->param) {
     $product->name($c->param('modify_product_name'));
     $product->iconpath($c->param('modify_icon_path'));
     if ($c->param('modify_enabled')) {
-      $product->enabled('Yes');
+      $product->enabled(1);
     } else {
-      $product->enabled('No');
+      $product->enabled(0);
     }
     eval {
       $product->update;

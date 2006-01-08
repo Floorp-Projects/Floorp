@@ -40,7 +40,7 @@ use Litmus::DB::Resultbug;
 use CGI;
 use Date::Manip;
 
-my $c = new CGI; 
+my $c = Litmus->cgi(); 
 print $c->header();
 
 if ($c->param && $c->param('id')) {

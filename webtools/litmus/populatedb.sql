@@ -97,7 +97,7 @@ UNLOCK TABLES;
 
 /*!40000 ALTER TABLE `products` DISABLE KEYS */;
 LOCK TABLES `products` WRITE;
-INSERT INTO `products` VALUES (1,'Firefox','ff.gif','Yes'),(2,'Seamonkey','moz.png','Yes'),(3,'Thunderbird','tb.gif','Yes');
+INSERT INTO `products` VALUES (1,'Firefox','ff.gif',1),(2,'Seamonkey','moz.png',1),(3,'Thunderbird','tb.gif',1);
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `products` ENABLE KEYS */;
 

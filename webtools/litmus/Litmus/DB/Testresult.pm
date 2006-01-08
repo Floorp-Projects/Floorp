@@ -48,6 +48,7 @@ Litmus::DB::Testresult->columns(All => qw/testresult_id test_id last_updated sub
 
 Litmus::DB::Testresult->column_alias("testresult_id", "testresultid");
 Litmus::DB::Testresult->column_alias("test_id", "testid");
+Litmus::DB::Testresult->column_alias("test_id", "test");
 Litmus::DB::Testresult->column_alias("submission_time", "timestamp");
 Litmus::DB::Testresult->column_alias("user_id", "user");
 Litmus::DB::Testresult->column_alias("platform_id", "platform");

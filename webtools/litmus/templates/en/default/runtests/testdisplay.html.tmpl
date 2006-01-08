@@ -149,8 +149,6 @@
       <div class="dh">Result:</div>
       [% INCLUDE form_widgets/radio_testresults.tmpl test_id=curtest.testid %]
       <br/>
-      <div><input class="button" type="submit" id="Submit[% curtest.testid | html %]" name="Submit[% curtest.testid | html %]" value="Submit This Result" onClick="return confirmPartialSubmission()"/>
-      </div>
      </td>
 
      <td>
@@ -169,7 +167,14 @@
    </td>
   </tr>
   </table>
-
+ [% IF i < tests.size - 1 %]
+   <div class="r"><a name="next" 
+     onClick="allStretch.showThisHideOpen(
+       document.getElementById('t[% i %]-content'), 100, 'height');
+       allStretch.showThisHideOpen(
+       document.getElementById('t[% i+1 %]-content'), 100, 'height');">
+     next</a></div>
+ [% END %]
  </div>
 
 </div>

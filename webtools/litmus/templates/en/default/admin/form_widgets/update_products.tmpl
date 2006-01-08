@@ -26,7 +26,7 @@ function updateProductForm() {
             document.getElementById("modify_product_icon_path").disabled = false;
             document.getElementById("modify_product_icon_path").value = update[2];
             document.getElementById("modify_product_enabled").disabled = false;
-            document.getElementById("modify_product_enabled").checked = update[3] == 'Yes' ? true : false;
+            document.getElementById("modify_product_enabled").checked = update[3] == 1 ? true : false;
             document.getElementById("delete_product").disabled = false;
             document.getElementById("update_product").disabled = false;
         } else {

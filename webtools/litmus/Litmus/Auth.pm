@@ -34,10 +34,17 @@ package Litmus::Auth;
 
 use strict;
 
+# IMPORTANT! 
+## You _must_ call Litmus::Auth methods before sending a Content-type
+## header so that any required cookies can be sent.
+
 require Exporter;
 use Litmus;
 use Litmus::DB::User;
 use Litmus::Error;
+use Litmus::Template;
+use Time::Piece;
+use Time::Seconds;
 
 use CGI;
 
@@ -45,8 +52,10 @@ our @ISA = qw(Exporter);
 our @EXPORT = qw();
 
 my $logincookiename = $Litmus::Config::user_cookiename;
+my $cookie_expire_days = 7;
 
-# (XXX) stub
+my $curSession;
+
 # Given a username and password, validate the login. Returns the 
 # Lutmus::DB::User object associated with the username if the login 
 # is sucuessful. Returns false otherwise.
@@ -54,16 +63,270 @@ sub validate_login($$) {
 	my $username = shift;
 	my $password = shift;
 	
-	# we'll fill this in later once we actually _have_ passwords. 
-	# for now, just return the user object or false:
 	my @usrobjs = Litmus::DB::User->search(email => $username);
-	if (@usrobjs) {
-		return $usrobjs[0];
+	my $userobj = $usrobjs[0];
+	
+	if (!$userobj) { return 0; } 
+	
+	if ($userobj->disabled() && $userobj->disabled() == 1) { 
+		die "account ".$userobj->username()." has been disabled by 
+		  the administrator"; 
+	}
+	
+	# for security reasons, we use the real (correct) crypt'd passwd
+	# as the salt:
+	my $realPasswordCrypted = $userobj->getRealPasswd();
+	my $enteredPasswordCrypted = crypt($password, $realPasswordCrypted);
+	if ($enteredPasswordCrypted eq $enteredPasswordCrypted) {
+		return $userobj;
 	} else {
 		return 0;
 	}
 }
 
+# Used by a CGI when a login is required to proceed beyond a certain point.
+# requireLogin() will return a Litmus::User object to indicate that the user 
+# is logged in, or it will redirect to a login page to allow the login to be 
+# completed. Once the login is complete, the user will be redirected back to 
+# $return_to and any parameters in the current CGI.pm object will be passed 
+# to the new script. 
+#
+sub requireLogin {
+	my $return_to = shift;
+	my $cgi = Litmus->cgi();
+	
+	# see if we are already logged in:
+	my $user = getCurrentUser();
+	return $user if $user; # well, that was easy...
+	
+	my $vars = {
+            return_to => $return_to,
+            params => $cgi,
+           };
+	
+	print $cgi->header();
+	Litmus->template()->process("auth/login.html.tmpl", $vars) ||
+  		internalError(Litmus->template()->error());
+	
+	exit;	
+}
+
+# Used by a CGI in much the same way as requireLogin() when the user must
+# be an admin to proceed.
+sub requireAdmin {
+	my $return_to = shift;
+	my $cgi = Litmus->cgi();
+	
+	my $user = requireLogin();
+	if (!$user || !$user->is_admin()) { 
+		basicError("You must be a Litmus administrator to perform this function.");
+	}
+	return $user;
+}
+
+# Returns the Litmus::User object corresponding to the current logged-in
+# user, or 0 if no valid login cookie exists
+sub getCurrentUser() {
+	my $c = Litmus->cgi();
+    
+    # we're actually processing the login form right now, so the cookie hasn't
+    # been sent yet...
+    if ($curSession) { return $curSession->user_id() }
+    
+    my $sessionCookie = $c->cookie($logincookiename);
+    if (! $sessionCookie) { return 0 }
+    
+    
+    my @sessions = Litmus::DB::Session->search(sessioncookie => $sessionCookie);
+    my $session = $sessions[0];
+    if (! $session) { return 0 }
+    
+    # see if it's still valid and that the user hasn't been disabled
+    if (! $session->isValid()) { return 0 }
+    
+    return $session->user_id();
+}
+
+#
+# ONLY NON-PUBLIC API BEYOND THIS POINT
+#
+
+# Processes data from a login form (auth/login.html.tmpl) using data 
+# from the current Litmus::CGI object in use. When complete, returns the 
+# flow of control to the script the user wanted to reach before the login,
+# setting a login cookie for the user.
+sub processLoginForm {
+	my $c = Litmus->cgi();
+	
+	my $type = $c->param("login_type");
+	
+	if ($c->param("accountCreated")  && 
+			$c->param("accountCreated") eq "true") {
+		# make sure they really are logged in and didn't just set
+		# the accountCreated flag:
+		requireLogin("index.cgi");
+		return; # we're done here
+	}
+	
+	if ($type eq "litmus") {
+		my $username = $c->param("email");
+		my $password = $c->param("password");
+		
+		my $user = validate_login($username, $password);
+		
+		if (!$user) {
+			loginError($c, "Username/Password incorrect. Please try again.");
+		}
+		
+		my $session = makeSession($user);
+		$c->storeCookie(makeCookie($session));
+		
+	} elsif ($type eq "newaccount") {
+		my $email = $c->param("email");
+		my $name = $c->param("realname");
+		my $password = $c->param("password"); 
+		
+		# some basic form-field validation:
+		my $emailregexp = q:^[\\w\\.\\+\\-=]+@[\\w\\.\\-]+\\.[\\w\\-]+$:;
+		if (! $email || ! $email =~ /$emailregexp/) {
+			loginError($c, "You must enter a valid email address");
+		}
+		if (! $password eq $c->param("password_confirm")) {
+			loginError($c, "Passwords do not match. Please try again.");
+		}
+		if (! $name || $name eq "") {
+			loginError($c, "You must enter your real name (or a pseudonym) to identify yourself");
+		}
+		my @users = Litmus::DB::User->search(email => $email);
+		if ($users[0]) {
+			loginError($c, "User ".$users[0]->email() ." already exists. Please try again.");
+		}
+		
+		my $userobj = 
+			Litmus::DB::User->create({email => $email, 
+								 password => bz_crypt($password),
+								 realname => $name,
+								 disabled => 0, 
+								 is_admin => 0});
+		
+		my $session = makeSession($userobj);
+		$c->storeCookie(makeCookie($session));
+		
+		my $vars = {
+			email => $email,
+			realname => $name,
+			return_to => $c->param("login_loc"),
+			params => $c
+		};
+		
+		print $c->header();
+		Litmus->template()->process("auth/accountcreated.html.tmpl", $vars) ||
+  			internalError(Litmus->template()->error());
+	
+		exit;	
+		
+	} elsif ($type eq "bugzilla") {
+		my $username = $c->param("username");
+		my $password = $c->param("password");
+		
+		
+	} else {
+		internalError("Unknown login scheme attempted");
+	}
+}
+
+# Given a userobj, process the login and return a session cookie
+sub makeSession {
+	my $userobj = shift;
+	my $c = Litmus->cgi();
+	
+	my $expires = localtime() + ONE_DAY * $cookie_expire_days;
+	
+	my $sessioncookie = randomToken(64);
+	
+	my $session = Litmus::DB::Session->create({
+										user_id => $userobj, 
+										sessioncookie => $sessioncookie,
+										expires => $expires});
+	
+	$curSession = $session;
+	return $session;
+}
+
+# Given a session, create a login cookie to go with it
+sub makeCookie {
+	my $session = shift;
+	
+	my $cookie = Litmus->cgi()->cookie( 
+                          -name    => $logincookiename,
+                          -value   => $session->sessioncookie(),
+                          -domain  => $main::ENV{"HTTP_HOST"},
+                          -expires => $session->expires(),
+                         );
+    return $cookie;
+}
+
+sub loginError {
+	my $c = shift;
+	my $message = shift;
+	print $c->header();
+	
+	my $return_to = $c->param("login_loc") || "";
+	
+	# We need to unset some params in $c since otherwise we end up with 
+	# a hidden form field set for "email" and friends and madness results:
+	$c->param('email', '');
+	$c->param('login_type', '');
+	$c->param('login_loc', '');
+	$c->param('realname', '');
+	$c->param('password', '');
+	$c->param('password_confirm', '');
+	
+	my $vars = {
+            return_to => $return_to,
+            params => $c,
+            message => "Error: ".$message,
+           };
+	
+	Litmus->template()->process("auth/login.html.tmpl", $vars) ||
+  		internalError(Litmus->template()->error());
+  
+  exit;
+}
+
+# Like crypt(), but with a random salt. Thanks to Bugzilla for this.
+sub bz_crypt {
+    my ($password) = @_;
+
+    # The list of characters that can appear in a salt.  Salts and hashes
+    # are both encoded as a sequence of characters from a set containing
+    # 64 characters, each one of which represents 6 bits of the salt/hash.
+    # The encoding is similar to BASE64, the difference being that the
+    # BASE64 plus sign (+) is replaced with a forward slash (/).
+    my @saltchars = (0..9, 'A'..'Z', 'a'..'z', '.', '/');
+
+    # Generate the salt.  We use an 8 character (48 bit) salt for maximum
+    # security on systems whose crypt uses MD5.  Systems with older
+    # versions of crypt will just use the first two characters of the salt.
+    my $salt = '';
+    for ( my $i=0 ; $i < 8 ; ++$i ) {
+        $salt .= $saltchars[rand(64)];
+    }
+
+    # Crypt the password.
+    my $cryptedpassword = crypt($password, $salt);
+
+    # Return the crypted password.
+    return $cryptedpassword;
+}
+
+sub randomToken {
+    my $size = shift || 10; # default to 10 chars if nothing specified
+    return join("", map{ ('0'..'9','a'..'z','A'..'Z')[rand 62] } (1..$size));
+}
+
+# Deprecated:
+# DO NOT USE
 sub setCookie {
   my $user = shift;
   my $expires = shift;
@@ -77,7 +340,7 @@ sub setCookie {
     $expires = '+3d';
   }
     
-  my $c = new CGI;
+  my $c = Litmus->cgi();
   
   my $cookie = $c->cookie( 
                           -name    => $logincookiename,
@@ -89,20 +352,9 @@ sub setCookie {
   return $cookie;
 }
 
+# Deprecated:
 sub getCookie() {
-    my $c = new CGI;
-    
-    my $cookie = $c->cookie($logincookiename);
-    
-    my $user = Litmus::DB::User->retrieve($cookie);
-    if (! $user) {
-        return 0;
-    } else {
-        unless ($user->userid() == $cookie) {
-            invalidInputError("Invalid login cookie");
-        }
-    }
-    return $user;
+   return getCurrentUser();
 }
 
 sub istrusted($) {
@@ -126,13 +378,18 @@ sub canEdit($) {
 #########################################################################
 # logout()
 #
-# Unset the user's cookie, and return them to the main index.
+# Unset the user's cookie
 #########################################################################
 sub logout() {
-  my $c = new CGI;
+	my $c = Litmus->cgi();
   
-  my $cookie = Litmus::Auth::setCookie(undef,'-1d');
-  return $cookie;
+	my $cookie = $c->cookie(
+  						 	-name => $logincookiename,
+  						 	-value => '',
+  						 	-domain  => $main::ENV{"HTTP_HOST"},
+  						 	-expires => '-1d'
+  						   );
+	$c->storeCookie($cookie);
 }
 
 

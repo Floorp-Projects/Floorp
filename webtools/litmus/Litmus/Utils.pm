@@ -52,7 +52,7 @@ sub requireField {
     my ($fieldname, $field) = @_;
     
     unless($field && $field ne "---") {
-        my $c = new CGI;
+        my $c = Litmus->cgi();
         print $c->header();
         invalidInputError("You must make a valid selection for field ".$fieldname.".");
     }

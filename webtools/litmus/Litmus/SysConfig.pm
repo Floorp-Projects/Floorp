@@ -68,7 +68,7 @@ sub setCookie {
     
     my %cookiedata;
     
-    my $c = new CGI;
+    my $c = Litmus->cgi();
     my $cookie = $c->cookie( 
         -name   => $configcookiename.'_'.$self->{"product"}->productid(),
         -value  => join('|', $self->{"product"}->productid(), $self->{"platform"}->platformid(),
@@ -81,7 +81,7 @@ sub setCookie {
 
 sub getCookie() {
     my $self = shift;
-    my $c = new CGI;
+    my $c = Litmus->cgi();
     my $product = shift;
     
     my $cookie = $c->cookie($configcookiename.'_'.$product->productid());
@@ -165,7 +165,6 @@ sub displayForm {
     my @locales = Litmus::DB::Locale->retrieve_all(
                                                    { order_by => 'abbrev' }
                                                   );
-    
     my $vars = {
         locales    => \@locales,        
         products   => \@products,
@@ -184,7 +183,7 @@ sub displayForm {
         $vars->{"defaultlocale"} = $sysconfig->locale();
     }
     
-    my $cookie =  Litmus::Auth::getCookie();
+    my $cookie =  Litmus::Auth::getCurrentUser();
     $vars->{"defaultemail"} = $cookie;
     $vars->{"show_admin"} = Litmus::Auth::istrusted($cookie);
 

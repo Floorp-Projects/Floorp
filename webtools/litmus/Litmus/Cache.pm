@@ -56,7 +56,7 @@ sub rebuildCache {
     # whole thing out as javascript with Data::JavaScript
     # shield your eyes, we're in for a long trip
     my @litmusconfig;
-    my @products = Litmus::DB::Product->search(enabled => 'Yes');
+    my @products = Litmus::DB::Product->search(enabled => 1);
     my $prodcount = 0;
     foreach my $curproduct (@products) {
         my $prodrow =  \%{$litmusconfig[$prodcount]};

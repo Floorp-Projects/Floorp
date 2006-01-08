@@ -41,7 +41,7 @@ use Time::Piece::MySQL;
 
 my $title = "Run Tests";
 
-my $c = new CGI; 
+my $c = Litmus->cgi(); 
 
 if ($c->param("group")) { # display the test screen
     page_test();
@@ -73,7 +73,6 @@ sub page_sysSetup {
 # an area to test:
 sub page_pickGroupSubgroup {
     my $sysconfig;
-    my $user;
     
     my $product = Litmus::DB::Product->retrieve($c->param("product"));
     if (! $product) {
@@ -81,29 +80,24 @@ sub page_pickGroupSubgroup {
         invalidInputError("Invalid product ".$c->param("product"));
     }
     
+    Litmus::Auth::requireLogin("run_tests.cgi");
+    
     if ($c->param("continuetesting")) {
         # they have already gotten setup and just want to 
         # pick a new group or subgroup:
         $sysconfig = Litmus::SysConfig->getCookie($product);
         if (!$sysconfig) {page_pickProduct()};
-        $user = Litmus::Auth::getCookie();
         
         print $c->header();
     } else {
         $sysconfig = Litmus::SysConfig->processForm($c);
-        # get the user id and set a login cookie:
-        my $email = $c->param("email");
-        if (!$email) {
-            print $c->header();
-            invalidInputError("You must enter your email address so we can track your results and contact you if we have any questions.");
-        }
-        $user = Litmus::DB::User->find_or_create(email => $email);
-   
-        print $c->header(-cookie => [$sysconfig->setCookie(), Litmus::Auth::setCookie($user)]);
+        # get the user id and set a sysconfig cookie
+        $c->storeCookie($sysconfig->setCookie());
+        print $c->header();
     }
 
     # get all groups for the product:
-    my @groups = Litmus::DB::Testgroup->search(product => $sysconfig->product(), obsolete => 'No');
+    my @groups = Litmus::DB::Testgroup->search(product => $sysconfig->product(), obsolete => 0);
     
     # all possible subgroups per group:
     my %subgroups; 
@@ -120,7 +114,7 @@ sub page_pickGroupSubgroup {
     
     my $vars = {
         title        => $title,
-        user         => $user,
+        user         => Litmus::Auth::getCurrentUser(),
         opsys        => $sysconfig->opsys(),
         groups       => \@groups,
         subgroups    => \%subgroups,

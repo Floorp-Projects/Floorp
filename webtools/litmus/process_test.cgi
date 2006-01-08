@@ -42,7 +42,7 @@ use CGI;
 use Date::Manip;
 use diagnostics;
 
-my $c = new CGI; 
+my $c = Litmus->cgi(); 
 
 my $user;
 my $sysconfig;
@@ -250,4 +250,3 @@ if ($c->param("isSimpleTest")) {
   Litmus->template()->process("process/process.html.tmpl", $vars) ||
     internalError(Litmus->template()->error());    
 }
-

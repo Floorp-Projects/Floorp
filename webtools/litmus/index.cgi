@@ -52,7 +52,7 @@ my $test_groups = Litmus::FormWidget->getTestGroups();
 my $result_statuses = Litmus::FormWidget->getResultStatuses;
 my $branches = Litmus::FormWidget->getBranches();
 
-my $c = new CGI;
+my $c = Litmus->cgi();
 print $c->header();
 
 my $vars = {
@@ -70,9 +70,11 @@ if ($results and scalar @$results > 0) {
   $vars->{results} = $results;
 }
 
-my $cookie =  Litmus::Auth::getCookie();
-$vars->{"defaultemail"} = $cookie;
-$vars->{"show_admin"} = Litmus::Auth::istrusted($cookie);
+my $user = Litmus::Auth::getCurrentUser();
+if ($user) {
+	$vars->{"defaultemail"} = $user;
+	$vars->{"show_admin"} = $user->is_admin();
+}
 
 Litmus->template()->process("index.tmpl", $vars) ||
   internalError(Litmus->template()->error());

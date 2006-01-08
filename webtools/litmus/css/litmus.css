@@ -754,6 +754,7 @@ div.error {
         padding: 5px;
 }
 
+
 .skipLink {
     position: absolute;
     left: -1200px;
@@ -959,3 +960,27 @@ div.formButtons {
     padding-bottom: 15px;
 }
 
+/* 12 Authentication and login **************************************** */
+
+div.loginbox {
+	background: #DDD;
+	border: solid #BBB 1px;
+	padding: 5px;
+	font-size: 120%;
+}
+
+div.login_form {
+	background: #FF9;
+	border: solid #BBB 1px;
+	padding: 5px;
+	width: 40%;
+}
+
+.login_sectitle {
+	font-weight: bold;
+	font-size: 120%;
+}
+
+.login_important {
+        color: #F00;
+}

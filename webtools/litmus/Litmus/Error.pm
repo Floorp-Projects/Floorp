@@ -40,10 +40,18 @@ use Litmus;
 
 our @ISA = qw(Exporter);
 @Litmus::Error::EXPORT = qw(
+	basicError
     invalidInputError
     internalError
     lastDitchError
 );
+
+# just a general run of the mill error
+sub basicError {
+	my $message = shift;
+	_doError($message);
+	exit;
+}
 
 # used to alert the user when an unexpected input value is found
 sub invalidInputError($) {

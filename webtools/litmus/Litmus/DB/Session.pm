@@ -30,48 +30,40 @@
 
 =cut
 
-# Global object store and function library for Litmus
-
-package Litmus;
+package Litmus::DB::Session;
 
 use strict;
+use base 'Litmus::DBI';
 
-use Litmus::Template;
-use Litmus::Config;
-use Litmus::Auth;
-use Litmus::CGI;
+use Time::Piece;
 
-BEGIN {
-	if ($Litmus::Config::disabled) {
-  	  	my $c = new CGI();
-    	print $c->header();
-    	print "Litmus has been shutdown by the administrator. Please try again later.";
-    	exit;
-	}
+Litmus::DB::Session->table('sessions');
+
+Litmus::DB::Session->columns(All => qw/session_id user_id sessioncookie expires/);
+
+Litmus::DB::Session->has_a(user_id => "Litmus::DB::User");
+
+Litmus::DB::Session->autoinflate(dates => 'Time::Piece');
+
+# expire the current Session object 
+sub makeExpire {
+	my $self = shift;
+	$self->delete();
 }
 
-# Global Template object
-my $_template;
-sub template() {
-    my $class = shift;
-    $_template ||= Litmus::Template->create();
-    return $_template;
-}
-
-# Global CGI object
-my $_cgi;
-sub cgi() {
-    my $class = shift;
-    $_cgi ||= Litmus::CGI->new();
-    return $_cgi;
-}
-
-# hook to handle a login in progress for any CGI script:
-BEGIN {
-	my $c = cgi();
-	if ($c->param("login_type")) {
-		Litmus::Auth::processLoginForm();
-	}
+sub isValid {
+	my $self = shift;
+	
+	if ($self->expires() <= localtime()) {
+    	$self->makeExpire();
+    	return 0;
+    }
+    
+    if ($self->user_id()->disabled() && $self->user_id()->disabled() == 1) {
+    	$self->makeExpire();
+    	return 0;
+    }
+    return 1;
 }
 
 1;

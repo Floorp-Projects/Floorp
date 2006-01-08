@@ -23,55 +23,50 @@
  # the Initial Developer. All Rights Reserved.
  #
  # Contributor(s):
- #   Chris Cooper <ccooper@deadsquid.com>
  #   Zach Lipton <zach@zachlipton.com>
  #
  # ***** END LICENSE BLOCK *****
 
 =cut
 
-# Global object store and function library for Litmus
-
-package Litmus;
+package Litmus::CGI; 
 
 use strict;
+use base 'CGI';
 
-use Litmus::Template;
-use Litmus::Config;
-use Litmus::Auth;
-use Litmus::CGI;
+# Subclass of CGI.pm that can store cookies in advance and output them 
+# later when the header() method is called. This feature should probably 
+# be submitted as a patch to CGI.pm itself.
 
-BEGIN {
-	if ($Litmus::Config::disabled) {
-  	  	my $c = new CGI();
-    	print $c->header();
-    	print "Litmus has been shutdown by the administrator. Please try again later.";
-    	exit;
+sub new {
+	my $class = shift;
+	my @args = @_;
+	
+	my $self = $class->SUPER::new(@args);
+	$self->{'litmusCookieStore'} = [];
+	return $self;
+}
+
+# Stores a cookie to be set later by the header() method
+sub storeCookie {
+	my $self = shift;
+	my $cookie = shift;
+	
+	# "we're like kids in a candy shop"
+	my @cookieStore = @{$self->{'litmusCookieStore'}};
+	push(@cookieStore, $cookie);
+	$self->{'litmusCookieStore'} = \@cookieStore;
+}
+
+sub header {
+	my $self = shift;
+	my @args = @_;
+	
+	foreach my $cur ($self->{'litmusCookieStore'}) {
+		push(@args, {-cookie => $cur});
 	}
-}
-
-# Global Template object
-my $_template;
-sub template() {
-    my $class = shift;
-    $_template ||= Litmus::Template->create();
-    return $_template;
-}
-
-# Global CGI object
-my $_cgi;
-sub cgi() {
-    my $class = shift;
-    $_cgi ||= Litmus::CGI->new();
-    return $_cgi;
-}
-
-# hook to handle a login in progress for any CGI script:
-BEGIN {
-	my $c = cgi();
-	if ($c->param("login_type")) {
-		Litmus::Auth::processLoginForm();
-	}
+	
+	$self->SUPER::header(@args);
 }
 
 1;
