@@ -19,26 +19,6 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-sub Query {
-    my ($qstr) = @_;
-    if ($F::debug) {
-        print $qstr . "<BR>\n";
-    }
-    return $main::db->query($qstr) || die "$qstr: $Mysql::db_errstr";
-}
-
-
-
-sub SqlQuote {
-    ($_) = (@_);
-    s/'/''/g;
-    s/\\/\\\\/g;
-    return $_;
-}
-
-1;
-
-
 sub cryptit {
     my ($plain,$s) = (@_);
     srand (time ());
@@ -59,7 +39,6 @@ sub checkpassword {
 }
 
 
-
 # Trim whitespace from front and back.
 
 sub trim {
@@ -78,3 +57,6 @@ sub name_to_id_token {
     s/[^A-Za-z0-9.]+/\-/g;
     return $_;
 }
+
+1;
+

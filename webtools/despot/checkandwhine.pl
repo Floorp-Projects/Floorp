@@ -32,17 +32,21 @@ if ($sourcedir eq "") {
 chdir $sourcedir || die "Couldn't chdir to $sourcedir";
 
 
-use Mysql;
+use DBI;
 require 'utils.pl';
 
-$db = Mysql->Connect("localhost", "mozusers", "despot")
+use vars qw( $db_host $db_name $db_user $db_pass );
+do "config.pl" || die "Couldn't load config file";
+my $dsn = "DBI:mysql:host=$db_host;database=$db_name";
+$::db = DBI->connect($dsn, $db_user, $db_pass)
     || die "Can't connect to database server";
 
-$query = Query("select email,neednewpassword from users");
+$query = $::db->prepare("SELECT email, neednewpassword FROM users");
+$query->execute();
 
 $changedsomething = 0;
 
-while (@row = $query->fetchrow()) {
+while (@row = $query->fetchrow_array()) {
     ($email,$neednew) = @row;
     if ($neednew eq "Yes") {
         print "$email\n";

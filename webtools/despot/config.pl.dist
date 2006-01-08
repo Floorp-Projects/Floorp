@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+#
+# Despot configuration file
+#
+# Copy this file to config.pl, then make changes to it.
+#
+
+$::db_host = 'localhost';   # database host
+$::db_name = 'mozusers';    # database name
+$::db_user = 'despot';      # database username
+$::db_pass = '';            # database password
+
+1;
+
