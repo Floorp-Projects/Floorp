@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIPref.h"
+#include "nsServiceManagerUtils.h"
+
 #include "gfxFont.h"
 
 #include "prtypes.h"
@@ -42,24 +45,51 @@
 
 #include "nsCRT.h"
 
-void
-gfxFontGroup::Init()
+gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
+    : mFamilies(aFamilies), mStyle(*aStyle), mIsRTL(PR_FALSE)
 {
-    FillFontArray();
+    nsresult rv;
+
+    /* Fix up mStyle */
+    if (mStyle.langGroup.IsEmpty())
+        mStyle.langGroup.AssignLiteral("x-western");
+
+    nsCOMPtr<nsIPref> prefs;
+    prefs = do_GetService(NS_PREF_CONTRACTID);
+    if (prefs) {
+        nsCAutoString prefName;
+        nsXPIDLCString value;
+
+        /* XXX fix up min/max size */
+
+        // add the deafult font to the end of the list
+        prefName.AssignLiteral("font.default.");
+        prefName.Append(mStyle.langGroup);
+        rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
+        if (NS_SUCCEEDED(rv) && value.get()) {
+            mFamilies.AppendLiteral(",");
+            mFamilies.AppendWithConversion(value);
+        }
+    }
 }
 
-
-PRBool gfxFontGroup::FillFontArray()
+PRBool
+gfxFontGroup::ForEachFont(FontCreationCallback fc,
+                          void *closure)
 {
     const PRUnichar kNullCh       = PRUnichar('\0');
     const PRUnichar kSingleQuote  = PRUnichar('\'');
     const PRUnichar kDoubleQuote  = PRUnichar('\"');
     const PRUnichar kComma        = PRUnichar(',');
 
+    nsCOMPtr<nsIPref> prefs;
+    prefs = do_GetService(NS_PREF_CONTRACTID);
+
     const PRUnichar *p, *p_end;
     mFamilies.BeginReading(p);
     mFamilies.EndReading(p_end);
     nsAutoString family;
+    nsAutoString genericFamily;
 
     while (p < p_end) {
         while (nsCRT::IsAsciiSpace(*p))
@@ -80,7 +110,7 @@ PRBool gfxFontGroup::FillFontArray()
                     return PR_TRUE;
 
             family = Substring(nameStart, p);
-            generic = PR_FALSE;
+            genericFamily.SetIsVoid(PR_TRUE);
 
             while (++p != p_end && *p != kComma)
                 /* nothing */ ;
@@ -93,11 +123,35 @@ PRBool gfxFontGroup::FillFontArray()
 
             family = Substring(nameStart, p);
             family.CompressWhitespace(PR_FALSE, PR_TRUE);
-            //generic = IsGenericFontFamily(family);
+
+            if (family.EqualsLiteral("serif") ||
+                family.EqualsLiteral("sans-serif") ||
+                family.EqualsLiteral("monospace") ||
+                family.EqualsLiteral("cursive") ||
+                family.EqualsLiteral("fantasy"))
+            {
+                generic = PR_TRUE;
+
+                nsCAutoString prefName("font.name.");
+                prefName.AppendWithConversion(family);
+                prefName.AppendLiteral(".");
+                prefName.Append(mStyle.langGroup);
+
+                nsXPIDLCString value;
+                nsresult rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
+                if (NS_SUCCEEDED(rv)) {
+                    genericFamily.Assign(family);
+                    family.AssignWithConversion(value);
+                }
+            } else {
+                generic = PR_FALSE;
+                genericFamily.SetIsVoid(PR_TRUE);
+            }
         }
         
         if (!family.IsEmpty()) {
-            mFonts.push_back(MakeFont(family));
+            if (!((*fc) (family, genericFamily, closure)))
+                return PR_FALSE;
         }
 
         ++p; // may advance past p_end

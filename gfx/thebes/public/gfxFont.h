@@ -152,9 +152,7 @@ typedef std::vector<gfxFont*> gfxFontVector;
 
 class NS_EXPORT gfxFontGroup {
 public:
-    gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
-        : mFamilies(aFamilies), mStyle(*aStyle), mIsRTL(PR_FALSE)
-    { }
+    gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle);
 
     virtual ~gfxFontGroup() {
         for (gfxFontVector::iterator it = mFonts.begin(); it!=mFonts.end(); ++it)
@@ -167,11 +165,12 @@ public:
     virtual gfxTextRun *MakeTextRun(const nsAString& aString) = 0;
 
 protected:
-    /* data gets passed in to the font when it is created */
-    void Init();
-    virtual gfxFont *MakeFont(const nsAString& aName) = 0;
+    /* helper function for splitting font families on commas and
+     * calling a function for each family to fill the mFonts array
+     */
+    typedef PRBool (*FontCreationCallback) (const nsAString& aName, const nsAString& aGenericName, void *closure);
+    PRBool ForEachFont(FontCreationCallback fc, void *closure);
 
-    PRBool FillFontArray();
     nsString mFamilies;
     gfxFontStyle mStyle;
     gfxFontVector mFonts;

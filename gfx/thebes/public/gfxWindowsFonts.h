@@ -82,7 +82,7 @@ public:
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
 
 protected:
-    virtual gfxFont *MakeFont(const nsAString& aName);
+    static gfxFont *MakeFont(const nsAString& aName, const nsAString& aGenericName, void *closure);
 
 private:
     HWND mWnd;
