@@ -1212,8 +1212,10 @@ nsBoxFrame::AppendFrames(nsIAtom*        aListName,
        SetDebugOnChildList(state, mFrames.FirstChild(), PR_TRUE);
 #endif
 
-   MarkDirtyChildren(state);
-   MarkDirty(state);
+   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+     MarkDirtyChildren(state);
+     MarkDirty(state);
+   }
    return NS_OK;
 }
 
