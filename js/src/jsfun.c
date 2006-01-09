@@ -1139,6 +1139,7 @@ static void
 fun_finalize(JSContext *cx, JSObject *obj)
 {
     JSFunction *fun;
+    JSScript *script;
 
     /* No valid function object should lack private data, but check anyway. */
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
@@ -1146,13 +1147,15 @@ fun_finalize(JSContext *cx, JSObject *obj)
         return;
     if (fun->object == obj)
         fun->object = NULL;
-    JS_ATOMIC_DECREMENT(&fun->nrefs);
-    if (fun->nrefs)
-        return;
 
     /* Null-check required since the parser sets interpreted very early. */
-    if (fun->interpreted && fun->u.script)
-        js_DestroyScript(cx, fun->u.script);
+    if (fun->interpreted && fun->u.i.script &&
+        js_IsAboutToBeFinalized(cx, fun))
+    {
+        script = fun->u.i.script;
+        fun->u.i.script = NULL;
+        js_DestroyScript(cx, script);
+    }
 }
 
 #if JS_HAS_XDR
@@ -1173,6 +1176,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     JSFunction *fun;
     JSString *atomstr;
     uint32 flagsword;           /* originally only flags was JS_XDRUint8'd */
+    uint16 extraUnused;         /* variable for no longer used field */
     char *propname;
     JSScopeProperty *sprop;
     uint32 userid;              /* NB: holds a signed int-tagged jsval */
@@ -1200,7 +1204,8 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
             return JS_FALSE;
         }
         atomstr = fun->atom ? ATOM_TO_STRING(fun->atom) : NULL;
-        flagsword = ((uint32)fun->nregexps << 16) | fun->flags;
+        flagsword = ((uint32)fun->u.i.nregexps << 16) | fun->flags;
+        extraUnused = 0;
     } else {
         fun = js_NewFunction(cx, NULL, NULL, 0, 0, NULL, NULL);
         if (!fun)
@@ -1210,15 +1215,18 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 
     if (!JS_XDRStringOrNull(xdr, &atomstr) ||
         !JS_XDRUint16(xdr, &fun->nargs) ||
-        !JS_XDRUint16(xdr, &fun->extra) ||
-        !JS_XDRUint16(xdr, &fun->nvars) ||
+        !JS_XDRUint16(xdr, &extraUnused) ||
+        !JS_XDRUint16(xdr, &fun->u.i.nvars) ||
         !JS_XDRUint32(xdr, &flagsword)) {
         return JS_FALSE;
     }
 
+    /* Assert that all previous writes of extraUnused were writes of 0. */
+    JS_ASSERT(extraUnused == 0);
+
     /* do arguments and local vars */
     if (fun->object) {
-        n = fun->nargs + fun->nvars;
+        n = fun->nargs + fun->u.i.nvars;
         if (xdr->mode == JSXDR_ENCODE) {
             JSScope *scope;
             JSScopeProperty **spvec, *auto_spvec[8];
@@ -1243,7 +1251,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                     JS_ASSERT(nargs++ <= fun->nargs);
                     spvec[sprop->shortid] = sprop;
                 } else if (sprop->getter == js_GetLocalVariable) {
-                    JS_ASSERT(nvars++ <= fun->nvars);
+                    JS_ASSERT(nvars++ <= fun->u.i.nvars);
                     spvec[fun->nargs + sprop->shortid] = sprop;
                 }
             }
@@ -1291,7 +1299,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                     setter = js_SetLocalVariable;
                     if (type == JSXDR_FUNCONST)
                         attrs |= JSPROP_READONLY;
-                    JS_ASSERT(nvars++ <= fun->nvars);
+                    JS_ASSERT(nvars++ <= fun->u.i.nvars);
                 } else {
                     getter = NULL;
                     setter = NULL;
@@ -1318,13 +1326,13 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         }
     }
 
-    if (!js_XDRScript(xdr, &fun->u.script, NULL))
+    if (!js_XDRScript(xdr, &fun->u.i.script, NULL))
         return JS_FALSE;
 
     if (xdr->mode == JSXDR_DECODE) {
         fun->interpreted = JS_TRUE;
         fun->flags = (uint8) flagsword;
-        fun->nregexps = (uint16) (flagsword >> 16);
+        fun->u.i.nregexps = (uint16) (flagsword >> 16);
 
         *objp = fun->object;
         if (atomstr) {
@@ -1334,7 +1342,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                 return JS_FALSE;
         }
 
-        js_CallNewScriptHook(cx, fun->u.script, fun);
+        js_CallNewScriptHook(cx, fun->u.i.script, fun);
     }
 
     return JS_TRUE;
@@ -1398,8 +1406,8 @@ fun_mark(JSContext *cx, JSObject *obj, void *arg)
         JS_MarkGCThing(cx, fun, js_private_str, arg);
         if (fun->atom)
             GC_MARK_ATOM(cx, fun->atom, arg);
-        if (fun->interpreted && fun->u.script)
-            js_MarkScript(cx, fun->u.script, arg);
+        if (fun->interpreted && fun->u.i.script)
+            js_MarkScript(cx, fun->u.i.script, arg);
     }
     return 0;
 }
@@ -1410,7 +1418,7 @@ fun_reserveSlots(JSContext *cx, JSObject *obj)
     JSFunction *fun;
 
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
-    return fun ? fun->nregexps : 0;
+    return (fun && fun->interpreted) ? fun->u.i.nregexps : 0;
 }
 
 /*
@@ -1744,7 +1752,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * are built for Function.prototype.call or .apply activations that invoke
      * Function indirectly from a script.
      */
-    JS_ASSERT(!fp->script && fp->fun && fp->fun->u.native == Function);
+    JS_ASSERT(!fp->script && fp->fun && fp->fun->u.n.native == Function);
     caller = JS_GetScriptedCaller(cx, fp);
     if (caller) {
         filename = caller->script->filename;
@@ -1965,10 +1973,10 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     fun = js_NewFunction(cx, proto, NULL, 0, 0, obj, NULL);
     if (!fun)
         goto bad;
-    fun->u.script = js_NewScript(cx, 1, 0, 0);
-    if (!fun->u.script)
+    fun->u.i.script = js_NewScript(cx, 1, 0, 0);
+    if (!fun->u.i.script)
         goto bad;
-    fun->u.script->code[0] = JSOP_STOP;
+    fun->u.i.script->code[0] = JSOP_STOP;
     fun->interpreted = JS_TRUE;
     return proto;
 
@@ -2021,16 +2029,13 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         return NULL;
 
     /* Initialize all function members. */
-    fun->nrefs = 0;
     fun->object = NULL;
-    fun->u.native = native;
     fun->nargs = nargs;
-    fun->extra = 0;
-    fun->nvars = 0;
     fun->flags = flags & JSFUN_FLAGS_MASK;
     fun->interpreted = JS_FALSE;
-    fun->nregexps = 0;
-    fun->spare = 0;
+    fun->u.n.native = native;
+    fun->u.n.extra = 0;
+    fun->u.n.spare = 0;
     fun->atom = atom;
     fun->clasp = NULL;
 
@@ -2067,7 +2072,6 @@ js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *funobj)
         fun->object = funobj;
     if (!JS_SetPrivate(cx, funobj, fun))
         return JS_FALSE;
-    JS_ATOMIC_INCREMENT(&fun->nrefs);
     return JS_TRUE;
 }
 

@@ -2814,7 +2814,7 @@ js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun)
         js_printf(jp, native_code_str);
         return JS_TRUE;
     }
-    script = fun->u.script;
+    script = fun->u.i.script;
     scope = fun->object ? OBJ_SCOPE(fun->object) : NULL;
     save = jp->scope;
     jp->scope = scope;
@@ -2903,7 +2903,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
     if (fun->interpreted && fun->object) {
         oldscope = jp->scope;
         jp->scope = scope;
-        ok = js_DecompileScript(jp, fun->u.script);
+        ok = js_DecompileScript(jp, fun->u.i.script);
         jp->scope = oldscope;
         if (!ok) {
             jp->indent = indent;

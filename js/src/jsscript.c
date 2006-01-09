@@ -1409,7 +1409,7 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
         atom = GET_ATOM(cx, script, pc);
         fun = (JSFunction *) JS_GetPrivate(cx, ATOM_TO_OBJECT(atom));
         JS_ASSERT(fun->interpreted);
-        return fun->u.script->lineno;
+        return fun->u.i.script->lineno;
     }
 
     /*

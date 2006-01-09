@@ -1088,16 +1088,17 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
 have_fun:
         /* Get private data and set derived locals from it. */
         fun = (JSFunction *) JS_GetPrivate(cx, funobj);
+        nslots = (fun->nargs > argc) ? fun->nargs - argc : 0;
         if (fun->interpreted) {
             native = NULL;
-            script = fun->u.script;
+            script = fun->u.i.script;
+            nvars = fun->u.i.nvars;
         } else {
-            native = fun->u.native;
+            native = fun->u.n.native;
             script = NULL;
+            nvars = 0;
+            nslots += fun->u.n.extra;
         }
-        nslots = (fun->nargs > argc) ? fun->nargs - argc : 0;
-        nslots += fun->extra;
-        nvars = fun->nvars;
 
         /* Handle bound method special case. */
         if (fun->flags & JSFUN_BOUND_METHOD)
@@ -2619,7 +2620,7 @@ interrupt:
 
               case JSOP_FORVAR:
                 slot = GET_VARNO(pc);
-                JS_ASSERT(slot < fp->fun->nvars);
+                JS_ASSERT(slot < fp->fun->u.i.nvars);
                 fp->vars[slot] = rval;
                 break;
 
@@ -3517,13 +3518,13 @@ interrupt:
             FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rtmp, -=, MIN);
 
           BEGIN_CASE(JSOP_INCVAR)
-            FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rval, +=, MAX);
+            FAST_INCREMENT_OP(GET_VARNO(pc), u.i.nvars, vars, rval, +=, MAX);
           BEGIN_CASE(JSOP_DECVAR)
-            FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rval, -=, MIN);
+            FAST_INCREMENT_OP(GET_VARNO(pc), u.i.nvars, vars, rval, -=, MIN);
           BEGIN_CASE(JSOP_VARINC)
-            FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rtmp, +=, MAX);
+            FAST_INCREMENT_OP(GET_VARNO(pc), u.i.nvars, vars, rtmp, +=, MAX);
           BEGIN_CASE(JSOP_VARDEC)
-            FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rtmp, -=, MIN);
+            FAST_INCREMENT_OP(GET_VARNO(pc), u.i.nvars, vars, rtmp, -=, MIN);
 
           end_nonint_fast_incop:
             len = JSOP_INCARG_LENGTH;   /* all arg/var incops are same length */
@@ -3669,7 +3670,7 @@ interrupt:
                  fun = (JSFunction *) JS_GetPrivate(cx, obj),
                  fun->interpreted &&
                  !(fun->flags & (JSFUN_HEAVYWEIGHT | JSFUN_BOUND_METHOD)) &&
-                 argc >= (uintN)(fun->nargs + fun->extra)))
+                 argc >= (uintN)fun->nargs))
           /* inline_call: */
             {
                 uintN nframeslots, nvars;
@@ -3695,8 +3696,8 @@ interrupt:
                 /* Compute the number of stack slots needed for fun. */
                 nframeslots = (sizeof(JSInlineFrame) + sizeof(jsval) - 1)
                               / sizeof(jsval);
-                nvars = fun->nvars;
-                script = fun->u.script;
+                nvars = fun->u.i.nvars;
+                script = fun->u.i.script;
                 depth = (jsint) script->depth;
 
                 /* Allocate the frame and space for vars and operands. */
@@ -4454,14 +4455,14 @@ interrupt:
 
           BEGIN_CASE(JSOP_GETVAR)
             slot = GET_VARNO(pc);
-            JS_ASSERT(slot < fp->fun->nvars);
+            JS_ASSERT(slot < fp->fun->u.i.nvars);
             PUSH_OPND(fp->vars[slot]);
             obj = NULL;
           END_CASE(JSOP_GETVAR)
 
           BEGIN_CASE(JSOP_SETVAR)
             slot = GET_VARNO(pc);
-            JS_ASSERT(slot < fp->fun->nvars);
+            JS_ASSERT(slot < fp->fun->u.i.nvars);
             vp = &fp->vars[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);

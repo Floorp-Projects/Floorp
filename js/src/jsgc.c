@@ -1750,7 +1750,8 @@ restart:
                     if (fp->fun) {
                         if (fp->fun->nargs > nslots)
                             nslots = fp->fun->nargs;
-                        nslots += fp->fun->extra;
+                        if (!fp->fun->interpreted)
+                            nslots += fp->fun->u.n.extra;
                     }
                     GC_MARK_JSVALS(cx, nslots, fp->argv, "arg");
                 }

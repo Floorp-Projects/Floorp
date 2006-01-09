@@ -1232,24 +1232,15 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
 JS_PUBLIC_API(size_t)
 JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
 {
-    size_t nbytes, obytes;
-    JSObject *obj;
-    JSAtom *atom;
+    size_t nbytes;
 
     nbytes = sizeof *fun;
-    JS_ASSERT(fun->nrefs);
-    obj = fun->object;
-    if (obj) {
-        obytes = JS_GetObjectTotalSize(cx, obj);
-        if (fun->nrefs > 1)
-            obytes = JS_HOWMANY(obytes, fun->nrefs);
-        nbytes += obytes;
-    }
+    if (fun->object)
+        nbytes += JS_GetObjectTotalSize(cx, fun->object);
     if (fun->interpreted)
-        nbytes += JS_GetScriptTotalSize(cx, fun->u.script);
-    atom = fun->atom;
-    if (atom)
-        nbytes += GetAtomTotalSize(cx, atom);
+        nbytes += JS_GetScriptTotalSize(cx, fun->u.i.script);
+    if (fun->atom)
+        nbytes += GetAtomTotalSize(cx, fun->atom);
     return nbytes;
 }
 

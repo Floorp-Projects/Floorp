@@ -1582,7 +1582,7 @@ IndexRegExpClone(JSContext *cx, JSParseNode *pn, JSAtomListElement *ale,
     clasp = OBJ_GET_CLASS(cx, varobj);
     if (clasp == &js_FunctionClass) {
         fun = (JSFunction *) JS_GetPrivate(cx, varobj);
-        countPtr = &fun->nregexps;
+        countPtr = &fun->u.i.nregexps;
         cloneIndex = *countPtr;
     } else {
         JS_ASSERT(clasp != &js_CallClass);
@@ -2782,8 +2782,8 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
     if (!ok)
         return JS_FALSE;
 
-    fun->u.script = js_NewScriptFromCG(cx, cg, fun);
-    if (!fun->u.script)
+    fun->u.i.script = js_NewScriptFromCG(cx, cg, fun);
+    if (!fun->u.i.script)
         return JS_FALSE;
     JS_ASSERT(fun->interpreted);
     if (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT)

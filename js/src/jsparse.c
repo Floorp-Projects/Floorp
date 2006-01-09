@@ -725,8 +725,8 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
          * No need to emit code here -- Statements (via FunctionBody) already
          * has.  See similar comment in js_CompileTokenStream, and bug 108257.
          */
-        fun->u.script = js_NewScriptFromCG(cx, &funcg, fun);
-        if (!fun->u.script) {
+        fun->u.i.script = js_NewScriptFromCG(cx, &funcg, fun);
+        if (!fun->u.i.script) {
             ok = JS_FALSE;
         } else {
             fun->interpreted = JS_TRUE;
@@ -850,15 +850,16 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                           js_SetLocalVariable,
                                           SPROP_INVALID_SLOT,
                                           JSPROP_PERMANENT | JSPROP_SHARED,
-                                          SPROP_HAS_SHORTID, fp->fun->nvars)) {
+                                          SPROP_HAS_SHORTID,
+                                          fp->fun->u.i.nvars)) {
                     return NULL;
                 }
-                if (fp->fun->nvars == JS_BITMASK(16)) {
+                if (fp->fun->u.i.nvars == JS_BITMASK(16)) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_TOO_MANY_FUN_VARS);
                     return NULL;
                 }
-                fp->fun->nvars++;
+                fp->fun->u.i.nvars++;
             }
         }
 #endif
@@ -2296,7 +2297,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     if (clasp == &js_FunctionClass) {
                         JS_ASSERT(sprop->getter == js_GetLocalVariable);
                         JS_ASSERT((sprop->flags & SPROP_HAS_SHORTID) &&
-                                  (uint16) sprop->shortid < fun->nvars);
+                                  (uint16) sprop->shortid < fun->u.i.nvars);
                     } else if (clasp == &js_CallClass) {
                         if (sprop->getter == js_GetCallVariable) {
                             /*
@@ -2305,7 +2306,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                              * that the slot number we have is in range.
                              */
                             JS_ASSERT((sprop->flags & SPROP_HAS_SHORTID) &&
-                                      (uint16) sprop->shortid < fun->nvars);
+                                      (uint16) sprop->shortid < fun->u.i.nvars);
                         } else {
                             /*
                              * A variable introduced through another eval:
@@ -2353,15 +2354,15 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                           currentGetter, currentSetter,
                                           SPROP_INVALID_SLOT,
                                           pn2->pn_attrs | JSPROP_SHARED,
-                                          SPROP_HAS_SHORTID, fun->nvars)) {
+                                          SPROP_HAS_SHORTID, fun->u.i.nvars)) {
                     return NULL;
                 }
-                if (fun->nvars == JS_BITMASK(16)) {
+                if (fun->u.i.nvars == JS_BITMASK(16)) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_TOO_MANY_FUN_VARS);
                     return NULL;
                 }
-                fun->nvars++;
+                fun->u.i.nvars++;
             }
         }
 
