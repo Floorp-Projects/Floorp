@@ -248,7 +248,7 @@ tbody.file pre:empty {
   [% IF other_patches.size > 0 %]
     [% IF headers %] |[%END%]
     Differences between
-    <form style="display: inline" action="">
+    <form style="display: inline" action="attachment.cgi">
       <select name="oldid">
       [% FOREACH patch = other_patches %]
         <option value="[% patch.id %]"
@@ -299,7 +299,7 @@ tbody.file pre:empty {
     [% context = 3 %]
   [% END %]
   [%# textbox for context %]
-  <form style="display: inline" action=""><input type="hidden" name="action" value="diff"><input type="hidden" name="id" value="[% attachid %]"><input type="hidden" name="collapsed" value="[% collapsed FILTER html %]"><input type="hidden" name="headers" value="[% headers FILTER html %]"><input type="text" name="context" value="[% context FILTER html %]" size="3"></form>)
+  <form style="display: inline" action="attachment.cgi"><input type="hidden" name="action" value="diff"><input type="hidden" name="id" value="[% attachid %]"><input type="hidden" name="collapsed" value="[% collapsed FILTER html %]"><input type="hidden" name="headers" value="[% headers FILTER html %]"><input type="text" name="context" value="[% context FILTER html %]" size="3"></form>)
 [% END %]
 
 [% IF warning %]
@@ -319,7 +319,7 @@ tbody.file pre:empty {
 [% END %]
  
 [%# Restore Stuff %]
-<form name="checkboxform" action="">
+<form name="checkboxform" action="attachment.cgi">
 <input type="checkbox" name="restore_indicator" style="display: none">
 
 

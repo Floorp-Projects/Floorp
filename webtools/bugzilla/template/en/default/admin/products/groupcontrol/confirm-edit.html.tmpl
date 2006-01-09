@@ -38,7 +38,7 @@ which the group is newly mandatory and will be added.
 group '[% group.name FILTER html %]' impacts [% group.count %]&nbsp;
 [% terms.bugs %] for which the group is no longer applicable and will
 be removed.[% END %]
-<form method="post" >
+<form action="editproducts.cgi" method="post" >
 
   [% PROCESS "global/hidden-fields.html.tmpl" exclude="^Bugzilla_(login|password)$" %]
 

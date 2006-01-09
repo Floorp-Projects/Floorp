@@ -244,7 +244,7 @@
 
 [% BLOCK query_form %]
 <hr noshade size=1>
-<form method="post" name="summary" style="display: inline" action="">
+<form method="post" name="summary" style="display: inline" action="summarize_time.cgi">
 <input type="hidden" name="do_depends" value="[% do_depends FILTER html %]">
 <input type="hidden" name="id" value="[% ids.join(",") FILTER html %]">
 <input type="hidden" name="do_report" value="1">
