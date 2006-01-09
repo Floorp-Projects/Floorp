@@ -3881,8 +3881,8 @@ GetFunction(JSContext *cx, JSObject *obj, JSXML *xml, jsid id, jsval *vp)
         if (JSVAL_IS_FUNCTION(cx, fval)) {
             if (xml && OBJECT_IS_XML(cx, obj)) {
                 fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval));
-                if (fun->spare &&
-                    (fun->spare & CLASS_TO_MASK(xml->xml_class)) == 0) {
+                if (!fun->interpreted && fun->u.n.spare &&
+                    (fun->u.n.spare & CLASS_TO_MASK(xml->xml_class)) == 0) {
                     /* XML method called on XMLList or vice versa. */
                     fval = JSVAL_VOID;
                 }
@@ -7479,8 +7479,8 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
                                 fs->flags);
         if (!fun)
             return NULL;
-        fun->extra = 0;
-        fun->spare = fs->extra;
+        fun->u.n.extra = 0;
+        fun->u.n.spare = fs->extra;
     }
 
     xml = js_NewXML(cx, JSXML_CLASS_TEXT);
