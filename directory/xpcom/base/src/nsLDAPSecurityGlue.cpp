@@ -43,6 +43,7 @@
 //
 #ifdef MOZ_PSM
 
+#include "nsLDAPInternal.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
@@ -50,7 +51,6 @@
 #include "nsISocketProvider.h"
 #include "nsISSLSocketControl.h"
 #include "nsMemory.h"
-#include "nsLDAPInternal.h"
 #include "plstr.h"
 #include "ldap.h"
 #include "ldappr.h"

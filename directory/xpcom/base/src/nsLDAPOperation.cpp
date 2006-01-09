@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsLDAPInternal.h"
 #include "nsLDAP.h"
 #include "nsLDAPOperation.h"
 #include "nsLDAPConnection.h"

@@ -36,6 +36,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifdef MOZ_LOGGING
+// This has to be before the pre-compiled headers.
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+
 #include "nsLDAP.h"
 
 #ifdef PR_LOGGING

@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsLDAPInternal.h"
 #include "nsLDAPURL.h"
 #include "nsIGenericFactory.h"
 #include "nsLDAPConnection.h"

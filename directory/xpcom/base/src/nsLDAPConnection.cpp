@@ -472,7 +472,10 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     nsCOMPtr<nsILDAPOperation> operation;
     nsCOMPtr<nsILDAPMessageListener> listener;
 
+#if defined(DEBUG)
+    // We only want this being logged for debug builds so as not to affect performance too much.
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("InvokeMessageCallback entered\n"));
+#endif
 
     // get the message id corresponding to this operation
     //
