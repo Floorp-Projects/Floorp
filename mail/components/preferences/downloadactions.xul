@@ -104,6 +104,7 @@
                   class="sortDirectionIndicator" persist="width"
                   label="&fileHandlerColumn.label;" accesskey="&fileHandlerColumn.accesskey;"
                   onclick="gDownloadActionsWindow.sort('action');"/>                
+        <splitter class="tree-splitter" />
       </treecols>
     </tree>
   </vbox>
