@@ -701,8 +701,13 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
 
     if(*q == 'Q' || *q == 'q')
       decodedText = DecodeQ(q + 2, r - (q + 2));
-    else
-      decodedText = PL_Base64Decode(q + 2, r - (q + 2), nsnull);
+    else {
+      // bug 227290. ignore an extraneous '=' at the end.
+      // (# of characters in B-encoded part has to be a multiple of 4)
+      PRInt32 n = r - (q + 2);
+      n -= (n % 4 == 1 && !PL_strncmp(r - 3, "===", 3)) ? 1 : 0;
+      decodedText = PL_Base64Decode(q + 2, n, nsnull);
+    }
 
     if (decodedText == nsnull)
       goto badsyntax;
