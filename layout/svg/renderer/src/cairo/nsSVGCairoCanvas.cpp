@@ -270,10 +270,12 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
     surface->GetSize(&mWidth, &mHeight);
     GdkDrawable *drawable = surface->GetDrawable();
     GdkVisual *visual = gdk_window_get_visual(drawable);
-    cairoSurf = cairo_xlib_surface_create(GDK_WINDOW_XDISPLAY(drawable),
-                                          GDK_WINDOW_XWINDOW(drawable),
-                                          GDK_VISUAL_XVISUAL(visual),
-                                          mWidth, mHeight);
+    if (visual) {
+      cairoSurf = cairo_xlib_surface_create(GDK_WINDOW_XDISPLAY(drawable),
+                                            GDK_WINDOW_XWINDOW(drawable),
+                                            GDK_VISUAL_XVISUAL(visual),
+                                            mWidth, mHeight);
+    }
   }
 #endif
 
