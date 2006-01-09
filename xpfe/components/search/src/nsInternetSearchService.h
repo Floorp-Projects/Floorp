@@ -46,6 +46,7 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIRDFService.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsITimer.h"
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
@@ -59,82 +60,82 @@ class InternetSearchDataSource : public nsIInternetSearchService,
                                  public nsSupportsWeakReference
 {
 private:
-  static PRInt32          gRefCnt;
-  static PRInt32          gBrowserSearchMode;
-  static PRBool           gEngineListBuilt;
+  PRInt32 mBrowserSearchMode;
+  PRBool  mEngineListBuilt;
+
 #ifdef MOZ_PHOENIX
-  static PRBool           gReorderedEngineList;
+  PRBool mReorderedEngineList;
 #endif
 
   // pseudo-constants
-  static nsIRDFResource    *kNC_SearchResult;
-  static nsIRDFResource    *kNC_SearchEngineRoot;
-  static nsIRDFResource    *kNC_LastSearchRoot;
-  static nsIRDFResource    *kNC_LastSearchMode;
-  static nsIRDFResource    *kNC_SearchCategoryRoot;
-  static nsIRDFResource    *kNC_SearchResultsSitesRoot;
-  static nsIRDFResource    *kNC_FilterSearchURLsRoot;
-  static nsIRDFResource    *kNC_FilterSearchSitesRoot;
-  static nsIRDFResource    *kNC_SearchType;
-  static nsIRDFResource    *kNC_Ref;
-  static nsIRDFResource    *kNC_Child;
-  static nsIRDFResource    *kNC_Title;
-  static nsIRDFResource    *kNC_Data;
-  static nsIRDFResource    *kNC_Name;
-  static nsIRDFResource    *kNC_Description;
-  static nsIRDFResource    *kNC_Version;
-  static nsIRDFResource    *kNC_actionButton;
-  static nsIRDFResource    *kNC_actionBar;
-  static nsIRDFResource    *kNC_searchForm;
-  static nsIRDFResource    *kNC_LastText;
-  static nsIRDFResource    *kNC_URL;
-  static nsIRDFResource    *kRDF_InstanceOf;
-  static nsIRDFResource    *kRDF_type;
-  static nsIRDFResource    *kNC_loading;
-  static nsIRDFResource    *kNC_HTML;
-  static nsIRDFResource    *kNC_Icon;
-  static nsIRDFResource    *kNC_StatusIcon;
-  static nsIRDFResource    *kNC_Banner;
-  static nsIRDFResource    *kNC_Site;
-  static nsIRDFResource    *kNC_Relevance;
-  static nsIRDFResource    *kNC_Date;
-  static nsIRDFResource    *kNC_RelevanceSort;
-  static nsIRDFResource    *kNC_PageRank;
-  static nsIRDFResource    *kNC_Engine;
-  static nsIRDFResource    *kNC_Price;
-  static nsIRDFResource    *kNC_PriceSort;
-  static nsIRDFResource    *kNC_Availability;
-  static nsIRDFResource    *kNC_BookmarkSeparator;
-  static nsIRDFResource    *kNC_Update;
-  static nsIRDFResource    *kNC_UpdateIcon;
-  static nsIRDFResource    *kNC_UpdateCheckDays;
-  static nsIRDFResource    *kWEB_LastPingDate;
-  static nsIRDFResource    *kWEB_LastPingModDate;
-  static nsIRDFResource    *kWEB_LastPingContentLen;
+  nsCOMPtr<nsIRDFResource> mNC_SearchResult;
+  nsCOMPtr<nsIRDFResource> mNC_SearchEngineRoot;
+  nsCOMPtr<nsIRDFResource> mNC_LastSearchRoot;
+  nsCOMPtr<nsIRDFResource> mNC_LastSearchMode;
+  nsCOMPtr<nsIRDFResource> mNC_SearchCategoryRoot;
+  nsCOMPtr<nsIRDFResource> mNC_SearchResultsSitesRoot;
+  nsCOMPtr<nsIRDFResource> mNC_FilterSearchURLsRoot;
+  nsCOMPtr<nsIRDFResource> mNC_FilterSearchSitesRoot;
+  nsCOMPtr<nsIRDFResource> mNC_SearchType;
+  nsCOMPtr<nsIRDFResource> mNC_Ref;
+  nsCOMPtr<nsIRDFResource> mNC_Child;
+  nsCOMPtr<nsIRDFResource> mNC_Title;
+  nsCOMPtr<nsIRDFResource> mNC_Data;
+  nsCOMPtr<nsIRDFResource> mNC_Name;
+  nsCOMPtr<nsIRDFResource> mNC_Description;
+  nsCOMPtr<nsIRDFResource> mNC_Version;
+  nsCOMPtr<nsIRDFResource> mNC_actionButton;
+  nsCOMPtr<nsIRDFResource> mNC_actionBar;
+  nsCOMPtr<nsIRDFResource> mNC_searchForm;
+  nsCOMPtr<nsIRDFResource> mNC_LastText;
+  nsCOMPtr<nsIRDFResource> mNC_URL;
+  nsCOMPtr<nsIRDFResource> mRDF_InstanceOf;
+  nsCOMPtr<nsIRDFResource> mRDF_type;
+  nsCOMPtr<nsIRDFResource> mNC_loading;
+  nsCOMPtr<nsIRDFResource> mNC_HTML;
+  nsCOMPtr<nsIRDFResource> mNC_Icon;
+  nsCOMPtr<nsIRDFResource> mNC_StatusIcon;
+  nsCOMPtr<nsIRDFResource> mNC_Banner;
+  nsCOMPtr<nsIRDFResource> mNC_Site;
+  nsCOMPtr<nsIRDFResource> mNC_Relevance;
+  nsCOMPtr<nsIRDFResource> mNC_Date;
+  nsCOMPtr<nsIRDFResource> mNC_RelevanceSort;
+  nsCOMPtr<nsIRDFResource> mNC_PageRank;
+  nsCOMPtr<nsIRDFResource> mNC_Engine;
+  nsCOMPtr<nsIRDFResource> mNC_Price;
+  nsCOMPtr<nsIRDFResource> mNC_PriceSort;
+  nsCOMPtr<nsIRDFResource> mNC_Availability;
+  nsCOMPtr<nsIRDFResource> mNC_BookmarkSeparator;
+  nsCOMPtr<nsIRDFResource> mNC_Update;
+  nsCOMPtr<nsIRDFResource> mNC_UpdateIcon;
+  nsCOMPtr<nsIRDFResource> mNC_UpdateCheckDays;
+  nsCOMPtr<nsIRDFResource> mWEB_LastPingDate;
+  nsCOMPtr<nsIRDFResource> mWEB_LastPingModDate;
+  nsCOMPtr<nsIRDFResource> mWEB_LastPingContentLen;
 
-  static nsIRDFResource    *kNC_SearchCommand_AddToBookmarks;
-  static nsIRDFResource    *kNC_SearchCommand_AddQueryToBookmarks;
-  static nsIRDFResource    *kNC_SearchCommand_FilterResult;
-  static nsIRDFResource    *kNC_SearchCommand_FilterSite;
-  static nsIRDFResource    *kNC_SearchCommand_ClearFilters;
+  nsCOMPtr<nsIRDFResource> mNC_SearchCommand_AddToBookmarks;
+  nsCOMPtr<nsIRDFResource> mNC_SearchCommand_AddQueryToBookmarks;
+  nsCOMPtr<nsIRDFResource> mNC_SearchCommand_FilterResult;
+  nsCOMPtr<nsIRDFResource> mNC_SearchCommand_FilterSite;
+  nsCOMPtr<nsIRDFResource> mNC_SearchCommand_ClearFilters;
 
-  static nsIRDFLiteral     *kTrueLiteral;
+  nsCOMPtr<nsIRDFLiteral>  mTrueLiteral;
 
 protected:
-  static nsIRDFDataSource           *mInner;
-  static nsCOMPtr<nsIRDFDataSource>  mLocalstore;
-  static nsCOMPtr<nsISupportsArray>  mUpdateArray;
-  nsCOMPtr<nsITimer>                 mTimer;
-  static nsCOMPtr<nsILoadGroup>      mBackgroundLoadGroup;
-  static nsCOMPtr<nsILoadGroup>      mLoadGroup;
-  static nsCOMPtr<nsIRDFDataSource>  categoryDataSource;
-  static nsCOMPtr<nsIPref>           prefs;
-  PRBool                             busySchedule;
-  nsCOMPtr<nsIRDFResource>           busyResource;
-  nsString                           mQueryEncodingStr;
+  nsCOMPtr<nsIRDFService>     mRDFService;
+  nsCOMPtr<nsIRDFContainerUtils> mRDFC;
+  nsCOMPtr<nsIRDFDataSource>  mInner;
+  nsCOMPtr<nsIRDFDataSource>  mLocalstore;
+  nsCOMPtr<nsISupportsArray>  mUpdateArray;
+  nsCOMPtr<nsITimer>          mTimer;
+  nsCOMPtr<nsILoadGroup>      mBackgroundLoadGroup;
+  nsCOMPtr<nsILoadGroup>      mLoadGroup;
+  nsCOMPtr<nsIRDFDataSource>  categoryDataSource;
+  PRBool                      busySchedule;
+  nsCOMPtr<nsIRDFResource>    busyResource;
+  nsString                    mQueryEncodingStr;
 
-
-friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosure);
+  friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosure);
 
   // helper methods
   nsresult  GetSearchEngineToPing(nsIRDFResource **theResource, nsCString &updateURL);
