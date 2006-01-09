@@ -1018,9 +1018,9 @@ var gExtensionsViewController = {
       if (!aSelectedItem) return;
       var aboutURL = aSelectedItem.getAttribute("aboutURL");
       if (aboutURL != "")
-        openDialog(aboutURL, "", "chrome,modal");
+        openDialog(aboutURL, "", "chrome,centerscreen,modal");
       else
-        openDialog("chrome://mozapps/content/extensions/about.xul", "", "chrome,modal", aSelectedItem.id, gExtensionsView.database);
+        openDialog("chrome://mozapps/content/extensions/about.xul", "", "chrome,centerscreen,modal", aSelectedItem.id, gExtensionsView.database);
     },  
     
     cmd_movetop: function (aSelectedItem)
