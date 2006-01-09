@@ -72,7 +72,6 @@ _MD_AtomicDecrement:
     .align 4
 _MD_AtomicSet:
     movl %esi, %eax
-    lock
     xchgl %eax, (%rdi)
     ret
 

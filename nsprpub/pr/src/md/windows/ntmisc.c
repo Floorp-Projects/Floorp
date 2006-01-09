@@ -774,7 +774,7 @@ PR_StackPush(PRStack *stack, PRStackElem *stack_elem)
   if (*tos == (void *) -1)
     goto retry;
   
-  __asm__("lock xchg %0,%1"
+  __asm__("xchg %0,%1"
           : "=r" (tmp), "=m"(*tos)
           : "0" (-1), "m"(*tos));
   
@@ -815,7 +815,7 @@ PR_StackPop(PRStack *stack)
   if (*tos == (void *) -1)
     goto retry;
   
-  __asm__("lock xchg %0,%1"
+  __asm__("xchg %0,%1"
           : "=r" (tmp), "=m"(*tos)
           : "0" (-1), "m"(*tos));
 
