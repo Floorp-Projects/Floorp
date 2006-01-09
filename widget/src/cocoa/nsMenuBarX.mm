@@ -538,7 +538,10 @@ NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
 nsresult
 nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
 {
-  sApplicationMenu = [[NSMenu alloc] initWithTitle:@"ApplicationMenu"];
+  // At this point, the application menu is the application menu from
+  // the nib in cocoa widgets. We do not have a way to create an application
+  // menu manually, so we grab the one from the nib and use that.
+  sApplicationMenu = [[[[NSApp mainMenu] itemAtIndex:0] submenu] retain];
   
   if (sApplicationMenu) {
     // this code reads the "label" attribute from the <menuitem/> with
