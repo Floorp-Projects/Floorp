@@ -181,31 +181,37 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
 
       // For XUL checkboxes and radio buttons, the state of the parent
       // determines our state.
-      if (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO ||
-          aWidgetType == NS_THEME_CHECKBOX_LABEL ||
-          aWidgetType == NS_THEME_RADIO_LABEL) {
-        if (aWidgetFlags) {
-          nsIAtom* atom = nsnull;
+      nsIFrame *stateFrame = aFrame;
+      if (aFrame && ((aWidgetFlags && (aWidgetType == NS_THEME_CHECKBOX ||
+                                       aWidgetType == NS_THEME_RADIO)) ||
+                     aWidgetType == NS_THEME_CHECKBOX_LABEL ||
+                     aWidgetType == NS_THEME_RADIO_LABEL)) {
 
-          if (aFrame) {
-            nsIContent* content = aFrame->GetContent();
-            if (content->IsContentOfType(nsIContent::eXUL)) {
-              aFrame = aFrame->GetParent();
-              if (aWidgetType == NS_THEME_CHECKBOX_LABEL ||
-                  aWidgetType == NS_THEME_RADIO_LABEL)
-                aFrame = aFrame->GetParent();
-            }
-            else if (content->Tag() == mInputAtom)
-              atom = mInputCheckedAtom;
+        nsIAtom* atom = nsnull;
+        nsIContent *content = aFrame->GetContent();
+        if (content->IsContentOfType(nsIContent::eXUL)) {
+          if (aWidgetType == NS_THEME_CHECKBOX_LABEL ||
+              aWidgetType == NS_THEME_RADIO_LABEL) {
+            // Adjust stateFrame so GetContentState finds the correct state.
+            stateFrame = aFrame = aFrame->GetParent()->GetParent();
+          } else {
+            // GetContentState knows to look one frame up for radio/checkbox
+            // widgets, so don't adjust stateFrame here.
+            aFrame = aFrame->GetParent();
           }
+        } else if (content->Tag() == mInputAtom) {
+          atom = mInputCheckedAtom;
+        }
 
-          if (!atom)
+        if (aWidgetFlags) {
+          if (!atom) {
             atom = (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_CHECKBOX_LABEL) ? mCheckedAtom : mSelectedAtom;
+          }
           *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
         }
       }
 
-      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+      PRInt32 eventState = GetContentState(stateFrame, aWidgetType);
 
       aState->disabled = IsDisabled(aFrame);
       aState->active  = (eventState & NS_EVENT_STATE_ACTIVE) == NS_EVENT_STATE_ACTIVE;
