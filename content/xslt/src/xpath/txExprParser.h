@@ -65,17 +65,25 @@ class txExprParser
 {
 public:
 
-    static nsresult createExpr(const nsASingleFragmentString& aExpression,
-                               txIParseContext* aContext, Expr** aExpr);
+    static nsresult createExpr(const nsSubstring& aExpression,
+                               txIParseContext* aContext, Expr** aExpr)
+    {
+        return createExprInternal(aExpression, 0, aContext, aExpr);
+    }
 
     /**
      * Creates an Attribute Value Template using the given value
      */
-    static AttributeValueTemplate* createAttributeValueTemplate
-        (const nsAFlatString& attValue, txIParseContext* aContext);
+    static nsresult createAVT(const nsSubstring& aAttrValue,
+                              txIParseContext* aContext,
+                              Expr** aResult);
 
 
 protected:
+    static nsresult createExprInternal(const nsSubstring& aExpression,
+                                       PRUint32 aSubStringPos,
+                                       txIParseContext* aContext,
+                                       Expr** aExpr);
     /**
      * Using nsAutoPtr& to optimize passing the ownership to the
      * created binary expression objects.
@@ -85,8 +93,9 @@ protected:
                                      Expr** aResult);
     static nsresult createExpr(txExprLexer& lexer, txIParseContext* aContext,
                                Expr** aResult);
-    static nsresult createFilter(txExprLexer& lexer, txIParseContext* aContext,
-                                 Expr** aResult);
+    static nsresult createFilterOrStep(txExprLexer& lexer,
+                                       txIParseContext* aContext,
+                                       Expr** aResult);
     static nsresult createFunctionCall(txExprLexer& lexer,
                                        txIParseContext* aContext,
                                        Expr** aResult);
@@ -102,9 +111,7 @@ protected:
                                     txIParseContext* aContext,
                                     Expr** aResult);
                   
-    static PRBool isFilterExprToken(Token* aToken);
     static PRBool isLocationStepToken(Token* aToken);
-    static PRBool isNodeTypeToken(Token* aToken);
                   
     static short precedence(Token* aToken);
 

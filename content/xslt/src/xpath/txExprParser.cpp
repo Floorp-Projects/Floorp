@@ -55,132 +55,133 @@
 /**
  * Creates an Attribute Value Template using the given value
  * This should move to XSLProcessor class
-**/
-AttributeValueTemplate* txExprParser::createAttributeValueTemplate
-    (const nsAFlatString& attValue, txIParseContext* aContext)
+ */
+nsresult
+txExprParser::createAVT(const nsSubstring& aAttrValue,
+                        txIParseContext* aContext,
+                        Expr** aResult)
 {
-    AttributeValueTemplate* avt = new AttributeValueTemplate();
-    if (!avt) {
-        // XXX ErrorReport: out of memory
-        return 0;
-    }
+    *aResult = nsnull;
+    nsresult rv = NS_OK;
+    nsAutoPtr<Expr> expr;
+    FunctionCall* concat = nsnull;
 
-    if (attValue.IsEmpty())
-        return avt;
+    nsAutoString literalString;
+    PRBool inExpr = PR_FALSE;
+    nsSubstring::const_char_iterator iter, start, end, avtStart;
+    aAttrValue.BeginReading(iter);
+    aAttrValue.EndReading(end);
+    avtStart = iter;
 
-    PRUint32 size = attValue.Length();
-    PRUint32 cc = 0;
-    PRUnichar nextCh;
-    PRUnichar ch;
-    nsAutoString buffer;
-    MBool inExpr    = MB_FALSE;
-    MBool inLiteral = MB_FALSE;
-    PRUnichar endLiteral = 0;
-
-    nextCh = attValue.CharAt(cc);
-    while (cc++ < size) {
-        ch = nextCh;
-        nextCh = cc != size ? attValue.CharAt(cc) : 0;
-        
-        // if in literal just add ch to buffer
-        if (inLiteral && (ch != endLiteral)) {
-                buffer.Append(ch);
-                continue;
-        }
-        switch ( ch ) {
-            case '\'' :
-            case '"' :
-                buffer.Append(ch);
-                if (inLiteral)
-                    inLiteral = MB_FALSE;
-                else if (inExpr) {
-                    inLiteral = MB_TRUE;
-                    endLiteral = ch;
-                }
-                break;
-            case  '{' :
-                if (!inExpr) {
-                    // Ignore case where we find two {
-                    if (nextCh == ch) {
-                        buffer.Append(ch); //-- append '{'
-                        cc++;
-                        nextCh = cc != size ? attValue.CharAt(cc) : 0;
-                    }
-                    else {
-                        if (!buffer.IsEmpty()) {
-                            Expr* strExpr = new txLiteralExpr(buffer);
-                            if (!strExpr) {
-                                // XXX ErrorReport: out of memory
-                                delete avt;
-                                return 0;
-                            }
-                            avt->addExpr(strExpr);
+    while (iter != end) {
+        // Every iteration through this loop parses either a literal section
+        // or an expression
+        start = iter;
+        nsAutoPtr<Expr> newExpr;
+        if (!inExpr) {
+            // Parse literal section
+            literalString.Truncate();
+            while (iter != end) {
+                PRUnichar q = *iter;
+                if (q == '{' || q == '}') {
+                    // Store what we've found so far and set a new |start| to
+                    // skip the (first) brace
+                    literalString.Append(Substring(start, iter));
+                    start = ++iter;
+                    // Unless another brace follows we've found the start of
+                    // an expression (in case of '{') or an unbalanced brace
+                    // (in case of '}')
+                    if (iter == end || *iter != q) {
+                        if (q == '}') {
+                            aContext->SetErrorOffset(iter - avtStart);
+                            return NS_ERROR_XPATH_UNBALANCED_CURLY_BRACE;
                         }
-                        buffer.Truncate();
-                        inExpr = MB_TRUE;
+
+                        inExpr = PR_TRUE;
+                        break;
+                    }
+                    // We found a second brace, let that be part of the next
+                    // literal section being parsed and continue looping
+                }
+                ++iter;
+            }
+
+            if (start == iter && literalString.IsEmpty()) {
+                // Restart the loop since we didn't create an expression
+                continue;
+            }
+            newExpr = new txLiteralExpr(literalString +
+                                        Substring(start, iter));
+            NS_ENSURE_TRUE(newExpr, NS_ERROR_OUT_OF_MEMORY);
+        }
+        else {
+            // Parse expressions, iter is already past the initial '{' when
+            // we get here.
+            while (iter != end) {
+                if (*iter == '}') {
+                    rv = createExprInternal(Substring(start, iter),
+                                            start - avtStart, aContext,
+                                            getter_Transfers(newExpr));
+                    NS_ENSURE_SUCCESS(rv, rv);
+
+                    inExpr = PR_FALSE;
+                    ++iter; // skip closing '}'
+                    break;
+                }
+                else if (*iter == '\'' || *iter == '"') {
+                    PRUnichar q = *iter;
+                    while (++iter != end && *iter != q) {} /* do nothing */
+                    if (iter == end) {
+                        break;
                     }
                 }
-                else
-                    buffer.Append(ch); //-- simply append '{'
-                break;
-            case '}':
-                if (inExpr) {
-                    inExpr = MB_FALSE;
-                    txExprLexer lexer;
-                    nsresult rv = lexer.parse(buffer);
-                    if (NS_FAILED(rv)) {
-                        delete avt;
-                        return 0;
-                    }
-                    Expr* expr;
-                    rv = createExpr(lexer, aContext, &expr);
-                    if (NS_FAILED(rv)) {
-                        delete avt;
-                        return 0;
-                    }
-                    avt->addExpr(expr);
-                    buffer.Truncate();
-                }
-                else if (nextCh == ch) {
-                    buffer.Append(ch);
-                    cc++;
-                    nextCh = cc != size ? attValue.CharAt(cc) : 0;
-                }
-                else {
-                    //XXX ErrorReport: unmatched '}' found
-                    delete avt;
-                    return 0;
-                }
-                break;
-            default:
-                buffer.Append(ch);
-                break;
+                ++iter;
+            }
+
+            if (inExpr) {
+                aContext->SetErrorOffset(start - avtStart);
+                return NS_ERROR_XPATH_UNBALANCED_CURLY_BRACE;
+            }
+        }
+        
+        // Add expression, create a concat() call if neccesary
+        if (!expr) {
+            expr = newExpr;
+        }
+        else {
+            if (!concat) {
+                concat = new StringFunctionCall(StringFunctionCall::CONCAT);
+                NS_ENSURE_TRUE(concat, NS_ERROR_OUT_OF_MEMORY);
+
+                rv = concat->addParam(expr.forget());
+                expr = concat;
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
+
+            rv = concat->addParam(newExpr.forget());
+            NS_ENSURE_SUCCESS(rv, rv);
         }
     }
 
     if (inExpr) {
-        //XXX ErrorReport: ending '}' missing
-        delete avt;
-        return 0;
+        aContext->SetErrorOffset(iter - avtStart);
+        return NS_ERROR_XPATH_UNBALANCED_CURLY_BRACE;
     }
 
-    if (!buffer.IsEmpty()) {
-        Expr* strExpr = new txLiteralExpr(buffer);
-        if (!strExpr) {
-            // XXX ErrorReport: out of memory
-            delete avt;
-            return 0;
-        }
-        avt->addExpr(strExpr);
+    if (!expr) {
+        expr = new txLiteralExpr(EmptyString());
+        NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
     }
 
-    return avt;
+    *aResult = expr.forget();
 
+    return NS_OK;
 }
 
 nsresult
-txExprParser::createExpr(const nsASingleFragmentString& aExpression,
-                         txIParseContext* aContext, Expr** aExpr)
+txExprParser::createExprInternal(const nsSubstring& aExpression,
+                                 PRUint32 aSubStringPos,
+                                 txIParseContext* aContext, Expr** aExpr)
 {
     NS_ENSURE_ARG_POINTER(aExpr);
     *aExpr = nsnull;
@@ -189,7 +190,7 @@ txExprParser::createExpr(const nsASingleFragmentString& aExpression,
     if (NS_FAILED(rv)) {
         nsASingleFragmentString::const_char_iterator start;
         aExpression.BeginReading(start);
-        aContext->SetErrorOffset(lexer.mPosition - start);
+        aContext->SetErrorOffset(lexer.mPosition - start + aSubStringPos);
         return rv;
     }
     rv = createExpr(lexer, aContext, aExpr);
@@ -201,7 +202,7 @@ txExprParser::createExpr(const nsASingleFragmentString& aExpression,
     if (NS_FAILED(rv)) {
         nsASingleFragmentString::const_char_iterator start;
         aExpression.BeginReading(start);
-        aContext->SetErrorOffset(lexer.peek()->mStart - start);
+        aContext->SetErrorOffset(lexer.peek()->mStart - start + aSubStringPos);
     }
     return rv;
 }
@@ -315,54 +316,35 @@ txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
         }
 
         if (unary) {
-            Expr* uExpr = new UnaryExpr(expr);
-            if (!uExpr) {
+            expr = new UnaryExpr(expr);
+            if (!expr) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
                 break;
             }
-            expr = uExpr;
         }
 
         Token* tok = lexer.nextToken();
-        switch (tok->mType) {
-            case Token::ADDITION_OP:
-            case Token::DIVIDE_OP:
-            //-- boolean ops
-            case Token::AND_OP :
-            case Token::OR_OP :
-            //-- equality ops
-            case Token::EQUAL_OP:
-            case Token::NOT_EQUAL_OP:
-            //-- relational ops
-            case Token::LESS_THAN_OP:
-            case Token::GREATER_THAN_OP:
-            case Token::LESS_OR_EQUAL_OP:
-            case Token::GREATER_OR_EQUAL_OP:
-            //-- multiplicative ops
-            case Token::MODULUS_OP:
-            case Token::MULTIPLY_OP:
-            case Token::SUBTRACTION_OP:
-            {
-                while (!exprs.isEmpty() && precedence(tok) 
-                       <= precedence(NS_STATIC_CAST(Token*, ops.peek()))) {
-                    // can't use expr as result due to order of evaluation
-                    nsAutoPtr<Expr> left(NS_STATIC_CAST(Expr*, exprs.pop()));
-                    nsAutoPtr<Expr> right(expr);
-                    rv = createBinaryExpr(left, right,
-                                          NS_STATIC_CAST(Token*, ops.pop()),
-                                          getter_Transfers(expr));
-                    if (NS_FAILED(rv)) {
-                        break;
-                    }
+        short tokPrecedence = precedence(tok);
+        if (tokPrecedence != 0) {
+            while (!exprs.isEmpty() && tokPrecedence
+                   <= precedence(NS_STATIC_CAST(Token*, ops.peek()))) {
+                // can't use expr as argument due to order of evaluation
+                nsAutoPtr<Expr> left(NS_STATIC_CAST(Expr*, exprs.pop()));
+                nsAutoPtr<Expr> right(expr);
+                rv = createBinaryExpr(left, right,
+                                      NS_STATIC_CAST(Token*, ops.pop()),
+                                      getter_Transfers(expr));
+                if (NS_FAILED(rv)) {
+                    done = PR_TRUE;
+                    break;
                 }
-                exprs.push(expr.forget());
-                ops.push(tok);
-                break;
             }
-            default:
-                lexer.pushBack();
-                done = MB_TRUE;
-                break;
+            exprs.push(expr.forget());
+            ops.push(tok);
+        }
+        else {
+            lexer.pushBack();
+            done = PR_TRUE;
         }
     }
 
@@ -383,8 +365,8 @@ txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
 }
 
 nsresult
-txExprParser::createFilter(txExprLexer& lexer, txIParseContext* aContext,
-                           Expr** aResult)
+txExprParser::createFilterOrStep(txExprLexer& lexer, txIParseContext* aContext,
+                                 Expr** aResult)
 {
     *aResult = nsnull;
 
@@ -393,7 +375,7 @@ txExprParser::createFilter(txExprLexer& lexer, txIParseContext* aContext,
 
     nsAutoPtr<Expr> expr;
     switch (tok->mType) {
-        case Token::FUNCTION_NAME :
+        case Token::FUNCTION_NAME_AND_PAREN:
             lexer.pushBack();
             rv = createFunctionCall(lexer, aContext, getter_Transfers(expr));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -430,9 +412,8 @@ txExprParser::createFilter(txExprLexer& lexer, txIParseContext* aContext,
             break;
         }
         default:
-            NS_NOTREACHED("internal error, this is not a filter token");
             lexer.pushBack();
-            return NS_ERROR_UNEXPECTED;
+            return createLocationStep(lexer, aContext, aResult);
     }
 
     if (lexer.peek()->mType == Token::L_BRACKET) {
@@ -458,7 +439,8 @@ txExprParser::createFunctionCall(txExprLexer& lexer, txIParseContext* aContext,
     nsAutoPtr<FunctionCall> fnCall;
 
     Token* tok = lexer.nextToken();
-    NS_ASSERTION(tok->mType == Token::FUNCTION_NAME, "FunctionCall expected");
+    NS_ASSERTION(tok->mType == Token::FUNCTION_NAME_AND_PAREN,
+                 "FunctionCall expected");
 
     //-- compare function names
     nsCOMPtr<nsIAtom> prefix, lName;
@@ -679,33 +661,26 @@ txExprParser::createLocationStep(txExprLexer& lexer, txIParseContext* aContext,
     if (!nodeTest) {
         tok = lexer.nextToken();
 
-        switch (tok->mType) {
-            case Token::CNAME :
-                {
-                    // resolve QName
-                    nsCOMPtr<nsIAtom> prefix, lName;
-                    PRInt32 nspace;
-                    rv = resolveQName(tok->Value(), getter_AddRefs(prefix),
-                                      aContext, getter_AddRefs(lName),
-                                      nspace, PR_TRUE);
-                    NS_ENSURE_SUCCESS(rv, rv);
-                    switch (axisIdentifier) {
-                        case LocationStep::ATTRIBUTE_AXIS:
-                            nodeTest = new txNameTest(prefix, lName, nspace,
-                                                      txXPathNodeType::ATTRIBUTE_NODE);
-                            break;
-                        default:
-                            nodeTest = new txNameTest(prefix, lName, nspace,
-                                                      txXPathNodeType::ELEMENT_NODE);
-                            break;
-                    }
-                    NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);
-                }
-                break;
-            default:
-                lexer.pushBack();
-                rv = createNodeTypeTest(lexer, getter_Transfers(nodeTest));
-                NS_ENSURE_SUCCESS(rv, rv);
+        if (tok->mType == Token::CNAME) {
+            // resolve QName
+            nsCOMPtr<nsIAtom> prefix, lName;
+            PRInt32 nspace;
+            rv = resolveQName(tok->Value(), getter_AddRefs(prefix),
+                              aContext, getter_AddRefs(lName),
+                              nspace, PR_TRUE);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nodeTest =
+              new txNameTest(prefix, lName, nspace,
+                             axisIdentifier == LocationStep::ATTRIBUTE_AXIS ?
+                             txXPathNodeType::ATTRIBUTE_NODE :
+                             txXPathNodeType::ELEMENT_NODE);
+            NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);
+        }
+        else {
+            lexer.pushBack();
+            rv = createNodeTypeTest(lexer, getter_Transfers(nodeTest));
+            NS_ENSURE_SUCCESS(rv, rv);
         }
     }
     
@@ -733,16 +708,16 @@ txExprParser::createNodeTypeTest(txExprLexer& lexer, txNodeTest** aTest)
     Token* nodeTok = lexer.nextToken();
 
     switch (nodeTok->mType) {
-        case Token::COMMENT:
+        case Token::COMMENT_AND_PAREN:
             nodeTest = new txNodeTypeTest(txNodeTypeTest::COMMENT_TYPE);
             break;
-        case Token::NODE :
+        case Token::NODE_AND_PAREN:
             nodeTest = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
             break;
-        case Token::PROC_INST :
+        case Token::PROC_INST_AND_PAREN:
             nodeTest = new txNodeTypeTest(txNodeTypeTest::PI_TYPE);
             break;
-        case Token::TEXT :
+        case Token::TEXT_AND_PAREN:
             nodeTest = new txNodeTypeTest(txNodeTypeTest::TEXT_TYPE);
             break;
         default:
@@ -751,12 +726,7 @@ txExprParser::createNodeTypeTest(txExprLexer& lexer, txNodeTest** aTest)
     }
     NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);
 
-    if (lexer.nextToken()->mType != Token::L_PAREN) {
-        lexer.pushBack();
-        NS_NOTREACHED("txExprLexer doesn't generate nodetypetest without(");
-        return NS_ERROR_UNEXPECTED;
-    }
-    if (nodeTok->mType == Token::PROC_INST &&
+    if (nodeTok->mType == Token::PROC_INST_AND_PAREN &&
         lexer.peek()->mType == Token::LITERAL) {
         Token* tok = lexer.nextToken();
         nodeTest->setNodeName(tok->Value());
@@ -799,12 +769,7 @@ txExprParser::createPathExpr(txExprLexer& lexer, txIParseContext* aContext,
     nsresult rv = NS_OK;
     if (tok->mType != Token::PARENT_OP &&
         tok->mType != Token::ANCESTOR_OP) {
-        if (isFilterExprToken(tok)) {
-            rv = createFilter(lexer, aContext, getter_Transfers(expr));
-        }
-        else {
-            rv = createLocationStep(lexer, aContext, getter_Transfers(expr));
-        }
+        rv = createFilterOrStep(lexer, aContext, getter_Transfers(expr));
         NS_ENSURE_SUCCESS(rv, rv);
 
         // is this a singlestep path expression?
@@ -898,47 +863,18 @@ txExprParser::createUnionExpr(txExprLexer& lexer, txIParseContext* aContext,
 }
 
 PRBool
-txExprParser::isFilterExprToken(Token* aToken)
-{
-    switch (aToken->mType) {
-        case Token::LITERAL:
-        case Token::NUMBER:
-        case Token::FUNCTION_NAME:
-        case Token::VAR_REFERENCE:
-        case Token::L_PAREN:            // grouping expr
-            return PR_TRUE;
-        default:
-            return PR_FALSE;
-    }
-}
-
-PRBool
 txExprParser::isLocationStepToken(Token* aToken)
 {
-    switch (aToken->mType) {
-        case Token::AXIS_IDENTIFIER :
-        case Token::AT_SIGN :
-        case Token::PARENT_NODE :
-        case Token::SELF_NODE :
-            return PR_TRUE;
-        default:
-            return isNodeTypeToken(aToken);
-    }
-}
-
-PRBool
-txExprParser::isNodeTypeToken(Token* aToken)
-{
-    switch (aToken->mType) {
-        case Token::CNAME:
-        case Token::COMMENT:
-        case Token::NODE :
-        case Token::PROC_INST :
-        case Token::TEXT :
-            return PR_TRUE;
-        default:
-            return PR_FALSE;
-    }
+    // We could put these in consecutive order in ExprLexer.h for speed
+    return aToken->mType == Token::AXIS_IDENTIFIER ||
+           aToken->mType == Token::AT_SIGN ||
+           aToken->mType == Token::PARENT_NODE ||
+           aToken->mType == Token::SELF_NODE ||
+           aToken->mType == Token::CNAME ||
+           aToken->mType == Token::COMMENT_AND_PAREN ||
+           aToken->mType == Token::NODE_AND_PAREN ||
+           aToken->mType == Token::PROC_INST_AND_PAREN ||
+           aToken->mType == Token::TEXT_AND_PAREN;
 }
 
 /**
@@ -986,12 +922,6 @@ nsresult
 txExprParser::parseParameters(FunctionCall* aFnCall, txExprLexer& lexer,
                               txIParseContext* aContext)
 {
-    if (lexer.nextToken()->mType != Token::L_PAREN) {
-        lexer.pushBack();
-        NS_NOTREACHED("txExprLexer doesn't generate functions without(");
-        return NS_ERROR_UNEXPECTED;
-    }
-
     if (lexer.peek()->mType == Token::R_PAREN) {
         lexer.nextToken();
         return NS_OK;

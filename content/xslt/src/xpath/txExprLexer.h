@@ -63,12 +63,11 @@ public:
         LITERAL,
         NUMBER,
         CNAME,
-        FUNCTION_NAME,
         VAR_REFERENCE,
         PARENT_NODE,
         SELF_NODE,
         R_PAREN,
-        R_BRACKET, // 10
+        R_BRACKET, // 9
         /**
          * start of tokens for 3.7, bullet 1
          * ExprLexer::nextIsOperatorToken bails if the tokens aren't
@@ -80,40 +79,41 @@ public:
         L_BRACKET,
         AXIS_IDENTIFIER,
 
+        // These tokens include their following left parenthesis
+        FUNCTION_NAME_AND_PAREN, // 15
+        COMMENT_AND_PAREN,
+        NODE_AND_PAREN,
+        PROC_INST_AND_PAREN,
+        TEXT_AND_PAREN,
+
         /**
          * operators
          */
         //-- boolean ops
-        AND_OP, // 16
+        AND_OP, // 20
         OR_OP,
 
         //-- relational
-        EQUAL_OP, // 18
+        EQUAL_OP, // 22
         NOT_EQUAL_OP,
         LESS_THAN_OP,
         GREATER_THAN_OP,
         LESS_OR_EQUAL_OP,
         GREATER_OR_EQUAL_OP,
         //-- additive operators
-        ADDITION_OP, // 24
+        ADDITION_OP, // 28
         SUBTRACTION_OP,
         //-- multiplicative
-        DIVIDE_OP , // 26
+        DIVIDE_OP, // 30
         MULTIPLY_OP,
         MODULUS_OP,
         //-- path operators
-        PARENT_OP, // 29
+        PARENT_OP, // 33
         ANCESTOR_OP,
         UNION_OP,
         /**
          * end of tokens for 3.7, bullet 1 -/
          */
-        //-- node type tokens
-        COMMENT, // 32
-        NODE,
-        PROC_INST,
-        TEXT,
-        
         //-- Special endtoken
         END // 36
     };
