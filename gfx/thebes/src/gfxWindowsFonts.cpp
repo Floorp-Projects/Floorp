@@ -235,17 +235,19 @@ gfxWindowsFont::FillLogFont()
 
 
 
-gfxFont *
-gfxWindowsFontGroup::MakeFont(const nsAString& aName)
+PRBool
+gfxWindowsFontGroup::MakeFont(const nsAString& aName, const nsAString& aGenericName, void *closure)
 {
-    return (new gfxWindowsFont(aName, this, mWnd));
+    gfxWindowsFontGroup *fg = NS_STATIC_CAST(gfxWindowsFontGroup*, closure);
+    mFonts.push_back (new gfxWindowsFont(aName, fg, mWnd));
+    return PR_TRUE;
 }
 
 
 gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, HWND hwnd)
     : gfxFontGroup(aFamilies, aStyle), mWnd(hwnd)
 {
-    Init();
+    FillFontArray (MakeFont, this);
 }
 
 gfxWindowsFontGroup::~gfxWindowsFontGroup()

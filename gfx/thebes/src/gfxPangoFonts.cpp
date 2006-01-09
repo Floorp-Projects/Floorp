@@ -35,25 +35,180 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define PANGO_ENABLE_BACKEND
+#define PANGO_ENABLE_ENGINE
+
 #include "prtypes.h"
+#include "prlink.h"
 #include "gfxTypes.h"
 
+#include "nsIPref.h"
+#include "nsServiceManagerUtils.h"
+
+#include "nsVoidArray.h"
 #include "nsPromiseFlatString.h"
 
 #include "gfxContext.h"
 #include "gfxPangoFonts.h"
 
+#include "cairo.h"
+
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+#include <gdk/gdkpango.h>
+
+#ifndef THEBES_USE_PANGO_CAIRO
+#include <freetype/tttables.h>
+#include <fontconfig/fontconfig.h>
+
+#include <pango/pango-font.h>
+#include <pango/pangoxft.h>
+
+#include "cairo-ft.h"
+
+#else
+
 #include <pango/pangocairo.h>
 
+#endif
+
 static PangoLanguage *GetPangoLanguage(const nsACString& aLangGroup);
+
+/**
+ ** gfxPangoFontGroup
+ **/
+
+static int
+FFRECountHyphens (const nsAString &aFFREName)
+{
+    int h = 0;
+    PRInt32 hyphen = 0;
+    while ((hyphen = aFFREName.FindChar('-', hyphen)) >= 0) {
+        ++h;
+        ++hyphen;
+    }
+    return h;
+}
+
+static PRBool
+IsASCIIFontName(const nsAString& aName)
+{
+    PRUint32 len = aName.Length();
+    const PRUnichar* str = aName.BeginReading();
+    for (PRUint32 i = 0; i < len; i++) {
+        /*
+         * X font names are printable ASCII, ignore others (for now)
+         */
+        if ((str[i] < 0x20) || (str[i] > 0x7E)) {
+            return PR_FALSE;
+        }
+    }
+  
+    return PR_TRUE;
+}
+
+PRBool
+gfxPangoFontGroup::FontCallback (const nsAString& fontName,
+                                 const nsAString& genericName,
+                                 void *closure)
+{
+    nsStringArray *sa = NS_STATIC_CAST(nsStringArray*, closure);
+
+    if (IsASCIIFontName(fontName) && FFRECountHyphens(fontName) < 3) {
+        sa->AppendString(fontName);
+    }
+
+    return PR_TRUE;
+}
+
+gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
+                                      const gfxFontStyle *aStyle)
+    : gfxFontGroup(families, aStyle)
+{
+    nsStringArray familyArray;
+
+    ForEachFont (FontCallback, &familyArray);
+
+    // now join them up with commas again, so that pango
+    // can split them up later
+    nsString fixedFamilies;
+    for (int i = 0; i < familyArray.Count(); i++) {
+        fixedFamilies.Append(*familyArray[i]);
+        fixedFamilies.AppendLiteral(",");
+    }
+
+    gfxFont *f = new gfxPangoFont(fixedFamilies, this);
+    mFonts.push_back(f);
+}
+
+gfxPangoFontGroup::~gfxPangoFontGroup()
+{
+}
+
+gfxTextRun*
+gfxPangoFontGroup::MakeTextRun(const nsAString& aString)
+{
+    return new gfxPangoTextRun(aString, this);
+}
 
 /**
  ** gfxPangoFont
  **/
 
+// Glue to avoid build/runtime dependencies on Pango > 1.6,
+// because we like living in 1999
+
+#ifndef THEBES_USE_PANGO_CAIRO
+static void
+(* PTR_pango_font_description_set_absolute_size)(PangoFontDescription*, double)
+    = nsnull;
+
+static void InitPangoLib()
+{
+    static PRBool initialized = PR_FALSE;
+    if (initialized)
+        return;
+    initialized = PR_TRUE;
+
+    PRLibrary* lib = PR_LoadLibrary("libpango-1.0.so");
+    if (!lib)
+        return;
+
+    PTR_pango_font_description_set_absolute_size =
+        (void (*)(PangoFontDescription*, double))
+        PR_FindFunctionSymbol(lib, "pango_font_description_set_absolute_size");
+
+    // leak lib deliberately
+}
+
+static void
+MOZ_pango_font_description_set_absolute_size(PangoFontDescription *desc,
+                                             double size)
+{
+    if (PTR_pango_font_description_set_absolute_size) {
+        PTR_pango_font_description_set_absolute_size(desc, size);
+    } else {
+        // Fake it! Assume the server DPI is 96. If it isn't, too bad
+        pango_font_description_set_size(desc, (gint)(size * 72.0/96.0));
+    }
+}
+#else
+static void InitPangoLib()
+{
+}
+
+static void
+MOZ_pango_font_description_set_absolute_size(PangoFontDescription *desc, double size)
+{
+    pango_font_description_set_absolute_size(desc, size);
+}
+#endif
+
 gfxPangoFont::gfxPangoFont(const nsAString &aName, const gfxFontGroup *aFontGroup)
     : mName(aName), mFontGroup(aFontGroup)
 {
+    InitPangoLib();
+
     mFontStyle = mFontGroup->GetStyle();
 
     mPangoFontDesc = nsnull;
@@ -148,11 +303,16 @@ gfxPangoFont::RealizeFont(PRBool force)
     mPangoFontDesc = pango_font_description_new();
 
     pango_font_description_set_family(mPangoFontDesc, NS_ConvertUTF16toUTF8(mName).get());
-    pango_font_description_set_absolute_size(mPangoFontDesc, mFontStyle->size * PANGO_SCALE);
+    MOZ_pango_font_description_set_absolute_size(mPangoFontDesc, mFontStyle->size * PANGO_SCALE);
     pango_font_description_set_style(mPangoFontDesc, ThebesStyleToPangoStyle(mFontStyle));
     pango_font_description_set_weight(mPangoFontDesc, ThebesStyleToPangoWeight(mFontStyle));
 
+#ifndef THEBES_USE_PANGO_CAIRO
+    mPangoCtx = pango_xft_get_context(GDK_DISPLAY(), 0);
+    gdk_pango_context_set_colormap(mPangoCtx, gdk_rgb_get_cmap());
+#else
     mPangoCtx = pango_cairo_font_map_create_context(PANGO_CAIRO_FONT_MAP(pango_cairo_font_map_get_default()));
+#endif
 
     if (!mFontStyle->langGroup.IsEmpty())
         pango_context_set_language(mPangoCtx, GetPangoLanguage(mFontStyle->langGroup));
@@ -193,6 +353,14 @@ gfxPangoFont::GetSize(const char *aCharString, PRUint32 aLength, gfxSize& inkSiz
     g_list_free(items);
 }
 
+// rounding and truncation functions for a Freetype floating point number 
+// (FT26Dot6) stored in a 32bit integer with high 26 bits for the integer
+// part and low 6 bits for the fractional part. 
+#define MOZ_FT_ROUND(x) (((x) + 32) & ~63) // 63 = 2^6 - 1
+#define MOZ_FT_TRUNC(x) ((x) >> 6)
+#define CONVERT_DESIGN_UNITS_TO_PIXELS(v, s) \
+        MOZ_FT_TRUNC(MOZ_FT_ROUND(FT_MulFix((v) , (s))))
+
 const gfxFont::Metrics&
 gfxPangoFont::GetMetrics()
 {
@@ -208,6 +376,92 @@ gfxPangoFont::GetMetrics()
     if (!items || g_list_length(items) != 1)
         return mMetrics;        // XXX error
 
+    float val;
+
+#ifndef THEBES_USE_PANGO_CAIRO
+    PangoItem *item = (PangoItem*)items->data;
+    PangoFcFont *fcfont = PANGO_FC_FONT(item->analysis.font);
+
+    FT_Face face;
+    TT_OS2 *os2;
+    XftFont *xftFont = pango_xft_font_get_font(PANGO_FONT(fcfont));
+    if (!xftFont)
+        return mMetrics;        // XXX error
+
+    face = XftLockFace(xftFont);
+    os2 = (TT_OS2 *) FT_Get_Sfnt_Table(face, ft_sfnt_os2);
+
+    int size;
+    if (FcPatternGetInteger(fcfont->font_pattern, FC_PIXEL_SIZE, 0, &size) != FcResultMatch)
+        size = 12;
+    mMetrics.emHeight = PR_MAX(1, size);
+
+    mMetrics.maxAscent = xftFont->ascent;
+    mMetrics.maxDescent = xftFont->descent;
+
+    double lineHeight = mMetrics.maxAscent + mMetrics.maxDescent;
+    mMetrics.height = lineHeight;
+
+    if (lineHeight > mMetrics.emHeight)
+        mMetrics.internalLeading = lineHeight - mMetrics.emHeight;
+    else
+        mMetrics.internalLeading = 0;
+    mMetrics.externalLeading = 0;
+
+    mMetrics.maxHeight = lineHeight;
+    mMetrics.emAscent = mMetrics.maxAscent * mMetrics.emHeight / lineHeight;
+    mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
+    mMetrics.maxAdvance = xftFont->max_advance_width;
+
+    gfxSize isz, lsz;
+    GetSize(" ", 1, isz, lsz);
+    mMetrics.spaceWidth = lsz.width;
+
+    // XXX do some FcCharSetHasChar work here to make sure
+    // we have an "x"
+    GetSize("x", 1, isz, lsz);
+    mMetrics.xHeight = isz.height;
+    mMetrics.aveCharWidth = isz.width;
+
+    val = CONVERT_DESIGN_UNITS_TO_PIXELS(face->underline_position,
+                                         face->size->metrics.y_scale);
+    if (!val)
+        val = - PR_MAX(1, floor(0.1 * xftFont->height + 0.5));
+
+    mMetrics.underlineOffset = val;
+
+    val = CONVERT_DESIGN_UNITS_TO_PIXELS(face->underline_thickness,
+                                         face->size->metrics.y_scale);
+    if (!val)
+        val = floor(0.05 * xftFont->height + 0.5);
+
+    mMetrics.underlineSize = PR_MAX(1, val);
+
+    if (os2 && os2->ySuperscriptYOffset) {
+        val = CONVERT_DESIGN_UNITS_TO_PIXELS(os2->ySuperscriptYOffset,
+                                             face->size->metrics.y_scale);
+        mMetrics.superscriptOffset = PR_MAX(1, val);
+    } else {
+        mMetrics.superscriptOffset = mMetrics.xHeight;
+    }
+
+    // mSubscriptOffset
+    if (os2 && os2->ySubscriptYOffset) {
+        val = CONVERT_DESIGN_UNITS_TO_PIXELS(os2->ySubscriptYOffset,
+                                             face->size->metrics.y_scale);
+        // some fonts have the incorrect sign. 
+        val = (val < 0) ? -val : val;
+        mMetrics.subscriptOffset = PR_MAX(1, val);
+    } else {
+        mMetrics.subscriptOffset = mMetrics.xHeight;
+    }
+
+    mMetrics.strikeoutOffset = mMetrics.xHeight / 2.0;
+    mMetrics.strikeoutSize = mMetrics.underlineSize;
+
+    XftUnlockFace(xftFont);
+#else
+    /* pango_cairo case; try to get all the metrics from pango itself */
     PangoItem *item = (PangoItem*)items->data;
     PangoFont *font = item->analysis.font;
 
@@ -256,8 +510,9 @@ gfxPangoFont::GetMetrics()
     mMetrics.subscriptOffset = mMetrics.xHeight;
 
     pango_font_metrics_unref (pfm);
+#endif
 
-#if 0
+#if 1
     fprintf (stderr, "Font: %s\n", NS_ConvertUTF16toUTF8(mName).get());
     fprintf (stderr, "    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
     fprintf (stderr, "    maxAscent: %f maxDescent: %f\n", mMetrics.maxAscent, mMetrics.maxDescent);
@@ -270,33 +525,6 @@ gfxPangoFont::GetMetrics()
     return mMetrics;
 }
 
-/**
- ** gfxPangoFontGroup
- **/
-
-gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
-                                      const gfxFontStyle *aStyle)
-    : gfxFontGroup(families, aStyle)
-{
-    gfxFont *f = new gfxPangoFont(families, this);
-    mFonts.push_back(f);
-}
-
-gfxPangoFontGroup::~gfxPangoFontGroup()
-{
-}
-
-gfxFont*
-gfxPangoFontGroup::MakeFont(const nsAString& aName)
-{
-    return nsnull;
-}
-
-gfxTextRun*
-gfxPangoFontGroup::MakeTextRun(const nsAString& aString)
-{
-    return new gfxPangoTextRun(aString, this);
-}
 
 
 /**
@@ -304,6 +532,51 @@ gfxPangoFontGroup::MakeTextRun(const nsAString& aString)
  **/
 
 THEBES_IMPL_REFCOUNTING(gfxPangoTextRun)
+
+#ifndef THEBES_USE_PANGO_CAIRO
+
+#define AUTO_GLYPHBUF_SIZE 100
+
+static gint
+DrawCairoGlyphs(gfxContext* ctx,
+                PangoFont* aFont,
+                const gfxPoint& pt,
+                PangoGlyphString* aGlyphs)
+{
+    PangoFcFont* fcfont = PANGO_FC_FONT(aFont);
+    cairo_font_face_t* font = cairo_ft_font_face_create_for_pattern(fcfont->font_pattern);
+    cairo_set_font_face(ctx->GetCairo(), font);
+
+    int size;
+    if (FcPatternGetInteger(fcfont->font_pattern, FC_PIXEL_SIZE, 0, &size) != FcResultMatch)
+        size = 12;
+
+    cairo_set_font_size(ctx->GetCairo(), size);
+
+    cairo_glyph_t autoGlyphs[AUTO_GLYPHBUF_SIZE];
+    cairo_glyph_t* glyphs = autoGlyphs;
+    if (aGlyphs->num_glyphs > AUTO_GLYPHBUF_SIZE)
+        glyphs = new cairo_glyph_t[aGlyphs->num_glyphs];
+
+    PangoGlyphUnit offset = 0;
+    for (gint i = 0; i < aGlyphs->num_glyphs; ++i) {
+        PangoGlyphInfo* info = &aGlyphs->glyphs[i];
+        glyphs[i].index = info->glyph;
+        glyphs[i].x = pt.x + (offset + info->geometry.x_offset)/PANGO_SCALE;
+        glyphs[i].y = pt.y + (info->geometry.y_offset)/PANGO_SCALE;
+        offset += info->geometry.width;
+    }
+
+    cairo_show_glyphs(ctx->GetCairo(), glyphs, aGlyphs->num_glyphs);
+
+    if (aGlyphs->num_glyphs > AUTO_GLYPHBUF_SIZE)
+        delete [] glyphs;
+
+    cairo_font_face_destroy(font);
+
+    return offset;
+}
+#endif
 
 gfxPangoTextRun::gfxPangoTextRun(const nsAString& aString, gfxPangoFontGroup *aGroup)
     : mString(aString), mGroup(aGroup), mPangoLayout(nsnull), mWidth(-1), mHeight(-1)
@@ -334,9 +607,11 @@ gfxPangoTextRun::EnsurePangoLayout(gfxContext *aContext)
         }
     }
 
+#ifdef THEBES_USE_PANGO_CAIRO
     if (aContext) {
         pango_cairo_update_context (aContext->GetCairo(), pf->GetPangoContext());
     }
+#endif
 }
 
 void
@@ -344,14 +619,53 @@ gfxPangoTextRun::DrawString (gfxContext *aContext, gfxPoint pt)
 {
     gfxMatrix mat = aContext->CurrentMatrix();
 
+    // note that to make this work with pango_cairo, changing
+    // this Translate to a MoveTo makes things render in the right place.
+    // -I don't know why-.  I mean, I assume it means that the path
+    // then starts in the right place, but that makes no sense,
+    // since a translate should do the exact same thing.  Since
+    // pango-cairo is not going to be the default case, we'll
+    // just leave this in here for now and puzzle over it later.
+#ifndef THEBES_USE_PANGO_CAIRO
+    aContext->Translate(pt);
+#else
     aContext->MoveTo(pt);
+#endif
 
     // we draw only the first layout line, because
     // we can then position by baseline (which is what pt is at);
     // using show_layout expects top-left point.
     EnsurePangoLayout(aContext);
+
+#if 0
+    MeasureString(aContext);
+    if (mWidth != -1) {
+        aContext->Save();
+        aContext->SetColor(gfxRGBA(1.0, 0.0, 0.0, 0.5));
+        aContext->NewPath();
+        aContext->Rectangle(gfxRect(0.0, -mHeight/PANGO_SCALE, mWidth/PANGO_SCALE, mHeight/PANGO_SCALE));
+        aContext->Fill();
+        aContext->Restore();
+    }
+#endif
+
     PangoLayoutLine *line = pango_layout_get_line(mPangoLayout, 0);
+
+#ifndef THEBES_USE_PANGO_CAIRO
+    gint offset = 0;
+    for (GSList *tmpList = line->runs;
+         tmpList && tmpList->data;
+         tmpList = tmpList->next)
+    {
+        PangoLayoutRun *layoutRun = (PangoLayoutRun *)tmpList->data;
+
+        offset += DrawCairoGlyphs (aContext, layoutRun->item->analysis.font,
+                                   gfxPoint(offset, 0.0),
+                                   layoutRun->glyphs);
+    }
+#else
     pango_cairo_show_layout_line (aContext->GetCairo(), line);
+#endif
 
     aContext->SetMatrix(mat);
 }

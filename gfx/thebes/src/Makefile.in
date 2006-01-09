@@ -15,6 +15,7 @@ REQUIRES = \
 	cairo \
 	libpixman \
 	string \
+	pref \
 	xpcom \
 	$(NULL)
 
@@ -48,7 +49,8 @@ OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
-CPPSRCS	+= 	gfxXlibSurface.cpp gfxPangoFonts.cpp gfxPlatformGtk.cpp
+CPPSRCS	+= 	gfxXlibSurface.cpp gfxPlatformGtk.cpp
+CPPSRCS +=	gfxPangoFonts.cpp 
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS)
 endif
 

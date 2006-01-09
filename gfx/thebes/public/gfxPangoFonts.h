@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is thebes gfx code.
+ * The Original Code is Mozilla Foundation code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2005
@@ -78,7 +78,9 @@ public:
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
 
 protected:
-    virtual gfxFont* MakeFont(const nsAString& aName);
+    static PRBool FontCallback (const nsAString& fontName,
+                                const nsAString& genericName,
+                                void *closure);
 };
 
 class NS_EXPORT gfxPangoTextRun : public gfxTextRun {
