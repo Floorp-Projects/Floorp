@@ -40,8 +40,11 @@
 #
 
 include $(MOD_DEPTH)/config/UNIX.mk
-
+ifeq ($(OS_TEST),ia64)
+DLL_SUFFIX	= so
+else
 DLL_SUFFIX	= sl
+endif
 
 ifeq ($(NS_USE_GCC), 1)
 	CC			        = gcc
@@ -51,7 +54,11 @@ ifeq ($(NS_USE_GCC), 1)
 else
 	CC				= cc -Ae
 	CCC			        = CC -ext
+ifeq ($(OS_RELEASE),B.11.23)
+	OS_CFLAGS           = +Olit=all
+else
 	OS_CFLAGS           = +ESlit
+endif
 endif
 
 RANLIB			= echo
@@ -77,7 +84,7 @@ endif
 ifeq (,$(filter-out B.10.10 B.10.20,$(OS_RELEASE)))
 OS_CFLAGS		+= -DHAVE_INT_LOCALTIME_R
 endif
-ifeq (,$(filter-out B.10.30 B.11.00,$(OS_RELEASE)))
+ifeq (,$(filter-out B.10.30 B.11.00 B.11.23,$(OS_RELEASE)))
 OS_CFLAGS		+= -DHAVE_POINTER_LOCALTIME_R
 endif
 
@@ -159,6 +166,30 @@ endif
 		endif
 	endif
 OS_CFLAGS		+= -DHPUX10 -DHPUX11 -D_LARGEFILE64_SOURCE -D_PR_HAVE_OFF64_T
+ifeq ($(HAVE_CCONF), 1)
+DEFAULT_IMPL_STRATEGY =
+else
+DEFAULT_IMPL_STRATEGY = _PTH
+endif
+endif
+
+# 11.23 is similar to 11.00.
+ifeq ($(OS_RELEASE),B.11.23)
+      ifneq ($(NS_USE_GCC), 1)
+              CCC                             = /opt/aCC/bin/aCC -AP -ext
+              ifeq ($(USE_64),1)
+                      OS_CFLAGS       += +DD64 +DSblended
+                      #COMPILER_TAG    = _64
+              else
+                      OS_CFLAGS       += +DD32 +DSblended
+ifeq ($(HAVE_CCONF), 1)
+                      COMPILER_TAG    =
+else
+                      COMPILER_TAG    = _32
+endif
+              endif
+      endif
+OS_CFLAGS               += -DHPUX10 -DHPUX11 -D_LARGEFILE64_SOURCE -D_PR_HAVE_OFF64_T
 ifeq ($(HAVE_CCONF), 1)
 DEFAULT_IMPL_STRATEGY =
 else

@@ -83,8 +83,16 @@ ifeq ($(OS_ARCH), IRIX)
 endif
 
 ifeq ($(OS_ARCH), HP-UX)
+    ifeq ($(OS_RELEASE), B.11.23)
+       ifeq ($(USE_64),1)
+           XLDOPTS += +DD64 +DSblended
+       else
+           XLDOPTS += +DD32 +DSblended
+       endif
+    else
     ifeq ($(USE_64),1)
         XLDOPTS += +DA2.0W
+    endif
     endif
 endif
 

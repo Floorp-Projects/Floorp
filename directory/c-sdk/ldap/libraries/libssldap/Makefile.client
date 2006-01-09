@@ -68,6 +68,10 @@ DLLSSLDAP	= $(addprefix $(SSLOBJDEST)/, $(SSLDAP_LIBNAME).$(LIB_SUFFIX))
 else
 LIBSSLDAP	= $(addprefix $(SSLOBJDEST)/, \
 			lib$(SSLDAP_LIBNAME).$(DLL_SUFFIX))
+ifeq ($(OS_ARCH), HP-UX)
+DLLSSLDAP       = $(addprefix $(SSLOBJDEST)/, \
+			lib$(SSLDAP_LIBNAME).$(LIB_SUFFIX))
+endif
 endif
 
 INSTALLDIR      = $(DEPTH)/dist/$(OBJDIR_NAME)
@@ -168,7 +172,11 @@ versiont.c:	Makefile.client Version.c
 	-e "s|%VERSION%|$${v}|" \
 	< Version.c > $@)
 
+ifeq ($(OS_ARCH), HP-UX)
+all::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBSSLDAP) $(DLLSSLDAP)
+else
 all::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBSSLDAP)
+endif
 
 $(LIBDIR):
 	$(MKDIR) $(LIBDIR)
@@ -180,6 +188,15 @@ ifdef SO_FILES_TO_REMOVE
 endif
 	$(LINK_DLL) $(DSO_LDOPTS) $(SSLDAP_EXPORT_FLAGS) $(EXTRA_LIBS)
 
+ifeq ($(OS_ARCH), HP-UX)
+$(DLLSSLDAP): $(OBJS) $(LIBDIR) $(SSLDAP_EXPORT_DEFS)
+	@echo ======= making $(DLLSSLDAP)
+ifdef SO_FILES_TO_REMOVE
+	-$(RM) $(SO_FILES_TO_REMOVE)
+endif
+	$(LINK_LIB) $(EXTRA_LIBS)
+endif
+
 veryclean:: clean
 
 clean::
@@ -189,11 +206,18 @@ clean::
 $(OBJDEST):
 	$(MKDIR) $(OBJDEST)
 
+ifeq ($(OS_ARCH), HP-UX)
+install:: $(LIBSSLDAP) $(DLLSSLDAP)
+else
 install:: $(LIBSSLDAP)
+endif
 ifeq ($(OS_ARCH), WINNT)
 	$(INSTALL) -m 555 $(LIBSSLDAP) $(INSTALLDIR)/lib
 	$(INSTALL) -m 555 $(DLLSSLDAP) $(INSTALLDIR)/lib
 endif
 ifdef MKSHLIB
 	$(INSTALL) -m 555 $(LIBSSLDAP) $(INSTALLDIR)/lib
+ifeq ($(OS_ARCH), HP-UX)
+	$(INSTALL) -m 555 $(DLLSSLDAP) $(INSTALLDIR)/lib
+endif
 endif

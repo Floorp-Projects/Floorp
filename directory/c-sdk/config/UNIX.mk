@@ -35,6 +35,16 @@
 # 
 # ***** END LICENSE BLOCK ***** 
 
+ifeq ($(OS_ARCH), HP-UX)
+      ifeq ($(OS_TEST), ia64)
+              ifdef USE_64
+                      64BIT_TAG=_ia64_64
+              else
+                      64BIT_TAG=_ia64_32
+              endif
+      endif
+endif
+
 PR_UNIXOS	= 1
 XP_DEFINE	= -DXP_UNIX
 OBJ_SUFFIX	= o
@@ -45,11 +55,19 @@ AR		= ar cr $@
 ifdef BUILD_OPT
 OPTIMIZER	= -O
 DEFINES		= -UDEBUG -DNDEBUG
-OBJDIR_TAG	= _OPT
+ifeq ($(OS_ARCH), HP-UX)
+OBJDIR_TAG      = $(64BIT_TAG)_OPT
+else
+OBJDIR_TAG      = _OPT
+endif
 else
 OPTIMIZER	= -g
 DEFINES		= -DDEBUG -UNDEBUG -DDEBUG_$(shell whoami)
-OBJDIR_TAG	= _DBG
+ifeq ($(OS_ARCH), HP-UX)
+OBJDIR_TAG      = $(64BIT_TAG)_DBG
+else
+OBJDIR_TAG      = _DBG
+endif
 endif
 
 # Name of the binary code directories

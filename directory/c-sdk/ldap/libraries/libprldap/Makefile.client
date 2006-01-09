@@ -71,6 +71,10 @@ DLLPRLDAP	= $(addprefix $(PROBJDEST)/, \
 			nsldappr32v$(PRLDAPVERS).$(LIB_SUFFIX))
 else
 LIBPRLDAP	= $(addprefix $(PROBJDEST)/, lib$(PRLDAP_LIBNAME).$(DLL_SUFFIX))
+ifeq ($(OS_ARCH), HP-UX)
+DLLPRLDAP       = $(addprefix $(PROBJDEST)/, \
+			lib$(PRLDAP_LIBNAME).$(LIB_SUFFIX))
+endif
 endif
 INSTALLDIR      = $(DEPTH)/dist/$(OBJDIR_NAME)
 
@@ -153,7 +157,11 @@ versiont.c:	Makefile.client Version.c
 	-e "s|%VERSION%|$${v}|" \
 	< Version.c > $@)
 
+ifeq ($(OS_ARCH), HP-UX)
+all::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBPRLDAP) $(DLLPRLDAP)
+else
 all::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBPRLDAP)
+endif
 
 $(LIBDIR):
 	$(MKDIR) $(LIBDIR)
@@ -165,6 +173,15 @@ ifdef SO_FILES_TO_REMOVE
 endif
 	$(LINK_DLL) $(DSO_LDOPTS) $(PRLDAP_EXPORT_FLAGS) $(EXTRA_LIBS)
 
+ifeq ($(OS_ARCH), HP-UX)
+$(DLLPRLDAP): $(OBJS) $(LIBDIR) $(PRLDAP_EXPORT_DEFS)
+	@echo ======= making $(DLLPRLDAP)
+ifdef SO_FILES_TO_REMOVE
+	-$(RM) $(SO_FILES_TO_REMOVE)
+endif
+	$(LINK_LIB) $(EXTRA_LIBS)
+endif
+
 veryclean:: clean
 
 clean::
@@ -174,11 +191,18 @@ clean::
 $(OBJDEST):
 	$(MKDIR) $(OBJDEST)
 
+ifeq ($(OS_ARCH), HP-UX)
+install:: $(LIBPRLDAP) $(DLLPRLDAP)
+else
 install:: $(LIBPRLDAP)	
+endif
 ifeq ($(OS_ARCH), WINNT)
 	$(INSTALL) -m 555 $(LIBPRLDAP) $(INSTALLDIR)/lib
 	$(INSTALL) -m 555 $(DLLPRLDAP) $(INSTALLDIR)/lib
 endif
 ifdef MKSHLIB
 	$(INSTALL) -m 555 $(LIBPRLDAP) $(INSTALLDIR)/lib
+ifeq ($(OS_ARCH), HP-UX)
+	$(INSTALL) -m 555 $(DLLPRLDAP) $(INSTALLDIR)/lib
+endif
 endif
