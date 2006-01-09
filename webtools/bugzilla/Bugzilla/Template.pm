@@ -402,7 +402,15 @@ sub create {
             # as prefix. In addition it replaces a ' ' by a '_'.
             css_class_quote => \&Bugzilla::Util::css_class_quote ,
 
-            quoteUrls => \&::quoteUrls ,
+            quoteUrls => [ sub {
+                               my ($context, $bug) = @_;
+                               return sub {
+                                   my $text = shift;
+                                   return &::quoteUrls($text, $bug);
+                               };
+                           },
+                           1
+                         ],
 
             bug_link => [ sub {
                               my ($context, $bug) = @_;

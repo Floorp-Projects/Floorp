@@ -57,7 +57,7 @@
 <p>
   Added the comment(s):
   <blockquote>
-    [% PROCESS "bug/comments.html.tmpl" %]
+    [% PROCESS "bug/comments.html.tmpl" bug = { 'bug_id' => bug_id } %]
   </blockquote>
 </p>
 [% END %]

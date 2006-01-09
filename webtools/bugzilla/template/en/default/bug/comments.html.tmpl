@@ -149,7 +149,7 @@
     [% wrapped_comment = comment.body FILTER wrap_comment %]
 [% END %]
 <pre[% ' id="comment_text_' _ count _ '"' IF mode == "edit" %]>
-  [%- wrapped_comment FILTER quoteUrls -%]
+  [%- wrapped_comment FILTER quoteUrls(bug.bug_id) -%]
 </pre>
     </div>
   [% END %]

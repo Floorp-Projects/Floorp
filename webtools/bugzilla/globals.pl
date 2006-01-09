@@ -485,7 +485,7 @@ sub get_component_name {
 # If you want to modify this routine, read the comments carefully
 
 sub quoteUrls {
-    my ($text) = (@_);
+    my ($text, $curr_bugid) = (@_);
     return $text unless $text;
 
     # We use /g for speed, but uris can have other things inside them
@@ -547,6 +547,9 @@ sub quoteUrls {
                ("\0\0" . ($count-1) . "\0\0")
               ~egmxi;
 
+    # Current bug ID this comment belongs to
+    my $current_bugurl = $curr_bugid ? "show_bug.cgi?id=$curr_bugid" : "";
+    
     # This handles bug a, comment b type stuff. Because we're using /g
     # we have to do this in one pattern, and so this is semi-messy.
     # Also, we can't use $bug_re?$comment_re? because that will match the
@@ -557,7 +560,7 @@ sub quoteUrls {
               ~ # We have several choices. $1 here is the link, and $2-4 are set
                 # depending on which part matched
                (defined($2) ? GetBugLink($2,$1,$3) :
-                              "<a href=\"#c$4\">$1</a>")
+                              "<a href=\"$current_bugurl#c$4\">$1</a>")
               ~egox;
 
     # Old duplicate markers
