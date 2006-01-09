@@ -153,7 +153,7 @@ nsresult txPatternParser::createLocPathPattern(txExprLexer& aLexer,
                 return aPattern ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
             }
             break;
-        case Token::FUNCTION_NAME:
+        case Token::FUNCTION_NAME_AND_PAREN:
             // id(Literal) or key(Literal, Literal)
             {
                 nsCOMPtr<nsIAtom> nameAtom =
@@ -244,8 +244,7 @@ nsresult txPatternParser::createIdPattern(txExprLexer& aLexer,
                                           txPattern*& aPattern)
 {
     // check for '(' Literal ')'
-    if (aLexer.nextToken()->mType != Token::L_PAREN && 
-        aLexer.peek()->mType != Token::LITERAL)
+    if (aLexer.peek()->mType != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILURE;
     const nsDependentSubstring& value =
         aLexer.nextToken()->Value();
@@ -260,8 +259,7 @@ nsresult txPatternParser::createKeyPattern(txExprLexer& aLexer,
                                            txPattern*& aPattern)
 {
     // check for '(' Literal, Literal ')'
-    if (aLexer.nextToken()->mType != Token::L_PAREN && 
-        aLexer.peek()->mType != Token::LITERAL)
+    if (aLexer.peek()->mType != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILURE;
     const nsDependentSubstring& key =
         aLexer.nextToken()->Value();

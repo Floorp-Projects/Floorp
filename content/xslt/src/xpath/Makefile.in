@@ -65,7 +65,6 @@ REQUIRES +=	  dom \
 endif
 
 CPPSRCS = txAdditiveExpr.cpp \
-        txAttributeValueTemplate.cpp \
         txBooleanExpr.cpp \
         txBooleanFunctionCall.cpp \
         txBooleanResult.cpp \

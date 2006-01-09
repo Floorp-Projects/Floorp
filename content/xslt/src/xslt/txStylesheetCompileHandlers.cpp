@@ -226,13 +226,10 @@ getAVTAttr(txStylesheetAttr* aAttributes,
         return rv;
     }
 
-    aAVT = txExprParser::createAttributeValueTemplate(attr->mValue, &aState);
-    if (!aAVT) {
-        if (!aState.fcp()) {
-            // XXX ErrorReport: XPath parse failure
-            return NS_ERROR_XPATH_PARSE_FAILURE;
-        }
-
+    rv = txExprParser::createAVT(attr->mValue, &aState,
+                                 getter_Transfers(aAVT));
+    if (NS_FAILED(rv) && aState.fcp()) {
+        // use default value in fcp for not required exprs
         if (aRequired) {
             aAVT = new txErrorExpr(
 #ifdef TX_TO_STRING
@@ -241,9 +238,13 @@ getAVTAttr(txStylesheetAttr* aAttributes,
                                    );
             NS_ENSURE_TRUE(aAVT, NS_ERROR_OUT_OF_MEMORY);
         }
+        else {
+            aAVT = nsnull;
+        }
+        return NS_OK;
     }
 
-    return NS_OK;
+    return rv;
 }
 
 nsresult
@@ -1237,9 +1238,10 @@ txFnStartLRE(PRInt32 aNamespaceID,
             continue;
         }
         
-        nsAutoPtr<Expr> avt(
-              txExprParser::createAttributeValueTemplate(attr->mValue, &aState));
-        NS_ENSURE_TRUE(avt, NS_ERROR_XPATH_PARSE_FAILURE);
+        nsAutoPtr<Expr> avt;
+        rv = txExprParser::createAVT(attr->mValue, &aState,
+                                     getter_Transfers(avt));
+        NS_ENSURE_SUCCESS(rv, rv);
 
         instr = new txLREAttribute(attr->mNamespaceID, attr->mLocalName,
                                    attr->mPrefix, avt);

@@ -328,22 +328,25 @@ txExprLexer::parse(const nsASingleFragmentString& aPattern)
         if (prevToken->mType == Token::CNAME) {
           NS_ConvertUTF16toUTF8 utf8Value(prevToken->Value());
           if (txXPathAtoms::comment->EqualsUTF8(utf8Value)) {
-            prevToken->mType = Token::COMMENT;
+            prevToken->mType = Token::COMMENT_AND_PAREN;
           }
           else if (txXPathAtoms::node->EqualsUTF8(utf8Value)) {
-            prevToken->mType = Token::NODE;
+            prevToken->mType = Token::NODE_AND_PAREN;
           }
           else if (txXPathAtoms::processingInstruction->EqualsUTF8(utf8Value)) {
-            prevToken->mType = Token::PROC_INST;
+            prevToken->mType = Token::PROC_INST_AND_PAREN;
           }
           else if (txXPathAtoms::text->EqualsUTF8(utf8Value)) {
-            prevToken->mType = Token::TEXT;
+            prevToken->mType = Token::TEXT_AND_PAREN;
           }
           else {
-            prevToken->mType = Token::FUNCTION_NAME;
+            prevToken->mType = Token::FUNCTION_NAME_AND_PAREN;
           }
+          isToken = PR_FALSE;
         }
-        newToken = new Token(mPosition, Token::L_PAREN);
+        else {
+          newToken = new Token(mPosition, Token::L_PAREN);
+        }
         ++mPosition;
         break;
       case R_PAREN:
