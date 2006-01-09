@@ -902,7 +902,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JSString *str;
     JSBool ok;
 #if JS_HAS_XML_SUPPORT
-    JSBool inXML, quoteAttr;
+    JSBool foreach, inXML, quoteAttr;
 #else
 #define inXML JS_FALSE
 #endif
@@ -964,7 +964,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     sn = NULL;
     rval = NULL;
 #if JS_HAS_XML_SUPPORT
-    inXML = quoteAttr = JS_FALSE;
+    foreach = inXML = quoteAttr = JS_FALSE;
 #endif
 
     while (pc < endpc) {
@@ -1581,7 +1581,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               do_forinbody:
 #if JS_HAS_XML_SUPPORT
-                if (lastop == JSOP_FOREACH) {
+                if (foreach) {
+                    foreach = JS_FALSE;
                     js_printf(jp, "\tfor %s (%s%s",
                               js_each_str, VarPrefix(sn), lval);
                 } else
@@ -1593,10 +1594,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         return JS_FALSE;
                     RETRACT(&ss->sprinter, xval);
                     js_printf(jp, *lval ? ".%s" : "%s", xval);
-                } else if (xval) {
+                } else if (xval && *xval) {
                     js_printf(jp,
                               (js_CodeSpec[lastop].format & JOF_XMLNAME)
-                              ? ".%s%s"
+                              ? ".%s"
                               : "[%s]",
                               xval);
                 }
@@ -2644,12 +2645,16 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 inXML = JS_FALSE;
                 break;
 
+              case JSOP_FOREACH:
+                foreach = JS_TRUE;
+                todo = -2;
+                break;
+
               case JSOP_TOXML:
                 inXML = JS_FALSE;
-                /* fall through */
+                /* FALL THROUGH */
 
               case JSOP_XMLNAME:
-              case JSOP_FOREACH:
               case JSOP_FILTER:
                 /* Conversion and prefix ops do nothing in the decompiler. */
                 todo = -2;

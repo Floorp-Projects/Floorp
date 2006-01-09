@@ -3264,6 +3264,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
                 /* FALL THROUGH */
 
+#if JS_HAS_XML_SUPPORT
+              case TOK_UNARYOP:
+#endif
+#if JS_HAS_LVALUE_RETURN
+              case TOK_LP:
+#endif
               case TOK_LB:
                 /*
                  * We separate the first/next bytecode from the enumerator
@@ -3288,6 +3294,27 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 beq = EmitJump(cx, cg, JSOP_IFEQ, 0);
                 if (beq < 0)
                     return JS_FALSE;
+
+#if JS_HAS_LVALUE_RETURN
+                if (pn3->pn_type == TOK_LP) {
+                    JS_ASSERT(pn3->pn_op == JSOP_SETCALL);
+                    if (!js_EmitTree(cx, cg, pn3))
+                        return JS_FALSE;
+                    if (!js_Emit1(cx, cg, JSOP_ENUMELEM))
+                        return JS_FALSE;
+                    break;
+                }
+#endif
+#if JS_HAS_XML_SUPPORT
+                if (pn3->pn_type == TOK_UNARYOP) {
+                    JS_ASSERT(pn3->pn_op == JSOP_BINDXMLNAME);
+                    if (!js_EmitTree(cx, cg, pn3))
+                        return JS_FALSE;
+                    if (!js_Emit1(cx, cg, JSOP_ENUMELEM))
+                        return JS_FALSE;
+                    break;
+                }
+#endif
 
                 /* Now that we're safely past the IFEQ, commit side effects. */
                 if (!EmitElemOp(cx, pn3, JSOP_ENUMELEM, cg))
