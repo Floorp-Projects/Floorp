@@ -304,6 +304,7 @@ sub data {
     # in a local file, so retrieve it from there.
     if (length($self->{data}) == 0) {
         if (open(AH, $self->_get_local_filename())) {
+            local $/;
             binmode AH;
             $self->{data} = <AH>;
             close(AH);
