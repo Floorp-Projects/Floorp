@@ -527,23 +527,31 @@ sub ListSomething {
         }
     }
         
-
     print h1("List of $tablename");
-    my $sortorder = $defaultsortorder;
-    if (defined $F::sortorder) {
-        # XXX this *absolutely* needs sanitization
-        # sort order is going to be a list of column names
-        # comma separated list of things that match stuff in the select part
-        # may or may not have " asc" or " desc" on the end of it
-        $sortorder = $F::sortorder;
-    }
-
     my $query = $::db->prepare("SHOW COLUMNS FROM $tablename");
     $query->execute();
     my @allcols = ();
     my @cols = ();
     while (@row = $query->fetchrow_array()) {
         push(@allcols, $row[0]);
+    }
+
+    my $sortorder = $defaultsortorder;
+    if (defined $F::sortorder) {
+        $sortorder = $F::sortorder;
+        my @sortorder = ();
+        my @passedsortorder = split(",",$sortorder);
+        foreach my $column (@passedsortorder) {
+            my $dir = "";
+            if ($column =~ m/(\S+)( ASC| DESC)$/i) {
+                ($column, $dir) = ($1, $2);
+            }
+            if (!grep {$column eq $_} @allcols) {
+                die "Invalid sort order passed";
+            }
+            push @sortorder, $column.$dir;
+        }
+        $sortorder = join(",",@sortorder);
     }
 
     my $hiddencols = "";
