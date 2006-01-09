@@ -573,7 +573,9 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
       // to enable live resizing
       { kEventClassWindow, kEventWindowBoundsChanged },
       // to roll up popups when we're minimized
-      { kEventClassWindow, kEventWindowCollapse },
+      { kEventClassWindow, kEventWindowCollapsing },
+      // to activate when restoring
+      { kEventClassWindow, kEventWindowExpanded },
       // to keep invisible windows off the screen
       { kEventClassWindow, kEventWindowConstrain },
       // to handle update events
@@ -700,14 +702,30 @@ nsMacWindow::WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef i
       break;
 
       // roll up popups when we're minimized
-      case kEventWindowCollapse:
+      case kEventWindowCollapsing:
       {
         if ( gRollupListener && gRollupWidget )
           gRollupListener->Rollup();        
+        nsMacWindow *self = NS_REINTERPRET_CAST(nsMacWindow *, userData);
+        if (self) {
+          gEventDispatchHandler.DispatchGuiEvent(self, NS_DEACTIVATE);
+        }
         retVal = ::CallNextEventHandler(inHandlerChain, inEvent);
       }
       break;
-        
+
+      // Activate when restoring from the minimized state.  This ensures that
+      // the restored window will be able to take focus.
+      case kEventWindowExpanded:
+      {
+        nsMacWindow *self = NS_REINTERPRET_CAST(nsMacWindow *, userData);
+        if (self) {
+          gEventDispatchHandler.DispatchGuiEvent(self, NS_ACTIVATE);
+        }
+        retVal = ::CallNextEventHandler(inHandlerChain, inEvent);
+      }
+      break;
+
       default:
         // do nothing...
         break;
