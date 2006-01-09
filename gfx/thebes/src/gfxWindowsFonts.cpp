@@ -239,7 +239,7 @@ PRBool
 gfxWindowsFontGroup::MakeFont(const nsAString& aName, const nsAString& aGenericName, void *closure)
 {
     gfxWindowsFontGroup *fg = NS_STATIC_CAST(gfxWindowsFontGroup*, closure);
-    mFonts.push_back (new gfxWindowsFont(aName, fg, mWnd));
+    fg->mFonts.push_back(new gfxWindowsFont(aName, fg, fg->mWnd));
     return PR_TRUE;
 }
 
@@ -247,7 +247,7 @@ gfxWindowsFontGroup::MakeFont(const nsAString& aName, const nsAString& aGenericN
 gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, HWND hwnd)
     : gfxFontGroup(aFamilies, aStyle), mWnd(hwnd)
 {
-    FillFontArray (MakeFont, this);
+    ForEachFont(MakeFont, this);
 }
 
 gfxWindowsFontGroup::~gfxWindowsFontGroup()
