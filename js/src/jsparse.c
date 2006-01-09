@@ -1586,10 +1586,19 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             stmtInfo.type = STMT_FOR_IN_LOOP;
 
             /* Check that the left side of the 'in' is valid. */
+            while (pn1->pn_type == TOK_RP)
+                pn1 = pn1->pn_kid;
             if ((pn1->pn_type == TOK_VAR)
                 ? (pn1->pn_count > 1 || pn1->pn_op == JSOP_DEFCONST)
                 : (pn1->pn_type != TOK_NAME &&
                    pn1->pn_type != TOK_DOT &&
+#if JS_HAS_LVALUE_RETURN
+                   pn1->pn_type != TOK_LP &&
+#endif
+#if JS_HAS_XML_SUPPORT
+                   (pn1->pn_type != TOK_UNARYOP ||
+                    pn1->pn_op != JSOP_XMLNAME) &&
+#endif
                    pn1->pn_type != TOK_LB)) {
                 js_ReportCompileErrorNumber(cx, ts,
                                             JSREPORT_TS | JSREPORT_ERROR,
@@ -1607,6 +1616,14 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     pn1->pn_extra |= PNX_POPVAR;
             } else {
                 pn2 = pn1;
+#if JS_HAS_LVALUE_RETURN
+                if (pn2->pn_type == TOK_LP)
+                    pn2->pn_op = JSOP_SETCALL;
+#endif
+#if JS_HAS_XML_SUPPORT
+                if (pn2->pn_type == TOK_UNARYOP)
+                    pn2->pn_op = JSOP_BINDXMLNAME;
+#endif
             }
 
             /* Beware 'for (arguments in ...)' with or without a 'var'. */
