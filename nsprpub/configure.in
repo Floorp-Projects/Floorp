@@ -931,10 +931,12 @@ case "$target" in
         i*86*)
             AC_DEFINE(i386)
             CPU_ARCH=i386
+            PR_MD_ASFILES=os_Darwin_x86.s
             ;;
         *)
             AC_DEFINE(ppc)
             CPU_ARCH=ppc
+            PR_MD_ASFILES=os_Darwin_ppc.s
             ;;
     esac
     DSO_CFLAGS=-fPIC
@@ -947,9 +949,6 @@ case "$target" in
     USE_PTHREADS=1
     MDCPUCFG_H=_darwin.cfg
     PR_MD_CSRCS=darwin.c
-    if test "$CPU_ARCH" = "ppc"; then
-        PR_MD_ASFILES=os_Darwin_ppc.s
-    fi
 
     # Add Mac OS X support for loading CFM & CFBundle plugins
     if test -f /System/Library/Frameworks/Carbon.framework/Carbon; then

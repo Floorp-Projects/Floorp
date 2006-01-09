@@ -48,9 +48,9 @@
 
 #define PR_LINKER_ARCH	"darwin"
 #define _PR_SI_SYSNAME  "DARWIN"
-#ifdef i386
+#ifdef __i386__
 #define _PR_SI_ARCHITECTURE "x86"
-#else
+#elif defined(__ppc__)
 #define _PR_SI_ARCHITECTURE "ppc"
 #endif
 #define PR_DLL_SUFFIX		".dylib"
@@ -113,7 +113,18 @@ extern PRInt32 _PR_DarwinPPC_AtomicSet(PRInt32 *val, PRInt32 newval);
 #define _MD_ATOMIC_SET(val, newval) _PR_DarwinPPC_AtomicSet(val, newval)
 extern PRInt32 _PR_DarwinPPC_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 #define _MD_ATOMIC_ADD(ptr, val)    _PR_DarwinPPC_AtomicAdd(ptr, val)
-#endif /* __ppc__ */
+#elif defined(__i386__)
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+extern PRInt32 _PR_Darwin_x86_AtomicIncrement(PRInt32 *val);
+#define _MD_ATOMIC_INCREMENT(val)   _PR_Darwin_x86_AtomicIncrement(val)
+extern PRInt32 _PR_Darwin_x86_AtomicDecrement(PRInt32 *val);
+#define _MD_ATOMIC_DECREMENT(val)   _PR_Darwin_x86_AtomicDecrement(val)
+extern PRInt32 _PR_Darwin_x86_AtomicSet(PRInt32 *val, PRInt32 newval);
+#define _MD_ATOMIC_SET(val, newval) _PR_Darwin_x86_AtomicSet(val, newval)
+extern PRInt32 _PR_Darwin_x86_AtomicAdd(PRInt32 *ptr, PRInt32 val);
+#define _MD_ATOMIC_ADD(ptr, val)    _PR_Darwin_x86_AtomicAdd(ptr, val)
+#endif /* __i386__ */
 
 #define USE_SETJMP
 
