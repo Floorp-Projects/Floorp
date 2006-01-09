@@ -98,9 +98,10 @@ ifeq ($(OS_ARCH), HP-UX)
            XLDOPTS += +DD32 +DSblended
        endif
     else
-    ifeq ($(USE_64),1)
-        XLDOPTS += +DA2.0W
-    endif
+       ifeq ($(USE_64),1)
+           XLDOPTS += +DA2.0W
+       endif
+	endif
 endif
 
 ifeq ($(OS_ARCH), OpenVMS)
