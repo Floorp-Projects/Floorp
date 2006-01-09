@@ -48,7 +48,11 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsAppShellCocoa.h"
-
+#include "nsCOMPtr.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsIFile.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsString.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAppShellCocoa, nsIAppShell)
 
@@ -87,8 +91,28 @@ nsAppShellCocoa::~nsAppShellCocoa()
 NS_IMETHODIMP
 nsAppShellCocoa::Create(int* argc, char ** argv)
 {
+  // Get the path of the NIB file, which lives in the GRE location
+  nsCOMPtr<nsIFile> nibFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(nibFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nibFile->AppendNative(NS_LITERAL_CSTRING("res"));
+  nibFile->AppendNative(NS_LITERAL_CSTRING("MainMenu.nib"));
+
+  nsCAutoString nibPath;
+  rv = nibFile->GetNativePath(nibPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // this call initializes NSApplication
-  [NSApplication sharedApplication];
+  [NSBundle loadNibFile:
+    [NSString stringWithUTF8String:(const char*)nibPath.get()]
+    externalNameTable:
+      [NSDictionary dictionaryWithObject:
+        [NSApplication sharedApplication]
+        forKey:@"NSOwner"
+      ]
+    withZone:NSDefaultMallocZone()
+  ];
 	return NS_OK;
 }
 
