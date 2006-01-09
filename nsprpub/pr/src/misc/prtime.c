@@ -617,6 +617,7 @@ PR_LocalTimeParameters(const PRExplodedTime *gmt)
     time_t secs;
     PRTime secs64;
     PRInt64 usecPerSec;
+    PRInt64 usecPerSec_1;
     PRInt64 maxInt32;
     PRInt64 minInt32;
     PRInt32 dayOffset;
@@ -663,7 +664,16 @@ PR_LocalTimeParameters(const PRExplodedTime *gmt)
 
     secs64 = PR_ImplodeTime(gmt);    /* This is still in microseconds */
     LL_I2L(usecPerSec, PR_USEC_PER_SEC);
-    LL_DIV(secs64, secs64, usecPerSec);   /* Convert to seconds */
+    LL_I2L(usecPerSec_1, PR_USEC_PER_SEC - 1);
+    /* Convert to seconds, truncating down (3.1 -> 3 and -3.1 -> -4) */
+    if (LL_GE_ZERO(secs64)) {
+        LL_DIV(secs64, secs64, usecPerSec);
+    } else {
+        LL_NEG(secs64, secs64);
+        LL_ADD(secs64, secs64, usecPerSec_1);
+        LL_DIV(secs64, secs64, usecPerSec);
+        LL_NEG(secs64, secs64);
+    }
     LL_I2L(maxInt32, PR_INT32_MAX);
     LL_I2L(minInt32, PR_INT32_MIN);
     if (LL_CMP(secs64, >, maxInt32) || LL_CMP(secs64, <, minInt32)) {
