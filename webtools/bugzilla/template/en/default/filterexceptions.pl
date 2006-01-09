@@ -104,10 +104,6 @@
 ],
 
 'reports/duplicates-table.html.tmpl' => [
-  '"&amp;maxrows=$maxrows" IF maxrows',
-  '"&amp;changedsince=$changedsince" IF changedsince',
-  '"&amp;bug_id=$bug_ids_string&amp;sortvisible=1" 
-                                                            IF sortvisible',
   'column.name', 
   'column.description',
   'bug.id', 
