@@ -905,8 +905,13 @@ case "$target" in
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(HPUX)
     AC_DEFINE(_HPUX_SOURCE)
-    AC_DEFINE(hppa)
-    DLL_SUFFIX=sl
+    if test "$OS_TEST" = "ia64" ; then
+        AC_DEFINE(ia64)
+        DLL_SUFFIX=so
+    else
+        AC_DEFINE(hppa)
+        DLL_SUFFIX=sl
+    endif
     DSO_LDOPTS='-b +h $(notdir $@)'
     if test -z "$GNU_CC"; then
         CC="$CC -Ae"
@@ -941,7 +946,7 @@ case "$target" in
         AC_DEFINE(HAVE_INT_LOCALTIME_R)
     fi
 
-    if echo "$OS_RELEASE" | egrep '^(B.10.30|B.11.00|B.11.11)' >/dev/null; then
+    if echo "$OS_RELEASE" | egrep '^(B.10.30|B.11.00|B.11.11|B.11.23)' >/dev/null; then
         AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     fi
 
@@ -989,6 +994,24 @@ case "$target" in
             else
                 CFLAGS="$CFLAGS +DA2.0W +DS2.0"
                 CXXFLAGS="$CXXFLAGS +DA2.0W +DS2.0"
+            fi
+        fi
+        DEFAULT_IMPL_STRATEGY=_PTH
+    fi
+
+    if echo "$OS_RELEASE" | egrep '^(B.11.23)' >/dev/null; then
+        AC_DEFINE(HPUX10)
+        AC_DEFINE(HPUX11)
+        AC_DEFINE(_LARGEFILE64_SOURCE)
+        AC_DEFINE(_PR_HAVE_OFF64_T)
+        AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
+        if test -z "$GNU_CC"; then
+            if test -z "$USE_64"; then
+                CFLAGS="$CFLAGS +DD32 +DSblended"
+                CXXFLAGS="$CXXFLAGS +DD32 +DSblended"
+            else
+                CFLAGS="$CFLAGS +DD64 +DSblended"
+                CXXFLAGS="$CXXFLAGS +DD64 +DSblended"
             fi
         fi
         DEFAULT_IMPL_STRATEGY=_PTH
