@@ -760,6 +760,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     nsIFrame* frame = mPopupFrames.FirstChild();
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
     
+    PRBool wasOpen = mMenuOpen;
     mMenuOpen = PR_TRUE;
 
     if (menuPopup) {
@@ -807,8 +808,11 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
       nsBoxLayoutState state(presContext);
 
-      // if height never set we need to do an initial reflow.
-      if (mLastPref.height == -1)
+      // If the menu popup was not open, do a reflow.  This is either the
+      // initial reflow for a brand-new popup, or a subsequent reflow for
+      // a menu that was deactivated and needs to be brought back to its
+      // active dimensions.
+      if (!wasOpen)
       {
          menuPopup->MarkDirty(state);
 
