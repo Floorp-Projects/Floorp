@@ -168,6 +168,18 @@ nsMathMLmactionFrame::Init(nsPresContext*  aPresContext,
   return nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 }
 
+nsresult
+nsMathMLmactionFrame::ChildListChanged(PRInt32 aModType)
+{
+  // update cached values
+  mChildCount = -1;
+  mSelection = 0;
+  mSelectedFrame = nsnull;
+  GetSelectedFrame();
+
+  return nsMathMLContainerFrame::ChildListChanged(aModType);
+}
+
 // return the frame whose number is given by the attribute selection="number"
 nsIFrame* 
 nsMathMLmactionFrame::GetSelectedFrame()

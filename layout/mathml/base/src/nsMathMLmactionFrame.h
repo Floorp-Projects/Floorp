@@ -72,6 +72,9 @@ public:
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList);
 
+  virtual nsresult
+  ChildListChanged(PRInt32 aModType);
+
   virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
                                      nsFramePaintLayer aWhichLayer);
 
