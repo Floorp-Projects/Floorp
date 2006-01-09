@@ -133,7 +133,6 @@ _MD_AtomicDecrement:
 _MD_AtomicSet:
     movl 4(%esp), %ecx
     movl 8(%esp), %eax
-    lock
     xchgl %eax, (%ecx)
     ret
 

@@ -72,7 +72,6 @@ _PR_x86_64_AtomicDecrement:
     .align 4
 _PR_x86_64_AtomicSet:
     movl %esi, %eax
-    lock
     xchgl %eax, (%rdi)
     ret
 

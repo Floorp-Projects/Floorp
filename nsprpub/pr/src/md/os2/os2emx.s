@@ -89,7 +89,6 @@ __PR_MD_ATOMIC_DECREMENT:
 __PR_MD_ATOMIC_SET:
     movl 4(%esp), %ecx
     movl 8(%esp), %eax
-    lock
     xchgl %eax, (%ecx)
     ret
 
