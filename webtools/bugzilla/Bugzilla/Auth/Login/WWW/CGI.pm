@@ -82,6 +82,7 @@ sub login {
         # or admin didn't forbid it and user told to remember.
         if ((Param('rememberlogin') eq 'on') ||
             ((Param('rememberlogin') ne 'off') &&
+             $cgi->param('Bugzilla_remember') &&
              ($cgi->param('Bugzilla_remember') eq 'on'))) {
             $cgi->send_cookie(-name => 'Bugzilla_login',
                               -value => $userid,
