@@ -258,6 +258,54 @@ _cairo_traps_translate (cairo_traps_t *traps, int x, int y)
     }
 }
 
+void
+_cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
+                                            cairo_trapezoid_t *src_traps,
+                                            int num_traps,
+                                            double tx, double ty,
+                                            double sx, double sy)
+{
+    int i;
+    cairo_fixed_t xoff = _cairo_fixed_from_double (tx);
+    cairo_fixed_t yoff = _cairo_fixed_from_double (ty);
+
+    if (sx == 1.0 && sy == 1.0) {
+        for (i = 0; i < num_traps; i++) {
+            offset_traps[i].top = src_traps[i].top + yoff;
+            offset_traps[i].bottom = src_traps[i].bottom + yoff;
+            offset_traps[i].left.p1.x = src_traps[i].left.p1.x + xoff;
+            offset_traps[i].left.p1.y = src_traps[i].left.p1.y + yoff;
+            offset_traps[i].left.p2.x = src_traps[i].left.p2.x + xoff;
+            offset_traps[i].left.p2.y = src_traps[i].left.p2.y + yoff;
+            offset_traps[i].right.p1.x = src_traps[i].right.p1.x + xoff;
+            offset_traps[i].right.p1.y = src_traps[i].right.p1.y + yoff;
+            offset_traps[i].right.p2.x = src_traps[i].right.p2.x + xoff;
+            offset_traps[i].right.p2.y = src_traps[i].right.p2.y + yoff;
+        }
+    } else {
+        cairo_fixed_t xsc = _cairo_fixed_from_double (sx);
+        cairo_fixed_t ysc = _cairo_fixed_from_double (sy);
+
+        for (i = 0; i < num_traps; i++) {
+#define FIXED_MUL(_a, _b) \
+            (_cairo_int64_to_int32(_cairo_int64_rsl(_cairo_int32x32_64_mul((_a), (_b)), 16)))
+
+            offset_traps[i].top = FIXED_MUL(src_traps[i].top + yoff, ysc);
+            offset_traps[i].bottom = FIXED_MUL(src_traps[i].bottom + yoff, ysc);
+            offset_traps[i].left.p1.x = FIXED_MUL(src_traps[i].left.p1.x + xoff, xsc);
+            offset_traps[i].left.p1.y = FIXED_MUL(src_traps[i].left.p1.y + yoff, ysc);
+            offset_traps[i].left.p2.x = FIXED_MUL(src_traps[i].left.p2.x + xoff, xsc);
+            offset_traps[i].left.p2.y = FIXED_MUL(src_traps[i].left.p2.y + yoff, ysc);
+            offset_traps[i].right.p1.x = FIXED_MUL(src_traps[i].right.p1.x + xoff, xsc);
+            offset_traps[i].right.p1.y = FIXED_MUL(src_traps[i].right.p1.y + yoff, ysc);
+            offset_traps[i].right.p2.x = FIXED_MUL(src_traps[i].right.p2.x + xoff, xsc);
+            offset_traps[i].right.p2.y = FIXED_MUL(src_traps[i].right.p2.y + yoff, ysc);
+
+#undef FIXED_MUL
+        }
+    }
+}
+
 cairo_status_t
 _cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3])
 {
@@ -859,4 +907,3 @@ _cairo_traps_extract_region (cairo_traps_t      *traps,
 
     return CAIRO_STATUS_SUCCESS;
 }
-

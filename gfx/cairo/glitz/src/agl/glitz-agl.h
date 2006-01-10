@@ -47,10 +47,14 @@ glitz_agl_fini (void);
 /* glitz_agl_format.c */
 
 glitz_drawable_format_t *
-glitz_agl_find_drawable_format (unsigned long                 mask,
-				const glitz_drawable_format_t *templ,
-				int                           count);
+glitz_agl_find_window_format (unsigned long                 mask,
+			      const glitz_drawable_format_t *templ,
+			      int                           count);
 
+glitz_drawable_format_t *
+glitz_agl_find_pbuffer_format (unsigned long                 mask,
+			       const glitz_drawable_format_t *templ,
+			       int                           count);
 
 /* glitz_agl_drawable.c */
 

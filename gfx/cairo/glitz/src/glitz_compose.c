@@ -347,7 +347,7 @@ _glitz_combine_solid_solidc (glitz_composite_op_t *op)
 
     if (op->solid->alpha > 0)
 	op->gl->blend_color ((glitz_gl_clampf_t)
-                             op->solid->red / op->solid->alpha,
+			     op->solid->red / op->solid->alpha,
 			     (glitz_gl_clampf_t)
 			     op->solid->green / op->solid->alpha,
 			     (glitz_gl_clampf_t)
@@ -421,9 +421,10 @@ _glitz_combine_map[GLITZ_SURFACE_TYPES][GLITZ_SURFACE_TYPES] = {
      ((SURFACE_PAD (surface))?                                          \
       (TEXTURE_PADABLE (&(surface)->texture))                           \
       :                                                                 \
-      (                                                                 \
-	  (!SURFACE_PROJECTIVE_TRANSFORM (surface)) ||                  \
-	  ((feature_mask) & GLITZ_FEATURE_TEXTURE_BORDER_CLAMP_MASK)    \
+      (TEXTURE_CLAMPABLE (&(surface)->texture) &&                       \
+       ((!SURFACE_PROJECTIVE_TRANSFORM (surface)) ||                    \
+	((feature_mask) & GLITZ_FEATURE_TEXTURE_BORDER_CLAMP_MASK)      \
+	   )                                                            \
 	  )                                                             \
 	 )                                                              \
 	)

@@ -37,14 +37,16 @@
 #ifndef CAIRO_FEATURES_H
 #define CAIRO_FEATURES_H
 
-#include "cairo-platform.h"
-
 #ifdef  __cplusplus
 # define CAIRO_BEGIN_DECLS  extern "C" {
 # define CAIRO_END_DECLS    }
 #else
 # define CAIRO_BEGIN_DECLS
 # define CAIRO_END_DECLS
+#endif
+
+#ifndef cairo_public
+# define cairo_public
 #endif
 
 #define CAIRO_VERSION_MAJOR 1
@@ -57,6 +59,8 @@
 
 @PDF_SURFACE_FEATURE@
 
+@SVG_SURFACE_FEATURE@
+
 @XLIB_SURFACE_FEATURE@
 
 @QUARTZ_SURFACE_FEATURE@
@@ -65,7 +69,11 @@
 
 @WIN32_SURFACE_FEATURE@
 
+@BEOS_SURFACE_FEATURE@
+
 @GLITZ_SURFACE_FEATURE@
+
+@DIRECTFB_SURFACE_FEATURE@
 
 @FT_FONT_FEATURE@
 

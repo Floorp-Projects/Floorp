@@ -70,3 +70,153 @@ cairo_debug_reset_static_data (void)
 #endif
 }
 
+/*
+ * path dumper
+ */
+
+typedef struct _cairo_debug_path_dump_closure {
+    unsigned int op_count;
+    FILE *fp;
+} cairo_debug_path_dump_closure_t;
+
+static cairo_status_t
+_cairo_debug_path_move_to (void *closure,
+                           cairo_point_t *point)
+{
+    cairo_debug_path_dump_closure_t *fdc =
+        (cairo_debug_path_dump_closure_t*) closure;
+    fprintf (fdc->fp, "%d: moveto (%f, %f)\n",
+             fdc->op_count++,
+             _cairo_fixed_to_double(point->x),
+             _cairo_fixed_to_double(point->y));
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_debug_path_line_to (void *closure,
+                           cairo_point_t *point)
+{
+    cairo_debug_path_dump_closure_t *fdc =
+        (cairo_debug_path_dump_closure_t*) closure;
+    fprintf (fdc->fp, "%d: lineto (%f, %f)\n",
+             fdc->op_count++,
+             _cairo_fixed_to_double(point->x),
+             _cairo_fixed_to_double(point->y));
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_debug_path_curve_to (void *closure,
+                            cairo_point_t *p0,
+                            cairo_point_t *p1,
+                            cairo_point_t *p2)
+{
+    cairo_debug_path_dump_closure_t *fdc =
+        (cairo_debug_path_dump_closure_t*) closure;
+    fprintf (fdc->fp, "%d: curveto (%f, %f) (%f, %f) (%f, %f)\n",
+             fdc->op_count++,
+             _cairo_fixed_to_double(p0->x),
+             _cairo_fixed_to_double(p0->y),
+             _cairo_fixed_to_double(p1->x),
+             _cairo_fixed_to_double(p1->y),
+             _cairo_fixed_to_double(p2->x),
+             _cairo_fixed_to_double(p2->y));
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_debug_path_close_path (void *closure)
+{
+    cairo_debug_path_dump_closure_t *fdc =
+        (cairo_debug_path_dump_closure_t*) closure;
+    fprintf (fdc->fp, "%d: close\n",
+             fdc->op_count++);
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * cairo_debug_dump_path
+ * @path: a #cairo_path_fixed_t
+ * @fp: the file pointer where to dump the given path
+ *
+ * Dumps @path in human-readable form to @fp.
+ */
+void
+cairo_debug_dump_path (cairo_path_fixed_t *path,
+                       FILE *fp)
+{
+    cairo_debug_path_dump_closure_t fdc;
+    fdc.fp = fp;
+    fdc.op_count = 0;
+
+    fprintf (fp, "=== path %p ===\n", path);
+    _cairo_path_fixed_interpret (path,
+                                 CAIRO_DIRECTION_FORWARD,
+                                 _cairo_debug_path_move_to,
+                                 _cairo_debug_path_line_to,
+                                 _cairo_debug_path_curve_to,
+                                 _cairo_debug_path_close_path,
+                                 &fdc);
+    fprintf (fp, "======================\n");
+}
+
+/*
+ * traps dumping
+ */
+
+/**
+ * cairo_debug_dump_traps
+ * @traps: a #cairo_traps_t
+ * @fp: the file pointer where to dump the traps
+ *
+ * Dumps @traps in human-readable form to @fp.
+ */
+void
+cairo_debug_dump_traps (cairo_traps_t *traps,
+                        FILE *fp)
+{
+    fprintf (fp, "=== traps %p ===\n", traps);
+    fprintf (fp, "extents: (%f, %f) (%f, %f)\n",
+             _cairo_fixed_to_double (traps->extents.p1.x),
+             _cairo_fixed_to_double (traps->extents.p1.y),
+             _cairo_fixed_to_double (traps->extents.p2.x),
+             _cairo_fixed_to_double (traps->extents.p2.y));
+
+    cairo_debug_dump_trapezoid_array (traps->traps,
+                                      traps->num_traps,
+                                      fp);
+
+    fprintf (fp, "=======================\n");
+}
+
+/**
+ * cairo_debug_dump_trapezoid_array
+ * @traps: a #cairo_trapezoid_t pointer
+ * @num_traps: the number of trapezoids in @traps
+ * @fp: the file pointer where to dump the traps
+ *
+ * Dumps num_traps in the @traps array in human-readable form to @fp.
+ */
+void
+cairo_debug_dump_trapezoid_array (cairo_trapezoid_t *traps,
+                                  int num_traps,
+                                  FILE *fp)
+{
+    int i;
+
+    for (i = 0; i < num_traps; i++) {
+        fprintf (fp, "% 3d: t: %f b: %f l: (%f,%f)->(%f,%f) r: (%f,%f)->(%f,%f)\n",
+                 i,
+                 _cairo_fixed_to_double (traps[i].top),
+                 _cairo_fixed_to_double (traps[i].bottom),
+                 _cairo_fixed_to_double (traps[i].left.p1.x),
+                 _cairo_fixed_to_double (traps[i].left.p1.y),
+                 _cairo_fixed_to_double (traps[i].left.p2.x),
+                 _cairo_fixed_to_double (traps[i].left.p2.y),
+                 _cairo_fixed_to_double (traps[i].right.p1.x),
+                 _cairo_fixed_to_double (traps[i].right.p1.y),
+                 _cairo_fixed_to_double (traps[i].right.p2.x),
+                 _cairo_fixed_to_double (traps[i].right.p2.y));
+    }
+}
+

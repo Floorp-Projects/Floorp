@@ -34,9 +34,9 @@
  */
 
 #include "cairoint.h"
-#include "cairo-pdf.h"
-/* XXX: Eventually, we need to handle other font backends */
 #include "cairo-font-subset-private.h"
+
+/* XXX: Eventually, we need to handle other font backends */
 #include "cairo-ft-private.h"
 
 #include <ft2build.h>
@@ -231,17 +231,31 @@ cairo_pdf_ft_font_destroy (void *abstract_font)
     free (font);
 }
 
-static void *
+static cairo_status_t
+cairo_pdf_ft_font_allocate_write_buffer (cairo_pdf_ft_font_t	 *font,
+					 size_t			  length,
+					 unsigned char		**buffer)
+{
+    cairo_status_t status;
+
+    status = _cairo_array_allocate (&font->output, length, (void **) buffer);
+    if (status)
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 cairo_pdf_ft_font_write (cairo_pdf_ft_font_t *font,
 			 const void *data, size_t length)
 {
-    void *p;
+    cairo_status_t status;
 
-    p = _cairo_array_append (&font->output, data, length);
-    if (p == NULL)
-	font->status = CAIRO_STATUS_NO_MEMORY;
+    status = _cairo_array_append_multiple (&font->output, data, length);
+    if (status)
+	return status;
 
-    return p;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -266,12 +280,15 @@ cairo_pdf_ft_font_write_be32 (cairo_pdf_ft_font_t *font, unsigned long value)
 static unsigned long
 cairo_pdf_ft_font_align_output (cairo_pdf_ft_font_t *font)
 {
-    int length, aligned;
-    static const char pad[4];
+    int length, aligned, pad;
+    unsigned char *ignored;
 
     length = _cairo_array_num_elements (&font->output);
     aligned = (length + 3) & ~3;
-    cairo_pdf_ft_font_write (font, pad, aligned - length);
+    pad = aligned - length;
+
+    if (pad)
+	cairo_pdf_ft_font_allocate_write_buffer (font, pad, &ignored);
 
     return aligned;
 }
@@ -305,12 +322,14 @@ static int
 cairo_pdf_ft_font_write_generic_table (cairo_pdf_ft_font_t *font,
 				       unsigned long tag)
 {
+    cairo_status_t status;
     unsigned char *buffer;
     unsigned long size;
 
     size = 0;
     FT_Load_Sfnt_Table (font->face, tag, 0, NULL, &size);
-    buffer = cairo_pdf_ft_font_write (font, NULL, size);
+    status = cairo_pdf_ft_font_allocate_write_buffer (font, size, &buffer);
+    /* XXX: Need to check status here. */
     FT_Load_Sfnt_Table (font->face, tag, 0, buffer, &size);
     
     return 0;
@@ -376,6 +395,7 @@ static int
 cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
 				    unsigned long tag)
 {
+    cairo_status_t status;
     unsigned long start_offset, index, size;
     TT_Header *header;
     unsigned long begin, end;
@@ -416,8 +436,8 @@ cairo_pdf_ft_font_write_glyf_table (cairo_pdf_ft_font_t *font,
 
 	font->glyphs[i].location =
 	    cairo_pdf_ft_font_align_output (font) - start_offset;
-	buffer = cairo_pdf_ft_font_write (font, NULL, size);
-	if (buffer == NULL)
+	status = cairo_pdf_ft_font_allocate_write_buffer (font, size, &buffer);
+	if (status)
 	    break;
         if (size != 0) {
             FT_Load_Sfnt_Table (font->face, TTAG_glyf, begin, buffer, &size);
@@ -506,13 +526,16 @@ static int
 cairo_pdf_ft_font_write_hmtx_table (cairo_pdf_ft_font_t *font,
 				    unsigned long tag)
 {
+    cairo_status_t status;
     unsigned long entry_size;
     short *p;
     int i;
 
     for (i = 0; i < font->base.num_glyphs; i++) {
 	entry_size = 2 * sizeof (short);
-	p = cairo_pdf_ft_font_write (font, NULL, entry_size);
+	status = cairo_pdf_ft_font_allocate_write_buffer (font, entry_size,
+							  (unsigned char **) &p);
+	/* XXX: Need to check status here. */
 	FT_Load_Sfnt_Table (font->face, TTAG_hmtx, 
 			    font->glyphs[i].parent_index * entry_size,
 			    (FT_Byte *) p, &entry_size);
@@ -597,6 +620,9 @@ static const table_t truetype_tables[] = {
 static cairo_status_t
 cairo_pdf_ft_font_write_offset_table (cairo_pdf_ft_font_t *font)
 {
+    cairo_status_t status;
+    unsigned char *table_buffer;
+    size_t table_buffer_length;
     unsigned short search_range, entry_selector, range_shift;
     int num_tables;
 
@@ -616,7 +642,14 @@ cairo_pdf_ft_font_write_offset_table (cairo_pdf_ft_font_t *font)
     cairo_pdf_ft_font_write_be16 (font, entry_selector);
     cairo_pdf_ft_font_write_be16 (font, range_shift);
 
-    cairo_pdf_ft_font_write (font, NULL, ARRAY_LENGTH (truetype_tables) * 16);
+    /* XXX: Why are we allocating a table here and then ignoring the
+     * returned buffer? This should result in garbage in the output
+     * file, correct? Is this just unfinished code? -cworth. */
+    table_buffer_length = ARRAY_LENGTH (truetype_tables) * 16;
+    status = cairo_pdf_ft_font_allocate_write_buffer (font, table_buffer_length,
+						      &table_buffer);
+    if (status)
+	return status;
 
     return font->status;
 }    

@@ -33,8 +33,9 @@
 
 #include "pixregionint.h"
 
+#include <math.h>
+
 // #define PIXMAN_CONVOLUTION
-// #define PIXMAN_GRADIENTS
 // #define PIXMAN_INDEXED_FORMATS
 
 static Bool
@@ -63,6 +64,65 @@ PictureTransformPoint3d (pixman_transform_t *transform,
 	return FALSE;
     *vector = result;
     return TRUE;
+}
+
+static unsigned int
+SourcePictureClassify (PicturePtr pict,
+		       int	  x,
+		       int	  y,
+		       int	  width,
+		       int	  height)
+{
+    if (pict->pSourcePict->type == SourcePictTypeSolidFill)
+    {
+	pict->pSourcePict->solidFill.class = SourcePictClassHorizontal;
+    }
+    else if (pict->pSourcePict->type == SourcePictTypeLinear)
+    {
+	PictVector   v;
+	xFixed_32_32 l;
+	xFixed_48_16 dx, dy, a, b, off;
+	xFixed_48_16 factors[4];
+	int	     i;
+
+	dx = pict->pSourcePict->linear.p2.x - pict->pSourcePict->linear.p1.x;
+	dy = pict->pSourcePict->linear.p2.y - pict->pSourcePict->linear.p1.y;
+	l = dx * dx + dy * dy;
+	if (l)
+	{
+	    a = (dx << 32) / l;
+	    b = (dy << 32) / l;
+	}
+	else
+	{
+	    a = b = 0;
+	}
+
+	off = (-a * pict->pSourcePict->linear.p1.x
+	       -b * pict->pSourcePict->linear.p1.y) >> 16;
+
+	for (i = 0; i < 3; i++)
+	{
+	    v.vector[0] = IntToxFixed ((i % 2) * (width  - 1) + x);
+	    v.vector[1] = IntToxFixed ((i / 2) * (height - 1) + y);
+	    v.vector[2] = xFixed1;
+
+	    if (pict->transform)
+	    {
+		if (!PictureTransformPoint3d (pict->transform, &v))
+		    return SourcePictClassUnknown;
+	    }
+
+	    factors[i] = ((a * v.vector[0] + b * v.vector[1]) >> 16) + off;
+	}
+
+	if (factors[2] == factors[0])
+	    pict->pSourcePict->linear.class = SourcePictClassHorizontal;
+	else if (factors[1] == factors[0])
+	    pict->pSourcePict->linear.class = SourcePictClassVertical;
+    }
+
+    return pict->pSourcePict->solidFill.class;
 }
 
 #define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))
@@ -2626,7 +2686,7 @@ FbComposeFunctions composeFunctions = {
 };
 
 
-static void fbFetchSolid(PicturePtr pict, int x, int y, int width, CARD32 *buffer)
+static void fbFetchSolid(PicturePtr pict, int x, int y, int width, CARD32 *buffer, CARD32 *mask, CARD32 maskBits)
 {
     FbBits *bits;
     FbStride stride;
@@ -2651,7 +2711,7 @@ static void fbFetchSolid(PicturePtr pict, int x, int y, int width, CARD32 *buffe
         *buffer++ = color;
 }
 
-static void fbFetch(PicturePtr pict, int x, int y, int width, CARD32 *buffer)
+static void fbFetch(PicturePtr pict, int x, int y, int width, CARD32 *buffer, CARD32 *mask, CARD32 maskBits)
 {
     FbBits *bits;
     FbStride stride;
@@ -2676,40 +2736,75 @@ static void fbFetch(PicturePtr pict, int x, int y, int width, CARD32 *buffer)
 #define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :\
         ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
 
-#ifdef PIXMAN_GRADIENTS
-static CARD32 gradientPixel(const SourcePictPtr pGradient, xFixed_48_16 pos, unsigned int spread)
+static CARD32
+xRenderColorMultToCard32 (pixman_color_t *c)
 {
-    int ipos = (pos * PICT_GRADIENT_STOPTABLE_SIZE - 1) >> 16;
-
-    /* calculate the actual offset. */
-    if (ipos < 0 || ipos >= PICT_GRADIENT_STOPTABLE_SIZE) {
-        if (pGradient->type == SourcePictTypeConical || spread == RepeatNormal) {
-            ipos = ipos % PICT_GRADIENT_STOPTABLE_SIZE;
-            ipos = ipos < 0 ? PICT_GRADIENT_STOPTABLE_SIZE + ipos : ipos;
-
-        } else if (spread == RepeatReflect) {
-            const int limit = PICT_GRADIENT_STOPTABLE_SIZE * 2 - 1;
-            ipos = ipos % limit;
-            ipos = ipos < 0 ? limit + ipos : ipos;
-            ipos = ipos >= PICT_GRADIENT_STOPTABLE_SIZE ? limit - ipos : ipos;
-
-        } else if (spread == RepeatPad) {
-            if (ipos < 0)
-                ipos = 0;
-            else if (ipos >= PICT_GRADIENT_STOPTABLE_SIZE)
-                ipos = PICT_GRADIENT_STOPTABLE_SIZE-1;
-        } else { /* RepeatNone */
-            return 0;
-        }
-    }
-
-    assert(ipos >= 0);
-    assert(ipos < PICT_GRADIENT_STOPTABLE_SIZE);
-
-    return pGradient->linear.colorTable[ipos];
+    return
+	((((uint32_t) c->red   * c->alpha) >> 24) << 16) |
+	((((uint32_t) c->green * c->alpha) >> 24) <<  8) |
+	((((uint32_t) c->blue  * c->alpha) >> 24) <<  0) |
+	((((uint32_t) c->alpha		 ) >> 8)  << 24);
 }
 
-static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *buffer)
+static CARD32 gradientPixel(const SourcePictPtr pGradient, xFixed_48_16 pos, unsigned int spread)
+{
+    int ipos = (pos * pGradient->gradient.stopRange - 1) >> 16;
+
+    /* calculate the actual offset. */
+    if (ipos < 0 || ipos >= pGradient->gradient.stopRange)
+    {
+	if (pGradient->type == SourcePictTypeConical || spread == RepeatNormal)
+	{
+	    ipos = ipos % pGradient->gradient.stopRange;
+	    ipos = ipos < 0 ? pGradient->gradient.stopRange + ipos : ipos;
+
+	}
+	else if (spread == RepeatReflect)
+	{
+	    const int limit = pGradient->gradient.stopRange * 2 - 1;
+
+	    ipos = ipos % limit;
+	    ipos = ipos < 0 ? limit + ipos : ipos;
+	    ipos = ipos >= pGradient->gradient.stopRange ? limit - ipos : ipos;
+
+	}
+	else if (spread == RepeatPad)
+	{
+	    if (ipos < 0)
+		ipos = 0;
+	    else
+		ipos = pGradient->gradient.stopRange - 1;
+	}
+	else  /* RepeatNone */
+	{
+	    return 0;
+	}
+    }
+
+    if (pGradient->gradient.colorTableSize)
+    {
+	return pGradient->gradient.colorTable[ipos];
+    }
+    else
+    {
+	int i;
+
+	if (ipos <= pGradient->gradient.stops->x)
+	    return xRenderColorMultToCard32 (&pGradient->gradient.stops->color);
+
+	for (i = 1; i < pGradient->gradient.nstops; i++)
+	{
+	    if (pGradient->gradient.stops[i].x >= ipos)
+		return PictureGradientColor (&pGradient->gradient.stops[i - 1],
+					     &pGradient->gradient.stops[i],
+					     ipos);
+	}
+
+	return xRenderColorMultToCard32 (&pGradient->gradient.stops[--i].color);
+    }
+}
+
+static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *buffer, CARD32 *mask, CARD32 maskBits)
 {
     SourcePictPtr pGradient = pict->pSourcePict;
     CARD32 *end = buffer + width;
@@ -2757,27 +2852,74 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
                 t = ((a*v.vector[0] + b*v.vector[1]) >> 16) + off;
                 inc = (a * unit.vector[0] + b * unit.vector[1]) >> 16;
             }
-            while (buffer < end) {
-                *buffer++ = gradientPixel(pGradient, t, pict->repeat);
-                t += inc;
-            }
-        } else {
-            /* projective transformation */
-            while (buffer < end) {
-                xFixed_48_16 t;
-                if (v.vector[2] == 0) {
-                    t = 0;
-                } else {
-                    xFixed_48_16 x, y;
-                    x = ((xFixed_48_16)v.vector[0] << 16) / v.vector[2];
-                    y = ((xFixed_48_16)v.vector[1] << 16) / v.vector[2];
-                    t = ((a*x + b*y) >> 16) + off;
-                }
-                *buffer++ = gradientPixel(pGradient, t, pict->repeat);
-                v.vector[0] += unit.vector[0];
-                v.vector[1] += unit.vector[1];
-                v.vector[2] += unit.vector[2];
-            }
+
+	    if (pGradient->linear.class == SourcePictClassVertical)
+	    {
+		register CARD32 color;
+
+		color = gradientPixel (pGradient, t, pict->repeat);
+		while (buffer < end)
+		    *buffer++ = color;
+	    }
+	    else
+	    {
+		while (buffer < end) {
+		    if (!mask || *mask++ & maskBits)
+		    {
+			*buffer = gradientPixel (pGradient, t, pict->repeat);
+		    }
+		    ++buffer;
+		    t += inc;
+		}
+	    }
+	}
+	else /* projective transformation */
+	{
+	    xFixed_48_16 t;
+
+	    if (pGradient->linear.class == SourcePictClassVertical)
+	    {
+		register CARD32 color;
+
+		if (v.vector[2] == 0)
+		{
+		    t = 0;
+		}
+		else
+		{
+		    xFixed_48_16 x, y;
+
+		    x = ((xFixed_48_16) v.vector[0] << 16) / v.vector[2];
+		    y = ((xFixed_48_16) v.vector[1] << 16) / v.vector[2];
+		    t = ((a * x + b * y) >> 16) + off;
+		}
+
+		color = gradientPixel (pGradient, t, pict->repeat);
+		while (buffer < end)
+		    *buffer++ = color;
+	    }
+	    else
+	    {
+		while (buffer < end)
+		{
+		    if (!mask || *mask++ & maskBits)
+		    {
+			if (v.vector[2] == 0) {
+			    t = 0;
+			} else {
+			    xFixed_48_16 x, y;
+			    x = ((xFixed_48_16)v.vector[0] << 16) / v.vector[2];
+			    y = ((xFixed_48_16)v.vector[1] << 16) / v.vector[2];
+			    t = ((a*x + b*y) >> 16) + off;
+			}
+			*buffer = gradientPixel(pGradient, t, pict->repeat);
+		    }
+		    ++buffer;
+		    v.vector[0] += unit.vector[0];
+		    v.vector[1] += unit.vector[1];
+		    v.vector[2] += unit.vector[2];
+		}
+	    }
         }
     } else {
         /* radial or conical */
@@ -2812,14 +2954,19 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
                 ry -= pGradient->radial.fy;
 
                 while (buffer < end) {
-                    double b = 2*(rx*pGradient->radial.dx + ry*pGradient->radial.dy);
-                    double c = -(rx*rx + ry*ry);
-                    double det = (b * b) - (4 * pGradient->radial.a * c);
-                    double s = (-b + sqrt(det))/(2. * pGradient->radial.a);
+		    double b, c, det, s;
+
+		    if (!mask || *mask++ & maskBits)
+		    {
+			b = 2*(rx*pGradient->radial.dx + ry*pGradient->radial.dy);
+			c = -(rx*rx + ry*ry);
+			det = (b * b) - (4 * pGradient->radial.a * c);
+			s = (-b + sqrt(det))/(2. * pGradient->radial.a);
                     *buffer = gradientPixel(pGradient,
                                             (xFixed_48_16)((s*pGradient->radial.m + pGradient->radial.b)*65536),
                                             pict->repeat);
-                    ++buffer;
+		    }
+		    ++buffer;
                     rx += cx;
                     ry += cy;
                 }
@@ -2827,22 +2974,26 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
                 while (buffer < end) {
                     double x, y;
                     double b, c, det, s;
-                    if (rz != 0) {
-                        x = rx/rz;
-                        y = ry/rz;
-                    } else {
-                        x = y = 0.;
-                    }
-                    x -= pGradient->radial.fx;
-                    y -= pGradient->radial.fy;
-                    b = 2*(x*pGradient->radial.dx + y*pGradient->radial.dy);
-                    c = -(x*x + y*y);
-                    det = (b * b) - (4 * pGradient->radial.a * c);
-                    s = (-b + sqrt(det))/(2. * pGradient->radial.a);
-                    *buffer = gradientPixel(pGradient,
-                                            (xFixed_48_16)((s*pGradient->radial.m + pGradient->radial.b)*65536),
-                                            pict->repeat);
-                    ++buffer;
+
+		    if (!mask || *mask++ & maskBits)
+		    {
+			if (rz != 0) {
+			    x = rx/rz;
+			    y = ry/rz;
+			} else {
+			    x = y = 0.;
+			}
+			x -= pGradient->radial.fx;
+			y -= pGradient->radial.fy;
+			b = 2*(x*pGradient->radial.dx + y*pGradient->radial.dy);
+			c = -(x*x + y*y);
+			det = (b * b) - (4 * pGradient->radial.a * c);
+			s = (-b + sqrt(det))/(2. * pGradient->radial.a);
+			*buffer = gradientPixel(pGradient,
+						(xFixed_48_16)((s*pGradient->radial.m + pGradient->radial.b)*65536),
+						pict->repeat);
+		    }
+		    ++buffer;
                     rx += cx;
                     ry += cy;
                     rz += cz;
@@ -2855,9 +3006,15 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
                 ry -= pGradient->conical.center.y/65536.;
 
                 while (buffer < end) {
-                    double angle = atan2(ry, rx) + a;
-                    *buffer = gradientPixel(pGradient, (xFixed_48_16) (angle * (65536. / (2*M_PI))),
-                                            pict->repeat);
+                    double angle;
+
+		    if (!mask || *mask++ & maskBits)
+		    {
+			angle = atan2(ry, rx) + a;
+
+			*buffer = gradientPixel(pGradient, (xFixed_48_16) (angle * (65536. / (2*M_PI))),
+						pict->repeat);
+		    }
                     ++buffer;
                     rx += cx;
                     ry += cy;
@@ -2866,17 +3023,22 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
 
                 while (buffer < end) {
                     double x, y;
-                    if (rz != 0) {
-                        x = rx/rz;
-                        y = ry/rz;
-                    } else {
-                        x = y = 0.;
-                    }
-                    x -= pGradient->conical.center.x/65536.;
-                    y -= pGradient->conical.center.y/65536.;
-                    double angle = atan2(y, x) + a;
-                    *buffer = gradientPixel(pGradient, (xFixed_48_16) (angle * (65536. / (2*M_PI))),
-                                            pict->repeat);
+		    double angle;
+
+		    if (!mask || *mask++ & maskBits)
+		    {
+			if (rz != 0) {
+			    x = rx/rz;
+			    y = ry/rz;
+			} else {
+			    x = y = 0.;
+			}
+			x -= pGradient->conical.center.x/65536.;
+			y -= pGradient->conical.center.y/65536.;
+			angle = atan2(y, x) + a;
+			*buffer = gradientPixel(pGradient, (xFixed_48_16) (angle * (65536. / (2*M_PI))),
+						pict->repeat);
+		    }
                     ++buffer;
                     rx += cx;
                     ry += cy;
@@ -2886,10 +3048,8 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
         }
     }
 }
-#endif /* PIXMAN_GRADIENTS */
 
-
-static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 *buffer)
+static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 *buffer, CARD32 *mask, CARD32 maskBits)
 {
     FbBits     *bits;
     FbStride    stride;
@@ -2937,38 +3097,44 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
             if (PIXREGION_NUM_RECTS(pict->pCompositeClip) == 1) {
                 box = pict->pCompositeClip->extents;
                 for (i = 0; i < width; ++i) {
-                    if (!v.vector[2]) {
-                        buffer[i] = 0;
-                    } else {
-                        if (projective) {
-                            y = MOD(DIV(v.vector[1],v.vector[2]), pict->pDrawable->height);
-                            x = MOD(DIV(v.vector[0],v.vector[2]), pict->pDrawable->width);
-                        } else {
-                            y = MOD(v.vector[1]>>16, pict->pDrawable->height);
-                            x = MOD(v.vector[0]>>16, pict->pDrawable->width);
-                        }
-                        buffer[i] = fetch(bits + (y + pict->pDrawable->y)*stride, x + pict->pDrawable->x, indexed);
-                    }
+ 		    if (!mask || mask[i] & maskBits)
+ 		    {
+			if (!v.vector[2]) {
+			    buffer[i] = 0;
+			} else {
+			    if (projective) {
+				y = MOD(DIV(v.vector[1],v.vector[2]), pict->pDrawable->height);
+				x = MOD(DIV(v.vector[0],v.vector[2]), pict->pDrawable->width);
+			    } else {
+				y = MOD(v.vector[1]>>16, pict->pDrawable->height);
+				x = MOD(v.vector[0]>>16, pict->pDrawable->width);
+			    }
+			    buffer[i] = fetch(bits + (y + pict->pDrawable->y)*stride, x + pict->pDrawable->x, indexed);
+			}
+		    }
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
                     v.vector[2] += unit.vector[2];
                 }
             } else {
                 for (i = 0; i < width; ++i) {
-                    if (!v.vector[2]) {
-                        buffer[i] = 0;
-                    } else {
-                        if (projective) {
-                            y = MOD(DIV(v.vector[1],v.vector[2]), pict->pDrawable->height);
-                            x = MOD(DIV(v.vector[0],v.vector[2]), pict->pDrawable->width);
-                        } else {
-                            y = MOD(v.vector[1]>>16, pict->pDrawable->height);
-                            x = MOD(v.vector[0]>>16, pict->pDrawable->width);
-                        }
-                        if (pixman_region_contains_point (pict->pCompositeClip, x, y, &box))
-                            buffer[i] = fetch(bits + (y + pict->pDrawable->y)*stride, x + pict->pDrawable->x, indexed);
-                        else
-                            buffer[i] = 0;
+ 		    if (!mask || mask[i] & maskBits)
+ 		    {
+			if (!v.vector[2]) {
+			    buffer[i] = 0;
+			} else {
+			    if (projective) {
+				y = MOD(DIV(v.vector[1],v.vector[2]), pict->pDrawable->height);
+				x = MOD(DIV(v.vector[0],v.vector[2]), pict->pDrawable->width);
+			    } else {
+				y = MOD(v.vector[1]>>16, pict->pDrawable->height);
+				x = MOD(v.vector[0]>>16, pict->pDrawable->width);
+			    }
+			    if (pixman_region_contains_point (pict->pCompositeClip, x, y, &box))
+				buffer[i] = fetch(bits + (y + pict->pDrawable->y)*stride, x + pict->pDrawable->x, indexed);
+			    else
+				buffer[i] = 0;
+			}
                     }
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
@@ -2979,19 +3145,22 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
             if (PIXREGION_NUM_RECTS(pict->pCompositeClip) == 1) {
                 box = pict->pCompositeClip->extents;
                 for (i = 0; i < width; ++i) {
-                    if (!v.vector[2]) {
-                        buffer[i] = 0;
-                    } else {
-                        if (projective) {
-                            y = DIV(v.vector[1],v.vector[2]);
-                            x = DIV(v.vector[0],v.vector[2]);
-                        } else {
-                            y = v.vector[1]>>16;
-                            x = v.vector[0]>>16;
-                        }
-                        buffer[i] = ((x < box.x1) | (x >= box.x2) | (y < box.y1) | (y >= box.y2)) ?
-                                    0 : fetch(bits + (y + pict->pDrawable->y)*stride, x + pict->pDrawable->x, indexed);
-                    }
+ 		    if (!mask || mask[i] & maskBits)
+ 		    {
+			if (!v.vector[2]) {
+			    buffer[i] = 0;
+			} else {
+			    if (projective) {
+				y = DIV(v.vector[1],v.vector[2]);
+				x = DIV(v.vector[0],v.vector[2]);
+			    } else {
+				y = v.vector[1]>>16;
+				x = v.vector[0]>>16;
+			    }
+			    buffer[i] = ((x < box.x1) | (x >= box.x2) | (y < box.y1) | (y >= box.y2)) ?
+				0 : fetch(bits + (y + pict->pDrawable->y)*stride, x + pict->pDrawable->x, indexed);
+			}
+		    }
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
                     v.vector[2] += unit.vector[2];
@@ -3024,126 +3193,132 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
             if (PIXREGION_NUM_RECTS(pict->pCompositeClip) == 1) {
                 box = pict->pCompositeClip->extents;
                 for (i = 0; i < width; ++i) {
-                    if (!v.vector[2]) {
-                        buffer[i] = 0;
-                    } else {
-                        int x1, x2, y1, y2, distx, idistx, disty, idisty;
-                        FbBits *b;
-                        CARD32 tl, tr, bl, br, r;
-                        CARD32 ft, fb;
+		    if (!mask || mask[i] & maskBits)
+		    {
+			if (!v.vector[2]) {
+			    buffer[i] = 0;
+			} else {
+			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
+			    FbBits *b;
+			    CARD32 tl, tr, bl, br, r;
+			    CARD32 ft, fb;
 
-                        if (projective) {
-                            xFixed_48_16 div;
-                            div = ((xFixed_48_16)v.vector[0] << 16)/v.vector[2];
-                            x1 = div >> 16;
-                            distx = ((xFixed)div >> 8) & 0xff;
-                            div = ((xFixed_48_16)v.vector[1] << 16)/v.vector[2];
-                            y1 = div >> 16;
-                            disty = ((xFixed)div >> 8) & 0xff;
-                        } else {
-                            x1 = v.vector[0] >> 16;
-                            distx = (v.vector[0] >> 8) & 0xff;
-                            y1 = v.vector[1] >> 16;
-                            disty = (v.vector[1] >> 8) & 0xff;
-                        }
-                        x2 = x1 + 1;
-                        y2 = y1 + 1;
+			    if (projective) {
+				xFixed_48_16 div;
+				div = ((xFixed_48_16)v.vector[0] << 16)/v.vector[2];
+				x1 = div >> 16;
+				distx = ((xFixed)div >> 8) & 0xff;
+				div = ((xFixed_48_16)v.vector[1] << 16)/v.vector[2];
+				y1 = div >> 16;
+				disty = ((xFixed)div >> 8) & 0xff;
+			    } else {
+				x1 = v.vector[0] >> 16;
+				distx = (v.vector[0] >> 8) & 0xff;
+				y1 = v.vector[1] >> 16;
+				disty = (v.vector[1] >> 8) & 0xff;
+			    }
+			    x2 = x1 + 1;
+			    y2 = y1 + 1;
 
-                        idistx = 256 - distx;
-                        idisty = 256 - disty;
+			    idistx = 256 - distx;
+			    idisty = 256 - disty;
 
-                        x1 = MOD (x1, pict->pDrawable->width);
-                        x2 = MOD (x2, pict->pDrawable->width);
-                        y1 = MOD (y1, pict->pDrawable->height);
-                        y2 = MOD (y2, pict->pDrawable->height);
+			    x1 = MOD (x1, pict->pDrawable->width);
+			    x2 = MOD (x2, pict->pDrawable->width);
+			    y1 = MOD (y1, pict->pDrawable->height);
+			    y2 = MOD (y2, pict->pDrawable->height);
 
-                        b = bits + (y1 + pict->pDrawable->y)*stride;
+			    b = bits + (y1 + pict->pDrawable->y)*stride;
 
-                        tl = fetch(b, x1 + pict->pDrawable->x, indexed);
-                        tr = fetch(b, x2 + pict->pDrawable->x, indexed);
-                        b = bits + (y2 + pict->pDrawable->y)*stride;
-                        bl = fetch(b, x1 + pict->pDrawable->x, indexed);
-                        br = fetch(b, x2 + pict->pDrawable->x, indexed);
+			    tl = fetch(b, x1 + pict->pDrawable->x, indexed);
+			    tr = fetch(b, x2 + pict->pDrawable->x, indexed);
+			    b = bits + (y2 + pict->pDrawable->y)*stride;
+			    bl = fetch(b, x1 + pict->pDrawable->x, indexed);
+			    br = fetch(b, x2 + pict->pDrawable->x, indexed);
 
-                        ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-                        fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-                        r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-                        ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-                        fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-                        r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-                        ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-                        fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-                        r |= (((ft * idisty + fb * disty)) & 0xff0000);
-                        ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-                        fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-                        r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-                        buffer[i] = r;
-                    }
+			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
+			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
+			    ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
+			    fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+			    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
+			    ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
+			    fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+			    r |= (((ft * idisty + fb * disty)) & 0xff0000);
+			    ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
+			    fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+			    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
+			    buffer[i] = r;
+			}
+		    }
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
                     v.vector[2] += unit.vector[2];
                 }
             } else {
                 for (i = 0; i < width; ++i) {
-                    if (!v.vector[2]) {
-                        buffer[i] = 0;
-                    } else {
-                        int x1, x2, y1, y2, distx, idistx, disty, idisty;
-                        FbBits *b;
-                        CARD32 tl, tr, bl, br, r;
-                        CARD32 ft, fb;
+		    if (!mask || mask[i] & maskBits)
+		    {
+			if (!v.vector[2]) {
+			    buffer[i] = 0;
+			} else {
+			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
+			    FbBits *b;
+			    CARD32 tl, tr, bl, br, r;
+			    CARD32 ft, fb;
 
-                        if (projective) {
-                            xFixed_48_16 div;
-                            div = ((xFixed_48_16)v.vector[0] << 16)/v.vector[2];
-                            x1 = div >> 16;
-                            distx = ((xFixed)div >> 8) & 0xff;
-                            div = ((xFixed_48_16)v.vector[1] << 16)/v.vector[2];
-                            y1 = div >> 16;
-                            disty = ((xFixed)div >> 8) & 0xff;
-                        } else {
-                            x1 = v.vector[0] >> 16;
-                            distx = (v.vector[0] >> 8) & 0xff;
-                            y1 = v.vector[1] >> 16;
-                            disty = (v.vector[1] >> 8) & 0xff;
-                        }
-                        x2 = x1 + 1;
-                        y2 = y1 + 1;
+			    if (projective) {
+				xFixed_48_16 div;
+				div = ((xFixed_48_16)v.vector[0] << 16)/v.vector[2];
+				x1 = div >> 16;
+				distx = ((xFixed)div >> 8) & 0xff;
+				div = ((xFixed_48_16)v.vector[1] << 16)/v.vector[2];
+				y1 = div >> 16;
+				disty = ((xFixed)div >> 8) & 0xff;
+			    } else {
+				x1 = v.vector[0] >> 16;
+				distx = (v.vector[0] >> 8) & 0xff;
+				y1 = v.vector[1] >> 16;
+				disty = (v.vector[1] >> 8) & 0xff;
+			    }
+			    x2 = x1 + 1;
+			    y2 = y1 + 1;
 
-                        idistx = 256 - distx;
-                        idisty = 256 - disty;
+			    idistx = 256 - distx;
+			    idisty = 256 - disty;
 
-                        x1 = MOD (x1, pict->pDrawable->width);
-                        x2 = MOD (x2, pict->pDrawable->width);
-                        y1 = MOD (y1, pict->pDrawable->height);
-                        y2 = MOD (y2, pict->pDrawable->height);
+			    x1 = MOD (x1, pict->pDrawable->width);
+			    x2 = MOD (x2, pict->pDrawable->width);
+			    y1 = MOD (y1, pict->pDrawable->height);
+			    y2 = MOD (y2, pict->pDrawable->height);
 
-                        b = bits + (y1 + pict->pDrawable->y)*stride;
+			    b = bits + (y1 + pict->pDrawable->y)*stride;
 
-                        tl = pixman_region_contains_point(pict->pCompositeClip, x1, y1, &box)
-                             ? fetch(b, x1 + pict->pDrawable->x, indexed) : 0;
-                        tr = pixman_region_contains_point(pict->pCompositeClip, x2, y1, &box)
-                             ? fetch(b, x2 + pict->pDrawable->x, indexed) : 0;
-                        b = bits + (y2 + pict->pDrawable->y)*stride;
-                        bl = pixman_region_contains_point(pict->pCompositeClip, x1, y2, &box)
-                             ? fetch(b, x1 + pict->pDrawable->x, indexed) : 0;
-                        br = pixman_region_contains_point(pict->pCompositeClip, x2, y2, &box)
-                             ? fetch(b, x2 + pict->pDrawable->x, indexed) : 0;
+			    tl = pixman_region_contains_point(pict->pCompositeClip, x1, y1, &box)
+				? fetch(b, x1 + pict->pDrawable->x, indexed) : 0;
+			    tr = pixman_region_contains_point(pict->pCompositeClip, x2, y1, &box)
+				? fetch(b, x2 + pict->pDrawable->x, indexed) : 0;
+			    b = bits + (y2 + pict->pDrawable->y)*stride;
+			    bl = pixman_region_contains_point(pict->pCompositeClip, x1, y2, &box)
+				? fetch(b, x1 + pict->pDrawable->x, indexed) : 0;
+			    br = pixman_region_contains_point(pict->pCompositeClip, x2, y2, &box)
+				? fetch(b, x2 + pict->pDrawable->x, indexed) : 0;
 
-                        ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-                        fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-                        r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-                        ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-                        fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-                        r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-                        ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-                        fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-                        r |= (((ft * idisty + fb * disty)) & 0xff0000);
-                        ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-                        fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-                        r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-                        buffer[i] = r;
-                    }
+			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
+			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
+			    ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
+			    fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+			    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
+			    ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
+			    fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+			    r |= (((ft * idisty + fb * disty)) & 0xff0000);
+			    ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
+			    fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+			    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
+			    buffer[i] = r;
+			}
+		    }
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
                     v.vector[2] += unit.vector[2];
@@ -3153,124 +3328,130 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
             if (PIXREGION_NUM_RECTS(pict->pCompositeClip) == 1) {
                 box = pict->pCompositeClip->extents;
                 for (i = 0; i < width; ++i) {
-                    if (!v.vector[2]) {
-                        buffer[i] = 0;
-                    } else {
-                        int x1, x2, y1, y2, distx, idistx, disty, idisty, x_off;
-                        FbBits *b;
-                        CARD32 tl, tr, bl, br, r;
-                        Bool x1_out, x2_out, y1_out, y2_out;
-                        CARD32 ft, fb;
+		    if (!mask || mask[i] & maskBits)
+		    {
+			if (!v.vector[2]) {
+			    buffer[i] = 0;
+			} else {
+			    int x1, x2, y1, y2, distx, idistx, disty, idisty, x_off;
+			    FbBits *b;
+			    CARD32 tl, tr, bl, br, r;
+			    Bool x1_out, x2_out, y1_out, y2_out;
+			    CARD32 ft, fb;
 
-                        if (projective) {
-                            xFixed_48_16 div;
-                            div = ((xFixed_48_16)v.vector[0] << 16)/v.vector[2];
-                            x1 = div >> 16;
-                            distx = ((xFixed)div >> 8) & 0xff;
-                            div = ((xFixed_48_16)v.vector[1] << 16)/v.vector[2];
-                            y1 = div >> 16;
-                            disty = ((xFixed)div >> 8) & 0xff;
-                        } else {
-                            x1 = v.vector[0] >> 16;
-                            distx = (v.vector[0] >> 8) & 0xff;
-                            y1 = v.vector[1] >> 16;
-                            disty = (v.vector[1] >> 8) & 0xff;
-                        }
-                        x2 = x1 + 1;
-                        y2 = y1 + 1;
+			    if (projective) {
+				xFixed_48_16 div;
+				div = ((xFixed_48_16)v.vector[0] << 16)/v.vector[2];
+				x1 = div >> 16;
+				distx = ((xFixed)div >> 8) & 0xff;
+				div = ((xFixed_48_16)v.vector[1] << 16)/v.vector[2];
+				y1 = div >> 16;
+				disty = ((xFixed)div >> 8) & 0xff;
+			    } else {
+				x1 = v.vector[0] >> 16;
+				distx = (v.vector[0] >> 8) & 0xff;
+				y1 = v.vector[1] >> 16;
+				disty = (v.vector[1] >> 8) & 0xff;
+			    }
+			    x2 = x1 + 1;
+			    y2 = y1 + 1;
 
-                        idistx = 256 - distx;
-                        idisty = 256 - disty;
+			    idistx = 256 - distx;
+			    idisty = 256 - disty;
 
-                        b = bits + (y1 + pict->pDrawable->y)*stride;
-                        x_off = x1 + pict->pDrawable->x;
+			    b = bits + (y1 + pict->pDrawable->y)*stride;
+			    x_off = x1 + pict->pDrawable->x;
 
-                        x1_out = (x1 < box.x1) | (x1 >= box.x2);
-                        x2_out = (x2 < box.x1) | (x2 >= box.x2);
-                        y1_out = (y1 < box.y1) | (y1 >= box.y2);
-                        y2_out = (y2 < box.y1) | (y2 >= box.y2);
+			    x1_out = (x1 < box.x1) | (x1 >= box.x2);
+			    x2_out = (x2 < box.x1) | (x2 >= box.x2);
+			    y1_out = (y1 < box.y1) | (y1 >= box.y2);
+			    y2_out = (y2 < box.y1) | (y2 >= box.y2);
 
-                        tl = x1_out|y1_out ? 0 : fetch(b, x_off, indexed);
-                        tr = x2_out|y1_out ? 0 : fetch(b, x_off + 1, indexed);
-                        b += stride;
-                        bl = x1_out|y2_out ? 0 : fetch(b, x_off, indexed);
-                        br = x2_out|y2_out ? 0 : fetch(b, x_off + 1, indexed);
+			    tl = x1_out|y1_out ? 0 : fetch(b, x_off, indexed);
+			    tr = x2_out|y1_out ? 0 : fetch(b, x_off + 1, indexed);
+			    b += stride;
+			    bl = x1_out|y2_out ? 0 : fetch(b, x_off, indexed);
+			    br = x2_out|y2_out ? 0 : fetch(b, x_off + 1, indexed);
 
-                        ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-                        fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-                        r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-                        ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-                        fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-                        r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-                        ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-                        fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-                        r |= (((ft * idisty + fb * disty)) & 0xff0000);
-                        ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-                        fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-                        r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-                        buffer[i] = r;
-                    }
+			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
+			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
+			    ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
+			    fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+			    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
+			    ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
+			    fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+			    r |= (((ft * idisty + fb * disty)) & 0xff0000);
+			    ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
+			    fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+			    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
+			    buffer[i] = r;
+			}
+		    }
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
                     v.vector[2] += unit.vector[2];
                 }
             } else {
                 for (i = 0; i < width; ++i) {
-                    if (!v.vector[2]) {
-                        buffer[i] = 0;
-                    } else {
-                        int x1, x2, y1, y2, distx, idistx, disty, idisty, x_off;
-                        FbBits *b;
-                        CARD32 tl, tr, bl, br, r;
-                        CARD32 ft, fb;
+		    if (!mask || mask[i] & maskBits)
+		    {
+			if (!v.vector[2]) {
+			    buffer[i] = 0;
+			} else {
+			    int x1, x2, y1, y2, distx, idistx, disty, idisty, x_off;
+			    FbBits *b;
+			    CARD32 tl, tr, bl, br, r;
+			    CARD32 ft, fb;
 
-                        if (projective) {
-                            xFixed_48_16 div;
-                            div = ((xFixed_48_16)v.vector[0] << 16)/v.vector[2];
-                            x1 = div >> 16;
-                            distx = ((xFixed)div >> 8) & 0xff;
-                            div = ((xFixed_48_16)v.vector[1] << 16)/v.vector[2];
-                            y1 = div >> 16;
-                            disty = ((xFixed)div >> 8) & 0xff;
-                        } else {
-                            x1 = v.vector[0] >> 16;
-                            distx = (v.vector[0] >> 8) & 0xff;
-                            y1 = v.vector[1] >> 16;
-                            disty = (v.vector[1] >> 8) & 0xff;
-                        }
-                        x2 = x1 + 1;
-                        y2 = y1 + 1;
+			    if (projective) {
+				xFixed_48_16 div;
+				div = ((xFixed_48_16)v.vector[0] << 16)/v.vector[2];
+				x1 = div >> 16;
+				distx = ((xFixed)div >> 8) & 0xff;
+				div = ((xFixed_48_16)v.vector[1] << 16)/v.vector[2];
+				y1 = div >> 16;
+				disty = ((xFixed)div >> 8) & 0xff;
+			    } else {
+				x1 = v.vector[0] >> 16;
+				distx = (v.vector[0] >> 8) & 0xff;
+				y1 = v.vector[1] >> 16;
+				disty = (v.vector[1] >> 8) & 0xff;
+			    }
+			    x2 = x1 + 1;
+			    y2 = y1 + 1;
 
-                        idistx = 256 - distx;
-                        idisty = 256 - disty;
+			    idistx = 256 - distx;
+			    idisty = 256 - disty;
 
-                        b = bits + (y1 + pict->pDrawable->y)*stride;
-                        x_off = x1 + pict->pDrawable->x;
+			    b = bits + (y1 + pict->pDrawable->y)*stride;
+			    x_off = x1 + pict->pDrawable->x;
 
-                        tl = pixman_region_contains_point(pict->pCompositeClip, x1, y1, &box)
-                             ? fetch(b, x_off, indexed) : 0;
-                        tr = pixman_region_contains_point(pict->pCompositeClip, x2, y1, &box)
-                             ? fetch(b, x_off + 1, indexed) : 0;
-                        b += stride;
-                        bl = pixman_region_contains_point(pict->pCompositeClip, x1, y2, &box)
-                             ? fetch(b, x_off, indexed) : 0;
-                        br = pixman_region_contains_point(pict->pCompositeClip, x2, y2, &box)
-                             ? fetch(b, x_off + 1, indexed) : 0;
+			    tl = pixman_region_contains_point(pict->pCompositeClip, x1, y1, &box)
+				? fetch(b, x_off, indexed) : 0;
+			    tr = pixman_region_contains_point(pict->pCompositeClip, x2, y1, &box)
+				? fetch(b, x_off + 1, indexed) : 0;
+			    b += stride;
+			    bl = pixman_region_contains_point(pict->pCompositeClip, x1, y2, &box)
+				? fetch(b, x_off, indexed) : 0;
+			    br = pixman_region_contains_point(pict->pCompositeClip, x2, y2, &box)
+				? fetch(b, x_off + 1, indexed) : 0;
 
-                        ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-                        fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-                        r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-                        ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-                        fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-                        r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-                        ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-                        fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-                        r |= (((ft * idisty + fb * disty)) & 0xff0000);
-                        ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-                        fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-                        r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-                        buffer[i] = r;
-                    }
+			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
+			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
+			    ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
+			    fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+			    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
+			    ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
+			    fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+			    r |= (((ft * idisty + fb * disty)) & 0xff0000);
+			    ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
+			    fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+			    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
+			    buffer[i] = r;
+			}
+		    }
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
                     v.vector[2] += unit.vector[2];
@@ -3286,57 +3467,60 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
         int yoff = params[1] >> 1;
         params += 2;
         for (i = 0; i < width; ++i) {
-            if (!v.vector[2]) {
-                buffer[i] = 0;
-            } else {
-                int x1, x2, y1, y2, x, y;
-                INT32 srtot, sgtot, sbtot, satot;
-                xFixed *p = params;
+	    if (!mask || mask[i] & maskBits)
+	    {
+		if (!v.vector[2]) {
+		    buffer[i] = 0;
+		} else {
+		    int x1, x2, y1, y2, x, y;
+		    INT32 srtot, sgtot, sbtot, satot;
+		    xFixed *p = params;
 
-                if (projective) {
-                    xFixed_48_16 tmp;
-                    tmp = ((xFixed_48_16)v.vector[0] << 16)/v.vector[2] - xoff;
-                    x1 = xFixedToInt(tmp);
-                    tmp = ((xFixed_48_16)v.vector[1] << 16)/v.vector[2] - yoff;
-                    y1 = xFixedToInt(tmp);
-                } else {
-                    x1 = xFixedToInt(v.vector[0] - xoff);
-                    y1 = xFixedToInt(v.vector[1] - yoff);
-                }
-                x2 = x1 + cwidth;
-                y2 = y1 + cheight;
+		    if (projective) {
+			xFixed_48_16 tmp;
+			tmp = ((xFixed_48_16)v.vector[0] << 16)/v.vector[2] - xoff;
+			x1 = xFixedToInt(tmp);
+			tmp = ((xFixed_48_16)v.vector[1] << 16)/v.vector[2] - yoff;
+			y1 = xFixedToInt(tmp);
+		    } else {
+			x1 = xFixedToInt(v.vector[0] - xoff);
+			y1 = xFixedToInt(v.vector[1] - yoff);
+		    }
+		    x2 = x1 + cwidth;
+		    y2 = y1 + cheight;
 
-                srtot = sgtot = sbtot = satot = 0;
+		    srtot = sgtot = sbtot = satot = 0;
 
-                for (y = y1; y < y2; y++) {
-                    int ty = (pict->repeat == RepeatNormal) ? MOD (y, pict->pDrawable->height) : y;
-                    for (x = x1; x < x2; x++) {
-                        if (*p) {
-                            int tx = (pict->repeat == RepeatNormal) ? MOD (x, pict->pDrawable->width) : x;
-                            if (pixman_region_contains_point (pict->pCompositeClip, tx, ty, &box)) {
-                                FbBits *b = bits + (ty + pict->pDrawable->y)*stride;
-                                CARD32 c = fetch(b, tx + pict->pDrawable->x, indexed);
+		    for (y = y1; y < y2; y++) {
+			int ty = (pict->repeat == RepeatNormal) ? MOD (y, pict->pDrawable->height) : y;
+			for (x = x1; x < x2; x++) {
+			    if (*p) {
+				int tx = (pict->repeat == RepeatNormal) ? MOD (x, pict->pDrawable->width) : x;
+				if (pixman_region_contains_point (pict->pCompositeClip, tx, ty, &box)) {
+				    FbBits *b = bits + (ty + pict->pDrawable->y)*stride;
+				    CARD32 c = fetch(b, tx + pict->pDrawable->x, indexed);
 
-                                srtot += Red(c) * *p;
-                                sgtot += Green(c) * *p;
-                                sbtot += Blue(c) * *p;
-                                satot += Alpha(c) * *p;
-                            }
-                        }
-                        p++;
-                    }
-                }
+				    srtot += Red(c) * *p;
+				    sgtot += Green(c) * *p;
+				    sbtot += Blue(c) * *p;
+				    satot += Alpha(c) * *p;
+				}
+			    }
+			    p++;
+			}
+		    }
 
-                if (satot < 0) satot = 0; else if (satot > 0xff) satot = 0xff;
-                if (srtot < 0) srtot = 0; else if (srtot > 0xff) srtot = 0xff;
-                if (sgtot < 0) sgtot = 0; else if (sgtot > 0xff) sgtot = 0xff;
-                if (sbtot < 0) sbtot = 0; else if (sbtot > 0xff) sbtot = 0xff;
+		    if (satot < 0) satot = 0; else if (satot > 0xff) satot = 0xff;
+		    if (srtot < 0) srtot = 0; else if (srtot > 0xff) srtot = 0xff;
+		    if (sgtot < 0) sgtot = 0; else if (sgtot > 0xff) sgtot = 0xff;
+		    if (sbtot < 0) sbtot = 0; else if (sbtot > 0xff) sbtot = 0xff;
 
-                buffer[i] = ((satot << 24) |
-                             (srtot << 16) |
-                             (sgtot <<  8) |
-                             (sbtot       ));
-            }
+		    buffer[i] = ((satot << 24) |
+				 (srtot << 16) |
+				 (sgtot <<  8) |
+				 (sbtot       ));
+		}
+	    }
             v.vector[0] += unit.vector[0];
             v.vector[1] += unit.vector[1];
             v.vector[2] += unit.vector[2];
@@ -3346,28 +3530,33 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
 }
 
 
-static void fbFetchExternalAlpha(PicturePtr pict, int x, int y, int width, CARD32 *buffer)
+static void fbFetchExternalAlpha(PicturePtr pict, int x, int y, int width, CARD32 *buffer, CARD32 *mask, CARD32 maskBits)
 {
     int i;
     CARD32 _alpha_buffer[SCANLINE_BUFFER_LENGTH];
     CARD32 *alpha_buffer = _alpha_buffer;
 
     if (!pict->alphaMap) {
-        fbFetchTransformed(pict, x, y, width, buffer);
+        fbFetchTransformed(pict, x, y, width, buffer, mask, maskBits);
         return;
     }
     
     if (width > SCANLINE_BUFFER_LENGTH)
         alpha_buffer = (CARD32 *) malloc(width*sizeof(CARD32));
     
-    fbFetchTransformed(pict, x, y, width, buffer);
-    fbFetchTransformed(pict->alphaMap, x - pict->alphaOrigin.x, y - pict->alphaOrigin.y, width, alpha_buffer);
+    fbFetchTransformed(pict, x, y, width, buffer, mask, maskBits);
+    fbFetchTransformed(pict->alphaMap, x - pict->alphaOrigin.x,
+		       y - pict->alphaOrigin.y, width, alpha_buffer,
+		       mask, maskBits);
     for (i = 0; i < width; ++i) {
-        int a = alpha_buffer[i]>>24;
-        buffer[i] = (a << 24)
-                 | (div_255(Red(buffer[i]) * a) << 16)
-                 | (div_255(Green(buffer[i]) * a) << 8)
-                 | (div_255(Blue(buffer[i]) * a));
+	if (!mask || mask[i] & maskBits)
+	{
+	    int a = alpha_buffer[i]>>24;
+	    buffer[i] = (a << 24)
+		| (div_255(Red(buffer[i]) * a) << 16)
+		| (div_255(Green(buffer[i]) * a) << 8)
+		| (div_255(Blue(buffer[i]) * a));
+	}
     }
 
     if (alpha_buffer != _alpha_buffer)
@@ -3443,7 +3632,7 @@ static void fbStoreExternalAlpha(PicturePtr pict, int x, int y, int width, CARD3
 }
 
 typedef void (*scanStoreProc)(PicturePtr , int , int , int , CARD32 *);
-typedef void (*scanFetchProc)(PicturePtr , int , int , int , CARD32 *);
+typedef void (*scanFetchProc)(PicturePtr , int , int , int , CARD32 * , CARD32 *, CARD32);
 
 static void
 fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
@@ -3453,19 +3642,29 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
     int i;
     scanStoreProc store;
     scanFetchProc fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
+    unsigned int srcClass  = SourcePictClassUnknown;
+    unsigned int maskClass = SourcePictClassUnknown;
+    FbBits *bits;
+    FbStride stride;
+    int	xoff, yoff;
 
     if (data->op == PIXMAN_OPERATOR_CLEAR)
         fetchSrc = NULL;
     else if (!data->src->pDrawable) {
-#ifdef PIXMAN_GRADIENTS
         if (data->src->pSourcePict)
+	{
             fetchSrc = fbFetchSourcePict;
-#endif
+	    srcClass = SourcePictureClassify (data->src,
+					      data->xSrc, data->ySrc,
+					      data->width, data->height);
+	}
     } else if (data->src->alphaMap)
         fetchSrc = fbFetchExternalAlpha;
     else if (data->src->repeat == RepeatNormal &&
-             data->src->pDrawable->width == 1 && data->src->pDrawable->height == 1)
+             data->src->pDrawable->width == 1 && data->src->pDrawable->height == 1) {
         fetchSrc = fbFetchSolid;
+	srcClass = SourcePictClassHorizontal;
+    }
 #ifdef PIXMAN_CONVOLUTION
     else if (!data->src->transform && data->src->filter != PictFilterConvolution)
         fetchSrc = fbFetch;
@@ -3478,15 +3677,20 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 
     if (data->mask && data->op != PIXMAN_OPERATOR_CLEAR) {
         if (!data->mask->pDrawable) {
-#ifdef PIXMAN_GRADIENTS
             if (data->mask->pSourcePict)
+	    {
                 fetchMask = fbFetchSourcePict;
-#endif
+		maskClass = SourcePictureClassify (data->mask,
+						   data->xMask, data->yMask,
+						   data->width, data->height);
+	    }
         } else if (data->mask->alphaMap)
             fetchMask = fbFetchExternalAlpha;
         else if (data->mask->repeat == RepeatNormal
-                 && data->mask->pDrawable->width == 1 && data->mask->pDrawable->height == 1)
+                 && data->mask->pDrawable->width == 1 && data->mask->pDrawable->height == 1) {
             fetchMask = fbFetchSolid;
+	    maskClass = SourcePictClassHorizontal;
+	}
 #ifdef PIXMAN_CONVOLUTION
         else if (!data->mask->transform && data->mask->filter != PictFilterConvolution)
             fetchMask = fbFetch;
@@ -3500,76 +3704,198 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
         fetchMask = NULL;
     }
 
-    if (data->dest->alphaMap) {
-        fetchDest = fbFetchExternalAlpha;
-        store = fbStoreExternalAlpha;
-    } else {
-        fetchDest = fbFetch;
-        store = fbStore;
+    if (data->dest->alphaMap)
+    {
+	fetchDest = fbFetchExternalAlpha;
+	store = fbStoreExternalAlpha;
+
+	if (data->op == PIXMAN_OPERATOR_CLEAR ||
+	    data->op == PIXMAN_OPERATOR_SRC)
+	    fetchDest = NULL;
     }
-    if (data->op == PIXMAN_OPERATOR_CLEAR || data->op == PIXMAN_OPERATOR_SRC)
-        fetchDest = NULL;
+    else
+    {
+	fetchDest = fbFetch;
+	store = fbStore;
 
-    if (fetchSrc && fetchMask && data->mask && data->mask->componentAlpha && PICT_FORMAT_RGB(data->mask->format_code)) {
-        CARD32 *mask_buffer = dest_buffer + data->width;
-        CombineFuncC compose = composeFunctions.combineC[data->op];
-        if (!compose)
-            return;
+	switch (data->op) {
+	case PIXMAN_OPERATOR_CLEAR:
+	case PIXMAN_OPERATOR_SRC:
+	    fetchDest = NULL;
+	    /* fall-through */
+	case PIXMAN_OPERATOR_ADD:
+	case PIXMAN_OPERATOR_OVER:
+	    switch (data->dest->format_code) {
+	    case PICT_a8r8g8b8:
+	    case PICT_x8r8g8b8:
+		store = NULL;
+		break;
+	    }
+	    break;
+	}
+    }
 
-        for (i = 0; i < data->height; ++i)
-        {
-            /* fill first half of scanline with source */
-            fetchSrc(data->src, data->xSrc, data->ySrc + i, data->width, src_buffer);
-            fetchMask(data->mask, data->xMask, data->yMask + i, data->width, mask_buffer);
+    if (!store)
+    {
+	int bpp;
 
-            /* fill dest into second half of scanline */
-            if (fetchDest)
-                fetchDest(data->dest, data->xDest, data->yDest + i, data->width, dest_buffer);
+	fbGetDrawable (data->dest->pDrawable, bits, stride, bpp, xoff, yoff);
+    }
 
-            /* blend */
-            compose(dest_buffer, src_buffer, mask_buffer, data->width);
+    if (fetchSrc		   &&
+	fetchMask		   &&
+	data->mask		   &&
+	data->mask->componentAlpha &&
+	PICT_FORMAT_RGB (data->mask->format_code))
+    {
+	CARD32 *mask_buffer = dest_buffer + data->width;
+	CombineFuncC compose = composeFunctions.combineC[data->op];
+	if (!compose)
+	    return;
 
-            /* write back */
-            store(data->dest, data->xDest, data->yDest + i, data->width, dest_buffer);
-        }
-    } else {
+	for (i = 0; i < data->height; ++i) {
+	    /* fill first half of scanline with source */
+	    if (fetchSrc)
+	    {
+		if (fetchMask)
+		{
+		    /* fetch mask before source so that fetching of
+		       source can be optimized */
+		    fetchMask (data->mask, data->xMask, data->yMask + i,
+			       data->width, mask_buffer, 0, 0);
 
-        CombineFuncU compose = composeFunctions.combineU[data->op];
-        if (!compose)
-            return;
+		    if (maskClass == SourcePictClassHorizontal)
+			fetchMask = NULL;
+		}
 
-        if (fetchSrc == fbFetchSolid && (!fetchMask || fetchMask == fbFetchSolid)) {
-            fetchSrc(data->src, data->xSrc, data->ySrc, data->width, src_buffer);
-            if (fetchMask) {
-                fetchMask(data->mask, data->xMask, data->yMask, data->width, dest_buffer);
-                composeFunctions.combineMaskU(src_buffer, dest_buffer, data->width);
-            }
-            fetchSrc = NULL;
-            fetchMask = NULL;
-        }
+		if (srcClass == SourcePictClassHorizontal)
+		{
+		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
+			      data->width, src_buffer, 0, 0);
+		    fetchSrc = NULL;
+		}
+		else
+		{
+		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
+			      data->width, src_buffer, mask_buffer,
+			      0xffffffff);
+		}
+	    }
+	    else if (fetchMask)
+	    {
+		fetchMask (data->mask, data->xMask, data->yMask + i,
+			   data->width, mask_buffer, 0, 0);
+	    }
 
-        for (i = 0; i < data->height; ++i) {
-            /* fill first half of scanline with source */
-            if (fetchSrc) {
-                fetchSrc(data->src, data->xSrc, data->ySrc + i, data->width, src_buffer);
+	    if (store)
+	    {
+		/* fill dest into second half of scanline */
+		if (fetchDest)
+		    fetchDest (data->dest, data->xDest, data->yDest + i,
+			       data->width, dest_buffer, 0, 0);
 
-                /* add in mask */
-                if (fetchMask) {
-                    fetchMask(data->mask, data->xMask, data->yMask + i, data->width, dest_buffer);
-                    composeFunctions.combineMaskU(src_buffer, dest_buffer, data->width);
-                }
-            }
+		/* blend */
+		compose (dest_buffer, src_buffer, mask_buffer, data->width);
 
-            /* fill dest into second half of scanline */
-            if (fetchDest)
-                fetchDest(data->dest, data->xDest, data->yDest + i, data->width, dest_buffer);
+		/* write back */
+		store (data->dest, data->xDest, data->yDest + i, data->width,
+		       dest_buffer);
+	    }
+	    else
+	    {
+		/* blend */
+		compose (bits + (data->yDest + i+ yoff) * stride +
+			 data->xDest + xoff,
+			 src_buffer, mask_buffer, data->width);
+	    }
+	}
+    }
+    else
+    {
+	CARD32 *src_mask_buffer, *mask_buffer = 0;
+	CombineFuncU compose = composeFunctions.combineU[data->op];
+	if (!compose)
+	    return;
 
-            /* blend */
-            compose(dest_buffer, src_buffer, data->width);
+	if (fetchMask)
+	  mask_buffer = dest_buffer + data->width;
 
-            /* write back */
-            store(data->dest, data->xDest, data->yDest + i, data->width, dest_buffer);
-        }
+	for (i = 0; i < data->height; ++i) {
+	    /* fill first half of scanline with source */
+	    if (fetchSrc)
+	    {
+		if (fetchMask)
+		{
+		    /* fetch mask before source so that fetching of
+		       source can be optimized */
+		    fetchMask (data->mask, data->xMask, data->yMask + i,
+			       data->width, mask_buffer, 0, 0);
+
+		    if (maskClass == SourcePictClassHorizontal)
+			fetchMask = NULL;
+		}
+
+		if (srcClass == SourcePictClassHorizontal)
+		{
+		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
+			      data->width, src_buffer, 0, 0);
+
+		    if (mask_buffer)
+		    {
+			fbCombineInU (mask_buffer, src_buffer, data->width);
+			src_mask_buffer = mask_buffer;
+		    }
+		    else
+			src_mask_buffer = src_buffer;
+
+		    fetchSrc = NULL;
+		}
+		else
+		{
+		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
+			      data->width, src_buffer, mask_buffer,
+			      0xff000000);
+
+		    if (mask_buffer)
+			composeFunctions.combineMaskU (src_buffer,
+						       mask_buffer,
+						       data->width);
+
+		    src_mask_buffer = src_buffer;
+		}
+	    }
+	    else if (fetchMask)
+	    {
+		fetchMask (data->mask, data->xMask, data->yMask + i,
+			   data->width, mask_buffer, 0, 0);
+
+		fbCombineInU (mask_buffer, src_buffer, data->width);
+
+		src_mask_buffer = mask_buffer;
+	    }
+
+	    if (store)
+	    {
+		/* fill dest into second half of scanline */
+		if (fetchDest)
+		    fetchDest (data->dest, data->xDest, data->yDest + i,
+			       data->width, dest_buffer, 0, 0);
+
+		/* blend */
+		compose (dest_buffer, src_mask_buffer, data->width);
+
+		/* write back */
+		store (data->dest, data->xDest, data->yDest + i, data->width,
+		       dest_buffer);
+	    }
+	    else
+	    {
+		/* blend */
+		compose (bits + (data->yDest + i+ yoff) * stride +
+			 data->xDest + xoff,
+			 src_mask_buffer, data->width);
+	    }
+	}
     }
 }
 

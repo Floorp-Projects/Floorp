@@ -145,58 +145,60 @@ static int
 _glitz_agl_format_compare (const void *elem1,
 			   const void *elem2)
 {
-    int i, score[2];
-    glitz_drawable_format_t *format[2];
+    glitz_int_drawable_format_t *format[2];
+    int				i, score[2];
 
-    format[0] = (glitz_drawable_format_t *) elem1;
-    format[1] = (glitz_drawable_format_t *) elem2;
+    format[0] = (glitz_int_drawable_format_t *) elem1;
+    format[1] = (glitz_int_drawable_format_t *) elem2;
     i = score[0] = score[1] = 0;
 
-    for (; i < 2; i++) {
-	if (format[i]->color.red_size) {
-	    if (format[i]->color.red_size == 8)
+    for (; i < 2; i++)
+    {
+	if (format[i]->d.color.red_size)
+	{
+	    if (format[i]->d.color.red_size >= 8)
 		score[i] += 5;
+
 	    score[i] += 10;
 	}
 
-	if (format[i]->color.green_size) {
-	    if (format[i]->color.green_size == 8)
+	if (format[i]->d.color.alpha_size)
+	{
+	    if (format[i]->d.color.alpha_size >= 8)
 		score[i] += 5;
+
 	    score[i] += 10;
 	}
 
-	if (format[i]->color.alpha_size) {
-	    if (format[i]->color.alpha_size == 8)
-		score[i] += 5;
-	    score[i] += 10;
-	}
-
-	if (format[i]->stencil_size)
+	if (format[i]->d.stencil_size)
 	    score[i] += 5;
 
-	if (format[i]->depth_size)
+	if (format[i]->d.depth_size)
 	    score[i] += 5;
 
-	if (format[i]->doublebuffer)
+	if (format[i]->d.doublebuffer)
 	    score[i] += 10;
 
-	if (format[i]->types.window)
+	if (format[i]->d.samples > 1)
+	    score[i] -= (20 - format[i]->d.samples);
+
+	if (format[i]->types & GLITZ_DRAWABLE_TYPE_WINDOW_MASK)
 	    score[i] += 10;
 
-	if (format[i]->types.pbuffer)
+	if (format[i]->types & GLITZ_DRAWABLE_TYPE_PBUFFER_MASK)
 	    score[i] += 10;
 
-	if (format[i]->samples > 1)
-	    score[i] -= (20 - format[i]->samples);
+	if (format[i]->caveat)
+	    score[i] -= 1000;
     }
 
     return score[1] - score[0];
 }
 
 static void
-_glitz_add_format (glitz_agl_thread_info_t *thread_info,
-		   glitz_drawable_format_t *format,
-		   AGLPixelFormat          pixel_format)
+_glitz_agl_add_format (glitz_agl_thread_info_t     *thread_info,
+		       glitz_int_drawable_format_t *format,
+		       AGLPixelFormat               pixel_format)
 {
     if (!glitz_drawable_format_find (thread_info->formats,
 				     thread_info->n_formats,
@@ -206,14 +208,14 @@ _glitz_add_format (glitz_agl_thread_info_t *thread_info,
 
 	thread_info->formats =
 	    realloc (thread_info->formats,
-		     sizeof (glitz_drawable_format_t) * (n + 1));
+		     sizeof (glitz_int_drawable_format_t) * (n + 1));
 	thread_info->pixel_formats =
 	    realloc (thread_info->pixel_formats,
 		     sizeof (AGLPixelFormat) * (n + 1));
 
 	if (thread_info->formats && thread_info->pixel_formats) {
-	    thread_info->formats[n] = *format;
-	    thread_info->formats[n].id = n;
+	    thread_info->formats[n] = *(glitz_int_drawable_format_t*)format;
+	    thread_info->formats[n].d.id = n;
 	    thread_info->pixel_formats[n] = pixel_format;
 	    thread_info->n_formats++;
 	}
@@ -223,12 +225,13 @@ _glitz_add_format (glitz_agl_thread_info_t *thread_info,
 void
 glitz_agl_query_formats (glitz_agl_thread_info_t *thread_info)
 {
-    glitz_drawable_format_t format;
+    glitz_int_drawable_format_t format;
     AGLPixelFormat pixel_format, *new_pfs;
     int n_attribs_list, i;
 
-    format.types.window = 1;
-    format.id = 0;
+    format.types	= GLITZ_DRAWABLE_TYPE_WINDOW_MASK;
+    format.d.id		= 0;
+    format.color.fourcc = GLITZ_FOURCC_RGB;
 
     n_attribs_list = sizeof (_attribs_list) / sizeof (GLint *);
 
@@ -245,20 +248,20 @@ glitz_agl_query_formats (glitz_agl_thread_info_t *thread_info)
 	}
 
 	aglDescribePixelFormat (pixel_format, AGL_DOUBLEBUFFER, &value);
-	format.doublebuffer = (value)? 1: 0;
+	format.d.doublebuffer = (value)? 1: 0;
 
 	aglDescribePixelFormat (pixel_format, AGL_RED_SIZE, &value);
-	format.color.red_size = (unsigned short) value;
+	format.d.color.red_size = (unsigned short) value;
 	aglDescribePixelFormat (pixel_format, AGL_GREEN_SIZE, &value);
-	format.color.green_size = (unsigned short) value;
+	format.d.color.green_size = (unsigned short) value;
 	aglDescribePixelFormat (pixel_format, AGL_BLUE_SIZE, &value);
-	format.color.blue_size = (unsigned short) value;
+	format.d.color.blue_size = (unsigned short) value;
 	aglDescribePixelFormat (pixel_format, AGL_ALPHA_SIZE, &value);
-	format.color.alpha_size = (unsigned short) value;
+	format.d.color.alpha_size = (unsigned short) value;
 	aglDescribePixelFormat (pixel_format, AGL_DEPTH_SIZE, &value);
-	format.depth_size = (unsigned short) value;
+	format.d.depth_size = (unsigned short) value;
 	aglDescribePixelFormat (pixel_format, AGL_STENCIL_SIZE, &value);
-	format.stencil_size = (unsigned short) value;
+	format.d.stencil_size = (unsigned short) value;
 
 	if (thread_info->agl_feature_mask & GLITZ_AGL_FEATURE_MULTISAMPLE_MASK)
 	{
@@ -266,42 +269,42 @@ glitz_agl_query_formats (glitz_agl_thread_info_t *thread_info)
 				    &value);
 	    if (value) {
 		aglDescribePixelFormat (pixel_format, AGL_SAMPLES_ARB, &value);
-		format.samples = (unsigned short) (value > 1)? value: 1;
+		format.d.samples = (unsigned short) (value > 1)? value: 1;
 	    } else
-		format.samples = 1;
+		format.d.samples = 1;
 	} else
-	    format.samples = 1;
+	    format.d.samples = 1;
 
 	if (thread_info->agl_feature_mask & GLITZ_AGL_FEATURE_PBUFFER_MASK) {
-	    if (format.color.red_size && format.color.green_size &&
-		format.color.blue_size && format.color.alpha_size &&
-		format.doublebuffer == 0 && format.stencil_size == 0 &&
-		format.depth_size == 0) {
+	    if (format.d.color.red_size && format.d.color.green_size &&
+		format.d.color.blue_size && format.d.color.alpha_size &&
+		format.d.doublebuffer == 0 && format.d.stencil_size == 0 &&
+		format.d.depth_size == 0) {
 
 		if (thread_info->agl_feature_mask &
 		    GLITZ_AGL_FEATURE_PBUFFER_MULTISAMPLE_MASK)
-		    format.types.pbuffer = 1;
-		else if (format.samples == 1)
-		    format.types.pbuffer = 1;
+		    format.types |= GLITZ_DRAWABLE_TYPE_PBUFFER_MASK;
+		else if (format.d.samples == 1)
+		    format.types |= GLITZ_DRAWABLE_TYPE_PBUFFER_MASK;
 		else
-		    format.types.pbuffer = 0;
+		    format.types &= ~GLITZ_DRAWABLE_TYPE_PBUFFER_MASK;
 	    } else
-		format.types.pbuffer = 0;
+		format.types &= ~GLITZ_DRAWABLE_TYPE_PBUFFER_MASK;
 	} else
-	    format.types.pbuffer = 0;
+	    format.types &= ~GLITZ_DRAWABLE_TYPE_PBUFFER_MASK;
 
-	if (format.color.red_size ||
-	    format.color.green_size ||
-	    format.color.blue_size ||
-	    format.color.alpha_size)
-	    _glitz_add_format (thread_info, &format, pixel_format);
+	if (format.d.color.red_size ||
+	    format.d.color.green_size ||
+	    format.d.color.blue_size ||
+	    format.d.color.alpha_size)
+	    _glitz_agl_add_format (thread_info, &format, pixel_format);
     }
 
     if (!thread_info->n_formats)
 	return;
 
     qsort (thread_info->formats, thread_info->n_formats,
-	   sizeof (glitz_drawable_format_t), _glitz_agl_format_compare);
+	   sizeof (glitz_int_drawable_format_t), _glitz_agl_format_compare);
 
     /*
      * Update AGLPixelFormat list so that it matches the sorted format list.
@@ -313,8 +316,8 @@ glitz_agl_query_formats (glitz_agl_thread_info_t *thread_info)
     }
 
     for (i = 0; i < thread_info->n_formats; i++) {
-	new_pfs[i] = thread_info->pixel_formats[thread_info->formats[i].id];
-	thread_info->formats[i].id = i;
+	new_pfs[i] = thread_info->pixel_formats[thread_info->formats[i].d.id];
+	thread_info->formats[i].d.id = i;
     }
 
     free (thread_info->pixel_formats);
@@ -322,14 +325,43 @@ glitz_agl_query_formats (glitz_agl_thread_info_t *thread_info)
 }
 
 glitz_drawable_format_t *
-glitz_agl_find_drawable_format (unsigned long                 mask,
-				const glitz_drawable_format_t *templ,
-				int                           count)
+glitz_agl_find_window_format (unsigned long                 mask,
+			      const glitz_drawable_format_t *templ,
+			      int                           count)
 {
-    glitz_agl_thread_info_t *thread_info = glitz_agl_thread_info_get ();
+    glitz_int_drawable_format_t itempl;
+    glitz_agl_thread_info_t *thread_info =
+	glitz_agl_thread_info_get ();
+
+    glitz_drawable_format_copy (templ, &itempl.d, mask);
+
+    itempl.types = GLITZ_DRAWABLE_TYPE_WINDOW_MASK;
+    mask |= GLITZ_INT_FORMAT_WINDOW_MASK;
 
     return glitz_drawable_format_find (thread_info->formats,
 				       thread_info->n_formats,
-				       mask, templ, count);
+				       mask, &itempl, count);
 }
-slim_hidden_def(glitz_agl_find_drawable_format);
+slim_hidden_def(glitz_agl_find_window_format);
+
+
+glitz_drawable_format_t *
+glitz_agl_find_pbuffer_format (unsigned long                 mask,
+			      const glitz_drawable_format_t *templ,
+			      int                           count)
+{
+    glitz_int_drawable_format_t itempl;
+    glitz_agl_thread_info_t *thread_info =
+	glitz_agl_thread_info_get ();
+
+    glitz_drawable_format_copy (templ, &itempl.d, mask);
+
+    itempl.types = GLITZ_DRAWABLE_TYPE_PBUFFER_MASK;
+    mask |= GLITZ_INT_FORMAT_PBUFFER_MASK;
+
+    return glitz_drawable_format_find (thread_info->formats,
+				       thread_info->n_formats,
+				       mask, &itempl, count);
+}
+slim_hidden_def(glitz_agl_find_pbuffer_format);
+

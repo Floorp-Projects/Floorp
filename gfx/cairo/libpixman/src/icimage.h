@@ -54,13 +54,92 @@ typedef struct pixman_format {
 } pixman_format_t;
 */
 
+#define PICT_GRADIENT_STOPTABLE_SIZE 1024
+
+#define SourcePictTypeSolidFill 0
+#define SourcePictTypeLinear    1
+#define SourcePictTypeRadial    2
+#define SourcePictTypeConical   3
+
+#define SourcePictClassUnknown    0
+#define SourcePictClassHorizontal 1
+#define SourcePictClassVertical   2
+
+typedef struct _pixman_solid_fill_image {
+    unsigned int type;
+    unsigned int class;
+    uint32_t	 color;
+} pixman_solid_fill_image_t;
+
+typedef struct _pixman_gradient_image {
+    unsigned int	   type;
+    unsigned int	   class;
+    pixman_gradient_stop_t *stops;
+    int			   nstops;
+    int			   stopRange;
+    uint32_t		   *colorTable;
+    int			   colorTableSize;
+} pixman_gradient_image_t;
+
+typedef struct _pixman_linear_gradient_image {
+    unsigned int	   type;
+    unsigned int	   class;
+    pixman_gradient_stop_t *stops;
+    int			   nstops;
+    int			   stopRange;
+    uint32_t		   *colorTable;
+    int			   colorTableSize;
+    pixman_point_fixed_t   p1;
+    pixman_point_fixed_t   p2;
+} pixman_linear_gradient_image_t;
+
+typedef struct _pixman_radial_gradient_image {
+    unsigned int	   type;
+    unsigned int	   class;
+    pixman_gradient_stop_t *stops;
+    int			   nstops;
+    int			   stopRange;
+    uint32_t		   *colorTable;
+    int			   colorTableSize;
+    double		   fx;
+    double		   fy;
+    double		   dx;
+    double		   dy;
+    double		   a;
+    double		   m;
+    double		   b;
+} pixman_radial_gradient_image_t;
+
+typedef struct _pixman_conical_gradient_image {
+    unsigned int	   type;
+    unsigned int	   class;
+    pixman_gradient_stop_t *stops;
+    int			   nstops;
+    int			   stopRange;
+    uint32_t		   *colorTable;
+    int			   colorTableSize;
+    pixman_point_fixed_t   center;
+    pixman_fixed16_16_t	   angle;
+} pixman_conical_gradient_image_t;
+
+typedef union _pixman_source_image {
+    unsigned int		    type;
+    pixman_solid_fill_image_t	    solidFill;
+    pixman_gradient_image_t	    gradient;
+    pixman_linear_gradient_image_t  linear;
+    pixman_radial_gradient_image_t  radial;
+    pixman_conical_gradient_image_t conical;
+} pixman_source_image_t;
+
+typedef pixman_source_image_t *SourcePictPtr;
+
 struct pixman_image {
     FbPixels	    *pixels;
     pixman_format_t	    image_format;
     int		    format_code;
     int		    refcnt;
     
-    unsigned int    repeat : 1;
+    unsigned int    repeat : 2;
     unsigned int    graphicsExposures : 1;
     unsigned int    subWindowMode : 1;
     unsigned int    polyEdge : 1;
@@ -70,7 +149,7 @@ struct pixman_image {
     unsigned int    clientClipType : 2;
     unsigned int    componentAlpha : 1;
     unsigned int    compositeClipSource : 1;
-    unsigned int    unused : 21;
+    unsigned int    unused : 20;
 
     struct pixman_image *alphaMap;
     FbPoint	    alphaOrigin;
@@ -93,6 +172,8 @@ struct pixman_image {
     int		    filter_nparams;
 
     int		    owns_pixels;
+
+    pixman_source_image_t *pSourcePict;
 };
 
 #endif /* _ICIMAGE_H_ */

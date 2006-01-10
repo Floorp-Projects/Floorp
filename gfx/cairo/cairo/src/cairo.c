@@ -82,8 +82,6 @@ static const cairo_t cairo_nil = {
 void
 _cairo_error (cairo_status_t status)
 {
-    fprintf (stderr, "#### Cairo Error: %d\n", status);
-
     assert (status > CAIRO_STATUS_SUCCESS &&
 	    status <= CAIRO_STATUS_LAST_STATUS);
 }
@@ -327,7 +325,7 @@ cairo_restore (cairo_t *cr)
 slim_hidden_def(cairo_restore);
 
 /**
- * cairo_set_target:
+ * moz_cairo_set_target:
  * @cr: a #cairo_t
  * @target: a #cairo_surface_t
  *
@@ -335,7 +333,7 @@ slim_hidden_def(cairo_restore);
  * @target must not be %NULL, or an error will be set on @cr.
  */
 void
-cairo_set_target (cairo_t *cr, cairo_surface_t *target)
+moz_cairo_set_target (cairo_t *cr, cairo_surface_t *target)
 {
     if (cr->status)
         return;
@@ -345,36 +343,123 @@ cairo_set_target (cairo_t *cr, cairo_surface_t *target)
         return;
     }
 
-    _cairo_gstate_set_target (cr->gstate, target);
+    _moz_cairo_gstate_set_target (cr->gstate, target);
 }
+slim_hidden_def(moz_cairo_set_target);
 
-/* XXX: I want to rethink this API
+/**
+ * cairo_push_group:
+ * @cr: a cairo context
+ *
+ * Pushes a temporary surface onto the rendering stack, redirecting
+ * all rendering into it.  The surface dimensions are the size of
+ * the current clipping bounding box.  Initially, this surface
+ * is cleared to fully transparent black (0,0,0,1).
+ *
+ * cairo_push_group() calls cairo_save() so that any changes to the
+ * graphics state will not be visible after cairo_pop_group() or
+ * cairo_pop_group_with_alpha().  See cairo_pop_group() and
+ * cairo_pop_group_with_alpha().
+ */
+
 void
 cairo_push_group (cairo_t *cr)
 {
-    if (cr->status)
-	return;
+    cairo_status_t status;
+    cairo_rectangle_t extents;
+    cairo_surface_t *group_surface = NULL;
 
-    cr->status = cairoPush (cr);
-    if (cr->status)
-	return;
+    /* Get the extents that we'll use in creating our new group surface */
+    _cairo_surface_get_extents (_cairo_gstate_get_target (cr->gstate), &extents);
+    status = _cairo_clip_intersect_to_rectangle (_cairo_gstate_get_clip (cr->gstate), &extents);
+    if (status != CAIRO_STATUS_SUCCESS)
+	goto bail;
 
-    cr->status = _cairo_gstate_begin_group (cr->gstate);
+    group_surface = cairo_surface_create_similar (_cairo_gstate_get_target (cr->gstate),
+						  CAIRO_CONTENT_COLOR_ALPHA,
+						  extents.width,
+						  extents.height);
+    status = cairo_surface_status (group_surface);
+    if (status)
+	goto bail;
+
+    /* XXX hrm. How best to make sure that drawing still happens in
+     * the right place?  Is this correct? Need to double-check the
+     * coordinate spaces.
+     */
+    cairo_surface_set_device_offset (group_surface, -extents.x, -extents.y);
+
+    /* create a new gstate for the redirect */
+    cairo_save (cr);
+    if (cr->status)
+	goto bail;
+
+    _cairo_gstate_redirect_target (cr->gstate, group_surface);
+
+bail:
+    cairo_surface_destroy (group_surface);
+    if (status)
+	_cairo_set_error (cr, status);
 }
+slim_hidden_def(cairo_push_group);
 
-void
+cairo_pattern_t *
 cairo_pop_group (cairo_t *cr)
 {
-    if (cr->status)
-	return;
+    cairo_surface_t *group_surface, *parent_target;
+    cairo_pattern_t *group_pattern = NULL;
 
-    cr->status = _cairo_gstate_end_group (cr->gstate);
-    if (cr->status)
-	return;
+    /* Grab the active surfaces */
+    group_surface = _cairo_gstate_get_target (cr->gstate);
+    parent_target = _cairo_gstate_get_parent_target (cr->gstate);
 
-    cr->status = cairoPop (cr);
+    /* Verify that we are at the right nesting level */
+    if (parent_target == NULL) {
+	_cairo_set_error (cr, CAIRO_STATUS_INVALID_POP_GROUP);
+	return NULL;
+    }
+
+    /* We need to save group_surface before we restore; we don't need
+     * to reference parent_target and original_target, since the
+     * gstate will still hold refs to them once we restore. */
+    cairo_surface_reference (group_surface);
+
+    cairo_restore (cr);
+
+    if (cr->status)
+	goto done;
+
+    /* Undo the device offset we used; we're back in a normal-sized
+     * surface, so this pattern will be positioned at the right place.
+     * XXXvlad - er, this doesn't make sense, why does it work?
+     */
+    cairo_surface_set_device_offset (group_surface, 0, 0);
+
+    group_pattern = cairo_pattern_create_for_surface (group_surface);
+    if (!group_pattern) {
+        cr->status = CAIRO_STATUS_NO_MEMORY;
+        goto done;
+    }
+
+done:
+    cairo_surface_destroy (group_surface);
+
+    return group_pattern;
 }
-*/
+slim_hidden_def(cairo_pop_group);
+
+void
+cairo_pop_group_to_source (cairo_t *cr)
+{
+    cairo_pattern_t *group_pattern;
+
+    group_pattern = cairo_pop_group (cr);
+    if (!group_pattern)
+        return;
+
+    cairo_set_source (cr, group_pattern);
+}
+slim_hidden_def(cairo_pop_group_to_source);
 
 /**
  * cairo_set_operator:
@@ -2422,7 +2507,7 @@ cairo_get_target (cairo_t *cr)
     if (cr->status)
 	return (cairo_surface_t*) &_cairo_surface_nil;
 
-    return _cairo_gstate_get_target (cr->gstate);
+    return _cairo_gstate_get_original_target (cr->gstate);
 }
 
 /**
@@ -2433,10 +2518,6 @@ cairo_get_target (cairo_t *cr)
  * #cairo_path_t. See #cairo_path_data_t for hints on how to iterate
  * over the returned data structure.
  * 
- * Return value: the copy of the current path. The caller owns the
- * returned object and should call cairo_path_destroy() when finished
- * with it.
- *
  * This function will always return a valid pointer, but the result
  * will have no data (<literal>data==NULL</literal> and
  * <literal>num_data==0</literal>), if either of the following

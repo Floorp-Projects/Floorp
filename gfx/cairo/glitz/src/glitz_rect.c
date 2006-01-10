@@ -144,6 +144,7 @@ glitz_set_rectangles (glitz_surface_t         *dst,
     else
     {
 	static glitz_pixel_format_t pf = {
+	    GLITZ_FOURCC_RGB,
 	    {
 		32,
 		0xff000000,

@@ -216,6 +216,7 @@ glitz_glx_destroy (void *abstract_drawable)
 				GLITZ_CONTEXT_CURRENT);
 	glitz_program_map_fini (drawable->base.backend->gl,
 				&drawable->screen_info->program_map);
+        glitz_program_map_init (&drawable->screen_info->program_map);
 	glitz_glx_pop_current (abstract_drawable);
     }
 

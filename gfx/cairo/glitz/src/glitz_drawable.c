@@ -55,6 +55,28 @@ _glitz_drawable_init (glitz_drawable_t	          *drawable,
     drawable->update_all = 1;
 }
 
+void
+_glitz_drawable_draw_buffer (void                  *abstract_drawable,
+			     const glitz_gl_enum_t buffer)
+{
+    glitz_drawable_t *drawable = abstract_drawable;
+
+    GLITZ_GL_DRAWABLE (drawable);
+
+    gl->draw_buffer (buffer);
+}
+
+void
+_glitz_drawable_read_buffer (void                  *abstract_drawable,
+			     const glitz_gl_enum_t buffer)
+{
+    glitz_drawable_t *drawable = abstract_drawable;
+
+    GLITZ_GL_DRAWABLE (drawable);
+
+    gl->read_buffer (buffer);
+}
+
 static glitz_bool_t
 _glitz_drawable_size_check (glitz_drawable_t *other,
 			    unsigned int     width,
@@ -241,8 +263,8 @@ glitz_drawable_swap_buffer_region (glitz_drawable_t *drawable,
 
 	gl->disable (GLITZ_GL_DITHER);
 
-	gl->read_buffer (GLITZ_GL_BACK);
-	gl->draw_buffer (GLITZ_GL_FRONT);
+	drawable->backend->read_buffer (drawable, GLITZ_GL_BACK);
+	drawable->backend->draw_buffer (drawable, GLITZ_GL_FRONT);
 
 	glitz_set_operator (gl, GLITZ_OPERATOR_SRC);
 

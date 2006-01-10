@@ -346,7 +346,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 	if (!src)
 	    goto bail2;
 
-	pixman_image_set_repeat (src, 1);
+	pixman_image_set_repeat (src, PIXMAN_REPEAT_NORMAL);
 
 	while (nRects--)
 	{

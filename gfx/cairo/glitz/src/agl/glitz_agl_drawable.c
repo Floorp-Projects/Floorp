@@ -52,7 +52,7 @@ _glitz_agl_create_drawable (glitz_agl_thread_info_t *thread_info,
     drawable->height = height;
 
     _glitz_drawable_init (&drawable->base,
-			  format,
+			  &thread_info->formats[format->id],
 			  &context->backend,
 			  width, height);
 
@@ -73,16 +73,15 @@ _glitz_agl_create_drawable (glitz_agl_thread_info_t *thread_info,
 }
 
 glitz_bool_t
-_glitz_agl_drawable_update_size (glitz_agl_drawable_t *drawable,
-				 int                  width,
-				 int                  height)
+glitz_agl_drawable_update_size (glitz_agl_drawable_t *drawable,
+				int                  width,
+				int                  height)
 {
     if (drawable->pbuffer)
     {
-	glitz_agl_pbuffer_destroy (drawable->thread_info, drawable->pbuffer);
+	glitz_agl_pbuffer_destroy (drawable->pbuffer);
 	drawable->pbuffer =
 	    glitz_agl_pbuffer_create (drawable->thread_info,
-				      drawable->context->fbconfig,
 				      (int) width, (int) height);
 	if (!drawable->pbuffer)
 	    return 0;
@@ -103,9 +102,6 @@ _glitz_agl_create_pbuffer_drawable (glitz_agl_thread_info_t *thread_info,
     glitz_agl_drawable_t *drawable;
     glitz_agl_context_t *context;
     AGLPbuffer pbuffer;
-
-    if (!format->types.pbuffer)
-	return NULL;
 
     context = glitz_agl_context_get (thread_info, format);
     if (!context)
@@ -158,7 +154,7 @@ glitz_agl_create_drawable_for_window (glitz_drawable_format_t *format,
     if (!thread_info)
 	return NULL;
 
-    if (format->id >= screen_info->n_formats)
+    if (format->id >= thread_info->n_formats)
 	return NULL;
 
     context = glitz_agl_context_get (thread_info, format);
@@ -186,7 +182,7 @@ glitz_agl_create_pbuffer_drawable (glitz_drawable_format_t *format,
     if (!thread_info)
 	return NULL;
 
-    if (format->id >= screen_info->n_formats)
+    if (format->id >= thread_info->n_formats)
 	return NULL;
 
     return _glitz_agl_create_pbuffer_drawable (thread_info, format,
@@ -208,8 +204,9 @@ glitz_agl_destroy (void *abstract_drawable)
 	 */
 	glitz_agl_push_current (abstract_drawable, NULL,
 				GLITZ_CONTEXT_CURRENT);
-	glitz_program_map_fini (&drawable->base.backend->gl,
+	glitz_program_map_fini (drawable->base.backend->gl,
 				&drawable->thread_info->program_map);
+	glitz_program_map_init (&drawable->thread_info->program_map);
 	glitz_agl_pop_current (abstract_drawable);
     }
 
@@ -219,7 +216,7 @@ glitz_agl_destroy (void *abstract_drawable)
 	if (context == drawable->context->context) {
 	    if (drawable->pbuffer) {
 		AGLPbuffer pbuffer;
-		GLuint unused;
+		GLint unused;
 
 		aglGetPBuffer (context, &pbuffer, &unused, &unused, &unused);
 

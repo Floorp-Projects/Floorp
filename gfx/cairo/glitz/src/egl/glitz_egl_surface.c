@@ -215,6 +215,7 @@ glitz_egl_destroy (void *abstract_drawable)
 				GLITZ_CONTEXT_CURRENT);
 	glitz_program_map_fini (surface->base.backend->gl,
 				&surface->screen_info->program_map);
+        glitz_program_map_init (&surface->screen_info->program_map);
 	glitz_egl_pop_current (abstract_drawable);
     }
 

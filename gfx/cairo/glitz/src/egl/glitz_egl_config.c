@@ -45,6 +45,9 @@ _glitz_egl_format_compare (const void *elem1,
 
     for (; i < 2; i++)
     {
+	if (format[i]->d.color.fourcc != GLITZ_FOURCC_RGB)
+	    score[i] -= 1000;
+
 	if (format[i]->d.color.red_size)
 	{
 	    if (format[i]->d.color.red_size >= 8)
@@ -118,7 +121,8 @@ _glitz_egl_query_configs (glitz_egl_screen_info_t *screen_info)
     if (!egl_configs)
 	return;
 
-    format.d.id = 0;
+    format.d.id           = 0;
+    format.d.color.fourcc = GLITZ_FOURCC_RGB;
     format.d.doublebuffer = 1;
 
     eglGetConfigs (egl_display, egl_configs, num_configs, &num_configs);

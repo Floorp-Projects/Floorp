@@ -90,7 +90,10 @@ glitz_surface_create (glitz_drawable_t           *drawable,
 
     glitz_texture_init (&surface->texture, width, height,
 			drawable->backend->texture_formats[format->id],
+			surface->format->color.fourcc,
 			feature_mask, unnormalized);
+
+    glitz_surface_set_filter (surface, GLITZ_FILTER_NEAREST, NULL, 0);
 
     if (width > 64 || height > 64)
     {
@@ -205,7 +208,8 @@ _glitz_surface_sync_texture (glitz_surface_t *surface)
 
 	glitz_surface_push_current (surface, GLITZ_DRAWABLE_CURRENT);
 
-	gl->read_buffer (surface->buffer);
+	surface->drawable->backend->read_buffer (surface->drawable,
+						 surface->buffer);
 
 	gl->disable (GLITZ_GL_SCISSOR_TEST);
 
@@ -270,8 +274,8 @@ glitz_surface_sync_drawable (glitz_surface_t *surface)
 		       GLITZ_GL_REPLACE);
 	gl->color_4us (0x0, 0x0, 0x0, 0xffff);
 
-	param.filter[0] = param.filter[1] = GLITZ_GL_CLAMP_TO_EDGE;
-	param.wrap[0] = param.wrap[1] = GLITZ_GL_NEAREST;
+	param.filter[0] = param.filter[1] = GLITZ_GL_NEAREST;
+	param.wrap[0] = param.wrap[1] = GLITZ_GL_CLAMP_TO_EDGE;
 
 	glitz_texture_ensure_parameters (gl, texture, &param);
 
@@ -470,7 +474,7 @@ _glitz_surface_update_state (glitz_surface_t *surface)
 	drawable->update_all = 0;
     }
 
-    gl->draw_buffer (surface->buffer);
+    drawable->backend->draw_buffer (drawable, surface->buffer);
 
     if (SURFACE_DITHER (surface))
 	gl->enable (GLITZ_GL_DITHER);
@@ -490,7 +494,7 @@ glitz_surface_attach (glitz_surface_t         *surface,
 	    if (surface == drawable->front)
 		return;
 
-	    if (surface->format->type != GLITZ_FORMAT_TYPE_COLOR)
+	    if (surface->format->color.fourcc != GLITZ_FOURCC_RGB)
 		drawable = NULL;
 
 	    if (drawable)
@@ -510,7 +514,7 @@ glitz_surface_attach (glitz_surface_t         *surface,
 	    if (surface == drawable->back)
 		return;
 
-	    if (surface->format->type != GLITZ_FORMAT_TYPE_COLOR)
+	    if (surface->format->color.fourcc != GLITZ_FOURCC_RGB)
 		drawable = NULL;
 
 	    if (drawable)
@@ -847,13 +851,25 @@ glitz_surface_set_filter (glitz_surface_t    *surface,
     } else {
 	switch (filter) {
 	case GLITZ_FILTER_NEAREST:
-	    surface->flags &= ~GLITZ_SURFACE_FLAG_FRAGMENT_FILTER_MASK;
+	    switch (surface->format->color.fourcc) {
+	    case GLITZ_FOURCC_YV12:
+		surface->flags |= GLITZ_SURFACE_FLAG_FRAGMENT_FILTER_MASK;
+		break;
+	    default:
+		surface->flags &= ~GLITZ_SURFACE_FLAG_FRAGMENT_FILTER_MASK;
+	    }
 	    surface->flags &= ~GLITZ_SURFACE_FLAG_LINEAR_TRANSFORM_FILTER_MASK;
 	    surface->flags &= ~GLITZ_SURFACE_FLAG_IGNORE_WRAP_MASK;
 	    surface->flags &= ~GLITZ_SURFACE_FLAG_EYE_COORDS_MASK;
 	    break;
 	case GLITZ_FILTER_BILINEAR:
-	    surface->flags &= ~GLITZ_SURFACE_FLAG_FRAGMENT_FILTER_MASK;
+	    switch (surface->format->color.fourcc) {
+	    case GLITZ_FOURCC_YV12:
+		surface->flags |= GLITZ_SURFACE_FLAG_FRAGMENT_FILTER_MASK;
+		break;
+	    default:
+		surface->flags &= ~GLITZ_SURFACE_FLAG_FRAGMENT_FILTER_MASK;
+	    }
 	    surface->flags |= GLITZ_SURFACE_FLAG_LINEAR_TRANSFORM_FILTER_MASK;
 	    surface->flags &= ~GLITZ_SURFACE_FLAG_IGNORE_WRAP_MASK;
 	    surface->flags &= ~GLITZ_SURFACE_FLAG_EYE_COORDS_MASK;

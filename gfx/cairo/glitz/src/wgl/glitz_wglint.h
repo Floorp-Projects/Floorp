@@ -1,6 +1,6 @@
 /*
  * Copyright © 2004 David Reveman
- * 
+ *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
  * fee, provided that the above copyright notice appear in all copies
@@ -12,11 +12,11 @@
  * software for any purpose. It is provided "as is" without express or
  * implied warranty.
  *
- * DAVID REVEMAN DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, 
+ * DAVID REVEMAN DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
  * NO EVENT SHALL DAVID REVEMAN BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
- * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, 
+ * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
  * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
  * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
@@ -98,7 +98,7 @@ typedef struct _glitz_wgl_context_t {
 struct _glitz_wgl_screen_info_t {
   glitz_wgl_thread_info_t *thread_info;
   int                                  drawables;
-  glitz_drawable_format_t              *formats;
+  glitz_int_drawable_format_t          *formats;
   int                                  *format_ids;
   int                                  n_formats;
   glitz_wgl_context_t                  **contexts;
@@ -143,34 +143,34 @@ glitz_wgl_get_proc_address (const char *name,
 extern glitz_wgl_context_t *__internal_linkage
 glitz_wgl_context_get (glitz_wgl_screen_info_t *screen_info,
 		       HDC                     dc,
-                       glitz_drawable_format_t *format);
+		       glitz_drawable_format_t *format);
 
 extern void __internal_linkage
 glitz_wgl_context_destroy (glitz_wgl_screen_info_t *screen_info,
-                           glitz_wgl_context_t     *context);
+			   glitz_wgl_context_t     *context);
 
 extern void __internal_linkage
 glitz_wgl_query_formats (glitz_wgl_screen_info_t *screen_info);
 
 extern HPBUFFERARB __internal_linkage
 glitz_wgl_pbuffer_create (glitz_wgl_screen_info_t    *screen_info,
-                          int                        pixel_format,
-                          unsigned int               width,
-                          unsigned int               height,
+			  int                        pixel_format,
+			  unsigned int               width,
+			  unsigned int               height,
 			  HDC                        *dcp);
 
 extern void __internal_linkage
 glitz_wgl_pbuffer_destroy (glitz_wgl_screen_info_t *screen_info,
-                           HPBUFFERARB             pbuffer,
+			   HPBUFFERARB             pbuffer,
 			   HDC                     dc);
 
 extern glitz_drawable_t *__internal_linkage
 glitz_wgl_create_pbuffer (void                       *abstract_templ,
-                          glitz_drawable_format_t    *format,
-                          unsigned int               width,
-                          unsigned int               height);
+			  glitz_drawable_format_t    *format,
+			  unsigned int               width,
+			  unsigned int               height);
 
-extern void __internal_linkage
+extern glitz_bool_t __internal_linkage
 glitz_wgl_push_current (void                *abstract_drawable,
 			glitz_surface_t     *surface,
 			glitz_constraint_t  constraint);
@@ -184,7 +184,7 @@ glitz_wgl_make_current_read (void *abstract_surface);
 extern void __internal_linkage
 glitz_wgl_destroy (void *abstract_drawable);
 
-extern void __internal_linkage
+extern glitz_bool_t __internal_linkage
 glitz_wgl_swap_buffers (void *abstract_drawable);
 
 extern void __internal_linkage

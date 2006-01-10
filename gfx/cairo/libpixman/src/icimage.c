@@ -101,11 +101,271 @@ pixman_image_createForPixels (FbPixels	*pixels,
     return image;
 }
 
+static CARD32 xRenderColorToCard32(pixman_color_t c)
+{
+    return
+        (c.alpha >> 8 << 24) |
+        (c.red >> 8 << 16) |
+        (c.green & 0xff00) |
+        (c.blue >> 8);
+}
+
+static uint32_t premultiply(uint32_t x)
+{
+    uint32_t a = x >> 24;
+    uint32_t t = (x & 0xff00ff) * a + 0x800080;
+    t = (t + ((t >> 8) & 0xff00ff)) >> 8;
+    t &= 0xff00ff;
+
+    x = ((x >> 8) & 0xff) * a + 0x80;
+    x = (x + ((x >> 8) & 0xff));
+    x &= 0xff00;
+    x |= t | (a << 24);
+    return x;
+}
+
+static uint32_t INTERPOLATE_PIXEL_256(uint32_t x, uint32_t a, uint32_t y, uint32_t b)
+{
+    CARD32 t = (x & 0xff00ff) * a + (y & 0xff00ff) * b;
+    t >>= 8;
+    t &= 0xff00ff;
+
+    x = ((x >> 8) & 0xff00ff) * a + ((y >> 8) & 0xff00ff) * b;
+    x &= 0xff00ff00;
+    x |= t;
+    return x;
+}
+
+uint32_t
+pixman_gradient_color (pixman_gradient_stop_t *stop1,
+		       pixman_gradient_stop_t *stop2,
+		       uint32_t		      x)
+{
+    uint32_t current_color, next_color;
+    int	     dist, idist;
+
+    current_color = xRenderColorToCard32 (stop1->color);
+    next_color    = xRenderColorToCard32 (stop2->color);
+
+    dist  = (int) (256 * (x - stop1->x) / (stop2->x - stop1->x));
+    idist = 256 - dist;
+
+    return premultiply (INTERPOLATE_PIXEL_256 (current_color, idist,
+					       next_color, dist));
+}
+
+static int
+pixman_init_gradient_color_table (pixman_gradient_image_t *gradient,
+				  int			  tableSize)
+{
+    int begin_pos, end_pos;
+    xFixed incr, dpos;
+    int pos, current_stop;
+    pixman_gradient_stop_t *stops = gradient->stops;
+    int nstops = gradient->nstops;
+
+    if (gradient->colorTableSize < tableSize)
+    {
+	uint32_t *newColorTable;
+
+	newColorTable = realloc (gradient->colorTable,
+				 tableSize * sizeof (uint32_t));
+	if (!newColorTable)
+	    return 1;
+
+	gradient->colorTable = newColorTable;
+	gradient->colorTableSize = tableSize;
+    }
+
+    gradient->stopRange = tableSize;
+
+    /* The position where the gradient begins and ends */
+    begin_pos = (stops[0].x * gradient->colorTableSize) >> 16;
+    end_pos = (stops[nstops - 1].x * gradient->colorTableSize) >> 16;
+
+    pos = 0; /* The position in the color table. */
+
+    /* Up to first point */
+    while (pos <= begin_pos) {
+	gradient->colorTable[pos] = xRenderColorToCard32(stops[0].color);
+        ++pos;
+    }
+
+    incr =  (1<<16)/ gradient->colorTableSize; /* the double increment. */
+    dpos = incr * pos; /* The position in terms of 0-1. */
+
+    current_stop = 0; /* We always interpolate between current and current + 1. */
+
+    /* Gradient area */
+    while (pos < end_pos) {
+	gradient->colorTable[pos] =
+	    pixman_gradient_color (&stops[current_stop],
+				   &stops[current_stop + 1],
+				   dpos);
+
+        ++pos;
+        dpos += incr;
+
+        if (dpos > stops[current_stop + 1].x)
+            ++current_stop;
+    }
+
+    /* After last point */
+    while (pos < gradient->colorTableSize) {
+	gradient->colorTable[pos] =
+	    xRenderColorToCard32 (stops[nstops - 1].color);
+        ++pos;
+    }
+
+    return 0;
+}
+
+static int
+_pixman_init_gradient (pixman_gradient_image_t	    *gradient,
+		       const pixman_gradient_stop_t *stops,
+		       int			    n_stops)
+{
+    pixman_fixed16_16_t dpos;
+    int			i;
+
+    if (n_stops <= 0)
+	return 1;
+
+    dpos = -1;
+    for (i = 0; i < n_stops; i++)
+    {
+	if (stops[i].x < dpos || stops[i].x > (1 << 16))
+	    return 1;
+
+	dpos = stops[i].x;
+    }
+
+    gradient->class	     = SourcePictClassUnknown;
+    gradient->stopRange	     = 0xffff;
+    gradient->colorTable     = NULL;
+    gradient->colorTableSize = 0;
+
+    return 0;
+}
+
+static pixman_image_t *
+_pixman_create_source_image (void)
+{
+    pixman_image_t *image;
+
+    image = (pixman_image_t *) malloc (sizeof (pixman_image_t));
+    image->pDrawable   = 0;
+    image->pixels      = 0;
+    image->format_code = PICT_a8r8g8b8;
+
+    pixman_image_init (image);
+
+    return image;
+}
+
+pixman_image_t *
+pixman_image_create_linear_gradient (const pixman_linear_gradient_t *gradient,
+				     const pixman_gradient_stop_t   *stops,
+				     int			    n_stops)
+{
+    pixman_linear_gradient_image_t *linear;
+    pixman_image_t		   *image;
+
+    if (n_stops < 2)
+	return 0;
+
+    image = _pixman_create_source_image ();
+    if (!image)
+	return 0;
+
+    linear = malloc (sizeof (pixman_linear_gradient_image_t) +
+		     sizeof (pixman_gradient_stop_t) * n_stops);
+    if (!linear)
+    {
+	free (image);
+	return 0;
+    }
+
+    linear->stops  = (pixman_gradient_stop_t *) (linear + 1);
+    linear->nstops = n_stops;
+
+    memcpy (linear->stops, stops, sizeof (pixman_gradient_stop_t) * n_stops);
+
+    linear->type = SourcePictTypeLinear;
+    linear->p1   = gradient->p1;
+    linear->p2   = gradient->p2;
+
+    image->pSourcePict = (pixman_source_image_t *) linear;
+
+    if (_pixman_init_gradient (&image->pSourcePict->gradient, stops, n_stops))
+    {
+	free (image);
+	return 0;
+    }
+
+    return image;
+}
+
+pixman_image_t *
+pixman_image_create_radial_gradient (const pixman_radial_gradient_t *gradient,
+				     const pixman_gradient_stop_t   *stops,
+				     int			    n_stops)
+{
+    pixman_radial_gradient_image_t *radial;
+    pixman_image_t		   *image;
+    double			   x;
+
+    if (n_stops < 2)
+	return 0;
+
+    image = _pixman_create_source_image ();
+    if (!image)
+	return 0;
+
+    radial = malloc (sizeof (pixman_radial_gradient_image_t) +
+		     sizeof (pixman_gradient_stop_t) * n_stops);
+    if (!radial)
+    {
+	free (image);
+	return 0;
+    }
+
+    radial->stops  = (pixman_gradient_stop_t *) (radial + 1);
+    radial->nstops = n_stops;
+
+    memcpy (radial->stops, stops, sizeof (pixman_gradient_stop_t) * n_stops);
+
+    radial->type = SourcePictTypeRadial;
+    x = (double) gradient->inner.radius / (double) gradient->outer.radius;
+    radial->dx = (gradient->outer.x - gradient->inner.x);
+    radial->dy = (gradient->outer.y - gradient->inner.y);
+    radial->fx = (gradient->inner.x) - x * radial->dx;
+    radial->fy = (gradient->inner.y) - x * radial->dy;
+    radial->m = 1. / (1 + x);
+    radial->b = -x * radial->m;
+    radial->dx /= 65536.;
+    radial->dy /= 65536.;
+    radial->fx /= 65536.;
+    radial->fy /= 65536.;
+    x = gradient->outer.radius / 65536.;
+    radial->a = x * x - radial->dx * radial->dx - radial->dy * radial->dy;
+
+    image->pSourcePict = (pixman_source_image_t *) radial;
+
+    if (_pixman_init_gradient (&image->pSourcePict->gradient, stops, n_stops))
+    {
+	free (image);
+	return 0;
+    }
+
+    return image;
+}
+
 void
 pixman_image_init (pixman_image_t *image)
 {
     image->refcnt = 1;
-    image->repeat = 0;
+    image->repeat = PIXMAN_REPEAT_NONE;
     image->graphicsExposures = 0;
     image->subWindowMode = ClipByChildren;
     image->polyEdge = PolyEdgeSharp;
@@ -135,16 +395,26 @@ pixman_image_init (pixman_image_t *image)
     image->serialNumber = GC_CHANGE_SERIAL_BIT;
 */
 
-    image->pCompositeClip = pixman_region_create();
-    pixman_region_union_rect (image->pCompositeClip, image->pCompositeClip,
-			0, 0, image->pixels->width, image->pixels->height);
-    image->freeCompClip = 1;
+    if (image->pixels)
+    {
+	image->pCompositeClip = pixman_region_create();
+	pixman_region_union_rect (image->pCompositeClip, image->pCompositeClip,
+				  0, 0, image->pixels->width,
+				  image->pixels->height);
+	image->freeCompClip = 1;
 
-    image->pSourceClip = pixman_region_create ();
-    pixman_region_union_rect (image->pSourceClip, image->pSourceClip,
-			0, 0, image->pixels->width, image->pixels->height);
-    image->freeSourceClip = 1;
-    
+	image->pSourceClip = pixman_region_create ();
+	pixman_region_union_rect (image->pSourceClip, image->pSourceClip,
+				  0, 0, image->pixels->width,
+				  image->pixels->height);
+	image->freeSourceClip = 1;
+    }
+    else
+    {
+	image->pCompositeClip = NULL;
+	image->pSourceClip    = NULL;
+    }
+
     image->transform = NULL;
 
     image->filter = PIXMAN_FILTER_NEAREST;
@@ -153,6 +423,8 @@ pixman_image_init (pixman_image_t *image)
 
 
     image->owns_pixels = 0;
+
+    image->pSourcePict = NULL;
 }
 
 void
@@ -199,8 +471,8 @@ pixman_image_set_transform (pixman_image_t		*image,
 }
 
 void
-pixman_image_set_repeat (pixman_image_t	*image,
-		  int		repeat)
+pixman_image_set_repeat (pixman_image_t		*image,
+			 pixman_repeat_t	repeat)
 {
     if (image)
 	image->repeat = repeat;
@@ -218,25 +490,37 @@ pixman_image_set_filter (pixman_image_t	*image,
 int
 pixman_image_get_width (pixman_image_t	*image)
 {
-    return image->pixels->width;
+    if (image->pixels)
+	return image->pixels->width;
+
+    return 0;
 }
 
 int
 pixman_image_get_height (pixman_image_t	*image)
 {
-    return image->pixels->height;
+    if (image->pixels)
+	return image->pixels->height;
+
+    return 0;
 }
 
 int
 pixman_image_get_depth (pixman_image_t	*image)
 {
-    return image->pixels->depth;
+    if (image->pixels)
+	return image->pixels->depth;
+
+    return 0;
 }
 
 int
 pixman_image_get_stride (pixman_image_t	*image)
 {
-    return image->pixels->stride;
+    if (image->pixels)
+	return image->pixels->stride;
+
+    return 0;
 }
 
 pixman_format_t *
@@ -248,7 +532,10 @@ pixman_image_get_format (pixman_image_t	*image)
 FbBits *
 pixman_image_get_data (pixman_image_t	*image)
 {
-    return image->pixels->data;
+    if (image->pixels)
+	return image->pixels->data;
+
+    return 0;
 }
 
 void
@@ -274,6 +561,11 @@ pixman_image_destroy (pixman_image_t *image)
     if (image->transform) {
 	free (image->transform);
 	image->transform = NULL;
+    }
+
+    if (image->pSourcePict) {
+	free (image->pSourcePict);
+	image->pSourcePict = NULL;
     }
 
     free (image);
@@ -307,6 +599,10 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 	pixman_region_copy (image->clientClip, region);
 	image->clientClipType = CT_REGION;
     }
+
+    image->stateChanges |= CPClipMask;
+    if (image->pSourcePict)
+	return 0;
     
     if (image->freeCompClip)
 	pixman_region_destroy (image->pCompositeClip);
@@ -326,7 +622,6 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 				 image->clipOrigin.y);
     }
     
-    image->stateChanges |= CPClipMask;
     return 0;
 }
 
@@ -377,7 +672,8 @@ FbClipImageSrc (pixman_region16_t	*region,
     /* XXX what to do with clipping from transformed pictures? */
     if (image->transform)
 	return 1;
-    if (image->repeat)
+    /* XXX davidr hates this, wants to never use source-based clipping */
+    if (image->repeat != PIXMAN_REPEAT_NONE || image->pSourcePict)
     {
 	/* XXX no source clipping */
 	if (image->compositeClipSource &&

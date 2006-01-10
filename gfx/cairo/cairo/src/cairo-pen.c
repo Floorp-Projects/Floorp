@@ -36,8 +36,6 @@
 
 #include "cairoint.h"
 
-#include "cairo-gstate-private.h"
-
 static int
 _cairo_pen_vertices_needed (double tolerance, double radius, cairo_matrix_t *matrix);
 
@@ -59,35 +57,28 @@ _cairo_pen_init_empty (cairo_pen_t *pen)
 }
 
 cairo_status_t
-_cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate)
+_cairo_pen_init (cairo_pen_t	*pen,
+		 double		 radius,
+		 double		 tolerance,
+		 cairo_matrix_t	*ctm)
 {
     int i;
     int reflect;
     double  det;
 
-    if (pen->num_vertices) {
-	/* XXX: It would be nice to notice that the pen is already properly constructed.
-	   However, this test would also have to account for possible changes in the transformation
-	   matrix.
-	   if (pen->radius == radius && pen->tolerance == tolerance)
-	   return CAIRO_STATUS_SUCCESS;
-	*/
-	_cairo_pen_fini (pen);
-    }
-
     pen->radius = radius;
-    pen->tolerance = gstate->tolerance;
+    pen->tolerance = tolerance;
 
-    _cairo_matrix_compute_determinant (&gstate->ctm, &det);
+    _cairo_matrix_compute_determinant (ctm, &det);
     if (det >= 0) {
 	reflect = 0;
     } else {
 	reflect = 1;
     }
 
-    pen->num_vertices = _cairo_pen_vertices_needed (gstate->tolerance,
+    pen->num_vertices = _cairo_pen_vertices_needed (tolerance,
 						    radius,
-						    &gstate->ctm);
+						    ctm);
     
     pen->vertices = malloc (pen->num_vertices * sizeof (cairo_pen_vertex_t));
     if (pen->vertices == NULL) {
@@ -105,7 +96,7 @@ _cairo_pen_init (cairo_pen_t *pen, double radius, cairo_gstate_t *gstate)
 	double dx = radius * cos (reflect ? -theta : theta);
 	double dy = radius * sin (reflect ? -theta : theta);
 	cairo_pen_vertex_t *v = &pen->vertices[i];
-	cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
+	cairo_matrix_transform_distance (ctm, &dx, &dy);
 	v->point.x = _cairo_fixed_from_double (dx);
 	v->point.y = _cairo_fixed_from_double (dy);
     }
