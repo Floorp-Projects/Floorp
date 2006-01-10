@@ -917,8 +917,8 @@ case "$target" in
         CC="$CC -Ae"
         CXX="$CXX -ext"
         if test "$OS_RELEASE" = "B.11.23"; then
-            CFLAGS="$CFLAGS +0lit=all"
-            CXXFLAGS="$CXXFLAGS +0lit=all"
+            CFLAGS="$CFLAGS +Olit=all"
+            CXXFLAGS="$CXXFLAGS +Olit=all"
         else
             CFLAGS="$CFLAGS +ESlit"
             CXXFLAGS="$CXXFLAGS +ESlit"
