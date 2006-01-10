@@ -26,19 +26,9 @@
 #ifndef GLITZ_H_INCLUDED
 #define GLITZ_H_INCLUDED
 
-#if defined(__SVR4) && defined(__sun)
-#  include <sys/int_types.h>
-#else
-#  if defined(__OpenBSD__)
-#    include <inttypes.h>
-#  else
-#    include <stdint.h>
-#  endif
-#endif
-
 #define GLITZ_MAJOR    0
 #define GLITZ_MINOR    5
-#define GLITZ_REVISION 0
+#define GLITZ_REVISION 2
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -158,17 +148,29 @@ typedef enum {
 
 typedef unsigned long glitz_format_id_t;
 
+typedef unsigned int glitz_fourcc_t;
+
+#define GLITZ_FORMAT_FOURCC_MASK     (1L <<  5)
+
+#define GLITZ_FOURCC(a, b, c, d)                                \
+    ((a) | (b) << 8 | (c) << 16 | ((glitz_fourcc_t) (d)) << 24)
+
+#define GLITZ_FOURCC_RGB  ((glitz_fourcc_t) 0x0)
+#define GLITZ_FOURCC_YV12 GLITZ_FOURCC ('Y', 'V', '1', '2')
+#define GLITZ_FOURCC_YUY2 GLITZ_FOURCC ('Y', 'U', 'Y', '2')
+
 typedef struct _glitz_color_format_t {
+  glitz_fourcc_t fourcc;
   unsigned short red_size;
   unsigned short green_size;
   unsigned short blue_size;
   unsigned short alpha_size;
 } glitz_color_format_t;
 
-#define GLITZ_FORMAT_DEPTH_SIZE_MASK   (1L <<  5)
-#define GLITZ_FORMAT_STENCIL_SIZE_MASK (1L <<  6)
-#define GLITZ_FORMAT_DOUBLEBUFFER_MASK (1L <<  7)
-#define GLITZ_FORMAT_SAMPLES_MASK      (1L <<  8)
+#define GLITZ_FORMAT_DEPTH_SIZE_MASK   (1L <<  6)
+#define GLITZ_FORMAT_STENCIL_SIZE_MASK (1L <<  7)
+#define GLITZ_FORMAT_DOUBLEBUFFER_MASK (1L <<  8)
+#define GLITZ_FORMAT_SAMPLES_MASK      (1L <<  9)
 
 typedef struct _glitz_drawable_format_t {
   glitz_format_id_t    id;
@@ -179,15 +181,8 @@ typedef struct _glitz_drawable_format_t {
   glitz_bool_t         doublebuffer;
 } glitz_drawable_format_t;
 
-#define GLITZ_FORMAT_TYPE_MASK (1L << 5)
-
-typedef enum {
-  GLITZ_FORMAT_TYPE_COLOR
-} glitz_format_type_t;
-
 typedef struct _glitz_format_t {
   glitz_format_id_t    id;
-  glitz_format_type_t  type;
   glitz_color_format_t color;
 } glitz_format_t;
 
@@ -482,6 +477,15 @@ void
 glitz_context_bind_texture (glitz_context_t        *context,
 			    glitz_texture_object_t *texture);
 
+void
+glitz_context_draw_buffers (glitz_context_t	          *context,
+			    const glitz_drawable_buffer_t *buffers,
+			    int				  n);
+
+void
+glitz_context_read_buffer (glitz_context_t		 *context,
+			   const glitz_drawable_buffer_t buffer);
+
 
 /* glitz_rect.c */
 
@@ -579,6 +583,7 @@ typedef struct _glitz_pixel_masks {
 } glitz_pixel_masks_t;
 
 typedef struct _glitz_pixel_format {
+  glitz_fourcc_t               fourcc;
   glitz_pixel_masks_t          masks;
   int                          xoffset;
   int                          skip_lines;

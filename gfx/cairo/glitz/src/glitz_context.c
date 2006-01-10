@@ -110,6 +110,11 @@ void
 glitz_context_make_current (glitz_context_t  *context,
 			    glitz_drawable_t *drawable)
 {
+    glitz_lose_current_function_t lose_current;
+
+    lose_current = context->lose_current;
+    context->lose_current = 0;
+
     if (drawable != context->drawable)
     {
 	glitz_drawable_reference (drawable);
@@ -145,6 +150,8 @@ glitz_context_make_current (glitz_context_t  *context,
 			      GLITZ_DAMAGE_SOLID_MASK);
     }
 
+    context->lose_current = lose_current;
+
     drawable->backend->make_current (drawable, context);
 }
 slim_hidden_def(glitz_context_make_current);
@@ -179,3 +186,63 @@ glitz_context_bind_texture (glitz_context_t	   *context,
 				     &texture->param);
 }
 slim_hidden_def(glitz_context_bind_texture);
+
+void
+glitz_context_draw_buffers (glitz_context_t	          *context,
+			    const glitz_drawable_buffer_t *buffers,
+			    int				  n)
+{
+    unsigned int mask = 0;
+
+#define FRONT_BIT (1 << 0)
+#define BACK_BIT  (1 << 1)
+
+    while (n--)
+    {
+	switch (*buffers++) {
+	case GLITZ_DRAWABLE_BUFFER_FRONT_COLOR:
+	    mask |= FRONT_BIT;
+	    break;
+	case GLITZ_DRAWABLE_BUFFER_BACK_COLOR:
+	    mask |= BACK_BIT;
+	default:
+	    break;
+	}
+    }
+
+    if (mask)
+    {
+	if (mask == (FRONT_BIT | BACK_BIT))
+	    context->drawable->backend->draw_buffer (context->drawable,
+						     GLITZ_GL_FRONT_AND_BACK);
+	else if (mask == FRONT_BIT)
+	    context->drawable->backend->draw_buffer (context->drawable,
+						     GLITZ_GL_FRONT);
+	else
+	    context->drawable->backend->draw_buffer (context->drawable,
+						     GLITZ_GL_BACK);
+    }
+
+#undef FRONT_BIT
+#undef BACK_BIT
+
+}
+slim_hidden_def(glitz_context_draw_buffers);
+
+void
+glitz_context_read_buffer (glitz_context_t		 *context,
+			   const glitz_drawable_buffer_t buffer)
+{
+    switch (buffer) {
+    case GLITZ_DRAWABLE_BUFFER_FRONT_COLOR:
+	context->drawable->backend->read_buffer (context->drawable,
+						 GLITZ_GL_FRONT);
+	break;
+    case GLITZ_DRAWABLE_BUFFER_BACK_COLOR:
+	context->drawable->backend->read_buffer (context->drawable,
+						 GLITZ_GL_BACK);
+    default:
+	break;
+    }
+}
+slim_hidden_def(glitz_context_read_buffer);

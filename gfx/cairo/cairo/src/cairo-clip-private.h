@@ -38,12 +38,6 @@
 
 #include "cairo-path-fixed-private.h"
 
-enum _cairo_clip_mode {
-    CAIRO_CLIP_MODE_PATH,
-    CAIRO_CLIP_MODE_REGION,
-    CAIRO_CLIP_MODE_MASK
-};
-
 struct _cairo_clip_path {
     unsigned int	ref_count;
     cairo_path_fixed_t	path;
@@ -114,7 +108,7 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
 
 cairo_private cairo_status_t
 _cairo_clip_combine_to_surface (cairo_clip_t            *clip,
-				cairo_operator_t         operator,
+				cairo_operator_t         op,
 				cairo_surface_t         *dst,
 				int                      dst_x,
 				int                      dst_y,

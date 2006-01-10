@@ -26,12 +26,35 @@
 #ifndef GLITZINT_H_INCLUDED
 #define GLITZINT_H_INCLUDED
 
+#ifdef _MSC_VER
+#define _USE_MATH_DEFINES
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 #include <math.h>
 
 #include "glitz.h"
+
+#if defined(__SVR4) && defined(__sun)
+#  include <sys/int_types.h>
+#elif defined(_MSC_VER)
+  typedef __int8 int8_t;
+  typedef unsigned __int8 uint8_t;
+  typedef __int16 int16_t;
+  typedef unsigned __int16 uint16_t;
+  typedef __int32 int32_t;
+  typedef unsigned __int32 uint32_t;
+  typedef __int64 int64_t;
+  typedef unsigned __int64 uint64_t;
+#else
+#  if defined(__OpenBSD__)
+#    include <inttypes.h>
+#  else
+#    include <stdint.h>
+#  endif
+#endif
 
 #if defined(__APPLE__) || defined(__sun__)
 # define floorf(a)    floor (a)
@@ -230,7 +253,9 @@ typedef int glitz_combine_type_t;
 #define GLITZ_FP_RADIAL_GRADIENT_NEAREST     6
 #define GLITZ_FP_RADIAL_GRADIENT_REPEAT      7
 #define GLITZ_FP_RADIAL_GRADIENT_REFLECT     8
-#define GLITZ_FP_TYPES                       9
+#define GLITZ_FP_COLORSPACE_YV12             9
+#define GLITZ_FP_UNSUPPORTED                 10
+#define GLITZ_FP_TYPES                       11
 
 typedef struct _glitz_program_t {
   glitz_gl_int_t *name;
@@ -238,7 +263,7 @@ typedef struct _glitz_program_t {
 } glitz_program_t;
 
 typedef struct _glitz_filter_map_t {
-  glitz_program_t fp[GLITZ_TEXTURE_LAST][GLITZ_TEXTURE_LAST];
+  glitz_program_t fp[GLITZ_TEXTURE_LAST][GLITZ_TEXTURE_LAST][2];
 } glitz_filter_map_t;
 
 typedef struct _glitz_program_map_t {
@@ -382,6 +407,14 @@ typedef struct glitz_backend {
   (*make_current)              (void *drawable,
 				void *context);
 
+  void
+  (*draw_buffer)               (void                  *drawable,
+				const glitz_gl_enum_t buffer);
+
+  void
+  (*read_buffer)               (void                  *drawable,
+				const glitz_gl_enum_t buffer);
+
   glitz_function_pointer_t
   (*get_proc_address)          (void       *context,
 				const char *name);
@@ -430,12 +463,16 @@ typedef struct _glitz_vec4_t {
 } glitz_vec4_t;
 
 #define GLITZ_TEXTURE_FLAG_ALLOCATED_MASK    (1L <<  0)
-#define GLITZ_TEXTURE_FLAG_REPEATABLE_MASK   (1L <<  1)
-#define GLITZ_TEXTURE_FLAG_PADABLE_MASK      (1L <<  2)
-#define GLITZ_TEXTURE_FLAG_INVALID_SIZE_MASK (1L <<  3)
+#define GLITZ_TEXTURE_FLAG_CLAMPABLE_MASK    (1L <<  1)
+#define GLITZ_TEXTURE_FLAG_REPEATABLE_MASK   (1L <<  2)
+#define GLITZ_TEXTURE_FLAG_PADABLE_MASK      (1L <<  3)
+#define GLITZ_TEXTURE_FLAG_INVALID_SIZE_MASK (1L <<  4)
 
 #define TEXTURE_ALLOCATED(texture) \
   ((texture)->flags & GLITZ_TEXTURE_FLAG_ALLOCATED_MASK)
+
+#define TEXTURE_CLAMPABLE(texture) \
+  ((texture)->flags & GLITZ_TEXTURE_FLAG_CLAMPABLE_MASK)
 
 #define TEXTURE_REPEATABLE(texture) \
   ((texture)->flags & GLITZ_TEXTURE_FLAG_REPEATABLE_MASK)
@@ -456,17 +493,18 @@ typedef struct _glitz_texture {
   glitz_gl_uint_t name;
   glitz_gl_enum_t target;
   glitz_gl_int_t  format;
+  glitz_fourcc_t  fourcc;
   unsigned long   flags;
 
   glitz_texture_parameters_t param;
 
-  int width;
-  int height;
+  int             width;
+  int             height;
 
-  glitz_box_t box;
+  glitz_box_t     box;
 
-  glitz_float_t texcoord_width_unit;
-  glitz_float_t texcoord_height_unit;
+  glitz_float_t   texcoord_width_unit;
+  glitz_float_t   texcoord_height_unit;
 } glitz_texture_t;
 
 struct _glitz_texture_object {
@@ -716,7 +754,8 @@ void
 glitz_create_surface_formats (glitz_gl_proc_address_list_t *gl,
 			      glitz_format_t               **formats,
 			      glitz_gl_int_t               **texture_formats,
-			      int                          *n_formats);
+			      int                          *n_formats,
+                              unsigned long                features);
 
 extern void __internal_linkage
 _glitz_add_drawable_formats (glitz_gl_proc_address_list_t *gl,
@@ -741,6 +780,7 @@ glitz_texture_init (glitz_texture_t *texture,
 		    int             width,
 		    int             height,
 		    glitz_gl_int_t  texture_format,
+		    glitz_fourcc_t  fourcc,
 		    unsigned long   feature_mask,
 		    glitz_bool_t    unnormalized);
 
@@ -907,6 +947,14 @@ _glitz_drawable_init (glitz_drawable_t	          *drawable,
 		      int		          width,
 		      int		          height);
 
+void
+_glitz_drawable_draw_buffer (void                  *abstract_drawable,
+			     const glitz_gl_enum_t buffer);
+
+void
+_glitz_drawable_read_buffer (void                  *abstract_drawable,
+			     const glitz_gl_enum_t buffer);
+
 extern glitz_drawable_t __internal_linkage *
 _glitz_fbo_drawable_create (glitz_drawable_t	        *other,
 			    glitz_int_drawable_format_t *format,
@@ -1052,5 +1100,7 @@ slim_hidden_proto(glitz_context_set_user_data)
 slim_hidden_proto(glitz_context_get_proc_address)
 slim_hidden_proto(glitz_context_make_current)
 slim_hidden_proto(glitz_context_bind_texture)
+slim_hidden_proto(glitz_context_draw_buffers)
+slim_hidden_proto(glitz_context_read_buffer)
 
 #endif /* GLITZINT_H_INCLUDED */

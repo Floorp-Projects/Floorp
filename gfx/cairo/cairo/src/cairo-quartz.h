@@ -47,6 +47,7 @@ CAIRO_BEGIN_DECLS
 
 cairo_public cairo_surface_t *
 cairo_quartz_surface_create (CGContextRef    context,
+			     cairo_bool_t    flipped,
 			     int	     width,
 			     int	     height);
 

@@ -39,22 +39,14 @@
 #include "cairo-clip-private.h"
 
 struct _cairo_gstate {
-    cairo_operator_t operator;
+    cairo_operator_t op;
     
     double tolerance;
     cairo_antialias_t antialias;
 
-    /* stroke style */
-    double line_width;
-    cairo_line_cap_t line_cap;
-    cairo_line_join_t line_join;
-    double miter_limit;
+    cairo_stroke_style_t stroke_style;
 
     cairo_fill_rule_t fill_rule;
-
-    double *dash;
-    int num_dashes;
-    double dash_offset;
 
     cairo_font_face_t *font_face;
     cairo_scaled_font_t *scaled_font;	/* Specific to the current CTM */
@@ -63,13 +55,13 @@ struct _cairo_gstate {
 
     cairo_clip_t clip;
 
-    cairo_surface_t *target;
+    cairo_surface_t *target;		/* The target to which all rendering is directed */
+    cairo_surface_t *parent_target;	/* The previous target which was receiving rendering */
+    cairo_surface_t *original_target;	/* The original target the initial gstate was created with */
 
     cairo_matrix_t ctm;
     cairo_matrix_t ctm_inverse;
     cairo_matrix_t source_ctm_inverse; /* At the time ->source was set */
-
-    cairo_pen_t pen_regular;
 
     cairo_pattern_t *source;
 

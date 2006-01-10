@@ -891,15 +891,20 @@ _start_glyphs (cairo_glyph_state_t        *state,
 static cairo_status_t
 _flush_glyphs (cairo_glyph_state_t *state)
 {
+    cairo_status_t status;
     int dx = 0;
-    if (!_cairo_array_append (&state->dx, &dx, 1))
-	return CAIRO_STATUS_NO_MEMORY;
+    WCHAR * elements;
+
+    status = _cairo_array_append (&state->dx, &dx);
+    if (status)
+	return status;
     
+    elements = _cairo_array_index (&state->glyphs, 0);
     if (!ExtTextOutW (state->hdc,
 		      state->start_x, state->last_y,
 		      ETO_GLYPH_INDEX,
 		      NULL,
-		      (WCHAR *)state->glyphs.elements,
+		      elements,
 		      state->glyphs.num_elements,
 		      (int *)state->dx.elements)) {
 	return _cairo_win32_print_gdi_error ("_flush_glyphs");
@@ -917,6 +922,7 @@ _add_glyph (cairo_glyph_state_t *state,
 	    double               device_x,
 	    double               device_y)
 {
+    cairo_status_t status;
     double user_x = device_x;
     double user_y = device_y;
     WCHAR glyph_index = index;
@@ -931,15 +937,16 @@ _add_glyph (cairo_glyph_state_t *state,
 	int dx;
 	
 	if (logical_y != state->last_y) {
-	    cairo_status_t status = _flush_glyphs (state);
+	    status = _flush_glyphs (state);
 	    if (status)
 		return status;
 	    state->start_x = logical_x;
 	}
 	
 	dx = logical_x - state->last_x;
-	if (!_cairo_array_append (&state->dx, &dx, 1))
-	    return CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_array_append (&state->dx, &dx);
+	if (status)
+	    return status;
     } else {
 	state->start_x = logical_x;
     }
@@ -947,7 +954,9 @@ _add_glyph (cairo_glyph_state_t *state,
     state->last_x = logical_x;
     state->last_y = logical_y;
     
-    _cairo_array_append (&state->glyphs, &glyph_index, 1);
+    status = _cairo_array_append (&state->glyphs, &glyph_index);
+    if (status)
+	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1096,7 +1105,7 @@ _cairo_win32_scaled_font_glyph_init (void		       *abstract_font,
 
 static cairo_int_status_t 
 _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
-				      cairo_operator_t    	operator,
+				      cairo_operator_t    	op,
 				      cairo_pattern_t          *pattern,
 				      cairo_surface_t          *generic_surface,
 				      int                 	source_x,
@@ -1117,7 +1126,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 
     if (_cairo_surface_is_win32 (generic_surface) &&
 	surface->format == CAIRO_FORMAT_RGB24 &&
-	operator == CAIRO_OPERATOR_OVER &&
+	op == CAIRO_OPERATOR_OVER &&
 	_cairo_pattern_is_opaque_solid (pattern)) {
 
 	cairo_solid_pattern_t *solid_pattern = (cairo_solid_pattern_t *)pattern;
@@ -1186,13 +1195,13 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 		return CAIRO_STATUS_NO_MEMORY;
 	}
 
-	/* For operator == OVER, no-cleartype, a possible optimization here is to
+	/* For op == OVER, no-cleartype, a possible optimization here is to
 	 * draw onto an intermediate ARGB32 surface and alpha-blend that with the
 	 * destination
 	 */
 	_cairo_pattern_init_for_surface (&mask, mask_surface);
 
-	status = _cairo_surface_composite (operator, pattern, 
+	status = _cairo_surface_composite (op, pattern, 
 					   &mask.base,
 					   &surface->base,
 					   source_x, source_y,

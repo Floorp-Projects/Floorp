@@ -130,6 +130,11 @@ glitz_agl_destroy (void *abstract_drawable);
 extern glitz_bool_t __internal_linkage
 glitz_agl_swap_buffers (void *abstract_drawable);
 
+extern glitz_bool_t __internal_linkage
+glitz_agl_drawable_update_size (glitz_agl_drawable_t *drawable,
+				int                  width,
+				int                  height);
+
 /* Avoid unnecessary PLT entries.  */
 
 slim_hidden_proto(glitz_agl_init)
@@ -137,5 +142,6 @@ slim_hidden_proto(glitz_agl_fini)
 slim_hidden_proto(glitz_agl_find_drawable_format)
 slim_hidden_proto(glitz_agl_create_drawable_for_window)
 slim_hidden_proto(glitz_agl_create_pbuffer_drawable)
+slim_hidden_proto(glitz_agl_drawable_update_size)
 
 #endif /* GLITZ_GLXINT_H_INCLUDED */

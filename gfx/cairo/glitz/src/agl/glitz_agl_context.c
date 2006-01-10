@@ -36,7 +36,7 @@ _glitz_agl_get_bundle (const char *name)
 {
     CFBundleRef bundle = 0;
     FSRefParam ref_param;
-    unsigned char framework_name[256];
+    char framework_name[256];
 
     framework_name[0] = strlen (name);
     strcpy (&framework_name[1], name);
@@ -52,7 +52,7 @@ _glitz_agl_get_bundle (const char *name)
 
 	memset (&ref, 0, sizeof (ref));
 
-	ref_param.ioNamePtr = framework_name;
+	ref_param.ioNamePtr = (unsigned char *) framework_name;
 	ref_param.newRef = &ref;
 
 	if (PBMakeFSRefSync (&ref_param) == noErr) {
@@ -173,9 +173,9 @@ _glitz_agl_make_current (void *abstract_drawable,
 
     if (drawable->base.width  != drawable->width ||
 	drawable->base.height != drawable->height)
-	_glitz_agl_drawable_update_size (drawable,
-					 drawable->base.width,
-					 drawable->base.height);
+	glitz_agl_drawable_update_size (drawable,
+					drawable->base.width,
+					drawable->base.height);
 
     if (aglGetCurrentContext () != context->context)
     {
@@ -186,7 +186,7 @@ _glitz_agl_make_current (void *abstract_drawable,
 	if (drawable->pbuffer)
 	{
 	    AGLPbuffer pbuffer;
-	    GLuint unused;
+	    GLint unused;
 
 	    aglGetPBuffer (context->context, &pbuffer,
 			   &unused, &unused, &unused);
@@ -242,7 +242,7 @@ _glitz_agl_context_get_proc_address (void       *abstract_context,
     glitz_function_pointer_t func;
     CFBundleRef bundle;
 
-    _glitz_agl_make_current (drawable, context, NULL);
+    _glitz_agl_make_current (drawable, context);
 
     bundle = _glitz_agl_get_bundle ("OpenGL.framework");
 
@@ -309,20 +309,23 @@ glitz_agl_context_get (glitz_agl_thread_info_t *thread_info,
     context->backend.make_current = _glitz_agl_make_current;
     context->backend.get_proc_address = _glitz_agl_context_get_proc_address;
 
+    context->backend.draw_buffer = _glitz_drawable_draw_buffer;
+    context->backend.read_buffer = _glitz_drawable_read_buffer;
+
     context->backend.drawable_formats = NULL;
     context->backend.n_drawable_formats = 0;
 
-    if (screen_info->n_formats)
+    if (thread_info->n_formats)
     {
 	int size;
 
-	size = sizeof (glitz_int_drawable_format_t) * screen_info->n_formats;
+	size = sizeof (glitz_int_drawable_format_t) * thread_info->n_formats;
 	context->backend.drawable_formats = malloc (size);
 	if (context->backend.drawable_formats)
 	{
-	    memcpy (context->backend.drawable_formats, screen_info->formats,
+	    memcpy (context->backend.drawable_formats, thread_info->formats,
 		    size);
-	    context->backend.n_drawable_formats = screen_info->n_formats;
+	    context->backend.n_drawable_formats = thread_info->n_formats;
 	}
     }
 
@@ -436,9 +439,9 @@ _glitz_agl_context_update (glitz_agl_drawable_t *drawable,
     case GLITZ_DRAWABLE_CURRENT:
 	if (drawable->base.width  != drawable->width ||
 	    drawable->base.height != drawable->height)
-	    _glitz_agl_drawable_update_size (drawable,
-					     drawable->base.width,
-					     drawable->base.height);
+	    glitz_agl_drawable_update_size (drawable,
+					    drawable->base.width,
+					    drawable->base.height);
 
 	context = aglGetCurrentContext ();
 	if (context != drawable->context->context) {
@@ -446,7 +449,7 @@ _glitz_agl_context_update (glitz_agl_drawable_t *drawable,
 	} else {
 	    if (drawable->pbuffer) {
 		AGLPbuffer pbuffer;
-		GLuint unused;
+		GLint unused;
 
 		aglGetPBuffer (drawable->context->context, &pbuffer,
 			       &unused, &unused, &unused);

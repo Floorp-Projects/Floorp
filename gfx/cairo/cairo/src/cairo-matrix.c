@@ -700,3 +700,20 @@ _cairo_matrix_transformed_circle_major_axis (cairo_matrix_t *matrix, double radi
      * double min = radius * sqrt (f - sqrt (g*g+h*h));
      */
 }
+
+void
+_cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
+				pixman_transform_t	*pixman_transform)
+{
+    pixman_transform->matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
+    pixman_transform->matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
+    pixman_transform->matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
+
+    pixman_transform->matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
+    pixman_transform->matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
+    pixman_transform->matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
+
+    pixman_transform->matrix[2][0] = 0;
+    pixman_transform->matrix[2][1] = 0;
+    pixman_transform->matrix[2][2] = _cairo_fixed_from_double (1);
+}

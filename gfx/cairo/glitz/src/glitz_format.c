@@ -31,28 +31,32 @@
 
 #include <stdlib.h>
 
-struct _texture_format {
+static struct _texture_format {
     glitz_gl_int_t texture_format;
     glitz_format_t format;
 } _texture_formats[] = {
-    { GLITZ_GL_ALPHA4,   { 0, GLITZ_FORMAT_TYPE_COLOR, {  0,  0,  0,  4 } } },
-    { GLITZ_GL_ALPHA8,   { 0, GLITZ_FORMAT_TYPE_COLOR, {  0,  0,  0,  8 } } },
-    { GLITZ_GL_ALPHA12,  { 0, GLITZ_FORMAT_TYPE_COLOR, {  0,  0,  0, 12 } } },
-    { GLITZ_GL_ALPHA16,  { 0, GLITZ_FORMAT_TYPE_COLOR, {  0,  0,  0, 16 } } },
-    { GLITZ_GL_R3_G3_B2, { 0, GLITZ_FORMAT_TYPE_COLOR, {  3,  3,  2,  0 } } },
-    { GLITZ_GL_RGB4,     { 0, GLITZ_FORMAT_TYPE_COLOR, {  4,  4,  4,  0 } } },
-    { GLITZ_GL_RGB5,     { 0, GLITZ_FORMAT_TYPE_COLOR, {  5,  6,  5,  0 } } },
-    { GLITZ_GL_RGB8,     { 0, GLITZ_FORMAT_TYPE_COLOR, {  8,  8,  8,  0 } } },
-    { GLITZ_GL_RGB10,    { 0, GLITZ_FORMAT_TYPE_COLOR, { 10, 10, 10,  0 } } },
-    { GLITZ_GL_RGB12,    { 0, GLITZ_FORMAT_TYPE_COLOR, { 12, 12, 12,  0 } } },
-    { GLITZ_GL_RGB16,    { 0, GLITZ_FORMAT_TYPE_COLOR, { 16, 16, 16,  0 } } },
-    { GLITZ_GL_RGBA2,    { 0, GLITZ_FORMAT_TYPE_COLOR, {  2,  2,  2,  2 } } },
-    { GLITZ_GL_RGB5_A1,  { 0, GLITZ_FORMAT_TYPE_COLOR, {  5,  5,  5,  1 } } },
-    { GLITZ_GL_RGBA4,    { 0, GLITZ_FORMAT_TYPE_COLOR, {  4,  4,  4,  4 } } },
-    { GLITZ_GL_RGBA8,    { 0, GLITZ_FORMAT_TYPE_COLOR, {  8,  8,  8,  8 } } },
-    { GLITZ_GL_RGB10_A2, { 0, GLITZ_FORMAT_TYPE_COLOR, { 10, 10, 10,  2 } } },
-    { GLITZ_GL_RGBA12,   { 0, GLITZ_FORMAT_TYPE_COLOR, { 12, 12, 12, 12 } } },
-    { GLITZ_GL_RGBA16,   { 0, GLITZ_FORMAT_TYPE_COLOR, { 16, 16, 16, 16 } } }
+    { GLITZ_GL_ALPHA4,   { 0, { GLITZ_FOURCC_RGB,  0,  0,  0,  4 } } },
+    { GLITZ_GL_ALPHA8,   { 0, { GLITZ_FOURCC_RGB,  0,  0,  0,  8 } } },
+    { GLITZ_GL_ALPHA12,  { 0, { GLITZ_FOURCC_RGB,  0,  0,  0, 12 } } },
+    { GLITZ_GL_ALPHA16,  { 0, { GLITZ_FOURCC_RGB,  0,  0,  0, 16 } } },
+    { GLITZ_GL_R3_G3_B2, { 0, { GLITZ_FOURCC_RGB,  3,  3,  2,  0 } } },
+    { GLITZ_GL_RGB4,     { 0, { GLITZ_FOURCC_RGB,  4,  4,  4,  0 } } },
+    { GLITZ_GL_RGB5,     { 0, { GLITZ_FOURCC_RGB,  5,  6,  5,  0 } } },
+    { GLITZ_GL_RGB8,     { 0, { GLITZ_FOURCC_RGB,  8,  8,  8,  0 } } },
+    { GLITZ_GL_RGB10,    { 0, { GLITZ_FOURCC_RGB, 10, 10, 10,  0 } } },
+    { GLITZ_GL_RGB12,    { 0, { GLITZ_FOURCC_RGB, 12, 12, 12,  0 } } },
+    { GLITZ_GL_RGB16,    { 0, { GLITZ_FOURCC_RGB, 16, 16, 16,  0 } } },
+    { GLITZ_GL_RGBA2,    { 0, { GLITZ_FOURCC_RGB,  2,  2,  2,  2 } } },
+    { GLITZ_GL_RGB5_A1,  { 0, { GLITZ_FOURCC_RGB,  5,  5,  5,  1 } } },
+    { GLITZ_GL_RGBA4,    { 0, { GLITZ_FOURCC_RGB,  4,  4,  4,  4 } } },
+    { GLITZ_GL_RGBA8,    { 0, { GLITZ_FOURCC_RGB,  8,  8,  8,  8 } } },
+    { GLITZ_GL_RGB10_A2, { 0, { GLITZ_FOURCC_RGB, 10, 10, 10,  2 } } },
+    { GLITZ_GL_RGBA12,   { 0, { GLITZ_FOURCC_RGB, 12, 12, 12, 12 } } },
+    { GLITZ_GL_RGBA16,   { 0, { GLITZ_FOURCC_RGB, 16, 16, 16, 16 } } }
+};
+
+static glitz_format_t _texture_format_yv12 = {
+    0, { GLITZ_FOURCC_YV12,  0,  0,  0,  0 }
 };
 
 static void
@@ -79,7 +83,8 @@ void
 glitz_create_surface_formats (glitz_gl_proc_address_list_t *gl,
 			      glitz_format_t               **formats,
 			      glitz_gl_int_t               **texture_formats,
-			      int                          *n_formats)
+			      int                          *n_formats,
+			      unsigned long                features)
 {
     glitz_gl_int_t value;
     int i, n_texture_formats;
@@ -88,12 +93,12 @@ glitz_create_surface_formats (glitz_gl_proc_address_list_t *gl,
 	sizeof (_texture_formats) / sizeof (struct _texture_format);
 
     for (i = 0; i < n_texture_formats; i++) {
-	gl->tex_image_2d (GLITZ_GL_PROXY_TEXTURE_2D, 0,
-			  _texture_formats[i].texture_format, 1, 1, 0,
-			  GLITZ_GL_RGBA, GLITZ_GL_UNSIGNED_BYTE, NULL);
+	switch (_texture_formats[i].format.color.fourcc) {
+	case GLITZ_FOURCC_RGB:
+	    gl->tex_image_2d (GLITZ_GL_PROXY_TEXTURE_2D, 0,
+			      _texture_formats[i].texture_format, 1, 1, 0,
+			      GLITZ_GL_RGBA, GLITZ_GL_UNSIGNED_BYTE, NULL);
 
-	switch (_texture_formats[i].format.type) {
-	case GLITZ_FORMAT_TYPE_COLOR:
 	    if (_texture_formats[i].format.color.red_size) {
 		gl->get_tex_level_parameter_iv (GLITZ_GL_PROXY_TEXTURE_2D, 0,
 						GLITZ_GL_TEXTURE_RED_SIZE,
@@ -136,6 +141,13 @@ glitz_create_surface_formats (glitz_gl_proc_address_list_t *gl,
 				   _texture_formats[i].texture_format,
 				   &_texture_formats[i].format);
     }
+
+    /* formats used for YUV surfaces */
+    if (features & GLITZ_FEATURE_FRAGMENT_PROGRAM_MASK)
+    {
+	_glitz_add_texture_format (formats, texture_formats, n_formats,
+				   GLITZ_GL_LUMINANCE8, &_texture_format_yv12);
+    }
 }
 
 static void
@@ -155,7 +167,7 @@ _glitz_add_drawable_format (glitz_int_drawable_format_t *format,
     }
 }
 
-/* TODO: Available drawable formats needs to be validated is a similar way
+/* TODO: Available drawable formats needs to be validated in a similar way
    as surface formats. */
 void
 _glitz_add_drawable_formats (glitz_gl_proc_address_list_t *gl,
@@ -167,10 +179,10 @@ _glitz_add_drawable_formats (glitz_gl_proc_address_list_t *gl,
     {
 	glitz_int_drawable_format_t format;
 	glitz_drawable_format_t     d[] = {
-	    { 0, { 8, 8, 8, 0 }, 0,  0, 1, 0 },
-	    { 0, { 8, 8, 8, 8 }, 0,  0, 1, 0 },
-	    { 0, { 8, 8, 8, 0 }, 24, 8, 1, 1 },
-	    { 0, { 8, 8, 8, 8 }, 24, 8, 1, 1 }
+	    { 0, { GLITZ_FOURCC_RGB, 8, 8, 8, 0 }, 0,  0, 1, 0 },
+	    { 0, { GLITZ_FOURCC_RGB, 8, 8, 8, 8 }, 0,  0, 1, 0 },
+	    { 0, { GLITZ_FOURCC_RGB, 8, 8, 8, 0 }, 24, 8, 1, 1 },
+	    { 0, { GLITZ_FOURCC_RGB, 8, 8, 8, 8 }, 24, 8, 1, 1 }
 	};
 	int			    i;
 
@@ -195,6 +207,9 @@ glitz_drawable_format_copy (const glitz_drawable_format_t *src,
 {
     if (mask & GLITZ_FORMAT_ID_MASK)
 	dst->id = src->id;
+
+    if (mask & GLITZ_FORMAT_FOURCC_MASK)
+	dst->color.fourcc = src->color.fourcc;
 
     if (mask & GLITZ_FORMAT_RED_SIZE_MASK)
 	dst->color.red_size = src->color.red_size;
@@ -232,6 +247,10 @@ glitz_drawable_format_find (glitz_int_drawable_format_t       *formats,
     {
 	if (mask & GLITZ_FORMAT_ID_MASK)
 	    if (templ->d.id != formats->d.id)
+		continue;
+
+	if (mask & GLITZ_FORMAT_FOURCC_MASK)
+	    if (templ->d.color.fourcc != formats->d.color.fourcc)
 		continue;
 
 	if (mask & GLITZ_FORMAT_RED_SIZE_MASK)
@@ -300,8 +319,8 @@ _glitz_format_find (glitz_format_t       *formats,
 	    if (templ->id != formats->id)
 		continue;
 
-	if (mask & GLITZ_FORMAT_TYPE_MASK)
-	    if (templ->type != formats->type)
+	if (mask & GLITZ_FORMAT_FOURCC_MASK)
+	    if (templ->color.fourcc != formats->color.fourcc)
 		continue;
 
 	if (mask & GLITZ_FORMAT_RED_SIZE_MASK)
@@ -345,9 +364,13 @@ glitz_find_standard_format (glitz_drawable_t    *drawable,
     glitz_format_t templ;
     unsigned long mask = GLITZ_FORMAT_RED_SIZE_MASK |
 	GLITZ_FORMAT_GREEN_SIZE_MASK | GLITZ_FORMAT_BLUE_SIZE_MASK |
-	GLITZ_FORMAT_ALPHA_SIZE_MASK | GLITZ_FORMAT_TYPE_MASK;
+	GLITZ_FORMAT_ALPHA_SIZE_MASK | GLITZ_FORMAT_FOURCC_MASK;
 
-    templ.type = GLITZ_FORMAT_TYPE_COLOR;
+    templ.color.fourcc = GLITZ_FOURCC_RGB;
+    templ.color.red_size = 0;
+    templ.color.green_size = 0;
+    templ.color.blue_size = 0;
+    templ.color.alpha_size = 0;
 
     switch (format_name) {
     case GLITZ_STANDARD_ARGB32:
@@ -360,18 +383,11 @@ glitz_find_standard_format (glitz_drawable_t    *drawable,
 	templ.color.red_size = 8;
 	templ.color.green_size = 8;
 	templ.color.blue_size = 8;
-	templ.color.alpha_size = 0;
 	break;
     case GLITZ_STANDARD_A8:
-	templ.color.red_size = 0;
-	templ.color.green_size = 0;
-	templ.color.blue_size = 0;
 	templ.color.alpha_size = 8;
 	break;
     case GLITZ_STANDARD_A1:
-	templ.color.red_size = 0;
-	templ.color.green_size = 0;
-	templ.color.blue_size = 0;
 	templ.color.alpha_size = 1;
 	break;
     }

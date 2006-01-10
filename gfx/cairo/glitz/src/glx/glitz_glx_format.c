@@ -45,6 +45,9 @@ _glitz_glx_format_compare (const void *elem1,
 
     for (; i < 2; i++)
     {
+	if (format[i]->d.color.fourcc != GLITZ_FOURCC_RGB)
+	    score[i] -= 1000;
+
 	if (format[i]->d.color.red_size)
 	{
 	    if (format[i]->d.color.red_size >= 8)
@@ -119,8 +122,9 @@ _glitz_glx_query_formats (glitz_glx_screen_info_t *screen_info)
 			      &visual_templ, &num_visuals);
 
     /* No pbuffers without fbconfigs */
-    format.types = GLITZ_DRAWABLE_TYPE_WINDOW_MASK;
-    format.d.id  = 0;
+    format.types          = GLITZ_DRAWABLE_TYPE_WINDOW_MASK;
+    format.d.id           = 0;
+    format.d.color.fourcc = GLITZ_FOURCC_RGB;
 
     for (i = 0; i < num_visuals; i++)
     {
@@ -243,7 +247,8 @@ _glitz_glx_query_formats_using_fbconfigs (glitz_glx_screen_info_t *screen_info)
 	if (value & GLX_PBUFFER_BIT)
 	    format.types |= GLITZ_DRAWABLE_TYPE_PBUFFER_MASK;
 
-	format.d.id = 0;
+	format.d.id           = 0;
+	format.d.color.fourcc = GLITZ_FOURCC_RGB;
 
 	glx->get_fbconfig_attrib (display, fbconfigs[i], GLX_FBCONFIG_ID,
 				  &value);

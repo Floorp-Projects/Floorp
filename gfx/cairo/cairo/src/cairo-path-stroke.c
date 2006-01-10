@@ -36,11 +36,16 @@
 
 #include "cairoint.h"
 
-#include "cairo-gstate-private.h"
-
 typedef struct cairo_stroker {
-    cairo_gstate_t *gstate;
+    cairo_stroke_style_t	*style;
+
+    cairo_matrix_t *ctm;
+    cairo_matrix_t *ctm_inverse;
+    double tolerance;
+
     cairo_traps_t *traps;
+
+    cairo_pen_t	  pen;
 
     cairo_bool_t has_current_point;
     cairo_point_t current_point;
@@ -60,7 +65,12 @@ typedef struct cairo_stroker {
 
 /* private functions */
 static void
-_cairo_stroker_init (cairo_stroker_t *stroker, cairo_gstate_t *gstate, cairo_traps_t *traps);
+_cairo_stroker_init (cairo_stroker_t		*stroker,
+		     cairo_stroke_style_t	*stroke_style,
+		     cairo_matrix_t		*ctm,
+		     cairo_matrix_t		*ctm_inverse,
+		     double			 tolerance,
+		     cairo_traps_t		*traps);
 
 static void
 _cairo_stroker_fini (cairo_stroker_t *stroker);
@@ -101,49 +111,59 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 static void
 _cairo_stroker_start_dash (cairo_stroker_t *stroker)
 {
-    cairo_gstate_t *gstate = stroker->gstate;
     double offset;
     int	on = 1;
     int	i = 0;
 
-    offset = gstate->dash_offset;
-    while (offset >= gstate->dash[i]) {
-	offset -= gstate->dash[i];
+    offset = stroker->style->dash_offset;
+    while (offset >= stroker->style->dash[i]) {
+	offset -= stroker->style->dash[i];
 	on = 1-on;
-	if (++i == gstate->num_dashes)
+	if (++i == stroker->style->num_dashes)
 	    i = 0;
     }
     stroker->dashed = TRUE;
     stroker->dash_index = i;
     stroker->dash_on = on;
-    stroker->dash_remain = gstate->dash[i] - offset;
+    stroker->dash_remain = stroker->style->dash[i] - offset;
 }
 
 static void
 _cairo_stroker_step_dash (cairo_stroker_t *stroker, double step)
 {
-    cairo_gstate_t *gstate = stroker->gstate;
     stroker->dash_remain -= step;
     if (stroker->dash_remain <= 0) {
 	stroker->dash_index++;
-	if (stroker->dash_index == gstate->num_dashes)
+	if (stroker->dash_index == stroker->style->num_dashes)
 	    stroker->dash_index = 0;
 	stroker->dash_on = 1-stroker->dash_on;
-	stroker->dash_remain = gstate->dash[stroker->dash_index];
+	stroker->dash_remain = stroker->style->dash[stroker->dash_index];
     }
 }
 
 static void
-_cairo_stroker_init (cairo_stroker_t *stroker, cairo_gstate_t *gstate, cairo_traps_t *traps)
+_cairo_stroker_init (cairo_stroker_t		*stroker,
+		     cairo_stroke_style_t	*stroke_style,
+		     cairo_matrix_t		*ctm,
+		     cairo_matrix_t		*ctm_inverse,
+		     double			 tolerance,
+		     cairo_traps_t		*traps)
 {
-    stroker->gstate = gstate;
+    stroker->style = stroke_style;
+    stroker->ctm = ctm;
+    stroker->ctm_inverse = ctm_inverse;
+    stroker->tolerance = tolerance;
     stroker->traps = traps;
 
+    _cairo_pen_init (&stroker->pen,
+		     stroke_style->line_width / 2.0,
+		     tolerance, ctm);
+    
     stroker->has_current_point = FALSE;
     stroker->has_current_face = FALSE;
     stroker->has_first_face = FALSE;
 
-    if (gstate->dash)
+    if (stroker->style->dash)
 	_cairo_stroker_start_dash (stroker);
     else
 	stroker->dashed = FALSE;
@@ -152,7 +172,7 @@ _cairo_stroker_init (cairo_stroker_t *stroker, cairo_gstate_t *gstate, cairo_tra
 static void
 _cairo_stroker_fini (cairo_stroker_t *stroker)
 {
-    /* nothing to do here */
+    _cairo_pen_fini (&stroker->pen);
 }
 
 static void
@@ -177,8 +197,7 @@ static cairo_status_t
 _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_stroke_face_t *out)
 {
     cairo_status_t	status;
-    cairo_gstate_t	*gstate = stroker->gstate;
-    int		clockwise = _cairo_stroker_face_clockwise (out, in);
+    int			clockwise = _cairo_stroker_face_clockwise (out, in);
     cairo_point_t	*inpt, *outpt;
 
     if (in->cw.x == out->cw.x
@@ -196,12 +215,12 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
     	outpt = &out->cw;
     }
 
-    switch (gstate->line_join) {
+    switch (stroker->style->line_join) {
     case CAIRO_LINE_JOIN_ROUND: {
 	int i;
 	int start, step, stop;
 	cairo_point_t tri[3];
-	cairo_pen_t *pen = &gstate->pen_regular;
+	cairo_pen_t *pen = &stroker->pen;
 
 	tri[0] = in->point;
 	if (clockwise) {
@@ -237,7 +256,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	/* dot product of incoming slope vector with outgoing slope vector */
 	double	in_dot_out = ((-in->usr_vector.x * out->usr_vector.x)+
 			      (-in->usr_vector.y * out->usr_vector.y));
-	double	ml = gstate->miter_limit;
+	double	ml = stroker->style->miter_limit;
 
 	/*
 	 * Check the miter limit -- lines meeting at an acute angle
@@ -285,14 +304,14 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	    y1 = _cairo_fixed_to_double (inpt->y);
 	    dx1 = in->usr_vector.x;
 	    dy1 = in->usr_vector.y;
-	    cairo_matrix_transform_distance (&gstate->ctm, &dx1, &dy1);
+	    cairo_matrix_transform_distance (stroker->ctm, &dx1, &dy1);
 	    
 	    /* outer point of outgoing line face */
 	    x2 = _cairo_fixed_to_double (outpt->x);
 	    y2 = _cairo_fixed_to_double (outpt->y);
 	    dx2 = out->usr_vector.x;
 	    dy2 = out->usr_vector.y;
-	    cairo_matrix_transform_distance (&gstate->ctm, &dx2, &dy2);
+	    cairo_matrix_transform_distance (stroker->ctm, &dx2, &dy2);
 	    
 	    /*
 	     * Compute the location of the outer corner of the miter.
@@ -344,18 +363,17 @@ static cairo_status_t
 _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 {
     cairo_status_t	    status;
-    cairo_gstate_t	    *gstate = stroker->gstate;
 
-    if (gstate->line_cap == CAIRO_LINE_CAP_BUTT)
+    if (stroker->style->line_cap == CAIRO_LINE_CAP_BUTT)
 	return CAIRO_STATUS_SUCCESS;
     
-    switch (gstate->line_cap) {
+    switch (stroker->style->line_cap) {
     case CAIRO_LINE_CAP_ROUND: {
 	int i;
 	int start, stop;
 	cairo_slope_t slope;
 	cairo_point_t tri[3];
-	cairo_pen_t *pen = &gstate->pen_regular;
+	cairo_pen_t *pen = &stroker->pen;
 
 	slope = f->dev_vector;
 	_cairo_pen_find_active_cw_vertex_index (pen, &slope, &start);
@@ -383,9 +401,9 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 
 	dx = f->usr_vector.x;
 	dy = f->usr_vector.y;
-	dx *= gstate->line_width / 2.0;
-	dy *= gstate->line_width / 2.0;
-	cairo_matrix_transform_distance (&gstate->ctm, &dx, &dy);
+	dx *= stroker->style->line_width / 2.0;
+	dy *= stroker->style->line_width / 2.0;
+	cairo_matrix_transform_distance (stroker->ctm, &dx, &dy);
 	fvector.dx = _cairo_fixed_from_double (dx);
 	fvector.dy = _cairo_fixed_from_double (dy);
 	occw.x = f->ccw.x + fvector.dx;
@@ -460,7 +478,7 @@ _cairo_stroker_add_caps (cairo_stroker_t *stroker)
 }
 
 static void
-_compute_face (cairo_point_t *point, cairo_slope_t *slope, cairo_gstate_t *gstate, cairo_stroke_face_t *face)
+_compute_face (cairo_point_t *point, cairo_slope_t *slope, cairo_stroker_t *stroker, cairo_stroke_face_t *face)
 {
     double mag, det;
     double line_dx, line_dy;
@@ -472,7 +490,7 @@ _compute_face (cairo_point_t *point, cairo_slope_t *slope, cairo_gstate_t *gstat
     line_dy = _cairo_fixed_to_double (slope->dy);
 
     /* faces are normal in user space, not device space */
-    cairo_matrix_transform_distance (&gstate->ctm_inverse, &line_dx, &line_dy);
+    cairo_matrix_transform_distance (stroker->ctm_inverse, &line_dx, &line_dy);
 
     mag = sqrt (line_dx * line_dx + line_dy * line_dy);
     if (mag == 0) {
@@ -494,20 +512,20 @@ _compute_face (cairo_point_t *point, cairo_slope_t *slope, cairo_gstate_t *gstat
      * whether the ctm reflects or not, and that can be determined
      * by looking at the determinant of the matrix.
      */
-    _cairo_matrix_compute_determinant (&gstate->ctm, &det);
+    _cairo_matrix_compute_determinant (stroker->ctm, &det);
     if (det >= 0)
     {
-	face_dx = - line_dy * (gstate->line_width / 2.0);
-	face_dy = line_dx * (gstate->line_width / 2.0);
+	face_dx = - line_dy * (stroker->style->line_width / 2.0);
+	face_dy = line_dx * (stroker->style->line_width / 2.0);
     }
     else
     {
-	face_dx = line_dy * (gstate->line_width / 2.0);
-	face_dy = - line_dx * (gstate->line_width / 2.0);
+	face_dx = line_dy * (stroker->style->line_width / 2.0);
+	face_dy = - line_dx * (stroker->style->line_width / 2.0);
     }
 
     /* back to device space */
-    cairo_matrix_transform_distance (&gstate->ctm, &face_dx, &face_dy);
+    cairo_matrix_transform_distance (stroker->ctm, &face_dx, &face_dy);
 
     offset_ccw.x = _cairo_fixed_from_double (face_dx);
     offset_ccw.y = _cairo_fixed_from_double (face_dy);
@@ -533,7 +551,6 @@ _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_
 			     cairo_stroke_face_t *start, cairo_stroke_face_t *end)
 {
     cairo_status_t status;
-    cairo_gstate_t *gstate = stroker->gstate;
     cairo_polygon_t polygon;
     cairo_slope_t slope;
 
@@ -545,12 +562,12 @@ _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_
     }
 
     _cairo_slope_init (&slope, p1, p2);
-    _compute_face (p1, &slope, gstate, start);
+    _compute_face (p1, &slope, stroker, start);
 
     /* XXX: This could be optimized slightly by not calling
        _compute_face again but rather  translating the relevant
        fields from start. */
-    _compute_face (p2, &slope, gstate, end);
+    _compute_face (p2, &slope, stroker, end);
 
     /* XXX: I should really check the return value of the
        move_to/line_to functions here to catch out of memory
@@ -648,7 +665,6 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t *stroker = closure;
-    cairo_gstate_t *gstate = stroker->gstate;
     double mag, remain, tmp;
     double dx, dy;
     double dx2, dy2;
@@ -664,7 +680,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     dx = _cairo_fixed_to_double (p2->x - p1->x);
     dy = _cairo_fixed_to_double (p2->y - p1->y);
 
-    cairo_matrix_transform_distance (&gstate->ctm_inverse, &dx, &dy);
+    cairo_matrix_transform_distance (stroker->ctm_inverse, &dx, &dy);
 
     mag = sqrt (dx *dx + dy * dy);
     remain = mag;
@@ -676,7 +692,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	remain -= tmp;
         dx2 = dx * (mag - remain)/mag;
 	dy2 = dy * (mag - remain)/mag;
-	cairo_matrix_transform_distance (&gstate->ctm, &dx2, &dy2);
+	cairo_matrix_transform_distance (stroker->ctm, &dx2, &dy2);
 	fd2.x = _cairo_fixed_from_double (dx2);
 	fd2.y = _cairo_fixed_from_double (dy2);
 	fd2.x += p1->x;
@@ -764,7 +780,6 @@ _cairo_stroker_curve_to (void *closure,
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t *stroker = closure;
-    cairo_gstate_t *gstate = stroker->gstate;
     cairo_spline_t spline;
     cairo_pen_t pen;
     cairo_stroke_face_t start, end;
@@ -775,12 +790,12 @@ _cairo_stroker_curve_to (void *closure,
     if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return CAIRO_STATUS_SUCCESS;
 
-    status = _cairo_pen_init_copy (&pen, &gstate->pen_regular);
+    status = _cairo_pen_init_copy (&pen, &stroker->pen);
     if (status)
 	goto CLEANUP_SPLINE;
 
-    _compute_face (a, &spline.initial_slope, gstate, &start);
-    _compute_face (d, &spline.final_slope, gstate, &end);
+    _compute_face (a, &spline.initial_slope, stroker, &start);
+    _compute_face (d, &spline.final_slope, stroker, &end);
 
     if (stroker->has_current_face) {
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &start);
@@ -812,7 +827,7 @@ _cairo_stroker_curve_to (void *closure,
     if (status)
 	goto CLEANUP_PEN;
 
-    status = _cairo_pen_stroke_spline (&pen, &spline, gstate->tolerance, stroker->traps);
+    status = _cairo_pen_stroke_spline (&pen, &spline, stroker->tolerance, stroker->traps);
     if (status)
 	goto CLEANUP_PEN;
 
@@ -852,7 +867,6 @@ _cairo_stroker_curve_to_dashed (void *closure,
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t *stroker = closure;
-    cairo_gstate_t *gstate = stroker->gstate;
     cairo_spline_t spline;
     cairo_point_t *a = &stroker->current_point;
     cairo_line_join_t line_join_save;
@@ -864,15 +878,15 @@ _cairo_stroker_curve_to_dashed (void *closure,
 
     /* If the line width is so small that the pen is reduced to a
        single point, then we have nothing to do. */
-    if (gstate->pen_regular.num_vertices <= 1)
+    if (stroker->pen.num_vertices <= 1)
 	goto CLEANUP_SPLINE;
 
-    /* Temporarily modify the gstate to use round joins to guarantee
+    /* Temporarily modify the stroker to use round joins to guarantee
      * smooth stroked curves. */
-    line_join_save = gstate->line_join;
-    gstate->line_join = CAIRO_LINE_JOIN_ROUND;
+    line_join_save = stroker->style->line_join;
+    stroker->style->line_join = CAIRO_LINE_JOIN_ROUND;
 
-    status = _cairo_spline_decompose (&spline, gstate->tolerance);
+    status = _cairo_spline_decompose (&spline, stroker->tolerance);
     if (status)
 	goto CLEANUP_GSTATE;
 
@@ -886,7 +900,7 @@ _cairo_stroker_curve_to_dashed (void *closure,
     }
 
   CLEANUP_GSTATE:
-    gstate->line_join = line_join_save;
+    stroker->style->line_join = line_join_save;
 
   CLEANUP_SPLINE:
     _cairo_spline_fini (&spline);
@@ -923,16 +937,21 @@ _cairo_stroker_close_path (void *closure)
 }
 
 cairo_status_t
-_cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t *path,
-				   cairo_gstate_t     *gstate,
-				   cairo_traps_t      *traps)
+_cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
+				   cairo_stroke_style_t	*stroke_style,
+				   cairo_matrix_t	*ctm,
+				   cairo_matrix_t	*ctm_inverse,
+				   double		 tolerance,
+				   cairo_traps_t	*traps)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t stroker;
 
-    _cairo_stroker_init (&stroker, gstate, traps);
+    _cairo_stroker_init (&stroker, stroke_style,
+			 ctm, ctm_inverse, tolerance,
+			 traps);
 
-    if (gstate->dash)
+    if (stroker.style->dash)
 	status = _cairo_path_fixed_interpret (path,
 					      CAIRO_DIRECTION_FORWARD,
 					      _cairo_stroker_move_to,

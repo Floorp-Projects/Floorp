@@ -38,16 +38,8 @@
 #include "cairo-atsui.h"
 #include "cairoint.h"
 #include "cairo.h"
+#include "cairo-quartz-private.h"
 
-/*
- * FixedToFloat/FloatToFixed are 10.3+ SDK items - include definitions
- * here so we can use older SDKs.
- */
-#ifndef FixedToFloat
-#define fixed1              ((Fixed) 0x00010000L)
-#define FixedToFloat(a)     ((float)(a) / fixed1)
-#define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
-#endif
 typedef struct _cairo_atsui_font_face cairo_atsui_font_face_t;
 typedef struct _cairo_atsui_font cairo_atsui_font_t;
 
@@ -62,7 +54,6 @@ static cairo_status_t _cairo_atsui_font_create_scaled (cairo_font_face_t *font_f
 struct _cairo_atsui_font {
     cairo_scaled_font_t base;
 
-    cairo_matrix_t scale;
     ATSUStyle style;
     ATSUStyle unscaled_style;
     ATSUFontID fontID;
@@ -128,7 +119,7 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
 
 
 static CGAffineTransform
-CGAffineTransformMakeWithCairoFontScale(cairo_matrix_t *scale)
+CGAffineTransformMakeWithCairoFontScale(const cairo_matrix_t *scale)
 {
     return CGAffineTransformMake(scale->xx, scale->yx,
                                  scale->xy, scale->yy,
@@ -136,7 +127,7 @@ CGAffineTransformMakeWithCairoFontScale(cairo_matrix_t *scale)
 }
 
 static ATSUStyle
-CreateSizedCopyOfStyle(ATSUStyle inStyle, cairo_matrix_t *scale)
+CreateSizedCopyOfStyle(ATSUStyle inStyle, const cairo_matrix_t *scale)
 {
     ATSUStyle style;
     OSStatus err;
@@ -176,17 +167,17 @@ _cairo_atsui_font_set_metrics (cairo_atsui_font_t *font)
                                         &metrics);
 
         if (err == noErr) {
-	    cairo_font_extents_t extents;
+	    	cairo_font_extents_t extents;
 	    
             extents.ascent = metrics.ascent;
-            extents.descent = metrics.descent;
+            extents.descent = -metrics.descent;
             extents.height = metrics.capHeight;
             extents.max_x_advance = metrics.maxAdvanceWidth;
 
             // The FT backend doesn't handle max_y_advance either, so we'll ignore it for now. 
             extents.max_y_advance = 0.0;
 
-	    _cairo_scaled_font_set_metrics (&font->base, &extents);
+	    	_cairo_scaled_font_set_metrics (&font->base, &extents);
 
             return CAIRO_STATUS_SUCCESS;
         }
@@ -205,7 +196,6 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 				 cairo_scaled_font_t **font_out)
 {
     cairo_atsui_font_t *font = NULL;
-    cairo_matrix_t scale;
     OSStatus err;
     cairo_status_t status;
 
@@ -214,8 +204,7 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     _cairo_scaled_font_init(&font->base, font_face, font_matrix, ctm, options,
 			    &cairo_atsui_scaled_font_backend);
 
-    cairo_matrix_multiply(&scale, font_matrix, ctm);
-    font->style = CreateSizedCopyOfStyle(style, &scale);
+    font->style = CreateSizedCopyOfStyle(style, &font->base.scale);
 
     Fixed theSize = FloatToFixed(1.0);
     const ATSUAttributeTag theFontStyleTags[] = { kATSUSizeTag };
@@ -229,7 +218,6 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     font->unscaled_style = style;
 
     font->fontID = font_id;
-    font->scale = scale;
 
     *font_out = &font->base;
 
@@ -550,18 +538,18 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 }
 
 static cairo_int_status_t 
-_cairo_atsui_font_show_glyphs (void		       *abstract_font,
-			       cairo_operator_t    	operator,
-			       cairo_pattern_t          *pattern,
-			       cairo_surface_t          *generic_surface,
-			       int                 	source_x,
-			       int                 	source_y,
-			       int			dest_x,
-			       int			dest_y,
-			       unsigned int		width,
-			       unsigned int		height,
-			       const cairo_glyph_t      *glyphs,
-			       int                 	num_glyphs)
+_cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
+				   cairo_operator_t    	op,
+				   cairo_pattern_t     *pattern,
+				   cairo_surface_t     *generic_surface,
+				   int                 	source_x,
+				   int                 	source_y,
+				   int			dest_x,
+				   int			dest_y,
+				   unsigned int		width,
+				   unsigned int		height,
+				   const cairo_glyph_t *glyphs,
+				   int                 	num_glyphs)
 {
     cairo_atsui_font_t *font = abstract_font;
     CGContextRef myBitmapContext;
@@ -596,7 +584,7 @@ _cairo_atsui_font_show_glyphs (void		       *abstract_font,
     CGContextSetFont(myBitmapContext, cgFont);
 
     CGAffineTransform textTransform =
-        CGAffineTransformMakeWithCairoFontScale(&font->scale);
+        CGAffineTransformMakeWithCairoFontScale(&font->base.scale);
 
     textTransform = CGAffineTransformScale(textTransform, 1.0f, -1.0f);
 
@@ -615,13 +603,43 @@ _cairo_atsui_font_show_glyphs (void		       *abstract_font,
 	CGContextSetRGBFillColor(myBitmapContext, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
+	if (_cairo_surface_is_quartz (generic_surface)) {
+		cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)generic_surface;
+		if (surface->clip_region) {
+			pixman_box16_t *boxes = pixman_region_rects (surface->clip_region);
+			int num_boxes = pixman_region_num_rects (surface->clip_region);
+			CGRect stack_rects[10];
+			CGRect *rects;
+			int i;
+			
+			if (num_boxes > 10)
+				rects = malloc (sizeof (CGRect) * num_boxes);
+			else
+				rects = stack_rects;
+				
+			for (i = 0; i < num_boxes; i++) {
+				rects[i].origin.x = boxes[i].x1;
+				rects[i].origin.y = boxes[i].y1;
+				rects[i].size.width = boxes[i].x2 - boxes[i].x1;
+				rects[i].size.height = boxes[i].y2 - boxes[i].y1;
+			}
+			
+			CGContextClipToRects (myBitmapContext, rects, num_boxes);
+			
+			if (rects != stack_rects)
+				free(rects);
+		}
+	} else {
+		/* XXX: Need to get the text clipped */
+	}
+	
     // TODO - bold and italic text
     //
     // We could draw the text using ATSUI and get bold, italics
     // etc. for free, but ATSUI does a lot of text layout work
     // that we don't really need...
 
-
+	
     for (i = 0; i < num_glyphs; i++) {
         CGGlyph theGlyph = glyphs[i].index;
 		
@@ -650,6 +668,6 @@ const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
     _cairo_atsui_font_scaled_glyph_init,
     _cairo_atsui_font_text_to_glyphs,
     NULL, /* ucs4_to_index */
-    _cairo_atsui_font_show_glyphs,
+    _cairo_atsui_font_old_show_glyphs,
 };
 

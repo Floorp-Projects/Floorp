@@ -401,7 +401,7 @@ _cairo_ft_unscaled_font_create_for_pattern (FcPattern *pattern)
 
     _cairo_ft_unscaled_font_init_key (&key, filename, id);
 
-    /* Return exsiting unscaled font if it exists in the hash table. */
+    /* Return existing unscaled font if it exists in the hash table. */
     if (_cairo_hash_table_lookup (font_map->hash_table, &key.base.hash_entry,
 				  (cairo_hash_entry_t **) &unscaled))
     {
@@ -1890,7 +1890,7 @@ _cairo_ft_ucs4_to_index (void	    *abstract_font,
 
 static cairo_int_status_t 
 _cairo_ft_show_glyphs (void		       *abstract_font,
-		       cairo_operator_t    	operator,
+		       cairo_operator_t    	op,
 		       cairo_pattern_t     *pattern,
 		       cairo_surface_t     *surface,
 		       int                 	source_x,

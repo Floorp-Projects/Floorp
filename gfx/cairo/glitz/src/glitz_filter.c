@@ -107,6 +107,10 @@ glitz_filter_set_params (glitz_surface_t *surface,
 
 	_glitz_filter_params_set (&dm, 3.0f, &params, &n_params);
 	_glitz_filter_params_set (&dn, 3.0f, &params, &n_params);
+
+	glitz_clamp_value (&dm, 1.0f, 1024.0f);
+	glitz_clamp_value (&dn, 1.0f, 1024.0f);
+
 	m = dm;
 	n = dn;
 
@@ -130,8 +134,10 @@ glitz_filter_set_params (glitz_surface_t *surface,
 		_glitz_filter_params_set (&weight, 0.0f, &params, &n_params);
 		if (weight != 0.0f) {
 		    vec = &vecs[surface->filter_params->id++];
-		    vec->v[0] = (i - cx) * surface->texture.texcoord_width_unit;
-		    vec->v[1] = (cy - j) * surface->texture.texcoord_height_unit;
+		    vec->v[0] = (i - cx) *
+			surface->texture.texcoord_width_unit;
+		    vec->v[1] = (cy - j) *
+			surface->texture.texcoord_height_unit;
 		    vec->v[2] = weight;
 		    vec->v[3] = 0.0f;
 		}
@@ -211,14 +217,15 @@ glitz_filter_set_params (glitz_surface_t *surface,
 	if (size < 2)
 	    size = 2;
 
-	if (_glitz_filter_params_ensure (surface, size + 1))
-	    return GLITZ_STATUS_NO_MEMORY;
-
-	vecs = surface->filter_params->vectors;
-
-	if (filter == GLITZ_FILTER_LINEAR_GRADIENT) {
-	    glitz_float_t length, angle, dh, dv;
+	if (filter == GLITZ_FILTER_LINEAR_GRADIENT)
+	{
+	    glitz_float_t length, dh, dv;
 	    glitz_float_t start_x, start_y, stop_x, stop_y;
+
+	    if (_glitz_filter_params_ensure (surface, size + 1))
+		return GLITZ_STATUS_NO_MEMORY;
+
+	    vecs = surface->filter_params->vectors;
 
 	    _glitz_filter_params_set (&start_x, 0.0f, &params, &n_params);
 	    _glitz_filter_params_set (&start_y, 0.0f, &params, &n_params);
@@ -228,32 +235,48 @@ glitz_filter_set_params (glitz_surface_t *surface,
 	    dh = stop_x - start_x;
 	    dv = stop_y - start_y;
 
-	    length = sqrtf (dh * dh + dv * dv);
+	    length = dh * dh + dv * dv;
 
-	    angle = -atan2f (dv, dh);
+	    vecs->v[0] = dh / length;
+	    vecs->v[1] = dv / length;
+	    vecs->v[2] = -vecs->v[0] * start_x - vecs->v[1] * start_y;
+	    vecs->v[3] = 0.0f;
+	}
+	else
+	{
+	    glitz_float_t r0, r1, r, x0, y0, x1, y1, dx, dy;
 
-	    vecs->v[2] = cosf (angle);
-	    vecs->v[3] = -sinf (angle);
+	    if (_glitz_filter_params_ensure (surface, size + 2))
+		return GLITZ_STATUS_NO_MEMORY;
 
-	    vecs->v[0] = vecs->v[2] * start_x;
-	    vecs->v[0] += vecs->v[3] * start_y;
+	    vecs = surface->filter_params->vectors;
 
-	    vecs->v[1] = (length)? 1.0f / length: 2147483647.0f;
-	} else {
-	    glitz_float_t r0, r1;
-
-	    _glitz_filter_params_set (&vecs->v[0], 0.5f, &params, &n_params);
-	    _glitz_filter_params_set (&vecs->v[1], 0.5f, &params, &n_params);
+	    _glitz_filter_params_set (&x0, 0.5f, &params, &n_params);
+	    _glitz_filter_params_set (&y0, 0.5f, &params, &n_params);
 	    _glitz_filter_params_set (&r0, 0.0f, &params, &n_params);
-	    _glitz_filter_params_set (&r1, 0.5f, &params, &n_params);
+
+	    _glitz_filter_params_set (&x1, x0, &params, &n_params);
+	    _glitz_filter_params_set (&y1, y0, &params, &n_params);
+	    _glitz_filter_params_set (&r1, r0 + 0.5f, &params, &n_params);
 
 	    glitz_clamp_value (&r0, 0.0f, r1);
 
-	    vecs->v[2] = r0;
-	    if (r1 != r0)
-		vecs->v[3] = 1.0f / (r1 - r0);
-	    else
-		vecs->v[3] = 2147483647.0f;
+	    r = r0 / r1;
+
+	    dx = x1 - x0;
+	    dy = y1 - y0;
+
+	    vecs->v[0] = x0 - r * dx;
+	    vecs->v[1] = y0 - r * dy;
+	    vecs->v[2] = dx * 2.0f;
+	    vecs->v[3] = dy * 2.0f;
+
+	    vecs++;
+
+	    vecs->v[0] = 1.0f / (1.0f + r);
+	    vecs->v[1] = -r * vecs->v[0];
+	    vecs->v[2] = (r1 * r1 - dx * dx - dy * dy) * 4.0f;
+	    vecs->v[3] = 2.0f / vecs->v[2];
 	}
 
 	vecs++;
@@ -309,10 +332,35 @@ glitz_filter_set_params (glitz_surface_t *surface,
 	break;
     case GLITZ_FILTER_BILINEAR:
     case GLITZ_FILTER_NEAREST:
-	if (surface->filter_params)
-	    free (surface->filter_params);
+	switch (surface->format->color.fourcc) {
+	case GLITZ_FOURCC_YV12:
+	    if (_glitz_filter_params_ensure (surface, 2))
+		return GLITZ_STATUS_NO_MEMORY;
 
-	surface->filter_params = NULL;
+	    vecs = surface->filter_params->vectors;
+
+	    vecs->v[0] = 0.0f;
+	    vecs->v[1] = surface->texture.texcoord_height_unit *
+		((surface->texture.box.y2 + 1) & ~1);
+	    vecs->v[2] = surface->texture.texcoord_width_unit *
+		(surface->texture.width >> 1);
+	    vecs->v[3] = 0.0f;
+
+	    vecs++;
+
+	    vecs->v[0] = surface->texture.texcoord_width_unit;
+	    vecs->v[1] = surface->texture.texcoord_height_unit;
+	    vecs->v[2] = surface->texture.texcoord_width_unit *
+		surface->texture.box.x2 - vecs->v[0];
+	    vecs->v[3] = surface->texture.texcoord_height_unit *
+		surface->texture.box.y2 - vecs->v[1];
+
+	    surface->filter_params->id = 1;
+	    break;
+	default:
+	    free (surface->filter_params);
+	    surface->filter_params = NULL;
+	}
 	break;
     }
 
@@ -325,6 +373,9 @@ glitz_gl_uint_t
 glitz_filter_get_fragment_program (glitz_surface_t *surface,
 				   glitz_composite_op_t *op)
 {
+    if (surface->filter_params->fp_type == GLITZ_FP_UNSUPPORTED)
+	return 0;
+
     return glitz_get_fragment_program (op,
 				       surface->filter_params->fp_type,
 				       surface->filter_params->id);
@@ -334,43 +385,56 @@ void
 glitz_filter_set_type (glitz_surface_t *surface,
 		       glitz_filter_t filter)
 {
-    switch (filter) {
-    case GLITZ_FILTER_CONVOLUTION:
-    case GLITZ_FILTER_GAUSSIAN:
-	surface->filter_params->fp_type = GLITZ_FP_CONVOLUTION;
+    switch (surface->format->color.fourcc) {
+    case GLITZ_FOURCC_YV12:
+	switch (filter) {
+	case GLITZ_FILTER_BILINEAR:
+	case GLITZ_FILTER_NEAREST:
+	    surface->filter_params->fp_type = GLITZ_FP_COLORSPACE_YV12;
+	    break;
+	default:
+	    surface->filter_params->fp_type = GLITZ_FP_UNSUPPORTED;
+	    break;
+	}
 	break;
-    case GLITZ_FILTER_LINEAR_GRADIENT:
-	if (surface->flags & GLITZ_SURFACE_FLAG_REPEAT_MASK) {
-	    if (SURFACE_MIRRORED (surface))
+    default:
+	switch (filter) {
+	case GLITZ_FILTER_CONVOLUTION:
+	case GLITZ_FILTER_GAUSSIAN:
+	    surface->filter_params->fp_type = GLITZ_FP_CONVOLUTION;
+	    break;
+	case GLITZ_FILTER_LINEAR_GRADIENT:
+	    if (surface->flags & GLITZ_SURFACE_FLAG_REPEAT_MASK) {
+		if (SURFACE_MIRRORED (surface))
+		    surface->filter_params->fp_type =
+			GLITZ_FP_LINEAR_GRADIENT_REFLECT;
+		else
+		    surface->filter_params->fp_type =
+			GLITZ_FP_LINEAR_GRADIENT_REPEAT;
+	    } else if (surface->flags & GLITZ_SURFACE_FLAG_PAD_MASK) {
 		surface->filter_params->fp_type =
-		    GLITZ_FP_LINEAR_GRADIENT_REFLECT;
-	    else
+		    GLITZ_FP_LINEAR_GRADIENT_NEAREST;
+	    } else
 		surface->filter_params->fp_type =
-		    GLITZ_FP_LINEAR_GRADIENT_REPEAT;
-	} else if (surface->flags & GLITZ_SURFACE_FLAG_PAD_MASK) {
-	    surface->filter_params->fp_type =
-		GLITZ_FP_LINEAR_GRADIENT_NEAREST;
-	} else
-	    surface->filter_params->fp_type =
-		GLITZ_FP_LINEAR_GRADIENT_TRANSPARENT;
-	break;
-    case GLITZ_FILTER_RADIAL_GRADIENT:
-	if (surface->flags & GLITZ_SURFACE_FLAG_REPEAT_MASK) {
-	    if (SURFACE_MIRRORED (surface))
+		    GLITZ_FP_LINEAR_GRADIENT_TRANSPARENT;
+	    break;
+	case GLITZ_FILTER_RADIAL_GRADIENT:
+	    if (surface->flags & GLITZ_SURFACE_FLAG_REPEAT_MASK) {
+		if (SURFACE_MIRRORED (surface))
+		    surface->filter_params->fp_type =
+			GLITZ_FP_RADIAL_GRADIENT_REFLECT;
+		else
+		    surface->filter_params->fp_type =
+			GLITZ_FP_RADIAL_GRADIENT_REPEAT;
+	    } else if (surface->flags & GLITZ_SURFACE_FLAG_PAD_MASK) {
 		surface->filter_params->fp_type =
-		    GLITZ_FP_RADIAL_GRADIENT_REFLECT;
-	    else
+		    GLITZ_FP_RADIAL_GRADIENT_NEAREST;
+	    } else
 		surface->filter_params->fp_type =
-		    GLITZ_FP_RADIAL_GRADIENT_REPEAT;
-	} else if (surface->flags & GLITZ_SURFACE_FLAG_PAD_MASK) {
-	    surface->filter_params->fp_type = GLITZ_FP_RADIAL_GRADIENT_NEAREST;
-	} else
-	    surface->filter_params->fp_type =
-		GLITZ_FP_RADIAL_GRADIENT_TRANSPARENT;
-	break;
-    case GLITZ_FILTER_BILINEAR:
-    case GLITZ_FILTER_NEAREST:
-	break;
+		    GLITZ_FP_RADIAL_GRADIENT_TRANSPARENT;
+	default:
+	    break;
+	}
     }
 }
 
@@ -402,6 +466,15 @@ glitz_filter_enable (glitz_surface_t *surface,
 
 	vec++;
 
+	j = 1;
+	if (surface->filter == GLITZ_FILTER_RADIAL_GRADIENT)
+	{
+	    gl->program_local_param_4fv (GLITZ_GL_FRAGMENT_PROGRAM, j++,
+					 vec->v);
+
+	    vec++;
+	}
+
 	if (fp_type == GLITZ_FP_LINEAR_GRADIENT_TRANSPARENT ||
 	    fp_type == GLITZ_FP_RADIAL_GRADIENT_TRANSPARENT) {
 	    glitz_vec4_t v;
@@ -410,10 +483,8 @@ glitz_filter_enable (glitz_surface_t *surface,
 	    v.v[2] = 0.0f;
 	    v.v[3] = (vec->v[3])? 1.0f / vec->v[3]: 1.0f;
 
-	    gl->program_local_param_4fv (GLITZ_GL_FRAGMENT_PROGRAM, 1, v.v);
-	    j = 2;
-	} else
-	    j = 1;
+	    gl->program_local_param_4fv (GLITZ_GL_FRAGMENT_PROGRAM, j++, v.v);
+	}
 
 	for (i = 0; i < surface->filter_params->id; i++, vec++)
 	    gl->program_local_param_4fv (GLITZ_GL_FRAGMENT_PROGRAM,
@@ -432,6 +503,18 @@ glitz_filter_enable (glitz_surface_t *surface,
     } break;
     case GLITZ_FILTER_BILINEAR:
     case GLITZ_FILTER_NEAREST:
+	switch (surface->format->color.fourcc) {
+	case GLITZ_FOURCC_YV12: {
+	    glitz_vec4_t *vec;
+
+	    vec = surface->filter_params->vectors;
+
+	    gl->program_local_param_4fv (GLITZ_GL_FRAGMENT_PROGRAM, 0,
+					 vec[0].v);
+	    gl->program_local_param_4fv (GLITZ_GL_FRAGMENT_PROGRAM, 1,
+					 vec[1].v);
+	} break;
+	}
 	break;
     }
 }

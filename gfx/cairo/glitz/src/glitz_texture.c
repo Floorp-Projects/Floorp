@@ -34,6 +34,7 @@ glitz_texture_init (glitz_texture_t *texture,
 		    int             width,
 		    int             height,
 		    glitz_gl_int_t  texture_format,
+		    glitz_fourcc_t  fourcc,
 		    unsigned long   feature_mask,
 		    glitz_bool_t    unnormalized)
 {
@@ -44,24 +45,48 @@ glitz_texture_init (glitz_texture_t *texture,
 	texture->param.border_color.alpha = 0;
 
     texture->format = texture_format;
-    texture->name = 0;
+    texture->fourcc = fourcc;
+    texture->name   = 0;
 
-    if (feature_mask & GLITZ_FEATURE_TEXTURE_BORDER_CLAMP_MASK)
-    {
+    switch (fourcc) {
+    case GLITZ_FOURCC_YV12:
+	/* U and V plane added below */
 	texture->box.x1 = texture->box.y1 = 0;
-	texture->box.x2 = texture->width = width;
+	texture->box.x2 = width;
+	texture->box.y2 = height;
+	texture->width  = (width + 1) & ~1;
+	texture->height = (height + 1) & ~1;
+	texture->height += texture->height >> 1;
+	texture->flags  = GLITZ_TEXTURE_FLAG_PADABLE_MASK;
+	break;
+    case GLITZ_FOURCC_YUY2:
+	/* 1 RGBA texel for 2 YUY2 pixels */
+	texture->box.x1 = texture->box.y1 = 0;
+	texture->box.x2 = texture->width  = width >> 1;
 	texture->box.y2 = texture->height = height;
-	texture->flags = GLITZ_TEXTURE_FLAG_REPEATABLE_MASK |
+	texture->flags  = GLITZ_TEXTURE_FLAG_CLAMPABLE_MASK |
+	    GLITZ_TEXTURE_FLAG_REPEATABLE_MASK |
 	    GLITZ_TEXTURE_FLAG_PADABLE_MASK;
-    }
-    else
-    {
-	texture->box.x1 = texture->box.y1 = 1;
-	texture->box.x2 = width + 1;
-	texture->box.y2 = height + 1;
-	texture->width = width + 2;
-	texture->height = height + 2;
-	texture->flags = 0;
+	break;
+    default:
+	if (feature_mask & GLITZ_FEATURE_TEXTURE_BORDER_CLAMP_MASK)
+	{
+	    texture->box.x1 = texture->box.y1 = 0;
+	    texture->box.x2 = texture->width = width;
+	    texture->box.y2 = texture->height = height;
+	    texture->flags =  GLITZ_TEXTURE_FLAG_CLAMPABLE_MASK |
+		GLITZ_TEXTURE_FLAG_REPEATABLE_MASK |
+		GLITZ_TEXTURE_FLAG_PADABLE_MASK;
+	}
+	else
+	{
+	    texture->box.x1 = texture->box.y1 = 1;
+	    texture->box.x2 = width + 1;
+	    texture->box.y2 = height + 1;
+	    texture->width = width + 2;
+	    texture->height = height + 2;
+	    texture->flags =  GLITZ_TEXTURE_FLAG_CLAMPABLE_MASK;
+	}
     }
 
     if (!unnormalized &&
@@ -154,8 +179,10 @@ glitz_texture_allocate (glitz_gl_proc_address_list_t *gl,
 
     glitz_texture_bind (gl, texture);
 
-    if (texture->box.x2 != texture->width ||
-	texture->box.y2 != texture->height) {
+    if (TEXTURE_CLAMPABLE (texture) &&
+	(texture->box.x2 != texture->width ||
+	 texture->box.y2 != texture->height))
+    {
 	data = malloc (texture->width * texture->height);
 	if (data)
 	    memset (data, 0, texture->width * texture->height);
@@ -276,6 +303,7 @@ glitz_texture_set_tex_gen (glitz_gl_proc_address_list_t *gl,
     if (flags & GLITZ_SURFACE_FLAG_GEN_T_COORDS_MASK)
     {
 	plane.v[0] = plane.v[2] = 0.0f;
+
 	if (flags & GLITZ_SURFACE_FLAG_EYE_COORDS_MASK)
 	{
 	    plane.v[1] = 1.0f;
@@ -284,7 +312,6 @@ glitz_texture_set_tex_gen (glitz_gl_proc_address_list_t *gl,
 	else
 	{
 	    plane.v[1] = -texture->texcoord_height_unit;
-
 	    if (flags & GLITZ_SURFACE_FLAG_TRANSFORM_MASK)
 		plane.v[3] = (y_src + texture->box.y2 - texture->box.y1) *
 		    texture->texcoord_height_unit;

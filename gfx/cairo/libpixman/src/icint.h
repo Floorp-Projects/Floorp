@@ -835,6 +835,13 @@ pixman_private pixman_image_t *
 pixman_image_createForPixels (FbPixels	*pixels,
 			pixman_format_t	*format);
 
+pixman_private uint32_t
+pixman_gradient_color (pixman_gradient_stop_t *stop1,
+		       pixman_gradient_stop_t *stop2,
+		       uint32_t		      x);
+
+#define PictureGradientColor pixman_gradient_color
+
 /* icpixels.c */
 
 pixman_private FbPixels *

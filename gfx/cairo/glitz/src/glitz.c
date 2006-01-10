@@ -422,8 +422,10 @@ glitz_copy_area (glitz_surface_t *src,
 		    glitz_surface_pop_current (src);
 		}
 
-		gl->read_buffer (src->buffer);
-		gl->draw_buffer (dst->buffer);
+		src->drawable->backend->read_buffer (src->drawable,
+						     src->buffer);
+		dst->drawable->backend->draw_buffer (dst->drawable,
+						     dst->buffer);
 
 		glitz_set_operator (gl, GLITZ_OPERATOR_SRC);
 
@@ -496,8 +498,8 @@ glitz_copy_area (glitz_surface_t *src,
 
 		    gl->color_4us (0x0, 0x0, 0x0, 0xffff);
 
-		    param.filter[0] = param.filter[1] = GLITZ_GL_CLAMP_TO_EDGE;
-		    param.wrap[0] = param.wrap[1] = GLITZ_GL_NEAREST;
+		    param.filter[0] = param.filter[1] = GLITZ_GL_NEAREST;
+		    param.wrap[0] = param.wrap[1] = GLITZ_GL_CLAMP_TO_EDGE;
 
 		    glitz_texture_ensure_parameters (gl, texture, &param);
 
@@ -596,7 +598,7 @@ glitz_copy_area (glitz_surface_t *src,
 	{
 	    glitz_texture_t *texture;
 
-	    gl->read_buffer (src->buffer);
+	    src->drawable->backend->read_buffer (src->drawable, src->buffer);
 
 	    texture = glitz_surface_get_texture (dst, 1);
 	    if (texture)

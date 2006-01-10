@@ -31,6 +31,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 static glitz_extension_map gl_extensions[] = {
     { 0.0, "GL_ARB_texture_rectangle", GLITZ_FEATURE_TEXTURE_RECTANGLE_MASK },
@@ -108,14 +109,36 @@ glitz_extensions_query (glitz_gl_float_t    version,
     return mask;
 }
 
+static glitz_gl_float_t
+_glitz_gl_version_string_to_float (const char *gl_version_string)
+{
+    glitz_gl_float_t version = 0.0f;
+    int		     i;
+
+    for (i = 0; isdigit (gl_version_string[i]); i++)
+	version = version * 10.0f + (gl_version_string[i] - 48);
+
+    if (gl_version_string[i++] != '.')
+	return 0.0f;
+
+    version = version * 10.0f + (gl_version_string[i] - 48);
+
+    return (version + 0.1f) / 10.0f;
+}
+
 static glitz_status_t
 _glitz_query_gl_extensions (glitz_gl_proc_address_list_t *gl,
 			    glitz_gl_float_t             *gl_version,
 			    unsigned long                *feature_mask)
 {
     const char *gl_extensions_string;
+    const char *gl_version_string;
 
-    *gl_version = atof ((const char *) gl->get_string (GLITZ_GL_VERSION));
+    gl_version_string = (const char *) gl->get_string (GLITZ_GL_VERSION);
+    if (!gl_version_string)
+	return GLITZ_STATUS_NOT_SUPPORTED;
+
+    *gl_version = _glitz_gl_version_string_to_float (gl_version_string);
     if (*gl_version < 1.2f)
 	return GLITZ_STATUS_NOT_SUPPORTED;
 
@@ -315,7 +338,8 @@ glitz_backend_init (glitz_backend_t               *backend,
 	glitz_create_surface_formats (backend->gl,
 				      &backend->formats,
 				      &backend->texture_formats,
-				      &backend->n_formats);
+				      &backend->n_formats,
+				      backend->feature_mask);
 	_glitz_add_drawable_formats (backend->gl,
 				     backend->feature_mask,
 				     &backend->drawable_formats,

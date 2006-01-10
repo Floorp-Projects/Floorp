@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.1 2005/10/06 04:02:06 vladimir%pobox.com Exp $
+/* $Id: cairo-scaled-font.c,v 1.3 2006/01/18 22:15:25 vladimir%pobox.com Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -776,7 +776,7 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	*scaled_font,
 
 cairo_status_t
 _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
-				cairo_operator_t        operator,
+				cairo_operator_t        op,
 				cairo_pattern_t        *pattern,
 				cairo_surface_t        *surface,
 				int                     source_x,
@@ -785,7 +785,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 				int			dest_y,
 				unsigned int		width,
 				unsigned int		height,
-				cairo_glyph_t          *glyphs,
+				const cairo_glyph_t    *glyphs,
 				int                     num_glyphs)
 {
     cairo_status_t status;
@@ -795,14 +795,14 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
     /* These operators aren't interpreted the same way by the backends;
      * they are implemented in terms of other operators in cairo-gstate.c
      */
-    assert (operator != CAIRO_OPERATOR_SOURCE && operator != CAIRO_OPERATOR_CLEAR);
+    assert (op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_CLEAR);
     
     if (scaled_font->status)
 	return scaled_font->status;
 
     if (scaled_font->backend->show_glyphs != NULL) {
 	status = scaled_font->backend->show_glyphs (scaled_font,
-						    operator, pattern, 
+						    op, pattern, 
 						    surface,
 						    source_x, source_y,
 						    dest_x, dest_y,
@@ -887,7 +887,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
 	_cairo_pattern_init_for_surface (&mask_pattern, mask);
     
-	status = _cairo_surface_composite (operator, pattern, &mask_pattern.base,
+	status = _cairo_surface_composite (op, pattern, &mask_pattern.base,
 					   surface,
 					   source_x, source_y, 
 					   0,        0,

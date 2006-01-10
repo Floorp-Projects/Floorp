@@ -119,8 +119,8 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
  * http://mail.gnome.org/archives/gtk-devel-list/2001-October/msg00087.html
  */
 
-static int
-dtostr (char *buffer, size_t size, double d)
+int
+_cairo_dtostr (char *buffer, size_t size, double d)
 {
   struct lconv *locale_data;
   const char *decimal_point;
@@ -233,7 +233,7 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	    snprintf (buffer, sizeof buffer, "%s", va_arg (ap, const char *));
 	    break;
 	case 'f':
-	    dtostr (buffer, sizeof buffer, va_arg (ap, double));
+	    _cairo_dtostr (buffer, sizeof buffer, va_arg (ap, double));
 	    break;
 	case 'c':
 	    buffer[0] = va_arg (ap, int);

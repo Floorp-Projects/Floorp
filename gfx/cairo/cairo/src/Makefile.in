@@ -84,7 +84,9 @@ CSRCS   = \
 	cairo-scaled-font.c \
         cairo-slope.c \
         cairo-spline.c \
+	cairo-stroke-style.c \
         cairo-surface.c \
+	cairo-surface-fallback.c \
         cairo-traps.c \
         cairo-unicode.c \
         cairo-wideint.c \
@@ -113,6 +115,10 @@ CSRCS   += cairo-font-subset.c \
 EXPORTS += cairo-ps.h cairo-pdf.h
 endif
 
+ifdef BUILD_CAIRO_SVG
+CSRCS	+= cairo-svg-surface.c
+EXPORTS += cairo-svg.h
+endif
 
 ifdef MOZ_X11
 CSRCS   += cairo-xlib-surface.c \

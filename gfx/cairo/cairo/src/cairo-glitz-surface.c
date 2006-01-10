@@ -92,7 +92,11 @@ _cairo_glitz_surface_create_similar (void	    *abstract_src,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    surface = glitz_surface_create (drawable, gformat, width, height, 0, NULL);
+    surface = glitz_surface_create (drawable, gformat,
+				    width <= 0 ? 1 : width,
+				    height <= 0 ? 1 : height,
+				    0, NULL);
+
     if (surface == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
@@ -153,7 +157,7 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
 	rect_out->height = height;
     }
 
-    if (surface->format->type == GLITZ_FORMAT_TYPE_COLOR) {
+    if (surface->format->color.fourcc == GLITZ_FOURCC_RGB) {
 	if (surface->format->color.red_size > 0) {
 	    format.bpp = 32;
 
@@ -178,6 +182,7 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
 	format.blue_mask = 0xff;
     }
 
+    pf.fourcc = GLITZ_FOURCC_RGB;
     pf.masks.bpp = format.bpp;
     pf.masks.alpha_mask = format.alpha_mask;
     pf.masks.red_mask = format.red_mask;
@@ -201,6 +206,10 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
+    /* clear out the glitz clip; the clip affects glitz_get_pixels */
+    glitz_surface_set_clip_region (surface->surface,
+				   0, 0, NULL, 0);
+
     glitz_get_pixels (surface->surface,
 		      x1, y1,
 		      width, height,
@@ -208,6 +217,10 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t *surface,
 		      buffer);
 
     glitz_buffer_destroy (buffer);
+
+    /* restore the clip, if any */
+    surface->base.current_clip_serial = 0;
+    _cairo_surface_set_clip (&surface->base, surface->base.clip);
 
     image = (cairo_image_surface_t *)
 	_cairo_image_surface_create_with_masks (pixels,
@@ -246,6 +259,7 @@ _cairo_glitz_surface_set_image (void		      *abstract_surface,
 
     pixman_format_get_masks (format, &pf.masks.bpp, &am, &rm, &gm, &bm);
 
+    pf.fourcc = GLITZ_FOURCC_RGB;
     pf.masks.alpha_mask = am;
     pf.masks.red_mask = rm;
     pf.masks.green_mask = gm;
@@ -475,7 +489,7 @@ _glitz_ensure_target (glitz_surface_t *surface)
 	width    = glitz_surface_get_width (surface);
 	height   = glitz_surface_get_height (surface);
 
-	if (format->type != GLITZ_FORMAT_TYPE_COLOR)
+	if (format->color.fourcc != GLITZ_FOURCC_RGB)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	templ.color        = format->color;
@@ -545,10 +559,10 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	glitz_fixed16_16_t	    *params;
 	int			    n_params;
 	unsigned int		    *pixels;
-	int			    i;
-	unsigned char		    alpha;
+	int			    i, n_base_params;
 	glitz_buffer_t		    *buffer;
 	static glitz_pixel_format_t format = {
+	    GLITZ_FOURCC_RGB,
 	    {
 		32,
 		0xff000000,
@@ -570,41 +584,15 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	if (gradient->n_stops < 2)
 	    break;
 
-	/* glitz doesn't support inner and outer circle with different
-	   center points. */
-	if (pattern->type == CAIRO_PATTERN_RADIAL)
-	{
-	    cairo_radial_pattern_t *grad = (cairo_radial_pattern_t *) pattern;
-
-	    if (grad->center0.x != grad->center1.x ||
-		grad->center0.y != grad->center1.y)
-		break;
-	}
-
 	if (!CAIRO_GLITZ_FEATURE_OK (dst->surface, FRAGMENT_PROGRAM))
 	    break;
 
-	if (pattern->filter != CAIRO_FILTER_BILINEAR &&
-	    pattern->filter != CAIRO_FILTER_GOOD &&
-	    pattern->filter != CAIRO_FILTER_BEST)
-	    break;
+	if (pattern->type == CAIRO_PATTERN_RADIAL)
+	    n_base_params = 6;
+	else
+	    n_base_params = 4;
 
-	alpha = gradient->stops[0].color.alpha * 0xff;
-	for (i = 1; i < gradient->n_stops; i++)
-	{
-	    unsigned char a;
-
-	    a = gradient->stops[i].color.alpha * 0xff;
-	    if (a != alpha)
-		break;
-	}
-
-	/* we can't have color stops with different alpha as gradient color
-	   interpolation should be done to unpremultiplied colors. */
-	if (i < gradient->n_stops)
-	    break;
-
-	n_params = gradient->n_stops * 3 + 4;
+	n_params = gradient->n_stops * 3 + n_base_params;
 
 	data = malloc (sizeof (glitz_fixed16_16_t) * n_params +
 		       sizeof (unsigned int) * gradient->n_stops);
@@ -636,14 +624,14 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	for (i = 0; i < gradient->n_stops; i++)
 	{
 	    pixels[i] =
-		(((int) alpha) << 24)                                  |
-		(((int) gradient->stops[i].color.red   * alpha) << 16) |
-		(((int) gradient->stops[i].color.green * alpha) << 8)  |
-		(((int) gradient->stops[i].color.blue  * alpha));
+		(((int) (gradient->stops[i].color.alpha >> 8)) << 24) |
+		(((int) (gradient->stops[i].color.red   >> 8)) << 16) |
+		(((int) (gradient->stops[i].color.green >> 8)) << 8)  |
+		(((int) (gradient->stops[i].color.blue  >> 8)));
 
-	    params[4 + 3 * i] = gradient->stops[i].offset;
-	    params[5 + 3 * i] = i << 16;
-	    params[6 + 3 * i] = 0;
+	    params[n_base_params + 3 * i + 0] = gradient->stops[i].x;
+	    params[n_base_params + 3 * i + 1] = i << 16;
+	    params[n_base_params + 3 * i + 2] = 0;
 	}
 
 	glitz_set_pixels (src->surface, 0, 0, gradient->n_stops, 1,
@@ -655,32 +643,37 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	{
 	    cairo_linear_pattern_t *grad = (cairo_linear_pattern_t *) pattern;
 
-	    params[0] = _cairo_fixed_from_double (grad->point0.x);
-	    params[1] = _cairo_fixed_from_double (grad->point0.y);
-	    params[2] = _cairo_fixed_from_double (grad->point1.x);
-	    params[3] = _cairo_fixed_from_double (grad->point1.y);
+	    params[0] = grad->gradient.p1.x;
+	    params[1] = grad->gradient.p1.y;
+	    params[2] = grad->gradient.p2.x;
+	    params[3] = grad->gradient.p2.y;
 	    attr->filter = GLITZ_FILTER_LINEAR_GRADIENT;
 	}
 	else
 	{
 	    cairo_radial_pattern_t *grad = (cairo_radial_pattern_t *) pattern;
 
-	    params[0] = _cairo_fixed_from_double (grad->center0.x);
-	    params[1] = _cairo_fixed_from_double (grad->center0.y);
-	    params[2] = _cairo_fixed_from_double (grad->radius0);
-	    params[3] = _cairo_fixed_from_double (grad->radius1);
+	    params[0] = grad->gradient.inner.x;
+	    params[1] = grad->gradient.inner.y;
+	    params[2] = grad->gradient.inner.radius;
+	    params[3] = grad->gradient.outer.x;
+	    params[4] = grad->gradient.outer.y;
+	    params[5] = grad->gradient.outer.radius;
 	    attr->filter = GLITZ_FILTER_RADIAL_GRADIENT;
 	}
 
 	switch (pattern->extend) {
 	case CAIRO_EXTEND_NONE:
-	    attr->fill = GLITZ_FILL_NEAREST;
+	    attr->fill = GLITZ_FILL_TRANSPARENT;
 	    break;
 	case CAIRO_EXTEND_REPEAT:
 	    attr->fill = GLITZ_FILL_REPEAT;
 	    break;
 	case CAIRO_EXTEND_REFLECT:
 	    attr->fill = GLITZ_FILL_REFLECT;
+	    break;
+	case CAIRO_EXTEND_PAD:
+	    attr->fill = GLITZ_FILL_NEAREST;
 	    break;
 	}
 
@@ -717,6 +710,10 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	    case CAIRO_EXTEND_REFLECT:
 		attr->fill = GLITZ_FILL_REFLECT;
 		break;
+	    case CAIRO_EXTEND_PAD:
+	    default:
+               attr->fill = GLITZ_FILL_NEAREST;
+               break;
 	    }
 
 	    switch (attr->base.filter) {
@@ -1007,6 +1004,10 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
     void			     *data = NULL;
     cairo_int_status_t		     status;
     unsigned short		     alpha;
+
+    if (antialias != CAIRO_ANTIALIAS_DEFAULT &&
+	antialias != CAIRO_ANTIALIAS_GRAY)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (dst->base.status)
 	return dst->base.status;
@@ -1818,6 +1819,7 @@ _cairo_glitz_surface_add_glyph (cairo_glitz_surface_t *surface,
 
     pixman_format_get_masks (format, &pf.masks.bpp, &am, &rm, &gm, &bm);
 
+    pf.fourcc		= GLITZ_FOURCC_RGB;
     pf.masks.alpha_mask = am;
     pf.masks.red_mask   = rm;
     pf.masks.green_mask = gm;
@@ -1856,18 +1858,18 @@ _cairo_glitz_surface_add_glyph (cairo_glitz_surface_t *surface,
 #define N_STACK_BUF 256
 
 static cairo_int_status_t
-_cairo_glitz_surface_show_glyphs (cairo_scaled_font_t *scaled_font,
-				  cairo_operator_t    op,
-				  cairo_pattern_t     *pattern,
-				  void		      *abstract_surface,
-				  int		      src_x,
-				  int		      src_y,
-				  int		      dst_x,
-				  int		      dst_y,
-				  unsigned int	      width,
-				  unsigned int	      height,
-				  const cairo_glyph_t *glyphs,
-				  int		      num_glyphs)
+_cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
+				      cairo_operator_t     op,
+				      cairo_pattern_t     *pattern,
+				      void		  *abstract_surface,
+				      int		   src_x,
+				      int		   src_y,
+				      int		   dst_x,
+				      int		   dst_y,
+				      unsigned int	   width,
+				      unsigned int	   height,
+				      const cairo_glyph_t *glyphs,
+				      int		   num_glyphs)
 {
     cairo_glitz_surface_attributes_t	attributes;
     cairo_glitz_surface_glyph_private_t *glyph_private;
@@ -2108,6 +2110,16 @@ UNLOCK:
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_cairo_glitz_surface_flush (void *abstract_surface)
+{
+    cairo_glitz_surface_t *surface = abstract_surface;
+
+    glitz_surface_flush (surface->surface);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_create_similar,
     _cairo_glitz_surface_finish,
@@ -2124,10 +2136,9 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_set_clip_region,
     NULL, /* intersect_clip_path */
     _cairo_glitz_surface_get_extents,
-    _cairo_glitz_surface_show_glyphs,
-    NULL, /* fill_path */
+    _cairo_glitz_surface_old_show_glyphs,
     NULL, /* get_font_options */
-    NULL, /* flush */
+    _cairo_glitz_surface_flush,
     NULL, /* mark_dirty_rectangle */
     _cairo_glitz_surface_scaled_font_fini,
     _cairo_glitz_surface_scaled_glyph_fini

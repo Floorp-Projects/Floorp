@@ -45,24 +45,24 @@
 #define EXPAND_SRC_DECL "TEMP src;"
 #define EXPAND_SRC_2D_IN_OP                             \
     { "TXP src, fragment.texcoord[1], texture[1], 2D;", \
-	    "DP4 color.a, color, fragment.color;",      \
-	    "MUL result.color, src, color.a;" }
+      "DP4 color.a, color, fragment.color;",		\
+      "MUL result.color, src, color.a;" }
 
 #define EXPAND_SRC_RECT_IN_OP                             \
     { "TXP src, fragment.texcoord[1], texture[1], RECT;", \
-	    "DP4 color.a, color, fragment.color;",        \
-	    "MUL result.color, src, color.a;" }
+      "DP4 color.a, color, fragment.color;",		  \
+      "MUL result.color, src, color.a;" }
 
 #define EXPAND_MASK_DECL "TEMP mask;"
-#define EXPAND_MASK_2D_IN_OP                              \
-    { "TXP mask, fragment.texcoord[0], texture[0], 2D;",  \
-	    "DP4 mask.a, mask, fragment.color;",          \
-	    "MUL result.color, color, mask.a;" }
+#define EXPAND_MASK_2D_IN_OP                             \
+    { "TXP mask, fragment.texcoord[0], texture[0], 2D;", \
+      "DP4 mask.a, mask, fragment.color;",		 \
+      "MUL result.color, color, mask.a;" }
 
 #define EXPAND_MASK_RECT_IN_OP                             \
     { "TXP mask, fragment.texcoord[0], texture[0], RECT;", \
-	    "DP4 mask.a, mask, fragment.color;",           \
-	    "MUL result.color, color, mask.a;" }
+      "DP4 mask.a, mask, fragment.color;",		   \
+      "MUL result.color, color, mask.a;" }
 
 #define EXPAND_IN_NA     \
     { "NA", "NA", "NA" }
@@ -140,6 +140,18 @@ static const struct _glitz_program_expand_t {
 };
 
 /*
+ * perspective divide.
+ */
+static const char *_perspective_divide[] = {
+    "RCP position.w, pos.w;",
+    "MUL position, pos, position.w;", NULL
+};
+
+static const char *_no_perspective_divide[] = {
+    "MOV position, pos;", NULL
+};
+
+/*
  * general convolution filter.
  */
 static const char *_convolution_header[] = {
@@ -148,79 +160,73 @@ static const char *_convolution_header[] = {
     "TEMP color, in, coord, position;",
 
     /* extra declarations */
-    "%s"
-
-    /* perspective divide */
-    "RCP position.w, pos.w;",
-    "MUL position, pos, position.w;", NULL
+    "%s", NULL
 };
 
 static const char *_convolution_sample_first[] = {
     "MOV coord, 0.0;",
-    "ADD coord.x, position.x, p[0].x;",
-    "ADD coord.y, position.y, p[0].y;",
+    "ADD coord.xy, position.xyxx, p[0].xyxx;",
     "TEX in, coord, texture[%s], %s;",
     "MUL color, in, p[0].z;", NULL
 };
 
 static const char *_convolution_sample[] = {
-    "ADD coord.x, position.x, p[%d].x;",
-    "ADD coord.y, position.y, p[%d].y;",
+    "ADD coord.xy, position.xyxx, p[%d].xyxx;",
     "TEX in, coord, texture[%s], %s;",
     "MAD color, in, p[%d].z, color;", NULL
 };
-
 
 /*
  * gradient filters.
  */
 static const char *_gradient_header[] = {
-    "PARAM gradient = program.local[0];",
-    "PARAM stops[%d] = { program.local[1..%d] };",
+    "PARAM gradient[%d] = { program.local[0..%d] };",
+    "PARAM stops[%d] = { program.local[%d..%d] };",
     "ATTRIB pos = fragment.texcoord[%s];",
     "TEMP color, second_color, stop0, stop1, position;",
 
     /* extra declarations */
-    "%s",
-
-    /* perspective divide */
-    "RCP position.w, pos.w;",
-    "MUL position, pos, position.w;", NULL
+    "%s", NULL
 };
 
 /*
  * linear gradient filter.
  *
- * gradient.x = start offset
- * gradient.y = 1 / length
- * gradient.z = cos (angle)
- * gradient.w = -sin (angle)
+ * gradient.x = a
+ * gradient.y = b
+ * gradient.z = offset
  */
 static const char *_linear_gradient_calculations[] = {
-    "MUL position.x, gradient.z, position.x;",
-    "MAD position.x, gradient.w, position.y, position.x;",
-    "SUB position.z, position.x, gradient.x;",
-    "MUL position.z, position.z, gradient.y;", NULL
+    "MUL position.xy, gradient[0], position;",
+    "ADD position.x, position.x, position.y;",
+    "ADD position.z, position.x, gradient[0].z;", NULL
 };
 
 /*
  * radial gradient filter.
  *
- * gradient.x = center point X coordinate
- * gradient.y = center point Y coordinate
- * gradient.z = radius0
- * gradient.w = 1 / (radius1 - radius0)
+ * gradient[0].x = fx
+ * gradient[0].y = fy
+ * gradient[0].z = dx
+ * gradient[0].w = dy
+ *
+ * gradient[1].x = m
+ * gradient[1].y = b
+ * gradient[1].z = 4a
+ * gradient[1].w = 1 / 2a
  */
 static const char *_radial_gradient_calculations[] = {
-    "SUB position, position, gradient;",
-    "MUL position.x, position.x, position.x;",
-    "MAD position.x, position.y, position.y, position.x;",
-    "RSQ position.y, position.x;",
-    "RCP position.x, position.y;",
-    "MUL position.x, position.x, position.x;",
-    "MUL position.x, position.x, position.y;",
-    "SUB position.x, position.x, gradient.z;",
-    "MUL position.z, position.x, gradient.w;", NULL
+    "SUB position, position.xyxx, gradient[0].xyxx;",
+    "MUL position.zw, position.xxxy, gradient[0];",
+    "ADD position.w, position.w, position.z;",
+    "MUL position.xyz, position.xyww, position.xyww;",
+    "ADD position.x, position.x, position.y;",
+    "MAD position.z, position.x, gradient[1].z, position.z;",
+    "RSQ position.z, position.z;",
+    "RCP position.z, position.z;",
+    "SUB position.x, position.z, position.w;",
+    "MUL position.x, position.x, gradient[1].w;",
+    "MAD position.z, position.x, gradient[1].x, gradient[1].y;", NULL
 };
 
 static const char *_gradient_fill_repeat[] = {
@@ -228,15 +234,12 @@ static const char *_gradient_fill_repeat[] = {
 };
 
 static const char *_gradient_fill_reflect[] = {
-    "FLR position.w, position.z;",
-    "MUL position.w, position.w, 0.5;",
-    "FLR position.w, position.w;",
-    "MUL position.y, position.w, 2.0;",
-    "FLR position.x, position.z;",
-    "SUB position.y, position.x, position.y;",
-    "FRC position.x, position.z;",
-    "SUB position.x, position.x, position.y;",
-    "ABS position.z, position.x;", NULL
+    "MUL position.z, position.z, 0.5;"
+    "FRC position.z, position.z;"
+    "MUL position.z, position.z, 2.0;"
+    "SUB position.z, 1.0, position.z;"
+    "ABS position.z, position.z;"
+    "SUB position.z, 1.0, position.z;", NULL
 };
 
 static const char *_gradient_init_stops[] = {
@@ -263,7 +266,37 @@ static const char *_gradient_fetch_and_interpolate[] = {
     "MUL_SAT position.z, position.z, stop0.w;",
 
     /* linear interpolation */
-    "LRP color, position.z, second_color, color;", NULL
+    "LRP color, position.z, second_color, color;",
+
+    /* multiply alpha */
+    "MUL color.rgb, color.rgba, color.a;", NULL
+};
+
+/*
+ * color conversion filters
+ */
+static const char *_colorspace_yv12_header[] = {
+    "PARAM offset = program.local[0];",
+    "PARAM minmax = program.local[1];",
+    "ATTRIB pos = fragment.texcoord[%s];",
+    "TEMP color, tmp, position;",
+
+    /* extra declarations */
+    "%s", NULL
+};
+
+static const char *_colorspace_yv12[] = {
+    "MAX position, position, minmax;",
+    "MIN position, position, minmax.zwww;",
+    "TEX color, position, texture[%s], %s;",
+    "MAD position, position, .5, offset.xyww;",
+    "TEX tmp.x, position, texture[%s], %s;",
+    "MAD color, color, 1.164, -0.073;",		/* -1.164 * 16 / 255 */
+    "ADD position.x, position.x, offset.z;",
+    "TEX tmp.y, position, texture[%s], %s;",
+    "SUB tmp, tmp, { .5, .5 };",
+    "MAD color.xyz, { 1.596, -.813, 0 }, tmp.xxxw, color;",
+    "MAD color.xyz, { 0, -.391, 2.018 }, tmp.yyyw, color;", NULL
 };
 
 static struct _glitz_program_query {
@@ -276,9 +309,9 @@ static struct _glitz_program_query {
     { GLITZ_GL_PROGRAM_NATIVE_INSTRUCTIONS,
       GLITZ_GL_MAX_PROGRAM_NATIVE_INSTRUCTIONS, 1 },
     { GLITZ_GL_PROGRAM_PARAMETERS,
-      GLITZ_GL_MAX_PROGRAM_PARAMETERS, 1 },
+      GLITZ_GL_MAX_PROGRAM_PARAMETERS, 0 },
     { GLITZ_GL_PROGRAM_NATIVE_PARAMETERS,
-      GLITZ_GL_MAX_PROGRAM_NATIVE_PARAMETERS, 1 },
+      GLITZ_GL_MAX_PROGRAM_NATIVE_PARAMETERS, 0 },
     { GLITZ_GL_PROGRAM_ALU_INSTRUCTIONS,
       GLITZ_GL_MAX_PROGRAM_ALU_INSTRUCTIONS, 0 },
     { GLITZ_GL_PROGRAM_TEX_INSTRUCTIONS,
@@ -321,10 +354,10 @@ _glitz_program_under_limits (glitz_gl_proc_address_list_t *gl)
 
 static glitz_gl_int_t
 _glitz_compile_arb_fragment_program (glitz_gl_proc_address_list_t *gl,
-				     char *program_string,
-				     int n_parameters)
+				     char			  *string,
+				     int			  n_parameters)
 {
-    glitz_gl_int_t error, pid = -1;
+    glitz_gl_int_t  error = 0, pid = -1;
     glitz_gl_uint_t program;
 
     /* clear error flags */
@@ -334,11 +367,9 @@ _glitz_compile_arb_fragment_program (glitz_gl_proc_address_list_t *gl,
     gl->bind_program (GLITZ_GL_FRAGMENT_PROGRAM, program);
     gl->program_string (GLITZ_GL_FRAGMENT_PROGRAM,
 			GLITZ_GL_PROGRAM_FORMAT_ASCII,
-			strlen (program_string),
-			program_string);
+			strlen (string), string);
     if (gl->get_error () == GLITZ_GL_NO_ERROR) {
 	gl->get_integer_v (GLITZ_GL_PROGRAM_ERROR_POSITION, &error);
-
 	if (error == -1) {
 	    glitz_gl_int_t value;
 
@@ -358,6 +389,14 @@ _glitz_compile_arb_fragment_program (glitz_gl_proc_address_list_t *gl,
 	    }
 	}
     }
+#ifdef DEBUG
+    else {
+	gl->get_integer_v (GLITZ_GL_PROGRAM_ERROR_POSITION, &error);
+    }
+    if (error != -1)
+	fprintf (stderr, "fp error at pos %d beginning with '%.40s'\n",
+		 error, string+error);
+#endif
 
     if (pid == -1) {
 	gl->bind_program (GLITZ_GL_FRAGMENT_PROGRAM, 0);
@@ -368,7 +407,8 @@ _glitz_compile_arb_fragment_program (glitz_gl_proc_address_list_t *gl,
 }
 
 static void
-_string_array_to_char_array (char *dst, const char *src[])
+_string_array_to_char_array (char	*dst,
+			     const char *src[])
 {
     int i, n;
 
@@ -387,17 +427,26 @@ _string_array_to_char_array (char *dst, const char *src[])
 #define GRADIENT_BASE_SIZE 2048
 #define GRADIENT_STOP_SIZE 256
 
+#define COLORSPACE_BASE_SIZE   2048
+
 static glitz_gl_uint_t
 _glitz_create_fragment_program (glitz_composite_op_t         *op,
 				int                          fp_type,
 				int                          id,
+				int                          p_divide,
 				const glitz_program_expand_t *expand)
 {
-    char buffer[1024], *program = NULL, *tex, *p = NULL;
-    char *texture_type, *extra_declarations;
+    char		buffer[1024], *program = NULL, *tex, *p = NULL;
+    char		*texture_type, *extra_declarations;
+    const char		**pos_to_position;
     const glitz_in_op_t *in;
-    glitz_gl_uint_t fp;
-    int i;
+    glitz_gl_uint_t	fp;
+    int			i;
+
+    if (p_divide)
+	pos_to_position = _perspective_divide;
+    else
+	pos_to_position = _no_perspective_divide;
 
     switch (op->type) {
     case GLITZ_COMBINE_TYPE_ARGBF:
@@ -438,12 +487,15 @@ _glitz_create_fragment_program (glitz_composite_op_t         *op,
 	_string_array_to_char_array (buffer, _convolution_header);
 	p += sprintf (p, buffer, id, id - 1, tex, extra_declarations);
 
+	_string_array_to_char_array (buffer, pos_to_position);
+	p += sprintf (p, buffer);
+
 	_string_array_to_char_array (buffer, _convolution_sample_first);
 	p += sprintf (p, buffer, tex, texture_type);
 
 	_string_array_to_char_array (buffer, _convolution_sample);
 	for (i = 1; i < id; i++)
-	    p += sprintf (p, buffer, i, i, tex, texture_type, i);
+	    p += sprintf (p, buffer, i, tex, texture_type, i);
 
 	break;
     case GLITZ_FP_LINEAR_GRADIENT_TRANSPARENT:
@@ -465,17 +517,27 @@ _glitz_create_fragment_program (glitz_composite_op_t         *op,
 	p += sprintf (p, "!!ARBfp1.0");
 
 	_string_array_to_char_array (buffer, _gradient_header);
-	p += sprintf (p, buffer, id, id, tex, extra_declarations);
 
 	switch (fp_type) {
 	case GLITZ_FP_LINEAR_GRADIENT_TRANSPARENT:
 	case GLITZ_FP_LINEAR_GRADIENT_NEAREST:
 	case GLITZ_FP_LINEAR_GRADIENT_REPEAT:
 	case GLITZ_FP_LINEAR_GRADIENT_REFLECT:
+	    p += sprintf (p, buffer, 1, 0, id, 1, id, tex, extra_declarations);
+
+	    _string_array_to_char_array (buffer, pos_to_position);
+	    p += sprintf (p, buffer);
+
 	    _string_array_to_char_array (buffer,
 					 _linear_gradient_calculations);
 	    break;
 	default:
+	    p += sprintf (p, buffer, 2, 1, id, 2, id + 1, tex,
+			  extra_declarations);
+
+	    _string_array_to_char_array (buffer, pos_to_position);
+	    p += sprintf (p, buffer);
+
 	    _string_array_to_char_array (buffer,
 					 _radial_gradient_calculations);
 	    break;
@@ -514,6 +576,25 @@ _glitz_create_fragment_program (glitz_composite_op_t         *op,
 
 	id++;
 	break;
+    case GLITZ_FP_COLORSPACE_YV12:
+	program = malloc (COLORSPACE_BASE_SIZE);
+	if (program == NULL)
+	    return 0;
+
+	p = program;
+
+	p += sprintf (p, "!!ARBfp1.0");
+
+	_string_array_to_char_array (buffer, _colorspace_yv12_header);
+	p += sprintf (p, buffer, tex, extra_declarations);
+
+	_string_array_to_char_array (buffer, pos_to_position);
+	p += sprintf (p, buffer);
+
+	_string_array_to_char_array (buffer, _colorspace_yv12);
+	p += sprintf (p, buffer, tex, texture_type, tex, texture_type,
+		      tex, texture_type);
+	break;
     default:
 	return 0;
     }
@@ -525,8 +606,12 @@ _glitz_create_fragment_program (glitz_composite_op_t         *op,
     if (op->per_component)
 	p += sprintf (p, "%s", in->dot_product);
     p += sprintf (p, "%s", in->mult);
+
     sprintf (p, "END");
 
+#ifdef DEBUG
+    fprintf (stderr, "***** fp %d:\n%s\n\n", id, program);
+#endif
     fp = _glitz_compile_arb_fragment_program (op->gl, program, id);
 
     free (program);
@@ -545,22 +630,24 @@ glitz_program_map_fini (glitz_gl_proc_address_list_t *gl,
 			glitz_program_map_t          *map)
 {
     glitz_gl_uint_t program;
-    int i, j, k, x, y;
+    int		    i, j, k, x, y, z;
 
     for (i = 0; i < GLITZ_COMBINE_TYPES; i++) {
 	for (j = 0; j < GLITZ_FP_TYPES; j++) {
 	    for (x = 0; x < GLITZ_TEXTURE_LAST; x++) {
 		for (y = 0; y < GLITZ_TEXTURE_LAST; y++) {
-		    glitz_program_t *p = &map->filters[i][j].fp[x][y];
+		    for (z = 0; z < 2; z++) {
+			glitz_program_t *p = &map->filters[i][j].fp[x][y][z];
 
-		    if (p->name) {
-			for (k = 0; k < p->size; k++)
-			    if (p->name[k] > 0) {
-				program = p->name[k];
-				gl->delete_programs (1, &program);
-			    }
+			if (p->name) {
+			    for (k = 0; k < p->size; k++)
+				if (p->name[k] > 0) {
+				    program = p->name[k];
+				    gl->delete_programs (1, &program);
+				}
 
-			free (p->name);
+			    free (p->name);
+			}
 		    }
 		}
 	    }
@@ -583,12 +670,30 @@ glitz_get_fragment_program (glitz_composite_op_t *op,
 			    int                  id)
 {
     glitz_program_map_t *map;
-    glitz_program_t *program;
-    int t0 = TEXTURE_INDEX (op->src);
-    int t1 = TEXTURE_INDEX (op->mask);
+    glitz_program_t	*program;
+    int			t0 = TEXTURE_INDEX (op->src);
+    int			t1 = TEXTURE_INDEX (op->mask);
+    int			p_divide = 1;
+
+    switch (op->type) {
+    case GLITZ_COMBINE_TYPE_ARGBF:
+    case GLITZ_COMBINE_TYPE_ARGBF_SOLID:
+    case GLITZ_COMBINE_TYPE_ARGBF_SOLIDC:
+    case GLITZ_COMBINE_TYPE_ARGBF_ARGB:
+    case GLITZ_COMBINE_TYPE_ARGBF_ARGBC:
+	if (!SURFACE_PROJECTIVE_TRANSFORM (op->src))
+	    p_divide = 0;
+	break;
+    case GLITZ_COMBINE_TYPE_ARGB_ARGBF:
+    case GLITZ_COMBINE_TYPE_SOLID_ARGBF:
+	if (!SURFACE_PROJECTIVE_TRANSFORM (op->mask))
+	    p_divide = 0;
+    default:
+	break;
+    }
 
     map = op->dst->drawable->backend->program_map;
-    program = &map->filters[op->type][fp_type].fp[t0][t1];
+    program = &map->filters[op->type][fp_type].fp[t0][t1][p_divide];
 
     if (program->size < id) {
 	int old_size;
@@ -609,7 +714,7 @@ glitz_get_fragment_program (glitz_composite_op_t *op,
 	glitz_surface_push_current (op->dst, GLITZ_CONTEXT_CURRENT);
 
 	program->name[id - 1] =
-	    _glitz_create_fragment_program (op, fp_type, id,
+	    _glitz_create_fragment_program (op, fp_type, id, p_divide,
 					    _program_expand_map[t0][t1]);
 
 	glitz_surface_pop_current (op->dst);

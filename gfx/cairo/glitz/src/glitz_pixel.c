@@ -37,23 +37,10 @@ typedef struct _glitz_gl_pixel_format {
     glitz_gl_enum_t      type;
 } glitz_gl_pixel_format_t;
 
-static glitz_gl_pixel_format_t _gl_pixel_formats[] = {
+static glitz_gl_pixel_format_t _gl_rgb_pixel_formats[] = {
     {
 	{
-	    {
-		8,
-		0x000000ff,
-		0x00000000,
-		0x00000000,
-		0x00000000
-	    },
-	    0, 0, 0,
-	    GLITZ_PIXEL_SCANLINE_ORDER_BOTTOM_UP
-	},
-	GLITZ_GL_ALPHA,
-	GLITZ_GL_UNSIGNED_BYTE
-    }, {
-	{
+	    GLITZ_FOURCC_RGB,
 	    {
 		32,
 		0xff000000,
@@ -72,12 +59,31 @@ static glitz_gl_pixel_format_t _gl_pixel_formats[] = {
 	GLITZ_GL_UNSIGNED_BYTE
 #endif
 
+    }, {
+	{
+	    GLITZ_FOURCC_RGB,
+	    {
+		8,
+		0x000000ff,
+		0x00000000,
+		0x00000000,
+		0x00000000
+	    },
+	    0, 0, 0,
+	    GLITZ_PIXEL_SCANLINE_ORDER_BOTTOM_UP
+	},
+	GLITZ_GL_ALPHA,
+	GLITZ_GL_UNSIGNED_BYTE
     }
 };
 
-static glitz_gl_pixel_format_t _gl_packed_pixel_formats[] = {
+#define N_RGB_FORMATS							\
+    (sizeof (_gl_rgb_pixel_formats) / sizeof (glitz_gl_pixel_format_t))
+
+static glitz_gl_pixel_format_t _gl_packed_rgb_pixel_formats[] = {
     {
 	{
+	    GLITZ_FOURCC_RGB,
 	    {
 		16,
 		0x00000000,
@@ -99,6 +105,31 @@ static glitz_gl_pixel_format_t _gl_packed_pixel_formats[] = {
     }
 };
 
+#define N_PACKED_RGB_FORMATS						       \
+    (sizeof (_gl_packed_rgb_pixel_formats) / sizeof (glitz_gl_pixel_format_t))
+
+static glitz_gl_pixel_format_t _gl_yuv_pixel_formats[] = {
+    {
+	{
+	    GLITZ_FOURCC_YV12,
+	    {
+		12,
+		0x00000000,
+		0x00000000,
+		0x00000000,
+		0x00000000
+	    },
+	    0, 0, 0,
+	    GLITZ_PIXEL_SCANLINE_ORDER_BOTTOM_UP
+	},
+	GLITZ_GL_LUMINANCE,
+	GLITZ_GL_UNSIGNED_BYTE
+    }
+};
+
+#define N_YUV_FORMATS							\
+    (sizeof (_gl_yuv_pixel_formats) / sizeof (glitz_gl_pixel_format_t))
+
 #define SOLID_ALPHA 0
 #define SOLID_RED   1
 #define SOLID_GREEN 2
@@ -106,6 +137,7 @@ static glitz_gl_pixel_format_t _gl_packed_pixel_formats[] = {
 
 static glitz_pixel_format_t _solid_format[] = {
     {
+	GLITZ_FOURCC_RGB,
 	{
 	    16,
 	    0x0000ffff,
@@ -116,6 +148,7 @@ static glitz_pixel_format_t _solid_format[] = {
 	0, 0, 0,
 	GLITZ_PIXEL_SCANLINE_ORDER_BOTTOM_UP
     }, {
+	GLITZ_FOURCC_RGB,
 	{
 	    16,
 	    0x00000000,
@@ -126,6 +159,7 @@ static glitz_pixel_format_t _solid_format[] = {
 	0, 0, 0,
 	GLITZ_PIXEL_SCANLINE_ORDER_BOTTOM_UP
     }, {
+	GLITZ_FOURCC_RGB,
 	{
 	    16,
 	    0x00000000,
@@ -136,6 +170,7 @@ static glitz_pixel_format_t _solid_format[] = {
 	0, 0, 0,
 	GLITZ_PIXEL_SCANLINE_ORDER_BOTTOM_UP
     }, {
+	GLITZ_FOURCC_RGB,
 	{
 	    16,
 	    0x00000000,
@@ -153,19 +188,19 @@ typedef struct _glitz_pixel_color {
 } glitz_pixel_color_t;
 
 typedef struct _glitz_pixel_transform_op {
-    char *line;
-    int offset;
+    char		 *line, *line2, *line3;
+    int			 offset;
     glitz_pixel_format_t *format;
-    glitz_pixel_color_t *color;
+    glitz_pixel_color_t  *color;
 } glitz_pixel_transform_op_t;
 
-#define FETCH(p, mask)                                                  \
-    ((mask) ? ((uint32_t) ((((uint64_t) (((uint32_t) (p)) & (mask))) *  \
+#define FETCH(p, mask)                                                 \
+    ((mask) ? ((uint32_t) ((((uint64_t) (((uint32_t) (p)) & (mask))) * \
 			    0xffffffff) / ((uint64_t) (mask)))): 0x0)
 
-#define FETCH_A(p, mask)                                                \
-    ((mask) ? ((uint32_t) ((((uint64_t) (((uint32_t) (p)) & (mask))) *  \
-			    0xffffffff) /((uint64_t) (mask)))): 0xffffffff)
+#define FETCH_A(p, mask)                                                     \
+    ((mask) ? ((uint32_t) ((((uint64_t) (((uint32_t) (p)) & (mask))) *       \
+			    0xffffffff) / ((uint64_t) (mask)))): 0xffffffff)
 
 typedef void (*glitz_pixel_fetch_function_t) (glitz_pixel_transform_op_t *op);
 
@@ -237,9 +272,59 @@ _fetch_32 (glitz_pixel_transform_op_t *op)
     op->color->b = FETCH (p, op->format->masks.blue_mask);
 }
 
+static void
+_fetch_yv12 (glitz_pixel_transform_op_t *op)
+{
+    int16_t y = ((uint8_t *) op->line)[op->offset] - 16;
+    int16_t v = ((uint8_t *) op->line2)[op->offset >> 1] - 128;
+    int16_t u = ((uint8_t *) op->line3)[op->offset >> 1] - 128;
+    int32_t r, g, b;
+
+    /* TODO: use tables, in a tight loop */
+    op->color->a = 0xffffffff;
+    /* all colors multiplied by 0x010101, cropped, shifted */
+    /* R = 1.164(Y - 16) + 1.596(V - 128) */
+    r = 0x012b27 * y + 0x019a2e * v;
+    op->color->r = r >= 0 ? r < 0x1000000 ? (((unsigned) r) << 8) :
+	0xffffffff : 0;
+    /* G = 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128) */
+    g = 0x012b27 * y - 0x00d0f2 * v - 0x00647e * u;
+    op->color->g = g >= 0 ? g < 0x1000000 ? (((unsigned) g) << 8) :
+	0xffffffff : 0;
+    /* B = 1.164(Y - 16) + 2.018(U - 128) */
+    b = 0x012b27 * y + 0x0206a2 * u;
+    op->color->b = b >= 0 ? b < 0x1000000 ? (((unsigned) b) << 8) :
+	0xffffffff : 0;
+}
+
+static void
+_fetch_yuy2 (glitz_pixel_transform_op_t *op)
+{
+    int16_t y = ((uint8_t *) op->line)[op->offset << 1] - 16;
+    int16_t u = ((uint8_t *) op->line)[((op->offset << 1) & -4) + 1] - 128;
+    int16_t v = ((uint8_t *) op->line)[((op->offset << 1) & -4) + 3] - 128;
+    int32_t r, g, b;
+
+    /* TODO: use tables, in a tight loop */
+    op->color->a = 0xffffffff;
+    /* all colors multiplied by 0x010101, cropped, shifted */
+    /* R = 1.164(Y - 16) + 1.596(V - 128) */
+    r = 0x012b27 * y + 0x019a2e * v;
+    op->color->r = r >= 0 ? r < 0x1000000 ? (((unsigned) r) << 8) :
+	0xffffffff : 0;
+    /* G = 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128) */
+    g = 0x012b27 * y - 0x00d0f2 * v - 0x00647e * u;
+    op->color->g = g >= 0 ? g < 0x1000000 ? (((unsigned) g) << 8) :
+	0xffffffff : 0;
+    /* B = 1.164(Y - 16) + 2.018(U - 128) */
+    b = 0x012b27 * y + 0x0206a2 * u;
+    op->color->b = b >= 0 ? b < 0x1000000 ? (((unsigned) b) << 8) :
+	0xffffffff : 0;
+}
+
 typedef void (*glitz_pixel_store_function_t) (glitz_pixel_transform_op_t *op);
 
-#define STORE(v, mask)                                                  \
+#define STORE(v, mask)                                               \
     (((uint32_t) (((v) * (uint64_t) (mask)) / 0xffffffff)) & (mask))
 
 static void
@@ -320,15 +405,76 @@ _store_32 (glitz_pixel_transform_op_t *op)
 	STORE (op->color->b, op->format->masks.blue_mask);
 }
 
+static void
+_store_yv12 (glitz_pixel_transform_op_t *op)
+{
+    uint8_t *yp = &((uint8_t *) op->line)[op->offset];
+    int16_t y;
+
+    /* Y =  (0.257 * R) + (0.504 * G) + (0.098 * B) + 16 */
+    y = op->color->r / 0x03e41be4 + op->color->g / 0x01fbefbf +
+	op->color->b / 0x0a343eb2 + 16;
+
+    *yp = y > 0 ? y < 255 ? y : 255 : 0;
+
+    if (op->line2 && (op->offset & 1) == 0)
+    {
+	uint8_t *vp = &((uint8_t *) op->line2)[op->offset >> 1];
+	uint8_t *up = &((uint8_t *) op->line3)[op->offset >> 1];
+	int16_t v, u;
+
+	/* V =  (0.439 * R) - (0.368 * G) - (0.071 * B) + 128 */
+	v = op->color->r / 0x024724bd - op->color->g / 0x02b7a6f5 -
+	    op->color->b / 0x0e15a241 + 128;
+	*vp = v > 0 ? v < 255 ? v : 255 : 0;
+
+	/* U = -(0.148 * R) - (0.291 * G) + (0.439 * B) + 128 */
+	u = op->color->b / 0x024724bd - op->color->r / 0x06c1bad0 -
+	    op->color->g / 0x36fb99f + 128;
+
+	*up = u > 0 ? u < 255 ? u : 255 : 0;
+    }
+}
+
+static void
+_store_yuy2 (glitz_pixel_transform_op_t *op)
+{
+    uint8_t *p = (uint8_t *) &op->line[op->offset << 1];
+    int16_t y, v, u;
+
+    /* Y =  (0.257 * R) + (0.504 * G) + (0.098 * B) + 16 */
+    y = op->color->r / 0x03e41be4 + op->color->g / 0x01fbefbf +
+	op->color->b / 0x0a343eb2 + 16;
+
+    p[0] = y >= 0 ? y < 255 ? y : 255 : 0;
+
+    if ((op->offset & 1) == 0)
+    {
+	/* U = -(0.148 * R) - (0.291 * G) + (0.439 * B) + 128 */
+	u = op->color->b / 0x024724bd - op->color->r / 0x06c1bad0 -
+	    op->color->g / 0x36fb99f + 128;
+
+	p[1] = u >= 0 ? u < 255 ? u : 255 : 0;
+    }
+    else
+    {
+	/* V =  (0.439 * R) - (0.368 * G) - (0.071 * B) + 128 */
+	v = op->color->r / 0x024724bd - op->color->g / 0x02b7a6f5 -
+	    op->color->b / 0x0e15a241 + 128;
+
+	p[1] = v >= 0 ? v < 255 ? v : 255 : 0;
+    }
+}
+
 #define GLITZ_TRANSFORM_PIXELS_MASK         (1L << 0)
 #define GLITZ_TRANSFORM_SCANLINE_ORDER_MASK (1L << 1)
 #define GLITZ_TRANSFORM_COPY_BOX_MASK       (1L << 2)
 
 typedef struct _glitz_image {
-    char *data;
+    char		 *data;
     glitz_pixel_format_t *format;
-    int width;
-    int height;
+    int			 width;
+    int			 height;
 } glitz_image_t;
 
 static void
@@ -342,62 +488,111 @@ _glitz_pixel_transform (unsigned long transform,
 			int           width,
 			int           height)
 {
-    int src_stride, dst_stride;
-    int x, y, bytes_per_pixel = 0;
+    int				 src_stride, dst_stride;
+    int				 src_planeoffset = 0, dst_planeoffset = 0;
+    int				 x, y, bytes_per_pixel = 0;
     glitz_pixel_fetch_function_t fetch;
     glitz_pixel_store_function_t store;
-    glitz_pixel_color_t color;
-    glitz_pixel_transform_op_t src_op, dst_op;
+    glitz_pixel_color_t		 color;
+    glitz_pixel_transform_op_t	 src_op, dst_op;
 
-    switch (src->format->masks.bpp) {
-    case 1:
-	fetch = _fetch_1;
+    switch (src->format->fourcc) {
+    case GLITZ_FOURCC_RGB:
+	switch (src->format->masks.bpp) {
+	case 1:
+	    fetch = _fetch_1;
+	    break;
+	case 8:
+	    fetch = _fetch_8;
+	    break;
+	case 16:
+	    fetch = _fetch_16;
+	    break;
+	case 24:
+	    fetch = _fetch_24;
+	    break;
+	case 32:
+	default:
+	    fetch = _fetch_32;
+	}
 	break;
-    case 8:
-	fetch = _fetch_8;
+    case GLITZ_FOURCC_YV12:
+	fetch = _fetch_yv12;
 	break;
-    case 16:
-	fetch = _fetch_16;
+    case GLITZ_FOURCC_YUY2:
+	fetch = _fetch_yuy2;
 	break;
-    case 24:
-	fetch = _fetch_24;
-	break;
-    case 32:
     default:
 	fetch = _fetch_32;
-	break;
     }
 
-    switch (dst->format->masks.bpp) {
-    case 1:
-	store = _store_1;
+    switch (dst->format->fourcc) {
+    case GLITZ_FOURCC_RGB:
+	switch (dst->format->masks.bpp) {
+	case 1:
+	    store = _store_1;
+	    break;
+	case 8:
+	    store = _store_8;
+	    break;
+	case 16:
+	    store = _store_16;
+	    break;
+	case 24:
+	    store = _store_24;
+	    break;
+	case 32:
+	default:
+	    store = _store_32;
+	}
 	break;
-    case 8:
-	store = _store_8;
+    case GLITZ_FOURCC_YV12:
+	store = _store_yv12;
 	break;
-    case 16:
-	store = _store_16;
+    case GLITZ_FOURCC_YUY2:
+	store = _store_yuy2;
 	break;
-    case 24:
-	store = _store_24;
-	break;
-    case 32:
     default:
 	store = _store_32;
-	break;
     }
 
-    src_stride = (src->format->bytes_per_line)? src->format->bytes_per_line:
-	(((src->width * src->format->masks.bpp) / 8) + 3) & -4;
+    switch (src->format->fourcc) {
+    case GLITZ_FOURCC_YV12:
+	src_stride = (src->format->bytes_per_line) ?
+	    src->format->bytes_per_line: (src->width + 3) & -4;
+	src_planeoffset = src_stride * src->height;
+	bytes_per_pixel = 1;
+	break;
+    default:
+	src_stride = (src->format->bytes_per_line) ?
+	    src->format->bytes_per_line:
+	    (((src->width * src->format->masks.bpp) / 8) + 3) & -4;
+	/* This only works for bpp % 8 = 0, but it shouldn't be a problem as
+	 * it will never be used for bitmaps */
+	bytes_per_pixel = src->format->masks.bpp / 8;
+    }
+
     if (src_stride == 0)
 	src_stride = 1;
+
     src_op.format = src->format;
     src_op.color = &color;
 
-    dst_stride = (dst->format->bytes_per_line)? dst->format->bytes_per_line:
-	(((dst->width * dst->format->masks.bpp) / 8) + 3) & -4;
+    switch (dst->format->fourcc) {
+    case GLITZ_FOURCC_YV12:
+	dst_stride = (dst->format->bytes_per_line) ?
+	    dst->format->bytes_per_line: (dst->width + 3) & -4;
+	dst_planeoffset = dst_stride * dst->height;
+	break;
+    default:
+	dst_stride = (dst->format->bytes_per_line) ?
+	    dst->format->bytes_per_line:
+	    (((dst->width * dst->format->masks.bpp) / 8) + 3) & -4;
+    }
+
     if (dst_stride == 0)
 	dst_stride = 1;
+
     dst_op.format = dst->format;
     dst_op.color = &color;
 
@@ -408,7 +603,49 @@ _glitz_pixel_transform (unsigned long transform,
 	else
 	    src_op.line = &src->data[(y + y_src) * src_stride];
 
-	dst_op.line = &dst->data[(y + y_dst) * dst_stride];
+	switch (src->format->fourcc) {
+	case GLITZ_FOURCC_YV12:
+	    if (src->format->scanline_order != dst->format->scanline_order)
+	    {
+		src_op.line2 =
+		    &src->data[src_planeoffset +
+			       (((src->height - (y + y_src) - 1) >> 1))
+			       * (src_stride >> 1)];
+		src_op.line3 =
+		    &src->data[src_planeoffset +
+			       (src_planeoffset >> 2) +
+			       (((src->height - (y + y_src) - 1) >> 1))
+			       * (src_stride >> 1)];
+	    }
+	    else
+	    {
+		src_op.line2 =
+		    &src->data[src_planeoffset +
+			       ((y + y_src) >> 1) * (src_stride >> 1)];
+		src_op.line3 =
+		    &src->data[src_planeoffset +
+			       (src_planeoffset >> 2) +
+			       ((y + y_src) >> 1) * (src_stride >> 1)];
+	    }
+	    break;
+	}
+
+	dst_op.line  = &dst->data[(y + y_dst) * dst_stride];
+	dst_op.line2 = dst_op.line3 = NULL;
+
+	switch (dst->format->fourcc) {
+	case GLITZ_FOURCC_YV12:
+	    if ((y & 1) == 0)
+	    {
+		dst_op.line2 =
+		    &dst->data[dst_planeoffset +
+			       ((y + y_dst) >> 1) * (dst_stride >> 1)];
+		dst_op.line3 =
+		    &dst->data[dst_planeoffset + (dst_planeoffset >> 2) +
+			       ((y + y_dst) >> 1) * (dst_stride >> 1)];
+	    }
+	    break;
+	}
 
 	if (transform & GLITZ_TRANSFORM_PIXELS_MASK)
 	{
@@ -423,41 +660,62 @@ _glitz_pixel_transform (unsigned long transform,
 	}
 	else
 	{
-	    /* This only works for bpp >= 8, but it shouldn't be a problem as
-	       it will never be used for bitmaps */
-	    if (bytes_per_pixel == 0)
-		bytes_per_pixel = src->format->masks.bpp / 8;
-
 	    memcpy (&dst_op.line[x_dst * bytes_per_pixel],
 		    &src_op.line[x_src * bytes_per_pixel],
 		    width * bytes_per_pixel);
+
+	    switch (dst->format->fourcc) {
+	    case GLITZ_FOURCC_YV12:
+		/* Will overwrite color components of adjacent pixels for odd
+		 * image sizes or not update color on odd start lines -
+		 * who cares? */
+		if ((y & 1) == 0)
+		{
+		    memcpy (&dst_op.line2[x_dst >> 1],
+			    &src_op.line2[x_src >> 1],
+			    width >> 1);
+		    memcpy (&dst_op.line3[x_dst >> 1],
+			    &src_op.line3[x_src >> 1],
+			    width >> 1);
+		}
+		break;
+	    }
 	}
     }
 }
 
 static glitz_bool_t
-_glitz_format_match (glitz_pixel_masks_t *masks1,
-		     glitz_pixel_masks_t *masks2,
-		     unsigned long	 mask)
+_glitz_format_match (glitz_pixel_format_t *format1,
+		     glitz_pixel_format_t *format2,
+		     unsigned long	   mask)
 {
-    if (masks1->bpp != masks2->bpp)
+    if (format1->fourcc != format2->fourcc)
 	return 0;
 
-    if (mask & GLITZ_FORMAT_RED_SIZE_MASK)
-	if (masks1->red_mask != masks2->red_mask)
+    switch (format1->fourcc) {
+    case GLITZ_FOURCC_RGB:
+	if (format1->masks.bpp != format2->masks.bpp)
 	    return 0;
 
-    if (mask & GLITZ_FORMAT_GREEN_SIZE_MASK)
-	if (masks1->green_mask != masks2->green_mask)
-	    return 0;
+	if (mask & GLITZ_FORMAT_RED_SIZE_MASK)
+	    if (format1->masks.red_mask != format2->masks.red_mask)
+		return 0;
 
-    if (mask & GLITZ_FORMAT_BLUE_SIZE_MASK)
-	if (masks1->blue_mask != masks2->blue_mask)
-	    return 0;
+	if (mask & GLITZ_FORMAT_GREEN_SIZE_MASK)
+	    if (format1->masks.green_mask != format2->masks.green_mask)
+		return 0;
 
-    if (mask & GLITZ_FORMAT_ALPHA_SIZE_MASK)
-	if (masks1->alpha_mask != masks2->alpha_mask)
-	    return 0;
+	if (mask & GLITZ_FORMAT_BLUE_SIZE_MASK)
+	    if (format1->masks.blue_mask != format2->masks.blue_mask)
+		return 0;
+
+	if (mask & GLITZ_FORMAT_ALPHA_SIZE_MASK)
+	    if (format1->masks.alpha_mask != format2->masks.alpha_mask)
+		return 0;
+	break;
+    default:
+	return 1;
+    }
 
     return 1;
 }
@@ -467,27 +725,30 @@ _glitz_find_gl_pixel_format (glitz_pixel_format_t *format,
 			     unsigned long	  color_mask,
 			     unsigned long        feature_mask)
 {
-    int i, n_formats;
+    int i;
 
-    n_formats = sizeof (_gl_pixel_formats) / sizeof (glitz_gl_pixel_format_t);
-    for (i = 0; i < n_formats; i++)
+    for (i = 0; i < N_RGB_FORMATS; i++)
     {
-	if (_glitz_format_match (&_gl_pixel_formats[i].pixel.masks,
-				 &format->masks, color_mask))
-	    return &_gl_pixel_formats[i];
+	if (_glitz_format_match (&_gl_rgb_pixel_formats[i].pixel,
+				 format, color_mask))
+	    return &_gl_rgb_pixel_formats[i];
     }
 
     if (feature_mask & GLITZ_FEATURE_PACKED_PIXELS_MASK)
     {
-	n_formats = sizeof (_gl_packed_pixel_formats) /
-	    sizeof (glitz_gl_pixel_format_t);
-
-	for (i = 0; i < n_formats; i++)
+	for (i = 0; i < N_PACKED_RGB_FORMATS; i++)
 	{
-	    if (_glitz_format_match (&_gl_packed_pixel_formats[i].pixel.masks,
-				     &format->masks, color_mask))
-		return &_gl_packed_pixel_formats[i];
+	    if (_glitz_format_match (&_gl_packed_rgb_pixel_formats[i].pixel,
+				     format, color_mask))
+		return &_gl_packed_rgb_pixel_formats[i];
 	}
+    }
+
+    for (i = 0; i < N_YUV_FORMATS; i++)
+    {
+	if (_glitz_format_match (&_gl_yuv_pixel_formats[i].pixel,
+				 format, color_mask))
+	    return &_gl_yuv_pixel_formats[i];
     }
 
     return NULL;
@@ -505,10 +766,10 @@ _component_size (unsigned long mask)
 }
 
 static glitz_bool_t
-_glitz_format_diff (glitz_pixel_masks_t  *masks,
-		    glitz_color_format_t *pixel_color,
-		    glitz_color_format_t *internal_color,
-		    int                  *diff)
+_glitz_rgb_format_diff (glitz_pixel_masks_t  *masks,
+			glitz_color_format_t *pixel_color,
+			glitz_color_format_t *internal_color,
+			int                  *diff)
 {
     int size;
 
@@ -546,48 +807,69 @@ _glitz_find_best_gl_pixel_format (glitz_pixel_format_t *format,
 				  glitz_color_format_t *internal_color,
 				  unsigned long        feature_mask)
 {
-    glitz_gl_pixel_format_t *best = NULL;
-    glitz_color_format_t color;
-    int i, n_formats, diff, best_diff = MAXSHORT;
+    glitz_gl_pixel_format_t *best = _gl_rgb_pixel_formats;
+    glitz_color_format_t    color;
+    int			    i, diff, best_diff = MAXSHORT;
+    glitz_pixel_masks_t     *masks;
 
-    color.red_size = _component_size (format->masks.red_mask);
-    color.green_size = _component_size (format->masks.green_mask);
-    color.blue_size = _component_size (format->masks.blue_mask);
-    color.alpha_size = _component_size (format->masks.alpha_mask);
+    switch (internal_color->fourcc) {
+    case GLITZ_FOURCC_YV12:
+    case GLITZ_FOURCC_YUY2:
+	for (i = 0; i < N_YUV_FORMATS; i++)
+	{
+	    glitz_fourcc_t fourcc;
 
-    n_formats = sizeof (_gl_pixel_formats) / sizeof (glitz_gl_pixel_format_t);
-    for (i = 0; best_diff > 0 && i < n_formats; i++)
+	    fourcc = internal_color->fourcc;
+	    if (_gl_yuv_pixel_formats[i].pixel.fourcc == fourcc)
+		return &_gl_yuv_pixel_formats[i];
+	}
+    default:
+	break;
+    }
+
+    switch (format->fourcc) {
+    case GLITZ_FOURCC_RGB:
+	color.red_size   = _component_size (format->masks.red_mask);
+	color.green_size = _component_size (format->masks.green_mask);
+	color.blue_size  = _component_size (format->masks.blue_mask);
+	color.alpha_size = _component_size (format->masks.alpha_mask);
+	break;
+    case GLITZ_FOURCC_YV12:
+    case GLITZ_FOURCC_YUY2:
+	color.red_size = color.green_size = color.blue_size = 8;
+	color.alpha_size = 0;
+	break;
+    default:
+	color.red_size = color.green_size = color.blue_size =
+	    color.alpha_size = 8;
+	break;
+    }
+
+    for (i = 0; best_diff > 0 && i < N_RGB_FORMATS; i++)
     {
-	if (_glitz_format_diff (&_gl_pixel_formats[i].pixel.masks,
-				&color,
-				internal_color,
-				&diff))
+	masks = &_gl_rgb_pixel_formats[i].pixel.masks;
+	if (_glitz_rgb_format_diff (masks, &color, internal_color, &diff))
 	{
 	    if (diff < best_diff)
 	    {
-		best = &_gl_pixel_formats[i];
+		best = &_gl_rgb_pixel_formats[i];
 		best_diff = diff;
 	    }
 	}
     }
 
-    if (feature_mask & GLITZ_FEATURE_PACKED_PIXELS_MASK)
-    {
-	n_formats = sizeof (_gl_packed_pixel_formats) /
-	    sizeof (glitz_gl_pixel_format_t);
+    if (!(feature_mask & GLITZ_FEATURE_PACKED_PIXELS_MASK))
+	return best;
 
-	for (i = 0; best_diff > 0 && i < n_formats; i++)
+    for (i = 0; best_diff > 0 && i < N_PACKED_RGB_FORMATS; i++)
+    {
+	masks = &_gl_packed_rgb_pixel_formats[i].pixel.masks;
+	if (_glitz_rgb_format_diff (masks, &color, internal_color, &diff))
 	{
-	    if (_glitz_format_diff (&_gl_packed_pixel_formats[i].pixel.masks,
-				    &color,
-				    internal_color,
-				    &diff))
+	    if (diff < best_diff)
 	    {
-		if (diff < best_diff)
-		{
-		    best = &_gl_packed_pixel_formats[i];
-		    best_diff = diff;
-		}
+		best = &_gl_packed_rgb_pixel_formats[i];
+		best_diff = diff;
 	    }
 	}
     }
@@ -652,7 +934,6 @@ glitz_set_pixels (glitz_surface_t      *dst,
 
 		src_image.data =
 		    glitz_buffer_map (buffer, GLITZ_BUFFER_ACCESS_READ_ONLY);
-		src_image.data += format->skip_lines * format->bytes_per_line;
 		src_image.format = format;
 		src_image.width = src_image.height = 1;
 
@@ -663,7 +944,8 @@ glitz_set_pixels (glitz_surface_t      *dst,
 
 		    _glitz_pixel_transform (GLITZ_TRANSFORM_PIXELS_MASK,
 					    &src_image, &dst_image,
-					    format->xoffset, 0, 0, 0, 1, 1);
+					    format->xoffset,format->skip_lines,
+					    0, 0, 1, 1);
 		} else
 		    dst->solid.alpha = 0xffff;
 
@@ -674,7 +956,8 @@ glitz_set_pixels (glitz_surface_t      *dst,
 
 		    _glitz_pixel_transform (GLITZ_TRANSFORM_PIXELS_MASK,
 					    &src_image, &dst_image,
-					    format->xoffset, 0, 0, 0, 1, 1);
+					    format->xoffset,format->skip_lines,
+					    0, 0, 1, 1);
 		} else
 		    dst->solid.red = 0;
 
@@ -685,7 +968,8 @@ glitz_set_pixels (glitz_surface_t      *dst,
 
 		    _glitz_pixel_transform (GLITZ_TRANSFORM_PIXELS_MASK,
 					    &src_image, &dst_image,
-					    format->xoffset, 0, 0, 0, 1, 1);
+					    format->xoffset,format->skip_lines,
+					    0, 0, 1, 1);
 		} else
 		    dst->solid.green = 0;
 
@@ -696,7 +980,8 @@ glitz_set_pixels (glitz_surface_t      *dst,
 
 		    _glitz_pixel_transform (GLITZ_TRANSFORM_PIXELS_MASK,
 					    &src_image, &dst_image,
-					    format->xoffset, 0, 0, 0, 1, 1);
+					    format->xoffset,format->skip_lines,
+					    0, 0, 1, 1);
 		} else
 		    dst->solid.blue = 0;
 
@@ -738,9 +1023,11 @@ glitz_set_pixels (glitz_surface_t      *dst,
 
     /* find direct format */
     gl_format =
-	_glitz_find_gl_pixel_format (format,
-				     color_mask,
+	_glitz_find_gl_pixel_format (format, color_mask,
 				     dst->drawable->backend->feature_mask);
+    if (gl_format && gl_format->pixel.fourcc != dst->format->color.fourcc)
+	gl_format = NULL;
+
     if (gl_format == NULL)
     {
 	unsigned long feature_mask;
@@ -748,8 +1035,7 @@ glitz_set_pixels (glitz_surface_t      *dst,
 	feature_mask = dst->drawable->backend->feature_mask;
 	transform |= GLITZ_TRANSFORM_PIXELS_MASK;
 	gl_format =
-	    _glitz_find_best_gl_pixel_format (format,
-					      &dst->format->color,
+	    _glitz_find_best_gl_pixel_format (format, &dst->format->color,
 					      feature_mask);
     }
 
@@ -762,7 +1048,7 @@ glitz_set_pixels (glitz_surface_t      *dst,
     }
 
     if (height > 1) {
-	if (format->scanline_order == GLITZ_PIXEL_SCANLINE_ORDER_TOP_DOWN)
+	if (format->scanline_order != gl_format->pixel.scanline_order)
 	    transform |= GLITZ_TRANSFORM_SCANLINE_ORDER_MASK;
     }
 
@@ -792,11 +1078,25 @@ glitz_set_pixels (glitz_surface_t      *dst,
 	    {
 		if (!data)
 		{
-		    int stride, bpp;
+		    int size;
 
-		    bpp = gl_format->pixel.masks.bpp;
-		    stride = (((width * bpp) / 8) + 3) & -4;
-		    data = malloc (stride * height);
+		    switch (gl_format->pixel.fourcc) {
+		    case GLITZ_FOURCC_YV12:
+			bytes_per_line  = (width + 3) & -4;
+			bytes_per_pixel = 1;
+			size = bytes_per_line * height +
+			    bytes_per_line * ((height + 1) >> 1);
+			break;
+		    default:
+			bytes_per_line =
+			    (((width * gl_format->pixel.masks.bpp) / 8) + 3) &
+			    -4;
+			bytes_per_pixel = gl_format->pixel.masks.bpp / 8;
+			size = bytes_per_line * height;
+			break;
+		    }
+
+		    data = malloc (size);
 		    if (!data)
 		    {
 			glitz_surface_status_add (dst,
@@ -807,13 +1107,13 @@ glitz_set_pixels (glitz_surface_t      *dst,
 		    dst_image.data = pixels = data;
 		    dst_image.format = &gl_format->pixel;
 
-		    ptr =
-			glitz_buffer_map (buffer,
-					  GLITZ_BUFFER_ACCESS_READ_ONLY);
+		    ptr = glitz_buffer_map (buffer,
+					    GLITZ_BUFFER_ACCESS_READ_ONLY);
 		    src_image.format = format;
 
 		    gl->pixel_store_i (GLITZ_GL_UNPACK_ALIGNMENT, 4);
-		    gl->pixel_store_i (GLITZ_GL_UNPACK_ROW_LENGTH, 0);
+		    gl->pixel_store_i (GLITZ_GL_UNPACK_ROW_LENGTH,
+				       bytes_per_line / bytes_per_pixel);
 		}
 
 		dst_image.width  = box.x2 - box.x1;
@@ -822,13 +1122,13 @@ glitz_set_pixels (glitz_surface_t      *dst,
 		src_image.width  = box.x2 - box.x1;
 		src_image.height = box.y2 - box.y1;
 
-		src_image.data = ptr + (format->skip_lines + box.y1 - y_dst) *
-		    format->bytes_per_line;
+		src_image.data = ptr;
 
 		_glitz_pixel_transform (transform,
 					&src_image,
 					&dst_image,
-					format->xoffset + box.x1 - x_dst, 0,
+					format->xoffset + box.x1 - x_dst,
+					format->skip_lines + box.y1 - y_dst,
 					0, 0,
 					box.x2 - box.x1, box.y2 - box.y1);
 	    }
@@ -840,7 +1140,14 @@ glitz_set_pixels (glitz_surface_t      *dst,
 					     GLITZ_GL_PIXEL_UNPACK_BUFFER);
 
 		    bytes_per_line = format->bytes_per_line;
-		    bytes_per_pixel = format->masks.bpp / 8;
+		    switch (format->fourcc) {
+		    case GLITZ_FOURCC_YV12:
+			bytes_per_pixel = 1;
+			break;
+		    default:
+			bytes_per_pixel = format->masks.bpp / 8;
+		    }
+
 		    if (bytes_per_line)
 		    {
 			if ((bytes_per_line % 4) == 0)
@@ -868,12 +1175,59 @@ glitz_set_pixels (glitz_surface_t      *dst,
 		    (format->xoffset + box.x1 - x_dst) * bytes_per_pixel;
 	    }
 
-	    gl->tex_sub_image_2d (texture->target, 0,
-				  texture->box.x1 + box.x1,
-				  texture->box.y2 - box.y2,
-				  box.x2 - box.x1, box.y2 - box.y1,
-				  gl_format->format, gl_format->type,
-				  pixels);
+	    switch (gl_format->pixel.fourcc) {
+	    case GLITZ_FOURCC_YV12:
+		gl->tex_sub_image_2d (texture->target, 0,
+				      box.x1,
+				      texture->box.y2 - box.y2,
+				      box.x2 - box.x1, box.y2 - box.y1,
+				      gl_format->format, gl_format->type,
+				      pixels);
+
+		if ((bytes_per_line % 8) == 0)
+		    gl->pixel_store_i (GLITZ_GL_UNPACK_ALIGNMENT, 4);
+		else if ((bytes_per_line % 4) == 0)
+		    gl->pixel_store_i (GLITZ_GL_UNPACK_ALIGNMENT, 2);
+		else
+		    gl->pixel_store_i (GLITZ_GL_UNPACK_ALIGNMENT, 1);
+
+		gl->pixel_store_i (GLITZ_GL_UNPACK_ROW_LENGTH,
+				   (bytes_per_line / bytes_per_pixel) >> 1);
+
+		gl->tex_sub_image_2d (texture->target, 0,
+				      (box.x1 >> 1),
+				      texture->height - ((box.y2 + 1) >> 1),
+				      (box.x2 - box.x1 + 1) >> 1,
+				      (box.y2 - box.y1 + 1) >> 1,
+				      gl_format->format, gl_format->type,
+				      pixels + bytes_per_line * height);
+
+		gl->tex_sub_image_2d (texture->target, 0,
+				      (texture->width >> 1) + (box.x1 >> 1),
+				      texture->height - ((box.y2 + 1) >> 1),
+				      (box.x2 - box.x1 + 1) >> 1,
+				      (box.y2 - box.y1 + 1) >> 1,
+				      gl_format->format, gl_format->type,
+				      pixels + bytes_per_line * height +
+				      ((bytes_per_line * height) >> 2));
+		break;
+	    case GLITZ_FOURCC_YUY2:
+		gl->tex_sub_image_2d (texture->target, 0,
+				      texture->box.x1 + (box.x1 >> 1),
+				      texture->box.y2 - box.y2,
+				      (box.x2 - box.x1 + 1) >> 1,
+				      box.y2 - box.y1,
+				      gl_format->format, gl_format->type,
+				      pixels);
+		break;
+	    default:
+		gl->tex_sub_image_2d (texture->target, 0,
+				      texture->box.x1 + box.x1,
+				      texture->box.y2 - box.y2,
+				      box.x2 - box.x1, box.y2 - box.y1,
+				      gl_format->format, gl_format->type,
+				      pixels);
+	    }
 
 	    glitz_surface_damage (dst, &box,
 				  GLITZ_DAMAGE_DRAWABLE_MASK |
@@ -1155,7 +1509,7 @@ glitz_get_pixels (glitz_surface_t      *src,
 
     if (from_drawable)
     {
-	gl->read_buffer (src->buffer);
+	src->drawable->backend->read_buffer (src->drawable, src->buffer);
 
 	gl->disable (GLITZ_GL_SCISSOR_TEST);
 

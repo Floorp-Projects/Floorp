@@ -313,6 +313,19 @@ _glitz_fbo_swap_buffers (void *abstract_drawable)
     if (!drawable->fb)
 	return 1;
 
+    /* flip */
+    if (drawable->base.back && drawable->base.front)
+    {
+	glitz_texture_t tmp;
+
+	tmp = drawable->base.front->texture;
+
+	drawable->base.front->texture = drawable->base.back->texture;
+	drawable->base.back->texture  = tmp;
+
+	return 1;
+    }
+
     return 0;
 }
 
@@ -351,6 +364,50 @@ _glitz_fbo_destroy (void *abstract_drawable)
     free (drawable);
 }
 
+static void
+_glitz_fbo_draw_buffer (void                  *abstract_drawable,
+			const glitz_gl_enum_t buffer)
+{
+    glitz_fbo_drawable_t *drawable = (glitz_fbo_drawable_t *)
+	abstract_drawable;
+
+    GLITZ_GL_DRAWABLE (drawable->other);
+
+    switch (buffer) {
+    case GLITZ_GL_FRONT:
+	gl->draw_buffer (GLITZ_GL_COLOR_ATTACHMENT0);
+	break;
+    case GLITZ_GL_BACK:
+	gl->draw_buffer (GLITZ_GL_COLOR_ATTACHMENT1);
+	break;
+    /* TODO: use GL_ARB_draw_buffers
+    case GLITZ_GL_FRONT_AND_BACK:
+    */
+    default:
+	break;
+    }
+}
+
+static void
+_glitz_fbo_read_buffer (void                  *abstract_drawable,
+			const glitz_gl_enum_t buffer)
+{
+    glitz_fbo_drawable_t *drawable = (glitz_fbo_drawable_t *)
+	abstract_drawable;
+
+    GLITZ_GL_DRAWABLE (drawable->other);
+
+    switch (buffer) {
+    case GLITZ_GL_FRONT:
+	gl->read_buffer (GLITZ_GL_COLOR_ATTACHMENT0);
+	break;
+    case GLITZ_GL_BACK:
+	gl->read_buffer (GLITZ_GL_COLOR_ATTACHMENT1);
+    default:
+	break;
+    }
+}
+
 glitz_drawable_t *
 _glitz_fbo_drawable_create (glitz_drawable_t	        *other,
 			    glitz_int_drawable_format_t *format,
@@ -377,6 +434,8 @@ _glitz_fbo_drawable_create (glitz_drawable_t	        *other,
     backend->detach_notify = _glitz_fbo_detach_notify;
     backend->swap_buffers  = _glitz_fbo_swap_buffers;
     backend->make_current  = _glitz_fbo_make_current;
+    backend->draw_buffer   = _glitz_fbo_draw_buffer;
+    backend->read_buffer   = _glitz_fbo_read_buffer;
 
     drawable->fb = 0;
 
