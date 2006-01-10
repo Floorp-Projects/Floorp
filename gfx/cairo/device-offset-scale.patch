@@ -1,0 +1,1294 @@
+Index: src/cairo-gstate.c
+===================================================================
+--- src/cairo-gstate.c.orig
++++ src/cairo-gstate.c
+@@ -501,37 +501,10 @@ _cairo_gstate_get_miter_limit (cairo_gst
+     return gstate->stroke_style.miter_limit;
+ }
+ 
+-static void
+-_cairo_gstate_apply_device_transform (cairo_gstate_t    *gstate,
+-				      cairo_matrix_t	*matrix)
+-{
+-    if (gstate->target->device_x_scale != 1.0 ||
+-	gstate->target->device_y_scale != 1.0)
+-    {
+-	cairo_matrix_scale (matrix,
+-			    gstate->target->device_x_scale,
+-			    gstate->target->device_y_scale);
+-    }
+-}
+-
+-static void
+-_cairo_gstate_apply_device_inverse_transform (cairo_gstate_t    *gstate,
+-					      cairo_matrix_t	*matrix)
+-{
+-    if (gstate->target->device_x_scale != 1.0 ||
+-	gstate->target->device_y_scale != 1.0)
+-    {
+-	cairo_matrix_scale (matrix,
+-			    1/gstate->target->device_x_scale,
+-			    1/gstate->target->device_y_scale);
+-    }
+-}
+-
+ void
+ _cairo_gstate_get_matrix (cairo_gstate_t *gstate, cairo_matrix_t *matrix)
+ {
+     *matrix = gstate->ctm;
+-    _cairo_gstate_apply_device_inverse_transform (gstate, matrix);
+ }
+ 
+ cairo_status_t
+@@ -617,9 +590,6 @@ _cairo_gstate_set_matrix (cairo_gstate_t
+     if (status)
+ 	return status;
+ 
+-    _cairo_gstate_apply_device_transform (gstate, &gstate->ctm);
+-    _cairo_gstate_apply_device_inverse_transform (gstate, &gstate->ctm_inverse);
+-
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
+@@ -631,9 +601,6 @@ _cairo_gstate_identity_matrix (cairo_gst
+     cairo_matrix_init_identity (&gstate->ctm);
+     cairo_matrix_init_identity (&gstate->ctm_inverse);
+ 
+-    _cairo_gstate_apply_device_transform (gstate, &gstate->ctm);
+-    _cairo_gstate_apply_device_inverse_transform (gstate, &gstate->ctm_inverse);
+-
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
+@@ -675,15 +642,11 @@ void
+ _cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y)
+ {
+     cairo_matrix_transform_point (&gstate->ctm, x, y);
+-    *x += gstate->target->device_x_offset;
+-    *y += gstate->target->device_y_offset;
+ }
+ 
+ void
+ _cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
+ {
+-    *x -= gstate->target->device_x_offset;
+-    *y -= gstate->target->device_y_offset;
+     cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
+ }
+ 
+@@ -704,16 +667,8 @@ _cairo_gstate_copy_transformed_pattern (
+ 					cairo_pattern_t *original,
+ 					cairo_matrix_t  *ctm_inverse)
+ {
+-    cairo_matrix_t tmp_matrix = *ctm_inverse;
+-  
+     _cairo_pattern_init_copy (pattern, original);
+-
+-    if (gstate->target)
+-	cairo_matrix_translate (&tmp_matrix,
+-				- gstate->target->device_x_offset,
+-				- gstate->target->device_y_offset);
+-
+-    _cairo_pattern_transform (pattern, &tmp_matrix);
++    _cairo_pattern_transform (pattern, ctm_inverse);
+ }
+ 
+ static void
+Index: src/cairo-path.c
+===================================================================
+--- src/cairo-path.c.orig
++++ src/cairo-path.c
+@@ -548,3 +548,40 @@ _cairo_path_fixed_interpret (cairo_path_
+ 
+     return CAIRO_STATUS_SUCCESS;
+ }
++
++void
++_cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
++				     cairo_fixed_t offx,
++				     cairo_fixed_t offy,
++				     cairo_fixed_t scalex,
++				     cairo_fixed_t scaley)
++{
++    cairo_path_arg_buf_t *arg_buf = path->arg_buf_head;
++    int i;
++    cairo_int64_t i64temp;
++    cairo_fixed_t fixedtemp;
++
++    while (arg_buf) {
++	 for (i = 0; i < arg_buf->num_points; i++) {
++	     /* CAIRO_FIXED_ONE? */
++	     if (scalex == 0x00010000) {
++		 arg_buf->points[i].x += offx;
++	     } else {
++		 fixedtemp = arg_buf->points[i].x + offx;
++		 i64temp = _cairo_int32x32_64_mul (fixedtemp, scalex);
++		 arg_buf->points[i].x = _cairo_int64_to_int32(_cairo_int64_rsl (i64temp, 16));
++	     }
++
++	     if (scaley == 0x00010000) {
++		 arg_buf->points[i].y += offy;
++	     } else {
++		 fixedtemp = arg_buf->points[i].y + offy;
++		 i64temp = _cairo_int32x32_64_mul (fixedtemp, scaley);
++		 arg_buf->points[i].y = _cairo_int64_to_int32(_cairo_int64_rsl (i64temp, 16));
++	     }
++	 }
++
++	 arg_buf = arg_buf->next;
++    }
++}
++
+Index: src/cairo-surface-fallback.c
+===================================================================
+--- src/cairo-surface-fallback.c.orig
++++ src/cairo-surface-fallback.c
+@@ -214,6 +214,21 @@ _clip_and_composite_combine (cairo_clip_
+      */
+     _cairo_pattern_init_for_surface (&dst_pattern, dst);
+ 
++    /* Set a translation on dst_pattern equivalent to the surface
++     * device offset, to make sure it's in the right place when
++     * composited.
++     */
++    if (dst->device_x_offset != 0.0 ||
++        dst->device_y_offset != 0.0 ||
++        dst->device_x_scale != 1.0 ||
++        dst->device_y_scale != 1.0)
++    {
++	cairo_matrix_t txmat;
++        cairo_matrix_init_scale (&txmat, dst->device_x_scale, dst->device_y_scale);
++        cairo_matrix_translate (&txmat, dst->device_x_offset, dst->device_y_offset);
++	cairo_pattern_set_matrix ((cairo_pattern_t*) &dst_pattern, &txmat);
++    }
++
+     status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
+ 				       &dst_pattern.base, NULL, intermediate,
+ 				       extents->x,     extents->y,
+@@ -982,6 +997,11 @@ _cairo_surface_fallback_snapshot (cairo_
+     _cairo_surface_release_source_image (surface,
+ 					 image, &image_extra);
+ 
++    snapshot->device_x_offset = surface->device_x_offset;
++    snapshot->device_y_offset = surface->device_y_offset;
++    snapshot->device_x_scale = surface->device_x_scale;
++    snapshot->device_y_scale = surface->device_y_scale;
++
+     snapshot->is_snapshot = TRUE;
+ 
+     return snapshot;
+@@ -1127,29 +1147,15 @@ _cairo_surface_fallback_composite_trapez
+     /* If the destination image isn't at 0,0, we need to offset the trapezoids */
+     
+     if (state.image_rect.x != 0 || state.image_rect.y != 0) {
+-
+-	cairo_fixed_t xoff = _cairo_fixed_from_int (state.image_rect.x);
+-	cairo_fixed_t yoff = _cairo_fixed_from_int (state.image_rect.y);
+-	
+ 	offset_traps = malloc (sizeof (cairo_trapezoid_t) * num_traps);
+ 	if (!offset_traps) {
+ 	    status = CAIRO_STATUS_NO_MEMORY;
+ 	    goto DONE;
+ 	}
+ 
+-	for (i = 0; i < num_traps; i++) {
+-	    offset_traps[i].top = traps[i].top - yoff;
+-	    offset_traps[i].bottom = traps[i].bottom - yoff;
+-	    offset_traps[i].left.p1.x = traps[i].left.p1.x - xoff;
+-	    offset_traps[i].left.p1.y = traps[i].left.p1.y - yoff;
+-	    offset_traps[i].left.p2.x = traps[i].left.p2.x - xoff;
+-	    offset_traps[i].left.p2.y = traps[i].left.p2.y - yoff;
+-	    offset_traps[i].right.p1.x = traps[i].right.p1.x - xoff;
+-	    offset_traps[i].right.p1.y = traps[i].right.p1.y - yoff;
+-	    offset_traps[i].right.p2.x = traps[i].right.p2.x - xoff;
+-	    offset_traps[i].right.p2.y = traps[i].right.p2.y - yoff;
+-	}
+-
++	_cairo_trapezoid_array_translate_and_scale (offset_traps, traps, num_traps,
++                                                    - state.image_rect.x, - state.image_rect.y,
++                                                    1.0, 1.0);
+ 	traps = offset_traps;
+     }
+ 
+Index: src/cairo-surface.c
+===================================================================
+--- src/cairo-surface.c.orig
++++ src/cairo-surface.c
+@@ -89,6 +89,22 @@ const cairo_surface_t _cairo_surface_nil
+     0					/* current_clip_serial */
+ };
+ 
++/* N.B.: set_device_offset already transforms the device offsets by the scale
++ * before storing in device_[xy]_scale
++ */
++
++/* Helper macros for transforming surface coords to backend coords */
++#define BACKEND_X(_surf, _sx)  ((_sx)*((_surf)->device_x_scale)+((_surf)->device_x_offset))
++#define BACKEND_Y(_surf, _sy)  ((_sy)*((_surf)->device_y_scale)+((_surf)->device_y_offset))
++#define BACKEND_X_SIZE(_surf, _sx)  ((_sx)*((_surf)->device_x_scale))
++#define BACKEND_Y_SIZE(_surf, _sy)  ((_sy)*((_surf)->device_y_scale))
++
++/* Helper macros for transforming backend coords to surface coords */
++#define SURFACE_X(_surf, _bx)  (((_bx)-((_surf)->device_x_offset))/((_surf)->device_x_scale))
++#define SURFACE_Y(_surf, _by)  (((_by)-((_surf)->device_y_offset))/((_surf)->device_y_scale))
++#define SURFACE_X_SIZE(_surf, _bx)  ((_bx)/((_surf)->device_x_scale))
++#define SURFACE_Y_SIZE(_surf, _by)  ((_by)/((_surf)->device_y_scale))
++
+ /**
+  * _cairo_surface_set_error:
+  * @surface: a surface
+@@ -523,7 +539,10 @@ cairo_surface_mark_dirty_rectangle (cair
+     if (surface->backend->mark_dirty_rectangle) {
+ 	cairo_status_t status;
+ 	
+-	status = surface->backend->mark_dirty_rectangle (surface, x, y, width, height);
++	status = surface->backend->mark_dirty_rectangle (surface,
++                                                         BACKEND_X(surface, x),
++                                                         BACKEND_Y(surface, y),
++							 width, height);
+ 	
+ 	if (status)
+ 	    _cairo_surface_set_error (surface, status);
+@@ -618,6 +637,7 @@ _cairo_surface_release_source_image (cai
+  * @surface: a #cairo_surface_t
+  * @interest_rect: area of @surface for which fallback drawing is being done.
+  *    A value of %NULL indicates that the entire surface is desired.
++ *    XXXX I'd like to get rid of being able to pass NULL here (nothing seems to)
+  * @image_out: location to store a pointer to an image surface that includes at least
+  *    the intersection of @interest_rect with the visible area of @surface.
+  *    This surface could be @surface itself, a surface held internal to @surface,
+@@ -650,10 +670,26 @@ _cairo_surface_acquire_dest_image (cairo
+ 				   cairo_rectangle_t       *image_rect,
+ 				   void                   **image_extra)
+ {
++    cairo_rectangle_t dev_interest_rect;
++    cairo_status_t status;
++
+     assert (!surface->finished);
+ 
+-    return surface->backend->acquire_dest_image (surface, interest_rect,
+-						 image_out, image_rect, image_extra);
++    if (interest_rect) {
++	dev_interest_rect = *interest_rect;
++        dev_interest_rect.x = BACKEND_X(surface, dev_interest_rect.x);
++        dev_interest_rect.y = BACKEND_Y(surface, dev_interest_rect.y);
++    }
++
++    status = surface->backend->acquire_dest_image (surface,
++						   interest_rect ? &dev_interest_rect : NULL,
++						   image_out, image_rect, image_extra);
++
++    /* move image_rect back into surface coordinates from backend device coordinates */
++    image_rect->x = SURFACE_X(surface, image_rect->x);
++    image_rect->y = SURFACE_Y(surface, image_rect->y);
++
++    return status;
+ }
+ 
+ /**
+@@ -675,10 +711,22 @@ _cairo_surface_release_dest_image (cairo
+ 				   cairo_rectangle_t      *image_rect,
+ 				   void                   *image_extra)
+ {
++    cairo_rectangle_t dev_interest_rect;
++
+     assert (!surface->finished);
+ 
++    /* move image_rect into backend device coords (opposite of acquire_dest_image) */
++    image_rect->x = BACKEND_X(surface, image_rect->x);
++    image_rect->y = BACKEND_Y(surface, image_rect->y);
++
++    if (interest_rect) {
++	dev_interest_rect = *interest_rect;
++        dev_interest_rect.x = BACKEND_X(surface, dev_interest_rect.x);
++        dev_interest_rect.y = BACKEND_Y(surface, dev_interest_rect.y);
++    }
++
+     if (surface->backend->release_dest_image)
+-	surface->backend->release_dest_image (surface, interest_rect,
++	surface->backend->release_dest_image (surface, &dev_interest_rect,
+ 					      image, image_rect, image_extra);
+ }
+ 
+@@ -714,6 +762,13 @@ _cairo_surface_clone_similar (cairo_surf
+ 	return CAIRO_INT_STATUS_UNSUPPORTED;
+       
+     status = surface->backend->clone_similar (surface, src, clone_out);
++    if (status == CAIRO_STATUS_SUCCESS) {
++        (*clone_out)->device_x_offset = src->device_x_offset;
++        (*clone_out)->device_y_offset = src->device_y_offset;
++        (*clone_out)->device_x_scale = src->device_x_scale;
++        (*clone_out)->device_y_scale = src->device_y_scale;
++    }
++
+     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+ 	return status;
+ 
+@@ -722,6 +777,12 @@ _cairo_surface_clone_similar (cairo_surf
+ 	return status;
+ 
+     status = surface->backend->clone_similar (surface, &image->base, clone_out);
++    if (status == CAIRO_STATUS_SUCCESS) {
++        (*clone_out)->device_x_offset = src->device_x_offset;
++        (*clone_out)->device_y_offset = src->device_y_offset;
++        (*clone_out)->device_x_scale = src->device_x_scale;
++        (*clone_out)->device_y_scale = src->device_y_scale;
++    }
+ 
+     /* If the above failed point, we could implement a full fallback
+      * using acquire_dest_image, but that's going to be very
+@@ -798,7 +859,8 @@ _cairo_surface_composite (cairo_operator
+ 					  src, mask, dst,
+ 					  src_x, src_y,
+ 					  mask_x, mask_y,
+-					  dst_x, dst_y,
++                                          BACKEND_X(dst, dst_x),
++                                          BACKEND_Y(dst, dst_y),
+ 					  width, height);
+ 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+ 	    return status;
+@@ -927,6 +989,8 @@ _cairo_surface_fill_rectangles (cairo_su
+ 				int			num_rects)
+ {
+     cairo_int_status_t status;
++    cairo_rectangle_t *dev_rects = NULL;
++    int i;
+ 
+     assert (! surface->is_snapshot);
+ 
+@@ -940,8 +1004,26 @@ _cairo_surface_fill_rectangles (cairo_su
+ 	return CAIRO_STATUS_SUCCESS;
+ 
+     if (surface->backend->fill_rectangles) {
+-	status = surface->backend->fill_rectangles (surface, op, color,
+-						    rects, num_rects);
++	if (surface->device_x_offset != 0.0 ||
++	    surface->device_y_offset != 0.0 ||
++	    surface->device_x_scale != 1.0 ||
++	    surface->device_y_scale != 1.0)
++	{
++	    dev_rects = malloc(sizeof(cairo_rectangle_t) * num_rects);
++	    for (i = 0; i < num_rects; i++) {
++		dev_rects[i].x = BACKEND_X(surface, rects[i].x);
++		dev_rects[i].y = BACKEND_Y(surface, rects[i].y);
++
++		dev_rects[i].width = BACKEND_X_SIZE(surface, rects[i].width);
++		dev_rects[i].height = BACKEND_Y_SIZE(surface, rects[i].height);
++	    }
++	}
++
++	status = surface->backend->fill_rectangles (surface,
++						    op,
++						    color,
++						    dev_rects ? dev_rects : rects, num_rects);
++	free (dev_rects);
+ 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+ 	    return status;
+     }
+@@ -1002,10 +1084,31 @@ _cairo_surface_stroke (cairo_surface_t		
+ 
+     if (surface->backend->stroke) {
+ 	cairo_status_t status;
++	cairo_path_fixed_t *dev_path = path;
++	cairo_path_fixed_t real_dev_path;
++
++	if (surface->device_x_offset != 0.0 ||
++	    surface->device_y_offset != 0.0 ||
++	    surface->device_x_scale != 1.0 ||
++	    surface->device_y_scale != 1.0)
++        {
++	    _cairo_path_fixed_init_copy (&real_dev_path, path);
++	    _cairo_path_fixed_offset_and_scale (&real_dev_path,
++						_cairo_fixed_from_double (surface->device_x_offset),
++						_cairo_fixed_from_double (surface->device_y_offset),
++						_cairo_fixed_from_double (surface->device_x_scale),
++						_cairo_fixed_from_double (surface->device_y_scale));
++	    dev_path = &real_dev_path;
++	}
++
+ 	status = surface->backend->stroke (surface, op, source,
+-					   path, stroke_style,
++					   dev_path, stroke_style,
+ 					   ctm, ctm_inverse,
+ 					   tolerance, antialias);
++
++	if (dev_path == &real_dev_path)
++	    _cairo_path_fixed_fini (&real_dev_path);
++
+ 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+ 	    return status;
+     }
+@@ -1026,13 +1129,33 @@ _cairo_surface_fill (cairo_surface_t	*su
+ 		     cairo_antialias_t	 antialias)
+ {
+     cairo_status_t status;
++    cairo_path_fixed_t *dev_path = path;
++    cairo_path_fixed_t real_dev_path;
+ 
+     assert (! surface->is_snapshot);
+ 
+     if (surface->backend->fill) {
++        if (surface->device_x_offset != 0.0 ||
++            surface->device_y_offset != 0.0 ||
++            surface->device_x_scale != 1.0 ||
++            surface->device_y_scale != 1.0)
++        {
++            _cairo_path_fixed_init_copy (&real_dev_path, path);
++            _cairo_path_fixed_offset_and_scale (&real_dev_path,
++                                                _cairo_fixed_from_double (surface->device_x_offset),
++                                                _cairo_fixed_from_double (surface->device_y_offset),
++                                                _cairo_fixed_from_double (surface->device_x_scale),
++                                                _cairo_fixed_from_double (surface->device_y_scale));
++            dev_path = &real_dev_path;
++        }
++
+ 	status = surface->backend->fill (surface, op, source,
+-					 path, fill_rule,
++					 dev_path, fill_rule,
+ 					 tolerance, antialias);
++
++        if (dev_path == &real_dev_path)
++            _cairo_path_fixed_fini (&real_dev_path);
++
+ 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+ 	    return status;
+     }
+@@ -1057,6 +1180,7 @@ _cairo_surface_composite_trapezoids (cai
+ 				     int			num_traps)
+ {
+     cairo_int_status_t status;
++    cairo_trapezoid_t *dev_traps = NULL;
+ 
+     assert (! dst->is_snapshot);
+ 
+@@ -1072,13 +1196,36 @@ _cairo_surface_composite_trapezoids (cai
+ 	return CAIRO_STATUS_SURFACE_FINISHED;
+ 
+     if (dst->backend->composite_trapezoids) {
++	if (dst->device_x_offset != 0.0 ||
++	    dst->device_y_offset != 0.0 ||
++	    dst->device_x_scale != 1.0 ||
++	    dst->device_y_scale != 1.0)
++	{
++	    dev_traps = malloc (sizeof (cairo_trapezoid_t) * num_traps);
++	    if (!dev_traps)
++		return CAIRO_STATUS_NO_MEMORY;
++
++	    _cairo_trapezoid_array_translate_and_scale
++		(dev_traps, traps, num_traps,
++		 dst->device_x_offset,
++		 dst->device_y_offset,
++		 dst->device_x_scale,
++		 dst->device_y_scale);
++	}
++
++
+ 	status = dst->backend->composite_trapezoids (op,
+ 						     pattern, dst,
+ 						     antialias,
+ 						     src_x, src_y,
+-						     dst_x, dst_y,
++						     BACKEND_X(dst, dst_x),
++						     BACKEND_Y(dst, dst_y),
++						     // XXX what the heck do I do with width/height?
++						     // they're not the same for src and dst!
+ 						     width, height,
+-						     traps, num_traps);
++						     dev_traps ? dev_traps : traps, num_traps);
++	free (dev_traps);
++
+ 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+ 	    return status;
+     }
+@@ -1225,6 +1372,9 @@ _cairo_surface_set_clip_region (cairo_su
+ 				pixman_region16_t   *region,
+ 				unsigned int	    serial)
+ {
++    pixman_region16_t *dev_region = NULL;
++    cairo_status_t status;
++
+     if (surface->status)
+ 	return surface->status;
+ 
+@@ -1232,10 +1382,48 @@ _cairo_surface_set_clip_region (cairo_su
+ 	return CAIRO_STATUS_SURFACE_FINISHED;
+     
+     assert (surface->backend->set_clip_region != NULL);
+-    
++
++    if (surface->device_x_offset != 0.0 ||
++	surface->device_y_offset != 0.0 ||
++	surface->device_x_scale != 1.0 ||
++	surface->device_y_scale != 1.0)
++    {
++	dev_region = pixman_region_create ();
++	if (surface->device_x_scale == 1.0 &&
++	    surface->device_y_scale == 1.0)
++	{
++	    pixman_region_copy (dev_region, region);
++	    pixman_region_translate (dev_region, surface->device_x_offset, surface->device_y_offset);
++	} else {
++	    int i, nr = pixman_region_num_rects (region);
++	    pixman_box16_t *rects = pixman_region_rects (region);
++	    for (i = 0; i < nr; i++) {
++		pixman_box16_t tmpb;
++		tmpb.x1 = BACKEND_X(surface, rects[i].x1);
++		tmpb.y1 = BACKEND_Y(surface, rects[i].y1);
++		tmpb.x2 = BACKEND_X(surface, rects[i].x2);
++		tmpb.y2 = BACKEND_Y(surface, rects[i].y2);
++
++		pixman_region16_t *tmpr = pixman_region_create_simple (&tmpb);
++
++		pixman_region_append (dev_region, tmpr);
++		pixman_region_destroy (tmpr);
++	    }
++
++	    pixman_region_validate (dev_region, &i);
++	}
++
++	region = dev_region;
++    }
++
+     surface->current_clip_serial = serial;
+ 
+-    return surface->backend->set_clip_region (surface, region);
++    status = surface->backend->set_clip_region (surface, region);
++
++    if (dev_region)
++	pixman_region_destroy (dev_region);
++
++    return status;
+ }
+ 
+ cairo_int_status_t
+@@ -1245,6 +1433,10 @@ _cairo_surface_intersect_clip_path (cair
+ 				    double		tolerance,
+ 				    cairo_antialias_t	antialias)
+ {
++    cairo_path_fixed_t *dev_path = path;
++    cairo_path_fixed_t real_dev_path;
++    cairo_status_t status;
++
+     if (surface->status)
+ 	return surface->status;
+ 
+@@ -1253,11 +1445,30 @@ _cairo_surface_intersect_clip_path (cair
+     
+     assert (surface->backend->intersect_clip_path != NULL);
+ 
+-    return surface->backend->intersect_clip_path (surface,
+-						  path,
+-						  fill_rule,
+-						  tolerance,
+-						  antialias);
++    if (surface->device_x_offset != 0.0 ||
++	surface->device_y_offset != 0.0 ||
++	surface->device_x_scale != 1.0 ||
++	surface->device_y_scale != 1.0)
++    {
++	_cairo_path_fixed_init_copy (&real_dev_path, path);
++	_cairo_path_fixed_offset_and_scale (&real_dev_path,
++					    _cairo_fixed_from_double (surface->device_x_offset),
++					    _cairo_fixed_from_double (surface->device_y_offset),
++					    _cairo_fixed_from_double (surface->device_x_scale),
++					    _cairo_fixed_from_double (surface->device_y_scale));
++	dev_path = &real_dev_path;
++    }
++
++    status = surface->backend->intersect_clip_path (surface,
++						    dev_path,
++						    fill_rule,
++						    tolerance,
++						    antialias);
++
++    if (dev_path == &real_dev_path)
++	_cairo_path_fixed_fini (&real_dev_path);
++
++    return status;
+ }
+ 
+ static cairo_status_t
+@@ -1273,11 +1484,11 @@ _cairo_surface_set_clip_path_recursive (
+     if (status)
+ 	return status;
+ 
+-    return surface->backend->intersect_clip_path (surface,
+-						  &clip_path->path,
+-						  clip_path->fill_rule,
+-						  clip_path->tolerance,
+-						  clip_path->antialias);
++    return _cairo_surface_intersect_clip_path (surface,
++					       &clip_path->path,
++					       clip_path->fill_rule,
++					       clip_path->tolerance,
++					       clip_path->antialias);
+ }
+ 
+ /**
+@@ -1374,13 +1585,20 @@ cairo_status_t
+ _cairo_surface_get_extents (cairo_surface_t   *surface,
+ 			    cairo_rectangle_t *rectangle)
+ {
++    cairo_status_t status;
++
+     if (surface->status)
+ 	return surface->status;
+ 
+     if (surface->finished)
+ 	return CAIRO_STATUS_SURFACE_FINISHED;
+ 
+-    return surface->backend->get_extents (surface, rectangle);
++    status = surface->backend->get_extents (surface, rectangle);
++
++    rectangle->x = SURFACE_X(surface, rectangle->x);
++    rectangle->y = SURFACE_Y(surface, rectangle->y);
++
++    return status;
+ }
+ 
+ cairo_status_t
+@@ -1392,13 +1610,34 @@ _cairo_surface_show_glyphs (cairo_surfac
+ 			    cairo_scaled_font_t	*scaled_font)
+ {
+     cairo_status_t status;
++    cairo_glyph_t *dev_glyphs = NULL;
+ 
+     assert (! surface->is_snapshot);
+ 
+     if (surface->backend->show_glyphs) {
++	if (surface->device_x_offset != 0.0 ||
++	    surface->device_y_offset != 0.0 ||
++	    surface->device_x_scale != 1.0 ||
++	    surface->device_y_scale != 1.0)
++	{
++            int i;
++
++            dev_glyphs = malloc (sizeof(cairo_glyph_t) * num_glyphs);
++            if (!dev_glyphs)
++                return CAIRO_STATUS_NO_MEMORY;
++
++            for (i = 0; i < num_glyphs; i++) {
++                dev_glyphs[i].index = glyphs[i].index;
++		// err, we really should scale the size of the glyphs, no?
++                dev_glyphs[i].x = BACKEND_X(surface, glyphs[i].x);
++                dev_glyphs[i].y = BACKEND_Y(surface, glyphs[i].y);
++            }
++        }
++
+ 	status = surface->backend->show_glyphs (surface, op, source,
+-						glyphs, num_glyphs,
+-						scaled_font);
++						dev_glyphs ? dev_glyphs : glyphs,
++						num_glyphs, scaled_font);
++	free (dev_glyphs);
+ 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+ 	    return status;
+     }
+@@ -1428,6 +1667,7 @@ _cairo_surface_old_show_glyphs (cairo_sc
+ 				int			 num_glyphs)
+ {
+     cairo_status_t status;
++    cairo_glyph_t *dev_glyphs = NULL;
+ 
+     assert (! dst->is_snapshot);
+ 
+@@ -1437,14 +1677,35 @@ _cairo_surface_old_show_glyphs (cairo_sc
+     if (dst->finished)
+ 	return CAIRO_STATUS_SURFACE_FINISHED;
+ 
+-    if (dst->backend->old_show_glyphs)
++    if (dst->backend->old_show_glyphs) {
++	if (dst->device_x_offset != 0.0 ||
++	    dst->device_y_offset != 0.0 ||
++	    dst->device_x_scale != 1.0 ||
++	    dst->device_y_scale != 1.0)
++	{
++	    int i;
++
++	    dev_glyphs = malloc(sizeof(cairo_glyph_t) * num_glyphs);
++	    for (i = 0; i < num_glyphs; i++) {
++		dev_glyphs[i] = glyphs[i];
++		// err, we really should scale the size of the glyphs, no?
++		dev_glyphs[i].x = BACKEND_X(dst, dev_glyphs[i].x);
++		dev_glyphs[i].y = BACKEND_Y(dst, dev_glyphs[i].y);
++	    }
++
++	    glyphs = dev_glyphs;
++	}
++
+ 	status = dst->backend->old_show_glyphs (scaled_font,
+ 						op, pattern, dst,
+ 						source_x, source_y,
+-						dest_x, dest_y,
++						BACKEND_X(dst, dest_x),
++						BACKEND_Y(dst, dest_y),
+ 						width, height,
+ 						glyphs, num_glyphs);
+-    else
++
++	free (dev_glyphs);
++    } else
+ 	status = CAIRO_INT_STATUS_UNSUPPORTED;
+ 
+     return status;
+@@ -1554,7 +1815,15 @@ _cairo_surface_composite_fixup_unbounded
+     cairo_rectangle_t *mask_rectangle = NULL;
+ 
+     assert (! dst->is_snapshot);
+-  
++
++    /* This is a little odd; this function is called from the xlib/image surfaces,
++     * where the coordinates have already been transformed by the device_xy_offset.
++     * We need to undo this before running through this function,
++     * otherwise those offsets get applied twice.
++     */
++    dst_x = SURFACE_X(dst, dst_x);
++    dst_y = SURFACE_Y(dst, dst_y);
++
+     /* The RENDER/libpixman operators are clipped to the bounds of the untransformed,
+      * non-repeating sources and masks. Other sources and masks can be ignored.
+      */
+@@ -1629,6 +1898,10 @@ _cairo_surface_composite_shape_fixup_unb
+     cairo_rectangle_t *mask_rectangle = NULL;
+ 
+     assert (! dst->is_snapshot);
++
++    /* See comment at start of _cairo_surface_composite_fixup_unbounded */
++    dst_x = SURFACE_X(dst, dst_x);
++    dst_y = SURFACE_Y(dst, dst_y);
+   
+     /* The RENDER/libpixman operators are clipped to the bounds of the untransformed,
+      * non-repeating sources and masks. Other sources and masks can be ignored.
+Index: src/cairo-traps.c
+===================================================================
+--- src/cairo-traps.c.orig
++++ src/cairo-traps.c
+@@ -258,6 +258,54 @@ _cairo_traps_translate (cairo_traps_t *t
+     }
+ }
+ 
++void
++_cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
++                                            cairo_trapezoid_t *src_traps,
++                                            int num_traps,
++                                            double tx, double ty,
++                                            double sx, double sy)
++{
++    int i;
++    cairo_fixed_t xoff = _cairo_fixed_from_double (tx);
++    cairo_fixed_t yoff = _cairo_fixed_from_double (ty);
++
++    if (sx == 1.0 && sy == 1.0) {
++        for (i = 0; i < num_traps; i++) {
++            offset_traps[i].top = src_traps[i].top + yoff;
++            offset_traps[i].bottom = src_traps[i].bottom + yoff;
++            offset_traps[i].left.p1.x = src_traps[i].left.p1.x + xoff;
++            offset_traps[i].left.p1.y = src_traps[i].left.p1.y + yoff;
++            offset_traps[i].left.p2.x = src_traps[i].left.p2.x + xoff;
++            offset_traps[i].left.p2.y = src_traps[i].left.p2.y + yoff;
++            offset_traps[i].right.p1.x = src_traps[i].right.p1.x + xoff;
++            offset_traps[i].right.p1.y = src_traps[i].right.p1.y + yoff;
++            offset_traps[i].right.p2.x = src_traps[i].right.p2.x + xoff;
++            offset_traps[i].right.p2.y = src_traps[i].right.p2.y + yoff;
++        }
++    } else {
++        cairo_fixed_t xsc = _cairo_fixed_from_double (sx);
++        cairo_fixed_t ysc = _cairo_fixed_from_double (sy);
++
++        for (i = 0; i < num_traps; i++) {
++#define FIXED_MUL(_a, _b) \
++            (_cairo_int64_to_int32(_cairo_int64_rsl(_cairo_int32x32_64_mul((_a), (_b)), 16)))
++
++            offset_traps[i].top = FIXED_MUL(src_traps[i].top + yoff, ysc);
++            offset_traps[i].bottom = FIXED_MUL(src_traps[i].bottom + yoff, ysc);
++            offset_traps[i].left.p1.x = FIXED_MUL(src_traps[i].left.p1.x + xoff, xsc);
++            offset_traps[i].left.p1.y = FIXED_MUL(src_traps[i].left.p1.y + yoff, ysc);
++            offset_traps[i].left.p2.x = FIXED_MUL(src_traps[i].left.p2.x + xoff, xsc);
++            offset_traps[i].left.p2.y = FIXED_MUL(src_traps[i].left.p2.y + yoff, ysc);
++            offset_traps[i].right.p1.x = FIXED_MUL(src_traps[i].right.p1.x + xoff, xsc);
++            offset_traps[i].right.p1.y = FIXED_MUL(src_traps[i].right.p1.y + yoff, ysc);
++            offset_traps[i].right.p2.x = FIXED_MUL(src_traps[i].right.p2.x + xoff, xsc);
++            offset_traps[i].right.p2.y = FIXED_MUL(src_traps[i].right.p2.y + yoff, ysc);
++
++#undef FIXED_MUL
++        }
++    }
++}
++
+ cairo_status_t
+ _cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3])
+ {
+@@ -859,4 +907,3 @@ _cairo_traps_extract_region (cairo_traps
+ 
+     return CAIRO_STATUS_SUCCESS;
+ }
+-
+Index: src/cairoint.h
+===================================================================
+--- src/cairoint.h.orig
++++ src/cairoint.h
+@@ -1460,6 +1460,13 @@ _cairo_path_fixed_bounds (cairo_path_fix
+ 			  double *x1, double *y1,
+ 			  double *x2, double *y2);
+ 
++cairo_private void
++_cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
++                                    cairo_fixed_t offx,
++                                    cairo_fixed_t offy,
++                                    cairo_fixed_t scalex,
++                                    cairo_fixed_t scaley);
++
+ /* cairo_path_fill.c */
+ cairo_private cairo_status_t
+ _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
+@@ -1978,6 +1985,13 @@ cairo_private cairo_status_t
+ _cairo_traps_extract_region (cairo_traps_t      *tr,
+ 			     pixman_region16_t **region);
+ 
++cairo_private void
++_cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
++					    cairo_trapezoid_t *src_traps,
++					    int num_traps,
++					    double tx, double ty,
++					    double sx, double sy);
++
+ /* cairo_slope.c */
+ cairo_private void
+ _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);
+Index: test/buffer-diff.c
+===================================================================
+--- test/buffer-diff.c.orig
++++ test/buffer-diff.c
+@@ -62,7 +62,9 @@ buffer_diff_core (unsigned char *_buf_a,
+ 		  unsigned char *_buf_diff,
+ 		  int		width,
+ 		  int		height,
+-		  int		stride,
++		  int		stride_a,
++		  int		stride_b,
++		  int		stride_diff,
+ 		  pixman_bits_t mask)
+ {
+     int x, y;
+@@ -72,12 +74,14 @@ buffer_diff_core (unsigned char *_buf_a,
+     pixman_bits_t *buf_b = (pixman_bits_t*)_buf_b;
+     pixman_bits_t *buf_diff = (pixman_bits_t*)_buf_diff;
+ 
+-    stride /= sizeof(pixman_bits_t);
++    stride_a /= sizeof(pixman_bits_t);
++    stride_b /= sizeof(pixman_bits_t);
++    stride_diff /= sizeof(pixman_bits_t);
+     for (y = 0; y < height; y++)
+     {
+-	row_a = buf_a + y * stride;
+-	row_b = buf_b + y * stride;
+-	row = buf_diff + y * stride;
++	row_a = buf_a + y * stride_a;
++	row_b = buf_b + y * stride_b;
++	row = buf_diff + y * stride_diff;
+ 	for (x = 0; x < width; x++)
+ 	{
+ 	    /* check if the pixels are the same */
+@@ -112,9 +116,12 @@ buffer_diff (unsigned char *buf_a,
+ 	     unsigned char *buf_diff,
+ 	     int	   width,
+ 	     int	   height,
+-	     int	   stride)
++	     int	   stride_a,
++	     int	   stride_b,
++	     int	   stride_diff)
+ {
+-    return buffer_diff_core(buf_a, buf_b, buf_diff, width, height, stride, 0xffffffff);
++    return buffer_diff_core(buf_a, buf_b, buf_diff,
++			    width, height, stride_a, stride_b, stride_diff, 0xffffffff);
+ }
+ 
+ int
+@@ -123,9 +130,12 @@ buffer_diff_noalpha (unsigned char *buf_
+ 		     unsigned char *buf_diff,
+ 		     int	   width,
+ 		     int	   height,
+-		     int	   stride)
++		     int	   stride_a,
++		     int	   stride_b,
++		     int	   stride_diff)
+ {
+-    return buffer_diff_core(buf_a, buf_b, buf_diff, width, height, stride, 0x00ffffff);
++    return buffer_diff_core(buf_a, buf_b, buf_diff,
++			    width, height, stride_a, stride_b, stride_diff, 0x00ffffff);
+ }
+ 
+ /* Image comparison code courtesy of Richard Worth <richard@theworths.org>
+@@ -136,11 +146,16 @@ buffer_diff_noalpha (unsigned char *buf_
+ int
+ image_diff (const char *filename_a,
+ 	    const char *filename_b,
+-	    const char *filename_diff)
++	    const char *filename_diff,
++	    int		ax,
++	    int		ay,
++	    int		bx,
++	    int		by)
+ {
+     int pixels_changed;
+     unsigned int width_a, height_a, stride_a;
+     unsigned int width_b, height_b, stride_b;
++    unsigned int stride_diff;
+     unsigned char *buf_a, *buf_b, *buf_diff;
+     read_png_status_t status;
+ 
+@@ -154,9 +169,13 @@ image_diff (const char *filename_a,
+ 	return -1;
+     }
+ 
++    width_a -= ax;
++    height_a -= ay;
++    width_b -= bx;
++    height_b -= by;
++
+     if (width_a  != width_b  ||
+-	height_a != height_b ||
+-	stride_a != stride_b)
++	height_a != height_b)
+     {
+ 	cairo_test_log ("Error: Image size mismatch: (%dx%d@%d) vs. (%dx%d@%d)\n"
+ 			"       for %s vs. %s\n",
+@@ -168,17 +187,27 @@ image_diff (const char *filename_a,
+ 	return -1;
+     }
+ 
+-    buf_diff = xcalloc (stride_a * height_a, 1);
++    stride_diff = 4 * width_a;
++    buf_diff = xcalloc (stride_diff * height_a, 1);
+ 
+-    pixels_changed = buffer_diff (buf_a, buf_b, buf_diff,
+-				  width_a, height_a, stride_a);
++    pixels_changed = buffer_diff (buf_a + (ay * stride_a) + ax * 4,
++                                  buf_b + (by * stride_b) + by * 4,
++                                  buf_diff,
++                                  width_a, height_a,
++				  stride_a, stride_b, stride_diff);
+ 
+     if (pixels_changed) {
+-	FILE *png_file = fopen (filename_diff, "wb");
+-	write_png_argb32 (buf_diff, png_file, width_a, height_a, stride_a);
+-	fclose (png_file);
++	FILE *png_file;
++	if (filename_diff)
++	    png_file = fopen (filename_diff, "wb");
++	else
++	    png_file = stdout;
++	write_png_argb32 (buf_diff, png_file, width_a, height_a, stride_diff);
++	if (png_file != stdout)
++	    fclose (png_file);
+     } else {
+-	xunlink (filename_diff);
++	if (filename_diff)
++	    xunlink (filename_diff);
+     }
+ 
+     free (buf_a);
+Index: test/buffer-diff.h
+===================================================================
+--- test/buffer-diff.h.orig
++++ test/buffer-diff.h
+@@ -36,7 +36,9 @@ buffer_diff (unsigned char *buf_a,
+ 	     unsigned char *buf_diff,
+ 	     int	    width,
+ 	     int	    height,
+-	     int	    stride);
++	     int	    stride_a,
++	     int	    stride_b,
++	     int	    stride_diff);
+ 
+ /* Returns number of pixels changed ignoring the alpha channel.
+  * Also fills in a "diff" buffer intended to visually show where the
+@@ -48,7 +50,10 @@ buffer_diff_noalpha (unsigned char *buf_
+ 		     unsigned char *buf_diff,
+ 		     int	    width,
+ 		     int	    height,
+-		     int	    stride);
++		     int	    stride_a,
++		     int	    stride_b,
++		     int	    stride_diff);
++
+ 
+ /* Returns number of pixels changed, (or -1 on error).
+  * Also saves a "diff" image intended to visually show where the
+@@ -57,6 +62,10 @@ buffer_diff_noalpha (unsigned char *buf_
+ int
+ image_diff (const char *filename_a,
+ 	    const char *filename_b,
+-	    const char *filename_diff);
++	    const char *filename_diff,
++	    int		ax,
++	    int		ay,
++	    int		bx,
++	    int		by);
+ 
+ #endif
+Index: test/cairo-test.c
+===================================================================
+--- test/cairo-test.c.orig
++++ test/cairo-test.c
+@@ -1241,12 +1241,13 @@ cleanup_svg (void *closure)
+ static cairo_test_status_t
+ cairo_test_for_target (cairo_test_t *test,
+ 		       cairo_test_draw_function_t draw,
+-		       cairo_test_target_t	 *target)
++		       cairo_test_target_t	 *target,
++		       int			  dev_offset)
+ {
+     cairo_test_status_t status;
+     cairo_surface_t *surface;
+     cairo_t *cr;
+-    char *png_name, *ref_name, *diff_name;
++    char *png_name, *ref_name, *diff_name, *offset_str;
+     char *srcdir;
+     char *format;
+     cairo_test_status_t ret;
+@@ -1256,9 +1257,14 @@ cairo_test_for_target (cairo_test_t *tes
+     if (!srcdir)
+ 	srcdir = ".";
+     format = cairo_target_format_name (target);
+-    
+-    xasprintf (&png_name, "%s-%s-%s%s", test->name,
+-	       target->name, format, CAIRO_TEST_PNG_SUFFIX);
++
++    if (dev_offset)
++	xasprintf (&offset_str, "-%d", dev_offset);
++    else
++	offset_str = strdup("");
++
++    xasprintf (&png_name, "%s-%s-%s%s%s", test->name,
++	       target->name, format, offset_str, CAIRO_TEST_PNG_SUFFIX);
+     xasprintf (&ref_name, "%s/%s-%s-%s%s", srcdir, test->name,
+ 	       target->name, format, CAIRO_TEST_REF_SUFFIX);
+     if (access (ref_name, F_OK) != 0) {
+@@ -1272,17 +1278,30 @@ cairo_test_for_target (cairo_test_t *tes
+ 	xasprintf (&ref_name, "%s/%s%s", srcdir, test->name,
+ 		   ref_suffix);
+     }
+-    xasprintf (&diff_name, "%s-%s-%s%s", test->name,
+-	       target->name, format, CAIRO_TEST_DIFF_SUFFIX);
++    xasprintf (&diff_name, "%s-%s-%s%s%s", test->name,
++	       target->name, format, offset_str, CAIRO_TEST_DIFF_SUFFIX);
+ 
+     /* Run the actual drawing code. */
++    if (test->width && test->height) {
++        test->width += dev_offset;
++        test->height += dev_offset;
++    }
++
+     surface = (target->create_target_surface) (test, target->reference_format, &target->closure);
++
++    if (test->width && test->height) {
++        test->width -= dev_offset;
++        test->height -= dev_offset;;
++    }
++
+     if (surface == NULL) {
+ 	cairo_test_log ("Error: Failed to set %s target\n", target->name);
+ 	ret = CAIRO_TEST_UNTESTED;
+ 	goto UNWIND_STRINGS;
+     }
+ 
++    cairo_surface_set_device_offset (surface, dev_offset, dev_offset);
++
+     cr = cairo_create (surface);
+ 
+     cairo_save (cr);
+@@ -1316,7 +1335,7 @@ cairo_test_for_target (cairo_test_t *tes
+     if (test->width != 0 && test->height != 0) {
+ 	int pixels_changed;
+ 	(target->write_to_png) (surface, png_name);
+-	pixels_changed = image_diff (png_name, ref_name, diff_name);
++	pixels_changed = image_diff (png_name, ref_name, diff_name, dev_offset, dev_offset, 0, 0);
+ 	if (pixels_changed) {
+ 	    if (pixels_changed > 0)
+ 		cairo_test_log ("Error: %d pixels differ from reference image %s\n",
+@@ -1341,6 +1360,7 @@ UNWIND_STRINGS:
+     free (png_name);
+     free (ref_name);
+     free (diff_name);
++    free (offset_str);
+ 
+     return ret;
+ }
+@@ -1349,7 +1369,7 @@ static cairo_test_status_t
+ cairo_test_expecting (cairo_test_t *test, cairo_test_draw_function_t draw,
+ 		      cairo_test_status_t expectation)
+ {
+-    int i, num_targets;
++    int i, j, num_targets;
+     const char *tname;
+     cairo_test_status_t status, ret;
+     cairo_test_target_t **targets_to_test;
+@@ -1357,8 +1377,10 @@ cairo_test_expecting (cairo_test_t *test
+ 	{
+ 	    { "image", CAIRO_FORMAT_ARGB32,
+ 	      create_image_surface, cairo_surface_write_to_png, NULL},
++#if 0
+ 	    { "image", CAIRO_FORMAT_RGB24, 
+ 	      create_image_surface, cairo_surface_write_to_png, NULL},
++#endif
+ #ifdef CAIRO_HAS_TEST_SURFACES
+ 	    { "test-fallback", CAIRO_FORMAT_ARGB32,
+ 	      create_test_fallback_surface, cairo_surface_write_to_png, NULL },
+@@ -1481,37 +1503,39 @@ cairo_test_expecting (cairo_test_t *test
+      */
+     ret = CAIRO_TEST_UNTESTED;
+     for (i = 0; i < num_targets; i++) {
+-    	cairo_test_target_t *target = targets_to_test[i];
+-	cairo_test_log ("Testing %s with %s target\n", test->name, target->name);
+-	printf ("%s-%s-%s:\t", test->name, target->name, cairo_target_format_name(target));
+-
+-	status = cairo_test_for_target (test, draw, target);
+-
+-
+-	cairo_test_log ("TEST: %s TARGET: %s FORMAT: %s RESULT: ",
+-			test->name, target->name, cairo_target_format_name(target));
+-	switch (status) {
+-	case CAIRO_TEST_SUCCESS:
+-	    printf ("PASS\n");
+-	    cairo_test_log ("PASS\n");
+-	    if (ret == CAIRO_TEST_UNTESTED)
+-		ret = CAIRO_TEST_SUCCESS;
+-	    break;
+-	case CAIRO_TEST_UNTESTED:
+-	    printf ("UNTESTED\n");
+-	    cairo_test_log ("UNTESTED\n");
+-	    break;
+-	default:
+-	case CAIRO_TEST_FAILURE:
+-	    if (expectation == CAIRO_TEST_FAILURE) {
+-		printf ("XFAIL\n");
+-		cairo_test_log ("XFAIL\n");
+-	    } else {
+-		printf ("FAIL\n");
+-		cairo_test_log ("FAIL\n");
++	for (j = 0; j < 2; j++) {
++	    cairo_test_target_t *target = targets_to_test[i];
++	    int dev_offset = j * 25;
++	    cairo_test_log ("Testing %s with %s target (dev offset %d)\n", test->name, target->name, dev_offset);
++	    printf ("%s-%s-%s [%d]:\t", test->name, target->name, cairo_target_format_name(target), dev_offset);
++
++	    status = cairo_test_for_target (test, draw, target, dev_offset);
++
++	    cairo_test_log ("TEST: %s TARGET: %s FORMAT: %s OFFSET: %d RESULT: ",
++			    test->name, target->name, target, dev_offset, cairo_target_format_name(target));
++	    switch (status) {
++	    case CAIRO_TEST_SUCCESS:
++		printf ("PASS\n");
++		cairo_test_log ("PASS\n");
++		if (ret == CAIRO_TEST_UNTESTED)
++		    ret = CAIRO_TEST_SUCCESS;
++		break;
++	    case CAIRO_TEST_UNTESTED:
++		printf ("UNTESTED\n");
++		cairo_test_log ("UNTESTED\n");
++		break;
++	    default:
++	    case CAIRO_TEST_FAILURE:
++		if (expectation == CAIRO_TEST_FAILURE) {
++		    printf ("XFAIL\n");
++		    cairo_test_log ("XFAIL\n");
++		} else {
++		    printf ("FAIL\n");
++		    cairo_test_log ("FAIL\n");
++		}
++		ret = status;
++		break;
+ 	    }
+-	    ret = status;
+-	    break;
+ 	}
+     }
+     if (ret == CAIRO_TEST_UNTESTED)
+Index: test/imagediff.c
+===================================================================
+--- test/imagediff.c.orig
++++ test/imagediff.c
+@@ -34,48 +34,31 @@
+ int 
+ main (int argc, char *argv[])
+ {
+-    unsigned char *buffer_a;
+-    unsigned int width_a, height_a, stride_a;
+-    unsigned char *buffer_b;
+-    unsigned int width_b, height_b, stride_b;
+-
+-    unsigned char *buffer;
+-    unsigned int width, height, stride;
+-    int buffer_size, total_pixels_changed;
++    int total_pixels_changed;
+ 
+-    if (argc < 2) {
+-	fprintf (stderr, "Usage: %s image1.png image2.png\n", argv[0]);
++    unsigned int ax, ay, bx, by;
++
++    if (argc != 3 && argc != 7) {
++	fprintf (stderr, "Usage: %s image1.png image2.png [ax ay bx by]\n", argv[0]);
+ 	fprintf (stderr, "Computes an output image designed to present a \"visual diff\" such that even\n");
+ 	fprintf (stderr, "small errors in single pixels are readily apparent in the output.\n");
+ 	fprintf (stderr, "The output image is written on stdout.\n");
+ 	exit (1);
+     }
+ 
+-    read_png_argb32 (argv[1], &buffer_a, &width_a, &height_a, &stride_a);
+-    read_png_argb32 (argv[2], &buffer_b, &width_b, &height_b, &stride_b);
+-
+-    if ((width_a == width_b) && (height_a == height_b) && (stride_a == stride_b))
+-    {
+-	width = width_a;
+-	height = height_a;
+-	stride = stride_a;
++    if (argc == 7) {
++	ax = strtoul (argv[3], NULL, 0);
++	ay = strtoul (argv[4], NULL, 0);
++	bx = strtoul (argv[5], NULL, 0);
++	by = strtoul (argv[6], NULL, 0);
+     } else {
+-	fprintf (stderr, "Error. Both images must be the same size\n");
+-	return 1;
++	ax = ay = bx = by = 0;
+     }
+ 
+-    buffer_size = stride * height;
+-    buffer = xmalloc (buffer_size);
+-    
+-    total_pixels_changed = buffer_diff (buffer_a, buffer_b, buffer,
+-					width_a, height_a, stride_a);
+-
++    total_pixels_changed = image_diff (argv[1], argv[2], NULL, ax, ay, bx, by);
+ 
+     if (total_pixels_changed)
+ 	fprintf (stderr, "Total pixels changed: %d\n", total_pixels_changed);
+-    write_png_argb32 (buffer, stdout, width, height, stride);
+-
+-    free (buffer);
+ 
+     return total_pixels_changed;
+ }
+Index: test/xlib-surface.c
+===================================================================
+--- test/xlib-surface.c.orig
++++ test/xlib-surface.c
+@@ -160,6 +160,8 @@ do_test (Display        *dpy,
+ 				       diff_data + offset,
+ 				       SIZE - OFFSCREEN_OFFSET,
+ 				       SIZE - OFFSCREEN_OFFSET,
++				       4 * SIZE,
++				       4 * SIZE,
+ 				       4 * SIZE);
+     } else {
+ 	result = !buffer_diff_noalpha (reference_data,
+@@ -167,6 +169,8 @@ do_test (Display        *dpy,
+ 				       diff_data,
+ 				       SIZE,
+ 				       SIZE,
++				       4 * SIZE,
++				       4 * SIZE,
+ 				       4 * SIZE);
+     }
+ 

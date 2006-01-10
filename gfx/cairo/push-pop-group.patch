@@ -1,0 +1,632 @@
+Index: src/cairo-gstate-private.h
+===================================================================
+--- src/cairo-gstate-private.h.orig
++++ src/cairo-gstate-private.h
+@@ -55,7 +55,9 @@ struct _cairo_gstate {
+ 
+     cairo_clip_t clip;
+ 
+-    cairo_surface_t *target;
++    cairo_surface_t *target;		/* The target to which all rendering is directed */
++    cairo_surface_t *parent_target;	/* The previous target which was receiving rendering */
++    cairo_surface_t *original_target;	/* The original target the initial gstate was created with */
+ 
+     cairo_matrix_t ctm;
+     cairo_matrix_t ctm_inverse;
+Index: src/cairo-gstate.c
+===================================================================
+--- src/cairo-gstate.c.orig
++++ src/cairo-gstate.c
+@@ -119,6 +119,8 @@ _cairo_gstate_init (cairo_gstate_t  *gst
+     _cairo_clip_init (&gstate->clip, target);
+ 
+     gstate->target = cairo_surface_reference (target);
++    gstate->parent_target = NULL;
++    gstate->original_target = cairo_surface_reference (target);
+ 
+     _cairo_gstate_identity_matrix (gstate);
+     gstate->source_ctm_inverse = gstate->ctm_inverse;
+@@ -166,6 +168,9 @@ _cairo_gstate_init_copy (cairo_gstate_t 
+     _cairo_clip_init_copy (&gstate->clip, &other->clip);
+ 
+     gstate->target = cairo_surface_reference (other->target);
++    /* parent_target is always set to NULL; it's only ever set by redirect_target */
++    gstate->parent_target = NULL;
++    gstate->original_target = cairo_surface_reference (other->original_target);
+ 
+     gstate->ctm = other->ctm;
+     gstate->ctm_inverse = other->ctm_inverse;
+@@ -194,6 +199,12 @@ _cairo_gstate_fini (cairo_gstate_t *gsta
+     cairo_surface_destroy (gstate->target);
+     gstate->target = NULL;
+ 
++    cairo_surface_destroy (gstate->parent_target);
++    gstate->parent_target = NULL;
++
++    cairo_surface_destroy (gstate->original_target);
++    gstate->target = NULL;
++
+     cairo_pattern_destroy (gstate->source);
+     gstate->source = NULL;
+ }
+@@ -248,94 +259,153 @@ _moz_cairo_gstate_set_target (cairo_gsta
+     gstate->target = cairo_surface_reference (target);
+ }
+ 
+-/* Push rendering off to an off-screen group. */
+-/* XXX: Rethinking this API
+-cairo_status_t
+-_cairo_gstate_begin_group (cairo_gstate_t *gstate)
++static cairo_status_t
++_cairo_gstate_recursive_apply_clip_path (cairo_gstate_t *gstate,
++					 cairo_clip_path_t *cpath)
+ {
+-    Pixmap pix;
+-    unsigned int width, height;
+-
+-    gstate->parent_surface = gstate->target;
+-
+-    width = _cairo_surface_get_width (gstate->target);
+-    height = _cairo_surface_get_height (gstate->target);
++    cairo_status_t status;
+ 
+-    pix = XCreatePixmap (gstate->dpy,
+-			 _cairo_surface_get_drawable (gstate->target),
+-			 width, height,
+-			 _cairo_surface_get_depth (gstate->target));
+-    if (pix == 0)
+-	return CAIRO_STATUS_NO_MEMORY;
++    if (cpath == NULL)
++	return CAIRO_STATUS_SUCCESS;
+ 
+-    gstate->target = cairo_surface_create (gstate->dpy);
+-    if (gstate->target->status)
+-	return gstate->target->status;
+-
+-    _cairo_surface_set_drawableWH (gstate->target, pix, width, height);
+-
+-    status = _cairo_surface_fill_rectangle (gstate->target,
+-                                   CAIRO_OPERATOR_CLEAR,
+-				   CAIRO_COLOR_TRANSPARENT,
+-				   0, 0,
+-			           _cairo_surface_get_width (gstate->target),
+-				   _cairo_surface_get_height (gstate->target));
+-    if (status)				 
+-        return status;
++    status = _cairo_gstate_recursive_apply_clip_path (gstate, cpath->prev);
++    if (status)
++	return status;
+ 
+-    return CAIRO_STATUS_SUCCESS;
++    return _cairo_clip_clip (&gstate->clip,
++			     &cpath->path,
++			     cpath->fill_rule,
++			     cpath->tolerance,
++			     cpath->antialias,
++			     gstate->target);
+ }
+-*/
+ 
+-/* Complete the current offscreen group, composing its contents onto the parent surface. */
+-/* XXX: Rethinking this API
+-cairo_status_t
+-_cairo_gstate_end_group (cairo_gstate_t *gstate)
++/**
++ * _cairo_gstate_redirect_target:
++ * @gstate: a #cairo_gstate_t
++ * @child: the new child target
++ *
++ * Redirect @gstate rendering to a "child" target. The original
++ * "parent" target with which the gstate was created will not be
++ * affected. See _cairo_gstate_get_target().
++ *
++ * Unless the redirected target has the same device offsets as the
++ * original #cairo_t target, the clip will be INVALID after this call,
++ * and the caller should either recreate or reset the clip.
++ **/
++void
++_cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
+ {
+-    Pixmap pix;
+-    cairo_color_t mask_color;
+-    cairo_surface_t mask;
+-
+-    if (gstate->parent_surface == NULL)
+-	return CAIRO_STATUS_INVALID_POP_GROUP;
+-
+-    _cairo_surface_init (&mask, gstate->dpy);
+-    _cairo_color_init (&mask_color);
+-
+-    _cairo_surface_set_solid_color (&mask, &mask_color);
+-
+-    * XXX: This could be made much more efficient by using
+-       _cairo_surface_get_damaged_width/Height if cairo_surface_t actually kept
+-       track of such informaton. *
+-    _cairo_surface_composite (gstate->op,
+-			      gstate->target,
+-			      mask,
+-			      gstate->parent_surface,
+-			      0, 0,
+-			      0, 0,
+-			      0, 0,
+-			      _cairo_surface_get_width (gstate->target),
+-			      _cairo_surface_get_height (gstate->target));
+-
+-    _cairo_surface_fini (&mask);
+-
+-    pix = _cairo_surface_get_drawable (gstate->target);
+-    XFreePixmap (gstate->dpy, pix);
+-
+-    cairo_surface_destroy (gstate->target);
+-    gstate->target = gstate->parent_surface;
+-    gstate->parent_surface = NULL;
++    /* If this gstate is already redirected, this is an error; we need a
++     * new gstate to be able to redirect */
++    assert (gstate->parent_target == NULL);
++
++    /* Set up our new parent_target based on our current target;
++     * gstate->parent_target will take the ref that is held by gstate->target
++     */
++    cairo_surface_destroy (gstate->parent_target);
++    gstate->parent_target = gstate->target;
++
++    /* Now set up our new target; we overwrite gstate->target directly,
++     * since its ref is now owned by gstate->parent_target */
++    gstate->target = cairo_surface_reference (child);
++
++    /* Check that the new surface's clip mode is compatible */
++    if (gstate->clip.mode != _cairo_surface_get_clip_mode (child)) {
++	/* clip is not compatible; try to recreate it */
++	/* XXX - saving the clip path always might be useful here,
++	 * so that we could recover non-CLIP_MODE_PATH clips */
++	if (gstate->clip.mode == CAIRO_CLIP_MODE_PATH) {
++	    cairo_clip_t saved_clip = gstate->clip;
++
++	    _cairo_clip_init (&gstate->clip, child);
++
++	    /* unwind the path and re-apply */
++	    _cairo_gstate_recursive_apply_clip_path (gstate, saved_clip.path);
++
++	    _cairo_clip_fini (&saved_clip);
++	} else {
++	    /* uh, not sure what to do here.. */
++	    _cairo_clip_fini (&gstate->clip);
++	    _cairo_clip_init (&gstate->clip, child);
++	}
++    } else {
++	/* clip is compatible; allocate a new serial for the new surface. */
++	if (gstate->clip.serial)
++	    gstate->clip.serial = _cairo_surface_allocate_clip_serial (child);
++    }
++}
+ 
+-    return CAIRO_STATUS_SUCCESS;
++/**
++ * _cairo_gstate_is_redirected
++ * @gstate: a #cairo_gstate_t
++ *
++ * Return value: TRUE if the gstate is redirected to a traget
++ * different than the original, FALSE otherwise.
++ **/
++cairo_bool_t
++_cairo_gstate_is_redirected (cairo_gstate_t *gstate)
++{
++    return (gstate->target != gstate->original_target);
+ }
+-*/
+ 
++/**
++ * _cairo_gstate_get_target:
++ * @gstate: a #cairo_gstate_t
++ *
++ * Return the current drawing target; if drawing is not redirected,
++ * this will be the same as _cairo_gstate_get_original_target().
++ *
++ * Return value: the current target surface
++ **/
+ cairo_surface_t *
+ _cairo_gstate_get_target (cairo_gstate_t *gstate)
+ {
+     return gstate->target;
+ }
+ 
++/**
++ * _cairo_gstate_get_parent_target:
++ * @gstate: a #cairo_gstate_t
++ *
++ * Return the parent surface of the current drawing target surface;
++ * if this particular gstate isn't a redirect gstate, this will return NULL.
++ **/
++cairo_surface_t *
++_cairo_gstate_get_parent_target (cairo_gstate_t *gstate)
++{
++    return gstate->parent_target;
++}
++
++/**
++ * _cairo_gstate_get_original_target:
++ * @gstate: a #cairo_gstate_t
++ *
++ * Return the original target with which @gstate was created. This
++ * function always returns the original target independent of any
++ * child target that may have been set with
++ * _cairo_gstate_redirect_target.
++ *
++ * Return value: the original target surface
++ **/
++cairo_surface_t *
++_cairo_gstate_get_original_target (cairo_gstate_t *gstate)
++{
++    return gstate->original_target;
++}
++
++/**
++ * _cairo_gstate_get_clip:
++ * @gstate: a #cairo_gstate_t
++ *
++ * Return value: a pointer to the gstate's cairo_clip_t structure.
++ */
++cairo_clip_t *
++_cairo_gstate_get_clip (cairo_gstate_t *gstate)
++{
++    return &gstate->clip;
++}
++
+ cairo_status_t
+ _cairo_gstate_set_source (cairo_gstate_t  *gstate,
+ 			  cairo_pattern_t *source)
+Index: src/cairo.c
+===================================================================
+--- src/cairo.c.orig
++++ src/cairo.c
+@@ -347,33 +347,119 @@ moz_cairo_set_target (cairo_t *cr, cairo
+ }
+ slim_hidden_def(moz_cairo_set_target);
+ 
+-/* XXX: I want to rethink this API
++/**
++ * cairo_push_group:
++ * @cr: a cairo context
++ *
++ * Pushes a temporary surface onto the rendering stack, redirecting
++ * all rendering into it.  The surface dimensions are the size of
++ * the current clipping bounding box.  Initially, this surface
++ * is cleared to fully transparent black (0,0,0,1).
++ *
++ * cairo_push_group() calls cairo_save() so that any changes to the
++ * graphics state will not be visible after cairo_pop_group() or
++ * cairo_pop_group_with_alpha().  See cairo_pop_group() and
++ * cairo_pop_group_with_alpha().
++ */
++
+ void
+ cairo_push_group (cairo_t *cr)
+ {
+-    if (cr->status)
+-	return;
++    cairo_status_t status;
++    cairo_rectangle_t extents;
++    cairo_surface_t *group_surface = NULL;
+ 
+-    cr->status = cairoPush (cr);
+-    if (cr->status)
+-	return;
++    /* Get the extents that we'll use in creating our new group surface */
++    _cairo_surface_get_extents (_cairo_gstate_get_target (cr->gstate), &extents);
++    status = _cairo_clip_intersect_to_rectangle (_cairo_gstate_get_clip (cr->gstate), &extents);
++    if (status != CAIRO_STATUS_SUCCESS)
++	goto bail;
++
++    group_surface = cairo_surface_create_similar (_cairo_gstate_get_target (cr->gstate),
++						  CAIRO_CONTENT_COLOR_ALPHA,
++						  extents.width,
++						  extents.height);
++    status = cairo_surface_status (group_surface);
++    if (status)
++	goto bail;
++
++    /* XXX hrm. How best to make sure that drawing still happens in
++     * the right place?  Is this correct? Need to double-check the
++     * coordinate spaces.
++     */
++    cairo_surface_set_device_offset (group_surface, -extents.x, -extents.y);
++
++    /* create a new gstate for the redirect */
++    cairo_save (cr);
++    if (cr->status)
++	goto bail;
++
++    _cairo_gstate_redirect_target (cr->gstate, group_surface);
++
++bail:
++    cairo_surface_destroy (group_surface);
++    if (status)
++	_cairo_set_error (cr, status);
++}
++slim_hidden_def(cairo_push_group);
++
++cairo_pattern_t *
++cairo_pop_group (cairo_t *cr)
++{
++    cairo_surface_t *group_surface, *parent_target;
++    cairo_pattern_t *group_pattern = NULL;
++
++    /* Grab the active surfaces */
++    group_surface = _cairo_gstate_get_target (cr->gstate);
++    parent_target = _cairo_gstate_get_parent_target (cr->gstate);
++
++    /* Verify that we are at the right nesting level */
++    if (parent_target == NULL) {
++	_cairo_set_error (cr, CAIRO_STATUS_INVALID_POP_GROUP);
++	return NULL;
++    }
++
++    /* We need to save group_surface before we restore; we don't need
++     * to reference parent_target and original_target, since the
++     * gstate will still hold refs to them once we restore. */
++    cairo_surface_reference (group_surface);
++
++    cairo_restore (cr);
++
++    if (cr->status)
++	goto done;
++
++    /* Undo the device offset we used; we're back in a normal-sized
++     * surface, so this pattern will be positioned at the right place.
++     * XXXvlad - er, this doesn't make sense, why does it work?
++     */
++    cairo_surface_set_device_offset (group_surface, 0, 0);
++
++    group_pattern = cairo_pattern_create_for_surface (group_surface);
++    if (!group_pattern) {
++        cr->status = CAIRO_STATUS_NO_MEMORY;
++        goto done;
++    }
++
++done:
++    cairo_surface_destroy (group_surface);
+ 
+-    cr->status = _cairo_gstate_begin_group (cr->gstate);
++    return group_pattern;
+ }
++slim_hidden_def(cairo_pop_group);
+ 
+ void
+-cairo_pop_group (cairo_t *cr)
++cairo_pop_group_to_source (cairo_t *cr)
+ {
+-    if (cr->status)
+-	return;
++    cairo_pattern_t *group_pattern;
+ 
+-    cr->status = _cairo_gstate_end_group (cr->gstate);
+-    if (cr->status)
+-	return;
++    group_pattern = cairo_pop_group (cr);
++    if (!group_pattern)
++        return;
+ 
+-    cr->status = cairoPop (cr);
++    cairo_set_source (cr, group_pattern);
+ }
+-*/
++slim_hidden_def(cairo_pop_group_to_source);
+ 
+ /**
+  * cairo_set_operator:
+@@ -2421,7 +2507,7 @@ cairo_get_target (cairo_t *cr)
+     if (cr->status)
+ 	return (cairo_surface_t*) &_cairo_surface_nil;
+ 
+-    return _cairo_gstate_get_target (cr->gstate);
++    return _cairo_gstate_get_original_target (cr->gstate);
+ }
+ 
+ /**
+Index: src/cairo.h
+===================================================================
+--- src/cairo.h.orig
++++ src/cairo.h
+@@ -255,13 +255,14 @@ cairo_restore (cairo_t *cr);
+ cairo_public void
+ moz_cairo_set_target (cairo_t *cr, cairo_surface_t *target);
+ 
+-/* XXX: I want to rethink this API
+ cairo_public void
+ cairo_push_group (cairo_t *cr);
+ 
+-cairo_public void
++cairo_public cairo_pattern_t *
+ cairo_pop_group (cairo_t *cr);
+-*/
++
++cairo_public void
++cairo_pop_group_to_source (cairo_t *cr);
+ 
+ /* Modify state */
+ 
+Index: src/cairoint.h
+===================================================================
+--- src/cairoint.h.orig
++++ src/cairoint.h
+@@ -1073,9 +1073,24 @@ _cairo_gstate_clone (cairo_gstate_t *gst
+ cairo_private void
+ _moz_cairo_gstate_set_target (cairo_gstate_t *gstate, cairo_surface_t *target);
+ 
++cairo_private cairo_bool_t
++_cairo_gstate_is_redirected (cairo_gstate_t *gstate);
++
++cairo_private void
++_cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child);
++
+ cairo_private cairo_surface_t *
+ _cairo_gstate_get_target (cairo_gstate_t *gstate);
+ 
++cairo_private cairo_surface_t *
++_cairo_gstate_get_parent_target (cairo_gstate_t *gstate);
++
++cairo_private cairo_surface_t *
++_cairo_gstate_get_original_target (cairo_gstate_t *gstate);
++
++cairo_private cairo_clip_t *
++_cairo_gstate_get_clip (cairo_gstate_t *gstate);
++
+ cairo_private cairo_status_t
+ _cairo_gstate_set_source (cairo_gstate_t *gstate, cairo_pattern_t *source);
+ 
+@@ -2173,6 +2188,9 @@ slim_hidden_proto(cairo_restore)
+ slim_hidden_proto(cairo_save)
+ slim_hidden_proto(cairo_stroke_preserve)
+ slim_hidden_proto(cairo_surface_destroy)
++slim_hidden_proto(cairo_push_group)
++slim_hidden_proto(cairo_pop_group)
++slim_hidden_proto(cairo_pop_group_to_source)
+ slim_hidden_proto(moz_cairo_set_target)
+ 
+ CAIRO_END_DECLS
+Index: test/Makefile.am
+===================================================================
+--- test/Makefile.am.orig
++++ test/Makefile.am
+@@ -59,7 +59,8 @@ trap-clip			\
+ unantialiased-shapes		\
+ unbounded-operator		\
+ user-data			\
+-rel-path
++rel-path                        \
++push-group
+ 
+ if HAVE_PTHREAD
+ TESTS += pthread-show-text
+@@ -352,6 +353,7 @@ unbounded_operator_LDADD = $(LDADDS)
+ user_data_LDADD = $(LDADDS)
+ rel_path_LDADD = $(LDADDS)
+ xlib_surface_LDADD = $(LDADDS)
++push_group_LDADD = $(LDADDS)
+ 
+ noinst_PROGRAMS = imagediff
+ imagediff_LDADD = $(LDADDS)
+Index: test/push-group.c
+===================================================================
+--- /dev/null
++++ test/push-group.c
+@@ -0,0 +1,119 @@
++/*
++ * Copyright © 2005 Mozilla Corporation
++ *
++ * Permission to use, copy, modify, distribute, and sell this software
++ * and its documentation for any purpose is hereby granted without
++ * fee, provided that the above copyright notice appear in all copies
++ * and that both that copyright notice and this permission notice
++ * appear in supporting documentation, and that the name of
++ * Mozilla Corporation not be used in advertising or publicity pertaining to
++ * distribution of the software without specific, written prior
++ * permission. Mozilla Corporation makes no representations about the
++ * suitability of this software for any purpose.  It is provided "as
++ * is" without express or implied warranty.
++ *
++ * MOZILLA CORPORATION DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
++ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
++ * FITNESS, IN NO EVENT SHALL MOZILLA CORPORATION BE LIABLE FOR ANY SPECIAL,
++ * INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
++ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
++ * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ * Author: Vladimir Vukicevic <vladimir@pobox.com>
++ */
++
++
++#include "cairo-test.h"
++
++
++#define UNIT_SIZE 100
++#define PAD 5
++#define INNER_PAD 10
++
++#define WIDTH (UNIT_SIZE + PAD) + PAD
++#define HEIGHT (UNIT_SIZE + PAD) + PAD
++
++cairo_test_t test = {
++    "push-group",
++    "Verify that cairo_push_group works.",
++    WIDTH, HEIGHT
++};
++
++static cairo_test_status_t
++draw (cairo_t *cr, int width, int height)
++{
++    cairo_pattern_t *gradient;
++    int i, j;
++
++    gradient = cairo_pattern_create_linear (UNIT_SIZE - (INNER_PAD*2), 0,
++                                            UNIT_SIZE - (INNER_PAD*2), UNIT_SIZE - (INNER_PAD*2));
++    cairo_pattern_add_color_stop_rgba (gradient, 0.0, 0.3, 0.3, 0.3, 1.0);
++    cairo_pattern_add_color_stop_rgba (gradient, 1.0, 1.0, 1.0, 1.0, 1.0);
++
++    for (j = 0; j < 1; j++) {
++        for (i = 0; i < 1; i++) {
++            double x = (i * UNIT_SIZE) + (i + 1) * PAD;
++            double y = (j * UNIT_SIZE) + (j + 1) * PAD;
++
++            cairo_save (cr);
++
++            cairo_translate (cr, x, y);
++
++            /* draw a gradient background */
++            cairo_save (cr);
++            cairo_translate (cr, INNER_PAD, INNER_PAD);
++            cairo_new_path (cr);
++            cairo_rectangle (cr, 0, 0,
++                             UNIT_SIZE - (INNER_PAD*2), UNIT_SIZE - (INNER_PAD*2));
++            cairo_set_source (cr, gradient);
++            cairo_fill (cr);
++            cairo_restore (cr);
++
++            /* clip to the unit size */
++            cairo_rectangle (cr, 0, 0,
++                             UNIT_SIZE, UNIT_SIZE);
++            cairo_clip (cr);
++
++            cairo_rectangle (cr, 0, 0,
++                             UNIT_SIZE, UNIT_SIZE);
++            cairo_set_source_rgba (cr, 0, 0, 0, 1);
++            cairo_set_line_width (cr, 2);
++            cairo_stroke (cr);
++
++            /* start a group */
++            cairo_push_group (cr);
++
++            /* draw diamond */
++            cairo_move_to (cr, UNIT_SIZE / 2, 0);
++            cairo_line_to (cr, UNIT_SIZE    , UNIT_SIZE / 2);
++            cairo_line_to (cr, UNIT_SIZE / 2, UNIT_SIZE);
++            cairo_line_to (cr, 0            , UNIT_SIZE / 2);
++            cairo_close_path (cr);
++            cairo_set_source_rgba (cr, 0, 0, 1, 1);
++            cairo_fill (cr);
++
++            /* draw circle */
++            cairo_arc (cr,
++                       UNIT_SIZE / 2, UNIT_SIZE / 2,
++                       UNIT_SIZE / 3.5,
++                       0, M_PI * 2);
++            cairo_set_source_rgba (cr, 1, 0, 0, 1);
++            cairo_fill (cr);
++
++            /* end group and paint */
++            cairo_pop_group_to_source (cr);
++            cairo_paint_with_alpha (cr, 0.5);
++
++            cairo_restore (cr);
++        }
++    }
++
++    return CAIRO_TEST_SUCCESS;
++}
++
++int
++main (void)
++{
++    return cairo_test (&test, draw);
++}
