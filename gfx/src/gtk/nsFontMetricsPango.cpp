@@ -981,7 +981,7 @@ nsFontMetricsPango::GetPosition(const PRUnichar *aText, PRUint32 aLength,
 
     // Jump to the end if it's not found.
     if (!found) {
-        if (inx = 0)
+        if (inx == 0)
             retval = 0;
         else if (trailing)
             retval = aLength;
