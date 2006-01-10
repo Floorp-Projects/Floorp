@@ -806,10 +806,17 @@ nsMathMLContainerFrame::RebuildAutomaticDataForChildren(nsIFrame* aParentFrame)
 /* static */ nsresult
 nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
 {
+  if (!aParentFrame)
+    return NS_OK;
+
   // walk-up to the first frame that is a MathML frame, stop if we reach <math>
   PRInt32 parentScriptLevel = 0;
   nsIFrame* frame = aParentFrame;
-  while (frame) {
+  while (1) {
+     nsIFrame* parent = frame->GetParent();
+     if (!parent || !parent->GetContent())
+       break;
+
     // stop if it is a MathML frame
     nsIMathMLFrame* mathMLFrame;
     frame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
@@ -819,22 +826,20 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
       parentScriptLevel = parentData.scriptLevel;
       break;
     }
+
     // stop if we reach the root <math> tag
     nsIContent* content = frame->GetContent();
     NS_ASSERTION(content, "dangling frame without a content node");
     if (!content)
-      return NS_ERROR_FAILURE;
-
-    if (content->Tag() == nsMathMLAtoms::math) {
       break;
-    }
+    if (content->Tag() == nsMathMLAtoms::math)
+      break;
+
     // mark the frame dirty, and continue to climb up
     frame->AddStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
-    frame = frame->GetParent();
+
+    frame = parent;
   }
-  NS_ASSERTION(frame, "bad MathML markup - could not find the top <math> element");
-  if (!frame)
-    return NS_OK;
 
   // re-sync the presentation data and embellishment data of our children
   RebuildAutomaticDataForChildren(frame);
