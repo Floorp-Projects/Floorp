@@ -207,6 +207,7 @@ void
 URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
 {
     if (!aSourceNode) {
+        // XXXbz passing nsnull as the first arg to Reset is illegal
         aNewDoc->Reset(nsnull, nsnull);
         return;
     }
@@ -219,13 +220,31 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
     }
     if (!sourceDoc) {
         NS_ASSERTION(0, "no source document found");
+        // XXXbz passing nsnull as the first arg to Reset is illegal
         aNewDoc->Reset(nsnull, nsnull);
+        return;
+    }
+
+    nsIPrincipal* sourcePrincipal = sourceDoc->GetPrincipal();
+    if (!sourcePrincipal) {
         return;
     }
 
     // Copy the channel and loadgroup from the source document.
     nsCOMPtr<nsILoadGroup> loadGroup = sourceDoc->GetDocumentLoadGroup();
-    aNewDoc->Reset(sourceDoc->GetChannel(), loadGroup);
+    nsCOMPtr<nsIChannel> channel = sourceDoc->GetChannel();
+    if (!channel) {
+        // Need to synthesize one
+        if (NS_FAILED(NS_NewChannel(getter_AddRefs(channel),
+                                    sourceDoc->GetDocumentURI(),
+                                    nsnull,
+                                    loadGroup))) {
+            return;
+        }
+        channel->SetOwner(sourcePrincipal);
+    }
+    aNewDoc->Reset(channel, loadGroup);
+    aNewDoc->SetPrincipal(sourcePrincipal);
     aNewDoc->SetBaseURI(sourceDoc->GetBaseURI());
 
     // Copy charset
