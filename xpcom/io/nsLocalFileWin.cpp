@@ -52,6 +52,7 @@
 #include "prtypes.h"
 #include "prio.h"
 #include "prprf.h"
+#include "nsHashKeys.h"
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -452,7 +453,6 @@ NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
 nsLocalFile::nsLocalFile()
   : mDirty(PR_TRUE)
   , mFollowSymlinks(PR_FALSE)
-  , mHashCode(0)
 {
 }
 
@@ -495,7 +495,6 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
   : mDirty(PR_TRUE)
   , mFollowSymlinks(other.mFollowSymlinks)
   , mWorkingPath(other.mWorkingPath)
-  , mHashCode(0)
 {
 }
 
@@ -2160,26 +2159,20 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
     NS_ENSURE_ARG(inFile);
     NS_ENSURE_ARG(_retval);
 
+    EnsureShortPath();
+
+    nsCOMPtr<nsILocalFileWin> lf(do_QueryInterface(inFile));
+    if (!lf) {
+        *_retval = PR_FALSE;
+        return NS_OK;
+    }
+
     nsCAutoString inFilePath;
-    inFile->GetNativePath(inFilePath);
+    lf->GetNativeCanonicalPath(inFilePath);
 
-    // Normalize both paths to the short form, failing back to a string
-    // comparison of the long form.
+    *_retval = _mbsicmp((unsigned char*) mShortWorkingPath.get(),
+                        (unsigned char*) inFilePath.get()) == 0;
 
-    char thisshort[MAX_PATH];
-    char thatshort[MAX_PATH];
-
-    DWORD thisr = GetShortPathName(mWorkingPath.get(), thisshort, sizeof(thisshort));
-    DWORD thatr = GetShortPathName(inFilePath.get(), thatshort, sizeof(thatshort));
-
-    if (thisr && thatr && thisr < sizeof(thisshort) && thatr < sizeof(thatshort)) {
-        *_retval = (_mbsicmp((unsigned char*) thisshort,
-                             (unsigned char*) thatshort) == 0);
-    }
-    else {
-        *_retval = (_mbsicmp((unsigned char*) inFilePath.get(),
-                             (unsigned char*) mWorkingPath.get()) == 0);
-    }
     return NS_OK;
 }
 
@@ -2544,23 +2537,45 @@ nsLocalFile::Equals(nsIHashable* aOther, PRBool *aResult)
     return Equals(otherfile, aResult);
 }
 
+void
+nsLocalFile::EnsureShortPath()
+{
+    if (!mShortWorkingPath.IsEmpty())
+        return;
+
+    char thisshort[MAX_PATH];
+    DWORD thisr = GetShortPathName(mWorkingPath.get(),
+                                   thisshort, sizeof(thisshort));
+    if (thisr < sizeof(thisshort))
+        mShortWorkingPath.Assign(thisshort);
+    else
+        mShortWorkingPath.Assign(mWorkingPath);
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetNativeCanonicalPath(nsACString &aResult)
+{
+    EnsureShortPath();
+    aResult.Assign(mShortWorkingPath);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetCanonicalPath(nsAString &aResult)
+{
+    EnsureShortPath();
+    NS_CopyNativeToUnicode(mShortWorkingPath, aResult);
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsLocalFile::GetHashCode(PRUint32 *aResult)
 {
-    if (!mHashCode) {
-        // In order for short and long path names to hash to the same value we
-        // always hash on the short pathname.
+    // In order for short and long path names to hash to the same value we
+    // always hash on the short pathname.
+    EnsureShortPath();
 
-        char thisshort[MAX_PATH];
-        DWORD thisr = GetShortPathName(mWorkingPath.get(),
-                                       thisshort, sizeof(thisshort));
-        if (thisr < sizeof(thisshort))
-            mHashCode = nsCRT::HashCode(thisshort);
-        else
-            mHashCode = nsCRT::HashCode(mWorkingPath.get());
-    }
-
-    *aResult = mHashCode;
+    *aResult = HashString(mShortWorkingPath);
     return NS_OK;
 }
 

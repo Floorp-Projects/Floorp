@@ -47,6 +47,8 @@
 #ifndef _NS_LOCAL_FILE_H_
 #define _NS_LOCAL_FILE_H_
 
+#include "nscore.h"
+
 #define NS_LOCAL_FILE_CID {0x2e23e220, 0x60be, 0x11d3, {0x8c, 0x4a, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}}
 
 #define NS_DECL_NSLOCALFILE_UNICODE_METHODS                                                      \
