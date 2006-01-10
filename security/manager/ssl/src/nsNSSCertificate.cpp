@@ -903,56 +903,56 @@ nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
 
   NS_ENSURE_ARG(verificationResult);
 
-  SECCertUsage nss_usage;
+  SECCertificateUsage nss_usage;
   
   switch (usage)
   {
     case CERT_USAGE_SSLClient:
-      nss_usage = certUsageSSLClient;
+      nss_usage = certificateUsageSSLClient;
       break;
 
     case CERT_USAGE_SSLServer:
-      nss_usage = certUsageSSLServer;
+      nss_usage = certificateUsageSSLServer;
       break;
 
     case CERT_USAGE_SSLServerWithStepUp:
-      nss_usage = certUsageSSLServerWithStepUp;
+      nss_usage = certificateUsageSSLServerWithStepUp;
       break;
 
     case CERT_USAGE_SSLCA:
-      nss_usage = certUsageSSLCA;
+      nss_usage = certificateUsageSSLCA;
       break;
 
     case CERT_USAGE_EmailSigner:
-      nss_usage = certUsageEmailSigner;
+      nss_usage = certificateUsageEmailSigner;
       break;
 
     case CERT_USAGE_EmailRecipient:
-      nss_usage = certUsageEmailRecipient;
+      nss_usage = certificateUsageEmailRecipient;
       break;
 
     case CERT_USAGE_ObjectSigner:
-      nss_usage = certUsageObjectSigner;
+      nss_usage = certificateUsageObjectSigner;
       break;
 
     case CERT_USAGE_UserCertImport:
-      nss_usage = certUsageUserCertImport;
+      nss_usage = certificateUsageUserCertImport;
       break;
 
     case CERT_USAGE_VerifyCA:
-      nss_usage = certUsageVerifyCA;
+      nss_usage = certificateUsageVerifyCA;
       break;
 
     case CERT_USAGE_ProtectedObjectSigner:
-      nss_usage = certUsageProtectedObjectSigner;
+      nss_usage = certificateUsageProtectedObjectSigner;
       break;
 
     case CERT_USAGE_StatusResponder:
-      nss_usage = certUsageStatusResponder;
+      nss_usage = certificateUsageStatusResponder;
       break;
 
     case CERT_USAGE_AnyCA:
-      nss_usage = certUsageAnyCA;
+      nss_usage = certificateUsageAnyCA;
       break;
 
     default:
@@ -961,8 +961,8 @@ nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
 
   CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
 
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         nss_usage, NULL) == SECSuccess)
+  if (CERT_VerifyCertificateNow(defaultcertdb, mCert, PR_TRUE, 
+                         nss_usage, NULL, NULL) == SECSuccess)
   {
     *verificationResult = VERIFIED_OK;
   }

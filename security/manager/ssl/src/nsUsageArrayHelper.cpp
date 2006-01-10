@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  John Gardiner Myers <jgmyers@speakeasy.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,94 +59,70 @@ nsUsageArrayHelper::nsUsageArrayHelper(CERTCertificate *aCert)
   nsNSSShutDownPreventionLock locker;
   defaultcertdb = CERT_GetDefaultCertDB();
   nssComponent = do_GetService(kNSSComponentCID, &m_rv);
-  mCached_NonInadequateReason = SECSuccess;
 }
 
 void
 nsUsageArrayHelper::check(const char *suffix,
-                        SECCertUsage aCertUsage,
+                        SECCertificateUsage aCertUsage,
                         PRUint32 &aCounter,
                         PRUnichar **outUsages)
 {
-  nsNSSShutDownPreventionLock locker;
-  if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
-                         aCertUsage, NULL) == SECSuccess) {
-    nsCAutoString typestr;
-    switch (aCertUsage) {
-      case certUsageSSLClient:
-        typestr = "VerifySSLClient";
-        break;
-      case certUsageSSLServer:
-        typestr = "VerifySSLServer";
-        break;
-      case certUsageSSLServerWithStepUp:
-        typestr = "VerifySSLStepUp";
-        break;
-      case certUsageEmailSigner:
-        typestr = "VerifyEmailSigner";
-        break;
-      case certUsageEmailRecipient:
-        typestr = "VerifyEmailRecip";
-        break;
-      case certUsageObjectSigner:
-        typestr = "VerifyObjSign";
-        break;
-      case certUsageProtectedObjectSigner:
-        typestr = "VerifyProtectObjSign";
-        break;
-      case certUsageUserCertImport:
-        typestr = "VerifyUserImport";
-        break;
-      case certUsageSSLCA:
-        typestr = "VerifySSLCA";
-        break;
-      case certUsageVerifyCA:
-        typestr = "VerifyCAVerifier";
-        break;
-      case certUsageStatusResponder:
-        typestr = "VerifyStatusResponder";
-        break;
-      case certUsageAnyCA:
-        typestr = "VerifyAnyCA";
-        break;
-      default:
-        break;
-    }
-    if (!typestr.IsEmpty()) {
-      typestr.Append(suffix);
-      nsAutoString verifyDesc;
-      m_rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-      if (NS_SUCCEEDED(m_rv)) {
-        outUsages[aCounter++] = ToNewUnicode(verifyDesc);
-      }
-    }
+  if (!aCertUsage) return;
+  nsCAutoString typestr;
+  switch (aCertUsage) {
+  case certificateUsageSSLClient:
+    typestr = "VerifySSLClient";
+    break;
+  case certificateUsageSSLServer:
+    typestr = "VerifySSLServer";
+    break;
+  case certificateUsageSSLServerWithStepUp:
+    typestr = "VerifySSLStepUp";
+    break;
+  case certificateUsageEmailSigner:
+    typestr = "VerifyEmailSigner";
+    break;
+  case certificateUsageEmailRecipient:
+    typestr = "VerifyEmailRecip";
+    break;
+  case certificateUsageObjectSigner:
+    typestr = "VerifyObjSign";
+    break;
+  case certificateUsageProtectedObjectSigner:
+    typestr = "VerifyProtectObjSign";
+    break;
+  case certificateUsageUserCertImport:
+    typestr = "VerifyUserImport";
+    break;
+  case certificateUsageSSLCA:
+    typestr = "VerifySSLCA";
+    break;
+  case certificateUsageVerifyCA:
+    typestr = "VerifyCAVerifier";
+    break;
+  case certificateUsageStatusResponder:
+    typestr = "VerifyStatusResponder";
+    break;
+  case certificateUsageAnyCA:
+    typestr = "VerifyAnyCA";
+    break;
+  default:
+    break;
   }
-  else {
-    int err = PR_GetError();
-    
-    if (SECSuccess == mCached_NonInadequateReason) {
-      // we have not yet cached anything
-      mCached_NonInadequateReason = err;
-    }
-    else {
-      switch (err) {
-        case SEC_ERROR_INADEQUATE_KEY_USAGE:
-        case SEC_ERROR_INADEQUATE_CERT_TYPE:
-          // this code should not override a possibly cached more informative reason
-          break;
-        
-        default:
-          mCached_NonInadequateReason = err;
-          break;
-      }
+  if (!typestr.IsEmpty()) {
+    typestr.Append(suffix);
+    nsAutoString verifyDesc;
+    m_rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
+    if (NS_SUCCEEDED(m_rv)) {
+      outUsages[aCounter++] = ToNewUnicode(verifyDesc);
     }
   }
 }
 
 void
-nsUsageArrayHelper::verifyFailed(PRUint32 *_verified)
+nsUsageArrayHelper::verifyFailed(PRUint32 *_verified, int err)
 {
-  switch (mCached_NonInadequateReason) {
+  switch (err) {
   /* For these cases, verify only failed for the particular usage */
   case SEC_ERROR_INADEQUATE_KEY_USAGE:
   case SEC_ERROR_INADEQUATE_CERT_TYPE:
@@ -203,26 +180,39 @@ nsUsageArrayHelper::GetUsagesArray(const char *suffix,
 
   PRUint32 &count = *_count;
   count = 0;
+  SECCertificateUsage usages;
   
+  CERT_VerifyCertificateNow(defaultcertdb, mCert, PR_TRUE, 
+			    certificateUsageSSLClient |
+			    certificateUsageSSLServer |
+			    certificateUsageSSLServerWithStepUp |
+			    certificateUsageEmailSigner |
+			    certificateUsageEmailRecipient |
+			    certificateUsageObjectSigner |
+			    certificateUsageSSLCA |
+			    certificateUsageStatusResponder,
+			    NULL, &usages);
+  int err = PR_GetError();
+
   // The following list of checks must be < max_returned_out_array_size
   
-  check(suffix, certUsageSSLClient, count, outUsages);
-  check(suffix, certUsageSSLServer, count, outUsages);
-  check(suffix, certUsageSSLServerWithStepUp, count, outUsages);
-  check(suffix, certUsageEmailSigner, count, outUsages);
-  check(suffix, certUsageEmailRecipient, count, outUsages);
-  check(suffix, certUsageObjectSigner, count, outUsages);
+  check(suffix, usages & certificateUsageSSLClient, count, outUsages);
+  check(suffix, usages & certificateUsageSSLServer, count, outUsages);
+  check(suffix, usages & certificateUsageSSLServerWithStepUp, count, outUsages);
+  check(suffix, usages & certificateUsageEmailSigner, count, outUsages);
+  check(suffix, usages & certificateUsageEmailRecipient, count, outUsages);
+  check(suffix, usages & certificateUsageObjectSigner, count, outUsages);
 #if 0
-  check(suffix, certUsageProtectedObjectSigner, count, outUsages);
-  check(suffix, certUsageUserCertImport, count, outUsages);
+  check(suffix, usages & certificateUsageProtectedObjectSigner, count, outUsages);
+  check(suffix, usages & certificateUsageUserCertImport, count, outUsages);
 #endif
-  check(suffix, certUsageSSLCA, count, outUsages);
+  check(suffix, usages & certificateUsageSSLCA, count, outUsages);
 #if 0
-  check(suffix, certUsageVerifyCA, count, outUsages);
+  check(suffix, usages & certificateUsageVerifyCA, count, outUsages);
 #endif
-  check(suffix, certUsageStatusResponder, count, outUsages);
+  check(suffix, usages & certificateUsageStatusResponder, count, outUsages);
 #if 0
-  check(suffix, certUsageAnyCA, count, outUsages);
+  check(suffix, usages & certificateUsageAnyCA, count, outUsages);
 #endif
 
   if (ignoreOcsp && nssComponent) {
@@ -230,7 +220,7 @@ nsUsageArrayHelper::GetUsagesArray(const char *suffix,
   }
 
   if (count == 0) {
-    verifyFailed(_verified);
+    verifyFailed(_verified, err);
   } else {
     *_verified = nsNSSCertificate::VERIFIED_OK;
   }
