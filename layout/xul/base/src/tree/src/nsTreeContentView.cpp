@@ -619,10 +619,8 @@ nsTreeContentView::IsEditable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval
   nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treerow, getter_AddRefs(realRow));
   if (realRow) {
     nsIContent* cell = GetCell(realRow, aCol);
-    if (cell) {
-      nsAutoString editable;
-      cell->GetAttr(kNameSpaceID_None, nsXULAtoms::editable, editable);
-      if (editable.EqualsLiteral("false"))
+    if (cell && cell->AttrValueIs(kNameSpaceID_None, nsXULAtoms::editable,
+                                  nsXULAtoms::_false, eCaseMatters)) {
         *_retval = PR_FALSE;
     }
   }
@@ -770,9 +768,9 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
   // Handle changes of the hidden attribute.
   if (aAttribute == nsHTMLAtoms::hidden &&
      (tag == nsXULAtoms::treeitem || tag == nsXULAtoms::treeseparator)) {
-    nsAutoString hiddenString;
-    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hiddenString);
-    PRBool hidden = hiddenString.EqualsLiteral("true");
+    PRBool hidden = aContent->AttrValueIs(kNameSpaceID_None,
+                                          nsHTMLAtoms::hidden,
+                                          nsXULAtoms::_true, eCaseMatters);
  
     PRInt32 index = FindContent(aContent);
     if (hidden && index >= 0) {
@@ -811,17 +809,17 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
     if (index >= 0) {
       Row* row = (Row*)mRows[index];
       if (aAttribute == nsXULAtoms::container) {
-        nsAutoString container;
-        aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
-        PRBool isContainer = container.EqualsLiteral("true");
+        PRBool isContainer =
+          aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::container,
+                                nsXULAtoms::_true, eCaseMatters);
         row->SetContainer(isContainer);
         if (mBoxObject)
           mBoxObject->InvalidateRow(index);
       }
       else if (aAttribute == nsXULAtoms::open) {
-        nsAutoString open;
-        aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
-        PRBool isOpen = open.EqualsLiteral("true");
+        PRBool isOpen =
+          aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::open,
+                                nsXULAtoms::_true, eCaseMatters);
         PRBool wasOpen = row->IsOpen();
         if (! isOpen && wasOpen)
           CloseContainer(index);
@@ -829,9 +827,9 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
           OpenContainer(index);
       }
       else if (aAttribute == nsXULAtoms::empty) {
-        nsAutoString empty;
-        aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::empty, empty);
-        PRBool isEmpty = empty.EqualsLiteral("true");
+        PRBool isEmpty =
+          aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::empty,
+                                nsXULAtoms::_true, eCaseMatters);
         row->SetEmpty(isEmpty);
         if (mBoxObject)
           mBoxObject->InvalidateRow(index);
@@ -1094,21 +1092,18 @@ nsTreeContentView::Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRInt32
 void
 nsTreeContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows)
 {
-  nsAutoString hidden;
-  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
-  if (hidden.EqualsLiteral("true"))
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::hidden,
+                            nsXULAtoms::_true, eCaseMatters))
     return;
 
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
   aRows.AppendElement(row);
 
-  nsAutoString container;
-  aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
-  if (container.EqualsLiteral("true")) {
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::container,
+                            nsXULAtoms::_true, eCaseMatters)) {
     row->SetContainer(PR_TRUE);
-    nsAutoString open;
-    aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
-    if (open.EqualsLiteral("true")) {
+    if (aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::open,
+                              nsXULAtoms::_true, eCaseMatters)) {
       row->SetOpen(PR_TRUE);
       nsCOMPtr<nsIContent> child;
       nsTreeUtils::GetImmediateChild(aContent, nsXULAtoms::treechildren, getter_AddRefs(child));
@@ -1121,11 +1116,9 @@ nsTreeContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRI
       }
       else
         row->SetEmpty(PR_TRUE);
-    } else {
-      nsAutoString empty;
-      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::empty, empty);
-      if (empty.EqualsLiteral("true"))
-        row->SetEmpty(PR_TRUE);
+    } else if (aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::empty,
+                                     nsXULAtoms::_true, eCaseMatters)) {
+      row->SetEmpty(PR_TRUE);
     }
   } 
 }
@@ -1133,9 +1126,8 @@ nsTreeContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRI
 void
 nsTreeContentView::SerializeSeparator(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows)
 {
-  nsAutoString hidden;
-  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
-  if (hidden.EqualsLiteral("true"))
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsXULAtoms::hidden,
+                            nsXULAtoms::_true, eCaseMatters))
     return;
 
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
@@ -1197,28 +1189,24 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
 
     if (content->IsContentOfType(nsIContent::eXUL)) {
       if (tag == nsXULAtoms::treeitem) {
-        nsAutoString hidden;
-        content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
-        if (! hidden.EqualsLiteral("true")) {
+        if (! content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::hidden,
+                                   nsXULAtoms::_true, eCaseMatters)) {
           (*aIndex)++;
-          nsAutoString container;
-          content->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
-          if (container.EqualsLiteral("true")) {
-            nsAutoString open;
-            content->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
-            if (open.EqualsLiteral("true")) {
-              nsCOMPtr<nsIContent> child;
-              nsTreeUtils::GetImmediateChild(content, nsXULAtoms::treechildren, getter_AddRefs(child));
-              if (child)
-                GetIndexInSubtree(child, aContent, aIndex);
-            }
+          if (content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::container,
+                                   nsXULAtoms::_true, eCaseMatters) &&
+              content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::open,
+                                   nsXULAtoms::_true, eCaseMatters)) {
+            nsCOMPtr<nsIContent> child;
+            nsTreeUtils::GetImmediateChild(content, nsXULAtoms::treechildren,
+                                           getter_AddRefs(child));
+            if (child)
+              GetIndexInSubtree(child, aContent, aIndex);
           }
         }
       }
       else if (tag == nsXULAtoms::treeseparator) {
-        nsAutoString hidden;
-        content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
-        if (! hidden.EqualsLiteral("true"))
+        if (! content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::hidden,
+                                   nsXULAtoms::_true, eCaseMatters))
           (*aIndex)++;
       }
     }

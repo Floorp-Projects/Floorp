@@ -212,25 +212,16 @@ nsTreeColumn::CacheAttributes()
 
   // Figure out if we're the primary column (that has to have indentation
   // and twisties drawn.
-  mIsPrimary = PR_FALSE;
-  nsAutoString primary;
-  content->GetAttr(kNameSpaceID_None, nsXULAtoms::primary, primary);
-  if (primary.EqualsLiteral("true"))
-    mIsPrimary = PR_TRUE;
+  mIsPrimary = content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::primary,
+                                    nsXULAtoms::_true, eCaseMatters);
 
   // Figure out if we're a cycling column (one that doesn't cause a selection
   // to happen).
-  mIsCycler = PR_FALSE;
-  nsAutoString cycler;
-  content->GetAttr(kNameSpaceID_None, nsXULAtoms::cycler, cycler);
-  if (cycler.EqualsLiteral("true"))
-    mIsCycler = PR_TRUE;
+  mIsCycler = content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::cycler,
+                                   nsXULAtoms::_true, eCaseMatters);
 
-  mIsEditable = PR_FALSE;
-  nsAutoString editable;
-  content->GetAttr(kNameSpaceID_None, nsXULAtoms::editable, editable);
-  if (editable.EqualsLiteral("true"))
-    mIsEditable = PR_TRUE;
+  mIsEditable = content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::editable,
+                                    nsXULAtoms::_true, eCaseMatters);
 
   // Figure out our column type. Default type is text.
   mType = nsITreeColumn::TYPE_TEXT;
@@ -357,9 +348,8 @@ nsTreeColumns::GetKeyColumn(nsITreeColumn** _retval)
     nsIContent* content = currCol->GetContent();
 
     // Skip hidden columns.
-    nsAutoString attr;
-    content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, attr);
-    if (attr.EqualsLiteral("true"))
+    if (content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::hidden,
+                             nsXULAtoms::_true, eCaseMatters))
       continue;
 
     // Skip non-text column
@@ -369,6 +359,7 @@ nsTreeColumns::GetKeyColumn(nsITreeColumn** _retval)
     if (!first)
       first = currCol;
     
+    nsAutoString attr;
     content->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, attr);
     if (!attr.IsEmpty()) {
       // Use sorted column as the key.

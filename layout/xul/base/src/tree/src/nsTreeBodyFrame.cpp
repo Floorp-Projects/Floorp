@@ -1706,13 +1706,13 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
     }
 
     // Read special properties from attributes on the column content node
-    nsAutoString attr;
-    aCol->GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::insertbefore, attr);
-    if (attr.EqualsLiteral("true"))
+    if (aCol->GetContent()->AttrValueIs(kNameSpaceID_None,
+                                        nsXULAtoms::insertbefore,
+                                        nsXULAtoms::_true, eCaseMatters))
       mScratchArray->AppendElement(nsXULAtoms::insertbefore);
-    attr.Truncate();
-    aCol->GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::insertafter, attr);
-    if (attr.EqualsLiteral("true"))
+    if (aCol->GetContent()->AttrValueIs(kNameSpaceID_None,
+                                        nsXULAtoms::insertafter,
+                                        nsXULAtoms::_true, eCaseMatters))
       mScratchArray->AppendElement(nsXULAtoms::insertafter);
   }
 }
