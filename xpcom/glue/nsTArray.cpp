@@ -41,13 +41,7 @@
 #include "nsXPCOM.h"
 #include "nsDebug.h"
 
-nsTArray_base::size_type
-nsTArray_base::Capacity() const {
-  if (!mData)
-    return 0;
-  Header *header = NS_STATIC_CAST(Header*, mData) - 1;
-  return header->mCapacity;
-}
+const nsTArray_base::Header nsTArray_base::sEmptyHdr = { 0, 0 };
 
 PRBool
 nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
@@ -58,61 +52,58 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
     NS_ERROR("Attempting to allocate excessively large array");
     return PR_FALSE;
   }
-  if (!mData) {
+  if (mHdr == &sEmptyHdr) {
     // NS_Alloc new data
     Header *header = NS_STATIC_CAST(Header*,
                          NS_Alloc(sizeof(Header) + capacity * elemSize));
     if (!header)
       return PR_FALSE;
+    header->mLength = 0;
     header->mCapacity = capacity;
-    mData = header + 1;
+    mHdr = header;
   } else {
     // NS_Realloc existing data
-    Header *header = NS_STATIC_CAST(Header*, mData) - 1;
-    if (capacity <= header->mCapacity)
+    if (capacity <= mHdr->mCapacity)
       return PR_TRUE;
 
     // Use doubling algorithm when forced to increase available capacity.
-    if (header->mCapacity > 0) {
-      size_type temp = header->mCapacity;
+    if (mHdr->mCapacity > 0) {
+      size_type temp = mHdr->mCapacity;
       while (temp < capacity)
         temp <<= 1;
       capacity = temp;
     }
 
     size_type size = sizeof(Header) + capacity * elemSize;
-    void *ptr = NS_Realloc(header, size);
+    void *ptr = NS_Realloc(mHdr, size);
     if (!ptr)
       return PR_FALSE;
-    header = NS_STATIC_CAST(Header*, ptr);
-    header->mCapacity = capacity;
-    mData = header + 1;
+    mHdr = NS_STATIC_CAST(Header*, ptr);
+    mHdr->mCapacity = capacity;
   }
   return PR_TRUE;
 }
 
 void
 nsTArray_base::ShrinkCapacity(size_type elemSize) {
-  if (!mData)
+  if (mHdr == &sEmptyHdr)
     return;
 
-  Header *header = NS_STATIC_CAST(Header*, mData) - 1;
-  if (mLength >= header->mCapacity)  // should never be greater than...
+  if (mHdr->mLength >= mHdr->mCapacity)  // should never be greater than...
     return;
 
-  if (mLength == 0) {
-    NS_Free(header);
-    mData = nsnull;
+  if (mHdr->mLength == 0) {
+    NS_Free(mHdr);
+    mHdr = NS_CONST_CAST(Header *, &sEmptyHdr);
     return;
   }
 
-  size_type size = sizeof(Header) + mLength * elemSize;
-  void *ptr = NS_Realloc(header, size);
+  size_type size = sizeof(Header) + mHdr->mLength * elemSize;
+  void *ptr = NS_Realloc(mHdr, size);
   if (!ptr)
     return;
-  header = NS_STATIC_CAST(Header*, ptr);
-  header->mCapacity = mLength;
-  mData = header + 1;
+  mHdr = NS_STATIC_CAST(Header*, ptr);
+  mHdr->mCapacity = mHdr->mLength;
 }
 
 void
@@ -122,11 +113,11 @@ nsTArray_base::ShiftData(index_type start, size_type oldLen, size_type newLen,
     return;
 
   // Determine how many elements need to be shifted
-  size_type num = mLength - (start + oldLen);
+  size_type num = mHdr->mLength - (start + oldLen);
 
   // Compute the resulting length of the array
-  mLength = (mLength + newLen) - oldLen;
-  if (mLength == 0) {
+  mHdr->mLength += newLen - oldLen;
+  if (mHdr->mLength == 0) {
     ShrinkCapacity(elemSize);
   } else {
     // Maybe nothing needs to be shifted
@@ -137,7 +128,7 @@ nsTArray_base::ShiftData(index_type start, size_type oldLen, size_type newLen,
     newLen *= elemSize;
     oldLen *= elemSize;
     num *= elemSize;
-    char *base = NS_STATIC_CAST(char*, mData) + start;
+    char *base = NS_REINTERPRET_CAST(char*, mHdr + 1) + start;
     memmove(base + newLen, base + oldLen, num);
   }
 }

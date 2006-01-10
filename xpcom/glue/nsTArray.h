@@ -62,23 +62,24 @@ class NS_COM_GLUE nsTArray_base {
 
     // @return The number of elements in the array.
     size_type Length() const {
-      return mLength;
+      return mHdr->mLength;
     }
 
     // @return True if the array is empty or false otherwise.
     PRBool IsEmpty() const {
-      return mLength == 0;
+      return Length() == 0;
     }
 
     // @return The number of elements that can fit in the array without forcing
     // the array to be re-allocated.  The length of an array is always less
     // than or equal to its capacity.
-    size_type Capacity() const;
+    size_type Capacity() const {
+      return mHdr->mCapacity;
+    }
 
   protected:
     nsTArray_base()
-      : mLength(0)
-      , mData(nsnull) {
+      : mHdr(NS_CONST_CAST(Header *, &sEmptyHdr)) {
     }
 
     // Resize the storage if necessary to achieve the requested capacity.
@@ -101,18 +102,26 @@ class NS_COM_GLUE nsTArray_base {
     void ShiftData(index_type start, size_type oldLen, size_type newLen,
                    size_type elementSize);
 
+    // This method increments the length member of the array's header.
+    void IncrementLength(PRUint32 n) {
+      NS_ASSERTION(mHdr != &sEmptyHdr, "bad data pointer");
+      mHdr->mLength += n;
+    }
+
   protected:
 
     // We prefix mData with a structure of this type.  This is done to minimize
-    // the size of the nsTArray object when it is empty.  mLength is not
-    // included in this structure because it is accessed frequently enough to
-    // warrant being a proper member variable of nsTArray.
+    // the size of the nsTArray object when it is empty.
     struct Header {
+      PRUint32 mLength;
       PRUint32 mCapacity;
     };
 
-    PRUint32  mLength;  // The length of the array
-    void     *mData;    // The array's elements (prefixed with a Header)
+    static const Header sEmptyHdr;
+
+    // The array's elements (prefixed with a Header).  This pointer is never
+    // null.  If the array is empty, then this will point to sEmptyHdr.
+    Header *mHdr;
 };
 
 //
@@ -235,17 +244,17 @@ class nsTArray : public nsTArray_base {
     //
 
     // This method provides direct access to the array elements.
-    // @return A pointer to the first element of the array or null if the array
-    // is empty.
+    // @return A pointer to the first element of the array.  If the array is
+    // empty, then this pointer must not be dereferenced.
     elem_type* Elements() {
-      return (elem_type *) mData; 
+      return NS_REINTERPRET_CAST(elem_type *, mHdr + 1);
     }
 
     // This method provides direct, readonly access to the array elements.
-    // @return A pointer to the first element of the array or null if the array
-    // is empty.
+    // @return A pointer to the first element of the array.  If the array is
+    // empty, then this pointer must not be dereferenced.
     const elem_type* Elements() const {
-      return (const elem_type *) mData; 
+      return NS_REINTERPRET_CAST(const elem_type *, mHdr + 1);
     }
     
     // This method provides direct access to the i'th element of the array.
@@ -413,7 +422,7 @@ class nsTArray : public nsTArray_base {
       if (!EnsureCapacity(Length() + arrayLen, sizeof(elem_type)))
         return PR_FALSE;
       AssignRange(Length(), arrayLen, array);
-      mLength += arrayLen;
+      IncrementLength(arrayLen);
       return PR_TRUE;
     }
 
@@ -435,7 +444,7 @@ class nsTArray : public nsTArray_base {
          return nsnull;
       elem_type *elem = Elements() + Length();
       elem_traits::Construct(elem);
-      ++mLength;
+      IncrementLength(1);
       return elem;
     }
 
