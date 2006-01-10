@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsPKCS12Blob.h,v 1.14 2005/11/11 13:28:56 kaie%kuix.de Exp $ */
+/* $Id: nsPKCS12Blob.h,v 1.15 2006/01/10 02:51:24 kaie%kuix.de Exp $ */
 
 #ifndef _NS_PKCS12BLOB_H_
 #define _NS_PKCS12BLOB_H_
@@ -109,9 +109,14 @@ private:
   
   nsresult ImportFromFileHelper(nsILocalFile *file, ImportMode aImportMode, RetryReason &aWantRetry);
 
-  // NSPR file I/O for temporary digest file
+  // NSPR file I/O for export file
   PRFileDesc *mTmpFile;
   char       *mTmpFilePath;
+
+  // simulated file I/O for "in memory" temporary digest data
+  nsCString                 *mDigest;
+  nsCString::const_iterator *mDigestIterator;
+
   PRBool      mTokenSet;
 
   // C-style callback functions for the NSS PKCS#12 library
