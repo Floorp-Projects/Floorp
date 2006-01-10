@@ -183,6 +183,10 @@ calItemBase.prototype = {
             m.mRecurrenceInfo.item = m;
         }
 
+        if (this.mOrganizer) {
+            m.mOrganizer = this.mOrganizer.clone();
+        }
+
         m.mAttendees = [];
         for (var i = 0; i < this.mAttendees.length; i++)
             m.mAttendees[i] = this.mAttendees[i].clone();
