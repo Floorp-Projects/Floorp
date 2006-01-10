@@ -332,8 +332,6 @@ nsMemoryImpl::sFlushEvent;
 XPCOM_API(void*)
 NS_Alloc(PRSize size)
 {
-    NS_ASSERTION(size, "NS_Alloc of size 0");
-
     void* result = MALLOC1(size);
     if (! result) {
         // Request an asynchronous flush
@@ -345,9 +343,8 @@ NS_Alloc(PRSize size)
 XPCOM_API(void*)
 NS_Realloc(void* ptr, PRSize size)
 {
-    NS_ASSERTION(size, "NS_Realloc of size 0");
     void* result = REALLOC1(ptr, size);
-    if (! result) {
+    if (! result && size != 0) {
         // Request an asynchronous flush
         sGlobalMemory.FlushMemory(NS_LITERAL_STRING("alloc-failure").get(), PR_FALSE);
     }
