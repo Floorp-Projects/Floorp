@@ -857,7 +857,7 @@ nsresult nsNSSComponent::GetNSSCipherIDFromPrefString(const nsACString &aPrefStr
 {
   for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
     if (nsDependentCString(cp->pref) == aPrefString) {
-      aCipherId = cp->id;
+      aCipherId = (PRUint16) cp->id;
       return NS_OK;
     }
   }

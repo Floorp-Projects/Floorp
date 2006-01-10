@@ -46,6 +46,9 @@
 #include "nsNSSCertificate.h"
 #include "nsNSSCertHelper.h"
 #include "nsINSSCertCache.h"
+#include "nsArray.h"
+#include "nsISupportsPrimitives.h"
+#include "nsXPCOMCID.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -141,6 +144,7 @@ nsCertTree::nsCertTree() : mTreeArray(NULL)
 {
   mCompareCache.ops = nsnull;
   mNSSComponent = do_GetService(kNSSComponentCID);
+  mCellText = nsnull;
 }
 
 void nsCertTree::ClearCompareHash()
@@ -286,6 +290,7 @@ nsCertTree::nsCertCompareFunc
 nsCertTree::GetCompareFuncFromCertType(PRUint32 aType)
 {
   switch (aType) {
+    case nsIX509Cert2::ANY_CERT:
     case nsIX509Cert::USER_CERT:
       return CmpUserCert;
     case nsIX509Cert::CA_CERT:
@@ -316,7 +321,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
   for (node = CERT_LIST_HEAD(aCertList);
        !CERT_LIST_END(node, aCertList);
        node = CERT_LIST_NEXT(node)) {
-    if (getCertType(node->cert) == aType) {
+    if (aType == nsIX509Cert2::ANY_CERT || getCertType(node->cert) == aType) {
       nsCOMPtr<nsIX509Cert> pipCert = new nsNSSCertificate(node->cert);
       if (pipCert) {
         int i;
@@ -418,6 +423,10 @@ nsCertTree::UpdateUIContents()
   mTreeArray = new treeArrayEl[mNumOrgs];
   if (!mTreeArray)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsIMutableArray> newCell;
+  NS_NewArray(getter_AddRefs(newCell));
+  mCellText = newCell;
 
   PRUint32 j = 0;
   nsCOMPtr<nsISupports> isupport = dont_AddRef(mCertArray->ElementAt(j));
@@ -711,6 +720,22 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
       _retval.SetCapacity(0);
     return NS_OK;
   }
+  PRInt32 colIndex;
+  col->GetIndex(&colIndex);
+  PRUint32 arrayIndex=row+colIndex*mNumRows;
+  PRUint32 arrayLength=0;
+  if (mCellText) {
+    mCellText->GetLength(&arrayLength);
+  }
+  if (arrayIndex < arrayLength) {
+    nsCOMPtr<nsISupportsString> myString;
+    mCellText->QueryElementAt(arrayIndex,
+	nsISupportsString::GetIID(), getter_AddRefs(myString));
+    if (myString) {
+      myString->GetData(_retval);
+      return NS_OK;
+    }
+  }
   nsCOMPtr<nsIX509Cert> cert = dont_AddRef(GetCertAtIndex(row));
   if (cert == nsnull) return NS_ERROR_FAILURE;
   if (NS_LITERAL_STRING("certcol").Equals(colID)) {
@@ -793,8 +818,40 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
     }
   } else if (NS_LITERAL_STRING("serialnumcol").Equals(colID)) {
     rv = cert->GetSerialNumber(_retval);
+  } else if (NS_LITERAL_STRING("typecol").Equals(colID)) {
+    nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert);
+    PRUint32 type = nsIX509Cert::UNKNOWN_CERT;
+
+    if (pipCert) {
+	rv = pipCert->GetCertType(&type);
+    }
+
+    switch (type) {
+    case nsIX509Cert::USER_CERT:
+        rv = mNSSComponent->GetPIPNSSBundleString("CertUser", _retval);
+	break;
+    case nsIX509Cert::CA_CERT:
+        rv = mNSSComponent->GetPIPNSSBundleString("CertCA", _retval);
+	break;
+    case nsIX509Cert::SERVER_CERT:
+        rv = mNSSComponent->GetPIPNSSBundleString("CertSSL", _retval);
+	break;
+    case nsIX509Cert::EMAIL_CERT:
+        rv = mNSSComponent->GetPIPNSSBundleString("CertEmail", _retval);
+	break;
+    default:
+        rv = mNSSComponent->GetPIPNSSBundleString("CertUnknown", _retval);
+	break;
+    }
+
   } else {
     return NS_ERROR_FAILURE;
+  }
+  if (mCellText) {
+    nsCOMPtr<nsISupportsString> text(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    text->SetData(_retval);
+    mCellText->ReplaceElementAt(text, arrayIndex, PR_FALSE);
   }
   return rv;
 }
