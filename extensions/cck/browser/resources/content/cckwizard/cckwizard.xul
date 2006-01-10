@@ -76,9 +76,10 @@
        <button label="&copyConfig.label;" id="copyconfig" oncommand="CopyConfig();"/>/>
        <button label="&deleteConfig.label;" id="deleteconfig" oncommand="DeleteConfig();"/>
      </hbox>
+     <checkbox id="saveOnExit" label="&saveOnExit.label;" oncommand="SetSaveOnExitPref();"/>
    </groupbox>
    <vbox>
-   <checkbox id="saveOnExit" label="&saveOnExit.label;" oncommand="SetSaveOnExitPref();"/>
+  
     <description>&zipLocation.label;</description>
 
          <hbox align="center">

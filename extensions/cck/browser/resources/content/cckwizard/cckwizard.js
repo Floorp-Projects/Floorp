@@ -137,7 +137,7 @@ function DeleteConfig()
 {
   var bundle = document.getElementById("bundle_cckwizard");
 
-  var button = gPromptService.confirmEx(window, "WizardMachine", bundle.getString("deleteConfirm"),
+  var button = gPromptService.confirmEx(window, bundle.getString("windowTitle"), bundle.getString("deleteConfirm"),
                                         gPromptService.BUTTON_TITLE_YES * gPromptService.BUTTON_POS_0 +
                                         gPromptService.BUTTON_TITLE_NO * gPromptService.BUTTON_POS_1,
                                         null, null, null, null, {});
@@ -253,7 +253,7 @@ function CloseCCKWizard()
   if (!saveOnExit) {
     var bundle = document.getElementById("bundle_cckwizard");
 
-    var button = gPromptService.confirmEx(window, "WizardMachine", bundle.getString("cancelConfirm"),
+    var button = gPromptService.confirmEx(window, bundle.getString("windowTitle"), bundle.getString("cancelConfirm"),
                                           gPromptService.BUTTON_TITLE_YES * gPromptService.BUTTON_POS_0 +
                                           gPromptService.BUTTON_TITLE_NO * gPromptService.BUTTON_POS_1,
                                           null, null, null, null, {});
@@ -1095,7 +1095,7 @@ function CCKWriteProperties(destdir)
       var file = Components.classes["@mozilla.org/file/local;1"]
                            .createInstance(Components.interfaces.nsILocalFile);
       file.initWithPath(certpath);
-      var line = "Cert"+i+"="+file.leafName;
+      var line = "Cert"+ i + "=" + file.leafName + "\n";
       fos.write(line, line.length);
     }
   }  
