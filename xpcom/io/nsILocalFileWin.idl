@@ -39,7 +39,7 @@
 
 #include "nsILocalFile.idl"
 
-[scriptable, uuid(dc42f467-4094-437d-9e3e-8912a072aede)]
+[scriptable, uuid(def38371-73b0-4dfd-85cd-0a7c91afbec6)]
 interface nsILocalFileWin : nsILocalFile
 {
    /**
@@ -52,5 +52,17 @@ interface nsILocalFileWin : nsILocalFile
     *
     */
     AString getVersionInfoField(in string aField);
+
+    /**
+     * The canonical path of the file, which avoids short/long
+     * pathname inconsistencies. The nsILocalFile persistent
+     * descriptor is not guaranteed to be canonicalized (it may
+     * persist either the long or the short path name). The format of
+     * the canonical path will vary with the underlying file system:
+     * it will typically be the short pathname on filesystems that
+     * support both short and long path forms.
+     */
+    readonly attribute AString canonicalPath;
+    [noscript] readonly attribute ACString nativeCanonicalPath;
 };
 

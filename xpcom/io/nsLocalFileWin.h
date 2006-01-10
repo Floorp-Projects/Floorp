@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -104,13 +104,18 @@ private:
     // this will be the resolved path of shortcuts, it will *NEVER* be returned to the user
     nsCString mResolvedPath;
     
-    PRFileInfo64 mFileInfo64;
-    PRUint32 mHashCode;
+    // this string, if not empty, is the *short* pathname that represents
+    // mWorkingPath
+    nsCString mShortWorkingPath;
 
-    void MakeDirty() { mDirty = PR_TRUE; mHashCode = 0; }
+    PRFileInfo64 mFileInfo64;
+
+    void MakeDirty() { mDirty = PR_TRUE; mShortWorkingPath.Truncate(); }
 
     nsresult ResolveAndStat();
     nsresult ResolveShortcut();
+
+    void EnsureShortPath();
     
     nsresult CopyMove(nsIFile *newParentDir, const nsACString &newName, PRBool followSymlinks, PRBool move);
     nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const nsACString &newName, PRBool followSymlinks, PRBool move);
