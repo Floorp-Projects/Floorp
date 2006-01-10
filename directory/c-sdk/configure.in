@@ -911,13 +911,18 @@ case "$target" in
     else
         AC_DEFINE(hppa)
         DLL_SUFFIX=sl
-    endif
+    fi
     DSO_LDOPTS='-b +h $(notdir $@)'
     if test -z "$GNU_CC"; then
         CC="$CC -Ae"
         CXX="$CXX -ext"
-        CFLAGS="$CFLAGS +ESlit"
-        CXXFLAGS="$CXXFLAGS +ESlit"
+        if test "$OS_RELEASE" = "B.11.23"; then
+            CFLAGS="$CFLAGS +0lit=all"
+            CXXFLAGS="$CXXFLAGS +0lit=all"
+        else
+            CFLAGS="$CFLAGS +ESlit"
+            CXXFLAGS="$CXXFLAGS +ESlit"
+        fi
         DSO_CFLAGS=+Z
     else
         DSO_CFLAGS=-fPIC
@@ -999,7 +1004,7 @@ case "$target" in
         DEFAULT_IMPL_STRATEGY=_PTH
     fi
 
-    if echo "$OS_RELEASE" | egrep '^(B.11.23)' >/dev/null; then
+    if test "$OS_RELEASE" = "B.11.23"; then
         AC_DEFINE(HPUX10)
         AC_DEFINE(HPUX11)
         AC_DEFINE(_LARGEFILE64_SOURCE)
@@ -1030,6 +1035,7 @@ case "$target" in
             USE_PTHREADS=
         fi
     fi
+
     ;;
 
 *-irix*)

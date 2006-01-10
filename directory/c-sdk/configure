@@ -7264,13 +7264,18 @@ _ACEOF
 _ACEOF
 
         DLL_SUFFIX=sl
-    endif
+    fi
     DSO_LDOPTS='-b +h $(notdir $@)'
     if test -z "$GNU_CC"; then
         CC="$CC -Ae"
         CXX="$CXX -ext"
-        CFLAGS="$CFLAGS +ESlit"
-        CXXFLAGS="$CXXFLAGS +ESlit"
+        if test "$OS_RELEASE" = "B.11.23"; then
+            CFLAGS="$CFLAGS +0lit=all"
+            CXXFLAGS="$CXXFLAGS +0lit=all"
+        else
+            CFLAGS="$CFLAGS +ESlit"
+            CXXFLAGS="$CXXFLAGS +ESlit"
+        fi
         DSO_CFLAGS=+Z
     else
         DSO_CFLAGS=-fPIC
@@ -7406,7 +7411,7 @@ _ACEOF
         DEFAULT_IMPL_STRATEGY=_PTH
     fi
 
-    if echo "$OS_RELEASE" | egrep '^(B.11.23)' >/dev/null; then
+    if test "$OS_RELEASE" = "B.11.23"; then
         cat >>confdefs.h <<\_ACEOF
 #define HPUX10 1
 _ACEOF
@@ -7452,6 +7457,7 @@ _ACEOF
             USE_PTHREADS=
         fi
     fi
+
     ;;
 
 *-irix*)
