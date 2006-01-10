@@ -15,9 +15,9 @@ xmlns:rss="http://purl.org/rss/1.0/"
 
 <div>
 
+		<!-- 1.0 --> 
+
 		<xsl:for-each select="/rdf:RDF/rss:item">
-
-
 		<div class='item'>
 			<a>
 				<xsl:attribute name="href">
@@ -27,6 +27,22 @@ xmlns:rss="http://purl.org/rss/1.0/"
 			</a>
 		</div>
 		</xsl:for-each>
+
+		<!-- 2.0 --> 
+
+		<xsl:for-each select="/rss/channel/item">
+
+		<div class='item'>
+			<a>
+				<xsl:attribute name="href">
+	                         <xsl:value-of select="link"/>
+				</xsl:attribute> 	
+	                  <xsl:value-of select="title"/>
+			</a>
+		</div>
+
+		</xsl:for-each>
+
 
 </div>
 </xsl:template>
