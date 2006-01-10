@@ -2467,12 +2467,13 @@ ReallocStateStack(REGlobalData *gData)
 
 /*
  * Apply the current op against the given input to see if it's going to match
- * or fail. Return false if we don't get a match, true if we do and update the
- * state of the input and pc if the update flag is true.
+ * or fail. Return false if we don't get a match, true if we do. If updatecp is
+ * true, then update the current state's cp. Always update startpc to the next
+ * op.
  */
 static REMatchState *
 SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
-            jsbytecode **startpc, JSBool update)
+            jsbytecode **startpc, JSBool updatecp)
 {
     REMatchState *result = NULL;
     jschar matchCh;
@@ -2657,10 +2658,9 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
         JS_ASSERT(JS_FALSE);
     }
     if (result) {
-        if (update)
-            *startpc = pc;
-        else
+        if (!updatecp)
             x->cp = startcp;
+        *startpc = pc;
         return result;
     }
     x->cp = startcp;
@@ -2672,7 +2672,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 {
     REMatchState *result = NULL;
     REBackTrackData *backTrackData;
-    jsbytecode *nextpc;
+    jsbytecode *nextpc, *testpc;
     REOp nextop;
     RECapture *cap;
     REProgState *curState;
@@ -2823,8 +2823,9 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 nextpc = pc + GET_OFFSET(pc);  /* start of term after ASSERT */
                 pc += ARG_LEN;                 /* start of ASSERT child */
                 op = (REOp) *pc++;
+                testpc = pc;
                 if (REOP_IS_SIMPLE(op) &&
-                    !SimpleMatch(gData, x, op, &pc, JS_FALSE)) {
+                    !SimpleMatch(gData, x, op, &testpc, JS_FALSE)) {
                     result = NULL;
                     break;
                 }
@@ -2844,9 +2845,10 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 nextpc = pc + GET_OFFSET(pc);
                 pc += ARG_LEN;
                 op = (REOp) *pc++;
+                testpc = pc;
                 if (REOP_IS_SIMPLE(op) /* Note - fail to fail! */ &&
-                    SimpleMatch(gData, x, op, &pc, JS_FALSE) &&
-                    pc == nextpc) {
+                    SimpleMatch(gData, x, op, &testpc, JS_FALSE) &&
+                    *testpc == REOP_ASSERTNOTTEST) {
                     result = NULL;
                     break;
                 }
@@ -2858,8 +2860,9 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 curState->parenSoFar = parenSoFar;
                 PUSH_STATE_STACK(gData);
                 if (!PushBackTrackState(gData, REOP_ASSERTNOTTEST,
-                                        nextpc, x, x->cp, 0, 0))
+                                        nextpc, x, x->cp, 0, 0)) {
                     return NULL;
+                }
                 continue;
 
             case REOP_ASSERTTEST:
