@@ -53,7 +53,8 @@ var gFullScreen=false;
 var gRSSTag="minimo";
 var gGlobalHistory = null;
 var gURIFixup = null;
-var gShowingMenuPopup=null;
+var gShowingMenuPopup=false;
+var gShowingNavMenuPopup=false;
 var gFocusedElementHREFContextMenu=null;
 var gDeckMode=0; // 0 = site, 1 = sb, 2= rss. Used for the URLBAR selector, DeckMode impl.
 var gDeckMenuChecked=null; // to keep the state of the checked URLBAR selector mode. 
@@ -61,8 +62,6 @@ var gDeckMenuChecked=null; // to keep the state of the checked URLBAR selector m
 var gPref = null;                    // so far snav toggles on / off via direct access to pref.
                                      // See bugzilla.mozilla.org/show_bug.cgi?id=311287#c1
 var gPrefAdded=false; // shall be used to flush the pref. 
-
-var gSNAV=-1; 
 
 function nsBrowserStatusHandler()
 {
@@ -85,14 +84,12 @@ nsBrowserStatusHandler.prototype =
   init : function()
   {
     this.urlBar           = document.getElementById("urlbar");
-    this.stopreloadButton = document.getElementById("reload-stop-button");
     this.progressBGPosition = 0;  /* To be removed, fix in onProgressChange ... */ 
   },
   
   destroy : function()
   {
     this.urlBar = null;
-    this.stopreloadButton = null;
     this.progressBGPosition = null;  /* To be removed, fix in onProgressChange ... */ 
   },
   
@@ -111,9 +108,6 @@ nsBrowserStatusHandler.prototype =
 		if(aRequest && aWebProgress.DOMWindow == content) {
           this.startDocumentLoad(aRequest);
 		}
-        this.stopreloadButton.className = "stop-button";
-        this.stopreloadButton.setAttribute("command","cmd_BrowserStop");
-        
         return;
       }
       
@@ -123,9 +117,6 @@ nsBrowserStatusHandler.prototype =
         
         /* To be fixed. We dont want to directly access sytle from here */
         document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
-        
-        this.stopreloadButton.className = "reload-button";
-        this.stopreloadButton.setAttribute("command","cmd_BrowserReload");
         
         return;
       }
@@ -333,25 +324,8 @@ nsBrowserStatusHandler.prototype =
   
   document.__defineSetter__("title",function(x){}); // Stays with the titled defined by the XUL element. 
   
-  /*
-   * We add event handler to catch the right and left keys on the main_MenuPopup 
-   */
-    document.addEventListener("keypress",eventHandlerMenu,true);
   
-  /*
-   * Sync UI zoom level 
-   */
-  
-  syncUIZoom();
-  
-  
-  /* 
-   * Add event clicks to Minimo toolbars and also to the mStrip BOX in the tabbrowser
-   */
-    gBrowser.mStrip.addEventListener("click",BrowserWithoutSNAV,false);
-    document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
-  
-    gBrowser.addEventListener("DOMLinkAdded", BrowserLinkAdded, false);
+  gBrowser.addEventListener("DOMLinkAdded", BrowserLinkAdded, false);
   
 }
 
@@ -439,19 +413,6 @@ function BrowserUpdateFeeds() {
  * For now, this updates via DOM the top menu. Context menu should be here as well. 
  */
 function BrowserUpdateBackForwardState() {
-  
-  if(gBrowser.webNavigation.canGoBack) {
-    document.getElementById("back-button").setAttribute("disabled","false");
-  } else {
-    document.getElementById("back-button").setAttribute("disabled","true");
-  }
-  
-  if(gBrowser.webNavigation.canGoForward) {
-    document.getElementById("forward-button").setAttribute("disabled","false");
-  } else {
-    document.getElementById("forward-button").setAttribute("disabled","true");
-  }
-  
 }
 
 
@@ -473,103 +434,6 @@ function findChildShell(aDocument, aDocShell, aSoughtURI) {
 }
 
 
-function BrowserWithoutSNAV(e) {
-  if(gSNAV==1||gSNAV==-1) {
-    gSNAV=0;
-    document.addEventListener("keypress",eventHandlerMenu,true);
-    gPref.setBoolPref("snav.enabled", false);                                   
-  } 
-}
-
-function BrowserWithSNAV(e) {
-  if(gSNAV==0||gSNAV==-1) {
-    gSNAV=1;
-    document.removeEventListener("keypress",eventHandlerMenu,true);
-    gPref.setBoolPref("snav.enabled", true);                                   
-  } 
-}
-
-function enableMenuAccess() {
-
-  if(document.commandDispatcher&&document.commandDispatcher.focusedElement) {
-    if (document.commandDispatcher.focusedElement.getAttribute("id")=="menu-button") {
-      BrowserWithSNAV();
-      gBrowser.focus();
-      gBrowser.contentWindow.focus();
-	return;
-    } 
-  } 
-
-  // In case focus is somewhere else..
-
-  document.getElementById("menu-button").focus();
-  BrowserWithoutSNAV(); 
-}
-
-
-/*
- *  Focus Shortcut Action. This is just a focus action dispatcher based on certain conditions 
- *  defined in the XUL elements. Ideally would be interesting to have this as part of some new
- *  XUL elements that are based on existing XUL elements, or to incorporate, import, this behavior
- *  in the XUL declaration. 
- */
-function eventHandlerMenu(e) {
-  
-  if( (e.keyCode==e.DOM_VK_LEFT || e.keyCode==e.DOM_VK_RIGHT) && (gShowingMenuPopup) ) {
-    BrowserMenuPopupFalse();
-    document.getElementById("menu-button").focus(); // forcing state back to the menu. 
-  }
-  
-  if(document.commandDispatcher&&document.commandDispatcher.focusedElement) { 
-    
-    var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
-    
-    if(outnavTarget && (e.keyCode==e.DOM_VK_DOWN||e.keyCode==e.DOM_VK_UP) && !gShowingMenuPopup) {
-      
-      e.preventBubble();
-      if(e.keyCode==e.DOM_VK_DOWN) {
-        
-        ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"),"accessnextrule");
-      }
-      if(e.keyCode==e.DOM_VK_UP) {
-        
-        ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"),"accessprevrule"); 
-      }
-      var tempElement=ruleElement.getAttribute("accessfocus");
-      if(tempElement.indexOf("#")>-1) {
-        
-        if(tempElement=="#tabContainer") { 
-          if(gBrowser.tabContainer) {
-            gBrowser.selectedTab.focus();
-            
-            if(gBrowser.mStrip.collapsed) {				
-              gBrowser.contentWindow.focus();
-            } 
-          }
-        } 
-        if(tempElement=="#tabContent") { 	
-	    gBrowser.focus();		
-          gBrowser.contentWindow.focus();
-        } 
-      } else { 
-        document.getElementById(tempElement).focus();
-      }
-    }
-  }
-}
-
-function findRuleById(outnavTarget,ruleattribute) {
-  var ruleElement=document.getElementById(outnavTarget);
-  
-  if(document.getElementById(ruleElement.getAttribute("target")).collapsed) {
-    return findRuleById(ruleElement.getAttribute(ruleattribute), ruleattribute);
-  } else {
-	return ruleElement;
-  } 
-}
-
-
-
 /** 
  * Init stuff
  * 
@@ -586,11 +450,6 @@ function browserInit(refTab)
    * 
    */
   var refBrowser=gBrowser.getBrowserForTab(refTab);
-  
-  /* New Browser OnFocus SNAV Toggle */
-  
-   refBrowser.addEventListener("focus", BrowserWithSNAV , true);
-
   
   try {
     refBrowser.markupDocumentViewer.textZoom = .90;
@@ -764,38 +623,6 @@ function BrowserResetZoomPlus() {
 
 function BrowserResetZoomMinus() {
   gBrowser.selectedBrowser.markupDocumentViewer.textZoom-= .25;
-}
-
-
-/* Reset the UI text size */ 
-function BrowserUIResetZoomPlus() {
-  var currentUILevel=gPref.getIntPref("browser.display.zoomui");
-  currentUILevel+=3;
-  gPref.setIntPref("browser.display.zoomui", currentUILevel);
-  syncUIZoom();
-  
-  /* 
-   * YES I know. 
-   * I do this because somehow the grid does not expand
-   * when the style CSS syncUIzoom kicks in 
-   */
-  document.getElementById("uizoomminusitem").focus();
-  document.getElementById("uizoomplusitem").focus();
-}
-
-function BrowserUIResetZoomMinus() {
-  var currentUILevel=gPref.getIntPref("browser.display.zoomui");
-  currentUILevel-=3;
-  gPref.setIntPref("browser.display.zoomui", currentUILevel);
-  syncUIZoom();
-  
-  /* 
-   * YES I know. 
-   * I do this because somehow the grid does not expand
-   * when the style CSS syncUIzoom kicks in 
-   */
-  document.getElementById("uizoomplusitem").focus();
-  document.getElementById("uizoomminusitem").focus();
 }
 
 
@@ -991,7 +818,6 @@ function DoBrowserFindNext() {
 function DoPanelPreferences() {
   window.openDialog("chrome://minimo/content/preferences/preferences.xul","preferences","modal,centerscreeen,chrome,resizable=no");
   // BrowserReload(); 
-  syncUIZoom();
 }
 
 /* 
@@ -1000,6 +826,30 @@ function DoPanelPreferences() {
 function DoTestSendCall(toCall) {
   var phoneInterface= Components.classes["@mozilla.org/phone/support;1"].createInstance(nsCI.nsIPhoneSupport);
   phoneInterface.makeCall(toCall,"");
+}
+
+function DoSSRToggle()
+{
+  try {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsCI.nsIPrefBranch);
+    pref.setBoolPref("ssr.enabled", !pref.getBoolPref("ssr.enabled"));
+    
+    gBrowser.webNavigation.reload(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+  }
+  catch(ex) { alert(ex); }
+
+}
+
+function DoSNavToggle()
+{
+  try {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsCI.nsIPrefBranch);
+    pref.setBoolPref("snav.enabled", !pref.getBoolPref("snav.enabled"));
+    
+    content.focus();    
+  }
+  catch(ex) { alert(ex); }
+
 }
 
 function DoFullScreen()
@@ -1161,25 +1011,20 @@ function URLBarClickHandler(aEvent, aElt)
     aElt.select();
 }
 
-var gRotationDirection = true;
-
-function BrowserScreenRotate()
-{
-  try {
-    var deviceSupport = Components.classes["@mozilla.org/device/support;1"].getService(nsCI.nsIDeviceSupport);
-    
-    deviceSupport.rotateScreen(gRotationDirection);
-    gRotationDirection != gRotationDirection;
-  }
-  catch (ex)
-  {
-    alert(ex);
-  }
-}
-
 /* 
  * Main Menu 
  */ 
+
+function BrowserNavMenuPopup() {
+  if (!gShowingNavMenuPopup){
+    document.getElementById("menu_NavPopup").showPopup(document.getElementById("nav-menu-button"),-1,-1,"popup","bottomright", "topright");
+  }
+  else {
+    document.getElementById("menu_NavPopup").hidePopup();
+  }
+  
+  gShowingNavMenuPopup != gShowingNavMenuPopup;
+}
 
 function BrowserMenuPopup() {
   if(!gShowingMenuPopup) { 
@@ -1187,26 +1032,14 @@ function BrowserMenuPopup() {
   } else {
     document.getElementById("menu_MainPopup").hidePopup();
   } 
+
+  gShowingMenuPopup != gShowingMenuPopup;
 }
 
 function BrowserMenuPopupFalse() {
   document.getElementById("menu_MainPopup").hidePopup();
 }
 
-function BrowserMenuPopupContextualMenu() {
-  document.getElementById("contentAreaContextMenu").hidePopup();
-  DoFullScreen();
-  BrowserMenuPopup();
-}
-
-function MenuPopupShowing() {
-  gShowingMenuPopup=true;
-  document.getElementById("menu-button").focus();
-}
-
-function MenuPopupHidden() {
-  gShowingMenuPopup=false;
-}
 
 /* The URLBAR Deck mode selector 
  */

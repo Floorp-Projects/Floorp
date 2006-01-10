@@ -1,42 +1,41 @@
 <?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
 
 <!-- ***** BEGIN LICENSE BLOCK *****
- Version: MPL 1.1/GPL 2.0/LGPL 2.1
+     Version: MPL 1.1/GPL 2.0/LGPL 2.1
+     
+     The contents of this file are subject to the Mozilla Public License Version
+     1.1 (the "License"); you may not use this file except in compliance with
+     the License. You may obtain a copy of the License at
+     http://www.mozilla.org/MPL/
+     
+     Software distributed under the License is distributed on an "AS IS" basis,
+     WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+     for the specific language governing rights and limitations under the
+     License.
+     
+     The Original Code is Minimo.
+     
+     The Initial Developer of the Original Code is
+     Doug Turner <dougt@meer.net>.
+     Portions created by the Initial Developer are Copyright (C) 2005
+     the Initial Developer. All Rights Reserved.
+     
+     Contributor(s):
+     Marcio S. Galli, mgalli@geckonnection.com
+     
+     Alternatively, the contents of this file may be used under the terms of
+     either the GNU General Public License Version 2 or later (the "GPL"), or
+     the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+     in which case the provisions of the GPL or the LGPL are applicable instead
+     of those above. If you wish to allow use of your version of this file only
+     under the terms of either the GPL or the LGPL, and not to allow others to
+     use your version of this file under the terms of the MPL, indicate your
+     decision by deleting the provisions above and replace them with the notice
+     and other provisions required by the GPL or the LGPL. If you do not delete
+     the provisions above, a recipient may use your version of this file under
+     the terms of any one of the MPL, the GPL or the LGPL.
 
- The contents of this file are subject to the Mozilla Public License Version
- 1.1 (the "License"); you may not use this file except in compliance with
- the License. You may obtain a copy of the License at
- http://www.mozilla.org/MPL/
-
- Software distributed under the License is distributed on an "AS IS" basis,
- WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- for the specific language governing rights and limitations under the
- License.
-
- The Original Code is Mozilla Communicator client code, released
- March 31, 1998.
-
- The Initial Developer of the Original Code is
- Netscape Communications Corporation.
- Portions created by the Initial Developer are Copyright (C) 1998-2000
- the Initial Developer. All Rights Reserved.
-
- Contributor(s):
-   Marcio S. Galli, mgalli@geckonnection.com
- 
- Alternatively, the contents of this file may be used under the terms of
- either the GNU General Public License Version 2 or later (the "GPL"), or
- the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- in which case the provisions of the GPL or the LGPL are applicable instead
- of those above. If you wish to allow use of your version of this file only
- under the terms of either the GPL or the LGPL, and not to allow others to
- use your version of this file under the terms of the MPL, indicate your
- decision by deleting the provisions above and replace them with the notice
- and other provisions required by the GPL or the LGPL. If you do not delete
- the provisions above, a recipient may use your version of this file under
- the terms of any one of the MPL, the GPL or the LGPL.
-
- ***** END LICENSE BLOCK ***** -->
+***** END LICENSE BLOCK ***** -->
 
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
@@ -48,131 +47,42 @@
 <?xul-overlay href="chrome://minimo/content/toolbars/toolbar-find.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % minimoDTD SYSTEM "chrome://minimo/locale/minimo.dtd" >
-%minimoDTD;
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-%brandDTD;
-]>
+          <!ENTITY % minimoDTD SYSTEM "chrome://minimo/locale/minimo.dtd" >
+          %minimoDTD;
+          <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+          %brandDTD;
+          ]>
 
 
 <window id="main-window"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  orient="vertical"
-  contenttitlesetting="false"
-  title="Minimo"
-  titlemodifier="Minimo"
-  titlemenuseparator=" - "
-  onload="MiniNavStartup()"
-  onunload="MiniNavShutdown()"
-  windowtype="navigator:browser">
-
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        orient="vertical"
+        contenttitlesetting="false"
+        title="Minimo"
+        titlemodifier="Minimo"
+        titlemenuseparator=" - "
+        onload="MiniNavStartup()"
+        onunload="MiniNavShutdown()"
+        windowtype="navigator:browser">
+  
   <script type="application/x-javascript" src="chrome://minimo/content/minimo.js"/>
   <script type="application/x-javascript" src="chrome://minimo/content/common.js"/>
   <script type="application/x-javascript" src="chrome://minimo/content/rssview/rssload.js"/>
-
+  
   <popupset id="mainPopupSet">
     <popup type="autocomplete" id="PopupAutoComplete"/>
   </popupset>
-
+  
   <keyset>
-    <key id="minimo-key" keycode="VK_F23" oncommand="enableMenuAccess()"/>
-    <key id="minimo-key2" keycode="VK_F12" oncommand="enableMenuAccess()"/>
+    <key id="minimo-key" keycode="VK_F23" oncommand="BrowserMenuPopup()"/>
+    <key id="minimo-key2" keycode="VK_F11" oncommand="BrowserMenuPopup()"/>
+
+    <key id="minimo-key3" keycode="VK_F24" oncommand="BrowserNavMenuPopup()"/>
+    <key id="minimo-key4" keycode="VK_F12" oncommand="BrowserNavMenuPopup()"/>
+
   </keyset>
-
-  <toolbox id="mini-toolbars">
-
-    <command id="cmd_BrowserOpenTab"          oncommand="BrowserOpenTab()"/>
-    <command id="cmd_BrowserScreenRotate"     oncommand="BrowserScreenRotate()"/>
-    <command id="cmd_BrowserOpenInfo"         oncommand="BrowserOpenInfo()"/>
-    <command id="cmd_BrowserTestDialogs"      oncommand="BrowserTestDialogs()"/>
-    <command id="cmd_BrowserTestSendSMS"      oncommand="BrowserTestSendSMS()"/>
-    <command id="cmd_ViewOptions"             oncommand="BrowserViewOptions()"/>
-    <!--
-    <command id="cmd_ViewRSS"                 oncommand="BrowserViewRSS()"/>
-    <command id="cmd_ViewSearch"              oncommand="BrowserViewSearch()"/>
-    -->
-    <command id="cmd_ViewDeckSB"              oncommand="BrowserViewDeckSB()"/>
-    <command id="cmd_ViewDeckSearch"          oncommand="BrowserViewDeckSearch()"/>
-    <command id="cmd_ViewDeckDefault"         oncommand="BrowserViewDeckDefault()"/>
-    <command id="cmd_ViewFind"                oncommand="BrowserViewFind()"/>
-    <command id="cmd_BrowserOpenLinkAsNewTab" oncommand="BrowserOpenLinkAsTab()" />
-    <command id="cmd_BrowserBack"             oncommand="BrowserBack()" />
-    <command id="cmd_BrowserForward"          oncommand="BrowserForward()" />
-    <command id="cmd_BrowserReload"           oncommand="BrowserReload()" />
-    <command id="cmd_BrowserStop"             oncommand="BrowserStop()" />
-    <command id="cmd_BrowserZoomPlus"         oncommand="BrowserResetZoomPlus()" />
-    <command id="cmd_BrowserZoomMinus"        oncommand="BrowserResetZoomMinus()" />
-    <command id="cmd_UIZoomPlus"              oncommand="BrowserUIResetZoomPlus()" />
-    <command id="cmd_UIZoomMinus"             oncommand="BrowserUIResetZoomMinus()" />
-    <command id="cmd_DoPanelPreferences"      oncommand="DoPanelPreferences()" /> 
-    <command id="cmd_DoBrowserRSS"            oncommand="DoBrowserRSS()" />
-    <command id="cmd_BrowserMenu"             oncommand="BrowserMenuPopup()" />
-    <command id="cmd_BrowserMenuContextual"   oncommand="BrowserMenuPopupContextualMenu()" />
-    <command id="cmd_Quit"                    oncommand="window.close();" />
-    <command id="cmd_BrowserBookmark"         oncommand="BrowserBookmark()" />
-    <command id="cmd_BrowserBookmarkThis"     oncommand="BrowserBookmarkThis()" />
-
-    <!-- Keyboard Focus Handler Controls --> 
-    <!-- This entire focusnavigation set is not XBLized yet, 
-         Minimo JS code will look into it anyways.  --> 
-         
-         
-    <!-- focushandler should have only accessfocus and target and the memory cookie maybe --> 
-    
-    <focusnavigation>           
-     <focushandler id="focus_tabcontent"     target="content"        accessfocus="#tabContent"  />
-     <focushandler id="focus_nav-bar"        target="nav-bar"        accessfocus="menu-button"   accessnextrule="focus_toolbar-view"   accessprevrule="focus_tabcontent" />
-     <focushandler id="focus_toolbar-view"   target="toolbar-view"   accessfocus="zoomplusitem"  accessnextrule="focus_toolbar-rss"    accessprevrule="focus_nav-bar" />
-     <focushandler id="focus_toolbar-rss"    target="toolbar-rss"    accessfocus="rss-close"     accessnextrule="focus_toolbar-search" accessprevrule="focus_toolbar-view" />
-     <focushandler id="focus_toolbar-search" target="toolbar-search" accessfocus="search-close"  accessnextrule="focus_toolbar-find"   accessprevrule="focus_toolbar-rss" />
-     <focushandler id="focus_toolbar-find"   target="toolbar-find"   accessfocus="find-close"    accessnextrule="focus_content"        accessprevrule="focus_toolbar-search" />
-     <focushandler id="focus_content"        target="content"        accessfocus="#tabContainer" accessnextrule="focus_tabcontent"     accessprevrule="focus_toolbar-find" />
-    </focusnavigation>  
-
-
-    <toolbar id="nav-bar" >
-    
-        <toolbarbutton tabindex="1" accessrule="focus_nav-bar" class="menu-button"  id="menu-button" command="cmd_BrowserMenu" />  
-        <toolbarbutton tabindex="2" accessrule="focus_nav-bar" class="back-button"  id="back-button" command="cmd_BrowserBack" />  
-        <toolbarbutton tabindex="3" accessrule="focus_nav-bar" class="forward-button" id="forward-button" command="cmd_BrowserForward" />  
-        <toolbarbutton tabindex="4" accessrule="focus_nav-bar" class="stop-button"  id="reload-stop-button" command="cmd_BrowserReload"/>
-
-
-        <!-- WARNING: don't add tabindex to the following element. Somehow it conflicts with the popup history open --> 
-        
-        <textbox  
-                 id="urlbar" 
-                 flex="1" 
-                 type="autocomplete"
-                 enablehistory="true"
-                 autocompletesearch="history" 
-                 completeselectedindex="true"
-                 autocompletepopup="PopupAutoComplete"
-                 ontextentered="return URLBarEntered();"
-                 onfocus="URLBarFocusHandler(event, this);"
-                 onmousedown="URLBarMouseDownHandler(event, this);"
-                 onclick="URLBarClickHandler(event, this);">
-				
-			<deck onclick="PageProxyClickHandler(event)" id='proxy-deck' >
-				<image id="urlbar-deck"  />  
-			</deck>
-			
-            <hbox>
-				<button type="menu" style="-moz-user-focus: none" class="plain" id="feed-button">
-					<menupopup id='feed-button-menu' position="after_end" />
-				</button>
-            	<image id="lock-icon" class="security-na" />
-            </hbox>
-        </textbox>
-
-    </toolbar>
-
-    <!-- the toolbars shall be added here, check the overlay settings --> 
-    
-
-  </toolbox>
-
+  
   <hbox flex="1" >
     <hbox id="appcontent" flex="100%">
       <hbox id="browser" context="context" flex="1">
@@ -184,86 +94,239 @@
                     flex="1" 
                     autocompletepopup="PopupAutoComplete"
                     onnewtab="BrowserOpenTab()"/>
-       </hbox>
+      </hbox>
     </hbox>
   </hbox>
-
-
+  
   <statusbar id="statusbar" hidden="false">
     <statusbarpanel id="statusbar-text" label="Minimo" flex="1"/>
   </statusbar>
-
+  
+  <toolbox id="mini-toolbars">
+    
+    <command id="cmd_BrowserOpenTab"          oncommand="BrowserOpenTab()"/>
+    <command id="cmd_BrowserScreenRotate"     oncommand="BrowserScreenRotate()"/>
+    <command id="cmd_BrowserOpenInfo"         oncommand="BrowserOpenInfo()"/>
+    <command id="cmd_BrowserTestDialogs"      oncommand="BrowserTestDialogs()"/>
+    <command id="cmd_BrowserTestSendSMS"      oncommand="BrowserTestSendSMS()"/>
+    <!--
+        <command id="cmd_ViewRSS"                 oncommand="BrowserViewRSS()"/>
+        <command id="cmd_ViewSearch"              oncommand="BrowserViewSearch()"/>
+        -->
+    <command id="cmd_ViewDeckSB"              oncommand="BrowserViewDeckSB()"/>
+    <command id="cmd_ViewDeckSearch"          oncommand="BrowserViewDeckSearch()"/>
+    <command id="cmd_ViewDeckDefault"         oncommand="BrowserViewDeckDefault()"/>
+    <command id="cmd_ViewFind"                oncommand="BrowserViewFind()"/>
+    <command id="cmd_BrowserOpenLinkAsNewTab" oncommand="BrowserOpenLinkAsTab()" />
+    <command id="cmd_BrowserBack"             oncommand="BrowserBack()" />
+    <command id="cmd_BrowserForward"          oncommand="BrowserForward()" />
+    <command id="cmd_BrowserReload"           oncommand="BrowserReload()" />
+    <command id="cmd_BrowserStop"             oncommand="BrowserStop()" />
+    <command id="cmd_DoPanelPreferences"      oncommand="DoPanelPreferences()" /> 
+    <command id="cmd_DoBrowserRSS"            oncommand="DoBrowserRSS()" />
+    <command id="cmd_BrowserMenu"             oncommand="BrowserMenuPopup()" />
+    <command id="cmd_BrowserNavMenu"          oncommand="BrowserNavMenuPopup()" />
+    <command id="cmd_Quit"                    oncommand="window.close();" />
+    <command id="cmd_Go"                      oncommand="URLBarEntered()" />
+    <command id="cmd_BrowserBookmark"         oncommand="BrowserBookmark()" />
+    <command id="cmd_BrowserBookmarkThis"     oncommand="BrowserBookmarkThis()" />
+    
+    <!-- Keyboard Focus Handler Controls --> 
+    <!-- This entire focusnavigation set is not XBLized yet, 
+         Minimo JS code will look into it anyways.  --> 
+    
+    
+    <!-- focushandler should have only accessfocus and target and the memory cookie maybe --> 
+    
+    <focusnavigation>           
+      <focushandler id="focus_tabcontent"     target="content"        accessfocus="#tabContent"  />
+      <focushandler id="focus_nav-bar"        target="nav-bar"        accessfocus="menu-button"   accessnextrule="focus_toolbar-view"   accessprevrule="focus_tabcontent" />
+      <focushandler id="focus_toolbar-view"   target="toolbar-view"   accessfocus="zoomplusitem"  accessnextrule="focus_toolbar-rss"    accessprevrule="focus_nav-bar" />
+      <focushandler id="focus_toolbar-rss"    target="toolbar-rss"    accessfocus="rss-close"     accessnextrule="focus_toolbar-search" accessprevrule="focus_toolbar-view" />
+      <focushandler id="focus_toolbar-search" target="toolbar-search" accessfocus="search-close"  accessnextrule="focus_toolbar-find"   accessprevrule="focus_toolbar-rss" />
+      <focushandler id="focus_toolbar-find"   target="toolbar-find"   accessfocus="find-close"    accessnextrule="focus_content"        accessprevrule="focus_toolbar-search" />
+      <focushandler id="focus_content"        target="content"        accessfocus="#tabContainer" accessnextrule="focus_tabcontent"     accessprevrule="focus_toolbar-find" />
+    </focusnavigation>  
+    
+    
+    <toolbar id="nav-bar" >
+      
+      <toolbarbutton tabindex="1" accessrule="focus_nav-bar" class="menu-button"  id="menu-button" command="cmd_BrowserMenu" />  
+      
+      <!-- WARNING: don't add tabindex to the following element. Somehow it conflicts with the popup history open --> 
+      
+      <textbox id="urlbar" 
+               flex="1" 
+               type="autocomplete"
+               enablehistory="true"
+               autocompletesearch="history" 
+               completeselectedindex="true"
+               autocompletepopup="PopupAutoComplete"
+               ontextentered="return URLBarEntered();"
+               onfocus="URLBarFocusHandler(event, this);"
+               onmousedown="URLBarMouseDownHandler(event, this);"
+               onclick="URLBarClickHandler(event, this);">
+		
+		<deck onclick="PageProxyClickHandler(event)" id='proxy-deck' >
+		  <image id="urlbar-deck"  />  
+		</deck>
+		
+        <hbox>
+		  <button type="menu" style="-moz-user-focus: none" class="plain" id="feed-button">
+			<menupopup id='feed-button-menu' position="after_end" />
+		  </button>
+          <image id="lock-icon" class="security-na" />
+        </hbox>
+      </textbox>
+      
+      <toolbarbutton tabindex="2" accessrule="focus_nav-bar" class="menu-button"  id="nav-menu-button" command="cmd_BrowserNavMenu" />  
+      
+    </toolbar>
+    <!-- the toolbars shall be added here, check the overlay settings --> 
+  </toolbox>
+  
   <!-- place holder for our app popups and hook to the overlay --> 
-
+  
   <popupset>
 	<popup id="contentAreaContextMenu" onpopupshowing="BrowserPopupShowing()">
-
-	   <!-- This toolbar menu works only with Mouse so far and shows 
-	        when gFullScreen mode is true --> 
-	        
-		<!--
-		<toolbar id="nav-bar-contextual" hidden="true">
-			<toolbarbutton class="menu-button"    command="cmd_BrowserMenuContextual" />  
-			<toolbarbutton class="back-button"    command="cmd_BrowserBack" />  
-			<toolbarbutton class="forward-button" command="cmd_BrowserForward" />  
-			<toolbarbutton class="reload-button"  command="cmd_BrowserReload"/>
-		</toolbar>
-		-->
-       
-		<menuitem id="link_as_new_tab"    label="&linknewtab.label;" command="cmd_BrowserOpenLinkAsNewTab" hidden="true"/>
-
-		<menuitem id="item-backbutton"    label="&backButton.label;"    command="cmd_BrowserBack"     hidden="true"/>
-		<menuitem id="item-forwardbutton" label="&forwardButton.label;" command="cmd_BrowserForward"  hidden="true"/>
-		<menuitem id="item-reloadbutton"  label="&reloadButton.label;"  command="cmd_BrowserReload"   hidden="true"/>
-
-        <menuitem id="item-bookmark-page" label="&bookmarkthispage.label;" insertbefore="context-sep-view"  command="cmd_BrowserBookmarkThis" hidden="false"/>
-        <menuitem id="item-bookmark"      label="&bookmarks.label;" command="cmd_BrowserBookmark" hidden="true"/>
-        
-		<menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand="" hidden="true"/>
-
-		<menuitem id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
-
-		<menuitem id="item-copy"   label="Copy" oncommand="DoClipCopy()" />
-		<menuitem id="item-paste"  label="Paste" oncommand="DoClipPaste()"/>
-       
+      
+	  <menuitem id="full_screen" 
+                label="&toggleFullScreen.label;" 
+                oncommand="DoFullScreen()"/>       
+      <!--
+          
+		  <menuitem id="link_as_new_tab"    label="&linknewtab.label;" command="cmd_BrowserOpenLinkAsNewTab" hidden="true"/>
+          
+          <menuitem id="item-bookmark-page" label="&bookmarkthispage.label;" insertbefore="context-sep-view"  command="cmd_BrowserBookmarkThis" hidden="false"/>
+          <menuitem id="item-bookmark"      label="&bookmarks.label;" command="cmd_BrowserBookmark" hidden="true"/>
+          
+          -->        
+	  <menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand="" hidden="true"/>
+      
+	  <menuitem id="item-copy"   label="Copy" oncommand="DoClipCopy()" />
+	  <menuitem id="item-paste"  label="Paste" oncommand="DoClipPaste()"/>
+      
 	</popup>
+    
 
-      <popup id="urlbarModeSelector" onpopuphidden="PageProxyHidden()">
-		<menuitem image="chrome://minimo/skin/extensions/icon-google.png" class="menuitem-iconic" id="command_ViewDeckSearch"  label="&decksearch.label;"   command="cmd_ViewDeckSearch"/>
-<!--		<menuitem image="chrome://minimo/skin/extensions/icon-delicious.png" class="menuitem-iconic" id="command_ViewDeckSB"      label="&decksb.label;"       command="cmd_ViewDeckSB" />-->
-		<menuitem image="chrome://minimo/skin/extensions/icon-urlbar.png" class="menuitem-iconic" id="command_ViewDeckDefault" label="&deckdefault.label;"  command="cmd_ViewDeckDefault" />
-      </popup>
+
+    <popup id="urlbarModeSelector" onpopuphidden="PageProxyHidden()">
+
+	  <menuitem id="command_ViewDeckSearch"
+                image="chrome://minimo/skin/extensions/icon-google.png"
+                class="menuitem-iconic" 
+                label="&decksearch.label;"
+                command="cmd_ViewDeckSearch"/>
+
+      <!--		
+                <menuitem id="command_ViewDeckSB"
+                          image="chrome://minimo/skin/extensions/icon-delicious.png" 
+                          class="menuitem-iconic"       
+                          label="&decksb.label;"       
+                          command="cmd_ViewDeckSB" />
+     -->
+
+	  <menuitem id="command_ViewDeckDefault"
+                image="chrome://minimo/skin/extensions/icon-urlbar.png" 
+                class="menuitem-iconic"  
+                label="&deckdefault.label;"  
+                command="cmd_ViewDeckDefault" />
+    </popup>
 	
-	 <!-- somehow tabbedbrowser needs this. Have to check its implementation and eliminate --> 
-	 <popup id="menu_FilePopup"> 
-         <menuitem id="menu_close"/>
-		 <menuitem id="menu_closeWindow" command="cmd_closeWindow" key="key_closeWindow" label=""  />
+	<!-- somehow tabbedbrowser needs this. Have to check its implementation and eliminate --> 
+	<popup id="menu_FilePopup"> 
+      <menuitem id="menu_close"/>
+	  <menuitem id="menu_closeWindow" command="cmd_closeWindow" key="key_closeWindow" label=""  />
 	</popup>
+    
     
     <menupopup id="menu_MainPopup" onpopupshowing="MenuPopupShowing()"  onpopuphidden="MenuPopupHidden()">
-    
-        <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="&newtab.label;"  /> 
-		<menuitem id="command_BrowserBookmark" command="cmd_BrowserBookmark" label="&bookmarks.label;" />
-		
-<!--    not working just yet.
-		<menuitem id="command_BrowserScreenRotate" command="cmd_BrowserScreenRotate" label="Rotate Screen"  /> 
--->
-        <menuitem id="command_DoPanelPreferences" command="cmd_DoPanelPreferences" label="&prefs.label;"  /> 
-        <!-- separator for now in CSS - need to redesign -->
-
-        <menuitem id="command_ViewOptions" type="checkbox" command="cmd_ViewOptions" label="&zoom.label;"  /> 
-        <menuitem id="command_ViewFind"    type="checkbox" command="cmd_ViewFind" label="&findToolbar.label;"  /> 
-<!--
-        <menuitem id="command_ViewRSS"  type="checkbox" command="cmd_ViewRSS" label="&rssBMtitle.label;"  /> 
-        <menuitem id="command_ViewSearch"  type="checkbox" command="cmd_ViewSearch" label="&searchToolbar.label;"  /> 
--->
-        
-        <!-- separator for now in CSS - need to redesign -->
-        <menuitem id="command_Quit" class="separator-menu"  command="cmd_Quit" label="&quit.label;"  /> 
-        
+      
+      <menuitem id="command_BrowserOpenTab" 
+                command="cmd_BrowserOpenTab" 
+                label="&newtab.label;"  /> 
+      
+      <menuseparator/>
+      
+	  <menuitem id="full_screen" 
+                label="&toggleFullScreen.label;" 
+                oncommand="DoFullScreen()"/>
+      
+      
+      <!-- this shouldn't be an option on smartphones -->
+	  <menuitem id="snav_toggle" 
+                label="&toggleSNav.label;" 
+                oncommand="DoSNavToggle()"/>
+      
+	  <menuitem id="ssr_toggle" 
+                label="&toggleSSR.label;" 
+                oncommand="DoSSRToggle()"/>
+      
+      <menuseparator/>
+      
+	  <menuitem id="textplus" 
+                label="&textSizePlus.label;" 
+                oncommand="BrowserResetZoomPlus()"/>
+      
+	  <menuitem id="testminus" 
+                label="&textSizeMinus.label;" 
+                oncommand="BrowserResetZoomMinus()"/>
+      
+      <menuseparator/>
+      
+      <menuitem id="command_DoPanelPreferences" 
+                command="cmd_DoPanelPreferences" 
+                label="&prefs.label;"  /> 
+      
+      <menuitem id="command_ViewFind"
+                command="cmd_ViewFind" 
+                label="&findToolbar.label;"  /> 
+      
+      <menuseparator/>
+      
+      <menuitem id="command_Quit" 
+                class="separator-menu"  
+                command="cmd_Quit" 
+                label="&quit.label;"  /> 
+      
     </menupopup>  
+    
+    <menupopup id="menu_NavPopup" onpopupshowing="MenuPopupShowing()"  onpopuphidden="MenuPopupHidden()">
+      
+	  <menuitem id="command_BrowserBookmark"
+	            command="cmd_BrowserBookmark"
+	            label="&bookmarks.label;" />
+      
+      <menuitem id="item-bookmark-page" 
+                label="&bookmarkthispage.label;" 
+                command="cmd_BrowserBookmarkThis"/>
+      
+      <menuseparator/>
+      
+      <!--            class="menuitem-iconic" image="chrome://minimo/skin/back-color.png" -->
+      <menuitem id="command_back"    
+                command="cmd_BrowserBack" 
+                label="&backCmd.label;"  /> 
+      
+      <!--            class="menuitem-iconic" image="chrome://minimo/skin/forward-color.png" -->
+      <menuitem id="command_forward" 
+                command="cmd_BrowserForward" 
+                label="&forwardCmd.label;"  /> 
+      
+      <!--            class="menuitem-iconic" image="chrome://minimo/skin/reload-color.png" -->
+      <menuitem id="command_reload"  
+                command="cmd_BrowserReload" 
+                label="&reloadCmd.label;"  /> 
+      
+      <!--            class="menuitem-iconic" image="chrome://minimo/skin/go-color.png" -->
+      <menuitem id="command_go"
+                command="cmd_BrowserGo" 
+                label="&goCmd.label;"  /> 
+      
+    </menupopup>  
+    
     
   </popupset>
   
 </window>
- 
+

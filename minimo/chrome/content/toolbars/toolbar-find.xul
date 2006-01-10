@@ -46,27 +46,16 @@
 ]>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
   <toolbox id="mini-toolbars">
-
     <toolbar id="toolbar-find" flex="1" collapsed="true" >
-                               
-        <groupbox flex="1" class="box-floatoptions">
-		    <caption label="&findToolbar.label;"/>
-			<hbox flex="1" >
-				<vbox flex="1"  style="padding:4px ! important">
-
-					<hbox flex="1" style="margin-top:4px ! important">
-						 <label value="&findText.label;"  />
-						 <textbox tabindex="17" accessrule="focus_toolbar-find"  id="toolbar-find-tag" flex="1" onchange="return DoBrowserFind();"/> 
-						 <toolbarbutton tabindex="18" accessrule="focus_toolbar-find" id="find-button-next" align="top" flex="0" label='&nextText.label;' oncommand="DoBrowserFindNext()"/>  
-					</hbox>
-				</vbox>
-				<vbox>
-				<toolbarbutton tabindex="19" accessrule="focus_toolbar-find" id="find-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewFind"/>  
-				</vbox>
-			</hbox>
-		</groupbox>
+	  <hbox flex="1" style="margin-top:4px ! important">
+		<label value="&findText.label;"  />
+		
+        <textbox tabindex="17" accessrule="focus_toolbar-find"  id="toolbar-find-tag" flex="1" onchange="return DoBrowserFind();"/> 
+		<toolbarbutton tabindex="18" accessrule="focus_toolbar-find" id="find-button-next" align="top" flex="0" label='&nextText.label;' oncommand="DoBrowserFindNext()"/>  
+        
+		<toolbarbutton tabindex="19" accessrule="focus_toolbar-find" id="find-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewFind"/>  
+	  </hbox>
     </toolbar>   
 </toolbox>
 </overlay>

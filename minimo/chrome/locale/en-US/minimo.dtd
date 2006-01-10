@@ -3,7 +3,6 @@
 <!ENTITY prefs.label                  "Preferences...">
 <!ENTITY quit.label                   "Quit">
 <!ENTITY newtab.label                 "New Tab">
-<!ENTITY bookmarks.label              "Bookmarks">
 
 <!-- Toolbar -->
 
@@ -18,15 +17,24 @@
 <!ENTITY searchButton.label           "Search">
 <!ENTITY searchButton.tooltip         "Type a word in the field to the left, then click Search">
 
+<!ENTITY toggleSNav.label             "Toggle Spatial Navigation">
+<!ENTITY toggleFullScreen.label       "Toggle Full Screen">
+<!ENTITY toggleSSR.label              "Toggle Single Column Mode">
+
+<!ENTITY textSizePlus.label           "Text Size +">
+<!ENTITY textSizeMinus.label          "Text Size -">
+
+
 
 <!-- Context menu -->
 
 <!ENTITY backCmd.label                "Back">
 <!ENTITY forwardCmd.label             "Forward">
 <!ENTITY stopCmd.label                "Stop">
+<!ENTITY goCmd.label                  "Go">
 <!ENTITY reloadCmd.label              "Reload">
 <!ENTITY linknewtab.label             "Open link in New Tab">
-<!ENTITY bookmarks.label              "Bookmarks">
+<!ENTITY bookmarks.label              "Bookmarks...">
 <!ENTITY bookmarkthispage.label      "Bookmark This Page">
 
 <!-- menu urlabr view options --> 
@@ -54,5 +62,5 @@
 
 <!-- toolbar find -->
 <!ENTITY findText.label              "Find string: " >
-<!ENTITY findToolbar.label           "Find" >
+<!ENTITY findToolbar.label           "Find..." >
 <!ENTITY nextText.label              "Next" >

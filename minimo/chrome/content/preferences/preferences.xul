@@ -81,8 +81,6 @@
       <preferenceitem preftype="int"     id="network.proxy.type" name="UseProxy" />
       <preferenceitem preftype="string"  id="network.proxy.http" name="networkProxyHTTP" />
       <preferenceitem preftype="int"     id="network.proxy.http_port" name="networkProxyHTTP_Port" />
-      <preferenceitem preftype="int"     id="browser.display.zoomui" name="browserDisplayZoomUI"/>
-      <preferenceitem preftype="int"     id="browser.display.zoomcontent" name="browserDisplayZoomContent"/> 
       <preferenceitem preftype="bool"    id="browser.cache.disk.enable" name="useDiskCache" />
       <!--
       <preferenceitem preftype="string"  id="browser.cache.disk.parent_directory" name="storeCacheStorageCard" />

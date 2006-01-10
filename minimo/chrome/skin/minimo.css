@@ -151,6 +151,11 @@ caption {
 	  list-style-image      : url("chrome://minimo/skin/stop-color.png");
   }
 
+.go-button 
+  {
+	  list-style-image      : url("chrome://minimo/skin/go-color.png");
+  }
+
 .reload-button 
   {
 	  list-style-image      : url("chrome://minimo/skin/reload-color.png");
@@ -255,3 +260,4 @@ caption {
  
 
 
+window { width: 240px ; height: 320px; }

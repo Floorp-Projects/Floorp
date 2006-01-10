@@ -101,42 +101,6 @@
                                               />
                             </vbox>
     				    </groupbox>
-    				    <groupbox class='box-prefgroupitem' id='zoom-box' >
-                            <caption label="&zoom.label;"/>
-                            
-                            <grid class="box-prefpadding" >
-                              <columns>
-                                <column flex="1"/>
-                                <column />
-                              </columns>
-                              <rows>
-                               <row>
-
-                                    <label value="&zoomui.label;" />
-                                    <textbox id="browserDisplayZoomUI" size="5" tabindex="14"
-                                             onfocus="prefFocus('zoom-box')" onblur="prefBlur('zoom-box')"
-                                             style="margin:3px ! important;" 
-                                             preference="browser.display.zoomui" preftype="int" 
-                                             onchange="syncPref(this)" 
-                                             />
-
-                               </row>
-                               <row>    
-
-                                    <label value="&zoomcontent.label;" />
-                                    <textbox id="browserDisplayZoomContent" size="5" tabindex="15" accessrule="general-pane"
-                                             onfocus="prefFocus('zoom-box')" onblur="prefBlur('zoom-box')"
-                                             style="margin:3px ! important;" 
-                                             onchange="syncPref(this)"
-                                             preference="browser.display.zoomcontent"
-                                             preftype="int"
-                                             />
-                                             
-                               </row>
-                              </rows>
-                            </grid>
-                            
-                        </groupbox>
                     </vbox>
                 </hbox>
             </groupbox> 
