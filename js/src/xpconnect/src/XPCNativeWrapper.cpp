@@ -967,7 +967,7 @@ XPC_NW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   if (JSVAL_IS_PRIMITIVE(*rval)) {
-    return NS_ERROR_ILLEGAL_VALUE;
+    return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
   }
 
   return RewrapIfDeepWrapper(cx, obj, *rval, rval);
