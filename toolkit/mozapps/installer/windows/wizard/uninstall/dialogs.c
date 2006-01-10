@@ -270,6 +270,9 @@ void ParseAllUninstallLogs()
     // Calling SHChangeNotify() will update the file association icons
     // in case they had been reset.
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+
+    // Note completion of the uninstall process.
+    gbUninstallCompleted = TRUE;
   }
 
   /* Broadcast message only if the windows registry keys exist

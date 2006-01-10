@@ -77,4 +77,6 @@ extern diU              diUninstall;
 
 extern DWORD            dwParentPID;
 
+extern BOOL             gbUninstallCompleted;
+
 #endif

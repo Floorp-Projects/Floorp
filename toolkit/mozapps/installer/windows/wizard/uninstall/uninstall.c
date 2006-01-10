@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Sean Su <ssu@netscape.com>
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -77,6 +78,8 @@ uninstallGen    ugUninstall;
 diU             diUninstall;
 
 DWORD           dwParentPID = 0;
+
+BOOL            gbUninstallCompleted = FALSE;
 
 /* Copy a file into a directory.  Write the path to the new file
  * into the result buffer (MAX_PATH in size). */
@@ -184,13 +187,52 @@ static BOOL EnsureRunningAsCopy(LPCSTR cmdLine)
   DeleteOnReboot(tempDir);
 
   /* append -ppid command line flag  */
-  _snprintf(tempBuf, sizeof(tempBuf), "%s -ppid %lu\n",
-            cmdLine, GetCurrentProcessId());
+  _snprintf(tempBuf, sizeof(tempBuf), "%s %s /ppid %lu",
+            uninstExe, cmdLine, GetCurrentProcessId());
 
   /* call CreateProcess */
   SpawnProcess(uninstExe, tempBuf);
 
   return FALSE;  /* exit this process */
+}
+
+/* Uninstall completed; show some UI... */
+static void OnUninstallComplete()
+{
+  char exePath[MAX_PATH], buf[MAX_PATH], title[MAX_BUF];
+  int rv;
+
+  if (!(ugUninstall.szProductName && ugUninstall.szProductName[0]) ||
+      !(ugUninstall.szProductName && ugUninstall.szProductName[0]))
+    return;
+
+  /* only show the exit survey message box if a string is defined */
+  GetPrivateProfileString("Messages", "MSG_EXIT_SURVEY", "", buf, sizeof(buf),
+                          szFileIniUninstall);
+  GetPrivateProfileString("Dialog Uninstall", "Title", "", title, sizeof(title),
+                          szFileIniUninstall);
+  if (!buf[0] || !title[0])
+    return;
+
+  rv = MessageBox(NULL, buf, title, MB_OKCANCEL | MB_ICONINFORMATION);
+  if (rv != IDOK)
+    return;
+
+  /* find iexplore.exe.  we cannot use ShellExecute because the protocol
+   * association (in HKEY_CLASSES_ROOT) may reference the app we just
+   * uninstalled, which is a bug in and of itself. */
+  GetWinReg(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\IE Setup\\Setup", "Path",
+            exePath, sizeof(exePath));
+  if (!exePath[0])
+    return;
+  lstrcat(exePath, "\\iexplore.exe");
+
+  /* launch IE, and point it at the survey URL (whitespace in the product name
+   * or user agent is okay) */
+  _snprintf(buf, sizeof(buf),
+            "\"%s\" \"https://survey.mozilla.com/1/%s/%s/exit.html\"", exePath,
+            ugUninstall.szProductName, ugUninstall.szUserAgent);
+  SpawnProcess(exePath, buf);
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
@@ -270,6 +312,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     }
   }
 
+  if(diUninstall.bShowDialog == TRUE && gbUninstallCompleted)
+  {
+    OnUninstallComplete();
+  }
+
   /* garbage collection */
   DeInitUninstallGeneral();
   if(iRv != WIZ_SETUP_ALREADY_RUNNING)
@@ -278,4 +325,3 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
   return(msg.wParam);
 } /*  End of WinMain */
-
