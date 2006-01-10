@@ -120,6 +120,8 @@ void DIR_SetFileName(char** filename, const char* leafName);
 static void DIR_SetIntPref(const char *prefRoot, const char *prefLeaf, PRInt32 value, PRInt32 defaultValue);
 static DIR_Server *dir_MatchServerPrefToServer(nsVoidArray *wholeList, const char *pref);
 static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fullprefname);
+static void DIR_DeleteServerList(nsVoidArray *wholeList);
+
 
 static PRInt32      dir_UserId = 0;
 nsVoidArray  *dir_ServerList = nsnull;
@@ -287,18 +289,9 @@ nsresult DIR_ShutDown()  /* FEs should call this when the app is shutting down. 
   nsresult rv = SavePrefsFile();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (dir_ServerList)
-  {
-    PRInt32 count = dir_ServerList->Count();
-    PRInt32 i;
-    for (i = 0; i < count; i++)
-    {
-      DIR_DeleteServer((DIR_Server *)(dir_ServerList->ElementAt(i)));
-    }
-    delete dir_ServerList;
-    dir_ServerList = nsnull;
-  }
-  
+  DIR_DeleteServerList(dir_ServerList);
+  dir_ServerList = nsnull;
+
   /* unregister the preference call back, if necessary.
   * we need to do this as DIR_Shutdown() is called when switching profiles
   * when using turbo.  (see nsAbDirectoryDataSource::Observe())
@@ -404,23 +397,6 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
   return NS_ERROR_FAILURE;
 }
 
-nsresult DIR_DecrementServerRefCount (DIR_Server *server)
-{
-  NS_ASSERTION((server != nsnull), "server is null");
- 	if (server && --server->refCount <= 0)
-          return DIR_DeleteServer(server);
-        else
-          return 1;
-}
-
-nsresult DIR_IncrementServerRefCount (DIR_Server *server)
-{
-  NS_ASSERTION((server != nsnull), "server is null");
-  if (server)
-    server->refCount++;
-  return NS_OK;
-}
-
 /*****************************************************************************
  * Functions for creating DIR_Servers
  */
@@ -447,7 +423,6 @@ nsresult DIR_InitServer (DIR_Server *server)
     server->port = LDAP_PORT;
     server->maxHits = kDefaultMaxHits;
     server->isOffline = kDefaultIsOffline;
-    server->refCount = 1;
     server->position = kDefaultPosition;
     server->csid = CS_UTF8;
     server->locale = nsnull;
@@ -561,8 +536,6 @@ nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 
 			if (in->replInfo)
 				(*out)->replInfo = dir_CopyReplicationInfo (in->replInfo);
-
-			(*out)->refCount = 1;
 		}
 		else {
 			err = NS_ERROR_OUT_OF_MEMORY;
@@ -1089,29 +1062,12 @@ static PRBool dir_AreServersSame (DIR_Server *first, DIR_Server *second, PRBool 
    the global server list. */
 static PRBool dir_IsServerDeleted(DIR_Server * server)
 {
-	if (server && server->position == 0)
-		return PR_TRUE;
-	else
-		return PR_FALSE;
-}
-
-static void dir_DeleteReplicationInfo (DIR_Server *server)
-{
-	DIR_ReplicationInfo *info = nsnull;
-	if (server && (info = server->replInfo) != nsnull)
-	{
-		PR_FREEIF(info->description);
-		PR_FREEIF(info->fileName);
-		PR_FREEIF(info->dataVersion);
-		PR_FREEIF(info->syncURL);
-		PR_FREEIF(info->filter);
-		PR_Free(info);
-	}
+  return (server && server->position == 0);
 }
 
 /* when the back end manages the server list, deleting a server just decrements its ref count,
    in the old world, we actually delete the server */
-static nsresult dir_DeleteServerContents (DIR_Server *server)
+static void dir_DeleteServerContents (DIR_Server *server)
 {
 	if (server)
 	{
@@ -1134,23 +1090,27 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 		PR_FREEIF (server->authDn);
 		PR_FREEIF (server->password);
 		PR_FREEIF (server->locale);
-        PR_FREEIF (server->uri);
+    PR_FREEIF (server->uri);
 
-		if (server->replInfo)
-			dir_DeleteReplicationInfo (server);
+    if (server->replInfo)
+    {
+      PR_FREEIF(server->replInfo->description);
+      PR_FREEIF(server->replInfo->fileName);
+      PR_FREEIF(server->replInfo->dataVersion);
+      PR_FREEIF(server->replInfo->syncURL);
+      PR_FREEIF(server->replInfo->filter);
+      PR_Free(server->replInfo);
+    }
 	}
-	return NS_OK;
 }
 
-nsresult DIR_DeleteServer(DIR_Server *server)
+void DIR_DeleteServer(DIR_Server *server)
 {
 	if (server)
 	{
 		dir_DeleteServerContents(server);
 		PR_Free(server);
 	}
-
-	return NS_OK;
 }
 
 nsresult DIR_DeleteServerFromList(DIR_Server *server)
@@ -1205,7 +1165,7 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 	return NS_ERROR_NULL_POINTER;
 }
 
-nsresult DIR_DeleteServerList(nsVoidArray *wholeList)
+static void DIR_DeleteServerList(nsVoidArray *wholeList)
 {
   if (wholeList)
   {
@@ -1222,36 +1182,7 @@ nsresult DIR_DeleteServerList(nsVoidArray *wholeList)
     }
     delete wholeList;
   }
-	return NS_OK;
 }
-
-/*****************************************************************************
- * Functions for retrieving subsets of the DIR_Server list 
- */
-nsresult DIR_GetPersonalAddressBook(nsVoidArray *wholeList, DIR_Server **pab)
-{
-	if (wholeList && pab)
-	{
-		PRInt32 count = wholeList->Count();
-		PRInt32 i;
-
-		*pab = nsnull;
-		for (i = 0; i < count; i++)
-		{
-			DIR_Server *server = (DIR_Server *)wholeList->ElementAt(i);
-			if ((PABDirectory == server->dirType) && (PR_FALSE == server->isOffline))
-			{
-				if (server->serverName == nsnull || server->serverName[0] == '\0')
-				{
-					*pab = server;
-					return NS_OK;
-				}
-			}
-		}
-	}
-	return NS_ERROR_FAILURE;
-}
-
 
 #ifndef MOZADDRSTANDALONE
 
@@ -1696,12 +1627,10 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
     /* If we're reinitializing, we need to save off the runtime volatile
     * data which isn't stored in persistent JS prefs and restore it
     */
-    PRUint32 oldRefCount = server->refCount;
     server->prefName = nsnull;
     dir_DeleteServerContents(server);
     DIR_InitServer(server);
     server->prefName = prefstring;
-    server->refCount = oldRefCount; 
   }
   
   // this call fills in tempstring with the position pref, and
@@ -2077,7 +2006,7 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
       }
       else
       {
-        DIR_DecrementServerRefCount(newServer);
+        DIR_DeleteServer(newServer);
       }
     }
     newList->Clear();
@@ -2116,7 +2045,7 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
             if (dir_AreServersSame(existingServer, obsoleteServer, PR_FALSE))
             {
               savePrefs = PR_TRUE;
-              DIR_DecrementServerRefCount(existingServer);
+              DIR_DeleteServer(existingServer);
               (*list)->RemoveElement(existingServer);
               break;
             }

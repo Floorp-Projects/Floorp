@@ -83,7 +83,6 @@ typedef enum
 	idNone = 0,					/* Special value                          */ 
 	idPrefName,
 	idPosition, 
-	idRefCount,
 	idDescription,
 	idServerName,
 	idSearchBase,
@@ -139,7 +138,6 @@ typedef struct DIR_Server
 	/* Housekeeping fields */
 	char   *prefName;			/* preference name, this server's subtree */
 	PRInt32  position;			/* relative position in server list       */
-	PRUint32  refCount;         /* Use count for server                   */
 
 	/* General purpose fields */
 	char   *description;		/* human readable name                    */
@@ -185,9 +183,6 @@ nsresult DIR_ShutDown(void);  /* FEs should call this when the app is shutting d
 nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, PRBool migrating, const char * uri, int maxHits, const char * authDn, DirectoryType dirType, DIR_Server** pServer);
 nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir);
 
-nsresult DIR_DecrementServerRefCount (DIR_Server *);
-nsresult DIR_IncrementServerRefCount (DIR_Server *);
-
 /* Since the strings in DIR_Server are allocated, we have bottleneck
  * routines to help with memory mgmt
  */
@@ -196,9 +191,8 @@ nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType);
 nsresult DIR_InitServer (DIR_Server *);
 nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out);
 
-nsresult DIR_DeleteServer (DIR_Server *);
+void DIR_DeleteServer (DIR_Server *);
 nsresult DIR_DeleteServerFromList (DIR_Server *);
-nsresult DIR_DeleteServerList(nsVoidArray *wholeList);
 
 #define DIR_POS_APPEND                     0x80000000
 #define DIR_POS_DELETE                     0x80000001
