@@ -290,7 +290,13 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   if (localFile)
   {
     localFile->GetNativePath(filePath);
-    localFile->Exists(&fileExists);
+    if (filePath.Last() == ':')
+      filePath.Append('\\');
+    else {
+      localFile->Exists(&fileExists);
+      if (!fileExists)
+       localFile->GetNativeLeafName(filePath);
+    }
   }
 
   if (!fileExists)
