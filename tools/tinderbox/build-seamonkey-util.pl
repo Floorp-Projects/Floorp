@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.305 $ ';
+$::UtilsVersion = '$Revision: 1.306 $ ';
 
 package TinderUtils;
 
@@ -1119,12 +1119,16 @@ sub get_profile_dir {
         if ($Settings::OS =~ /^WIN9/) { # 98 [but what does uname say on Me?]
             $profile_dir = $ENV{winbootdir} || $ENV{windir} || "C:\\WINDOWS";
             $profile_dir .= "\\Application Data";
-        } elsif ($Settings::OS =~ /^WINNT/) { # NT 4, 2K, XP(?)
-            # afaict, %USERPROFILE% should always be there, NT 4.0 and up
-            if ($ENV{USERPROFILE}) {
+        } elsif ($Settings::OS =~ /^WINNT/) { # NT 4, 2K, XP
+            # try %APPDATA% first as it works even on localized OS versions
+            if ($ENV{APPDATA}) {
+                $profile_dir = $ENV{APPDATA};
+            }
+            elsif ($ENV{USERPROFILE}) {
+                # afaict, %USERPROFILE% should always be there, NT 4.0 and up
                 $profile_dir = $ENV{USERPROFILE} . "\\Application Data";
-            } else { # use %APPDATA% as a fallback (or prepare to fail)
-                $profile_dir = $ENV{APPDATA} || "C:\\_UNKNOWN_";
+            } else { # prepare to fail
+                $profile_dir = "C:\\_UNKNOWN_";
             }
         }
         if ($Settings::VendorName) {
