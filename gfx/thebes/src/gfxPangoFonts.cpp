@@ -515,7 +515,7 @@ gfxPangoFont::GetMetrics()
     pango_font_metrics_unref (pfm);
 #endif
 
-#if 1
+#if 0
     fprintf (stderr, "Font: %s\n", NS_ConvertUTF16toUTF8(mName).get());
     fprintf (stderr, "    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
     fprintf (stderr, "    maxAscent: %f maxDescent: %f\n", mMetrics.maxAscent, mMetrics.maxDescent);
