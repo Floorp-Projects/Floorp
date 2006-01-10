@@ -7,8 +7,8 @@
 ;            values.
 Run Mode=Normal
 
-Company Name=$CompanyName$
-Product Name=$ProductName$
+Company Name=@BRAND_COMPANY_NAME@
+Product Name=@BRAND_PRODUCT_NAME@
 
 ; Valid Path values:
 ;   PROGRAMFILESDIR
@@ -54,13 +54,11 @@ Root Key=HKEY_LOCAL_MACHINE
 Key=[Product CurrentVersion]\Uninstall
 Decrypt Key=TRUE
 
-Uninstall Filename=$UninstallFile$
-
 [Check Instance0]
 Class Name=MozillaMessageWindow
 Window Name=
-Process Name=$MainExeFile$
-Pretty Name=$ProductNameInternal$
+Process Name=thunderbird.exe
+Pretty Name=@BRAND_PRODUCT_NAME@
 ;*** LOCALIZE ME BABY ***
 Message=$ProductNameInternal$ is detected to be currently running.  Please quit $ProductNameInternal$ before continuing.  Click OK to exit $ProductNameInternal$ automatically and proceed with uninstallation.
 ;*** LOCALIZE ME BABY ***
@@ -73,7 +71,7 @@ Close All Process Windows=TRUE
 ; These keys are not normally necessary for checking instances.  They are
 ; set here because Mozilla requires a way to shut down it's turbo mode.
 Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
-Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
+Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\thunderbird.exe
 Extra Cmd0 Reg Name=
 Extra Cmd0 Parameter=-kill
 

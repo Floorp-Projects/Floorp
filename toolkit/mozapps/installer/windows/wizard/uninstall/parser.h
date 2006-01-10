@@ -50,9 +50,9 @@ HRESULT     ParseForWinRegInfo(LPSTR szString, LPSTR szKeyStr, LPSTR szRootKey, 
 void        ParseForUninstallCommand(LPSTR szString, LPSTR szKeyStr, LPSTR szFile, DWORD dwFileBufSize, LPSTR szParam, DWORD dwParamBufSize);
 void        DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey, BOOL bAbsoluteDelete);
 DWORD       GetLogFile(LPSTR szTargetPath, LPSTR szInFilename, LPSTR szOutBuf, DWORD dwOutBufSize);
-void        RemoveUninstaller(LPSTR szUninstallFilename);
 DWORD       DecrementSharedFileCounter(char *file);
 BOOL        DeleteOrDelayUntilReboot(LPSTR szFile);
+BOOL        DeleteOnReboot(LPSTR szFile);
 BOOL        UnregisterServer(char *file);
 int         GetSharedFileCount(char *file);
 BOOL        DetermineUnRegisterServer(sil *silInstallLogHead, LPSTR szFile);

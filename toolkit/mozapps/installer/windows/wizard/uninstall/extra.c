@@ -253,19 +253,10 @@ HRESULT Initialize(HINSTANCE hInstance)
     {
       lstrcpy(szTempDir, szUninstallDir);
     }
-    else
+    else if (!MakeUniquePath(szTempDir))
     {
-      int i;
-      for(i = 1; i <= 100 && (FileExists(szTempDir) != FALSE); i++)
-      {
-        itoa(i, (szTempDir + dwLen), 10);
-      }
-    
-      if (FileExists(szTempDir) != FALSE)
-      {
-        MessageBox(hWndMain, "Cannot create temp directory", NULL, MB_OK | MB_ICONEXCLAMATION);
-        exit(1);
-      }
+      MessageBox(hWndMain, "Cannot create temp directory", NULL, MB_OK | MB_ICONEXCLAMATION);
+      exit(1);
     }
   }
   else
@@ -854,8 +845,6 @@ HRESULT InitUninstallGeneral()
     return(1);
   if((ugUninstall.szUninstallKeyDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((ugUninstall.szUninstallFilename       = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
   if((ugUninstall.szClientAppID             = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((ugUninstall.szClientAppPath           = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -871,7 +860,6 @@ void DeInitUninstallGeneral()
   FreeMemory(&(ugUninstall.szLogFilename));
   FreeMemory(&(ugUninstall.szDescription));
   FreeMemory(&(ugUninstall.szUninstallKeyDescription));
-  FreeMemory(&(ugUninstall.szUninstallFilename));
   FreeMemory(&(ugUninstall.szUserAgent));
   FreeMemory(&(ugUninstall.szDefaultComponent));
   FreeMemory(&(ugUninstall.szWrKey));
@@ -1022,6 +1010,17 @@ DWORD ParseCommandLine(LPSTR lpszCmdLine)
     else if(!lstrcmpi(szArgVBuf, "-mmi") || !lstrcmpi(szArgVBuf, "/mmi"))
     {
       gbAllowMultipleInstalls = TRUE;    
+    }
+    else if(!lstrcmpi(szArgVBuf, "-ppid") || !lstrcmpi(szArgVBuf, "/ppid"))
+    {
+      if((i + 1) < iArgC)
+      {
+        char buf[32];
+        if (GetArgV(lpszCmdLine, ++i, buf, sizeof(buf)))
+        {
+          dwParentPID = (DWORD) atoi(buf);
+        }
+      }
     }
 
     ++i;
@@ -2068,9 +2067,6 @@ HRESULT ParseUninstallIni()
 
   RemoveBackSlash(ugUninstall.szWrMainKey);
 
-  GetPrivateProfileString("General", "Uninstall Filename", "", ugUninstall.szUninstallFilename, MAX_BUF, szFileIniUninstall);
-
-
   /* Uninstall dialog */
   GetPrivateProfileString("Dialog Uninstall",       "Show Dialog",  "", szShowDialog,                 MAX_BUF, szFileIniUninstall);
   GetPrivateProfileString("Dialog Uninstall",       "Title",        "", diUninstall.szTitle,          MAX_BUF, szFileIniUninstall);
@@ -2579,6 +2575,18 @@ HRESULT FileExists(LPSTR szFile)
   {
     return(rv);
   }
+}
+
+BOOL MakeUniquePath(LPSTR szPath)
+{
+  int i, dwLen;
+
+  dwLen = lstrlen(szPath);
+  for(i = 1; i <= 999 && (FileExists(szPath) != FALSE); i++)
+  {
+    itoa(i, (szPath + dwLen), 10);
+  }
+  return !FileExists(szPath);
 }
 
 BOOL WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName)

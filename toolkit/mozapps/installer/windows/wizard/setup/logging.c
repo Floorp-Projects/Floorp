@@ -121,11 +121,10 @@ void LogISProductInfo(void)
   }
   UpdateInstallStatusLog(szBuf);
 
-  wsprintf(szBuf, "        Company name: %s\n        Product name (external): %s\n        Product name (internal): %s\n        Uninstall Filename: %s\n        UserAgent: %s\n        Alternate search path: %s\n",
+  wsprintf(szBuf, "        Company name: %s\n        Product name (external): %s\n        Product name (internal): %s\n        UserAgent: %s\n        Alternate search path: %s\n",
            sgProduct.szCompanyName,
            sgProduct.szProductName,
            sgProduct.szProductNameInternal,
-           sgProduct.szUninstallFilename,
            sgProduct.szUserAgent,
            sgProduct.szAlternateArchiveSearchPath);
   UpdateInstallStatusLog(szBuf);

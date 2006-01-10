@@ -369,3 +369,7 @@ bin\components\dom_svg.xpt
 
 ; [Updater]
 bin\updater.exe
+
+; [Uninstaller]
+bin\uninstall\uninstall.exe
+bin\uninstall\uninstall.ini

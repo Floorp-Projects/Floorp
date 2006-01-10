@@ -51,7 +51,6 @@ SRC_DIR=$(shell cygpath -a $(topsrcdir))
 
 PP_LOCALIZED_FILES = \
 	packages-static \
-	uninstall.it \
 	installer.cfg \
 	$(NULL)
 

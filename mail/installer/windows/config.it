@@ -71,8 +71,6 @@ Program Name=$MainExeFile$
 Program Folder Name=$ProductName$
 Program Folder Path=[PROGRAMS]
 
-Uninstall Filename=$UninstallFile$
-
 ; This key is used as a fail over key.  This url will be used when the
 ; url in the Site Selector fails.
 url=$ArchiveUrl$
@@ -215,13 +213,12 @@ Description Long={Standard_Long}
 ; this Setup Type is selected.
 C0=Component XPCOM
 C1=Component Mail
-C2=Component Uninstaller
-C3=Component Langpack
-C4=Component Offline
-C5=Component RSS
+C2=Component Langpack
+C3=Component Offline
+C4=Component RSS
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C6=Component QFA
+C5=Component QFA
 
 [Setup Type1]
 Description Short={Custom_Short}
@@ -232,14 +229,13 @@ Description Long={Custom_Long}
 ; this Setup Type is selected.
 C0=Component XPCOM
 C1=Component Mail
-C2=Component Uninstaller
-C3=Component Langpack
-C4=Component Offline
-C5=Component RSS
+C2=Component Langpack
+C3=Component Offline
+C4=Component RSS
 ;C7=Component ADT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C6=Component QFA
+C5=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -579,22 +575,6 @@ FileCount=$FileCount$
 ;Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
 ;FileCount=$FileCount$
 
-[Component Uninstaller]
-Description Short=$CompanyName$ Uninstaller
-Description Long=$CompanyName$ Uninstaller
-Archive=$UninstallFileZip$
-$InstallSize$:$UninstallFileZip$
-$InstallSizeSystem$
-$InstallSizeArchive$:$UninstallFileZip$
-Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
-FileCount=$FileCount$
-
-;Since the uninstaller program is going to be installed into the Windows folder,
-;Setup.exe needs to know to calculate the disk space required for the Windows folder.
-;This section overrides the default user-chosen path for the Uninstaller only.
-[Component Uninstaller-Destination Path0]
-Path=[WINDIR]
-
 [Component Langpack]
 Description Short={AB_CD} {LANGPACK_TITLE}
 Description Long={AB_CD} {LANGPACK_TITLE}
@@ -670,33 +650,7 @@ Message=
 ;                      if reboot is necessary, installer can set it up so
 ;                      the app runs once upon windows reboot.
 
-;Uncompress FileX sections
-[Uncompress File0]
-Timing=post smartupdate
-Source=[XPI PATH]\$UninstallFileZip$
-Destination=[WINDIR]
-;*** LOCALIZE ME BABY ***
-Message=Installing the uninstaller, please wait...
-Only If Exists=FALSE
-
-
 ;Copy FileX sections
-;Copy the uninstaller to the [Setup Path]\uninstall folder.
-;This copy is to be used when the user installed on a system with
-;restricted access.
-[Copy File0]
-Timing=post smartupdate
-Source=[WINDIR]\$UninstallFile$
-Destination=[SETUP PATH]\uninstall
-Fail If Exists=FALSE
-Do Not Uninstall=FALSE
-
-[Copy File1]
-Timing=post smartupdate
-Source=[XPI PATH]\$UninstallFile$
-Destination=[WINDIR]
-Fail If Exists=FALSE
-Do Not Uninstall=TRUE
 
 ; nss3.dll, softokn3.dll, ssl3.dll, and smime3.dll all need to be copied from
 ; the GRE dir to the destination app folder (see bug 202326)
@@ -954,7 +908,7 @@ Timing=post smartupdate
 Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
 Name=UninstallString
-Name Value=[WINDIR]\$UninstallFile$ /ua "$UserAgent$"
+Name Value=[SETUP PATH]\uninstall\uninstall.exe /ua "$UserAgent$"
 Type=REG_SZ
 Decrypt Key=FALSE
 Decrypt Name=FALSE
@@ -1139,11 +1093,11 @@ Show Folder=HIDE
 Program Folder=[Default Folder]
 
 [Program Folder0-Shortcut0]
-File=[SETUP PATH]\uninstall\$UninstallFile$
+File=[SETUP PATH]\uninstall\uninstall.exe
 Arguments=/ua "$UserAgent$"
 Working Dir=[SETUP PATH]
 Description=Uninstall $ProductName$
-Icon Path=[SETUP PATH]\uninstall\$UninstallFile$
+Icon Path=[SETUP PATH]\uninstall\uninstall.exe
 Icon Id=0
 
 ; Default value:

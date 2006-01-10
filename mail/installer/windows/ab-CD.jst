@@ -225,7 +225,7 @@ function createShortcuts()
       data = "\"" + fProgram + "$MainExeFile$\"";
       winreg.setValueString(subkey + "\\shell\\open\\command", "", data);
 
-      data = "\"" + fProgram + "uninstall\\$UninstallFile$\" /ua \"$UserAgent$\" /hs";
+      data = "\"" + fProgram + "uninstall\\uninstall.exe\" /ua \"$UserAgent$\" /hs";
       winreg.setValueString(subkey + "\\InstallInfo", "HideIconsCommand", data);
 
       // set this value to 0 because we're not creating the mail shortcuts yet.
@@ -234,7 +234,7 @@ function createShortcuts()
       data = "\"" + fProgram + "$MainExeFile$\" -silent -nosplash -setDefaultMail";
       winreg.setValueString(subkey + "\\InstallInfo", "ReinstallCommand", data);
 
-      data = "\"" + fProgram + "uninstall\\$UninstallFile$\" /ua \"$UserAgent$\" /ss mail";
+      data = "\"" + fProgram + "uninstall\\uninstall.exe\" /ua \"$UserAgent$\" /ss mail";
       winreg.setValueString(subkey + "\\InstallInfo", "ShowIconsCommand", data);
     }
   }

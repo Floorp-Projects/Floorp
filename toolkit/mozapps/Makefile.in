@@ -44,5 +44,12 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = downloads extensions update xpinstall plugins
 
-include $(topsrcdir)/config/rules.mk
+# The installer is built during the packaging phase, but the uninstaller needs
+# to be built earlier.
+ifdef MOZ_INSTALLER
+ifeq ($(OS_ARCH),WINNT)
+DIRS += installer/windows/wizard/uninstall
+endif
+endif
 
+include $(topsrcdir)/config/rules.mk

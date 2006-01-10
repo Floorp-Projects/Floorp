@@ -268,7 +268,6 @@ void InitSequence(HINSTANCE hInstance)
         RefreshIcons();
 
       UnsetSetupState(); // clear setup state
-      ClearWinRegUninstallFileDeletion();
       if (!gbIgnoreProgramFolderX)
         ProcessProgramFolderShowCmd();
 
@@ -2189,7 +2188,6 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
           RefreshIcons();
 
         UnsetSetupState(); // clear setup state
-        ClearWinRegUninstallFileDeletion();
         if (!gbIgnoreProgramFolderX)
           ProcessProgramFolderShowCmd();
 

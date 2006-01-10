@@ -46,7 +46,6 @@ const URI_BRAND_PROPERTIES     = "chrome://branding/locale/brand.properties";
 const URI_UNINSTALL_PROPERTIES = "chrome://branding/content/uninstall.properties";
 
 const KEY_APPDIR          = "XCurProcD";
-const KEY_WINDIR          = "WinD";
 const KEY_COMPONENTS_DIR  = "ComsD";
 const KEY_PLUGINS_DIR     = "APlugns";
 const KEY_EXECUTABLE_FILE = "XREExeF";
@@ -713,9 +712,10 @@ function updateRegistry(rootKey) {
   var uninstallBundle = sbs.createBundle(URI_UNINSTALL_PROPERTIES);
 
   var nameWithVersion = brandFullName + " (" + app.version + ")";
-  var uninstaller = getFile(KEY_WINDIR);
-  uninstaller.append(uninstallBundle.GetStringFromName("fileUninstall"));
-  // XXX copy latest uninstaller to this location
+
+  var uninstaller = getFile(KEY_APPDIR);
+  uninstaller.append("uninstall");
+  uninstaller.append("uninstall.exe");
 
   var uninstallString =
       uninstaller.path + " /ua \"" + versionWithLocale + "\"";

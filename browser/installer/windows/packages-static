@@ -298,6 +298,11 @@ bin\chrome\pippki.manifest
 ;
 bin\updater.exe
 
+; [Uninstaller]
+;
+bin\uninstall\uninstall.exe
+bin\uninstall\uninstall.ini
+
 ; [Additional Developer Tools]
 [adt]
 bin\extensions\inspector@mozilla.org\install.rdf

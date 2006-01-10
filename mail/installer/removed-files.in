@@ -192,3 +192,4 @@ components/talkback/master.ini
 components/talkback/talkback
 components/talkback/talkback.so
 components/talkback/XTalkback.ad
+uninstall/UninstallThunderbird.exe

@@ -81,12 +81,6 @@ sub ParseInstallerCfg
       elsif ($prop eq "FileInstallerEXE") {
         $ENV{WIZ_fileInstallerExe} = $value;
       }
-      elsif ($prop eq "FileUninstall") {
-        $ENV{WIZ_fileUninstall} = $value;
-      }
-      elsif ($prop eq "FileUninstallZIP") {
-        $ENV{WIZ_fileUninstallZip} = $value;
-      }
       elsif ($prop eq "FileMainEXE") {
         $ENV{WIZ_fileMainExe} = $value;
       }
