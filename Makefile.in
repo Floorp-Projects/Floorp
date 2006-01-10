@@ -65,16 +65,6 @@ ifdef GC_LEAK_DETECTOR
 DIRS += gc/boehm
 endif
 
-ifdef MOZ_EXTENSIONS
-DIRS += $(tier_94_dirs)
-endif
-ifdef MOZ_MAIL_NEWS
-DIRS += $(tier_97_dirs)
-endif
-ifdef MOZ_CALENDAR
-DIRS += $(tier_98_dirs)
-endif
-
 DIRS	+= $(tier_99_dirs)
 
 #
@@ -307,24 +297,20 @@ tier_50_dirs	+= tools/codesighs
 endif
 
 #
-# tier 9x - application features
+# tier 99 - application binaries
 #
 
-ifdef MOZ_EXTENSIONS
-tier_94_dirs	+= extensions
-endif
-
 ifdef MOZ_MAIL_NEWS
-tier_97_dirs	+= mailnews
+tier_99_dirs	+= mailnews
 endif
 
 ifdef MOZ_CALENDAR
-tier_98_dirs	+= calendar
+tier_99_dirs	+= calendar
 endif
 
-#
-# tier 99 - application binaries
-#
+ifdef MOZ_EXTENSIONS
+tier_99_dirs	+= extensions
+endif
 
 # axcontrol
 ifeq ($(OS_ARCH),WINNT)
@@ -436,15 +422,6 @@ default alldep all:: $(SUBMAKEFILES)
 	$(MAKE) tier_2
 	$(MAKE) tier_9
 	$(MAKE) tier_50
-ifdef MOZ_EXTENSIONS
-	$(MAKE) tier_94
-endif
-ifdef MOZ_MAIL_NEWS
-	$(MAKE) tier_97
-endif
-ifdef MOZ_CALENDAR
-	$(MAKE) tier_98
-endif
 	$(MAKE) tier_99
 
 include $(topsrcdir)/config/config.mk
