@@ -148,13 +148,11 @@ nsTreeColFrame::GetFrameForPoint(const nsPoint& aPoint,
   nsIFrame* frame = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
   if (frame) {
     nsIContent* content = frame->GetContent();
-    if (content) {
-      // This allows selective overriding for subcontent.
-      nsAutoString value;
-      content->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-      if (value.EqualsLiteral("true"))
-        return frame;
-    }
+    if (content &&
+        // This allows selective overriding for subcontent.
+        content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::allowevents,
+                             nsXULAtoms::_true, eCaseMatters))
+      return frame;
   }
 
   if (thisRect.Contains(aPoint) && GetStyleVisibility()->IsVisible()) {

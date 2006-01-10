@@ -182,10 +182,9 @@ NS_IMPL_ISUPPORTS2(nsSplitterFrameInner, nsIDOMMouseListener, nsIDOMMouseMotionL
 nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeBefore()
 {
-  nsString value;
-  mOuter->GetContent()->GetAttr(kNameSpaceID_None,
-                                nsXULAtoms::resizebefore, value);
-  if (value.EqualsLiteral("farthest"))
+  if (mOuter->GetContent()->
+        AttrValueIs(kNameSpaceID_None, nsXULAtoms::resizebefore,
+                    NS_LITERAL_STRING("farthest"), eCaseMatters))
     return Farthest;
   return Closest;
 }
@@ -686,10 +685,9 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   if (button != 0)
      return NS_OK;
 
-  nsAutoString disabled;
-  mOuter->GetContent()->GetAttr(kNameSpaceID_None,
-                                nsHTMLAtoms::disabled, disabled);
-  if (disabled.EqualsLiteral("true"))
+  if (mOuter->GetContent()->
+        AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::disabled,
+                    nsXULAtoms::_true, eCaseMatters))
     return NS_OK;
 
   nsPresContext* outerPresContext = mOuter->GetPresContext();
@@ -767,14 +765,12 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         nsRect r(childBox->GetRect());
         r.Inflate(margin);
 
-        nsAutoString fixed, hidden;
-        content->GetAttr(kNameSpaceID_None, nsXULAtoms::fixed, fixed);
         // We need to check for hidden attribute too, since treecols with
         // the hidden="true" attribute are not really hidden, just collapsed
-        content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
-
-        NS_NAMED_LITERAL_STRING(attrTrue, "true");
-        if (!attrTrue.Equals(fixed) && !attrTrue.Equals(hidden)) {
+        if (!content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::fixed,
+                                  nsXULAtoms::_true, eCaseMatters) &&
+            !content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::hidden,
+                                  nsXULAtoms::_true, eCaseMatters)) {
             if (count < childIndex) {
                 mChildInfosBefore[mChildInfosBeforeCount].childElem = content;
                 mChildInfosBefore[mChildInfosBeforeCount].min     = isHorizontal ? minSize.width : minSize.height;
@@ -1074,9 +1070,8 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildB
   // set its preferred size.
   nsAutoString prefValue;
   prefValue.AppendInt(pref/aOnePixel);
-  nsAutoString oldValue;
-  content->GetAttr(kNameSpaceID_None, attribute, oldValue);
-  if (oldValue.Equals(prefValue))
+  if (content->AttrValueIs(kNameSpaceID_None, attribute,
+                           prefValue, eCaseMatters))
      return;
 
   content->SetAttr(kNameSpaceID_None, attribute, prefValue, PR_TRUE);
