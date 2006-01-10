@@ -86,3 +86,11 @@ gfxPlatform::UseGlitz()
 
     return PR_FALSE;
 }
+
+nsresult
+gfxPlatform::GetFontList(const nsACString& aLangGroup,
+                         const nsACString& aGenericFamily,
+                         nsStringArray& aListOfFonts)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}

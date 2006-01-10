@@ -21,6 +21,9 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@mozilla.com>
  *
+ * based on nsFontMetricsPango.cpp by
+ *   Christopher Blizzard <blizzard@mozilla.org>
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -559,15 +562,23 @@ DrawCairoGlyphs(gfxContext* ctx,
         glyphs = new cairo_glyph_t[aGlyphs->num_glyphs];
 
     PangoGlyphUnit offset = 0;
+    int num_invalid_glyphs = 0;
     for (gint i = 0; i < aGlyphs->num_glyphs; ++i) {
         PangoGlyphInfo* info = &aGlyphs->glyphs[i];
-        glyphs[i].index = info->glyph;
-        glyphs[i].x = pt.x + (offset + info->geometry.x_offset)/PANGO_SCALE;
-        glyphs[i].y = pt.y + (info->geometry.y_offset)/PANGO_SCALE;
+        // 0x10000000 is PANGO_{CAIRO,XFT,FT,WIN32}_UNKNOWN_FLAG
+        if (info->glyph & 0x10000000) {
+            // XXX we should to render a slug for the invalid glyph instead of just skipping it
+            num_invalid_glyphs++;
+        } else {
+            glyphs[i-num_invalid_glyphs].index = info->glyph;
+            glyphs[i-num_invalid_glyphs].x = pt.x + (offset + info->geometry.x_offset)/PANGO_SCALE;
+            glyphs[i-num_invalid_glyphs].y = pt.y + (info->geometry.y_offset)/PANGO_SCALE;
+        }
+
         offset += info->geometry.width;
     }
 
-    cairo_show_glyphs(ctx->GetCairo(), glyphs, aGlyphs->num_glyphs);
+    cairo_show_glyphs(ctx->GetCairo(), glyphs, aGlyphs->num_glyphs-num_invalid_glyphs);
 
     if (aGlyphs->num_glyphs > AUTO_GLYPHBUF_SIZE)
         delete [] glyphs;

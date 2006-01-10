@@ -59,6 +59,11 @@ public:
 
     void SetSurfaceGdkWindow(gfxASurface *aSurf,
                              GdkWindow *win);
+
+    nsresult GetFontList(const nsACString& aLangGroup,
+                         const nsACString& aGenericFamily,
+                         nsStringArray& aListOfFonts);
+
 };
 
 #endif /* GFX_PLATFORM_GTK_H */
