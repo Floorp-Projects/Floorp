@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsPKCS12Blob.cpp,v 1.44 2006/01/10 02:29:25 kaie%kuix.de Exp $ */
+/* $Id: nsPKCS12Blob.cpp,v 1.45 2006/01/10 02:51:24 kaie%kuix.de Exp $ */
 
 #include "prmem.h"
 #include "prprf.h"
@@ -88,6 +88,8 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 nsPKCS12Blob::nsPKCS12Blob():mCertArray(0),
                              mTmpFile(nsnull),
                              mTmpFilePath(nsnull),
+                             mDigest(nsnull),
+                             mDigestIterator(nsnull),
                              mTokenSet(PR_FALSE)
 {
   mUIContext = new PipUIContext();
@@ -96,6 +98,8 @@ nsPKCS12Blob::nsPKCS12Blob():mCertArray(0),
 // destructor
 nsPKCS12Blob::~nsPKCS12Blob()
 {
+  delete mDigestIterator;
+  delete mDigest;
 }
 
 // nsPKCS12Blob::SetToken
@@ -640,75 +644,98 @@ OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath)
 //
 
 // digest_open
-// open a temporary file for reading/writing digests
+// prepare a memory buffer for reading/writing digests
 SECStatus PR_CALLBACK
 nsPKCS12Blob::digest_open(void *arg, PRBool reading)
 {
-  nsPKCS12Blob *cx = (nsPKCS12Blob *)arg;
-  nsresult rv;
-  // use DirectoryService to find the system temp directory
-  nsCOMPtr<nsILocalFile> tmpFile;
-  nsCOMPtr<nsIProperties> directoryService = 
-           do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return SECFailure;
-  directoryService->Get(NS_OS_TEMP_DIR, 
-                        NS_GET_IID(nsILocalFile),
-                        getter_AddRefs(tmpFile));
-  if (tmpFile) {
-    tmpFile->AppendNative(PIP_PKCS12_TMPFILENAME);
-    nsCAutoString pathBuf;
-    tmpFile->GetNativePath(pathBuf);
-    cx->mTmpFilePath = ToNewCString(pathBuf);
-    if (!cx->mTmpFilePath) return SECFailure;
-#ifdef XP_MAC
-    char *unixPath = nsnull;
-    ConvertMacPathToUnixPath(cx->mTmpFilePath, &unixPath);
-    nsMemory::Free(cx->mTmpFilePath);
-    cx->mTmpFilePath = unixPath;
-#endif    
-  }
-  // Open the file using NSPR
+  nsPKCS12Blob *cx = NS_REINTERPRET_POINTER_CAST(nsPKCS12Blob *, arg);
+  NS_ENSURE_TRUE(cx, SECFailure);
+  
   if (reading) {
-    cx->mTmpFile = PR_Open(cx->mTmpFilePath, PR_RDONLY, 0400);
-  } else {
-    cx->mTmpFile = PR_Open(cx->mTmpFilePath, 
-                           PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0600);
+    NS_ENSURE_TRUE(cx->mDigest, SECFailure);
+
+    delete cx->mDigestIterator;
+    cx->mDigestIterator = new nsCString::const_iterator;
+
+    if (!cx->mDigestIterator) {
+      PORT_SetError(SEC_ERROR_NO_MEMORY);
+      return SECFailure;
+    }
+
+    cx->mDigest->BeginReading(*cx->mDigestIterator);
   }
-  return (cx->mTmpFile != NULL) ? SECSuccess : SECFailure;
+  else {
+    delete cx->mDigest;
+    cx->mDigest = new nsCString;
+
+    if (!cx->mDigest) {
+      PORT_SetError(SEC_ERROR_NO_MEMORY);
+      return SECFailure;
+    }
+  }
+
+  return SECSuccess;
 }
 
 // digest_close
-// close the temp file opened above
+// destroy a possibly active iterator
+// remove the data buffer if requested
 SECStatus PR_CALLBACK
 nsPKCS12Blob::digest_close(void *arg, PRBool remove_it)
 {
-  nsPKCS12Blob *cx = (nsPKCS12Blob *)arg;
-  PR_Close(cx->mTmpFile);
-  if (remove_it) {
-    PR_Delete(cx->mTmpFilePath);
-    PR_Free(cx->mTmpFilePath);
-    cx->mTmpFilePath = NULL;
+  nsPKCS12Blob *cx = NS_REINTERPRET_POINTER_CAST(nsPKCS12Blob *, arg);
+  NS_ENSURE_TRUE(cx, SECFailure);
+
+  delete cx->mDigestIterator;
+  cx->mDigestIterator = nsnull;
+
+  if (remove_it) {  
+    delete cx->mDigest;
+    cx->mDigest = nsnull;
   }
-  cx->mTmpFile = NULL;
+  
   return SECSuccess;
 }
 
 // digest_read
-// read bytes from the temp digest file
+// read bytes from the memory buffer
 int PR_CALLBACK
 nsPKCS12Blob::digest_read(void *arg, unsigned char *buf, unsigned long len)
 {
-  nsPKCS12Blob *cx = (nsPKCS12Blob *)arg;
-  return PR_Read(cx->mTmpFile, buf, len);
+  nsPKCS12Blob *cx = NS_REINTERPRET_POINTER_CAST(nsPKCS12Blob *, arg);
+  NS_ENSURE_TRUE(cx, SECFailure);
+  NS_ENSURE_TRUE(cx->mDigest, SECFailure);
+
+  // iterator object must exist when digest has been opened in read mode
+  NS_ENSURE_TRUE(cx->mDigestIterator, SECFailure);
+
+  unsigned long available = cx->mDigestIterator->size_forward();
+  
+  if (len > available)
+    len = available;
+
+  memcpy(buf, cx->mDigestIterator->get(), len);
+  cx->mDigestIterator->advance(len);
+  
+  return len;
 }
 
 // digest_write
-// write bytes to the temp digest file
+// append bytes to the memory buffer
 int PR_CALLBACK
 nsPKCS12Blob::digest_write(void *arg, unsigned char *buf, unsigned long len)
 {
-  nsPKCS12Blob *cx = (nsPKCS12Blob *)arg;
-  return PR_Write(cx->mTmpFile, buf, len);
+  nsPKCS12Blob *cx = NS_REINTERPRET_POINTER_CAST(nsPKCS12Blob *, arg);
+  NS_ENSURE_TRUE(cx, SECFailure);
+  NS_ENSURE_TRUE(cx->mDigest, SECFailure);
+
+  // make sure we are in write mode, read iterator has not yet been allocated
+  NS_ENSURE_FALSE(cx->mDigestIterator, SECFailure);
+  
+  cx->mDigest->Append(NS_REINTERPRET_CAST(char *, buf),
+                     NS_STATIC_CAST(PRUint32, len));
+  
+  return len;
 }
 
 // nickname_collision
