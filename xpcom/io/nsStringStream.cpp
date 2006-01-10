@@ -66,13 +66,14 @@
 // nsIStringInputStream implementation
 //-----------------------------------------------------------------------------
 
-class nsStringInputStream : public nsIStringInputStream
+class nsStringInputStream : public nsIStringInputStream2
                           , public nsISeekableStream
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTRINGINPUTSTREAM
     NS_DECL_NSIINPUTSTREAM
+    NS_DECL_NSISTRINGINPUTSTREAM
+    NS_DECL_NSISTRINGINPUTSTREAM2
     NS_DECL_NSISEEKABLESTREAM
 
     nsStringInputStream()
@@ -112,13 +113,14 @@ private:
 
 // This class needs to support threadsafe refcounting since people often
 // allocate a string stream, and then read it from a background thread.
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsStringInputStream,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsStringInputStream,
                               nsIStringInputStream,
+                              nsIStringInputStream2,
                               nsIInputStream,
                               nsISeekableStream)
 
 /////////
-// nsIStringInputStream implementation
+// nsIStringInputStream2 implementation
 /////////
 
 NS_IMETHODIMP
@@ -137,6 +139,10 @@ nsStringInputStream::SetData(const nsACString &data)
     data.BeginReading(iter);
     return SetData(iter.get(), iter.size_forward());
 }
+
+/////////
+// nsIStringInputStream implementation
+/////////
 
 NS_IMETHODIMP
 nsStringInputStream::SetData(const char *data, PRInt32 dataLen)
