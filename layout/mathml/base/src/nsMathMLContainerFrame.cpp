@@ -937,20 +937,6 @@ nsMathMLContainerFrame::RemoveFrame(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::ReplaceFrame(nsIAtom*        aListName,
-                                     nsIFrame*       aOldFrame,
-                                     nsIFrame*       aNewFrame)
-{
-  if (aListName || !aOldFrame || !aNewFrame) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  // Replace the old frame with the new frame in the list
-  mFrames.ReplaceFrame(this, aOldFrame, aNewFrame, PR_TRUE);
-
-  return ChildListChanged(nsIDOMMutationEvent::MODIFICATION);
-}
-
-NS_IMETHODIMP
 nsMathMLContainerFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                          nsIAtom*        aAttribute,
                                          PRInt32         aModType)

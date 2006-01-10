@@ -266,15 +266,6 @@ nsSVGTSpanFrame::RemoveFrame(nsIAtom*        aListName,
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsSVGTSpanFrame::ReplaceFrame(nsIAtom*        aListName,
-                              nsIFrame*       aOldFrame,
-                              nsIFrame*       aNewFrame)
-{
-  NS_NOTYETIMPLEMENTED("nsSVGTSpanFrame::ReplaceFrame");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods:
 

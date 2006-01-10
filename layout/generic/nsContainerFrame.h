@@ -72,9 +72,6 @@ public:
                    PRUint32             aFlags = 0);
   virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
                                      nsFramePaintLayer aWhichLayer);
-  NS_IMETHOD ReplaceFrame(nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame,
-                          nsIFrame*       aNewFrame);
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
   virtual PRBool IsLeaf() const;

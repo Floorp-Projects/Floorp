@@ -219,10 +219,6 @@ public:
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
 
-  NS_IMETHOD ReplaceFrame(nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame,
-                          nsIFrame*       aNewFrame);
-
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
@@ -352,10 +348,6 @@ public:
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-
-  NS_IMETHOD ReplaceFrame(nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame,
-                          nsIFrame*       aNewFrame);
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 

@@ -94,9 +94,6 @@ public:
                           nsIFrame*      aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*       aListName,
                          nsIFrame*      aOldFrame);
-  NS_IMETHOD ReplaceFrame(nsIAtom*       aListName,
-                          nsIFrame*      aOldFrame,
-                          nsIFrame*      aNewFrame);
 
   virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
                                      nsFramePaintLayer aWhichLayer);
@@ -645,18 +642,6 @@ nsFieldSetFrame::RemoveFrame(nsIAtom*       aListName,
     return NS_OK;
   }
   return mContentFrame->RemoveFrame(aListName, aOldFrame);
-}
-
-NS_IMETHODIMP
-nsFieldSetFrame::ReplaceFrame(nsIAtom*       aListName,
-                              nsIFrame*      aOldFrame,
-                              nsIFrame*      aNewFrame)
-{
-  if (aOldFrame == mLegendFrame) {
-    mLegendFrame = aNewFrame;
-    return nsContainerFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
-  }
-  return mContentFrame->ReplaceFrame(aListName, aOldFrame, aNewFrame);
 }
 
 nsIFrame*

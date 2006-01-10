@@ -572,12 +572,3 @@ nsHTMLButtonControlFrame::RemoveFrame(nsIAtom*        aListName,
 {
   return mFrames.FirstChild()->RemoveFrame(aListName, aOldFrame);
 }
-
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::ReplaceFrame(nsIAtom*        aListName,
-                                       nsIFrame*       aOldFrame,
-                                       nsIFrame*       aNewFrame)
-{
-  ReParentFrameList(GetPresContext()->FrameManager(), aNewFrame);
-  return mFrames.FirstChild()->ReplaceFrame(aListName, aOldFrame, aNewFrame);
-}

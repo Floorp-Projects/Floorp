@@ -156,15 +156,6 @@ nsSVGGenericContainerFrame::RemoveFrame(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::ReplaceFrame(nsIAtom*        aListName,
-                                         nsIFrame*       aOldFrame,
-                                         nsIFrame*       aNewFrame)
-{
-  NS_NOTYETIMPLEMENTED("nsSVGGenericContainerFrame::ReplaceFrame");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsSVGGenericContainerFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                              nsIAtom*        aAttribute,
                                              PRInt32         aModType)

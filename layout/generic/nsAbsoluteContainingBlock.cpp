@@ -122,18 +122,6 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
-nsAbsoluteContainingBlock::ReplaceFrame(nsIFrame*      aDelegatingFrame,
-                                        nsIAtom*       aListName,
-                                        nsIFrame*      aOldFrame,
-                                        nsIFrame*      aNewFrame)
-{
-  PRBool result = mAbsoluteFrames.ReplaceFrame(aDelegatingFrame,
-                                               aOldFrame, aNewFrame, PR_TRUE);
-  NS_ASSERTION(result, "Problems replacing a frame");
-  return result ? NS_OK : NS_ERROR_FAILURE;
-}
-
 static void
 AddFrameToChildBounds(nsIFrame* aKidFrame, nsRect* aChildBounds)
 {

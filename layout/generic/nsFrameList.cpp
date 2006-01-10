@@ -300,58 +300,6 @@ nsFrameList::InsertFrames(nsIFrame* aParent,
 }
 
 PRBool
-nsFrameList::DoReplaceFrame(nsIFrame* aParent,
-                            nsIFrame* aOldFrame,
-                            nsIFrame* aNewFrame)
-{
-  NS_PRECONDITION(aOldFrame, "null ptr");
-  NS_PRECONDITION(aNewFrame, "null ptr");
-  if (!aOldFrame || !aNewFrame) {
-    return PR_FALSE;
-  }
-  
-  nsIFrame* nextFrame = aOldFrame->GetNextSibling();
-  if (aOldFrame == mFirstChild) {
-    mFirstChild = aNewFrame;
-  }
-  else {
-    nsIFrame* prevSibling = GetPrevSiblingFor(aOldFrame);
-    if (!prevSibling) {
-      NS_WARNING("nsFrameList::ReplaceFrame: aOldFrame not found in list");
-      return PR_FALSE;
-    }
-    prevSibling->SetNextSibling(aNewFrame);
-  }
-
-  aNewFrame->SetNextSibling(nextFrame);
-  
-  if (aParent) {
-    aNewFrame->SetParent(aParent);
-  }
-#ifdef DEBUG
-  CheckForLoops();
-#endif
-  return PR_TRUE;
-}
-
-PRBool
-nsFrameList::ReplaceFrame(nsIFrame* aParent,
-                          nsIFrame* aOldFrame,
-                          nsIFrame* aNewFrame,
-                          PRBool aDestroy)
-{
-  NS_PRECONDITION(aOldFrame, "null ptr");
-  NS_PRECONDITION(aNewFrame, "null ptr");
-  if (DoReplaceFrame(aParent, aOldFrame, aNewFrame)) {
-    if (aDestroy) {
-      aOldFrame->Destroy(aOldFrame->GetPresContext());
-    }
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-PRBool
 nsFrameList::Split(nsIFrame* aAfterFrame, nsIFrame** aNextFrameResult)
 {
   NS_PRECONDITION(nsnull != aAfterFrame, "null ptr");

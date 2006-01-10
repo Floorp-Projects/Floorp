@@ -122,22 +122,6 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  // need special care here because the base class implementation treats this
-  // as two operations: remove & insert; In our case, removing the child will
-  // remove us too... so we have to operate from our parent's perspective
-  NS_IMETHOD
-  ReplaceFrame(nsIAtom*        aListName,
-               nsIFrame*       aOldFrame,
-               nsIFrame*       aNewFrame)
-  {
-    nsresult rv = mParent->ReplaceFrame(aListName, this, aNewFrame);
-    // XXX the usage of ReplaceFrame() vs. ReplaceFrameAndDestroy() is
-    // XXX ambiguous - see bug 122748. The style system doesn't call ReplaceFrame()
-    // XXX and that's why nobody seems to have been biten by the ambiguity yet
-    aOldFrame->Destroy(GetPresContext());
-    return rv;
-  }
-
   // Our life is bound to the life of our unique child.
   // When our child goes away, we ask our parent to delete us
   NS_IMETHOD

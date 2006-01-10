@@ -83,10 +83,6 @@ public:
   nsresult RemoveFrame(nsIFrame*      aDelegatingFrame,
                        nsIAtom*       aListName,
                        nsIFrame*      aOldFrame);
-  nsresult ReplaceFrame(nsIFrame*      aDelegatingFrame,
-                        nsIAtom*       aListName,
-                        nsIFrame*      aOldFrame,
-                        nsIFrame*      aNewFrame);
 
   // Called by the delegating frame after it has done its reflow first. This
   // function will reflow any absolutely positioned child frames that need to

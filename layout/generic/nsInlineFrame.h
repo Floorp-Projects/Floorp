@@ -81,9 +81,6 @@ public:
                           nsIFrame*       aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
-  NS_IMETHOD ReplaceFrame(nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame,
-                          nsIFrame*       aNewFrame);
   NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
@@ -214,9 +211,6 @@ public:
                           nsIFrame*       aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
-  NS_IMETHOD ReplaceFrame(nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame,
-                          nsIFrame*       aNewFrame);
 
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
 

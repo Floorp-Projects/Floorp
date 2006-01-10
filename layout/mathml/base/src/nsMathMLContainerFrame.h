@@ -142,11 +142,6 @@ public:
   RemoveFrame(nsIAtom*        aListName,
               nsIFrame*       aOldFrame);
 
-  NS_IMETHOD
-  ReplaceFrame(nsIAtom*        aListName,
-               nsIFrame*       aOldFrame,
-               nsIFrame*       aNewFrame);
-
   NS_IMETHODIMP
   ReflowDirtyChild(nsIPresShell* aPresShell, 
                    nsIFrame*     aChild);
@@ -378,17 +373,6 @@ public:
   }
 
   NS_IMETHOD
-  ReplaceFrame(nsIAtom*        aListName,
-               nsIFrame*       aOldFrame,
-               nsIFrame*       aNewFrame)
-  {
-    NS_ASSERTION(!aListName, "internal error");
-    nsresult rv = nsBlockFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
-    nsMathMLContainerFrame::ReLayoutChildren(this);
-    return rv;
-  }
-
-  NS_IMETHOD
   RemoveFrame(nsIAtom*        aListName,
               nsIFrame*       aOldFrame)
   {
@@ -460,17 +444,6 @@ public:
   {
     NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsInlineFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(this);
-    return rv;
-  }
-
-  NS_IMETHOD
-  ReplaceFrame(nsIAtom*        aListName,
-               nsIFrame*       aOldFrame,
-               nsIFrame*       aNewFrame)
-  {
-    NS_ASSERTION(!aListName, "internal error");
-    nsresult rv = nsInlineFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
     nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }

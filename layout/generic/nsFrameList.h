@@ -108,11 +108,6 @@ public:
     aFrameList.mFirstChild = nsnull;
   }
 
-  PRBool ReplaceFrame(nsIFrame* aParent,
-                      nsIFrame* aOldFrame,
-                      nsIFrame* aNewFrame,
-                      PRBool aDestroy);
-
   PRBool Split(nsIFrame* aAfterFrame, nsIFrame** aNextFrameResult);
 
   /**
@@ -168,10 +163,6 @@ public:
 #endif
 
 private:
-  PRBool DoReplaceFrame(nsIFrame* aParent,
-                        nsIFrame* aOldFrame,
-                        nsIFrame* aNewFrame);
-
 #ifdef DEBUG
   void CheckForLoops();
 #endif
