@@ -379,7 +379,7 @@ foreach my $module (@{$modules}) {
 print "\nThe following Perl modules are optional:\n" unless $silent;
 my $gd          = have_vers("GD","1.20");
 my $chartbase   = have_vers("Chart::Base","1.0");
-my $xmlparser   = have_vers("XML::Parser",0);
+my $xmlparser   = have_vers("XML::Twig",0);
 my $gdgraph     = have_vers("GD::Graph",0);
 my $gdtextalign = have_vers("GD::Text::Align",0);
 my $patchreader = have_vers("PatchReader","0.9.4");
@@ -405,8 +405,8 @@ if ((!$gd || !$chartbase) && !$silent) {
 if (!$xmlparser && !$silent) {
     print "If you want to use the bug import/export feature to move bugs to\n",
           "or from other bugzilla installations, you will need to install\n ",
-          "the XML::Parser module by running (as $::root):\n\n",
-    "   " . install_command("XML::Parser") . "\n\n";
+          "the XML::Twig module by running (as $::root):\n\n",
+    "   " . install_command("XML::Twig") . "\n\n";
 }
 if (!$imagemagick && !$silent) {
     print "If you want to convert BMP image attachments to PNG to conserve\n",
