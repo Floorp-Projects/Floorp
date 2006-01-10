@@ -107,7 +107,7 @@ static PRBool test_basic_array(ElementType *data,
     return PR_FALSE;
 
   ary.Clear();
-  if (!ary.IsEmpty() || ary.Elements() != nsnull)
+  if (!ary.IsEmpty() || ary.Elements() == nsnull)
     return PR_FALSE;
 
   ary = copy;
