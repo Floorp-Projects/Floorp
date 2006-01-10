@@ -1378,9 +1378,9 @@ verifyCertAgain(CERTCertificate *cert,
 
   // If we get here, the user has accepted the cert so
   // far, so we don't check the signature again.
-  rv = CERT_VerifyCertNow(CERT_GetDefaultCertDB(), cert,
-                          PR_FALSE, certUsageSSLServer,
-                          (void*)infoObject);
+  rv = CERT_VerifyCertificateNow(CERT_GetDefaultCertDB(), cert,
+                          PR_FALSE, certificateUsageSSLServer,
+                          (void*)infoObject, NULL);
 
   if (rv != SECSuccess) {
     return rv;

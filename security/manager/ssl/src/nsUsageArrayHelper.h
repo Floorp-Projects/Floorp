@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  John Gardiner Myers <jgmyers@speakeasy.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,14 +61,13 @@ private:
   nsresult m_rv;
   CERTCertDBHandle *defaultcertdb;
   nsCOMPtr<nsINSSComponent> nssComponent;
-  int mCached_NonInadequateReason;
 
   void check(const char *suffix,
-             SECCertUsage aCertUsage,
+             SECCertificateUsage aCertUsage,
              PRUint32 &aCounter,
              PRUnichar **outUsages);
 
-  void verifyFailed(PRUint32 *_verified);
+  void verifyFailed(PRUint32 *_verified, int err);
 };
 
 #endif
