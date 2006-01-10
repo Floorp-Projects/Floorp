@@ -39,6 +39,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIX509CertList;
+
 /**
  * This represents a service to access and manipulate 
  * X.509 certificates stored in a database through methods
@@ -58,5 +60,10 @@ interface nsIX509CertDB2 : nsISupports {
    * @param aName name of the cert for display purposes.
    */
   void addCertFromBase64(in string base64, in string aTrust, in string aName);
+
+  /*
+   * Get all the known certs in the database
+   */
+  nsIX509CertList getCerts();
 };
 

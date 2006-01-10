@@ -45,6 +45,7 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeSelection.h"
 #include "nsISupportsArray.h"
+#include "nsIArray.h"
 #include "pldhash.h"
 #include "nsIX509CertDB.h"
 
@@ -128,6 +129,8 @@ private:
                                     nsCertCompareFunc  aCertCmpFn,
                                     void              *aCertCmpFnArg,
                                     nsISupportsArray **_certs);
+
+  nsCOMPtr<nsIMutableArray> mCellText;
 
 #ifdef DEBUG_CERT_TREE
   /* for debugging purposes */

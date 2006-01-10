@@ -867,14 +867,14 @@ NS_IMETHODIMP
 nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
 {
   nsNSSShutDownPreventionLock locker;
-  nsNSSCertificate *nssCert = NS_STATIC_CAST(nsNSSCertificate*, aCert);
+  nsCOMPtr<nsIX509Cert2> nssCert = do_QueryInterface(aCert);
   CERTCertificate *cert = nssCert->GetCert();
   if (!cert) return NS_ERROR_FAILURE;
   CERTCertificateCleaner certCleaner(cert);
   SECStatus srv = SECSuccess;
 
-  PRUint32 certType = getCertType(cert);
-  nssCert->SetCertType(certType);
+  PRUint32 certType;
+  nssCert->GetCertType(&certType);
   if (NS_FAILED(nssCert->MarkForPermDeletion()))
   {
     return NS_ERROR_FAILURE;
@@ -909,7 +909,7 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   nsNSSShutDownPreventionLock locker;
   SECStatus srv;
   nsNSSCertTrust trust;
-  nsNSSCertificate *pipCert = NS_STATIC_CAST(nsNSSCertificate *, cert);
+  nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert);
   CERTCertificate *nsscert = pipCert->GetCert();
   CERTCertificateCleaner certCleaner(nsscert);
   if (type == nsIX509Cert::CA_CERT) {
@@ -953,7 +953,7 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
 
   nsNSSShutDownPreventionLock locker;
   SECStatus srv;
-  nsNSSCertificate *pipCert = NS_STATIC_CAST(nsNSSCertificate *, cert);
+  nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert);
   CERTCertificate *nsscert = pipCert->GetCert();
   CERTCertTrust nsstrust;
   srv = CERT_GetCertTrust(nsscert, &nsstrust);
@@ -1629,4 +1629,23 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
 
 
   return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
+{
+  CERTCertList *certList;
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
+  nsCOMPtr<nsIX509CertList> nssCertList;
+  certList = PK11_ListCerts(PK11CertListUnique, ctx);
+
+  // nsNSSCertList 1) adopts certList, and 2) handles the NULL case fine.
+  // (returns an empty list) 
+  nssCertList = new nsNSSCertList(certList, PR_TRUE);
+  if (!nssCertList) { return NS_ERROR_OUT_OF_MEMORY; }
+
+  *_retval = nssCertList;
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }

@@ -36,41 +36,28 @@
 
 #include "nsISupports.idl"
 
-interface nsIX509CertList;
+interface nsISimpleEnumerator;
+interface nsIX509Cert;
 
-[scriptable, uuid(1b75bdae-1757-4322-9d1e-cfcaa18cb710)]
-interface nsINSSCertCache : nsISupports {
+[scriptable, uuid(a539759b-e22d-462f-94ea-2915b11b33e8)]
+interface nsIX509CertList : nsISupports {
+   void addCert(in nsIX509Cert cert);
+   void deleteCert(in nsIX509Cert cert);
+   nsISimpleEnumerator getEnumerator();
 
-  /*
-   * cacheAllCerts
-   *
-   * Creates a cache of all certificates currently known to NSS.
-   */
-  void cacheAllCerts();
-  void cacheCertList(in nsIX509CertList list); 
+   [notxpcom, noscript] voidPtr getRawCertList();
 
-  /*
-   * get an X509CertList
-   */
-  nsIX509CertList getX509CachedCerts();
-
-  /*
-   * getCachedCerts
-   *
-   * Returns the cached CERTCertList*
-   */
-  [notxpcom, noscript] voidPtr getCachedCerts();
 };
 
 %{C++
 
-#define NS_NSSCERTCACHE_CID { /* 3f429a14-dffe-417d-8cb8-fdf09bacd09e */ \
-    0x3f429a14,                                                          \
-    0xdffe,                                                              \
-    0x417d,                                                              \
-    {0x8c, 0xb8, 0xfd, 0xf0, 0x9b, 0xac, 0xd0, 0x9e}                     \
+#define NS_X509CERRTLIST_CID { /* 959fb165-6517-487f-ab9b-d8913be53197 */ \
+    0x959fb165,                                                           \
+    0x6517,                                                               \
+    0x487f                                                                \
+    {0xab, 0x9b, 0xd8, 0x91, 0x3b, 0xe5, 0x31, 0x97}                      \
   }
 
-#define NS_NSSCERTCACHE_CONTRACTID "@mozilla.org/security/nsscertcache;1"
+#define NS_X509CERTLIST_CONTRACTID "@mozilla.org/security/x509certlist;1"
 
 %}
