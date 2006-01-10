@@ -118,6 +118,10 @@ nsBrowserStatusHandler.prototype =
         /* To be fixed. We dont want to directly access sytle from here */
         document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
         
+          if (aRequest) {
+            if (aWebProgress.DOMWindow == content) this.endDocumentLoad(aRequest, aStatus);
+          }
+
         return;
       }
       return;
@@ -193,6 +197,9 @@ nsBrowserStatusHandler.prototype =
   {
     gBrowser.mCurrentBrowser.feeds = null;
   },
+  endDocumentLoad : function(aRequest, aStatus)
+  {
+  },
   onSecurityChange : function(aWebProgress, aRequest, aState)
   {
     /* Color is temporary. We shall dynamically assign a new class to the element and or to 
@@ -236,7 +243,7 @@ nsBrowserStatusHandler.prototype =
   
   setOverLink : function(link, b)
   {
-  },
+  }
 }
   
 /** 
@@ -385,7 +392,7 @@ function BrowserLinkAdded(event) {
       if (feedButton) {
         feedButton.setAttribute("feeds", "true");
         //				feedButton.setAttribute("tooltiptext", gNavigatorBundle.getString("feedHasFeeds"));	
-        document.getElementById("feed-button-menu").setAttribute("onpopupshowing","DoBrowserRSS('"+ehref+"')");
+        document.getElementById("feed-button-menu").setAttribute("oncommand","DoBrowserRSS('"+ehref+"')");
       }
     }
   }
