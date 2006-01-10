@@ -2768,8 +2768,20 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
     {
         NS_NAMED_LITERAL_STRING(proxyText, "EnterUserPasswordForProxy");
         NS_NAMED_LITERAL_STRING(originText, "EnterUserPasswordForRealm");
-        const PRUnichar *text = proxyAuth ? proxyText.get() : originText.get();
- 
+
+        const PRUnichar *text;
+        if (proxyAuth) {
+            text = proxyText.get();
+        } else {
+            text = originText.get();
+
+            // prepend "scheme://"
+            nsAutoString schemeU; 
+            CopyASCIItoUTF16(scheme, schemeU);
+            schemeU.AppendLiteral("://");
+            displayHost.Insert(schemeU, 0);
+        }
+
         const PRUnichar *strings[] = { realmU.get(), displayHost.get() };
 
         rv = bundle->FormatStringFromName(text, strings, 2,
