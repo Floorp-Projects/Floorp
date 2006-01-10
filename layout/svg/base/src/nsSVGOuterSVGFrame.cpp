@@ -195,9 +195,6 @@ public:
                            nsIFrame*       aFrameList);
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  ReplaceFrame(nsIAtom*        aListName,
-                           nsIFrame*       aOldFrame,
-                           nsIFrame*       aNewFrame);
 
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -663,15 +660,6 @@ nsSVGOuterSVGFrame::RemoveFrame(nsIAtom*        aListName,
 
   NS_ASSERTION(result, "didn't find frame to delete");
   return result ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::ReplaceFrame(nsIAtom*        aListName,
-                                 nsIFrame*       aOldFrame,
-                                 nsIFrame*       aNewFrame)
-{
-  NS_NOTYETIMPLEMENTED("nsSVGOuterSVGFrame::ReplaceFrame");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

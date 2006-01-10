@@ -215,17 +215,6 @@ nsHTMLScrollFrame::RemoveFrame(nsIAtom*  aListName,
 }
 
 
-NS_IMETHODIMP
-nsHTMLScrollFrame::ReplaceFrame(nsIAtom*  aListName,
-                                nsIFrame* aOldFrame,
-                                nsIFrame* aNewFrame)
-{
-  NS_ASSERTION(!aListName, "Only main list supported");
-  nsresult rv = nsHTMLContainerFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
-  mInner.ReloadChildFrames();
-  return rv;
-}
-
 PRIntn
 nsHTMLScrollFrame::GetSkipSides() const
 {
@@ -1094,16 +1083,6 @@ nsXULScrollFrame::RemoveFrame(nsIAtom*        aListName,
   return rv;
 }
 
-
-NS_IMETHODIMP
-nsXULScrollFrame::ReplaceFrame(nsIAtom*        aListName,
-                               nsIFrame*       aOldFrame,
-                               nsIFrame*       aNewFrame)
-{
-  nsresult rv = nsBoxFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
-  mInner.ReloadChildFrames();
-  return rv;
-}
 
 NS_IMETHODIMP
 nsXULScrollFrame::GetPadding(nsMargin& aMargin)

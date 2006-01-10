@@ -151,14 +151,6 @@ public:
                                    nsIAtom*        aListName,
                                    nsIFrame*       aOldFrame);
 
-  NS_HIDDEN_(nsresult) ReplaceFrame(nsIFrame*       aParentFrame,
-                                    nsIAtom*        aListName,
-                                    nsIFrame*       aOldFrame,
-                                    nsIFrame*       aNewFrame)
-  {
-    return aParentFrame->ReplaceFrame(aListName, aOldFrame, aNewFrame);
-  }
-
   /*
    * Notification that a frame is about to be destroyed. This allows any
    * outstanding references to the frame to be cleaned up.

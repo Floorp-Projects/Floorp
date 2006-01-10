@@ -520,27 +520,6 @@ public:
                          nsIFrame*       aOldFrame) = 0;
 
   /**
-   * This method is responsible for replacing the old frame with the
-   * new frame. The old frame should be destroyed and the new frame inserted
-   * in its place in the specified child list.
-   *
-   * @param   aListName the name of the child list. A NULL pointer for the atom
-   *            name means the unnamed principal child list
-   * @param   aOldFrame the frame to remove
-   * @param   aNewFrame the frame to replace it with. The new frame has its
-   *            NS_FRAME_IS_DIRTY bit set
-   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
-   *            name,
-   *          NS_ERROR_FAILURE if the old child frame is not in the specified
-   *            child list,
-   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
-   *          NS_OK otherwise
-   */
-  NS_IMETHOD ReplaceFrame(nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame,
-                          nsIFrame*       aNewFrame) = 0;
-
-  /**
    * Get the content object associated with this frame. Does not add a reference.
    */
   nsIContent* GetContent() const { return mContent; }

@@ -350,28 +350,6 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
 }
 
 NS_IMETHODIMP
-nsContainerFrame::ReplaceFrame(nsIAtom*        aListName,
-                               nsIFrame*       aOldFrame,
-                               nsIFrame*       aNewFrame)
-{
-  nsIFrame* prevFrame;
-  nsresult  rv;
-
-  // Get the old frame's previous sibling frame
-  nsFrameList frames(GetFirstChild(aListName));
-  NS_ASSERTION(frames.ContainsFrame(aOldFrame), "frame is not a valid child frame");
-  prevFrame = frames.GetPrevSiblingFor(aOldFrame);
-
-  // Default implementation treats it like two separate operations
-  rv = RemoveFrame(aListName, aOldFrame);
-  if (NS_SUCCEEDED(rv)) {
-    rv = InsertFrames(aListName, prevFrame, aNewFrame);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsContainerFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 {
   // The container frame always generates a reflow command

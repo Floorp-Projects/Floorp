@@ -107,10 +107,6 @@ public:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   
-  NS_IMETHOD  ReplaceFrame(nsIAtom*        aListName,
-                           nsIFrame*       aOldFrame,
-                           nsIFrame*       aNewFrame);
-
   /**
    * Get the "type" of the frame
    *
@@ -410,21 +406,6 @@ nsSVGForeignObjectFrame::RemoveFrame(nsIAtom*        aListName,
 {
 	nsresult rv;
 	rv = nsSVGForeignObjectFrameBase::RemoveFrame(aListName, aOldFrame);
-	Update();
-	return rv;
-}
-
-NS_IMETHODIMP
-nsSVGForeignObjectFrame::ReplaceFrame(nsIAtom*        aListName,
-                                      nsIFrame*       aOldFrame,
-                                      nsIFrame*       aNewFrame)
-{
-#ifdef DEBUG
-  printf("**nsSVGForeignObjectFrame::ReplaceFrame()\n");
-#endif
-	nsresult rv;
-	rv = nsSVGForeignObjectFrameBase::ReplaceFrame(aListName, aOldFrame,
-                                                   aNewFrame);
 	Update();
 	return rv;
 }

@@ -176,9 +176,6 @@ public:
                            nsIFrame*       aFrameList);
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  ReplaceFrame(nsIAtom*        aListName,
-                           nsIFrame*       aOldFrame,
-                           nsIFrame*       aNewFrame);
   NS_IMETHOD  Destroy(nsPresContext* aPresContext);
   NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const;
   virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;

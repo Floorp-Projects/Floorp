@@ -182,15 +182,6 @@ nsSVGDefsFrame::RemoveFrame(nsIAtom*  aListName,
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsSVGDefsFrame::ReplaceFrame(nsIAtom*  aListName,
-                             nsIFrame* aOldFrame,
-                             nsIFrame* aNewFrame)
-{
-  NS_NOTYETIMPLEMENTED("nsSVGDefsFrame::ReplaceFrame");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsIAtom *
 nsSVGDefsFrame::GetType() const
 {
