@@ -38,6 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsSVGCairoSurface.h"
 #include "nsISVGCairoSurface.h"
+#include "prmem.h"
 #include <cairo.h>
 
 /**
@@ -87,9 +88,32 @@ nsSVGCairoSurface::~nsSVGCairoSurface()
     mSurface = nsnull;
   }
   if (mData) {
-    delete [] mData;
+    PR_Free(mData);
     mData = nsnull;
   }
+}
+
+static PRBool
+CheckSaneImageSize(PRUint32 width, PRUint32 height)
+{
+    if (width <= 0 || height <= 0)
+        return PR_FALSE;
+
+    /* check to make sure we don't overflow a 32-bit */
+    PRUint32 tmp = width * height;
+    if (tmp / height != width)
+        return PR_FALSE;
+
+    tmp = tmp * 4;
+    if (tmp / 4 != width * height)
+        return PR_FALSE;
+
+    /* reject over-wide or over-tall images */
+    const PRUint32 k64KLimit = 0x0000FFFF;
+    if (width > k64KLimit || height > k64KLimit)
+        return PR_FALSE;
+
+    return PR_TRUE;
 }
 
 nsresult
@@ -98,7 +122,10 @@ nsSVGCairoSurface::Init(PRUint32 width, PRUint32 height)
   mWidth = width;
   mHeight = height;
 
-  mData = new PRUint8[4*width*height];
+  if (!CheckSaneImageSize(width, height))
+    return NS_ERROR_FAILURE;
+
+  mData = (PRUint8 *)PR_Malloc(4*width*height);
 
   if (!mData)
     return NS_ERROR_OUT_OF_MEMORY;
