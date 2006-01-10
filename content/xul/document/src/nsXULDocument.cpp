@@ -2554,19 +2554,22 @@ nsXULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver)
         }
         mOverlayLoadObservers.Put(uri, aObserver);
     }
-    PRBool shouldReturn;
-    rv = LoadOverlayInternal(uri, PR_TRUE, &shouldReturn);
+    PRBool shouldReturn, failureFromContent;
+    rv = LoadOverlayInternal(uri, PR_TRUE, &shouldReturn, &failureFromContent);
     if (NS_FAILED(rv) && mOverlayLoadObservers.IsInitialized())
         mOverlayLoadObservers.Remove(uri); // remove the observer if LoadOverlayInternal generated an error
     return rv;
 }
 
 nsresult
-nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic, PRBool* aShouldReturn)
+nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
+                                   PRBool* aShouldReturn,
+                                   PRBool* aFailureFromContent)
 {
     nsresult rv;
 
     *aShouldReturn = PR_FALSE;
+    *aFailureFromContent = PR_FALSE;
 
     nsCOMPtr<nsIScriptSecurityManager> secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2581,7 +2584,8 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic, PRBool* aSho
     }
 #endif
 
-    mResolutionPhase = nsForwardReference::eStart;
+    if (aIsDynamic)
+        mResolutionPhase = nsForwardReference::eStart;
 
     // Chrome documents are allowed to load overlays from anywhere.
     // Also, any document may load a chrome:// overlay.
@@ -2592,7 +2596,10 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic, PRBool* aSho
     if (!IsChromeURI(mDocumentURI) && !overlayIsChrome) {
         // Make sure we're allowed to load this overlay.
         rv = secMan->CheckSameOriginURI(mDocumentURI, aURI);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) {
+            *aFailureFromContent = PR_TRUE;
+            return rv;
+        }
     }
 
     // Look in the prototype cache for the prototype document with
@@ -2620,7 +2627,8 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic, PRBool* aSho
 
     PRBool useXULCache;
     gXULCache->GetEnabled(&useXULCache);
-    mIsWritingFastLoad = useXULCache;
+    if (aIsDynamic)
+        mIsWritingFastLoad = useXULCache;
 
     if (useXULCache && mCurrentPrototype) {
         PRBool loaded;
@@ -2693,6 +2701,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic, PRBool* aSho
             // just because a channel could not be opened, which can happen
             // if a file or chrome package does not exist.
             ReportMissingOverlay(aURI);
+            *aFailureFromContent = PR_TRUE;
             return rv;
         }
 
@@ -2741,8 +2750,6 @@ nsXULDocument::ResumeWalk()
     // <html:script src="..." />) can be properly re-loaded if the
     // cached copy of the document becomes stale.
     nsresult rv;
-    nsCOMPtr<nsIScriptSecurityManager> secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     while (1) {
         // Begin (or resume) walking the current prototype.
@@ -2923,141 +2930,19 @@ nsXULDocument::ResumeWalk()
 
         mUnloadedOverlays->RemoveElementAt(count - 1);
 
-#ifdef PR_LOGGING
-        if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
-            nsCAutoString urlspec;
-            uri->GetSpec(urlspec);
 
-            PR_LOG(gXULLog, PR_LOG_DEBUG,
-                   ("xul: loading overlay %s", urlspec.get()));
-        }
-#endif
-
-        // Chrome documents are allowed to load overlays from anywhere.
-        // Also, any document may load a chrome:// overlay.
-        // In all other cases, the overlay is only allowed to load if
-        // the master document and prototype document have the same origin.
-
-        PRBool overlayIsChrome = IsChromeURI(uri);
-        if (!IsChromeURI(mDocumentURI) && !overlayIsChrome) {
-            // Make sure we're allowed to load this overlay.
-            rv = secMan->CheckSameOriginURI(mDocumentURI, uri);
-            if (NS_FAILED(rv)) {
-                // move on to the next overlay
-                continue;
-            }
-        }
-
-        // Look in the prototype cache for the prototype document with
-        // the specified overlay URI.
-        if (overlayIsChrome)
-            gXULCache->GetPrototype(uri, getter_AddRefs(mCurrentPrototype));
-        else
-            mCurrentPrototype = nsnull;
-
-        // Same comment as nsChromeProtocolHandler::NewChannel and
-        // nsXULDocument::StartDocumentLoad
-        // - Ben Goodger
-        //
-        // We don't abort on failure here because there are too many valid
-        // cases that can return failure, and the null-ness of |proto| is
-        // enough to trigger the fail-safe parse-from-disk solution.
-        // Example failure cases (for reference) include:
-        //
-        // NS_ERROR_NOT_AVAILABLE: the URI was not found in the FastLoad file,
-        //                         parse from disk
-        // other: the FastLoad file, XUL.mfl, could not be found, probably
-        //        due to being accessed before a profile has been selected
-        //        (e.g. loading chrome for the profile manager itself).
-        //        The .xul file must be parsed from disk.
-
-        PRBool useXULCache;
-        gXULCache->GetEnabled(&useXULCache);
-
-        if (useXULCache && mCurrentPrototype) {
-            PRBool loaded;
-            rv = mCurrentPrototype->AwaitLoadDone(this, &loaded);
-            if (NS_FAILED(rv)) return rv;
-
-            if (! loaded) {
-                // Return to the main event loop and eagerly await the
-                // prototype overlay load's completion. When the content
-                // sink completes, it will trigger an EndLoad(), which'll
-                // wind us back up here, in ResumeWalk().
-                return NS_OK;
-            }
-
-            // Found the overlay's prototype in the cache, fully loaded.
-            rv = AddPrototypeSheets();
-            if (NS_FAILED(rv)) return rv;
-
-            // Now prepare to walk the prototype to create its content
-            rv = PrepareToWalk();
-            if (NS_FAILED(rv)) return rv;
-
-            PR_LOG(gXULLog, PR_LOG_DEBUG, ("xul: overlay was cached"));
-        }
-        else {
-            // Not there. Initiate a load.
-            PR_LOG(gXULLog, PR_LOG_DEBUG, ("xul: overlay was not cached"));
-
-            nsCOMPtr<nsIParser> parser;
-            rv = PrepareToLoadPrototype(uri, "view", nsnull, getter_AddRefs(parser));
-            if (NS_FAILED(rv)) return rv;
-
-            // Predicate mIsWritingFastLoad on the XUL cache being enabled,
-            // so we don't have to re-check whether the cache is enabled all
-            // the time.
-            mIsWritingFastLoad = useXULCache;
-
-            nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser);
-            if (! listener)
-                return NS_ERROR_UNEXPECTED;
-
-            // Add an observer to the parser; this'll get called when
-            // Necko fires its On[Start|Stop]Request() notifications,
-            // and will let us recover from a missing overlay.
-            ParserObserver* parserObserver = new ParserObserver(this);
-            if (! parserObserver)
-                return NS_ERROR_OUT_OF_MEMORY;
-
-            NS_ADDREF(parserObserver);
-            parser->Parse(uri, parserObserver);
-            NS_RELEASE(parserObserver);
-
-            nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-            rv = NS_OpenURI(listener, nsnull, uri, nsnull, group);
-            if (NS_FAILED(rv)) {
-                // Abandon this prototype
-                mCurrentPrototype = nsnull;
-
-                // The parser won't get an OnStartRequest and
-                // OnStopRequest, so it needs a Terminate.
-                parser->Terminate();
-
-                // Just move on to the next overlay.  NS_OpenURI could fail
-                // just because a channel could not be opened, which can happen
-                // if a file or chrome package does not exist.
-                ReportMissingOverlay(uri);
-                continue;
-            }
-
-            // If it's a 'chrome:' prototype document, then put it into
-            // the prototype cache; other XUL documents will be reloaded
-            // each time.  We must do this after NS_OpenURI and AsyncOpen,
-            // or chrome code will wrongly create a cached chrome channel
-            // instead of a real one.
-            if (useXULCache && overlayIsChrome) {
-                rv = gXULCache->PutPrototype(mCurrentPrototype);
-                if (NS_FAILED(rv)) return rv;
-            }
-
-            // Return to the main event loop and eagerly await the
-            // overlay load's completion. When the content sink
-            // completes, it will trigger an EndLoad(), which'll wind
-            // us back up here, in ResumeWalk().
+        PRBool shouldReturn, failureFromContent;
+        rv = LoadOverlayInternal(uri, PR_FALSE, &shouldReturn,
+                                 &failureFromContent);
+        if (failureFromContent)
+            // The failure |rv| was the result of a problem in the content
+            // rather than an unexpected problem in our implementation, so
+            // just continue with the next overlay.
+            continue;
+        if (NS_FAILED(rv))
+            return rv;
+        if (shouldReturn)
             return NS_OK;
-        }
     }
 
     // If we get here, there is nothing left for us to walk. The content
