@@ -44,9 +44,11 @@
 #include "nsMemory.h"
 
 /**
- * nsStringInputStream : nsIStringInputStream
- *                     , nsIInputStream
- *                     , nsISeekableStream
+ * Implements:
+ *   nsIStringInputStream2
+ *   nsIStringInputStream
+ *   nsIInputStream
+ *   nsISeekableStream
  */
 #define NS_STRINGINPUTSTREAM_CLASSNAME  "nsStringInputStream"
 #define NS_STRINGINPUTSTREAM_CONTRACTID "@mozilla.org/io/string-input-stream;1"

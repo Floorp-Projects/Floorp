@@ -44,25 +44,14 @@
 /**
  * nsIStringInputStream
  *
- * Provides scriptable and specialized C++ only methods for initializing a
+ * Provides scriptable and specialized C++-only methods for initializing a
  * nsIInputStream implementation with a simple character array.
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(8f6053fc-0944-4270-89e1-12c3113d44e8)]
+[scriptable, uuid(450cd2d4-f0fd-424d-b365-b1251f80fd53)]
 interface nsIStringInputStream : nsIInputStream
 {
-    /**
-     * Set or get this stream's data.  The data may contain null characters.
-     *
-     * NOTE: JS callers should understand that assigning a JS string to this
-     * attribute results in the high-byte of each character being discarded.
-     * Likewise, assigning this attribute into a JS string results in the
-     * high-byte of each character in the resulting JS string being set to
-     * zero.
-     */
-    attribute ACString data;
-
     /**
      * SetData - assign data to the input stream (copied on assignment).
      *
@@ -103,4 +92,23 @@ interface nsIStringInputStream : nsIInputStream
      * @param dataLen   - stream data length (-1 if length should be computed)
      */
     [noscript] void shareData(in string data, in long dataLen);
+};
+
+/**
+ * This interface provides a convenient attribute for setting and getting the
+ * stream's data.
+ */
+[scriptable, uuid(0e36fe9e-ecbe-4088-b616-45672d1c3e94)]
+interface nsIStringInputStream2 : nsIStringInputStream
+{
+    /**
+     * Set or get this stream's data.  The data may contain null characters.
+     *
+     * NOTE: JS callers should understand that assigning a JS string to this
+     * attribute results in the high-byte of each character being discarded.
+     * Likewise, assigning this attribute into a JS string results in the
+     * high-byte of each character in the resulting JS string being set to
+     * zero.
+     */
+    attribute ACString data;
 };
