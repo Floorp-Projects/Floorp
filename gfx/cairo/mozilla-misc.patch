@@ -1,0 +1,154 @@
+Index: pixman/src/pixman-xserver-compat.h
+===================================================================
+--- pixman/src/pixman-xserver-compat.h.orig
++++ pixman/src/pixman-xserver-compat.h
+@@ -72,8 +72,8 @@ typedef pixman_triangle_t	xTriangle;
+ #define FB_SHIFT IC_SHIFT 
+ #define FB_MASK IC_MASK
+ #define FB_ALLONES IC_ALLONES
++#define FbMaskBits IcMaskBits
+ */
+-//#define FbMaskBits IcMaskBits
+ 
+ /* XXX: We changed some function and field names which makes for some
+  * ugly hacks... */
+Index: pixman/src/pixregion.c
+===================================================================
+--- pixman/src/pixregion.c.orig
++++ pixman/src/pixregion.c
+@@ -60,7 +60,7 @@ SOFTWARE.
+ #endif
+ 
+ #undef assert
+-#ifdef DEBUG
++#ifdef DEBUG_PIXREGION
+ #define assert(expr) {if (!(expr)) \
+ 		FatalError("Assertion failed file %s, line %d: expr\n", \
+ 			__FILE__, __LINE__); }
+@@ -208,7 +208,7 @@ if (((numRects) < ((reg)->data->size >> 
+ }
+ 
+ 
+-#ifdef DEBUG
++#ifdef DEBUG_PIXREGION
+ int
+ pixman_region16_print(rgn)
+     pixman_region16_t * rgn;
+@@ -302,7 +302,7 @@ pixman_region16_valid(reg)
+     }
+ }
+ 
+-#endif /* DEBUG */
++#endif /* DEBUG_PIXREGION */
+ 
+ 
+ /*	Create a new empty region	*/
+Index: src/cairo-gstate.c
+===================================================================
+--- src/cairo-gstate.c.orig
++++ src/cairo-gstate.c
+@@ -241,6 +241,13 @@ _cairo_gstate_clone (cairo_gstate_t *oth
+     return gstate;
+ }
+ 
++void
++_moz_cairo_gstate_set_target (cairo_gstate_t *gstate, cairo_surface_t *target)
++{
++    cairo_surface_destroy (gstate->target);
++    gstate->target = cairo_surface_reference (target);
++}
++
+ /* Push rendering off to an off-screen group. */
+ /* XXX: Rethinking this API
+ cairo_status_t
+Index: src/cairo.c
+===================================================================
+--- src/cairo.c.orig
++++ src/cairo.c
+@@ -324,6 +324,29 @@ cairo_restore (cairo_t *cr)
+ }
+ slim_hidden_def(cairo_restore);
+ 
++/**
++ * moz_cairo_set_target:
++ * @cr: a #cairo_t
++ * @target: a #cairo_surface_t
++ *
++ * Change the destination surface of rendering to @cr to @target.
++ * @target must not be %NULL, or an error will be set on @cr.
++ */
++void
++moz_cairo_set_target (cairo_t *cr, cairo_surface_t *target)
++{
++    if (cr->status)
++        return;
++
++    if (target == NULL) {
++        _cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
++        return;
++    }
++
++    _moz_cairo_gstate_set_target (cr->gstate, target);
++}
++slim_hidden_def(moz_cairo_set_target);
++
+ /* XXX: I want to rethink this API
+ void
+ cairo_push_group (cairo_t *cr)
+Index: src/cairo.h
+===================================================================
+--- src/cairo.h.orig
++++ src/cairo.h
+@@ -252,6 +252,9 @@ cairo_save (cairo_t *cr);
+ cairo_public void
+ cairo_restore (cairo_t *cr);
+ 
++cairo_public void
++moz_cairo_set_target (cairo_t *cr, cairo_surface_t *target);
++
+ /* XXX: I want to rethink this API
+ cairo_public void
+ cairo_push_group (cairo_t *cr);
+Index: src/cairoint.h
+===================================================================
+--- src/cairoint.h.orig
++++ src/cairoint.h
+@@ -132,6 +132,7 @@ CAIRO_BEGIN_DECLS
+ #define INLINE
+ #endif
+ 
++#if 0
+ #if HAVE_PTHREAD_H
+ # include <pthread.h>
+ # define CAIRO_MUTEX_DECLARE(name) static pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
+@@ -159,11 +160,9 @@ cairo_private void _cairo_beos_unlock(vo
+ # define CAIRO_MUTEX_LOCK(name) _cairo_beos_lock (&name)
+ # define CAIRO_MUTEX_UNLOCK(name) _cairo_beos_unlock (&name)
+ #endif
+-
++#endif /* 0 */
+ 
+ #ifndef CAIRO_MUTEX_DECLARE
+-# error "No mutex declarations. Cairo will not work with multiple threads." \
+-	"(Remove this #error directive to acknowledge & accept this limitation)."
+ # define CAIRO_MUTEX_DECLARE(name)
+ # define CAIRO_MUTEX_DECLARE_GLOBAL(name)
+ # define CAIRO_MUTEX_LOCK(name)
+@@ -1071,6 +1070,9 @@ _cairo_gstate_destroy (cairo_gstate_t *g
+ cairo_private cairo_gstate_t *
+ _cairo_gstate_clone (cairo_gstate_t *gstate);
+ 
++cairo_private void
++_moz_cairo_gstate_set_target (cairo_gstate_t *gstate, cairo_surface_t *target);
++
+ cairo_private cairo_surface_t *
+ _cairo_gstate_get_target (cairo_gstate_t *gstate);
+ 
+@@ -2157,6 +2159,7 @@ slim_hidden_proto(cairo_restore)
+ slim_hidden_proto(cairo_save)
+ slim_hidden_proto(cairo_stroke_preserve)
+ slim_hidden_proto(cairo_surface_destroy)
++slim_hidden_proto(moz_cairo_set_target)
+ 
+ CAIRO_END_DECLS
+ 
