@@ -172,7 +172,6 @@ typedef struct uninstallStruct
   LPSTR     szProductName;
   LPSTR     szDescription;
   LPSTR     szUninstallKeyDescription;
-  LPSTR     szUninstallFilename;
   HKEY      hWrMainRoot;
   LPSTR     szWrMainKey;
   HKEY      hWrRoot;

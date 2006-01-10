@@ -41,6 +41,7 @@
 #include "extra.h"
 #include "dialogs.h"
 #include "ifuncns.h"
+#include "parser.h"
 
 /* global variables */
 HINSTANCE       hInst;
@@ -75,6 +76,123 @@ BOOL            gbAllowMultipleInstalls = FALSE;
 uninstallGen    ugUninstall;
 diU             diUninstall;
 
+DWORD           dwParentPID = 0;
+
+/* Copy a file into a directory.  Write the path to the new file
+ * into the result buffer (MAX_PATH in size). */
+static BOOL CopyTo(LPCSTR file, LPCSTR destDir, LPSTR result)
+{
+  char leaf[MAX_BUF_TINY];
+
+  ParsePath(file, leaf, sizeof(leaf), PP_FILENAME_ONLY);
+  lstrcpy(result, destDir);
+  lstrcat(result, "\\");
+  lstrcat(result, leaf);
+
+  return CopyFile(file, result, TRUE);
+}
+
+/* Spawn child process. */
+static BOOL SpawnProcess(LPCSTR exePath, LPCSTR cmdLine)
+{
+  STARTUPINFO si = {sizeof(si), 0};
+  PROCESS_INFORMATION pi = {0};
+
+  BOOL ok = CreateProcess(exePath,
+                          cmdLine,
+                          NULL,  // no special security attributes
+                          NULL,  // no special thread attributes
+                          FALSE, // don't inherit filehandles
+                          0,     // No special process creation flags
+                          NULL,  // inherit my environment
+                          NULL,  // use my current directory
+                          &si,
+                          &pi);
+
+  if (ok) {
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+  }
+
+  return ok;
+}
+
+/* This function is called to ensure that the running executable is a copy of
+ * the actual uninstaller.  If not, then this function copies the uninstaller
+ * into a temporary directory and invokes the copy of itself.  This is done to
+ * enable the uninstaller to remove itself. */
+static BOOL EnsureRunningAsCopy(LPCSTR cmdLine)
+{
+  char uninstExe[MAX_PATH], uninstIni[MAX_PATH];
+  char tempBuf[MAX_PATH], tempDir[MAX_PATH] = ""; 
+  DWORD n;
+
+  if (dwParentPID != 0)
+  {
+    HANDLE hParent;
+    
+    /* OpenProcess may return NULL if the parent process has already gone away.
+     * If not, then wait for the parent process to exit.  NOTE: The process may
+     * be signaled before it releases the executable image, so we sit in a loop
+     * until OpenProcess returns NULL. */
+    while ((hParent = OpenProcess(SYNCHRONIZE, FALSE, dwParentPID)) != NULL)
+    {
+      DWORD rv = WaitForSingleObject(hParent, 5000);
+      CloseHandle(hParent);
+      if (rv != WAIT_OBJECT_0)
+        return FALSE;
+      Sleep(50);  /* prevent burning CPU while waiting */
+    }
+
+    return TRUE;
+  }
+
+  /* otherwise, copy ourselves to a temp location and execute the copy. */
+
+  /* make unique folder under the Temp folder */
+  n = GetTempPath(sizeof(tempDir)-1, tempDir);
+  if (n == 0 || n > sizeof(tempDir)-1)
+    return FALSE;
+  lstrcat(tempDir, "nstmp");
+  if (!MakeUniquePath(tempDir) || !CreateDirectory(tempDir, NULL))
+    return FALSE;
+
+  if (!GetModuleFileName(hInst, tempBuf, sizeof(tempBuf)))
+    return FALSE;
+
+  /* copy exe file into temp folder */
+  if (!CopyTo(tempBuf, tempDir, uninstExe))
+  {
+    RemoveDirectory(tempDir);
+    return FALSE;
+  }
+
+  /* copy ini file into temp folder */
+  ParsePath(tempBuf, uninstIni, sizeof(uninstIni), PP_PATH_ONLY); 
+  lstrcat(uninstIni, FILE_INI_UNINSTALL);
+
+  if (!CopyTo(uninstIni, tempDir, tempBuf))
+  {
+    DeleteFile(uninstExe);
+    RemoveDirectory(tempDir);
+    return FALSE;
+  }
+
+  /* schedule temp dir and contents to be deleted on reboot */
+  DeleteOnReboot(uninstExe);
+  DeleteOnReboot(tempBuf);
+  DeleteOnReboot(tempDir);
+
+  /* append -ppid command line flag  */
+  _snprintf(tempBuf, sizeof(tempBuf), "%s -ppid %lu\n",
+            cmdLine, GetCurrentProcessId());
+
+  /* call CreateProcess */
+  SpawnProcess(uninstExe, tempBuf);
+
+  return FALSE;  /* exit this process */
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {
   /***********************************************************************/
@@ -92,10 +210,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
   if(!hPrevInstance)
   {
     hInst = GetModuleHandle(NULL);
-    if(InitUninstallGeneral())
+    if(InitUninstallGeneral() || ParseCommandLine(lpszCmdLine))
+    {
       PostQuitMessage(1);
-    else if(ParseCommandLine(lpszCmdLine))
-      PostQuitMessage(1);
+    }
     else if((hwndFW = FindWindow(CLASS_NAME_UNINSTALL_DLG, NULL)) != NULL && !gbAllowMultipleInstalls)
     {
     /* Allow only one instance of setup to run.
@@ -107,7 +225,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
       iRv = WIZ_SETUP_ALREADY_RUNNING;
       PostQuitMessage(1);
     }
-    else if(Initialize(hInst))
+    else if(!EnsureRunningAsCopy(lpszCmdLine) || Initialize(hInst))
     {
       PostQuitMessage(1);
     }

@@ -640,51 +640,6 @@ void RemoveDelayedDeleteFileEntries(const char *aPathToMatch)
   free(pathToMatch);
 }
 
-
-/* Looks for and removes the uninstaller from the Windows Registry
- * that is set to delete the uninstaller at the next restart of
- * Windows.  This key is set/created when the user does the following:
- *
- * 1) Runs the uninstaller from the previous version of the product.
- * 2) User does not reboot the OS and starts the installation of
- *    the next version of the product.
- *
- * This functions prevents the uninstaller from being deleted on a
- * system reboot after the user performs 2).
- */
-void ClearWinRegUninstallFileDeletion(void)
-{
-  char  szLCUninstallFilenameLongBuf[MAX_BUF];
-  char  szLCUninstallFilenameShortBuf[MAX_BUF];
-  char  szWinInitFile[MAX_BUF];
-  char  szTempInitFile[MAX_BUF];
-  char  szWinDir[MAX_BUF];
-
-  if(!GetWindowsDirectory(szWinDir, sizeof(szWinDir)))
-    return;
-
-  wsprintf(szLCUninstallFilenameLongBuf, "%s\\%s", szWinDir, sgProduct.szUninstallFilename);
-  GetShortPathName(szLCUninstallFilenameLongBuf, szLCUninstallFilenameShortBuf, sizeof(szLCUninstallFilenameShortBuf));
-
-  if(gSystemInfo.dwOSType & OS_NT)
-  {
-    RemoveDelayedDeleteFileEntries(szLCUninstallFilenameShortBuf);
-  }
-  else
-  {
-    /* OS type is win9x */
-    wsprintf(szWinInitFile, "%s\\wininit.ini", szWinDir);
-    wsprintf(szTempInitFile, "%s\\wininit.moz", szWinDir);
-    if(FileExists(szWinInitFile))
-    {
-      if(UpdateFile(szWinInitFile, szTempInitFile, szLCUninstallFilenameLongBuf))
-        CopyFile(szTempInitFile, szWinInitFile, FALSE);
-
-      DeleteFile(szTempInitFile);
-    }
-  }
-}
-
 HRESULT Initialize(HINSTANCE hInstance)
 {
   char szBuf[MAX_BUF];
@@ -3941,8 +3896,6 @@ HRESULT InitSetupGeneral()
     return(1);
   if((sgProduct.szProductNamePrevious         = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((sgProduct.szUninstallFilename           = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
   if((sgProduct.szUserAgent                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((sgProduct.szProgramFolderName           = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -3981,7 +3934,6 @@ void DeInitSetupGeneral()
   FreeMemory(&(sgProduct.szProductName));
   FreeMemory(&(sgProduct.szProductNameInternal));
   FreeMemory(&(sgProduct.szProductNamePrevious));
-  FreeMemory(&(sgProduct.szUninstallFilename));
   FreeMemory(&(sgProduct.szUserAgent));
   FreeMemory(&(sgProduct.szProgramFolderName));
   FreeMemory(&(sgProduct.szProgramFolderPath));
@@ -7276,7 +7228,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     lstrcpy(sgProduct.szProductNameInternal, sgProduct.szProductName);
  
   GetConfigIniProfileString("General", "Product Name Previous", "", sgProduct.szProductNamePrevious, MAX_BUF);
-  GetConfigIniProfileString("General", "Uninstall Filename", "", sgProduct.szUninstallFilename, MAX_BUF);
   GetConfigIniProfileString("General", "User Agent",   "", sgProduct.szUserAgent,   MAX_BUF);
   GetConfigIniProfileString("General", "Sub Path",     "", sgProduct.szSubPath,     MAX_BUF);
   GetConfigIniProfileString("General", "Program Name", "", sgProduct.szProgramName, MAX_BUF);

@@ -68,7 +68,7 @@ LOCAL_INCLUDES	= -I$(srcdir)
 ifdef GNU_CC
 OS_LIBS		+= -lshell32 -lversion -lgdi32
 else
-OS_LIBS		+= shell32.lib version.lib
+OS_LIBS		+= shell32.lib version.lib ole32.lib
 endif
 
 NO_DIST_INSTALL	= 1
@@ -76,11 +76,10 @@ NO_DIST_INSTALL	= 1
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(PROGRAM)
-	$(INSTALL) $(PROGRAM) $(DIST)/install
+	$(INSTALL) $(PROGRAM) $(DIST)/bin/uninstall
 
 install:: $(PROGRAM)
-	$(INSTALL) $(PROGRAM) $(DESTDIR)$(mozappdir)/install
+	$(INSTALL) $(PROGRAM) $(DESTDIR)$(mozappdir)/bin/uninstall
 
 clean clobber realclean clobber_all::
-	$(RM) $(DIST)/install/$(PROGRAM)
-
+	$(RM) $(DIST)/bin/uninstall/$(PROGRAM)

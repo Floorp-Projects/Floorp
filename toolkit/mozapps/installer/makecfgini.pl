@@ -109,8 +109,6 @@ $nameProduct      = $ENV{WIZ_nameProduct};
 $shortNameProduct = $ENV{WIZ_shortNameProduct};
 $nameProductInternal = $ENV{WIZ_nameProductInternal};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
-$fileUninstall    = $ENV{WIZ_fileUninstall};
-$fileUninstallZip = $ENV{WIZ_fileUninstallZip};
 $greBuildID       = $ENV{WIZ_greBuildID};
 $greFileVersion   = $ENV{WIZ_greFileVersion};
 $greUniqueID      = $ENV{WIZ_greUniqueID};
@@ -157,26 +155,19 @@ while($line = <fpInIt>)
         chop($componentName);
       }
 
-      if($componentName =~ /\$UninstallFileZip\$/i)
+      $installSize = OutputInstallSize("$inStagePath/$componentName");
+
+      # special oji consideration here.  Since it's an installer that 
+      # seamonkey installer will be calling, the disk space allocation
+      # needs to be adjusted by an expansion factor of 3.62.
+      if($componentName =~ /oji/i)
       {
-        $installSize = OutputInstallSizeArchive("$inXpiPath/$fileUninstallZip") * 2;
+        $installSize = int($installSize * 3.62);
       }
-      else
+
+      if($componentName =~ /gre/i)
       {
-        $installSize = OutputInstallSize("$inStagePath/$componentName");
-
-        # special oji consideration here.  Since it's an installer that 
-        # seamonkey installer will be calling, the disk space allocation
-        # needs to be adjusted by an expansion factor of 3.62.
-        if($componentName =~ /oji/i)
-        {
-          $installSize = int($installSize * 3.62);
-        }
-
-        if($componentName =~ /gre/i)
-        {
-          $installSize = int($installSize * 4.48);
-        }
+        $installSize = int($installSize * 4.48);
       }
     }
 
@@ -208,7 +199,6 @@ while($line = <fpInIt>)
       else {
         chop($componentName);
       }
-      $componentName      =~ s/\$UninstallFileZip\$/$fileUninstallZip/gi;
       $installSizeArchive = OutputInstallSizeArchive("$inXpiPath/$componentName");
     }
 
@@ -252,8 +242,6 @@ while($line = <fpInIt>)
     $line =~ s/\$ProductNameInternal\$/$nameProductInternal/gi;
     $line =~ s/\$ProductShortName\$/$shortNameProduct/gi;
     $line =~ s/\$MainExeFile\$/$fileMainExe/gi;
-    $line =~ s/\$UninstallFile\$/$fileUninstall/gi;
-    $line =~ s/\$UninstallFileZip\$/$fileUninstallZip/gi;
     $line =~ s/\$GreBuildID\$/$greBuildID/gi;
     $line =~ s/\$GreFileVersion\$/$greFileVersion/gi;
     $line =~ s/\$GreUniqueID\$/$greUniqueID/gi;

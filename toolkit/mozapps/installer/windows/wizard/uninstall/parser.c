@@ -46,69 +46,48 @@
 
 #define KEY_SHARED_DLLS "Software\\Microsoft\\Windows\\CurrentVersion\\SharedDlls"
 
-BOOL DeleteOrDelayUntilReboot(LPSTR szFile)
+BOOL DeleteOnReboot(LPSTR szFile)
 {
-  FILE      *ofp;
-  char      szWinDir[MAX_BUF];
-  char      szWininitFile[MAX_BUF];
-  BOOL      bDelayDelete = FALSE;
-  BOOL      bWriteRenameSection;
-
-  FileDelete(szFile);
-  if(FileExists(szFile))
-  {
-    bDelayDelete = TRUE;
-    if(ulOSType & OS_NT)
-      MoveFileEx(szFile, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-    else
-    {
-      if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
-        return(FALSE);
-
-      lstrcpy(szWininitFile, szWinDir);
-      AppendBackSlash(szWininitFile, sizeof(szWininitFile));
-      lstrcat(szWininitFile, "wininit.ini");
-
-      if(FileExists(szWininitFile) == FALSE)
-        bWriteRenameSection = TRUE;
-      else
-        bWriteRenameSection = FALSE;
-
-      if((ofp = fopen(szWininitFile, "a+")) == NULL)
-        return(FALSE);
-
-      if(bWriteRenameSection == TRUE)
-        fprintf(ofp, "[RENAME]\n");
-
-      fprintf(ofp, "NUL=%s\n", szFile);
-      fclose(ofp);
-    }
-  }
+  if(ulOSType & OS_NT)
+    MoveFileEx(szFile, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
   else
-    bDelayDelete = FALSE;
+  {
+    char szWinDir[MAX_BUF];
+    char szWininitFile[MAX_BUF];
+    BOOL bWriteRenameSection;
+    FILE *ofp;
 
-  return(bDelayDelete);
+    if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
+      return(FALSE);
+
+    lstrcpy(szWininitFile, szWinDir);
+    AppendBackSlash(szWininitFile, sizeof(szWininitFile));
+    lstrcat(szWininitFile, "wininit.ini");
+
+    if(FileExists(szWininitFile) == FALSE)
+      bWriteRenameSection = TRUE;
+    else
+      bWriteRenameSection = FALSE;
+
+    if((ofp = fopen(szWininitFile, "a+")) == NULL)
+      return(FALSE);
+
+    if(bWriteRenameSection == TRUE)
+      fprintf(ofp, "[RENAME]\n");
+
+    fprintf(ofp, "NUL=%s\n", szFile);
+    fclose(ofp);
+  }
+  return(TRUE);
 }
 
-void RemoveUninstaller(LPSTR szUninstallFilename)
+BOOL DeleteOrDelayUntilReboot(LPSTR szFile)
 {
-  char      szBuf[MAX_BUF];
-  char      szWinDir[MAX_BUF];
-  char      szUninstallFile[MAX_BUF];
+  FileDelete(szFile);
+  if(FileExists(szFile))
+    return DeleteOnReboot(szFile);
 
-  if(SearchForUninstallKeys(szUninstallFilename))
-    /* Found the uninstall file name in the windows registry uninstall
-     * key sections.  We should not try to delete ourselves. */
-    return;
-
-  if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
-    return;
-
-  lstrcpy(szBuf, szWinDir);
-  AppendBackSlash(szBuf, sizeof(szBuf));
-  lstrcat(szBuf, szUninstallFilename);
-  GetShortPathName(szBuf, szUninstallFile, sizeof(szUninstallFile));
-  DeleteOrDelayUntilReboot(szUninstallFile);
+  return(TRUE);
 }
 
 sil *InitSilNodes(char *szInFile)

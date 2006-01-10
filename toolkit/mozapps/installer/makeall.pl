@@ -90,8 +90,6 @@ $seiFileNameGeneric       = "nsinstall".$exe_suffix;
 $seiFileNameSpecific      = $ENV{WIZ_fileInstallerExe};
 $seiStubRootName          = $ENV{WIZ_fileNetStubRootName};
 $seiFileNameSpecificStub  = "$seiStubRootName".$exe_suffix;
-$seuFileNameSpecific      = $ENV{WIZ_fileUninstall};
-$seuzFileNameSpecific     = $ENV{WIZ_fileUninstallZip};
 
 if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 {

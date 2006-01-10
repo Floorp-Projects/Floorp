@@ -541,7 +541,6 @@ typedef struct setupStruct
   LPSTR     szProductName;
   LPSTR     szProductNameInternal;
   LPSTR     szProductNamePrevious;
-  LPSTR     szUninstallFilename;
   LPSTR     szUserAgent;
   LPSTR     szProgramFolderName;
   LPSTR     szProgramFolderPath;

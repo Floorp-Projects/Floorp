@@ -256,7 +256,7 @@ function registerMainKeys(winreg)
     data = "\"" + fProgram + "$MainExeFile$\"";
     winreg.setValueString(subkey + "\\shell\\open\\command", "", data);
 
-    data = "\"" + fProgram + "uninstall\\$UninstallFile$\" /ua \"$UserAgent$\" /hs browser";
+    data = "\"" + fProgram + "uninstall\\uninstall.exe\" /ua \"$UserAgent$\" /hs browser";
     winreg.setValueString(subkey + "\\InstallInfo", "HideIconsCommand", data);
 
     winreg.setValueNumber(subkey + "\\InstallInfo", "IconsVisible", 1);
@@ -264,7 +264,7 @@ function registerMainKeys(winreg)
     data = "\"" + fProgram + "$MainExeFile$\" -silent -nosplash -setDefaultBrowser ";
     winreg.setValueString(subkey + "\\InstallInfo", "ReinstallCommand", data);
 
-    data = "\"" + fProgram + "uninstall\\$UninstallFile$\" /ua \"$UserAgent$\" /ss browser";
+    data = "\"" + fProgram + "uninstall\\uninstall.exe\" /ua \"$UserAgent$\" /ss browser";
     winreg.setValueString(subkey + "\\InstallInfo", "ShowIconsCommand", data);
   }
 }

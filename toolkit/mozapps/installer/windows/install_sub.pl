@@ -11,9 +11,6 @@ $exe_suffix = '.exe';
 
 sub BuildPlatformInstaller
 {
-  print "Making uninstaller...\n";
-  MakeUninstall() && die;
-
   # copy the lean installer to stub\ dir
   print "\n****************************\n";
   print "*                          *\n";
@@ -209,55 +206,6 @@ sub BuildPlatformInstaller
     print "***\n\n";
   }
   return 0;
-}
-
-sub MakeUninstall
-{
-  chdir($inConfigFiles);
-  if(MakeUninstallIniFile())
-  {
-    return(1);
-  }
-
-  # Copy the uninstall files to the dist uninstall directory.
-  copy("uninstall.ini", "$gDirDistInstall") ||
-    die "copy uninstall.ini $gDirDistInstall: $!\n";
-  copy("uninstall.ini", "$gDirDistInstall/uninstall") ||
-    die "copy uninstall.ini $gDirDistInstall/uninstall: $!\n";
-  copy("$gDirDistInstall/uninstall.exe", "$gDirDistInstall/uninstall") ||
-    die "copy $gDirDistInstall/uninstall.exe $gDirDistInstall/uninstall: $!\n";
-
-  # build the self-extracting .exe (uninstaller) file.
-  print "\nbuilding self-extracting uninstaller ($seuFileNameSpecific)...\n";
-  copy("$gDirDistInstall/$seiFileNameGeneric", "$gDirDistInstall/$seuFileNameSpecific") ||
-    die "copy $gDirDistInstall/$seiFileNameGeneric $gDirDistInstall/$seuFileNameSpecific: $!\n";
-
-  $origCwd = cwd();
-  chdir($gDirDistInstall);
-
-  if(system("./nsztool.exe $seuFileNameSpecific uninstall/*.*"))
-  {
-    print "\n Error: ./nsztool.exe $seuFileNameSpecific uninstall/*.*\n";
-    return(1);
-  }
-
-  chdir($origCwd);
-
-  MakeExeZip($gDirDistInstall, $seuFileNameSpecific, $seuzFileNameSpecific);
-  unlink <$gDirDistInstall/$seuFileNameSpecific>;
-  return(0);
-}
-
-sub MakeUninstallIniFile
-{
-  # Make config.ini file
-  chdir($inConfigFiles);
-  if(system("perl $gDirPackager/windows/makeuninstallini.pl uninstall.it $gDefaultProductVersion"))
-  {
-    print "\n Error: perl $gDirPackager/windows/makeuninstallini.pl uninstall.it $gDefaultProductVersion\n";
-    return(1);
-  }
-  return(0);
 }
 
 sub MakeExeZip

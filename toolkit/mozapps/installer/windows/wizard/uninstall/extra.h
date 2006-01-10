@@ -91,6 +91,7 @@ void              AppendBackSlash(LPSTR szInput, DWORD dwInputSize);
 void              RemoveSlash(LPSTR szInput);
 void              AppendSlash(LPSTR szInput, DWORD dwInputSize);
 HRESULT           FileExists(LPSTR szFile);
+BOOL              MakeUniquePath(LPSTR szPath);
 BOOL              IsWin95Debute(void);
 HRESULT           CheckInstances();
 BOOL              GetFileVersion(LPSTR szFile, verBlock *vbVersion);

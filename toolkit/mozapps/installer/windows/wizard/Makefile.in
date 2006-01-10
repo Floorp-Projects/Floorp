@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= uninstall setuprsc setup
+DIRS	= setuprsc setup
 
 include $(topsrcdir)/config/rules.mk
 
