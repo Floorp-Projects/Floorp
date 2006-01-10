@@ -15,7 +15,7 @@ xmlns:rss="http://purl.org/rss/1.0/"
 
 <div>
 
-		<!-- 1.0 --> 
+		<!-- 0.91, 1.0 --> 
 
 		<xsl:for-each select="/rdf:RDF/rss:item">
 		<div class='item'>
