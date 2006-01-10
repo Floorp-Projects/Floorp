@@ -50,6 +50,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIParser.h"
 #include "nsICharsetAlias.h"
+#include "nsIPrincipal.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -173,9 +174,26 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
 
     // Reset and set up document
     nsCOMPtr<nsIDocument> sourceDoc = do_QueryInterface(aSourceDocument);
+    nsIPrincipal* sourcePrincipal = sourceDoc->GetPrincipal();
+    if (!sourcePrincipal) {
+        return;
+    }
+
     nsCOMPtr<nsILoadGroup> loadGroup = sourceDoc->GetDocumentLoadGroup();
+    nsCOMPtr<nsIChannel> channel = sourceDoc->GetChannel();
+    if (!channel) {
+        // Need to synthesize one
+        if (NS_FAILED(NS_NewChannel(getter_AddRefs(channel),
+                                    sourceDoc->GetDocumentURI(),
+                                    nsnull,
+                                    loadGroup))) {
+            return;
+        }
+        channel->SetOwner(sourcePrincipal);
+    }
     // Copy the channel and loadgroup from the source document.
-    doc->Reset(sourceDoc->GetChannel(), loadGroup);
+    doc->Reset(channel, loadGroup);
+    doc->SetPrincipal(sourcePrincipal);
     doc->SetBaseURI(sourceDoc->GetBaseURI());
 
     // Set the charset
