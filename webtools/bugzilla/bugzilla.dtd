@@ -5,7 +5,7 @@
 	maintainer CDATA #REQUIRED
 	exporter CDATA #IMPLIED
 >
-<!ELEMENT bug (bug_id, (alias?, creation_ts, short_desc, delta_ts, reporter_accessible, cclist_accessible, classification_id, classification, product, component, version, rep_platform, op_sys, bug_status, resolution?, bug_file_loc?, status_whiteboard?, keywords*, priority, bug_severity, target_milestone?, dependson*, blocked*, votes?, reporter, assigned_to, qa_contact?, cc*, (estimated_time, remaining_time, actual_time, deadline)?, group*, flag*, long_desc*, attachment*)?)>
+<!ELEMENT bug (bug_id, (alias?, creation_ts, short_desc, delta_ts, reporter_accessible, cclist_accessible, classification_id, classification, product, component, version, rep_platform, op_sys, bug_status, resolution?, bug_file_loc?, status_whiteboard?, keywords*, priority, bug_severity, target_milestone?, dependson*, blocked*, votes?, everconfirmed, reporter, assigned_to, qa_contact?, cc*, (estimated_time, remaining_time, actual_time, deadline)?, group*, flag*, long_desc*, attachment*)?)>
 <!ATTLIST bug
 	error (NotFound | NotPermitted | InvalidBugId) #IMPLIED
 >
@@ -39,6 +39,7 @@
 <!ELEMENT dependson (#PCDATA)>
 <!ELEMENT blocked (#PCDATA)>
 <!ELEMENT votes (#PCDATA)>
+<!ELEMENT everconfirmed (#PCDATA)>
 <!ELEMENT cc (#PCDATA)>
 <!ELEMENT group (#PCDATA)>
 <!ELEMENT estimated_time (#PCDATA)>

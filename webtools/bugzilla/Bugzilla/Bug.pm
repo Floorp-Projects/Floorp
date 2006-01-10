@@ -78,7 +78,7 @@ sub fields {
                     bug_status resolution
                     bug_file_loc status_whiteboard keywords
                     priority bug_severity target_milestone
-                    dependson blocked votes
+                    dependson blocked votes everconfirmed
                     reporter assigned_to cc
                    );
 
@@ -172,7 +172,7 @@ sub initBug  {
       bug_file_loc, short_desc, target_milestone,
       qa_contact AS qa_contact_id, status_whiteboard, " .
       $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') . ",
-      delta_ts, COALESCE(SUM(votes.vote_count), 0),
+      delta_ts, COALESCE(SUM(votes.vote_count), 0), everconfirmed,
       reporter_accessible, cclist_accessible,
       estimated_time, remaining_time, " .
       $dbh->sql_date_format('deadline', '%Y-%m-%d') . "
@@ -191,7 +191,7 @@ sub initBug  {
       rep_platform, op_sys, bug_status, resolution, priority,
       bug_severity, bugs.component_id, components.name, assigned_to,
       reporter, bug_file_loc, short_desc, target_milestone,
-      qa_contact, status_whiteboard, creation_ts, 
+      qa_contact, status_whiteboard, everconfirmed, creation_ts, 
       delta_ts, reporter_accessible, cclist_accessible,
       estimated_time, remaining_time, deadline');
 
@@ -210,7 +210,7 @@ sub initBug  {
                        "assigned_to_id", "reporter_id", 
                        "bug_file_loc", "short_desc",
                        "target_milestone", "qa_contact_id", "status_whiteboard",
-                       "creation_ts", "delta_ts", "votes",
+                       "creation_ts", "delta_ts", "votes", "everconfirmed",
                        "reporter_accessible", "cclist_accessible",
                        "estimated_time", "remaining_time", "deadline")
       {
