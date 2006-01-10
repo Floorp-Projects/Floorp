@@ -1485,8 +1485,10 @@
         <!-- this thing is tricky; its width/height need to be programatically set based on the orientation -->
         <xul:box anonid="labelbox">
           <xul:box anonid="labeltimespacer">
+           <!-- XXX R button commented out until bug 322124 fixed
             <xul:button style="min-width: 10px; padding: 1px; background: red;" label="R"
              oncommand="var e=this.parentNode.parentNode.parentNode.parentNode; if (e.orient == 'horizontal') e.orient = 'vertical'; else e.orient = 'horizontal';" align="center"/>
+           -->    
           </xul:box>
           <xul:box anonid="labeldaybox" flex="1" equalsize="always" />
         </xul:box>
