@@ -37,6 +37,8 @@
 
 #include "gfxPlatformGtk.h"
 
+#include "nsIAtom.h"
+
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 
@@ -46,6 +48,10 @@
 #ifdef MOZ_ENABLE_GLITZ
 #include "gfxGlitzSurface.h"
 #include "glitz-glx.h"
+#endif
+
+#ifndef THEBES_USE_PANGO_CAIRO
+#include <fontconfig/fontconfig.h>
 #endif
 
 static cairo_user_data_key_t cairo_gdk_window_key;
@@ -167,4 +173,102 @@ gfxPlatformGtk::SetSurfaceGdkWindow(gfxASurface *aSurf,
                                  &cairo_gdk_window_key,
                                  win,
                                  nsnull);
+}
+
+// this is in nsFontConfigUtils.h
+extern void NS_AddLangGroup (FcPattern *aPattern, nsIAtom *aLangGroup);
+
+nsresult
+gfxPlatformGtk::GetFontList(const nsACString& aLangGroup,
+                            const nsACString& aGenericFamily,
+                            nsStringArray& aListOfFonts)
+{
+#ifndef THEBES_USE_PANGO_CAIRO
+    FcPattern *pat = NULL;
+    FcObjectSet *os = NULL;
+    FcFontSet *fs = NULL;
+    nsresult rv = NS_ERROR_FAILURE;
+
+    aListOfFonts.Clear();
+
+    PRInt32 serif = 0, sansSerif = 0, monospace = 0, nGenerics;
+
+    pat = FcPatternCreate();
+    if (!pat)
+        goto end;
+
+    os = FcObjectSetBuild(FC_FAMILY, FC_FOUNDRY, 0);
+    if (!os)
+        goto end;
+
+    // take the pattern and add the lang group to it
+    if (!aLangGroup.IsEmpty()) {
+        nsCOMPtr<nsIAtom> langAtom = do_GetAtom(aLangGroup);
+        //XXX fix me //NS_AddLangGroup(pat, langAtom);
+    }
+
+    fs = FcFontList(0, pat, os);
+    if (!fs)
+        goto end;
+
+    if (fs->nfont == 0) {
+        rv = NS_OK;
+        goto end;
+    }
+
+    // Fontconfig supports 3 generic fonts, "serif", "sans-serif", and
+    // "monospace", slightly different from CSS's 5.
+    if (aGenericFamily.IsEmpty())
+        serif = sansSerif = monospace = 1;
+    else if (aGenericFamily.EqualsLiteral("serif"))
+        serif = 1;
+    else if (aGenericFamily.EqualsLiteral("sans-serif"))
+        sansSerif = 1;
+    else if (aGenericFamily.EqualsLiteral("monospace"))
+        monospace = 1;
+    else if (aGenericFamily.EqualsLiteral("cursive") || aGenericFamily.EqualsLiteral("fantasy"))
+        serif = sansSerif = 1;
+    else
+        NS_NOTREACHED("unexpected CSS generic font family");
+    nGenerics = serif + sansSerif + monospace;
+
+    if (serif)
+        aListOfFonts.AppendString(NS_LITERAL_STRING("serif"));
+    if (sansSerif)
+        aListOfFonts.AppendString(NS_LITERAL_STRING("sans-serif"));
+    if (monospace)
+        aListOfFonts.AppendString(NS_LITERAL_STRING("monospace"));
+
+    for (int i = 0; i < fs->nfont; i++) {
+        char *family;
+
+        // if there's no family name, skip this match
+        if (FcPatternGetString (fs->fonts[i], FC_FAMILY, 0,
+                                (FcChar8 **) &family) != FcResultMatch)
+        {
+            continue;
+        }
+
+        aListOfFonts.AppendString(NS_ConvertASCIItoUTF16(nsDependentCString(family)));
+    }
+
+    aListOfFonts.Sort();
+    rv = NS_OK;
+
+  end:
+    if (NS_FAILED(rv))
+        aListOfFonts.Clear();
+
+    if (pat)
+        FcPatternDestroy(pat);
+    if (os)
+        FcObjectSetDestroy(os);
+    if (fs)
+        FcFontSetDestroy(fs);
+
+    return rv;
+#else
+    // pango_cairo case; needs to be written
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }

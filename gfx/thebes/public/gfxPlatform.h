@@ -39,6 +39,8 @@
 #define GFX_PLATFORM_H
 
 #include "prtypes.h"
+#include "nsVoidArray.h"
+
 #include "gfxTypes.h"
 #include "gfxASurface.h"
 
@@ -73,6 +75,20 @@ public:
                                                 PRUint32 height,
                                                 gfxASurface::gfxImageFormat imageFormat,
                                                 PRBool fastPixelAccess = PR_FALSE) = 0;
+
+    /*
+     * Font bits
+     */
+
+    /**
+     * Fill aListOfFonts with the results of querying the list of font names
+     * that correspond to the given language group or generic font family
+     * (or both, or neither).
+     */
+    virtual nsresult GetFontList(const nsACString& aLangGroup,
+                                 const nsACString& aGenericFamily,
+                                 nsStringArray& aListOfFonts);
+
 protected:
     gfxPlatform() { }
     ~gfxPlatform() { }

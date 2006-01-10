@@ -52,6 +52,7 @@
 #include "nsThebesScreenManager.h"
 #include "nsThebesBlender.h"
 #include "nsThebesFontMetrics.h"
+#include "nsThebesFontEnumerator.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesFontMetrics)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesBlender)
@@ -61,6 +62,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesRenderingContext)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesImage)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesRegion)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesScreenManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesFontEnumerator)
 
 static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -108,8 +110,7 @@ static const nsModuleComponentInfo components[] =
   { "Thebes nsFontMetrics",
     NS_FONT_METRICS_CID,
     "@mozilla.org/gfx/fontmetrics;1",
-    nsThebesFontMetricsConstructor
-  },
+    nsThebesFontMetricsConstructor },
   { "Thebes Device Context",
     NS_DEVICE_CONTEXT_CID,
     "@mozilla.org/gfx/devicecontext;1",
@@ -141,7 +142,11 @@ static const nsModuleComponentInfo components[] =
   { "image frame",
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",
-    gfxImageFrameConstructor, }
+    gfxImageFrameConstructor, },
+  { "Thebes Font Enumerator",
+    NS_FONT_ENUMERATOR_CID,
+    "@mozilla.org/gfx/fontenumerator;1",
+    nsThebesFontEnumeratorConstructor },
 };
 
 PR_STATIC_CALLBACK(void)

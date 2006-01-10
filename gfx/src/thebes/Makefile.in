@@ -84,6 +84,7 @@ CPPSRCS		= \
 		nsThebesScreen.cpp \
 		nsThebesScreenManager.cpp \
 		nsThebesFontMetrics.cpp \
+		nsThebesFontEnumerator.cpp \
 		$(NULL)
 
 
