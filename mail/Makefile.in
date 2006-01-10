@@ -44,6 +44,8 @@ include $(topsrcdir)/config/config.mk
 
 DIRS		= base locales components extensions themes app 
 
+include $(topsrcdir)/config/rules.mk
+
 # this will get cleaned up once OSX comes on board. We won't need platform specific ifdefs for
 # entering mail\config
 
@@ -60,5 +62,3 @@ libs:: $(FINAL_TARGET)/uninstall/uninstall.ini
 
 endif
 endif
-
-include $(topsrcdir)/config/rules.mk

@@ -44,6 +44,8 @@ include $(topsrcdir)/config/config.mk
 
 DIRS = base components locales extensions themes app
 
+include $(topsrcdir)/config/rules.mk
+
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_INSTALLER
 DIRS += installer/windows
@@ -57,5 +59,3 @@ libs:: $(FINAL_TARGET)/uninstall/uninstall.ini
 
 endif
 endif
-
-include $(topsrcdir)/config/rules.mk
