@@ -137,6 +137,8 @@ nsScreenGtk :: Init ()
   GdkAtom cardinal_atom = (GdkAtom) XA_CARDINAL;
 #endif
 
+  gdk_error_trap_push();
+
   if (!gdk_property_get(root_window,
                         gdk_atom_intern ("_NET_WORKAREA", FALSE),
                         cardinal_atom,
@@ -149,6 +151,9 @@ nsScreenGtk :: Init ()
     // Nothing we can do about it, so assume full screen size.
     return;
   }
+
+  // Flush the X queue to catch errors now.
+  gdk_flush();
 
   if (!gdk_error_trap_pop() &&
       type_returned == cardinal_atom &&
