@@ -44,7 +44,7 @@
 
 nsScreenGtk :: nsScreenGtk (  )
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mScreenNum = 0;
   mXOrg = 0;
