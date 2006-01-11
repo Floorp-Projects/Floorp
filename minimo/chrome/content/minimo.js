@@ -104,8 +104,8 @@ nsBrowserStatusHandler.prototype =
       if (aStateFlags & nsIWebProgressListener.STATE_START)
       {
         // disable and hides the nav-menu-button; and enables unhide the stop button
-		document.getElementById("nav-menu-button").hidden=true;
-		document.getElementById("nav-stop-button").hidden=false;
+        document.getElementById("nav-menu-button").className="stop-button";
+        document.getElementById("nav-menu-button").setAttribute("command","cmd_BrowserStop");
 
         // Notify anyone interested that we are loading.
         try {
@@ -136,8 +136,8 @@ nsBrowserStatusHandler.prototype =
         }
 
         // disable and hides the nav-stop-button; and enables unhides the nav-menu-button button
-		document.getElementById("nav-menu-button").hidden=true;
-		document.getElementById("nav-stop-button").hidden=false;
+        document.getElementById("nav-menu-button").className="menu-button";
+        document.getElementById("nav-menu-button").setAttribute("command","cmd_BrowserNavMenu");
 
         return;
       }
