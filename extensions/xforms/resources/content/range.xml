@@ -346,8 +346,16 @@
 
           if (event.keyCode == event.DOM_VK_LEFT) {
             this.setSlider(this.rVal - move);
-          } else if (event.keyCode == event.DOM_VK_RIGHT) {        
+          } else if (event.keyCode == event.DOM_VK_RIGHT) {
             this.setSlider(this.rVal + move);
+          } else if (event.keyCode == event.DOM_VK_PAGE_DOWN) {
+            this.setSlider(this.rVal - move * 2);
+          } else if (event.keyCode == event.DOM_VK_PAGE_UP) {
+            this.setSlider(this.rVal + move * 2);
+          } else if (event.keyCode == event.DOM_VK_HOME) {
+            this.setSlider(this.rBegin);
+          } else if (event.keyCode == event.DOM_VK_END) {
+            this.setSlider(this.rEnd);
           }
         </body>
       </method>
