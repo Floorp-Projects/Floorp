@@ -3,6 +3,12 @@
  div#map           { margin-left: 0 ! important;}
  div#panel         { display: none  ! important;}
  table#headertitle { display: none  ! important;}
+ table#titlebar    { display: none  ! important;}
+ div#gaia          { display: none  ! important;}
+ td.logo           { display: none  ! important;}
+ td.tabs           { display: none  ! important;}
+ td.helplinks      { display: none  ! important;}
+ span.example      { display: none  ! important;}
  }
 
  @-moz-document domain(slashdot.org)
@@ -50,7 +56,6 @@
     padding: 0     ! important;
  }
 }
-
 
 @-moz-document domain(weblogs.mozillazine.org)
 {

@@ -92,13 +92,6 @@
                                               onclick="syncPref(this)" 
                                               />
     
-                                <checkbox id="sitessr" 
-                                              onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
-                                              tabindex="13" 
-                                              label="&usesiteSSRCheckbox.label;"
-                                              preference="ssr.site.enabled" preftype="bool"
-                                              onclick="syncPref(this)" 
-                                              />
                             </vbox>
     				    </groupbox>
                     </vbox>

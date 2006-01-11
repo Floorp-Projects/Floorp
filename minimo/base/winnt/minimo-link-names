@@ -19,12 +19,14 @@ nsTransactionManagerModule
 appshell
 nsChromeModule
 nsMorkModule
+tkAutoCompleteModule
 nsToolkitCompsModule
 nsXMLExtrasModule
-TransformiixModule
 nsWebServicesModule
+nsPluginModule
 SoftKeyBoardModule
 nsPhoneSupportModule
 SpatialNavigationModule
 SSRModule
-DeviceSupportModule
+nsCookieModule
+nsPermissionsModule

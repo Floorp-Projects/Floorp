@@ -249,6 +249,7 @@ nsFullScreen::GetChromeItems(nsISimpleEnumerator **_retval)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#ifndef WINCE
 
 class nsBadCertListener : public nsIBadCertListener
 {
@@ -387,6 +388,7 @@ nsBadCertListener::NotifyCrlNextupdate(nsIInterfaceRequestor *socketInfo, const 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#endif
 
 nsresult StartupProfile()
 {    
@@ -442,9 +444,13 @@ void DoPreferences()
 }
 
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFullScreen)
+
+#ifndef WINCE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBadCertListener)
+#endif
 
 static const nsModuleComponentInfo defaultAppComps[] = {
   {
@@ -454,6 +460,12 @@ static const nsModuleComponentInfo defaultAppComps[] = {
      nsBrowserStatusFilterConstructor
   },
 
+  { "nsBrowserInstance",
+    NS_BROWSERINSTANCE_CID,
+    NS_BROWSERINSTANCE_CONTRACTID,
+    nsBrowserInstanceConstructor
+  },
+  
   {
      "FullScreen",
      NS_FULLSCREEN_CID,
@@ -461,12 +473,14 @@ static const nsModuleComponentInfo defaultAppComps[] = {
      nsFullScreenConstructor
   },
 
+#ifndef WINCE
   {
      "Bad Cert Dialogs",
      NS_BADCERTLISTENER_CID,
      NS_BADCERTLISTENER_CONTRACTID,
      nsBadCertListenerConstructor
   },
+#endif
 };
 
 void OverrideComponents()

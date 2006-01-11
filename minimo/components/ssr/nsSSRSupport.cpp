@@ -44,6 +44,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 #include "nsICategoryManager.h"
+#include "nsIObserverService.h"
 
 #include "string.h"
 #include "nsNetUtil.h"
@@ -68,11 +69,10 @@ public:
   nsCOMPtr<nsIStyleSheetService> m_sss;
 
   PRBool mUsingSSR;
-  PRBool mUsingSiteSSR;
 };
 
 nsSSRSupport::nsSSRSupport()  
-  : mUsingSiteSSR(PR_FALSE), mUsingSSR(PR_FALSE)
+  : mUsingSSR(PR_FALSE)
 {
   m_sss = do_GetService("@mozilla.org/content/style-sheet-service;1");
 }  
@@ -128,13 +128,13 @@ nsSSRSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar
     NS_ENSURE_SUCCESS(rv, rv);
     
     prefBranch->AddObserver("ssr.", this, PR_FALSE);
+    prefBranch->GetBoolPref("ssr.enabled", &mUsingSSR);
 
-    PRBool enabled;
-    prefBranch->GetBoolPref("ssr.enabled", &enabled);
-    SetSSREnabled(enabled);
 
-    prefBranch->GetBoolPref("ssr.sites.enabled", &enabled);
-    SetSiteSSREnabled(enabled);
+    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    observerService->AddObserver(this, "loading-domain", PR_FALSE);
 
     return NS_OK;
   }
@@ -148,21 +148,33 @@ nsSSRSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar
     
     if (!strcmp(pref, "ssr.enabled"))
     {
-      PRBool enabled;
-      prefBranch->GetBoolPref(pref, &enabled);
-
-      SetSSREnabled(enabled);
+      prefBranch->GetBoolPref(pref, &mUsingSSR);
       return NS_OK;
     }
+  }
 
-    if (!strcmp(pref, "ssr.site.enabled"))
+  if (!strcmp(aTopic, "loading-domain")) 
+  {
+    if (!mUsingSSR)
+      return NS_OK;
+
+    const char* domain = NS_ConvertUCS2toUTF8(aData).get();
+    
+    if (!strcmp(domain, "maps.google.com") ||
+        !strcmp(domain, "slashdot.org") ||
+        !strcmp(domain, "www.digg.com") ||
+        !strcmp(domain, "weblogs.mozillazine.org") ||
+        !strcmp(domain, "forums.mozillazine.org") )
     {
-      PRBool enabled;
-      prefBranch->GetBoolPref(pref, &enabled);
-
-      SetSiteSSREnabled(enabled);
-      return NS_OK;
+      SetSSREnabled(PR_FALSE);
+      SetSiteSSREnabled(PR_TRUE);
     }
+    else
+    {
+      SetSSREnabled(PR_TRUE);
+      SetSiteSSREnabled(PR_FALSE);
+    }
+    return NS_OK;
   }
   return NS_OK;
 }

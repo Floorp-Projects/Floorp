@@ -282,11 +282,11 @@ pref("network.http.redirection-limit", 20);
 // NOTE: support for "compress" has been disabled per bug 196406.
 pref("network.http.accept-encoding" ,"gzip,deflate");
 
-pref("network.http.pipelining"      , false);
+pref("network.http.pipelining"      , true);
 pref("network.http.proxy.pipelining", false);
 
 // Max number of requests in the pipeline
-pref("network.http.pipelining.maxrequests" , 4);
+pref("network.http.pipelining.maxrequests" , 12);
 
 // </http>
 
@@ -640,7 +640,6 @@ pref("network.autodial-helper.enabled", true);
 pref("config.wince.overrideHWKeys", false);
 
 pref("ssr.enabled", true);
-pref("ssr.site.enabled", true);
 
 pref("skey.enabled", true);
 

@@ -103,6 +103,15 @@ nsBrowserStatusHandler.prototype =
       
       if (aStateFlags & nsIWebProgressListener.STATE_START)
       {
+        // Notify anyone interested that we are loading.
+        try {
+          var os = Components.classes["@mozilla.org/observer-service;1"]
+                             .getService(Components.interfaces.nsIObserverService);
+          var host = aRequest.QueryInterface(Components.interfaces.nsIChannel).URI.host;
+          os.notifyObservers(null, "loading-domain", host);
+        }
+        catch(e) {}
+
         document.getElementById("statusbar").hidden=false;
         
 		if(aRequest && aWebProgress.DOMWindow == content) {

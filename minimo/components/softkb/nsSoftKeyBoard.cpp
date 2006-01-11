@@ -610,13 +610,18 @@ nsSoftKeyBoard::OpenSIP()
   if (hWndSIP)
     ::ShowWindow( hWndSIP, SW_SHOW);
 
-  hWndSIP = ::FindWindow( _T( "MS_SIPBUTTON" ), NULL );
-  if (hWndSIP)
-    ::ShowWindow( hWndSIP, SW_SHOW);
-
   SHSipPreference(NULL, SIP_UP);
 
-  SHFullScreen(GetForegroundWindow(), SHFS_SHOWSIPBUTTON);
+  //  SHFullScreen(GetForegroundWindow(), SHFS_SHOWSIPBUTTON);
+
+  // keep the sip button hidden!
+  
+  hWndSIP = FindWindow( _T( "MS_SIPBUTTON" ), NULL );
+  if (hWndSIP) 
+  {
+    ShowWindow( hWndSIP, SW_HIDE );
+    SetWindowPos(hWndSIP, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+  }
 
 #endif
 }

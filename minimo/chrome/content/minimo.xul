@@ -322,6 +322,10 @@
       <menuitem id="command_go"
                 command="cmd_BrowserGo" 
                 label="&goCmd.label;"  /> 
+
+      <menuitem id="command_stop"
+                command="cmd_BrowserStop" 
+                label="&stopCmd.label;"  /> 
       
     </menupopup>  
     

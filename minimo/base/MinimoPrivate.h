@@ -97,7 +97,9 @@ void GetScreenSize(unsigned long* x, unsigned long* y);
 
 void WriteConsoleLog();
 
+#include "nsIBrowserInstance.h"
 
 #include "nsBrowserStatusFilter.h"
+#include "nsBrowserInstance.h"
 
 #endif // MINIMO_PRIVATE_H

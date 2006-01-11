@@ -54,6 +54,8 @@ PROGRAM		= minimo$(BIN_SUFFIX)
 MODULE		= minimo
 
 REQUIRES	= xpcom					 \
+		      browser                \
+		      history                \
 		      appshell				 \
 		      string				 \
 		      embed_base			 \
@@ -89,7 +91,7 @@ CPPSRCS	    = Minimo.cpp		  \
 
 # this should move into the toolkit!
 LOCAL_INCLUDES	= -I$(srcdir) -I$(topsrcdir)/xpfe/browser/src/
-CPPSRCS    += nsBrowserStatusFilter.cpp
+CPPSRCS    += nsBrowserStatusFilter.cpp nsBrowserInstance.cpp
 
 ifdef WINCE
 RCINCLUDE  = wince/SplashScreen.rc
@@ -156,9 +158,10 @@ endif
 
 export::
 	$(NSINSTALL) $(topsrcdir)/xpfe/browser/src/nsBrowserStatusFilter.cpp .
+	$(NSINSTALL) $(topsrcdir)/xpfe/browser/src/nsBrowserInstance.cpp .
 
 
-GARBAGE += nsBrowserStatusFilter.cpp
+GARBAGE += nsBrowserStatusFilter.cpp nsBrowserInstance.cpp
 
 ifdef WINCE
 package::
