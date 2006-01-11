@@ -132,12 +132,3 @@ nsScreenOS2 :: GetColorDepth(PRInt32 *aColorDepth)
 } // GetColorDepth
 
 
-NS_IMETHODIMP
-nsScreenOS2 :: GetGammaValue(double *aGammaValue)
-{
-  // XXX - Replace this with code to query the gamma value for your platform
-
-  *aGammaValue = 2.2;
-
-  return NS_OK;
-} // GetGammaValue
