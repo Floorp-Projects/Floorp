@@ -40,8 +40,10 @@ public:
 
 private:
 
+#if !TARGET_CARBON
     // Take out the menu bar from the reported size of this screen.
   void SubtractMenuBar ( const Rect & inScreenRect, Rect* outAdjustedRect ) ;
+#endif
   
     // are we the primary screen? Needed so we can sub out the menubar if
     // asked.
