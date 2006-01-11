@@ -52,8 +52,8 @@ C3=Component3
 C4=Component5
 C5=Component6
 C6=Component7
-C7=Component8
-C8=Component11
+C7=Component10
+C8=Component12
 
 [Setup Type1]
 ; *** LOCALIZE ME BABY ***
@@ -83,9 +83,9 @@ C0=Component0
 C1=Component1 
 C2=Component3 
 C3=Component5
-C4=COmponent6
+C4=Component6
 C5=Component7
-C6=Component8
+C6=Component12
 
 [Setup Type3]
 ; *** LOCALIZE ME BABY ***
@@ -165,16 +165,6 @@ Attributes=SELECTED
 URL0=$URLPath$
 
 [Component5]
-Description Short=Quality Feedback Agent
-; *** LOCALIZE ME BABY ***
-Description Long=for reporting $AppDisplayName$ crash information
-Archive=talkback.xpi
-Install Size=1960
-Archive Size=812
-Attributes=SELECTED
-URL0=$URLPath$
-
-[Component6]
 Description Short=English US Profile Defaults
 ; *** LOCALIZE ME BABY ***
 Description Long=English US Profile Defaults
@@ -184,7 +174,7 @@ $InstallSizeArchive$:deflenus.xpi
 Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
-[Component7]
+[Component6]
 Description Short=English (US) Language Pack
 ; *** LOCALIZE ME BABY ***
 Description Long=English (US) Language Pack
@@ -194,7 +184,7 @@ $InstallSizeArchive$:langenus.xpi
 Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
-[Component8]
+[Component7]
 Description Short=US Regional Pack
 ; *** LOCALIZE ME BABY ***
 Description Long=Regional contents for US users
@@ -204,7 +194,7 @@ $InstallSizeArchive$:regus.xpi
 Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
-[Component9]
+[Component8]
 Description Short=Debugger
 ; *** LOCALIZE ME BABY ***
 Description Long=for debugging JavaScript
@@ -214,7 +204,7 @@ $InstallSizeArchive$:venkman.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 
-[Component10]
+[Component9]
 Description Short=Inspector
 ; *** LOCALIZE ME BABY ***
 Description Long=DOM Inspector
@@ -224,7 +214,7 @@ $InstallSizeArchive$:inspector.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 
-[Component11]
+[Component10]
 Description Short=Spellchecker
 ; *** LOCALIZE ME BABY ***
 Description Long=Spellchecker
@@ -234,13 +224,23 @@ $InstallSizeArchive$:spellcheck.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 
-[Component12]
+[Component11]
 Description Short=Website Reporter
 ; *** LOCALIZE ME BABY ***
 Description Long=Website Reporter
 Archive=reporter.xpi
 $InstallSize$:reporter
 $InstallSizeArchive$:reporter.xpi
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component12]
+Description Short=Quality Feedback Agent
+; *** LOCALIZE ME BABY ***
+Description Long=for reporting $AppDisplayName$ crash information
+Archive=talkback.xpi
+Install Size=1960
+Archive Size=812
 Attributes=SELECTED
 URL0=$URLPath$
 
