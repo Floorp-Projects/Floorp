@@ -365,8 +365,13 @@ function BrowserMenuTabsActive() {
     tabItem=gBrowser.mTabContainer.childNodes[i];
     var tabMenuElement=document.createElement("menuitem");
     tabMenuElement.setAttribute("label",tabItem.label);
+    tabMenuElement.setAttribute("oncommand","BrowserTabFocus("+i+")");    
     document.getElementById("MenuTabsContainer").appendChild(tabMenuElement);	
   }
+}
+
+function BrowserTabFocus(i) {
+	gBrowser.selectedTab=gBrowser.mTabContainer.childNodes[i];
 }
 
 /* 
