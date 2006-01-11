@@ -22,8 +22,8 @@
 <!ENTITY  configName.label              "Name of configuration">
 <!ENTITY  configLocation.label          "Location of configuration">
 
-<!ENTITY  saveOnExit.label             "Save settings automatically on exit">
-<!ENTITY  zipLocation.label             "Path to ZIP executable">
+<!ENTITY  saveOnExit.label              "Save configuration automatically on exit">
+<!ENTITY  zipLocation.label             "In order to create the XPI, we need to use ZIP. If ZIP is not in your path, you can specify it here">
 
 
 

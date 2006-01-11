@@ -47,18 +47,18 @@
         buttons="accept,cancel"
         ondialogaccept="return OnConfigOK()"
         onload="OnConfigLoad()"
-        width="500"
-        height="200"
+        style="width: 40em;"
         >
   <script src="chrome://cckwizard/content/cckwizard.js"/>
 
-<label>&configName.label;</label>
-<vbox>
-<textbox flex="1" id="cnc-name" onchange="configCheckOKButton();" onkeyup="configCheckOKButton();"/>/>
-&configLocation.label;
-<hbox>
-<textbox readonly="true" flex="1" id="cnc-location"/>
-<button label="&chooseDir.label;" oncommand="choosedir('cnc-location');configCheckOKButton();"/>
-</hbox>
-</vbox>
+  <label>&configName.label;</label>
+  <vbox flex="1">
+    <textbox flex="1" id="cnc-name" onchange="configCheckOKButton();" onkeyup="configCheckOKButton();"/>/>
+    &configLocation.label;
+    <hbox>
+      <textbox readonly="true" flex="1" id="cnc-location"/>
+      <button label="&chooseDir.label;" oncommand="choosedir('cnc-location');configCheckOKButton();"/>
+    </hbox>
+  </vbox>
 </dialog>
+

@@ -143,6 +143,8 @@ function DeleteConfig()
                                         null, null, null, null, {});
   if (button == 0) {
     gPrefBranch.deleteBranch("cck.config."+currentconfigname);
+    currentconfigname = "";
+    currentconfigpath = "";
     updateconfiglist();
   }
 }
@@ -206,6 +208,8 @@ function updateconfiglist()
     document.getElementById('deleteconfig').disabled = true;
     document.getElementById('showconfig').disabled = true;
     document.getElementById('copyconfig').disabled = true;
+    currentconfigname = "";
+    currentconfigpath = "";
   }
 }
 
@@ -274,25 +278,59 @@ function OnConfigLoad()
 }
 
 
+function ClearAll()
+{
+    /* clear out all data */
+    var elements = this.opener.document.getElementsByAttribute("id", "*");
+    for (var i=0; i < elements.length; i++) {
+      if ((elements[i].nodeName == "textbox") ||
+          (elements[i].nodeName == "radiogroup") ||
+          (elements[i].nodeName == "checkbox") ||
+          (elements[i].id == "RootKey1") ||
+          (elements[i].id == "Type1")) {
+        if ((elements[i].id != "saveOnExit") && (elements[i].id != "zipLocation")) {
+          elements[i].value = "";
+        }
+      } else if (elements[i].id == "prefList") {
+        listbox = this.opener.document.getElementById('prefList');    
+        var children = listbox.childNodes;
+        for (var j = children.length; j > 0; j--)
+        {
+           listbox.removeChild(children[j-1]);
+        }
+      } else if (elements[i].id == "regList") {
+        listbox = this.opener.document.getElementById('regList');    
+        var children = listbox.childNodes;
+        for (var j = children.length; j > 0; j--)
+        {
+           listbox.removeChild(children[j-1]);
+        }
+      } else if (elements[i].id == "searchPluginList") {
+        listbox = this.opener.document.getElementById('searchPluginList');    
+        var children = listbox.childNodes;
+        for (var j = children.length; j > 0; j--)
+        {
+           listbox.removeChild(children[j-1]);
+        }
+      }
+    } 
+}
+
 function OnConfigOK()
 {
   var configname = document.getElementById('cnc-name').value;
   var configlocation = document.getElementById('cnc-location').value;
-  if ((configname) && (configlocation)) {
-    gPrefBranch.setCharPref("cck.config." + configname, configlocation);
-    this.opener.setcurrentconfig(configname);
-    if (window.name == 'copyconfig') {
-    /* ---------- */
-  var destdir = Components.classes["@mozilla.org/file/local;1"]
-                          .createInstance(Components.interfaces.nsILocalFile);
-  destdir.initWithPath(configlocation);
-  
-  this.opener.CCKWriteConfigFile(destdir);
-
-    }
+  if (window.name == 'copyconfig') {
+    var destdir = Components.classes["@mozilla.org/file/local;1"]
+                            .createInstance(Components.interfaces.nsILocalFile);
+    destdir.initWithPath(configlocation);
+    this.opener.CCKWriteConfigFile(destdir);
   } else {
-    return false;
+    ClearAll();
   }
+  gPrefBranch.setCharPref("cck.config." + configname, configlocation);
+  this.opener.setcurrentconfig(configname);
+
 }
 
 function configCheckOKButton()
@@ -634,8 +672,20 @@ function CreateCCK()
     installrdfdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
   } catch(ex) {}
   CCKWriteInstallRDF(installrdfdir);
+  
+// For now, do to a Firefox 1.5 bug, we have to put install.rdf in a subdir and install
+// it from there. So the installer needs a different XPI.
+// We do this first so the install.js that is in the dir is the "good" one.
+  var installerfilename = document.getElementById("filename").value;
+  if (installerfilename.length == 0)
+    installerfilename = "cck";
+  installerfilename += "-installer.xpi";
 
-  CCKWriteInstallJS(destdir);  
+  CCKWriteInstallJS(destdir, true);
+  CCKZip(installerfilename, destdir,
+         "chrome", "components", "defaults", "plugins", "searchplugins", "chrome.manifest", "installrdf", "install.js");
+         
+  CCKWriteInstallJS(destdir, false);
   var filename = document.getElementById("filename").value;
   if (filename.length == 0)
     filename = "cck";
@@ -643,17 +693,7 @@ function CreateCCK()
   
   CCKZip(filename, destdir,
          "chrome", "components", "defaults", "plugins", "searchplugins", "chrome.manifest", "install.rdf", "install.js");
-  var bundle = document.getElementById("bundle_cckwizard");
-  
-// For now, do to a Firefox 1.5 bug, we have to put install.rdf in a subdir and install
-// it from there. So the installer needs a different XPI.
-  var installerfilename = document.getElementById("filename").value;
-  if (installerfilename.length == 0)
-    installerfilename = "cck";
-  installerfilename += "-installer.xpi";
 
-  CCKZip(installerfilename, destdir,
-         "chrome", "components", "defaults", "plugins", "searchplugins", "chrome.manifest", "installrdf", "install.js");
   var bundle = document.getElementById("bundle_cckwizard");
 
   gPromptService.alert(window, bundle.getString("windowTitle"),
@@ -1284,7 +1324,7 @@ function CCKWriteInstallRDF(destdir)
   fos.close();
 }
 
-function CCKWriteInstallJS(destdir)
+function CCKWriteInstallJS(destdir, useinstallrdfdir)
 {
   var file = destdir.clone();
   file.append("install.js");
@@ -1322,9 +1362,16 @@ function CCKWriteInstallJS(destdir)
   else
     str = str.replace(/%searchplugins%/g, '');
     
+  var brokeway = "addDirectory(\"\", \"%version%\", \"installrdf\", cckextensiondir, \"\", true);";
+  var goodway  = "addFile(\"\", \"%version%\", \"install.rdf\", cckextensiondir, \"\", true);";
+
+  if (useinstallrdfdir)
+    str = str.replace(/%installrdf%/g, brokeway);
+  else
+    str = str.replace(/%installrdf%/g, goodway);  
+
   str = str.replace(/%version%/g, document.getElementById("version").value);
-
-
+  
   fos.write(str, str.length); 
   fos.close();
 }
@@ -1400,6 +1447,7 @@ function CCKWriteConfigFile(destdir)
              
   var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
                        .createInstance(Components.interfaces.nsIFileOutputStream);
+                       
   fos.init(file, -1, -1, false);
 
   var elements = document.getElementsByAttribute("id", "*")
@@ -1471,7 +1519,6 @@ function CCKReadConfigFile(srcdir)
   var lis = stream.QueryInterface(Components.interfaces.nsILineInputStream);
   var line = {value:null};
   
-  var prefList = document.getElementById('prefList');    
   configarray = new Array();
   do {
     var more = lis.readLine(line);
@@ -1489,6 +1536,15 @@ function CCKReadConfigFile(srcdir)
   
   // handle prefs
   listbox = document.getElementById('prefList');
+  
+  var children = listbox.childNodes;
+  for (var i = children.length; i > 0; i--)
+  {
+    listbox.removeChild(children[i-1]);
+  }
+
+
+
   var i = 1;
   while( prefname = configarray['PreferenceName' + i]) {
     listbox.appendItem(prefname, configarray['PreferenceValue' + i]);
@@ -1497,6 +1553,13 @@ function CCKReadConfigFile(srcdir)
   
   // handle registry items
   listbox = document.getElementById('regList');
+  
+  var children = listbox.childNodes;
+  for (var i = children.length; i > 0; i--)
+  {
+    listbox.removeChild(children[i-1]);
+  }
+
   var i = 1;
   while( regname = configarray['RegName' + i]) {
     var listitem = listbox.appendItem(regname, "");
@@ -1513,6 +1576,13 @@ function CCKReadConfigFile(srcdir)
 
   // handle searchplugins
   listbox = document.getElementById('searchPluginList');
+  
+  var children = listbox.childNodes;
+  for (var i = children.length; i > 0; i--)
+  {
+    listbox.removeChild(children[i-1]);
+  }
+
   var i = 1;
   while(searchpluginname = configarray['SearchPlugin' + i]) {
     item = document.createElement("richlistitem");
