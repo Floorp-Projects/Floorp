@@ -97,6 +97,8 @@ CPPSRCS		= \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
 		nsGtkIMEHelper.cpp \
+		nsScreenGtk.cpp \
+		nsScreenManagerGtk.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
