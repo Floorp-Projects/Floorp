@@ -46,8 +46,6 @@
 nsScreenMac :: nsScreenMac ( GDHandle inScreen )
   : mScreen(inScreen)
 {
-  NS_INIT_ISUPPORTS();
-
   NS_ASSERTION ( inScreen, "Passing null device to nsScreenMac" );
   
   // nothing else to do. I guess we could cache a bunch of information
