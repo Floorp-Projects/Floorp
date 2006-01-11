@@ -155,7 +155,7 @@ nsScreenGtk :: Init ()
   }
 
   if (!gdk_error_trap_pop() &&
-      type_returned == gdk_x11_xatom_to_atom(XA_CARDINAL) &&
+      type_returned == cardinal_atom &&
       length_returned && (length_returned % 4) == 0 &&
       format_returned == 32) {
     int num_items = length_returned / sizeof(long);
