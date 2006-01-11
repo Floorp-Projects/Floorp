@@ -63,6 +63,7 @@
 
 #include "nsSound.h"
 #include "nsNativeScrollbar.h"
+#include "nsScreenManagerMac.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCocoaWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildView)
@@ -81,6 +82,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerMac)
 
 #include "nsBidiKeyboard.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
