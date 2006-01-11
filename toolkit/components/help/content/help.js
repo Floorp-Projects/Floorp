@@ -101,10 +101,6 @@ var helpFileDS;
 # reduction on all links within the current help set.
 var helpBaseURI;
 
-var gIgnoreFocus = false;
-var gClickSelectsAll;
-var gIgnoreClick = false;
-
 /* defaultTopic is either set
    1. in the openHelp() call, passed as an argument to the Help window and
       evaluated in init(), or
@@ -179,8 +175,9 @@ function init() {
 
   webProgress.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
-  gClickSelectsAll = getBoolPref("browser.urlbar.clickSelectsAll", true);
-  
+  var searchBox = document.getElementById("findText");
+  searchBox.clickSelectsAll = getBoolPref("browser.urlbar.clickSelectsAll", true);
+
   setTimeout(focusSearch, 0);
 }
 
@@ -631,33 +628,6 @@ function onselect_loadURI(tree) {
     } catch (e) {
     }// when switching between tabs a spurious row number is returned.
 }
-
-// copied from browser.js to handle the searchbar
-function SearchbarFocusHandler(aEvent, aElt)
-{
-  if (gIgnoreFocus)
-    gIgnoreFocus = false;
-  else if (gClickSelectsAll)
-    aElt.select();
-}
-
-function SearchbarMouseDownHandler(aEvent, aElt)
-{
-  if (aElt.hasAttribute("focused")) {
-    gIgnoreClick = true;
-  } else {
-    gIgnoreFocus = true;
-    gIgnoreClick = false;
-    aElt.setSelectionRange(0, 0);
-  }
-}
-
-function SearchbarClickHandler(aEvent, aElt)
-{
-  if (!gIgnoreClick && gClickSelectsAll && aElt.selectionStart == aElt.selectionEnd)
-    aElt.select();
-}
-
 
 function focusSearch() {
   var searchBox = document.getElementById("findText");

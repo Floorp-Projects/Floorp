@@ -185,9 +185,6 @@
           <label value="&searchtab.label;" accesskey="&searchtab.accesskey;" 
                  control="findText"/>
           <textbox id="findText" type="timed" timeout="500"
-                   onfocus="SearchbarFocusHandler(event, this);"
-                   onmousedown="SearchbarMouseDownHandler(event, this);"
-                   onclick="SearchbarClickHandler(event, this);"
                    oncommand="doFind();"/>
         </toolbaritem>
       </toolbar>
