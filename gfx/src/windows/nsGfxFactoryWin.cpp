@@ -48,7 +48,6 @@
 #include "nsDeviceContextSpecWin.h"
 #include "nsDeviceContextSpecFactoryW.h"
 #include "nsScriptableRegion.h"
-#include "nsScreenManagerWin.h"
 #include "nsPrintOptionsWin.h"
 #include "nsFontList.h"
 #include "nsIGenericFactory.h"
@@ -68,7 +67,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryWin)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableRegion)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
 #ifndef WINCE
@@ -213,11 +211,6 @@ static const nsModuleComponentInfo components[] =
     NS_FONTLIST_CID,
     "@mozilla.org/gfx/fontlist;1",
     nsFontListConstructor },
-
-  { "nsScreenManagerWin",
-    NS_SCREENMANAGER_CID,
-    "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerWinConstructor },
 
   { "windows image frame",
     GFX_IMAGEFRAME_CID,
