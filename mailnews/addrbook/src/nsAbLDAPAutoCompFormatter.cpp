@@ -51,12 +51,12 @@
 #include "nsIServiceManager.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsILDAPMessage.h"
-#include "nsLDAP.h"
 #include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNetError.h"
+#include "nsILDAPErrors.h"
 
 NS_IMPL_ISUPPORTS2(nsAbLDAPAutoCompFormatter, 
 		   nsILDAPAutoCompFormatter, 

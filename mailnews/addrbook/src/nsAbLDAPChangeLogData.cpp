@@ -39,7 +39,6 @@
 
 #include "nsAbLDAPChangeLogData.h"
 #include "nsAbLDAPChangeLogQuery.h"
-#include "nsLDAP.h"
 #include "nsILDAPMessage.h"
 #include "nsIAbCard.h"
 #include "nsIAddrBookSession.h"
@@ -54,6 +53,8 @@
 #include "nsIWindowWatcher.h"
 #include "nsUnicharUtils.h"
 #include "plstr.h"
+#include "nsILDAPErrors.h"
+#include "prmem.h"
 
 // defined here since to be used 
 // only locally to this file.

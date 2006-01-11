@@ -64,9 +64,6 @@ ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
 XPIDLSRCS	+=	\
 			$(NULL)
 endif
-EXPORTS		= \
-		nsLDAP.h \
-		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

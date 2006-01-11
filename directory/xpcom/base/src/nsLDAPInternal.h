@@ -41,7 +41,7 @@
 #define FORCE_PR_LOG /* Allow logging in the release build */
 #endif
 
-#include "nsLDAP.h"
+#include "prlog.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo *gLDAPLogModule;    // defn in nsLDAPProtocolModule.cpp

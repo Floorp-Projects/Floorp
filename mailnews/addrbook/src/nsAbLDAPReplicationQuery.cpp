@@ -46,10 +46,10 @@
 #include "nsILDAPURL.h"
 #include "nsAbBaseCID.h"
 #include "nsProxiedService.h"
-#include "nsLDAP.h"
 #include "nsAbUtils.h"
 #include "nsDirPrefs.h"
 #include "nsCRT.h"
+#include "prmem.h"
 
 NS_IMPL_ISUPPORTS1(nsAbLDAPReplicationQuery, nsIAbLDAPReplicationQuery)
 

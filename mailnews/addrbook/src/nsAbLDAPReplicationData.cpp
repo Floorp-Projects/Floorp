@@ -39,7 +39,6 @@
 
 #include "nsILDAPMessage.h"
 #include "nsAbLDAPReplicationData.h"
-#include "nsLDAP.h"
 #include "nsIAbCard.h"
 #include "nsIAddrBookSession.h"
 #include "nsAbBaseCID.h"
@@ -50,6 +49,7 @@
 #include "nsCPasswordManager.h"
 #include "nsIRDFService.h"
 #include "nsIRDFResource.h"
+#include "nsILDAPErrors.h"
 
 // once bug # 101252 gets fixed, this should be reverted back to be non threadsafe
 // implementation is not really thread safe since each object should exist 

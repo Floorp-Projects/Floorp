@@ -42,6 +42,10 @@
 interface nsILDAPBERValue;
 interface nsILDAPOperation;
 
+%{C++
+#define NS_LDAPMESSAGE_CONTRACTID "@mozilla.org/network/ldap-message;1"
+%}
+
 [scriptable, uuid(973ff50f-2002-4f0c-b57d-2242156139a2)]
 interface nsILDAPMessage : nsISupports
 {

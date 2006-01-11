@@ -57,7 +57,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nspr.h"
-#include "nsLDAP.h"
 #include "nsIStringBundle.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"
@@ -66,6 +65,7 @@
 #include "nsCategoryManagerUtils.h"
 #include "nsILDAPService.h"
 #include "nsILDAPMessage.h"
+#include "nsILDAPErrors.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *sLDAPAutoCompleteLogModule = 0;

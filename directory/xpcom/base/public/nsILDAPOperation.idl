@@ -44,6 +44,10 @@ interface nsILDAPMessage;
 interface nsILDAPMessageListener;
 interface nsIMutableArray;
 
+%{C++
+#define NS_LDAPOPERATION_CONTRACTID "@mozilla.org/network/ldap-operation;1" 
+%}
+
 // XXXdmose check to make sure ctl-related err codes documented
 
 typedef PRUint32 PRIntervalTime;

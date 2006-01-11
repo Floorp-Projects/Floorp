@@ -40,6 +40,10 @@
 
 #include "nsIURI.idl"
 
+%{C++
+#define NS_LDAPURL_CONTRACTID "@mozilla.org/network/ldap-url;1"
+%}
+
 /**
  * Strings in methods inherited from nsIURI, which are using XPIDL
  * |string| types, are expected to be UTF8 encoded. All such strings

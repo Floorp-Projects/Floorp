@@ -59,7 +59,6 @@
 #include "nsIPrefBranch.h"
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
-#include "nsLDAP.h"
 #include "nsIAbLDAPAttributeMap.h"
 
 nsAbLDAPDirectory::nsAbLDAPDirectory() :

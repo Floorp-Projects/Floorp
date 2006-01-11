@@ -42,6 +42,10 @@
 interface nsILDAPOperation;
 interface nsILDAPMessageListener;
 
+%{C++
+#define NS_LDAPCONNECTION_CONTRACTID "@mozilla.org/network/ldap-connection;1" 
+%}
+
 [scriptable, uuid(337ad2fe-1dd2-11b2-89f8-aae1221ec86c)]
 interface nsILDAPConnection : nsISupports
 {

@@ -46,7 +46,7 @@
 #include "nsReadableUtils.h"
 #include "nsISupportsUtils.h"
 #include "nsLDAPBERValue.h"
-
+#include "nsILDAPErrors.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsLDAPMessage)
 NS_IMPL_THREADSAFE_RELEASE(nsLDAPMessage)

@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsLDAPInternal.h"
-#include "nsLDAP.h"
 #include "nsLDAPOperation.h"
 #include "nsLDAPConnection.h"
 #include "nsILDAPMessage.h"
@@ -47,6 +46,7 @@
 #include "nspr.h"
 #include "nsISimpleEnumerator.h"
 #include "nsLDAPControl.h"
+#include "nsILDAPErrors.h"
 
 // constructor
 nsLDAPOperation::nsLDAPOperation()

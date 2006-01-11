@@ -46,7 +46,6 @@
 #include "nsILDAPOperation.h"
 #include "nsIAbLDAPAttributeMap.h"
 #include "nsAbUtils.h"
-#include "nsLDAP.h"
 
 #include "nsIAuthPrompt.h"
 #include "nsIStringBundle.h"

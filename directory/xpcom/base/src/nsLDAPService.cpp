@@ -48,6 +48,7 @@
 #include "nsILDAPURL.h"
 #include "nsAutoLock.h"
 #include "nsCRT.h"
+#include "nsILDAPErrors.h"
 
 // Constants for CIDs used here.
 //

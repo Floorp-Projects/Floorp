@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsLDAP.h"
 #include "nsString.h"
 #include "nsILDAPServer.h"
 #include "nsILDAPURL.h"
