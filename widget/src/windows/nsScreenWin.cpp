@@ -65,8 +65,6 @@ nsScreenWin :: nsScreenWin ( void* inScreen )
   : mScreen(inScreen), mHasMultiMonitorAPIs(PR_FALSE),
       mGetMonitorInfoProc(nsnull)
 {
-  NS_INIT_ISUPPORTS();
-
 #ifdef DEBUG
   HDC hDCScreen = ::GetDC(nsnull);
   NS_ASSERTION(hDCScreen,"GetDC Failure");
