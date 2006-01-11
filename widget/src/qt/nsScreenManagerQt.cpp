@@ -44,31 +44,14 @@
 #include "qapplication.h"
 #include "qtlog.h"
 
-#ifdef DEBUG
-PRUint32 gSMCount = 0;
-PRUint32 gSMID = 0;
-#endif
-
 nsScreenManagerQt::nsScreenManagerQt()
 {
-#ifdef DEBUG
-    gSMCount++;
-    mID = gSMID++;
-    PR_LOG(gQtLogModule, QT_BASIC,
-           ("nsScreenManagerQt CTOR (%p) ID: %d, Count: %d\n", this, mID, gSMCount));
-#endif
-
     desktop = 0;
 }
 
 
 nsScreenManagerQt::~nsScreenManagerQt()
 {
-#ifdef DEBUG
-    gSMCount--;
-    PR_LOG(gQtLogModule, QT_BASIC,
-           ("nsScreenManagerQt DTOR (%p) ID: %d, Count: %d\n", this, mID, gSMCount));
-#endif
     // nothing to see here.
 }
 
