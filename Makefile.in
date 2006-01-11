@@ -282,9 +282,11 @@ ifdef MOZ_LDAP_XPCOM
 tier_50_dirs	+= directory/xpcom
 endif
 
+ifndef MINIMO
 ifdef MOZ_XUL_APP
 ifdef MOZ_ENABLE_GTK2
 tier_50_dirs    += toolkit/components/gnome
+endif
 endif
 endif
 
