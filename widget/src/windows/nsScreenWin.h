@@ -23,6 +23,7 @@
 #ifndef nsScreenWin_h___
 #define nsScreenWin_h___
 
+#include <windows.h>
 #include "nsIScreen.h"
 
 //------------------------------------------------------------------------
@@ -30,8 +31,7 @@
 class nsScreenWin : public nsIScreen
 {
 public:
-  //nsScreenWin ( GDHandle inScreen );
-  nsScreenWin ( );
+  nsScreenWin ( HDC inScreen );
   ~nsScreenWin();
 
   NS_DECL_ISUPPORTS
@@ -43,7 +43,7 @@ private:
     // asked.
   //PRBool IsPrimaryScreen ( ) const { return (mScreen == ::GetMainDevice()); }
   
-  // GDHandle mScreen;   // the device that represents this screen
+  HDC mScreen;   // the dc that represents this screen
 };
 
 #endif  // nsScreenWin_h___ 
