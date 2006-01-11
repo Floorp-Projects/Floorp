@@ -165,7 +165,7 @@ chdir("$RAW/..");
 system("mv $RAW $ROOT/$SUBDIR");
 system("tar cvf $STUB/$aStubName.tar ./$SUBDIR/$aMozAppName-installer ./$SUBDIR/$aMozAppName-installer-bin ./$SUBDIR/installer.ini ./$SUBDIR/README ./$SUBDIR/config.ini ./$SUBDIR/MPL-1.1.txt"); 
 system("mv $ROOT/$SUBDIR $RAW");
-system("gzip $STUB/$aStubName.tar");
+system("bzip2 $STUB/$aStubName.tar");
 spew("Completed creating stub installer tarball");
 
 #// tar and gzip mozilla-installer, mozilla-installer-bin, README, license, 
@@ -174,7 +174,7 @@ spew("Creating blob (aka full or sea) installer tarball...");
 system("mv $RAW $ROOT/$SUBDIR");
 system("tar cvf $BLOB/$aBlobName.tar ./$SUBDIR/"); 
 system("mv $ROOT/$SUBDIR $RAW");
-system("gzip $BLOB/$aBlobName.tar");
+system("bzip2 $BLOB/$aBlobName.tar");
 spew("Completed creating blob (aka full or sea) installer tarball");
 chdir($_orig);
 
