@@ -371,7 +371,8 @@ function BrowserMenuTabsActive() {
 }
 
 function BrowserTabFocus(i) {
-	gBrowser.selectedTab=gBrowser.mTabContainer.childNodes[i];
+  gBrowser.selectedTab=gBrowser.mTabContainer.childNodes[i];
+  gBrowser.contentWindow.focus();
 }
 
 /* 
