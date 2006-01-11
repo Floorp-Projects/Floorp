@@ -40,7 +40,7 @@
 interface nsIInterfaceRequestor;
 
 /**
- * nsICertPicker
+ * nsICertPickDialogs
  * Provides generic UI for choosing a certificate
  */
 [scriptable, uuid(51d59b08-1dd2-11b2-ad4a-a51b92f8a184)]
