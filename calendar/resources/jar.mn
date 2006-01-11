@@ -1,3 +1,5 @@
+#filter substitution
+
 calendar.jar:
 %   content calendar %content/calendar/
 #ifndef MOZ_SUNBIRD
@@ -8,11 +10,9 @@ calendar.jar:
 %   overlay chrome://messenger/content/mailWindowOverlay.xul chrome://calendar/content/calExtOverlay.xul
 %   overlay chrome://messenger/content/messengercompose/messengercompose.xul chrome://calendar/content/calExtOverlay.xul
 *   content/calendar/contents.rdf (content/contents.rdf)
-    locale/en-US/calendar/contents.rdf (locale/en-US/contents.rdf)
 *   skin/classic/calendar/contents.rdf (skin/classic/contents.rdf)
 *   skin/modern/calendar/contents.rdf (skin/modern/contents.rdf)
 #endif
-%   locale calendar en-US %locale/en-US/calendar/
 %   skin calendar classic/1.0 %skin/classic/calendar/
 %   skin calendar modern/1.0 %skin/modern/calendar/
     content/calendar/about.html (content/about.html)
@@ -97,22 +97,6 @@ calendar.jar:
     content/calendar/pref/editCategory.xul (content/pref/editCategory.xul)
     content/calendar/pref/wsm.js (content/pref/wsm.js)
 *   content/calendar/pref/nsPrefWindow.js (content/pref/nsPrefWindow.js)
-*   locale/en-US/calendar/aboutDialog.dtd (locale/en-US/aboutDialog.dtd)
-    locale/en-US/calendar/calendar.dtd (locale/en-US/calendar.dtd)
-    locale/en-US/calendar/calendarCreation.dtd (locale/en-US/calendarCreation.dtd)
-    locale/en-US/calendar/calendar.properties (locale/en-US/calendar.properties)
-    locale/en-US/calendar/categories.properties  (locale/en-US/categories.properties) 
-    locale/en-US/calendar/dateFormat.properties (locale/en-US/dateFormat.properties)
-    locale/en-US/calendar/email.properties (locale/en-US/email.properties)
-    locale/en-US/calendar/global.dtd (locale/en-US/global.dtd)
-    locale/en-US/calendar/menuOverlay.dtd (locale/en-US/menuOverlay.dtd)
-    locale/en-US/calendar/overlay.dtd  (locale/en-US/overlay.dtd) 
-*   locale/en-US/calendar/prefs.dtd  (locale/en-US/prefs.dtd) 
-    locale/en-US/calendar/selectAddresses.dtd (locale/en-US/selectAddresses.dtd)
-#ifdef MOZ_SUNBIRD
-    locale/en-US/calendar/connectionPrefs.dtd (locale/en-US/connectionPrefs.dtd)
-    locale/en-US/calendar/prefutilities.properties (locale/en-US/prefutilities.properties)
-#endif
     skin/classic/calendar/btn1.png (skin/classic/btn1.png)
     skin/classic/calendar/calendar-16.gif (skin/classic/calendar-16.gif)
     skin/classic/calendar/calendar.css (skin/classic/calendar.css)
@@ -171,3 +155,25 @@ calendar.jar:
     skin/modern/calendar/unifinder/priority_high.png (skin/modern/unifinder/priority_high.png)
     skin/modern/calendar/unifinder/priority_low.png (skin/modern/unifinder/priority_low.png)
     content/calendar/import-export.js (/calendar/base/content/import-export.js)
+
+calendar-@AB_CD@.jar:
+#ifndef MOZ_SUNBIRD
+    locale/@AB_CD@/calendar/contents.rdf (locale/@AB_CD@/contents.rdf)
+#endif
+%   locale calendar @AB_CD@ %locale/@AB_CD@/calendar/
+*   locale/@AB_CD@/calendar/aboutDialog.dtd (locale/@AB_CD@/aboutDialog.dtd)
+    locale/@AB_CD@/calendar/calendar.dtd (locale/@AB_CD@/calendar.dtd)
+    locale/@AB_CD@/calendar/calendarCreation.dtd (locale/@AB_CD@/calendarCreation.dtd)
+    locale/@AB_CD@/calendar/calendar.properties (locale/@AB_CD@/calendar.properties)
+    locale/@AB_CD@/calendar/categories.properties  (locale/@AB_CD@/categories.properties) 
+    locale/@AB_CD@/calendar/dateFormat.properties (locale/@AB_CD@/dateFormat.properties)
+    locale/@AB_CD@/calendar/email.properties (locale/@AB_CD@/email.properties)
+    locale/@AB_CD@/calendar/global.dtd (locale/@AB_CD@/global.dtd)
+    locale/@AB_CD@/calendar/menuOverlay.dtd (locale/@AB_CD@/menuOverlay.dtd)
+    locale/@AB_CD@/calendar/overlay.dtd  (locale/@AB_CD@/overlay.dtd) 
+*   locale/@AB_CD@/calendar/prefs.dtd  (locale/@AB_CD@/prefs.dtd) 
+    locale/@AB_CD@/calendar/selectAddresses.dtd (locale/@AB_CD@/selectAddresses.dtd)
+#ifdef MOZ_SUNBIRD
+    locale/@AB_CD@/calendar/connectionPrefs.dtd (locale/@AB_CD@/connectionPrefs.dtd)
+    locale/@AB_CD@/calendar/prefutilities.properties (locale/@AB_CD@/prefutilities.properties)
+#endif
