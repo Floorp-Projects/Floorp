@@ -66,15 +66,14 @@ nsScreenOS2 :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
 
   HPS hps = ::WinGetScreenPS( HWND_DESKTOP);
   HDC hdc = GFX (::GpiQueryDevice (hps), HDC_ERROR);
-
   ::DevQueryCaps(hdc, CAPS_WIDTH, 2, alArray);
+  ::WinReleasePS(hps);
 
   *outTop = 0;
   *outLeft = 0;
   *outWidth = alArray[0];
   *outHeight = alArray[1];
 
-  ::WinReleasePS(hps);
 
   return NS_OK;
   
@@ -84,20 +83,45 @@ nsScreenOS2 :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
 NS_IMETHODIMP
 nsScreenOS2 :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-  *outTop = 0;
-  *outLeft = 0;
-  *outWidth = ::WinQuerySysValue( HWND_DESKTOP, SV_CXFULLSCREEN );
-  *outHeight = ::WinQuerySysValue( HWND_DESKTOP, SV_CYFULLSCREEN ); 
+  static APIRET rc = 0;
+  static BOOL (APIENTRY * pfnQueryDesktopWorkArea)(HWND hwndDesktop, PWRECT pwrcWorkArea) = NULL;
+
+  GetRect(outLeft, outTop, outWidth, outHeight);
+
+  // This height is different based on whether or not 
+  // "Show on top of maximed windows" is checked
+  LONG lWorkAreaHeight = *outHeight;
+
+  if ( !rc && !pfnQueryDesktopWorkArea )
+  {
+      HMODULE hmod = 0;
+      rc = DosLoadModule( NULL, 0, "PMMERGE", &hmod );
+      if ( !rc )
+      {
+          rc = DosQueryProcAddr( hmod, 5469, NULL, (PFN*) &pfnQueryDesktopWorkArea ); // WinQueryDesktopWorkArea
+          DosFreeModule(hmod);
+      }
+  }
+  if ( pfnQueryDesktopWorkArea && !rc )
+  {
+      RECTL rectl;
+      pfnQueryDesktopWorkArea( HWND_DESKTOP, &rectl );
+      lWorkAreaHeight = rectl.yTop - rectl.yBottom;
+  }
 
   HWND hwndWarpCenter = WinWindowFromID( HWND_DESKTOP, 0x555 );
   if (hwndWarpCenter) {
-    SWP swp;
-    WinQueryWindowPos( hwndWarpCenter, &swp );
-    if (swp.y != 0) {
-      /* WarpCenter at top */
-      *outTop += swp.cy;
-    } /* endif */
-  } /* endif */
+    /* If "Show on top of maximized windows is checked" */
+    if (lWorkAreaHeight != *outHeight) {
+      SWP swp;
+      WinQueryWindowPos( hwndWarpCenter, &swp );
+      if (swp.y != 0) {
+         /* WarpCenter is at the top */
+         *outTop += (*outHeight - lWorkAreaHeight);
+      }
+      *outHeight = lWorkAreaHeight;
+    }
+  }
 
   return NS_OK;
   
