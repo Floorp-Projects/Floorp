@@ -88,7 +88,7 @@ nsScreenOS2 :: GetPixelDepth(PRInt32 *aPixelDepth)
   HPS hps = ::WinGetScreenPS( HWND_DESKTOP);
   HDC hdc = GFX (::GpiQueryDevice (hps), HDC_ERROR);
 
-  ::DevQueryCaps(hdc, CAPS_COLOR_BITCOUNT, 1, &lCap);
+  GFX (::DevQueryCaps(hdc, CAPS_COLOR_BITCOUNT, 1, &lCap), FALSE);
 
   *aPixelDepth = (PRInt32)lCap;
 
