@@ -24,6 +24,7 @@
 #define nsScreenManagerWin_h___
 
 #include "nsIScreenManager.h"
+#include <windows.h>
 
 class nsIScreen;
 
@@ -40,7 +41,7 @@ public:
 
 private:
 
-  nsIScreen* CreateNewScreenObject ( ) ;
+  nsIScreen* CreateNewScreenObject ( HDC inScreen ) ;
 
 };
 

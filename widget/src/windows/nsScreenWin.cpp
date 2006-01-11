@@ -23,12 +23,13 @@
 #include "nsScreenWin.h"
 
 
-nsScreenWin :: nsScreenWin (  )
-//  : mScreen(inScreen)
+nsScreenWin :: nsScreenWin ( HDC inScreen )
+  : mScreen(inScreen)
 {
   NS_INIT_REFCNT();
 
-  //NS_ASSERTION ( inScreen, "Passing null device to nsScreenWin" );
+  NS_ASSERTION ( inScreen, "Passing null device to nsScreenWin" );
+  NS_ASSERTION ( ::GetDeviceCaps(inScreen, TECHNOLOGY) == DT_RASDISPLAY, "Not a display screen");
   
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
@@ -49,7 +50,7 @@ NS_IMPL_ISUPPORTS(nsScreenWin, NS_GET_IID(nsIScreen))
 NS_IMETHODIMP 
 nsScreenWin :: GetWidth(PRInt32 *aWidth)
 {
-  //*aWidth = (**mScreen).gdRect.right - (**mScreen).gdRect.left;
+  *aWidth = ::GetDeviceCaps(mScreen, HORZRES);
   return NS_OK;
 
 } // GetWidth
@@ -58,7 +59,7 @@ nsScreenWin :: GetWidth(PRInt32 *aWidth)
 NS_IMETHODIMP 
 nsScreenWin :: GetHeight(PRInt32 *aHeight)
 {
-  //*aHeight = (**mScreen).gdRect.bottom - (**mScreen).gdRect.top;
+  *aHeight = ::GetDeviceCaps(mScreen, VERTRES);
   return NS_OK;
 
 } // GetHeight
@@ -67,7 +68,7 @@ nsScreenWin :: GetHeight(PRInt32 *aHeight)
 NS_IMETHODIMP 
 nsScreenWin :: GetPixelDepth(PRInt32 *aPixelDepth)
 {
-  //*aPixelDepth = (**(**mScreen).gdPMap).pixelSize;
+  *aPixelDepth = ::GetDeviceCaps(mScreen, BITSPIXEL);
   return NS_OK;
 
 } // GetPixelDepth
@@ -76,8 +77,7 @@ nsScreenWin :: GetPixelDepth(PRInt32 *aPixelDepth)
 NS_IMETHODIMP 
 nsScreenWin :: GetColorDepth(PRInt32 *aColorDepth)
 {
-  //*aColorDepth = (**(**mScreen).gdPMap).pixelSize;
-  return NS_OK;
+  return GetPixelDepth(aColorDepth);
 
 } // GetColorDepth
 
@@ -85,7 +85,10 @@ nsScreenWin :: GetColorDepth(PRInt32 *aColorDepth)
 NS_IMETHODIMP 
 nsScreenWin :: GetAvailWidth(PRInt32 *aAvailWidth)
 {
-  GetWidth(aAvailWidth);
+  // XXX Needs to be rewritten for a non-primary monitor?
+  RECT workArea;
+  ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+  *aAvailWidth = workArea.right - workArea.left;
   return NS_OK;
 
 } // GetAvailWidth
@@ -94,10 +97,9 @@ nsScreenWin :: GetAvailWidth(PRInt32 *aAvailWidth)
 NS_IMETHODIMP 
 nsScreenWin :: GetAvailHeight(PRInt32 *aAvailHeight)
 {
-  //Rect adjustedRect;
-  //SubtractMenuBar ( (**mScreen).gdRect, &adjustedRect );
-  //*aAvailHeight = adjustedRect.bottom - adjustedRect.top;
-  
+  RECT workArea;
+  ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+  *aAvailHeight = workArea.bottom - workArea.top;
   return NS_OK;
 
 } // GetAvailHeight
@@ -106,7 +108,9 @@ nsScreenWin :: GetAvailHeight(PRInt32 *aAvailHeight)
 NS_IMETHODIMP 
 nsScreenWin :: GetAvailLeft(PRInt32 *aAvailLeft)
 {
-  //*aAvailLeft = (**mScreen).gdRect.left;
+  RECT workArea;
+  ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+  *aAvailLeft = workArea.left;
   return NS_OK;
 
 } // GetAvailLeft
@@ -115,9 +119,9 @@ nsScreenWin :: GetAvailLeft(PRInt32 *aAvailLeft)
 NS_IMETHODIMP 
 nsScreenWin :: GetAvailTop(PRInt32 *aAvailTop)
 {
-  //Rect adjustedRect;
-  //SubtractMenuBar ( (**mScreen).gdRect, &adjustedRect );
-  //*aAvailTop = adjustedRect.top;
+  RECT workArea;
+  ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+  *aAvailTop = workArea.top;
   
   return NS_OK;
 
