@@ -321,6 +321,8 @@ pref("browser.startup.autoload_homepage",   true);
 
 pref("browser.cache.memory.capacity",       4096);
 
+pref("browser.send_pings", false);
+
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.showPopup", true);
 pref("browser.urlbar.showSearch", true);
