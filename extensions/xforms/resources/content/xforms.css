@@ -364,3 +364,7 @@ upload[mozType|type="http://www.w3.org/2001/XMLSchema#hexBinary"] {
   -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-upload');
 }
 
+/* default MIP styling */
+*:disabled {
+  display: none;
+}
