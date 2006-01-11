@@ -44,21 +44,9 @@
 
 #include "qtlog.h"
 
-#ifdef DEBUG
-PRUint32 gScreenCount = 0;
-PRUint32 gScreenID = 0;
-#endif
-
 nsScreenQt::nsScreenQt(int aScreen)
 {
     screen = aScreen;
-
-#ifdef DEBUG
-    gScreenCount++;
-    mID = gScreenID++;
-    PR_LOG(gQtLogModule, QT_BASIC,
-           ("nsScreenQt CTOR (%p) ID: %d, Count: %d\n", this, mID, gScreenCount));
-#endif
     // nothing else to do. I guess we could cache a bunch of information
     // here, but we want to ask the device at runtime in case anything
     // has changed.
@@ -66,11 +54,6 @@ nsScreenQt::nsScreenQt(int aScreen)
 
 nsScreenQt::~nsScreenQt()
 {
-#ifdef DEBUG
-    gScreenCount--;
-    PR_LOG(gQtLogModule, QT_BASIC,
-           ("nsScreenQt DTOR (%p) ID: %d, Count: %d\n", this, mID, gScreenCount));
-#endif
     // nothing to see here.
 }
 

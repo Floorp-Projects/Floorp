@@ -64,11 +64,6 @@ private:
   nsCOMPtr<nsIScreen> *screens;
   QDesktopWidget *desktop;
   int nScreens;
-
-#ifdef DEBUG
-  PRUint32 mID;
-#endif
-
 };
 
 #endif  // nsScreenManagerQt_h___
