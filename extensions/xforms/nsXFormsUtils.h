@@ -44,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsIDOMNode.h"
+#include "nsIDocument.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIModelElementPrivate.h"
 #include "nsIScriptError.h"
@@ -351,9 +352,9 @@ public:
                                                 PRInt32                 *aContextSize);
 
   /**
-   * @return true if aTestURI has the same origin as aBaseURI
+   * @return true if aTestURI has the same origin as aBaseDocument
    */
-  static NS_HIDDEN_(PRBool) CheckSameOrigin(nsIURI *aBaseURI,
+  static NS_HIDDEN_(PRBool) CheckSameOrigin(nsIDocument *aBaseDocument,
                                             nsIURI *aTestURI);
 
   /**

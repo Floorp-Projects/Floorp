@@ -1107,17 +1107,36 @@ nsXFormsUtils::FindParentContext(nsIDOMElement           *aElement,
 }
 
 /* static */ PRBool
-nsXFormsUtils::CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI)
+nsXFormsUtils::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI)
 {
   nsresult rv;
 
-  // check to see if we're allowed to load this URI
+  // get the base document's principal
+  nsIPrincipal *basePrincipal = aBaseDocument->GetPrincipal();
+
+  if (basePrincipal) {
+    // check for the UniversalBrowserRead capability.
+    PRBool crossSiteAccessEnabled;
+    rv = basePrincipal->IsCapabilityEnabled("UniversalBrowserRead", nsnull,
+                                            &crossSiteAccessEnabled);
+    if (NS_SUCCEEDED(rv) && crossSiteAccessEnabled)
+      return PR_TRUE;
+
+    // check the security manager and do a same original check on the principal
   nsCOMPtr<nsIScriptSecurityManager> secMan =
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
   if (secMan) {
-    rv = secMan->CheckSameOriginURI(aBaseURI, aTestURI);
+      // get a principal for the uri we are testing
+      nsCOMPtr<nsIPrincipal> testPrincipal;
+      rv = secMan->GetCodebasePrincipal(aTestURI, getter_AddRefs(testPrincipal));
+
+      if (NS_SUCCEEDED(rv)) {
+        rv = secMan->CheckSameOriginPrincipal(aBaseDocument->GetPrincipal(),
+                                              testPrincipal);
     if (NS_SUCCEEDED(rv))
       return PR_TRUE;
+  }
+    }
   }
 
   // else, check with the permission manager to see if this host is
@@ -1126,7 +1145,8 @@ nsXFormsUtils::CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI)
   nsCOMPtr<nsIPermissionManager> permMgr =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   PRUint32 perm;
-  rv = permMgr->TestPermission(aBaseURI, "xforms-load", &perm);
+  rv = permMgr->TestPermission(aBaseDocument->GetDocumentURI(), "xforms-load",
+                               &perm);
   if (NS_SUCCEEDED(rv) && perm == nsIPermissionManager::ALLOW_ACTION)
     return PR_TRUE; 
 

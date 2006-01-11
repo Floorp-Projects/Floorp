@@ -49,6 +49,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsHashSets.h"
+#include "nsIDocument.h"
 
 
 class nsIMultiplexInputStream;
@@ -130,7 +131,7 @@ private:
    * @return true if aTestURI has the same origin as aBaseURI or if
    * there is no need for a same origin check.
    */
-  PRBool CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI);
+  PRBool CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI);
   PRBool CheckPermissionManager(nsIURI *aBaseURI);
   nsresult AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSource,
                          nsStringHashSet* aPrefixHash);

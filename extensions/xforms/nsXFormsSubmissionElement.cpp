@@ -74,7 +74,6 @@
 #include "nsIMultiplexInputStream.h"
 #include "nsIMIMEInputStream.h"
 #include "nsINameSpaceManager.h"
-#include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIFileURL.h"
 #include "nsIMIMEService.h"
@@ -381,7 +380,7 @@ nsXFormsSubmissionElement::OnChannelRedirect(nsIChannel *aOldChannel,
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   NS_ENSURE_STATE(doc);
 
-  if (!CheckSameOrigin(doc->GetDocumentURI(), newURI)) {
+  if (!CheckSameOrigin(doc, newURI)) {
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("submitSendOrigin"),
                                mElement);
     return NS_ERROR_ABORT;
@@ -947,7 +946,7 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
 }
 
 PRBool
-nsXFormsSubmissionElement::CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI)
+nsXFormsSubmissionElement::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI)
 {
   // we default to true to allow regular posts to work like html forms.
   PRBool allowSubmission = PR_TRUE;
@@ -966,25 +965,22 @@ nsXFormsSubmissionElement::CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI)
 
     // if same origin is required, default to false
     allowSubmission = PR_FALSE;
+    nsIURI *baseURI = aBaseDocument->GetDocumentURI();
 
-    // if we don't replace the instance, we allow file:// and chrome://
-    // to submit data anywhere
+    // if we don't replace the instance, we allow file:// to submit data anywhere
     if (!mIsReplaceInstance) {
-      aBaseURI->SchemeIs("file", &allowSubmission);
-      if (!allowSubmission) {
-        aBaseURI->SchemeIs("chrome", &allowSubmission);
-      }
+      baseURI->SchemeIs("file", &allowSubmission);
     }
 
     // let's check the permission manager
     if (!allowSubmission) {
-      allowSubmission = CheckPermissionManager(aBaseURI);
+      allowSubmission = CheckPermissionManager(baseURI);
     }
 
     // if none of the above checks have allowed the submission, we do a
     // same origin check.
     if (!allowSubmission) {
-      allowSubmission = nsXFormsUtils::CheckSameOrigin(aBaseURI, aTestURI);
+      allowSubmission = nsXFormsUtils::CheckSameOrigin(aBaseDocument, aTestURI);
     }
   }
 
@@ -1919,7 +1915,7 @@ nsXFormsSubmissionElement::SendData(const nsCString &uriSpec,
     }
   }
 
-  if (!CheckSameOrigin(doc->GetDocumentURI(), uri)) {
+  if (!CheckSameOrigin(doc, uri)) {
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("submitSendOrigin"),
                                mElement);
     return NS_ERROR_ABORT;

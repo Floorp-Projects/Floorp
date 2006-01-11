@@ -183,7 +183,7 @@ nsXFormsInstanceElement::OnChannelRedirect(nsIChannel *OldChannel,
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   NS_ENSURE_STATE(doc);
 
-  if (!nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), newURI)) {
+  if (!nsXFormsUtils::CheckSameOrigin(doc, newURI)) {
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceLoadOrigin"), domDoc);
     return NS_ERROR_ABORT;
   }
@@ -535,7 +535,7 @@ nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
         NS_NewURI(getter_AddRefs(uri), aSrc,
                   doc->GetDocumentCharacterSet().get(), doc->GetDocumentURI());
         if (uri) {
-          if (nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), uri)) {
+          if (nsXFormsUtils::CheckSameOrigin(doc, uri)) {
             nsCOMPtr<nsILoadGroup> loadGroup;
             loadGroup = doc->GetDocumentLoadGroup();
             NS_WARN_IF_FALSE(loadGroup, "No load group!");
