@@ -85,6 +85,8 @@ CPPSRCS		= \
 	nsClipboard.cpp      \
 	nsNativeThemeWin.cpp \
 	nsFilePicker.cpp     \
+	nsScreenWin.cpp	\
+	nsScreenManagerWin.cpp \
 	$(NULL)
 
 ifneq ($(OS_ARCH), WINCE)

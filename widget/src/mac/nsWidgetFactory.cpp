@@ -64,6 +64,7 @@
 #include "nsSound.h"
 #include "nsBidiKeyboard.h"
 #include "nsNativeThemeMac.h"
+#include "nsScreenManagerMac.h"
 
 #if USE_NATIVE_VERSION
 
@@ -106,6 +107,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerMac)
 
 static const nsModuleComponentInfo gComponents[] =
 {
@@ -199,10 +201,14 @@ static const nsModuleComponentInfo gComponents[] =
 		NS_BIDIKEYBOARD_CID,
 		"@mozilla.org/widget/bidikeyboard;1",
 		nsBidiKeyboardConstructor },
-    {	"Native Theme Renderer", 
+	{	"Native Theme Renderer", 
 		NS_THEMERENDERER_CID,
 		"@mozilla.org/chrome/chrome-native-theme;1",
-		nsNativeThemeMacConstructor }
+		nsNativeThemeMacConstructor },
+	{   "nsScreenManager",
+		NS_SCREENMANAGER_CID,
+		"@mozilla.org/gfx/screenmanager;1",
+		nsScreenManagerMacConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetMacModule, gComponents)

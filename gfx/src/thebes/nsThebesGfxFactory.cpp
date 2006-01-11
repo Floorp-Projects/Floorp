@@ -48,8 +48,6 @@
 #include "nsThebesRenderingContext.h"
 #include "nsThebesImage.h"
 #include "nsThebesRegion.h"
-#include "nsThebesScreen.h"
-#include "nsThebesScreenManager.h"
 #include "nsThebesBlender.h"
 #include "nsThebesFontMetrics.h"
 #include "nsThebesFontEnumerator.h"
@@ -61,7 +59,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesDeviceContext)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesRenderingContext)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesImage)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesRegion)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesScreenManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesFontEnumerator)
 
 static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -127,10 +124,6 @@ static const nsModuleComponentInfo components[] =
     NS_REGION_CID,
     "@mozilla.org/gfx/region/nsThebes;1",
     nsThebesRegionConstructor },
-  { "Thebes Screen Manager",
-    NS_SCREENMANAGER_CID,
-    "@mozilla.org/gfx/screenmanager;1",
-    nsThebesScreenManagerConstructor },
   { "Scriptable Region",
     NS_SCRIPTABLE_REGION_CID,
     "@mozilla.org/gfx/region;1",

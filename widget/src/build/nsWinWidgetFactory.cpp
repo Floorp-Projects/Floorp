@@ -52,7 +52,6 @@
 
 #include "nsBidiKeyboard.h"
 
-
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
@@ -60,7 +59,7 @@
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
 #include "nsNativeThemeWin.h"
-
+#include "nsScreenManagerWin.h"
 #include "nsIGenericFactory.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
@@ -81,6 +80,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -147,6 +148,10 @@ static const nsModuleComponentInfo components[] =
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter;1",
     nsHTMLFormatConverterConstructor },
+  { "nsScreenManagerWin",
+    NS_SCREENMANAGER_CID,
+    "@mozilla.org/gfx/screenmanager;1",
+    nsScreenManagerWinConstructor },
 };
 
 
