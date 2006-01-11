@@ -25,6 +25,7 @@
 
 #include "nsIScreenManager.h"
 #include <windows.h>
+#include "nsCOMPtr.h"
 
 class nsIScreen;
 
@@ -43,6 +44,8 @@ private:
 
   nsIScreen* CreateNewScreenObject ( HDC inScreen ) ;
 
+    // cache the primary screen object to avoid memory allocation every time
+  nsCOMPtr<nsIScreen> mCachedMainScreen;
 };
 
 #endif  // nsScreenManagerWin_h___ 
