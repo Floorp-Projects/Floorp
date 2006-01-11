@@ -26,7 +26,6 @@
 #include "nsPhGfxLog.h"
 
 nsScreenPh :: nsScreenPh ( ) {
-  nsresult    		res = NS_ERROR_FAILURE;
   PhSysInfo_t       SysInfo;
   PhRect_t          rect;
   char              *p = NULL;
