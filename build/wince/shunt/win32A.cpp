@@ -973,10 +973,10 @@ MOZCE_SHUNT_API HWND mozce_FindWindowA(LPCSTR inClass, LPCSTR inWindow)
    
     retval = FindWindow(wClass, NULL);
     
-    if (!wWindow)
+    if (wWindow)
         free(wWindow);
 
-    if (!wClass)
+    if (wClass)
         free(wClass);
 
     return retval;
