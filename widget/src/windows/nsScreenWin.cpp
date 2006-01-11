@@ -41,7 +41,7 @@
 
 
 #if _MSC_VER >= 1200
-typedef BOOL (*GetMonitorInfoProc)(HMONITOR inMon, LPMONITORINFO ioInfo); 
+typedef BOOL (WINAPI *GetMonitorInfoProc)(HMONITOR inMon, LPMONITORINFO ioInfo); 
 #endif
 
 

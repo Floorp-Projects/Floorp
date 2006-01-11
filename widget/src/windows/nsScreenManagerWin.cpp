@@ -41,8 +41,8 @@
 
 
 #if _MSC_VER >= 1200
-typedef HMONITOR (*MonitorFromRectProc)(LPCRECT inRect, DWORD inFlag); 
-typedef BOOL (*EnumDisplayMonitorsProc)(HDC, LPCRECT, MONITORENUMPROC, LPARAM);
+typedef HMONITOR (WINAPI *MonitorFromRectProc)(LPCRECT inRect, DWORD inFlag); 
+typedef BOOL (WINAPI *EnumDisplayMonitorsProc)(HDC, LPCRECT, MONITORENUMPROC, LPARAM);
 
 BOOL CALLBACK CountMonitors ( HMONITOR, HDC, LPRECT, LPARAM ioCount ) ;
 #else
