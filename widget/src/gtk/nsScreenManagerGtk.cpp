@@ -67,7 +67,7 @@ nsScreenManagerGtk :: CreateNewScreenObject (  )
 // The coordinates are in pixels (not twips) and in screen coordinates.
 //
 NS_IMETHODIMP
-nsScreenManagerGtk :: ScreenForRect ( PRInt32 /*inTop*/, PRInt32 /*inLeft*/, PRInt32 /*inWidth*/,
+nsScreenManagerGtk :: ScreenForRect ( PRInt32 /*inLeft*/, PRInt32 /*inTop*/, PRInt32 /*inWidth*/,
                                        PRInt32 /*inHeight*/, nsIScreen **outScreen )
 {
   GetPrimaryScreen ( outScreen );
@@ -89,4 +89,18 @@ nsScreenManagerGtk :: GetPrimaryScreen(nsIScreen * *aPrimaryScreen)
   return NS_OK;
   
 } // GetPrimaryScreen
+
+
+//
+// GetNumberOfScreens
+//
+// Returns how many physical screens are available.
+//
+NS_IMETHODIMP
+nsScreenManagerGtk :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
+{
+  *aNumberOfScreens = 1;
+  return NS_OK;
+  
+} // GetNumberOfScreens
 
