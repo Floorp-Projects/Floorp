@@ -25,24 +25,16 @@
 
 #include "nsPhGfxLog.h"
 
-nsScreenManagerPh :: nsScreenManagerPh ( )
-{
+nsScreenManagerPh :: nsScreenManagerPh( ) {
   NS_INIT_REFCNT();
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsScreenManagerPh::nsScreenManagerPh Constructor called this=<%p>\n", this));
-
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
   // has changed.
-}
+	}
 
 
-nsScreenManagerPh :: ~nsScreenManagerPh()
-{
-  // nothing to see here.
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsScreenManagerPh::~nsScreenManagerPh Destructor called this=<%p>\n", this));
-
-}
+nsScreenManagerPh :: ~nsScreenManagerPh( ) {
+	}
 
 
 // addref, release, QI
@@ -57,17 +49,12 @@ NS_IMPL_ISUPPORTS(nsScreenManagerPh, NS_GET_IID(nsIScreenManager))
 // NOTE: For this "single-monitor" impl, we just always return the cached primary
 //        screen. This should change when a multi-monitor impl is done.
 //
-nsIScreen* 
-nsScreenManagerPh :: CreateNewScreenObject (  )
-{
+nsIScreen* nsScreenManagerPh :: CreateNewScreenObject( ) {
   nsIScreen* retval = nsnull;
-  if ( !mCachedMainScreen )
-    mCachedMainScreen = new nsScreenPh ( );
+  if( !mCachedMainScreen ) mCachedMainScreen = new nsScreenPh( );
   NS_IF_ADDREF(retval = mCachedMainScreen.get());
-  
   return retval;
-}
-
+	}
 
 //
 // ScreenForRect 
@@ -77,15 +64,10 @@ nsScreenManagerPh :: CreateNewScreenObject (  )
 //
 // The coordinates are in pixels (not twips) and in screen coordinates.
 //
-NS_IMETHODIMP
-nsScreenManagerPh :: ScreenForRect ( PRInt32 /*inLeft*/, PRInt32 /*inTop*/, PRInt32 /*inWidth*/,
-                                       PRInt32 /*inHeight*/, nsIScreen **outScreen )
-{
-  GetPrimaryScreen ( outScreen );
+NS_IMETHODIMP nsScreenManagerPh :: ScreenForRect ( PRInt32 /*inLeft*/, PRInt32 /*inTop*/, PRInt32 /*inWidth*/, PRInt32 /*inHeight*/, nsIScreen **outScreen ) {
+  GetPrimaryScreen( outScreen );
   return NS_OK;
-    
-} // ScreenForRect
-
+	}
 
 //
 // GetPrimaryScreen
@@ -93,25 +75,18 @@ nsScreenManagerPh :: ScreenForRect ( PRInt32 /*inLeft*/, PRInt32 /*inTop*/, PRIn
 // The screen with the menubar/taskbar. This shouldn't be needed very
 // often.
 //
-NS_IMETHODIMP 
-nsScreenManagerPh :: GetPrimaryScreen(nsIScreen * *aPrimaryScreen) 
-{
+NS_IMETHODIMP nsScreenManagerPh :: GetPrimaryScreen( nsIScreen * *aPrimaryScreen ) {
   *aPrimaryScreen = CreateNewScreenObject();    // addrefs  
   return NS_OK;
-  
-} // GetPrimaryScreen
-
+	}
 
 //
 // GetNumberOfScreens
 //
 // Returns how many physical screens are available.
 //
-NS_IMETHODIMP
-nsScreenManagerPh :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
-{
+NS_IMETHODIMP nsScreenManagerPh :: GetNumberOfScreens( PRUint32 *aNumberOfScreens ) {
   *aNumberOfScreens = 1;
   return NS_OK;
-  
-} // GetNumberOfScreens
+	}
 
