@@ -59,7 +59,7 @@ nsScreenPh :: nsScreenPh ( ) {
 	PhQueryRids( 0, 0, inp_grp, Ph_INPUTGROUP_REGION, 0, 0, 0, &rid, 1 );
 	PhRegionQuery( rid, &region, &rect, NULL, 0 );
 	inp_grp = region.input_group;
-	PhWindowQueryVisible( Ph_QUERY_INPUT_GROUP | Ph_QUERY_EXACT, 0, inp_grp, &rect );
+	PhWindowQueryVisible( Ph_QUERY_IG_POINTER, 0, inp_grp, &rect );
 	mWidth  = rect.lr.x - rect.ul.x + 1;
 	mHeight = rect.lr.y - rect.ul.y + 1;  
 
