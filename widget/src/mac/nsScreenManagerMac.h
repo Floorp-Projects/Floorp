@@ -34,7 +34,7 @@ class nsScreenManagerMac : public nsIScreenManager
 {
 public:
   nsScreenManagerMac ( );
-  ~nsScreenManagerMac();
+  virtual ~nsScreenManagerMac();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCREENMANAGER

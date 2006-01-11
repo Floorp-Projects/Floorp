@@ -67,11 +67,11 @@ nsScreenManagerMac :: CreateNewScreenObject ( GDHandle inDevice )
 // The coordinates are in pixels (not twips) and in screen coordinates.
 //
 NS_IMETHODIMP
-nsScreenManagerMac :: ScreenForRect ( PRInt32 inTop, PRInt32 inLeft, PRInt32 inWidth, PRInt32 inHeight,
+nsScreenManagerMac :: ScreenForRect ( PRInt32 inLeft, PRInt32 inTop, PRInt32 inWidth, PRInt32 inHeight,
                                         nsIScreen **outScreen )
 {
-  if ( !(inTop || inLeft || inWidth || inHeight) ) {
-    NS_WARNING ( "trying to find screen for sizeless window" );
+  if ( !(inWidth || inHeight) ) {
+    NS_WARNING ( "trying to find screen for sizeless window, using primary monitor" );
     *outScreen = CreateNewScreenObject ( ::GetMainDevice() );    // addrefs
     return NS_OK;
   }
@@ -116,4 +116,24 @@ nsScreenManagerMac :: GetPrimaryScreen(nsIScreen * *aPrimaryScreen)
   return NS_OK;
   
 } // GetPrimaryScreen
+
+
+//
+// GetNumberOfScreens
+//
+// Returns how many physical screens are available.
+//
+NS_IMETHODIMP
+nsScreenManagerMac :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
+{
+  *aNumberOfScreens = 0;
+  GDHandle currDevice = ::GetDeviceList();
+  while ( currDevice ) {
+    if ( ::TestDeviceAttribute(currDevice, screenDevice) && ::TestDeviceAttribute(currDevice, screenActive) )
+      ++(*aNumberOfScreens);
+    currDevice = ::GetNextDevice(currDevice);
+  }
+  return NS_OK;
+  
+} // GetNumberOfScreens
 
