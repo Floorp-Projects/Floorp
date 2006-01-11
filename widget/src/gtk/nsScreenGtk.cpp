@@ -22,14 +22,14 @@
 
 #include "nsScreenGtk.h"
 
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+
 
 nsScreenGtk :: nsScreenGtk (  )
-//  : mScreen(inScreen)
 {
   NS_INIT_REFCNT();
 
-  //NS_ASSERTION ( inScreen, "Passing null device to nsScreenGtk" );
-  
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
   // has changed.
@@ -49,7 +49,7 @@ NS_IMPL_ISUPPORTS(nsScreenGtk, NS_GET_IID(nsIScreen))
 NS_IMETHODIMP 
 nsScreenGtk :: GetWidth(PRInt32 *aWidth)
 {
-  //*aWidth = (**mScreen).gdRect.right - (**mScreen).gdRect.left;
+  *aWidth = gdk_screen_width();
   return NS_OK;
 
 } // GetWidth
@@ -58,7 +58,7 @@ nsScreenGtk :: GetWidth(PRInt32 *aWidth)
 NS_IMETHODIMP 
 nsScreenGtk :: GetHeight(PRInt32 *aHeight)
 {
-  //*aHeight = (**mScreen).gdRect.bottom - (**mScreen).gdRect.top;
+  *aHeight = gdk_screen_height();
   return NS_OK;
 
 } // GetHeight
@@ -67,7 +67,9 @@ nsScreenGtk :: GetHeight(PRInt32 *aHeight)
 NS_IMETHODIMP 
 nsScreenGtk :: GetPixelDepth(PRInt32 *aPixelDepth)
 {
-  //*aPixelDepth = (**(**mScreen).gdPMap).pixelSize;
+  GdkVisual * rgb_visual = gdk_rgb_get_visual();
+  *aPixelDepth = rgb_visual->depth;
+
   return NS_OK;
 
 } // GetPixelDepth
@@ -76,8 +78,7 @@ nsScreenGtk :: GetPixelDepth(PRInt32 *aPixelDepth)
 NS_IMETHODIMP 
 nsScreenGtk :: GetColorDepth(PRInt32 *aColorDepth)
 {
-  //*aColorDepth = (**(**mScreen).gdPMap).pixelSize;
-  return NS_OK;
+  return GetPixelDepth ( aColorDepth );
 
 } // GetColorDepth
 
@@ -85,8 +86,7 @@ nsScreenGtk :: GetColorDepth(PRInt32 *aColorDepth)
 NS_IMETHODIMP 
 nsScreenGtk :: GetAvailWidth(PRInt32 *aAvailWidth)
 {
-  GetWidth(aAvailWidth);
-  return NS_OK;
+  return GetWidth(aAvailWidth);
 
 } // GetAvailWidth
 
@@ -94,11 +94,7 @@ nsScreenGtk :: GetAvailWidth(PRInt32 *aAvailWidth)
 NS_IMETHODIMP 
 nsScreenGtk :: GetAvailHeight(PRInt32 *aAvailHeight)
 {
-  //Rect adjustedRect;
-  //SubtractMenuBar ( (**mScreen).gdRect, &adjustedRect );
-  //*aAvailHeight = adjustedRect.bottom - adjustedRect.top;
-  
-  return NS_OK;
+  return GetHeight(aAvailHeight);
 
 } // GetAvailHeight
 
@@ -106,7 +102,7 @@ nsScreenGtk :: GetAvailHeight(PRInt32 *aAvailHeight)
 NS_IMETHODIMP 
 nsScreenGtk :: GetAvailLeft(PRInt32 *aAvailLeft)
 {
-  //*aAvailLeft = (**mScreen).gdRect.left;
+  *aAvailLeft = 0;
   return NS_OK;
 
 } // GetAvailLeft
@@ -115,10 +111,7 @@ nsScreenGtk :: GetAvailLeft(PRInt32 *aAvailLeft)
 NS_IMETHODIMP 
 nsScreenGtk :: GetAvailTop(PRInt32 *aAvailTop)
 {
-  //Rect adjustedRect;
-  //SubtractMenuBar ( (**mScreen).gdRect, &adjustedRect );
-  //*aAvailTop = adjustedRect.top;
-  
+  *aAvailTop = 0;
   return NS_OK;
 
 } // GetAvailTop
