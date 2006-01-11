@@ -139,10 +139,11 @@ nsScreenGtk :: Init ()
 
   gdk_error_trap_push();
 
+  // gdk_property_get uses (length + 3) / 4, hence G_MAXLONG - 3 here.
   if (!gdk_property_get(root_window,
                         gdk_atom_intern ("_NET_WORKAREA", FALSE),
                         cardinal_atom,
-                        0, G_MAXLONG, FALSE,
+                        0, G_MAXLONG - 3, FALSE,
                         &type_returned,
                         &format_returned,
                         &length_returned,
