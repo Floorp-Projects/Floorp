@@ -49,23 +49,17 @@ NS_IMPL_ISUPPORTS(nsScreenOS2, NS_GET_IID(nsIScreen))
 NS_IMETHODIMP
 nsScreenOS2 :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
+  LONG alArray[2];
+
+  HPS hps = WinGetScreenPS( HWND_DESKTOP);
+  HDC hdc = GpiQueryDevice( hps);
+
+  DevQueryCaps(hdc, CAPS_HORIZONTAL_RESOLUTION, 2, alArray);
+
   *outTop = 0;
   *outLeft = 0;
-  *outWidth = WinQuerySysValue( HWND_DESKTOP, SV_CXFULLSCREEN );
-  *outHeight = WinQuerySysValue( HWND_DESKTOP, SV_CYFULLSCREEN ); 
-#ifdef THIS_DOESNT_WORK
-  HWND hwndDesktop = WinQueryDesktopWindow(NULLHANDLE, NULLHANDLE); 
-  HDC hdc = WinQueryWindowDC(hwndDesktop);
-  if (!hdc) {
-     hdc = WinOpenWindowDC(hwndDesktop);
-  } /* endif */
-
-  LONG alArray[2];
-  DevQueryCaps(hdc, CAPS_HORIZONTAL_RESOLUTION, CAPS_VERTICAL_RESOLUTION, alArray);
-
   *outWidth = alArray[0];
   *outHeight = alArray[1];
-#endif
 
   return NS_OK;
   
@@ -88,20 +82,14 @@ nsScreenOS2 :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
 NS_IMETHODIMP 
 nsScreenOS2 :: GetPixelDepth(PRInt32 *aPixelDepth)
 {
-#ifdef THIS_DOESNT_WORK
   LONG lCap;
 
-  HWND hwndDesktop = WinQueryDesktopWindow(NULLHANDLE, NULLHANDLE); 
-  HDC hdc = WinQueryWindowDC(hwndDesktop);
-  if (!hdc) {
-     hdc = WinOpenWindowDC(hwndDesktop);
-  } /* endif */
+  HPS hps = WinGetScreenPS( HWND_DESKTOP);
+  HDC hdc = GpiQueryDevice( hps);
 
-  DevQueryCaps(hdc, CAPS_COLOR_BITCOUNT, CAPS_COLOR_BITCOUNT, &lCap);
+  DevQueryCaps(hdc, CAPS_COLOR_BITCOUNT, 1, &lCap);
 
   *aPixelDepth = (PRInt32)lCap;
-#endif
-  *aPixelDepth = 0;
 
   return NS_OK;
 
