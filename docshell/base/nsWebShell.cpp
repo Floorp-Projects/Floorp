@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 cin et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -100,15 +101,16 @@
 #include "nsISHistoryInternal.h"
 
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIUploadChannel.h"
 #include "nsISeekableStream.h"
+#include "nsStreamUtils.h"
 
 #include "nsILocaleService.h"
 #include "nsIStringBundle.h"
 
 #include "nsICachingChannel.h"
 
-//XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
 #include "nsIDocument.h"
 #include "nsITextToSubURI.h"
 
@@ -116,6 +118,10 @@
 #include "nsCExternalHandlerService.h"
 
 #include "nsIIDNService.h"
+
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsITimer.h"
 
 #ifdef NS_DEBUG
 /**
@@ -151,6 +157,189 @@ IsOffline()
     if (ios)
         ios->GetOffline(&offline);
     return offline;
+}
+
+//----------------------------------------------------------------------
+
+// We wait this many milliseconds before killing the ping channel...
+#define PING_TIMEOUT 10000
+
+static void
+OnPingTimeout(nsITimer *timer, void *closure)
+{
+  nsIRequest *request = NS_STATIC_CAST(nsIRequest *, closure);
+  request->Cancel(NS_BINDING_ABORTED);
+  request->Release();
+}
+
+//----------------------------------------------------------------------
+
+class nsPingListener : public nsIStreamListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+};
+
+NS_IMPL_ISUPPORTS2(nsPingListener, nsIStreamListener, nsIRequestObserver)
+
+NS_IMETHODIMP
+nsPingListener::OnStartRequest(nsIRequest *request, nsISupports *context)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPingListener::OnDataAvailable(nsIRequest *request, nsISupports *context,
+                                nsIInputStream *stream, PRUint32 offset,
+                                PRUint32 count)
+{
+  PRUint32 result;
+  return stream->ReadSegments(NS_DiscardSegment, nsnull, count, &result);
+}
+
+NS_IMETHODIMP
+nsPingListener::OnStopRequest(nsIRequest *request, nsISupports *context,
+                              nsresult status)
+{
+  return NS_OK;
+}
+
+static void
+SendPing(const nsSubstring &relSpec, nsIDocument *doc, nsIURI *referrer,
+         nsIIOService *ios)
+{
+  nsCOMPtr<nsIChannel> chan;
+  ios->NewChannel(NS_ConvertUTF16toUTF8(relSpec),
+                  doc->GetDocumentCharacterSet().get(),
+                  doc->GetBaseURI(),
+                  getter_AddRefs(chan));
+  if (!chan)
+    return;
+
+  // Don't bother caching the result of this URI load.
+  chan->SetLoadFlags(nsIRequest::INHIBIT_CACHING);
+
+  nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(chan);
+  if (httpChan) {
+    // This is needed in order for 3rd-party cookie blocking to work.
+    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(httpChan);
+    if (httpInternal)
+      httpInternal->SetDocumentURI(doc->GetBaseURI());
+
+    if (referrer)
+      httpChan->SetReferrer(referrer);
+
+    httpChan->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+
+    // Remove extraneous request headers (to reduce request size)
+    httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept"),
+                               EmptyCString(), PR_FALSE);
+    httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-language"),
+                               EmptyCString(), PR_FALSE);
+    httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-charset"),
+                               EmptyCString(), PR_FALSE);
+    httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-encoding"),
+                               EmptyCString(), PR_FALSE);
+
+    nsCOMPtr<nsIUploadChannel> uploadChan = do_QueryInterface(httpChan);
+    if (!uploadChan)
+      return;
+
+    // To avoid sending an unnecessary Content-Type header, we encode the
+    // closing portion of the headers in the POST body.
+    NS_NAMED_LITERAL_CSTRING(uploadData, "Content-Length: 0\r\n\r\n");
+
+    nsCOMPtr<nsIInputStream> uploadStream;
+    NS_NewPostDataStream(getter_AddRefs(uploadStream), PR_FALSE,
+                         uploadData, 0);
+    if (!uploadStream)
+      return;
+
+    uploadChan->SetUploadStream(uploadStream, EmptyCString(), -1);
+  }
+
+  // Construct a listener that merely discards any response.  If successful at
+  // opening the channel, then it is not necessary to hold a reference to the
+  // channel.  The networking subsystem will take care of that for us.
+  nsCOMPtr<nsIStreamListener> listener = new nsPingListener();
+  if (listener) {
+    chan->AsyncOpen(listener, nsnull);
+
+    // Prevent ping requests from stalling and never being garbage collected...
+    nsCOMPtr<nsITimer> timer =
+        do_CreateInstance(NS_TIMER_CONTRACTID);
+    if (timer) {
+      nsresult rv = timer->InitWithFuncCallback(OnPingTimeout, chan,
+                                                PING_TIMEOUT,
+                                                nsITimer::TYPE_ONE_SHOT);
+      if (NS_SUCCEEDED(rv)) {
+        // When the timer expires, the callback function will release this
+        // reference to the channel.
+        NS_STATIC_CAST(nsIChannel *, chan.get())->AddRef();
+      }
+    }
+  }
+}
+
+// Spec: http://whatwg.org/specs/web-apps/current-work/#ping
+static void
+DispatchPings(nsIContent *content, nsIURI *referrer)
+{
+  // Make sure we are dealing with either an <A> or <AREA> element in the HTML
+  // or XHTML namespace.
+  if (!content->IsContentOfType(nsIContent::eHTML))
+    return;
+  nsIAtom *nameAtom = content->Tag();
+  if (!nameAtom->EqualsUTF8(NS_LITERAL_CSTRING("a")) &&
+      !nameAtom->EqualsUTF8(NS_LITERAL_CSTRING("area")))
+    return;
+
+  nsCOMPtr<nsIAtom> pingAtom = do_GetAtom("ping");
+  if (!pingAtom)
+    return;
+
+  nsAutoString value;
+  content->GetAttr(kNameSpaceID_None, pingAtom, value);
+  if (value.IsEmpty())
+    return;
+
+  // check prefs to see if pings are enabled
+  nsCOMPtr<nsIPrefBranch> prefs =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRBool allow = PR_TRUE;
+    prefs->GetBoolPref("browser.send_pings", &allow);
+    if (!allow)
+      return;
+  }
+
+  nsCOMPtr<nsIIOService> ios = do_GetIOService();
+  if (!ios)
+    return;
+
+  nsIDocument *doc = content->GetOwnerDoc();
+  if (!doc)
+    return;
+
+  // value contains relative URIs split on spaces (U+0020)
+  const PRUnichar *start = value.BeginReading();
+  const PRUnichar *end   = value.EndReading();
+  const PRUnichar *iter  = start;
+  for (;;) {
+    if (iter < end && *iter != ' ') {
+      ++iter;
+    } else {  // iter is pointing at either end or a space
+      while (*start == ' ' && start < iter)
+        ++start;
+      if (iter != start)
+        SendPing(Substring(start, iter), doc, referrer, ios);
+      start = iter = iter + 1;
+      if (iter >= end)
+        break;
+    }
+  }
 }
 
 //----------------------------------------------------------------------
@@ -524,6 +713,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     *aRequest = nsnull;
   }
 
+  nsresult rv;
   switch(aVerb) {
     case eLinkVerb_New:
       target.AssignLiteral("_blank");
@@ -532,19 +722,22 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
       // Fall through, this seems like the most reasonable action
     case eLinkVerb_Replace:
       {
-        return InternalLoad(aURI,               // New URI
-                            referer,            // Referer URI
-                            nsnull,             // No onwer
-                            INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner from document
-                            target.get(),       // Window target
-                            NS_LossyConvertUCS2toASCII(typeHint).get(),
-                            aPostDataStream,    // Post data stream
-                            aHeadersDataStream, // Headers stream
-                            LOAD_LINK,          // Load type
-                            nsnull,             // No SHEntry
-                            PR_TRUE,            // first party site
-                            aDocShell,          // DocShell out-param
-                            aRequest);          // Request out-param
+        rv = InternalLoad(aURI,               // New URI
+                          referer,            // Referer URI
+                          nsnull,             // No onwer
+                          INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner from document
+                          target.get(),       // Window target
+                          NS_LossyConvertUCS2toASCII(typeHint).get(),
+                          aPostDataStream,    // Post data stream
+                          aHeadersDataStream, // Headers stream
+                          LOAD_LINK,          // Load type
+                          nsnull,             // No SHEntry
+                          PR_TRUE,            // first party site
+                          aDocShell,          // DocShell out-param
+                          aRequest);          // Request out-param
+        if (NS_SUCCEEDED(rv)) {
+          DispatchPings(aContent, referer);
+        }
       }
       break;
     case eLinkVerb_Embed:
@@ -552,8 +745,9 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
       //          in NS 4.x
     default:
       NS_ABORT_IF_FALSE(0,"unexpected link verb");
-      return NS_ERROR_UNEXPECTED;
+      rv = NS_ERROR_UNEXPECTED;
   }
+  return rv;
 }
 
 NS_IMETHODIMP
