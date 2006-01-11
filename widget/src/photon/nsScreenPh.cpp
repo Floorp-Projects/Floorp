@@ -89,7 +89,7 @@ nsScreenPh :: ~nsScreenPh()
 // addref, release, QI
 NS_IMPL_ISUPPORTS(nsScreenPh, NS_GET_IID(nsIScreen))
 
-
+#if 0
 NS_IMETHODIMP 
 nsScreenPh :: GetWidth(PRInt32 *aWidth)
 {
@@ -109,6 +109,7 @@ nsScreenPh :: GetHeight(PRInt32 *aHeight)
 
 } // GetHeight
 
+#endif
 
 NS_IMETHODIMP 
 nsScreenPh :: GetPixelDepth(PRInt32 *aPixelDepth)
@@ -127,14 +128,16 @@ nsScreenPh :: GetColorDepth(PRInt32 *aColorDepth)
 } // GetColorDepth
 
 
+#if 0
 NS_IMETHODIMP 
 nsScreenPh :: GetAvailWidth(PRInt32 *aAvailWidth)
 {
   return GetWidth(aAvailWidth);
 
 } // GetAvailWidth
+#endif
 
-
+#if 0
 NS_IMETHODIMP 
 nsScreenPh :: GetAvailHeight(PRInt32 *aAvailHeight)
 {
@@ -152,6 +155,7 @@ nsScreenPh :: GetAvailLeft(PRInt32 *aAvailLeft)
 } // GetAvailLeft
 
 
+
 NS_IMETHODIMP 
 nsScreenPh :: GetAvailTop(PRInt32 *aAvailTop)
 {
@@ -160,3 +164,29 @@ nsScreenPh :: GetAvailTop(PRInt32 *aAvailTop)
 
 } // GetAvailTop
 
+#endif
+
+NS_IMETHODIMP
+nsScreenPh :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
+{
+  *outTop = 0;
+  *outLeft = 0;
+  *outWidth = mWidth;
+  *outHeight = mHeight;
+
+  return NS_OK;
+  
+} // GetRect
+
+
+NS_IMETHODIMP
+nsScreenPh :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
+{
+  *outTop = 0;
+  *outLeft = 0;
+  *outWidth = mWidth;
+  *outHeight = mHeight;
+
+  return NS_OK;
+  
+} // GetAvailRect
