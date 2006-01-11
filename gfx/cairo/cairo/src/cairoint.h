@@ -66,6 +66,10 @@
 #include "cairo-debug.h"
 #include <pixman.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 CAIRO_BEGIN_DECLS
 
 #if __GNUC__ >= 3 && defined(__ELF__)
