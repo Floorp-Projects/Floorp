@@ -1,0 +1,86 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version 
+# 1.1 (the "License"); you may not use this file except in compliance with 
+# the License. You may obtain a copy of the License at 
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is mozilla.org code.
+# 
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2002
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK ***** 
+
+The mozldap.spec file can be used to build an RPM package.  This
+spec file produces 3 packages:
+
+mozldap - the core runtime shared libraries libssldap50.so,
+libprldap50.so, and libldap50.so, along with major and minor
+version symlinks (see the %files section).  These files are
+placed in the system LIBDIR (usually /usr/lib or /usr/lib64).
+
+mozldap-tools - the command line tools ldapsearch, ldapmodify,
+ldapdelete, ldapcmp, ldapcompare - these are placed in a
+subdirectory of LIBDIR called mozldap, so as not to conflict
+with the OpenLDAP versions of ldapsearch, ldapmodify, etc.
+which are present in almost every linux distro in /usr/bin
+(the libs don't conflict because they have different names).
+This package is not required if you only need the libs for
+application support (e.g. Thunderbird), but it is a good
+idea if you need to test some LDAP client feature that is
+not supported by the OpenLDAP tools, or want to use NSS
+for crypto with ldapsearch et. al.
+
+mozldap-devel - the include files, example code, config files,
+and pkg-config .pc file.  The include files are placed in a
+mozldap subdirectory of the system INCDIR (usually /usr/include)
+so as not to conflict with the OpenLDAP include files in
+/usr/include.  The example code and config files go into the
+/usr/share/mozldap directory.  The mozldap.pc file goes into
+the usual pkg-config directory, so you can get information
+about the lib and include directories when building other
+applications that use mozldap, e.g.
+    /usr/bin/pkg-config --cflags-only-I mozldap
+
+Build Dependencies: nspr-devel, nss-devel, and svrcore-devel
+Runtime Dependencies: nspr, nss
+
+These packages should be available for download from ftp.mozilla.org
+or from your favorite RPM/yum repository.  If these packages are
+installed, and have the proper pkg-config installed, the rpmbuild
+will automatically find them - see config/autoconf/*.m4.
+
+This RPM uses NSS for crypto and SVRCORE for secure PIN
+management, which in turn depend on NSPR.  If you do not want that,
+you can create a new mozldap.spec file that removes those
+dependencies (edit Requires: and BuildRequires:) and removes those
+from the build (e.g. use --without-nss for the configure command).
+
+Comments to <news://news.mozilla.org/netscape.public.mozilla.directory>, 
+please.
+
+- Rich Megginson <richm@stanfordalumni.org>

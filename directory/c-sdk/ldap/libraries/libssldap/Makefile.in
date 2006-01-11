@@ -39,6 +39,10 @@
 MOD_DEPTH	= ../../..
 srcdir		= @srcdir@
 topsrcdir 	= @top_srcdir@
+NSPR_LIBS   = @NSPR_LIBS@
+NSPR_CFLAGS = @NSPR_CFLAGS@
+NSS_LIBS   = @NSS_LIBS@
+NSS_CFLAGS = @NSS_CFLAGS@
 
 include $(MOD_DEPTH)/config/autoconf.mk
 include $(topsrcdir)/build.mk
@@ -69,11 +73,9 @@ GARBAGE 	+= $(LIBSSLDAP) $(DLLSSLDAP)
 LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
 INCLUDES	+= -I$(DISTHDIR) -I$(HDIR) -I$(INSTALLDIR)/include \
 		   -I$(DIST)/include \
-		   -I$(DIST)/public/security \
-		   -I$(DIST)/public/nss \
-                   -I$(DIST)/include/nspr \
-		   -I$(DIST)/$(RELEASE_OBJDIR_NAME)/include
-		    
+			$(NSS_CFLAGS) \
+			$(NSPR_CFLAGS)
+
 DEFINES		+= $(DEFS)
 
 PLATFORMCFLAGS	= -DUSE_WAITPID -DNEEDPROTOS
@@ -107,93 +109,77 @@ ifeq ($(OS_ARCH), SunOS)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME) 
 # NSPR, NSS, etc. other mozilla components do not put their shared libs
 # in dist_libdir but rather in $(DIST)/$(RELEASE_OBJDIR_NAME)/lib
-EXTRA_LIBS += -L$(DIST)/$(RELEASE_OBJDIR_NAME)/lib $(DYNAMICNSPR)
+EXTRA_LIBS += $(NSPRLINK)
 endif
 
 ifeq ($(OS_ARCH), WINNT)
 ifdef NS_USE_GCC
 EXTRA_DLL_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
-	-l$(NSS_LIBNAME)
-ifeq ($(NSS_DYNAMIC_SOFTOKN),1)
-EXTRA_DLL_LIBS += -l$(SOFTOKN_LIBNAME)
-endif
-EXTRA_DLL_LIBS += -l$(SSL_LIBNAME) \
-	-l$(PLC_BASENAME) -l$(PLDS_BASENAME) -l$(NSPR_BASENAME)
+	$(NSSLINK) $(NSPRLINK)
 else
 EXTRA_LIBS =wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib \
             comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib \
             rpcrt4.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib
 EXTRA_LIBS += $(dist_libdir)/$(LDAP_LIBNAME).lib
 EXTRA_LIBS += $(dist_libdir)/$(PRLDAP_LIBNAME).lib
-EXTRA_LIBS += $(dist_libdir)/$(PLC_BASENAME).lib
-EXTRA_LIBS += $(dist_libdir)/$(PLDS_BASENAME).lib
-EXTRA_LIBS += $(dist_libdir)/$(NSPR_BASENAME).lib
-EXTRA_LIBS += $(dist_libdir)/$(NSS_LIBNAME).lib
-ifeq ($(NSS_DYNAMIC_SOFTOKN),1)
-EXTRA_LIBS += $(dist_libdir)/$(SOFTOKN_LIBNAME).lib
+EXTRA_LIBS += $(NSSLINK)
+EXTRA_LIBS += $(NSPRLINK)
 endif
-EXTRA_LIBS += $(dist_libdir)/$(SSL_LIBNAME).lib
-endif
+CUSTOM_LIBS=1
 endif
 
 ifeq ($(OS_ARCH),OS2)
 EXTRA_LIBS = $(OS_LIBS)
 EXTRA_LIBS += $(dist_libdir)/$(LDAP_LIBNAME).lib
 EXTRA_LIBS += $(dist_libdir)/$(PRLDAP_LIBNAME).lib
-EXTRA_LIBS += $(dist_libdir)/$(PLCBASE).lib
-EXTRA_LIBS += $(dist_libdir)/$(PLDSBASE).lib
-EXTRA_LIBS += $(dist_libdir)/$(NSPRBASE).lib
-EXTRA_LIBS += $(dist_libdir)/$(NSS_LIBNAME).lib
-ifeq ($(NSS_DYNAMIC_SOFTOKN),1)
-EXTRA_LIBS += $(dist_libdir)/$(SOFTOKN_LIBNAME).lib
-endif
-EXTRA_LIBS += $(dist_libdir)/$(SSL_LIBNAME).lib
+EXTRA_LIBS += $(NSSLINK)
+EXTRA_LIBS += $(NSPRLINK)
+CUSTOM_LIBS=1
 endif
 
 ifeq ($(OS_ARCH), OSF1)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME)
-EXTRA_LIBS += $(DYNAMICNSPR)
+EXTRA_LIBS += $(NSPRLINK)
 EXTRA_LIBS += -lcxx -lpthread -lrt -lmach -lexc
+CUSTOM_LIBS=1
 endif
 
 ifeq ($(OS_ARCH), AIX)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME)
-EXTRA_LIBS += $(DYNAMICNSPR) -l$(NSS_LIBNAME)
-ifeq ($(NSS_DYNAMIC_SOFTOKN),1)
-EXTRA_LIBS += -l$(SOFTOKN_LIBNAME)
-endif
-EXTRA_LIBS += -l$(SSL_LIBNAME) -l $(PRLDAP_LIBNAME)
+EXTRA_LIBS += $(NSPRLINK)
+EXTRA_LIBS += $(NSSLINK) -l $(PRLDAP_LIBNAME)
 EXTRA_LIBS += -ldl -brtl -lpthreads -lc_r -lm
+CUSTOM_LIBS=1
 endif
 
 ifeq ($(OS_ARCH), IRIX)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME)
-EXTRA_LIBS += $(DYNAMICNSPR) -l$(NSS_LIBNAME)
-ifeq ($(NSS_DYNAMIC_SOFTOKN),1)
-EXTRA_LIBS += -l$(SOFTOKN_LIBNAME)
-endif
-EXTRA_LIBS += -l$(SSL_LIBNAME) -l $(PRLDAP_LIBNAME)
+EXTRA_LIBS += $(NSPRLINK)
+EXTRA_LIBS += $(NSSLINK) -l $(PRLDAP_LIBNAME)
 EXTRA_LIBS += $(OS_LIBS) -lc
+CUSTOM_LIBS=1
 endif
 
 ifeq ($(OS_ARCH), Darwin)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME) -l$(PRLDAP_LIBNAME)
-ifeq ($(NSS_DYNAMIC_SOFTOKN),1)
-EXTRA_LIBS += -l$(SOFTOKN_LIBNAME)
-endif
-EXTRA_LIBS += -l$(SSL_LIBNAME) -l$(NSS_LIBNAME)
-EXTRA_LIBS += $(DYNAMICNSPR) 
+EXTRA_LIBS += $(NSSLINK) 
+EXTRA_LIBS += $(NSPRLINK) 
 EXTRA_LIBS += $(OS_LIBS)
+CUSTOM_LIBS=1
 endif
 
 ifeq ($(OS_ARCH), BeOS)
 EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME) -l$(PRLDAP_LIBNAME)
-ifeq ($(NSS_DYNAMIC_SOFTOKN),1)
-EXTRA_LIBS += -l$(SOFTOKN_LIBNAME)
-endif
-EXTRA_LIBS += -l$(SSL_LIBNAME) -l$(NSS_LIBNAME)
-EXTRA_LIBS += $(DYNAMICNSPR) 
+EXTRA_LIBS += $(NSSLINK) 
+EXTRA_LIBS += $(NSPRLINK) 
 EXTRA_LIBS += $(OS_LIBS)
+CUSTOM_LIBS=1
+endif
+
+ifndef CUSTOM_LIBS
+EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME) -l$(PRLDAP_LIBNAME)
+EXTRA_LIBS += $(NSSLINK) 
+EXTRA_LIBS += $(NSPRLINK) 
 endif
 
 OBJDEST = $(OBJDIR_NAME)

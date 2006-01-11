@@ -149,6 +149,9 @@ endif
 ifeq ($(OS_RELEASE),B.11.11)
 MODERN_HPUX=1
 endif
+ifeq ($(OS_RELEASE),B.11.23)
+MODERN_HPUX=1
+endif
 
 ifdef MODERN_HPUX
 	ifneq ($(NS_USE_GCC), 1)

@@ -37,3 +37,5 @@ dnl
 dnl ***** END LICENSE BLOCK ***** 
 
 builtin(include, config/autoconf/nspr.m4)dnl
+builtin(include, config/autoconf/nss.m4)dnl
+builtin(include, config/autoconf/svrcore.m4)dnl

@@ -45,7 +45,7 @@ COMPVERSIONDIR = $(DEPTH)/directory/c-sdk
 endif
 
 DEFAULT_VENDOR_NAME=mozilla.org
-DEFAULT_VENDOR_VERSION=516
+DEFAULT_VENDOR_VERSION=517
 
 ifndef VENDOR_NAME
 VENDOR_NAME	= $(DEFAULT_VENDOR_NAME)
@@ -120,6 +120,10 @@ ifeq ($(NSS_DYNAMIC_SOFTOKN),1)
 SOFTOKN_LIBNAME	= softokn$(NSSVERS)
 endif
 SSL_LIBNAME	= ssl$(NSSVERS)
+
+DYNAMICNSS = $(addprefix -l,$(SSL_LIBNAME) $(NSS_LIBNAME) $(SOFTOKN_LIBNAME))
+NSSLINK = $(NSS_LIBS) $(DYNAMICNSS)
+
 HYBRID_LIBNAME	= freebl_hybrid_$(NSSVERS)
 PURE32_LIBNAME	= freebl_pure32_$(NSSVERS)
 
@@ -145,25 +149,31 @@ SVRCORE_LIBNAME	= svrcore$(SVRCOREVERS)
 # NSPR library
 #
 
-ifeq ($(OS_TARGET), WIN95)
-PLC_BASENAME=plc$(NSPR_LIBVERSION)
-PLDS_BASENAME=plds$(NSPR_LIBVERSION)
-NSPR_BASENAME=nspr$(NSPR_LIBVERSION)
-else
-PLC_BASENAME=libplc$(NSPR_LIBVERSION)
-PLDS_BASENAME=libplds$(NSPR_LIBVERSION)
-NSPR_BASENAME=libnspr$(NSPR_LIBVERSION)
-endif
-
 PLCBASE=plc$(NSPR_LIBVERSION)
 PLDSBASE=plds$(NSPR_LIBVERSION)
 NSPRBASE=nspr$(NSPR_LIBVERSION)
 
-DYNAMICNSPR = -l$(PLCBASE) -l$(PLDSBASE) -l$(NSPRBASE)
+ifeq ($(OS_TARGET), WIN95)
+PLC_BASENAME=$(PLCBASE)
+PLDS_BASENAME=$(PLDSBASE)
+NSPR_BASENAME=$(NSPRBASE)
+else
+PLC_BASENAME=lib$(PLCBASE)
+PLDS_BASENAME=lib$(PLDSBASE)
+NSPR_BASENAME=lib$(NSPRBASE)
+endif
 
-PLC_LIBNAME=plc$(NSPR_LIBVERSION)
-PLDS_LIBNAME=plds$(NSPR_LIBVERSION)
-NSPR_LIBNAME=nspr$(NSPR_LIBVERSION)
+DYNAMICNSPR = -l$(PLCBASE) -l$(PLDSBASE) -l$(NSPRBASE)
+# use the NSPRLINK macro in other makefiles to define the linker command line
+NSPRLINK = $(NSPR_LIBS) $(DYNAMICNSPR)
+
+# why the redundant definitions?  apparently, all of these basename/libname macros are so that
+# the ldapsdk can create a package containing all of the nspr shared libs/dlls - I don't think
+# we should do this anymore, we should just depend on the user installing nspr first - then we
+# can get rid of all of this junk
+PLC_LIBNAME=$(PLCBASE)
+PLDS_LIBNAME=$(PLDSBASE)
+NSPR_LIBNAME=$(NSPRBASE)
 
 #
 # NLS library
