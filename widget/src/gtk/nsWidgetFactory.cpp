@@ -58,6 +58,7 @@
 #include "nsDragService.h"
 #include "nsSound.h"
 #include "nsBidiKeyboard.h"
+#include "nsScreenManagerGtk.h"
 #ifdef NATIVE_THEME_SUPPORT
 #include "nsNativeThemeGTK.h"
 #endif
@@ -80,6 +81,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 #ifdef NATIVE_THEME_SUPPORT
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
 #endif
@@ -154,6 +156,10 @@ static const nsModuleComponentInfo components[] =
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
+  { "Gtk Screen Manager",
+    NS_SCREENMANAGER_CID,
+    "@mozilla.org/gfx/screenmanager;1",
+    nsScreenManagerGtkConstructor },
 #ifdef NATIVE_THEME_SUPPORT
    { "Native Theme Renderer",
     NS_THEMERENDERER_CID,
