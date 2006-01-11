@@ -82,8 +82,8 @@ nsScreenWin :: ~nsScreenWin()
 NS_IMPL_ISUPPORTS(nsScreenWin, NS_GET_IID(nsIScreen))
 
 
-NS_IMETHODIMP 
-nsScreenWin :: GetWidth(PRInt32 *aWidth)
+NS_IMETHODIMP
+nsScreenWin :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
   BOOL success = FALSE;
 #if _MSC_VER >= 1200
@@ -92,21 +92,27 @@ nsScreenWin :: GetWidth(PRInt32 *aWidth)
     MONITORINFO info;
     info.cbSize = sizeof(MONITORINFO);
     success = (*proc)( (HMONITOR)mScreen, &info );
-    if ( success ) 
-      *aWidth = info.rcMonitor.right - info.rcMonitor.left;
+    if ( success ) {
+      *outLeft = info.rcMonitor.left;
+      *outTop = info.rcMonitor.top;
+      *outWidth = info.rcMonitor.right - info.rcMonitor.left;
+      *outHeight = info.rcMonitor.bottom - info.rcMonitor.top;
+    }
   }
 #endif
-
-  if (!success)
-    *aWidth = ::GetDeviceCaps(mContext, HORZRES);
+  if (!success) {
+    *outTop = *outLeft = 0;
+    *outWidth = ::GetDeviceCaps(mContext, HORZRES);
+    *outHeight = ::GetDeviceCaps(mContext, VERTRES);
+  }
 
   return NS_OK;
 
-} // GetWidth
+} // GetRect
 
 
-NS_IMETHODIMP 
-nsScreenWin :: GetHeight(PRInt32 *aHeight)
+NS_IMETHODIMP
+nsScreenWin :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
   BOOL success = FALSE;
 #if _MSC_VER >= 1200
@@ -115,15 +121,27 @@ nsScreenWin :: GetHeight(PRInt32 *aHeight)
     MONITORINFO info;
     info.cbSize = sizeof(MONITORINFO);
     success = (*proc)( (HMONITOR)mScreen, &info );
-    if ( success ) 
-      *aHeight = info.rcMonitor.bottom - info.rcMonitor.top;
+    if ( success ) {
+      *outLeft = info.rcWork.left;
+      *outTop = info.rcWork.top;
+      *outWidth = info.rcWork.right - info.rcWork.left;
+      *outHeight = info.rcWork.bottom - info.rcWork.top;
+    }
   }
 #endif
-  if (!success)
-    *aHeight = ::GetDeviceCaps(mContext, VERTRES);
-  return NS_OK;
+  if (!success) {
+    RECT workArea;
+    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+    *outLeft = workArea.left;
+    *outTop = workArea.top;
+    *outWidth = workArea.right - workArea.left;
+    *outHeight = workArea.bottom - workArea.top;
+  }
 
-} // GetHeight
+  return NS_OK;
+  
+} // GetAvailRect
+
 
 
 NS_IMETHODIMP 
@@ -143,99 +161,4 @@ nsScreenWin :: GetColorDepth(PRInt32 *aColorDepth)
 
 } // GetColorDepth
 
-
-NS_IMETHODIMP 
-nsScreenWin :: GetAvailWidth(PRInt32 *aAvailWidth)
-{
-  BOOL success = FALSE;
-#if _MSC_VER >= 1200
-  if ( mScreen && mHasMultiMonitorAPIs ) {
-    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
-    MONITORINFO info;
-    info.cbSize = sizeof(MONITORINFO);
-    success = (*proc)( (HMONITOR)mScreen, &info );
-    if ( success ) 
-      *aAvailWidth = info.rcWork.right - info.rcWork.left;
-  }
-#endif
-  if (!success) {
-    RECT workArea;
-    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-    *aAvailWidth = workArea.right - workArea.left;
-  }
-  return NS_OK;
-
-} // GetAvailWidth
-
-
-NS_IMETHODIMP 
-nsScreenWin :: GetAvailHeight(PRInt32 *aAvailHeight)
-{
-  BOOL success = FALSE;
-#if _MSC_VER >= 1200
-  if ( mScreen && mHasMultiMonitorAPIs ) {
-    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
-    MONITORINFO info;
-    info.cbSize = sizeof(MONITORINFO);
-    success = (*proc)( (HMONITOR)mScreen, &info );
-    if ( success ) 
-      *aAvailHeight = info.rcWork.bottom - info.rcWork.top;
-  }
-#endif
-  if (!success) {
-    RECT workArea;
-    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-    *aAvailHeight = workArea.bottom - workArea.top;
-  }
-  return NS_OK;
-
-} // GetAvailHeight
-
-
-NS_IMETHODIMP 
-nsScreenWin :: GetAvailLeft(PRInt32 *aAvailLeft)
-{
-  BOOL success = FALSE;
-#if _MSC_VER >= 1200
-  if ( mScreen && mHasMultiMonitorAPIs ) {
-    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
-    MONITORINFO info;
-    info.cbSize = sizeof(MONITORINFO);
-    success = (*proc)( (HMONITOR)mScreen, &info );
-    if ( success ) 
-      *aAvailLeft = info.rcWork.left;
-  }
-#endif
-  if (!success) {
-    RECT workArea;
-    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-    *aAvailLeft = workArea.left;
-  }
-  return NS_OK;
-
-} // GetAvailLeft
-
-
-NS_IMETHODIMP 
-nsScreenWin :: GetAvailTop(PRInt32 *aAvailTop)
-{
-  BOOL success = FALSE;
-#if _MSC_VER >= 1200
-  if ( mScreen && mHasMultiMonitorAPIs ) {
-    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
-    MONITORINFO info;
-    info.cbSize = sizeof(MONITORINFO);
-    success = (*proc)( (HMONITOR)mScreen, &info );
-    if ( success ) 
-      *aAvailTop = info.rcWork.top;
-  }
-#endif
-  if (!success) {
-    RECT workArea;
-    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-    *aAvailTop = workArea.top;
-  }
-  return NS_OK;
-
-} // GetAvailTop
 
