@@ -45,15 +45,19 @@ typedef BOOL (WINAPI *GetMonitorInfoProc)(HMONITOR inMon, LPMONITORINFO ioInfo);
 #endif
 
 
-nsScreenWin :: nsScreenWin ( HDC inContext, void* inScreen )
-  : mContext(inContext), mScreen(inScreen), mHasMultiMonitorAPIs(PR_FALSE),
+nsScreenWin :: nsScreenWin ( void* inScreen )
+  : mScreen(inScreen), mHasMultiMonitorAPIs(PR_FALSE),
       mGetMonitorInfoProc(nsnull)
 {
   NS_INIT_REFCNT();
 
-  NS_ASSERTION ( inContext, "Passing null device to nsScreenWin" );
-  NS_ASSERTION ( ::GetDeviceCaps(inContext, TECHNOLOGY) == DT_RASDISPLAY, "Not a display screen");
-  
+#ifdef DEBUG
+  HDC hDCScreen = ::GetDC(nsnull);
+  NS_ASSERTION(hDCScreen,"GetDC Failure");
+  NS_ASSERTION ( ::GetDeviceCaps(hDCScreen, TECHNOLOGY) == DT_RASDISPLAY, "Not a display screen");
+  ::ReleaseDC(nsnull,hDCScreen);
+#endif
+   
 #if _MSC_VER >= 1200
   // figure out if we can call the multiple monitor APIs that are only
   // available on Win98/2000.
@@ -101,11 +105,15 @@ nsScreenWin :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
   }
 #endif
   if (!success) {
-    *outTop = *outLeft = 0;
-    *outWidth = ::GetDeviceCaps(mContext, HORZRES);
-    *outHeight = ::GetDeviceCaps(mContext, VERTRES);
+     HDC hDCScreen = ::GetDC(nsnull);
+     NS_ASSERTION(hDCScreen,"GetDC Failure");
+    
+     *outTop = *outLeft = 0;
+     *outWidth = ::GetDeviceCaps(hDCScreen, HORZRES);
+     *outHeight = ::GetDeviceCaps(hDCScreen, VERTRES); 
+     
+     ::ReleaseDC(nsnull, hDCScreen);
   }
-
   return NS_OK;
 
 } // GetRect
@@ -148,7 +156,12 @@ NS_IMETHODIMP
 nsScreenWin :: GetPixelDepth(PRInt32 *aPixelDepth)
 {
   //XXX not sure how to get this info for multiple monitors, this might be ok...
-  *aPixelDepth = ::GetDeviceCaps(mContext, BITSPIXEL);
+  HDC hDCScreen = ::GetDC(nsnull);
+  NS_ASSERTION(hDCScreen,"GetDC Failure");
+
+  *aPixelDepth = ::GetDeviceCaps(hDCScreen, BITSPIXEL);
+
+  ::ReleaseDC(nsnull, hDCScreen);
   return NS_OK;
 
 } // GetPixelDepth
