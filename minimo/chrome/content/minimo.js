@@ -353,6 +353,34 @@ nsBrowserStatusHandler.prototype =
   
 }
 
+/* 
+ * XUL > Menu > Tabs > Creates menuitems for each tab. 
+ * When the XUL Nav menu > Tabs Item is selected,
+ * meaning the MenuTabsContainer is show, 
+ * contents are dynamically written. Check id="MenuTabsContainer"
+ * 
+ */
+function BrowserMenuTabsActive() {
+  for (var i = 0; i < gBrowser.mPanelContainer.childNodes.length; i++) {
+    tabItem=gBrowser.mTabContainer.childNodes[i];
+    var tabMenuElement=document.createElement("menuitem");
+    tabMenuElement.setAttribute("label",tabItem.label);
+    document.getElementById("MenuTabsContainer").appendChild(tabMenuElement);	
+  }
+}
+
+/* 
+ * Menu > Tabs -> destroy tab reference elements.
+ * When the XUL Nav menu > id="MenuTabsContainer" is hidden,
+ * menuitems are removed from the menu. 
+ */
+function BrowserMenuTabsDestroy() {
+  var refTabMenuContainer=document.getElementById("MenuTabsContainer");
+  while(refTabMenuContainer.firstChild) {
+    refTabMenuContainer.removeChild(refTabMenuContainer.firstChild);
+  }
+}
+
 /*
  * Page's new Link tag handlers. This should be able to be smart about RSS, CSS, and maybe other Minimo stuff?  
  * So far we have this here, so we can experience and try some new stuff. To be tabrowsed.
