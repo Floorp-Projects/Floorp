@@ -83,7 +83,7 @@ nsScreenWin :: ~nsScreenWin()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenWin, NS_GET_IID(nsIScreen))
+NS_IMPL_ISUPPORTS1(nsScreenWin, nsIScreen)
 
 
 NS_IMETHODIMP
