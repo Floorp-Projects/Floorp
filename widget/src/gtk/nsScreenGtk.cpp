@@ -54,6 +54,8 @@ nsScreenGtk :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
   *outWidth = gdk_screen_width();
   *outHeight = gdk_screen_height();
 
+  return NS_OK;
+  
 } // GetRect
 
 
@@ -65,6 +67,8 @@ nsScreenGtk :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
   *outWidth = gdk_screen_width();
   *outHeight = gdk_screen_height();
 
+  return NS_OK;
+  
 } // GetAvailRect
 
 
