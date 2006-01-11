@@ -118,7 +118,7 @@ LoadVersionedLibrary(const char* libName, const char* libVersion)
   char *platformLibName = PR_GetLibraryName(nsnull, libName);
   nsCAutoString versionLibName(platformLibName);
   versionLibName.Append(libVersion);
-  PR_Free(platformLibName);
+  PR_FreeLibraryName(platformLibName);
   return PR_LoadLibrary(versionLibName.get());
 }
 
