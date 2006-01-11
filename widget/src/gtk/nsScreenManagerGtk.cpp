@@ -39,6 +39,7 @@
 #include "nsScreenGtk.h"
 #include "nsIComponentManager.h"
 #include "nsRect.h"
+#include "nsAutoPtr.h"
 
 #include <gdk/gdkx.h>
 
@@ -96,10 +97,14 @@ nsScreenManagerGtk :: EnsureInit(void)
     // display.
     if (mNumScreens < 2) {
       mNumScreens = 1;
-      nsCOMPtr<nsISupports> screen = new nsScreenGtk();
+      nsRefPtr<nsScreenGtk> screen = new nsScreenGtk();
       if (!screen)
         return NS_ERROR_OUT_OF_MEMORY;
-      mCachedScreenArray->AppendElement(screen);
+
+      screen->Init();
+
+      nsISupports *supportsScreen = screen;
+      mCachedScreenArray->AppendElement(supportsScreen);
     }
     // If Xinerama is enabled and there's more than one screen, fill
     // in the info for all of the screens.  If that's not the case
@@ -111,22 +116,21 @@ nsScreenManagerGtk :: EnsureInit(void)
 #endif
       int i;
       for (i=0; i < mNumScreens; i++) {
-        nsScreenGtk *screen = new nsScreenGtk();
+        nsRefPtr<nsScreenGtk> screen = new nsScreenGtk();
         if (!screen) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
+
         // initialize this screen object
-        screen->mXOrg = screenInfo[i].x_org;
-        screen->mYOrg = screenInfo[i].y_org;
-        screen->mWidth = screenInfo[i].width;
-        screen->mHeight = screenInfo[i].height;
-        screen->mScreenNum = screenInfo[i].screen_number;
-        nsCOMPtr<nsISupports> screenSupports = screen;
+        screen->Init(&screenInfo[i]);
+
+        nsISupports *screenSupports = screen;
         mCachedScreenArray->AppendElement(screenSupports);
       }
     }
 #endif /* MOZ_ENABLE_XINERAMA */
   }
+
   return NS_OK;;
 }
 
