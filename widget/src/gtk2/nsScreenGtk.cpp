@@ -43,10 +43,6 @@
 #include <gtk/gtk.h>
 #include <X11/Xatom.h>
 
-#ifdef MOZ_ENABLE_XINERAMA
-#include <X11/extensions/Xinerama.h>
-#endif // MOZ_ENABLE_XINERAMA
-
 nsScreenGtk :: nsScreenGtk (  )
   : mScreenNum(0),
     mRect(0, 0, 0, 0),
@@ -165,7 +161,7 @@ nsScreenGtk :: Init ()
                       workareas[i + 2], workareas[i + 3]);
       if (!mRect.Contains(workarea)) {
         NS_WARNING("Invalid bounds");
-	continue;
+        continue;
       }
 
       mAvailRect.IntersectRect(mAvailRect, workarea);

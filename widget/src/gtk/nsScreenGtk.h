@@ -41,6 +41,11 @@
 #include "nsIScreen.h"
 #include "nsRect.h"
 
+#ifdef MOZ_ENABLE_XINERAMA
+#include <X11/Xlib.h>
+#include <X11/extensions/Xinerama.h>
+#endif // MOZ_ENABLE_XINERAMA
+
 //------------------------------------------------------------------------
 
 class nsScreenGtk : public nsIScreen
