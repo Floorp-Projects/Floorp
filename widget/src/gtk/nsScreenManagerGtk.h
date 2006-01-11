@@ -26,6 +26,7 @@
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
 #include "nsCOMPtr.h"
+#include "nsISupportsArray.h"
 
 //------------------------------------------------------------------------
 
@@ -40,10 +41,13 @@ public:
 
 private:
 
-  nsIScreen* CreateNewScreenObject ( ) ;
+  nsresult EnsureInit(void);
 
-    // cache the primary screen object to avoid memory allocation every time
-  nsCOMPtr<nsIScreen> mCachedMainScreen;
+  // cache the primary screen object to avoid memory allocation every
+  // time
+  nsCOMPtr<nsISupportsArray> mCachedScreenArray;
+  // how many screens do we have?
+  int mNumScreens;
 
 };
 
