@@ -40,7 +40,7 @@ nsScreenOS2 :: ~nsScreenOS2()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenOS2, NS_GET_IID(nsIScreen))
+NS_IMPL_ISUPPORTS1(nsScreenOS2, nsIScreen)
 
 
 NS_IMETHODIMP

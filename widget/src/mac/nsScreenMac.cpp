@@ -44,7 +44,7 @@ nsScreenMac :: ~nsScreenMac()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenMac, NS_GET_IID(nsIScreen))
+NS_IMPL_ISUPPORTS1(nsScreenMac, nsIScreen)
 
 
 NS_IMETHODIMP

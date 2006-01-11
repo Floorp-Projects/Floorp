@@ -42,7 +42,7 @@ nsScreenXlib :: ~nsScreenXlib()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenXlib, NS_GET_IID(nsIScreen))
+NS_IMPL_ISUPPORTS1(nsScreenXlib, nsIScreen)
 
 
 NS_IMETHODIMP
