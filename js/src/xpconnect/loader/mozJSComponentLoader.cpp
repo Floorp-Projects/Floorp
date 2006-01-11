@@ -1047,7 +1047,9 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
 
 #ifdef HAVE_PR_MEMMAP
         PRInt64 fileSize;
-        aComponent->GetFileSize(&fileSize);
+        rv = aComponent->GetFileSize(&fileSize);
+        if (NS_FAILED(rv))
+            return rv;
 
         PRInt64 maxSize;
         LL_UI2L(maxSize, PR_UINT32_MAX);
