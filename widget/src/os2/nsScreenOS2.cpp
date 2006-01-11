@@ -51,12 +51,21 @@ nsScreenOS2 :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
 {
   *outTop = 0;
   *outLeft = 0;
-  HDC hdc = WinQueryWindowDC(HWND_DESKTOP);
+  *outWidth = WinQuerySysValue( HWND_DESKTOP, SV_CXFULLSCREEN );
+  *outHeight = WinQuerySysValue( HWND_DESKTOP, SV_CYFULLSCREEN ); 
+#ifdef THIS_DOESNT_WORK
+  HWND hwndDesktop = WinQueryDesktopWindow(NULLHANDLE, NULLHANDLE); 
+  HDC hdc = WinQueryWindowDC(hwndDesktop);
+  if (!hdc) {
+     hdc = WinOpenWindowDC(hwndDesktop);
+  } /* endif */
+
   LONG alArray[2];
   DevQueryCaps(hdc, CAPS_HORIZONTAL_RESOLUTION, CAPS_VERTICAL_RESOLUTION, alArray);
 
   *outWidth = alArray[0];
   *outHeight = alArray[1];
+#endif
 
   return NS_OK;
   
@@ -79,12 +88,20 @@ nsScreenOS2 :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
 NS_IMETHODIMP 
 nsScreenOS2 :: GetPixelDepth(PRInt32 *aPixelDepth)
 {
+#ifdef THIS_DOESNT_WORK
   LONG lCap;
-  HDC hdc = WinQueryWindowDC(HWND_DESKTOP);
+
+  HWND hwndDesktop = WinQueryDesktopWindow(NULLHANDLE, NULLHANDLE); 
+  HDC hdc = WinQueryWindowDC(hwndDesktop);
+  if (!hdc) {
+     hdc = WinOpenWindowDC(hwndDesktop);
+  } /* endif */
 
   DevQueryCaps(hdc, CAPS_COLOR_BITCOUNT, CAPS_COLOR_BITCOUNT, &lCap);
 
   *aPixelDepth = (PRInt32)lCap;
+#endif
+  *aPixelDepth = 0;
 
   return NS_OK;
 
