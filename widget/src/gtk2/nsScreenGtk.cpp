@@ -172,6 +172,7 @@ nsScreenGtk :: Init ()
       mAvailRect.IntersectRect(mAvailRect, workarea);
     }
   }
+  g_free (workareas);
 }
 
 #ifdef MOZ_ENABLE_XINERAMA
