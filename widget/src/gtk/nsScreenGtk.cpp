@@ -30,9 +30,12 @@ nsScreenGtk :: nsScreenGtk (  )
 {
   NS_INIT_REFCNT();
 
-  // nothing else to do. I guess we could cache a bunch of information
-  // here, but we want to ask the device at runtime in case anything
-  // has changed.
+  mScreenNum = 0;
+  mXOrg = 0;
+  mYOrg = 0;
+  // these always default to the full screen size
+  mWidth = gdk_screen_width();
+  mHeight = gdk_screen_height();
 }
 
 
@@ -49,10 +52,10 @@ NS_IMPL_ISUPPORTS(nsScreenGtk, NS_GET_IID(nsIScreen))
 NS_IMETHODIMP
 nsScreenGtk :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-  *outTop = 0;
-  *outLeft = 0;
-  *outWidth = gdk_screen_width();
-  *outHeight = gdk_screen_height();
+  *outLeft = mXOrg;
+  *outTop = mYOrg;
+  *outWidth = mWidth;
+  *outHeight = mHeight;
 
   return NS_OK;
   
@@ -62,10 +65,10 @@ nsScreenGtk :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
 NS_IMETHODIMP
 nsScreenGtk :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-  *outTop = 0;
-  *outLeft = 0;
-  *outWidth = gdk_screen_width();
-  *outHeight = gdk_screen_height();
+  *outTop = mXOrg;
+  *outLeft = mYOrg;
+  *outWidth = mWidth;
+  *outHeight = mHeight;
 
   return NS_OK;
   
