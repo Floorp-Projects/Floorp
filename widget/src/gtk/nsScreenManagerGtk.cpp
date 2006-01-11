@@ -84,7 +84,13 @@ nsScreenManagerGtk :: EnsureInit(void)
 #ifdef MOZ_ENABLE_XINERAMA
     // get the number of screens via xinerama
     XineramaScreenInfo *screenInfo;
-    screenInfo = XineramaQueryScreens(GDK_DISPLAY(), &mNumScreens);
+    if (XineramaIsActive(GDK_DISPLAY())) {
+      screenInfo = XineramaQueryScreens(GDK_DISPLAY(), &mNumScreens);
+    }
+    else {
+      screenInfo = NULL;
+      mNumScreens = 1;
+    }
 #else
     mNumScreens = 1;
 #endif
