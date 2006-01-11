@@ -1,0 +1,46 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator.
+ * 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corp.  Portions created by Netscape are Copyright (C) 2000 Netscape 
+ * Communications Corp.  All Rights Reserved.
+ * 
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+#include "nsIScreen.idl"
+
+
+[scriptable, uuid(662e7b78-1dd2-11b2-a3d3-fc1e5f5fb9d4)]
+interface nsIScreenManager : nsISupports
+{
+    //
+    // Returns the screen that contains the rectangle. If the rect overlaps
+    // multiple screens, it picks the screen with the greatest area of intersection.
+    //
+    // The coordinates are in pixels (not twips) and in screen coordinates.
+    //
+  nsIScreen screenForRect ( in long top, in long left, in long width, in long height ) ;
+  
+    // The screen with the menubar/taskbar. This shouldn't be needed very
+    // often.
+  readonly attribute nsIScreen primaryScreen;
+  
+};
+
+
+%{ C++
+
+%}
