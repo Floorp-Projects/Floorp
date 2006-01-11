@@ -45,20 +45,9 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsNetError.h"
+#include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
-
-static NS_METHOD
-DiscardSegments(nsIInputStream *input,
-                void *closure,
-                const char *buf,
-                PRUint32 offset,
-                PRUint32 count,
-                PRUint32 *countRead)
-{
-    *countRead = count;
-    return NS_OK;
-}
 
 // nsISupports implementation
 NS_IMPL_ISUPPORTS2(nsHTTPCompressConv, nsIStreamConverter, nsIStreamListener)
@@ -157,7 +146,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
         // what's left is either metadata or padding of some sort.... throwing
         // it out is probably the safe thing to do.
         PRUint32 n;
-        return iStr->ReadSegments(DiscardSegments, nsnull, streamLen, &n);
+        return iStr->ReadSegments(NS_DiscardSegment, nsnull, streamLen, &n);
     }
 
     switch (mMode)

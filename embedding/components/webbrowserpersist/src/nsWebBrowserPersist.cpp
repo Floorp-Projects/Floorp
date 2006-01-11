@@ -60,6 +60,7 @@
 #include "nsCRT.h"
 #include "nsSupportsArray.h"
 #include "nsInt64.h"
+#include "nsStreamUtils.h"
 
 #include "nsCExternalHandlerService.h"
 
@@ -791,17 +792,6 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
 // nsWebBrowserPersist::nsIStreamListener
 //*****************************************************************************
 
-static NS_METHOD DiscardSegments(nsIInputStream *input,
-                                 void *closure,
-                                 const char *buf,
-                                 PRUint32 offset,
-                                 PRUint32 count,
-                                 PRUint32 *countRead)
-{
-    *countRead = count;
-    return NS_OK;
-}
-
 NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
     nsIRequest* request, nsISupports *aContext, nsIInputStream *aIStream,
     PRUint32 aOffset, PRUint32 aLength)
@@ -821,7 +811,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
         if (!data) {
             // might be uploadData; consume necko's buffer and bail...
             PRUint32 n;
-            return aIStream->ReadSegments(DiscardSegments, nsnull, aLength, &n);
+            return aIStream->ReadSegments(NS_DiscardSegment, nsnull, aLength, &n);
         }
 
         PRBool readError = PR_TRUE;

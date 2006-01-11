@@ -709,3 +709,15 @@ NS_CopySegmentToBuffer(nsIInputStream *inStr,
     *countWritten = count;
     return NS_OK;
 }
+
+NS_COM NS_METHOD
+NS_DiscardSegment(nsIInputStream *inStr,
+                  void *closure,
+                  const char *buffer,
+                  PRUint32 offset,
+                  PRUint32 count,
+                  PRUint32 *countWritten)
+{
+    *countWritten = count;
+    return NS_OK;
+}

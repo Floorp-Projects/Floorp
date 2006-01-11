@@ -192,4 +192,16 @@ NS_CopySegmentToBuffer(nsIInputStream *aInputStream, void *aClosure,
                        const char *aFromSegment, PRUint32 aToOffset,
                        PRUint32 aCount, PRUint32 *aWriteCount);
 
+/**
+ * This function is intended to be passed to nsIInputStream::ReadSegments to
+ * discard data from the nsIInputStream.  This can be used to efficiently read
+ * data from the stream without actually copying any bytes.
+ *
+ * @see nsIInputStream.idl for a description of this function's parameters.
+ */
+extern NS_COM NS_METHOD
+NS_DiscardSegment(nsIInputStream *aInputStream, void *aClosure,
+                  const char *aFromSegment, PRUint32 aToOffset,
+                  PRUint32 aCount, PRUint32 *aWriteCount);
+
 #endif // !nsStreamUtils_h__

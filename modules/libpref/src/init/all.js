@@ -84,6 +84,9 @@ pref("browser.underline_anchors",           true);
 pref("browser.blink_allowed",               true);
 pref("browser.enable_automatic_image_resizing", false);
 
+// See http://whatwg.org/specs/web-apps/current-work/#ping
+pref("browser.send_pings", true);
+
 pref("browser.display.use_focus_colors",    false);
 pref("browser.display.focus_background_color", "#117722");
 pref("browser.display.focus_text_color",     "#ffffff");

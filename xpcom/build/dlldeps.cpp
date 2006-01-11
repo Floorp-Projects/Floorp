@@ -125,6 +125,9 @@ void XXXNeverCalled()
     }
     NS_InputStreamIsBuffered(nsnull);
     NS_OutputStreamIsBuffered(nsnull);
+    NS_CopySegmentToStream(nsnull, nsnull, nsnull, 0, 0, nsnull);
+    NS_CopySegmentToBuffer(nsnull, nsnull, nsnull, 0, 0, nsnull);
+    NS_DiscardSegment(nsnull, nsnull, nsnull, 0, 0, nsnull);
     NS_NewByteInputStream(nsnull, nsnull, 0, NS_ASSIGNMENT_COPY);
     NS_NewCStringInputStream(nsnull, nsCString());
     NS_NewStringInputStream(nsnull, nsString());
