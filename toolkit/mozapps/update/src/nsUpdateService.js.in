@@ -427,6 +427,22 @@ function getLocale() {
 }
 
 /**
+ * Read the update channel from defaults only.  We do this to ensure that
+ * the channel is tightly coupled with the application and does not apply
+ * to other instances of the application that may use the same profile.
+ */
+function getUpdateChannel() {
+  var defaults =
+      gPref.QueryInterface(Components.interfaces.nsIPrefService).
+      getDefaultBranch(null);
+  try {
+    return defaults.getCharPref(PREF_APP_UPDATE_CHANNEL);
+  } catch (e) {
+    return "default";  // failover when pref not found
+  }
+}
+
+/**
  * An enumeration of items in a JS array.
  * @constructor
  */
@@ -665,6 +681,8 @@ function Update(update) {
       this.isSecurityUpdate = attr.value == "true";
     else if (attr.name == "detailsURL")
       this._detailsURL = attr.value;
+    else if (attr.name == "channel")
+      this.channel = attr.value;
     else
       this[attr.name] = attr.value;
   }
@@ -770,6 +788,7 @@ Update.prototype = {
     update.setAttribute("statusText", this.statusText);
     update.setAttribute("buildID", this.buildID);
     update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
+    update.setAttribute("channel", this.channel);
     updates.documentElement.appendChild(update);
     
     for (var p in this._properties) {
@@ -963,10 +982,7 @@ UpdateService.prototype = {
       var shouldCleanup = true;
       var update = um.activeUpdate;
       if (!update) {
-        if ((status == STATE_SUCCEEDED) && (um.updateCount >= 1))
-          update = um.getUpdateAt(0);
-        else
-          update = new Update(null);
+        update = new Update(null);
       }
       update.state = status;
       var sbs = 
@@ -1472,7 +1488,7 @@ UpdateManager.prototype = {
    */
   get activeUpdate() {
     if (this._activeUpdate &&
-        this._activeUpdate.serviceURL != Checker.prototype.updateURL) {
+        this._activeUpdate.channel != getUpdateChannel()) {
       // User switched channels, clear out any old active updates and remove
       // partial downloads
       this._activeUpdate = null;
@@ -1672,17 +1688,6 @@ Checker.prototype = {
       return null;
     }
 
-    // Read the update channel from defaults only.  We do this to ensure that
-    // the channel is tightly coupled with the application and does not apply
-    // to other instances of the application that may use the same profile.
-    function getUpdateChannel() {
-      try {
-        return defaults.getCharPref(PREF_APP_UPDATE_CHANNEL);
-      } catch (e) {
-        return "default";  // failover when pref not found
-      }
-    }
-
     url = url.replace(/%PRODUCT%/g, gApp.name);
     url = url.replace(/%VERSION%/g, gApp.version);
     url = url.replace(/%BUILD_ID%/g, gApp.appBuildID);
@@ -1759,6 +1764,7 @@ Checker.prototype = {
       updateElement.QueryInterface(Components.interfaces.nsIDOMElement);
       var update = new Update(updateElement);
       update.serviceURL = this.updateURL;
+      update.channel = getUpdateChannel();
       updates.push(update);
     }
 
