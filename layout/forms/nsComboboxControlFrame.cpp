@@ -2332,8 +2332,8 @@ nsComboboxControlFrame::RestoreState(nsPresState* aState)
 
 
 //
-// Some toolkits (just Cocoa at this point) use a native widget
-// for the combobox popup, which affects drawing and event
+// Camino uses a native widget for the combobox
+// popup, which affects drawing and event
 // handling here and in nsListControlFrame.
 // 
 
@@ -2341,7 +2341,7 @@ nsComboboxControlFrame::RestoreState(nsPresState* aState)
 PRBool
 nsComboboxControlFrame::ToolkitHasNativePopup()
 {
-#ifdef MOZ_WIDGET_COCOA
+#ifdef MOZ_MACBROWSER
   return PR_TRUE;
 #else
   return PR_FALSE;

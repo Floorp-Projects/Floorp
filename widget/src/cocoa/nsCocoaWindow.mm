@@ -121,8 +121,8 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
                         nsWidgetInitData *aInitData,
                         nsNativeWidget aNativeParent)
 {
-  Inherited::BaseCreate ( aParent, aRect, aHandleEventFunction, aContext, aAppShell,
-                            aToolkit, aInitData );
+  Inherited::BaseCreate(aParent, aRect, aHandleEventFunction, aContext, aAppShell,
+                        aToolkit, aInitData);
                             
   if (!aNativeParent || (aInitData && aInitData->mWindowType == eWindowType_popup)) {
     mOffsetParent = aParent;
@@ -149,8 +149,10 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     if (mWindowType == eWindowType_popup || mWindowType == eWindowType_invisible)
       features = 0;
 
+#ifdef MOZ_MACBROWSER
     if (mWindowType == eWindowType_popup)
       return NS_OK;
+#endif
 
     mWindow = [[NSWindow alloc] initWithContentRect:rect styleMask:features 
                                 backing:NSBackingStoreBuffered defer:NO];
