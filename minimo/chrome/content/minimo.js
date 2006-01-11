@@ -103,6 +103,10 @@ nsBrowserStatusHandler.prototype =
       
       if (aStateFlags & nsIWebProgressListener.STATE_START)
       {
+        // disable and hides the nav-menu-button; and enables unhide the stop button
+		document.getElementById("nav-menu-button").hidden=true;
+		document.getElementById("nav-stop-button").hidden=false;
+
         // Notify anyone interested that we are loading.
         try {
           var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -127,9 +131,13 @@ nsBrowserStatusHandler.prototype =
         /* To be fixed. We dont want to directly access sytle from here */
         document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
         
-          if (aRequest) {
+        if (aRequest) {
             if (aWebProgress.DOMWindow == content) this.endDocumentLoad(aRequest, aStatus);
-          }
+        }
+
+        // disable and hides the nav-stop-button; and enables unhides the nav-menu-button button
+		document.getElementById("nav-menu-button").hidden=true;
+		document.getElementById("nav-stop-button").hidden=false;
 
         return;
       }
