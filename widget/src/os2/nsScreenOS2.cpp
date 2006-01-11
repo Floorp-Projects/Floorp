@@ -21,6 +21,7 @@
  */
 
 #include "nsScreenOS2.h"
+#include "nsGfxDefs.h"
 
 #define INCL_PM
 #include <os2.h>
@@ -51,10 +52,10 @@ nsScreenOS2 :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
 {
   LONG alArray[2];
 
-  HPS hps = WinGetScreenPS( HWND_DESKTOP);
-  HDC hdc = GpiQueryDevice( hps);
+  HPS hps = ::WinGetScreenPS( HWND_DESKTOP);
+  HDC hdc = GFX (::GpiQueryDevice (hps), HDC_ERROR);
 
-  DevQueryCaps(hdc, CAPS_WIDTH, 2, alArray);
+  ::DevQueryCaps(hdc, CAPS_WIDTH, 2, alArray);
 
   *outTop = 0;
   *outLeft = 0;
@@ -71,8 +72,8 @@ nsScreenOS2 :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
 {
   *outTop = 0;
   *outLeft = 0;
-  *outWidth = WinQuerySysValue( HWND_DESKTOP, SV_CXFULLSCREEN );
-  *outHeight = WinQuerySysValue( HWND_DESKTOP, SV_CYFULLSCREEN ); 
+  *outWidth = ::WinQuerySysValue( HWND_DESKTOP, SV_CXFULLSCREEN );
+  *outHeight = ::WinQuerySysValue( HWND_DESKTOP, SV_CYFULLSCREEN ); 
 
   return NS_OK;
   
@@ -84,10 +85,10 @@ nsScreenOS2 :: GetPixelDepth(PRInt32 *aPixelDepth)
 {
   LONG lCap;
 
-  HPS hps = WinGetScreenPS( HWND_DESKTOP);
-  HDC hdc = GpiQueryDevice( hps);
+  HPS hps = ::WinGetScreenPS( HWND_DESKTOP);
+  HDC hdc = GFX (::GpiQueryDevice (hps), HDC_ERROR);
 
-  DevQueryCaps(hdc, CAPS_COLOR_BITCOUNT, 1, &lCap);
+  ::DevQueryCaps(hdc, CAPS_COLOR_BITCOUNT, 1, &lCap);
 
   *aPixelDepth = (PRInt32)lCap;
 
