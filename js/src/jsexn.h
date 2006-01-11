@@ -98,7 +98,8 @@ extern JSErrorReport *
 js_ErrorFromException(JSContext *cx, jsval exn);
 
 extern const JSErrorFormatString* 
-js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale, const uintN errorNumber);
+js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
+                            const uintN errorNumber);
 
 JS_END_EXTERN_C
 
