@@ -113,7 +113,18 @@ Index: src/cairoint.h
 ===================================================================
 --- src/cairoint.h.orig
 +++ src/cairoint.h
-@@ -132,6 +132,7 @@ CAIRO_BEGIN_DECLS
+@@ -66,6 +66,10 @@
+ #include "cairo-debug.h"
+ #include <pixman.h>
+ 
++#ifndef M_PI
++#define M_PI 3.14159265358979323846
++#endif
++
+ CAIRO_BEGIN_DECLS
+ 
+ #if __GNUC__ >= 3 && defined(__ELF__)
+@@ -132,6 +136,7 @@ CAIRO_BEGIN_DECLS
  #define INLINE
  #endif
  
@@ -121,7 +132,7 @@ Index: src/cairoint.h
  #if HAVE_PTHREAD_H
  # include <pthread.h>
  # define CAIRO_MUTEX_DECLARE(name) static pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
-@@ -159,11 +160,9 @@ cairo_private void _cairo_beos_unlock(vo
+@@ -159,11 +164,9 @@ cairo_private void _cairo_beos_unlock(vo
  # define CAIRO_MUTEX_LOCK(name) _cairo_beos_lock (&name)
  # define CAIRO_MUTEX_UNLOCK(name) _cairo_beos_unlock (&name)
  #endif
@@ -134,7 +145,7 @@ Index: src/cairoint.h
  # define CAIRO_MUTEX_DECLARE(name)
  # define CAIRO_MUTEX_DECLARE_GLOBAL(name)
  # define CAIRO_MUTEX_LOCK(name)
-@@ -1071,6 +1070,9 @@ _cairo_gstate_destroy (cairo_gstate_t *g
+@@ -1071,6 +1074,9 @@ _cairo_gstate_destroy (cairo_gstate_t *g
  cairo_private cairo_gstate_t *
  _cairo_gstate_clone (cairo_gstate_t *gstate);
  
@@ -144,7 +155,7 @@ Index: src/cairoint.h
  cairo_private cairo_surface_t *
  _cairo_gstate_get_target (cairo_gstate_t *gstate);
  
-@@ -2157,6 +2159,7 @@ slim_hidden_proto(cairo_restore)
+@@ -2157,6 +2163,7 @@ slim_hidden_proto(cairo_restore)
  slim_hidden_proto(cairo_save)
  slim_hidden_proto(cairo_stroke_preserve)
  slim_hidden_proto(cairo_surface_destroy)
@@ -156,7 +167,7 @@ Index: pixman/src/fbcompose.c
 ===================================================================
 --- pixman/src/fbcompose.c.orig
 +++ pixman/src/fbcompose.c
-@@ -33,6 +33,9 @@
+@@ -33,8 +33,15 @@
  
  #include "pixregionint.h"
  
@@ -165,7 +176,13 @@ Index: pixman/src/fbcompose.c
 +#endif
  #include <math.h>
  
++#ifndef M_PI
++#define M_PI 3.14159265358979323846
++#endif
++
  // #define PIXMAN_CONVOLUTION
+ // #define PIXMAN_INDEXED_FORMATS
+ 
 Index: src/cairo-atsui-font.c
 ===================================================================
 --- src/cairo-atsui-font.c.orig
