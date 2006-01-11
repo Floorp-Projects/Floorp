@@ -208,10 +208,7 @@
                  newlines="stripsurroundingwhitespace"
                  oninput="gBrowser.userTypedValue = this.value"
                  ontextentered="return handleURLBarCommand(param);"
-                 ontextreverted="return handleURLBarRevert();"
-                 onfocus="URLBarFocusHandler(event, this);"
-                 onmousedown="URLBarMouseDownHandler(event, this);"
-                 onclick="URLBarClickHandler(event, this);">
+                 ontextreverted="return handleURLBarRevert();">
           <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
             <image id="page-proxy-button"
                     ondraggesture="PageProxyDragGesture(event);"
@@ -227,11 +224,17 @@
                     tooltiptext="&proxyIcon.tooltip;"/>
           </deck>
           <hbox id="urlbar-icons">
-            <button type="menu" style="-moz-user-focus: none" class="plain" id="feed-button" chromedir="&locale.dir;">
-              <menupopup onpopupshowing="return FeedHandler.buildFeedList(event);" position="after_end"
+            <button type="menu"
+                    style="-moz-user-focus: none"
+                    class="plain"
+                    id="feed-button"
+                    chromedir="&locale.dir;"
+                    onclick="event.preventBubble();">
+              <menupopup position="after_end"
+                         onpopupshowing="return FeedHandler.buildFeedList(event);"
                          oncommand="FeedHandler.addLiveBookmark(event.target.getAttribute('feed'));" />
             </button>
-            <image id="lock-icon" onclick="displaySecurityInfo()"/>
+            <image id="lock-icon" onclick="displaySecurityInfo(); event.preventBubble();"/>
           </hbox>
         </textbox>
       </toolbaritem>

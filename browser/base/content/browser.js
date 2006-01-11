@@ -892,7 +892,7 @@ function delayedStartup()
   gURLBarAutoFillPrefListener = new URLBarAutoFillPrefListener();
   pbi.addObserver(gURLBarAutoFillPrefListener.domain, gURLBarAutoFillPrefListener, false);
 
-  // Enable/Disbale auto-hide tabbar
+  // Enable/Disable auto-hide tabbar
   gAutoHideTabbarPrefListener = new AutoHideTabbarPrefListener();
   pbi.addObserver(gAutoHideTabbarPrefListener.domain, gAutoHideTabbarPrefListener, false);
 
@@ -900,6 +900,8 @@ function delayedStartup()
   gHomeButton.updateTooltip();
 
   gClickSelectsAll = gPrefService.getBoolPref("browser.urlbar.clickSelectsAll");
+  if (gURLBar)
+    gURLBar.clickSelectsAll = gClickSelectsAll;
 
 #ifdef HAVE_SHELL_SERVICE
   // Perform default browser checking (after window opens).
@@ -2076,32 +2078,6 @@ function checkForDirectoryListing()
   }
 }
 
-function URLBarFocusHandler(aEvent, aElt)
-{
-  if (gIgnoreFocus)
-    gIgnoreFocus = false;
-  else if (gClickSelectsAll)
-    aElt.select();
-}
-
-function URLBarMouseDownHandler(aEvent, aElt)
-{
-  if (aElt.hasAttribute("focused") ||
-      aEvent.target.id == "lock-icon" || aEvent.target.id == "feed-button") {
-    gIgnoreClick = true;
-  } else {
-    gIgnoreFocus = true;
-    gIgnoreClick = false;
-    aElt.setSelectionRange(0, 0);
-  }
-}
-
-function URLBarClickHandler(aEvent, aElt)
-{
-  if (!gIgnoreClick && gClickSelectsAll && aElt.selectionStart == aElt.selectionEnd)
-    aElt.select();
-}
-
 // If "ESC" is pressed in the url bar, we replace the urlbar's value with the url of the page
 // and highlight it, unless it is about:blank, where we reset it to "".
 function handleURLBarRevert()
@@ -3082,6 +3058,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   // Update global UI elements that may have been added or removed
   if (aToolboxChanged) {
     gURLBar = document.getElementById("urlbar");
+    if (gURLBar)
+      gURLBar.clickSelectsAll = gClickSelectsAll;
     gProxyButton = document.getElementById("page-proxy-button");
     gProxyFavIcon = document.getElementById("page-proxy-favicon");
     gProxyDeck = document.getElementById("page-proxy-deck");
