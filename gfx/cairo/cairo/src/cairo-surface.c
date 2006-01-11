@@ -1399,12 +1399,14 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 	    pixman_box16_t *rects = pixman_region_rects (region);
 	    for (i = 0; i < nr; i++) {
 		pixman_box16_t tmpb;
+		pixman_region16_t *tmpr;
+
 		tmpb.x1 = BACKEND_X(surface, rects[i].x1);
 		tmpb.y1 = BACKEND_Y(surface, rects[i].y1);
 		tmpb.x2 = BACKEND_X(surface, rects[i].x2);
 		tmpb.y2 = BACKEND_Y(surface, rects[i].y2);
 
-		pixman_region16_t *tmpr = pixman_region_create_simple (&tmpb);
+		tmpr = pixman_region_create_simple (&tmpb);
 
 		pixman_region_append (dev_region, tmpr);
 		pixman_region_destroy (tmpr);
