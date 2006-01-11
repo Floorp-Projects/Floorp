@@ -358,7 +358,7 @@ JSClass js_ArrayClass = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-enum ArrayToSringOp {
+enum ArrayToStringOp {
     TO_STRING,
     TO_LOCALE_STRING,
     TO_SOURCE
@@ -370,7 +370,7 @@ enum ArrayToSringOp {
  * When op is TO_SOURCE sep must be NULL.
  */
 static JSBool
-array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToSringOp op,
+array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
                JSString *sep, jsval *rval)
 {
     JSBool ok;
