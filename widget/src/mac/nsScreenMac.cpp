@@ -36,11 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsScreenMac.h"
-#if TARGET_CARBON
 #include <MacWindows.h>
-#else
-#include <Menus.h>
-#endif
 
 nsScreenMac :: nsScreenMac ( GDHandle inScreen )
   : mScreen(inScreen)
@@ -81,11 +77,7 @@ nsScreenMac :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
 {
   Rect adjustedRect;
   
-#if TARGET_CARBON
   ::GetAvailableWindowPositioningBounds ( mScreen, &adjustedRect );
-#else
-  SubtractMenuBar ( (**mScreen).gdRect, &adjustedRect );
-#endif
 
   *outLeft = adjustedRect.left;
   *outTop = adjustedRect.top;  
@@ -115,23 +107,3 @@ nsScreenMac :: GetColorDepth(PRInt32 *aColorDepth)
 
 } // GetColorDepth
 
-
-#if !TARGET_CARBON
-
-//
-// SubtractMenuBar
-//
-// Take out the menu bar from the reported size of this screen, but only
-// if it is the primary screen
-//
-void
-nsScreenMac :: SubtractMenuBar ( const Rect & inScreenRect, Rect* outAdjustedRect )
-{
-  // if the screen we're being asked about is the main screen (ie, has the menu
-  // bar), then subract out the menubar from the rect that we're returning.
-  *outAdjustedRect = inScreenRect;  
-  if ( IsPrimaryScreen() )
-    outAdjustedRect->top += ::GetMBarHeight();
-}
-
-#endif
