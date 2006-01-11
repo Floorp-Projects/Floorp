@@ -30,6 +30,7 @@ interface nsIScreen : nsISupports
   
   readonly attribute long pixelDepth;
   readonly attribute long colorDepth;  
+  readonly attribute double gammaValue;  
 };
 
 
