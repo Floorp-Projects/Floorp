@@ -43,7 +43,7 @@ nsScreenManagerXlib :: ~nsScreenManagerXlib()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenManagerXlib, NS_GET_IID(nsIScreenManager))
+NS_IMPL_ISUPPORTS1(nsScreenManagerXlib, nsIScreenManager)
 
 
 //

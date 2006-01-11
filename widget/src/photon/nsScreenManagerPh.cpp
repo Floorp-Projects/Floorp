@@ -38,7 +38,7 @@ nsScreenManagerPh :: ~nsScreenManagerPh( ) {
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenManagerPh, NS_GET_IID(nsIScreenManager))
+NS_IMPL_ISUPPORTS1(nsScreenManagerPh, nsIScreenManager)
 
 
 //

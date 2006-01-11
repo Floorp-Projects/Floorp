@@ -41,7 +41,7 @@ nsScreenManagerBeOS :: ~nsScreenManagerBeOS()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenManagerBeOS, NS_GET_IID(nsIScreenManager))
+NS_IMPL_ISUPPORTS1(nsScreenManagerBeOS, nsIScreenManager)
 
 
 //

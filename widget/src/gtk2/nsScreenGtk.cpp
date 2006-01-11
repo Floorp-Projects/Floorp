@@ -46,7 +46,7 @@ nsScreenGtk :: ~nsScreenGtk()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenGtk, NS_GET_IID(nsIScreen))
+NS_IMPL_ISUPPORTS1(nsScreenGtk, nsIScreen)
 
 
 NS_IMETHODIMP

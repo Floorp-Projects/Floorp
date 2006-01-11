@@ -57,7 +57,7 @@ nsScreenManagerMac :: ~nsScreenManagerMac()
 
 
 // addref, release, QI
-NS_IMPL_ISUPPORTS(nsScreenManagerMac, NS_GET_IID(nsIScreenManager))
+NS_IMPL_ISUPPORTS1(nsScreenManagerMac, nsIScreenManager)
 
 
 //
