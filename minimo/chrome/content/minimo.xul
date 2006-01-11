@@ -180,6 +180,7 @@
       </textbox>
       
       <toolbarbutton tabindex="2" accessrule="focus_nav-bar" class="menu-button"  id="nav-menu-button" command="cmd_BrowserNavMenu" />  
+      <toolbarbutton tabindex="3" accessrule="focus_nav-bar" class="stop-button"  id="nav-stop-button" command="cmd_BrowserStop" />  
       
     </toolbar>
     <!-- the toolbars shall be added here, check the overlay settings --> 
