@@ -101,8 +101,6 @@ CPPSRCS		= \
 		nsImageGTK.cpp \
 		nsGCCache.cpp \
 		nsRenderingContextGTK.cpp \
-		nsScreenGtk.cpp \
-		nsScreenManagerGtk.cpp \
 		nsPrintOptionsGTK.cpp \
 		nsFontMetricsUtils.cpp \
 		$(NULL)

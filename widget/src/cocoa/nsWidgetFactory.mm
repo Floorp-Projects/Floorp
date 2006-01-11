@@ -166,10 +166,14 @@ static const nsModuleComponentInfo gComponents[] =
 		NS_NATIVESCROLLBAR_CID,
 		"@mozilla.org/widget/nativescrollbar;1",
 		nsNativeScrollbarConstructor },
-  {	"Native Theme Renderer", 
+	{	"Native Theme Renderer", 
 		NS_THEMERENDERER_CID,
 		"@mozilla.org/chrome/chrome-native-theme;1",
-		nsNativeThemeMacConstructor }
+		nsNativeThemeMacConstructor },
+	{   "nsScreenManager",
+		NS_SCREENMANAGER_CID,
+		"@mozilla.org/gfx/screenmanager;1",
+		nsScreenManagerMacConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetMacModule, gComponents)

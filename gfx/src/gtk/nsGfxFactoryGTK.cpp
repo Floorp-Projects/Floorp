@@ -50,7 +50,6 @@
 #include "nsDeviceContextSpecG.h"
 // aka    nsDeviceContextSpecFactoryGTK.h
 #include "nsDeviceContextSpecFactoryG.h"
-#include "nsScreenManagerGtk.h"
 #include "nsScriptableRegion.h"
 #include "nsDeviceContextGTK.h"
 #include "nsImageGTK.h"
@@ -85,7 +84,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsGTK, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
@@ -291,11 +289,6 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/fontlist;1"
     NS_FONTLIST_CONTRACTID,
     nsFontListConstructor },
-  { "Gtk Screen Manager",
-    NS_SCREENMANAGER_CID,
-    //    "@mozilla.org/gfx/screenmanager/gtk;1",
-    "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerGtkConstructor },
   { "Gtk Printer Enumerator",
     NS_PRINTER_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/printer_enumerator/gtk;1",

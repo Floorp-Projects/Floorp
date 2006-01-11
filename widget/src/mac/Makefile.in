@@ -109,6 +109,8 @@ CPPSRCS	= nsAppShell.cpp \
 		nsStylClipboardUtils.cpp \
 		nsMacControl.cpp \
 		nsNativeScrollbar.cpp \
+		nsScreenMac.cpp \
+		nsScreenManagerMac.cpp \
 		$(GFX_LCPPSRCS) \
 		$(NULL)
 

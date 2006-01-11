@@ -98,6 +98,8 @@ XPIDLSRCS	= \
 		nsIBidiKeyboard.idl \
 		nsIFullScreen.idl \
 		nsINativeScrollbar.idl \
+		nsIScreen.idl \
+		nsIScreenManager.idl \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

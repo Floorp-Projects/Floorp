@@ -44,8 +44,6 @@
 #include "nsUnitConversion.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsIScreen.h"
-#include "nsIScreenManager.h"
 #include <math.h>
 #include "prprf.h"
 

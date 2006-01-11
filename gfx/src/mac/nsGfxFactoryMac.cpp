@@ -52,7 +52,6 @@
 #include "nsPrintOptionsX.h"
 #include "nsPrintSessionX.h"
 #include "nsDeviceContextSpecFactoryM.h"
-#include "nsScreenManagerMac.h"
 #include "nsBlender.h"
 #include "nsCOMPtr.h"
 #include "nsUnicodeMappingUtil.h"
@@ -77,7 +76,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSessionX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 #ifdef MOZ_WIDGET_COCOA
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsQDFlushManager)
@@ -154,10 +152,6 @@ static const nsModuleComponentInfo components[] =
     NS_FONTLIST_CID,
     "@mozilla.org/gfx/fontlist;1",
     nsFontListConstructor },
-  { "nsScreenManager",
-    NS_SCREENMANAGER_CID,
-    "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerMacConstructor },
   { "windows image frame",
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",

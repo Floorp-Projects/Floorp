@@ -95,6 +95,8 @@ MAC_LCPPSRCS = \
 		nsStylClipboardUtils.cpp \
 		nsToolkitBase.cpp \
 		nsTSMStrategy.cpp \
+		nsScreenMac.cpp \
+		nsScreenManagerMac.cpp \
 		$(NULL)
 
 
@@ -118,7 +120,7 @@ CMMSRCS = \
 		nsCursorManager.mm \
 		nsMacCursor.mm \
 		$(NULL)
-	
+
 XPIDLSRCS	+= \
 		nsIChangeManager.idl \
 		nsIMenuCommandDispatcher.idl \
