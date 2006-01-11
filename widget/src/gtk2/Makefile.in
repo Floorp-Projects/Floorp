@@ -99,6 +99,8 @@ CPPSRCS		= \
 		nsFilePicker.cpp \
 		nsSound.cpp \
 		nsNativeKeyBindings.cpp \
+		nsScreenGtk.cpp \
+		nsScreenManagerGtk.cpp \
 		$(NULL)
 
 # build our subdirs, too
