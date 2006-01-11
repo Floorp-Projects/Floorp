@@ -2,7 +2,7 @@
 
 <!ENTITY prefs.label                  "Preferences...">
 <!ENTITY quit.label                   "Quit">
-<!ENTITY tabs.label                   "Browser Tabs...">
+<!ENTITY tabs.label                   "Browser Tabs">
 <!ENTITY newtab.label                 "New Tab">
 
 <!-- Toolbar -->
