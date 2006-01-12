@@ -586,13 +586,18 @@ function grabAll(elem)
     addImage(elem.data, gStrings.mediaObject, getValueText(elem), elem, false);
   else if (elem instanceof nsIEmbedElement)
     addImage(elem.src, gStrings.mediaEmbed, "", elem, false);
-  else
-    if (elem.hasAttributeNS(XLinkNS, "href"))
-      linkView.addRow([getValueText(elem),
-                       ioService.newURI(elem.getAttributeNS(XLinkNS, "href"), null, elem.baseURI).spec,
-                       gStrings.linkX,
-                       ""]);
-
+  else if (elem.hasAttributeNS(XLinkNS, "href")) {
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+    var href = elem.getAttributeNS(XLinkNS, "href");
+    try {
+      var baseURI = ioService.newURI(elem.baseURI,
+                                     elem.ownerDocument.characterSet, null);
+      var uri = ioService.newURI(href, elem.ownerDocument.characterSet,
+                                 baseURI).spec;
+    } catch (e) {}
+    linkView.addRow([getValueText(elem), uri, gStrings.linkX, ""]);
+  }
   return NodeFilter.FILTER_ACCEPT;
 }
 
