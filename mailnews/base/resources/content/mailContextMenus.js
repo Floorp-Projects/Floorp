@@ -599,7 +599,10 @@ function CopyFolderUrl()
   {
     var folderResource = GetSelectedFolderResource();
     if (folderResource)
+    {
+      var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
       CopyString(msgFolder.folderURL);
+    }
   }
   catch (ex) 
   {
