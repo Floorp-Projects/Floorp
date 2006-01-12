@@ -75,30 +75,12 @@ make EXPORTS="" RELEASE="" REQUIRES="" MODULE="" IMPORTS="" OBJDIR=. INSTALL=tru
                           -e "s,%%SVRCORE_VERSION%%,%{version},g" > \
                           $RPM_BUILD_ROOT/%{_libdir}/pkgconfig/svrcore.pc
 
-VMAJOR=`echo %{version}|cut -f1 -d.`
-VMINOR=`echo %{version}|cut -f2 -d.`
-VPATCH=`echo %{version}|cut -f3 -d.`
-
-%{__mkdir_p} $RPM_BUILD_ROOT/%{_bindir}
-%{__cat} svrcore-config.in | sed -e "s,@libdir@,%{_libdir},g" \
-                          -e "s,@prefix@,%{_prefix},g" \
-                          -e "s,@exec_prefix@,%{_prefix},g" \
-                          -e "s,@includedir@,%{_includedir},g" \
-                          -e "s,@MOD_MAJOR_VERSION@,$VMAJOR,g" \
-                          -e "s,@MOD_MINOR_VERSION@,$VMINOR,g" \
-                          -e "s,@MOD_PATCH_VERSION@,$VPATCH,g" \
-                          > $RPM_BUILD_ROOT/%{_bindir}/svrcore-config
-
-chmod 755 $RPM_BUILD_ROOT/%{_bindir}/svrcore-config
-
-
 %install
 
 # There is no make install target so we'll do it ourselves.
 
 %{__mkdir_p} $RPM_BUILD_ROOT/%{_includedir}
 %{__mkdir_p} $RPM_BUILD_ROOT/%{_libdir}
-%{__mkdir_p} $RPM_BUILD_ROOT/%{_bindir}
 
 cd mozilla/security/svrcore
 # Copy the binary libraries we want
@@ -117,23 +99,16 @@ done
 %clean
 %{__rm} -rf $RPM_BUILD_ROOT
 
-
-%post
-/sbin/ldconfig >/dev/null 2>/dev/null
-
-
-%postun
-/sbin/ldconfig >/dev/null 2>/dev/null
-
-
 %files
 %defattr(0644,root,root)
 %{_libdir}/pkgconfig/svrcore.pc
 %{_libdir}/libsvrcore.a
-%attr(0755,root,root) %{_bindir}/svrcore-config
 %{_includedir}/svrcore.h
 
 %changelog
+* Wed Jan 11 2006 Rich Megginson <rmeggins@redhat.com> - 4.01-1
+- Removed svrcore-config - use pkg-config instead
+
 * Mon Dec 19 2005 Rich Megginson <rmeggins@redhat.com> - 4.01-1
 - Initial revision
 
