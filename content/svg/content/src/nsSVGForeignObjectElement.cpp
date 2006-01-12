@@ -71,6 +71,9 @@ public:
   // nsISVGContent specializations:
   virtual void ParentChainChanged();
 
+  // nsIContent interface
+  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+
 protected:
   
   nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
@@ -269,3 +272,17 @@ void nsSVGForeignObjectElement::ParentChainChanged()
     length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
   }
 }  
+
+//----------------------------------------------------------------------
+// nsIContent methods
+
+NS_IMETHODIMP_(PRBool)
+nsSVGForeignObjectElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sViewportsMap,
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGForeignObjectElementBase::IsAttributeMapped(name);
+}

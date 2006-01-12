@@ -93,6 +93,9 @@ public:
   // nsISVGContent specializations:
   virtual void ParentChainChanged();
 
+  // nsIContent interface
+  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+
 protected:
   
   // nsIDOMSVGPatternElement values
@@ -392,3 +395,17 @@ void nsSVGPatternElement::ParentChainChanged()
 
   // Do we need to recurse to child elements??
 }  
+
+//----------------------------------------------------------------------
+// nsIContent methods
+
+NS_IMETHODIMP_(PRBool)
+nsSVGPatternElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sViewportsMap,
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGPatternElementBase::IsAttributeMapped(name);
+}

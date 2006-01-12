@@ -87,8 +87,11 @@ public:
   NS_IMETHOD DidModifySVGObservable(nsISVGValue *observable,
                                     nsISVGValue::modificationType aModType);
 
-  // nsIContent specializations
+  // nsIContent interface
   virtual PRInt32 IntrinsicState() const;
+
+  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+
 protected:
   void GetSrc(nsAString& src);
   
@@ -401,4 +404,15 @@ nsSVGImageElement::IntrinsicState() const
 {
   return nsSVGImageElementBase::IntrinsicState() |
     nsImageLoadingContent::ImageState();
+}
+
+NS_IMETHODIMP_(PRBool)
+nsSVGImageElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sViewportsMap,
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGImageElementBase::IsAttributeMapped(name);
 }

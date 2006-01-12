@@ -70,6 +70,9 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
 
+  // nsIContent interface
+  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+
 protected:
 
   nsCOMPtr<nsIDOMSVGAnimatedRect> mViewBox;
@@ -163,4 +166,18 @@ nsSVGSymbolElement::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio 
   *aPreserveAspectRatio = mPreserveAspectRatio;
   NS_ADDREF(*aPreserveAspectRatio);
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsIContent methods
+
+NS_IMETHODIMP_(PRBool)
+nsSVGSymbolElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sViewportsMap,
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGSymbolElementBase::IsAttributeMapped(name);
 }
