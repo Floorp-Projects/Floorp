@@ -324,6 +324,11 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     }
   }
 
+  if (NS_SUCCEEDED(rv) && file) {
+    NS_ADDREF(*aFile = file);
+    return NS_OK;
+  }
+
   if (NS_SUCCEEDED(GetProfileDir(getter_AddRefs(file)))) {
     if (!strcmp(aProperty, NS_APP_PREFS_50_DIR)) {
       rv = NS_OK;
