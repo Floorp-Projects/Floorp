@@ -103,8 +103,9 @@ blenderObject.prototype.apply = function () {
 		}
             this.targetElement.appendChild(htmlFragment.firstChild);
 
+		document.title=document.getElementById("pagetitle").innerHTML;
 
-		document.getElementById("loadmessage").style.display="none";
+		//document.getElementById("loadmessage").style.display="none";
 
 	}
 }
@@ -117,7 +118,7 @@ blenderObject.prototype.run = function () {
 		req.open('GET', this.xmlUrl, false); 
 		req.send(null);
 		if(req.status == 200) {
-			 this.xmlRef=req.responseXML;
+			this.xmlRef=req.responseXML;
 			this.xmlLoadedState=true;
 
 		}
