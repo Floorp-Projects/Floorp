@@ -245,6 +245,11 @@
       <menuitem id="command_BrowserOpenTab" 
                 command="cmd_BrowserOpenTab" 
                 label="&newtab.label;"  /> 
+      <menu     id="command_TabFocus" 
+                label="&tabs.label;"  >
+        <menupopup id="MenuTabsContainer" onpopupshown="BrowserMenuTabsActive()" onpopuphidden="BrowserMenuTabsDestroy()" >
+        </menupopup>
+      </menu>
       
       <menuseparator/>
       
@@ -281,12 +286,6 @@
       <menuitem id="command_ViewFind"
                 command="cmd_ViewFind" 
                 label="&findToolbar.label;"  /> 
-
-      <menu     id="command_TabFocus" 
-                label="&tabs.label;"  >
-        <menupopup id="MenuTabsContainer" onpopupshown="BrowserMenuTabsActive()" onpopuphidden="BrowserMenuTabsDestroy()" >
-        </menupopup>
-      </menu>
       
       <menuseparator/>
       
