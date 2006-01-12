@@ -158,7 +158,7 @@ nsNativeModuleLoader::LoadModule(nsILocalFile* aFile, nsIModule* *aResult)
     if (env && *env && (blist = strdup(env))) {
         char *nextTok = blist;
         while (char *token = NS_strtok(":", &nextTok)) {
-            if (leafName.Find(token, PR_TRUE)) {
+            if (leafName.Find(token, PR_TRUE) != kNotFound) {
                 NS_BREAK();
             }
         }
