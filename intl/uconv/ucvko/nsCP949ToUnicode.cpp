@@ -50,7 +50,7 @@ static const PRUint16 g_ASCIIShiftTable[] =  {
 
 // This is necessary to decode 8byte sequence representation of Hangul
 // syllables. This representation is uniq to EUC-KR and is not used
-// in CP949. However, this conveter is for both EUC-KR and CP949
+// in CP949. However, this converter is for both EUC-KR and CP949
 // so that this shift table is put here. See bug 131388. 
 static const PRUint16 g_DecomposedHangulShiftTable[] =  {
   0, uDecomposedHangulCharset,  

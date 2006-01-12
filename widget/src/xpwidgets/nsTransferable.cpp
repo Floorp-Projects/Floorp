@@ -367,7 +367,7 @@ nsTransferable::GetTransferData(const char *aFlavor, nsISupports **aData, PRUint
         if (dataProvider) {
           rv = dataProvider->GetFlavorData(this, aFlavor, aData, aDataLen);
           if (NS_FAILED(rv))
-            break;    // the provider failed. fall into the conveter code below.
+            break;    // the provider failed. fall into the converter code below.
         }
       }
       if (*aData && *aDataLen > 0)
