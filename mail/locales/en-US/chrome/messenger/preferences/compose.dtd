@@ -14,7 +14,7 @@
 <!ENTITY sendingMessagesHeader.label          "Composing Messages">
 <!ENTITY spellCheck.label                     "Check spelling before sending">
 <!ENTITY spellCheck.accesskey                 "C">
-<!ENTITY spellCheckInline.label               "Enable spell as you type">
+<!ENTITY spellCheckInline.label               "Enable spell check as you type">
 <!ENTITY spellCheckInline.accesskey           "n">
 <!ENTITY languagePopup.label                  "Language:">
 <!ENTITY languagePopup.accessKey              "g">
