@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# $Id: leak-gauge.pl,v 1.3 2006/01/11 22:44:34 dbaron%dbaron.org Exp $
+# $Id: leak-gauge.pl,v 1.4 2006/01/12 08:50:56 dbaron%dbaron.org Exp $
 # This script is designed to help testers isolate and simplify testcases
 # for many classes of leaks (those that involve large graphs of core
 # data structures) in Mozilla-based browsers.  It is designed to print
@@ -179,7 +179,7 @@ my $handlers = {
 while (<>) {
     # strip off initial "-", thread id, and thread pointer; separate
     # first word and rest
-    if (/^\-[0-9]*\[[0-9a-f]*\]: (\S*) (.*)$/) {
+    if (/^\-?[0-9]*\[[0-9a-f]*\]: (\S*) ([^\n\r]*)[\n\r]*$/) {
         my ($handler, $data) = ($1, $2);
         if (defined(${$handlers}{$handler})) {
             call("handle_line", ${$handlers}{$handler}, $data);
