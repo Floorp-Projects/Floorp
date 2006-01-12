@@ -290,7 +290,7 @@
   <section id="query">
     <title>Searching for Bugs</title>
 
-    <para>The Bugzilla Search page is is the interface where you can find
+    <para>The Bugzilla Search page is the interface where you can find
     any bug report, comment, or patch currently in the Bugzilla system. You
     can play with it here: 
     <ulink url="&landfillbase;query.cgi"/>.</para>
