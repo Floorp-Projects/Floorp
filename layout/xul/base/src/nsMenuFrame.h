@@ -66,9 +66,34 @@ class nsIScrollableView;
 
 #define NS_STATE_ACCELTEXT_IS_DERIVED  NS_STATE_BOX_CHILD_RESERVED
 
+class nsMenuFrame;
+
+/**
+ * nsMenuTimerMediator is a wrapper around an nsMenuFrame which can be safely
+ * passed to timers. The class is reference counted unlike the underlying
+ * nsMenuFrame, so that it will exist as long as the timer holds a reference
+ * to it. The callback is delegated to the contained nsMenuFrame as long as
+ * the contained nsMenuFrame has not been destroyed.
+ */
+class nsMenuTimerMediator : public nsITimerCallback
+{
+public:
+  nsMenuTimerMediator(nsMenuFrame* aFrame);
+  ~nsMenuTimerMediator();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITIMERCALLBACK
+
+  void ClearFrame();
+
+private:
+
+  // Pointer to the wrapped frame.
+  nsMenuFrame* mFrame;
+};
+
 class nsMenuFrame : public nsBoxFrame, 
                     public nsIMenuFrame,
-                    public nsITimerCallback,
                     public nsIScrollableViewProvider
 {
 public:
@@ -80,9 +105,6 @@ public:
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-
-  // The nsITimerCallback interface
-  NS_DECL_NSITIMERCALLBACK
 
   NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
@@ -184,7 +206,8 @@ public:
   static nsIMenuParent *GetContextMenu();
 
 protected:
-
+  friend class nsMenuTimerMediator;
+  
   virtual void RePositionPopup(nsBoxLayoutState& aState);
 
   static void UpdateDismissalListener(nsIMenuParent* aMenuParent);
@@ -223,6 +246,7 @@ protected:
 #ifdef DEBUG_LAYOUT
   nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug);
 #endif
+  NS_HIDDEN_(nsresult) Notify(nsITimer* aTimer);
 
   nsFrameList mPopupFrames;
   PRPackedBool mIsMenu; // Whether or not we can even have children or not.
@@ -232,7 +256,12 @@ protected:
   nsMenuType mType;
 
   nsIMenuParent* mMenuParent; // Our parent menu.
+
+  // Reference to the mediator which wraps this frame.
+  nsRefPtr<nsMenuTimerMediator> mTimerMediator;
+
   nsCOMPtr<nsITimer> mOpenTimer;
+
   nsString mGroupName;
   nsSize mLastPref;
   
