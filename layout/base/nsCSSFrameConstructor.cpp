@@ -8703,29 +8703,11 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   //
   nsIFrame* insertionPoint;
   PRBool multiple = PR_FALSE;
-  GetInsertionPoint(parentFrame, nsnull, &insertionPoint, &multiple);
+  PRBool hasInsertion = PR_FALSE;
+  GetInsertionPoint(parentFrame, nsnull, &insertionPoint, &multiple, &hasInsertion);
   if (! insertionPoint)
     return NS_OK; // Don't build the frames.
 
-  PRBool hasInsertion = PR_FALSE;
-  if (!multiple) {
-    nsIBindingManager *bindingManager = nsnull;
-    nsIDocument* document = nsnull; 
-    nsIContent *firstAppendedChild =
-      aContainer->GetChildAt(aNewIndexInContainer);
-    if (firstAppendedChild) {
-      document = firstAppendedChild->GetDocument();
-    }
-    if (document)
-      bindingManager = document->BindingManager();
-    if (bindingManager) {
-      nsCOMPtr<nsIContent> insParent;
-      bindingManager->GetInsertionParent(firstAppendedChild, getter_AddRefs(insParent));
-      if (insParent)
-        hasInsertion = PR_TRUE;
-    }
-  }
-  
   if (multiple || hasInsertion) {
     // We have an insertion point.  There are some additional tests we need to do
     // in order to ensure that an append is a safe operation.
@@ -11373,7 +11355,8 @@ nsresult
 nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
                                          nsIContent*   aChildContent,
                                          nsIFrame**    aInsertionPoint,
-                                         PRBool*       aMultiple)
+                                         PRBool*       aMultiple,
+                                         PRBool*       aHasInsertion)
 {
   // Make the insertion point be the parent frame by default, in case
   // we have to bail early.
@@ -11411,6 +11394,9 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
   }
 
   if (insertionElement) {
+    if (aHasInsertion) {
+      *aHasInsertion = PR_TRUE;
+    }
     nsIFrame* insertionPoint = mPresShell->GetPrimaryFrameFor(insertionElement);
     if (insertionPoint) {
       // If the insertion point is a scrollable, then walk ``through''

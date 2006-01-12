@@ -167,7 +167,8 @@ public:
   nsresult GetInsertionPoint(nsIFrame*     aParentFrame,
                              nsIContent*   aChildContent,
                              nsIFrame**    aInsertionPoint,
-                             PRBool*       aMultiple = nsnull);
+                             PRBool*       aMultiple = nsnull,
+                             PRBool*       aHasInsertion = nsnull);
 
   nsresult CreateListBoxContent(nsPresContext* aPresContext,
                                 nsIFrame*       aParentFrame,
