@@ -86,6 +86,9 @@ public:
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
                                      nsISVGValue::modificationType aModType);
 
+  // nsIContent interface
+  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+
 protected:
   
   nsCOMPtr<nsIDOMSVGAnimatedLength>      mRefX;
@@ -558,4 +561,18 @@ nsSVGMarkerElement::DidModifySVGObservable (nsISVGValue* observable,
   }
 
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsIContent methods
+
+NS_IMETHODIMP_(PRBool)
+nsSVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sViewportsMap,
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGMarkerElementBase::IsAttributeMapped(name);
 }
