@@ -29,6 +29,7 @@ minimo.jar:
     locale/en-US/minimo/minimo.properties (locale/en-US/minimo.properties)
     locale/en-US/minimo/preferences.dtd   (locale/en-US/preferences.dtd)
     locale/en-US/minimo/bookmarks.dtd     (locale/en-US/bookmarks.dtd)
+    locale/en-US/minimo/rssload.dtd     (locale/en-US/rssload.dtd)
 	skin/classic/minimo/minimo.css          (skin/minimo.css)
 	skin/classic/minimo/preferences.css     (skin/preferences.css)	
 	skin/classic/minimo/rssload/rssload.css (skin/rssload/rssload.css)
