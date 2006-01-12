@@ -65,6 +65,7 @@
   <command id="delete_todo_command" oncommand="deleteToDoCommand()" disabled="true"/>
 
   <command id="new_calendar_command" oncommand="newCalendarDialog()"/>
+  <command id="open_local_calendar_command" oncommand="openLocalCalendar()"/>
   <command id="edit_calendar_command" oncommand="editCalendarDialog(event)"/>
   <command id="delete_calendar_command" oncommand="deleteCalendar(event)"/>
   <command id="find_new_calendar_command" oncommand="goFindNewCalendars()"/>
