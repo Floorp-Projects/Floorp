@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# $Id: leak-gauge.pl,v 1.4 2006/01/12 08:50:56 dbaron%dbaron.org Exp $
+# $Id: leak-gauge.pl,v 1.5 2006/01/12 09:00:51 dbaron%dbaron.org Exp $
 # This script is designed to help testers isolate and simplify testcases
 # for many classes of leaks (those that involve large graphs of core
 # data structures) in Mozilla-based browsers.  It is designed to print
@@ -112,6 +112,11 @@ my $handlers = {
                     print " ... with URI \"$uri\".\n";
                 }
             }
+        },
+        summary => sub($) {
+            my ($self) = @_;
+            my $windows = ${$self}{windows};
+            print 'Leaked DOM windows: ' . keys(%{$windows}) . "\n";
         }
     },
     "DOCUMENT" => {
@@ -142,6 +147,11 @@ my $handlers = {
                     print " ... with URI \"$uri\".\n";
                 }
             }
+        },
+        summary => sub($) {
+            my ($self) = @_;
+            my $docs = ${$self}{docs};
+            print 'Leaked documents: ' . keys(%{$docs}) . "\n";
         }
     },
     "DOCSHELL" => {
@@ -172,6 +182,11 @@ my $handlers = {
                     print " ... which loaded URI \"$uri\".\n";
                 }
             }
+        },
+        summary => sub($) {
+            my ($self) = @_;
+            my $shells = ${$self}{shells};
+            print 'Leaked docshells: ' . keys(%{$shells}) . "\n";
         }
     }
 };
@@ -189,4 +204,8 @@ while (<>) {
 
 foreach my $key (keys(%{$handlers})) {
     call("dump", ${$handlers}{$key});
+}
+print "Summary:\n";
+foreach my $key (keys(%{$handlers})) {
+    call("summary", ${$handlers}{$key});
 }
