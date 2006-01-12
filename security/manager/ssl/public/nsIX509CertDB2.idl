@@ -47,7 +47,7 @@ interface nsIX509CertList;
  * not in nsIX509CertDB, which is frozen
  *
  */
-[scriptable, uuid(dedec2ca-f941-4638-a9c0-32e02ff83d5b)]
+[scriptable, uuid(e0df4784-6560-45bf-b1b7-86076a0e8381)]
 interface nsIX509CertDB2 : nsISupports {
 
   /* 
