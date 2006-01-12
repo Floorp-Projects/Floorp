@@ -57,7 +57,11 @@ public:
   NS_DECL_NSIPROFILESTARTUP
 
   nsXREDirProvider();
-  nsresult Initialize(nsIFile *aXULAppDir);
+
+  // if aXULAppDir is null, use gArgv[0]
+  nsresult Initialize(nsIFile *aXULAppDir,
+                      nsILocalFile *aGREDir = nsnull,
+                      nsIDirectoryServiceProvider* aAppProvider = nsnull);
   ~nsXREDirProvider();
 
   // We only set the profile dir, we don't ensure that it exists;
@@ -85,11 +89,27 @@ public:
     return mGREDir;
   }
 
+  /**
+   * Get the profile startup directory as determined by this class or by
+   * mAppProvider. This method may be called before XPCOM is started. aResult
+   * is a clone, it may be modified.
+   */
+  nsresult GetProfileStartupDir(nsIFile* *aResult);   
+
+  /**
+   * Get the profile directory as determined by this class or by an
+   * embedder-provided XPCOM directory provider. Only call this method
+   * when XPCOM is initialized! aResult is a clone, it may be modified.
+   */
+  nsresult GetProfileDir(nsIFile* *aResult);
+
 protected:
+  nsresult GetFilesInternal(const char* aProperty, nsISimpleEnumerator** aResult);
   static nsresult GetUserDataDirectory(nsILocalFile* *aFile, PRBool aLocal);
   static nsresult EnsureDirectoryExists(nsIFile* aDirectory);
   void EnsureProfileFileExists(nsIFile* aFile);
 
+  nsCOMPtr<nsIDirectoryServiceProvider> mAppProvider;
   nsCOMPtr<nsILocalFile> mGREDir;
   nsCOMPtr<nsIFile>      mXULAppDir;
   nsCOMPtr<nsIFile>      mProfileDir;
