@@ -1947,8 +1947,10 @@
                   }
               }
 
-              return (this.mSelectedItem = val);
+              this.mSelectedItem = val;
           }
+
+          return val;
         ]]></setter>
       </property>
 

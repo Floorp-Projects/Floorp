@@ -605,6 +605,8 @@
         <getter><![CDATA[
           if (this.mSelectedDayBox)
             return this.mSelectedDayBox.date.clone();
+
+          return null;
         ]]></getter>
         <setter><![CDATA[
           if (this.mSelectedDayBox)
