@@ -3595,34 +3595,8 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
 NS_IMETHODIMP
 nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  *aReturn = nsnull; // do we need to do this?
-
-  NS_ENSURE_TRUE(aOldChild, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aOldChild));
-  if (!content) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  PRInt32 indx = mChildren.IndexOfChild(content);
-  if (indx == -1) {
-    return NS_ERROR_DOM_NOT_FOUND_ERR;
-  }
-
-  ContentRemoved(nsnull, content, indx);
-
-  mChildren.RemoveChildAt(indx);
-  if (content == mRootContent) {
-    DestroyLinkMap();
-    mRootContent = nsnull;
-  }
-
-  content->UnbindFromTree();
-
-  *aReturn = aOldChild;
-  NS_ADDREF(aOldChild);
-
-  return NS_OK;
+  return nsGenericElement::doRemoveChild(aOldChild, nsnull, this,
+                                         mChildren, aReturn);
 }
 
 NS_IMETHODIMP
