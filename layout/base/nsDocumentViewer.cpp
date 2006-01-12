@@ -1162,12 +1162,14 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
       docShellNode->GetChildAt(i, getter_AddRefs(item));
 
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
-      nsCOMPtr<nsIContentViewer> cv;
 
+      if (docShell) {
+        nsCOMPtr<nsIContentViewer> cv;
       docShell->GetContentViewer(getter_AddRefs(cv));
 
       if (cv) {
         cv->PermitUnload(aPermitUnload);
+        }
       }
     }
   }
