@@ -55,9 +55,9 @@
       <property name="scrollAmount">
         <getter>
           <![CDATA[
-          var val = this.getAttribute("scrollamount");
+          var val = parseInt(this.getAttribute("scrollamount"));
 
-          if (val <= 0 || isNaN(val) || val == null)
+          if (val <= 0 || isNaN(val))
             return this._scrollAmount;
 
           return val;
@@ -72,9 +72,9 @@
       <property name="scrollDelay">
         <getter>
           <![CDATA[
-          var val = this.getAttribute("scrolldelay");
+          var val = parseInt(this.getAttribute("scrolldelay"));
 
-          if (val <= 0 || isNaN(val) || val == null)
+          if (val <= 0 || isNaN(val))
             return this._scrollDelay;
 
           return val;
@@ -125,6 +125,24 @@
       </property>
 
       <field name="_behavior">"scroll"</field>
+
+      <property name="loop">
+        <getter>
+          <![CDATA[
+          var val = parseInt(this.getAttribute('loop'));
+    
+          if (val < -1 || isNaN(val))
+            return this._loop;
+
+          return val;
+          ]]>
+        </getter>
+        <setter>
+          this.setAttribute("loop", val);
+        </setter>
+      </property>
+
+      <field name="_loop">-1</field>
 
       <field name="dirsign">1</field>
       <field name="startAt">0</field>
@@ -219,6 +237,22 @@
           this._direction = aValue;
           return true;
         ]]>
+        </body>
+      </method>
+
+      <method name="_set_loop">
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+          if (!aValue || isNaN(aValue))
+            return false;
+
+          if (aValue < -1)
+            aValue = -1;
+
+          this._loop = aValue;
+          return true;
+          ]]>
         </body>
       </method>
 
@@ -323,13 +357,32 @@
               break;
 
               case 'slide':
-                if (this.newPosition == this.stopAt)
-                  return;
-                this.newPosition = this.stopAt;
+                if (this._loop > 1) {
+                  this.newPosition = this.startAt;
+                }
+                else {
+                  if ((this._direction == "up") || (this._direction == "down"))
+                    this.outerDiv.scrollTop = this.stopAt;
+                  else
+                    this.outerDiv.scrollLeft = this.stopAt;
+                  this.stop();
+                  return;                  
+                }
               break;
 
               default:
                 this.newPosition = this.startAt;
+            }
+
+            if (this._loop > 1)
+              this._loop--;
+            else if (this._loop == 1) {
+              if ((this._direction == "up") || (this._direction == "down"))
+                this.outerDiv.scrollTop = this.stopAt;
+              else
+                this.outerDiv.scrollLeft = this.stopAt;
+              this.stop();
+              return;
             }
           }
 
@@ -368,7 +421,8 @@
           this._set_direction(this.getAttribute('direction'));
           this._set_behavior(this.getAttribute('behavior'));
           this._set_scrollDelay(this.getAttribute('scrolldelay'));
-          this._set_scrollAmount(this.getAttribute('scrollamount'))
+          this._set_scrollAmount(this.getAttribute('scrollamount'));
+          this._set_loop(this.getAttribute('loop'));
           this.startNewDirection = true;
 
           // init needs to be run after the page has loaded in order to calculate
@@ -393,7 +447,17 @@
           if (oldValue != newValue) {
             switch (attrName) {
               case "loop":
-                //XXX needs implementing
+                if (!this._set_loop(newValue)) {
+                  if (attributeRemoval) {
+                    this._loop = -1;
+                    if (!this.runId)
+                      this.start();
+                  }
+                  else
+                    throw new Error("Invalid argument for Marquee::loop");
+                }
+                if (!this.rundId)
+                  this.start();
                 break;
               case "scrollamount":
                 if (!this._set_scrollAmount(newValue)) {
