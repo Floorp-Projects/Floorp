@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.26 2005/11/10 02:18:22 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: loader.c,v 1.27 2006/01/12 23:46:31 wtchang%redhat.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -125,20 +125,18 @@ static const char * getLibName(void) { return default_name; }
 
 #ifdef XP_UNIX
 #include <unistd.h>
-#endif
 
 #define BL_MAXSYMLINKS 20
 
 /*
  * If 'link' is a symbolic link, this function follows the symbolic links
  * and returns the pathname of the ultimate source of the symbolic links.
- * If 'link' is not a symbolic link, this function returns a copy of 'link'.
+ * If 'link' is not a symbolic link, this function returns NULL.
  * The caller should call PR_Free to free the string returned by this
  * function.
  */
 static char* bl_GetOriginalPathname(const char* link)
 {
-#ifdef XP_UNIX
     char* resolved = NULL;
     char* input = NULL;
     PRUint32 iterations = 0;
@@ -168,16 +166,13 @@ static char* bl_GetOriginalPathname(const char* link)
         resolved = tmp;
     }
     PR_Free(resolved);
-    return input;
-#else
-    if (link) {
-        return PL_strdup(link);
-    } else {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return NULL;
+    if (iterations == 1 && retlen < 0) {
+        PR_Free(input);
+        input = NULL;
     }
-#endif
+    return input;
 }
+#endif /* XP_UNIX */
 
 /*
  * We use PR_GetLibraryFilePathname to get the pathname of the loaded 
@@ -196,16 +191,47 @@ typedef struct {
     PRLibrary *dlh;
 } BLLibrary;
 
+/*
+ * Load the freebl library with the file name 'name' residing in the same
+ * directory as libsoftoken, whose pathname is 'softokenPath'.
+ */
+static PRLibrary *
+bl_LoadFreeblLibInSoftokenDir(const char *softokenPath, const char *name)
+{
+    PRLibrary *dlh = NULL;
+    char *fullName = NULL;
+    char* c;
+    PRLibSpec libSpec;
+
+    /* Remove "libsoftokn" from the pathname and add the freebl libname */
+    c = strrchr(softokenPath, PR_GetDirectorySeparator());
+    if (c) {
+        size_t softoknPathSize = 1 + c - softokenPath;
+        fullName = (char*) PORT_Alloc(strlen(name) + softoknPathSize + 1);
+        if (fullName) {
+            memcpy(fullName, softokenPath, softoknPathSize);
+            strcpy(fullName + softoknPathSize, name); 
+#ifdef DEBUG_LOADER
+            PR_fprintf(PR_STDOUT, "\nAttempting to load fully-qualified %s\n", 
+                       fullName);
+#endif
+            libSpec.type = PR_LibSpec_Pathname;
+            libSpec.value.pathname = fullName;
+            dlh = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_LOCAL);
+            PORT_Free(fullName);
+        }
+    }
+    return dlh;
+}
+
 static BLLibrary *
 bl_LoadLibrary(const char *name)
 {
     BLLibrary *lib = NULL;
     PRFuncPtr fn_addr;
     char* softokenPath = NULL;
-    char* fullName = NULL;
     PRLibSpec libSpec;
 
-    libSpec.type = PR_LibSpec_Pathname;
     lib = PR_NEWZAP(BLLibrary);
     if (NULL == lib) {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
@@ -222,38 +248,29 @@ bl_LoadLibrary(const char *name)
     fn_addr = (PRFuncPtr) &bl_LoadLibrary;
     softokenPath = PR_GetLibraryFilePathname(softoken, fn_addr);
 
-    /* Remove "libsoftokn" from the pathname and add the freebl libname */
     if (softokenPath) {
-       char* c;
-       char* originalSoftokenPath = bl_GetOriginalPathname(softokenPath);
-       if (originalSoftokenPath) {
-           PR_Free(softokenPath);
-           softokenPath = originalSoftokenPath;
-       }
-       c = strrchr(softokenPath, PR_GetDirectorySeparator());
-       if (c) {
-           size_t softoknPathSize = 1 + c - softokenPath;
-           fullName = (char*) PORT_Alloc(strlen(name) + softoknPathSize + 1);
-           if (fullName) {
-               memcpy(fullName, softokenPath, softoknPathSize);
-               strcpy(fullName + softoknPathSize, name); 
-           }
-       }
-       PR_Free(softokenPath);
-    }
-    if (fullName) {
-#ifdef DEBUG_LOADER
-        PR_fprintf(PR_STDOUT, "\nAttempting to load fully-qualified %s\n", 
-                   fullName);
+        lib->dlh = bl_LoadFreeblLibInSoftokenDir(softokenPath, name);
+#ifdef XP_UNIX
+        if (!lib->dlh) {
+            /*
+             * If softokenPath is a symbolic link, resolve the symbolic
+             * link and try again.
+             */
+            char* originalSoftokenPath = bl_GetOriginalPathname(softokenPath);
+            if (originalSoftokenPath) {
+                PR_Free(softokenPath);
+                softokenPath = originalSoftokenPath;
+                lib->dlh = bl_LoadFreeblLibInSoftokenDir(softokenPath, name);
+            }
+        }
 #endif
-        libSpec.value.pathname = fullName;
-        lib->dlh = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_LOCAL);
-        PORT_Free(fullName);
+        PR_Free(softokenPath);
     }
     if (!lib->dlh) {
 #ifdef DEBUG_LOADER
         PR_fprintf(PR_STDOUT, "\nAttempting to load %s\n", name);
 #endif
+        libSpec.type = PR_LibSpec_Pathname;
         libSpec.value.pathname = name;
         lib->dlh = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_LOCAL);
     }
