@@ -44,6 +44,7 @@
 #include "nsID.h"
 #include "xrecore.h"
 #include "nsXPCOM.h"
+#include "nsISupports.h"
 
 /**
  * Application-specific data needed to start the apprunner.
@@ -161,6 +162,28 @@ struct nsXREAppData
 #define XRE_EXECUTABLE_FILE "XREExeF"
 
 /**
+ * A directory service key which specifies the profile
+ * directory. Unlike the NS_APP_USER_PROFILE_50_DIR key, this key may
+ * be available when the profile hasn't been "started", or after is
+ * has been shut down. If the application is running without a
+ * profile, such as when showing the profile manager UI, this key will
+ * not be available. This key is provided by the XUL apprunner or by
+ * the aAppDirProvider object passed to XRE_InitEmbedding.
+ */
+#define NS_APP_PROFILE_DIR_STARTUP "ProfDS"
+
+/**
+ * A directory service key which specifies the profile
+ * directory. Unlike the NS_APP_USER_PROFILE_LOCAL_50_DIR key, this key may
+ * be available when the profile hasn't been "started", or after is
+ * has been shut down. If the application is running without a
+ * profile, such as when showing the profile manager UI, this key will
+ * not be available. This key is provided by the XUL apprunner or by
+ * the aAppDirProvider object passed to XRE_InitEmbedding.
+ */
+#define NS_APP_PROFILE_LOCAL_DIR_STARTUP "ProfLDS"
+
+/**
  * Begin an XUL application. Does not return until the user exits the
  * application.
  *
@@ -206,13 +229,25 @@ XRE_API(void,
                                   PRUint32 *aComponentCount))
 
 /**
+ * Lock a profile directory using platform-specific semantics.
+ *
+ * @param aDirectory  The profile directory to lock.
+ * @param aLockObject An opaque lock object. The directory will remain locked
+ *                    as long as the XPCOM reference is held.
+ */
+XRE_API(nsresult,
+        XRE_LockProfileDirectory, (nsILocalFile* aDirectory,
+                                   nsISupports* *aLockObject))
+
+/**
  * Initialize libXUL for embedding purposes.
  *
  * @param aLibXULDirectory   The directory in which the libXUL shared library
  *                           was found.
  * @param aAppDirectory      The directory in which the application components
  *                           and resources can be found. This will map to
- *                           the "resource:app" directory service key.
+ *                           the NS_OS_CURRENT_PROCESS_DIR directory service
+ *                           key.
  * @param aAppDirProvider    A directory provider for the application. This
  *                           provider will be aggregated by a libxul provider
  *                           which will provide the base required GRE keys.
@@ -237,6 +272,38 @@ XRE_API(nsresult,
                             nsStaticModuleInfo const *aStaticComponents,
                             PRUint32 aStaticComponentCount))
 
+/**
+ * Fire notifications to inform the toolkit about a new profile. This
+ * method should be called after XRE_InitEmbedding if the embedder
+ * wishes to run with a profile. Normally the embedder should call
+ * XRE_LockProfileDirectory to lock the directory before calling this
+ * method.
+ *
+ * @note There are two possibilities for selecting a profile:
+ *
+ * 1) Select the profile before calling XRE_InitEmbedding. The aAppDirProvider
+ *    object passed to XRE_InitEmbedding should provide the
+ *    NS_APP_USER_PROFILE_50_DIR key, and may also provide the following keys:
+ *    - NS_APP_USER_PROFILE_LOCAL_50_DIR
+ *    - NS_APP_PROFILE_DIR_STARTUP
+ *    - NS_APP_PROFILE_LOCAL_DIR_STARTUP
+ *    In this scenario XRE_NotifyProfile should be called immediately after
+ *    XRE_InitEmbedding. Component registration information will be stored in
+ *    the profile and JS components may be stored in the fastload cache.
+ *
+ * 2) Select a profile some time after calling XRE_InitEmbedding. In this case
+ *    the embedder must install a directory service provider which provides
+ *    NS_APP_USER_PROFILE_50_DIR and optionally
+ *    NS_APP_USER_PROFILE_LOCAL_50_DIR. Component registration information
+ *    will be stored in the application directory and JS components will not
+ *    fastload.
+ */
+XRE_API(void,
+        XRE_NotifyProfile, ())
+
+/**
+ * Terminate embedding started with XRE_InitEmbedding or XRE_InitEmbedding2
+ */
 XRE_API(void,
         XRE_TermEmbedding, ())
 

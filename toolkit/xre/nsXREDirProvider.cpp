@@ -52,12 +52,14 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsXULAppAPI.h"
 
 #include "nsINIParser.h"
 #include "nsDependentString.h"
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
+#include "nsEnumeratorUtils.h"
 
 #include <stdlib.h>
 
@@ -106,23 +108,31 @@ nsXREDirProvider::~nsXREDirProvider()
 }
 
 nsresult
-nsXREDirProvider::Initialize(nsIFile *aXULAppDir)
+nsXREDirProvider::Initialize(nsIFile *aXULAppDir,
+                             nsILocalFile *aGREDir,
+                             nsIDirectoryServiceProvider* aAppProvider)
 { 
+  mAppProvider = aAppProvider;
   mXULAppDir = aXULAppDir;
 
-  nsCOMPtr<nsILocalFile> lf;
-  nsresult rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
-  if (NS_FAILED(rv))
-    return rv;
+  if (aGREDir) {
+    mGREDir = aGREDir;
+  }
+  else {
+    nsCOMPtr<nsILocalFile> lf;
+    nsresult rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
+    if (NS_FAILED(rv))
+      return rv;
 
-  nsCOMPtr<nsIFile> greDir;
-  rv = lf->GetParent(getter_AddRefs(greDir));
-  if (NS_FAILED(rv))
-    return rv;
+    nsCOMPtr<nsIFile> greDir;
+    rv = lf->GetParent(getter_AddRefs(greDir));
+    if (NS_FAILED(rv))
+      return rv;
 
-  mGREDir = do_QueryInterface(greDir);
-  if (!mGREDir)
-    return NS_ERROR_FAILURE;
+    mGREDir = do_QueryInterface(greDir);
+    if (!mGREDir)
+      return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -175,18 +185,57 @@ NS_IMETHODIMP
 nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
 			  nsIFile** aFile)
 {
+  nsresult rv;
+
+  PRBool gettingProfile = PR_FALSE;
+
+  if (!strcmp(aProperty, NS_APP_USER_PROFILE_LOCAL_50_DIR)) {
+    // If XRE_NotifyProfile hasn't been called, don't fall through to
+    // mAppProvider on the profile keys.
+    if (!mProfileNotified)
+      return NS_ERROR_FAILURE;
+
+    if (mProfileLocalDir)
+      return mProfileLocalDir->Clone(aFile);
+
+    if (mAppProvider)
+      return mAppProvider->GetFile(aProperty, aPersistent, aFile);
+
+    // This falls through to the case below
+    gettingProfile = PR_TRUE;
+  }
+  if (!strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR) || gettingProfile) {
+    if (!mProfileNotified)
+      return NS_ERROR_FAILURE;
+
+    if (mProfileDir)
+      return mProfileDir->Clone(aFile);
+
+    if (mAppProvider)
+      return mAppProvider->GetFile(aProperty, aPersistent, aFile);
+
+    // If we don't succeed here, bail early so that we aren't reentrant
+    // through the "GetProfileDir" call below.
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mAppProvider) {
+    rv = mAppProvider->GetFile(aProperty, aPersistent, aFile);
+    if (NS_SUCCEEDED(rv) && *aFile)
+      return rv;
+  }
+
   *aPersistent = PR_TRUE;
 
   if (!strcmp(aProperty, NS_GRE_DIR)) {
     return mGREDir->Clone(aFile);
   }
-
-  if (!strcmp(aProperty, NS_OS_CURRENT_PROCESS_DIR) ||
+  else if (!strcmp(aProperty, NS_OS_CURRENT_PROCESS_DIR) ||
       !strcmp(aProperty, NS_APP_INSTALL_CLEANUP_DIR)) {
     return GetAppDir()->Clone(aFile);
   }
 
-  nsresult rv = NS_ERROR_FAILURE;
+  rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIFile> file;
 
   if (!strcmp(aProperty, NS_APP_PROFILE_DEFAULTS_50_DIR) ||
@@ -210,29 +259,34 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
   }
   else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_FILE)) {
     rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
-    rv |= file->AppendNative(NS_LITERAL_CSTRING(APP_REGISTRY_NAME));
+    if (NS_SUCCEEDED(rv))
+      rv = file->AppendNative(NS_LITERAL_CSTRING(APP_REGISTRY_NAME));
   }
   else if (!strcmp(aProperty, NS_APP_USER_PROFILES_ROOT_DIR)) {
     rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
 
+    if (NS_SUCCEEDED(rv)) {
 #if !defined(XP_UNIX) || defined(XP_MACOSX)
-    rv |= file->AppendNative(NS_LITERAL_CSTRING("Profiles"));
+      rv = file->AppendNative(NS_LITERAL_CSTRING("Profiles"));
 #endif
 
-    // We must create the profile directory here if it does not exist.
-    rv |= EnsureDirectoryExists(file);
+      // We must create the profile directory here if it does not exist.
+      rv |= EnsureDirectoryExists(file);
+    }
   }
   else if (!strcmp(aProperty, NS_APP_USER_PROFILES_LOCAL_ROOT_DIR)) {
     rv = GetUserLocalDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
 
+    if (NS_SUCCEEDED(rv)) {
 #if !defined(XP_UNIX) || defined(XP_MACOSX)
-    rv |= file->AppendNative(NS_LITERAL_CSTRING("Profiles"));
+      rv = file->AppendNative(NS_LITERAL_CSTRING("Profiles"));
 #endif
 
-    // We must create the profile directory here if it does not exist.
-    rv |= EnsureDirectoryExists(file);
+      // We must create the profile directory here if it does not exist.
+      rv |= EnsureDirectoryExists(file);
+    }
   }
-  else if (!strcmp(aProperty, XRE_EXECUTABLE_FILE)) {
+  else if (!strcmp(aProperty, XRE_EXECUTABLE_FILE) && gArgv[0]) {
     nsCOMPtr<nsILocalFile> lf;
     rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
     if (NS_SUCCEEDED(rv))
@@ -241,93 +295,84 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
   else if (!strcmp(aProperty, "resource:app")) {
     rv = GetAppDir()->Clone(getter_AddRefs(file));
   }
-  else if (mProfileDir) {
+
+  else if (!strcmp(aProperty, NS_APP_PROFILE_DIR_STARTUP) && mProfileDir) {
+    return mProfileDir->Clone(aFile);
+  }
+  else if (!strcmp(aProperty, NS_APP_PROFILE_LOCAL_DIR_STARTUP)) {
+    if (mProfileLocalDir)
+      return mProfileLocalDir->Clone(aFile);
+
+    if (mProfileDir)
+      return mProfileDir->Clone(aFile);
+
+    if (mAppProvider)
+      return mAppProvider->GetFile(NS_APP_PROFILE_DIR_STARTUP, aPersistent,
+                                   aFile);
+  }
+  else if (NS_SUCCEEDED(GetProfileStartupDir(getter_AddRefs(file)))) {
     // We need to allow component, xpt, and chrome registration to
     // occur prior to the profile-after-change notification.
     if (!strcmp(aProperty, NS_XPCOM_COMPONENT_REGISTRY_FILE)) {
-      rv = mProfileDir->Clone(getter_AddRefs(file));
-      rv |= file->AppendNative(NS_LITERAL_CSTRING("compreg.dat"));
+      rv = file->AppendNative(NS_LITERAL_CSTRING("compreg.dat"));
     }
     else if (!strcmp(aProperty, NS_XPCOM_XPTI_REGISTRY_FILE)) {
-      rv = mProfileDir->Clone(getter_AddRefs(file));
-      rv |= file->AppendNative(NS_LITERAL_CSTRING("xpti.dat"));
+      rv = file->AppendNative(NS_LITERAL_CSTRING("xpti.dat"));
     }
     else if (!strcmp(aProperty, NS_APP_USER_CHROME_DIR)) {
-      rv = mProfileDir->Clone(getter_AddRefs(file));
-      rv |= file->AppendNative(NS_LITERAL_CSTRING("chrome"));
-    }
-    else if (!strcmp(aProperty, NS_APP_PROFILE_DIR_STARTUP) && mProfileDir) {
-      return mProfileDir->Clone(aFile);
-    }
-    else if (!strcmp(aProperty, NS_APP_PROFILE_LOCAL_DIR_STARTUP) &&
-             mProfileLocalDir) {
-      return mProfileLocalDir->Clone(aFile);
-    }
-    else if (mProfileNotified) {
-      if (!strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR) ||
-          !strcmp(aProperty, NS_APP_PREFS_50_DIR)) {
-        return mProfileDir->Clone(aFile);
-      }
-      else if (!strcmp(aProperty, NS_APP_USER_PROFILE_LOCAL_50_DIR)) {
-        return mProfileLocalDir->Clone(aFile);
-      }
-      else if (!strcmp(aProperty, NS_APP_PREFS_50_FILE)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("prefs.js"));
-      }
-      else if (!strcmp(aProperty, NS_LOCALSTORE_UNSAFE_FILE)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
-      }
-      else if (!strcmp(aProperty, NS_APP_LOCALSTORE_50_FILE)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        if (gSafeMode) {
-          rv |= file->AppendNative(NS_LITERAL_CSTRING("localstore-safe.rdf"));
-          file->Remove(PR_FALSE);
-        }
-        else {
-          rv |= file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
-          EnsureProfileFileExists(file);
-        }
-      }
-      else if (!strcmp(aProperty, NS_APP_HISTORY_50_FILE)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("history.dat"));
-      }
-      else if (!strcmp(aProperty, NS_APP_USER_MIMETYPES_50_FILE)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("mimeTypes.rdf"));
-        EnsureProfileFileExists(file);
-      }
-      else if (!strcmp(aProperty, NS_APP_STORAGE_50_FILE)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("storage.sdb"));
-      }
-      else if (!strcmp(aProperty, NS_APP_DOWNLOADS_50_FILE)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("downloads.rdf"));
-      }
-      // XXXbsmedberg move these defines into application-specific providers.
-      else if (!strcmp(aProperty, NS_APP_MAIL_50_DIR)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("Mail"));
-      }
-      else if (!strcmp(aProperty, NS_APP_IMAP_MAIL_50_DIR)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("ImapMail"));
-      }
-      else if (!strcmp(aProperty, NS_APP_NEWS_50_DIR)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("News"));
-      }
-      else if (!strcmp(aProperty, NS_APP_MESSENGER_FOLDER_CACHE_50_DIR)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("panacea.dat"));
-      }
+      rv = file->AppendNative(NS_LITERAL_CSTRING("chrome"));
     }
   }
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  if (!file) return NS_ERROR_FAILURE;
+
+  if (NS_SUCCEEDED(GetProfileDir(getter_AddRefs(file)))) {
+    if (!strcmp(aProperty, NS_APP_PREFS_50_DIR)) {
+      rv = NS_OK;
+    }
+    else if (!strcmp(aProperty, NS_APP_PREFS_50_FILE)) {
+      rv = file->AppendNative(NS_LITERAL_CSTRING("prefs.js"));
+    }
+    else if (!strcmp(aProperty, NS_LOCALSTORE_UNSAFE_FILE)) {
+      rv = file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
+    }
+    else if (!strcmp(aProperty, NS_APP_LOCALSTORE_50_FILE)) {
+      if (gSafeMode) {
+        rv = file->AppendNative(NS_LITERAL_CSTRING("localstore-safe.rdf"));
+        file->Remove(PR_FALSE);
+      }
+      else {
+        rv = file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
+        EnsureProfileFileExists(file);
+      }
+    }
+    else if (!strcmp(aProperty, NS_APP_HISTORY_50_FILE)) {
+      rv = file->AppendNative(NS_LITERAL_CSTRING("history.dat"));
+    }
+    else if (!strcmp(aProperty, NS_APP_USER_MIMETYPES_50_FILE)) {
+      rv = file->AppendNative(NS_LITERAL_CSTRING("mimeTypes.rdf"));
+      EnsureProfileFileExists(file);
+    }
+    else if (!strcmp(aProperty, NS_APP_STORAGE_50_FILE)) {
+      rv = file->AppendNative(NS_LITERAL_CSTRING("storage.sdb"));
+    }
+    else if (!strcmp(aProperty, NS_APP_DOWNLOADS_50_FILE)) {
+      rv = file->AppendNative(NS_LITERAL_CSTRING("downloads.rdf"));
+    }
+    // XXXbsmedberg move these defines into application-specific providers.
+    else if (!strcmp(aProperty, NS_APP_MAIL_50_DIR)) {
+      rv = file->AppendNative(NS_LITERAL_CSTRING("Mail"));
+    }
+    else if (!strcmp(aProperty, NS_APP_IMAP_MAIL_50_DIR)) {
+      rv = file->AppendNative(NS_LITERAL_CSTRING("ImapMail"));
+    }
+    else if (!strcmp(aProperty, NS_APP_NEWS_50_DIR)) {
+      rv = file->AppendNative(NS_LITERAL_CSTRING("News"));
+    }
+    else if (!strcmp(aProperty, NS_APP_MESSENGER_FOLDER_CACHE_50_DIR)) {
+      rv = file->AppendNative(NS_LITERAL_CSTRING("panacea.dat"));
+    }
+  }
+  if (NS_FAILED(rv) || !file)
+    return NS_ERROR_FAILURE;
 
   NS_ADDREF(*aFile = file);
   return NS_OK;
@@ -422,6 +467,44 @@ static const char *const kAppendChromeManifests[] =
 
 NS_IMETHODIMP
 nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsISimpleEnumerator> appEnum;
+  nsCOMPtr<nsIDirectoryServiceProvider2>
+    appP2(do_QueryInterface(mAppProvider));
+  if (appP2) {
+    rv = appP2->GetFiles(aProperty, getter_AddRefs(appEnum));
+    if (NS_FAILED(rv)) {
+      appEnum = nsnull;
+    }
+    else if (rv != NS_SUCCESS_AGGREGATE_RESULT) {
+      NS_ADDREF(*aResult = appEnum);
+      return NS_OK;
+    }
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> xreEnum;
+  rv = GetFilesInternal(aProperty, getter_AddRefs(xreEnum));
+  if (NS_FAILED(rv)) {
+    if (appEnum) {
+      NS_ADDREF(*aResult = appEnum);
+      return NS_SUCCESS_AGGREGATE_RESULT;
+    }
+
+    return rv;
+  }
+
+  rv = NS_NewUnionEnumerator(aResult, appEnum, xreEnum);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return NS_SUCCESS_AGGREGATE_RESULT;
+}
+
+nsresult
+nsXREDirProvider::GetFilesInternal(const char* aProperty,
+                                   nsISimpleEnumerator** aResult)
 {
   nsresult rv = NS_OK;
   *aResult = nsnull;
@@ -698,9 +781,52 @@ GetShellFolderPath(int folder, char result[MAXPATHLEN])
 #endif
 
 nsresult
+nsXREDirProvider::GetProfileStartupDir(nsIFile* *aResult)
+{
+  if (mProfileDir)
+    return mProfileDir->Clone(aResult);
+
+  if (mAppProvider) {
+    nsCOMPtr<nsIFile> needsclone;
+    PRBool dummy;
+    nsresult rv = mAppProvider->GetFile(NS_APP_PROFILE_DIR_STARTUP,
+                                        &dummy,
+                                        getter_AddRefs(needsclone));
+    if (NS_SUCCEEDED(rv))
+      return needsclone->Clone(aResult);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsXREDirProvider::GetProfileDir(nsIFile* *aResult)
+{
+  if (mProfileDir) {
+    if (!mProfileNotified)
+      return NS_ERROR_FAILURE;
+
+    return mProfileDir->Clone(aResult);
+  }
+
+  if (mAppProvider) {
+    nsCOMPtr<nsIFile> needsclone;
+    PRBool dummy;
+    nsresult rv = mAppProvider->GetFile(NS_APP_USER_PROFILE_50_DIR,
+                                        &dummy,
+                                        getter_AddRefs(needsclone));
+    if (NS_SUCCEEDED(rv))
+      return needsclone->Clone(aResult);
+  }
+
+  return NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, aResult);
+}
+
+nsresult
 nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
 {
-  NS_ASSERTION(gAppData, "gAppData not initialized!");
+  if (!gAppData)
+    return NS_ERROR_FAILURE;
 
   // Copied from nsAppFileLocationProvider (more or less)
   nsresult rv;

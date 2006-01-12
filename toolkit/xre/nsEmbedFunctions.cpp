@@ -46,130 +46,12 @@
 #include "nsIToolkitChromeRegistry.h"
 
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsArrayEnumerator.h"
-#include "nsCOMArray.h"
+#include "nsAppRunner.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsEnumeratorUtils.h"
 #include "nsStaticComponents.h"
 #include "nsString.h"
-
-class nsEmbeddingDirProvider : public nsIDirectoryServiceProvider2
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
-
-  nsEmbeddingDirProvider(nsILocalFile* aGREDir,
-                         nsILocalFile* aAppDir,
-                         nsIDirectoryServiceProvider* aAppProvider) :
-    mGREDir(aGREDir),
-    mAppDir(aAppDir),
-    mAppProvider(aAppProvider) { }
-
-private:
-  nsCOMPtr<nsILocalFile> mGREDir;
-  nsCOMPtr<nsILocalFile> mAppDir;
-  nsCOMPtr<nsIDirectoryServiceProvider> mAppProvider;
-};
-
-NS_IMPL_ISUPPORTS2(nsEmbeddingDirProvider,
-                   nsIDirectoryServiceProvider,
-                   nsIDirectoryServiceProvider2)
-
-NS_IMETHODIMP
-nsEmbeddingDirProvider::GetFile(const char *aProperty, PRBool *aPersistent,
-                                nsIFile* *aFile)
-{
-  nsresult rv;
-
-  if (mAppProvider) {
-    rv = mAppProvider->GetFile(aProperty, aPersistent, aFile);
-    if (NS_SUCCEEDED(rv) && *aFile)
-      return rv;
-  }
-
-  if (!strcmp(aProperty, NS_OS_CURRENT_PROCESS_DIR) ||
-      !strcmp(aProperty, NS_APP_INSTALL_CLEANUP_DIR)) {
-    // NOTE: this is *different* than NS_XPCOM_CURRENT_PROCESS_DIR. This points
-    // to the application dir. NS_XPCOM_CURRENT_PROCESS_DIR points to the toolkit.
-    return mAppDir->Clone(aFile);
-  }
-
-  if (!strcmp(aProperty, NS_GRE_DIR)) {
-    return mGREDir->Clone(aFile);
-  }
-
-  if (!strcmp(aProperty, NS_APP_PREF_DEFAULTS_50_DIR))
-  {
-    nsCOMPtr<nsIFile> file;
-    rv = mAppDir->Clone(getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = file->AppendNative(NS_LITERAL_CSTRING("defaults"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = file->AppendNative(NS_LITERAL_CSTRING("pref"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ADDREF(*aFile = file);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsEmbeddingDirProvider::GetFiles(const char* aProperty,
-                                 nsISimpleEnumerator** aResult)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsISimpleEnumerator> appEnum;
-  nsCOMPtr<nsIDirectoryServiceProvider2> appP2
-    (do_QueryInterface(mAppProvider));
-  if (appP2) {
-    rv = appP2->GetFiles(aProperty, getter_AddRefs(appEnum));
-    if (NS_SUCCEEDED(rv) && rv != NS_SUCCESS_AGGREGATE_RESULT) {
-      NS_ADDREF(*aResult = appEnum);
-      return NS_OK;
-    }
-  }
-
-  nsCOMArray<nsIFile> dirs;
-
-  if (!strcmp(aProperty, NS_CHROME_MANIFESTS_FILE_LIST) ||
-      !strcmp(aProperty, NS_APP_CHROME_DIR_LIST)) {
-    nsCOMPtr<nsIFile> manifest;
-    mGREDir->Clone(getter_AddRefs(manifest));
-    manifest->AppendNative(NS_LITERAL_CSTRING("chrome"));
-    dirs.AppendObject(manifest);
-
-    mAppDir->Clone(getter_AddRefs(manifest));
-    manifest->AppendNative(NS_LITERAL_CSTRING("chrome"));
-    dirs.AppendObject(manifest);
-  }
-
-  if (dirs.Count()) {
-    nsCOMPtr<nsISimpleEnumerator> thisEnum;
-    rv = NS_NewArrayEnumerator(getter_AddRefs(thisEnum), dirs);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (appEnum) {
-      return NS_NewUnionEnumerator(aResult, appEnum, thisEnum);
-    }
-
-    NS_ADDREF(*aResult = thisEnum);
-    return NS_OK;
-  }
-
-  if (appEnum) {
-    NS_ADDREF(*aResult = appEnum);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
-}
+#include "nsXREDirProvider.h"
+#include "nsIToolkitProfile.h"
 
 void
 XRE_GetStaticComponents(nsStaticModuleInfo const **aStaticComponents,
@@ -177,6 +59,20 @@ XRE_GetStaticComponents(nsStaticModuleInfo const **aStaticComponents,
 {
   *aStaticComponents = kPStaticModules;
   *aComponentCount = kStaticModuleCount;
+}
+
+nsresult
+XRE_LockProfileDirectory(nsILocalFile* aDirectory,
+                         nsISupports* *aLockObject)
+{
+  nsCOMPtr<nsIProfileLock> lock;
+
+  nsresult rv = NS_LockProfilePath(aDirectory, nsnull, nsnull,
+                                   getter_AddRefs(lock));
+  if (NS_SUCCEEDED(rv))
+    NS_ADDREF(*aLockObject = lock);
+
+  return rv;
 }
 
 static nsStaticModuleInfo *sCombined;
@@ -189,22 +85,29 @@ XRE_InitEmbedding(nsILocalFile *aLibXULDirectory,
                   nsStaticModuleInfo const *aStaticComponents,
                   PRUint32 aStaticComponentCount)
 {
-  if (++sInitCounter > 1)
-    return NS_OK;
+  // Initialize some globals to make nsXREDirProvider happy
+  static char* kNullCommandLine[] = { nsnull };
+  gArgv = kNullCommandLine;
+  gArgc = 0;
 
   NS_ENSURE_ARG(aLibXULDirectory);
+
+  if (++sInitCounter > 1) // XXXbsmedberg is this really the right solution?
+    return NS_OK;
 
   if (!aAppDirectory)
     aAppDirectory = aLibXULDirectory;
 
   nsresult rv;
 
-  nsCOMPtr<nsIDirectoryServiceProvider> dirSvc
-    (new nsEmbeddingDirProvider(aLibXULDirectory,
-                                aAppDirectory,
-                                aAppDirProvider));
-  if (!dirSvc)
+  new nsXREDirProvider; // This sets gDirServiceProvider
+  if (!gDirServiceProvider)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = gDirServiceProvider->Initialize(aAppDirectory, aLibXULDirectory,
+                                       aAppDirProvider);
+  if (NS_FAILED(rv))
+    return rv;
 
   // Combine the toolkit static components and the app components.
   PRUint32 combinedCount = kStaticModuleCount + aStaticComponentCount;
@@ -218,7 +121,7 @@ XRE_InitEmbedding(nsILocalFile *aLibXULDirectory,
   memcpy(sCombined + kStaticModuleCount, aStaticComponents,
          sizeof(nsStaticModuleInfo) * aStaticComponentCount);
 
-  rv = NS_InitXPCOM3(nsnull, aAppDirectory, dirSvc,
+  rv = NS_InitXPCOM3(nsnull, aAppDirectory, gDirServiceProvider,
                      sCombined, combinedCount);
   if (NS_FAILED(rv))
     return rv;
@@ -248,11 +151,23 @@ XRE_InitEmbedding(nsILocalFile *aLibXULDirectory,
 }
 
 void
+XRE_NotifyProfile()
+{
+  NS_ASSERTION(gDirServiceProvider, "XRE_InitEmbedding was not called!");
+  gDirServiceProvider->DoStartup();
+}
+
+void
 XRE_TermEmbedding()
 {
   if (--sInitCounter != 0)
     return;
 
+  NS_ASSERTION(gDirServiceProvider,
+               "XRE_TermEmbedding without XRE_InitEmbedding");
+
+  gDirServiceProvider->DoShutdown();
   NS_ShutdownXPCOM(nsnull);
   delete [] sCombined;
+  delete gDirServiceProvider;
 }
