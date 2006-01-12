@@ -58,6 +58,7 @@ var gShowingNavMenuPopup=false;
 var gFocusedElementHREFContextMenu=null;
 var gDeckMode=0; // 0 = site, 1 = sb, 2= rss. Used for the URLBAR selector, DeckMode impl.
 var gDeckMenuChecked=null; // to keep the state of the checked URLBAR selector mode. 
+var gURLBarBoxObject = null; // stores the urlbar boxObject so the background loader can update itself based on actual urlbar size width;
 
 var gPref = null;                    // so far snav toggles on / off via direct access to pref.
                                      // See bugzilla.mozilla.org/show_bug.cgi?id=311287#c1
@@ -132,9 +133,9 @@ nsBrowserStatusHandler.prototype =
       if (aStateFlags & nsIWebProgressListener.STATE_STOP)
       {
         document.getElementById("statusbar").hidden=true;
-        
-        /* To be fixed. We dont want to directly access sytle from here */
-        document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
+
+        // gURLBarBoxObject width + 20 pixels.... so you cannot see it.         
+        document.getElementById("urlbar").inputField.style.backgroundPosition=gURLBarBoxObject.width+20+"px 100%";
         
         if (aRequest) {
             if (aWebProgress.DOMWindow == content) this.endDocumentLoad(aRequest, aStatus);
@@ -174,8 +175,9 @@ nsBrowserStatusHandler.prototype =
   },
   onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
-    var percentage = parseInt((aCurTotalProgress * 100) / aMaxTotalProgress);
-    document.styleSheets[1].cssRules[0].style.backgroundPosition=percentage+"px 100%";
+    var percentage = parseInt((aCurTotalProgress/aMaxTotalProgress)*parseInt(gURLBarBoxObject.width));
+    if(percentage<0) percentage=10;
+    document.getElementById("urlbar").inputField.style.backgroundPosition=percentage+"px 100%";
   },
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
@@ -353,8 +355,13 @@ nsBrowserStatusHandler.prototype =
   
   document.__defineSetter__("title",function(x){}); // Stays with the titled defined by the XUL element. 
   
-  
   gBrowser.addEventListener("DOMLinkAdded", BrowserLinkAdded, false);
+  
+  /*
+   * We save the inputField (anonymous node within textbox urlbar) BoxObject, so we can measure its width 
+   * on progress load
+   */
+  gURLBarBoxObject=(document.getBoxObjectFor(document.getElementById("urlbar").inputField));
   
 }
 
