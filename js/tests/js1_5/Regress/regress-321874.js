@@ -66,12 +66,12 @@ catch(ex)
 }  
 reportCompare(expect, actual, section);
 
-section = summary + ': function foo(){for((v) in b);}';
+section = summary + ': function foo(){for((v) in b);};foo();';
 expect = 'foo';
 printStatus(section);
 try
 {
-  eval('function foo(){ for ((v) in b);}');
+  eval('function foo(){ for ((v) in b);}; foo();');
   actual = v;
 }
 catch(ex)
@@ -96,12 +96,12 @@ catch(ex)
 }  
 reportCompare(expect, actual, section);
 
-section = summary + ': function foo(){for(a() in b);}';
+section = summary + ': function foo(){for(a() in b);};foo();';
 expect = 'error';
 printStatus(section);
 try
 {
-  eval('function foo(){ for (a() in b);}');
+  eval('function foo(){ for (a() in b);};foo();');
   actual = 'no error';
 }
 catch(ex)
@@ -126,12 +126,12 @@ catch(ex)
 }  
 reportCompare(expect, actual, summary + section);
 
-section = ': function foo(){for(new a() in b);}';
+section = ': function foo(){for(new a() in b);};foo();';
 expect = 'error';
 printStatus(section);
 try
 {
-  eval('function foo(){ for (new a() in b);}');
+  eval('function foo(){ for (new a() in b);};foo();');
   actual = 'no error';
 }
 catch(ex)
@@ -156,12 +156,12 @@ catch(ex)
 }  
 reportCompare(expect, actual, summary + section);
 
-section = ': function foo(){for(void in b);}';
+section = ': function foo(){for(void in b);};foo();';
 expect = 'error';
 printStatus(section);
 try
 {
-  eval('function foo(){ for (void in b);}');
+  eval('function foo(){ for (void in b);};foo();');
   actual = 'no error';
 }
 catch(ex)
@@ -191,11 +191,11 @@ reportCompare(expect, actual, summary + section);
 var d = 1;
 var e = 2;
 expect = 'error';
-section = ': function foo(){for((d*e) in b);}';
+section = ': function foo(){for((d*e) in b);};foo();';
 printStatus(section);
 try
 {
-  eval('function foo(){ for ((d*e) in b);}');
+  eval('function foo(){ for ((d*e) in b);};foo();');
   actual = 'no error';
 }
 catch(ex)
@@ -223,11 +223,11 @@ catch(ex)
 reportCompare(expect, actual, summary + section);
 
 expect = 0;
-section = ': function foo(){for(c in b);}';
+section = ': function foo(){for(c in b);};foo();';
 printStatus(section);
 try
 {
-  eval('function foo(){ for (c in b);}');
+  eval('function foo(){ for (c in b);};foo();');
   actual = c;
   printStatus('typeof c: ' + (typeof c) + ', c: ' + c);
 }
@@ -258,11 +258,11 @@ if (typeof it != 'undefined')
   reportCompare(expect, actual, summary + section);
 
   expect = 'foo';
-  section = ': function foo(){for(it.item(0) in b);}';
+  section = ': function foo(){for(it.item(0) in b);};foo();';
   printStatus(section);
   try
   {
-    eval('function foo(){ for (it.item(0) in b);}');
+    eval('function foo(){ for (it.item(0) in b);};foo();');
     actual = it.item(0);
   }
   catch(ex)
