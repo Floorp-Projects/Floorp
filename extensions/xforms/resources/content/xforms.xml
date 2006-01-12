@@ -155,15 +155,23 @@
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
       <children includes="label"/>
-      <html:span class="xf-value" anonid="content"></html:span>
+      <!-- XXX initialize span with a space until repeat is xbl-ized.  Part
+           of workaround for bug 322975 
+      -->
+      <html:span class="xf-value" anonid="content"> </html:span>
       <children/>
     </content>
     
     <implementation implements="nsIXFormsUIWidget">
       <method name="refresh">
         <body>
-          document.getAnonymousElementByAttribute(this, "anonid", "content").textContent =
+          // XXX changing from setting textContent to setting nodeValue of
+          // first child (text node created by space character initializer
+          // above).  Workaround for bug 322975.  Probably should be changed
+          // back after repeat is xbl-ized
+          document.getAnonymousElementByAttribute(this, "anonid", "content").firstChild.nodeValue =
             this.stringValue;
+
           return true;
         </body>
       </method>
