@@ -86,6 +86,8 @@ class AMO_Smarty extends Smarty
  * If it is already cached, display cached output.
  * If it is not cached, continue typical runtime.
  *
+ * NOTE: In order to avoid/disable caching, pass null as the argument for aCacheId and aCompileId.
+ *
  * @param string $aTplName name of the template to process
  * @param string $aCacheId name of the cache to check - this corresponds to other $_GET params
  * @param string $aCompileId name of the compileId to check - this is $_GET['app']
