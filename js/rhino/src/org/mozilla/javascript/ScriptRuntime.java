@@ -3316,7 +3316,7 @@ public class ScriptRuntime {
     {
         String message =
 "RHINO USAGE WARNING: Missed Context.javaToJS() conversion:\n"
-+"Rhino runtime detected object "+nonJSObject+" of class "+nonJSObject.getClass().getName()+" where it expected String, Number, Boolean or Scriptable instance. Please check your code for missig Context.javaToJS() call.";
++"Rhino runtime detected object "+nonJSObject+" of class "+nonJSObject.getClass().getName()+" where it expected String, Number, Boolean or Scriptable instance. Please check your code for missing Context.javaToJS() call.";
         Context.reportWarning(message);
         // Just to be sure that it would be noticed
         System.err.println(message);

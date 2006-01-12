@@ -535,7 +535,7 @@ function vmgr_remake (ary, cb, startIndex, recalled)
 ViewManager.prototype.computeLocation =
 function vmgr_computelocation (element)
 {
-    if (!ASSERT(element, "missig parameter"))
+    if (!ASSERT(element, "missing parameter"))
         return null;
     
     if (!element.parentNode)
