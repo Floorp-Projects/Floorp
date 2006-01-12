@@ -4245,17 +4245,22 @@ $dbh->bz_alter_column('logincookies', 'cookie',
 my $controlchar_bugs =
     $dbh->selectall_arrayref("SELECT short_desc, bug_id FROM bugs WHERE " .
                              $dbh->sql_regexp('short_desc', "'[[:cntrl:]]'"));
-if (@$controlchar_bugs)
+if (scalar(@$controlchar_bugs))
 {
-    print 'Cleaning control characters from bug summaries...';
+    my $msg = 'Cleaning control characters from bug summaries...';
+    my $found = 0;
     foreach (@$controlchar_bugs) {
         my ($short_desc, $bug_id) = @$_;
-        print " $bug_id...";
-        $short_desc = clean_text($short_desc);
-        $dbh->do("UPDATE bugs SET short_desc = ? WHERE bug_id = ?",
-                 undef, $short_desc, $bug_id);
+        my $clean_short_desc = clean_text($short_desc);
+        if ($clean_short_desc ne $short_desc) {
+            print $msg if !$found;
+            $found = 1;
+            print " $bug_id...";
+            $dbh->do("UPDATE bugs SET short_desc = ? WHERE bug_id = ?",
+                      undef, $clean_short_desc, $bug_id);
+        }
     }
-    print " done.\n";
+    print " done.\n" if $found;
 }
 
 # If you had to change the --TABLE-- definition in any way, then add your
