@@ -455,7 +455,7 @@ function BrowserLinkAdded(event) {
       if (feedButton) {
         feedButton.setAttribute("feeds", "true");
         //				feedButton.setAttribute("tooltiptext", gNavigatorBundle.getString("feedHasFeeds"));	
-        document.getElementById("feed-button-menu").setAttribute("oncommand","DoBrowserRSS('"+ehref+"')");
+        document.getElementById("feed-button-menu").setAttribute("onpopupshowing","DoBrowserRSS('"+ehref+"')");
       }
     }
   }
