@@ -360,6 +360,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     EXT_SERVERDIR=${HOSTDIR}/ext_server
     EXT_CLIENTDIR=${HOSTDIR}/ext_client
 
+    CERT_EXTENSIONS_DIR=${HOSTDIR}/cert_extensions
+
     PWFILE=${TMP}/tests.pw.$$
     NOISE_FILE=${TMP}/tests_noise.$$
 
@@ -381,6 +383,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     D_FIPS="FIPS.$version"
     D_EXT_SERVER="ExtendedServer.$version"
     D_EXT_CLIENT="ExtendedClient.$version"
+    D_CERT_EXTENSTIONS="CertExtensions.$version"
 
     # we need relative pathnames of these files abd directories, since our 
     # tools can't handle the unix style absolut pathnames on cygnus
@@ -394,6 +397,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_EVEDIR=../eve
     R_EXT_SERVERDIR=../ext_server
     R_EXT_CLIENTDIR=../ext_client
+    R_CERT_EXT=../cert_extensions
 
     #
     # profiles are either paths or domains depending on the setting of
