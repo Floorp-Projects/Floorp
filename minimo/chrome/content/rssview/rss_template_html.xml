@@ -15,6 +15,8 @@ xmlns:rss="http://purl.org/rss/1.0/"
 
 <div>
 
+<!-- so far we don't really probe this, we try to transform, and fail --> 
+
 		<!-- 0.91, 1.0 --> 
 
         <xsl:for-each select="/rdf:RDF/rss:channel">
@@ -37,6 +39,14 @@ xmlns:rss="http://purl.org/rss/1.0/"
 		</xsl:for-each>
 
 		<!-- 2.0 --> 
+
+        <xsl:for-each select="/rss/channel/title">
+          <div id='pagetitle' style='display:none'><xsl:value-of select="."/></div>
+        </xsl:for-each>
+        
+        <xsl:for-each select="/rss/channel/description">
+          <div style='padding:.3em;'><xsl:value-of select="."/></div>
+        </xsl:for-each>
 
 		<xsl:for-each select="/rss/channel/item">
 
