@@ -192,6 +192,8 @@ function prefStartup() {
     syncPrefLoadDOM(document.getElementById("prefsInstance").prefArray);
 
     syncUIZoom(); // from common.js 
+    
+    gToolbarButtonSelected.focus();
 
 }
 
