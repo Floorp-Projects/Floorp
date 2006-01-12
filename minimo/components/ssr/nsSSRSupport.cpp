@@ -149,6 +149,7 @@ nsSSRSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar
     if (!strcmp(pref, "ssr.enabled"))
     {
       prefBranch->GetBoolPref(pref, &mUsingSSR);
+
       return NS_OK;
     }
   }
@@ -156,7 +157,11 @@ nsSSRSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar
   if (!strcmp(aTopic, "loading-domain")) 
   {
     if (!mUsingSSR)
+    {
+      SetSSREnabled(PR_FALSE);
+      SetSiteSSREnabled(PR_FALSE);
       return NS_OK;
+    }
 
     const char* domain = NS_ConvertUCS2toUTF8(aData).get();
     

@@ -117,7 +117,12 @@ nsBrowserStatusHandler.prototype =
         catch(e) {}
 
         document.getElementById("statusbar").hidden=false;
-        
+
+
+        //        document.getElementById("menu_NavPopup").
+
+
+
 		if(aRequest && aWebProgress.DOMWindow == content) {
           this.startDocumentLoad(aRequest);
 		}
@@ -568,9 +573,9 @@ function BrowserOpenTab()
   } catch (e) {
     alert(e);
   }
-  //  if (gURLBar) setTimeout(function() { gURLBar.focus(); }, 0);
-  
+  //  if (gURLBar) setTimeout(function() { gURLBar.focus(); }, 0);  
 }
+
 
 /* 
  * Used by the Context Menu - Open link as Tab 
@@ -684,46 +689,56 @@ function BrowserResetZoomMinus() {
 }
 
 
-/* 
-   We want to intercept before it shows, 
-   to evaluate when the selected content area is a phone number, 
-   thus mutate the popup menu to the right make call item 
-*/ 
+function MenuMainPopupShowing () {
+  try {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsCI.nsIPrefBranch);
+    if (pref.getBoolPref("snav.enabled"))
+    {
+      document.getElementById("snav_toggle").label = "Enable arrow key scrolling";
+    }
+    else
+    {
+      document.getElementById("snav_toggle").label = "Enable jump to links";
+    }
 
-
-
-function BrowserPopupShowing () {
-  
-  /*
-   * Open Link as New Tab  
-   */ 
-  
-  if(document.commandDispatcher.focusedElement && document.commandDispatcher.focusedElement.href) {
-	gFocusedElementHREFContextMenu=document.commandDispatcher.focusedElement.href;
-	document.getElementById("link_as_new_tab").hidden=false;
-    
-	document.getElementById("item-backbutton").hidden=true;
-	document.getElementById("item-forwardbutton").hidden=true;
-	document.getElementById("item-reloadbutton").hidden=true;
-    
-  } else {
-	document.getElementById("link_as_new_tab").hidden=true;
-    
-	document.getElementById("item-backbutton").hidden=false;
-	document.getElementById("item-forwardbutton").hidden=false;
-	document.getElementById("item-reloadbutton").hidden=false;
-    
+    if (pref.getBoolPref("ssr.enabled"))
+    {
+      document.getElementById("ssr_toggle").label = "Desktop layout";
+    }
+    else
+    {
+      document.getElementById("ssr_toggle").label = "Single column layout";
+    }
   }
+  catch(ex) { alert(ex); }
+}
+
+function MenuNavPopupShowing () {
+
+  /*  
+  command_back
+  command_forward
+  command_go
+  command_reload
   
+    
+  command_stop
+  */
+
+}
+
+
+function BrowserContentAreaPopupShowing () {
+
   var selectedRange=gBrowser.selectedBrowser.contentDocument.getSelection();
   
   /* Enable Copy */
   
   if(selectedRange.toString()) {
     
-    document.getElementById("item-copy").style.display="block";
+    document.getElementById("item-copy").disabled=false;
   } else {
-    document.getElementById("item-copy").style.display="none";
+    document.getElementById("item-copy").disabled=true;
   }
   
   /* Enable Paste - Can paste only if the focused element has a value attribute. :) 
@@ -732,9 +747,9 @@ function BrowserPopupShowing () {
   if (document.commandDispatcher.focusedElement) {
     if(document.commandDispatcher.focusedElement.nodeName=="INPUT"||document.commandDispatcher.focusedElement.nodeName=="TEXTAREA") {
       if(DoClipCheckPaste()) {
-        document.getElementById("item-paste").style.display="block";	
+        document.getElementById("item-paste").disabled=false;	
       } else {
-        document.getElementById("item-paste").style.display="none";	
+        document.getElementById("item-paste").disabled=true;	
       }
     }
   }
@@ -754,6 +769,8 @@ function BrowserBookmarkThis() {
   
   storeBookmarks();	
   refreshBookmarks();
+
+  alert("Bookmark Saved.");
 }
 
 function BrowserBookmark() {
@@ -922,9 +939,6 @@ function DoFullScreen()
   } 
   
   window.fullScreen = gFullScreen;  
-  
-  document.getElementById("nav-bar-contextual").hidden = !gFullScreen;    
-  
 }
 
 /* 

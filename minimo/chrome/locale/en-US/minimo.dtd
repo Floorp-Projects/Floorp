@@ -18,7 +18,11 @@
 <!ENTITY searchButton.label           "Search">
 <!ENTITY searchButton.tooltip         "Type a word in the field to the left, then click Search">
 
-<!ENTITY toggleSNav.label             "Toggle Spatial Navigation">
+
+<!ENTITY toggleSNavOn.label           "Navigate via arrow keys">
+<!ENTITY toggleSNavOff.label          "Scroll via arrow keys">
+
+<!ENTITY gotoFullScreen.label         "Full Screen mode">
 <!ENTITY toggleFullScreen.label       "Toggle Full Screen">
 <!ENTITY toggleSSR.label              "Toggle Single Column Mode">
 

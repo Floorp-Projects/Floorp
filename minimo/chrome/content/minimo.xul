@@ -104,6 +104,7 @@
   
   <toolbox id="mini-toolbars">
     
+
     <command id="cmd_BrowserOpenTab"          oncommand="BrowserOpenTab()"/>
     <command id="cmd_BrowserScreenRotate"     oncommand="BrowserScreenRotate()"/>
     <command id="cmd_BrowserOpenInfo"         oncommand="BrowserOpenInfo()"/>
@@ -161,6 +162,7 @@
                enablehistory="true"
                autocompletesearch="history" 
                completeselectedindex="true"
+               maxrows="14"
                autocompletepopup="PopupAutoComplete"
                ontextentered="return URLBarEntered();"
                onfocus="URLBarFocusHandler(event, this);"
@@ -188,7 +190,7 @@
   <!-- place holder for our app popups and hook to the overlay --> 
   
   <popupset>
-	<popup id="contentAreaContextMenu" onpopupshowing="BrowserPopupShowing()">
+	<popup id="contentAreaContextMenu" onpopupshowing="BrowserContentAreaPopupShowing()">
       
 	  <menuitem id="full_screen" 
                 label="&toggleFullScreen.label;" 
@@ -202,6 +204,8 @@
           
           -->        
 	  <menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand="" hidden="true"/>
+
+      <menuseparator/>
       
 	  <menuitem id="item-copy"   label="Copy" oncommand="DoClipCopy()" />
 	  <menuitem id="item-paste"  label="Paste" oncommand="DoClipPaste()"/>
@@ -240,31 +244,36 @@
 	</popup>
     
     
-    <menupopup id="menu_MainPopup">
+    <menupopup id="menu_MainPopup"
+               onpopupshowing="MenuMainPopupShowing()" >
       
       <menuitem id="command_BrowserOpenTab" 
                 command="cmd_BrowserOpenTab" 
                 label="&newtab.label;"  /> 
+      
       <menu     id="command_TabFocus" 
                 label="&tabs.label;"  >
-        <menupopup id="MenuTabsContainer" onpopupshown="BrowserMenuTabsActive()" onpopuphidden="BrowserMenuTabsDestroy()" >
+        
+        <menupopup id="MenuTabsContainer" 
+                   onpopupshown="BrowserMenuTabsActive()" 
+                   onpopuphidden="BrowserMenuTabsDestroy()" >
+        
         </menupopup>
       </menu>
-      
+
       <menuseparator/>
       
 	  <menuitem id="full_screen" 
-                label="&toggleFullScreen.label;" 
+                label="&gotoFullScreen.label;" 
                 oncommand="DoFullScreen()"/>
-      
       
       <!-- this shouldn't be an option on smartphones -->
 	  <menuitem id="snav_toggle" 
-                label="&toggleSNav.label;" 
+                label="" 
                 oncommand="DoSNavToggle()"/>
       
 	  <menuitem id="ssr_toggle" 
-                label="&toggleSSR.label;" 
+                label="" 
                 oncommand="DoSSRToggle()"/>
       
       <menuseparator/>
