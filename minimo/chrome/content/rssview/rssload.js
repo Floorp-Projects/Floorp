@@ -101,12 +101,15 @@ blenderObject.prototype.apply = function () {
 			htmlFragment = xsltProcessor.transformToFragment(this.xmlRef, this.targetDocument);
 		} catch (e) {
 		}
-            this.targetElement.appendChild(htmlFragment.firstChild);
+        this.targetElement.appendChild(htmlFragment.firstChild);
 
-		document.title=document.getElementById("pagetitle").innerHTML;
-
-		//document.getElementById("loadmessage").style.display="none";
-
+        /*
+         * Updates the page title if pagetitle generated ID exists. 
+         * Check the rss_*.xml templates for additional details..
+         */
+        if(document.getElementById("pagetitle")) {
+          document.title=document.getElementById("pagetitle").innerHTML;
+        }
 	}
 }
 
