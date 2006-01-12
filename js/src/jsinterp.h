@@ -262,7 +262,7 @@ extern void         js_DumpCallTable(JSContext *cx);
  * "Call" objects that have private data) may not be referred to by 'this',
  * as dictated by ECMA.
  *
- * N.B.: fp->argv must be set, fp->argv[-1] the nominal 'this' paramter as
+ * N.B.: fp->argv must be set, fp->argv[-1] the nominal 'this' parameter as
  * a jsval, and fp->argv[-2] must be the callee object reference, usually a
  * function object.  Also, fp->flags must contain JSFRAME_CONSTRUCTING if we
  * are preparing for a constructor call.

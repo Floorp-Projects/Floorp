@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  *
- * $Id: wf_moz6_common.h,v 1.1 2001/05/10 18:12:45 edburns%acm.org Exp $
+ * $Id: wf_moz6_common.h,v 1.2 2006/01/12 07:57:29 timeless%mozdev.org Exp $
  *
  * 
  * Contributor(s): 
@@ -29,7 +29,7 @@
 /** Ideology behind this file:
  *  To keep generic binary compatibility, and be independent from Mozilla 
  *  build system for Mozilla extension (not very good idea, but currently
- *  it's more convinient) we need some kind of fixed API/ABI between
+ *  it's more convenient) we need some kind of fixed API/ABI between
  *  extension and Java service in browser. This file is _only_ (beside 
  *  jvmp.h) common header between Java component and extension. It's written
  *  in pure C and has no Mozilla dependencies. So JVM service in browser fills
