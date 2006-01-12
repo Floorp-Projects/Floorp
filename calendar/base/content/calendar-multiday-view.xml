@@ -1823,9 +1823,13 @@
         <body><![CDATA[
           //dump ("setDateRange\n");
           this.mDateList = null;
+
           this.mStartDate = aStartDate.clone();
+          this.mStartDate.isDate = true;
           this.mStartDate.makeImmutable();
+
           this.mEndDate = aEndDate.clone();
+          this.mEndDate.isDate = true;
           this.mEndDate.makeImmutable();
 
           // this function needs to be smarter, and needs to compare
