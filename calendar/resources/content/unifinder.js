@@ -248,7 +248,7 @@ function unifinderDoubleClickEvent( event )
    var calendarEvent = getCalendarEventFromEvent( event );
    
    if( calendarEvent != null )
-      editEvent( calendarEvent.parentItem );
+      editEvent(calendarEvent);
    else
       newEvent();
 }
