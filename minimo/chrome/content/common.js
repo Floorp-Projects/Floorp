@@ -81,7 +81,7 @@ function loadBookmarks(storeStr) {
 
 function refreshBookmarks() {
 	if(gBookmarksDoc.getElementsByTagName("li").length>0) {
-		document.getElementById("item-bookmark").hidden=false;
+		document.getElementById("command_BrowserBookmark").hidden=false;
 	} 
 }
 
