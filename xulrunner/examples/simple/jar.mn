@@ -1,6 +1,8 @@
 simple.jar:
-* content/simple/simple.xul                (content/simple.xul)
-  content/simple/simple.js                 (content/simple.js)
+% content simple %content/
+* content/simple.xul                (content/simple.xul)
+  content/simple.js                 (content/simple.js)
 
 en-US.jar:
-  locale/en-US/simple/simple.dtd           (locale/simple.dtd)
+% locale simple en-US %locale/en-US/
+  locale/en-US/simple.dtd           (locale/simple.dtd)
