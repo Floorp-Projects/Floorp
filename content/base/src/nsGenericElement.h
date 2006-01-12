@@ -662,6 +662,23 @@ public:
                                  nsAttrAndChildArray& aChildArray,
                                  nsIDOMNode** aReturn);
 
+  /**
+   * Actual implementation of the DOM RemoveChild method.  Shared by
+   * nsDocument.  When called from nsDocument, aParent will be null.
+   *
+   * @param aOldChild The child to remove
+   * @param aParent The parent to use for the new child
+   * @param aDocument The document to use for the new child.
+   *                  Must be non-null if aParent is null and must match
+   *                  aParent->GetCurrentDoc() if aParent is not null.
+   * @param aChildArray The child array to work with
+   * @param aReturn [out] the child we remove
+   */
+  static nsresult doRemoveChild(nsIDOMNode* aOldChild,
+                                nsIContent* aParent, nsIDocument* aDocument,
+                                nsAttrAndChildArray& aChildArray,
+                                nsIDOMNode** aReturn);
+
   static nsresult InitHashes();
 
   static PLDHashTable sEventListenerManagersHash;
