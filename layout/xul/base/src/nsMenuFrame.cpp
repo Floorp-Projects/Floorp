@@ -135,7 +135,6 @@ nsMenuFrame::Release(void)
 // QueryInterface
 //
 NS_INTERFACE_MAP_BEGIN(nsMenuFrame)
-  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIMenuFrame)
   NS_INTERFACE_MAP_ENTRY(nsIScrollableViewProvider)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
@@ -178,6 +177,11 @@ nsMenuFrame::Init(nsPresContext*  aPresContext,
                      nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  // Set up a mediator which can be used for callbacks on this frame.
+  mTimerMediator = new nsMenuTimerMediator(this);
+  if (NS_UNLIKELY(!mTimerMediator))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsIFrame* currFrame = aParent;
   while (!mMenuParent && currFrame) {
@@ -325,6 +329,17 @@ nsMenuFrame::DestroyPopupFrames(nsPresContext* aPresContext)
 NS_IMETHODIMP
 nsMenuFrame::Destroy(nsPresContext* aPresContext)
 {
+  // Kill our timer if one is active. This is not strictly necessary as
+  // the pointer to this frame will be cleared from the mediator, but
+  // this is done for added safety.
+  if (mOpenTimer) {
+    mOpenTimer->Cancel();
+  }
+
+  // Null out the pointer to this frame in the mediator wrapper so that it 
+  // doesn't try to interact with a deallocated frame.
+  mTimerMediator->ClearFrame();
+
   // are we our menu parent's current menu item?
   if (mMenuParent) {
     nsIMenuFrame *curItem = mMenuParent->GetCurrentMenuItem();
@@ -506,7 +521,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mOpenTimer);
       ti->SetIdle(PR_FALSE);
 
-      mOpenTimer->InitWithCallback(this, menuDelay, nsITimer::TYPE_ONE_SHOT);
+      mOpenTimer->InitWithCallback(mTimerMediator, menuDelay, nsITimer::TYPE_ONE_SHOT);
 
     }
   }
@@ -1282,7 +1297,7 @@ nsMenuFrame::IsMenu()
   return mIsMenu;
 }
 
-NS_IMETHODIMP
+nsresult
 nsMenuFrame::Notify(nsITimer* aTimer)
 {
   // Our timer has fired.
@@ -2083,4 +2098,43 @@ nsMenuFrame::GetContextMenu()
     return menuParent;
 
   return nsnull;
+}
+
+// nsMenuTimerMediator implementation.
+NS_IMPL_ISUPPORTS1(nsMenuTimerMediator, nsITimerCallback)
+
+/**
+ * Constructs a wrapper around an nsMenuFrame.
+ * @param aFrame nsMenuFrame to create a wrapper around.
+ */
+nsMenuTimerMediator::nsMenuTimerMediator(nsMenuFrame *aFrame) :
+  mFrame(aFrame)
+{
+  NS_ASSERTION(mFrame, "Must have frame");
+}
+
+nsMenuTimerMediator::~nsMenuTimerMediator()
+{
+}
+
+/**
+ * Delegates the notification to the contained frame if it has not been destroyed.
+ * @param aTimer Timer which initiated the callback.
+ * @return NS_ERROR_FAILURE if the frame has been destroyed.
+ */
+NS_IMETHODIMP nsMenuTimerMediator::Notify(nsITimer* aTimer)
+{
+  if (!mFrame)
+    return NS_ERROR_FAILURE;
+
+  return mFrame->Notify(aTimer);
+}
+
+/**
+ * Clear the pointer to the contained nsMenuFrame. This should be called
+ * when the contained nsMenuFrame is destroyed.
+ */
+void nsMenuTimerMediator::ClearFrame()
+{
+  mFrame = nsnull;
 }
