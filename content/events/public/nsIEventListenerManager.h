@@ -54,8 +54,9 @@ struct JSObject;
  * Event listener manager interface.
  */
 #define NS_IEVENTLISTENERMANAGER_IID \
-{0xc23b877c, 0xb396, 0x11d9, \
-{0x86, 0xbd, 0x00, 0x11, 0x24, 0x78, 0xd6, 0x26} }
+{ 0xec4df50f, 0x3f1d, 0x479c, \
+  { 0x80, 0xad, 0x9c, 0x0e, 0x4b, 0x90, 0x61, 0x57 } }
+
 
 class nsIEventListenerManager : public nsISupports {
 
@@ -168,7 +169,7 @@ public:
   * Removes all event listeners registered by this instance of the listener
   * manager.
   */
-  NS_IMETHOD RemoveAllListeners(PRBool aScriptOnly) = 0;
+  NS_IMETHOD RemoveAllListeners() = 0;
 
   /**
   * Removes all event listeners registered by this instance of the listener

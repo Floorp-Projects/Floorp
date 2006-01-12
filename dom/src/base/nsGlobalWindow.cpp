@@ -474,7 +474,7 @@ nsGlobalWindow::FreeInnerObjects(JSContext *cx)
   mChromeEventHandler = nsnull;
 
   if (mListenerManager) {
-    mListenerManager->RemoveAllListeners(PR_FALSE);
+    mListenerManager->RemoveAllListeners();
     mListenerManager = nsnull;
   }
 
@@ -1002,7 +1002,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       }
 
       if (!reUseInnerWindow && currentInner->mListenerManager) {
-        currentInner->mListenerManager->RemoveAllListeners(PR_FALSE);
+        currentInner->mListenerManager->RemoveAllListeners();
         currentInner->mListenerManager = nsnull;
       }
 
