@@ -114,7 +114,9 @@
 
 #include "nsINIParser.h"
 
+#ifdef MOZ_XPINSTALL
 #include "InstallCleanupDefines.h"
+#endif
 
 #include <stdlib.h>
 
@@ -832,6 +834,7 @@ DumpHelp()
   DumpArbitraryHelp();
 }
 
+#ifdef MOZ_XPINSTALL
 // don't modify aAppDir directly... clone it first
 static int
 VerifyInstallation(nsIFile* aAppDir)
@@ -892,6 +895,7 @@ VerifyInstallation(nsIFile* aAppDir)
 
   return 0;
 }
+#endif
 
 #ifdef DEBUG_warren
 #ifdef XP_WIN
@@ -2019,6 +2023,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     return 1;
   }
 
+#ifdef MOZ_XPINSTALL
   //----------------------------------------------------------------
   // We need to check if a previous installation occured and
   // if so, make sure it finished and cleaned up correctly.
@@ -2041,6 +2046,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return VerifyInstallation(dirProvider.GetAppDir());
     }
   }
+#endif
 
 #ifdef MOZ_ENABLE_XREMOTE
   // handle -remote now that xpcom is fired up
