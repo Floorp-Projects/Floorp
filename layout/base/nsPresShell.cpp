@@ -5185,14 +5185,6 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   mFrameConstructor->ContentRemoved(aContainer, aChild,
                                     aIndexInContainer, PR_FALSE);
 
-  // If we have no root content node at this point, be sure to reset
-  // mDidInitialReflow to PR_FALSE, this will allow InitialReflow()
-  // to be called again should a new root node be inserted for this
-  // presShell. (Bug 167355)
-
-  if (mDocument && !mDocument->GetRootContent())
-    mDidInitialReflow = PR_FALSE;
-
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 }

@@ -371,6 +371,10 @@ protected:
   // parser interrupt mode.
   PRUint8 mDeflectedCount;
 
+  // Boolean indicating whether we've notified insertion of our root content
+  // yet.  We want to make sure to only do this once.
+  PRPackedBool mNotifiedRootInsertion;
+
   nsCOMPtr<nsIObserverEntry> mObservers;
 
   void StartLayout();
@@ -2876,6 +2880,22 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
     case eHTMLTag_html:
       if (mRoot) {
         AddAttributes(aNode, mRoot, PR_TRUE, PR_TRUE);
+        if (!mNotifiedRootInsertion) {
+          NS_ASSERTION(!mLayoutStarted,
+                       "How did we start layout without notifying on root?");
+          // Now make sure to notify that we have now inserted our root.  If
+          // there has been no initial reflow yet it'll be a no-op, but if
+          // there has been one we need this to get its frames constructed.
+          // Note that if mNotifiedRootInsertion is true we don't notify here,
+          // since that just means there are multiple <html> tags in the
+          // document; in those cases we just want to put all the attrs on one
+          // tag.
+          mNotifiedRootInsertion = PR_TRUE;
+          PRInt32 index = mDocument->IndexOf(mRoot);
+          NS_ASSERTION(index != -1, "mRoot not child of document?");
+          NotifyInsert(nsnull, mRoot, index);
+          
+        }
       }
       break;
     case eHTMLTag_form:
@@ -3673,7 +3693,7 @@ HTMLContentSink::NotifyInsert(nsIContent* aContent,
                               nsIContent* aChildContent,
                               PRInt32 aIndexInContainer)
 {
-  if (aContent->GetCurrentDoc() != mDocument) {
+  if (aContent && aContent->GetCurrentDoc() != mDocument) {
     // aContent is not actually in our document anymore.... Just bail out of
     // here; notifying on our document for this insert would be wrong.
     return;
