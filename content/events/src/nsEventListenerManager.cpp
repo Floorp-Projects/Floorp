@@ -413,32 +413,20 @@ GenericListenersHashEnum(nsHashKey *aKey, void *aData, void* closure)
   if (listeners) {
     PRInt32 i, count = listeners->Count();
     nsListenerStruct *ls;
-    PRBool* scriptOnly = NS_STATIC_CAST(PRBool*, closure);
     for (i = count-1; i >= 0; --i) {
       ls = (nsListenerStruct*)listeners->ElementAt(i);
       if (ls) {
-        if (*scriptOnly) {
-          if (ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
-            listeners->RemoveElement(ls);
-            delete ls;
-          }
-        }
-        else {
-          delete ls;
-        }
+        delete ls;
       }
     }
-    //Only delete if we were removing all listeners
-    if (!*scriptOnly) {
-      delete listeners;
-    }
+    delete listeners;
   }
   return PR_TRUE;
 }
 
 nsEventListenerManager::~nsEventListenerManager() 
 {
-  RemoveAllListeners(PR_FALSE);
+  RemoveAllListeners();
 
   --mInstanceCount;
   if(mInstanceCount == 0) {
@@ -448,13 +436,11 @@ nsEventListenerManager::~nsEventListenerManager()
 }
 
 nsresult
-nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
+nsEventListenerManager::RemoveAllListeners()
 {
-  if (!aScriptOnly) {
-    mListenersRemoved = PR_TRUE;
-  }
+  mListenersRemoved = PR_TRUE;
 
-  ReleaseListeners(&mSingleListener, aScriptOnly);
+  ReleaseListeners(&mSingleListener);
   if (!mSingleListener) {
     mSingleListenerType = eEventArrayType_None;
     mManagerType &= ~NS_ELM_SINGLE;
@@ -465,24 +451,19 @@ nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
     for (PRInt32 i=0; i<EVENT_ARRAY_TYPE_LENGTH && i < mMultiListeners->Count(); i++) {
       nsVoidArray* listeners;
       listeners = NS_STATIC_CAST(nsVoidArray*, mMultiListeners->ElementAt(i));
-      ReleaseListeners(&listeners, aScriptOnly);
+      ReleaseListeners(&listeners);
     }
-    if (!aScriptOnly) {
-      delete mMultiListeners;
-      mMultiListeners = nsnull;
-      mManagerType &= ~NS_ELM_MULTI;
-    }
+    delete mMultiListeners;
+    mMultiListeners = nsnull;
+    mManagerType &= ~NS_ELM_MULTI;
   }
 
   if (mGenericListeners) {
-    PRBool scriptOnly = aScriptOnly;
-    mGenericListeners->Enumerate(GenericListenersHashEnum, &scriptOnly);
+    mGenericListeners->Enumerate(GenericListenersHashEnum, nsnull);
     //hash destructor
-    if (!aScriptOnly) {
-      delete mGenericListeners;
-      mGenericListeners = nsnull;
-      mManagerType &= ~NS_ELM_HASH;
-    }
+    delete mGenericListeners;
+    mGenericListeners = nsnull;
+    mManagerType &= ~NS_ELM_HASH;
   }
 
   return NS_OK;
@@ -673,8 +654,7 @@ nsEventListenerManager::GetTypeForIID(const nsIID& aIID)
 }
 
 void
-nsEventListenerManager::ReleaseListeners(nsVoidArray** aListeners,
-                                         PRBool aScriptOnly)
+nsEventListenerManager::ReleaseListeners(nsVoidArray** aListeners)
 {
   if (nsnull != *aListeners) {
     PRInt32 i, count = (*aListeners)->Count();
@@ -682,22 +662,11 @@ nsEventListenerManager::ReleaseListeners(nsVoidArray** aListeners,
     for (i = 0; i < count; i++) {
       ls = (nsListenerStruct*)(*aListeners)->ElementAt(i);
       if (ls) {
-        if (aScriptOnly) {
-          if (ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
-            (*aListeners)->RemoveElement(ls);
-            delete ls;
-          }
-        }
-        else {
-          delete ls;
-        }
+        delete ls;
       }
     }
-    //Only delete if we were removing all listeners
-    if (!aScriptOnly) {
-      delete *aListeners;
-      *aListeners = nsnull;
-    }
+    delete *aListeners;
+    *aListeners = nsnull;
   }
 }
 
