@@ -1076,22 +1076,22 @@ function URLBarClickHandler(aEvent, aElt)
 function BrowserNavMenuPopup() {
   if (!gShowingNavMenuPopup){
     document.getElementById("menu_NavPopup").showPopup(document.getElementById("nav-menu-button"),-1,-1,"popup","bottomright", "topright");
+    gShowingNavMenuPopup=true;
   }
   else {
     document.getElementById("menu_NavPopup").hidePopup();
+    gShowingNavMenuPopup=false;
   }
-  
-  gShowingNavMenuPopup != gShowingNavMenuPopup;
 }
 
 function BrowserMenuPopup() {
   if(!gShowingMenuPopup) { 
     document.getElementById("menu_MainPopup").showPopup(document.getElementById("menu-button"),-1,-1,"popup","bottomleft", "topleft");
+    gShowingMenuPopup=true;
   } else {
     document.getElementById("menu_MainPopup").hidePopup();
+    gShowingMenuPopup=false;
   } 
-
-  gShowingMenuPopup != gShowingMenuPopup;
 }
 
 function BrowserMenuPopupFalse() {
