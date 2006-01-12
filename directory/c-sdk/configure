@@ -2199,7 +2199,7 @@ echo "${ECHO_T}yes" >&6
                 echo "$as_me:$LINENO: result: using $withval" >&5
 echo "${ECHO_T}using $withval" >&6
                 NSS_CFLAGS="-I$withval/include"
-                NSS_LIB_PATH="-L$withval/lib"
+                NSS_LIBS="-L$withval/lib"
             else
                 USE_NSS=
     	    fi

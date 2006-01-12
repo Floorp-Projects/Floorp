@@ -138,7 +138,7 @@ AC_DEFUN(AM_PATH_GIVEN_NSS,
                 USE_NSS=1
                 AC_MSG_RESULT([using $withval])
                 NSS_CFLAGS="-I$withval/include"
-                NSS_LIB_PATH="-L$withval/lib"
+                NSS_LIBS="-L$withval/lib"
             else
                 USE_NSS=
     	    fi])
