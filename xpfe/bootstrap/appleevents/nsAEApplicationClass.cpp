@@ -190,7 +190,7 @@ void AEApplicationClass::HandleCount(AEDesc *token, const AppleEvent *appleEvent
 	err = GetObjectClassFromAppleEvent(appleEvent, &objectClass);
 	ThrowIfOSErr(err);
 
-	// Make sure we got & handled all of the required paramters
+	// Make sure we got & handled all of the required parameters
 	err = CheckForUnusedParameters(appleEvent);
 	ThrowIfOSErr(err);
 	

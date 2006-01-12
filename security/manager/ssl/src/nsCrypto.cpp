@@ -271,7 +271,7 @@ nsCrypto::GetEnableSmartCardEvents(PRBool *aEnable)
 //These next few functions are based on implementation in
 //the script security manager to get the principals from
 //a JSContext.  We need that to successfully run the 
-//callback paramter passed to crypto.generateCRMFRequest
+//callback parameter passed to crypto.generateCRMFRequest
 static nsresult
 cryptojs_GetScriptPrincipal(JSContext *cx, JSScript *script,
                             nsIPrincipal **result)

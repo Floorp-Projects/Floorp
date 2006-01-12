@@ -111,7 +111,7 @@ interface nsISVGRendererGlyphMetrics : nsISupports
   /**
    * Called by this object's corresponding nsISVGGlyphMetricsSource as
    * a notification that some of the source's data (identified by
-   * paramter 'updatemask') has changed.
+   * parameter 'updatemask') has changed.
    *
    * @param updatemask An OR-ed combination of the UPDATEMASK_*
    * constants defined in nsISVGGlyphMetricsSource.

@@ -86,7 +86,7 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount, nsXPTCVariant* s)
       case nsXPTType::T_U64   : *((PRUint64*)l_d)    = l_s->val.u64;   break;
 
       /* in the case of floats, we want to put the bits in to the
-         64bit space right justified... floats in the paramter array on
+         64bit space right justified... floats in the parameter array on
          sparcv9 use odd numbered registers.. %f1, %f3, so we have to skip
          the space that would be occupied by %f0, %f2, etc.
       */

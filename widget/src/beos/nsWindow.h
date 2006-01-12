@@ -316,7 +316,7 @@ private:
 #endif
 	BPoint               mousePos;
 	uint32               mouseMask;
-	// actually it is delta, not point, using it as convinient x,y storage
+	// actually it is delta, not point, using it as convenient x,y storage
 	BPoint               wheel;
 	bool                 fRestoreMouseMask;	
 	bool                 fJustValidated;
