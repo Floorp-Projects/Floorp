@@ -50,13 +50,16 @@
 #define NSToCoordRound(x) (floor((x) + 0.5))
 
 
-gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HWND aHWnd)
+gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HDC aDC)
 {
     mName = aName;
     mGroup = aFontGroup;
     mStyle = mGroup->GetStyle();
 
-    mHWnd = (HWND)aHWnd;
+    mDC = aDC;
+
+    if (!mDC)
+        mDC = GetDC(nsnull);
 
     mFontFace = MakeCairoFontFace();
     NS_ASSERTION(mFontFace, "Failed to make font face");
@@ -64,6 +67,11 @@ gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFont
     NS_ASSERTION(mScaledFont, "Failed to make scaled font");
 
     ComputeMetrics();
+
+    if (mDC != aDC) {
+        ReleaseDC(nsnull, mDC);
+        mDC = aDC;
+    }
 }
 
 gfxWindowsFont::~gfxWindowsFont()
@@ -88,6 +96,8 @@ gfxWindowsFont::MakeCairoFontFace()
 cairo_scaled_font_t *
 gfxWindowsFont::MakeCairoScaledFont(cairo_t *cr)
 {
+    //    cairo_win32_set_global_font_dc(mDC);
+
     cairo_scaled_font_t *font = nsnull;
 
     cairo_matrix_t sizeMatrix, ctm;
@@ -109,11 +119,9 @@ gfxWindowsFont::MakeCairoScaledFont(cairo_t *cr)
 void
 gfxWindowsFont::ComputeMetrics()
 {
-    HDC dc = GetDC(mHWnd);
+    SaveDC(mDC);
 
-    SaveDC(dc);
-
-    cairo_win32_scaled_font_select_font(mScaledFont, dc);
+    cairo_win32_scaled_font_select_font(mScaledFont, mDC);
 
     double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(mScaledFont);
     double multiplier = cairofontfactor * mStyle->size;
@@ -124,7 +132,7 @@ gfxWindowsFont::ComputeMetrics()
     TEXTMETRIC& metrics = oMetrics.otmTextMetrics;
     gfxFloat descentPos = 0;
 
-    if (0 < ::GetOutlineTextMetrics(dc, sizeof(oMetrics), &oMetrics)) {
+    if (0 < ::GetOutlineTextMetrics(mDC, sizeof(oMetrics), &oMetrics)) {
         //    mXHeight = NSToCoordRound(oMetrics.otmsXHeight * mDev2App);  XXX not really supported on windows
         mMetrics.xHeight = NSToCoordRound((float)metrics.tmAscent * multiplier * 0.56f); // 50% of ascent, best guess for true type
         mMetrics.superscriptOffset = NSToCoordRound(oMetrics.otmptSuperscriptOffset.y * multiplier);
@@ -139,7 +147,7 @@ gfxWindowsFont::ComputeMetrics()
         // Begin -- section of code to get the real x-height with GetGlyphOutline()
         GLYPHMETRICS gm;
         MAT2 mMat = { 1, 0, 0, 1 };    // glyph transform matrix (always identity in our context)
-        DWORD len = GetGlyphOutlineW(dc, PRUnichar('x'), GGO_METRICS, &gm, 0, nsnull, &mMat);
+        DWORD len = GetGlyphOutlineW(mDC, PRUnichar('x'), GGO_METRICS, &gm, 0, nsnull, &mMat);
 
         if (GDI_ERROR != len && gm.gmptGlyphOrigin.y > 0) {
             mMetrics.xHeight = NSToCoordRound(gm.gmptGlyphOrigin.y * multiplier);
@@ -149,7 +157,7 @@ gfxWindowsFont::ComputeMetrics()
     else {
         // Make a best-effort guess at extended metrics
         // this is based on general typographic guidelines
-        ::GetTextMetrics(dc, &metrics);
+        ::GetTextMetrics(mDC, &metrics);
         mMetrics.xHeight = NSToCoordRound((float)metrics.tmAscent * 0.56f); // 56% of ascent, best guess for non-true type
         mMetrics.superscriptOffset = mMetrics.xHeight;     // XXX temporary code!
         mMetrics.subscriptOffset = mMetrics.xHeight;     // XXX temporary code!
@@ -174,15 +182,13 @@ gfxWindowsFont::ComputeMetrics()
     
     // Cache the width of a single space.
     SIZE  size;
-    ::GetTextExtentPoint32(dc, " ", 1, &size);
+    ::GetTextExtentPoint32(mDC, " ", 1, &size);
     //size.cx -= font->mOverhangCorrection;
     mMetrics.spaceWidth = NSToCoordRound(size.cx * multiplier);
 
     cairo_win32_scaled_font_done_font(mScaledFont);
 
-    RestoreDC(dc, -1);
-
-    ReleaseDC(mHWnd, dc);
+    RestoreDC(mDC, -1);
 }
 
 
@@ -239,13 +245,13 @@ PRBool
 gfxWindowsFontGroup::MakeFont(const nsAString& aName, const nsAString& aGenericName, void *closure)
 {
     gfxWindowsFontGroup *fg = NS_STATIC_CAST(gfxWindowsFontGroup*, closure);
-    fg->mFonts.push_back(new gfxWindowsFont(aName, fg, fg->mWnd));
+    fg->mFonts.push_back(new gfxWindowsFont(aName, fg, (HDC)fg->mDC));
     return PR_TRUE;
 }
 
 
-gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, HWND hwnd)
-    : gfxFontGroup(aFamilies, aStyle), mWnd(hwnd)
+gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, HDC dc)
+    : gfxFontGroup(aFamilies, aStyle), mDC(dc)
 {
     ForEachFont(MakeFont, this);
 }

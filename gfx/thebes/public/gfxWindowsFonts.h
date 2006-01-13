@@ -47,7 +47,7 @@
 class gfxWindowsFont : public gfxFont {
 
 public:
-    gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HWND aHWnd);
+    gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HDC aHWnd);
     virtual ~gfxWindowsFont();
 
     virtual const gfxFont::Metrics& GetMetrics() { return mMetrics; }
@@ -66,7 +66,7 @@ private:
     LOGFONTW mLogFont;
     cairo_font_face_t *mFontFace;
     cairo_scaled_font_t *mScaledFont;
-    HWND mHWnd;
+    HDC mDC;
 
     gfxFont::Metrics mMetrics;
 };
@@ -76,16 +76,17 @@ private:
 class NS_EXPORT gfxWindowsFontGroup : public gfxFontGroup {
 
 public:
-    gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle, HWND hwnd);
+    gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle, HDC hwnd);
     virtual ~gfxWindowsFontGroup();
+
 
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
 
 protected:
-    static PRBool MakeFont(const nsAString& aName, const nsAString& aGenericName, void *closure);
+    static PRBool MakeFont(const nsAString& fontName, const nsAString& genericName, void *closure);
 
 private:
-    HWND mWnd;
+    HDC mDC;
 
     friend class gfxWindowsTextRun;
 };
@@ -112,4 +113,3 @@ private:
 };
 
 #endif /* GFX_WINDOWSFONTS_H */
-
