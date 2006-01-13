@@ -361,7 +361,8 @@ function JavaScriptOptions()
   this.orig.strict = this.strict = false;
   this.orig.werror = this.werror = false;
 
-  this.privileges = 'UniversalXPConnect';
+  this.privileges = 'UniversalXPConnect UniversalPreferencesRead ' + 
+                    'UniversalPreferencesWrite';
 
   if (typeof options == 'function')
   {
@@ -405,8 +406,8 @@ function JavaScriptOptions()
 
     try
     {
-        this.orig.strict = this.strict = 
-            pref.getBoolPref('javascript.options.strict');
+      this.orig.strict = this.strict = 
+        pref.getBoolPref('javascript.options.strict');
     }
     catch(e)
     {
@@ -414,8 +415,8 @@ function JavaScriptOptions()
 
     try
     {
-        this.orig.werror = this.werror = 
-            pref.getBoolPref('javascript.options.werror');
+      this.orig.werror = this.werror = 
+        pref.getBoolPref('javascript.options.werror');
     }
     catch(e)
     {
@@ -474,3 +475,4 @@ JavaScriptOptions.prototype.reset = function ()
   this.setOption('strict', this.orig.strict);
   this.setOption('werror', this.orig.werror);
 }
+
