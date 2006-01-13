@@ -81,7 +81,7 @@ $::opt_rev = &SanitizeRevision($::FORM{'rev'}) if
 my $revstr = '';
 $revstr = "&rev=$::opt_rev" unless $::opt_rev eq '';
 my $browse_revtag = 'HEAD';
-$browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]/);
+$browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]|^\d*(?:\.\d+)*$/);
 my $revision = '';
 
 
@@ -141,6 +141,8 @@ my $file_rev = $revision;
 my $start_rev;
 if ($browse_revtag eq 'HEAD') {
     $start_rev = $::head_revision;  # $::head_revision is a global from cvsblame.pl
+} elsif ($browse_revtag =~ /^\d+(?:\.\d+)*$/) {
+    $start_rev = $browse_revtag;
 } else {
     $start_rev = map_tag_to_revision($browse_revtag);
 }
@@ -226,7 +228,7 @@ my $graph_cell = Param('cvsgraph') ? <<"--endquote--" : "";
 --endquote--
 
 print " (";
-print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
+print "$browse_revtag:" unless $browse_revtag =~ /^(?:HEAD|\d+(?:\.\d+)*)$/;
 print $revision if $revision;
 print ")";
 
@@ -515,7 +517,7 @@ sub sprint_author {
 
 sub print_top {
     my ($title_text) = "for " . &html_quote($file_tail) . " (";
-    $title_text .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
+    $title_text .= "$browse_revtag:" unless $browse_revtag =~ /^(?:HEAD|\d+(?:\.\d+)*)$/;
     $title_text .= $revision if $revision;
     $title_text .= ")";
     $title_text =~ s/\(\)//;
