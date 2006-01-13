@@ -187,7 +187,7 @@ new TestCase( SECTION,
 new TestCase( SECTION,
 	      "var f = new Object( String.prototype.indexOf ); f('"+GLOBAL+"')",
 	      0,
-	      eval("var f = new Object( String.prototype.indexOf ); f('"+GLOBAL.replace(/ @ 0x[0-9a-fA-F]+ \(native @ 0x[0-9a-fA-F]+\)/, '')+"')") );
+	      eval("var f = new Object( String.prototype.indexOf ); f('"+GLOBAL+"')") );
 
 new TestCase( SECTION,
 	      "var f = new Function(); f.toString = Object.prototype.toString; f.indexOf = String.prototype.indexOf; f.indexOf('[object Function]')",
