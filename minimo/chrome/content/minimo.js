@@ -784,9 +784,22 @@ function BrowserContentAreaPopupShowing () {
 /* Bookmarks */ 
 
 function BrowserBookmarkThis() {
+ /* So far to force resync load bookmark from the pref, there are cases, bookmark is 
+  * erased and we need to check
+  */
+  var bookmarkstore = gPref.getCharPref("browser.bookmark.store");
+  loadBookmarks(bookmarkstore);
   
   var currentURI=gBrowser.selectedBrowser.webNavigation.currentURI.spec;
+  var currentContentTitle=gBrowser.selectedBrowser.contentTitle;
+  var currentIconURL=gBrowser.selectedBrowser.mIconURL;
   var newLi=gBookmarksDoc.createElement("li");
+  newLi.setAttribute("title",currentContentTitle);
+  if(currentIconURL) {
+	newLi.setAttribute("iconsrc",currentIconURL); 
+  } else {
+	newLi.setAttribute("iconsrc","chrome://minimo/skin/m.gif");
+  }
   var bmContent=gBookmarksDoc.createTextNode(currentURI);
   newLi.appendChild(bmContent);
   gBookmarksDoc.getElementsByTagName("bm")[0].appendChild(newLi);
@@ -794,8 +807,6 @@ function BrowserBookmarkThis() {
   
   storeBookmarks();	
   refreshBookmarks();
-
-  alert("Bookmark Saved.");
 }
 
 function BrowserBookmark() {
