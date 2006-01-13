@@ -1062,6 +1062,9 @@ CRITICAL_SECTION cairo_toy_font_face_hash_table_mutex;
 CRITICAL_SECTION cairo_scaled_font_map_mutex;
 CRITICAL_SECTION cairo_ft_unscaled_font_map_mutex;
 
+#if 0
+// Mozilla doesn't use the mutexes, and this definition of DllMain
+// conflicts with libxul.
 BOOL WINAPI
 DllMain (HINSTANCE hinstDLL,
 	 DWORD     fdwReason,
@@ -1083,4 +1086,6 @@ DllMain (HINSTANCE hinstDLL,
   }
   return TRUE;
 }
+#endif // 0
+
 #endif
