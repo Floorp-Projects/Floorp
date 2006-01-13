@@ -120,15 +120,13 @@
   "Current Collection Only">
 <!ENTITY search.collection.accesskey
   "C">
-<!ENTITY search.bookmarks.label
-  "All Bookmarks">
-<!ENTITY search.bookmarks.accesskey
-  "B">
-<!ENTITY search.history.label
-  "All History">
-<!ENTITY search.history.accesskey
-  "H">
 <!ENTITY search.all.label
   "All Bookmarks and History">
 <!ENTITY search.all.accesskey
   "A">
+<!ENTITY saveSearch.label
+  "Save">
+<!ENTITY saveSearch.accesskey
+  "S">
+<!ENTITY moreCriteria.label
+  "+">

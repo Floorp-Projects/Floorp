@@ -17,8 +17,15 @@
 }
 
 #placesList {
-  margin: 7px 0px 7px 6px;
+  -moz-appearance: none;
   width: 160px;
+  margin: 0px;
+  border: 0px;
+}
+
+#placesListContainer {
+  -moz-appearance: listbox;
+  margin: 7px 0px 7px 6px;
 }
 
 #placeContent {
@@ -107,14 +114,39 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 #titlebar {
   background-color: -moz-Dialog;
   font-weight: bold;
-  padding: 5px 5px 5px 3px;
   border-bottom: 2px solid;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
 }
 
+#titlebartext {
+  margin: 5px 8px;
+}
+
 /* Search Bar */
+#searchbar {
+  margin: 6px -4px 0px 2px;
+}
+
+.small {
+  font-size: x-small;
+  min-width: 0px;
+  padding: 0px 4px 0px 4px;
+  margin: 0px;  
+  border: 0px;
+}
+
+.small .button-text,
+.small .button-box {
+  padding: 0px;
+  border: 0px;
+}
+
 #searchFilter {
   padding: 0px;
+}
+
+#searchFilter[empty="true"] {
+  color: GrayText;
 }
 
 #searchFilter .textbox-input-box {

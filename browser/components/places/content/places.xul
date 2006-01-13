@@ -47,15 +47,33 @@
   
   <hbox flex="1" id="placesView">
     <vbox>
-      <tree id="placesList" class="placesTree" flex="1" type="places" 
-            hidecolumnpicker="true" context="placesContext"
-            onselect="PlacesPage.placeSelected(event);"
-            seltype="single">
-        <treecols>
-          <treecol id="title" flex="1" primary="true" hideheader="true"/>
-        </treecols>
-        <treechildren id="placesListChildren" view="placesList"  flex="1"/>
-      </tree>
+      <hbox align="center" id="searchbar">
+        <textbox id="searchFilter" flex="3" style="width: 0px;" timeout="500"
+                 oncommand="PlacesPage.search(this.value);" 
+                 collection="all" persist="collection"
+                 onfocus="PlacesSearchBox.onFocus();" onblur="PlacesSearchBox.onBlur();">
+          <button type="menu" class="filterList" id="filterList_history">
+            <menupopup>
+              <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
+                        type="radio" name="collection" value="all" 
+                        checked="true" default="true"/>
+              <menuitem label="&search.collection.label;" accesskey="&search.collection.accesskey;"
+                        type="radio" name="collection" value="collection"/>
+            </menupopup>
+          </button>
+        </textbox>
+      </hbox>
+      <vbox id="placesListContainer" flex="1">
+        <tree id="placesList" class="placesTree" flex="1" type="places" 
+              hidecolumnpicker="true" context="placesContext"
+              onselect="PlacesPage.placeSelected(event);"
+              seltype="single">
+          <treecols>
+            <treecol id="title" flex="1" primary="true" hideheader="true"/>
+          </treecols>
+          <treechildren id="placesListChildren" view="placesList"  flex="1"/>
+        </tree>
+      </vbox>
       <vbox id="historyCalendar" 
             onselectionchanged="return PlacesPage.rangeSelected()"/>
       <hbox class="commands">
@@ -66,8 +84,17 @@
     <vbox flex="4">
       <deck id="content" flex="1">
         <vbox flex="1">
-          <hbox id="titlebar">
+          <hbox id="titlebar" align="center">
             <label id="titlebartext"/>
+            <spacer flex="1"/>
+            <hbox id="searchModifiers" hidden="true" align="center">
+              <button id="saveSearch" class="small" 
+                      label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
+                      command="placesCmd_search:save"/>
+              <button class="small"
+                      label="&moreCriteria.label;"
+                      command="placesCmd_search:moreCriteria"/>
+            </hbox>
           </hbox>
           <tree id="placeContent" class="placesTree" context="placesContext" 
                 flex="1" query="" type="places" 
@@ -88,77 +115,39 @@
             </treecols>
             <treechildren id="placeContentChildren" view="placeContent" flex="1"/>
           </tree>
-          <hbox>
-            <deck id="commandBar" flex="1">
-              <hbox class="commands" id="commands_bookmark" flex="1">
-                <button id="newFolder" view="placeContent" command="placesCmd_new:folder"/>
-                <spacer flex="1"/>
-                <button id="saveSearch_bookmark" command="placesCmd_saveSearch" hidden="true"/>
-              </hbox>
-              <hbox class="commands" id="commands_history" flex="1">
-                <button id="groupBy_site" class="commandGroupButton first" 
-                        view="placeContent" command="placesCmd_groupby:site"/>
-                <spacer class="groupSpacer"/>
-                <button id="groupBy_page" class="commandGroupButton last" 
-                        view="placeContent" command="placesCmd_groupby:page"/>
-                <spacer flex="1"/>
-                <button id="saveSearch_history" command="placesCmd_saveSearch" hidden="true"/>
-              </hbox>
-              <hbox class="commands" id="commands_feed" flex="1">
-                <button id="subscribe" command="placesCmd_new:folder"/>
-                <separator/>
-                <button id="groupOption0" class="commandGroupButton first" 
-                        view="placeContent" command="placesCmd_groupby:site"/>
-                <spacer class="groupSpacer"/>
-                <button id="groupOption1" class="commandGroupButton last" 
-                        view="placeContent" command="placesCmd_groupby:page"/>
-                <spacer flex="1"/>
-                <button id="saveSearch_feed" command="placesCmd_saveSearch" hidden="true"/>
-              </hbox>
-            </deck>
-            <resizer dir="bottomright"/>
-          </hbox>
         </vbox>
       </deck>
+      <hbox>
+        <deck id="commandBar" flex="1">
+          <hbox class="commands" id="commands_bookmark" flex="1">
+            <button id="newFolder" view="placeContent" command="placesCmd_new:folder"/>
+            <spacer flex="1"/>
+            <button id="saveSearch_bookmark" command="placesCmd_saveSearch" hidden="true"/>
+          </hbox>
+          <hbox class="commands" id="commands_history" flex="1">
+            <button id="groupBy_site" class="commandGroupButton first" 
+                    view="placeContent" command="placesCmd_groupby:site"/>
+            <spacer class="groupSpacer"/>
+            <button id="groupBy_page" class="commandGroupButton last" 
+                    view="placeContent" command="placesCmd_groupby:page"/>
+            <spacer flex="1"/>
+            <button id="saveSearch_history" command="placesCmd_saveSearch" hidden="true"/>
+          </hbox>
+          <hbox class="commands" id="commands_feed" flex="1">
+            <button id="subscribe" command="placesCmd_new:folder"/>
+            <separator/>
+            <button id="groupOption0" class="commandGroupButton first" 
+                    view="placeContent" command="placesCmd_groupby:site"/>
+            <spacer class="groupSpacer"/>
+            <button id="groupOption1" class="commandGroupButton last" 
+                    view="placeContent" command="placesCmd_groupby:page"/>
+            <spacer flex="1"/>
+            <button id="saveSearch_feed" command="placesCmd_saveSearch" hidden="true"/>
+          </hbox>
+        </deck>
+        <resizer dir="bottomright"/>
+      </hbox>
     </vbox>
   </hbox>
-
-  <!-- 
-          <hbox align="center" id="searchbar">
-            <label accesskey="&search.accesskey;" control="search">&search.label;</label>
-            <textbox id="searchFilter" flex="3" style="width: 0px;" timeout="500"
-                     oncommand="PlacesPage.applyFilter(this.value);" 
-                     collection="all" persist="collection">
-              <deck id="filterCollectionDeck">
-                <button type="menu" class="filterList" id="filterList_history">
-                  <menupopup>
-                    <menuitem label="&search.history.label;" accesskey="&search.history.accesskey;"
-                              type="radio" name="collection" value="history" 
-                              checked="true" default="true"/>
-                    <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
-                              type="radio" name="collection" value="all"/>
-                  </menupopup>
-                </button>
-                <button type="menu" class="filterList" id="filterList_bookmark">
-                  <menupopup>
-                    <menuitem label="&search.collection.label;" accesskey="&search.collection.accesskey;"
-                              type="radio" name="collection" value="collection"/>
-                    <menuitem label="&search.bookmarks.label;" accesskey="&search.bookmarks.accesskey;"
-                              type="radio" name="collection" value="bookmarks"
-                              checked="true" default="true"/>
-                    <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
-                              type="radio" name="collection" value="all"/>
-                  </menupopup>
-                </button>
-              </deck>
-            </textbox>
-            <button id="showAdvancedSearch" 
-                    label="&advancedSearch.label;" accesskey="&advancedSearch.accesskey;" 
-                    oncommand="PlacesPage.showAdvancedOptions();"/>
-            <spacer flex="2"/>
-          </hbox>
-  
-  -->
-  
 </window>
 
