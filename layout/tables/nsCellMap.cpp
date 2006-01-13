@@ -218,7 +218,7 @@ nsTableCellMap::InsertGroupCellMap(nsCellMap* aPrevMap,
 void nsTableCellMap::InsertGroupCellMap(nsTableRowGroupFrame&  aNewGroup,
                                         nsTableRowGroupFrame*& aPrevGroup)
 {
-  nsCellMap* newMap = new nsCellMap(aNewGroup);
+  nsCellMap* newMap = new nsCellMap(aNewGroup, mBCInfo != nsnull);
   if (newMap) {
     nsCellMap* prevMap = nsnull;
     nsCellMap* lastMap = mFirstMap;
@@ -684,10 +684,10 @@ nsTableCellMap::Dump(char* aString) const
 {
   if (aString) 
     printf("%s \n", aString);
-  printf("***** START TABLE CELL MAP DUMP ***** %p\n", this);
+  printf("***** START TABLE CELL MAP DUMP ***** %p\n", (void*)this);
   // output col info
   PRInt32 colCount = mCols.Count();
-  printf ("cols array orig/span-> %p", this);
+  printf ("cols array orig/span-> %p", (void*)this);
   for (PRInt32 colX = 0; colX < colCount; colX++) {
     nsColInfo* colInfo = (nsColInfo *)mCols.ElementAt(colX);
     printf ("%d=%d/%d ", colX, colInfo->mNumCellsOrig, colInfo->mNumCellsSpan);
@@ -1051,8 +1051,9 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
   else NS_ASSERTION(PR_FALSE, "program error");
 }
 
-nsCellMap::nsCellMap(nsTableRowGroupFrame& aRowGroup)
-  : mRowCount(0), mRowGroupFrame(&aRowGroup), mNextSibling(nsnull)
+nsCellMap::nsCellMap(nsTableRowGroupFrame& aRowGroup, PRBool aIsBC)
+  : mRowCount(0), mRowGroupFrame(&aRowGroup), mNextSibling(nsnull),
+    mIsBC(aIsBC)
 {
   MOZ_COUNT_CTOR(nsCellMap);
 }
@@ -1067,9 +1068,7 @@ nsCellMap::~nsCellMap()
     PRInt32 colCount = row->Count();
     for (PRInt32 colX = 0; colX < colCount; colX++) {
       CellData* data = (CellData *)(row->ElementAt(colX));
-      if (data) {
-        delete data;
-      } 
+      DestroyCellData(data);
     }
     delete row;
   }
@@ -1230,6 +1229,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
                       nsRect&           aDamageArea,
                       PRInt32*          aColToBeginSearch)
 {
+  NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   PRInt32 origNumMapRows = mRows.Count();
   PRInt32 origNumCols = aMap.GetColCount();
   PRBool  zeroRowSpan;
@@ -1292,7 +1292,8 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
     }
   }
   else {
-    origData = (aMap.mBCInfo) ? new BCCellData(aCellFrame) : new CellData(aCellFrame); if (!origData) ABORT1(origData);
+    origData = AllocCellData(aCellFrame);
+    if (!origData) ABORT1(origData);
     SetDataAt(aMap, *origData, aRowIndex, startColIndex, PR_TRUE);
   }
 
@@ -1345,7 +1346,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
           }
         }
         else { 
-          cellData = (aMap.mBCInfo) ? new BCCellData(nsnull) : new CellData(nsnull);
+          cellData = AllocCellData(nsnull);
           if (!cellData) return origData;
           if (rowX > aRowIndex) {
             cellData->SetRowSpanOffset(rowX - aRowIndex);
@@ -1537,6 +1538,7 @@ void nsCellMap::ExpandWithCells(nsTableCellMap& aMap,
                                 PRBool          aRowSpanIsZero,
                                 nsRect&         aDamageArea)
 {
+  NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   PRInt32 endRowIndex = aRowIndex + aRowSpan - 1;
   PRInt32 startColIndex = aColIndex;
   PRInt32 endColIndex = aColIndex;
@@ -1546,7 +1548,7 @@ void nsCellMap::ExpandWithCells(nsTableCellMap& aMap,
   // add cellData entries for the space taken up by the new cells
   for (PRInt32 cellX = 0; cellX < numCells; cellX++) {
     nsTableCellFrame* cellFrame = (nsTableCellFrame*) aCellFrames.ElementAt(cellX);
-    CellData* origData = (aMap.mBCInfo) ? new BCCellData(cellFrame) : new CellData(cellFrame); // the originating cell
+    CellData* origData = AllocCellData(cellFrame); // the originating cell
     if (!origData) return;
 
     // set the starting and ending col index for the new cell
@@ -1568,7 +1570,7 @@ void nsCellMap::ExpandWithCells(nsTableCellMap& aMap,
         row->InsertElementAt(nsnull, colX);
         CellData* data = origData;
         if ((rowX != aRowIndex) || (colX != startColIndex)) {
-          data = (aMap.mBCInfo) ? new BCCellData(nsnull) : new CellData(nsnull);
+          data = AllocCellData(nsnull);
           if (!data) return;
           if (rowX > aRowIndex) {
             data->SetRowSpanOffset(rowX - aRowIndex);
@@ -1641,6 +1643,7 @@ void nsCellMap::ShrinkWithoutRows(nsTableCellMap& aMap,
                                   PRInt32         aNumRowsToRemove,
                                   nsRect&         aDamageArea)
 {
+  NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   PRInt32 endRowIndex = aStartRowIndex + aNumRowsToRemove - 1;
   PRInt32 colCount = aMap.GetColCount();
   for (PRInt32 rowX = endRowIndex; rowX >= aStartRowIndex; --rowX) {
@@ -1670,9 +1673,7 @@ void nsCellMap::ShrinkWithoutRows(nsTableCellMap& aMap,
     // Delete our row information.
     for (colX = 0; colX < rowLength; colX++) {
       CellData* data = (CellData *)(row->ElementAt(colX));
-      if (data) {
-        delete data;
-      }
+      DestroyCellData(data);
     }
 
     mRows.RemoveElementAt(rowX);
@@ -1820,6 +1821,7 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
                                   PRInt32           aColIndex,
                                   nsRect&           aDamageArea)
 {
+  NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   PRInt32 colX, rowX;
 
   // get the rowspan and colspan from the cell map since the content may have changed
@@ -1849,7 +1851,7 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rowX);
     for (colX = endColIndex; colX >= aColIndex; colX--) {
       CellData* doomedData = (CellData*) row->ElementAt(colX);
-      delete doomedData;
+      DestroyCellData(doomedData);
       row->RemoveElementAt(colX);
     }
   }
@@ -1901,6 +1903,7 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
                                   PRBool          aNumRowsToRemove,
                                   nsRect&         aDamageArea)
 {
+  NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   // copy the old cell map into a new array
   PRInt32 numOrigRows = mRows.Count();
   PRInt32 numOrigCols = aMap.GetColCount();
@@ -1981,7 +1984,7 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
     PRInt32 len = row->Count();
     for (colX = 0; colX < len; colX++) {
       CellData* data = (CellData*) row->ElementAt(colX);
-      delete data;
+      DestroyCellData(data);
     }
     delete row;
   }
@@ -1997,6 +2000,7 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
                                         PRBool          aInsert,
                                         nsRect&         aDamageArea)
 {
+  NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   // copy the old cell map into a new array
   PRInt32 mRowCountOrig = mRowCount;
   PRInt32 numOrigRows   = mRows.Count();
@@ -2056,8 +2060,7 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
     PRInt32 len = row->Count();
     for (PRInt32 colX = 0; colX < len; colX++) {
       CellData* data = (CellData*) row->SafeElementAt(colX);
-      if(data)
-        delete data;
+      DestroyCellData(data);
     }
     delete row;
   }
@@ -2110,7 +2113,7 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
 #ifdef NS_DEBUG
 void nsCellMap::Dump(PRBool aIsBorderCollapse) const
 {
-  printf("\n  ***** START GROUP CELL MAP DUMP ***** %p\n", this);
+  printf("\n  ***** START GROUP CELL MAP DUMP ***** %p\n", (void*)this);
   nsTableRowGroupFrame* rg = GetRowGroup();
   const nsStyleDisplay* display = rg->GetStyleDisplay();
   switch (display->mDisplay) {
@@ -2202,7 +2205,8 @@ void nsCellMap::Dump(PRBool aIsBorderCollapse) const
           nsTableCellFrame* cellFrame = cd->GetCellFrame();
           PRInt32 cellFrameColIndex;
           cellFrame->GetColIndex(cellFrameColIndex);
-          printf("C%d,%d=%p(%d)  ", rIndex, colIndex, cellFrame, cellFrameColIndex);
+          printf("C%d,%d=%p(%d)  ", rIndex, colIndex, (void*)cellFrame,
+                 cellFrameColIndex);
           cellCount++;
         }
       }
@@ -2233,6 +2237,7 @@ nsCellMap::AdjustForZeroSpan(nsTableCellMap& aMap,
                              PRInt32         aRowIndex,
                              PRInt32         aColIndex)
 {
+  NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   PRInt32 numColsInTable = aMap.GetColCount();
   CellData* data = GetDataAt(aMap, aRowIndex, aColIndex, PR_FALSE);
   if (!data) return;
@@ -2272,7 +2277,7 @@ nsCellMap::AdjustForZeroSpan(nsTableCellMap& aMap,
       if ((colX > aColIndex) || (rowX > aRowIndex)) {
         CellData* oldData = GetDataAt(aMap, rowX, colX, PR_FALSE); 
         if (!oldData) {
-          CellData* newData = (aMap.mBCInfo) ? new BCCellData(nsnull) : new CellData(nsnull);
+          CellData* newData = AllocCellData(nsnull);
           if (!newData) return;
           if (colX > aColIndex) {
             newData->SetColSpanOffset(colX - aColIndex);
@@ -2296,6 +2301,7 @@ nsCellMap::GetDataAt(nsTableCellMap& aMap,
                      PRInt32         aColIndex,
                      PRBool          aUpdateZeroSpan)
 {
+  NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   PRInt32 numColsInTable = aMap.GetColCount();
   if ((aMapRowIndex < 0) || (aMapRowIndex >= mRows.Count())) {
     return nsnull;
@@ -2348,7 +2354,7 @@ nsCellMap::GetDataAt(nsTableCellMap& aMap,
     }
     if (!didZeroExpand) {
       // mark this point dead
-      CellData* cellData = (aMap.mBCInfo) ? new BCCellData(nsnull) : new CellData(nsnull);
+      CellData* cellData = AllocCellData(nsnull);
       if (cellData)
         SetDataAt(aMap, *cellData, aMapRowIndex, aColIndex, PR_FALSE);
     }
@@ -2367,6 +2373,7 @@ void nsCellMap::SetDataAt(nsTableCellMap& aMap,
                           PRInt32         aColIndex,
                           PRBool          aCountZeroSpanAsSpan)
 {
+  NS_ASSERTION(!!aMap.mBCInfo == mIsBC, "BC state mismatch");
   nsVoidArray* row = (nsVoidArray *)(mRows.SafeElementAt(aMapRowIndex));
   if (row) {
     // the table map may need cols added
@@ -2381,7 +2388,7 @@ void nsCellMap::SetDataAt(nsTableCellMap& aMap,
     }
 
     CellData* doomedData = (CellData*)row->ElementAt(aColIndex);
-    delete doomedData;
+    DestroyCellData(doomedData);
 
     row->ReplaceElementAt(&aNewCell, aColIndex);
     // update the originating cell counts if cell originates in this row, col
@@ -2498,4 +2505,23 @@ PRBool nsCellMap::ColHasSpanningCells(nsTableCellMap& aMap,
     }
   }
   return PR_FALSE;
+}
+
+void nsCellMap::DestroyCellData(CellData* aData)
+{
+  if (mIsBC) {
+    BCCellData* bcData = NS_STATIC_CAST(BCCellData*, aData);
+    delete bcData;
+  } else {
+    delete aData;
+  }
+}
+
+CellData* nsCellMap::AllocCellData(nsTableCellFrame* aOrigCell)
+{
+  if (mIsBC) {
+    return new BCCellData(aOrigCell);
+  }
+
+  return new CellData(aOrigCell);
 }
