@@ -49,11 +49,24 @@
  *      <script src="./../browser.js"></script>
  *      <script src="./mytest.js"></script>
  */
+function htmlesc(str) { 
+  if (str == '<') 
+    return '&lt;'; 
+  if (str == '>') 
+    return '&gt;'; 
+  if (str == '&') 
+    return '&amp;'; 
+  return str; 
+}
+
 function writeLineToLog( string ) {
+  string = String(string);
+  string = string.replace(/[<>&]/g, htmlesc);
   document.write( string + "<br>\n");
 }
 
 function print( string ) {
+  string = String(string);
   writeLineToLog( string );
 }
 
@@ -180,10 +193,22 @@ TEST_XML = function (section, expected, actual)
 
 function gc()
 {
-  // Thanks to igor.bukanov@gmail.com
-  for (var i = 0; i != 1 << 15; ++i) 
+  try
   {
-    new Object();
+    // Thanks to dveditz
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
+    var service = Components.classes['@mozilla.org/js/jsd/debugger-service;1'].
+      getService(jsdIDebuggerService);
+    service.GC();
+  }
+  catch(ex)
+  {
+    // Thanks to igor.bukanov@gmail.com
+    for (var i = 0; i != 1 << 15; ++i) 
+    {
+      new Object();
+    }
   }
 }
 

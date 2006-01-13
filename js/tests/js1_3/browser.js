@@ -52,18 +52,34 @@
 
 GLOBAL = this + '';
 
+function htmlesc(str) { 
+  if (str == '<') 
+    return '&lt;'; 
+  if (str == '>') 
+    return '&gt;'; 
+  if (str == '&') 
+    return '&amp;'; 
+  return str; 
+}
+
 function writeLineToLog( string ) {
+  string = String(string);
+  string = string.replace(/[<>&]/g, htmlesc);
+  string = string.replace(/[<>&]/g, htmlesc);
   document.write( string + "<br>\n");
 }
 function writeHeaderToLog( string ) {
+  string = String(string);
   document.write( "<h2>" + string + "</h2>" );
 }
 function writeFormattedResult( expect, actual, string, passed ) {
+  string = String(string);
+  string = string.replace(/[<>&]/g, htmlesc);
   var s = "<tt>"+ string ;
   s += "<b>" ;
   s += ( passed ) ? "<font color=#009900> &nbsp;" + PASSED
     : "<font color=#aa0000>&nbsp;" +  FAILED + expect + "</tt>";
-  writeLineToLog( s + "</font></b></tt>" );
+  document.write( s + "</font></b></tt><br>" );
   return passed;
 }
 
@@ -129,9 +145,21 @@ function version(v)
 
 function gc()
 {
-  // Thanks to igor.bukanov@gmail.com
-  for (var i = 0; i != 1 << 15; ++i) 
+  try
   {
-    new Object();
+    // Thanks to dveditz
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
+    var service = Components.classes['@mozilla.org/js/jsd/debugger-service;1'].
+      getService(jsdIDebuggerService);
+    service.GC();
+  }
+  catch(ex)
+  {
+    // Thanks to igor.bukanov@gmail.com
+    for (var i = 0; i != 1 << 15; ++i) 
+    {
+      new Object();
+    }
   }
 }
