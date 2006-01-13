@@ -119,6 +119,7 @@
     <command id="cmd_ViewDeckDefault"         oncommand="BrowserViewDeckDefault()"/>
     <command id="cmd_ViewFind"                oncommand="BrowserViewFind()"/>
     <command id="cmd_BrowserOpenLinkAsNewTab" oncommand="BrowserOpenLinkAsTab()" />
+    <command id="cmd_BrowserHome"             oncommand="BrowserHome()" />
     <command id="cmd_BrowserBack"             oncommand="BrowserBack()" />
     <command id="cmd_BrowserForward"          oncommand="BrowserForward()" />
     <command id="cmd_BrowserReload"           oncommand="BrowserReload()" />
@@ -317,6 +318,10 @@
       
       <menuseparator/>
       
+      <menuitem id="command_home"    
+                command="cmd_BrowserHome" 
+                label="&homeCmd.label;"  /> 
+
       <!--            class="menuitem-iconic" image="chrome://minimo/skin/back-color.png" -->
       <menuitem id="command_back"    
                 command="cmd_BrowserBack" 
@@ -336,10 +341,6 @@
       <menuitem id="command_go"
                 command="cmd_BrowserGo" 
                 label="&goCmd.label;"  /> 
-
-      <menuitem id="command_stop"
-                command="cmd_BrowserStop" 
-                label="&stopCmd.label;"  /> 
       
     </menupopup>  
     

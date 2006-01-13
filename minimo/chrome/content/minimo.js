@@ -553,6 +553,20 @@ function loadURI(uri)
   gBrowser.webNavigation.loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
 }
 
+function BrowserHome()
+{
+  var homepage = "http://www.mozilla.org";
+
+  var page = gPref.getCharPref("browser.startup.homepage");
+  if (page != null)
+  {
+    var fixedUpURI = gURIFixup.createFixupURI(page, 2 /*fixup url*/ );
+    homepage = fixedUpURI.spec;
+  }
+
+  loadURI(homepage);
+}
+
 function BrowserBack()
 {
   gBrowser.webNavigation.goBack();

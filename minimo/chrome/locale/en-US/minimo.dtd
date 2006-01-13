@@ -33,6 +33,7 @@
 
 <!-- Context menu -->
 
+<!ENTITY homeCmd.label                "Home">
 <!ENTITY backCmd.label                "Back">
 <!ENTITY forwardCmd.label             "Forward">
 <!ENTITY stopCmd.label                "Stop">
