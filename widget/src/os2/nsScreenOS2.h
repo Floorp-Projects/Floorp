@@ -40,6 +40,10 @@
 
 #include "nsIScreen.h"
 
+#define INCL_WIN
+#define INCL_DOS
+#include <os2.h>
+
 //------------------------------------------------------------------------
 
 class nsScreenOS2 : public nsIScreen

@@ -76,8 +76,6 @@ CPPSRCS		= \
 		nsImageOS2.cpp \
 		nsRegionOS2.cpp \
 		nsDeviceContextSpecFactoryO.cpp \
-		nsScreenOS2.cpp          \
-		nsScreenManagerOS2.cpp          \
 		nsGfxFactoryOS2.cpp \
 		nsPrintOptionsOS2.cpp \
 		nsGfxDefs.cpp \

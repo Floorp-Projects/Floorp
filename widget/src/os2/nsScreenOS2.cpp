@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsScreenOS2.h"
-#include "nsGfxDefs.h"
 
 nsScreenOS2 :: nsScreenOS2 (  )
 {
@@ -62,7 +61,7 @@ nsScreenOS2 :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
   LONG alArray[2];
 
   HPS hps = ::WinGetScreenPS( HWND_DESKTOP);
-  HDC hdc = GFX (::GpiQueryDevice (hps), HDC_ERROR);
+  HDC hdc = ::GpiQueryDevice (hps);
   ::DevQueryCaps(hdc, CAPS_WIDTH, 2, alArray);
   ::WinReleasePS(hps);
 
@@ -131,9 +130,9 @@ nsScreenOS2 :: GetPixelDepth(PRInt32 *aPixelDepth)
   LONG lCap;
 
   HPS hps = ::WinGetScreenPS( HWND_DESKTOP);
-  HDC hdc = GFX (::GpiQueryDevice (hps), HDC_ERROR);
+  HDC hdc = ::GpiQueryDevice (hps);
 
-  GFX (::DevQueryCaps(hdc, CAPS_COLOR_BITCOUNT, 1, &lCap), FALSE);
+  ::DevQueryCaps(hdc, CAPS_COLOR_BITCOUNT, 1, &lCap);
 
   *aPixelDepth = (PRInt32)lCap;
 
