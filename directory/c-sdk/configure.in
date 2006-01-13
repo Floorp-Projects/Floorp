@@ -459,7 +459,27 @@ if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
-if test "$target" != "$host"; then
+if test "$target" = "$host"; then
+    AC_PROG_CXX
+    if test "$CXX" = "cl" -a -z "$CC"; then
+        CC=$CXX
+    else        
+        AC_PROG_CC
+    fi
+    AC_PROG_CPP
+    AC_PROG_RANLIB
+    AC_PATH_PROGS(AS, as, $CC)
+    AC_PATH_PROGS(AR, ar, echo not_ar)
+    AC_PATH_PROGS(LD, ld link, echo not_ld)
+    AC_PATH_PROGS(STRIP, strip, echo not_strip)
+    AC_PATH_PROGS(WINDRES, windres, echo not_windres)
+    if test -z "$HOST_CC"; then
+	    HOST_CC="$CC"
+    fi
+    if test -z "$HOST_CFLAGS"; then
+	    HOST_CFLAGS="$CFLAGS"
+    fi
+else
     echo "cross compiling from $host to $target"
     cross_compiling=yes
 
@@ -505,27 +525,6 @@ if test "$target" != "$host"; then
     AC_CHECK_PROGS(LD, $LD "${target_alias}-ld" "${target}-ld", echo)
     AC_CHECK_PROGS(STRIP, $STRIP "${target_alias}-strip" "${target}-strip", echo)
     AC_CHECK_PROGS(WINDRES, $WINDRES "${target_alias}-windres" "${target}-windres", echo)
-
-else
-    AC_PROG_CXX
-    if test "$CXX" = "cl" -a -z "$CC"; then
-        CC=$CXX
-    else        
-        AC_PROG_CC
-    fi
-    AC_PROG_CPP
-    AC_PROG_RANLIB
-    AC_PATH_PROGS(AS, as, $CC)
-    AC_PATH_PROGS(AR, ar, echo not_ar)
-    AC_PATH_PROGS(LD, ld link, echo not_ld)
-    AC_PATH_PROGS(STRIP, strip, echo not_strip)
-    AC_PATH_PROGS(WINDRES, windres, echo not_windres)
-    if test -z "$HOST_CC"; then
-	    HOST_CC="$CC"
-    fi
-    if test -z "$HOST_CFLAGS"; then
-	    HOST_CFLAGS="$CFLAGS"
-    fi
 fi
 
 if test "$GCC" = "yes"; then

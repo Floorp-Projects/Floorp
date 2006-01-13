@@ -125,7 +125,7 @@ ifeq ($(OS_ARCH), HP-UX)
 LDAPTOOLCPPCOMMON_OBJ   = $(addprefix $(OBJDEST)/, convutf8.o)
 endif
 
-CLIENT_OBJS = $(LDAPDELETE_OBJ) $(LDAPMODIFY_OBJ) \
+CLIENT_OBJS= $(LDAPDELETE_OBJ) $(LDAPMODIFY_OBJ) \
 	$(LDAPSEARCH_OBJ) $(LDAPCOMPARE_OBJ) $(LDAPCMP_OBJ) $(LDAPTOOLCOMMON_OBJ)
 
 # For 'clean' target:
@@ -141,61 +141,51 @@ BINS=	 $(LDAPDELETE) $(LDAPMODIFY) $(LDAPSEARCH) $(LDAPCOMPARE) $(LDAPCMP)
 
 LDAPTOOLS_NSS_LINK=$(NSSLINK)
 
-ifeq ($(OS_ARCH), SunOS)
-EXTRA_LIBS = -L$(DIST)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
-	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
-             -L$(DIST)/lib -L$(DIST_LIB_PATH) $(SVRCORE_LINK) \
-	     $(LDAPTOOLS_NSS_LINK) $(NSPRLINK) \
-	     -lthread -lposix4 -lsocket -lnls \
-	     -ldl -lresolv -lgen 
-endif
-
+# set common libs for all platforms
 ifeq ($(OS_ARCH), WINNT)
-EXTRA_LIBS =wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib \
-            comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib \
-            rpcrt4.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib
-EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(LBER_LIBNAME).lib
+EXTRA_LIBS = $(DIST)/$(OBJDIR_NAME)/lib/$(SSLDAP_LIBNAME).lib
+EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(PRLDAP_LIBNAME).lib
 EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(LDAP_LIBNAME).lib
+EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(LBER_LIBNAME).lib
 EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(LDIF_LIBNAME).lib
 EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(UTIL_LIBNAME).lib
 EXTRA_LIBS += $(SVRCORE_LINK)
 EXTRA_LIBS += $(NSSLINK)
 EXTRA_LIBS += $(NSPRLINK)
-EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(SSLDAP_LIBNAME).lib
-EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(PRLDAP_LIBNAME).lib
+else
+# ordering appears to be important, at least on some platforms with some
+# linkers
+EXTRA_LIBS = -L$(DIST)/$(OBJDIR_NAME)/lib -l$(SSLDAP_LIBNAME) \
+	     -l$(PRLDAP_LIBNAME) -l$(LDAP_LIBNAME) -l$(LDIF_LIBNAME) \
+             -L$(DIST)/lib $(SVRCORE_LINK) $(LDAPTOOLS_NSS_LINK) $(NSPRLINK)
+endif
+
+# set platform specific libs
+ifeq ($(OS_ARCH), SunOS)
+PLATFORMLIBS=-lthread -lposix4 -lsocket -lnls \
+	     -ldl -lresolv -lgen 
+endif
+
+ifeq ($(OS_ARCH), WINNT)
+PLATFORMLIBS =wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib \
+            comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib \
+            rpcrt4.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib
 endif
 
 ifeq ($(OS_ARCH), OSF1)
-EXTRA_LIBS = -L$(DIST)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
-	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
-             -L$(DIST)/lib -L$(DIST_LIB_PATH) $(SVRCORE_LINK) \
-	     $(LDAPTOOLS_NSS_LINK) $(NSPRLINK) \
-	     -lcxx -lpthread -lrt -lmach -lexc 
+PLATFORMLIBS = -lcxx -lpthread -lrt -lmach -lexc 
 endif
 
 ifeq ($(OS_ARCH), Linux)
-EXTRA_LIBS = -L$(DIST)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
-	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
-             -L$(DIST)/lib -L$(DIST_LIB_PATH) $(SVRCORE_LINK) \
-	     $(LDAPTOOLS_NSS_LINK) $(NSPRLINK) \
-	     -l$(LBER_LIBNAME) \
-	     -ldl -lresolv -lpthread 
+PLATFORMLIBS=-ldl -lresolv -lpthread 
 endif
 
 ifeq ($(OS_ARCH), HP-UX)
-EXTRA_LIBS = -ldld -lm -lpthread -lrt \
-	     -L$(DIST)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
-	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
-             -L$(DIST)/lib -L$(DIST_LIB_PATH) $(SVRCORE_LINK) \
-	      -l$(LBER_LIBNAME) $(LDAPTOOLS_NSS_LINK) $(NSPRLINK)
+PLATFORMLIBS = -ldld -lm -lpthread -lrt
 endif
 
 ifeq ($(OS_ARCH), AIX)
-EXTRA_LIBS = -L$(DIST)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
-	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
-             -L$(DIST)/lib -L$(DIST_LIB_PATH) $(SVRCORE_LINK) \
-	     $(LDAPTOOLS_NSS_LINK) $(NSPRLINK) \
-	     -ldl -brtl -lpthreads -lc_r -lm
+PLATFORMLIBS=-ldl -brtl -lpthreads -lc_r -lm
 endif
 
 ifdef HAVE_LIBNLS
@@ -227,9 +217,6 @@ EXTRA_LIBS +=   $(LIBNLS_LIBDIR)/$(NSCNV_LIBNAME) \
 		$(LIBNLS_LIBDIR)/$(NSSB_LIBNAME)
 endif
 endif
-
-LDTOOLS_LIBS += $(EXTRA_LIBS)
-LIBLOCATION   = $(DIST)/$(OBJDIR_NAME)/lib
 
 include $(topsrcdir)/config/rules.mk
 
@@ -272,23 +259,23 @@ endif
 
 $(LDAPCOMPARE):	$(LDAPCOMPARE_OBJ) $(LDAPTOOLCOMMON_OBJ) \
 		$(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS_DEP)
-	$(LINK_EXE) $(LDAPCOMPARE_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS)
+	$(LINK_EXE)
 
 $(LDAPDELETE):	$(LDAPDELETE_OBJ) $(LDAPTOOLCOMMON_OBJ) \
 		$(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS_DEP)
-	$(LINK_EXE) $(LDAPDELETE_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS)
+	$(LINK_EXE)
 
 $(LDAPMODIFY):	$(LDAPMODIFY_OBJ) $(LDAPTOOLCOMMON_OBJ) \
 		$(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS_DEP)
-	$(LINK_EXE) $(LDAPMODIFY_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS)
+	$(LINK_EXE)
 
 $(LDAPSEARCH):	$(LDAPSEARCH_OBJ) $(LDAPTOOLCOMMON_OBJ) \
 		$(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS_DEP)
-	$(LINK_EXE) $(LDAPSEARCH_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS)
+	$(LINK_EXE)
 
 $(LDAPCMP):	$(LDAPCMP_OBJ) $(LDAPTOOLCOMMON_OBJ) \
 		$(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS_DEP)
-	$(LINK_EXE) $(LDAPCMP_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS)
+	$(LINK_EXE)
 
 $(OBJDEST):	FORCE
 	$(NSINSTALL) -D $(OBJDEST)

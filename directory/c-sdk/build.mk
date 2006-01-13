@@ -425,7 +425,8 @@ endif
 ifeq ($(OS_ARCH), WINNT)
 
 ifdef NS_USE_GCC
-LINK_EXE	= $(CC_FOR_LINK) -o $@ $(LDFLAGS) $(LCFLAGS) $(DEPLIBS) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
+LINK_EXE	= $(CC_FOR_LINK) -o $@ $(LDFLAGS) $(LCFLAGS) $(DEPLIBS) \
+	$(filter %.$(OBJ_SUFFIX),$^) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
 LINK_LIB	= $(AR) cr $@ $(OBJS)
 LINK_DLL	= $(CC_FOR_LINK) -shared -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(@:.$(DLL_SUFFIX)=.$(LIB_SUFFIX)) $(LLFLAGS) $(DLL_LDFLAGS) -o $@ $(OBJS) $(EXTRA_LIBS) $(EXTRA_DLL_LIBS)
 else
@@ -445,7 +446,7 @@ endif
 LINK_EXE        = $(CYGWIN_WRAPPER) link $(DEBUG_LINK_OPT) -OUT:"$@" -MAP $(ALDFLAGS) $(LDFLAGS) $(ML_DEBUG) \
     $(LCFLAGS) -NOLOGO $(DEBUG_FLAGS) -INCREMENTAL:NO \
     -NODEFAULTLIB:MSVCRTD -SUBSYSTEM:$(SUBSYSTEM) $(DEPLIBS) \
-    $(EXTRA_LIBS) $(PLATFORMLIBS) $(OBJS)
+    $(filter %.$(OBJ_SUFFIX),$^) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
 LINK_LIB        = $(CYGWIN_WRAPPER) lib -OUT:"$@"  $(OBJS)
 LINK_DLL        = $(CYGWIN_WRAPPER) link $(DEBUG_LINK_OPT) -nologo -MAP -DLL $(DEBUG_FLAGS) \
         $(ML_DEBUG) -SUBSYSTEM:$(SUBSYSTEM) $(LLFLAGS) $(DLL_LDFLAGS) \
@@ -496,13 +497,13 @@ ifeq ($(OS_ARCH), HP-UX)
 #    needs this).
 # 2) Add a "-Wl,-E" option so the linker gets a "-E" flag.  This makes symbols
 #    in an executable visible to shared libraries loaded at runtime.
-LINK_EXE        = $(CC_FOR_LINK) -Wl,-E $(ALDFLAGS) $(LDFLAGS) $(RPATHFLAG_PREFIX)$(RPATHFLAG) -o $@ $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
+LINK_EXE        = $(CC_FOR_LINK) -Wl,-E $(ALDFLAGS) $(LDFLAGS) $(RPATHFLAG_PREFIX)$(RPATHFLAG) -o $@ $(filter %.$(OBJ_SUFFIX),$^) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
 
 ifeq ($(USE_64), 1)
 ifeq ($(OS_RELEASE), B.11.23)
-LINK_EXE        = $(CC_FOR_LINK) -DHPUX_ACC -D__STDC_EXT__ -D_POSIX_C_SOURCE=199506L  +DD64 +DSblended -Wl,-E $(ALDFLAGS) $(LDFLAGS) $(RPATHFLAG_PREFIX)$(RPATHFLAG) -o $@ $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
+LINK_EXE        = $(CC_FOR_LINK) -DHPUX_ACC -D__STDC_EXT__ -D_POSIX_C_SOURCE=199506L  +DD64 +DSblended -Wl,-E $(ALDFLAGS) $(LDFLAGS) $(RPATHFLAG_PREFIX)$(RPATHFLAG) -o $@ $(filter %.$(OBJ_SUFFIX),$^) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
 else
-LINK_EXE        = $(CC_FOR_LINK) -DHPUX_ACC -D__STDC_EXT__ -D_POSIX_C_SOURCE=199506L  +DA2.0W +DS2.0 -Wl,-E $(ALDFLAGS) $(LDFLAGS) $(RPATHFLAG_PREFIX)$(RPATHFLAG) -o $@ $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
+LINK_EXE        = $(CC_FOR_LINK) -DHPUX_ACC -D__STDC_EXT__ -D_POSIX_C_SOURCE=199506L  +DA2.0W +DS2.0 -Wl,-E $(ALDFLAGS) $(LDFLAGS) $(RPATHFLAG_PREFIX)$(RPATHFLAG) -o $@ $(filter %.$(OBJ_SUFFIX),$^) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
 endif
 endif
 
@@ -514,12 +515,12 @@ ifdef USE_LD_RUN_PATH
 #see ns/netsite/ldap/clients/tools/Makefile for an example
 export LD_RUN_PATH=$(RPATHFLAG)
 LINK_EXE        = $(CC_FOR_LINK) $(ALDFLAGS) $(LDFLAGS) \
-                        -o $@ $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
+                        -o $@ $(filter %.$(OBJ_SUFFIX),$^) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
 LINK_EXE_NOLIBSOBJS     =  $(CC_FOR_LINK) $(ALDFLAGS) $(LDFLAGS) -o $@
 else # USE_LD_RUN_PATH
 LINK_EXE        = $(CC_FOR_LINK) $(ALDFLAGS) $(LDFLAGS) \
                         $(RPATHFLAG_PREFIX)$(RPATHFLAG)$(RPATHFLAG_EXTRAS) \
-                        -o $@ $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
+                        -o $@ $(filter %.$(OBJ_SUFFIX),$^) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
 LINK_EXE_NOLIBSOBJS     = $(CC_FOR_LINK) $(ALDFLAGS) $(LDFLAGS) \
                         $(RPATHFLAG_PREFIX)$(RPATHFLAG)$(RPATHFLAG_EXTRAS) -o $@
 endif # USE_LD_RUN_PATH
