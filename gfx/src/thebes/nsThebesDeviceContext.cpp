@@ -314,7 +314,8 @@ nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
 NS_IMETHODIMP
 nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-    nsresult rv;
+#ifdef XP_WIN
+    nsresult rv = NS_OK;
 
     aContext = nsnull;
     nsCOMPtr<nsIRenderingContext> pContext;
@@ -332,6 +333,9 @@ nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
     }
 
     return rv;
+#endif
+
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
