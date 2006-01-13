@@ -166,12 +166,20 @@ SIGN_NSS		= @echo signing nss libraries;
 SIGN_CMD	= $(DIST)/bin/run-mozilla.sh $(DIST)/bin/shlibsign -v -i
 
 SOFTOKN		= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)softokn3$(DLL_SUFFIX)
-FREEBL_HYBRID	= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)freebl_hybrid_3$(DLL_SUFFIX)
-FREEBL_PURE	= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)freebl_pure32_3$(DLL_SUFFIX)
+FREEBL		= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)freebl3$(DLL_SUFFIX)
+FREEBL_32FPU	= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)freebl_32fpu_3$(DLL_SUFFIX)
+FREEBL_32INT	= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)freebl_32int_3$(DLL_SUFFIX)
+FREEBL_32INT64	= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)freebl_32int64_3$(DLL_SUFFIX)
+FREEBL_64FPU	= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)freebl_64fpu_3$(DLL_SUFFIX)
+FREEBL_64INT	= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)freebl_64int_3$(DLL_SUFFIX)
 
 SIGN_NSS	+= $(SIGN_CMD) $(SOFTOKN); \
-        if test -f $(FREEBL_HYBRID); then $(SIGN_CMD) $(FREEBL_HYBRID); fi; \
-        if test -f $(FREEBL_PURE); then $(SIGN_CMD) $(FREEBL_PURE); fi;
+	if test -f $(FREEBL); then $(SIGN_CMD) $(FREEBL); fi; \
+	if test -f $(FREEBL_32FPU); then $(SIGN_CMD) $(FREEBL_32FPU); fi; \
+	if test -f $(FREEBL_32INT); then $(SIGN_CMD) $(FREEBL_32INT); fi; \
+	if test -f $(FREEBL_32INT64); then $(SIGN_CMD) $(FREEBL_32INT64); fi; \
+	if test -f $(FREEBL_64FPU); then $(SIGN_CMD) $(FREEBL_64FPU); fi; \
+	if test -f $(FREEBL_64INT); then $(SIGN_CMD) $(FREEBL_64INT); fi;
 
 endif # MOZ_PSM
 endif # !CROSS_COMPILE

@@ -344,14 +344,21 @@ bin/libnss3.so
 bin/libsmime3.so
 bin/libsoftokn3.chk
 bin/libsoftokn3.so
+bin/libfreebl3.chk
+bin/libfreebl3.so
+bin/libfreebl_32fpu_3.chk
+bin/libfreebl_32fpu_3.so
+bin/libfreebl_32int_3.chk
+bin/libfreebl_32int_3.so
+bin/libfreebl_32int64_3.so
+bin/libfreebl_32int64_3.chk
+bin/libfreebl_64fpu_3.chk
+bin/libfreebl_64fpu_3.so
+bin/libfreebl_64int_3.chk
+bin/libfreebl_64int_3.so
 bin/libssl3.so
 bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
-; These are required for solaris 32-bit builds
-bin/libfreebl_pure32_3.chk
-bin/libfreebl_pure32_3.so
-bin/libfreebl_hybrid_3.chk
-bin/libfreebl_hybrid_3.so
 
 [inspector]
 bin/components/inspector-cmdline.js

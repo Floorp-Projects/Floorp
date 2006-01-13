@@ -55,7 +55,10 @@ PACKAGE_VARS += \
 	SOFTOKEN3_LIB \
 	SOFTOKEN3_CHK \
 	LOADABLE_ROOT_MODULE \
-	HAVE_FREEBL_MODULES \
+	HAVE_FREEBL_LIBS \
+	HAVE_FREEBL_LIBS_32 \
+	HAVE_FREEBL_LIBS_32INT64 \
+	HAVE_FREEBL_LIBS_64 \
 	$(NULL)
 
 LOADABLE_ROOT_MODULE = $(DLL_PREFIX)nssckbi$(DLL_SUFFIX)
@@ -67,24 +70,80 @@ SSL3_LIB =  $(DLL_PREFIX)ssl3$(DLL_SUFFIX)
 SOFTOKEN3_LIB = $(DLL_PREFIX)softokn3$(DLL_SUFFIX)
 SOFTOKEN3_CHK = $(DLL_PREFIX)softokn3.chk
 
-ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
-ifeq (,$(filter i86pc ia64,$(OS_TEST)))
+# Default
+HAVE_FREEBL_LIBS = 1
+
+# 32-bit HP-UX PA-RISC
+ifeq ($(OS_ARCH), HP-UX)
+ifneq ($(OS_TEST), ia64)
 ifndef HAVE_64BIT_OS
-HAVE_FREEBL_MODULES = 1
-FREEBL_PURE32_MODULE = libfreebl_pure32_3$(DLL_SUFFIX)
-FREEBL_PURE32_CHK = libfreebl_pure32_3.chk
-FREEBL_HYBRID_MODULE = libfreebl_hybrid_3$(DLL_SUFFIX)
-FREEBL_HYBRID_CHK = libfreebl_hybrid_3.chk
+HAVE_FREEBL_LIBS =
+HAVE_FREEBL_LIBS_32 = 1
 endif
 endif
 endif
 
+# SunOS SPARC
+ifeq ($(OS_ARCH), SunOS)
+ifneq ($(OS_TEST), i86pc)
+ifdef HAVE_64BIT_OS
+HAVE_FREEBL_LIBS =
+HAVE_FREEBL_LIBS_64 = 1
+else
+HAVE_FREEBL_LIBS =
+HAVE_FREEBL_LIBS_32 = 1
+HAVE_FREEBL_LIBS_32INT64 = 1
+endif
+endif
+endif
+
+ifdef HAVE_FREEBL_LIBS
+FREEBL_LIB = $(DLL_PREFIX)freebl3$(DLL_SUFFIX)
+FREEBL_CHK = $(DLL_PREFIX)freebl3.chk
+endif
+ifdef HAVE_FREEBL_LIBS_32
+FREEBL_32INT_LIB = libfreebl_32int_3$(DLL_SUFFIX)
+FREEBL_32INT_CHK = libfreebl_32int_3.chk
+FREEBL_32FPU_LIB = libfreebl_32fpu_3$(DLL_SUFFIX)
+FREEBL_32FPU_CHK = libfreebl_32fpu_3.chk
+endif
+ifdef HAVE_FREEBL_LIBS_32INT64
+FREEBL_32INT64_LIB = libfreebl_32int64_3$(DLL_SUFFIX)
+FREEBL_32INT64_CHK = libfreebl_32int64_3.chk
+endif
+ifdef HAVE_FREEBL_LIBS_64
+FREEBL_64INT_LIB = libfreebl_64int_3$(DLL_SUFFIX)
+FREEBL_64INT_CHK = libfreebl_64int_3.chk
+FREEBL_64FPU_LIB = libfreebl_64fpu_3$(DLL_SUFFIX)
+FREEBL_64FPU_CHK = libfreebl_64fpu_3.chk
+endif
+ 
+ABS_DIST := $(shell cd $(DIST) && pwd)
+ifeq ($(HOST_OS_ARCH),WINNT)
+ifdef CYGDRIVE_MOUNT
+ABS_DIST := $(shell cygpath -w $(ABS_DIST) | sed -e 's|\\|/|g')
+endif
+endif
+NSPR_INCLUDE_DIR = $(firstword $(filter -I%,$(NSPR_CFLAGS)))
+ifneq (,$(strip $(NSPR_INCLUDE_DIR)))
+NSPR_INCLUDE_DIR := $(subst -I,,$(subst -I$(DIST),-I$(ABS_DIST),$(NSPR_INCLUDE_DIR)))
+else
+NSPR_INCLUDE_DIR = $(ABS_DIST)/include/nspr
+endif
+NSPR_LIB_DIR = $(firstword $(filter -L%,$(NSPR_LIBS)))
+ifneq (,$(strip $(NSPR_LIB_DIR)))
+NSPR_LIB_DIR := $(subst -L,,$(subst -L$(DIST),-L$(ABS_DIST),$(NSPR_LIB_DIR)))
+else
+NSPR_LIB_DIR = $(ABS_DIST)/lib
+endif
 # NSS makefiles are not safe for parallel execution.
 DEFAULT_GMAKE_FLAGS = MAKE="$(MAKE) -j1" -j1
 DEFAULT_GMAKE_FLAGS += CC="$(CC)"
-DEFAULT_GMAKE_FLAGS += MOZILLA_INCLUDES="-I$(MOZ_BUILD_ROOT)/dist/include/nspr -I$(MOZ_BUILD_ROOT)/dist/include/dbm"
-DEFAULT_GMAKE_FLAGS += SOURCE_MD_DIR=$(MOZ_BUILD_ROOT)/dist
-DEFAULT_GMAKE_FLAGS += DIST=$(MOZ_BUILD_ROOT)/dist
+DEFAULT_GMAKE_FLAGS += MOZILLA_INCLUDES=-I$(ABS_DIST)/include/dbm
+DEFAULT_GMAKE_FLAGS += SOURCE_MD_DIR=$(ABS_DIST)
+DEFAULT_GMAKE_FLAGS += DIST=$(ABS_DIST)
+DEFAULT_GMAKE_FLAGS += NSPR_INCLUDE_DIR=$(NSPR_INCLUDE_DIR)
+DEFAULT_GMAKE_FLAGS += NSPR_LIB_DIR=$(NSPR_LIB_DIR)
 DEFAULT_GMAKE_FLAGS += MOZILLA_CLIENT=1
 DEFAULT_GMAKE_FLAGS += NO_MDUPDATE=1
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
@@ -199,11 +258,25 @@ endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DIST)/bin
-ifdef HAVE_FREEBL_MODULES
-	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_PURE32_CHK) $(DIST)/bin
-	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_PURE32_MODULE) $(DIST)/bin
-	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_HYBRID_CHK) $(DIST)/bin
-	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(DIST)/bin
+ifdef HAVE_FREEBL_LIBS
+	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_CHK) $(DIST)/bin
+	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_LIB) $(DIST)/bin
+endif
+ifdef HAVE_FREEBL_LIBS_32
+	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_32INT_CHK) $(DIST)/bin
+	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT_LIB) $(DIST)/bin
+	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_32FPU_CHK) $(DIST)/bin
+	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_32FPU_LIB) $(DIST)/bin
+endif
+ifdef HAVE_FREEBL_LIBS_32INT64
+	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_32INT64_CHK) $(DIST)/bin
+	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT64_LIB) $(DIST)/bin
+endif
+ifdef HAVE_FREEBL_LIBS_64
+	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_64INT_CHK) $(DIST)/bin
+	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_64INT_LIB) $(DIST)/bin
+	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_64FPU_CHK) $(DIST)/bin
+	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_64FPU_LIB) $(DIST)/bin
 endif
 endif
 	$(MAKE) -C boot $@
@@ -223,11 +296,25 @@ endif
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DESTDIR)$(mozappdir)
-ifdef HAVE_FREEBL_MODULES
-	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_PURE32_CHK) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_PURE32_MODULE) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_HYBRID_CHK) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(DESTDIR)$(mozappdir)
+ifdef HAVE_FREEBL_LIBS
+	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_CHK) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_LIB) $(DESTDIR)$(mozappdir)
+endif
+ifdef HAVE_FREEBL_LIBS_32
+	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_32INT_CHK) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT_LIB) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_32FPU_CHK) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_32FPU_LIB) $(DESTDIR)$(mozappdir)
+endif
+ifdef HAVE_FREEBL_LIBS_32INT64
+	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_32INT64_CHK) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT64_LIB) $(DESTDIR)$(mozappdir)
+endif
+ifdef HAVE_FREEBL_LIBS_64
+	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_64INT_CHK) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_64INT_LIB) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_64FPU_CHK) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_64FPU_LIB) $(DESTDIR)$(mozappdir)
 endif
 endif
 	$(MAKE) -C boot $@

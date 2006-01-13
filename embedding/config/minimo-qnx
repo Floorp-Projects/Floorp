@@ -161,6 +161,8 @@ libnss3.so
 libsmime3.so
 libsoftokn3.chk
 libsoftokn3.so
+libfreebl3.chk
+libfreebl3.so
 libssl3.so
 libnssckbi.so
 

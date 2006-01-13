@@ -222,6 +222,8 @@ nss3.dll
 smime3.dll
 softokn3.chk
 softokn3.dll
+freebl3.chk
+freebl3.dll
 ssl3.dll
 nssckbi.dll
 
