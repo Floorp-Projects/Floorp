@@ -84,7 +84,7 @@ public:
 
   /** destructor
     * NOT VIRTUAL BECAUSE THIS CLASS SHOULD **NEVER** BE SUBCLASSED  
-	  */
+    */
   ~nsTableCellMap();
   
   void RemoveGroupCellMap(nsTableRowGroupFrame* aRowGroup);
@@ -235,14 +235,14 @@ class nsCellMap
 {
 public:
   /** constructor 
-    * @param aNumRows - initial number of rows
-	  * @param aNumColumns - initial number of columns
-	  */
-  nsCellMap(nsTableRowGroupFrame& aRowGroupFrame);
+    * @param aRowGroupFrame the row group frame this is a cellmap for
+    * @param aIsBC whether the table is doing border-collapse
+    */
+  nsCellMap(nsTableRowGroupFrame& aRowGroupFrame, PRBool aIsBC);
 
   /** destructor
     * NOT VIRTUAL BECAUSE THIS CLASS SHOULD **NEVER** BE SUBCLASSED  
-	  */
+    */
   ~nsCellMap();
 
   nsCellMap* GetNextSibling() const;
@@ -442,6 +442,14 @@ protected:
   PRBool IsZeroColSpan(PRInt32 aRowIndex,
                        PRInt32 aColIndex) const;
 
+  // Destroy a CellData struct.  This will handle the case of aData
+  // actually being a BCCellData properly.
+  void DestroyCellData(CellData* aData);
+  // Allocate a CellData struct.  This will handle needing to create a
+  // BCCellData properly.
+  // @param aOrigCell the originating cell to pass to the celldata constructor
+  CellData* AllocCellData(nsTableCellFrame* aOrigCell);
+
   /** an array containing col array. It can be larger than mRowCount due to
     * row spans extending beyond the table */
   nsAutoVoidArray mRows; 
@@ -456,6 +464,8 @@ protected:
   // the next row group cell map
   nsCellMap* mNextSibling;
 
+  // Whether this is a BC cellmap or not
+  PRBool mIsBC;
 };
 
 /* ----- inline methods ----- */
