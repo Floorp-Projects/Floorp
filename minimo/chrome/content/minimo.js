@@ -73,7 +73,7 @@ nsBrowserStatusHandler.prototype =
   QueryInterface : function(aIID)
   {
     if (aIID.equals(nsCI.nsIWebProgressListener) ||
-        aIID.equals(Components.interfaces.nsIXULBrowserWindow) ||
+        aIID.equals(nsCI.nsIXULBrowserWindow) ||
         aIID.equals(nsCI.nsISupportsWeakReference) ||
         aIID.equals(nsCI.nsISupports))
     {
@@ -175,6 +175,10 @@ nsBrowserStatusHandler.prototype =
   },
   onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
+
+    document.getElementById("statusbar-text").label= "dbg:onProgressChange " + aCurTotalProgress + " " + aMaxTotalProgress;
+
+
     var percentage = parseInt((aCurTotalProgress/aMaxTotalProgress)*parseInt(gURLBarBoxObject.width));
     if(percentage<0) percentage=10;
     document.getElementById("urlbar").inputField.style.backgroundPosition=percentage+"px 100%";
