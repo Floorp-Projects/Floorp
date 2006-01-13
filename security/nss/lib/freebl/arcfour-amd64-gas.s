@@ -114,3 +114,7 @@ ARCFOUR:
 	ret
 .L_ARCFOUR_end:
 .size ARCFOUR,.L_ARCFOUR_end-ARCFOUR
+
+# Magic indicating no need for an executable stack
+.section .note.GNU-stack,"",@progbits
+.previous

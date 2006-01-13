@@ -416,3 +416,7 @@
 	ret
         
 .size s_mpv_mul_add_vec64, [.-s_mpv_mul_add_vec64]
+
+# Magic indicating no need for an executable stack
+.section .note.GNU-stack, "", @progbits
+.previous
