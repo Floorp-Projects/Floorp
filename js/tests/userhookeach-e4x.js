@@ -82,6 +82,9 @@ function checkTestCompleted()
             'actual: '      + testcase.actual + ' ' +
             'reason: '      + testcase.reason);
     }
+    // added in Spider 0.0.1.8
+    // gc to flush out issues quickly
+    collectGarbage();
   }
   else
   {
