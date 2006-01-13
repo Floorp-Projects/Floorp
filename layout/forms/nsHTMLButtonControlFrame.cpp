@@ -105,20 +105,6 @@ nsHTMLButtonControlFrame::Init(nsPresContext*  aPresContext,
 {
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   mRenderer.SetFrame(this,aPresContext);
-
-  PRUint32 flags = NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP;
-
-  nsIPresShell *shell = aPresContext->PresShell();
-  nsIFrame* areaFrame = NS_NewAreaFrame(shell, flags);
-  mFrames.SetFrames(areaFrame);
-
-  // Resolve style and initialize the frame
-  nsRefPtr<nsStyleContext> styleContext;
-  styleContext = shell->StyleSet()->ResolvePseudoStyleFor(mContent,
-                                                          nsCSSAnonBoxes::buttonContent,
-                                                          mStyleContext);
-  mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
-
   return rv;
 }
 
@@ -168,25 +154,6 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetAccessible(nsIAccessible** aAccessibl
   return NS_ERROR_FAILURE;
 }
 #endif
-
-void
-nsHTMLButtonControlFrame::ReParentFrameList(nsFrameManager* aFrameManager,
-                                            nsIFrame* aFrameList)
-{
-  // get the new parent context from the first child: that is the
-  // frame that the subsequent children will be made children of
-  nsStyleContext* newParentContext = mFrames.FirstChild()->GetStyleContext();
-
-  // Set the parent for each of the child frames
-  for (nsIFrame* frame = aFrameList; frame; frame = frame->GetNextSibling()) {
-    frame->SetParent(mFrames.FirstChild());
-    // now reparent the contexts for the reparented frame too
-    aFrameManager->ReParentStyleContext(frame, newParentContext);
-  }
-
-  // Set NS_FRAME_HAS_CHILD_WITH_VIEW on the area frame if needed, bug 276236.
-  mFrames.FirstChild()->AddStateBits(GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW);
-}
 
 PRBool
 nsHTMLButtonControlFrame::IsReset(PRInt32 type)
@@ -241,16 +208,6 @@ nsHTMLButtonControlFrame::GetFrameForPoint(const nsPoint& aPoint,
   return nsnull;
 }
 
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                              nsIAtom*        aListName,
-                                              nsIFrame*       aChildList)
-{
-  // NOTE: the whole reparenting should not need to happen: see bugzilla bug 51767
-  ReParentFrameList(aPresContext->FrameManager(), aChildList);
-  
-  return mFrames.FirstChild()->SetInitialChildList(aPresContext, aListName, aChildList);
-}
 
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::Paint(nsPresContext*      aPresContext,
@@ -307,14 +264,6 @@ nsHTMLButtonControlFrame::Paint(nsPresContext*      aPresContext,
   return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
-NS_IMETHODIMP 
-nsHTMLButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
-                                                                const nsHTMLReflowState& aSuggestedReflowState)
-{
-  aDesiredSize.width  += aSuggestedReflowState.mComputedBorderPadding.left + aSuggestedReflowState.mComputedBorderPadding.right;
-  aDesiredSize.height += aSuggestedReflowState.mComputedBorderPadding.top + aSuggestedReflowState.mComputedBorderPadding.bottom;
-  return NS_OK;
-}
 
 NS_IMETHODIMP 
 nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
@@ -401,10 +350,10 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   else
     aDesiredSize.height += focusPadding.top + focusPadding.bottom;
 
-  AddComputedBorderPaddingToDesiredSize(aDesiredSize, aReflowState);
+ 
 
-  //aDesiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-  //aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+  aDesiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+  aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   if (aDesiredSize.mComputeMEW) {
     aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
@@ -553,8 +502,8 @@ NS_IMETHODIMP
 nsHTMLButtonControlFrame::AppendFrames(nsIAtom*        aListName,
                                        nsIFrame*       aFrameList)
 {
-  ReParentFrameList(GetPresContext()->FrameManager(), aFrameList);
-  return mFrames.FirstChild()->AppendFrames(aListName, aFrameList);
+  NS_NOTREACHED("unsupported operation");
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
@@ -562,13 +511,14 @@ nsHTMLButtonControlFrame::InsertFrames(nsIAtom*        aListName,
                                        nsIFrame*       aPrevFrame,
                                        nsIFrame*       aFrameList)
 {
-  ReParentFrameList(GetPresContext()->FrameManager(), aFrameList);
-  return mFrames.FirstChild()->InsertFrames(aListName, aPrevFrame, aFrameList);
+  NS_NOTREACHED("unsupported operation");
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::RemoveFrame(nsIAtom*        aListName,
                                       nsIFrame*       aOldFrame)
 {
-  return mFrames.FirstChild()->RemoveFrame(aListName, aOldFrame);
+  NS_NOTREACHED("unsupported operation");
+  return NS_ERROR_UNEXPECTED;
 }
