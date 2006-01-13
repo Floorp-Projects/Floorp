@@ -51,4 +51,8 @@ if (actual)
   actual = actual.toString();
 }
   
-reportCompare(expect, actual, summary);
+reportCompare(expect, actual, summary + ' ' + inSection(1));
+
+expect = 'AB';
+actual = /(?!AB+D)AB/.exec("AB") + '';
+reportCompare(expect, actual, status + ' ' + inSection(2));
