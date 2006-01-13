@@ -61,9 +61,7 @@ public:
     /**
      * Force the glitz state to on or off
      */
-    static void SetUseGlitz(PRBool use) {
-        mGlitzState = (use ? 1 : 0);
-    }
+    static void SetUseGlitz(PRBool use);
 
     /**
      * Create an offscreen surface of the given dimensions
@@ -92,9 +90,6 @@ public:
 protected:
     gfxPlatform() { }
     ~gfxPlatform() { }
-
-    static gfxPlatform *mPlatform;
-    static int mGlitzState;
 };
 
 #endif /* GFX_PLATFORM_H */

@@ -61,8 +61,6 @@
 
 #include <stdlib.h>
 
-PRInt32 nsThebesDrawingSurface::mGlitzMode = -1;
-
 NS_IMPL_ISUPPORTS1(nsThebesDrawingSurface, nsIDrawingSurface)
 
 nsThebesDrawingSurface::nsThebesDrawingSurface()
@@ -328,23 +326,3 @@ static nsresult ConvertPixmapsGTK(GdkPixmap* aPmBlack, GdkPixmap* aPmWhite,
     return NS_OK;
 }
 #endif
-
-PRBool
-nsThebesDrawingSurface::UseGlitz()
-{
-#ifdef MOZ_ENABLE_GLITZ
-    if (mGlitzMode == -1) {
-        if (getenv("MOZ_GLITZ")) {
-            glitz_glx_init (NULL);
-            mGlitzMode = 1;
-        } else {
-            mGlitzMode = 0;
-        }
-    }
-
-    if (mGlitzMode)
-        return PR_TRUE;
-
-#endif
-    return PR_FALSE;
-}

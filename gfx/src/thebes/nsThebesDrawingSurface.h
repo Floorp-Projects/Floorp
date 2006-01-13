@@ -95,9 +95,6 @@ public:
 
     nsresult PushFilter(const nsIntRect& aRect, PRBool aAreaIsOpaque, float aOpacity);
     void PopFilter();
-
-    static PRBool UseGlitz();
-    static PRInt32 mGlitzMode;
 private:
     nsRefPtr<gfxASurface> mSurface;
     nsThebesDeviceContext *mDC;

@@ -49,42 +49,48 @@
 #include <stdlib.h>
 #endif
 
-NS_EXPORT gfxPlatform *gfxPlatform::mPlatform = nsnull;
-NS_EXPORT int gfxPlatform::mGlitzState = -1;
+gfxPlatform *gPlatform = nsnull;
+int gGlitzState = -1;
 
 gfxPlatform*
 gfxPlatform::GetPlatform()
 {
-    if (!mPlatform) {
+    if (!gPlatform) {
 #if defined(XP_WIN)
-//        mPlatform = new gfxPlatformWindows;
+//        gPlatform = new gfxPlatformWindows;
         return nsnull;
 #elif defined(XP_MACOSX)
-        mPlatform = new gfxPlatformMac;
+        gPlatform = new gfxPlatformMac;
 #elif defined(MOZ_WIDGET_GTK2)
-        mPlatform = new gfxPlatformGtk;
+        gPlatform = new gfxPlatformGtk;
 #endif
     }
 
-    return mPlatform;
+    return gPlatform;
 }
 
 PRBool
 gfxPlatform::UseGlitz()
 {
 #ifdef MOZ_ENABLE_GLITZ
-    if (mGlitzState == -1) {
+    if (gGlitzState == -1) {
         if (getenv("MOZ_GLITZ"))
-            mGlitzState = 1;
+            gGlitzState = 1;
         else
-            mGlitzState = 0;
+            gGlitzState = 0;
     }
 
-    if (mGlitzState)
+    if (gGlitzState)
         return PR_TRUE;
 #endif
 
     return PR_FALSE;
+}
+
+void
+gfxPlatform::SetUseGlitz(PRBool use)
+{
+    gGlitzState = (use ? 1 : 0);
 }
 
 nsresult

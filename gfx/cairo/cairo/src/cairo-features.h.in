@@ -37,6 +37,8 @@
 #ifndef CAIRO_FEATURES_H
 #define CAIRO_FEATURES_H
 
+#include "cairo-platform.h"
+
 #ifdef  __cplusplus
 # define CAIRO_BEGIN_DECLS  extern "C" {
 # define CAIRO_END_DECLS    }
