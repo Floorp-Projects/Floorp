@@ -46,6 +46,7 @@
 #include "nsIAddrBookSession.h"
 #include "nsIAbLDIFService.h"
 #include "nsAddrDatabase.h"
+#include "nsIAbMDBDirectory.h"
 #include "nsIOutputStream.h"
 #include "nsNetUtil.h"
 #include "msgCore.h"

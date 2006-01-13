@@ -41,6 +41,11 @@
 #include "nsIAbCard.idl"
 #include "nsIAbDirectory.idl"
 
+%{C++
+#define kMDBDirectoryRoot          "moz-abmdbdirectory://"
+#define kMDBDirectoryRootLen       21
+%}
+
 [scriptable, uuid(C6BCF232-1DD1-11B2-A108-B41BFECED134)]
 interface nsIAbMDBDirectory : nsISupports {
 

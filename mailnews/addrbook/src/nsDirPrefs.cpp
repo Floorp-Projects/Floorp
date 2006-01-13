@@ -57,6 +57,10 @@
 #include "nsCRT.h"
 #include "nsILocalFile.h"
 #include "nsWeakReference.h"
+#include "nsIAbMDBDirectory.h"
+#if defined(MOZ_LDAP_XPCOM)
+#include "nsIAbLDAPDirectory.h"
+#endif
 
 #include "prlog.h"
 #include "plstr.h"
@@ -1675,7 +1679,13 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
     DIR_ConvertServerFileName(server);
 
   // the string "s" is the default uri ( <scheme> + "://" + <filename> )
-  nsCString s((server->dirType == PABDirectory || server->dirType == MAPIDirectory) ? kMDBDirectoryRoot : kLDAPDirectoryRoot);
+  nsCString s((server->dirType == PABDirectory || server->dirType == MAPIDirectory) ?
+#if defined(MOZ_LDAP_XPCOM)
+    kMDBDirectoryRoot : kLDAPDirectoryRoot);
+#else
+    // Fallback to the all directory root in the non-ldap enabled case.
+    kMDBDirectoryRoot : kAllDirectoryRoot);
+#endif
   s.Append (server->fileName);
   server->uri = DIR_GetStringPref (prefstring, "uri", s.get ());
 

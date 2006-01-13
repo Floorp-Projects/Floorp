@@ -49,6 +49,7 @@
 #include "nsAddrDatabase.h"
 #include "nsIAddrBookSession.h"
 #include "nsIAddressBook.h"
+#include "nsIAbMDBDirectory.h"
 #include "nsILocalFile.h"
 
 nsAbMDBCardProperty::nsAbMDBCardProperty(void)
