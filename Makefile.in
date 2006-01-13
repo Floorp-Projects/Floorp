@@ -250,6 +250,8 @@ endif
 
 ifdef MOZ_PSM
 tier_50_dirs	+= security/manager
+else
+tier_50_dirs	+= security/manager/boot/public security/manager/ssl/public
 endif
 
 ifdef MOZ_PREF_EXTENSIONS
