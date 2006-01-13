@@ -221,7 +221,8 @@ function JavaScriptOptions()
   this.orig.strict = this.strict = false;
   this.orig.werror = this.werror = false;
 
-  this.privileges = 'UniversalXPConnect';
+  this.privileges = 'UniversalXPConnect UniversalPreferencesRead ' + 
+                    'UniversalPreferencesWrite';
 
   if (typeof options == 'function')
   {
