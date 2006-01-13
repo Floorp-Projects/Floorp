@@ -487,6 +487,16 @@ private:
   nsresult ConstructCheckboxControlFrame(nsIFrame**       aNewFrame,
                                          nsIContent*      aContent,
                                          nsStyleContext*  aStyleContext);
+  // ConstructButtonFrame puts the new frame in aFrameItems and
+  // handles the kids of the button.
+  nsresult ConstructButtonFrame(nsFrameConstructorState& aState,
+                                nsIContent*              aContent,
+                                nsIFrame*                aParentFrame,
+                                nsIAtom*                 aTag,
+                                nsStyleContext*          aStyleContext,
+                                nsIFrame**               aNewFrame,
+                                const nsStyleDisplay*    aStyleDisplay,
+                                nsFrameItems&            aFrameItems);
 
   // ConstructSelectFrame puts the new frame in aFrameItems and
   // handles the kids of the select.
@@ -649,9 +659,16 @@ private:
                            nsTableCreator*          aTableCreator = nsnull);
 
   // @param OUT aFrame the newly created frame
-  nsresult CreateInputFrame(nsIContent*      aContent,
-                            nsIFrame**       aFrame,
-                            nsStyleContext*  aStyleContext);
+  nsresult CreateInputFrame(nsFrameConstructorState& aState,
+                            nsIContent*              aContent,
+                            nsIFrame*                aParentFrame,
+                            nsIAtom*                 aTag,
+                            nsStyleContext*          aStyleContext,
+                            nsIFrame**               aFrame,
+                            const nsStyleDisplay*    aStyleDisplay,
+                            PRBool&                  aFrameHasBeenInitialized,
+                            PRBool&                  aAddedToFrameList,
+                            nsFrameItems&            aFrameItems);
 
   // A function that can be invoked to create some sort of image frame.
   typedef nsIFrame* (* ImageFrameCreatorFunc)(nsIPresShell*);

@@ -88,10 +88,6 @@ public:
   virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
                                      nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-
   NS_IMETHOD  Init(nsPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
@@ -133,7 +129,6 @@ public:
   }
 
 protected:
-  void ReParentFrameList(nsFrameManager* aFrameManager, nsIFrame* aFrameList);
   virtual PRBool IsReset(PRInt32 type);
   virtual PRBool IsSubmit(PRInt32 type);
   void ReflowButtonContents(nsPresContext* aPresContext,
@@ -144,8 +139,7 @@ protected:
                             nsReflowReason aReason,
                             nsMargin aFocusPadding,
                             nsReflowStatus& aStatus);
-  NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
-                                                   const nsHTMLReflowState& aSuggestedReflowState);
+
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 

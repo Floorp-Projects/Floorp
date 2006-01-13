@@ -2388,9 +2388,16 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsFrameConstructorState& aSta
 }
 
 nsresult
-nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
-                                        nsIFrame        **aFrame,
-                                        nsStyleContext  *aStyleContext)
+nsCSSFrameConstructor::CreateInputFrame(nsFrameConstructorState& aState,
+                                        nsIContent*              aContent,
+                                        nsIFrame*                aParentFrame,
+                                        nsIAtom*                 aTag,
+                                        nsStyleContext*          aStyleContext,
+                                        nsIFrame**               aFrame,
+                                        const nsStyleDisplay*    aStyleDisplay,
+                                        PRBool&                  aFrameHasBeenInitialized,
+                                        PRBool&                  aAddedToFrameList,
+                                        nsFrameItems&            aFrameItems)
 {
   // Make sure to keep IsSpecialContent in synch with this code
   
@@ -2399,7 +2406,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
   // callers accordingly.
   nsCOMPtr<nsIFormControl> control = do_QueryInterface(aContent);
   NS_ASSERTION(control, "input is not an nsIFormControl!");
-  
+
   switch (control->GetType()) {
     case NS_FORM_INPUT_SUBMIT:
     case NS_FORM_INPUT_RESET:
@@ -2408,8 +2415,12 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
       if (gUseXBLForms)
         return NS_OK; // upddate IsSpecialContent if this becomes functional
 
-      *aFrame = NS_NewGfxButtonControlFrame(mPresShell);
-      return NS_UNLIKELY(!*aFrame) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+      nsresult rv = ConstructButtonFrame(aState, aContent, aParentFrame,
+                                         aTag, aStyleContext, aFrame,
+                                         aStyleDisplay, aFrameItems);
+      aAddedToFrameList = PR_TRUE;
+      aFrameHasBeenInitialized = PR_TRUE;
+      return rv;
     }
 
     case NS_FORM_INPUT_CHECKBOX:
@@ -5068,6 +5079,108 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIFrame**      aNewFrame,
 }
 
 nsresult
+nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
+                                            nsIContent*              aContent,
+                                            nsIFrame*                aParentFrame,
+                                            nsIAtom*                 aTag,
+                                            nsStyleContext*          aStyleContext,
+                                            nsIFrame**               aNewFrame,
+                                            const nsStyleDisplay*    aStyleDisplay,
+                                            nsFrameItems&            aFrameItems)
+{
+  *aNewFrame = nsnull;
+  nsIFrame* buttonFrame = nsnull;
+  
+  if (nsHTMLAtoms::button == aTag) {
+    buttonFrame = NS_NewHTMLButtonControlFrame(mPresShell);
+  }
+  else {
+    buttonFrame = NS_NewGfxButtonControlFrame(mPresShell);
+  }
+  if (NS_UNLIKELY(!buttonFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  // Initialize the button frame
+  nsresult rv = InitAndRestoreFrame(aState, aContent,
+                                    aState.GetGeometricParent(aStyleDisplay, aParentFrame),
+                                    aStyleContext, nsnull, buttonFrame);
+  if (NS_FAILED(rv)) {
+    buttonFrame->Destroy(aState.mPresContext);
+    return rv;
+  }
+  // See if we need to create a view, e.g. the frame is absolutely positioned
+  nsHTMLContainerFrame::CreateViewForFrame(buttonFrame, aParentFrame, PR_FALSE);
+
+  nsIFrame* areaFrame = NS_NewAreaFrame(mPresShell, NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP);
+
+  if (NS_UNLIKELY(!areaFrame)) {
+    buttonFrame->Destroy(aState.mPresContext);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  nsRefPtr<nsStyleContext> styleContext;
+  styleContext = mPresShell->StyleSet()->ResolvePseudoStyleFor(aContent,
+                                                               nsCSSAnonBoxes::buttonContent,
+                                                               aStyleContext);
+  rv = InitAndRestoreFrame(aState, aContent, buttonFrame, styleContext, nsnull,
+                           areaFrame);
+  if (NS_FAILED(rv)) {
+    areaFrame->Destroy(aState.mPresContext);
+    buttonFrame->Destroy(aState.mPresContext);
+    return rv;
+  }
+
+  rv = aState.AddChild(buttonFrame, aFrameItems, aStyleDisplay, aContent,
+                                aStyleContext, aParentFrame);
+  if (NS_FAILED(rv)) {
+    areaFrame->Destroy(aState.mPresContext);
+    buttonFrame->Destroy(aState.mPresContext);
+    return rv;
+  }
+  // The area frame is a float container
+  PRBool haveFirstLetterStyle, haveFirstLineStyle;
+  HaveSpecialBlockStyle(aContent, aStyleContext,
+                        &haveFirstLetterStyle, &haveFirstLineStyle);
+  nsFrameConstructorSaveState floatSaveState;
+  aState.PushFloatContainingBlock(areaFrame, floatSaveState,
+                                  haveFirstLetterStyle,
+                                  haveFirstLineStyle);
+
+  // Process children
+  nsFrameConstructorSaveState absoluteSaveState;
+  nsFrameItems                childItems;
+
+  if (aStyleDisplay->IsPositioned()) {
+    // The area frame becomes a container for child frames that are
+    // absolutely positioned
+    aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
+  }
+
+  rv = ProcessChildren(aState, aContent, areaFrame, PR_TRUE, childItems,
+                       buttonFrame->GetStyleDisplay()->IsBlockLevel());
+  if (NS_FAILED(rv)) return rv;
+
+  // Set the scrolled frame's initial child lists
+  areaFrame->SetInitialChildList(aState.mPresContext, nsnull,
+                                 childItems.childList);
+
+  buttonFrame->SetInitialChildList(aState.mPresContext, nsnull, areaFrame);
+
+  nsFrameItems  anonymousChildItems;
+  // if there are any anonymous children create frames for them
+  CreateAnonymousFrames(aTag, aState, aContent, buttonFrame,
+                          PR_FALSE, anonymousChildItems);
+  if (anonymousChildItems.childList) {
+    // the anonmyous content is allready parented to the area frame
+    aState.mFrameManager->AppendFrames(areaFrame, nsnull, anonymousChildItems.childList);
+  }
+
+  // our new button frame returned is the top frame. 
+  *aNewFrame = buttonFrame; 
+
+  return NS_OK;  
+}
+nsresult
 nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
                                             nsIContent*              aContent,
                                             nsIFrame*                aParentFrame,
@@ -5547,14 +5660,15 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     triedFrame = PR_TRUE;
   }
   else if (nsHTMLAtoms::input == aTag) {
-    // Make sure to keep IsSpecialContent in synch with this code
-    rv = CreateInputFrame(aContent, &newFrame, aStyleContext);
-    if (NS_SUCCEEDED(rv) && newFrame) {
-      if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
+    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
         ProcessPseudoFrames(aState, aFrameItems); 
-      }
-      isReplaced = PR_TRUE;
     }
+    // Make sure to keep IsSpecialContent in synch with this code
+    rv = CreateInputFrame(aState, aContent, aParentFrame,
+                          aTag, aStyleContext, &newFrame,
+                          display, frameHasBeenInitialized,
+                          addedToFrameList, aFrameItems);  
+    isReplaced = PR_TRUE;
   }
   else if (nsHTMLAtoms::textarea == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -5688,14 +5802,17 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
-    newFrame = NS_NewHTMLButtonControlFrame(mPresShell);
-    triedFrame = PR_TRUE;
-
+    
+    rv = ConstructButtonFrame(aState, aContent, aParentFrame,
+                              aTag, aStyleContext, &newFrame,
+                              display, aFrameItems);
     // the html4 button needs to act just like a 
     // regular button except contain html content
     // so it must be replaced or html outside it will
     // draw into its borders. -EDV
+    frameHasBeenInitialized = PR_TRUE;
     isReplaced = PR_TRUE;
+    addedToFrameList = PR_TRUE;
     isFloatContainer = PR_TRUE;
   }
   else if (nsHTMLAtoms::isindex == aTag) {
