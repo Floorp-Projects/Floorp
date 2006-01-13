@@ -55,12 +55,12 @@ jsOptions.setOption('strict', true);
 jsOptions.setOption('werror', true);
 try 
 { 
-    var s = new String ('abc');
-    s.length = 0;
+  var s = new String ('abc');
+  s.length = 0;
 } 
 catch (e) 
 { 
-    actual = e.message;
+  actual = e.message;
 }
 jsOptions.reset();
 
@@ -76,11 +76,11 @@ jsOptions.setOption('strict', true);
 jsOptions.setOption('werror', false);
 try 
 { 
-    s.length = 0;
+  s.length = 0;
 } 
 catch (e) 
 { 
-    actual = e.message;
+  actual = e.message;
 }
 jsOptions.reset();
 reportCompare(expect, actual, status);
@@ -95,11 +95,11 @@ jsOptions.setOption('strict', false);
 jsOptions.setOption('werror', false);
 try 
 { 
-    s.length = 0;
+  s.length = 0;
 } 
 catch (e) 
 { 
-    actual = e.message;
+  actual = e.message;
 }
 jsOptions.reset();
 reportCompare(expect, actual, status);
