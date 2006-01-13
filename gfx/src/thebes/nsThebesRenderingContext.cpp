@@ -61,6 +61,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "gfxPlatform.h"
+
 #ifdef XP_WIN
 #include "gfxWindowsSurface.h"
 #endif
@@ -747,7 +749,7 @@ void*
 nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
 {
     if (aType == NATIVE_GDK_DRAWABLE &&
-        !nsThebesDrawingSurface::UseGlitz())
+        !gfxPlatform::GetPlatform()->UseGlitz())
     {
         if (mWidget && mDrawingSurface == mLocalDrawingSurface)
             return mWidget->GetNativeData(NS_NATIVE_WIDGET);

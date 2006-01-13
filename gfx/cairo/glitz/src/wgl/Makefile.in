@@ -49,10 +49,19 @@ LIBXUL_LIBRARY = 1
 REQUIRES	= glitz
 
 CSRCS = \
+	glitz_wgl_context.c \
+	glitz_wgl_drawable.c \
+	glitz_wgl_extension.c \
+	glitz_wgl_format.c \
+	glitz_wgl_info.c \
+	glitz_wgl_pbuffer.c \
 	$(NULL)
+
+LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/..
 
 EXPORTS = glitz-wgl.h
 
+FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk

@@ -47,6 +47,8 @@
 #include "gfxContext.h"
 #include "gfxPattern.h"
 
+#include "gfxPlatform.h"
+
 #ifdef MOZ_ENABLE_GTK2
 #include <gdk/gdkx.h>
 #include "gfxXlibSurface.h"
@@ -193,7 +195,7 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
 
     if (!mOptSurface) {
 #ifdef MOZ_ENABLE_GTK2
-        if (!nsThebesDrawingSurface::UseGlitz()) {
+        if (!gfxPlatform::GetPlatform()->UseGlitz()) {
             XRenderPictFormat *fmt = nsnull;
 
             if (mRealAlphaDepth == 0) {
