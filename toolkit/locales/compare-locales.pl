@@ -124,7 +124,19 @@ sub compareProperties
         if (exists $entities2{$entity}) {
             delete $entities2{$entity};
         } else {
-            push @extra1, $entity;
+# hack around region.properties#browser.search.order.[1-9]
+            if ($path !~ /chrome\/browser-region\/region\.properties$/ and
+                $entity !~ /browser\.search\.order\.[1-9]/) {
+                push @extra1, $entity;
+            }
+        }
+    }
+# hack around region.properties#browser.search.order.[1-9]
+    if ($path =~ /chrome\/browser-region\/region\.properties$/) {
+        foreach $entity (keys(%entities2)) {
+            if ($entity =~ /browser\.search\.order\.[1-9]/) {
+                delete $entities2{$entity};
+            }
         }
     }
 
