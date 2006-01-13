@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -wT
+#!/usr/bin/perl -wT
 if (!defined $ARGV[0]) {
     print "Usage: trapdoor PASSWORD\n";
     exit 2;

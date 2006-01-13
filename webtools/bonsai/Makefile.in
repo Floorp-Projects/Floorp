@@ -103,8 +103,7 @@ install: all
 	-mkdir -p $(PREFIX)
 	@for I in $(FILES); do \
 	  echo Installing $$I && \
-          sed -e s#/usr/bonsaitools/bin/perl#$(PERL)#g \
-              -e s#/tools/ns/bin/perl5#$(PERL)#g \
+          sed -e s#/usr/bin/perl#$(PERL)#g \
               $$I > $(PREFIX)/$$I && \
 	chmod 755 $(PREFIX)/$$I; done
 	-mkdir -p $(PREFIX)/data && chmod 755 $(PREFIX)/data

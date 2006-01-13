@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bin/perl --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 require 'utils.pl';

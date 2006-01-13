@@ -1,4 +1,4 @@
-#! /tools/ns/bin/perl5
+#! /usr/bin/perl
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public
