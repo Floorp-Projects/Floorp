@@ -2180,6 +2180,24 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         (do_GetService(NS_APPSTARTUP_CONTRACTID));
       NS_ENSURE_TRUE(appStartup, 1);
 
+      if (gDoMigration) {
+        nsCOMPtr<nsIFile> file;
+        profD->Clone(getter_AddRefs(file));
+        file->AppendNative(NS_LITERAL_CSTRING("override.ini"));
+        nsINIParser parser;
+        nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
+        nsresult rv = parser.Init(localFile);
+        if (NS_SUCCEEDED(rv)) {
+          nsCAutoString buf;
+          rv = parser.GetString("XRE", "EnableProfileMigrator", buf);
+          if (NS_SUCCEEDED(rv)) {
+            if (buf[0] == '0' || buf[0] == 'f' || buf[0] == 'F') {
+              gDoMigration = PR_FALSE;
+            }
+          }
+        }
+      }
+
       // Profile Migration
       if (gAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR && gDoMigration) {
         gDoMigration = PR_FALSE;
