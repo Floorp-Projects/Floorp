@@ -47,14 +47,6 @@
 
 MOZ_DECL_CTOR_COUNTER(CParserContext)
 
-/**
- * Your friendly little constructor. Ok, it's not the friendly, but the only guy
- * using it is the parser.
- * @update	gess7/23/98
- * @param   aScanner
- * @param   aKey
- * @param   aListener
- */
 CParserContext::CParserContext(nsScanner* aScanner, 
                                void *aKey, 
                                eParserCommands aCommand,
@@ -62,89 +54,38 @@ CParserContext::CParserContext(nsScanner* aScanner,
                                nsIDTD *aDTD, 
                                eAutoDetectResult aStatus, 
                                PRBool aCopyUnused)
+  : mDTD(aDTD),
+    mListener(aListener),
+    mKey(aKey),
+    mPrevContext(nsnull),
+    mScanner(aScanner),
+    mDTDMode(eDTDMode_unknown),
+    mStreamListenerState(eNone),
+    mContextType(eCTNone),
+    mAutoDetectStatus(aStatus),
+    mParserCommand(aCommand),
+    mMultipart(PR_TRUE),
+    mCopyUnused(aCopyUnused),
+    mTransferBufferSize(eTransferBufferSize)
 { 
   MOZ_COUNT_CTOR(CParserContext); 
-
-  mScanner=aScanner; 
-  mKey=aKey; 
-  mPrevContext=0; 
-  mListener=aListener; 
-  mDTDMode=eDTDMode_unknown; 
-  mAutoDetectStatus=aStatus; 
-  mTransferBuffer=0; 
-  mDTD=aDTD; 
-  mTokenizer = 0;
-  mTransferBufferSize=eTransferBufferSize; 
-  mStreamListenerState=eNone; 
-  mMultipart=PR_TRUE; 
-  mContextType=eCTNone; 
-  mCopyUnused=aCopyUnused; 
-  mParserCommand=aCommand;
-  mRequest=0;
 } 
 
-/**
- * Your friendly little constructor. Ok, it's not the friendly, but the only guy
- * using it is the parser.
- * @update	gess7/23/98
- * @param   aScanner
- * @param   aKey
- * @param   aListener
- */
-CParserContext::CParserContext(const CParserContext &aContext) : mMimeType() {
-  MOZ_COUNT_CTOR(CParserContext);
-
-  mScanner=aContext.mScanner;
-  mKey=aContext.mKey;
-  mPrevContext=0;
-  mListener=aContext.mListener;
-
-  mDTDMode=aContext.mDTDMode;
-  mAutoDetectStatus=aContext.mAutoDetectStatus;
-  mTransferBuffer=aContext.mTransferBuffer;
-  mDTD=aContext.mDTD;
-
-  mTokenizer = aContext.mTokenizer;
-
-  mTransferBufferSize=eTransferBufferSize;
-  mStreamListenerState=aContext.mStreamListenerState;
-  mMultipart=aContext.mMultipart;
-  mContextType=aContext.mContextType;
-  mRequest=aContext.mRequest;
-  mParserCommand=aContext.mParserCommand;
-  SetMimeType(aContext.mMimeType);
-}
-
-
-/**
- * Destructor for parser context
- */
 CParserContext::~CParserContext()
 {
+  // It's ok to simply ingore the PrevContext.
   MOZ_COUNT_DTOR(CParserContext);
-
-  if(mScanner) {
-    delete mScanner;
-  }
-
-  if(mTransferBuffer) {
-    delete [] mTransferBuffer;
-  }
-  //Remember that it's ok to simply ingore the PrevContext.
 }
 
-
-/**
- * Set's the mimetype for this context
- * @update	rickg 03.18.2000
- */
-void CParserContext::SetMimeType(const nsACString& aMimeType){
+void
+CParserContext::SetMimeType(const nsACString& aMimeType)
+{
   mMimeType.Assign(aMimeType);
 
-  mDocType=ePlainText;
+  mDocType = ePlainText;
 
-  if(mMimeType.EqualsLiteral(kHTMLTextContentType))
-    mDocType=eHTML_Strict;
+  if (mMimeType.EqualsLiteral(kHTMLTextContentType))
+    mDocType = eHTML_Strict;
   else if (mMimeType.EqualsLiteral(kXMLTextContentType)          ||
            mMimeType.EqualsLiteral(kXMLApplicationContentType)   ||
            mMimeType.EqualsLiteral(kXHTMLApplicationContentType) ||
@@ -154,7 +95,7 @@ void CParserContext::SetMimeType(const nsACString& aMimeType){
 #endif
            mMimeType.EqualsLiteral(kRDFApplicationContentType)   ||
            mMimeType.EqualsLiteral(kRDFTextContentType))
-    mDocType=eXML;
+    mDocType = eXML;
 }
 
 nsresult
@@ -164,7 +105,7 @@ CParserContext::GetTokenizer(PRInt32 aType,
 {
   nsresult result = NS_OK;
   
-  if(!mTokenizer) {
+  if (!mTokenizer) {
     if (aType == NS_IPARSER_FLAG_HTML || mParserCommand == eViewSource) {
       nsCOMPtr<nsIHTMLContentSink> theSink = do_QueryInterface(aSink);
       PRUint16 theFlags = 0;
@@ -196,12 +137,12 @@ CParserContext::GetTokenizer(PRInt32 aType,
         mTokenizer->CopyState(mPrevContext->mTokenizer);
       }
     }
-    else if (aType == NS_IPARSER_FLAG_XML)
-    {
+    else if (aType == NS_IPARSER_FLAG_XML) {
       mTokenizer = do_QueryInterface(mDTD, &result);
     }
   }
   
   aTokenizer = mTokenizer;
+
   return result;
 }
