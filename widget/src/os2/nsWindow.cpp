@@ -1638,12 +1638,14 @@ nsIFontMetrics *nsWindow::GetFont(void)
 
    if( mToolkit)
    {
-      char buf[2][128];
+      char fontNameSize[FACESIZE+5]; // FACESIZE + decimal + up to three digits for font size + null terminator
+      char fontName[FACESIZE];
       int  ptSize;
    
-      WinQueryPresParam( mWnd, PP_FONTNAMESIZE, 0, 0, 128, buf[0], 0);
+      WinQueryPresParam( mWnd, PP_FONTNAMESIZE, 0, 0, FACESIZE+5, fontNameSize, 0);
    
-      if( 2 == sscanf( buf[0], "%d.%s", &ptSize, buf[1])) // mmm, scanf()...
+      // FACESIZE = 32, hence the 31 here
+      if( 2 == sscanf( fontNameSize, "%d.%31s", &ptSize, fontName))
       {
          float twip2dev, twip2app;
          twip2dev = mContext->TwipsToDevUnits();
@@ -1652,7 +1654,7 @@ nsIFontMetrics *nsWindow::GetFont(void)
    
          nscoord appSize = (nscoord) (twip2app * ptSize * 20);
    
-         nsFont font( buf[1], NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+         nsFont font( fontName, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
                       NS_FONT_WEIGHT_NORMAL, 0 /*decoration*/, appSize);
    
          mContext->GetMetricsFor( font, metrics);

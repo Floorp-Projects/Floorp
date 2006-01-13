@@ -83,6 +83,8 @@ CPPSRCS		= \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
 		nsDragService.cpp \
+		nsScreenOS2.cpp	\
+		nsScreenManagerOS2.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
@@ -112,3 +114,5 @@ export::
 	test -f ./res/aliasb.ptr || cp $(srcdir)/res/*.* ./res
 
 ADD_TO_DEF_FILE = cat < $(srcdir)/extradefs.os2 >>$(DEF_FILE)
+
+

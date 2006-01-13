@@ -46,7 +46,6 @@
 #include "nsRenderingContextOS2.h"
 #include "nsDeviceContextSpecOS2.h"
 #include "nsDeviceContextSpecFactoryO.h"
-#include "nsScreenManagerOS2.h"
 #include "nsScriptableRegion.h"
 #include "nsDeviceContextOS2.h"
 #include "nsImageOS2.h"
@@ -74,7 +73,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsOS2, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
@@ -326,11 +324,6 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/fontlist;1"
     NS_FONTLIST_CONTRACTID,
     nsFontListConstructor },
-  { "OS/2 Screen Manager",
-    NS_SCREENMANAGER_CID,
-    //    "@mozilla.org/gfx/screenmanager/gtk;1",
-    "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerOS2Constructor },
   { "OS/2 Printer Enumerator",
     NS_PRINTER_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/printer_enumerator/gtk;1",

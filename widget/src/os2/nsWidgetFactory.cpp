@@ -78,6 +78,8 @@
 #include "nsTransferable.h"
 #include "nsHTMLFormatConverter.h"
 
+#include "nsScreenManagerOS2.h"
+
 #include "nsFrameWindow.h" // OS/2 only
 
 // objects that just require generic constructors
@@ -94,6 +96,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerOS2)
 
 // component definition, will be exported using XPCOM
 static const nsModuleComponentInfo components[] =
@@ -149,7 +153,11 @@ static const nsModuleComponentInfo components[] =
   { "OS/2 HTML Format Converter",
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter;1",
-    nsHTMLFormatConverterConstructor }
+    nsHTMLFormatConverterConstructor },
+  { "nsScreenManagerWin",
+    NS_SCREENMANAGER_CID,
+    "@mozilla.org/gfx/screenmanager;1",
+    nsScreenManagerOS2Constructor },
 };
 
 PR_STATIC_CALLBACK(void)
