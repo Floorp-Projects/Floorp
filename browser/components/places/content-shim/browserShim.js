@@ -72,8 +72,12 @@ function PBS__bookmarkURI(folder, uri, title) {
   this._bms.setItemTitle(uri, title);
 };
 
-PlacesBrowserShim.showPlaces = function PBS_showPlaces() {
-  loadURI("chrome://browser/content/places/places.xul", null, null);
+PlacesBrowserShim.showHistory = function PBS_showHistory() {
+  loadURI("chrome://browser/content/places/places.xul?history", null, null);
+};
+
+PlacesBrowserShim.showBookmarks = function PBS_showBookmarks() {
+  loadURI("chrome://browser/content/places/places.xul?bookmarks", null, null);
 };
 
 PlacesBrowserShim.addLivemark = function PBS_addLivemark(aURL, aFeedURL, aTitle, aDescription) {

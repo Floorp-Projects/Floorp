@@ -18,7 +18,8 @@
 
   <commandset id="mainCommandSet">
 #include ../content/commands.inc
-    <command id="Browser:ShowPlaces" oncommand="PlacesBrowserShim.showPlaces();"/>
+    <command id="Browser:ShowBookmarks" oncommand="PlacesBrowserShim.showBookmarks();"/>
+    <command id="Browser:ShowHistory" oncommand="PlacesBrowserShim.showHistory();"/>
   </commandset>
   
   <popupset id="mainPopupSet">
@@ -28,7 +29,7 @@
   <toolbarpalette id="BrowserToolbarPalette">
     <toolbarbutton id="bookmarksBarShowPlaces"
                    label="Show Places"
-                   oncommand="PlacesBrowserShim.showPlaces()"/>
+                   oncommand="PlacesBrowserShim.showHistory()"/>
     <toolbaritem flex="1" id="bookmarksBarContainer">
        <hbox id="bookmarksBarContent" flex="1" context="placesContext"/>
     </toolbaritem>

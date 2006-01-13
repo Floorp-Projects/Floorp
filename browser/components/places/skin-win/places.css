@@ -21,14 +21,14 @@
   width: 160px;
 }
 
-#placesListChildren::-moz-tree-twisty {
-  list-style-image: none;
-  width: 0px;
-  padding: 0px;
+#placeContent {
+  -moz-appearance: none;
+  border: 0px;
 }
 
-#placeContent {
-  margin: 0px 6px 7px 0px;
+#content {
+  margin: 7px 6px 7px 0px;
+  -moz-appearance: listbox;
 }
 
 treechildren::-moz-tree-image(title) {
@@ -101,6 +101,15 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 
 .commandGroupButton.last {
   margin-left: 20px;
+}
+
+/* Title Bar */
+#titlebar {
+  background-color: -moz-Dialog;
+  font-weight: bold;
+  padding: 5px 5px 5px 3px;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
 }
 
 /* Search Bar */

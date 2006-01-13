@@ -228,7 +228,8 @@ var PlacesController = {
   get _hist() {
     if (!this.__hist) {
       this.__hist =
-        Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
+        Cc["@mozilla.org/browser/nav-history-service;1"].
+        getService(Ci.nsINavHistoryService);
     }
     return this.__hist;
   },

@@ -218,6 +218,8 @@ nsNavHistory::~nsNavHistory()
 
   NS_IF_RELEASE(sMenuRootAtom);
   NS_IF_RELEASE(sToolbarRootAtom);
+  NS_IF_RELEASE(sSessionStartAtom);
+  NS_IF_RELEASE(sSessionContinueAtom);
 }
 
 
