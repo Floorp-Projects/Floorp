@@ -43,6 +43,7 @@
 <title>Leak Gauge</title>
 
 <style type="text/css">
+pre { margin: 0; }
 pre.output { border: medium solid; padding: 1em; margin: 1em; }
 </style>
 <script type="text/javascript">
@@ -235,7 +236,7 @@ function run() {
 
 <h1>Leak Gauge</h1>
 
-<pre>$Id: leak-gauge.html,v 1.1 2006/01/13 23:37:23 dbaron%dbaron.org Exp $</pre>
+<pre>$Id: leak-gauge.html,v 1.2 2006/01/13 23:40:19 dbaron%dbaron.org Exp $</pre>
 
 <p>This script is designed to help testers isolate and simplify testcases
 for many classes of leaks (those that involve large graphs of core
@@ -246,16 +247,18 @@ normal browsing and then the log can be processed to find sites that
 leak.  Once a site is known to leak, the logging can then be repeated
 to figure out under what conditions the leak occurs.</p>
 
-<pre>The way to create this log is to set the environment variables:
-  NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
-  NSPR_LOG_FILE=nspr.log     (or any other filename of your choice)
-in your shell and then run the program.
-* In a Windows command prompt, set environment variables with
-    set VAR=value
-* In an sh-based shell such as bash, set environment variables with
-    export VAR=value
-* In a csh-based shell such as tcsh, set environment variables with
-    setenv VAR value</pre>
+<p>The way to create this log is to set the environment variables:</p>
+<pre>  NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
+  NSPR_LOG_FILE=nspr.log     <i>(or any other filename of your choice)</i></pre>
+<p>in your shell and then run the program.</p>
+<ul>
+<li>In a Windows command prompt, set environment variables with
+<pre>    set VAR=value</pre></li>
+<li> In an sh-based shell such as bash, set environment variables with
+<pre>    export VAR=value</pre></li>
+<li>In a csh-based shell such as tcsh, set environment variables with
+<pre>    setenv VAR value</pre></li>
+</ul>
 
 <p>Then <a href="javascript:run()">enter the filename</a> of the log and you'll
 see the output, which will tell you which of certain core objects leaked and
