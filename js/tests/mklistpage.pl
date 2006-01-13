@@ -237,6 +237,7 @@ sub process_test {
     # ignore excluded tests
     if ($excludedhash{$test_dir_path . "/" . $test})
     {
+	--$suite_count;
 	return;
     }
 
