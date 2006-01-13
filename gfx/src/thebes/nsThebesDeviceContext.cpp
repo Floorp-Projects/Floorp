@@ -111,10 +111,16 @@ nsThebesDeviceContext::nsThebesDeviceContext()
     mAppUnitsToDevUnits = 1.0f;
     mCPixelScale = 1.0f;
     mZoom = 1.0f;
+    mDepth = 0;
+
+    mWidget = nsnull;
+    mPrinter = PR_FALSE;
 
     mWidgetSurfaceCache.Init();
 
 #ifdef XP_WIN
+    mDC = nsnull;
+
     SCRIPT_DIGITSUBSTITUTE sds;
     ScriptRecordDigitSubstitution(LOCALE_USER_DEFAULT, &sds);
 #endif
@@ -122,12 +128,15 @@ nsThebesDeviceContext::nsThebesDeviceContext()
 
 nsThebesDeviceContext::~nsThebesDeviceContext()
 {
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    prefs->UnregisterCallback("browser.display.screen_resolution",
-                              prefChanged, (void *)this);
-  }
+    nsresult rv;
+    nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        prefs->UnregisterCallback("browser.display.screen_resolution",
+                                  prefChanged, (void *)this);
+    }
+
+    if (mDC)
+        DeleteDC((HDC)mDC);
 }
 
 nsresult
@@ -156,13 +165,17 @@ nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
 
 #elif defined(XP_WIN)
     // XXX we should really look at the widget for printing and such, but this widget is currently always null...
-    HDC dc = GetDC((HWND)nsnull);
+    HDC dc = mDC ? (HDC)mDC : GetDC((HWND)nsnull);
+
     OSVal = GetDeviceCaps(dc, LOGPIXELSY);
     if (GetDeviceCaps(dc, TECHNOLOGY) != DT_RASDISPLAY)
         do_round = PR_FALSE;
-    ReleaseDC((HWND)nsnull, dc);
 
-    mDpi = OSVal;
+    if (dc != (HDC)mDC)
+        ReleaseDC((HWND)nsnull, dc);
+
+    if (OSVal != 0)
+        mDpi = OSVal;
 
 #else
     mDpi = 72;
@@ -182,6 +195,8 @@ nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
 NS_IMETHODIMP
 nsThebesDeviceContext::Init(nsNativeWidget aWidget)
 {
+    mWidget = aWidget;
+
     static int initialized = 0;
     PRInt32 prefVal = -1;
     if (!initialized) {
@@ -211,32 +226,27 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
         SetDPI(mDpi);
     }
 
-    mWidget = aWidget;
-
-    if (!mScreenManager)
-        mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
-    if (!mScreenManager)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIScreen> screen;
-    mScreenManager->GetPrimaryScreen (getter_AddRefs(screen));
-    if (screen) {
-        PRInt32 x, y, width, height;
-        screen->GetRect (&x, &y, &width, &height);
-        mWidthFloat = float(width);
-        mHeightFloat = float(height);
-    }
-
 #ifdef MOZ_ENABLE_GTK2
     if (getenv ("MOZ_X_SYNC")) {
         PR_LOG (gThebesGFXLog, PR_LOG_DEBUG, ("+++ Enabling XSynchronize\n"));
         XSynchronize (gdk_x11_get_default_xdisplay(), True);
         XSetErrorHandler(x11_error_handler);
     }
+
+    // XXX
+    mDepth = 24;
 #endif
 
-    mWidth = -1;
-    mHeight = -1;
+#ifdef XP_WIN
+    HDC dc = mDC ? (HDC)mDC : GetDC((HWND)mWidget);
+    mWidth = ::GetDeviceCaps(dc, HORZRES);
+    mHeight = ::GetDeviceCaps(dc, VERTRES);
+    mDepth = (PRUint32)::GetDeviceCaps(dc, BITSPIXEL);
+    if (dc != (HDC)mDC)
+        ReleaseDC((HWND)mWidget, dc);
+#endif
+
+    mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");   
 
     return NS_OK;
 }
@@ -298,11 +308,29 @@ nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
     return rv;
 }
 
+#include "gfxWindowsSurface.h"
+
 NS_IMETHODIMP
 nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-    NS_ERROR("CreateRenderingContext with other rendering context arg; fix this if this needs to be called");
-    return NS_OK;
+    nsresult rv;
+
+    aContext = nsnull;
+    nsCOMPtr<nsIRenderingContext> pContext;
+    rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
+    if (NS_SUCCEEDED(rv)) {
+        gfxASurface *surface = new gfxWindowsSurface((HDC)mDC);
+        NS_ADDREF(surface);
+        if (surface)
+            rv = pContext->Init(this, surface);
+
+        if (NS_SUCCEEDED(rv)) {
+            aContext = pContext;
+            NS_ADDREF(aContext);
+        }
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -326,10 +354,35 @@ nsThebesDeviceContext::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 }
 
 NS_IMETHODIMP
+nsThebesDeviceContext::GetCanonicalPixelScale(float &aScale) const
+{
+    aScale = mPixelScale;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThebesDeviceContext::SetCanonicalPixelScale(float aScale)
+{
+    DeviceContextImpl::SetCanonicalPixelScale(aScale);
+    mPixelScale = aScale;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsThebesDeviceContext::GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
+#ifdef XP_WIN
+    float scale;
+    GetCanonicalPixelScale(scale);
+
+    aWidth  = ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits * scale;
+    aHeight = ::GetSystemMetrics(SM_CXHSCROLL) * mDevUnitsToAppUnits * scale;
+
+#else
+
     aWidth = 10.0f * mPixelsToTwips;
     aHeight = 10.0f * mPixelsToTwips;
+#endif
     return NS_OK;
 }
 
@@ -397,7 +450,7 @@ nsThebesDeviceContext::CheckFontExistence(const nsString& aFaceName)
 NS_IMETHODIMP
 nsThebesDeviceContext::GetDepth(PRUint32& aDepth)
 {
-    aDepth = 24;
+    aDepth = mDepth;
     return NS_OK;
 }
 
@@ -422,14 +475,16 @@ nsThebesDeviceContext::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 NS_IMETHODIMP
 nsThebesDeviceContext::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-    if (mWidth == -1)
-        mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
-
-    if (mHeight == -1)
-        mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
-
-    aWidth = mWidth;
-    aHeight = mHeight;
+    if (mPrinter) {
+        // we have a printer device
+        aWidth = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+        aHeight = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+    } else {
+        nsRect area;
+        ComputeFullAreaUsingScreen(&area);
+        aWidth = area.width;
+        aHeight = area.height;
+    }
 
     return NS_OK;
 }
@@ -437,41 +492,14 @@ nsThebesDeviceContext::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHei
 NS_IMETHODIMP
 nsThebesDeviceContext::GetRect(nsRect &aRect)
 {
-    if (mWidget) {
-        PRInt32 x,y;
-        PRUint32 width, height;
-
-#if defined (MOZ_ENABLE_GTK2)
-        Window root_ignore;
-        PRUint32 bwidth_ignore, depth;
-
-        XGetGeometry(GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(mWidget)),
-                     GDK_WINDOW_XWINDOW(GDK_DRAWABLE(mWidget)),
-                     &root_ignore, &x, &y,
-                     &width, &height,
-                     &bwidth_ignore, &depth);
-#elif defined (XP_WIN)
-        // XXX
-        x = y = 0;
-        width = height = 200;
-#else
-#error write me
-#endif
-
-        nsCOMPtr<nsIScreen> screen;
-        mScreenManager->ScreenForRect(x, y, width, height, getter_AddRefs(screen));
-        screen->GetRect(&aRect.x, &aRect.y, &aRect.width, &aRect.height);
-
-        aRect.x = NSToIntRound(mDevUnitsToAppUnits * aRect.x);
-        aRect.y = NSToIntRound(mDevUnitsToAppUnits * aRect.y);
-        aRect.width = NSToIntRound(mDevUnitsToAppUnits * aRect.width);
-        aRect.height = NSToIntRound(mDevUnitsToAppUnits * aRect.height);
-    } else {
+    if (mPrinter) {
+        // we have a printer device
         aRect.x = 0;
         aRect.y = 0;
-
-        this->GetDeviceSurfaceDimensions(aRect.width, aRect.height);
-    }
+        aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+        aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+    } else
+        ComputeFullAreaUsingScreen ( &aRect );
 
     return NS_OK;
 }
@@ -479,8 +507,17 @@ nsThebesDeviceContext::GetRect(nsRect &aRect)
 NS_IMETHODIMP
 nsThebesDeviceContext::GetClientRect(nsRect &aRect)
 {
-    nsresult rv = this->GetRect(aRect);
-    return rv;
+    if (mPrinter) {
+        // we have a printer device
+        aRect.x = 0;
+        aRect.y = 0;
+        aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+        aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+    }
+    else
+        ComputeClientRectUsingScreen(&aRect);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -490,13 +527,73 @@ nsThebesDeviceContext::PrepareNativeWidget(nsIWidget* aWidget, void** aOut)
     return NS_OK;
 }
 
+
+#ifdef CAIRO_PRINTING_WORKS
+
+#ifdef XP_WIN
+#include "nsDeviceContextSpecWin.h"
+#endif
+
+#endif /* CAIRO_PRINTING_WORKS */
+
 /*
  * below methods are for printing and are not implemented
  */
 NS_IMETHODIMP
 nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
-                                          nsIDeviceContext *&aContext)
+                                           nsIDeviceContext *&aContext)
 {
+#ifdef CAIRO_PRINTING_WORKS
+
+#ifdef XP_WIN
+    nsThebesDeviceContext* devConWin = new nsThebesDeviceContext();
+
+    if (devConWin) {
+        // this will ref count it
+        nsresult rv = devConWin->QueryInterface(NS_GET_IID(nsIDeviceContext), (void**)&aContext);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "This has to support nsIDeviceContext");
+    } else {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    //    devConWin->mSpec = aDevice;
+    NS_ADDREF(aDevice);
+    
+    char*   devicename;
+    char*   drivername;
+    
+    nsDeviceContextSpecWin* devSpecWin = NS_STATIC_CAST(nsDeviceContextSpecWin*, aDevice);
+    devSpecWin->GetDeviceName(devicename); // sets pointer do not free
+    devSpecWin->GetDriverName(drivername); // sets pointer do not free
+    
+    HDC dc = NULL;
+    LPDEVMODE devmode;
+    devSpecWin->GetDevMode(devmode);
+    NS_ASSERTION(devmode, "DevMode can't be NULL here");
+    if (devmode) {
+        dc = ::CreateDC(drivername, devicename, NULL, devmode);
+    }
+
+    devConWin->mPrinter = PR_TRUE;
+    devConWin->mDC = dc; // take ownership of the dc.
+    devConWin->Init(nsnull);
+
+    float newscale = devConWin->TwipsToDevUnits();
+    float origscale = this->TwipsToDevUnits();
+
+    devConWin->mPixelScale = newscale / origscale;
+
+    float t2d = this->TwipsToDevUnits();
+    float a2d = this->AppUnitsToDevUnits();
+
+    devConWin->mAppUnitsToDevUnits = (a2d / t2d) * devConWin->mTwipsToPixels;
+    devConWin->mDevUnitsToAppUnits = 1.0f / devConWin->mAppUnitsToDevUnits;
+
+    return NS_OK;
+#endif
+
+#endif /* CAIRO_PRINTING_WORKS */
+
     /* we don't do printing */
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -504,18 +601,68 @@ nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
 
 NS_IMETHODIMP
 nsThebesDeviceContext::PrepareDocument(PRUnichar * aTitle, 
-                                      PRUnichar*  aPrintToFileName)
+                                       PRUnichar*  aPrintToFileName)
 {
     return NS_OK;
 }
 
+#ifdef XP_WIN
+static char*
+GetACPString(const nsAString& aStr)
+{
+    int acplen = aStr.Length() * 2 + 1;
+    char * acp = new char[acplen];
+    if(acp) {
+        int outlen = ::WideCharToMultiByte(CP_ACP, 0, 
+                                           PromiseFlatString(aStr).get(),
+                                           aStr.Length(),
+                                           acp, acplen, NULL, NULL);
+        if (outlen > 0)
+            acp[outlen] = '\0';  // null terminate
+    }
+    return acp;
+}
+#endif
 
 NS_IMETHODIMP
 nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle, 
-                                            PRUnichar*  aPrintToFileName,
-                                            PRInt32     aStartPage, 
-                                            PRInt32     aEndPage)
+                                     PRUnichar*  aPrintToFileName,
+                                     PRInt32     aStartPage, 
+                                     PRInt32     aEndPage)
 {
+#ifdef XP_WIN
+#define DOC_TITLE_LENGTH 30
+    nsresult rv = NS_ERROR_GFX_PRINTER_STARTDOC;
+
+    if (mDC) {
+        DOCINFO docinfo;
+
+        nsString titleStr;
+        titleStr = aTitle;
+        if (titleStr.Length() > DOC_TITLE_LENGTH) {
+            titleStr.SetLength(DOC_TITLE_LENGTH-3);
+            titleStr.AppendLiteral("...");
+        }
+        char *title = GetACPString(titleStr);
+
+        char* docName = nsnull;
+        nsAutoString str(aPrintToFileName);
+        if (!str.IsEmpty()) {
+            docName = ToNewCString(str);
+        }
+
+        docinfo.cbSize = sizeof(docinfo);
+        docinfo.lpszDocName = title ? title : "Mozilla Document";
+        docinfo.lpszOutput = docName;
+        docinfo.lpszDatatype = NULL;
+        docinfo.fwType = 0;
+
+        ::StartDoc((HDC)mDC, &docinfo);
+        
+        if (title != nsnull) delete [] title;
+        if (docName != nsnull) nsMemory::Free(docName);
+    }
+#endif
     return NS_OK;
 }
 
@@ -523,6 +670,10 @@ nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle,
 NS_IMETHODIMP
 nsThebesDeviceContext::EndDocument(void)
 {
+#ifdef XP_WIN
+    if (mDC)
+        ::EndDoc((HDC)mDC);
+#endif
     return NS_OK;
 }
 
@@ -530,6 +681,11 @@ nsThebesDeviceContext::EndDocument(void)
 NS_IMETHODIMP
 nsThebesDeviceContext::AbortDocument(void)
 {
+#ifdef XP_WIN
+    if (mDC)
+        ::AbortDoc((HDC)mDC);
+#endif
+
     return NS_OK;
 }
 
@@ -537,13 +693,31 @@ nsThebesDeviceContext::AbortDocument(void)
 NS_IMETHODIMP
 nsThebesDeviceContext::BeginPage(void)
 {
+#ifdef XP_WIN
+    if (mDC)
+        ::StartPage((HDC)mDC);
+#endif
+
     return NS_OK;
+
 }
 
 
 NS_IMETHODIMP
 nsThebesDeviceContext::EndPage(void)
 {
+#ifdef XP_WIN
+    /*
+    if (mDC) {
+        nsAutoPtr<gfxWindowsSurface> surface = new gfxWindowsSurface((HDC)mDC);
+        nsAutoPtr<gfxContext> context = new gfxContext(surface);
+
+        context->ShowPage();
+    }
+    */
+    if (mDC)
+        ::EndPage((HDC)mDC);
+#endif
     return NS_OK;
 }
 
@@ -586,4 +760,95 @@ nsThebesDeviceContext::prefChanged(const char *aPref, void *aClosure)
     }
 
     return 0;
+}
+
+
+void
+nsThebesDeviceContext::ComputeClientRectUsingScreen(nsRect* outRect)
+{
+    // we always need to recompute the clientRect
+    // because the window may have moved onto a different screen. In the single
+    // monitor case, we only need to do the computation if we haven't done it
+    // once already, and remember that we have because we're assured it won't change.
+    nsCOMPtr<nsIScreen> screen;
+    FindScreen (getter_AddRefs(screen));
+    if (screen) {
+        PRInt32 x, y, width, height;
+        screen->GetAvailRect(&x, &y, &width, &height);
+        
+        // convert to device units
+        outRect->y = NSToIntRound(y * mDevUnitsToAppUnits);
+        outRect->x = NSToIntRound(x * mDevUnitsToAppUnits);
+        outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
+        outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
+    }
+}
+
+void
+nsThebesDeviceContext::ComputeFullAreaUsingScreen(nsRect* outRect)
+{
+    // if we have more than one screen, we always need to recompute the clientRect
+    // because the window may have moved onto a different screen. In the single
+    // monitor case, we only need to do the computation if we haven't done it
+    // once already, and remember that we have because we're assured it won't change.
+    nsCOMPtr<nsIScreen> screen;
+    FindScreen ( getter_AddRefs(screen) );
+    if ( screen ) {
+        PRInt32 x, y, width, height;
+        screen->GetRect ( &x, &y, &width, &height );
+        
+        // convert to device units
+        outRect->y = NSToIntRound(y * mDevUnitsToAppUnits);
+        outRect->x = NSToIntRound(x * mDevUnitsToAppUnits);
+        outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
+        outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
+        
+        mWidth = width;
+        mHeight = height;
+    }
+    
+}
+
+
+//
+// FindScreen
+//
+// Determines which screen intersects the largest area of the given surface.
+//
+void
+nsThebesDeviceContext::FindScreen(nsIScreen** outScreen)
+{
+    // now then, if we have more than one screen, we need to find which screen this
+    // window is on.
+#ifdef XP_WIN
+    HWND window = NS_REINTERPRET_CAST(HWND, mWidget);
+    if (window) {
+        RECT globalPosition;
+        ::GetWindowRect(window, &globalPosition); 
+        if (mScreenManager) {
+            mScreenManager->ScreenForRect(globalPosition.left, globalPosition.top, 
+                                          globalPosition.right - globalPosition.left,
+                                          globalPosition.bottom - globalPosition.top,
+                                          outScreen);
+            return;
+        }
+    }
+#endif
+
+#ifdef MOZ_ENABLE_GTK2
+    gint x, y, width, height, depth;
+    x = y = width = height = 0;
+
+    gdk_window_get_geometry(mWidget, &x, &y, &width, &height,
+                            &depth);
+    gdk_window_get_origin(mWidget, &x, &y);
+    if (mScreenManager) {
+        mScreenManager->ScreenForRect(x, y, width, height, outScreen);
+        return;
+    }
+
+#endif
+
+    mScreenManager->GetPrimaryScreen(outScreen);
+
 }
