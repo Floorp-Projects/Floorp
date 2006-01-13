@@ -78,8 +78,6 @@ CPPSRCS		= \
 		nsRegionWin.cpp \
 		nsDeviceContextSpecWin.cpp \
 		nsDeviceContextSpecFactoryW.cpp \
-		nsScreenWin.cpp \
-		nsScreenManagerWin.cpp \
 		nsGfxFactoryWin.cpp \
 		nsUnicodeRange.cpp \
 		$(NULL)
