@@ -1113,7 +1113,11 @@
 
       <method name="refresh">
         <body>
-          this.controlField.readonly = this.accessors.isReadonly();
+          if (this.accessors.isReadonly()) {
+            this.controlField.setAttribute("readonly", "readonly");
+          } else {
+            this.controlField.removeAttribute("readonly");
+          }
           // If the value has not changed, no need to update the
           // value of the control, because that makes the textarea widget
           // to scroll up.
