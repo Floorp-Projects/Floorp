@@ -33,6 +33,8 @@ cp -pRL bin/libnssckbi.so                                  minimo
 cp -pRL bin/libsmime3.so                                   minimo
 cp -pRL bin/libsoftokn3.so                                 minimo
 cp -pRL bin/libsoftokn3.chk                                minimo
+cp -pRL bin/libfreebl3.so                                  minimo
+cp -pRL bin/libfreebl3.chk                                 minimo
 cp -pRL bin/libssl3.so                                   minimo
 
 

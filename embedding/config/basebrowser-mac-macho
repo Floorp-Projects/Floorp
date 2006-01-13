@@ -163,6 +163,8 @@ libnss3.dylib
 libsmime3.dylib
 libsoftokn3.chk
 libsoftokn3.dylib
+libfreebl3.chk
+libfreebl3.dylib
 libssl3.dylib
 libnssckbi.dylib
 

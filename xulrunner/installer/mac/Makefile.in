@@ -69,8 +69,7 @@ include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 BINARY_DIR = $(DIST)/package-stage/XUL.framework/Versions/$(MOZILLA_VERSION)
 
 SOFTOKN       = $(BINARY_DIR)/$(DLL_PREFIX)softokn3$(DLL_SUFFIX)
-FREEBL_HYBRID = $(BINARY_DIR)/$(DLL_PREFIX)freebl_hybrid_3$(DLL_SUFFIX)
-FREEBL_PURE   = $(BINARY_DIR)/$(DLL_PREFIX)freebl_pure32_3$(DLL_SUFFIX)
+FREEBL        = $(BINARY_DIR)/$(DLL_PREFIX)freebl3$(DLL_SUFFIX)
 
 _ABS_OBJDIR := $(shell pwd)
 _ABS_DIST := $(shell cd $(DIST) && pwd)

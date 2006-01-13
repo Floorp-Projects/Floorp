@@ -4,9 +4,19 @@ dist/bin/@SMIME3_LIB@
 dist/bin/@SSL3_LIB@
 dist/bin/@SOFTOKEN3_LIB@
 dist/bin/@LOADABLE_ROOT_MODULE@
-#if HAVE_FREEBL_MODULES
-dist/bin/libfreebl_pure32_3@DLLS@
-dist/bin/libfreebl_hybrid_3@DLLS@
+#if HAVE_FREEBL_LIBS
+dist/bin/libfreebl3@DLLS@
+#endif
+#if HAVE_FREEBL_LIBS_32
+dist/bin/libfreebl_32fpu_3@DLLS@
+dist/bin/libfreebl_32int_3@DLLS@
+#endif
+#if HAVE_FREEBL_LIBS_32INT64
+dist/bin/libfreebl_32int64_3@DLLS@
+#endif
+#if HAVE_FREEBL_LIBS_64
+dist/bin/libfreebl_64fpu_3@DLLS@
+dist/bin/libfreebl_64int_3@DLLS@
 #endif
 
 # when these files are packaged they should be re-signed
@@ -25,9 +35,19 @@ dist/bin/libfreebl_hybrid_3@DLLS@
 #endif
 #endif
 != dist/bin/shlibsign -v -i %dist/bin/@SOFTOKEN3_LIB@% ;
-#if HAVE_FREEBL_MODULES
-!= dist/bin/shlibsign -v -i %dist/bin/libfreebl_pure32_3@DLLS@% ;
-!= dist/bin/shlibsign -v -i %dist/bin/libfreebl_hybrid_3@DLLS@% ;
+#if HAVE_FREEBL_LIBS
+!= dist/bin/shlibsign -v -i %dist/bin/libfreebl3@DLLS@% ;
+#endif
+#if HAVE_FREEBL_LIBS_32
+!= dist/bin/shlibsign -v -i %dist/bin/libfreebl_32fpu_3@DLLS@% ;
+!= dist/bin/shlibsign -v -i %dist/bin/libfreebl_32int_3@DLLS@% ;
+#endif
+#if HAVE_FREEBL_LIBS_32INT64
+!= dist/bin/shlibsign -v -i %dist/bin/libfreebl_32int64_3@DLLS@% ;
+#endif
+#if HAVE_FREEBL_LIBS_64
+!= dist/bin/shlibsign -v -i %dist/bin/libfreebl_64fpu_3@DLLS@% ;
+!= dist/bin/shlibsign -v -i %dist/bin/libfreebl_64int_3@DLLS@% ;
 #endif
 
 [unpackaged-files]

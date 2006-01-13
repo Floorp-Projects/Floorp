@@ -176,13 +176,29 @@ spew("Completed stripping libs in $STAGE");
 
 #// regenerate the NSS .chk files
 system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libsoftokn3.so");
-if(-e "$STAGE/psm/bin/libfreebl_pure32_3.so")
+if(-e "$STAGE/psm/bin/libfreebl3.so")
 {
-  system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libfreebl_pure32_3.so");
+  system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libfreebl3.so");
 }
-if(-e "$STAGE/psm/bin/libfreebl_hybrid_3.so")
+if(-e "$STAGE/psm/bin/libfreebl_32fpu_3.so")
 {
-  system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libfreebl_hybrid_3.so");
+  system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libfreebl_32fpu_3.so");
+}
+if(-e "$STAGE/psm/bin/libfreebl_32int_3.so")
+{
+  system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libfreebl_32int_3.so");
+}
+if(-e "$STAGE/psm/bin/libfreebl_32int64_3.so")
+{
+  system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libfreebl_32int64_3.so");
+}
+if(-e "$STAGE/psm/bin/libfreebl_64fpu_3.so")
+{
+  system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libfreebl_64fpu_3.so");
+}
+if(-e "$STAGE/psm/bin/libfreebl_64int_3.so")
+{
+  system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libfreebl_64int_3.so");
 }
 spew("Completed signing NSS libraries");
 
