@@ -81,7 +81,7 @@ $::opt_rev = &SanitizeRevision($::FORM{'rev'}) if
 my $revstr = '';
 $revstr = "&rev=$::opt_rev" unless $::opt_rev eq '';
 my $browse_revtag = 'HEAD';
-$browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]|^\d*(?:\.\d+)*$/);
+$browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]|^\d+(?:\.\d+)*$/);
 my $revision = '';
 
 
