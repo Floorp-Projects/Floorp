@@ -38,7 +38,7 @@
   <binding id="filter-button" extends="chrome://global/content/bindings/button.xml#menu">
     <handlers>
       <handler event="command"><![CDATA[
-        PlacesPage.setFilterCollection(event.target.getAttribute("value"));
+        PlacesSearchBox.filterCollection = event.target.getAttribute("value");
       ]]></handler>
     </handlers>
   </binding>
