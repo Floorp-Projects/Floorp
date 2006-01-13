@@ -236,7 +236,7 @@ function run() {
 
 <h1>Leak Gauge</h1>
 
-<pre>$Id: leak-gauge.html,v 1.2 2006/01/13 23:40:19 dbaron%dbaron.org Exp $</pre>
+<pre>$Id: leak-gauge.html,v 1.3 2006/01/13 23:43:41 dbaron%dbaron.org Exp $</pre>
 
 <p>This script is designed to help testers isolate and simplify testcases
 for many classes of leaks (those that involve large graphs of core
@@ -260,9 +260,15 @@ to figure out under what conditions the leak occurs.</p>
 <pre>    setenv VAR value</pre></li>
 </ul>
 
-<p>Then <a href="javascript:run()">enter the filename</a> of the log and you'll
-see the output, which will tell you which of certain core objects leaked and
-the URLs associated with those objects.</p>
+<p><strong>This script will not work from a Web page.  It will work only
+in relatively recent Mozilla-based browsers and only when loaded as a
+file from your disk.  You will be asked to give it permission to execute
+arbitrary code.  You should only grant this permission if you trust this
+page.</strong></p>
+
+<p>When <a href="javascript:run()">enter the filename</a> of the log,
+you'll see the output below, which will tell you which of certain core
+objects leaked and the URLs associated with those objects.</p>
 
 </body>
 </html>
