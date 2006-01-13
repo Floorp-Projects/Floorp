@@ -522,19 +522,6 @@
       <handler event="select"><![CDATA[
         document.commandDispatcher.updateCommands("select");
       ]]></handler>
-      <handler event="click"><![CDATA[
-        if (this.getAttribute("singleclick") == "true") {
-          var view = this.view;
-          var selection = view.selection;
-          var rc = selection.getRangeCount();
-          if (rc != 1) 
-            return null;
-          var min = { };
-          selection.getRangeAt(0, min, { });
-          if (!view.isContainerEmpty(min.value))
-            view.toggleOpenState(min.value);
-        }
-      ]]></handler>
       <handler event="draggesture"><![CDATA[
         // XXXben ew.
         if (event.target.localName == "treechildren")

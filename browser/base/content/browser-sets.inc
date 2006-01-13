@@ -169,6 +169,7 @@
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
+#ifndef MOZ_PLACES
     <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
                  oncommand="toggleSidebar('viewBookmarksSidebar');"/>
@@ -180,6 +181,7 @@
     <broadcaster id="viewWebPanelsSidebar" autoCheck="false" 
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/web-panels.xul"
                  oncommand="toggleSidebar('viewWebPanelsSidebar');"/>
+#endif
 
     <!-- popup blocking menu items -->
     <broadcaster id="blockedPopupAllowSite" 

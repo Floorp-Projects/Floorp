@@ -50,7 +50,7 @@
       <tree id="placesList" class="placesTree" flex="1" type="places" 
             hidecolumnpicker="true" context="placesContext"
             onselect="PlacesPage.placeSelected(event);"
-            singleclick="true" seltype="single">
+            seltype="single">
         <treecols>
           <treecol id="title" flex="1" primary="true" hideheader="true"/>
         </treecols>
@@ -59,46 +59,16 @@
       <vbox id="historyCalendar" 
             onselectionchanged="return PlacesPage.rangeSelected()"/>
       <hbox class="commands">
-        <button id="newPlace" view="placesList" command="placesCmd_new:folder"/>
+        <button id="newFolder" view="placesList" command="placesCmd_new:folder"/>
       </hbox>
     </vbox>
     <splitter id="splitter"/>
     <vbox flex="4">
-      <hbox align="center">
-        <label accesskey="&search.accesskey;" control="search">&search.label;</label>
-        <textbox id="searchFilter" flex="3" style="width: 0px;" timeout="500"
-                 oncommand="PlacesPage.applyFilter(this.value);" 
-                 collection="all" persist="collection">
-          <deck id="filterCollectionDeck">
-            <button type="menu" class="filterList" id="filterList_history">
-              <menupopup>
-                <menuitem label="&search.history.label;" accesskey="&search.history.accesskey;"
-                          type="radio" name="collection" value="history" 
-                          checked="true" default="true"/>
-                <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
-                          type="radio" name="collection" value="all"/>
-              </menupopup>
-            </button>
-            <button type="menu" class="filterList" id="filterList_bookmark">
-              <menupopup>
-                <menuitem label="&search.collection.label;" accesskey="&search.collection.accesskey;"
-                          type="radio" name="collection" value="collection"/>
-                <menuitem label="&search.bookmarks.label;" accesskey="&search.bookmarks.accesskey;"
-                          type="radio" name="collection" value="bookmarks"
-                          checked="true" default="true"/>
-                <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
-                          type="radio" name="collection" value="all"/>
-              </menupopup>
-            </button>
-          </deck>
-        </textbox>
-        <button id="showAdvancedSearch" 
-                label="&advancedSearch.label;" accesskey="&advancedSearch.accesskey;" 
-                oncommand="PlacesPage.showAdvancedOptions();"/>
-        <spacer flex="2"/>
-      </hbox>
       <deck id="content" flex="1">
         <vbox flex="1">
+          <hbox id="titlebar">
+            <label id="titlebartext"/>
+          </hbox>
           <tree id="placeContent" class="placesTree" context="placesContext" 
                 flex="1" query="" type="places" 
                 ondblclick="PlacesController.mouseLoadURI(event);"
@@ -153,5 +123,42 @@
     </vbox>
   </hbox>
 
+  <!-- 
+          <hbox align="center" id="searchbar">
+            <label accesskey="&search.accesskey;" control="search">&search.label;</label>
+            <textbox id="searchFilter" flex="3" style="width: 0px;" timeout="500"
+                     oncommand="PlacesPage.applyFilter(this.value);" 
+                     collection="all" persist="collection">
+              <deck id="filterCollectionDeck">
+                <button type="menu" class="filterList" id="filterList_history">
+                  <menupopup>
+                    <menuitem label="&search.history.label;" accesskey="&search.history.accesskey;"
+                              type="radio" name="collection" value="history" 
+                              checked="true" default="true"/>
+                    <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
+                              type="radio" name="collection" value="all"/>
+                  </menupopup>
+                </button>
+                <button type="menu" class="filterList" id="filterList_bookmark">
+                  <menupopup>
+                    <menuitem label="&search.collection.label;" accesskey="&search.collection.accesskey;"
+                              type="radio" name="collection" value="collection"/>
+                    <menuitem label="&search.bookmarks.label;" accesskey="&search.bookmarks.accesskey;"
+                              type="radio" name="collection" value="bookmarks"
+                              checked="true" default="true"/>
+                    <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
+                              type="radio" name="collection" value="all"/>
+                  </menupopup>
+                </button>
+              </deck>
+            </textbox>
+            <button id="showAdvancedSearch" 
+                    label="&advancedSearch.label;" accesskey="&advancedSearch.accesskey;" 
+                    oncommand="PlacesPage.showAdvancedOptions();"/>
+            <spacer flex="2"/>
+          </hbox>
+  
+  -->
+  
 </window>
 

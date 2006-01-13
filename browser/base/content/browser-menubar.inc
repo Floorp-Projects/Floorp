@@ -350,7 +350,12 @@
                           key="goHome"/>
                 <menuseparator id="startHistorySeparator"/>
                 <menuseparator hidden="true" id="endHistorySeparator"/>
+#ifndef MOZ_PLACES
                 <menuitem observes="viewHistorySidebar" key="key_gotoHistory"/>
+#else
+                <menuitem label="&historyButton.label;" 
+                          command="Browser:ShowPlaces" key="key_gotoHistory"/>
+#endif
               </menupopup>
             </menu>
 
@@ -393,7 +398,7 @@
       <menuitem label="&addCurPageAsCmd.label;" 
                 command="Browser:AddBookmarkAs" key="addBookmarkAsKb"/>
       <menuitem label="&manBookmarksCmd.label;" 
-                command="Browser:ShowPlaces" key="manBookmarkKb"/>
+                command="Browser:ShowBookmarks" key="manBookmarkKb"/>
       <menuseparator builder="start"/>
     </menupopup>
   </menu>

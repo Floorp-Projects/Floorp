@@ -38,6 +38,13 @@
 const PREF_PLACES_GROUPING_GENERIC = "browser.places.grouping.generic";
 const PREF_PLACES_GROUPING_BOOKMARK = "browser.places.grouping.bookmark";
 
+// Default Search Queries
+const QUERY_MONTH_HISTORY = "place:&group=2&sort=1&type=1";
+const QUERY_DAY_HISTORY = "place:&beginTimeRef=1&endTimeRef=2&sort=4&type=1";
+const QUERY_BOOKMARKS_MENU = "place:&folders=3&group=3";
+const INDEX_HISTORY = 2;
+const INDEX_BOOKMARKS = 4;
+
 var PlacesUIHook = {
   _tabbrowser: null,
   _topWindow: null,
@@ -182,13 +189,16 @@ var PlacesPage = {
     // Hook the browser UI
     PlacesUIHook.init(this._content);
 
-    // Attach the History model to the Content View
-    this._content.queryString = "";
-
     // Attach the Places model to the Place View
     // XXXben - move this to an attribute/property on the tree view
     var bms = PlacesController._bms;
     this._places.loadFolder(bms.placesRoot);
+    
+    // Now load the appropriate folder in the Content View, and select the 
+    // corresponding entry in the Places View. This is a little fragile. 
+    var params = window.location.search;
+    var index = params == "?history" ? INDEX_HISTORY : INDEX_BOOKMARKS;
+    this._places.view.selection.select(index);
   },
 
   uninit: function PP_uninit() {
@@ -253,6 +263,18 @@ var PlacesPage = {
   },
   
   /**
+   * Fill the header with information about what view is being displayed.
+   */
+  _setHeader: function(isSearch, text) {
+    var bundle = document.getElementById("placeBundle");
+    var key = isSearch ? "headerTextResultsFor" : "headerTextShowing";
+    var title = bundle.getFormattedString(key, [text]);
+    
+    var titlebarText = document.getElementById("titlebartext");
+    titlebarText.setAttribute("value", title);
+  },  
+  
+  /**
    * Called when a place folder is selected in the left pane.
    */
   placeSelected: function PP_placeSelected(event) {
@@ -275,6 +297,8 @@ var PlacesPage = {
 
     newOptions.setGroupingMode(groupings, groupings.length);
     this._content.load(newQueries, newOptions);
+
+    this._setHeader(false, node.title);
   },
   
   /**
@@ -330,8 +354,8 @@ var PlacesPage = {
     }
     var commandBar = document.getElementById("commandBar");
     commandBar.selectedPanel = document.getElementById(panelID);
-    var filterCollectionDeck = document.getElementById("filterCollectionDeck");
-    filterCollectionDeck.selectedPanel = document.getElementById(filterButtonID);
+    //var filterCollectionDeck = document.getElementById("filterCollectionDeck");
+    //filterCollectionDeck.selectedPanel = document.getElementById(filterButtonID);
 
     // Hide the Calendar for Bookmark queries. 
     document.getElementById("historyCalendar").setAttribute("hidden", isBookmarks);
