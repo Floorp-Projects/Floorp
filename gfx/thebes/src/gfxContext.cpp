@@ -507,3 +507,8 @@ void gfxContext::PopFilter()
 {
 
 }
+
+void gfxContext::ShowPage()
+{
+    cairo_show_page(mCairo);
+}
