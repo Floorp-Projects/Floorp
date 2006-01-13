@@ -92,7 +92,7 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
                                   size, langGroup, aFont.sizeAdjust);
 
 #if defined(XP_WIN)
-    mFontGroup = new gfxWindowsFontGroup(aFont.name, mFontStyle, (HWND)mDeviceContext->GetWidget());
+    mFontGroup = new gfxWindowsFontGroup(aFont.name, mFontStyle, (HDC)mDeviceContext->GetHDC());
 #elif defined(MOZ_ENABLE_GTK2)
     mFontGroup = new gfxPangoFontGroup(aFont.name, mFontStyle);
 #else

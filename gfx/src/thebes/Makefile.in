@@ -111,9 +111,15 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS		+= nsSystemFontsWin.cpp \
 		   $(NULL)
+#		nsPrintOptionsWin.cpp \
+#		nsPrintSettingsWin.cpp \
+#		nsDeviceContextSpecWin.cpp \
+#		nsDeviceContextSpecFactoryW.cpp \
+#		   $(NULL)
+
 REQUIRES        += glitzwgl
 
-_OS_LIBS	= usp10
+_OS_LIBS	= usp10 Winspool
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 endif
 

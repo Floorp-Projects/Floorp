@@ -74,6 +74,9 @@ public:
     NS_IMETHOD SupportsNativeWidgets(PRBool &aSupportsWidgets);
     NS_IMETHOD PrepareNativeWidget(nsIWidget* aWidget, void** aOut);
 
+    NS_IMETHOD GetCanonicalPixelScale(float &aScale) const;
+    NS_IMETHOD SetCanonicalPixelScale(float aScale);
+
     NS_IMETHOD GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
     NS_IMETHOD GetSystemFont(nsSystemFontID aID, nsFont *aFont) const;
@@ -116,9 +119,18 @@ public:
     static int prefChanged(const char *aPref, void *aClosure);
 
     nsNativeWidget GetWidget() { return mWidget; }
+#ifdef XP_WIN
+	void* GetHDC() { return mDC; }
+#endif
 
 protected:
     nsresult SetDPI(PRInt32 aPrefDPI);
+    void ComputeClientRectUsingScreen(nsRect* outRect);
+    void ComputeFullAreaUsingScreen(nsRect* outRect);
+    void FindScreen(nsIScreen** outScreen);
+
+    float mPixelScale;
+    PRUint32 mDepth;
 
 private:
     nsNativeWidget mWidget;
@@ -131,7 +143,14 @@ private:
     PRInt32 mHeight;
     static PRInt32 mDpi;
 
+    PRBool mPrinter;
+
     nsRefPtrHashtable<nsISupportsHashKey, gfxASurface> mWidgetSurfaceCache;
+
+#ifdef XP_WIN
+	// This will only be set in the case of printing....
+    void* mDC;
+#endif
 };
 
 #endif /* _NS_CAIRODEVICECONTEXT_H_ */
