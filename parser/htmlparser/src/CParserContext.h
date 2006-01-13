@@ -52,6 +52,7 @@
 #include "nsScanner.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 
 /**
  * Note that the parser is given FULL access to all
@@ -73,7 +74,6 @@ public:
                     eAutoDetectResult aStatus=eUnknownDetect, 
                     PRBool aCopyUnused=PR_FALSE); 
     
-    CParserContext( const CParserContext& aContext);
     ~CParserContext();
 
     nsresult GetTokenizer(PRInt32 aType,
@@ -85,11 +85,11 @@ public:
                                    // why is mRequest strongly referenced? see bug 102376.
     nsCOMPtr<nsIDTD>	 mDTD;
     nsCOMPtr<nsIRequestObserver> mListener;
-    char*                mTransferBuffer;
+    nsAutoArrayPtr<char> mTransferBuffer;
     void*                mKey;
     nsCOMPtr<nsITokenizer> mTokenizer;
     CParserContext*      mPrevContext;
-    nsScanner*           mScanner;
+    nsAutoPtr<nsScanner> mScanner;
     
     nsCString            mMimeType;
     nsDTDMode            mDTDMode;

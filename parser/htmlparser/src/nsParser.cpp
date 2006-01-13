@@ -1013,8 +1013,11 @@ FindSuitableDTD(CParserContext& aParserContext, PRBool* aReturn)
   // Let's start by trying the defaultDTD, if one exists...
   if (aParserContext.mDTD) {
     eAutoDetectResult canParse = aParserContext.mDTD->CanParse(aParserContext);
-    if (canParse != eUnknownDetect && canParse != eInvalidDetect)
-      return PR_TRUE;
+    if (canParse != eUnknownDetect && canParse != eInvalidDetect) {
+      *aReturn = PR_TRUE;
+
+      return NS_OK;
+    }
   }
 
   CSharedParserObjects* sharedObjects;
@@ -2639,8 +2642,7 @@ NS_IMETHODIMP
 nsParser::GetDTD(nsIDTD** aDTD)
 {
   if (mParserContext) {
-    *aDTD = mParserContext->mDTD;
-    NS_IF_ADDREF(*aDTD);
+    NS_IF_ADDREF(*aDTD = mParserContext->mDTD);
   }
 
   return NS_OK;
