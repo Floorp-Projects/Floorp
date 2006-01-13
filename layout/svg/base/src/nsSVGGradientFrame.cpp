@@ -618,6 +618,10 @@ nsSVGGradientFrame::PrivateGetSpreadMethod(nsIDOMSVGAnimatedEnumeration * *aEnum
 NS_IMETHODIMP
 nsSVGGradientFrame::GetNextGradient(nsISVGGradient * *aNextGrad, PRUint32 aType) {
   PRUint32 nextType;
+  if (!mNextGrad) {
+    *aNextGrad = nsnull;
+    return NS_ERROR_FAILURE;
+  }
   mNextGrad->GetGradientType(&nextType);
   if (nextType == aType) {
     *aNextGrad = mNextGrad;
