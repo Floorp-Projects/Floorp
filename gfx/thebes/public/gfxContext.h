@@ -497,6 +497,13 @@ public:
      */
     void PopFilter();
 
+
+    /**
+     * ...
+     *
+     */
+    void ShowPage();
+
 private:
     cairo_t *mCairo;
     nsRefPtr<gfxASurface> mSurface;
