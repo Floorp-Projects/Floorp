@@ -5390,7 +5390,7 @@ nsDocShell::RestoreFromHistory()
     // Rather than call Embed(), we will retrieve the viewer from the session
     // history entry and swap it in.
     // XXX can we refactor this so that we can just call Embed()?
-    // XXX PersistLayoutHistoryState() ?
+    PersistLayoutHistoryState();
     nsresult rv;
     if (mContentViewer) {
         if (mSavingOldViewer && NS_FAILED(CaptureState())) {
