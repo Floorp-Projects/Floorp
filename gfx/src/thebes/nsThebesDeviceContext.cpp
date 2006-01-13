@@ -73,6 +73,7 @@ static nsSystemFontsGTK2 *gSystemFonts = nsnull;
 #elif XP_WIN
 #include <cairo-win32.h>
 #include "nsSystemFontsWin.h"
+#include "gfxWindowsSurface.h"
 static nsSystemFontsWin *gSystemFonts = nsnull;
 #include <Usp10.h>
 #else
@@ -135,8 +136,10 @@ nsThebesDeviceContext::~nsThebesDeviceContext()
                                   prefChanged, (void *)this);
     }
 
+#ifdef XP_WIN
     if (mDC)
         DeleteDC((HDC)mDC);
+#endif
 }
 
 nsresult
@@ -307,8 +310,6 @@ nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
 
     return rv;
 }
-
-#include "gfxWindowsSurface.h"
 
 NS_IMETHODIMP
 nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
@@ -839,9 +840,9 @@ nsThebesDeviceContext::FindScreen(nsIScreen** outScreen)
     gint x, y, width, height, depth;
     x = y = width = height = 0;
 
-    gdk_window_get_geometry(mWidget, &x, &y, &width, &height,
+    gdk_window_get_geometry(GDK_WINDOW(mWidget), &x, &y, &width, &height,
                             &depth);
-    gdk_window_get_origin(mWidget, &x, &y);
+    gdk_window_get_origin(GDK_WINDOW(mWidget), &x, &y);
     if (mScreenManager) {
         mScreenManager->ScreenForRect(x, y, width, height, outScreen);
         return;
