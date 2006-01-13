@@ -79,7 +79,6 @@ CPPSRCS		= \
 	nsAppShell.cpp       \
 	nsLookAndFeel.cpp    \
 	nsToolkit.cpp        \
-	nsKeyboardLayout.cpp \
 	nsDataObj.cpp  \
 	nsDataObjCollection.cpp  \
 	nsClipboard.cpp      \
