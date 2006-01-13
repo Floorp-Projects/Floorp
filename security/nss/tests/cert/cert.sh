@@ -687,14 +687,14 @@ cert_extensions()
 
     count=0
     while read arg opt filterList; do
-        if [ "`echo $arg | cut -c 1`" = "#" ]; then
+        if [ X"`echo $arg | cut -c 1`" = "X#" ]; then
             continue
         fi
-        if [ "`echo $arg | cut -c 1`" = "!" ]; then
+        if [ X"`echo $arg | cut -c 1`" = "X!" ]; then
             testName="$filterList"
             continue
         fi
-        if [ "$arg" = "=" ]; then
+        if [ X"$arg" = "X=" ]; then
             count=`expr $count + 1`
             echo "#################################################"
             CU_ACTION="Testing $testName"
