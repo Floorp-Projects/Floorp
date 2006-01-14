@@ -48,9 +48,9 @@ pre.output { border: medium solid; padding: 1em; margin: 1em; }
 </style>
 <script type="text/javascript">
 
-var result = "";
-
 function run() {
+    var result = "";
+
     // A hash of objects (keyed by the first word of the line in the log)
     // that have two public methods, handle_line and dump (to be called using
     // call, above), along with any private data they need.
@@ -219,6 +219,8 @@ function run() {
 
     for (var handler in handlers)
         handlers[handler].dump();
+    if (result.length)
+        result += "\n";
     result += "Summary:\n";
     for (var handler in handlers)
         handlers[handler].summary();
@@ -226,7 +228,6 @@ function run() {
     var out = document.createElement("pre");
     out.className = "output";
     out.appendChild(document.createTextNode(result));
-    result = "";
     document.body.appendChild(out);
 }
 
@@ -236,7 +237,7 @@ function run() {
 
 <h1>Leak Gauge</h1>
 
-<pre>$Id: leak-gauge.html,v 1.3 2006/01/13 23:43:41 dbaron%dbaron.org Exp $</pre>
+<pre>$Id: leak-gauge.html,v 1.4 2006/01/14 00:00:58 dbaron%dbaron.org Exp $</pre>
 
 <p>This script is designed to help testers isolate and simplify testcases
 for many classes of leaks (those that involve large graphs of core
