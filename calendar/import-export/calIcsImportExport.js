@@ -157,7 +157,7 @@ function ics_exportToStream(aStream, aCount, aItems) {
     }
     var str = calComp.serializeToICS();
 
-    // Convert the javascript string to an araay of bytes, using the
+    // Convert the javascript string to an array of bytes, using the
     // utf8 encoder
     var convStream = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
                                .getService(Components.interfaces.nsIConverterOutputStream);
