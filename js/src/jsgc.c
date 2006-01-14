@@ -1820,7 +1820,6 @@ restart:
      */
     js_SweepAtomState(&rt->atomState);
     js_SweepScopeProperties(rt);
-    js_SweepScriptFilenames(rt);
     for (i = 0; i < GC_NUM_FREELISTS; i++) {
         nbytes = GC_FREELIST_NBYTES(i);
         nflags = nbytes / sizeof(JSGCThing);
@@ -1863,6 +1862,14 @@ restart:
             }
         }
     }
+
+    /*
+     * Sweep script filenames after sweeping functions in the generic loop
+     * above. In this way when scripted function's finalizer destroys script
+     * triggering a call to rt->destroyScriptHook, the hook can still access
+     * script's filename. See bug 323267.
+     */
+    js_SweepScriptFilenames(rt);
 
     /*
      * Free phase.
