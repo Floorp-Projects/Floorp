@@ -86,7 +86,8 @@ var PlacesUIHook = {
               "Browser:Reload", "viewTextZoomMenu", "pageStyleMenu", 
               "charsetMenu", "View:PageSource", "View:FullScreen", 
               "documentDirection-swap", "Browser:AddBookmarkAs", 
-              "Browser:ShowPlaces", "View:PageInfo", "cmd_toggleTaskbar"],
+              "Browser:ShowBookmarks", "Browser:ShowHistory", "View:PageInfo", 
+              "cmd_toggleTaskbar"],
   
   /**
    * Disable commands that are not relevant to the Places page, so that all 
@@ -114,7 +115,8 @@ var PlacesUIHook = {
 
   onTabSelect: function PP_onTabSelect(event) {
     var tabURI = this._tabbrowser.selectedBrowser.currentURI.spec;
-    (tabURI == this._placesURI) ? this._showPlacesUI() : this._hidePlacesUI();
+    var isPlaces = tabURI.substr(0, this._placesURI.length) == this._placesURI;
+    isPlaces ? this._showPlacesUI() : this._hidePlacesUI();
   },
   
   _topElement: function PUIH__topElement(id) {
