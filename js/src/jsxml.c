@@ -3056,7 +3056,7 @@ construct:
 out:
     qn = (JSXMLQName *) JS_GetPrivate(cx, obj);
     atom = cx->runtime->atomState.lazy.functionNamespaceURIAtom;
-    if (atom &&
+    if (qn->uri && atom &&
         (qn->uri == ATOM_TO_STRING(atom) ||
          !js_CompareStrings(qn->uri, ATOM_TO_STRING(atom)))) {
         if (!JS_ValueToId(cx, STRING_TO_JSVAL(qn->localName), funidp))
