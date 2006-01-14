@@ -3,12 +3,12 @@
 <!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet">
 <!ENTITY  directTypeRadio.label         "Direct connection to the Internet">
 <!ENTITY  directTypeRadio.accesskey     "d">
+<!ENTITY  WPADTypeRadio.label           "Auto-detect proxy settings for this network">
+<!ENTITY  WPADTypeRadio.accesskey       "w">
 <!ENTITY  manualTypeRadio.label         "Manual proxy configuration">
 <!ENTITY  manualTypeRadio.accesskey     "m">
 <!ENTITY  autoTypeRadio.label           "Automatic proxy configuration URL:">
 <!ENTITY  autoTypeRadio.accesskey       "a">
-<!ENTITY  configAutoconfigText.label    "Configuration location (URL):">
-<!ENTITY  configAutoconfigText.accesskey "u">
 <!ENTITY  shareproxy.label              "Use this proxy server for all protocols">
 <!ENTITY  shareproxy.accesskey          "x">
 <!ENTITY  reload.label                  "Reload">

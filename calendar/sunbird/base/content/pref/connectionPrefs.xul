@@ -55,7 +55,7 @@
 
     <radiogroup id="networkProxyType" prefstring="network.proxy.type">
         <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
-        <radio value="4" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling()"/>
+        <radio value="4" label="&WPADTypeRadio.label;" accesskey="&WPADTypeRadio.accesskey;" oncommand="DoEnabling()"/>
         <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
       <grid class="indent" flex="1">
         <columns>
