@@ -110,6 +110,7 @@ sub build_who {
     $query_module=$cvs_module;
     $query_branch=$cvs_branch;
     $query_branchtype='regexp' if $query_branch =~ /\*|\?|\+/;
+    $::query_branch_head=1 if $::query_branch eq 'HEAD';
 
     my $who_file = "$tree/who.dat";
     my $temp_who_file = "$who_file.$$";
