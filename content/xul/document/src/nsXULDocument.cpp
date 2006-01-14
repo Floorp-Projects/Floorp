@@ -2957,6 +2957,15 @@ nsXULDocument::ResumeWalk()
     // attribute.
 
     if (!mDocumentLoaded) {
+        // Make sure we don't reenter here from StartLayout().  Note that
+        // setting mDocumentLoaded to true here means that if StartLayout()
+        // causes ResumeWalk() to be reentered, we'll take the other branch of
+        // the |if (!mDocumentLoaded)| check above and since
+        // mInitialLayoutComplete will be false will follow the else branch
+        // there too.  See the big comment there for how such reentry can
+        // happen.
+        mDocumentLoaded = PR_TRUE;
+
         nsAutoString title;
         mRootContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
         SetTitle(title);
@@ -2990,8 +2999,6 @@ nsXULDocument::ResumeWalk()
         // See below for detail.
         if (mPendingOverlayLoadNotifications.IsInitialized())
             mPendingOverlayLoadNotifications.Enumerate(FirePendingMergeNotification, (void*)&mOverlayLoadObservers);
-
-        mDocumentLoaded = PR_TRUE;
     }
     else {
         if (mOverlayLoadObservers.IsInitialized()) {
@@ -3020,6 +3027,8 @@ nsXULDocument::ResumeWalk()
                 // whether or not the overlay prototype is in the XUL cache. The
                 // most likely effect of this bug is odd UI initialization due to
                 // methods and properties that do not work.
+                // XXXbz really, we shouldn't be firing binding constructors
+                // until after StartLayout returns!
 
                 NS_ENSURE_TRUE(mPendingOverlayLoadNotifications.IsInitialized() || mPendingOverlayLoadNotifications.Init(), 
                                NS_ERROR_OUT_OF_MEMORY);
