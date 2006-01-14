@@ -761,8 +761,8 @@ LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
         if (fun->atom)
             name = js_AtomToPrintableString(cx, fun->atom);
         if (fun->interpreted) {
-            key.filename = fun->u.script->filename;
-            key.lineno = fun->u.script->lineno;
+            key.filename = fun->u.i.script->filename;
+            key.lineno = fun->u.i.script->lineno;
         }
     }
     keyHash = js_hash_call_key(&key);
