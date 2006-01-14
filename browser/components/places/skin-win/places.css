@@ -164,11 +164,16 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
   height: 16px;
   list-style-image: url("chrome://browser/skin/Search-bar.png");
   -moz-user-focus: ignore;
+  cursor: default;
 }
 
 .filterList .button-box {
   border: 0px;
   padding: 0px;
+}
+
+.filterList .button-menu-dropmarker {
+  margin: 9px -3px -4px 8px;
 }
 
 /* Calendar */

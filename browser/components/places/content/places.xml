@@ -36,6 +36,13 @@
   </binding>
   
   <binding id="filter-button" extends="chrome://global/content/bindings/button.xml#menu">
+    <content>
+      <xul:stack flex="1" class="box-inherit button-box">
+        <xul:image class="button-icon" xbl:inherits="src=image"/>
+        <xul:dropmarker class="button-menu-dropmarker" xbl:inherits="open,disabled"/>
+      </xul:stack>
+      <children includes="menupopup"/>
+    </content>
     <handlers>
       <handler event="command"><![CDATA[
         PlacesSearchBox.filterCollection = event.target.getAttribute("value");
