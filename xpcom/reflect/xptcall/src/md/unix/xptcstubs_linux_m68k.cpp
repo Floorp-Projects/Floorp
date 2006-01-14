@@ -129,9 +129,9 @@ nsresult nsXPTCStubBase::Stub##n() \
     "movl  %1, %/sp@-\n\t"          /* this */ \
     "jbsr  PrepareAndDispatch\n\t" \
     "addw  #12, %/sp" \
-    : "=d" (result)     /* %0 */ \
+    : "=&d" (result)     /* %0 */ \
     : "a" (this), "a" (frame) \
-    : "a0", "a1", "d0", "d1", "memory" ); \
+    : "memory" ); \
     return result; \
 }
 
