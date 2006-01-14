@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# $Id: leak-gauge.pl,v 1.6 2006/01/12 09:14:29 dbaron%dbaron.org Exp $
+# $Id: leak-gauge.pl,v 1.7 2006/01/14 00:27:41 dbaron%dbaron.org Exp $
 # This script is designed to help testers isolate and simplify testcases
 # for many classes of leaks (those that involve large graphs of core
 # data structures) in Mozilla-based browsers.  It is designed to print
@@ -57,8 +57,8 @@
 # * In a csh-based shell such as tcsh, set environment variables with
 #     setenv VAR value
 #
-# Then run this perl script over the log.  Either of the following
-# commands should work:
+# Then, after you have exited the browser, run this perl script over the
+# log.  Either of the following commands should work:
 #   perl ./path/to/leak-gauge.pl nspr.log
 #   cat nspr.log | perl ./path/to/leak-gauge.pl
 # and it will tell you which of certain core objects leaked and the URLs

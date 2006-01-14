@@ -237,7 +237,7 @@ function run() {
 
 <h1>Leak Gauge</h1>
 
-<pre>$Id: leak-gauge.html,v 1.5 2006/01/14 00:02:52 dbaron%dbaron.org Exp $</pre>
+<pre>$Id: leak-gauge.html,v 1.6 2006/01/14 00:27:41 dbaron%dbaron.org Exp $</pre>
 
 <p>This script is designed to help testers isolate and simplify testcases
 for many classes of leaks (those that involve large graphs of core
@@ -267,11 +267,13 @@ file from your disk.  You will be asked to give it permission to execute
 arbitrary code.  You should only grant this permission if you trust this
 page.</strong></p>
 
-<p>Once you have this log, you can load this page <em>from your
-disk</em> and <a href="javascript:run()">enter the filename</a> of the
-log.  Then you'll see the output below, which will tell you which of
-certain core objects leaked and the URLs associated with those
-objects.</p>
+<p>Once you have this log from a complete run of the browser (you have
+to exit; otherwise it will look like everything leaked), you can load
+this page <em>from your disk</em> (be careful not to overwrite the log
+when starting the browser to load this page) and <a
+href="javascript:run()">enter the filename</a> of the log.  Then you'll
+see the output below, which will tell you which of certain core objects
+leaked and the URLs associated with those objects.</p>
 
 </body>
 </html>
