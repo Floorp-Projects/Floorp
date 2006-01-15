@@ -80,6 +80,8 @@ CPPSRCS		= \
 		nsKeyCode.cpp \
 		nsLabel.cpp \
 		nsLookAndFeel.cpp \
+		nsScreenXlib.cpp \
+		nsScreenManagerXlib.cpp \
 		nsSound.cpp \
 		nsTextHelper.cpp \
 		nsTextWidget.cpp \

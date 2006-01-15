@@ -94,8 +94,6 @@ CPPSRCS		= \
 		nsImageXlib.cpp \
 		nsRegionXlib.cpp \
 		nsRenderingContextXlib.cpp \
-		nsScreenXlib.cpp \
-		nsScreenManagerXlib.cpp \
 	       	nsPrintOptionsXlib.cpp \
 		nsGCCache.cpp \
 		$(NULL)

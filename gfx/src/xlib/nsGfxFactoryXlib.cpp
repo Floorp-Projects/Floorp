@@ -50,7 +50,6 @@
 #include "nsDeviceContextSpecXlib.h"
 // aka    nsDeviceContextSpecFactoryXlib.h
 #include "nsDeviceContextSpecFactoryX.h"
-#include "nsScreenManagerXlib.h"
 #include "nsScriptableRegion.h"
 #include "nsDeviceContextXlib.h"
 #include "nsImageXlib.h"
@@ -71,7 +70,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsXlib, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
@@ -177,11 +175,6 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/fontlist;1"
     NS_FONTLIST_CONTRACTID,
     nsFontListConstructor },
-  { "Xlib Screen Manager",
-    NS_SCREENMANAGER_CID,
-    //    "@mozilla.org/gfx/screenmanager/xlib;1",
-    "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerXlibConstructor },
   { "Xlib Printer Enumerator",
     NS_PRINTER_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/printer_enumerator/xlib;1",
