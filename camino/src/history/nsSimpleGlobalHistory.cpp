@@ -72,6 +72,11 @@
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 
+// see bug #319004 -- clamp title and URL to generously-large but not too large
+// length
+#define HISTORY_URI_LENGTH_MAX 65536
+#define HISTORY_TITLE_LENGTH_MAX 4096
+
 // sync history every 10 seconds
 #define HISTORY_SYNC_TIMEOUT (10 * PR_MSEC_PER_SEC)
 //#define HISTORY_SYNC_TIMEOUT 3000 // every 3 seconds - testing only!
@@ -598,6 +603,9 @@ nsSimpleGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel, 
   nsCAutoString URISpec;
   rv = aURI->GetSpec(URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (URISpec.Length() > HISTORY_URI_LENGTH_MAX)
+     return NS_OK;
 
   nsCAutoString referrerSpec;
   if (aReferrer) {
@@ -1181,7 +1189,7 @@ nsSimpleGlobalHistory::SetPageTitle(nsIURI *aURI, const nsAString& aTitle)
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aURI);
 
-  const nsAFlatString& titleString = PromiseFlatString(aTitle);
+  nsAutoString titleString(StringHead(aTitle, HISTORY_TITLE_LENGTH_MAX));
 
   // skip about: URIs to avoid reading in the db (about:blank, especially)
   PRBool isAbout;
@@ -1554,6 +1562,9 @@ nsSimpleGlobalHistory::HidePage(nsIURI *aURI)
   rv = aURI->GetSpec(URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
   
+  if (URISpec.Length() > HISTORY_URI_LENGTH_MAX)
+     return NS_OK;
+
   nsCOMPtr<nsIMdbRow> row;
 
   rv = FindRow(kToken_URLColumn, URISpec.get(), getter_AddRefs(row));
@@ -1583,6 +1594,9 @@ nsSimpleGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
   nsCAutoString spec;
   nsresult rv = aURI->GetSpec(spec);
   if (NS_FAILED(rv)) return rv;
+
+  if (spec.Length() > HISTORY_URI_LENGTH_MAX)
+     return NS_OK;
 
   nsCOMPtr<nsIMdbRow> row;
   rv = FindRow(kToken_URLColumn, spec.get(), getter_AddRefs(row));
