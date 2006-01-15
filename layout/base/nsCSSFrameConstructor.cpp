@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Dan Rosen <dr@netscape.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -11273,16 +11274,20 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
 
         if (kidFrame) {
           // then use the next sibling frame as our starting point
-          kidFrame = kidFrame->GetNextSibling();
-          if (!kidFrame)
-          { // the hint frame had no next frame.  try the next-in-flow fo the parent of the hint frame
-            // if there is one
-            nsIFrame *parentFrame = aHint->mPrimaryFrameForPrevSibling->GetParent();
+          if (kidFrame->GetNextSibling()) {
+            kidFrame = kidFrame->GetNextSibling();
+          }
+          else {
+            // The hint frame had no next sibling. Try the next-in-flow or
+            // special sibling of the parent of the hint frame (or its
+            // associated placeholder).
+            nsIFrame *parentFrame = kidFrame->GetParent();
+            kidFrame = nsnull;
             if (parentFrame) {
               parentFrame = GetNifOrSpecialSibling(aFrameManager, parentFrame);
             }
-            if (parentFrame) 
-            { // if we found the next-in-flow for the parent of the hint frame, start with it's first child
+            if (parentFrame) {
+              // Found it, continue the search with its first child.
               kidFrame = parentFrame->GetFirstChild(listName);
               // Leave |aParentFrame| as-is, since the only time we'll
               // reuse it is if the hint fails.
@@ -11322,7 +11327,7 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
 #ifdef NOISY_FINDFRAME
             FFWC_recursions++;
             printf("  recursing with new parent set to kidframe=%p, parentContent=%p\n", 
-                   kidFrame, aParentContent.get());
+                   kidFrame, aParentContent);
 #endif
             nsIFrame* matchingFrame =
                 FindFrameWithContent(aFrameManager, kidFrame,
