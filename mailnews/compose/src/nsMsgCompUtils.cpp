@@ -1307,10 +1307,7 @@ RFC2231ParmFolding(const char *parmName, const nsAFlatCString& charset,
         foldedParm = PL_strdup(parmName);
       }
       else {
-        if (needEscape)
-          NS_MsgSACat(&foldedParm, "\r\n ");
-        else
-          NS_MsgSACat(&foldedParm, ";\r\n ");
+        NS_MsgSACat(&foldedParm, ";\r\n ");
         NS_MsgSACat(&foldedParm, parmName);
       }
       PR_snprintf(digits, sizeof(digits), "*%d", counter);
