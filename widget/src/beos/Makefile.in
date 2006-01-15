@@ -81,6 +81,8 @@ CPPSRCS		= \
 		nsToolkit.cpp \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
+		nsScreenBeOS.cpp \
+		nsScreenManagerBeOS.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
