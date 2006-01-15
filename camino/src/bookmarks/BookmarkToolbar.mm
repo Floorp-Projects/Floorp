@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "NSView+Utils.h"
+
 #import "BookmarkToolbar.h"
 
 #import "CHBrowserService.h"
@@ -60,13 +62,17 @@ static const float kButtonRectVPadding = 4.0f;
 
 @interface BookmarkToolbar(Private)
 
+-(void)rebuildButtonList;
 - (void)setButtonInsertionPoint:(id <NSDraggingInfo>)sender;
 - (NSRect)insertionHiliteRectForButton:(NSView*)aButton position:(int)aPosition;
 - (BookmarkButton*)makeNewButtonWithItem:(BookmarkItem*)aItem;
 - (void)managerStarted:(NSNotification*)inNotify;
 - (BOOL)anchorFoundAtPoint:(NSPoint)testPoint forButton:(NSButton*)sourceButton;
 - (BOOL)anchorFoundScanningFromPoint:(NSPoint)testPoint withStep:(int)step;
+
 @end
+
+#pragma mark -
 
 @implementation BookmarkToolbar
 
@@ -80,8 +86,12 @@ static const int kBMBarScanningStep = 5;
     mDragInsertionButton = nil;
     mDragInsertionPosition = CHInsertNone;
     mDrawBorder = YES;
+
     [self registerForDraggedTypes:[NSArray arrayWithObjects: kCaminoBookmarkListPBoardType, kWebURLsWithTitlesPboardType, NSStringPboardType, NSURLPboardType, nil]];
+
     mIsShowing = YES;
+    mButtonListDirty = YES;
+    
     // Generic notifications for Bookmark Client
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
     [nc addObserver:self selector:@selector(bookmarkAdded:) name:BookmarkFolderAdditionNotification object:nil];
@@ -112,7 +122,7 @@ static const int kBMBarScanningStep = 5;
 //
 - (void)managerStarted:(NSNotification*)inNotify
 {
-  [self buildButtonList];
+  [self rebuildButtonList];
 }
 
 static void VerticalGrayGradient(void* inInfo, float const* inData, float* outData)
@@ -218,42 +228,36 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 }
 
 //
-// -buildButtonList
+// -rebuildButtonList
 //
 // this only gets called on startup OR window creation.  on the off chance that
 // we're starting due to an appleevent from another program, we might call it twice.
 // make sure nothing bad happens if we do that.
 // 
--(void)buildButtonList
+-(void)rebuildButtonList
 {
-  BookmarkFolder* toolbar = [[BookmarkManager sharedBookmarkManager] toolbarFolder];
-
-  // check if we've built the toolbar already and bail if we have
-  const unsigned long count = [toolbar count];
-  if ([mButtons count] == count)
+  if (!mButtonListDirty)
     return;
 
-  for (unsigned int i = 0; i < count; i++) {
-    BookmarkButton* button = [self makeNewButtonWithItem:[toolbar objectAtIndex:i]];
+  BookmarkFolder* toolbarFolder = [[BookmarkManager sharedBookmarkManager] toolbarFolder];
+
+  [mButtons removeAllObjects];
+  [self removeAllSubviews];
+
+  unsigned int numItems = [toolbarFolder count];
+  for (unsigned int i = 0; i < numItems; i++)
+  {
+    BookmarkButton* button = [self makeNewButtonWithItem:[toolbarFolder objectAtIndex:i]];
     if (button) {
       [self addSubview:button];
       [mButtons addObject:button];
     }
   }
+
+  mButtonListDirty = NO;
+
   if ([self isShown])
     [self reflowButtons];
-}
-
-- (void)resetButtonList
-{
-  int count = [mButtons count];
-  for (int i = 0; i < count; i++)
-  {
-    BookmarkButton* button = [mButtons objectAtIndex: i];
-    [button removeFromSuperview];
-  }
-  [mButtons removeAllObjects];
-  [self setNeedsDisplay:YES];
 }
 
 -(void)addButton:(BookmarkItem*)aItem atIndex:(int)aIndex
@@ -315,7 +319,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 #define kBookmarkButtonVerticalPadding    1.0
 #define kBookmarkToolbarBottomPadding     2.0
 
--(void)reflowButtonsStartingAtIndex: (int)aIndex
+-(void)reflowButtonsStartingAtIndex:(int)aIndex
 {
   if (![self isShown])
     return;
@@ -718,33 +722,62 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
 
 - (BookmarkButton*)makeNewButtonWithItem:(BookmarkItem*)aItem
 {
-  return [[[BookmarkButton alloc] initWithFrame: NSMakeRect(2.0f, 1.0f, 100.0f, 17.0f) item:aItem] autorelease];
+  return [[[BookmarkButton alloc] initWithFrame: NSMakeRect(0.0f, 0.0f, kMaxBookmarkButtonWidth, kBookmarkButtonHeight) item:aItem] autorelease];
 }
 
 #pragma mark -
 
 - (void)bookmarkAdded:(NSNotification *)aNote
 {
-  BookmarkFolder *anArray = [aNote object];
-  if (![anArray isEqual:[[BookmarkManager sharedBookmarkManager] toolbarFolder]])
+  BookmarkItem* changedItem = [aNote object];
+  if (changedItem != [[BookmarkManager sharedBookmarkManager] toolbarFolder])
     return;
+
   NSDictionary *dict = [aNote userInfo];
   [self addButton:[dict objectForKey:BookmarkFolderChildKey] atIndex:[[dict objectForKey:BookmarkFolderChildIndexKey] unsignedIntValue]];
 }
 
 - (void)bookmarkRemoved:(NSNotification *)aNote
 {
-  BookmarkFolder *aFolder = [aNote object];
-  if (![aFolder isEqual:[[BookmarkManager sharedBookmarkManager] toolbarFolder]])
+  BookmarkItem* changedItem = [aNote object];
+  if (changedItem != [[BookmarkManager sharedBookmarkManager] toolbarFolder])
     return;
+
   NSDictionary *dict = [aNote userInfo];
   [self removeButton:[dict objectForKey:BookmarkFolderChildKey]];
 }
 
 - (void)bookmarkChanged:(NSNotification *)aNote
 {
-  // XXX look at change flags
-  [self updateButton:[aNote object]];
+  BookmarkItem* changedItem = [aNote object];
+  BookmarkFolder* toolbarFolder = [[BookmarkManager sharedBookmarkManager] toolbarFolder];
+  
+  if (changedItem == toolbarFolder)
+  {
+    const unsigned int kSignificantRootChangeFlags = (kBookmarkItemTitleChangedMask |
+                                                      kBookmarkItemStatusChangedMask |
+                                                      kBookmarkItemChildrenChangedMask);
+
+    if ([BookmarkItem bookmarkChangedNotificationUserInfo:[aNote userInfo] containsFlags:kSignificantRootChangeFlags])
+    {
+      mButtonListDirty = YES;
+      [self rebuildButtonList];
+    }
+  }
+  else if ([changedItem parent] == toolbarFolder)
+  {
+    const unsigned int kSignificantItemChangeFlags = (kBookmarkItemTitleChangedMask |
+                                                      kBookmarkItemIconChangedMask |
+                                                      kBookmarkItemStatusChangedMask |
+                                                      kBookmarkItemChildrenChangedMask);
+
+    if ([BookmarkItem bookmarkChangedNotificationUserInfo:[aNote userInfo] containsFlags:kSignificantItemChangeFlags])
+    {
+      // note that this gets called as we're building the toolbar for the first time, since that's
+      // setting the icons on the bookmarks. It's slightly expensive, but harmless.
+      [self updateButton:changedItem];
+    }
+  }
 }
 
 @end

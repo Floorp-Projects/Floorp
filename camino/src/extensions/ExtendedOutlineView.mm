@@ -139,53 +139,99 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
   // check each char in the event array. it should be just 1 char, but
   // just in case we use a loop.
   int len = [[aEvent characters] length];
-  for ( int i = 0; i < len; ++i ) {
+  BOOL handled = NO;
+  
+  for (int i = 0; i < len; ++i)
+  {
     unichar c = [[aEvent characters] characterAtIndex:i];
-    
-    // Check for a certain set of special keys.    
-    if (c == NSDeleteCharacter || c == NSBackspaceCharacter || c == NSDeleteFunctionKey) {
-      // delete the bookmark
-      if (mDeleteAction)
-        [NSApp sendAction: mDeleteAction to: [self target] from: self];
-      return;
-    }
-    else if (c == NSCarriageReturnCharacter) {
-      // Start editing
-      if ([self numberOfSelectedRows] == 1) {
-        [self editColumn:0 row:[self selectedRow] withEvent:aEvent select:YES];
-        return;
-      }
-    }
-    else if (c == NSEnterCharacter
-              || ([aEvent modifierFlags] & NSCommandKeyMask && c == NSDownArrowFunctionKey)) {
-      // on enter or cmd-downArrow, open the item as a double-click
-      [NSApp sendAction:[self doubleAction] to:[self target] from:self];
-      return;
-    }
-    else if (c == NSLeftArrowFunctionKey || c == NSRightArrowFunctionKey)
+    // Check for a certain set of special keys.
+    switch (c)
     {
-      BOOL expand = (c == NSRightArrowFunctionKey);
-      if ([self numberOfSelectedRows] == 1) {
-        int index = [self selectedRow];
-        if (index == -1)
-          return;
-  
-        id item = [self itemAtRow: index];
-        if (!item)
-          return;
-  
-        if (![self isExpandable: item])
-          return;
+      case NSDeleteCharacter:
+      case NSBackspaceCharacter:
+      case NSDeleteFunctionKey:
+        if (mDeleteAction)
+        {
+          [NSApp sendAction:mDeleteAction to:[self target] from:self];
+          handled = YES;
+        }
+        break;
         
-        if (![self isItemExpanded: item] && expand)
-          [self expandItem: item];
-        else if ([self isItemExpanded: item] && !expand)
-          [self collapseItem: item];
-      }
+      case NSCarriageReturnCharacter:
+        // Start editing
+        if ([self numberOfSelectedRows] == 1)
+        {
+          [self editColumn:0 row:[self selectedRow] withEvent:aEvent select:YES];
+          handled = YES;
+        }
+        break;
+
+      case NSEnterCharacter:
+        [NSApp sendAction:[self doubleAction] to:[self target] from:self];
+        handled = YES;
+        break;
+
+      case NSDownArrowFunctionKey:
+        // Command-down arrow opens an item
+        if ([aEvent modifierFlags] & NSCommandKeyMask)
+        {
+          [NSApp sendAction:[self doubleAction] to:[self target] from:self];
+          handled = YES;
+        }
+        break;
+      
+      case NSLeftArrowFunctionKey:
+      case NSRightArrowFunctionKey:
+        {
+          BOOL expand = (c == NSRightArrowFunctionKey);
+          BOOL changeChildren = (([aEvent modifierFlags] & NSAlternateKeyMask) != 0);
+
+          if ([self numberOfSelectedRows] == 1)
+          {
+            int index = [self selectedRow];
+            if (index == -1)
+              break;
+
+            id item = [self itemAtRow:index];
+            if (!item)
+              break;
+
+            if (![self isExpandable:item])
+              break;
+            
+            if (expand)
+            {
+              if (![self isItemExpanded:item])
+                [self expandItem:item expandChildren:changeChildren];
+            }
+            else  // collapse
+            {
+              if ([self isItemExpanded:item])
+                [self collapseItem:item collapseChildren:changeChildren];   // doesn't seem to work for children
+            }
+            
+            handled = YES;
+          }
+        }
+        break;
+        
+      // AppKit doesn't seem to call -interpretKeyEvents for table views, so we can't just 
+      // override the standard NSResponder methods like -moveToBeginningOfDocument: and expect them to work
+      case NSHomeFunctionKey:
+        [self scrollRowToVisible:0];
+        handled = YES;
+        break;
+
+      case NSEndFunctionKey:
+        [self scrollRowToVisible:[self numberOfRows] - 1];
+        handled = YES;
+        break;
     }
+    
   } // foreach character
 
-  [super keyDown: aEvent];
+  if (!handled)
+    [super keyDown:aEvent];
 }
 
 /*

@@ -148,9 +148,12 @@ enum
 // we put sort comparators on the base class for convenience
 - (NSComparisonResult)compareURL:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
 - (NSComparisonResult)compareTitle:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareKeyword:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareDescription:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
 - (NSComparisonResult)compareType:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
 - (NSComparisonResult)compareVisitCount:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
 - (NSComparisonResult)compareLastVisitDate:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
+
 - (NSComparisonResult)compareForTop10:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending;
 
 @end

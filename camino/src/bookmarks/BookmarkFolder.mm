@@ -121,6 +121,9 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 - (NSString*)expandKeyword:(NSString*)keyword inString:(NSString*)location;
 - (NSArray *)folderItemsWithClass:(Class)theClass;
 
+// used for undo
+- (void)arrangeChildrenWithOrder:(NSArray*)inChildArray;
+
 @end
 
 #pragma mark -
@@ -478,14 +481,16 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   [self insertChild:aChild atIndex:[self count] isMove:NO];
 }
 
--(void) insertChild:(BookmarkItem *)aChild atIndex:(unsigned)aPosition isMove:(BOOL)aBool
+-(void) insertChild:(BookmarkItem *)aChild atIndex:(unsigned)aPosition isMove:(BOOL)inIsMove
 {
   [aChild setParent:self];
   unsigned insertPoint = [mChildArray count];
   if (insertPoint > aPosition)
     insertPoint = aPosition;
+
   [mChildArray insertObject:aChild atIndex:insertPoint];
-  if (!aBool && ![self isSmartFolder]) {
+  if (!inIsMove && ![self isSmartFolder])
+  {
     NSUndoManager* undoManager = [[BookmarkManager sharedBookmarkManager] undoManager];
     [[undoManager prepareWithInvocationTarget:self] deleteChild:aChild];
     if (![undoManager isUndoing]) {
@@ -532,8 +537,39 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   }   
 }
 
-- (void)sortChildrenUsingSelector:(SEL)inSelector reverseSort:(BOOL)inReverse sortDeep:(BOOL)inDeep
+// move the given items together, sorted according to the sort selector.
+// inChildItems is assumed to be in the same order as the children
+- (void)arrangeChildItems:(NSArray*)inChildItems usingSelector:(SEL)inSelector reverseSort:(BOOL)inReverse
 {
+  NSMutableArray* orderedItems = [NSMutableArray arrayWithArray:inChildItems];
+
+  BookmarkSortData sortData = { inSelector, [NSNumber numberWithBool:inReverse], NULL, nil };
+  [orderedItems sortUsingFunction:BookmarkItemSort context:&sortData];
+  
+  // now build a new child array
+  NSMutableArray* newChildOrder = [[mChildArray mutableCopy] autorelease];
+  
+  // save the index of the first (which won't change, since it's the first)
+  int firstChangedIndex = [newChildOrder indexOfObject:[inChildItems firstObject]];
+  if (firstChangedIndex == -1) return;    // something went wrong
+  
+  [newChildOrder removeObjectsInArray:inChildItems];
+  [newChildOrder replaceObjectsInRange:NSMakeRange(firstChangedIndex, 0) withObjectsFromArray:orderedItems];
+  
+  // this makes it undoable
+  [self arrangeChildrenWithOrder:newChildOrder];
+}
+
+- (void)sortChildrenUsingSelector:(SEL)inSelector reverseSort:(BOOL)inReverse sortDeep:(BOOL)inDeep undoable:(BOOL)inUndoable
+{
+  NSUndoManager* undoManager = [[BookmarkManager sharedBookmarkManager] undoManager];
+  if (inUndoable)
+  {
+    [undoManager beginUndoGrouping];
+    // record undo, back to existing order
+    [[undoManager prepareWithInvocationTarget:self] arrangeChildrenWithOrder:[NSArray arrayWithArray:mChildArray]];
+  }
+  
   BookmarkSortData sortData = { inSelector, [NSNumber numberWithBool:inReverse], NULL, nil };
   [mChildArray sortUsingFunction:BookmarkItemSort context:&sortData];
   
@@ -547,37 +583,42 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
     while ((childItem = [enumerator nextObject]))
     {
       if ([childItem isKindOfClass:[BookmarkFolder class]])
-        [childItem sortChildrenUsingSelector:inSelector reverseSort:inReverse sortDeep:inDeep];
+        [childItem sortChildrenUsingSelector:inSelector reverseSort:inReverse sortDeep:inDeep undoable:inUndoable];
     }
+  }
+
+  if (inUndoable)
+  {
+    [undoManager endUndoGrouping];
+    [undoManager setActionName:NSLocalizedString(@"Arrange Bookmarks", @"")];
   }
 }
 
-- (void)sortChildrenUsingPrimarySelector:(SEL)inSelector primaryReverseSort:(BOOL)inReverse
-                       secondarySelector:(SEL)inSecondarySelector secondaryReverseSort:(BOOL)inSecondaryReverse
-                                sortDeep:(BOOL)inDeep
+// used for undo
+- (void)arrangeChildrenWithOrder:(NSArray*)inChildArray
 {
-  BookmarkSortData sortData = { inSelector,           [NSNumber numberWithBool:inReverse],
-                                inSecondarySelector,  [NSNumber numberWithBool:inSecondaryReverse]
-                              };
-  [mChildArray sortUsingFunction:BookmarkItemSort context:&sortData];
-  
+  // The undo manager automatically puts redo items in a group, so we don't have to
+  // (undoing sorting of nested folders will work OK)
+  NSUndoManager* undoManager = [[BookmarkManager sharedBookmarkManager] undoManager];
+
+  // record undo, back to existing order
+  [[undoManager prepareWithInvocationTarget:self] arrangeChildrenWithOrder:[NSArray arrayWithArray:mChildArray]];
+
+  if ([mChildArray count] != [inChildArray count])
+  {
+    NSLog(@"arrangeChildrenWithOrder: unmatched child array sizes");
+    return;
+  }
+
+  // Cheating here. The in array simply contains the items in the order we want,
+  // so use it.
+  [mChildArray removeAllObjects];
+  [mChildArray addObjectsFromArray:inChildArray];
+
   // notify
   [self itemChangedNote:self];
-  
-  if (inDeep)
-  {
-    NSEnumerator *enumerator = [mChildArray objectEnumerator];
-    id childItem;
-    while ((childItem = [enumerator nextObject]))
-    {
-      if ([childItem isKindOfClass:[BookmarkFolder class]])
-        [childItem sortChildrenUsingPrimarySelector:inSelector
-                                 primaryReverseSort:inReverse
-                                  secondarySelector:inSecondarySelector
-                               secondaryReverseSort:inSecondaryReverse
-                                           sortDeep:inDeep];
-    }
-  }
+
+  [undoManager setActionName:NSLocalizedString(@"Arrange Bookmarks", @"")];
 }
 
 //
@@ -719,15 +760,20 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
     return;
 
   BOOL isSeparator = NO;
-  // Couple of sanity checks
-  if ([aChild isKindOfClass:[BookmarkFolder class]]) {
+  // A few of sanity checks
+  if ([aChild isKindOfClass:[BookmarkFolder class]])
+  {
     if ([aNewParent isChildOfItem:aChild])
       return;
-    else if ([(BookmarkFolder *)aChild isToolbar] && ![aNewParent isRoot])
+    
+    if ([(BookmarkFolder *)aChild isToolbar] && ![aNewParent isRoot])
       return;
-    else if ([(BookmarkFolder *)aChild isSmartFolder] && ![aNewParent isRoot])
+    
+    if ([(BookmarkFolder *)aChild isSmartFolder] && ![aNewParent isRoot])
       return;
-  } else if ([aChild isKindOfClass:[Bookmark class]]){
+  }
+  else if ([aChild isKindOfClass:[Bookmark class]])
+  {
     if ([aNewParent isRoot])
       return;
     isSeparator = [(Bookmark *)aChild isSeparator];
@@ -796,15 +842,20 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 -(BOOL) deleteChild:(BookmarkItem *)aChild
 {
   BOOL itsDead = NO;
-  if ([[self childArray] indexOfObjectIdenticalTo:aChild] != NSNotFound) {
+  if ([[self childArray] indexOfObjectIdenticalTo:aChild] != NSNotFound)
+  {
     if ([aChild isKindOfClass:[Bookmark class]])
       itsDead = [self deleteBookmark:(Bookmark *)aChild];
     else if ([aChild isKindOfClass:[BookmarkFolder class]])
       itsDead = [self deleteBookmarkFolder:(BookmarkFolder *)aChild];
-  } else { //with current setup, shouldn't ever hit this code path.
+  }
+  else
+  {
+    //with current setup, shouldn't ever hit this code path.
     NSEnumerator *enumerator = [[self childArray] objectEnumerator];
     id anObject;
-    while (!itsDead && (anObject = [enumerator nextObject])) {
+    while (!itsDead && (anObject = [enumerator nextObject]))
+    {
       if ([anObject isKindOfClass:[BookmarkFolder class]])
         itsDead = [anObject deleteChild:aChild];
     }
@@ -847,7 +898,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   while (numChildren > 0)
     [aChild deleteChild:[aChild objectAtIndex:--numChildren]];
 
-  //record undo
+  // record undo
   [[undoManager prepareWithInvocationTarget:self] insertChild:aChild atIndex:[[self childArray] indexOfObjectIdenticalTo:aChild] isMove:NO];
   [undoManager endUndoGrouping];
 

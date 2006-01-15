@@ -51,6 +51,8 @@ extern NSString* const kBookmarkManagerStartedNotification;
 extern NSString* const kBookmarksToolbarFolderIdentifier;
 extern NSString* const kBookmarksMenuFolderIdentifier;
 
+const int kBookmarksContextMenuArrangeSeparatorTag = 100;
+
 
 @interface BookmarkManager : NSObject <BookmarksClient>
 {
@@ -106,6 +108,9 @@ extern NSString* const kBookmarksMenuFolderIdentifier;
 - (unsigned)indexOfContainerItem:(BookmarkItem*)inItem;
 - (BookmarkItem*)containerItemAtIndex:(unsigned)inIndex;
 - (BookmarkFolder*)rootBookmarkFolderWithIdentifier:(NSString*)inIdentifier;
+
+- (BOOL)itemsShareCommonParent:(NSArray*)inItems;
+
 
 // get/set folder last used by "Add Bookmarks"
 - (BookmarkFolder*)lastUsedBookmarkFolder;

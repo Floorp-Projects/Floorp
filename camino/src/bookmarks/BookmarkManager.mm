@@ -45,6 +45,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 #import "NSString+Utils.h"
+#import "NSArray+Utils.h"
 #import "NSThread+Utils.h"
 #import "NSFileManager+Utils.h"
 #import "NSWorkspace+Utils.h"
@@ -310,13 +311,9 @@ static BookmarkManager* gBookmarkManager = nil;
 
   mSmartFolderManager = [[KindaSmartFolderManager alloc] initWithBookmarkManager:self];
 
-#if 0
-  // at some point, f'd up setting the bookmark toolbar folder special flag.
-  // this'll handle that little boo-boo for the time being
-  [[self toolbarFolder] setIsToolbar:YES];
+  // set the localized titles of these folders
   [[self toolbarFolder] setTitle:NSLocalizedString(@"Bookmark Bar", @"")];
   [[self bookmarkMenuFolder] setTitle:NSLocalizedString(@"Bookmark Menu", @"")]; 
-#endif
 
   // don't do this until after we've read in the bookmarks
   mUndoManager = [[NSUndoManager alloc] init];
@@ -484,6 +481,28 @@ static BookmarkManager* gBookmarkManager = nil;
   }
   return nil;
 }
+
+- (BOOL)itemsShareCommonParent:(NSArray*)inItems
+{
+  NSEnumerator* itemsEnum = [inItems objectEnumerator];
+  
+  id commonParent = nil;
+  BookmarkItem* curItem;
+  while ((curItem = [itemsEnum nextObject]))
+  {
+    if (curItem == [inItems firstObject])
+    {
+      commonParent = [curItem parent];
+      if (!commonParent) return NO;
+    }
+
+    if ([curItem parent] != commonParent)
+      return NO;
+  }
+
+  return YES;
+}
+
 
 -(BookmarkFolder *)top10Folder
 {
@@ -702,6 +721,13 @@ static BookmarkManager* gBookmarkManager = nil;
   [menuItem setTarget:target];
   [contextMenu addItem:menuItem];
 
+  if (!outlineView || ([items count] == 1)) {
+    menuTitle = NSLocalizedString(@"Get Info", @"");
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:@""] autorelease];
+    [menuItem setTarget:target];
+    [contextMenu addItem:menuItem];
+  }
+
   [contextMenu addItem:[NSMenuItem separatorItem]];
 
   // copy URL(s) to clipboard
@@ -712,14 +738,6 @@ static BookmarkManager* gBookmarkManager = nil;
   menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(copyURLs:) keyEquivalent:@""] autorelease];
   [menuItem setTarget:target];
   [contextMenu addItem:menuItem];
-
-  if (!outlineView || ([items count] == 1)) {
-    [contextMenu addItem:[NSMenuItem separatorItem]];
-    menuTitle = NSLocalizedString(@"Get Info", @"");
-    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:@""] autorelease];
-    [menuItem setTarget:target];
-    [contextMenu addItem:menuItem];
-  }
   
   if (([items count] == 1) && itemsContainsFolder) {
     menuTitle = NSLocalizedString(@"Use as Dock Menu", @"");
@@ -732,16 +750,6 @@ static BookmarkManager* gBookmarkManager = nil;
   if ([target isKindOfClass:[BookmarkViewController class]])
     allowNewFolder = ![[target activeCollection] isSmartFolder];
 
-  if (allowNewFolder) {
-    // space
-    [contextMenu addItem:[NSMenuItem separatorItem]];
-    // create new folder
-    menuTitle = NSLocalizedString(@"Create New Folder...", @"");
-    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(addBookmarkFolder:) keyEquivalent:@""] autorelease];
-    [menuItem setTarget:target];
-    [contextMenu addItem:menuItem];
-  }
-  
   // if we're not in a smart collection (other than history)
   if (!outlineView ||
       ![target isKindOfClass:[BookmarkViewController class]] ||
@@ -755,6 +763,67 @@ static BookmarkManager* gBookmarkManager = nil;
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
   }
+  
+  if (allowNewFolder) {
+    // space
+    [contextMenu addItem:[NSMenuItem separatorItem]];
+    // create new folder
+    menuTitle = NSLocalizedString(@"Create New Folder...", @"");
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(addBookmarkFolder:) keyEquivalent:@""] autorelease];
+    [menuItem setTarget:target];
+    [contextMenu addItem:menuItem];
+  }
+  
+  // Arrange bookmarks items. these may get removed again by the caller, so
+  // we tag them.
+  if ([target isKindOfClass:[BookmarkViewController class]] &&
+      ![[target activeCollection] isSmartFolder])
+  {
+    NSMenuItem* separatorItem = [NSMenuItem separatorItem];
+    [separatorItem setTag:kBookmarksContextMenuArrangeSeparatorTag];
+    [contextMenu addItem:separatorItem];
+
+    menuTitle = NSLocalizedString(@"Arrange Bookmarks", @"");
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:NULL keyEquivalent:@""] autorelease];
+    [menuItem setTarget:target];
+    [contextMenu addItem:menuItem];
+  
+    // create submenu
+    NSMenu* arrangeSubmenu = [[[NSMenu alloc] initWithTitle:@"notitle"] autorelease];
+
+    NSMenuItem* subMenuItem = [[[NSMenuItem alloc] initWithTitle: NSLocalizedString(@"Arrange Increasing by title", @"")
+                                           action:@selector(arrange:)
+                                    keyEquivalent:@""] autorelease];
+    [subMenuItem setTarget:target];
+    [subMenuItem setTag:(kArrangeBookmarksByTitleMask | kArrangeBookmarksAscendingMask)];
+    [arrangeSubmenu addItem:subMenuItem];
+
+    subMenuItem = [[[NSMenuItem alloc] initWithTitle: NSLocalizedString(@"Arrange Decreasing by title", @"")
+                                           action:@selector(arrange:)
+                                    keyEquivalent:@""] autorelease];
+    [subMenuItem setTarget:target];
+    [subMenuItem setTag:(kArrangeBookmarksByTitleMask | kArrangeBookmarksDescendingMask)];
+    [arrangeSubmenu addItem:subMenuItem];
+
+    [arrangeSubmenu addItem:[NSMenuItem separatorItem]];
+
+    subMenuItem = [[[NSMenuItem alloc] initWithTitle: NSLocalizedString(@"Arrange Increasing by location", @"")
+                                           action:@selector(arrange:)
+                                    keyEquivalent:@""] autorelease];
+    [subMenuItem setTarget:target];
+    [subMenuItem setTag:(kArrangeBookmarksByLocationMask | kArrangeBookmarksAscendingMask)];
+    [arrangeSubmenu addItem:subMenuItem];
+
+    subMenuItem = [[[NSMenuItem alloc] initWithTitle: NSLocalizedString(@"Arrange Decreasing by location", @"")
+                                           action:@selector(arrange:)
+                                    keyEquivalent:@""] autorelease];
+    [subMenuItem setTarget:target];
+    [subMenuItem setTag:(kArrangeBookmarksByLocationMask | kArrangeBookmarksDescendingMask)];
+    [arrangeSubmenu addItem:subMenuItem];
+    
+    [contextMenu setSubmenu:arrangeSubmenu forItem:menuItem];
+  }
+  
   return contextMenu;
 }
 

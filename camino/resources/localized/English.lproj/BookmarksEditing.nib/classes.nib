@@ -10,7 +10,9 @@
                 addBookmarkFolder = id; 
                 addBookmarkSeparator = id; 
                 addCollection = id; 
+                arrange = id; 
                 copy = id; 
+                copyURLs = id; 
                 cut = id; 
                 delete = id; 
                 deleteBookmarks = id; 
@@ -50,7 +52,12 @@
             }; 
             SUPERCLASS = NSObject; 
         }, 
-        {CLASS = BookmarksEditingView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {
+            CLASS = BookmarksEditingView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mDelegate = id; }; 
+            SUPERCLASS = NSView; 
+        }, 
         {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
         {CLASS = ExtendedTableView; LANGUAGE = ObjC; SUPERCLASS = NSTableView; }, 
         {

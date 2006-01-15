@@ -23,15 +23,15 @@
 		<key>302</key>
 		<string>17 392 130 49 0 0 1600 1002 </string>
 		<key>64</key>
-		<string>367 446 170 118 0 0 1600 1002 </string>
+		<string>367 446 180 118 0 0 1600 1002 </string>
 		<key>68</key>
 		<string>174 384 142 87 0 0 1600 1002 </string>
 		<key>70</key>
-		<string>206 320 138 68 0 0 1600 1002 </string>
+		<string>210 319 186 118 0 0 1600 1002 </string>
 	</dict>
 	<key>IBFramework Version</key>
 	<string>437.0</string>
 	<key>IBSystem Version</key>
-	<string>8C46</string>
+	<string>8F46</string>
 </dict>
 </plist>

@@ -43,10 +43,12 @@
 
 #import "BookmarkViewController.h"
 
+#import "NSArray+Utils.h"
 #import "NSString+Utils.h"
 #import "NSPasteboard+Utils.h"
 #import "NSSplitView+Utils.h"
 #import "NSView+Utils.h"
+#import "NSMenu+Utils.h"
 
 #import "BookmarkManager.h"
 #import "BookmarkInfoController.h"
@@ -123,6 +125,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (void)selectItems:(NSArray*)items expandingContainers:(BOOL)expandContainers scrollIntoView:(BOOL)scroll;
 - (BookmarkItem*)selectedBookmarkItem;
 
+- (SEL)sortSelectorFromItemTag:(int)inTag;
+
 - (id)itemTreeRootContainer;   // something that responds to NSArray-like selectors
 
 - (NSOutlineView*)activeOutlineView;    // return the outline view of the visible tab
@@ -143,6 +147,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 -(void)pasteBookmarks:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index copying:(BOOL)isCopy;
 -(void)pasteBookmarksFromURLsAndTitles:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder*)dropFolder index:(int)index;
+
 @end
 
 
@@ -679,6 +684,67 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [self deleteBookmarks:aSender];
 }
 
+// 
+// the logic of what to sort here is somewhat subtle.
+// 
+// If a single folder is selected, we sort its children.
+// If > 1 items are selected, we just re-order them.
+// If the option key is down, we sort deep
+// 
+-(IBAction) arrange:(id)aSender
+{
+  BookmarkFolder* activeCollection = [self activeCollection];
+  if ([activeCollection isRoot] || [activeCollection isSmartFolder])
+    return;
+ 
+  int tag = [aSender tag];
+    
+  BOOL  reverseSort   = ((tag & kArrangeBookmarksDescendingMask) != 0);
+  SEL   sortSelector  = [self sortSelectorFromItemTag:tag];
+  if (!sortSelector)
+    return;     // all UI items that call this should have the appropriate tags set
+
+  // sort deep if the option key is down
+  BOOL sortDeep = (([[NSApp currentEvent] modifierFlags] & NSAlternateKeyMask) != 0);
+
+  NSArray* bmItems = [mBookmarksOutlineView selectedItems];
+  if ([bmItems count] == 0)
+  {
+    // if nothing is selected, sort the whole container
+    bmItems = [NSArray arrayWithObject:[self activeCollection]];
+  }
+
+  // if the items don't have a common parent, bail.
+  if (![[BookmarkManager sharedBookmarkManager] itemsShareCommonParent:bmItems])
+    return;
+  
+  // first arrange the items at the top level
+  if ([bmItems count] > 1)
+  {
+    BookmarkFolder* itemsParent = [[bmItems firstObject] parent];
+    [itemsParent arrangeChildItems:bmItems usingSelector:sortSelector reverseSort:reverseSort];
+  }
+  
+  // now sort the children if a single folder is selected,
+  // or sort deep if we are doing so
+  if ([bmItems count] == 1 || sortDeep)
+  {
+    NSEnumerator* itemsEnum = [bmItems objectEnumerator];
+    BookmarkItem* curItem;
+    while ((curItem = [itemsEnum nextObject]))
+    {
+      if ([curItem isKindOfClass:[BookmarkFolder class]])
+      {
+        BookmarkFolder* curFolder = (BookmarkFolder*)curItem;
+        [curFolder sortChildrenUsingSelector:sortSelector reverseSort:reverseSort sortDeep:sortDeep undoable:YES];
+      }
+    }
+  }
+  
+  // reselect them
+  [self selectItems:bmItems expandingContainers:NO scrollIntoView:YES];
+}
+
 - (IBAction)copyURLs:(id)aSender
 {
   [[BookmarkManager sharedBookmarkManager] copyBookmarksURLs:[mBookmarksOutlineView selectedItems] toPasteboard:[NSPasteboard generalPasteboard]];
@@ -833,7 +899,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   if (itemRow == -1) return;
 
   if (inSelectItem)
-    [mBookmarksOutlineView selectRow:itemRow byExtendingSelection:NO];
+    [mBookmarksOutlineView selectRow:itemRow byExtendingSelection:inExtendSelection];
     
   if (inScroll)
     [mBookmarksOutlineView scrollRowToVisible:itemRow];
@@ -1563,6 +1629,18 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
     if (action == @selector(showBookmarkInfo:))
       return (selItem != nil);
+
+    if (action == @selector(arrange:))
+    {
+      BookmarkFolder* activeCollection = [self activeCollection];
+      if ([activeCollection isRoot] || [activeCollection isSmartFolder])
+        return NO;
+
+      NSArray* selectedBMs = [mBookmarksOutlineView selectedItems];
+      return ([selectedBMs count] == 0) ||
+             ([selectedBMs count] == 1 && [[selectedBMs firstObject] isKindOfClass:[BookmarkFolder class]]) ||
+             (([selectedBMs count] > 1) && [[BookmarkManager sharedBookmarkManager] itemsShareCommonParent:selectedBMs]);
+    }
   }
   else    // history visible
   {
@@ -1704,6 +1782,39 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   return (BookmarkItem*)[mBookmarksOutlineView itemAtRow:index];
 }
 
+- (SEL)sortSelectorFromItemTag:(int)inTag
+{
+  switch (inTag & kArrangeBookmarksFieldMask)
+  {
+    default:
+      NSLog(@"Unknown sort tag mask");
+      // fall through
+    case kArrangeBookmarksByLocationMask:
+      return @selector(compareURL:sortDescending:);
+
+    case kArrangeBookmarksByTitleMask:
+      return @selector(compareTitle:sortDescending:);
+
+    case kArrangeBookmarksByKeywordMask:
+      return @selector(compareKeyword:sortDescending:);
+
+    case kArrangeBookmarksByDescriptionMask:
+      return @selector(compareDescription:sortDescending:);
+
+    case kArrangeBookmarksByLastVisitMask:
+      return @selector(compareLastVisitDate:sortDescending:);
+
+    case kArrangeBookmarksByVisitCountMask:
+      return @selector(compareVisitCount:sortDescending:);
+
+    case kArrangeBookmarksByTypeMask:
+      return @selector(compareType:sortDescending:);
+  }
+  
+  return NULL;  // keep compiler quiet
+}
+
+
 - (id)itemTreeRootContainer
 {
   if (mSearchResultArray)
@@ -1754,7 +1865,11 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   {
     NSArray* selectedBMs = [mBookmarksOutlineView selectedItems];
     if ([selectedBMs count] > 0)
+    {
       actionMenu = [[BookmarkManager sharedBookmarkManager] contextMenuForItems:selectedBMs fromView:mBookmarksOutlineView target:self];
+      // remove the arrange stuff, because it's on the sort button too
+      [actionMenu removeItemsFromIndex:[actionMenu indexOfItemWithTag:kBookmarksContextMenuArrangeSeparatorTag]];
+    }
     else
       actionMenu = mActionMenuBookmarks;
   }

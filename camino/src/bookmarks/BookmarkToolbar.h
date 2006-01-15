@@ -51,10 +51,11 @@
   int             mDragInsertionPosition;
   BOOL            mIsShowing;
   BOOL            mDrawBorder;
+  BOOL            mButtonListDirty;   // do we need a full rebuild of the button list?
 }
 
   // Called to construct & edit the initial set of personal toolbar buttons.
--(void)buildButtonList;
+-(void)rebuildButtonList;
 -(void)addButton:(BookmarkItem*)aItem atIndex:(int)aIndex;
 -(void)updateButton:(BookmarkItem*)aItem;
 -(void)removeButton:(BookmarkItem*)aItem;

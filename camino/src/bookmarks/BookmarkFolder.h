@@ -125,10 +125,11 @@ enum {
 -(void) deleteFromSmartFolderChildAtIndex:(unsigned)index;
 
 // sorting
-- (void)sortChildrenUsingSelector:(SEL)inSelector reverseSort:(BOOL)inReverse sortDeep:(BOOL)inDeep;
-- (void)sortChildrenUsingPrimarySelector:(SEL)inSelector primaryReverseSort:(BOOL)inReverse
-                       secondarySelector:(SEL)inSecondarySelector secondaryReverseSort:(BOOL)inSecondaryReverse
-                                sortDeep:(BOOL)inDeep;
+// Arrange the given items (which must be children of this folder) next to eachother and in
+// the order determined by the selector. Undoable.
+- (void)arrangeChildItems:(NSArray*)inChildItems usingSelector:(SEL)inSelector reverseSort:(BOOL)inReverse;
+// Sort the children of this folder, optionally sorting deep. Optionally undoable.
+- (void)sortChildrenUsingSelector:(SEL)inSelector reverseSort:(BOOL)inReverse sortDeep:(BOOL)inDeep undoable:(BOOL)inUndoable;
 
 // generation menus
 -(void) buildFlatFolderList:(NSMenu *)menu depth:(unsigned)pad;

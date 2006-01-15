@@ -429,20 +429,20 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
   // space
   [contextMenu addItem:[NSMenuItem separatorItem]];
 
-  if (numSiteItems > 1)
-    menuTitle = NSLocalizedString(@"Copy URLs to Clipboard", @"");
-  else
-    menuTitle = NSLocalizedString(@"Copy URL to Clipboard", @"");
-  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(copyURLs:) keyEquivalent:@""] autorelease];
+  // delete
+  menuTitle = NSLocalizedString(@"Delete", @"");
+  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(deleteHistoryItems:) keyEquivalent:@""] autorelease];
   [menuItem setTarget:self];
   [contextMenu addItem:menuItem];
 
   // space
   [contextMenu addItem:[NSMenuItem separatorItem]];
 
-  // delete
-  menuTitle = NSLocalizedString(@"Delete", @"");
-  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(deleteHistoryItems:) keyEquivalent:@""] autorelease];
+  if (numSiteItems > 1)
+    menuTitle = NSLocalizedString(@"Copy URLs to Clipboard", @"");
+  else
+    menuTitle = NSLocalizedString(@"Copy URL to Clipboard", @"");
+  menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(copyURLs:) keyEquivalent:@""] autorelease];
   [menuItem setTarget:self];
   [contextMenu addItem:menuItem];
 

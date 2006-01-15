@@ -56,19 +56,39 @@
   // check each char in the event array. it should be just 1 char, but
   // just in case we use a loop.
   int len = [[aEvent characters] length];
-  for ( int i = 0; i < len; ++i ) {
+  BOOL handled = NO;
+  
+  for (int i = 0; i < len; ++i)
+  {
     unichar c = [[aEvent characters] characterAtIndex:i];
 
     // Check for a certain set of special keys.
-    if (c == NSDeleteCharacter || c == NSBackspaceCharacter || c == NSDeleteFunctionKey) {
-      // delete the bookmark
-      if (mDeleteAction)
-        [NSApp sendAction: mDeleteAction to: [self target] from: self];
-      return;
+    switch (c)
+    {
+       case NSDeleteCharacter:
+       case NSBackspaceCharacter:
+       case NSDeleteFunctionKey:
+        if (mDeleteAction)
+        {
+          [NSApp sendAction:mDeleteAction to:[self target] from:self];
+          handled = YES;
+        }
+        break;
+
+      case NSHomeFunctionKey:
+        [self scrollRowToVisible:0];
+        handled = YES;
+        break;
+
+      case NSEndFunctionKey:
+        [self scrollRowToVisible:[self numberOfRows] - 1];
+        handled = YES;
+        break;
     }
   }
 
-  [super keyDown: aEvent];
+  if (!handled)
+    [super keyDown:aEvent];
 }
 
 -(NSMenu *)menuForEvent:(NSEvent *)theEvent

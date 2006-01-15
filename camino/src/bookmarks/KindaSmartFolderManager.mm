@@ -173,7 +173,8 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
       // just resort
       [mTop10Folder sortChildrenUsingSelector:@selector(compareForTop10:sortDescending:)
                                   reverseSort:YES
-                                     sortDeep:NO];
+                                     sortDeep:NO
+                                     undoable:NO];
     }
   }
   else if (visitCount >= currentMinVisits)

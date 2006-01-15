@@ -841,7 +841,7 @@ enum BWCOpenDest {
       mPendingURL = mPendingReferrer = nil;
     }
     
-    [mPersonalToolbar buildButtonList];
+    [mPersonalToolbar rebuildButtonList];
 
     BOOL chromeHidesToolbar = (mChromeMask != 0) && !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR);
     if (chromeHidesToolbar || ![self shouldShowBookmarkToolbar])

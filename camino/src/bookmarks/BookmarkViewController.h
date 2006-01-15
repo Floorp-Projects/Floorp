@@ -59,6 +59,25 @@
 
 @class SearchTextField;
 
+// Tags for arrange menu items
+enum
+{
+  kArrangeBookmarksByLocationMask     = (1 << 0),
+  kArrangeBookmarksByTitleMask        = (1 << 1),
+
+  // currently unused (but implemented)
+  kArrangeBookmarksByKeywordMask      = (1 << 2),
+  kArrangeBookmarksByDescriptionMask  = (1 << 3),
+  kArrangeBookmarksByLastVisitMask    = (1 << 4),
+  kArrangeBookmarksByVisitCountMask   = (1 << 5),
+
+  kArrangeBookmarksByTypeMask         = (1 << 6),   // folder < item < separator
+
+  kArrangeBookmarksAscendingMask      = (0),
+  kArrangeBookmarksDescendingMask     = (1 << 7),
+
+  kArrangeBookmarksFieldMask          = kArrangeBookmarksDescendingMask - 1
+};
 
 // a simple view subclass that allows us to override viewDidMoveToWindow
 @interface BookmarksEditingView : NSView
@@ -150,6 +169,9 @@
 -(IBAction) copy:(id)aSender;
 -(IBAction) paste:(id)aSender;
 -(IBAction) delete:(id)aSender;
+
+// uses the tag of the sender to determine the sort order
+-(IBAction) arrange:(id)aSender;
 
 -(IBAction) copyURLs:(id)aSender;
 
