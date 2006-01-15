@@ -1687,16 +1687,22 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
 
   mTimeDownloadStarted = PR_Now();
 
-  // now that the temp file is set up, find out if we need to invoke a dialog asking the user what
-  // they want us to do with this content...
+  // now that the temp file is set up, find out if we need to invoke a dialog
+  // asking the user what they want us to do with this content...
+
+  // We can get here for three reasons: "can't handle", "sniffed type", or
+  // "server sent content-disposition:attachment".  In the first case we want
+  // to honor the user's "always ask" pref; in the other two cases we want to
+  // honor it only if the default action is "save".  Opening attachments in
+  // helper apps by default breaks some websites (especially if the attachment
+  // is one part of a multipart document).  Opening sniffed content in helper
+  // apps by default introduces security holes that we'd rather not have.
+
+  // So let's find out whether the user wants to be prompted.  If he does not,
+  // check mReason and the preferred action to see what we should do.
 
   PRBool alwaysAsk = PR_TRUE;
-  // If we're handling an attachment we want to default to saving but
-  // always ask just in case
-  if (mReason == nsIHelperAppLauncherDialog::REASON_CANTHANDLE)
-  {
-    mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
-  }
+  mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
   if (alwaysAsk)
   {
     // But we *don't* ask if this mimeInfo didn't come from
@@ -1722,6 +1728,16 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     }
   }
 
+  PRInt32 action = nsIMIMEInfo::saveToDisk;
+  mMimeInfo->GetPreferredAction( &action );
+
+  // OK, now check why we're here
+  if (!alwaysAsk && mReason != nsIHelperAppLauncherDialog::REASON_CANTHANDLE) {
+    // Force asking if we're not saving.  See comment back when we fetched the
+    // alwaysAsk boolean for details.
+    alwaysAsk = (action != nsIMIMEInfo::saveToDisk);
+  }
+
   if (alwaysAsk)
   {
     // do this first! make sure we don't try to take an action until the user tells us what they want to do
@@ -1744,8 +1760,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     mReceivedDispositionInfo = PR_TRUE; // no need to wait for a response from the user
 
     // We need to do the save/open immediately, then.
-    PRInt32 action = nsIMIMEInfo::saveToDisk;
-    mMimeInfo->GetPreferredAction( &action );
 #ifdef XP_WIN
     /* We need to see whether the file we've got here could be
      * executable.  If it could, we had better not try to open it!
