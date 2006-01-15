@@ -57,6 +57,7 @@
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
 #include "nsSound.h"
+#include "nsScreenManagerXlib.h"
 
 #include "nsBidiKeyboard.h"
 
@@ -76,6 +77,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerXlib)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -145,7 +147,11 @@ static const nsModuleComponentInfo components[] =
   { "Xlib Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
-    nsBidiKeyboardConstructor }
+    nsBidiKeyboardConstructor },
+  { "Xlib Screen Manager",
+    NS_SCREENMANAGER_CID,
+    "@mozilla.org/gfx/screenmanager;1",
+    nsScreenManagerXlibConstructor }
 };
 
 PR_STATIC_CALLBACK(void)
