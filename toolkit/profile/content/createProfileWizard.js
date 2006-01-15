@@ -127,6 +127,10 @@ function chooseProfileFolder()
   dirChooser.init(window, gProfileManagerBundle.getString("chooseFolder"),
                   I.nsIFilePicker.modeGetFolder);
   dirChooser.appendFilters(I.nsIFilePicker.filterAll);
+
+  // default to the Profiles folder
+  dirChooser.displayDirectory = gDefaultProfileParent;
+
   dirChooser.show();
   newProfileRoot = dirChooser.file;
 
