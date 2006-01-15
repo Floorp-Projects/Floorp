@@ -6223,7 +6223,9 @@ static void
 StartPluginInstance(PresShell *aShell, nsIContent *aContent)
 {
   nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(aContent));
-  NS_ASSERTION(objlc, "Object nodes must implement nsIObjectLoadingContent");
+  if (!objlc)
+    return;
+
   nsCOMPtr<nsIPluginInstance> inst;
   objlc->EnsureInstantiation(getter_AddRefs(inst));
 }
