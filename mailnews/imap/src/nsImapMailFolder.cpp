@@ -2018,52 +2018,55 @@ NS_IMETHODIMP nsImapMailFolder::GetOnlineName(char ** aOnlineFolderName)
 NS_IMETHODIMP
 nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
-  nsresult openErr=NS_ERROR_UNEXPECTED;
   if(!db || !folderInfo)
-    return NS_ERROR_NULL_POINTER; //ducarroz: should we use NS_ERROR_INVALID_ARG?
+    return NS_ERROR_NULL_POINTER;
+
   nsresult rv;
 
-  openErr = GetDatabase(nsnull);
+  rv = GetDatabase(nsnull);
+  if (NS_FAILED(rv))
+    return rv;
 
   *db = mDatabase;
-  NS_IF_ADDREF(*db);
-  if (NS_SUCCEEDED(openErr)&& *db)
+  NS_ADDREF(*db);
+
+  rv = (*db)->GetDBFolderInfo(folderInfo);
+  if (NS_FAILED(rv))
+    return rv; //GetDBFolderInfo can't return NS_OK if !folderInfo
+
+  nsXPIDLCString onlineName;
+  rv = (*folderInfo)->GetCharPtrProperty("onlineName", getter_Copies(onlineName));
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!onlineName.IsEmpty())
+    m_onlineFolderName.Assign(onlineName);
+  else
   {
-    openErr = (*db)->GetDBFolderInfo(folderInfo);
-    if (NS_SUCCEEDED(openErr) && folderInfo)
+    nsAutoString autoOnlineName; 
+    // autoOnlineName.AssignWithConversion(name);
+    (*folderInfo)->GetMailboxName(autoOnlineName);
+    if (autoOnlineName.IsEmpty())
     {
-      nsXPIDLCString onlineName;
-      if (NS_SUCCEEDED((*folderInfo)->GetCharPtrProperty("onlineName", getter_Copies(onlineName))))
-      {
-        if (!onlineName.IsEmpty())
-          m_onlineFolderName.Assign(onlineName);
-        else
-        {
-          nsAutoString autoOnlineName; 
-          // autoOnlineName.AssignWithConversion(name);
-          (*folderInfo)->GetMailboxName(autoOnlineName);
-          if (autoOnlineName.IsEmpty())
-          {
-            nsXPIDLCString uri;
-            rv = GetURI(getter_Copies(uri));
-            if (NS_FAILED(rv)) return rv;
-            nsXPIDLCString hostname;
-            rv = GetHostname(getter_Copies(hostname));
-            if (NS_FAILED(rv)) return rv;
-            nsXPIDLCString name;
-            rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
-            nsCAutoString onlineCName(name);
-            if (m_hierarchyDelimiter != '/')
-              onlineCName.ReplaceChar('/',  char(m_hierarchyDelimiter));
-            m_onlineFolderName.Assign(onlineCName); 
-            autoOnlineName.AssignWithConversion(onlineCName.get());
-          }
-          rv = (*folderInfo)->SetProperty("onlineName", autoOnlineName);
-        }
-      }
+      nsXPIDLCString uri;
+      rv = GetURI(getter_Copies(uri));
+      if (NS_FAILED(rv)) return rv;
+
+      nsXPIDLCString hostname;
+      rv = GetHostname(getter_Copies(hostname));
+      if (NS_FAILED(rv)) return rv;
+
+      nsXPIDLCString name;
+      rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
+      nsCAutoString onlineCName(name);
+      if (m_hierarchyDelimiter != '/')
+        onlineCName.ReplaceChar('/',  char(m_hierarchyDelimiter));
+      m_onlineFolderName.Assign(onlineCName); 
+      autoOnlineName.AssignWithConversion(onlineCName.get());
     }
+    (*folderInfo)->SetProperty("onlineName", autoOnlineName);
   }
-  return openErr;
+  return rv;
 }
 
 nsresult
@@ -2608,15 +2611,13 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
     PRInt32 imapUIDValidity = 0;
     
-    rv = NS_ERROR_UNEXPECTED;
     if (mDatabase)
+    {
       rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
     
-    if (NS_SUCCEEDED(rv) && dbFolderInfo)
-      dbFolderInfo->GetImapUidValidity(&imapUIDValidity);
-    
-    if (mDatabase) 
-    {
+      if (NS_SUCCEEDED(rv) && dbFolderInfo)
+        dbFolderInfo->GetImapUidValidity(&imapUIDValidity);
+
       mDatabase->ListAllKeys(existingKeys);
       PRInt32 keyCount = existingKeys.GetSize();
       mDatabase->ListAllOfflineDeletes(&existingKeys);
@@ -2687,7 +2688,6 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
           SetDBTransferInfo(transferInfo);
         
         SummaryChanged();
-        rv = NS_ERROR_UNEXPECTED;
         if (mDatabase) 
         {
           if(mAddListener)
