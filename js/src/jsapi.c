@@ -4031,12 +4031,14 @@ JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
     return ok;
 }
 
+/* Ancient uintN nbytes is part of API/ABI, so use size_t length local. */
 JS_PUBLIC_API(JSBool)
 JS_EvaluateScript(JSContext *cx, JSObject *obj,
-                  const char *bytes, uintN length,
+                  const char *bytes, uintN nbytes,
                   const char *filename, uintN lineno,
                   jsval *rval)
 {
+    size_t length = nbytes;
     jschar *chars;
     JSBool ok;
 
@@ -4049,13 +4051,15 @@ JS_EvaluateScript(JSContext *cx, JSObject *obj,
     return ok;
 }
 
+/* Ancient uintN nbytes is part of API/ABI, so use size_t length local. */
 JS_PUBLIC_API(JSBool)
 JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *obj,
                                JSPrincipals *principals,
-                               const char *bytes, uintN length,
+                               const char *bytes, uintN nbytes,
                                const char *filename, uintN lineno,
                                jsval *rval)
 {
+    size_t length = nbytes;
     jschar *chars;
     JSBool ok;
 
@@ -4206,27 +4210,28 @@ JS_SetCallReturnValue2(JSContext *cx, jsval v)
 /************************************************************************/
 
 JS_PUBLIC_API(JSString *)
-JS_NewString(JSContext *cx, char *bytes, size_t length)
+JS_NewString(JSContext *cx, char *bytes, size_t nbytes)
 {
+    size_t length = nbytes;
     jschar *chars;
     JSString *str;
-    size_t charsLength = length;
 
     CHECK_REQUEST(cx);
-    /* Make a Unicode vector from the 8-bit char codes in bytes. */
-    chars = js_InflateString(cx, bytes, &charsLength);
+
+    /* Make a UTF-16 vector from the 8-bit char codes in bytes. */
+    chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
 
     /* Free chars (but not bytes, which caller frees on error) if we fail. */
-    str = js_NewString(cx, chars, charsLength, 0);
+    str = js_NewString(cx, chars, length, 0);
     if (!str) {
         JS_free(cx, chars);
         return NULL;
     }
 
     /* Hand off bytes to the deflated string cache, if possible. */
-    if (!js_SetStringBytes(str, bytes, length))
+    if (!js_SetStringBytes(str, bytes, nbytes))
         JS_free(cx, bytes);
     return str;
 }
