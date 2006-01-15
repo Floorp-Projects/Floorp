@@ -205,6 +205,7 @@ sub processLoginForm {
 		my $userobj = 
 			Litmus::DB::User->create({email => $email, 
 								 password => bz_crypt($password),
+								 bugzilla_uid => 0,
 								 realname => $name,
 								 disabled => 0, 
 								 is_admin => 0});
@@ -229,6 +230,76 @@ sub processLoginForm {
 		my $username = $c->param("username");
 		my $password = $c->param("password");
 		
+		
+	} elsif ($type eq "convert") {
+		# convert an old-school Litmus account (pre authentication system) 
+		# to a new one with a password:
+		my $username = $c->param("email");
+		
+		my @userobjs = Litmus::DB::User->search(email => $username);
+		my $userobj = $userobjs[0];
+		if (! $userobj || $userobj->email() ne $username) {
+			loginError($c, "User $username does not exist. Please try again or 
+				create a new account.");
+		}
+		
+		if ($userobj->password() ne "") {
+			# already a new-style account
+			loginError($c, "User $username has already been updated. Please 
+				go ahead and login normally or create a new account.");
+		}
+		
+		# display a "convert login" form to get the rest of the information
+		print $c->header();
+		my $return_to = $c->param("login_loc") || "";
+		unsetFields();
+		my $vars = {
+				email => $username,
+				return_to => $return_to,
+				params => $c,
+			   };
+		
+		Litmus->template()->process("auth/convertaccount.html.tmpl", $vars) ||
+			internalError(Litmus->template()->error());
+		exit;
+	} elsif ($type eq "reallyconvert") {
+		my $username = $c->param("email");
+		my $realname = $c->param("realname");
+		my $password = $c->param("password");
+		my $password_confirm = $c->param("password_confirm");
+		
+		if (! $password eq $password_confirm) {
+			loginError($c, "Passwords do not match. Please try again.");
+		}
+		if (! $realname || $realname eq "") {
+			loginError($c, "You must enter your real name (or a pseudonym) to identify yourself");
+		}
+		
+		my @userobjs = Litmus::DB::User->search(email => $username);
+		my $userobj = $userobjs[0];
+		
+		# just to be safe:
+		if (! $userobj || $userobj->email() ne $username) {
+			loginError($c, "User $username does not exist. Please try again or 
+				create a new account.");
+		}
+		
+		if ($userobj->password() ne "") {
+			# already a new-style account
+			loginError($c, "User $username has already been updated. Please 
+				go ahead and login normally or create a new account.");
+		}
+		
+		# do the upgrade:
+		$userobj->password(bz_crypt($password));
+		$userobj->bugzilla_uid("0");
+		$userobj->realname($realname);
+		$userobj->disabled(0);
+		$userobj->is_admin(0);
+		$userobj->update();
+		
+		my $session = makeSession($userobj);
+		$c->storeCookie(makeCookie($session));
 		
 	} else {
 		internalError("Unknown login scheme attempted");
@@ -273,14 +344,7 @@ sub loginError {
 	
 	my $return_to = $c->param("login_loc") || "";
 	
-	# We need to unset some params in $c since otherwise we end up with 
-	# a hidden form field set for "email" and friends and madness results:
-	$c->param('email', '');
-	$c->param('login_type', '');
-	$c->param('login_loc', '');
-	$c->param('realname', '');
-	$c->param('password', '');
-	$c->param('password_confirm', '');
+	unsetFields();
 	
 	my $vars = {
             return_to => $return_to,
@@ -292,6 +356,21 @@ sub loginError {
   		internalError(Litmus->template()->error());
   
   exit;
+}
+
+sub unsetFields() {
+	my $c = Litmus->cgi();
+	
+	# We need to unset some params in $c since otherwise we end up with 
+	# a hidden form field set for "email" and friends and madness results:
+	$c->param('email', '');
+	$c->param('username', '');
+	$c->param('login_type', '');
+	$c->param('login_loc', '');
+	$c->param('realname', '');
+	$c->param('password', '');
+	$c->param('password_confirm', '');
+	
 }
 
 # Like crypt(), but with a random salt. Thanks to Bugzilla for this.

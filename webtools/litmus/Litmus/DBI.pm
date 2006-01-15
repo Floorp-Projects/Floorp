@@ -47,7 +47,10 @@ our %column_aliases;
 Litmus::DBI->set_db('Main',
                          $dsn,
                          $Litmus::Config::db_user,
-                         $Litmus::Config::db_pass);
+                         $Litmus::Config::db_pass,
+                         	{AutoCommit=>1}
+                         );
+Litmus::DBI->autoupdate(1);
                          
 # In some cases, we have column names that make sense from a database perspective
 # (i.e. subgroup_id), but that don't make sense from a class/object perspective 

@@ -130,11 +130,11 @@ my $dbtool = Litmus::DBTools->new($dbh);
 
 # ZLL: Authentication System fields
 $dbtool->DropField("users", "is_trusted");
-$dbtool->AddField("users", "bugzilla_uid", "int");
+$dbtool->AddField("users", "bugzilla_uid", "int default '1'");
 $dbtool->AddField("users", "password", "varchar(255)");
 $dbtool->AddField("users", "realname", "varchar(255)");
 $dbtool->AddField("users", "disabled", "mediumtext");
-$dbtool->AddField("users", "is_admin", "tinyint(1)");
+$dbtool->AddField("users", "is_admin", "tinyint(1) default '0'");
 
 # replace enums with more portable and flexible formats:
 $dbtool->ChangeFieldType("products", "enabled", 'tinyint default \'1\'');

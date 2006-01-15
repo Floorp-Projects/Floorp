@@ -101,13 +101,35 @@
     			</tr><tr>
     			<td>Confirm Password:</td>
     				<td><input name="password_confirm" type="password" size="25"></td>
+    			</tr>
     		</table>
     		<br /><input type="submit" name="Submit" value="Create Account">
     	</form>
     </div>
     
-    <!--
+
     <div class="login_form" style="position: relative; left: 350px; bottom:130px;">
+    	<h2 class="login_sectitle">Update your account</h2>
+    	<p>Existing Litmus users without a password: update your account to 
+    		be compatible with this new version of Litmus.</p>
+    	<form name="litmus_login" action="[% return_to | none %]" method="post">
+    	<input name="login_type" type="hidden" value="convert">
+    	<input name="login_loc" type="hidden" value="[% return_to FILTER html %]">
+    	[% INCLUDE create_hidden_fields params=params %]
+    		
+    		<table border=0>
+    			<tr>
+    			<td>Email address:</td>
+    				<td><input name="email" type="text" size="25"></td>
+    			</tr>
+    		</table>
+    		<br /><input type="submit" name="Submit" value="Login">
+    	</form>
+    </div>
+
+    
+<!--
+    <div class="login_form" style="position: relative; bottom: 390px;">
     	<h2 class="login_sectitle">Login to an existing Bugzilla account:</h2>
     	
     	<form name="litmus_login" action="[% return_to | none %]" method="post">
@@ -122,13 +144,15 @@
     			</tr><tr>
     			<td>Password:</td>
     				<td><input name="password" type="password" size="25"></td>
+    			</tr>
     		</table>
     		<br /><input type="submit" name="Submit" value="Login">
     	</form>
     </div>
-    -->
+   	-->
     
-     
+    <p class="login_forhelp">For assistance logging in, please contact 
+    	<a href="http://irc.mozilla.org">irc.mozilla.org</a>, channel #qa.</p> 
     
     </div>
 

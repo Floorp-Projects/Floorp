@@ -982,5 +982,14 @@ div.login_form {
 }
 
 .login_important {
-        color: #F00;
+	color: #F00;
+}
+
+.login_forhelp {
+	border: solid #BBB 1px;
+    color: #000;
+    font-weight: bold;
+	font-size: 120%;
+	position: relative;
+	bottom: 40px;
 }
