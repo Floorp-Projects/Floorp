@@ -128,9 +128,17 @@ if ($reset_db) {
 use Litmus::DBTools;
 my $dbtool = Litmus::DBTools->new($dbh);
 
-# for example:
-# $dbtool->AddField('tests', 'newfield', 'varchar(64)');
+# ZLL: Authentication System fields
+$dbtool->DropField("users", "is_trusted");
+$dbtool->AddField("users", "bugzilla_uid", "int");
+$dbtool->AddField("users", "password", "varchar(255)");
+$dbtool->AddField("users", "realname", "varchar(255)");
+$dbtool->AddField("users", "disabled", "mediumtext");
+$dbtool->AddField("users", "is_admin", "tinyint(1)");
 
+# replace enums with more portable and flexible formats:
+$dbtool->ChangeFieldType("products", "enabled", 'tinyint default \'1\'');
+$dbtool->ChangeFieldType("test_groups", "obsolete", 'tinyint default \'1\'');
 
 # javascript cache
 print "Rebuilding JS cache...";
