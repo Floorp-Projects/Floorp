@@ -5137,32 +5137,37 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     buttonFrame->Destroy(aState.mPresContext);
     return rv;
   }
-  // The area frame is a float container
-  PRBool haveFirstLetterStyle, haveFirstLineStyle;
-  HaveSpecialBlockStyle(aContent, aStyleContext,
-                        &haveFirstLetterStyle, &haveFirstLineStyle);
-  nsFrameConstructorSaveState floatSaveState;
-  aState.PushFloatContainingBlock(areaFrame, floatSaveState,
-                                  haveFirstLetterStyle,
-                                  haveFirstLineStyle);
 
-  // Process children
-  nsFrameConstructorSaveState absoluteSaveState;
-  nsFrameItems                childItems;
+  
+  if (!buttonFrame->IsLeaf()) { 
+    // input type="button" have only anonymous content
+    // The area frame is a float container
+    PRBool haveFirstLetterStyle, haveFirstLineStyle;
+    HaveSpecialBlockStyle(aContent, aStyleContext,
+                          &haveFirstLetterStyle, &haveFirstLineStyle);
+    nsFrameConstructorSaveState floatSaveState;
+    aState.PushFloatContainingBlock(areaFrame, floatSaveState,
+                                    haveFirstLetterStyle,
+                                    haveFirstLineStyle);
 
-  if (aStyleDisplay->IsPositioned()) {
-    // The area frame becomes a container for child frames that are
-    // absolutely positioned
-    aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
+    // Process children
+    nsFrameConstructorSaveState absoluteSaveState;
+    nsFrameItems                childItems;
+
+    if (aStyleDisplay->IsPositioned()) {
+      // The area frame becomes a container for child frames that are
+      // absolutely positioned
+      aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
+    }
+
+    rv = ProcessChildren(aState, aContent, areaFrame, PR_TRUE, childItems,
+                         buttonFrame->GetStyleDisplay()->IsBlockLevel());
+    if (NS_FAILED(rv)) return rv;
+  
+    // Set the areas frame's initial child lists
+    areaFrame->SetInitialChildList(aState.mPresContext, nsnull,
+                                   childItems.childList);
   }
-
-  rv = ProcessChildren(aState, aContent, areaFrame, PR_TRUE, childItems,
-                       buttonFrame->GetStyleDisplay()->IsBlockLevel());
-  if (NS_FAILED(rv)) return rv;
-
-  // Set the scrolled frame's initial child lists
-  areaFrame->SetInitialChildList(aState.mPresContext, nsnull,
-                                 childItems.childList);
 
   buttonFrame->SetInitialChildList(aState.mPresContext, nsnull, areaFrame);
 
@@ -5171,7 +5176,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
   CreateAnonymousFrames(aTag, aState, aContent, buttonFrame,
                           PR_FALSE, anonymousChildItems);
   if (anonymousChildItems.childList) {
-    // the anonmyous content is allready parented to the area frame
+    // the anonymous content is already parented to the area frame
     aState.mFrameManager->AppendFrames(areaFrame, nsnull, anonymousChildItems.childList);
   }
 
