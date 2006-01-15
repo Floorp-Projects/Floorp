@@ -333,10 +333,8 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
     JS_ASSERT(GC_FLAGS_SIZE >= GC_PAGE_SIZE);
     JS_ASSERT(sizeof(JSStackHeader) >= 2 * sizeof(jsval));
 
-    for (i = 0; i < GC_NUM_FREELISTS; i++) {
-        JS_InitArenaPool(&rt->gcArenaPool[i], "gc-arena", GC_ARENA_SIZE,
-                         GC_FREELIST_NBYTES(i));
-    }
+    for (i = 0; i < GC_NUM_FREELISTS; i++)
+        JS_InitArenaPool(&rt->gcArenaPool[i], "gc-arena", GC_ARENA_SIZE, 1);
     if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,
                            sizeof(JSGCRootHashEntry), GC_ROOTS_SIZE)) {
         rt->gcRootsHash.ops = NULL;
