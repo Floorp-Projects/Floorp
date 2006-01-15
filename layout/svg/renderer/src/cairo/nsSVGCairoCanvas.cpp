@@ -79,7 +79,7 @@ extern "C" {
 extern "C" {
 #include <cairo-win32.h>
 }
-#else
+#elif defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_GTK)
 #include "nsRenderingContextGTK.h"
 #include <gdk/gdkx.h>
 #endif
