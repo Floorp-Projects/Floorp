@@ -754,11 +754,11 @@ toolbar[iconsize="small"] #calendar-new-task-button:hover {
 }
 
 toolbar[iconsize="small"] #navigator-throbber {
-  list-style-image: url('chrome://calendar/skin/Throbber-small.png');
+  list-style-image: url('chrome://global/skin/throbber/Throbber-small.png');
 }
 
 toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
-  list-style-image: url('chrome://calendar/skin/Throbber-small.gif');
+  list-style-image: url('chrome://global/skin/throbber/Throbber-small.gif');
 }
 
 /* UNIFINDER */
