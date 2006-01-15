@@ -21,8 +21,8 @@
                 onset="this.setAttribute('type', val); return val;"/>
 
       <property name="dlgType"
-                onget="return this.getAttribute('dlgType');"
-                onset="this.setAttribute('dlgType', val); return val;"/>
+                onget="return this.getAttribute('dlgtype');"
+                onset="this.setAttribute('dlgtype', val); return val;"/>
 
       <property name="group"
                 onget="return this.getAttribute('group');"
