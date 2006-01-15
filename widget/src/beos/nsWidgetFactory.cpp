@@ -51,6 +51,8 @@
 #include "nsFilePicker.h"
 #include "nsBidiKeyboard.h"
 
+#include "nsScreenManagerBeOS.h" 
+
 // Drag & Drop, Clipboard
 #include "nsTransferable.h"
 #include "nsClipboard.h"
@@ -72,6 +74,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerBeOS) 
 
 static const nsModuleComponentInfo components[] =
 {
@@ -126,7 +129,11 @@ static const nsModuleComponentInfo components[] =
   { "BeOS File Picker",
     NS_FILEPICKER_CID,
     "@mozilla.org/filepicker;1",
-    nsFilePickerConstructor },
+   nsFilePickerConstructor },
+  { "BeOS Screen Manager", 
+    NS_SCREENMANAGER_CID, 
+    "@mozilla.org/gfx/screenmanager;1", 
+    nsScreenManagerBeOSConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetBeOSModule,components)
