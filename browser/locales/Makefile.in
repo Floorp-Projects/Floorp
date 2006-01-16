@@ -186,7 +186,7 @@ repackage-win32-installer: $(WIN32_INSTALLER_IN)
 	$(SYSINSTALL) install.ini $(DIST)/l10n-stage
 	cd $(DIST)/l10n-stage && \
 	  $(CYGWIN_WRAPPER) 7z a -t7z ../l10n-temp-stage/app.7z *.* -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
-	$(CYGWIN_WRAPPER) upx -9 -o $(DIST)/l10n-temp-stage/7zSD.sfxc $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
+	$(CYGWIN_WRAPPER) upx --best -o $(DIST)/l10n-temp-stage/7zSD.sfxc $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
 	$(INSTALL) $(topsrcdir)/browser/installer/windows/app.tag $(DIST)/l10n-temp-stage
 	cd $(DIST)/l10n-temp-stage && \
 	  $(CYGWIN_WRAPPER) cmd /C copy /b 7zSD.sfxc+app.tag+app.7z firefox-installer.exe
