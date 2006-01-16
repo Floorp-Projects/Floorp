@@ -330,21 +330,6 @@
                        observes="viewHistorySidebar"
                        tooltiptext="&historyButton.tooltip;"/>
 
-#ifdef HAVE_SHELL_SERVICE
-        <toolbarbutton id="mail-button" type="menu" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       label="&mailButton.label;" orient="vertical"
-                       onmouseover="MailIntegration.updateUnreadCount();"
-                       tooltiptext="&mailButton.tooltip;">
-          <menupopup tooltiptext="">
-            <menuitem accesskey="&mailButton.readMail.accesskey;"
-                      command="Browser:ReadMail"/>
-            <menuitem label="&mailButton.newMessage.label;" 
-                      accesskey="&mailButton.newMessage.accesskey;"
-                      command="Browser:NewMessage"/>
-          </menupopup>
-        </toolbarbutton>                       
-#endif
-
 #ifndef MOZ_PLACES
         <toolbarbutton id="bookmarks-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="viewBookmarksSidebar"

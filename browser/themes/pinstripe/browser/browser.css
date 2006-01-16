@@ -411,19 +411,6 @@ menubutton:not([disabled="true"]):hover:active {
   -moz-image-region: rect(64px 448px 96px 416px);
 }
 
-/* mail button */
-
-#mail-button {
-  -moz-image-region: rect(0px 480px 32px 448px);
-}
-#mail-button:active,
-#mail-button[open="true"] {
-  -moz-image-region: rect(32px 480px 64px 448px);
-}
-#mail-button[disabled="true"] {
-  -moz-image-region: rect(64px 480px 96px 448px);
-}
-
 /* ::::: small primary toolbar buttons ::::: */
 
 
@@ -597,19 +584,6 @@ toolbar[iconsize="small"] #paste-button:active {
 }
 toolbar[iconsize="small"] #paste-button[disabled="true"] {
   -moz-image-region: rect(48px 336px 72px 312px);
-}
-
-/* mail button */
-
-toolbar[iconsize="small"] #mail-button {
-  -moz-image-region: rect(0px 360px 24px 336px);
-}
-toolbar[iconsize="small"] #mail-button:active,
-toolbar[iconsize="small"] #mail-button[open="true"] {
-  -moz-image-region: rect(24px 360px 48px 336px);
-}
-toolbar[iconsize="small"] #mail-button[disabled="true"] {
-  -moz-image-region: rect(48px 360px 72px 336px);
 }
 
 /* ::::: fullscreen window controls ::::: */

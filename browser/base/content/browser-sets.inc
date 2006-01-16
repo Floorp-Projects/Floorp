@@ -91,11 +91,6 @@
     <command id="Browser:SaveFrame" oncommand="saveFrameDocument();"/>
 
     <command id="Browser:SendLink" oncommand="MailIntegration.sendLinkForContent();"/>
-    <command id="Browser:NewMessage" oncommand="MailIntegration.sendMessage('', '');"/>
-#ifdef HAVE_SHELL_SERVICE
-    <command id="Browser:ReadMail" oncommand="MailIntegration.readMail();" label="&mailButton.readMail.label;"/>
-    <command id="Browser:ReadNews" oncommand="MailIntegration.readNews();"/>
-#endif
 
     <command id="cmd_pageSetup" oncommand="PrintUtils.showPageSetup();"/>
     <command id="cmd_print" oncommand="PrintUtils.print();"/>
@@ -320,15 +315,6 @@
     <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistorySidebar" modifiers="accel,shift"/>
 #else
     <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistorySidebar" modifiers="accel"/>
-#endif
-
-    <key id="key_newMessage"
-         key="&sendMessage.commandkey;"
-         command="Browser:NewMessage"
-#ifdef XP_MACOSX
-         modifiers="accel,shift"/>
-#else
-         modifiers="accel"/>
 #endif
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>

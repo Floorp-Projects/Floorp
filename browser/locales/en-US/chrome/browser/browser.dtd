@@ -295,16 +295,6 @@
 <!ENTITY textSize.label                 "Text Size">
 <!ENTITY textSize.accesskey             "z">
 
-<!ENTITY mailMenu.label                   "Mail &amp; News">
-<!ENTITY mailMenu.accesskey               "M">
-<!ENTITY mailButton.label                 "Mail">
-<!ENTITY mailButton.tooltip               "Read and Send Mail">
-<!ENTITY mailButton.readMail.label        "Read Mail">
-<!ENTITY mailButton.readMail.accesskey    "M">
-<!ENTITY mailButton.newMessage.label      "New Message...">
-<!ENTITY mailButton.newMessage.accesskey  "w">
-<!ENTITY sendMessage.commandkey           "m">
-
 <!ENTITY newTabButton.tooltip           "Open a new tab">
 <!ENTITY newWindowButton.tooltip        "Open a new window">
 <!ENTITY sidebarCloseButton.tooltip     "Close sidebar">
