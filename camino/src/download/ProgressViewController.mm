@@ -190,6 +190,10 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
     mDownloader->DetachDownloadDisplay();
     NS_RELEASE(mDownloader);
   }
+
+  // the views might outlive us, so clear refs to us
+  [mCompletedView setController:nil];
+  [mProgressView setController:nil];
   
   [self unsubscribeFileSystemNotification];
   
