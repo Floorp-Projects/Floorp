@@ -162,7 +162,8 @@ if (defined $cgi->param('createmissinggroupcontrolmapentries')) {
                    ON bugs.product_id = gcm.product_id
                   AND    bgm.group_id = gcm.group_id
                 WHERE COALESCE(gcm.membercontrol, $na) = $na
-          } . $dbh->sql_group_by('bugs.product_id, bgm.group_id'));
+          } . $dbh->sql_group_by('bugs.product_id, bgm.group_id',
+                                 'gcm.membercontrol, groups.name, products.name'));
 
     foreach (@$invalid_combinations) {
         my ($product_id, $group_id, $currentmembercontrol,
