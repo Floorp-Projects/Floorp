@@ -405,23 +405,9 @@
 #endif
         
             <menu id="tools-menu" label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
-              <menupopup id="menu_ToolsPopup"
-#ifdef XP_WIN
-                       onpopupshowing="MailIntegration.updateUnreadCount();"
-#endif
-            >
+              <menupopup id="menu_ToolsPopup">
               <menuitem label="&search.label;" accesskey="&search.accesskey;" 
                         key="key_search" command="Tools:Search"/>
-#ifdef HAVE_SHELL_SERVICE
-              <menuseparator/>
-              <menuitem label="&mailButton.readMail.label;" 
-                        accesskey="&mailButton.readMail.accesskey;"
-                        command="Browser:ReadMail"/>
-              <menuitem label="&mailButton.newMessage.label;" 
-                        accesskey="&mailButton.newMessage.accesskey;"
-                        key="key_newMessage" command="Browser:NewMessage"/>
-
-#endif
               <menuseparator/>
               <menuitem label="&downloads.label;" accesskey="&downloads.accesskey;"
                         key="key_openDownloads" command="Tools:Downloads"/>

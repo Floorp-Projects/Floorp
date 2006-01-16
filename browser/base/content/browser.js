@@ -928,11 +928,6 @@ function delayedStartup()
         shell.setDefaultBrowser(true, false);
       shell.shouldCheckDefaultBrowser = checkEveryTime.value;
     }
-  } else {
-    // We couldn't get the shell service; go hide the mail toolbar button.
-    var mailbutton = document.getElementById("mail-button");
-    if (mailbutton)
-      mailbutton.hidden = true;
   }
 #endif
 
@@ -5674,67 +5669,37 @@ function WindowIsClosing()
 }
 
 var MailIntegration = {
-  sendLinkForContent: function ()
-  {
+  sendLinkForContent: function () {
     this.sendMessage(window.content.location.href,
                      window.content.document.title);
   },
 
-  sendMessage: function (aBody, aSubject)
-  {
+  sendMessage: function (aBody, aSubject) {
     // generate a mailto url based on the url and the url's title
-    var mailtoUrl = aBody ? "mailto:?body=" + encodeURIComponent(aBody) + "&subject=" + encodeURIComponent(aSubject) : "mailto:";
+    var mailtoUrl = "mailto:";
+    if (aBody) {
+      mailtoUrl += "?body=" + encodeURIComponent(aBody);
+      mailtoUrl += "&subject=" + encodeURIComponent(aSubject);
+    }
 
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
     var uri = ioService.newURI(mailtoUrl, null, null);
 
-    // now pass this url to the operating system
+    // now pass this uri to the operating system
     this._launchExternalUrl(uri);
   },
 
-  // a generic method which can be used to pass arbitrary urls to the operating system.
+  // a generic method which can be used to pass arbitrary urls to the operating
+  // system.
   // aURL --> a nsIURI which represents the url to launch
-  _launchExternalUrl: function(aURL)
-  {
-    var extProtocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"].getService(Components.interfaces.nsIExternalProtocolService);
+  _launchExternalUrl: function (aURL) {
+    var extProtocolSvc =
+       Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                 .getService(Components.interfaces.nsIExternalProtocolService);
     if (extProtocolSvc)
       extProtocolSvc.loadUrl(aURL);
-#ifdef HAVE_SHELL_SERVICE
-  },
-
-  readMail: function ()
-  {
-    var shell = getShellService();
-    if (shell)
-      shell.openApplication(Components.interfaces.nsIShellService.APPLICATION_MAIL);
-  },
-
-  readNews: function ()
-  {
-    var shell = getShellService();
-    if (shell)
-      shell.openApplication(Components.interfaces.nsIShellService.APPLICATION_NEWS);
-  },
-
-  updateUnreadCount: function ()
-  {
-#ifdef XP_WIN
-    var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
-                          .getService(Components.interfaces.nsIWindowsShellService);
-    var unreadCount = shell.unreadMailCount;
-    var message = gNavigatorBundle.getFormattedString("mailUnreadTooltip", [unreadCount]);
-    var element = document.getElementById("mail-button");
-    if (element)
-      element.setAttribute("tooltiptext", message);
-
-    message = gNavigatorBundle.getFormattedString("mailUnreadMenuitem", [unreadCount]);
-    element = document.getElementById("Browser:ReadMail");
-    element.setAttribute("label", message);
-#endif
   }
-#else
-  }
-#endif
 };
 
 function BrowserOpenExtensions(aOpenMode)
