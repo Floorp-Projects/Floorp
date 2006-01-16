@@ -357,6 +357,8 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 -(void)willResignActiveBrowser
 {
+  [mToolTip closeToolTip];
+
   [[NSNotificationCenter defaultCenter] removeObserver:self name:kOfflineNotificationName object:nil];
   [mBrowserView setActive:NO];
 }
@@ -652,6 +654,11 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 //
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text
 {
+  // if this tooltip originates from a tab that is (now) in the background,
+  // or a background window, don't show it.
+  if (![self window] || ![[self window] isMainWindow])
+    return;
+
   NSPoint point = [[self window] convertBaseToScreen:[self convertPoint: where toView:nil]];
   [mToolTip showToolTipAtPoint: point withString: text overWindow:mWindow];
 }

@@ -182,8 +182,12 @@ const float kVOffset = 20.0;
 
 - (void)closeToolTip
 {
-  [[mTooltipWindow parentWindow] removeChildWindow:mTooltipWindow];
-  [mTooltipWindow orderOut:nil];
+  // we can get -closeToolTip even if we didn't show it
+  if ([mTooltipWindow isVisible])
+  {
+    [[mTooltipWindow parentWindow] removeChildWindow:mTooltipWindow];
+    [mTooltipWindow orderOut:nil];
+  }
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
