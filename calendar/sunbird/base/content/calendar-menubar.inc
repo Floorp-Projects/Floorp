@@ -183,6 +183,15 @@
                      label="&calendar.selectall.label;"
                      accesskey="&calendar.selectall.accesskey;"
                      observes="select_all_command"/>
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+           <menuseparator/>
+           <menuitem id="menu_preferences_unix"
+                     label="&preferencesCmd.label;"
+                     accesskey="&preferencesCmd.accesskey;"
+                     oncommand="openPreferences();"/>
+#endif
+#endif
          </menupopup>
        </menu>
 
@@ -357,12 +366,21 @@
                      oncommand="toJavaScriptConsole();"/>
 <!-- The ids of the following menuseparator and menuitem must remain as they are to be
    - automatically hidden on Mac OS X - See mozilla/widget/src/mac/nsMenuBarX.cpp -->
+#ifndef XP_UNIX
            <menuseparator id="menu_PrefsSeparator"/>
                <menuitem id="menu_preferences"
-                         label="&preferencesCmd.label;"
-                         accesskey="&preferencesCmd.accesskey;"
+                         label="&optionsCmd.label;"
+                         accesskey="&optionsCmd.accesskey;"
                          oncommand="openPreferences();"/>
-
+#endif
+#ifdef XP_MACOSX
+# -- ifdef UNIX also covers Mac OS X, so we have to explicitly enable this menuitem
+           <menuseparator id="menu_PrefsSeparator"/>
+               <menuitem id="menu_preferences"
+                         label="&optionsCmd.label;"
+                         accesskey="&optionsCmd.accesskey;"
+                         oncommand="openPreferences();"/>
+#endif
          </menupopup>
        </menu>
 
@@ -406,7 +424,7 @@
              label="&helpMenu.label;"
              accesskey="&helpMenu.accesskey;">
          <menupopup id="menu_HelpPopup">
-           <!-- XXX lilmatt: Finish/localize this!  oncommand="openTopWin('&helpURL;');" -->
+           <!-- XXX lilmatt: Finish this!  oncommand="openTopWin('&helpURL;');" -->
            <menuitem label="&calendar.help.label;"
                      disabled="true"/>
            <menuitem accesskey="&releaseCmd.accesskey;"
