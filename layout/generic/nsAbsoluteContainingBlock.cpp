@@ -404,11 +404,6 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
                             aContainingBlockWidth, aContainingBlockHeight, *iter,
                             aReflowState.reason, kidStatus);
 
-        // We don't need to invalidate anything because the frame
-        // should invalidate any area within its frame that needs
-        // repainting, and because it has a view if it changes size
-        // the view manager will damage the dirty area
-
         aReflowState.path->Remove(iter);
       }
     }
@@ -619,6 +614,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     nsRect  rect(border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
                  border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
                  kidDesiredSize.width, kidDesiredSize.height);
+    nsRect oldRect = aKidFrame->GetRect();
     aKidFrame->SetRect(rect);
 
     // Size and position the view and set its opacity, visibility, content
@@ -626,6 +622,25 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame,
                                                aKidFrame->GetView(),
                                                &kidDesiredSize.mOverflowArea);
+    // if the frame moved, then the view would have invalidated everything so
+    // we don't need to do any invalidation here.
+    if (oldRect.TopLeft() == rect.TopLeft() &&
+        aReason != eReflowReason_Initial &&
+        oldRect.Size() != rect.Size()) {
+      // Invalidate the area where the frame changed size. We can't
+      // rely on the view to do this ... the view size might not change even
+      // though the frame size changed (and besides, views will go away).
+      // Invalidate the vertical strip
+      nscoord innerWidth = PR_MIN(oldRect.width, rect.width);
+      nscoord innerHeight = PR_MIN(oldRect.height, rect.height);
+      nscoord outerWidth = PR_MAX(oldRect.width, rect.width);
+      nscoord outerHeight = PR_MAX(oldRect.height, rect.height);
+      aKidFrame->GetParent()->Invalidate(
+          nsRect(rect.x + innerWidth, rect.y, outerWidth - innerWidth, outerHeight));
+      // Invalidate the horizontal strip
+      aKidFrame->GetParent()->Invalidate(
+          nsRect(rect.x, rect.y + innerHeight, outerWidth, outerHeight - innerHeight));
+    }
     aKidFrame->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
 
     // If the frame has visible overflow, then store it as a property on the
