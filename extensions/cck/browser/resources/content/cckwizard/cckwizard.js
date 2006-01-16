@@ -285,12 +285,14 @@ function ClearAll()
     for (var i=0; i < elements.length; i++) {
       if ((elements[i].nodeName == "textbox") ||
           (elements[i].nodeName == "radiogroup") ||
-          (elements[i].nodeName == "checkbox") ||
           (elements[i].id == "RootKey1") ||
           (elements[i].id == "Type1")) {
         if ((elements[i].id != "saveOnExit") && (elements[i].id != "zipLocation")) {
           elements[i].value = "";
         }
+      } else if (elements[i].nodeName == "checkbox") {
+        if (elements[i].id != "saveOnExit")
+          elements[i].checked = false;
       } else if (elements[i].id == "prefList") {
         listbox = this.opener.document.getElementById('prefList');    
         var children = listbox.childNodes;
@@ -824,7 +826,7 @@ function CCKZip(zipfile, location)
                        .createInstance(Components.interfaces.nsIFileOutputStream);
   fos.init(file, -1, -1, false);
   var line;
-  line = "cd \"" + location.path + "\"\n";
+  line = "cd /d \"" + location.path + "\"\n";
   fos.write(line, line.length);
   if (navigator.platform == "Win32")
     line = zipLocation + " -r \"" + location.path + "\\" + zipfile + "\"";
@@ -961,7 +963,7 @@ var liststyleimageend = '");\n}\n';
     fos.write(liststyleimageend, liststyleimageend.length);
   }
   var atrestlogopath = document.getElementById("LargeStillPath").value;
-  if (atrestlogopath && (animatedlogopath.length > 0)) {
+  if (atrestlogopath && (atrestlogopath.length > 0)) {
     var file = Components.classes["@mozilla.org/file/local;1"]
                          .createInstance(Components.interfaces.nsILocalFile);
     file.initWithPath(atrestlogopath);
@@ -1181,41 +1183,61 @@ function CCKWriteDefaultJS(destdir)
     fos.write(useragent2end, useragent2end.length);
   }
   
-  
-  // For these guys Idid something a little clever - the preference name is stored in the XUL
-
-  var proxystringlist = ["HTTPproxyname","SSLproxyname","FTPproxyname","Gopherproxyname","NoProxyname","autoproxyurl" ];
-  
-  for (i = 0; i < proxystringlist.length; i++) {
-    var proxyitem = document.getElementById(proxystringlist[i]);
-    if (proxyitem.value.length > 0) {
-      var line = 'pref("' + proxyitem.getAttribute("preference") + '", "' + proxyitem.value + '");\n';
-      fos.write(line, line.length);
-    }
-  }
-  
-  var proxyintegerlist = ["HTTPportno","SSLportno","FTPportno","Gopherportno","socksv","ProxyType"];
-
-  for (i = 0; i < proxyintegerlist.length; i++) {
-    var proxyitem = document.getElementById(proxyintegerlist[i]);
-    if (proxyitem.value.length > 0) {
-      var line = 'pref("' + proxyitem.getAttribute("preference") + '", ' + proxyitem.value + ');\n';
-      fos.write(line, line.length);
-    }
-  }
-  
-  var proxyitem = document.getElementById("shareAllProxies");
-  var line = 'pref("' + proxyitem.getAttribute("preference") + '", ' + proxyitem.value + ');\n';
-  fos.write(line, line.length);
-
   // Preferences
   listbox = document.getElementById("prefList");
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
-    var line = 'pref("' + listitem.label + '", ' + listitem.value + ');\n';
+    var listitemvalue = listitem.value;
+    if ((listitemvalue == "FALSE") || (listitemvalue == "TRUE")) {
+      listitemvalue = listitemvalue.toLowerCase()    
+    }
+    var line = 'pref("' + listitem.label + '", ' + listitemvalue + ');\n';
     fos.write(line, line.length);
   }
   
+  var radiogroup = document.getElementById("ProxyType");
+  if (radiogroup.value == "")
+    radiogroup.value = "0";
+
+  switch ( radiogroup.value ) {
+    case "1":
+      var proxystringlist = ["HTTPproxyname","SSLproxyname","FTPproxyname","Gopherproxyname","NoProxyname","autoproxyurl" ];
+  
+      for (i = 0; i < proxystringlist.length; i++) {
+        var proxyitem = document.getElementById(proxystringlist[i]);
+        if (proxyitem.value.length > 0) {
+          var line = 'pref("' + proxyitem.getAttribute("preference") + '", "' + proxyitem.value + '");\n';
+          fos.write(line, line.length);
+        }
+      }
+  
+      var proxyintegerlist = ["HTTPportno","SSLportno","FTPportno","Gopherportno","socksv","ProxyType"];
+
+      for (i = 0; i < proxyintegerlist.length; i++) {
+        var proxyitem = document.getElementById(proxyintegerlist[i]);
+        if (proxyitem.value.length > 0) {
+          var line = 'pref("' + proxyitem.getAttribute("preference") + '", ' + proxyitem.value + ');\n';
+          fos.write(line, line.length);
+        }
+      }
+  
+      var proxyitem = document.getElementById("shareAllProxies");
+      var line = 'pref("' + proxyitem.getAttribute("preference") + '", ' + proxyitem.checked + ');\n';
+      fos.write(line, line.length);
+      break;
+    case "2":
+      var proxystringlist = ["autoproxyurl" ];
+  
+      for (i = 0; i < proxystringlist.length; i++) {
+        var proxyitem = document.getElementById(proxystringlist[i]);
+        if (proxyitem.value.length > 0) {
+          var line = 'pref("' + proxyitem.getAttribute("preference") + '", "' + proxyitem.value + '");\n';
+          fos.write(line, line.length);
+        }
+      }
+      break;
+  }
+
   fos.close();
 }
 
@@ -1454,11 +1476,15 @@ function CCKWriteConfigFile(destdir)
   for (var i=0; i < elements.length; i++) {
     if ((elements[i].nodeName == "textbox") ||
         (elements[i].nodeName == "radiogroup") ||
-        (elements[i].nodeName == "checkbox") ||
         (elements[i].id == "RootKey1") ||
         (elements[i].id == "Type1")) {
       if ((elements[i].id != "saveOnExit") && (elements[i].id != "zipLocation")) {
         var line = elements[i].getAttribute("id") + "=" + elements[i].value + "\n";
+        fos.write(line, line.length);
+      }
+    } else if (elements[i].nodeName == "checkbox") {
+      if (elements[i].id != "saveOnExit") {
+        var line = elements[i].getAttribute("id") + "=" + elements[i].checked + "\n";
         fos.write(line, line.length);
       }
     } else if (elements[i].id == "prefList") {
@@ -1607,6 +1633,9 @@ function CCKReadConfigFile(srcdir)
     i++;
   }  
 
+  var proxyitem = document.getElementById("shareAllProxies");
+  proxyitem.checked = configarray["shareAllProxies"];
+  
   DoEnabling();
   toggleProxySettings();
   
