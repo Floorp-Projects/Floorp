@@ -43,7 +43,3 @@ pref("security.warn_viewing_mixed",      true);
 pref("security.warn_submit_insecure",    true);
 
 pref("security.OCSP.enabled",		0);
-
-pref("security.ui.enable",    true);
-
-
