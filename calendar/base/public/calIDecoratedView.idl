@@ -85,6 +85,11 @@ interface calIDecoratedView : nsISupports
   attribute boolean tasksInView;
 
   /**
+   * The selectedItem in the embedded view.
+   */
+  readonly attribute calIItemBase selectedItem;
+
+  /**
    * The selectedDay in the embedded view.  Use the goToDay function to set a
    * particular day to be selected.
    */

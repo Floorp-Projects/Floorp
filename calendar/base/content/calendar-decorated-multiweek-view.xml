@@ -48,7 +48,7 @@
              <xul:vbox anonid="main-box" flex="1">
                 <xul:calendar-navigation-buttons anonid="nav-control"/>
                 <xul:box style="overflow: auto;" flex="1">
-                    <xul:calendar-month-view anonid="view-element" flex="1" xbl:inherits="context"/>
+                    <xul:calendar-month-view anonid="view-element" flex="1" xbl:inherits="context,item-context"/>
                 </xul:box>
             </xul:vbox>
         </content>

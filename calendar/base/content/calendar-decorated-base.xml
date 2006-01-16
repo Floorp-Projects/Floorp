@@ -132,6 +132,12 @@
                 ]]></setter>
             </property>
 
+            <property name="selectedItem">
+                <getter><![CDATA[
+                    return document.getAnonymousElementByAttribute(this, "anonid", "view-element").selectedItem;
+                ]]></getter>
+            </property>
+
             <property name="selectedDay">
                 <getter><![CDATA[
                     return document.getAnonymousElementByAttribute(this, "anonid", "view-element").selectedDay;
