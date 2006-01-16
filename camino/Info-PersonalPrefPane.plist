@@ -21,9 +21,9 @@
 	<key>CFBundleShortVersionString</key>
 	<string></string>
 	<key>CFBundleSignature</key>
-	<string>????</string>
+	<string>MOZC</string>
 	<key>CFBundleVersion</key>
-	<string>0.0.1d1</string>
+	<string>1.0</string>
 	<key>NSMainNibFile</key>
 	<string>Personal</string>
 	<key>NSPrefPaneIconFIle</key>

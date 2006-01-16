@@ -23,7 +23,7 @@
 	<key>CFBundleSignature</key>
 	<string>MOZC</string>
 	<key>CFBundleVersion</key>
-	<string>0.0.1d1</string>
+	<string>1.0</string>
 	<key>NSMainNibFile</key>
 	<string>Appearance</string>
 	<key>NSPrincipalClass</key>
