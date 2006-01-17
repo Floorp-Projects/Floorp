@@ -63,52 +63,127 @@ function getFileTypes(aCount) {
 // not prototype.export. export is reserved.
 calHtmlExporter.prototype.exportToStream =
 function html_exportToStream(aStream, aCount, aItems) {
-    var str = 
-        "<html>\n" +
-        "<head>\n" + 
-        "<title>HTMLTitle</title>\n" +
-        "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
-        "</head>\n"+ "<body bgcolor=\"#FFFFFF\" text=\"#000000\">\n";
-    aStream.write(str, str.length);
-   
+    var dateFormatter = 
+        Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                  .getService(Components.interfaces.calIDateTimeFormatter);
+
+    var html =
+        <html>
+            <head>
+                <title>HTMLTitle</title>
+                <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
+                <style type='text/css'/>
+            </head>
+            <body>
+                <!-- Note on the use of the summarykey class: this is a
+                     special class, because in the default style, it is hidden.
+                     The div is still included for those that want a different
+                     style, where the key is visible -->
+            </body>
+        </html>;
+    // XXX The html comment above won't propagate to the resulting html.
+    //     Should fix that, one day.
+
+    // Using this way to create the styles, because { and } are special chars
+    // in e4x. They have to be escaped, which doesn't improve readability
+    html.head.style = ".vevent {border: 1px solid black; padding: 0px; margin-bottom: 10px;}\n";
+    html.head.style += "div.key {font-style: italic; margin-left: 3px;}\n";
+    html.head.style += "div.value {margin-left: 20px;}\n";
+    html.head.style += "abbr {border: none;}\n";
+    html.head.style += ".summarykey {display: none;}\n";
+    html.head.style += "div.summary {background: lightgray; font-weight: bold; margin: 0px; padding: 3px;}\n";
+
+    // Sort aItems
+    aItems.sort(function (a,b) { return a.startDate.compare(b.startDate); });
+
     for each (item in aItems) {
         try {
             item = item.QueryInterface(Components.interfaces.calIEvent);
         } catch(e) {
             continue;
         }
-        var start = item.startDate.jsDate;
-        var end = item.endDate.jsDate;
-        //var when = dateFormat.formatInterval(start, end, calendarEvent.allDay);
-        var when = item.startDate + " -- " + item.endDate;
-        dump(when+"\n");
-        var desc = item.description;
-        if (desc == null)
-          desc = "";
-        if (desc.length > 0) { 
-          if (desc.indexOf("\n ") >= 0 || desc.indexOf("\n\t") >= 0 ||
-              desc.indexOf(" ") == 0 || desc.indexOf("\t") == 0)
-            // (RegExp /^[ \t]/ doesn't work.)
-            // contains indented preformatted text after beginning or newline
-            // so preserve indentation with PRE.
-            desc = "<PRE>"+desc+"</PRE>\n";
-          else
-            // no indentation, so preserve text line breaks in html with BR
-            desc = "<P>"+desc.replace(/\n/g, "<BR>\n")+"</P>\n";
+
+        // Put properties of the event in a definition list
+        // Use hCalendar classes as bonus
+        var ev = <div class='vevent'/>;
+
+        // Title
+        ev.appendChild(
+            <div>
+                <div class='key summarykey'>Title</div>
+                <div class='value summary'>{item.title}</div>
+            </div>
+        );
+
+        // Start and end
+        var startstr = new Object();
+        var endstr = new Object();
+        dateFormatter.formatInterval(item.startDate, item.endDate, startstr, endstr);
+
+        // Include the end date anyway, even when empty, because the dtend
+        // class should be there, for hCalendar goodness.
+        var seperator = "";
+        if (endstr.value) {
+            seperator = " - ";
         }
-        // use div around each event so events are navigable via DOM.
-        str  = "<div><p>";
-        str += "<B>Title: </B>\t" + item.title + "<BR>\n";
-        str += "<B>When: </B>\t" + when.replace("--", "&ndash;") + "<BR>\n";
-        str += "<B>Where: </B>\t" + item.location + "<BR>\n";
-        // str += "<B>Organiser: </B>\t" + Event.???
-        str += "</p>\n";
-        str += desc; // may be empty
-        str += "</div>\n";
-        aStream.write(str, str.length);
+
+        ev.appendChild(
+            <div>
+                <div class='key'>When</div>
+                <div class='value'>
+                    <abbr class='dtstart' title={item.startDate.icalString}>{startstr.value}</abbr>
+                    {seperator}
+                    <abbr class='dtend' title={item.endDate.icalString}>{endstr.value}</abbr>
+                </div>
+            </div>
+        );
+
+
+        // Location
+        if (item.getProperty('LOCATION')) {
+            ev.appendChild(
+                <div>
+                    <div class='key'>Location</div>
+                    <div class='value location'>{item.getProperty('LOCATION')}</div>
+                </div>
+            );
+        }
+
+        // Description, inside a pre to preserve formating when needed.
+        var desc = item.getProperty('DESCRIPTION');
+        if (desc && desc.length > 0) { 
+            var usePre = false;
+            if (desc.indexOf("\n ") >= 0 || desc.indexOf("\n\t") >= 0 ||
+                desc.indexOf(" ") == 0 || desc.indexOf("\t") == 0)
+                // (RegExp /^[ \t]/ doesn't work.)
+                // contains indented preformatted text after beginning or newline
+                // so preserve indentation with PRE.
+                usePre = true;
+
+            var descnode = 
+                <div>
+                    <div class='key'>Description</div>
+                    <div class='value'/>
+                </div>;
+
+            if (usePre)
+                descnode.div[1] = <pre class='description'>{desc}</pre>;
+            else {
+                descnode.div[1] = desc.replace(/\n/g, "<BR>\n");
+                descnode.div[1].@class += ' description';
+            }
+            ev.appendChild(descnode);
+        }
+        html.body.appendChild(ev);
     }
 
-    str = "\n</body>\n</html>\n";
-    aStream.write(str, str.length);
+    // Convert the javascript string to an array of bytes, using the
+    // utf8 encoder
+    var convStream = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
+                               .getService(Components.interfaces.nsIConverterOutputStream);
+    convStream.init(aStream, 'UTF-8', 0, 0x0000);
+
+    var str = html.toXMLString()
+    convStream.writeString(str);
     return;
 };
