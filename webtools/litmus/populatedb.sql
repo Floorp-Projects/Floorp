@@ -130,7 +130,7 @@ UNLOCK TABLES;
 
 /*!40000 ALTER TABLE `test_groups` DISABLE KEYS */;
 LOCK TABLES `test_groups` WRITE;
-INSERT INTO `test_groups` VALUES (1,1,'Smoketests',5,'No',25),(2,1,'1.0 Basic Functional Tests (BFTs)',10,'Yes',NULL),(3,2,'Installation and Startup',5,'No',NULL),(4,2,'Menu bar',5,'No',NULL),(5,3,'Smoketests',5,'No',26),(6,3,'1.0 Basic Functional Tests (BFTs)',5,'Yes',32),(7,1,'Basic Functional Tests (BFTs)',10,'No',44),(8,3,'Basic Functional Tests (BFTs)',10,'No',41),(9,3,'Localization (l10n)',10,'No',NULL);
+INSERT INTO `test_groups` VALUES (1,1,'Smoketests',5,0,25),(2,1,'1.0 Basic Functional Tests (BFTs)',10,1,NULL),(3,2,'Installation and Startup',5,0,NULL),(4,2,'Menu bar',5,0,NULL),(5,3,'Smoketests',5,'No',26),(6,3,'1.0 Basic Functional Tests (BFTs)',5,1,32),(7,1,'Basic Functional Tests (BFTs)',10,0,44),(8,3,'Basic Functional Tests (BFTs)',10,0,41),(9,3,'Localization (l10n)',10,0,NULL);
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `test_groups` ENABLE KEYS */;
 
