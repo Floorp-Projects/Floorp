@@ -79,6 +79,9 @@
               button.setAttribute("container", "true");
               var popup = document.createElementNS(XULNS, "menupopup");
               popup.setAttribute("type", "places");
+              // This is set here and not in the XBL constructor for the menu because
+              // it doesn't get initialized properly in the constructor.
+              popup.setAttribute("context", "placesContext");
               button.appendChild(popup);
               popup.folderId = child.folderId;
             }
@@ -100,6 +103,9 @@
           overflowPadder.appendChild(this._chevron);
           var popup = document.createElementNS(XULNS, "menupopup");
           popup.setAttribute("type", "places");
+          // This is set here and not in the XBL constructor for the menu because
+          // it doesn't get initialized properly in the constructor.
+          popup.setAttribute("context", "placesContext");
           popup.folderId = this._result.folderId;
           var t = this;
           popup.popupShowingCallback = function() {t.chevronPopupShowing();};
