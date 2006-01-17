@@ -38,7 +38,7 @@ sub ChangeFieldType
 {
     my ($self, $table, $field, $newtype) = @_;
 
-    my $ref = GetFieldDef($table, $field);
+    my $ref = $self->GetFieldDef($table, $field);
     #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
 
     my $oldtype = $ref->[1];
@@ -65,7 +65,7 @@ sub RenameField
 {
     my ($self, $table, $field, $newname) = @_;
 
-    my $ref = GetFieldDef($table, $field);
+    my $ref = $self->GetFieldDef($table, $field);
     return unless $ref; # already fixed?
     #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
 
@@ -84,7 +84,7 @@ sub AddField
 {
     my ($self, $table, $field, $definition) = @_;
 
-    my $ref = GetFieldDef($table, $field);
+    my $ref = $self->GetFieldDef($table, $field);
     return if $ref; # already added?
 
     print "Adding new field $field to table $table ...\n";
@@ -96,7 +96,7 @@ sub DropField
 {
     my ($self, $table, $field) = @_;
 
-    my $ref = GetFieldDef($table, $field);
+    my $ref = $self->GetFieldDef($table, $field);
     return unless $ref; # already dropped?
 
     print "Deleting unused field $field from table $table ...\n";
