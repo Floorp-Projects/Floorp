@@ -59,6 +59,9 @@ tab:hover:active > .tab-image-right {
 }
 
 /* when a tab is selected this is how it should look */
+tab[selected="true"] {
+  -moz-user-focus: normal;
+}
 
 tab[selected="true"] > .tab-image-left,
 tab[selected="true"]:hover:active > .tab-image-left {
@@ -75,6 +78,13 @@ tab[selected="true"]:hover:active > .tab-image-middle {
 tab[selected="true"] > .tab-image-right,
 tab[selected="true"]:hover:active > .tab-image-right {
   background		: url(chrome://global/skin/tabbox/tab-select-right.gif) no-repeat;
+}
+
+tab:focus {
+  outline: 3px solid -moz-mac-focusring;
+  outline-offset: -3px;
+  -moz-outline-radius-topleft:  5px;
+  -moz-outline-radius-topright: 5px;
 }
 
 .tab-border-top-left {
