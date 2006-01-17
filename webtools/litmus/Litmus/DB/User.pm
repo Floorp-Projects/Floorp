@@ -46,7 +46,9 @@ Litmus::DB::User->column_alias("is_admin", "is_trusted");
 
 Litmus::DB::User->has_many(testresults => "Litmus::DB::Testresult");
 Litmus::DB::User->has_many(sessions => "Litmus::DB::Session");
-Litmus::DB::User->has_a(bugzilla_uid => "Litmus::DB::BugzillaUser");
+
+# ZLL: leave this commented until we're ready for Bugzilla login
+#Litmus::DB::User->has_a(bugzilla_uid => "Litmus::DB::BugzillaUser");
 
 # returns the crypt'd password from a linked Bugzilla account if it 
 # exists or the Litmus user account
