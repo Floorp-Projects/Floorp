@@ -223,10 +223,6 @@ js_GC(JSContext *cx, uintN gcflags);
 
 typedef struct JSGCStats {
     uint32  alloc;      /* number of allocation attempts */
-    uint32  freelen[GC_NUM_FREELISTS];
-                        /* gcFreeList lengths */
-    uint32  recycle[GC_NUM_FREELISTS];
-                        /* number of things recycled through gcFreeList */
     uint32  retry;      /* allocation attempt retries after running the GC */
     uint32  retryhalt;  /* allocation retries halted by the branch callback */
     uint32  fail;       /* allocation failures */
@@ -255,6 +251,31 @@ extern JS_FRIEND_API(void)
 js_DumpGCStats(JSRuntime *rt, FILE *fp);
 
 #endif /* JS_GCMETER */
+
+typedef struct JSGCArena JSGCArena;
+typedef struct JSGCArenaList JSGCArenaList;
+
+#ifdef JS_GCMETER
+typedef struct JSGCArenaStats JSGCArenaStats;
+
+struct JSGCArenaStats {
+    uint32  narenas;        /* number of arena in list */
+    uint32  maxarenas;      /* maximun number of allocated arenas */
+    uint32  nthings;        /* number of allocates JSGCThing */
+    uint32  maxthings;      /* maximum number number of allocates JSGCThing */
+    uint32  freelen;        /* freeList lengths */
+    uint32  recycle;        /* number of things recycled through freeList */
+};
+#endif
+
+struct JSGCArenaList {
+    JSGCArena   *last;      /* last allocated GC arena */
+    size_t      lastLimit;  /* end offset of allocated so far things in last */
+    JSGCThing   *freeList;
+#ifdef JS_GCMETER
+    JSGCArenaStats stats;
+#endif
+};
 
 #ifdef DEBUG_notme
 #define TOO_MUCH_GC 1
