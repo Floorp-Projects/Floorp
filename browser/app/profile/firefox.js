@@ -245,13 +245,6 @@ pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
 
-// Smart Browsing prefs
-pref("browser.related.enabled", true);
-pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
-pref("browser.related.provider", "http://www-rl.netscape.com/wtgn?");
-pref("browser.related.disabledForDomains", "");
-pref("browser.goBrowsing.enabled", true);
-
 // Default bookmark sorting
 pref("browser.bookmarks.sort.direction", "descending");
 pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Name");
