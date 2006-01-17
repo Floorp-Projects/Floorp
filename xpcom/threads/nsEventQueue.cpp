@@ -206,11 +206,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsEventQueueImpl,
 NS_IMETHODIMP
 nsEventQueueImpl::StopAcceptingEvents()
 {
-  // this assertion is bogus.  I should be able to shut down the eldest queue,
-  //    as long as there are no younger children
+  if (mYoungerQueue) {
+    NS_ERROR("Should not shut down eventq while child queues are active");
+    mYoungerQueue->StopAcceptingEvents();
+  }
 
-
-  NS_ASSERTION(mElderQueue || !mYoungerQueue, "attempted to disable eldest queue in chain");
+  // XXXThis method can be called from any thread: do we need to protect this
+  // with a lock?
   mAcceptingEvents = PR_FALSE;
   CheckForDeactivation();
 #if defined(PR_LOGGING) && defined(DEBUG_danm)

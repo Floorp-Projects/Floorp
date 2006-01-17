@@ -40,8 +40,7 @@
 #include "nsIEventQueue.h"
 #include "nsPIEventQueueChain.h"
 
-class nsEventQueueImpl : public nsIEventQueue,
-                         public nsPIEventQueueChain
+class nsEventQueueImpl : public nsPIEventQueueChain
 {
 public:
     nsEventQueueImpl();

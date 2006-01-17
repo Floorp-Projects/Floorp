@@ -104,8 +104,9 @@ interface nsIEventQueue : nsIEventTarget
 
     boolean isQueueNative();
 
-    // effectively kill the queue. warning: the queue is allowed to delete
-    // itself any time after this.
+    /**
+     * Stop accepting events on this queue.
+     */
     void stopAcceptingEvents();
 };
 
