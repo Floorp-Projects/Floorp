@@ -513,6 +513,9 @@
         ]]></body>
       </method>
 
+      <!-- NOTE: This function may not return the true start and end time
+                 of an occurrence if that occurrence starts or ends on a day
+                 different than the day of this column -->
       <method name="getStartEndMinutesForOccurrence">
         <parameter name="aOccurrence"/>
         <body><![CDATA[
@@ -524,6 +527,16 @@
 
            if (enddate.timezone != this.mTimezone)
                enddate = enddate.getInTimezone (this.mTimezone);
+
+           // Handle cases where an event begins or ends on a day other than this
+           if (stdate.compare(this.mDate) == -1) {
+               stdate.hour = 0;
+               stdate.minute = 0;
+           }
+           if (enddate.compare(this.mDate) == 1) {
+               enddate.hour = 24;
+               enddate.minute = 0;
+           }
 
            return { start: stdate.hour * 60 + stdate.minute,
                     end: enddate.hour * 60 + enddate.minute };
@@ -1932,18 +1945,18 @@
         <setter><![CDATA[
           if (this.mSelectedItem != val) {
               if (this.mSelectedItem) {
-                  var col = this.findColumnForItem(this.mSelectedItem);
-                  if (col) {
+                  var cols = this.findColumnsForItem(this.mSelectedItem);
+                  for each (col in cols) {
                       col.column.selectOccurrence(null);
-                  } else {
-                      dump ("Thought I had a selected occurrence (id: " + this.mSelectedItem.id + "), but couldn't find a column for it!\n");
                   }
               }
 
               if (val) {
-                  var col = this.findColumnForItem(val);
-                  if (col) {
-                      col.column.selectOccurrence(val);
+                  var cols = this.findColumnsForItem(val);
+                  if (cols.length > 0) {
+                      for each (col in cols) {
+                          col.column.selectOccurrence(val);
+                      }
                       if(this.mController.selectionManager)
                           this.mController.selectionManager.replaceSelection(val);
                   } else {
@@ -2273,20 +2286,31 @@
       </method>
 
 
-      <method name="findColumnForItem">
+      <method name="findColumnsForItem">
         <parameter name="aItem"/>
         <body><![CDATA[
-          var estart;
-          if(aItem.startDate) 
-              estart = aItem.startDate;
-          //XXX This isn't really good yet.  It may need to be changed once
-          //    tasks are fully implemented.
-          if(aItem.entryDate)
-              estart = aItem.entryDate;
-          if(!estart)
-              return null;
+          // We don't support tasks here, yet
+          if (!(aItem instanceof Components.interfaces.calIEvent))
+              return;
 
-          return this.findColumnForDate(estart);
+          var columns = new Array();
+
+          // Note that these may be dates or datetimes
+          var targetDate = aItem.startDate.clone();
+          var finishDate = aItem.endDate;
+
+          while (targetDate.compare(finishDate) == -1) {
+            var col = this.findColumnForDate(targetDate);
+
+            // This might not exist if the event spans the view start or end
+            if (col) {
+                columns.push(col);
+            }
+            targetDate.day += 1;
+            targetDate.normalize();
+          }
+
+          return columns;
         ]]></body>
       </method>
 
@@ -2314,18 +2338,20 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           //dump ("++ doAddevent\n");
-          var col = this.findColumnForItem(aEvent);
-          if (!col)
+          var cols = this.findColumnsForItem(aEvent);
+          if (!cols.length)
               return;
 
-          var column = col.column;
-          var header = col.header;
+          for each (col in cols) {
+              var column = col.column;
+              var header = col.header;
 
-          var estart = aEvent.startDate;
-          if (estart.isDate) {
-              // add it to header
-          } else {
-              column.addEvent(aEvent);
+              var estart = aEvent.startDate;
+              if (estart.isDate) {
+                  // add it to header
+              } else {
+                  column.addEvent(aEvent);
+              }
           }
         ]]></body>
       </method>
@@ -2333,18 +2359,20 @@
       <method name="doDeleteEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          var col = this.findColumnForItem(aEvent);
-          if (!col)
+          var cols = this.findColumnsForItem(aEvent);
+          if (!cols.length)
               return;
 
-          var column = col.column;
-          var header = col.header;
+          for each (col in cols) {
+              var column = col.column;
+              var header = col.header;
 
-          var estart = aEvent.startDate;
-          if (estart.isDate) {
-              // remove from header
-          } else {
-              column.deleteEvent(aEvent);
+              var estart = aEvent.startDate;
+              if (estart.isDate) {
+                  // remove from header
+              } else {
+                  column.deleteEvent(aEvent);
+              }
           }
         ]]></body>
       </method>
