@@ -54,16 +54,16 @@
   <menupopup id="menu_HelpPopup">
     <menuitem id="menu_HelpPopup_reportertoolmenu" 
               label="&reporterMenu.title;..." 
-              accesskey="&reporterMenu.accesskey;" 
+              accesskey="&reporterMenu.accesskey;"
               insertbefore="aboutSeparator"
               observes="reporterItemsBroadcaster"
               oncommand="loadReporterWizard()"/>
   </menupopup>
   <toolbarpalette id="BrowserToolbarPalette">
     <toolbarbutton id="reporterMenuButton" 
-                   oncommand="loadReporterWizard();" 
+                   oncommand="loadReporterWizard();"
                    class="toolbarbutton-1" 
-                   label="&reporterMenu.title;" 
+                   label="&reporterToolBarButton.title;"
                    observes="reporterItemsBroadcaster"
                    tooltiptext="&reporterMenu.tooltip;"/>
   </toolbarpalette>
