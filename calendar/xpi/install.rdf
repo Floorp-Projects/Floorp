@@ -27,6 +27,15 @@
         <em:maxVersion>1.0+</em:maxVersion>
       </Description>
     </em:targetApplication>
+    
+    <em:targetApplication>
+      <Description>
+        <!-- Seamonkey -->
+        <em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
+        <em:minVersion>1.0</em:minVersion>
+        <em:maxVersion>1.0</em:maxVersion>
+      </Description>
+    </em:targetApplication>
 
     <em:name>Mozilla Calendar</em:name>
     <em:description>A calendar client based on iCal standard</em:description>
