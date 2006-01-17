@@ -714,8 +714,8 @@ nsThebesDeviceContext::EndPage(void)
 #ifdef XP_WIN
     /*
     if (mDC) {
-        nsAutoPtr<gfxWindowsSurface> surface = new gfxWindowsSurface((HDC)mDC);
-        nsAutoPtr<gfxContext> context = new gfxContext(surface);
+        nsRefPtr<gfxWindowsSurface> surface = new gfxWindowsSurface((HDC)mDC);
+        nsRefPtr<gfxContext> context = new gfxContext(surface);
 
         context->ShowPage();
     }
