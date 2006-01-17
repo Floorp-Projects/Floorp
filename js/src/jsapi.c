@@ -756,6 +756,7 @@ JS_DestroyRuntime(JSRuntime *rt)
 #endif
     js_FinishPropertyTree(rt);
     free(rt);
+    JS_ArenaFinish();
 }
 
 JS_PUBLIC_API(void)
