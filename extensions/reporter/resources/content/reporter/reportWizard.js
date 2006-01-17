@@ -123,7 +123,10 @@ function initForm() {
 
   // Change next button to "submit report"
   reportWizard.getButton('next').label = strbundle.getString("submitReport") + ">";
-  
+  reportWizard.getButton('next').setAttribute("accesskey",
+                                              strbundle.getString("submitReport.accesskey"));
+
+
   // Set the privacy policy link href
   var url = getCharPref("privacyURL", "http://reporter.mozilla.org/privacy/");
   var privacyLink = document.getElementById("privacyPolicy");
