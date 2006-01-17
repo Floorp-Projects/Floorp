@@ -24,7 +24,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>APP_VERSION</string>
 	<key>CFBundleSignature</key>
-	<string>MOZB</string>
+	<string>MOZC</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 	</array>
