@@ -1588,9 +1588,10 @@
 	       // The selection manager should be smart enough to only call this
 	       // when the selection really did change, so just do it.
                if (this.calView.mSelectedItem) {
-                   var col = this.calView.findColumnForItem(this.calView.mSelectedItem);
-                   if (col) 
+                   var cols = this.calView.findColumnsForItem(this.calView.mSelectedItem);
+                   for each (col in cols) {
                        col.column.selectOccurrence(null);
+                   }
                }
                this.calView.mSelectedItem = itemSelectionArray[0];
                if (!this.calView.mSelectedItem)
@@ -1599,9 +1600,10 @@
                    this.calView.showDate(this.calView.mSelectedItem.startDate);
                if (this.calView.mSelectedItem.entryDate)
                    this.calView.showDate(this.calView.mSelectedItem.entryDate);
-               var col = this.calView.findColumnForItem(this.calView.mSelectedItem);
-               if (col) 
+               var cols = this.calView.findColumnsForItem(this.calView.mSelectedItem);
+               for each (col in cols) {
                    col.column.selectOccurrence(this.calView.mSelectedItem);
+               }
           }
       })
       ]]></field>
@@ -2289,11 +2291,11 @@
       <method name="findColumnsForItem">
         <parameter name="aItem"/>
         <body><![CDATA[
+          var columns = new Array();
+
           // We don't support tasks here, yet
           if (!(aItem instanceof Components.interfaces.calIEvent))
-              return;
-
-          var columns = new Array();
+              return columns;
 
           // Note that these may be dates or datetimes
           var targetDate = aItem.startDate.clone();
