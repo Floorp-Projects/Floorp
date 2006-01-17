@@ -1839,6 +1839,13 @@
           }
         ]]>
       </handler>
+
+      <handler event="keypress" keycode="VK_LEFT" modifiers="accel" action="if (event.target == this) { this.moveTabLeft(); event.preventDefault(); }"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="accel" action="if (event.target == this) { this.moveTabRight();" event.preventDefault(); }/>
+      <handler event="keypress" keycode="VK_UP" modifiers="accel" action="if (event.target == this) { this.moveTabBackward();" event.preventDefault(); }/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="accel" action="if (event.target == this) { this.moveTabForward();" event.preventDefault(); }/>
+      <handler event="keypress" keycode="VK_HOME" modifiers="accel" action="if (event.target == this) { this.moveTabToStart();" event.preventDefault(); }/>
+      <handler event="keypress" keycode="VK_END" modifiers="accel" action="if (event.target == this) { this.moveTabToEnd();" event.preventDefault(); }/>
     </handlers>
   </binding>
 
