@@ -43,7 +43,9 @@
 
 // commdlg.h and cderr.h are needed to build with WIN32_LEAN_AND_MEAN
 #include <commdlg.h>
+#ifndef WINCE
 #include <cderr.h>
+#endif
 
 #include "nsString.h"
 #include "nsToolkit.h"
