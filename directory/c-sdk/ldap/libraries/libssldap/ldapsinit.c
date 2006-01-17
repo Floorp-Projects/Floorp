@@ -1085,7 +1085,7 @@ ldapssl_AuthCertificate(void *sessionarg, PRFileDesc *fd, PRBool checkSig,
     SECCertUsage	certUsage;
     char		*hostname = (char *)0;
 
-    if (!sessionarg || !socket) {
+    if (!sessionarg || !fd) {
 	return rv;
     }
 
@@ -1106,6 +1106,8 @@ ldapssl_AuthCertificate(void *sessionarg, PRFileDesc *fd, PRBool checkSig,
 			certUsage, NULL);
 
     if ( rv != SECSuccess || isServer ) {
+	/* must destroy cert to avoid mem leak */
+	CERT_DestroyCertificate(cert);
 	return rv;
     }
   
@@ -1123,10 +1125,16 @@ ldapssl_AuthCertificate(void *sessionarg, PRFileDesc *fd, PRBool checkSig,
 	} else  {
 	  rv = SECFailure;
      	}
-	if (rv != SECSuccess)
+        if (hostname) {
+	  PL_strfree(hostname);
+        }
+	if (rv != SECSuccess) {
 	  PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
-      }
+        }
+    }
 
+    /* must destroy cert to avoid mem leak */
+    CERT_DestroyCertificate(cert);
     return((int)rv);
 }
 
