@@ -392,6 +392,8 @@ nsSoftKeyBoard::nsSoftKeyBoard(nsSoftKeyBoardService* aService)
   mCurrentDigit = 0;
   mCurrentDigitCount = 0;
   mUsage = eLowerCase;
+
+  CloseSIP();
 }
 
 nsSoftKeyBoard::~nsSoftKeyBoard()
