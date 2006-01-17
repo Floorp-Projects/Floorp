@@ -60,7 +60,7 @@ our \$sysconfig_cookiename = "litmustestingconfiguration";
 our \$bugzilla_db = "bugzilla";
 our \$bugzilla_host = "localhost";
 our \$bugzilla_user = "litmus";
-out \$bugzilla_pass = "litmus";
+our \$bugzilla_pass = "litmus";
 EOT
         close(OUT);
         print "Go edit 'localconfig' with your configuration and \n";
