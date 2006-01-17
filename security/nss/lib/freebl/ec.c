@@ -612,6 +612,7 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     mp_int n;
     mp_err err = MP_OKAY;
     ECParams *ecParams = NULL;
+    SECItem localDigest;
     SECItem kGpoint = { siBuffer, NULL, 0};
     int len = 0;
 
@@ -619,9 +620,17 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     char mpstr[256];
 #endif
 
+    /* Initialize MPI integers. */
+    /* must happen before the first potential call to cleanup */
+    MP_DIGITS(&x1) = 0;
+    MP_DIGITS(&d) = 0;
+    MP_DIGITS(&k) = 0;
+    MP_DIGITS(&r) = 0;
+    MP_DIGITS(&s) = 0;
+    MP_DIGITS(&n) = 0;
+
     /* Check args */
-    if (!key || !signature || !digest || !kb || (kblen < 0) ||
-	(digest->len != SHA1_LENGTH)) {
+    if (!key || !signature || !digest || !kb || (kblen < 0)) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	goto cleanup;
     }
@@ -633,13 +642,13 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
 	goto cleanup;
     }
 
-    /* Initialize MPI integers. */
-    MP_DIGITS(&x1) = 0;
-    MP_DIGITS(&d) = 0;
-    MP_DIGITS(&k) = 0;
-    MP_DIGITS(&r) = 0;
-    MP_DIGITS(&s) = 0;
-    MP_DIGITS(&n) = 0;
+    /* ec defines signing with a larger digest than the keysize
+     * as signing with a truncated digest */
+    localDigest = *digest;
+    if (localDigest.len > len) {
+	localDigest.len = len;
+    }
+
     CHECK_MPI_OK( mp_init(&x1) );
     CHECK_MPI_OK( mp_init(&d) );
     CHECK_MPI_OK( mp_init(&k) );
@@ -703,9 +712,9 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     /*                                  
     ** ANSI X9.62, Section 5.3.3, Step 4
     **
-    ** s = (k**-1 * (SHA1(M) + d*r)) mod n 
+    ** s = (k**-1 * (HASH(M) + d*r)) mod n 
     */
-    SECITEM_TO_MPINT(*digest, &s);        /* s = SHA1(M)     */
+    SECITEM_TO_MPINT(localDigest, &s);        /* s = HASH(M)     */
 
 #if EC_DEBUG
     mp_todecimal(&n, mpstr);
@@ -861,6 +870,7 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     mp_err err = MP_OKAY;
     PRArenaPool *arena = NULL;
     ECParams *ecParams = NULL;
+    SECItem localDigest;
     SECItem pointA = { siBuffer, NULL, 0 };
     SECItem pointB = { siBuffer, NULL, 0 };
     SECItem pointC = { siBuffer, NULL, 0 };
@@ -871,18 +881,40 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     printf("ECDSA verification called\n");
 #endif
 
+    /* Initialize MPI integers. */
+    /* must happen before the first potential call to cleanup */
+    MP_DIGITS(&r_) = 0;
+    MP_DIGITS(&s_) = 0;
+    MP_DIGITS(&c) = 0;
+    MP_DIGITS(&u1) = 0;
+    MP_DIGITS(&u2) = 0;
+    MP_DIGITS(&x1) = 0;
+    MP_DIGITS(&y1) = 0;
+    MP_DIGITS(&x2) = 0;
+    MP_DIGITS(&y2) = 0;
+    MP_DIGITS(&v)  = 0;
+    MP_DIGITS(&n)  = 0;
+
     /* Check args */
-    if (!key || !signature || !digest ||
-	(digest->len != SHA1_LENGTH)) {
+    if (!key || !signature || !digest) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	goto cleanup;
     }
+
 
     ecParams = &(key->ecParams);
     len = (ecParams->fieldID.size + 7) >> 3;  
     if (signature->len < 2*len) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	goto cleanup;
+    }
+
+
+    /* ec defines signing with a larger digest than the keysize
+     * as signing with a truncated digest */
+    localDigest = *digest;
+    if (localDigest.len > len) {
+	localDigest.len = len;
     }
 
     /* Initialize an arena for pointA, pointB and pointC */
@@ -895,18 +927,6 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     if (pointA.data == NULL || pointB.data == NULL || pointC.data == NULL)
 	goto cleanup;
 
-    /* Initialize MPI integers. */
-    MP_DIGITS(&r_) = 0;
-    MP_DIGITS(&s_) = 0;
-    MP_DIGITS(&c) = 0;
-    MP_DIGITS(&u1) = 0;
-    MP_DIGITS(&u2) = 0;
-    MP_DIGITS(&x1) = 0;
-    MP_DIGITS(&y1) = 0;
-    MP_DIGITS(&x2) = 0;
-    MP_DIGITS(&y2) = 0;
-    MP_DIGITS(&v)  = 0;
-    MP_DIGITS(&n)  = 0;
     CHECK_MPI_OK( mp_init(&r_) );
     CHECK_MPI_OK( mp_init(&s_) );
     CHECK_MPI_OK( mp_init(&c)  );
@@ -945,9 +965,9 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     /*
     ** ANSI X9.62, Section 5.4.2, Step 4
     **
-    ** u1 = ((SHA1(M')) * c) mod n
+    ** u1 = ((HASH(M')) * c) mod n
     */
-    SECITEM_TO_MPINT(*digest, &u1);         /* u1 = SHA1(M')     */
+    SECITEM_TO_MPINT(localDigest, &u1);         /* u1 = HASH(M')     */
 
 #if EC_DEBUG
     mp_todecimal(&r_, mpstr);
