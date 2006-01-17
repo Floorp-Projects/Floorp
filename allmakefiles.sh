@@ -820,9 +820,6 @@ embedding/tests/mfcembed/components/Makefile
 "
 
 MAKEFILES_minimo="
-embedding/minimo/Makefile
-embedding/minimo/app/Makefile
-embedding/minimo/popuplite/Makefile
 minimo/Makefile
 minimo/base/Makefile
 minimo/base/wince/Makefile
