@@ -113,6 +113,9 @@
                 var popup = document.createElementNS(XULNS, "menupopup");
                 popup.setAttribute("type", "places");
                 element.appendChild(popup);
+                // The context menu is set here instead of in the xbl constructor
+                // because it doesn't get initialized properly if set in the constructor.
+                popup.setAttribute("context", "placesContext");
                 popup.folderId = child.folderId;
                 element.className = "menu-iconic bookmark-item";
               }

@@ -394,7 +394,7 @@
 #else
   <menu id="bookmarksMenu" 
         label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;">
-    <menupopup id="bookmarksMenuPopup" type="places">
+    <menupopup id="bookmarksMenuPopup" type="places" context="placesContext">
       <menuitem label="&addCurPageAsCmd.label;" 
                 command="Browser:AddBookmarkAs" key="addBookmarkAsKb"/>
       <menuitem label="&manBookmarksCmd.label;" 
