@@ -40,13 +40,13 @@
 
 #include "nsISupports.h"
 
-// {8f310040-82a7-11d3-95bc-0060083a0bcf}
+// {6a418ae8-db08-495d-843a-0822ebdc9d10}
 #define NS_IEVENTQUEUECHAIN_IID \
-{ 0x8f310040, 0x82a7, 0x11d3, { 0x95, 0xbc, 0x0, 0x60, 0x8, 0x3a, 0xb, 0xcf } }
+{ 0x6a418ae8, 0xdb08, 0x495d, { 0x84, 0x3a, 0x08, 0x22, 0xeb, 0xdc, 0x9d, 0x10 } }
 
 class nsIEventQueue;
 
-class nsPIEventQueueChain : public nsISupports
+class nsPIEventQueueChain : public nsIEventQueue
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEVENTQUEUECHAIN_IID)

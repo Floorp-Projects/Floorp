@@ -42,15 +42,21 @@
 #include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIEventQueue.h"
+#include "nsPIEventQueueChain.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsEventQueueServiceImpl : public nsIEventQueueService
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_EVENTQUEUESERVICE_CID)
+
   nsEventQueueServiceImpl();
 
   nsresult Init();
+
+  // During XPCOM shutdown: stop accepting events on all event queues
+  void Shutdown();
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS
@@ -65,12 +71,17 @@ private:
                 Addref the descriptor in any case. parameter aNative is
                 ignored if the queue already exists. */
   NS_IMETHOD CreateEventQueue(PRThread *aThread, PRBool aNative);
-  NS_IMETHOD MakeNewQueue(PRThread* thread, PRBool aNative, nsIEventQueue **aQueue);
-  inline nsresult GetYoungestEventQueue(nsIEventQueue *queue, nsIEventQueue **aResult);
+  NS_IMETHOD MakeNewQueue(PRThread* thread, PRBool aNative,
+                          nsPIEventQueueChain **aQueue);
+  inline nsresult GetYoungestEventQueue(nsIEventQueue *queue,
+                                        nsIEventQueue **aResult);
 
-  nsInterfaceHashtable<nsVoidPtrHashKey, nsIEventQueue> mEventQTable;
+  nsInterfaceHashtable<nsVoidPtrHashKey, nsPIEventQueueChain> mEventQTable;
   PRMonitor *mEventQMonitor;
+  PRBool mIsShuttingDown;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsEventQueueServiceImpl, NS_EVENTQUEUESERVICE_CID)
 
 ////////////////////////////////////////////////////////////////////////////////
 

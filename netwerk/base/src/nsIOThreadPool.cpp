@@ -68,7 +68,7 @@ static PRLogModuleInfo *gIOThreadPoolLog = nsnull;
 // the thread pool are dispatched on one of the threads.  a variable number
 // of threads are maintained.  the threads die off if they remain idle for
 // more than THREAD_IDLE_TIMEOUT.  the thread pool shuts down when it receives
-// the "xpcom-shutdown" event.
+// the "xpcom-shutdown-threads" event.
 //-----------------------------------------------------------------------------
 
 class nsIOThreadPool : public nsIEventTarget
@@ -125,10 +125,10 @@ nsIOThreadPool::Init()
 
     PR_INIT_CLIST(&mEventQ);
 
-    // we want to shutdown the i/o thread pool at xpcom-shutdown time...
+    // We want to shutdown the i/o thread pool at xpcom-shutdown-threads time.
     nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
     if (os)
-        os->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+        os->AddObserver(this, "xpcom-shutdown-threads", PR_FALSE);
     return NS_OK;
 }
 
@@ -224,7 +224,7 @@ nsIOThreadPool::IsOnCurrentThread(PRBool *result)
 NS_IMETHODIMP
 nsIOThreadPool::Observe(nsISupports *, const char *topic, const PRUnichar *)
 {
-    NS_ASSERTION(strcmp(topic, "xpcom-shutdown") == 0, "unexpected topic");
+    NS_ASSERTION(strcmp(topic, "xpcom-shutdown-threads") == 0, "unexpected topic");
     Shutdown();
     return NS_OK;
 }

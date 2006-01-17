@@ -700,7 +700,7 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 //
 // - Notify "xpcom-shutdown" for modules to release primary (root) references
 // - Notify "xpcom-shutdown-threads" for thread joins
-// - Shutdown the main event queue (TODO)
+// - Shutdown the event queues
 // - Release the Global Service Manager
 //   - Release all service instances held by the global service manager
 //   - Release the Global Service Manager itself
@@ -718,16 +718,22 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
     nsresult rv;
 
-    // grab the event queue so that we can process events before exiting.
-    nsCOMPtr <nsIEventQueue> currentQ;
-    NS_GetCurrentEventQ(getter_AddRefs(currentQ));
-
     nsCOMPtr<nsISimpleEnumerator> moduleLoaders;
 
     // Notify observers of xpcom shutting down
     {
         // Block it so that the COMPtr will get deleted before we hit
         // servicemanager shutdown
+
+        // grab the event queue service so that we can process events and
+        // manage event queues 
+        nsRefPtr<nsEventQueueServiceImpl> eqs;
+        CallGetService(NS_EVENTQUEUESERVICE_CONTRACTID,
+                       (nsEventQueueServiceImpl**) getter_AddRefs(eqs));
+ 
+        nsCOMPtr <nsIEventQueue> currentQ;
+        NS_GetCurrentEventQ(getter_AddRefs(currentQ), eqs);
+
         nsCOMPtr<nsIObserverService> observerService =
                  do_GetService("@mozilla.org/observer-service;1");
 
@@ -754,6 +760,12 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
         if (currentQ)
             currentQ->ProcessPendingEvents();
 
+        if (eqs)
+            eqs->Shutdown();
+
+        if (currentQ)
+            currentQ->ProcessPendingEvents();
+
         // We save the "xpcom-shutdown-loaders" observers to notify after
         // the observerservice is gone.
         if (observerService)
@@ -774,11 +786,6 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // here again:
     NS_IF_RELEASE(servMgr);
 
-    if (currentQ) {
-        currentQ->ProcessPendingEvents();
-        currentQ = 0;
-    }
-    
     // Shutdown global servicemanager
     if (nsComponentManagerImpl::gComponentManager) {
         nsComponentManagerImpl::gComponentManager->FreeServices();

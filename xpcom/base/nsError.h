@@ -295,6 +295,11 @@
 
 #define NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM,  1)
 
+/**
+ * Various operations are not permitted during XPCOM shutdown and will fail
+ * with this exception.
+ */
+#define NS_ERROR_ILLEGAL_DURING_SHUTDOWN        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM, 30)
 
  /*
   * This will return the nsresult corresponding to the most recent NSPR failure
