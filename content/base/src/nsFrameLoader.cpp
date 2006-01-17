@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -107,11 +108,17 @@ nsFrameLoader::LoadFrame()
 
   nsCOMPtr<nsIURI> base_uri = mOwnerContent->GetBaseURI();
   const nsAFlatCString &doc_charset = doc->GetDocumentCharacterSet();
+  const char *charset = doc_charset.IsEmpty() ? nsnull : doc_charset.get();
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), src,
-                          doc_charset.IsEmpty() ? nsnull : doc_charset.get(),
-                          base_uri);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), src, charset, base_uri);
+
+  // If the URI was malformed, try to recover by loading about:blank.
+  if (rv == NS_ERROR_MALFORMED_URI) {
+    rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_STRING("about:blank"),
+                   charset);
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
   return LoadURI(uri);
 }
