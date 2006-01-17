@@ -138,7 +138,7 @@ $dbtool->AddField("users", "is_admin", "tinyint(1) default '0'");
 
 # replace enums with more portable and flexible formats:
 $dbtool->ChangeFieldType("products", "enabled", 'tinyint default \'1\'');
-$dbtool->ChangeFieldType("test_groups", "obsolete", 'tinyint default \'1\'');
+$dbtool->ChangeFieldType("test_groups", "obsolete", 'tinyint default \'0\'');
 
 # javascript cache
 print "Rebuilding JS cache...";
