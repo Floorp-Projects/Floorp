@@ -4311,10 +4311,10 @@ nsGlobalHistory::AutoCompleteTypedSearch(nsIAutoCompleteMdbResult **aResult)
   result->Init(mEnv, mTable);
   result->SetTokens(kToken_URLColumn, nsIAutoCompleteMdbResult::kCharType, kToken_NameColumn, nsIAutoCompleteMdbResult::kUnicharType);
 
-  nsIMdbRow *row = nsnull;
+  nsCOMPtr<nsIMdbRow> row;
   mdb_pos pos;
   do {
-    rowCursor->PrevRow(mEnv, &row, &pos);
+    rowCursor->PrevRow(mEnv, getter_AddRefs(row), &pos);
     if (!row) break;
     
     if (HasCell(mEnv, row, kToken_TypedColumn)) {
