@@ -497,6 +497,24 @@ void gfxContext::Paint(gfxFloat alpha)
     cairo_paint_with_alpha(mCairo, alpha);
 }
 
+// groups
+
+void gfxContext::PushGroup()
+{
+    cairo_push_group(mCairo);
+}
+
+gfxPattern *gfxContext::PopGroup()
+{
+    cairo_pattern_t *pat = cairo_pop_group(mCairo);
+    return new gfxPattern(pat);
+}
+
+void gfxContext::PopGroupToSource()
+{
+    cairo_pop_group_to_source(mCairo);
+}
+
 // filters
 void gfxContext::PushFilter(gfxFilter& filter, FilterHints hints, gfxRect& maxArea)
 {

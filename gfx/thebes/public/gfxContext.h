@@ -478,6 +478,13 @@ public:
     void Clip(const gfxRegion& region); // will clip to a region
 
     /**
+     * Groups
+     */
+    void PushGroup();
+    gfxPattern *PopGroup();
+    void PopGroupToSource();
+
+    /**
      ** Filters/Group Rendering
      ** XXX these aren't really "filters" and should be renamed properly.
      **/
