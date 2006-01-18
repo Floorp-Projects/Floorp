@@ -244,10 +244,11 @@ var PlacesPage = {
   _setHeader: function(isSearch, text) {
     var bundle = document.getElementById("placeBundle");
     var key = isSearch ? "headerTextResultsFor" : "headerTextShowing";
-    var title = bundle.getFormattedString(key, [text]);
+    var showingPrefix = document.getElementById("showingPrefix");
+    showingPrefix.setAttribute("value", bundle.getString(key));
     
-    var titlebarText = document.getElementById("titlebartext");
-    titlebarText.setAttribute("value", title);
+    var contentTitle = document.getElementById("contentTitle");
+    contentTitle.setAttribute("value", text);
     
     var searchModifiers = document.getElementById("searchModifiers");
     searchModifiers.hidden = !isSearch;

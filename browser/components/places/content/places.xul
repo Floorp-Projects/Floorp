@@ -85,7 +85,8 @@
       <deck id="content" flex="1">
         <vbox flex="1">
           <hbox id="titlebar" align="center">
-            <label id="titlebartext"/>
+            <label id="showingPrefix"/>
+            <label id="contentTitle"/>
             <spacer flex="1"/>
             <hbox id="searchModifiers" hidden="true" align="center">
               <button id="saveSearch" class="small" 

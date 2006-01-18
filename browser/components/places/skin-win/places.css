@@ -3,6 +3,7 @@
   -moz-appearance: tabpanels;
   margin: -10px;
   padding: 8px 6px 6px 8px;
+  -moz-user-focus: ignore;
 }
 
 #splitter {
@@ -113,13 +114,17 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 /* Title Bar */
 #titlebar {
   background-color: -moz-Dialog;
-  font-weight: bold;
   border-bottom: 2px solid;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
 }
 
-#titlebartext {
-  margin: 5px 8px;
+#showingPrefix {
+  margin: 5px 0.33em 5px 8px;
+}
+
+#contentTitle {
+  margin: 5px 8px 5px 0px;
+  font-weight: bold;
 }
 
 /* Search Bar */
