@@ -3095,6 +3095,15 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     } 
     else
     {
+        // The prompter reqires that our private window has a document (or it
+        // asserts). Satisfy that assertion now since GetDocument will force
+        // creation of one if it hasn't already been created.
+        nsCOMPtr<nsPIDOMWindow> pwin(do_QueryInterface(mScriptGlobal));
+        if (pwin) {
+            nsCOMPtr<nsIDOMDocument> doc;
+            pwin->GetDocument(getter_AddRefs(doc));
+        }
+
         // Display a message box
         prompter->Alert(nsnull, messageStr.get());
     }
