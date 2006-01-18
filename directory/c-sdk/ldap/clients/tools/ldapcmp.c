@@ -104,7 +104,7 @@ main( int argc, char **argv )
     sizelimit = timelimit = 0;
     scope = LDAP_SCOPE_SUBTREE;
 
-    optind = ldaptool_process_args( argc, argv, "Bb:l:s:z:", 0,
+    optind = ldaptool_process_args( argc, argv, "Bb:l:s:z:", 1,
 	    options_callback );
 
     if ( optind == -1 ) {
