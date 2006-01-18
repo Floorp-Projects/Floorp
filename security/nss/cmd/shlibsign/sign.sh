@@ -50,6 +50,8 @@ OpenVMS)
     export DYLD_LIBRARY_PATH
     LIBRARY_PATH=${1}/lib:${4}:$LIBRARY_PATH
     export LIBRARY_PATH
+    ADDON_PATH=${1}/lib:${4}:$ADDON_PATH
+    export ADDON_PATH
     echo ${2}/shlibsign -v -i ${5}
     ${2}/shlibsign -v -i ${5}
     ;;
