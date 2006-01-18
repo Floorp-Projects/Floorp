@@ -204,6 +204,10 @@ case "$target" in
     rm shunt.out
     $srcdir/build/wince/tools/topsrcdir.h
 
+    `$srcdir/build/cygwin-wrapper evc $srcdir/build/wince/shunt/build/static/shunt.vcw /MAKE ALL > shunt.out <<\EOF`
+    cat shunt.out
+    rm shunt.out
+
     echo -n "#define TOPSRCDIR \"" > $srcdir/build/wince/tools/topsrcdir.h
     `$srcdir/build/cygwin-wrapper echo -n $_topsrcdir >> $srcdir/build/wince/tools/topsrcdir.h`
     echo -n \" >> $srcdir/build/wince/tools/topsrcdir.h
