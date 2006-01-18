@@ -222,6 +222,8 @@ const nsIEmbedElement    = Components.interfaces.nsIDOMHTMLEmbedElement
 const nsIButtonElement   = Components.interfaces.nsIDOMHTMLButtonElement
 const nsISelectElement   = Components.interfaces.nsIDOMHTMLSelectElement
 const nsITextareaElement = Components.interfaces.nsIDOMHTMLTextAreaElement
+const nsIQuoteElement    = Components.interfaces.nsIDOMHTMLQuoteElement
+const nsIModElement      = Components.interfaces.nsIDOMHTMLModElement
 
 // Interface for image loading content
 const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
@@ -267,6 +269,8 @@ function onLoadPageInfo()
   gStrings.linkStylesheet = theBundle.getString("linkStylesheet");
   gStrings.linkRev = theBundle.getString("linkRev");
   gStrings.linkX = theBundle.getString("linkX");
+  gStrings.linkQuote = theBundle.getString("linkQuote");
+  gStrings.linkMod = theBundle.getString("linkMod");
   gStrings.mediaImg = theBundle.getString("mediaImg");
   gStrings.mediaBGImg = theBundle.getString("mediaBGImg");
   gStrings.mediaApplet = theBundle.getString("mediaApplet");
@@ -534,6 +538,10 @@ function grabAll(elem)
     addImage(elem.src, gStrings.mediaImg, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false);
   else if (elem instanceof nsIAreaElement)
     linkView.addRow([elem.alt, elem.href, gStrings.linkArea, elem.target]);
+  else if (elem instanceof nsIQuoteElement && elem.cite)
+    linkView.addRow([getValueText(elem), elem.cite, gStrings.linkQuote]);
+  else if (elem instanceof nsIModElement && elem.cite)
+    linkView.addRow([getValueText(elem), elem.cite, gStrings.linkMod]);
   else if (elem instanceof nsILinkElement)
   {
     if (elem.rel)
