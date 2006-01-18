@@ -274,9 +274,14 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     surface->clip_rect.width = width;
     surface->clip_rect.height = height;
 
-    surface->set_clip = 0;
-    surface->saved_clip = NULL;
-    
+    surface->saved_clip = CreateRectRgn (0, 0, 0, 0);
+    if (GetClipRgn (surface->dc, surface->saved_clip) == 0) {
+        DeleteObject(surface->saved_clip);
+        surface->saved_clip = NULL;
+    }
+
+    surface->extents = surface->clip_rect;
+
     _cairo_surface_init (&surface->base, &cairo_win32_surface_backend);
 
     return (cairo_surface_t *)surface;
@@ -340,9 +345,8 @@ _cairo_win32_surface_finish (void *abstract_surface)
     if (surface->image)
 	cairo_surface_destroy (surface->image);
 
-    if (surface->saved_clip) {
+    if (surface->saved_clip)
 	DeleteObject (surface->saved_clip);
-    }
 
     /* If we created the Bitmap and DC, destroy them */
     if (surface->bitmap) {
@@ -403,7 +407,7 @@ _cairo_win32_surface_acquire_source_image (void                    *abstract_sur
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_win32_surface_t *local = NULL;
     cairo_status_t status;
-        
+
     if (surface->image) {
 	*image_out = (cairo_image_surface_t *)surface->image;
 	*image_extra = NULL;
@@ -446,7 +450,7 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
     cairo_status_t status;
     RECT clip_box;
     int x1, y1, x2, y2;
-        
+
     if (surface->image) {
 	image_rect->x = 0;
 	image_rect->y = 0;
@@ -461,12 +465,12 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
 
     if (GetClipBox (surface->dc, &clip_box) == ERROR)
 	return _cairo_win32_print_gdi_error ("_cairo_win3_surface_acquire_dest_image");
-    
+
     x1 = clip_box.left;
     x2 = clip_box.right;
     y1 = clip_box.top;
     y2 = clip_box.bottom;
-    
+
     if (interest_rect->x > x1)
 	x1 = interest_rect->x;
     if (interest_rect->y > y1)
@@ -855,19 +859,9 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 
     if (region == NULL) {
 	/* Clear any clip set by cairo, return to the original */
-	
-	if (surface->set_clip) {
-	    if (SelectClipRgn (surface->dc, surface->saved_clip) == ERROR)
-		return _cairo_win32_print_gdi_error ("_cairo_win32_surface_set_clip_region");
+	if (SelectClipRgn (surface->dc, surface->saved_clip) == ERROR)
+	    return _cairo_win32_print_gdi_error ("_cairo_win32_surface_set_clip_region (reset)");
 
-	    if (surface->saved_clip) {
-		DeleteObject (surface->saved_clip);
-		surface->saved_clip = NULL;
-	    }
-
-	    surface->set_clip = 0;
-	}
-	    
 	return CAIRO_STATUS_SUCCESS;
     
     } else {
@@ -910,35 +904,15 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 	if (!gdi_region)
 	    return CAIRO_STATUS_NO_MEMORY;
 
-	if (surface->set_clip) {
-	    /* Combine the new region with the original clip */
+	/* Combine the new region with the original clip */
 	    
-	    if (surface->saved_clip) {
-		if (CombineRgn (gdi_region, gdi_region, surface->saved_clip, RGN_AND) == ERROR)
-		    goto FAIL;
-	    }
-
-	    if (SelectClipRgn (surface->dc, gdi_region) == ERROR)
+	if (surface->saved_clip) {
+	    if (CombineRgn (gdi_region, gdi_region, surface->saved_clip, RGN_AND) == ERROR)
 		goto FAIL;
-		
-	} else {
-	    /* Save the the current region */
-
-	    surface->saved_clip = CreateRectRgn (0, 0, 0, 0);
-	    if (!surface->saved_clip) {
-		goto FAIL;	    }
-
-	    /* This function has no error return! */
-	    if (GetClipRgn (surface->dc, surface->saved_clip) == 0) { /* No clip */
-		DeleteObject (surface->saved_clip);
-		surface->saved_clip = NULL;
-	    }
-		
-	    if (ExtSelectClipRgn (surface->dc, gdi_region, RGN_AND) == ERROR)
-		goto FAIL;
-
-	    surface->set_clip = 1;
 	}
+
+	if (SelectClipRgn (surface->dc, gdi_region) == ERROR)
+	    goto FAIL;
 
 	DeleteObject (gdi_region);
 	return CAIRO_STATUS_SUCCESS;
@@ -955,15 +929,8 @@ _cairo_win32_surface_get_extents (void		    *abstract_surface,
 				  cairo_rectangle_t *rectangle)
 {
     cairo_win32_surface_t *surface = abstract_surface;
-    RECT clip_box;
 
-    if (GetClipBox (surface->dc, &clip_box) == ERROR)
-	return _cairo_win32_print_gdi_error ("_cairo_win3_surface_acquire_dest_image");
-
-    rectangle->x = clip_box.left;
-    rectangle->y = clip_box.top;
-    rectangle->width  = clip_box.right  - clip_box.left;
-    rectangle->height = clip_box.bottom - clip_box.top;
+    *rectangle = surface->extents;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1007,8 +974,19 @@ cairo_win32_surface_create (HDC hdc)
     surface->clip_rect.width = rect.right - rect.left;
     surface->clip_rect.height = rect.bottom - rect.top;
 
-    surface->set_clip = 0;
-    surface->saved_clip = NULL;
+    if (surface->clip_rect.width == 0 ||
+        surface->clip_rect.height == 0)
+    {
+        surface->saved_clip = NULL;
+    } else {
+        surface->saved_clip = CreateRectRgn (0, 0, 0, 0);
+        if (GetClipRgn (hdc, surface->saved_clip) == 0) {
+            DeleteObject(surface->saved_clip);
+            surface->saved_clip = NULL;
+        }
+    }
+
+    surface->extents = surface->clip_rect;
 
     _cairo_surface_init (&surface->base, &cairo_win32_surface_backend);
 

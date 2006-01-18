@@ -35,6 +35,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-clip-private.h"
+
 /**
  * cairo_debug_reset_static_data:
  * 
@@ -68,6 +70,45 @@ cairo_debug_reset_static_data (void)
 #if CAIRO_HAS_FT_FONT
     _cairo_ft_font_reset_static_data ();
 #endif
+}
+
+/*
+ * clip dumper
+ */
+void
+cairo_debug_dump_clip (struct _cairo_clip *clip,
+                       FILE *fp)
+{
+    fprintf (fp, "clip %p: %s ", (clip->mode == CAIRO_CLIP_MODE_PATH ? "PATH" :
+                                  clip->mode == CAIRO_CLIP_MODE_REGION ? "REGION" :
+                                  clip->mode == CAIRO_CLIP_MODE_MASK ? "MASK" :
+                                  "INVALID?!"));
+    if (clip->mode == CAIRO_CLIP_MODE_PATH) {
+        fprintf (fp, "\n=== clip path ===\n");
+    } else if (clip->mode == CAIRO_CLIP_MODE_REGION) {
+        if (!clip->region) {
+            fprintf (fp, "region = NULL");
+        } else if (pixman_region_num_rects (clip->region) == 1) {
+            pixman_box16_t *rects = pixman_region_rects (clip->region);
+            fprintf (fp, "region [%d %d %d %d]",
+                     rects[0].x1, rects[0].y1,
+                     rects[0].x2, rects[0].y2);
+        } else {
+            pixman_box16_t *rects = pixman_region_rects (clip->region);
+            int i, nr = pixman_region_num_rects(clip->region);
+            fprintf (fp, "region (%d rects)\n", nr);
+            for (i = 0; i < nr; i++) {
+                fprintf (fp, "rect %d: [%d %d %d %d]", i,
+                         rects[nr].x1, rects[nr].y1,
+                         rects[nr].x2, rects[nr].y2);
+            }
+        }
+    } else if (clip->mode == CAIRO_CLIP_MODE_MASK) {
+        fprintf (fp, "mask, surface: %p rect: [%d %d %d %d]", clip->surface,
+                 clip->surface_rect.x, clip->surface_rect.y, clip->surface_rect.width, clip->surface_rect.height);
+    }
+
+    fprintf (fp, "\n");
 }
 
 /*

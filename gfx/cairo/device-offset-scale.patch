@@ -2,7 +2,7 @@ Index: src/cairo-gstate.c
 ===================================================================
 --- src/cairo-gstate.c.orig
 +++ src/cairo-gstate.c
-@@ -501,37 +501,10 @@ _cairo_gstate_get_miter_limit (cairo_gst
+@@ -508,37 +508,10 @@ _cairo_gstate_get_miter_limit (cairo_gst
      return gstate->stroke_style.miter_limit;
  }
  
@@ -40,7 +40,7 @@ Index: src/cairo-gstate.c
  }
  
  cairo_status_t
-@@ -617,9 +590,6 @@ _cairo_gstate_set_matrix (cairo_gstate_t
+@@ -624,9 +597,6 @@ _cairo_gstate_set_matrix (cairo_gstate_t
      if (status)
  	return status;
  
@@ -50,7 +50,7 @@ Index: src/cairo-gstate.c
      return CAIRO_STATUS_SUCCESS;
  }
  
-@@ -631,9 +601,6 @@ _cairo_gstate_identity_matrix (cairo_gst
+@@ -638,9 +608,6 @@ _cairo_gstate_identity_matrix (cairo_gst
      cairo_matrix_init_identity (&gstate->ctm);
      cairo_matrix_init_identity (&gstate->ctm_inverse);
  
@@ -60,7 +60,7 @@ Index: src/cairo-gstate.c
      return CAIRO_STATUS_SUCCESS;
  }
  
-@@ -675,15 +642,11 @@ void
+@@ -682,15 +649,11 @@ void
  _cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y)
  {
      cairo_matrix_transform_point (&gstate->ctm, x, y);
@@ -76,7 +76,7 @@ Index: src/cairo-gstate.c
      cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
  }
  
-@@ -704,16 +667,8 @@ _cairo_gstate_copy_transformed_pattern (
+@@ -711,16 +674,8 @@ _cairo_gstate_copy_transformed_pattern (
  					cairo_pattern_t *original,
  					cairo_matrix_t  *ctm_inverse)
  {
@@ -237,7 +237,7 @@ Index: src/cairo-surface.c
  /**
   * _cairo_surface_set_error:
   * @surface: a surface
-@@ -523,7 +539,10 @@ cairo_surface_mark_dirty_rectangle (cair
+@@ -533,7 +549,10 @@ cairo_surface_mark_dirty_rectangle (cair
      if (surface->backend->mark_dirty_rectangle) {
  	cairo_status_t status;
  	
@@ -249,7 +249,7 @@ Index: src/cairo-surface.c
  	
  	if (status)
  	    _cairo_surface_set_error (surface, status);
-@@ -618,6 +637,7 @@ _cairo_surface_release_source_image (cai
+@@ -628,6 +647,7 @@ _cairo_surface_release_source_image (cai
   * @surface: a #cairo_surface_t
   * @interest_rect: area of @surface for which fallback drawing is being done.
   *    A value of %NULL indicates that the entire surface is desired.
@@ -257,7 +257,7 @@ Index: src/cairo-surface.c
   * @image_out: location to store a pointer to an image surface that includes at least
   *    the intersection of @interest_rect with the visible area of @surface.
   *    This surface could be @surface itself, a surface held internal to @surface,
-@@ -650,10 +670,26 @@ _cairo_surface_acquire_dest_image (cairo
+@@ -660,10 +680,26 @@ _cairo_surface_acquire_dest_image (cairo
  				   cairo_rectangle_t       *image_rect,
  				   void                   **image_extra)
  {
@@ -286,7 +286,7 @@ Index: src/cairo-surface.c
  }
  
  /**
-@@ -675,10 +711,22 @@ _cairo_surface_release_dest_image (cairo
+@@ -685,10 +721,22 @@ _cairo_surface_release_dest_image (cairo
  				   cairo_rectangle_t      *image_rect,
  				   void                   *image_extra)
  {
@@ -310,7 +310,7 @@ Index: src/cairo-surface.c
  					      image, image_rect, image_extra);
  }
  
-@@ -714,6 +762,13 @@ _cairo_surface_clone_similar (cairo_surf
+@@ -724,6 +772,13 @@ _cairo_surface_clone_similar (cairo_surf
  	return CAIRO_INT_STATUS_UNSUPPORTED;
        
      status = surface->backend->clone_similar (surface, src, clone_out);
@@ -324,7 +324,7 @@ Index: src/cairo-surface.c
      if (status != CAIRO_INT_STATUS_UNSUPPORTED)
  	return status;
  
-@@ -722,6 +777,12 @@ _cairo_surface_clone_similar (cairo_surf
+@@ -732,6 +787,12 @@ _cairo_surface_clone_similar (cairo_surf
  	return status;
  
      status = surface->backend->clone_similar (surface, &image->base, clone_out);
@@ -337,7 +337,7 @@ Index: src/cairo-surface.c
  
      /* If the above failed point, we could implement a full fallback
       * using acquire_dest_image, but that's going to be very
-@@ -798,7 +859,8 @@ _cairo_surface_composite (cairo_operator
+@@ -808,7 +869,8 @@ _cairo_surface_composite (cairo_operator
  					  src, mask, dst,
  					  src_x, src_y,
  					  mask_x, mask_y,
@@ -347,7 +347,7 @@ Index: src/cairo-surface.c
  					  width, height);
  	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
  	    return status;
-@@ -927,6 +989,8 @@ _cairo_surface_fill_rectangles (cairo_su
+@@ -937,6 +999,8 @@ _cairo_surface_fill_rectangles (cairo_su
  				int			num_rects)
  {
      cairo_int_status_t status;
@@ -356,7 +356,7 @@ Index: src/cairo-surface.c
  
      assert (! surface->is_snapshot);
  
-@@ -940,8 +1004,26 @@ _cairo_surface_fill_rectangles (cairo_su
+@@ -950,8 +1014,26 @@ _cairo_surface_fill_rectangles (cairo_su
  	return CAIRO_STATUS_SUCCESS;
  
      if (surface->backend->fill_rectangles) {
@@ -385,7 +385,7 @@ Index: src/cairo-surface.c
  	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
  	    return status;
      }
-@@ -1002,10 +1084,31 @@ _cairo_surface_stroke (cairo_surface_t		
+@@ -1012,10 +1094,31 @@ _cairo_surface_stroke (cairo_surface_t		
  
      if (surface->backend->stroke) {
  	cairo_status_t status;
@@ -418,7 +418,7 @@ Index: src/cairo-surface.c
  	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
  	    return status;
      }
-@@ -1026,13 +1129,33 @@ _cairo_surface_fill (cairo_surface_t	*su
+@@ -1036,13 +1139,33 @@ _cairo_surface_fill (cairo_surface_t	*su
  		     cairo_antialias_t	 antialias)
  {
      cairo_status_t status;
@@ -453,7 +453,7 @@ Index: src/cairo-surface.c
  	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
  	    return status;
      }
-@@ -1057,6 +1180,7 @@ _cairo_surface_composite_trapezoids (cai
+@@ -1067,6 +1190,7 @@ _cairo_surface_composite_trapezoids (cai
  				     int			num_traps)
  {
      cairo_int_status_t status;
@@ -461,7 +461,7 @@ Index: src/cairo-surface.c
  
      assert (! dst->is_snapshot);
  
-@@ -1072,13 +1196,36 @@ _cairo_surface_composite_trapezoids (cai
+@@ -1082,13 +1206,36 @@ _cairo_surface_composite_trapezoids (cai
  	return CAIRO_STATUS_SURFACE_FINISHED;
  
      if (dst->backend->composite_trapezoids) {
@@ -500,7 +500,7 @@ Index: src/cairo-surface.c
  	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
  	    return status;
      }
-@@ -1225,6 +1372,9 @@ _cairo_surface_set_clip_region (cairo_su
+@@ -1235,6 +1382,9 @@ _cairo_surface_set_clip_region (cairo_su
  				pixman_region16_t   *region,
  				unsigned int	    serial)
  {
@@ -510,7 +510,7 @@ Index: src/cairo-surface.c
      if (surface->status)
  	return surface->status;
  
-@@ -1232,10 +1382,48 @@ _cairo_surface_set_clip_region (cairo_su
+@@ -1242,10 +1392,50 @@ _cairo_surface_set_clip_region (cairo_su
  	return CAIRO_STATUS_SURFACE_FINISHED;
      
      assert (surface->backend->set_clip_region != NULL);
@@ -532,12 +532,14 @@ Index: src/cairo-surface.c
 +	    pixman_box16_t *rects = pixman_region_rects (region);
 +	    for (i = 0; i < nr; i++) {
 +		pixman_box16_t tmpb;
++		pixman_region16_t *tmpr;
++
 +		tmpb.x1 = BACKEND_X(surface, rects[i].x1);
 +		tmpb.y1 = BACKEND_Y(surface, rects[i].y1);
 +		tmpb.x2 = BACKEND_X(surface, rects[i].x2);
 +		tmpb.y2 = BACKEND_Y(surface, rects[i].y2);
 +
-+		pixman_region16_t *tmpr = pixman_region_create_simple (&tmpb);
++		tmpr = pixman_region_create_simple (&tmpb);
 +
 +		pixman_region_append (dev_region, tmpr);
 +		pixman_region_destroy (tmpr);
@@ -561,7 +563,7 @@ Index: src/cairo-surface.c
  }
  
  cairo_int_status_t
-@@ -1245,6 +1433,10 @@ _cairo_surface_intersect_clip_path (cair
+@@ -1255,6 +1445,10 @@ _cairo_surface_intersect_clip_path (cair
  				    double		tolerance,
  				    cairo_antialias_t	antialias)
  {
@@ -572,7 +574,7 @@ Index: src/cairo-surface.c
      if (surface->status)
  	return surface->status;
  
-@@ -1253,11 +1445,30 @@ _cairo_surface_intersect_clip_path (cair
+@@ -1263,11 +1457,30 @@ _cairo_surface_intersect_clip_path (cair
      
      assert (surface->backend->intersect_clip_path != NULL);
  
@@ -608,7 +610,7 @@ Index: src/cairo-surface.c
  }
  
  static cairo_status_t
-@@ -1273,11 +1484,11 @@ _cairo_surface_set_clip_path_recursive (
+@@ -1283,11 +1496,11 @@ _cairo_surface_set_clip_path_recursive (
      if (status)
  	return status;
  
@@ -625,7 +627,7 @@ Index: src/cairo-surface.c
  }
  
  /**
-@@ -1374,13 +1585,20 @@ cairo_status_t
+@@ -1390,13 +1603,20 @@ cairo_status_t
  _cairo_surface_get_extents (cairo_surface_t   *surface,
  			    cairo_rectangle_t *rectangle)
  {
@@ -647,7 +649,7 @@ Index: src/cairo-surface.c
  }
  
  cairo_status_t
-@@ -1392,13 +1610,34 @@ _cairo_surface_show_glyphs (cairo_surfac
+@@ -1408,13 +1628,34 @@ _cairo_surface_show_glyphs (cairo_surfac
  			    cairo_scaled_font_t	*scaled_font)
  {
      cairo_status_t status;
@@ -684,7 +686,7 @@ Index: src/cairo-surface.c
  	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
  	    return status;
      }
-@@ -1428,6 +1667,7 @@ _cairo_surface_old_show_glyphs (cairo_sc
+@@ -1444,6 +1685,7 @@ _cairo_surface_old_show_glyphs (cairo_sc
  				int			 num_glyphs)
  {
      cairo_status_t status;
@@ -692,7 +694,7 @@ Index: src/cairo-surface.c
  
      assert (! dst->is_snapshot);
  
-@@ -1437,14 +1677,35 @@ _cairo_surface_old_show_glyphs (cairo_sc
+@@ -1453,14 +1695,35 @@ _cairo_surface_old_show_glyphs (cairo_sc
      if (dst->finished)
  	return CAIRO_STATUS_SURFACE_FINISHED;
  
@@ -731,7 +733,7 @@ Index: src/cairo-surface.c
  	status = CAIRO_INT_STATUS_UNSUPPORTED;
  
      return status;
-@@ -1554,7 +1815,15 @@ _cairo_surface_composite_fixup_unbounded
+@@ -1570,7 +1833,15 @@ _cairo_surface_composite_fixup_unbounded
      cairo_rectangle_t *mask_rectangle = NULL;
  
      assert (! dst->is_snapshot);
@@ -748,7 +750,7 @@ Index: src/cairo-surface.c
      /* The RENDER/libpixman operators are clipped to the bounds of the untransformed,
       * non-repeating sources and masks. Other sources and masks can be ignored.
       */
-@@ -1629,6 +1898,10 @@ _cairo_surface_composite_shape_fixup_unb
+@@ -1645,6 +1916,10 @@ _cairo_surface_composite_shape_fixup_unb
      cairo_rectangle_t *mask_rectangle = NULL;
  
      assert (! dst->is_snapshot);
@@ -827,7 +829,7 @@ Index: src/cairoint.h
 ===================================================================
 --- src/cairoint.h.orig
 +++ src/cairoint.h
-@@ -1460,6 +1460,13 @@ _cairo_path_fixed_bounds (cairo_path_fix
+@@ -1466,6 +1466,13 @@ _cairo_path_fixed_bounds (cairo_path_fix
  			  double *x1, double *y1,
  			  double *x2, double *y2);
  
@@ -841,7 +843,7 @@ Index: src/cairoint.h
  /* cairo_path_fill.c */
  cairo_private cairo_status_t
  _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
-@@ -1978,6 +1985,13 @@ cairo_private cairo_status_t
+@@ -1984,6 +1991,13 @@ cairo_private cairo_status_t
  _cairo_traps_extract_region (cairo_traps_t      *tr,
  			     pixman_region16_t **region);
  

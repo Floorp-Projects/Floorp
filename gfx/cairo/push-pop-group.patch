@@ -151,25 +151,23 @@ Index: src/cairo-gstate.c
 -			      0, 0,
 -			      _cairo_surface_get_width (gstate->target),
 -			      _cairo_surface_get_height (gstate->target));
--
++    /* If this gstate is already redirected, this is an error; we need a
++     * new gstate to be able to redirect */
++    assert (gstate->parent_target == NULL);
+ 
 -    _cairo_surface_fini (&mask);
 -
 -    pix = _cairo_surface_get_drawable (gstate->target);
 -    XFreePixmap (gstate->dpy, pix);
--
--    cairo_surface_destroy (gstate->target);
--    gstate->target = gstate->parent_surface;
--    gstate->parent_surface = NULL;
-+    /* If this gstate is already redirected, this is an error; we need a
-+     * new gstate to be able to redirect */
-+    assert (gstate->parent_target == NULL);
-+
 +    /* Set up our new parent_target based on our current target;
 +     * gstate->parent_target will take the ref that is held by gstate->target
 +     */
 +    cairo_surface_destroy (gstate->parent_target);
 +    gstate->parent_target = gstate->target;
-+
+ 
+-    cairo_surface_destroy (gstate->target);
+-    gstate->target = gstate->parent_surface;
+-    gstate->parent_surface = NULL;
 +    /* Now set up our new target; we overwrite gstate->target directly,
 +     * since its ref is now owned by gstate->parent_target */
 +    gstate->target = cairo_surface_reference (child);
@@ -449,7 +447,7 @@ Index: src/cairoint.h
 ===================================================================
 --- src/cairoint.h.orig
 +++ src/cairoint.h
-@@ -1073,9 +1073,24 @@ _cairo_gstate_clone (cairo_gstate_t *gst
+@@ -1077,9 +1077,24 @@ _cairo_gstate_clone (cairo_gstate_t *gst
  cairo_private void
  _moz_cairo_gstate_set_target (cairo_gstate_t *gstate, cairo_surface_t *target);
  
@@ -474,7 +472,7 @@ Index: src/cairoint.h
  cairo_private cairo_status_t
  _cairo_gstate_set_source (cairo_gstate_t *gstate, cairo_pattern_t *source);
  
-@@ -2173,6 +2188,9 @@ slim_hidden_proto(cairo_restore)
+@@ -2177,6 +2192,9 @@ slim_hidden_proto(cairo_restore)
  slim_hidden_proto(cairo_save)
  slim_hidden_proto(cairo_stroke_preserve)
  slim_hidden_proto(cairo_surface_destroy)

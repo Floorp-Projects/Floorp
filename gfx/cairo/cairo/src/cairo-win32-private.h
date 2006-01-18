@@ -62,9 +62,9 @@ typedef struct _cairo_win32_surface {
     
     cairo_rectangle_t clip_rect;
 
-    int set_clip;
     HRGN saved_clip;
 
+    cairo_rectangle_t extents;
 } cairo_win32_surface_t;
 
 cairo_status_t
