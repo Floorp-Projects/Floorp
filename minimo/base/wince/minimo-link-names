@@ -22,7 +22,6 @@ nsMorkModule
 tkAutoCompleteModule
 nsToolkitCompsModule
 nsXMLExtrasModule
-nsWebServicesModule
 nsPluginModule
 SoftKeyBoardModule
 nsPhoneSupportModule

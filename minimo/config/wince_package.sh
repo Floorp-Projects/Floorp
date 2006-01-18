@@ -99,9 +99,9 @@ cp -a ../customization/HelperAppDlg.js                    $OBJDIR/dist/minimo/co
 
 cat ../customization/ua.css.additions >> $OBJDIR/dist/minimo/res/ua.css
 
-echo Copying ARM shunt lib.  Adjust if you are not building ARM
-
-cp -a ../../build/wince/shunt/build/ARMV4Rel/shunt.dll $OBJDIR/dist/minimo
+#echo Copying ARM shunt lib.  Adjust if you are not building ARM
+#
+#cp -a ../../build/wince/shunt/build/ARMV4Rel/shunt.dll $OBJDIR/dist/minimo
 
 popd
 

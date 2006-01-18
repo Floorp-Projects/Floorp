@@ -27,7 +27,6 @@ CEShortcuts=Shortcuts
 [SourceDisksFiles]
 minimo.exe=1
 minimo_runner.exe=1
-shunt.dll=1
 
 classic.jar=2
 classic.manifest=2
@@ -89,7 +88,6 @@ Shortcuts=0,%CE11% ; Start Menuz
 [Files.minimo]
 minimo.exe,,,0
 minimo_runner.exe,,,0
-shunt.dll,,,0
 
 [Files.chrome]
 classic.jar,,,0
