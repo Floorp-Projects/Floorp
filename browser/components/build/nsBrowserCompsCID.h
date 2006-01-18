@@ -111,3 +111,9 @@
 
 #define NS_LIVEMARKSERVICE_CONTRACTID \
   "@mozilla.org/browser/livemark-service;1"
+
+#define NS_MORKHISTORYIMPORTER_CID \
+{ 0x428e6d12, 0x9c6d, 0x436f, {0xb7, 0xa3, 0x6c, 0xa5, 0xf4, 0x80, 0x92, 0x12}}
+
+#define NS_MORKHISTORYIMPORTER_CONTRACTID \
+  "@mozilla.org/browser/history-importer;1"

@@ -46,6 +46,7 @@
 #include "nsNavBookmarks.h"
 #include "nsFaviconService.h"
 #include "nsLivemarkService.h"
+#include "nsMorkHistoryImporter.h"
 #else
 #include "nsBookmarksService.h"
 #include "nsForwardProxyDataSource.h"
@@ -86,6 +87,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAnnotationService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavBookmarks, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFaviconService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLivemarkService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMorkHistoryImporter)
 #else
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsForwardProxyDataSource, Init)
@@ -174,6 +176,12 @@ static const nsModuleComponentInfo components[] =
     NS_LIVEMARKSERVICE_CID,
     NS_LIVEMARKSERVICE_CONTRACTID,
     nsLivemarkServiceConstructor },
+
+  { "Mork History Importer",
+    NS_MORKHISTORYIMPORTER_CID,
+    NS_MORKHISTORYIMPORTER_CONTRACTID,
+    nsMorkHistoryImporterConstructor },
+
 #else
 
   { "Bookmarks",

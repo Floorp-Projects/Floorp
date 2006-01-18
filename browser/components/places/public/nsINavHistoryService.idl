@@ -44,6 +44,7 @@ interface nsINavHistoryQuery;
 interface nsINavHistoryQueryOptions;
 interface nsITransactionManager;
 interface nsITreeColumn;
+interface nsIFile;
 
 [scriptable, uuid(acae2b2d-5fcd-4419-b1bc-b7dc92a1836c)]
 interface nsINavHistoryResultNode : nsISupports
@@ -813,4 +814,14 @@ interface nsINavHistoryService : nsISupports
    * Bookmark items.
    */
   readonly attribute nsITransactionManager transactionManager;
+};
+
+/**
+ * nsIMorkHistoryImporter is a service which handles importing old
+ * history files.
+ */
+[scriptable, uuid(be935aed-6929-4e44-be29-17ec89e5c8bd)]
+interface nsIMorkHistoryImporter : nsISupports
+{
+  void importHistory(in nsIFile file, in nsINavHistoryService history);
 };
