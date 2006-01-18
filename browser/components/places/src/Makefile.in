@@ -54,7 +54,7 @@ REQUIRES = xpcom \
            docshell \
            rdf \
            dom \
-           mork \
+           morkreader \
            pref \
            necko \
            intl \
@@ -89,6 +89,7 @@ CPPSRCS = \
           nsLivemarkService.cpp \
           nsBookmarksFeedHandler.cpp \
           nsMaybeWeakPtr.cpp \
+          nsMorkHistoryImporter.cpp \
           $(NULL)
 
 include $(topsrcdir)/config/rules.mk

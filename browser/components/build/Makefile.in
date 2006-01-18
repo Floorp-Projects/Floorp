@@ -69,7 +69,7 @@ REQUIRES += \
             locale \
             layout \
             dom \
-            mork \
+            morkreader \
             history \
             storage \
             places \
@@ -96,6 +96,10 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_JS_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
+
+ifdef MOZ_PLACES
+EXTRA_DSO_LDOPTS += $(DIST)/lib/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX)
+endif
 
 # Need to link to CoreFoundation for Mac Migrators (PList reading code)
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
