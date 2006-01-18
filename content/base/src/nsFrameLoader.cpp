@@ -188,7 +188,11 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
   // Kick off the load...
   rv = mDocShell->LoadURI(aURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
                           PR_FALSE);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
+#ifdef DEBUG
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to load the URL");
+  }
+#endif
 
   return rv;
 }
