@@ -2892,7 +2892,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
     str = js_NewString(cx, sb.base, STRING_BUFFER_OFFSET(&sb), 0);
 out:
     JS_LeaveLocalRootScope(cx);
-    if (!str)
+    if (!str && STRING_BUFFER_OK(&sb))
         js_FinishStringBuffer(&sb);
     XMLArrayFinish(cx, &decls);
     if (ancdecls.capacity != 0)
