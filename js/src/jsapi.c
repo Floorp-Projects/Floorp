@@ -3647,7 +3647,7 @@ JS_CompileUCScript(JSContext *cx, JSObject *obj,
 #if JS_HAS_EXCEPTIONS
 # define LAST_FRAME_EXCEPTION_CHECK(cx,result)                                \
     JS_BEGIN_MACRO                                                            \
-        if (!(result))                                                        \
+        if (!(result) && !((cx)->options & JSOPTION_DONT_REPORT_UNCAUGHT))    \
             js_ReportUncaughtException(cx);                                   \
     JS_END_MACRO
 #else
