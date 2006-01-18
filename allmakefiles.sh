@@ -88,6 +88,7 @@ db/mork/src/Makefile
 
 MAKEFILES_storage="
 db/sqlite3/src/Makefile
+db/morkreader/Makefile
 storage/Makefile
 storage/public/Makefile
 storage/src/Makefile
