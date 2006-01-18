@@ -1,6 +1,6 @@
 
 <ul id="nav">
-<li><span>Explore this Addon...</span>
+<li><span>{$addon->Name}</span>
     <ul>
     <li><a href="./addon.php?id={$addon->ID}">Overview</a></li>
     {if $addon->PreviewID}
@@ -8,14 +8,9 @@
     {/if}
     <li><a href="./comments.php?id={$addon->ID}">Comments</a></li>
     <li><a href="./history.php?id={$addon->ID}">Version History</a></li>
+    <li><a href="./addcomment.php?id={$addon->ID}">Add a Comment</a></li>
     </ul>
 </li>
-<li><span>What do you think?</span>
-    <ul>
-    <li><a href="./addcomment.php?id={$addon->ID}">Add a Comment</a></li>
-    <li><a href="./mailfriend.php?id={$addon->ID}">Email a Friend</a></li>
-    <li><a href="./report.php?id={$addon->ID}">Report a Bug</a></li>
-    </ul>
 <li><span>Find similar Addons...</span>
     <ul>
     {section name=cats loop=$addon->AddonCats}
@@ -27,7 +22,6 @@
 <li><span>More about the author...</span>
     <ul>
     <li><a href="./author.php?id={$addon->UserID}">{$addon->UserName}</a></li>
-    <li><a href="./mailauthor.php?id={$addon->UserID}">Contact this Author</a></li>
     </ul>
 </ul>
 
