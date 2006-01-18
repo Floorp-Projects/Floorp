@@ -1702,18 +1702,14 @@ mips-sony-newsos*)
     AC_DEFINE(__svr4__)
     AC_DEFINE(SOLARIS)
     AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
-    LD=/usr/ccs/bin/ld
-    RANLIB=/usr/ccs/bin/ranlib
-    DSO_LDOPTS='-G -h $(notdir $@)'
-    if test -n "$GNU_CC"; then
+    if test -n "$GNU_CC" ; then
+        if test -n "$USE_64"; then
+            CC="$CC -m64"
+            CXX="$CXX -m64"
+        fi
+        LD='$(CC)'
+        DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
         DSO_CFLAGS=-fPIC
-    else
-        DSO_CFLAGS=-KPIC
-    fi
-    if test -z "$GNU_AS"; then
-        ASFLAGS="$ASFLAGS -Wa,-P"
-    fi
-    if test -n "$GNU_CC"; then
         CFLAGS="$CFLAGS -Wall"
         CXXFLAGS="$CXXFLAGS -Wall"
         if test -n "$USE_MDUPDATE"; then
@@ -1721,6 +1717,14 @@ mips-sony-newsos*)
             CXXFLAGS="$CXXFLAGS -MDupdate \$(DEPENDENCIES)"
         fi
     else
+        LD=/usr/ccs/bin/ld
+        RANLIB=/usr/ccs/bin/ranlib
+    	DSO_LDOPTS='-G -h $(notdir $@)'
+        DSO_CFLAGS=-KPIC
+    	if test -n "$USE_64"; then
+            CC="$CC -xarch=v9"
+            CXX="$CXX -xarch=v9"
+        fi
         CC="$CC -xstrconst"
         CXX="$CXX -Qoption cg -xstrconst"
         if test -z "$MOZ_OPTIMIZE"; then
@@ -1728,13 +1732,8 @@ mips-sony-newsos*)
             CXXFLAGS="$CXXFLAGS -xs"
         fi
     fi
-    if test -n "$USE_64" && test -z "$GNU_CC"; then
-        CC="$CC -xarch=v9"
-        CXX="$CXX -xarch=v9"
-    fi
-    if test -n "$USE_64" && test -n "$GNU_CC"; then
-        CC="$CC -m64"
-        CXX="$CXX -m64"
+    if test -z "$GNU_AS"; then
+        ASFLAGS="$ASFLAGS -Wa,-P"
     fi
     if test "$OS_TEST" = "i86pc"; then
         AC_DEFINE(i386)

@@ -274,8 +274,13 @@ USE_DLL_EXPORTS_FILE	= 1
 endif
 
 ifeq ($(OS_ARCH), SunOS)
+ifndef NS_USE_GCC
 DLLEXPORTS_PREFIX=-Blocal -M
 USE_DLL_EXPORTS_FILE	= 1
+# else
+# use the --version-script GNU ld argument - need to add support for
+# GNU (linux and solaris and ???) to genexports.pl et. al.
+endif # NS_USE_GCC
 endif
 
 ifeq ($(OS_ARCH), IRIX)
@@ -327,6 +332,7 @@ endif
 
 ifdef NS_USE_GCC
 USE_CCC_TO_LINK=1
+RPATHFLAG_PREFIX=-Wl,-R,
 endif
 
 # flag to pass to ld when linking to set runtime shared library search path
