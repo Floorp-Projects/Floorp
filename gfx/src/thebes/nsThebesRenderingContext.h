@@ -40,6 +40,7 @@
 #define NSTHEBESRENDERINGCONTEXT__H__
 
 #include "nsCOMPtr.h"
+#include "nsTArray.h"
 #include "nsIRenderingContext.h"
 #include "nsRenderingContextImpl.h"
 #include "nsIDeviceContext.h"
@@ -273,6 +274,9 @@ protected:
     // for handing out to people
     void UpdateTempTransformMatrix();
     nsTransform2D mTempTransform;
+
+    // keeping track of pushgroup/popgroup opacities
+    nsTArray<float> mOpacityArray;
 };
 
 #endif  // NSCAIRORENDERINGCONTEXT__H__
