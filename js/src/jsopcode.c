@@ -866,20 +866,13 @@ GetSlotAtom(JSPrinter *jp, JSPropertyOp getter, uintN slot)
 static const char *
 VarPrefix(jssrcnote *sn)
 {
-    const char *kw;
-    static char buf[8];
-
-    kw = NULL;
     if (sn) {
         if (SN_TYPE(sn) == SRC_VAR)
-            kw = js_var_str;
-        else if (SN_TYPE(sn) == SRC_CONST)
-            kw = js_const_str;
+            return "var ";
+        if (SN_TYPE(sn) == SRC_CONST)
+            return "const ";
     }
-    if (!kw)
-        return "";
-    JS_snprintf(buf, sizeof buf, "%s ", kw);
-    return buf;
+    return "";
 }
 
 static JSBool
