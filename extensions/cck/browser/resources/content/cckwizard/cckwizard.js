@@ -859,7 +859,14 @@ function CCKZip(zipfile, location)
   var args = [file.path];
   
   process.run(true, args, args.length);
-//  file.remove(false);
+  file.remove(false);
+  var file = location.clone();
+  file.append(zipfile);
+  if (!file.exists()) {
+    var bundle = document.getElementById("bundle_cckwizard");
+    gPromptService.alert(window, bundle.getString("windowTitle"),
+                       bundle.getString("zipError"));
+  }
 }
 
 function CCKWriteXULOverlay(destdir)
