@@ -829,11 +829,11 @@ function onChannelPrefChanged(channel, prefName, newValue, oldValue)
                     channel.display(MSG_CONF_MODE_OFF);
             }
             break;
-            
+
         case "conference.limit":
             channel._updateConferenceMode();
             break;
-        
+
         case "font.family":
         case "font.size":
             channel.dispatch("sync-font");

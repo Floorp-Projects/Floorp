@@ -1426,7 +1426,6 @@ function my_abortList()
 CIRCNetwork.prototype.on321 = /* LIST reply header */
 function my_321 (e)
 {
-
     this.listInit();
 
     if (!("saveTo" in this._list))

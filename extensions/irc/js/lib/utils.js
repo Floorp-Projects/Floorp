@@ -533,7 +533,7 @@ function newObject(contractID, iface)
 
     var rv;
     var cls = Components.classes[contractID];
-    
+
     if (!cls)
         return null;
 
@@ -567,7 +567,7 @@ function getService(contractID, iface)
 
     var rv;
     var cls = Components.classes[contractID];
-    
+
     if (!cls)
         return null;
 
@@ -919,7 +919,7 @@ function getFileFromURLSpec(url)
 {
     const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
 
-    var service = getService("@mozilla.org/network/io-service;1", 
+    var service = getService("@mozilla.org/network/io-service;1",
                              "nsIIOService");
 
     /* In sept 2002, bug 166792 moved this method to the nsIFileProtocolHandler
@@ -997,7 +997,7 @@ function confirm(msg, parent, title)
     return ps.confirm (parent, title, msg);
 }
 
-function confirmEx(msg, buttons, defaultButton, checkText, 
+function confirmEx(msg, buttons, defaultButton, checkText,
                    checkVal, parent, title)
 {
     /* Note that on versions before Mozilla 0.9, using 3 buttons,
@@ -1006,7 +1006,7 @@ function confirmEx(msg, buttons, defaultButton, checkText,
      * The buttons should be listed in the 'accept', 'cancel' and 'extra' order,
      * and the exact button order is host app- and platform-dependant.
      * For example, on Windows this is usually [button 1] [button 3] [button 2],
-     * and on Linux [button 3] [button 2] [button 1]. 
+     * and on Linux [button 3] [button 2] [button 1].
      */
     var PROMPT_CTRID = "@mozilla.org/embedcomp/prompt-service;1";
     var nsIPromptService = Components.interfaces.nsIPromptService;
@@ -1024,7 +1024,7 @@ function confirmEx(msg, buttons, defaultButton, checkText,
     var buttonFlags = 0;
     var buttonText = [null, null, null];
 
-    if (!isinstance(buttons, Array)) 
+    if (!isinstance(buttons, Array))
         throw "buttons parameter must be an Array";
     if ((buttons.length < 1) || (buttons.length > 3))
         throw "the buttons array must have 1, 2 or 3 elements";
@@ -1200,4 +1200,3 @@ function compareVersions(ver1, ver2)
         return 1;
     return 0;
 }
-

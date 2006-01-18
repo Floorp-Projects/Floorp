@@ -341,7 +341,7 @@ function initStatic()
 
     client.statusBar = new Object();
 
-    client.statusBar["server-nick"] = document.getElementById ("server-nick");
+    client.statusBar["server-nick"] = document.getElementById("server-nick");
 
     client.statusElement = document.getElementById("status-text");
     client.defaultStatus = MSG_DEFAULT_STATUS;
@@ -391,7 +391,7 @@ function initApplicationCompatibility()
     // This routine does nothing more than tweak the UI based on the host
     // application.
 
-    /* client.hostCompat.typeChromeBrowser indicates whether we should use 
+    /* client.hostCompat.typeChromeBrowser indicates whether we should use
      * type="chrome" <browser> elements for the output window documents.
      * Using these is necessary to work properly with xpcnativewrappers, but
      * broke selection in older builds.
@@ -461,7 +461,7 @@ function initApplicationCompatibility()
 function initNetworks()
 {
     client.addNetwork("moznet",
-                      [{name: "irc.mozilla.org", port:6667}, 
+                      [{name: "irc.mozilla.org", port:6667},
                        {name: "irc.mozilla.org", port:6697, isSecure:true}]);
     client.addNetwork("hybridnet", [{name: "irc.ssc.net", port: 6667}]);
     client.addNetwork("slashnet", [{name: "irc.slashnet.org", port:6667}]);
@@ -470,7 +470,7 @@ function initNetworks()
     client.addNetwork("webbnet", [{name: "irc.webbnet.info", port:6667}]);
     client.addNetwork("quakenet", [{name: "irc.quakenet.org", port:6667}]);
     client.addNetwork("freenode", [{name: "irc.freenode.net", port:6667}]);
-    client.addNetwork("serenia", 
+    client.addNetwork("serenia",
                       [{name: "chat.serenia.net", port:9999, isSecure:true}]);
     client.addNetwork("efnet",
                       [{name: "irc.prison.net", port: 6667},
@@ -2282,7 +2282,7 @@ function updateSecurityIcon()
     }
 
     var securityState = o.server.connection.getSecurityState()
-    switch (securityState[0]) 
+    switch (securityState[0])
     {
         case STATE_IS_SECURE:
             securityButton.firstChild.value = o.server.hostname;
@@ -4118,7 +4118,7 @@ function addHistory (source, obj, mergeData)
                             inobj.getAttribute("msg-type"));
             // Is either of the messages an action? We may not want to collapse
             // depending on the collapseActions pref
-            isAction = ((inobj.getAttribute("msg-type") == "ACTION") || 
+            isAction = ((inobj.getAttribute("msg-type") == "ACTION") ||
                         (lastRow.getAttribute("msg-type") == "ACTION"));
             // Do we collapse actions?
             collapseActions = source.prefs["collapseActions"];
