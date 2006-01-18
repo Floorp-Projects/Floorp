@@ -72,6 +72,10 @@ nsThebesDrawingSurface::nsThebesDrawingSurface()
 
 nsThebesDrawingSurface::~nsThebesDrawingSurface()
 {
+    // destroy this before any other bits are destroyed,
+    // in case they depend on them
+    mSurface = nsnull;
+
 #ifdef XP_WIN
     if (mWidget)
         mWidget->FreeNativeData(mNativeWidget, NS_NATIVE_GRAPHIC);
