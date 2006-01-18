@@ -681,7 +681,7 @@
                           categoriesList[i] = categoriesList[i].replace(' ','_');
                           categoriesList[i] = categoriesList[i].toLowerCase();
                         }
-                        categorySelectorList = categoriesList.join(" ");
+                        categoriesSelectorList = categoriesList.join(" ");
                       }
                       chunkBox.setAttribute("item-category", categoriesSelectorList);
 
