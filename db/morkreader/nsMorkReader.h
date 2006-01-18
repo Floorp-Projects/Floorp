@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Places.
+ * The Original Code is the Mork Reader.
  *
  * The Initial Developer of the Original Code is
  * Google Inc.

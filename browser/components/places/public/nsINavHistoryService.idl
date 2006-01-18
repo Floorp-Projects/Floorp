@@ -823,5 +823,12 @@ interface nsINavHistoryService : nsISupports
 [scriptable, uuid(be935aed-6929-4e44-be29-17ec89e5c8bd)]
 interface nsIMorkHistoryImporter : nsISupports
 {
+  /**
+   * Import the given Mork history file.
+   *  @param file     The Mork history file to import
+   *  @param history  A reference to the nsINavHistoryService.  This is
+   *                  supplied since the importer is invoked during
+   *                  history service initialization.
+   */
   void importHistory(in nsIFile file, in nsINavHistoryService history);
 };
