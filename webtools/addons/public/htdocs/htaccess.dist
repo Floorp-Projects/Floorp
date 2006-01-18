@@ -1,0 +1,11 @@
+# a) Install me in public/htdocs/.htaccess, or 
+# b) Create a <Directory> entry in your Apache conf
+
+# You MUST define YOURPATH/inc as an include_path!
+php_value include_path /YOURPATH/v2/public/inc:.:/usr/share/pear:/YOURPATH/v2/shared/lib
+
+# Init script to set up required libraries.
+php_value auto_prepend_file init.php
+
+# Finish script that calls $tpl->display for global Smarty object.
+php_value auto_append_file finish.php

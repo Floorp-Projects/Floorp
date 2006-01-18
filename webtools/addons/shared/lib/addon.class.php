@@ -110,8 +110,8 @@ class AddOn extends AMO_Object {
         if (!empty($this->db->record)) {
             $this->setVars($this->db->record);
 
-            if (file_exists(ROOT_PATH.$this->PreviewURI)) {
-                $size = getimagesize(ROOT_PATH.$this->PreviewURI);
+            if (file_exists(ROOT_PATH.'/htdocs'.$this->PreviewURI)) {
+                $size = getimagesize(ROOT_PATH.'/htdocs'.$this->PreviewURI);
                 $this->setVar('PreviewWidth',$size[0]);
                 $this->setVar('PreviewHeight',$size[1]);
             }
@@ -139,7 +139,7 @@ class AddOn extends AMO_Object {
         while ($this->db->next(SQL_ASSOC)) {
             $result = $this->db->record;
             $uri = $result['PreviewURI'];
-            list($src_width, $src_height, $type, $attr) = getimagesize(ROOT_PATH.$uri);
+            list($src_width, $src_height, $type, $attr) = getimagesize(ROOT_PATH.'/htdocs'.$uri);
             $this->Previews[] = array(
                 'PreviewURI' => $uri,
                 'caption' => $result['caption'],
