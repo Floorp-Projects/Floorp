@@ -58,14 +58,6 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 include ../platlibs.mk
 
-ifeq (,$(filter-out WINNT WIN95 WIN16,$(OS_TARGET)))  # omits WINCE
-ifndef BUILD_OPT
-LDFLAGS   +=  /subsystem:console /profile /debug /machine:I386 /incremental:no
-OS_CFLAGS += -D_CONSOLE
-endif
-endif
-
-
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################
