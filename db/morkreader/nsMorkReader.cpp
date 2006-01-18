@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Places.
+ * The Original Code is the Mork Reader.
  *
  * The Initial Developer of the Original Code is
  * Google Inc.
@@ -64,7 +64,8 @@ ConvertChar(char *c)
   if ('0' <= c1 && c1 <= '9') {
     *c = c1 - '0';
     return PR_TRUE;
-  } else if ('A' <= c1 && c1 <= 'F') {
+  }
+  if ('A' <= c1 && c1 <= 'F') {
     *c = c1 - 'A' + 10;
     return PR_TRUE;
   }
