@@ -127,6 +127,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsXBLPrototypeBinding.h"
 #include "nsEscape.h"
 #include "nsICharsetConverterManager.h"
+#include "nsXULAtoms.h"
 
 // for ReportToConsole
 #include "nsIStringBundle.h"
@@ -2730,4 +2731,14 @@ nsContentUtils::GetReferencedElement(nsIURI* aURI, nsIContent *aFromContent)
   }
 
   return content;
+}
+
+/* static */
+PRBool
+nsContentUtils::HasNonEmptyAttr(nsIContent* aContent, PRInt32 aNameSpaceID,
+                                nsIAtom* aName)
+{
+  static nsIContent::AttrValuesArray strings[] = {&nsXULAtoms::_empty, nsnull};
+  return aContent->FindAttrValueIn(aNameSpaceID, aName, strings, eCaseMatters)
+    == nsIContent::ATTR_VALUE_NO_MATCH;
 }

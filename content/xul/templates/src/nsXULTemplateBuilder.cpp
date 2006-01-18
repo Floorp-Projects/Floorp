@@ -1392,7 +1392,7 @@ nsXULTemplateBuilder::ComputeContainmentProperties()
 PRBool
 nsXULTemplateBuilder::IsTemplateElement(nsIContent* aContent)
 {
-    return aContent->NodeInfo()->Equals(nsXULAtoms::Template,
+    return aContent->NodeInfo()->Equals(nsXULAtoms::_template,
                                         kNameSpaceID_XUL);
 }
 

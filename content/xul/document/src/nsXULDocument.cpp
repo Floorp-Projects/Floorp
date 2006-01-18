@@ -2369,7 +2369,7 @@ nsXULDocument::ContextStack::IsInsideXULTemplate()
         for (nsIContent* element = mTop->mElement; element;
              element = element->GetParent()) {
 
-            if (element->NodeInfo()->Equals(nsXULAtoms::Template,
+            if (element->NodeInfo()->Equals(nsXULAtoms::_template,
                                             kNameSpaceID_XUL)) {
                 return PR_TRUE;
             }

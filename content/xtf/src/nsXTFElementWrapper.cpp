@@ -365,6 +365,42 @@ nsXTFElementWrapper::AttrValueIs(PRInt32 aNameSpaceID,
                                               aCaseSensitive);
 }
 
+PRInt32
+nsXTFElementWrapper::FindAttrValueIn(PRInt32 aNameSpaceID,
+                                     nsIAtom* aName,
+                                     AttrValuesArray* aValues,
+                                     nsCaseTreatment aCaseSensitive) const
+{
+  NS_ASSERTION(aName, "Must have attr name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+  NS_ASSERTION(aValues, "Null value array");
+  
+  if (aNameSpaceID == kNameSpaceID_None && HandledByInner(aName)) {
+    nsAutoString ourVal;
+    if (!GetAttr(aNameSpaceID, aName, ourVal)) {
+      return ATTR_MISSING;
+    }
+    
+    for (PRInt32 i = 0; aValues[i]; ++i) {
+      if (aCaseSensitive == eCaseMatters) {
+        if ((*aValues[i])->Equals(ourVal)) {
+          return i;
+        }
+      } else {
+        nsAutoString val;
+        (*aValues[i])->ToString(val);
+        if (val.Equals(ourVal, nsCaseInsensitiveStringComparator())) {
+          return i;
+        }
+      }
+    }
+    return ATTR_VALUE_NO_MATCH;
+  }
+
+  return nsXTFElementWrapperBase::FindAttrValueIn(aNameSpaceID, aName, aValues,
+                                                  aCaseSensitive);
+}
+
 nsresult
 nsXTFElementWrapper::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
                                PRBool aNotify)

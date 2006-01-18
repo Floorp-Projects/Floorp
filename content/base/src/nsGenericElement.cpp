@@ -4255,6 +4255,28 @@ nsGenericElement::AttrValueIs(PRInt32 aNameSpaceID,
   return val && val->Equals(aValue, aCaseSensitive);
 }
 
+PRInt32
+nsGenericElement::FindAttrValueIn(PRInt32 aNameSpaceID,
+                                  nsIAtom* aName,
+                                  AttrValuesArray* aValues,
+                                  nsCaseTreatment aCaseSensitive) const
+{
+  NS_ASSERTION(aName, "Must have attr name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+  NS_ASSERTION(aValues, "Null value array");
+  
+  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aName, aNameSpaceID);
+  if (val) {
+    for (PRInt32 i = 0; aValues[i]; ++i) {
+      if (val->Equals(*aValues[i], aCaseSensitive)) {
+        return i;
+      }
+    }
+    return ATTR_VALUE_NO_MATCH;
+  }
+  return ATTR_MISSING;
+}
+
 nsresult
 nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                             PRBool aNotify)
