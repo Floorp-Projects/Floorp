@@ -84,7 +84,7 @@
   <command id="export_command" oncommand="saveEventsToFile(gCalendarWindow.EventSelection.selectedEvents)" disabled="true" disabledwhennoeventsselected="true"/>
 
   <command id="reload_remote_calendars" oncommand="reloadCalendars()"/>
-  <command id="publish_calendar" oncommand="publishEntireCalendar()"/>
+  <command id="publish_calendar" oncommand="publishEntireCalendar(getDefaultCalendar())"/>
   <command id="publish_events_command" oncommand="publishCalendarData()" disabled="true" disabledwhennoeventsselected="true"/>
 
   <command id="toggle_tasks_in_view" 

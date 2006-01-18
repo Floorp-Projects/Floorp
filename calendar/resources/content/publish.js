@@ -51,15 +51,13 @@ function publishCalendarDataDialogResponse(CalendarPublishObject, aProgressDialo
                     CalendarPublishObject.remotePath, aProgressDialog);
 }
 
-function publishEntireCalendar()
+function publishEntireCalendar(cal)
 {
     var args = new Object();
     var publishObject = new Object( );
 
     args.onOk =  self.publishEntireCalendarDialogResponse;
 
-    // get the currently selected calendar
-    var cal = getDefaultCalendar();
     publishObject.calendar = cal;
 
     // restore the remote ics path preference from the calendar passed in

@@ -201,9 +201,7 @@ function LtnObserveDisplayDeckChange(event)
 
 function ltnPublishCalendar()
 {
-    currentCalendar = ltnSelectedCalendar();
-
-    openDialog("chrome://calendar/content/calendar-publish-dialog.xul", "caPublishEvents", "chrome,titlebar,modal", currentCalendar);
+    publishEntireCalendar(ltnSelectedCalendar());
 }
 
 function ltnFinish() {

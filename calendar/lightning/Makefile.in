@@ -52,6 +52,7 @@ DIRS		= ../../db/sqlite3/src ../../storage \
 		  ../../extensions/xmlextras         \
 		  ../../extensions/webdav            \
                   ../libical ../base ../providers    \
+                  ../import-export                   \
                   components                         \
 		  $(NULL)
 
