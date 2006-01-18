@@ -300,5 +300,9 @@ nsSVGCairoGlyphMetrics::SelectFont(cairo_t *ctx)
     mSource->GetPresContext(getter_AddRefs(presContext));
     float pxPerTwips;
     pxPerTwips = presContext->TwipsToPixels();
-    cairo_set_font_size(ctx, font.size*pxPerTwips);
+    // Since SVG has its own scaling, we really don't want
+    // fonts in SVG to respond to the browser's "TextZoom"
+    // (Ctrl++,Ctrl+-)
+    float textZoom = presContext->TextZoom();
+    cairo_set_font_size(ctx, font.size*pxPerTwips/textZoom);
 }
