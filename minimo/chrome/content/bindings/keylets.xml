@@ -101,11 +101,20 @@
 				if(tryElement) {
 					if(e.keyCode==tryElement.rule_keyCode) {
 
-
 						e.preventBubble();
 
-						document.getElementById(tryElement.rule_focusTo).focus();
+						if(tryElement.rule_focusTo.indexOf("#advance")>-1) {
 
+							document.commandDispatcher.advanceFocus();
+						} else if (tryElement.rule_focusTo.indexOf("#rewind")>-1) {
+
+							document.commandDispatcher.rewindFocus();
+						} else {
+							if(document.getElementById(tryElement.rule_focusTo)) {
+
+								document.getElementById(tryElement.rule_focusTo).focus();
+							}
+						}
 					}
 				}
 			}
@@ -142,4 +151,3 @@
   </binding>
 
 </bindings>
-
