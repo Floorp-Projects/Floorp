@@ -1224,24 +1224,32 @@ function cmdStatus(e)
     display(MSG_END_STATUS, MT_STATUS);
 }
 
-function cmdHelp (e)
+function cmdHelp(e)
 {
-    var ary;
-    ary = client.commandManager.list (e.pattern, CMD_CONSOLE);
+    if (!e.pattern)
+    {
+        if ("hello" in e)
+            display(MSG_HELP_INTRO, "HELLO");
+        else
+            display(MSG_HELP_INTRO);
+        return;
+    }
+
+    var ary = client.commandManager.list(e.pattern, CMD_CONSOLE);
 
     if (ary.length == 0)
     {
-        display (getMsg(MSG_ERR_NO_COMMAND, e.pattern), MT_ERROR);
-        return false;
+        display(getMsg(MSG_ERR_NO_COMMAND, e.pattern), MT_ERROR);
+        return;
     }
 
     for (var i in ary)
     {
-        display (getMsg(MSG_FMT_USAGE, [ary[i].name, ary[i].usage]), MT_USAGE);
-        display (ary[i].help, MT_HELP);
+        display(getMsg(MSG_FMT_USAGE, [ary[i].name, ary[i].usage]), MT_USAGE);
+        display(ary[i].help, MT_HELP);
     }
 
-    return true;
+    return;
 }
 
 function cmdTestDisplay(e)

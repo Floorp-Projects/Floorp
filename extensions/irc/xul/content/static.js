@@ -205,8 +205,8 @@ function init()
 
     client.initialized = true;
 
+    dispatch("help", { hello: true });
     dispatch("networks");
-    dispatch("commands");
 
     setTimeout(processStartupURLs, 0);
 }
