@@ -232,17 +232,3 @@ EXTRA_DSO_LIBS += macmorefiles_s
 EXTRA_DEPS += $(DIST)/lib/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX)
 endif
 
-ifdef MOZ_JAVAXPCOM
-LOCAL_INCLUDES += \
-		-I$(topsrcdir)/extensions/java/xpcom/src \
-		-I$(JAVA_INCLUDE_PATH) \
-		$(NULL)
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += dlldeps-javaxpcom.cpp
-LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/win32
-else
-LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
-endif
-STATIC_LIBS += javaxpcom
-endif
-

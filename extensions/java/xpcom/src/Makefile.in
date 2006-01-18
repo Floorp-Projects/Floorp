@@ -45,10 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= javaxpcom
 LIBRARY_NAME	= javaxpcom
 LIBXUL_LIBRARY	= 1
+FORCE_STATIC_LIB = 1
 
-# On Mac OS X, JNI libraries must end with a '.jnilib' extension
-ifeq ($(OS_ARCH),Darwin)
-DLL_SUFFIX = .jnilib
+ifndef MOZ_ENABLE_LIBXUL
+DEFINES += -DIMPL_XREAPI
 endif
 
 REQUIRES	= xpcom \
@@ -85,12 +85,6 @@ endif
 
 # necessary until we do 'cvs move' to put files in correct directories
 LOCAL_INCLUDES += -I$(srcdir)
-
-EXTRA_DSO_LDOPTS = \
-	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(NULL)
 
 GARBAGE += $(JARFILE) $(JARFILE_SRC)
 GARBAGE_DIRS += _javagen org
