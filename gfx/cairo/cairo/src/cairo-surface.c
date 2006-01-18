@@ -518,6 +518,10 @@ cairo_surface_mark_dirty (cairo_surface_t *surface)
  * Like cairo_surface_mark_dirty(), but drawing has been done only to
  * the specified rectangle, so that cairo can retain cached contents
  * for other parts of the surface.
+ *
+ * Any cached clip set on the surface will be reset by this function,
+ * to make sure that future cairo calls have the clip set that they
+ * expect.
  */
 void
 cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
@@ -535,6 +539,12 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
 	return;
     }
+
+    /* Always reset the clip here, to avoid having a SaveDC/RestoreDC around
+     * cairo calls that update the surface clip resulting in a desync between
+     * the cairo clip and the backend clip.
+     */
+    surface->current_clip_serial = -1;
 
     if (surface->backend->mark_dirty_rectangle) {
 	cairo_status_t status;
@@ -1542,6 +1552,12 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
     if (!surface)
 	return CAIRO_STATUS_NULL_POINTER;
 
+    if (surface->status)
+	return surface->status;
+
+    if (surface->finished)
+	return CAIRO_STATUS_SURFACE_FINISHED;
+
     if (clip) {
 	serial = clip->serial;
 	if (serial == 0)
@@ -1549,7 +1565,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
     }
     
     surface->clip = clip;
-    
+
     if (serial == _cairo_surface_get_current_clip_serial (surface))
 	return CAIRO_STATUS_SUCCESS;
 

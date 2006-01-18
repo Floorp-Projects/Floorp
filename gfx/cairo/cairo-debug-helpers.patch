@@ -1,19 +1,59 @@
 Index: src/cairo-debug.c
 ===================================================================
-RCS file: /cvs/cairo/cairo/src/cairo-debug.c,v
-retrieving revision 1.2
-diff -u -8 -p -r1.2 cairo-debug.c
---- src/cairo-debug.c	31 Aug 2005 22:08:02 -0000	1.2
-+++ src/cairo-debug.c	10 Jan 2006 21:15:50 -0000
-@@ -65,8 +65,158 @@ cairo_debug_reset_static_data (void)
+--- src/cairo-debug.c.orig
++++ src/cairo-debug.c
+@@ -35,6 +35,8 @@
  
-     _cairo_font_reset_static_data ();
+ #include "cairoint.h"
  
- #if CAIRO_HAS_FT_FONT
-     _cairo_ft_font_reset_static_data ();
++#include "cairo-clip-private.h"
++
+ /**
+  * cairo_debug_reset_static_data:
+  * 
+@@ -70,3 +72,192 @@ cairo_debug_reset_static_data (void)
  #endif
  }
  
++/*
++ * clip dumper
++ */
++void
++cairo_debug_dump_clip (struct _cairo_clip *clip,
++                       FILE *fp)
++{
++    fprintf (fp, "clip %p: %s ", (clip->mode == CAIRO_CLIP_MODE_PATH ? "PATH" :
++                                  clip->mode == CAIRO_CLIP_MODE_REGION ? "REGION" :
++                                  clip->mode == CAIRO_CLIP_MODE_MASK ? "MASK" :
++                                  "INVALID?!"));
++    if (clip->mode == CAIRO_CLIP_MODE_PATH) {
++        fprintf (fp, "\n=== clip path ===\n");
++    } else if (clip->mode == CAIRO_CLIP_MODE_REGION) {
++        if (!clip->region) {
++            fprintf (fp, "region = NULL");
++        } else if (pixman_region_num_rects (clip->region) == 1) {
++            pixman_box16_t *rects = pixman_region_rects (clip->region);
++            fprintf (fp, "region [%d %d %d %d]",
++                     rects[0].x1, rects[0].y1,
++                     rects[0].x2, rects[0].y2);
++        } else {
++            pixman_box16_t *rects = pixman_region_rects (clip->region);
++            int i, nr = pixman_region_num_rects(clip->region);
++            fprintf (fp, "region (%d rects)\n", nr);
++            for (i = 0; i < nr; i++) {
++                fprintf (fp, "rect %d: [%d %d %d %d]", i,
++                         rects[nr].x1, rects[nr].y1,
++                         rects[nr].x2, rects[nr].y2);
++            }
++        }
++    } else if (clip->mode == CAIRO_CLIP_MODE_MASK) {
++        fprintf (fp, "mask, surface: %p rect: [%d %d %d %d]", clip->surface,
++                 clip->surface_rect.x, clip->surface_rect.y, clip->surface_rect.width, clip->surface_rect.height);
++    }
++
++    fprintf (fp, "\n");
++}
++
 +/*
 + * path dumper
 + */
@@ -166,17 +206,9 @@ diff -u -8 -p -r1.2 cairo-debug.c
 +
 Index: src/cairo-debug.h
 ===================================================================
-RCS file: /cvs/cairo/cairo/src/cairo-debug.h,v
-retrieving revision 1.1
-diff -u -8 -p -r1.1 cairo-debug.h
---- src/cairo-debug.h	1 Aug 2005 20:33:47 -0000	1.1
-+++ src/cairo-debug.h	10 Jan 2006 21:15:50 -0000
-@@ -32,17 +32,35 @@
-  * Contributor(s):
-  *	Carl D. Worth <cworth@cworth.org>
-  */
- 
- #ifndef CAIRO_DEBUG_H
+--- src/cairo-debug.h.orig
++++ src/cairo-debug.h
+@@ -37,12 +37,34 @@
  #define CAIRO_DEBUG_H
  
  #include <cairo-features.h>
@@ -187,10 +219,14 @@ diff -u -8 -p -r1.1 cairo-debug.h
 +struct _cairo_path_fixed;
 +struct _cairo_traps;
 +struct _cairo_trapezoid;
++struct _cairo_clip;
 +
  void
  cairo_debug_reset_static_data (void);
  
++void
++cairo_debug_dump_clip (struct _cairo_clip *clip,
++                       FILE *fp);
 +void
 +cairo_debug_dump_path (struct _cairo_path_fixed *path,
 +                       FILE *fp);

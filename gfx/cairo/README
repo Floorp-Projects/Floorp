@@ -23,9 +23,24 @@ if cairo is enabled.  Please upgrade to VC7.1/8.
 mozilla-misc.patch
   - Misc compilation fixes for pixman (submitted upstream)
   - temporary moz_cairo_set_target API (not for upstream)
+  - mac compilation fix for cairo-atsui-font.c for 10.2 SDK (maybe should
+    be upstream?)
+  - cairo-features.h.in - add cairo-platform.h include and hard-code the
+    cairo version (not for upstream)
+  - #if 0'ing out DllMain in win32-surface.c -- not needed, since
+    we don't use cairo multithreaded, and DllMain interferes
+    with libxul's DllMain. (not for usptream)
+  - #if 0'ing out bits to get rid of multithreaded stuff in cairoint.h
+    (not for upstream)
 
 cairo-debug-helpers.patch
   - some stuff for cairo-debug.[ch]
+
+cairo-win32-clip.patch
+  - Make mark_dirty() reset a surface's clip, so that we can call it
+    when we RestoreDC() after native win32 drawing (submitted upstream)
+  - Rework win32 surface clip and extents handling for correctness
+    (submitted upstream)
 
 device-offset-scale.path
   - Move device offset/scale handling into surface layer; large rework
