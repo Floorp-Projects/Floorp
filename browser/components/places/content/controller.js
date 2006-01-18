@@ -752,7 +752,8 @@ var PlacesController = {
    */
   remove: function PC_remove(txnName) {
     var nodes = this._activeView.getSelectionNodes();
-    if (this.activeView.isBookmarks) {
+    this._activeView.saveSelection();
+    if (this._activeView.isBookmarks) {
       // delete bookmarks
       var txns = [];
       for (var i = 0; i < nodes.length; ++i) {
@@ -784,6 +785,7 @@ var PlacesController = {
         }
       }
     }
+    this._activeView.restoreSelection();
   },
 
   /**

@@ -361,6 +361,13 @@
         },
         
       })]]></field>
+
+      <method name="saveSelection">
+        <body/>
+      </method>
+      <method name="restoreSelection">
+        <body/>
+      </method>
     </implementation>
     <handlers>
       <handler event="mousedown"><![CDATA[

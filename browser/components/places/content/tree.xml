@@ -410,7 +410,6 @@
           var node = index != -1 ? root.nodeForTreeIndex(index) : root;
           const DROP_ON = Ci.nsINavHistoryResultViewObserver.DROP_ON;
           // Cannot drop before fixed items in the list. 
-          LOG("FDI: " + this._self.firstDropIndex + ", GIN: " + PlacesController.getIndexOfNode(node));
           if (node.parent == root && 
               PlacesController.getIndexOfNode(node) < this._self.firstDropIndex &&
               orientation != DROP_ON)
@@ -511,8 +510,31 @@
         onPerformActionOnCell: function VO_onPerformActionOnCell(action, row, column) { },      
       })]]></field>
       
-      <field name="suppressSelection">false</field>
-      <field name="_selection">null</field>
+      <field name="_nextSelection">-1</field>
+      <method name="saveSelection">
+        <body><![CDATA[ 
+          var s = this.view.selection;
+          var rc = s.getRangeCount();
+          var min = { }, max = { };
+          s.getRangeAt(rc - 1, min, max);
+          var rowCount = this.view.rowCount;
+          if (max.value == (rowCount - 1) || 
+              this.view.getLevel(max.value + 1) != this.view.getLevel(max.value))
+            this._nextSelection = max.value - s.count;
+          else
+            this._nextSelection = max.value - s.count + 1;
+          LOG("NS = " + this._nextSelection);
+        ]]></body>
+      </method>
+
+      <method name="restoreSelection">
+        <body><![CDATA[
+          LOG("RNS = " + this._nextSelection);
+          if (this._nextSelection != -1)
+            this.view.selection.select(this._nextSelection);
+        ]]></body>
+      </method>
+      
     </implementation>
     <handlers>
       <handler event="focus"><![CDATA[
