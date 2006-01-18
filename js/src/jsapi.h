@@ -503,6 +503,12 @@ JS_StringToVersion(const char *string);
                                                    called with a null script
                                                    parameter, by native code
                                                    that loops intensively */
+#define JSOPTION_DONT_REPORT_UNCAUGHT \
+                                JS_BIT(8)       /* When returning from the
+                                                   outermost API call, prevent
+                                                   uncaught exceptions from
+                                                   being converted to error
+                                                   reports */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
