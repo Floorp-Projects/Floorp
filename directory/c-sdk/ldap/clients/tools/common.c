@@ -703,20 +703,24 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
     char pbuf[257];
     struct termios termstat;
     tcflag_t savestat;
+    /* Only perform terminal manipulation if stdin is a terminal */
+    int havetty = isatty(fileno(stdin));
 
     fputs(password_string, stdout);
     fflush(stdout);
 
-    if(tcgetattr(fileno(stdin), &termstat) < 0) {
-        perror( "tcgetattr" );
-        exit( LDAP_LOCAL_ERROR );
-    }
-    savestat = termstat.c_lflag;
-    termstat.c_lflag &= ~(ECHO | ECHOE | ECHOK);
-    termstat.c_lflag |= (ICANON | ECHONL);
-    if(tcsetattr(fileno(stdin), TCSANOW, &termstat) < 0) {
-        perror( "tcgetattr" );
-        exit( LDAP_LOCAL_ERROR );
+    if(havetty) {
+        if(tcgetattr(fileno(stdin), &termstat) < 0) {
+            perror( "tcgetattr" );
+            exit( LDAP_LOCAL_ERROR );
+        }
+        savestat = termstat.c_lflag;
+        termstat.c_lflag &= ~(ECHO | ECHOE | ECHOK);
+        termstat.c_lflag |= (ICANON | ECHONL);
+        if(tcsetattr(fileno(stdin), TCSANOW, &termstat) < 0) {
+            perror( "tcsetattr" );
+            exit( LDAP_LOCAL_ERROR );
+        }
     }
     if (fgets(pbuf,256,stdin) == NULL) {
         passwd = NULL;
@@ -728,10 +732,12 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
             *tmp = '\0';
         passwd = strdup(pbuf);
     }
-    termstat.c_lflag = savestat;
-    if(tcsetattr(fileno(stdin), TCSANOW, &termstat) < 0) {
-        perror( "tcgetattr" );
-        exit( LDAP_LOCAL_ERROR );
+    if(havetty) {
+        termstat.c_lflag = savestat;
+        if(tcsetattr(fileno(stdin), TCSANOW, &termstat) < 0) {
+            perror( "tcgetattr" );
+            exit( LDAP_LOCAL_ERROR );
+        }
     }
 #else
 	/* limited to 16 chars on Tru64, 32 on AIX */
