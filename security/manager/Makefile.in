@@ -123,6 +123,9 @@ ifeq ($(HOST_OS_ARCH),WINNT)
 ifdef CYGDRIVE_MOUNT
 ABS_DIST := $(shell cygpath -w $(ABS_DIST) | sed -e 's|\\|/|g')
 endif
+ifneq (,$(filter mingw%,$(host_os)))
+ABS_DIST := $(shell cd $(DIST) && pwd -W)
+endif
 endif
 NSPR_INCLUDE_DIR = $(firstword $(filter -I%,$(NSPR_CFLAGS)))
 ifneq (,$(strip $(NSPR_INCLUDE_DIR)))
