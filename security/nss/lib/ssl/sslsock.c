@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.45 2005/12/14 01:49:39 wtchang%redhat.com Exp $ */
+/* $Id: sslsock.c,v 1.46 2006/01/18 23:06:57 wtchang%redhat.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -48,6 +48,7 @@
 #include "sslimpl.h"
 #include "sslproto.h"
 #include "nspr.h"
+#include "private/pprio.h"
 
 #define SET_ERROR_CODE   /* reminder */
 
@@ -1592,6 +1593,24 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
     return new_flags;
 }
 
+static PRInt32 PR_CALLBACK
+ssl_TransmitFile(PRFileDesc *sd, PRFileDesc *fd,
+		 const void *headers, PRInt32 hlen,
+		 PRTransmitFileFlags flags, PRIntervalTime timeout)
+{
+    PRSendFileData sfd;
+
+    sfd.fd = fd;
+    sfd.file_offset = 0;
+    sfd.file_nbytes = 0;
+    sfd.header = headers;
+    sfd.hlen = hlen;
+    sfd.trailer = NULL;
+    sfd.tlen = 0;
+
+    return sd->methods->sendfile(sd, &sfd, flags, timeout);
+}
+
 
 PRBool
 ssl_FdIsBlocking(PRFileDesc *fd)
@@ -1848,15 +1867,15 @@ static const PRIOMethods ssl_methods = {
     ssl_RecvFrom,        	/* recvfrom     */
     ssl_SendTo,          	/* sendto       */
     ssl_Poll,            	/* poll         */
-    ssl_EmulateAcceptRead,      /* acceptread   */
-    ssl_EmulateTransmitFile,    /* transmitfile */
+    PR_EmulateAcceptRead,       /* acceptread   */
+    ssl_TransmitFile,           /* transmitfile */
     ssl_GetSockName,     	/* getsockname  */
     ssl_GetPeerName,     	/* getpeername  */
     NULL,                	/* getsockopt   OBSOLETE */
     NULL,                	/* setsockopt   OBSOLETE */
     NULL,                	/* getsocketoption   */
     NULL,                	/* setsocketoption   */
-    ssl_EmulateSendFile, 	/* Send a (partial) file with header/trailer*/
+    PR_EmulateSendFile, 	/* Send a (partial) file with header/trailer*/
     NULL,                	/* reserved for future use */
     NULL,                	/* reserved for future use */
     NULL,                	/* reserved for future use */
