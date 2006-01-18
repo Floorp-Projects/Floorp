@@ -84,16 +84,7 @@ const FILE_INSTALL_MANIFEST           = "install.rdf";
 const FILE_CONTENTS_MANIFEST          = "contents.rdf";
 const FILE_CHROME_MANIFEST            = "chrome.manifest";
 
-#expand const OS_TARGET               = __OS_TARGET__;
-
-#ifdef TARGET_XPCOM_ABI
-#expand const TARGET_XPCOM_ABI        = __TARGET_XPCOM_ABI__;
-#else
-// Provide a default for TARGET_XPCOM_ABI. It won't be compared to an item's metadata
-// (i.e. install.rdf can't specify e.g. WINNT_unknownABI as targetPlatform),
-// but it will be displayed in error messages and transmitted to update URLs.
-const TARGET_XPCOM_ABI                = "unknownABI";
-#endif
+const UNKNOWN_XPCOM_ABI               = "unknownABI";
 
 const FILE_LOGFILE                    = "extensionmanager.log";
 
@@ -163,6 +154,8 @@ var gApp  = null;
 var gPref = null;
 var gRDF  = null;
 var gOS   = null;
+var gXPCOMABI             = null;
+var gOSTarget             = null;
 var gConsole              = null;
 var gInstallManifestRoot  = null;
 var gVersionChecker       = null;
@@ -2222,6 +2215,16 @@ function ExtensionManager() {
   gApp = Components.classes["@mozilla.org/xre/app-info;1"]
                    .getService(Components.interfaces.nsIXULAppInfo)
                    .QueryInterface(Components.interfaces.nsIXULRuntime);
+  gOSTarget = gApp.OS;
+  try {
+    gXPCOMABI = gApp.XPCOMABI;
+  } catch (ex) {
+    // Provide a default for gXPCOMABI. It won't be compared to an
+    // item's metadata (i.e. install.rdf can't specify e.g. WINNT_unknownABI
+    // as targetPlatform), but it will be displayed in error messages and
+    // transmitted to update URLs.
+    gXPCOMABI = UNKNOWN_XPCOM_ABI;
+  }
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefBranch2);
   gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
@@ -3620,18 +3623,16 @@ ExtensionManager.prototype = {
         var tokens = targetPlatform.split("_");
         var os = tokens[0];
         var abi = (tokens.length > 1) ? tokens[1] : null;
-        if (os == OS_TARGET) {
+        if (os == gOSTarget) {
           foundMatchingOS = true;
           // The presence of any ABI part after our OS means ABI is important.
           if (abi != null) {
             requireABICompatibility = true;
-// If we don't know our ABI, we can't be compatible - skip the equality check.
-#ifdef TARGET_XPCOM_ABI
-            if (abi == TARGET_XPCOM_ABI) {
+            // If we don't know our ABI, we can't be compatible
+            if (abi == gXPCOMABI && abi != UNKNOWN_XPCOM_ABI) {
               foundMatchingOSAndABI = true;
               break;
             }
-#endif
           }
         }
       }
@@ -4105,7 +4106,7 @@ ExtensionManager.prototype = {
                   "invalidVersionMessage", [installData.name, installData.version]);
       break;
     case INSTALLERROR_INCOMPATIBLE_PLATFORM:
-      const osABI = OS_TARGET + "_" + TARGET_XPCOM_ABI;
+      const osABI = gOSTarget + "_" + gXPCOMABI;
       LOG("Incompatible Platform: Item: \"" + installData.id + "\" is not " + 
           "compatible with '" + osABI + "'.");
       var bundle = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
@@ -5291,8 +5292,8 @@ RDFItemUpdater.prototype = {
     dsURI = dsURI.replace(/%APP_ID%/g, this._updater._appID);
     dsURI = dsURI.replace(/%APP_VERSION%/g, this._updater._appVersion);
     dsURI = dsURI.replace(/%REQ_VERSION%/g, 1);
-    dsURI = dsURI.replace(/%APP_OS%/g, OS_TARGET);
-    dsURI = dsURI.replace(/%APP_ABI%/g, TARGET_XPCOM_ABI);
+    dsURI = dsURI.replace(/%APP_OS%/g, gOSTarget);
+    dsURI = dsURI.replace(/%APP_ABI%/g, gXPCOMABI);
     
     // escape() does not properly encode + symbols in any embedded FVF strings.
     dsURI = dsURI.replace(/\+/g, "%2B");
