@@ -7,9 +7,12 @@ main(int argc, char **argv)
   int i = 0;
   
   args[i++] = ASM_PATH;
+  args[i++] = "-I\"" WCE_INC "\""; 
+
   i += argpath_conv(&argv[1], &args[i]);
 
-  run(args);
+  dumpargs(args);
 
+  run(args);
   return 0;
 }

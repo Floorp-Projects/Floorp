@@ -37,10 +37,14 @@
 #ifndef _MOZCE_DEFS
 #define _MOZCE_DEFS
 
+#define MOZCE_SHUNT_API
+
+#ifndef MOZCE_STATIC_BUILD
 #ifdef MOZCE_SHUNT_EXPORTS
 #define MOZCE_SHUNT_API __declspec(dllexport)
 #else
 #define MOZCE_SHUNT_API __declspec(dllimport)
+#endif
 #endif
 
 //#define USE_NC_LOGGING 1
@@ -293,6 +297,11 @@
 #endif
 #define	EOVERFLOW	79	/* Value too large to be stored in data type */
 
+// From cderr.h
+#ifdef FNERR_INVALIDFILENAME
+#undef FNERR_INVALIDFILENAME
+#endif
+#define FNERR_INVALIDFILENAME  0x3002
 
 // From signal.h
 #define SIGABRT         0
@@ -508,6 +517,19 @@ typedef struct mozce_MAT2 {
 } mozce_MAT2; 
 
 
+//#if 0
+
+#ifdef _BLENDFUNCTION
+#undef _BLENDFUNCTION
+#endif
+
+#ifdef BLENDFUNCTION
+#undef BLENDFUNCTION
+#endif
+
+#ifdef PBLENDFUNCTION
+#undef PBLENDFUNCTION
+#endif
 
 typedef struct _BLENDFUNCTION
 {
@@ -516,6 +538,8 @@ typedef struct _BLENDFUNCTION
     BYTE   SourceConstantAlpha;
     BYTE   AlphaFormat;
 }BLENDFUNCTION,*PBLENDFUNCTION;
+
+//#endif
 
 
 //

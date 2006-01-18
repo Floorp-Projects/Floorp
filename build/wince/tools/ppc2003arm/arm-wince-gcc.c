@@ -23,6 +23,8 @@ main(int argc, char **argv)
   args[i++] = "/I\"" SHUNT_INC "\"";
   args[i++] = "/FI\"mozce_shunt.h\"";
 
+  args[i++] = "/DMOZCE_STATIC_BUILD";
+
   args[i++] = "/DARM";
   args[i++] = "/DWINCE";
   args[i++] = "/D_WIN32_WCE=420";
@@ -36,8 +38,10 @@ main(int argc, char **argv)
   args[i++] = "/Gy";  // For link warning LNK1166
 
   //  args[i++] = "/Gf";
-  //  args[i++] = "/GF";
-  //  args[i++] = "/QRxscale";
+  
+  args[i++] = "/Gf";
+  args[i++] = "/QRxscale";
+
   //  args[i++] = "/QRxscalesched";
   //  args[i++] = "/Ox";
 
@@ -82,6 +86,7 @@ main(int argc, char **argv)
 
     args[i++] = "-ENTRY:mainACRTStartup";
     args[i++] = "-SUBSYSTEM:WINDOWSCE,4.20";
+    args[i++] = "-ALIGN:\"4096\"";
     args[i++] = "-MACHINE:ARM";
     args[i++] = "-LIBPATH:\"" WCE_LIB "\"";
     args[i++] = "-LIBPATH:\"" SHUNT_LIB "\"";

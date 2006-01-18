@@ -8,8 +8,9 @@ main(int argc, char **argv)
   int i = 0;
 
   args[i++] = LIB_PATH;
-  args[i++] = "/SUBSYSTEM:WINDOWSCE,4.20";
-  args[i++] = "/MACHINE:ARM";
+
+  //  args[i++] = "/SUBSYSTEM:WINDOWSCE,4.20";
+  //  args[i++] = "/MACHINE:ARM";
 
   argpath_conv(&argv[1], &args[i]);
 

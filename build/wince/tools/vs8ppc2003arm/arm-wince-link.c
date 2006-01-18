@@ -9,12 +9,8 @@ main(int argc, char **argv)
   int j = 0;
   int k = 0;
 
-  // Clear any link env variable that might get us tangled up
-  _putenv("LINK=");
-
   args[i++] = LINK_PATH;
-  args[i++] = "/SUBSYSTEM:WINDOWSCE,4.20";
-  args[i++] = "/MACHINE:ARM";
+
   args[i++] = "/LIBPATH:\"" WCE_LIB "\"";
   args[i++] = "/LIBPATH:\"" SHUNT_LIB "\"";
 
@@ -22,11 +18,20 @@ main(int argc, char **argv)
   args[i++] = "corelibc.lib";
   args[i++] = "coredll.lib";
   args[i++] = "ceshell.lib";
+  args[i++] = "ole32.lib";
 
-  args[i++] = "mozce_shunt.lib";
+  args[i++] = "shunt.lib";
+
+  args[i++] = "/subsystem:\"WINDOWSCE,5.01\"";
+  args[i++] = "/MACHINE:THUMB";
+
+  args[i++] = "-OPT:REF";
+  args[i++] = "-OPT:ICF";
 
   args[i++] = "/NODEFAULTLIB:LIBC";
   args[i++] = "/NODEFAULTLIB:OLDNAMES";
+  args[i++] = "/NODEFAULTLIB:LIBCMT";
+  args[i++] = "/NODEFAULTLIB:LIBCMTD";
 
   // if -DLL is not passed, then change the entry to 'main'
   while(argv[j])
@@ -44,7 +49,7 @@ main(int argc, char **argv)
 
   argpath_conv(&argv[1], &args[i]);
 
-  // dumpargs(args);
+  dumpargs(args);
 
   run(args);
   return 0;

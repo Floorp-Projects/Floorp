@@ -7,7 +7,7 @@
 #define WCE_INC   "c:/Program Files/Windows CE Tools/wce420/POCKET PC 2003/Include/Armv4/"
 #define WCE_LIB   "c:/Program Files/Windows CE Tools/wce420/POCKET PC 2003/Lib/Armv4/"
 
-#define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/ARMV4Rel/"
+#define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/static/ARMV4Dbg/"
 #define SHUNT_INC TOPSRCDIR "/build/wince/shunt/include/"
 
 #define ASM_PATH WCE_BIN "armasm.exe"
@@ -18,15 +18,15 @@
 #define MAX_NOLEAK_BUFFERS 100
 char noleak_buffers[MAX_NOLEAK_BUFFERS][1024];
 static int next_buffer = 0;
- 
+
 int argpath_conv(char **args_in, char **args_out)
 {
   int i = 0;
-
+  
   while (args_in[i])
   {
     args_out[i] = args_in[i];
-
+    
     if (args_in[i])
     {
       char *offset = strstr(args_out[i], "/cygdrive/");

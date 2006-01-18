@@ -29,8 +29,13 @@ main(int argc, char **argv)
 
   args[i++] = "shunt.lib";
 
+  args[i++] = "ole32.lib";
+
   args[i++] = "/NODEFAULTLIB:LIBC";
   args[i++] = "/NODEFAULTLIB:OLDNAMES";
+
+
+  args[i++] = "/align:\"4096\"";
 
   //  args[i++] = "/STACK:0x5000000,0x100000";
 
