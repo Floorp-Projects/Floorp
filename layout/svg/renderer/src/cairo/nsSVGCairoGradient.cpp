@@ -161,7 +161,7 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
   PRUint16 aSpread;
   aGrad->GetSpreadMethod(&aSpread);
   if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD)
-    cairo_pattern_set_extend(gradient, CAIRO_EXTEND_NONE);
+    cairo_pattern_set_extend(gradient, CAIRO_EXTEND_PAD);
   else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT)
     cairo_pattern_set_extend(gradient, CAIRO_EXTEND_REFLECT);
   else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT)
