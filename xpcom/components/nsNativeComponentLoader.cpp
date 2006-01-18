@@ -52,6 +52,7 @@
 
 #include "prlog.h"
 #include "prinit.h"
+#include "prerror.h"
 
 #include "nsComponentManager.h"
 #include "nsCRTGlue.h"
@@ -136,9 +137,23 @@ nsNativeModuleLoader::LoadModule(nsILocalFile* aFile, nsIModule* *aResult)
 
     rv = aFile->Load(&data.library);
     if (NS_FAILED(rv)) {
+        char errorMsg[1024] = "<unknown; can't get error from NSPR>";
+
+        if (PR_GetErrorTextLength() < (int) sizeof(errorMsg))
+            PR_GetErrorText(errorMsg);
+
         LOG(PR_LOG_ERROR,
-            ("nsNativeModuleLoader::LoadModule(\"%s\") - load failed, rv: %lx",
-             filePath.get(), rv));
+            ("nsNativeModuleLoader::LoadModule(\"%s\") - load FAILED, "
+             "rv: %lx, error:\n\t%s\n",
+             filePath.get(), rv, errorMsg));
+
+#ifdef DEBUG
+        fprintf(stderr,
+                "nsNativeModuleLoader::LoadModule(\"%s\") - load FAILED, "
+                "rv: %lx, error:\n\t%s\n",
+                filePath.get(), rv, errorMsg);
+#endif
+
         return rv;
     }
 
