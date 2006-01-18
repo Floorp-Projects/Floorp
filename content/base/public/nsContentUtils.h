@@ -432,6 +432,13 @@ public:
                                           nsIPrincipal** aPrincipal);
 
   /**
+   * @return PR_TRUE if aContent has an attribute aName in namespace aNameSpaceID,
+   * and the attribute value is non-empty.
+   */
+  static PRBool HasNonEmptyAttr(nsIContent* aContent, PRInt32 aNameSpaceID,
+                                nsIAtom* aName);
+
+  /**
    * Method to do security and content policy checks on the image URI
    *
    * @param aURI uri of the image to be loaded

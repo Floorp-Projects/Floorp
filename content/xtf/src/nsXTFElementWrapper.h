@@ -99,6 +99,10 @@ public:
   virtual PRBool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aValue,
                              nsCaseTreatment aCaseSensitive) const;
+  virtual PRInt32 FindAttrValueIn(PRInt32 aNameSpaceID,
+                                  nsIAtom* aName,
+                                  AttrValuesArray* aValues,
+                                  nsCaseTreatment aCaseSensitive) const;
   nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
                      PRBool aNotify);
   const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;

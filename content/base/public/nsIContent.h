@@ -71,8 +71,8 @@ class nsAttrName;
 // IID for the nsIContent interface
 // ffc6f2b8-bcdc-4cf7-b72f-e843860f14a6
 #define NS_ICONTENT_IID \
-{ 0xffc6f2b8, 0xbcdc, 0x4cf7, \
-  { 0xb7, 0x2f, 0xe8, 0x43, 0x86, 0x0f, 0x14, 0xa6 } }
+{ 0xe616c36e, 0x7db7, 0x46b0, \
+  { 0x89, 0x11, 0xf5, 0xd1, 0x74, 0xfa, 0x37, 0x34 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -377,7 +377,7 @@ public:
   {
     return PR_FALSE;
   }
-
+  
   /**
    * Test whether this content node's given attribute has the given value.  If
    * the attribute is not set at all, this will return false.
@@ -394,6 +394,36 @@ public:
                              nsCaseTreatment aCaseSensitive) const
   {
     return PR_FALSE;
+  }
+  
+  enum {
+    ATTR_MISSING = -1,
+    ATTR_VALUE_NO_MATCH = -2
+  };
+  /**
+   * Check whether this content node's given attribute has one of a given
+   * list of values. If there is a match, we return the index in the list
+   * of the first matching value. If there was no attribute at all, then
+   * we return ATTR_MISSING. If there was an attribute but it didn't
+   * match, we return ATTR_VALUE_NO_MATCH. A non-negative result always
+   * indicates a match.
+   * 
+   * @param aNameSpaceID The namespace ID of the attribute.  Must not
+   *                     be kNameSpaceID_Unknown.
+   * @param aName The name atom of the attribute.  Must not be null.
+   * @param aValues a NULL-terminated array of pointers to atom values to test
+   *                against.
+   * @param aCaseSensitive Whether to do a case-sensitive compare on the values.
+   * @return ATTR_MISSING, ATTR_VALUE_NO_MATCH or the non-negative index
+   * indicating the first value of aValues that matched
+   */
+  typedef nsIAtom* const* const AttrValuesArray;
+  virtual PRInt32 FindAttrValueIn(PRInt32 aNameSpaceID,
+                                  nsIAtom* aName,
+                                  AttrValuesArray* aValues,
+                                  nsCaseTreatment aCaseSensitive) const
+  {
+    return -1;
   }
 
   /**
