@@ -511,6 +511,15 @@ TRY_AGAIN_SAME_SCRIPT:
 
            RestoreDC(aDC, -1);
 
+           /* There's a (good) chance that something set a new clip
+            * region while inside the SaveDC/RestoreDC; cairo will get
+            * very confused, because its clip caching will tell it
+            * that the clip is up to date, when in fact it will have
+            * been reset.  MarkDirty resets a surface's clip serial,
+            * such that it will be reset the next time clipping is
+            * necessary. */
+           aContext->CurrentSurface()->MarkDirty();
+
         }
         free(glyphs);
         free(clusters);
