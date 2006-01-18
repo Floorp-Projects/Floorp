@@ -1087,11 +1087,11 @@ case "$target" in
         AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
         if test -z "$GNU_CC"; then
             if test -z "$USE_64"; then
-                CFLAGS="$CFLAGS +DD32 +DSblended"
-                CXXFLAGS="$CXXFLAGS +DD32 +DSblended"
+                CFLAGS="$CFLAGS +DD32"
+                CXXFLAGS="$CXXFLAGS +DD32"
             else
-                CFLAGS="$CFLAGS +DD64 +DSblended"
-                CXXFLAGS="$CXXFLAGS +DD64 +DSblended"
+                CFLAGS="$CFLAGS +DD64"
+                CXXFLAGS="$CXXFLAGS +DD64"
             fi
         fi
         DEFAULT_IMPL_STRATEGY=_PTH

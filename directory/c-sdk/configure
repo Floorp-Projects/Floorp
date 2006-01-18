@@ -7815,11 +7815,11 @@ _ACEOF
 
         if test -z "$GNU_CC"; then
             if test -z "$USE_64"; then
-                CFLAGS="$CFLAGS +DD32 +DSblended"
-                CXXFLAGS="$CXXFLAGS +DD32 +DSblended"
+                CFLAGS="$CFLAGS +DD32"
+                CXXFLAGS="$CXXFLAGS +DD32"
             else
-                CFLAGS="$CFLAGS +DD64 +DSblended"
-                CXXFLAGS="$CXXFLAGS +DD64 +DSblended"
+                CFLAGS="$CFLAGS +DD64"
+                CXXFLAGS="$CXXFLAGS +DD64"
             fi
         fi
         DEFAULT_IMPL_STRATEGY=_PTH
@@ -8904,6 +8904,7 @@ _ACEOF
     cat >>confdefs.h <<\_ACEOF
 #define HAVE_FCNTL_FILE_LOCKING 1
 _ACEOF
+
     if test -n "$GNU_CC" ; then
         if test -n "$USE_64"; then
             CC="$CC -m64"
@@ -8921,9 +8922,9 @@ _ACEOF
     else
         LD=/usr/ccs/bin/ld
         RANLIB=/usr/ccs/bin/ranlib
-        DSO_LDOPTS='-G -h $(notdir $@)'
+    	DSO_LDOPTS='-G -h $(notdir $@)'
         DSO_CFLAGS=-KPIC
-        if test -n "$USE_64"; then
+    	if test -n "$USE_64"; then
             CC="$CC -xarch=v9"
             CXX="$CXX -xarch=v9"
         fi
@@ -8934,7 +8935,6 @@ _ACEOF
             CXXFLAGS="$CXXFLAGS -xs"
         fi
     fi
-
     if test -z "$GNU_AS"; then
         ASFLAGS="$ASFLAGS -Wa,-P"
     fi

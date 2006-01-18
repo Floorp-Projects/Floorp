@@ -380,8 +380,11 @@ ifeq ($(OS_ARCH), HP-UX)
 # Use the C++ compiler to link
 USE_CCC_TO_LINK=1
 
-# include $ORIGIN in run time library path (works on HP-UX 11.23 and later)
-ifeq ($(OS_TEST),ia64)
+# include $ORIGIN in run time library path (works on HP-UX 11.11 with latest patches and later)
+ifeq ($(OS_RELEASE), B.11.11)
+RPATHFLAG := \$$ORIGIN/../lib:\$$ORIGIN/../../lib:$(RPATHFLAG)
+endif
+ifeq ($(OS_RELEASE), B.11.23)
 RPATHFLAG := \$$ORIGIN/../lib:\$$ORIGIN/../../lib:$(RPATHFLAG)
 endif
 
@@ -507,7 +510,7 @@ LINK_EXE        = $(CC_FOR_LINK) -Wl,-E $(ALDFLAGS) $(LDFLAGS) $(RPATHFLAG_PREFI
 
 ifeq ($(USE_64), 1)
 ifeq ($(OS_RELEASE), B.11.23)
-LINK_EXE        = $(CC_FOR_LINK) -DHPUX_ACC -D__STDC_EXT__ -D_POSIX_C_SOURCE=199506L  +DD64 +DSblended -Wl,-E $(ALDFLAGS) $(LDFLAGS) $(RPATHFLAG_PREFIX)$(RPATHFLAG) -o $@ $(filter %.$(OBJ_SUFFIX),$^) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
+LINK_EXE        = $(CC_FOR_LINK) -DHPUX_ACC -D__STDC_EXT__ -D_POSIX_C_SOURCE=199506L  +DD64 -Wl,-E $(ALDFLAGS) $(LDFLAGS) $(RPATHFLAG_PREFIX)$(RPATHFLAG) -o $@ $(filter %.$(OBJ_SUFFIX),$^) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
 else
 LINK_EXE        = $(CC_FOR_LINK) -DHPUX_ACC -D__STDC_EXT__ -D_POSIX_C_SOURCE=199506L  +DA2.0W +DS2.0 -Wl,-E $(ALDFLAGS) $(LDFLAGS) $(RPATHFLAG_PREFIX)$(RPATHFLAG) -o $@ $(filter %.$(OBJ_SUFFIX),$^) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS)
 endif

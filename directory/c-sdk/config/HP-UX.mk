@@ -181,10 +181,10 @@ ifeq ($(OS_RELEASE),B.11.23)
       ifneq ($(NS_USE_GCC), 1)
               CCC                             = /opt/aCC/bin/aCC -AP -ext
               ifeq ($(USE_64),1)
-                      OS_CFLAGS       += +DD64 +DSblended
+                      OS_CFLAGS       += +DD64
                       #COMPILER_TAG    = _64
               else
-                      OS_CFLAGS       += +DD32 +DSblended
+                      OS_CFLAGS       += +DD32
 ifeq ($(HAVE_CCONF), 1)
                       COMPILER_TAG    =
 else

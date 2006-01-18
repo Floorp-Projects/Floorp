@@ -93,9 +93,9 @@ endif
 ifeq ($(OS_ARCH), HP-UX)
     ifeq ($(OS_RELEASE), B.11.23)
        ifeq ($(USE_64),1)
-           XLDOPTS += +DD64 +DSblended
+           XLDOPTS += +DD64
        else
-           XLDOPTS += +DD32 +DSblended
+           XLDOPTS += +DD32
        endif
     else
        ifeq ($(USE_64),1)
