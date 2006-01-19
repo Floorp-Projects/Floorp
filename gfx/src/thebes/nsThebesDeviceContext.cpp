@@ -148,6 +148,8 @@ nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
     PRInt32 OSVal;
     PRBool do_round = PR_TRUE;
 
+    mDpi = 96;
+
 #if defined(MOZ_ENABLE_GTK2)
     float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
     OSVal = NSToCoordRound(float(::gdk_screen_width()) / screenWidthIn);
@@ -179,15 +181,12 @@ nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
 
     if (OSVal != 0)
         mDpi = OSVal;
-
-#else
-    mDpi = 72;
 #endif
 
-    int pt2t = 72;
+    int in2pt = 72;
 
     // make p2t a nice round number - this prevents rounding problems
-    mPixelsToTwips = float(NSIntPointsToTwips(pt2t)) / float(mDpi);
+    mPixelsToTwips = float(NSIntPointsToTwips(in2pt)) / float(mDpi);
     if (do_round)
         mPixelsToTwips = float(NSToIntRound(mPixelsToTwips));
     mTwipsToPixels = 1.0f / mPixelsToTwips;
