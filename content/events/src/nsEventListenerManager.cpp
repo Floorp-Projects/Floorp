@@ -2022,7 +2022,7 @@ nsEventListenerManager::Disconnect()
   // nsIDOMGCParticipant) require that we remove all event listeners now
   // to remove any weak references in the nsDOMClassInfo's preserved
   // wrapper table to the target.
-  RemoveAllListeners();
+  return RemoveAllListeners();
 }
 
 NS_IMETHODIMP
