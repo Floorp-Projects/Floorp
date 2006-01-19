@@ -108,10 +108,6 @@
   "Last Visit Date">
 <!ENTITY col.visitcount.label
   "Visit Count">
-<!ENTITY advancedSearch.label
-  "More Options...">
-<!ENTITY advancedSearch.accesskey
-  "O">
 <!ENTITY search.label
   "Search:">
 <!ENTITY search.accesskey
@@ -130,3 +126,73 @@
   "S">
 <!ENTITY moreCriteria.label
   "+">
+<!ENTITY advancedSearch.onlybookmarked.label
+  "Search Bookmarks only">
+<!ENTITY advancedSearch.match.label
+  "Match ">
+<!ENTITY advancedSearch.all.label
+  "all">
+<!ENTITY advancedSearch.any.label
+  "any">
+<!ENTITY advancedSearch.rules.label
+  " of the following rules:">
+<!ENTITY advancedSearch.subj_keyword.label
+  "Keywords">
+<!ENTITY advancedSearch.subj_visited.label
+  "Visited">
+<!ENTITY advancedSearch.subj_host.label
+  "Host">
+<!ENTITY advancedSearch.subj_uri.label
+  "URI">
+<!ENTITY advancedSearch.host_is.label
+  "is">
+<!ENTITY advancedSearch.host_endswith.label
+  "ends with">
+<!ENTITY advancedSearch.include.label
+  "include">
+<!ENTITY advancedSearch.uri_is.label
+  "is">
+<!ENTITY advancedSearch.uri_startswith.label
+  "starts with">
+<!ENTITY advancedSearch.time_is.label
+  "on">
+<!ENTITY advancedSearch.time_before.label
+  "before">
+<!ENTITY advancedSearch.time_after.label
+  "after">
+<!ENTITY advancedSearch.time_inlast.label
+  "in the last">
+<!ENTITY advancedSearch.last_days.label
+  "days">
+<!ENTITY advancedSearch.last_weeks.label
+  "weeks">
+<!ENTITY advancedSearch.last_months.label
+  "months">
+<!ENTITY advancedSearch.plus.label
+  "+">
+<!ENTITY advancedSearch.minus.label
+  "-">
+<!ENTITY advancedSearch.groupby.label
+  "Group by: ">
+<!ENTITY advancedSearch.groupby_host.label
+  "host">
+<!ENTITY advancedSearch.groupby_domain.label
+  "domain">
+<!ENTITY advancedSearch.groupby_folder.label
+  "folder">
+<!ENTITY advancedSearch.sortby.label
+  "Sort by: ">
+<!ENTITY advancedSearch.sortby_title.label
+  "title">
+<!ENTITY advancedSearch.sortby_date.label
+  "date">
+<!ENTITY advancedSearch.sortby_visit.label
+  "visit count">
+<!ENTITY advancedSearch.sortby_url.label
+  "url">
+<!ENTITY advancedSearch.sortby_asc.label
+  "ascending">
+<!ENTITY advancedSearch.sortby_desc.label
+  "descending">
+<!ENTITY advancedSearch.max.label
+  "Maximum results: ">
