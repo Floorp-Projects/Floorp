@@ -414,6 +414,11 @@ static const char kDOMStringBundleURL[] =
 // NOTE: DEFAULT_SCRIPTABLE_FLAGS and DOM_DEFAULT_SCRIPTABLE_FLAGS
 //       are defined in nsIDOMClassInfo.h.
 
+#define GCPARTICIPANT_SCRIPTABLE_FLAGS                                        \
+ (DOM_DEFAULT_SCRIPTABLE_FLAGS |                                              \
+  nsIXPCScriptable::WANT_FINALIZE |                                           \
+  nsIXPCScriptable::WANT_MARK)
+
 #define WINDOW_SCRIPTABLE_FLAGS                                               \
  (nsIXPCScriptable::WANT_GETPROPERTY |                                        \
   nsIXPCScriptable::WANT_SETPROPERTY |                                        \
@@ -429,12 +434,10 @@ static const char kDOMStringBundleURL[] =
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
 
 #define NODE_SCRIPTABLE_FLAGS                                                 \
- ((DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
+ ((GCPARTICIPANT_SCRIPTABLE_FLAGS |                                           \
    nsIXPCScriptable::WANT_PRECREATE |                                         \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
-   nsIXPCScriptable::WANT_SETPROPERTY |                                       \
-   nsIXPCScriptable::WANT_FINALIZE |                                          \
-   nsIXPCScriptable::WANT_MARK) &                                             \
+   nsIXPCScriptable::WANT_SETPROPERTY) &                                      \
   ~nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY)
 
 // We need to let JavaScript QI elements to interfaces that are not in
@@ -815,8 +818,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // DOM Traversal classes
-  NS_DEFINE_CLASSINFO_DATA(TreeWalker, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(TreeWalker, nsDOMGCParticipantSH,
+                           GCPARTICIPANT_SCRIPTABLE_FLAGS)
 
   // We are now trying to preserve binary compat in classinfo.  No
   // more putting things in those categories up there.  New entries
@@ -6657,8 +6660,8 @@ nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
     *objp = obj;
   }
 
-  return nsDOMClassInfo::NewResolve(wrapper, cx, obj, id, flags, objp,
-                                    _retval);
+  return nsDOMGCParticipantSH::NewResolve(wrapper, cx, obj, id, flags, objp,
+                                          _retval);
 }
 
 NS_IMETHODIMP
@@ -6685,19 +6688,21 @@ nsEventReceiverSH::AddProperty(nsIXPConnectWrappedNative *wrapper,
   return nsEventReceiverSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
-NS_IMETHODIMP
-nsEventReceiverSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj)
-{
-  // XXX clear event handlers in mListener...
+// XXX nsEventReceiverSH::Finalize: clear event handlers in mListener...
 
+// DOMGCParticipant helper
+
+NS_IMETHODIMP
+nsDOMGCParticipantSH::Finalize(nsIXPConnectWrappedNative *wrapper,
+                               JSContext *cx, JSObject *obj)
+{
   nsDOMClassInfo::ReleaseWrapper(wrapper);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsEventReceiverSH::Mark(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                        JSObject *obj, void *arg, PRUint32 *_retval)
+nsDOMGCParticipantSH::Mark(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                           JSObject *obj, void *arg, PRUint32 *_retval)
 {
   nsCOMPtr<nsIDOMGCParticipant> participant(do_QueryWrappedNative(wrapper));
 

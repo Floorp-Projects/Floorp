@@ -370,15 +370,39 @@ protected:
 
 typedef nsDOMClassInfo nsDOMGenericSH;
 
+// Scriptable helper for implementations of nsIDOMGCParticipant that
+// need a mark callback.
+class nsDOMGCParticipantSH : public nsDOMGenericSH
+{
+protected:
+  nsDOMGCParticipantSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsDOMGCParticipantSH()
+  {
+  }
+
+public:
+  NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                      JSObject *obj);
+  NS_IMETHOD Mark(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                  JSObject *obj, void *arg, PRUint32 *_retval);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsDOMGCParticipantSH(aData);
+  }
+};
 
 // EventProp scriptable helper, this class should be the base class of
 // all objects that should support things like
 // obj.onclick=function{...}
 
-class nsEventReceiverSH : public nsDOMGenericSH
+class nsEventReceiverSH : public nsDOMGCParticipantSH
 {
 protected:
-  nsEventReceiverSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  nsEventReceiverSH(nsDOMClassInfoData* aData) : nsDOMGCParticipantSH(aData)
   {
   }
 
@@ -420,10 +444,6 @@ public:
                          PRBool *_retval);
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                      JSObject *obj);
-  NS_IMETHOD Mark(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                  JSObject *obj, void *arg, PRUint32 *_retval);
 };
 
 
