@@ -119,7 +119,6 @@ private:
     nsCOMPtr<nsIDOMDocument> mDocument;
     nsCOMPtr<nsIDOMNode> mCurrentNode;
     nsCOMPtr<nsIDOMNode> mParentNode;
-    nsCOMPtr<nsIContent> mRootContent;
 
     nsCOMPtr<nsIDOMNode> mNonAddedParent;
     nsCOMPtr<nsIDOMNode> mNonAddedNode;
@@ -148,6 +147,9 @@ private:
 
     PRPackedBool mDocumentIsHTML;
     PRPackedBool mCreatingNewDocument;
+
+    // Set to true when we know there's a root content in our document.
+    PRPackedBool mRootContentCreated;
 
     enum txAction { eCloseElement = 1, eFlushText = 2 };
 };

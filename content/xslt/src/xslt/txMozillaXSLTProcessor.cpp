@@ -907,12 +907,8 @@ txMozillaXSLTProcessor::notifyError()
         return;
     }
 
-    nsCOMPtr<nsIContent> rootContent = do_QueryInterface(element);
-    if (!rootContent) {
-        return;
-    }
-
-    rv = document->SetRootContent(rootContent);
+    nsCOMPtr<nsIDOMNode> resultNode;
+    rv = errorDocument->AppendChild(element, getter_AddRefs(resultNode));
     if (NS_FAILED(rv)) {
         return;
     }
@@ -923,7 +919,6 @@ txMozillaXSLTProcessor::notifyError()
         return;
     }
 
-    nsCOMPtr<nsIDOMNode> resultNode;
     rv = element->AppendChild(text, getter_AddRefs(resultNode));
     if (NS_FAILED(rv)) {
         return;

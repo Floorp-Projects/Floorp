@@ -37,7 +37,7 @@
 #ifndef nsIDocument_h___
 #define nsIDocument_h___
 
-#include "nsIDOMGCParticipant.h"
+#include "nsINode.h"
 #include "nsEvent.h"
 #include "nsStringGlue.h"
 #include "nsCOMArray.h"
@@ -92,10 +92,10 @@ class nsIVariant;
 class nsIDOMUserDataHandler;
 
 // IID for the nsIDocument interface
-// a5d8343d-9b0a-40a8-a47e-893065749f0b
+// 1e787f0e-feb3-43e3-bd00-bf8a77dcc557
 #define NS_IDOCUMENT_IID \
-{ 0xa5d8343d, 0x9b0a, 0x40a8, \
-  { 0xa4, 0x7e, 0x89, 0x30, 0x65, 0x74, 0x9f, 0x0b } }
+{ 0x1e787f0e, 0xfeb3, 0x43e3, \
+ { 0xbd, 0x00, 0xbf, 0x8a, 0x77, 0xdc, 0xc5, 0x57 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -104,19 +104,22 @@ class nsIDOMUserDataHandler;
 
 // Document interface.  This is implemented by all document objects in
 // Gecko.
-class nsIDocument : public nsIDOMGCParticipant
+class nsIDocument : public nsINode
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
+#ifdef MOZILLA_INTERNAL_API
   nsIDocument()
-    : mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
+    : nsINode(nsnull),
+      mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
       mNodeInfoManager(nsnull),
       mPartID(0)
   {
   }
-
+#endif
+  
   /**
    * Let the document know that we're starting to load data into it.
    * @param aCommand The parser command
@@ -371,26 +374,6 @@ public:
   {
     return mRootContent;
   }
-
-  /**
-   * Set aRoot as the root content object for this document.  If aRoot is
-   * non-null, this should not be called on documents that currently have a
-   * root content without first clearing out the document's children.  Passing
-   * in null to unbind the existing root content is allowed.  This method will
-   * bind aRoot to the document; the caller need not call BindToTree on aRoot.
-   *
-   * Note that this method never sends out nsIDocumentObserver notifications;
-   * doing that is the caller's responsibility.
-   */
-  virtual nsresult SetRootContent(nsIContent* aRoot) = 0;
-
-  /** 
-   * Get the direct children of the document - content in
-   * the prolog, the root content and content in the epilog.
-   */
-  virtual nsIContent *GetChildAt(PRUint32 aIndex) const = 0;
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const = 0;
-  virtual PRUint32 GetChildCount() const = 0;
 
   /**
    * Accessors to the collection of stylesheets owned by this document.

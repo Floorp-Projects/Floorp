@@ -2449,7 +2449,7 @@ nsXULDocument::PrepareToWalk()
         rv = CreateElementFromPrototype(proto, getter_AddRefs(root));
         if (NS_FAILED(rv)) return rv;
 
-        rv = SetRootContent(root);
+        rv = AppendChildTo(root, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
         
         // Add the root element to the XUL document's ID-to-element map.

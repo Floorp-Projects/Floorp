@@ -2113,7 +2113,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     }
     NS_ADDREF(mRoot);
 
-    rv = mDocument->SetRootContent(mRoot);
+    NS_ASSERTION(mDocument->GetChildCount() == 0,
+                 "Document should have no kids here!");
+    rv = mDocument->AppendChildTo(mRoot, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3051,12 +3053,6 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::AddDocTypeDecl()\n"));
   MOZ_TIMER_START(mWatch);
 
-  nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mHTMLDocument));
-
-  if (!doc) {
-    return NS_OK;
-  }
-
   nsAutoString docTypeStr(aNode.GetText());
   nsresult rv = NS_OK;
 
@@ -3239,6 +3235,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
     nsCOMPtr<nsIDOMDocumentType> oldDocType;
     nsCOMPtr<nsIDOMDocumentType> docType;
 
+    nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mHTMLDocument));
     doc->GetDoctype(getter_AddRefs(oldDocType));
 
     nsCOMPtr<nsIDOMDOMImplementation> domImpl;
@@ -3259,25 +3256,19 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
     if (NS_FAILED(rv) || !docType) {
       return rv;
     }
-    nsCOMPtr<nsIDOMNode> tmpNode;
 
     if (oldDocType) {
       // If we already have a doctype we replace the old one.
-
+      nsCOMPtr<nsIDOMNode> tmpNode;
       rv = doc->ReplaceChild(oldDocType, docType, getter_AddRefs(tmpNode));
     } else {
       // If we don't already have one we insert it as the first child,
       // this might not be 100% correct but since this is called from
       // the content sink we assume that this is what we want.
-      nsCOMPtr<nsIDOMNode> firstChild;
-
-      doc->GetFirstChild(getter_AddRefs(firstChild));
-
-      // If the above fails it must be because we don't have any child
-      // nodes, then firstChild will be 0 and InsertBefore() will
-      // append
-
-      rv = doc->InsertBefore(docType, firstChild, getter_AddRefs(tmpNode));
+      nsCOMPtr<nsIContent> content = do_QueryInterface(docType);
+      NS_ASSERTION(content, "Doctype isn't content?");
+      
+      mDocument->InsertChildAt(content, 0, PR_TRUE);
     }
   }
 

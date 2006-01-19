@@ -243,7 +243,8 @@ nsMediaDocument::CreateSyntheticDocument()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  rv = SetRootContent(root);
+  NS_ASSERTION(GetChildCount() == 0, "Shouldn't have any kids");
+  rv = AppendChildTo(root, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::body, nsnull,

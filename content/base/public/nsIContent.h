@@ -46,11 +46,7 @@
 #include "nsPropertyTable.h"
 #include "nsCaseTreatment.h"
 #include "nsChangeHint.h"
-#include "nsIDOMGCParticipant.h"
-
-#ifdef MOZILLA_INTERNAL_API
-#include "nsINodeInfo.h"
-#endif
+#include "nsINode.h"
 
 // Forward declarations
 class nsIAtom;
@@ -69,16 +65,16 @@ class nsAttrValue;
 class nsAttrName;
 
 // IID for the nsIContent interface
-// ffc6f2b8-bcdc-4cf7-b72f-e843860f14a6
+// e7c1214f-8164-43aa-934e-b8b06431a93d
 #define NS_ICONTENT_IID \
-{ 0xe616c36e, 0x7db7, 0x46b0, \
-  { 0x89, 0x11, 0xf5, 0xd1, 0x74, 0xfa, 0x37, 0x34 } }
+{ 0xe7c1214f, 0x8164, 0x43aa, \
+ { 0x93, 0x4e, 0xb8, 0xb0, 0x64, 0x31, 0xa9, 0x3d } }
 
 /**
  * A node of content in a document's content model. This interface
  * is supported by all content objects.
  */
-class nsIContent : public nsIDOMGCParticipant {
+class nsIContent : public nsINode {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 
@@ -87,8 +83,8 @@ public:
   // nsIContent is that it exists with an IID
 
   nsIContent(nsINodeInfo *aNodeInfo)
-    : mParentPtrBits(0),
-      mNodeInfo(aNodeInfo)
+    : nsINode(aNodeInfo),
+      mParentPtrBits(0)
   {
     NS_ASSERTION(aNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
@@ -172,16 +168,6 @@ public:
   }
 
   /**
-   * Get the ownerDocument for this content.
-   *
-   * @return the ownerDocument
-   */
-  nsIDocument *GetOwnerDoc() const
-  {
-    return mNodeInfo->GetDocument();
-  }
-
-  /**
    * Get the parent content for this content.
    * @return the parent, or null if no parent
    */
@@ -230,57 +216,6 @@ public:
   {
     return mNodeInfo;
   }
-
-  /**
-   * Get the number of children
-   * @return the number of children
-   */
-  virtual PRUint32 GetChildCount() const = 0;
-
-  /**
-   * Get a child by index
-   * @param aIndex the index of the child to get, or null if index out
-   *               of bounds
-   * @return the child
-   */
-  virtual nsIContent *GetChildAt(PRUint32 aIndex) const = 0;
-
-  /**
-   * Get the index of a child within this content
-   * @param aPossibleChild the child to get the index
-   * @return the index of the child, or -1 if not a child
-   */
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const = 0;
-
-  /**
-   * Insert a content node at a particular index.
-   *
-   * @param aKid the content to insert
-   * @param aIndex the index it is being inserted at (the index it will have
-   *        after it is inserted)
-   * @param aNotify whether to notify the document that the insert has
-   *        occurred
-   */
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify) = 0;
-
-  /**
-   * Append a content node to the end of the child list.
-   *
-   * @param aKid the content to append
-   * @param aNotify whether to notify the document that the replace has
-   *        occurred
-   */
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify) = 0;
-
-  /**
-   * Remove a child from this content node.
-   *
-   * @param aIndex the index of the child to remove
-   * @param aNotify whether to notify the document that the replace has
-   *        occurred
-   */
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify) = 0;
 
   /**
    * Returns an atom holding the name of the attribute of type ID on
@@ -916,8 +851,6 @@ protected:
 
   PtrBits      mParentPtrBits;
   
-  nsCOMPtr<nsINodeInfo> mNodeInfo;
-
 #endif // MOZILLA_INTERNAL_API
 };
 

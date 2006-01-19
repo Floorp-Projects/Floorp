@@ -38,12 +38,12 @@
 #define nsDetectionAdaptor_h__
 
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
 #include "nsIWebShellServices.h"
 
 #include "nsIParserFilter.h"
 static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
 
+class nsIDocument;
 class CToken;
 
 //--------------------------------------------------------------

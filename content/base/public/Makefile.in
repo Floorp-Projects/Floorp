@@ -58,6 +58,7 @@ nsIDocumentEncoder.h \
 nsIDocumentObserver.h \
 nsIDOMGCParticipant.h \
 nsINameSpaceManager.h \
+nsINode.h \
 nsINodeInfo.h \
 nsIRangeUtils.h \
 nsIScriptElement.h \

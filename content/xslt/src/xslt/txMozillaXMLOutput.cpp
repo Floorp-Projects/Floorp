@@ -98,7 +98,8 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsAString& aRootName,
       mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
       mHaveBaseElement(PR_FALSE),
-      mCreatingNewDocument(PR_TRUE)
+      mCreatingNewDocument(PR_TRUE),
+      mRootContentCreated(PR_FALSE)
 {
     if (aObserver) {
         mNotifier = new txTransformNotifier();
@@ -304,16 +305,15 @@ void txMozillaXMLOutput::endElement(const nsAString& aName, const PRInt32 aNsID)
     // BindToTree manually
     if (mCurrentNode == mNonAddedNode) {
         nsCOMPtr<nsIDocument> document = do_QueryInterface(mNonAddedParent);
-        if (document && !mRootContent) {
-            mRootContent = do_QueryInterface(mCurrentNode);
-            // XXXbz what to do on failure here?
-            document->SetRootContent(mRootContent);
+        NS_ASSERTION(!document || !mRootContentCreated,
+                     "mNonAddedParent shouldn't be a document if we have a "
+                     "root content");
+        if (document) {
+            mRootContentCreated = PR_TRUE;
         }
-        else {
-            nsCOMPtr<nsIDOMNode> resultNode;
-            mNonAddedParent->AppendChild(mCurrentNode,
-                                         getter_AddRefs(resultNode));
-        }
+        
+        nsCOMPtr<nsIDOMNode> resultNode;
+        mNonAddedParent->AppendChild(mCurrentNode, getter_AddRefs(resultNode));
         mCurrentNode = mNonAddedParent;
         mNonAddedParent = nsnull;
         mNonAddedNode = nsnull;
@@ -477,7 +477,7 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
         nsCOMPtr<nsIDocument> document = do_QueryInterface(mParentNode);
         nsCOMPtr<nsIDOMElement> currentElement = do_QueryInterface(mCurrentNode);
 
-        if (document && currentElement && mRootContent) {
+        if (document && currentElement && mRootContentCreated) {
             // We already have a document element, but the XSLT spec allows this.
             // As a workaround, create a wrapper object and use that as the
             // document element.
@@ -491,28 +491,24 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
             mNonAddedNode = mCurrentNode;
         }
         else {
-            if (document && currentElement && !mRootContent) {
-                mRootContent = do_QueryInterface(mCurrentNode);
-                // XXXbz what to do on failure here?
-                document->SetRootContent(mRootContent);
+            if (document && currentElement) {
+                mRootContentCreated = PR_TRUE;
             }
-            else {
-                nsCOMPtr<nsIDOMNode> resultNode;
-
-                rv = mParentNode->AppendChild(mCurrentNode, getter_AddRefs(resultNode));
-                if (NS_FAILED(rv)) {
-                    mBadChildLevel = 1;
-                    mCurrentNode = mParentNode;
-                    PR_LOG(txLog::xslt, PR_LOG_DEBUG,
-                           ("closePrevious, mBadChildLevel = %d\n",
-                            mBadChildLevel));
-                    // warning to the console
-                    nsCOMPtr<nsIConsoleService> consoleSvc = 
-                        do_GetService("@mozilla.org/consoleservice;1", &rv);
-                    if (consoleSvc) {
-                        consoleSvc->LogStringMessage(
-                            NS_LITERAL_STRING("failed to create XSLT content").get());
-                    }
+            
+            nsCOMPtr<nsIDOMNode> resultNode;
+            rv = mParentNode->AppendChild(mCurrentNode, getter_AddRefs(resultNode));
+            if (NS_FAILED(rv)) {
+                mBadChildLevel = 1;
+                mCurrentNode = mParentNode;
+                PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+                       ("closePrevious, mBadChildLevel = %d\n",
+                        mBadChildLevel));
+                // warning to the console
+                nsCOMPtr<nsIConsoleService> consoleSvc = 
+                    do_GetService("@mozilla.org/consoleservice;1", &rv);
+                if (consoleSvc) {
+                    consoleSvc->LogStringMessage(
+                                                 NS_LITERAL_STRING("failed to create XSLT content").get());
                 }
             }
         }
@@ -559,16 +555,22 @@ txMozillaXMLOutput::createTxWrapper()
 
     nsCOMPtr<nsIDOMNode> child, resultNode;
     PRUint32 i, j, childCount = document->GetChildCount();
+#ifdef DEBUG
+    // Keep track of the location of the current documentElement, if there is
+    // one, so we can verify later
+    PRUint32 rootLocation = 0;
+#endif
     for (i = 0, j = 0; i < childCount; ++i) {
         nsIContent* childContent = document->GetChildAt(j);
         child = do_QueryInterface(childContent);
-        if (childContent == mRootContent) {
-            document->SetRootContent(nsnull);
-        }
         PRUint16 nodeType;
         child->GetNodeType(&nodeType);
         switch (nodeType) {
             case nsIDOMNode::ELEMENT_NODE:
+#ifdef DEBUG
+                rootLocation = j;
+                // Fall through
+#endif
             case nsIDOMNode::TEXT_NODE:
             case nsIDOMNode::CDATA_SECTION_NODE:
             case nsIDOMNode::ENTITY_REFERENCE_NODE:
@@ -582,7 +584,16 @@ txMozillaXMLOutput::createTxWrapper()
                     // Failed to remove the content, skip it in next iteration
                     ++j;
                 }
+                break;
             }
+            case nsIDOMNode::DOCUMENT_TYPE_NODE:
+#ifdef DEBUG
+                // The new documentElement should go after the document type.
+                // This is needed for cases when there is no existing
+                // documentElement in the document.
+                rootLocation = PR_MAX(rootLocation, j+1);
+                // Fall through
+#endif
             default:
             {
                 ++j;
@@ -597,8 +608,12 @@ txMozillaXMLOutput::createTxWrapper()
         mCurrentNode = wrapper;
     }
         
-    mRootContent = do_QueryInterface(wrapper);
-    return document->SetRootContent(mRootContent);
+    mRootContentCreated = PR_TRUE;
+    nsCOMPtr<nsIContent> wrapperContent = do_QueryInterface(wrapper);
+    NS_ASSERTION(wrapperContent, "Must have wrapper content");
+    NS_ASSERTION(rootLocation = document->GetChildCount(),
+                 "Incorrect root location");
+    return document->AppendChildTo(wrapperContent, PR_TRUE);
 }
 
 void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML)

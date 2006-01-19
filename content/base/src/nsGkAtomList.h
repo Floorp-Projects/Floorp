@@ -1192,6 +1192,7 @@ GK_ATOM(secondsFromDateTime, "seconds-from-dateTime")
 // Node types
 GK_ATOM(cdataTagName, "#cdata-section")
 GK_ATOM(commentTagName, "#comment")
+GK_ATOM(documentNodeName, "#document")
 GK_ATOM(documentFragmentNodeName, "#document-fragment")
 GK_ATOM(documentTypeNodeName, "#document-type")
 GK_ATOM(processingInstructionTagName, "#processing-instruction")
