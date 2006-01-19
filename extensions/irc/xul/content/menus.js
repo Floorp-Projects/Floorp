@@ -106,10 +106,36 @@ function initMenus()
         ]
     };
 
-    var notInChannel = "((cx.TYPE == 'IRCChannel') and !cx.channel.active)";
-    var inChannel = "((cx.TYPE == 'IRCChannel') and cx.channel.active)";
-    var netConnected = "cx.network and cx.network.isConnected()";
-    var netDisconnected = "cx.network and !cx.network.isConnected()";
+    // OS values
+    var Win      = "(client.platform == 'Windows')";
+    var NotWin   = "(client.platform != 'Windows')";
+    var Linux    = "(client.platform == 'Linux')";
+    var NotLinux = "(client.platform != 'Linux')";
+    var Mac      = "(client.platform == 'Mac')";
+    var NotMac   = "(client.platform != 'Mac')";
+
+    // Platform values
+    var Mozilla    = "(client.host == 'Mozilla')";
+    var NotMozilla = "(client.host != 'Mozilla')";
+    var Toolkit    = NotMozilla;
+
+    // Useful combinations
+    var ToolkitOnLinux    = "(" + Toolkit + " and " + Linux + ")";
+    var ToolkitNotOnLinux = "(" + Toolkit + " and " + NotLinux + ")";
+    var ToolkitOnMac      = "(" + Toolkit + " and " + Mac + ")";
+    var ToolkitNotOnMac   = "(" + Toolkit + " and " + NotMac + ")";
+
+    // IRC specific values
+    var ViewClient  = "(cx.TYPE == 'IRCClient')";
+    var ViewNetwork = "(cx.TYPE == 'IRCNetwork')";
+    var ViewChannel = "(cx.TYPE == 'IRCChannel')";
+    var ViewUser    = "(cx.TYPE == 'IRCUser')";
+
+    // IRC specific combinations
+    var ChannelActive   = "(" + ViewChannel + " and cx.channel.active)";
+    var ChannelInactive = "(" + ViewChannel + " and !cx.channel.active)";
+    var NetConnected    = "(cx.network and cx.network.isConnected())";
+    var NetDisconnected = "(cx.network and !cx.network.isConnected())";
 
     client.menuSpecs["mainmenu:file"] = {
         label: MSG_MNU_FILE,
@@ -123,25 +149,20 @@ function initMenus()
          //["manage-networks"],
          //["manage-plugins"],
          ["-"],
-         ["leave",       {visibleif: inChannel}],
-         ["rejoin",      {visibleif: notInChannel}],
-         ["delete-view", {visibleif: "!" + inChannel}],
-         ["disconnect",  {visibleif: netConnected}],
-         ["reconnect",   {visibleif: netDisconnected}],
+         ["leave",       {visibleif: ChannelActive}],
+         ["rejoin",      {visibleif: ChannelInactive}],
+         ["delete-view", {visibleif: "!" + ChannelActive}],
+         ["disconnect",  {visibleif: NetConnected}],
+         ["reconnect",   {visibleif: NetDisconnected}],
          ["-"],
          ["print"],
          ["-"],
          ["save"],
-         ["-"],
-         [navigator.platform.search(/win/i) == -1 ? "quit" : "exit"]
+         ["-",           {visibleif: NotMac}],
+         ["exit",        {visibleif: Win}],
+         ["quit",        {visibleif: NotMac + " and " + NotWin}]
         ]
     };
-
-    var Mozilla = "(client.host == 'Mozilla')";
-    var ToolkitAppOnLinux = "((client.host != 'Mozilla') and " +
-                            "(client.platform == 'Linux'))";
-    var ToolkitAppNotOnLinux = "((client.host != 'Mozilla') and " +
-                               "!(client.platform == 'Linux'))";
 
     client.menuSpecs["mainmenu:edit"] = {
         label: MSG_MNU_EDIT,
@@ -160,11 +181,16 @@ function initMenus()
          ["-"],
          ["find"],
          ["find-again", {enabledif: "canFindAgainInPage()"}],
+         // Mozilla (suite) gets  : separator, Mozilla Prefs, ChatZilla prefs.
+         // Toolkit Linux apps get: separator, ChatZilla prefs.
+         // Toolkit Mac apps get  : ChatZilla prefs (special Mac ID).
          ["-",                   {visibleif: Mozilla}],
          ["cmd-mozilla-prefs",   {visibleif: Mozilla}],
          ["cmd-chatzilla-prefs", {visibleif: Mozilla}],
-         ["-",                   {visibleif: ToolkitAppOnLinux}],
-         ["cmd-prefs",           {visibleif: ToolkitAppOnLinux}]
+         ["-",                   {visibleif: ToolkitOnLinux}],
+         ["cmd-prefs",           {visibleif: ToolkitOnLinux}],
+         ["cmd-chatzilla-opts",  {visibleif: ToolkitOnMac,
+                                  id: "menu_preferences"}]
         ]
     };
 
@@ -173,7 +199,8 @@ function initMenus()
         getContext: getDefaultContext,
         items:
         [
-         ["cmd-chatzilla-opts", {visibleif: ToolkitAppNotOnLinux}]
+         ["cmd-chatzilla-opts",
+             {visibleif: ToolkitNotOnLinux + " and " + ToolkitNotOnMac}]
         ]
     };
 
@@ -355,11 +382,11 @@ function initMenus()
          ["query",   {visibleif: "cx.nickname"}],
          ["version", {visibleif: "cx.nickname"}],
          ["-"],
-         ["leave",       {visibleif: inChannel}],
-         ["rejoin",      {visibleif: notInChannel}],
-         ["delete-view", {visibleif: "!" + inChannel}],
-         ["disconnect",  {visibleif: netConnected}],
-         ["reconnect",   {visibleif: netDisconnected}],
+         ["leave",       {visibleif: ChannelActive}],
+         ["rejoin",      {visibleif: ChannelInactive}],
+         ["delete-view", {visibleif: "!" + ChannelActive}],
+         ["disconnect",  {visibleif: NetConnected}],
+         ["reconnect",   {visibleif: NetDisconnected}],
          ["-"],
          ["toggle-text-dir"]
         ]
@@ -375,11 +402,11 @@ function initMenus()
                  {type: "checkbox",
                   checkedif: "isStartupURL(cx.sourceObject.getURL())"}],
          ["-"],
-         ["leave",       {visibleif: inChannel}],
-         ["rejoin",      {visibleif: notInChannel}],
-         ["delete-view", {visibleif: "!" + inChannel}],
-         ["disconnect",  {visibleif: netConnected}],
-         ["reconnect",   {visibleif: netDisconnected}],
+         ["leave",       {visibleif: ChannelActive}],
+         ["rejoin",      {visibleif: ChannelInactive}],
+         ["delete-view", {visibleif: "!" + ChannelActive}],
+         ["disconnect",  {visibleif: NetConnected}],
+         ["reconnect",   {visibleif: NetDisconnected}],
          ["-"],
          ["toggle-text-dir"]
         ]
@@ -427,7 +454,9 @@ function createMenus()
         comBar.collapsed = false;
     }
 
-    if ((client.host == "Mozilla") || (client.platform == "Linux")) {
+    if ((client.host == "Mozilla") || (client.platform == "Linux") ||
+        (client.platform == "Mac"))
+    {
         toolsMenu.parentNode.removeChild(toolsMenu);
     }
 }
