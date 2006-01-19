@@ -134,8 +134,12 @@ PR_IMPLEMENT(PRStatus) PR_GetSystemInfo(PRSysInfo cmd, char *buf, PRUint32 bufle
     switch(cmd)
     {
       case PR_SI_HOSTNAME:
+      case PR_SI_HOSTNAME_UNTRUNCATED:
         if (PR_FAILURE == _PR_MD_GETHOSTNAME(buf, (PRUintn)buflen))
             return PR_FAILURE;
+
+        if (cmd == PR_SI_HOSTNAME_UNTRUNCATED)
+            break;
         /*
          * On some platforms a system does not have a hostname and
          * its IP address is returned instead.   The following code
