@@ -75,9 +75,12 @@
   </popupset>
   
   <keyset>
-    <key id="minimo-key" keycode="VK_F23" oncommand="BrowserMenuSpin()"/>
+    <!-- ***** IMPORTANT ***** 
+         Everytime you edit these keys, you may also consider
+         to check/edit the key assignment on minimo.js/MenuHandleMenuEscape
+         -->
+    <key id="minimo-key"  keycode="VK_F23" oncommand="BrowserMenuSpin()"/>
     <key id="minimo-key2" keycode="VK_F11" oncommand="BrowserMenuSpin()"/>
-
     <key id="minimo-key3" keycode="VK_F24" oncommand="BrowserNavMenuPopup()"/>
     <key id="minimo-key4" keycode="VK_F12" oncommand="BrowserNavMenuPopup()"/>
 
