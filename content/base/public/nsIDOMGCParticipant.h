@@ -52,6 +52,12 @@
  * reachability in the native object graphs to help prevent script ->
  * native -> script cyclical reference from causing leaks due to the
  * creation of garbage collection roots and native/script boundaries.
+ *
+ * Some implementations of nsIDOMGCParticipant may be responsible for
+ * enforcing the requirement that callers of
+ * |nsDOMClassInfo::PreserveWrapper| must call
+ * |nsDOMClassInfo::ReleaseWrapper| before the nsIDOMGCParticipant
+ * argument to the former is destroyed.
  */
 class nsIDOMGCParticipant : public nsISupports
 {

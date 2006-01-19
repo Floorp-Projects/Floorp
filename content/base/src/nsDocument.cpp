@@ -776,7 +776,7 @@ nsDocument::~nsDocument()
   }
 
   if (mListenerManager) {
-    mListenerManager->SetListenerTarget(nsnull);
+    mListenerManager->Disconnect();
   }
 
   if (mScriptLoader) {

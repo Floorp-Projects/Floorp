@@ -210,7 +210,7 @@ public:
   ~EventListenerManagerMapEntry()
   {
     if (mListenerManager) {
-      mListenerManager->SetListenerTarget(nsnull);
+      mListenerManager->Disconnect();
     }
   }
 

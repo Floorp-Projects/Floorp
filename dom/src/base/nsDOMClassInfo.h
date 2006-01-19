@@ -180,6 +180,10 @@ public:
    *
    * A preservation with a given key overwrites any previous
    * preservation with that key.
+   *
+   * No strong references are held as a result of this function call, so
+   * the caller is responsible for calling |ReleaseWrapper| sometime
+   * before |aParticipant|'s destructor runs.
    */
   static nsresult PreserveWrapper(void* aKey,
                                   nsIXPConnectJSObjectHolder* (*aKeyToWrapperFunc)(void* aKey),
@@ -190,6 +194,9 @@ public:
    * Easier way to call the above just for DOM nodes (and better, since
    * we get the performance benefits of having the same identity function).
    * The call to |PreserveWrapper| is made with |aKey| == |aWrapper|.
+   *
+   * The caller need not call |ReleaseWrapper| since the node's
+   * wrapper's scriptable helper does so in its finalize callback.
    */
   static nsresult PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);
 

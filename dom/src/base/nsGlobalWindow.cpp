@@ -377,6 +377,11 @@ nsGlobalWindow::~nsGlobalWindow()
       PR_REMOVE_AND_INIT_LINK(w);
     }
   } else {
+    if (mListenerManager) {
+      mListenerManager->Disconnect();
+      mListenerManager = nsnull;
+    }
+
     // An inner window is destroyed, pull it out of the outer window's
     // list if inner windows.
 
@@ -474,7 +479,7 @@ nsGlobalWindow::FreeInnerObjects(JSContext *cx)
   mChromeEventHandler = nsnull;
 
   if (mListenerManager) {
-    mListenerManager->RemoveAllListeners();
+    mListenerManager->Disconnect();
     mListenerManager = nsnull;
   }
 
@@ -1002,7 +1007,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       }
 
       if (!reUseInnerWindow && currentInner->mListenerManager) {
-        currentInner->mListenerManager->RemoveAllListeners();
+        currentInner->mListenerManager->Disconnect();
         currentInner->mListenerManager = nsnull;
       }
 

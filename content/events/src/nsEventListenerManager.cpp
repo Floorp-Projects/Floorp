@@ -2014,9 +2014,23 @@ nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes,
 }
 
 NS_IMETHODIMP
+nsEventListenerManager::Disconnect()
+{
+  mTarget = nsnull;
+
+  // Bug 323807: nsDOMClassInfo::PreserveWrapper (and
+  // nsIDOMGCParticipant) require that we remove all event listeners now
+  // to remove any weak references in the nsDOMClassInfo's preserved
+  // wrapper table to the target.
+  RemoveAllListeners();
+}
+
+NS_IMETHODIMP
 nsEventListenerManager::SetListenerTarget(nsISupports* aTarget)
 {
-  //WEAK reference, must be set back to nsnull when done
+  NS_PRECONDITION(aTarget, "unexpected null pointer");
+
+  //WEAK reference, must be set back to nsnull when done by calling Disconnect
   mTarget = aTarget;
   return NS_OK;
 }
