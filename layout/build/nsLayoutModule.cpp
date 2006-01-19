@@ -308,10 +308,7 @@ Initialize(nsIModule* aSelf)
   nsCSSKeywords::AddRefTable();
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
-  nsHTMLAtoms::AddRefAtoms();
-  nsXBLAtoms::AddRefAtoms();
-  nsLayoutAtoms::AddRefAtoms();
-  nsXULAtoms::AddRefAtoms();
+  nsGkAtoms::AddRefAtoms();
 
 #ifdef MOZ_XUL
   rv = nsXULContentUtils::Init();
@@ -326,13 +323,11 @@ Initialize(nsIModule* aSelf)
 
 #ifdef MOZ_MATHML
   nsMathMLOperators::AddRefTable();
-  nsMathMLAtoms::AddRefAtoms();
 #endif
 
 #ifdef MOZ_SVG
   if (nsSVGUtils::SVGEnabled())
     nsContentDLF::RegisterSVG();
-  nsSVGAtoms::AddRefAtoms();
 #ifdef MOZ_SVG_RENDERER_LIBART
   NS_InitSVGRendererLibartGlobals();
 #endif

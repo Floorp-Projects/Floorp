@@ -79,6 +79,8 @@ EXPORTS		= \
 		nsAtomListUtils.h \
 		nsAttrName.h \
 		nsContentList.h \
+		nsGkAtomList.h \
+		nsGkAtoms.h \
 		nsNodeInfoManager.h \
 		nsPropertyTable.h \
 		nsStubDocumentObserver.h \
@@ -112,6 +114,7 @@ CPPSRCS		= \
 		nsGenericDOMDataNode.cpp \
 		nsGenericDOMNodeList.cpp \
 		nsGenericElement.cpp \
+		nsGkAtoms.cpp \
 		nsHTMLContentSerializer.cpp \
 		nsImageLoadingContent.cpp \
 		nsMappedAttributes.cpp \

@@ -58,7 +58,6 @@ REQUIRES	= xpcom \
 include $(topsrcdir)/config/config.mk
 
 CPPSRCS =				\
-	nsMathMLAtoms.cpp  \
         nsMathMLOperators.cpp \
 	$(NULL)
 

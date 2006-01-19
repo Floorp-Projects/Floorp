@@ -541,7 +541,7 @@ nsComputedDOMStyle::GetColumnCount(nsIFrame *aFrame,
 
   if (column) {
     if (column->mColumnCount == NS_STYLE_COLUMN_COUNT_AUTO) {
-      val->SetIdent(nsLayoutAtoms::autoAtom);
+      val->SetIdent(nsLayoutAtoms::_auto);
     } else {
       val->SetNumber(column->mColumnCount);
     }
@@ -568,7 +568,7 @@ nsComputedDOMStyle::GetColumnWidth(nsIFrame *aFrame,
       case eStyleUnit_Auto:
         // XXX fix this. When we actually have a column frame, I think
         // we should return the computed column width.
-        val->SetIdent(nsLayoutAtoms::autoAtom);
+        val->SetIdent(nsLayoutAtoms::_auto);
         break;
       default:
         NS_ERROR("Unexpected column width unit");
@@ -1180,7 +1180,7 @@ nsComputedDOMStyle::GetTableLayout(nsIFrame *aFrame,
                                  nsCSSProps::kTableLayoutKTable);
     val->SetIdent(tableLayout);
   } else {
-    val->SetIdent(nsLayoutAtoms::autoAtom);
+    val->SetIdent(nsLayoutAtoms::_auto);
   }
 
   return CallQueryInterface(val, aValue);
@@ -1401,7 +1401,7 @@ nsComputedDOMStyle::GetMarkerOffset(nsIFrame *aFrame,
         val->SetTwips(content->mMarkerOffset.GetCoordValue());
         break;
       case eStyleUnit_Auto:
-        val->SetIdent(nsLayoutAtoms::autoAtom);
+        val->SetIdent(nsLayoutAtoms::_auto);
         break;
       case eStyleUnit_Null: // XXX doesn't seem like a valid unit per CSS2?
         val->SetIdent(nsLayoutAtoms::none);
@@ -1487,7 +1487,7 @@ nsComputedDOMStyle::GetOutlineStyle(nsIFrame *aFrame,
         val->SetIdent(nsLayoutAtoms::none);
         break;
       case NS_STYLE_BORDER_STYLE_AUTO:
-        val->SetIdent(nsLayoutAtoms::autoAtom);
+        val->SetIdent(nsLayoutAtoms::_auto);
         break;
       default:
         const nsAFlatCString& style =
@@ -1640,7 +1640,7 @@ nsComputedDOMStyle::GetZIndex(nsIFrame *aFrame,
         NS_ERROR("Unexpected z-index unit");
         // fall through
       case eStyleUnit_Auto:
-        val->SetIdent(nsLayoutAtoms::autoAtom);
+        val->SetIdent(nsLayoutAtoms::_auto);
         break;
     }
   }
@@ -1735,7 +1735,7 @@ nsComputedDOMStyle::GetImageRegion(nsIFrame *aFrame,
   nsROCSSPrimitiveValue *leftVal = nsnull;
   if (list) {
     if (list->mImageRegion.width <= 0 || list->mImageRegion.height <= 0) {
-      val->SetIdent(nsLayoutAtoms::autoAtom);
+      val->SetIdent(nsLayoutAtoms::_auto);
     } else {
       // create the cssvalues for the sides, stick them in the rect object
       topVal = GetROCSSPrimitiveValue();
@@ -2176,7 +2176,7 @@ nsComputedDOMStyle::GetCursor(nsIFrame *aFrame,
     }
 
     if (ui->mCursor == NS_STYLE_CURSOR_AUTO) {
-      val->SetIdent(nsLayoutAtoms::autoAtom);
+      val->SetIdent(nsLayoutAtoms::_auto);
     } else {
       const nsAFlatCString& cursor =
         nsCSSProps::ValueToKeyword(ui->mCursor,
@@ -2582,7 +2582,7 @@ nsComputedDOMStyle::GetClip(nsIFrame *aFrame,
                                 NS_STYLE_CLIP_RIGHT_AUTO |
                                 NS_STYLE_CLIP_BOTTOM_AUTO |
                                 NS_STYLE_CLIP_LEFT_AUTO)) {
-      val->SetIdent(nsLayoutAtoms::autoAtom);
+      val->SetIdent(nsLayoutAtoms::_auto);
     } else {
       // create the cssvalues for the sides, stick them in the rect object
       topVal = GetROCSSPrimitiveValue();
@@ -2594,25 +2594,25 @@ nsComputedDOMStyle::GetClip(nsIFrame *aFrame,
                                                   bottomVal, leftVal);
         if (domRect) {
           if (display->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
-            topVal->SetIdent(nsLayoutAtoms::autoAtom);
+            topVal->SetIdent(nsLayoutAtoms::_auto);
           } else {
             topVal->SetTwips(display->mClip.y);
           }
         
           if (display->mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO) {
-            rightVal->SetIdent(nsLayoutAtoms::autoAtom);
+            rightVal->SetIdent(nsLayoutAtoms::_auto);
           } else {
             rightVal->SetTwips(display->mClip.width + display->mClip.x);
           }
         
           if (display->mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO) {
-            bottomVal->SetIdent(nsLayoutAtoms::autoAtom);
+            bottomVal->SetIdent(nsLayoutAtoms::_auto);
           } else {
             bottomVal->SetTwips(display->mClip.height + display->mClip.y);
           }
           
           if (display->mClipFlags & NS_STYLE_CLIP_LEFT_AUTO) {
-            leftVal->SetIdent(nsLayoutAtoms::autoAtom);
+            leftVal->SetIdent(nsLayoutAtoms::_auto);
           } else {
             leftVal->SetTwips(display->mClip.x);
           }
@@ -2657,7 +2657,7 @@ nsComputedDOMStyle::GetOverflow(nsIFrame *aFrame,
                                    nsCSSProps::kOverflowKTable);
       val->SetIdent(overflow);
     } else {
-      val->SetIdent(nsLayoutAtoms::autoAtom);
+      val->SetIdent(nsLayoutAtoms::_auto);
     }
   } // XXX else what?
 
@@ -2680,7 +2680,7 @@ nsComputedDOMStyle::GetOverflowX(nsIFrame *aFrame,
                                  nsCSSProps::kOverflowSubKTable);
     val->SetIdent(overflow);
   } else {
-    val->SetIdent(nsLayoutAtoms::autoAtom);
+    val->SetIdent(nsLayoutAtoms::_auto);
   }
 
   return CallQueryInterface(val, aValue);
@@ -2702,7 +2702,7 @@ nsComputedDOMStyle::GetOverflowY(nsIFrame *aFrame,
                                  nsCSSProps::kOverflowSubKTable);
     val->SetIdent(overflow);
   } else {
-    val->SetIdent(nsLayoutAtoms::autoAtom);
+    val->SetIdent(nsLayoutAtoms::_auto);
   }
 
   return CallQueryInterface(val, aValue);
@@ -2764,7 +2764,7 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
           val->SetPercent(positionData->mHeight.GetPercentValue());
           break;
         case eStyleUnit_Auto:
-          val->SetIdent(nsLayoutAtoms::autoAtom);
+          val->SetIdent(nsLayoutAtoms::_auto);
           break;
         default:
           NS_ERROR("Unexpected height unit");
@@ -2832,7 +2832,7 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
           val->SetPercent(positionData->mWidth.GetPercentValue());
           break;
         case eStyleUnit_Auto:
-          val->SetIdent(nsLayoutAtoms::autoAtom);
+          val->SetIdent(nsLayoutAtoms::_auto);
           break;
         default:
           NS_ERROR("Unexpected width unit");
@@ -3262,7 +3262,7 @@ nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIFrame* aFrame,
 
         break;
       case eStyleUnit_Auto:
-        val->SetIdent(nsLayoutAtoms::autoAtom);
+        val->SetIdent(nsLayoutAtoms::_auto);
 
         break;
       default:

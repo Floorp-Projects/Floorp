@@ -3498,7 +3498,7 @@ IsSpecialContent(nsIContent*     aContent,
       aTag == nsMathMLAtoms::maction_ ||
       aTag == nsMathMLAtoms::mrow_   ||
       aTag == nsMathMLAtoms::merror_ ||
-      aTag == nsMathMLAtoms::none_   ||
+      aTag == nsMathMLAtoms::none   ||
       aTag == nsMathMLAtoms::mprescripts_;
 #endif
   return PR_FALSE;
@@ -6460,7 +6460,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
         if (aTag == nsXULAtoms::tooltip) {
           nsAutoString defaultTooltip;
-          aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::defaultz, defaultTooltip);
+          aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::_default, defaultTooltip);
           if (defaultTooltip.LowerCaseEqualsLiteral("true")) {
             // Locate the root frame and tell it about the tooltip.
             nsIFrame* rootFrame = aState.mFrameManager->GetRootFrame();
@@ -7284,7 +7284,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewMathMLmactionFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mrow_   ||
            aTag == nsMathMLAtoms::merror_ ||
-           aTag == nsMathMLAtoms::none_   ||
+           aTag == nsMathMLAtoms::none    ||
            aTag == nsMathMLAtoms::mprescripts_ )
     newFrame = NS_NewMathMLmrowFrame(mPresShell);
   // CONSTRUCTION of MTABLE elements

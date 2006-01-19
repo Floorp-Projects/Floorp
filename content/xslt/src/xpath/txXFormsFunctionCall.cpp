@@ -544,7 +544,7 @@ XFormsFunctionCall::getNameAtom(nsIAtom** aAtom)
     }
     case IF:
     {
-      *aAtom = txXPathAtoms::ifFunc;
+      *aAtom = txXPathAtoms::_if;
       break;
     }
     case INDEX:

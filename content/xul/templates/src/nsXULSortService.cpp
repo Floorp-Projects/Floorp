@@ -300,7 +300,7 @@ XULSortServiceImpl::FindSortableContainer(nsIContent *aRoot,
   nsIAtom *tag = aRoot->Tag();
 
   if (aRoot->IsContentOfType(nsIContent::eXUL)) {
-    if (tag == nsXULAtoms::templateAtom) // ignore content within templates
+    if (tag == nsXULAtoms::_template) // ignore content within templates
       return NS_OK;    
 
     if (tag == nsXULAtoms::listbox ||
@@ -1420,7 +1420,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
         child = container->GetChildAt(childLoop);
         if (!child) break;
 
-        child->GetAttr(kNameSpaceID_None, nsXULAtoms::templateAtom, valueStr);
+        child->GetAttr(kNameSpaceID_None, nsXULAtoms::_template, valueStr);
         if (!valueStr.IsEmpty())
           break;
         else

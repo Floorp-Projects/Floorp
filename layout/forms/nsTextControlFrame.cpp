@@ -1865,7 +1865,7 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Set the necessary style attributes on the text control.
 
-  rv = divContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::kClass,
+  rv = divContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_class,
                            NS_LITERAL_STRING("anonymous-div"), PR_FALSE);
 
   if (!IsSingleLineTextControl()) {

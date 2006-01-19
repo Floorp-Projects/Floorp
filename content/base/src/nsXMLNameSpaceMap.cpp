@@ -58,9 +58,9 @@ nsXMLNameSpaceMap::Create()
   nsXMLNameSpaceMap *map = new nsXMLNameSpaceMap();
   NS_ENSURE_TRUE(map, nsnull);
 
-  nsresult rv = map->AddPrefix(nsLayoutAtoms::xmlnsNameSpace,
+  nsresult rv = map->AddPrefix(nsLayoutAtoms::xmlns,
                                kNameSpaceID_XMLNS);
-  rv |= map->AddPrefix(nsLayoutAtoms::xmlNameSpace, kNameSpaceID_XML);
+  rv |= map->AddPrefix(nsLayoutAtoms::xml, kNameSpaceID_XML);
 
   if (NS_FAILED(rv)) {
     delete map;

@@ -38,32 +38,8 @@
 #ifndef nsSVGAtoms_h___
 #define nsSVGAtoms_h___
 
-#include "prtypes.h"
-#include "nsIAtom.h"
-
-/**
- * This class wraps up the creation and destruction of the standard
- * set of SVG atoms used during normal SVG handling. This object
- * is created when the first SVG content object is created, and
- * destroyed when the last such content object is destroyed.
- */
-class nsSVGAtoms {
-public:
-
-  static void AddRefAtoms();
-
-  /* Declare all atoms
-
-     The atom names and values are stored in nsCSSAtomList.h and
-     are brought to you by the magic of C preprocessing
-
-     Add new atoms to nsCSSAtomList and all support logic will be auto-generated
-   */
-#define SVG_ATOM(_name, _value) static nsIAtom* _name;
-#include "nsSVGAtomList.h"
-#undef SVG_ATOM
-
-};
+#include "nsGkAtoms.h"
+typedef class nsGkAtoms nsSVGAtoms;
 
 #endif /* nsSVGAtoms_h___ */
 

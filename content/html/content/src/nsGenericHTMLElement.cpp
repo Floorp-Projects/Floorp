@@ -489,14 +489,14 @@ nsGenericHTMLElement::SetDir(const nsAString& aDir)
 nsresult
 nsGenericHTMLElement::GetClassName(nsAString& aClassName)
 {
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::kClass, aClassName);
+  GetAttr(kNameSpaceID_None, nsHTMLAtoms::_class, aClassName);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetClassName(const nsAString& aClassName)
 {
-  SetAttr(kNameSpaceID_None, nsHTMLAtoms::kClass, aClassName, PR_TRUE);
+  SetAttr(kNameSpaceID_None, nsHTMLAtoms::_class, aClassName, PR_TRUE);
   return NS_OK;
 }
 
@@ -1779,7 +1779,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 const nsAttrValue*
 nsGenericHTMLElement::GetClasses() const
 {
-  return mAttrsAndChildren.GetAttr(nsHTMLAtoms::kClass);
+  return mAttrsAndChildren.GetAttr(nsHTMLAtoms::_class);
 }
 
 nsIAtom *
@@ -1791,7 +1791,7 @@ nsGenericHTMLElement::GetIDAttributeName() const
 nsIAtom *
 nsGenericHTMLElement::GetClassAttributeName() const
 {
-  return nsHTMLAtoms::kClass;
+  return nsHTMLAtoms::_class;
 }
 
 nsresult
@@ -2027,7 +2027,7 @@ nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
                           aValue, aResult);
       return PR_TRUE;
     }
-    if (aAttribute == nsHTMLAtoms::kClass) {
+    if (aAttribute == nsHTMLAtoms::_class) {
       aResult.ParseAtomArray(aValue);
 
       return PR_TRUE;

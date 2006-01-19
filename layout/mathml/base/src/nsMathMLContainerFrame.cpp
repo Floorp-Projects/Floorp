@@ -942,12 +942,12 @@ nsMathMLContainerFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                          PRInt32         aModType)
 {
   if (aAttribute == nsMathMLAtoms::mathcolor_      ||
-      aAttribute == nsMathMLAtoms::color_          ||
+      aAttribute == nsMathMLAtoms::color           ||
       aAttribute == nsMathMLAtoms::mathsize_       ||
       aAttribute == nsMathMLAtoms::fontsize_       ||
       aAttribute == nsMathMLAtoms::fontfamily_     ||
       aAttribute == nsMathMLAtoms::mathbackground_ ||
-      aAttribute == nsMathMLAtoms::background_) {
+      aAttribute == nsMathMLAtoms::background) {
     MapAttributesIntoCSS(GetPresContext(), this);
   }
 

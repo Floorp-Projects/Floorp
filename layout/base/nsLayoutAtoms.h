@@ -37,31 +37,8 @@
 #ifndef nsLayoutAtoms_h___
 #define nsLayoutAtoms_h___
 
-#include "nsIAtom.h"
-
-/**
- * This class wraps up the creation (and destruction) of the standard
- * set of atoms used during layout processing. These objects
- * are created when the first presentation context is created and they
- * are destroyed when the last presentation context object is destroyed.
- */
-
-class nsLayoutAtoms {
-public:
-
-  static void AddRefAtoms();
-
-  /* Declare all atoms
-
-     The atom names and values are stored in nsLayoutAtomList.h and
-     are brought to you by the magic of C preprocessing
-
-     Add new atoms to nsLayoutAtomList and all support logic will be auto-generated
-   */
-#define LAYOUT_ATOM(_name, _value) static nsIAtom* _name;
-#include "nsLayoutAtomList.h"
-#undef LAYOUT_ATOM
-};
+#include "nsGkAtoms.h"
+typedef class nsGkAtoms nsLayoutAtoms;
 
 static inline PRBool IS_TABLE_CELL(nsIAtom* frameType) {
   return nsLayoutAtoms::tableCellFrame == frameType ||

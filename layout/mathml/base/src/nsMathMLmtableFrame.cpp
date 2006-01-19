@@ -484,7 +484,7 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   // XXX should we also check <mstyle> ?
   PRInt32 rowIndex = 0;
   eAlign tableAlign = eAlign_axis;
-  GetAttribute(mContent, nsnull, nsMathMLAtoms::align_, value);
+  GetAttribute(mContent, nsnull, nsMathMLAtoms::align, value);
   if (!value.IsEmpty()) {
     ParseAlignAttribute(value, tableAlign, rowIndex);
   }
@@ -597,7 +597,7 @@ nsMathMLmtdFrame::GetRowSpan()
 {
   PRInt32 rowspan = 1;
   nsAutoString value;
-  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::rowspan_, value);
+  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::rowspan, value);
   if (!value.IsEmpty()) {
     PRInt32 error;
     rowspan = value.ToInteger(&error);

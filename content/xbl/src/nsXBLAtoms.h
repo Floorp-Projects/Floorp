@@ -38,30 +38,7 @@
 #ifndef nsXBLAtoms_h___
 #define nsXBLAtoms_h___
 
-#include "nsIAtom.h"
-
-/**
- * This class wraps up the creation and destruction of the standard
- * set of XBL atoms used during normal XBL handling. This object
- * is created when the first XBL content object is created, and
- * destroyed when the last such content object is destroyed.
- */
-class nsXBLAtoms {
-public:
-
-  static void AddRefAtoms();
-
-  /* Declare all atoms
-
-     The atom names and values are stored in nsCSSAtomList.h and
-     are brought to you by the magic of C preprocessing
-
-     Add new atoms to nsCSSAtomList and all support logic will be auto-generated
-   */
-#define XBL_ATOM(_name, _value) static nsIAtom* _name;
-#include "nsXBLAtomList.h"
-#undef XBL_ATOM
-
-};
+#include "nsGkAtoms.h"
+typedef class nsGkAtoms nsXBLAtoms;
 
 #endif /* nsXBLAtoms_h___ */

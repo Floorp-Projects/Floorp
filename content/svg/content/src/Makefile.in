@@ -80,7 +80,6 @@ CPPSRCS		= \
 		nsSVGAnimatedPreserveAspectRatio.cpp \
 		nsSVGAnimatedString.cpp \
 		nsSVGAnimatedTransformList.cpp \
-		nsSVGAtoms.cpp \
 		nsSVGCircleElement.cpp \
 		nsSVGClassValue.cpp \
 		nsSVGClipPathElement.cpp \
@@ -160,7 +159,6 @@ EXPORTS =  			\
 	nsSVGRect.h                \
 	nsSVGPoint.h               \
 	nsSVGMatrix.h              \
-	nsSVGAtomList.h            \
 	nsSVGAtoms.h               \
 	nsISVGPathFlatten.h        \
 	$(NULL)

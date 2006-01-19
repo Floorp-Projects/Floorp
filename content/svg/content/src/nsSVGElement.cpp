@@ -363,7 +363,7 @@ nsSVGElement::sFontSpecificationMap[] = {
   { &nsSVGAtoms::font_stretch },
   { &nsSVGAtoms::font_style },
   { &nsSVGAtoms::font_variant },
-  { &nsSVGAtoms::font_weight },  
+  { &nsSVGAtoms::fontWeight },  
   { nsnull }
 };
 

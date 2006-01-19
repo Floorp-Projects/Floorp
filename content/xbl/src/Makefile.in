@@ -70,12 +70,10 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 EXPORTS		= \
-		nsXBLAtomList.h \
 		nsXBLAtoms.h \
 		$(NULL)
 
 CPPSRCS		= \
-    nsXBLAtoms.cpp \
     nsXBLBinding.cpp \
     nsXBLPrototypeBinding.cpp \
     nsXBLPrototypeResources.cpp \

@@ -478,7 +478,7 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
                                aNamespaceURI, eCaseMatters)) {
         // If the localName is "xmlns", the prefix we output should be
         // null.
-        if (name->LocalName() != nsLayoutAtoms::xmlnsNameSpace) {
+        if (name->LocalName() != nsLayoutAtoms::xmlns) {
           name->LocalName()->ToString(aPrefix);
         }
 
@@ -4131,7 +4131,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   }
   
   if (aNamespaceID == kNameSpaceID_XMLEvents && 
-      aName == nsHTMLAtoms::_event && mNodeInfo->GetDocument()) {
+      aName == nsHTMLAtoms::event && mNodeInfo->GetDocument()) {
     mNodeInfo->GetDocument()->AddXMLEventsContent(this);
   }
 

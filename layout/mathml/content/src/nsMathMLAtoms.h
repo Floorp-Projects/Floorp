@@ -39,31 +39,7 @@
 #ifndef nsMathMLAtoms_h___
 #define nsMathMLAtoms_h___
 
-#include "nsIAtom.h"
-
-/**
- * This class wraps up the creation and destruction of the standard
- * set of MathML atoms used during normal MathML handling. This object
- * is created when the first MathML content object is created, and
- * destroyed when the last such content object is destroyed.
- */
-class nsMathMLAtoms {
-public:
-
-  static void AddRefAtoms();
-
-  /* Declare all atoms
-
-     The atom names and values are stored in nsMathMLAtomList.h and
-     are brought to you by the magic of C preprocessing
-
-     Add new atoms to nsMathMLAtomList and all support logic will be auto-generated
-     after a clobber-build within this directory
-   */
-#define MATHML_ATOM(_name, _value) static nsIAtom* _name;
-#include "nsMathMLAtomList.h"
-#undef MATHML_ATOM
-
-};
+#include "nsGkAtoms.h"
+typedef class nsGkAtoms nsMathMLAtoms;
 
 #endif /* nsMathMLAtoms_h___ */

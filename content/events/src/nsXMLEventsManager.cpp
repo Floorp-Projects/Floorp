@@ -63,7 +63,7 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   else
     nameSpaceID = kNameSpaceID_XMLEvents;
   nsAutoString eventType;
-  aContent->GetAttr(nameSpaceID, nsHTMLAtoms::_event, eventType);
+  aContent->GetAttr(nameSpaceID, nsHTMLAtoms::event, eventType);
   if (eventType.IsEmpty())
     return PR_FALSE;
   nsAutoString handlerURIStr;
@@ -361,7 +361,7 @@ nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
                                      PRInt32 aModType)
 {
   if (aNameSpaceID == kNameSpaceID_XMLEvents &&
-      (aAttribute == nsHTMLAtoms::_event ||
+      (aAttribute == nsHTMLAtoms::event ||
        aAttribute == nsHTMLAtoms::handler ||
        aAttribute == nsHTMLAtoms::target ||
        aAttribute == nsHTMLAtoms::observer ||
