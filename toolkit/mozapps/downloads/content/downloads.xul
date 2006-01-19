@@ -110,8 +110,14 @@
     <menuitem id="menuitem_openWith" 
               label="&cmd.openWith.label;" accesskey="&cmd.openWith.accesskey;"
               oncommand="fireEventForElement(gDownloadsView.selectedItem, 'openWith');"/>
-    <menuitem id="menuitem_show" 
-              label="&cmd.show.label;" accesskey="&cmd.show.accesskey;"
+    <menuitem id="menuitem_show"
+#ifdef XP_MACOSX
+              label="&cmd.show.labelMac;"
+              accesskey="&cmd.show.accesskeyMac;"
+#else
+              label="&cmd.show.label;"
+              accesskey="&cmd.show.accesskey;"
+#endif
               oncommand="fireEventForElement(gDownloadsView.selectedItem, 'show');"/>
 
     <menuitem id="menuitem_retry" default="true"
