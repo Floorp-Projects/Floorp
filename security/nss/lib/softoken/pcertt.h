@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: pcertt.h,v 1.13 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: pcertt.h,v 1.14 2006/01/19 02:09:37 nelsonb%netscape.com Exp $
  */
 #ifndef _PCERTT_H_
 #define _PCERTT_H_
@@ -410,12 +410,14 @@ typedef struct {
 #define SEC_DB_CONTENT_VERSION_KEY_LEN sizeof(SEC_DB_CONTENT_VERSION_KEY)
 
 typedef union {
-    certDBEntryCommon common;
-    certDBEntryVersion version;
-    certDBEntryCert cert;
-    certDBEntryNickname nickname;
-    certDBEntrySubject subject;
-    certDBEntryRevocation revocation;
+    certDBEntryCommon         common;
+    certDBEntryCert           cert;
+    certDBEntryContentVersion content;
+    certDBEntryNickname       nickname;
+    certDBEntryRevocation     revocation;
+    certDBEntrySMime          smime;
+    certDBEntrySubject        subject;
+    certDBEntryVersion        version;
 } certDBEntry;
 
 /* length of the fixed part of a database entry */
