@@ -67,7 +67,7 @@ struct TableReadClosure
     voidString.SetIsVoid(PR_TRUE);
   }
 
-  // Backpointers to the importer and history we're operating on
+  // Backpointers to the reader and history we're operating on
   nsMorkReader *reader;
   nsINavHistoryService *history;
 
@@ -77,7 +77,7 @@ struct TableReadClosure
   // Whether we need to swap bytes (file format is other-endian)
   PRBool swapBytes;
 
-  // Column ids if the columns that we care about
+  // Column ids of the columns that we care about
   nsCString columnIDs[kColumnCount];
   nsCString byteOrderColumn;
 };
