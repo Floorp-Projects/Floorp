@@ -49,12 +49,18 @@
 #include "nsIDOMNodeFilter.h"
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
+#include "nsIDOMGCParticipant.h"
+#include "nsJSUtils.h"
 
-class nsTreeWalker : public nsIDOMTreeWalker
+class nsTreeWalker : public nsIDOMTreeWalker, public nsIDOMGCParticipant
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOMTREEWALKER
+
+    // nsIDOMGCParticipant
+    virtual nsIDOMGCParticipant* GetSCCIndex();
+    virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
 
     nsTreeWalker(nsIDOMNode *aRoot,
                  PRUint32 aWhatToShow,
@@ -65,7 +71,7 @@ public:
 private:
     nsCOMPtr<nsIDOMNode> mRoot;
     PRUint32 mWhatToShow;
-    nsCOMPtr<nsIDOMNodeFilter> mFilter;
+    nsMarkedJSFunctionHolder<nsIDOMNodeFilter> mFilter;
     PRBool mExpandEntityReferences;
     nsCOMPtr<nsIDOMNode> mCurrentNode;
     

@@ -260,7 +260,8 @@ PRBool
 nsMarkedJSFunctionHolder_base::TryMarkedSet(nsISupports *aPotentialFunction,
                                             nsIDOMGCParticipant *aParticipant)
 {
-  NS_ENSURE_TRUE(aParticipant, PR_FALSE);
+  if (!aParticipant)
+    return PR_FALSE;
 
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS =
     do_QueryInterface(aPotentialFunction);

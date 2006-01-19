@@ -84,11 +84,11 @@ nsTreeWalker::nsTreeWalker(nsIDOMNode *aRoot,
                            PRBool aExpandEntityReferences) :
     mRoot(aRoot),
     mWhatToShow(aWhatToShow),
-    mFilter(aFilter),
     mExpandEntityReferences(aExpandEntityReferences),
     mCurrentNode(aRoot),
     mPossibleIndexesPos(-1)
 {
+    mFilter.Set(aFilter, this);
 
     NS_ASSERTION(aRoot, "invalid root in call to nsTreeWalker constructor");
 }
@@ -105,7 +105,8 @@ nsTreeWalker::~nsTreeWalker()
 // QueryInterface implementation for nsTreeWalker
 NS_INTERFACE_MAP_BEGIN(nsTreeWalker)
     NS_INTERFACE_MAP_ENTRY(nsIDOMTreeWalker)
-    NS_INTERFACE_MAP_ENTRY(nsISupports)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMTreeWalker)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(TreeWalker)
 NS_INTERFACE_MAP_END
 
@@ -136,8 +137,10 @@ NS_IMETHODIMP nsTreeWalker::GetWhatToShow(PRUint32 *aWhatToShow)
 NS_IMETHODIMP nsTreeWalker::GetFilter(nsIDOMNodeFilter * *aFilter)
 {
     NS_ENSURE_ARG_POINTER(aFilter);
-    *aFilter = mFilter;
-    NS_IF_ADDREF(*aFilter);
+
+    nsCOMPtr<nsIDOMNodeFilter> filter = mFilter.Get();
+    filter.swap((*aFilter = nsnull));
+
     return NS_OK;
 }
 
@@ -267,6 +270,29 @@ NS_IMETHODIMP nsTreeWalker::NextNode(nsIDOMNode **_retval)
                                  PR_FALSE,
                                  mPossibleIndexesPos,
                                  _retval);
+}
+
+/*
+ * nsIDOMGCParticipant functions
+ */
+/* virtual */ nsIDOMGCParticipant*
+nsTreeWalker::GetSCCIndex()
+{
+    return this;
+}
+
+/* virtual */ void
+nsTreeWalker::AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray)
+{
+    nsCOMPtr<nsIDOMGCParticipant> gcp;
+    
+    gcp = do_QueryInterface(mRoot);
+    if (gcp)
+        aArray.AppendObject(gcp);
+
+    gcp = do_QueryInterface(mCurrentNode);
+    if (gcp)
+        aArray.AppendObject(gcp);
 }
 
 /*
@@ -594,8 +620,9 @@ nsresult nsTreeWalker::TestNode(nsIDOMNode* aNode, PRInt16* _filtered)
         return NS_OK;
     }
 
-    if (mFilter)
-        return mFilter->AcceptNode(aNode, _filtered);
+    nsCOMPtr<nsIDOMNodeFilter> filter = mFilter.Get();
+    if (filter)
+        return filter->AcceptNode(aNode, _filtered);
 
     *_filtered = nsIDOMNodeFilter::FILTER_ACCEPT;
     return NS_OK;
