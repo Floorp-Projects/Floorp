@@ -1242,13 +1242,16 @@ CCommentToken::ConsumeStrictComment(nsScanner& aScanner)
   lt = current;
   lt.advance(-2); // <!
 
+  current.advance(-1);
+
   // Regular comment must start with <!--
-  if (current != end && *current == kMinus &&
+  if (*current == kExclamation &&
+      ++current != end && *current == kMinus &&
       ++current != end && *current == kMinus &&
       ++current != end) {
     nsScannerIterator currentEnd = end;
     PRBool balancedComment = PR_FALSE;
-    static NS_NAMED_LITERAL_STRING(dashes, "--");
+    NS_NAMED_LITERAL_STRING(dashes, "--");
     beginData = current;
 
     while (FindInReadable(dashes, current, currentEnd)) {
@@ -1265,10 +1268,10 @@ CCommentToken::ConsumeStrictComment(nsScanner& aScanner)
         aScanner.BindSubstring(mCommentDecl, lt, ++gt);
         aScanner.SetPosition(gt);
         return NS_OK;
-      } else {
-        // Continue after the last '--'
-        currentEnd = end;
       }
+
+      // Continue after the last '--'
+      currentEnd = end;
     }
   }
 
