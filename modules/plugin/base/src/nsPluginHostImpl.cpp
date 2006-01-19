@@ -4833,6 +4833,29 @@ static nsresult FixUpPluginInfo(nsPluginInfo &aInfo, nsPluginFile &aPluginFile)
   return NS_OK;
 }
 
+/**
+ * Helper class which automatically deallocates a nsVoidArray of 
+ * pluginFileinDirectories when the array goes out of scope.
+ */
+class nsAutoPluginFileDeleter
+{
+public:
+  nsAutoPluginFileDeleter (nsAutoVoidArray& aPluginFiles)
+    :mPluginFiles(aPluginFiles)
+  {}
+ 
+  ~nsAutoPluginFileDeleter()
+  {
+    for (PRInt32 i = 0; i < mPluginFiles.Count(); ++i) {
+      pluginFileinDirectory* pfd = NS_STATIC_CAST(pluginFileinDirectory*, mPluginFiles[i]);
+      delete pfd;
+    }
+  }
+protected:
+  // A reference to the array for which to perform deallocation.
+  nsAutoVoidArray& mPluginFiles;
+};
+
 ////////////////////////////////////////////////////////////////////////
 nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
                                                 nsIComponentManager * compManager,
@@ -4859,6 +4882,10 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 
   // Collect all the files in this directory in a void array we can sort later
   nsAutoVoidArray pluginFilesArray;  // array for sorting files in this directory
+
+  // Setup the helper which will cleanup the array.
+  nsAutoPluginFileDeleter pluginFileArrayDeleter(pluginFilesArray);
+
   PRBool hasMore;
   while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> supports;
@@ -4908,7 +4935,6 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     // Look for it in our cache
     nsPluginTag *pluginTag = RemoveCachedPluginsInfo(NS_ConvertUCS2toUTF8(pfd->mFilename).get());
 
-    delete pfd;
     if (pluginTag) {
       // If plugin changed, delete cachedPluginTag and don't use cache
       if (LL_NE(fileModTime, pluginTag->mLastModifiedTime)) {
