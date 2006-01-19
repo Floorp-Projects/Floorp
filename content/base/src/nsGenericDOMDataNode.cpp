@@ -106,6 +106,7 @@ NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   // No nsITextContent since all subclasses might not want that.
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
+  NS_INTERFACE_MAP_ENTRY(nsINode)
 NS_INTERFACE_MAP_END
 
 

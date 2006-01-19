@@ -388,16 +388,6 @@ public:
   virtual nsIDocument* GetSubDocumentFor(nsIContent *aContent) const;
   virtual nsIContent* FindContentForSubDocument(nsIDocument *aDocument) const;
 
-  virtual nsresult SetRootContent(nsIContent* aRoot);
-
-  /**
-   * Get the direct children of the document - content in
-   * the prolog, the root content and content in the epilog.
-   */
-  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
-  virtual PRUint32 GetChildCount() const;
-
   /**
    * Get the style sheets owned by this document.
    * These are ordered, highest priority last
@@ -533,6 +523,15 @@ public:
 
   virtual void OnPageShow(PRBool aPersisted);
   virtual void OnPageHide(PRBool aPersisted);
+
+  // nsINode
+  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
+  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
+  virtual PRUint32 GetChildCount() const;
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
@@ -714,6 +713,10 @@ protected:
 
   // Dispatch an event to the ScriptGlobalObject for this document
   void DispatchEventToWindow(nsEvent *aEvent);
+
+#ifdef DEBUG
+  void VerifyRootContentState();
+#endif
 
   nsDocument();
   virtual ~nsDocument();

@@ -564,11 +564,8 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
 
   if ((eXMLContentSinkState_InProlog == mState) ||
       (eXMLContentSinkState_InEpilog == mState)) {
-    nsCOMPtr<nsIDOMDocument> domDoc( do_QueryInterface(mDocument) );
-    nsCOMPtr<nsIDOMNode> trash;
-    nsCOMPtr<nsIDOMNode> child( do_QueryInterface(aContent) );
-    NS_ASSERTION(child, "not a dom node");
-    domDoc->AppendChild(child, getter_AddRefs(trash));
+    NS_ASSERTION(mDocument, "Fragments have no prolog or epilog");
+    mDocument->AppendChildTo(aContent, PR_FALSE);
   }
   else {
     nsCOMPtr<nsIContent> parent = GetCurrentContent();
@@ -869,7 +866,7 @@ nsXMLContentSink::SetDocElement(PRInt32 aNameSpaceID,
   mDocElement = aContent;
   NS_ADDREF(mDocElement);
 
-  nsresult rv = mDocument->SetRootContent(mDocElement);
+  nsresult rv = mDocument->AppendChildTo(mDocElement, PR_FALSE);
   if (NS_FAILED(rv)) {
     // If we return PR_FALSE here, the caller will bail out because it won't
     // find a parent content node to append to, which is fine.
@@ -1077,9 +1074,7 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
 
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mDocument));
-  if (!doc)
-    return NS_OK;
+  NS_ASSERTION(mDocument, "Shouldn't get here from a document fragment");
 
   nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
@@ -1114,9 +1109,10 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
     }
   }
 
-  nsCOMPtr<nsIDOMNode> tmpNode;
-  
-  return doc->AppendChild(docType, getter_AddRefs(tmpNode));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(docType);
+  NS_ASSERTION(content, "doctype isn't content?");
+
+  return mDocument->AppendChildTo(content, PR_FALSE);
 }
 
 NS_IMETHODIMP 

@@ -356,6 +356,15 @@ public:
   virtual nsIDOMGCParticipant* GetSCCIndex();
   virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
 
+  // nsINode interface methods
+  virtual PRUint32 GetChildCount() const;
+  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
+  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  
   // nsIContent interface methods
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -364,13 +373,6 @@ public:
                               PRBool aNullParent = PR_TRUE);
   virtual PRBool IsNativeAnonymous() const;
   virtual void SetNativeAnonymous(PRBool aAnonymous);
-  virtual PRUint32 GetChildCount() const;
-  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
@@ -640,12 +642,10 @@ public:
    * @param aDocument The document to use for the new child.
    *                  Must be non-null, if aParent is null and must match
    *                  aParent->GetCurrentDoc() if aParent is not null.
-   * @param aChildArray The child array to work with
    * @param aReturn [out] the child we insert
    */
   static nsresult doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                                  nsIContent* aParent, nsIDocument* aDocument,
-                                 nsAttrAndChildArray& aChildArray,
                                  nsIDOMNode** aReturn);
 
   /**
@@ -663,7 +663,6 @@ public:
    */
   static nsresult doReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                                  nsIContent* aParent, nsIDocument* aDocument,
-                                 nsAttrAndChildArray& aChildArray,
                                  nsIDOMNode** aReturn);
 
   /**
@@ -675,14 +674,50 @@ public:
    * @param aDocument The document to use for the new child.
    *                  Must be non-null if aParent is null and must match
    *                  aParent->GetCurrentDoc() if aParent is not null.
-   * @param aChildArray The child array to work with
    * @param aReturn [out] the child we remove
    */
   static nsresult doRemoveChild(nsIDOMNode* aOldChild,
                                 nsIContent* aParent, nsIDocument* aDocument,
-                                nsAttrAndChildArray& aChildArray,
                                 nsIDOMNode** aReturn);
 
+  /**
+   * Most of the implementation of the nsINode InsertChildAt method.  Shared by
+   * nsDocument.  When called from nsDocument, aParent will be null.
+   *
+   * @param aKid The child to insert.
+   * @param aIndex The index to insert at.
+   * @param aNotify Whether to notify.
+   * @param aParent The parent to use for the new child.
+   * @param aDocument The document to use for the notifications.  Must be
+   *                  non-null if aParent is null (in which case aKid is being
+   *                  inserted as its child) and must match
+   *                  aParent->GetCurrentDoc() if aParent is not null.
+   * @param aChildArray The child array to work with
+   */
+  static nsresult doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                  PRBool aNotify, nsIContent* aParent,
+                                  nsIDocument* aDocument,
+                                  nsAttrAndChildArray& aChildArray);
+
+  /**
+   * Most of the implementation of the nsINode RemoveChildAt method.  Shared by
+   * nsDocument.  When called from nsDocument, aParent will be null.
+   *
+   * @param aIndex The index to remove at.
+   * @param aNotify Whether to notify.
+   * @param aKid The kid at aIndex.  Must not be null.
+   * @param aParent The parent we're removing from.
+   * @param aDocument The document to use for the notifications.  Must be
+   *                  non-null if aParent is null (in which case aKid is being
+   *                  removed as its child) and must match
+   *                  aParent->GetCurrentDoc() if aParent is not null.
+   * @param aChildArray The child array to work with
+   */
+  static nsresult doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
+                                  nsIContent* aKid, nsIContent* aParent,
+                                  nsIDocument* aDocument,
+                                  nsAttrAndChildArray& aChildArray);
+  
   static nsresult InitHashes();
 
   static PLDHashTable sEventListenerManagersHash;

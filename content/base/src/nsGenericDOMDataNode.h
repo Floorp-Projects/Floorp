@@ -178,6 +178,15 @@ public:
   virtual nsIDOMGCParticipant* GetSCCIndex();
   virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray);
 
+  // nsINode methods
+  virtual PRUint32 GetChildCount() const;
+  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
+  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -222,13 +231,6 @@ public:
   virtual nsresult GetListenerManager(nsIEventListenerManager **aResult);
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
-  virtual PRUint32 GetChildCount() const;
-  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual PRBool MayHaveFrame() const;
   virtual void SetHasProperties()
   {

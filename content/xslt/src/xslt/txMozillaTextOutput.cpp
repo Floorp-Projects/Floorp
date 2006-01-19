@@ -253,16 +253,14 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
         mDocument->CreateElementNS(XHTML_NSURI,
                                    NS_LITERAL_STRING("html"),
                                    getter_AddRefs(docElement));
-        nsCOMPtr<nsIContent> rootContent = do_QueryInterface(docElement);
-        NS_ASSERTION(rootContent, "Need root element");
-        if (!rootContent) {
+        if (!docElement) {
+            // Out of memory
+            NS_WARNING("Failed to create documentElement");
             return;
         }
 
-        // XXXbz what to do on failure here?
-        rv = doc->SetRootContent(rootContent);
+        rv = mDocument->AppendChild(docElement, getter_AddRefs(parent));
         if (NS_FAILED(rv)) {
-            NS_ERROR("Failed to set root content");
             return;
         }
             

@@ -463,6 +463,11 @@ public:
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
 
+    // nsINode
+    virtual PRUint32 GetChildCount() const;
+    virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
+    virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
+
     // nsIContent
     virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
@@ -470,9 +475,6 @@ public:
     virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                                 PRBool aNullParent = PR_TRUE);
     virtual PRBool IsNativeAnonymous() const;
-    virtual PRUint32 GetChildCount() const;
-    virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-    virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
     virtual nsIAtom *GetIDAttributeName() const;
     virtual nsIAtom *GetClassAttributeName() const;

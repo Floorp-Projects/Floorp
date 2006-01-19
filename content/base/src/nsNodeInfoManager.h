@@ -84,7 +84,16 @@ public:
    * Returns the nodeinfo for text nodes. Can return null if OOM.
    */
   already_AddRefed<nsINodeInfo> GetTextNodeInfo();
+
+  /**
+   * Returns the nodeinfo for comment nodes. Can return null if OOM.
+   */
   already_AddRefed<nsINodeInfo> GetCommentNodeInfo();
+
+  /**
+   * Returns the nodeinfo for the document node. Can return null if OOM.
+   */
+  already_AddRefed<nsINodeInfo> GetDocumentNodeInfo();     
 
   /**
    * Retrieve a pointer to the document that owns this node info
@@ -121,6 +130,7 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsINodeInfo *mTextNodeInfo; // WEAK to avoid circular ownership
   nsINodeInfo *mCommentNodeInfo; // WEAK to avoid circular ownership
+  nsINodeInfo *mDocumentNodeInfo; // WEAK to avoid circular ownership
 
   static PRUint32 gNodeManagerCount;
 };

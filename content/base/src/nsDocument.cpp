@@ -830,6 +830,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Document)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
+  NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
   if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
       aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
@@ -881,7 +882,15 @@ nsDocument::Init()
 
   NS_ADDREF(mNodeInfoManager);
 
-  return mNodeInfoManager->Init(this);
+  nsresult  rv = mNodeInfoManager->Init(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mNodeInfo = mNodeInfoManager->GetDocumentNodeInfo();
+  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ASSERTION(GetOwnerDoc() == this, "Our nodeinfo is busted!");
+
+  return NS_OK;
 }
 
 nsresult
@@ -1672,40 +1681,6 @@ nsDocument::FindContentForSubDocument(nsIDocument *aDocument) const
   return data.mResult;
 }
 
-nsresult
-nsDocument::SetRootContent(nsIContent* aRoot)
-{
-  if (aRoot) {
-    NS_ASSERTION(!mRootContent,
-                 "Already have a root content!  Clear out first!");
-    nsresult rv = aRoot->BindToTree(this, nsnull, nsnull, PR_TRUE);
-
-    if (NS_SUCCEEDED(rv)) {
-      rv = mChildren.AppendChild(aRoot);
-    }
-
-    if (NS_FAILED(rv)) {
-      aRoot->UnbindFromTree();
-    } else {
-      mRootContent = aRoot;
-    }
-    
-    return rv;
-  }
-
-  if (mRootContent) {
-    DestroyLinkMap();
-    mRootContent->UnbindFromTree();
-    PRInt32 pos = mChildren.IndexOfChild(mRootContent);
-    if (pos >= 0) {
-      mChildren.RemoveChildAt(pos);
-    }
-    mRootContent = nsnull;
-  }
-
-  return NS_OK;
-}
-
 nsIContent *
 nsDocument::GetChildAt(PRUint32 aIndex) const
 {
@@ -1723,6 +1698,110 @@ nsDocument::GetChildCount() const
 {
   return mChildren.ChildCount();
 }
+
+nsresult
+nsDocument::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                          PRBool aNotify)
+{
+  if (aKid->IsContentOfType(nsIContent::eELEMENT)) {
+    if (mRootContent) {
+      NS_ERROR("Inserting element child when we already have one");
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+
+    mRootContent = aKid;
+  }
+  
+  nsresult rv = nsGenericElement::doInsertChildAt(aKid, aIndex, aNotify,
+                                                  nsnull, this, mChildren);
+
+  if (NS_FAILED(rv) && mRootContent == aKid) {
+    PRInt32 kidIndex = mChildren.IndexOfChild(aKid);
+    NS_ASSERTION(kidIndex == -1,
+                 "Error result and still have same root content but it's in "
+                 "our child list?");
+    // Check to make sure that we're keeping mRootContent in sync with our
+    // child list... but really, if kidIndex != -1 we have major problems
+    // coming up; hence the assert above.  This check is just a feeble attempt
+    // to not die due to mRootContent being bogus.
+    if (kidIndex == -1) {
+      mRootContent = nsnull;
+    }
+  }
+
+#ifdef DEBUG
+  VerifyRootContentState();
+#endif
+
+  return rv;
+}
+
+nsresult
+nsDocument::AppendChildTo(nsIContent* aKid, PRBool aNotify)
+{
+  // Make sure to _not_ call the subclass InsertChildAt here.  If
+  // subclasses wanted to hook into this stuff, they would have
+  // overridden AppendChildTo.
+  // XXXbz maybe this should just be a non-virtual method on nsINode?
+  // Feels that way to me...
+  return nsDocument::InsertChildAt(aKid, GetChildCount(), aNotify);
+}
+
+nsresult
+nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+{
+  nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
+  nsresult rv = NS_OK;
+  if (oldKid) {
+    if (oldKid == mRootContent) {
+      NS_ASSERTION(oldKid->IsContentOfType(nsIContent::eELEMENT),
+                   "Non-element root content?");
+      // Destroy the link map up front and null out mRootContent before we mess
+      // with the child list.  Hopefully no one in doRemoveChildAt will compare
+      // the content being removed to GetRootContent()....  Need to do this
+      // before calling doRemoveChildAt because DOM events might fire while
+      // we're inside the doInsertChildAt call and want to set a new
+      // mRootContent; if they do that, setting mRootContent after the
+      // doRemoveChildAt call would clobber state.  If we ever fix the issue of
+      // DOM events firing at inconvenient times, consider changing the order
+      // here.  Just make sure we DestroyLinkMap() before unbinding the
+      // content.
+      DestroyLinkMap();
+      mRootContent = nsnull;
+    }
+    
+    rv = nsGenericElement::doRemoveChildAt(aIndex, aNotify, oldKid,
+                                           nsnull, this, mChildren);
+    if (NS_FAILED(rv) && mChildren.IndexOfChild(oldKid) != -1) {
+      mRootContent = oldKid;
+    }
+  }
+
+#ifdef DEBUG
+  VerifyRootContentState();
+#endif
+
+  return rv;
+}
+
+#ifdef DEBUG
+void
+nsDocument::VerifyRootContentState()
+{
+  nsIContent* elementChild = nsnull;
+  for (PRUint32 i = 0; i < GetChildCount(); ++i) {
+    nsIContent* kid = GetChildAt(i);
+    NS_ASSERTION(kid, "Must have kid here");
+
+    if (kid->IsContentOfType(nsIContent::eELEMENT)) {
+      NS_ASSERTION(!elementChild, "Multiple element kids?");
+      elementChild = kid;
+    }
+  }
+
+  NS_ASSERTION(mRootContent == elementChild, "Incorrect mRootContent");
+}
+#endif // DEBUG
 
 PRInt32
 nsDocument::GetNumberOfStyleSheets() const
@@ -3581,7 +3660,7 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                          nsIDOMNode** aReturn)
 {
   return nsGenericElement::doInsertBefore(aNewChild, aRefChild, nsnull, this,
-                                          mChildren, aReturn);
+                                          aReturn);
 }
 
 NS_IMETHODIMP
@@ -3589,20 +3668,19 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                          nsIDOMNode** aReturn)
 {
   return nsGenericElement::doReplaceChild(aNewChild, aOldChild, nsnull, this,
-                                          mChildren, aReturn);
+                                          aReturn);
 }
 
 NS_IMETHODIMP
 nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doRemoveChild(aOldChild, nsnull, this,
-                                         mChildren, aReturn);
+  return nsGenericElement::doRemoveChild(aOldChild, nsnull, this, aReturn);
 }
 
 NS_IMETHODIMP
 nsDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-  return InsertBefore(aNewChild, nsnull, aReturn);
+  return nsDocument::InsertBefore(aNewChild, nsnull, aReturn);
 }
 
 NS_IMETHODIMP

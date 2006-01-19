@@ -82,7 +82,8 @@ nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
 nsNodeInfoManager::nsNodeInfoManager()
   : mDocument(nsnull),
     mTextNodeInfo(nsnull),
-    mCommentNodeInfo(nsnull)
+    mCommentNodeInfo(nsnull),
+    mDocumentNodeInfo(nsnull)
 {
   ++gNodeManagerCount;
 
@@ -289,6 +290,19 @@ nsNodeInfoManager::GetCommentNodeInfo()
   return mCommentNodeInfo;
 }
 
+already_AddRefed<nsINodeInfo>
+nsNodeInfoManager::GetDocumentNodeInfo()
+{
+  if (!mDocumentNodeInfo) {
+    GetNodeInfo(nsLayoutAtoms::documentNodeName, nsnull, kNameSpaceID_None,
+                &mDocumentNodeInfo);
+  }
+  else {
+    NS_ADDREF(mDocumentNodeInfo);
+  }
+
+  return mDocumentNodeInfo;
+}
 
 nsIPrincipal*
 nsNodeInfoManager::GetDocumentPrincipal()
@@ -330,6 +344,9 @@ nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
   }
   else if (aNodeInfo == mCommentNodeInfo) {
     mCommentNodeInfo = nsnull;
+  }
+  else if (aNodeInfo == mDocumentNodeInfo) {
+    mDocumentNodeInfo = nsnull;
   }
 
 #ifdef DEBUG
