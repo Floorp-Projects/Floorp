@@ -55,16 +55,16 @@ function enabling()
 
   // If the default per-identity directory preferences are locked 
   // disable the corresponding elements.
-  if (gPrefInt.prefIsLocked("mail.identity." + gIdentity.key + ".overrideGlobal_Pref")) {
+  if (gIdentity && gPrefInt.prefIsLocked("mail.identity." + gIdentity.key + ".overrideGlobal_Pref")) {
     document.getElementById("useGlobalPref").setAttribute("disabled", "true");
     document.getElementById("directories").setAttribute("disabled", "true");
   }
   else
   {
-	document.getElementById("useGlobalPref").removeAttribute("disabled");
+    document.getElementById("useGlobalPref").removeAttribute("disabled");
     document.getElementById("directories").removeAttribute("disabled");
   }
-  if (gPrefInt.prefIsLocked("mail.identity." + gIdentity.key + ".directoryServer")) {
+  if (gIdentity && gPrefInt.prefIsLocked("mail.identity." + gIdentity.key + ".directoryServer")) {
     document.getElementById("directoriesList").setAttribute("disabled", "true");
     document.getElementById("directoriesListPopup").setAttribute("disabled", "true");
   }
