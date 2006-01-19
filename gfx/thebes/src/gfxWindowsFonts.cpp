@@ -396,7 +396,9 @@ TRY_AGAIN_SAME_SCRIPT:
                 goto TRY_AGAIN_SAME_SCRIPT;
             }
             // otherwise we fail to draw the characters so give up and continue on.
+#ifdef DEBUG_pavlov
             printf("failed to render glyphs :(\n");
+#endif
         }
 
         if (rv == 0) {
