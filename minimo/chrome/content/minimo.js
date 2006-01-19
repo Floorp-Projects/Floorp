@@ -60,6 +60,8 @@ var gDeckMode=0; // 0 = site, 1 = sb, 2= rss. Used for the URLBAR selector, Deck
 var gDeckMenuChecked=null; // to keep the state of the checked URLBAR selector mode. 
 var gURLBarBoxObject = null; // stores the urlbar boxObject so the background loader can update itself based on actual urlbar size width;
 
+var gSoftKeyAccessState=0;   // Accessibility and keyboard shortcuts. See BrowserMenuSpin functions. 
+
 var gPref = null;                    // so far snav toggles on / off via direct access to pref.
                                      // See bugzilla.mozilla.org/show_bug.cgi?id=311287#c1
 var gPrefAdded=false; // shall be used to flush the pref. 
@@ -1149,7 +1151,57 @@ function BrowserMenuPopupFalse() {
 }
 
 
-/* The URLBAR Deck mode selector 
+/*
+ * BrowserMenu Accessibility Key Spin
+ * You click the Softkey1 and rotates through some elements / focus. 
+ * depends on gSoftKeyAccessState with initial state=0;
+ */
+
+function BrowserMenuSpin() {
+  if(gSoftKeyAccessState==0||gSoftKeyAccessState==3) {
+	if(gSoftKeyAccessState==3) {
+	    document.getElementById("menu_NavPopup").hidePopup();
+	    gShowingNavMenuPopup=false;
+	    gSoftKeyAccessState=1;
+	}
+	document.getElementById("menu-button").focus();
+	document.getElementById("menu_MainPopup").showPopup(document.getElementById("menu-button"),-1,-1,"popup","bottomleft", "topleft");
+	gShowingMenuPopup=true;
+	gSoftKeyAccessState=1;
+  } else if(gSoftKeyAccessState==1) {
+	document.getElementById("menu_MainPopup").hidePopup();
+	gShowingMenuPopup=false;
+	document.getElementById("urlbar").focus();
+	gSoftKeyAccessState=2;	    
+  } else if(gSoftKeyAccessState==2) {
+	document.getElementById("menu_NavPopup").showPopup(document.getElementById("nav-menu-button"),-1,-1,"popup","bottomright", "topright");
+	gShowingNavMenuPopup=true;
+	document.getElementById("nav-menu-button").focus();
+	gSoftKeyAccessState=3;
+  } 
+}
+
+function MenuEnableEscapeKeys() {
+	// When popups are on, <key /> not working...bugs like https://bugzilla.mozilla.org/show_bug.cgi?id=55495 
+	document.addEventListener("keypress",MenuHandleMenuEscape,true); 
+}
+
+function MenuDisableEscapeKeys() {
+  document.removeEventListener("keypress",MenuHandleMenuEscape,true); 
+}
+
+function MenuHandleMenuEscape(e) {
+  /* This applies because our <key /> handlers would not work when Menu popups are active */ 
+  if( gShowingMenuPopup  &&  e.keyCode==e.DOM_VK_F11) {
+    BrowserMenuSpin();
+  }
+  if( gShowingNavMenuPopup &&  e.keyCode==e.DOM_VK_F11) {
+    BrowserMenuSpin(); 
+  }
+}
+
+/*
+ * The URLBAR Deck mode selector 
  */
 
 function BrowserSetDeck(dMode,menuElement) {
