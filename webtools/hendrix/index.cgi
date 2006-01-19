@@ -37,7 +37,7 @@ use Email::Send qw(NNTP);
 # use CGI::Carp qw(fatalsToBrowser);
 
 # Configuration
-my $newsgroup = "netscape.public.beta.feedback";
+my $newsgroup = "mozilla.feedback";
 my $server    = "news.mozilla.org";
 
 my $cgi = new CGI;
