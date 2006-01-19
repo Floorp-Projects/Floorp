@@ -38,6 +38,7 @@ var currentconfigpath;
 var haveplugins = false;
 var havesearchplugins = false;
 var configarray = new Array();
+var debug = true;
 
 var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefBranch);
@@ -1424,8 +1425,17 @@ function CCKCopyFile(source, destination)
   try {
     destfile.remove(false);
   } catch (ex) {}
-
-  sourcefile.copyTo(destination, "");
+  
+  try {
+    sourcefile.copyTo(destination, "");
+  } catch (ex) {
+    if (debug) {
+      var bundle = document.getElementById("bundle_cckwizard");
+      gPromptService.alert(window, bundle.getString("windowTitle"),
+                       ex + "\n\nSource: " +  source + "\n\nDestination: " + destination.path );
+    }
+    throw("Stopping Javascript execution");
+  }
   
   return true;
 }
