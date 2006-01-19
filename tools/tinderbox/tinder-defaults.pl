@@ -217,6 +217,7 @@ $update_package = 0;
 #$update_filehost = "ftp.mozilla.org";
 #$update_appv = "1.0+";
 #$update_extv = "1.0+";
+#$update_pushinfo = 1;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
