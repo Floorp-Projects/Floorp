@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "nsIRenderingContext.h"
+#include "prlink.h"
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -15,7 +16,41 @@
 #include "nsSystemFontsGTK2.h"
 
 static PRInt32 GetXftDPI(void);
-static void AppendFontFFREName(nsString& aString, const char* aXLFDName);
+
+// Glue to avoid build/runtime dependencies on Pango > 1.6
+
+static gboolean
+(* PTR_pango_font_description_get_size_is_absolute)(PangoFontDescription*)
+    = nsnull;
+
+static void InitPangoLib()
+{
+    static PRBool initialized = PR_FALSE;
+    if (initialized)
+        return;
+    initialized = PR_TRUE;
+
+    PRLibrary* lib = PR_LoadLibrary("libpango-1.0.so");
+    if (!lib)
+        return;
+
+    PTR_pango_font_description_get_size_is_absolute =
+        (gboolean (*)(PangoFontDescription*))
+        PR_FindFunctionSymbol(lib, "pango_font_description_get_size_is_absolute");
+
+    // leak lib deliberately
+}
+
+static gboolean
+MOZ_pango_font_description_get_size_is_absolute(PangoFontDescription *desc)
+{
+    if (PTR_pango_font_description_get_size_is_absolute) {
+        return PTR_pango_font_description_get_size_is_absolute(desc);
+    }
+
+    // In old versions of pango, this was always false.
+    return PR_FALSE;
+}
 
 #define DEFAULT_TWIP_FONT_SIZE 240
 
@@ -124,22 +159,26 @@ nsSystemFontsGTK2::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
     aFont->weight = pango_font_description_get_weight(desc);
 
     float size = float(pango_font_description_get_size(desc) / PANGO_SCALE);
-#ifdef MOZ_ENABLE_XFT
-    PRInt32 dpi = GetXftDPI();
-    if (dpi != 0) {
-        // pixels/inch * twips/pixel * inches/twip == 1, except it isn't, since
-        // our idea of dpi may be different from Xft's.
-        size *= float(dpi) * aPixelsToTwips * (1.0f/1440.0f);
+
+    // |size| is now either pixels or pango-points (not Mozilla-points!)
+
+    if (!pango_font_description_get_size_is_absolute(desc)) {
+        // |size| is in pango-points, so convert to pixels
+        PRInt32 dpi = GetXftDPI();
+        if (dpi != 0) {
+            size *= float(dpi) / 72.0f;
+        }
     }
-#endif /* MOZ_ENABLE_XFT */
-    aFont->size = NSFloatPointsToTwips(size);
+
+    // |size| is now pixels
+
+    aFont->size = NSToCoordRound(size * aPixelsToTwips);
   
     pango_font_description_free(desc);
 
     return NS_OK;
 }
 
-#ifdef MOZ_ENABLE_XFT
 /* static */
 PRInt32
 GetXftDPI(void)
@@ -155,4 +194,3 @@ GetXftDPI(void)
 
   return 0;
 }
-#endif /* MOZ_ENABLE_XFT */
