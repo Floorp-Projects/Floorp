@@ -570,7 +570,7 @@ sub update_create_package {
       }
 
       # Push the build schema 2 data.
-      {
+      if ( $Settings::update_pushinfo ) {
           TinderUtils::print_log "\nPushing third-gen update info...\n";
           my $path = "/opt/aus2/build/0";
           $path = "$path/$update_product/$update_version/$update_platform/$buildid/$locale";
