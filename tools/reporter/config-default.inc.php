@@ -100,6 +100,10 @@ $config['products'][1]                     = 'Firefox/1.0+';
 
 // How many items to show by default
 $config['show'] = 25;
+$config['max_show'] = 200;
+
+// Max items to remember for next/prev navigation
+$config['max_nav_count'] = 2000;
 
 // Field Names, and how they should appear in the UI
 $config['fields']['report_id']             = 'Report ID';

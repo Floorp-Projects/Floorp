@@ -94,9 +94,9 @@ if(isset($_SESSION['reportList'])){
     $query = new query;
     $query_input = $query->getQueryInputs();
 
-    $continuity_params = $query->continuityParams($query_input);
+    $continuity_params = $query->continuityParams($query_input, null);
 
-    $content->assign('continuity_params',             $continuity_params[0]);
+    $content->assign('continuity_params',             $continuity_params);
 
     $reportIndex = array_search($_GET['report_id'],   $_SESSION['reportList']);
 

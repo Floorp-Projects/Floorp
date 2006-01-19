@@ -49,7 +49,9 @@ session_start();
 header("Cache-control: private"); //IE 6 Fix
 printheaders();
 
-$method = 'html';
+if(!$_GET['method']){
+    $method = 'html';
+}
 
 $title = "Searching Results";
 
@@ -91,7 +93,7 @@ if (sizeof($output['data']) == 0){
  * We cap the navigation at 2000 items because php sometimes acts wierd
  * when sessions get to big.  In most cases, this won't effect anyone.
  *******/
-if($result['totalResults'] < 2000){
+if($result['totalResults'] < $config['max_nav_count']){
     $_SESSION['reportList'] = $result['reportList'];
 } else {
     unset($_SESSION['reportList']);
