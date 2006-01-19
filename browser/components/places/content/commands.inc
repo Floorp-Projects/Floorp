@@ -5,7 +5,8 @@
     <command id="placesCmd_export" label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"/>
     <command id="placesCmd_import"/>
     <command id="placesCmd_search:save"/>
-    <command id="placesCmd_search:moreCriteria"/>
+    <command id="placesCmd_search:moreCriteria"
+             oncommand="PlacesQueryBuilder.toggle();"/>
     <command id="placesCmd_select:all" 
              label="&cmd.select_all.label;" accesskey="&cmd.select_all.accesskey;"
              oncommand="PlacesController.selectAll();"/>

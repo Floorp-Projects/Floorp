@@ -182,7 +182,7 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 }
 
 /* Calendar */
-#historyCalendar {
+.history-calendar {
   margin: 0px 0px 7px 6px;
 }
 
@@ -239,4 +239,8 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 }
 .calendar-day[month="other"] {
   color:#888;
+}
+
+.no-margin-button {
+  min-width:0em;
 }
