@@ -53,7 +53,7 @@
 
 // OUTPUT_CLASS=nsGkAtoms
 // MACRO_NAME=GK_ATOM
-#ifdef WINCE
+#ifdef small
 #undef small
 #endif 
 
