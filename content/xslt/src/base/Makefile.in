@@ -67,14 +67,14 @@ endif
 
 CPPSRCS	= txDouble.cpp \
 	txList.cpp \
-	txAtoms.cpp \
 	txExpandedNameMap.cpp \
 	txNamespaceMap.cpp \
 	txURIUtils.cpp
 
 ifdef MOZ_XSLT_STANDALONE
 CPPSRCS += txSimpleErrorObserver.cpp \
-	txStringUtils.cpp
+	txStringUtils.cpp \
+	txAtoms.cpp
 endif
 
 # we don't want the shared lib, but we want to force the creation of a

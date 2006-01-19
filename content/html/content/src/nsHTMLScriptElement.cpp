@@ -535,7 +535,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLScriptElement, Defer, defer)
 NS_IMPL_URI_ATTR(nsHTMLScriptElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, HtmlFor, _for)
-NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Event, _event)
+NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Event, event)
 
 nsresult
 nsHTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
@@ -707,7 +707,7 @@ nsHTMLScriptElement::MaybeProcessScript()
 
     if (mScriptEventHandler) {
       nsAutoString event_val;
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::_event, event_val);
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::event, event_val);
       mScriptEventHandler->ParseEventString(event_val);
     }
   }

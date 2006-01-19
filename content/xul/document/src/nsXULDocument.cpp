@@ -1038,7 +1038,7 @@ nsXULDocument::AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
                     NS_STATIC_CAST(BroadcastListener*, entry->mListeners[i]);
 
                 if ((bl->mAttribute == aAttribute) ||
-                    (bl->mAttribute == nsXULAtoms::_star)) {
+                    (bl->mAttribute == nsXULAtoms::_asterix)) {
                     nsCOMPtr<nsIContent> listener
                         = do_QueryInterface(bl->mListener);
 

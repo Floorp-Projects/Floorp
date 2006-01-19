@@ -497,7 +497,7 @@ nsXBLBinding::GenerateAnonymousContent()
         nsIAtom *localName = ni->NameAtom();
         if (ni->NamespaceID() != kNameSpaceID_XUL ||
             (localName != nsXULAtoms::observes &&
-             localName != nsXULAtoms::templateAtom)) {
+             localName != nsXULAtoms::_template)) {
           hasContent = PR_FALSE;
           break;
         }
@@ -573,7 +573,7 @@ nsXBLBinding::GenerateAnonymousContent()
                 nsIAtom *localName = ni->NameAtom();
                 if (ni->NamespaceID() != kNameSpaceID_XUL ||
                     (localName != nsXULAtoms::observes &&
-                     localName != nsXULAtoms::templateAtom)) {
+                     localName != nsXULAtoms::_template)) {
                   // Kill all anonymous content.
                   mContent = nsnull;
                   bindingManager->SetContentListFor(mBoundElement, nsnull);

@@ -600,7 +600,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
         // XXXbz what if we have both "xmlns" in the null namespace and "xmlns"
         // in the xmlns namespace?
         (namespaceID == kNameSpaceID_None &&
-         attrName == nsLayoutAtoms::xmlnsNameSpace)) {
+         attrName == nsLayoutAtoms::xmlns)) {
       content->GetAttr(namespaceID, attrName, uriStr);
 
       if (!name->GetPrefix()) {

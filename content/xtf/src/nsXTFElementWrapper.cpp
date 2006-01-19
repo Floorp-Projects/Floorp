@@ -59,7 +59,7 @@ nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo)
     : nsXTFElementWrapperBase(aNodeInfo),
       mNotificationMask(0),
       mIntrinsicState(0),
-      mTmpAttrName(nsLayoutAtoms::wildcard) // XXX this is a hack, but names
+      mTmpAttrName(nsLayoutAtoms::_asterix) // XXX this is a hack, but names
                                             // have to have a value
 {
 }

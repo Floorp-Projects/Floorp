@@ -74,7 +74,7 @@ nsXMLEventsElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPref
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::listener) && 
       mNodeInfo->GetDocument() && aNameSpaceID == kNameSpaceID_None && 
-      aName == nsHTMLAtoms::_event)
+      aName == nsHTMLAtoms::event)
     mNodeInfo->GetDocument()->AddXMLEventsContent(this);
   return nsXMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
                                    aNotify);

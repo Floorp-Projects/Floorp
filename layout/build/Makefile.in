@@ -136,7 +136,6 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)txxpath_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)txxslt_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxbl_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconxulcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxuldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkview_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
@@ -154,6 +153,7 @@ ifdef MOZ_XUL
 SHARED_LIBRARY_LIBS += \
 		$(DIST)/lib/$(LIB_PREFIX)gkxultree_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkxulgrid_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxulcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxultmpl_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif

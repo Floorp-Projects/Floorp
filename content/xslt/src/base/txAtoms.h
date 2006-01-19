@@ -39,6 +39,16 @@
 #ifndef TRANSFRMX_ATOMS_H
 #define TRANSFRMX_ATOMS_H
 
+#ifndef TX_EXE
+
+#include "nsGkAtoms.h"
+typedef class nsGkAtoms txXPathAtoms;
+typedef class nsGkAtoms txXMLAtoms;
+typedef class nsGkAtoms txXSLTAtoms;
+typedef class nsGkAtoms txHTMLAtoms;
+
+#else
+
 class nsIAtom;
 
 /*
@@ -50,14 +60,10 @@ class nsIAtom;
  * be auto-generated.
  */
 
-#ifdef TX_EXE
 #define DOM_ATOMS                               \
 TX_ATOM(comment, "#comment")                    \
 TX_ATOM(document, "#document")                  \
 TX_ATOM(text, "#text")
-#else
-#define DOM_ATOMS
-#endif
 
 #define XML_ATOMS             \
 TX_ATOM(_empty, "")           \
@@ -101,5 +107,7 @@ public:
 };
 
 #undef TX_ATOM
+
+#endif
 
 #endif

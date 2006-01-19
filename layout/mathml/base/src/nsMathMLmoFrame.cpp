@@ -388,7 +388,7 @@ nsMathMLmoFrame::ProcessOperatorData()
 
     // find our form
     form = NS_MATHML_OPERATOR_FORM_INFIX;
-    GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::form_,
+    GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::form,
                  value);
     if (!value.IsEmpty()) {
       if (value.EqualsLiteral("prefix"))

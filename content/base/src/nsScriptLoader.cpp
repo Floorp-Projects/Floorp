@@ -292,7 +292,7 @@ nsScriptLoader::IsScriptEventHandler(nsIScriptElement *aScriptElement)
 
   nsAutoString forAttr, eventAttr;
   if (!contElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::_for, forAttr) ||
-      !contElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::_event, eventAttr)) {
+      !contElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::event, eventAttr)) {
     return PR_FALSE;
   }
 

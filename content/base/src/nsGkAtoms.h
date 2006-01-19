@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla MathML Project.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * The University Of Queensland.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -34,25 +34,32 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsGkAtoms_h___
+#define nsGkAtoms_h___
 
-#include "nsMathMLAtoms.h"
-#include "nsStaticAtom.h"
-#include "nsMemory.h"
+#include "nsIAtom.h"
 
-// define storage for all atoms
-#define MATHML_ATOM(_name, _value) nsIAtom* nsMathMLAtoms::_name;
-#include "nsMathMLAtomList.h"
-#undef MATHML_ATOM
+/**
+ * This class wraps up the creation (and destruction) of the standard
+ * set of atoms used by gklayout. This objects are created when gklayout
+ * is loaded and they destroyed when gklayout is unloaded.
+ */
 
+class nsGkAtoms {
+public:
 
-static const nsStaticAtom MathMLAtoms_info[] = {
-#define MATHML_ATOM(name_, value_) { value_, &nsMathMLAtoms::name_ },
-#include "nsMathMLAtomList.h"
-#undef MATHML_ATOM
+  static void AddRefAtoms();
+
+  /* Declare all atoms
+
+     The atom names and values are stored in nsGkAtomList.h and
+     are brought to you by the magic of C preprocessing
+
+     Add new atoms to nsGkAtomList and all support logic will be auto-generated
+   */
+#define GK_ATOM(_name, _value) static nsIAtom* _name;
+#include "nsGkAtomList.h"
+#undef GK_ATOM
 };
 
-void nsMathMLAtoms::AddRefAtoms() {
-    NS_RegisterStaticAtoms(MathMLAtoms_info,
-                           NS_ARRAY_LENGTH(MathMLAtoms_info));
-}
-
+#endif /* nsGkAtoms_h___ */

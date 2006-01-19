@@ -1792,7 +1792,7 @@ PRBool
 nsPlainTextSerializer::IsCurrentNodeConverted(const nsIParserNode* aNode)
 {
   nsAutoString value;
-  nsresult rv = GetAttributeValue(aNode, nsHTMLAtoms::kClass, value);
+  nsresult rv = GetAttributeValue(aNode, nsHTMLAtoms::_class, value);
   return (NS_SUCCEEDED(rv) &&
           (value.EqualsIgnoreCase("moz-txt", 7) ||
            value.EqualsIgnoreCase("\"moz-txt", 8)));

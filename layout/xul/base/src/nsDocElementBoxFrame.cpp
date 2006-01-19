@@ -134,7 +134,7 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   rv = NS_NewXULElement(getter_AddRefs(content), nodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  content->SetAttr(nsnull, nsXULAtoms::defaultz, NS_LITERAL_STRING("true"), PR_FALSE);
+  content->SetAttr(nsnull, nsXULAtoms::_default, NS_LITERAL_STRING("true"), PR_FALSE);
   aAnonymousItems.AppendElement(content);
   
   return NS_OK;

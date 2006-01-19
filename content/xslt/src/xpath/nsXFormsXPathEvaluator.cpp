@@ -208,7 +208,7 @@ nsXFormsXPathEvaluator::XFormsParseContextImpl::resolveFunctionCall(
     else if (aName == txXPathAtoms::daysFromDate) {
       aFnCall = new XFormsFunctionCall(XFormsFunctionCall::DAYSFROMDATE);
     }
-    else if (aName == txXPathAtoms::ifFunc) {
+    else if (aName == txXPathAtoms::_if) {
       aFnCall = new XFormsFunctionCall(XFormsFunctionCall::IF);
     }
     else if (aName == txXPathAtoms::index) {

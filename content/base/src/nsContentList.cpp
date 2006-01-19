@@ -330,7 +330,7 @@ nsContentList::nsContentList(nsIDocument *aDocument,
     mFuncMayDependOnAttr(PR_FALSE)
 {
   NS_ASSERTION(mDeep || mRootContent, "Must have root content for non-deep list!");
-  if (nsLayoutAtoms::wildcard == mMatchAtom) {
+  if (nsLayoutAtoms::_asterix == mMatchAtom) {
     mMatchAll = PR_TRUE;
   }
   else {

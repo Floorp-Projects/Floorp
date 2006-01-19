@@ -356,10 +356,10 @@ nsSVGLength::GetValueAsString(nsAString & aValueAsString)
       UnitAtom = nsSVGAtoms::pc;
       break;
     case SVG_LENGTHTYPE_EMS:
-      UnitAtom = nsSVGAtoms::ems;
+      UnitAtom = nsSVGAtoms::em;
       break;
     case SVG_LENGTHTYPE_EXS:
-      UnitAtom = nsSVGAtoms::exs;
+      UnitAtom = nsSVGAtoms::ex;
       break;
     case SVG_LENGTHTYPE_PERCENTAGE:
       UnitAtom = nsSVGAtoms::percentage;
@@ -410,9 +410,9 @@ nsSVGLength::SetValueAsString(const nsAString & aValueAsString)
           unitType = SVG_LENGTHTYPE_PT;
         else if (unitAtom == nsSVGAtoms::pc)
           unitType = SVG_LENGTHTYPE_PC;
-        else if (unitAtom == nsSVGAtoms::ems)
+        else if (unitAtom == nsSVGAtoms::em)
           unitType = SVG_LENGTHTYPE_EMS;
-        else if (unitAtom == nsSVGAtoms::exs)
+        else if (unitAtom == nsSVGAtoms::ex)
           unitType = SVG_LENGTHTYPE_EXS;
         else if (unitAtom == nsSVGAtoms::percentage)
           unitType = SVG_LENGTHTYPE_PERCENTAGE;

@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -16,8 +15,8 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,24 +34,22 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-#include "nsSVGAtoms.h"
+#include "nsGkAtoms.h"
 #include "nsStaticAtom.h"
-#include "nsMemory.h"
 
 // define storage for all atoms
-#define SVG_ATOM(_name, _value) nsIAtom* nsSVGAtoms::_name;
-#include "nsSVGAtomList.h"
-#undef SVG_ATOM
+#define GK_ATOM(_name, _value) nsIAtom* nsGkAtoms::_name;
+#include "nsGkAtomList.h"
+#undef GK_ATOM
 
-static const nsStaticAtom SVGAtoms_info[] = {
-#define SVG_ATOM(name_, value_) { value_, &nsSVGAtoms::name_ },
-#include "nsSVGAtomList.h"
-#undef SVG_ATOM
+static const nsStaticAtom GkAtoms_info[] = {
+#define GK_ATOM(name_, value_) { value_, &nsGkAtoms::name_ },
+#include "nsGkAtomList.h"
+#undef GK_ATOM
 };
 
-void nsSVGAtoms::AddRefAtoms() {
-
-  NS_RegisterStaticAtoms(SVGAtoms_info, NS_ARRAY_LENGTH(SVGAtoms_info));
+void nsGkAtoms::AddRefAtoms()
+{
+  NS_RegisterStaticAtoms(GkAtoms_info, NS_ARRAY_LENGTH(GkAtoms_info));
 }
 

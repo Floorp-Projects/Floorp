@@ -82,7 +82,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
 
   // width 
   mWidth = 0;
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::width_,
+  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::width,
                value);
   if (!value.IsEmpty()) {
     if ((ParseNumericValue(value, cssValue) ||
@@ -94,7 +94,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
 
   // height
   mHeight = 0;
-  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::height_,
+  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::height,
                value);
   if (!value.IsEmpty()) {
     if ((ParseNumericValue(value, cssValue) ||

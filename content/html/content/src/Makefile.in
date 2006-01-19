@@ -75,7 +75,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 EXPORTS		= \
-		nsHTMLAtomList.h \
 		nsHTMLAtoms.h \
 		nsImageMapUtils.h \
 		$(NULL)
@@ -84,7 +83,6 @@ CPPSRCS		= \
 		nsGenericHTMLElement.cpp \
 		nsGenericDOMHTMLCollection.cpp \
 		nsFormSubmission.cpp \
-		nsHTMLAtoms.cpp \
 		nsImageMapUtils.cpp \
 		nsHTMLAnchorElement.cpp \
 		nsHTMLAppletElement.cpp \

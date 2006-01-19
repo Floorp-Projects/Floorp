@@ -1004,7 +1004,7 @@ nsXULContentBuilder::IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aPare
         // <template> or <rule> element in the simple syntax, or the
         // <action> element in the extended syntax.
         ni = tmpl->NodeInfo();
-    } while (!ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL) &&
+    } while (!ni->Equals(nsXULAtoms::_template, kNameSpaceID_XUL) &&
              !ni->Equals(nsXULAtoms::rule, kNameSpaceID_XUL) &&
              !ni->Equals(nsXULAtoms::action, kNameSpaceID_XUL));
 
@@ -1361,7 +1361,7 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
             // to even check this subtree.
             // XXX should this check |child| rather than |element|? Otherwise
             //     it should be moved outside the inner loop. Bug 297290.
-            if (element->NodeInfo()->Equals(nsXULAtoms::templateAtom,
+            if (element->NodeInfo()->Equals(nsXULAtoms::_template,
                                             kNameSpaceID_XUL) ||
                 !element->IsContentOfType(nsIContent::eELEMENT))
                 continue;

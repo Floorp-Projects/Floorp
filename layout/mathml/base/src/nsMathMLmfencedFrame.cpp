@@ -136,7 +136,7 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
 
   //////////////  
   // see if the opening fence is there ...
-  if (!GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::open_,
+  if (!GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::open,
                     value)) {
     value = PRUnichar('('); // default as per the MathML REC
   }
@@ -155,7 +155,7 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
   //////////////
   // see if the closing fence is there ...
   if(!GetAttribute(mContent, mPresentationData.mstyle,
-                    nsMathMLAtoms::close_, value)) {
+                    nsMathMLAtoms::close, value)) {
     value = PRUnichar(')'); // default as per the MathML REC
   }
   else {

@@ -62,12 +62,12 @@ txXSLTProcessor::init()
     if (NS_FAILED(txHTMLOutput::init())) {
         return MB_FALSE;
     }
-#endif
 
     txXMLAtoms::init();
     txXPathAtoms::init();
     txXSLTAtoms::init();
     txHTMLAtoms::init();
+#endif
     
     if (!txHandlerTable::init())
         return MB_FALSE;

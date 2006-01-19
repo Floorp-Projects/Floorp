@@ -1217,7 +1217,7 @@ nsXULElement::ParseAttribute(PRInt32 aNamespaceID,
             return PR_TRUE;
         }
 
-        if (aAttribute == nsXULAtoms::clazz) {
+        if (aAttribute == nsXULAtoms::_class) {
             aResult.ParseAtomArray(aValue);
             return PR_TRUE;
         }
@@ -2102,7 +2102,7 @@ nsXULElement::GetID() const
 const nsAttrValue*
 nsXULElement::GetClasses() const
 {
-    return FindLocalOrProtoAttr(kNameSpaceID_None, nsXULAtoms::clazz);
+    return FindLocalOrProtoAttr(kNameSpaceID_None, nsXULAtoms::_class);
 }
 
 NS_IMETHODIMP
@@ -2193,7 +2193,7 @@ nsXULElement::GetIDAttributeName() const
 nsIAtom *
 nsXULElement::GetClassAttributeName() const
 {
-    return nsXULAtoms::clazz;
+    return nsXULAtoms::_class;
 }
 
 // Controllers Methods
@@ -2284,7 +2284,7 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
 
 
 NS_IMPL_XUL_STRING_ATTR(Id, id)
-NS_IMPL_XUL_STRING_ATTR(ClassName, clazz)
+NS_IMPL_XUL_STRING_ATTR(ClassName, _class)
 NS_IMPL_XUL_STRING_ATTR(Align, align)
 NS_IMPL_XUL_STRING_ATTR(Dir, dir)
 NS_IMPL_XUL_STRING_ATTR(Flex, flex)
@@ -2910,7 +2910,7 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
 
         return NS_OK;
     }
-    else if (mAttributes[aPos].mName.Equals(nsXULAtoms::clazz)) {
+    else if (mAttributes[aPos].mName.Equals(nsXULAtoms::_class)) {
         // Compute the element's class list
         mAttributes[aPos].mValue.ParseAtomArray(aValue);
         

@@ -586,12 +586,12 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
   static const nsCSSMapping
   kCSSMappingTable[] = {
     {kMathMLversion2, nsMathMLAtoms::mathcolor_,      "color:"},
-    {kMathMLversion1, nsMathMLAtoms::color_,          "color:"},
+    {kMathMLversion1, nsMathMLAtoms::color,           "color:"},
     {kMathMLversion2, nsMathMLAtoms::mathsize_,       "font-size:"},
     {kMathMLversion1, nsMathMLAtoms::fontsize_,       "font-size:"},
     {kMathMLversion1, nsMathMLAtoms::fontfamily_,     "font-family:"},
     {kMathMLversion2, nsMathMLAtoms::mathbackground_, "background-color:"},
-    {kMathMLversion1, nsMathMLAtoms::background_,     "background-color:"},
+    {kMathMLversion1, nsMathMLAtoms::background,      "background-color:"},
     {0, nsnull, nsnull}
   };
 
