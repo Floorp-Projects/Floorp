@@ -4633,7 +4633,9 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
     case CKM_SSL3_MASTER_KEY_DERIVE_DH:
       {
 	CK_SSL3_MASTER_KEY_DERIVE_PARAMS *ssl3_master;
-	SSL3RSAPreMasterSecret *rsa_pms;
+	SSL3RSAPreMasterSecret *          rsa_pms;
+	unsigned char                     crsrdata[SSL3_RANDOM_LENGTH * 2];
+
         if ((pMechanism->mechanism == CKM_SSL3_MASTER_KEY_DERIVE_DH) ||
             (pMechanism->mechanism == CKM_TLS_MASTER_KEY_DERIVE_DH))
 		isDH = PR_TRUE;
@@ -4660,10 +4662,15 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	    break;
 	}
 
-
 	/* finally do the key gen */
 	ssl3_master = (CK_SSL3_MASTER_KEY_DERIVE_PARAMS *)
 					pMechanism->pParameter;
+
+	PORT_Memcpy(crsrdata, 
+	            ssl3_master->RandomInfo.pClientRandom, SSL3_RANDOM_LENGTH);
+	PORT_Memcpy(crsrdata + SSL3_RANDOM_LENGTH, 
+	            ssl3_master->RandomInfo.pServerRandom, SSL3_RANDOM_LENGTH);
+
 	if (ssl3_master->pVersion) {
 	    SFTKSessionObject *sessKey = sftk_narrowToSessionObject(key);
 	    rsa_pms = (SSL3RSAPreMasterSecret *) att->attrib.pValue;
@@ -4686,23 +4693,11 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	}
 
         if (isTLS) {
-	    unsigned char crsrdata[SSL3_RANDOM_LENGTH * 2];
-	    SECItem crsr = { siBuffer, NULL, 0 };
-	    SECItem master = { siBuffer, NULL, 0 };
-	    SECItem pms = { siBuffer, NULL, 0 };
 	    SECStatus status;
-
-	    pms.data = (unsigned char*)att->attrib.pValue;
-	    pms.len = att->attrib.ulValueLen;
-	    master.data = key_block;
-	    master.len = SSL3_MASTER_SECRET_LENGTH;
-	    crsr.data = crsrdata;
-	    crsr.len = sizeof(crsrdata);
-
-	    PORT_Memcpy(crsrdata, ssl3_master->RandomInfo.pClientRandom,
-							 SSL3_RANDOM_LENGTH);
-	    PORT_Memcpy(crsrdata + SSL3_RANDOM_LENGTH, 
-		ssl3_master->RandomInfo.pServerRandom, SSL3_RANDOM_LENGTH);
+ 	    SECItem crsr   = { siBuffer, crsrdata, sizeof crsrdata };
+ 	    SECItem master = { siBuffer, key_block, SSL3_MASTER_SECRET_LENGTH};
+ 	    SECItem pms    = { siBuffer, (unsigned char*)att->attrib.pValue,
+ 					 att->attrib.ulValueLen };
 
 	    status = TLS_PRF(&pms, "master secret", &crsr, &master, isFIPS);
 	    if (status != SECSuccess) {
@@ -4727,12 +4722,10 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
               SHA1_Update(sha, (unsigned char*) mixers[i], strlen(mixers[i]));
               SHA1_Update(sha, (const unsigned char*)att->attrib.pValue, 
 			  att->attrib.ulValueLen);
-              SHA1_Update(sha, ssl3_master->RandomInfo.pClientRandom,
-				ssl3_master->RandomInfo.ulClientRandomLen);
-              SHA1_Update(sha, ssl3_master->RandomInfo.pServerRandom, 
-				ssl3_master->RandomInfo.ulServerRandomLen);
+              SHA1_Update(sha, crsrdata, sizeof crsrdata);
               SHA1_End(sha, sha_out, &outLen, SHA1_LENGTH);
               PORT_Assert(outLen == SHA1_LENGTH);
+
               MD5_Begin(md5);
               MD5_Update(md5, (const unsigned char*)att->attrib.pValue, 
 			 att->attrib.ulValueLen);
@@ -4773,6 +4766,9 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	CK_SSL3_KEY_MAT_PARAMS *ssl3_keys;
 	CK_SSL3_KEY_MAT_OUT *   ssl3_keys_out;
 	CK_ULONG                effKeySize;
+	unsigned int            block_needed;
+	unsigned char           srcrdata[SSL3_RANDOM_LENGTH * 2];
+	unsigned char           crsrdata[SSL3_RANDOM_LENGTH * 2];
 
 	crv = sftk_DeriveSensitiveCheck(sourceKey,key);
 	if (crv != CKR_OK) break;
@@ -4801,6 +4797,17 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	    break;
 	}
 	ssl3_keys = (CK_SSL3_KEY_MAT_PARAMS *) pMechanism->pParameter;
+
+	PORT_Memcpy(srcrdata, 
+	            ssl3_keys->RandomInfo.pServerRandom, SSL3_RANDOM_LENGTH);
+	PORT_Memcpy(srcrdata + SSL3_RANDOM_LENGTH, 
+		    ssl3_keys->RandomInfo.pClientRandom, SSL3_RANDOM_LENGTH);
+
+	PORT_Memcpy(crsrdata, 
+		    ssl3_keys->RandomInfo.pClientRandom, SSL3_RANDOM_LENGTH);
+	PORT_Memcpy(crsrdata + SSL3_RANDOM_LENGTH, 
+		    ssl3_keys->RandomInfo.pServerRandom, SSL3_RANDOM_LENGTH);
+
 	/*
 	 * clear out our returned keys so we can recover on failure
 	 */
@@ -4811,29 +4818,31 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	ssl3_keys_out->hServerKey       = CK_INVALID_HANDLE;
 
 	/*
+	 * How much key material do we need?
+	 */
+	macSize    = ssl3_keys->ulMacSizeInBits/8;
+	effKeySize = ssl3_keys->ulKeySizeInBits/8;
+	IVSize     = ssl3_keys->ulIVSizeInBits/8;
+	if (keySize == 0) {
+	    effKeySize = keySize;
+	}
+	block_needed = 2 * (macSize + effKeySize + 
+	                    ((!ssl3_keys->bIsExport) * IVSize));
+	PORT_Assert(block_needed <= sizeof key_block);
+	if (block_needed > sizeof key_block)
+	    block_needed = sizeof key_block;
+
+	/*
 	 * generate the key material: This looks amazingly similar to the
 	 * PMS code, and is clearly crying out for a function to provide it.
 	 */
 	if (isTLS) {
 	    SECStatus     status;
-	    SECItem       master = { siBuffer, NULL, 0 };
-	    SECItem       srcr   = { siBuffer, NULL, 0 };
-	    SECItem       keyblk = { siBuffer, NULL, 0 };
-	    unsigned char srcrdata[SSL3_RANDOM_LENGTH * 2];
-
-	    master.data = (unsigned char*)att->attrib.pValue;
-	    master.len  = att->attrib.ulValueLen;
-	    srcr.data   = srcrdata;
-	    srcr.len    = sizeof srcrdata;
-	    keyblk.data = key_block;
-	    keyblk.len  = sizeof key_block;
-
-	    PORT_Memcpy(srcrdata, 
-	                ssl3_keys->RandomInfo.pServerRandom,
-			SSL3_RANDOM_LENGTH);
-	    PORT_Memcpy(srcrdata + SSL3_RANDOM_LENGTH, 
-		        ssl3_keys->RandomInfo.pClientRandom, 
-			SSL3_RANDOM_LENGTH);
+	    SECItem       srcr   = { siBuffer, srcrdata, sizeof srcrdata };
+	    SECItem       keyblk = { siBuffer, key_block, block_needed };
+	    SECItem       master = { siBuffer, 
+	                             (unsigned char*)att->attrib.pValue,
+	                             att->attrib.ulValueLen };
 
 	    status = TLS_PRF(&master, "key expansion", &srcr, &keyblk,
 			      isFIPS);
@@ -4841,6 +4850,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		goto key_and_mac_derive_fail;
 	    }
 	} else {
+	    unsigned int block_bytes = 0;
 	    /* key_block = 
 	     *     MD5(master_secret + SHA('A' + master_secret + 
 	     *                      ServerHello.random + ClientHello.random)) +
@@ -4850,15 +4860,12 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	     *                      ServerHello.random + ClientHello.random)) +
 	     *     [...];
 	     */
-	    for (i = 0; i < NUM_MIXERS; i++) {
+	    for (i = 0; i < NUM_MIXERS && block_bytes < block_needed; i++) {
 	      SHA1_Begin(sha);
 	      SHA1_Update(sha, (unsigned char*) mixers[i], strlen(mixers[i]));
 	      SHA1_Update(sha, (const unsigned char*)att->attrib.pValue, 
 			  att->attrib.ulValueLen);
-              SHA1_Update(sha, ssl3_keys->RandomInfo.pServerRandom, 
-				ssl3_keys->RandomInfo.ulServerRandomLen);
-              SHA1_Update(sha, ssl3_keys->RandomInfo.pClientRandom,
-				ssl3_keys->RandomInfo.ulClientRandomLen);
+	      SHA1_Update(sha, srcrdata, sizeof srcrdata);
 	      SHA1_End(sha, sha_out, &outLen, SHA1_LENGTH);
 	      PORT_Assert(outLen == SHA1_LENGTH);
 	      MD5_Begin(md5);
@@ -4867,6 +4874,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	      MD5_Update(md5, sha_out, outLen);
 	      MD5_End(md5, &key_block[i*MD5_LENGTH], &outLen, MD5_LENGTH);
 	      PORT_Assert(outLen == MD5_LENGTH);
+	      block_bytes += outLen;
 	    }
 	}
 
@@ -4874,12 +4882,6 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	 * Put the key material where it goes.
 	 */
 	i = 0;			/* now shows how much consumed */
-	macSize    = ssl3_keys->ulMacSizeInBits/8;
-	effKeySize = ssl3_keys->ulKeySizeInBits/8;
-	IVSize     = ssl3_keys->ulIVSizeInBits/8;
-	if (keySize == 0) {
-	    effKeySize = keySize;
-	}
 
 	/* 
 	 * The key_block is partitioned as follows:
@@ -4954,10 +4956,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		*/
 		MD5_Begin(md5);
 		MD5_Update(md5, &key_block[i], effKeySize);
-            	MD5_Update(md5, ssl3_keys->RandomInfo.pClientRandom,
-				ssl3_keys->RandomInfo.ulClientRandomLen);
-            	MD5_Update(md5, ssl3_keys->RandomInfo.pServerRandom, 
-				ssl3_keys->RandomInfo.ulServerRandomLen);
+            	MD5_Update(md5, crsrdata, sizeof crsrdata);
 		MD5_End(md5, key_block2, &outLen, MD5_LENGTH);
 		i += effKeySize;
 		crv = sftk_buildSSLKey(hSession,key,PR_FALSE,key_block2,
@@ -4973,10 +4972,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		*/
 		MD5_Begin(md5);
 		MD5_Update(md5, &key_block[i], effKeySize);
-            	MD5_Update(md5, ssl3_keys->RandomInfo.pServerRandom, 
-				ssl3_keys->RandomInfo.ulServerRandomLen);
-            	MD5_Update(md5, ssl3_keys->RandomInfo.pClientRandom,
-				ssl3_keys->RandomInfo.ulClientRandomLen);
+            	MD5_Update(md5, srcrdata, sizeof srcrdata);
 		MD5_End(md5, key_block2, &outLen, MD5_LENGTH);
 		i += effKeySize;
 		crv = sftk_buildSSLKey(hSession,key,PR_FALSE,key_block2,
@@ -4990,10 +4986,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		**	MD5(ClientHello.random + ServerHello.random);
 		*/
 		MD5_Begin(md5);
-            	MD5_Update(md5, ssl3_keys->RandomInfo.pClientRandom,
-				ssl3_keys->RandomInfo.ulClientRandomLen);
-            	MD5_Update(md5, ssl3_keys->RandomInfo.pServerRandom, 
-				ssl3_keys->RandomInfo.ulServerRandomLen);
+            	MD5_Update(md5, crsrdata, sizeof crsrdata);
 		MD5_End(md5, key_block2, &outLen, MD5_LENGTH);
 		PORT_Memcpy(ssl3_keys_out->pIVClient, key_block2, IVSize);
 
@@ -5002,10 +4995,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		**	MD5(ServerHello.random + ClientHello.random);
 		*/
 		MD5_Begin(md5);
-            	MD5_Update(md5, ssl3_keys->RandomInfo.pServerRandom, 
-				ssl3_keys->RandomInfo.ulServerRandomLen);
-            	MD5_Update(md5, ssl3_keys->RandomInfo.pClientRandom,
-				ssl3_keys->RandomInfo.ulClientRandomLen);
+            	MD5_Update(md5, srcrdata, sizeof srcrdata);
 		MD5_End(md5, key_block2, &outLen, MD5_LENGTH);
 		PORT_Memcpy(ssl3_keys_out->pIVServer, key_block2, IVSize);
 
@@ -5016,20 +5006,8 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		*/
 		SECStatus     status;
 		SECItem       secret = { siBuffer, NULL, 0 };
-		SECItem       crsr   = { siBuffer, NULL, 0 };
+		SECItem       crsr   = { siBuffer, crsrdata, sizeof crsrdata };
 		SECItem       keyblk = { siBuffer, NULL, 0 };
-		unsigned char crsrdata[SSL3_RANDOM_LENGTH * 2];
-
-		crsr.data   = crsrdata;
-		crsr.len    = sizeof crsrdata;
-
-		PORT_Memcpy(crsrdata, 
-		            ssl3_keys->RandomInfo.pClientRandom, 
-			    SSL3_RANDOM_LENGTH);
-		PORT_Memcpy(crsrdata + SSL3_RANDOM_LENGTH, 
-			    ssl3_keys->RandomInfo.pServerRandom,
-			    SSL3_RANDOM_LENGTH);
-
 
 		/*
 		** client_write_key[CipherSpec.key_material]
