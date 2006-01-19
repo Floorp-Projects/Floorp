@@ -542,9 +542,9 @@ if ($format->{'extension'} eq 'html') {
     DefineColumn("reporter_realname"   , "CASE WHEN map_reporter.realname    = '' THEN map_reporter.login_name    ELSE map_reporter.realname    END AS reporter_realname"   , "Reporter"  );
     DefineColumn("qa_contact_realname" , "CASE WHEN map_qa_contact.realname  = '' THEN map_qa_contact.login_name  ELSE map_qa_contact.realname  END AS qa_contact_realname" , "QA Contact");
 } else {
-    DefineColumn("assigned_to_realname", "map_assigned_to.realname" , "Assignee"         );
-    DefineColumn("reporter_realname"   , "map_reporter.realname"    , "Reporter"         );
-    DefineColumn("qa_contact_realname" , "map_qa_contact.realname"  , "QA Contact"       );
+    DefineColumn("assigned_to_realname", "map_assigned_to.realname AS assigned_to_realname", "Assignee"  );
+    DefineColumn("reporter_realname"   , "map_reporter.realname AS reporter_realname"      , "Reporter"  );
+    DefineColumn("qa_contact_realname" , "map_qa_contact.realname AS qa_contact_realname"  , "QA Contact");
 }
 DefineColumn("bug_status"        , "bugs.bug_status"            , "Status"           );
 DefineColumn("resolution"        , "bugs.resolution"            , "Resolution"       );
