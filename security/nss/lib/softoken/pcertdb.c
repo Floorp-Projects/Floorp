@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.54 2006/01/19 02:09:37 nelsonb%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.55 2006/01/19 02:16:30 nelsonb%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -3844,6 +3844,8 @@ UpdateV5DB(NSSLOWCERTCertDBHandle *handle, DB *updatedb)
     
     updatehandle.permCertDB = updatedb;
     updatehandle.dbMon = PZ_NewMonitor(nssILockCertDB);
+    updatehandle.dbVerify = 0;
+    updatehandle.ref      = 1; /* prevent premature close */
     
     rv = nsslowcert_TraversePermCerts(&updatehandle, updateV5Callback,
 			       (void *)handle);
