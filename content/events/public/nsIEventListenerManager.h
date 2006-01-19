@@ -53,9 +53,10 @@ struct JSObject;
 /*
  * Event listener manager interface.
  */
+// dbb34a55-276d-4105-a26a-401bbb3e60c3
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ 0xec4df50f, 0x3f1d, 0x479c, \
-  { 0x80, 0xad, 0x9c, 0x0e, 0x4b, 0x90, 0x61, 0x57 } }
+{ 0xdbb34a55, 0x276d, 0x4105, \
+  { 0xa2, 0x6a, 0x40, 0x1b, 0xbb, 0x3e, 0x60, 0xc3 } }
 
 
 class nsIEventListenerManager : public nsISupports {
@@ -166,14 +167,24 @@ public:
   NS_IMETHOD ReleaseEvent(PRInt32 aEventTypes) = 0;
 
   /**
-  * Removes all event listeners registered by this instance of the listener
-  * manager.
+  * Tells the event listener manager that its target (which owns it) is
+  * no longer using it (and could go away).
+  *
+  * This causes the removal of all event listeners registered by this
+  * instance of the listener manager.  This is important for Bug 323807,
+  * since nsDOMClassInfo::PreserveWrapper (and nsIDOMGCParticipant)
+  * require that we remove all event listeners to remove any weak
+  * references in the nsDOMClassInfo's preserved wrapper table to the
+  * target.
+  *
+  * It also clears the weak pointer set by the call to
+  * |SetListenerTarget|.
   */
-  NS_IMETHOD RemoveAllListeners() = 0;
+  NS_IMETHOD Disconnect() = 0;
 
   /**
-  * Removes all event listeners registered by this instance of the listener
-  * manager.
+  * Tells the event listener manager what its target is.  This must be
+  * followed by a call to |Disconnect| before the target is destroyed.
   */
   NS_IMETHOD SetListenerTarget(nsISupports* aTarget) = 0;
 

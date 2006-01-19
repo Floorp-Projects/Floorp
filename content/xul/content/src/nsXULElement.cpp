@@ -939,7 +939,7 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     // XXXbz why are we nuking our listener manager?  We can get events while
     // not in a document!
     if (mListenerManager) {
-        mListenerManager->SetListenerTarget(nsnull);
+        mListenerManager->Disconnect();
         mListenerManager = nsnull;
     }
 

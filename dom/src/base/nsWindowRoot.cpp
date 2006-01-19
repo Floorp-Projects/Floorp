@@ -72,6 +72,9 @@ nsWindowRoot::nsWindowRoot(nsIDOMWindow* aWindow)
 
 nsWindowRoot::~nsWindowRoot()
 {
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
 }
 
 NS_INTERFACE_MAP_BEGIN(nsWindowRoot)

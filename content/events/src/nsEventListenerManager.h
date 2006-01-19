@@ -168,7 +168,7 @@ public:
                          const nsAString& aEventType,
                          nsIDOMEvent** aDOMEvent);
 
-  NS_IMETHOD RemoveAllListeners();
+  NS_IMETHOD Disconnect();
 
   NS_IMETHOD SetListenerTarget(nsISupports* aTarget);
 
@@ -236,6 +236,7 @@ protected:
                                PRInt32 aFlags,
                                nsIDOMEventGroup* aEvtGrp);
   void ReleaseListeners(nsVoidArray** aListeners);
+  nsresult RemoveAllListeners();
   nsresult FlipCaptureBit(PRInt32 aEventTypes, PRBool aInitCapture);
   nsVoidArray* GetListenersByType(EventArrayType aType, nsHashKey* aKey, PRBool aCreate);
   EventArrayType GetTypeForIID(const nsIID& aIID);
