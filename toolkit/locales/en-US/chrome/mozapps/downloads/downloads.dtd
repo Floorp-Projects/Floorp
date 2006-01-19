@@ -17,7 +17,9 @@
 <!ENTITY cmd.cancel.label                 "Cancel">
 <!ENTITY cmd.cancel.accesskey             "C">
 <!ENTITY cmd.show.label                   "Open Containing Folder">
+<!ENTITY cmd.show.labelMac                "Show in Finder">
 <!ENTITY cmd.show.accesskey               "F">
+<!ENTITY cmd.show.accesskeyMac            "F">
 <!ENTITY cmd.open.label                   "Open">
 <!ENTITY cmd.open.accesskey               "O">
 <!ENTITY cmd.openWith.label               "Open With...">
