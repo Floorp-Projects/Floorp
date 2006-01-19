@@ -545,8 +545,17 @@ _library Libraries[] =
 
 void LoadKnownLibs()
 {
-  for (int i=0; Libraries[i].name; i++)
+  for (int i=0; Libraries[i].name; i++) 
+  {
     Libraries[i].module = LoadLibraryW(Libraries[i].name);
+    if (!Libraries[i].module)
+    {
+      MessageBox(0, 
+                 "Preload library failed to load.", 
+                 "Lib Load Failed", 
+                 MB_APPLMODAL);
+    }
+  }
 }
 
 void UnloadKnownLibs()

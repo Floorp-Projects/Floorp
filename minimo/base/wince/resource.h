@@ -37,4 +37,4 @@
 #define IDD_SPLASHSCREEN                101
 #define IDB_BITMAP1                     104
 #define IDC_SPLASHBMP                   1001
-
+#define IDC_DUMMY_CE_MENUBAR            4111 /* defined in mozilla/widget/src/windows/resource.h */

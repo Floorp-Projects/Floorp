@@ -62,7 +62,6 @@ cp -pRL bin/components/nsHelperAppDlg.js                   minimo/components
 cp -pRL bin/components/nsProgressDialog.js                 minimo/components
 
 cp -pRL bin/components/nsDictionary.js                     minimo/components
-cp -pRL bin/components/nsInterfaceInfoToIDL.js             minimo/components
 cp -pRL bin/components/nsXmlRpcClient.js                   minimo/components
 
 cp -pRL bin/extensions/spatial-navigation@extensions.mozilla.org/components/* minimo/components

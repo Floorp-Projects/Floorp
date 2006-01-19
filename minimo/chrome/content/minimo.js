@@ -964,6 +964,16 @@ function DoSNavToggle()
 
 }
 
+function DoToggleSoftwareKeyboard()
+{
+  try {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsCI.nsIPrefBranch);
+    pref.setBoolPref("skey.enabled", !pref.getBoolPref("skey.enabled"));
+  }
+  catch(ex) { alert(ex); }
+}
+
+
 function DoFullScreen()
 {
   gFullScreen = !gFullScreen;

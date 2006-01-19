@@ -40,7 +40,6 @@ toolkit.manifest=2
 all.xpt=3
 snav.xpt=3
 nsDictionary.js=3
-nsInterfaceInfoToIDL.js=3
 nsXmlRpcClient.js=3
 HelperAppDlg.js=3
 
@@ -103,7 +102,6 @@ toolkit.manifest,,,0
 all.xpt,,,0
 snav.xpt,,,0
 nsDictionary.js,,,0
-nsInterfaceInfoToIDL.js,,,0
 nsXmlRpcClient.js,,,0
 HelperAppDlg.js,,,0
 

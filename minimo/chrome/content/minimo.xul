@@ -81,7 +81,8 @@
          -->
     <key id="minimo-key"  keycode="VK_F23" oncommand="BrowserMenuSpin()"/>
     <key id="minimo-key2" keycode="VK_F11" oncommand="BrowserMenuSpin()"/>
-    <key id="minimo-key3" keycode="VK_F24" oncommand="BrowserNavMenuPopup()"/>
+
+    <key id="minimo-key3" keycode="VK_F24" oncommand="DoToggleSoftwareKeyboard()"/>
     <key id="minimo-key4" keycode="VK_F12" oncommand="BrowserNavMenuPopup()"/>
 
   </keyset>
