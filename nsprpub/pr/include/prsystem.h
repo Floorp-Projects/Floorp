@@ -70,10 +70,13 @@ NSPR_API(char) PR_GetPathSeparator(void);
 
 /* Types of information available via PR_GetSystemInfo(...) */
 typedef enum {
-    PR_SI_HOSTNAME,
+    PR_SI_HOSTNAME,  /* the hostname with the domain name (if any)
+                      * removed */
     PR_SI_SYSNAME,
     PR_SI_RELEASE,
-    PR_SI_ARCHITECTURE
+    PR_SI_ARCHITECTURE,
+    PR_SI_HOSTNAME_UNTRUNCATED  /* the hostname exactly as configured
+                                 * on the system */
 } PRSysInfo;
 
 
