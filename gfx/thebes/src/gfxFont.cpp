@@ -54,21 +54,23 @@ gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyl
     if (mStyle.langGroup.IsEmpty())
         mStyle.langGroup.AssignLiteral("x-western");
 
-    nsCOMPtr<nsIPref> prefs;
-    prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (prefs) {
-        nsCAutoString prefName;
-        nsXPIDLCString value;
+    if (!mStyle.systemFont) {
+        nsCOMPtr<nsIPref> prefs;
+        prefs = do_GetService(NS_PREF_CONTRACTID);
+        if (prefs) {
+            nsCAutoString prefName;
+            nsXPIDLCString value;
 
-        /* XXX fix up min/max size */
+            /* XXX fix up min/max size */
 
-        // add the deafult font to the end of the list
-        prefName.AssignLiteral("font.default.");
-        prefName.Append(mStyle.langGroup);
-        rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
-        if (NS_SUCCEEDED(rv) && value.get()) {
-            mFamilies.AppendLiteral(",");
-            mFamilies.AppendWithConversion(value);
+            // add the default font to the end of the list
+            prefName.AssignLiteral("font.default.");
+            prefName.Append(mStyle.langGroup);
+            rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
+            if (NS_SUCCEEDED(rv) && value.get()) {
+                mFamilies.AppendLiteral(",");
+                mFamilies.AppendWithConversion(value);
+            }
         }
     }
 }
@@ -77,7 +79,6 @@ PRBool
 gfxFontGroup::ForEachFont(FontCreationCallback fc,
                           void *closure)
 {
-    const PRUnichar kNullCh       = PRUnichar('\0');
     const PRUnichar kSingleQuote  = PRUnichar('\'');
     const PRUnichar kDoubleQuote  = PRUnichar('\"');
     const PRUnichar kComma        = PRUnichar(',');
