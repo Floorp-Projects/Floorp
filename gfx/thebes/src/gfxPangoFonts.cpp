@@ -565,9 +565,9 @@ DrawCairoGlyphs(gfxContext* ctx,
     cairo_font_face_t* font = cairo_ft_font_face_create_for_pattern(fcfont->font_pattern);
     cairo_set_font_face(ctx->GetCairo(), font);
 
-    int size;
-    if (FcPatternGetInteger(fcfont->font_pattern, FC_PIXEL_SIZE, 0, &size) != FcResultMatch)
-        size = 12;
+    double size;
+    if (FcPatternGetDouble(fcfont->font_pattern, FC_PIXEL_SIZE, 0, &size) != FcResultMatch)
+        size = 12.0;
 
     cairo_set_font_size(ctx->GetCairo(), size);
 
