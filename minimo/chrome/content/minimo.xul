@@ -250,6 +250,7 @@
     <menupopup id="menu_MainPopup"
                onpopupshown="MenuEnableEscapeKeys()"
                onpopuphidden="MenuDisableEscapeKeys()" 
+               onpopuphiding="MenuMainPopupHiding()" 
                onpopupshowing="MenuMainPopupShowing()" >
       
       <menuitem id="command_BrowserOpenTab" 
@@ -311,6 +312,7 @@
     </menupopup>  
              
     <menupopup id="menu_NavPopup"
+               onpopuphiding="MenuNavPopupHiding()" 
                onpopupshown="MenuEnableEscapeKeys()"
                onpopuphidden="MenuDisableEscapeKeys()" 
     >
