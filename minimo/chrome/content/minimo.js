@@ -53,8 +53,7 @@ var gFullScreen=false;
 var gRSSTag="minimo";
 var gGlobalHistory = null;
 var gURIFixup = null;
-var gShowingMenuPopup=false;
-var gShowingNavMenuPopup=false;
+var gShowingMenuCurrent=null;
 var gFocusedElementHREFContextMenu=null;
 var gDeckMode=0; // 0 = site, 1 = sb, 2= rss. Used for the URLBAR selector, DeckMode impl.
 var gDeckMenuChecked=null; // to keep the state of the checked URLBAR selector mode. 
@@ -1125,25 +1124,40 @@ function URLBarClickHandler(aEvent, aElt)
  * Main Menu 
  */ 
 
-function BrowserNavMenuPopup() {
-  if (!gShowingNavMenuPopup){
-    document.getElementById("menu_NavPopup").showPopup(document.getElementById("nav-menu-button"),-1,-1,"popup","bottomright", "topright");
-    gShowingNavMenuPopup=true;
-  }
-  else {
-    document.getElementById("menu_NavPopup").hidePopup();
-    gShowingNavMenuPopup=false;
-  }
+function BrowserMenuPopup() {
+   ref=document.getElementById("menu_MainPopup");
+
+   if(gShowingMenuCurrent==ref) {
+	gShowingMenuCurrent.hidePopup();
+	gShowingMenuCurrent=null;
+   } else {
+	if(!gShowingMenuCurrent) {
+		gShowingMenuCurrent=ref;
+	} 
+      gShowingMenuCurrent.showPopup(document.getElementById("menu-button"),-1,-1,"popup","bottomleft", "topleft");
+   }
 }
 
-function BrowserMenuPopup() {
-  if(!gShowingMenuPopup) { 
-    document.getElementById("menu_MainPopup").showPopup(document.getElementById("menu-button"),-1,-1,"popup","bottomleft", "topleft");
-    gShowingMenuPopup=true;
-  } else {
-    document.getElementById("menu_MainPopup").hidePopup();
-    gShowingMenuPopup=false;
-  } 
+function BrowserNavMenuPopup() {
+   ref=document.getElementById("menu_NavPopup");
+
+   if(gShowingMenuCurrent==ref) {
+	gShowingMenuCurrent.hidePopup();
+	gShowingMenuCurrent=null;
+   } else {
+	if(!gShowingMenuCurrent) {
+		gShowingMenuCurrent=ref;
+	} 
+      gShowingMenuCurrent.showPopup(document.getElementById("nav-menu-button"),-1,-1,"popup","bottomright", "topright");
+   }
+}
+
+function MenuMainPopupHiding() {
+	gShowingMenuCurrent=null;
+}
+
+function MenuNavPopupHiding() {
+	gShowingMenuCurrent=null;
 }
 
 function BrowserMenuPopupFalse() {
@@ -1157,25 +1171,24 @@ function BrowserMenuPopupFalse() {
  * depends on gSoftKeyAccessState with initial state=0;
  */
 
+
 function BrowserMenuSpin() {
   if(gSoftKeyAccessState==0||gSoftKeyAccessState==3) {
 	if(gSoftKeyAccessState==3) {
 	    document.getElementById("menu_NavPopup").hidePopup();
-	    gShowingNavMenuPopup=false;
 	    gSoftKeyAccessState=1;
 	}
 	document.getElementById("menu-button").focus();
 	document.getElementById("menu_MainPopup").showPopup(document.getElementById("menu-button"),-1,-1,"popup","bottomleft", "topleft");
-	gShowingMenuPopup=true;
+	gShowingMenuCurrent=document.getElementById("menu_MainPopup");
 	gSoftKeyAccessState=1;
   } else if(gSoftKeyAccessState==1) {
 	document.getElementById("menu_MainPopup").hidePopup();
-	gShowingMenuPopup=false;
 	document.getElementById("urlbar").focus();
 	gSoftKeyAccessState=2;	    
   } else if(gSoftKeyAccessState==2) {
 	document.getElementById("menu_NavPopup").showPopup(document.getElementById("nav-menu-button"),-1,-1,"popup","bottomright", "topright");
-	gShowingNavMenuPopup=true;
+	gShowingMenuCurrent=document.getElementById("menu_NavPopup");
 	document.getElementById("nav-menu-button").focus();
 	gSoftKeyAccessState=3;
   } 
@@ -1192,13 +1205,11 @@ function MenuDisableEscapeKeys() {
 
 function MenuHandleMenuEscape(e) {
   /* This applies because our <key /> handlers would not work when Menu popups are active */ 
-  if( gShowingMenuPopup  &&  (e.keyCode==e.DOM_VK_F11||e.keyCode==e.DOM_VK_F23) ) {
+  if( gShowingMenuCurrent &&  (e.keyCode==e.DOM_VK_F11||e.keyCode==e.DOM_VK_F23) ) {
     BrowserMenuSpin();
   }
-  if( gShowingNavMenuPopup && (e.keyCode==e.DOM_VK_F11||e.keyCode==e.DOM_VK_F23) ) {
-    BrowserMenuSpin(); 
-  }
 }
+
 
 /*
  * The URLBAR Deck mode selector 
