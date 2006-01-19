@@ -86,13 +86,11 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 include ../platrules.mk
 
-SRCDIR = $(call abspath,.)
-
 %.chk: %.$(DLL_SUFFIX) 
 ifeq ($(OS_TARGET), OS2)
-	cd $(OBJDIR) ; cmd.exe /c $(SRCDIR)/sign.cmd $(DIST) $(call abspath,$(OBJDIR)) $(OS_TARGET) $(call abspath,$(NSPR_LIB_DIR)) $(call abspath,$<)
+	cmd.exe /c sign.cmd $(DIST) $(OBJDIR) $(OS_TARGET) $(NSPR_LIB_DIR) $<
 else
-	cd $(OBJDIR) ; sh $(SRCDIR)/sign.sh $(call abspath,$(DIST)) $(call abspath,$(OBJDIR)) $(OS_TARGET) $(call abspath,$(NSPR_LIB_DIR)) $(call abspath,$<)
+	sh ./sign.sh $(DIST) $(OBJDIR) $(OS_TARGET) $(NSPR_LIB_DIR) $<
 endif
 
 libs install :: $(CHECKLOC)
