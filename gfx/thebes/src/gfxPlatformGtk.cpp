@@ -82,9 +82,10 @@ gfxPlatformGtk::CreateOffscreenSurface (PRUint32 width,
         newSurface = new gfxImageSurface(imageFormat, width, height);
     } else {
         int bpp, glitzf;
+        int bestbpp = gdk_visual_get_best_depth();
         switch (imageFormat) {
             case gfxASurface::ImageFormatARGB32:
-                bpp = 24;
+                bpp = 32;
                 glitzf = 0; // GLITZ_STANDARD_ARGB32;
                 break;
             case gfxASurface::ImageFormatRGB24:
@@ -102,14 +103,17 @@ gfxPlatformGtk::CreateOffscreenSurface (PRUint32 width,
                 return nsnull;
         }
 
+        if (bestbpp < bpp)
+            bpp = bestbpp;
+
         if (!UseGlitz()) {
-            // XXX do we always want 24 here?  We don't really have any other choice..
             GdkPixmap *pixmap = ::gdk_pixmap_new(nsnull, width, height, bpp);
             gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), gdk_rgb_get_colormap());
 
             newSurface = new gfxXlibSurface(GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(pixmap)),
                                             GDK_WINDOW_XWINDOW(GDK_DRAWABLE(pixmap)),
-                                            GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(GDK_DRAWABLE(pixmap))));
+                                            GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(GDK_DRAWABLE(pixmap))),
+                                            width, height);
 
             // set up the surface to auto-unref the gdk pixmap when the surface
             // is released
