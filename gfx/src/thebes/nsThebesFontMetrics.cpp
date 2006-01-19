@@ -89,7 +89,8 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
     mFontStyle = new gfxFontStyle(aFont.style, aFont.variant,
                                   aFont.weight, aFont.decorations,
-                                  size, langGroup, aFont.sizeAdjust);
+                                  size, langGroup, aFont.sizeAdjust,
+                                  aFont.systemFont, aFont.familyNameQuirks);
 
 #if defined(XP_WIN)
     mFontGroup = new gfxWindowsFontGroup(aFont.name, mFontStyle, (HDC)mDeviceContext->GetHDC());

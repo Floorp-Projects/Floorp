@@ -68,15 +68,18 @@ struct NS_EXPORT gfxFontStyle {
     gfxFontStyle(PRUint8 aStyle, PRUint8 aVariant,
                  PRUint16 aWeight, PRUint8 aDecoration, gfxFloat aSize,
                  const nsACString& aLangGroup,
-                 float aSizeAdjust=0.0f) :
-        style(aStyle), variant(aVariant), weight(aWeight),
+                 float aSizeAdjust, PRPackedBool aSystemFont,
+                 PRPackedBool aFamilyNameQuirks) :
+        style(aStyle), systemFont(aSystemFont), variant(aVariant),
+        familyNameQuirks(aFamilyNameQuirks), weight(aWeight),
         decorations(aDecoration), size(aSize), langGroup(aLangGroup), sizeAdjust(aSizeAdjust) {}
 
     // The style of font (normal, italic, oblique)
     PRUint8 style : 7;
 
-    // Force this font to not be considered a 'generic' font, even if
-    // the name is the same as a CSS generic font family.
+    // Say that this font is a system font and therefore does not
+    // require certain fixup that we do for fonts from untrusted
+    // sources.
     PRPackedBool systemFont : 1;
 
     // The variant of the font (normal, small-caps)
@@ -86,14 +89,18 @@ struct NS_EXPORT gfxFontStyle {
     // "Wingdings", etc.) should be applied.
     PRPackedBool familyNameQuirks : 1;
     
-    // The weight of the font (0-999)
+    // The weight of the font.  100, 200, ... 900 are the weights, and
+    // single integer offsets request the next bolder/lighter font
+    // available.  For example, for a font available in weights 200,
+    // 400, 700, and 900, a weight of 898 should lead to the weight 400
+    // font being used, since it is two weights lighter than 900.
     PRUint16 weight;
 
     // The decorations on the font (underline, overline,
     // line-through). The decorations can be binary or'd together.
     PRUint8 decorations;
 
-    // The logical size of the font, in nscoord units
+    // The logical size of the font, in pixels
     gfxFloat size;
 
     // the language group
