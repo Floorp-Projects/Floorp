@@ -11495,7 +11495,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
 
   nsIBindingManager *bindingManager = mDocument->BindingManager();
 
-  nsCOMPtr<nsIContent> insertionElement;
+  nsIContent* insertionElement;
   if (aChildContent) {
     // We've got an explicit insertion child. Check to see if it's
     // anonymous.
@@ -11539,6 +11539,16 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
     else {
       // There was no frame created yet for the insertion point.
       *aInsertionPoint = nsnull;
+    }
+  }
+
+  // fieldsets have multiple insertion points.  Note that we might
+  // have to look at insertionElement here...
+  if (aMultiple && !*aMultiple) {
+    nsIContent* content = insertionElement ? insertionElement : container;
+    if (content->IsContentOfType(nsIContent::eHTML) &&
+        content->Tag() == nsHTMLAtoms::fieldset) {
+      *aMultiple = PR_TRUE;
     }
   }
 
