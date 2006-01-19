@@ -82,7 +82,6 @@ calendar.jar:
     content/calendar/pref/alarmPrefs.xul (content/pref/alarmPrefs.xul)
 *   content/calendar/pref/calendarPref.xul (content/pref/calendarPref.xul)
     content/calendar/pref/prefOverlay.xul (content/pref/prefOverlay.xul)
-    content/calendar/pref/publishPrefs.xul (content/pref/publishPrefs.xul)
     content/calendar/pref/alarmPrefs.js (content/pref/alarmPrefs.js)
     content/calendar/pref/rootCalendarPref.js (content/pref/rootCalendarPref.js)
     content/calendar/pref/viewPrefs.xul (content/pref/viewPrefs.xul)

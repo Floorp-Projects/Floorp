@@ -111,7 +111,6 @@ page button {
 
 #calendarGeneralButton {-moz-image-region: rect(0px, 32px,  32px, 0px)}
 #calendarAlarmButton   {-moz-image-region: rect(0px, 64px,  32px, 32px)}
-#calendarPublishbutton {-moz-image-region: rect(0px, 96px,  32px, 64px)}
 #calendarThemesButton  {-moz-image-region: rect(0px, 128px, 32px, 96px)}
 #calendarExtButton     {-moz-image-region: rect(0px, 160px, 32px, 128px)}
 #calendarViewButton    {-moz-image-region: rect(0px, 192px, 32px, 160px)}

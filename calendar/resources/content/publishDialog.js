@@ -73,8 +73,6 @@ function loadCalendarPublishDialog()
    else
    {
       gPublishObject = new Object();
-      //get default values from the prefs
-      document.getElementById( "publish-remotePath-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.path", "" );
    }
    document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "label", publishButtonLabel );   
    

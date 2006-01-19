@@ -92,7 +92,6 @@
     <vbox id="prefsCategories" class="listBox buttonBox" oncommand="switchPage(event);" orient="vertical" lastpanel="0" persist="lastpanel">
       <button id="calendarGeneralButton" orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.general.label;"  url="calendarPref.xul"/>
       <button id="calendarAlarmButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.alarms.label;"   url="alarmPrefs.xul"/>
-      <button id="calendarPublishbutton" orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.publish.label;"  url="publishPrefs.xul"/>
       <button id="calendarViewButton"    orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.views.label;"    url="viewPrefs.xul"/>
       <button id="calendarTZButton"      orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.timezone.label;" url="timezonePrefs.xul"/>
     </vbox>
