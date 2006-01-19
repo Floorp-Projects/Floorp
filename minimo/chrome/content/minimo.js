@@ -1195,7 +1195,7 @@ function MenuHandleMenuEscape(e) {
   if( gShowingMenuPopup  &&  (e.keyCode==e.DOM_VK_F11||e.keyCode==e.DOM_VK_F23) ) {
     BrowserMenuSpin();
   }
-  if( gShowingNavMenuPopup && (e.keyCode==e.DOM_VK_F11||e.keyCode==e.DOM_VK_F23) {
+  if( gShowingNavMenuPopup && (e.keyCode==e.DOM_VK_F11||e.keyCode==e.DOM_VK_F23) ) {
     BrowserMenuSpin(); 
   }
 }
