@@ -84,10 +84,6 @@ dbtest_init()
          # in the output.log, otherwise we can't tell what's a real error
   RONLY_DIR=${HOSTDIR}/ronlydir
   EMPTY_DIR=${HOSTDIR}/emptydir
-  grep "SUCCESS: SSL passed" $CERT_LOG_FILE >/dev/null || {
-      html_head "SSL Test failure"
-      Exit : "Fatal - SSL of cert.sh needs to pass first"
-  }
 
   html_head "CERT and Key DB Tests"
 
