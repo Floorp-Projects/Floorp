@@ -68,6 +68,8 @@ nsSystemFontsGTK2::nsSystemFontsGTK2(float aPixelsToTwips)
                NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE,
                DEFAULT_TWIP_FONT_SIZE)
 {
+    InitPangoLib();
+
     /*
      * Much of the widget creation code here is similar to the code in
      * nsLookAndFeel::InitColors().
@@ -162,7 +164,7 @@ nsSystemFontsGTK2::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
 
     // |size| is now either pixels or pango-points (not Mozilla-points!)
 
-    if (!pango_font_description_get_size_is_absolute(desc)) {
+    if (!MOZ_pango_font_description_get_size_is_absolute(desc)) {
         // |size| is in pango-points, so convert to pixels
         PRInt32 dpi = GetXftDPI();
         if (dpi != 0) {
