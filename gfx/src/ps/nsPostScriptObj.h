@@ -116,8 +116,8 @@ typedef struct PrintInfo_ PrintInfo;
 ** Used to pass info into text and/or postscript translation
 */
 struct PrintSetup_ {
-  nscoord width;                /* Page size, in twips, as oriented for */
-  nscoord height;               /* this print job. */
+  PRInt32 width;                /* Paper size in twips. */
+  PRInt32 height;               /* Not adjusted for landscape/portrait */
   
   const char* header;
   const char* footer;

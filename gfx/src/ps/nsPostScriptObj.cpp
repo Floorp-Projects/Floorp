@@ -263,7 +263,6 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
 {
   PRBool      isGray,
               isFirstPageFirst;
-  int         landscape;
 
   PrintInfo* pi = new PrintInfo(); 
   mPrintSetup = new PrintSetup();
@@ -301,20 +300,9 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     aSpec->GetPaperName(&(mPrintSetup->paper_name));
 
     /* Get the paper size */
-    PRInt32 width = 0, height = 0;
-    rv = aSpec->GetPageSizeInTwips( &width, &height );
-    if ( NS_FAILED(rv) || width <= 0 || height <= 0 ) {
+    rv = aSpec->GetPageSizeInTwips(&mPrintSetup->width, &mPrintSetup->height);
+    if ( NS_FAILED(rv) || mPrintSetup->width <= 0 || mPrintSetup->height <= 0 ) {
       return NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;
-    }
-
-    aSpec->GetLandscape( landscape );
-
-    if (landscape) {
-      mPrintSetup->width = height;
-      mPrintSetup->height = width;
-    } else {
-      mPrintSetup->width = width;
-      mPrintSetup->height = height;
     }
 
 #ifdef DEBUG
@@ -326,9 +314,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     mPrintSetup->footer = "footer";
     mPrintSetup->sizes = nsnull;
 
-    mPrintSetup->landscape = (landscape) ? PR_TRUE : PR_FALSE; // Rotated output 
-    //mPrintSetup->landscape = PR_FALSE;
-
+    aSpec->GetLandscape(mPrintSetup->landscape);
     mPrintSetup->underline = PR_TRUE;             // underline links 
     mPrintSetup->scale_images = PR_TRUE;          // Scale unsized images which are too big 
     mPrintSetup->scale_pre = PR_FALSE;		        // do the pre-scaling thing 
@@ -412,27 +398,14 @@ nsPostScriptObj::initialize_translation(PrintSetup* pi)
 void 
 nsPostScriptObj::write_prolog(FILE *aHandle, PRBool aFTPEnable)
 {
-  int i;
   FILE *f = aHandle;
 
-  nscoord paper_width = mPrintContext->prSetup->width;
-  nscoord paper_height = mPrintContext->prSetup->height;
-  const char *orientation;
+  float fWidth = NSTwipsToFloatPoints(mPrintContext->prSetup->width);
+  float fHeight = NSTwipsToFloatPoints(mPrintContext->prSetup->height);
 
-  if (paper_height < paper_width) {
-    // prSetup->width and height have been swapped, indicating landscape.
-    // The bounding box etc. must be in terms of the default PS coordinate
-    // system.
-    nscoord temp = paper_width;
-    paper_width = paper_height;
-    paper_height = temp;
-    orientation = "Landscape";
-  }
-  else
-    orientation = "Portrait";
-
-  float fWidth = NSTwipsToFloatPoints(paper_width);
-  float fHeight = NSTwipsToFloatPoints(paper_height);
+  // PostScript comments marked with %% are document structuring conventions
+  // (DSC) comments. See Adobe specification 5001 at
+  // <http://partners.adobe.com/public/developer/ps/index_specs.html>.
 
   fprintf(f, "%%!PS-Adobe-3.0\n");
   fprintf(f, "%%%%BoundingBox: 0 0 %s %s\n",
@@ -446,7 +419,8 @@ nsPostScriptObj::write_prolog(FILE *aHandle, PRBool aFTPEnable)
              "rv:" MOZILLA_VERSION, (unsigned long)NS_BUILD_ID);
   fprintf(f, "%%%%DocumentData: Clean8Bit\n");
   fprintf(f, "%%%%DocumentPaperSizes: %s\n", mPrintSetup->paper_name);
-  fprintf(f, "%%%%Orientation: %s\n", orientation);
+  fprintf(f, "%%%%Orientation: %s\n",
+    mPrintContext->prSetup->landscape ? "Landscape" : "Portrait");
   fprintf(f, "%%%%Pages: %d\n", (int) mPageNumber - 1);
 
   fprintf(f, "%%%%PageOrder: %s\n",
@@ -464,48 +438,12 @@ nsPostScriptObj::write_prolog(FILE *aHandle, PRBool aFTPEnable)
   // general comments: Mozilla-specific 
   fputs("% MozillaCharsetName: iso-8859-1\n\n", f);
     
-    // now begin prolog 
-  fprintf(f, "%%%%BeginProlog\n");
+  fputs("%%BeginProlog\n", f);
 
-  // Tell the printer what size paper it should use
-  fprintf(f,
-    "/setpagedevice where\n"			// Test for the feature
-    "{ pop 2 dict\n"
-    "  dup /PageSize [ %s %s ] put\n"		// Paper dimensions
-    "  dup /Policies 1 dict\n"
-    "    dup /PageSize 3 put\n"			// Select the nearest page size to fit
-    "  put\n"
-    "  setpagedevice\n"				// Install settings
-    "} if\n", 
-    fpCString(NSTwipsToFloatPoints(paper_width)).get(),
-    fpCString(NSTwipsToFloatPoints(paper_height)).get());
-
-  fprintf(f, "[");
-  for (i = 0; i < 256; i++){
-	  if (*isotab[i] == '\0'){
-      fprintf(f, " /.notdef");
-    }else{
-	    fprintf(f, " /%s", isotab[i]);
-    }
-
-    if (( i % 6) == 5){
-      fprintf(f, "\n");
-    }
-  }
-
-  fprintf(f, "] /isolatin1encoding exch def\n");
-
-  // Procedure to reencode a font
-  fprintf(f, "%s",
-      "/Mfr {\n"
-      "  findfont dup length dict\n"
-      "  begin\n"
-      "    {1 index /FID ne {def} {pop pop} ifelse} forall\n"
-      "    /Encoding isolatin1encoding def\n"
-      "    currentdict\n"
-      "  end\n"
-      "  definefont pop\n"
-      "} bind def\n");
+  // The first number following "Gecko_procset" is a version number. If you change
+  // any of the PS between the following BeginResource and EndResource lines, you
+  // must increment the version.
+  fputs("%%BeginResource: procset Gecko_procset 1.0 0\n", f);
 
   // Procedure to select and scale a font, using selectfont if available. See
   // Adobe Technical note 5048. Note msf args are backwards from selectfont.
@@ -544,21 +482,44 @@ nsPostScriptObj::write_prolog(FILE *aHandle, PRBool aFTPEnable)
     "/Msetstrokeadjust /setstrokeadjust where\n"
     "  { pop /setstrokeadjust } { /pop } ifelse\n"
     "  load def\n"
-
-    "\n"
     );
+  fputs("%%EndResource\n", f);    // Gecko_procset
 
   if (aFTPEnable) {
-    fprintf(f, "%%%%EndProlog\n");
     return;
   }
 
-  for(i = 0;i < NUM_AFM_FONTS; i++){
-    fprintf(f, 
-      "/F%d /%s Mfr\n"
-      "/f%d { dup /csize exch def /F%d Msf } bind def\n",
-      i, gSubstituteFonts[i].mPSName, i, i);
+  // Write the AFM font support.
+  // The first number following "Gecko_afm_procset" is a version number. If you change
+  // any of the PS between the following BeginResource and EndResource lines, you
+  // must increment the version.
+  fputs("%%BeginResource: procset Gecko_afm_procset 1.0 0\n", f);
+  fprintf(f, "[");
+  for (int i = 0; i < 256; i++) {
+    if (*isotab[i] == '\0') {
+      fputs(" /.notdef", f);
+    }
+    else {
+      fprintf(f, " /%s", isotab[i]);
+    }
+
+    if (( i % 6) == 5){
+      fprintf(f, "\n");
+    }
   }
+  fprintf(f, "] /isolatin1encoding exch def\n");
+
+  // Procedure to reencode a font
+  fprintf(f, "%s",
+      "/Mfr {\n"
+      "  findfont dup length dict\n"
+      "  begin\n"
+      "    {1 index /FID ne {def} {pop pop} ifelse} forall\n"
+      "    /Encoding isolatin1encoding def\n"
+      "    currentdict\n"
+      "  end\n"
+      "  definefont pop\n"
+      "} bind def\n");
 
   fprintf(f, "%s",
     // Unicode glyph dictionary
@@ -1824,11 +1785,18 @@ nsPostScriptObj::write_prolog(FILE *aHandle, PRBool aFTPEnable)
     "  /unicodeshow2 { real_unicodeshow_native } bind def\n"
     "} bind def\n"
     );
-
   // setup prolog for each langgroup
   initlanggroup(f);
+  fputs("%%EndResource\n", f);  // Gecko_afm_procset
 
-  fprintf(f, "%%%%EndProlog\n");
+  for(int i = 0;i < NUM_AFM_FONTS; i++) {
+    fprintf(f, 
+      "%%%%BeginResource: font Gecko_%s\n"
+      "/F%d /%s Mfr\n"
+      "/f%d { dup /csize exch def /F%d Msf } bind def\n"
+      "%%%%EndResource\n",
+      gSubstituteFonts[i].mPSName, i, gSubstituteFonts[i].mPSName, i, i);
+  }
 }
 
 /** ---------------------------------------------------
@@ -1841,9 +1809,27 @@ nsresult
 nsPostScriptObj::write_script(FILE *aDestHandle)
 {
   NS_PRECONDITION(aDestHandle, "Handle must not be NULL");
+
+  // Close out the prolog
+  fprintf(aDestHandle, "%%%%EndProlog\n");
+
+  // Begin the script section. Set the correct paper size.
+  fputs("%%BeginSetup\n", aDestHandle);
+  fprintf(aDestHandle,
+    "/setpagedevice where\n"			// Test for the feature
+    "{ pop 2 dict\n"
+    "  dup /PageSize [ %s %s ] put\n"		// Paper dimensions
+    "  dup /Policies 1 dict\n"
+    "    dup /PageSize 3 put\n"			// Select the nearest page size to fit
+    "  put\n"
+    "  setpagedevice\n"				// Install settings
+    "} if\n", 
+    fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->width)).get(),
+    fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->height)).get());
+  fputs("%%EndSetup\n", aDestHandle);
+
   char buf[BUFSIZ];
   size_t readAmt;
-
   rewind(mScriptFP);
   while ((readAmt = fread(buf, 1, sizeof buf, mScriptFP))) {
     size_t writeAmt = fwrite(buf, 1, readAmt, aDestHandle);
