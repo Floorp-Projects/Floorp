@@ -185,6 +185,7 @@ sub processLoginForm {
 		my $email = $c->param("email");
 		my $name = $c->param("realname");
 		my $password = $c->param("password"); 
+		my $nickname = $c->param("irc_nickname");
 		
 		# some basic form-field validation:
 		my $emailregexp = q:^[\\w\\.\\+\\-=]+@[\\w\\.\\-]+\\.[\\w\\-]+$:;
@@ -208,7 +209,9 @@ sub processLoginForm {
 								 bugzilla_uid => 0,
 								 realname => $name,
 								 disabled => 0, 
-								 is_admin => 0});
+								 is_admin => 0,
+								 irc_nickname => $nickname
+								});
 		
 		my $session = makeSession($userobj);
 		$c->storeCookie(makeCookie($session));
@@ -267,6 +270,7 @@ sub processLoginForm {
 		my $realname = $c->param("realname");
 		my $password = $c->param("password");
 		my $password_confirm = $c->param("password_confirm");
+		my $nickname = $c->param("irc_nickname");
 		
 		if (! $password eq $password_confirm) {
 			loginError($c, "Passwords do not match. Please try again.");
@@ -284,7 +288,8 @@ sub processLoginForm {
 				create a new account.");
 		}
 		
-		if ($userobj->password() ne "") {
+		if ($userobj->password() ne "" && ($userobj->bugzilla_uid() == 0 || 
+			!$userobj->bugzilla_uid())) {
 			# already a new-style account
 			loginError($c, "User $username has already been updated. Please 
 				go ahead and login normally or create a new account.");
@@ -296,6 +301,7 @@ sub processLoginForm {
 		$userobj->realname($realname);
 		$userobj->disabled(0);
 		$userobj->is_admin(0);
+		$userobj->irc_nickname($nickname);
 		$userobj->update();
 		
 		my $session = makeSession($userobj);

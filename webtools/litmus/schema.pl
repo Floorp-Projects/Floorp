@@ -21,6 +21,10 @@
 
 # Litmus database schema
 
+# IMPORTANT: Any changes (other than new tables) made here must also be made 
+# by adding --TABLE-- upgrading code to populatedb.pl to handle upgrades from 
+# previous versions of the schema.
+
 our $table;
 
 $table{branches} = 
@@ -247,6 +251,7 @@ $table{users} =
 	 email varchar(255),
 	 password varchar(255),
 	 realname varchar(255),
+	 irc_nickname varchar(32),
 	 disabled mediumtext,
 	 is_admin tinyint(1),
 	 

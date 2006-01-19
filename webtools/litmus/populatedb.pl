@@ -135,6 +135,7 @@ $dbtool->AddField("users", "password", "varchar(255)");
 $dbtool->AddField("users", "realname", "varchar(255)");
 $dbtool->AddField("users", "disabled", "mediumtext");
 $dbtool->AddField("users", "is_admin", "tinyint(1) default '0'");
+$dbtool->AddField("users", "irc_nickname", "varchar(32)");
 
 # replace enums with more portable and flexible formats:
 $dbtool->ChangeFieldType("products", "enabled", 'tinyint default \'1\'');
