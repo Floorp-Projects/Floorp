@@ -668,10 +668,10 @@ nsresult EscapeFromSpaceLine(nsIFileSpec *pDst, char *start, const char *end)
       // Found a line so check if it's a qualified "From " line.
       if (IsAFromSpaceLine(start, pChar))
         rv = pDst->Write(">", 1, &written);
-
-      rv = pDst->Write(start, pChar-start+2, &written);
+      PRInt32 lineTerminatorCount = (*(pChar + 1) == nsCRT::LF) ? 2 : 1;
+      rv = pDst->Write(start, pChar - start + lineTerminatorCount, &written);
       NS_ENSURE_SUCCESS(rv,rv);
-      pChar += 2;
+      pChar += lineTerminatorCount;
       start = pChar;
     }
     else if (start < end)
@@ -1177,6 +1177,16 @@ nsresult GetSummaryFileLocation(nsIFileSpec* fileLocation, nsFileSpec* summaryLo
   NS_ENSURE_SUCCESS(rv, rv);
 
   return summaryIFile->GetFileSpec(summaryLocation);
+}
+
+void MsgGenerateNowStr(nsACString &nowStr)
+{
+  char dateBuf[100];
+  dateBuf[0] = '\0';
+  PRExplodedTime exploded;
+  PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &exploded);
+  PR_FormatTimeUSEnglish(dateBuf, sizeof(dateBuf), "%a %b %d %H:%M:%S %Y", &exploded);
+  nowStr.Assign(dateBuf);
 }
 
 void GetSummaryFileLocation(nsFileSpec& fileLocation, nsFileSpec* summaryLocation)
