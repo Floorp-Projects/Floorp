@@ -198,8 +198,11 @@
           if (aDate.compare(aDate.startOfMonth) == 0 ||
               aDate.compare(aDate.endOfMonth) == 0)
           {
-            var monthNames = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
-            daylabel.setAttribute("value", aDate.day + " " + monthNames[aDate.month]);
+            var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                .getService(Components.interfaces.nsIStringBundleService);
+            var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
+            var monthName = props.GetStringFromName("month." + (aDate.month+1) + ".Mmm");
+            daylabel.setAttribute("value", aDate.day + " " + monthName);
           } else {
             daylabel.setAttribute("value", aDate.day);
           }
@@ -407,21 +410,13 @@
         <getter>return this.mIndex;</getter>
         <setter><![CDATA[
           this.mIndex = val % 7;
-
-          // XXX aaaaaaaa
-          var weekdayNames = [
-            "Sunday",
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday"
-          ];
+          var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                              .getService(Components.interfaces.nsIStringBundleService);
+          var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
 
           var label = document.getAnonymousElementByAttribute(this, "anonid", "label");
-          label.setAttribute("value", weekdayNames[this.mIndex]);
+          var dayName = props.GetStringFromName("day." + (this.mIndex+1) + ".name");
+          label.setAttribute("value", dayName);
 
           return this.mIndex;
         ]]></setter>

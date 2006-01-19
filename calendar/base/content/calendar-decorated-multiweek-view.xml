@@ -139,6 +139,10 @@
                 <parameter name="aDate"/>
                 <body><![CDATA[
                     var nameArray = new Array();
+                    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                        .getService(Components.interfaces.nsIStringBundleService);
+                    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+                    var weekString = props.GetStringFromName("Week");
                     for (var i = -2; i < 3; i++) {
                         var date = aDate.clone();
                         // Add/subtract I number of weeks
@@ -155,8 +159,7 @@
                         date.normalize();
                         var weekno2 = Math.floor ((date.yearday - date.weekday) / 7);
 
-                        //XXX l10n love needed
-                        nameArray.push("Week " + weekno1 + '-' + weekno2);
+                        nameArray.push(weekString + weekno1 + '-' + weekno2);
                     }
                     document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
                 ]]></body>

@@ -2248,13 +2248,13 @@
               label.setAttribute("class", "calendar-day-label-date");
               labelbox.appendChild(label);
 
-              // XXX Localize me, get me out of here
-              var dayNames = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
-              var dayNamesShort = [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ];
+              var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                  .getService(Components.interfaces.nsIStringBundleService);
+              var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
 
               label = createXULElement("label");
               //label.setAttribute("flex", "1");
-              label.setAttribute("value", dayNamesShort[d.weekday]);
+              label.setAttribute("value", props.GetStringFromName("day."+ (d.weekday+1)+ ".Mmm"));
               label.setAttribute("class", "calendar-day-label-name");
               labelbox.appendChild(label);
               

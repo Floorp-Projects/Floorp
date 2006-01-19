@@ -115,13 +115,14 @@
             <method name="setNavLabels">
                 <parameter name="aDate"/>
                 <body><![CDATA[
-                    //XXX l10n Get me out of here
-                    var monthNames = ["January","February","March","April","May",
-                                      "June","July","August","September","October",
-                                      "November","December"];
+                    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                        .getService(Components.interfaces.nsIStringBundleService);
+                    var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
                     var nameArray = new Array();
-                    for (var i = -2; i < 3; i++)
-                        nameArray.push(monthNames[(aDate.month+i+12)%12]);
+                    for (var i = -2; i < 3; i++) {
+                        var index = ((aDate.month + i + 12) % 12) + 1;
+                        nameArray.push(props.GetStringFromName("month."+index+".name"));
+                    }
                     document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
                 ]]></body>
             </method>
