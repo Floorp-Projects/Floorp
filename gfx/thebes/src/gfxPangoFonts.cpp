@@ -184,6 +184,21 @@ static void InitPangoLib()
     // leak lib deliberately
 }
 
+static double
+GetXftDPI(void)
+{
+  char *val = XGetDefault(GDK_DISPLAY(), "Xft", "dpi");
+  if (val) {
+    char *e;
+    double d = strtod(val, &e);
+
+    if (e != val)
+      return round(d);
+  }
+
+  return 0;
+}
+
 static void
 MOZ_pango_font_description_set_absolute_size(PangoFontDescription *desc,
                                              double size)
@@ -191,8 +206,8 @@ MOZ_pango_font_description_set_absolute_size(PangoFontDescription *desc,
     if (PTR_pango_font_description_set_absolute_size) {
         PTR_pango_font_description_set_absolute_size(desc, size);
     } else {
-        // Fake it! Assume the server DPI is 96. If it isn't, too bad
-        pango_font_description_set_size(desc, (gint)(size * 72.0/96.0));
+        pango_font_description_set_size(desc,
+                                        (gint)(size * 72.0 / GetXftDPI()));
     }
 }
 #else
