@@ -142,6 +142,12 @@ calMemoryCalendar.prototype = {
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
+        var newItem = aItem.clone();
+        return this.adoptItem(newItem, aListener);
+    },
+    
+    // void adoptItem( in calIItemBase aItem, in calIOperationListener aListener );
+    adoptItem: function (aItem, aListener) {
         if (this.readOnly) 
             throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         if (aItem.id == null && aItem.isMutable)
@@ -168,21 +174,20 @@ calMemoryCalendar.prototype = {
             return;
         }
 
-        var newItem = aItem.clone();
-        newItem.calendar = this.calendarToReturn;
-        newItem.generation = 1;
-        newItem.makeImmutable();
-        this.mItems[newItem.id] = newItem;
+        aItem.calendar = this.calendarToReturn;
+        aItem.generation = 1;
+        aItem.makeImmutable();
+        this.mItems[aItem.id] = aItem;
 
         // notify the listener
         if (aListener)
             aListener.onOperationComplete (this.calendarToReturn,
                                            Components.results.NS_OK,
                                            aListener.ADD,
-                                           newItem.id,
-                                           newItem);
+                                           aItem.id,
+                                           aItem);
         // notify observers
-        this.observeAddItem(newItem);
+        this.observeAddItem(aItem);
     },
 
     // void modifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem, in calIOperationListener aListener );

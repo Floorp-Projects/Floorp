@@ -182,6 +182,12 @@ calDavCalendar.prototype = {
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
+        var newItem = aItem.clone();
+        return this.adoptItem(newItem, aListener);
+    },
+
+    // void adoptItem( in calIItemBase aItem, in calIOperationListener aListener );
+    adoptItem: function (aItem, aListener) {
         if (this.readOnly) {
             throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         }
@@ -255,20 +261,19 @@ calDavCalendar.prototype = {
             }
         }
   
-        var newItem = aItem.clone();
-        newItem.calendar = this;
-        newItem.generation = 1;
-        newItem.setProperty("locationURI", itemUri.spec);
-        newItem.makeImmutable();
+        aItem.calendar = this;
+        aItem.generation = 1;
+        aItem.setProperty("locationURI", itemUri.spec);
+        aItem.makeImmutable();
 
-        debug("icalString = " + newItem.icalString + "\n");
+        debug("icalString = " + aItem.icalString + "\n");
 
         // XXX use if not exists
         // do WebDAV put
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
         webSvc.putFromString(eventResource, "text/calendar", 
-                             newItem.icalString, listener, null);
+                             aItem.icalString, listener, null);
 
         return;
     },

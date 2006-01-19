@@ -346,6 +346,12 @@ calStorageCalendar.prototype = {
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
+        var newItem = aItem.clone();
+        return this.adoptItem(newItem, aListener);
+    },
+
+    // void adoptItem( in calIItemBase aItem, in calIOperationListener aListener );
+    adoptItem: function (aItem, aListener) {
         if (this.readOnly) 
             throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         // Ensure that we're looking at the base item
@@ -372,23 +378,22 @@ calStorageCalendar.prototype = {
             }
         }
 
-        var newItem = aItem.clone();
-        newItem.calendar = this;
-        newItem.generation = 1;
-        newItem.makeImmutable();
+        aItem.calendar = this;
+        aItem.generation = 1;
+        aItem.makeImmutable();
 
-        this.flushItem (newItem, null);
+        this.flushItem (aItem, null);
 
         // notify the listener
         if (aListener)
             aListener.onOperationComplete (this,
                                            Components.results.NS_OK,
                                            aListener.ADD,
-                                           newItem.id,
-                                           newItem);
+                                           aItem.id,
+                                           aItem);
 
         // notify observers
-        this.observeAddItem(newItem);
+        this.observeAddItem(aItem);
     },
 
     // void modifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem, in calIOperationListener aListener );

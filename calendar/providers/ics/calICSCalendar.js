@@ -225,13 +225,13 @@ calICSCalendar.prototype = {
                             var event = Components.classes["@mozilla.org/calendar/event;1"]
                                                   .createInstance(Components.interfaces.calIEvent);
                             event.icalComponent = subComp;
-                            this.mMemoryCalendar.addItem(event, null);
+                            this.mMemoryCalendar.adoptItem(event, null);
                             break;
                         case "VTODO":
                             var todo = Components.classes["@mozilla.org/calendar/todo;1"]
                                                  .createInstance(Components.interfaces.calITodo);
                             todo.icalComponent = subComp;
-                            this.mMemoryCalendar.addItem(todo, null);
+                            this.mMemoryCalendar.adoptItem(todo, null);
                             break;
 
                         case "VTIMEZONE":
