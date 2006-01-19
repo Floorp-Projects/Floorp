@@ -215,6 +215,10 @@ nsTypeAheadFind::SetDocShell(nsIDocShell* aDocShell)
   mStartFindRange = nsnull;
   mStartPointRange = do_CreateInstance(kRangeCID);
   mSearchRange = do_CreateInstance(kRangeCID);
+
+  mFoundLink = nsnull;
+  mCurrentWindow = nsnull;
+
   return NS_OK;
 }
 
