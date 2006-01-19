@@ -65,17 +65,18 @@ var alarmServiceObserver = {
         }
 
         //Check to see if an alarm window already exists.  It not, create it.
-        var wWatcher = Components.classes[
-                       "@mozilla.org/embedcomp/window-watcher;1"]
-                       .getService( Components.interfaces.nsIWindowWatcher );
-        var gAlarmWindow = wWatcher.getWindowByName( "calendar-alarm-window", null);
+
+        var wMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                                  .getService(Components.interfaces.nsIWindowMediator);
+        var gAlarmWindow = wMediator.getMostRecentWindow("calendarAlarmWindow");
         if( !gAlarmWindow ) {
+            var wWatcher = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                                     .getService(Components.interfaces.nsIWindowWatcher);
             gAlarmWindow = wWatcher.openWindow(null,
                                                "chrome://calendar/content/calendar-alarm-dialog.xul",
                                                "_blank",
                                                "chrome,dialog=yes,all",
                                                 null);
-            gAlarmWindow.name = "calendar-alarm-window";
 
         }
         gAlarmWindow.focus();
