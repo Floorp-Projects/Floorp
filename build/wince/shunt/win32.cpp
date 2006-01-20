@@ -52,6 +52,19 @@ extern "C" {
 
 #define wcharcount(array) (sizeof(array) / sizeof(TCHAR))
 
+
+MOZCE_SHUNT_API DWORD mozce_CommDlgExtendedError()
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_CommDlgExtendedError called\n");
+#endif
+
+    return -1 /*CDERR_DIALOGFAILURE*/;
+}
+
+
 MOZCE_SHUNT_API int mozce_MulDiv(int inNumber, int inNumerator, int inDenominator)
 {
     MOZCE_PRECHECK
@@ -857,7 +870,7 @@ MOZCE_SHUNT_API BOOL mozce_GetUserName(LPTSTR inBuffer, LPDWORD inoutSize)
 }
 
 
-MOZCE_SHUNT_API DWORD mozce_GetShortPathName(LPCTSTR inLongPath, LPTSTR outShortPath, DWORD inBufferSize)
+MOZCE_SHUNT_API DWORD mozce_GetShortPathName(LPCSTR inLongPath, LPSTR outShortPath, DWORD inBufferSize)
 {
     MOZCE_PRECHECK
 
@@ -865,9 +878,9 @@ MOZCE_SHUNT_API DWORD mozce_GetShortPathName(LPCTSTR inLongPath, LPTSTR outShort
     mozce_printf("-- mozce_GetShortPathName called\n");
 #endif
 
-    DWORD retval = 0;
+    DWORD retval = strlen(inLongPath);
 
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	strncpy(outShortPath, inLongPath, inBufferSize);
 
     return retval;
 }
@@ -1108,6 +1121,8 @@ struct lconv s_locale_conv =
     1,     /* p_sign_posn */
     1,     /* n_sign_posn */
 };
+
+
 
 MOZCE_SHUNT_API struct lconv * mozce_localeconv(void)
 {

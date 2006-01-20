@@ -393,6 +393,11 @@
 #endif
 #define CreateDIBitmap            mozce_CreateDIBitmap
 
+#ifdef CommDlgExtendedError
+#undef CommDlgExtendedError
+#endif
+#define CommDlgExtendedError     mozce_CommDlgExtendedError
+
 #ifdef EnumChildWindows
 #undef EnumChildWindows
 #endif
@@ -1324,6 +1329,7 @@ extern "C" {
   MOZCE_SHUNT_API int mozce_MulDiv(int inNumber, int inNumerator, int inDenominator);
   MOZCE_SHUNT_API int mozce_GetDIBits(HDC inDC, HBITMAP inBMP, UINT inStartScan, UINT inScanLines, LPVOID inBits, LPBITMAPINFO inInfo, UINT inUsage);
   MOZCE_SHUNT_API int mozce_SetDIBits(HDC inDC, HBITMAP inBMP, UINT inStartScan, UINT inScanLines, CONST LPVOID inBits, CONST LPBITMAPINFO inInfo, UINT inUsage);
+  MOZCE_SHUNT_API DWORD mozce_CommDlgExtendedError(void);
   MOZCE_SHUNT_API HBITMAP mozce_CreateDIBitmap(HDC inDC, CONST BITMAPINFOHEADER *inBMIH, DWORD inInit, CONST VOID *inBInit, CONST BITMAPINFO *inBMI, UINT inUsage);
   MOZCE_SHUNT_API int mozce_SetPolyFillMode(HDC inDC, int inPolyFillMode);
   MOZCE_SHUNT_API int mozce_SetStretchBltMode(HDC inDC, int inStretchMode);
