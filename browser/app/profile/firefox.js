@@ -244,6 +244,15 @@ pref("browser.tabs.loadFolderAndReplace", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
+pref("browser.tabs.tabClipWidth", 140);
+pref("browser.tabs.disableBackgroundClose", false);
+
+// When tabs opened by links in other tabs via a combination of 
+// browser.link.open_newwindow being set to 3 and target="_blank" etc are
+// closed:
+// true   return to the tab that opened this tab (its owner)
+// false  return to the adjacent tab (old default)
+pref("browser.tabs.selectOwnerOnClose", true);
 
 // Default bookmark sorting
 pref("browser.bookmarks.sort.direction", "descending");

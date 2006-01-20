@@ -726,8 +726,14 @@ var BookmarksCommand = {
           var uri = target.QueryInterface(kRDFLITIID).Value;
           if (index < tabCount)
             tabPanels[index].loadURI(uri);
-          else
+          else {
+            // This is not a modal sub-action of a given tab/document within a window
+            // since opening a bookmarks group replaces all existing tabs in the window,
+            // closing extras. If this ever changes to be augmentative, this code will
+            // have to change to probably just use <tabbrowser>.loadTabs() which figures
+            // out whether or not owner should be set. 
             browser.addTab(uri);
+          }
           ++index;
         }
       }

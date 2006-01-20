@@ -428,6 +428,13 @@
     </implementation>
   </binding>
   
+  <!-- 
+  XXXben - this looks like something added specifically for tabbrowser.
+           if it turns out no one uses this that can't easily be evangelized to
+           use their own roll-your-own binding, then we should get rid of this
+           to tighten up the toolkit api. This binding made obsolete in Firefox
+           by 308396. 
+  -->
   <binding id="tabs-closebutton" 
            extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
@@ -443,7 +450,8 @@
       </xul:stack>
     </content>
   </binding>
-  
+ 
+
   <binding id="tabpanels"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <implementation implements="nsIAccessibleProvider">
@@ -541,20 +549,29 @@
           return this.getAttribute("selected") == "true" ? true : false;
         </getter>
         <setter>
+          <![CDATA[
           this.setAttribute("selected", val);
-          if (this.previousSibling) {
+          if (this.previousSibling && this.previousSibling.localName == "tab") {
             if (val)
               this.previousSibling.setAttribute("beforeselected", val);
             else
               this.previousSibling.removeAttribute("beforeselected");
+            this.removeAttribute("first-tab");
           }
-          if (this.nextSibling) {
+          else
+            this.setAttribute("first-tab", "true");
+
+          if (this.nextSibling && this.nextSibling.localName == "tab") {
             if (val)
               this.nextSibling.setAttribute("afterselected", val);
             else
               this.nextSibling.removeAttribute("afterselected");
+            this.removeAttribute("last-tab");
           }
+          else
+            this.setAttribute("last-tab", "true");
           return val;
+        ]]>
         </setter>
       </property>
 

@@ -37,37 +37,20 @@
 # ***** END LICENSE BLOCK *****
 
 var gTabsPane = {
-  _lastForceLinksMode: 3,
-  writeWindowLinksBehavior: function ()
-  {
-    var tabbedOpenForce = document.getElementById("tabbedOpenForce");
-    if (!tabbedOpenForce.checked) 
-      return 2;
-    
-    var tabbedWindowLinks = document.getElementById("tabbedWindowLinks");
-    this._lastForceLinksMode = parseInt(tabbedWindowLinks.value)
-    return this._lastForceLinksMode;
+  readLinkTarget: function() {
+    // Each open link preference has an integer value of the form:
+    // 0 - open links in the default window
+    // 1 - open links in the most recent window or tab
+    // 2 - open links in a new window
+    // 3 - open links in a new tab
+    var openExternal = document.getElementById("browser.link.open_external");
+    return openExternal.value != 2 ? 3 : 2;
   },
   
-  readForceLinks: function ()
-  {
-    var preference = document.getElementById("browser.link.open_newwindow");
-    var tabbedWindowLinks = document.getElementById("tabbedWindowLinks");
-    tabbedWindowLinks.disabled = preference.value == 2;
-    return preference.value != 2;
-  },
-  
-  readForceLinksMode: function ()
-  {
-    var preference = document.getElementById("browser.link.open_newwindow");
-    return preference.value != 2 ? preference.value : this._lastForceLinksMode;
-  },
-  
-  updateWindowLinksBehavior: function ()
-  {
-    var preference = document.getElementById("app.update.autoInstallEnabled");
-    
-    return undefined;
+  writeLinkTarget: function() {
+    var linkTargeting = document.getElementById("linkTargeting");
+    document.getElementById("browser.link.open_newwindow").value = linkTargeting.value;
+    return linkTargeting.value;
   }
 };
 

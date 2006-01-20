@@ -10,11 +10,11 @@ tabpanels {
 }
 
 .tabbrowser-tabs {
-	padding-top: 1px;
-        background: transparent url("chrome://global/skin/icons/tabstrip-bottom.png") repeat-x bottom center !important;
-        -moz-padding-start: 2px;
-        border-bottom: 2px solid;
-        -moz-border-bottom-colors: threedshadow threedlightshadow;
+  padding-top: 1px;
+  background: transparent url("chrome://global/skin/icons/tabstrip-bottom.png") repeat-x bottom center !important;
+  -moz-padding-start: 2px;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: threedshadow threedlightshadow;
 }
 
 .tabs-left,
@@ -40,6 +40,12 @@ tab[busy] > .tab-middle > .tab-icon {
 tab[selected="true"] {
   font-weight: bold;
   margin-bottom: 0px;
+  -moz-padding-start: 3px;
+}
+
+.tabbrowser-tabs[tiny="true"] > .tabbrowser-tab[selected="true"],
+.tabborwser-tabs[singlechild="true"] > .tabbrowser-tab[selected="true"] {
+  min-width: 50px; /* approximately favicon + close icon + slop for tab boundaries */
 }
 
 tab {
@@ -90,4 +96,66 @@ browsermessage[type="bottom"] {
 
 .messageButton {
   margin: 0px 5px 0px 5px;
+}
+
+/**
+ * In-tab close button
+ */
+.tab-close-button > .toolbarbutton-icon {
+  -moz-margin-end: 0px !important;
+}
+
+.tab-close-button {
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-appearance: none;
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+  -moz-margin-start: 2px;
+  margin-top: 2px;
+  border: none !important;
+  padding: 0px;
+  opacity: 0.7;
+}
+
+.tab-close-button:hover,
+.tabbrowser-tab[selected="true"] > .tab-close-button:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+  opacity: 1.0;
+}
+
+.tab-close-button:hover:active,
+.tabbrowser-tab[selected="true"] > .tab-close-button:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+  opacity: 1.0;
+}
+
+.tab-close-button-placeholder {
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+  opacity: 0.7;
+  -moz-margin-start: 2px;
+  margin-top: 2px;
+  border: none !important;
+  padding: 0px;
+}
+
+.tabbrowser-tab[selected="true"] > .tab-close-button {
+  -moz-margin-start: 2px;
+  margin-top: 0px;
+  opacity: 1.0;
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+/**
+ * Tabbrowser Tabs
+ */
+.tabbrowser-tab[selected="true"] {
+  -moz-padding-end: 4px; 
+  padding-top: 4px;
+  padding-bottom: 1px;
+}
+
+.tabbrowser-tab[selected="true"] > .tab-middle {
+  padding-bottom: 1px;
+  -moz-padding-start: 1px;
+  margin-bottom: 1px;
 }

@@ -60,27 +60,16 @@
     <script type="application/x-javascript" src="chrome://browser/content/preferences/tabs.js"/>
 
     <groupbox align="start">
-      <caption label="&openExternalLinksIn.label;"/>
-      <radiogroup id="tabbedExternalLinks"
-                  preference="browser.link.open_external">
+      <caption label="&linkTargeting.label;"/>
+      <radiogroup id="linkTargeting"
+                  preference="browser.link.open_external"
+                  onsyncfrompreference="return gTabsPane.readLinkTarget();"
+                  onsynctopreference="return gTabsPane.writeLinkTarget();">
         <radio label="&newWindow.label;" accesskey="&newWindow.accesskey;" value="2"/>
         <radio label="&newTabInRecentWindow.label;" accesskey="&newTabInRecentWindow.accesskey;" value="3"/>
-        <radio label="&recentWindowOrTab.label;" accesskey="&recentWindowOrTab.accesskey;" value="1"/>
       </radiogroup>
     </groupbox>
     <vbox align="start">
-      <checkbox id="tabbedOpenForce" label="&forceNewWindowLinks.label;"
-                accesskey="&forceNewWindowLinks.accesskey;"
-                preference="browser.link.open_newwindow"
-                onsynctopreference="return gTabsPane.writeWindowLinksBehavior();"
-                onsyncfrompreference="return gTabsPane.readForceLinks();"/>
-      <radiogroup id="tabbedWindowLinks" class="indent"
-                  preference="browser.link.open_newwindow"
-                  onsynctopreference="return gTabsPane.writeWindowLinksBehavior();"
-                  onsyncfrompreference="return gTabsPane.readForceLinksMode();">
-        <radio label="&sameTabOrWindow.label;" accesskey="&sameTabOrWindow.accesskey;" value="1"/>
-        <radio label="&newTab.label;" accesskey="&newTab.accesskey;" value="3"/>
-      </radiogroup>
       <checkbox id="hideTabBar" label="&hideTabBar.label;"
                 accesskey="&hideTabBar.accesskey;"
                 preference="browser.tabs.autoHide"/>
