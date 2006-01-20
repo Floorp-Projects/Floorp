@@ -102,12 +102,12 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
 
     // check verison
     if ($rmoVers < $config['min_vers']){
-        return new soap_fault('Client', '', 'Your product is out of date, please upgrade.  See http://reporter-test.mozilla.org/install for details.', $rmoVers);
+        return new soap_fault('Client', '', 'Your product is out of date, please upgrade.  See http://reporter.mozilla.org/install for details.', $rmoVers);
     }
 
     $parsedURL = parse_url($url);
     if (!$url || !$parsedURL['host']){
-        return new soap_fault('Client', '', 'url must use a valid URL syntax http://domain.tld/foo', $url);
+        return new soap_fault('Client', '', 'url must use a valid URL syntax http://mozilla.com/page', $url);
     }
     if (!$problem_type || $problem_type == -1 || $problem_type == "0") {
     }

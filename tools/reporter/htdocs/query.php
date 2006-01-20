@@ -49,7 +49,7 @@ session_start();
 header("Cache-control: private"); //IE 6 Fix
 printheaders();
 
-if(!$_GET['method']){
+if(!isset($_GET['method'])){
     $method = 'html';
 }
 
