@@ -80,6 +80,7 @@ CPPSRCS		= \
 		nsSVGInnerSVGFrame.cpp \
 		nsSVGLineFrame.cpp \
 		nsSVGMarkerFrame.cpp \
+		nsSVGMaskFrame.cpp \
 		nsSVGOuterSVGFrame.cpp \
 		nsSVGPathFrame.cpp \
 		nsSVGPathGeometryFrame.cpp \

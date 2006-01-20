@@ -102,6 +102,7 @@ CPPSRCS		= \
 		nsSVGLengthList.cpp \
 		nsSVGLineElement.cpp \
 		nsSVGMarkerElement.cpp \
+		nsSVGMaskElement.cpp \
 		nsSVGMatrix.cpp \
 		nsSVGMetadataElement.cpp \
 		nsSVGNumber.cpp \

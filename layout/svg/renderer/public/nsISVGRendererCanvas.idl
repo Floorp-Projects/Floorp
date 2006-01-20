@@ -69,7 +69,7 @@ interface nsISVGRendererSurface;
  * Mozilla-native rendering object with a call to
  * nsISVGRenderer::createCanvas().
  */
-[scriptable, uuid(2e64a227-de4b-4a69-ab82-5dda1579e90f)]
+[scriptable, uuid(9cdf3f86-a511-4948-83f8-e25460f03b83)]
 interface nsISVGRendererCanvas : nsISupports
 {
   /**
@@ -108,10 +108,11 @@ interface nsISVGRendererCanvas : nsISupports
   void flush();
 
   /**
-   * Set render mode (clipping or normal draw)
+   * Set render mode (normal, clipping, or clip render to mask)
    */
-  const unsigned short SVG_RENDER_MODE_NORMAL = 0;
-  const unsigned short SVG_RENDER_MODE_CLIP = 1;
+  const unsigned short SVG_RENDER_MODE_NORMAL    = 0;
+  const unsigned short SVG_RENDER_MODE_CLIP      = 1;
+  const unsigned short SVG_RENDER_MODE_CLIP_MASK = 2;
   attribute unsigned short renderMode;
 
   /**
@@ -138,6 +139,10 @@ interface nsISVGRendererCanvas : nsISupports
   void compositeSurface(in nsISVGRendererSurface surface,
                         in unsigned long x, in unsigned long y,
                         in float opacity);
+
+  void compositeSurfaceWithMask(in nsISVGRendererSurface surface,
+                                in unsigned long x, in unsigned long y,
+                                in nsISVGRendererSurface mask);
 
   void compositeSurfaceMatrix(in nsISVGRendererSurface surface,
                               in nsIDOMSVGMatrix canvasTM,

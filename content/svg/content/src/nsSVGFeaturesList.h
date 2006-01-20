@@ -56,7 +56,7 @@ SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#ColorProfile")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Gradient")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Pattern")
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Clip")
-SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Mask")
+SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Mask")
 SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Filter")
 
 // Basic features

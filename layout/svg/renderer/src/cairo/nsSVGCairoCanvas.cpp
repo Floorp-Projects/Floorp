@@ -721,12 +721,32 @@ nsSVGCairoCanvas::CompositeSurface(nsISVGRendererSurface *aSurface,
   cairo_save(mCR);
   cairo_translate(mCR, aX, aY);
 
-  PRUint32 width, height;
-  aSurface->GetWidth(&width);
-  aSurface->GetHeight(&height);
-
   cairo_set_source_surface(mCR, cairoSurface->GetSurface(), 0.0, 0.0);
   cairo_paint_with_alpha(mCR, aOpacity);
+  cairo_restore(mCR);
+
+  return NS_OK;
+}
+
+/** Implements void compositeSurfaceWithMask(in nsISVGRendererSurface surface,
+                                             in unsigned long x,
+                                             in unsigned long y,
+                                             in nsISVGRendererSurface mask); */
+NS_IMETHODIMP
+nsSVGCairoCanvas::CompositeSurfaceWithMask(nsISVGRendererSurface *aSurface,
+                                           PRUint32 aX, PRUint32 aY,
+                                           nsISVGRendererSurface *aMask)
+{
+  nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
+  nsCOMPtr<nsISVGCairoSurface> maskSurface = do_QueryInterface(aMask);
+  if (!cairoSurface || !maskSurface)
+    return NS_ERROR_FAILURE;
+
+  cairo_save(mCR);
+  cairo_translate(mCR, aX, aY);
+
+  cairo_set_source_surface(mCR, cairoSurface->GetSurface(), 0.0, 0.0);
+  cairo_mask_surface(mCR, maskSurface->GetSurface(), 0.0, 0.0);
   cairo_restore(mCR);
 
   return NS_OK;
@@ -767,10 +787,6 @@ nsSVGCairoCanvas::CompositeSurfaceMatrix(nsISVGRendererSurface *aSurface,
 
   cairo_matrix_t matrix = {m[0], m[1], m[2], m[3], m[4], m[5]};
   cairo_transform(mCR, &matrix);
-
-  PRUint32 width, height;
-  aSurface->GetWidth(&width);
-  aSurface->GetHeight(&height);
 
   cairo_set_source_surface(mCR, cairoSurface->GetSurface(), 0.0, 0.0);
   cairo_paint_with_alpha(mCR, aOpacity);

@@ -15,7 +15,7 @@
  * The Original Code is the Mozilla SVG project.
  *
  * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,8 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGCLIPPATHFRAME_H__
-#define __NS_SVGCLIPPATHFRAME_H__
+#ifndef __NS_SVGMASKFRAME_H__
+#define __NS_SVGMASKFRAME_H__
 
 #include "nsISupports.h"
 
@@ -46,34 +46,24 @@ class nsIDOMSVGMatrix;
 class nsIURI;
 class nsIContent;
 
-#define NS_ISVGCLIPPATHFRAME_IID \
-{0x9309e388, 0xde9b, 0x4848, {0x84, 0xfe, 0x22, 0xc1, 0xd8, 0x0c, 0x89, 0x11}}
+#define NS_ISVGMASKFRAME_IID \
+{0x122fe62b, 0xa4cb, 0x49d4, {0xbf, 0xd7, 0x26, 0x67, 0x58, 0x28, 0xff, 0x02}}
 
-class nsISVGClipPathFrame : public nsISupports {
+class nsISVGMaskFrame : public nsISupports {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGCLIPPATHFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGMASKFRAME_IID)
 
-  NS_IMETHOD ClipPaint(nsISVGRendererCanvas* canvas,
-                       nsISVGRendererSurface* aClipSurface,
+  NS_IMETHOD MaskPaint(nsISVGRendererCanvas* aCanvas,
+                       nsISVGRendererSurface* aSurface,
                        nsISVGChildFrame* aParent,
-                       nsCOMPtr<nsIDOMSVGMatrix> aMatrix) = 0;
-
-  NS_IMETHOD ClipHitTest(nsISVGChildFrame* aParent,
-                         nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
-                         float aX, float aY, PRBool *aHit) = 0;
-
-  // Check if this clipPath is made up of more than one geometry object.
-  // If so, the clipping API in cairo isn't enough and we need to use
-  // mask based clipping.
-
-  NS_IMETHOD IsTrivial(PRBool *aTrivial) = 0;
+                       nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
+                       float aOpacity = 1.0f) = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGClipPathFrame, NS_ISVGCLIPPATHFRAME_IID)
-
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGMaskFrame, NS_ISVGMASKFRAME_IID)
 
 nsresult
-NS_GetSVGClipPathFrame(nsISVGClipPathFrame **aResult,
-                       nsIURI *aURI, nsIContent *aContent);
+NS_GetSVGMaskFrame(nsISVGMaskFrame **aResult,
+                   nsIURI *aURI, nsIContent *aContent);
 
 #endif

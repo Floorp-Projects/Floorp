@@ -573,6 +573,7 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mMarkerEnd;
   nsCSSValue mMarkerMid;
   nsCSSValue mMarkerStart;
+  nsCSSValue mMask;
   nsCSSValue mPointerEvents;
   nsCSSValue mShapeRendering;
   nsCSSValue mStopColor;

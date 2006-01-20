@@ -57,6 +57,9 @@
 #include "nsSVGFilterFrame.h"
 #include "nsISVGValueUtils.h"
 #include "nsSVGUtils.h"
+#include "nsSVGClipPathFrame.h"
+#include "nsSVGMaskFrame.h"
+#include "nsISVGRendererSurface.h"
 
 typedef nsContainerFrame nsSVGInnerSVGFrameBase;
 
@@ -359,6 +362,8 @@ nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas,
 //  printf("nsSVGInnerSVG(%p)::Paint\n", this);
 #endif
 
+  const nsStyleDisplay *display = mStyleContext->GetStyleDisplay();
+
   nsIURI *aURI;
 
   /* check for filter */
@@ -411,6 +416,63 @@ nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas,
       canvas->SetClipRect(clipTransform, x, y, width, height);
   }
 
+  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+
+  /* check for a clip path */
+
+  PRBool trivialClip = PR_TRUE;
+  nsISVGClipPathFrame *clip = NULL;
+  nsCOMPtr<nsISVGRendererSurface> clipMaskSurface;
+
+  aURI = GetStyleSVGReset()->mClipPath;
+  if (aURI) {
+    NS_GetSVGClipPathFrame(&clip, aURI, mContent);
+
+    if (clip) {
+      clip->IsTrivial(&trivialClip);
+
+      if (!trivialClip) {
+        nsSVGUtils::GetSurface(outerSVGFrame, getter_AddRefs(clipMaskSurface));
+        if (!clipMaskSurface)
+          clip = nsnull;
+      }
+
+      if (clip) {
+        nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM();
+        clip->ClipPaint(canvas, clipMaskSurface, this, matrix);
+      }
+    }
+  }
+
+  /* check for mask */
+
+  nsISVGMaskFrame *mask = nsnull;
+  nsCOMPtr<nsISVGRendererSurface> maskSurface, maskedSurface;
+
+  aURI = GetStyleSVGReset()->mMask;
+  if (aURI) {
+    NS_GetSVGMaskFrame(&mask, aURI, mContent);
+
+    if (mask) {
+      nsSVGUtils::GetSurface(outerSVGFrame, getter_AddRefs(maskSurface));
+
+      if (maskSurface) {
+        nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM();
+        if (NS_FAILED(mask->MaskPaint(canvas, maskSurface, this, matrix,
+                                      display->mOpacity)))
+          maskSurface = nsnull;
+      }
+    }
+  }
+
+  if (maskSurface || clipMaskSurface || display->mOpacity != 1.0) {
+    nsSVGUtils::GetSurface(outerSVGFrame, getter_AddRefs(maskedSurface));
+    if (maskedSurface) {
+      canvas->PushSurface(maskedSurface);
+    } else
+      maskSurface = nsnull;
+  }
+
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame=nsnull;
@@ -418,6 +480,28 @@ nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas,
     if (SVGFrame)
       SVGFrame->PaintSVG(canvas, dirtyRectTwips, PR_FALSE);
   }
+
+  if (maskedSurface)
+    canvas->PopSurface();
+
+  if (clipMaskSurface) {
+    if (!maskSurface && display->mOpacity == 1.0) {
+      maskSurface = clipMaskSurface;
+    } else {
+      nsCOMPtr<nsISVGRendererSurface> clipped;
+      nsSVGUtils::GetSurface(outerSVGFrame, getter_AddRefs(clipped));
+      
+      canvas->PushSurface(clipped);
+      canvas->CompositeSurfaceWithMask(maskedSurface, 0, 0, clipMaskSurface);
+      canvas->PopSurface();
+      maskedSurface = clipped;
+    }
+  }
+
+  if (maskSurface)
+    canvas->CompositeSurfaceWithMask(maskedSurface, 0, 0, maskSurface);
+  else if (display->mOpacity != 1.0)
+    canvas->CompositeSurface(maskedSurface, 0, 0, display->mOpacity);
 
   canvas->PopClip();
 
@@ -748,6 +832,8 @@ nsSVGInnerSVGFrame::WillModifySVGObservable(nsISVGValue* observable,
     nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
     outerSVGFrame->InvalidateRegion(region, PR_TRUE);
   }
+
+  return NS_OK;
 }
 	
 NS_IMETHODIMP

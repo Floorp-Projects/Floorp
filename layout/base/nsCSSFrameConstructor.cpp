@@ -229,6 +229,8 @@ nsIFrame*
 NS_NewSVGFilterFrame(nsIPresShell *aPresShell, nsIContent *aContent);
 nsIFrame*
 NS_NewSVGPatternFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 #endif
 
 #include "nsIDocument.h"
@@ -3469,7 +3471,8 @@ IsSpecialContent(nsIContent*     aContent,
       aTag == nsSVGAtoms::clipPath  ||
       aTag == nsSVGAtoms::textPath  ||
       aTag == nsSVGAtoms::filter  ||
-      aTag == nsSVGAtoms::pattern;
+      aTag == nsSVGAtoms::pattern ||
+      aTag == nsSVGAtoms::mask;
 #endif
 
 #ifdef MOZ_MATHML
@@ -7799,6 +7802,9 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   }
   else if (aTag == nsSVGAtoms::pattern) {
     newFrame = NS_NewSVGPatternFrame(mPresShell, aContent);
+  }
+  else if (aTag == nsSVGAtoms::mask) {
+    newFrame = NS_NewSVGMaskFrame(mPresShell, aContent);
   }
   
   if (newFrame == nsnull) {

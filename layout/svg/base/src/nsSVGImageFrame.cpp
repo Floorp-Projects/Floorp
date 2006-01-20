@@ -57,6 +57,8 @@
 #include "nsLayoutAtoms.h"
 #include "nsISVGValueUtils.h"
 #include "nsSVGFilterFrame.h"
+#include "nsSVGUtils.h"
+#include "nsSVGMaskFrame.h"
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
 
@@ -354,17 +356,64 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas,
 
   canvas->PushClip();
 
+  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+
   /* check for a clip path */
-  nsSVGClipPathFrame *clip = NULL;
+
+  PRBool trivialClip = PR_TRUE;
+  nsISVGClipPathFrame *clip = NULL;
+  nsCOMPtr<nsISVGRendererSurface> clipMaskSurface;
+
   aURI = GetStyleSVGReset()->mClipPath;
   if (aURI) {
     NS_GetSVGClipPathFrame(&clip, aURI, mContent);
 
     if (clip) {
-      nsCOMPtr<nsIDOMSVGMatrix> matrix;
-      GetCanvasTM(getter_AddRefs(matrix));
-      clip->ClipPaint(canvas, this, matrix);
+      clip->IsTrivial(&trivialClip);
+
+      if (trivialClip) {
+        canvas->PushClip();
+      } else {
+        nsSVGUtils::GetSurface(outerSVGFrame, getter_AddRefs(clipMaskSurface));
+        if (!clipMaskSurface)
+          clip = nsnull;
+      }
+
+      if (clip) {
+        nsCOMPtr<nsIDOMSVGMatrix> matrix;
+        GetCanvasTM(getter_AddRefs(matrix));
+        clip->ClipPaint(canvas, clipMaskSurface, this, matrix);
+      }
     }
+  }
+
+  /* check for mask */
+
+  nsISVGMaskFrame *mask = nsnull;
+  nsCOMPtr<nsISVGRendererSurface> maskSurface, maskedSurface;
+
+  aURI = GetStyleSVGReset()->mMask;
+  if (aURI) {
+    NS_GetSVGMaskFrame(&mask, aURI, mContent);
+
+    if (mask) {
+      nsSVGUtils::GetSurface(outerSVGFrame, getter_AddRefs(maskSurface));
+
+      if (maskSurface) {
+        nsCOMPtr<nsIDOMSVGMatrix> matrix;
+        GetCanvasTM(getter_AddRefs(matrix));
+        if (NS_FAILED(mask->MaskPaint(canvas, maskSurface, this, matrix)))
+          maskSurface = nsnull;
+      }
+    }
+  }
+
+  if (maskSurface || clipMaskSurface) {
+    nsSVGUtils::GetSurface(outerSVGFrame, getter_AddRefs(maskedSurface));
+    if (maskedSurface) {
+      canvas->PushSurface(maskedSurface);
+    } else
+      maskSurface = nsnull;
   }
 
   if (mSurface) {
@@ -464,6 +513,26 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas,
                                    fini,
                                    mStyleContext->GetStyleDisplay()->mOpacity);
   }
+
+  if (maskedSurface)
+    canvas->PopSurface();
+
+  if (clipMaskSurface) {
+    if (!maskSurface) {
+      maskSurface = clipMaskSurface;
+    } else {
+      nsCOMPtr<nsISVGRendererSurface> clipped;
+      nsSVGUtils::GetSurface(outerSVGFrame, getter_AddRefs(clipped));
+      
+      canvas->PushSurface(clipped);
+      canvas->CompositeSurfaceWithMask(maskedSurface, 0, 0, clipMaskSurface);
+      canvas->PopSurface();
+      maskedSurface = clipped;
+    }
+  }
+
+  if (maskSurface)
+    canvas->CompositeSurfaceWithMask(maskedSurface, 0, 0, maskSurface);
 
   canvas->PopClip();
 
