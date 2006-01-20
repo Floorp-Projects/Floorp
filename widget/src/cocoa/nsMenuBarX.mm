@@ -73,6 +73,7 @@ NS_IMPL_ISUPPORTS6(nsMenuBarX, nsIMenuBar, nsIMenuListener, nsIDocumentObserver,
 
 NSMenu* nsMenuBarX::sApplicationMenu = nsnull;
 EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
+NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
 
 
 nsMenuBarX::nsMenuBarX()
@@ -530,6 +531,52 @@ NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
 }
 
 
+// for creating menu items destined for the Application menu
+NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString& nodeID, SEL action,
+                                                int tag, NativeMenuItemTarget* target)
+{
+  nsCOMPtr<nsIContent> menu;
+  inMenu->GetMenuContent(getter_AddRefs(menu));
+  if (!menu)
+    return nil;
+
+  nsCOMPtr<nsIDocument> doc = menu->GetDocument();
+  if (!doc)
+    return nil;
+
+  nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
+  if (!domdoc)
+    return nil;
+
+  // Get menu item label and access key
+  nsAutoString label;
+  nsAutoString modifiers;
+  nsCOMPtr<nsIDOMElement> menuItem;
+  domdoc->GetElementById(nodeID, getter_AddRefs(menuItem));
+  if (menuItem) {
+    menuItem->GetAttribute(NS_LITERAL_STRING("label"), label);
+    menuItem->GetAttribute(NS_LITERAL_STRING("modifiers"), modifiers);
+  }
+  else {
+    return nil;
+  }
+
+  NSString* labelString = (NSString*)::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.get(),
+                                                                    label.Length());
+  if (!labelString)
+    labelString = [@"" retain];
+  
+  NSMenuItem* newMenuItem = [[NSMenuItem alloc] initWithTitle:labelString action:action keyEquivalent:@""];
+  
+  [labelString release];
+  
+  [newMenuItem setTag:tag];
+  [newMenuItem setTarget:target];
+  
+  return newMenuItem;
+}
+
+
 //
 // CreateApplicationMenu
 //
@@ -543,35 +590,126 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
   // menu manually, so we grab the one from the nib and use that.
   sApplicationMenu = [[[[NSApp mainMenu] itemAtIndex:0] submenu] retain];
   
+/*
+  We support the following menu items here:
+
+  Menu Item             DOM Node ID             Notes
+  
+  ==================
+  = About This App = <- aboutName
+  ==================
+  = Preferences... = <- menu_preferences
+  ==================
+  = Services     > = <- menu_mac_services    <- (do not define access key, has submenu)
+  ==================
+  = Hide App       = <- menu_mac_hide_app
+  = Hide Others    = <- menu_mac_hide_others
+  = Show All       = <- menu_mac_show_all
+  ==================
+  = Quit           = <- menu_FileQuitItem
+  ==================
+  
+  If any of them are ommitted from the application's DOM, we just don't add
+  them. We always add a "Quit" item, but if an app developer does not provide a
+  DOM node with the right ID for the Quit item, we add it in English. App
+  developers need only add each node with a label and an accesskey (if they want
+  one). Other attributes are optional. Like so:
+  
+  <menuitem id="menu_preferences"
+         label="&preferencesCmdMac.label;"
+     accesskey="&preferencesCmdMac.accesskey;"/>
+  
+  We need to use this system for localization purposes, until we have a better way
+  to define the Application menu to be used on Mac OS X.
+*/
+
   if (sApplicationMenu) {
-    // this code reads the "label" attribute from the <menuitem/> with
-    // id="aboutName" and puts its label in the Application Menu
-    nsAutoString label;
-    nsCOMPtr<nsIContent> menu;
-    inMenu->GetMenuContent(getter_AddRefs(menu));
-    if (menu) {
-      nsCOMPtr<nsIDocument> doc = menu->GetDocument();
-      if (doc) {
-        nsCOMPtr<nsIDOMDocument> domdoc (do_QueryInterface(doc));
-        if (domdoc) {
-          nsCOMPtr<nsIDOMElement> aboutMenuItem;
-          domdoc->GetElementById(NS_LITERAL_STRING("aboutName"), getter_AddRefs(aboutMenuItem));
-          if (aboutMenuItem)
-            aboutMenuItem->GetAttribute(NS_LITERAL_STRING("label"), label);
-        }
-      }
-    }
-    CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.get(), label.Length());
-    if (labelRef) {
-      [sApplicationMenu insertItemWithTitle:(NSString*)labelRef action:nil keyEquivalent:@"" atIndex:0];
-      ::CFRelease(labelRef);
+    // This code reads attributes we are going to care about from the DOM elements
+    
+    NSMenuItem *itemBeingAdded = nil;
+    
+    // Add the About menu item
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("aboutName"), @selector(menuItemHit:),
+                                             kHICommandAbout, nsMenuBarX::sNativeEventTarget);
+    if (itemBeingAdded) {
+      [sApplicationMenu addItem:itemBeingAdded];
+      [itemBeingAdded release];
+      // Add separator after About menu
+      [sApplicationMenu addItem:[NSMenuItem separatorItem]];      
     }
     
-    //XXXJOSH we need to get this event, maybe convert to a MenuRef, do later
-    //::SetMenuItemCommandID(sApplicationMenu, 1, kHICommandAbout);
+    // Add the Preferences menu item
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_preferences"), @selector(menuItemHit:),
+                                             kHICommandPreferences, nsMenuBarX::sNativeEventTarget);
+    if (itemBeingAdded) {
+      [sApplicationMenu addItem:itemBeingAdded];
+      [itemBeingAdded release];
+      // Add separator after Preferences menu
+      [sApplicationMenu addItem:[NSMenuItem separatorItem]];      
+    }
+
+    // Add Services menu item
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_services"), nil,
+                                             0, nil);
+    if (itemBeingAdded) {
+      [sApplicationMenu addItem:itemBeingAdded];
+      
+      // set this menu item up as the Mac OS X Services menu
+      NSMenu* servicesMenu = [[NSMenu alloc] initWithTitle:@""];
+      [itemBeingAdded setSubmenu:servicesMenu];
+      [NSApp setServicesMenu:servicesMenu];
+      
+      [itemBeingAdded release];
+      
+      // Add separator after Services menu
+      [sApplicationMenu addItem:[NSMenuItem separatorItem]];      
+    }
     
-    // add separator after About menu
-    [sApplicationMenu addItem:[NSMenuItem separatorItem]];
+    BOOL addHideShowSeparator = FALSE;
+    
+    // Add menu item to hide this application
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_hide_app"), @selector(hide:),
+                                             0, NSApp);
+    if (itemBeingAdded) {
+      [sApplicationMenu addItem:itemBeingAdded];
+      [itemBeingAdded release];
+      addHideShowSeparator = TRUE;
+    }
+    
+    // Add menu item to hide other applications
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_hide_others"), @selector(hideOtherApplications:),
+                                             0, NSApp);
+    if (itemBeingAdded) {
+      [sApplicationMenu addItem:itemBeingAdded];
+      [itemBeingAdded release];
+      addHideShowSeparator = TRUE;
+    }
+    
+    // Add menu item to show all applications
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_mac_show_all"), @selector(unhideAllApplications:),
+                                             0, NSApp);
+    if (itemBeingAdded) {
+      [sApplicationMenu addItem:itemBeingAdded];
+      [itemBeingAdded release];
+      addHideShowSeparator = TRUE;
+    }
+    
+    // Add a separator after the hide/show menus if at least one exists
+    if (addHideShowSeparator)
+      [sApplicationMenu addItem:[NSMenuItem separatorItem]];
+    
+    // Add quit menu item
+    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("menu_FileQuitItem"), @selector(menuItemHit:),
+                                             kHICommandQuit, nsMenuBarX::sNativeEventTarget);
+    if (itemBeingAdded) {
+      [sApplicationMenu addItem:itemBeingAdded];
+      [itemBeingAdded release];
+    }
+    else {
+      // the current application does not have a DOM node for "Quit". Add one
+      // anyway, in English.
+      ;
+    }
   }
   
   return (sApplicationMenu) ? NS_OK : NS_ERROR_FAILURE;
@@ -762,7 +900,6 @@ nsMenuBarX::ContentInserted(nsIDocument * aDocument, nsIContent * aContainer,
   }
 }
 
-#pragma mark - 
 
 //
 // nsIChangeManager
@@ -931,3 +1068,80 @@ NSString* MenuHelpersX::CreateTruncatedCocoaLabel(nsString itemLabel)
   ::TruncateThemeText(labelRef, kThemeMenuItemFont, kThemeStateActive, kMaxItemPixelWidth, truncMiddle, NULL);
   return (NSString*)labelRef; // caller releases
 }
+
+PRUint8 MenuHelpersX::GeckoModifiersForNodeAttribute(char* modifiersAttribute)
+{
+  PRUint8 modifiers = knsMenuItemNoModifier;
+  char* newStr;
+  char* token = nsCRT::strtok(modifiersAttribute, ", \t", &newStr);
+  while (token != NULL) {
+    if (PL_strcmp(token, "shift") == 0)
+      modifiers |= knsMenuItemShiftModifier;
+    else if (PL_strcmp(token, "alt") == 0) 
+      modifiers |= knsMenuItemAltModifier;
+    else if (PL_strcmp(token, "control") == 0) 
+      modifiers |= knsMenuItemControlModifier;
+    else if ((PL_strcmp(token, "accel") == 0) ||
+             (PL_strcmp(token, "meta") == 0)) {
+      modifiers |= knsMenuItemCommandModifier;
+    }
+    token = nsCRT::strtok(newStr, ", \t", &newStr);
+  }
+  
+  return modifiers;
+}
+
+unsigned int MenuHelpersX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
+{
+  unsigned int macModifiers = 0;
+  
+  if (geckoModifiers & knsMenuItemShiftModifier)
+    macModifiers |= NSShiftKeyMask;
+  if (geckoModifiers & knsMenuItemAltModifier)
+    macModifiers |= NSAlternateKeyMask;
+  if (geckoModifiers & knsMenuItemControlModifier)
+    macModifiers |= NSControlKeyMask;
+  if (geckoModifiers & knsMenuItemCommandModifier)
+    macModifiers |= NSCommandKeyMask;
+  
+  return macModifiers;
+}
+
+// Objective-C class used as action target for menu items
+
+@implementation NativeMenuItemTarget
+
+// called when some menu item in this menu gets hit
+-(IBAction)menuItemHit:(id)sender
+{
+  MenuRef senderMenuRef = _NSGetCarbonMenu([sender menu]);
+  int senderCarbonMenuItemIndex = [[sender menu] indexOfItem:sender] + 1;
+  
+  // If this carbon menu item has never had a command ID assigned to it, give it
+  // one from the sender's tag
+  MenuCommand menuCommand;
+  ::GetMenuItemCommandID(senderMenuRef, senderCarbonMenuItemIndex, &menuCommand);
+  if (menuCommand == 0) {
+    menuCommand = (MenuCommand)[sender tag];
+    ::SetMenuItemCommandID(senderMenuRef, senderCarbonMenuItemIndex, menuCommand);
+  }
+  
+  // set up an HICommand to send
+  HICommand menuHICommand;
+  menuHICommand.commandID = menuCommand;
+  menuHICommand.menu.menuRef = senderMenuRef;
+  menuHICommand.menu.menuItemIndex = senderCarbonMenuItemIndex;
+  
+  // send Carbon Event
+  EventRef newEvent;
+  OSErr err = ::CreateEvent(NULL, kEventClassCommand, kEventCommandProcess, 0, kEventAttributeUserEvent, &newEvent);
+  if (err == noErr) {
+    err = ::SetEventParameter(newEvent, kEventParamDirectObject, typeHICommand, sizeof(HICommand), &menuHICommand);
+    if (err == noErr) {
+      err = ::SendEventToEventTarget(newEvent, GetWindowEventTarget((WindowRef)[[NSApp keyWindow] windowRef]));
+      NS_ASSERTION(err == noErr, "Carbon event for menu hit not sent!");
+    }
+  }
+}
+
+@end

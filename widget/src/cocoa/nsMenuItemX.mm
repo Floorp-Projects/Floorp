@@ -297,15 +297,7 @@ NS_METHOD nsMenuItemX::SetModifiers(PRUint8 aModifiers)
   mModifiers = aModifiers;
 
   // set up shortcut key modifiers on native menu item
-  unsigned int macModifiers = 0;
-  if (mModifiers & knsMenuItemShiftModifier)
-    macModifiers |= NSShiftKeyMask;
-  if (mModifiers & knsMenuItemAltModifier)
-    macModifiers |= NSAlternateKeyMask;
-  if (mModifiers & knsMenuItemControlModifier)
-    macModifiers |= NSControlKeyMask;
-  if (mModifiers & knsMenuItemCommandModifier)
-    macModifiers |= NSCommandKeyMask;
+  unsigned int macModifiers = MenuHelpersX::MacModifiersForGeckoModifiers(mModifiers);
   [mNativeMenuItem setKeyEquivalentModifierMask:macModifiers];
   
   return NS_OK;

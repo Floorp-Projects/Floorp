@@ -47,7 +47,6 @@
 #include "prinrval.h"
 
 #include "nsMenuX.h"
-#include "nsMenuBarX.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIMenuItem.h"
@@ -70,8 +69,6 @@
 #include "nsCRT.h"
 
 static PRBool gConstructingMenu = PR_FALSE;
-
-static MenuRef GetCarbonMenuRef(NSMenu* aMenu);
 
 // CIDs
 #include "nsWidgetsCID.h"
@@ -103,7 +100,10 @@ nsMenuX::nsMenuX()
   mDestroyHandlerCalled(PR_FALSE), mNeedsRebuild(PR_TRUE),
   mConstructed(PR_FALSE), mVisible(PR_TRUE), mHandler(nsnull)
 {
-    mMenuDelegate = [[MenuDelegate alloc] initWithGeckoMenu:this];
+  mMenuDelegate = [[MenuDelegate alloc] initWithGeckoMenu:this];
+    
+  if (!nsMenuBarX::sNativeEventTarget)
+    nsMenuBarX::sNativeEventTarget = [[NativeMenuItemTarget alloc] init];
 }
 
 
@@ -229,7 +229,7 @@ NS_IMETHODIMP nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   [mMacMenu addItem:newNativeMenuItem];
 
   // set up target/action
-  [newNativeMenuItem setTarget:mMenuDelegate];
+  [newNativeMenuItem setTarget:nsMenuBarX::sNativeEventTarget];
   [newNativeMenuItem setAction:@selector(menuItemHit:)];
   
   // set its command. we get the unique command id from the menubar
@@ -386,7 +386,7 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
 
   // at this point, the carbon event handler was installed so there
   // must be a carbon MenuRef to be had
-  if (GetCarbonMenuRef(mMacMenu) == selectedMenuHandle) {
+  if (_NSGetCarbonMenu(mMacMenu) == selectedMenuHandle) {
     if (mIsHelpMenu && mConstructed) {
       RemoveAll();
       mConstructed = false;
@@ -637,16 +637,14 @@ void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
     nsAutoString checked;
     nsAutoString type;
     nsAutoString menuitemName;
-    nsAutoString menuitemCmd;
     
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, disabled);
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, checked);
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::type, type);
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuitemName);
-    inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, menuitemCmd);
 
     // printf("menuitem %s \n", NS_LossyConvertUCS2toASCII(menuitemName).get());
-              
+
     PRBool enabled = !(disabled.EqualsLiteral("true"));
     
     nsIMenuItem::EMenuItemType itemType = nsIMenuItem::eRegular;
@@ -683,29 +681,13 @@ void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
       keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
       if (!keyChar.EqualsLiteral(" ")) 
         pnsMenuItem->SetShortcutChar(keyChar);
-        
-      PRUint8 modifiers = knsMenuItemNoModifier;
+      
       nsAutoString modifiersStr;
       keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
       char* str = ToNewCString(modifiersStr);
-      char* newStr;
-      char* token = nsCRT::strtok(str, ", \t", &newStr);
-      while (token != NULL) {
-        if (PL_strcmp(token, "shift") == 0)
-          modifiers |= knsMenuItemShiftModifier;
-        else if (PL_strcmp(token, "alt") == 0) 
-          modifiers |= knsMenuItemAltModifier;
-        else if (PL_strcmp(token, "control") == 0) 
-          modifiers |= knsMenuItemControlModifier;
-        else if ((PL_strcmp(token, "accel") == 0) ||
-                 (PL_strcmp(token, "meta") == 0)) {
-          modifiers |= knsMenuItemCommandModifier;
-        }
-
-        token = nsCRT::strtok(newStr, ", \t", &newStr);
-      }
+      PRUint8 modifiers = MenuHelpersX::GeckoModifiersForNodeAttribute(str);
       nsMemory::Free(str);
-
+      
       pnsMenuItem->SetModifiers(modifiers);
     }
 
@@ -1230,31 +1212,8 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
   return status;
 }
 
-// #include <mach-o/dyld.h>
-extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
-static MenuRef GetCarbonMenuRef(NSMenu* aMenu)
-{
-  // we use a private API, so check for its existence and cache it (no static linking)
-  //XXXJOSH I don't feel like debugging this now, so I'll leave it for later
-  /*
-  typedef MenuRef (*NSGetCarbonMenuPtr)(NSMenu* menu);
-  static NSGetCarbonMenuPtr NSGetCarbonMenu = NULL;
-  
-  if (!NSGetCarbonMenu && NSIsSymbolNameDefined("_NSGetCarbonMenu"))
-    NSGetCarbonMenu = (NSGetCarbonMenuPtr)NSAddressOfSymbol(NSLookupAndBindSymbol("_NSGetCarbonMenu"));
-  
-  if (NSGetCarbonMenu)
-    return NSGetCarbonMenu(aMenu);
-  else
-    return NULL;
-   */
-  return _NSGetCarbonMenu(aMenu);
-}
 
-
-//
-// MenuDelegate Cocoa class, receives events for the gecko menus
-//
+// MenuDelegate Objective-C class, used to set up Carbon events
 
 
 @implementation MenuDelegate
@@ -1278,45 +1237,12 @@ static MenuRef GetCarbonMenuRef(NSMenu* aMenu)
 - (void)menuNeedsUpdate:(NSMenu*)aMenu
 {
   if (!mHaveInstalledCarbonEvents) {
-    MenuRef myMenuRef = GetCarbonMenuRef(aMenu);
+    MenuRef myMenuRef = _NSGetCarbonMenu(aMenu);
     if (myMenuRef) {
       InstallMyMenuEventHandler(myMenuRef, mGeckoMenu, nil); // can't be nil because we need to clean up
       mHaveInstalledCarbonEvents = TRUE;
     }
   }
 }
-
-// called when some menu item in this menu gets hit
-- (IBAction)menuItemHit:(id)sender {
-  MenuRef senderMenuRef = GetCarbonMenuRef([sender menu]);
-  int senderCarbonMenuItemIndex = [[sender menu] indexOfItem:sender] + 1;
-  
-  // If this carbon menu item has never had a command ID assigned to it, give it
-  // one from the sender's tag
-  MenuCommand menuCommand;
-  ::GetMenuItemCommandID(senderMenuRef, senderCarbonMenuItemIndex, &menuCommand);
-  if (menuCommand == 0) {
-    menuCommand = (MenuCommand)[sender tag];
-    ::SetMenuItemCommandID(senderMenuRef, senderCarbonMenuItemIndex, menuCommand);
-  }
-  
-  // set up an HICommand to send
-  HICommand menuHICommand;
-  menuHICommand.commandID = menuCommand;
-  menuHICommand.menu.menuRef = senderMenuRef;
-  menuHICommand.menu.menuItemIndex = senderCarbonMenuItemIndex;
-  
-  // send Carbon Event
-  EventRef newEvent;
-  OSErr err = ::CreateEvent(NULL, kEventClassCommand, kEventCommandProcess, 0, kEventAttributeUserEvent, &newEvent);
-  if (err == noErr) {
-    err = ::SetEventParameter(newEvent, kEventParamDirectObject, typeHICommand, sizeof(HICommand), &menuHICommand);
-    if (err == noErr) {
-      err = ::SendEventToEventTarget(newEvent, GetWindowEventTarget((WindowRef)[[NSApp keyWindow] windowRef]));
-      NS_ASSERTION(err == noErr, "Carbon event for menu hit not sent!");
-    }
-  }
-}
-
 
 @end
