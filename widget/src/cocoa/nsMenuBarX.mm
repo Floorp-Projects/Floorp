@@ -548,30 +548,59 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
   if (!domdoc)
     return nil;
 
-  // Get menu item label and access key
+  // Get information from the gecko menu item
   nsAutoString label;
   nsAutoString modifiers;
+  nsAutoString key;
   nsCOMPtr<nsIDOMElement> menuItem;
   domdoc->GetElementById(nodeID, getter_AddRefs(menuItem));
   if (menuItem) {
     menuItem->GetAttribute(NS_LITERAL_STRING("label"), label);
     menuItem->GetAttribute(NS_LITERAL_STRING("modifiers"), modifiers);
+    menuItem->GetAttribute(NS_LITERAL_STRING("key"), key);
   }
   else {
     return nil;
   }
 
+  // get the label into NSString* form
   NSString* labelString = (NSString*)::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.get(),
                                                                     label.Length());
   if (!labelString)
     labelString = [@"" retain];
-  
-  NSMenuItem* newMenuItem = [[NSMenuItem alloc] initWithTitle:labelString action:action keyEquivalent:@""];
+    
+  // Get more information about the key equivalent. Start by
+  // finding the key node we need.
+  NSString* keyEquiv = @"";
+  unsigned int macKeyModifiers;
+  nsCOMPtr<nsIDOMElement> keyElement;
+  domdoc->GetElementById(key, getter_AddRefs(keyElement));
+  if (keyElement) {
+    nsCOMPtr<nsIContent> keyContent (do_QueryInterface(keyElement));
+    // first grab the key equivalent character
+    nsAutoString keyChar(NS_LITERAL_STRING(" "));
+    keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
+    if (!keyChar.EqualsLiteral(" ")) {
+      keyEquiv = (NSString*)::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)keyChar.get(),
+                                                           keyChar.Length());
+    }
+    // now grab the key equivalent modifiers
+    nsAutoString modifiersStr;
+    keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
+    char* str = ToNewCString(modifiersStr);
+    PRUint8 geckoModifiers = MenuHelpersX::GeckoModifiersForNodeAttribute(str);
+    nsMemory::Free(str);
+    macKeyModifiers = MenuHelpersX::MacModifiersForGeckoModifiers(geckoModifiers);
+  }
+
+  // put together the actual NSMenuItem
+  NSMenuItem* newMenuItem = [[NSMenuItem alloc] initWithTitle:labelString action:action keyEquivalent:keyEquiv];
   
   [labelString release];
   
   [newMenuItem setTag:tag];
   [newMenuItem setTarget:target];
+  [newMenuItem setKeyEquivalentModifierMask:macKeyModifiers];
   
   return newMenuItem;
 }
@@ -617,7 +646,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
   
   <menuitem id="menu_preferences"
          label="&preferencesCmdMac.label;"
-     accesskey="&preferencesCmdMac.accesskey;"/>
+           key="quit_app_key"/>
   
   We need to use this system for localization purposes, until we have a better way
   to define the Application menu to be used on Mac OS X.
@@ -708,7 +737,11 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     else {
       // the current application does not have a DOM node for "Quit". Add one
       // anyway, in English.
-      ;
+      NSMenuItem* defaultQuitItem = [[[NSMenuItem alloc] initWithTitle:@"Quit" action:@selector(menuItemHit:)
+                                                         keyEquivalent:@"q"] autorelease];
+      [defaultQuitItem setTarget:nsMenuBarX::sNativeEventTarget];
+      [defaultQuitItem setTag:kHICommandQuit];
+      [sApplicationMenu addItem:defaultQuitItem];
     }
   }
   
