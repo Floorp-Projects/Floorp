@@ -909,6 +909,8 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
                                 const char **displayNameArray,
                                 const char **messageUriArray)
 {
+  if (!count)
+    return NS_ERROR_INVALID_ARG;
   return SaveAllAttachments(count, contentTypeArray, urlArray, displayNameArray, messageUriArray, PR_FALSE);
 }
 
