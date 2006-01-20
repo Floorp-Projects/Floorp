@@ -1547,6 +1547,8 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/python/xpcom/Makefile
             extensions/python/xpcom/src/Makefile
             extensions/python/xpcom/src/loader/Makefile
+            extensions/python/xpcom/src/module/Makefile
+            extensions/python/xpcom/test/Makefile
             extensions/python/xpcom/test/test_component/Makefile
             " ;;
         sql ) MAKEFILES_extensions="$MAKEFILES_extensions
