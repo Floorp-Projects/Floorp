@@ -551,6 +551,8 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
         mWindowType != eWindowType_popup)
         return NS_OK;
 
+    // XXX Should we do some AreBoundsSane check here?
+
     mBounds.x = aX;
     mBounds.y = aY;
 
@@ -570,8 +572,12 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
             // actually placed the window somewhere.  If no placement
             // has taken place, we just let the window manager Do The
             // Right Thing.
-            if (mPlaced)
+            // XXX Uhhh ... aX and aY are in twips, not screen coordinates
+            // XXX mPlaced is always PR_TRUE here, see above
+            if (mPlaced) {
+                NS_WARNING("BOGUS code reached!");
                 gtk_window_move(GTK_WINDOW(mShell), aX, aY);
+            }
         }
     }
     else if (mDrawingarea) {
@@ -2275,6 +2281,13 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 
     // save our bounds
     mBounds = aRect;
+    if (mWindowType != eWindowType_child) {
+        // The window manager might place us. Indicate that if we're
+        // shown, we want to go through
+        // nsWindow::NativeResize(x,y,w,h) to maybe set our own
+        // position.
+        mNeedsMove = PR_TRUE;
+    }
 
     // figure out our parent window
     MozDrawingarea *parentArea = nsnull;
