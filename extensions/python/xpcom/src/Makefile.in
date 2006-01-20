@@ -43,21 +43,22 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 pyexecdir	= @libdir@/python$(PYTHON_VER_DOTTED)/site-packages
 
-DIRS = loader $(NULL)
+DIRS = module loader $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= pyxpcom
-LIBRARY_NAME	= _xpcom$(PYTHON_DEBUG_SUFFIX)
+LIBRARY_NAME	= pyxpcom
 #MODULE_NAME	= 
 REQUIRES	= xpcom string $(NULL)
 MOZILLA_INTERNAL_API = 1
 FORCE_SHARED_LIB = 1 
 FORCE_USE_PIC = 1 
 
-DLL_SUFFIX=$(PYTHON_DLL_SUFFIX)
 LOCAL_INCLUDES = $(PYTHON_INCLUDES)
 EXTRA_LIBS += $(PYTHON_LIBS)
+
+EXPORTS		= PyXPCOM.h
 
 CPPSRCS= \
 	ErrorUtils.cpp \
@@ -80,33 +81,18 @@ CPPSRCS= \
 	TypeObject.cpp \
 	VariantUtils.cpp \
 	dllmain.cpp \
-	xpcom.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
-IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.pyd=.lib)
-
-# Install into our Python directory
-# default build installs into bin and lib - remove them
-libs::
-ifeq ($(OS_ARCH),WINNT)
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/python/xpcom
+ifeq ($(OS_ARCH),Darwin)
+# Don't use the EXTRA_DSO_LDOPTS from rules.mk, it breaks the python module
+  EXTRA_DSO_LDOPTS = -bundle $(MOZ_COMPONENT_LIBS)
 else
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/python/xpcom
-	mv $(DIST)/bin/python/xpcom/$(SHARED_LIBRARY) $(DIST)/bin/python/xpcom/_xpcom.so
-endif
-	rm -f $(DIST)/bin/$(SHARED_LIBRARY)
-	rm -f $(DIST)/lib/$(IMPORT_LIBRARY)
-
-install::
-ifneq ($(OS_ARCH),WINNT)
-	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DISTDIR)$(pyexecdir)/xpcom
-	mv $(DISTDIR)$(pyexecdir)/xpcom/$(SHARED_LIBRARY) $(DISTDIR)$(pyexecdir)/xpcom/_xpcom$(PYTHON_DLL_SUFFIX)
+  EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 endif
 
 clobber::
-	rm -f *.ilk *.pdb
+	rm -f *.ilk *.pdb *.exp *.lib *.pyd
 

@@ -13,12 +13,12 @@
 #
 # The Original Code is mozilla.org code.
 #
-# The Initial Developer of the Original Code is
-# Mark Hammond <mhammond@skippinet.com.au>.
+# The Initial Developer of the Original Code is mozilla.org
 # Portions created by the Initial Developer are Copyright (C) 2002
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Mark Hammond <mhammond@skippinet.com.au> (original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,23 +34,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# The PyXPCOM component loader
+# The xpcom._xpcom module
 
 DEPTH=../../../../..
 
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+pyexecdir	= @libdir@/python$(PYTHON_VER_DOTTED)/site-packages
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= pyloader
-IS_COMPONENT	= 1
-REQUIRES	= pyxpcom xpcom string xpcom_obsolete $(NULL)
+LIBRARY_NAME	= _xpcom$(PYTHON_DEBUG_SUFFIX)
+REQUIRES	= pyxpcom xpcom string $(NULL)
 MOZILLA_INTERNAL_API = 1
 FORCE_SHARED_LIB = 1 
-FORCE_USE_PIC = 1
+FORCE_USE_PIC = 1 
 
+DLL_SUFFIX=$(PYTHON_DLL_SUFFIX)
 LOCAL_INCLUDES = $(PYTHON_INCLUDES)
 
 EXTRA_LIBS += $(PYTHON_LIBS)
@@ -61,16 +62,33 @@ else
 EXTRA_LIBS += -lpyxpcom
 endif
 
-
-CPPSRCS		=		   \
-		pyloader.cpp	   \
-		$(NULL)
+CPPSRCS= \
+	_xpcom.cpp \
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
-
 include $(topsrcdir)/config/rules.mk
-CXXFLAGS += -DPYTHON_SO=\"libpython$(PYTHON_VER_DOTTED).so\"
+
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.pyd=.lib)
+
+# Install into our Python directory
+# default build installs into bin and lib - remove them
+libs::
+ifeq ($(OS_ARCH),WINNT)
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/python/xpcom
+else
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/python/xpcom
+	mv $(DIST)/bin/python/xpcom/$(SHARED_LIBRARY) $(DIST)/bin/python/xpcom/_xpcom.so
+endif
+	rm -f $(DIST)/bin/$(SHARED_LIBRARY)
+	rm -f $(DIST)/lib/$(IMPORT_LIBRARY)
+
+install::
+ifneq ($(OS_ARCH),WINNT)
+	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DISTDIR)$(pyexecdir)/xpcom
+	mv $(DISTDIR)$(pyexecdir)/xpcom/$(SHARED_LIBRARY) $(DISTDIR)$(pyexecdir)/xpcom/_xpcom$(PYTHON_DLL_SUFFIX)
+endif
 
 clobber::
-	rm -f *.ilk
+	rm -f *.ilk *.pdb

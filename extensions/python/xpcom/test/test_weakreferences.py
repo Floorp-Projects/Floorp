@@ -38,6 +38,7 @@
 # test_weakreferences.py - Test our weak reference implementation.
 from xpcom import components, _xpcom
 import xpcom.server, xpcom.client
+from pyxpcom_test_tools import suite_from_functions, testmain
 
 try:
     from sys import gettotalrefcount
@@ -104,13 +105,10 @@ def test_refcount(num_loops=-1):
     # more than twice!
     if abs(lost)>2:
         print "*** Lost %d references" % (lost,)
-    
-test_refcount()
 
-print "Weak-reference tests appear to have worked!"
+# Make this test run under our std test suite
+def suite():
+    return suite_from_functions(test_refcount)
+
 if __name__=='__main__':
-    _xpcom.NS_ShutdownXPCOM()
-    ni = xpcom._xpcom._GetInterfaceCount()
-    ng = xpcom._xpcom._GetGatewayCount()
-    if ni or ng:
-        print "********* WARNING - Leaving with %d/%d objects alive" % (ni,ng)
+    testmain()

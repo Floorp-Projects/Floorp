@@ -37,15 +37,18 @@
 
 import os
 import new
-from xpcom import xpt, COMException, nsError
+import logging
+from xpcom import xpt, COMException, nsError, logger
 
 # Suck in stuff from _xpcom we use regularly to prevent a module lookup
-from xpcom._xpcom import IID_nsISupports, IID_nsIClassInfo, IID_nsISupportsCString, IID_nsISupportsWeakReference, \
-        IID_nsIWeakReference, XPTI_GetInterfaceInfoManager, GetComponentManager, XPTC_InvokeByIndex
+from xpcom._xpcom import IID_nsISupports, IID_nsIClassInfo, \
+    IID_nsISupportsCString, IID_nsISupportsString, \
+    IID_nsISupportsWeakReference, IID_nsIWeakReference, \
+    XPTI_GetInterfaceInfoManager, GetComponentManager, XPTC_InvokeByIndex
 
 # Attribute names we may be __getattr__'d for, but know we don't want to delegate
 # Could maybe just look for startswith("__") but this may screw things for some objects.
-_special_getattr_names = ["__del__", "__len__", "__nonzero__"]
+_special_getattr_names = ["__del__", "__len__", "__nonzero__", "__eq__", "__neq__"]
 
 _just_int_interfaces = ["nsISupportsPRInt32", "nsISupportsPRInt16", "nsISupportsPRUint32", "nsISupportsPRUint16", "nsISupportsPRUint8", "nsISupportsPRBool"]
 _just_long_interfaces = ["nsISupportsPRInt64", "nsISupportsPRUint64"]
@@ -176,6 +179,21 @@ class _XPCOMBase:
     def __hash__(self):
         return hash(self._comobj_)
 
+    # The basic rich compare ops for equality
+    def __eq__(self, other):
+        try:
+            other = other._comobj_
+        except AttributeError:
+            pass
+        return self._comobj_ == other
+
+    def __neq__(self, other):
+        try:
+            other = other._comobj_
+        except AttributeError:
+            pass
+        return self._comobj_ != other
+
     # See if the object support strings.
     def __str__(self):
         try:
@@ -183,6 +201,13 @@ class _XPCOMBase:
             return str(self._comobj_)
         except COMException:
             return self.__repr__()
+
+    def __unicode__(self):
+        try:
+            prin = self._comobj_.QueryInterface(IID_nsISupportsString)
+        except COMException:
+            return unicode(str(self))
+        return prin.data
 
     # Try the numeric support.
     def _do_conversion(self, interface_names, cvt):
@@ -206,7 +231,7 @@ class _XPCOMBase:
         return self._do_conversion(_float_interfaces, float)
     
 class Component(_XPCOMBase):
-    def __init__(self, ob, iid):
+    def __init__(self, ob, iid = IID_nsISupports):
         assert not hasattr(ob, "_comobj_"), "Should be a raw nsIWhatever, not a wrapped one"
         ob_name = None
         if not hasattr(ob, "IID"):
@@ -220,7 +245,7 @@ class Component(_XPCOMBase):
         self.__dict__['_interfaces_'] = {} # keyed by IID
         self.__dict__['_interface_names_'] = {} # keyed by IID name
         self.__dict__['_interface_infos_'] = {} # keyed by IID
-        self.__dict__['_name_to_interface_name_'] = {}
+        self.__dict__['_name_to_interface_iid_'] = {}
         self.__dict__['_tried_classinfo_'] = 0
 
         if ob_name is None:
@@ -256,10 +281,11 @@ class Component(_XPCOMBase):
                 for nominated_iid in interface_infos:
                     # Interface may appear twice in the class info list, so check this here.
                     if not self.__dict__['_interface_infos_'].has_key(nominated_iid):
-                        self._remember_interface_info(nominated_iid)
+                        # Just invoke our QI on the object
+                        self.queryInterface(nominated_iid)
                 if real_cid is not None:
                     contractid_info = {}
-                    contractid_info['_name_to_interface_name_'] = self.__dict__['_name_to_interface_name_']
+                    contractid_info['_name_to_interface_iid_'] = self.__dict__['_name_to_interface_iid_']
                     contractid_info['_interface_infos_'] = self.__dict__['_interface_infos_']
                     contractid_info_cache[real_cid] = contractid_info
             else:
@@ -269,26 +295,28 @@ class Component(_XPCOMBase):
         self.__dict__['_com_classinfo_'] = classinfo
 
     def _remember_interface_info(self, iid):
-        method_infos, getters, setters, constants = BuildInterfaceInfo(iid)
-        # Remember all the names so we can delegate
-        assert not self.__dict__['_interface_infos_'].has_key(iid), "Already remembered this interface!"
-        self.__dict__['_interface_infos_'][iid] = method_infos, getters, setters, constants
-        interface_name = iid.name
-        names = self.__dict__['_name_to_interface_name_']
-        for name in method_infos.keys(): names[name] = interface_name
-        for name in getters.keys(): names[name] = interface_name
-        for name in setters.keys(): names[name] = interface_name
-        for name in constants.keys():  names[name] = interface_name
+        # XXX - there is no good reason to cache this only in each instance
+        # It should be cached at the module level, so we don't need to
+        # rebuild the world for each new object.
+        iis = self.__dict__['_interface_infos_']
+        assert not iis.has_key(iid), "Already remembered this interface!"
+        try:
+            method_infos, getters, setters, constants = BuildInterfaceInfo(iid)
+        except COMException, why:
+            # Failing to build an interface info generally isn't a real
+            # problem - its probably just that the interface is non-scriptable.
+            logger.info("Failed to build interface info for %s: %s", iid, why)
+            # Remember the fact we failed.
+            iis[iid] = None
+            return
 
-    def _make_interface_info(self, ob, iid):
-        interface_infos = self._interface_infos_
-        assert not self._interfaces_.has_key(iid), "Already have made this interface"
-        method_infos, getters, setters, constants = interface_infos[iid]
-        new_interface = _Interface(ob, iid, method_infos, getters, setters, constants)
-        self._interfaces_[iid] = new_interface
-        self._interface_names_[iid.name] = new_interface
-        # No point remembering these.
-        del interface_infos[iid]
+        # Remember all the names so we can delegate
+        iis[iid] = method_infos, getters, setters, constants
+        names = self.__dict__['_name_to_interface_iid_']
+        for name in method_infos.keys(): names[name] = iid
+        for name in getters.keys(): names[name] = iid
+        for name in setters.keys(): names[name] = iid
+        for name in constants.keys():  names[name] = iid
 
     def QueryInterface(self, iid):
         if self._interfaces_.has_key(iid):
@@ -297,10 +325,24 @@ class Component(_XPCOMBase):
         # Haven't seen this before - do a real QI.
         if not self._interface_infos_.has_key(iid):
             self._remember_interface_info(iid)
-        ret = self._comobj_.QueryInterface(iid, 0)
-#        print "Component QI for", iid, "yielded", ret
-        self._make_interface_info(ret, iid)
-        assert self._interfaces_.has_key(iid) and self._interface_names_.has_key(iid.name), "Making the interface didn't update the maps"
+        iface_info = self._interface_infos_[iid]
+        if iface_info is None:
+            # We have tried, but failed, to get this interface info.  Its
+            # unlikely to work later either - its probably non-scriptable.
+            # That means our component wrappers are useless - so just return a
+            # raw nsISupports object with no wrapper.            
+            return self._comobj_.QueryInterface(iid, 0)
+
+        raw_iface = self._comobj_.QueryInterface(iid, 0)
+
+        method_infos, getters, setters, constants = iface_info
+        new_interface = _Interface(raw_iface, iid, method_infos,
+                                   getters, setters, constants)
+        self._interfaces_[iid] = new_interface
+        self._interface_names_[iid.name] = new_interface
+        # As we 'flatten' objects when possible, a QI on an object just
+        # returns ourself - all the methods etc on this interface are
+        # available.
         return self
 
     queryInterface = QueryInterface # Alternate name.
@@ -312,47 +354,51 @@ class Component(_XPCOMBase):
         interface = self.__dict__['_interface_names_'].get(attr, None)
         if interface is not None:
             return interface
-        interface_name = self.__dict__['_name_to_interface_name_'].get(attr, None)
+        # See if we know the IID of an interface providing this attribute
+        iid = self.__dict__['_name_to_interface_iid_'].get(attr, None)
         # This may be first time trying this interface - get the nsIClassInfo
-        if interface_name is None and not self._tried_classinfo_:
+        if iid is None and not self._tried_classinfo_:
             self._build_all_supported_interfaces_()
-            interface_name = self.__dict__['_name_to_interface_name_'].get(attr, None)
-            
-        if interface_name is not None:
-            interface = self.__dict__['_interface_names_'].get(interface_name, None)
+            iid = self.__dict__['_name_to_interface_iid_'].get(attr, None)
+            # If the request is for an interface name, it may now be
+            # available.
+            interface = self.__dict__['_interface_names_'].get(attr, None)
+            if interface is not None:
+                return interface
+
+        if iid is not None:
+            interface = self.__dict__['_interfaces_'].get(iid, None)
             if interface is None:
-                iid = XPTI_GetInterfaceInfoManager().GetInfoForName(interface_name).GetIID()
                 self.QueryInterface(iid)
-                interface = self.__dict__['_interface_names_'][interface_name]
+                interface = self.__dict__['_interfaces_'][iid]
             return getattr(interface, attr)
         # Some interfaces may provide this name via "native" support.
         # Loop over all interfaces, and if found, cache it for next time.
         for interface in self.__dict__['_interfaces_'].values():
             try:
                 ret = getattr(interface, attr)
-                self.__dict__['_name_to_interface_name_'][attr] = interface._iid_.name
+                self.__dict__['_name_to_interface_iid_'][attr] = interface._iid_
                 return ret
             except AttributeError:
                 pass
         raise AttributeError, "XPCOM component '%s' has no attribute '%s'" % (self._object_name_, attr)
         
     def __setattr__(self, attr, val):
-        interface_name = self._name_to_interface_name_.get(attr, None)
+        iid = self._name_to_interface_iid_.get(attr, None)
         # This may be first time trying this interface - get the nsIClassInfo
-        if interface_name is None and not self._tried_classinfo_:
+        if iid is None and not self._tried_classinfo_:
             self._build_all_supported_interfaces_()
-            interface_name = self.__dict__['_name_to_interface_name_'].get(attr, None)
-        if interface_name is not None:
-            interface = self._interface_names_.get(interface_name, None)
+            iid = self.__dict__['_name_to_interface_iid_'].get(attr, None)
+        if iid is not None:
+            interface = self._interfaces_.get(iid, None)
             if interface is None:
-                iid = XPTI_GetInterfaceInfoManager().GetInfoForName(interface_name).GetIID()
                 self.QueryInterface(iid)
-                interface = self.__dict__['_interface_names_'][interface_name]
+                interface = self.__dict__['_interfaces_'][iid]
             setattr(interface, attr, val)
             return
         raise AttributeError, "XPCOM component '%s' has no attribute '%s'" % (self._object_name_, attr)
-    def __repr__(self):
-        # We can advantage from nsIClassInfo - use it.
+
+    def _get_classinfo_repr_(self):
         try:
             if not self._tried_classinfo_:
                 self._build_all_supported_interfaces_()
@@ -362,13 +408,21 @@ class Component(_XPCOMBase):
             # we are flagged as *not* having built, so the error is seen
             # by the first caller who actually *needs* this to work.
             self.__dict__['_tried_classinfo_'] = 0
-        infos = self.__dict__['_interface_infos_']
-        if infos:
-            iface_names = ",".join([iid.name for iid in infos.keys()])
-            iface_desc = " (implementing %s)" % (iface_names,)
-        else:
-            iface_desc = " (with no class info)"
-        return "<XPCOM component '%s'%s>" % (self._object_name_,iface_desc)
+
+        iface_names = self.__dict__['_interface_names_'].keys()
+        try:
+            iface_names.remove("nsISupports")
+        except ValueError:
+            pass
+        iface_names.sort()
+        
+        iface_desc = "implementing %s" % (",".join(iface_names),)
+        return iface_desc
+        
+    def __repr__(self):
+        # We can advantage from nsIClassInfo - use it.
+        iface_desc = self._get_classinfo_repr_()
+        return "<XPCOM component '%s' (%s)>" % (self._object_name_,iface_desc)
 
 class _Interface(_XPCOMBase):
     def __init__(self, comobj, iid, method_infos, getters, setters, constants):
@@ -403,7 +457,7 @@ class _Interface(_XPCOMBase):
             if len(param_infos)!=1: # Only expecting a retval
                 raise RuntimeError, "Can't get properties with this many args!"
             args = ( param_infos, () )
-            return XPTC_InvokeByIndex(self, method_index, args)
+            return XPTC_InvokeByIndex(self._comobj_, method_index, args)
 
         # See if we have a method info waiting to be turned into a method.
         # Do this last as it is a one-off hit.
@@ -431,7 +485,7 @@ class _Interface(_XPCOMBase):
         if len(param_infos)!=1: # Only expecting a single input val
             raise RuntimeError, "Can't set properties with this many args!"
         real_param_infos = ( param_infos, (val,) )
-        return XPTC_InvokeByIndex(self, method_index, real_param_infos)
+        return XPTC_InvokeByIndex(self._comobj_, method_index, real_param_infos)
 
     def __repr__(self):
         return "<XPCOM interface '%s'>" % (self._object_name_,)
@@ -453,7 +507,7 @@ class WeakReference:
     >>> some_ob = components.classes['...']
     >>> weak_ref = WeakReference(some_ob)
     >>> new_ob = weak_ref() # new_ob is effectively "some_ob" at this point
-    >>> # EXCEPT: new_ob may be None of some_ob has already died - a
+    >>> # EXCEPT: new_ob may be None if some_ob has already died - a
     >>> # weak reference does not keep the object alive (that is the point)
 
     You should never hold onto this resulting strong object for a long time,

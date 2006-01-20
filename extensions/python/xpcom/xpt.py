@@ -76,15 +76,10 @@ from xpcom_consts import *
 class Interface:
     def __init__(self, iid):
         iim = xpcom._xpcom.XPTI_GetInterfaceInfoManager()
-        try:
-            if hasattr(iid, "upper"): # Is it a stringy thing.
-                item = iim.GetInfoForName(iid)
-            else:
-                item = iim.GetInfoForIID(iid)
-        except xpcom.COMException:
-            name = getattr(iid, "name", str(iid))
-            print "Failed to get info for IID '%s'" % (name,)
-            raise
+        if hasattr(iid, "upper"): # Is it a stringy thing.
+            item = iim.GetInfoForName(iid)
+        else:
+            item = iim.GetInfoForIID(iid)
         self.interface_info = item
         self.namespace = "" # where does this come from?
         self.methods = Methods(item)

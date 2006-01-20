@@ -46,9 +46,18 @@
 // (c) 2000, ActiveState corp.
 
 #include "PyXPCOM_std.h"
+#include "nsISupportsPrimitives.h"
 
 static PRInt32 cInterfaces=0;
 static PyObject *g_obFuncMakeInterfaceCount = NULL; // XXX - never released!!!
+
+PyObject *PyObject_FromNSInterface( nsISupports *aInterface,
+                                    const nsIID &iid, 
+                                    PRBool bMakeNicePyObject /*= PR_TRUE */)
+{
+	return Py_nsISupports::PyObjectFromInterface(aInterface, iid,
+	                                             bMakeNicePyObject);
+}
 
 PRInt32 
 _PyXPCOM_GetInterfaceCount(void)
@@ -99,15 +108,9 @@ Py_nsISupports::SafeRelease(Py_nsISupports *ob)
 		return;
 	if (ob->m_obj)
 	{
-		long rcnt;
 		Py_BEGIN_ALLOW_THREADS;
-		rcnt = ob->m_obj->Release();
+		ob->m_obj = nsnull;
 		Py_END_ALLOW_THREADS;
-
-#ifdef _DEBUG_LIFETIMES
-		LogF(buf, "   SafeRelease(%ld) -> %s at 0x%0lx, nsISupports at 0x%0lx - Release() returned %ld",GetCurrentThreadId(), ob->ob_type->tp_name,ob, ob->m_obj,rcnt);
-#endif
-		ob->m_obj = NULL;
 	}
 }
 
@@ -117,6 +120,23 @@ Py_nsISupports::getattr(const char *name)
 	if (strcmp(name, "IID")==0)
 		return Py_nsIID::PyObjectFromIID( m_iid );
 
+	// Support for __unicode__ until we get a tp_unicode slot.
+	if (strcmp(name, "__unicode__")==0) {
+		nsresult rv;
+		PRUnichar *val = NULL;
+		Py_BEGIN_ALLOW_THREADS;
+		{ // scope to kill pointer while thread-lock released.
+		nsCOMPtr<nsISupportsString> ss( do_QueryInterface(m_obj, &rv ));
+		if (NS_SUCCEEDED(rv))
+			rv = ss->ToString(&val);
+		} // end-scope 
+		Py_END_ALLOW_THREADS;
+		PyObject *ret = NS_FAILED(rv) ?
+			PyXPCOM_BuildPyException(rv) :
+			PyObject_FromNSString(val);
+		if (val) nsMemory::Free(val);
+		return ret;
+	}
 	PyXPCOM_TypeObject *this_type = (PyXPCOM_TypeObject *)ob_type;
 	return Py_FindMethodInChain(&this_type->chain, this, (char *)name);
 }
@@ -231,8 +251,13 @@ Py_nsISupports::InterfaceFromPyObject(PyObject *ob,
 				Py_DECREF(sub_ob);
 			}
 		}
-		*ppv = PyObject_AsVariant(ob);
-		return *ppv != NULL;
+		nsresult nr = PyObject_AsVariant(ob, (nsIVariant **)ppv);
+		if (NS_FAILED(nr)) {
+			PyXPCOM_BuildPyException(nr);
+			return PR_FALSE;
+		}
+		NS_ASSERTION(ppv != nsnull, "PyObject_AsVariant worked but gave null!");
+		return PR_TRUE;
 	}
 	// end of variant support.
 
@@ -274,32 +299,10 @@ Py_nsISupports::RegisterInterface( const nsIID &iid, PyTypeObject *t)
 }
 
 /*static */PyObject *
-Py_nsISupports::PyObjectFromInterfaceOrVariant(nsISupports *pis, 
-				      const nsIID &riid, 
-				      PRBool bAddRef, 
-				      PRBool bMakeNicePyObject /* = PR_TRUE */)
-{
-	// Quick exit.
-	if (pis==NULL) {
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
-	if (riid.Equals(NS_GET_IID(nsIVariant))) {
-		PyObject *ret = PyObject_FromVariant((nsIVariant *)pis);
-		// If we were asked not to add a reference, then there
-		// will be a spare reference on pis() - remove it.
-		if (!bAddRef)
-			pis->Release();
-		return ret;
-	}
-	return PyObjectFromInterface(pis, riid, bAddRef, bMakeNicePyObject);
-}
-
-/*static */PyObject *
 Py_nsISupports::PyObjectFromInterface(nsISupports *pis, 
 				      const nsIID &riid, 
-				      PRBool bAddRef, 
-				      PRBool bMakeNicePyObject /* = PR_TRUE */)
+				      PRBool bMakeNicePyObject, /* = PR_TRUE */
+				      PRBool bIsInternalCall /* = PR_FALSE */)
 {
 	// Quick exit.
 	if (pis==NULL) {
@@ -307,9 +310,15 @@ Py_nsISupports::PyObjectFromInterface(nsISupports *pis,
 		return Py_None;
 	}
 
-	// FIXME: if !bAddRef, in all error cases, do NS_RELEASE(pis) before return
-	// since that means we have a spare reference
-        
+	if (!bIsInternalCall) {
+#ifdef NS_DEBUG
+		nsISupports *queryResult = nsnull;
+		pis->QueryInterface(riid, (void **)&queryResult);
+		NS_ASSERTION(queryResult == pis, "QueryInterface needed");
+		NS_IF_RELEASE(queryResult);
+#endif
+	}
+
 	PyTypeObject *createType = NULL;
 	// If the IID is for nsISupports, don't bother with
 	// a map lookup as we know the type!
@@ -341,16 +350,15 @@ Py_nsISupports::PyObjectFromInterface(nsISupports *pis,
 	PyXPCOM_LogF("XPCOM Object created at 0x%0xld, nsISupports at 0x%0xld",
 		ret, ret->m_obj);
 #endif
-	if (ret && bAddRef && pis) pis->AddRef();
 	if (ret && bMakeNicePyObject)
-		return MakeInterfaceResult(ret, riid);
+		return MakeDefaultWrapper(ret, riid);
 	return ret;
 }
 
 // Call back into Python, passing a raw nsIInterface object, getting back
 // the object to actually pass to Python.
 PyObject *
-Py_nsISupports::MakeInterfaceResult(PyObject *pyis, 
+Py_nsISupports::MakeDefaultWrapper(PyObject *pyis, 
 			     const nsIID &iid)
 {
 	NS_PRECONDITION(pyis, "NULL pyobject!");
@@ -411,10 +419,17 @@ Py_nsISupports::QueryInterface(PyObject *self, PyObject *args)
 	nsISupports *pMyIS = GetI(self);
 	if (pMyIS==NULL) return NULL;
 
-	nsISupports *pis;
+	// Optimization, If we already wrap the IID, just return
+	// ourself.
+	if (!bWrap && iid.Equals(((Py_nsISupports *)self)->m_iid)) {
+		Py_INCREF(self);
+		return self;
+	}
+
+	nsCOMPtr<nsISupports> pis;
 	nsresult r;
 	Py_BEGIN_ALLOW_THREADS;
-	r = pMyIS->QueryInterface(iid, (void **)&pis);
+	r = pMyIS->QueryInterface(iid, getter_AddRefs(pis));
 	Py_END_ALLOW_THREADS;
 
 	/* Note that this failure may include E_NOINTERFACE */
@@ -422,7 +437,7 @@ Py_nsISupports::QueryInterface(PyObject *self, PyObject *args)
 		return PyXPCOM_BuildPyException(r);
 
 	/* Return a type based on the IID (with no extra ref) */
-	return PyObjectFromInterface(pis, iid, PR_FALSE, (PRBool)bWrap);
+	return ((Py_nsISupports *)self)->MakeInterfaceResult(pis, iid, (PRBool)bWrap);
 }
 
 

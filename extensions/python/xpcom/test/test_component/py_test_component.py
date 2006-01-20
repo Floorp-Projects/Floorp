@@ -365,6 +365,14 @@ class PythonTestComponent:
     def CopyVariant(self, invar):
         return invar
 
+    def SumVariants(self, variants):
+        if len(variants) == 0:
+            return None
+        result = variants[0]
+        for v in variants[1:]:
+            result += v
+        return result
+
     # Some tests for the "new" (Feb-2001) DOMString type.
     def GetDOMStringResult( self, length ):
         # Result: DOMString &

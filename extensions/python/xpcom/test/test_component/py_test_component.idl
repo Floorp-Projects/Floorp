@@ -212,6 +212,7 @@ interface nsIPythonTestInterfaceExtra : nsIPythonTestInterface
     void AppendArray(inout PRUint32 count, [array, size_is(count)]in PRInt32 array1, [array, size_is(count)]inout PRInt32 array2);
     void AppendVariant(in nsIVariant variant, inout nsIVariant result);
     nsIVariant CopyVariant(in nsIVariant variant);
+    nsIVariant SumVariants(in PRUint32 incount, [array, size_is(incount)]in nsIVariant variants);
 };
 
 // DOM String support is a "recent" (01/2001) addition to XPCOM.  These test 

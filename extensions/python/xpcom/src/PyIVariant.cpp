@@ -64,13 +64,10 @@ static PyObject *MyChar( char c) {
 	return PyString_FromStringAndSize(&c, 1);
 }
 static PyObject *MyUChar( PRUnichar c) {
-	return PyUnicode_FromPRUnichar(&c, 1);
+	return PyObject_FromNSString( &c, 1);
 }
 static PyObject *MyUnicode( PRUnichar *p) {
-	return PyUnicode_FromPRUnichar(p, nsCRT::strlen(p));
-}
-static PyObject *MyISupports( nsISupports *p) {
-	return Py_nsISupports::PyObjectFromInterface(p, NS_GET_IID(nsISupports), PR_FALSE);
+	return PyObject_FromNSString(p);
 }
 
 #define GET_SIMPLE(Type, FuncGet, FuncConvert) \
@@ -123,32 +120,49 @@ GET_SIMPLE(double, GetAsDouble, PyFloat_FromDouble)
 GET_SIMPLE(PRBool, GetAsBool, MyBool)
 GET_SIMPLE(char, GetAsChar, MyChar)
 GET_SIMPLE(PRUnichar, GetAsWChar, MyUChar)
-GET_SIMPLE(nsISupports *, GetAsISupports, MyISupports)
 GET_SIMPLE(nsIID, GetAsID, Py_nsIID::PyObjectFromIID)
 
 GET_ALLOCATED(char *, GetAsString, PyString_FromString, nsMemory::Free)
 GET_ALLOCATED(PRUnichar *, GetAsWString, MyUnicode, nsMemory::Free)
 GET_ALLOCATED_SIZE(char *, GetAsStringWithSize, PyString_FromStringAndSize, nsMemory::Free)
-GET_ALLOCATED_SIZE(PRUnichar *, GetAsWStringWithSize, PyUnicode_FromPRUnichar, nsMemory::Free)
+GET_ALLOCATED_SIZE(PRUnichar *, GetAsWStringWithSize, PyObject_FromNSString, nsMemory::Free)
 
 static PyObject *GetAsInterface(PyObject *self, PyObject *args) {
 	nsIVariant *pI = GetI(self);
 	if (pI==NULL) return NULL;
 	if (!PyArg_ParseTuple(args, ":GetAsInterface")) return NULL;
-	nsISupports *p;
+	nsCOMPtr<nsISupports> p;
 	nsIID *iid;
-	nsresult nr = pI->GetAsInterface(&iid, (void **)&p);
+	nsresult nr = pI->GetAsInterface(&iid, getter_AddRefs(p));
 	if (NS_FAILED(nr)) return PyXPCOM_BuildPyException(nr);
-	return Py_nsISupports::PyObjectFromInterface(p, *iid, PR_FALSE);
+	return Py_nsISupports::PyObjectFromInterface(p, *iid);
 }
 
-extern PyObject *PyObject_FromVariantArray( nsIVariant *v);
+static PyObject *GetAsISupports(PyObject *self, PyObject *args) {
+	nsIVariant *pI = GetI(self);
+	if (pI==NULL) return NULL;
+	if (!PyArg_ParseTuple(args, ":GetAsInterface")) return NULL;
+	nsCOMPtr<nsISupports> p;
+	nsIID *iid;
+	nsresult nr = pI->GetAsInterface(&iid, getter_AddRefs(p));
+	if (NS_FAILED(nr)) return PyXPCOM_BuildPyException(nr);
+	return Py_nsISupports::PyObjectFromInterface(p, *iid);
+}
+
+extern PyObject *PyObject_FromVariantArray( Py_nsISupports*, nsIVariant *v);
 
 static PyObject *GetAsArray(PyObject *self, PyObject *args) {
 	nsIVariant *pI = GetI(self);
 	if (pI==NULL) return NULL;
 	if (!PyArg_ParseTuple(args, ":GetAsArray")) return NULL;
-	return PyObject_FromVariantArray(pI);
+	return PyObject_FromVariantArray((Py_nsISupports *)self, pI);
+}
+
+static PyObject *Get(PyObject *self, PyObject *args) {
+	nsIVariant *pI = GetI(self);
+	if (pI==NULL) return NULL;
+	if (!PyArg_ParseTuple(args, ":Get")) return NULL;
+	return PyObject_FromVariant((Py_nsISupports *)self, pI);
 }
 
 struct PyMethodDef 
@@ -175,6 +189,7 @@ PyMethods_IVariant[] =
 	{ "getAsInterface", GetAsInterface, 1},
 	{ "getAsArray", GetAsArray, 1},
 	{ "getAsID", GetAsID, 1},
+	{ "get", Get, 1},
 	{NULL}
 };
 

@@ -41,26 +41,13 @@
 //
 // The main loader and registrar for Python.  A thin DLL that is designed to live in
 // the xpcom "components" directory.  Simply locates and loads the standard
-// _xpcom support module and transfers control to that.
+// pyxpcom core library and transfers control to that.
 
-#include <Python.h>
+#include <PyXPCOM.h>
 
-#ifdef HAVE_LONG_LONG
-#undef HAVE_LONG_LONG
-#endif
-
-#include "nsISupports.h"
-#include "nsIModule.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
-#include "nsString.h"
-#include "nsXPIDLString.h"
-#include "nsString.h"
-#include "stdlib.h"
-#include "stdarg.h"
 
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
 #include "nspr.h" // PR_fprintf
 
 #if (PY_VERSION_HEX >= 0x02030000)
@@ -84,9 +71,6 @@ static char *PyTraceback_AsString(PyObject *exc_tb);
 typedef nsresult (*pfnPyXPCOM_NSGetModule)(nsIComponentManager *servMgr,
                                           nsIFile* location,
                                           nsIModule** result);
-
-
-pfnPyXPCOM_NSGetModule pfnEntryPoint = nsnull;
 
 
 static void LogError(const char *fmt, ...);
@@ -133,6 +117,63 @@ void AddStandardPaths()
 	}
 }
 
+////////////////////////////////////////////////////////////
+// This is the main entry point that delegates into Python
+nsresult PyXPCOM_NSGetModule(nsIComponentManager *servMgr,
+                             nsIFile* location,
+                             nsIModule** result)
+{
+	NS_PRECONDITION(result!=NULL, "null result pointer in PyXPCOM_NSGetModule!");
+	NS_PRECONDITION(location!=NULL, "null nsIFile pointer in PyXPCOM_NSGetModule!");
+	NS_PRECONDITION(servMgr!=NULL, "null servMgr pointer in PyXPCOM_NSGetModule!");
+#ifndef LOADER_LINKS_WITH_PYTHON
+	if (!Py_IsInitialized()) {
+		Py_Initialize();
+		if (!Py_IsInitialized()) {
+			PyXPCOM_LogError("Python initialization failed!\n");
+			return NS_ERROR_FAILURE;
+		}
+		PyEval_InitThreads();
+#ifndef PYXPCOM_USE_PYGILSTATE
+		PyXPCOM_InterpreterState_Ensure();
+#endif
+		PyEval_SaveThread();
+	}
+#endif // LOADER_LINKS_WITH_PYTHON	
+	CEnterLeavePython _celp;
+	PyObject *func = NULL;
+	PyObject *obServMgr = NULL;
+	PyObject *obLocation = NULL;
+	PyObject *wrap_ret = NULL;
+	PyObject *args = NULL;
+	PyObject *mod = PyImport_ImportModule("xpcom.server");
+	if (!mod) goto done;
+	func = PyObject_GetAttrString(mod, "NS_GetModule");
+	if (func==NULL) goto done;
+	obServMgr = Py_nsISupports::PyObjectFromInterface(servMgr, NS_GET_IID(nsIComponentManager));
+	if (obServMgr==NULL) goto done;
+	obLocation = Py_nsISupports::PyObjectFromInterface(location, NS_GET_IID(nsIFile));
+	if (obLocation==NULL) goto done;
+	args = Py_BuildValue("OO", obServMgr, obLocation);
+	if (args==NULL) goto done;
+	wrap_ret = PyEval_CallObject(func, args);
+	if (wrap_ret==NULL) goto done;
+	Py_nsISupports::InterfaceFromPyObject(wrap_ret, NS_GET_IID(nsIModule), (nsISupports **)result, PR_FALSE, PR_FALSE);
+done:
+	nsresult nr = NS_OK;
+	if (PyErr_Occurred()) {
+		PyXPCOM_LogError("Obtaining the module object from Python failed.\n");
+		nr = PyXPCOM_SetCOMErrorFromPyException();
+	}
+	Py_XDECREF(func);
+	Py_XDECREF(obServMgr);
+	Py_XDECREF(obLocation);
+	Py_XDECREF(wrap_ret);
+	Py_XDECREF(mod);
+	Py_XDECREF(args);
+	return nr;
+}
+
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
                                           nsIFile* location,
                                           nsIModule** result)
@@ -152,7 +193,6 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 #ifndef NS_DEBUG
 		Py_OptimizeFlag = 1;
 #endif // NS_DEBUG
-		AddStandardPaths();
 		PyEval_InitThreads();
 		NS_TIMELINE_STOP_TIMER("PyXPCOM: Python initializing");
 		NS_TIMELINE_MARK_TIMER("PyXPCOM: Python initializing");
@@ -177,25 +217,6 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 #else
 	PyGILState_STATE state = PyGILState_Ensure();
 #endif // PYXPCOM_USE_PYGILSTATE
-	if (pfnEntryPoint == nsnull) {
-		PyObject *mod = PyImport_ImportModule("xpcom._xpcom");
-		if (mod==NULL) {
-			LogError("Could not import the Python XPCOM extension\n");
-			return NS_ERROR_FAILURE;
-		}
-		PyObject *obpfn = PyObject_GetAttrString(mod, "_NSGetModule_FuncPtr");
-		void *pfn = NULL;
-		if (obpfn) {
-			NS_ABORT_IF_FALSE(PyLong_Check(obpfn)||PyInt_Check(obpfn), "xpcom._NSGetModule_FuncPtr is not a long!");
-			pfn = PyLong_AsVoidPtr(obpfn);
-		}
-		pfnEntryPoint = (pfnPyXPCOM_NSGetModule)pfn;
-	}
-	if (pfnEntryPoint==NULL) {
-		LogError("Could not load main Python entry point\n");
-		return NS_ERROR_FAILURE;
-	}
-
 #ifdef MOZ_TIMELINE
 	// If the timeline service is installed, see if we can install our hooks.
 	if (NULL==PyImport_ImportModule("timeline_hook")) {
@@ -204,6 +225,10 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 		PyErr_Clear(); // but don't care if we can't.
 	}
 #endif
+	// Add the standard paths always - we may not have been the first to
+	// init Python.
+	AddStandardPaths();
+
 #ifndef PYXPCOM_USE_PYGILSTATE
 	// Abandon the thread-lock, as the first thing Python does
 	// is re-establish the lock (the Python thread-state story SUCKS!!!)
@@ -226,7 +251,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 	NS_TIMELINE_STOP_TIMER("PyXPCOM: Python threadstate setup");
 	NS_TIMELINE_MARK_TIMER("PyXPCOM: Python threadstate setup");
 	NS_TIMELINE_START_TIMER("PyXPCOM: PyXPCOM NSGetModule entry point");
-	nsresult rc = (*pfnEntryPoint)(servMgr, location, result);
+	nsresult rc = PyXPCOM_NSGetModule(servMgr, location, result);
 	NS_TIMELINE_STOP_TIMER("PyXPCOM: PyXPCOM NSGetModule entry point");
 	NS_TIMELINE_MARK_TIMER("PyXPCOM: PyXPCOM NSGetModule entry point");
 	return rc;

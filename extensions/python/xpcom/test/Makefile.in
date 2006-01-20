@@ -11,15 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Python XPCOM language bindings.
+# The Original Code is mozilla.org code
 #
-# The Initial Developer of the Original Code is
-# ActiveState Tool Corp.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# The Initial Developer of the Original Code is mozilla.org.
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Mark Hammond <mhammond@skippinet.com.au> (original author)
+#   Mark Hammond: author
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,34 +34,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# regxpcom.py - basically the standard regxpcom.cpp ported to Python.
-# In general, you should use regxpcom.exe instead of this.
+DEPTH   =../../../..
 
-from xpcom import components, _xpcom
-from xpcom.client import Component
-import sys
-import os
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-registrar = Component(_xpcom.GetComponentRegistrar(),
-                      components.interfaces.nsIComponentRegistrar)
+DIRS = test_component $(NULL)
 
-def ProcessArgs(args):
+include $(DEPTH)/config/autoconf.mk
 
-    unregister = 0
-    for arg in args:
-        spec = components.classes['@mozilla.org/file/local;1'].createInstance()
-        spec = spec.QueryInterface(components.interfaces.nsILocalFile)
-        spec.initWithPath(os.path.abspath(arg))
-        if arg == "-u":
-            registrar.autoUnregister(spec)
-            print "Successfully unregistered", spec.path
-        else:
-            registrar.autoRegister(spec)
-            print "Successfully registered", spec.path
 
-if len(sys.argv) < 2:
-    registrar.autoRegister( None)
-else:
-    ProcessArgs(sys.argv[1:])
+include $(topsrcdir)/config/rules.mk
 
-#_xpcom.NS_ShutdownXPCOM()
+check::
+	@echo "Running Python XPCOM tests"
+	@$(PYTHON)$(PYTHON_DEBUG_SUFFIX) $(srcdir)/regrtest.py

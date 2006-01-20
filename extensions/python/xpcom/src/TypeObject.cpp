@@ -69,10 +69,10 @@ static PyTypeObject PyInterfaceType_Type = {
 	0,			/*tp_hash*/
 	0,			/*tp_call*/
 	0,			/*tp_str*/
-	0,			/*tp_xxx1*/
-	0,			/*tp_xxx2*/
-	0,			/*tp_xxx3*/
-	0,			/*tp_xxx4*/
+	0,			/* tp_getattro */
+	0,			/*tp_setattro */
+	0,			/* tp_as_buffer */
+	0,			/* tp_flags */
 	"Define the behavior of a PythonCOM Interface type.",
 };
 
@@ -149,7 +149,8 @@ PyXPCOM_TypeObject::Py_repr(PyObject *self)
 		iid_repr = pis->m_iid.ToString();
 	// XXX - need some sort of buffer overflow.
 	char buf[512];
-	sprintf(buf, "<XPCOM object (%s) at 0x%p/0x%p>", iid_repr, self, pis->m_obj);
+	sprintf(buf, "<XPCOM object (%s) at 0x%p/0x%p>",
+	        iid_repr, (void *)self, (void *)pis->m_obj.get());
 	nsMemory::Free(iid_repr);
 	return PyString_FromString(buf);
 }
@@ -199,9 +200,24 @@ PyXPCOM_TypeObject::PyXPCOM_TypeObject( const char *name, PyXPCOM_TypeObject *pB
     		0,                                           /* tp_as_number*/
 		0,                                           /* tp_as_sequence */
 		0,                                           /* tp_as_mapping */
-		Py_hash,					     /* tp_hash */
+		Py_hash,                                     /* tp_hash */
 		0,                                           /* tp_call */
 		Py_str,                                      /* tp_str */
+		0,                                           /* tp_getattro */
+		0,                                           /*tp_setattro */
+		0,                                           /* tp_as_buffer */
+		0,                                           /* tp_flags */
+		0,                                           /* tp_doc */
+		0,                                           /* tp_traverse */
+		0,                                           /* tp_clear */
+		0,                                           /* tp_richcompare */
+		0,                                           /* tp_weaklistoffset */
+		0,                                           /* tp_iter */
+		0,                                           /* tp_iternext */
+		0,                                           /* tp_methods */
+		0,                                           /* tp_members */
+		0,                                           /* tp_getset */
+		0,                                           /* tp_base */
 	};
 
 	*((PyTypeObject *)this) = type_template;

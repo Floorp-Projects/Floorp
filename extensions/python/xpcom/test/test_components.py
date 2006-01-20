@@ -39,6 +39,7 @@
 """
 
 import xpcom.components
+from pyxpcom_test_tools import suite_from_functions, testmain
 
 if not __debug__:
     raise RuntimeError, "This test uses assert, so must be run in debug mode"
@@ -63,9 +64,7 @@ def test_interfaces():
     assert len(xpcom.components.interfaces.keys()) == len(xpcom.components.interfaces.values()) == \
                len(xpcom.components.interfaces.items()) == len(xpcom.components.interfaces) == \
                num_fetched, "The collection lengths were wrong"
-    if num_nsisupports != 1:
-        print "Didn't find exactly 1 nsiSupports!"
-    print "The interfaces object appeared to work!"
+    assert num_nsisupports == 1, "Didn't find exactly 1 nsiSupports!"
 
 def test_classes():
     # Need a well-known contractID here?
@@ -81,8 +80,7 @@ def test_classes():
     for name, klass in xpcom.components.classes.items():
         num_fetched = num_fetched + 1
         if name == prog_id:
-            if klass.clsid != clsid:
-                print "Eeek - didn't get the correct IID - got", klass.clsid
+            assert klass.clsid == clsid, "Eeek - didn't get the correct IID - got %s" %klass.clsid
             num_mine = num_mine + 1
 
 # xpcom appears to add charset info to the contractid!?         
@@ -98,15 +96,14 @@ def test_classes():
         raise RuntimeError, "Didn't get any classes!!!"
     if num_mine != 1:
         raise RuntimeError, "Didn't find exactly 1 of my contractid! (%d)" % (num_mine,)
-    print "The classes object appeared to work!"
     
 def test_id():
     id = xpcom.components.ID(str(xpcom._xpcom.IID_nsISupports))
     assert id == xpcom._xpcom.IID_nsISupports
-    print "The ID function appeared to work!"
     
+# Make this test run under our std test suite
+def suite():
+    return suite_from_functions(test_interfaces, test_classes, test_id)
 
-# regrtest doesn't like if __name__=='__main__' blocks - it fails when running as a test!
-test_interfaces()
-test_classes()
-test_id()
+if __name__=='__main__':
+    testmain()

@@ -109,7 +109,9 @@ static PyObject *PyGetNext(PyObject *self, PyObject *args)
 		}
 		pRet = temp;
 	}
-	return Py_nsISupports::PyObjectFromInterface(pRet, iid, PR_FALSE);
+	PyObject *ret = Py_nsISupports::PyObjectFromInterface(pRet, iid);
+	NS_IF_RELEASE(pRet);
+	return ret;
 }
 
 // A method added for Python performance if you really need
@@ -169,7 +171,8 @@ static PyObject *PyFetchBlock(PyObject *self, PyObject *args)
 		ret = PyList_New(n_fetched);
 		if (ret)
 			for (int i=0;i<n_fetched;i++) {
-				PyObject *new_ob = Py_nsISupports::PyObjectFromInterface(fetched[i], iid, PR_FALSE);
+				PyObject *new_ob = Py_nsISupports::PyObjectFromInterface(fetched[i], iid);
+				NS_IF_RELEASE(fetched[i]);
 				PyList_SET_ITEM(ret, i, new_ob);
 			}
 	} else
