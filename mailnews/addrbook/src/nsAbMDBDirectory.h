@@ -53,7 +53,7 @@
 #include "nsIAbDirectorySearch.h"
 #include "nsAbDirSearchListener.h"
 #include "nsHashtable.h"
-#include "nsRDFResource.h"
+#include "nsAbDirectoryRDFResource.h"
 #include "nsIAddrDBListener.h"
 
  /* 
@@ -61,7 +61,7 @@
   */ 
 
 class nsAbMDBDirectory:
-	public nsRDFResource, 
+	public nsAbDirectoryRDFResource, 
 	public nsAbMDBDirProperty,	// nsIAbDirectory, nsIAbMDBDirectory
 	public nsAbDirSearchListenerContext,
   public nsIAddrDBListener, 
@@ -73,9 +73,6 @@ public:
 
 	NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIADDRDBLISTENER
-
-	// nsIRDFResource methods:
-	NS_IMETHOD Init(const char* aURI);
 
 	// nsIAbMDBDirectory methods
 	NS_IMETHOD ClearDatabase();
@@ -122,16 +119,9 @@ protected:
 	nsresult GetAbDatabase();
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
 
-protected:
 	nsCOMArray<nsIAbDirectory> mSubDirectories;
 	PRBool mInitialized;
 	PRInt16 mIsMailingList;
-
-	PRBool mIsValidURI;
-	PRBool mIsQueryURI;
-	nsCString mPath;
-	nsCString mQueryString;
-	nsCString mURINoQuery;
 
 	PRInt32 mContext;
 	PRBool mPerformingQuery;

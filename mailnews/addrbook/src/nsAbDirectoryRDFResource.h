@@ -40,7 +40,6 @@
 #define nsAbDirectoryRDFResource_h__
 
 #include "nsRDFResource.h"
-#include "nsIAbBooleanExpression.h"
 #include "nsString.h"
 
 class nsAbDirectoryRDFResource : public nsRDFResource

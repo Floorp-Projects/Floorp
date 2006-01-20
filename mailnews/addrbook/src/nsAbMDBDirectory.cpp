@@ -64,10 +64,9 @@
 // fix this -1,0,1 crap, use an enum or #define
 
 nsAbMDBDirectory::nsAbMDBDirectory(void):
-     nsRDFResource(),
+     nsAbDirectoryRDFResource(),
      mInitialized(PR_FALSE),
      mIsMailingList(-1),
-     mIsQueryURI(PR_FALSE),
      mPerformingQuery(PR_FALSE)
 {
 }
@@ -79,7 +78,7 @@ nsAbMDBDirectory::~nsAbMDBDirectory(void)
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED4(nsAbMDBDirectory, nsRDFResource,
+NS_IMPL_ISUPPORTS_INHERITED4(nsAbMDBDirectory, nsAbDirectoryRDFResource,
                              nsIAbDirectory,
                              nsIAbMDBDirectory,
                              nsIAbDirectorySearch,
@@ -229,53 +228,6 @@ nsresult nsAbMDBDirectory::NotifyItemDeleted(nsISupports *item)
 
   return NS_OK;
 }
-
-
-// nsIRDFResource methods
-
-NS_IMETHODIMP nsAbMDBDirectory::Init(const char* aURI)
-{
-  nsresult rv;
-
-  rv = nsRDFResource::Init(aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mURINoQuery = aURI;
-
-  nsCOMPtr<nsIURI> uri = do_CreateInstance (NS_STANDARDURL_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = uri->SetSpec(nsDependentCString(aURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mIsValidURI = PR_TRUE;
-
-    nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString queryString;
-  rv = url->GetQuery (queryString);
-
-  nsCAutoString path;
-  rv = url->GetPath (path);
-  mPath = path;
-
-  if (!queryString.IsEmpty())
-  {
-    mPath.Truncate(path.Length() - queryString.Length() - 1);
-
-    mURINoQuery.Truncate(mURINoQuery.Length() - queryString.Length() - 1);
-
-    mQueryString = queryString;
-
-    mIsQueryURI = PR_TRUE;
-  }
-  else
-    mIsQueryURI = PR_FALSE;
-
-  return rv;
-}
-
 
 // nsIAbMDBDirectory methods
 
