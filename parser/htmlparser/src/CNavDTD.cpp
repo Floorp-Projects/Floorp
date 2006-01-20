@@ -1054,6 +1054,9 @@ CNavDTD::WillHandleStartTag(CToken* aToken, eHTMLTags aTag,
     if (theToken) {
       theToken->SetKey(NS_LITERAL_STRING("_moz-userdefined"));
       aNode.AddAttribute(theToken);
+
+      // Make sure to remember that we added this attribute.
+      aToken->SetAttributeCount(aNode.GetAttributeCount());
     }
   }
 
