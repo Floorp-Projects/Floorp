@@ -316,11 +316,18 @@ function replaceVars(str, vars)
     return str.replace(/(\$\w[\w\d\-]+)/g, doReplace);
 }
 
-function formatException (ex)
+function formatException(ex)
 {
-    if (ex instanceof Error)
-        return getMsg (MSG_FMT_JSEXCEPTION, [ex.name, ex.message, ex.fileName,
-                                             ex.lineNumber]);
+    if (isinstance(ex, Error))
+    {
+        return getMsg(MSG_FMT_JSEXCEPTION, [ex.name, ex.message, ex.fileName,
+                                            ex.lineNumber]);
+    }
+    if ((typeof ex == "object") && ("filename" in ex))
+    {
+        return getMsg(MSG_FMT_JSEXCEPTION, [ex.name, ex.message, ex.filename,
+                                            ex.lineNumber]);
+    }
 
     return String(ex);
 }
@@ -1135,8 +1142,9 @@ function isinstance(inst, base)
      * 254067 which makes instanceof fail if the two sides are 'from'
      * different windows (something we don't care about).
      */
-    return (inst && inst.constructor && base &&
-            (inst.constructor.name == base.name));
+    return (inst && base &&
+            ((inst instanceof base) ||
+             (inst.constructor && (inst.constructor.name == base.name))));
 }
 
 function scaleNumberBy1024(number)
