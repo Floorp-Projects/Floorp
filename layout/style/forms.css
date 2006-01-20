@@ -193,7 +193,10 @@ select:empty {
   overflow: -moz-hidden-unscrollable;
   /* This top/bottom padding plus the combobox top/bottom border need to
      add up to the top/bottom borderpadding of text inputs and buttons */ 
-  padding: 1px 0 1px 4px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 0;
   background-color: inherit;
   color: inherit;
   white-space: nowrap;
@@ -210,7 +213,10 @@ option {
 }
 
 select > option {
-  padding: 0 5px 0 3px;
+  padding-top : 0;
+  padding-bottom: 0;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 5px;
 }
 
 option:checked {
