@@ -1518,7 +1518,7 @@ pref("network.dns.disableIPv6", true);
 #if XP_OS2
 
 pref("ui.key.menuAccessKeyFocuses", true);
-pref("browser.display.screen_resolution", 0); // System setting
+pref("browser.display.screen_resolution", -1); // max(96dpi, System setting)
 
 /* Fonts only needs lists if we have a default that might not be available. */
 /* Tms Rmn, Helv and Courier are ALWAYS available on OS/2 */
