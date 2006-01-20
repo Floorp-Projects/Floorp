@@ -76,6 +76,8 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
+  // nsSVGElement overrides
+  virtual PRBool IsEventName(nsIAtom* aName);
 
   nsCOMPtr<nsIDOMSVGAnimatedLength> mStartOffset;
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMethod;
@@ -331,3 +333,11 @@ nsSVGTextPathElement::IsAttributeMapped(const nsIAtom* name) const
     nsSVGTextPathElementBase::IsAttributeMapped(name);
 }
 
+//----------------------------------------------------------------------
+// nsSVGElement overrides
+
+PRBool
+nsSVGTextPathElement::IsEventName(nsIAtom* aName)
+{
+  return IsGraphicElementEventName(aName);
+}
