@@ -571,7 +571,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
     
   // Get more information about the key equivalent. Start by
   // finding the key node we need.
-  NSString* keyEquiv = @"";
+  NSString* keyEquiv = [@"" retain];
   unsigned int macKeyModifiers;
   nsCOMPtr<nsIDOMElement> keyElement;
   domdoc->GetElementById(key, getter_AddRefs(keyElement));
@@ -583,6 +583,8 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
     if (!keyChar.EqualsLiteral(" ")) {
       keyEquiv = (NSString*)::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)keyChar.get(),
                                                            keyChar.Length());
+      [keyEquiv autorelease];
+      keyEquiv = [[keyEquiv lowercaseString] retain];
     }
     // now grab the key equivalent modifiers
     nsAutoString modifiersStr;
@@ -597,6 +599,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
   NSMenuItem* newMenuItem = [[NSMenuItem alloc] initWithTitle:labelString action:action keyEquivalent:keyEquiv];
   
   [labelString release];
+  [keyEquiv release];
   
   [newMenuItem setTag:tag];
   [newMenuItem setTarget:target];
