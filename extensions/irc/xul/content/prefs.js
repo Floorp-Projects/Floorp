@@ -148,6 +148,8 @@ function initPrefs()
          ["initialURLs",        [],       "startup.initialURLs"],
          ["initialScripts",     [getURLSpecFromFile(scriptPath.path)],
                                           "startup.initialScripts"],
+         ["instrumentation.key", 0,      "hidden"],
+         ["instrumentation.inst1", 0,    "hidden"],
          ["link.focus",         true,     "global.links"],
          ["log",                false,                                  ".log"],
          ["logFileName",        makeLogNameClient,                      ".log"],
@@ -647,6 +649,13 @@ function onPrefChanged(prefName, newValue, oldValue)
         case "font.family":
         case "font.size":
             client.dispatch("sync-font");
+            break;
+
+        case "instrumentation.inst1":
+            if ((oldValue == 0) && (newValue == 1))
+                runInstrumentation("inst1", true);
+            else
+                runInstrumentation("inst1", false);
             break;
 
         case "showModeSymbols":

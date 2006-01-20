@@ -242,7 +242,10 @@ function initCommands()
          ["ltr",              "text-direction ltr",                CMD_CONSOLE],
          ["toggle-text-dir",  "text-direction toggle",                       0],
          ["irtl",             "input-text-direction rtl",          CMD_CONSOLE],
-         ["iltr",             "input-text-direction ltr",          CMD_CONSOLE]
+         ["iltr",             "input-text-direction ltr",          CMD_CONSOLE],
+         // Instrumentation aliases
+         ["allow-inst1",      "pref instrumentation.inst1 1",                0],
+         ["deny-inst1",       "pref instrumentation.inst1 2",                0]
         ];
 
     // set the stringbundle associated with these commands.
@@ -1495,6 +1498,12 @@ function cmdDeleteView(e)
 {
     if (!e.view)
         e.view = e.sourceObject;
+
+    if (("lockView" in e.view) && e.view.lockView)
+    {
+        setTabState(e.view, "attention");
+        return;
+    }
 
     if (e.view.TYPE == "IRCChannel" && e.view.active)
     {
@@ -3524,6 +3533,9 @@ function cmdTimestampFormat(e)
 
 function cmdSetCurrentView(e)
 {
+    if ("lockView" in e.view)
+        delete e.view.lockView;
+
     setCurrentObject(e.view);
 }
 
