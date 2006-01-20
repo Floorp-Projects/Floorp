@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.28 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
+/* $Id: sslcon.c,v 1.29 2006/01/20 17:40:21 nelsonb%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -3742,7 +3742,8 @@ ssl2_BeginServerHandshake(sslSocket *ss)
     ss->sec.rcvSequence = 0;
 
     /* don't turn on SSL2 if we don't have an RSA key and cert */
-    if (!rsaAuth->SERVERKEY || !rsaAuth->serverCert) {
+    if (!rsaAuth->serverKeyPair || !rsaAuth->SERVERKEY || 
+        !rsaAuth->serverCert) {
 	ss->opt.enableSSL2 = PR_FALSE;
     }
 
