@@ -294,13 +294,14 @@
           }
         }
       </handler>
-      <handler event="click">
-        if (event.target.localName != "menuitem")
+      <handler event="click"><![CDATA[
+        if (event.target.localName != "menuitem" &&
+            event.target.localName != "menu")
           return;
         this._selection = event.target.node;
         PlacesController.activeView = this;
         PlacesController.mouseLoadURI(event);
-      </handler>
+      ]]></handler>
     </handlers>
   </binding>
 
