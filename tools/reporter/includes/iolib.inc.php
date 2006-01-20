@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function initializeTemplate(){
+function initializeTemplate($page = ''){
     global $config;
 
     $object = new Smarty;
@@ -44,7 +44,11 @@ function initializeTemplate(){
     $object->debugging = $config['smarty_debug'];
 
     if ($config['smarty_template_directory']){
-        $object->template_dir = $config['smarty_template_directory'];
+        $subdir = '';
+        if($page == 'layout'){
+            $subdir = '/'.$config['theme'];
+        }
+        $object->template_dir = $config['smarty_template_directory'].$subdir;
     }
     if ($config['smarty_compile_dir']){
         $object->compile_dir = $config['smarty_compile_dir'];
@@ -73,11 +77,11 @@ function templateStandardVars($object){
 function displayPage($object, $path, $objectTemplate, $title = 'Mozilla Reporter'){
     global $config;
 
-    $page = initializeTemplate();
+    $page = initializeTemplate('layout');
     $page->assign('content', $object->fetch($objectTemplate));
     $page->assign('title', $title);
     $page->assign('path', $path);
-    $page->display($config['theme'].'/layout.tpl');
+    $page->display('layout.tpl');
     return;
 }
 function strMiddleReduceWordSensitive($string, $max = 50, $rep = '[...]') {
