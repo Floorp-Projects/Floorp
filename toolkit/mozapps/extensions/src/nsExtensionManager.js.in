@@ -337,12 +337,13 @@ function getDirNoCreate(key, pathArray) {
 function getDirInternal(key, pathArray, shouldCreate) {
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
                               .getService(Components.interfaces.nsIProperties);
-  var dir = fileLocator.get(key, Components.interfaces.nsIFile);
+  var dir = fileLocator.get(key, nsILocalFile);
   for (var i = 0; i < pathArray.length; ++i) {
     dir.append(pathArray[i]);
     if (shouldCreate && !dir.exists())
       dir.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
   }
+  dir.followLinks = false;
   return dir;
 }
 
