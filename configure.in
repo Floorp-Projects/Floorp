@@ -6715,13 +6715,37 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c python/xpcom` -ne 0; then
     else
         dnl Non-Windows include and libs
         MOZ_PYTHON_DLL_SUFFIX=$DLL_SUFFIX
-        PYTHON_INCLUDE_SRC=$MOZ_PYTHON_PREFIX/include/python$MOZ_PYTHON_VER_DOTTED
-        PYTHON_LIB_SRC=`$PYTHON  -c 'from distutils import sysconfig; print sysconfig.get_config_var("LIBPL")'`
-        if test ! -f $PYTHON_INCLUDE_SRC/Python.h; then
-            AC_MSG_ERROR([Include directory $PYTHON_INCLUDE_SRC not found or does not contain development headers])
+        MOZ_PYTHON_INCLUDES="-I$MOZ_PYTHON_PREFIX/include/python$MOZ_PYTHON_VER_DOTTED"
+        dnl Check for dynamic Python lib
+        dnl - A static Python is no good - multiple dynamic libraries (xpcom
+        dnl - core, xpcom loader, pydom etc) all need to share Python.
+        dnl - Python 2.3's std --enable-shared configure option will
+        dnl   create a libpython2.3.so.1.0. We should first try this
+        dnl   dotted versioned .so file because this is the one that
+        dnl   the PyXPCOM build mechanics tries to link to.
+        dnl   XXX Should find a better way than hardcoding "1.0".
+        dnl - Python developement tree dir layouts are NOT allowed here
+        dnl   because the PyXPCOM build just dies on it later anyway.
+        dnl - Fixes to the above by Python/*nix knowledgable people welcome!
+        if test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so.1.0"; then
+            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
+        elif test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so"; then
+            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
+        elif test -f "$MOZ_PYTHON_PREFIX/libpython$MOZ_PYTHON_VER_DOTTED.so"; then
+            dnl Don't Python development tree directory layout.
+            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX -lpython$MOZ_PYTHON_VER_DOTTED"
+            AC_MSG_ERROR([The Python at $MOZ_PYTHON_PREFIX looks like a dev tree. The PyXPCOM build cannot handle this yet. You must 'make install' Python and use the installed tree.])
+        elif test "$OS_ARCH" = "Darwin"; then
+            dnl We do Darwin last, so if a custom non-framework build of
+            dnl python is used on OSX, then it will be picked up first by
+            dnl the logic above.
+            MOZ_PYTHON_LIBS="-framework Python"
+        else
+            AC_MSG_ERROR([Could not find build shared libraries for Python at $MOZ_PYTHON_PREFIX.  This is required for PyXPCOM.])
         fi
-        MOZ_PYTHON_INCLUDES="-I$PYTHON_INCLUDE_SRC"
-        MOZ_PYTHON_LIBS="-L$PYTHON_LIB_SRC -lpython$MOZ_PYTHON_VER_DOTTED"
+        if test "$OS_ARCH" = "Linux"; then
+            MOZ_PYTHON_LIBS="$MOZ_PYTHON_LIBS -lutil"
+        fi
     fi
     dnl Handle "_d" on Windows
     if test "$OS_ARCH" = "WINNT" && test -n "$MOZ_DEBUG"; then
