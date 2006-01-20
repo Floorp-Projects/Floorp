@@ -43,10 +43,10 @@
 #include "nsIDOMSVGTransformList.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsIDOMSVGAnimatedEnum.h"
-#include "nsSVGUtils.h"
 #include "nsISVGRendererSurface.h"
 #include "nsSVGDefsFrame.h"
 #include "nsSVGAtoms.h"
+#include "nsSVGUtils.h"
 
 typedef nsSVGDefsFrame nsSVGClipPathFrameBase;
 
