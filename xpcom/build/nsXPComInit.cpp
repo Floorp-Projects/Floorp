@@ -104,6 +104,7 @@
 
 #include "nsStringStream.h"
 extern NS_METHOD nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **);
+NS_DECL_CLASSINFO(nsStringInputStream)
 
 #include "nsFastLoadService.h"
 
@@ -387,7 +388,8 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(PROCESS, nsProcessConstructor),
     COMPONENT(ENVIRONMENT, nsEnvironment::Create),
 
-    COMPONENT(STRINGINPUTSTREAM, nsStringInputStreamConstructor),
+    COMPONENT_CI_FLAGS(STRINGINPUTSTREAM, nsStringInputStreamConstructor,
+                       nsStringInputStream, nsIClassInfo::THREADSAFE),
     COMPONENT(MULTIPLEXINPUTSTREAM, nsMultiplexInputStreamConstructor),
 
 #ifndef MOZ_NO_FAST_LOAD

@@ -54,27 +54,29 @@
 
 #include "nsStringStream.h"
 #include "nsStreamUtils.h"
-
+#include "nsReadableUtils.h"
+#include "nsISeekableStream.h"
+#include "nsISupportsPrimitives.h"
+#include "nsInt64.h"
+#include "nsCRT.h"
 #include "prerror.h"
 #include "plstr.h"
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
-#include "nsISeekableStream.h"
-#include "nsInt64.h"
 
 //-----------------------------------------------------------------------------
 // nsIStringInputStream implementation
 //-----------------------------------------------------------------------------
 
-class nsStringInputStream : public nsIStringInputStream2
+class nsStringInputStream : public nsIStringInputStream
                           , public nsISeekableStream
+                          , public nsISupportsCString
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSISTRINGINPUTSTREAM
-    NS_DECL_NSISTRINGINPUTSTREAM2
     NS_DECL_NSISEEKABLESTREAM
+    NS_DECL_NSISUPPORTSPRIMITIVE
+    NS_DECL_NSISUPPORTSCSTRING
 
     nsStringInputStream()
         : mData(nsnull)
@@ -113,20 +115,38 @@ private:
 
 // This class needs to support threadsafe refcounting since people often
 // allocate a string stream, and then read it from a background thread.
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsStringInputStream,
-                              nsIStringInputStream,
-                              nsIStringInputStream2,
-                              nsIInputStream,
-                              nsISeekableStream)
+NS_IMPL_THREADSAFE_ADDREF(nsStringInputStream)
+NS_IMPL_THREADSAFE_RELEASE(nsStringInputStream)
+
+NS_IMPL_QUERY_INTERFACE4_CI(nsStringInputStream,
+                            nsIStringInputStream,
+                            nsIInputStream,
+                            nsISupportsCString,
+                            nsISeekableStream)
+NS_IMPL_CI_INTERFACE_GETTER4(nsStringInputStream,
+                             nsIStringInputStream,
+                             nsIInputStream,
+                             nsISupportsCString,
+                             nsISeekableStream)
 
 /////////
-// nsIStringInputStream2 implementation
+// nsISupportsCString implementation
 /////////
+
+NS_IMETHODIMP
+nsStringInputStream::GetType(PRUint16 *type)
+{
+    *type = TYPE_CSTRING;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsStringInputStream::GetData(nsACString &data)
 {
-    NS_ENSURE_TRUE(mData, NS_ERROR_NOT_INITIALIZED);
+    // The stream doesn't have any data when it is closed.  We could fake it
+    // and return an empty string here, but it seems better to keep this return
+    // value consistent with the behavior of the other 'getter' methods.
+    NS_ENSURE_TRUE(mData, NS_BASE_STREAM_CLOSED);
 
     data.Assign(mData, mLength);
     return NS_OK;
@@ -138,6 +158,13 @@ nsStringInputStream::SetData(const nsACString &data)
     nsACString::const_iterator iter;
     data.BeginReading(iter);
     return SetData(iter.get(), iter.size_forward());
+}
+
+NS_IMETHODIMP
+nsStringInputStream::ToString(char **result)
+{
+    // NOTE: This method may result in data loss, so we do not implement it.
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /////////
