@@ -40,12 +40,12 @@
 #include "nsSVGMaskFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsIDOMSVGAnimatedEnum.h"
-#include "nsSVGUtils.h"
 #include "nsISVGValueUtils.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsSVGDefsFrame.h"
 #include "nsIDOMSVGLength.h"
 #include "nsISVGRendererSurface.h"
+#include "nsSVGUtils.h"
 
 typedef nsSVGDefsFrame nsSVGMaskFrameBase;
 
