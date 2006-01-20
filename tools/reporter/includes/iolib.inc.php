@@ -71,11 +71,13 @@ function templateStandardVars($object){
 }
 
 function displayPage($object, $path, $objectTemplate, $title = 'Mozilla Reporter'){
+    global $config;
+
     $page = initializeTemplate();
     $page->assign('content', $object->fetch($objectTemplate));
     $page->assign('title', $title);
     $page->assign('path', $path);
-    $page->display('layout.tpl');
+    $page->display($config['theme'].'/layout.tpl');
     return;
 }
 function strMiddleReduceWordSensitive($string, $max = 50, $rep = '[...]') {

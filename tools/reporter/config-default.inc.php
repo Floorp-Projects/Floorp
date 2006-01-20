@@ -56,6 +56,9 @@ $config['db_pass']                         = 'PASSWORD';
 $config['db_database']                     = 'DATABASE';
 $config['db_dsn']                          = $config['db_type'].'://'.$config['db_user'].':'.$config['db_pass'].'@'.$config['db_server'].'/'.$config['db_database'];
 
+// Theme
+$config['theme']                           = 'mozilla';
+
 // Smarty Configurations
 $config['smarty_template_directory']       = $config['base_path'].'/templates/';
 $config['smarty_compile_dir']              = '/tmp';
