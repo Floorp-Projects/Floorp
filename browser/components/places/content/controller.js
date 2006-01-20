@@ -895,24 +895,25 @@ var PlacesController = {
   _getFolderCopyTransaction: 
   function PC__getFolderCopyTransaction(data, container, index) {
     var transactions = [];
+    var self = this;
     function createTransactions(folderId, container, index) {
-      var folderTitle = this._bms.getFolderTitle(folderId);
+      var folderTitle = self._bms.getFolderTitle(folderId);
     
       var createTxn = 
         new PlacesCreateFolderTransaction(folderTitle, container, index);
       transactions.push(createTxn);
     
       // Get the folder's children
-      var kids = this.getFolderContents(folderId, 
+      var kids = self.getFolderContents(folderId, 
                                         ViewConfig.GENERIC_FILTER_OPTIONS);
       var cc = kids.childCount;
       for (var i = 0; i < cc; ++i) {
         var node = kids.getChild(i);
-        if (this.nodeIsFolder(node))
+        if (self.nodeIsFolder(node))
           createTransactions(node.folderId, folderId, i);
         else {
-          var uri = this._uri(node.url);
-          transactions.push(this._getItemCopyTransaction(uri, container, 
+          var uri = self._uri(node.url);
+          transactions.push(self._getItemCopyTransaction(uri, container, 
                                                          index));
         }
       }

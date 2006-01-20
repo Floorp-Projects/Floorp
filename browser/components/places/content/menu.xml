@@ -147,6 +147,12 @@
         ]]></body>
       </method>
       
+      <property name="isBookmarks">
+        <getter><![CDATA[ 
+          return PlacesController.nodeIsFolder(this.getResult());
+        ]]></getter>
+      </property>
+      
       <property name="hasSelection">
         <getter><![CDATA[ 
           return this._selection != null;
@@ -264,10 +270,12 @@
       })]]></field>
       
       <method name="saveSelection">
-        <body/>
+        <body><![CDATA[
+        ]]></body>
       </method>
       <method name="restoreSelection">
-        <body/>
+        <body><![CDATA[
+        ]]></body>
       </method>
     </implementation>
     <handlers>
