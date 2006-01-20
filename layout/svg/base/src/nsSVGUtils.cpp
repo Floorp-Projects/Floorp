@@ -410,3 +410,12 @@ nsSVGUtils::GetGlyphFragmentAtCharNum(nsISVGGlyphFragmentNode* node,
   // not found
   return nsnull;
 }
+
+float
+nsSVGUtils::AngleBisect(float a1, float a2)
+{
+  if (a2 - a1 < M_PI)
+    return (a1+a2)/2;
+  else
+    return M_PI + (a1+a2)/2;
+}

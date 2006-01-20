@@ -40,11 +40,11 @@
 #include "nsIDOMSVGAnimatedPoints.h"
 #include "nsIDOMSVGPointList.h"
 #include "nsIDOMSVGPoint.h"
-//#include "nsASVGPathBuilder.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
 #include "nsSVGMarkerFrame.h"
 #include "nsLayoutAtoms.h"
+#include "nsSVGUtils.h"
 
 class nsSVGPolylineFrame : public nsSVGPathGeometryFrame,
                            public nsISVGMarkable
@@ -218,7 +218,7 @@ nsSVGPolylineFrame::GetMarkPoints(nsVoidArray *aMarks) {
       ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle = angle;
     else if (i > 1)
       ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle =
-        nsSVGMarkerFrame::bisect(prevAngle, angle);
+        nsSVGUtils::AngleBisect(prevAngle, angle);
 
     nsSVGMark *mark;
     mark = new nsSVGMark;

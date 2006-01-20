@@ -58,33 +58,77 @@
 #include "nsSVGUtils.h"
 #include "nsSVGMatrix.h"
 
-NS_IMETHODIMP_(nsrefcnt)
-  nsSVGMarkerFrame::AddRef()
+class nsSVGMarkerFrame : public nsSVGDefsFrame,
+                         public nsISVGMarkerFrame
 {
-  return NS_OK;
-}
+protected:
+  friend nsIFrame*
+  NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
-NS_IMETHODIMP_(nsrefcnt)
-  nsSVGMarkerFrame::Release()
-{
-  return NS_OK;
-}
+  virtual ~nsSVGMarkerFrame();
+  NS_IMETHOD InitSVG();
 
-// Trying to implement a QueryInterfacable class without a nsIFoo class.
-// Couldn't find a macro incantation for this situation, so roll by hand.
-NS_IMETHODIMP
-nsSVGMarkerFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
+public:
+  // nsISupports interface:
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+
+  // nsISVGValueObserver interface:
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
+                                    nsISVGValue::modificationType aModType);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgMarkerFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGMarker"), aResult);
   }
-  if (aIID.Equals(nsSVGMarkerFrame::GetCID())) {
-    *aInstancePtr = (void*)(nsSVGMarkerFrame*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return (nsSVGDefsFrame::QueryInterface(aIID, aInstancePtr));
-}
+#endif
+
+  // nsISVGMarkerFrame interface:
+  NS_IMETHOD PaintMark(nsISVGRendererCanvas *aCanvas,
+                       nsSVGPathGeometryFrame *aParent,
+                       nsSVGMark *aMark,
+                       float aStrokeWidth);
+
+  NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>)
+    RegionMark(nsSVGPathGeometryFrame *aParent,
+               nsSVGMark *aMark, float aStrokeWidth);
+
+private:
+  nsCOMPtr<nsIDOMSVGLength>              mRefX;
+  nsCOMPtr<nsIDOMSVGLength>              mRefY;
+  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMarkerUnits;
+  nsCOMPtr<nsIDOMSVGLength>              mMarkerWidth;
+  nsCOMPtr<nsIDOMSVGLength>              mMarkerHeight;
+  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mOrientType;
+  nsCOMPtr<nsIDOMSVGAngle>               mOrientAngle;
+  nsCOMPtr<nsIDOMSVGRect>                mViewBox;
+
+  // stuff needed for callback
+  float mStrokeWidth, mX, mY, mAngle;
+  nsSVGPathGeometryFrame *mMarkerParent;
+
+  // nsISVGContainerFrame interface:
+  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+
+  // recursion prevention flag
+  PRPackedBool mInUse;
+
+  // second recursion prevention flag, for GetCanvasTM()
+  PRPackedBool mInUse2;
+};
+
+NS_INTERFACE_MAP_BEGIN(nsSVGMarkerFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGMarkerFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrame)
 
 nsIFrame*
 NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent)
@@ -93,7 +137,8 @@ NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 }
 
 nsresult
-NS_GetSVGMarkerFrame(nsSVGMarkerFrame **aResult, nsIURI *aURI, nsIContent *aContent)
+NS_GetSVGMarkerFrame(nsISVGMarkerFrame **aResult,
+                     nsIURI *aURI, nsIContent *aContent)
 {
   *aResult = nsnull;
 
@@ -305,7 +350,7 @@ nsSVGMarkerFrame::GetCanvasTM()
 }
 
 
-void
+NS_IMETHODIMP
 nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
                             nsSVGPathGeometryFrame *aParent,
                             nsSVGMark *aMark, float aStrokeWidth)
@@ -314,7 +359,7 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
   // has already been used painting the current mark, and the document
   // has a marker reference loop.
   if (mInUse)
-    return;
+    return NS_OK;
 
   mInUse = PR_TRUE;
   mStrokeWidth = aStrokeWidth;
@@ -371,6 +416,8 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
 
   mMarkerParent = nsnull;
   mInUse = PR_FALSE;
+
+  return NS_OK;
 }
 
 
@@ -422,15 +469,6 @@ NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
   return accu_region;
 }
 
-
-float
-nsSVGMarkerFrame::bisect(float a1, float a2)
-{
-  if (a2 - a1 < M_PI)
-    return (a1+a2)/2;
-  else
-    return M_PI + (a1+a2)/2;
-}
 
 nsIAtom *
 nsSVGMarkerFrame::GetType() const

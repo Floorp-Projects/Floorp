@@ -208,9 +208,9 @@ nsSVGPathGeometryFrame::GetType() const
 
 // marker helper
 void
-nsSVGPathGeometryFrame::GetMarkerFrames(nsSVGMarkerFrame **markerStart,
-                                        nsSVGMarkerFrame **markerMid,
-                                        nsSVGMarkerFrame **markerEnd)
+nsSVGPathGeometryFrame::GetMarkerFrames(nsISVGMarkerFrame **markerStart,
+                                        nsISVGMarkerFrame **markerMid,
+                                        nsISVGMarkerFrame **markerEnd)
 {
   nsIURI *aURI;
 
@@ -286,7 +286,7 @@ nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas,
   CallQueryInterface(this, &markable);
 
   if (markable) {
-    nsSVGMarkerFrame *markerEnd, *markerMid, *markerStart;
+    nsISVGMarkerFrame *markerEnd, *markerMid, *markerStart;
     GetMarkerFrames(&markerStart, &markerMid, &markerEnd);
 
     if (markerEnd || markerMid || markerStart) {
@@ -367,7 +367,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
   CallQueryInterface(this, &markable);
 
   if (markable) {
-    nsSVGMarkerFrame *markerEnd, *markerMid, *markerStart;
+    nsISVGMarkerFrame *markerEnd, *markerMid, *markerStart;
     GetMarkerFrames(&markerStart, &markerMid, &markerEnd);
 
     if (!markerEnd && !markerMid && !markerStart)
@@ -1026,7 +1026,7 @@ void nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags,
       CallQueryInterface(this, &markable);
       
       if (markable) {
-        nsSVGMarkerFrame *markerEnd, *markerMid, *markerStart;
+        nsISVGMarkerFrame *markerEnd, *markerMid, *markerStart;
         GetMarkerFrames(&markerStart, &markerMid, &markerEnd);
 
         if (markerEnd || markerMid || markerStart) {
