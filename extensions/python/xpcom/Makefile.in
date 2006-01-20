@@ -38,10 +38,15 @@
 
 DEPTH   =../../..
 
+include $(DEPTH)/config/autoconf.mk
+
 DIRS = \
         src \
-        test/test_component \
         $(NULL)
+
+ifdef ENABLE_TESTS
+        DIRS += test $(NULL)
+endif
 
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
@@ -53,7 +58,7 @@ PYSRCS_XPCOM = \
 	components.py \
 	file.py \
 	nsError.py \
-	register.py \
+	primitives.py \
 	shutdown.py \
 	xpcom_consts.py \
 	xpt.py \

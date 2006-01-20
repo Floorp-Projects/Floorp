@@ -54,7 +54,7 @@
 nsIID Py_nsIID_NULL = {0,0,0,{0,0,0,0,0,0,0,0}};
 
 // @pymethod <o Py_nsIID>|xpcom|IID|Creates a new IID object
-PyObject *PyXPCOMMethod_IID(PyObject *self, PyObject *args)
+PYXPCOM_EXPORT PyObject *PyXPCOMMethod_IID(PyObject *self, PyObject *args)
 {
 	PyObject *obIID;
 	PyObject *obBuf;

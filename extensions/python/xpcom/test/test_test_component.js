@@ -130,5 +130,9 @@ v2[3] = 6;
 if (c.SumArrays(v.length, v, v2) != 21)
 	throw("Could not sum an array of integers!");
 
+var count = new Object();
+count.value = 0;
+var out = [];
+c.DoubleStringArray(count, out);
 
 print("javascript successfully tested the Python test component.");

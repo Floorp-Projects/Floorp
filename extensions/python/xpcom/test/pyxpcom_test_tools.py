@@ -1,4 +1,6 @@
-# test tools for the pyxpcom
+# test tools for the pyxpcom bindings
+from xpcom import _xpcom
+import unittest
 
 # export a "getmemusage()" function that returns a useful "bytes used" count
 # for the current process.  Growth in this when doing the same thing over and
@@ -70,3 +72,55 @@ if have_pdh:
 else:
     def getmemusage():
         return 0
+
+# Test runner utilities, including some support for builtin leak tests.
+class TestLoader(unittest.TestLoader):
+    def loadTestsFromTestCase(self, testCaseClass):
+        """Return a suite of all tests cases contained in testCaseClass"""
+        leak_tests = []
+        for name in self.getTestCaseNames(testCaseClass):
+            real_test = testCaseClass(name)
+            leak_test = self._getTestWrapper(real_test)
+            leak_tests.append(leak_test)
+        return self.suiteClass(leak_tests)
+    def _getTestWrapper(self, test):
+        # later! see pywin32's win32/test/util.py
+        return test
+    def loadTestsFromModule(self, mod):
+        if hasattr(mod, "suite"):
+            ret = mod.suite()
+        else:
+            ret = unittest.TestLoader.loadTestsFromModule(self, mod)
+        assert ret.countTestCases() > 0, "No tests in %r" % (mod,)
+        return ret
+    def loadTestsFromName(self, name, module=None):
+        test = unittest.TestLoader.loadTestsFromName(self, name, module)
+        if isinstance(test, unittest.TestSuite):
+            pass # hmmm? print "Don't wrap suites yet!", test._tests
+        elif isinstance(test, unittest.TestCase):
+            test = self._getTestWrapper(test)
+        else:
+            print "XXX - what is", test
+        return test
+
+# A base class our tests should derive from (well, one day it will be)
+TestCase = unittest.TestCase
+
+def suite_from_functions(*funcs):
+    suite = unittest.TestSuite()
+    for func in funcs:
+        suite.addTest(unittest.FunctionTestCase(func))
+    return suite
+
+def testmain(*args, **kw):
+    new_kw = kw.copy()
+    if not new_kw.has_key('testLoader'):
+        new_kw['testLoader'] = TestLoader()
+    try:
+        unittest.main(*args, **new_kw)
+    finally:
+        _xpcom.NS_ShutdownXPCOM()
+        ni = _xpcom._GetInterfaceCount()
+        ng = _xpcom._GetGatewayCount()
+        if ni or ng:
+            print "********* WARNING - Leaving with %d/%d objects alive" % (ni,ng)

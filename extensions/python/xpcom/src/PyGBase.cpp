@@ -271,8 +271,18 @@ PyG_Base::MakeInterfaceParam(nsISupports *pis,
 	PyObject *result = NULL;
 
 	// get the basic interface first, as if we fail, we can try and use this.
-	nsIID iid_check = piid ? *piid : NS_GET_IID(nsISupports);
-	obISupports = Py_nsISupports::PyObjectFromInterface(pis, iid_check, PR_TRUE, PR_FALSE);
+	// If we don't know the IID, we must explicitly query for nsISupports.
+	nsCOMPtr<nsISupports> piswrap;
+	nsIID iid_check;
+	if (piid) {
+		iid_check = *piid;
+		piswrap = pis;
+	} else {
+		iid_check = NS_GET_IID(nsISupports);
+		pis->QueryInterface(iid_check, getter_AddRefs(piswrap));
+	}
+
+	obISupports = Py_nsISupports::PyObjectFromInterface(piswrap, iid_check, PR_FALSE);
 	if (!obISupports)
 		goto done;
 	if (piid==NULL) {
@@ -346,7 +356,11 @@ PyG_Base::QueryInterface(REFNSIID iid, void** ppv)
 		CEnterLeavePython celp;
 
 		PyObject * ob = Py_nsIID::PyObjectFromIID(iid);
-		PyObject * this_interface_ob = Py_nsISupports::PyObjectFromInterface((nsIInternalPython *)this, NS_GET_IID(nsISupports), PR_TRUE, PR_FALSE);
+		// must say this is an 'internal' call, else we recurse QI into
+		// oblivion.
+		PyObject * this_interface_ob = Py_nsISupports::PyObjectFromInterface(
+		                                       (nsXPTCStubBase *)this,
+		                                       iid, PR_FALSE, PR_TRUE);
 		if ( !ob || !this_interface_ob) {
 			Py_XDECREF(ob);
 			Py_XDECREF(this_interface_ob);
@@ -355,7 +369,7 @@ PyG_Base::QueryInterface(REFNSIID iid, void** ppv)
 
 		PyObject *result = PyObject_CallMethod(m_pPyObject, "_QueryInterface_",
 		                                                    "OO", 
-								    this_interface_ob, ob);
+		                                                    this_interface_ob, ob);
 		Py_DECREF(ob);
 		Py_DECREF(this_interface_ob);
 
@@ -426,6 +440,7 @@ PyG_Base::GetWeakReference(nsIWeakReference **ret)
 	if (ret==nsnull) return NS_ERROR_INVALID_POINTER;
 	if (!m_pWeakRef) {
 		// First query for a weak reference - create it.
+		// XXX - this looks like it needs thread safety!?
 		m_pWeakRef = new PyXPCOM_GatewayWeakReference(this);
 		NS_ABORT_IF_FALSE(m_pWeakRef, "Shouldn't be able to fail creating a weak reference!");
 		if (!m_pWeakRef)
@@ -444,17 +459,17 @@ nsresult PyG_Base::HandleNativeGatewayError(const char *szMethodName)
 		// good error reporting is critical for users to know WTF 
 		// is going on - especially with TypeErrors etc in their
 		// return values (ie, after the Python code has successfully
-		// existed, but we encountered errors unpacking their
+		// exited, but we encountered errors unpacking their
 		// result values for the COM caller - there is literally no 
 		// way to catch these exceptions from Python code, as their
-		// is no Python function on the call-stack)
+		// is no Python function directly on the call-stack)
 
 		// First line of attack in an error is to call-back on the policy.
 		// If the callback of the error handler succeeds and returns an
 		// integer (for the nsresult), we take no further action.
 
-		// If this callback fails, we log _2_ exceptions - the error handler
-		// error, and the original error.
+		// If this callback fails, we log _2_ exceptions - the error
+		// handler error, and the original error.
 
 		PRBool bProcessMainError = PR_TRUE; // set to false if our exception handler does its thing!
 		PyObject *exc_typ, *exc_val, *exc_tb;
@@ -696,10 +711,10 @@ PyObject *PyG_Base::UnwrapPythonObject(void)
 
  Some special support to help with object identity.
 
-  In the simplest case, assume a Python COM object is
+  In the simplest case, assume a Python XPCOM object is
   supporting a function "nsIWhatever GetWhatever()",
   so implements it as:
-    return this
+    return self
   it is almost certain they intend returning
   the same COM OBJECT to the caller!  Thus, if a user of this COM
   object does:
@@ -709,7 +724,7 @@ PyObject *PyG_Base::UnwrapPythonObject(void)
 
   We almost certainly expect p1==p2==foo.
 
-  We previously _did_ have special support for the "this"
+  We previously _did_ have special support for the "self"
   example above, but this implements a generic scheme that
   works for _all_ objects.
 
@@ -803,12 +818,11 @@ void AddDefaultGateway(PyObject *instance, nsISupports *gateway)
 		NS_ABORT_IF_FALSE(swr, "Our gateway failed with a weak reference query");
 		// Create the new default gateway - get a weak reference for our gateway.
 		if (swr) {
-			nsIWeakReference *pWeakReference = NULL;
-			swr->GetWeakReference( &pWeakReference );
+			nsCOMPtr<nsIWeakReference> pWeakReference;
+			swr->GetWeakReference( getter_AddRefs(pWeakReference) );
 			if (pWeakReference) {
 				PyObject *ob_new_weak = Py_nsISupports::PyObjectFromInterface(pWeakReference, 
 										   NS_GET_IID(nsIWeakReference),
-										   PR_FALSE, /* bAddRef */
 										   PR_FALSE ); /* bMakeNicePyObject */
 				// pWeakReference reference consumed.
 				if (ob_new_weak) {

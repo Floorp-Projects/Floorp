@@ -128,14 +128,14 @@ static PyObject *PyGetParent(PyObject *self, PyObject *args)
 	if (pI==NULL)
 		return NULL;
 
-	nsIInterfaceInfo *pRet;
+	nsCOMPtr<nsIInterfaceInfo> pRet;
 	nsresult r;
 	Py_BEGIN_ALLOW_THREADS;
-	r = pI->GetParent(&pRet);
+	r = pI->GetParent(getter_AddRefs(pRet));
 	Py_END_ALLOW_THREADS;
 	if ( NS_FAILED(r) )
 		return PyXPCOM_BuildPyException(r);
-	return Py_nsISupports::PyObjectFromInterface(pRet, NS_GET_IID(nsIInterfaceInfo), PR_FALSE, PR_FALSE);
+	return Py_nsISupports::PyObjectFromInterface(pRet, NS_GET_IID(nsIInterfaceInfo), PR_FALSE);
 }
 
 static PyObject *PyGetMethodCount(PyObject *self, PyObject *args)
@@ -288,11 +288,11 @@ static PyObject *PyGetInfoForParam(PyObject *self, PyObject *args)
 	if (!__GetMethodInfoHelper(pii, mi, pi, &pmi))
 		return NULL;
 	const nsXPTParamInfo& param_info = pmi->GetParam((PRUint8)pi);
-	nsIInterfaceInfo *pnewii = nsnull;
-	nsresult n = pii->GetInfoForParam(mi, &param_info, &pnewii);
+	nsCOMPtr<nsIInterfaceInfo> pnewii;
+	nsresult n = pii->GetInfoForParam(mi, &param_info, getter_AddRefs(pnewii));
 	if (NS_FAILED(n))
 		return PyXPCOM_BuildPyException(n);
-	return Py_nsISupports::PyObjectFromInterface(pnewii, NS_GET_IID(nsIInterfaceInfo), PR_FALSE);
+	return Py_nsISupports::PyObjectFromInterface(pnewii, NS_GET_IID(nsIInterfaceInfo));
 }
 
 static PyObject *PyGetIIDForParam(PyObject *self, PyObject *args)

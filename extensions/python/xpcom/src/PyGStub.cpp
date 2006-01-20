@@ -96,7 +96,8 @@ PyXPCOM_XPTStub::CallMethod(PRUint16 methodIndex,
 	if (obMI==NULL)
 		goto done;
 	// base object is passed raw.
-	obThisObject = Py_nsISupports::PyObjectFromInterface((nsIInternalPython*)this, NS_GET_IID(nsISupports), PR_TRUE, PR_FALSE);
+	obThisObject = PyObject_FromNSInterface((nsXPTCStubBase *)this,
+	                                        m_iid, PR_FALSE);
 	obParams = arg_helper.MakePyArgs();
 	if (obParams==NULL)
 		goto done;

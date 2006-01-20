@@ -41,6 +41,7 @@ import xpcom.server
 import xpcom._xpcom
 import xpcom.components
 import string
+from pyxpcom_test_tools import testmain
 
 import unittest
 
@@ -223,10 +224,13 @@ class TestUnwrap(unittest.TestCase):
             return
         self.failUnlessRaises(ValueError, xpcom.server.UnwrapObject, ob)
 
+class TestNonScriptable(unittest.TestCase):
+    def testQI(self):
+        # Test we can QI for a non-scriptable interface.  We can't *do* much
+        # with it (other than pass it on), but we should still work and get
+        # a basic wrapper.
+        ob = xpcom.components.classes["Python.TestComponent"].createInstance()
+        ob = ob.queryInterface(xpcom._xpcom.IID_nsIInternalPython)
+
 if __name__=='__main__':
-    unittest.main()
-    xpcom._xpcom.NS_ShutdownXPCOM()
-    ni = xpcom._xpcom._GetInterfaceCount()
-    ng = xpcom._xpcom._GetGatewayCount()
-    if ni or ng:
-        print "********* WARNING - Leaving with %d/%d objects alive" % (ni,ng)
+    testmain()

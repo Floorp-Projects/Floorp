@@ -1,7 +1,0 @@
-test_comfile
-Open as string test worked.
-Open as URL test worked.
-File test using buffers worked.
-Local file read test worked.
-Read the correct data.
-Chunks read the correct data.

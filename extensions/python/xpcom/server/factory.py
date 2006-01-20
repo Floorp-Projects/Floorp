@@ -39,8 +39,7 @@
 #
 # Hardly worth its own source file!
 import xpcom
-from xpcom import components, nsError, _xpcom
-
+from xpcom import components, nsError, _xpcom, logger
 
 class Factory:
     _com_interfaces_ = components.interfaces.nsIFactory
@@ -53,18 +52,17 @@ class Factory:
         if outer is not None:
             raise xpcom.ServerException(nsError.NS_ERROR_NO_AGGREGATION)
 
-        if xpcom.verbose:
-            print "Python Factory creating", self.klass.__name__
+        logger.debug("Python Factory creating %s", self.klass.__name__)
         try:
             return self.klass()
         except:
             # An exception here may not be obvious to the user - none
             # of their code has been called yet.  It can be handy on
             # failure to tell the user what class failed!
-            _xpcom.LogWarning("Creation of class '%r' failed!\nException details follow\n" % (self.klass,))
+            logger.error("Creation of class '%r' failed!\nException details follow\n",
+                           self.klass)
+            # The framework itself will also report the error.
             raise
 
     def lockServer(self, lock):
-        if xpcom.verbose:
-            print "Python Factory LockServer called -", lock
-
+        logger.debug("Python Factory LockServer called '%s'", lock)

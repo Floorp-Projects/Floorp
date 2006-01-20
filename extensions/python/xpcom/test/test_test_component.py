@@ -40,6 +40,8 @@ import xpcom.components
 import xpcom._xpcom
 import xpcom.nsError
 
+MakeVariant = xpcom._xpcom.MakeVariant
+
 try:
     import gc
 except ImportError:
@@ -406,10 +408,18 @@ def test_derived_interface(c, test_flat = 0):
     test_method(c.CopyVariant, (("foo","bar"),), ["foo", "bar"])
     test_method(c.CopyVariant, ((component_iid,component_iid),), [component_iid,component_iid])
     test_method(c.CopyVariant, ((c,c),), [c,c])
+    sup = c.queryInterface(xpcom.components.interfaces.nsISupports)._comobj_
+    test_method(c.CopyVariant, ((sup, sup),), [sup,sup])
     test_method(c.AppendVariant, (1,2), 3)
     test_method(c.AppendVariant, ((1,2),(3,4)), 10)
     test_method(c.AppendVariant, ("bar", "foo"), "foobar")
     test_method(c.AppendVariant, (None, None), None)
+
+    test_method(c.SumVariants, ([],), None)
+    # Array's dont expose their interface, so we are unable to auto-wrap
+    # variant arrays, as they aren't aware if the IID of the array
+    test_method(c.SumVariants, ([MakeVariant(1),MakeVariant(2),MakeVariant(3)],), 6)
+    test_method(c.SumVariants, ([MakeVariant('foo'), MakeVariant('bar')],), 'foobar')
 
     if not test_flat:
         c = c.queryInterface(xpcom.components.interfaces.nsIPythonTestInterfaceDOMStrings)
@@ -491,29 +501,20 @@ def test_from_js():
         raise RuntimeError, "Can not find '%s'" % (fname,)
     # Note we _dont_ pump the test output out, as debug "xpcshell" spews
     # extra debug info that will cause our output comparison to fail.
-    try:
-        data = os.popen('xpcshell "' + fname + '"').readlines()
-        good = 0
-        for line in data:
-            if line.strip() == "javascript successfully tested the Python test component.":
-                good = 1
-        if good:
-            print "Javascript could successfully use the Python test component."
-        else:
-            print "** The javascript test appeared to fail!  Test output follows **"
-            print "".join(data)
-            print "** End of javascript test output **"
-
-    except os.error, why:
-        print "Error executing the javascript test program:", why
-        
+    data = os.popen('xpcshell "' + fname + '"').readlines()
+    good = 0
+    for line in data:
+        if line.strip() == "javascript successfully tested the Python test component.":
+            good = 1
+    if not good:
+        print "** The javascript test appeared to fail!  Test output follows **"
+        print "".join(data)
+        print "** End of javascript test output **"
+        raise RuntimeError, "test failed"
 
 def doit(num_loops = -1):
-    if "-v" in sys.argv: # Hack the verbose flag for the server
-        xpcom.verbose = 1
     # Do the test lots of times - can help shake-out ref-count bugs.
-    print "Testing the Python.TestComponent component"
-    if num_loops == -1: num_loops = 10
+    if num_loops == -1: num_loops = 5
     for i in xrange(num_loops):
         test_all()
 
@@ -535,38 +536,40 @@ def doit(num_loops = -1):
     # Sometimes we get spurious counts off by 1 or 2.
     # This can't indicate a real leak, as we have looped
     # more than twice!
-    if abs(lost)>2:
+    if abs(lost)>3: # 2 or 3 :)
         print "*** Lost %d references" % (lost,)
 
     # sleep to allow the OS to recover
     time.sleep(1)
     mem_lost = getmemusage() - mem_usage
     # working set size is fickle, and when we were leaking strings, this test
-    # would report a leak of 100MB.  So we allow a 2MB buffer - but even this
+    # would report a leak of 100MB.  So we allow a 3MB buffer - but even this
     # may still occasionally report spurious warnings.  If you are really
     # worried, bump the counter to a huge value, and if there is a leak it will
     # show.
-    if mem_lost > 2000000:
+    if mem_lost > 3000000:
         print "*** Lost %.6f MB of memory" % (mem_lost/1000000.0,)
 
-    if num_errors:
-        print "There were", num_errors, "errors testing the Python component :-("
-    else:
-        print "The Python test component worked!"
+    assert num_errors==0, "There were %d errors testing the Python component" % (num_errors,)
 
-# regrtest doesn't like if __name__=='__main__' blocks - it fails when running as a test!
-num_iters = -1
-if __name__=='__main__' and len(sys.argv) > 1:
-    num_iters = int(sys.argv[1])
-
-doit(num_iters)
-test_from_js()
+def suite():
+    from pyxpcom_test_tools import suite_from_functions
+    return suite_from_functions(doit, test_from_js)
 
 if __name__=='__main__':
-    # But we can only do this if _not_ testing - otherwise we
-    # screw up any tests that want to run later.
+    num_iters = 10 # times times is *lots* - we do a fair bit of work!
+    if __name__=='__main__' and len(sys.argv) > 1:
+        num_iters = int(sys.argv[1])
+
+    if "-v" in sys.argv: # Hack the verbose flag for the server
+        xpcom.verbose = 1
+
+    print "Testing the Python.TestComponent component"
+    doit(num_iters)
+    print "The Python test component worked."
+    test_from_js()
+    print "JS successfully used our Python test component."
     xpcom._xpcom.NS_ShutdownXPCOM()
     ni = xpcom._xpcom._GetInterfaceCount()
     ng = xpcom._xpcom._GetGatewayCount()
-    if ni or ng:
-        print "********* WARNING - Leaving with %d/%d objects alive" % (ni,ng)
+    print "test completed with %d interfaces and %d objects." % (ni, ng)

@@ -251,24 +251,17 @@ def _TestLocalFile():
         test_file.close()
         # Make sure Python can read it OK.
         f = open(fname, "r")
-        if f.read() != data:
-                print "Eeek - Python could not read the data back correctly!"
+        assert f.read() == data, "Eeek - Python could not read the data back correctly!"
         f.close()
         # For the sake of the test, try a re-init.
         test_file.init(fname, "r")
         got = str(test_file.read())
-        if got != data:
-            print "Read the wrong data back - %r" % (got,)
-        else:
-            print "Read the correct data."
+        assert got == data, got
         test_file.close()
         # Try reading in chunks.
         test_file = LocalFile(fname, "r")
         got = test_file.read(10) + test_file.read()
-        if got != data:
-            print "Chunks the wrong data back - %r" % (got,)
-        else:
-            print "Chunks read the correct data."
+        assert got == data, got
         test_file.close()
         # Open the same file again for writing - this should delete the old one.
         if not os.path.isfile(fname):
@@ -278,16 +271,12 @@ def _TestLocalFile():
         test_file.close()
         # Make sure Python can read it OK.
         f = open(fname, "r")
-        if f.read() != data:
-                print "Eeek - Python could not read the data back correctly after recreating an existing file!"
+        assert f.read() == data, "Eeek - Python could not read the data back correctly after recreating an existing file!"
         f.close()
 
         # XXX - todo - test "a" mode!
     finally:
-        try:
-            os.unlink(fname)
-        except OSError, details:
-            print "Error removing temp test file:", details
+        os.unlink(fname)
 
 def _TestAll():
     # A mini test suite.
@@ -302,17 +291,13 @@ def _TestAll():
     url = LocalFileToURL(fname)
     # First try passing a URL as a string.
     _DoTestRead( URIFile( url.spec), expected)
-    print "Open as string test worked."
     # Now with a URL object.
     _DoTestRead( URIFile( url ), expected)
-    print "Open as URL test worked."
 
     _DoTestBufferRead( URIFile( url ), expected)
-    print "File test using buffers worked."
 
     # For the sake of testing, do our pointless, demo object!
     _DoTestRead( LocalFile(fname), expected )
-    print "Local file read test worked."
 
     # Now do the full test of our pointless, demo object!
     _TestLocalFile()
@@ -330,4 +315,4 @@ if __name__=='__main__':
         print "No URL specified on command line - performing self-test"
         _TestAll()
     else:
-            _TestURI(sys.argv[1])
+        _TestURI(sys.argv[1])

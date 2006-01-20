@@ -36,7 +36,7 @@
 # ***** END LICENSE BLOCK *****
 
 import xpcom
-from xpcom import components
+from xpcom import components, nsError
 import xpcom.shutdown
 
 import module
@@ -93,6 +93,8 @@ class ModuleLoader:
 
     def _getCOMModuleForLocation(self, componentFile):
         fqn = componentFile.path
+        if not fqn.endswith(".py"):
+            raise xpcom.ServerException(nsError.NS_ERROR_INVALID_ARG)
         mod = self.com_modules.get(fqn)
         if mod is not None:
             return mod

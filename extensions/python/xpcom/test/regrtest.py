@@ -42,28 +42,50 @@ import os
 import sys
 
 import unittest
-import test.regrtest # The standard Python test suite.
 
-path = os.path.abspath(os.path.split(sys.argv[0])[0])
-# This sucks - python now uses "test." - so to worm around this,
-# we append our test path to the test packages!
-test.__path__.append(path)
+# A little magic to create a single "test suite" from all test_ files
+# in this dir.  A single suite makes for prettier output test :)
+def suite():
+    # Loop over all test_*.py files here
+    try:
+        me = __file__
+    except NameError:
+        me = sys.argv[0]
+    me = os.path.abspath(me)
+    files = os.listdir(os.path.dirname(me))
+    suite = unittest.TestSuite()
+    # XXX - add the others here!
+    #suite.addTest(unittest.FunctionTestCase(import_all))
+    for file in files:
+        base, ext = os.path.splitext(file)
+        if ext=='.py' and os.path.basename(base).startswith("test_"):
+            mod = __import__(base)
+            if hasattr(mod, "suite"):
+                test = mod.suite()
+            else:
+                test = unittest.defaultTestLoader.loadTestsFromModule(mod)
+            suite.addTest(test)
+    return suite
 
-tests = []
-for arg in sys.argv[1:]:
-    if arg[0] not in "-/":
-        tests.append(arg)
-tests = tests or test.regrtest.findtests(path, [])
+class CustomLoader(unittest.TestLoader):
+    def loadTestsFromModule(self, module):
+        return suite()
+
 try:
-    # unittest based tests first - hopefully soon this will be the default!
-    if not sys.argv[1:]:
-        for t in "test_misc test_streams".split():
-            m = __import__(t)
-            try:
-                unittest.main(m)
-            except SystemExit:
-                pass
-    test.regrtest.main(tests, path)
+    unittest.TestProgram(testLoader=CustomLoader())(argv=sys.argv)
 finally:
     from xpcom import _xpcom
     _xpcom.NS_ShutdownXPCOM() # To get leak stats and otherwise ensure life is good.
+    ni = _xpcom._GetInterfaceCount()
+    ng = _xpcom._GetGatewayCount()
+    if ni or ng:
+        # The old 'regrtest' that was not based purely on unittest did not
+        # do this check at the end - it relied on each module doing it itself.
+        # Thus, these leaks are not new, just newly noticed :)  Likely to be
+        # something silly like module globals.
+        if ni == 6 and ng == 1:
+            print "Sadly, there are 6/1 leaks, but these appear normal and benign"
+        else:
+            print "********* WARNING - Leaving with %d/%d objects alive" % (ni,ng)
+    else:
+        print "yay! Our leaks have all vanished!"

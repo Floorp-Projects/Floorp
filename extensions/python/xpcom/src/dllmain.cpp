@@ -47,6 +47,8 @@
 
 #include "PyXPCOM_std.h"
 #include <prthread.h>
+#include "nsIThread.h"
+#include "nsILocalFile.h"
 
 #ifdef XP_WIN
 #ifndef WIN32_LEAN_AND_MEAN
@@ -57,6 +59,17 @@
 
 static PRInt32 g_cLockCount = 0;
 static PRLock *g_lockMain = nsnull;
+
+PYXPCOM_EXPORT PyObject *PyXPCOM_Error = NULL;
+
+PyXPCOM_INTERFACE_DEFINE(Py_nsIComponentManager, nsIComponentManager, PyMethods_IComponentManager)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfoManager, nsIInterfaceInfoManager, PyMethods_IInterfaceInfoManager)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIEnumerator, nsIEnumerator, PyMethods_IEnumerator)
+PyXPCOM_INTERFACE_DEFINE(Py_nsISimpleEnumerator, nsISimpleEnumerator, PyMethods_ISimpleEnumerator)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfo, nsIInterfaceInfo, PyMethods_IInterfaceInfo)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIInputStream, nsIInputStream, PyMethods_IInputStream)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIClassInfo, nsIClassInfo, PyMethods_IClassInfo)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIVariant, nsIVariant, PyMethods_IVariant)
 
 #ifndef PYXPCOM_USE_PYGILSTATE
 
@@ -245,3 +258,86 @@ struct DllInitializer {
 		pyxpcom_destruct();
 	}
 } dll_initializer;
+
+////////////////////////////////////////////////////////////
+// Other helpers/global functions.
+//
+PRBool PyXPCOM_Globals_Ensure()
+{
+	PRBool rc = PR_TRUE;
+
+#ifndef PYXPCOM_USE_PYGILSTATE
+	PyXPCOM_InterpreterState_Ensure();
+#endif
+
+	// The exception object - we load it from .py code!
+	if (PyXPCOM_Error == NULL) {
+		rc = PR_FALSE;
+		PyObject *mod = NULL;
+
+		mod = PyImport_ImportModule("xpcom");
+		if (mod!=NULL) {
+			PyXPCOM_Error = PyObject_GetAttrString(mod, "Exception");
+			Py_DECREF(mod);
+		}
+		rc = (PyXPCOM_Error != NULL);
+	}
+	if (!rc)
+		return rc;
+
+	static PRBool bHaveInitXPCOM = PR_FALSE;
+	if (!bHaveInitXPCOM) {
+		nsCOMPtr<nsIThread> thread_check;
+		// xpcom appears to assert if already initialized
+		// Is there an official way to determine this?
+		if (NS_FAILED(nsIThread::GetMainThread(getter_AddRefs(thread_check)))) {
+			// not already initialized.
+#ifdef XP_WIN
+			// On Windows, we need to locate the Mozilla bin
+			// directory.  This by using locating a Moz DLL we depend
+			// on, and assume it lives in that bin dir.  Different
+			// moz build types (eg, xulrunner, suite) package
+			// XPCOM itself differently - but all appear to require
+			// nspr4.dll - so this is what we use.
+			char landmark[MAX_PATH+1];
+			HMODULE hmod = GetModuleHandle("nspr4.dll");
+			if (hmod==NULL) {
+				PyErr_SetString(PyExc_RuntimeError, "We dont appear to be linked against nspr4.dll.");
+				return PR_FALSE;
+			}
+			GetModuleFileName(hmod, landmark, sizeof(landmark)/sizeof(landmark[0]));
+			char *end = landmark + (strlen(landmark)-1);
+			while (end > landmark && *end != '\\')
+				end--;
+			if (end > landmark) *end = '\0';
+
+			nsCOMPtr<nsILocalFile> ns_bin_dir;
+			NS_ConvertASCIItoUCS2 strLandmark(landmark);
+			NS_NewLocalFile(strLandmark, PR_FALSE, getter_AddRefs(ns_bin_dir));
+			nsresult rv = NS_InitXPCOM2(nsnull, ns_bin_dir, nsnull);
+#else
+			// Elsewhere, Mozilla can find it itself (we hope!)
+			nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+#endif // XP_WIN
+			if (NS_FAILED(rv)) {
+				PyErr_SetString(PyExc_RuntimeError, "The XPCOM subsystem could not be initialized");
+				return PR_FALSE;
+			}
+		}
+		// Even if xpcom was already init, we want to flag it as init!
+		bHaveInitXPCOM = PR_TRUE;
+		// Register our custom interfaces.
+	
+		Py_nsISupports::InitType();
+		Py_nsIComponentManager::InitType();
+		Py_nsIInterfaceInfoManager::InitType();
+		Py_nsIEnumerator::InitType();
+		Py_nsISimpleEnumerator::InitType();
+		Py_nsIInterfaceInfo::InitType();
+		Py_nsIInputStream::InitType();
+		Py_nsIClassInfo::InitType();
+		Py_nsIVariant::InitType();
+	}
+	return rc;
+}
+

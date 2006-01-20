@@ -55,81 +55,179 @@ static char *PyTraceback_AsString(PyObject *exc_tb);
 // The internal helper that actually moves the
 // formatted string to the target!
 
-void LogMessage(const char *prefix, const char *pszMessageText)
+// Only used in really bad situations!
+static void _PanicErrorWrite(const char *msg)
 {
 	nsCOMPtr<nsIConsoleService> consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-	NS_ABORT_IF_FALSE(consoleService, "Where is the console service?");
 	if (consoleService)
-		consoleService->LogStringMessage(NS_ConvertASCIItoUCS2(pszMessageText).get());
-	else
-		PR_fprintf(PR_STDERR,"%s\n", pszMessageText);
+		consoleService->LogStringMessage(NS_ConvertASCIItoUCS2(msg).get());
+	PR_fprintf(PR_STDERR,"%s\n", msg);
 }
 
-void LogMessage(const char *prefix, nsACString &text)
+// Called when our "normal" error logger fails.
+static void HandleLogError(const char *pszMessageText)
+{
+	nsCAutoString streamout;
+
+	_PanicErrorWrite("Failed to log an error record");
+	if (PyXPCOM_FormatCurrentException(streamout))
+		_PanicErrorWrite(streamout.get());
+	_PanicErrorWrite("Original error follows:");
+	_PanicErrorWrite(pszMessageText);
+}
+
+static const char *LOGGER_WARNING = "warning";
+static const char *LOGGER_ERROR = "error";
+static const char *LOGGER_DEBUG = "debug";
+
+// Our "normal" error logger - calls back to the logging module.
+void DoLogMessage(const char *methodName, const char *pszMessageText)
+{
+	// We use the logging module now.  Originally this code called
+	// the logging module directly by way of the C API's
+	// PyImport_ImportModule/PyObject_CallMethod etc.  However, this
+	// causes problems when there is no Python caller on the stack -
+	// the logging module's findCaller method fails with a None frame.
+	// We now work around this by calling PyRun_SimpleString - this
+	// causes a new frame to be created for executing the compiled
+	// string, and the logging module no longer fails.
+	// XXX - this implementation is less than ideal - findCaller now
+	// returns ("<string>", 2).  Ideally we would compile with a
+	// filename something similar to "<pydom error reporter>".
+
+	// But this also means we need a clear error state...
+	PyObject *exc_typ = NULL, *exc_val = NULL, *exc_tb = NULL;
+	PyErr_Fetch(&exc_typ, &exc_val, &exc_tb);
+// We will execute:
+//  import logging
+//  logging.getLogger('xpcom').{warning/error/etc}("%s", {msg_text})
+	nsCAutoString c("import logging\nlogging.getLogger('xpcom').");
+	c += methodName;
+	c += "('%s', ";
+	// Pull a trick to ensure a valid string - use Python repr!
+	PyObject *obMessage = PyString_FromString(pszMessageText);
+	if (obMessage) {
+		PyObject *repr = PyObject_Repr(obMessage);
+		if (repr) {
+			c += PyString_AsString(repr);
+			Py_DECREF(repr);
+		}
+		Py_DECREF(obMessage);
+	}
+	c += ")\n";
+	if (PyRun_SimpleString(c.get()) != 0) {
+		HandleLogError(pszMessageText);
+	}
+	PyErr_Restore(exc_typ, exc_val, exc_tb);
+}
+
+void LogMessage(const char *methodName, const char *pszMessageText)
+{
+	// Be careful to save and restore the Python exception state
+	// before calling back to Python, or we lose the original error.
+	PyObject *exc_typ = NULL, *exc_val = NULL, *exc_tb = NULL;
+	PyErr_Fetch( &exc_typ, &exc_val, &exc_tb);
+	DoLogMessage(methodName, pszMessageText);
+	PyErr_Restore(exc_typ, exc_val, exc_tb);
+}
+
+
+void LogMessage(const char *methodName, nsACString &text)
 {
 	char *c = ToNewCString(text);
-	LogMessage(prefix, c);
+	LogMessage(methodName, c);
 	nsCRT::free(c);
 }
 
 // A helper for the various logging routines.
-static void VLogF(const char *prefix, const char *fmt, va_list argptr)
+static void VLogF(const char *methodName, const char *fmt, va_list argptr)
 {
 	char buff[512];
+	// Use safer NS_ functions.
+	PR_vsnprintf(buff, sizeof(buff), fmt, argptr);
 
-	vsprintf(buff, fmt, argptr);
+	LogMessage(methodName, buff);
+}
 
-	LogMessage(prefix, buff);
+PRBool PyXPCOM_FormatCurrentException(nsCString &streamout)
+{
+	PRBool ok = PR_FALSE;
+	PyObject *exc_typ = NULL, *exc_val = NULL, *exc_tb = NULL;
+	PyErr_Fetch( &exc_typ, &exc_val, &exc_tb);
+	PyErr_NormalizeException( &exc_typ, &exc_val, &exc_tb);
+	if (exc_typ) {
+		ok = PyXPCOM_FormatGivenException(streamout, exc_typ, exc_val,
+						  exc_tb);
+	}
+	PyErr_Restore(exc_typ, exc_val, exc_tb);
+	return ok;
+}
+
+PRBool PyXPCOM_FormatGivenException(nsCString &streamout,
+				    PyObject *exc_typ, PyObject *exc_val,
+				    PyObject *exc_tb)
+{
+	if (!exc_typ)
+		return PR_FALSE;
+	streamout += "\n";
+
+	if (exc_tb) {
+		const char *szTraceback = PyTraceback_AsString(exc_tb);
+		if (szTraceback == NULL)
+			streamout += "Can't get the traceback info!";
+		else {
+			streamout += "Traceback (most recent call last):\n";
+			streamout += szTraceback;
+			PyMem_Free((void *)szTraceback);
+		}
+	}
+	PyObject *temp = PyObject_Str(exc_typ);
+	if (temp) {
+		streamout += PyString_AsString(temp);
+		Py_DECREF(temp);
+	} else
+		streamout += "Can't convert exception to a string!";
+	streamout += ": ";
+	if (exc_val != NULL) {
+		temp = PyObject_Str(exc_val);
+		if (temp) {
+			streamout += PyString_AsString(temp);
+			Py_DECREF(temp);
+		} else
+			streamout += "Can't convert exception value to a string!";
+	}
+	return PR_TRUE;
 }
 
 void PyXPCOM_LogError(const char *fmt, ...)
 {
 	va_list marker;
 	va_start(marker, fmt);
-	VLogF("PyXPCOM Error: ", fmt, marker);
+	// NOTE: It is tricky to use logger.exception here - the exception
+	// state when called back from the C code is clear.  Only Python 2.4
+	// and later allows an explicit exc_info tuple().
+	
+	// Don't use VLogF here, instead arrange for exception info and
+	// traceback to be in the same buffer.
+	char buff[512];
+	PR_vsnprintf(buff, sizeof(buff), fmt, marker);
 	// If we have a Python exception, also log that:
-	PyObject *exc_typ = NULL, *exc_val = NULL, *exc_tb = NULL;
-	PyErr_Fetch( &exc_typ, &exc_val, &exc_tb);
-	if (exc_typ) {
-		PyErr_NormalizeException( &exc_typ, &exc_val, &exc_tb);
-		nsCAutoString streamout;
-
-		if (exc_tb) {
-			const char *szTraceback = PyTraceback_AsString(exc_tb);
-			if (szTraceback == NULL)
-				streamout += "Can't get the traceback info!";
-			else {
-				streamout += "Traceback (most recent call last):\n";
-				streamout += szTraceback;
-				PyMem_Free((void *)szTraceback);
-			}
-		}
-		PyObject *temp = PyObject_Str(exc_typ);
-		if (temp) {
-			streamout += PyString_AsString(temp);
-			Py_DECREF(temp);
-		} else
-			streamout += "Can't convert exception to a string!";
-		streamout += ": ";
-		if (exc_val != NULL) {
-			temp = PyObject_Str(exc_val);
-			if (temp) {
-				streamout += PyString_AsString(temp);
-				Py_DECREF(temp);
-			} else
-				streamout += "Can't convert exception value to a string!";
-		}
-		streamout += "\n";
-		LogMessage("PyXPCOM Exception:", streamout);
+	nsCAutoString streamout(buff);
+	if (PyXPCOM_FormatCurrentException(streamout)) {
+		LogMessage(LOGGER_ERROR, streamout);
 	}
-	PyErr_Restore(exc_typ, exc_val, exc_tb);
 }
 
 void PyXPCOM_LogWarning(const char *fmt, ...)
 {
 	va_list marker;
 	va_start(marker, fmt);
-	VLogF("PyXPCOM Warning: ", fmt, marker);
+	VLogF(LOGGER_WARNING, fmt, marker);
+}
+
+void PyXPCOM_Log(const char *level, const nsCString &msg)
+{
+	DoLogMessage(level, msg.get());
 }
 
 #ifdef DEBUG
@@ -137,7 +235,7 @@ void PyXPCOM_LogDebug(const char *fmt, ...)
 {
 	va_list marker;
 	va_start(marker, fmt);
-	VLogF("PyXPCOM Debug: ", fmt, marker);
+	VLogF(LOGGER_DEBUG, fmt, marker);
 }
 #endif
 
@@ -156,7 +254,17 @@ nsresult PyXPCOM_SetCOMErrorFromPyException()
 	if (!PyErr_Occurred())
 		// No error occurred
 		return NS_OK;
-	return NS_ERROR_FAILURE;
+	nsresult rv = NS_ERROR_FAILURE;
+	if (PyErr_ExceptionMatches(PyExc_MemoryError))
+		rv = NS_ERROR_OUT_OF_MEMORY;
+	// todo:
+	// * Set an exception using the exception service.
+
+	// Once we have returned to the xpcom caller, we don't want to leave a
+	// Python exception pending - it may get noticed when the next call
+	// is made on the same thread.
+	PyErr_Clear();
+	return rv;
 }
 
 /* Obtains a string from a Python traceback.
