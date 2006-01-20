@@ -730,7 +730,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     thing->flagp = NULL;
 #ifdef DEBUG_brendan
     gchist[gchpos].lastDitch = tried_gc;
-    gchist[gchpos].freeList = list->freeList;
+    gchist[gchpos].freeList = arenaList->freeList;
     if (++gchpos == NGCHIST)
         gchpos = 0;
 #endif
