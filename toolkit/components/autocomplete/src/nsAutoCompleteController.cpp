@@ -411,8 +411,10 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
         if (selectedIndex >= 0) {
           //  A result is selected, so fill in its value
           nsAutoString value;
-          if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, PR_TRUE, value)))
-            CompleteValue(value, PR_FALSE);
+          if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, PR_TRUE, value))) {
+            mInput->SetTextValue(value);
+            mInput->SelectTextRange(value.Length(), value.Length());
+          }
         } else {
           // Nothing is selected, so fill in the last typed value
           mInput->SetTextValue(mSearchString);
@@ -1166,22 +1168,12 @@ nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aSearchIndex)
 nsresult
 nsAutoCompleteController::CompleteValue(nsString &aValue, PRBool selectDifference)
 {
-  nsString::const_iterator start, end, iter, skip;
+  nsString::const_iterator start, end, iter;
   PRInt32 startSelect, endSelect;
-
-  mSearchString.BeginReading(start);
-  mSearchString.EndReading(end);
-  PRBool searchScheme = FindInReadable(NS_LITERAL_STRING("://"), start, end);
 
   aValue.BeginReading(start);
   aValue.EndReading(end);
   iter = start;
-
-  // Skip "://"-suffixed scheme unless explicitly searched for (bug 202992).
-  if (!searchScheme) {
-    skip = end;
-    iter = FindInReadable(NS_LITERAL_STRING("://"), iter, skip) ? skip : start;
-  }
 
   FindInReadable(mSearchString, iter, end,
          nsCaseInsensitiveStringComparator());
