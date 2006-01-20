@@ -37,14 +37,14 @@
 #ifndef _MOZCE_DEFS
 #define _MOZCE_DEFS
 
-#define MOZCE_SHUNT_API
-
 #ifndef MOZCE_STATIC_BUILD
 #ifdef MOZCE_SHUNT_EXPORTS
 #define MOZCE_SHUNT_API __declspec(dllexport)
 #else
 #define MOZCE_SHUNT_API __declspec(dllimport)
 #endif
+#else
+#define MOZCE_SHUNT_API
 #endif
 
 //#define USE_NC_LOGGING 1
