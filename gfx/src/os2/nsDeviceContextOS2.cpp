@@ -573,16 +573,18 @@ nsDeviceContextOS2::SetDPI(PRInt32 aPrefDPI)
   GFX (::DevQueryCaps(hdc, CAPS_HORIZONTAL_FONT_RES, 1, &OSVal), FALSE);
   ::WinReleasePS(ps);
 
-  if (aPrefDPI == 0) {
-    // If the pref is 0 use of OS value
-    mDpi = OSVal;
-  } else if (aPrefDPI > 0) {
+  if (aPrefDPI > 0) {
     // If there's a valid pref value for the logical resolution,
     // use it.
     mDpi = aPrefDPI;
+  } else if ((aPrefDPI == 0) || (OSVal > 96)) {
+    // Either if the pref is 0 (force use of OS value) or the OS
+    // value is bigger than 96, use the OS value.
+    mDpi = OSVal;
   } else {
-    // if we couldn't get the pref or it's negative then use 120
-    mDpi = 120;
+    // if we couldn't get the pref or it's negative, and the OS
+    // value is under 96ppi, then use 96.
+    mDpi = 96;
   }
 
   int pt2t = 72;
