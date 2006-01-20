@@ -153,6 +153,16 @@ interface calICalendar : nsISupports
   void addItem( in calIItemBase aItem, in calIOperationListener aListener );
 
   /**
+   * adoptItem adds the given calIItemBase to the calendar, but doesn't
+   * clone it. It adopts the item as-is. This is generally for use in
+   * performance-critical situations where there is no danger of the caller
+   * using the item after making the call.
+   *
+   * @see addItem
+   */
+  void adoptItem( in calIItemBase aItem, in calIOperationListener aListener );
+
+  /**
    * modifyItem takes a modified mutable item and modifies the
    * calendar's internal version of the item to match.  The item is
    * expected to have an ID that already exists in the calendar; if it
