@@ -19233,13 +19233,22 @@ fi
         MOZ_PYTHON_LIBS="\"/libpath:$MOZ_PYTHON_PREFIX/PCBuild\" \"/libpath:$MOZ_PYTHON_PREFIX/libs\""
     else
                 MOZ_PYTHON_DLL_SUFFIX=$DLL_SUFFIX
-        PYTHON_INCLUDE_SRC=$MOZ_PYTHON_PREFIX/include/python$MOZ_PYTHON_VER_DOTTED
-        PYTHON_LIB_SRC=`$PYTHON  -c 'from distutils import sysconfig; print sysconfig.get_config_var("LIBPL")'`
-        if test ! -f $PYTHON_INCLUDE_SRC/Python.h; then
-            { echo "configure: error: Include directory $PYTHON_INCLUDE_SRC not found or does not contain development headers" 1>&2; exit 1; }
+        MOZ_PYTHON_INCLUDES="-I$MOZ_PYTHON_PREFIX/include/python$MOZ_PYTHON_VER_DOTTED"
+                                                                                                if test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so.1.0"; then
+            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
+        elif test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so"; then
+            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
+        elif test -f "$MOZ_PYTHON_PREFIX/libpython$MOZ_PYTHON_VER_DOTTED.so"; then
+                        MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX -lpython$MOZ_PYTHON_VER_DOTTED"
+            { echo "configure: error: The Python at $MOZ_PYTHON_PREFIX looks like a dev tree. The PyXPCOM build cannot handle this yet. You must 'make install' Python and use the installed tree." 1>&2; exit 1; }
+        elif test "$OS_ARCH" = "Darwin"; then
+                                                MOZ_PYTHON_LIBS="-framework Python"
+        else
+            { echo "configure: error: Could not find build shared libraries for Python at $MOZ_PYTHON_PREFIX.  This is required for PyXPCOM." 1>&2; exit 1; }
         fi
-        MOZ_PYTHON_INCLUDES="-I$PYTHON_INCLUDE_SRC"
-        MOZ_PYTHON_LIBS="-L$PYTHON_LIB_SRC -lpython$MOZ_PYTHON_VER_DOTTED"
+        if test "$OS_ARCH" = "Linux"; then
+            MOZ_PYTHON_LIBS="$MOZ_PYTHON_LIBS -lutil"
+        fi
     fi
         if test "$OS_ARCH" = "WINNT" && test -n "$MOZ_DEBUG"; then
         MOZ_PYTHON_DEBUG_SUFFIX="_d"
@@ -19442,14 +19451,14 @@ ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$a
 cross_compiling=$ac_cv_prog_cc_cross
 
     cat > conftest.$ac_ext <<EOF
-#line 19446 "configure"
+#line 19455 "configure"
 #include "confdefs.h"
 #include <gmodule.h>
 int main() {
  int x = 1; x++; 
 ; return 0; }
 EOF
-if { (eval echo configure:19453: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:19462: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
@@ -19753,7 +19762,7 @@ if test "$MOZ_X11"; then
                 _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $XCFLAGS"
     cat > conftest.$ac_ext <<EOF
-#line 19757 "configure"
+#line 19766 "configure"
 #include "confdefs.h"
 
         #include <stdio.h>
@@ -19769,7 +19778,7 @@ int main() {
     
 ; return 0; }
 EOF
-if { (eval echo configure:19773: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:19782: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
