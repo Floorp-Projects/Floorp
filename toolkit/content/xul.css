@@ -595,6 +595,13 @@ tabs {
   -moz-box-orient: horizontal;
 }
 
+/**
+ * XXXben - this looks like something added specifically for tabbrowser.
+ *          if it turns out no one uses this that can't easily be evangelized to
+ *          use their own roll-your-own binding, then we should get rid of this
+ *          to tighten up the toolkit api. This binding made obsolete in Firefox
+ *          by 308396. 
+ */
 tabs[closebutton="true"] {
   -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabs-closebutton");
 }
@@ -603,6 +610,41 @@ tab {
   -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tab");
   -moz-box-align: center;
   -moz-box-pack: center;
+}
+
+.tabbrowser-tabs {
+  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tabs");
+}
+
+.tabbrowser-tabs > .tabbrowser-tab {
+  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tab");
+}
+
+.tab-close-button {
+  display: -moz-box;
+}
+
+.tab-close-button-placeholder {
+  display: none;
+}
+
+.tabbrowser-tabs[disablebackgroundclose="true"] > .tabbrowser-tab:not([selected="true"]) > .tab-close-button {
+  display: none;
+}
+
+.tabbrowser-tabs[disablebackgroundclose="true"]:not([tiny="true"]):not([singlechild="true"]) > .tabbrowser-tab:not([selected="true"]) .tab-close-button-placeholder {
+  display: -moz-box;
+}
+
+.tabbrowser-tabs[tiny="true"] > .tabbrowser-tab > .tab-close-button,
+.tabbrowser-tabs[tiny="true"] > .tabbrowser-tab .tab-close-button-placeholder,
+.tabbrowser-tabs[singlechild="true"] > .tabbrowser-tab > .tab-close-button,
+.tabbrowser-tabs[singlechild="true"] > .tabbrowser-tab .tab-close-button-placeholder {
+  display: none;
+}
+
+.tabbrowser-tabs[tiny="true"] > .tabbrowser-tab[selected="true"] > .tab-close-button {
+  display: -moz-box;  
 }
 
 tabpanels {

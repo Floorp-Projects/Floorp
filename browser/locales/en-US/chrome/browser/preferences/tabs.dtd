@@ -1,18 +1,10 @@
 
 <!ENTITY tabsTab.label                       "Tabs">
-<!ENTITY openExternalLinksIn.label           "Open links from other applications in:">
-<!ENTITY newWindow.label                     "a new window">
+<!ENTITY linkTargeting.label                 "Open links that would open new windows in:">
+<!ENTITY newWindow.label                     "new windows">
 <!ENTITY newWindow.accesskey                 "w">
-<!ENTITY newTabInRecentWindow.label          "a new tab in the most recent window">
+<!ENTITY newTabInRecentWindow.label          "new tabs in the most recent window">
 <!ENTITY newTabInRecentWindow.accesskey      "t">
-<!ENTITY recentWindowOrTab.label             "the most recent tab/window">
-<!ENTITY recentWindowOrTab.accesskey         "r">
-<!ENTITY forceNewWindowLinks.label           "Force links that open new windows to open in:">
-<!ENTITY forceNewWindowLinks.accesskey       "F">
-<!ENTITY sameTabOrWindow.label               "the same tab/window as the link">
-<!ENTITY sameTabOrWindow.accesskey           "s">
-<!ENTITY newTab.label                        "a new tab">
-<!ENTITY newTab.accesskey                    "n">
 <!ENTITY hideTabBar.label                    "Hide the tab bar when only one web site is open">
 <!ENTITY hideTabBar.accesskey                "d">
 <!ENTITY loadInBackground.label              "Select new tabs opened from links">

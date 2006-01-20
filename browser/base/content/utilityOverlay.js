@@ -229,15 +229,8 @@ function openUILinkIn( url, where )
     break;
   case "tabshifted":
   case "tab":
-    var tab = browser.addTab(url);
-
-    // We check the pref here, rather than in whereToOpenLink, because an "open link in tab"
-    // context menu item could call openUILinkwhere directly.
-    if ((where == "tab") ^ getBoolPref("browser.tabs.loadBookmarksInBackground", false)) {
-      browser.selectedTab = tab;
-      w.content.focus();
-    }
-
+    var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground", false);
+    browser.loadOneTab(url, null, null, null, loadInBackground);
     break;
   }
 }

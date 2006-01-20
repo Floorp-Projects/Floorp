@@ -34,12 +34,12 @@ tab:hover > .tab-image-middle > .tab-icon > .tab-extra-status {
 }
 
 .tab-icon {
-	padding-top: 1px;
+  padding-top: 1px;
 }
 
 .tab-text {
-	font: icon;
-        padding-top: 1px;
+  font: icon;
+  padding-top: 1px;
 }
 
 
@@ -49,7 +49,7 @@ tab[busy] > .tab-icon-image, tab[busy] > .tab-image-middle > .tab-icon > .tab-ic
 }
 
 tab {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#tab") !important;
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabbrowser-tab") !important;
   -moz-appearance: none;
   color: #383838;
   -moz-box-pack: center;
@@ -109,7 +109,13 @@ tab:not([selected="true"]) > .tab-image-middle > .tab-icon > .tab-icon-image  {
 }
 
 /* ::::: close button ::::: */
-
+/**
+ * XXXben - this looks like something added specifically for tabbrowser.
+ *          if it turns out no one uses this that can't easily be evangelized to
+ *          use their own roll-your-own binding, then we should get rid of this
+ *          to tighten up the toolkit api. This binding made obsolete in Firefox
+ *          by 308396. 
+ */
 .tabs-closebutton {
   padding: 0px 4px 2px 0px;
   margin: 0px;
@@ -130,12 +136,11 @@ tab:not([selected="true"]) > .tab-image-middle > .tab-icon > .tab-icon-image  {
 	-moz-box-orient: vertical !important;
 }
 .tabbrowser-tabs {
-padding: 0px;
-margin: 0px;
--moz-box-pack: center;
--moz-box-align: center;
-background: url("chrome://global/skin/10pct_transparent_pixel.png") repeat;
-
+  padding: 0px;
+  margin: 0px;
+  -moz-box-pack: center;
+  -moz-box-align: center;
+  background: url("chrome://global/skin/10pct_transparent_pixel.png") repeat;
 }
 
 
@@ -182,3 +187,54 @@ tabbrowser > tabbox > tabpanels {
     display: -moz-box;
 }
 
+/**
+ * In-tab close button
+ */
+.tab-close-button > .toolbarbutton-icon {
+  -moz-margin-end: 0px !important;
+}
+
+.tab-close-button {
+  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  -moz-appearance: none;
+  -moz-margin-start: -5px;
+  -moz-padding-end: 3px;
+  margin-top: 2px;
+  border: none !important;
+  padding: 0px;
+  opacity: 0.7;
+}
+
+.tab-close-button:hover,
+.tabbrowser-tab[selected="true"] > .tab-close-button:hover {
+  opacity: 1.0;
+}
+
+.tab-close-button:hover:active,
+.tabbrowser-tab[selected="true"] > .tab-close-button:hover:active {
+  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
+  opacity: 1.0;
+}
+
+.tabbrowser-tab[selected="true"] > .tab-close-button {
+  -moz-margin-start: -5px;
+  -moz-margin-end: -1px;
+  margin-top: 0px;
+  opacity: 1.0;
+  -moz-padding-end: 3px;
+  padding-top: 2px;
+	background-image: url("chrome://global/skin/activetab-middle.png");
+  background-repeat: no-repeat;
+  background-position: 5px 0px;
+}
+
+
+.tab-close-button-placeholder {
+  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  opacity: 0.5;
+  -moz-margin-start: -5px;
+  -moz-padding-end: 3px;
+  margin-top: 2px;
+  border: none !important;
+  padding: 0px;
+}

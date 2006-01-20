@@ -93,7 +93,7 @@ menulist > menupopup,
 }
 
 .tabbrowser-tabs {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabs-closebutton");
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabbrowser-tabs");
 }
 
 /* ::::: root elements ::::: */
