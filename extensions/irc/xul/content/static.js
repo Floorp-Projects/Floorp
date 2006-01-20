@@ -2859,7 +2859,7 @@ function reSortUserlist(node)
     if (client.prefs["sortUsersByMode"])
         sortResource = RES_PFX + "sortname";
     else
-        sortResource = RES_PFX + "nick";
+        sortResource = RES_PFX + "unicodeName";
 
     try
     {

@@ -2391,13 +2391,7 @@ function my_cnick (e)
     }
 
     e.user.updateGraphResource();
-    //this.updateUsers([e.user]);
-    /* updateUsers isn't clever enough (currently) to handle a nick change, so
-     * we fake the user leaving (with the old nick) and coming back (with the
-     * new nick).
-     */
-    this.removeUsers([e.server.addUser(e.oldNick)]);
-    this.addUsers([e.user]);
+    this.updateUsers([e.user]);
     if (client.currentObject == this)
         updateUserList();
 }
