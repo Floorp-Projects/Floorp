@@ -2090,7 +2090,7 @@ function cmdGotoURL(e)
     {
         var ary = e.url.match(/^x-cz-command:(.*)$/i);
         e.sourceObject.frame.contentWindow.location.href = 
-            "javascript:void(view.dispatch('" + decodeURI(ary[1]) + "'))";
+            "javascript:void(view.dispatch('" + decodeURI(ary[1]) + "', null, true))";
         return;
     }
 

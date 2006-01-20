@@ -166,6 +166,18 @@
 
 body.chatzilla-body {               /* The topmost container in the ChatZilla */
     margin: 0px 0px 0px 0px;        /* output window. */
+    background: #FFFFFF;
+    color: #000000;
+}
+
+a:link {
+	color: #0000EE;
+}
+a:active {
+	color: #EE0000;
+}
+a:visited {
+	color: #551A8B;
 }
 
 /* links */

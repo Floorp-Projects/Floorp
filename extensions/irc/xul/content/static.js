@@ -1213,6 +1213,7 @@ function insertInlineButton(text, containerTag, data)
     var link = document.createElementNS("http://www.w3.org/1999/xhtml", "a");
     link.setAttribute("href", "x-cz-command:" + encodeURI(command));
     link.setAttribute("title", title);
+    link.setAttribute("class", "chatzilla-link");
     link.appendChild(document.createTextNode(label));
 
     containerTag.appendChild(document.createTextNode("["));
