@@ -38,7 +38,6 @@ var currentconfigpath;
 var haveplugins = false;
 var havesearchplugins = false;
 var configarray = new Array();
-var debug = true;
 
 var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefBranch);
@@ -830,7 +829,7 @@ function CCKZip(zipfile, location)
   line = "cd /d \"" + location.path + "\"\n";
   fos.write(line, line.length);
   if (navigator.platform == "Win32")
-    line = zipLocation + " -r \"" + location.path + "\\" + zipfile + "\"";
+    line =  "\"" + zipLocation + "\" -r \"" + location.path + "\\" + zipfile + "\"";
   else
     line = zipLocation + " -r \"" + location.path + "/" + zipfile + "\"";  
   for (var i=2; i < arguments.length; i++) {
@@ -860,7 +859,7 @@ function CCKZip(zipfile, location)
   var args = [file.path];
   
   process.run(true, args, args.length);
-  file.remove(false);
+//  file.remove(false);
   var file = location.clone();
   file.append(zipfile);
   if (!file.exists()) {
@@ -1429,12 +1428,11 @@ function CCKCopyFile(source, destination)
   try {
     sourcefile.copyTo(destination, "");
   } catch (ex) {
-    if (debug) {
       var bundle = document.getElementById("bundle_cckwizard");
-      gPromptService.alert(window, bundle.getString("windowTitle"),
-                       ex + "\n\nSource: " +  source + "\n\nDestination: " + destination.path );
-    }
-    throw("Stopping Javascript execution");
+      var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+                                     .getService(Components.interfaces.nsIConsoleService);
+      consoleService.logStringMessage(bundle.getString("windowTitle") + ": " + ex + "\n\nSource: " +  source + "\n\nDestination: " + destination.path );
+      throw("Stopping Javascript execution");
   }
   
   return true;
