@@ -37,95 +37,36 @@
 #ifndef __NS_SVGMARKERFRAME_H__
 #define __NS_SVGMARKERFRAME_H__
 
-#include "nsSVGDefsFrame.h"
-#include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGAngle.h"
-#include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGAnimatedEnum.h"
 #include "nsISVGMarkable.h"
-#include "nsLayoutAtoms.h"
+#include "nsISupports.h"
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
+class nsISVGRendererCanvas;
 class nsSVGPathGeometryFrame;
+class nsISVGRendererRegion;
+class nsIURI;
+class nsIContent;
 
-#define NS_SVGMARKERFRAME_CID \
-{0x899a645c, 0xf817, 0x4a1a, {0xaa, 0x3d, 0xa9, 0x1a, 0xbf, 0xa2, 0xb2, 0x0a}}
+#define NS_ISVGMARKERFRAME_IID \
+  {0xf08cd1a0, 0x667c, 0x43ef, {0x9d, 0xcf, 0x99,0x09, 0xc7, 0x96, 0x0d, 0x02}}
 
-class nsSVGMarkerFrame : public nsSVGDefsFrame
-{
-protected:
-  friend nsIFrame*
-  NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent);
-
-  virtual ~nsSVGMarkerFrame();
-  NS_IMETHOD InitSVG();
-
+class nsISVGMarkerFrame : public nsISupports {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGMARKERFRAME_IID)
 
-  NS_DEFINE_STATIC_CID_ACCESSOR(NS_SVGMARKERFRAME_CID)
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVGMARKERFRAME_CID)
-
-  // nsISVGValueObserver interface:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
-                                    nsISVGValue::modificationType aModType);
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsLayoutAtoms::svgMarkerFrame
-   */
-  virtual nsIAtom* GetType() const;
-
-#ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
-  {
-    return MakeFrameName(NS_LITERAL_STRING("SVGMarker"), aResult);
-  }
-#endif
-
-  void PaintMark(nsISVGRendererCanvas *aCanvas,
-                 nsSVGPathGeometryFrame *aParent,
-                 nsSVGMark *aMark,
-                 float aStrokeWidth);
+  NS_IMETHOD PaintMark(nsISVGRendererCanvas *aCanvas,
+                       nsSVGPathGeometryFrame *aParent,
+                       nsSVGMark *aMark,
+                       float aStrokeWidth) = 0;
 
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>)
     RegionMark(nsSVGPathGeometryFrame *aParent,
-               nsSVGMark *aMark, float aStrokeWidth);
-
-  static float bisect(float a1, float a2);
-
-private:
-  nsCOMPtr<nsIDOMSVGLength>              mRefX;
-  nsCOMPtr<nsIDOMSVGLength>              mRefY;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMarkerUnits;
-  nsCOMPtr<nsIDOMSVGLength>              mMarkerWidth;
-  nsCOMPtr<nsIDOMSVGLength>              mMarkerHeight;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mOrientType;
-  nsCOMPtr<nsIDOMSVGAngle>               mOrientAngle;
-  nsCOMPtr<nsIDOMSVGRect>                mViewBox;
-
-  // stuff needed for callback
-  float mStrokeWidth, mX, mY, mAngle;
-  nsSVGPathGeometryFrame *mMarkerParent;
-
-  // nsISVGContainerFrame interface:
-  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-
-  // recursion prevention flag
-  PRPackedBool mInUse;
-
-  // second recursion prevention flag, for GetCanvasTM()
-  PRPackedBool mInUse2;
+               nsSVGMark *aMark, float aStrokeWidth) = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGMarkerFrame, NS_SVGMARKERFRAME_CID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGMarkerFrame, NS_SVGMARKERFRAME_IID)
 
 nsresult
-NS_GetSVGMarkerFrame(nsSVGMarkerFrame **aResult,
+NS_GetSVGMarkerFrame(nsISVGMarkerFrame **aResult,
                      nsIURI *aURI,
                      nsIContent *aContent);
 

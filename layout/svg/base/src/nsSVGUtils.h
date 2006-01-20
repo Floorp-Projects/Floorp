@@ -54,6 +54,10 @@ class nsIDOMSVGLength;
 class nsIDOMSVGMatrix;
 class nsIURI;
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 class nsSVGUtils
 {
 public:
@@ -127,6 +131,10 @@ public:
   static void
   TransformPoint(nsIDOMSVGMatrix *matrix,
                  float *x, float *y);
+
+  /* Returns the angle halfway between the two specified angles */
+  static float
+  AngleBisect(float a1, float a2);
 
 private:
   /*
