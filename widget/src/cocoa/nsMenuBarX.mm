@@ -629,7 +629,7 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
   ==================
   = Preferences... = <- menu_preferences
   ==================
-  = Services     > = <- menu_mac_services    <- (do not define access key, has submenu)
+  = Services     > = <- menu_mac_services    <- (do not define key equivalent)
   ==================
   = Hide App       = <- menu_mac_hide_app
   = Hide Others    = <- menu_mac_hide_others
@@ -641,12 +641,12 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
   If any of them are ommitted from the application's DOM, we just don't add
   them. We always add a "Quit" item, but if an app developer does not provide a
   DOM node with the right ID for the Quit item, we add it in English. App
-  developers need only add each node with a label and an accesskey (if they want
-  one). Other attributes are optional. Like so:
+  developers need only add each node with a label and a key equivalent (if they
+  want one). Other attributes are optional. Like so:
   
   <menuitem id="menu_preferences"
          label="&preferencesCmdMac.label;"
-           key="quit_app_key"/>
+           key="open_prefs_key"/>
   
   We need to use this system for localization purposes, until we have a better way
   to define the Application menu to be used on Mac OS X.
