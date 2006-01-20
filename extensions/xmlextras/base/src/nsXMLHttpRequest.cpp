@@ -630,7 +630,21 @@ nsXMLHttpRequest::GetStatus(PRUint32 *aStatus)
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
 
   if (httpChannel) {
-    return httpChannel->GetResponseStatus(aStatus);
+    nsresult rv = httpChannel->GetResponseStatus(aStatus);
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      // Someone's calling this before we got a response... Check our
+      // ReadyState.  If we're at 3 or 4, then this means the connection
+      // errored before we got any data; return a somewhat sensible error code
+      // in that case.
+      PRInt32 readyState;
+      GetReadyState(&readyState);
+      if (readyState >= 3) {
+        *aStatus = NS_ERROR_NOT_AVAILABLE;
+        return NS_OK;
+      }
+    }
+
+    return rv;
   }
   *aStatus = 0;
 
