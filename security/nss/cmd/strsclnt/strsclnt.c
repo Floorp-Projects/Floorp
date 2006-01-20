@@ -447,7 +447,6 @@ launch_thread(
     int         tid)
 {
     perThread * slot;
-    int         i;
 
     PR_Lock(threadLock);
 
@@ -476,7 +475,7 @@ launch_thread(
 
     slot->inUse   = 1;
     PR_Unlock(threadLock);
-    PRINTF("strsclnt: Launched thread in slot %d \n", i);
+    PRINTF("strsclnt: Launched thread in slot %d \n", numUsed-1);
 
     return SECSuccess;
 }
@@ -820,7 +819,7 @@ retry:
 	goto done;
     } else {
         if (ThrottleUp) {
-            PRTime now;
+            PRTime now = PR_Now();
             PR_Lock(threadLock);
             lastConnectSuccess = PR_MAX(now, lastConnectSuccess);
             PR_Unlock(threadLock);
