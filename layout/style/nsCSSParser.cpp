@@ -4434,6 +4434,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_marker_mid:
   case eCSSProperty_marker_start:
     return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
+  case eCSSProperty_mask:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
   case eCSSProperty_pointer_events:
     return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
                         nsCSSProps::kPointerEventsKTable);

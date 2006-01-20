@@ -44,32 +44,64 @@
 #include "nsSVGAnimatedTransformList.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsSVGUtils.h"
+#include "nsISVGRendererSurface.h"
+#include "nsSVGDefsFrame.h"
+#include "nsSVGAtoms.h"
 
-NS_IMETHODIMP_(nsrefcnt)
-nsSVGClipPathFrame::AddRef()
-{
-  return NS_OK;
-}
+typedef nsSVGDefsFrame nsSVGClipPathFrameBase;
 
-NS_IMETHODIMP_(nsrefcnt)
-nsSVGClipPathFrame::Release()
+class nsSVGClipPathFrame : public nsSVGClipPathFrameBase,
+                           public nsISVGClipPathFrame
 {
-  return NS_OK;
-}
+  friend nsIFrame*
+  NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
-NS_IMETHODIMP
-nsSVGClipPathFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
+  virtual ~nsSVGClipPathFrame();
+  NS_IMETHOD InitSVG();
+
+ public:
+  // nsISupports interface:
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+
+  // nsISVGClipPathFrame interface:
+  NS_IMETHOD ClipPaint(nsISVGRendererCanvas* canvas,
+                       nsISVGRendererSurface* aClipSurface,
+                       nsISVGChildFrame* aParent,
+                       nsCOMPtr<nsIDOMSVGMatrix> aMatrix);
+
+  NS_IMETHOD ClipHitTest(nsISVGChildFrame* aParent,
+                         nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
+                         float aX, float aY, PRBool *aHit);
+
+  NS_IMETHOD IsTrivial(PRBool *aTrivial);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgClipPathFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGClipPath"), aResult);
   }
-  if (aIID.Equals(nsSVGClipPathFrame::GetCID())) {
-    *aInstancePtr = (void*)(nsSVGClipPathFrame*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return (nsSVGDefsFrame::QueryInterface(aIID, aInstancePtr));
-}
+#endif
+
+ private:
+  nsISVGChildFrame *mClipParent;
+  nsCOMPtr<nsIDOMSVGMatrix> mClipParentMatrix;
+
+  // nsISVGContainerFrame interface:
+  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+};
+
+NS_INTERFACE_MAP_BEGIN(nsSVGClipPathFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGClipPathFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGClipPathFrameBase)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -89,7 +121,8 @@ NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 }
 
 nsresult
-NS_GetSVGClipPathFrame(nsSVGClipPathFrame **aResult, nsIURI *aURI, nsIContent *aContent)
+NS_GetSVGClipPathFrame(nsISVGClipPathFrame **aResult,
+                       nsIURI *aURI, nsIContent *aContent)
 {
   *aResult = nsnull;
 
@@ -132,6 +165,7 @@ nsSVGClipPathFrame::InitSVG()
 
 NS_IMETHODIMP
 nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
+                              nsISVGRendererSurface* aClipSurface,
                               nsISVGChildFrame* aParent,
                               nsCOMPtr<nsIDOMSVGMatrix> aMatrix)
 {
@@ -143,7 +177,17 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
 
   NotifyCanvasTMChanged(PR_TRUE);
 
-  rv = canvas->SetRenderMode(nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP);
+  PRBool isTrivial;
+  IsTrivial(&isTrivial);
+
+  if (isTrivial)
+    rv = canvas->SetRenderMode(nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP);
+  else {
+    rv = canvas->SetRenderMode(nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP_MASK);
+
+    canvas->PushSurface(aClipSurface);
+  }
+
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -155,6 +199,9 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
       SVGFrame->PaintSVG(canvas, dirty, PR_TRUE);
     }
   }
+
+  if (!isTrivial)
+    canvas->PopSurface();
 
   canvas->SetRenderMode(nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL);
 
@@ -187,6 +234,30 @@ nsSVGClipPathFrame::ClipHitTest(nsISVGChildFrame* aParent,
         *aHit = PR_TRUE;
         return NS_OK;
       }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGClipPathFrame::IsTrivial(PRBool *aTrivial)
+{
+  *aTrivial = PR_TRUE;
+  PRBool foundOne = PR_FALSE;
+
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
+    nsISVGChildFrame* SVGFrame = nsnull;
+    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+    if (SVGFrame) {
+      nsIFrame *frame = nsnull;
+      CallQueryInterface(SVGFrame, &frame);
+      if (foundOne || frame->GetContent()->Tag() == nsSVGAtoms::g) {
+        *aTrivial = PR_FALSE;
+        return NS_OK;
+      }
+      foundOne = PR_TRUE;
     }
   }
 

@@ -277,20 +277,18 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
 
   PRUint16 renderMode;
   canvas->GetRenderMode(&renderMode);
-  cairo_matrix_t matrix;
 
-  if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
-    cairo_new_path(ctx);
+  cairo_new_path(ctx);
 
-    /* save/pop the state so we don't screw up the xform */
-    cairo_save(ctx);
-  } else {
-    cairo_get_matrix(ctx, &matrix);
-  }
+  /* save/pop the state so we don't screw up the xform */
+  cairo_save(ctx);
 
   GeneratePath(ctx, cairoCanvas);
 
   if (renderMode != nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL) {
+
+    cairo_restore(ctx);
+
     PRUint16 rule;
     mSource->GetClipRule(&rule);
     if (rule == nsISVGGeometrySource::FILL_RULE_EVENODD)
@@ -298,7 +296,11 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
     else
       cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
 
-    cairo_set_matrix(ctx, &matrix);
+    if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP_MASK) {
+      cairo_set_antialias(ctx, CAIRO_ANTIALIAS_NONE);
+      cairo_set_source_rgba(ctx, 1.0f, 1.0f, 1.0f, 1.0f);
+      cairo_fill(ctx);
+    }
 
     return NS_OK;
   }

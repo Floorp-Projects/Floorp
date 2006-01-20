@@ -485,6 +485,19 @@ nsSVGGDIPlusCanvas::CompositeSurface(nsISVGRendererSurface *aSurface,
   return NS_OK;
 }
 
+/** Implements void compositeSurfaceWithMask(in nsISVGRendererSurface surface,
+                                             in unsigned long x,
+                                             in unsigned long y,
+                                             in nsISVGRendererSurface mask); */
+NS_IMETHODIMP
+nsSVGGDIPlusCanvas::CompositeSurfaceWithMask(nsISVGRendererSurface *aSurface,
+                                             PRUint32 aX, PRUint32 aY,
+                                             nsISVGRendererSurface *aMask)
+{
+  // XXX
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /** Implements  void compositeSurface(in nsISVGRendererSurface surface,
                                       in nsIDOMSVGMatrix canvasTM,
                                       in float opacity); */

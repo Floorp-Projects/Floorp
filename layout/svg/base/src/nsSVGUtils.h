@@ -53,6 +53,8 @@ class nsISVGGlyphFragmentNode;
 class nsIDOMSVGLength;
 class nsIDOMSVGMatrix;
 class nsIURI;
+class nsISVGOuterSVGFrame;
+class nsISVGRendererSurface;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -135,6 +137,10 @@ public:
   /* Returns the angle halfway between the two specified angles */
   static float
   AngleBisect(float a1, float a2);
+
+  /* Generate a new rendering surface the size of the outer svg frame */
+  static nsresult GetSurface(nsISVGOuterSVGFrame *aOuterSVGFrame,
+                             nsISVGRendererSurface **aSurface);
 
 private:
   /*
