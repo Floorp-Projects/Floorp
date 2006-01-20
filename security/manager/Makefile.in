@@ -262,23 +262,31 @@ endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DIST)/bin
 ifdef HAVE_FREEBL_LIBS
+ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_CHK) $(DIST)/bin
+endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_LIB) $(DIST)/bin
 endif
 ifdef HAVE_FREEBL_LIBS_32
+ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_32INT_CHK) $(DIST)/bin
-	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT_LIB) $(DIST)/bin
 	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_32FPU_CHK) $(DIST)/bin
+endif
+	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_32FPU_LIB) $(DIST)/bin
 endif
 ifdef HAVE_FREEBL_LIBS_32INT64
+ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_32INT64_CHK) $(DIST)/bin
+endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT64_LIB) $(DIST)/bin
 endif
 ifdef HAVE_FREEBL_LIBS_64
+ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_64INT_CHK) $(DIST)/bin
-	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_64INT_LIB) $(DIST)/bin
 	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_64FPU_CHK) $(DIST)/bin
+endif
+	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_64INT_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_64FPU_LIB) $(DIST)/bin
 endif
 endif
@@ -300,23 +308,31 @@ endif
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DESTDIR)$(mozappdir)
 ifdef HAVE_FREEBL_LIBS
+ifndef SKIP_CHK
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_CHK) $(DESTDIR)$(mozappdir)
+endif
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_LIB) $(DESTDIR)$(mozappdir)
 endif
 ifdef HAVE_FREEBL_LIBS_32
+ifndef SKIP_CHK
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_32INT_CHK) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_32FPU_CHK) $(DESTDIR)$(mozappdir)
+endif
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_32FPU_LIB) $(DESTDIR)$(mozappdir)
 endif
 ifdef HAVE_FREEBL_LIBS_32INT64
+ifndef SKIP_CHK
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_32INT64_CHK) $(DESTDIR)$(mozappdir)
+endif
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_32INT64_LIB) $(DESTDIR)$(mozappdir)
 endif
 ifdef HAVE_FREEBL_LIBS_64
+ifndef SKIP_CHK
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_64INT_CHK) $(DESTDIR)$(mozappdir)
-	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_64INT_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(FREEBL_64FPU_CHK) $(DESTDIR)$(mozappdir)
+endif
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_64INT_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(FREEBL_64FPU_LIB) $(DESTDIR)$(mozappdir)
 endif
 endif
