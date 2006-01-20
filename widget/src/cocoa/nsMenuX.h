@@ -45,6 +45,7 @@
 #include "nsIMenuListener.h"
 #include "nsIChangeManager.h"
 #include "nsWeakReference.h"
+#include "nsMenuBarX.h"
 
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
@@ -55,7 +56,8 @@ class nsIMenuListener;
 class nsMenuX;
 
 
-// This class simply receives events from menus as a proxy for a gecko menu
+// MenuDelegate is used to receive Cocoa notifications for
+// setting up carbon events
 @interface MenuDelegate : NSObject
 {
   nsMenuX* mGeckoMenu; // weak ref

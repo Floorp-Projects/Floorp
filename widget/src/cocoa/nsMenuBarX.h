@@ -57,6 +57,8 @@ class nsIWidget;
 class nsIDocument;
 class nsIDOMNode;
 
+extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
+
 namespace MenuHelpersX
 {
   // utility routine for getting a PresContext out of a docShell
@@ -64,8 +66,17 @@ namespace MenuHelpersX
   nsEventStatus DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
                                   nsIContent* aTargetContent);
   NSString* CreateTruncatedCocoaLabel(nsString itemLabel);
+  PRUint8 GeckoModifiersForNodeAttribute(char* modifiersAttribute);
+  unsigned int MacModifiersForGeckoModifiers(PRUint8 geckoModifiers);
 }
 
+
+// Objective-C class used as action target for menu items
+@interface NativeMenuItemTarget : NSObject
+{
+}
+-(IBAction)menuItemHit:(id)sender;
+@end
 
 //
 // Native Mac menu bar wrapper
@@ -83,6 +94,9 @@ public:
     virtual ~nsMenuBarX();
     
     enum {kApplicationMenuID = 1};
+    
+    // |NSMenuItem|s target Objective-C objects
+    static NativeMenuItemTarget* sNativeEventTarget;
     
     NS_DECL_ISUPPORTS
     NS_DECL_NSICHANGEMANAGER
@@ -132,6 +146,8 @@ protected:
     nsEventStatus ExecuteCommand(nsIContent* inDispatchTo);
     
     // build the Application menu shared by all menu bars.
+    NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString& nodeID, SEL action,
+                                                    int tag, NativeMenuItemTarget* target);
     nsresult CreateApplicationMenu(nsIMenu* inMenu);
 
     nsHashtable             mObserverTable;       // stores observers for content change notification
