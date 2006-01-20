@@ -4261,6 +4261,10 @@ function findPreviousColumnInfo(table)
 
 function getLogPath(obj)
 {
+    // If we're logging, return the currently-used URL.
+    if (obj.logFile)
+        return getURLSpecFromFile(obj.logFile.path);
+    // If not, return the ideal URL.
     return getURLSpecFromFile(obj.prefs["logFileName"]);
 }
 
