@@ -7272,7 +7272,9 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewMathMLmphantomFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mpadded_)
     newFrame = NS_NewMathMLmpaddedFrame(mPresShell);
-  else if (aTag == nsMathMLAtoms::mspace_)
+  else if (aTag == nsMathMLAtoms::mspace_ ||
+           aTag == nsMathMLAtoms::none    ||
+           aTag == nsMathMLAtoms::mprescripts_)
     newFrame = NS_NewMathMLmspaceFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mfenced_)
     newFrame = NS_NewMathMLmfencedFrame(mPresShell);
@@ -7286,10 +7288,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewMathMLmrootFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::maction_)
     newFrame = NS_NewMathMLmactionFrame(mPresShell);
-  else if (aTag == nsMathMLAtoms::mrow_   ||
-           aTag == nsMathMLAtoms::merror_ ||
-           aTag == nsMathMLAtoms::none    ||
-           aTag == nsMathMLAtoms::mprescripts_ )
+  else if (aTag == nsMathMLAtoms::mrow_ ||
+           aTag == nsMathMLAtoms::merror_)
     newFrame = NS_NewMathMLmrowFrame(mPresShell);
   // CONSTRUCTION of MTABLE elements
   else if (aTag == nsMathMLAtoms::mtable_ &&
@@ -7393,8 +7393,10 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
 
     // MathML frames are inline frames, so just process their kids
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, newFrame, PR_TRUE,
-                         childItems, PR_FALSE);
+    if (!newFrame->IsLeaf()) {
+      rv = ProcessChildren(aState, aContent, newFrame, PR_TRUE,
+                           childItems, PR_FALSE);
+    }
 
     CreateAnonymousFrames(aTag, aState, aContent, newFrame, PR_FALSE,
                           childItems);
@@ -7403,7 +7405,12 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     newFrame->SetInitialChildList(aState.mPresContext, nsnull,
                                   childItems.childList);
 
-    return CreateInsertionPointChildren(aState, newFrame, aContent);
+
+    if (!newFrame->IsLeaf()) {
+      rv = CreateInsertionPointChildren(aState, newFrame, aContent);
+    }
+ 
+    return rv;
   }
   else {
     return NS_ERROR_OUT_OF_MEMORY;

@@ -49,6 +49,8 @@ class nsMathMLmspaceFrame : public nsMathMLContainerFrame {
 public:
   friend nsIFrame* NS_NewMathMLmspaceFrame(nsIPresShell* aPresShell);
 
+  virtual PRBool IsLeaf() const;
+
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
