@@ -6585,6 +6585,7 @@ if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_
        if test "$MOZ_X11"; then
            XLIB_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_SURFACE 1"
            FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+           MOZ_ENABLE_CAIRO_FT=1
        fi
        if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
            QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
@@ -6597,6 +6598,14 @@ if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_
        if test "$MOZ_ENABLE_GLITZ"; then
            GLITZ_SURFACE_FEATURE="#define CAIRO_HAS_GLITZ_SURFACE 1"
        fi
+       if test "$MOZ_WIDGET_TOOLKIT" = "beos"; then
+           PKG_CHECK_MODULES(CAIRO_FT, fontconfig freetype2)
+           BEOS_SURFACE_FEATURE="#define CAIRO_HAS_BEOS_SURFACE 1"
+           FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+           MOZ_ENABLE_CAIRO_FT=1
+       fi
+       AC_SUBST(MOZ_ENABLE_CAIRO_FT)
+       AC_SUBST(CAIRO_FT_CFLAGS)
 
        if test "$MOZ_DEBUG"; then
          SANITY_CHECKING_FEATURE="#define CAIRO_DO_SANITY_CHECKING 1"
@@ -6627,7 +6636,7 @@ if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_
                MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $(DIST)/lib/mozglitz.lib $(DIST)/lib/mozglitzwgl.lib"
            fi
        else
-           MOZ_CAIRO_LIBS="-lmozcairo -lmozlibpixman"
+           MOZ_CAIRO_LIBS="-lmozcairo -lmozlibpixman $CAIRO_FT_LIBS"
 
            if test "$MOZ_X11"; then
                MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"

@@ -75,10 +75,6 @@ ifeq ($(MOZ_GFX_TOOLKIT),cocoa)
 DIRS	    += mac
 endif
 
-ifneq (,$(filter beos os2 mac,$(MOZ_GFX_TOOLKIT)))
-DIRS        += $(MOZ_GFX_TOOLKIT)
-endif
-
 # Build xlibrgb only for X toolkits and/or Xprint
 ifneq (,$(filter xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB)$(MOZ_ENABLE_XPRINT))
 DIRS        += xlibrgb
@@ -109,6 +105,10 @@ else
  ifeq ($(MOZ_GFX_TOOLKIT),windows)
  DIRS        += windows
  endif
+ ifneq (,$(filter beos os2 mac,$(MOZ_GFX_TOOLKIT)))
+ DIRS        += $(MOZ_GFX_TOOLKIT)
+ endif
+
 endif
 
 CPPSRCS = \

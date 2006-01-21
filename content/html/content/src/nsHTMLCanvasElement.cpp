@@ -422,7 +422,7 @@ nsHTMLCanvasElement::UpdateImageContainer(PRBool forceCreate)
     if (!mImageFrame)
       return NS_ERROR_FAILURE;
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
     rv = mImageFrame->Init(0, 0, sz.width, sz.height, gfxIFormats::BGR_A8, 24);
 #else
     rv = mImageFrame->Init(0, 0, sz.width, sz.height, gfxIFormats::RGB_A8, 24);
