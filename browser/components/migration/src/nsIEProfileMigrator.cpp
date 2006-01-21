@@ -272,7 +272,7 @@ TranslateLanglist(unsigned char *aRegValue, DWORD aRegValueLength,
     if (!skip) {
       if (comma && *source != ' ')
         *dest++ = ' ';
-      *dest = *source;
+      *dest++ = *source;
     }
     comma = *source == ',';
     ++source;
