@@ -47,7 +47,6 @@ nsGetInterface::operator()( const nsIID& aIID, void** aInstancePtr ) const
   if ( mSource )
   {
     nsCOMPtr<nsIInterfaceRequestor> factoryPtr = do_QueryInterface(mSource, &status);
-    NS_ASSERTION(factoryPtr, "Did you know you were calling |do_GetInterface()| on an object that doesn't support the |nsIInterfaceRequestor| interface?");
 
     if ( factoryPtr )
       status = factoryPtr->GetInterface(aIID, aInstancePtr);
