@@ -6586,7 +6586,7 @@ if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_
            XLIB_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_SURFACE 1"
            FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
            MOZ_ENABLE_CAIRO_FT=1
-           CAIRO_FT_CFLAGS="$(FT2_CFLAGS)"
+           CAIRO_FT_CFLAGS="$FT2_CFLAGS"
        fi
        if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
            QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
