@@ -10,6 +10,8 @@
       onload="onLoad();"
       headertitle="&pref.addressing.title;">
 
+  <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
   <script type="application/x-javascript">
   <![CDATA[
@@ -22,7 +24,7 @@
 
   function onLoad()
   {
-    createDirectoriesList(true);
+    createDirectoriesList();
     parent.initPanel('chrome://messenger/content/addressbook/pref-addressing.xul');   
   }
 
@@ -87,7 +89,7 @@
                   preftype="string" 
                   prefstring="ldap_2.autoComplete.directoryServer">
           <menupopup id="directoriesListPopup" 
-            onpopupshowing="createDirectoriesList(true);">
+            onpopupshowing="createDirectoriesList();">
           </menupopup>
        </menulist>
        <button id="editButton" label="&editDirectories.label;" 

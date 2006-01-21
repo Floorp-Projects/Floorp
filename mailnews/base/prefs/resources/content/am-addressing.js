@@ -3,7 +3,7 @@ var gPrefInt = null;
 
 function onLoad()
 {
-  createDirectoriesList(false);
+  createDirectoriesList();
   parent.onPanelLoaded('am-addressing.xul');
 }
 
@@ -69,7 +69,6 @@ function enabling()
     document.getElementById("directoriesListPopup").setAttribute("disabled", "true");
   }
 
-  gFromGlobalPref = false;
   LoadDirectories(directoriesListPopup);
 }
 

@@ -178,7 +178,6 @@ var gComposePane = {
     var arrayOfDirectories;
     var position;
     var dirType;
-    var directoriesList;
     var prefService;
     
     prefService = Components.classes["@mozilla.org/preferences-service;1"]
@@ -247,42 +246,30 @@ var gComposePane = {
           }
         }
       
-        var value;
         if (aPopup) 
         {
-          directoriesList =  document.getElementById("directoriesList");
-          if (gRefresh) 
+          // we are in mail/news Account settings
+          item = document.createElement("menuitem");
+          var addressBookBundle = document.getElementById("bundle_addressBook");
+          var directoryName = addressBookBundle.getString("directoriesListItemNone");
+          item.setAttribute("label", directoryName);
+          item.setAttribute("value", "");
+          aPopup.appendChild(item);
+
+          // Now check what we are displaying is valid.
+          var directoriesList =  document.getElementById("directoriesList");
+          var value = directoriesList.value;
+          directoriesList.selectedItem = null;
+          directoriesList.value = value;
+          if (!directoriesList.selectedItem) 
           {
-            // gRefresh is true if user edits, removes or adds a directory.
-            value = directoriesList.value;
-            directoriesList.selectedItem = null;
-            directoriesList.value = value;
-            if (!directoriesList.selectedItem)
-              directoriesList.selectedIndex = 0;
-            if (!directoriesList.selectedItem) 
-            {
-              directoriesList.value = "";
+            directoriesList.value = "";
+            // If we have no other directories, also disable the popup.
+            if (gAvailDirectories.length == 0)
               directoriesList.disabled = true;
-            }
-            else if (!prefService.prefIsLocked("ldap_2.autoComplete.directoryServer"))
-              directoriesList.disabled = false;
-            return;
           }
-        
-          var pref_string_title = "ldap_2.autoComplete.directoryServer";
-          try 
-          {
-            var directoryServer = prefService.getCharPref(pref_string_title);
-            directoriesList.value = directoryServer;
-            if (!directoriesList.selectedItem)
-              directoriesList.selectedIndex = 0;
-            if (!directoriesList.selectedItem)
-              directoriesList.value = "";
-          }
-          catch (ex)
-          {
-            directoriesList.selectedItem = null;
-          }
+          else if (!prefService.prefIsLocked("ldap_2.autoComplete.directoryServer"))
+            directoriesList.disabled = false;
         }
       }
     }

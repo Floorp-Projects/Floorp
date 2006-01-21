@@ -100,7 +100,7 @@ function initCopiesAndFolder(identity)
 
 function initCompositionAndAddressing(identity)
 {
-  createDirectoriesList(false);
+  createDirectoriesList();
 
   // if we are editing an existing identity, use it...otherwise copy our values from the default identity
   var addressingIdentity = identity ? identity : gAccount.defaultIdentity;

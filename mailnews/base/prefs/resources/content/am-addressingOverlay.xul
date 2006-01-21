@@ -127,7 +127,7 @@
                accesskey="&directories.accesskey;"/>
         <hbox class="indent">
           <menulist id="directoriesList" wsm_persist="true" style="min-width: 16em;">
-            <menupopup onpopupshowing="createDirectoriesList(false);" id="directoriesListPopup"/>
+            <menupopup onpopupshowing="createDirectoriesList();" id="directoriesListPopup"/>
           </menulist>
           <button id="editButton" label="&editDirectories.label;"
                   accesskey="&editDirectories.accesskey;" oncommand="onEditDirectories();"/>
