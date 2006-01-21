@@ -470,8 +470,7 @@ UpdateHeights(RowInfo& aRowInfo,
 }
 
 void 
-nsTableRowGroupFrame::DidResizeRows(nsPresContext&          aPresContext,
-                                    const nsHTMLReflowState& aReflowState,
+nsTableRowGroupFrame::DidResizeRows(const nsHTMLReflowState& aReflowState,
                                     nsHTMLReflowMetrics&     aDesiredSize,
                                     nsTableRowFrame*         aStartRowFrameIn)
 {
@@ -485,7 +484,7 @@ nsTableRowGroupFrame::DidResizeRows(nsPresContext&          aPresContext,
     aDesiredSize.mOverflowArea = nsRect(0, 0, 0, 0);
   }
   for (rowFrame = startRowFrame, rowIndex = 0; rowFrame; rowFrame = rowFrame->GetNextRow(), rowIndex++) {
-    rowFrame->DidResize(&aPresContext, aReflowState);
+    rowFrame->DidResize(aReflowState);
     ConsiderChildOverflow(aDesiredSize.mOverflowArea, rowFrame);
   }
 }
@@ -521,8 +520,8 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
 
   // all table cells have the same top and bottom margins, namely cellSpacingY
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
-  float p2t;
-  p2t = aPresContext->PixelsToTwips();
+  GET_TWIPS_TO_PIXELS(aPresContext, p2t);
+
   PRInt32 numEffCols = tableFrame->GetEffectiveColCount();
 
   // find the nearest row index at or before aStartRowFrameIn that isn't spanned into. 
@@ -797,7 +796,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
     CacheRowHeightsForPrinting(aPresContext, GetFirstRow());
   }
 
-  DidResizeRows(*aPresContext, aReflowState, aDesiredSize, startRowFrame);
+  DidResizeRows(aReflowState, aDesiredSize, startRowFrame);
 
   aDesiredSize.height = rowGroupHeight; // Adjust our desired size
   delete [] rowInfo; // cleanup
@@ -1033,7 +1032,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
         if (NS_FAILED(rv)) return rv;
         rowFrame->SetSize(nsSize(rowMetrics.width, rowMetrics.height));
         rowFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
-        rowFrame->DidResize(aPresContext, aReflowState);
+        rowFrame->DidResize(aReflowState);
 
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
           // The row frame is incomplete and all of the rowspan 1 cells' block frames split
@@ -1251,7 +1250,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
     // but we need to correctly calculate the row group height and we can't if there
     // are row spans unless we do this step
     if (aReflowState.mFlags.mSpecialHeightReflow) {
-      DidResizeRows(*aPresContext, aReflowState, aDesiredSize);
+      DidResizeRows(aReflowState, aDesiredSize);
       if (isPaginated) {
         CacheRowHeightsForPrinting(aPresContext, GetFirstRow());
       }
@@ -1660,7 +1659,7 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsPresContext*        aPresContext,
         aDesiredSize.height = GetLastRowSibling(mFrames.FirstChild())->GetRect().YMost();
       } else {
         // Inform the row of its new height.
-        ((nsTableRowFrame*)aNextFrame)->DidResize(aPresContext, aReflowState.reflowState);
+        ((nsTableRowFrame*)aNextFrame)->DidResize(aReflowState.reflowState);
         // the overflow area may have changed inflate the overflow area
         if (aReflowState.tableFrame->IsAutoHeight()) {
           // Because other cells in the row may need to be aligned differently,

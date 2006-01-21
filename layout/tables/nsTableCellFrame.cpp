@@ -307,22 +307,22 @@ nsTableCellFrame::DecorateForSelection(nsPresContext* aPresContext,
             GetColor(nsILookAndFeel::eColor_TextSelectBackground,
                      bordercolor);
         }
-        PRInt16 t2p = (PRInt16) aPresContext->PixelsToTwips();
-        if ((mRect.width >(3*t2p)) && (mRect.height > (3*t2p)))
+        GET_PIXELS_TO_TWIPS(aPresContext, p2t);
+        if ((mRect.width >(3*p2t)) && (mRect.height > (3*p2t)))
         {
           //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
           bordercolor = EnsureDifferentColors(bordercolor, aStyleColor->mBackgroundColor);
           //outerrounded
           aRenderingContext.SetColor(bordercolor);
-          aRenderingContext.DrawLine(t2p, 0, mRect.width, 0);
-          aRenderingContext.DrawLine(0, t2p, 0, mRect.height);
-          aRenderingContext.DrawLine(t2p, mRect.height, mRect.width, mRect.height);
-          aRenderingContext.DrawLine(mRect.width, t2p, mRect.width, mRect.height);
+          aRenderingContext.DrawLine(p2t, 0, mRect.width, 0);
+          aRenderingContext.DrawLine(0, p2t, 0, mRect.height);
+          aRenderingContext.DrawLine(p2t, mRect.height, mRect.width, mRect.height);
+          aRenderingContext.DrawLine(mRect.width, p2t, mRect.width, mRect.height);
           //middle
-          aRenderingContext.DrawRect(t2p, t2p, mRect.width-t2p, mRect.height-t2p);
+          aRenderingContext.DrawRect(p2t, p2t, mRect.width-p2t, mRect.height-p2t);
           //shading
-          aRenderingContext.DrawLine(2*t2p, mRect.height-2*t2p, mRect.width-t2p, mRect.height- (2*t2p));
-          aRenderingContext.DrawLine(mRect.width - (2*t2p), 2*t2p, mRect.width - (2*t2p), mRect.height-t2p);
+          aRenderingContext.DrawLine(2*p2t, mRect.height-2*p2t, mRect.width-p2t, mRect.height- (2*p2t));
+          aRenderingContext.DrawLine(mRect.width - (2*p2t), 2*p2t, mRect.width - (2*p2t), mRect.height-p2t);
         }
       }
     }
@@ -579,9 +579,7 @@ void nsTableCellFrame::VerticallyAlignChild(const nsHTMLReflowState& aReflowStat
     case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
       // Align the middle of the child frame with the middle of the content area, 
       kidYTop = (height - childHeight - bottomInset + topInset) / 2;
-      kidYTop = nsTableFrame::RoundToPixel(kidYTop,
-                                           presContext->ScaledPixelsToTwips(),
-                                           eAlwaysRoundDown);
+      kidYTop = nsTableFrame::RoundToPixel(kidYTop, p2t, eAlwaysRoundDown);
   }
   // if the content is larger than the cell height align from top
   kidYTop = PR_MAX(0, kidYTop);
@@ -720,7 +718,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
-  float p2t = aPresContext->ScaledPixelsToTwips();
+  GET_PIXELS_TO_TWIPS(aPresContext, p2t);
 
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
   nscoord availHeight = aReflowState.availableHeight;
@@ -1277,7 +1275,7 @@ nsBCTableCellFrame::SetBorderWidth(PRUint8 aSide,
 nsBCTableCellFrame::GetSelfOverflow(nsRect& aOverflowArea)
 {
   nsMargin halfBorder;
-  float p2t = GetPresContext()->PixelsToTwips();
+  GET_PIXELS_TO_TWIPS(GetPresContext(), p2t);
   halfBorder.top = BC_BORDER_TOP_HALF_COORD(p2t, mTopBorder);
   halfBorder.right = BC_BORDER_RIGHT_HALF_COORD(p2t, mRightBorder);
   halfBorder.bottom = BC_BORDER_BOTTOM_HALF_COORD(p2t, mBottomBorder);

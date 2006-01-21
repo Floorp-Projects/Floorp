@@ -3474,7 +3474,6 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLRef
 
 static
 void ResizeCells(nsTableFrame&            aTableFrame,
-                 nsPresContext*          aPresContext,
                  const nsHTMLReflowState& aReflowState)
 {
   nsAutoVoidArray rowGroups;
@@ -3498,7 +3497,7 @@ void ResizeCells(nsTableFrame&            aTableFrame,
                                       groupDesiredSize.height);
     nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
     while (rowFrame) {
-      rowFrame->DidResize(aPresContext, aReflowState);
+      rowFrame->DidResize(aReflowState);
       rgFrame->ConsiderChildOverflow(groupDesiredSize.mOverflowArea, rowFrame);
       rowFrame = rowFrame->GetNextRow();
     }
@@ -3517,9 +3516,8 @@ void
 nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
                                      nscoord                  aAmount)
 { 
-  nsPresContext *presContext = GetPresContext();
-  float p2t;
-  p2t = presContext->PixelsToTwips();
+ 
+  GET_PIXELS_TO_TWIPS(GetPresContext(), p2t);
 
   nscoord cellSpacingY = GetCellSpacingY();
 
@@ -3556,7 +3554,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
             yEndRG += rowRect.height + cellSpacingY;
             amountUsed += amountForRow;
             amountUsedByRG += amountForRow;
-            //rowFrame->DidResize(aPresContext, aReflowState);        
+            //rowFrame->DidResize(aReflowState);        
             nsTableFrame::RePositionViews(rowFrame);
           }
         }
@@ -3585,7 +3583,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
   }
 
   if (amountUsed >= aAmount) {
-    ResizeCells(*this, presContext, aReflowState);
+    ResizeCells(*this, aReflowState);
     return;
   }
 
@@ -3661,7 +3659,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
           amountUsed += amountForRow;
           amountUsedByRG += amountForRow;
           NS_ASSERTION((amountUsed <= aAmount), "invalid row allocation");
-          //rowFrame->DidResize(aPresContext, aReflowState);        
+          //rowFrame->DidResize(aReflowState);        
           nsTableFrame::RePositionViews(rowFrame);
         }
         else {
@@ -3690,7 +3688,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
     yOriginRG = yEndRG;
   }
 
-  ResizeCells(*this, presContext, aReflowState);
+  ResizeCells(*this, aReflowState);
 }
 
 static void
@@ -4144,8 +4142,7 @@ nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
   width = PR_MAX(width, 0);
 
   if (NS_UNCONSTRAINEDSIZE != width) {
-    float p2t;
-    p2t = GetPresContext()->PixelsToTwips();
+    GET_PIXELS_TO_TWIPS(GetPresContext(), p2t);
     width = RoundToPixel(width, p2t, eRoundUpIfHalfOrMore);
   }
 
