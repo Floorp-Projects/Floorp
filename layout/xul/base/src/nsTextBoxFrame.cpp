@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Peter Annema <disttsc@bart.nl>
  *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -705,34 +706,45 @@ nsTextBoxFrame::UpdateAccessTitle()
 {
     PRInt32 menuAccessKey;
     nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
-    if (menuAccessKey) {
-        if (!mAccessKey.IsEmpty()) {
-            if (( !FindInReadable(mAccessKey, mTitle, nsCaseInsensitiveStringComparator()))
-                || AlwaysAppendAccessKey()) 
-            {
-                nsAutoString tmpstring;
-                if (InsertSeparatorBeforeAccessKey() &&
-                    !mTitle.IsEmpty() && !NS_IS_SPACE(mTitle.Last())) {
-                  tmpstring += ' ';
-                }
-                tmpstring += '(';
-                tmpstring += mAccessKey;
-                ToUpperCase(tmpstring);
-                tmpstring.Append(NS_LITERAL_STRING(")"));
-                PRInt32 offset = mTitle.RFind("...");
-                if (offset != kNotFound) {
-                    mTitle.Insert(tmpstring,NS_STATIC_CAST(PRUint32, offset));
-                } else {
-                    PRUint32 l = mTitle.Length();
-                    if((l > 0) && (PRUnichar(':')==mTitle[l-1])) {
-                      mTitle.Insert(tmpstring,l-1);
-                    } else {
-                      mTitle += tmpstring;
-                    }
-                }
-            }
-        }
+    if (!menuAccessKey || mAccessKey.IsEmpty())
+        return;
+
+    if (!AlwaysAppendAccessKey() &&
+        FindInReadable(mAccessKey, mTitle, nsCaseInsensitiveStringComparator()))
+        return;
+
+    nsAutoString accessKeyLabel;
+    accessKeyLabel += '(';
+    accessKeyLabel += mAccessKey;
+    ToUpperCase(accessKeyLabel);
+    accessKeyLabel += ')';
+
+    if (mTitle.IsEmpty()) {
+        mTitle = accessKeyLabel;
+        return;
     }
+
+    PRInt32 offset = mTitle.RFind("...");
+    if (offset == kNotFound) {
+        offset = (PRInt32)mTitle.Length();
+        if (mTitle.Last() == PRUnichar(':'))
+            offset--;
+    }
+
+    PRInt32 len = (PRInt32)accessKeyLabel.Length();
+    if (offset >= len &&
+        Substring(mTitle, offset - len, len) == accessKeyLabel) {
+        // We don't need to append access key label. See bug 324159
+        return;
+    }
+
+    if (InsertSeparatorBeforeAccessKey() && offset > 0 &&
+        !NS_IS_SPACE(mTitle[offset - 1])) {
+        mTitle.Insert(NS_LITERAL_STRING(" "), (PRUint32)offset);
+        offset++;
+    }
+
+    mTitle.Insert(accessKeyLabel, (PRUint32)offset);
 }
 
 void
