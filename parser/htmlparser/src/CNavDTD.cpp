@@ -1109,20 +1109,16 @@ CNavDTD::WillHandleStartTag(CToken* aToken, eHTMLTags aTag,
 }
 
 static void
-PushMisplacedAttributes(nsIParserNode& aNode, nsDeque& aDeque, PRInt32& aCount)
+PushMisplacedAttributes(nsIParserNode& aNode, nsDeque& aDeque)
 {
-  if (aCount <= 0) {
-    return;
-  }
-
   nsCParserNode& theAttrNode = NS_STATIC_CAST(nsCParserNode &, aNode);
-  while (aCount) {
+
+  for (PRInt32 count = aNode.GetAttributeCount(); count > 0; --count) {
     CToken* theAttrToken = theAttrNode.PopAttributeToken();
     if (theAttrToken) {
       theAttrToken->SetNewlineCount(0);
       aDeque.Push(theAttrToken);
     }
-    --aCount;
   }
 }
 
@@ -1137,50 +1133,44 @@ CNavDTD::HandleOmittedTag(CToken* aToken, eHTMLTags aChildTag,
   // if it's potentially a child of another section. If it is, the cache it for
   // later.
   PRInt32 theTagCount = mBodyContext->GetCount();
+  PRBool pushToken = PR_FALSE;
 
-  // XXX This null check seems like it might be redundant.
-  if (aToken) {
-    PRInt32 attrCount = aToken->GetAttributeCount();
-    if (gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch) &&
-        !nsHTMLElement::IsWhitespaceTag(aChildTag)) {
-      eHTMLTags theTag = eHTMLTag_unknown;
+  if (gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch) &&
+      !nsHTMLElement::IsWhitespaceTag(aChildTag)) {
+    eHTMLTags theTag = eHTMLTag_unknown;
 
-      // Determine the insertion point
-      while (theTagCount > 0) {
-        theTag = mBodyContext->TagAt(--theTagCount);
-        if (!gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch)) {
-          // This is our insertion point.
-          mBodyContext->mContextTopIndex = theTagCount;
-          break;
-        }
-      }
-
-      if (mBodyContext->mContextTopIndex > -1) {
-        PushIntoMisplacedStack(aToken);
-        // We're going to be using this token later.
-        IF_HOLD(aToken);
-
-        // If the token is attributed then save those attributes too.
-        if (attrCount > 0) {
-          PushMisplacedAttributes(*aNode, mMisplacedContent, attrCount);
-        }
-
-        // Remember that we've stashed some misplaced content.
-        mFlags |= NS_DTD_FLAG_MISPLACED_CONTENT;
+    // Determine the insertion point
+    while (theTagCount > 0) {
+      theTag = mBodyContext->TagAt(--theTagCount);
+      if (!gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch)) {
+        // This is our insertion point.
+        mBodyContext->mContextTopIndex = theTagCount;
+        break;
       }
     }
 
-    if (aChildTag != aParent &&
-        gHTMLElements[aParent].HasSpecialProperty(kSaveMisplaced)) {
-      // Hold on to this token for later use. Ref Bug. 53695
-      IF_HOLD(aToken);
-      PushIntoMisplacedStack(aToken);
+    if (mBodyContext->mContextTopIndex > -1) {
+      pushToken = PR_TRUE;
 
-      // If the token is attributed then save those attributes too.
-      if (attrCount > 0) {
-        PushMisplacedAttributes(*aNode, mMisplacedContent, attrCount);
-      }
+      // Remember that we've stashed some misplaced content.
+      mFlags |= NS_DTD_FLAG_MISPLACED_CONTENT;
     }
+  }
+  
+  if (aChildTag != aParent &&
+      gHTMLElements[aParent].HasSpecialProperty(kSaveMisplaced)) {
+    NS_ASSERTION(!pushToken, "A strange element has both kBadContentWatch "
+                             "and kSaveMisplaced");
+    pushToken = PR_TRUE;
+  }
+
+  if (pushToken) {
+    // Hold on to this token for later use. Ref Bug. 53695
+    IF_HOLD(aToken);
+    PushIntoMisplacedStack(aToken);
+
+    // If the token is attributed then save those attributes too.
+    PushMisplacedAttributes(*aNode, mMisplacedContent);
   }
 }
 
