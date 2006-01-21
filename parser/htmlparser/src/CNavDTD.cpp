@@ -2069,7 +2069,7 @@ CNavDTD::CollectAttributes(nsIParserNode *aNode, eHTMLTags aTag, PRInt32 aCount)
           break;
         }
 
-        if (IsParserInDocWrite()) {
+        if (!IsParserInDocWrite()) {
           mLineNumber += theToken->GetNewlineCount();
         }
 
