@@ -520,7 +520,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
 
   // all table cells have the same top and bottom margins, namely cellSpacingY
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
-  GET_TWIPS_TO_PIXELS(aPresContext, p2t);
+  GET_PIXELS_TO_TWIPS(aPresContext, p2t);
 
   PRInt32 numEffCols = tableFrame->GetEffectiveColCount();
 
