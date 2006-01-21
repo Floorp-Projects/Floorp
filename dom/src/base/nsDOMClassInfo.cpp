@@ -5737,12 +5737,36 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       my_cx = (JSContext *)my_context->GetNativeContext();
     }
 
+    // Resolving a standard class won't do any evil, and it's possible
+    // for caps to get the answer wrong, so disable the security check
+    // for this case.
+
     JSBool did_resolve = JS_FALSE;
+    PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
+    sDoSecurityCheckInAddProperty = PR_FALSE;
 
-    if (!::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve)) {
+    JSBool ok = ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve);
+
+    sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
+
+    if (!ok) {
+      // Trust the JS engine (or the script security manager) to set
+      // the exception in the JS engine.
+
+      jsval exn;
+      if (!JS_GetPendingException(my_cx, &exn)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      // Return NS_OK to avoid stomping over the exception that was passed
+      // down from the ResolveStandardClass call.
+      // Note that the order of the JS_ClearPendingException and
+      // JS_SetPendingException is important in the case that my_cx == cx.
+
+      JS_ClearPendingException(my_cx);
+      JS_SetPendingException(cx, exn);
       *_retval = JS_FALSE;
-
-      return NS_ERROR_UNEXPECTED;
+      return NS_OK;
     }
 
     if (did_resolve) {
@@ -6056,10 +6080,6 @@ nsWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         return NS_OK;
       }
 
-#ifdef DEBUG_mrbkap
-      printf(">>> Enumerating a window!\n");
-#endif
-
       // The security check passed, let's see if we need to get the inner
       // window's JS object or if we can just start enumerating.
       nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
@@ -6093,13 +6113,6 @@ nsWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       }
 
       if (*idp != JSVAL_VOID) {
-#ifdef DEBUG_mrbkap
-        {
-          jsval v;
-          NS_ASSERTION(JS_IdToValue(cx, *idp, &v), "Give me my value");
-          printf("=== %s\n", JS_GetStringBytes(JS_ValueToString(cx, v)));
-        }
-#endif
         break;
       }
 
