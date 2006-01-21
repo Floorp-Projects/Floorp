@@ -3915,7 +3915,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
     if (input.IsEmpty())        return(NS_ERROR_UNEXPECTED);
 
     // HTTP Get method support
-    action += NS_LITERAL_STRING("?") + input;
+    action += input;
   }
 
   nsCOMPtr<nsIInternetSearchContext>  context;
