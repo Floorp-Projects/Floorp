@@ -703,7 +703,7 @@ sub packit_l10n {
   TinderUtils::print_log "Starting l10n builds\n";
 
   foreach my $wgeturl (keys(%Settings::WGetFiles)) {
-    my $status = TinderUtils::run_shell_command_with_timeout("wget --non-verbose --output-document \"$Settings::WGetFiles{$wgeturl}\" $wgeturl",
+    my $status = TinderUtils::run_shell_command_with_timeout("wget -nv --output-document \"$Settings::WGetFiles{$wgeturl}\" $wgeturl",
                                                              $Settings::WGetTimeout);
     if ($status->{exit_value} != 0) {
       TinderUtils::print_log "Error: wget failed or timed out.\n";
@@ -1126,11 +1126,6 @@ sub PreBuild {
       if ( -d "mozilla") {
         TinderUtils::run_shell_command "rm -rf mozilla";
         $cachebuild = 1;
-      } else {
-        TinderUtils::print_log "starting non-release build\n";
-        # Bug 305233 
-        TinderUtils::run_shell_command "rm -rf mozilla/dist";
-        $cachebuild = 0;
       }
     }
     if ( -d "l10n" ) {
@@ -1251,8 +1246,18 @@ sub main {
   my $store_home;
   $store_home = "$mozilla_build_dir/$store_name";
 
+  if (is_windows()) {
+    # need to convert the path in case we're using activestate perl or
+    # cygwin rsync
+    $local_build_dir = `cygpath -u $local_build_dir`;
+    $store_home = `cygpath -u $store_home`;
+  }
+  chomp($local_build_dir);
+  chomp($store_home);
+
   if ( -e "$store_home/packages" ) {
-    TinderUtils::print_log "Found old storage directory, removing.\n";
+    # remove old storage directory
+    TinderUtils::print_log "Found old storage directory.  Removing.\n";
     TinderUtils::run_shell_command "rm -rf $store_home/packages";
   }
 
