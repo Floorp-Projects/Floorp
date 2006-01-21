@@ -456,6 +456,11 @@ nsMathMLContainerFrame::FinalizeReflow(nsIRenderingContext& aRenderingContext,
                         mEmbellishData.direction == NS_STRETCH_DIRECTION_UNSUPPORTED);
   Place(aRenderingContext, placeOrigin, aDesiredSize);
 
+  // exit now if the frame was flagged as having invalid markup
+  if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
+    return NS_OK;
+  }
+
   if (!placeOrigin) {
     // This means the rect.x and rect.y of our children were not set!!
     // Don't go without checking to see if our parent will later fire a Stretch() command
