@@ -37,10 +37,21 @@
 
 
 /* all params are optional */
-function createEventWithDialog(calendar, startDate, endDate, summary)
+function createEventWithDialog(calendar, startDate, endDate, summary, event)
 {
     const kDefaultTimezone = calendarDefaultTimezone();
-    var event = createEvent();
+
+
+    var onNewEvent = function(event, calendar, originalEvent) {
+        calendar.addItem(event, null);
+    }
+
+    if (event) {
+        openEventDialog(event, calendar, "new", onNewEvent);
+        return;
+    }
+    
+    event = createEvent();
 
     if (!startDate) {
         startDate = jsDateToDateTime(new Date());
@@ -84,17 +95,23 @@ function createEventWithDialog(calendar, startDate, endDate, summary)
     if (summary)
         event.title = summary;
 
-    var onNewEvent = function(event, calendar, originalEvent) {
-        calendar.addItem(event, null);
-    }
-
     openEventDialog(event, calendar, "new", onNewEvent);
 }
 
-function createTodoWithDialog(calendar, dueDate, summary)
+function createTodoWithDialog(calendar, dueDate, summary, todo)
 {
     const kDefaultTimezone = calendarDefaultTimezone();
-    var todo = createToDo();
+
+    var onNewItem = function(item, calendar, originalItem) {
+        calendar.addItem(item, null);
+    }
+
+    if (todo) {
+        openEventDialog(todo, calendar, "new", onNewItem);
+        return;
+    }
+
+    todo = createToDo();
 
     if (calendar) {
         todo.calendar = calendar;

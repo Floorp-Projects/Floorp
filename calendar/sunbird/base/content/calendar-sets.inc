@@ -46,10 +46,10 @@
 </broadcasterset>
 
 <commandset id="calendar_commands">
-  <command id="new_command" oncommand="newEventCommand( event )"/>
+  <command id="new_command" oncommand="newEvent()"/>
   <command id="delete_command" oncommand="deleteEventCommand( )" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="delete_command_no_confirm" oncommand="deleteEventCommand( true )" disabled="true" disabledwhennoeventsselected="true"/>
-  <command id="modify_command" oncommand="editEventCommand()" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="modify_command" oncommand="editEvent()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="send_event_command" oncommand="sendEvent()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="print_command" oncommand="print()"/>
   
@@ -60,8 +60,8 @@
   <command id="paste_command" oncommand="pasteFromClipboard()"/>
   <command id="select_all_command" oncommand="selectAllEvents()"/>
 
-  <command id="new_todo_command" oncommand="newToDoCommand()"/>
-  <command id="modify_todo_command" oncommand="modifyToDoCommand( event )"/>
+  <command id="new_todo_command" oncommand="newToDo()"/>
+  <command id="modify_todo_command" oncommand="editToDo()"/>
   <command id="delete_todo_command" oncommand="deleteToDoCommand()" disabled="true"/>
 
   <command id="new_calendar_command" oncommand="newCalendarDialog()"/>

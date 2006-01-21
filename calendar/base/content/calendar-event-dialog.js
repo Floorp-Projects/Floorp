@@ -37,6 +37,10 @@
 
 var gReadOnlyMode = false;
 
+// If the user clicks 'More', then we set this to true.  Otherwise, we don't
+// load/check the stuff in this area, because it hasn't changed.
+var gDetailsShown = false;
+
 /* dialog stuff */
 function onLoad()
 {
@@ -72,16 +76,14 @@ function onLoad()
     updateAccept();
 
     // update datetime pickers
-    updateDuedate();
+    updateDueDate();
+    updateEntryDate();
 
     // update datetime pickers
     updateAllDay();
 
     // update recurrence button
     updateRecurrence();
-
-    // update alarm checkbox/label/settings button
-    updateAlarm();
 
     // update our size!
     window.sizeToContent();
@@ -119,8 +121,6 @@ function loadDialog(item)
 
     setElementValue("item-title",       item.title);
     setElementValue("item-location",    item.getProperty("LOCATION"));
-    setElementValue("item-url",         item.getProperty("URL"));
-    setElementValue("item-description", item.getProperty("DESCRIPTION"));
 
     /* event specific properties */
     if (isEvent(item)) {
@@ -133,25 +133,22 @@ function loadDialog(item)
         }
         setElementValue("event-starttime",   startDate.jsDate);
         setElementValue("event-endtime",     endDate.jsDate);
+        document.getElementById("component-type").selectedIndex = 0;
     }
 
     /* todo specific properties */
     if (isToDo(item)) {
+        var hasEntryDate = (item.entryDate != null);
+        setElementValue("todo-has-entrydate", hasEntryDate, "checked");
+        if (hasEntryDate)
+            setElementValue("todo-entrydate", item.entryDate.jsDate);
+
         var hasDueDate = (item.dueDate != null);
         setElementValue("todo-has-duedate", hasDueDate, "checked");
         if (hasDueDate)
             setElementValue("todo-duedate", item.dueDate.jsDate);
-        setElementValue("todo-completed", item.isCompleted, "checked");
+        document.getElementById("component-type").selectedIndex = 1;
     }
-
-    /* attendence */
-    var attendeeString = "";
-    for each (var attendee in item.getAttendees({})) {
-        if (attendeeString != "")
-            attendeeString += ",";
-        attendeeString += attendee.id.split("mailto:")[1];
-    }
-    setElementValue("item-attendees", attendeeString);
 
     /* item default calendar */
     if (item.calendar) {
@@ -167,6 +164,51 @@ function loadDialog(item)
         document.getElementById("item-calendar").selectedIndex = 0;
     }
 
+    /* Categories */
+    try {
+        var pb2 = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch2);
+        var categoriesString = pb2.getComplexValue("calendar.categories.names", 
+                                                  Components.interfaces.nsISupportsString).data;
+        var categoriesList = categoriesString.split( "," );
+
+        // insert the category already in the menulist so it doesn't get lost
+        var itemCategory = item.getProperty("CATEGORIES");
+        if (itemCategory) {
+            if (categoriesString.indexOf(itemCategory) == -1)
+                categoriesList[categoriesList.length] = itemCategory;
+        }
+        categoriesList.sort();
+
+        var oldMenulist = document.getElementById("item-categories");
+        while (oldMenulist.hasChildNodes()) {
+            oldMenulist.removeChild(oldMenulist.lastChild);
+        }
+
+        var categoryMenuList = document.getElementById("item-categories");
+        var indexToSelect = 0;
+
+        // Add a 'none' option to allow users to cancel the category
+        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                            .getService(Components.interfaces.nsIStringBundleService);
+        var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+        var noneItem = categoryMenuList.appendItem(props.GetStringFromName("None"), "NONE");
+
+        for (var i in categoriesList) {
+            var catItem = categoryMenuList.appendItem(categoriesList[i], categoriesList[i]);
+            catItem.value = categoriesList[i];
+            if (itemCategory && categoriesList[i] == itemCategory) {
+                indexToSelect = parseInt(i)+1;  // Add 1 because of 'None'
+            }
+        }
+        categoryMenuList.selectedIndex = indexToSelect;
+
+    } catch (ex) {
+        // The app using this dialog doesn't support categories
+        document.getElementById("categories-box").collapsed = true;
+    }
+
+
     /* recurrence */
     /* if the item is a proxy occurrence/instance, a few things aren't valid:
      * - Setting recurrence on the item
@@ -179,15 +221,20 @@ function loadDialog(item)
     } else if (item.recurrenceInfo)
         setElementValue("item-recurrence", "true", "checked");
 
-    /* alarms */
-    if (item.alarmTime) {
-        var alarmLength = item.getProperty("alarmLength");
-        if (alarmLength != null) {
-            setElementValue("alarm-length-field", alarmLength);
-            setElementValue("alarm-length-units", event.getProperty("alarmUnits"));
-            setElementValue("alarm-trigger-relation", item.getProperty("alarmRelated"));
+    var detailsButton = document.getElementById("calendar-event-dialog").getButton("disclosure");
+    var detailsElements = document.getElementsByAttribute("details", "true");
+
+    if (document.getElementById("description-row").getAttribute("collapsed") != "true") {
+        detailsButton.setAttribute("label", lessLabel);
+        for each (elem in detailsElements) {
+            elem.collapsed = false;
         }
-        setElementValue("item-alarm", "custom");
+        loadDetails();
+    } else {
+        for each (elem in detailsElements) {
+            elem.collapsed = true;
+        }
+        detailsButton.setAttribute("label", moreLabel);
     }
 }
 
@@ -195,8 +242,6 @@ function saveDialog(item)
 {
     setItemProperty(item, "title",       getElementValue("item-title"));
     setItemProperty(item, "LOCATION",    getElementValue("item-location"));
-    setItemProperty(item, "URL",         getElementValue("item-url"));
-    setItemProperty(item, "DESCRIPTION", getElementValue("item-description"));
 
     if (isEvent(item)) {
         var startDate = jsDateToDateTime(getElementValue("event-starttime"));
@@ -216,23 +261,13 @@ function saveDialog(item)
     }
 
     if (isToDo(item)) {
+        var entryDate = getElementValue("todo-has-entrydate", "checked") ? 
+            jsDateToDateTime(getElementValue("todo-entrydate")) : null;
+        setItemProperty(item, "entryDate",   entryDate);
+
         var dueDate = getElementValue("todo-has-duedate", "checked") ? 
             jsDateToDateTime(getElementValue("todo-duedate")) : null;
         setItemProperty(item, "dueDate",     dueDate);
-        setItemProperty(item, "isCompleted", getElementValue("todo-completed", "checked"));
-    }
-
-    /* attendence */
-    item.removeAllAttendees();
-    var attendees = getElementValue("item-attendees");
-    if (attendees != "") {
-        for each (var addr in attendees.split(",")) {
-            if (addr != "") {
-                var attendee = createAttendee();
-                attendee.id = "mailto:" + addr;
-                item.addAttendee(attendee);
-            }
-        }
     }
 
     /* recurrence */
@@ -242,6 +277,51 @@ function saveDialog(item)
         }
     } else {
         item.recurrenceInfo = null;
+    }
+
+    /* Category */
+    var category = getElementValue("item-categories");
+
+    if (category != "NONE") {
+       setItemProperty(item, "CATEGORIES", category);
+    } else {
+       item.deleteProperty("CATEGORIES");
+    }
+
+    if (!gDetailsShown) {
+        // We never showed the items in the 'More' box.  That means that clone()
+        // took care of it, so just return now
+        dump(item.icalString + '\n');
+        return;
+    }
+
+    setItemProperty(item, "URL",         getElementValue("item-url"));
+    setItemProperty(item, "DESCRIPTION", getElementValue("item-description"));
+
+    var status;
+    if (isEvent(item)) {
+        status = getElementValue("event-status");
+    } else {
+        status = getElementValue("todo-status");
+    }
+
+    setItemProperty(item, "STATUS",   status);
+    setItemProperty(item, "PRIORITY", getElementValue("priority-levels"));
+    setItemProperty(item, "CLASS", getElementValue("privacy-menulist"));
+
+    if (item.status == "COMPLETED" && isToDo(item)) {
+        item.completedDate = getElementValue("compeleted-date-picker");
+    }
+
+    setItemProperty(item, "PERCENT-COMPLETE", getElementValue("percent-complete-menulist"));
+
+    /* attendence */
+    item.removeAllAttendees();
+    var attendeeListBox = document.getElementById("attendees-listbox");
+    for each (kid in attendeeListBox.childNodes) {
+        if (kid.attendee) {
+            item.addAttendee(kid.attendee);
+        }
     }
 
     /* alarms */
@@ -263,9 +343,15 @@ function saveDialog(item)
         var alarmTime = null;
 
         if (alarmRelated == "START") {
-            alarmTime = item.startDate.clone();
+            if (isEvent(item))
+                alarmTime = item.startDate.clone();
+            else
+                alarmTime = item.entryDate.clone();
         } else if (alarmRelated == "END") {
-            alarmTime = item.endDate.clone();
+            if (isEvent(item))
+                alarmTime = item.endDate.clone();
+            else
+                alarmTime = item.dueDate.clone();
         }
 
         switch (alarmUnits) {
@@ -305,6 +391,11 @@ function updateTitle()
     }
 }
 
+function updateComponentType() {
+    //XXX We still can't properly convert from event <-> task via QI
+    return;
+}
+
 function updateStyle()
 {
     const kDialogStylesheet = "chrome://calendar/content/calendar-event-dialog.css";
@@ -331,12 +422,25 @@ function updateAccept()
         acceptButton.removeAttribute("disabled");
 
     // don't allow for end dates to be before start dates
-    var startDate = jsDateToDateTime(getElementValue("event-starttime"));
-    var endDate = jsDateToDateTime(getElementValue("event-endtime"));
-    if (endDate.compare(startDate) == -1) {
+    var startDate;
+    var endDate;
+    if (isEvent(window.calendarItem)) {
+        startDate = jsDateToDateTime(getElementValue("event-starttime"));
+        endDate = jsDateToDateTime(getElementValue("event-endtime"));
+    } else {
+        startDate = getElementValue("todo-has-entrydate", "checked") ? 
+            jsDateToDateTime(getElementValue("todo-entrydate")) : null;
+        endDate = getElementValue("todo-has-duedate", "checked") ? 
+            jsDateToDateTime(getElementValue("todo-duedate")) : null;
+    }
+
+    var timeWarning = document.getElementById("end-time-warning");
+    if (endDate && startDate && endDate.compare(startDate) == -1) {
         acceptButton.setAttribute("disabled", "true");
-    } else if (acceptButton.getAttribute("disabled")) {
+        timeWarning.removeAttribute("hidden");
+    } else {
         acceptButton.removeAttribute("disabled");
+        timeWarning.setAttribute("hidden", "true");
     }
 
     // can't add/edit items in readOnly calendars
@@ -347,10 +451,14 @@ function updateAccept()
     if (gReadOnlyMode || cal.readOnly) {
         acceptButton.setAttribute("disabled", "true");
     }
+
+    if (!updateTaskAlarmWarnings()) {
+        acceptButton.setAttribute("disabled", "true");
+    }
     return;
 }
 
-function updateDuedate()
+function updateDueDate()
 {
     if (!isToDo(window.calendarItem))
         return;
@@ -359,8 +467,49 @@ function updateDuedate()
     setElementValue("todo-duedate", getElementValue("todo-duedate"));
 
     setElementValue("todo-duedate", !getElementValue("todo-has-duedate", "checked"), "disabled");
+
+    updateAccept();
 }
 
+function updateEntryDate()
+{
+    if (!isToDo(window.calendarItem))
+        return;
+
+    // force something to get set if there was nothing there before
+    setElementValue("todo-entrydate", getElementValue("todo-entrydate"));
+
+    setElementValue("todo-entrydate", !getElementValue("todo-has-entrydate", "checked"), "disabled");
+
+    updateAccept();
+}
+
+function updateTaskAlarmWarnings() {
+    document.getElementById("alarm-start-warning").setAttribute("hidden", true);
+    document.getElementById("alarm-end-warning").setAttribute("hidden", true);
+
+    var alarmType = getElementValue("item-alarm");
+    if (!gDetailsShown || !isToDo(window.calendarItem) || alarmType == "none") {
+        return true;
+    }
+
+    var hasEntryDate = getElementValue("todo-has-entrydate", "checked");
+    var hasDueDate = getElementValue("todo-has-duedate", "checked");
+
+    var alarmRelated = document.getElementById("alarm-trigger-relation").selectedItem.value;
+
+    if ((alarmType != "custom" || alarmRelated == "START") && !hasEntryDate) {
+        document.getElementById("alarm-start-warning").removeAttribute("hidden");
+        return false;
+    }
+
+    if (alarmRelated == "END" && !hasDueDate) {
+        document.getElementById("alarm-end-warning").removeAttribute("hidden");
+        return false;
+    }
+
+    return true;
+}
 
 function updateAllDay()
 {
@@ -406,10 +555,10 @@ function updateAlarm()
         /* restore old values if they're around */
         setAlarmFields(alarmItem);
         
-        document.getElementById("alarm-details").style.visibility = "visible";
+        document.getElementById("alarm-details").removeAttribute("hidden");
         break;
     default:
-        document.getElementById("alarm-details").style.visibility = "hidden";
+        document.getElementById("alarm-details").setAttribute("hidden", true);
 
         var customItem = document.getElementById("alarm-custom-menuitem");
         if (prevAlarmItem == customItem) {
@@ -423,6 +572,9 @@ function updateAlarm()
     }
 
     prevAlarmItem = alarmItem;
+    updateAccept();
+
+    this.sizeToContent();
 }
 
 function editRecurrence()
@@ -462,7 +614,14 @@ function setItemProperty(item, propertyName, value)
             item.endDate = value;
         break;
 
-
+    case "entryDate":
+        if (value == item.entryDate)
+            break;
+        if ((value && !item.entryDate) ||
+            (!value && item.entryDate) ||
+            (value.compare(item.entryDate) != 0))
+            item.entryDate = value;
+        break;
     case "dueDate":
         if (value == item.dueDate)
             break;
@@ -493,5 +652,181 @@ function setItemProperty(item, propertyName, value)
         else if (item.getProperty(propertyName) != value)
             item.setProperty(propertyName, value);
         break;
+    }
+}
+
+function toggleDetails() {
+    var detailsElements = document.getElementsByAttribute("details", "true");
+    var detailsButton = document.getElementById("calendar-event-dialog").getButton("disclosure");
+
+    if (!detailsElements[0].collapsed) {
+        // Hide details
+        for each (elem in detailsElements) {
+            elem.collapsed = true;
+        }
+        detailsButton.setAttribute("label", moreLabel);
+        this.sizeToContent();
+        return;
+    }
+
+    // Display details
+    for each (elem in detailsElements) {
+        elem.collapsed = false;
+    }
+    detailsButton.setAttribute("label", lessLabel);
+    this.sizeToContent();
+
+    if (gDetailsShown) {
+        // We've already loaded this stuff before, so we're done
+        return;
+    }
+
+    loadDetails();
+}
+
+function loadDetails() {
+    gDetailsShown = true;
+    var item = window.calendarItem;
+
+    /* attendence */
+    var attendeeString = "";
+    var attendeeListBox = document.getElementById("attendees-listbox");
+
+    var child;
+    while ((child = attendeeListBox.lastChild) && (child.tagName == "listitem")) {
+        attendeeListBox.removeChild(child);
+    }
+
+    for each (var attendee in item.getAttendees({})) {
+        var listItem = document.createElement("listitem");
+        var nameCell = document.createElement("listcell");
+        nameCell.setAttribute("label", attendee.id.split("MAILTO:")[1]);
+        listItem.appendChild(nameCell);
+
+        listItem.attendee = attendee;
+        attendeeListBox.appendChild(listItem);
+    }
+
+
+    /* Status */
+    setElementValue("item-url",         item.getProperty("URL"));
+    setElementValue("item-description", item.getProperty("DESCRIPTION"));
+    if (isEvent(item)) {
+        setElementValue("event-status", item.getProperty("STATUS"));
+    } else {
+        setElementValue("todo-status", item.getProperty("STATUS"));
+    }
+
+    /* Task completed date */
+    if (item.completedDate) {
+        updateToDoStatus(item.status, item.completedDate.jsDate);
+    } else {
+        updateToDoStatus(item.status);
+    }
+
+    /* Priority */
+    var priorityInteger = parseInt(item.priority);
+    if (priorityInteger >= 1 && priorityInteger <= 4) {
+        document.getElementById("priority-levels").selectedIndex = 3; // high priority
+    } else if (priorityInteger == 5) {
+        document.getElementById("priority-levels").selectedIndex = 2; // medium priority
+    } else if (priorityInteger >= 6 && priorityInteger <= 9) {
+        document.getElementById("priority-levels").selectedIndex = 1; // low priority
+    } else {
+        document.getElementById("priority-levels").selectedIndex = 0; // not defined
+    }
+
+    /* Privacy */
+    switch (item.privacy) {
+        case "PUBLIC":
+        case "PRIVATE":
+        case "CONFIDENTIAL":
+            setElementValue("privacy-menulist", item.privacy);
+            break;
+        case "":
+            setElementValue("private-menulist", "PUBLIC");
+            break;
+        default:  // bogus value
+            dump("ERROR! Event has invalid privacy string: " + item.privacy + "\n");
+            break;
+    }
+
+    /* alarms */
+    if (item.alarmTime) {
+        var alarmLength = item.getProperty("alarmLength");
+        if (alarmLength != null) {
+            setElementValue("alarm-length-field", alarmLength);
+            setElementValue("alarm-length-units", item.getProperty("alarmUnits"));
+            setElementValue("alarm-trigger-relation", item.getProperty("alarmRelated"));
+        }
+        setElementValue("item-alarm", "custom");
+    }
+
+    // update alarm checkbox/label/settings button
+    updateAlarm();
+
+    updateTaskAlarmWarnings();
+}
+
+function updateToDoStatus(status, passedInCompletedDate)
+{
+    // RFC2445 doesn't support completedDates without the todo's status
+    // being "COMPLETED", however twiddling the status menulist shouldn't
+    // destroy that information at this point (in case you change status
+    // back to COMPLETED). When we go to store this VTODO as .ics the
+    // date will get lost.
+
+    var completedDate;
+    if (passedInCompletedDate) {
+        completedDate = passedInCompletedDate;
+    } else {
+        completedDate = null;
+    }
+
+    // remember the original values
+    var oldPercentComplete = getElementValue("percent-complete-menulist");
+    var oldCompletedDate   = getElementValue("completed-date-picker");
+
+    switch (status) {
+    case "":
+    case "NONE":
+        document.getElementById("todo-status").selectedIndex = 0;
+        disableElement("percent-complete-menulist");
+        disableElement("percent-complete-label");
+        break;
+    case "CANCELLED":
+        document.getElementById("todo-status").selectedIndex = 4;
+        disableElement("percent-complete-menulist");
+        disableElement("percent-complete-label");
+        break;
+    case "COMPLETED":
+        document.getElementById("todo-status").selectedIndex = 3;
+        enableElement("percent-complete-menulist");
+        enableElement("percent-complete-label");
+        // if there isn't a completedDate, set it to now
+        if (!completedDate)
+            completedDate = new Date();
+        break;
+    case "IN-PROCESS":
+        document.getElementById("todo-status").selectedIndex = 2;
+        disableElement("completed-date-picker");
+        enableElement("percent-complete-menulist");
+        enableElement("percent-complete-label");
+        break;
+    case "NEEDS-ACTION":
+        document.getElementById("todo-status").selectedIndex = 1;
+        enableElement("percent-complete-menulist");
+        enableElement("percent-complete-label");
+        break;
+    }
+
+    if (status == "COMPLETED") {
+        setElementValue("percent-complete-menulist", "100");
+        setElementValue("completed-date-picker", completedDate);
+        enableElement("completed-date-picker");
+    } else {
+        setElementValue("percent-complete-menulist", oldPercentComplete);
+        setElementValue("completed-date-picker", oldCompletedDate);
+        disableElement("completed-date-picker");
     }
 }

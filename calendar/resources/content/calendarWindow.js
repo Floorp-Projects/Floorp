@@ -77,7 +77,7 @@ calViewController.prototype.modifyOccurrence = function (aOccurrence, aNewStartT
         instance.endDate = aNewEndTime;
         doTransaction('modify', instance, instance.calendar, aOccurrence, null);
     } else {
-        editEventCommand();
+        editEvent();
     }
 }
 

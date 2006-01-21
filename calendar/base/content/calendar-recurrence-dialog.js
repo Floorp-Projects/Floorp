@@ -52,6 +52,8 @@ function onLoad()
 
     updateDuration();
 
+    updateAccept();
+
     opener.setCursor("auto");
 
     self.focus();
@@ -171,8 +173,6 @@ function saveDialog()
     case 0:
         recRule.type = "DAILY";
         var ndays = Number(getElementValue("daily-days"));
-        if (ndays == "")
-            ndays = 1;
         recRule.interval = ndays;
         break;
     case 1:
@@ -228,6 +228,8 @@ function saveDialog()
 function updateDeck()
 {
     document.getElementById("period-deck").selectedIndex = Number(getElementValue("period-list"));
+
+    updateAccept();
 }
 
 function updateDuration()
@@ -249,6 +251,41 @@ function updateDuration()
     } else {
         setElementValue("repeat-until-date", "true", "disabled");
     }
+}
+
+function updateAccept()
+{
+    var acceptButton = document.getElementById("calendar-recurrence-dialog").getButton("accept");
+    acceptButton.removeAttribute("disabled", "true");
+    document.getElementById("repeat-interval-warning").setAttribute("hidden", true);
+    document.getElementById("repeat-numberoftimes-warning").setAttribute("hidden", true);
+
+    switch (Number(getElementValue("period-list"))) {
+    case 0: // daily
+        var ndays = Number(getElementValue("daily-days"));
+        if (ndays == "" || ndays < 1) {
+            document.getElementById("repeat-interval-warning").removeAttribute("hidden");
+            acceptButton.setAttribute("disabled", "true");
+        }
+        break;
+    case 3: // yearly
+        var nyears = Number(getElementValue("yearly-years"));
+        if (nyears == "" || nyears < 1) {
+            document.getElementById("repeat-interval-warning").removeAttribute("hidden");
+            acceptButton.setAttribute("disabled", "true");
+        }
+        break;
+    }
+
+    if (document.getElementById("recurrence-duration").selectedItem.value == "ntimes") {
+        var ntimes = getElementValue("repeat-ntimes-count");
+        if (ntimes == "" || ntimes < 1) {
+            document.getElementById("repeat-numberoftimes-warning").removeAttribute("hidden");
+            acceptButton.setAttribute("disabled", "true");
+        }
+    }
+
+    this.sizeToContent();
 }
 
 function removeSelectedException()
