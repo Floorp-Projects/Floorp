@@ -75,10 +75,10 @@ endif
 
 MKSHLIB			= $(CC) $(DSO_LDOPTS)
 ifdef MAPFILE
-# Add LD options to restrict exported symbols to those in the map file
+	MKSHLIB += -Wl,--version-script,$(MAPFILE)
 endif
-# Change PROCESS to put the mapfile in the correct format for this platform
-PROCESS_MAP_FILE = cp $< $@
+PROCESS_MAP_FILE = grep -v ';-' $< | \
+        sed -e 's,;+,,' -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,;,' > $@
 
 G++INCLUDES		= -I/usr/include/g++
 
