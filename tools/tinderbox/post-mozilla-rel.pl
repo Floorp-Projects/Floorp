@@ -419,8 +419,10 @@ sub get_buildid {
 
   # If the first method of getting the build ID failed, grab it from config.
   if (!defined($buildid) and defined($objdir)) {
-      $buildid = `cd $objdir/config/ && cat build_number`;
-      chomp($buildid);
+      if ( -f "$objdir/config/build_number" ) {
+          $buildid = `cd $objdir/config/ && cat build_number`;
+          chomp($buildid);
+      }
   }
 
   if (defined($buildid)) {
@@ -1249,12 +1251,9 @@ sub main {
   my $store_home;
   $store_home = "$mozilla_build_dir/$store_name";
 
-  if ( -e $store_home ) {
-    # remove old storage directory
-    TinderUtils::print_log "Found old storage directory.  Removing.\n";
-    TinderUtils::run_shell_command "rm -rf $store_home";
-  } else {
-    TinderUtils::print_log "Didn't find old storage directory, skipping removal.\n";
+  if ( -e "$store_home/packages" ) {
+    TinderUtils::print_log "Found old storage directory, removing.\n";
+    TinderUtils::run_shell_command "rm -rf $store_home/packages";
   }
 
   # save the current build in the appropriate store directory
