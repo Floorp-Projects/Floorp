@@ -75,7 +75,9 @@ public:
                                   const PRUnichar *aEncoding,
                                   PRInt32 aStandalone);
   NS_IMETHOD ReportError(const PRUnichar* aErrorText, 
-                         const PRUnichar* aSourceText);
+                         const PRUnichar* aSourceText,
+                         PRInt32 aLineNumber,
+                         PRInt32 aColumnNumber);
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
@@ -303,7 +305,9 @@ nsXMLFragmentContentSink::HandleXMLDeclaration(const PRUnichar *aVersion,
 
 NS_IMETHODIMP
 nsXMLFragmentContentSink::ReportError(const PRUnichar* aErrorText, 
-                                      const PRUnichar* aSourceText)
+                                      const PRUnichar* aSourceText,
+                                      PRInt32 aLineNumber,
+                                      PRInt32 aColumnNumber)
 {
   mParseError = PR_TRUE;
   // The following error reporting is copied from nsXBLContentSink::ReportError()

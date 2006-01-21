@@ -146,7 +146,9 @@ protected:
 
   // nsIExpatSink overrides
   NS_IMETHOD ReportError(const PRUnichar* aErrorText,
-                         const PRUnichar* aSourceText);
+                         const PRUnichar* aSourceText,
+                         PRInt32 aLineNumber,
+                         PRInt32 aColumnNumber);
 
 protected:
   nsresult ReportUnexpectedElement(nsIAtom* aElementName, PRUint32 aLineNumber);

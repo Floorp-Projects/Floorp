@@ -233,7 +233,9 @@ txStylesheetSink::HandleXMLDeclaration(const PRUnichar *aVersion,
 
 NS_IMETHODIMP
 txStylesheetSink::ReportError(const PRUnichar *aErrorText,
-                              const PRUnichar *aSourceText)
+                              const PRUnichar *aSourceText,
+                              PRInt32 aLineNumber,
+                              PRInt32 aColumnNumber)
 {
     mCompiler->cancel(NS_ERROR_FAILURE, aErrorText, aSourceText);
 
