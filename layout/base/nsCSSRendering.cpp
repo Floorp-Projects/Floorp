@@ -2572,7 +2572,7 @@ nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
 // it does not actually paint a background, we need to get the right
 // background style so we correctly detect transparent documents.
 inline nsIFrame*
-IsCanvasFrame(nsPresContext* aPresContext, nsIFrame *aFrame)
+IsCanvasFrame(nsIFrame *aFrame)
 {
   nsIAtom* frameType = aFrame->GetType();
   if (frameType == nsLayoutAtoms::canvasFrame ||
@@ -2590,8 +2590,7 @@ IsCanvasFrame(nsPresContext* aPresContext, nsIFrame *aFrame)
 }
 
 inline PRBool
-FindCanvasBackground(nsPresContext* aPresContext,
-                     nsIFrame* aForFrame,
+FindCanvasBackground(nsIFrame* aForFrame,
                      const nsStyleBackground** aBackground)
 {
   // XXXldb What if the root element is positioned, etc.?  (We don't
@@ -2632,7 +2631,7 @@ FindCanvasBackground(nsPresContext* aPresContext,
             // and thus |InitialReflow| on the pres shell.  See bug 119351
             // for the ugly details.
             if (bodyContent) {
-              nsIFrame *bodyFrame = aPresContext->PresShell()->
+              nsIFrame *bodyFrame = aForFrame->GetPresContext()->GetPresShell()->
                 GetPrimaryFrameFor(bodyContent);
               if (bodyFrame)
                 result = bodyFrame->GetStyleBackground();
@@ -2654,13 +2653,12 @@ FindCanvasBackground(nsPresContext* aPresContext,
 }
 
 inline PRBool
-FindElementBackground(nsPresContext* aPresContext,
-                      nsIFrame* aForFrame,
+FindElementBackground(nsIFrame* aForFrame,
                       const nsStyleBackground** aBackground)
 {
   nsIFrame *parentFrame = aForFrame->GetParent();
   // XXXldb We shouldn't have to null-check |parentFrame| here.
-  if (parentFrame && IsCanvasFrame(aPresContext, parentFrame) == parentFrame) {
+  if (parentFrame && IsCanvasFrame(parentFrame) == parentFrame) {
     // Check that we're really the root (rather than in another child list).
     nsIFrame *childFrame = parentFrame->GetFirstChild(nsnull);
     if (childFrame == aForFrame)
@@ -2710,11 +2708,11 @@ nsCSSRendering::FindBackground(nsPresContext* aPresContext,
                                const nsStyleBackground** aBackground,
                                PRBool* aIsCanvas)
 {
-  nsIFrame* canvasFrame = IsCanvasFrame(aPresContext, aForFrame);
+  nsIFrame* canvasFrame = IsCanvasFrame(aForFrame);
   *aIsCanvas = canvasFrame != nsnull;
   return canvasFrame
-      ? FindCanvasBackground(aPresContext, canvasFrame, aBackground)
-      : FindElementBackground(aPresContext, aForFrame, aBackground);
+      ? FindCanvasBackground(canvasFrame, aBackground)
+      : FindElementBackground(aForFrame, aBackground);
 }
 
 void
