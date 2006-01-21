@@ -39,7 +39,6 @@ calendar.jar:
     content/calendar/calendar-multiday-view.xml (/calendar/base/content/calendar-multiday-view.xml)
     content/calendar/calendar-recurrence-dialog.js (/calendar/base/content/calendar-recurrence-dialog.js)
     content/calendar/calendar-recurrence-dialog.xul (/calendar/base/content/calendar-recurrence-dialog.xul)
-
     content/calendar/calendarUtils.js (content/calendarUtils.js)
 *   content/calendar/calendar.xul (content/calendar.xul)
     content/calendar/calendarMail.js (content/calendarMail.js)
