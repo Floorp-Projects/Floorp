@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.55 2006/01/19 02:16:30 nelsonb%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.56 2006/01/21 02:23:42 nelsonb%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -5103,6 +5103,9 @@ nsslowcert_DestroyTrust(NSSLOWCERTTrust *trust)
 
     if ( entry ) {
 	DestroyDBEntry((certDBEntry *)entry);
+    }
+    if (trust->dbhandle) {
+	sftk_freeCertDB(trust->dbhandle);
     }
     pkcs11_freeStaticData(trust->dbKey.data,trust->dbKeySpace);
     PORT_Memset(trust, 0, sizeof(*trust));
