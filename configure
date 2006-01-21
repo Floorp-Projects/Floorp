@@ -19130,7 +19130,7 @@ echo "configure:19071: checking CAIRO_FT_LIBS" >&5
                MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $(DIST)/lib/mozglitz.lib $(DIST)/lib/mozglitzwgl.lib"
            fi
        else
-           MOZ_CAIRO_LIBS="-lmozcairo -lmozlibpixman $CAIRO_FT_LIBS"
+           MOZ_CAIRO_LIBS="-L$(DIST)/lib -lmozcairo -lmozlibpixman $CAIRO_FT_LIBS"
 
            if test "$MOZ_X11"; then
                MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
