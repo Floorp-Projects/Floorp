@@ -825,7 +825,10 @@ nsExpatDriver::HandleError()
 
   NS_ASSERTION(mSink, "no sink?");
   if (mSink) {
-    mSink->ReportError(errorText.get(), sourceText.get());
+    mSink->ReportError(errorText.get(), 
+                       sourceText.get(), 
+                       lineNumber, 
+                       colNumber);
   }
 
   return NS_ERROR_HTMLPARSER_STOPPARSING;

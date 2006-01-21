@@ -982,7 +982,9 @@ XULContentSinkImpl::HandleXMLDeclaration(const PRUnichar *aVersion,
 
 NS_IMETHODIMP
 XULContentSinkImpl::ReportError(const PRUnichar* aErrorText, 
-                                const PRUnichar* aSourceText)
+                                const PRUnichar* aSourceText,
+                                PRInt32 aLineNumber,
+                                PRInt32 aColumnNumber)
 {
   nsresult rv = NS_OK;
 

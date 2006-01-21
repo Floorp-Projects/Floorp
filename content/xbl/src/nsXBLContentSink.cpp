@@ -203,7 +203,9 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
 
 NS_IMETHODIMP
 nsXBLContentSink::ReportError(const PRUnichar* aErrorText, 
-                              const PRUnichar* aSourceText)
+                              const PRUnichar* aSourceText,
+                              PRInt32 aLineNumber,
+                              PRInt32 aColumnNumber)
 {
   // XXX We should make sure the binding has no effect, but that it also
   // gets destroyed properly without leaking.  Perhaps we should even
@@ -232,7 +234,10 @@ nsXBLContentSink::ReportError(const PRUnichar* aErrorText,
 #endif
 
   // Most of what this does won't be too useful, but whatever...
-  return nsXMLContentSink::ReportError(aErrorText, aSourceText);
+  return nsXMLContentSink::ReportError(aErrorText, 
+                                       aSourceText, 
+                                       aLineNumber,
+                                       aColumnNumber);
 }
 
 nsresult

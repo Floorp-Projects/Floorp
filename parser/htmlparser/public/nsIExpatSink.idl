@@ -43,7 +43,7 @@
  * by any sink that handles some sort of XML dialect.
  */
 
-[scriptable, uuid(1DEEA160-C661-11d5-84CC-0010A4E0C706)]
+[scriptable, uuid(34CB3B34-7F15-4971-B262-370CE61ADE4D)]
 interface nsIExpatSink : nsISupports 
 {
   /**
@@ -130,5 +130,7 @@ interface nsIExpatSink : nsISupports
                             in long aStandalone);
 
   void ReportError(in wstring aErrorText,
-                   in wstring aSourceText);
+                   in wstring aSourceText,
+                   in long aLineNumber,
+                   in long aColumnNumber);
 }; 
