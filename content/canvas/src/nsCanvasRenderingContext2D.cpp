@@ -651,7 +651,7 @@ nsCanvasRenderingContext2D::UpdateImageFrame()
                 *outrowrgb++ = 0;
 #endif
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
                 // On windows, RGB_A8 is really BGR_A8.
                 // in fact, BGR_A8 is also BGR_A8.
                 *outrowrgb++ = b;

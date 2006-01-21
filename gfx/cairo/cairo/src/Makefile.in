@@ -107,6 +107,10 @@ CSRCS   += cairo-quartz-surface.c \
 EXPORTS += cairo-quartz.h cairo-atsui.h
 endif
 
+ifeq ($(MOZ_GFX_TOOLKIT),beos)
+CPPSRCS += cairo-beos-surface.cpp
+EXPORTS += cairo-beos.h
+endif
 
 ifdef BUILD_CAIRO_PDF
 CSRCS   += cairo-font-subset.c \
@@ -122,11 +126,16 @@ endif
 
 ifdef MOZ_X11
 CSRCS   += cairo-xlib-surface.c \
-	   cairo-xlib-screen.c \
-           cairo-ft-font.c
-EXPORTS += cairo-xlib.h cairo-xlib-xrender.h cairo-ft.h
-LOCAL_INCLUDES += $(FT2_CFLAGS)
+	   cairo-xlib-screen.c
+EXPORTS += cairo-xlib.h cairo-xlib-xrender.h
 endif
+
+ifdef MOZ_ENABLE_CAIRO_FT
+CSRCS   += cairo-ft-font.c
+EXPORTS += cairo-ft.h
+LOCAL_INCLUDES += $(CAIRO_FT_CFLAGS)
+endif
+
 
 ifdef MOZ_ENABLE_GLITZ
 REQUIRES += glitz
