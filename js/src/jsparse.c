@@ -3130,9 +3130,9 @@ EndBracketedExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
  *              PropertySelector :: [ Expression ]
  *              PropertySelector
  *
- * Since PrimaryExpression: Identifier in ECMA-262 and we want the semantics
- * for that rule to result in a name node, but extend the grammar to include
- * PrimaryExpression: QualifiedIdentifier, we factor further:
+ * As PrimaryExpression: Identifier is in ECMA-262 and we want the semantics
+ * for that rule to result in a name node, but ECMA-357 extends the grammar
+ * to include PrimaryExpression: QualifiedIdentifier, we must factor further:
  *
  *      QualifiedIdentifier:
  *              PropertySelector QualifiedSuffix
@@ -3147,7 +3147,7 @@ EndBracketedExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
  *      PrimaryExpression:
  *              Identifier QualifiedSuffix
  *
- * We hoists the :: match into callers of QualifiedSuffix, in order to tweak
+ * We hoist the :: match into callers of QualifiedSuffix, in order to tweak
  * PropertySelector vs. Identifier pn_arity, pn_op, and other members.
  */
 static JSParseNode *
@@ -3293,7 +3293,7 @@ XMLExpr(JSContext *cx, JSTokenStream *ts, JSBool inTag, JSTreeContext *tc)
 }
 
 /*
- * Make a terminal node for oneof TOK_XMLNAME, TOK_XMLATTR, TOK_XMLSPACE,
+ * Make a terminal node for one of TOK_XMLNAME, TOK_XMLATTR, TOK_XMLSPACE,
  * TOK_XMLTEXT, TOK_XMLCDATA, TOK_XMLCOMMENT, or TOK_XMLPI.  When converting
  * parse tree to XML, we preserve a TOK_XMLSPACE node only if it's the sole
  * child of a container tag.
