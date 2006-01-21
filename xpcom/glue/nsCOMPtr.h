@@ -414,7 +414,7 @@ do_QueryInterface( already_AddRefed<T>&, nsresult* )
 class NS_COM_GLUE nsGetServiceByCID
 {
  public:
-    nsGetServiceByCID(const nsCID& aCID)
+    explicit nsGetServiceByCID(const nsCID& aCID)
         : mCID(aCID)
         {
             // nothing else to do
@@ -446,7 +446,7 @@ class NS_COM_GLUE nsGetServiceByCIDWithError
 class NS_COM_GLUE nsGetServiceByContractID
 {
  public:
-    nsGetServiceByContractID(const char* aContractID)
+    explicit nsGetServiceByContractID(const char* aContractID)
         : mContractID(aContractID)
         {
             // nothing else to do
