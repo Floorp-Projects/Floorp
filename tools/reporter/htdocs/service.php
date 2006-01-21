@@ -41,7 +41,7 @@ require_once($config['base_path'].'/includes/iolib.inc.php');
 require_once($config['base_path'].'/includes/contrib/adodb/adodb.inc.php');
 require_once($config['base_path'].'/includes/contrib/nusoap/lib/nusoap.php');
 
-// Turn off Error Reporting
+// Turn off Error Reporting because it breaks xml formatting and causes errors
 error_reporting(0);
 
 // Create the server instance
@@ -83,6 +83,10 @@ $server->register(
 );
 function submitReport($rmoVers, $url, $problem_type, $description, $behind_login, $platform, $oscpu, $gecko, $product, $useragent, $buildconfig, $language, $email, $sysid) {
     global $config;
+
+    if ($config['service_active'] == false){
+            return new soap_fault('SERVER', '', 'The service is currently unavailable.  Please try again in a few minutes.');
+    }
 
     // Remove any HTML tags and whitespace
     $rmoVers = trim(strip_all_tags($rmoVers));
