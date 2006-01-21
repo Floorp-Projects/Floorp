@@ -123,8 +123,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  void DidResize(nsPresContext*          aPresContext,
-                 const nsHTMLReflowState& aReflowState);
+  void DidResize(const nsHTMLReflowState& aReflowState);
 
   /**
    * Get the "type" of the frame

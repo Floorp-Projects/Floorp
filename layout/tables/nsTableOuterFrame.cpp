@@ -907,8 +907,7 @@ nsTableOuterFrame::BalanceLeftRightCaption(PRUint8         aCaptionSide,
 }
 
 nsresult 
-nsTableOuterFrame::GetCaptionOrigin(nsPresContext*  aPresContext,
-                                    PRUint32         aCaptionSide,
+nsTableOuterFrame::GetCaptionOrigin(PRUint32         aCaptionSide,
                                     const nsSize&    aContainBlockSize,
                                     const nsSize&    aInnerSize, 
                                     const nsMargin&  aInnerMargin,
@@ -923,7 +922,7 @@ nsTableOuterFrame::GetCaptionOrigin(nsPresContext*  aPresContext,
   }
   if (!mCaptionFrame) return NS_OK;
 
-  float p2t = aPresContext->ScaledPixelsToTwips();
+  GET_PIXELS_TO_TWIPS(GetPresContext(), p2t);
 
   switch(aCaptionSide) {
   case NS_SIDE_BOTTOM: {
@@ -1019,8 +1018,7 @@ nsTableOuterFrame::GetCaptionOrigin(nsPresContext*  aPresContext,
 }
 
 nsresult 
-nsTableOuterFrame::GetInnerOrigin(nsPresContext*  aPresContext,
-                                  PRUint32         aCaptionSide,
+nsTableOuterFrame::GetInnerOrigin(PRUint32         aCaptionSide,
                                   const nsSize&    aContainBlockSize,
                                   const nsSize&    aCaptionSize, 
                                   const nsMargin&  aCaptionMargin,
@@ -1034,7 +1032,7 @@ nsTableOuterFrame::GetInnerOrigin(nsPresContext*  aPresContext,
     return NS_OK;
   }
 
-  float p2t = aPresContext->ScaledPixelsToTwips();
+  GET_PIXELS_TO_TWIPS(GetPresContext(), p2t);
 
   nscoord minCapWidth = aCaptionSize.width;
   if (NS_AUTOMARGIN != aCaptionMargin.left)
@@ -1481,13 +1479,13 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsPresContext*           aPresContext
     OuterReflowChild(aPresContext, mInnerTableFrame, aOuterRS, innerMet, availTableWidth, innerSize, 
                      innerMargin, innerMarginNoAuto, innerPadding, eReflowReason_Resize, aStatus);
 
-    GetInnerOrigin(aPresContext, captionSide, containSize, captionSize,
+    GetInnerOrigin(captionSide, containSize, captionSize,
                    captionMargin, innerSize, innerMargin, innerOrigin);
     rv = FinishReflowChild(mInnerTableFrame, aPresContext, nsnull, innerMet,
                            innerOrigin.x, innerOrigin.y, 0);
     if (NS_FAILED(rv)) return rv;
     
-    GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
+    GetCaptionOrigin(captionSide, containSize, innerSize, 
                      innerMargin, captionSize, captionMargin, captionOrigin);
   }
   else {
@@ -1495,9 +1493,9 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsPresContext*           aPresContext
     nsSize innerSize = mInnerTableFrame->GetSize();
     GetMarginPadding(aPresContext, aOuterRS, mInnerTableFrame, aOuterRS.availableWidth, innerMargin, 
                      innerMarginNoAuto, innerPadding);
-    GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
+    GetInnerOrigin(captionSide, containSize, captionSize, 
                    captionMargin, innerSize, innerMargin, innerOrigin);
-    GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
+    GetCaptionOrigin(captionSide, containSize, innerSize, 
                      innerMargin, captionSize, captionMargin, captionOrigin);
     MoveFrameTo(mInnerTableFrame, innerOrigin.x, innerOrigin.y); 
   }
@@ -1553,7 +1551,7 @@ nsTableOuterFrame::IR_ReflowDirty(nsPresContext*           aPresContext,
     GetMarginPadding(aPresContext, aReflowState, mInnerTableFrame, aReflowState.availableWidth, innerMargin, 
                      innerMarginNoAuto, innerPadding);
     nsSize containSize = GetContainingBlockSize(aReflowState);
-    GetInnerOrigin(aPresContext, NO_SIDE, containSize, nsSize(0,0),
+    GetInnerOrigin(NO_SIDE, containSize, nsSize(0,0),
                    nsMargin(0,0,0,0), innerSize, innerMargin, innerOrigin);
     MoveFrameTo(mInnerTableFrame, innerOrigin.x, innerOrigin.y); 
 
@@ -1680,12 +1678,12 @@ nsTableOuterFrame::IR_InnerTableReflow(nsPresContext*           aPresContext,
                             ignorePadding, reflowReason, capStatus);
       if (NS_FAILED(rv)) return rv;
 
-      GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
+      GetCaptionOrigin(captionSide, containSize, innerSize, 
                        innerMargin, captionSize, captionMargin, captionOrigin);
       FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
                         captionOrigin.x, captionOrigin.y, 0);
 
-      GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
+      GetInnerOrigin(captionSide, containSize, captionSize, 
                      captionMargin, innerSize, innerMargin, innerOrigin);
     }
     else {
@@ -1694,9 +1692,9 @@ nsTableOuterFrame::IR_InnerTableReflow(nsPresContext*           aPresContext,
       nsMargin captionPadding;
       GetMarginPadding(aPresContext, aOuterRS, mCaptionFrame, aOuterRS.availableWidth, captionMargin, 
                        captionMarginNoAuto, captionPadding);
-      GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
+      GetCaptionOrigin(captionSide, containSize, innerSize, 
                        innerMargin, captionSize, captionMargin, captionOrigin);
-      GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
+      GetInnerOrigin(captionSide, containSize, captionSize, 
                      captionMargin, innerSize, innerMargin, innerOrigin);
       MoveFrameTo(mCaptionFrame, captionOrigin.x, captionOrigin.y); 
     }
@@ -1708,7 +1706,7 @@ nsTableOuterFrame::IR_InnerTableReflow(nsPresContext*           aPresContext,
     }
   }
   else {
-    GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
+    GetInnerOrigin(captionSide, containSize, captionSize, 
                    captionMargin, innerSize, innerMargin, innerOrigin);
   }
 
@@ -1781,7 +1779,7 @@ nsTableOuterFrame::IR_CaptionInserted(nsPresContext*           aPresContext,
                           innerPadding, eReflowReason_Resize, aStatus);
     if (NS_FAILED(rv)) return rv;
 
-    GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
+    GetInnerOrigin(captionSide, containSize, captionSize, 
                    captionMargin, innerSize, innerMargin, innerOrigin);
     rv = FinishReflowChild(mInnerTableFrame, aPresContext, nsnull, innerMet,
                            innerOrigin.x, innerOrigin.y, 0);
@@ -1789,7 +1787,7 @@ nsTableOuterFrame::IR_CaptionInserted(nsPresContext*           aPresContext,
       aDesiredSize.mMaxElementWidth = innerMet.mMaxElementWidth;
     }
     if (NS_FAILED(rv)) return rv;
-    GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
+    GetCaptionOrigin(captionSide, containSize, innerSize, 
                      innerMargin, captionSize, captionMargin, captionOrigin);
   }
   else {
@@ -1797,9 +1795,9 @@ nsTableOuterFrame::IR_CaptionInserted(nsPresContext*           aPresContext,
     nsSize innerSize = mInnerTableFrame->GetSize();
     GetMarginPadding(aPresContext, aOuterRS, mInnerTableFrame, aOuterRS.availableWidth, innerMargin, 
                      innerMarginNoAuto, innerPadding);
-    GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
+    GetInnerOrigin(captionSide, containSize, captionSize, 
                    captionMargin, innerSize, innerMargin, innerOrigin);
-    GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
+    GetCaptionOrigin(captionSide, containSize, innerSize, 
                      innerMargin, captionSize, captionMargin, captionOrigin);
     MoveFrameTo(mInnerTableFrame, innerOrigin.x, innerOrigin.y); 
   }
@@ -1975,18 +1973,18 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*          aPresContext,
 
       nsPoint captionOrigin;
 
-      GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
+      GetCaptionOrigin(captionSide, containSize, innerSize, 
                        innerMargin, captionSize, captionMargin, captionOrigin);
       FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
                         captionOrigin.x, captionOrigin.y, 0);
 
-      GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
+      GetInnerOrigin(captionSide, containSize, captionSize, 
                      captionMargin, innerSize, innerMargin, innerOrigin);
 
       // XXX If the height is constrained then we need to check whether the inner table still fits...
     } 
     else {
-      GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
+      GetInnerOrigin(captionSide, containSize, captionSize, 
                      captionMargin, innerSize, innerMargin, innerOrigin);
     }
 

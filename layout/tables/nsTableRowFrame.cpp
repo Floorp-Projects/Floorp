@@ -344,8 +344,7 @@ nsTableRowFrame::GetFirstCell()
  * Post-reflow hook. This is where the table row does its post-processing
  */
 void
-nsTableRowFrame::DidResize(nsPresContext*          aPresContext,
-                           const nsHTMLReflowState& aReflowState)
+nsTableRowFrame::DidResize(const nsHTMLReflowState& aReflowState)
 {
   // Resize and re-align the cell frames based on our row height
   nsTableFrame* tableFrame;
@@ -394,7 +393,7 @@ nsTableRowFrame::DidResize(nsPresContext*          aPresContext,
   }
   FinishAndStoreOverflow(&desiredSize);
   if (HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, this, GetView(), &desiredSize.mOverflowArea, 0);
+    nsContainerFrame::SyncFrameViewAfterReflow(GetPresContext(), this, GetView(), &desiredSize.mOverflowArea, 0);
   }
   // Let our base class do the usual work
 }

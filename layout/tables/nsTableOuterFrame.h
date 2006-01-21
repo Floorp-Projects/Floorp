@@ -320,8 +320,7 @@ protected:
                                nscoord&        aInnerWidth,
                                nscoord&        aCaptionWidth);
 
-  NS_IMETHOD GetCaptionOrigin(nsPresContext*  aPresContext,
-                              PRUint32         aCaptionSide,
+  NS_IMETHOD GetCaptionOrigin(PRUint32         aCaptionSide,
                               const nsSize&    aContainBlockSize,
                               const nsSize&    aInnerSize, 
                               const nsMargin&  aInnerMargin,
@@ -329,8 +328,7 @@ protected:
                               nsMargin&        aCaptionMargin,
                               nsPoint&         aOrigin);
 
-  NS_IMETHOD GetInnerOrigin(nsPresContext*  aPresContext,
-                            PRUint32         aCaptionSide,
+  NS_IMETHOD GetInnerOrigin(PRUint32         aCaptionSide,
                             const nsSize&    aContainBlockSize,
                             const nsSize&    aCaptionSize, 
                             const nsMargin&  aCaptionMargin,

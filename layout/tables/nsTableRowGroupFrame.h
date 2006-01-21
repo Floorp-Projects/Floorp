@@ -272,8 +272,7 @@ protected:
                            const nsHTMLReflowState& aReflowState,
                            nsTableRowFrame*         aStartRowFrameIn = nsnull);
 
-  void DidResizeRows(nsPresContext&          aPresContext,
-                     const nsHTMLReflowState& aReflowState,
+  void DidResizeRows(const nsHTMLReflowState& aReflowState,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      nsTableRowFrame*         aStartRowFrameIn = nsnull);
 
