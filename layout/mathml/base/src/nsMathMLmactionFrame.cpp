@@ -333,8 +333,8 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
     childFrame->SetRect(nsRect(aDesiredSize.descent,aDesiredSize.ascent,
                         aDesiredSize.width,aDesiredSize.height));
     mBoundingMetrics = aDesiredSize.mBoundingMetrics;
-    FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
   }
+  FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
