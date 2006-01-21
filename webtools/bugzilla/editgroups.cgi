@@ -32,6 +32,7 @@ use lib ".";
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Group;
+use Bugzilla::User;
 require "globals.pl";
 
 my $cgi = Bugzilla->cgi;
@@ -338,10 +339,12 @@ if ($action eq 'del') {
         ThrowUserError("system_group_not_deletable", { name => $name });
     }
 
-    my $hasusers = $dbh->selectrow_array('SELECT 1 FROM user_group_map 
-                                          WHERE group_id = ? AND isbless = 0 ' .
-                                          $dbh->sql_limit(1),
-                                          undef, $gid) || 0;
+    # Group inheritance no longer appears in user_group_map.
+    my $grouplist = join(',', @{Bugzilla::User->flatten_group_membership($gid)});
+    my $hasusers =
+        $dbh->selectrow_array("SELECT 1 FROM user_group_map
+                               WHERE group_id IN ($grouplist) AND isbless = 0 " .
+                               $dbh->sql_limit(1)) || 0;
 
     my $bug_ids = $dbh->selectcol_arrayref('SELECT bug_id FROM bug_group_map
                                             WHERE group_id = ?', undef, $gid);
@@ -391,10 +394,13 @@ if ($action eq 'delete') {
 
     my $cantdelete = 0;
 
-    my $hasusers = $dbh->selectrow_array('SELECT 1 FROM user_group_map 
-                                          WHERE group_id = ? AND isbless = 0 ' .
-                                          $dbh->sql_limit(1),
-                                          undef, $gid) || 0;
+    # Group inheritance no longer appears in user_group_map.
+    my $grouplist = join(',', @{Bugzilla::User->flatten_group_membership($gid)});
+    my $hasusers =
+        $dbh->selectrow_array("SELECT 1 FROM user_group_map
+                               WHERE group_id IN ($grouplist) AND isbless = 0 " .
+                               $dbh->sql_limit(1)) || 0;
+
     if ($hasusers && !defined $cgi->param('removeusers')) {
         $cantdelete = 1;
     }
