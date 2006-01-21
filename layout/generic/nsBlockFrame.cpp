@@ -5665,14 +5665,10 @@ found_frame:;
     NS_ASSERTION(this == aDeletedFrame->GetParent(), "messed up delete code");
     NS_ASSERTION(line->Contains(aDeletedFrame), "frame not in line");
 
-    // See if the frame being deleted is the last one on the line
-    PRBool isLastFrameOnLine = PR_FALSE;
-    if (1 == line->GetChildCount()) {
-      isLastFrameOnLine = PR_TRUE;
-    }
-    else if (line->LastChild() == aDeletedFrame) {
-      isLastFrameOnLine = PR_TRUE;
-    }
+    // If the frame being deleted is the last one on the line then
+    // optimize away the line->Contains(next-in-flow) call below.
+    PRBool isLastFrameOnLine = (1 == line->GetChildCount() ||
+                                line->LastChild() == aDeletedFrame);
 
     // Remove aDeletedFrame from the line
     nsIFrame* nextFrame = aDeletedFrame->GetNextSibling();
@@ -5709,7 +5705,8 @@ found_frame:;
     // to destroy that too.
     nsIFrame* deletedNextInFlow = aDeletedFrame->GetNextInFlow();
 #ifdef NOISY_REMOVE_FRAME
-    printf("DoRemoveFrame: line=%p frame=", line.get());
+    printf("DoRemoveFrame: %s line=%p frame=",
+           searchingOverflowList?"overflow":"normal", line.get());
     nsFrame::ListTag(stdout, aDeletedFrame);
     printf(" prevSibling=%p deletedNextInFlow=%p\n", prevSibling, deletedNextInFlow);
 #endif
@@ -5720,8 +5717,13 @@ found_frame:;
     }
     aDeletedFrame = deletedNextInFlow;
 
+    PRBool haveAdvancedToNextLine = PR_FALSE;
     // If line is empty, remove it now.
     if (0 == lineChildCount) {
+#ifdef NOISY_REMOVE_FRAME
+        printf("DoRemoveFrame: %s line=%p became empty so it will be removed\n",
+               searchingOverflowList?"overflow":"normal", line.get());
+#endif
       nsLineBox *cur = line;
       if (!searchingOverflowList) {
         line = mLines.erase(line);
@@ -5732,7 +5734,8 @@ found_frame:;
         nsRect lineCombinedArea(cur->GetCombinedArea());
 #ifdef NOISY_BLOCK_INVALIDATE
         printf("%p invalidate 10 (%d, %d, %d, %d)\n",
-               this, lineCombinedArea.x, lineCombinedArea.y, lineCombinedArea.width, lineCombinedArea.height);
+               this, lineCombinedArea.x, lineCombinedArea.y,
+               lineCombinedArea.width, lineCombinedArea.height);
 #endif
         Invalidate(lineCombinedArea);
       } else {
@@ -5751,16 +5754,19 @@ found_frame:;
       if (line != line_end) {
         line->MarkPreviousMarginDirty();
       }
+      haveAdvancedToNextLine = PR_TRUE;
     } else {
       // Make the line that just lost a frame dirty, and advance to
       // the next line.
-      if (!deletedNextInFlow || !line->Contains(deletedNextInFlow)) {
+      if (!deletedNextInFlow || isLastFrameOnLine ||
+          !line->Contains(deletedNextInFlow)) {
         line->MarkDirty();
         ++line;
+        haveAdvancedToNextLine = PR_TRUE;
       }
     }
 
-    if (nsnull != deletedNextInFlow) {
+    if (deletedNextInFlow) {
       // Continuations for placeholder frames don't always appear in
       // consecutive lines. So for placeholders, just continue the slow easy way.
       if (isPlaceholder) {
@@ -5775,15 +5781,22 @@ found_frame:;
         break;
       }
 
-      // If we just removed the last frame on the line then we need
-      // to advance to the next line.
-      if (isLastFrameOnLine) {
-        TryAllLines(&line, &line_end, &searchingOverflowList);
-        // Detect the case when we've run off the end of the normal line
-        // list and we're starting the overflow line list
-        if (prevSibling && !prevSibling->GetNextSibling()) {
+      // If we advanced to the next line then check if we should switch to the
+      // overflow line list.
+      if (haveAdvancedToNextLine) {
+        if (line != line_end && !searchingOverflowList &&
+            !line->Contains(deletedNextInFlow)) {
+          // We have advanced to the next *normal* line but the next-in-flow
+          // is not there - force a switch to the overflow line list.
+          line = line_end;
           prevSibling = nsnull;
         }
+        TryAllLines(&line, &line_end, &searchingOverflowList);
+#ifdef NOISY_REMOVE_FRAME
+        printf("DoRemoveFrame: now on %s line=%p prevSibling=%p\n",
+               searchingOverflowList?"overflow":"normal", line.get(),
+               prevSibling);
+#endif
       }
     }
   }
