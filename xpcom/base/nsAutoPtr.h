@@ -71,6 +71,28 @@ class nsAutoPtr
           delete oldPtr;
         }
 
+      // |class Ptr| helps us prevent implicit "copy construction"
+      // through |operator T*() const| from a |const nsAutoPtr<T>|
+      // because two implicit conversions in a row aren't allowed.
+      // It still allows assignment from T* through implicit conversion
+      // from |T*| to |nsAutoPtr<T>::Ptr|
+      class Ptr
+        {
+          public:
+            Ptr( T* aPtr )
+                  : mPtr(aPtr)
+              {
+              }
+
+            operator T*() const
+              {
+                return mPtr;
+              }
+
+          private:
+            T* mPtr;
+        };
+
     private:
       T* mRawPtr;
 
@@ -90,7 +112,7 @@ class nsAutoPtr
         {
         }
 
-      nsAutoPtr( T* aRawPtr )
+      nsAutoPtr( Ptr aRawPtr )
             : mRawPtr(aRawPtr)
           // construct from a raw pointer (of the right type)
         {
