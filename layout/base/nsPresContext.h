@@ -388,6 +388,11 @@ public:
    */
   NS_HIDDEN_(void) SetPageDim(const nsRect& aRect);
 
+  /**
+   * Conversion from device pixels to twips.
+   * WARNING: The misuse of this function to convert CSS pixels to twips 
+   * will cause problems during printing
+   */
   float PixelsToTwips() const { return mDeviceContext->DevUnitsToAppUnits(); }
 
   float TwipsToPixels() const { return mDeviceContext->AppUnitsToDevUnits(); }
@@ -396,7 +401,7 @@ public:
 
   //XXX this is probably not an ideal name. MMP
   /** 
-   * Do pixels to twips conversion taking into account
+   * Do CSS pixels to twips conversion taking into account
    * differing size of a "pixel" from device to device.
    */
   NS_HIDDEN_(float) ScaledPixelsToTwips() const;
