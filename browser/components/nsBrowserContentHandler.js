@@ -106,24 +106,19 @@ function resolveURIInternal(aCmdLine, aArgument) {
 }
 
 function needHomepageOverride(prefb) {
-  var savedmstone;
+  var savedmstone = null;
   try {
     savedmstone = prefb.getCharPref("browser.startup.homepage_override.mstone");
-  }
-  catch (e) {
-  }
-
-  if (savedmstone == "ignore")
-    return false;
+  } catch (e) {}
 
   var mstone = Components.classes["@mozilla.org/network/protocol;1?name=http"]
                          .getService(nsIHttpProtocolHandler).misc;
 
-  if (mstone == savedmstone)
-    return false;
+  if (mstone != savedmstone)
+    prefb.setCharPref("browser.startup.homepage_override.mstone", mstone);
 
-  prefb.setCharPref("browser.startup.homepage_override.mstone", mstone);
-  return true;
+  // Return true if the pref didn't exist (i.e. new profile)
+  return !savedmstone;
 }
 
 function openWindow(parent, url, target, features, args) {

@@ -55,6 +55,8 @@ REQUIRES	= xpcom \
 		  uconv \
 		  pref \
 		  dom \
+		  content \
+		  htmlparser \
 		  intl \
 		  windowwatcher \
 		  unicharutil \
