@@ -188,6 +188,17 @@ endif
 endif
 endif
 
+# The blapi functions are defined not only in the freebl shared
+# libraries but also in the shared libraries linked with loader.c
+# (libsoftokn3.so and libssl3.so).  We need to use GNU ld's
+# -Bsymbolic option or the equivalent option for other linkers
+# to bind the blapi function references in FREEBLVector vector
+# (ldvector.c) to the blapi functions defined in the freebl
+# shared libraries.
+ifeq (,$(filter-out BSD_OS FreeBSD Linux NetBSD, $(OS_TARGET)))
+    MKSHLIB += -Wl,-Bsymbolic
+endif
+
 ifeq ($(OS_TARGET),SunOS)
 
 # The -R '$ORIGIN' linker option instructs this library to search for its
