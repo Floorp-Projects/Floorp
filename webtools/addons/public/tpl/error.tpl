@@ -1,6 +1,6 @@
 
 <h1>Error Found</h1>
-<p>The was an error processing your request.  Please check your inputs and try again.</p>
+<p>There was an error processing your request.  Please check your inputs and try again.</p>
 <dl>
 {if $error}
 <dt>Error Message</dt>
