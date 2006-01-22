@@ -177,7 +177,7 @@ endif
 	+$(LOOP_OVER_DIRS)
 
 clean:
-	rm -rf $(OBJS)
+	rm -rf $(OBJS) $(GARBAGE)
 	@cd fdlibm; $(MAKE) -f Makefile.ref clean
 
 clobber:

@@ -71,7 +71,7 @@ extern const char js_Error_str[];       /* trivial, from jsexn.h */
  * Keep this in sync with jspubtd.h -- an assertion below will insist that
  * its length match the JSType enum's JSTYPE_LIMIT limit value.
  */
-const char *js_type_str[] = {
+const char *js_type_strs[] = {
     "undefined",
     js_object_str,
     "function",
@@ -82,7 +82,7 @@ const char *js_type_str[] = {
     "xml",
 };
 
-const char *js_boolean_str[] = {
+const char *js_boolean_strs[] = {
     js_false_str,
     js_true_str
 };
@@ -122,7 +122,6 @@ const char js_name_str[]            = "name";
 const char js_noSuchMethod_str[]    = "__noSuchMethod__";
 const char js_object_str[]          = "object";
 const char js_parent_str[]          = "__parent__";
-const char js_private_str[]         = "private";
 const char js_proto_str[]           = "__proto__";
 const char js_setter_str[]          = "setter";
 const char js_set_str[]             = "set";
@@ -294,9 +293,9 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
             return JS_FALSE;                                                  \
     JS_END_MACRO
 
-    JS_ASSERT(sizeof js_type_str / sizeof js_type_str[0] == JSTYPE_LIMIT);
+    JS_ASSERT(sizeof js_type_strs / sizeof js_type_strs[0] == JSTYPE_LIMIT);
     for (i = 0; i < JSTYPE_LIMIT; i++)
-        FROB(typeAtoms[i],        js_type_str[i]);
+        FROB(typeAtoms[i],        js_type_strs[i]);
 
     FROB(booleanAtoms[0],         js_false_str);
     FROB(booleanAtoms[1],         js_true_str);
