@@ -5453,7 +5453,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                                               const nsStyleDisplay*    aStyleDisplay,
                                               PRBool&                  aFrameHasBeenInitialized)
 {
-  nsIFrame* newFrame = NS_NewFieldSetFrame(mPresShell, NS_BLOCK_SPACE_MGR);
+  nsIFrame* newFrame = NS_NewFieldSetFrame(mPresShell);
   if (NS_UNLIKELY(!newFrame)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -11155,7 +11155,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       return NS_ERROR_NULL_POINTER;
     newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
   } else if (nsLayoutAtoms::fieldSetFrame == frameType) {
-    newFrame = NS_NewFieldSetFrame(aPresContext->PresShell(), NS_BLOCK_SPACE_MGR);
+    newFrame = NS_NewFieldSetFrame(shell);
 
     if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext,

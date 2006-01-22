@@ -61,7 +61,6 @@
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
-#include "nsSpaceManager.h"
 
 class nsLegendFrame;
 
@@ -124,16 +123,9 @@ protected:
 };
 
 nsIFrame*
-NS_NewFieldSetFrame(nsIPresShell* aPresShell, PRUint32 aStateFlags)
+NS_NewFieldSetFrame(nsIPresShell* aPresShell)
 {
-  nsFieldSetFrame* it = new (aPresShell) nsFieldSetFrame;
-
-  if (it) {
-    // set the state flags (if any are provided)
-    it->AddStateBits(aStateFlags);
-  }
-
-  return it;
+  return new (aPresShell) nsFieldSetFrame;
 }
 
 nsFieldSetFrame::nsFieldSetFrame()
@@ -300,17 +292,6 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   // Initialize OUT parameter
   aStatus = NS_FRAME_COMPLETE;
 
-  // Should we create a space manager?
-  nsAutoSpaceManager autoSpaceManager(NS_CONST_CAST(nsHTMLReflowState &, aReflowState));
-
-  // XXXldb If we start storing the space manager in the frame rather
-  // than keeping it around only during reflow then we should create it
-  // only when there are actually floats to manage.  Otherwise things
-  // like tables will gain significant bloat.
-  if (NS_BLOCK_SPACE_MGR & mState)
-    autoSpaceManager.CreateSpaceManagerFor(aPresContext, this);
-
-  
   //------------ Handle Incremental Reflow -----------------
   PRBool reflowContent = PR_TRUE;
   PRBool reflowLegend = PR_TRUE;

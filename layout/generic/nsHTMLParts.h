@@ -203,7 +203,7 @@ NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell);
 nsIFrame*
 NS_NewNativeCheckboxControlFrame(nsIPresShell* aPresShell);
 nsIFrame*
-NS_NewFieldSetFrame(nsIPresShell* aPresShell, PRUint32 aFlags);
+NS_NewFieldSetFrame(nsIPresShell* aPresShell);
 nsIFrame*
 NS_NewFileControlFrame(nsIPresShell* aPresShell);
 nsIFrame*
