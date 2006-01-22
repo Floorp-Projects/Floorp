@@ -1900,7 +1900,8 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   }
   else if (eCSSUnit_Percent == aFontData.mSize.GetUnit()) {
     aInherited = PR_TRUE;
-    aFont->mSize = (nscoord)((float)(aParentFont->mSize) * aFontData.mSize.GetPercentValue());
+    aFont->mSize = NSToCoordRound(float(aParentFont->mSize) *
+                                  aFontData.mSize.GetPercentValue());
     zoom = PR_FALSE;
   }
   else if (eCSSUnit_Inherit == aFontData.mSize.GetUnit()) {
