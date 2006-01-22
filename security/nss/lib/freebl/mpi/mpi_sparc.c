@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi_sparc.c,v 1.6 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
+/* $Id: mpi_sparc.c,v 1.7 2006/01/22 08:43:57 nelsonb%netscape.com Exp $ */
 
 /* Multiplication performance enhancements for sparc v8+vis CPUs. */
 
@@ -177,11 +177,11 @@ v8_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 #endif
 }
 
-/* vis versions of these functions run only on v8+vis or v9+vis CPUs. */
+/* These functions run only on v8plus+vis or v9+vis CPUs. */
 
 /* c = a * b */
-static void 
-vis_mpv_mul_d(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
+void 
+s_mpv_mul_d(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 {
     mp_digit d;
     mp_digit x[258];
@@ -204,8 +204,8 @@ vis_mpv_mul_d(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 }
 
 /* c += a * b, where a is a_len words long. */
-static void     
-vis_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
+void     
+s_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 {
     mp_digit d;
     mp_digit x[258];
@@ -227,9 +227,8 @@ vis_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 }
 
 /* c += a * b, where a is y words long. */
-static void     
-vis_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, 
-			 mp_digit *c)
+void     
+s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 {
     mp_digit d;
     mp_digit x[258];
@@ -256,106 +255,3 @@ vis_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b,
 	v8_mpv_mul_d_add_prop(a, a_len, b, c);
     }
 }
-
-#if defined(SOLARIS2_5)
-static int
-isSparcV8PlusVis(void)
-{
-    long buflen;
-    int  rv             = 0;    /* false */
-    char buf[256];
-    buflen = sysinfo(SI_MACHINE, buf, sizeof buf);
-    if (buflen > 0) {
-        rv = (!strcmp(buf, "sun4u") || !strcmp(buf, "sun4u1"));
-    }
-    return rv;
-}
-#else   /* SunOS2.6or higher has SI_ISALIST */
-
-static int
-isSparcV8PlusVis(void)
-{
-    long buflen;
-    int  rv             = 0;    /* false */
-    char buf[256];
-    buflen = sysinfo(SI_ISALIST, buf, sizeof buf);
-    if (buflen > 0) {
-#if defined(MP_USE_LONG_DIGIT)
-        char * found = strstr(buf, "sparcv9+vis");
-#else
-        char * found = strstr(buf, "sparcv8plus+vis");
-#endif
-        rv = (found != 0);
-    }
-    return rv;
-}
-#endif
-
-typedef void MPVmpy(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c);
-
-/* forward static function declarations */
-static MPVmpy sp_mpv_mul_d;
-static MPVmpy sp_mpv_mul_d_add;
-static MPVmpy sp_mpv_mul_d_add_prop;
-
-static MPVmpy *p_mpv_mul_d		= &sp_mpv_mul_d;
-static MPVmpy *p_mpv_mul_d_add		= &sp_mpv_mul_d_add;
-static MPVmpy *p_mpv_mul_d_add_prop	= &sp_mpv_mul_d_add_prop;
-
-static void
-initPtrs(void)
-{
-    if (isSparcV8PlusVis()) {
-	p_mpv_mul_d = 		&vis_mpv_mul_d;
-	p_mpv_mul_d_add = 	&vis_mpv_mul_d_add;
-	p_mpv_mul_d_add_prop = 	&vis_mpv_mul_d_add_prop;
-    } else {
-	p_mpv_mul_d = 		&v8_mpv_mul_d;
-	p_mpv_mul_d_add = 	&v8_mpv_mul_d_add;
-	p_mpv_mul_d_add_prop = 	&v8_mpv_mul_d_add_prop;
-    }
-}
-
-static void 
-sp_mpv_mul_d(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
-{
-    initPtrs();
-    (* p_mpv_mul_d)(a, a_len, b, c);
-}
-
-static void 
-sp_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
-{
-    initPtrs();
-    (* p_mpv_mul_d_add)(a, a_len, b, c);
-}
-
-static void 
-sp_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
-{
-    initPtrs();
-    (* p_mpv_mul_d_add_prop)(a, a_len, b, c);
-}
-
-
-/* This is the external interface */
-
-void 
-s_mpv_mul_d(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
-{
-    (* p_mpv_mul_d)(a, a_len, b, c);
-}
-
-void 
-s_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
-{
-    (* p_mpv_mul_d_add)(a, a_len, b, c);
-}
-
-void 
-s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
-{
-    (* p_mpv_mul_d_add_prop)(a, a_len, b, c);
-}
-
-
