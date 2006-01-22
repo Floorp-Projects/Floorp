@@ -56,16 +56,16 @@ calViewController.prototype.createNewEvent = function (aCalendar, aStartTime, aE
         event.startDate = aStartTime;
         event.endDate = aEndTime;
         //var bundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-        //var newEvent = bundle.GetStringFromName("newEvent");
-        var newEvent = "New Event";
-        event.title = newEvent;
+        //var newEventTitle = bundle.GetStringFromName("newEvent");
+        var newEventTitle = "New Event";
+        event.title = newEventTitle;
         doTransaction('add', event, aCalendar, null, null);
     } else if (aStartTime && aStartTime.isDate) {
         var event = createEvent();
         event.startDate = aStartTime;
         doTransaction('add', event, aCalendar, null, null);
     } else {
-        newEventCommand();
+        newEvent();
     }
 }
 

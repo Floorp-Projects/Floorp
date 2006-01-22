@@ -217,7 +217,7 @@ function modifyToDoCommand( event )
    if( ThisToDo )
       editToDo( ThisToDo );
    else
-     newToDoCommand();
+     newToDo();
 }
 
 /**
