@@ -435,8 +435,9 @@ if ($action eq 'delete') {
                   undef, (undef, $gid));
         $dbh->do('DELETE FROM user_group_map WHERE group_id = ?',
                   undef, $gid);
-        $dbh->do('DELETE FROM group_group_map WHERE grantor_id = ?',
-                  undef, $gid);
+        $dbh->do('DELETE FROM group_group_map 
+                   WHERE grantor_id = ? OR member_id = ?',
+                  undef, ($gid, $gid));
         $dbh->do('DELETE FROM bug_group_map WHERE group_id = ?',
                   undef, $gid);
         $dbh->do('DELETE FROM group_control_map WHERE group_id = ?',
