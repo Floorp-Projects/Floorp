@@ -1112,7 +1112,6 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   // them or we may get this event at startup before we've had time to load
   // our window.
   BrowserWindowController* controller = (BrowserWindowController*)[[self getFrontmostBrowserWindow] windowController];
-  BOOL tabOrWindowIsAvailable = (controller && [[controller getBrowserWrapper] isEmpty] && ![[controller getBrowserWrapper] isBusy]);
   if (controller) {
     BOOL tabOrWindowIsAvailable = ([[controller getBrowserWrapper] isEmpty] && ![[controller getBrowserWrapper] isBusy]);
 

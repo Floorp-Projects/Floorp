@@ -45,4 +45,8 @@
 // this will return -1 on error
 - (long long)sizeOfFileAtPath:(NSString*)inPath traverseLink:(BOOL)inTraverseLink;
 
+// make a name for a backup file with the given path and suffix
+// (e.g. bookmarks.plist will be changed to "bookmarksSUFFIX-1.plist".
+- (NSString*)backupFileNameFromPath:(NSString*)inPath withSuffix:(NSString*)inFileSuffix;
+
 @end

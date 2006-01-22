@@ -81,5 +81,25 @@
   return [fileSize longLongValue];
 }
 
+- (NSString*)backupFileNameFromPath:(NSString*)inPath withSuffix:(NSString*)inFileSuffix
+{
+  NSString* pathWithoutExtension = [inPath stringByDeletingPathExtension];
+  NSString* fileExtension = [inPath pathExtension];
+
+  int sequenceNumber = 1;
+  
+  NSString* newName = nil;
+
+  do {
+    NSString* sequenceString = [NSString stringWithFormat:@"%@-%d", inFileSuffix, sequenceNumber];
+    
+    newName = [pathWithoutExtension stringByAppendingString:sequenceString];
+    newName = [newName stringByAppendingPathExtension:fileExtension];
+    
+    ++sequenceNumber;
+  } while ([self fileExistsAtPath:newName]);
+
+  return newName;
+}
 
 @end

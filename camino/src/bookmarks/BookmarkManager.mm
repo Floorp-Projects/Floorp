@@ -1175,6 +1175,13 @@ static BookmarkManager* gBookmarkManager = nil;
   {
     if ([self readPListBookmarks:bookmarkPath])
       return YES;
+    else
+    {
+      // save the corrupted bookmarks to a backup file
+      NSString* uniqueName = [fM backupFileNameFromPath:bookmarkPath withSuffix:@"-corrupted"];
+      [fM copyPath:bookmarkPath toPath:uniqueName handler:nil];
+      NSLog(@"Copied corrupted bookmarks file to %@", uniqueName);
+    }
   }
   else if ([fM isReadableFileAtPath:[profileDir stringByAppendingPathComponent:@"bookmarks.xml"]])
   {
