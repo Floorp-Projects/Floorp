@@ -70,7 +70,22 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-static const char js_incop_strs[][3] = {"++", "--"};
+const char js_const_str[]       = "const";
+const char js_var_str[]         = "var";
+const char js_function_str[]    = "function";
+const char js_in_str[]          = "in";
+const char js_instanceof_str[]  = "instanceof";
+const char js_new_str[]         = "new";
+const char js_delete_str[]      = "delete";
+const char js_typeof_str[]      = "typeof";
+const char js_void_str[]        = "void";
+const char js_null_str[]        = "null";
+const char js_this_str[]        = "this";
+const char js_false_str[]       = "false";
+const char js_true_str[]        = "true";
+const char js_default_str[]     = "default";
+
+const char *js_incop_str[]      = {"++", "--"};
 
 /* Pollute the namespace locally for MSVC Win16, but not for WatCom.  */
 #ifdef __WINDOWS_386__
@@ -899,7 +914,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
  * Callers know that ATOM_IS_STRING(atom), and we leave it to the optimizer to
  * common ATOM_TO_STRING(atom) here and near the call sites.
  */
-#define ATOM_IS_IDENTIFIER(atom) js_IsIdentifier(ATOM_TO_STRING(atom))
+#define ATOM_IS_IDENTIFIER(atom)                                              \
+    (!ATOM_KEYWORD(atom) && js_IsIdentifier(ATOM_TO_STRING(atom)))
 
 /*
  * Given an atom already fetched from jp->script's atom map, quote/escape its
@@ -1830,7 +1846,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     return JS_FALSE;
                 RETRACT(&ss->sprinter, lval);
                 todo = Sprint(&ss->sprinter, "%s%s",
-                              js_incop_strs[!(cs->format & JOF_INC)], lval);
+                              js_incop_str[!(cs->format & JOF_INC)], lval);
                 break;
 
               case JSOP_INCPROP:
@@ -1838,7 +1854,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 GET_ATOM_QUOTE_AND_FMT("%s%s[%s]", "%s%s.%s", rval);
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, fmt,
-                              js_incop_strs[!(cs->format & JOF_INC)],
+                              js_incop_str[!(cs->format & JOF_INC)],
                               lval, rval);
                 break;
 
@@ -1851,11 +1867,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                                   (js_CodeSpec[lastop].format & JOF_XMLNAME)
                                   ? "%s%s.%s"
                                   : "%s%s[%s]",
-                                  js_incop_strs[!(cs->format & JOF_INC)],
+                                  js_incop_str[!(cs->format & JOF_INC)],
                                   lval, xval);
                 } else {
                     todo = Sprint(&ss->sprinter, "%s%s",
-                                  js_incop_strs[!(cs->format & JOF_INC)], lval);
+                                  js_incop_str[!(cs->format & JOF_INC)], lval);
                 }
                 break;
 
@@ -1882,7 +1898,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     return JS_FALSE;
                 todo = STR2OFF(&ss->sprinter, lval);
                 SprintPut(&ss->sprinter,
-                          js_incop_strs[!(cs->format & JOF_INC)],
+                          js_incop_str[!(cs->format & JOF_INC)],
                           2);
                 break;
 
@@ -1891,7 +1907,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 GET_ATOM_QUOTE_AND_FMT("%s[%s]%s", "%s.%s%s", rval);
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, fmt, lval, rval,
-                              js_incop_strs[!(cs->format & JOF_INC)]);
+                              js_incop_str[!(cs->format & JOF_INC)]);
                 break;
 
               case JSOP_ELEMINC:
@@ -1904,10 +1920,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                                   ? "%s.%s%s"
                                   : "%s[%s]%s",
                                   lval, xval,
-                                  js_incop_strs[!(cs->format & JOF_INC)]);
+                                  js_incop_str[!(cs->format & JOF_INC)]);
                 } else {
                     todo = Sprint(&ss->sprinter, "%s%s",
-                                  lval, js_incop_strs[!(cs->format & JOF_INC)]);
+                                  lval, js_incop_str[!(cs->format & JOF_INC)]);
                 }
                 break;
 

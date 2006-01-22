@@ -80,7 +80,7 @@ bool_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return js_obj_toSource(cx, obj, argc, argv, rval);
     JS_snprintf(buf, sizeof buf, "(new %s(%s))",
                 js_BooleanClass.name,
-                js_boolean_strs[JSVAL_TO_BOOLEAN(v) ? 1 : 0]);
+                js_boolean_str[JSVAL_TO_BOOLEAN(v) ? 1 : 0]);
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return JS_FALSE;

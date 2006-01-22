@@ -149,22 +149,6 @@ CLASSPATH    = $(JDK)/lib/classes.zip$(SEP)$(CLASSDIR)/$(OBJDIR)
 
 include $(DEPTH)/config/$(OS_CONFIG).mk
 
-ifndef OBJ_SUFFIX
-ifdef USE_MSVC
-OBJ_SUFFIX = obj
-else
-OBJ_SUFFIX = o
-endif
-endif
-
-ifndef HOST_BIN_SUFFIX
-ifeq ($(OS_ARCH),WINNT)
-HOST_BIN_SUFFIX = .exe
-else
-HOST_BIN_SUFFIX =
-endif
-endif
-
 # Name of the binary code directories
 ifdef BUILD_IDG
 OBJDIR          = $(OS_CONFIG)$(OBJDIR_TAG).OBJD

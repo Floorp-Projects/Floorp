@@ -637,7 +637,7 @@ JS_GetTypeName(JSContext *cx, JSType type)
 {
     if ((uintN)type >= (uintN)JSTYPE_LIMIT)
         return NULL;
-    return js_type_strs[type];
+    return js_type_str[type];
 }
 
 /************************************************************************/

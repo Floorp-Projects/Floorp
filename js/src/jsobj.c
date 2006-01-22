@@ -836,11 +836,12 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         *rval = STRING_TO_JSVAL(idstr);         /* local root */
 
         /*
-         * If id is a string that's not an identifier, then it needs to be
-         * quoted.  Also, negative integer ids must be quoted.
+         * If id is a string that's a reserved identifier, or else id is not
+         * an identifier at all, then it needs to be quoted.  Also, negative
+         * integer ids must be quoted.
          */
         if (atom
-            ? !js_IsIdentifier(idstr)
+            ? (ATOM_KEYWORD(atom) || !js_IsIdentifier(idstr))
             : (JSID_IS_OBJECT(id) || JSID_TO_INT(id) < 0)) {
             idstr = js_QuoteString(cx, idstr, (jschar)'\'');
             if (!idstr) {
@@ -3415,7 +3416,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
                                  JS_GetStringBytes(str),
                                  (hint == JSTYPE_VOID)
                                  ? "primitive type"
-                                 : js_type_strs[hint]);
+                                 : js_type_str[hint]);
         }
         return JS_FALSE;
     }

@@ -104,7 +104,6 @@ CSRCS		= \
 
 EXPORTS		= \
 		jsautocfg.h \
-		jsautokw.h \
 		js.msg \
 		jsapi.h \
 		jsarray.h \
@@ -393,35 +392,3 @@ jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.c Makefile.in
 endif
 endif
 
-#
-# Rules for keyword switch generation
-#
-
-GARBAGE += jsautokw.h jskwgen$(HOST_BIN_SUFFIX)
-
-# Extra dependancies for jsscan.o
-jsscan.$(OBJ_SUFFIX): jsautokw.h jskeyword.tbl
-
-jsautokw.h: jskwgen$(HOST_BIN_SUFFIX) jskeyword.tbl
-	./jskwgen$(HOST_BIN_SUFFIX) $@
-
-ifeq ($(OS_ARCH),QNX)
-ifneq ($(OS_TARGET),NTO)
-# QNX's compiler apparently can't build a binary directly from a source file.
-GARBAGE += jskwgen.$(OBJ_SUFFIX)
-jskwgen.$(OBJ_SUFFIX): jskwgen.c jskeyword.tbl Makefile.in
-	$(HOST_CC) $(HOST_CFLAGS) -c $(DEFINES) $(NSPR_CFLAGS) -o $@ $<
-
-jskwgen$(HOST_BIN_SUFFIX): jskwgen.$(OBJ_SUFFIX)
-	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) -o $@ $<
-endif
-else
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-# XXXbe See bug 319719 -- mozilla/config/rules.mk HOST_* support has rotted.
-jskwgen$(HOST_BIN_SUFFIX): jskwgen.c jskeyword.tbl Makefile.in
-	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) $<
-else
-jskwgen$(HOST_BIN_SUFFIX): jskwgen.c jskeyword.tbl Makefile.in
-	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) $(OUTOPTION)$@ $<
-endif
-endif
