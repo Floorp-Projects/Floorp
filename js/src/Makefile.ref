@@ -120,9 +120,9 @@ endif
 #
 #	Server-related changes :
 #
-ifdef NES40 
-DEFINES += -DNES40 
-endif 
+ifdef NES40
+DEFINES += -DNES40
+endif
 
 #
 # Line editing support.
@@ -203,6 +203,7 @@ OTHER_HFILES =		\
 	jsopcode.tbl	\
 	js.msg		\
 	jsshell.msg	\
+	jskeyword.tbl	\
 	$(NULL)
 
 ifndef PREBUILT_CPUCFG
@@ -255,14 +256,14 @@ FDLIBM_LIBRARY = fdlibm/$(OBJDIR)/fdlibm.lib
 else
 FDLIBM_LIBRARY = fdlibm/$(OBJDIR)/libfdm.a
 endif
-JSMATH_PRELINK	= $(OBJDIR)/jsmathtemp.o
+JSMATH_PRELINK	= $(OBJDIR)/jsmathtemp.$(OBJ_SUFFIX)
 # Flag for incremental linking
 DASH_R		= -r
 
 ifeq ($(OS_ARCH),QNX)
 ifneq ($(OS_TARGET),NTO)
 # Don't use wildcard here, because we only want this resolved at link time.
-OBJS		+= fdlibm/*.o
+OBJS		+= fdlibm/*.$(OBJ_SUFFIX)
 endif
 endif
 
@@ -303,6 +304,33 @@ include jsconfig.mk
 
 nsinstall-target:
 	cd ../../config; $(MAKE) OBJDIR=$(OBJDIR) OBJDIR_NAME=$(OBJDIR)
+
+#
+# Rules for keyword switch generation
+#
+
+GARBAGE += $(OBJDIR)/jsautokw.h $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX)
+GARBAGE += $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
+
+$(OBJDIR)/jsscan.$(OBJ_SUFFIX): $(OBJDIR)/jsautokw.h jskeyword.tbl
+
+$(OBJDIR)/jskwgen.$(OBJ_SUFFIX): jskwgen.c jskeyword.tbl
+
+$(OBJDIR)/jsautokw.h: $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX) jskeyword.tbl
+	$(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX) $@
+
+ifdef USE_MSVC
+$(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX): $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
+	link.exe -out:"$@" $(EXE_LINK_FLAGS) $^
+else
+$(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX): $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^
+endif
+
+#
+# JS shell executable
+#
+
 ifdef USE_MSVC
 $(PROGRAM): $(PROG_OBJS) $(LIBRARY) $(FDLIBM_LIBRARY)
 	link.exe -out:"$@" $(EXE_LINK_FLAGS) $^
@@ -348,7 +376,7 @@ endif
 ifeq ($(OS_ARCH),QNX)
 ifneq ($(OS_TARGET),NTO)
 	@cp $(JSMATH_PRELINK) $@
-else	
+else
 	$(LD) $(DASH_R) -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
 endif
 else

@@ -63,8 +63,8 @@ JS_BEGIN_EXTERN_C
 #define ATOM_TMPSTR     0x80            /* internal, to avoid extra string */
 
 struct JSAtom {
-    JSHashEntry         entry;          /* key is jsval, value keyword info or
-                                           unhidden atom if ATOM_HIDDEN */
+    JSHashEntry         entry;          /* key is jsval or unhidden atom
+                                           if ATOM_HIDDEN */
     uint32              flags;          /* pinned, interned, and mark flags */
     jsatomid            number;         /* atom serial number and hash code */
 };
@@ -88,9 +88,6 @@ struct JSAtom {
  */
 extern JS_FRIEND_API(const char *)
 js_AtomToPrintableString(JSContext *cx, JSAtom *atom);
-
-#define ATOM_KEYWORD(atom)        ((struct keyword *)(atom)->entry.value)
-#define ATOM_SET_KEYWORD(atom,kw) ((atom)->entry.value = (kw))
 
 struct JSAtomListElement {
     JSHashEntry         entry;
@@ -269,8 +266,8 @@ struct JSAtomState {
 };
 
 /* Well-known predefined strings and their atoms. */
-extern const char   *js_type_str[];
-extern const char   *js_boolean_str[];
+extern const char   *js_type_strs[];
+extern const char   *js_boolean_strs[];
 
 extern const char   js_Arguments_str[];
 extern const char   js_Array_str[];
