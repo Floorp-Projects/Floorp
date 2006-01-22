@@ -43,6 +43,7 @@
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd2;
 ]>
 
+<?xml-stylesheet href="chrome://lightning/skin/lightning.css"?>
 
 <overlay id="LightningPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

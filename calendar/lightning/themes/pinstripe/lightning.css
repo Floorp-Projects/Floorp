@@ -96,3 +96,7 @@ treechildren::-moz-tree-image(col-calendar-Checkbox, unchecked) {
     -moz-box-align: center;
     -moz-box-pack: end;
 }
+
+radio[pane=paneLightning] {
+  list-style-image: url("chrome://calendar/skin/calendartoolbar.png")
+}

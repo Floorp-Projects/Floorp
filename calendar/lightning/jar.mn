@@ -72,6 +72,7 @@ classic.jar:
 #expand  skin/classic/calendar/prevnextarrow.png	(/calendar/sunbird/themes/__THEME__/sunbird/prevnextarrow.png)
 #expand  skin/classic/calendar/pageupdown.png	(/calendar/sunbird/themes/__THEME__/sunbird/pageupdown.png)
 #expand  skin/classic/calendar/calendar-toolbar.css	(/calendar/base/themes/__THEME__/calendar-toolbar.css)
+#expand  skin/classic/calendar/calendartoolbar.png	(/calendar/resources/skin/classic/calendartoolbar.png)
 #expand  skin/classic/calendar/toolbar-large.png	(/calendar/base/themes/__THEME__/toolbar-large.png)
 #expand  skin/classic/calendar/toolbar-small.png	(/calendar/base/themes/__THEME__/toolbar-small.png)
 #expand  skin/classic/calendar/checkbox_checked.png	(/calendar/resources/skin/classic/unifinder/checkbox_checked.png)
