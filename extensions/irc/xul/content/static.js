@@ -3332,15 +3332,19 @@ function tabdnd_dstart (aEvent, aXferData, aDragAction)
 var userlistDNDObserver = new Object();
 
 userlistDNDObserver.onDragStart =
-function userlistdnd_dstart(event, transferdata, dragAction)
+function userlistdnd_dstart(event, transferData, dragAction)
 {
+    var col = new Object(), row = new Object(), cell = new Object();
     var tree = document.getElementById('user-list');
-    var index = tree.treeBoxObject.getRowAt(event.clientX, event.clientY);
-    var user = tree.contentView.getItemAtIndex(index).firstChild.firstChild;
+    tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, cell);
+    // Check whether we're actually on a normal row and cell
+    if (!cell.value || (row.value == -1)) 
+        return;
+    var user = tree.contentView.getItemAtIndex(row.value).firstChild.firstChild;
     var nickname = user.getAttribute("unicodeName");
 
-    transferdata.data = new TransferData();
-    transferdata.data.addDataForFlavour("text/unicode", nickname);
+    transferData.data = new TransferData();
+    transferData.data.addDataForFlavour("text/unicode", nickname);
 }
 
 function deleteTab (tb)
