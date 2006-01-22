@@ -51,15 +51,16 @@
 static PRInt32 cInterfaces=0;
 static PyObject *g_obFuncMakeInterfaceCount = NULL; // XXX - never released!!!
 
-PyObject *PyObject_FromNSInterface( nsISupports *aInterface,
-                                    const nsIID &iid, 
-                                    PRBool bMakeNicePyObject /*= PR_TRUE */)
+PYXPCOM_EXPORT PyObject *
+PyObject_FromNSInterface(nsISupports *aInterface,
+                         const nsIID &iid, 
+                         PRBool bMakeNicePyObject /*= PR_TRUE */)
 {
 	return Py_nsISupports::PyObjectFromInterface(aInterface, iid,
 	                                             bMakeNicePyObject);
 }
 
-PRInt32 
+PYXPCOM_EXPORT PRInt32 
 _PyXPCOM_GetInterfaceCount(void)
 {
 	return cInterfaces;
@@ -442,7 +443,7 @@ Py_nsISupports::QueryInterface(PyObject *self, PyObject *args)
 
 
 // @object Py_nsISupports|The base object for all PythonCOM objects.  Wraps a COM nsISupports interface.
-/*static*/ struct PyMethodDef 
+NS_EXPORT_STATIC_MEMBER_(struct PyMethodDef)
 Py_nsISupports::methods[] =
 {
 	{ "queryInterface", Py_nsISupports::QueryInterface, 1, "Queries the object for an interface."},
@@ -460,5 +461,5 @@ Py_nsISupports::methods[] =
 		Constructor);
 }
 
-PyXPCOM_TypeObject *Py_nsISupports::type = NULL;
-PyObject *Py_nsISupports::mapIIDToType = NULL;
+NS_EXPORT_STATIC_MEMBER_(PyXPCOM_TypeObject *) Py_nsISupports::type = NULL;
+NS_EXPORT_STATIC_MEMBER_(PyObject *) Py_nsISupports::mapIIDToType = NULL;

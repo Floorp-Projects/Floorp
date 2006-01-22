@@ -51,7 +51,7 @@
 #include "PyXPCOM_std.h"
 #include <nsIInterfaceInfoManager.h>
 
-nsIID Py_nsIID_NULL = {0,0,0,{0,0,0,0,0,0,0,0}};
+PYXPCOM_EXPORT nsIID Py_nsIID_NULL = {0,0,0,{0,0,0,0,0,0,0,0}};
 
 // @pymethod <o Py_nsIID>|xpcom|IID|Creates a new IID object
 PYXPCOM_EXPORT PyObject *PyXPCOMMethod_IID(PyObject *self, PyObject *args)
@@ -137,7 +137,7 @@ Py_nsIID::IIDFromPyObject(PyObject *ob, nsIID *pRet) {
 // <nl>All pythoncom functions that return a CLSID/IID will return one of these
 // objects.  However, in almost all cases, functions that expect a CLSID/IID
 // as a param will accept either a string object, or a native Py_nsIID object.
-PyTypeObject Py_nsIID::type =
+PYXPCOM_EXPORT PyTypeObject Py_nsIID::type =
 {
 	PyObject_HEAD_INIT(&PyType_Type)
 	0,
