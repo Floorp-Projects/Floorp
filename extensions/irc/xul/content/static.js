@@ -4402,6 +4402,29 @@ function cli_quit (reason)
     }
 }
 
+client.wantToQuit =
+function cli_wantToQuit(reason)
+{
+    
+    var close = true;
+    if (client.prefs["warnOnClose"])
+    {
+        const buttons = ["!yes", "!no"];
+        var checkState = { value: true };
+        var rv = confirmEx(MSG_CONFIRM_QUIT, buttons, 0, MSG_WARN_ON_EXIT,
+                           checkState);
+        close = (rv == 0);
+        client.prefs["warnOnClose"] = checkState.value;
+    }
+
+    if (close)
+    {
+        client.userClose = true;
+        display(MSG_CLOSING);
+        client.quit(reason);
+    }
+}
+
 /* gets a tab-complete match for the line of text specified by |line|.
  * wordStart is the position within |line| that starts the word being matched,
  * wordEnd marks the end position.  |cursorPos| marks the position of the caret

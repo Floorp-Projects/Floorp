@@ -151,7 +151,6 @@ function initCommands()
          ["print",             cmdPrint,                           CMD_CONSOLE],
          ["query",             cmdQuery,            CMD_NEED_SRV | CMD_CONSOLE],
          ["quit",              cmdQuit,                            CMD_CONSOLE],
-         ["quit-mozilla",      cmdQuitMozilla,                     CMD_CONSOLE],
          ["quote",             cmdQuote,            CMD_NEED_SRV | CMD_CONSOLE],
          ["reload-plugin",     cmdReload,                          CMD_CONSOLE],
          ["rlist",             cmdRlist,            CMD_NEED_SRV | CMD_CONSOLE],
@@ -202,7 +201,6 @@ function initCommands()
          /* aliases */
          ["css",              "motif",                             CMD_CONSOLE],
          ["exit",             "quit",                              CMD_CONSOLE],
-         ["exit-mozilla",     "quit-mozilla",                      CMD_CONSOLE],
          ["j",                "join",                              CMD_CONSOLE],
          ["part",             "leave",                             CMD_CONSOLE],
          ["raw",              "quote",                             CMD_CONSOLE],
@@ -1451,14 +1449,7 @@ function cmdSSLServer(e)
 
 function cmdQuit(e)
 {
-    client.quit(e.reason);
-    window.close();
-}
-
-function cmdQuitMozilla(e)
-{
-    client.quit(e.reason);
-    goQuitApplication();
+    client.wantToQuit(e.reason);
 }
 
 function cmdDisconnect(e)
