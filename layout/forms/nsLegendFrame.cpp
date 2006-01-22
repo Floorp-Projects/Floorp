@@ -58,7 +58,11 @@ static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
 nsIFrame*
 NS_NewLegendFrame(nsIPresShell* aPresShell)
 {
-  return new (aPresShell) nsLegendFrame;
+  nsIFrame* f = new (aPresShell) nsLegendFrame;
+  if (f) {
+    f->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+  }
+  return f;
 }
 
 nsIAtom*
