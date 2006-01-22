@@ -51,6 +51,8 @@
 #include "prtypes.h"
 #include "prtime.h"
 #include "prlong.h"
+#include "pcert.h"
+#include "nss.h"
 
 static char *progName;
 
@@ -58,6 +60,46 @@ static char *progName;
 static void *WrongEntry;
 static void *NoNickname;
 static void *NoSMime;
+
+typedef enum {
+/* 0*/ NoSubjectForCert = 0,
+/* 1*/ SubjectHasNoKeyForCert,
+/* 2*/ NoNicknameOrSMimeForSubject,
+/* 3*/ WrongNicknameForSubject,
+/* 4*/ NoNicknameEntry,
+/* 5*/ WrongSMimeForSubject,
+/* 6*/ NoSMimeEntry,
+/* 7*/ NoSubjectForNickname,
+/* 8*/ NoSubjectForSMime,
+/* 9*/ NicknameAndSMimeEntries,
+    NUM_ERROR_TYPES
+} dbErrorType;
+
+static char *dbErrorString[NUM_ERROR_TYPES] = {
+/* 0*/ "<CERT ENTRY>\nDid not find a subject entry for this certificate.",
+/* 1*/ "<SUBJECT ENTRY>\nSubject has certKey which is not in db.",
+/* 2*/ "<SUBJECT ENTRY>\nSubject does not have a nickname or email address.",
+/* 3*/ "<SUBJECT ENTRY>\nUsing this subject's nickname, found a nickname entry for a different subject.",
+/* 4*/ "<SUBJECT ENTRY>\nDid not find a nickname entry for this subject.",
+/* 5*/ "<SUBJECT ENTRY>\nUsing this subject's email, found an S/MIME entry for a different subject.",
+/* 6*/ "<SUBJECT ENTRY>\nDid not find an S/MIME entry for this subject.",
+/* 7*/ "<NICKNAME ENTRY>\nDid not find a subject entry for this nickname.",
+/* 8*/ "<S/MIME ENTRY>\nDid not find a subject entry for this S/MIME profile.",
+};
+
+static char *errResult[NUM_ERROR_TYPES] = {
+    "Certificate entries that had no subject entry.", 
+    "Subject entries with no corresponding Certificate entries.", 
+    "Subject entries that had no nickname or S/MIME entries.",
+    "Redundant nicknames (subjects with the same nickname).",
+    "Subject entries that had no nickname entry.",
+    "Redundant email addresses (subjects with the same email address).",
+    "Subject entries that had no S/MIME entry.",
+    "Nickname entries that had no subject entry.", 
+    "S/MIME entries that had no subject entry.",
+    "Subject entries with BOTH nickname and S/MIME entries."
+};
+
 
 enum {
     GOBOTH = 0,
@@ -71,8 +113,15 @@ typedef struct
     PRBool dograph;
     PRFileDesc *out;
     PRFileDesc *graphfile;
-    int dbErrors[10];
+    int dbErrors[NUM_ERROR_TYPES];
 } dbDebugInfo;
+
+struct certDBEntryListNodeStr {
+    PRCList link;
+    certDBEntry entry;
+    void *appData;
+};
+typedef struct certDBEntryListNodeStr  certDBEntryListNode;
 
 /*
  * A list node for a cert db entry.  The index is a unique identifier
@@ -113,10 +162,12 @@ typedef struct
     int numSubjects;
     int numNicknames;
     int numSMime;
+    int numRevocation;
     certDBEntryListNode certs;      /* pointer to head of cert list */
     certDBEntryListNode subjects;   /* pointer to head of subject list */
     certDBEntryListNode nicknames;  /* pointer to head of nickname list */
     certDBEntryListNode smime;      /* pointer to head of smime list */
+    certDBEntryListNode revocation; /* pointer to head of revocation list */
 } certDBArray;
 
 /* Cast list to the base element, a certDBEntryListNode. */
@@ -128,10 +179,12 @@ Usage(char *progName)
 {
 #define FPS fprintf(stderr, 
     FPS "Type %s -H for more detailed descriptions\n", progName);
-    FPS "Usage:  %s -D [-d certdir] [-i dbname] [-m] [-v  [-f dumpfile]]\n", 
+    FPS "Usage:  %s -D [-d certdir] [-m] [-v [-f dumpfile]]\n", 
 	progName);
-    FPS "        %s -R -o newdbname [-d certdir] [-i dbname] [-aprsx] [-v [-f dumpfile]]\n", 
+#ifdef DORECOVER
+    FPS "        %s -R -o newdbname [-d certdir] [-aprsx] [-v [-f dumpfile]]\n", 
 	progName);
+#endif
     exit(-1);
 }
 
@@ -144,18 +197,13 @@ LongUsage(char *progName)
 	"-D");
     FPS "%-15s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
-    FPS "%-15s Input cert database name (default is cert7.db)\n",
-	"   -i dbname");
-    FPS "%-15s Mail a graph of the database to certdb@netscape.com.\n",
+    FPS "%-15s Put database graph in ./mailfile (default is stdout).\n",
 	"   -m");
-    FPS "%-15s This will produce an index graph of your cert db and send\n",
-	"");
-    FPS "%-15s it to Netscape for analysis.  Personal info will be removed.\n",
-	"");
-    FPS "%-15s Verbose mode.  Dumps the entire contents of your cert7.db.\n",
+    FPS "%-15s Verbose mode.  Dumps the entire contents of your cert8.db.\n",
 	"   -v");
-    FPS "%-15s File to dump verbose output into.\n",
+    FPS "%-15s File to dump verbose output into. (default is stdout)\n",
 	"   -f dumpfile");
+#ifdef DORECOVER
     FPS "%-15s Repair the database.  The program will look for broken\n",
 	"-R");
     FPS "%-15s dependencies between subject entries and certificates,\n",
@@ -166,12 +214,10 @@ LongUsage(char *progName)
         "");
     FPS "%-15s removed, any missing entries will be created.\n",
         "");
-    FPS "%-15s File to store new database in (default is new_cert7.db)\n",
+    FPS "%-15s File to store new database in (default is new_cert8.db)\n",
 	"   -o newdbname");
     FPS "%-15s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
-    FPS "%-15s Input cert database name (default is cert7.db)\n",
-	"   -i dbname");
     FPS "%-15s Prompt before removing any certificates.\n",
         "   -p");
     FPS "%-15s Keep all possible certificates.  Only remove certificates\n",
@@ -195,6 +241,7 @@ LongUsage(char *progName)
     FPS "%-15s File to dump verbose output into.\n",
 	"   -f dumpfile");
     FPS "\n");
+#endif
     exit(-1);
 #undef FPS
 }
@@ -208,7 +255,7 @@ LongUsage(char *progName)
 void
 printHexString(PRFileDesc *out, SECItem *hexval)
 {
-    int i;
+    unsigned int i;
     for (i = 0; i < hexval->len; i++) {
 	if (i != hexval->len - 1) {
 	    PR_fprintf(out, "%02x:", hexval->data[i]);
@@ -219,30 +266,6 @@ printHexString(PRFileDesc *out, SECItem *hexval)
     PR_fprintf(out, "\n");
 }
 
-typedef enum {
-/* 0*/ NoSubjectForCert = 0,
-/* 1*/ SubjectHasNoKeyForCert,
-/* 2*/ NoNicknameOrSMimeForSubject,
-/* 3*/ WrongNicknameForSubject,
-/* 4*/ NoNicknameEntry,
-/* 5*/ WrongSMimeForSubject,
-/* 6*/ NoSMimeEntry,
-/* 7*/ NoSubjectForNickname,
-/* 8*/ NoSubjectForSMime,
-/* 9*/ NicknameAndSMimeEntry
-} dbErrorType;
-
-static char *dbErrorString[] = {
-/* 0*/ "<CERT ENTRY>\nDid not find a subject entry for this certificate.",
-/* 1*/ "<SUBJECT ENTRY>\nSubject has certKey which is not in db.",
-/* 2*/ "<SUBJECT ENTRY>\nSubject does not have a nickname or email address.",
-/* 3*/ "<SUBJECT ENTRY>\nUsing this subject's nickname, found a nickname entry for a different subject.",
-/* 4*/ "<SUBJECT ENTRY>\nDid not find a nickname entry for this subject.",
-/* 5*/ "<SUBJECT ENTRY>\nUsing this subject's email, found an S/MIME entry for a different subject.",
-/* 6*/ "<SUBJECT ENTRY>\nDid not find an S/MIME entry for this subject.",
-/* 7*/ "<NICKNAME ENTRY>\nDid not find a subject entry for this nickname.",
-/* 8*/ "<S/MIME ENTRY>\nDid not find a subject entry for this S/MIME profile.",
-};
 
 SECStatus
 dumpCertificate(CERTCertificate *cert, int num, PRFileDesc *outfile)
@@ -285,13 +308,20 @@ dumpCertificate(CERTCertificate *cert, int num, PRFileDesc *outfile)
 SECStatus
 dumpCertEntry(certDBEntryCert *entry, int num, PRFileDesc *outfile)
 {
+#if 0
+    NSSLOWCERTCertificate *cert;
+    /* should we check for existing duplicates? */
+    cert = nsslowcert_DecodeDERCertificate(&entry->cert.derCert, 
+					    entry->cert.nickname);
+#else
     CERTCertificate *cert;
     cert = CERT_DecodeDERCertificate(&entry->derCert, PR_FALSE, NULL);
+#endif
     if (!cert) {
 	fprintf(stderr, "Failed to decode certificate.\n");
 	return SECFailure;
     }
-    cert->trust = &entry->trust;
+    cert->trust = (CERTCertTrust *)&entry->trust;
     dumpCertificate(cert, num, outfile);
     CERT_DestroyCertificate(cert);
     return SECSuccess;
@@ -300,16 +330,23 @@ dumpCertEntry(certDBEntryCert *entry, int num, PRFileDesc *outfile)
 SECStatus
 dumpSubjectEntry(certDBEntrySubject *entry, int num, PRFileDesc *outfile)
 {
-    char *subjectName;
-    subjectName = CERT_DerNameToAscii(&entry->derSubject);
+    char *subjectName = CERT_DerNameToAscii(&entry->derSubject);
+
     PR_fprintf(outfile, "Subject: %3d\n", num);
     PR_fprintf(outfile, "------------\n");
     PR_fprintf(outfile, "## %s\n", subjectName);
     if (entry->nickname)
 	PR_fprintf(outfile, "## Subject nickname:  %s\n", entry->nickname);
-    if (entry->emailAddr && entry->emailAddr[0])
-	PR_fprintf(outfile, "## Subject email address:  %s\n", 
-	           entry->emailAddr);
+    if (entry->emailAddrs) {
+	unsigned int n;
+	for (n = 0; n < entry->nemailAddrs && entry->emailAddrs[n]; ++n) {
+	    char * emailAddr = entry->emailAddrs[n];
+	    if (emailAddr[0]) {
+		PR_fprintf(outfile, "## Subject email address:  %s\n", 
+	           emailAddr);
+	    }
+	}
+    }
     PR_fprintf(outfile, "## This subject has %d cert(s).\n", entry->ncerts);
     PR_fprintf(outfile, "\n");
     PORT_Free(subjectName);
@@ -331,10 +368,18 @@ dumpSMimeEntry(certDBEntrySMime *entry, int num, PRFileDesc *outfile)
     PR_fprintf(outfile, "S/MIME Profile: %3d\n", num);
     PR_fprintf(outfile, "-------------------\n");
     PR_fprintf(outfile, "##  \"%s\"\n", entry->emailAddr);
+#ifdef OLDWAY
     PR_fprintf(outfile, "##  OPTIONS:  ");
     printHexString(outfile, &entry->smimeOptions);
     PR_fprintf(outfile, "##  TIMESTAMP:  ");
     printHexString(outfile, &entry->optionsDate);
+#else
+    SECU_PrintAny(stdout, &entry->smimeOptions, "##  OPTIONS  ", 0);
+    fflush(stdout);
+    if (entry->optionsDate.len && entry->optionsDate.data)
+	PR_fprintf(outfile, "##  TIMESTAMP: %.*s\n", 
+	           entry->optionsDate.len, entry->optionsDate.data);
+#endif
     PR_fprintf(outfile, "\n");
     return SECSuccess;
 }
@@ -351,7 +396,6 @@ mapCertEntries(certDBArray *dbArray)
     SECItem derSubject;
     SECItem certKey;
     PRCList *cElem, *sElem;
-    int i;
 
     /* Arena for decoded entries */
     tmparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -377,6 +421,7 @@ mapCertEntries(certDBArray *dbArray)
 	    subjNode = LISTNODE_CAST(sElem);
 	    subjectEntry = (certDBEntrySubject *)&subjNode->entry;
 	    if (SECITEM_ItemsAreEqual(&derSubject, &subjectEntry->derSubject)) {
+		unsigned int i;
 		/*  Found matching subject name, create link.  */
 		map->pSubject = subjNode;
 		/*  Make sure subject entry has cert's key.  */
@@ -400,12 +445,9 @@ SECStatus
 mapSubjectEntries(certDBArray *dbArray)
 {
     certDBEntrySubject *subjectEntry;
-    certDBEntryNickname *nicknameEntry;
-    certDBEntrySMime *smimeEntry;
-    certDBEntryListNode *subjNode, *nickNode, *smimeNode;
+    certDBEntryListNode *subjNode;
     certDBSubjectEntryMap *subjMap;
-    certDBEntryMap *nickMap, *smimeMap;
-    PRCList *sElem, *nElem, *mElem;
+    PRCList *sElem;
 
     for (sElem = PR_LIST_HEAD(&dbArray->subjects.link);
          sElem != &dbArray->subjects.link; sElem = PR_NEXT_LINK(sElem)) {
@@ -420,57 +462,73 @@ mapSubjectEntries(certDBArray *dbArray)
 	subjMap->pCerts = PORT_ArenaAlloc(subjMap->arena, 
 	                                  subjectEntry->ncerts*sizeof(int));
 	subjMap->numCerts = subjectEntry->ncerts;
+	subjMap->pNickname = NoNickname;
+	subjMap->pSMime = NoSMime;
+
 	if (subjectEntry->nickname) {
 	    /* Subject should have a nickname entry, so create a link. */
+	    PRCList *nElem;
 	    for (nElem = PR_LIST_HEAD(&dbArray->nicknames.link);
 	         nElem != &dbArray->nicknames.link; 
 	         nElem = PR_NEXT_LINK(nElem)) {
+		certDBEntryListNode *nickNode;
+		certDBEntryNickname *nicknameEntry;
 		/*  Look for subject's nickname in nickname entries.  */
 		nickNode = LISTNODE_CAST(nElem);
 		nicknameEntry = (certDBEntryNickname *)&nickNode->entry;
-		nickMap = (certDBEntryMap *)nickNode->appData;
 		if (PL_strcmp(subjectEntry->nickname, 
 		              nicknameEntry->nickname) == 0) {
 		    /*  Found a nickname entry for subject's nickname.  */
 		    if (SECITEM_ItemsAreEqual(&subjectEntry->derSubject,
 		                              &nicknameEntry->subjectName)) {
+			certDBEntryMap *nickMap;
+			nickMap = (certDBEntryMap *)nickNode->appData;
 			/*  Nickname and subject match.  */
 			subjMap->pNickname = nickNode;
 			nickMap->pSubject = subjNode;
-		    } else {
+		    } else if (subjMap->pNickname == NoNickname) {
 			/*  Nickname entry found is for diff. subject.  */
 			subjMap->pNickname = WrongEntry;
 		    }
 		}
 	    }
-	} else {
-	    subjMap->pNickname = NoNickname;
 	}
-	if (subjectEntry->emailAddr && subjectEntry->emailAddr[0]) {
-	    /* Subject should have an smime entry, so create a link. */
-	    for (mElem = PR_LIST_HEAD(&dbArray->smime.link);
-	         mElem != &dbArray->smime.link; mElem = PR_NEXT_LINK(mElem)) {
-		/*  Look for subject's email in S/MIME entries.  */
-		smimeNode = LISTNODE_CAST(mElem);
-		smimeEntry = (certDBEntrySMime *)&smimeNode->entry;
-		smimeMap = (certDBEntryMap *)smimeNode->appData;
-		if (PL_strcmp(subjectEntry->emailAddr, 
-		              smimeEntry->emailAddr) == 0) {
-		    /*  Found a S/MIME entry for subject's email.  */
-		    if (SECITEM_ItemsAreEqual(&subjectEntry->derSubject,
-		                              &smimeEntry->subjectName)) {
-			/*  S/MIME entry and subject match.  */
-			subjMap->pSMime = smimeNode;
-			smimeMap->pSubject = subjNode;
-		    } else {
-			/*  S/MIME entry found is for diff. subject.  */
-			subjMap->pSMime = WrongEntry;
-		    }
-		}
-	    }
-	} else {
-	    subjMap->pSMime = NoSMime;
-	}
+	if (subjectEntry->emailAddrs) {
+	    unsigned int n;
+	    for (n = 0; n < subjectEntry->nemailAddrs && 
+	                subjectEntry->emailAddrs[n]; ++n) {
+		char * emailAddr = subjectEntry->emailAddrs[n];
+		if (emailAddr[0]) {
+		    PRCList *mElem;
+		    /* Subject should have an smime entry, so create a link. */
+		    for (mElem = PR_LIST_HEAD(&dbArray->smime.link);
+			 mElem != &dbArray->smime.link; 
+			 mElem = PR_NEXT_LINK(mElem)) {
+			certDBEntryListNode *smimeNode;
+			certDBEntrySMime *smimeEntry;
+			/*  Look for subject's email in S/MIME entries.  */
+			smimeNode = LISTNODE_CAST(mElem);
+			smimeEntry = (certDBEntrySMime *)&smimeNode->entry;
+			if (PL_strcmp(emailAddr, 
+				      smimeEntry->emailAddr) == 0) {
+			    /*  Found a S/MIME entry for subject's email.  */
+			    if (SECITEM_ItemsAreEqual(
+			    		&subjectEntry->derSubject,
+				        &smimeEntry->subjectName)) {
+				certDBEntryMap *smimeMap;
+				/*  S/MIME entry and subject match.  */
+				subjMap->pSMime = smimeNode;
+				smimeMap = (certDBEntryMap *)smimeNode->appData;
+				smimeMap->pSubject = subjNode;
+			    } else if (subjMap->pSMime == NoSMime) {
+				/*  S/MIME entry found is for diff. subject.  */
+				subjMap->pSMime = WrongEntry;
+			    }
+			}
+		    }   /* end for */
+		}   /* endif (emailAddr[0]) */
+	    }   /* end for */
+	}   /* endif (subjectEntry->emailAddrs) */
     }
     return SECSuccess;
 }
@@ -535,6 +593,7 @@ print_smime_graph(dbDebugInfo *info, certDBEntryMap *smimeMap, int direction)
 	                        smimeMap->index, certDBEntryTypeSMimeProfile);
 	} else {
 	    printnode(info, "<---- S/MIME   %5d   ", smimeMap->index);
+	    info->dbErrors[NoSubjectForSMime]++;
 	}
     } else {
 	printnode(info, "S/MIME   %5d   ", smimeMap->index);
@@ -559,6 +618,7 @@ print_nickname_graph(dbDebugInfo *info, certDBEntryMap *nickMap, int direction)
 	                        nickMap->index, certDBEntryTypeNickname);
 	} else {
 	    printnode(info, "<---- Nickname %5d   ", nickMap->index);
+	    info->dbErrors[NoSubjectForNickname]++;
 	}
     } else {
 	printnode(info, "Nickname %5d   ", nickMap->index);
@@ -603,6 +663,8 @@ print_subject_graph(dbDebugInfo *info, certDBSubjectEntryMap *subjMap,
 	    map = (certDBEntryMap *)node->appData;
 	    /* going left here stops. */
 	    print_cert_graph(info, map, GOLEFT); 
+	} else {
+	    info->dbErrors[SubjectHasNoKeyForCert]++;
 	}
 	/* Now it is safe to output the subject id. */
 	if (direction == GOLEFT)
@@ -632,6 +694,10 @@ print_subject_graph(dbDebugInfo *info, certDBSubjectEntryMap *subjMap,
 	}
 	if (!subjMap->pNickname && !subjMap->pSMime) {
 	    printnode(info, "******************* ", -1);
+	    info->dbErrors[NoNicknameOrSMimeForSubject]++;
+	}
+	if (subjMap->pNickname && subjMap->pSMime) {
+	    info->dbErrors[NicknameAndSMimeEntries]++;
 	}
     }
     if (direction != GORIGHT) { /* going right has only one cert */
@@ -672,6 +738,8 @@ print_cert_graph(dbDebugInfo *info, certDBEntryMap *certMap, int direction)
     if (map_handle_is_ok(info, (void *)subjNode, 0)) {
 	subjMap = (certDBSubjectEntryMap *)subjNode->appData;
 	print_subject_graph(info, subjMap, GORIGHT, -1, -1);
+    } else {
+	info->dbErrors[NoSubjectForCert]++;
     }
 }
 
@@ -774,6 +842,7 @@ verboseOutput(certDBArray *dbArray, dbDebugInfo *info)
     /* List subjects */
     for (elem = PR_LIST_HEAD(&dbArray->subjects.link);
          elem != &dbArray->subjects.link; elem = PR_NEXT_LINK(elem)) {
+	int refs = 0;
 	node = LISTNODE_CAST(elem);
 	subjectEntry = (certDBEntrySubject *)&node->entry;
 	smap = (certDBSubjectEntryMap *)node->appData;
@@ -789,6 +858,7 @@ verboseOutput(certDBArray *dbArray, dbDebugInfo *info)
 	    }
 	}
 	if (subjectEntry->nickname) {
+	    ++refs;
 	    /* walk each subject handle to it's nickname entry */
 	    if (map_handle_is_ok(info, smap->pNickname, -1)) {
 		ref = ((certDBEntryMap *)smap->pNickname->appData)->index;
@@ -797,7 +867,11 @@ verboseOutput(certDBArray *dbArray, dbDebugInfo *info)
 		PR_fprintf(info->out, "-->(MISSING NICKNAME ENTRY)\n");
 	    }
 	}
-	if (subjectEntry->emailAddr && subjectEntry->emailAddr[0]) {
+	if (subjectEntry->nemailAddrs && 
+	    subjectEntry->emailAddrs &&
+	    subjectEntry->emailAddrs[0] &&
+	    subjectEntry->emailAddrs[0][0]) {
+	    ++refs;
 	    /* walk each subject handle to it's smime entry */
 	    if (map_handle_is_ok(info, smap->pSMime, -1)) {
 		ref = ((certDBEntryMap *)smap->pSMime->appData)->index;
@@ -805,6 +879,9 @@ verboseOutput(certDBArray *dbArray, dbDebugInfo *info)
 	    } else {
 		PR_fprintf(info->out, "-->(MISSING S/MIME ENTRY)\n");
 	    }
+	}
+	if (!refs) {
+	    PR_fprintf(info->out, "-->(NO NICKNAME+S/MIME ENTRY)\n");
 	}
 	PR_fprintf(info->out, "\n\n");
     }
@@ -836,20 +913,43 @@ verboseOutput(certDBArray *dbArray, dbDebugInfo *info)
     PR_fprintf(info->out, "\n\n");
 }
 
-char *errResult[] = {
-    "Certificate entries that had no subject entry.", 
-    "Certificate entries that had no key in their subject entry.", 
-    "Subject entries that had no nickname or email address.",
-    "Redundant nicknames (subjects with the same nickname).",
-    "Subject entries that had no nickname entry.",
-    "Redundant email addresses (subjects with the same email address).",
-    "Subject entries that had no S/MIME entry.",
-    "Nickname entries that had no subject entry.", 
-    "S/MIME entries that had no subject entry.",
-};
+
+/* A callback function, intended to be called from nsslowcert_TraverseDBEntries
+ * Builds a PRCList of DB entries of the specified type.
+ */
+SECStatus 
+SEC_GetCertDBEntryList(SECItem *dbdata, SECItem *dbkey, 
+                       certDBEntryType entryType, void *pdata)
+{
+    certDBEntry         * entry;
+    certDBEntryListNode * node;
+    PRCList             * list = (PRCList *)pdata;
+
+    if (!dbdata || !dbkey || !pdata || !dbdata->data || !dbkey->data) {
+    	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    entry = nsslowcert_DecodeAnyDBEntry(dbdata, dbkey, entryType, NULL);
+    if (!entry) {
+    	return SECSuccess; /* skip it */
+    }
+    node = PORT_ArenaZNew(entry->common.arena, certDBEntryListNode);
+    if (!node) {
+    	/* DestroyDBEntry(entry); */
+	PLArenaPool *arena = entry->common.arena;
+	PORT_Memset(&entry->common, 0, sizeof entry->common);
+	PORT_FreeArena(arena, PR_FALSE);
+	return SECFailure;
+    }
+    node->entry = *entry;  		/* crude but effective. */
+    PR_INIT_CLIST(&node->link);
+    PR_INSERT_BEFORE(&node->link, list);
+    return SECSuccess;
+}
+
 
 int
-fillDBEntryArray(CERTCertDBHandle *handle, certDBEntryType type, 
+fillDBEntryArray(NSSLOWCERTCertDBHandle *handle, certDBEntryType type, 
                  certDBEntryListNode *list)
 {
     PRCList *elem;
@@ -858,20 +958,21 @@ fillDBEntryArray(CERTCertDBHandle *handle, certDBEntryType type,
     certDBSubjectEntryMap *smnode;
     PRArenaPool *arena;
     int count = 0;
+
     /* Initialize a dummy entry in the list.  The list head will be the
      * next element, so this element is skipped by for loops.
      */
     PR_INIT_CLIST((PRCList *)list);
     /* Collect all of the cert db entries for this type into a list. */
-    SEC_TraverseDBEntries(handle, type, SEC_GetCertDBEntryList, 
-                          (PRCList *)list);
+    nsslowcert_TraverseDBEntries(handle, type, SEC_GetCertDBEntryList, list);
+
     for (elem = PR_LIST_HEAD(&list->link); 
          elem != &list->link; elem = PR_NEXT_LINK(elem)) {
 	/* Iterate over the entries and ... */
 	node = (certDBEntryListNode *)elem;
 	if (type != certDBEntryTypeSubject) {
 	    arena = PORT_NewArena(sizeof(*mnode));
-	    mnode = (certDBEntryMap *)PORT_ArenaZAlloc(arena, sizeof(*mnode));
+	    mnode = PORT_ArenaZNew(arena, certDBEntryMap);
 	    mnode->arena = arena;
 	    /* ... assign a unique index number to each node, and ... */
 	    mnode->index = count;
@@ -880,8 +981,7 @@ fillDBEntryArray(CERTCertDBHandle *handle, certDBEntryType type,
 	} else {
 	    /* allocate some room for the cert pointers also */
 	    arena = PORT_NewArena(sizeof(*smnode) + 20*sizeof(void *));
-	    smnode = (certDBSubjectEntryMap *)
-	              PORT_ArenaZAlloc(arena, sizeof(*smnode));
+	    smnode = PORT_ArenaZNew(arena, certDBSubjectEntryMap);
 	    smnode->arena = arena;
 	    smnode->index = count;
 	    node->appData = (void *)smnode;
@@ -910,10 +1010,11 @@ freeDBEntryList(PRCList *list)
 }
 
 void
-DBCK_DebugDB(CERTCertDBHandle *handle, PRFileDesc *out, PRFileDesc *mailfile)
+DBCK_DebugDB(NSSLOWCERTCertDBHandle *handle, PRFileDesc *out, 
+	     PRFileDesc *mailfile)
 {
     int i, nCertsFound, nSubjFound, nErr;
-    int nCerts, nSubjects, nSubjCerts, nNicknames, nSMime;
+    int nCerts, nSubjects, nSubjCerts, nNicknames, nSMime, nRevocation;
     PRCList *elem;
     char c;
     dbDebugInfo info;
@@ -921,20 +1022,22 @@ DBCK_DebugDB(CERTCertDBHandle *handle, PRFileDesc *out, PRFileDesc *mailfile)
 
     PORT_Memset(&dbArray, 0, sizeof(dbArray));
     PORT_Memset(&info, 0, sizeof(info));
-    info.verbose = (out == NULL) ? PR_FALSE : PR_TRUE ;
-    info.dograph = (mailfile == NULL) ? PR_FALSE : PR_TRUE ;
-    info.out = (out) ? out : PR_STDOUT;
-    info.graphfile = mailfile;
+    info.verbose = (PRBool)(out != NULL);
+    info.dograph = info.verbose;
+    info.out       = (out)    ? out      : PR_STDOUT;
+    info.graphfile = mailfile ? mailfile : PR_STDOUT;
 
     /*  Fill the array structure with cert/subject/nickname/smime entries.  */
-    dbArray.numCerts = fillDBEntryArray(handle, certDBEntryTypeCert, 
-                                        &dbArray.certs);
-    dbArray.numSubjects = fillDBEntryArray(handle, certDBEntryTypeSubject, 
-                                           &dbArray.subjects);
+    dbArray.numCerts     = fillDBEntryArray(handle, certDBEntryTypeCert, 
+                                            &dbArray.certs);
+    dbArray.numSubjects  = fillDBEntryArray(handle, certDBEntryTypeSubject, 
+                                            &dbArray.subjects);
     dbArray.numNicknames = fillDBEntryArray(handle, certDBEntryTypeNickname, 
                                             &dbArray.nicknames);
-    dbArray.numSMime = fillDBEntryArray(handle, certDBEntryTypeSMimeProfile, 
-                                        &dbArray.smime);
+    dbArray.numSMime     = fillDBEntryArray(handle, certDBEntryTypeSMimeProfile, 
+                                            &dbArray.smime);
+    dbArray.numRevocation= fillDBEntryArray(handle, certDBEntryTypeRevocation, 
+                                            &dbArray.revocation);
 
     /*  Compute the map between the database entries.  */
     mapSubjectEntries(&dbArray);
@@ -942,10 +1045,11 @@ DBCK_DebugDB(CERTCertDBHandle *handle, PRFileDesc *out, PRFileDesc *mailfile)
     computeDBGraph(&dbArray, &info);
 
     /*  Store the totals for later reference.  */
-    nCerts = dbArray.numCerts;
-    nSubjects = dbArray.numSubjects;
+    nCerts     = dbArray.numCerts;
+    nSubjects  = dbArray.numSubjects;
     nNicknames = dbArray.numNicknames;
-    nSMime = dbArray.numSMime;
+    nSMime     = dbArray.numSMime;
+    nRevocation= dbArray.numRevocation;
     nSubjCerts = 0;
     for (elem = PR_LIST_HEAD(&dbArray.subjects.link);
          elem != &dbArray.subjects.link; elem = PR_NEXT_LINK(elem)) {
@@ -963,6 +1067,7 @@ DBCK_DebugDB(CERTCertDBHandle *handle, PRFileDesc *out, PRFileDesc *mailfile)
     freeDBEntryList(&dbArray.subjects.link);
     freeDBEntryList(&dbArray.nicknames.link);
     freeDBEntryList(&dbArray.smime.link);
+    freeDBEntryList(&dbArray.revocation.link);
 
     PR_fprintf(info.out, "\n");
     PR_fprintf(info.out, "Database statistics:\n");
@@ -976,10 +1081,12 @@ DBCK_DebugDB(CERTCertDBHandle *handle, PRFileDesc *out, PRFileDesc *mailfile)
                           nNicknames);
     PR_fprintf(info.out, "N4: Found %4d S/MIME entries.\n", 
                           nSMime);
+    PR_fprintf(info.out, "N5: Found %4d CRL entries.\n", 
+                          nRevocation);
     PR_fprintf(info.out, "\n");
 
     nErr = 0;
-    for (i=0; i<sizeof(errResult)/sizeof(char*); i++) {
+    for (i=0; i < NUM_ERROR_TYPES; i++) {
 	PR_fprintf(info.out, "E%d: Found %4d %s\n", 
 	           i, info.dbErrors[i], errResult[i]);
 	nErr += info.dbErrors[i];
@@ -998,11 +1105,16 @@ DBCK_DebugDB(CERTCertDBHandle *handle, PRFileDesc *out, PRFileDesc *mailfile)
                   info.dbErrors[NoSubjectForCert],
                   info.dbErrors[SubjectHasNoKeyForCert]);
     PR_fprintf(info.out, "\nSubjects:\n");
-    PR_fprintf(info.out, "N1 == N3 + N4 + E%d + E%d + E%d + E%d + E%d - E%d - E%d\n",
-                  NoNicknameOrSMimeForSubject, WrongNicknameForSubject,
-		  NoNicknameEntry, WrongSMimeForSubject, NoSMimeEntry,
-		  NoSubjectForNickname, NoSubjectForSMime);
-    PR_fprintf(info.out, "      - #(subjects with both nickname and S/MIME entries)\n");
+    PR_fprintf(info.out, 
+    "N1 == N3 + N4 + E%d + E%d + E%d + E%d + E%d - E%d - E%d - E%d\n",
+                  NoNicknameOrSMimeForSubject, 
+		  WrongNicknameForSubject,
+		  NoNicknameEntry, 
+		  WrongSMimeForSubject, 
+		  NoSMimeEntry,
+		  NoSubjectForNickname, 
+		  NoSubjectForSMime,
+		  NicknameAndSMimeEntries);
     nSubjFound = nNicknames + nSMime + 
                  info.dbErrors[NoNicknameOrSMimeForSubject] +
 		 info.dbErrors[WrongNicknameForSubject] +
@@ -1011,9 +1123,10 @@ DBCK_DebugDB(CERTCertDBHandle *handle, PRFileDesc *out, PRFileDesc *mailfile)
                  info.dbErrors[NoSMimeEntry] -
 		 info.dbErrors[NoSubjectForNickname] -
 		 info.dbErrors[NoSubjectForSMime] -
-		 info.dbErrors[NicknameAndSMimeEntry];
+		 info.dbErrors[NicknameAndSMimeEntries];
     c = (nSubjFound == nSubjects) ? '=' : '!';
-    PR_fprintf(info.out, "%d %c= %d + %d + %d + %d + %d + %d + %d - %d - %d - %d\n",
+    PR_fprintf(info.out, 
+    "%2d %c= %2d + %2d + %2d + %2d + %2d + %2d + %2d - %2d - %2d - %2d\n",
                   nSubjects, c, nNicknames, nSMime,
                   info.dbErrors[NoNicknameOrSMimeForSubject],
 		  info.dbErrors[WrongNicknameForSubject],
@@ -1022,676 +1135,12 @@ DBCK_DebugDB(CERTCertDBHandle *handle, PRFileDesc *out, PRFileDesc *mailfile)
                   info.dbErrors[NoSMimeEntry],
 		  info.dbErrors[NoSubjectForNickname],
 		  info.dbErrors[NoSubjectForSMime],
-		  info.dbErrors[NicknameAndSMimeEntry]);
+		  info.dbErrors[NicknameAndSMimeEntries]);
     PR_fprintf(info.out, "\n");
 }
 
 #ifdef DORECOVER
-enum {
-    dbInvalidCert = 0,
-    dbNoSMimeProfile,
-    dbOlderCert,
-    dbBadCertificate,
-    dbCertNotWrittenToDB
-};
-
-typedef struct dbRestoreInfoStr
-{
-    CERTCertDBHandle *handle;
-    PRBool verbose;
-    PRFileDesc *out;
-    int nCerts;
-    int nOldCerts;
-    int dbErrors[5];
-    PRBool removeType[3];
-    PRBool promptUser[3];
-} dbRestoreInfo;
-
-char *
-IsEmailCert(CERTCertificate *cert)
-{
-    char *email, *tmp1, *tmp2;
-    PRBool isCA;
-    int len;
-
-    if (!cert->subjectName) {
-	return NULL;
-    }
-
-    tmp1 = PORT_Strstr(cert->subjectName, "E=");
-    tmp2 = PORT_Strstr(cert->subjectName, "MAIL=");
-    /* XXX Nelson has cert for KTrilli which does not have either
-     * of above but is email cert (has cert->emailAddr). 
-     */
-    if (!tmp1 && !tmp2 && !(cert->emailAddr && cert->emailAddr[0])) {
-	return NULL;
-    }
-
-    /*  Server or CA cert, not personal email.  */
-    isCA = CERT_IsCACert(cert, NULL);
-    if (isCA)
-	return NULL;
-
-    /*  XXX CERT_IsCACert advertises checking the key usage ext.,
-	but doesn't appear to. */
-    /*  Check the key usage extension.  */
-    if (cert->keyUsagePresent) {
-	/*  Must at least be able to sign or encrypt (not neccesarily
-	 *  both if it is one of a dual cert).  
-	 */
-	if (!((cert->rawKeyUsage & KU_DIGITAL_SIGNATURE) || 
-              (cert->rawKeyUsage & KU_KEY_ENCIPHERMENT)))
-	    return NULL;
-
-	/*  CA cert, not personal email.  */
-	if (cert->rawKeyUsage & (KU_KEY_CERT_SIGN | KU_CRL_SIGN))
-	    return NULL;
-    }
-
-    if (cert->emailAddr && cert->emailAddr[0]) {
-	email = PORT_Strdup(cert->emailAddr);
-    } else {
-	if (tmp1)
-	    tmp1 += 2; /* "E="  */
-	else
-	    tmp1 = tmp2 + 5; /* "MAIL=" */
-	len = strcspn(tmp1, ", ");
-	email = (char*)PORT_Alloc(len+1);
-	PORT_Strncpy(email, tmp1, len);
-	email[len] = '\0';
-    }
-
-    return email;
-}
-
-SECStatus
-deleteit(CERTCertificate *cert, void *arg)
-{
-    return SEC_DeletePermCertificate(cert);
-}
-
-/*  Different than DeleteCertificate - has the added bonus of removing
- *  all certs with the same DN.  
- */
-SECStatus
-deleteAllEntriesForCert(CERTCertDBHandle *handle, CERTCertificate *cert,
-                        PRFileDesc *outfile)
-{
-#if 0
-    certDBEntrySubject *subjectEntry;
-    certDBEntryNickname *nicknameEntry;
-    certDBEntrySMime *smimeEntry;
-    int i;
-#endif
-
-    if (outfile) {
-	PR_fprintf(outfile, "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n\n");
-	PR_fprintf(outfile, "Deleting redundant certificate:\n");
-	dumpCertificate(cert, -1, outfile);
-    }
-
-    CERT_TraverseCertsForSubject(handle, cert->subjectList, deleteit, NULL);
-#if 0
-    CERT_LockDB(handle);
-    subjectEntry = ReadDBSubjectEntry(handle, &cert->derSubject);
-    /*  It had better be there, or created a bad db.  */
-    PORT_Assert(subjectEntry);
-    for (i=0; i<subjectEntry->ncerts; i++) {
-	DeleteDBCertEntry(handle, &subjectEntry->certKeys[i]);
-    }
-    DeleteDBSubjectEntry(handle, &cert->derSubject);
-    if (subjectEntry->emailAddr && subjectEntry->emailAddr[0]) {
-	smimeEntry = ReadDBSMimeEntry(handle, subjectEntry->emailAddr);
-	if (smimeEntry) {
-	    if (SECITEM_ItemsAreEqual(&subjectEntry->derSubject,
-	                              &smimeEntry->subjectName))
-		/*  Only delete it if it's for this subject!  */
-		DeleteDBSMimeEntry(handle, subjectEntry->emailAddr);
-	    SEC_DestroyDBEntry((certDBEntry*)smimeEntry);
-	}
-    }
-    if (subjectEntry->nickname) {
-	nicknameEntry = ReadDBNicknameEntry(handle, subjectEntry->nickname);
-	if (nicknameEntry) {
-	    if (SECITEM_ItemsAreEqual(&subjectEntry->derSubject,
-	                              &nicknameEntry->subjectName))
-		/*  Only delete it if it's for this subject!  */
-		DeleteDBNicknameEntry(handle, subjectEntry->nickname);
-	    SEC_DestroyDBEntry((certDBEntry*)nicknameEntry);
-	}
-    }
-    SEC_DestroyDBEntry((certDBEntry*)subjectEntry);
-    CERT_UnlockDB(handle);
-#endif
-    return SECSuccess;
-}
-
-void
-getCertsToDelete(char *numlist, int len, int *certNums, int nCerts)
-{
-    int j, num;
-    char *numstr, *numend, *end;
-
-    numstr = numlist;
-    end = numstr + len - 1;
-    while (numstr != end) {
-	numend = strpbrk(numstr, ", \n");
-	*numend = '\0';
-	if (PORT_Strlen(numstr) == 0)
-	    return;
-	num = PORT_Atoi(numstr);
-	if (numstr == numlist)
-	    certNums[0] = num;
-	for (j=1; j<nCerts+1; j++) {
-	    if (num == certNums[j]) {
-		certNums[j] = -1;
-		break;
-	    }
-	}
-	if (numend == end)
-	    break;
-	numstr = strpbrk(numend+1, "0123456789");
-    }
-}
-
-PRBool
-userSaysDeleteCert(CERTCertificate **certs, int nCerts,
-                   int errtype, dbRestoreInfo *info, int *certNums)
-{
-    char response[32];
-    int32 nb;
-    int i;
-    /*  User wants to remove cert without prompting.  */
-    if (info->promptUser[errtype] == PR_FALSE)
-	return (info->removeType[errtype]);
-    switch (errtype) {
-    case dbInvalidCert:
-	PR_fprintf(PR_STDOUT, "********  Expired ********\n");
-	PR_fprintf(PR_STDOUT, "Cert has expired.\n\n");
-	dumpCertificate(certs[0], -1, PR_STDOUT);
-	PR_fprintf(PR_STDOUT,
-	           "Keep it? (y/n - this one, Y/N - all expired certs) [n] ");
-	break;
-    case dbNoSMimeProfile:
-	PR_fprintf(PR_STDOUT, "********  No Profile ********\n");
-	PR_fprintf(PR_STDOUT, "S/MIME cert has no profile.\n\n");
-	dumpCertificate(certs[0], -1, PR_STDOUT);
-	PR_fprintf(PR_STDOUT,
-	      "Keep it? (y/n - this one, Y/N - all S/MIME w/o profile) [n] ");
-	break;
-    case dbOlderCert:
-	PR_fprintf(PR_STDOUT, "*******  Redundant nickname/email *******\n\n");
-	PR_fprintf(PR_STDOUT, "These certs have the same nickname/email:\n");
-	for (i=0; i<nCerts; i++)
-	    dumpCertificate(certs[i], i, PR_STDOUT);
-	PR_fprintf(PR_STDOUT, 
-	"Enter the certs you would like to keep from those listed above.\n");
-	PR_fprintf(PR_STDOUT, 
-	"Use a comma-separated list of the cert numbers (ex. 0, 8, 12).\n");
-	PR_fprintf(PR_STDOUT, 
-	"The first cert in the list will be the primary cert\n");
-	PR_fprintf(PR_STDOUT, 
-	" accessed by the nickname/email handle.\n");
-	PR_fprintf(PR_STDOUT, 
-	"List cert numbers to keep here, or hit enter\n");
-	PR_fprintf(PR_STDOUT, 
-	" to always keep only the newest cert:  ");
-	break;
-    default:
-    }
-    nb = PR_Read(PR_STDIN, response, sizeof(response));
-    PR_fprintf(PR_STDOUT, "\n\n");
-    if (errtype == dbOlderCert) {
-	if (!isdigit(response[0])) {
-	    info->promptUser[errtype] = PR_FALSE;
-	    info->removeType[errtype] = PR_TRUE;
-	    return PR_TRUE;
-	}
-	getCertsToDelete(response, nb, certNums, nCerts);
-	return PR_TRUE;
-    }
-    /*  User doesn't want to be prompted for this type anymore.  */
-    if (response[0] == 'Y') {
-	info->promptUser[errtype] = PR_FALSE;
-	info->removeType[errtype] = PR_FALSE;
-	return PR_FALSE;
-    } else if (response[0] == 'N') {
-	info->promptUser[errtype] = PR_FALSE;
-	info->removeType[errtype] = PR_TRUE;
-	return PR_TRUE;
-    }
-    return (response[0] != 'y') ? PR_TRUE : PR_FALSE;
-}
-
-SECStatus
-addCertToDB(certDBEntryCert *certEntry, dbRestoreInfo *info, 
-            CERTCertDBHandle *oldhandle)
-{
-    SECStatus rv = SECSuccess;
-    PRBool allowOverride;
-    PRBool userCert;
-    SECCertTimeValidity validity;
-    CERTCertificate *oldCert = NULL;
-    CERTCertificate *dbCert = NULL;
-    CERTCertificate *newCert = NULL;
-    CERTCertTrust *trust;
-    certDBEntrySMime *smimeEntry = NULL;
-    char *email = NULL;
-    char *nickname = NULL;
-    int nCertsForSubject = 1;
-
-    oldCert = CERT_DecodeDERCertificate(&certEntry->derCert, PR_FALSE,
-                                        certEntry->nickname);
-    if (!oldCert) {
-	info->dbErrors[dbBadCertificate]++;
-	SEC_DestroyDBEntry((certDBEntry*)certEntry);
-	return SECSuccess;
-    }
-
-    oldCert->dbEntry = certEntry;
-    oldCert->trust = &certEntry->trust;
-    oldCert->dbhandle = oldhandle;
-
-    trust = oldCert->trust;
-
-    info->nOldCerts++;
-
-    if (info->verbose)
-	PR_fprintf(info->out, "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n");
-
-    if (oldCert->nickname)
-	nickname = PORT_Strdup(oldCert->nickname);
-
-    /*  Always keep user certs.  Skip ahead.  */
-    /*  XXX if someone sends themselves a signed message, it is possible
-	for their cert to be imported as an "other" cert, not a user cert.
-	this mucks with smime entries...  */
-    userCert = (SEC_GET_TRUST_FLAGS(trust, trustSSL) & CERTDB_USER) ||
-               (SEC_GET_TRUST_FLAGS(trust, trustEmail) & CERTDB_USER) ||
-               (SEC_GET_TRUST_FLAGS(trust, trustObjectSigning) & CERTDB_USER);
-    if (userCert)
-	goto createcert;
-
-    /*  If user chooses so, ignore expired certificates.  */
-    allowOverride = (PRBool)((oldCert->keyUsage == certUsageSSLServer) ||
-                         (oldCert->keyUsage == certUsageSSLServerWithStepUp));
-    validity = CERT_CheckCertValidTimes(oldCert, PR_Now(), allowOverride);
-    /*  If cert expired and user wants to delete it, ignore it. */
-    if ((validity != secCertTimeValid) && 
-	 userSaysDeleteCert(&oldCert, 1, dbInvalidCert, info, 0)) {
-	info->dbErrors[dbInvalidCert]++;
-	if (info->verbose) {
-	    PR_fprintf(info->out, "Deleting expired certificate:\n");
-	    dumpCertificate(oldCert, -1, info->out);
-	}
-	goto cleanup;
-    }
-
-    /*  New database will already have default certs, don't attempt
-	to overwrite them.  */
-    dbCert = CERT_FindCertByDERCert(info->handle, &oldCert->derCert);
-    if (dbCert) {
-	info->nCerts++;
-	if (info->verbose) {
-	    PR_fprintf(info->out, "Added certificate to database:\n");
-	    dumpCertificate(oldCert, -1, info->out);
-	}
-	goto cleanup;
-    }
-    
-    /*  Determine if cert is S/MIME and get its email if so.  */
-    email = IsEmailCert(oldCert);
-
-    /*
-	XXX  Just create empty profiles?
-    if (email) {
-	SECItem *profile = CERT_FindSMimeProfile(oldCert);
-	if (!profile &&
-	    userSaysDeleteCert(&oldCert, 1, dbNoSMimeProfile, info, 0)) {
-	    info->dbErrors[dbNoSMimeProfile]++;
-	    if (info->verbose) {
-		PR_fprintf(info->out, 
-		           "Deleted cert missing S/MIME profile.\n");
-		dumpCertificate(oldCert, -1, info->out);
-	    }
-	    goto cleanup;
-	} else {
-	    SECITEM_FreeItem(profile);
-	}
-    }
-    */
-
-createcert:
-
-    /*  Sometimes happens... */
-    if (!nickname && userCert)
-	nickname = PORT_Strdup(oldCert->subjectName);
-
-    /*  Create a new certificate, copy of the old one.  */
-    newCert = CERT_NewTempCertificate(info->handle, &oldCert->derCert, 
-                                      nickname, PR_FALSE, PR_TRUE);
-    if (!newCert) {
-	PR_fprintf(PR_STDERR, "Unable to create new certificate.\n");
-	dumpCertificate(oldCert, -1, PR_STDERR);
-	info->dbErrors[dbBadCertificate]++;
-	goto cleanup;
-    }
-
-    /*  Add the cert to the new database.  */
-    rv = CERT_AddTempCertToPerm(newCert, nickname, oldCert->trust);
-    if (rv) {
-	PR_fprintf(PR_STDERR, "Failed to write temp cert to perm database.\n");
-	dumpCertificate(oldCert, -1, PR_STDERR);
-	info->dbErrors[dbCertNotWrittenToDB]++;
-	goto cleanup;
-    }
-
-    if (info->verbose) {
-	PR_fprintf(info->out, "Added certificate to database:\n");
-	dumpCertificate(oldCert, -1, info->out);
-    }
-
-    /*  If the cert is an S/MIME cert, and the first with it's subject,
-     *  modify the subject entry to include the email address,
-     *  CERT_AddTempCertToPerm does not do email addresses and S/MIME entries.
-     */
-    if (smimeEntry) { /*&& !userCert && nCertsForSubject == 1) { */
-#if 0
-	UpdateSubjectWithEmailAddr(newCert, email);
-#endif
-	SECItem emailProfile, profileTime;
-	rv = CERT_FindFullSMimeProfile(oldCert, &emailProfile, &profileTime);
-	/*  calls UpdateSubjectWithEmailAddr  */
-	if (rv == SECSuccess)
-	    rv = CERT_SaveSMimeProfile(newCert, &emailProfile, &profileTime);
-    }
-
-    info->nCerts++;
-
-cleanup:
-
-    if (nickname)
-	PORT_Free(nickname);
-    if (email)
-	PORT_Free(email);
-    if (oldCert)
-	CERT_DestroyCertificate(oldCert);
-    if (dbCert)
-	CERT_DestroyCertificate(dbCert);
-    if (newCert)
-	CERT_DestroyCertificate(newCert);
-    if (smimeEntry)
-	SEC_DestroyDBEntry((certDBEntry*)smimeEntry);
-    return SECSuccess;
-}
-
-#if 0
-SECStatus
-copyDBEntry(SECItem *data, SECItem *key, certDBEntryType type, void *pdata)
-{
-    SECStatus rv;
-    CERTCertDBHandle *newdb = (CERTCertDBHandle *)pdata;
-    certDBEntryCommon common;
-    SECItem dbkey;
-
-    common.type = type;
-    common.version = CERT_DB_FILE_VERSION;
-    common.flags = data->data[2];
-    common.arena = NULL;
-
-    dbkey.len = key->len + SEC_DB_KEY_HEADER_LEN;
-    dbkey.data = (unsigned char *)PORT_Alloc(dbkey.len*sizeof(unsigned char));
-    PORT_Memcpy(&dbkey.data[SEC_DB_KEY_HEADER_LEN], key->data, key->len);
-    dbkey.data[0] = type;
-
-    rv = WriteDBEntry(newdb, &common, &dbkey, data);
-
-    PORT_Free(dbkey.data);
-    return rv;
-}
-#endif
-
-int
-certIsOlder(CERTCertificate **cert1, CERTCertificate** cert2)
-{
-    return !CERT_IsNewer(*cert1, *cert2);
-}
-
-int
-findNewestSubjectForEmail(CERTCertDBHandle *handle, int subjectNum,
-                          certDBArray *dbArray, dbRestoreInfo *info,
-                          int *subjectWithSMime, int *smimeForSubject)
-{
-    int newestSubject;
-    int subjectsForEmail[50];
-    int i, j, ns, sNum;
-    certDBEntryListNode *subjects = &dbArray->subjects;
-    certDBEntryListNode *smime = &dbArray->smime;
-    certDBEntrySubject *subjectEntry1, *subjectEntry2;
-    certDBEntrySMime *smimeEntry;
-    CERTCertificate **certs;
-    CERTCertificate *cert;
-    CERTCertTrust *trust;
-    PRBool userCert;
-    int *certNums;
-
-    ns = 0;
-    subjectEntry1 = (certDBEntrySubject*)&subjects.entries[subjectNum];
-    subjectsForEmail[ns++] = subjectNum;
-
-    *subjectWithSMime = -1;
-    *smimeForSubject = -1;
-    newestSubject = subjectNum;
-
-    cert = CERT_FindCertByKey(handle, &subjectEntry1->certKeys[0]);
-    if (cert) {
-	trust = cert->trust;
-	userCert = (SEC_GET_TRUST_FLAGS(trust, trustSSL) & CERTDB_USER) ||
-	          (SEC_GET_TRUST_FLAGS(trust, trustEmail) & CERTDB_USER) ||
-	         (SEC_GET_TRUST_FLAGS(trust, trustObjectSigning) & CERTDB_USER);
-	CERT_DestroyCertificate(cert);
-    }
-
-    /*
-     * XXX Should we make sure that subjectEntry1->emailAddr is not
-     * a null pointer or an empty string before going into the next
-     * two for loops, which pass it to PORT_Strcmp?
-     */
-
-    /*  Loop over the remaining subjects.  */
-    for (i=subjectNum+1; i<subjects.numEntries; i++) {
-	subjectEntry2 = (certDBEntrySubject*)&subjects.entries[i];
-	if (!subjectEntry2)
-	    continue;
-	if (subjectEntry2->emailAddr && subjectEntry2->emailAddr[0] &&
-	     PORT_Strcmp(subjectEntry1->emailAddr, 
-	                 subjectEntry2->emailAddr) == 0) {
-	    /*  Found a subject using the same email address.  */
-	    subjectsForEmail[ns++] = i;
-	}
-    }
-
-    /*  Find the S/MIME entry for this email address.  */
-    for (i=0; i<smime.numEntries; i++) {
-	smimeEntry = (certDBEntrySMime*)&smime.entries[i];
-	if (smimeEntry->common.arena == NULL)
-	    continue;
-	if (smimeEntry->emailAddr && smimeEntry->emailAddr[0] && 
-	    PORT_Strcmp(subjectEntry1->emailAddr, smimeEntry->emailAddr) == 0) {
-	    /*  Find which of the subjects uses this S/MIME entry.  */
-	    for (j=0; j<ns && *subjectWithSMime < 0; j++) {
-		sNum = subjectsForEmail[j];
-		subjectEntry2 = (certDBEntrySubject*)&subjects.entries[sNum];
-		if (SECITEM_ItemsAreEqual(&smimeEntry->subjectName,
-		                          &subjectEntry2->derSubject)) {
-		    /*  Found the subject corresponding to the S/MIME entry. */
-		    *subjectWithSMime = sNum;
-		    *smimeForSubject = i;
-		}
-	    }
-	    SEC_DestroyDBEntry((certDBEntry*)smimeEntry);
-	    PORT_Memset(smimeEntry, 0, sizeof(certDBEntry));
-	    break;
-	}
-    }
-
-    if (ns <= 1)
-	return subjectNum;
-
-    if (userCert)
-	return *subjectWithSMime;
-
-    /*  Now find which of the subjects has the newest cert.  */
-    certs = (CERTCertificate**)PORT_Alloc(ns*sizeof(CERTCertificate*));
-    certNums = (int*)PORT_Alloc((ns+1)*sizeof(int));
-    certNums[0] = 0;
-    for (i=0; i<ns; i++) {
-	sNum = subjectsForEmail[i];
-	subjectEntry1 = (certDBEntrySubject*)&subjects.entries[sNum];
-	certs[i] = CERT_FindCertByKey(handle, &subjectEntry1->certKeys[0]);
-	certNums[i+1] = i;
-    }
-    /*  Sort the array by validity.  */
-    qsort(certs, ns, sizeof(CERTCertificate*), 
-          (int (*)(const void *, const void *))certIsOlder);
-    newestSubject = -1;
-    for (i=0; i<ns; i++) {
-	sNum = subjectsForEmail[i];
-	subjectEntry1 = (certDBEntrySubject*)&subjects.entries[sNum];
-	if (SECITEM_ItemsAreEqual(&subjectEntry1->derSubject,
-	                          &certs[0]->derSubject))
-	    newestSubject = sNum;
-	else
-	    SEC_DestroyDBEntry((certDBEntry*)subjectEntry1);
-    }
-    if (info && userSaysDeleteCert(certs, ns, dbOlderCert, info, certNums)) {
-	for (i=1; i<ns+1; i++) {
-	    if (certNums[i] >= 0 && certNums[i] != certNums[0]) {
-		deleteAllEntriesForCert(handle, certs[certNums[i]], info->out);
-		info->dbErrors[dbOlderCert]++;
-	    }
-	}
-    }
-    CERT_DestroyCertArray(certs, ns);
-    return newestSubject;
-}
-
-CERTCertDBHandle *
-DBCK_ReconstructDBFromCerts(CERTCertDBHandle *oldhandle, char *newdbname,
-                            PRFileDesc *outfile, PRBool removeExpired,
-                            PRBool requireProfile, PRBool singleEntry,
-                            PRBool promptUser)
-{
-    SECStatus rv;
-    dbRestoreInfo info;
-    certDBEntryContentVersion *oldContentVersion;
-    certDBArray dbArray;
-    int i;
-
-    PORT_Memset(&dbArray, 0, sizeof(dbArray));
-    PORT_Memset(&info, 0, sizeof(info));
-    info.verbose = (outfile) ? PR_TRUE : PR_FALSE;
-    info.out = (outfile) ? outfile : PR_STDOUT;
-    info.removeType[dbInvalidCert] = removeExpired;
-    info.removeType[dbNoSMimeProfile] = requireProfile;
-    info.removeType[dbOlderCert] = singleEntry;
-    info.promptUser[dbInvalidCert]  = promptUser;
-    info.promptUser[dbNoSMimeProfile]  = promptUser;
-    info.promptUser[dbOlderCert]  = promptUser;
-
-    /*  Allocate a handle to fill with CERT_OpenCertDB below.  */
-    info.handle = (CERTCertDBHandle *)PORT_ZAlloc(sizeof(CERTCertDBHandle));
-    if (!info.handle) {
-	fprintf(stderr, "unable to get database handle");
-	return NULL;
-    }
-
-    /*  Create a certdb with the most recent set of roots.  */
-    rv = CERT_OpenCertDBFilename(info.handle, newdbname, PR_FALSE);
-
-    if (rv) {
-	fprintf(stderr, "could not open certificate database");
-	goto loser;
-    }
-
-    /*  Create certificate, subject, nickname, and email records.
-     *  mcom_db seems to have a sequential access bug.  Though reads and writes
-     *  should be allowed during traversal, they seem to screw up the sequence.
-     *  So, stuff all the cert entries into an array, and loop over the array
-     *  doing read/writes in the db.
-     */
-    fillDBEntryArray(oldhandle, certDBEntryTypeCert, &dbArray.certs);
-    for (elem = PR_LIST_HEAD(&dbArray->certs.link);
-         elem != &dbArray->certs.link; elem = PR_NEXT_LINK(elem)) {
-	node = LISTNODE_CAST(elem);
-	addCertToDB((certDBEntryCert*)&node->entry, &info, oldhandle);
-	/* entries get destroyed in addCertToDB */
-    }
-#if 0
-    rv = SEC_TraverseDBEntries(oldhandle, certDBEntryTypeSMimeProfile, 
-                               copyDBEntry, info.handle);
-#endif
-
-    /*  Fix up the pointers between (nickname|S/MIME) --> (subject).
-     *  Create S/MIME entries for S/MIME certs.
-     *  Have the S/MIME entry point to the last-expiring cert using
-     *  an email address.
-     */
-#if 0
-    CERT_RedoHandlesForSubjects(info.handle, singleEntry, &info);
-#endif
-
-    freeDBEntryList(&dbArray.certs.link);
-
-    /*  Copy over the version record.  */
-    /*  XXX Already exists - and _must_ be correct... */
-    /*
-    versionEntry = ReadDBVersionEntry(oldhandle);
-    rv = WriteDBVersionEntry(info.handle, versionEntry);
-    */
-
-    /*  Copy over the content version record.  */
-    /*  XXX Can probably get useful info from old content version?
-     *      Was this db created before/after this tool?  etc.
-     */
-#if 0
-    oldContentVersion = ReadDBContentVersionEntry(oldhandle);
-    CERT_SetDBContentVersion(oldContentVersion->contentVersion, info.handle); 
-#endif
-
-#if 0
-    /*  Copy over the CRL & KRL records.  */
-    rv = SEC_TraverseDBEntries(oldhandle, certDBEntryTypeRevocation, 
-                               copyDBEntry, info.handle);
-    /*  XXX Only one KRL, just do db->get? */
-    rv = SEC_TraverseDBEntries(oldhandle, certDBEntryTypeKeyRevocation, 
-                               copyDBEntry, info.handle);
-#endif
-
-    PR_fprintf(info.out, "Database had %d certificates.\n", info.nOldCerts);
-
-    PR_fprintf(info.out, "Reconstructed %d certificates.\n", info.nCerts);
-    PR_fprintf(info.out, "(ax) Rejected %d expired certificates.\n", 
-                       info.dbErrors[dbInvalidCert]);
-    PR_fprintf(info.out, "(as) Rejected %d S/MIME certificates missing a profile.\n", 
-                       info.dbErrors[dbNoSMimeProfile]);
-    PR_fprintf(info.out, "(ar) Rejected %d certificates for which a newer certificate was found.\n", 
-                       info.dbErrors[dbOlderCert]);
-    PR_fprintf(info.out, "     Rejected %d corrupt certificates.\n", 
-                       info.dbErrors[dbBadCertificate]);
-    PR_fprintf(info.out, "     Rejected %d certificates which did not write to the DB.\n", 
-                       info.dbErrors[dbCertNotWrittenToDB]);
-
-    if (rv)
-	goto loser;
-
-    return info.handle;
-
-loser:
-    if (info.handle) 
-	PORT_Free(info.handle);
-    return NULL;
-}
+#include "dbrecover.c"
 #endif /* DORECOVER */
 
 enum {
@@ -1736,12 +1185,51 @@ static secuCommandFlag dbck_options[] =
     { /* opt_KeepExpired,       */  'x', PR_FALSE, 0, PR_FALSE }
 };
 
+#define CERT_DB_FMT "%s/cert%s.db"
+
+static char *
+dbck_certdb_name_cb(void *arg, int dbVersion)
+{
+    const char *configdir = (const char *)arg;
+    const char *dbver;
+    char *smpname = NULL;
+    char *dbname = NULL;
+
+    switch (dbVersion) {
+      case 8:
+	dbver = "8";
+	break;
+      case 7:
+	dbver = "7";
+	break;
+      case 6:
+	dbver = "6";
+	break;
+      case 5:
+	dbver = "5";
+	break;
+      case 4:
+      default:
+	dbver = "";
+	break;
+    }
+
+    /* make sure we return something allocated with PORT_ so we have properly
+     * matched frees at the end */
+    smpname = PR_smprintf(CERT_DB_FMT, configdir, dbver);
+    if (smpname) {
+	dbname = PORT_Strdup(smpname);
+	PR_smprintf_free(smpname);
+    }
+    return dbname;
+}
+    
+
 int 
 main(int argc, char **argv)
 {
-    CERTCertDBHandle *certHandle;
+    NSSLOWCERTCertDBHandle *certHandle;
 
-    PRFileInfo fileInfo;
     PRFileDesc *mailfile = NULL;
     PRFileDesc *dumpfile = NULL;
 
@@ -1750,10 +1238,9 @@ main(int argc, char **argv)
     char * newdbname    = 0;
 
     PRBool removeExpired, requireProfile, singleEntry;
-    
-    SECStatus rv;
-
+    SECStatus   rv;
     secuCommand dbck;
+
     dbck.numCommands = sizeof(dbck_commands) / sizeof(secuCommandFlag);
     dbck.numOptions = sizeof(dbck_options) / sizeof(secuCommandFlag);
     dbck.commands = dbck_commands;
@@ -1772,7 +1259,7 @@ main(int argc, char **argv)
 
     if (!dbck.commands[cmd_Debug].activated &&
         !dbck.commands[cmd_Recover].activated) {
-	PR_fprintf(PR_STDERR, "Please specify -D or -R.\n");
+	PR_fprintf(PR_STDERR, "Please specify -H, -D or -R.\n");
 	Usage(progName);
     }
 
@@ -1788,7 +1275,7 @@ main(int argc, char **argv)
     if (dbck.options[opt_OutputDB].activated) {
 	newdbname = PL_strdup(dbck.options[opt_OutputDB].arg);
     } else {
-	newdbname = PL_strdup("new_cert7.db");
+	newdbname = PL_strdup("new_cert8.db");
     }
 
     /*  Create a generic graph of the database.  */
@@ -1805,10 +1292,12 @@ main(int argc, char **argv)
 	if (dbck.options[opt_Dumpfile].activated) {
 	    dumpfile = PR_Open(dbck.options[opt_Dumpfile].arg,
 	                       PR_RDWR | PR_CREATE_FILE, 00660);
-	}
-	if (!dumpfile) {
-	    fprintf(stderr, "Unable to create dumpfile.\n");
-	    return -1;
+	    if (!dumpfile) {
+		fprintf(stderr, "Unable to create dumpfile.\n");
+		return -1;
+	    }
+	} else {
+	    dumpfile = PR_STDOUT;
 	}
     }
 
@@ -1817,18 +1306,26 @@ main(int argc, char **argv)
 	SECU_ConfigDirectory(dbck.options[opt_CertDir].arg);
     }
 
-    PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    SEC_Init();
+    pathname = SECU_ConfigDirectory(NULL);
 
-    certHandle = (CERTCertDBHandle *)PORT_ZAlloc(sizeof(CERTCertDBHandle));
+    PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
+    rv = NSS_NoDB_Init(pathname);
+    if (rv != SECSuccess) {
+	fprintf(stderr, "NSS_NoDB_Init failed\n");
+	return -1;
+    }
+
+    certHandle = PORT_ZNew(NSSLOWCERTCertDBHandle);
     if (!certHandle) {
 	SECU_PrintError(progName, "unable to get database handle");
 	return -1;
     }
+    certHandle->ref = 1;
 
+#ifdef NOTYET
     /*  Open the possibly corrupt database.  */
     if (dbck.options[opt_InputDB].activated) {
-	pathname = SECU_ConfigDirectory(NULL);
+	PRFileInfo fileInfo;
 	fullname = PR_smprintf("%s/%s", pathname, 
 	                                dbck.options[opt_InputDB].arg);
 	if (PR_GetFileInfo(fullname, &fileInfo) != PR_SUCCESS) {
@@ -1836,15 +1333,24 @@ main(int argc, char **argv)
 	    return -1;
 	}
 	rv = CERT_OpenCertDBFilename(certHandle, fullname, PR_TRUE);
-    } else {
+    } else 
+#endif
+    {
 	/*  Use the default.  */
+#ifdef NOTYET
 	fullname = SECU_CertDBNameCallback(NULL, CERT_DB_FILE_VERSION);
 	if (PR_GetFileInfo(fullname, &fileInfo) != PR_SUCCESS) {
 	    fprintf(stderr, "Unable to read file \"%s\".\n", fullname);
 	    return -1;
 	}
-	rv = CERT_OpenCertDB(certHandle, PR_TRUE, 
-	                     SECU_CertDBNameCallback, NULL);
+#endif
+	rv = nsslowcert_OpenCertDB(certHandle, 
+	                           PR_TRUE, 		    /* readOnly */
+				   NULL,                    /* rdb appName */
+				   "",                      /* rdb prefix */
+	                           dbck_certdb_name_cb,     /* namecb */
+				   pathname, 		    /* configDir */
+				   PR_FALSE);		    /* volatile */
     }
 
     if (rv) {
@@ -1872,7 +1378,7 @@ main(int argc, char **argv)
     if (dumpfile)
 	PR_Close(dumpfile);
     if (certHandle) {
-	CERT_ClosePermCertDB(certHandle);
+	nsslowcert_ClosePermCertDB(certHandle);
 	PORT_Free(certHandle);
     }
     return -1;
