@@ -6038,8 +6038,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
 
   // call the event callback
   if (nsnull != mEventCallback) {
+    MouseTrailer::GetSingleton().Disable();
     if (aEventType == NS_MOUSE_MOVE) {
-      MouseTrailer::GetSingleton().Disable();
       if (!mIsInMouseCapture) {
         MouseTrailer::GetSingleton().SetMouseTrailerWindow(mWnd);
       }
@@ -6061,7 +6061,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
           }
         }
       }
-      MouseTrailer::GetSingleton().Enable();
     } else if (aEventType == NS_MOUSE_EXIT) {
       if (gCurrentWindow == this) {
         gCurrentWindow = nsnull;
@@ -6069,6 +6068,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
     }
 
     result = DispatchWindowEvent(&event);
+
+    MouseTrailer::GetSingleton().Enable();
 
     // Release the widget with NS_IF_RELEASE() just in case
     // the context menu key code in nsEventListenerManager::HandleEvent()

@@ -1038,9 +1038,6 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
     if (mSingleton.mMouseTrailerWindow != mouseWnd) {
 #ifndef WINCE
       // Notify someone that a mouse exit happened.
-      // This must be posted to the toplevel window. Otherwise event state
-      // manager might think the mouse is still within window bounds and 
-      // convert this to a move message.
       PostMessage(mSingleton.mMouseTrailerWindow, WM_MOUSELEAVE, NULL, NULL);
 #endif
 
