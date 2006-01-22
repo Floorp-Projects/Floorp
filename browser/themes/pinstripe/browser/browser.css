@@ -288,7 +288,7 @@ menubutton:not([disabled="true"]):hover:active {
 #reload-button {
   -moz-image-region: rect(0px 128px 32px 96px);
 }
-#reload-button:active {
+#reload-button:hover:active {
   -moz-image-region: rect(32px 128px 64px 96px);
 }
 #reload-button[disabled="true"] {
@@ -299,7 +299,7 @@ menubutton:not([disabled="true"]):hover:active {
 #stop-button {
   -moz-image-region: rect(0px 96px 32px 64px);
 }
-#stop-button:active {
+#stop-button:hover:active {
   -moz-image-region: rect(32px 96px 64px 64px);
 }
 #stop-button[disabled="true"] {
@@ -309,7 +309,7 @@ menubutton:not([disabled="true"]):hover:active {
 #home-button {
   -moz-image-region: rect(0px 160px 32px 128px);
 }
-#home-button:active {
+#home-button:hover:active {
   -moz-image-region: rect(32px 160px 64px 128px);
 }
 #home-button[disabled="true"] {
@@ -319,7 +319,7 @@ menubutton:not([disabled="true"]):hover:active {
 #print-button {
   -moz-image-region: rect(0px 288px 32px 256px);
 }
-#print-button:active {
+#print-button:hover:active {
   -moz-image-region: rect(32px 288px 64px 256px);
 }
 #print-button[disabled="true"] {
@@ -329,7 +329,7 @@ menubutton:not([disabled="true"]):hover:active {
 #new-tab-button {
   -moz-image-region: rect(0px 320px 32px 288px);
 }
-#new-tab-button:active,
+#new-tab-button:hover:active,
 #new-tab-button[checked="true"] {
   -moz-image-region: rect(32px 320px 64px 288px);
 }
@@ -340,7 +340,7 @@ menubutton:not([disabled="true"]):hover:active {
 #new-window-button {
   -moz-image-region: rect(0px 352px 32px 320px);
 }
-#new-window-button:active,
+#new-window-button:hover:active,
 #new-window-button[checked="true"] {
   -moz-image-region: rect(32px 352px 64px 320px);
 }
@@ -351,7 +351,7 @@ menubutton:not([disabled="true"]):hover:active {
 #downloads-button {
   -moz-image-region: rect(0px 192px 32px 160px);
 }
-#downloads-button:active {
+#downloads-button:hover:active {
   -moz-image-region: rect(32px 192px 64px 160px);
 }
 #downloads-button[disabled="true"] {
@@ -361,7 +361,7 @@ menubutton:not([disabled="true"]):hover:active {
 #bookmarks-button {
   -moz-image-region: rect(0px 256px 32px 224px);
 }
-#bookmarks-button:active {
+#bookmarks-button:hover:active {
   -moz-image-region: rect(32px 256px 64px 224px);
 }
 #bookmarks-button[disabled="true"] {
@@ -371,7 +371,7 @@ menubutton:not([disabled="true"]):hover:active {
 #history-button {
   -moz-image-region: rect(0px 224px 32px 192px);
 }
-#history-button:active {
+#history-button:hover:active {
   -moz-image-region: rect(32px 224px 64px 192px);
 }
 #history-button[disabled="true"] {
@@ -381,7 +381,7 @@ menubutton:not([disabled="true"]):hover:active {
 #cut-button {
   -moz-image-region: rect(0px 384px 32px 352px);
 }
-#cut-button:active,
+#cut-button:hover:active,
 #cut-button[checked="true"] {
   -moz-image-region: rect(32px 384px 64px 352px);
 }
@@ -403,7 +403,7 @@ menubutton:not([disabled="true"]):hover:active {
 #paste-button {
   -moz-image-region: rect(0px 448px 32px 416px);
 }
-#paste-button:active,
+#paste-button:hover:active,
 #copy-button[checked="true"] {
   -moz-image-region: rect(32px 448px 64px 416px);
 }
@@ -450,7 +450,7 @@ toolbar[iconsize="small"] #forward-button[disabled="true"] {
 toolbar[iconsize="small"] #stop-button {
   -moz-image-region: rect(0px 72px 24px 48px);
 }
-toolbar[iconsize="small"] #stop-button:active {
+toolbar[iconsize="small"] #stop-button:hover:active {
   -moz-image-region: rect(24px 72px 48px 48px);
 }
 toolbar[iconsize="small"] #stop-button[disabled="true"] {
@@ -462,7 +462,7 @@ toolbar[iconsize="small"] #stop-button[disabled="true"] {
 toolbar[iconsize="small"] #reload-button {
   -moz-image-region: rect(0px 96px 24px 72px);
 }
-toolbar[iconsize="small"] #reload-button:active {
+toolbar[iconsize="small"] #reload-button:hover:active {
   -moz-image-region: rect(24px 96px 48px 72px);
 }
 toolbar[iconsize="small"] #reload-button[disabled="true"] {
@@ -474,7 +474,7 @@ toolbar[iconsize="small"] #reload-button[disabled="true"] {
 toolbar[iconsize="small"] #home-button {
   -moz-image-region: rect(0px 120px 24px 96px);
 }
-toolbar[iconsize="small"] #home-button:active {
+toolbar[iconsize="small"] #home-button:hover:active {
   -moz-image-region: rect(24px 120px 48px 96px);
 }
 
@@ -483,7 +483,7 @@ toolbar[iconsize="small"] #home-button:active {
 toolbar[iconsize="small"] #downloads-button {
   -moz-image-region: rect(0px 144px 24px 120px);
 }
-toolbar[iconsize="small"] #downloads-button:active {
+toolbar[iconsize="small"] #downloads-button:hover:active {
   -moz-image-region: rect(24px 144px 48px 120px);
 }
 toolbar[iconsize="small"] #downloads-button[disabled="true"] {
@@ -495,7 +495,7 @@ toolbar[iconsize="small"] #downloads-button[disabled="true"] {
 toolbar[iconsize="small"] #history-button {
   -moz-image-region: rect(0px 168px 24px 144px);
 }
-toolbar[iconsize="small"] #history-button:active {
+toolbar[iconsize="small"] #history-button:hover:active {
   -moz-image-region: rect(24px 168px 48px 144px);
 }
 toolbar[iconsize="small"] #history-button[disabled="true"] {
@@ -507,7 +507,7 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
 toolbar[iconsize="small"] #bookmarks-button {
   -moz-image-region: rect(0px 192px 24px 168px);
 }
-toolbar[iconsize="small"] #bookmarks-button:active {
+toolbar[iconsize="small"] #bookmarks-button:hover:active {
   -moz-image-region: rect(24px 192px 48px 168px);
 }
 toolbar[iconsize="small"] #bookmarks-button[disabled="true"] {
@@ -519,7 +519,7 @@ toolbar[iconsize="small"] #bookmarks-button[disabled="true"] {
 toolbar[iconsize="small"] #print-button {
   -moz-image-region: rect(0px 216px 24px 192px);
 }
-toolbar[iconsize="small"] #print-button:active {
+toolbar[iconsize="small"] #print-button:hover:active {
   -moz-image-region: rect(24px 216px 48px 192px);
 }
 toolbar[iconsize="small"] #print-button[disabled="true"] {
@@ -531,7 +531,7 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 toolbar[iconsize="small"] #new-tab-button {
   -moz-image-region: rect(0px 240px 24px 216px);
 }
-toolbar[iconsize="small"] #new-tab-button:active {
+toolbar[iconsize="small"] #new-tab-button:hover:active {
   -moz-image-region: rect(24px 240px 48px 216px);
 }
 toolbar[iconsize="small"] #new-tab-button[disabled="true"] {
@@ -543,7 +543,7 @@ toolbar[iconsize="small"] #new-tab-button[disabled="true"] {
 toolbar[iconsize="small"] #new-window-button {
   -moz-image-region: rect(0px 264px 24px 240px);
 }
-toolbar[iconsize="small"] #new-window-button:active {
+toolbar[iconsize="small"] #new-window-button:hover:active {
   -moz-image-region: rect(24px 264px 48px 240px);
 }
 toolbar[iconsize="small"] #new-window-button[disabled="true"] {
@@ -555,7 +555,7 @@ toolbar[iconsize="small"] #new-window-button[disabled="true"] {
 toolbar[iconsize="small"] #cut-button {
   -moz-image-region: rect(0px 288px 24px 264px);
 }
-toolbar[iconsize="small"] #cut-button:active {
+toolbar[iconsize="small"] #cut-button:hover:active {
   -moz-image-region: rect(24px 288px 48px 264px);
 }
 toolbar[iconsize="small"] #cut-button[disabled="true"] {
@@ -567,7 +567,7 @@ toolbar[iconsize="small"] #cut-button[disabled="true"] {
 toolbar[iconsize="small"] #copy-button {
   -moz-image-region: rect(0px 312px 24px 288px);
 }
-toolbar[iconsize="small"] #copy-button:active {
+toolbar[iconsize="small"] #copy-button:hover:active {
   -moz-image-region: rect(24px 312px 48px 288px);
 }
 toolbar[iconsize="small"] #copy-button[disabled="true"] {
@@ -579,7 +579,7 @@ toolbar[iconsize="small"] #copy-button[disabled="true"] {
 toolbar[iconsize="small"] #paste-button {
   -moz-image-region: rect(0px 336px 24px 312px);
 }
-toolbar[iconsize="small"] #paste-button:active {
+toolbar[iconsize="small"] #paste-button:hover:active {
   -moz-image-region: rect(24px 336px 48px 312px);
 }
 toolbar[iconsize="small"] #paste-button[disabled="true"] {
