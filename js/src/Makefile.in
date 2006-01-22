@@ -416,6 +416,12 @@ jskwgen$(HOST_BIN_SUFFIX): jskwgen.$(OBJ_SUFFIX)
 	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) -o $@ $<
 endif
 else
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+# XXXbe See bug 319719 -- mozilla/config/rules.mk HOST_* support has rotted.
+jskwgen$(HOST_BIN_SUFFIX): jskwgen.c jskeyword.tbl Makefile.in
+	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) $<
+else
 jskwgen$(HOST_BIN_SUFFIX): jskwgen.c jskeyword.tbl Makefile.in
 	$(HOST_CC) $(HOST_CFLAGS) $(DEFINES) $(NSPR_CFLAGS) $(OUTOPTION)$@ $<
+endif
 endif
