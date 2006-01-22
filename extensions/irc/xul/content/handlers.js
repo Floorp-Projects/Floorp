@@ -1274,6 +1274,8 @@ function my_running_list()
 CIRCNetwork.prototype.list =
 function my_list(word, file)
 {
+    const NORMAL_FILE_TYPE = Components.interfaces.nsIFile.NORMAL_FILE_TYPE;
+
     if (("_list" in this) && !this._list.done)
         return false;
 
@@ -1283,7 +1285,15 @@ function my_list(word, file)
     this._list.done = false;
     this._list.count = 0;
     if (file)
-        this._list.saveTo = file;
+    {
+        var lfile = new LocalFile(file);
+        if (!lfile.localFile.exists())
+        {
+            // futils.umask may be 0022. Result is 0644.
+            lfile.localFile.create(NORMAL_FILE_TYPE, 0666 & ~futils.umask);
+        }
+        this._list.file = new LocalFile(lfile.localFile, ">");
+    }
 
     if (word instanceof RegExp)
     {
@@ -1303,8 +1313,6 @@ function my_list(word, file)
 CIRCNetwork.prototype.listInit =
 function my_list_init ()
 {
-    const NORMAL_FILE_TYPE = Components.interfaces.nsIFile.NORMAL_FILE_TYPE;
-
     function checkEndList (network)
     {
         if (network._list.count == network._list.lastLength)
@@ -1363,7 +1371,6 @@ function my_list_init ()
             }
             network.displayHere(getMsg(MSG_LIST_END,
                                        [list.displayed, list.count]));
-            delete network._list;
         }
         else
         {
@@ -1380,17 +1387,7 @@ function my_list_init ()
         this._list.count = 0;
     }
 
-    if ("saveTo" in this._list)
-    {
-        var file = new LocalFile(this._list.saveTo);
-        if (!file.localFile.exists())
-        {
-            // futils.umask may be 0022. Result is 0644.
-            file.localFile.create(NORMAL_FILE_TYPE, 0666 & ~futils.umask);
-        }
-        this._list.file = new LocalFile(file.localFile, ">");
-    }
-    else
+    if (!("saveTo" in this._list))
     {
         this._list.displayed = 0;
         if (client.currentObject != this)

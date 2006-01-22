@@ -42,6 +42,22 @@ var createChannelItem;
 var channelTreeShare = new Object();
 var channelTreeView;
 
+var s = 0;
+const STATE_IDLE = ++s;            // Doing nothing.
+const STATE_LOAD = ++s;            // Loading from saved file only.
+const STATE_LIST_AND_LOAD = ++s;   // Doing /list and loading simultaneously.
+const STATE_LIST_THEN_LOAD = ++s;  // Doing /list, after which do load.
+
+s = 0;
+const SUBSTATE_START = ++s;  // Starting an operation.
+const SUBSTATE_RUN   = ++s;  // Running...
+const SUBSTATE_END   = ++s;  // Clean-up/ending operation.
+const SUBSTATE_ERROR = ++s;  // Error occurred: don't try do to any more.
+delete s;
+
+var state = { state: STATE_IDLE, substate: 0 };
+const STATE_DELAY = 1000;
+
 const colIDToSortKey = { chanColName: "name",
                          chanColUsers: "users",
                          chanColTopic: "topic" };
@@ -63,10 +79,14 @@ function onLoad()
     };
 
     client = window.arguments[0].client;
+    network = window.arguments[0].network;
+    network.joinDialog = window;
 
+    window.dd = client.mainWindow.dd;
     window.toUnicode = client.mainWindow.toUnicode;
     window.getMsg = client.mainWindow.getMsg;
     window.MSG_CHANNEL_OPENED = client.mainWindow.MSG_CHANNEL_OPENED;
+    window.MSG_FMT_JSEXCEPTION = client.mainWindow.MSG_FMT_JSEXCEPTION;
     window.MT_INFO = client.mainWindow.MT_INFO;
 
     // Import "MSG_CD_*"...
@@ -75,8 +95,6 @@ function onLoad()
         if (m.substr(0, 7) == "MSG_CD_")
             window[m] = client.mainWindow[m];
     }
-
-    network = client.mainWindow.getObjectDetails(client.currentObject).network;
 
     var tree = document.getElementById("channelList");
 
@@ -100,7 +118,13 @@ function onLoad()
     document.title = getMsg(MSG_CD_TITLE, [network.unicodeName,
                                            network.getURL()]);
 
-    setTimeout(startListRequest, 100, false);
+    setInterval(doCurrentStatus, STATE_DELAY);
+    setState(STATE_LOAD);
+}
+
+function onUnload()
+{
+    delete network.joinDialog;
 }
 
 function onKeyPress(event)
@@ -134,10 +158,12 @@ function runFilter()
         if (!channelText.match(/^[#&+!]/))
             channelText = "#" + channelText;
 
+        // Should ideally be calling freeze()/thaw() here, but unfortunately they
+        // mess up the selection, even if they make this so much faster.
         for (var i = 0; i < channels.length; i++)
         {
             var match = (channels[i].name.toLowerCase().indexOf(text) != -1) ||
-                        (searchTopics && 
+                        (searchTopics &&
                          (channels[i].topic.toLowerCase().indexOf(text) != -1));
 
             if (minUsers && (channels[i].users < minUsers))
@@ -223,7 +249,7 @@ function focusSearch()
 
 function refreshList()
 {
-    startListRequest(true);
+    setState(STATE_LIST_THEN_LOAD);
 }
 
 function updateProgress(label, pro)
@@ -250,7 +276,7 @@ function updateProgress(label, pro)
     else
     {
         document.getElementById("loadBar").mode = "determined";
-        document.getElementById("loadBar").position = pro;
+        document.getElementById("loadBar").value = pro;
     }
 }
 
@@ -286,119 +312,217 @@ function changeSort(col)
     }
 }
 
-function startListRequest(force)
+function setState(newState)
 {
-    if (("_list" in network) && !network._list.done)
-    {
-        updateProgress(MSG_CD_WAIT_LIST);
-        setTimeout(startListRequest, 1000, force);
-        return;
-    }
-
-    updateProgress(MSG_CD_FETCHING, -1);
-    document.getElementById("refreshNow").disabled = true;
-
-    var file = new LocalFile(network.prefs["logFileName"]);
-    file.localFile.leafName = "list.txt";
-
-    if (file.localFile.exists() && !force)
-    {
-        startListFileLoad();
-        return;
-    }
-
-    network.list("", file.localFile.path);
-
-    setTimeout(duringListRequest, 1000);
-}
-
-function duringListRequest()
-{
-    var lbl = document.getElementById("loadLabel");
-    updateProgress(getMsg(MSG_CD_FETCHED, network._list.count), -1);
-
-    if (!network._list.done)
-        setTimeout(duringListRequest, 1000);
+    state.state = newState;
+    if (newState == STATE_IDLE)
+        state.substate = 0;
     else
-        afterListRequest();
+        state.substate = SUBSTATE_START;
+    // Force an update when the state changes.
+    doCurrentStatus();
 }
 
-function afterListRequest()
+function setSubstate(newSubstate)
 {
-    if ("error" in network._list)
-    {
-        updateProgress(MSG_CD_ERROR_LIST);
-        document.getElementById("refreshNow").disabled = false;
-        // Can't seem to "undefine" the parameters using the function format.
-        setTimeout("updateProgress()", 10000);
-    }
-    else
-    {
-        updateProgress();
-        startListFileLoad();
-    }
+    state.substate = newSubstate;
 }
 
-var pendingData;
-
-function startListFileLoad()
+function doCurrentStatus()
 {
-    // Nuke contents.
-    channelTreeView.selectedIndex = -1;
-    // Should ideally be calling freeze()/thaw() here, but unfortunately they
-    // mess up the selection, even if they make this so much faster.
-    while (channelTreeView.childData.childData.length > 1)
-        channelTreeView.childData.removeChildAtIndex(1);
-
-    // Nuke more stuff.
-    channels = new Array();
-    pendingData = "";
-
-    // And... here we go.
-    var file = new LocalFile(network.prefs["logFileName"]);
-    file.localFile.leafName = "list.txt";
-    file = new LocalFile(file.localFile, "<");
-
-    duringListFileLoad(file);
-}
-
-function duringListFileLoad(file)
-{
-    var data = file.read(10000);
-    pendingData += data;
-
-    while (pendingData.indexOf("\n") != -1)
+    var st = Number(new Date());
+    try
     {
-        var lines = pendingData.split("\n");
-        pendingData = lines.pop();
-
-        for (var i = 0; i < lines.length; i++)
+        switch (state.substate)
         {
-            var ary = lines[i].match(/^([^ ]+) ([^ ]+) (.*)$/);
-            if (ary)
-            {
-                var chan = new ChannelEntry(toUnicode(ary[1], "UTF-8"), ary[2],
-                                            toUnicode(ary[3], "UTF-8"));
-                channels.push(chan);
-            }
+            case SUBSTATE_START:
+                doCurrentStatusStart();
+                break;
+
+            case SUBSTATE_RUN:
+                doCurrentStatusRun();
+                break;
+
+            case SUBSTATE_END:
+                doCurrentStatusEnd();
+                break;
         }
     }
-    updateProgress(getMsg(MSG_CD_LOADED, channels.length), -1);
-
-    if (file.inputStream.available() != 0)
-        setTimeout(duringListFileLoad, 100, file);
-    else
-        afterListFileLoad(file);
+    catch(ex)
+    {
+        /* If an error has occured, we display it (updateProgress) and then
+         * halt our opperations to prevent further damage.
+         */
+        dd("Exception in channels.js:doCurrentStatus: " + formatException(ex));
+        updateProgress(formatException(ex));
+        state.substate = SUBSTATE_ERROR;
+    }
+    var en = Number(new Date());
+    state.timeTaken = (en - st);
 }
 
-function afterListFileLoad(file)
+function doCurrentStatusStart()
 {
-    document.getElementById("refreshNow").disabled = false;
-    if (channels.length > 0)
-        channelTreeView.childData.appendChildren(channels);
-    updateProgress();
-    runFilter();
+    // Only the list has an initial message.
+    if (state.state == STATE_LIST_THEN_LOAD)
+        updateProgress(MSG_CD_FETCHING, -1);
+
+    // The file is used in all 3 cases.
+    var file = getListFile();
+
+    // Doing the list should disable the refresh button.
+    if ((state.state == STATE_LIST_AND_LOAD) || (state.state == STATE_LIST_THEN_LOAD))
+    {
+        document.getElementById("refreshNow").disabled = true;
+        network.list("", file.path);
+    }
+
+    // Do file handling setup for both loading states.
+    if ((state.state == STATE_LOAD) || (state.state == STATE_LIST_AND_LOAD))
+    {
+        if (!file.exists())
+        {
+            // We tried to do a load, but the file does not exist.
+            setState(STATE_LIST_AND_LOAD);
+            return;
+        }
+
+        // Nuke contents.
+        channelTreeView.selectedIndex = -1;
+        channelTreeView.freeze();
+        while (channelTreeView.childData.childData.length > 1)
+            channelTreeView.childData.removeChildAtIndex(1);
+        channelTreeView.thaw();
+
+        // Nuke more stuff.
+        channels = new Array();
+
+        // And... here we go.
+        state.loadFile = new LocalFile(file, "<");
+        state.loadPendingData = "";
+        state.loadChunk = 10000;
+        state.loadedSoFar = 0;
+        // The loading from the file will never complete whilst this is true.
+        state.loadNeverComplete = (state.state == STATE_LIST_AND_LOAD);
+    }
+
+    setSubstate(SUBSTATE_RUN);
 }
+
+function doCurrentStatusRun()
+{
+    if (state.state == STATE_LIST_THEN_LOAD)
+    {
+        // Update the progress and end if /list done for "list only" state.
+        updateProgress(getMsg(MSG_CD_FETCHED, network._list.count), -1);
+
+        if (network._list.done)
+            setSubstate(SUBSTATE_END);
+    }
+
+    /* If we're doing the list+load state, flag is as ok to stop loading the
+     * file when the network has finished doing the /list.
+     */
+    if ((state.state == STATE_LIST_AND_LOAD) && network._list.done)
+        state.loadNeverComplete = false;
+
+    // Do file handling for loading states.
+    if ((state.state == STATE_LOAD) || (state.state == STATE_LIST_AND_LOAD))
+    {
+        // Adjust chunk size to keep time per-chunk between 750ms and 1000ms.
+        if ((state.timeTaken > 1.25 * STATE_DELAY) && (state.loadChunk >= 2000))
+            state.loadChunk -= 1000;
+        else if ((state.timeTaken > STATE_DELAY) && (state.loadChunk >= 1100))
+            state.loadChunk -= 100;
+        if (state.timeTaken < 0.5 * STATE_DELAY)
+            state.loadChunk += 1000;
+        else if (state.timeTaken < 0.75 * STATE_DELAY)
+            state.loadChunk += 100;
+        state.loadedSoFar += state.loadChunk;
+        state.loadPendingData += state.loadFile.read(state.loadChunk);
+
+        while (state.loadPendingData.indexOf("\n") != -1)
+        {
+            var lines = state.loadPendingData.split("\n");
+            state.loadPendingData = lines.pop();
+
+            for (var i = 0; i < lines.length; i++)
+            {
+                var ary = lines[i].match(/^([^ ]+) ([^ ]+) (.*)$/);
+                if (ary)
+                {
+                    var chan = new ChannelEntry(toUnicode(ary[1], "UTF-8"), ary[2],
+                                                toUnicode(ary[3], "UTF-8"));
+                    channels.push(chan);
+                }
+            }
+        }
+
+        var dataLeft = state.loadFile.inputStream.available();
+        var pro = state.loadedSoFar / (state.loadedSoFar + dataLeft);
+        pro = Math.round(100 * pro);
+        updateProgress(getMsg(MSG_CD_LOADED, channels.length), pro);
+
+        // Done if there is no more data, and we're not *expecting* any more.
+        if ((dataLeft == 0) && !state.loadNeverComplete)
+            setSubstate(SUBSTATE_END);
+    }
+}
+function doCurrentStatusEnd()
+{
+    // Reset refresh button.
+    if ((state.state == STATE_LIST_AND_LOAD) || (state.state == STATE_LIST_THEN_LOAD))
+        document.getElementById("refreshNow").disabled = false;
+
+    // Check that /list finished ok if we're just doing a list.
+    if (state.state == STATE_LIST_THEN_LOAD)
+    {
+        if ("error" in network._list)
+        {
+            updateProgress(MSG_CD_ERROR_LIST);
+            // Can't seem to "undefine" the parameters using the function format.
+            setTimeout("updateProgress()", 10000);
+            // Bail out if there was an error!
+            return;
+        }
+        else
+        {
+            // Replace files.
+            updateProgress();
+        }
+    }
+
+    // Finish file handling work.
+    if ((state.state == STATE_LOAD) || (state.state == STATE_LIST_AND_LOAD))
+    {
+        if (channels.length > 0)
+            channelTreeView.childData.appendChildren(channels);
+        state.loadFile.close();
+        delete state.loadFile;
+        delete state.loadPendingData;
+        delete state.loadChunk;
+        delete state.loadedSoFar;
+        delete state.loadNeverComplete;
+        updateProgress();
+        runFilter();
+    }
+
+    if (state.state == STATE_LIST_THEN_LOAD)
+        setState(STATE_LOAD);
+    else
+        setState(STATE_IDLE);
+}
+
+function getListFile(temp)
+{
+    var file = new LocalFile(network.prefs["logFileName"]);
+    if (temp)
+        file.localFile.leafName = "list.temp";
+    else
+        file.localFile.leafName = "list.txt";
+    return file.localFile;
+}
+
 
 // Tree ChannelEntry objects //
 function ChannelEntry(name, users, topic)

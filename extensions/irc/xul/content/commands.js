@@ -2184,7 +2184,8 @@ function cmdJoin(e)
     if (!e.hasOwnProperty("channelName") || !e.channelName)
     {
         window.openDialog("chrome://chatzilla/content/channels.xul", "",
-                          "modal,resizable=yes", { client: client })
+                          "modal,resizable=yes",
+                          { client: client, network: e.network })
         return null;
     }
 
