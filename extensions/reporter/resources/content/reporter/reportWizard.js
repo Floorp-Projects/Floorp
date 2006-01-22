@@ -271,8 +271,6 @@ function showDetail() {
 function getBuildConfig() {
   // bz and Biesi are my heroes for writing/debugging this chunk.
   try {
-    netscape.security.PrivilegeManager
-            .enablePrivilege("UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite");
     var ioservice =
       Components.classes["@mozilla.org/network/io-service;1"]
                 .getService(Components.interfaces.nsIIOService);
