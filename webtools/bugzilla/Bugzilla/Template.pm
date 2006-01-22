@@ -461,11 +461,41 @@ sub create {
             # Format a time for display (more info in Bugzilla::Util)
             time => \&Bugzilla::Util::format_time,
 
-            # Override html filter to obscure the '@' in user visible strings
-            # See bug 120030 for details
+            # Bug 120030: Override html filter to obscure the '@' in user
+            #             visible strings.
+            # Bug 319331: Handle BiDi disruptions.
             html => sub {
                 my ($var) = Template::Filters::html_filter(@_);
+                # Obscure '@'.
                 $var =~ s/\@/\&#64;/g;
+                if (Param('utf8')) {
+                    # Remove the following characters because they're
+                    # influencing BiDi:
+                    # --------------------------------------------------------
+                    # |Code  |Name                      |UTF-8 representation|
+                    # |------|--------------------------|--------------------|
+                    # |U+202a|Left-To-Right Embedding   |0xe2 0x80 0xaa      |
+                    # |U+202b|Right-To-Left Embedding   |0xe2 0x80 0xab      |
+                    # |U+202c|Pop Directional Formatting|0xe2 0x80 0xac      |
+                    # |U+202d|Left-To-Right Override    |0xe2 0x80 0xad      |
+                    # |U+202e|Right-To-Left Override    |0xe2 0x80 0xae      |
+                    # --------------------------------------------------------
+                    #
+                    # The following are characters influencing BiDi, too, but
+                    # they can be spared from filtering because they don't
+                    # influence more than one character right or left:
+                    # --------------------------------------------------------
+                    # |Code  |Name                      |UTF-8 representation|
+                    # |------|--------------------------|--------------------|
+                    # |U+200e|Left-To-Right Mark        |0xe2 0x80 0x8e      |
+                    # |U+200f|Right-To-Left Mark        |0xe2 0x80 0x8f      |
+                    # --------------------------------------------------------
+                    #
+                    # Do the replacing in a loop so that we don't get tricked
+                    # by stuff like 0xe2 0xe2 0x80 0xae 0x80 0xae.
+                    while ($var =~ s/\xe2\x80(\xaa|\xab|\xac|\xad|\xae)//g) {
+                    }
+                }
                 return $var;
             },
             
