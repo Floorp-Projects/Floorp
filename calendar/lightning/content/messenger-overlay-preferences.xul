@@ -39,6 +39,8 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://lightning/locale/lightning.dtd" >
 
+<?xml-stylesheet href="chrome://lightning/skin/lightning.css"?>
+
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <prefwindow id="MailPreferences">
