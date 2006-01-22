@@ -561,8 +561,3 @@
 #error "unknown JS_VERSION"
 
 #endif
-
-/* Features that are present in all versions. */
-#define JS_HAS_RESERVED_JAVA_KEYWORDS   1
-#define JS_HAS_RESERVED_ECMA_KEYWORDS   1
-

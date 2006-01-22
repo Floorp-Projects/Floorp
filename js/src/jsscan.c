@@ -74,80 +74,133 @@
 #include "jsxml.h"
 #endif
 
+#define RESERVE_JAVA_KEYWORDS
+#define RESERVE_ECMA_KEYWORDS
+
 #define MAX_KEYWORD_LENGTH      12
 
-#define JS_KEYWORD(keyword, type, op, version) \
-    const char js_##keyword##_str[] = #keyword;
-#include "jskeyword.tbl"
-#undef JS_KEYWORD
-
-struct keyword {
-    const char  *chars;         /* C string with keyword text */
+static struct keyword {
+    const char  *name;
     JSTokenType tokentype;      /* JSTokenType */
     JSOp        op;             /* JSOp */
     JSVersion   version;        /* JSVersion */
+} keywords[] = {
+    {"break",           TOK_BREAK,              JSOP_NOP,   JSVERSION_DEFAULT},
+    {"case",            TOK_CASE,               JSOP_NOP,   JSVERSION_DEFAULT},
+    {"continue",        TOK_CONTINUE,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {js_default_str,    TOK_DEFAULT,            JSOP_NOP,   JSVERSION_DEFAULT},
+    {js_delete_str,     TOK_DELETE,             JSOP_NOP,   JSVERSION_DEFAULT},
+    {"do",              TOK_DO,                 JSOP_NOP,   JSVERSION_DEFAULT},
+    {"else",            TOK_ELSE,               JSOP_NOP,   JSVERSION_DEFAULT},
+    {"export",          TOK_EXPORT,             JSOP_NOP,   JSVERSION_1_2},
+    {js_false_str,      TOK_PRIMARY,            JSOP_FALSE, JSVERSION_DEFAULT},
+    {"for",             TOK_FOR,                JSOP_NOP,   JSVERSION_DEFAULT},
+    {js_function_str,   TOK_FUNCTION,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"if",              TOK_IF,                 JSOP_NOP,   JSVERSION_DEFAULT},
+    {js_in_str,         TOK_IN,                 JSOP_IN,    JSVERSION_DEFAULT},
+    {js_new_str,        TOK_NEW,                JSOP_NEW,   JSVERSION_DEFAULT},
+    {js_null_str,       TOK_PRIMARY,            JSOP_NULL,  JSVERSION_DEFAULT},
+    {"return",          TOK_RETURN,             JSOP_NOP,   JSVERSION_DEFAULT},
+    {"switch",          TOK_SWITCH,             JSOP_NOP,   JSVERSION_DEFAULT},
+    {js_this_str,       TOK_PRIMARY,            JSOP_THIS,  JSVERSION_DEFAULT},
+    {js_true_str,       TOK_PRIMARY,            JSOP_TRUE,  JSVERSION_DEFAULT},
+    {js_typeof_str,     TOK_UNARYOP,            JSOP_TYPEOF,JSVERSION_DEFAULT},
+    {js_var_str,        TOK_VAR,                JSOP_DEFVAR,JSVERSION_DEFAULT},
+    {js_void_str,       TOK_UNARYOP,            JSOP_VOID,  JSVERSION_DEFAULT},
+    {"while",           TOK_WHILE,              JSOP_NOP,   JSVERSION_DEFAULT},
+    {"with",            TOK_WITH,               JSOP_NOP,   JSVERSION_DEFAULT},
+
+#if JS_HAS_CONST
+    {js_const_str,      TOK_VAR,                JSOP_DEFCONST,JSVERSION_DEFAULT},
+#else
+    {js_const_str,      TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+#endif
+
+#if JS_HAS_EXCEPTIONS
+    {"try",             TOK_TRY,                JSOP_NOP,   JSVERSION_DEFAULT},
+    {"catch",           TOK_CATCH,              JSOP_NOP,   JSVERSION_DEFAULT},
+    {"finally",         TOK_FINALLY,            JSOP_NOP,   JSVERSION_DEFAULT},
+    {"throw",           TOK_THROW,              JSOP_NOP,   JSVERSION_DEFAULT},
+#else
+    {"try",             TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"catch",           TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"finally",         TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"throw",           TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+#endif
+
+#if JS_HAS_INSTANCEOF
+    {js_instanceof_str, TOK_INSTANCEOF,         JSOP_INSTANCEOF,JSVERSION_1_4},
+#else
+    {js_instanceof_str, TOK_RESERVED,           JSOP_NOP,   JSVERSION_1_4},
+#endif
+
+#ifdef RESERVE_JAVA_KEYWORDS
+    {"abstract",        TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"boolean",         TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"byte",            TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"char",            TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"class",           TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"double",          TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"extends",         TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"final",           TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"float",           TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"goto",            TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"implements",      TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"import",          TOK_IMPORT,             JSOP_NOP,   JSVERSION_DEFAULT},
+    {"int",             TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"interface",       TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"long",            TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"native",          TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"package",         TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"private",         TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"protected",       TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"public",          TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"short",           TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"static",          TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"super",           TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"synchronized",    TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"throws",          TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"transient",       TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+    {"volatile",        TOK_RESERVED,           JSOP_NOP,   JSVERSION_DEFAULT},
+#endif
+
+#ifdef RESERVE_ECMA_KEYWORDS
+    {"enum",           TOK_RESERVED,            JSOP_NOP,   JSVERSION_1_3},
+#endif
+
+#if JS_HAS_DEBUGGER_KEYWORD
+    {"debugger",       TOK_DEBUGGER,            JSOP_NOP,   JSVERSION_1_3},
+#elif defined(RESERVE_ECMA_KEYWORDS)
+    {"debugger",       TOK_RESERVED,            JSOP_NOP,   JSVERSION_1_3},
+#endif
+    {0,                TOK_EOF,                 JSOP_NOP,   JSVERSION_DEFAULT}
 };
-
-static const struct keyword keyword_defs[] = {
-#define JS_KEYWORD(keyword, type, op, version) \
-    {js_##keyword##_str, type, op, version},
-#include "jskeyword.tbl"
-#undef JS_KEYWORD
-};
-
-#define KEYWORD_COUNT (sizeof keyword_defs / sizeof keyword_defs[0])
-
-static const struct keyword *
-FindKeyword(const jschar *s, size_t length)
-{
-    register size_t i;
-    const struct keyword *kw;
-    const char *chars;
-
-    JS_ASSERT(length != 0);
-
-#define JSKW_LENGTH()           length
-#define JSKW_AT(column)         s[column]
-#define JSKW_GOT_MATCH(index)   i = (index); goto got_match;
-#define JSKW_TEST_GUESS(index)  i = (index); goto test_guess;
-#define JSKW_NO_MATCH()         goto no_match;
-#include "jsautokw.h"
-#undef JSKW_NO_MATCH
-#undef JSKW_TEST_GUESS
-#undef JSKW_GOT_MATCH
-#undef JSKW_AT
-#undef JSKW_LENGTH
-
-  got_match:
-    return &keyword_defs[i];
-
-  test_guess:
-    kw = &keyword_defs[i];
-    chars = kw->chars;
-    do {
-        if (*s++ != (unsigned char)(*chars++))
-            goto no_match;
-    } while (--length != 0);
-    return kw;
-
-  no_match:
-    return NULL;
-}
 
 JSBool
-js_IsKeyword(const jschar *str, size_t length)
+js_InitScanner(JSContext *cx)
 {
-    JS_ASSERT(length != 0);
-    return FindKeyword(str, length) != NULL;
+    struct keyword *kw;
+    size_t length;
+    JSAtom *atom;
+
+    for (kw = keywords; kw->name; kw++) {
+        length = strlen(kw->name);
+        JS_ASSERT(length <= MAX_KEYWORD_LENGTH);
+        atom = js_Atomize(cx, kw->name, length, ATOM_PINNED);
+        if (!atom)
+            return JS_FALSE;
+        ATOM_SET_KEYWORD(atom, kw);
+    }
+    return JS_TRUE;
 }
 
 JS_FRIEND_API(void)
 js_MapKeywords(void (*mapfun)(const char *))
 {
-    size_t i;
+    struct keyword *kw;
 
-    for (i = 0; i != KEYWORD_COUNT; ++i)
-        mapfun(keyword_defs[i].chars);
+    for (kw = keywords; kw->name; kw++)
+        mapfun(kw->name);
 }
 
 JSTokenStream *
@@ -702,7 +755,7 @@ js_ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
                                        &report, JS_TRUE, ap);
     va_end(ap);
 
-    /*
+    /* 
      * We have to do this here because js_ReportCompileErrorNumberUC doesn't
      * need to do this.
      */
@@ -726,7 +779,7 @@ js_ReportCompileErrorNumberUC(JSContext *cx, void *handle, uintN flags,
 
     if ((flags & JSREPORT_STRICT) && !JS_HAS_STRICT_OPTION(cx))
         return JS_TRUE;
-
+ 
     va_start(ap, errorNumber);
     warning = ReportCompileErrorNumber(cx, handle, flags, errorNumber,
                                        &report, JS_FALSE, ap);
@@ -1061,7 +1114,6 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
     JSToken *tp;
     JSAtom *atom;
     JSBool hadUnicodeEscape;
-    const struct keyword *kw;
 
 #define INIT_TOKENBUF()     (ts->tokenbuf.ptr = ts->tokenbuf.base)
 #define NUL_TERM_TOKENBUF() (*ts->tokenbuf.ptr = 0)
@@ -1283,8 +1335,14 @@ retry:
         }
         UngetChar(ts, c);
 
-        if (!hadUnicodeEscape &&
-            (kw = FindKeyword(TOKENBUF_BASE(), TOKENBUF_LENGTH()))) {
+        atom = TOKENBUF_TO_ATOM();
+        if (!atom)
+            goto error;
+        if (!hadUnicodeEscape && ATOM_KEYWORD(atom)) {
+            struct keyword *kw;
+            
+            JS_ASSERT(!(atom->flags & ATOM_HIDDEN));
+            kw = ATOM_KEYWORD(atom);
             if (kw->tokentype == TOK_RESERVED) {
                 char buf[MAX_KEYWORD_LENGTH + 1];
                 size_t buflen = sizeof(buf) - 1;
@@ -1306,10 +1364,6 @@ retry:
                 goto out;
             }
         }
-
-        atom = TOKENBUF_TO_ATOM();
-        if (!atom)
-            goto error;
         tp->t_op = JSOP_NAME;
         tp->t_atom = atom;
         tt = TOK_NAME;
