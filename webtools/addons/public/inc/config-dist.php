@@ -38,6 +38,4 @@ define('DB_HOST','');
 define('DB_NAME','');
 define('DB_PORT', '');
 
-// When set to true, db sessions are available.
-define('USE_DB_SESSIONS', true);
 ?>
