@@ -51,7 +51,8 @@
 #include <nsIInputStream.h>
 
 static PRInt32 cGateways = 0;
-PRInt32 _PyXPCOM_GetGatewayCount(void)
+
+PYXPCOM_EXPORT PRInt32 _PyXPCOM_GetGatewayCount(void)
 {
 	return cGateways;
 }
@@ -60,9 +61,8 @@ extern PyG_Base *MakePyG_nsIModule(PyObject *);
 extern PyG_Base *MakePyG_nsIInputStream(PyObject *instance);
 
 static char *PyXPCOM_szDefaultGatewayAttributeName = "_com_instance_default_gateway_";
-PyG_Base *GetDefaultGateway(PyObject *instance);
-void AddDefaultGateway(PyObject *instance, nsISupports *gateway);
-PRBool CheckDefaultGateway(PyObject *real_inst, REFNSIID iid, nsISupports **ret_gateway);
+static PyG_Base *GetDefaultGateway(PyObject *instance);
+static PRBool CheckDefaultGateway(PyObject *real_inst, REFNSIID iid, nsISupports **ret_gateway);
 
 /*static*/ nsresult 
 PyG_Base::CreateNew(PyObject *pPyInstance, const nsIID &iid, void **ppResult)
@@ -807,7 +807,7 @@ PRBool CheckDefaultGateway(PyObject *real_inst, REFNSIID iid, nsISupports **ret_
 	return PR_FALSE;
 }
 
-void AddDefaultGateway(PyObject *instance, nsISupports *gateway)
+PYXPCOM_EXPORT void AddDefaultGateway(PyObject *instance, nsISupports *gateway)
 {
 	// NOTE: Instance is the _policy_!
 	PyObject *real_inst = PyObject_GetAttrString(instance, "_obj_");

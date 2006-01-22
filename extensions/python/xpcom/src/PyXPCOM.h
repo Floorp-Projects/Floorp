@@ -748,7 +748,7 @@ extern struct PyMethodDef Methods[];                                      \
 class ClassName : public Py_nsISupports                                   \
 {                                                                         \
 public:                                                                   \
-	static PyXPCOM_TypeObject *type;                                  \
+	static PYXPCOM_EXPORT PyXPCOM_TypeObject *type;                                  \
 	static Py_nsISupports *Constructor(nsISupports *pInitObj, const nsIID &iid) { \
 		return new ClassName(pInitObj, iid);                      \
 	}                                                                 \
@@ -775,7 +775,7 @@ protected:                                                                \
 // End of PyXPCOM_ATTR_INTERFACE_DECLARE macro
 
 #define PyXPCOM_INTERFACE_DEFINE(ClassName, InterfaceName, Methods )      \
-PyXPCOM_TypeObject *ClassName::type = NULL;
+NS_EXPORT_STATIC_MEMBER_(PyXPCOM_TypeObject *) ClassName::type = NULL;
 
 
 // And the classes

@@ -107,7 +107,8 @@ PyUnicode_AsPRUnichar(PyObject *obj, PRUnichar **dest_out, PRUint32 *size_out)
 	return 0;
 }
 
-PyObject *PyObject_FromNSString( const nsACString &s, PRBool bAssumeUTF8 /*= PR_FALSE */)
+PYXPCOM_EXPORT PyObject *
+PyObject_FromNSString( const nsACString &s, PRBool bAssumeUTF8 /*= PR_FALSE */)
 {
 	PyObject *ret;
 	if (IsNullDOMString(s)) {
@@ -130,7 +131,8 @@ PyObject *PyObject_FromNSString( const nsACString &s, PRBool bAssumeUTF8 /*= PR_
 	return ret;
 }
 
-PyObject *PyObject_FromNSString( const nsAString &s )
+PYXPCOM_EXPORT PyObject *
+PyObject_FromNSString( const nsAString &s )
 {
 	PyObject *ret;
 	if (IsNullDOMString(s)) {
@@ -143,14 +145,16 @@ PyObject *PyObject_FromNSString( const nsAString &s )
 	return ret;
 }
 
-PyObject *PyObject_FromNSString( const PRUnichar *s,
-                                 PRUint32 len /* = (PRUint32)-1*/)
+PYXPCOM_EXPORT PyObject *
+PyObject_FromNSString( const PRUnichar *s,
+                       PRUint32 len /* = (PRUint32)-1*/)
 {
 	return PyUnicode_FromPRUnichar(s,
 	           len==((PRUint32)-1)? nsCRT::strlen(s) : len);
 }
 
-PRBool PyObject_AsNSString( PyObject *val, nsAString &aStr)
+PYXPCOM_EXPORT PRBool
+PyObject_AsNSString( PyObject *val, nsAString &aStr)
 {
 	if (val == Py_None) {
 		aStr.Truncate();
@@ -646,7 +650,8 @@ static PRUint16 BestVariantTypeForPyObject( PyObject *ob, BVFTResult *pdata = NU
 	return (PRUint16)-1;
 }
 
-nsresult PyObject_AsVariant( PyObject *ob, nsIVariant **aRet)
+PYXPCOM_EXPORT nsresult
+PyObject_AsVariant( PyObject *ob, nsIVariant **aRet)
 {
 	nsresult nr = NS_OK;
 	nsCOMPtr<nsIWritableVariant> v = do_CreateInstance("@mozilla.org/variant;1", &nr);
@@ -785,7 +790,8 @@ PyObject *PyObject_FromVariantArray( Py_nsISupports *parent, nsIVariant *v)
 	return ret;
 }
 
-PyObject *PyObject_FromVariant( Py_nsISupports *parent, nsIVariant *v)
+PYXPCOM_EXPORT PyObject *
+PyObject_FromVariant( Py_nsISupports *parent, nsIVariant *v)
 {
 	if (!v) {
 		Py_INCREF(Py_None);

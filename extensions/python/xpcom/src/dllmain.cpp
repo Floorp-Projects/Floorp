@@ -177,12 +177,15 @@ void PyXPCOM_ThreadState_Clear()
 ////////////////////////////////////////////////////////////
 // Lock/exclusion global functions.
 //
-void PyXPCOM_AcquireGlobalLock(void)
+PYXPCOM_EXPORT void
+PyXPCOM_AcquireGlobalLock(void)
 {
 	NS_PRECONDITION(g_lockMain != nsnull, "Cant acquire a NULL lock!");
 	PR_Lock(g_lockMain);
 }
-void PyXPCOM_ReleaseGlobalLock(void)
+
+PYXPCOM_EXPORT void
+PyXPCOM_ReleaseGlobalLock(void)
 {
 	NS_PRECONDITION(g_lockMain != nsnull, "Cant release a NULL lock!");
 	PR_Unlock(g_lockMain);
@@ -262,7 +265,8 @@ struct DllInitializer {
 ////////////////////////////////////////////////////////////
 // Other helpers/global functions.
 //
-PRBool PyXPCOM_Globals_Ensure()
+PYXPCOM_EXPORT PRBool
+PyXPCOM_Globals_Ensure()
 {
 	PRBool rc = PR_TRUE;
 

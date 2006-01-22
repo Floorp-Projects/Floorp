@@ -78,7 +78,9 @@ static void HandleLogError(const char *pszMessageText)
 
 static const char *LOGGER_WARNING = "warning";
 static const char *LOGGER_ERROR = "error";
+#ifdef NS_DEBUG
 static const char *LOGGER_DEBUG = "debug";
+#endif
 
 // Our "normal" error logger - calls back to the logging module.
 void DoLogMessage(const char *methodName, const char *pszMessageText)
@@ -149,7 +151,7 @@ static void VLogF(const char *methodName, const char *fmt, va_list argptr)
 	LogMessage(methodName, buff);
 }
 
-PRBool PyXPCOM_FormatCurrentException(nsCString &streamout)
+PYXPCOM_EXPORT PRBool PyXPCOM_FormatCurrentException(nsCString &streamout)
 {
 	PRBool ok = PR_FALSE;
 	PyObject *exc_typ = NULL, *exc_val = NULL, *exc_tb = NULL;
@@ -163,7 +165,7 @@ PRBool PyXPCOM_FormatCurrentException(nsCString &streamout)
 	return ok;
 }
 
-PRBool PyXPCOM_FormatGivenException(nsCString &streamout,
+PYXPCOM_EXPORT PRBool PyXPCOM_FormatGivenException(nsCString &streamout,
 				    PyObject *exc_typ, PyObject *exc_val,
 				    PyObject *exc_tb)
 {
@@ -199,7 +201,7 @@ PRBool PyXPCOM_FormatGivenException(nsCString &streamout,
 	return PR_TRUE;
 }
 
-void PyXPCOM_LogError(const char *fmt, ...)
+PYXPCOM_EXPORT void PyXPCOM_LogError(const char *fmt, ...)
 {
 	va_list marker;
 	va_start(marker, fmt);
@@ -218,20 +220,20 @@ void PyXPCOM_LogError(const char *fmt, ...)
 	}
 }
 
-void PyXPCOM_LogWarning(const char *fmt, ...)
+PYXPCOM_EXPORT void PyXPCOM_LogWarning(const char *fmt, ...)
 {
 	va_list marker;
 	va_start(marker, fmt);
 	VLogF(LOGGER_WARNING, fmt, marker);
 }
 
-void PyXPCOM_Log(const char *level, const nsCString &msg)
+PYXPCOM_EXPORT void PyXPCOM_Log(const char *level, const nsCString &msg)
 {
 	DoLogMessage(level, msg.get());
 }
 
 #ifdef DEBUG
-void PyXPCOM_LogDebug(const char *fmt, ...)
+PYXPCOM_EXPORT void PyXPCOM_LogDebug(const char *fmt, ...)
 {
 	va_list marker;
 	va_start(marker, fmt);
@@ -240,7 +242,7 @@ void PyXPCOM_LogDebug(const char *fmt, ...)
 #endif
 
 
-PyObject *PyXPCOM_BuildPyException(nsresult r)
+PYXPCOM_EXPORT PyObject *PyXPCOM_BuildPyException(nsresult r)
 {
 	// Need the message etc.
 	PyObject *evalue = Py_BuildValue("i", r);
@@ -249,7 +251,7 @@ PyObject *PyXPCOM_BuildPyException(nsresult r)
 	return NULL;
 }
 
-nsresult PyXPCOM_SetCOMErrorFromPyException()
+PYXPCOM_EXPORT nsresult PyXPCOM_SetCOMErrorFromPyException()
 {
 	if (!PyErr_Occurred())
 		// No error occurred
@@ -358,7 +360,7 @@ done:
 }
 
 // See comments in PyXPCOM.h for why we need this!
-void PyXPCOM_MakePendingCalls()
+PYXPCOM_EXPORT void PyXPCOM_MakePendingCalls()
 {
 	while (1) {
 		int rc = Py_MakePendingCalls();
