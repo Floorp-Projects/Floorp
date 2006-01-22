@@ -4696,8 +4696,13 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	    SECStatus status;
  	    SECItem crsr   = { siBuffer, crsrdata, sizeof crsrdata };
  	    SECItem master = { siBuffer, key_block, SSL3_MASTER_SECRET_LENGTH};
- 	    SECItem pms    = { siBuffer, (unsigned char*)att->attrib.pValue,
- 					 att->attrib.ulValueLen };
+ 	    SECItem pms    = { siBuffer };
+
+	    /* HPUX won't let a structure member be initialized with the 
+	     * value of a variable, but the address of a local variable. :-/
+	     */
+ 	    pms.data = (unsigned char*)att->attrib.pValue;
+	    pms.len  =                 att->attrib.ulValueLen;
 
 	    status = TLS_PRF(&pms, "master secret", &crsr, &master, isFIPS);
 	    if (status != SECSuccess) {
@@ -4839,10 +4844,12 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	if (isTLS) {
 	    SECStatus     status;
 	    SECItem       srcr   = { siBuffer, srcrdata, sizeof srcrdata };
-	    SECItem       keyblk = { siBuffer, key_block, block_needed };
-	    SECItem       master = { siBuffer, 
-	                             (unsigned char*)att->attrib.pValue,
-	                             att->attrib.ulValueLen };
+	    SECItem       keyblk = { siBuffer, key_block };
+	    SECItem       master = { siBuffer }; 
+
+	    keyblk.len  = block_needed;
+	    master.data = (unsigned char*)att->attrib.pValue;
+	    master.len  =                 att->attrib.ulValueLen;
 
 	    status = TLS_PRF(&master, "key expansion", &srcr, &keyblk,
 			      isFIPS);
