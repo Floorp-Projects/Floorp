@@ -68,7 +68,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (6) Execute "component" rules. (OPTIONAL)                           #
 #######################################################################
 
-
+INCLUDES += -I ../../lib/softoken
 
 #######################################################################
 # (7) Execute "local" rules. (OPTIONAL).                              #
