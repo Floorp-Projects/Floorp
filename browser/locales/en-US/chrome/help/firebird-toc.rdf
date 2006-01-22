@@ -327,8 +327,6 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="menu-tools-web-search" nc:name="Web Search" nc:link="menu_reference.xhtml#web_search"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-tools-read-mail" nc:name="Read Mail" nc:link="menu_reference.xhtml#read_mail"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-tools-new-message" nc:name="New Message..." nc:link="menu_reference.xhtml#new_message"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-downloads" nc:name="Downloads" nc:link="menu_reference.xhtml#downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-extensions" nc:name="Extensions" nc:link="menu_reference.xhtml#extensions"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-themes" nc:name="Themes" nc:link="menu_reference.xhtml#themes"/> </rdf:li>
