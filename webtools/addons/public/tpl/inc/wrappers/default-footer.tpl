@@ -17,11 +17,3 @@
 
 </body>
 </html>
-</div>
-<!-- close mBody -->
-
-</div>
-<!-- close container -->
-
-</body>
-</html>

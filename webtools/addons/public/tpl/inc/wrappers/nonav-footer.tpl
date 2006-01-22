@@ -15,9 +15,3 @@
 
 </body>
 </html>
-
-</div>
-<!-- close container -->
-
-</body>
-</html>
