@@ -69,6 +69,8 @@
 		 <1>	 1/25/02	JL		MoreFilesX 1.0
 */
 
+// Modified 2006-01-23 - added this comment.
+
 #if defined(__MACH__)
 	#include <Carbon/Carbon.h>
 	#include <string.h>
