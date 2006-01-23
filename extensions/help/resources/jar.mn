@@ -3,7 +3,7 @@ help.jar:
         content/help/contextHelp.js                     (content/contextHelp.js)
         content/help/help.js                            (content/help.js)
 *       content/help/contents.rdf                       (content/contents.rdf)
-        content/help/helpMenuOverlay.xul                (content/helpMenuOverlay.xul)
+*       content/help/helpMenuOverlay.xul                (content/helpMenuOverlay.xul)
         content/help/helpContextOverlay.xul             (content/helpContextOverlay.xul)
 *       content/help/platformClasses.css                (content/platformClasses.css)
 

@@ -19,10 +19,24 @@
       position="1" id="help"
       key="key_openHelp"
       command="cmd_openHelp"/>
+#ifdef XP_WIN
+#define DISPLAY_IE_USERS_HELP_MENU_ITEM
+#endif
+#ifdef XP_MACOSX
+#define DISPLAY_IE_USERS_HELP_MENU_ITEM
+#endif
+#ifdef HPUX
+#define DISPLAY_IE_USERS_HELP_MENU_ITEM
+#endif
+#ifdef SOLARIS
+#define DISPLAY_IE_USERS_HELP_MENU_ITEM
+#endif
+#ifdef DISPLAY_IE_USERS_HELP_MENU_ITEM
     <menuitem label="&helpForIEUsers.label;"
       accesskey="&helpForIEUsers.accesskey;"
       position="2"
       oncommand="openHelp('ieusers');" />
+#endif
   </menupopup>
   
   <commandset id="tasksCommands">
