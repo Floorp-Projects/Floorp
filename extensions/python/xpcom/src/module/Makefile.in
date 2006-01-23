@@ -69,7 +69,12 @@ CPPSRCS= \
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+ifeq ($(OS_ARCH),Darwin)
+# Don't use the EXTRA_DSO_LDOPTS from rules.mk, it breaks the python module
+  EXTRA_DSO_LDOPTS = -bundle $(MOZ_COMPONENT_LIBS)
+else
+  EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+endif
 IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.pyd=.lib)
 
 # Install into our Python directory
