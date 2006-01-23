@@ -4,6 +4,7 @@ require_once('DB.php');  // PEAR::DB
 require_once('Auth.php');  // PEAR::Auth
 require_once(LIB.'/amo.class.php');
 require_once(LIB.'/addon.class.php');
+require_once(LIB.'/auth.class.php');
 require_once(LIB.'/error.php');
 require_once(LIB.'/rdf.class.php');
 require_once(LIB.'/rss.class.php');
@@ -38,14 +39,15 @@ class AMO_SQL extends SQL
 
 $db = new AMO_SQL();
 
-if (USE_DB_SESSIONS)
-{
-    $amo_session_handler = new AMO_Session($db);
-    session_set_save_handler(array(&$amo_session_handler, '_open'),
-    array(&$amo_session_handler, '_close'),
-    array(&$amo_session_handler, '_read'),
-    array(&$amo_session_handler, '_write'),
-    array(&$amo_session_handler, '_destroy'),
-    array(&$amo_session_handler, '_gc'));
-}
+// Setup the session for the secure pages
+$_auth = new AMO_Auth();
+session_set_save_handler(
+    array(&$_auth, "_openSession"), 
+    array(&$_auth, "_closeSession"), 
+    array(&$_auth, "_readSession"), 
+    array(&$_auth, "_writeSession"), 
+    array(&$_auth, "_destroySession"), 
+    array(&$_auth, "_gcSession")
+    );
+
 ?>
