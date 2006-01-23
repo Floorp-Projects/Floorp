@@ -151,23 +151,25 @@ Index: src/cairo-gstate.c
 -			      0, 0,
 -			      _cairo_surface_get_width (gstate->target),
 -			      _cairo_surface_get_height (gstate->target));
-+    /* If this gstate is already redirected, this is an error; we need a
-+     * new gstate to be able to redirect */
-+    assert (gstate->parent_target == NULL);
- 
+-
 -    _cairo_surface_fini (&mask);
 -
 -    pix = _cairo_surface_get_drawable (gstate->target);
 -    XFreePixmap (gstate->dpy, pix);
+-
+-    cairo_surface_destroy (gstate->target);
+-    gstate->target = gstate->parent_surface;
+-    gstate->parent_surface = NULL;
++    /* If this gstate is already redirected, this is an error; we need a
++     * new gstate to be able to redirect */
++    assert (gstate->parent_target == NULL);
++
 +    /* Set up our new parent_target based on our current target;
 +     * gstate->parent_target will take the ref that is held by gstate->target
 +     */
 +    cairo_surface_destroy (gstate->parent_target);
 +    gstate->parent_target = gstate->target;
- 
--    cairo_surface_destroy (gstate->target);
--    gstate->target = gstate->parent_surface;
--    gstate->parent_surface = NULL;
++
 +    /* Now set up our new target; we overwrite gstate->target directly,
 +     * since its ref is now owned by gstate->parent_target */
 +    gstate->target = cairo_surface_reference (child);
@@ -277,7 +279,7 @@ Index: src/cairo.c
 ===================================================================
 --- src/cairo.c.orig
 +++ src/cairo.c
-@@ -347,33 +347,119 @@ moz_cairo_set_target (cairo_t *cr, cairo
+@@ -347,33 +347,120 @@ moz_cairo_set_target (cairo_t *cr, cairo
  }
  slim_hidden_def(moz_cairo_set_target);
  
@@ -406,13 +408,14 @@ Index: src/cairo.c
  
 -    cr->status = cairoPop (cr);
 +    cairo_set_source (cr, group_pattern);
++    cairo_pattern_destroy (group_pattern);
  }
 -*/
 +slim_hidden_def(cairo_pop_group_to_source);
  
  /**
   * cairo_set_operator:
-@@ -2421,7 +2507,7 @@ cairo_get_target (cairo_t *cr)
+@@ -2421,7 +2508,7 @@ cairo_get_target (cairo_t *cr)
      if (cr->status)
  	return (cairo_surface_t*) &_cairo_surface_nil;
  
