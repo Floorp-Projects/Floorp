@@ -1364,16 +1364,23 @@
         <parameter name="aDestIndex"/>
         <body>
           <![CDATA[
+            // for compatibility with extensions
+            if (typeof(aSrcIndex) != "number")
+              aSrcIndex = this.getTabIndex(aSrcIndex);
+
             this.mTabFilters.splice(aDestIndex, 0, this.mTabFilters.splice(aSrcIndex, 1)[0]);
             this.mTabListeners.splice(aDestIndex, 0, this.mTabListeners.splice(aSrcIndex, 1)[0]);
 
-            aDestIndex = aDestIndex < aSrcIndex ? aDestIndex : aDestIndex + 1;
             this.mCurrentTab.selected = false;
-            if (aDestIndex == this.mTabs.length)
-               this.mTabContainer.appendChild(this.mTabs[aSrcIndex]);
-            else
-               this.mTabContainer.insertBefore(this.mTabs[aSrcIndex], this.mTabs[aDestIndex]);
+
+            if (aDestIndex >= aSrcIndex)
+              ++aDestIndex;
+            var tab = this.mTabContainer.insertBefore(this.mTabs[aSrcIndex],
+                                                      this.mTabs[aDestIndex]);
+
             this.mCurrentTab.selected = true;
+
+            return tab;
           ]]>
         </body>
       </method>
