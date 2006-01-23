@@ -86,12 +86,7 @@ CPPSRCS= \
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),Darwin)
-# Don't use the EXTRA_DSO_LDOPTS from rules.mk, it breaks the python module
-  EXTRA_DSO_LDOPTS = -bundle $(MOZ_COMPONENT_LIBS)
-else
-  EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
-endif
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
 clobber::
 	rm -f *.ilk *.pdb *.exp *.lib *.pyd
