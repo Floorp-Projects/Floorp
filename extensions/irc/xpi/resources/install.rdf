@@ -25,7 +25,7 @@
 		
 		<!-- front-end metadata -->
 		<em:name>ChatZilla</em:name>
-		<em:description>A simple, straightforward Internet Relay Chat (IRC) client.</em:description>
+		<em:description>A clean, easy to use and highly extensible Internet Relay Chat (IRC) client.</em:description>
 		<em:creator>The ChatZilla Team</em:creator>
 		<em:contributor>Robert Ginda</em:contributor>
 		<em:contributor>Samuel Sieb</em:contributor>
