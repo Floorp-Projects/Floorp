@@ -3631,7 +3631,7 @@ else
         $(DIST)/lib/$(LIB_PREFIX)nss'$NSS_VERSION'.$(IMPORT_LIB_SUFFIX) \\\
         $(DIST)/lib/$(LIB_PREFIX)softokn'$NSS_VERSION'.$(IMPORT_LIB_SUFFIX)'
    else
-       NSS_LIBS='-L$(LIBS_DIR)'" -lcrmf -lsmime$NSS_VERSION -lssl$NSS_VERSION -lnss$NSS_VERSION -lsoftokn$NSS_VERSION"
+       NSS_LIBS='$(LIBS_DIR)'" -lcrmf -lsmime$NSS_VERSION -lssl$NSS_VERSION -lnss$NSS_VERSION -lsoftokn$NSS_VERSION"
    fi
 fi
 
