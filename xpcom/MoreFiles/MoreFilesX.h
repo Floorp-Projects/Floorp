@@ -84,6 +84,8 @@
 				do less work.
 */
 
+// Modified 2006-01-23 - added this comment.
+
 #ifndef __MOREFILESX__
 #define __MOREFILESX__
 

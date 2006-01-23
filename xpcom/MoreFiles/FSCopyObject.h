@@ -41,6 +41,7 @@
 	Copyright © 2002 Apple Computer, Inc., All Rights Reserved
 */
 
+// Modified 2006-01-23 - added this comment.
 
 #ifndef __FSCOPYOBJECT_H__
 #define __FSCOPYOBJECT_H__
