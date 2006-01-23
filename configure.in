@@ -962,6 +962,7 @@ CYGWIN32_NT|CYGWIN_NT*|MINGW*_NT*)
     ;;
 AIX)
     OS_RELEASE=`uname -v`.`uname -r`
+    OS_TEST=`uname -p`
     ;;
 BSD_386)
     OS_ARCH=BSD
@@ -1316,6 +1317,7 @@ case "$target" in
                 AC_MSG_RESULT([yes])    
             fi
             AC_LANG_RESTORE
+            TARGET_COMPILER_ABI="ibmc"
             CC_VERSION=`lslpp -Lcq vac.C 2>/dev/null | awk -F: '{ print $3 }'`
             CXX_VERSION=`lslpp -Lcq vacpp.cmp.core 2>/dev/null | awk -F: '{ print $3 }'`
         fi
