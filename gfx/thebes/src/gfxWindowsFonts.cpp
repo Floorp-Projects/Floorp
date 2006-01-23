@@ -448,13 +448,13 @@ TRY_AGAIN_SAME_SCRIPT:
                         if (justOpps > 0) {
                             int eachJust = justTotal / justOpps;
 
-                            for (j=0; j<numGlyphs-1; j++) {
-                                if (attr[j+1].uJustification > 1) {
+                            for (PRUint32 m=0; m<numGlyphs-1; m++) {
+                                if (attr[m+1].uJustification > 1) {
                                     --justOpps;
                                     if (justOpps == 0) {
-                                        spacing[j] += justTotal;
+                                        spacing[m] += justTotal;
                                     } else {
-                                        spacing[j] += eachJust;
+                                        spacing[m] += eachJust;
                                         justTotal -= eachJust;
                                     }
                                 }

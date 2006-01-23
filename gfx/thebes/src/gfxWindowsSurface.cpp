@@ -55,6 +55,7 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, unsigned long width, unsigned long 
     if (SelectClipRgn(mDC, clipRegion) == ERROR) {
         NS_ERROR("gfxWindowsSurface: SelectClipRgn failed\n");
     }
+    DeleteObject(clipRegion);
 
     // Creating with width or height of 0 will create a
     // 1x1 monotone bitmap, which isn't what we want
