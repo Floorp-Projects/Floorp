@@ -109,8 +109,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Marker)
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGMarkerElement,nsSVGElement)
-NS_IMPL_RELEASE_INHERITED(nsSVGMarkerElement,nsSVGElement)
+NS_IMPL_ADDREF_INHERITED(nsSVGMarkerElement,nsSVGMarkerElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGMarkerElement,nsSVGMarkerElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGMarkerElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
@@ -120,7 +120,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGMarkerElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGMarkerElement)
   NS_INTERFACE_MAP_ENTRY(nsSVGCoordCtxProvider)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGMarkerElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGMarkerElementBase)
 
 //----------------------------------------------------------------------
 // Implementation
