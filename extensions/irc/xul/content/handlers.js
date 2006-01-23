@@ -628,7 +628,7 @@ function onInputCompleteLine(e)
 
 function onNotifyTimeout()
 {
-    /* Workaround: bug 291386 - timers sometimes fire way too quickly.
+    /* Workaround: bug 318419 - timers sometimes fire way too quickly.
      * This catches us out, as it causes the notify code (this) and the who
      * code (below) to fire continuously, which completely floods the
      * sendQueue. We work around this for now by reporting the probable
@@ -640,19 +640,19 @@ function onNotifyTimeout()
         var net = client.networks[n];
         if (net.isConnected()) {
             // WORKAROUND BEGIN //
-            if (!("bug291386" in client) &&
+            if (!("bug318419" in client) &&
                 (net.primServ.sendQueue.length >= 1000))
             {
-                client.bug291386 = 10;
-                display(MSG_BUG291386_WARNING, MT_WARN);
+                client.bug318419 = 10;
+                display(MSG_BUG318419_WARNING, MT_WARN);
                 window.getAttention();
                 return;
             }
-            else if (("bug291386" in client) && (client.bug291386 > 0) &&
-                     (net.primServ.sendQueue.length >= (1000 * client.bug291386)))
+            else if (("bug318419" in client) && (client.bug318419 > 0) &&
+                     (net.primServ.sendQueue.length >= (1000 * client.bug318419)))
             {
-                client.bug291386++;
-                display(MSG_BUG291386_ERROR, MT_ERROR);
+                client.bug318419++;
+                display(MSG_BUG318419_ERROR, MT_ERROR);
                 window.getAttention();
                 return;
             }
