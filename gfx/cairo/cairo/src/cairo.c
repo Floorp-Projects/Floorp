@@ -458,6 +458,7 @@ cairo_pop_group_to_source (cairo_t *cr)
         return;
 
     cairo_set_source (cr, group_pattern);
+    cairo_pattern_destroy (group_pattern);
 }
 slim_hidden_def(cairo_pop_group_to_source);
 
