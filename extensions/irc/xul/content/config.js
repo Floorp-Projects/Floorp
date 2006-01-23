@@ -104,6 +104,7 @@ function PrefGlobal()
     this.commandManager = new Object();
     this.commandManager.defineCommand = function() {};
     this.entities = new Object();
+    this.hostCompat = new Object();
 }
 PrefGlobal.prototype.TYPE = "PrefGlobal";
 
@@ -977,6 +978,9 @@ function pwin_onLoad()
         window.close();
         return;
     }
+
+    // Make sure we know what host we're on.
+    initApplicationCompatibility();
     
     // Kick off the core pref initalisation code.
     initPrefs();
