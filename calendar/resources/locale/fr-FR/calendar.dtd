@@ -52,6 +52,9 @@
 <!ENTITY alarm.units.hours.singular    "heure" >
 <!ENTITY alarm.units.days.singular     "jour" >
 
+<!ENTITY alarm.start.warning   "Cette alarme nécessite une date de début" >
+<!ENTITY alarm.due.warning     "Cette alarme nécessite une date de fin" >
+
 <!ENTITY repeat.units.days.both         "Jour(s)" >
 <!ENTITY repeat.units.weeks.both        "Semaine(s)" >
 <!ENTITY repeat.units.months.both       "Mois" >
@@ -85,7 +88,7 @@
 <!ENTITY newevent.from.label         "Du" >
 <!ENTITY newevent.to.label           "Au" >
 <!ENTITY newevent.enddate.label      "Fin" >
-<!ENTITY newevent.set.label          "définir…" >
+<!ENTITY newevent.set.label          "Définir la fréquence…" >
 <!ENTITY newevent.settings.label     "Paramètres généraux" >
 <!ENTITY newevent.none.label         "aucun" >
 <!ENTITY newevent.custom.label       "Personnaliser…" >
@@ -160,6 +163,7 @@
 
 <!ENTITY newevent.attendees.tab.label "Participants" >
 <!ENTITY newevent.attendees.label     "Participants" >
+<!ENTITY calendar.edit.attendees      "Modifier les participants" >
 <!ENTITY newevent.attachments.tab.label "Fichiers joints" >
 <!ENTITY newevent.advanced.tab.label        "Avancé" >
 <!ENTITY newevent.completed.label           "Terminé" >
@@ -271,6 +275,9 @@
 <!ENTITY calendar.calendartab.label "Calendrier">
 <!ENTITY calendar.listofcalendarstab.label "Agendas">
 <!ENTITY calendar.gototoday.button.label "Aujourd'hui">
+
+<!ENTITY calendar.more.label "Plus">
+<!ENTITY calendar.less.label "Moins">
 
 <!ENTITY calendar.calendarlistbox.label "Agendas">
 

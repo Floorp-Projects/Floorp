@@ -144,9 +144,6 @@
 
 <!ENTITY pref.reloadonlaunch       "Recharger les agendas distants au démarrage">
 
-<!ENTITY pref.publish.caption        "Paramètres de publication">
-<!ENTITY pref.publish.path.label     "Nom par défaut du fichier distant">
-
 <!ENTITY pref.minutes.label "Minutes">
 
 <!-- Calendar Timezone preferences information -->
