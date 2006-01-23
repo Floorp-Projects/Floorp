@@ -110,9 +110,9 @@ $sort = array(
 );
 
 $apps = array(
-    'Firefox'     => 'Firefox',
-    'Thunderbird' => 'Thunderbird',
-    'Mozilla'     => 'Mozilla'
+    'firefox'     => 'Firefox',
+    'thunderbird' => 'Thunderbird',
+    'mozilla'     => 'Mozilla'
 );
 
 $perpage = array(

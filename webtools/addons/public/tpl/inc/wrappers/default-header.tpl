@@ -27,27 +27,23 @@
 
     <div id="key-title">
 
-{assign var="app" value=$smarty.get.app|lower|default:"firefox"}
-
-{if $app eq "firefox"}
-        <h1><a href="{$config.webpath}/?app=firefox" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-firefox.gif" width="276" height="54" alt="Firefox Add-ons Beta"></a></h1>
-{elseif $app eq "thunderbird"}
+{if $smarty.get.app eq "thunderbird"}
+    {assign var="app" value="thunderbird"}
         <h1><a href="{$config.webpath}/?app=thunderbird" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-thunderbird.gif" width="355" height="54" alt="Thunderbird Add-ons Beta"></a></h1>
 {elseif $app eq "mozilla"}
+    {assign var="app" value="mozilla"}
         <h1><a href="{$config.webpath}/?app=mozilla" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-suite.gif" width="370" height="54" alt="Mozilla Suite Add-ons Beta"></a></h1>
+{else}
+    {assign var="app" value="firefox"}
+        <h1><a href="{$config.webpath}/?app=firefox" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-firefox.gif" width="276" height="54" alt="Firefox Add-ons Beta"></a></h1>
 {/if}
 
-		<form id="search" method="get" action="{$config.webpath}/quicksearch.php" title="Search Mozilla Update">
+		<form id="search" method="get" action="{$config.webpath}/search.php" title="Search Mozilla Update">
 		<div>
 		<label for="q" title="Search Mozilla Update">search:</label>
-		<input type="text" id="q" name="q" accesskey="s" size="10">
-		<select name="section" id="sectionsearch">
-		  <option value="A">Entire Site</option>
-		  <option value="E">Extensions</option>
-		  <option value="T">Themes</option>
-		</select>
-        <input type="hidden" name="app" value="{$app}">
-		<input type="submit" id="submit" value="Go">
+		<input type="text" id="q" name="q" accesskey="s" size="10"/>
+        <input type="hidden" name="app" value="{$app}"/>
+		<input type="submit" id="submit" value="Go"/>
 		</div>
 		</form>
 	</div>

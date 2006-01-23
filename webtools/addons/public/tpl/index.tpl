@@ -25,31 +25,27 @@
 
 </div>
 
-<form id="front-search" method="get" action="/quicksearch.php" title="Search Mozilla Update">
+<form id="front-search" method="get" action="{$config.webpath}/search.php" title="Search Mozilla Addons">
     <div>
-    <label for="q2" title="Search mozilla.org&quot;s sites">search:</label>
-    <input type="hidden" name="cof" value="">
-    <input type="hidden" name="domains" value="mozilla.org">
-    <input type="hidden" name="sitesearch" value="mozilla.org">
-    <input id="q2" type="text" name="q" accesskey="s" size="40">
-    <select name="section">
+    <label for="q2" title="Search addons.mozilla.org">search:</label>
+    <input id="q2" type="text" name="q" accesskey="s" size="40"/>
+    <select name="type">
           <option value="A">Entire Site</option>
           <option value="E">Extensions</option>
           <option value="T">Themes</option>
     </select>
-    <input type="submit" value="Go">
+    <input type="submit" value="Go"/>
     </div>
 </form>
 
 <div class="front-section-left">
     <h2><img src="images/title-browse.gif" width="168" height="22" alt="Browse By Category"></h2>
     <ul>
-    <li><a href="./extensions/showlist.php?application=firefox&amp;category=Popular">Most Popular Add-ons</a></li>
-    <li><a href="./extensions/showlist.php?application=firefox&amp;category=Newest">Recently Added</a></li>
-    <li><a href="./extensions/showlist.php?application=firefox&amp;category=All">All Categories</a></li>
+    <li><a href="./search.php?app={$app}&amp;sort=downloads">Most Popular Add-ons</a></li>
+    <li><a href="./search.php?app={$app}&amp;sort=rating">Highest Rated Add-ons</a></li>
+    <li><a href="./search.php?app={$app}&amp;sort=newest">Recently Added</a></li>
     </ul>
 </div>
-
 
 <div class="front-section-right">
     <h2><img src="images/title-develop.gif" width="152" height="22" alt="Develop Your Own"></h2>

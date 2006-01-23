@@ -8,7 +8,6 @@ require_once(LIB.'/auth.class.php');
 require_once(LIB.'/error.php');
 require_once(LIB.'/rdf.class.php');
 require_once(LIB.'/rss.class.php');
-require_once(LIB.'/session.class.php');
 require_once(LIB.'/sql.class.php');
 require_once(LIB.'/user.class.php');
 require_once(LIB.'/version.class.php');

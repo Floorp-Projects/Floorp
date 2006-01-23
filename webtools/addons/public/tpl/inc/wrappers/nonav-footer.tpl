@@ -8,9 +8,6 @@
     </div>
 
 </div>
-<!-- close mBody -->
-
-</div>
 <!-- close container -->
 
 </body>

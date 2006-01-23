@@ -6,8 +6,10 @@
 
 <form id="search-side" action="{$smarty.server.PHP_SELF}" method="get">
 
-<input type="text" name="q" value="{$clean.q}" maxlength="32">
-<input type="submit" value="Search"><br><br>
+<div>
+<input type="text" name="q" value="{$clean.q}" maxlength="32"/>
+<input type="submit" value="Search"/>
+</div>
 
 <fieldset>
     <legend>Search Options</legend>
@@ -33,7 +35,7 @@
     <label for="app">App:</label>
     <select id="app" name="app">
     <option value="null">Any</option>
-    {html_options options=$apps selected=$clean.app}
+    {html_options options=$apps selected=$app}
     </select>
     </div>
 
@@ -69,7 +71,7 @@
 
 </fieldset>
 
-<input type="submit" value="Search"><br><br>
+<p><input type="submit" value="Search"/></p>
 
 </form>
 
@@ -122,8 +124,8 @@ Next Page &raquo;
     <p class="first">{$results[r]->Description}</p>
     <div style="margin-top: 30px; height: 34px">
         <div class="iconbar">
-            <a href="{$results[r]->URI}" onclick="return install(event,'{$results[r]->Name}', '{$config.webpath}/images/default.png');">
-            <img src="{$config.webpath}/images/download.png" height="32" width="32" title="Install {$results[r]->Name}" ALT="">Install</a><br>
+            <a href="{$results[r]->URI|escape:url}" onclick="return install(event,'{$results[r]->Name}', '{$config.webpath}/images/default.png');">
+            <img src="{$config.webpath}/images/download.png" height="32" width="32" title="Install {$results[r]->Name}" ALT="">Install</a><br/>
             <span class="filesize">&nbsp;&nbsp;{$results[r]->Size} kb</span>
         </div>
         <div class="iconbar">
