@@ -52,9 +52,10 @@ Copyright © 2005 Apple Computer, Inc., All Rights Reserved
 
 #import <Cocoa/Cocoa.h>
 
-@interface ImageAndTextCell : NSTextFieldCell {
+@interface ImageAndTextCell : NSTextFieldCell
+{
 @private
-    NSImage  *image;
+    NSImage *mImage;
 }
 
 - (void)setImage:(NSImage *)anImage;
