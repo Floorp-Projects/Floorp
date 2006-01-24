@@ -662,6 +662,7 @@ free_gslist_data(gpointer data, gpointer user_data)
 #include <unistd.h>
 #elif XP_WIN
 /* We get it from stdio.h. */
+#define unlink _unlink
 #endif
 
 int
