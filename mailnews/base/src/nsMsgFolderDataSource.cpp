@@ -2559,7 +2559,7 @@ PRBool nsMsgRecentFoldersDataSource::WantsThisFolder(nsIMsgFolder *folder)
               nsCOMPtr <nsIMsgFolder> curFolder = do_QueryElementAt(allFolders, newEntryIndex);
               nsXPIDLCString dateStr;
               PRInt32 err;
-              curFolder->GetStringProperty("MRUTime", getter_Copies(dateStr));
+              curFolder->GetStringProperty(MRU_TIME_PROPERTY, getter_Copies(dateStr));
               PRUint32 curFolderDate = (PRUint32) dateStr.ToInteger(&err);
               if (err)
                 curFolderDate = 0;
@@ -2577,7 +2577,7 @@ PRBool nsMsgRecentFoldersDataSource::WantsThisFolder(nsIMsgFolder *folder)
                   for (PRUint32 index = 0; index < curFaveFoldersCount; )
                   {
                     nsXPIDLCString curFaveFolderDateStr;
-                    m_folders[index]->GetStringProperty("MRUTime", getter_Copies(curFaveFolderDateStr));
+                    m_folders[index]->GetStringProperty(MRU_TIME_PROPERTY, getter_Copies(curFaveFolderDateStr));
                     PRUint32 curFaveFolderDate = (PRUint32) curFaveFolderDateStr.ToInteger(&err);
                     if (!oldestFaveDate || curFaveFolderDate < oldestFaveDate)
                     {
@@ -2605,7 +2605,7 @@ PRBool nsMsgRecentFoldersDataSource::WantsThisFolder(nsIMsgFolder *folder)
                 for (PRUint32 index = 0; index < m_folders.Count(); index++)
                 {
                   nsXPIDLCString curFaveFolderDateStr;
-                  m_folders[index]->GetStringProperty("MRUTime", getter_Copies(curFaveFolderDateStr));
+                  m_folders[index]->GetStringProperty(MRU_TIME_PROPERTY, getter_Copies(curFaveFolderDateStr));
                   PRUint32 curFaveFolderDate = (PRUint32) curFaveFolderDateStr.ToInteger(&err);
                   NS_ASSERTION(curFaveFolderDate > curFolderDate, "folder newer then faves but not added");
                 }

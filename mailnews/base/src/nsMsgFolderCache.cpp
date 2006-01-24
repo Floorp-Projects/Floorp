@@ -336,45 +336,61 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 }
 
 NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *pathKey, PRBool createIfMissing, 
-							nsIMsgFolderCacheElement **result)
+                                                nsIMsgFolderCacheElement **result)
 {
-
-	if (!result || !pathKey || !m_cacheElements)
-		return NS_ERROR_NULL_POINTER;
+  
+  if (!result || !pathKey || !m_cacheElements)
+    return NS_ERROR_NULL_POINTER;
 		
-	if (!*pathKey) {
-		return NS_ERROR_FAILURE;
-	}
-	
-	nsCStringKey hashKey(pathKey);
+  if (!*pathKey)
+    return NS_ERROR_FAILURE;
+  
+  nsCStringKey hashKey(pathKey);
+  
+  *result = (nsIMsgFolderCacheElement *) m_cacheElements->Get(&hashKey);
+  
+  // nsHashTable already does an address on *result
+  if (*result)
+  {
+    return NS_OK;
+  }
+  else if (createIfMissing)
+  {
+    nsIMdbRow* hdrRow;
+    
+    if (GetStore())
+    {
+      mdb_err err = GetStore()->NewRow(GetEnv(), m_folderRowScopeToken,   // row scope for row ids
+        &hdrRow);
+      if (NS_SUCCEEDED(err) && hdrRow)
+      {
+        m_mdbAllFoldersTable->AddRow(GetEnv(), hdrRow);
+        nsresult ret = AddCacheElement(pathKey, hdrRow, result);
+        if (*result)
+          (*result)->SetStringProperty("key", pathKey);
+        hdrRow->Release();
+        return ret;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
 
-	*result = (nsIMsgFolderCacheElement *) m_cacheElements->Get(&hashKey);
-
-	// nsHashTable already does an address on *result
-	if (*result)
-	{
-		return NS_OK;
-	}
-	else if (createIfMissing)
-	{
-		nsIMdbRow* hdrRow;
-
-		if (GetStore())
-		{
-			mdb_err err = GetStore()->NewRow(GetEnv(), m_folderRowScopeToken,   // row scope for row ids
-				&hdrRow);
-			if (NS_SUCCEEDED(err) && hdrRow)
-			{
-				m_mdbAllFoldersTable->AddRow(GetEnv(), hdrRow);
-				nsresult ret = AddCacheElement(pathKey, hdrRow, result);
-				if (*result)
-					(*result)->SetStringProperty("key", pathKey);
-                                hdrRow->Release();
-				return ret;
-			}
-		}
-	}
-	return NS_ERROR_FAILURE;
+NS_IMETHODIMP nsMsgFolderCache::RemoveElement(const char *key)
+{
+  if (!key || !*key)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsCStringKey hashKey(key);
+  
+  nsCOMPtr <nsISupports> supports = getter_AddRefs(m_cacheElements->Get(&hashKey));
+  if (!supports)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr <nsIMsgFolderCacheElement> cacheElement = do_QueryInterface(supports);
+  nsMsgFolderCacheElement *element = NS_STATIC_CAST(nsMsgFolderCacheElement *, NS_STATIC_CAST(nsISupports *, cacheElement.get())); 
+  m_mdbAllFoldersTable->CutRow(GetEnv(), element->m_mdbRow);
+  m_cacheElements->Remove(&hashKey);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolderCache::Clear()

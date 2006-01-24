@@ -157,7 +157,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsMsgAccountManager,
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
-  m_folderCacheNeedsClearing(PR_FALSE),
   m_emptyTrashInProgress(PR_FALSE),
   m_cleanupInboxInProgress(PR_FALSE),
   m_haveShutdown(PR_FALSE),
@@ -227,12 +226,7 @@ nsresult nsMsgAccountManager::Shutdown()
       msgDBService->UnregisterPendingListener(m_virtualFolderListeners[i]);
   }
   if(m_msgFolderCache)
-  {
-    if (m_folderCacheNeedsClearing)
-      m_msgFolderCache->Clear();
-    m_folderCacheNeedsClearing = PR_FALSE;
     WriteToFolderCache(m_msgFolderCache);
-  }
   (void)ShutdownServers();
   (void)UnloadAccounts();
   
@@ -1549,8 +1543,13 @@ nsMsgAccountManager::SetSpecialFolders()
       if (folderUri && NS_SUCCEEDED(rdf->GetResource(folderUri, getter_AddRefs(res))))
       {
         folder = do_QueryInterface(res, &rv);
-        if (NS_SUCCEEDED(rv))
-          rv = folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
+        nsCOMPtr <nsIMsgFolder> parent;
+        if (folder && NS_SUCCEEDED(rv))
+        {
+          rv = folder->GetParent(getter_AddRefs(parent));
+          if (NS_SUCCEEDED(rv) && parent)
+            rv = folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
+        }
       }
       thisIdentity->GetStationeryFolder(getter_Copies(folderUri));
       if (folderUri && NS_SUCCEEDED(rdf->GetResource(folderUri, getter_AddRefs(res))))
@@ -3107,7 +3106,6 @@ NS_IMETHODIMP nsMsgAccountManager::OnItemRemoved(nsIRDFResource *parentItem, nsI
   // just kick out with a success code if the item in question is not a folder
   if (!folder)
     return NS_OK;
-  m_folderCacheNeedsClearing = PR_TRUE;
   nsresult rv = NS_OK;
   PRUint32 folderFlags;
   folder->GetFlags(&folderFlags);

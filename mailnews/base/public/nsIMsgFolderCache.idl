@@ -41,12 +41,13 @@
 interface nsIFileSpec;
 interface nsIMsgFolderCacheElement;
 
-[scriptable, uuid(7C1BAA8B-5FD0-4667-B37C-0A952CB40F04)]
+[scriptable, uuid(a340a8c8-3587-4d7a-a2af-ed06b923d5ac)]
 interface nsIMsgFolderCache : nsISupports 
 {
-	void Init(in nsIFileSpec fileSpec);
-	nsIMsgFolderCacheElement GetCacheElement(in string key, in boolean createIfMissing);
+  void Init(in nsIFileSpec fileSpec);
+  nsIMsgFolderCacheElement GetCacheElement(in string key, in boolean createIfMissing);
   void clear();
-	void Close();
-	void Commit(in boolean compress);
+  void close();
+  void commit(in boolean compress);
+  void removeElement(in string key);
 };

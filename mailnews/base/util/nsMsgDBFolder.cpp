@@ -3020,6 +3020,24 @@ NS_IMETHODIMP nsMsgDBFolder::RecursiveDelete(PRBool deleteStorage, nsIMsgWindow 
   // frees memory for the subfolders but NOT for _this_
 
   nsresult status = NS_OK;
+  nsCOMPtr <nsIFileSpec> dbPath;
+  
+  // first remove the deleted folder from the folder cache;
+  nsresult result = GetFolderCacheKey(getter_AddRefs(dbPath));
+
+  nsCOMPtr<nsIMsgAccountManager> accountMgr = 
+    do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &result); 
+  if(NS_SUCCEEDED(result))
+  {
+    nsCOMPtr <nsIMsgFolderCache> folderCache;
+    result = accountMgr->GetFolderCache(getter_AddRefs(folderCache));
+    if (NS_SUCCEEDED(result) && folderCache)
+    {
+      nsXPIDLCString persistentPath;
+      dbPath->GetPersistentDescriptorString(getter_Copies(persistentPath));
+      folderCache->RemoveElement(persistentPath.get());
+    }
+  }
 
   PRUint32 cnt;
   nsresult rv = mSubFolders->Count(&cnt);
