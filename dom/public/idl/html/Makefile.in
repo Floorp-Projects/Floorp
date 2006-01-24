@@ -109,7 +109,9 @@ SDK_XPIDLSRCS =					\
 XPIDLSRCS = 					\
 	nsIDOMHTMLCanvasElement.idl		\
 	nsIDOMNSHTMLAnchorElement.idl		\
+	nsIDOMNSHTMLAnchorElement2.idl		\
 	nsIDOMNSHTMLAreaElement.idl		\
+	nsIDOMNSHTMLAreaElement2.idl		\
 	nsIDOMNSHTMLButtonElement.idl		\
 	nsIDOMNSHTMLDocument.idl		\
 	nsIDOMNSHTMLElement.idl			\
