@@ -307,13 +307,13 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
     
     mBuffer = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
     if (mPreBlendImage) {
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
       mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::BGR, 24);
 #else
       mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB, 24);
 #endif
     } else {
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
       mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::BGR_A8, 24);
 #else
       mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB_A8, 24);
@@ -526,7 +526,7 @@ static nsresult CopyCairoImageToIImage(PRUint8* aData, PRInt32 aWidth, PRInt32 a
       *outrowrgb++ = 0;
 #endif
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
       // On windows, RGB_A8 is really BGR_A8.
       // in fact, BGR_A8 is also BGR_A8.
       if (!aPreBlend) {
