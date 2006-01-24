@@ -26,7 +26,7 @@ if (!$_auth->validSession()) {
 }
 
 // If there are errors, this will be populated
-$_errors     = array();
+$_errors = array();
 
 // They're posting a comment
 if (isset($_POST['c_submit'])) {
@@ -38,34 +38,62 @@ if (isset($_POST['c_submit'])) {
         triggerError('There was an error processing your request.');
     }
 
-
-    $_c_rating   = mysql_real_escape_string($_POST['c_rating']);
-    $_c_title    = mysql_real_escape_string($_POST['c_title']);
-    $_c_comments = mysql_real_escape_string($_POST['c_comments']);
-
-    // This is used in the template.  If 'true' is returned, an error will be
-    // printed in the template (using booleans instead of strings here keeps the
-    // error messages in the template).
-    $_errors['c_rating']   = !is_numeric($_c_rating);
-    $_errors['c_title']    = empty($_c_title);
-    $_errors['c_comments'] = empty($_c_comments);
-
-    foreach ($_errors as $error) {
-        if ($error !== false) {
+    // Check all our input to make sure something is there, and it is appropriate.
+    // If it isn't, make $_bad_input=true which means we'll print the form back out
+    // with an error message.  (By using booleans here, we keep the error messages in
+    // the .tpl)
+        $_bad_input = false;
+        if (!is_numeric($_POST['c_rating'])) {
+            $_errors['c_rating'] = true;
             $_bad_input = true;
-        } else {
-            $_bad_input = false;
         }
-    }
+        if (empty($_POST['c_title'])) {
+            $_errors['c_title'] = true;
+            $_bad_input = true;
+        }
+        if (empty($_POST['c_comments'])) {
+            $_errors['c_comments'] = true;
+            $_bad_input = true;
+        }
 
     // If bad_input is true, we'll skip the rest of the processing and dump them
     // back out to the from with an error.
     if ($_bad_input === false) {
 
+        $_c_id         = '';// lookup
+        $_c_user_id    = '';// lookup
+        $_c_user_name  = '';// from user_id
+        $_c_rating     = mysql_real_escape_string($_POST['c_rating']);
+        $_c_title      = mysql_real_escape_string($_POST['c_title']);
+        $_c_comments   = mysql_real_escape_string($_POST['c_comments']);
+        $_c_commentip  = mysql_real_escape_string($_SERVER['REMOTE_ADDR']);
+        $_c_email      = '';//from user_id
+
+        $_sql = "INSERT INTO `feedback`
+                 ( 
+                    `ID`,
+                    `CommentUserId`,
+                    `CommentName`,
+                    `CommentVote`,
+                    `CommentTitle`,
+                    `CommentNote`,
+                    `CommentDate`,
+                    `commentip`,
+                    `email`
+                 ) VALUES (
+                     {$_c_id},
+                     {$_c_user_id},
+                    '{$_c_user_name}',
+                     {$_c_rating},
+                    '{$_c_title}',
+                    '{$_c_comments}',
+                    '{$_c_commentip}',
+                    '{$_c_email}'
+                 )";
+
         // @todo this
-        // Put it in the database
-        // Drop significant stuff in the session
-        // header() them to somewhere else
+        // run $_sql;
+        // header() them to somewhere else - edit: or just print "success"?
     }
 }
 
