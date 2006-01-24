@@ -773,7 +773,9 @@ void CBrowserView::OnCopyLinkLocation()
 	if(!pszClipData)
 		return;
 
-	mCtxMenuLinkUrl.ToCString(pszClipData, mCtxMenuLinkUrl.Length() + 1);
+	nsFixedCString clipDataStr(pszClipData, mCtxMenuLinkUrl.Length() + 1);
+	LossyCopyUTF16toASCII(mCtxMenuLinkUrl, clipDataStr);
+	NS_ASSERTION(clipDataStr.get() == pszClipData, "buffer too small");
 
 	GlobalUnlock(hClipData);
 

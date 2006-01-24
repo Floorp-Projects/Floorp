@@ -201,9 +201,7 @@ char* nsWinRegItem::toString()
   if (result)
   {
       result->Append(*keyString);
-      resultCString = new char[result->Length() + 1];
-      if(resultCString != nsnull)
-          result->ToCString(resultCString, result->Length() + 1);
+      resultCString = ToNewCString(*result);
   }
   
   if (keyString) delete keyString;

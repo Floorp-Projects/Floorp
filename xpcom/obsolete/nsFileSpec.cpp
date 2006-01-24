@@ -150,7 +150,9 @@ void nsSimpleCharString::operator = (const nsString& inString)
     ReallocData(len);
     if (!mData)
         return;
-    inString.ToCString(mData->mString, len + 1);  
+    nsFixedCString dataString(mData->mString, len + 1);
+    LossyCopyUTF16toASCII(inString, dataString);
+    NS_ASSERTION(dataString.get() == mData->mString, "buffer too small");
 } // nsSimpleCharString::operator =
 
 //----------------------------------------------------------------------------------------

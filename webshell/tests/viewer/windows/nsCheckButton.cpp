@@ -155,10 +155,7 @@ NS_METHOD nsCheckButton::GetState(PRBool& aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 {
-  char label[256];
-  aText.ToCString(label, 256);
-  label[255] = '\0';
-  VERIFY(::SetWindowText(mWnd, label));
+  VERIFY(::SetWindowText(mWnd, NS_LossyConvertUTF16toASCII(aText).get()));
   return NS_OK;
 }
 

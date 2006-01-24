@@ -257,9 +257,7 @@ NS_METHOD nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   aMenuItem->GetShortcutChar(keyEquivalent);
   if (!keyEquivalent.EqualsLiteral(" ")) {
     ToUpperCase(keyEquivalent);
-    char keyStr[2];
-    keyEquivalent.ToCString(keyStr, sizeof(keyStr));
-    short inKey = keyStr[0];
+    short inKey = NS_LossyConvertUTF16toASCII(keyEquivalent).First();
     ::SetItemCmd(mMacMenuHandle, currItemIndex, inKey);
     //::SetMenuItemKeyGlyph(mMacMenuHandle, mNumMenuItems, 0x61);
   }

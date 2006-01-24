@@ -104,12 +104,6 @@ PRBool nsAccessibleHyperText::GetAllTextChildren(nsPresContext *aPresContext, ns
       if (! aCurFrame->GetRect().IsEmpty()) {
         nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aCurFrame->GetContent()));
         if (bSave || node == aNode) {
-#ifdef DEBUG
-          nsAutoString text;
-          node->GetNodeValue(text);
-          char buf[1024];
-          text.ToCString(buf, sizeof(buf));
-#endif
           // some long text node may be divided into several frames, 
           // so we must check whether this node is already in the array
           PRUint32 index;

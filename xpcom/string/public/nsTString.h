@@ -266,18 +266,6 @@ class nsTString_CharT : public nsTSubstring_CharT
       NS_COM PRBool EqualsIgnoreCase( const char* aString, PRInt32 aCount=-1 ) const;
 
 
-        /**
-         * Copies data from internal buffer onto given char* buffer
-         *
-         * NOTE: This only copies as many chars as will fit in given buffer (clips)
-         * @param aBuf is the buffer where data is stored
-         * @param aBuflength is the max # of chars to move to buffer
-         * @param aOffset is the offset to copy from
-         * @return ptr to given buffer
-         */
-
-      NS_COM char* ToCString( char* aBuf, PRUint32 aBufLength, PRUint32 aOffset=0 ) const;
-
 #endif // !CharT_is_PRUnichar
 
         /**

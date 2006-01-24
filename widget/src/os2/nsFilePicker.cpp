@@ -127,13 +127,13 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   NS_ENSURE_ARG_POINTER(retval);
 
   PRBool result = PR_FALSE;
-  char fileBuffer[MAX_PATH+1] = "";
+  nsCAutoString fileBuffer;
   char *converted = ConvertToFileSystemCharset(mDefault);
   if (nsnull == converted) {
-    mDefault.ToCString(fileBuffer,MAX_PATH);
+    LossyCopyUTF16toASCII(mDefault, fileBuffer);
   }
   else {
-    PL_strncpyz(fileBuffer, converted, MAX_PATH+1);
+    fileBuffer.Assign(converted);
     nsMemory::Free( converted );
   }
 
@@ -177,7 +177,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   else {
     PL_strncpy(filedlg.szFullFile, initialDir.get(), MAX_PATH);
     PL_strncat(filedlg.szFullFile, "\\", 1);
-    PL_strncat(filedlg.szFullFile, fileBuffer, MAX_PATH);
+    PL_strncat(filedlg.szFullFile, fileBuffer.get(), MAX_PATH);
     filedlg.fl = FDS_CENTER;
     if (mMode == modeSave) {
        filedlg.fl |= FDS_SAVEAS_DIALOG | FDS_ENABLEFILELB;

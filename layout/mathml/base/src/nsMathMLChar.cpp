@@ -956,9 +956,8 @@ nsGlyphTableList::GetPreferredListAt(nsPresContext* aPresContext,
     glyphTable->GetPrimaryFontName(fontName);
     if (CheckFontExistence(aPresContext, fontName)) {
 #ifdef NOISY_SEARCH
-      char str[50];
-      fontName.ToCString(str, sizeof(str));
-      printf("Found preferreed font %s\n", str);
+      printf("Found preferreed font %s\n",
+             NS_LossyConvertUTF16toASCII(fontName).get());
 #endif
       if (index == aStartingIndex) {
         // At least one font is found, clear aGlyphTableList
@@ -1078,9 +1077,8 @@ SetPreferredFonts(const char* aKey, nsString& aFamilyList)
   const char* extension = aKey + 27;
 
 #ifdef DEBUG_rbs
-  char str[50];
-  aFamilyList.ToCString(str, sizeof(str));
-  printf("Setting preferred fonts for \\u%04X%s: %s\n", uchar, extension, str);
+  printf("Setting preferred fonts for \\u%04X%s: %s\n", uchar, extension,
+         NS_LossyConvertUTF16toASCII(aFamilyList).get());
 #endif
 
   if (!strcmp(extension, ".base")) {
@@ -1238,10 +1236,9 @@ InitGlobals(nsPresContext* aPresContext)
   prefBranch->GetChildList("font.mathfont-family.", &count, &allKey);    
   for (i = 0; i < count; ++i) {
 #ifdef DEBUG_rbs
-    char str[50];
     GetPrefValue(prefBranch, allKey[i], value);
-    value.ToCString(str, sizeof(str));
-    printf("Found user pref %s: %s\n", allKey[i], str);
+    printf("Found user pref %s: %s\n", allKey[i],
+           NS_LossyConvertUTF16toASCII(value).get());
 #endif
     if ((30 < strlen(allKey[i])) && 
         GetPrefValue(prefBranch, allKey[i], value)) {
@@ -1660,9 +1657,8 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
     SetFirstFamily(theFont, fontName);
     aRenderingContext.SetFont(theFont, nsnull);
 #ifdef NOISY_SEARCH
-    char str[50];
-    fontName.ToCString(str, sizeof(str));
-    printf("  searching in %s ...\n", str);
+    printf("  searching in %s ...\n",
+           NS_LossyConvertUTF16toASCII(fontName).get());
 #endif
     ch = glyphTable->BigOf(aPresContext, this, size++);
     while (ch) {
@@ -1736,10 +1732,9 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
       rv = ComposeChildren(aPresContext, aRenderingContext, glyphTable,
                            aContainerSize, compositeSize, aStretchHint);
 #ifdef NOISY_SEARCH
-      char str[50];
-      fontName.ToCString(str, sizeof(str));
       printf("    Composing %d chars in font %s %s!\n",
-             glyphTable->ChildCountOf(aPresContext, this), str,
+             glyphTable->ChildCountOf(aPresContext, this),
+             NS_LossyConvertUTF16toASCII(fontName).get(),
              NS_SUCCEEDED(rv)? "OK" : "Rejected");
 #endif
       if (NS_FAILED(rv)) continue; // to next table
@@ -1794,9 +1789,9 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
     // bounding metrics of all parts.
     computedSize = ComputeSizeFromParts(chdata, sizedata, targetSize, aStretchHint);
 #ifdef NOISY_SEARCH
-    char str[50];
-    fontName.ToCString(str, sizeof(str));
-    printf("    Font %s %s!\n", str, (computedSize) ? "OK" : "Rejected");
+    printf("    Font %s %s!\n",
+           NS_LossyConvertUTF16toASCII(fontName).get(),
+           (computedSize) ? "OK" : "Rejected");
 #endif
     if (!computedSize) continue; // to next table
 

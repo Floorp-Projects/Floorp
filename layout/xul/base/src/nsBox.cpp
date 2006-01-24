@@ -178,7 +178,7 @@ nsBox::BeginLayout(nsBoxLayoutState& aState)
 
   nsBoxAddIndents();
 
-  nsAutoString reason;
+  nsCAutoString reason;
   switch(aState.LayoutReason())
     {
     case nsBoxLayoutState::Dirty:
@@ -192,9 +192,7 @@ nsBox::BeginLayout(nsBoxLayoutState& aState)
       break;
     }
 
-  char ch[100];
-  reason.ToCString(ch,100);
-  printf("%s Layout: ", ch);
+  printf("%s Layout: ", reason.get());
   DumpBox(stdout);
   printf("\n");
   gIndent++;

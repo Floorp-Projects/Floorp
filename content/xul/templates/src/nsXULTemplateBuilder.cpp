@@ -1227,8 +1227,7 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
             Value val;
             match->GetAssignmentFor(mConflictSet, var, &val);
 
-            nsCAutoString str;
-            val.ToCString(str);
+            NS_LossyConvertUTF16toASCII str(val);
 
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("xultemplate[%p]   %d <= %s", this, var, str.get()));

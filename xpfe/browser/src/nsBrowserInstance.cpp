@@ -378,12 +378,12 @@ NS_IMPL_ISUPPORTS1(PageCycler, nsIObserver)
 void TimesUp(nsITimer *aTimer, void *aClosure)
 {
   if(aClosure){
-    char urlBuf[64];
     PageCycler *pCycler = (PageCycler *)aClosure;
     pCycler->StopTimer();
-    pCycler->GetLastRequest().ToCString( urlBuf, sizeof(urlBuf), 0 );
-    fprintf(stderr,"########## PageCycler Timeout on URL: %s\n", urlBuf);
-    pCycler->Observe( pCycler, nsnull, (pCycler->GetLastRequest()).get() );
+    const nsAutoString &url  = pCycler->GetLastRequest();
+    fprintf(stderr,"########## PageCycler Timeout on URL: %s\n",
+            NS_LossyConvertUTF16toASCII(url).get());
+    pCycler->Observe( pCycler, nsnull, url.get() );
   }
 }
 
