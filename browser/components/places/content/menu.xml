@@ -37,14 +37,6 @@
         // options.setExpandPlaces();  ?
         this._result = this._places.executeQuery(query, options);
         
-        // If this is a container, notify the service.
-        if (PlacesController.nodeIsContainer(this._result)) {
-          var serv = Cc[this._result.folderType]
-                     .getService(Ci.nsIBookmarksContainer);
-          if (serv.onContainerOpening(this._result.folderId))
-            this._result = this._places.executeQuery(query, options);
-        }
-        
         this._rebuild();
         if (this.popupShowingCallback)
           this.popupShowingCallback();
@@ -92,15 +84,15 @@
         <body><![CDATA[
           this._cleanMenu();
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          var cc = this._result.childCount;
+          var cc = this._result.root.childCount;
           if (cc > 0) {
             for (var i = 0; i < cc; ++i) {
-              var child = this._result.getChild(i);
+              var child = this._result.root.getChild(i);
               var element = null;
-              if (PlacesController.nodeIsURL(child)) {
+              if (PlacesController.nodeIsURI(child)) {
                 element = document.createElementNS(XULNS, "menuitem");
                 element.setAttribute("label", child.title);
-                element.setAttribute("url", child.url);
+                element.setAttribute("url", child.QueryInterface(nsINavHistoryURIResultNode).uri);
                 element.setAttribute("statustext", child.url);
                 element.setAttribute("image", child.icon.spec);
                 element.className = "menuitem-iconic bookmark-item";
@@ -183,10 +175,10 @@
         ]]></getter>
       </property>
       
-      <property name="selectedURLNode">
+      <property name="selectedURINode">
         <getter><![CDATA[
           var node = this.selectedNode;
-          return node && PlacesController.nodeIsURL(node) ? node : null;
+          return node && PlacesController.nodeIsURI(node) ? node : null;
         ]]></getter>
       </property>
       
@@ -200,7 +192,7 @@
             if(PlacesController.nodeIsFolder(this.selectedNode))
               // If there is a folder selected, the insertion point is the
               // end of the folder.
-              folderId = this.selectedNode.folderId;
+              folderId = this.selectedNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
             else
               // If there is another type of node selected, the insertion point
               // is after that node.
@@ -249,7 +241,7 @@
         onItemChanged: function TB_O_onItemChanged(bookmark, property, value) {
           //this._self.init();
         },
-        onItemVisited: function TB_0_onItemVisited(bookmark, time) {
+        onItemVisited: function TB_0_onItemVisited(bookmark, visitId, time) {
           //this._self.init();
         },
         onItemReplaced: function TB_0_onItemReplaced(filder, item, newItem) {

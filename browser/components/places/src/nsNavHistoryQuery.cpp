@@ -119,7 +119,7 @@ static void SetQueryKeyInt64(const nsCString& aValue, nsINavHistoryQuery* aQuery
 // options setters
 typedef NS_STDCALL_FUNCPROTO(nsresult, BoolOptionsSetter,
                              nsINavHistoryQueryOptions,
-                             SetExpandPlaces, (PRBool));
+                             SetExpandQueries, (PRBool));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32OptionsSetter,
                              nsINavHistoryQueryOptions,
                              SetResultType, (PRUint32));
@@ -130,7 +130,9 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
                                 nsINavHistoryQueryOptions* aOptions,
                                 Uint32OptionsSetter setter);
 
-// components of a query string
+// Components of a query string.
+// Note that query strings are also generated in nsNavBookmarks::GetFolderURI
+// for performance reasons, so if you change these values, change that, too.
 #define QUERYKEY_BEGIN_TIME "beginTime"
 #define QUERYKEY_BEGIN_TIME_REFERENCE "beginTimeRef"
 #define QUERYKEY_END_TIME "endTime"
@@ -146,7 +148,9 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_GROUP "group"
 #define QUERYKEY_SORT "sort"
 #define QUERYKEY_RESULT_TYPE "type"
-#define QUERYKEY_EXPAND_PLACES "expandplaces"
+#define QUERYKEY_EXCLUDE_ITEMS "excludeItems"
+#define QUERYKEY_EXCLUDE_QUERIES "excludeQueries"
+#define QUERYKEY_EXPAND_QUERIES "expandQueries"
 #define QUERYKEY_FORCE_ORIGINAL_TITLE "originalTitle"
 #define QUERYKEY_INCLUDE_HIDDEN "includeHidden"
 #define QUERYKEY_MAX_RESULTS "maxResults"
@@ -350,10 +354,28 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
   }
 
   // result type
-  if (options->ResultType() != nsINavHistoryQueryOptions::RESULT_TYPE_URL) {
+  if (options->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_URI) {
     AppendAmpersandIfNonempty(aQueryString);
     aQueryString += NS_LITERAL_CSTRING(QUERYKEY_RESULT_TYPE "=");
     AppendInt32(aQueryString, options->ResultType());
+  }
+
+  // exclude items
+  if (options->ExcludeItems()) {
+    AppendAmpersandIfNonempty(aQueryString);
+    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_ITEMS "=1");
+  }
+
+  // exclude queries
+  if (options->ExcludeQueries()) {
+    AppendAmpersandIfNonempty(aQueryString);
+    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_QUERIES "=1");
+  }
+
+  // expand queries
+  if (options->ExpandQueries()) {
+    AppendAmpersandIfNonempty(aQueryString);
+    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_EXPAND_QUERIES "=1");
   }
 
   // title mode
@@ -537,10 +559,20 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
       SetOptionsKeyUint32(kvp.value, aOptions,
                           &nsINavHistoryQueryOptions::SetResultType);
 
-    // expand places
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_EXPAND_PLACES)) {
+    // exclude items
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_EXCLUDE_ITEMS)) {
       SetOptionsKeyBool(kvp.value, aOptions,
-                        &nsINavHistoryQueryOptions::SetExpandPlaces);
+                        &nsINavHistoryQueryOptions::SetExcludeItems);
+
+    // exclude queries
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_EXCLUDE_QUERIES)) {
+      SetOptionsKeyBool(kvp.value, aOptions,
+                        &nsINavHistoryQueryOptions::SetExcludeQueries);
+
+    // expand queries
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_EXPAND_QUERIES)) {
+      SetOptionsKeyBool(kvp.value, aOptions,
+                        &nsINavHistoryQueryOptions::SetExpandQueries);
 
     // force original title
     } else if (kvp.key.EqualsLiteral(QUERYKEY_FORCE_ORIGINAL_TITLE)) {
@@ -592,7 +624,7 @@ ParseQueryBooleanString(const nsCString& aString, PRBool* aValue)
 
 // nsINavHistoryQuery **********************************************************
 
-NS_IMPL_ISUPPORTS1(nsNavHistoryQuery, nsINavHistoryQuery)
+NS_IMPL_ISUPPORTS2(nsNavHistoryQuery, nsNavHistoryQuery, nsINavHistoryQuery)
 
 // nsINavHistoryQuery::nsNavHistoryQuery
 //
@@ -604,8 +636,7 @@ nsNavHistoryQuery::nsNavHistoryQuery()
   : mBeginTime(0), mBeginTimeReference(TIME_RELATIVE_EPOCH),
     mEndTime(0), mEndTimeReference(TIME_RELATIVE_EPOCH),
     mOnlyBookmarked(PR_FALSE), mDomainIsHost(PR_FALSE),
-    mUriIsPrefix(PR_FALSE),
-    mItemTypes(PR_UINT32_MAX) // default to include all item types
+    mUriIsPrefix(PR_FALSE)
 {
   // differentiate not set (IsVoid) from empty string (local files)
   mDomain.SetIsVoid(PR_TRUE);
@@ -802,18 +833,6 @@ NS_IMETHODIMP nsNavHistoryQuery::SetFolders(const PRInt64 *aFolders,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::GetItemTypes(PRUint32 *aTypes)
-{
-  *aTypes = mItemTypes;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsNavHistoryQuery::SetItemTypes(PRUint32 aTypes)
-{
-  mItemTypes = aTypes;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
 {
   *_retval = nsnull;
@@ -904,23 +923,51 @@ nsNavHistoryQueryOptions::GetResultType(PRUint32* aType)
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetResultType(PRUint32 aType)
 {
-  if (aType > RESULT_TYPE_VISIT)
+  if (aType > RESULTS_AS_FULL_VISIT)
     return NS_ERROR_INVALID_ARG;
   mResultType = aType;
   return NS_OK;
 }
 
-// expandPlaces
+// excludeItems
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetExpandPlaces(PRBool* aExpand)
+nsNavHistoryQueryOptions::GetExcludeItems(PRBool* aExclude)
 {
-  *aExpand = mExpandPlaces;
+  *aExclude = mExcludeItems;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetExpandPlaces(PRBool aExpand)
+nsNavHistoryQueryOptions::SetExcludeItems(PRBool aExclude)
 {
-  mExpandPlaces = aExpand;
+  mExcludeItems = aExclude;
+  return NS_OK;
+}
+
+// excludeQueries
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetExcludeQueries(PRBool* aExclude)
+{
+  *aExclude = mExcludeQueries;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetExcludeQueries(PRBool aExclude)
+{
+  mExcludeQueries = aExclude;
+  return NS_OK;
+}
+
+// expandQueries
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetExpandQueries(PRBool* aExpand)
+{
+  *aExpand = mExpandQueries;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetExpandQueries(PRBool aExpand)
+{
+  mExpandQueries = aExpand;
   return NS_OK;
 }
 
@@ -997,7 +1044,9 @@ nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
   } else {
     result->mGroupCount = nsnull;
   }
-  result->mExpandPlaces = mExpandPlaces;
+  result->mExcludeItems = mExcludeItems;
+  result->mExcludeQueries = mExcludeQueries;
+  result->mExpandQueries = mExpandQueries;
 
   resultHolder.swap(*aResult);
   return NS_OK;

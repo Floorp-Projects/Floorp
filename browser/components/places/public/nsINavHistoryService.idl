@@ -40,11 +40,13 @@
 #include "nsIArray.idl"
 #include "nsIURI.idl"
 
+interface nsIFile;
+interface nsINavHistoryContainerResultNode;
 interface nsINavHistoryQuery;
 interface nsINavHistoryQueryOptions;
 interface nsITransactionManager;
 interface nsITreeColumn;
-interface nsIFile;
+interface nsIWritablePropertyBag;
 
 [scriptable, uuid(acae2b2d-5fcd-4419-b1bc-b7dc92a1836c)]
 interface nsINavHistoryResultNode : nsISupports
@@ -53,37 +55,201 @@ interface nsINavHistoryResultNode : nsISupports
    * Indentifies the parent result node in the result set. This is null for
    * top level nodes.
    */
-  readonly attribute nsINavHistoryResultNode parent;
+  readonly attribute nsINavHistoryContainerResultNode parent;
 
   /**
    * Identifies the type of this node.
    */
-  const PRUint32 RESULT_TYPE_URL = 0;
+  const PRUint32 RESULT_TYPE_URI = 0;
   const PRUint32 RESULT_TYPE_VISIT = 1;
-  const PRUint32 RESULT_TYPE_HOST = 2;
-  const PRUint32 RESULT_TYPE_DAY = 3;
-  const PRUint32 RESULT_TYPE_QUERY = 4;
+  const PRUint32 RESULT_TYPE_FULL_VISIT = 2;
+  const PRUint32 RESULT_TYPE_HOST = 3;
+  const PRUint32 RESULT_TYPE_DAY = 4;
+  const PRUint32 RESULT_TYPE_QUERY = 5;
+  const PRUint32 RESULT_TYPE_FOLDER = 6;
   readonly attribute PRUint32 type;
 
   /**
-   * URL of the web page in question. Empty for all other types, including
+   * Title of the web page, or of the node's grouping (day, host, folder, etc)
+   */
+  readonly attribute AUTF8String title;
+
+  /**
+   * Total number of times the URI has ever been accessed. For hosts, this
+   * is the total of the children under it, NOT the total times the host has
+   * been accessed (this would require an additional query, so is not given
+   * by default when most of the time it is never needed).
+   */
+  readonly attribute PRUint32 accessCount;
+
+  /**
+   * This is the time the user accessed the page.
+   *
+   * If this is a visit, it is the exact time that the page visit occurred.
+   *
+   * If this is a URI, it is the most recent time that the URI was visited.
+   * Even if you ask for all URIs for a given date range long ago, this might
+   * contain today's date if the URI was visited today.
+   *
+   * For hosts, or other node types with children, this is the most recent
+   * access time for any of the children.
+   *
+   * For days, this is midnight on the morning of the day in question in
+   * UTC time.
+   */
+  readonly attribute PRTime time;
+
+  /**
+   * This URI can be used as an image source URI and will give you the favicon
+   * for the page. It is *not* the URI of the favicon, but rather something
+   * that will resolve to the actual image.
+   *
+   * In most cases, this is an annotation URI that will query the favicon
+   * service. If the entry has no favicon, this is the chrome URI of the
+   * default favicon. If the favicon originally lived in chrome, this will
+   * be the original chrome URI of the icon.
+   */
+  readonly attribute nsIURI icon;
+
+  /**
+   * This is the number of levels between this node and the top of the
+   * hierarchy. The members of result.children have indentLevel = 0, their
+   * children have indentLevel = 1, etc.
+   */
+  readonly attribute PRUint32 indentLevel;
+
+  /**
+   * You can use this to associate temporary information with the result node.
+   * This property bag is associated with the result node and is not persisted
+   * in any way.
+   */
+  readonly attribute nsIWritablePropertyBag propertyBag;
+};
+
+
+/**
+ * This is a result node that includes a URI. Used for bookmark and URI
+ * results, as well as a base class for visit information.
+ */
+[scriptable, uuid(b62daf70-936a-41f8-a57e-6d2a6598bca6)]
+interface nsINavHistoryURIResultNode : nsINavHistoryResultNode
+{
+  /**
+   * URI of the web page in question. Empty for all other types, including
    * hosts.
    */
-  readonly attribute AUTF8String url;
+  readonly attribute AUTF8String uri;
+};
+
+
+/**
+ * When you request RESULT_TYPE_VISIT from query options, you will get this
+ * interface for each item, which includes the session ID so that we can
+ * group items from the same session together.
+ */
+[scriptable, uuid(8e2c5a86-b33d-4fa6-944b-559af7e95fcd)]
+interface nsINavHistoryVisitResultNode : nsINavHistoryURIResultNode
+{
+  /**
+   * This indicates the session ID of the * visit. This is used for session
+   * grouping when a tree view is sorted by date.
+   */
+  readonly attribute PRInt64 sessionId;
+};
+
+
+/**
+ * This structure will be returned when you request RESULT_TYPE_FULL_VISIT in
+ * the query options. This includes uncommonly used information about each
+ * visit.
+ */
+[scriptable, uuid(c49fd9d5-56e2-43eb-932c-f933f28cba85)]
+interface nsINavHistoryFullVisitResultNode : nsINavHistoryVisitResultNode
+{
+  /**
+   * This indicates the visit ID of the visit.
+   */
+  readonly attribute PRInt64 visitId;
 
   /**
-   * ID of the folder corresponding to this node.
-   * Only valid for RESULT_TYPE_QUERY nodes where exactly one folder
-   * has been specified in the query.  0 in all other cases.
+   * This indicates the referring visit ID of the visit. The referrer should
+   * have the same sessionId.
    */
-  readonly attribute PRInt64 folderId;
+  readonly attribute PRInt64 referringVisitId;
 
   /**
-   * Type of the folder corresponding to this node.
-   * Only valid for RESULT_TYPE_QUERY nodes where exactly one folder
-   * has been specified in the query.  0 in all other cases.
+   * Indicates the transition type of the visit.
+   * One of nsINavHistoryService.TRANSITION_*
    */
-  readonly attribute AString folderType;
+  readonly attribute PRInt32 transitionType;
+};
+
+
+/**
+ * Base class for container results. This includes all types of groupings.
+ * Bookmark folders and places queries will be QueryResultNodes which extends
+ * these items.
+ */
+[scriptable, uuid(155757ea-482a-462e-9b14-70707d65afe3)]
+interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
+{
+
+  /**
+   * Set this to allow descent into the container. When closed, attempting
+   * to call getChildren or childCount will result in an error. You should
+   * set this to false when you are done reading.
+   *
+   * For HOST and DAY groupings, doing this is free since the children have
+   * been precomputed. For queries and bookmark folders, being open means they
+   * will keep themselves up-to-date by listening for updates and re-querying
+   * as needed.
+   */
+  attribute boolean containerOpen;
+
+  /**
+   * This indicates whether this node "may" have children, and can be used
+   * when the container is open or closed. When the container is closed, it
+   * will give you an exact answer if the node can easily be populated (for
+   * example, a bookmark folder). If not (for example, a complex history query),
+   * it will return true. When the container is open, it will always be
+   * accurate. It is intended to be used to see if we should draw the "+" next
+   * to a tree item.
+   */
+  readonly attribute boolean hasChildren;
+
+  /**
+   * This gives you the children of the nodes. It is preferrable to use this
+   * interface over the array one, since it avoids creating an nsIArray object
+   * and the interface is already the correct type.
+   */
+  readonly attribute PRUint32 childCount;
+  nsINavHistoryResultNode getChild(in PRUint32 index);
+
+  /**
+   * Returns false if this node's list of children can be modified
+   * (adding or removing children, or reordering children), or true if
+   * the UI should not allow the list of children to be modified.
+   * This is false for bookmark folder nodes unless setFolderReadOnly() has
+   * been called to override it, and true for non-folder nodes.
+   */
+  readonly attribute boolean childrenReadOnly;
+};
+
+
+/**
+ * Used for places queries and as a base for bookmark folders.
+ *
+ * Note that if you request places to *not* be expanded in the options that
+ * generated this node, this item will report it has no children and never try
+ * to populate itself.
+ */
+[scriptable, uuid(dcd6a2b7-3d50-4c78-b1cb-2f0f18ac5864)]
+interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
+{
+  /**
+   * A "place:" URI that encodes the query and options.
+   */
+  readonly attribute nsIURI queryURI;
 
   /**
    * Get the queries which build this node's children.
@@ -97,72 +263,23 @@ interface nsINavHistoryResultNode : nsISupports
    * Only valid for RESULT_TYPE_QUERY nodes.
    */
   readonly attribute nsINavHistoryQueryOptions queryOptions;
+};
 
-  /**
-   * Title of the web page, or of the node's grouping (day, host, folder, etc)
-   */
-  readonly attribute AString title;
 
+/**
+ * Represents a bookmark folder (type == RESULT_TYPE_FOLDER). It derives from a
+ * query result because it can provide a query that will result in the
+ * contents.
+ */
+[scriptable, uuid(f3160bfe-ebb3-453b-b25e-19d0b9c425b1)]
+interface nsINavHistoryFolderResultNode : nsINavHistoryQueryResultNode
+{
   /**
-   * Total number of times the URL has ever been accessed. For hosts, this
-   * is the total of the children under it, NOT the total times the host has
-   * been accessed (this would require an additional query, so is not given
-   * by default when most of the time it is never needed).
+   * ID of the folder corresponding to this node.
+   * Only valid for RESULT_TYPE_QUERY nodes where exactly one folder
+   * has been specified in the query.  0 in all other cases.
    */
-  readonly attribute PRInt32 accessCount;
-
-  /**
-   * This is the time the user accessed the page.
-   *
-   * If this is a visit, it is the exact time that the page visit occurred.
-   *
-   * If this is a URL, it is the most recent time that the URL was visited.
-   * Even if you ask for all URLs for a given date range long ago, this might
-   * contain today's date if the URL was visited today.
-   *
-   * For hosts, or other node types with children, this is the most recent
-   * access time for any of the children.
-   *
-   * For days, this is midnight on the morning of the day in question in
-   * UTC time.
-   */
-  readonly attribute PRTime time;
-
-  /**
-   * This URI can be used as an image source URL and will give you the favicon
-   * for the page. It is *not* the URL of the favicon, but rather something
-   * that will resolve to the actual image.
-   *
-   * In most cases, this is an annotation URI that will query the favicon
-   * service. If the entry has no favicon, this is the chrome URL of the
-   * default favicon. If the favicon originally lived in chrome, this will
-   * be the original chrome URI of the icon.
-   */
-  readonly attribute nsIURI icon;
-
-  /**
-   * This is the number of levels between this node and the top of the
-   * hierarchy. The members of result.children have indentLevel = 0, their
-   * children have indentLevel = 1, etc.
-   */
-  readonly attribute PRInt32 indentLevel;
-
-  /**
-   * This gives you the children of the nodes. It is preferrable to use this
-   * interface over the array one, since it avoids creating an nsIArray object
-   * and the interface is already the correct type.
-   */
-  readonly attribute PRInt32 childCount;
-  nsINavHistoryResultNode getChild(in PRInt32 index);
-
-  /**
-   * Returns false if this node's list of children can be modified
-   * (adding or removing children, or reordering children), or true if
-   * the UI should not allow the list of children to be modified.
-   * This is false for bookmark folder nodes unless setFolderReadOnly() has
-   * been called to override it, and true for non-folder nodes.
-   */
-  readonly attribute boolean childrenReadOnly;
+  readonly attribute PRInt64 folderId;
 };
 
 
@@ -235,18 +352,19 @@ interface nsINavHistoryResultViewObserver : nsISupports
 /**
  * The result of a history/bookmark query.
  *
- * This class is also a result "node". Use those interfaces to access the
- * toplevel children of this result.
+ * Use the "root" element to access the children of this query.
  */
 
 [scriptable, uuid(25b45a94-3323-4c7b-910a-315f2c59bfb4)]
-interface nsINavHistoryResult : nsINavHistoryResultNode
+interface nsINavHistoryResult : nsISupports
 {
   /**
    * Sorts all nodes recursively by the given parameter, one of
-   * nsINavHistory.SORT_BY_*
+   * nsINavHistory.SORT_BY_*  This will update the corresponding options for
+   * this result, so that re-using the current options/queries will always give
+   * you the current view.
    */
-  void recursiveSort(in PRUint32 aSortingMode);
+  void sortAll(in PRUint32 aSortingMode);
 
   /**
    * Controls whether duplicate adjacent elements are collapsed into a single
@@ -254,17 +372,11 @@ interface nsINavHistoryResult : nsINavHistoryResultNode
    * things when you have selected to get visits. When you sort by date, the
    * multiple entries will then appear because they will be separated (unless
    * you clicked reload a bunch of times in a row). If you know you'll only
-   * ever want one entry per site, you should ask for URLs back instead of
+   * ever want one entry per site, you should ask for URIs back instead of
    * visits so it will be more efficient.
    * Default = true
    */
   attribute boolean collapseDuplicates;
-
-  /**
-   * Call these functions to expand or collapse all elements in the tree.
-   */
-  void expandAll();
-  void collapseAll();
 
   /**
    * This allows you to get at the real node for a given row index in the tree.
@@ -293,6 +405,15 @@ interface nsINavHistoryResult : nsINavHistoryResultNode
    * Remove a tree builder observer.
    */
   void removeObserver(in nsINavHistoryResultViewObserver observer);
+
+  /**
+   * This is the root of the results.  It will either be a
+   * nsINavHistoryFolderResultNode (if the query is for bookmarks matching a
+   * single folder) or just a nsINavHistoryQueryResultNode (for everything
+   * else).  The root node is open by default. Remember that you need to open
+   * all other containers for their contents to be valid.
+   */
+  readonly attribute nsINavHistoryQueryResultNode root;
 };
 
 /**
@@ -435,7 +556,8 @@ interface nsINavHistoryQuery : nsISupports
   readonly attribute boolean hasSearchTerms;
 
   /**
-   * When set, returns only bookmarked items, when unset, returns anything.
+   * When set, returns only bookmarked items, when unset, returns anything. Setting this
+   * is equivalent to listing all bookmark folders in the 'folders' parameter.
    */
   attribute boolean onlyBookmarked;
 
@@ -482,19 +604,6 @@ interface nsINavHistoryQuery : nsISupports
 
   void setFolders([const,array, size_is(folderCount)] in PRInt64 folders,
                   in PRUint32 folderCount);
-
-  /**
-   * Constants for itemTypes
-   */
-  const PRUint32 INCLUDE_ITEMS = 1;
-  const PRUint32 INCLUDE_QUERIES = 2;
-
-  /**
-   * Filter the items returned.  Takes a bitwise combination of INCLUDE_*
-   * constants.  Note that folders are only returned when a parent folder
-   * is specified with setFolders().
-   */
-  attribute PRUint32 itemTypes;
 
   /**
    * Creates a new query item with the same parameters of this one.
@@ -554,21 +663,31 @@ interface nsINavHistoryQueryOptions : nsISupports
   const PRUint32 SORT_BY_TITLE_DESCENDING = 2;
   const PRUint32 SORT_BY_DATE_ASCENDING = 3;
   const PRUint32 SORT_BY_DATE_DESCENDING = 4;
-  const PRUint32 SORT_BY_URL_ASCENDING = 5;
-  const PRUint32 SORT_BY_URL_DESCENDING = 6;
+  const PRUint32 SORT_BY_URI_ASCENDING = 5;
+  const PRUint32 SORT_BY_URI_DESCENDING = 6;
   const PRUint32 SORT_BY_VISITCOUNT_ASCENDING = 7;
   const PRUint32 SORT_BY_VISITCOUNT_DESCENDING = 8;
 
   /**
-   * "URL" results, one for each URL visited in the range.
+   * "URI" results, one for each URI visited in the range. Individual result
+   * nodes will be of type "URI".
    */
-  const PRUint32 RESULT_TYPE_URL = 0;
+  const PRUint32 RESULTS_AS_URI = 0;
 
   /**
-   * "Visit" results, with one for each time a page was visited
-   * (this will often give you multiple results for one URL).
+   * "Visit" results, with one for each time a page was visited (this will
+   * often give you multiple results for one URI). Individual result nodes will
+   * have type "Visit"
    */
-  const PRUint32 RESULT_TYPE_VISIT = 1;
+  const PRUint32 RESULTS_AS_VISIT = 1;
+
+  /**
+   * This is identical to RESULT_TYPE_VISIT except that individual result nodes
+   * will have type "FullVisit".  This is used for the attributes that are not
+   * commonly accessed to save space in the common case (the lists can be very
+   * long).
+   */
+  const PRUint32 RESULTS_AS_FULL_VISIT = 2;
 
   /**
    * The grouping mode to be used for this query.
@@ -591,22 +710,39 @@ interface nsINavHistoryQueryOptions : nsISupports
   attribute PRUint32 sortingMode;
 
   /**
-   * Sets the result type. One of RESULT_TYPE_*.
+   * Sets the result type. One of RESULT_TYPE_* which includes how URIs are
+   * represented.
    */
   attribute PRUint32 resultType;
 
   /**
+   * This option excludes all URIs from a bookmarks query. This would be used
+   * if you just wanted a list of bookmark folders and queries (such as the left
+   * pane of the places page). Ignored for queries over history.
+   * Defaults to false.
+   */
+  attribute boolean excludeItems;
+
+  /**
+   * Set to true to exclude queries ("place:" URIs) from the query results.
+   * Simple folder queries (bookmark folder symlinks) will still be included.
+   * Defaults to false.
+   */
+  attribute boolean excludeQueries;
+
+  /**
    * When set, allows items with "place:" URIs to appear as containers,
    * with the container's contents filled in from the stored query.
-   * If not set, these will appear as normal items.
+   * If not set, these will appear as normal items. Doesn't do anything if
+   * excludeQueries is set. Defaults to false.
    */
-  attribute boolean expandPlaces;
+  attribute boolean expandQueries;
 
   /**
    * Normally the title of a result will be the user's custom title if there is
    * one, falling back on the default page title. If this is set, we will not
    * do this operation and always use the original page title extracted from
-   * the HTML of the page.
+   * the HTML of the page. Defaults to false.
    */
   attribute boolean forceOriginalTitle;
 
@@ -615,7 +751,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * user sees in the URL bar are not hidden. Hidden things include the content
    * of iframes and all images on web pages. Normally, you don't want these
    * things. If you do, set this flag and you'll get all items, even hidden
-   * ones.
+   * ones. Does nothing for bookmark queries. Defaults to false.
    */
   attribute boolean includeHidden;
 
@@ -685,8 +821,8 @@ interface nsINavHistoryService : nsISupports
 
   /**
    * This is just like markPageAsTyped (in nsIBrowserHistory, also implemented
-   * by the history service), but for bookmarks. It declares that the given URL
-   * is being opened as a result of following a bookmark. If this URL is loaded
+   * by the history service), but for bookmarks. It declares that the given URI
+   * is being opened as a result of following a bookmark. If this URI is loaded
    * soon after this message has been received, that transition will be marked
    * as following a bookmark.
    */
@@ -715,7 +851,7 @@ interface nsINavHistoryService : nsISupports
    * @param aHidden     Whether the page is hidden. If the page has only
    *                    TRANSITION_EMBED visits, this will be true, otherwise
    *                    false.
-   * @param aTyped      True if this URL has ever been typed.
+   * @param aTyped      True if this URI has ever been typed.
    */
   void setPageDetails(in nsIURI aURI, in AString aTitle, in AString aUserTitle,
                       in PRUint32 aVisitCount, in boolean aHidden,
