@@ -288,7 +288,6 @@ protected:
   nsIFontMetrics*       mFontMetrics;
   nsIRenderingContext*  mTempRenderingContext;
 
-  PRPackedBool          mDestroyCalled;
   PRPackedBool          mDestructorCalled;
   PRPackedBool          mVisible;
 

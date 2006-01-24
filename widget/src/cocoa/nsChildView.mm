@@ -290,7 +290,6 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mParentWidget(nsnull)
 , mFontMetrics(nsnull)
 , mTempRenderingContext(nsnull)
-, mDestroyCalled(PR_FALSE)
 , mDestructorCalled(PR_FALSE)
 , mVisible(PR_FALSE)
 , mDrawing(PR_FALSE)
@@ -518,9 +517,9 @@ NS_IMETHODIMP nsChildView::Create(nsNativeWidget aNativeParent,
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Destroy()
 {
-  if (mDestroyCalled)
+  if (mOnDestroyCalled)
     return NS_OK;
-  mDestroyCalled = PR_TRUE;
+  mOnDestroyCalled = PR_TRUE;
 
   [mView widgetDestroyed];
 
@@ -1307,7 +1306,7 @@ void nsChildView::StartDraw(nsIRenderingContext* aRenderingContext)
 //-------------------------------------------------------------------------
 void nsChildView::EndDraw()
 {
-  if (! mDrawing)
+  if (!mDrawing)
     return;
   mDrawing = PR_FALSE;
 
@@ -2054,8 +2053,8 @@ nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
 // The cocoa view calls DispatchWindowEvent() directly, so no need for this
 //
 NS_IMETHODIMP
-nsChildView::Scroll ( PRBool aVertical, PRInt16 aNumLines, PRInt16 aMouseLocalX, 
-                        PRInt16 aMouseLocalY, PRBool *_retval )
+nsChildView::Scroll(PRBool aVertical, PRInt16 aNumLines, PRInt16 aMouseLocalX, 
+                    PRInt16 aMouseLocalY, PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -2081,8 +2080,7 @@ nsChildView::Idle()
 //
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild eventSink:(nsIEventSink*)inSink
 {
-  if ((self = [super initWithFrame:inFrame]))
-  {
+  if ((self = [super initWithFrame:inFrame])) {
     mGeckoChild = inChild;
     mEventSink = inSink;
     mIsPluginView = NO;
