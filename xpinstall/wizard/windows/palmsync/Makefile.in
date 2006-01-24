@@ -53,10 +53,34 @@ LOCAL_INCLUDES += -I$(PALM_CDK_INC) \
 
 CPPSRCS		= PalmSyncInstall.cpp
 
+ifdef MOZ_XUL_APP
+XPI_NAME               = palmsync
+USE_EXTENSION_MANIFEST = 1
+NO_JAR_AUTO_REG        = 1
+INSTALL_EXTENSION_ID   = palmsync@mozilla.org
+XPI_PKGNAME            = palmsync-$(MOZ_APP_VERSION)
+
+# We should really pull THUNDERBIRD_VERSION from
+# mail/config/version.txt but we can't be assured
+# that we've even pulled that file. So we hardcode them.
+
+XULAPP_DEFINES = \
+	-DTHUNDERBIRD_VERSION=$(THUNDERBIRD_VERSION) \
+	-DEXTENSION_VERSION=$(MOZILLA_VERSION) \
+	$(NULL)
+
+#ifdef MOZ_THUNDERBIRD
+RCFLAGS += -DMOZ_THUNDERBIRD
+#endif
+
+endif
+
+
 include $(topsrcdir)/config/rules.mk
 
 LDFLAGS		+= /SUBSYSTEM:WINDOWS /MACHINE:i386
 
+ifndef MOZ_XUL_APP
 libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install
 
@@ -65,3 +89,4 @@ install:: $(PROGRAM)
 
 clean clobber clobber_all realclean::
 	$(RM) $(DIST)/install/$(PROGRAM)
+endif
