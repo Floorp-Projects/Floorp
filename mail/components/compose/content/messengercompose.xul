@@ -283,7 +283,12 @@
   <!-- Menu -->
   <!-- if you change the id of the menubar, be sure to update mailCore.js::CustomizeMailToolbar and MailToolboxCustomizeDone -->
   <toolbar type="menubar" id="compose-toolbar-menubar" class="chromeclass-menubar" customizable="true"
-           context="toolbar-context-menu" defaultset="menubar-items" mode="full">
+#ifdef XP_MACOSX
+           defaultset="menubar-items"
+#else
+          defaultset="menubar-items,spring,throbber-box"
+#endif
+           context="toolbar-context-menu" mode="full">
 
      <toolbaritem id="menubar-items" align="center">
       <menubar id="mail-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
@@ -370,7 +375,7 @@
               <menuitem id="menu_showComposeToolbar"
                         type="checkbox"
                         label="&showComposeToolbarCmd.label;"
-                        oncommand="onViewToolbarCommand('composeToolbar', 'menu_showComposeToolbar');"
+                        oncommand="onViewToolbarCommand('composeToolbar2', 'menu_showComposeToolbar');"
                         accesskey="&showComposeToolbarCmd.accesskey;"
                         checked="true"/>
               <menuitem id="menu_showFormatToolbar"
@@ -661,12 +666,15 @@
 
   </toolbarpalette>
 
-  <toolbar id="composeToolbar" class="toolbar-primary chromeclass-toolbar"
+  <toolbar id="composeToolbar2" class="toolbar-primary chromeclass-toolbar"
            toolbarname="Compose" 
            fullscreentoolbar="true" mode="full"
-           customizable="true"
-           context="toolbar-context-menu"
-           defaultset="button-send,spacer,button-address,spacer,spellingButton,spacer,button-attach,button-security,spacer,button-save,spring,throbber-box">
+#ifdef XP_MACOSX
+           defaultset="button-send,spacer,button-address,spacer,spellingButton,spacer,button-attach,button-security,spacer,button-save,throbber-box"
+#else
+           defaultset="button-send,spacer,button-address,spacer,spellingButton,spacer,button-attach,button-security,spacer,button-save"
+#endif
+           customizable="true" context="toolbar-context-menu">
   </toolbar>
 
   <toolbarset id="customToolbars" context="toolbar-context-menu"/>

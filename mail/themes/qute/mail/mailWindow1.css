@@ -49,6 +49,20 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* Don't use the listbox appearance as that gives us a blue-grey top border
+   that collides with the primary toolbar border */
+#threadTree {
+  -moz-appearance:  none;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  border-left: 1px solid;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+}
+
 #mailContent {
   -moz-appearance: toolbox;
   background-color: -moz-Dialog;
@@ -110,7 +124,6 @@ treechildren::-moz-tree-cell-text(container, closed, hasUnread, read) {
 
 treecol.threadColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/thread-col.png");
-
   -moz-padding-end: 3px; 
 }
 
@@ -860,10 +873,8 @@ treechildren::-moz-tree-cell-text(lc-black, selected, focus) {
 
 #folderPaneHeader {
   height: 29px;
-  border-bottom: none;
-  border-top: none;
+  border: none;
   background-color: transparent;
-  border-top: 1px solid ThreeDHighlight;
 }
 
 #folderpane-title {
@@ -875,10 +886,7 @@ treechildren::-moz-tree-cell-text(lc-black, selected, focus) {
 /* ..... splitter adjustments ..... */
 
 #folderpane_splitter {
-  border-top: 1px solid ThreeDHighlight;
-  border-left: none;
-  border-right: none;
-  border-bottom: none;
+  border: none;
   background-color: transparent;
 }
 
@@ -886,6 +894,7 @@ treechildren::-moz-tree-cell-text(lc-black, selected, focus) {
 #threadpane-splitter {
   border: none;
   min-height: 5px;
+  background-color: transparent;
 }
 
 /* ..... tree adjustments ..... */
@@ -901,14 +910,6 @@ treechildren::-moz-tree-cell-text(lc-black, selected, focus) {
   border-left: 1px solid ThreeDShadow;
   border-right: 0px;
   border-bottom: 0px;
-}
-
-/* ..... search box ..... */
-
-#searchBox {
-  border-top: 1px solid ThreeDHighlight;
-  height: 30px;
-  background-color: transparent;
 }
 
 /* ..... update notifications ..... */

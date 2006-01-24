@@ -69,6 +69,14 @@ function MailToolboxCustomizeDone(aToolboxChanged)
   if (document.getElementById("button-file"))
     SetupMoveCopyMenus('button-file', accountManagerDataSource, folderDataSource);
 
+  // make sure the mail views search box is initialized
+  if (document.getElementById("mailviews-container"))
+    viewPickerOnLoad();
+ 
+  gSearchInput = null;
+  if (document.getElementById("search-container"))
+    GetSearchInput();
+
   var customizePopup = document.getElementById("CustomizeMailToolbar");
   customizePopup.removeAttribute("disabled");
 

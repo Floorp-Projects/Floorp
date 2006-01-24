@@ -48,7 +48,6 @@ var gQueryURIFormat = null;
 var gSearchInput;
 var gPrintSettings = null;
 var gDirTree;
-var gSearchBox;
 var gCardViewBox;
 var gCardViewBoxEmail1;
 var gPreviousDirTreeIndex = -1;
@@ -676,7 +675,7 @@ function SetStatusText(total)
   try {
     var statusText;
 
-    if (gSearchInput.value) {
+    if (gSearchInput && gSearchInput.value) {
       if (total == 0)
         statusText = gAddressBookBundle.getString("noMatchFound");
       else
@@ -762,13 +761,13 @@ function SwitchPaneFocus(event)
   var focusedElement    = WhichPaneHasFocus();
   var cardViewBox       = GetCardViewBox();
   var cardViewBoxEmail1 = GetCardViewBoxEmail1();
-  var searchBox         = GetSearchBox();
+  var searchBox         = document.getElementById('search-container');
   var dirTree           = GetDirTree();
   var searchInput       = GetSearchInput();
 
   if (event && event.shiftKey)
   {
-    if (focusedElement == gAbResultsTree && searchBox.getAttribute('hidden') != 'true')
+    if (focusedElement == gAbResultsTree && searchBox)
       searchInput.focus();
     else if ((focusedElement == gAbResultsTree || focusedElement == searchBox) && !IsDirPaneCollapsed())
       dirTree.focus();
@@ -795,7 +794,7 @@ function SwitchPaneFocus(event)
     }
     else if (focusedElement != dirTree && !IsDirPaneCollapsed())
       dirTree.focus();
-    else if (searchBox.getAttribute('hidden') != 'true')
+    else if (searchBox)
       searchInput.focus();
     else
       gAbResultsTree.focus();
@@ -805,7 +804,7 @@ function SwitchPaneFocus(event)
 function WhichPaneHasFocus()
 {
   var cardViewBox       = GetCardViewBox();
-  var searchBox         = GetSearchBox();
+  var searchBox         = document.getElementById('search-container');
   var dirTree           = GetDirTree();
     
   var currentNode = top.document.commandDispatcher.focusedElement;
@@ -837,13 +836,6 @@ function GetSearchInput()
   if (!gSearchInput)
     gSearchInput = document.getElementById('searchInput');
   return gSearchInput;
-}
-
-function GetSearchBox()
-{
-  if (!gSearchBox)
-    gSearchBox = document.getElementById('searchBox');
-  return gSearchBox;
 }
 
 function GetCardViewBox()

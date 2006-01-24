@@ -1041,9 +1041,8 @@ var gQuickSearchFocusEl = null;
 
 function onClearSearch()
 {
-  if (!gSearchInput.showingSearchCriteria) // ignore the text box value if it's just showing the search criteria string
+  if (gSearchInput && !gSearchInput.showingSearchCriteria) // ignore the text box value if it's just showing the search criteria string
   {
-//     gQuickSearchFocusEl = gLastFocusedElement;  //save of the last focused element so that focus can be restored
      onAbClearSearch();
      // this needs to be on a timer otherwise we end up messing up the focus while the Search("") is still happening
      setTimeout("restoreSearchFocusAfterClear();", 0); 

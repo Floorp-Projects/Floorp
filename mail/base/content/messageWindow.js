@@ -253,6 +253,7 @@ function OnLoadMessageWindow()
 function delayedOnLoadMessageWindow()
 {
   HideMenus();
+  HideToolbarButtons();
   ShowMenus();
   AddMailOfflineObserver();
   CreateMailWindowGlobals();
@@ -427,15 +428,25 @@ function ShowMenus()
     openMail3Pane_menuitem.removeAttribute("hidden");
 }
 
+// Toolbar buttons like quick search and mail views should be hidden for the message window
+function HideToolbarButtons()
+{
+  // How can we remove these two items from the palette as well? 
+  var mailToolbar = document.getElementById('mail-bar');
+  if (mailToolbar)
+  {
+    var defaultSet = mailToolbar.getAttribute("defaultset");
+    defaultSet = defaultSet.replace(/search-container/i, "");
+    defaultSet = defaultSet.replace(/mailviews-containerr/i, "");
+    mailToolbar.setAttribute('defaultset', defaultSet);
+  }
+}
+
 function HideMenus()
 {
 	var message_menuitem=document.getElementById('menu_showMessage');
 	if (message_menuitem)
 		message_menuitem.setAttribute("hidden", "true");
-
-	var showSearchToolbar = document.getElementById('menu_showSearchToolbar');
-	if (showSearchToolbar)
-		showSearchToolbar.setAttribute("hidden", "true");
 
 	var showSearch_showMessage_Separator = document.getElementById('menu_showSearch_showMessage_Separator');
 	if (showSearch_showMessage_Separator)

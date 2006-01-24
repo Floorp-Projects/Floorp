@@ -687,7 +687,7 @@ function onQuickSearchNewMsgLoaded()
   // re-highlight this new message.
   // Optimization: We'll special case Message Body quick searches and highlight those as well as find in message
   // searches.
-  if ( (gSearchInput.searchMode == kQuickSearchHighlight || gSearchInput.searchMode == kQuickSearchBody)
+  if (gSearchInput && (gSearchInput.searchMode == kQuickSearchHighlight || gSearchInput.searchMode == kQuickSearchBody)
        && gSearchInput.value && !gSearchInput.showingSearchCriteria)
   {
     highlightMessage(false);

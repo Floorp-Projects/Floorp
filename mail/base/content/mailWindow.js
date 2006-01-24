@@ -74,7 +74,6 @@ var accountManagerDataSource;
 var folderDataSource;
 
 var accountCentralBox = null;
-var gSearchBox = null;
 var gAccountCentralLoaded = false;
 var gFakeAccountPageLoaded = false;
 //End progress and Status variables
@@ -205,7 +204,6 @@ function CreateMailWindowGlobals()
   folderDataSource         = Components.classes[folderDSContractID].getService();
 
   accountCentralBox = document.getElementById("accountCentralBox");
-  gSearchBox = document.getElementById("searchBox");
 }
 
 function InitMsgWindow()
@@ -542,7 +540,6 @@ function ShowingAccountCentral()
                                                Components.interfaces.nsIPrefLocalizedString).data;
         GetMessagePane().collapsed = true;
         document.getElementById("threadpane-splitter").collapsed = true;
-        gSearchBox.collapsed = true;
         document.getElementById("key_toggleMessagePane").setAttribute("disabled", "true");
 
         window.frames["accountCentralPane"].location.href = acctCentralPage;
@@ -580,7 +577,6 @@ function ShowThreadPane()
 
 function ShowingThreadPane()
 {
-    gSearchBox.collapsed = false;
     var threadPaneSplitter = document.getElementById("threadpane-splitter");
     threadPaneSplitter.collapsed = false;
     GetMessagePane().collapsed =

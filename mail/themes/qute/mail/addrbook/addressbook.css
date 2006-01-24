@@ -235,9 +235,8 @@ toolbar[iconsize="small"] #button-abdelete[disabled] {
 
 #abDirTreeHeader {
   height: 29px;
-  border-bottom: none;
+  border: none;
   background-color: transparent;
-  border-top: 1px solid ThreeDHighlight;
 }
 
 #abDirTreeHeader-title {
@@ -271,7 +270,6 @@ treechildren::-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
 /* ::::: splitters ::::: */
 
 #dirTree-splitter {
-  border-top: 1px solid ThreeDHighlight;
   border-left: none;
   border-right: none;
   border-bottom: none;
@@ -281,9 +279,22 @@ treechildren::-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
 #results-splitter {
   border: none;
   min-height: 5px;
+  background-color: transparent;
 }
 
 /* ::::: results pane ::::: */
+
+#abResultsTree {
+  -moz-appearance:  none;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  border-left: 1px solid;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+}
 
 treechildren::-moz-tree-image(GeneratedName) {
   -moz-margin-end: 2px;

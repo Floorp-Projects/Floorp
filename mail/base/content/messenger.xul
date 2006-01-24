@@ -301,9 +301,7 @@
       
     <splitter id="folderpane_splitter" collapse="before" persist="state"/>
     
-    <vbox flex="1">
-      <hbox id="searchBox"/>
-    
+    <vbox flex="1">   
       <box orient="vertical" id="messagesBox" flex="1">
         <hbox id="messengerBox" flex="1" minheight="100" height="100" persist="height">
           <deck id="displayDeck" flex="1" selectedIndex="0"

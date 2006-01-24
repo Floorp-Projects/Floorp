@@ -1062,8 +1062,13 @@
 
 <toolbox id="mail-toolbox" class="toolbox-top" mode="full">  
   <!-- Menu -->
-  <toolbar type="menubar" id="mail-toolbar-menubar" class="chromeclass-menubar" customizable="true"
-           context="toolbar-context-menu" defaultset="menubar-items" mode="icons">
+  <toolbar type="menubar" id="mail-toolbar-menubar" class="chromeclass-menubar" customizable="true"           
+#ifdef XP_MACOSX
+           defaultset="menubar-items"
+#else
+          defaultset="menubar-items,spring,throbber-box"
+#endif
+          context="toolbar-context-menu" mode="icons">
     <toolbaritem id="menubar-items" align="center">
       <menubar id="mail-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
         <!-- File -->
@@ -1217,13 +1222,7 @@
                type="checkbox"
                label="&showMessengerToolbarCmd.label;"
                accesskey="&showMessengerToolbarCmd.accesskey;"
-               oncommand="onViewToolbarCommand('mail-bar', 'menu_showMessengerToolbar');"
-               checked="true"/>
-              <menuitem id="menu_showSearchToolbar"
-               type="checkbox"
-               label="&showSearchToolbarCmd.label;"
-               accesskey="&showSearchToolbarCmd.accesskey;"
-               oncommand="goToggleToolbar('searchBox', 'menu_showSearchToolbar'); SearchBarToggled();"
+               oncommand="onViewToolbarCommand('mail-bar2', 'menu_showMessengerToolbar');"
                checked="true"/>
               <menuitem type="checkbox" id="menu_showTaskbar"/>              
               <menuseparator/>
@@ -1935,70 +1934,74 @@
       </toolbaritem>
 
       <toolbarbutton class="toolbarbutton-1" id="button-stop" label="&stopButton.label;" tooltiptext="&stopButton.tooltip;" command="cmd_stop"/>
-  </toolbarpalette>
 
-  <toolbar id="mail-bar" class="toolbar-primary chromeclass-toolbar"
+      <toolbaritem id="search-container" title="&searchItem.title;" align="center" class="chromeclass-toolbar-additional">
+        <textbox id="searchInput" flex="1" onfocus="onSearchInputFocus(event);" onclick="onSearchInputClick(event);" 
+                 onmousedown="onSearchInputMousedown(event);" onblur="onSearchInputBlur(event);"
+                 oninput="onSearchInput(false);" onkeypress="onSearchKeyPress(event);">
+          <button id="quick-search-button" type="menu">
+            <menupopup id="quick-search-menupopup" value="2" persist="value" onpopupshowing="InitQuickSearchPopup();" popupalign="topleft" popupanchor="bottomleft">
+              <menuitem value="0" label="&searchSubjectMenu.label;" type="radio"  
+                        oncommand="changeQuickSearchMode(this)"/>
+              <menuitem value="1" label="&searchSenderMenu.label;" type="radio" 
+                        oncommand="changeQuickSearchMode(this)" />
+              <menuitem value="2" label="&searchSubjectOrSenderMenu.label;" type="radio" 
+                        checked="true" oncommand="changeQuickSearchMode(this)"/>
+              <menuitem value="5" label="&searchRecipient.label;" type="radio" 
+                        oncommand="changeQuickSearchMode(this)"/>
+              <menuitem value="3" label="&searchMessageBody.label;" type="radio" 
+                        oncommand="changeQuickSearchMode(this)"/>
+              <menuitem value="4" label="&findInMessageMenu.label;" type="radio" 
+                        oncommand="changeQuickSearchMode(this)"/>
+              <menuseparator/>
+              <!-- if the value for the save as virtual folder menu changes, please update the 
+                   vk_down key handler in searchbar.xml
+              -->
+              <menuitem value="5" id="quickSearchSaveAsVirtualFolder" label="&saveAsVirtualFolderMenu.label;" 
+                        oncommand="saveViewAsVirtualFolder()"/>
+            </menupopup>
+          </button>
+        </textbox>
+      </toolbaritem>
+
+      <toolbaritem id="mailviews-container" title="&mailViewsToolbarItem.title;" align="center" class="chromeclass-toolbar-additional">
+        <label value="&viewPicker.label;" control="viewPicker"  accesskey="&viewPicker.accesskey;"/>
+        <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this, this.value);">
+          <menupopup id="viewPickerPopup">
+            <menuitem value="0" id="viewPickerAll" label="&viewPickerAll.label;"/>
+            <menuitem value="1" id="viewPickerUnread" label="&viewPickerUnread.label;"/>
+            <menuseparator/>
+            <menuitem value="2" id="labelMenuItem1"/>
+            <menuitem value="3" id="labelMenuItem2"/>
+            <menuitem value="4" id="labelMenuItem3"/>
+            <menuitem value="5" id="labelMenuItem4"/>
+            <menuitem value="6" id="labelMenuItem5"/>
+            <menuseparator id="lastDefaultView"/>
+            <menuseparator id="createCustomViewSeparator"/>
+            <menuitem id="saveAsVirtualFolder" value="7" label="&viewPickerSaveAsVirtualFolder.label;"/>
+            <menuitem id="createCustomView" value="8" label="&viewPickerCustomView.label;"/>
+          </menupopup>
+        </menulist>
+      </toolbaritem>
+  </toolbarpalette>
+  
+  <!-- If changes are made to the default set of toolbar buttons, you may need to rev the id
+       of mail-bar in order to force the new default items to show up for users who customized their toolbar
+       in earlier versions. Bumping the id means users will have to re-customize their toolbar!
+  -->
+  <toolbar id="mail-bar2" class="toolbar-primary chromeclass-toolbar"
            toolbarname="Mail" 
            fullscreentoolbar="true" mode="full"
            customizable="true"
            context="toolbar-context-menu"
 #ifdef XP_MACOSX
-           defaultset="button-getmsg,button-newmsg,button-address,spacer,button-reply,button-replyall,button-forward,spacer,button-delete,button-junk,spacer,button-print,button-stop,spring,throbber-box">
+           defaultset="button-getmsg,button-newmsg,button-address,spacer,button-reply,button-replyall,button-forward,spacer,button-delete,button-junk,spacer,button-print,button-stop,spring,search-container,throbber-box">
 #else
-           defaultset="button-getmsg,button-newmsg,button-address,separator,button-reply,button-replyall,button-forward,separator,button-delete,button-junk,separator,button-print,button-stop,spring,throbber-box">
+           defaultset="button-getmsg,button-newmsg,button-address,separator,button-reply,button-replyall,button-forward,separator,button-delete,button-junk,separator,button-print,button-stop,spring,search-container">
 #endif
   </toolbar>
   <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 </toolbox>
-
-<hbox id="searchBox" persist="collapsed" align="center">
-  <label value="&viewPicker.label;" control="viewPicker"  accesskey="&viewPicker.accesskey;"/>
-  <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this, this.value);">
-    <menupopup id="viewPickerPopup">
-      <menuitem value="0" id="viewPickerAll" label="&viewPickerAll.label;"/>
-      <menuitem value="1" id="viewPickerUnread" label="&viewPickerUnread.label;"/>
-      <menuseparator/>
-      <menuitem value="2" id="labelMenuItem1"/>
-      <menuitem value="3" id="labelMenuItem2"/>
-      <menuitem value="4" id="labelMenuItem3"/>
-      <menuitem value="5" id="labelMenuItem4"/>
-      <menuitem value="6" id="labelMenuItem5"/>
-      <menuseparator id="lastDefaultView"/>
-      <menuseparator id="createCustomViewSeparator"/>
-      <menuitem id="saveAsVirtualFolder" value="7" label="&viewPickerSaveAsVirtualFolder.label;"/>
-      <menuitem id="createCustomView" value="8" label="&viewPickerCustomView.label;"/>
-    </menupopup>
-  </menulist>
-  
-  <spring flex="4"/>
-
-  <textbox id="searchInput" flex="1" onfocus="onSearchInputFocus(event);" onclick="onSearchInputClick(event);" 
-           onmousedown="onSearchInputMousedown(event);" onblur="onSearchInputBlur(event);"
-           oninput="onSearchInput(false);" onkeypress="onSearchKeyPress(event);">
-    <button id="quick-search-button" type="menu">
-      <menupopup id="quick-search-menupopup" value="2" persist="value" onpopupshowing="InitQuickSearchPopup();" popupalign="topleft" popupanchor="bottomleft">
-        <menuitem value="0" label="&searchSubjectMenu.label;" type="radio"  
-                  oncommand="changeQuickSearchMode(this)"/>
-        <menuitem value="1" label="&searchSenderMenu.label;" type="radio" 
-                  oncommand="changeQuickSearchMode(this)" />
-        <menuitem value="2" label="&searchSubjectOrSenderMenu.label;" type="radio" 
-                  checked="true" oncommand="changeQuickSearchMode(this)"/>
-        <menuitem value="5" label="&searchRecipient.label;" type="radio" 
-                  oncommand="changeQuickSearchMode(this)"/>
-        <menuitem value="3" label="&searchMessageBody.label;" type="radio" 
-                  oncommand="changeQuickSearchMode(this)"/>
-        <menuitem value="4" label="&findInMessageMenu.label;" type="radio" 
-                  oncommand="changeQuickSearchMode(this)"/>
-        <menuseparator/>
-        <!-- if the value for the save as virtual folder menu changes, please update the 
-             vk_down key handler in searchbar.xml
-        -->
-        <menuitem value="5" id="quickSearchSaveAsVirtualFolder" label="&saveAsVirtualFolderMenu.label;" 
-                  oncommand="saveViewAsVirtualFolder()"/>
-      </menupopup>
-    </button>
-  </textbox>
-</hbox>
 
 <!-- The msgNotificationBar appears on top of the message and displays 
      information like: junk, contains remote images, or is a suspected phishing URL 

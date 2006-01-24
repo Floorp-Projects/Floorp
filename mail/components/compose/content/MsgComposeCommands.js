@@ -527,7 +527,7 @@ var defaultController =
       case "cmd_account"            : MsgAccountManager(null); break;
 
       //View Menu
-      case "cmd_showComposeToolbar" : goToggleToolbar('composeToolbar', 'menu_showComposeToolbar'); break;
+      case "cmd_showComposeToolbar" : goToggleToolbar('composeToolbar2', 'menu_showComposeToolbar'); break;
       case "cmd_showFormatToolbar"  : goToggleToolbar('FormatToolbar', 'menu_showFormatToolbar');   break;
 
       //Options Menu

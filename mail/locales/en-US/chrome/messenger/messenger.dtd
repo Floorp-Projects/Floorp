@@ -104,8 +104,6 @@
 <!-- View Menu -->
 <!ENTITY showMessengerToolbarCmd.label "Mail Toolbar">
 <!ENTITY showMessengerToolbarCmd.accesskey "o">
-<!ENTITY showSearchToolbarCmd.label "Search Bar">
-<!ENTITY showSearchToolbarCmd.accesskey	"e">
 <!ENTITY customizeToolbar.label "Customize...">
 <!ENTITY customizeToolbar.accesskey "C">
 
@@ -435,6 +433,8 @@
 <!ENTITY junkButton.label "Junk">
 <!ENTITY notJunkButton.label "Not Junk">
 <!ENTITY addressBookButton.label "Address Book">
+<!ENTITY searchItem.title "Quick Search">
+<!ENTITY mailViewsToolbarItem.title "Mail Views">
 
 <!-- Mail Toolbar Tooltips-->
 <!ENTITY advancedButton.tooltip "Advanced message search">
