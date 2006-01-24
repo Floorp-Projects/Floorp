@@ -73,8 +73,6 @@ REQUIRES = 	\
 		mimetype \
 		webbrowserpersist \
 		progressDlg \
-		history \
-		satchel \
 		necko \
 		windowwatcher \
 		uriloader \
@@ -96,9 +94,6 @@ CPPSRCS = nsToolkitCompsModule.cpp
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../downloads/src \
-	-I$(srcdir)/../history/src \
-	-I$(srcdir)/../satchel/src \
-	-I$(srcdir)/../passwordmgr/base \
 	-I$(srcdir)/../startup/src \
 	-I$(srcdir)/../typeaheadfind/src \
 	-I$(srcdir)/../alerts/src \
@@ -117,13 +112,7 @@ SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
 endif
 
 ifndef MOZ_THUNDERBIRD
-ifndef MOZ_PLACES
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX)
-endif
-
 SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/$(LIB_PREFIX)satchel_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)passwordmgr_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
 		$(NULL)
 

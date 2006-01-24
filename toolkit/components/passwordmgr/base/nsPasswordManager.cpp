@@ -70,6 +70,9 @@
 #include "nsIAutoCompleteResult.h"
 #include "nsIPK11TokenDB.h"
 #include "nsIPK11Token.h"
+#include "nsIGenericFactory.h"
+#include "nsToolkitCompsCID.h"
+#include "nsSingleSignonPrompt.h"
 
 static const char kPMPropertiesURL[] = "chrome://passwordmgr/locale/passwordmgr.properties";
 static PRBool sRememberPasswords = PR_FALSE;
@@ -2007,3 +2010,29 @@ nsPasswordManager::GetLocalizedString(const nsAString& key,
                                  getter_Copies(str));
   aResult.Assign(str);
 }
+
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPasswordManager, nsPasswordManager::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSingleSignonPrompt)
+
+static void PR_CALLBACK nsPasswordManagerShutdown(nsIModule* self)
+{
+  nsPasswordManager::Shutdown();
+}
+
+static const nsModuleComponentInfo components[] =
+{
+  { "Password Manager",
+    NS_PASSWORDMANAGER_CID,
+    NS_PASSWORDMANAGER_CONTRACTID,
+    nsPasswordManagerConstructor,
+    nsPasswordManager::Register,
+    nsPasswordManager::Unregister },
+
+  { "Single Signon Prompt",
+    NS_SINGLE_SIGNON_PROMPT_CID,
+    "@mozilla.org/wallet/single-sign-on-prompt;1",
+    nsSingleSignonPromptConstructor }
+};
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsPasswordManager, components,
+                              nsPasswordManagerShutdown)

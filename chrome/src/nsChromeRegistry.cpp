@@ -102,6 +102,7 @@
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
 
+#ifdef MOZ_XUL
 // keep all the RDF stuff together, in case we can remove it in the far future
 #include "rdf.h"
 #include "nsRDFCID.h"
@@ -115,6 +116,15 @@
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
 
+#define CHROME_URI "http://www.mozilla.org/rdf/chrome#"
+
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, packages);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, package);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, name);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, platformPackage);
+
+#endif
+
 #define UILOCALE_CMD_LINE_ARG "UILocale"
 
 #define MATCH_OS_LOCALE_PREF "intl.locale.matchOS"
@@ -125,13 +135,6 @@ static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 nsChromeRegistry* nsChromeRegistry::gChromeRegistry;
-
-#define CHROME_URI "http://www.mozilla.org/rdf/chrome#"
-
-DEFINE_RDF_VOCAB(CHROME_URI, CHROME, packages);
-DEFINE_RDF_VOCAB(CHROME_URI, CHROME, package);
-DEFINE_RDF_VOCAB(CHROME_URI, CHROME, name);
-DEFINE_RDF_VOCAB(CHROME_URI, CHROME, platformPackage);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -427,13 +430,19 @@ nsChromeRegistry::~nsChromeRegistry()
   gChromeRegistry = nsnull;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsChromeRegistry,
-                              nsIChromeRegistry,
-                              nsIXULChromeRegistry,
-                              nsIToolkitChromeRegistry,
-                              nsIXULOverlayProvider,
-                              nsIObserver,
-                              nsISupportsWeakReference)
+NS_INTERFACE_MAP_BEGIN(nsChromeRegistry)
+  NS_INTERFACE_MAP_ENTRY(nsIChromeRegistry)
+  NS_INTERFACE_MAP_ENTRY(nsIXULChromeRegistry)
+  NS_INTERFACE_MAP_ENTRY(nsIToolkitChromeRegistry)
+#ifdef MOZ_XUL
+  NS_INTERFACE_MAP_ENTRY(nsIXULOverlayProvider)
+#endif
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsChromeRegistry)
+NS_IMPL_RELEASE(nsChromeRegistry)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChromeRegistry methods:
@@ -778,6 +787,7 @@ nsChromeRegistry::GetLocalesForPackage(const nsACString& aPackage,
   return rv;
 }
 
+#ifdef MOZ_XUL
 NS_IMETHODIMP
 nsChromeRegistry::GetStyleOverlays(nsIURI *aChromeURL,
                                    nsISimpleEnumerator **aResult)
@@ -798,6 +808,7 @@ nsChromeRegistry::GetXULOverlays(nsIURI *aChromeURL, nsISimpleEnumerator **aResu
 
   return NS_NewArrayEnumerator(aResult, *parray);
 }
+#endif // MOZ_XUL
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -1398,6 +1409,7 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
   return rv;
 }
 
+#ifdef MOZ_XUL
 static nsresult
 GetContainerEnumerator(nsIRDFDataSource* ds, nsIRDFResource* res,
                        nsISimpleEnumerator* *aResult, PRInt32 *aCountResult = nsnull)
@@ -1794,6 +1806,18 @@ nsChromeRegistry::ProcessOverlays(PRFileDesc *fd, nsIRDFDataSource* aDS,
     }
   }
 }
+
+#else // MOZ_XUL
+
+NS_IMETHODIMP
+nsChromeRegistry::ProcessContentsManifest(nsIURI* aOldManifest, nsIURI* aFile,
+                                          nsIURI* aBaseURI, PRBool aAppend,
+                                          PRBool aSkinOnly)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+#endif // MOZ_XUL
 
 nsresult
 nsChromeRegistry::ProcessManifest(nsILocalFile* aManifest, PRBool aSkinOnly)

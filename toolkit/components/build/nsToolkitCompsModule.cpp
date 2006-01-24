@@ -45,16 +45,10 @@
 #endif
 
 #ifndef MOZ_THUNDERBIRD
-#include "nsDocShellCID.h"
 #ifdef MOZ_XPINSTALL
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
 #endif
-#include "nsFormHistory.h"
-#include "nsFormFillController.h"
-#include "nsGlobalHistory.h"
-#include "nsPasswordManager.h"
-#include "nsSingleSignonPrompt.h"
 #include "nsTypeAheadFind.h"
 #endif
 
@@ -69,29 +63,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 
 #ifndef MOZ_THUNDERBIRD
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsFormHistory, nsFormHistory::GetInstance)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
-#ifndef MOZ_PLACES
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
-#endif
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPasswordManager, nsPasswordManager::GetInstance)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSingleSignonPrompt)
 #ifdef MOZ_XPINSTALL
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init) 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 #endif
 #endif
-
-/////////////////////////////////////////////////////////////////////////////
-//// Module Destructor
-
-static void PR_CALLBACK nsToolkitCompModuleDtor(nsIModule* self)
-{
-#ifndef MOZ_THUNDERBIRD
-  nsFormHistory::ReleaseInstance();
-  nsPasswordManager::Shutdown();
-#endif
-}
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -124,55 +100,10 @@ static const nsModuleComponentInfo components[] =
     nsDownloadProxyConstructor },
 #endif
 
-  { "HTML Form History",
-    NS_FORMHISTORY_CID, 
-    NS_FORMHISTORY_CONTRACTID,
-    nsFormHistoryConstructor },
-
-  { "HTML Form Fill Controller",
-    NS_FORMFILLCONTROLLER_CID, 
-    "@mozilla.org/satchel/form-fill-controller;1",
-    nsFormFillControllerConstructor },
-
-  { "HTML Form History AutoComplete",
-    NS_FORMFILLCONTROLLER_CID, 
-    NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID,
-    nsFormFillControllerConstructor },
-
-#ifndef MOZ_PLACES
-  // "places" replaces global history
-  { "Global History",
-    NS_GLOBALHISTORY_CID,
-    NS_GLOBALHISTORY2_CONTRACTID,
-    nsGlobalHistoryConstructor },
-    
-  { "Global History",
-    NS_GLOBALHISTORY_CID,
-    NS_GLOBALHISTORY_DATASOURCE_CONTRACTID,
-    nsGlobalHistoryConstructor },
-    
-  { "Global History",
-    NS_GLOBALHISTORY_CID,
-    NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
-    nsGlobalHistoryConstructor },
-#endif
-
-  { "Password Manager",
-    NS_PASSWORDMANAGER_CID,
-    NS_PASSWORDMANAGER_CONTRACTID,
-    nsPasswordManagerConstructor,
-    nsPasswordManager::Register,
-    nsPasswordManager::Unregister },
-
-  { "Single Signon Prompt",
-    NS_SINGLE_SIGNON_PROMPT_CID,
-    "@mozilla.org/wallet/single-sign-on-prompt;1",
-    nsSingleSignonPromptConstructor },
-  
   { "TypeAheadFind Component", NS_TYPEAHEADFIND_CID,
     NS_TYPEAHEADFIND_CONTRACTID, nsTypeAheadFindConstructor
   },
 #endif
 };
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsToolkitCompsModule, components, nsToolkitCompModuleDtor)
+NS_IMPL_NSGETMODULE(nsToolkitCompsModule, components)

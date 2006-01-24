@@ -66,12 +66,15 @@
 #include "nsIServiceManager.h"
 #include "nsIStandardURL.h"
 #include "nsIStreamListener.h"
-#include "nsIXULPrototypeCache.h"
-#include "nsIXULPrototypeDocument.h"
 #include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "prlog.h"
+
+#ifdef MOZ_XUL
+#include "nsIXULPrototypeCache.h"
+#include "nsIXULPrototypeDocument.h"
+#endif
 
 //----------------------------------------------------------------------
 
@@ -491,6 +494,8 @@ NS_IMETHODIMP
 nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
                                     nsIChannel* *aResult)
 {
+    nsresult rv;
+
     NS_ENSURE_ARG_POINTER(aURI);
     NS_PRECONDITION(aResult, "Null out param");
     
@@ -512,9 +517,9 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     }
 #endif
 
-    nsresult rv;
     nsCOMPtr<nsIChannel> result;
 
+#ifdef MOZ_XUL
     // Check the prototype cache to see if we've already got the
     // document in the cache.
     nsCOMPtr<nsIXULPrototypeCache> cache
@@ -550,6 +555,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
             return NS_ERROR_OUT_OF_MEMORY;
     }
     else {
+#endif // MOZ_XUL
         // Miss. Resolve the chrome URL using the registry and do a
         // normal necko load.
         //nsXPIDLCString oldSpec;
@@ -632,6 +638,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
             result->SetOwner(owner);
         }
 
+#ifdef MOZ_XUL
         // Track FastLoad file dependencies.
         //
         // This is harder than it ought to be!  While an nsResChannel "is-a"
@@ -675,6 +682,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
             }
         }
     }
+#endif
 
     *aResult = result;
     NS_ADDREF(*aResult);

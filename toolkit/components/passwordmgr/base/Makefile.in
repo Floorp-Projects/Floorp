@@ -44,8 +44,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = passwordmgr
-LIBRARY_NAME = passwordmgr_s
-FORCE_STATIC_LIB = 1
+LIBRARY_NAME = passwordmgr
+MODULE_NAME = nsPasswordManager
+IS_COMPONENT = 1
 LIBXUL_LIBRARY = 1
 
 REQUIRES = 	\
@@ -62,6 +63,7 @@ REQUIRES = 	\
 		widget \
 		autocomplete \
 		pipnss \
+		toolkitcomps \
 		$(NULL)
 
 XPIDLSRCS	= \
