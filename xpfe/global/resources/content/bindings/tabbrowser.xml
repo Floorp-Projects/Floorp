@@ -1375,8 +1375,7 @@
 
             if (aDestIndex >= aSrcIndex)
               ++aDestIndex;
-            var tab = this.mTabContainer.insertBefore(this.mTabs[aSrcIndex],
-                                                      this.mTabs[aDestIndex]);
+            var tab = this.mTabContainer.insertBefore(this.mTabs[aSrcIndex], this.mTabs.item(aDestIndex));
 
             this.mCurrentTab.selected = true;
 
