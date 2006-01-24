@@ -125,8 +125,8 @@ public class JSSE_SSLServer extends ClassServer {
             SSLServerSocketFactory ssf =
                     JSSE_SSLServer.getServerSocketFactory(type);
             SSLServerSocket ss = (SSLServerSocket)ssf.createServerSocket(port);
-            // Set server socket timeout to 15 sec
-            ss.setSoTimeout(15 * 1000);
+            // Set server socket timeout to 90 sec
+            ss.setSoTimeout(90 * 1000);
             
             // Based on J2SE version, enable appropriate ciphers
             if ( (System.getProperty("java.version")).indexOf("1.4") != -1 ) {
