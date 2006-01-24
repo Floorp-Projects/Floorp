@@ -48,6 +48,7 @@ LIBRARY_NAME = passwordmgr
 MODULE_NAME = nsPasswordManager
 IS_COMPONENT = 1
 LIBXUL_LIBRARY = 1
+EXPORT_LIBRARY = 1
 
 REQUIRES = 	\
 		necko \
@@ -76,5 +77,9 @@ CPPSRCS		= 	\
 		nsSingleSignonPrompt.cpp \
 		$(NULL)
 
-
 include $(topsrcdir)/config/rules.mk
+
+EXTRA_DSO_LDOPTS = \
+	$(MOZ_UNICHARUTIL_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
