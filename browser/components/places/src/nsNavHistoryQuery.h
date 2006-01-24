@@ -59,7 +59,11 @@ public:
   nsNavHistoryQuery();
   // note: we use a copy constructor in Clone(), the default is good enough
 
+#ifdef MOZILLA_1_8_BRANCH
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERY_IID)
+#else
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERY_IID)
+#endif
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYQUERY
 
