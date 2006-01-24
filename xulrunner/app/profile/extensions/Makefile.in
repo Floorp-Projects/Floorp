@@ -43,17 +43,3 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
-
-FILES := \
-	Extensions.rdf \
-	$(NULL)
-
-FILES := $(addprefix $(srcdir)/, $(FILES))
-
-libs::
-	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/extensions
-	$(INSTALL) $(srcdir)/"installed-extensions.txt" $(DIST)/bin/defaults/profile/extensions
- 
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(FILES) $(DESTDIR)$(mozappdir)/defaults/profile/extensions
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/"installed-extensions.txt" $(DESTDIR)$(mozappdir)/defaults/profile/extensions
