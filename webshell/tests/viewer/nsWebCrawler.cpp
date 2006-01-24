@@ -558,10 +558,7 @@ nsWebCrawler::GetOutputFile(nsIURI *aURL, nsString& aOutputName)
     nsAutoString outputFileName(mOutputDir);
     outputFileName.AppendWithConversion(inputFileName);
     PRInt32 bufLen = outputFileName.Length()+1;
-    char *buf = new char[bufLen+1];
-    outputFileName.ToCString(buf, bufLen);
-    result = fopen(buf, "wt");
-    delete [] buf;
+    result = fopen(NS_LossyConvertUTF16toASCII(outputFileName).get(), "wt");
     delete [] inputFileName;
   }
   return result;
@@ -942,12 +939,10 @@ nsWebCrawler::PerformRegressionTest(const nsString& aOutputName)
   rv = fu->CompareRegressionData(f1, f2,mRegressionOutputLevel);
   NS_RELEASE(fu);
 
-  char dirName[BUF_SIZE];
-  char fileName[BUF_SIZE];
-  mOutputDir.ToCString(dirName, BUF_SIZE-1);
-  aOutputName.ToCString(fileName, BUF_SIZE-1);
-
-  printf("regression test %s%s %s\n", dirName, fileName, NS_SUCCEEDED(rv) ? "passed" : "failed");
+  printf("regression test %s%s %s\n",
+         NS_LossyConvertUTF16toASCII(mOutputDir).get(),
+         NS_LossyConvertUTF16toASCII(aOutputName).get(),
+         NS_SUCCEEDED(rv) ? "passed" : "failed");
 }
 
 //----------------------------------------------------------------------

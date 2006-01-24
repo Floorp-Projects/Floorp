@@ -581,8 +581,13 @@ NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const nsString& aFontName
                                    logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
 
   // somehow the WideCharToMultiByte failed, let's try the old code
-  if(0 == outlen)
-    aFontName.ToCString(logFont.lfFaceName, LF_FACESIZE);
+  if(0 == outlen) {
+    nsFixedCString logFontStr(logFont.lfFaceName, LF_FACESIZE);
+    LossyCopyUTF16toASCII(aFontName, logFontStr);
+    if (logFontStr.get() != logFont.lfFaceName) {
+      return NS_ERROR_FAILURE; // the font name is too large
+    }
+  }
 
   ::EnumFontFamiliesEx(hdc, &logFont, (FONTENUMPROC)fontcallback, (LPARAM)&isthere, 0);
 

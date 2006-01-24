@@ -956,9 +956,6 @@ int CStringTester::TestCreators(){
     if(str)
       Recycle(str);
 
-    char buffer[6];
-    theString5.ToCString(buffer,sizeof(buffer));
-    
   }
 
   {
@@ -974,9 +971,6 @@ int CStringTester::TestCreators(){
     if(str)
       Recycle(str);
 
-    char buffer[100];
-    theString5.ToCString(buffer,sizeof(buffer)-1);
-    nsCString  theOther=theString5.GetBuffer();
   }
   */
   return result;
@@ -1591,10 +1585,8 @@ int CStringTester::TestRandomOps(){
         output<< "(" << str[index] << ", " << pos << ") ";
       }
 
-      thePrevString.ToCString(buffer,1000,0);
-      output << " Old: [" << buffer << "]";
-      theString.ToCString(buffer,1000,0);
-      output << " New: [" << buffer << "]";
+      output << " Old: [" << NS_LossyConvertUTF16toASCII(thePrevString).get() << "]";
+      output << " New: [" << NS_LossyConvertUTF16toASCII(theString).get() << "]";
       output << " STL: [" << theSTLString.c_str() << "]" << endl;
 
       if(theString.mStringValue.mLength>300) {

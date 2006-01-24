@@ -820,8 +820,10 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
         delete[] cStr;
 
         mVerDirTxt->GetText(str, 255, size);
-        str.ToCString(gVerifyDir, (PRInt32)_MAX_PATH);
-        if (!strcmp(gVerifyDir,DEBUG_EMPTY)) {
+        nsFixedCString verifyDirStr(gVerifyDir, sizeof(gVerifyDir));
+        LossyCopyUTF16toASCII(str, verifyDirStr);
+        if (verifyDirStr.get() != gVerifyDir ||
+            !strcmp(gVerifyDir,DEBUG_EMPTY)) {
           gVerifyDir[0] = '\0';
         }
         PRBool state = PR_FALSE;

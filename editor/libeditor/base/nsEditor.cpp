@@ -5425,11 +5425,8 @@ nsEditor::DumpNode(nsIDOMNode *aNode, PRInt32 indent)
     if (element)
     {
       nsAutoString tag;
-      char ctag[40];
       element->GetTagName(tag);
-      tag.ToCString(ctag,40);
-      ctag[40]=0;
-      printf("<%s>\n", ctag);
+      printf("<%s>\n", NS_LossyConvertUTF16toASCII(tag).get());
     }
     else
     {
@@ -5454,11 +5451,10 @@ nsEditor::DumpNode(nsIDOMNode *aNode, PRInt32 indent)
     nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(aNode);
     nsAutoString str;
     textNode->GetData(str);
-    char theText[30], *c;
-    str.ToCString(theText,30);
-    theText[30]=0;
-    while (c=strchr(theText,'\n')) (*c) = ' ';
-    printf("<textnode> %s\n", theText);
+    nsCAutoString cstr;
+    LossyCopyUTF16toASCII(str, cstr);
+    cstr.ReplaceChar('\n', ' ');
+    printf("<textnode> %s\n", cstr.get());
   }
 }
 #endif

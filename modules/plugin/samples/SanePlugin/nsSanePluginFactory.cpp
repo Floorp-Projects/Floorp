@@ -285,19 +285,10 @@ NSRegisterSelf( nsISupports* aServMgr, const char* aPath )
                                     aPath, PR_TRUE, PR_TRUE );
   
     // Register the plugin portion.
-    nsString contractID;
-    contractID.AssignWithConversion( NS_INLINE_PLUGIN_CONTRACTID_PREFIX );
-
-    contractID.AppendWithConversion(PLUGIN_MIME_TYPE);
-    buf = ( char * )calloc( 2000, sizeof( char ) );
-    contractID.ToCString( buf, 1999 );
-  
     rv = compMgr->RegisterComponent( knsSanePluginInst,
                                      "SANE Plugin Component",
-                                     buf,
+                                     NS_INLINE_PLUGIN_CONTRACTID_PREFIX PLUGIN_MIME_TYPE
                                      aPath, PR_TRUE, PR_TRUE);
-    free( buf );
-  
     if ( NS_FAILED( rv ) )
         return rv;
   
