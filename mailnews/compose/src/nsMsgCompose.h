@@ -92,7 +92,6 @@ private:
                                                      nsIDOMNode * object);
   nsresult                      TagEmbeddedObjects(nsIEditorMailSupport *aMailEditor);
 
-  nsCString                     mQuoteURI;
   nsCString                     mQuoteCharset;
   nsCString                     mOriginalMsgURI; // used so we can mark message disposition flags after we send the message
 

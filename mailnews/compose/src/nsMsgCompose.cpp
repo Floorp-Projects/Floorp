@@ -405,10 +405,10 @@ nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorMailSupport *aEditor)
 
   // first, convert the rdf original msg uri into a url that represents the message...
   nsCOMPtr <nsIMsgMessageService> msgService;
-  rv = GetMessageServiceFromURI(mQuoteURI.get(), getter_AddRefs(msgService));
+  rv = GetMessageServiceFromURI(mOriginalMsgURI.get(), getter_AddRefs(msgService));
   if (NS_SUCCEEDED(rv))
   {
-    rv = msgService->GetUrlForUri(mQuoteURI.get(), getter_AddRefs(originalUrl), nsnull);
+    rv = msgService->GetUrlForUri(mOriginalMsgURI.get(), getter_AddRefs(originalUrl), nsnull);
     if (NS_SUCCEEDED(rv) && originalUrl)
     {
       originalUrl->GetScheme(originalScheme);
@@ -1856,8 +1856,6 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
             // Setup quoting callbacks for later...
             mWhatHolder = 1;
-            mQuoteURI = originalMsgURI;
-
             break;
           }
         case nsIMsgCompType::ForwardAsAttachment:
@@ -3540,7 +3538,7 @@ nsMsgCompose::BuildQuotedMessageAndSignature(void)
 
   // We will fire off the quote operation and wait for it to
   // finish before we actually do anything with Ender...
-  return QuoteOriginalMessage(mQuoteURI.get(), mWhatHolder);
+  return QuoteOriginalMessage(mOriginalMsgURI.get(), mWhatHolder);
 }
 
 //
