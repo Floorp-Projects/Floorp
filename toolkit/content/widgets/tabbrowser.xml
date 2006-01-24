@@ -1330,7 +1330,7 @@
             for (i = 0; i < this.mTabContainer.childNodes.length; ++i) {
               var tab = this.mTabContainer.childNodes[i];
               if ("owner" in tab && tab.owner == oldTab)
-                // |tab| is a child of the tab we're removing - make it an orphan
+                // |tab| is a child of the tab we're removing, make it an orphan
                 tab.owner = null;
             }
 
