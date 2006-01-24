@@ -107,14 +107,16 @@ FeedParser.prototype =
     var nsURI = channel.namespaceURI || "";
     debug("channel NS: '" + nsURI +"'");
 
-    aFeed.title = aFeed.title || getNodeValue(channel.getElementsByTagNameNS(nsURI,"title")[0]);
-    aFeed.description = getNodeValue(channel.getElementsByTagNameNS(nsURI,"description")[0]);
-    aFeed.link = getNodeValue(channel.getElementsByTagNameNS(nsURI,"link")[0]);
+    aFeed.title = aFeed.title || getNodeValue(this.childrenByTagNameNS(channel, nsURI, "title")[0]);
+    aFeed.description = getNodeValue(this.childrenByTagNameNS(channel, nsURI, "description")[0]);
+    aFeed.link = getNodeValue(this.childrenByTagNameNS(channel, nsURI, "link")[0]);
 
     if (!aFeed.parseItems)
       return parsedItems;
 
     aFeed.invalidateItems();
+    // XXX use getElementsByTagNameNS for now
+    // childrenByTagNameNS would be better, but RSS .90 is still with us
     var itemNodes = aDOM.getElementsByTagNameNS(nsURI,"item");
 
     for (var i=0; i < itemNodes.length; i++) 
@@ -124,8 +126,8 @@ FeedParser.prototype =
       item.feed = aFeed;
       item.characterSet = "UTF-8";
 
-      var link = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"link")[0]);
-      var guidNode = itemNode.getElementsByTagNameNS(nsURI,"guid")[0];
+      var link = getNodeValue(this.childrenByTagNameNS(itemNode, nsURI, "link")[0]);
+      var guidNode = this.childrenByTagNameNS(itemNode, nsURI, "guid")[0];
       var guid;
       var isPermaLink;
       if (guidNode) 
@@ -134,23 +136,19 @@ FeedParser.prototype =
         isPermaLink = guidNode.getAttribute('isPermaLink') == 'false' ? false : true;
       }
 
-      // getNodeValue returns unicode strings...
-      // we need to do the proper conversion on these before we call into
-      // item.Store();
-
       item.url = link ? link : (guid && isPermaLink) ? guid : null;
       item.id = guid;
-      item.description = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"description")[0]);
-      item.title = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"title")[0])
+      item.description = getNodeValue(this.childrenByTagNameNS(itemNode, nsURI, "description")[0]);
+      item.title = getNodeValue(this.childrenByTagNameNS(itemNode, nsURI, "title")[0])
                    || (item.description ? (this.stripTags(item.description).substr(0, 150)) : null)
                    || item.title;
 
-      item.author = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"author")[0]
-                                 || itemNode.getElementsByTagNameNS(DC_NS,"creator")[0])
+      item.author = getNodeValue(this.childrenByTagNameNS(itemNode, nsURI, "author")[0]
+                                 || this.childrenByTagNameNS(itemNode, DC_NS, "creator")[0])
                                  || aFeed.title
                                  || item.author;
-      item.date = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"pubDate")[0]
-                               || itemNode.getElementsByTagNameNS(DC_NS,"date")[0])
+      item.date = getNodeValue(this.childrenByTagNameNS(itemNode, nsURI, "pubDate")[0]
+                               || this.childrenByTagNameNS(itemNode, DC_NS, "date")[0])
                                || item.date;
     
       // If the date is invalid, users will see the beginning of the epoch
@@ -166,12 +164,12 @@ FeedParser.prototype =
         }
       }
 
-      var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
+      var content = getNodeValue(this.childrenByTagNameNS(itemNode, RSS_CONTENT_NS, "encoded")[0]);
       if(content)
         item.content = content;
 
       // Handle an enclosure (if present)
-      var enclosureNode = itemNode.getElementsByTagNameNS(nsURI,"enclosure")[0];
+      var enclosureNode = this.childrenByTagNameNS(itemNode, nsURI, "enclosure")[0];
       if (enclosureNode)
         item.enclosure = new FeedEnclosure(enclosureNode.getAttribute("url"), 
                                           enclosureNode.getAttribute("type"),
@@ -264,15 +262,15 @@ FeedParser.prototype =
       return parsedItems;
     }
 
-    aFeed.title = aFeed.title || this.stripTags(getNodeValue(channel.getElementsByTagName("title")[0]));
-    aFeed.description = getNodeValue(channel.getElementsByTagName("tagline")[0]);
-    aFeed.link = this.findAtomLink("alternate",channel.getElementsByTagNameNS(ATOM_03_NS,"link"));
+    aFeed.title = aFeed.title || this.stripTags(getNodeValue(this.childrenByTagNameNS(channel, ATOM_03_NS, "title")[0]));
+    aFeed.description = getNodeValue(this.childrenByTagNameNS(channel, ATOM_03_NS, "tagline")[0]);
+    aFeed.link = this.findAtomLink("alternate",this.childrenByTagNameNS(channel, ATOM_03_NS, "link"));
 
     if (!aFeed.parseItems)
       return parsedItems;
 
     aFeed.invalidateItems();
-    var items = aDOM.getElementsByTagName("entry");
+    var items = this.childrenByTagNameNS(channel, ATOM_03_NS, "entry");
     debug("Items to parse: " + items.length);
   
     for (var i=0; i < items.length; i++) 
@@ -283,24 +281,24 @@ FeedParser.prototype =
       item.characterSet = "UTF-8";
 
       var url;
-      url = this.findAtomLink("alternate",itemNode.getElementsByTagNameNS(ATOM_03_NS,"link"));
+      url = this.findAtomLink("alternate",this.childrenByTagNameNS(itemNode, ATOM_03_NS, "link"));
 
       item.url = url;
-      item.id = getNodeValue(itemNode.getElementsByTagName("id")[0]);
-      item.description = getNodeValue(itemNode.getElementsByTagName("summary")[0]);
-      item.title = getNodeValue(itemNode.getElementsByTagName("title")[0])
+      item.id = getNodeValue(this.childrenByTagNameNS(itemNode, ATOM_03_NS, "id")[0]);
+      item.description = getNodeValue(this.childrenByTagNameNS(itemNode, ATOM_03_NS, "summary")[0]);
+      item.title = getNodeValue(this.childrenByTagNameNS(itemNode, ATOM_03_NS, "title")[0])
                                 || (item.description ? item.description.substr(0, 150) : null)
                                 || item.title;
 
-      var authorEl = itemNode.getElementsByTagName("author")[0]
-                     || itemNode.getElementsByTagName("contributor")[0]
-                     || channel.getElementsByTagName("author")[0];
+      var authorEl = this.childrenByTagNameNS(itemNode, ATOM_03_NS, "author")[0]
+                     || this.childrenByTagNameNS(itemNode, ATOM_03_NS, "contributor")[0]
+                     || this.childrenByTagNameNS(channel, ATOM_03_NS, "author")[0];
       var author = "";
 
       if (authorEl) 
       {
-        var name = getNodeValue(authorEl.getElementsByTagName("name")[0]);
-        var email = getNodeValue(authorEl.getElementsByTagName("email")[0]);
+        var name = getNodeValue(this.childrenByTagNameNS(authorEl, ATOM_03_NS, "name")[0]);
+        var email = getNodeValue(this.childrenByTagNameNS(authorEl, ATOM_03_NS, "email")[0]);
         if (name)
           author = name + (email ? " <" + email + ">" : "");
         else if (email)
@@ -309,9 +307,9 @@ FeedParser.prototype =
       
       item.author = author || item.author || aFeed.title;
 
-      item.date = getNodeValue(itemNode.getElementsByTagName("modified")[0]
-                               || itemNode.getElementsByTagName("issued")[0]
-                               || itemNode.getElementsByTagName("created")[0])
+      item.date = getNodeValue(this.childrenByTagNameNS(itemNode, ATOM_03_NS, "modified")[0]
+                               || this.childrenByTagNameNS(itemNode, ATOM_03_NS, "issued")[0]
+                               || this.childrenByTagNameNS(itemNode, ATOM_03_NS, "created")[0])
                                || item.date;
 
       // XXX We should get the xml:base attribute from the content tag as well
@@ -324,7 +322,7 @@ FeedParser.prototype =
       // We deal with the first two but not the third.
       
       var content;
-      var contentNode = itemNode.getElementsByTagName("content")[0];
+      var contentNode = this.childrenByTagNameNS(itemNode, ATOM_03_NS, "content")[0];
       if (contentNode) 
       {
         content = "";
@@ -360,22 +358,22 @@ FeedParser.prototype =
     var parsedItems = new Array();
 
     // Get the first channel (assuming there is only one per Atom File).
-    var channel = aDOM.getElementsByTagNameNS(ATOM_IETF_NS,"feed")[0];
+    var channel = this.childrenByTagNameNS(aDOM,ATOM_IETF_NS,"feed")[0];
     if (!channel)
     {
       aFeed.onParseError(aFeed);
       return parsedItems;
     }
 
-    aFeed.title = aFeed.title || this.stripTags(this.serializeTextConstruct(channel.getElementsByTagNameNS(ATOM_IETF_NS,"title")[0]));
-    aFeed.description = this.serializeTextConstruct(channel.getElementsByTagNameNS(ATOM_IETF_NS,"subtitle")[0]);
-    aFeed.link = this.findAtomLink("alternate",channel.getElementsByTagNameNS(ATOM_IETF_NS,"link"));
-
+    aFeed.title = aFeed.title || this.stripTags(this.serializeTextConstruct(this.childrenByTagNameNS(channel,ATOM_IETF_NS,"title")[0]));
+    aFeed.description = this.serializeTextConstruct(this.childrenByTagNameNS(channel,ATOM_IETF_NS,"subtitle")[0]);
+    aFeed.link = this.findAtomLink("alternate", this.childrenByTagNameNS(channel,ATOM_IETF_NS,"link"));
+    
     if (!aFeed.parseItems)
       return parsedItems;
 
     aFeed.invalidateItems();
-    var items = aDOM.getElementsByTagNameNS(ATOM_IETF_NS,"entry");
+    var items = this.childrenByTagNameNS(channel,ATOM_IETF_NS,"entry");
     debug("Items to parse: " + items.length);
 
     for (var i=0; i < items.length; i++) 
@@ -385,24 +383,24 @@ FeedParser.prototype =
       item.feed = aFeed;
       item.characterSet = "UTF-8";
       item.isStoredWithId = true;
-      item.url = this.findAtomLink("alternate",itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"link")) || aFeed.link;
-      item.id = getNodeValue(itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"id")[0]);
-      item.description = this.serializeTextConstruct(itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"summary")[0]);
-      item.title = this.stripTags(this.serializeTextConstruct(itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"title")[0])
+      item.url = this.findAtomLink("alternate", this.childrenByTagNameNS(itemNode, ATOM_IETF_NS, "link")) || aFeed.link;
+      item.id = getNodeValue(this.childrenByTagNameNS(itemNode, ATOM_IETF_NS, "id")[0]);
+      item.description = this.serializeTextConstruct(this.childrenByTagNameNS(itemNode, ATOM_IETF_NS, "summary")[0]);
+      item.title = this.stripTags(this.serializeTextConstruct(this.childrenByTagNameNS(itemNode, ATOM_IETF_NS, "title")[0])
                                   || (item.description ? item.description.substr(0, 150) : null)
                                   || item.title);
       
       // XXX Support multiple authors
-      var source = itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"source")[0];
-      var authorEl = itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"author")[0]
-                           || (source ? source.getElementsByTagNameNS(ATOM_IETF_NS,"author")[0] : null)
-                           || channel.getElementsByTagNameNS(ATOM_IETF_NS,"author")[0];
+      var source = this.childrenByTagNameNS(itemNode, ATOM_IETF_NS, "source")[0];
+      var authorEl = this.childrenByTagNameNS(itemNode, ATOM_IETF_NS, "author")[0]
+                           || (source ? this.childrenByTagNameNS(source, ATOM_IETF_NS, "author")[0] : null)
+                           || this.childrenByTagNameNS(channel, ATOM_IETF_NS, "author")[0];
       var author = "";
 
       if (authorEl) 
       {
-        var name = getNodeValue(authorEl.getElementsByTagNameNS(ATOM_IETF_NS,"name")[0]);
-        var email = getNodeValue(authorEl.getElementsByTagNameNS(ATOM_IETF_NS,"email")[0]);
+        var name = getNodeValue(this.childrenByTagNameNS(authorEl, ATOM_IETF_NS, "name")[0]);
+        var email = getNodeValue(this.childrenByTagNameNS(authorEl, ATOM_IETF_NS, "email")[0]);
         if (name)
           author = name + (email ? " <" + email + ">" : "");
         else if (email)
@@ -410,16 +408,16 @@ FeedParser.prototype =
       }
       
       item.author = author || item.author || aFeed.title;
-      item.date = getNodeValue(itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"updated")[0]
-                               || itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"published")[0])
+      item.date = getNodeValue(this.childrenByTagNameNS(itemNode, ATOM_IETF_NS, "updated")[0]
+                               || this.childrenByTagNameNS(itemNode, ATOM_IETF_NS, "published")[0])
                                || item.date;
 
-      item.content = this.serializeTextConstruct(itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"content")[0]);
+      item.content = this.serializeTextConstruct(this.childrenByTagNameNS(itemNode, ATOM_IETF_NS, "content")[0]);
 
       if(item.content)
-        item.xmlContentBase = itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"content")[0].baseURI;
+        item.xmlContentBase = this.childrenByTagNameNS(itemNode, ATOM_IETF_NS, "content")[0].baseURI;
       else if(item.description)
-        item.xmlContentBase = itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"summary")[0].baseURI;
+        item.xmlContentBase = this.childrenByTagNameNS(itemNode, ATOM_IETF_NS, "summary")[0].baseURI;
       else
         item.xmlContentBase = itemNode.baseURI;
 
@@ -463,6 +461,19 @@ FeedParser.prototype =
     return content ? content : null;
   },
 
+  // finds elements that are direct children of the first arg
+  childrenByTagNameNS: function(aElement, aNamespace, aTagName)
+  {
+    var matches = aElement.getElementsByTagNameNS(aNamespace, aTagName);
+    var matchingChildren = new Array();
+    for (var i = 0; i < matches.length; i++) 
+    {
+      if(matches[i].parentNode == aElement)
+        matchingChildren.push(matches[i])
+    }
+    return matchingChildren;
+  },
+
   findAtomLink: function(linkRel, linkElements)
   {
     // XXX Need to check for MIME type and hreflang
@@ -476,9 +487,9 @@ FeedParser.prototype =
           && alink.getAttribute('href')) 
       {
         // Atom links are interpreted relative to xml:base
-        url = Components.classes["@mozilla.org/network/standard-url;1"].
-                    createInstance(Components.interfaces.nsIURI);
-        url.spec = alink.baseURI;
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                   .getService(Components.interfaces.nsIIOService);
+        url = ioService.newURI(alink.baseURI, null, null);
         return url.resolve(alink.getAttribute('href'));
       }
     }

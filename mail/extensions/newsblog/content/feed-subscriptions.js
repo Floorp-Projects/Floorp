@@ -855,7 +855,7 @@ var gFeedSubscriptionsWindow = {
       else if(rv)
       {
         //debug("opml:\n"+serial.serializeToString(opmlDoc)+"\n");
-        var file = new LocalFile(rv.file, MODE_WRONLY | MODE_CREATE);
+        var file = new LocalFile(rv.file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE);
         serial.serializeToStream(opmlDoc,file.outputStream,'utf-8');
         file.close();
       }
