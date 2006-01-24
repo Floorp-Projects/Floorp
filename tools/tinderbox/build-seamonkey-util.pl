@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.306 $ ';
+$::UtilsVersion = '$Revision: 1.307 $ ';
 
 package TinderUtils;
 
@@ -1154,12 +1154,11 @@ sub get_profile_dir {
         # *nix
         if ($Settings::VendorName) {
           $profile_dir = "$build_dir/.".lc($Settings::VendorName)."/".lc($profile_product_name)."/";
-          ($profile_dir) = <$profile_dir . "*" . $Settings::MozProfileName . "*">;
-        }
-        else {
+        } else {
           $profile_dir = "$build_dir/." . lc($profile_product_name) . "/";
-          ($profile_dir) = <$profile_dir*$Settings::MozProfileName*>;
         }
+
+        ($profile_dir) = <$profile_dir . "*" . $Settings::MozProfileName . "*">;
     }
 
     return $profile_dir;
@@ -1398,7 +1397,12 @@ sub fork_and_log {
         if ($Settings::ResetHomeDirForTests) {
             $ENV{HOME} = $home if ($Settings::OS ne "BeOS");
         }
-            
+
+        # Set XRE_NO_WINDOWS_CRASH_DIALOG to disable showing
+        # the windows crash dialog in case the child process
+        # crashes
+        $ENV{XRE_NO_WINDOWS_CRASH_DIALOG} = 1;
+
         # Explicitly set cwd to home dir.
         chdir $home or die "chdir($home): $!\n";
 
@@ -1628,7 +1632,7 @@ sub run_all_tests {
         } else {
             $args = ["$binary_dir/regxpcom"];
         }
-        AliveTest("regxpcom", $build_dir, $args,
+        AliveTest("regxpcom", $binary_dir, $args,
                   $Settings::RegxpcomTestTimeout);
     }
 
@@ -1731,7 +1735,8 @@ sub run_all_tests {
            $Settings::MailBloatTest          or
            $Settings::QATest                 or
            $Settings::BloatTest2             or
-           $Settings::BloatTest) {
+           $Settings::BloatTest              or
+           $Settings::RenderPerformanceTest) {
             
             # Chances are we will be timing these tests.  Bring gettime() into memory
             # by calling it once, before any tests run.
@@ -1746,8 +1751,13 @@ sub run_all_tests {
             set_pref($pref_file, 'dom.allow_scripts_to_close_windows', 'true');
 
             # Set security prefs to allow us to resize our windows.
-            # DHTML perf test (and possibly other tests) needs this off.
+            # DHTML and Tgfx perf tests (and possibly other tests) need this off.
             set_pref($pref_file, 'dom.disable_window_flip', 'false');
+
+            # Set prefs to allow us to move, resize, and raise/lower the
+            # current window. Tgfx needs this.
+            set_pref($pref_file, 'dom.disable_window_flip', 'false');
+            set_pref($pref_file, 'dom.disable_window_move_resize', 'false');
 
             # Suppress firefox's popup blocking
             if ($Settings::BinaryName =~ /^firefox/) {
@@ -1770,7 +1780,7 @@ sub run_all_tests {
     # Assume that we want to test modern skin for all tests.
     #
     if ($pref_file && $test_result eq 'success' and $Settings::UseMozillaProfile) { #XXX lame
-        if (system("\\grep -s general.skins.selectedSkin $pref_file > /dev/null")) {
+        if (system("\\grep -s general.skins.selectedSkin \"$pref_file\" > /dev/null")) {
             print_log "Setting general.skins.selectedSkin to modern/1.0\n";
             open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
             print PREFS "user_pref(\"general.skins.selectedSkin\", \"modern/1.0\");\n";
@@ -2017,6 +2027,7 @@ sub run_all_tests {
                                             $app_args,
                                             "file://$startup_build_dir/../startup-test.html");
     }
+
     if ($Settings::NeckoUnitTest and $test_result eq 'success') {
         $test_result = FileBasedTest("Necko unit tests",
                                      $build_dir, $binary_dir,
@@ -2024,19 +2035,46 @@ sub run_all_tests {
                                      $Settings::NeckoUnitTestTimeout,
                                      "FAIL", 0, 0);
     }
+
+    # run Trender
+    if ($Settings::RenderPerformanceTest and $test_result eq 'success') {
+      # Trender wants to be run in offline mode
+      set_pref($pref_file, 'browser.offline', 'true');
+
+      # And needs popups suppressed, because some sites have popups
+      if ($Settings::BinaryName =~ /^firefox/) {
+        set_pref($pref_file, 'privacy.popups.firstTime', 'true');
+        set_pref($pref_file, 'privacy.popups.showBrowserMessage', 'false');
+        set_pref($pref_file, 'dom.disable_open_during_load', 'true');
+      }
+
+      $test_result = RenderPerformanceTest("RenderPerformanceTest",
+                                           $build_dir, $binary_dir,
+                                           [$binary, "-P", $Settings::MozProfileName]);
+
+      # Undo pref changes
+      set_pref($pref_file, 'browser.offline', 'false');
+      if ($Settings::BinaryName =~ /^firefox/) {
+        set_pref($pref_file, 'privacy.popups.firstTime', 'false');
+        set_pref($pref_file, 'privacy.popups.showBrowserMessage', 'true');
+        set_pref($pref_file, 'dom.disable_open_during_load', 'false');
+      }
+    }
+
     return $test_result;
 }
 
 sub set_pref {
     my ($pref_file, $pref, $value) = @_;
-    if (system("\\grep -s $pref $pref_file > /dev/null")) {
-        print_log "Setting $pref to $value\n";
-        open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
-        print PREFS "user_pref(\"$pref\", $value);\n";
-        close PREFS;
-    } else {
-        print_log "Already set $pref\n";
-    }
+    # Make sure we get rid of whatever value was there,
+    # to allow for resetting prefs
+    system ("\\grep -v \\\"$pref\\\" '$pref_file' > '$pref_file.new'");
+    File::Copy::move("$pref_file.new", "$pref_file") or die("move: $!\n");
+
+    print_log "Setting $pref to $value\n";
+    open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
+    print PREFS "user_pref(\"$pref\", $value);\n";
+    close PREFS;
 }
 
 
@@ -2292,6 +2330,104 @@ sub DHTMLPerformanceTest {
     return $dhtml_test_result;
 }
 
+
+#
+# Trender test
+#
+
+sub RenderPerformanceTest {
+  my ($test_name, $build_dir, $binary_dir, $args) = @_;
+  my $render_test_result;
+  my $render_time;
+  my $render_gfx_time;
+  my $render_details;
+  my $binary_log = "$build_dir/$test_name.log";
+  my $url;
+  my $testbox = ::hostname();
+
+  # Find Trender.xml
+  if (-f "/cygdrive/c/builds/tinderbox/Trender/Trender.xml") {
+    $url = "file:///C:/builds/tinderbox/Trender/Trender.xml#tinderbox=1";
+  } elsif (-f "/builds/tinderbox/Trender/Trender.xml") {
+    $url = "file:///builds/tinderbox/Trender/Trender.xml#tinderbox=1";
+  } else {
+    print_log "TinderboxPrint:Trender:[NOTFOUND]\n";
+    return 'testfailed';
+  }
+
+  # fix up hostname/testbox; clear everything after the first ., if any
+  $testbox =~ s/\..*$//;
+  $testbox .= $Settings::BuildNameExtra;
+
+  # Settle OS.
+  run_system_cmd("sync; sleep 5", 35);
+
+  $render_test_result = FileBasedTest($test_name, $build_dir, $binary_dir,
+                                      [@$args, $url],
+                                      $Settings::RenderTestTimeout,
+                                      "_x_x_mozilla_trender", 1, 1);
+
+  # double check to make sure the test didn't really succeed
+  # even though the scripts think it failed.  Prevents various breakage
+  # (e.g. when a timeout happens on the mac, killing the process returns
+  # a bogus result code).  FileBasedTest checks the status code
+  # before the token
+  my $found_token = file_has_token($binary_log, "_x_x_mozilla_trender");
+  if ($found_token) {
+    $render_test_result = 'success';
+  }
+
+  if ($render_test_result eq 'testfailed') {
+    print_log "TinderboxPrint:Trender:[FAILED]\n";
+    return 'testfailed';
+  }
+
+  $render_time = extract_token_from_file($binary_log, "_x_x_mozilla_trender", ",");
+  if ($render_time) {
+    chomp($render_time);
+    my @times = split(',', $render_time);
+    $render_time = $times[0];
+  }
+  $render_time =~ s/[\r\n]//g;
+
+  $render_gfx_time = extract_token_from_file($binary_log, "_x_x_mozilla_trender_gfx", ",");
+  if ($render_gfx_time) {
+    chomp($render_gfx_time);
+    my @times = split(',', $render_gfx_time);
+    $render_gfx_time = $times[0];
+  }
+  $render_gfx_time =~ s/[\r\n]//g;
+
+  if (!$render_time || !$render_gfx_time) {
+    print_log "TinderboxPrint:Trender:[FAILED]\n";
+    return 'testfailed';
+  }
+
+  my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+
+  print_log "TinderboxPrint:";
+  print_log "<a title=\"Avg page render time in ms\" href=\"http://$Settings::results_server/graph/query.cgi?testname=render&tbox=" . $testbox . "&autoscale=1&days=7&avg=1&showpoint=$time,$render_time\">" if ($Settings::TestsPhoneHome);
+  print_log "Tr:$render_time" . "ms";
+  print_log "</a>" if ($Settings::TestsPhoneHome);
+  print_log "\n";
+
+  print_log "TinderboxPrint:";
+  print_log "<a title=\"Avg gfx render time in ms\" href=\"http://$Settings::results_server/graph/query.cgi?testname=rendergfx&tbox=" . $testbox . "&autoscale=1&days=7&avg=1&showpoint=$time,$render_gfx_time\">" if ($Settings::TestsPhoneHome);
+  print_log "Tgfx:$render_gfx_time" . "ms";
+  print_log "</a>" if ($Settings::TestsPhoneHome);
+  print_log "\n";
+
+  if($Settings::TestsPhoneHome) {
+    # Pull out detail data from log; this includes results for all sets
+    my $raw_data = extract_token_from_file($binary_log, "_x_x_mozilla_trender_details", ",");
+    chomp($raw_data);
+
+    send_results_to_server($render_time, $raw_data, "render", $testbox);
+    send_results_to_server($render_gfx_time, $raw_data, "rendergfx", $testbox);
+  }
+
+  return 'success';
+}
 
 #
 # Codesize test.  Needs:  cvs checkout mozilla/tools/codesighs
