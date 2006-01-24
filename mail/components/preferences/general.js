@@ -43,7 +43,9 @@ var gGeneralPane = {
   init: function ()
   {
     this.mPane = document.getElementById("paneGeneral"); 
-
+    
+    this.startPageCheck();
+    
 #ifdef XP_WIN
     document.getElementById('mail.checkDefaultMail').valueFromPreferences = this.onReadDefaultMailPref();
     document.getElementById('mail.checkDefaultNews').valueFromPreferences = this.onReadDefaultNewsPref();
