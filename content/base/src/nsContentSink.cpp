@@ -269,7 +269,7 @@ nsContentSink::ScriptEvaluated(nsresult aResult,
   mScriptElements.RemoveObjectAt(count - 1); 
 
   if (NS_SUCCEEDED(aResult)) {
-    PostEvaluateScript();
+    PostEvaluateScript(aElement);
   }
 
   if (mParser && mParser->IsParserEnabled() && aWasPending) {
