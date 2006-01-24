@@ -41,6 +41,10 @@
 
 #include "xpidl.h"
 
+#ifdef XP_WIN
+#define strdup _strdup
+#endif
+
 /* XXXbe static */ char OOM[] = "ERROR: out of memory\n";
 
 void *

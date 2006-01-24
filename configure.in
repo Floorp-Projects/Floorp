@@ -1753,7 +1753,13 @@ case "$target" in
         AC_MSG_ERROR([Cannot find $_GLIB_PREFIX_DIR/include/glib.h .])
     fi
     GLIB_CFLAGS="-I${_GLIB_PREFIX_DIR}/include"
-    GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
+    if test -f "${_GLIB_PREFIX_DIR}/lib/glib-1.2_s.lib"; then
+        GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2_s.lib"
+    elif test -f "${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"; then
+        GLIB_LIBS="${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
+    else
+        AC_MSG_ERROR([Cannot find $_GLIB_PREFIX_DIR/lib/glib-1.2.lib or $_GLIB_PREFIX_DIR/lib/glib-1.2_s.lib])
+    fi
 
     if test -n "$LIBIDL_PREFIX"; then
         _LIBIDL_PREFIX_DIR=`cd $LIBIDL_PREFIX && pwd`
@@ -1772,17 +1778,40 @@ case "$target" in
         AC_MSG_ERROR([Cannot find $_LIBIDL_PREFIX_DIR/include/libIDL/IDL.h .])
     fi
     LIBIDL_CFLAGS="-I${_LIBIDL_PREFIX_DIR}/include ${GLIB_CFLAGS}"
-    LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib ${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
+    if test -f "${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6_s.lib"; then
+        LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6_s.lib"
+        STATIC_LIBIDL=1
+    elif test -f "${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib"; then
+        LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib"
+    else
+        AC_MSG_ERROR([Cannot find $_LIBIDL_PREFIX_DIR/lib/libidl-0.6.lib or $_LIBIDL_PREFIX_DIR/lib/libidl-0.6_s.lib])
+    fi
+    LIBIDL_LIBS="${LIBIDL_LIBS} ${GLIB_LIBS}"
     ;;
+
     *) # else cross-compiling
         if test -n "$GLIB_PREFIX"; then
             GLIB_CFLAGS="-I${GLIB_PREFIX}/include"
-            GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2.lib"
+            if test -f "${GLIB_PREFIX}/lib/glib-1.2_s.lib"; then
+                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2_s.lib"
+            elif test -f "${GLIB_PREFIX}/lib/glib-1.2.lib"; then
+                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2.lib"
+            else
+                AC_MSG_ERROR([Cannot find $GLIB_PREFIX/lib/glib-1.2.lib or $GLIB_PREFIX/lib/glib-1.2_s.lib])
+            fi
         fi
         if test -n "$LIBIDL_PREFIX"; then
             LIBIDL_CFLAGS="-I${LIBIDL_PREFIX}/include ${GLIB_CFLAGS}"
-            LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libIDL-0.6.lib ${GLIB_LIBS}"
+            if test -f "${LIBIDL_PREFIX}/lib/libidl-0.6_s.lib"; then
+                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libidl-0.6_s.lib"
+                STATIC_LIBIDL=1
+            elif test -f "${LIBIDL_PREFIX}/lib/libidl-0.6.lib"; then
+                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libidl-0.6.lib"
+            else
+                AC_MSG_ERROR([Cannot find $LIBIDL_PREFIX/lib/libidl-0.6.lib or $LIBIDL_PREFIX/lib/libidl-0.6_s.lib])
+            fi
         fi
+        LIBIDL_LIBS="${LIBIDL_LIBS} ${GLIB_LIBS}"
         ;;
     esac 
 
@@ -6542,6 +6571,7 @@ fi
 
 AC_SUBST(LIBIDL_CFLAGS)
 AC_SUBST(LIBIDL_LIBS)
+AC_SUBST(STATIC_LIBIDL)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_GMODULE_LIBS)

@@ -575,17 +575,12 @@ ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 #//
 #//------------------------------------------------------------------------
 ifdef USE_STATIC_LIBS
-ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
-RTL_FLAGS=-ML          # Statically linked non-multithreaded LIBC RTL
-ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
-RTL_FLAGS=-MLd         # Statically linked non-multithreaded LIBC debug RTL
-endif # MOZ_DEBUG || NS_TRACE_MALLOC
-else
 RTL_FLAGS=-MT          # Statically linked multithreaded RTL
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
+ifndef MOZ_NO_DEBUG_RTL
 RTL_FLAGS=-MTd         # Statically linked multithreaded MSVC4.0 debug RTL
+endif
 endif # MOZ_DEBUG || NS_TRACE_MALLOC
-endif # _MSC_VER
 
 else # !USE_STATIC_LIBS
 
