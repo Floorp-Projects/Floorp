@@ -696,9 +696,6 @@ ifdef HOST_LIBRARY
 endif
 endif # !NO_DIST_INSTALL
 	+$(LOOP_OVER_DIRS)
-ifndef MOZ_ENABLE_LIBXUL
-	+$(LOOP_OVER_TOOL_DIRS)
-endif
 
 ##############################################
 install:: $(SUBMAKEFILES) $(MAKE_DIRS)

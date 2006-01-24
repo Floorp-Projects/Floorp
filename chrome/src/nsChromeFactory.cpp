@@ -43,7 +43,6 @@
 #include "nsIComponentManager.h"
 #include "nsIChromeRegistry.h"
 #include "nscore.h"
-#include "rdf.h"
 #include "nsChromeProtocolHandler.h"
 #include "nsChromeRegistry.h"
 

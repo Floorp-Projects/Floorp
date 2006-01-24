@@ -44,8 +44,9 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = history
-LIBRARY_NAME  = history_s
-FORCE_STATIC_LIB = 1
+LIBRARY_NAME  = tkhstory
+IS_COMPONENT = 1
+MODULE_NAME = nsToolkitHistory
 LIBXUL_LIBRARY = 1
 
 REQUIRES = xpcom \
@@ -59,6 +60,7 @@ REQUIRES = xpcom \
            unicharutil \
            autocomplete \
            uconv \
+           toolkitcomps \
            $(NULL)
 
 CPPSRCS = nsGlobalHistory.cpp  \
