@@ -385,14 +385,29 @@ error_exit:
 nsresult
 nsDiskCacheDevice::Shutdown()
 {
-    return Shutdown_Private(PR_TRUE);
+    nsresult rv = Shutdown_Private(PR_TRUE);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (mCacheDirectory) {
+        // delete any trash files left-over before shutting down.
+        nsCOMPtr<nsIFile> trashDir;
+        GetTrashDir(mCacheDirectory, &trashDir);
+        if (trashDir) {
+            PRBool exists;
+            if (NS_SUCCEEDED(trashDir->Exists(&exists)) && exists)
+                DeleteDir(trashDir, PR_FALSE, PR_TRUE);
+        }
+    }
+
+    return NS_OK;
 }
 
 
 nsresult
 nsDiskCacheDevice::Shutdown_Private(PRBool  flush)
 {
-        if (Initialized()) {
+    if (Initialized()) {
         // check cache limits in case we need to evict.
         EvictDiskCacheEntries((PRInt32)mCacheCapacity);
 
@@ -834,7 +849,7 @@ nsDiskCacheDevice::OpenDiskCache()
         rv = mCacheMap->Open(mCacheDirectory);        
         // move "corrupt" caches to trash
         if (rv == NS_ERROR_FILE_CORRUPTED) {
-            rv = DeleteDir(mCacheDirectory, PR_TRUE);
+            rv = DeleteDir(mCacheDirectory, PR_TRUE, PR_FALSE);
             if (NS_FAILED(rv))
                 return rv;
             exists = PR_FALSE;
@@ -858,7 +873,7 @@ nsDiskCacheDevice::OpenDiskCache()
         if (trashDir) {
             PRBool exists;
             if (NS_SUCCEEDED(trashDir->Exists(&exists)) && exists)
-                DeleteDir(trashDir, PR_FALSE);
+                DeleteDir(trashDir, PR_FALSE, PR_FALSE);
         }
     }
 
@@ -876,8 +891,10 @@ nsDiskCacheDevice::ClearDiskCache()
     if (NS_FAILED(rv))
         return rv;
 
-    rv = DeleteDir(mCacheDirectory, PR_TRUE);
-    if (NS_FAILED(rv))
+    // If the disk cache directory is already gone, then it's not an error if
+    // we fail to delete it ;-)
+    rv = DeleteDir(mCacheDirectory, PR_TRUE, PR_FALSE);
+    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
         return rv;
 
     return Init();

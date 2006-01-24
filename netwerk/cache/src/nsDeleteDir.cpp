@@ -48,7 +48,7 @@ PR_STATIC_CALLBACK(void) DeleteDirThreadFunc(void *arg)
   NS_RELEASE(dir);
 }
 
-nsresult DeleteDir(nsIFile *dirIn, PRBool moveToTrash)
+nsresult DeleteDir(nsIFile *dirIn, PRBool moveToTrash, PRBool sync)
 {
   nsresult rv;
   nsCOMPtr<nsIFile> trash, dir;
@@ -92,16 +92,23 @@ nsresult DeleteDir(nsIFile *dirIn, PRBool moveToTrash)
   nsIFile *trashRef = nsnull;
   trash.swap(trashRef);
 
-  // now, invoke the worker thread
-  PRThread *thread = PR_CreateThread(PR_USER_THREAD,
-                                     DeleteDirThreadFunc,
-                                     trashRef,
-                                     PR_PRIORITY_LOW,
-                                     PR_GLOBAL_THREAD,
-                                     PR_UNJOINABLE_THREAD,
-                                     0);
-  if (!thread)
-    return NS_ERROR_UNEXPECTED;
+  if (sync)
+  {
+    DeleteDirThreadFunc(trashRef);
+  }
+  else
+  {
+    // now, invoke the worker thread
+    PRThread *thread = PR_CreateThread(PR_USER_THREAD,
+                                       DeleteDirThreadFunc,
+                                       trashRef,
+                                       PR_PRIORITY_LOW,
+                                       PR_GLOBAL_THREAD,
+                                       PR_UNJOINABLE_THREAD,
+                                       0);
+    if (!thread)
+      return NS_ERROR_UNEXPECTED;
+  }
 
   return NS_OK;
 }

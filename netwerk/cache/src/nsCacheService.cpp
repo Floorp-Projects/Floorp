@@ -356,7 +356,7 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
                     if (NS_SUCCEEDED(rv)) {
                         PRBool exists;
                         if (NS_SUCCEEDED(profDir->Exists(&exists)) && exists)
-                            DeleteDir(profDir, PR_FALSE);
+                            DeleteDir(profDir, PR_FALSE, PR_FALSE);
                     }
                 }
             }

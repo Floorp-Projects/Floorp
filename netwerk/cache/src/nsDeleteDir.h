@@ -56,8 +56,11 @@ class nsIFile;
  *
  * If the moveToTrash parameter is false, then the given directory is deleted
  * directly.
+ *
+ * If the sync flag is true, then the delete operation runs to completion
+ * before this function returns.  Otherwise, deletion occurs asynchronously.
  */
-NS_HIDDEN_(nsresult) DeleteDir(nsIFile *dir, PRBool moveToTrash);
+NS_HIDDEN_(nsresult) DeleteDir(nsIFile *dir, PRBool moveToTrash, PRBool sync);
 
 /**
  * This routine returns the trash directory corresponding to the given 
