@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -44,6 +45,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLCollection.h"
+#include "nsIScriptElement.h"
 #include "jsapi.h"
 #include "rdf.h"
 #include "nsRDFCID.h"
@@ -187,6 +189,9 @@ public:
                          nsIDOMHTMLFormElement *aForm,
                          nsISupports **aResult);
 
+  virtual void ScriptLoading(nsIScriptElement *aScript);
+  virtual void ScriptExecuted(nsIScriptElement *aScript);
+
   virtual void AddedForm();
   virtual void RemovedForm();
   virtual PRInt32 GetNumFormsSynchronous();
@@ -290,8 +295,28 @@ protected:
   void StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
                           const char* aCommand);
 
-  PRUint32 mIsWriting : 1;
-  PRUint32 mWriteLevel : 31;
+  // mWriteState tracks the status of this document if the document is being
+  // entirely created by script. In the normal load case, mWriteState will be
+  // eNotWriting. Once document.open has been called (either implicitly or
+  // explicitly), mWriteState will be eDocumentOpened. When document.close has
+  // been called, mWriteState will become eDocumentClosed if there have been no
+  // external script loads in the meantime. If there have been, then mWriteState
+  // becomes ePendingClose, indicating that we might still be writing, but that
+  // we shouldn't process any further close() calls.
+  enum {
+    eNotWriting,
+    eDocumentOpened,
+    ePendingClose,
+    eDocumentClosed
+  } mWriteState;
+
+  // Tracks if we are currently processing any document.write calls (either
+  // implicit or explicit). Note that if a write call writes out something which
+  // would block the parser, then mWriteLevel will be incorrect until the parser
+  // finishes processing that script.
+  PRUint32 mWriteLevel;
+
+  nsSmallVoidArray mPendingScripts;
 
   // Load flags of the document's channel
   PRUint32 mLoadFlags;

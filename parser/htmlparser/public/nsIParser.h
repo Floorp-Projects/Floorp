@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,7 +41,6 @@
 
 /**
  * MODULE NOTES:
- * @update  gess 4/1/98
  *  
  *  This class defines the iparser interface. This XPCOM
  *  inteface is all that parser clients ever need to see.
@@ -54,10 +54,10 @@
 #include "nsStringGlue.h"
 #include "nsVoidArray.h"
 
-// {22039D29-2798-4412-9EA6-A11B41BA27D0}
-#define NS_IPARSER_IID      \
-{ 0x22039d29, 0x2798, 0x4412, \
-{ 0x9e, 0xa6, 0xa1, 0x1b, 0x41, 0xba, 0x27, 0xd0 } }
+// {6BE162F1-0A2E-4517-B3C5-EF5302DD2FEF}
+#define NS_IPARSER_IID \
+{ 0x6be162f1, 0xa2e, 0x4517, \
+{ 0xb3, 0xc5, 0xef, 0x53, 0x2, 0xdd, 0x2f, 0xef } }
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
@@ -77,13 +77,6 @@ enum eParserCommands {
   eViewFragment,
   eViewErrors
 };
-
-enum eCRCQuality {
-  eCRCGood = 0,
-  eCRCFair,
-  eCRCPoor
-};
-
 
 enum eParserDocType {
   ePlainText = 0,
@@ -136,8 +129,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDebugDumpContent, NS_IDEBUG_DUMP_CONTENT_IID)
 /**
  *  This class defines the iparser interface. This XPCOM
  *  inteface is all that parser clients ever need to see.
- *  
- *  @update  gess 3/25/98
  */
 class nsIParser : public nsISupports {
   public:
@@ -146,7 +137,7 @@ class nsIParser : public nsISupports {
 
     /**
      *  Call this method if you have a DTD that you want to share with the parser.
-	   *  Registered DTD's get remembered until the system shuts down.
+     *  Registered DTD's get remembered until the system shuts down.
      *  
      *  @update  gess 3/25/98
      *  @param   aDTD -- ptr DTD that you're publishing the services of
@@ -213,11 +204,11 @@ class nsIParser : public nsISupports {
      */
     NS_IMETHOD GetDTD(nsIDTD** aDTD) = 0;
 
-    /******************************************************************************************
-     *  Parse methods always begin with an input source, and perform conversions 
-     *  until you wind up being emitted to the given contentsink (which may or may not
-     *  be a proxy for the NGLayout content model).
-     ******************************************************************************************/
+    /**************************************************************************
+     *  Parse methods always begin with an input source, and perform
+     *  conversions until you wind up being emitted to the given contentsink
+     *  (which may or may not be a proxy for the NGLayout content model).
+     ************************************************************************/
     
     // Call this method to resume the parser from the blocked state.
     NS_IMETHOD ContinueParsing() = 0;
@@ -258,6 +249,10 @@ class nsIParser : public nsISupports {
                      PRBool aEnableVerify,
                      PRBool aLastCall,
                      nsDTDMode aMode = eDTDMode_autodetect) = 0;
+
+    // Return a key, suitable for passing into one of the Parse methods above,
+    // that will cause this parser to use the root context.
+    NS_IMETHOD_(void *) GetRootContextKey() = 0;
     
     NS_IMETHOD Terminate(void) = 0;
 

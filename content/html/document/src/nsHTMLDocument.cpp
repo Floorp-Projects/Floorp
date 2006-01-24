@@ -121,6 +121,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIDocumentViewer.h"
 #include "nsIWyciwygChannel.h"
+#include "nsIScriptElement.h"
 
 #include "nsIPrompt.h"
 //AHMED 12-2
@@ -970,7 +971,7 @@ nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
   // cancel the load that was initiated by the location="..." in the
   // script that was written out by document.write().
 
-  if (!htmldoc->mWriteLevel && !htmldoc->mIsWriting) {
+  if (!htmldoc->mWriteLevel && htmldoc->mWriteState != eDocumentOpened) {
     // Release the documents parser so that the call to EndLoad()
     // doesn't just return early and set the termination function again.
 
@@ -983,7 +984,7 @@ nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
 void
 nsHTMLDocument::EndLoad()
 {
-  if (mParser) {
+  if (mParser && mWriteState != eDocumentClosed) {
     nsCOMPtr<nsIJSContextStack> stack =
       do_GetService("@mozilla.org/js/xpc/ContextStack;1");
 
@@ -1024,6 +1025,13 @@ nsHTMLDocument::EndLoad()
     }
   }
 
+  // Reset this now, since we're really done "loading" this document.written
+  // document.
+  NS_ASSERTION(mWriteState == eNotWriting || mWriteState == ePendingClose ||
+               mWriteState == eDocumentClosed, "EndLoad called early");
+  mWriteState = eNotWriting;
+
+  // Note: nsDocument::EndLoad nulls out mParser.
   nsDocument::EndLoad();
 }
 
@@ -2047,7 +2055,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   // This will be propagated to the parser when someone actually calls write()
   mContentType = aContentType;
 
-  mIsWriting = 1;
+  mWriteState = eDocumentOpened;
 
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIHTMLContentSink> sink;
@@ -2141,21 +2149,24 @@ nsHTMLDocument::Close()
 {
   nsresult rv = NS_OK;
 
-  if (mParser && mIsWriting) {
+  if (mParser && mWriteState == eDocumentOpened) {
     ++mWriteLevel;
     if (mContentType.EqualsLiteral("text/html")) {
       rv = mParser->Parse(NS_LITERAL_STRING("</HTML>"),
-                          GenerateParserKey(),
+                          mParser->GetRootContextKey(),
                           mContentType, PR_FALSE,
                           PR_TRUE);
     } else {
-      rv = mParser->Parse(EmptyString(), GenerateParserKey(),
+      rv = mParser->Parse(EmptyString(), mParser->GetRootContextKey(),
                           mContentType, PR_FALSE, PR_TRUE);
     }
     --mWriteLevel;
-    mIsWriting = 0;
-    mParser->Terminate();
-    mParser = nsnull;
+
+    mPendingScripts.RemoveElement(GenerateParserKey());
+
+    mWriteState = mPendingScripts.Count() == 0
+                  ? eDocumentClosed
+                  : ePendingClose;
 
     // XXX Make sure that all the document.written content is
     // reflowed.  We should remove this call once we change
@@ -2202,6 +2213,15 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
 {
   nsresult rv = NS_OK;
 
+  void *key = GenerateParserKey();
+  if (mWriteState == eDocumentClosed ||
+      (mWriteState == ePendingClose &&
+       mPendingScripts.IndexOf(key) == kNotFound)) {
+    mWriteState = eDocumentClosed;
+    mParser->Terminate();
+    NS_ASSERTION(!mParser, "mParser should have been null'd out");
+  }
+
   if (!mParser) {
     rv = Open();
 
@@ -2238,14 +2258,12 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
   // why pay that price when we don't need to?
   if (aNewlineTerminate) {
     rv = mParser->Parse(aText + new_line,
-                        GenerateParserKey(),
-                        mContentType, PR_FALSE,
-                        (!mIsWriting || (mWriteLevel > 1)));
+                        key, mContentType, PR_FALSE,
+                        (mWriteState == eNotWriting || (mWriteLevel > 1)));
   } else {
     rv = mParser->Parse(aText,
-                        GenerateParserKey(),
-                        mContentType, PR_FALSE,
-                        (!mIsWriting || (mWriteLevel > 1)));
+                        key, mContentType, PR_FALSE,
+                        (mWriteState == eNotWriting || (mWriteLevel > 1)));
   }
 
   --mWriteLevel;
@@ -2522,6 +2540,30 @@ nsHTMLDocument::GetElementsByName(const nsAString& aElementName,
   NS_ADDREF(*aReturn);
 
   return NS_OK;
+}
+
+void
+nsHTMLDocument::ScriptLoading(nsIScriptElement *aScript)
+{
+  if (mWriteState == eNotWriting) {
+    return;
+  }
+
+  mPendingScripts.AppendElement(aScript);
+}
+
+void
+nsHTMLDocument::ScriptExecuted(nsIScriptElement *aScript)
+{
+  if (mWriteState == eNotWriting) {
+    return;
+  }
+
+  mPendingScripts.RemoveElement(aScript);
+  if (mPendingScripts.Count() == 0 && mWriteState == ePendingClose) {
+    // The last pending script just finished, terminate our parser now.
+    mWriteState = eDocumentClosed;
+  }
 }
 
 void

@@ -103,8 +103,8 @@ protected:
   void StartLayout(PRBool aIsFrameset);
 
   // Overridable hooks into script evaluation
-  virtual void PreEvaluateScript()  {return;}
-  virtual void PostEvaluateScript() {return;}
+  virtual void PreEvaluateScript()                            {return;}
+  virtual void PostEvaluateScript(nsIScriptElement *aElement) {return;}
 
   nsCOMPtr<nsIDocument>         mDocument;
   nsCOMPtr<nsIParser>           mParser;

@@ -52,9 +52,12 @@ class nsIStyleSheet;
 class nsICSSLoader;
 class nsIContent;
 class nsIDOMHTMLBodyElement;
+class nsIScriptElement;
 
 #define NS_IHTMLDOCUMENT_IID \
-{0x83f3c1d2, 0x0a60, 0x42db, {0xaf, 0x75, 0xd5, 0x54, 0xfe, 0x70, 0x8d, 0x25}}
+{ 0x4daadd67, 0x61b4, 0x4423, \
+  { 0xae, 0x1a, 0x61, 0x6f, 0xed, 0x5d, 0x72, 0x3c } }
+
 
 
 /**
@@ -85,6 +88,18 @@ public:
   virtual nsresult ResolveName(const nsAString& aName,
                                nsIDOMHTMLFormElement *aForm,
                                nsISupports **aResult) = 0;
+
+  /**
+   * Called from the script loader to notify this document that a new
+   * script is being loaded.
+   */
+  virtual void ScriptLoading(nsIScriptElement *aScript) = 0;
+
+  /**
+   * Called from the script loader to notify this document that a script
+   * just finished executing.
+   */
+  virtual void ScriptExecuted(nsIScriptElement *aScript) = 0;
 
   /**
    * Called when form->BindToTree() is called so that document knows
