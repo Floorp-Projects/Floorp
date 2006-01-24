@@ -411,7 +411,7 @@ protected:
 
   // nsContentSink overrides
   virtual void PreEvaluateScript();
-  virtual void PostEvaluateScript();
+  virtual void PostEvaluateScript(nsIScriptElement *aElement);
 
   void UpdateAllContexts();
   void NotifyAppend(nsIContent* aContent,
@@ -3810,8 +3810,9 @@ HTMLContentSink::PreEvaluateScript()
 }
 
 void
-HTMLContentSink::PostEvaluateScript()
+HTMLContentSink::PostEvaluateScript(nsIScriptElement *aElement)
 {
+  mHTMLDocument->ScriptExecuted(aElement);
 }
 
 nsresult
@@ -3851,6 +3852,9 @@ HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content,
 
     mScriptElements.AppendObject(sele);
   }
+
+  // Notify our document that we're loading this script.
+  mHTMLDocument->ScriptLoading(sele);
 
   // Now tell the script that it's ready to go. This will execute the script
   // and call our ScriptAvailable method.

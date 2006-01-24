@@ -1222,6 +1222,21 @@ nsParser::SetUnusedInput(nsString& aBuffer)
   mUnusedInput = aBuffer;
 }
 
+NS_IMETHODIMP_(void *)
+nsParser::GetRootContextKey()
+{
+  CParserContext* pc = mParserContext;
+  if (!pc) {
+    return nsnull;
+  }
+
+  while (pc->mPrevContext) {
+    pc = pc->mPrevContext;
+  }
+
+  return pc->mKey;
+}
+
 /**
  *  Call this when you want to *force* the parser to terminate the
  *  parsing process altogether. This is binary -- so once you terminate
@@ -1516,7 +1531,6 @@ nsParser::Parse(nsIInputStream* aStream,
  * In particular, this method should be called by the DOM when it has an HTML
  * string to feed to the parser in real-time.
  *
- * @update	gess5/11/98
  * @param   aSourceBuffer contains a string-full of real content
  * @param   aMimeType tells us what type of content to expect in the given string
  */
@@ -1555,9 +1569,16 @@ nsParser::Parse(const nsAString& aSourceBuffer,
       mFlags &= ~NS_PARSER_FLAG_DTD_VERIFICATION;
     }
 
-    CParserContext* pc = nsnull;
+    // Note: The following code will always find the parser context associated
+    // with the given key, even if that context has been suspended (e.g., for
+    // another document.write call). This doesn't appear to be exactly what IE
+    // does in the case where this happens, but this makes more sense.
+    CParserContext* pc = mParserContext;
+    while (pc && pc->mKey != aKey) {
+      pc = pc->mPrevContext;
+    }
 
-    if (!mParserContext || mParserContext->mKey != aKey) {
+    if (!pc) {
       // Only make a new context if we don't have one, OR if we do, but has a
       // different context key.
       nsScanner* theScanner = new nsScanner(mUnusedInput, mCharset, mCharsetSource);
@@ -1620,15 +1641,21 @@ nsParser::Parse(const nsAString& aSourceBuffer,
       // Do not interrupt document.write() - bug 95487
       result = ResumeParse(PR_FALSE, PR_FALSE, PR_FALSE);
     } else {
-      mParserContext->mScanner->Append(aSourceBuffer);
-      if (!mParserContext->mPrevContext) {
+      pc->mScanner->Append(aSourceBuffer);
+      if (!pc->mPrevContext) {
         // Set stream listener state to eOnStop, on the final context - Fix 68160,
         // to guarantee DidBuildModel() call - Fix 36148
         if (aLastCall) {
-          mParserContext->mStreamListenerState = eOnStop;
-          mParserContext->mScanner->SetIncremental(PR_FALSE);
+          pc->mStreamListenerState = eOnStop;
+          pc->mScanner->SetIncremental(PR_FALSE);
         }
-        ResumeParse(PR_FALSE, PR_FALSE, PR_FALSE);
+
+        if (pc == mParserContext) {
+          // If pc is not mParserContext, then this call to ResumeParse would
+          // do the wrong thing and try to continue parsing using
+          // mParserContext. We need to wait to actually resume parsing on pc.
+          ResumeParse(PR_FALSE, PR_FALSE, PR_FALSE);
+        }
       }
     }
   }
