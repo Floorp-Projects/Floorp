@@ -64,7 +64,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
 CPPSRCS = nsMailGNOMEIntegration.cpp
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT), mac)
+ifeq (,$(filter-out mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS = nsMailMacIntegration.cpp
 endif
 
