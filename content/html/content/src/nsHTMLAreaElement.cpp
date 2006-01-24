@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMNSHTMLAreaElement.h"
+#include "nsIDOMNSHTMLAreaElement2.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
@@ -52,7 +52,7 @@
 
 class nsHTMLAreaElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLAreaElement,
-                          public nsIDOMNSHTMLAreaElement,
+                          public nsIDOMNSHTMLAreaElement2,
                           public nsILink
 {
 public:
@@ -76,6 +76,9 @@ public:
 
   // nsIDOMNSHTMLAreaElement
   NS_DECL_NSIDOMNSHTMLAREAELEMENT
+
+  // nsIDOMNSHTMLAreaElement2
+  NS_DECL_NSIDOMNSHTMLAREAELEMENT2
 
   // nsILink
   NS_IMETHOD GetLinkState(nsLinkState &aState);
@@ -133,6 +136,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLAreaElement, nsGenericElement)
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAreaElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLAreaElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAreaElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAreaElement2)
   NS_INTERFACE_MAP_ENTRY(nsILink)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLAreaElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -478,6 +482,18 @@ NS_IMETHODIMP
 nsHTMLAreaElement::ToString(nsAString& aSource)
 {
   return GetHref(aSource);
+}
+
+NS_IMETHODIMP    
+nsHTMLAreaElement::GetPing(nsAString& aValue)
+{
+  return GetURIListAttr(nsHTMLAtoms::ping, aValue);
+}
+
+NS_IMETHODIMP
+nsHTMLAreaElement::SetPing(const nsAString& aValue)
+{
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::ping, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP

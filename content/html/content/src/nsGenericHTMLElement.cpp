@@ -2970,6 +2970,52 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsAString& aResult)
   return NS_OK;
 }
 
+nsresult
+nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
+{
+  aResult.Truncate();
+
+  nsAutoString value;
+  if (!GetAttr(kNameSpaceID_None, aAttr, value))
+    return NS_OK;
+
+  nsIDocument* doc = GetOwnerDoc(); 
+  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+
+  // Value contains relative URIs split on spaces (U+0020)
+  const PRUnichar *start = value.BeginReading();
+  const PRUnichar *end   = value.EndReading();
+  const PRUnichar *iter  = start;
+  for (;;) {
+    if (iter < end && *iter != ' ') {
+      ++iter;
+    } else {  // iter is pointing at either end or a space
+      while (*start == ' ' && start < iter)
+        ++start;
+      if (iter != start) {
+        if (!aResult.IsEmpty())
+          aResult.Append(PRUnichar(' '));
+        const nsSubstring& uriPart = Substring(start, iter);
+        nsCOMPtr<nsIURI> attrURI;
+        nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
+                                                  uriPart, doc, baseURI);
+        if (attrURI) {
+          nsCAutoString spec;
+          attrURI->GetSpec(spec);
+          AppendUTF8toUTF16(spec, aResult);
+        } else {
+          aResult.Append(uriPart);
+        }
+      }
+      start = iter = iter + 1;
+      if (iter >= end)
+        break;
+    }
+  }
+
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsGenericHTMLFrameElement, TabIndex, tabindex, 0)

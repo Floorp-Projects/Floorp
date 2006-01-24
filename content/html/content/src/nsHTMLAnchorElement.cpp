@@ -40,7 +40,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMNSHTMLAnchorElement.h"
+#include "nsIDOMNSHTMLAnchorElement2.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLDocument.h"
 #include "nsGenericHTMLElement.h"
@@ -68,7 +68,7 @@ nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 
 class nsHTMLAnchorElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLAnchorElement,
-                            public nsIDOMNSHTMLAnchorElement,
+                            public nsIDOMNSHTMLAnchorElement2,
                             public nsILink
 {
 public:
@@ -92,6 +92,9 @@ public:
 
   // nsIDOMNSHTMLAnchorElement
   NS_DECL_NSIDOMNSHTMLANCHORELEMENT
+
+  // nsIDOMNSHTMLAnchorElement2
+  NS_DECL_NSIDOMNSHTMLANCHORELEMENT2
 
   // nsILink
   NS_IMETHOD GetLinkState(nsLinkState &aState);
@@ -152,6 +155,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, nsGenericElement)
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAnchorElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLAnchorElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAnchorElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAnchorElement2)
   NS_INTERFACE_MAP_ENTRY(nsILink)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLAnchorElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -546,6 +550,18 @@ NS_IMETHODIMP
 nsHTMLAnchorElement::ToString(nsAString& aSource)
 {
   return GetHref(aSource);
+}
+
+NS_IMETHODIMP    
+nsHTMLAnchorElement::GetPing(nsAString& aValue)
+{
+  return GetURIListAttr(nsHTMLAtoms::ping, aValue);
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::SetPing(const nsAString& aValue)
+{
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::ping, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
