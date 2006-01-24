@@ -76,6 +76,7 @@ REQUIRES	= xpcom					 \
 		      profdirserviceprovider \
 		      pref					 \
 		      pipnss                 \
+			  pipboot                \
 		      intl                   \
 		      embedcomponents		 \
 		      appcomps				 \
