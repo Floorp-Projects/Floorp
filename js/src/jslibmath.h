@@ -50,9 +50,12 @@
 #include "jsconfig.h"
 
 /*
- * Define which platforms on which to use fdlibm.  Not used
- * by default since there can be problems with endian-ness and such.
+ * Define on which platforms to use fdlibm. Not used by default under
+ * assumption that native math library works unless proved guilty.
+ * Plus there can be problems with endian-ness and such in fdlibm itself.
  */
+
+#ifndef JS_USE_FDLIBM_MATH
 
 #if defined(_WIN32) && !defined(__MWERKS__)
 #define JS_USE_FDLIBM_MATH 1
@@ -69,9 +72,6 @@
 #elif defined(HPUX)
 #define JS_USE_FDLIBM_MATH 1
 
-#elif defined(linux)
-#define JS_USE_FDLIBM_MATH 1
-
 #elif defined(OSF1)
 /* Want to use some fdlibm functions but fdlibm broken on OSF1/alpha. */
 #define JS_USE_FDLIBM_MATH 0
@@ -82,6 +82,8 @@
 #else
 #define JS_USE_FDLIBM_MATH 0
 #endif
+
+#endif /* JS_USE_FDLIBM_MATH */
 
 #if !JS_USE_FDLIBM_MATH
 
@@ -199,26 +201,6 @@ extern double fd_pow __P((double, double));
 extern double fd_asin __P((double));
 extern double fd_atan __P((double));
 extern double fd_copysign __P((double, double));
-
-#elif defined(linux)
-
-#define fd_atan atan
-#define fd_atan2 atan2
-#define fd_ceil ceil
-#define fd_cos cos
-#define fd_fabs fabs
-#define fd_floor floor
-#define fd_fmod fmod
-#define fd_sin sin
-#define fd_sqrt sqrt
-#define fd_tan tan
-#define fd_copysign copysign
-
-extern double fd_asin __P((double));
-extern double fd_acos __P((double));
-extern double fd_exp __P((double));
-extern double fd_log __P((double));
-extern double fd_pow __P((double, double));
 
 #elif defined(OSF1)
 
