@@ -43,7 +43,7 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
-const SELECTION_CONTAINS_URL = 0x01;
+const SELECTION_CONTAINS_URI = 0x01;
 const SELECTION_CONTAINS_CONTAINER = 0x02;
 const SELECTION_IS_OPEN_CONTAINER = 0x04;
 const SELECTION_IS_CLOSED_CONTAINER = 0x08;
@@ -104,16 +104,15 @@ function InsertionPoint(folderId, index, orientation) {
  * Initialization Configuration for a View
  * @constructor
  */
-function ViewConfig(dropTypes, dropOnTypes, filterOptions, firstDropIndex) {
+function ViewConfig(dropTypes, dropOnTypes, excludeItems, expandQueries, firstDropIndex) {
   this.dropTypes = dropTypes;
   this.dropOnTypes = dropOnTypes;
-  this.filterOptions = filterOptions;
+  this.excludeItems = excludeItems;
+  this.expandQueries = expandQueries;
   this.firstDropIndex = firstDropIndex;
 }
 ViewConfig.GENERIC_DROP_TYPES = [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE,
                                  TYPE_X_MOZ_URL];
-ViewConfig.GENERIC_FILTER_OPTIONS = Ci.nsINavHistoryQuery.INCLUDE_ITEMS +
-                                     Ci.nsINavHistoryQuery.INCLUDE_QUERIES;
 
 /**
  * Manages grouping options for a particular view type. 
@@ -238,17 +237,22 @@ var PlacesController = {
    * Generates a HistoryResult for the contents of a folder. 
    * @param   folderId
    *          The folder to open
-   * @param   filterOptions
-   *          Options regarding the type of items to be returned. See 
-   *          documentation in nsINavHistoryQuery for the |itemTypes| property.
+   * @param   excludeItems
+   *          True to hide all items (individual bookmarks). This is used on
+   *          the left places pane so you just get a folder hierarchy.
+   * @param   expandQueries
+   *          True to make query items expand as new containers. For managing,
+   *          you want this to be false, for menus and such, you want this to
+   *          be true.
    * @returns A HistoryResult containing the contents of the folder. 
    */
-  getFolderContents: function PC_getFolderContents(folderId, filterOptions) {
+  getFolderContents: function PC_getFolderContents(folderId, excludeItems, expandQueries) {
     var query = this._hist.getNewQuery();
     query.setFolders([folderId], 1);
-    query.itemTypes = filterOptions;
     var options = this._hist.getNewQueryOptions();
     options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+    options.excludeItems = excludeItems;
+    options.expandQueries = expandQueries;
     return this._hist.executeQuery(query, options);
   },
   
@@ -385,8 +389,7 @@ var PlacesController = {
    * @returns true if the node is a Bookmark folder, false otherwise
    */
   nodeIsFolder: function PC_nodeIsFolder(node) {
-    return (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
-            node.folderId > 0);
+    return (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER);
   },
   
   /**
@@ -395,10 +398,11 @@ var PlacesController = {
    *          A NavHistoryResultNode
    * @returns true if the node is a URL item, false otherwise
    */
-  nodeIsURL: function PC_nodeIsURL(node) {
+  nodeIsURI: function PC_nodeIsURI(node) {
     const NHRN = Ci.nsINavHistoryResultNode;
-    return node.type == NHRN.RESULT_TYPE_URL || 
-           node.type == NHRN.RESULT_TYPE_VISIT;
+    return node.type == NHRN.RESULT_TYPE_URI ||
+           node.type == NHRN.RESULT_TYPE_VISIT ||
+           node.type == NHRN.RESULT_TYPE_FULL_VISIT;
   },
   
   /**
@@ -456,10 +460,10 @@ var PlacesController = {
     // Paste
     this._setEnabled("placesCmd_edit:paste", this._canPaste());
     // Open
-    var hasSelectedURL = this._activeView.selectedURLNode != null;
-    this._setEnabled("placesCmd_open", hasSelectedURL);
-    this._setEnabled("placesCmd_open:window", hasSelectedURL);
-    this._setEnabled("placesCmd_open:tab", hasSelectedURL);
+    var hasSelectedURI = this._activeView.selectedURINode != null;
+    this._setEnabled("placesCmd_open", hasSelectedURI);
+    this._setEnabled("placesCmd_open:window", hasSelectedURI);
+    this._setEnabled("placesCmd_open:tab", hasSelectedURI);
     
     // We can open multiple links in tabs if there is either: 
     //  a) a single folder selected
@@ -469,7 +473,7 @@ var PlacesController = {
     this._setEnabled("placesCmd_open:tabs", 
       singleFolderSelected || !hasSingleSelection);
       
-    var viewIsFolder = this.nodeIsFolder(this._activeView.getResult());
+    var viewIsFolder = this.nodeIsFolder(this._activeView.getResult().root);
     // Persistent Sort
     this._setEnabled("placesCmd_sortby:name", viewIsFolder);
     // New Folder
@@ -499,19 +503,21 @@ var PlacesController = {
     var metadata = { mixed: true };
     
     var hasSingleSelection = this._activeView.hasSingleSelection;
-    if (this._activeView.selectedURLNode && hasSingleSelection)
+    if (this._activeView.selectedURINode && hasSingleSelection)
       metadata["link"] = true;
-    var selectedNode = this._activeView.selectedNode;
-    if (this.nodeIsFolder(selectedNode) && hasSingleSelection)
-      metadata["folder"] = true;
-    if (this.nodeIsContainer(selectedNode) && hasSingleSelection)
-      metadata["container"] = true;
+    if (hasSingleSelection) {
+      var selectedNode = this._activeView.selectedNode;
+      if (this.nodeIsFolder(selectedNode))
+        metadata["folder"] = true;
+      if (this.nodeIsContainer(selectedNode))
+        metadata["container"] = true;
+    }
     
     var foundNonLeaf = false;
     var nodes = this._activeView.getSelectionNodes();
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
-      if (node.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_URL)
+      if (node.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_URI)
         foundNonLeaf = true;
       if (!node.readonly && node.folderType == "")
         metadata["mutable"] = true;
@@ -617,27 +623,30 @@ var PlacesController = {
    * Loads the selected URL in a new tab. 
    */
   openLinkInNewTab: function PC_openLinkInNewTab() {
-    var node = this._activeView.selectedURLNode;
+    var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.openNewTabWith(node.url, null, null);
+      this._activeView.browserWindow.openNewTabWith(
+          node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri, null, null);
   },
 
   /**
    * Loads the selected URL in a new window.
    */
   openLinkInNewWindow: function PC_openLinkInNewWindow() {
-    var node = this._activeView.selectedURLNode;
+    var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.openNewWindowWith(node.url, null, null);
+      this._activeView.browserWindow.openNewWindowWith(
+          node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri, null, null);
   },
 
   /**
    * Loads the selected URL in the current window, replacing the Places page.
    */
   openLinkInCurrentWindow: function PC_openLinkInCurrentWindow() {
-    var node = this._activeView.selectedURLNode;
+    var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.loadURI(node.url, null, null);
+      this._activeView.browserWindow.loadURI(
+          node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri, null, null);
   },
   
   /**
@@ -652,16 +661,19 @@ var PlacesController = {
       var cc = kids.childCount;
       for (var i = 0; i < cc; ++i) {
         var node = kids.getChild(i);
-        if (this.nodeIsURL(node))
-          this._activeView.browserWindow.openNewTabWith(node.url, 
-                                                        null, null);
+        if (this.nodeIsURI(node))
+          this._activeView.browserWindow.openNewTabWith(
+              node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri,
+              null, null);
       }
     }
     else {
       var nodes = this._activeView.getSelectionNodes();
       for (var i = 0; i < nodes.length; ++i) {
-        if (this.nodeIsURL(nodes[i]))
-          this._activeView.browserWindow.openNewTabWith(nodes[i].url, null, null);
+        if (this.nodeIsURI(nodes[i]))
+          this._activeView.browserWindow.openNewTabWith(
+              nodes[i].QueryInterface(Ci.nsINavHistoryURIResultNode).uri,
+              null, null);
       }
     }
   },
@@ -683,8 +695,9 @@ var PlacesController = {
     if (!this._groupableView)
       return;
     var result = this._groupableView.getResult();
-    var queries = result.getQueries({ });
-    var newOptions = result.queryOptions.clone();
+    var root = result.root.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+    var queries = root.getQueries({ });
+    var newOptions = root.queryOptions.clone();
     
     // Update the grouping mode only after persisting, so that the URI is not 
     // changed. 
@@ -753,36 +766,41 @@ var PlacesController = {
   remove: function PC_remove(txnName) {
     var nodes = this._activeView.getSelectionNodes();
     this._activeView.saveSelection();
-    if (this._activeView.isBookmarks) {
-      // delete bookmarks
-      var txns = [];
-      for (var i = 0; i < nodes.length; ++i) {
-        var node = nodes[i];
-        var index = this.getIndexOfNode(node);
-        if (this.nodeIsFolder(node)) {
-          txns.push(new PlacesRemoveFolderTransaction(node.folderId, 
-                                                      node.parent.folderId, 
-                                                      index));
-        }
-        else {
-          txns.push(new PlacesRemoveItemTransaction(this._uri(node.url),
-                                                    node.parent.folderId,
+
+    // delete bookmarks
+    var txns = [];
+    for (var i = 0; i < nodes.length; ++i) {
+      var node = nodes[i];
+      var index = this.getIndexOfNode(node);
+      if (this.nodeIsFolder(node)) {
+        txns.push(new PlacesRemoveFolderTransaction(node.folderId, 
+                                                    node.parent.folderId, 
                                                     index));
+      }
+      else if (this.nodeIsFolder(node.parent)) {
+        // this item is in a bookmark folder
+        txns.push(new PlacesRemoveItemTransaction(this._uri(node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri),
+                                                  node.parent.folderId,
+                                                  index));
+      }
+      else {
+        // other containers are history queries, just delete from history
+        // history deletes are not undoable.
+        var hist = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsIBrowserHistory);
+        for (var i = 0; i < nodes.length; ++i) {
+          var node = nodes[i];
+          if (this.nodeIsHost(node)) {
+            hist.removePagesFromHost(node.title, true);
+          } else if (this.nodeIsURI(node)) {
+            hist.removePage(this._uri(node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri));
+          }
         }
       }
-      var txn = new PlacesAggregateTransaction(txnName || "RemoveItems", txns);
-      this._hist.transactionManager.doTransaction(txn);
-    } else {
-      // delete history items: these are unfortunately not undoable.
-      var hist = Cc["@mozilla.org/browser/nav-history-service;1"].
-              getService(Ci.nsIBrowserHistory);
-      for (var i = 0; i < nodes.length; ++i) {
-        var node = nodes[i];
-        if (this.nodeIsHost(node)) {
-          hist.removePagesFromHost(node.title, true);
-        } else {
-          hist.removePage(this._uri(node.url));
-        }
+
+      if (txns.length > 0) {
+        var txn = new PlacesAggregateTransaction(txnName || "RemoveItems", txns);
+        this._hist.transactionManager.doTransaction(txn);
       }
     }
     this._activeView.restoreSelection();
@@ -817,14 +835,14 @@ var PlacesController = {
     switch (type) {
     case TYPE_X_MOZ_PLACE_CONTAINER:
     case TYPE_X_MOZ_PLACE: 
-      return node.folderId + "\n" + node.url + "\n" + node.parent.folderId + "\n" + this.getIndexOfNode(node);
+      return node.folderId + "\n" + node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri + "\n" + node.parent.folderId + "\n" + this.getIndexOfNode(node);
     case TYPE_X_MOZ_URL:
-      return node.url + "\n" + node.title;
+      return node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri + "\n" + node.title;
     case TYPE_HTML:
-      return "<A HREF=\"" + node.url + "\">" + node.title + "</A>";
+      return "<A HREF=\"" + node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri + "\">" + node.title + "</A>";
     }
     // case TYPE_UNICODE:
-    return node.url;
+    return node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri;
   },
   
   /**
@@ -904,15 +922,14 @@ var PlacesController = {
       transactions.push(createTxn);
     
       // Get the folder's children
-      var kids = self.getFolderContents(folderId, 
-                                        ViewConfig.GENERIC_FILTER_OPTIONS);
+      var kids = self.getFolderContents(folderId, false, false);
       var cc = kids.childCount;
       for (var i = 0; i < cc; ++i) {
         var node = kids.getChild(i);
         if (self.nodeIsFolder(node))
           createTransactions(node.folderId, folderId, i);
-        else {
-          var uri = self._uri(node.url);
+        else if (this.nodeIsURI(node)) {
+          var uri = self._uri(node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri);
           transactions.push(self._getItemCopyTransaction(uri, container, 
                                                          index));
         }
@@ -1145,7 +1162,7 @@ var PlacesControllerDragHelper = {
    */
   canDrop: function PCDH_canDrop(view, orientation) {
     var result = view.getResult();
-    if (result.readOnly || !PlacesController.nodeIsFolder(result))
+    if (result.readOnly || !PlacesController.nodeIsFolder(result.root))
       return false;
   
     var session = this._getSession();
@@ -1490,7 +1507,7 @@ PlacesEditItemTransaction.prototype = {
  selection flags
 
  flags:
-   SELECTION_CONTAINS_URL
+   SELECTION_CONTAINS_URI
    SELECTION_CONTAINS_CONTAINER_OPEN
    SELECTION_CONTAINS_CONTAINER_CLOSED
    SELECTION_CONTAINS_CHANGEABLE

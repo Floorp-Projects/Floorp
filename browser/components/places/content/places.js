@@ -175,12 +175,11 @@ var PlacesPage = {
     
     this._places.init(new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER],
                                      ViewConfig.GENERIC_DROP_TYPES,
-                                     Ci.nsINavHistoryQuery.INCLUDE_QUERIES,
-                                     ViewConfig.GENERIC_FILTER_OPTIONS, 3));
+                                     true, false, 3));
     this._content.init(new ViewConfig(ViewConfig.GENERIC_DROP_TYPES,
                                       ViewConfig.GENERIC_DROP_TYPES,
-                                      ViewConfig.GENERIC_FILTER_OPTIONS, 0));
-                                      
+                                      false, false, 0));
+
     PlacesController.groupableView = this._content;
 
     var GroupingSerializer = {
@@ -309,21 +308,24 @@ var PlacesPage = {
     var node = this._places.selectedNode;
     if (!node || this._places.suppressSelection)
       return;
+    if (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER)
+      node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+    else if (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
+      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+    else
+      return; // should not get here
     var queries = node.getQueries({});
     var newQueries = [];
     for (var i = 0; i < queries.length; ++i) {
       var query = queries[i].clone();
-      query.itemTypes |= this._content.filterOptions;
       newQueries.push(query);
     }
     var newOptions = node.queryOptions.clone();
 
-    var groupings = PlacesController.groupers.generic.value;
     var isBookmark = PlacesController.nodeIsFolder(node);
     if (isBookmark)
       groupings = PlacesController.groupers.bookmark.value;
 
-    newOptions.setGroupingMode(groupings, groupings.length);
     this._content.load(newQueries, newOptions);
 
     this._setHeader("showing", node.title);
@@ -340,11 +342,19 @@ var PlacesPage = {
     calendar.suppressRangeEvents = true;
 
     var result = this._content.getResult();
-    var queries = result.getQueries({ });
+    if (result.root.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
+      result.root.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+    else if (result.root.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER)
+      result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+    else
+      return;
+    var queries = result.root.getQueries({ });
     if (!queries.length)
       return;
     
-    // Query values are OR'ed together, so just use the first. 
+    // Query values are OR'ed together, so just use the first.
+    // FIXME: if there is more than one query, we probably do NOT want to
+    // highlight the date range in the calendar.
     var query = queries[0];
     
     const NOW = new Date();
@@ -868,8 +878,8 @@ var PlacesQueryBuilder = {
       result.queryOptions.maxResults = max;
       dump("Max results = " + result.queryOptions.maxResults + "(" + max + ")\n");
     }
-    // Make sure we're getting url results, not visits
-    result.queryOptions.resultType = result.queryOptions.RESULT_TYPE_URL;
+    // Make sure we're getting uri results, not visits
+    result.queryOptions.resultType = result.queryOptions.RESULT_TYPE_URI;
 
     PlacesPage._content.load(queries, result.queryOptions);
   },

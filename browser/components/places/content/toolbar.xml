@@ -35,16 +35,6 @@
         var options = this._places.getNewQueryOptions();
         options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
         this._result = this._places.executeQuery(query, options);
-                                                     
-        // Check if the new query needs a show event.
-        if (PlacesController.nodeIsContainer(this._result)) {
-          var serv = Cc[this._result.folderType]
-                     .getService(Ci.nsIBookmarksContainer);
-          if (serv.onContainerOpening(this._result.folderId))
-            this._result = this._places.executeQueries(queries, queries.length,
-                                                       options);
-        }
-                                                         
         this._rebuild();
         ]]></body>
       </method>
@@ -66,13 +56,14 @@
           while (this.hasChildNodes())
             this.removeChild(this.firstChild);
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          var cc = this._result.childCount;
+          var cc = this._result.root.childCount;
           for (var i = 0; i < cc; ++i) {
-            var child = this._result.getChild(i);
+            var child = this._result.root.getChild(i);
             var button = document.createElementNS(XULNS, "toolbarbutton");
             button.setAttribute("label", child.title);
-            if (PlacesController.nodeIsURL(child)) {
-              button.setAttribute("url", child.url);
+            if (PlacesController.nodeIsURI(child)) {
+              child = child.QueryInterface(Ci.nsINavHistoryURIResultNode);
+              button.setAttribute("url", child.uri);
               button.setAttribute("image", child.icon.spec);
             } else if (PlacesController.nodeIsFolder(child)) {
               button.setAttribute("type", "menu");
@@ -106,7 +97,7 @@
           // This is set here and not in the XBL constructor for the menu because
           // it doesn't get initialized properly in the constructor.
           popup.setAttribute("context", "placesContext");
-          popup.folderId = this._result.folderId;
+          popup.folderId = this._result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
           var t = this;
           popup.popupShowingCallback = function() {t.chevronPopupShowing();};
           this._chevron.appendChild(popup);
@@ -170,24 +161,8 @@
         <parameter name="queries"/>
         <parameter name="options"/>
         <body><![CDATA[
-          // Check if the old query needs a hidden event.
-          if (PlacesController.nodeIsContainer(this._result)) {
-            var serv = Cc[this._result.folderType]
-                       .getService(Ci.nsIBookmarksContainer);
-            serv.onContainerClosed(this._result.folderId);
-          }
-          
           this._result = this._places.executeQueries(queries, queries.length,
                                                      options);
-
-          // Check if the new query needs a show event.
-          if (PlacesController.nodeIsContainer(this._result)) {
-            var serv = Cc[this._result.folderType]
-                       .getService(Ci.nsIBookmarksContainer);
-            if (serv.onContainerOpening(this._result.folderId))
-              this._result = this._places.executeQueries(queries, queries.length,
-                                                         options);
-          }
           this._rebuild();
         ]]></body>
       </method>
@@ -228,10 +203,10 @@
         ]]></getter>
       </property>
       
-      <property name="selectedURLNode">
+      <property name="selectedURINode">
         <getter><![CDATA[
           var node = this.selectedNode;
-          return node && PlacesController.nodeIsURL(node) ? node : null;
+          return node && PlacesController.nodeIsURI(node) ? node : null;
         ]]></getter>
       </property>
       
@@ -239,7 +214,7 @@
         <getter><![CDATA[
           // By default, the insertion point is at the top level, at the end. 
           var index = -1;
-          var folderId = this._result.folderId;
+          var folderId = this._result.root.QueryInterface(nsINavHistoryFolderResultNode).folderId;
           
           if (this.hasSelection) {
             if(PlacesController.nodeIsFolder(this.selectedNode))
@@ -298,7 +273,7 @@
           if (!this._numBatches)
             this._self.init();
         },
-        onItemVisited: function TB_0_onItemVisited(bookmark, time) {
+        onItemVisited: function TB_0_onItemVisited(bookmark, visitId, time) {
           //this._self.init();
         },
         onItemReplaced: function TB_0_onItemReplaced(filder, item, newItem) {

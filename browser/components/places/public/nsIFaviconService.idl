@@ -49,9 +49,9 @@ interface nsIFaviconService : nsISupports
    * You needn't have specified any data at this point. An entry linking the
    * favicon with the page will be create with no data. You can populate it
    * later with SetFaviconData.  However, any favicons not associated with a
-   * visited web page or bookmark will be expired when history cleanup is done
-   * (typically at app shutdown, but also possibly if the user clears their
-   * cache or history).
+   * visited web page, a bookmark, or a "place:" URI will be expired when
+   * history cleanup is done * (typically at app shutdown, but also possibly
+   * if the user clears their * cache or history).
    *
    * This will send out history notifications if the new favicon has any data.
    * This means that you should try to set data first if you have it, otherwise
@@ -99,10 +99,10 @@ interface nsIFaviconService : nsISupports
    *
    * You can set the data even if you haven't called SetFaviconUrlForPage
    * yet. It will be stored but will not be associated with any page.
-   * However, any favicons not associated with a visited web page or bookmark
-   * will be expired when history cleanup is done (typically at app shutdown,
-   * but also possibly if the user clears their cache or history). It is best
-   * to call this function first for notification purposes.
+   * However, any favicons not associated with a visited web page, bookmark,
+   * or "place:" URI will be expired when history cleanup is done (typically
+   * at app shutdown, but also possibly if the user clears their cache or
+   * history). It is best to call this function first for notification purposes.
    *
    * The expiration time is stored. This will be used if you call
    * SetAndLoadFaviconForPage to see whether the data needs reloading.

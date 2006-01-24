@@ -65,24 +65,14 @@ public:
     return sInstance;
   }
 
-  // Creates a new result node for the given folder.
-  // The query and options are cloned, and the folder's id is set on the
-  // new node's query.
-  nsresult ResultNodeForFolder(PRInt64 aFolder,
-                               nsINavHistoryQuery *aQuery,
-                               nsINavHistoryQueryOptions *aOptions,
+  nsresult ResultNodeForFolder(PRInt64 aID, nsNavHistoryQueryOptions *aOptions,
                                nsNavHistoryResultNode **aNode);
-
-  // Fills in a ResultNode for the given folder.
-  // The node's type and queries must already be set.
-  nsresult FillFolderNode(PRInt64 aID,
-                          nsNavHistoryQueryNode *aNode);
 
   // Find all the children of a folder, using the given query and options.
   // For each child, a ResultNode is created and added to |children|.
   // The results are ordered by folder position.
-  nsresult QueryFolderChildren(nsINavHistoryQuery *aQuery,
-                               nsINavHistoryQueryOptions *aOptions,
+  nsresult QueryFolderChildren(PRInt64 aFolderId,
+                               nsNavHistoryQueryOptions *aOptions,
                                nsCOMArray<nsNavHistoryResultNode> *children);
 
   // Returns a statement to get information about a folder id
