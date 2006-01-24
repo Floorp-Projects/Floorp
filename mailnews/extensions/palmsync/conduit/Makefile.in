@@ -44,6 +44,7 @@ PALM_CDK_INC	= $(PALM_CDK_DIR)/C++/Include
 PALM_CDK_LIB	= $(PALM_CDK_DIR)/C++/Lib
 PALM_PFC_INC	= $(PALM_CDK_DIR)/C++/Pfc/include
 PALM_PFC_SRC	= $(PALM_CDK_DIR)/C++/Pfc/Src
+PALM_CDK_BIN    = $(PALM_CDK_DIR)/Common/Bin
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -51,6 +52,10 @@ MODULE		= mozABConduit
 EXPORT_LIBRARY	= $(MODULE)
 LIBRARY_NAME	= $(MODULE)
 RESFILE         = MozABConduitGenCond.res
+
+ifdef MOZ_XUL_APP
+XPI_NAME = palmsync
+endif
 
 REQUIRES	= PalmSyncProxy \
 		  $(NULL)

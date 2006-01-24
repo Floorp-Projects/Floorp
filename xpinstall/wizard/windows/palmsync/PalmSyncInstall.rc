@@ -94,7 +94,7 @@ BEGIN
                             "Could not find the directory to install the %s Address Book Palm Sync Conduit."
     IDS_SUCCESS_INSTALL     "%s Address Book Palm Sync was successfully installed. Using your Palm device, perform a HotSync operation to synchronize your Palm device's address book with your %s address book."
     IDS_SUCCESS_UNINSTALL   "%s Address Book Palm Sync was successfully uninstalled. Palm Desktop synchronization with your Palm device is now restored."
-    IDS_CONFIRM_INSTALL     "You are about to synchronize your %s address book with your Palm device's address book. This will replace Palm Desktop synchronization with %s address book synchronization. Do you want to continue?"
+    IDS_CONFIRM_INSTALL     "You are about to add the %s Address Book conduit to your Palm Hot Sync installation, which may remove the Palm Desktop conduit.  Do you want to continue?"
     IDS_CONFIRM_UNINSTALL   "You are about to uninstall %s Address Book Palm Sync. This will restore Palm Desktop synchronization. Do you want to continue?"
     IDS_ERR_REGISTERING_MOZ_DLL 
                             "Failed to register the %s's Palm Sync Support Proxy Dll while installing the %s Address Book Palm Sync Conduit."

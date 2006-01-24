@@ -44,17 +44,34 @@ README  = palm.html
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE =  palmsync
+
 DIRS		= build public src
+
+ifdef MOZ_XUL_APP
+XPI_NAME               = palmsync
+USE_EXTENSION_MANIFEST = 1
+NO_JAR_AUTO_REG        = 1
+INSTALL_EXTENSION_ID   = palmsync@mozilla.org
+XPI_PKGNAME            = palmsync-$(MOZ_APP_VERSION)
+endif
+
+PREF_JS_EXPORTS = palmsync.js
+DIST_FILES = install.rdf
+
+# We should really pull THUNDERBIRD_VERSION from
+# mail/config/version.txt but we can't be assured
+# that we've even pulled that file. So we hardcode them.
+
+XULAPP_DEFINES = \
+	-DTHUNDERBIRD_VERSION=$(THUNDERBIRD_VERSION) \
+	-DEXTENSION_VERSION=$(MOZILLA_VERSION) \
+	$(NULL)
 
 ifdef PALM_CDK_DIR
 DIRS		+= conduit
 
 PACKAGE_FILE = palmsync.pkg
-
-install:: $(README)
-	$(INSTALL) $< $(DIST)/bin
-
-GARBAGE += $(DIST)/bin/$(README)
 
 else
 libs::

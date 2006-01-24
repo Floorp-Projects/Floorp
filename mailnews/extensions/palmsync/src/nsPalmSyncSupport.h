@@ -42,6 +42,8 @@
 #include "nsIPalmSyncSupport.h"
 #include "PalmSyncFactory.h"
 
+class nsILocalFile;
+
 // {44812571-CE84-11d6-B8A6-00B0D06E5F27}
 #define NS_IPALMSYNCSUPPORT_CID \
   { 0x44812571, 0xce84, 0x11d6, \
@@ -64,6 +66,9 @@ class nsPalmSyncSupport : public nsIPalmSyncSupport,
 
         DWORD   m_dwRegister;
         CPalmSyncFactory *m_nsPalmSyncFactory;
+
+        nsresult LaunchPalmSyncInstallExe();
+        nsresult GetPalmSyncInstall(nsILocalFile ** aLocalFile);
 };
 
 #endif  // MSG_PALMSYNC_SUPPORT_H_

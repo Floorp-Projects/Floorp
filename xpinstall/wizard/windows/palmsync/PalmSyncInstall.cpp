@@ -495,13 +495,10 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir)
         SetCurrentDirectory(szPalmDesktopDir);
 
         if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, szPalmDesktopDir)) != 0 )
-            // load it from local dir if present by any chance
-            if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, ".")) != 0 )
-                return(dwReturnCode);
+            return dwReturnCode;
     }
-    else // if registery key not load it from local dir if present by any chance
-        if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, ".")) != 0 )
-        return(dwReturnCode);
+    else 
+        return IDS_ERR_CONDUIT_NOT_FOUND;
     
     // Prepare to install the conduit using Conduit Manager functions
     CmInstallCreatorPtr lpfnCmInstallCreator;
@@ -574,9 +571,7 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir)
     // Load the HSAPI DLL.
     HINSTANCE hHsapiDLL;
     if( (dwReturnCode = LoadHsapiDll(&hHsapiDLL, szPalmDesktopDir)) != 0 )
-        // load it from local dir if present by any chance
-        if( (dwReturnCode = LoadHsapiDll(&hHsapiDLL, ".")) != 0 )
-        return(dwReturnCode);
+        return dwReturnCode;
         
     // Shutdown the HotSync Process if it is running
     if( (bHotSyncRunning=IsHotSyncRunning(hHsapiDLL)) )
@@ -645,12 +640,10 @@ int UninstallConduit()
     if( (dwReturnCode=GetPalmDesktopInstallDirectory(szPalmDesktopDir, &desktopSize)) == 0 )
     {
         if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, szPalmDesktopDir)) != 0 )
-            // load it from local dir if present by any chance
-            if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, ".")) != 0 )
                 return(dwReturnCode);
     }
     // if registery key not load it from local dir if present by any chance
-    else if( (dwReturnCode = LoadConduitManagerDll(&hConduitManagerDLL, ".")) != 0 )
+    else 
           return(dwReturnCode);
     
     // need to switch current working directory to directory with palm dlls
@@ -689,8 +682,6 @@ int UninstallConduit()
     // Load the HSAPI DLL.
     HINSTANCE hHsapiDLL;
     if( (dwReturnCode = LoadHsapiDll(&hHsapiDLL, szPalmDesktopDir)) != 0 )
-        // load it from local dir if present by any chance
-        if( (dwReturnCode = LoadHsapiDll(&hHsapiDLL, ".")) != 0 )
           return(dwReturnCode);
         
     // Shutdown the HotSync Process if it is running

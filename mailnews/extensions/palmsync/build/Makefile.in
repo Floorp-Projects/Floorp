@@ -47,6 +47,10 @@ LIBRARY_NAME	= $(MODULE)
 DEFFILE		= $(win_srcdir)/PalmSyncProxy.def
 MOZILLA_INTERNAL_API = 1
 
+ifdef MOZ_XUL_APP
+XPI_NAME = palmsync
+endif
+
 EXPORTS		= IPalmSync.h
 
 CSRCS		= \

@@ -44,11 +44,15 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE      = palmsync
 LIBRARY_NAME    = $(MODULE)
-EXPORT_LIBRARY = 1
+# Do not set EXPORT_LIBRARY as we do not want palmsync in the static libs list
 IS_COMPONENT	= 1
-MODULE_NAME	= PalmSyncModule
-META_COMPONENT = mail
+FORCE_SHARED_LIB = 1
+
 MOZILLA_INTERNAL_API = 1
+
+ifdef MOZ_XUL_APP
+XPI_NAME = palmsync
+endif
 
 REQUIRES    = xpcom \
           PalmSyncProxy \
@@ -66,6 +70,7 @@ REQUIRES    = xpcom \
           msgbaseutil \
           necko \
           addrbook \
+	  extensions \
           $(NULL)
 
 CPPSRCS     = \
@@ -105,7 +110,7 @@ EXTRA_DSO_LDOPTS= \
         $(NSPR_LIBS) \
         $(NULL)
 
-OS_LIBS     += ole32.lib
+OS_LIBS     += ole32.lib shell32.lib
 
 include $(topsrcdir)/config/rules.mk
 

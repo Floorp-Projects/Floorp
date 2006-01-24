@@ -45,10 +45,21 @@
 #include "nsIComponentManager.h"
 #include "nsICategoryManager.h"
 #include "nsCRT.h"
+#include "nsIExtensionManager.h"
+#include "nsIFile.h"
+#include "nsILocalFile.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "PalmSyncImp.h"
 #include "nsPalmSyncSupport.h"
 #include "Registry.h"
+#include <shellapi.h> // needed for ShellExecute
+
+#define EXTENSION_ID "p@m" // would ideally be palmsync@mozilla.org, but palm can't handle the long file path
+#define EXECUTABLE_FILENAME "PalmSyncInstall.exe"
+#define PREF_CONDUIT_REGISTERED "extensions.palmsync.conduitRegistered"
+
 
 /** Implementation of the IPalmSyncSupport interface.
  *  Use standard implementation of nsISupports stuff.
@@ -64,16 +75,23 @@ static NS_METHOD nsPalmSyncRegistrationProc(nsIComponentManager *aCompMgr,
                    nsIFile *aPath, const char *registryLocation, const char *componentType,
                    const nsModuleComponentInfo *info)
 {
-    
   nsresult rv;
-
   nsCOMPtr<nsICategoryManager> categoryManager(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) 
       rv = categoryManager->AddCategoryEntry(APPSTARTUP_CATEGORY, "PalmSync Support", 
                   "service," NS_IPALMSYNCSUPPORT_CONTRACTID, PR_TRUE, PR_TRUE, nsnull);
- 
   return rv ;
+}
 
+static NS_METHOD nsPalmSyncUnRegistrationProc(nsIComponentManager *aCompMgr,
+                   nsIFile *aPath, const char *registryLocation, const nsModuleComponentInfo *info)
+{    
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> categoryManager(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv)) 
+        rv = categoryManager->DeleteCategoryEntry(APPSTARTUP_CATEGORY, "PalmSync Support", PR_TRUE);
+ 
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -81,21 +99,61 @@ nsPalmSyncSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUn
 {
     nsresult rv = NS_OK ;
 
-    if (!strcmp(aTopic, "profile-after-change"))
-        return InitializePalmSyncSupport();
-
-    if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
-        return ShutdownPalmSyncSupport();
-
+    // If nsIAppStartupNotifer tells us the app is starting up, then register
+    // our observer topics and return.
+    if (!strcmp(aTopic, "app-startup"))
+    {
     nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1", &rv));
-    if (NS_FAILED(rv)) return rv;
+      NS_ENSURE_SUCCESS(rv, rv);
  
     rv = observerService->AddObserver(this,"profile-after-change", PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    return observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+      rv = observerService->AddObserver(this, "em-action-requested", PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);      
+
+      rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
 }
+    // otherwise, take the appropriate action based on the topic
+    else if (!strcmp(aTopic, "profile-after-change"))
+    {
+        // we can't call installPalmSync in app-startup because the extension manager hasn't been initialized yet. 
+        // so we need to wait until the profile-after-change notification has fired. 
+        rv = LaunchPalmSyncInstallExe(); 
+        rv |= InitializePalmSyncSupport();
+    } 
+    else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
+        rv = ShutdownPalmSyncSupport();
+    else if (aSubject && !strcmp(aTopic, "em-action-requested") && !nsCRT::strcmp(aData, NS_LITERAL_STRING("item-uninstalled").get()))
+    {
+        // make sure the subject is our extension.
+        nsCOMPtr<nsIUpdateItem> updateItem (do_QueryInterface(aSubject, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
 
+        nsAutoString extensionName;
+        updateItem->GetId(extensionName);
+
+        if (extensionName.EqualsLiteral(EXTENSION_ID))
+        {
+            nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv,rv);
+           
+            // clear the conduit pref so we'll re-run PalmSyncInstall.exe the next time the extension is installed.
+            rv = prefBranch->ClearUserPref(PREF_CONDUIT_REGISTERED); 
+
+            nsCOMPtr<nsILocalFile> palmSyncInstall;
+            rv = GetPalmSyncInstall(getter_AddRefs(palmSyncInstall));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCAutoString nativePath;
+            palmSyncInstall->GetNativePath(nativePath);
+        
+            LONG r = (LONG) ::ShellExecuteA( NULL, NULL, nativePath.get(), "/u", NULL, SW_SHOWNORMAL);  // silent uninstall
+        }
+    }
+
+    return rv;
+}
 
 nsPalmSyncSupport::nsPalmSyncSupport()
 : m_dwRegister(0),
@@ -105,6 +163,51 @@ nsPalmSyncSupport::nsPalmSyncSupport()
 
 nsPalmSyncSupport::~nsPalmSyncSupport()
 {
+}
+
+nsresult nsPalmSyncSupport::GetPalmSyncInstall(nsILocalFile ** aLocalFile)
+{
+    nsresult rv;
+    nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
+    NS_ENSURE_TRUE(em, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIInstallLocation> installLocation;
+    rv = em->GetInstallLocation(NS_LITERAL_STRING(EXTENSION_ID), getter_AddRefs(installLocation));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIFile> palmSyncInstallExe;
+    rv = installLocation->GetItemFile(NS_LITERAL_STRING(EXTENSION_ID), NS_LITERAL_STRING(EXECUTABLE_FILENAME), getter_AddRefs(palmSyncInstallExe));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    palmSyncInstallExe->QueryInterface(NS_GET_IID(nsILocalFile), (void **) aLocalFile);
+    return rv;
+}
+
+nsresult nsPalmSyncSupport::LaunchPalmSyncInstallExe()
+{
+    // we only want to call PalmSyncInstall.exe the first time the app is run after installing the
+    // palm sync extension. We use PREF_CONDUIT_REGISTERED to keep track of that
+    // information.
+
+    nsresult rv;    
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    PRBool conduitIsRegistered = PR_FALSE;
+    rv = prefBranch->GetBoolPref(PREF_CONDUIT_REGISTERED, &conduitIsRegistered);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (!conduitIsRegistered)
+    {        
+        rv = prefBranch->SetBoolPref(PREF_CONDUIT_REGISTERED, PR_TRUE); 
+        nsCOMPtr<nsILocalFile> palmSyncInstall;
+        rv = GetPalmSyncInstall(getter_AddRefs(palmSyncInstall));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = palmSyncInstall->Launch();             
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
