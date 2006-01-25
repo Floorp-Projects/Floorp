@@ -51,8 +51,8 @@ endif
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
 CPPSRCS	+= 	gfxXlibSurface.cpp gfxPlatformGtk.cpp
 CPPSRCS +=	gfxPangoFonts.cpp 
-#CPPSRCS +=	gfxPDFSurface.cpp
-EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS)
+CPPSRCS +=	gfxPDFSurface.cpp
+EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS)
 endif
 
 ifdef MOZ_ENABLE_GLITZ
