@@ -1815,7 +1815,13 @@ XML_GetCurrentByteIndex(XML_Parser parser)
 {
   if (eventPtr)
     return parseEndByteIndex - (parseEndPtr - eventPtr);
+/* BEGIN MOZILLA CHANGE (fix XML_GetCurrentByteIndex) */
+#if 0
   return -1;
+#else
+  return parseEndByteIndex;
+#endif
+/* END MOZILLA CHANGE */
 }
 
 /* BEGIN MOZILLA CHANGE (unused API) */
