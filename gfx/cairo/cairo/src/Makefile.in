@@ -95,24 +95,24 @@ CSRCS   = \
 EXPORTS = cairo.h cairo-features.h cairo-platform.h
 
 
-ifeq ($(MOZ_GFX_TOOLKIT),windows)
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CSRCS   += cairo-win32-font.c \
            cairo-win32-surface.c
 EXPORTS += cairo-win32.h
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CSRCS   += cairo-quartz-surface.c \
            cairo-atsui-font.c
 EXPORTS += cairo-quartz.h cairo-atsui.h
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),beos)
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 CPPSRCS += cairo-beos-surface.cpp
 EXPORTS += cairo-beos.h
 endif
 
-ifdef BUILD_CAIRO_PDF
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CSRCS   += cairo-font-subset.c \
            cairo-pdf-surface.c \
            cairo-ps-surface.c
