@@ -260,7 +260,7 @@ function JSDChannel (uri)
 {
     this.URI = uri;
     this.originalURI = uri;
-    this._isPending = true;
+    this._isPending = false;
     var clazz = Components.classes[STRING_STREAM_CTRID];
     this.stringStream = clazz.createInstance(nsIStringInputStream);
 }
@@ -296,6 +296,7 @@ function jsdch_aopen (streamListener, context)
 {
     this.streamListener = streamListener;
     this.context = context;
+    this._isPending = true;
     
     if (!window && this.URI.spec == "x-jsd:debugger")
     {
