@@ -586,7 +586,6 @@ nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
     return NS_OK;
 #endif
 
-#endif
     /* we don't do printing */
     return NS_ERROR_NOT_IMPLEMENTED;
 }
