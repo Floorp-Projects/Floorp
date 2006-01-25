@@ -1057,6 +1057,25 @@ public:
    */
   virtual nsIAtom* GetType() const = 0;
   
+
+  /**
+   * Bit-flags to pass to IsFrameOfType()
+   */
+  enum {
+    eMathML =           1 << 0,
+    eSVG =              1 << 1,
+    eSVGForeignObject = 1 << 2
+  };
+
+  /**
+   * API for doing a quick check if a frame is of a given
+   * type. Returns true if the frame matches ALL flags passed in.
+   */
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return !aFlags;
+  }
+
   /**
    * Is this frame a containing block for non-positioned elements?
    */

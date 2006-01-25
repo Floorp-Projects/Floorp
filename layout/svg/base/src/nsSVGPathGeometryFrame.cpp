@@ -205,6 +205,12 @@ nsSVGPathGeometryFrame::GetType() const
   return nsLayoutAtoms::svgPathGeometryFrame;
 }
 
+PRBool
+nsSVGPathGeometryFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~nsIFrame::eSVG);
+}
+
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 

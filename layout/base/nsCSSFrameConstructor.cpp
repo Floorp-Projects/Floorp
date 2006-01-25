@@ -8050,6 +8050,19 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
     return NS_OK;
   }
   
+#ifdef MOZ_SVG
+  // Don't create frames for non-SVG children of SVG elements
+  if (aNameSpaceID != kNameSpaceID_SVG &&
+      aParentFrame &&
+      aParentFrame->IsFrameOfType(nsIFrame::eSVG)
+#ifdef MOZ_SVG_FOREIGNOBJECT
+      && !aParentFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)
+#endif
+      ) {
+    return NS_OK;
+  }
+#endif
+
   nsIFrame* adjParentFrame = aParentFrame;
   nsFrameItems* frameItems = &aFrameItems;
   PRBool pseudoParent = PR_FALSE;
