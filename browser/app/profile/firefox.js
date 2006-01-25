@@ -59,8 +59,6 @@ pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/ex
 pref("xpinstall.dialog.progress.type.skin", "Extension:Manager-themes");
 pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
 
-pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
-pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
 // Developers can set this to |true| if they are constantly changing files in their 
 // extensions directory so that the extension system does not constantly think that
 // their extensions are being updated and thus reregistered every time the app is
