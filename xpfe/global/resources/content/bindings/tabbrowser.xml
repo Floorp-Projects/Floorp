@@ -1512,7 +1512,7 @@
             if (i < oldCount) {
               var firstTab = this.mTabContainer.firstChild;
               var browserData = {
-                sessionHistory : firstTab.linkedBrowser.sessionHistory;
+                sessionHistory : firstTab.linkedBrowser.sessionHistory
               }
               oldBrowserGroup.push(browserData);
               this.removeTab(firstTab);
