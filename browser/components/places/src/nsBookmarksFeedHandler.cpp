@@ -141,7 +141,7 @@ protected:
 
   nsLivemarkService *mLivemarkService;
   nsCOMPtr<nsIAnnotationService> mAnnotationService;
-  nsLivemarkService::LivemarkInfo *mLivemark;
+  nsRefPtr<nsLivemarkService::LivemarkInfo> mLivemark;
   nsCOMPtr<nsIOutputStream> mCacheStream;
   nsCOMPtr<nsIScriptSecurityManager> mSecMan;
   PRBool mAborted;
@@ -749,40 +749,47 @@ nsLivemarkService::UpdateLivemarkChildren(PRInt32 aLivemarkIndex)
 {
   nsresult rv;
 
-  if (mLivemarks[aLivemarkIndex].locked)
+  if (mLivemarks[aLivemarkIndex]->locked)
   {
     // We're already loading the livemark
     return NS_OK;
   }
 
   // Lock the livemark
-  mLivemarks[aLivemarkIndex].locked = PR_TRUE;
+  mLivemarks[aLivemarkIndex]->locked = PR_TRUE;
 
   // Check the TTL/expiration on this.  If there isn't one,
   // then we assume it's never been loaded.
   PRTime exprTime;
-  rv = mAnnotationService->GetAnnotationInt64(mLivemarks[aLivemarkIndex].feedURI,
+  rv = mAnnotationService->GetAnnotationInt64(mLivemarks[aLivemarkIndex]->feedURI,
                                               NS_LITERAL_CSTRING(LMANNO_EXPIRATION),
                                               &exprTime);
   if (rv == NS_OK) {
     PRTime nowTime = PR_Now();
     if (LL_CMP(exprTime, >, nowTime)) {
       // No need to refresh yet.
-      mLivemarks[aLivemarkIndex].locked = PR_FALSE;
+      mLivemarks[aLivemarkIndex]->locked = PR_FALSE;
       return rv;
     }
   } else {
     // This livemark has never been loaded, since it has no expire time.
-    rv = InsertLivemarkLoadingItem(mLivemarks[aLivemarkIndex].folderId);
+    rv = InsertLivemarkLoadingItem(mLivemarks[aLivemarkIndex]->folderId);
   }
+
+  // Create a load group for the request.  This will allow us to automatically
+  // keep track of redirects, so we can always cancel the channel.
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  rv = NS_NewLoadGroup(getter_AddRefs(loadGroup), nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> uriChannel;
   rv = NS_NewChannel(getter_AddRefs(uriChannel),
-                     mLivemarks[aLivemarkIndex].feedURI,
-                     nsnull, nsnull, nsnull,
+                     mLivemarks[aLivemarkIndex]->feedURI,
+                     nsnull, loadGroup, nsnull,
                      nsIRequest::LOAD_BACKGROUND);
   if (NS_FAILED(rv)) {
-    mLivemarks[aLivemarkIndex].locked = PR_FALSE;
+    mLivemarks[aLivemarkIndex]->locked = PR_FALSE;
     return rv;
   }
 
@@ -794,21 +801,22 @@ nsLivemarkService::UpdateLivemarkChildren(PRInt32 aLivemarkIndex)
     
   nsCOMPtr<nsLivemarkLoadListener> listener = new nsLivemarkLoadListener(this,
                                                                          mAnnotationService,
-                                                                         &mLivemarks[aLivemarkIndex]);
+                                                                         mLivemarks[aLivemarkIndex]);
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel), 
-                     mLivemarks[aLivemarkIndex].feedURI, nsnull, nsnull, nsnull,
+                     mLivemarks[aLivemarkIndex]->feedURI, nsnull, nsnull, nsnull,
                      nsIRequest::LOAD_BACKGROUND | nsIRequest::VALIDATE_ALWAYS);
   if (NS_FAILED(rv)) {
-    mLivemarks[aLivemarkIndex].locked = PR_FALSE;
+    mLivemarks[aLivemarkIndex]->locked = PR_FALSE;
     return rv;
   }
 
   rv = channel->AsyncOpen(listener, nsnull);
   if (NS_FAILED(rv)) {
-    mLivemarks[aLivemarkIndex].locked = PR_FALSE;
+    mLivemarks[aLivemarkIndex]->locked = PR_FALSE;
     return rv;
   }
 
+  mLivemarks[aLivemarkIndex]->loadGroup = loadGroup;
   return NS_OK;
 }
