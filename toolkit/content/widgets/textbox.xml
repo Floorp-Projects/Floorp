@@ -15,14 +15,14 @@
     <resources>
       <stylesheet src="chrome://global/skin/textbox.css"/>
     </resources>
-    
+
     <content>
       <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context">
         <html:input class="textbox-input" flex="1" anonid="input"
                     xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       </xul:hbox>
     </content>
-    
+
     <implementation implements="nsIAccessibleProvider, nsIDOMXULTextBoxElement">
       <property name="accessible">
         <getter>
@@ -36,15 +36,15 @@
       <field name="mInputField">null</field>
       <field name="mIgnoreClick">false</field>
       <field name="mIgnoreFocus">false</field>
-      
+
       <property name="inputField" readonly="true">
         <getter><![CDATA[
-          if (!this.mInputField)    
+          if (!this.mInputField)
             this.mInputField = document.getAnonymousElementByAttribute(this, "anonid", "input");
           return this.mInputField;
         ]]></getter>
       </property>
-      
+
       <property name="value"      onset="this.inputField.value = val; return val;"
                                   onget="return this.inputField.value;"/>
       <property name="type"       onset="this.inputField.type = val; return val;"
@@ -69,6 +69,13 @@
                 onget="return this.getAttribute('clickSelectsAll') == 'true';"
                 onset="if (val) this.setAttribute('clickSelectsAll', 'true');
                        else this.removeAttribute('clickSelectsAll'); return val;" />
+
+      <property name="editor" readonly="true">
+        <getter><![CDATA[
+          const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
+          return this.inputField.QueryInterface(nsIDOMNSEditableElement).editor;
+        ]]></getter>
+      </property>
 
       <method name="select">
         <body>
@@ -118,12 +125,10 @@
         str = this.getAttribute("newlines");
         if (str) {
           const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
-          const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
           for (var x in nsIPlaintextEditor) {
             if (/^eNewlines/.test(x)) {
               if (str == RegExp.rightContext.toLowerCase()) {
-                this.inputField.QueryInterface(nsIDOMNSEditableElement)
-                    .editor.QueryInterface(nsIPlaintextEditor)
+                this.editor.QueryInterface(nsIPlaintextEditor)
                     .newlineHandling = nsIPlaintextEditor[x];
                 break;
               }
@@ -160,7 +165,7 @@
       </method>
 
     </implementation>
-    
+
     <handlers>
       <handler event="focus" phase="capturing">
         <![CDATA[
@@ -201,7 +206,7 @@
             this.inputField.select();
         ]]>
       </handler>
-    </handlers>    
+    </handlers>
   </binding>
 
   <binding id="timed-textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
@@ -232,7 +237,7 @@
           ]]>
         </body>
       </method>
-    </implementation>    
+    </implementation>
     <handlers>
       <handler event="input">
         <![CDATA[
@@ -294,7 +299,7 @@
 
     <implementation>
       <method name="_doPopupItemEnabling">
-        <parameter name="popupNode"/> 
+        <parameter name="popupNode"/>
         <body>
           <![CDATA[
             var children = popupNode.childNodes;
@@ -306,7 +311,7 @@
                 if (enabled)
                   children[i].removeAttribute("disabled");
                 else
-                  children[i].setAttribute("disabled", "true");               
+                  children[i].setAttribute("disabled", "true");
               }
             }
 
@@ -395,5 +400,5 @@
       </method>
     </implementation>
   </binding>
-  
+
 </bindings>
