@@ -94,6 +94,8 @@ protected:
   nsCString mDomain; // Default is IsVoid, empty string is valid query
   PRBool mUriIsPrefix;
   nsCOMPtr<nsIURI> mUri;
+  PRBool mAnnotationIsNot;
+  nsCString mAnnotation;
   nsTArray<PRInt64> mFolders;
 };
 
