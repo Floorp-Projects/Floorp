@@ -42,9 +42,8 @@
 
 @namespace url(http://www.w3.org/1998/Math/MathML);
 
-/* MathML doesn't permit floating and positioning */
+/* MathML doesn't permit positioning */
 *, * > *|* {
-  float: none !important;
   position: static !important;
 }
 
