@@ -70,8 +70,11 @@ REQUIRES    = xpcom \
           msgbaseutil \
           necko \
           addrbook \
-	  extensions \
           $(NULL)
+
+ifdef MOZ_XUL_APP
+REQUIRES  += extensions
+endif
 
 CPPSRCS     = \
         nsPalmSyncSupport.cpp \

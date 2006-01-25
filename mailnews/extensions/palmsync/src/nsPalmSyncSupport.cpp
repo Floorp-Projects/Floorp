@@ -45,7 +45,9 @@
 #include "nsIComponentManager.h"
 #include "nsICategoryManager.h"
 #include "nsCRT.h"
+#ifdef MOZ_THUNDERBIRD
 #include "nsIExtensionManager.h"
+#endif
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsIPrefBranch.h"
@@ -117,13 +119,16 @@ nsPalmSyncSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUn
     // otherwise, take the appropriate action based on the topic
     else if (!strcmp(aTopic, "profile-after-change"))
     {
+#ifdef MOZ_THUNDERBIRD
         // we can't call installPalmSync in app-startup because the extension manager hasn't been initialized yet. 
         // so we need to wait until the profile-after-change notification has fired. 
         rv = LaunchPalmSyncInstallExe(); 
+#endif
         rv |= InitializePalmSyncSupport();
     } 
     else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
         rv = ShutdownPalmSyncSupport();
+#ifdef MOZ_THUNDERBIRD
     else if (aSubject && !strcmp(aTopic, "em-action-requested") && !nsCRT::strcmp(aData, NS_LITERAL_STRING("item-uninstalled").get()))
     {
         // make sure the subject is our extension.
@@ -151,6 +156,7 @@ nsPalmSyncSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUn
             LONG r = (LONG) ::ShellExecuteA( NULL, NULL, nativePath.get(), "/u", NULL, SW_SHOWNORMAL);  // silent uninstall
         }
     }
+#endif
 
     return rv;
 }
@@ -165,6 +171,7 @@ nsPalmSyncSupport::~nsPalmSyncSupport()
 {
 }
 
+#ifdef MOZ_THUNDERBIRD
 nsresult nsPalmSyncSupport::GetPalmSyncInstall(nsILocalFile ** aLocalFile)
 {
     nsresult rv;
@@ -209,6 +216,7 @@ nsresult nsPalmSyncSupport::LaunchPalmSyncInstallExe()
 
     return rv;
 }
+#endif
 
 NS_IMETHODIMP
 nsPalmSyncSupport::InitializePalmSyncSupport()

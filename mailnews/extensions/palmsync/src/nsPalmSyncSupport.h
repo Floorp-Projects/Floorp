@@ -67,8 +67,10 @@ class nsPalmSyncSupport : public nsIPalmSyncSupport,
         DWORD   m_dwRegister;
         CPalmSyncFactory *m_nsPalmSyncFactory;
 
+#ifdef MOZ_THUNDERBIRD
         nsresult LaunchPalmSyncInstallExe();
         nsresult GetPalmSyncInstall(nsILocalFile ** aLocalFile);
+#endif
 };
 
 #endif  // MSG_PALMSYNC_SUPPORT_H_
