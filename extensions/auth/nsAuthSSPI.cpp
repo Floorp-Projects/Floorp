@@ -390,6 +390,9 @@ nsAuthSSPI::Unwrap(const void *inToken,
     ib[0].BufferType = SECBUFFER_STREAM;
     ib[0].cbBuffer = inTokenLen;
     ib[0].pvBuffer = nsMemory::Alloc(ib[0].cbBuffer);
+    if (!ib[0].pvBuffer)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
     memcpy(ib[0].pvBuffer, inToken, inTokenLen);
 
     // app data
@@ -413,7 +416,10 @@ nsAuthSSPI::Unwrap(const void *inToken,
 
     nsMemory::Free(ib[0].pvBuffer);
 
-    return rc;
+    if (!SEC_SUCCESS(rc))
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
 }
 
 // utility class used to free memory on exit
@@ -457,7 +463,7 @@ nsAuthSSPI::Wrap(const void *inToken,
          &sizes);
 
     if (!SEC_SUCCESS(rc))  
-        return rc;
+        return NS_ERROR_FAILURE;
     
     ibd.cBuffers = 3;
     ibd.pBuffers = bufs.ib;
@@ -508,7 +514,11 @@ nsAuthSSPI::Wrap(const void *inToken,
 
         memcpy(outToken + bufs.ib[0].cbBuffer + bufs.ib[1].cbBuffer,
                bufs.ib[2].pvBuffer, bufs.ib[2].cbBuffer);
+
+        *outTokenLen = len;
+        
+        return NS_OK;
     }
 
-    return rc;
+    return NS_ERROR_FAILURE;
 }
