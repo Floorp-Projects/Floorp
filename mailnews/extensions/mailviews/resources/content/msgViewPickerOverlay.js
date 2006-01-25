@@ -218,6 +218,10 @@ function refreshCustomMailViews(aDefaultSelectedIndex)
 function ViewChangeByValue(aValue)
 {
   var viewPicker = document.getElementById('viewPicker');
+
+  if (!viewPicker)
+    return;
+
   if (aValue == -1)
   {
     viewPicker.selectedItem = null;
