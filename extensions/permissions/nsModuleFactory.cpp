@@ -38,15 +38,11 @@
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsContentBlocker.h"
-#include "nsMailnewsContentBlocker.h"
 #include "nsXPIDLString.h"
 #include "nsICategoryManager.h"
 
 // Define the constructor function for the objects
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsContentBlocker, Init)
-#ifdef MOZ_MAIL_NEWS
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMailnewsContentBlocker, Init)
-#endif
 
 static NS_METHOD
 RegisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
@@ -64,24 +60,6 @@ RegisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
                                   PR_TRUE, PR_TRUE, getter_Copies(previous));
 }
 
-#ifdef MOZ_MAIL_NEWS
-static NS_METHOD
-RegisterMailnewsContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                              const char *registryLocation, const char *componentType,
-                              const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-      do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  nsXPIDLCString previous;
-  return catman->AddCategoryEntry("content-policy",
-                                  NS_MAILNEWSCONTENTBLOCKER_CONTRACTID,
-                                  NS_MAILNEWSCONTENTBLOCKER_CONTRACTID,
-                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
-}
-#endif
-
 static NS_METHOD
 UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
                         const char *registryLocation,
@@ -97,24 +75,6 @@ UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
                                      PR_TRUE);
 }
 
-#ifdef MOZ_MAIL_NEWS
-static NS_METHOD
-UnregisterMailnewsContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                        const char *registryLocation,
-                        const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-      do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  return catman->DeleteCategoryEntry("content-policy",
-                                     NS_MAILNEWSCONTENTBLOCKER_CONTRACTID,
-                                     PR_TRUE);
-}
-#endif
-
-
 // The list of components we register
 static const nsModuleComponentInfo components[] = {
   { "ContentBlocker",
@@ -123,15 +83,6 @@ static const nsModuleComponentInfo components[] = {
     nsContentBlockerConstructor,
     RegisterContentPolicy, UnregisterContentPolicy
   }
-#ifdef MOZ_MAIL_NEWS
-  ,
-  { "MailnewsContentBlocker",
-    NS_MAILNEWSCONTENTBLOCKER_CID,
-    NS_MAILNEWSCONTENTBLOCKER_CONTRACTID,
-    nsMailnewsContentBlockerConstructor,
-    RegisterMailnewsContentPolicy, UnregisterMailnewsContentPolicy
-  }
-#endif
 };
 
 NS_IMPL_NSGETMODULE(nsPermissionsModule, components)

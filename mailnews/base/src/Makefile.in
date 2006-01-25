@@ -126,6 +126,7 @@ CPPSRCS		= \
 		nsMessengerContentHandler.cpp \
 		nsSpamSettings.cpp \
 		nsCidProtocolHandler.cpp \
+		nsMsgContentPolicy.cpp \
 		$(NULL)
 
 # MacOSX requires the MoreFiles module
@@ -158,13 +159,9 @@ DEFINES         += -DMOZ_LDAP_XPCOM
 endif
 
 ifdef MOZ_THUNDERBIRD
-CPPSRCS		+= nsMsgContentPolicy.cpp 
-
-
 ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS		+= nsMessengerOSXIntegration.cpp 
 endif
-
 endif
 
 EXPORTS = \

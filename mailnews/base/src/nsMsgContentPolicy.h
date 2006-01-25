@@ -103,4 +103,3 @@ public:
 };
 
 #endif // _nsMsgContentPolicy_H_
-

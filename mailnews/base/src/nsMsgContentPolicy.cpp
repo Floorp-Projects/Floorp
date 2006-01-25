@@ -38,12 +38,12 @@
 
 #include "nsMsgContentPolicy.h"
 #include "nsIServiceManager.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
-#include "nsIContentPolicy.h"
 #include "nsIRDFService.h"
 #include "nsIRDFResource.h"
 #include "nsIMsgHeaderParser.h"
@@ -64,9 +64,12 @@
 
 // needed for the cookie policy manager
 #include "nsNetUtil.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsICookie2.h"
 #include "nsICookieManager2.h"
+
+// needed for mailnews content load policy manager
+#include "nsIDocShell.h"
+#include "nsContentPolicyUtils.h"
 
 static const char kBlockRemoteImages[] = "mailnews.message_display.disable_remote_image";
 static const char kRemoteImagesUseWhiteList[] = "mailnews.message_display.disable_remote_images.useWhitelist";
@@ -82,15 +85,10 @@ static const char kTrustedDomains[] =  "mail.trusteddomains";
 #define kBlockRemoteContent 1
 #define kAllowRemoteContent 2
 
-NS_IMPL_ADDREF(nsMsgContentPolicy)
-NS_IMPL_RELEASE(nsMsgContentPolicy)
-
-NS_INTERFACE_MAP_BEGIN(nsMsgContentPolicy)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentPolicy)
-   NS_INTERFACE_MAP_ENTRY(nsIContentPolicy)
-   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-   NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS3(nsMsgContentPolicy, 
+                   nsIContentPolicy,
+                   nsIObserver,
+                   nsISupportsWeakReference)
 
 nsMsgContentPolicy::nsMsgContentPolicy()
 {
@@ -235,131 +233,169 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
                                PRInt16          *aDecision)
 {
   nsresult rv = NS_OK;
-  *aDecision = nsIContentPolicy::REJECT_REQUEST;
+  *aDecision = nsIContentPolicy::ACCEPT;
 
   NS_ENSURE_ARG_POINTER(aContentLocation);
   NS_ENSURE_ARG_POINTER(aRequestingLocation);
 
+#ifndef MOZ_THUNDERBIRD
+  // Go find out if we are dealing with mailnews. Anything else
+  // isn't our concern and we accept content.
+  nsIDocShell *shell = NS_CP_GetDocShellFromContext(aRequestingContext);
+  nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem(do_QueryInterface(shell));
+  if (!docshellTreeItem)
+    return NS_OK;
+
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  // we want the app docshell, so don't use GetSameTypeRootTreeItem
+  rv = docshellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(rootItem));
+  if (!docshell)
+    return NS_OK;
+
+  PRUint32 appType;
+  rv = docshell->GetAppType(&appType);
+  // We only want to deal with mailnews
+  if (NS_FAILED(rv) || appType != nsIDocShell::APP_TYPE_MAIL)
+    return NS_OK;
+#endif
+
   if (aContentType == nsIContentPolicy::TYPE_OBJECT)
   {
     // only allow the plugin to load if the allow plugins pref has been set
-    *aDecision = mAllowPlugins ? nsIContentPolicy::ACCEPT :
-                                 nsIContentPolicy::REJECT_TYPE;
+    if (!mAllowPlugins)
+      *aDecision = nsIContentPolicy::REJECT_TYPE;
+    return NS_OK;
   }
-  else 
+
+  // if aRequestingLocation is chrome, about or resource, allow aContentLocation to load
+  PRBool isChrome = PR_FALSE;
+  PRBool isRes = PR_FALSE;
+  PRBool isAbout = PR_FALSE;
+
+  rv = aRequestingLocation->SchemeIs("chrome", &isChrome);
+  rv |= aRequestingLocation->SchemeIs("resource", &isRes);
+  rv |= aRequestingLocation->SchemeIs("about", &isAbout);
+
+  if (NS_SUCCEEDED(rv) && (isChrome || isRes || isAbout))
+    return rv;
+
+  // if aContentLocation is a protocol we handle (imap, pop3, mailbox, etc)
+  // or is a chrome url, then allow the load
+  nsCAutoString contentScheme;
+  PRBool isExposedProtocol = PR_FALSE;
+  rv = aContentLocation->GetScheme(contentScheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef MOZ_THUNDERBIRD
+  nsCOMPtr<nsIExternalProtocolService> extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
+  rv = extProtService->IsExposedProtocol(contentScheme.get(), &isExposedProtocol);
+  NS_ENSURE_SUCCESS(rv, rv);
+#else
+  if (contentScheme.LowerCaseEqualsLiteral("mailto") ||
+      contentScheme.LowerCaseEqualsLiteral("news") ||
+      contentScheme.LowerCaseEqualsLiteral("snews") ||
+      contentScheme.LowerCaseEqualsLiteral("nntp") ||
+      contentScheme.LowerCaseEqualsLiteral("imap") ||
+      contentScheme.LowerCaseEqualsLiteral("addbook") ||
+      contentScheme.LowerCaseEqualsLiteral("pop") ||
+      contentScheme.LowerCaseEqualsLiteral("mailbox") ||
+      contentScheme.LowerCaseEqualsLiteral("about"))
+    isExposedProtocol = PR_TRUE;
+#endif
+    
+  rv = aContentLocation->SchemeIs("chrome", &isChrome);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (isExposedProtocol || isChrome)
+    return rv;
+
+  // for unexposed protocols, we never try to load any of them with the exception of http and https.
+  // this means we never even try to load urls that we don't handle ourselves like ftp and gopher.
+  PRBool isHttp = PR_FALSE;
+  PRBool isHttps = PR_FALSE;
+
+  rv = aContentLocation->SchemeIs("http", &isHttp);
+  rv |= aContentLocation->SchemeIs("https", &isHttps);
+
+  if (!NS_SUCCEEDED(rv) || (!isHttp && !isHttps))
   {
-    // if aRequestingLocation is chrome, about or resource, allow aContentLocation to load
-    PRBool isChrome = PR_FALSE;
-    PRBool isRes = PR_FALSE;
-    PRBool isAbout = PR_FALSE;
+    *aDecision = nsIContentPolicy::REJECT_REQUEST;
+    return rv;
+  }
 
-    rv = aRequestingLocation->SchemeIs("chrome", &isChrome);
-    rv |= aRequestingLocation->SchemeIs("resource", &isRes);
-    rv |= aRequestingLocation->SchemeIs("about", &isAbout);
-      
-    if (NS_SUCCEEDED(rv) && (isChrome || isRes || isAbout))
-    {
-      *aDecision = nsIContentPolicy::ACCEPT;
-      return rv;
-    }
+  // Look into http and https more closely to determine if the load should be allowed
 
-    // if aContentLocation is a protocol we handle (imap, pop3, mailbox, etc) or is a chrome url, then allowe the load
-    nsCAutoString contentScheme;
-    PRBool isExposedProtocol = PR_FALSE;
-    rv = aContentLocation->GetScheme(contentScheme);
-    NS_ENSURE_SUCCESS(rv, rv);
+  // If we do not block remote content then return with an accept content here
+  if (!mBlockRemoteImages)
+    return NS_OK;
 
-    nsCOMPtr<nsIExternalProtocolService> extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
-    rv = extProtService->IsExposedProtocol(contentScheme.get(), &isExposedProtocol);
-    NS_ENSURE_SUCCESS(rv, rv);
-    aContentLocation->SchemeIs("chrome", &isChrome);    
-    
-    if (isExposedProtocol || isChrome)
-    {
-      *aDecision = nsIContentPolicy::ACCEPT;
-      return rv;
-    }
+  // now do some more detective work to better refine our decision...
+  // (1) examine the msg hdr value for the remote content policy on this particular message to
+  //     see if this particular message has special rights to bypass the remote content check
+  // (2) special case RSS urls, always allow them to load remote images since the user explicitly
+  //     subscribed to the feed.
+  // (3) Check the personal address book and use it as a white list for senders
+  //     who are allowed to send us remote images
 
-    // for unexposed protocols, we never try to load any of them with the exception of http and https. 
-    // this means we never even try to load urls that we don't handle ourselves like ftp and gopher.
-    PRBool isHttp = PR_FALSE;
-    PRBool isHttps = PR_FALSE;
+  // get the msg hdr for the message URI we are actually loading
+  NS_ENSURE_TRUE(aRequestingLocation, NS_OK);
+  nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(aRequestingLocation, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aContentLocation->SchemeIs("http", &isHttp);
-    rv |= aContentLocation->SchemeIs("https", &isHttps);
+  nsXPIDLCString resourceURI;
+  msgUrl->GetUri(getter_Copies(resourceURI));
 
-    // Look into http and https more closely to determine if the load should be allowed
-    if (NS_SUCCEEDED(rv) && (isHttp || isHttps)) 
-    {
-      // default to blocking remote content 
-      *aDecision = mBlockRemoteImages ? nsIContentPolicy::REJECT_REQUEST : nsIContentPolicy::ACCEPT;
+  // get the msg service for this URI
+  nsCOMPtr<nsIMsgMessageService> msgService;
+  rv = GetMessageServiceFromURI(resourceURI.get(), getter_AddRefs(msgService));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-      // now do some more detective work to better refine our decision...
-      // (1) examine the msg hdr value for the remote content policy on this particular message to
-      //     see if this particular message has special rights to bypass the remote content check
-      // (2) special case RSS urls, always allow them to load remote images since the user explicitly
-      //     subscribed to the feed.
-      // (3) Check the personal address book and use it as a white list for senders 
-      //     who are allowed to send us remote images 
-        
-      // get the msg hdr for the message URI we are actually loading
-      NS_ENSURE_TRUE(aRequestingLocation, NS_OK);
-      nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(aRequestingLocation, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIMsgDBHdr> msgHdr;
+  rv = msgService->MessageURIToMsgHdr(resourceURI, getter_AddRefs(msgHdr));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-      nsXPIDLCString resourceURI;
-      msgUrl->GetUri(getter_Copies(resourceURI));
-        
-      // get the msg service for this URI
-      nsCOMPtr<nsIMsgMessageService> msgService;
-      rv = GetMessageServiceFromURI(resourceURI.get(), getter_AddRefs(msgService));
-      NS_ENSURE_SUCCESS(rv, rv);
-        
-      nsCOMPtr<nsIMsgDBHdr> msgHdr;
-      rv = msgService->MessageURIToMsgHdr(resourceURI, getter_AddRefs(msgHdr));
-      NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aRequestingLocation, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aRequestingLocation, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+  // Case #1, check the db hdr for the remote content policy on this particular message
+  PRUint32 remoteContentPolicy = kNoRemoteContentPolicy;
+  msgHdr->GetUint32Property("remoteContentPolicy", &remoteContentPolicy);
 
-      // Case #1, check the db hdr for the remote content policy on this particular message
-      PRUint32 remoteContentPolicy = kNoRemoteContentPolicy;
-      msgHdr->GetUint32Property("remoteContentPolicy", &remoteContentPolicy); 
+  // Case #2, check if the message is in an RSS folder
+  PRBool isRSS = PR_FALSE;
+  IsRSSArticle(aRequestingLocation, &isRSS);
 
-      // Case #2, check if the message is in an RSS folder
-      PRBool isRSS = PR_FALSE;
-      IsRSSArticle(aRequestingLocation, &isRSS);
-    
-      // Case #3, author is in our white list..
-      PRBool authorInWhiteList = PR_FALSE;
-      IsSenderInWhiteList(msgHdr, &authorInWhiteList);
+  // Case #3, author is in our white list..
+  PRBool authorInWhiteList = PR_FALSE;
+  IsSenderInWhiteList(msgHdr, &authorInWhiteList);
 
-      // Case #4, the domain for the remote image is in our white list
-      PRBool trustedDomain = PR_FALSE;
-      IsTrustedDomain(aContentLocation, &trustedDomain);
-        
-      // Case #1 and #2: special case RSS. Allow urls that are RSS feeds to show remote image (Bug #250246)
-      // Honor the message specific remote content policy
-      if (isRSS || remoteContentPolicy == kAllowRemoteContent || authorInWhiteList || trustedDomain)
-        *aDecision = nsIContentPolicy::ACCEPT;
-      else if (mBlockRemoteImages) 
-      {
-        if (!remoteContentPolicy) // kNoRemoteContentPolicy means we have never set a value on the message
-          msgHdr->SetUint32Property("remoteContentPolicy", kBlockRemoteContent); 
-            
-        // now we need to call out the msg sink informing it that this message has remote content      
-        nsCOMPtr<nsIMsgWindow> msgWindow;
-        rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow)); // it's not an error for the msg window to be null
-        NS_ENSURE_TRUE(msgWindow, NS_ERROR_FAILURE);
+  // Case #4, the domain for the remote image is in our white list
+  PRBool trustedDomain = PR_FALSE;
+  IsTrustedDomain(aContentLocation, &trustedDomain);
 
-        nsCOMPtr<nsIMsgHeaderSink> msgHdrSink;
-        rv = msgWindow->GetMsgHeaderSink(getter_AddRefs(msgHdrSink));
-        NS_ENSURE_TRUE(msgHdrSink, rv);
-        msgHdrSink->OnMsgHasRemoteContent(msgHdr); // notify the UI to show the remote content hdr bar so the user can overide
-      } // if mBlockRemoteImages
-    } // if isHttp
-  } 
+  // Case #1 and #2: special case RSS. Allow urls that are RSS feeds to show remote image (Bug #250246)
+  // Honor the message specific remote content policy
+  if (isRSS || remoteContentPolicy == kAllowRemoteContent || authorInWhiteList || trustedDomain)
+    return rv;
 
+  if (!remoteContentPolicy) // kNoRemoteContentPolicy means we have never set a value on the message
+    msgHdr->SetUint32Property("remoteContentPolicy", kBlockRemoteContent);
+
+  // now we need to call out the msg sink informing it that this message has remote content
+  nsCOMPtr<nsIMsgWindow> msgWindow;
+  rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow)); // it's not an error for the msg window to be null
+  NS_ENSURE_TRUE(msgWindow, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIMsgHeaderSink> msgHdrSink;
+  rv = msgWindow->GetMsgHeaderSink(getter_AddRefs(msgHdrSink));
+  NS_ENSURE_TRUE(msgHdrSink, rv);
+  msgHdrSink->OnMsgHasRemoteContent(msgHdr); // notify the UI to show the remote content hdr bar so the user can overide
+
+  *aDecision = nsIContentPolicy::REJECT_REQUEST;
   return rv;
 }
 
@@ -394,7 +430,7 @@ NS_IMETHODIMP nsMsgContentPolicy::Observe(nsISupports *aSubject, const char *aTo
     else if (pref.Equals(kRemoteImagesWhiteListURI))
       prefBranchInt->GetCharPref(kRemoteImagesWhiteListURI, getter_Copies(mRemoteImageWhiteListURI));
   }
-  
+
   return NS_OK;
 }
 

@@ -634,8 +634,10 @@ pref("mailnews.fakeaccount.show", false);
 pref("mailnews.fakeaccount.server", "");
 
 // message display properties
-pref("mailnews.message_display.disable_remote_image", false);
 pref("mailnews.message_display.allow.plugins", false);
+pref("mailnews.message_display.disable_remote_image", true);
+pref("mailnews.message_display.disable_remote_images.useWhitelist", true);
+pref("mailnews.message_display.disable_remote_images.whiteListAbURI","moz-abmdbdirectory://abook.mab");
 
 // default msg compose font prefs
 pref("msgcompose.font_face",                "");

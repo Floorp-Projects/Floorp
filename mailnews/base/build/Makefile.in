@@ -63,6 +63,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  locale \
 		  rdf \
+		  content \
 		  dom \
 		  docshell \
 		  widget \
