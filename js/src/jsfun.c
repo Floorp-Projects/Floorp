@@ -1765,7 +1765,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* Belt-and-braces: check that the caller has access to parent. */
-    if (!js_CheckPrincipalsAccess(cx, parent, principals, "Function"))
+    if (!js_CheckPrincipalsAccess(cx, parent, principals, js_Function_str))
         return JS_FALSE;
 
     n = argc ? argc - 1 : 0;
@@ -2126,6 +2126,7 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
     JSFunction *fun;
     JSObject *funobj;
     JSStackFrame *caller;
+    JSPrincipals *principals;
 
     if (JSVAL_IS_FUNCTION(cx, *vp))
         return JSVAL_TO_OBJECT(*vp);
@@ -2137,10 +2138,21 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
     *vp = OBJECT_TO_JSVAL(funobj);
 
     caller = JS_GetScriptedCaller(cx, cx->fp);
-    if (caller &&
-        !js_CheckPrincipalsAccess(cx, funobj,
-                                  caller->script->principals,
-                                  JS_GetFunctionName(fun))) {
+    if (caller) {
+        principals = caller->script->principals;
+    } else {
+        /* No scripted caller, don't allow access. */
+        principals = NULL;
+    }
+
+    /*
+     * FIXME: Reparameterize so we don't call js_AtomToPrintableString unless
+     *        there is an error (bug 324694).
+     */
+    if (!js_CheckPrincipalsAccess(cx, funobj, principals,
+                                  fun->atom
+                                  ? js_AtomToPrintableString(cx, fun->atom)
+                                  : js_anonymous_str)) {
         return NULL;
     }
     return funobj;
