@@ -44,7 +44,6 @@ const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
 var gExtensionManager = null;
 var gExtensionsView   = null;
 var gWindowState      = "";
-var gGetMoreURL       = "";
 var gCurrentTheme     = "classic/1.0";
 var gDefaultTheme     = "classic/1.0";
 var gDownloadManager  = null;
@@ -191,18 +190,23 @@ function Startup()
   document.title = extensionsStrings.getString(gWindowState + "Title");
   
   gExtensionsViewController.onCommandUpdate(); 
-  
-  gGetMoreURL = pref.getComplexValue(isExtensions ? PREF_EXTENSIONS_GETMOREEXTENSIONSURL 
-                                                  : PREF_EXTENSIONS_GETMORETHEMESURL, 
-                                     Components.interfaces.nsIPrefLocalizedString).data;
-  var app = Components.classes["@mozilla.org/xre/app-info;1"]
-                      .getService(Components.interfaces.nsIXULAppInfo);
-  gGetMoreURL = gGetMoreURL.replace(/%APPID%/g, app.ID);
-  // Update various pieces of state-dependant UI
+
   var getMore = document.getElementById("getMore");
-  getMore.setAttribute("value", getMore.getAttribute(isExtensions ? "valueextensions" : "valuethemes"));
-  getMore.setAttribute("tooltiptext", getMore.getAttribute(isExtensions ? "tooltiptextextensions" : "tooltiptextthemes"));
-  getMore.setAttribute('href', gGetMoreURL);
+  try {
+    var getMoreURL = pref.getComplexValue(isExtensions ? PREF_EXTENSIONS_GETMOREEXTENSIONSURL 
+                                                       : PREF_EXTENSIONS_GETMORETHEMESURL, 
+                                          Components.interfaces.nsIPrefLocalizedString).data;
+    var app = Components.classes["@mozilla.org/xre/app-info;1"]
+                        .getService(Components.interfaces.nsIXULAppInfo);
+    getMoreURL = getMoreURL.replace(/%APPID%/g, app.ID);
+    // Update various pieces of state-dependant UI
+    getMore.setAttribute("value", getMore.getAttribute(isExtensions ? "valueextensions" : "valuethemes"));
+    getMore.setAttribute("tooltiptext", getMore.getAttribute(isExtensions ? "tooltiptextextensions" : "tooltiptextthemes"));
+    getMore.setAttribute('href', getMoreURL);
+  }
+  catch (e) {
+    getMore.hidden = true;
+  }
   
   if (!isExtensions) {
     var themePreviewArea = document.getElementById("themePreviewArea");
