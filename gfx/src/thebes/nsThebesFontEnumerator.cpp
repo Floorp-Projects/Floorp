@@ -80,7 +80,11 @@ nsThebesFontEnumerator::EnumerateFonts(const char *aLangGroup,
     else
         generic.SetIsVoid(PR_TRUE);
 
-    rv = gfxPlatform::GetPlatform()->GetFontList(langGroup, generic, fontList);
+    // XXX windows doesn't implement gfxPlatform yet
+    if (gfxPlatform::GetPlatform())
+        rv = gfxPlatform::GetPlatform()->GetFontList(langGroup, generic, fontList);
+    else
+        rv = NS_ERROR_NOT_IMPLEMENTED;
 
     if (NS_FAILED(rv)) {
         *aCount = 0;
