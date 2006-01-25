@@ -118,7 +118,17 @@ MimeEncrypted_parse_begin (MimeObject *obj)
   else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_BASE64))
 	fn = &MimeB64DecoderInit;
   else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_QUOTED_PRINTABLE))
-	fn = &MimeQPDecoderInit;
+  {
+    enc->decoder_data =
+	  MimeQPDecoderInit (/* The (int (*) ...) cast is to turn the `void' argument
+		     into `MimeObject'. */
+		  ((nsresult (*) (const char *, PRInt32, void *))
+		   ((MimeEncryptedClass *)obj->clazz)->parse_decoded_buffer),
+		  obj);
+
+    if (!enc->decoder_data)
+	  return MIME_OUT_OF_MEMORY;
+  }
   else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE) ||
 		   !nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE2) ||
 		   !nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE3) ||

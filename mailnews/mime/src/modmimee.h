@@ -56,17 +56,17 @@
 typedef struct MimeDecoderData MimeDecoderData;
 typedef struct MimeEncoderData MimeEncoderData;
 
+struct MimeObject;
+
 
 /* functions for creating that opaque data.
  */
-MimeDecoderData *MimeB64DecoderInit(nsresult (*output_fn) (const char *buf,
-													  PRInt32 size,
-													  void *closure),
+MimeDecoderData *MimeB64DecoderInit(nsresult (*output_fn) (const char *buf,PRInt32 size, void *closure),
 									void *closure);
-MimeDecoderData *MimeQPDecoderInit (nsresult (*output_fn) (const char *buf,
-													  PRInt32 size,
-													  void *closure),
-									void *closure);
+
+MimeDecoderData *MimeQPDecoderInit (nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure),
+									void *closure, MimeObject *object = nsnull);
+
 MimeDecoderData *MimeUUDecoderInit (nsresult (*output_fn) (const char *buf,
 													  PRInt32 size,
 													  void *closure),

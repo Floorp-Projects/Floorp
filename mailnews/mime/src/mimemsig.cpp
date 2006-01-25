@@ -395,7 +395,15 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
     else if (!nsCRT::strcasecmp(encoding.get(), ENCODING_BASE64))
       fn = &MimeB64DecoderInit;
     else if (!nsCRT::strcasecmp(encoding.get(), ENCODING_QUOTED_PRINTABLE))
-      fn = &MimeQPDecoderInit;
+    {
+      sig->sig_decoder_data =
+	MimeQPDecoderInit (((nsresult (*) (const char *, PRInt32, void *))
+		 (((MimeMultipartSignedClass *) obj->clazz)
+		      ->crypto_signature_hash)),
+		sig->crypto_closure);
+      if (!sig->sig_decoder_data)
+	return MIME_OUT_OF_MEMORY;
+    }
     else if (!nsCRT::strcasecmp(encoding.get(), ENCODING_UUENCODE) ||
              !nsCRT::strcasecmp(encoding.get(), ENCODING_UUENCODE2) ||
              !nsCRT::strcasecmp(encoding.get(), ENCODING_UUENCODE3) ||

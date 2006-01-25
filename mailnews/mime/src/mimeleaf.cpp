@@ -124,7 +124,10 @@ MimeLeaf_parse_begin (MimeObject *obj)
   else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_BASE64))
 	fn = &MimeB64DecoderInit;
   else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_QUOTED_PRINTABLE))
-	fn = &MimeQPDecoderInit;
+	leaf->decoder_data = 
+          MimeQPDecoderInit(((nsresult (*) (const char *, PRInt32, void *))
+                        ((MimeLeafClass *)obj->clazz)->parse_decoded_buffer),
+                        obj, obj);
   else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE) ||
 		   !nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE2) ||
 		   !nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE3) ||

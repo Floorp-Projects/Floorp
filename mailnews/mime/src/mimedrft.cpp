@@ -1964,7 +1964,13 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     else if (!nsCRT::strcasecmp(newAttachment->encoding, ENCODING_BASE64))
       fn = &MimeB64DecoderInit;
     else if (!nsCRT::strcasecmp(newAttachment->encoding, ENCODING_QUOTED_PRINTABLE))
-      fn = &MimeQPDecoderInit;
+    {
+      mdd->decoder_data = MimeQPDecoderInit (/* The (nsresult (*) ...) cast is to turn the `void' argument into `MimeObject'. */
+                              ((nsresult (*) (const char *, PRInt32, void *))
+                              dummy_file_write), mdd->tmpFileStream);
+      if (!mdd->decoder_data)
+        return MIME_OUT_OF_MEMORY;
+    }
     else if (!nsCRT::strcasecmp(newAttachment->encoding, ENCODING_UUENCODE) ||
              !nsCRT::strcasecmp(newAttachment->encoding, ENCODING_UUENCODE2) ||
              !nsCRT::strcasecmp(newAttachment->encoding, ENCODING_UUENCODE3) ||

@@ -42,6 +42,7 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "prprf.h"
+#include "mimeobj.h"
 
 typedef enum mime_encoding {
   mime_Base64, mime_QuotedPrintable, mime_uuencode, mime_yencode
@@ -63,6 +64,7 @@ struct MimeDecoderData {
   char *line_buffer;
   int line_buffer_size;
 
+  MimeObject *objectToDecode; // might be null, only used for QP currently
   /* Where to write the decoded data */
   nsresult (*write_buffer) (const char *buf, PRInt32 size, void *closure);
   void *closure;
@@ -176,7 +178,9 @@ mime_decode_qp_buffer (MimeDecoderData *data, const char *buffer, PRInt32 length
 			  continue;
 			}
 		  /* treat null bytes as spaces per bug 243199 comment 7 */
-		  *out++ = c ? (char) c : ' ';
+		  *out++ = c || (data->objectToDecode && 
+                      data->objectToDecode->options->format_out != nsMimeOutput::nsMimeMessageBodyDisplay)
+                    ? (char) c : ' ';
 		}
 	  else
 		{
@@ -797,9 +801,12 @@ MimeB64DecoderInit (nsresult (*output_fn) (const char *, PRInt32, void *),
 
 MimeDecoderData *
 MimeQPDecoderInit (nsresult (*output_fn) (const char *, PRInt32, void *),
-				   void *closure)
+				   void *closure, MimeObject *object)
 {
-  return mime_decoder_init (mime_QuotedPrintable, output_fn, closure);
+  MimeDecoderData *retData = mime_decoder_init (mime_QuotedPrintable, output_fn, closure);
+  if (retData)
+    retData->objectToDecode = object;
+  return retData;
 }
 
 MimeDecoderData *
