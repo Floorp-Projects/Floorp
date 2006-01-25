@@ -39,9 +39,12 @@
 
 #include "nsIChromeRegistry.h"
 #include "nsIToolkitChromeRegistry.h"
-#include "nsIXULOverlayProvider.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+
+#ifdef MOZ_XUL
+#include "nsIXULOverlayProvider.h"
+#endif
 
 #include "pldhash.h"
 
@@ -61,6 +64,7 @@ class nsILocalFile;
 class nsIRDFDataSource;
 class nsIRDFResource;
 class nsIRDFService;
+class nsISimpleEnumerator;
 class nsIURL;
 
 // for component registration
@@ -69,7 +73,9 @@ class nsIURL;
 { 0x47049e42, 0x1d87, 0x482a, { 0x98, 0x4d, 0x56, 0xae, 0x18, 0x5e, 0x36, 0x7a } }
 
 class nsChromeRegistry : public nsIToolkitChromeRegistry,
+#ifdef MOZ_XUL
                          public nsIXULOverlayProvider,
+#endif
                          public nsIObserver,
                          public nsSupportsWeakReference
 {
@@ -80,7 +86,10 @@ public:
   NS_DECL_NSICHROMEREGISTRY
   NS_DECL_NSIXULCHROMEREGISTRY
   NS_DECL_NSITOOLKITCHROMEREGISTRY
+
+#ifdef MOZ_XUL
   NS_DECL_NSIXULOVERLAYPROVIDER
+#endif
 
   NS_DECL_NSIOBSERVER
 
@@ -109,12 +118,14 @@ private:
   static nsresult GetProviderAndPath(nsIURL* aChromeURL,
                                      nsACString& aProvider, nsACString& aPath);
 
+#ifdef MOZ_XUL
   NS_HIDDEN_(void) ProcessProvider(PRFileDesc *fd, nsIRDFService* aRDFs,
                                    nsIRDFDataSource* ds, nsIRDFResource* aRoot,
                                    PRBool aIsLocale, const nsACString& aBaseURL);
   NS_HIDDEN_(void) ProcessOverlays(PRFileDesc *fd, nsIRDFDataSource* ds,
                                    nsIRDFResource* aRoot,
                                    const nsCSubstring& aType);
+#endif
 
   NS_HIDDEN_(nsresult) ProcessManifest(nsILocalFile* aManifest, PRBool aSkinOnly);
   NS_HIDDEN_(nsresult) ProcessManifestBuffer(char *aBuffer, PRInt32 aLength, nsILocalFile* aManifest, PRBool aSkinOnly);

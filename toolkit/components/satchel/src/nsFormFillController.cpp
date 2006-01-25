@@ -69,7 +69,10 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsPasswordManager.h"
+#include "nsSingleSignonPrompt.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIGenericFactory.h"
+#include "nsToolkitCompsCID.h"
 
 NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIFormFillController)
@@ -1102,3 +1105,47 @@ nsFormFillController::GetIndexOfDocShell(nsIDocShell *aDocShell)
     
   return -1;
 }
+
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsFormHistory, nsFormHistory::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPasswordManager, nsPasswordManager::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSingleSignonPrompt)
+
+static void PR_CALLBACK nsFormHistoryModuleDtor(nsIModule* self)
+{
+  nsPasswordManager::Shutdown();
+  nsFormHistory::ReleaseInstance();
+}
+
+static const nsModuleComponentInfo components[] =
+{
+  { "Password Manager",
+    NS_PASSWORDMANAGER_CID,
+    NS_PASSWORDMANAGER_CONTRACTID,
+    nsPasswordManagerConstructor,
+    nsPasswordManager::Register,
+    nsPasswordManager::Unregister },
+
+  { "Single Signon Prompt",
+    NS_SINGLE_SIGNON_PROMPT_CID,
+    "@mozilla.org/wallet/single-sign-on-prompt;1",
+    nsSingleSignonPromptConstructor },
+
+  { "HTML Form History",
+    NS_FORMHISTORY_CID, 
+    NS_FORMHISTORY_CONTRACTID,
+    nsFormHistoryConstructor },
+
+  { "HTML Form Fill Controller",
+    NS_FORMFILLCONTROLLER_CID, 
+    "@mozilla.org/satchel/form-fill-controller;1",
+    nsFormFillControllerConstructor },
+
+  { "HTML Form History AutoComplete",
+    NS_FORMFILLCONTROLLER_CID, 
+    NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID,
+    nsFormFillControllerConstructor }
+};
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(satchel, components, nsFormHistoryModuleDtor)
+
