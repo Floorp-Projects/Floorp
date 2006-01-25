@@ -73,6 +73,7 @@ public:
 
     nsresult Init();
     void     ProcessNextURI();
+    void     UpdateCurrentChannel(nsIChannel *c) { mCurrentChannel = c; }
 
 private:
     ~nsPrefetchService();
