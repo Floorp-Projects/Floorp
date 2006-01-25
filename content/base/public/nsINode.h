@@ -39,11 +39,11 @@
 #define nsINode_h___
 
 #include "nsIDOMGCParticipant.h"
+#include "nsPropertyTable.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsINodeInfo.h"
 #include "nsCOMPtr.h"
-#include "nsPropertyTable.h"
 #endif
 
 class nsIContent;
