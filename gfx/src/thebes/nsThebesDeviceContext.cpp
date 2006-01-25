@@ -146,7 +146,7 @@ nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
 
 #if defined(MOZ_ENABLE_GTK2)
     if (mPrinter) {
-        mDPI = 600;
+        mDpi = 600;
     } else {
         float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
         OSVal = NSToCoordRound(float(::gdk_screen_width()) / screenWidthIn);
@@ -235,8 +235,8 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
 
     // XXX
     if (mPrinter) {
-        mWidth = mDPI * 8.5;
-        mHeight = mDPI * 11;
+        mWidth = mDpi * 8.5;
+        mHeight = mDpi * 11;
     }
     // XXX
     mDepth = 24;
