@@ -55,10 +55,19 @@ interface nsIRequest : nsISupports
     readonly attribute AUTF8String name;
 
     /**
+     * Indicates whether the request is pending. nsIRequest::isPending is
+     * true when there is an outstanding asynchronous event that will make
+     * the request no longer be pending.  Requests do not necessarily start
+     * out pending; in some cases, requests have to be explicitly initiated
+     * (e.g. nsIChannel implementations are only pending once asyncOpen
+     * returns successfully).
+     *
+     * Requests can become pending multiple times during their lifetime.
+     *
      * @return TRUE if the request has yet to reach completion.
      * @return FALSE if the request has reached completion (e.g., after
      *   OnStopRequest has fired).
-     * Suspended requests are still considered pending.
+     * @note Suspended requests are still considered pending.
      */
     boolean isPending();
 
