@@ -147,11 +147,17 @@ tier_9_dirs	+= \
 		modules/libutil \
 		netwerk \
 		modules/libjar \
+		$(NULL)
+
+ifdef MOZ_XUL
+tier_9_dirs += rdf
+endif
+
+tier_9_dirs	+= \
 		uriloader \
 		modules/libpref \
 		modules/libimg \
 		caps \
-		rdf \
 		parser/expat \
 		parser/htmlparser \
 		gfx \
@@ -201,14 +207,14 @@ endif
 # tier 50 - xpfe & toolkit
 #
 
-ifdef MOZ_XUL
 ifdef MOZ_XUL_APP
 tier_50_dirs += chrome
 else
+ifdef MOZ_XUL
 tier_50_dirs += rdf/chrome
-endif
 else
 tier_50_dirs += embedding/minimo/chromelite
+endif
 endif
 
 tier_50_dirs += profile
@@ -260,6 +266,14 @@ endif
 
 ifdef MOZ_JAVAXPCOM
 tier_50_dirs += extensions/java
+endif
+
+ifndef BUILD_STATIC_LIBS
+ifdef MOZ_XUL_APP
+ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
+tier_50_dirs += embedding/browser/gtk
+endif
+endif
 endif
 
 ifdef MOZ_XUL_APP
@@ -381,10 +395,6 @@ ifndef MINIMO
 tier_99_dirs	+= xpfe/bootstrap
 endif
 endif
-endif
-
-ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
-tier_99_dirs	+= embedding/browser/gtk
 endif
 
 # viewer
@@ -532,7 +542,6 @@ tools_tier_%:
 	  $(MAKE) -C $$d tools; \
 	done
 
-ifdef MOZ_ENABLE_LIBXUL
 tier_50:
 	@echo "$@: $($@_dirs)"
 	$(MAKE) export_tier_50
@@ -540,7 +549,6 @@ tier_50:
 	$(MAKE) tools_tier_2
 	$(MAKE) tools_tier_9
 	$(MAKE) tools_tier_50
-endif
 
 tier_%:
 	@echo "$@: $(if $($@_dirs),$($@_dirs),$(error Tier $* not present.))"

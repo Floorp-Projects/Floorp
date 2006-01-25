@@ -86,6 +86,10 @@
 #include "nsIObserverService.h"
 #include "nsITextToSubURI.h"
 
+#include "nsIGenericFactory.h"
+#include "nsToolkitCompsCID.h"
+#include "nsDocShellCID.h"
+
 PRInt32 nsGlobalHistory::gRefCnt;
 nsIRDFService* nsGlobalHistory::gRDFService;
 nsIRDFResource* nsGlobalHistory::kNC_Page;
@@ -4674,3 +4678,25 @@ nsGlobalHistory::AutoCompleteSortComparison(nsIMdbRow *row1, nsIMdbRow *row2,
   }
   return 0;
 }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
+
+static const nsModuleComponentInfo components[] =
+{
+  { "Global History",
+    NS_GLOBALHISTORY_CID,
+    NS_GLOBALHISTORY2_CONTRACTID,
+    nsGlobalHistoryConstructor },
+    
+  { "Global History",
+    NS_GLOBALHISTORY_CID,
+    NS_GLOBALHISTORY_DATASOURCE_CONTRACTID,
+    nsGlobalHistoryConstructor },
+    
+  { "Global History",
+    NS_GLOBALHISTORY_CID,
+    NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
+    nsGlobalHistoryConstructor }
+};
+
+NS_IMPL_NSGETMODULE(nsToolkitHistory, components)
