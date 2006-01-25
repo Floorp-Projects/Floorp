@@ -21,6 +21,7 @@
  * Contributor(s): Mike Potter <mikep@oeone.com>
  *                 ArentJan Banck <ajbanck@planet.nl>
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
+ *                 Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,8 +60,6 @@ calendarPrefObserver.prototype =
         // when calendar pref was changed, we reinitialize 
         switch( prefName )
         {
-            case "calendar.view.defaultstarthour":
-            case "calendar.view.defaultendhour":
             case "calendar.previousweeks.inview":
             case "calendar.week.d0sundaysoff":
             case "calendar.week.d1mondaysoff":

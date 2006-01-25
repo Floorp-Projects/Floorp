@@ -16,6 +16,8 @@
  *
  * The Initial Developer of the Original Code is
  *   Joey Minta <jminta@gmail.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
+ *
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
@@ -49,6 +51,12 @@ interface calIItemBase;
  * Because it contains a calICalendarView as an anonymous node, not easily
  * accessible, it must therefore expose several of that interface's methods and
  * attributes, as well as its own.
+ * 
+ * @note Implementations of this interface are intended to be the home
+ * for view preference handling.  The lower-level views (ie
+ * implementers of calICalendarView) are intended to be pure widgetry,
+ * and this sort of view should be pluggable, meaning that callers
+ * shouldn't need to know about view-specific preferences.
  */
 
 [scriptable, uuid(229049e0-e36f-4706-9fe1-37eb370273b9)]
