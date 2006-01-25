@@ -69,19 +69,14 @@ endif
 
 ifndef MOZ_THUNDERBIRD
 DIRS +=	\
-	cookie \
-	typeaheadfind \
-	$(NULL)
-
-ifdef MOZ_XUL
-DIRS += \
 	autocomplete \
+	cookie \
+	help \
 	history \
 	passwordmgr \
 	satchel \
-	help \
+	typeaheadfind \
 	$(NULL)
-endif # MOZ_XUL
 endif # MOZ_THUNDERBIRD
 
 ifdef MOZ_XPINSTALL

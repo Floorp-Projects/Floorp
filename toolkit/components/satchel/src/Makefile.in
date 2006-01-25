@@ -44,11 +44,9 @@ VPATH=@srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = satchel
-LIBRARY_NAME = satchel
-MODULE_NAME = satchel
-IS_COMPONENT = 1
+LIBRARY_NAME = satchel_s
+FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
-EXPORT_LIBRARY = 1
 
 REQUIRES =	\
 		xpcom \
@@ -68,7 +66,6 @@ REQUIRES =	\
 		unicharutil \
 		intl \
 		pref \
-		toolkitcomps \
 		$(NULL)
 
 CPPSRCS = nsFormFillController.cpp \
@@ -78,8 +75,3 @@ CPPSRCS = nsFormFillController.cpp \
 LOCAL_INCLUDES = -I$(srcdir)/../../passwordmgr/base
 
 include $(topsrcdir)/config/rules.mk
-
-EXTRA_DSO_LDOPTS = \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(NULL)

@@ -70,8 +70,6 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsPasswordManager.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIGenericFactory.h"
-#include "nsToolkitCompsCID.h"
 
 NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIFormFillController)
@@ -1104,31 +1102,3 @@ nsFormFillController::GetIndexOfDocShell(nsIDocShell *aDocShell)
     
   return -1;
 }
-
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsFormHistory, nsFormHistory::GetInstance)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
-
-static void PR_CALLBACK nsFormHistoryModuleDtor(nsIModule* self)
-{
-  nsFormHistory::ReleaseInstance();
-}
-
-static const nsModuleComponentInfo components[] =
-{
-  { "HTML Form History",
-    NS_FORMHISTORY_CID, 
-    NS_FORMHISTORY_CONTRACTID,
-    nsFormHistoryConstructor },
-
-  { "HTML Form Fill Controller",
-    NS_FORMFILLCONTROLLER_CID, 
-    "@mozilla.org/satchel/form-fill-controller;1",
-    nsFormFillControllerConstructor },
-
-  { "HTML Form History AutoComplete",
-    NS_FORMFILLCONTROLLER_CID, 
-    NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID,
-    nsFormFillControllerConstructor }
-};
-
-NS_IMPL_NSGETMODULE_WITH_DTOR(satchel, components, nsFormHistoryModuleDtor)

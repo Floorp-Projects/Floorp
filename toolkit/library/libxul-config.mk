@@ -103,23 +103,15 @@ COMPONENT_LIBS += \
 	mozfind \
 	appcomps \
 	commandlines \
+	tkautocomplete \
 	toolkitcomps \
 	xpinstall \
 	jsd \
+	pippki \
 	pipboot \
 	pipnss \
 	autoconfig \
 	$(NULL)
-
-ifdef MOZ_XUL
-COMPONENT_LIBS += \
-	tkautocomplete \
-	tkhstory \
-	passwordmgr \
-	satchel \
-	pippki \
-	$(NULL)
-endif
 
 ifeq ($(OS_ARCH),WINNT)
 COMPONENT_LIBS += intlcmpt
