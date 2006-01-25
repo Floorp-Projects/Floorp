@@ -39,20 +39,21 @@
 #define nsINode_h___
 
 #include "nsIDOMGCParticipant.h"
-#include "nsCOMPtr.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsINodeInfo.h"
+#include "nsCOMPtr.h"
+#include "nsPropertyTable.h"
 #endif
 
 class nsIContent;
 class nsIDocument;
 
 // IID for the nsINode interface
-// a22b59d9-cc21-402c-bdd2-2780e4cd5883
+// 9c74e48b-b417-4058-aa23-83cd7eb15131
 #define NS_INODE_IID \
-{ 0xa22b59d9, 0xcc21, 0x402c, \
- { 0xbd, 0xd2, 0x27, 0x80, 0xe4, 0xcd, 0x58, 0x83 } }
+{ 0x9c74e48b, 0xb417, 0x4058, \
+ { 0xaa, 0x23, 0x83, 0xcd, 0x7e, 0xb1, 0x51, 0x31 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -165,6 +166,64 @@ public:
    * Note: If there is no child at aIndex, this method will simply do nothing.
    */
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify) = 0;
+
+  /**
+   * Get a property associated with this node.
+   *
+   * @param aPropertyName  name of property to get.
+   * @param aStatus        out parameter for storing resulting status.
+   *                       Set to NS_PROPTABLE_PROP_NOT_THERE if the property
+   *                       is not set.
+   * @return               the property. Null if the property is not set
+   *                       (though a null return value does not imply the
+   *                       property was not set, i.e. it can be set to null).
+   */
+  virtual void* GetProperty(nsIAtom *aPropertyName,
+                            nsresult *aStatus = nsnull) const;
+
+  /**
+   * Set a property to be associated with this node. This will overwrite an
+   * existing value if one exists. The existing value is destroyed using the
+   * destructor function given when that value was set.
+   *
+   * @param aPropertyName  name of property to set.
+   * @param aValue         new value of property.
+   * @param aDtor          destructor function to be used when this property
+   *                       is destroyed.
+   *
+   * @return NS_PROPTABLE_PROP_OVERWRITTEN (success value) if the property
+   *                                       was already set
+   * @throws NS_ERROR_OUT_OF_MEMORY if that occurs
+   */
+  virtual nsresult SetProperty(nsIAtom *aPropertyName,
+                               void *aValue,
+                               NSPropertyDtorFunc aDtor = nsnull);
+
+  /**
+   * Destroys a property associated with this node. The value is destroyed
+   * using the destruction function given when that value was set.
+   *
+   * @param aPropertyName  name of property to destroy.
+   *
+   * @throws NS_PROPTABLE_PROP_NOT_THERE if the property was not set
+   */
+  virtual nsresult DeleteProperty(nsIAtom *aPropertyName);
+
+  /**
+   * Unset a property associated with this node. The value will not be
+   * destroyed but rather returned. It is the caller's responsibility to
+   * destroy the value after that point
+   *
+   * @param aPropertyName  name of property to unset.
+   * @param aStatus        out parameter for storing resulting status.
+   *                       Set to NS_PROPTABLE_PROP_NOT_THERE if the property
+   *                       is not set.
+   * @return               the property. Null if the property is not set
+   *                       (though a null return value does not imply the
+   *                       property was not set, i.e. it can be set to null).
+   */
+  virtual void* UnsetProperty(nsIAtom  *aPropertyName,
+                              nsresult *aStatus = nsnull);
 
   /**
    * IsNodeOfType()?  Do we need a non-QI way to tell apart documents and

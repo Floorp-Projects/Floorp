@@ -708,7 +708,7 @@ nsDocument::~nsDocument()
   mInDestructor = PR_TRUE;
 
   CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
-                      NS_STATIC_CAST(nsIDocument*, this), nsnull, nsnull);
+                      this, nsnull, nsnull);
 
   // XXX Inform any remaining observers that we are going away.
   // Note that this currently contradicts the rule that all
@@ -2975,10 +2975,10 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
         aImportedNode->GetFirstChild(getter_AddRefs(child));
         clone->GetFirstChild(getter_AddRefs(newChild));
 
-        nsCOMPtr<nsISupports> childSupports = do_QueryInterface(child);
-        if (childSupports && newChild) {
+        nsCOMPtr<nsINode> childNode = do_QueryInterface(child);
+        if (childNode && newChild) {
           document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_IMPORTED,
-                                        childSupports, child, newChild);
+                                        childNode, child, newChild);
         }
       }
 
@@ -3021,7 +3021,7 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
   }
 
   if (document) {
-    nsCOMPtr<nsISupports> importedNode = do_QueryInterface(aImportedNode);
+    nsCOMPtr<nsINode> importedNode = do_QueryInterface(aImportedNode);
     document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_IMPORTED,
                                   importedNode, aImportedNode, *aResult);
   }
@@ -3865,7 +3865,7 @@ nsDocument::SetUserData(const nsAString &aKey,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return SetUserData(NS_STATIC_CAST(nsIDocument*, this), key, aData, aHandler,
+  return SetUserData(this, key, aData, aHandler,
                      aResult);
 }
 
@@ -3878,7 +3878,7 @@ nsDocument::GetUserData(const nsAString &aKey,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return GetUserData(NS_STATIC_CAST(nsIDocument*, this), key, aResult);
+  return GetUserData(this, key, aResult);
 }
 
 static void
@@ -3892,16 +3892,16 @@ ReleaseDOMUserData(void *aObject,
 }
 
 nsresult
-nsDocument::SetUserData(const nsISupports *aObject,
+nsDocument::SetUserData(const nsINode *aObject,
                         nsIAtom *aKey,
                         nsIVariant *aData,
                         nsIDOMUserDataHandler *aHandler,
                         nsIVariant **aResult)
 {
 #ifdef DEBUG
-  nsCOMPtr<nsISupports> object =
-    do_QueryInterface(NS_CONST_CAST(nsISupports*, aObject));
-  NS_ASSERTION(object == aObject, "Use cannonical nsISupports pointer!");
+  nsCOMPtr<nsINode> object =
+    do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
+  NS_ASSERTION(object == aObject, "Use cannonical nsINode pointer!");
 #endif
 
   *aResult = nsnull;
@@ -3955,13 +3955,13 @@ nsDocument::SetUserData(const nsISupports *aObject,
 }
 
 nsresult
-nsDocument::GetUserData(const nsISupports *aObject, nsIAtom *aKey,
+nsDocument::GetUserData(const nsINode *aObject, nsIAtom *aKey,
                         nsIVariant **aResult)
 {
 #ifdef DEBUG
-  nsCOMPtr<nsISupports> object =
-    do_QueryInterface(NS_CONST_CAST(nsISupports*, aObject));
-  NS_ASSERTION(object == aObject, "Use cannonical nsISupports pointer!");
+  nsCOMPtr<nsINode> object =
+    do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
+  NS_ASSERTION(object == aObject, "Use cannonical nsINode pointer!");
 #endif
 
   *aResult = NS_STATIC_CAST(nsIVariant*,
@@ -3988,7 +3988,7 @@ CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
   nsCOMPtr<nsIDOMUserDataHandler> handler =
     NS_STATIC_CAST(nsIDOMUserDataHandler*, aHandler);
   nsCOMPtr<nsIVariant> data;
-  nsISupports *object = NS_STATIC_CAST(nsISupports*, aObject);
+  nsINode *object = NS_STATIC_CAST(nsINode*, aObject);
   nsresult rv = handlerData->mDocument->GetUserData(object, aKey,
                                                     getter_AddRefs(data));
   if (NS_SUCCEEDED(rv)) {
@@ -4003,14 +4003,14 @@ CallHandler(void *aObject, nsIAtom *aKey, void *aHandler, void *aData)
 
 void
 nsDocument::CallUserDataHandler(PRUint16 aOperation,
-                                const nsISupports *aObject,
+                                const nsINode *aObject,
                                 nsIDOMNode *aSource, nsIDOMNode *aDest)
 {
 #ifdef DEBUG
   // XXX Should we guard from QI'ing nodes that are being destroyed?
-  nsCOMPtr<nsISupports> object =
-    do_QueryInterface(NS_CONST_CAST(nsISupports*, aObject));
-  NS_ASSERTION(object == aObject, "Use cannonical nsISupports pointer!");
+  nsCOMPtr<nsINode> object =
+    do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
+  NS_ASSERTION(object == aObject, "Use cannonical nsINode pointer!");
 #endif
 
   nsHandlerData handlerData;
@@ -4034,7 +4034,7 @@ Copy(void *aObject, nsIAtom *aKey, void *aUserData, void *aData)
 {
   nsCopyData *data = NS_STATIC_CAST(nsCopyData*, aData);
   nsPropertyTable *propertyTable = data->mSourceDocument->PropertyTable();
-  nsISupports *object = NS_STATIC_CAST(nsISupports*, aObject);
+  nsINode *object = NS_STATIC_CAST(nsINode*, aObject);
   nsIDOMUserDataHandler *handler =
     NS_STATIC_CAST(nsIDOMUserDataHandler*,
                    propertyTable->GetProperty(object, DOM_USER_DATA_HANDLER,
@@ -4047,12 +4047,12 @@ Copy(void *aObject, nsIAtom *aKey, void *aUserData, void *aData)
 }
 
 void
-nsDocument::CopyUserData(const nsISupports *aObject, nsIDocument *aDestination)
+nsDocument::CopyUserData(const nsINode *aObject, nsIDocument *aDestination)
 {
 #ifdef DEBUG
-  nsCOMPtr<nsISupports> object =
-    do_QueryInterface(NS_CONST_CAST(nsISupports*, aObject));
-  NS_ASSERTION(object == aObject, "Use cannonical nsISupports pointer!");
+  nsCOMPtr<nsINode> object =
+    do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
+  NS_ASSERTION(object == aObject, "Use cannonical nsINode pointer!");
 #endif
 
   nsCopyData copyData = { this, aDestination };
@@ -5016,34 +5016,6 @@ nsDocument::IsSafeToFlush() const
     ++i;
   }
   return isSafeToFlush;
-}
-
-void*
-nsDocument::GetProperty(nsIAtom *aPropertyName, nsresult *aStatus) const
-{
-  // ick
-  return NS_CONST_CAST(nsDocument*, this)->mPropertyTable.GetProperty(this, aPropertyName, aStatus);
-}
-
-nsresult
-nsDocument::SetProperty(nsIAtom            *aPropertyName,
-                        void               *aValue,
-                        NSPropertyDtorFunc  aDtor)
-{
-  return mPropertyTable.SetProperty(this, aPropertyName, aValue,
-                                    aDtor, nsnull);
-}
-
-nsresult
-nsDocument::DeleteProperty(nsIAtom *aPropertyName)
-{
-  return mPropertyTable.DeleteProperty(this, aPropertyName);
-}
-
-void*
-nsDocument::UnsetProperty(nsIAtom *aPropertyName, nsresult *aStatus)
-{
-  return mPropertyTable.UnsetProperty(this, aPropertyName, aStatus);
 }
 
 nsresult

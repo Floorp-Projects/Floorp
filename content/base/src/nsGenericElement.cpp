@@ -133,6 +133,53 @@ PRBool nsIContent::sTabFocusModelAppliesToXUL = PR_FALSE;
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 //----------------------------------------------------------------------
 
+void*
+nsINode::GetProperty(nsIAtom  *aPropertyName, nsresult *aStatus) const
+{
+  nsIDocument *doc = GetOwnerDoc();
+  if (!doc)
+    return nsnull;
+
+  return doc->PropertyTable()->GetProperty(this, aPropertyName,
+                                           aStatus);
+}
+
+nsresult
+nsINode::SetProperty(nsIAtom *aPropertyName,
+                     void *aValue,
+                     NSPropertyDtorFunc aDtor)
+{
+  nsIDocument *doc = GetOwnerDoc();
+  if (!doc)
+    return NS_ERROR_FAILURE;
+
+  return doc->PropertyTable()->SetProperty(this, aPropertyName,
+                                           aValue, aDtor, nsnull);
+}
+
+nsresult
+nsINode::DeleteProperty(nsIAtom *aPropertyName)
+{
+  nsIDocument *doc = GetOwnerDoc();
+  if (!doc)
+    return nsnull;
+
+  return doc->PropertyTable()->DeleteProperty(this, aPropertyName);
+}
+
+void*
+nsINode::UnsetProperty(nsIAtom *aPropertyName, nsresult *aStatus)
+{
+  nsIDocument *doc = GetOwnerDoc();
+  if (!doc)
+    return nsnull;
+
+  return doc->PropertyTable()->UnsetProperty(this, aPropertyName,
+                                             aStatus);
+}
+
+//----------------------------------------------------------------------
+
 nsChildContentList::nsChildContentList(nsIContent *aContent)
 {
   // This reference is not reference-counted. The content
@@ -818,10 +865,10 @@ nsGenericElement::~nsGenericElement()
   if (HasProperties()) {
     nsIDocument *document = GetOwnerDoc();
     if (document) {
-      nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
       document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
-                                    thisSupports, nsnull, nsnull);
-      document->PropertyTable()->DeleteAllPropertiesFor(thisSupports);
+                                    this, nsnull, nsnull);
+      document->PropertyTable()->
+        DeleteAllPropertiesFor(NS_STATIC_CAST(nsINode*, this));
     }
   }
 
@@ -1876,13 +1923,12 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsIDocument *ownerDocument = GetOwnerDoc();
     if (aDocument != ownerDocument) {
       if (ownerDocument && HasProperties()) {
-        nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
-
         // Copy UserData to the new document.
-        ownerDocument->CopyUserData(thisSupports, aDocument);
+        ownerDocument->CopyUserData(this, aDocument);
 
         // Remove all properties.
-        ownerDocument->PropertyTable()->DeleteAllPropertiesFor(thisSupports);
+        ownerDocument->PropertyTable()->
+          DeleteAllPropertiesFor(NS_STATIC_CAST(nsINode*, this));
       }
 
       // get a new nodeinfo
@@ -4365,57 +4411,17 @@ nsGenericElement::GetContentsAsText(nsAString& aText)
   }
 }
 
-void*
-nsGenericElement::GetProperty(nsIAtom  *aPropertyName, nsresult *aStatus) const
-{
-  nsIDocument *doc = GetOwnerDoc();
-  if (!doc)
-    return nsnull;
-
-  const nsISupports *thisSupports = NS_STATIC_CAST(const nsIContent*, this);
-  return doc->PropertyTable()->GetProperty(thisSupports, aPropertyName,
-                                           aStatus);
-}
-
 nsresult
 nsGenericElement::SetProperty(nsIAtom            *aPropertyName,
                               void               *aValue,
                               NSPropertyDtorFunc  aDtor)
 {
-  nsIDocument *doc = GetOwnerDoc();
-  if (!doc)
-    return NS_ERROR_FAILURE;
+  nsresult rv = nsIXMLContent::SetProperty(aPropertyName, aValue, aDtor);
 
-  nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
-  nsresult rv = doc->PropertyTable()->SetProperty(thisSupports, aPropertyName,
-                                                  aValue, aDtor, nsnull);
   if (NS_SUCCEEDED(rv))
     SetFlags(GENERIC_ELEMENT_HAS_PROPERTIES);
 
   return rv;
-}
-
-nsresult
-nsGenericElement::DeleteProperty(nsIAtom *aPropertyName)
-{
-  nsIDocument *doc = GetOwnerDoc();
-  if (!doc)
-    return nsnull;
-
-  nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
-  return doc->PropertyTable()->DeleteProperty(thisSupports, aPropertyName);
-}
-
-void*
-nsGenericElement::UnsetProperty(nsIAtom  *aPropertyName, nsresult *aStatus)
-{
-  nsIDocument *doc = GetOwnerDoc();
-  if (!doc)
-    return nsnull;
-
-  nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
-  return doc->PropertyTable()->UnsetProperty(thisSupports, aPropertyName,
-                                             aStatus);
 }
 
 void
@@ -4440,8 +4446,7 @@ nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode *aSource,
   nsIDocument *ownerDoc = GetOwnerDoc();
   if (NS_SUCCEEDED(rv) && ownerDoc && HasProperties()) {
     ownerDoc->CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
-                                  NS_STATIC_CAST(const nsIContent*, this),
-                                  aSource, *aResult);
+                                  this, aSource, *aResult);
   }
 
   return rv;

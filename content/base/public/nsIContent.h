@@ -43,7 +43,6 @@
 #include "nsEvent.h"
 #include "nsStringGlue.h"
 #include "nsContentErrors.h"
-#include "nsPropertyTable.h"
 #include "nsCaseTreatment.h"
 #include "nsChangeHint.h"
 #include "nsINode.h"
@@ -65,10 +64,10 @@ class nsAttrValue;
 class nsAttrName;
 
 // IID for the nsIContent interface
-// e7c1214f-8164-43aa-934e-b8b06431a93d
+// bb761f7a-62a8-43d4-9694-1cf7850b0453
 #define NS_ICONTENT_IID \
-{ 0xe7c1214f, 0x8164, 0x43aa, \
- { 0x93, 0x4e, 0xb8, 0xb0, 0x64, 0x31, 0xa9, 0x3d } }
+{ 0xbb761f7a, 0x62a8, 0x43d4, \
+ { 0x96, 0x94, 0x1c, 0xf7, 0x85, 0x0b, 0x04, 0x53 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -714,27 +713,6 @@ public:
     return 0;
   }
     
-
-  /* Methods for manipulating content node properties.  For documentation on
-   * properties, see nsPropertyTable.h.
-   */
-
-  virtual void* GetProperty(nsIAtom  *aPropertyName,
-                            nsresult *aStatus = nsnull) const
-  { if (aStatus) *aStatus = NS_ERROR_NOT_IMPLEMENTED; return nsnull; }
-
-  virtual nsresult SetProperty(nsIAtom                   *aPropertyName,
-                               void                      *aValue,
-                               NSPropertyDtorFunc         aDtor = nsnull)
-  { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  virtual nsresult DeleteProperty(nsIAtom *aPropertyName)
-  { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  virtual void* UnsetProperty(nsIAtom  *aPropertyName,
-                              nsresult *aStatus = nsnull)
-  { if (aStatus) *aStatus = NS_ERROR_NOT_IMPLEMENTED; return nsnull; }
-
 
   virtual void SetHasProperties() = 0;
 

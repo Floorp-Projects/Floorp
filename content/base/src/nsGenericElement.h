@@ -364,6 +364,9 @@ public:
                                  PRBool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  virtual nsresult SetProperty(nsIAtom            *aPropertyName,
+                               void               *aValue,
+                               NSPropertyDtorFunc  aDtor);
   
   // nsIContent interface methods
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -413,14 +416,6 @@ public:
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
   virtual nsresult GetListenerManager(nsIEventListenerManager** aResult);
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
-  virtual void* GetProperty(nsIAtom  *aPropertyName,
-                            nsresult *aStatus = nsnull) const;
-  virtual nsresult SetProperty(nsIAtom            *aPropertyName,
-                               void               *aValue,
-                               NSPropertyDtorFunc  aDtor);
-  virtual nsresult DeleteProperty(nsIAtom  *aPropertyName);
-  virtual void*    UnsetProperty(nsIAtom *aPropertyName,
-                                 nsresult *aStatus = nsnull);
   virtual void SetMayHaveFrame(PRBool aMayHaveFrame);
   virtual PRBool MayHaveFrame() const;
   void SetHasProperties();

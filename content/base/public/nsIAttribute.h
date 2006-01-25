@@ -43,17 +43,17 @@
 #include "nsISupports.h"
 #include "nsINodeInfo.h"
 #include "nsIContent.h"
-#include "nsPropertyTable.h"
+#include "nsINode.h"
 #include "nsIDOMGCParticipant.h"
 
 class nsIAtom;
 class nsDOMAttributeMap;
 
 #define NS_IATTRIBUTE_IID  \
- {0x4940cc50, 0x2ede, 0x4883,        \
- {0x95, 0xf5, 0x53, 0xdb, 0x50, 0x50, 0x13, 0x3e}}
+{ 0x629c4659, 0xbadd, 0x4364, \
+ { 0x88, 0x9f, 0x37, 0x66, 0x70, 0xbe, 0x1a, 0xee } }
 
-class nsIAttribute : public nsIDOMGCParticipant
+class nsIAttribute : public nsINode
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IATTRIBUTE_IID)
@@ -72,27 +72,6 @@ public:
 
   virtual nsIContent* GetContent() const = 0;
 
-  nsIDocument *GetOwnerDoc() const
-  {
-    return mNodeInfo->GetDocument();
-  }
-
-  /*
-   * Methods for manipulating content node properties.  For documentation on
-   * properties, see nsPropertyTable.h.
-   */
-  virtual void* GetProperty(nsIAtom  *aPropertyName,
-                            nsresult *aStatus = nsnull) = 0;
-
-  virtual nsresult SetProperty(nsIAtom                   *aPropertyName,
-                               void                      *aValue,
-                               NSPropertyDtorFunc         aDtor = nsnull) = 0;
-
-  virtual nsresult DeleteProperty(nsIAtom *aPropertyName) = 0;
-
-  virtual void* UnsetProperty(nsIAtom  *aPropertyName,
-                              nsresult *aStatus = nsnull) = 0;
-
   /**
    * Called when our ownerElement is moved into a new document.
    * Updates the nodeinfo of this node.
@@ -101,15 +80,11 @@ public:
 
 protected:
   nsIAttribute(nsDOMAttributeMap *aAttrMap, nsINodeInfo *aNodeInfo)
-    : mAttrMap(aAttrMap), mNodeInfo(aNodeInfo)
+    : nsINode(aNodeInfo), mAttrMap(aAttrMap)
   {
   }
 
   nsDOMAttributeMap *mAttrMap; // WEAK
-  nsCOMPtr<nsINodeInfo> mNodeInfo; // STRONG
-
-private:
-  nsIAttribute(); // Not to be implemented.
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAttribute, NS_IATTRIBUTE_IID)
