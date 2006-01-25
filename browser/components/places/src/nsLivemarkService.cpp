@@ -94,6 +94,13 @@ nsLivemarkService::~nsLivemarkService()
       mTimer->Cancel();
       mTimer = nsnull;
   }
+  // Cancel any pending loads
+  for (PRInt32 i = 0; i < mLivemarks.Length(); ++i) {
+    LivemarkInfo *li = mLivemarks[i];
+    if (li->loadGroup) {
+      li->loadGroup->Cancel(NS_BINDING_ABORTED);
+    }
+  }
 }
 
 NS_IMPL_ISUPPORTS2(nsLivemarkService,
@@ -210,9 +217,9 @@ nsLivemarkService::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create the livemark and add it to the list.
-    LivemarkInfo li(folders[0], pLivemarks[i], feedURI);
-    PRBool added = mLivemarks.AppendElement(li);
-    NS_ASSERTION(added, "Could not add livemark to array!");
+    LivemarkInfo *li = new LivemarkInfo(folders[0], pLivemarks[i], feedURI);
+    NS_ENSURE_TRUE(li, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(mLivemarks.AppendElement(li), NS_ERROR_OUT_OF_MEMORY);
   }
   if (numLivemarks > 0)
     nsMemory::Free(pLivemarks);
@@ -251,21 +258,23 @@ nsLivemarkService::CreateLivemark(PRInt64 aFolder,
                                           0,
                                           nsIAnnotationService::EXPIRE_NEVER);
 
-  // Add an annotation to map the folder URI to the livemark site URI
-  nsCAutoString siteURISpec;
-  rv = aSiteURI->GetSpec(siteURISpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mAnnotationService->SetAnnotationString(livemarkURI,
-                                               NS_LITERAL_CSTRING(LMANNO_SITEURI),
-                                               NS_ConvertUTF8toUTF16(siteURISpec),
-                                               0,
-                                               nsIAnnotationService::EXPIRE_NEVER);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aSiteURI) {
+    // Add an annotation to map the folder URI to the livemark site URI
+    nsCAutoString siteURISpec;
+    rv = aSiteURI->GetSpec(siteURISpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mAnnotationService->SetAnnotationString(livemarkURI,
+                                                 NS_LITERAL_CSTRING(LMANNO_SITEURI),
+                                                 NS_ConvertUTF8toUTF16(siteURISpec),
+                                                 0,
+                                                 nsIAnnotationService::EXPIRE_NEVER);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Store the livemark info in our array.
-  LivemarkInfo info(*aNewLivemark, livemarkURI, aFeedURI);
-  PRBool added = mLivemarks.AppendElement(info);
-  NS_ASSERTION(added, "Could not add livemark to list!");
+  LivemarkInfo *info = new LivemarkInfo(*aNewLivemark, livemarkURI, aFeedURI);
+  NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mLivemarks.AppendElement(info), NS_ERROR_OUT_OF_MEMORY);
 
   UpdateLivemarkChildren(mLivemarks.Length() - 1);
 
@@ -300,7 +309,7 @@ nsLivemarkService::OnContainerRemoving(PRInt64 aContainer)
   PRInt32 lmIndex = -1;
   PRInt32 i;
   for (i = 0; i < mLivemarks.Length(); i++) {
-    if (mLivemarks[i].folderId == aContainer) {
+    if (mLivemarks[i]->folderId == aContainer) {
       lmIndex = i;
       break;
     }
@@ -311,10 +320,11 @@ nsLivemarkService::OnContainerRemoving(PRInt64 aContainer)
 
   // Remove the annotations that link the folder URI to the 
   // Feed URI and Site URI
-  rv = mAnnotationService->RemoveAnnotation(mLivemarks[lmIndex].folderURI,
+  LivemarkInfo *removedItem = mLivemarks[lmIndex];
+  rv = mAnnotationService->RemoveAnnotation(removedItem->folderURI,
                                             NS_LITERAL_CSTRING(LMANNO_FEEDURI));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mAnnotationService->RemoveAnnotation(mLivemarks[lmIndex].folderURI,
+  rv = mAnnotationService->RemoveAnnotation(removedItem->folderURI,
                                             NS_LITERAL_CSTRING(LMANNO_SITEURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -324,7 +334,7 @@ nsLivemarkService::OnContainerRemoving(PRInt64 aContainer)
   PRBool urisEqual = PR_FALSE;
   for (i = 0; i < mLivemarks.Length(); i++) {
     if (i != lmIndex && 
-        (NS_OK == mLivemarks[i].feedURI->Equals(mLivemarks[lmIndex].feedURI, &urisEqual)) &&
+        (NS_OK == mLivemarks[i]->feedURI->Equals(removedItem->feedURI, &urisEqual)) &&
         urisEqual) {
       stillInUse = PR_TRUE;
       break;
@@ -332,9 +342,15 @@ nsLivemarkService::OnContainerRemoving(PRInt64 aContainer)
   }
   if (!stillInUse) {
     // No other livemarks use this feed. Clear all the annotations for it.
-    rv = mAnnotationService->RemoveAnnotation(mLivemarks[lmIndex].feedURI,
+    rv = mAnnotationService->RemoveAnnotation(removedItem->feedURI,
                                               NS_LITERAL_CSTRING("livemark_expiration"));
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Cancel the load before we remove the element; this will ensure that
+  // a LivemarkLoadListener won't try to add items for this load.
+  if (removedItem->loadGroup) {
+    removedItem->loadGroup->Cancel(NS_BINDING_ABORTED);
   }
 
   // Take the annotation out of the list of annotations.
@@ -354,7 +370,7 @@ nsLivemarkService::OnContainerMoved(PRInt64 aContainer,
   // Find the livemark in the list.
   PRInt32 index = -1;
   for (PRInt32 i = 0; i < mLivemarks.Length(); i++) {
-    if (mLivemarks[i].folderId == aContainer) {
+    if (mLivemarks[i]->folderId == aContainer) {
       index = i;
       break;
     }
@@ -367,8 +383,8 @@ nsLivemarkService::OnContainerMoved(PRInt64 aContainer,
   rv = nsNavBookmarks::GetBookmarksService()->GetFolderURI(aContainer,
                                                            getter_AddRefs(newURI));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIURI> oldURI = mLivemarks[index].folderURI;
-  mLivemarks[index].folderURI = newURI;
+  nsCOMPtr<nsIURI> oldURI = mLivemarks[index]->folderURI;
+  mLivemarks[index]->folderURI = newURI;
 
   // Update the annotation that maps the folder URI to the livemark feed URI
   nsAutoString feedURIString;
