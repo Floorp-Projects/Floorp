@@ -4354,7 +4354,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
           case TOK_XMLSPACE:
           case TOK_XMLTEXT:
           case TOK_STRING:
-            if (pn->pn_arity == PN_LIST)
+            if (pn2->pn_arity == PN_LIST)
                 goto cantfold;
             str = ATOM_TO_STRING(pn2->pn_atom);
             break;
