@@ -49,10 +49,14 @@
 
 #include "prlog.h"
 
-#include <gfxContext.h>
+#include "gfxContext.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gThebesGFXLog;
+#endif
+
+#ifdef XP_WIN
+#include "gfxWindowsSurface.h"
 #endif
 
 class nsThebesDeviceContext : public DeviceContextImpl
@@ -120,7 +124,11 @@ public:
 
     nsNativeWidget GetWidget() { return mWidget; }
 #ifdef XP_WIN
-	void* GetHDC() { return mDC; }
+    HDC GetHDC() {
+        if (mPrintingSurface)
+            return reinterpret_cast<gfxWindowsSurface*>(mPrintingSurface.get())->GetDC();
+        return nsnull;
+    }
 #endif
 
 protected:
@@ -147,10 +155,7 @@ private:
 
     nsRefPtrHashtable<nsISupportsHashKey, gfxASurface> mWidgetSurfaceCache;
 
-#ifdef XP_WIN
-	// This will only be set in the case of printing....
-    void* mDC;
-#endif
+    nsRefPtr<gfxASurface> mPrintingSurface;
 };
 
 #endif /* _NS_CAIRODEVICECONTEXT_H_ */
