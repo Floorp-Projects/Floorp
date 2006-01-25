@@ -188,6 +188,12 @@ nsSVGDefsFrame::GetType() const
   return nsLayoutAtoms::svgDefsFrame;
 }
 
+PRBool
+nsSVGDefsFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~nsIFrame::eSVG);
+}
+
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods:
 

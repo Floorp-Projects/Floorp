@@ -116,6 +116,7 @@ public:
   // Overloaded nsHTMLContainerFrame methods -- see documentation in nsIFrame.h
 
   virtual nsIAtom* GetType() const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
   NS_IMETHOD
   Init(nsPresContext*  aPresContext,

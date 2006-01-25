@@ -571,6 +571,12 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   return rv;
 }
 
+PRBool
+nsMathMLmtableOuterFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~nsIFrame::eMathML);
+}
+
 // --------
 // implementation of nsMathMLmtdFrame
 
@@ -620,6 +626,12 @@ nsMathMLmtdFrame::GetColSpan()
       colspan = 1;
   }
   return colspan;
+}
+
+PRBool
+nsMathMLmtdFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~nsIFrame::eMathML);
 }
 
 // --------
@@ -676,3 +688,10 @@ nsMathMLmtdInnerFrame::Reflow(nsPresContext*          aPresContext,
   // ...
   return rv;
 }
+
+PRBool
+nsMathMLmtdInnerFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~nsIFrame::eMathML);
+}
+

@@ -116,6 +116,7 @@ public:
   // frametypes, particularly code looking at block and area
   // also handles foreignObject before we return our own frametype
   // virtual nsIAtom* GetType() const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -418,6 +419,12 @@ nsSVGForeignObjectFrame::RemoveFrame(nsIAtom*        aListName,
 // {
 //   return nsLayoutAtoms::svgForeignObjectFrame;
 // }
+
+PRBool
+nsSVGForeignObjectFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGForeignObject));
+}
 
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods:

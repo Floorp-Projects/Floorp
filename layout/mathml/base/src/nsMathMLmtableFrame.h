@@ -92,6 +92,8 @@ public:
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
+
 protected:
   nsMathMLmtableOuterFrame();
   virtual ~nsMathMLmtableOuterFrame();
@@ -116,6 +118,7 @@ public:
   // overloaded nsTableCellFrame methods
   virtual PRInt32 GetRowSpan();
   virtual PRInt32 GetColSpan();
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 protected:
   nsMathMLmtdFrame();
@@ -166,6 +169,7 @@ public:
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 protected:
   nsMathMLmtdInnerFrame();

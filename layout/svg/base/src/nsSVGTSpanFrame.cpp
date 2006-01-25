@@ -159,6 +159,12 @@ nsSVGTSpanFrame::GetType() const
   return nsLayoutAtoms::svgTSpanFrame;
 }
 
+PRBool
+nsSVGTSpanFrame::IsFrameOfType(PRUint32 aFlags) const
+{
+  return !(aFlags & ~nsIFrame::eSVG);
+}
+
 //----------------------------------------------------------------------
 // nsISupports methods
 
