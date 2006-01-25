@@ -283,13 +283,12 @@
         <button id="useThemeButton" hidden="true"
                 label="&cmd.useTheme.label;" accesskey="&cmd.useTheme.accesskey;" tooltiptext="&cmd.useTheme.tooltip;"
                 command="cmd_useTheme"/>
+        <separator class="commandBarSeparator"/>
+        <button id="updateButton" 
+                label="&cmd.update.label;" accesskey="&cmd.update.accesskey;" tooltiptext="&cmd.update.tooltip;"
+                command="cmd_update_all"/>
       </hbox>
       <spacer flex="1"/>
-
-      <separator class="commandBarSeparator"/>
-      <button id="updateButton" 
-              label="&cmd.update.label;" accesskey="&cmd.update.accesskey;" tooltiptext="&cmd.update.tooltip;"
-              command="cmd_update_all"/>
       <separator class="commandBarSeparator"/>
       <label id="getMore" class="text-link"
              valuethemes="&getMoreThemes.label;"
