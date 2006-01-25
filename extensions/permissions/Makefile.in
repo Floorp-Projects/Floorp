@@ -71,9 +71,4 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-ifdef MOZ_MAIL_NEWS
-CPPSRCS		+= nsMailnewsContentBlocker.cpp
-DEFINES		+= -DMOZ_MAIL_NEWS
-endif
-
 include $(topsrcdir)/config/rules.mk
