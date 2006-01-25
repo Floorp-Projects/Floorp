@@ -188,8 +188,8 @@
                  inputtooltiptext="&locationBar.tooltip;"
                  newlines="stripsurroundingwhitespace"
                  oninput="gBrowser.userTypedValue = this.value;"
-                 ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
-                 ontextrevert="return handleURLBarRevert();"
+                 ontextentered="return handleURLBarCommand(eventParam, domEvent);"
+                 ontextreverted="return handleURLBarRevert();"
                  onfocus="URLBarFocusHandler(event);"
                  onmousedown="URLBarMouseDownHandler(event);"
                  onclick="URLBarClickHandler(event);">

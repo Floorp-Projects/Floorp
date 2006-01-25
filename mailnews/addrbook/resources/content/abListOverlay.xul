@@ -92,7 +92,7 @@
                   searchSessions="addrbook" timeout="300" maxrows="4" 
                   autoFill="true" autoFillAfterMatch="true" forceComplete="true"
                   minResultsForPopup="3"
-                  ontextcommand="awRecipientTextCommand(eventParam, this)"
+                  ontextentered="awRecipientTextCommand(eventParam, this)"
                   onkeypress="handleKeyPress(this, event);"
                   onkeydown="awRecipientKeyDown(event, this);"
                   onclick="awNotAnEmptyArea(event);">
