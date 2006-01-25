@@ -1054,18 +1054,22 @@ obj_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
  */
 JSBool
 js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
-                         JSPrincipals *principals, const char *caller)
+                         JSPrincipals *principals, JSAtom *caller)
 {
     JSRuntime *rt;
     JSPrincipals *scopePrincipals;
+    const char *callerstr;
 
     rt = cx->runtime;
     if (rt->findObjectPrincipals) {
         scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
         if (!principals || !scopePrincipals ||
             !principals->subsume(principals, scopePrincipals)) {
+            callerstr = js_AtomToPrintableString(cx, caller);
+            if (!callerstr)
+                return JS_FALSE;
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_INDIRECT_CALL, caller);
+                                 JSMSG_BAD_INDIRECT_CALL, callerstr);
             return JS_FALSE;
         }
     }
@@ -1175,7 +1179,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (obj != callerScopeChain) {
                 if (!js_CheckPrincipalsAccess(cx, obj,
                                               caller->script->principals,
-                                              js_eval_str)) {
+                                              cx->runtime->atomState.evalAtom)) {
                     return JS_FALSE;
                 }
 
@@ -1261,7 +1265,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * Belt-and-braces: check that the lesser of eval's principals and the
      * caller's principals has access to scopeobj.
      */
-    ok = js_CheckPrincipalsAccess(cx, scopeobj, principals, js_eval_str);
+    ok = js_CheckPrincipalsAccess(cx, scopeobj, principals,
+                                  cx->runtime->atomState.evalAtom);
     if (!ok)
         goto out;
 

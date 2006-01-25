@@ -1765,8 +1765,10 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* Belt-and-braces: check that the caller has access to parent. */
-    if (!js_CheckPrincipalsAccess(cx, parent, principals, js_Function_str))
+    if (!js_CheckPrincipalsAccess(cx, parent, principals,
+                                  cx->runtime->atomState.FunctionAtom)) {
         return JS_FALSE;
+    }
 
     n = argc ? argc - 1 : 0;
     if (n > 0) {
@@ -2145,14 +2147,10 @@ js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
         principals = NULL;
     }
 
-    /*
-     * FIXME: Reparameterize so we don't call js_AtomToPrintableString unless
-     *        there is an error (bug 324694).
-     */
     if (!js_CheckPrincipalsAccess(cx, funobj, principals,
                                   fun->atom
-                                  ? js_AtomToPrintableString(cx, fun->atom)
-                                  : js_anonymous_str)) {
+                                  ? fun->atom
+                                  : cx->runtime->atomState.anonymousAtom)) {
         return NULL;
     }
     return funobj;
