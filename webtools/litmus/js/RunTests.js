@@ -1,5 +1,5 @@
 function tc_init() {
-    var divs = document.getElementsByClassName("section-content");
+    var divs = document.getElementsByClassName("testcase-content");
     allStretch = new fx.MultiFadeSize(divs, {duration: 400});
 
     for (i = 0; i < divs.length; i++) {

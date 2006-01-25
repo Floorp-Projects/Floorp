@@ -15,7 +15,7 @@
   #
   # The Initial Developer of the Original Code is
   # The Mozilla Corporation.
-  # Portions created by the Initial Developer are Copyright (C) 2005
+  # Portions created by the Initial Developer are Copyright (C) 2006
   # the Initial Developer. All Rights Reserved.
   #
   # Contributor(s):
@@ -64,6 +64,7 @@ General Statistics
 
 <br/>
 
+<!--
 <div class="section-full">
 <div class="section-header">
 Top Testers
@@ -82,8 +83,8 @@ Top Testers
     <td align="center">[% loop.count %]</td>
     <td align="center">
     [% IF curtester.email %]
-      <a href="mailto:[% curtester.email FILTER html | uri | email %]">
-        [% curtester.email FILTER html | email  %]</a>
+      <a href="mailto:[% curtester.email | html | uri | email %]">
+        [% curtester.getDisplayName | html | email  %]</a>
     [% ELSE %]Anonymous[% END %]</td>
     <td align="center">[% curtester.numtests | html %]</td>
 </tr>
@@ -95,9 +96,8 @@ Top Testers
 [% END %]
 </table>
 </div>
-
   </div> <!--END section-full-->
-
+-->
 
   </div> <!--END content-->
 

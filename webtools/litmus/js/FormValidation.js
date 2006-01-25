@@ -1,6 +1,8 @@
 var iBugNumber = "This field must be a valid, positive integer (>0). Please re-enter it now.";
 var iEmail = "This field must be a valid email address (like foo@bar.com). Please re-enter it now.";
 var iBuildId = "This field must be a valid build id, which is a string of 8 digits most easily found in the About dialog. Please re-enter it now.";
+var iPasswordMismatch = "The passwords you entered did not match.";
+var iPasswordLength = "Your password must be longer than 4 characters.";
 var defaultEmptyOK = false;
 var mPrefix = "You did not enter a value into the ";
 var mSuffix = " field. This is a required field. Please enter it now.";
@@ -49,7 +51,7 @@ function isDigit (c)
 function warnEmpty (theField, s)
 {
     theField.focus();
-    alert(mPrefix + s + mSuffix); 
+    toggleMessage('failure',mPrefix + s + mSuffix);
     return false;
 }
 
@@ -60,7 +62,7 @@ function warnInvalid (theField, s)
 {
     theField.focus();
     theField.select();
-    alert(s);
+    toggleMessage('failure',s);
     return false;
 }
 
@@ -161,6 +163,25 @@ function checkEmail (theField, emptyOK)
 	} else {
 	    return true;
 	}
+    }
+}
+
+function comparePasswords(password1, password2)
+{
+    if (isWhitespace(password1.value)) {
+        return warnEmpty(password1, "Password");
+    }
+    if (isWhitespace(password2.value)) {
+        return warnEmpty(password2, "Confirm Password");
+    }
+    if (password1.value.length < 5) {
+	return warnInvalid (password1, iPasswordLength);
+    }
+
+    if (password1.value != password2.value) {
+	password1.value="";
+	password2.value="";
+        return warnInvalid (password1, iPasswordMismatch);
     }
 }
 
@@ -302,5 +323,43 @@ function isPositiveInteger (s)
     return (isSignedInteger(s, secondArg)
          && ( (isEmpty(s) && secondArg)  || (parseInt (s) > 0) ) );
 }
+
+function toggleMessage(msgType,msg) {
+  var em = document.getElementById("message");
+  if (toggleMessage.arguments.length < 1) {
+     em.innerHTML="";
+     em.style.display = 'none';
+     return;
+  }
+
+  switch (msgType) {
+    case "loading":
+      em.innerHTML = '<div class="loading">Loading...</div>';
+      em.style.display = 'block';
+      break;
+    case "info":
+      em.innerHTML = '<div class="info">'+msg+'</div>';
+      em.style.display = 'block';
+      setTimeout('toggleMessage()',5000);
+      break;
+    case "success":
+      em.innerHTML = '<div class="success">'+msg+'</div>';
+      em.style.display = 'block';
+      setTimeout('toggleMessage()',5000);
+      break;
+    case "failure":
+      em.innerHTML = '<div class="failure">'+msg+'</div>';
+      em.style.display = 'block';
+      setTimeout('toggleMessage()',5000);
+      break;
+    case "none":
+    default:
+     em.innerHTML="";
+     em.style.display = 'none';
+     return;
+     break;
+  }
+}
+
 
 

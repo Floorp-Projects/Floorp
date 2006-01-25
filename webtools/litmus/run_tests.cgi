@@ -18,7 +18,7 @@
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -98,7 +98,7 @@ sub page_pickGroupSubgroup {
 
     # get all groups for the product:
     my @groups = Litmus::DB::Testgroup->search(product => $sysconfig->product(), obsolete => 0);
-    
+
     # all possible subgroups per group:
     my %subgroups; 
     foreach my $curgroup (@groups) {
@@ -126,8 +126,9 @@ sub page_pickGroupSubgroup {
     $vars->{"defaultemail"} = $cookie;
     $vars->{"show_admin"} = Litmus::Auth::istrusted($cookie);
     
-    Litmus->template()->process("runtests/selectgroupsubgroup.html.tmpl", $vars) || 
-        internalError(Litmus->template()->error());    
+    Litmus->template()->process("runtests/selectgroupsubgroup.html.tmpl", 
+                                $vars) || 
+                                  internalError(Litmus->template()->error());
 }
 
 # display a page of testcases:

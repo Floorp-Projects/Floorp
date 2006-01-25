@@ -63,7 +63,7 @@ fx.Layout = Class.create();
 fx.Layout.prototype = Object.extend(new fx.Base(), {
 	initialize: function(el, options) {
 		this.el = $(el);
-		this.el.style.overflow = "hidden";
+		this.el.style.overflow = "auto";
 		this.el.iniWidth = this.el.offsetWidth;
 		this.el.iniHeight = this.el.offsetHeight;
 		this.setOptions(options);

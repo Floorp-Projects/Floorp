@@ -324,8 +324,8 @@ div#related a {
 /* 8) Pagetools ***************************************************************** */
 
 div.pagetools {
-        background: #dddddd;
-        border: solid #bbbbbb 1px;
+    background: #dddddd;
+    border: solid #bbbbbb 1px;
     margin: 0 0 16px;
     overflow: auto;
 }
@@ -659,8 +659,9 @@ div.tcs table {
 
 table.tcm { 
     border: solid #bbbbbb 1px;
-    width:100%;
-    margin: 5px 0px 0px 0px;
+    width: 100%;
+    padding: 0px;
+    margin: 0px;
 }
 
 table.tcm td { 
@@ -737,7 +738,103 @@ p.comment {
     font-size: 0.9em;
 }
 
-/* ****************************************************************************** */
+/* 13 Authentication and login **************************************** */
+
+div.loginbox {
+    background: #DDD;
+    border: solid #BBB 1px;
+    padding: 5px;
+    font-size: 120%;
+}
+
+div.login_form {
+    background-color: #efefef; 
+    border: solid #BBB 1px;
+    padding: 10px;
+    width: 45%;
+    height: 150px;
+}
+
+.login_sectitle {
+    font-weight: bold;
+    font-size: 120%;
+}
+
+.login_important {
+    color: #F00;
+    font-size: 120%;
+}
+
+.login_forhelp {
+    border: solid #BBB 1px;
+    color: #000;
+    font-weight: bold;
+    font-size: 120%;
+    position: relative;
+    bottom: 40px;
+}
+
+.login_info {
+    vertical-align: top;
+    padding-left: 40px;
+    padding-right: 10px;
+}
+
+/* 14 Popup Message Display  ******************************************* */
+
+#message
+{
+  position: fixed;
+  display: none;
+  top: -1px;
+  left: 200px;
+  right: 200px;
+  z-index: 5000;
+  opacity: 0.85;
+}
+
+#message div
+{
+  width: 400px;
+  margin: 0px auto;
+  height: 32px;
+  min-height: 32px;
+  padding: 24px 10px 16px 46px;
+}
+
+#message div.info
+{
+  background: url(../images/info.png) 7px center no-repeat;
+  background-color: #F7FDCB;
+  border: 1px solid #C2D071;
+}
+
+#message div.error,
+#message div.warning,
+#message div.failure
+{
+  background: url(../images/warning.png) 7px center no-repeat;
+  background-color: #EF9398;
+  border: 1px solid #DC5757;
+}
+
+#message div.confirmation,
+#message div.success
+{
+  background: url(../images/confirm.png) 7px center no-repeat;
+  background-color: #A6EF7B;
+  border: 1px solid #76C83F;
+}
+
+
+#message div.loading
+{
+  background: url(../images/loading.gif) 7px center no-repeat;
+  background-color: #EBEBEB;
+  border: 1px solid #CCCCCC;
+}
+
+/* Misc ************************************************************** */
 
 fieldset {
     margin-bottom: 5px;
@@ -845,10 +942,12 @@ div.section-full, div.category, div.section, div.testcase {
     margin-bottom: 5px;    
     border: solid #bbbbbb 1px;
     background-color: #dddddd;
+    overflow: auto;
 }
 
 div.testcase {
     background-color: #cccccc;
+    overflow: auto;
 }
 
 div.section-full, div.category {
@@ -861,6 +960,7 @@ div.section-header {
     font-weight: bold;
     color: #666666;
     text-transform: lowercase;
+    overflow: auto;
 }
 
 div.category h2, div.category h3 {
@@ -892,7 +992,13 @@ div.section-content {
     padding: 0px;
     padding-left: 10px;
     padding-right: 10px;
-/*    font-size: 0.8em;*/
+}
+
+div.testcase-content {
+   padding: 0px;
+   margin: 5px 10px 0px 10px;
+   width: auto;
+   overflow: auto;
 }
 
 .submit {
@@ -960,36 +1066,3 @@ div.formButtons {
     padding-bottom: 15px;
 }
 
-/* 12 Authentication and login **************************************** */
-
-div.loginbox {
-	background: #DDD;
-	border: solid #BBB 1px;
-	padding: 5px;
-	font-size: 120%;
-}
-
-div.login_form {
-	background: #FF9;
-	border: solid #BBB 1px;
-	padding: 5px;
-	width: 40%;
-}
-
-.login_sectitle {
-	font-weight: bold;
-	font-size: 120%;
-}
-
-.login_important {
-	color: #F00;
-}
-
-.login_forhelp {
-	border: solid #BBB 1px;
-    color: #000;
-    font-weight: bold;
-	font-size: 120%;
-	position: relative;
-	bottom: 40px;
-}

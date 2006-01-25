@@ -19,7 +19,7 @@
  #
  # The Initial Developer of the Original Code is
  # the Mozilla Corporation.
- # Portions created by the Initial Developer are Copyright (C) 2005
+ # Portions created by the Initial Developer are Copyright (C) 2006
  # the Initial Developer. All Rights Reserved.
  #
  # Contributor(s):
@@ -37,8 +37,7 @@ use base 'Litmus::DBI';
 
 Litmus::DB::User->table('users');
 
-Litmus::DB::User->columns(All => qw/user_id bugzilla_uid email password realname 
-	irc_nickname disabled is_admin/);
+Litmus::DB::User->columns(All => qw/user_id bugzilla_uid email password realname irc_nickname disabled is_admin/);
 
 Litmus::DB::User->column_alias("user_id", "userid");
 Litmus::DB::User->column_alias("is_trusted", "istrusted");
@@ -53,12 +52,25 @@ Litmus::DB::User->has_many(sessions => "Litmus::DB::Session");
 # returns the crypt'd password from a linked Bugzilla account if it 
 # exists or the Litmus user account
 sub getRealPasswd {
-	my $self = shift;
-	if ($self->bugzilla_uid()) {
-		return $self->bugzilla_uid()->cryptpassword();
-	} else {
-		return $self->password();
-	}
+  my $self = shift;
+  if ($self->bugzilla_uid()) {
+    return $self->bugzilla_uid()->cryptpassword();
+  } else {
+    return $self->password();
+  }
 }
 
+sub getDisplayName() {
+  my $self = shift;
+  
+  return $self->irc_nickname if ($self->irc_nickname ne '');
+  return $self->realname if ($self->realname ne '');
+  return $self->email if ($self->email ne '');
+  return undef;
+}
+
+
 1;
+
+
+

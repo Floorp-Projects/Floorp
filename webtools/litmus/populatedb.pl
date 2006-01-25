@@ -18,7 +18,7 @@
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -136,10 +136,36 @@ $dbtool->AddField("users", "realname", "varchar(255)");
 $dbtool->AddField("users", "disabled", "mediumtext");
 $dbtool->AddField("users", "is_admin", "tinyint(1) default '0'");
 $dbtool->AddField("users", "irc_nickname", "varchar(32)");
+$dbtool->AddUniqueKey("users","email","(email)");
+$dbtool->AddUniqueKey("users","irc_nickname","(irc_nickname)");
+$dbtool->AddKey("users","bugzilla_uid","(bugzilla_uid)");
+$dbtool->AddKey("users","realname","(realname)");
+$dbtool->AddKey("users","is_admin","(is_admin)");
 
 # replace enums with more portable and flexible formats:
-$dbtool->ChangeFieldType("products", "enabled", 'tinyint default \'1\'');
-$dbtool->ChangeFieldType("test_groups", "obsolete", 'tinyint default \'0\'');
+$dbtool->ChangeFieldType("products", "enabled", 'tinyint(1) default "1"');
+$dbtool->ChangeFieldType("test_groups", "obsolete", 'tinyint(1) default "0"');
+
+$dbtool->DropField("test_result_logs", "log_path");
+$dbtool->AddField("test_result_logs", "log_text", "longtext");
+$dbtool->AddKey("test_result_logs", "log_text", "(log_text(255))");
+
+$dbtool->AddField("test_results", "valid", "tinyint(1) default '1'");
+$dbtool->AddField("test_results", "vetted", "tinyint(1) default '0'");
+$dbtool->AddField("test_results", "validated_by_user_id", "int(11) default '0'");
+$dbtool->AddField("test_results", "vetted_by_user_id", "int(11) default '0'");
+$dbtool->AddField("test_results", "validated_timestamp", "datetime");
+$dbtool->AddField("test_results", "vetted_timestamp", "datetime");
+$dbtool->AddKey("test_results", "valid", "(valid)");
+$dbtool->AddKey("test_results", "vetted", "(vetted)");
+$dbtool->AddKey("test_results", "validated_by_user_id", "(validated_by_user_id)");
+$dbtool->AddKey("test_results", "vetted_by_user_id", "(vetted_by_user_id)");
+$dbtool->AddKey("test_results", "validated_timestamp", "(valid)");
+$dbtool->AddKey("test_results", "vetted_timestamp", "(vetted)");
+$dbtool->DropField("test_results", "validity_id");
+$dbtool->DropField("test_results", "vetting_status_id");
+$dbtool->DropTable("validity_lookup");
+$dbtool->DropTable("vetting_status_lookup");
 
 # javascript cache
 print "Rebuilding JS cache...";

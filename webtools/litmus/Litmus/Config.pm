@@ -19,7 +19,7 @@
  #
  # The Initial Developer of the Original Code is
  # the Mozilla Corporation.
- # Portions created by the Initial Developer are Copyright (C) 2005
+ # Portions created by the Initial Developer are Copyright (C) 2006
  # the Initial Developer. All Rights Reserved.
  #
  # Contributor(s):
@@ -36,7 +36,7 @@ use strict;
 
 do 'localconfig';
 
-our $version = "0.3";
+our $version = "0.6";
 
 # if true, then Litmus will not accept any requests
 our $disabled = 0;

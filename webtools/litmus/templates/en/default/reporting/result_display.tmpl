@@ -15,7 +15,7 @@
   #
   # The Initial Developer of the Original Code is
   # The Mozilla Corporation.
-  # Portions created by the Initial Developer are Copyright (C) 2005
+  # Portions created by the Initial Developer are Copyright (C) 2006
   # the Initial Developer. All Rights Reserved.
   #
   # Contributor(s):
@@ -46,9 +46,9 @@ Summary Information
 <td>Submitted on:</td><td>[% result.submission_time | html %]</td>
 </tr>
 <tr class="odd">
-<td>Submitted by:</td><td>[% IF result.user.email != "" %]
-<a href="mailto:[% result.user.email FILTER html | uri | email %]?subject='Litmus test result submission #[% result.testresult_id | html | uri %]'">
-  [% result.user.email FILTER html | email %]</a>
+[% display_name = result.user.getDisplayName %]
+<td>Submitted by:</td><td>[% IF display_name != "" %]
+[% IF show_admin %]<a href="mailto:[% result.user.email | html | uri | email %]?subject='Litmus test result submission #[% result.testresult_id | html | uri %]'">[% END %][% display_name.replace('\@.*','') %][% IF show_admin %]</a>[% END %]
 [% ELSE %]
 Not provided
 [% END %]</td>

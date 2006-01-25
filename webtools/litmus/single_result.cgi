@@ -18,7 +18,7 @@
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -100,6 +100,7 @@ if ($c->param && $c->param('id')) {
              };
   
   $vars->{"defaultemail"} = Litmus::Auth::getCookie();
+  $vars->{"show_admin"} = $cookie->is_admin();
   
   Litmus->template()->process("reporting/single_result.tmpl", $vars) || 
     internalError("Error loading template.");

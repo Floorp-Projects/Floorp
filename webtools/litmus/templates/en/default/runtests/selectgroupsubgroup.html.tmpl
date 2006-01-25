@@ -15,7 +15,7 @@
   #
   # The Initial Developer of the Original Code is
   # The Mozilla Corporation.
-  # Portions created by the Initial Developer are Copyright (C) 2005
+  # Portions created by the Initial Developer are Copyright (C) 2006
   # the Initial Developer. All Rights Reserved.
   #
   # Contributor(s):
@@ -34,7 +34,7 @@
   # $defaultgroup (optional) - the default group to display
 #%]
 
-[% onload = 'showsubgroup()' %]
+[% onload = "$onload; showsubgroup();" %]
 
 [% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/SubGroup.js','js/SelectBoxes.js','js/RunTests.js'] %] 
 [% INCLUDE global/litmus_header.tmpl %]
@@ -139,8 +139,7 @@ Select Testing Group
       [% selected = "" %]
     [% END %]
 
-    <td><input [% IF personal_completed == 100 OR 
-                 personal_completed == 'N/A' %]disabled [% END %] type="radio" name="group" value="[% curgroup.testgroupid FILTER html %]"
+    <td><input [% IF personal_completed == 'N/A' %]disabled [% END %] type="radio" name="group" value="[% curgroup.testgroupid FILTER html %]"
         onchange="showsubgroup()" [% selected | none %]>
          [% curgroup.name FILTER html %]</td>
     <td align="center">[% personal_completed FILTER html %][% IF personal_completed != 'N/A' %]%[% END %]</td>
@@ -196,11 +195,12 @@ Please select a testing group with testcases, or that has not yet been tested in
         [% END %]
             [% END %]
             
+            [% counttests = cursubgroup.tests('status_id',1) %]
             <tr class="[% groupstyle | none %]">
-                <td align="left"><input [% IF personal_completed == 100 OR personal_completed == 'N/A' %]disabled [% ELSIF select_first_avail_subgroup==1 %][% select_first_avail_subgroup=0 %]checked [% END %]type="radio" name="subgroup_[% curgroup FILTER html %]" 
+                <td align="left"><input [% IF ! counttests %]disabled [% ELSIF select_first_avail_subgroup==1 %][% select_first_avail_subgroup=0 %]checked [% END %]type="radio" name="subgroup_[% curgroup FILTER html %]" 
                     value="[% cursubgroup.id FILTER html %]">
                     [% cursubgroup.name FILTER html %]</input></td>
-                <td align="center">[% counttests = cursubgroup.tests('status_id',1) %]
+                <td align="center">
                     [% IF ! counttests %] 0 
                     [% ELSIF ! counttests.testid %][% counttests.list.size %]
                     [% ELSE %]

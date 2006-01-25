@@ -19,7 +19,7 @@
  #
  # The Initial Developer of the Original Code is
  # the Mozilla Corporation.
- # Portions created by the Initial Developer are Copyright (C) 2005
+ # Portions created by the Initial Developer are Copyright (C) 2006
  # the Initial Developer. All Rights Reserved.
  #
  # Contributor(s):
@@ -44,7 +44,7 @@ our $_num_results_default = 15;
 
 Litmus::DB::Testresult->table('test_results');
 
-Litmus::DB::Testresult->columns(All => qw/testresult_id test_id last_updated submission_time user_id platform_id opsys_id branch_id buildid user_agent result_id build_type_id machine_name exit_status_id duration_ms talkback_id validity_id vetting_status_id locale_abbrev/);
+Litmus::DB::Testresult->columns(All => qw/testresult_id test_id last_updated submission_time user_id platform_id opsys_id branch_id buildid user_agent result_id build_type_id machine_name exit_status_id duration_ms talkback_id valid vetted validated_by_user_id vetted_by_user_id validated_timestamp vetted_timestamp locale_abbrev/);
 
 Litmus::DB::Testresult->column_alias("testresult_id", "testresultid");
 Litmus::DB::Testresult->column_alias("test_id", "testid");
@@ -71,8 +71,6 @@ Litmus::DB::Testresult->has_a(user => "Litmus::DB::User");
 Litmus::DB::Testresult->has_a(useragent => "Litmus::UserAgentDetect");
 Litmus::DB::Testresult->has_a(build_type => "Litmus::DB::BuildType");
 Litmus::DB::Testresult->has_a(exit_status => "Litmus::DB::ExitStatus");
-Litmus::DB::Testresult->has_a(validity => "Litmus::DB::Validity");
-Litmus::DB::Testresult->has_a(vetting_status => "Litmus::DB::VettingStatus");
 Litmus::DB::Testresult->has_a(locale => "Litmus::DB::Locale");
 
 Litmus::DB::Testresult->has_many("logs" => "Litmus::DB::Log", {order_by => 'submission_time'});
@@ -186,6 +184,7 @@ sub getTestResults($\@\@$) {
     my $limit = 'LIMIT ';
 
     foreach my $criterion (@$where_criteria) {
+        $criterion->{'value'} = quotemeta( $criterion->{'value'} );
         if ($criterion->{'field'} eq 'branch') {
             $where .= " AND b.name='" . $criterion->{'value'} . "'";
         } elsif ($criterion->{'field'} eq 'locale') {
@@ -344,7 +343,6 @@ sub _processSearchField(\%) {
             $join = 'OR';
         }
 
-        $search_field->{'value'} =~ s/\\//g;
         my @words = split(/ /,$search_field->{'value'});
         if ($search_field->{'match_criteria'} eq 'not_contain_any') {
             $where .= " AND NOT (";

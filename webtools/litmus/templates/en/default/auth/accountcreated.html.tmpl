@@ -15,7 +15,7 @@
   #
   # The Initial Developer of the Original Code is
   # The Mozilla Corporation.
-  # Portions created by the Initial Developer are Copyright (C) 2005
+  # Portions created by the Initial Developer are Copyright (C) 2006
   # the Initial Developer. All Rights Reserved.
   #
   # Contributor(s):
@@ -54,21 +54,26 @@
 
   <div id="content">
 
-    <h1 class="breadcrumbs">Account Created</h1>
+    <h1 class="firstHeading">[% title | html %]</h1>
+
+    <div class="section-full">
+      <div class="section-content">
     
-   	<h3>Thank you [% realname FILTER html %], your account 
-   		[% email FILTER html %] has been created</h3>
-   		
-   	<h3>Thank you for helping out 
-   		with Mozilla QA</h3>
+   	<p>Thank you,[% IF realname != "" %] [% realname | html %],[% END %] your account has been created<p>
+        <p>For future testing sessions, you can login using your email address ([% email FILTER html %]) and your chosen password.</p>  		
+
+<p>Thank you for your contribution to Mozilla QA.</p>
    	
    	<form name="form" action="[% return_to FILTER html %]" method="post">
    	  [% INCLUDE create_hidden_fields %]
    	  <input type="hidden" name="accountCreated" value="true" />
    	  <input type="submit" name="submit" value="Continue" />
-    </form>
-   	
-   	
+        </form>
+
+	<p align="center">If you require assistance with your login, please contact an operator in <a href="http://irc.mozilla.org/">irc.mozilla.org</a>, channel #qa.</p>
+
+      </div>
+    </div>
 
   </div> <!--END content-->
 

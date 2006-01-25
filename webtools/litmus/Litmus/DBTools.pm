@@ -12,7 +12,7 @@
  #
  # The Initial Developer of the Original Code is
  # the Mozilla Corporation.
- # Portions created by the Initial Developer are Copyright (C) 2005
+ # Portions created by the Initial Developer are Copyright (C) 2006
  # the Initial Developer. All Rights Reserved.
  #
  # Contributor(s):
@@ -92,6 +92,30 @@ sub AddField
               ADD COLUMN $field $definition");
 }
 
+sub AddKey 
+{
+    my ($self, $table, $field, $definition) = @_;
+
+    my $ref = $self->GetIndexDef($table, $field);
+    return if $ref; # already added?
+
+    print "Adding new key $field to table $table ...\n";
+    $self->{'dbh'}->do("ALTER TABLE $table
+              ADD KEY $field $definition");
+}
+
+sub AddUniqueKey 
+{
+    my ($self, $table, $field, $definition) = @_;
+
+    my $ref = $self->GetIndexDef($table, $field);
+    return if $ref; # already added?
+
+    print "Adding new key $field to table $table ...\n";
+    $self->{'dbh'}->do("ALTER TABLE $table
+              ADD UNIQUE KEY $field $definition");
+}
+
 sub DropField 
 {
     my ($self, $table, $field) = @_;
@@ -102,6 +126,17 @@ sub DropField
     print "Deleting unused field $field from table $table ...\n";
     $self->{'dbh'}->do("ALTER TABLE $table
               DROP COLUMN $field");
+}
+
+sub DropTable 
+{
+    my ($self, $table, $field) = @_;
+
+    my $ref = $self->TableExists($table);
+    return unless $ref; # already dropped?
+
+    print "Deleting unused table $table ...\n";
+    $self->{'dbh'}->do("DROP TABLE $table");
 }
 
 # this uses a mysql specific command. 
