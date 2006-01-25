@@ -521,25 +521,41 @@ CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 aFlag)
       result = aScanner.Peek(aChar);
 
       if (NS_OK == result && (kCR == aChar || kNewLine == aChar)) {
-        result = aScanner.GetChar(aChar); // Strip off the char
-        PRUnichar theNextChar;
-        result = aScanner.Peek(theNextChar);    // Then see what's next.
         switch (aChar) {
           case kCR:
+          {
+            // It's a carriage return. See if this is part of a CR-LF pair (in
+            // which case we need to treat it as one newline). If we're at the
+            // edge of a packet, then leave the CR on the scanner, since it
+            // could still be part of a CR-LF pair. Otherwise, it isn't.
+            PRUnichar theNextChar;
+            result = aScanner.Peek(theNextChar, 1);
+
+            if (result == kEOF && aScanner.IsIncremental()) {
+              break;
+            }
+
+            if (NS_SUCCEEDED(result)) {
+              // Actually get the carriage return.
+              aScanner.GetChar(aChar);
+            }
+
             if (kLF == theNextChar) {
-              // If the "\r" is followed by a "\n", don't replace it and
-              // let it be ignored by the layout system
+              // If the "\r" is followed by a "\n", don't replace it and let
+              // it be ignored by the layout system.
               end.advance(2);
-              result = aScanner.GetChar(theNextChar);
+              aScanner.GetChar(theNextChar);
             } else {
-              // If it standalone, replace the "\r" with a "\n" so that
-              // it will be considered by the layout system
+              // If it is standalone, replace the "\r" with a "\n" so that it
+              // will be considered by the layout system.
               aScanner.ReplaceCharacter(end, kLF);
               ++end;
             }
             ++mNewlineCount;
             break;
+          }
           case kLF:
+            aScanner.GetChar(aChar);
             ++end;
             ++mNewlineCount;
             break;
@@ -550,6 +566,9 @@ CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 aFlag)
     }
   }
 
+  // Note: This function is only called from nsHTMLTokenizer::ConsumeText. If
+  // we return an error result from the final buffer, then it is responsible
+  // for turning it into an NS_OK result.
   aScanner.BindSubstring(mTextValue, origin, end);
 
   return result;
