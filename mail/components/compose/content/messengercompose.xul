@@ -282,7 +282,7 @@
 
   <!-- Menu -->
   <!-- if you change the id of the menubar, be sure to update mailCore.js::CustomizeMailToolbar and MailToolboxCustomizeDone -->
-  <toolbar type="menubar" id="compose-toolbar-menubar" class="chromeclass-menubar" customizable="true"
+  <toolbar type="menubar" id="compose-toolbar-menubar2" class="chromeclass-menubar" customizable="true"
 #ifdef XP_MACOSX
            defaultset="menubar-items"
 #else
