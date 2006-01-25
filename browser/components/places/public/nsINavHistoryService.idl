@@ -596,6 +596,24 @@ interface nsINavHistoryQuery : nsISupports
   readonly attribute boolean hasUri;
 
   /**
+   * Test for existance or non-existance of a given annotation. We don't
+   * currently support >1 annotation name per query. If 'annotationIsNot' is
+   * true, we test for the non-existance of the specified annotation.
+   *
+   * Testing for not annotation will do the same thing as a normal query and
+   * remove everything that doesn't have that annotation. Asking for things
+   * that DO have a given annotation is a little different. It also includes
+   * things that have never been visited. This allows place queries to be
+   * returned (which might include bookmark folders -- use the bookmark
+   * service's GetFolderURI) as well as anything else that may have been
+   * tagged with an annotation. This will only work for RESULTS_AS_URI since
+   * there will be no visits for these items.
+   */
+  attribute boolean annotationIsNot;
+  attribute AUTF8String annotation;
+  readonly attribute boolean hasAnnotation;
+
+  /**
    * Limit results to items that are in all of the given folders.
    */
   void getFolders(out PRUint32 count,
@@ -735,6 +753,10 @@ interface nsINavHistoryQueryOptions : nsISupports
    * with the container's contents filled in from the stored query.
    * If not set, these will appear as normal items. Doesn't do anything if
    * excludeQueries is set. Defaults to false.
+   *
+   * Note that this has no effect on folder links, which are place: URIs
+   * returned by nsINavBookmarkService.GetFolderURI. These are always expanded
+   * and will appear as bookmark folders.
    */
   attribute boolean expandQueries;
 

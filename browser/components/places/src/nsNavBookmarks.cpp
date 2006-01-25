@@ -1116,6 +1116,8 @@ nsNavBookmarks::GetFolderURI(PRInt64 aFolder, nsIURI **aURI)
   // and constructing fake queries and options each time just to
   // serialize them would be a waste. Therefore, we just synthesize the
   // correct string here.
+  //
+  // If you change this, change IsSimpleFolderURI which detects this string.
   nsCAutoString spec("place:folders=");
   spec.AppendInt(aFolder);
   spec.AppendLiteral("&group=3"); // GROUP_BY_FOLDER

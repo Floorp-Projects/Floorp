@@ -1709,10 +1709,9 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsINavHistoryQuery>& aQueries,
     (aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_VISIT ||
      aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_FULL_VISIT);
 
-  // conditions we want on all history queries, this just selects history
-  // entries that are "active"
-  NS_NAMED_LITERAL_CSTRING(commonConditions,
-                           "h.visit_count > 0 ");
+  nsCAutoString commonConditions("visit_count > 0 ");
+  if (! aOptions->IncludeHidden())
+    commonConditions.AppendLiteral("AND hidden <> 1 ");
 
   // Query string: Output parameters should be in order of kGetInfoIndex_*
   // WATCH OUT: nsNavBookmarks::Init also creates some statements that share
@@ -1743,7 +1742,7 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsINavHistoryQuery>& aQueries,
         "(SELECT MAX(visit_date) FROM moz_historyvisit WHERE page_id = h.id), "
         "f.url, null "
       "FROM moz_history h "
-      "JOIN moz_historyvisit v ON h.id = v.page_id "
+      "LEFT OUTER JOIN moz_historyvisit v ON h.id = v.page_id "
       "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
       "WHERE ");
     groupBy = NS_LITERAL_CSTRING(" GROUP BY h.id");
@@ -1756,7 +1755,8 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsINavHistoryQuery>& aQueries,
     nsCString queryClause;
     PRInt32 clauseParameters = 0;
     rv = QueryToSelectClause(aQueries[i], numParameters,
-                             &queryClause, &clauseParameters);
+                             &queryClause, &clauseParameters,
+                             commonConditions);
     NS_ENSURE_SUCCESS(rv, rv);
     if (! queryClause.IsEmpty()) {
       if (! conditions.IsEmpty()) // exists previous clause: multiple ones are ORed
@@ -1766,12 +1766,13 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsINavHistoryQuery>& aQueries,
       numParameters += clauseParameters;
     }
   }
-  queryString += commonConditions;
-  if (! aOptions->IncludeHidden())
-    queryString += NS_LITERAL_CSTRING("AND h.hidden <> 1 ");
+
+  // in cases where there were no queries, we need to use the common conditions
+  // (normally these are appended to each clause that are not annotation-based)
   if (! conditions.IsEmpty()) {
-    queryString += NS_LITERAL_CSTRING("AND (") + conditions +
-                   NS_LITERAL_CSTRING(") ");
+    queryString += conditions;
+  } else {
+    queryString += commonConditions;
   }
   queryString += groupBy;
 
@@ -2528,13 +2529,16 @@ nsresult
 nsNavHistory::QueryToSelectClause(nsINavHistoryQuery* aQuery, // const
                                   PRInt32 aStartParameter,
                                   nsCString* aClause,
-                                  PRInt32* aParamCount)
+                                  PRInt32* aParamCount,
+                                  const nsACString& aCommonConditions)
 {
   PRBool hasIt;
 
   aClause->Truncate();
   *aParamCount = 0;
   nsCAutoString paramString;
+
+  // note common condition visit_count > 0 is set under the annotation section
 
   // begin time
   if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt) {
@@ -2614,6 +2618,30 @@ nsNavHistory::QueryToSelectClause(nsINavHistoryQuery* aQuery, // const
       *aClause += NS_LITERAL_CSTRING("h.url = ") + paramString;
     }
     aClause->Append(' ');
+  }
+
+  // annotation
+  aQuery->GetHasAnnotation(&hasIt);
+  if (! aClause->IsEmpty())
+    *aClause += NS_LITERAL_CSTRING(" AND ");
+  if (hasIt) {
+    PRBool notAnnotation;
+    aQuery->GetAnnotationIsNot(&notAnnotation);
+
+    nsCAutoString paramString;
+    parameterString(aStartParameter + *aParamCount, paramString);
+    (*aParamCount) ++;
+
+    if (notAnnotation)
+      aClause->AppendLiteral("NOT ");
+    aClause->AppendLiteral("EXISTS (SELECT anno_id FROM moz_anno anno WHERE anno.page = h.id AND anno.name = ");
+    aClause->Append(paramString);
+    aClause->AppendLiteral(") ");
+    // annotation-based queries don't get the common conditions, so you get
+    // all URLs with that annotation
+  } else {
+    // all non-annotation queries return only visited items
+    aClause->Append(aCommonConditions);
   }
 
   return NS_OK;
@@ -2700,6 +2728,16 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
     NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE); // if (hasUri) then it should be valid
     BindStatementURI(statement, aStartParameter + *aParamCount, uri);
     (*aParamCount) ++;
+  }
+
+  // annotation
+  aQuery->GetHasAnnotation(&hasIt);
+  if (hasIt) {
+    nsCAutoString annotationName;
+    aQuery->GetAnnotation(annotationName);
+    rv = statement->BindUTF8StringParameter(aStartParameter + *aParamCount,
+                                            annotationName);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -3039,8 +3077,37 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsQueryURI(url)) {
-    *aResult = new nsNavHistoryQueryResultNode(aOptions, title, accessCount,
-                                               time, favicon, url);
+    nsINavHistoryQuery** queries;
+    PRUint32 queryCount;
+    nsCOMPtr<nsINavHistoryQueryOptions> subIOptions;
+    rv = QueryStringToQueries(url, &queries, &queryCount,
+                              getter_AddRefs(subIOptions));
+    if (NS_FAILED(rv)) {
+      // This was a query that did not parse, what do we do? We don't want to
+      // return failure since that will kill the whole query process. Instead
+      // make a query node with the query as a string. This way we have a valid
+      // node for the user to manipulate, but it will never populate since the
+      // query string is invalid.
+      *aResult = new nsNavHistoryQueryResultNode(aOptions, title, accessCount,
+                                                 time, favicon, url);
+    } else {
+      nsCOMPtr<nsNavHistoryQueryOptions> subOptions =
+        do_QueryInterface(subIOptions, &rv);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Options must be our concrete ones");
+      PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries, queryCount);
+      if (folderId) {
+        // simple bookmarks folder, magically generate a bookmarks folder node
+        *aResult = new nsNavHistoryFolderResultNode(title, 0, 0,
+                                                    subOptions, folderId);
+      } else {
+        // regular query
+        *aResult = new nsNavHistoryQueryResultNode(subOptions, title, 0,
+                                                   0, EmptyCString(),
+                                                   queries, queryCount,
+                                                   subOptions);
+      }
+      nsMemory::Free(queries);
+    }
     if (! *aResult)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*aResult);
