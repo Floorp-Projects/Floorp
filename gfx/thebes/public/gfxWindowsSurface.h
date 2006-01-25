@@ -46,10 +46,9 @@ class NS_EXPORT gfxWindowsSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:
-    gfxWindowsSurface(HDC dc);
+    gfxWindowsSurface(HDC dc, PRBool deleteDC = PR_FALSE);
     gfxWindowsSurface(HDC dc, unsigned long width, unsigned long height);
     virtual ~gfxWindowsSurface();
-
 
     HDC GetDC() { return mDC; }
 private:
