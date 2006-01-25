@@ -761,49 +761,6 @@ nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void*
-nsDOMAttribute::GetProperty(nsIAtom* aPropertyName, nsresult* aStatus) const
-{
-  nsIDocument *doc = GetOwnerDoc();
-  if (!doc)
-    return nsnull;
-
-  return doc->PropertyTable()->GetProperty(this, aPropertyName, aStatus);
-}
-
-nsresult
-nsDOMAttribute::SetProperty(nsIAtom            *aPropertyName,
-                            void               *aValue,
-                            NSPropertyDtorFunc  aDtor)
-{
-  nsIDocument *doc = GetOwnerDoc();
-  if (!doc)
-    return NS_ERROR_FAILURE;
-
-  return doc->PropertyTable()->SetProperty(this, aPropertyName, aValue, aDtor,
-                                           nsnull);
-}
-
-nsresult
-nsDOMAttribute::DeleteProperty(nsIAtom* aPropertyName)
-{
-  nsIDocument *doc = GetOwnerDoc();
-  if (!doc)
-    return nsnull;
-
-  return doc->PropertyTable()->DeleteProperty(this, aPropertyName);
-}
-
-void*
-nsDOMAttribute::UnsetProperty(nsIAtom* aPropertyName, nsresult* aStatus)
-{
-  nsIDocument *doc = GetOwnerDoc();
-  if (!doc)
-    return nsnull;
-
-  return doc->PropertyTable()->UnsetProperty(this, aPropertyName, aStatus);
-}
-
 nsresult
 nsDOMAttribute::EnsureChildState(PRBool aSetText, PRBool &aHasChild) const
 {
