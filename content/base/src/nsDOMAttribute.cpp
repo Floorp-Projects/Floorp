@@ -725,7 +725,7 @@ nsDOMAttribute::GetChildAt(PRUint32 aIndex) const
   PRBool hasChild;
   EnsureChildState(PR_TRUE, hasChild);
 
-  return aIndex == 0 && hasChild ? mChild : nsnull;
+  return aIndex == 0 && hasChild ? mChild.get() : nsnull;
 }
   
 PRInt32
