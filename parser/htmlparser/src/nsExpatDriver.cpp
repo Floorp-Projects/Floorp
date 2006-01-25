@@ -58,10 +58,6 @@
 
 static const PRUnichar kUTF16[] = { 'U', 'T', 'F', '-', '1', '6', '\0' };
 
-#ifdef PR_LOGGING
-static PRLogModuleInfo *gExpatDriverLog = PR_NewLogModule("expatdriver");
-#endif
-
 /***************************** EXPAT CALL BACKS ******************************/
 // The callback handlers that get called from the expat parser.
 
@@ -341,9 +337,9 @@ nsExpatDriver::nsExpatDriver()
     mInCData(PR_FALSE),
     mInInternalSubset(PR_FALSE),
     mInExternalDTD(PR_FALSE),
-    mEOF(PR_FALSE),
+    mBytePosition(0),
     mInternalState(NS_OK),
-    mExpatBuffered(0),
+    mBytesParsed(0),
     mCatalogData(nsnull)
 {
 }
@@ -389,6 +385,7 @@ nsExpatDriver::HandleEndElement(const PRUnichar *aValue)
 
   if (mSink &&
       mSink->HandleEndElement(aValue) == NS_ERROR_HTMLPARSER_BLOCK) {
+    mInternalState = NS_ERROR_HTMLPARSER_BLOCK;
     XML_StopParser(mExpatParser, XML_TRUE);
   }
 
@@ -455,6 +452,7 @@ nsExpatDriver::HandleProcessingInstruction(const PRUnichar *aTarget,
   else if (mSink &&
            mSink->HandleProcessingInstruction(aTarget, aData) ==
            NS_ERROR_HTMLPARSER_BLOCK) {
+    mInternalState = NS_ERROR_HTMLPARSER_BLOCK;
     XML_StopParser(mExpatParser, XML_TRUE);
   }
 
@@ -836,59 +834,133 @@ nsExpatDriver::HandleError()
   return NS_ERROR_HTMLPARSER_STOPPARSING;
 }
 
-void
-nsExpatDriver::ParseBuffer(const PRUnichar *aBuffer,
+nsresult
+nsExpatDriver::ParseBuffer(const char* aBuffer,
                            PRUint32 aLength,
-                           PRBool aIsFinal,
-                           PRUint32 *aConsumed)
+                           PRBool aIsFinal)
 {
   NS_ASSERTION((aBuffer && aLength != 0) || (!aBuffer && aLength == 0), "?");
-  NS_ASSERTION(mInternalState != NS_OK || aIsFinal || aBuffer,
-               "Useless call, we won't call Expat");
-  NS_PRECONDITION(mInternalState != NS_ERROR_HTMLPARSER_BLOCK || !aBuffer,
-                  "Non-null buffer when resuming");
-  NS_PRECONDITION(XML_GetCurrentByteIndex(mExpatParser) % sizeof(PRUnichar) == 0,
+  NS_ASSERTION(aLength % sizeof(PRUnichar) == 0,
+               "We can have a PRUnichar spanning chunks?");
+  NS_PRECONDITION(mBytesParsed % sizeof(PRUnichar) == 0,
+                  "Parsed part of a PRUnichar?");
+  NS_PRECONDITION(mBytePosition % sizeof(PRUnichar) == 0,
+                  "Parsed part of a PRUnichar?");
+  NS_PRECONDITION(XML_GetCurrentByteIndex(mExpatParser) == -1 ||
+                  XML_GetCurrentByteIndex(mExpatParser) % sizeof(PRUnichar) == 0,
                   "Consumed part of a PRUnichar?");
 
   if (mExpatParser && (mInternalState == NS_OK ||
                        mInternalState == NS_ERROR_HTMLPARSER_BLOCK)) {
-    PRInt32 parserBytesBefore = XML_GetCurrentByteIndex(mExpatParser);
-    NS_ASSERTION(parserBytesBefore >= 0, "Unexpected value");
-
     XML_Status status;
     if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK) {
       mInternalState = NS_OK; // Resume in case we're blocked.
       status = XML_ResumeParser(mExpatParser);
     }
     else {
-      status = XML_Parse(mExpatParser,
-                         NS_REINTERPRET_CAST(const char*, aBuffer),
-                         aLength * sizeof(PRUnichar), aIsFinal);
+      status = XML_Parse(mExpatParser, aBuffer, aLength, aIsFinal);
     }
 
     PRInt32 parserBytesConsumed = XML_GetCurrentByteIndex(mExpatParser);
 
-    NS_ASSERTION(parserBytesConsumed >= 0, "Unexpected value");
-    NS_ASSERTION(parserBytesConsumed >= parserBytesBefore,
-                 "How'd this happen?");
-    NS_ASSERTION(parserBytesConsumed % sizeof(PRUnichar) == 0,
+    NS_ASSERTION(parserBytesConsumed == -1 ||
+                 parserBytesConsumed % sizeof(PRUnichar) == 0,
                  "Consumed part of a PRUnichar?");
 
-    // Consumed something.
-    *aConsumed = (parserBytesConsumed - parserBytesBefore) / sizeof(PRUnichar);
-    NS_ASSERTION(*aConsumed <= aLength + mExpatBuffered,
-                 "Too many bytes consumed?");
+    // Now figure out the startOffset for appending to mLastLine -- this
+    // calculation is the same no matter whether we saw an error, got blocked,
+    // parsed it all but didn't consume it all, or whatever else happened.
+    const PRUnichar* const buffer =
+      NS_REINTERPRET_CAST(const PRUnichar*, aBuffer);
+    PRUint32 startOffset;
+    // If expat failed to consume some bytes last time it won't consume them
+    // this time without also consuming some bytes from aBuffer. Note that when
+    // resuming after suspending the parser, aBuffer will contain the data that
+    // Expat also has in its internal buffer.
+    // Note that if expat consumed everything we passed it, it will have nulled
+    // out all its internal pointers to data, so parserBytesConsumed will come
+    // out -1 in that case.
+    if (buffer) {
+      if (parserBytesConsumed < 0 ||
+          (PRUint32)parserBytesConsumed >= mBytesParsed) {
+        // We consumed something
+        if (parserBytesConsumed < 0) {
+          NS_ASSERTION(parserBytesConsumed == -1,
+                       "Unexpected negative value?");
+          // Consumed everything.
+          startOffset = aLength / sizeof(PRUnichar);
+        }
+        else {
+          // Consumed something, but not all
+          NS_ASSERTION(parserBytesConsumed - mBytesParsed <= aLength,
+                       "Too many bytes consumed?");
+          startOffset = (parserBytesConsumed - mBytesParsed) /
+                        sizeof(PRUnichar);
+        }
+        // Now startOffset points one past the last PRUnichar consumed in
+        // buffer
+        while (startOffset-- != 0) {
+          if (buffer[startOffset] == '\n' || buffer[startOffset] == '\r') {
+            mLastLine.Truncate();
+            break;
+          }
+        }
+        // Now startOffset is pointing to the last newline we consumed (or to
+        // -1 if there weren't any consumed in this chunk).  Make startOffset
+        // point to the first char of the first line whose end we haven't
+        // consumed yet.
+        ++startOffset;
+      }
+      else {
+        // Didn't parse anything new.  So append all of aBuffer.
+        startOffset = 0;
+      }
+    }
 
     if (status == XML_STATUS_SUSPENDED) {
-      mInternalState = NS_ERROR_HTMLPARSER_BLOCK;
+      NS_ASSERTION(mInternalState == NS_ERROR_HTMLPARSER_BLOCK,
+                   "mInternalState out of sync!");
+      NS_ASSERTION((PRUint32)parserBytesConsumed >= mBytesParsed,
+                   "How'd this happen?");
+      mBytePosition = parserBytesConsumed - mBytesParsed;
+      mBytesParsed = parserBytesConsumed;
+      if (buffer) {
+        PRUint32 endOffset = mBytePosition / sizeof(PRUnichar);
+        NS_ASSERTION(startOffset <= endOffset,
+                     "Something is confused about what we've consumed");
+        // Only append the data we actually parsed.  The rest will come
+        // through this method again.
+        mLastLine.Append(Substring(buffer + startOffset, buffer + endOffset));
+      }
+
+      return mInternalState;
     }
-    else if (status == XML_STATUS_ERROR) {
+
+    PRUint32 length = aLength / sizeof(PRUnichar);
+    if (status == XML_STATUS_ERROR) {
+      // Look for the next newline after the last one we consumed
+      if (buffer) {
+        PRUint32 endOffset = startOffset;
+        while (endOffset < length && buffer[endOffset] != '\n' &&
+               buffer[endOffset] != '\r') {
+          ++endOffset;
+        }
+        mLastLine.Append(Substring(buffer + startOffset, buffer + endOffset));
+      }
+      HandleError();
       mInternalState = NS_ERROR_HTMLPARSER_STOPPARSING;
+
+      return mInternalState;
     }
+
+    if (!aIsFinal && buffer) {
+      mLastLine.Append(Substring(buffer + startOffset, buffer + length));
+    }
+    mBytesParsed += aLength;
+    mBytePosition = 0;
   }
-  else {
-    *aConsumed = 0;
-  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -898,153 +970,43 @@ nsExpatDriver::CreateNewInstance(nsIDTD** aInstancePtrResult)
 }
 
 NS_IMETHODIMP
-nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
+nsExpatDriver::ConsumeToken(nsScanner& aScanner,
+                            PRBool& aFlushTokens)
 {
-  // We keep the scanner pointing to the position where Expat will start
-  // parsing.
-  nsScannerIterator currentExpatPosition;
-  aScanner.CurrentPosition(currentExpatPosition);
+  // Ask the scanner to send us all the data it has
+  // scanned and pass that data to expat.
 
-  // This is the start of the first buffer that we need to pass to Expat.
-  nsScannerIterator start = currentExpatPosition;
-  start.advance(mExpatBuffered);
-
-  // This is the end of the last buffer (at this point, more data could come in
-  // later).
-  nsScannerIterator end;
+  nsScannerIterator start, end;
+  aScanner.CurrentPosition(start);
   aScanner.EndReading(end);
 
-  // We want to call Expat if we have more buffers, or if we're currently
-  // blocked and there's data in Expat's buffer, or if we know there won't be
-  // more buffers and there's data in Expat's buffer.
-  while (start != end ||
-         ((mInternalState == NS_ERROR_HTMLPARSER_BLOCK || mEOF) &&
-          mExpatBuffered > 0)) {
-    const PRUnichar *buffer;
-    PRUint32 length;
-    if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK || mEOF) {
-      // If we're blocked we just resume Expat so we don't need a buffer, if
-      // there aren't any more buffers we pass a null buffer to Expat.
-      buffer = nsnull;
-      length = 0;
+  while (start != end) {
+    PRUint32 fragLength = PRUint32(start.size_forward());
 
-      if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK) {
-        PR_LOG(gExpatDriverLog, PR_LOG_DEBUG,
-               ("Resuming Expat, will parse data remaining in Expat's "
-                "buffer.\nContent of Expat's buffer:\n-----\n%s\n-----\n",
-                NS_ConvertUTF16toUTF8(currentExpatPosition.get(),
-                                      mExpatBuffered).get()));
-      }
-      else {
-        PR_LOG(gExpatDriverLog, PR_LOG_DEBUG,
-               ("Last call to Expat, will parse data remaining in Expat's "
-                "buffer.\nContent of Expat's buffer:\n-----\n%s\n-----\n",
-                NS_ConvertUTF16toUTF8(currentExpatPosition.get(),
-                                      mExpatBuffered).get()));
-      }
-    }
-    else {
-      buffer = start.get();
-      length = PRUint32(start.size_forward());
-
-      PR_LOG(gExpatDriverLog, PR_LOG_DEBUG,
-             ("Calling Expat, will parse data remaining in Expat's buffer and "
-              "new data.\nContent of Expat's buffer:\n-----\n%s\n-----\nNew "
-              "data:\n-----\n%s\n-----\n",
-              NS_ConvertUTF16toUTF8(currentExpatPosition.get(),
-                                    mExpatBuffered).get(),
-              NS_ConvertUTF16toUTF8(start.get(), length).get()));
-    }
-
-    PRUint32 consumed;
-    ParseBuffer(buffer, length, mEOF, &consumed);
-    if (consumed > 0) {
-      nsScannerIterator oldExpatPosition = currentExpatPosition;
-      currentExpatPosition.advance(consumed);
-
-      // We consumed some data, we want to store the last line of data that
-      // was consumed in case we run into an error (to show the line in which
-      // the error occurred).
-
-      // The length of the last line that Expat has parsed.
-      PRUint32 lastLineLength = XML_GetCurrentColumnNumber(mExpatParser);
-
-      if (lastLineLength <= consumed) {
-        // The length of the last line was less than what expat consumed, so
-        // there was at least one line break in the consumed data. Store the
-        // last line until the point where we stopped parsing.
-        nsScannerIterator startLastLine = currentExpatPosition;
-        startLastLine.advance(-lastLineLength);
-        CopyUnicodeTo(startLastLine, currentExpatPosition, mLastLine);
-      }
-      else {
-        // There was no line break in the consumed data, append the consumed
-        // data.
-        AppendUnicodeTo(oldExpatPosition, currentExpatPosition, mLastLine);
-      }
-    }
-
-    mExpatBuffered += length - consumed;
-
-    if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK) {
-      PR_LOG(gExpatDriverLog, PR_LOG_DEBUG,
-             ("Blocked parser (probably for loading linked stylesheets or "
-              "scripts)."));
-
-      aScanner.SetPosition(currentExpatPosition, PR_TRUE);
-      aScanner.Mark();
-
-      return mInternalState;
-    }
+    mInternalState = ParseBuffer((const char*)start.get(),
+                                 fragLength * sizeof(PRUnichar),
+                                 PR_FALSE);
 
     if (NS_FAILED(mInternalState)) {
-      if (XML_GetErrorCode(mExpatParser) != XML_ERROR_NONE) {
-        NS_ASSERTION(mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING,
-                     "Unexpected error");
-
-        // Look for the next newline after the last one we consumed
-        nsScannerIterator lastLine = currentExpatPosition;
-        while (lastLine != end) {
-          length = PRUint32(lastLine.size_forward());
-          PRUint32 endOffset = 0;
-          const PRUnichar *buffer = lastLine.get();
-          while (endOffset < length && buffer[endOffset] != '\n' &&
-                 buffer[endOffset] != '\r') {
-            ++endOffset;
-          }
-          mLastLine.Append(Substring(buffer, buffer + endOffset));
-          if (endOffset < length) {
-            // We found a newline.
-            break;
-          }
-
-          lastLine.advance(length);
-        }
-
-        HandleError();
+      if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK) {
+        aScanner.SetPosition(start.advance(mBytePosition / sizeof(PRUnichar)),
+                             PR_TRUE);
+        aScanner.Mark();
       }
 
       return mInternalState;
     }
 
-    if (mEOF) {
-      NS_ASSERTION(mExpatBuffered == 0 && currentExpatPosition == end,
-                   "Unreachable data left in Expat's buffer");
-      break;
-    }
-
-    start.advance(length);
+    start.advance(fragLength);
   }
 
-  aScanner.SetPosition(currentExpatPosition, PR_TRUE);
-  aScanner.Mark();
+  aScanner.SetPosition(end, PR_TRUE);
 
-  nsresult rv = NS_SUCCEEDED(mInternalState) ? aScanner.FillBuffer() : NS_OK;
+  if (NS_SUCCEEDED(mInternalState)) {
+    return aScanner.FillBuffer();
+  }
 
-  // Remember that there won't be any more data coming in.
-  mEOF = rv == kEOF;
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(eAutoDetectResult)
@@ -1173,7 +1135,8 @@ nsExpatDriver::WillInterruptParse(nsIContentSink* aSink)
 NS_IMETHODIMP
 nsExpatDriver::DidTokenize(PRBool aIsFinalChunk)
 {
-  return NS_OK;
+  return mInternalState == NS_OK ? ParseBuffer(nsnull, 0, aIsFinalChunk) :
+                                   NS_OK;
 }
 
 NS_IMETHODIMP_(const nsIID&)
