@@ -237,6 +237,14 @@ nsPrefetchListener::OnChannelRedirect(nsIChannel *aOldChannel,
         return NS_ERROR_ABORT;
     }
 
+    // HTTP request headers are not automatically forwarded to the new channel.
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aNewChannel);
+    NS_ENSURE_STATE(httpChannel);
+
+    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
+                                  NS_LITERAL_CSTRING("prefetch"), PR_FALSE);
+
+    mService->UpdateCurrentChannel(aNewChannel);
     return NS_OK;
 }
 
