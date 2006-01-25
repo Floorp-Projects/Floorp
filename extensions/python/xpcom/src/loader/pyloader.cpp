@@ -178,10 +178,6 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
                                           nsIFile* location,
                                           nsIModule** result)
 {
-#ifdef XP_UNIX
-	// *sob* - seems necessary to open the .so as RTLD_GLOBAL
-	dlopen(PYTHON_SO,RTLD_NOW | RTLD_GLOBAL);
-#endif
 	PRBool bDidInitPython = !Py_IsInitialized(); // well, I will next line, anyway :-)
 	if (bDidInitPython) {
 		NS_TIMELINE_START_TIMER("PyXPCOM: Python initializing");
