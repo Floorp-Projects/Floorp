@@ -161,7 +161,7 @@ function openEventDialog(calendarItem, calendar, mode, callback)
     window.setCursor("wait");
 
     // open the dialog modally
-    openDialog("chrome://calendar/content/calendar-event-dialog.xul", "_blank", "chrome,titlebar,modal", args);
-    //openDialog("chrome://calendar/content/eventDialog.xul", "_blank", "chrome,titlebar,modal", args);
+    openDialog("chrome://calendar/content/calendar-event-dialog.xul", "_blank",
+               "chrome,titlebar,modal,resizable", args);
 }
 
