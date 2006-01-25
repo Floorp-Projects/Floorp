@@ -12,7 +12,7 @@
     </resources>
   </binding>
 
-  <binding id="menulist" display="xul:menu" 
+  <binding id="menulist" display="xul:menu"
            extends="chrome://global/content/bindings/menulist.xml#menulist-base">
     <content sizetopopup="pref">
       <xul:hbox class="menulist-label-box" flex="1">
@@ -26,7 +26,7 @@
     <handlers>
       <handler event="command" phase="capturing"
         action="if (event.target.parentNode.parentNode == this) this.selectedItem = event.target;"/>
-        
+
       <handler event="popupshowing">
         <![CDATA[
           if (event.target.parentNode == this && this.selectedItem)
@@ -49,7 +49,7 @@
       <constructor>
         this.setInitialSelection()
       </constructor>
-    
+
       <method name="setInitialSelection">
         <body>
           <![CDATA[
@@ -59,7 +59,7 @@
 
               if (!arr.item(0) && this.value)
                 arr = popup.getElementsByAttribute('value', this.value);
-                
+
               if (arr.item(0))
                 this.selectedItem = arr[0];
               else
@@ -143,7 +143,7 @@
               this.selectedItem = popup.childNodes[val];
             else
               this.selectedItem = null;
-            return val;    
+            return val;
           ]]>
         </setter>
       </property>
@@ -158,7 +158,7 @@
           <![CDATA[
             if (this.selectedInternal == val)
               return val;
-            
+
             if (this.selectedInternal)
               this.selectedInternal.removeAttribute('selected');
 
@@ -170,7 +170,7 @@
               this.removeAttribute('description');
               return val;
             }
-             
+
             val.setAttribute('selected', 'true');
 
             this.setAttribute('value', val.getAttribute('value'));
@@ -181,12 +181,12 @@
             var event = document.createEvent("Events");
             event.initEvent("ValueChange", true, true);
             this.dispatchEvent(event);
-            
+
             return val;
           ]]>
         </setter>
       </property>
-      
+
       <method name="appendItem">
         <parameter name="label"/>
         <parameter name="value"/>
@@ -207,7 +207,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="insertItemAt">
         <parameter name="index"/>
         <parameter name="label"/>
@@ -267,7 +267,7 @@
           ]]>
         </getter>
       </property>
-    </implementation>  
+    </implementation>
   </binding>
 
   <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
@@ -279,18 +279,11 @@
       <xul:dropmarker class="menulist-dropmarker" type="menu"/>
       <children includes="menupopup"/>
     </content>
-    
+
     <implementation>
       <constructor><![CDATA[
         this.setInitialSelection();
       ]]></constructor>
-
-      <property name="editor" readonly="true">
-        <getter><![CDATA[
-          const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
-          return this.inputField.QueryInterface(nsIDOMNSEditableElement).editor;
-        ]]></getter>
-      </property>
 
       <method name="_selectInputFieldValueInList">
         <body>
@@ -319,7 +312,7 @@
             //  when using selectedItem's setter
             if (this.selectedInternal == val)
               return val;
-            
+
             if (this.selectedInternal)
               this.selectedInternal.removeAttribute('selected');
 
@@ -335,10 +328,10 @@
       </method>
 
       <field name="mInputField">null</field>
-      
+
       <property name="inputField" readonly="true">
         <getter><![CDATA[
-          if (!this.mInputField)    
+          if (!this.mInputField)
             this.mInputField = document.getAnonymousElementByAttribute(this, "anonid", "input");
           return this.mInputField;
         ]]></getter>
@@ -392,10 +385,17 @@
           ]]>
         </setter>
       </property>
-      <property name="disableautoselect" 
+      <property name="disableautoselect"
                 onset="if (val) this.setAttribute('disableautoselect','true');
                        else this.removeAttribute('disableautoselect'); return val;"
                 onget="return this.hasAttribute('disableautoselect');"/>
+
+      <property name="editor" readonly="true">
+        <getter><![CDATA[
+          const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
+          return this.inputField.QueryInterface(nsIDOMNSEditableElement).editor;
+        ]]></getter>
+      </property>
 
       <method name="select">
         <body>
@@ -408,13 +408,13 @@
       <handler event="focus" phase="capturing">
         <![CDATA[
           if (!this.hasAttribute('focused')) {
-            if (document.commandDispatcher.focusedElement != this.inputField) 
+            if (document.commandDispatcher.focusedElement != this.inputField)
               this.inputField.focus();
             this.setAttribute('focused','true');
           }
         ]]>
       </handler>
-      
+
       <handler event="blur" phase="capturing">
         <![CDATA[
           this.removeAttribute('focused');
@@ -426,7 +426,7 @@
           // editable menulists elements aren't in the focus order,
           // so when the popup opens we need to force the focus to the inputField
           if (event.target.parentNode == this) {
-            if (document.commandDispatcher.focusedElement != this.inputField) 
+            if (document.commandDispatcher.focusedElement != this.inputField)
               this.inputField.focus();
 
             if (this.selectedItem)
@@ -450,10 +450,10 @@
           }
         ]]>
       </handler>
-    </handlers>    
+    </handlers>
   </binding>
-  
-  <binding id="menulist-compact" display="xul:menu" 
+
+  <binding id="menulist-compact" display="xul:menu"
            extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content sizetopopup="false">
       <xul:dropmarker class="menulist-dropmarker" type="menu"/>
@@ -463,7 +463,7 @@
     </content>
   </binding>
 
-  <binding id="menulist-description" display="xul:menu" 
+  <binding id="menulist-description" display="xul:menu"
            extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content sizetopopup="pref">
       <xul:hbox class="menulist-label-box" flex="1">
