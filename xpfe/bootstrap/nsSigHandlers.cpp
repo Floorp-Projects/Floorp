@@ -75,7 +75,7 @@
 
 static char _progname[1024] = "huh?";
 
-#if defined(LINUX) && defined(DEBUG) && (defined(__i386) || defined(PPC))
+#if defined(LINUX) && defined(DEBUG) && defined(__GLIBC__)
 #define CRAWL_STACK_ON_SIGSEGV
 #endif
 
