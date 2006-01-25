@@ -421,12 +421,13 @@ TRY_AGAIN_SAME_SCRIPT:
                 PRInt32 *spacing = 0;
                 PRInt32 justTotal = 0;
                 if (aSpacing) {
+                    PRUint32 j;
                     /* need to correct for layout/gfx spacing mismatch */
                     // hacky inefficient justification: take the excess of what layout
                     // thinks the width is over what uniscribe thinks the width is and
                     // share it evenly between the justification opportunities
                     PRInt32 layoutTotal = 0;
-                    for (PRUint32 j = items[i].iCharPos; j < items[i+1].iCharPos; j++) {
+                    for (j = items[i].iCharPos; j < items[i+1].iCharPos; j++) {
                         layoutTotal += aSpacing[j];
                     }
                     PRInt32 gfxTotal = abc.abcA + abc.abcB + abc.abcC;
