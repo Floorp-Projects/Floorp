@@ -1510,11 +1510,12 @@
               }
             }
             if (i < oldCount) {
+              var firstTab = this.mTabContainer.firstChild;
               var browserData = {
-                sessionHistory : this.mPanelContainer.firstChild.sessionHistory
+                sessionHistory : firstTab.linkedBrowser.sessionHistory;
               }
               oldBrowserGroup.push(browserData);
-              this.removeTab(this.mTabContainer.firstChild);
+              this.removeTab(firstTab);
             }
           }
           return oldBrowserGroup;
