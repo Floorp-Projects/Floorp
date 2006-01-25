@@ -298,9 +298,6 @@
       <field name="currentSearchString">""</field>
       <field name="ignoreInputEvent">false</field>
       <field name="oninit">null</field>
-      <field name="ontextcommand">null</field>
-      <field name="ontextrevert">null</field>
-      <field name="onerrorcommand">null</field>
       <field name="mDefaultMatchFilled">false</field>
 
       <field name="mAutoCompleteListener"><![CDATA[
@@ -755,7 +752,7 @@
           this.clearTimer();
 
           if (aFireTextCommand)
-            this._fireEvent("textcommand", this.userAction, aTriggeringEvent);
+            this._fireEvent("textentered", this.userAction, aTriggeringEvent);
         ]]></body>
       </method>
 
@@ -792,7 +789,7 @@
 
           if (errItem)
             this._fireEvent("errorcommand", errItem);
-          this._fireEvent("textcommand", "clicking");
+          this._fireEvent("textentered", "clicking");
         ]]></body>
       </method>
 
@@ -801,7 +798,7 @@
         <body><![CDATA[
           var val = this.currentSearchString;
 
-          var ok = this._fireEvent("textrevert");
+          var ok = this._fireEvent("textreverted");
           if ((ok || ok == undefined) && val)
             this.setTextValue(val);
 

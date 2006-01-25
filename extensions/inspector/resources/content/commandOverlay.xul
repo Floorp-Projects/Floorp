@@ -11,7 +11,7 @@
   <commandset id="cmdsGlobalCommands">
       
     <command id="cmdGotoURL" 
-      ontextcommand="inspector.gotoTypedURL();"
+      ontextentered="inspector.gotoTypedURL();"
       oncommand="inspector.gotoTypedURL()"/>
 
     <command id="cmdShowOpenURLDialog" oncommand="inspector.showOpenURLDialog()"/>
