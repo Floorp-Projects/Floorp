@@ -151,17 +151,6 @@
 #define SYSTEMPREF_MODULES
 #endif
 
-#ifdef MOZ_XUL
-#define XULENABLED_MODULES                   \
-    MODULE(tkAutoCompleteModule)             \
-    MODULE(nsToolkitHistory)                 \
-    MODULE(nsPasswordManager)                \
-    MODULE(satchel)                          \
-    MODULE(PKI)
-#else
-#define XULENABLED_MODULES
-#endif
-
 #define XUL_MODULES                          \
     MODULE(xpcomObsoleteModule)              \
     MODULE(xpconnect)                        \
@@ -202,11 +191,12 @@
     MODULE(application)                      \
     MODULE(Apprunner)                        \
     MODULE(CommandLineModule)                \
-    XULENABLED_MODULES                       \
+    MODULE(tkAutoCompleteModule)             \
     MODULE(nsToolkitCompsModule)             \
     XREMOTE_MODULES                          \
     MODULE(nsSoftwareUpdate)                 \
     MODULE(JavaScript_Debugger)              \
+    MODULE(PKI)                              \
     MODULE(BOOT)                             \
     MODULE(NSS)                              \
     MODULE(nsAutoConfigModule)               \

@@ -43,6 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= rdf
+ifdef MOZ_XUL
 
 LIBRARY_NAME	= rdf
 EXPORT_LIBRARY  = 1
@@ -79,6 +80,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
+endif
 
 EXPORTS		= nsRDFCID.h
 
