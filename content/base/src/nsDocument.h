@@ -633,18 +633,6 @@ public:
                               PRBool aDocumentDefaultType,
                               nsIContent **aResult);
 
-  virtual NS_HIDDEN_(void*) GetProperty(nsIAtom  *aPropertyName,
-                                        nsresult *aStatus = nsnull) const;
-
-  virtual NS_HIDDEN_(nsresult) SetProperty(nsIAtom            *aPropertyName,
-                                           void               *aValue,
-                                           NSPropertyDtorFunc  aDtor = nsnull);
-
-  virtual NS_HIDDEN_(nsresult) DeleteProperty(nsIAtom *aPropertyName);
-
-  virtual NS_HIDDEN_(void*) UnsetProperty(nsIAtom  *aPropertyName,
-                                          nsresult *aStatus = nsnull);
-
   virtual NS_HIDDEN_(nsresult) Sanitize();
 
   virtual NS_HIDDEN_(void) EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
@@ -661,19 +649,19 @@ public:
   virtual NS_HIDDEN_(void) ForgetLink(nsIContent* aContent);
   virtual NS_HIDDEN_(void) NotifyURIVisitednessChanged(nsIURI* aURI);
 
-  NS_HIDDEN_(nsresult) SetUserData(const nsISupports *aObject,
+  NS_HIDDEN_(nsresult) SetUserData(const nsINode *aObject,
                                    nsIAtom *aKey,
                                    nsIVariant *aData,
                                    nsIDOMUserDataHandler *aHandler,
                                    nsIVariant **aReturn);
-  NS_HIDDEN_(nsresult) GetUserData(const nsISupports *aObject,
+  NS_HIDDEN_(nsresult) GetUserData(const nsINode *aObject,
                                    nsIAtom *aKey,
                                    nsIVariant **aResult);
   NS_HIDDEN_(void) CallUserDataHandler(PRUint16 aOperation,
-                                       const nsISupports *aObject,
+                                       const nsINode *aObject,
                                        nsIDOMNode *aSource,
                                        nsIDOMNode *aDest);
-  NS_HIDDEN_(void) CopyUserData(const nsISupports *aObject,
+  NS_HIDDEN_(void) CopyUserData(const nsINode *aObject,
                                 nsIDocument *aDestination);
 
 protected:

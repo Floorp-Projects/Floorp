@@ -50,7 +50,6 @@
 #include "nsILoadGroup.h"
 #include "nsCRT.h"
 #include "mozFlushType.h"
-#include "nsPropertyTable.h"
 #include "nsAutoPtr.h"
 #include "nsIAtom.h"
 
@@ -92,10 +91,10 @@ class nsIVariant;
 class nsIDOMUserDataHandler;
 
 // IID for the nsIDocument interface
-// 1e787f0e-feb3-43e3-bd00-bf8a77dcc557
+// bc831b59-2148-4016-a3c8-bf65f68da758
 #define NS_IDOCUMENT_IID \
-{ 0x1e787f0e, 0xfeb3, 0x43e3, \
- { 0xbd, 0x00, 0xbf, 0x8a, 0x77, 0xdc, 0xc5, 0x57 } }
+{ 0xbc831b59, 0x2148, 0x4016, \
+ { 0xa3, 0xc8, 0xbf, 0x65, 0xf6, 0x8d, 0xa7, 0x58 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -673,18 +672,6 @@ public:
    */
   virtual PRInt32 GetDefaultNamespaceID() const = 0;
 
-  virtual void* GetProperty(nsIAtom *aPropertyName,
-                            nsresult *aStatus = nsnull) const = 0;
-
-  virtual nsresult SetProperty(nsIAtom            *aPropertyName,
-                               void               *aValue,
-                               NSPropertyDtorFunc  aDtor = nsnull) = 0;
-
-  virtual nsresult DeleteProperty(nsIAtom *aPropertyName) = 0;
-
-  virtual void* UnsetProperty(nsIAtom  *aPropertyName,
-                              nsresult *aStatus = nsnull) = 0;
-
   nsPropertyTable* PropertyTable() { return &mPropertyTable; }
 
   /**
@@ -811,7 +798,7 @@ public:
    * Associate an object aData to aKey on node aObject. Should only be used to
    * implement the DOM Level 3 UserData API.
    *
-   * @param aObject cannonical nsISupports pointer of the node to add aData to
+   * @param aObject cannonical nsINode pointer of the node to add aData to
    * @param aKey the key to associate the object to
    * @param aData the object to associate to aKey on aObject
    * @param aHandler the UserDataHandler to call when the node is
@@ -820,7 +807,7 @@ public:
    *                      if any
    * @return whether adding the object and UserDataHandler succeeded
    */
-  nsresult SetUserData(const nsISupports *aObject, const nsAString &aKey,
+  nsresult SetUserData(const nsINode *aObject, const nsAString &aKey,
                        nsIVariant *aData, nsIDOMUserDataHandler *aHandler,
                        nsIVariant **aResult)
   {
@@ -838,7 +825,7 @@ public:
    * aObject will be removed. Should only be used to implement the DOM Level 3
    * UserData API.
    *
-   * @param aObject cannonical nsISupports pointer of the node to add aData to
+   * @param aObject cannonical nsINode pointer of the node to add aData to
    * @param aKey the key to associate the object to
    * @param aData the object to associate to aKey on aObject (may be nulll)
    * @param aHandler the UserDataHandler to call when the node is
@@ -847,7 +834,7 @@ public:
    *                      if any
    * @return whether adding the object and UserDataHandler succeeded
    */
-  virtual nsresult SetUserData(const nsISupports *aObject, nsIAtom *aKey,
+  virtual nsresult SetUserData(const nsINode *aObject, nsIAtom *aKey,
                                nsIVariant *aData,
                                nsIDOMUserDataHandler *aHandler,
                                nsIVariant **aResult) = 0;
@@ -857,13 +844,13 @@ public:
    * if no object was associated to aKey on aObject. Should only be used to
    * implement the DOM Level 3 UserData API.
    *
-   * @param aObject cannonical nsISupports pointer of the node to get the
+   * @param aObject cannonical nsINode pointer of the node to get the
    *                object for
    * @param aKey the key the object is associated to
    * @param aResult [out] the registered object for aKey on aObject, if any
    * @return whether an error occured while looking up the registered object
    */
-  nsresult GetUserData(nsISupports *aObject, const nsAString &aKey,
+  nsresult GetUserData(nsINode *aObject, const nsAString &aKey,
                        nsIVariant **aResult)
   {
     nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
@@ -879,13 +866,13 @@ public:
    * if no object was associated to aKey on aObject. Should only be used to
    * implement the DOM Level 3 UserData API.
    *
-   * @param aObject cannonical nsISupports pointer of the node to get the
+   * @param aObject cannonical nsINode pointer of the node to get the
    *                object for
    * @param aKey the key the object is associated to
    * @param aResult [out] the registered object for aKey on aObject, if any
    * @return whether an error occured while looking up the registered object
    */
-  virtual nsresult GetUserData(const nsISupports *aObject, nsIAtom *aKey,
+  virtual nsresult GetUserData(const nsINode *aObject, nsIAtom *aKey,
                                nsIVariant **aResult) = 0;
 
   /**
@@ -894,25 +881,25 @@ public:
    *
    * @param aOperation the type of operation that is being performed on the
    *                   node. @see nsIDOMUserDataHandler
-   * @param aObject cannonical nsISupports pointer of the node to call the
+   * @param aObject cannonical nsINode pointer of the node to call the
    *                UserDataHandler for
    * @param aSource the node that aOperation is being performed on, or null if
    *                the operation is a deletion
    * @param aDest the newly created node if any, or null
    */
   virtual void CallUserDataHandler(PRUint16 aOperation,
-                                   const nsISupports *aObject,
+                                   const nsINode *aObject,
                                    nsIDOMNode *aSource, nsIDOMNode *aDest) = 0;
 
   /**
    * Copy the objects and UserDataHandlers for node aObject to a new document.
    * Should only be used to implement the DOM Level 3 UserData API.
    *
-   * @param aObject cannonical nsISupports pointer of the node to copy objects
+   * @param aObject cannonical nsINode pointer of the node to copy objects
    *                and UserDataHandlers for
    * @param aDestination the new document
    */
-  virtual void CopyUserData(const nsISupports *aObject,
+  virtual void CopyUserData(const nsINode *aObject,
                             nsIDocument *aDestination) = 0;
 
 protected:

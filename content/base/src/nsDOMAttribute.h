@@ -49,6 +49,7 @@
 #include "nsDOMAttributeMap.h"
 
 class nsDOMAttribute;
+class nsITextContent;
 
 // bogus child list for an attribute
 class nsAttributeChildList : public nsGenericDOMNodeList
@@ -98,9 +99,16 @@ public:
   nsIContent *GetContent() const;
   nsresult SetOwnerDocument(nsIDocument* aDocument);
 
-  // Property functions, see nsPropertyTable.h
+  // nsINode interface
+  virtual PRUint32 GetChildCount() const;
+  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
+  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual void* GetProperty(nsIAtom  *aPropertyName,
-                            nsresult *aStatus = nsnull);
+                            nsresult *aStatus = nsnull) const;
   virtual nsresult SetProperty(nsIAtom            *aPropertyName,
                                void               *aValue,
                                NSPropertyDtorFunc  aDtor);
@@ -114,10 +122,12 @@ protected:
   static PRBool sInitialized;
 
 private:
+  nsresult EnsureChildState(PRBool aSetText, PRBool &aHasChild) const;
+
   nsString mValue;
   // XXX For now, there's only a single child - a text
   // element representing the value
-  nsIDOMText* mChild;
+  nsCOMPtr<nsITextContent> mChild;
   nsAttributeChildList* mChildList;
 
   nsIContent *GetContentInternal() const

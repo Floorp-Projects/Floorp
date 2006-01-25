@@ -813,13 +813,12 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
         nsIDocument *ownerDocument = GetOwnerDoc();
         if (aDocument != ownerDocument) {
             if (ownerDocument && HasProperties()) {
-                nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
-
                 // Copy UserData to the new document.
-                ownerDocument->CopyUserData(thisSupports, aDocument);
+                ownerDocument->CopyUserData(this, aDocument);
 
                 // Remove all properties.
-                ownerDocument->PropertyTable()->DeleteAllPropertiesFor(thisSupports);
+                ownerDocument->PropertyTable()->
+                  DeleteAllPropertiesFor(NS_STATIC_CAST(nsINode*, this));
             }
 
             // get a new nodeinfo
