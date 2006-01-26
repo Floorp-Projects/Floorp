@@ -9,7 +9,7 @@
  *   $_GET['id'] = Addon ID (integer)
  */
 
-startProcessing('addcomment.tpl', null, null, 'nonav');
+startProcessing('addcomment.tpl', null, null);
 require_once 'includes.php';
 
 session_start();
@@ -117,7 +117,8 @@ $tpl->assign(
             'c_errors'          => $_errors,
             'c_rating_value'    => $c_rating_value,
             'c_title_value'     => $c_title_value,
-            'c_comments_value'  => $c_comments_value
+            'c_comments_value'  => $c_comments_value,
+            'sidebar'           => 'inc/addon-sidebar.tpl'
          )
 );
 ?>
