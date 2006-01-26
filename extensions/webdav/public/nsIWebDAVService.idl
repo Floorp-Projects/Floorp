@@ -75,6 +75,9 @@ interface nsIWebDAVService : nsISupports
                                   in nsIWebDAVOperationListener listener,
                                   in nsISupports closure);
     /**
+     * @param properties  an array of propertynames, where the namespace
+     *                    and the name of the properties are seperated by
+     *                    a space
      * @param closure   caller-private data returned via listener
      */
     void getResourceProperties(in nsIWebDAVResource resource,
