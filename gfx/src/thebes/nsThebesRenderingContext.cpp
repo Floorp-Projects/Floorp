@@ -234,9 +234,9 @@ nsThebesRenderingContext::SetTranslation(nscoord aX, nscoord aY)
 {
     gfxMatrix mat = mThebes->CurrentMatrix();
     gfxFloat a, b, c, d, tx, ty;
-    mat->ToValues(&a, &b, &c, &d, &tx, &ty);
+    mat.ToValues(&a, &b, &c, &d, &tx, &ty);
     gfxMatrix newMat(a, b, c, d, aX, aY);
-    mThebes->SetMatrix(&newMat);
+    mThebes->SetMatrix(newMat);
     return NS_OK;
 }
 
