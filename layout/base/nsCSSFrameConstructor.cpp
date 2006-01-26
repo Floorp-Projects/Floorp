@@ -5572,9 +5572,11 @@ nsCSSFrameConstructor::ConstructTextFrame(nsFrameConstructorState& aState,
   nsIFrame* newFrame = nsnull;
 
 #ifdef MOZ_SVG
-  nsCOMPtr<nsISVGTextContainerFrame> svg_parent = do_QueryInterface(aParentFrame);
-  if (svg_parent)
-  {
+  if (aParentFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    nsCOMPtr<nsISVGTextContainerFrame> svg_parent = do_QueryInterface(aParentFrame);
+    if (!svg_parent) {
+      return NS_OK;
+    }
     newFrame = NS_NewSVGGlyphFrame(mPresShell, aContent, aParentFrame);
   }
   else {
@@ -8060,19 +8062,6 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
     return NS_OK;
   }
   
-#ifdef MOZ_SVG
-  // Don't create frames for non-SVG children of SVG elements
-  if (aNameSpaceID != kNameSpaceID_SVG &&
-      aParentFrame &&
-      aParentFrame->IsFrameOfType(nsIFrame::eSVG)
-#ifdef MOZ_SVG_FOREIGNOBJECT
-      && !aParentFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)
-#endif
-      ) {
-    return NS_OK;
-  }
-#endif
-
   nsIFrame* adjParentFrame = aParentFrame;
   nsFrameItems* frameItems = &aFrameItems;
   PRBool pseudoParent = PR_FALSE;
@@ -8088,6 +8077,19 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
   if (aContent->IsContentOfType(nsIContent::eTEXT)) 
     return ConstructTextFrame(aState, aContent, adjParentFrame, styleContext,
                               *frameItems, pseudoParent);
+
+#ifdef MOZ_SVG
+  // Don't create frames for non-SVG children of SVG elements
+  if (aNameSpaceID != kNameSpaceID_SVG &&
+      aParentFrame &&
+      aParentFrame->IsFrameOfType(nsIFrame::eSVG)
+#ifdef MOZ_SVG_FOREIGNOBJECT
+      && !aParentFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)
+#endif
+      ) {
+    return NS_OK;
+  }
+#endif
 
   // Style resolution can normally happen lazily.  However, getting the
   // Visibility struct can cause |SetBidiEnabled| to be called on the
