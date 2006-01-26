@@ -2428,7 +2428,7 @@ public:
     : nsDisplayWrapList(aFrame, aList), mTargetFrame(aTargetFrame) {}
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
-  virtual const char* Name() { return "XULEventRedirector"; }
+  NS_DISPLAY_DECL_NAME("XULEventRedirector")
 private:
   nsIFrame* mTargetFrame;
 };

@@ -173,7 +173,7 @@ public:
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
-  virtual const char* Name() { return "CheckMark"; }
+  NS_DISPLAY_DECL_NAME("CheckMark")
 private:
   nsGfxCheckboxControlFrame* mFrame;
 };

@@ -74,7 +74,7 @@ public:
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
-  virtual const char* Name() { return "TextDecoration"; }
+  NS_DISPLAY_DECL_NAME("TextDecoration")
 private:
   nsHTMLContainerFrame* mFrame;
   nsLineBox*            mLine;
