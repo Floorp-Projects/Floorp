@@ -44,7 +44,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= gtkembedmoz
-TOOL_DIRS=src
+
+DIRS=src
 
 ifdef ENABLE_TESTS
 TOOL_DIRS  += tests

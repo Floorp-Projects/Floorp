@@ -83,105 +83,6 @@
 #define NEW_TOOLKIT_STRING(x) g_strdup(NS_LossyConvertUTF16toASCII(x).get())
 #define GET_OBJECT_CLASS_TYPE(x) (GTK_OBJECT_CLASS(x)->type)
 
-// Some "massaged" enum information for the GTK Type System
-static GtkFlagValue gtk_moz_embed_progress_flags_values[] = {
-  { GTK_MOZ_EMBED_FLAG_START,
-    "GTK_MOZ_EMBED_FLAG_START", "start" },
-  { GTK_MOZ_EMBED_FLAG_REDIRECTING,
-    "GTK_MOZ_EMBED_FLAG_REDIRECTING", "redirecting" },
-  { GTK_MOZ_EMBED_FLAG_TRANSFERRING,
-    "GTK_MOZ_EMBED_FLAG_TRANSFERRING", "transferring" },
-  { GTK_MOZ_EMBED_FLAG_NEGOTIATING,
-    "GTK_MOZ_EMBED_FLAG_NEGOTIATING", "negotiating" },
-  { GTK_MOZ_EMBED_FLAG_STOP,
-    "GTK_MOZ_EMBED_FLAG_STOP", "stop" },
-  { GTK_MOZ_EMBED_FLAG_IS_REQUEST,
-    "GTK_MOZ_EMBED_FLAG_IS_REQUEST", "is-request" },
-  { GTK_MOZ_EMBED_FLAG_IS_DOCUMENT,
-    "GTK_MOZ_EMBED_FLAG_IS_DOCUMENT", "is-document" },
-  { GTK_MOZ_EMBED_FLAG_IS_NETWORK,
-    "GTK_MOZ_EMBED_FLAG_IS_NETWORK", "is-network" },
-  { GTK_MOZ_EMBED_FLAG_IS_WINDOW,
-    "GTK_MOZ_EMBED_FLAG_IS_WINDOW", "is-window" },
-  { GTK_MOZ_EMBED_FLAG_RESTORING,
-    "GTK_MOZ_EMBED_FLAG_RESTORING", "restoring" },
-  { 0,
-    NULL, NULL }
-};
-
-static GtkEnumValue gtk_moz_embed_status_enums_values[] = {
-  { GTK_MOZ_EMBED_STATUS_FAILED_DNS,
-    "GTK_MOZ_EMBED_STATUS_FAILED_DNS", "failed-dns" },
-  { GTK_MOZ_EMBED_STATUS_FAILED_CONNECT,
-    "GTK_MOZ_EMBED_STATUS_FAILED_CONNECT", "failed-connect" },
-  { GTK_MOZ_EMBED_STATUS_FAILED_TIMEOUT,
-    "GTK_MOZ_EMBED_STATUS_FAILED_TIMEOUT", "failed-timeout" },
-  { GTK_MOZ_EMBED_STATUS_FAILED_USERCANCELED,
-    "GTK_MOZ_EMBED_STATUS_FAILED_USERCANCELED", "failed-usercanceled" },
-  { 0,
-    NULL, NULL }
-};
-
-static GtkFlagValue gtk_moz_embed_reload_flags_values[] = {
-  { GTK_MOZ_EMBED_FLAG_RELOADNORMAL,
-    "GTK_MOZ_EMBED_FLAG_RELOADNORMAL", "reloadnormal" },
-  { GTK_MOZ_EMBED_FLAG_RELOADBYPASSCACHE,
-    "GTK_MOZ_EMBED_FLAG_RELOADBYPASSCACHE", "reloadbypasscache" },
-  { GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXY,
-    "GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXY", "reloadbypassproxy" },
-  { GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXYANDCACHE,
-    "GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXYANDCACHE",
-    "reloadbypassproxyandcache" },
-  { GTK_MOZ_EMBED_FLAG_RELOADCHARSETCHANGE,
-    "GTK_MOZ_EMBED_FLAG_RELOADCHARSETCHANGE", "reloadcharset" },
-  { 0,
-    NULL, NULL }
-};
-
-static GtkFlagValue gtk_moz_embed_chrome_flags_values[] = {
-  { GTK_MOZ_EMBED_FLAG_DEFAULTCHROME, 
-    "GTK_MOZ_EMBED_FLAG_DEFAULTCHROME", "defaultchrome" },
-  { GTK_MOZ_EMBED_FLAG_WINDOWBORDERSON, 
-    "GTK_MOZ_EMBED_FLAG_WINDOWBORDERSON", "windowborderson" },
-  { GTK_MOZ_EMBED_FLAG_WINDOWCLOSEON,
-    "GTK_MOZ_EMBED_FLAG_WINDOWCLOSEON", "windowcloseon" },
-  { GTK_MOZ_EMBED_FLAG_WINDOWRESIZEON,
-    "GTK_MOZ_EMBED_FLAG_WINDOWRESIZEON", "windowresizeon" },
-  { GTK_MOZ_EMBED_FLAG_MENUBARON, 
-    "GTK_MOZ_EMBED_FLAG_MENUBARON", "menubaron" },
-  { GTK_MOZ_EMBED_FLAG_TOOLBARON,
-    "GTK_MOZ_EMBED_FLAG_TOOLBARON", "toolbaron" },
-  { GTK_MOZ_EMBED_FLAG_LOCATIONBARON,
-    "GTK_MOZ_EMBED_FLAG_LOCATIONBARON", "locationbaron" },
-  { GTK_MOZ_EMBED_FLAG_STATUSBARON,
-    "GTK_MOZ_EMBED_FLAG_STATUSBARON", "statusbaron" },
-  { GTK_MOZ_EMBED_FLAG_PERSONALTOOLBARON,
-    "GTK_MOZ_EMBED_FLAG_PERSONALTOOLBARON", "personaltoolbaron" },
-  { GTK_MOZ_EMBED_FLAG_SCROLLBARSON,
-    "GTK_MOZ_EMBED_FLAG_SCROLLBARSON", "scrollbarson" },
-  { GTK_MOZ_EMBED_FLAG_TITLEBARON, 
-    "GTK_MOZ_EMBED_FLAG_TITLEBARON", "titlebaron" },
-  { GTK_MOZ_EMBED_FLAG_EXTRACHROMEON,
-    "GTK_MOZ_EMBED_FLAG_EXTRACHROMEON", "extrachromeon" },
-  { GTK_MOZ_EMBED_FLAG_ALLCHROME, 
-    "GTK_MOZ_EMBED_FLAG_ALLCHROME", "allchrome" },
-  { GTK_MOZ_EMBED_FLAG_WINDOWRAISED, 
-    "GTK_MOZ_EMBED_FLAG_WINDOWRAISED", "windowraised" },
-  { GTK_MOZ_EMBED_FLAG_WINDOWLOWERED,
-    "GTK_MOZ_EMBED_FLAG_WINDOWLOWERED", "windowlowered" },
-  { GTK_MOZ_EMBED_FLAG_CENTERSCREEN,
-    "GTK_MOZ_EMBED_FLAG_CENTERSCREEN", "centerscreen" },
-  { GTK_MOZ_EMBED_FLAG_DEPENDENT,
-    "GTK_MOZ_EMBED_FLAG_DEPENDENT", "dependent" },
-  { GTK_MOZ_EMBED_FLAG_MODAL,
-    "GTK_MOZ_EMBED_FLAG_MODAL", "modal" },
-  { GTK_MOZ_EMBED_FLAG_OPENASDIALOG,
-    "GTK_MOZ_EMBED_FLAG_OPENASDIALOG", "openasdialog" },
-  { GTK_MOZ_EMBED_FLAG_OPENASCHROME, 
-    "GTK_MOZ_EMBED_FLAG_OPENASCHROME", "openaschrome" },
-  { 0,
-    NULL, NULL }
-};
 #endif /* MOZ_WIDGET_GTK */
 
 class nsIDirectoryServiceProvider;
@@ -804,6 +705,12 @@ gtk_moz_embed_pop_startup(void)
 }
 
 void
+gtk_moz_embed_set_path(const char *aPath)
+{
+  EmbedPrivate::SetPath(aPath);
+}
+
+void
 gtk_moz_embed_set_comp_path(const char *aPath)
 {
   EmbedPrivate::SetCompPath(aPath);
@@ -1108,58 +1015,6 @@ gtk_moz_embed_get_chrome_mask(GtkMozEmbed *embed)
 
   return embedPrivate->mChromeMask;
 }
-
-#ifdef MOZ_WIDGET_GTK
-
-GtkType
-gtk_moz_embed_progress_flags_get_type(void)
-{
-  static GtkType progress_flags_type = 0;
-    
-  if (!progress_flags_type)
-    progress_flags_type =
-      gtk_type_register_flags("GtkMozEmbedReloadFlags",
-			      gtk_moz_embed_progress_flags_values);
-  return progress_flags_type;
-}
-
-GtkType
-gtk_moz_embed_status_enums_get_type(void)
-{
-  static GtkType status_enum_type = 0;
-
-  if (!status_enum_type)
-    status_enum_type =
-      gtk_type_register_enum("GtkMozEmbedStatusFlags",
-			     gtk_moz_embed_status_enums_values);
-  return status_enum_type;
-}
-
-GtkType
-gtk_moz_embed_reload_flags_get_type(void)
-{
-  static GtkType reload_flags_type = 0;
-
-  if (!reload_flags_type)
-    reload_flags_type =
-      gtk_type_register_flags("GtkMozEmbedReloadFlags",
-			      gtk_moz_embed_reload_flags_values);
-  return reload_flags_type;
-}
-
-GtkType
-gtk_moz_embed_chrome_flags_get_type(void)
-{
-  static GtkType chrome_flags_type = 0;
-
-  if (!chrome_flags_type)
-    chrome_flags_type = 
-      gtk_type_register_flags("GtkMozEmbedChromeFlags",
-			      gtk_moz_embed_chrome_flags_values);
-  return chrome_flags_type;
-}
-
-#endif /* MOZ_WIDGET_GTK */
 
 void
 gtk_moz_embed_get_nsIWebBrowser  (GtkMozEmbed *embed, nsIWebBrowser **retval)

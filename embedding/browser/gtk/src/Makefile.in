@@ -45,7 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= gtkembedmoz
 LIBRARY_NAME	= gtkembedmoz
-MOZILLA_INTERNAL_API = 1
+LIBXUL_LIBRARY	= 1
+FORCE_STATIC_LIB = 1
+DEFINES += -DIMPL_XREAPI
 
 REQUIRES	= xpcom \
 		  string \
@@ -61,6 +63,7 @@ REQUIRES	= xpcom \
 		  embed_base \
 		  windowwatcher \
 		  profdirserviceprovider \
+		  xulapp \
 		  $(NULL)
 
 ifdef ACCESSIBILITY
@@ -87,105 +90,12 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-# Save the "real" FINAL_LINK_COMP* before we override them
-FAT_FINAL_LINK_COMPS := $(FINAL_LINK_COMPS)
-FAT_FINAL_LINK_COMP_NAMES := $(FINAL_LINK_COMP_NAMES)
-
-ifdef BUILD_STATIC_LIBS
-include $(topsrcdir)/config/static-config.mk
-DEFINES += $(STATIC_DEFINES)
-CPPSRCS += $(STATIC_CPPSRCS)
-EXTRA_DSO_LDOPTS += $(STATIC_EXTRA_LIBS)
-EXTRA_DEPS	+= \
-	$(STATIC_EXTRA_DEPS) \
-	$(NULL)
-endif
-
-SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libprofdirserviceprovider_s.$(LIB_SUFFIX) \
-		$(NULL)
-
 EXPORTS		= \
 		gtkmozembed.h \
+		gtkmozembed_glue.cpp \
 		gtkmozembed_internal.h
 
-ifdef MOZ_ENABLE_GTK
-EXTRA_DSO_LDOPTS = \
-		$(MOZ_COMPONENT_LIBS) \
-		-lgtksuperwin \
-		$(NULL)
-endif
-
-ifdef MOZ_ENABLE_GTK2
-EXTRA_DSO_LDOPTS = \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-endif
-
-EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) $(MOZ_GTK2_LIBS)
-
-ifdef BUILD_STATIC_LIBS
-# This is so sick! We'll work backwards from the embedding manifest to
-# produce the set of components that we need to link in to a
-# ``minimal'' embedding harness.
-ifndef MINIMO
-EMBED_MANIFEST=$(topsrcdir)/embedding/config/basebrowser-unix
-endif
-
-ifndef MOZ_FAT_EMBED
-FINAL_LINK_COMPS=embed-link-comps
-FINAL_LINK_COMP_NAMES=embed-link-comp-names
-endif
-
-ifdef MINIMO
-FINAL_LINK_COMPS=$(topsrcdir)/minimo/base/linux/minimo-link-comps
-FINAL_LINK_COMP_NAMES=$(topsrcdir)/minimo/base/linux/minimo-link-names
-FINAL_LINK_LIBS=$(topsrcdir)/minimo/base/linux/minimo-link-libs
-endif
-
-# Recreate these files each time to pick up any changes.
-# XXX This is a hack; the dependency system should do this for us.
-export::
-	-rm -f embed-link-comps embed-link-comp-names components_list
-
-# Create a map that we can use to go from library name to component
-# symbol. N.B. that this will break if the $(FINAL_LINK_COMP_NAMES)
-# and $(FINAL_LINK_COMPS) somehow get out-of-sync and aren't in
-# _exactly_ the same order. (Hey, this is a hack!)
-components_list: $(FAT_FINAL_LINK_COMPS) $(FAT_FINAL_LINK_COMP_NAMES)
-	paste $(FAT_FINAL_LINK_COMPS) $(FAT_FINAL_LINK_COMP_NAMES) | sort -k 1,1 > $@
-
-# Compute the embedding libs by extracting them from the embedding
-# manifest.
-#
-# We start by selecting anything that starts with `components/', as
-# these are the component libraries. We print the `first' field to
-# strip off any crap after the library name. Next, we select for files
-# ending with `.so' so we end up with only the libraries. We then rip
-# off the `components/lib' prefix and the `.so' suffix, leaving just
-# the library name. This list is sorted, and joined with the list of
-# components that were actually _built_ to cull out anything that's
-# included in the manifest, but wasn't built.
-embed-link-comps: $(EMBED_MANIFEST) components_list
-	grep '^components/' $< | \
-		awk '{ print $$1; }' | \
-		grep '\.so$$' | \
-		sed -e 's.^components/lib..' -e 's/\.so//' | \
-		sort | \
-		join -o 1.1 - components_list > $@
-
-# Compute the symbols we'll need for the ``minimal embedding client''
-# by joining the compoent list with the sorted list of embedding
-# components.
-embed-link-comp-names: embed-link-comps components_list
-	sort embed-link-comps | join -o 2.2 - components_list > $@
-
-GARBAGE += embed-link-comp-names embed-link-comps components components_list
-endif
-
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/config/static-rules.mk
 
 ifeq ($(OS_ARCH), SunOS)
 ifndef GNU_CC

@@ -73,6 +73,11 @@ STATIC_LIBS = \
 	xulapp_s \
 	$(NULL)
 
+ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
+STATIC_LIBS += gtkembedmoz
+endif
+
+
 SHARED_LIBRARY_LIBS = \
 	$(foreach lib,$(STATIC_LIBS),$(DIST)/lib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
 	$(foreach component,$(COMPONENT_LIBS),$(DIST)/lib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \

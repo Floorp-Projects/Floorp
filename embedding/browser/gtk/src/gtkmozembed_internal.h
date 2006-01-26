@@ -47,12 +47,24 @@ struct nsModuleComponentInfo;
 extern "C" {
 #endif /* __cplusplus */
 
-extern GTKMOZEMBED_API(void)  gtk_moz_embed_get_nsIWebBrowser  (GtkMozEmbed *embed, nsIWebBrowser **retval);
-extern GTKMOZEMBED_API(PRUnichar*) gtk_moz_embed_get_title_unichar (GtkMozEmbed *embed);
-extern GTKMOZEMBED_API(PRUnichar*) gtk_moz_embed_get_js_status_unichar (GtkMozEmbed *embed);
-extern GTKMOZEMBED_API(PRUnichar*) gtk_moz_embed_get_link_message_unichar (GtkMozEmbed *embed);
-extern GTKMOZEMBED_API(void) gtk_moz_embed_set_directory_service_provider (nsIDirectoryServiceProvider *appFileLocProvider);
-extern GTKMOZEMBED_API(void) gtk_moz_embed_set_app_components (const nsModuleComponentInfo *aComps, int aNumComps);
+GTKMOZEMBED_API(void,
+  gtk_moz_embed_get_nsIWebBrowser, (GtkMozEmbed *embed,
+                                    nsIWebBrowser **retval))
+GTKMOZEMBED_API(PRUnichar*,
+  gtk_moz_embed_get_title_unichar, (GtkMozEmbed *embed))
+
+GTKMOZEMBED_API(PRUnichar*,
+  gtk_moz_embed_get_js_status_unichar, (GtkMozEmbed *embed))
+
+GTKMOZEMBED_API(PRUnichar*,
+  gtk_moz_embed_get_link_message_unichar, (GtkMozEmbed *embed))
+
+GTKMOZEMBED_API(void,
+  gtk_moz_embed_set_directory_service_provider, (nsIDirectoryServiceProvider *appFileLocProvider))
+
+GTKMOZEMBED_API(void,
+  gtk_moz_embed_set_app_components, (const nsModuleComponentInfo *aComps,
+                                     int aNumComps))
 
 #ifdef __cplusplus
 }
