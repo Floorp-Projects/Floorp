@@ -395,7 +395,7 @@ sub getVisibleSeries {
                         "    AND cgm.group_id NOT IN($grouplist) " .
                         "WHERE creator = " . Bugzilla->user->id . " OR " .
                         "      cgm.category_id IS NULL " . 
-                   $dbh->sql_group_by('series_id', 'cc1.name, cc2.name, ' .
+                   $dbh->sql_group_by('series.series_id', 'cc1.name, cc2.name, ' .
                                       'series.name'));
     foreach my $series (@$serieses) {
         my ($cat, $subcat, $name, $series_id) = @$series;
