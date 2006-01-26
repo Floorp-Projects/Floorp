@@ -2064,12 +2064,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
                                channel);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-    nsCOMPtr<nsIDTD> theDTD(do_CreateInstance(kNavDTDCID));
-    if(theDTD) {
-      mParser->RegisterDTD(theDTD);
-    }
-
     mParser->SetContentSink(sink);
   }
 

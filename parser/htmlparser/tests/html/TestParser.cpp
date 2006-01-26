@@ -47,7 +47,6 @@
 // Class IID's
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 static NS_DEFINE_CID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
-static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 
 //----------------------------------------------------------------------
 
@@ -69,13 +68,7 @@ nsresult ParseData(char* anInputStream,char* anOutputStream) {
     printf("\nUnable to create a sink\n");
     return result;
   }
-  // Create a dtd
-  nsCOMPtr<nsIDTD> dtd(do_CreateInstance(kNavDTDCID, &result));
-  if(NS_FAILED(result)) {
-    printf("Unable to create a dtd\n");
-    return result;
-  }
-     
+
   PRFileDesc* in = PR_Open(anInputStream, PR_RDONLY, 0777);
   if (!in) {
     printf("\nUnable to open input file - %s\n", anInputStream);
@@ -104,8 +97,7 @@ nsresult ParseData(char* anInputStream,char* anOutputStream) {
   }
 
   sink->SetOutputStream(out);
-  parser->RegisterDTD(dtd);
-	parser->SetContentSink(sink);
+  parser->SetContentSink(sink);
   result = parser->Parse(stream, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
   
   PR_Close(in);
@@ -120,7 +112,7 @@ nsresult ParseData(char* anInputStream,char* anOutputStream) {
 int main(int argc, char** argv)
 {
   if (argc < 3) {
-		printf("\nUsage: <inputfile> <outputfile>\n"); 
+    printf("\nUsage: <inputfile> <outputfile>\n"); 
     return -1;
   }
 

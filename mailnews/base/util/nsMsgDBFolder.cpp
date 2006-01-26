@@ -99,7 +99,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
-static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 
 nsIAtom* nsMsgDBFolder::mFolderLoadedAtom=nsnull;
 nsIAtom* nsMsgDBFolder::mDeleteOrMoveMsgCompletedAtom=nsnull;
@@ -5210,10 +5209,7 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
     textSink->Initialize(&bodyText, flags, 80);
 
     parser->SetContentSink(sink);
-    nsCOMPtr<nsIDTD> dtd = do_CreateInstance(kNavDTDCID,&rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    parser->RegisterDTD(dtd);
     nsAutoString msgBodyStr;
     // need to do an appropriate conversion here.
     msgBodyStr.AssignWithConversion(msgBody);

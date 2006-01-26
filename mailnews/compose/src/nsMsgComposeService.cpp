@@ -104,7 +104,6 @@
 #endif
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
-static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 // </for>
 
 #ifdef NS_DEBUG
@@ -579,17 +578,13 @@ NS_IMETHODIMP nsMsgComposeService::GetParamsForMailto(nsIURI * aURI, nsIMsgCompo
             sanSink->Initialize(&sanitizedBody, 0, NS_ConvertASCIItoUTF16(allowedTags));
 
             parser->SetContentSink(sink);
-            nsCOMPtr<nsIDTD> dtd = do_CreateInstance(kNavDTDCID);
-            if (dtd)
+            rv = parser->Parse(rawBody, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+            if (NS_FAILED(rv))
             {
-              parser->RegisterDTD(dtd);
-
-              rv = parser->Parse(rawBody, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
-              if (NS_FAILED(rv))
-                // Something went horribly wrong with parsing for html format
-                // in the body.  Set composeHTMLFormat to PR_FALSE so we show the
-                // plain text mail compose.
-                composeHTMLFormat = PR_FALSE;
+              // Something went horribly wrong with parsing for html format
+              // in the body.  Set composeHTMLFormat to PR_FALSE so we show the
+              // plain text mail compose.
+              composeHTMLFormat = PR_FALSE;
             }
           }
         }

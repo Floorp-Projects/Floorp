@@ -54,10 +54,11 @@
 #include "nsStringGlue.h"
 #include "nsVoidArray.h"
 
-// {6BE162F1-0A2E-4517-B3C5-EF5302DD2FEF}
+// {26C4ABBE-A462-4110-A0A6-244BF39AE7D4}
 #define NS_IPARSER_IID \
-{ 0x6be162f1, 0xa2e, 0x4517, \
-{ 0xb3, 0xc5, 0xef, 0x53, 0x2, 0xdd, 0x2f, 0xef } }
+{ 0x26c4abbe, 0xa462, 0x4110, \
+  { 0xa0, 0xa6, 0x24, 0x4b, 0xf3, 0x9a, 0xe7, 0xd4 } }
+
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
@@ -134,16 +135,6 @@ class nsIParser : public nsISupports {
   public:
 
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPARSER_IID)
-
-    /**
-     *  Call this method if you have a DTD that you want to share with the parser.
-     *  Registered DTD's get remembered until the system shuts down.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aDTD -- ptr DTD that you're publishing the services of
-     */
-    NS_IMETHOD RegisterDTD(nsIDTD* aDTD)=0;
-
 
     /**
      * Select given content sink into parser for parser output

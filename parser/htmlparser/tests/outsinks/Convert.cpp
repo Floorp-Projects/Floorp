@@ -169,23 +169,11 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
 #endif /* USE_SERIALIZER */
 
   parser->SetContentSink(sink);
-   nsCOMPtr<nsIDTD> dtd;
-  if (inType.EqualsLiteral("text/html")) {
-    static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-    dtd = do_CreateInstance(kNavDTDCID, &rv);
-  }
-  else
+  if (!inType.EqualsLiteral("text/html"))
   {
     printf("Don't know how to deal with non-html input!\n");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  if (NS_FAILED(rv))
-  {
-    printf("Couldn't create new HTML DTD: 0x%x\n", rv);
-    return rv;
-  }
-
-  parser->RegisterDTD(dtd);
 
   rv = parser->Parse(inString, 0, NS_LossyConvertUCS2toASCII(inType), PR_FALSE, PR_TRUE);
   if (NS_FAILED(rv))

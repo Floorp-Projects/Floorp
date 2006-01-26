@@ -118,6 +118,4 @@ private:
   nsString         mURISpec;
 };
 
-nsresult NS_NewExpatDriver(nsIDTD** aDriver);
-
 #endif

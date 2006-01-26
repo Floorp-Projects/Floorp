@@ -104,7 +104,6 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // <for functions="HTML2Plaintext,HTMLSantinize">
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
-static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 // </for>
 
 #ifdef HAVE_MIME_DATA_SLOT
@@ -2188,10 +2187,6 @@ HTML2Plaintext(const nsString& inString, nsString& outString,
   textSink->Initialize(&outString, flags, wrapCol);
 
   parser->SetContentSink(sink);
-  nsCOMPtr<nsIDTD> dtd = do_CreateInstance(kNavDTDCID);
-  NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
-
-  parser->RegisterDTD(dtd);
 
   rv = parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"),
                      PR_FALSE, PR_TRUE);
@@ -2252,10 +2247,6 @@ HTMLSanitize(const nsString& inString, nsString& outString,
   sanSink->Initialize(&outString, flags, allowedTags);
 
   parser->SetContentSink(sink);
-  nsCOMPtr<nsIDTD> dtd = do_CreateInstance(kNavDTDCID);
-  NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
-
-  parser->RegisterDTD(dtd);
 
   rv = parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"),
                      PR_FALSE, PR_TRUE);

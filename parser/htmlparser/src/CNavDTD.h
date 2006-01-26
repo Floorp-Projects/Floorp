@@ -413,12 +413,6 @@ protected:
     PRUint16            mFlags;
 };
 
-inline nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult)
-{
-  NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-  return CallCreateInstance(kNavDTDCID, aInstancePtrResult);
-}
-
 #endif 
 
 

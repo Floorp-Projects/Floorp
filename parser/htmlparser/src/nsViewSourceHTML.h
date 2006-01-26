@@ -52,11 +52,6 @@
 #include "nsDTDUtils.h"
 #include "nsParserNode.h"
 
-#define NS_VIEWSOURCE_HTML_IID      \
-  {0xb6003010, 0x7932, 0x11d2, \
-  {0x80, 0x1b, 0x0, 0x60, 0x8, 0xbf, 0xc4, 0x89 }}
-
-
 class nsIParserNode;
 class nsParser;
 class nsITokenizer;
@@ -117,9 +112,4 @@ protected:
     PRUint32            mTokenCount;
 };
 
-extern nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);
-
 #endif 
-
-
-

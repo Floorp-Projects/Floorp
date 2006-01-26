@@ -85,7 +85,6 @@
 static PRLogModuleInfo *BayesianFilterLogModule = nsnull;
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
-static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 
 #define kDefaultJunkThreshold .99 // we override this value via a pref
 static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f.";
@@ -559,10 +558,6 @@ nsresult Tokenizer::stripHTML(const nsAString& inString, nsAString& outString)
   textSink->Initialize(&outString, flags, 80);
 
   parser->SetContentSink(sink);
-  nsCOMPtr<nsIDTD> dtd = do_CreateInstance(kNavDTDCID,&rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  parser->RegisterDTD(dtd);
 
   return parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
 }

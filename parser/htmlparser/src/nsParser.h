@@ -178,8 +178,6 @@ class nsParser : public nsIParser,
 
 
     NS_IMETHOD_(void) SetParserFilter(nsIParserFilter* aFilter);
-    
-    NS_IMETHOD RegisterDTD(nsIDTD* aDTD);
 
     /**
      *  Retrieve the scanner from the topmost parser context
