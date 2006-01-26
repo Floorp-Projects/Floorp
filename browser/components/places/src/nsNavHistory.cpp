@@ -1200,7 +1200,8 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
 
   // first check if there are search terms
   *aHasSearchTerms = PR_FALSE;
-  for (PRInt32 i = 0; i < aQueries.Count(); i ++) {
+  PRInt32 i;
+  for (i = 0; i < aQueries.Count(); i ++) {
     aQueries[i]->GetHasSearchTerms(aHasSearchTerms);
     if (*aHasSearchTerms)
       break;
@@ -1213,7 +1214,7 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
     return QUERYUPDATE_COMPLEX;
 
   PRBool nonTimeBasedItems = PR_FALSE;
-  for (PRInt32 i = 0; i < aQueries.Count(); i ++) {
+  for (i = 0; i < aQueries.Count(); i ++) {
     nsNavHistoryQuery* query = aQueries[i];
 
     if (query->Folders().Length() > 0 || query->OnlyBookmarked()) {
