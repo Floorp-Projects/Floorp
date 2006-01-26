@@ -402,4 +402,4 @@ endif
 jsscan.$(OBJ_SUFFIX): jsautokw.h jskeyword.tbl
 
 jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX) jskeyword.tbl
-	$< $@
+	./host_jskwgen$(HOST_BIN_SUFFIX) $@
