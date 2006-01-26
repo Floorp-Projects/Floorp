@@ -23,5 +23,6 @@
     <ul>
     <li><a href="./author.php?id={$addon->UserID}">{$addon->UserName}</a></li>
     </ul>
+</li>
 </ul>
 

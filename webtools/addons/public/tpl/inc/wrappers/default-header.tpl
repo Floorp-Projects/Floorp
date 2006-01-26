@@ -51,10 +51,10 @@
 	<div id="key-menu">	
         <ul id="menu-firefox">
             <li{if $currentTab eq "home"} class="current"{/if}><a href="{$config.webpath}/?app={$app}">Home</a></li>
-            <li{if $currentTab eq "extensions"} class="current"{/if}><a href="{$config.webpath}/extensions/?app={$app}">Extensions</a></li>
+            <li{if $currentTab eq "extensions"} class="current"{/if}><a href="{$config.webpath}/extensions.php?app={$app}">Extensions</a></li>
             <li{if $currentTab eq "pfs"} class="current"{/if}><a href="https://pfs.mozilla.org/plugins/?app={$app}">Plugins</a></li>
             <li{if $currentTab eq "search-engines"} class="current"{/if}><a href="{$config.webpath}/search-engines.php?app={$app}">Search Engines</a></li>
-            <li{if $currentTab eq "themes"} class="current"{/if}><a href="{$config.webpath}/themes/?app={$app}">Themes</a></li>
+            <li{if $currentTab eq "themes"} class="current"{/if}><a href="{$config.webpath}/themes.php?app={$app}">Themes</a></li>
         </ul>
     </div>
     <!-- end key-menu -->
