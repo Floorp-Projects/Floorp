@@ -87,6 +87,69 @@ public:
     virtual nsresult evaluate(txIEvalContext* aContext,
                               txAExprResult** aResult) = 0;
 
+
+    /**
+     * Returns the type of this expression.
+     */
+    enum ExprType {
+        LOCATIONSTEP_ATTRIBUTE_EXPR,
+        LOCATIONSTEP_OTHER_EXPR,
+        OTHER_EXPR
+    };
+    virtual ExprType getType()
+    {
+      return OTHER_EXPR;
+    }
+
+    /**
+     * Returns the type or types of results this Expr return.
+     */
+    typedef PRUint16 ResultType;
+    enum {
+        NODESET_RESULT = 0x01,
+        BOOLEAN_RESULT = 0x02,
+        NUMBER_RESULT = 0x04,
+        STRING_RESULT = 0x08,
+        RTF_RESULT = 0x10,
+        ANY_RESULT = 0xFFFF
+    };
+    virtual ResultType getReturnType() = 0;
+    PRBool canReturnType(ResultType aType)
+    {
+        return (getReturnType() & aType) != 0;
+    }
+
+    typedef PRUint16 ContextSensitivity;
+    enum {
+        NO_CONTEXT = 0x00,
+        DOCUMENT_CONTEXT = 0x01,
+        NODE_ONLY_CONTEXT = 0x02,
+        NODE_CONTEXT = DOCUMENT_CONTEXT | NODE_ONLY_CONTEXT,
+        POSITION_CONTEXT = 0x04,
+        SIZE_CONTEXT = 0x08,
+        NODESET_CONTEXT = POSITION_CONTEXT | SIZE_CONTEXT,
+        VARIABLES_CONTEXT = 0x10,
+        PRIVATE_CONTEXT = 0x20,
+        ANY_CONTEXT = 0xFFFF
+    };
+
+    /**
+     * Returns true if this expression is sensitive to *any* of
+     * the requested contexts in aContexts.
+     */
+    virtual PRBool isSensitiveTo(ContextSensitivity aContexts) = 0;
+
+    /**
+     * Returns sub-expression at given position
+     */
+    virtual Expr* getSubExprAt(PRUint32 aPos) = 0;
+
+    /**
+     * Replace sub-expression at given position. Does not delete the old
+     * expression, that is the responsibility of the caller.
+     */
+    virtual void setSubExprAt(PRUint32 aPos, Expr* aExpr) = 0;
+
 #ifdef TX_TO_STRING
     /**
      * Returns the String representation of this Expr.
@@ -100,21 +163,118 @@ public:
 #endif
 }; //-- Expr
 
-#define TX_DECL_EVALUATE \
-    nsresult evaluate(txIEvalContext* aContext, txAExprResult** aResult)
-
-#ifndef TX_TO_STRING
-#define TX_DECL_EXPR TX_DECL_EVALUATE
-#define TX_DECL_FUNCTION TX_DECL_EVALUATE
+#ifdef TX_TO_STRING
+#define TX_DECL_TOSTRING \
+    void toString(nsAString& aDest);
+#define TX_DECL_GETNAMEATOM \
+    nsresult getNameAtom(nsIAtom** aAtom);
 #else
+#define TX_DECL_TOSTRING
+#define TX_DECL_GETNAMEATOM
+#endif
+
+#define TX_DECL_EXPR_BASE \
+    nsresult evaluate(txIEvalContext* aContext, txAExprResult** aResult); \
+    ResultType getReturnType(); \
+    PRBool isSensitiveTo(ContextSensitivity aContexts)
+
 #define TX_DECL_EXPR \
-    TX_DECL_EVALUATE; \
-    void toString(nsAString& aDest)
+    TX_DECL_EXPR_BASE; \
+    TX_DECL_TOSTRING \
+    Expr* getSubExprAt(PRUint32 aPos); \
+    void setSubExprAt(PRUint32 aPos, Expr* aExpr)
+
+#define TX_DECL_OPTIMIZABLE_EXPR \
+    TX_DECL_EXPR; \
+    ExprType getType()
+    
 
 #define TX_DECL_FUNCTION \
-    TX_DECL_EVALUATE; \
-    nsresult getNameAtom(nsIAtom** aAtom)
-#endif
+    TX_DECL_GETNAMEATOM \
+    TX_DECL_EXPR_BASE
+
+#define TX_IMPL_EXPR_STUBS_BASE(_class, _ReturnType)          \
+Expr::ResultType                                              \
+_class::getReturnType()                                       \
+{                                                             \
+    return _ReturnType;                                       \
+}
+
+#define TX_IMPL_EXPR_STUBS_0(_class, _ReturnType)             \
+TX_IMPL_EXPR_STUBS_BASE(_class, _ReturnType)                  \
+Expr*                                                         \
+_class::getSubExprAt(PRUint32 aPos)                           \
+{                                                             \
+    return nsnull;                                            \
+}                                                             \
+void                                                          \
+_class::setSubExprAt(PRUint32 aPos, Expr* aExpr)              \
+{                                                             \
+    NS_NOTREACHED("setting bad subexpression index");         \
+}
+
+#define TX_IMPL_EXPR_STUBS_1(_class, _ReturnType, _Expr1)     \
+TX_IMPL_EXPR_STUBS_BASE(_class, _ReturnType)                  \
+Expr*                                                         \
+_class::getSubExprAt(PRUint32 aPos)                           \
+{                                                             \
+    if (aPos == 0) {                                          \
+        return _Expr1;                                        \
+    }                                                         \
+    return nsnull;                                            \
+}                                                             \
+void                                                          \
+_class::setSubExprAt(PRUint32 aPos, Expr* aExpr)              \
+{                                                             \
+    NS_ASSERTION(aPos < 1, "setting bad subexpression index");\
+    _Expr1.forget();                                          \
+    _Expr1 = aExpr;                                           \
+}
+
+#define TX_IMPL_EXPR_STUBS_2(_class, _ReturnType, _Expr1, _Expr2) \
+TX_IMPL_EXPR_STUBS_BASE(_class, _ReturnType)                  \
+Expr*                                                         \
+_class::getSubExprAt(PRUint32 aPos)                           \
+{                                                             \
+    switch(aPos) {                                            \
+        case 0:                                               \
+            return _Expr1;                                    \
+        case 1:                                               \
+            return _Expr2;                                    \
+        default:                                              \
+            break;                                            \
+    }                                                         \
+    return nsnull;                                            \
+}                                                             \
+void                                                          \
+_class::setSubExprAt(PRUint32 aPos, Expr* aExpr)              \
+{                                                             \
+    NS_ASSERTION(aPos < 2, "setting bad subexpression index");\
+    if (aPos == 0) {                                          \
+        _Expr1.forget();                                      \
+        _Expr1 = aExpr;                                       \
+    }                                                         \
+    else {                                                    \
+        _Expr2.forget();                                      \
+        _Expr2 = aExpr;                                       \
+    }                                                         \
+}
+
+#define TX_IMPL_EXPR_STUBS_LIST(_class, _ReturnType, _ExprList) \
+TX_IMPL_EXPR_STUBS_BASE(_class, _ReturnType)                  \
+Expr*                                                         \
+_class::getSubExprAt(PRUint32 aPos)                           \
+{                                                             \
+    return NS_STATIC_CAST(Expr*, _ExprList.get(aPos));        \
+}                                                             \
+void                                                          \
+_class::setSubExprAt(PRUint32 aPos, Expr* aExpr)              \
+{                                                             \
+    NS_ASSERTION(aPos < (PRUint32)_ExprList.getLength(),      \
+                 "setting bad subexpression index");          \
+    _ExprList.replace(aPos, aExpr);                           \
+}
+
 
 /**
  * This class represents a FunctionCall as defined by the XPath 1.0
@@ -149,9 +309,9 @@ public:
                                  PRInt32 aParamCountMax,
                                  txIEvalContext* aContext);
 
-#ifdef TX_TO_STRING
-    void toString(nsAString& aDest);
-#endif
+    TX_DECL_TOSTRING
+    Expr* getSubExprAt(PRUint32 aPos);
+    void setSubExprAt(PRUint32 aPos, Expr* aExpr);
 
 protected:
 
@@ -182,6 +342,12 @@ protected:
      */
     nsresult evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
                                txNodeSet** aResult);
+
+    /**
+     * Returns true if any argument is sensitive to the given context.
+     */
+    PRBool argsSensitiveTo(ContextSensitivity aContexts);
+
 
 #ifdef TX_TO_STRING
     /*
@@ -232,22 +398,34 @@ public:
                            txIMatchContext* aContext) = 0;
     virtual double getDefaultPriority() = 0;
 
+    /**
+     * Returns the type of this nodetest.
+     */
+    enum NodeTestType {
+        NAME_TEST,
+        OTHER_TEST
+    };
+    virtual NodeTestType getType()
+    {
+      return OTHER_TEST;
+    }
+
+    /**
+     * Returns true if this expression is sensitive to *any* of
+     * the requested flags.
+     */
+    virtual PRBool isSensitiveTo(Expr::ContextSensitivity aContext) = 0;
+
 #ifdef TX_TO_STRING
     virtual void toString(nsAString& aDest) = 0;
 #endif
 };
 
-#define TX_DECL_NODE_TEST_BASE \
-    PRBool matches(const txXPathNode& aNode, txIMatchContext* aContext); \
-    double getDefaultPriority()
-
-#ifndef TX_TO_STRING
-#define TX_DECL_NODE_TEST TX_DECL_NODE_TEST_BASE
-#else
 #define TX_DECL_NODE_TEST \
-    TX_DECL_NODE_TEST_BASE; \
-    void toString(nsAString& aDest)
-#endif
+    TX_DECL_TOSTRING \
+    PRBool matches(const txXPathNode& aNode, txIMatchContext* aContext); \
+    double getDefaultPriority(); \
+    PRBool isSensitiveTo(Expr::ContextSensitivity aContext);
 
 /*
  * This class represents a NameTest as defined by the XPath spec
@@ -262,14 +440,14 @@ public:
     txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
                PRUint16 aNodeType);
 
-    ~txNameTest();
+    NodeTestType getType();
 
     TX_DECL_NODE_TEST;
 
-private:
     nsCOMPtr<nsIAtom> mPrefix;
     nsCOMPtr<nsIAtom> mLocalName;
     PRInt32 mNamespace;
+private:
     PRUint16 mNodeType;
 };
 
@@ -291,8 +469,6 @@ public:
      */
     txNodeTypeTest(NodeType aNodeType);
 
-    ~txNodeTypeTest();
-
     /*
      * Sets the name of the node to match. Only availible for pi nodes
      */
@@ -303,6 +479,21 @@ public:
 private:
     NodeType mNodeType;
     nsCOMPtr<nsIAtom> mNodeName;
+};
+
+/**
+ * Class representing a nodetest combined with a predicate. May only be used
+ * if the predicate is not sensitive to the context-nodelist.
+ */
+class txPredicatedNodeTest : public txNodeTest
+{
+public:
+    txPredicatedNodeTest(txNodeTest* aNodeTest, Expr* aPredicate);
+    TX_DECL_NODE_TEST;
+
+private:
+    nsAutoPtr<txNodeTest> mNodeTest;
+    nsAutoPtr<Expr> mPredicate;
 };
 
 /**
@@ -335,6 +526,11 @@ public:
     nsresult evaluatePredicates(txNodeSet* aNodes, txIMatchContext* aContext);
 
     /**
+     * Drops the first predicate without deleting it.
+     */
+    void dropFirst();
+
+    /**
      * returns true if this predicate list is empty
     **/
     MBool isEmpty();
@@ -352,6 +548,10 @@ public:
 #endif
 
 protected:
+    PRBool isSensitiveTo(Expr::ContextSensitivity aContext);
+    Expr* getSubExprAt(PRUint32 aPos);
+    void setSubExprAt(PRUint32 aPos, Expr* aExpr);
+
     //-- list of predicates
     List predicates;
 }; //-- PredicateList
@@ -388,7 +588,17 @@ public:
     {
     }
 
-    TX_DECL_EXPR;
+    TX_DECL_OPTIMIZABLE_EXPR;
+
+    txNodeTest* getNodeTest()
+    {
+      return mNodeTest;
+    }
+    void setNodeTest(txNodeTest* aNodeTest)
+    {
+      mNodeTest.forget();
+      mNodeTest = aNodeTest;
+    }
 
 private:
     void fromDescendants(const txXPathNode& aNode, txIMatchContext* aCs,
@@ -588,7 +798,6 @@ class VariableRefExpr : public Expr {
 public:
 
     VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID);
-    ~VariableRefExpr();
 
     TX_DECL_EXPR;
 
@@ -716,6 +925,24 @@ private:
    List expressions;
 
 }; //-- UnionExpr
+
+/**
+ * Class specializing in executing expressions like "@foo" where we are
+ * interested in different result-types, and expressions like "@foo = 'hi'"
+ */
+class txNamedAttributeStep : public Expr
+{
+public:
+    txNamedAttributeStep(PRInt32 aNsID, nsIAtom* aPrefix,
+                         nsIAtom* aLocalName);
+
+    TX_DECL_EXPR;
+
+private:
+    PRInt32 mNamespace;
+    nsCOMPtr<nsIAtom> mPrefix;
+    nsCOMPtr<nsIAtom> mLocalName;
+};
 
 /**
  *  Expression that failed to parse

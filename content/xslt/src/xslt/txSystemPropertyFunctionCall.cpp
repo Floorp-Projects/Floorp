@@ -109,6 +109,18 @@ SystemPropertyFunctionCall::evaluate(txIEvalContext* aContext,
 
 }
 
+Expr::ResultType
+SystemPropertyFunctionCall::getReturnType()
+{
+    return STRING_RESULT | NUMBER_RESULT;
+}
+
+PRBool
+SystemPropertyFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    return argsSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 nsresult
 SystemPropertyFunctionCall::getNameAtom(nsIAtom** aAtom)

@@ -67,6 +67,14 @@ RootExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return aContext->recycler()->getNodeSet(*document, aResult);
 } //-- evaluate
 
+TX_IMPL_EXPR_STUBS_0(RootExpr, NODESET_RESULT)
+
+PRBool
+RootExpr::isSensitiveTo(ContextSensitivity aContext)
+{
+    return !!(aContext & DOCUMENT_CONTEXT);
+}
+
 #ifdef TX_TO_STRING
 void
 RootExpr::toString(nsAString& dest)

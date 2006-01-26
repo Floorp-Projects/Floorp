@@ -884,6 +884,22 @@ txErrorFunctionCall::evaluate(txIEvalContext* aContext,
     return NS_ERROR_XPATH_BAD_EXTENSION_FUNCTION;
 }
 
+Expr::ResultType
+txErrorFunctionCall::getReturnType()
+{
+    // It doesn't really matter what we return here, but it might
+    // be a good idea to try to keep this as unoptimizable as possible
+    return ANY_RESULT;
+}
+
+PRBool
+txErrorFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    // It doesn't really matter what we return here, but it might
+    // be a good idea to try to keep this as unoptimizable as possible
+    return PR_TRUE;
+}
+
 #ifdef TX_TO_STRING
 nsresult
 txErrorFunctionCall::getNameAtom(nsIAtom** aAtom)

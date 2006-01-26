@@ -75,6 +75,14 @@ public:
     PRInt32 getLength();
 
     /**
+     * Returns true if there are no items in this txList
+     */
+    inline PRBool isEmpty()
+    {
+        return itemCount == 0;
+    }
+
+    /**
      * Adds the given Object to the specified position in the list
     **/
     nsresult insert(int index, void* objPtr);
@@ -94,6 +102,14 @@ public:
      */
     void clear();
 
+    /**
+     * Replaces the Object at the given index with a new Object.
+     * If the given index is outside the list null is returned.
+     * @param aIndex  index of Object to replace.
+     * @param aObjPtr new Object to put in the list.
+     * @return the old Object pointer
+     */
+    void* replace(PRUint32 aIndex, void* aObjPtr);
 
 protected:
 

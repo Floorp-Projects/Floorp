@@ -12,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is TransforMiiX XSLT processor code.
+ * The Original Code is TransforMiiX XSLT processor.
  *
  * The Initial Developer of the Original Code is
- * Jonas Sicking.
- * Portions created by the Initial Developer are Copyright (C) 2005
- * the Initial Developer. All Rights Reserved.
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonas Sicking <jonas@sicking.cc> (Original Author)
+ *   IBM Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,41 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txError.h"
-#include "txExpr.h"
-#include "nsString.h"
-#include "txIXPathContext.h"
+#ifndef txPatternOptimizer_h__
+#define txPatternOptimizer_h__
 
-nsresult
-txErrorExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
+#include "txXPathOptimizer.h"
+
+class txPattern;
+
+class txPatternOptimizer
 {
-    *aResult = nsnull;
+public:
+    /**
+     * Optimize the given pattern.
+     * @param aInPattern    Pattern to optimize.
+     * @param aOutPattern   Resulting pattern, null if optimization didn't
+     *                      result in a new pattern.
+     */
+    nsresult optimize(txPattern* aInPattern, txPattern** aOutPattern);
 
-    nsAutoString err(NS_LITERAL_STRING("Invalid expression evaluated"));
-#ifdef TX_TO_STRING
-    err.AppendLiteral(": ");
-    toString(err);
-#endif
-    aContext->receiveError(err,
-                           NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED);
+private:
 
-    return NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED;
-}
+    // Helper methods for optimizing specific classes
+    nsresult optimizeStep(txPattern* aInPattern, txPattern** aOutPattern);
 
-TX_IMPL_EXPR_STUBS_0(txErrorExpr, ANY_RESULT)
+    txXPathOptimizer mXPathOptimizer;
+};
 
-PRBool
-txErrorExpr::isSensitiveTo(ContextSensitivity aContext)
-{
-    // It doesn't really matter what we return here, but it might
-    // be a good idea to try to keep this as unoptimizable as possible
-    return PR_TRUE;
-}
-
-#ifdef TX_TO_STRING
-void
-txErrorExpr::toString(nsAString& aStr)
-{
-    aStr.Append(mStr);
-}
-#endif
+#endif //txPatternOptimizer_h__

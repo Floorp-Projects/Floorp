@@ -406,6 +406,18 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
     return aContext->recycler()->getStringResult(res, aResult);
 } //-- evaluate
 
+Expr::ResultType
+txFormatNumberFunctionCall::getReturnType()
+{
+    return STRING_RESULT;
+}
+
+PRBool
+txFormatNumberFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    return argsSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 nsresult
 txFormatNumberFunctionCall::getNameAtom(nsIAtom** aAtom)

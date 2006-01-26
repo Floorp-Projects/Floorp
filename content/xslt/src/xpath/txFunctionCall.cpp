@@ -171,6 +171,33 @@ PRBool FunctionCall::requireParams(PRInt32 aParamCountMin,
     return PR_TRUE;
 }
 
+Expr*
+FunctionCall::getSubExprAt(PRUint32 aPos)
+{
+    return NS_STATIC_CAST(Expr*, params.get(aPos));
+}
+
+void
+FunctionCall::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+{
+    NS_ASSERTION(aPos < (PRUint32)params.getLength(),
+                 "setting bad subexpression index");
+    params.replace(aPos, aExpr);
+}
+
+PRBool
+FunctionCall::argsSensitiveTo(ContextSensitivity aContext)
+{
+    txListIterator iter(&params);
+    while (iter.hasNext()) {
+        if (NS_STATIC_CAST(Expr*, iter.next())->isSensitiveTo(aContext)) {
+            return PR_TRUE;
+        }
+    }
+
+    return PR_FALSE;
+}
+
 #ifdef TX_TO_STRING
 void
 FunctionCall::toString(nsAString& aDest)

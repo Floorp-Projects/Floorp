@@ -105,6 +105,22 @@ GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
     return NS_OK;
 }
 
+Expr::ResultType
+GenerateIdFunctionCall::getReturnType()
+{
+    return STRING_RESULT;
+}
+
+PRBool
+GenerateIdFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    if (params.isEmpty()) {
+        return !!(aContext & NODE_CONTEXT);
+    }
+
+    return argsSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 nsresult
 GenerateIdFunctionCall::getNameAtom(nsIAtom** aAtom)

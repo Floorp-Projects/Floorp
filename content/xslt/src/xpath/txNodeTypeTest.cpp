@@ -49,10 +49,6 @@ txNodeTypeTest::txNodeTypeTest(NodeType aNodeType)
 {
 }
 
-txNodeTypeTest::~txNodeTypeTest()
-{
-}
-
 void txNodeTypeTest::setNodeName(const nsAString& aName)
 {
     mNodeName = do_GetAtom(aName);
@@ -92,6 +88,12 @@ PRBool txNodeTypeTest::matches(const txXPathNode& aNode,
 double txNodeTypeTest::getDefaultPriority()
 {
     return mNodeName ? 0 : -0.5;
+}
+
+PRBool
+txNodeTypeTest::isSensitiveTo(Expr::ContextSensitivity aContext)
+{
+    return !!(aContext & Expr::NODE_CONTEXT);
 }
 
 #ifdef TX_TO_STRING

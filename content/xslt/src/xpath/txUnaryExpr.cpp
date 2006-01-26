@@ -69,6 +69,14 @@ UnaryExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 #endif
 }
 
+TX_IMPL_EXPR_STUBS_1(UnaryExpr, NODESET_RESULT, expr)
+
+PRBool
+UnaryExpr::isSensitiveTo(ContextSensitivity aContext)
+{
+    return expr->isSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 void
 UnaryExpr::toString(nsAString& str)

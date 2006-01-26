@@ -517,6 +517,22 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
   return NS_ERROR_UNEXPECTED;
 }
 
+Expr::ResultType
+XFormsFunctionCall::getReturnType()
+{
+    // It doesn't really matter what we return here, but it might
+    // be a good idea to try to keep this as unoptimizable as possible
+    return ANY_RESULT;
+}
+
+PRBool
+XFormsFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    // It doesn't really matter what we return here, but it might
+    // be a good idea to try to keep this as unoptimizable as possible
+    return PR_TRUE;
+}
+
 #ifdef TX_TO_STRING
 nsresult
 XFormsFunctionCall::getNameAtom(nsIAtom** aAtom)

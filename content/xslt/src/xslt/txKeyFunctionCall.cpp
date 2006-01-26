@@ -126,6 +126,18 @@ txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 }
 
+Expr::ResultType
+txKeyFunctionCall::getReturnType()
+{
+    return NODESET_RESULT;
+}
+
+PRBool
+txKeyFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    return (aContext & DOCUMENT_CONTEXT) || argsSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 nsresult
 txKeyFunctionCall::getNameAtom(nsIAtom** aAtom)

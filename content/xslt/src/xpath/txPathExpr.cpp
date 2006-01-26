@@ -102,13 +102,29 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     *aResult = nsnull;
 
-    nsRefPtr<txNodeSet> nodes;
-    nsresult rv = aContext->recycler()->getNodeSet(aContext->getContextNode(),
-                                                   getter_AddRefs(nodes));
+    // We need to evaluate the first step with the current context since it
+    // can depend on the context size and position. For example:
+    // key('books', concat('book', position()))
+    txListIterator iter(&expressions);
+    PathExprItem* pxi = NS_STATIC_CAST(PathExprItem*, iter.next());
+    nsRefPtr<txAExprResult> res;
+    nsresult rv = pxi->expr->evaluate(aContext, getter_AddRefs(res));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    txListIterator iter(&expressions);
-    PathExprItem* pxi;
+    NS_ENSURE_TRUE(res->getResultType() == txAExprResult::NODESET,
+                   NS_ERROR_XSLT_NODESET_EXPECTED);
+
+    nsRefPtr<txNodeSet> nodes = NS_STATIC_CAST(txNodeSet*,
+                                               NS_STATIC_CAST(txAExprResult*,
+                                                              res));
+    if (nodes->isEmpty()) {
+        res.swap(*aResult);
+
+        return NS_OK;
+    }
+    res = nsnull; // To allow recycling
+
+    // Evaluate remaining steps
     while ((pxi = (PathExprItem*)iter.next())) {
         nsRefPtr<txNodeSet> tmpNodes;
         txNodeSetContext eContext(nodes, aContext);
@@ -215,6 +231,53 @@ PathExpr::evalDescendants(Expr* aStep, const txXPathNode& aNode,
 
     return NS_OK;
 } //-- evalDescendants
+
+TX_IMPL_EXPR_STUBS_BASE(PathExpr, NODESET_RESULT)
+
+Expr*
+PathExpr::getSubExprAt(PRUint32 aPos)
+{
+    PathExprItem* pxi = NS_STATIC_CAST(PathExprItem*, expressions.get(aPos));
+
+    return pxi ? pxi->expr.get() : nsnull;
+}
+void
+PathExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+{
+    NS_ASSERTION(aPos < (PRUint32)expressions.getLength(),
+                 "setting bad subexpression index");
+    PathExprItem* pxi = NS_STATIC_CAST(PathExprItem*, expressions.get(aPos));
+    pxi->expr.forget();
+    pxi->expr = aExpr;
+}
+
+
+PRBool
+PathExpr::isSensitiveTo(ContextSensitivity aContext)
+{
+    txListIterator iter(&expressions);
+    PathExprItem* pxi = NS_STATIC_CAST(PathExprItem*, iter.next());
+    if (pxi->expr->isSensitiveTo(aContext)) {
+        return PR_TRUE;
+    }
+
+    // We're creating a new node/nodeset so we can ignore those bits.
+    Expr::ContextSensitivity context =
+        aContext & ~(Expr::NODE_CONTEXT | Expr::NODESET_CONTEXT);
+    if (context == NO_CONTEXT) {
+        return PR_FALSE;
+    }
+
+    while ((pxi = NS_STATIC_CAST(PathExprItem*, iter.next()))) {
+        NS_ASSERTION(!pxi->expr->isSensitiveTo(Expr::NODESET_CONTEXT),
+                     "Step cannot depend on nodeset-context");
+        if (pxi->expr->isSensitiveTo(context)) {
+            return PR_TRUE;
+        }
+    }
+
+    return PR_FALSE;
+}
 
 #ifdef TX_TO_STRING
 void

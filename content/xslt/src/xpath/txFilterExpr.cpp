@@ -86,6 +86,36 @@ FilterExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 } //-- evaluate
 
+TX_IMPL_EXPR_STUBS_BASE(FilterExpr, NODESET_RESULT)
+
+Expr*
+FilterExpr::getSubExprAt(PRUint32 aPos)
+{
+    if (aPos == 0) {
+      return expr;
+    }
+    return PredicateList::getSubExprAt(aPos - 1);
+}
+
+void
+FilterExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+{
+    if (aPos == 0) {
+      expr.forget();
+      expr = aExpr;
+    }
+    else {
+      PredicateList::setSubExprAt(aPos - 1, aExpr);
+    }
+}
+
+PRBool
+FilterExpr::isSensitiveTo(ContextSensitivity aContext)
+{
+    return expr->isSensitiveTo(aContext) ||
+           PredicateList::isSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 void
 FilterExpr::toString(nsAString& str)

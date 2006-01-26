@@ -152,6 +152,25 @@ txXPathTreeWalker::moveToValidAttribute(PRUint32 aStartIndex)
 }
 
 PRBool
+txXPathTreeWalker::moveToNamedAttribute(nsIAtom* aLocalName, PRInt32 aNSID)
+{
+    if (!mPosition.isContent()) {
+        return PR_FALSE;
+    }
+
+    const nsAttrName* name;
+    PRUint32 i;
+    for (i = 0; (name = mPosition.mContent->GetAttrNameAt(i)); ++i) {
+        if (name->Equals(aLocalName, aNSID)) {
+            mPosition.mIndex = i;
+
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
+}
+
+PRBool
 txXPathTreeWalker::moveToFirstChild()
 {
     if (mPosition.isAttribute()) {

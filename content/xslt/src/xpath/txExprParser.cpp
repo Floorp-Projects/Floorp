@@ -51,6 +51,7 @@
 #include "txIXPathContext.h"
 #include "txStringUtils.h"
 #include "txXPathNode.h"
+#include "txXPathOptimizer.h"
 
 /**
  * Creates an Attribute Value Template using the given value
@@ -193,10 +194,9 @@ txExprParser::createExprInternal(const nsSubstring& aExpression,
         aContext->SetErrorOffset(lexer.mPosition - start + aSubStringPos);
         return rv;
     }
-    rv = createExpr(lexer, aContext, aExpr);
+    nsAutoPtr<Expr> expr;
+    rv = createExpr(lexer, aContext, getter_Transfers(expr));
     if (NS_SUCCEEDED(rv) && lexer.peek()->mType != Token::END) {
-        delete *aExpr;
-        *aExpr = nsnull;
         rv = NS_ERROR_XPATH_BINARY_EXPECTED;
     }
     if (NS_FAILED(rv)) {
@@ -204,7 +204,15 @@ txExprParser::createExprInternal(const nsSubstring& aExpression,
         aExpression.BeginReading(start);
         aContext->SetErrorOffset(lexer.peek()->mStart - start + aSubStringPos);
     }
-    return rv;
+
+    txXPathOptimizer optimizer;
+    Expr* newExpr = nsnull;
+    rv = optimizer.optimize(expr, &newExpr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aExpr = newExpr ? newExpr : expr.forget();
+
+    return NS_OK;
 }
 
 /**

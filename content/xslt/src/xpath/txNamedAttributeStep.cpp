@@ -12,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is TransforMiiX XSLT processor code.
+ * The Original Code is TransforMiiX XSLT processor.
  *
  * The Initial Developer of the Original Code is
- * Jonas Sicking.
- * Portions created by the Initial Developer are Copyright (C) 2005
- * the Initial Developer. All Rights Reserved.
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonas Sicking <jonas@sicking.cc> (Original Author)
+ *   IBM Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,41 +36,61 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txError.h"
-#include "txExpr.h"
-#include "nsString.h"
+#include "nsIAtom.h"
 #include "txIXPathContext.h"
+#include "txNodeSet.h"
+#include "txExpr.h"
+
+txNamedAttributeStep::txNamedAttributeStep(PRInt32 aNsID,
+                                           nsIAtom* aPrefix,
+                                           nsIAtom* aLocalName)
+    : mNamespace(aNsID),
+      mPrefix(aPrefix),
+      mLocalName(aLocalName)
+{
+}
 
 nsresult
-txErrorExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
+txNamedAttributeStep::evaluate(txIEvalContext* aContext,
+                               txAExprResult** aResult)
 {
     *aResult = nsnull;
 
-    nsAutoString err(NS_LITERAL_STRING("Invalid expression evaluated"));
-#ifdef TX_TO_STRING
-    err.AppendLiteral(": ");
-    toString(err);
-#endif
-    aContext->receiveError(err,
-                           NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED);
+    nsRefPtr<txNodeSet> nodes;
+    nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED;
+    txXPathTreeWalker walker(aContext->getContextNode());
+    if (walker.moveToNamedAttribute(mLocalName, mNamespace)) {
+        rv = nodes->append(walker.getCurrentPosition());
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    NS_ADDREF(*aResult = nodes);
+
+    return NS_OK;
 }
 
-TX_IMPL_EXPR_STUBS_0(txErrorExpr, ANY_RESULT)
+TX_IMPL_EXPR_STUBS_0(txNamedAttributeStep, NODESET_RESULT);
 
 PRBool
-txErrorExpr::isSensitiveTo(ContextSensitivity aContext)
+txNamedAttributeStep::isSensitiveTo(ContextSensitivity aContext)
 {
-    // It doesn't really matter what we return here, but it might
-    // be a good idea to try to keep this as unoptimizable as possible
-    return PR_TRUE;
+    return !!(aContext & NODE_CONTEXT);
 }
 
 #ifdef TX_TO_STRING
 void
-txErrorExpr::toString(nsAString& aStr)
+txNamedAttributeStep::toString(nsAString& aDest)
 {
-    aStr.Append(mStr);
+    aDest.Append(PRUnichar('@'));
+    if (mPrefix) {
+        nsAutoString prefix;
+        mPrefix->ToString(prefix);
+        aDest.Append(prefix);
+        aDest.Append(PRUnichar(':'));
+    }
+    nsAutoString localName;
+    mLocalName->ToString(localName);
+    aDest.Append(localName);
 }
 #endif

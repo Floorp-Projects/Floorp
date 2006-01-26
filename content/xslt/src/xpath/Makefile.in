@@ -78,6 +78,7 @@ CPPSRCS = txAdditiveExpr.cpp \
         txNumberFunctionCall.cpp \
         txNumberResult.cpp \
         txPathExpr.cpp \
+        txPredicatedNodeTest.cpp \
         txPredicateList.cpp \
         txRelationalExpr.cpp \
         txRootExpr.cpp \
@@ -86,6 +87,7 @@ CPPSRCS = txAdditiveExpr.cpp \
         txErrorExpr.cpp \
         txLiteralExpr.cpp \
         txNameTest.cpp \
+        txNamedAttributeStep.cpp \
         txNodeSet.cpp \
         txNodeTypeTest.cpp \
         txForwardContext.cpp \
@@ -93,7 +95,8 @@ CPPSRCS = txAdditiveExpr.cpp \
         txResultRecycler.cpp \
         txUnionExpr.cpp \
         txUnaryExpr.cpp \
-        txVariableRefExpr.cpp
+        txVariableRefExpr.cpp \
+        txXPathOptimizer.cpp
 ifndef MOZ_XSLT_STANDALONE
 CPPSRCS += nsXPathEvaluator.cpp \
            nsXPathExpression.cpp \

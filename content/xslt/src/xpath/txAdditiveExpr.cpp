@@ -83,6 +83,15 @@ AdditiveExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return aContext->recycler()->getNumberResult(result, aResult);
 } //-- evaluate
 
+TX_IMPL_EXPR_STUBS_2(AdditiveExpr, NUMBER_RESULT, leftExpr, rightExpr)
+
+PRBool
+AdditiveExpr::isSensitiveTo(ContextSensitivity aContext)
+{
+    return leftExpr->isSensitiveTo(aContext) ||
+           rightExpr->isSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 void
 AdditiveExpr::toString(nsAString& str)
@@ -103,4 +112,3 @@ AdditiveExpr::toString(nsAString& str)
 
 }
 #endif
-

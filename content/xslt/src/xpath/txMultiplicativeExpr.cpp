@@ -114,6 +114,15 @@ MultiplicativeExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return aContext->recycler()->getNumberResult(result, aResult);
 } //-- evaluate
 
+TX_IMPL_EXPR_STUBS_2(MultiplicativeExpr, NUMBER_RESULT, leftExpr, rightExpr)
+
+PRBool
+MultiplicativeExpr::isSensitiveTo(ContextSensitivity aContext)
+{
+    return leftExpr->isSensitiveTo(aContext) ||
+           rightExpr->isSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 void
 MultiplicativeExpr::toString(nsAString& str)

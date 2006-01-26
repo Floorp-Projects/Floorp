@@ -85,6 +85,15 @@ BooleanExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 } //-- evaluate
 
+TX_IMPL_EXPR_STUBS_2(BooleanExpr, BOOLEAN_RESULT, leftExpr, rightExpr)
+
+PRBool
+BooleanExpr::isSensitiveTo(ContextSensitivity aContext)
+{
+    return leftExpr->isSensitiveTo(aContext) ||
+           rightExpr->isSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 void
 BooleanExpr::toString(nsAString& str)

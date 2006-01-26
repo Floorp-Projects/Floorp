@@ -58,13 +58,6 @@ VariableRefExpr::VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName,
         mPrefix = 0;
 }
 
-/*
- * Release the local name atom
- */
-VariableRefExpr::~VariableRefExpr()
-{
-}
-
 /**
  * Evaluates this Expr based on the given context node and processor state
  * @param context the context node for evaluation of this Expr
@@ -81,6 +74,14 @@ VariableRefExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       return rv;
     }
     return NS_OK;
+}
+
+TX_IMPL_EXPR_STUBS_0(VariableRefExpr, ANY_RESULT)
+
+PRBool
+VariableRefExpr::isSensitiveTo(ContextSensitivity aContext)
+{
+    return !!(aContext & VARIABLES_CONTEXT);
 }
 
 #ifdef TX_TO_STRING

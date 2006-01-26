@@ -60,6 +60,38 @@ txLiteralExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 }
 
+static Expr::ResultType resultTypes[] =
+{
+    Expr::NODESET_RESULT, // NODESET
+    Expr::BOOLEAN_RESULT, // BOOLEAN
+    Expr::NUMBER_RESULT,  // NUMBER
+    Expr::STRING_RESULT,  // STRING
+    Expr::RTF_RESULT      // RESULT_TREE_FRAGMENT
+};
+
+Expr::ResultType
+txLiteralExpr::getReturnType()
+{
+    return resultTypes[mValue->getResultType()];
+}
+
+Expr*
+txLiteralExpr::getSubExprAt(PRUint32 aPos)
+{
+    return nsnull;
+}
+void
+txLiteralExpr::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+{
+    NS_NOTREACHED("setting bad subexpression index");
+}
+
+PRBool
+txLiteralExpr::isSensitiveTo(ContextSensitivity aContext)
+{
+    return PR_FALSE;
+}
+
 #ifdef TX_TO_STRING
 void
 txLiteralExpr::toString(nsAString& aStr)

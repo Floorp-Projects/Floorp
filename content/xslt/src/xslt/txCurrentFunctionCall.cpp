@@ -35,7 +35,19 @@ CurrentFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         return NS_ERROR_UNEXPECTED;
     }
     return aContext->recycler()->getNodeSet(
-          es->getEvalContext()->getContextNode(), aResult);
+           es->getEvalContext()->getContextNode(), aResult);
+}
+
+Expr::ResultType
+CurrentFunctionCall::getReturnType()
+{
+    return NODESET_RESULT;
+}
+
+PRBool
+CurrentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    return (aContext & PRIVATE_CONTEXT);
 }
 
 #ifdef TX_TO_STRING

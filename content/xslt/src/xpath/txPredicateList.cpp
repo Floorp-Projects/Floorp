@@ -116,6 +116,12 @@ PredicateList::evaluatePredicates(txNodeSet* nodes,
     return NS_OK;
 }
 
+void
+PredicateList::dropFirst()
+{
+    predicates.remove(predicates.get(0));
+}
+
 /*
  * returns true if this predicate list is empty
  */
@@ -123,6 +129,40 @@ MBool PredicateList::isEmpty()
 {
     return (MBool)(predicates.getLength() == 0);
 } // isEmpty
+
+Expr*
+PredicateList::getSubExprAt(PRUint32 aPos)
+{
+    return NS_STATIC_CAST(Expr*, predicates.get(aPos));
+}
+
+void
+PredicateList::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+{
+    NS_ASSERTION(aPos < (PRUint32)predicates.getLength(),
+                 "setting bad subexpression index");
+    predicates.replace(aPos, aExpr);
+}
+
+PRBool
+PredicateList::isSensitiveTo(Expr::ContextSensitivity aContext)
+{
+    // We're creating a new node/nodeset so we can ignore those bits.
+    Expr::ContextSensitivity context =
+        aContext & ~(Expr::NODE_CONTEXT | Expr::NODESET_CONTEXT);
+    if (context == Expr::NO_CONTEXT) {
+        return PR_FALSE;
+    }
+
+    txListIterator iter(&predicates);
+    while (iter.hasNext()) {
+        if (NS_STATIC_CAST(Expr*, iter.next())->isSensitiveTo(context)) {
+            return PR_TRUE;
+        }
+    }
+
+    return PR_FALSE;
+}
 
 #ifdef TX_TO_STRING
 void PredicateList::toString(nsAString& dest)

@@ -12,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is TransforMiiX XSLT processor code.
+ * The Original Code is TransforMiiX XSLT processor.
  *
  * The Initial Developer of the Original Code is
- * Jonas Sicking.
- * Portions created by the Initial Developer are Copyright (C) 2005
- * the Initial Developer. All Rights Reserved.
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonas Sicking <jonas@sicking.cc> (Original Author)
+ *   IBM Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,41 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txError.h"
-#include "txExpr.h"
-#include "nsString.h"
-#include "txIXPathContext.h"
+#ifndef txXPathOptimizer_h__
+#define txXPathOptimizer_h__
 
-nsresult
-txErrorExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
+#include "txCore.h"
+
+class Expr;
+
+class txXPathOptimizer
 {
-    *aResult = nsnull;
+public:
+    /**
+     * Optimize the given expression.
+     * @param aInExpr       Expression to optimize.
+     * @param aOutExpr      Resulting expression, null if optimization didn't
+     *                      result in a new expression.
+     */
+    nsresult optimize(Expr* aInExpr, Expr** aOutExpr);
 
-    nsAutoString err(NS_LITERAL_STRING("Invalid expression evaluated"));
-#ifdef TX_TO_STRING
-    err.AppendLiteral(": ");
-    toString(err);
-#endif
-    aContext->receiveError(err,
-                           NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED);
+private:
+    // Helper methods for optimizing specific classes
+    nsresult optimizeAttributeStep(Expr* aInExpr, Expr** aOutExpr);
+    nsresult optimizeStep(Expr* aInExpr, Expr** aOutExpr);
+};
 
-    return NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED;
-}
-
-TX_IMPL_EXPR_STUBS_0(txErrorExpr, ANY_RESULT)
-
-PRBool
-txErrorExpr::isSensitiveTo(ContextSensitivity aContext)
-{
-    // It doesn't really matter what we return here, but it might
-    // be a good idea to try to keep this as unoptimizable as possible
-    return PR_TRUE;
-}
-
-#ifdef TX_TO_STRING
-void
-txErrorExpr::toString(nsAString& aStr)
-{
-    aStr.Append(mStr);
-}
 #endif

@@ -227,6 +227,59 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_ERROR_UNEXPECTED;
 }
 
+static Expr::ResultType resultTypes[] =
+{
+    Expr::NUMBER_RESULT,  // COUNT
+    Expr::NODESET_RESULT, // ID
+    Expr::NUMBER_RESULT,  // LAST
+    Expr::STRING_RESULT,  // LOCAL_NAME
+    Expr::STRING_RESULT,  // NAMESPACE_URI
+    Expr::STRING_RESULT,  // NAME
+    Expr::NUMBER_RESULT   // POSITION
+};
+
+Expr::ResultType
+NodeSetFunctionCall::getReturnType()
+{
+    return resultTypes[mType];
+}
+
+PRBool
+NodeSetFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    switch (mType) {
+        case COUNT:
+        {
+            return argsSensitiveTo(aContext);
+        }
+        case ID:
+        {
+            return (aContext & DOCUMENT_CONTEXT) ||
+                   argsSensitiveTo(aContext);
+        }
+        case LAST:
+        {
+            return !!(aContext & SIZE_CONTEXT);
+        }
+        case LOCAL_NAME:
+        case NAME:
+        case NAMESPACE_URI:
+        {
+            if (params.isEmpty()) {
+                return !!(aContext & NODE_CONTEXT);
+            }
+            return argsSensitiveTo(aContext);
+        }
+        case POSITION:
+        {
+            return !!(aContext & POSITION_CONTEXT);
+        }
+    }
+
+    NS_NOTREACHED("how'd we get here?");
+    return PR_TRUE;
+}
+
 #ifdef TX_TO_STRING
 nsresult
 NodeSetFunctionCall::getNameAtom(nsIAtom** aAtom)

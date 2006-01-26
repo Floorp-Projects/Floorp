@@ -58,8 +58,10 @@ class txAExprResult : public TxObject
 {
 public:
     friend class txResultRecycler;
+
+    // Update txLiteralExpr::getReturnType if this enum is changed.
     enum ResultType {
-        NODESET,
+        NODESET = 0,
         BOOLEAN,
         NUMBER,
         STRING,

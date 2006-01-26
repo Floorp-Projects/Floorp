@@ -205,6 +205,15 @@ RelationalExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 }
 
+TX_IMPL_EXPR_STUBS_2(RelationalExpr, BOOLEAN_RESULT, mLeftExpr, mRightExpr)
+
+PRBool
+RelationalExpr::isSensitiveTo(ContextSensitivity aContext)
+{
+    return mLeftExpr->isSensitiveTo(aContext) ||
+           mRightExpr->isSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 void
 RelationalExpr::toString(nsAString& str)

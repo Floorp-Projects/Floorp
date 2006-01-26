@@ -134,6 +134,31 @@ txXPathTreeWalker::moveToNextAttribute()
 }
 
 PRBool
+txXPathTreeWalker::moveToNamedAttribute(nsIAtom* aLocalName, PRInt32 aNSID)
+{
+    if (INNER->nodeType != Node::ELEMENT_NODE) {
+        return PR_FALSE;
+    }
+
+    Element* element = NS_STATIC_CAST(Element*, INNER);
+    NamedNodeMap* attrs = element->getAttributes();
+    NodeListDefinition::ListItem* item = attrs->firstItem;
+    // find requested attribute
+    nsCOMPtr<nsIAtom> localName;
+    while (item && (item->node->getNamespaceID() != aNSID ||
+                    !item->node->getLocalName(getter_AddRefs(localName)) || 
+                    localName != aLocalName) {
+        item = item->next;
+    }
+    if (!item) {
+        return PR_FALSE;
+    }
+
+    INNER = NS_STATIC_CAST(NodeDefinition*, item->node);
+    return PR_TRUE;
+}
+
+PRBool
 txXPathTreeWalker::moveToFirstChild()
 {
     if (!INNER->firstChild) {
