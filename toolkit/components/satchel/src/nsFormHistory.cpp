@@ -88,18 +88,21 @@ nsFormHistory::nsFormHistory() :
   mStore(nsnull),
   mTable(nsnull)
 {
+  NS_ASSERTION(!gFormHistory, "nsFormHistory must be used as a service");
+  gFormHistory = this;
 }
 
 nsFormHistory::~nsFormHistory()
 {
+  NS_ASSERTION(gFormHistory == this,
+               "nsFormHistory must be used as a service");
   CloseDatabase();
+  gFormHistory = nsnull;
 }
 
 nsresult
 nsFormHistory::Init()
 {
-  gFormHistory = this;
-
   nsCOMPtr<nsIObserverService> service = do_GetService("@mozilla.org/observer-service;1");
   if (service)
     service->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
@@ -108,35 +111,6 @@ nsFormHistory::Init()
 }
 
 nsFormHistory *nsFormHistory::gFormHistory = nsnull;
-
-nsFormHistory *
-nsFormHistory::GetInstance()
-{
-  if (!gFormHistory) {
-    gFormHistory = new nsFormHistory();
-    if (!gFormHistory)
-      return nsnull;
-
-    NS_ADDREF(gFormHistory);  // addref for the global
-
-    if (NS_FAILED(gFormHistory->Init())) {
-      NS_RELEASE(gFormHistory);
-
-      return nsnull;
-    }  
-  }
-
-  NS_ADDREF(gFormHistory);   // addref for the getter
-
-  return gFormHistory;
-}
-
-
-void
-nsFormHistory::ReleaseInstance()
-{
-  NS_IF_RELEASE(gFormHistory);
-}
 
 /* static */ PRBool
 nsFormHistory::FormHistoryEnabled()
@@ -164,60 +138,16 @@ nsFormHistory::FormHistoryEnabled()
 //// nsIFormHistory
 
 NS_IMETHODIMP
-nsFormHistory::GetRowCount(PRUint32 *aRowCount)
+nsFormHistory::GetHasEntries(PRBool *aHasEntries)
 {
   nsresult rv = OpenDatabase(); // lazily ensure that the database is open
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mdb_err err = mTable->GetCount(mEnv, aRowCount);
+  PRUint32 rowCount;
+  mdb_err err = mTable->GetCount(mEnv, &rowCount);
   NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
-  
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-nsFormHistory::GetEntryAt(PRUint32 aIndex, nsAString &aName, nsAString &aValue)
-{
-  nsresult rv = OpenDatabase(); // lazily ensure that the database is open
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIMdbRow> row;
-  mdb_err err = mTable->PosToRow(mEnv, aIndex, getter_AddRefs(row));
-  NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
-  
-  GetRowValue(row, kToken_NameColumn, aName);
-  GetRowValue(row, kToken_ValueColumn, aValue);
-    
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormHistory::GetNameAt(PRUint32 aIndex, nsAString &aName)
-{
-  nsresult rv = OpenDatabase(); // lazily ensure that the database is open
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIMdbRow> row;
-  mdb_err err = mTable->PosToRow(mEnv, aIndex, getter_AddRefs(row));
-  NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
-  
-  GetRowValue(row, kToken_NameColumn, aName);
-    
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormHistory::GetValueAt(PRUint32 aIndex, nsAString &aValue)
-{
-  nsresult rv = OpenDatabase(); // lazily ensure that the database is open
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIMdbRow> row;
-  mdb_err err = mTable->PosToRow(mEnv, aIndex, getter_AddRefs(row));
-  NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
-  
-  GetRowValue(row, kToken_ValueColumn, aValue);
-    
+  *aHasEntries = rowCount != 0;
   return NS_OK;
 }
 
@@ -236,12 +166,6 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
 }
 
 NS_IMETHODIMP
-nsFormHistory::RemoveEntryAt(PRUint32 index)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsFormHistory::EntryExists(const nsAString &aName, const nsAString &aValue, PRBool *_retval)
 {
   return EntriesExistInternal(&aName, &aValue, _retval);
@@ -251,6 +175,12 @@ NS_IMETHODIMP
 nsFormHistory::NameExists(const nsAString &aName, PRBool *_retval)
 {
   return EntriesExistInternal(&aName, nsnull, _retval);
+}
+
+NS_IMETHODIMP
+nsFormHistory::RemoveEntry(const nsAString &aName, const nsAString &aValue)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

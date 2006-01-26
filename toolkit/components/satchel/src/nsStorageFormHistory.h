@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,16 +40,28 @@
 #define __nsFormHistory__
 
 #include "nsIFormHistory.h"
-#include "nsIAutoCompleteResultTypes.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"
 #include "nsWeakReference.h"
-#include "mdb.h"
-#include "nsIServiceManager.h"
+
+#include "mozIStorageService.h"
+#include "mozIStorageConnection.h"
+#include "mozIStorageStatement.h"
+
+#include "nsServiceManagerUtils.h"
 #include "nsToolkitCompsCID.h"
+#ifdef MOZ_MORKREADER
+#include "nsMorkReader.h"
+#endif
+
+class nsIAutoCompleteSimpleResult;
+class nsIAutoCompleteResult;
+
+#define NS_FORMHISTORY_IID \
+{0xc4a47315, 0xaeb5, 0x4039, {0x9f, 0x34, 0x45, 0x11, 0xb3, 0xa7, 0x58, 0xdd}}
 
 class nsFormHistory : public nsIFormHistory,
                       public nsIObserver,
@@ -56,6 +69,12 @@ class nsFormHistory : public nsIFormHistory,
                       public nsSupportsWeakReference
 {
 public:
+#ifdef MOZILLA_1_8_BRANCH
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_FORMHISTORY_IID)
+#else
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_FORMHISTORY_IID)
+#endif
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFORMHISTORY
   NS_DECL_NSIOBSERVER
@@ -64,10 +83,9 @@ public:
   NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit);
 
   nsFormHistory();
-  virtual ~nsFormHistory();
   nsresult Init();
 
-  static nsFormHistory *GetInstance()
+  static nsFormHistory* GetInstance()
     {
       if (!gFormHistory) {
         nsCOMPtr<nsIFormHistory> fh = do_GetService(NS_FORMHISTORY_CONTRACTID);
@@ -75,53 +93,56 @@ public:
       return gFormHistory;
     }
 
-  nsresult AutoCompleteSearch(const nsAString &aInputName, const nsAString &aInputValue,
-                              nsIAutoCompleteMdbResult *aPrevResult, nsIAutoCompleteResult **aNewResult);
+  mozIStorageConnection* GetStorageConnection() { return mDBConn; }
 
-  static mdb_column kToken_ValueColumn;
-  static mdb_column kToken_NameColumn;
+  nsresult AutoCompleteSearch(const nsAString &aInputName,
+			      const nsAString &aInputValue,
+                              nsIAutoCompleteSimpleResult *aPrevResult,
+			      nsIAutoCompleteResult **aNewResult);
 
-protected:
+ private:
+  ~nsFormHistory();
+
+ protected:
   // Database I/O
   nsresult OpenDatabase();
-  nsresult OpenExistingFile(const char *aPath);
-  nsresult CreateNewFile(const char *aPath);
   nsresult CloseDatabase();
-  nsresult CreateTokens();
-  nsresult Flush();
-  nsresult CopyRowsFromTable(nsIMdbTable *sourceTable);
   
-  mdb_err UseThumb(nsIMdbThumb *aThumb, PRBool *aDone);
-  
-  nsresult AppendRow(const nsAString &aValue, const nsAString &aName, nsIMdbRow **aResult);
-  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const nsAString &aValue);
-  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAString &aValue);
-  
-  PRBool RowMatch(nsIMdbRow *aRow, const nsAString &aInputName, const nsAString &aInputValue, PRUnichar **aValue);
-  
-  PR_STATIC_CALLBACK(int) SortComparison(const void *v1, const void *v2, void *closureVoid);
-
-  nsresult EntriesExistInternal(const nsAString *aName, const nsAString *aValue, PRBool *_retval);
-
-  nsresult RemoveEntriesInternal(const nsAString *aName);
-
   static PRBool FormHistoryEnabled();
-
   static nsFormHistory *gFormHistory;
-
   static PRBool gFormHistoryEnabled;
   static PRBool gPrefsInitialized;
 
-  nsCOMPtr<nsIMdbFactory> mMdbFactory;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
-  nsIMdbEnv* mEnv;
-  nsIMdbStore* mStore;
-  nsIMdbTable* mTable;
-  PRInt64 mFileSizeOnDisk;
-  
-  // database tokens
-  mdb_scope kToken_RowScope;
-  mdb_kind kToken_Kind;
+  nsCOMPtr<mozIStorageService> mStorageService;
+  nsCOMPtr<mozIStorageConnection> mDBConn;
+  nsCOMPtr<mozIStorageStatement> mDBGetMatchingField;
+  nsCOMPtr<mozIStorageStatement> mDBFindEntry;
+  nsCOMPtr<mozIStorageStatement> mDBFindEntryByName;
+  nsCOMPtr<mozIStorageStatement> mDBSelectEntries;
+  nsCOMPtr<mozIStorageStatement> mDBInsertNameValue;
 };
+
+#ifdef MOZ_MORKREADER
+class nsFormHistoryImporter : public nsIFormHistoryImporter
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFORMHISTORYIMPORTER
+
+private:
+  // Enumerator callback to build up a list of columns
+  static PLDHashOperator PR_CALLBACK
+  EnumerateColumnsCB(const nsACString &aColumnID,
+                     nsCString aName,
+                     void *aData);
+
+  // Enumerator callback to add a single row to the FormHistory.
+  static PLDHashOperator PR_CALLBACK
+  AddToFormHistoryCB(const nsACString &aRowID,
+                     const nsMorkReader::StringMap *aMap,
+                     void *aData);
+};
+#endif
 
 #endif // __nsFormHistory__
