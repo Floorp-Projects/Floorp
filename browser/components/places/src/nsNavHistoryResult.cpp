@@ -1135,8 +1135,8 @@ nsNavHistoryContainerResultNode::RemoveChildAt(PRInt32 aIndex,
 PRBool
 nsNavHistoryContainerResultNode::CanRemoteContainersChange()
 {
-  return (mContainerType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER &&
-          mContainerType != nsINavHistoryResultNode::RESULT_TYPE_QUERY);
+  return (mContainerType != nsNavHistoryResultNode::RESULT_TYPE_FOLDER &&
+          mContainerType != nsNavHistoryResultNode::RESULT_TYPE_QUERY);
 }
 
 
@@ -1295,10 +1295,10 @@ nsNavHistoryContainerResultNode::AppendContainerNode(
   if (! IsTypeContainer(aContainerType) || IsTypeFolder(aContainerType) ||
       IsTypeQuery(aContainerType))
     return NS_ERROR_INVALID_ARG; // not proper container type
-  if (aContainerType == nsINavHistoryResultNode::RESULT_TYPE_REMOTE_CONTAINER &&
+  if (aContainerType == nsNavHistoryResultNode::RESULT_TYPE_REMOTE_CONTAINER &&
       aRemoteContainerType.IsEmpty())
     return NS_ERROR_INVALID_ARG; // remote containers must have r.c. type
-  if (aContainerType != nsINavHistoryResultNode::RESULT_TYPE_REMOTE_CONTAINER &&
+  if (aContainerType != nsNavHistoryResultNode::RESULT_TYPE_REMOTE_CONTAINER &&
       ! aRemoteContainerType.IsEmpty())
     return NS_ERROR_INVALID_ARG; // non-remote containers must NOT have r.c. type
 
@@ -1417,7 +1417,7 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     const nsACString& aTitle, const nsACString& aIconURI,
     const nsACString& aQueryURI) :
   nsNavHistoryContainerResultNode(aTitle, aIconURI,
-                                  nsINavHistoryResultNode::RESULT_TYPE_QUERY,
+                                  nsNavHistoryResultNode::RESULT_TYPE_QUERY,
                                   PR_TRUE, EmptyCString()),
   mQueryURI(aQueryURI),
   mHasSearchTerms(PR_FALSE),
@@ -1434,7 +1434,7 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     const nsCOMArray<nsNavHistoryQuery>& aQueries,
     nsNavHistoryQueryOptions* aOptions) :
   nsNavHistoryContainerResultNode(aTitle, aIconURI,
-                                  nsINavHistoryResultNode::RESULT_TYPE_QUERY,
+                                  nsNavHistoryResultNode::RESULT_TYPE_QUERY,
                                   PR_TRUE, EmptyCString()),
   mQueries(aQueries),
   mOptions(aOptions),
@@ -2308,7 +2308,7 @@ nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
     const nsACString& aTitle, nsNavHistoryQueryOptions* aOptions,
     PRInt64 aFolderId, const nsACString& aRemoteContainerType) :
   nsNavHistoryContainerResultNode(aTitle, EmptyCString(),
-                                  nsINavHistoryResultNode::RESULT_TYPE_FOLDER,
+                                  nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
                                   PR_FALSE, aRemoteContainerType),
   mContentsValid(PR_FALSE),
   mOptions(aOptions),
