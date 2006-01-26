@@ -69,8 +69,6 @@
   bottom: inherit;
   left: inherit;
   z-index: inherit;
-  // REVIEW: fixed the hack that we were using before in favour of having
-  // GetComputedStyle get most style data from the inner table frame
   page-break-before: inherit;
   page-break-after: inherit;
 }
