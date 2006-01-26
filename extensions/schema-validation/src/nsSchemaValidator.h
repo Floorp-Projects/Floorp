@@ -48,7 +48,7 @@
 /* eced2af3-fde9-4575-b5a4-e1c830b24611 */
 #define NS_SCHEMAVALIDATOR_CID \
 { 0xeced2af3, 0xfde9, 0x4575, \
-  {0xb5, 0xa4, 0xe1, 0xc8, 0x30, 0xb2, 0x46, 0x11}}     
+  {0xb5, 0xa4, 0xe1, 0xc8, 0x30, 0xb2, 0x46, 0x11}}
 
 #define NS_SCHEMAVALIDATOR_CONTRACTID "@mozilla.org/schemavalidator;1"
 
@@ -72,10 +72,16 @@ private:
   nsresult ValidateSimpletype(const nsAString & aNodeValue,
                               nsISchemaSimpleType *aSchemaSimpleType,
                               PRBool *aResult);
+  nsresult ValidateDerivedSimpletype(const nsAString & aNodeValue,
+                                     nsSchemaDerivedSimpleType *aDerived,
+                                     PRBool *aResult);
 
   nsresult ValidateRestrictionSimpletype(const nsAString & aNodeValue,
                                          nsISchemaSimpleType *aSchemaSimpleType,
                                          PRBool *aResult);
+  nsresult ValidateDerivedBuiltinType(const nsAString & aNodeValue,
+                                      nsSchemaDerivedSimpleType *aDerived,
+                                      PRBool *aResult);
 
   nsresult ValidateBuiltinType(const nsAString & aNodeValue,
                                nsISchemaSimpleType *aSchemaSimpleType,
@@ -83,11 +89,15 @@ private:
 
   nsresult ValidateListSimpletype(const nsAString & aNodeValue,
                                   nsISchemaSimpleType *aSchemaSimpleType,
+                                  nsSchemaDerivedSimpleType *aDerived,
                                   PRBool *aResult);
 
   nsresult ValidateUnionSimpletype(const nsAString & aNodeValue,
                                    nsISchemaSimpleType *aSchemaSimpleType,
                                    PRBool *aResult);
+  nsresult ValidateDerivedUnionSimpletype(const nsAString & aNodeValue,
+                                          nsSchemaDerivedSimpleType *aDerived,
+                                          PRBool *aResult);
 
   // methods dealing with validation of built-in types
   nsresult ValidateBuiltinTypeString(const nsAString & aNodeValue,
@@ -261,7 +271,6 @@ private:
                                     nsStringArray *aEnumerationList,
                                     PRBool *aResult);
   PRBool IsValidSchemaQName(const nsAString & aString);
-
 
   // helper methods
   void DumpBaseType(nsISchemaBuiltinType *aBuiltInType);

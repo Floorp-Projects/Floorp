@@ -1305,6 +1305,7 @@ nsSchemaValidatorUtils::HandleEnumeration(const nsAString &aStrValue,
   for (PRInt32 i = 0; i < count; ++i) {
     if (aEnumerationList[i]->Equals(aStrValue)) {
       isValid = PR_TRUE;
+      LOG(("  Valid: Value matched enumeration #%d", i));
       break;
     }
   }
@@ -1347,7 +1348,15 @@ nsSchemaValidatorUtils::RemoveLeadingZeros(nsAString & aString)
     aString.AssignLiteral("0");
   } else {
     // finally, remove the leading zeros
-    aString.Cut(indexstart, count);
+    PRUint32 length = aString.Length();
+
+    // if the entire string is composed of zeros, set it to one zero
+    if (length == count) {
+      aString.AssignLiteral("0");
+    } else {
+      // finally, remove the leading zeros
+      aString.Cut(indexstart, count);
+    }
   }
 }
 
@@ -1376,5 +1385,245 @@ nsSchemaValidatorUtils::RemoveTrailingZeros(nsAString & aString)
 
   // finally, remove the trailing zeros
   aString.Cut(length - count, count);
+}
+
+// Walks the inheritance tree until it finds a type that isn't a restriction
+// type.  While it finds restriction types, it collects restriction facets and
+// places them into the nsSchemaDerivedSimpleType.  Once a facet has been found,
+// it makes sure that it won't be overwritten by the same facet defined in one
+// of the inherited types.
+nsresult
+nsSchemaValidatorUtils::GetDerivedSimpleType(nsISchemaSimpleType *aSimpleType,
+                                             nsSchemaDerivedSimpleType *aDerived)
+{
+  PRBool done = PR_FALSE;
+  nsCOMPtr<nsISchemaSimpleType> simpleType(aSimpleType);
+  PRUint16 simpleTypeValue;
+  PRUint32 facetCount;
+
+  nsAutoString enumeration;
+  nsresult rv = NS_OK;
+
+  while(simpleType && !done) {
+    // get the type of the simpletype
+    rv = simpleType->GetSimpleType(&simpleTypeValue);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    switch (simpleTypeValue) {
+      case nsISchemaSimpleType::SIMPLE_TYPE_RESTRICTION: {
+        // handle the facets
+
+        nsCOMPtr<nsISchemaRestrictionType> restrictionType =
+          do_QueryInterface(simpleType);
+
+        nsCOMPtr<nsISchemaFacet> facet;
+        PRUint32 facetCounter;
+        PRUint16 facetType;
+
+        // get the amount of restriction facet defined.
+        rv = restrictionType->GetFacetCount(&facetCount);
+        NS_ENSURE_SUCCESS(rv, rv);
+        LOG(("    %d facet(s) defined.", facetCount));
+
+        for (facetCounter = 0; facetCounter < facetCount; ++facetCounter) {
+          rv = restrictionType->GetFacet(facetCounter, getter_AddRefs(facet));
+          NS_ENSURE_SUCCESS(rv, rv);
+          facet->GetFacetType(&facetType);
+
+          switch (facetType) {
+            case nsISchemaFacet::FACET_TYPE_LENGTH: {
+              nsSchemaIntFacet *length = &aDerived->length;
+              if (!length->isDefined) {
+                length->isDefined = PR_TRUE;
+                facet->GetLengthValue(&length->value);
+                LOG(("  - Length Facet found (value is %d)",
+                     length->value));
+              }
+              break;
+            }
+
+            case nsISchemaFacet::FACET_TYPE_MINLENGTH: {
+              nsSchemaIntFacet *minLength = &aDerived->minLength;
+              if (!minLength->isDefined) {
+                minLength->isDefined = PR_TRUE;
+                facet->GetLengthValue(&minLength->value);
+                LOG(("  - Min Length Facet found (value is %d)",
+                     minLength->value));
+              }
+              break;
+            }
+
+            case nsISchemaFacet::FACET_TYPE_MAXLENGTH: {
+              nsSchemaIntFacet *maxLength = &aDerived->maxLength;
+              if (!maxLength->isDefined) {
+                maxLength->isDefined = PR_TRUE;
+                facet->GetLengthValue(&maxLength->value);
+                LOG(("  - Max Length Facet found (value is %d)",
+                     maxLength->value));
+              }
+              break;
+            }
+
+
+            case nsISchemaFacet::FACET_TYPE_PATTERN: {
+              nsSchemaStringFacet *pattern = &aDerived->pattern;
+              if (!pattern->isDefined) {
+                pattern->isDefined = PR_TRUE;
+                facet->GetValue(pattern->value);
+                LOG(("  - Pattern Facet found (value is %s)",
+                      NS_ConvertUTF16toUTF8(pattern->value).get()));
+              }
+              break;
+            }
+
+            case nsISchemaFacet::FACET_TYPE_ENUMERATION: {
+              facet->GetValue(enumeration);
+              aDerived->enumerationList.AppendString(enumeration);
+              LOG(("  - Enumeration found (%s)",
+                   NS_ConvertUTF16toUTF8(enumeration).get()));
+              break;
+            }
+
+            case nsISchemaFacet::FACET_TYPE_WHITESPACE: {
+              if (!aDerived->isWhitespaceDefined)
+                facet->GetWhitespaceValue(&aDerived->whitespace);
+              break;
+            }
+
+            case nsISchemaFacet::FACET_TYPE_MAXINCLUSIVE: {
+              nsSchemaStringFacet *maxInclusive = &aDerived->maxInclusive;
+              if (!maxInclusive->isDefined) {
+                maxInclusive->isDefined = PR_TRUE;
+                facet->GetValue(maxInclusive->value);
+                LOG(("  - Max Inclusive Facet found (value is %s)",
+                  NS_ConvertUTF16toUTF8(maxInclusive->value).get()));
+              }
+              break;
+            }
+
+            case nsISchemaFacet::FACET_TYPE_MININCLUSIVE: {
+              nsSchemaStringFacet *minInclusive = &aDerived->minInclusive;
+              if (!minInclusive->isDefined) {
+                minInclusive->isDefined = PR_TRUE;
+                facet->GetValue(minInclusive->value);
+                LOG(("  - Min Inclusive Facet found (value is %s)",
+                  NS_ConvertUTF16toUTF8(minInclusive->value).get()));
+              }
+              break;
+            }
+
+            case nsISchemaFacet::FACET_TYPE_MAXEXCLUSIVE: {
+              nsSchemaStringFacet *maxExclusive = &aDerived->maxExclusive;
+              if (!maxExclusive->isDefined) {
+                maxExclusive->isDefined = PR_TRUE;
+                facet->GetValue(aDerived->maxExclusive.value);
+                LOG(("  - Max Exclusive Facet found (value is %s)",
+                  NS_ConvertUTF16toUTF8(maxExclusive->value).get()));
+              }
+              break;
+            }
+
+            case nsISchemaFacet::FACET_TYPE_MINEXCLUSIVE: {
+              nsSchemaStringFacet *minExclusive = &aDerived->minExclusive;
+              if (!minExclusive->isDefined) {
+                minExclusive->isDefined = PR_TRUE;
+                facet->GetValue(minExclusive->value);
+                LOG(("  - Min Exclusive Facet found (value is %s)",
+                  NS_ConvertUTF16toUTF8(minExclusive->value).get()));
+              }
+              break;
+            }
+
+            case nsISchemaFacet::FACET_TYPE_TOTALDIGITS: {
+              nsSchemaIntFacet *totalDigits = &aDerived->totalDigits;
+              if (!totalDigits->isDefined) {
+                totalDigits->isDefined = PR_TRUE;
+                facet->GetDigitsValue(&totalDigits->value);
+                LOG(("  - Totaldigits Facet found (value is %d)",
+                     totalDigits->value));
+              }
+              break;
+            }
+
+            case nsISchemaFacet::FACET_TYPE_FRACTIONDIGITS: {
+              nsSchemaIntFacet *fractionDigits = &aDerived->fractionDigits;
+              if (!fractionDigits->isDefined) {
+                fractionDigits->isDefined = PR_TRUE;
+                facet->GetDigitsValue(&fractionDigits->value);
+                LOG(("  - FractionDigits Facet found (value is %d)",
+                     fractionDigits->value));
+              }
+              break;
+            }
+          }
+        }
+
+        // get base type
+        nsresult rv = restrictionType->GetBaseType(getter_AddRefs(simpleType));
+        NS_ENSURE_SUCCESS(rv, rv);
+        break;
+      }
+
+      case nsISchemaSimpleType::SIMPLE_TYPE_BUILTIN: {
+        // we are done
+        aDerived->mBaseType = simpleType;
+        done = PR_TRUE;
+        break;
+      }
+
+      case nsISchemaSimpleType::SIMPLE_TYPE_LIST: {
+        // set as base type
+        aDerived->mBaseType = simpleType;
+        done = PR_TRUE;
+        break;
+      }
+
+      case nsISchemaSimpleType::SIMPLE_TYPE_UNION: {
+        // set as base type
+        aDerived->mBaseType = simpleType;
+        done = PR_TRUE;
+        break;
+      }
+    }
+  }
+
+  return rv;
+}
+
+// copies the data from aDerivedSrc to aDerivedDest
+void
+nsSchemaValidatorUtils::CopyDerivedSimpleType(nsSchemaDerivedSimpleType *aDerivedDest,
+                                              nsSchemaDerivedSimpleType *aDerivedSrc)
+{
+  aDerivedDest->mBaseType = aDerivedSrc->mBaseType;
+
+  aDerivedDest->length.value = aDerivedSrc->length.value;
+  aDerivedDest->length.isDefined = aDerivedSrc->length.isDefined;
+  aDerivedDest->minLength.value = aDerivedSrc->minLength.value;
+  aDerivedDest->minLength.isDefined = aDerivedSrc->minLength.isDefined;
+  aDerivedDest->maxLength.value = aDerivedSrc->maxLength.value;
+  aDerivedDest->maxLength.isDefined = aDerivedSrc->maxLength.isDefined;
+
+  aDerivedDest->pattern.value = aDerivedSrc->pattern.value;
+  aDerivedDest->pattern.isDefined = aDerivedSrc->pattern.isDefined;
+
+  aDerivedDest->isWhitespaceDefined = aDerivedSrc->isWhitespaceDefined;
+  aDerivedDest->whitespace = aDerivedSrc->whitespace;
+
+  aDerivedDest->maxInclusive.value = aDerivedSrc->maxInclusive.value;
+  aDerivedDest->maxInclusive.isDefined = aDerivedSrc->maxInclusive.isDefined;
+  aDerivedDest->minInclusive.value = aDerivedSrc->minInclusive.value;
+  aDerivedDest->minInclusive.isDefined = aDerivedSrc->minInclusive.isDefined;
+  aDerivedDest->maxExclusive.value = aDerivedSrc->maxExclusive.value;
+  aDerivedDest->maxExclusive.isDefined = aDerivedSrc->maxExclusive.isDefined;
+  aDerivedDest->minExclusive.value = aDerivedSrc->minExclusive.value;
+  aDerivedDest->minExclusive.isDefined = aDerivedSrc->minExclusive.isDefined;
+
+  aDerivedDest->totalDigits.value = aDerivedSrc->totalDigits.value;
+  aDerivedDest->totalDigits.isDefined = aDerivedSrc->totalDigits.isDefined;
+  aDerivedDest->fractionDigits.value = aDerivedSrc->fractionDigits.value;
+  aDerivedDest->fractionDigits.isDefined = aDerivedSrc->fractionDigits.isDefined;
+
+  aDerivedDest->enumerationList = aDerivedSrc->enumerationList;
 }
 
