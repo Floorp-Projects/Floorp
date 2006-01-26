@@ -803,7 +803,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         nsCOMPtr<nsIDocument> document = GetDocumentFromWindow(focusedWindow);
 
         if (document) {
-          nsIPresShell *shell = document->GetShellAt(0);
+          // Use a strong ref to make sure that the shell is alive still
+          // when calling FrameSelection().
+          nsCOMPtr<nsIPresShell> shell = document->GetShellAt(0);
           NS_ASSERTION(shell, "Focus events should not be getting thru when this is null!");
           if (shell) {
             if (focusedElement) {
