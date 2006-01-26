@@ -638,7 +638,15 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
 
     ecParams = &(key->ecParams);
     flen = (ecParams->fieldID.size + 7) >> 3;
+    /*
+     * FIXME: temporary workaround until we change PK11_SignatureLen
+     * to use the length of the base point order.
+     */
+#if 0
     olen = ecParams->order.len;  
+#else
+    olen = flen;  
+#endif
     if (signature->len < 2*olen) {
 	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
 	goto cleanup;
