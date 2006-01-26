@@ -201,7 +201,7 @@ public:
    * mIsAtRootOfPseudoStackingContext.
    */
   class AutoIsRootSetter;
-  friend class nsAutoIsRootSetter;
+  friend class AutoIsRootSetter;
   class AutoIsRootSetter {
   public:
     AutoIsRootSetter(nsDisplayListBuilder* aBuilder, PRBool aIsRoot)
