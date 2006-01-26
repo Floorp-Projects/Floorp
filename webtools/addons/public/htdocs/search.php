@@ -92,9 +92,6 @@ foreach ($clean as $key=>$val) {
 // Instantiate AMO_Object so we can get our categories and platforms.
 $amo = new AMO_Object();
 
-$amo->getCats();
-$amo->getPlatforms();
-
 $dates = array(
     'day'  => 'Today',
     'week' => 'This Week',
@@ -270,8 +267,8 @@ $tpl->assign(
         'page'          => $page,
         'results'       => $results,
         'clean'         => $clean,
-        'cats'          => $amo->Cats,
-        'platforms'     => $amo->Platforms,
+        'cats'          => $amo->getCats(),
+        'platforms'     => $amo->getPlatforms(),
         'apps'          => $apps,
         'dates'         => $dates,
         'sort'          => $sort,
