@@ -41,9 +41,9 @@
 #include "nsISupports.h"
 #include "nsEvent.h"
 #include "nsColor.h"
+#include "nsRect.h"
 
 class nsIRenderingContext;
-struct nsRect;
 class nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID   \
