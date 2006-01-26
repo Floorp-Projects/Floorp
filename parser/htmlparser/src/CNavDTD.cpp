@@ -114,7 +114,6 @@ static const  char kInvalidTagStackPos[] = "Error: invalid tag stack position";
                                             NS_DTD_FLAG_HAD_FRAMESET)
 
 NS_IMPL_ISUPPORTS2(CNavDTD, nsIDTD, CNavDTD)
-NS_DEFINE_STATIC_IID_ACCESSOR(CNavDTD, NS_INAVHTML_DTD_IID)
 
 CNavDTD::CNavDTD()
   : mMisplacedContent(0),
@@ -133,14 +132,6 @@ CNavDTD::CNavDTD()
     mFlags(NS_DTD_FLAG_NONE)
 {
 }
-
-const nsIID&
-CNavDTD::GetMostDerivedIID() const
-{
-  static nsIID kClassIID = NS_GET_IID(CNavDTD);
-  return kClassIID;
-}
-
 
 #ifdef NS_DEBUG
 
@@ -192,41 +183,6 @@ CNavDTD::~CNavDTD()
 #endif
 
   NS_IF_RELEASE(mSink);
-}
-
-nsresult
-CNavDTD::CreateNewInstance(nsIDTD** aInstancePtrResult)
-{
-  nsresult result = NS_NewNavHTMLDTD(aInstancePtrResult);
-  NS_ENSURE_SUCCESS(result, result);
-
-  CNavDTD* dtd = NS_STATIC_CAST(CNavDTD*, *aInstancePtrResult);
-    
-  dtd->mDTDMode = mDTDMode;
-  dtd->mParserCommand = mParserCommand;
-  dtd->mDocType = mDocType;
-
-  return result;
-}
-
-NS_IMETHODIMP_(eAutoDetectResult)
-CNavDTD::CanParse(CParserContext& aParserContext)
-{
-  NS_ASSERTION(!aParserContext.mMimeType.IsEmpty(),
-               "How'd we get here with an unknown type?");
-  
-  if (aParserContext.mParserCommand != eViewSource &&
-      aParserContext.mDocType != eXML) {
-    // This means that we're
-    // 1) Looking at a type the parser claimed to know how to handle (so XML
-    //    or HTML or a plaintext type)
-    // 2) Not looking at XML
-    //
-    // Therefore, we want to handle this data with this DTD
-    return ePrimaryDetect;
-  }
-
-  return eUnknownDetect;
 }
 
 nsresult

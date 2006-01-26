@@ -319,19 +319,6 @@ NS_IMPL_ISUPPORTS2(nsExpatDriver,
                    nsITokenizer,
                    nsIDTD)
 
-nsresult
-NS_NewExpatDriver(nsIDTD** aResult)
-{
-  *aResult = new nsExpatDriver();
-  if (!*aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
 nsExpatDriver::nsExpatDriver()
   : mExpatParser(nsnull),
     mInCData(PR_FALSE),
@@ -964,12 +951,6 @@ nsExpatDriver::ParseBuffer(const char* aBuffer,
 }
 
 NS_IMETHODIMP
-nsExpatDriver::CreateNewInstance(nsIDTD** aInstancePtrResult)
-{
-  return NS_NewExpatDriver(aInstancePtrResult);
-}
-
-NS_IMETHODIMP
 nsExpatDriver::ConsumeToken(nsScanner& aScanner,
                             PRBool& aFlushTokens)
 {
@@ -1007,22 +988,6 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP_(eAutoDetectResult)
-nsExpatDriver::CanParse(CParserContext& aParserContext)
-{
-  NS_ASSERTION(!aParserContext.mMimeType.IsEmpty(),
-               "How'd we get here with an unknown type?");
-  
-  if (eViewSource != aParserContext.mParserCommand &&
-      aParserContext.mDocType == eXML) {
-    // The parser context already looked at the MIME type for us
-  
-    return ePrimaryDetect;
-  }
-
-  return eUnknownDetect;
 }
 
 NS_IMETHODIMP
@@ -1137,12 +1102,6 @@ nsExpatDriver::DidTokenize(PRBool aIsFinalChunk)
 {
   return mInternalState == NS_OK ? ParseBuffer(nsnull, 0, aIsFinalChunk) :
                                    NS_OK;
-}
-
-NS_IMETHODIMP_(const nsIID&)
-nsExpatDriver::GetMostDerivedIID(void) const
-{
-  return NS_GET_IID(nsIDTD);
 }
 
 NS_IMETHODIMP_(void)

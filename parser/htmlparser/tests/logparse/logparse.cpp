@@ -99,9 +99,6 @@ nsresult GenerateBaselineFile(const char* aSourceFilename,const char* aBaselineF
   sink->SetOutputStream(outputfile);
 
   // Parse the document, having the sink write the data to fp
-  nsIDTD* dtd = nsnull;
-  NS_NewNavHTMLDTD(&dtd);
-  parser->RegisterDTD(dtd);
   parser->SetContentSink(sink);
 
   rv = parser->Parse(inputURI, 0, PR_FALSE, 0, eDTDMode_unknown);
