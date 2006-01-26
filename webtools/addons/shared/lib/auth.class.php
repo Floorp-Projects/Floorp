@@ -192,7 +192,7 @@ class AMO_Auth extends AMO_Object{
         $_session_id = mysql_real_escape_string(session_id());
 
         $_sql = "SELECT 
-                    `sess_id`
+                    `sess_user_id`
                  FROM 
                     `{$this->_session_table}` 
                  WHERE 
@@ -202,6 +202,8 @@ class AMO_Auth extends AMO_Object{
         $this->db->query($_sql, SQL_INIT, SQL_ASSOC);
 
         if (!empty($this->db->record)){
+            $user = $this->db->record;
+            $this->_user_id = $user['sess_user_id'];
             return true;
         } else {
             return false;
@@ -286,6 +288,15 @@ class AMO_Auth extends AMO_Object{
 
         $this->db->query($_sql);
         return true;
+    }
+
+    /**
+     * This is simply a conveinence function because pretty much everything is based
+     * off the ID.
+     */
+    function getId()
+    {
+        return $this->_user_id;
     }
 }
 ?>

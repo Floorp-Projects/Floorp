@@ -28,6 +28,12 @@ if (!$_auth->validSession()) {
 // If there are errors, this will be populated
 $_errors = array();
 
+// This will be used in queries and the template
+$addon = new AddOn($_GET['id']);
+
+// If the comment is added successfully, this will toggle (used in the template)
+$added_comment = false;
+
 // They're posting a comment
 if (isset($_POST['c_submit'])) {
 
@@ -60,46 +66,42 @@ if (isset($_POST['c_submit'])) {
     // back out to the from with an error.
     if ($_bad_input === false) {
 
-        $_c_id         = '';// lookup
-        $_c_user_id    = '';// lookup
-        $_c_user_name  = '';// from user_id
+        // I got a little carried away with the escaping, but it's not gonna hurt anything.
+        $_c_id         = mysql_real_escape_string($addon->ID);
+        $_c_user_id    = mysql_real_escape_string($_auth->getId());
         $_c_rating     = mysql_real_escape_string($_POST['c_rating']);
         $_c_title      = mysql_real_escape_string($_POST['c_title']);
         $_c_comments   = mysql_real_escape_string($_POST['c_comments']);
         $_c_commentip  = mysql_real_escape_string($_SERVER['REMOTE_ADDR']);
-        $_c_email      = '';//from user_id
 
         $_sql = "INSERT INTO `feedback`
                  ( 
                     `ID`,
-                    `CommentUserId`,
-                    `CommentName`,
+                    `UserId`,
                     `CommentVote`,
                     `CommentTitle`,
                     `CommentNote`,
                     `CommentDate`,
-                    `commentip`,
-                    `email`
+                    `commentip`
                  ) VALUES (
                      {$_c_id},
                      {$_c_user_id},
-                    '{$_c_user_name}',
                      {$_c_rating},
                     '{$_c_title}',
                     '{$_c_comments}',
-                    '{$_c_commentip}',
-                    '{$_c_email}'
+                    NOW(),
+                    '{$_c_commentip}'
                  )";
 
-        // @todo this
-        // run $_sql;
-        // header() them to somewhere else - edit: or just print "success"?
+        $db->query($_sql);
+
+        // For the template
+        $added_comment = true;
     }
 }
 
-$addon = new AddOn($_GET['id']);
-
-// Put values back into the form - something went wrong (or they haven't hit 'submit' yet).
+// Put values back into the form - if something went wrong this will populate the
+// form again
 $c_rating_value   = array_key_exists('c_rating', $_POST)   ? $_POST['c_rating']   : '';
 $c_title_value    = array_key_exists('c_title', $_POST)    ? $_POST['c_title']    : '';
 $c_comments_value = array_key_exists('c_comments', $_POST) ? $_POST['c_comments'] : '';
@@ -111,6 +113,7 @@ $tpl->assign(
             'rate_select_value' => array('','5','4','3','2','1','0'),
             'rate_select_name'  => array('Rating:','5 stars', '4 stars', '3 stars', '2 stars', '1 star', '0 stars'),
             'addon'             => $addon,
+            'c_added_comment'   => $added_comment,
             'c_errors'          => $_errors,
             'c_rating_value'    => $c_rating_value,
             'c_title_value'     => $c_title_value,

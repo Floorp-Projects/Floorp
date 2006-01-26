@@ -3,6 +3,12 @@
 <p>{$addon->Name|escape} {$addon->Version|escape}, by {$addon->UserName|escape} released on {$addon->DateUpdated|date_format:"%B %d, %Y"}</p>
 <h2 class="first">Your comments about {$addon->Name|escape}</h2>
 <div class="front-section">
+{if $c_added_comment}
+<p>You comment has been added successfully.</p>
+<ul>
+<li><a href="addon.php?id={$addon->ID}">Return to {$addon->Name|escape}</a></li>
+</ul>
+{else}
 <form id="commentform" name="commentform" method="post" action="">
     <label for="c_rating">Rating:</label>
     <select id="c_rating" name="c_rating">
@@ -30,6 +36,7 @@
     <input type="submit" id="c_submit" name="c_submit" value="Post" />
     <p>All fields are required.</p>
 </form>
+{/if}
 </div>
 
 
