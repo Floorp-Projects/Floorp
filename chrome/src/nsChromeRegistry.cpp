@@ -439,6 +439,7 @@ NS_INTERFACE_MAP_BEGIN(nsChromeRegistry)
 #endif
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChromeRegistry)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsChromeRegistry)
