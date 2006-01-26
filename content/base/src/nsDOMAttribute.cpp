@@ -70,8 +70,7 @@ nsDOMAttribute::~nsDOMAttribute()
   if (doc) {
     doc->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED, this,
                              nsnull, nsnull);
-    doc->PropertyTable()->
-      DeleteAllPropertiesFor(NS_STATIC_CAST(nsINode*, this));
+    doc->PropertyTable()->DeleteAllPropertiesFor(this);
   }
 
   if (mChildList) {
@@ -139,8 +138,7 @@ nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
   nsIDocument *doc = GetOwnerDoc();
   NS_ASSERTION(doc != aDocument, "bad call to nsDOMAttribute::SetOwnerDocument");
   if (doc) {
-    doc->PropertyTable()->
-      DeleteAllPropertiesFor(NS_STATIC_CAST(nsINode*, this));
+    doc->PropertyTable()->DeleteAllPropertiesFor(this);
   }
 
   nsCOMPtr<nsINodeInfo> newNodeInfo;

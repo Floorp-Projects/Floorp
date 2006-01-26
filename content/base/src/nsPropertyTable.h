@@ -73,6 +73,26 @@ typedef void
  * is the opaque destructor data that was passed to SetProperty().
  **/
 typedef NSPropertyFunc NSPropertyDtorFunc;
+class nsINode;
+class nsIFrame;
+
+class nsPropertyOwner
+{
+public:
+  nsPropertyOwner(const nsPropertyOwner& aOther) : mObject(aOther.mObject) {}
+
+  // These are the types of objects that can own properties. No object should
+  // inherit more then one of these classes.
+  // To add support for more types just add to this list.
+  nsPropertyOwner(const nsINode* aObject) : mObject(aObject) {}
+  nsPropertyOwner(const nsIFrame* aObject) : mObject(aObject) {}
+
+  operator const void*() { return mObject; }
+  const void* get() { return mObject; }
+
+private:
+  const void* mObject;
+};
 
 // Categories of properties
 // 0x00000000U is global.
@@ -87,14 +107,14 @@ class nsPropertyTable
    * Get the value of the property |aPropertyName| for node |aObject|.
    * |aResult|, if supplied, is filled in with a return status code.
    **/
-  void* GetProperty(const void *aObject,
+  void* GetProperty(nsPropertyOwner aObject,
                     nsIAtom    *aPropertyName,
                     nsresult   *aResult = nsnull)
   {
     return GetPropertyInternal(aObject, 0, aPropertyName, PR_FALSE, aResult);
   }
 
-  void* GetProperty(const void *aObject,
+  void* GetProperty(nsPropertyOwner aObject,
                     PRUint32    aCategory,
                     nsIAtom    *aPropertyName,
                     nsresult   *aResult = nsnull)
@@ -115,7 +135,7 @@ class nsPropertyTable
    * it will contain the old value after the function returns (the destructor
    * for the old value will not be run in that case).
    */
-  NS_HIDDEN_(nsresult) SetProperty(const void         *aObject,
+  NS_HIDDEN_(nsresult) SetProperty(nsPropertyOwner     aObject,
                                    nsIAtom            *aPropertyName,
                                    void               *aPropertyValue,
                                    NSPropertyDtorFunc  aDtor,
@@ -137,7 +157,7 @@ class nsPropertyTable
    * old value after the function returns (the destructor for the old value
    * will not be run in that case).
    */
-  NS_HIDDEN_(nsresult) SetProperty(const void         *aObject,
+  NS_HIDDEN_(nsresult) SetProperty(nsPropertyOwner     aObject,
                                    PRUint32            aCategory,
                                    nsIAtom            *aPropertyName,
                                    void               *aPropertyValue,
@@ -152,7 +172,7 @@ class nsPropertyTable
    * Delete the property |aPropertyName| in the global category for object
    * |aObject|. The property's destructor function will be called.
    */
-  NS_HIDDEN_(nsresult) DeleteProperty(const void *aObject,
+  NS_HIDDEN_(nsresult) DeleteProperty(nsPropertyOwner aObject,
                                       nsIAtom    *aPropertyName)
   {
     return DeleteProperty(aObject, 0, aPropertyName);
@@ -162,7 +182,7 @@ class nsPropertyTable
    * Delete the property |aPropertyName| in category |aCategory| for object
    * |aObject|. The property's destructor function will be called.
    */
-  NS_HIDDEN_(nsresult) DeleteProperty(const void *aObject,
+  NS_HIDDEN_(nsresult) DeleteProperty(nsPropertyOwner aObject,
                                       PRUint32    aCategory,
                                       nsIAtom    *aPropertyName);
 
@@ -171,7 +191,7 @@ class nsPropertyTable
    * |aObject|, but do not call the property's destructor function.  The
    * property value is returned.
    */
-  void* UnsetProperty(const void *aObject,
+  void* UnsetProperty(nsPropertyOwner aObject,
                       nsIAtom    *aPropertyName,
                       nsresult   *aStatus = nsnull)
   {
@@ -183,7 +203,7 @@ class nsPropertyTable
    * |aObject|, but do not call the property's destructor function.  The
    * property value is returned.
    */
-  void* UnsetProperty(const void *aObject,
+  void* UnsetProperty(nsPropertyOwner aObject,
                       PRUint32    aCategory,
                       nsIAtom    *aPropertyName,
                       nsresult   *aStatus = nsnull)
@@ -196,14 +216,14 @@ class nsPropertyTable
    * Deletes all of the properties for object |aObject|, calling the
    * destructor function for each property.
    */
-  NS_HIDDEN_(void) DeleteAllPropertiesFor(const void *aObject);
+  NS_HIDDEN_(void) DeleteAllPropertiesFor(nsPropertyOwner aObject);
 
   /**
    * Enumerate the properties in category |aCategory| for object |aObject|.
    * For every property |aCallback| will be called with as arguments |aObject|,
    * the property name, the property value and |aData|.
    */
-  NS_HIDDEN_(void) Enumerate(const void *aObject, PRUint32 aCategory,
+  NS_HIDDEN_(void) Enumerate(nsPropertyOwner aObject, PRUint32 aCategory,
                              NSPropertyFunc aCallback, void *aData);
 
   /**
@@ -216,18 +236,18 @@ class nsPropertyTable
     DeleteAllProperties();
   }
 
-  struct PropertyList;
+  class PropertyList;
 
  private:
   NS_HIDDEN_(void) DestroyPropertyList();
   NS_HIDDEN_(PropertyList*) GetPropertyListFor(PRUint32 aCategory,
                                                nsIAtom *aPropertyName) const;
-  NS_HIDDEN_(void*) GetPropertyInternal(const void *aObject,
+  NS_HIDDEN_(void*) GetPropertyInternal(nsPropertyOwner aObject,
                                         PRUint32    aCategory,
                                         nsIAtom    *aPropertyName,
                                         PRBool      aRemove,
                                         nsresult   *aStatus);
-  NS_HIDDEN_(nsresult) SetPropertyInternal(const void         *aObject,
+  NS_HIDDEN_(nsresult) SetPropertyInternal(nsPropertyOwner     aObject,
                                            PRUint32            aCategory,
                                            nsIAtom            *aPropertyName,
                                            void               *aPropertyValue,

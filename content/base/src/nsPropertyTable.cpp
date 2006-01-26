@@ -70,7 +70,7 @@ public:
 
   // Removes the property associated with the given object, and destroys
   // the property value
-  NS_HIDDEN_(PRBool) DeletePropertyFor(const void    * aObject);
+  NS_HIDDEN_(PRBool) DeletePropertyFor(nsPropertyOwner aObject);
 
   // Destroy all remaining properties (without removing them)
   NS_HIDDEN_(void) Destroy();
@@ -120,7 +120,7 @@ nsPropertyTable::DeleteAllProperties()
 }
 
 void
-nsPropertyTable::DeleteAllPropertiesFor(const void *aObject)
+nsPropertyTable::DeleteAllPropertiesFor(nsPropertyOwner aObject)
 {
   for (PropertyList* prop = mPropertyList; prop; prop = prop->mNext) {
     prop->DeletePropertyFor(aObject);
@@ -128,7 +128,7 @@ nsPropertyTable::DeleteAllPropertiesFor(const void *aObject)
 }
 
 void
-nsPropertyTable::Enumerate(const void *aObject, PRUint32 aCategory,
+nsPropertyTable::Enumerate(nsPropertyOwner aObject, PRUint32 aCategory,
                            NSPropertyFunc aCallback, void *aData)
 {
   PropertyList* prop;
@@ -138,7 +138,7 @@ nsPropertyTable::Enumerate(const void *aObject, PRUint32 aCategory,
           PL_DHashTableOperate(&prop->mObjectValueMap, aObject,
                                PL_DHASH_LOOKUP));
       if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-        aCallback(NS_CONST_CAST(void*, aObject), prop->mName, entry->value,
+        aCallback(NS_CONST_CAST(void*, aObject.get()), prop->mName, entry->value,
                   aData);
       }
     }
@@ -146,7 +146,7 @@ nsPropertyTable::Enumerate(const void *aObject, PRUint32 aCategory,
 }
 
 void*
-nsPropertyTable::GetPropertyInternal(const void *aObject,
+nsPropertyTable::GetPropertyInternal(nsPropertyOwner aObject,
                                      PRUint32    aCategory,
                                      nsIAtom    *aPropertyName,
                                      PRBool      aRemove,
@@ -178,7 +178,7 @@ nsPropertyTable::GetPropertyInternal(const void *aObject,
 }
 
 nsresult
-nsPropertyTable::SetPropertyInternal(const void         *aObject,
+nsPropertyTable::SetPropertyInternal(nsPropertyOwner     aObject,
                                      PRUint32            aCategory,
                                      nsIAtom            *aPropertyName,
                                      void               *aPropertyValue,
@@ -236,7 +236,7 @@ nsPropertyTable::SetPropertyInternal(const void         *aObject,
 }
 
 nsresult
-nsPropertyTable::DeleteProperty(const void *aObject,
+nsPropertyTable::DeleteProperty(nsPropertyOwner aObject,
                                 PRUint32    aCategory,
                                 nsIAtom    *aPropertyName)
 {
@@ -315,7 +315,7 @@ nsPropertyTable::PropertyList::Destroy()
 }
 
 PRBool
-nsPropertyTable::PropertyList::DeletePropertyFor(const void* aObject)
+nsPropertyTable::PropertyList::DeletePropertyFor(nsPropertyOwner aObject)
 {
   PropertyListMapEntry *entry = NS_STATIC_CAST(PropertyListMapEntry*,
       PL_DHashTableOperate(&mObjectValueMap, aObject, PL_DHASH_LOOKUP));
@@ -323,7 +323,7 @@ nsPropertyTable::PropertyList::DeletePropertyFor(const void* aObject)
     return PR_FALSE;
 
   if (mDtorFunc)
-    mDtorFunc(NS_CONST_CAST(void*, aObject), mName,
+    mDtorFunc(NS_CONST_CAST(void*, aObject.get()), mName,
               entry->value, GetDtorData());
 
   PL_DHashTableRawRemove(&mObjectValueMap, entry);
