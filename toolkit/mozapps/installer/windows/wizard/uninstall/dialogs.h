@@ -43,6 +43,7 @@
 LRESULT CALLBACK  DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcWhatToDo(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
+LRESULT CALLBACK  DlgProcComplete(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 
 void              ParseAllUninstallLogs();
 void              ParseDefaultsInfo();

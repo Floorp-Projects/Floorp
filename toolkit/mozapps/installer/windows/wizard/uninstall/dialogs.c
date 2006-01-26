@@ -489,6 +489,66 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   return(0);
 }
 
+// This dialog proc must be used in conjunction with DLG_MESSAGE_CHK.
+LRESULT CALLBACK DlgProcComplete(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  RECT rDlg;
+  char text[256];
+  LRESULT result = 0;
+
+  switch(msg)
+  {
+    case WM_INITDIALOG:
+      SetWindowText(hDlg, diUninstall.szTitle);
+
+      GetPrivateProfileString("Dialog Uninstall", "OK", "",
+                              text, sizeof(text), szFileIniUninstall);
+      SetDlgItemText(hDlg, IDOK, text);
+
+      GetPrivateProfileString("Messages", "MSG_UNINSTALL_COMPLETE", "",
+                              text, sizeof(text), szFileIniUninstall);
+      SetDlgItemText(hDlg, IDC_MESSAGE, text);
+
+      GetPrivateProfileString("Messages", "MSG_UNINSTALL_SURVEY", "",
+                              text, sizeof(text), szFileIniUninstall);
+      if (text[0]) 
+      {
+        SetDlgItemText(hDlg, IDC_CHECKBOX, text);
+      }
+      else
+      {
+        // Hide the checkbox control if there is not survey text.
+        ShowWindow(GetDlgItem(hDlg, IDC_CHECKBOX), SW_HIDE);
+      }
+
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+
+      break;
+
+    case WM_COMMAND:
+      switch(LOWORD(wParam))
+      {
+        case IDOK:
+          if (SendDlgItemMessage(hDlg, IDC_CHECKBOX, BM_GETCHECK, 0, 0) == BST_CHECKED)
+          {
+            EndDialog(hDlg, ID_YES_TO_ALL);
+          }
+          else 
+          {
+            EndDialog(hDlg, IDOK);
+          }            
+          break;
+      }
+      break;
+
+    case WM_CLOSE:
+      EndDialog(hDlg, IDOK);
+      break;
+  }
+  return(0);
+}
+
 void ProcessWindowsMessages()
 {
   MSG msg;

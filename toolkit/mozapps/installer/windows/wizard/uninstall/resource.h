@@ -15,6 +15,7 @@
 #define IDI_SETUP                       105
 #define IDI_UNINSTALL                   105
 #define DLG_MESSAGE                     110
+#define DLG_MESSAGE_CHK                 111
 #define IDC_LIST_PRODUCTS               1000
 #define ID_NO                           1001
 #define IDC_GAUGE_FILE                  1002
@@ -29,6 +30,7 @@
 #define IDC_MESSAGE0                    1042
 #define IDC_MESSAGE1                    1043
 #define IDC_MESSAGE                     1049
+#define IDC_CHECKBOX                    1050
 #define DLG_UNINSTALL                   2008
 #define DLG_EXTRACTING                  2009
 #define DLG_PRODUCT_LIST                2009
