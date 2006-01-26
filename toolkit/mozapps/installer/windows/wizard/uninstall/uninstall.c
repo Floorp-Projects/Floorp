@@ -187,7 +187,7 @@ static BOOL EnsureRunningAsCopy(LPCSTR cmdLine)
   DeleteOnReboot(tempDir);
 
   /* append -ppid command line flag  */
-  _snprintf(tempBuf, sizeof(tempBuf), "%s %s /ppid %lu",
+  _snprintf(tempBuf, sizeof(tempBuf), "\"%s\" %s /ppid %lu",
             uninstExe, cmdLine, GetCurrentProcessId());
 
   /* call CreateProcess */
@@ -199,23 +199,14 @@ static BOOL EnsureRunningAsCopy(LPCSTR cmdLine)
 /* Uninstall completed; show some UI... */
 static void OnUninstallComplete()
 {
-  char exePath[MAX_PATH], buf[MAX_PATH], title[MAX_BUF];
-  int rv;
+  char exePath[MAX_PATH], buf[MAX_PATH];
 
   if (!(ugUninstall.szProductName && ugUninstall.szProductName[0]) ||
-      !(ugUninstall.szProductName && ugUninstall.szProductName[0]))
+      !(ugUninstall.szUserAgent && ugUninstall.szUserAgent[0]))
     return;
 
-  /* only show the exit survey message box if a string is defined */
-  GetPrivateProfileString("Messages", "MSG_EXIT_SURVEY", "", buf, sizeof(buf),
-                          szFileIniUninstall);
-  GetPrivateProfileString("Dialog Uninstall", "Title", "", title, sizeof(title),
-                          szFileIniUninstall);
-  if (!buf[0] || !title[0])
-    return;
-
-  rv = MessageBox(NULL, buf, title, MB_OKCANCEL | MB_ICONINFORMATION);
-  if (rv != IDOK)
+  if (DialogBox(hInst, MAKEINTRESOURCE(DLG_MESSAGE_CHK), NULL,
+      DlgProcComplete) != ID_YES_TO_ALL)
     return;
 
   /* find iexplore.exe.  we cannot use ShellExecute because the protocol

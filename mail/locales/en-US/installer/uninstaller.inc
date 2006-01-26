@@ -31,6 +31,7 @@
 #define BTN_NOTOALL N&o to all
 #define BTN_YES &Yes
 #define BTN_YESTOALL Y&es to all
+#define BTN_OK OK
 
 #define ERROR_DLL_LOAD Could not load %s
 #define ERROR_STRING_LOAD Could not load string resource ID %d
