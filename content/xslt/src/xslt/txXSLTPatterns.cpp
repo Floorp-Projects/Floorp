@@ -129,7 +129,7 @@ nsresult txUnionPattern::getSimplePatterns(txList& aList)
     return NS_OK;
 }
 
-TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txUnionPattern);
+TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txUnionPattern)
 txPattern*
 txUnionPattern::getSubPatternAt(PRUint32 aPos)
 {
@@ -270,7 +270,7 @@ double txLocPathPattern::getDefaultPriority()
     return ((Step*)mSteps.get(0))->pattern->getDefaultPriority();
 }
 
-TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txLocPathPattern);
+TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txLocPathPattern)
 txPattern*
 txLocPathPattern::getSubPatternAt(PRUint32 aPos)
 {
@@ -335,8 +335,8 @@ double txRootPattern::getDefaultPriority()
     return 0.5;
 }
 
-TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txRootPattern);
-TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txRootPattern);
+TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txRootPattern)
+TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txRootPattern)
 
 #ifdef TX_TO_STRING
 void
@@ -421,8 +421,8 @@ double txIdPattern::getDefaultPriority()
     return 0.5;
 }
 
-TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txIdPattern);
-TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txIdPattern);
+TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txIdPattern)
+TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txIdPattern)
 
 #ifdef TX_TO_STRING
 void
@@ -477,8 +477,8 @@ double txKeyPattern::getDefaultPriority()
     return 0.5;
 }
 
-TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txKeyPattern);
-TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txKeyPattern);
+TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txKeyPattern)
+TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txKeyPattern)
 
 #ifdef TX_TO_STRING
 void
@@ -631,7 +631,7 @@ txStepPattern::getType()
   return STEP_PATTERN;
 }
 
-TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txStepPattern);
+TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txStepPattern)
 Expr*
 txStepPattern::getSubExprAt(PRUint32 aPos)
 {
