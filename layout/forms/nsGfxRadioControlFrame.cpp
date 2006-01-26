@@ -195,7 +195,7 @@ public:
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
-  virtual const char* Name() { return "RadioButton"; }
+  NS_DISPLAY_DECL_NAME("RadioButton")
 private:
   nsGfxRadioControlFrame* mFrame;
 };
