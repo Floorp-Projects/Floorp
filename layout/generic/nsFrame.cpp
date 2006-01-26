@@ -1290,11 +1290,15 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   if (aChild->GetStateBits() & NS_FRAME_IS_UNFLOWABLE)
     return NS_OK;
-    
+  
+  // XXX we really need IsFrameOfType() here
+  nsIAtom* childType = aChild->GetType();
   // PR_TRUE if this is a real or pseudo stacking context
   PRBool pseudoStackingContext =
     (aFlags & DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT) != 0;
-  if ((aFlags & DISPLAY_CHILD_INLINE) && aChild->IsContainingBlock()) {
+  if ((aFlags & DISPLAY_CHILD_INLINE) &&
+      (aChild->IsContainingBlock() ||
+       childType == nsLayoutAtoms::listControlFrame)) {
     // child is a block or table-like frame in an inline context, i.e.,
     // it acts like inline-block or inline-table. Therefore it is a
     // pseudo-stacking-context.
@@ -1304,7 +1308,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // dirty rect in child-relative coordinates
   nsRect dirty = aDirtyRect - aChild->GetOffsetTo(this);
 
-  if (aChild->GetType() == nsLayoutAtoms::placeholderFrame) {
+  if (childType == nsLayoutAtoms::placeholderFrame) {
     nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*, aChild);
     aChild = placeholder->GetOutOfFlowFrame();
     NS_ASSERTION(aChild, "No out of flow frame?");
