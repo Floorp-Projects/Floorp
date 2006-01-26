@@ -2,6 +2,7 @@
 RewriteEngine On
 
 RewriteRule ^app/query(/)?(.*)$ query.php$1 [QSA,L]
+RewriteRule ^app/report/screenshot(/)?(.*)$ screenshot.php$1 [QSA,L]
 RewriteRule ^app/report(/)?(.*)$ report.php$1 [QSA,L]
 RewriteRule ^app/stats(/)?(.*)$ stats.php$1 [QSA,L]
 RewriteRule ^app/login(/)?(.*)$ login.php$1 [QSA,L]

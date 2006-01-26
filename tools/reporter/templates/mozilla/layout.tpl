@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="top" title="Home" href="http://www.mozilla.org/">
 <link rel="stylesheet" type="text/css" href="{$base_url}/styles/theme/mozilla/print.css"  media="print">
 <link rel="stylesheet" type="text/css" href="{$base_url}/styles/theme/mozilla/base/content.css"  media="all">

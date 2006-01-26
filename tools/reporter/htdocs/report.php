@@ -54,40 +54,64 @@ printheaders();
 $db = NewDBConnection($config['db_dsn']);
 $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
-$query =& $db->Execute("SELECT *
-                        FROM report, host
-                        WHERE report.report_id = ".$db->quote($_GET['report_id'])."
-                        AND host.host_id = report_host_id");
+$reportQuery =& $db->Execute("SELECT *
+                              FROM report, host
+                              WHERE report.report_id = ".$db->quote($_GET['report_id'])."
+                              AND host.host_id = report_host_id");
+if(!$reportQuery){
+    die("DB Error");
+}
+
+// Init to false
+$screenshot = false;
+
+// Only check for a screenshot if the user is an admin, and if we have a valid report
+if($reportQuery->RecordCount() == 1 && $securitylib->isLoggedIn()){
+    $screenshotQuery =& $db->Execute("SELECT screenshot.screenshot_report_id
+                                      FROM screenshot
+                                      WHERE screenshot.screenshot_report_id = ".$db->quote($_GET['report_id'])
+                                     );
+    if(!$screenshotQuery){
+        die("DB Error");
+    }
+    if($screenshotQuery->RecordCount() == 1){
+        $screenshot = true;
+    }
+}
 
 // disconnect database
 $db->Close();
 
 $content = initializeTemplate();
 
-if (!$query->fields){
+if (!$reportQuery->fields){
     $content->assign('error', 'No Report Found');
     displayPage($content, 'report', 'report.tpl', 'Mozilla Reporter - Error');
     exit;
 }
 
-$title = "Report for ".$query->fields['host_hostname']." - ".$query->fields['report_id'];
-$content->assign('report_id',              $query->fields['report_id']);
-$content->assign('report_url',             $query->fields['report_url']);
-$content->assign('host_url',               $config['base_url'].'/app/query/?host_hostname='.$query->fields['host_hostname'].'&amp;submit_query=Query');
-$content->assign('host_hostname',          $query->fields['host_hostname']);
-$content->assign('report_problem_type',    resolveProblemTypes($query->fields['report_problem_type']));
-$content->assign('report_behind_login',    resolveBehindLogin($query->fields['report_behind_login']));
-$content->assign('report_product',         $query->fields['report_product']);
-$content->assign('report_gecko',           $query->fields['report_gecko']);
-$content->assign('report_useragent',       $query->fields['report_useragent']);
-$content->assign('report_buildconfig',     $query->fields['report_buildconfig']);
-$content->assign('report_platform',        $query->fields['report_platform']);
-$content->assign('report_oscpu',           $query->fields['report_oscpu']);
-$content->assign('report_language',        $query->fields['report_language']);
-$content->assign('report_file_date',       $query->fields['report_file_date']);
-$content->assign('report_email',           $query->fields['report_email']);
-$content->assign('report_ip',              $query->fields['report_ip']);
-$content->assign('report_description',     $query->fields['report_description']);
+$title = "Report for ".$reportQuery->fields['host_hostname']." - ".$reportQuery->fields['report_id'];
+$content->assign('report_id',              $reportQuery->fields['report_id']);
+$content->assign('report_url',             $reportQuery->fields['report_url']);
+$content->assign('host_url',               $config['base_url'].'/app/query/?host_hostname='.$reportQuery->fields['host_hostname'].'&amp;submit_query=Query');
+$content->assign('host_hostname',          $reportQuery->fields['host_hostname']);
+$content->assign('report_problem_type',    resolveProblemTypes($reportQuery->fields['report_problem_type']));
+$content->assign('report_behind_login',    resolveBehindLogin($reportQuery->fields['report_behind_login']));
+$content->assign('report_product',         $reportQuery->fields['report_product']);
+$content->assign('report_gecko',           $reportQuery->fields['report_gecko']);
+$content->assign('report_useragent',       $reportQuery->fields['report_useragent']);
+$content->assign('report_buildconfig',     $reportQuery->fields['report_buildconfig']);
+$content->assign('report_platform',        $reportQuery->fields['report_platform']);
+$content->assign('report_oscpu',           $reportQuery->fields['report_oscpu']);
+$content->assign('report_language',        $reportQuery->fields['report_language']);
+$content->assign('report_file_date',       $reportQuery->fields['report_file_date']);
+$content->assign('report_email',           $reportQuery->fields['report_email']);
+$content->assign('report_ip',              $reportQuery->fields['report_ip']);
+$content->assign('report_description',     $reportQuery->fields['report_description']);
+
+if($screenshot){
+    $content->assign('screenshot',              $screenshot);
+}
 
 // Last/Next Functionality
 if(isset($_SESSION['reportList'])){

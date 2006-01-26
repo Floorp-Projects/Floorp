@@ -91,7 +91,7 @@
 		<tr>
 			<td class="label"><label for="report_problem_type">Problem Type:</label></td>
 			<td>
-				<input type="radio" name="report_problem_type" id="0" value="0" {if $report_problem_type == '0' || $report_problem_type == null}checked="checked"{/if}><label for="0">All types</label><br>
+				<input type="radio" name="report_problem_type" id="null" value="-1" {if $report_problem_type == '-1' || $report_problem_type == null}checked="checked"{/if}><label for="null">All types</label><br>
 				{html_radios name="report_problem_type" options=$problem_types selected=$report_problem_type separator="<br />"}
 			</td>
 		</tr>
@@ -99,8 +99,8 @@
 			<td class="label">Site requires login:</td>
 			<td>
 				<input type="radio" name="report_behind_login" id="behind_login_null" value="-1" {if $report_behind_login == '-1' || $report_behind_login == ''}checked="checked"{/if}><label for="behind_login_null">Any</label>
-				<input type="radio" name="report_behind_login" id="behind_login_yes" value="0" {if $report_behind_login == '0'}checked="checked"{/if}><label for="behind_login_yes">Yes</label>
-				<input type="radio" name="report_behind_login" id="behind_login_no" value="1" {if $report_behind_login == '1'}checked="checked"{/if}><label for="behind_login_no">No</label>
+				<input type="radio" name="report_behind_login" id="behind_login_yes" value="1" {if $report_behind_login == '1'}checked="checked"{/if}><label for="behind_login_yes">Yes</label>
+				<input type="radio" name="report_behind_login" id="behind_login_no" value="0" {if $report_behind_login == '0'}checked="checked"{/if}><label for="behind_login_no">No</label>
 			</td>
 		</tr>
 		<tr>

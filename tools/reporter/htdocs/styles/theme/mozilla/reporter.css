@@ -136,3 +136,18 @@ body {
 	width: 45%;
 	padding: 2px 9px 5px 9px;
 }
+
+
+#report_tabs li {
+   list-style-type: none;
+   border: 1px solid red;
+}
+
+#report_data, #report_screenshot{
+/*   float: right; */
+   margin-left: 110px;
+}
+
+#report_screenshot {
+    text-align: center;
+}

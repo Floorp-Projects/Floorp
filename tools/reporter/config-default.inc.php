@@ -47,6 +47,13 @@ $config['debug']                           = false;
 // Service Active
 $config['service_active']                  = true; // true=on | false=off
 
+// Screenshot Formats
+$config['screenshot_imageTypes']           = array('png' => 'image/png',
+                                                   'jpg' => 'image/jpeg');
+
+// Turn on WSDL??
+$config['use_wsdl']                        = false;
+
 // Paths
 $config['base_url']                        = 'http://reporter.server.tld'; // no trailing slash
 $config['base_path']                       = '/path/to/reporter'; // no trailing slash

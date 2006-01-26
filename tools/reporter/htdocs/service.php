@@ -38,14 +38,27 @@
 
 require_once('../config.inc.php');
 require_once($config['base_path'].'/includes/iolib.inc.php');
-require_once($config['base_path'].'/includes/contrib/adodb/adodb.inc.php');
+require_once($config['base_path'].'/includes/db.inc.php');
 require_once($config['base_path'].'/includes/contrib/nusoap/lib/nusoap.php');
 
 // Turn off Error Reporting because it breaks xml formatting and causes errors
 error_reporting(0);
 
+if($config['debug']){
+    $debug = 1;
+}
+
 // Create the server instance
 $server = new soap_server;
+
+// UTF-8 support is good
+$server->soap_defencoding = "UTF-8";
+$server->decode_utf8 = false;
+
+// WSDL Support
+if($config['use_wsdl']){
+    $server->configureWSDL('reporterwsdl', 'urn:reporterwsdl');
+}
 
 // Register the method to expose
 // Note: with NuSOAP 0.6.3, only method name is used w/o WSDL
@@ -74,20 +87,28 @@ $server->register(
           'buildconfig' => 'xsd:string',
           'language' => 'xsd:string',
           'email' => 'xsd:string',
-          'sysid' => 'xsd:string'),     // input parameters
-    array('return' => 'xsd:string'),    // output parameters
-    'uri:MozillaReporter',              // namespace
-    'uri:MozillaReporter/submitReport', // SOAPAction
-    'rpc',                              // style
-    'encoded'                           // use
+          'sysid' => 'xsd:string',
+          'screenshot' => 'xsd:base64Binary',
+          'screenshot_format' => 'xsd:string'),     // input parameters
+    array('return' => 'xsd:string'),                // output parameters
+    'uri:MozillaReporter',                          // namespace
+    'uri:MozillaReporter/submitReport',             // SOAPAction
+    'rpc',                                          // style
+    'encoded'                                       // use
 );
-function submitReport($rmoVers, $url, $problem_type, $description, $behind_login, $platform, $oscpu, $gecko, $product, $useragent, $buildconfig, $language, $email, $sysid) {
-    global $config;
 
+function submitReport($rmoVers, $url, $problem_type, $description, $behind_login,
+                      $platform, $oscpu, $gecko, $product, $useragent, $buildconfig, 
+                      $language, $email, $sysid, $screenshot, $screenshot_format) {
+    global $config;
+    
     if ($config['service_active'] == false){
             return new soap_fault('SERVER', '', 'The service is currently unavailable.  Please try again in a few minutes.');
     }
 
+    /**********
+     * Sanitize and Validate
+     **********/
     // Remove any HTML tags and whitespace
     $rmoVers = trim(strip_all_tags($rmoVers));
     $url = trim(strip_all_tags($url));
@@ -103,14 +124,17 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     $language = trim(strip_all_tags($language));
     $email = trim(strip_all_tags($email));
     $sysid = trim(strip_all_tags($sysid));
+    $screenshot_format = trim(strip_all_tags($screenshot_format));
+    $screenshot_width = trim(strip_all_tags($screenshot_width));
+    $screenshot_height = trim(strip_all_tags($screenshot_height));
 
     // check verison
     if ($rmoVers < $config['min_vers']){
         return new soap_fault('Client', '', 'Your product is out of date, please upgrade.  See http://reporter.mozilla.org/install for details.', $rmoVers);
     }
 
-    $parsedURL = parse_url($url);
-    if (!$url || !$parsedURL['host']){
+    $parsedUrl = parse_url($url);
+    if (!$url || !$parsedUrl['host']){
         return new soap_fault('Client', '', 'url must use a valid URL syntax http://mozilla.com/page', $url);
     }
     if (!$problem_type || $problem_type == -1 || $problem_type == "0") {
@@ -127,10 +151,11 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     if (!$language) {
         return new soap_fault('Client', '', 'Invalid Localization', $language);
     }
-/*  not used until we have a way to gather this info
+    /*  We don't explicity require this since some older clients may not return this.
    if (!$gecko) {
         return new soap_fault('Client', '', 'Invalid Gecko ID', $gecko);
-    }*/
+    }
+    */
     if (!$oscpu) {
         return new soap_fault('Client', '', 'Invalid OS CPU', $oscpu);
     }
@@ -140,73 +165,108 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     if (!$buildconfig) {
         return new soap_fault('Client', '', 'Invalid Build Config', $buildconfig);
     }
-
     if (!$sysid) {
         return new soap_fault('Client', '', 'No SysID Entered', $sysid);
     }
-    /*    we don't require email... it's optional
+    /* We don't require email... it's optional
     if    (!$email) {
         return new soap_fault('Client', '', 'Invalid Email', $email);
-    }*/
+    }
+    */
+
+    // Image Validation
+    if($screenshot != null) {
+        // If no format specified, it's invalid
+        if($screenshot_format == null) {
+            return new soap_fault('Client', '', 'Invalid Screenshot', $screenshot_format);
+        }
+        // Must be in our list of approved formats.
+        if(!in_array($screenshot_format, $config['screenshot_imageTypes'])){
+            return new soap_fault('Client', '', 'Invalid Screenshot Format', $screenshot_format);
+        }
+    }
 
     // create report_id.    We just MD5 it, becase we don't need people counting reports, since it's inaccurate.
     // we can have dup's, so it's not a good thing for people to be saying 'mozilla.org reports 500,000 incompatable sites'
     $report_id = 'RMO'.str_replace(".", "", array_sum(explode(' ', microtime())));
 
-    // Open DB
-    $db = NewADOConnection($config['db_dsn']);
-    if (!$db) die("Connection failed");
+    /**********
+     * Open DB
+     **********/
+    $db = NewDBConnection($config['db_dsn']);
     $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
-    $sysIDQuery = $db->Execute("SELECT `sysid_id` FROM `sysid` WHERE `sysid_id` = ".$db->quote($sysid));
-    $sysidCount = $sysIDQuery->RecordCount();
-    if ($sysidCount != 1){
-      return new soap_fault('Client', '', 'Invalid SysID', $sysid);
+    /**********
+     * Check for valid sysid
+     **********/
+    $sysIdQuery = $db->Execute("SELECT sysid.sysid_id
+                                FROM sysid
+                                WHERE sysid.sysid_id = ".$db->quote($sysid));
+    if(!$sysIdQuery){
+        return new soap_fault('SERVER', '', 'Database Error SR1');
     }
 
-    $queryURL = $db->Execute("SELECT `host_id` FROM `host` WHERE `host_hostname` = ".$db->quote($parsedURL['host']));
-    $resultURL = $queryURL->RecordCount();
-    if ($resultURL <= 0) {
+    if ($sysIdQuery->RecordCount() != 1){
+        return new soap_fault('Client', '', 'Invalid SysID', $sysid);
+    }
+
+    /**********
+     * Check Hostname
+     **********/
+    $hostnameQuery = $db->Execute("SELECT host.host_id
+                                   FROM host
+                                   WHERE host.host_hostname = ".$db->quote($parsedUrl['host']));
+    if(!$hostnameQuery){
+        return new soap_fault('SERVER', '', 'Database Error SR2');
+    }
+
+    /**********
+     * Add Host
+     **********/
+    if ($hostnameQuery->RecordCount() <= 0) {
         // generate hash
-        $host_id = md5($parsedURL['host'].microtime());
+        $host_id = md5($parsedUrl['host'].microtime());
         // We add the URL
-        $addURL = $db->Execute("INSERT INTO `host` (`host_id`, `host_hostname`, `host_date_added`)
-                                VALUES (
-                                    ".$db->quote($host_id).",
-                                    ".$db->quote($parsedURL['host']).",
-                                    now()
-                                )
-                    ");
-        if (!$addURL) {
-            return new soap_fault('SERVER', '', 'Database Error');
+        $addUrlQuery = $db->Execute("INSERT INTO host (host.host_id, host.host_hostname, host.host_date_added)
+                                         VALUES (
+                                             ".$db->quote($host_id).",
+                                             ".$db->quote($parsedUrl['host']).",
+                                             now()
+                                         )");
+        if (!$addUrlQuery) {
+            return new soap_fault('SERVER', '', 'Database Error SR3');
         }
     }
-    else if ($resultURL == 1) {
+    else if ($hostnameQuery->RecordCount() == 1) {
         // pull the hash from DB
-        $host_id = $queryURL->fields['host_id'];
+        $host_id = $hostnameQuery->fields['host_id'];
     } else{
-            return new soap_fault('SERVER', '', 'Host Exception Error');
+        return new soap_fault('SERVER', '', 'Host Exception Error');
     }
-    $addReport = $db->Execute("INSERT INTO `report` (
-                                                    `report_id`,
-                                                    `report_url`,
-                                                    `report_host_id`,
-                                                    `report_problem_type`,
-                                                    `report_description`,
-                                                    `report_behind_login`,
-                                                    `report_useragent`,
-                                                    `report_platform`,
-                                                    `report_oscpu`,
-                                                    `report_language`,
-                                                    `report_gecko`,
-                                                    `report_buildconfig`,
-                                                    `report_product`,
-                                                    `report_email`,
-                                                    `report_ip`,
-                                                    `report_file_date`,
-                                                    `report_sysid`
-                                )
-                                VALUES (
+
+    /**********
+     * Add Report
+     **********/
+    $addReportQuery = $db->Execute("INSERT INTO report (
+                                        report.report_id,
+                                        report.report_url,
+                                        report.report_host_id,
+                                        report.report_problem_type,
+                                        report.report_description,
+                                        report.report_behind_login,
+                                        report.report_useragent,
+                                        report.report_platform,
+                                        report.report_oscpu,
+                                        report.report_language,
+                                        report.report_gecko,
+                                        report.report_buildconfig,
+                                        report.report_product,
+                                        report.report_email,
+                                        report.report_ip,
+                                        report.report_file_date,
+                                        report.report_sysid
+                                    )
+                                    VALUES (
                                         ".$db->quote($report_id).",
                                         ".$db->quote($url).",
                                         ".$db->quote($host_id).",
@@ -224,25 +284,57 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
                                         ".$db->quote($_SERVER['REMOTE_ADDR']).",
                                         now(),
                                         ".$db->quote($sysid)."
-                                )
-        ");
-
-    if (!$addReport) {
-        return new soap_fault('SERVER', '', 'Database Error');
-    } else {
-        return $report_id;
+                                    );");
+    if (!$addReportQuery) {
+        return new soap_fault('SERVER', '', 'Database Error SR4');
     }
+
+    /**********
+     * Process Screenshot
+     **********/
+    if($screenshot != null){
+
+        // Screenshots come in base64 encoded, so we need to decode.
+        $screenshot = base64_decode($screenshot);
+
+        // Note we addslashes() not quote() the image, because quote() is not
+        // binary compatible and has ugly consequences.
+        $insertSsQuery = $db->Execute("INSERT screenshot(
+                                           screenshot.screenshot_report_id,
+                                           screenshot.screenshot_data,
+                                           screenshot.screenshot_format
+                                       )
+                                       VALUES (".$db->quote($report_id).",
+                                               '".addslashes($screenshot)."',
+                                               ".$db->quote($screenshot_format)."
+                                       );
+        ");
+        if(!$insertSsQuery){
+            return new soap_fault('SERVER', '', 'Database Error SR5');
+        }
+        // If we got this far, the screenshot was successfully added!
+    }
+
+    /**********
+     * Disconnect (optional really)
+     **********/
+    $db->disconnect();
+
+    return $report_id;
 }
 
 function register($language){
     global $config;
 
-    // Open DB
-    $db = NewADOConnection($config['db_dsn']);
-    if (!$db) die("Connection failed");
+    /**********
+     * Open DB
+     **********/
+    $db = NewDBConnection($config['db_dsn']);
     $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
-    // generate an ID
+    /**********
+     * Generate an ID
+     **********/
     $unique = false;
 
     // in theory a collision could happen, though unlikely.    So just to make sure, we do this
@@ -250,41 +342,49 @@ function register($language){
     while (!$unique) {
         $id = date("ymd").rand(1000,9999);
 
-        $query =& $db->Execute("SELECT sysid.sysid_id
+        $uniqueQuery =& $db->Execute("SELECT sysid.sysid_id
                                 FROM sysid
-                                WHERE sysid.sysid_id = '$newid'
+                                WHERE sysid.sysid_id = '$id'
                                ");
-        $numRows = $query->RecordCount();
+        if(!$uniqueQuery){
+            return new soap_fault('SERVER', '', 'Database Error R1');
+        }
+        $numRows = $uniqueQuery->RecordCount();
         if ($numRows == 0) {
             // It's unique, stop the loop.
             $unique = true;
         }
     }
 
-    $addsysid = $db->Execute("INSERT INTO `sysid` (
-                                 `sysid_id`,
-                                 `sysid_created`,
-                                 `sysid_created_ip`,
-                                 `sysid_language`
-                            )
-                            VALUES (
-                                  '".$id."',
-                                  now(),
-                                  '".$_SERVER['REMOTE_ADDR']."',
-                                  ".$db->quote($language)."
-                            )
-                     ");
-    // Disconnect Database
+    /**********
+     * Register ID
+     **********/
+    $addSysIdQuery = $db->Execute("INSERT INTO sysid (
+                                       sysid.sysid_id,
+                                       sysid.sysid_created,
+                                       sysid.sysid_created_ip,
+                                       sysid.sysid_language
+                                   )
+                                   VALUES (
+                                       '".$id."',
+                                       now(),
+                                       '".$_SERVER['REMOTE_ADDR']."',
+                                       ".$db->quote($language)."
+                                   )");
+    if (!$addSysIdQuery) {
+        return new soap_fault('SERVER', '', 'Database Error R2');
+    }
+
+    /**********
+     * Disconnect
+     **********/
     $db->disconnect();
 
-    if (!$addsysid) {
-        return new soap_fault('SERVER', '', 'Database Error');
-    } else {
-        return $id;
-    }
+    return $id;
 }
 
 // Use the request to (try to) invoke the service
 $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
 $server->service($HTTP_RAW_POST_DATA);
+
 ?>
