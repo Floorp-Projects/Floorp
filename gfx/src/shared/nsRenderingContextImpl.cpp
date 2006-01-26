@@ -190,6 +190,7 @@ NS_IMETHODIMP nsRenderingContextImpl::SetTranslation(nscoord aX, nscoord aY)
   GetCurrentTransform(theTransform);
   NS_ASSERTION(theTransform != nsnull, "The rendering context transform is null");
   theTransform->SetTranslation(aX, aY);
+  return NS_OK;
 }
 
 PRBool nsRenderingContextImpl::RectFitsInside(const nsRect& aRect, PRInt32 aWidth, PRInt32 aHeight) const
