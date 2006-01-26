@@ -141,7 +141,7 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_ONLY_BOOKMARKED "onlyBookmarked"
 #define QUERYKEY_DOMAIN_IS_HOST "domainIsHost"
 #define QUERYKEY_DOMAIN "domain"
-#define QUERYKEY_FOLDERS "folders"
+#define QUERYKEY_FOLDER "folder"
 #define QUERYKEY_NOTANNOTATION "!annotation"
 #define QUERYKEY_ANNOTATION "annotation"
 #define QUERYKEY_URI "uri"
@@ -175,7 +175,11 @@ inline void AppendInt64(nsACString& str, PRInt64 i)
   str.Append(tmp);
 }
 
+
 // nsNavHistory::QueryStringToQueries
+//
+//    From C++ places code, you should use QueryStringToQueryArray, this is
+//    the harder-to-use XPCOM version.
 
 NS_IMETHODIMP
 nsNavHistory::QueryStringToQueries(const nsACString& aQueryString,
@@ -183,9 +187,42 @@ nsNavHistory::QueryStringToQueries(const nsACString& aQueryString,
                                    PRUint32* aResultCount,
                                    nsINavHistoryQueryOptions** aOptions)
 {
-  nsresult rv;
   *aQueries = nsnull;
   *aResultCount = 0;
+  nsCOMPtr<nsNavHistoryQueryOptions> options;
+  nsCOMArray<nsNavHistoryQuery> queries;
+  nsresult rv = QueryStringToQueryArray(aQueryString, &queries,
+                                        getter_AddRefs(options));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aResultCount = queries.Count();
+  if (queries.Count() > 0) {
+    // convert COM array to raw
+    *aQueries = NS_STATIC_CAST(nsINavHistoryQuery**,
+                  nsMemory::Alloc(sizeof(nsINavHistoryQuery*) * queries.Count()));
+    NS_ENSURE_TRUE(*aQueries, NS_ERROR_OUT_OF_MEMORY);
+    for (PRInt32 i = 0; i < queries.Count(); i ++) {
+      (*aQueries)[i] = queries[i];
+      NS_ADDREF((*aQueries)[i]);
+    }
+  }
+  NS_ADDREF(*aOptions = options);
+  return NS_OK;
+}
+
+
+// nsNavHistory::QueryStringToQueryArray
+//
+//    An internal version of QueryStringToQueries that fills a COM array for
+//    ease-of-use.
+
+nsresult
+nsNavHistory::QueryStringToQueryArray(const nsACString& aQueryString,
+                                      nsCOMArray<nsNavHistoryQuery>* aQueries,
+                                      nsNavHistoryQueryOptions** aOptions)
+{
+  nsresult rv;
+  aQueries->Clear();
   *aOptions = nsnull;
 
   nsRefPtr<nsNavHistoryQueryOptions> options(new nsNavHistoryQueryOptions());
@@ -196,30 +233,14 @@ nsNavHistory::QueryStringToQueries(const nsACString& aQueryString,
   rv = TokenizeQueryString(aQueryString, &tokens);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMArray<nsINavHistoryQuery> queries;
-  rv = TokensToQueries(tokens, &queries, options);
+  rv = TokensToQueries(tokens, aQueries, options);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Unable to parse the query string: ");
+    NS_WARNING(PromiseFlatCString(aQueryString).get());
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_STATIC_CAST(nsRefPtr<nsINavHistoryQueryOptions>, options).swap(*aOptions);
-  *aResultCount = queries.Count();
-  if (queries.Count() == 0) {
-    // need to special-case 0 queries since we don't allocate an array
-    *aQueries = nsnull;
-    return NS_OK;
-  }
-
-  // convert COM array to raw
-  *aQueries = NS_STATIC_CAST(nsINavHistoryQuery**,
-                nsMemory::Alloc(sizeof(nsINavHistoryQuery*) * queries.Count()));
-  if (! *aQueries)
-    return NS_ERROR_OUT_OF_MEMORY;
-  for (PRInt32 i = 0; i < queries.Count(); i ++) {
-    (*aQueries)[i] = queries[i];
-    NS_ADDREF((*aQueries)[i]);
-  }
-
   NS_ADDREF(*aOptions = options);
-
   return NS_OK;
 }
 
@@ -352,7 +373,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     query->GetFolders(&folderCount, &folders);
     for (PRUint32 i = 0; i < folderCount; ++i) {
       AppendAmpersandIfNonempty(aQueryString);
-      aQueryString += NS_LITERAL_CSTRING(QUERYKEY_FOLDERS "=");
+      aQueryString += NS_LITERAL_CSTRING(QUERYKEY_FOLDER "=");
       AppendInt64(aQueryString, folders[0]);
     }
   }
@@ -465,7 +486,7 @@ TokenizeQueryString(const nsACString& aQuery,
 
 nsresult
 nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
-                              nsCOMArray<nsINavHistoryQuery>* aQueries,
+                              nsCOMArray<nsNavHistoryQuery>* aQueries,
                               nsNavHistoryQueryOptions* aOptions)
 {
   nsresult rv;
@@ -475,7 +496,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
   nsTArray<PRUint32> groups;
   nsTArray<PRInt64> folders;
 
-  nsCOMPtr<nsINavHistoryQuery> query(new nsNavHistoryQuery());
+  nsCOMPtr<nsNavHistoryQuery> query(new nsNavHistoryQuery());
   if (! query)
     return NS_ERROR_OUT_OF_MEMORY;
   if (! aQueries->AppendObject(query))
@@ -522,7 +543,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
       NS_ENSURE_SUCCESS(rv, rv);
 
     // folders: FIXME use folder name???
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_FOLDERS)) {
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_FOLDER)) {
       PRInt64 folder;
       if (PR_sscanf(kvp.value.get(), "%lld", &folder) == 1) {
         NS_ENSURE_TRUE(folders.AppendElement(folder), NS_ERROR_OUT_OF_MEMORY);

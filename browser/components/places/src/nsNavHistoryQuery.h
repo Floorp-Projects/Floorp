@@ -77,6 +77,8 @@ public:
   const nsCString& Domain() { return mDomain; }
   PRBool UriIsPrefix() { return mUriIsPrefix; }
   nsIURI* Uri() { return mUri; } // NOT AddRef-ed!
+  PRBool AnnotationIsNot() { return mAnnotationIsNot; }
+  const nsCString& Annotation() { return mAnnotation; }
   const nsTArray<PRInt64>& Folders() const { return mFolders; }
 
 private:
