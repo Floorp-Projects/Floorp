@@ -586,12 +586,20 @@ js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
 
 /*
  * Local root set management.
+ *
+ * NB: the jsval parameters below may be properly tagged jsvals, or GC-thing
+ * pointers cast to (jsval).  This relies on JSObject's tag being zero, but
+ * on the up side it lets us push int-jsval-encoded scopeMark values on the
+ * local root stack.
  */
 extern JSBool
 js_EnterLocalRootScope(JSContext *cx);
 
+#define js_LeaveLocalRootScope(cx) \
+    js_LeaveLocalRootScopeWithResult(cx, JSVAL_NULL)
+
 extern void
-js_LeaveLocalRootScope(JSContext *cx);
+js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval);
 
 extern void
 js_ForgetLocalRoot(JSContext *cx, jsval v);
