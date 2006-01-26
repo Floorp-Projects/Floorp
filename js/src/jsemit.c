@@ -546,7 +546,7 @@ BuildSpanDepTable(JSContext *cx, JSCodeGenerator *cg)
     const JSCodeSpec *cs;
     ptrdiff_t len, off;
 
-    pc = CG_BASE(cg);
+    pc = CG_BASE(cg) + cg->spanDepTodo;
     end = CG_NEXT(cg);
     while (pc < end) {
         op = (JSOp)*pc;
@@ -611,6 +611,7 @@ BuildSpanDepTable(JSContext *cx, JSCodeGenerator *cg)
 #endif /* JS_HAS_SWITCH_STATEMENT */
         }
 
+        JS_ASSERT(len > 0);
         pc += len;
     }
 
@@ -1037,6 +1038,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
                 }
             }
         }
+        cg->main.lastNoteOffset += growth;
 
         /*
          * Fix try/catch notes (O(numTryNotes * log2(numSpanDeps)), but it's
@@ -1130,6 +1132,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
     FreeJumpTargets(cg, cg->jumpTargets);
     cg->jumpTargets = NULL;
     cg->numSpanDeps = cg->numJumpTargets = 0;
+    cg->spanDepTodo = CG_OFFSET(cg);
     return JS_TRUE;
 }
 

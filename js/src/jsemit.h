@@ -186,11 +186,13 @@ struct JSJumpTarget {
 
 struct JSCodeGenerator {
     JSTreeContext   treeContext;    /* base state: statement info stack, etc. */
+
     JSArenaPool     *codePool;      /* pointer to thread code arena pool */
     JSArenaPool     *notePool;      /* pointer to thread srcnote arena pool */
     void            *codeMark;      /* low watermark in cg->codePool */
     void            *noteMark;      /* low watermark in cg->notePool */
     void            *tempMark;      /* low watermark in cx->tempPool */
+
     struct {
         jsbytecode  *base;          /* base of JS bytecode vector */
         jsbytecode  *limit;         /* one byte beyond end of bytecode */
@@ -201,20 +203,27 @@ struct JSCodeGenerator {
         ptrdiff_t   lastNoteOffset; /* code offset for last source note */
         uintN       currentLine;    /* line number for tree-based srcnote gen */
     } prolog, main, *current;
+
     const char      *filename;      /* null or weak link to source filename */
     uintN           firstLine;      /* first line, for js_NewScriptFromCG */
     JSPrincipals    *principals;    /* principals for constant folding eval */
     JSAtomList      atomList;       /* literals indexed for mapping */
+
     intN            stackDepth;     /* current stack depth in script frame */
     uintN           maxStackDepth;  /* maximum stack depth so far */
+
     JSTryNote       *tryBase;       /* first exception handling note */
     JSTryNote       *tryNext;       /* next available note */
     size_t          tryNoteSpace;   /* # of bytes allocated at tryBase */
+
     JSSpanDep       *spanDeps;      /* span dependent instruction records */
     JSJumpTarget    *jumpTargets;   /* AVL tree of jump target offsets */
     JSJumpTarget    *jtFreeList;    /* JT_LEFT-linked list of free structs */
     uintN           numSpanDeps;    /* number of span dependencies */
     uintN           numJumpTargets; /* number of jump targets */
+    ptrdiff_t       spanDepTodo;    /* offset from main.base of potentially
+                                       unoptimized spandeps */
+
     uintN           emitLevel;      /* js_EmitTree recursion level */
     JSAtomList      constList;      /* compile time constants */
     JSCodeGenerator *parent;        /* Enclosing function or global context */
