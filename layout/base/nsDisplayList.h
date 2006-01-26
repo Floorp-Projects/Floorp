@@ -563,7 +563,8 @@ private:
  * The lists themselves are external to this object and thus can be shared
  * with others. Some of the list pointers may even refer to the same list.
  */
-struct nsDisplayListSet {
+class nsDisplayListSet {
+public:
   /**
    * @return a list where one should place the border and/or background for
    * this frame (everything from steps 1 and 2 of CSS 2.1 appendix E)

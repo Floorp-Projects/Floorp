@@ -1263,7 +1263,7 @@ class nsDisplayImage : public nsDisplayItem {
 public:
   nsDisplayImage(nsImageFrame* aFrame, imgIContainer* aImage)
       : mFrame(aFrame), mImage(aImage) {}
-  virtual nsImageFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("Image")
