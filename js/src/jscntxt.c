@@ -489,10 +489,10 @@ js_EnterLocalRootScope(JSContext *cx)
 }
 
 void
-js_LeaveLocalRootScope(JSContext *cx)
+js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
 {
     JSLocalRootStack *lrs;
-    unsigned mark, m, n;
+    uint32 mark, m, n;
     JSLocalRootChunk *lrc;
 
     /* Defend against buggy native callers. */
@@ -517,11 +517,29 @@ js_LeaveLocalRootScope(JSContext *cx)
         --n;
     }
 
-    /* Pop the scope, restoring lrs->scopeMark. */
+    /*
+     * Pop the scope, restoring lrs->scopeMark.  If rval is a GC-thing, push
+     * it on the caller's scope, or store it in cx->lastInternalResult if we
+     * are leaving the outermost scope.  We don't need to allocate a new lrc
+     * because we can overwrite the old mark's slot with rval.
+     */
     lrc = lrs->topChunk;
     m = mark & JSLRS_CHUNK_MASK;
     lrs->scopeMark = (uint32) JSVAL_TO_INT(lrc->roots[m]);
-    lrc->roots[m] = JSVAL_NULL;
+    if (JSVAL_IS_GCTHING(rval) && !JSVAL_IS_NULL(rval)) {
+        if (mark == 0) {
+            cx->lastInternalResult = rval;
+        } else {
+            /*
+             * Increment m to avoid the "else if (m == 0)" case below.  If
+             * rval is not a GC-thing, that case would take care of freeing
+             * any chunk that contained only the old mark.  Since rval *is*
+             * a GC-thing here, we want to reuse that old mark's slot.
+             */
+            lrc->roots[m++] = rval;
+            ++mark;
+        }
+    }
     lrs->rootCount = (uint32) mark;
 
     /*
@@ -546,7 +564,7 @@ void
 js_ForgetLocalRoot(JSContext *cx, jsval v)
 {
     JSLocalRootStack *lrs;
-    unsigned i, j, m, n, mark;
+    uint32 i, j, m, n, mark;
     JSLocalRootChunk *lrc, *lrc2;
     jsval top;
 
@@ -604,7 +622,7 @@ js_ForgetLocalRoot(JSContext *cx, jsval v)
 int
 js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
 {
-    unsigned n, m;
+    uint32 n, m;
     JSLocalRootChunk *lrc;
 
     n = lrs->rootCount;
@@ -640,7 +658,7 @@ js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
 void
 js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs)
 {
-    unsigned n, m, mark;
+    uint32 n, m, mark;
     JSLocalRootChunk *lrc;
 
     n = lrs->rootCount;
