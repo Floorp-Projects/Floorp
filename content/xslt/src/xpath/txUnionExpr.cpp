@@ -125,6 +125,21 @@ UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 } //-- evaluate
 
+TX_IMPL_EXPR_STUBS_LIST(UnionExpr, NODESET_RESULT, expressions)
+
+PRBool
+UnionExpr::isSensitiveTo(ContextSensitivity aContext)
+{
+    txListIterator iter(&expressions);
+    while (iter.hasNext()) {
+        if (NS_STATIC_CAST(Expr*, iter.next())->isSensitiveTo(aContext)) {
+            return PR_TRUE;
+        }
+    }
+
+    return PR_FALSE;
+}
+
 #ifdef TX_TO_STRING
 void
 UnionExpr::toString(nsAString& dest)

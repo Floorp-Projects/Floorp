@@ -87,6 +87,7 @@ public:
     PRBool moveToElementById(const nsAString& aID);
     PRBool moveToFirstAttribute();
     PRBool moveToNextAttribute();
+    PRBool moveToNamedAttribute(nsIAtom* aLocalName, PRInt32 aNSID);
     PRBool moveToFirstChild();
     PRBool moveToLastChild();
     PRBool moveToNextSibling();

@@ -74,6 +74,40 @@ public:
      */
     virtual nsresult getSimplePatterns(txList &aList);
 
+    /**
+     * Returns the type of this pattern.
+     */
+    enum Type {
+        STEP_PATTERN,
+        OTHER_PATTERN
+    };
+    virtual Type getType()
+    {
+      return OTHER_PATTERN;
+    }
+
+    /**
+     * Returns sub-expression at given position
+     */
+    virtual Expr* getSubExprAt(PRUint32 aPos) = 0;
+
+    /**
+     * Replace sub-expression at given position. Does not delete the old
+     * expression, that is the responsibility of the caller.
+     */
+    virtual void setSubExprAt(PRUint32 aPos, Expr* aExpr) = 0;
+
+    /**
+     * Returns sub-pattern at given position
+     */
+    virtual txPattern* getSubPatternAt(PRUint32 aPos) = 0;
+
+    /**
+     * Replace sub-pattern at given position. Does not delete the old
+     * pattern, that is the responsibility of the caller.
+     */
+    virtual void setSubPatternAt(PRUint32 aPos, txPattern* aPattern) = 0;
+
 #ifdef TX_TO_STRING
     /*
      * Returns the String representation of this Pattern.
@@ -89,7 +123,11 @@ public:
 
 #define TX_DECL_PATTERN_BASE \
     MBool matches(const txXPathNode& aNode, txIMatchContext* aContext); \
-    double getDefaultPriority()
+    double getDefaultPriority(); \
+    virtual Expr* getSubExprAt(PRUint32 aPos); \
+    virtual void setSubExprAt(PRUint32 aPos, Expr* aExpr); \
+    virtual txPattern* getSubPatternAt(PRUint32 aPos); \
+    virtual void setSubPatternAt(PRUint32 aPos, txPattern* aPattern)
 
 #ifndef TX_TO_STRING
 #define TX_DECL_PATTERN TX_DECL_PATTERN_BASE
@@ -103,6 +141,29 @@ public:
     TX_DECL_PATTERN; \
     nsresult getSimplePatterns(txList &aList)
 
+#define TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(_class)             \
+Expr*                                                         \
+_class::getSubExprAt(PRUint32 aPos)                           \
+{                                                             \
+    return nsnull;                                            \
+}                                                             \
+void                                                          \
+_class::setSubExprAt(PRUint32 aPos, Expr* aExpr)              \
+{                                                             \
+    NS_NOTREACHED("setting bad subexpression index");         \
+}
+
+#define TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(_class)          \
+txPattern*                                                    \
+_class::getSubPatternAt(PRUint32 aPos)                        \
+{                                                             \
+    return nsnull;                                            \
+}                                                             \
+void                                                          \
+_class::setSubPatternAt(PRUint32 aPos, txPattern* aPattern)   \
+{                                                             \
+    NS_NOTREACHED("setting bad subexpression index");         \
+}
 
 class txUnionPattern : public txPattern
 {
@@ -142,12 +203,7 @@ private:
         {
         }
 
-        ~Step()
-        {
-            delete pattern;
-        }
-
-        txPattern* pattern;
+        nsAutoPtr<txPattern> pattern;
         MBool isChild;
     };
 
@@ -221,12 +277,21 @@ public:
     {
     }
 
-    ~txStepPattern();
-
     TX_DECL_PATTERN;
+    Type getType();
+
+    txNodeTest* getNodeTest()
+    {
+      return mNodeTest;
+    }
+    void setNodeTest(txNodeTest* aNodeTest)
+    {
+      mNodeTest.forget();
+      mNodeTest = aNodeTest;
+    }
 
 private:
-    txNodeTest* mNodeTest;
+    nsAutoPtr<txNodeTest> mNodeTest;
     MBool mIsAttr;
 };
 

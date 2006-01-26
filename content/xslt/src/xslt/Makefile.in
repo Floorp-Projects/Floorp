@@ -94,6 +94,7 @@ CPPSRCS = \
         txToplevelItems.cpp \
         txXSLTNumber.cpp \
         txXSLTNumberCounters.cpp \
+        txPatternOptimizer.cpp \
         txXSLTPatterns.cpp \
         txXSLTProcessor.cpp \
         txPatternParser.cpp \

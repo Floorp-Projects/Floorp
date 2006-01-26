@@ -130,6 +130,18 @@ ElementAvailableFunctionCall::evaluate(txIEvalContext* aContext,
     return NS_OK;
 }
 
+Expr::ResultType
+ElementAvailableFunctionCall::getReturnType()
+{
+    return BOOLEAN_RESULT;
+}
+
+PRBool
+ElementAvailableFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    return argsSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 nsresult
 ElementAvailableFunctionCall::getNameAtom(nsIAtom** aAtom)

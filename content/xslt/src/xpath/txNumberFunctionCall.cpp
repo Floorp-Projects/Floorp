@@ -153,6 +153,22 @@ NumberFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_ERROR_UNEXPECTED;
 }
 
+Expr::ResultType
+NumberFunctionCall::getReturnType()
+{
+    return NUMBER_RESULT;
+}
+
+PRBool
+NumberFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    if (mType == NUMBER && params.isEmpty()) {
+        return !!(aContext & NODE_CONTEXT);
+    }
+
+    return argsSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 nsresult
 NumberFunctionCall::getNameAtom(nsIAtom** aAtom)

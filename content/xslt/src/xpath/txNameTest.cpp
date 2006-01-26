@@ -56,10 +56,6 @@ txNameTest::txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
                  "Go fix txNameTest::matches");
 }
 
-txNameTest::~txNameTest()
-{
-}
-
 PRBool txNameTest::matches(const txXPathNode& aNode, txIMatchContext* aContext)
 {
     if ((mNodeType == txXPathNodeType::ELEMENT_NODE &&
@@ -98,6 +94,18 @@ double txNameTest::getDefaultPriority()
         return -0.25;
     }
     return 0;
+}
+
+txNodeTest::NodeTestType
+txNameTest::getType()
+{
+    return NAME_TEST;
+}
+
+PRBool
+txNameTest::isSensitiveTo(Expr::ContextSensitivity aContext)
+{
+    return !!(aContext & Expr::NODE_CONTEXT);
 }
 
 #ifdef TX_TO_STRING

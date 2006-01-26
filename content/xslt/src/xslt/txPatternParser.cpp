@@ -43,23 +43,31 @@
 #include "txStringUtils.h"
 #include "txXSLTPatterns.h"
 #include "txIXPathContext.h"
+#include "txPatternOptimizer.h"
+
 
 txPattern* txPatternParser::createPattern(const nsAFlatString& aPattern,
                                           txIParseContext* aContext)
 {
-    txPattern* pattern = 0;
     txExprLexer lexer;
     nsresult rv = lexer.parse(aPattern);
     if (NS_FAILED(rv)) {
         // XXX error report parsing error
         return 0;
     }
-    rv = createUnionPattern(lexer, aContext, pattern);
+    nsAutoPtr<txPattern> pattern;
+    rv = createUnionPattern(lexer, aContext, *getter_Transfers(pattern));
     if (NS_FAILED(rv)) {
         // XXX error report parsing error
         return 0;
     }
-    return pattern;
+
+    txPatternOptimizer optimizer;
+    txPattern* newPattern = nsnull;
+    rv = optimizer.optimize(pattern, &newPattern);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+
+    return newPattern ? newPattern : pattern.forget();
 }
 
 nsresult txPatternParser::createUnionPattern(txExprLexer& aLexer,

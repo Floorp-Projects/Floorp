@@ -12,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is TransforMiiX XSLT processor code.
+ * The Original Code is TransforMiiX XSLT processor.
  *
  * The Initial Developer of the Original Code is
- * Jonas Sicking.
- * Portions created by the Initial Developer are Copyright (C) 2005
- * the Initial Developer. All Rights Reserved.
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonas Sicking <jonas@sicking.cc> (Original Author)
+ *   IBM Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,41 +36,55 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txError.h"
 #include "txExpr.h"
-#include "nsString.h"
-#include "txIXPathContext.h"
+#include "txExprResult.h"
+#include "txSingleNodeContext.h"
 
-nsresult
-txErrorExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
+txPredicatedNodeTest::txPredicatedNodeTest(txNodeTest* aNodeTest,
+                                           Expr* aPredicate)
+    : mNodeTest(aNodeTest),
+      mPredicate(aPredicate)
 {
-    *aResult = nsnull;
-
-    nsAutoString err(NS_LITERAL_STRING("Invalid expression evaluated"));
-#ifdef TX_TO_STRING
-    err.AppendLiteral(": ");
-    toString(err);
-#endif
-    aContext->receiveError(err,
-                           NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED);
-
-    return NS_ERROR_XPATH_INVALID_EXPRESSION_EVALUATED;
+    NS_ASSERTION(!mPredicate->isSensitiveTo(Expr::NODESET_CONTEXT),
+                 "predicate must not be context-nodeset-sensitive");
 }
 
-TX_IMPL_EXPR_STUBS_0(txErrorExpr, ANY_RESULT)
+PRBool
+txPredicatedNodeTest::matches(const txXPathNode& aNode,
+                              txIMatchContext* aContext)
+{
+    if (!mNodeTest->matches(aNode, aContext)) {
+        return PR_FALSE;
+    }
+
+    txSingleNodeContext context(aNode, aContext);
+    nsRefPtr<txAExprResult> res;
+    nsresult rv = mPredicate->evaluate(&context, getter_AddRefs(res));
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+    return res->booleanValue();
+}
+
+double
+txPredicatedNodeTest::getDefaultPriority()
+{
+    return 0.5;
+}
 
 PRBool
-txErrorExpr::isSensitiveTo(ContextSensitivity aContext)
+txPredicatedNodeTest::isSensitiveTo(Expr::ContextSensitivity aContext)
 {
-    // It doesn't really matter what we return here, but it might
-    // be a good idea to try to keep this as unoptimizable as possible
-    return PR_TRUE;
+    return mNodeTest->isSensitiveTo(aContext) ||
+           mPredicate->isSensitiveTo(aContext);
 }
 
 #ifdef TX_TO_STRING
 void
-txErrorExpr::toString(nsAString& aStr)
+txPredicatedNodeTest::toString(nsAString& aDest)
 {
-    aStr.Append(mStr);
+    mNodeTest->toString(aDest);
+    aDest.Append(PRUnichar('['));
+    mPredicate->toString(aDest);
+    aDest.Append(PRUnichar(']'));
 }
 #endif

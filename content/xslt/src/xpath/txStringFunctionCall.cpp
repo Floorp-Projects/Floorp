@@ -350,6 +350,39 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_ERROR_UNEXPECTED;
 }
 
+static Expr::ResultType resultTypes[] =
+{
+    Expr::STRING_RESULT,  // CONCAT
+    Expr::BOOLEAN_RESULT, // CONTAINS
+    Expr::STRING_RESULT,  // NORMALIZE_SPACE
+    Expr::BOOLEAN_RESULT, // STARTS_WITH
+    Expr::STRING_RESULT,  // STRING
+    Expr::NUMBER_RESULT,  // STRING_LENGTH
+    Expr::STRING_RESULT,  // SUBSTRING
+    Expr::STRING_RESULT,  // SUBSTRING_AFTER
+    Expr::STRING_RESULT,  // SUBSTRING_BEFORE
+    Expr::STRING_RESULT   // TRANSLATE
+};
+
+Expr::ResultType
+StringFunctionCall::getReturnType()
+{
+    return resultTypes[mType];
+}
+
+PRBool
+StringFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    if (params.isEmpty() &&
+        (mType == NORMALIZE_SPACE ||
+         mType == STRING ||
+         mType == STRING_LENGTH)) {
+        return !!(aContext & NODE_CONTEXT);
+    }
+         
+    return argsSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 nsresult
 StringFunctionCall::getNameAtom(nsIAtom** aAtom)

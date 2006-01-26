@@ -129,6 +129,22 @@ nsresult txUnionPattern::getSimplePatterns(txList& aList)
     return NS_OK;
 }
 
+TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txUnionPattern);
+txPattern*
+txUnionPattern::getSubPatternAt(PRUint32 aPos)
+{
+    return NS_STATIC_CAST(txPattern*, mLocPathPatterns.get(aPos));
+}
+
+void
+txUnionPattern::setSubPatternAt(PRUint32 aPos, txPattern* aPattern)
+{
+    NS_ASSERTION(aPos < (PRUint32)mLocPathPatterns.getLength(),
+                 "setting bad subexpression index");
+    mLocPathPatterns.replace(aPos, aPattern);
+}
+
+
 #ifdef TX_TO_STRING
 void
 txUnionPattern::toString(nsAString& aDest)
@@ -254,6 +270,25 @@ double txLocPathPattern::getDefaultPriority()
     return ((Step*)mSteps.get(0))->pattern->getDefaultPriority();
 }
 
+TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txLocPathPattern);
+txPattern*
+txLocPathPattern::getSubPatternAt(PRUint32 aPos)
+{
+    Step* step = NS_STATIC_CAST(Step*, mSteps.get(aPos));
+
+    return step ? step->pattern.get() : nsnull;
+}
+
+void
+txLocPathPattern::setSubPatternAt(PRUint32 aPos, txPattern* aPattern)
+{
+    NS_ASSERTION(aPos < (PRUint32)mSteps.getLength(),
+                 "setting bad subexpression index");
+    Step* step = NS_STATIC_CAST(Step*, mSteps.get(aPos));
+    step->pattern.forget();
+    step->pattern = aPattern;
+}
+
 #ifdef TX_TO_STRING
 void
 txLocPathPattern::toString(nsAString& aDest)
@@ -299,6 +334,9 @@ double txRootPattern::getDefaultPriority()
 {
     return 0.5;
 }
+
+TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txRootPattern);
+TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txRootPattern);
 
 #ifdef TX_TO_STRING
 void
@@ -383,6 +421,9 @@ double txIdPattern::getDefaultPriority()
     return 0.5;
 }
 
+TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txIdPattern);
+TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txIdPattern);
+
 #ifdef TX_TO_STRING
 void
 txIdPattern::toString(nsAString& aDest)
@@ -436,6 +477,9 @@ double txKeyPattern::getDefaultPriority()
     return 0.5;
 }
 
+TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(txKeyPattern);
+TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txKeyPattern);
+
 #ifdef TX_TO_STRING
 void
 txKeyPattern::toString(nsAString& aDest)
@@ -466,11 +510,6 @@ txKeyPattern::toString(nsAString& aDest)
  *
  * a txPattern to hold the NodeTest and the Predicates of a StepPattern
  */
-
-txStepPattern::~txStepPattern()
-{
-    delete mNodeTest;
-}
 
 MBool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
 {
@@ -584,6 +623,25 @@ double txStepPattern::getDefaultPriority()
     if (isEmpty())
         return mNodeTest->getDefaultPriority();
     return 0.5;
+}
+
+txPattern::Type
+txStepPattern::getType()
+{
+  return STEP_PATTERN;
+}
+
+TX_IMPL_PATTERN_STUBS_NO_SUB_PATTERN(txStepPattern);
+Expr*
+txStepPattern::getSubExprAt(PRUint32 aPos)
+{
+    return PredicateList::getSubExprAt(aPos);
+}
+
+void
+txStepPattern::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+{
+    return PredicateList::setSubExprAt(aPos, aExpr);
 }
 
 #ifdef TX_TO_STRING

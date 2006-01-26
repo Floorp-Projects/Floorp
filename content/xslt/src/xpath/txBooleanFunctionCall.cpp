@@ -143,6 +143,19 @@ BooleanFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_ERROR_UNEXPECTED;
 }
 
+Expr::ResultType
+BooleanFunctionCall::getReturnType()
+{
+    return BOOLEAN_RESULT;
+}
+
+PRBool
+BooleanFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    return argsSensitiveTo(aContext) ||
+           (mType == TX_LANG && (aContext & NODE_CONTEXT));
+}
+
 #ifdef TX_TO_STRING
 nsresult
 BooleanFunctionCall::getNameAtom(nsIAtom** aAtom)

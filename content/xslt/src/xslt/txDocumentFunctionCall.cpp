@@ -177,6 +177,18 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
     return NS_OK;
 }
 
+Expr::ResultType
+DocumentFunctionCall::getReturnType()
+{
+    return NODESET_RESULT;
+}
+
+PRBool
+DocumentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
+{
+    return argsSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 nsresult
 DocumentFunctionCall::getNameAtom(nsIAtom** aAtom)

@@ -276,6 +276,37 @@ void LocationStep::fromDescendantsRev(const txXPathNode& aNode,
     } while (walker.moveToPreviousSibling());
 }
 
+Expr::ExprType
+LocationStep::getType()
+{
+  return mAxisIdentifier == ATTRIBUTE_AXIS ?
+         LOCATIONSTEP_ATTRIBUTE_EXPR :
+         LOCATIONSTEP_OTHER_EXPR;
+}
+
+
+TX_IMPL_EXPR_STUBS_BASE(LocationStep, NODESET_RESULT)
+
+Expr*
+LocationStep::getSubExprAt(PRUint32 aPos)
+{
+    return PredicateList::getSubExprAt(aPos);
+}
+
+void
+LocationStep::setSubExprAt(PRUint32 aPos, Expr* aExpr)
+{
+    return PredicateList::setSubExprAt(aPos, aExpr);
+}
+
+PRBool
+LocationStep::isSensitiveTo(ContextSensitivity aContext)
+{
+    return (aContext & NODE_CONTEXT) ||
+           mNodeTest->isSensitiveTo(aContext) ||
+           PredicateList::isSensitiveTo(aContext);
+}
+
 #ifdef TX_TO_STRING
 void
 LocationStep::toString(nsAString& str)
