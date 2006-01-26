@@ -43,22 +43,34 @@
 [scriptable, uuid(3A3C2953-01EE-4D9C-A102-5AA0D7BD444C)]
 interface nsIAlertsService : nsISupports
 {
-   /* showAlertNotification: shows an animated alert icon 
-      aImageUrl --> a url identifying an image to put in the alert.
-      aAlertTitle --> the title text for the alert (i.e. You have New Mail)
-      aAlertText --> the contents of the alert
-      alertTextClickable --> set to true if you wish to be notified if the user attempts to click
-                             the alert text. Also causes the alert text to look like a link.
-      aAlertCookie --> a blind cookie the alert will pass back to the consumer
-                       during the alert listener callbacks
-      aAlertListener --> used for callbacks.  Subject is null, topic is "alertfinished" when the
-                         alert goes away, or "alertclickcallback" when the text is clicked. Data
-                         is aAlertCookie.
-   */
-   void showAlertNotification(in AString aImageUrl, in AString aAlertTitle, 
-                              in AString aAlertText, in boolean alertTextClickable,
-                              in AString aAlertCookie,
-                              in nsIObserver aAlertListener );
+   /**
+    * Displays a sliding notification window. Currently works under 
+    * Windows and Linux only.
+    *    
+    * @param imageUrl       A URL identifying the image to put in the alert.
+    * @param title          The title for the alert.
+    * @param text           The contents of the alert.
+    * @param textClickable  If true, causes the alert text to look like a link
+    *                       and notifies the listener when user attempts to 
+    *                       click the alert text.
+    * @param cookie         A blind cookie the alert will pass back to the 
+    *                       consumer during the alert listener callbacks.
+    * @param alertListener  Used for callbacks. May be null if the caller 
+    *                       doesn't care about callbacks.
+    *
+    * The following arguments will be passed to the alertListener's observe() 
+    * method:
+    *   subject - null
+    *   topic   - "alertfinished" when the alert goes away
+    *             "alertclickcallback" when the text is clicked
+    *   data    - the value of the cookie parameter passed to showAlertNotification.
+    */
+   void showAlertNotification(in AString  imageUrl, 
+                              in AString  title, 
+                              in AString  text, 
+                              in boolean  textClickable,
+                              in AString  cookie,
+                              in nsIObserver alertListener); 
 };
 
 %{ C++
