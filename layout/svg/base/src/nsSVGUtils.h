@@ -37,8 +37,11 @@
 #ifndef NS_SVGUTILS_H
 #define NS_SVGUTILS_H
 
-// Need this to get nsPresContext
-#include "nsContentUtils.h"
+// include math.h to pick up definition of M_PI if the platform defines it
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+#include "nscore.h"
 
 class nsPresContext;
 class nsIContent;
@@ -55,6 +58,7 @@ class nsIDOMSVGMatrix;
 class nsIURI;
 class nsISVGOuterSVGFrame;
 class nsISVGRendererSurface;
+class nsIPresShell;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846

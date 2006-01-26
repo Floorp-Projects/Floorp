@@ -70,6 +70,7 @@
 #include "nsSVGUtils.h"
 #include "nsWeakReference.h"
 #include "nsISVGValueObserver.h"
+#include "nsContentUtils.h"
   
 typedef nsSVGGenericContainerFrame  nsSVGGradientFrameBase;
 

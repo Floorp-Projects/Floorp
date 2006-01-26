@@ -80,6 +80,7 @@
 #include "nsSVGUtils.h"
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGContainerFrame.h"
+#include "nsContentUtils.h"
   
 typedef nsContainerFrame  nsSVGPatternFrameBase;
 

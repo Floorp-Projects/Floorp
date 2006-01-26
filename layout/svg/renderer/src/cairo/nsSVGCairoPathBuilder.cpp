@@ -42,7 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsSVGCairoPathBuilder.h"
-#include <math.h>
+#include "nsSVGUtils.h"
 #include <cairo.h>
 
 /**
@@ -149,8 +149,7 @@ static inline double CalcVectorAngle(double ux, double uy, double vx, double vy)
 NS_IMETHODIMP
 nsSVGCairoPathBuilder::Arcto(float x2, float y2, float rx, float ry, float angle, PRBool largeArcFlag, PRBool sweepFlag)
 {
-  const double pi = 3.14159265359;
-  const double radPerDeg = pi/180.0;
+  const double radPerDeg = M_PI/180.0;
 
   double x1=0.0, y1=0.0;
   cairo_get_current_point(mCR, &x1, &y1);
@@ -214,12 +213,12 @@ nsSVGCairoPathBuilder::Arcto(float x2, float y2, float rx, float ry, float angle
   double dtheta = CalcVectorAngle((x1dash-cxdash)/rx, (y1dash-cydash)/ry,
                                   (-x1dash-cxdash)/rx, (-y1dash-cydash)/ry);
   if (!sweepFlag && dtheta>0)
-    dtheta -= 2.0*pi;
+    dtheta -= 2.0*M_PI;
   else if (sweepFlag && dtheta<0)
-    dtheta += 2.0*pi;
+    dtheta += 2.0*M_PI;
   
   // 3. convert into cubic bezier segments <= 90deg
-  int segments = (int)ceil(fabs(dtheta/(pi/2.0)));
+  int segments = (int)ceil(fabs(dtheta/(M_PI/2.0)));
   double delta = dtheta/segments;
   double t = 8.0/3.0 * sin(delta/4.0) * sin(delta/4.0) / sin(delta/2.0);
   
