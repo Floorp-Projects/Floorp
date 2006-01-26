@@ -362,7 +362,7 @@ LogoutAndTeardown()
 }
 
 /* void setWindow(in nsISupports w); */
-nsresult nsSecretDecoderRing::
+NS_IMETHODIMP nsSecretDecoderRing::
 SetWindow(nsISupports *w)
 {
   return NS_OK;
