@@ -138,27 +138,6 @@ nsresult CViewSourceHTML::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;                                                        
 }
 
-/**
- *  This method is defined in nsIParser. It is used to 
- *  cause the COM-like construction of an nsParser.
- *  
- *  @update  gess 4/8/98
- *  @param   nsIParser** ptr to newly instantiated parser
- *  @return  NS_xxx error result
- */
-nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult)
-{
-  CViewSourceHTML* it = new CViewSourceHTML();
-
-  if (it == 0) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aInstancePtrResult = it);
-  return NS_OK;
-}
-
-
 NS_IMPL_ADDREF(CViewSourceHTML)
 NS_IMPL_RELEASE(CViewSourceHTML)
 
