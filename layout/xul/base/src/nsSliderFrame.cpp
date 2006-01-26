@@ -77,6 +77,7 @@
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
+#include "nsDisplayList.h"
 
 PRBool nsSliderFrame::gMiddlePref = PR_FALSE;
 PRInt32 nsSliderFrame::gSnapMultiplier = 6;
@@ -269,11 +270,24 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::Paint(nsPresContext*      aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect,
-                     nsFramePaintLayer    aWhichLayer,
-                     PRUint32             aFlags)
+nsSliderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists)
+{
+  if (aBuilder->IsForEventDelivery() && isDraggingThumb()) {
+    // This is EVIL, we shouldn't be messing with event delivery just to get
+    // thumb mouse drag events to arrive at the slider!
+    return aLists.Outlines()->AppendNewToTop(new (aBuilder)
+        nsDisplayEventReceiver(this));
+  }
+  
+  return nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+}
+
+NS_IMETHODIMP
+nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                           const nsRect&           aDirtyRect,
+                                           const nsDisplayListSet& aLists)
 {
   // if we are too small to have a thumb don't paint it.
   nsIBox* thumb;
@@ -289,15 +303,10 @@ nsSliderFrame::Paint(nsPresContext*      aPresContext,
     GetClientRect(crect);
 
     if (crect.width < thumbRect.width || crect.height < thumbRect.height)
-    {
-      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-        PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
-      }
       return NS_OK;
-    }
   }
-
-  return nsBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  
+  return nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 NS_IMETHODIMP
@@ -714,29 +723,6 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
 #endif
 
 }
-
-nsIFrame* nsSliderFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                          nsFramePaintLayer aWhichLayer)
-{
-  // This is EVIL, we shouldn't be messing with GetFrameForPoint just to get
-  // thumb mouse drag events to arrive at the slider!
-  if (isDraggingThumb())
-    // XXX I assume it's better not to test for visibility here.
-    return this;
-
-  nsIFrame* frame;
-  if ((frame = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer)))
-    return frame;
-
-  // always return us (if visible)
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (thisRect.Contains(aPoint) && GetStyleVisibility()->IsVisible())
-    return this;
-
-  return nsnull;
-}
-
-
 
 NS_IMETHODIMP
 nsSliderFrame::SetInitialChildList(nsPresContext* aPresContext,

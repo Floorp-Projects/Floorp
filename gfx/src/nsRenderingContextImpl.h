@@ -100,6 +100,7 @@ public:
   
   NS_IMETHOD PushTranslation(PushedTranslation* aState);
   NS_IMETHOD PopTranslation(PushedTranslation* aState);
+  NS_IMETHOD SetTranslation(nscoord aX, nscoord aY);
 
   /**
    * Let the device context know whether we want text reordered with

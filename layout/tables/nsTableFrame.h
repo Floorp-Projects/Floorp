@@ -262,6 +262,17 @@ public:
   // on stronger criteria, like an inner table frame atom
   static NS_METHOD GetTableFrame(nsIFrame*      aSourceFrame, 
                                  nsTableFrame*& aTableFrame);
+                                 
+  /**
+   * Helper method to handle display common to table frames, rowgroup frames
+   * and row frames. It creates a background display item for handling events
+   * if necessary, an outline display item if necessary, and displays
+   * all the the frame's children.
+   */
+  static nsresult DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
+                                           nsFrame* aFrame,
+                                           const nsRect& aDirtyRect,
+                                           const nsDisplayListSet& aLists);
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.
@@ -292,18 +303,18 @@ public:
   /** @see nsIFrame::GetAdditionalChildListName */
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
 
-  /** @see nsIFrame::Paint */
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
-  virtual void PaintChildren(nsPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags = 0);
+  /**
+   * Paint the background of the table and its parts (column groups,
+   * columns, row groups, rows, and cells), and the table border, and all
+   * internal borders if border-collapse is on.
+   */
+  void PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
+                                  const nsRect& aDirtyRect,
+                                  nsPoint aPt);
 
   nsMargin GetBCBorder() const;
 
@@ -323,9 +334,6 @@ public:
 
   void PaintBCBorders(nsIRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect);
-
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer);
 
   /** nsIFrame method overridden to handle table specifics
   */

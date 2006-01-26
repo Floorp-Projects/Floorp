@@ -80,6 +80,7 @@
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
+#include "nsDisplayList.h"
 
 static const char kEventQueueServiceCID[] = NS_EVENTQUEUESERVICE_CONTRACTID;
 
@@ -1354,6 +1355,63 @@ NS_IMETHODIMP_(nsrefcnt) nsGfxScrollFrameInner::Release(void)
 }
 
 NS_IMPL_QUERY_INTERFACE1(nsGfxScrollFrameInner, nsIScrollPositionListener)
+
+nsresult
+nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                        const nsRect&           aDirtyRect,
+                                        const nsDisplayListSet& aLists)
+{
+  nsresult rv = mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (aBuilder->GetIgnoreScrollFrame() == mOuter) {
+    // Don't clip the scrolled child, and don't paint scrollbars/scrollcorner.
+    // The scrolled frame shouldn't have its own background/border, so we
+    // can just pass aLists directly. We do need to replace aDirtyRect with
+    // the scrolled area though, since callers may have restricted aDirtyRect
+    // to our bounds.
+    nsRect newDirty = mScrolledFrame->GetOverflowRect() +
+        aBuilder->ToReferenceFrame(mScrolledFrame);
+    return mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, newDirty, aLists);
+  }
+
+  // Overflow clipping can never clip frames outside our subtree, so there
+  // is no need to worry about whether we are a moving frame that might clip
+  // non-moving frames.
+  nsRect frameClip = mScrollableView->View()->GetBounds();
+  nsRect dirtyRect;
+  // Not all our descendants will be clipped by overflow clipping, but all
+  // the ones that aren't clipped will be out of flow frames that have already
+  // had dirty rects saved for them by their parent frames calling
+  // MarkOutOfFlowChildrenForDisplayList, so it's safe to restrict our
+  // dirty rect here.
+  dirtyRect.IntersectRect(aDirtyRect, frameClip);
+  
+  nsDisplayListCollection set;
+  rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsRect clip = frameClip + aBuilder->ToReferenceFrame(mOuter);
+  // mScrolledFrame may have given us a background, e.g., the scrolled canvas
+  // frame below the viewport. If so, we want it to be clipped.
+  // If we are the viewport scrollframe, then clip all our descendants (to ensure
+  // that fixed-pos elements get clipped by us).
+  rv = mOuter->OverflowClip(aBuilder, set, aLists, clip, PR_TRUE, mIsRoot);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now display the scrollbars and scrollcorner
+  nsIFrame* kid = mOuter->GetFirstChild(nsnull);
+  // Put each child's background directly onto the content list
+  nsDisplayListSet scrollbarSet(aLists, aLists.Content());
+  while (kid) {
+    if (kid != mScrolledFrame) {
+      rv = mOuter->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, scrollbarSet,
+                                            nsIFrame::DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    kid = kid->GetNextSibling();
+  }
+  return NS_OK;
+}
 
 PRBool
 nsGfxScrollFrameInner::NeedsClipWidget() const

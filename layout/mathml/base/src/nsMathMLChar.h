@@ -99,12 +99,15 @@ public:
   }
 
   nsresult
-  Paint(nsPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
-        const nsRect&        aDirtyRect,
-        nsFramePaintLayer    aWhichLayer,
-        nsIFrame*            aForFrame,
-        const nsRect*        aSelectedRect = nsnull);
+  Display(nsDisplayListBuilder*   aBuilder,
+          nsIFrame*               aForFrame,
+          const nsDisplayListSet& aLists,
+          const nsRect*           aSelectedRect = nsnull);
+          
+  void PaintForeground(nsPresContext* aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       nsPoint aPt,
+                       PRBool aIsSelected);
 
   // This is the method called to ask the char to stretch itself.
   // @param aContainerSize - IN - suggested size for the stretched char

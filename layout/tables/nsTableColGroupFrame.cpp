@@ -322,22 +322,6 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
   return NS_OK;
 }
 
-NS_METHOD 
-nsTableColGroupFrame::Paint(nsPresContext*      aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect&        aDirtyRect,
-                            nsFramePaintLayer    aWhichLayer,
-                            PRUint32             aFlags)
-{
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
-    return NS_OK;
-  }
-
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  return NS_OK;
-}
-
 PRIntn
 nsTableColGroupFrame::GetSkipSides() const
 {
@@ -349,14 +333,6 @@ nsTableColGroupFrame::GetSkipSides() const
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
-}
-
-nsIFrame*
-nsTableColGroupFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                       nsFramePaintLayer aWhichLayer)
-{
-  // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, PR_FALSE);
 }
 
 NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,

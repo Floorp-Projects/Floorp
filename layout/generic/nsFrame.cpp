@@ -112,6 +112,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsBoxLayoutState.h"
 #include "nsBlockFrame.h"
+#include "nsDisplayList.h"
 
 static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
@@ -762,81 +763,73 @@ nsFrame::DisplaySelection(nsPresContext* aPresContext, PRBool isOkToTurnOn)
   return selType;
 }
 
-void
-nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
+class nsDisplaySelectionOverlay : public nsDisplayItem {
+public:
+  nsDisplaySelectionOverlay(nsFrame* aFrame, PRInt16 aSelectionValue)
+      : mFrame(aFrame), mSelectionValue(aSelectionValue) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("SelectionOverlay")
+private:
+  nsFrame* mFrame;
+  PRInt16 mSelectionValue;
+};
+
+void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  // 'overflow-clip' only applies to block-level elements and replaced
-  // elements that have 'overflow' set to 'hidden', and it is relative
-  // to the content area and applies to content only (not border or background)
-  const nsStyleBorder* borderStyle = GetStyleBorder();
-  const nsStylePadding* paddingStyle = GetStylePadding();
+  nsCOMPtr<nsISelectionImageService> imageService
+      = do_GetService(kSelectionImageService);
+  if (!imageService)
+    return;
+
+  nsCOMPtr<imgIContainer> container;
+  imageService->GetImage(mSelectionValue, getter_AddRefs(container));
+  if (!container)
+    return;
   
-  // Start with the 'auto' values and then factor in user specified values
-  nsRect  clipRect(0, 0, mRect.width, mRect.height);
-
-  // XXX We don't support the 'overflow-clip' property yet, so just use the
-  // content area (which is the default value) as the clip shape
-
-  clipRect.Deflate(borderStyle->GetBorder());
-  // XXX We need to handle percentage padding
-  nsMargin padding;
-  if (paddingStyle->GetPadding(padding)) {
-    clipRect.Deflate(padding);
-  }
-#ifdef DEBUG
-  else {
-    NS_WARNING("Percentage padding and CLIP overflow don't mix yet");
-  }
-#endif
-
-  // Set updated clip-rect into the rendering context
-  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+  nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
+  rect.IntersectRect(rect, aDirtyRect);
+  aCtx->DrawTile(container, 0, 0, &rect);
 }
 
 /********************************************************
 * Refreshes each content's frame
 *********************************************************/
 
-NS_IMETHODIMP
-nsFrame::Paint(nsPresContext*      aPresContext,
-               nsIRenderingContext& aRenderingContext,
-               const nsRect&        aDirtyRect,
-               nsFramePaintLayer    aWhichLayer,
-               PRUint32             aFlags)
+nsresult
+nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
+                                 const nsDisplayListSet& aLists,
+                                 PRUint16                aContentType)
 {
-  if (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND)
-    return NS_OK;
-  
-  nsresult result; 
-  nsIPresShell *shell = aPresContext->PresShell();
-
-  PRInt16 displaySelection = nsISelectionDisplay::DISPLAY_ALL;
-  if (!(aFlags & nsISelectionDisplay::DISPLAY_IMAGES))
-  {
-    result = shell->GetSelectionFlags(&displaySelection);
-    if (NS_FAILED(result))
-      return result;
-    if (!(displaySelection & nsISelectionDisplay::DISPLAY_FRAMES))
-      return NS_OK;
-  }
-
 //check frame selection state
-  PRBool isSelected;
-  isSelected = (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-//if not selected then return 
-  if (!isSelected)
-    return NS_OK; //nothing to do
+  if ((GetStateBits() & NS_FRAME_SELECTED_CONTENT) != NS_FRAME_SELECTED_CONTENT)
+    return NS_OK;
+  if (!IsVisibleForPainting(aBuilder))
+    return NS_OK;
+    
+  nsPresContext* presContext = GetPresContext();
+  nsIPresShell *shell = presContext->PresShell();
+  if (!shell)
+    return NS_OK;
+
+  PRInt16 displaySelection;
+  nsresult rv = shell->GetSelectionFlags(&displaySelection);
+  if (NS_FAILED(rv))
+    return rv;
+  if (!(displaySelection & aContentType))
+    return NS_OK;
 
 //get the selection controller
   nsCOMPtr<nsISelectionController> selCon;
-  result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+  rv = GetSelectionController(presContext, getter_AddRefs(selCon));
+  if (NS_FAILED(rv) || !selCon)
+    return rv;
   PRInt16 selectionValue;
   selCon->GetDisplaySelection(&selectionValue);
-  displaySelection = selectionValue > nsISelectionController::SELECTION_HIDDEN;
-//check display selection state.
-  if (!displaySelection)
-    return NS_OK; //if frame does not allow selection. do nothing
-
+  if (selectionValue <= nsISelectionController::SELECTION_HIDDEN)
+    return NS_OK; // selection is hidden or off
 
   nsIContent *newContent = mContent->GetParent();
 
@@ -848,87 +841,629 @@ nsFrame::Paint(nsPresContext*      aPresContext,
   }
 
   SelectionDetails *details;
-  if (NS_SUCCEEDED(result) && shell)
-  {
-    nsCOMPtr<nsIFrameSelection> frameSelection;
-    if (NS_SUCCEEDED(result) && selCon)
-    {
-      frameSelection = do_QueryInterface(selCon); //this MAY implement
-    }
-    if (!frameSelection)
-      frameSelection = shell->FrameSelection();
-    result = frameSelection->LookUpSelection(newContent, offset, 
-                                             1, &details, PR_FALSE);//look up to see what selection(s) are on this frame
-  }
+  nsCOMPtr<nsIFrameSelection> frameSelection = do_QueryInterface(selCon);
+     //this MAY implement
+  if (!frameSelection)
+    frameSelection = shell->FrameSelection();
+  rv = frameSelection->LookUpSelection(newContent, offset, 
+                                       1, &details, PR_FALSE);//look up to see what selection(s) are on this frame
+  // XXX is the above really necessary? We don't actually DO anything
+  // with the details other than test that they're non-null
+  if (NS_FAILED(rv) || !details)
+    return rv;
   
-  if (details)
-  {
-    nsRect rect = GetRect();
-    rect.width-=2;
-    rect.height-=2;
-    rect.x=1; //we are in the coordinate system of the frame now with regards to the rendering context.
-    rect.y=1;
-
-    nsCOMPtr<nsISelectionImageService> imageService;
-    imageService = do_GetService(kSelectionImageService, &result);
-    if (NS_SUCCEEDED(result) && imageService)
-    {
-      nsCOMPtr<imgIContainer> container;
-      imageService->GetImage(selectionValue, getter_AddRefs(container));
-      if (container)
-      {
-        nsRect rect(0, 0, mRect.width, mRect.height);
-        rect.IntersectRect(rect,aDirtyRect);
-        aRenderingContext.DrawTile(container,0,0,&rect);
-      }
-    }
-
-    
-    
-    SelectionDetails *deletingDetails = details;
-    while ((deletingDetails = details->mNext) != nsnull) {
-      delete details;
-      details = deletingDetails;
-    }
+  while (details) {
+    SelectionDetails *next = details->mNext;
     delete details;
+    details = next;
   }
-  return NS_OK;
+
+  return aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplaySelectionOverlay(this, selectionValue));
 }
 
-void
-nsFrame::PaintSelf(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   PRIntn               aSkipSides,
-                   PRBool               aUsePrintBackgroundSettings)
+nsresult
+nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder*   aBuilder,
+                                     const nsDisplayListSet& aLists)
+{
+  if (GetStyleOutline()->GetOutlineStyle() == NS_STYLE_BORDER_STYLE_NONE)
+    return NS_OK;
+    
+  return aLists.Outlines()->AppendNewToTop(new (aBuilder) nsDisplayOutline(this));
+}
+
+nsresult
+nsFrame::DisplayOutline(nsDisplayListBuilder*   aBuilder,
+                        const nsDisplayListSet& aLists)
+{
+  if (!IsVisibleForPainting(aBuilder))
+    return NS_OK;
+
+  return DisplayOutlineUnconditional(aBuilder, aLists);
+}
+
+nsresult
+nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
+                                        const nsDisplayListSet& aLists,
+                                        PRBool                  aForceBackground)
 {
   // The visibility check belongs here since child elements have the
   // opportunity to override the visibility property and display even if
   // their parent is hidden.
+  if (!IsVisibleForPainting(aBuilder))
+    return NS_OK;
 
-  PRBool isVisible;
-  if (mRect.height == 0 || mRect.width == 0 ||
-      NS_FAILED(IsVisibleForPainting(aPresContext, aRenderingContext,
-                                     PR_TRUE, &isVisible)) ||
-      !isVisible) {
-    return;
+  // Here we don't try to detect background propagation. Frames that might
+  // receive a propagated background should just set aForceBackground to
+  // PR_TRUE.
+  if (aBuilder->IsForEventDelivery() || aForceBackground ||
+      !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayBackground(this));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
+  if (HasBorder()) {
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayBorder(this));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Paint our background and border
-  const nsStyleBorder* border = GetStyleBorder();
-  const nsStylePadding* padding = GetStylePadding();
-  const nsStyleOutline* outline = GetStyleOutline();
+  return DisplayOutlineUnconditional(aBuilder, aLists);
+}
 
-  nsRect rect(0, 0, mRect.width, mRect.height);
-  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *border, *padding,
-                                  aUsePrintBackgroundSettings);
-  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, rect, *border, mStyleContext,
-                              aSkipSides);
-  nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                               aDirtyRect, rect, *border, *outline,
-                               mStyleContext, 0);
+static PRBool ApplyAbsPosClipping(nsDisplayListBuilder* aBuilder,
+                                  const nsStyleDisplay* aDisp, nsIFrame* aFrame,
+                                  nsRect* aRect) {
+  // REVIEW: from nsContainerFrame.cpp SyncFrameViewGeometryDependentProperties
+  if (!aDisp->IsAbsolutelyPositioned() ||
+      !(aDisp->mClipFlags & NS_STYLE_CLIP_RECT))
+    return PR_FALSE;
+  
+  // A moving frame should not be allowed to clip a non-moving frame.
+  // Abs-pos clipping always clips frames below it in the frame tree, except
+  // for when an abs-pos frame clips a fixed-pos frame. So when fixed-pos
+  // elements are present we do not allow a moving abs-pos frame with
+  // an out-of-flow descendant (which could be a fixed frame) child to clip
+  // anything. It's OK to not clip anything, even the moving children ...
+  // all that could happen is that we get unnecessarily conservative results
+  // for nsLayoutUtils::ComputeRepaintRegionForCopy ... but this is a rare
+  // situation.
+  if (aBuilder->HasMovingFrames() &&
+      (aFrame->GetStateBits() & NS_FRAME_HAS_DESCENDANT_PLACEHOLDER) &&
+      aFrame->GetPresContext()->FrameManager()->GetRootFrame()->
+          GetFirstChild(nsLayoutAtoms::fixedList) &&
+      aBuilder->IsMovingFrame(aFrame))
+    return PR_FALSE;
+    
+  // Start with the 'auto' values and then factor in user specified values
+  aRect->SetRect(aBuilder->ToReferenceFrame(aFrame), aFrame->GetSize());
+  if (0 == (NS_STYLE_CLIP_TOP_AUTO & aDisp->mClipFlags)) {
+    aRect->y += aDisp->mClip.y;
+  }
+  if (0 == (NS_STYLE_CLIP_LEFT_AUTO & aDisp->mClipFlags)) {
+    aRect->x += aDisp->mClip.x;
+  }
+  if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & aDisp->mClipFlags)) {
+    aRect->width = aDisp->mClip.width;
+  }
+  if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & aDisp->mClipFlags)) {
+    aRect->height = aDisp->mClip.height;
+  }
+  return PR_TRUE;
+}
+
+/**
+ * Returns PR_TRUE if aFrame is overflow:hidden and we should interpret
+ * that as -moz-hidden-unscrollable.
+ */
+static PRBool ApplyOverflowHiddenClipping(nsIFrame* aFrame,
+                                          const nsStyleDisplay* aDisp)
+{
+  if (aDisp->mOverflowX != NS_STYLE_OVERFLOW_HIDDEN)
+    return PR_FALSE;
+    
+  nsIAtom* type = aFrame->GetType();
+  // REVIEW: these are the frame types that call IsTableClip and set up
+  // clipping. Actually there were also table rows and the inner table frame
+  // doing this, but 'overflow' isn't applicable to them according to
+  // CSS 2.1 so I removed them. Also, we used to clip at tableOuterFrame
+  // but we should actually clip at tableFrame (as per discussion with Hixie and
+  // bz).
+  return type == nsLayoutAtoms::tableFrame ||
+       type == nsLayoutAtoms::tableCellFrame ||
+       type == nsLayoutAtoms::bcTableCellFrame;
+}
+
+static PRBool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
+                                    nsIFrame* aFrame,
+                                    const nsStyleDisplay* aDisp, nsRect* aRect) {
+  // REVIEW: from nsContainerFrame.cpp SyncFrameViewGeometryDependentProperties,
+  // except that that function used the border-edge for
+  // -moz-hidden-unscrollable which I don't think is correct... Also I've
+  // changed -moz-hidden-unscrollable to apply to any kind of frame.
+
+  // Only -moz-hidden-unscrollable is handled here (and 'hidden' for table
+  // frames). Other overflow clipping is applied by nsHTML/XULScrollFrame.
+  if (!ApplyOverflowHiddenClipping(aFrame, aDisp)) {
+    PRBool clip = aDisp->mOverflowX == NS_STYLE_OVERFLOW_CLIP;
+    if (!clip)
+      return PR_FALSE;
+    // We allow -moz-hidden-unscrollable to apply to any kind of frame. This
+    // is required by comboboxes which make their display text (an inline frame)
+    // have clipping.
+  }
+  
+  aRect->SetRect(aBuilder->ToReferenceFrame(aFrame), aFrame->GetSize());
+  const nsStyleBorder* borderStyle = aFrame->GetStyleContext()->GetStyleBorder();
+  aRect->Deflate(borderStyle->GetBorder());
+  return PR_TRUE;
+}
+
+class nsOverflowClipWrapper : public nsDisplayWrapper
+{
+public:
+  /**
+   * Create a wrapper to apply overflow clipping for aContainer.
+   * @param aClipBorderBackground set to PR_TRUE to clip the BorderBackground()
+   * list, otherwise it will not be clipped
+   * @param aClipAll set to PR_TRUE to clip all descendants, even those for
+   * which we aren't the containing block
+   */
+  nsOverflowClipWrapper(nsIFrame* aContainer, const nsRect& aRect,
+                        PRBool aClipBorderBackground, PRBool aClipAll)
+    : mContainer(aContainer), mRect(aRect),
+      mClipBorderBackground(aClipBorderBackground), mClipAll(aClipAll) {}
+  virtual PRBool WrapBorderBackground() { return mClipBorderBackground; }
+  virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
+                                  nsIFrame* aFrame, nsDisplayList* aList) {
+    // We are not a stacking context root. There is no valid underlying
+    // frame for the whole list. These items are all in-flow descendants so
+    // we can safely just clip them.
+    return new (aBuilder) nsDisplayClip(nsnull, aList, mRect);
+  }
+  virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
+                                  nsDisplayItem* aItem) {
+    nsIFrame* f = aItem->GetUnderlyingFrame();
+    if (mClipAll || nsLayoutUtils::IsProperAncestorFrame(mContainer, f, nsnull))
+      return new (aBuilder) nsDisplayClip(f, aItem, mRect);
+    return aItem;
+  }
+protected:
+  nsIFrame*    mContainer;
+  nsRect       mRect;
+  PRPackedBool mClipBorderBackground;
+  PRPackedBool mClipAll;
+};
+
+class nsAbsPosClipWrapper : public nsDisplayWrapper
+{
+public:
+  nsAbsPosClipWrapper(const nsRect& aRect)
+    : mRect(aRect) {}
+  virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
+                                  nsIFrame* aFrame, nsDisplayList* aList) {
+    // We are not a stacking context root. There is no valid underlying
+    // frame for the whole list.
+    return new (aBuilder) nsDisplayClip(nsnull, aList, mRect);
+  }
+  virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
+                                  nsDisplayItem* aItem) {
+    return new (aBuilder) nsDisplayClip(aItem->GetUnderlyingFrame(), aItem, mRect);
+  }
+protected:
+  nsRect mRect;
+};
+
+nsresult
+nsIFrame::OverflowClip(nsDisplayListBuilder*   aBuilder,
+                       const nsDisplayListSet& aFromSet,
+                       const nsDisplayListSet& aToSet,
+                       const nsRect&           aClipRect,
+                       PRBool                  aClipBorderBackground,
+                       PRBool                  aClipAll)
+{
+  nsOverflowClipWrapper wrapper(this, aClipRect, aClipBorderBackground, aClipAll);
+  return wrapper.WrapLists(aBuilder, this, aFromSet, aToSet);
+}
+
+nsresult
+nsIFrame::Clip(nsDisplayListBuilder*   aBuilder,
+               const nsDisplayListSet& aFromSet,
+               const nsDisplayListSet& aToSet,
+               const nsRect&           aClipRect)
+{
+  nsAbsPosClipWrapper wrapper(aClipRect);
+  return wrapper.WrapLists(aBuilder, this, aFromSet, aToSet);
+}
+
+static nsresult
+BuildDisplayListWithOverflowClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+    const nsRect& aDirtyRect, const nsDisplayListSet& aSet,
+    const nsRect& aClipRect)
+{
+  nsDisplayListCollection set;
+  nsresult rv = aFrame->BuildDisplayList(aBuilder, aDirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return aFrame->OverflowClip(aBuilder, set, aSet, aClipRect);
+}
+
+nsresult
+nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
+                                             const nsRect&         aDirtyRect,
+                                             nsDisplayList*        aList) {
+  if (GetStateBits() & NS_FRAME_IS_UNFLOWABLE) {
+    RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
+    return NS_OK;
+  }
+
+  // Replaced elements have their visibility handled here, because
+  // they're visually atomic
+  if ((GetStateBits() & NS_FRAME_REPLACED_ELEMENT) &&
+      !IsVisibleForPainting(aBuilder))
+    return NS_OK;
+  if (GetStyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
+    return NS_OK;
+
+  nsRect absPosClip;
+  const nsStyleDisplay* disp = GetStyleDisplay();
+  PRBool applyAbsPosClipping =
+      ApplyAbsPosClipping(aBuilder, disp, this, &absPosClip);
+  nsRect dirtyRect = aDirtyRect;
+  if (applyAbsPosClipping) {
+    dirtyRect.IntersectRect(dirtyRect,
+                            absPosClip - aBuilder->ToReferenceFrame(this));
+  }
+      
+  nsDisplayListCollection set;
+  nsresult rv;
+  {    
+    nsDisplayListBuilder::AutoIsRootSetter rootSetter(aBuilder, PR_TRUE);
+    rv = BuildDisplayList(aBuilder, dirtyRect, set);
+  }
+  RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  if (aBuilder->IsBackgroundOnly()) {
+    set.BlockBorderBackgrounds()->DeleteAll();
+    set.Floats()->DeleteAll();
+    set.Content()->DeleteAll();
+    set.PositionedDescendants()->DeleteAll();
+    set.Outlines()->DeleteAll();
+  }
+  
+  // This z-order sort also sorts secondarily by content order. We need to do
+  // this so that boxes produced by the same element are placed together
+  // in the sort. Consider a position:relative inline element that breaks
+  // across lines and has absolutely positioned children; all the abs-pos
+  // children should be z-ordered after all the boxes for the position:relative
+  // element itself.
+  set.PositionedDescendants()->SortByZOrder(aBuilder, GetContent());
+  
+  nsRect overflowClip;
+  if (ApplyOverflowClipping(aBuilder, this, disp, &overflowClip)) {
+    nsOverflowClipWrapper wrapper(this, overflowClip, PR_FALSE, PR_FALSE);
+    rv = wrapper.WrapListsInPlace(aBuilder, this, set);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  // We didn't use overflowClip to restrict the dirty rect, since some of the
+  // descendants may not be clipped by it. Even if we end up with unnecessary
+  // display items, they'll be pruned during OptimizeVisibility.  
+
+  nsDisplayList resultList;
+  // Now follow the rules of http://www.w3.org/TR/CSS21/zindex.html
+  // 1,2: backgrounds and borders
+  resultList.AppendToTop(set.BorderBackground());
+  // 3: negative z-index children.
+  for (;;) {
+    nsDisplayItem* item = set.PositionedDescendants()->GetBottom();
+    if (item) {
+      nsIFrame* f = item->GetUnderlyingFrame();
+      NS_ASSERTION(f, "After sorting, every item in the list should have an underlying frame");
+      if (nsLayoutUtils::GetZIndex(f) < 0) {
+        set.PositionedDescendants()->RemoveBottom();
+        resultList.AppendToTop(item);
+        continue;
+      }
+    }
+    break;
+  }
+  // 4: block backgrounds
+  resultList.AppendToTop(set.BlockBorderBackgrounds());
+  // 5: floats
+  resultList.AppendToTop(set.Floats());
+  // 6: general content
+  resultList.AppendToTop(set.Content());
+  // 7, 8: non-negative z-index children
+  resultList.AppendToTop(set.PositionedDescendants());
+  // 9: outlines, in content tree order. We need to sort by content order
+  // because an element with outline that breaks and has children with outline
+  // might have placed child outline items between its own outline items.
+  // The element's outline items need to all come before any child outline
+  // items.
+  set.Outlines()->SortByContentOrder(aBuilder, GetContent());
+  resultList.AppendToTop(set.Outlines());
+  
+  if (applyAbsPosClipping) {
+    nsAbsPosClipWrapper wrapper(absPosClip);
+    nsDisplayItem* item = wrapper.WrapList(aBuilder, this, &resultList);
+    if (!item)
+      return NS_ERROR_OUT_OF_MEMORY;
+    // resultList was emptied
+    resultList.AppendToTop(item);
+  }
+ 
+  if (disp->mOpacity == 1.0f) {
+    aList->AppendToTop(&resultList);
+  } else {
+    rv = aList->AppendNewToTop(new (aBuilder) nsDisplayOpacity(this, &resultList));
+  }
+  
+  return rv;
+}
+
+static nsIFrame* GetParentOrPlaceholderFor(nsFrameManager* aFrameManager, nsIFrame* aFrame) {
+  if (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+    return aFrameManager->GetPlaceholderFrameFor(aFrame);
+  }
+  return aFrame->GetParent();
+}
+
+static void MarkOutOfFlowChild(nsIFrame* aFrame, nsIFrame* aChild,
+                               const nsRect& aDirtyRect, PRBool aMark) {
+  if (aMark) {
+    nsRect dirty = aDirtyRect - aChild->GetOffsetTo(aFrame);
+    nsRect overflowRect = aChild->GetOverflowRect();
+    if (!dirty.IntersectRect(dirty, overflowRect))
+      return;
+    // if "new nsRect" fails, this won't do anything, but that's okay
+    aChild->SetProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty,
+                        new nsRect(dirty));
+  } else {
+    aChild->DeleteProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty);
+  }
+
+  nsFrameManager* frameManager = aChild->GetPresContext()->PresShell()->FrameManager();
+  nsIFrame* placeholder = frameManager->GetPlaceholderFrameFor(aChild);
+  NS_ASSERTION(placeholder, "No placeholder for out of flow?");
+  if (!placeholder)
+    return;
+
+  nsIFrame* f;
+  for (f = placeholder; f; f = GetParentOrPlaceholderFor(frameManager, f)) {
+    if (((f->GetStateBits() & NS_FRAME_HAS_DESCENDANT_PLACEHOLDER) != 0)
+        == aMark)
+      return;
+    if (aMark) {
+      f->AddStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
+    } else {
+      f->RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
+    }      
+    if (f == aFrame)
+      break;
+  }
+  NS_ASSERTION(f, "Did not find ourselves on the placeholder's ancestor chain");
+}
+
+void
+nsIFrame::MarkOutOfFlowChildrenForDisplayList(nsIFrame* aFirstChild,
+                                              const nsRect& aDirtyRect) {
+  while (aFirstChild) {
+    MarkOutOfFlowChild(this, aFirstChild, aDirtyRect, PR_TRUE);
+    aFirstChild = aFirstChild->GetNextSibling();
+  }
+}
+
+void
+nsIFrame::UnmarkOutOfFlowChildrenForDisplayList(nsIFrame* aFirstChild) {
+  nsRect empty;
+  while (aFirstChild) {
+    MarkOutOfFlowChild(this, aFirstChild, empty, PR_FALSE);
+    aFirstChild = aFirstChild->GetNextSibling();
+  }
+}
+
+#ifdef NS_DEBUG
+static void PaintDebugBorder(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect, nsPoint aPt) {
+  nsRect r(aPt, aFrame->GetSize());
+  if (aFrame->HasView()) {
+    aCtx->SetColor(NS_RGB(0,0,255));
+  } else {
+    aCtx->SetColor(NS_RGB(255,0,0));
+  }
+  aCtx->DrawRect(r);
+}
+#endif
+
+nsresult
+nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
+                                   nsIFrame*               aChild,
+                                   const nsRect&           aDirtyRect,
+                                   const nsDisplayListSet& aLists,
+                                   PRUint32                aFlags) {
+  // If painting is restricted to just the background of the top level frame,
+  // then we have nothing to do here.
+  if (aBuilder->IsBackgroundOnly())
+    return NS_OK;
+
+  if (aChild->GetStateBits() & NS_FRAME_IS_UNFLOWABLE)
+    return NS_OK;
+    
+  // PR_TRUE if this is a real or pseudo stacking context
+  PRBool pseudoStackingContext =
+    (aFlags & DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT) != 0;
+  if ((aFlags & DISPLAY_CHILD_INLINE) && aChild->IsContainingBlock()) {
+    // child is a block or table-like frame in an inline context, i.e.,
+    // it acts like inline-block or inline-table. Therefore it is a
+    // pseudo-stacking-context.
+    pseudoStackingContext = PR_TRUE;
+  }
+
+  // dirty rect in child-relative coordinates
+  nsRect dirty = aDirtyRect - aChild->GetOffsetTo(this);
+
+  if (aChild->GetType() == nsLayoutAtoms::placeholderFrame) {
+    nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*, aChild);
+    aChild = placeholder->GetOutOfFlowFrame();
+    NS_ASSERTION(aChild, "No out of flow frame?");
+    if (!aChild)
+      return NS_OK;
+    // Recheck NS_FRAME_IS_FLOWABLE
+    if (aChild->GetStateBits() & NS_FRAME_IS_UNFLOWABLE)
+      return NS_OK;
+    nsRect* savedDirty = NS_STATIC_CAST(nsRect*,
+        aChild->GetProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty));
+    if (savedDirty) {
+      dirty = *savedDirty;
+    } else {
+      // The out-of-flow frame did not intersect the dirty area. We may still
+      // need to traverse into it, since it may contain placeholders we need
+      // to enter to reach other out-of-flow frames that are visible.
+      dirty.Empty();
+    }
+    pseudoStackingContext = PR_TRUE;
+  } else {
+    dirty.IntersectRect(dirty, aChild->GetOverflowRect());
+  }
+
+  // If this child has a placeholder of interest then we must descend into
+  // it even if the child's descendant frames don't intersect the dirty
+  // area themselves.
+  // If the child is a scrollframe that we want to ignore, then we need
+  // to descend into it because its scrolled child may intersect the dirty
+  // area even if the scrollframe itself doesn't.
+  if (dirty.IsEmpty() &&
+      !(aChild->GetStateBits() & NS_FRAME_HAS_DESCENDANT_PLACEHOLDER) && 
+      aChild != aBuilder->GetIgnoreScrollFrame())
+    return NS_OK;
+
+  // Don't remove NS_FRAME_HAS_DESCENDANT_PLACEHOLDER until after we've
+  // processed the frame ... it could be useful for frames to know this
+  
+  if (aChild->GetStyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
+    return NS_OK;
+  // XXX need to have inline-block and inline-table set pseudoStackingContext
+  
+  const nsStyleDisplay* ourDisp = GetStyleDisplay();
+  // REVIEW: Taken from nsBoxFrame::Paint
+  // Don't paint our children if the theme object is a leaf.
+  if (IsThemed(ourDisp) &&
+      !GetPresContext()->GetTheme()->WidgetIsContainer(ourDisp->mAppearance))
+    return NS_OK;
+
+#ifdef NS_DEBUG
+  // Draw a border around the child
+  // REVIEW: From nsContainerFrame::PaintChild
+  if (nsIFrameDebug::GetShowFrameBorders() && !aChild->GetRect().IsEmpty()) {
+    nsresult rv = aLists.Outlines()->AppendNewToTop(new (aBuilder)
+        nsDisplayGeneric(aChild, PaintDebugBorder, "DebugBorder"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+#endif
+
+  const nsStyleDisplay* disp = aChild->GetStyleDisplay();
+  PRBool isComposited = disp->mOpacity != 1.0f;
+  PRBool isPositioned = disp->IsPositioned();
+  if (isComposited || isPositioned) {
+    // If you change this, also change IsPseudoStackingContextFromStyle()
+    pseudoStackingContext = PR_TRUE;
+  }
+  
+  nsRect overflowClip;
+  PRBool applyOverflowClip =
+    ApplyOverflowClipping(aBuilder, aChild, disp, &overflowClip);
+  // Don't use overflowClip to restrict the dirty rect, since some of the
+  // descendants may not be clipped by it. Even if we end up with unnecessary
+  // display items, they'll be pruned during OptimizeVisibility. Note that
+  // this overflow-clipping here only applies to overflow:-moz-hidden-unscrollable;
+  // overflow:hidden etc creates an nsHTML/XULScrollFrame which does its own
+  // clipping.
+
+  nsDisplayListBuilder::AutoIsRootSetter rootSetter(aBuilder, pseudoStackingContext);
+  nsresult rv;
+  if (!pseudoStackingContext) {
+    // THIS IS THE COMMON CASE.
+    // Not a pseudo or real stacking context. Do the simple thing and
+    // return early.
+    if (applyOverflowClip) {
+      rv = BuildDisplayListWithOverflowClip(aBuilder, aChild, dirty, aLists,
+                                            overflowClip);
+    } else {
+      rv = aChild->BuildDisplayList(aBuilder, dirty, aLists);
+    }
+    aChild->RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
+    return NS_OK;
+  }
+  
+  nsDisplayList list;
+  nsDisplayList extraPositionedDescendants;
+  const nsStylePosition* pos = aChild->GetStylePosition();
+  if ((isPositioned && pos->mZIndex.GetUnit() == eStyleUnit_Integer) ||
+      isComposited) {
+    // True stacking context
+    rv = aChild->BuildDisplayListForStackingContext(aBuilder, dirty, &list);
+  } else {
+    nsRect clipRect;
+    PRBool applyAbsPosClipping =
+        ApplyAbsPosClipping(aBuilder, disp, aChild, &clipRect);
+    // A psuedo-stacking context (e.g., a positioned element with z-index auto).
+    // we allow positioned descendants of this element to escape to our
+    // container's positioned descendant list, because they might be
+    // z-index:non-auto
+    nsDisplayListCollection pseudoStack;
+    nsRect clippedDirtyRect = dirty;
+    if (applyAbsPosClipping) {
+      // clipRect is in builder-reference-frame coordinates,
+      // dirty/clippedDirtyRect are in aChild coordinates
+      clippedDirtyRect.IntersectRect(clippedDirtyRect,
+                                     clipRect - aBuilder->ToReferenceFrame(aChild));
+    }
+    
+    if (applyOverflowClip) {
+      rv = BuildDisplayListWithOverflowClip(aBuilder, aChild, clippedDirtyRect,
+                                            pseudoStack, overflowClip);
+    } else {
+      rv = aChild->BuildDisplayList(aBuilder, clippedDirtyRect, pseudoStack);
+    }
+    aChild->RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
+    
+    if (NS_SUCCEEDED(rv)) {
+      if (isPositioned && applyAbsPosClipping) {
+        nsAbsPosClipWrapper wrapper(clipRect);
+        rv = wrapper.WrapListsInPlace(aBuilder, aChild, pseudoStack);
+      }
+    }
+    list.AppendToTop(pseudoStack.BorderBackground());
+    list.AppendToTop(pseudoStack.BlockBorderBackgrounds());
+    list.AppendToTop(pseudoStack.Floats());
+    list.AppendToTop(pseudoStack.Content());
+    extraPositionedDescendants.AppendToTop(pseudoStack.PositionedDescendants());
+    aLists.Outlines()->AppendToTop(pseudoStack.Outlines());
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  if (isPositioned || isComposited) {
+    // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
+    // go in this level.
+    rv = aLists.PositionedDescendants()->AppendNewToTop(new (aBuilder)
+        nsDisplayWrapList(aChild, &list));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (disp->IsFloating()) {
+    rv = aLists.Floats()->AppendNewToTop(new (aBuilder)
+        nsDisplayWrapList(aChild, &list));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    aLists.Content()->AppendToTop(&list);
+  }
+  // We delay placing the positioned descendants of positioned frames to here,
+  // because in the absence of z-index this is the correct order for them.
+  // This doesn't affect correctness because the positioned descendants list
+  // is sorted by z-order and content in BuildDisplayListForStackingContext,
+  // but it means that sort routine needs to do less work.
+  aLists.PositionedDescendants()->AppendToTop(&extraPositionedDescendants);
+  return NS_OK;
 }
 
 nsresult
@@ -2198,18 +2733,6 @@ nsFrame::GetCursor(const nsPoint& aPoint,
   return NS_OK;
 }
 
-nsIFrame*
-nsFrame::GetFrameForPoint(const nsPoint& aPoint,
-                          nsFramePaintLayer aWhichLayer)
-{
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND &&
-      thisRect.Contains(aPoint) && GetStyleVisibility()->IsVisible()) {
-    return this;
-  }
-  return nsnull;
-}
-
 // Resize and incremental reflow
 
 // nsIHTMLReflow member functions
@@ -2963,66 +3486,58 @@ nsFrame::ParentDisablesSelection() const
   return PR_FALSE;
 }
 
-nsresult 
-nsFrame::GetSelectionForVisCheck(nsPresContext * aPresContext, nsISelection** aSelection)
-{
-  *aSelection = nsnull;
-  nsresult rv = NS_OK;
-
-  // start by checking to see if we are paginated which probably means
-  // we are in print preview or printing
-  if (aPresContext->IsPaginated()) {
-    // now see if we are rendering selection only
-    if (aPresContext->IsRenderingOnlySelection()) {
-      // Check the quick way first (typically only leaf nodes)
-      PRBool isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-      // if we aren't selected in the mState,
-      // we could be a container so check to see if we are in the selection range
-      // this is a expensive
-      if (!isSelected) {
-        nsIPresShell *shell = aPresContext->GetPresShell();
-        if (shell) {
-          nsCOMPtr<nsISelectionController> selcon(do_QueryInterface(shell));
-          if (selcon) {
-            rv = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);
-          }
-        }
-      }
-    }
-  } 
-
-  return rv;
+PRBool
+nsIFrame::IsVisibleForPainting(nsDisplayListBuilder* aBuilder) {
+  if (!GetStyleVisibility()->IsVisible())
+    return PR_FALSE;
+  nsISelection* sel = aBuilder->GetBoundingSelection();
+  return !sel || IsVisibleInSelection(sel);
 }
 
+PRBool
+nsIFrame::IsVisibleForPainting() {
+  if (!GetStyleVisibility()->IsVisible())
+    return PR_FALSE;
 
-NS_IMETHODIMP
-nsFrame::IsVisibleForPainting(nsPresContext *     aPresContext, 
-                              nsIRenderingContext& aRenderingContext,
-                              PRBool               aCheckVis,
-                              PRBool*              aIsVisible)
+  nsPresContext* pc = GetPresContext();
+  if (!pc->IsRenderingOnlySelection())
+    return PR_TRUE;
+
+  nsCOMPtr<nsISelectionController> selcon(do_QueryInterface(pc->PresShell()));
+  if (selcon) {
+    nsCOMPtr<nsISelection> sel;
+    selcon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                         getter_AddRefs(sel));
+    if (sel)
+      return IsVisibleInSelection(sel);
+  }
+  return PR_TRUE;
+}
+
+PRBool
+nsIFrame::IsVisibleInSelection(nsDisplayListBuilder* aBuilder) {
+  nsISelection* sel = aBuilder->GetBoundingSelection();
+  return !sel || IsVisibleInSelection(sel);
+}
+
+PRBool
+nsIFrame::IsVisibleOrCollapsedForPainting(nsDisplayListBuilder* aBuilder) {
+  if (!GetStyleVisibility()->IsVisibleOrCollapsed())
+    return PR_FALSE;
+  nsISelection* sel = aBuilder->GetBoundingSelection();
+  return !sel || IsVisibleInSelection(sel);
+}
+
+PRBool
+nsIFrame::IsVisibleInSelection(nsISelection* aSelection)
 {
-  // first check to see if we are visible
-  if (aCheckVis) {
-    if (!GetStyleVisibility()->IsVisible()) {
-      *aIsVisible = PR_FALSE;
-      return NS_OK;
-    }
-  }
-
-  // Start by assuming we are visible and need to be painted
-  *aIsVisible = PR_TRUE;
-
-  // NOTE: GetSelectionforVisCheck checks the pagination to make sure we are printing
-  // In otherwords, the selection will ALWAYS be null if we are not printing, meaning
-  // the visibility will be TRUE in that case
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelectionForVisCheck(aPresContext, getter_AddRefs(selection));
-  if (NS_SUCCEEDED(rv) && selection) {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
-    selection->ContainsNode(node, PR_TRUE, aIsVisible);
-  }
-
-  return rv;
+  if ((mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT)
+    return PR_TRUE;
+  
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
+  PRBool vis;
+  nsresult rv = aSelection->ContainsNode(node, PR_TRUE, &vis);
+  return NS_FAILED(rv) || vis;
 }
 
 /* virtual */ PRBool
@@ -3603,9 +4118,8 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
       aFrame->GetType() == nsLayoutAtoms::brFrame) {
     nsIContent* content = aFrame->GetContent();
     result.mContent = content->GetParent();
-    if (result.mContent)
-      result.mOffset = result.mContent->IndexOf(content) + 
-        (aDirection == eDirPrevious ? 1 : 0);
+    result.mOffset = result.mContent->IndexOf(content) + 
+      (aDirection == eDirPrevious ? 1 : 0);
     return result;
   }
 

@@ -86,6 +86,7 @@
 #include "nsStyleSet.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsDisplayList.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h" // Temporary fix for Bug 36558
@@ -1535,30 +1536,6 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 
 //--------------------------------------------------------------
 
-nsIFrame*
-nsComboboxControlFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                         nsFramePaintLayer aWhichLayer)
-{
-  // The button is getting the hover events so...
-  // None of the children frames of the combobox get
-  // the events. (like the button frame), that way
-  // all event based style rules affect the combobox 
-  // and not the any of the child frames.  (The inability
-  // of the parent to be in the :hover state at the same
-  // time as its children is really a bug (#5693 / #33736)
-  // in the implementation of :hover.)
-  
-  // It would be theoretically more elegant to check the
-  // children when not disabled, and then use event
-  // capturing.  It would correctly handle situations (obscure!!)
-  // where the children were visible but the parent was not.
-  // Now the functionality of the OPTIONs depends on the SELECT
-  // being visible.  Oh well...
-
-  return nsFrame::GetFrameForPoint(aPoint, aWhichLayer);
-}
-
-
 //--------------------------------------------------------------
 
 #ifdef NS_DEBUG
@@ -2115,14 +2092,6 @@ nsComboboxControlFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   return nsnull;
 }
 
-PRIntn
-nsComboboxControlFrame::GetSkipSides() const
-{    
-    // Don't skip any sides during border rendering
-  return 0;
-}
-
-
 //----------------------------------------------------------------------
   //nsIRollupListener
 //----------------------------------------------------------------------
@@ -2155,79 +2124,98 @@ nsComboboxControlFrame::UpdateRecentIndex(PRInt32 aIndex)
   return index;
 }
 
-NS_METHOD 
-nsComboboxControlFrame::Paint(nsPresContext*     aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags)
+class nsDisplayComboboxFocus : public nsDisplayItem {
+public:
+  nsDisplayComboboxFocus(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("ComboboxFocus")
+private:
+  nsComboboxControlFrame* mFrame;
+};
+
+void nsDisplayComboboxFocus::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
-    return NS_OK;
-  }
+  mFrame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+}
+
+NS_IMETHODIMP
+nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                         const nsRect&           aDirtyRect,
+                                         const nsDisplayListSet& aLists)
+{
 #ifdef NOISY
-  printf("%p paint layer %d at (%d, %d, %d, %d)\n", this, aWhichLayer, 
+  printf("%p paint at (%d, %d, %d, %d)\n", this,
     aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
 #endif
-  // We paint everything in the foreground so that the form control's
-  // parents cannot paint over it in other passes (bug 95826).
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                       NS_FRAME_PAINT_LAYER_BACKGROUND);
-    nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                       NS_FRAME_PAINT_LAYER_FLOATS);
-    nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                       NS_FRAME_PAINT_LAYER_FOREGROUND);
 
-    // nsITheme should take care of drawing the focus border, but currently does so only on Mac.
-    // If all of the nsITheme implementations are fixed to draw the focus border correctly,
-    // this #ifdef should be replaced with a -moz-appearance / ThemeSupportsWidget() check.
-
-    if (!ToolkitHasNativePopup() && mDisplayFrame) {
-      aRenderingContext.PushState();
-      nsRect clipRect = mDisplayFrame->GetRect();
-      aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
-      PaintChild(aPresContext, aRenderingContext, aDirtyRect, 
-                 mDisplayFrame, NS_FRAME_PAINT_LAYER_BACKGROUND);
-      PaintChild(aPresContext, aRenderingContext, aDirtyRect, 
-                 mDisplayFrame, NS_FRAME_PAINT_LAYER_FOREGROUND);
-
-      /////////////////////
-      // draw focus
-      // XXX This is only temporary
-      // Only paint the focus if we're visible
-      if (GetStyleVisibility()->IsVisible()) {
-        if (!nsFormControlHelper::GetDisabled(mContent) && mFocused == this) {
-          aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-          aRenderingContext.SetColor(0);
-        } else {
-          aRenderingContext.SetColor(GetStyleBackground()->mBackgroundColor);
-          aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
-        }
-        //aRenderingContext.DrawRect(clipRect);
-        float p2t = aPresContext->PixelsToTwips();
-        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-        clipRect.width -= onePixel;
-        clipRect.height -= onePixel;
-        aRenderingContext.DrawLine(clipRect.x, clipRect.y, 
-                                   clipRect.x+clipRect.width, clipRect.y);
-        aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y, 
-                                   clipRect.x+clipRect.width, clipRect.y+clipRect.height);
-        aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y+clipRect.height, 
-                                   clipRect.x, clipRect.y+clipRect.height);
-        aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
-                                   clipRect.x, clipRect.y);
-        aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
-                                   clipRect.x, clipRect.y);
-      }
-      /////////////////////
-      aRenderingContext.PopState();
-    }
+  if (aBuilder->IsForEventDelivery()) {
+    // Don't allow children to receive events.
+    // REVIEW: following old GetFrameForPoint
+    nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // REVIEW: Our in-flow child frames are inline-level so they will paint in our
+    // content list, so we don't need to mess with layers.
+    nsresult rv = nsAreaFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  
-  // Call to the base class to draw selection borders when appropriate
-  return nsFrame::Paint(aPresContext,aRenderingContext,aDirtyRect,aWhichLayer);
+
+  // nsITheme should take care of drawing the focus border, but currently does so only on Mac.
+  // If all of the nsITheme implementations are fixed to draw the focus border correctly,
+  // this #ifdef should be replaced with a -moz-appearance / ThemeSupportsWidget() check.
+
+  if (!ToolkitHasNativePopup() && mDisplayFrame &&
+      IsVisibleForPainting(aBuilder)) {
+    // REVIEW: We used to paint mDisplayFrame *again* here, with clipping,
+    // but that makes no sense.
+    nsresult rv = aLists.Content()->AppendNewToTop(new (aBuilder)
+        nsDisplayComboboxFocus(this));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return DisplaySelectionOverlay(aBuilder, aLists);
+}
+
+void nsComboboxControlFrame::PaintFocus(nsIRenderingContext& aRenderingContext,
+                                        nsPoint aPt) {
+  aRenderingContext.PushState();
+  nsRect clipRect = mDisplayFrame->GetRect() + aPt;
+  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+
+  // REVIEW: Why does the old code paint mDisplayFrame again? We've
+  // already painted it in the children above. So clipping it here won't do
+  // us much good.
+
+  /////////////////////
+  // draw focus
+  // XXX This is only temporary
+  if (!nsFormControlHelper::GetDisabled(mContent) && mFocused == this) {
+    aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
+    aRenderingContext.SetColor(0);
+  } else {
+    aRenderingContext.SetColor(GetStyleBackground()->mBackgroundColor);
+    aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
+  }
+  //aRenderingContext.DrawRect(clipRect);
+  float p2t = GetPresContext()->PixelsToTwips();
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  clipRect.width -= onePixel;
+  clipRect.height -= onePixel;
+  aRenderingContext.DrawLine(clipRect.x, clipRect.y, 
+                             clipRect.x+clipRect.width, clipRect.y);
+  aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y, 
+                             clipRect.x+clipRect.width, clipRect.y+clipRect.height);
+  aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y+clipRect.height, 
+                             clipRect.x, clipRect.y+clipRect.height);
+  aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
+                             clipRect.x, clipRect.y);
+  aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
+                             clipRect.x, clipRect.y);
+
+  aRenderingContext.PopState();
 }
 
 //----------------------------------------------------------------------

@@ -75,14 +75,3 @@ nsMathMLmphantomFrame::InheritAutomaticData(nsIFrame* aParent)
 
   return NS_OK;
 }
-
-NS_METHOD
-nsMathMLmphantomFrame::Paint(nsPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags)
-{
-  // do nothing, this is not a bug.
-  return NS_OK;
-}

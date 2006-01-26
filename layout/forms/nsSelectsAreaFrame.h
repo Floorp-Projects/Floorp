@@ -54,18 +54,16 @@ public:
   // nsISupports
   //NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
-                                     nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
-protected:
-  PRBool IsOptionElement(nsIContent* aContent);
-  PRBool IsOptionElementFrame(nsIFrame *aFrame);
+  nsresult BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
+                                    const nsRect&           aDirtyRect,
+                                    const nsDisplayListSet& aLists);
 
+  static PRBool IsOptionElement(nsIContent* aContent);
+  static PRBool IsOptionElementFrame(nsIFrame *aFrame);
 };
 
 #endif /* nsSelectsAreaFrame_h___ */

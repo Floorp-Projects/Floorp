@@ -424,6 +424,21 @@ public:
                        nsIFrame*       aFrame);
 
 protected:
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  nsresult DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
+                                  nsIFrame* aFrame, const nsPoint& aPt,
+                                  const nsBoundingMetrics& aMetrics,
+                                  const nsDisplayListSet& aLists);
+#endif
+
+  /**
+   * Display a solid rectangle in the frame's text color. Used for drawing
+   * fraction separators and root/sqrt overbars.
+   */
+  nsresult DisplayBar(nsDisplayListBuilder* aBuilder,
+                      nsIFrame* aFrame, const nsRect& aRect,
+                      const nsDisplayListSet& aLists);
+
   // information about the presentation policy of the frame
   nsPresentationData mPresentationData;
 

@@ -860,8 +860,8 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
       GetChildBox(&box);
       while (box) {
         nsRect* overflowArea = box->GetOverflowAreaProperty();
-        nsRect bounds = overflowArea ? *overflowArea + box->GetPosition() :
-                                       bounds = box->GetRect();
+        nsRect bounds = overflowArea ? *overflowArea + box->GetPosition()
+                                     : box->GetRect();
         rect.UnionRect(rect, bounds);
 
         box->GetNextBox(&box);

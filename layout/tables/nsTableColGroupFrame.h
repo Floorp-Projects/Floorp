@@ -85,6 +85,13 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
+  /**
+   * ColGroups never paint anything, nor receive events.
+   */
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) { return NS_OK; }
+
   /** A colgroup can be caused by three things:
     * 1)	An element with table-column-group display
     * 2)	An element with a table-column display without a
@@ -131,23 +138,6 @@ public:
     */
   void RemoveChild(nsTableColFrame& aChild,
                    PRBool           aResetSubsequentColIndices);
-
-  /** @see nsIFrame::Paint
-    * all the table painting is done in nsTablePainter.cpp
-    */
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
-
-  // column groups don't paint their own background -- the cells do
-  virtual PRBool CanPaintBackground() { return PR_FALSE; }
-
-  /** @see nsIFrame::GetFrameForPoint
-    */
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer);
 
   /** reflow of a column group is a trivial matter of reflowing
     * the col group's children (columns), and setting this frame

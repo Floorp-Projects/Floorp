@@ -53,6 +53,8 @@
 
 #include "nsISupports.h"
 #include "nsCoord.h"
+#include "nsRect.h"
+#include "nsColor.h"
 #include "nsEvent.h"
 #include "nsReflowType.h"
 #include "nsCompatibility.h"
@@ -707,6 +709,29 @@ public:
   {
     mForwardingContainer = aContainer;
   }
+  
+  /**
+   * Dump window contents into a new offscreen rendering context.
+   * @param aRect is the region to capture into the offscreen buffer, in the
+   * root frame's coordinate system (if aIgnoreViewportScrolling is false)
+   * or in the root scrolled frame's coordinate system
+   * (if aIgnoreViewportScrolling is true)
+   * @param aUntrusted set to PR_TRUE if the contents may be passed to malicious
+   * agents. E.g. we might choose not to paint the contents of sensitive widgets
+   * such as the file name in a file upload widget, and we might choose not
+   * to paint themes.
+   * @param aIgnoreViewportScrolling ignore clipping/scrolling/scrollbar painting
+   * due to scrolling in the viewport
+   * @param aBackgroundColor a background color to render onto
+   * @param aRenderedContext gets set to a rendering context whose offscreen
+   * buffer can be locked to get the data. The buffer's size will be aRect's size.
+   * In all cases the caller must clean it up by calling
+   * cx->DestroyDrawingSurface(cx->GetDrawingSurface()).
+   */
+  NS_IMETHOD RenderOffscreen(nsRect aRect, PRBool aUntrusted,
+                             PRBool aIgnoreViewportScrolling,
+                             nscolor aBackgroundColor,
+                             nsIRenderingContext** aRenderedContext) = 0;
 
 protected:
   // IMPORTANT: The ownership implicit in the following member variables

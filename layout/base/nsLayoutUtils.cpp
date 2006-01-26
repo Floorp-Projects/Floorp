@@ -52,6 +52,8 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsGUIEvent.h"
+#include "nsDisplayList.h"
+#include "nsRegion.h"
 
 /**
  * A namespace class for static layout utilities.
@@ -206,6 +208,46 @@ nsLayoutUtils::IsGeneratedContentFor(nsIContent* aContent,
   }
 
   return aFrame->GetStyleContext()->GetPseudoType() == aPseudoElement;
+}
+
+// static
+nsIFrame*
+nsLayoutUtils::GetCrossDocParentFrame(nsIFrame* aFrame)
+{
+  nsIFrame* p = aFrame->GetParent();
+  if (p)
+    return p;
+
+  nsIView* v = aFrame->GetView();
+  if (!v)
+    return nsnull;
+  v = v->GetParent(); // anonymous inner view
+  if (!v)
+    return nsnull;
+  v = v->GetParent(); // subdocumentframe's view
+  if (!v)
+    return nsnull;
+  return NS_STATIC_CAST(nsIFrame*, v->GetClientData());
+}
+
+// static
+PRBool
+nsLayoutUtils::IsProperAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
+                                             nsIFrame* aCommonAncestor)
+{
+  if (aFrame == aCommonAncestor)
+    return PR_FALSE;
+  
+  nsIFrame* parentFrame = GetCrossDocParentFrame(aFrame);
+
+  while (parentFrame != aCommonAncestor) {
+    if (parentFrame == aAncestorFrame)
+      return PR_TRUE;
+
+    parentFrame = GetCrossDocParentFrame(parentFrame);
+  }
+
+  return PR_FALSE;
 }
 
 // static
@@ -540,6 +582,202 @@ nsLayoutUtils::IsInitialContainingBlock(nsIFrame* aFrame)
     aFrame->GetPresContext()->PresShell()->FrameConstructor()->GetInitialContainingBlock();
 }
 
+#ifdef DEBUG
+#include <stdio.h>
+
+static PRBool gDumpPaintList = 0;
+static PRBool gDumpEventList = 0;
+#endif
+
+nsIFrame*
+nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt)
+{
+  nsDisplayListBuilder builder(aFrame, PR_TRUE);
+  nsDisplayList list;
+  nsresult rv =
+    aFrame->BuildDisplayListForStackingContext(&builder, nsRect(aPt, nsSize(1, 1)), &list);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+#ifdef DEBUG
+  if (gDumpEventList) {
+    fprintf(stderr, "Event handling --- (%d,%d):\n", aPt.x, aPt.y);
+    nsIFrameDebug::PrintDisplayList(&builder, list);
+  }
+#endif
+  
+  nsIFrame* result = list.HitTest(&builder, aPt);
+  list.DeleteAll();
+  return result;
+}
+
+nsresult
+nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
+                          const nsRegion& aDirtyRegion)
+{
+  nsDisplayListBuilder builder(aFrame, PR_FALSE);
+  nsDisplayList list;
+  nsRect dirtyRect = aDirtyRegion.GetBounds();
+  nsresult rv =
+    aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DEBUG
+  if (gDumpPaintList) {
+    fprintf(stderr, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
+            dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
+    nsIFrameDebug::PrintDisplayList(&builder, list);
+  }
+#endif
+  
+  nsRegion visibleRegion = aDirtyRegion;
+  list.OptimizeVisibility(&builder, &visibleRegion);
+
+#ifdef DEBUG
+  if (gDumpPaintList) {
+    fprintf(stderr, "Painting --- after optimization:\n");
+    nsIFrameDebug::PrintDisplayList(&builder, list);
+  }
+#endif
+  
+  list.Paint(&builder, aRenderingContext, aDirtyRegion.GetBounds());
+  // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
+  list.DeleteAll();
+  return NS_OK;
+}
+
+static void
+AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
+                 const nsRect& aRect, const nsRect& aClipRect, nsPoint aDelta,
+                 nsRegion* aRegion)
+{
+  for (nsDisplayItem* item = aList->GetBottom(); item; item = item->GetAbove()) {
+    nsDisplayList* sublist = item->GetList();
+    if (sublist) {
+      if (item->GetType() == nsDisplayItem::TYPE_CLIP) {
+        nsRect clip;
+        clip.IntersectRect(aClipRect, NS_STATIC_CAST(nsDisplayClip*, item)->GetClipRect());
+        AddItemsToRegion(aBuilder, sublist, aRect, clip, aDelta, aRegion);
+      } else {
+        // opacity, or a generic sublist
+        AddItemsToRegion(aBuilder, sublist, aRect, aClipRect, aDelta, aRegion);
+      }
+    } else {
+      // Items left in the list are either IsVaryingRelativeToFrame
+      // or !IsMovingFrame (i.e., not in the moving subtree)
+      nsRect r;
+      if (r.IntersectRect(aClipRect, item->GetBounds(aBuilder))) {
+        PRBool inMovingSubtree = PR_FALSE;
+        if (item->IsVaryingRelativeToFrame(aBuilder, aBuilder->GetRootMovingFrame())) {
+          nsIFrame* f = item->GetUnderlyingFrame();
+          NS_ASSERTION(f, "Must have an underlying frame for leaf item");
+          inMovingSubtree = aBuilder->IsMovingFrame(f);
+          nsRect damageRect;
+          if (damageRect.IntersectRect(aRect + aDelta, r)) {
+            aRegion->Or(*aRegion, damageRect);
+          }
+        }
+      
+        if (!inMovingSubtree) {
+          // if it's uniform and it includes both the old and new areas, then
+          // we don't need to paint it
+          if (!(r.Contains(aRect) && r.Contains(aRect + aDelta) &&
+                item->IsVaryingRelativeToFrame(aBuilder, aBuilder->GetRootMovingFrame()))) {
+            // area where a non-moving element is visible must be repainted
+            nsRect damageRect;
+            if (damageRect.IntersectRect(aRect + aDelta, r)) {
+              aRegion->Or(*aRegion, damageRect);
+            }
+            // we may have bitblitted an area that was painted by a non-moving
+            // element. This bitblitted data is invalid and was copied to
+            // "r + aDelta".
+            if (damageRect.IntersectRect(aRect + aDelta, r + aDelta)) {
+              aRegion->Or(*aRegion, damageRect);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+nsresult
+nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
+                                           nsIFrame* aMovingFrame,
+                                           nsPoint aDelta,
+                                           const nsRect& aCopyRect,
+                                           nsRegion* aRepaintRegion)
+{
+  // Build the 'after' display list over the whole area of interest.
+  // Frames under aMovingFrame will not be allowed to affect (clip or cover)
+  // non-moving frame display items ... then we can be sure the non-moving
+  // frame display items we get are the same ones we would have gotten if
+  // we had constructed the 'before' display list.
+  // (We have to build the 'after' display list because the frame/view
+  // hierarchy has already been updated for the move.)
+  nsRect rect;
+  rect.UnionRect(aCopyRect, aCopyRect + aDelta);
+  nsDisplayListBuilder builder(aRootFrame, PR_FALSE, aMovingFrame);
+  nsDisplayList list;
+  nsresult rv =
+    aRootFrame->BuildDisplayListForStackingContext(&builder, rect, &list);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Optimize for visibility, but frames under aMovingFrame will not be
+  // considered opaque, so they don't cover non-moving frames.
+  nsRegion visibleRegion(aCopyRect);
+  visibleRegion.Or(visibleRegion, aCopyRect + aDelta);
+  list.OptimizeVisibility(&builder, &visibleRegion);
+
+  aRepaintRegion->SetEmpty();
+  // Any visible non-moving display items get added to the repaint region
+  // a) at their current location and b) offset by -aPt (their position in
+  // the 'before' display list) (unless they're uniform and we can exclude them).
+  // Also, any visible position-varying display items get added to the
+  // repaint region. All these areas are confined to aCopyRect+aDelta.
+  // We could do more work here: e.g., do another optimize-visibility pass
+  // with the moving items taken into account, either on the before-list
+  // or the after-list, or even both if we cloned the display lists ... but
+  // it's probably not worth it.
+  AddItemsToRegion(&builder, &list, aCopyRect, rect, aDelta, aRepaintRegion);
+  // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
+  list.DeleteAll();
+  return NS_OK;
+}
+
+nsresult
+nsLayoutUtils::CreateOffscreenContext(nsIDeviceContext* deviceContext, nsIDrawingSurface* surface,
+                                      const nsRect& aRect, nsIRenderingContext** aResult)
+{
+  nsresult            rv;
+  nsIRenderingContext *context = nsnull;
+
+  rv = deviceContext->CreateRenderingContext(surface, context);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // always initialize clipping, linux won't draw images otherwise.
+  nsRect clip(0, 0, aRect.width, aRect.height);
+  context->SetClipRect(clip, nsClipCombine_kReplace);
+
+  context->Translate(-aRect.x, -aRect.y);
+  
+  *aResult = context;
+  return NS_OK;
+}
+
+PRInt32
+nsLayoutUtils::GetZIndex(nsIFrame* aFrame) {
+  if (!aFrame->GetStyleDisplay()->IsPositioned())
+    return 0;
+
+  const nsStylePosition* position =
+    aFrame->GetStylePosition();
+  if (position->mZIndex.GetUnit() == eStyleUnit_Integer)
+    return position->mZIndex.GetIntValue();
+
+  // sort the auto and 0 elements together
+  return 0;
+}
+
 /**
  * Uses a binary search for find where the cursor falls in the line of text
  * It also keeps track of the part of the string that has already been measured
@@ -614,4 +852,3 @@ nsLayoutUtils::ScrollIntoView(nsIFormControlFrame* aFormFrame)
     }
   }
 }
-

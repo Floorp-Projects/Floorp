@@ -285,6 +285,16 @@ void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, 
   *aHeight = y2 - *aY;
 }
 
+void nsTransform2D :: TransformNoXLateCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, nscoord *aHeight) const
+{
+  nscoord x2 = *aX + *aWidth;
+  nscoord y2 = *aY + *aHeight;
+  TransformNoXLateCoord(aX, aY);
+  TransformNoXLateCoord(&x2, &y2);
+  *aWidth = x2 - *aX;
+  *aHeight = y2 - *aY;
+}
+
 void nsTransform2D :: AddTranslation(float ptX, float ptY)
 {
   if (type == MG_2DIDENTITY)

@@ -230,6 +230,16 @@ nsThebesRenderingContext::PopTranslation(PushedTranslation* aState)
 }
 
 NS_IMETHODIMP
+nsThebesRenderingContext::SetTranslation(nscoord aX, nscoord aY)
+{
+    gfxMatrix mat = mThebes->CurrentMatrix();
+    gfxFloat a, b, c, d, tx, ty;
+    mat->ToValues(&a, &b, &c, &d, &tx, &ty);
+    gfxMatrix newMat(a, b, c, d, aX, aY);
+    mThebes->SetMatrix(&newMat);
+}
+
+NS_IMETHODIMP
 nsThebesRenderingContext::GetHints(PRUint32& aResult)
 {
     aResult = 0;

@@ -93,6 +93,7 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsLayoutUtils.h"
+#include "nsDisplayList.h"
 
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
@@ -342,73 +343,35 @@ nsListControlFrame::Destroy(nsPresContext *aPresContext)
 }
 
 NS_IMETHODIMP
-nsListControlFrame::Paint(nsPresContext*       aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsFramePaintLayer    aWhichLayer,
-                          PRUint32             aFlags)
+nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists)
 {
-  if (!GetStyleVisibility()->IsVisible()) {
-    return PR_FALSE;
-  }
-
+  // We allow visibility:hidden <select>s to contain visible options.
+  
   // Don't allow painting of list controls when painting is suppressed.
-  PRBool paintingSuppressed = PR_FALSE;
-  aPresContext->PresShell()->IsPaintingSuppressed(&paintingSuppressed);
-  if (paintingSuppressed)
+  // XXX why do we need this here? we should never reach this. Maybe
+  // because these can have widgets? Hmm
+  if (aBuilder->IsBackgroundOnly())
     return NS_OK;
-
-  // Start by assuming we are visible and need to be painted
-  PRBool isVisible = PR_TRUE;
-
-  if (aPresContext->IsPaginated()) {
-    if (aPresContext->IsRenderingOnlySelection()) {
-      // Check the quick way first
-      PRBool isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-      // if we aren't selected in the mState we could be a container
-      // so check to see if we are in the selection range
-      if (!isSelected) {
-        nsCOMPtr<nsISelectionController> selcon;
-        selcon = do_QueryInterface(aPresContext->PresShell());
-        if (selcon) {
-          nsCOMPtr<nsISelection> selection;
-          selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-          nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
-          selection->ContainsNode(node, PR_TRUE, &isVisible);
-        } else {
-          isVisible = PR_FALSE;
-        }
-      }
-    }
-  } 
-
-  if (isVisible) {
-    if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND) {
-      const nsStyleDisplay* displayData = GetStyleDisplay();
-      if (displayData->mAppearance) {
-        nsITheme *theme = aPresContext->GetTheme();
-        nsRect  rect(0, 0, mRect.width, mRect.height);
-        if (theme && theme->ThemeSupportsWidget(aPresContext, this, displayData->mAppearance))
-          theme->DrawWidgetBackground(&aRenderingContext, this, 
-                                      displayData->mAppearance, rect, aDirtyRect); 
-      }
-    }
-
-    return nsHTMLScrollFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  }
-
-  DO_GLOBAL_REFLOW_COUNT_DSP("nsListControlFrame", &aRenderingContext);
-  return NS_OK;
-
+    
+  // REVIEW: The selection visibility code that used to be here is what
+  // we already do by default.
+  // REVIEW: There was code here to paint the theme background. But as far
+  // as I can tell, we'd just paint the theme background twice because
+  // it was redundant with nsCSSRendering::PaintBackground
+  return nsHTMLScrollFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
-/* Note: this is called by the SelectsAreaFrame, which is the same
-   as the frame returned by GetOptionsContainer. It's the frame which is
-   scrolled by us. */
-void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer aWhichLayer)
+/**
+ * This is called by the SelectsAreaFrame, which is the same
+ * as the frame returned by GetOptionsContainer. It's the frame which is
+ * scrolled by us.
+ * @param aPt the offset of this frame, relative to the rendering reference
+ * frame
+ */
+void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
 {
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) return;
-
   if (mFocused != this) return;
 
   // The mEndSelectionIndex is what is currently being selected
@@ -494,14 +457,15 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
   if (childframe) {
     // get the child rect
     fRect = childframe->GetRect();
-
-    // get it into the coordinates of containerFrame
-    fRect.MoveBy(childframe->GetParent()->GetOffsetTo(containerFrame));
+    // get it into the our coordinates
+    fRect.MoveBy(childframe->GetParent()->GetOffsetTo(this));
   } else {
     fRect.x = fRect.y = 0;
     fRect.width = mRect.width;
     fRect.height = CalcFallbackRowHeight(0);
+    fRect.MoveBy(containerFrame->GetOffsetTo(this));
   }
+  fRect += aPt;
   
   PRBool lastItemIsSelected = PR_FALSE;
   if (focusedIndex != kNothingSelected) {
@@ -2547,9 +2511,8 @@ nsresult
 nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent, 
                                          PRInt32&     aCurIndex)
 {
-  if (IgnoreMouseEventForSelection(aMouseEvent)) {
+  if (IgnoreMouseEventForSelection(aMouseEvent))
     return NS_ERROR_FAILURE;
-  }
 
   nsIView* view = GetScrolledFrame()->GetView();
   nsIViewManager* viewMan = view->GetViewManager();

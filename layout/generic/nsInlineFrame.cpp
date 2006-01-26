@@ -264,34 +264,21 @@ nsInlineFrame::RemoveFrame(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsInlineFrame::Paint(nsPresContext*      aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect,
-                     nsFramePaintLayer    aWhichLayer,
-                     PRUint32             aFlags)
+nsInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists)
 {
-  if (NS_FRAME_IS_UNFLOWABLE & mState) {
-    return NS_OK;
-  }
-
-  // Paint inline element backgrounds in the foreground layer (bug 36710).
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
-  }
-    
+  nsresult rv = nsHTMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   // The sole purpose of this is to trigger display of the selection
   // window for Named Anchors, which don't have any children and
   // normally don't have any size, but in Editor we use CSS to display
   // an image to represent this "hidden" element.
   if (!mFrames.FirstChild()) {
-    nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                   aWhichLayer, aFlags);
+    rv = DisplaySelectionOverlay(aBuilder, aLists);
   }
-
-  PaintDecorationsAndChildren(aPresContext, aRenderingContext,
-                              aDirtyRect, aWhichLayer, PR_FALSE,
-                              aFlags);
-  return NS_OK;
+  return rv;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1088,6 +1075,17 @@ nsPositionedInlineFrame::RemoveFrame(nsIAtom*        aListName,
     rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
   }
 
+  return rv;
+}
+
+NS_IMETHODIMP
+nsPositionedInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                          const nsRect&           aDirtyRect,
+                                          const nsDisplayListSet& aLists)
+{
+  MarkOutOfFlowChildrenForDisplayList(mAbsoluteContainer.GetFirstChild(), aDirtyRect);
+  nsresult rv = nsHTMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  UnmarkOutOfFlowChildrenForDisplayList(mAbsoluteContainer.GetFirstChild());
   return rv;
 }
 

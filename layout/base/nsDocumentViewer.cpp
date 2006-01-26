@@ -894,10 +894,9 @@ DocumentViewerImpl::DumpContentToPPM(const char* aFileName)
     status = "EMPTY";
   } else {
     nsCOMPtr<nsIRenderingContext> context;
-    nsresult rv = mViewManager->RenderOffscreen(view, r,
-                                                PR_FALSE, PR_TRUE,
-                                                NS_RGB(255, 255, 255),
-                                                getter_AddRefs(context));
+    nsresult rv = mPresShell->RenderOffscreen(r, PR_FALSE, PR_TRUE, 
+                                              NS_RGB(255, 255, 255),
+                                              getter_AddRefs(context));
 
     if (NS_FAILED(rv)) {
       status = "FAILEDRENDER";

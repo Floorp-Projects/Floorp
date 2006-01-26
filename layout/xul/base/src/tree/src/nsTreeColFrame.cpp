@@ -49,6 +49,7 @@
 #include "nsIDOMElement.h"
 #include "nsITreeBoxObject.h"
 #include "nsIDOMXULTreeElement.h"
+#include "nsDisplayList.h"
 
 //
 // NS_NewTreeColFrame
@@ -113,52 +114,65 @@ nsTreeColFrame::Destroy(nsPresContext* aPresContext)
   return nsBoxFrame::Destroy(aPresContext);
 }
 
-nsIFrame*
-nsTreeColFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                 nsFramePaintLayer aWhichLayer)
-{
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (!(thisRect.Contains(aPoint) || (mState & NS_FRAME_OUTSIDE_CHILDREN)))
-    return nsnull;
+class nsDisplayXULTreeColSplitterTarget : public nsDisplayItem {
+public:
+  nsDisplayXULTreeColSplitterTarget(nsIFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  NS_DISPLAY_DECL_NAME("XULTreeColSplitterTarget")
+private:
+  nsIFrame* mFrame;
+};
 
+nsIFrame* 
+nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder,
+                                           nsPoint aPt)
+{
+  nsPoint pt = aPt - aBuilder->ToReferenceFrame(mFrame);
   // If we are in either the first 2 pixels or the last 2 pixels, we're going to
   // do something really strange.  Check for an adjacent splitter.
   PRBool left = PR_FALSE;
   PRBool right = PR_FALSE;
-  if (mRect.width - 60 < aPoint.x)
+  if (mFrame->GetSize().width - 60 < pt.x)
     right = PR_TRUE;
-  else if (60 > aPoint.x)
+  else if (60 > pt.x)
     left = PR_TRUE;
 
   if (left || right) {
     // We are a header. Look for the correct splitter.
-    nsFrameList frames(mParent->GetFirstChild(nsnull));
+    nsFrameList frames(mFrame->GetParent()->GetFirstChild(nsnull));
     nsIFrame* child;
     if (left)
-      child = frames.GetPrevSiblingFor(this);
+      child = frames.GetPrevSiblingFor(mFrame);
     else
-      child = GetNextSibling();
+      child = mFrame->GetNextSibling();
 
     if (child && child->GetContent()->NodeInfo()->Equals(nsXULAtoms::splitter,
                                                          kNameSpaceID_XUL)) {
       return child;
     }
   }
-
-  nsIFrame* frame = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
-  if (frame) {
-    nsIContent* content = frame->GetContent();
-    if (content &&
-        // This allows selective overriding for subcontent.
-        content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::allowevents,
-                             nsXULAtoms::_true, eCaseMatters))
-      return frame;
-  }
-
-  if (thisRect.Contains(aPoint) && GetStyleVisibility()->IsVisible()) {
-    return this; // Capture all events.
-  }
+  
   return nsnull;
+}
+
+nsresult
+nsTreeColFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                            const nsRect&           aDirtyRect,
+                                            const nsDisplayListSet& aLists)
+{
+  if (!aBuilder->IsForEventDelivery())
+    return nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+  
+  nsDisplayListCollection set;
+  nsresult rv = nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = WrapListsInRedirector(aBuilder, set, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayXULTreeColSplitterTarget(this));
 }
 
 NS_IMETHODIMP

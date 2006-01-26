@@ -108,11 +108,9 @@ public:
    */
   void UpdateLoadFlags();
 
-  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer,
-                    PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   NS_IMETHOD OnStartContainer(imgIRequest *request, imgIContainer *image);
   NS_IMETHOD OnStopContainer(imgIRequest *request, imgIContainer *image);
@@ -124,12 +122,12 @@ public:
                           nsRect * dirtyRect);
 
   virtual ~nsImageBoxFrame();
-protected:
 
   void  PaintImage(nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   nsPoint aPt);
 
+protected:
   nsImageBoxFrame(nsIPresShell* aShell);
 
   virtual void GetImageSize();

@@ -58,6 +58,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIScrollPositionListener.h"
+#include "nsDisplayList.h"
 
 // for focus
 #include "nsIDOMWindowInternal.h"
@@ -111,15 +112,13 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
-  nsIFrame* GetFrameForPoint(const nsPoint& aPoint,
-                             nsFramePaintLayer aWhichLayer);
   virtual PRBool IsContainingBlock() const { return PR_TRUE; }
 
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+
+  void PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt);
 
   // nsIScrollPositionListener
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
@@ -347,97 +346,105 @@ CanvasFrame::RemoveFrame(nsIAtom*        aListName,
   return rv;
 }
 
-NS_IMETHODIMP
-CanvasFrame::Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags)
+static void
+PaintCanvasFocus(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+                 const nsRect& aDirtyRect, nsPoint aPt)
 {
-  // We are wrapping the root frame of a document. We
-  // need to check the pres shell to find out if painting is locked
-  // down (because we're still in the early stages of document
-  // and frame construction.  If painting is locked down, then we
-  // do not paint our children.  
-  PRBool paintingSuppressed = PR_FALSE;
-  aPresContext->PresShell()->IsPaintingSuppressed(&paintingSuppressed);
-  if (paintingSuppressed) {
-    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-      PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
-    }
-    return NS_OK;
+  NS_STATIC_CAST(CanvasFrame*, aFrame)->PaintFocus(*aCtx, aPt);
+}
+
+NS_IMETHODIMP
+CanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists)
+{
+  // Force a background to be shown. We may have a background propagated to us,
+  // in which case GetStyleBackground wouldn't have the right background
+  // and the code in nsFrame::DisplayBorderBackgroundOutline might not give us
+  // a background.
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIFrame* kid = GetFirstChild(nsnull);
+  if (kid) {
+    // Put our child into its own pseudo-stack.
+    rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists,
+                                  DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  nsresult rv = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
 
 #ifdef DEBUG_CANVAS_FOCUS
-    nsCOMPtr<nsIContent> focusContent;
-    aPresContext->EventStateManager()->
-      GetFocusedContent(getter_AddRefs(focusContent));
+  nsCOMPtr<nsIContent> focusContent;
+  aPresContext->EventStateManager()->
+    GetFocusedContent(getter_AddRefs(focusContent));
 
-    PRBool hasFocus = PR_FALSE;
-    nsCOMPtr<nsISupports> container;
-    aPresContext->GetContainer(getter_AddRefs(container));
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-    if (docShell) {
-      docShell->GetHasFocus(&hasFocus);
-      printf("%p - CanvasFrame::Paint R:%d,%d,%d,%d  DR: %d,%d,%d,%d\n", this, 
-              mRect.x, mRect.y, mRect.width, mRect.height,
-              aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-    }
-    printf("%p - Focus: %s   c: %p  DoPaint:%s\n", docShell.get(), hasFocus?"Y":"N", 
-           focusContent.get(), mDoPaintFocus?"Y":"N");
+  PRBool hasFocus = PR_FALSE;
+  nsCOMPtr<nsISupports> container;
+  aPresContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  if (docShell) {
+    docShell->GetHasFocus(&hasFocus);
+    printf("%p - CanvasFrame::Paint R:%d,%d,%d,%d  DR: %d,%d,%d,%d\n", this, 
+            mRect.x, mRect.y, mRect.width, mRect.height,
+            aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  }
+  printf("%p - Focus: %s   c: %p  DoPaint:%s\n", docShell.get(), hasFocus?"Y":"N", 
+         focusContent.get(), mDoPaintFocus?"Y":"N");
 #endif
 
-    if (mDoPaintFocus) {
-      nsRect focusRect = GetRect();
-      /////////////////////
-      // draw focus
-      // XXX This is only temporary
-      // Only paint the focus if we're visible
-      if (GetStyleVisibility()->IsVisible()) {
-        nsIFrame * parentFrame = GetParent();
-        nsIView* parentView = parentFrame->GetView();
+  if (!mDoPaintFocus)
+    return NS_OK;
+  // Only paint the focus if we're visible
+  if (!GetStyleVisibility()->IsVisible())
+    return NS_OK;
+  
+  return aLists.Outlines()->AppendNewToTop(new (aBuilder)
+      nsDisplayGeneric(this, ::PaintCanvasFocus, "CanvasFocus"));
+}
 
-        nsIScrollableView* scrollableView = parentView->ToScrollableView();
-        if (scrollableView) {
-          nscoord width, height;
-          scrollableView->GetContainerSize(&width, &height);
-          nsRect vcr = parentView->GetBounds();
-          focusRect.width = vcr.width;
-          focusRect.height = vcr.height;
-          nscoord x,y;
-          scrollableView->GetScrollPosition(x, y);
-          focusRect.x += x;
-          focusRect.y += y;
-        }
+void
+CanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
+{
+  nsRect focusRect = GetRect();
+  /////////////////////
+  // draw focus
+  // XXX This is only temporary
+  nsIFrame * parentFrame = GetParent();
+  nsIView* parentView = parentFrame->GetView();
 
-        nsStyleOutline outlineStyle(aPresContext);
-        outlineStyle.SetOutlineStyle(NS_STYLE_BORDER_STYLE_DOTTED);
-        outlineStyle.SetOutlineInvert();
-
-        float p2t = aPresContext->PixelsToTwips();
-        // XXX the CSS border for links is specified as 2px, but it
-        // is only drawn as 1px.  Match this here.
-        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-
-        nsRect borderInside(focusRect.x + onePixel,
-                            focusRect.y + onePixel,
-                            focusRect.width - 2 * onePixel,
-                            focusRect.height - 2 * onePixel);
-
-        nsCSSRendering::DrawDashedSides(0, aRenderingContext, 
-                                        focusRect, nsnull,
-                                        nsnull, &outlineStyle,
-                                        PR_TRUE, focusRect,
-                                        borderInside, 0, 
-                                        nsnull);
-      }
-    }
+  nsIScrollableView* scrollableView = parentView->ToScrollableView();
+  if (scrollableView) {
+    nscoord width, height;
+    scrollableView->GetContainerSize(&width, &height);
+    nsRect vcr = parentView->GetBounds();
+    focusRect.width = vcr.width;
+    focusRect.height = vcr.height;
+    nscoord x,y;
+    scrollableView->GetScrollPosition(x, y);
+    focusRect.x += x;
+    focusRect.y += y;
   }
-  return rv;
+
+  nsStyleOutline outlineStyle(GetPresContext());
+  outlineStyle.SetOutlineStyle(NS_STYLE_BORDER_STYLE_DOTTED);
+  outlineStyle.SetOutlineInvert();
+
+  float p2t = GetPresContext()->PixelsToTwips();
+  // XXX the CSS border for links is specified as 2px, but it
+  // is only drawn as 1px.  Match this here.
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+  nsRect borderInside(focusRect.x + onePixel,
+                      focusRect.y + onePixel,
+                      focusRect.width - 2 * onePixel,
+                      focusRect.height - 2 * onePixel);
+
+  nsCSSRendering::DrawDashedSides(0, aRenderingContext, 
+                                  focusRect, nsnull,
+                                  nsnull, &outlineStyle,
+                                  PR_TRUE, focusRect,
+                                  borderInside, 0, 
+                                  nsnull);
 }
 
 NS_IMETHODIMP
@@ -606,15 +613,6 @@ CanvasFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
   return NS_OK;
-}
-
-nsIFrame*
-CanvasFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer)
-{
-  // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, 
-                               aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND);
 }
 
 nsIAtom*

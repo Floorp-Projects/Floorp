@@ -79,13 +79,22 @@ ViewportFrame::SetInitialChildList(nsPresContext* aPresContext,
   return rv;
 }
 
-nsIFrame*
-ViewportFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                nsFramePaintLayer aWhichLayer)
+NS_IMETHODIMP
+ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists)
 {
-  // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer,
-                               aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND);
+  // We don't need any special painting or event handling. We just need to
+  // mark our visible out-of-flow frames (i.e., the fixed position frames) so
+  // that display list construction is guaranteed to recurse into their
+  // ancestors.
+  MarkOutOfFlowChildrenForDisplayList(mFixedContainer.GetFirstChild(), aDirtyRect);
+  // Put the regular child in a pseudo-stack.
+  nsresult rv =
+    BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
+                                        DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+  UnmarkOutOfFlowChildrenForDisplayList(mFixedContainer.GetFirstChild());
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -71,9 +71,6 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer);
-
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
 
@@ -88,13 +85,15 @@ public:
 
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
 
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  virtual PRBool CanPaintBackground() { return PR_FALSE; }
-  
   /**
    * Get the "type" of the frame
    *

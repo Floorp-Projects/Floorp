@@ -54,6 +54,7 @@
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
+#include "nsDisplayList.h"
 
 #include "imgILoader.h"
 #include "imgIContainer.h"
@@ -173,211 +174,228 @@ nsBulletFrame::DidSetStyleContext(nsPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBulletFrame::Paint(nsPresContext*      aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect,
-                     nsFramePaintLayer    aWhichLayer,
-                     PRUint32             aFlags)
+class nsDisplayBullet : public nsDisplayItem {
+public:
+  nsDisplayBullet(nsBulletFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("Bullet")
+private:
+  nsBulletFrame* mFrame;
+};
+
+void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
+  mFrame->PaintBullet(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+}
+
+NS_IMETHODIMP
+nsBulletFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists)
+{
+  if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
-  }
+  return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayBullet(this));
+}
 
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && isVisible) {
-    const nsStyleList* myList = GetStyleList();
-    PRUint8 listStyleType = myList->mListStyleType;
+void
+nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt)
+{
+  const nsStyleList* myList = GetStyleList();
+  PRUint8 listStyleType = myList->mListStyleType;
 
-    if (myList->mListStyleImage && mImageRequest) {
-      PRUint32 status;
-      mImageRequest->GetImageStatus(&status);
-      if (status & imgIRequest::STATUS_LOAD_COMPLETE &&
-          !(status & imgIRequest::STATUS_ERROR)) {
-        nsCOMPtr<imgIContainer> imageCon;
-        mImageRequest->GetImage(getter_AddRefs(imageCon));
-        if (imageCon) {
-          nsRect innerArea(0, 0,
-                           mRect.width - (mPadding.left + mPadding.right),
-                           mRect.height - (mPadding.top + mPadding.bottom));
-          nsRect dest(mPadding.left, mPadding.top, innerArea.width, innerArea.height);
-          aRenderingContext.DrawImage(imageCon, innerArea, dest);
-          return NS_OK;
-        }
+  if (myList->mListStyleImage && mImageRequest) {
+    PRUint32 status;
+    mImageRequest->GetImageStatus(&status);
+    if (status & imgIRequest::STATUS_LOAD_COMPLETE &&
+        !(status & imgIRequest::STATUS_ERROR)) {
+      nsCOMPtr<imgIContainer> imageCon;
+      mImageRequest->GetImage(getter_AddRefs(imageCon));
+      if (imageCon) {
+        nsRect innerArea(0, 0,
+                         mRect.width - (mPadding.left + mPadding.right),
+                         mRect.height - (mPadding.top + mPadding.bottom));
+        nsRect dest(mPadding.left, mPadding.top, innerArea.width, innerArea.height);
+        aRenderingContext.DrawImage(imageCon, innerArea, dest + aPt);
+        return;
       }
     }
+  }
 
-    const nsStyleFont* myFont = GetStyleFont();
-    const nsStyleColor* myColor = GetStyleColor();
+  const nsStyleFont* myFont = GetStyleFont();
+  const nsStyleColor* myColor = GetStyleColor();
 
-    nsCOMPtr<nsIFontMetrics> fm;
-    aRenderingContext.SetColor(myColor->mColor);
+  nsCOMPtr<nsIFontMetrics> fm;
+  aRenderingContext.SetColor(myColor->mColor);
 
 #ifdef IBMBIDI
-    nsCharType charType = eCharType_LeftToRight;
-    PRUint8 level = 0;
-    PRBool isBidiSystem = PR_FALSE;
-    const nsStyleVisibility* vis = GetStyleVisibility();
-    PRUint32 hints = 0;
+  nsCharType charType = eCharType_LeftToRight;
+  PRUint8 level = 0;
+  PRBool isBidiSystem = PR_FALSE;
+  const nsStyleVisibility* vis = GetStyleVisibility();
+  PRUint32 hints = 0;
 #endif // IBMBIDI
 
-    nsAutoString text;
-    switch (listStyleType) {
-    case NS_STYLE_LIST_STYLE_NONE:
-      break;
+  nsAutoString text;
+  switch (listStyleType) {
+  case NS_STYLE_LIST_STYLE_NONE:
+    break;
 
-    default:
-    case NS_STYLE_LIST_STYLE_DISC:
-      aRenderingContext.FillEllipse(mPadding.left, mPadding.top,
-                                    mRect.width - (mPadding.left + mPadding.right),
-                                    mRect.height - (mPadding.top + mPadding.bottom));
-      break;
+  default:
+  case NS_STYLE_LIST_STYLE_DISC:
+    aRenderingContext.FillEllipse(mPadding.left + aPt.x, mPadding.top + aPt.y,
+                                  mRect.width - (mPadding.left + mPadding.right),
+                                  mRect.height - (mPadding.top + mPadding.bottom));
+    break;
 
-    case NS_STYLE_LIST_STYLE_CIRCLE:
-      aRenderingContext.DrawEllipse(mPadding.left, mPadding.top,
-                                    mRect.width - (mPadding.left + mPadding.right),
-                                    mRect.height - (mPadding.top + mPadding.bottom));
-      break;
+  case NS_STYLE_LIST_STYLE_CIRCLE:
+    aRenderingContext.DrawEllipse(mPadding.left + aPt.x, mPadding.top + aPt.y,
+                                  mRect.width - (mPadding.left + mPadding.right),
+                                  mRect.height - (mPadding.top + mPadding.bottom));
+    break;
 
-    case NS_STYLE_LIST_STYLE_SQUARE:
-      aRenderingContext.FillRect(mPadding.left, mPadding.top,
-                                 mRect.width - (mPadding.left + mPadding.right),
-                                 mRect.height - (mPadding.top + mPadding.bottom));
-      break;
+  case NS_STYLE_LIST_STYLE_SQUARE:
+    aRenderingContext.FillRect(mPadding.left + aPt.x, mPadding.top + aPt.y,
+                               mRect.width - (mPadding.left + mPadding.right),
+                               mRect.height - (mPadding.top + mPadding.bottom));
+    break;
 
-    case NS_STYLE_LIST_STYLE_DECIMAL:
-    case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
-    case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
+  case NS_STYLE_LIST_STYLE_DECIMAL:
+  case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
+  case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
 #ifdef IBMBIDI
-      GetListItemText(*myList, text);
+    GetListItemText(*myList, text);
+    charType = eCharType_EuropeanNumber;
+    break;
+
+  case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
+    if (GetListItemText(*myList, text))
+      charType = eCharType_ArabicNumber;
+    else
       charType = eCharType_EuropeanNumber;
-      break;
+    break;
 
-    case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
-      if (GetListItemText(*myList, text))
-        charType = eCharType_ArabicNumber;
-      else
+  case NS_STYLE_LIST_STYLE_HEBREW:
+    aRenderingContext.GetHints(hints);
+    isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
+    if (!isBidiSystem) {
+      if (GetListItemText(*myList, text)) {
+         charType = eCharType_RightToLeft;
+        level = 1;
+      } else {
         charType = eCharType_EuropeanNumber;
-      break;
-
-    case NS_STYLE_LIST_STYLE_HEBREW:
-      aRenderingContext.GetHints(hints);
-      isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
-      if (!isBidiSystem) {
-        if (GetListItemText(*myList, text)) {
-          charType = eCharType_RightToLeft;
-          level = 1;
-        } else {
-          charType = eCharType_EuropeanNumber;
-        }
-
-        if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-          text.Cut(0, 1);
-          text.AppendLiteral(".");
-        }
-        break;
       }
-      // else fall through
-#endif // IBMBIDI
 
-    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-    case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
-    case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
-    case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
-    case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
-    case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-#ifndef IBMBIDI
-    case NS_STYLE_LIST_STYLE_HEBREW:
-#endif
-    case NS_STYLE_LIST_STYLE_ARMENIAN:
-    case NS_STYLE_LIST_STYLE_GEORGIAN:
-    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
-    case NS_STYLE_LIST_STYLE_HIRAGANA:
-    case NS_STYLE_LIST_STYLE_KATAKANA:
-    case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-    case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
-    case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
-#ifndef IBMBIDI
-    case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
-#endif
-    case NS_STYLE_LIST_STYLE_MOZ_PERSIAN:
-    case NS_STYLE_LIST_STYLE_MOZ_URDU:
-    case NS_STYLE_LIST_STYLE_MOZ_DEVANAGARI:
-    case NS_STYLE_LIST_STYLE_MOZ_GURMUKHI:
-    case NS_STYLE_LIST_STYLE_MOZ_GUJARATI:
-    case NS_STYLE_LIST_STYLE_MOZ_ORIYA:
-    case NS_STYLE_LIST_STYLE_MOZ_KANNADA:
-    case NS_STYLE_LIST_STYLE_MOZ_MALAYALAM:
-    case NS_STYLE_LIST_STYLE_MOZ_BENGALI:
-    case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
-    case NS_STYLE_LIST_STYLE_MOZ_TELUGU:
-    case NS_STYLE_LIST_STYLE_MOZ_THAI:
-    case NS_STYLE_LIST_STYLE_MOZ_LAO:
-    case NS_STYLE_LIST_STYLE_MOZ_MYANMAR:
-    case NS_STYLE_LIST_STYLE_MOZ_KHMER:
-    case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
-    case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
-      fm = aPresContext->GetMetricsFor(myFont->mFont);
-#ifdef IBMBIDI
-      // If we can't render our numeral using the chars in the numbering
-      // system, we'll be using "decimal"...
-      PRBool usedChars =
-#endif // IBMBIDI
-      GetListItemText(*myList, text);
-#ifdef IBMBIDI
-      if (!usedChars)
-        charType = eCharType_EuropeanNumber;
-#endif
-      aRenderingContext.SetFont(fm);
-      nscoord ascent;
-      fm->GetMaxAscent(ascent);
-      aRenderingContext.DrawString(text, mPadding.left, mPadding.top + ascent);
+      if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+        text.Cut(0, 1);
+        text.AppendLiteral(".");
+      }
       break;
     }
-#ifdef IBMBIDI
-    if (charType != eCharType_LeftToRight) {
-      fm = aPresContext->GetMetricsFor(myFont->mFont);
-      aRenderingContext.SetFont(fm);
-      nscoord ascent;
-      fm->GetMaxAscent(ascent);
-
-      nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
-      if (bidiUtils) {
-        const PRUnichar* buffer = text.get();
-        PRInt32 textLength = text.Length();
-        if (eCharType_RightToLeft == charType) {
-          bidiUtils->FormatUnicodeText(aPresContext, (PRUnichar*)buffer, textLength,
-                                       charType, level, PR_FALSE);
-        }
-        else {
-//Mohamed
-          aRenderingContext.GetHints(hints);
-          isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
-          bidiUtils->FormatUnicodeText(aPresContext, (PRUnichar*)buffer, textLength,
-                                       charType, level, isBidiSystem);//Mohamed
-        }
-      }
-      aRenderingContext.DrawString(text, mPadding.left, mPadding.top + ascent);
-    }   
+    // else fall through
 #endif // IBMBIDI
+
+  case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+  case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+  case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+  case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+  case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
+  case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
+  case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
+  case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
+  case NS_STYLE_LIST_STYLE_LOWER_GREEK:
+#ifndef IBMBIDI
+  case NS_STYLE_LIST_STYLE_HEBREW:
+#endif
+  case NS_STYLE_LIST_STYLE_ARMENIAN:
+  case NS_STYLE_LIST_STYLE_GEORGIAN:
+  case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
+  case NS_STYLE_LIST_STYLE_HIRAGANA:
+  case NS_STYLE_LIST_STYLE_KATAKANA:
+  case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
+  case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
+  case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL: 
+  case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL: 
+  case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL: 
+  case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL: 
+  case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL: 
+  case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL: 
+  case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
+  case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
+#ifndef IBMBIDI
+  case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
+#endif
+  case NS_STYLE_LIST_STYLE_MOZ_PERSIAN:
+  case NS_STYLE_LIST_STYLE_MOZ_URDU:
+  case NS_STYLE_LIST_STYLE_MOZ_DEVANAGARI:
+  case NS_STYLE_LIST_STYLE_MOZ_GURMUKHI:
+  case NS_STYLE_LIST_STYLE_MOZ_GUJARATI:
+  case NS_STYLE_LIST_STYLE_MOZ_ORIYA:
+  case NS_STYLE_LIST_STYLE_MOZ_KANNADA:
+  case NS_STYLE_LIST_STYLE_MOZ_MALAYALAM:
+  case NS_STYLE_LIST_STYLE_MOZ_BENGALI:
+  case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
+  case NS_STYLE_LIST_STYLE_MOZ_TELUGU:
+  case NS_STYLE_LIST_STYLE_MOZ_THAI:
+  case NS_STYLE_LIST_STYLE_MOZ_LAO:
+  case NS_STYLE_LIST_STYLE_MOZ_MYANMAR:
+  case NS_STYLE_LIST_STYLE_MOZ_KHMER:
+  case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
+  case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
+  case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
+  case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
+  case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
+  case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
+  case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
+    fm = GetPresContext()->GetMetricsFor(myFont->mFont);
+#ifdef IBMBIDI
+    // If we can't render our numeral using the chars in the numbering
+    // system, we'll be using "decimal"...
+    PRBool usedChars =
+#endif // IBMBIDI
+    GetListItemText(*myList, text);
+#ifdef IBMBIDI
+    if (!usedChars)
+      charType = eCharType_EuropeanNumber;
+#endif
+    aRenderingContext.SetFont(fm);
+    nscoord ascent;
+    fm->GetMaxAscent(ascent);
+    aRenderingContext.DrawString(text, mPadding.left + aPt.x,
+                                 mPadding.top + aPt.y + ascent);
+    break;
   }
-  DO_GLOBAL_REFLOW_COUNT_DSP("nsBulletFrame", &aRenderingContext);
-  return NS_OK;
+#ifdef IBMBIDI
+  if (charType != eCharType_LeftToRight) {
+    nsPresContext* presContext = GetPresContext();
+    fm = presContext->GetMetricsFor(myFont->mFont);
+    aRenderingContext.SetFont(fm);
+    nscoord ascent;
+    fm->GetMaxAscent(ascent);
+
+    nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+    if (bidiUtils) {
+      const PRUnichar* buffer = text.get();
+      PRInt32 textLength = text.Length();
+      if (eCharType_RightToLeft == charType) {
+        bidiUtils->FormatUnicodeText(presContext, (PRUnichar*)buffer, textLength,
+                                     charType, level, PR_FALSE);
+      }
+      else {
+//Mohamed
+        aRenderingContext.GetHints(hints);
+        isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
+        bidiUtils->FormatUnicodeText(presContext, (PRUnichar*)buffer, textLength,
+                                     charType, level, isBidiSystem);//Mohamed
+      }
+    }
+    aRenderingContext.DrawString(text, mPadding.left + aPt.x,
+                                 mPadding.top + aPt.y + ascent);
+  }   
+#endif // IBMBIDI
 }
 
 PRInt32

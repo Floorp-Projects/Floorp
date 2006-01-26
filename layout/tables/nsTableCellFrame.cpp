@@ -63,7 +63,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsINameSpaceManager.h"
-
+#include "nsDisplayList.h"
 
 //TABLECELL SELECTION
 #include "nsIFrameSelection.h"
@@ -279,183 +279,207 @@ inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
     return colorA;
 }
 
-
-nsresult
-nsTableCellFrame::DecorateForSelection(nsPresContext* aPresContext,
-                                       nsIRenderingContext& aRenderingContext,
-                                       const nsStyleBackground *aStyleColor)
+void
+nsTableCellFrame::DecorateForSelection(nsIRenderingContext& aRenderingContext,
+                                       nsPoint aPt)
 {
+  NS_ASSERTION(GetStateBits() & NS_FRAME_SELECTED_CONTENT,
+               "Should only be called for selected cells");
   PRInt16 displaySelection;
-  displaySelection = DisplaySelection(aPresContext);
+  nsPresContext* presContext = GetPresContext();
+  displaySelection = DisplaySelection(presContext);
   if (displaySelection) {
-    PRBool isSelected =
-      (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-    if (isSelected) {
-      nsIFrameSelection *frameSelection =
-        aPresContext->PresShell()->FrameSelection();
+    nsIFrameSelection *frameSelection =
+      presContext->PresShell()->FrameSelection();
 
-      PRBool tableCellSelectionMode;
-      nsresult result =
-        frameSelection->GetTableCellSelection(&tableCellSelectionMode);
-      if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
-        nscolor       bordercolor;
-        if (displaySelection == nsISelectionController::SELECTION_DISABLED) {
-          bordercolor = NS_RGB(176,176,176);// disabled color
-        }
-        else {
-          aPresContext->LookAndFeel()->
-            GetColor(nsILookAndFeel::eColor_TextSelectBackground,
-                     bordercolor);
-        }
-        GET_PIXELS_TO_TWIPS(aPresContext, p2t);
-        if ((mRect.width >(3*p2t)) && (mRect.height > (3*p2t)))
-        {
-          //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
-          bordercolor = EnsureDifferentColors(bordercolor, aStyleColor->mBackgroundColor);
-          //outerrounded
-          aRenderingContext.SetColor(bordercolor);
-          aRenderingContext.DrawLine(p2t, 0, mRect.width, 0);
-          aRenderingContext.DrawLine(0, p2t, 0, mRect.height);
-          aRenderingContext.DrawLine(p2t, mRect.height, mRect.width, mRect.height);
-          aRenderingContext.DrawLine(mRect.width, p2t, mRect.width, mRect.height);
-          //middle
-          aRenderingContext.DrawRect(p2t, p2t, mRect.width-p2t, mRect.height-p2t);
-          //shading
-          aRenderingContext.DrawLine(2*p2t, mRect.height-2*p2t, mRect.width-p2t, mRect.height- (2*p2t));
-          aRenderingContext.DrawLine(mRect.width - (2*p2t), 2*p2t, mRect.width - (2*p2t), mRect.height-p2t);
-        }
+    PRBool tableCellSelectionMode;
+    nsresult result =
+      frameSelection->GetTableCellSelection(&tableCellSelectionMode);
+    if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
+      nscolor       bordercolor;
+      if (displaySelection == nsISelectionController::SELECTION_DISABLED) {
+        bordercolor = NS_RGB(176,176,176);// disabled color
+      }
+      else {
+        presContext->LookAndFeel()->
+          GetColor(nsILookAndFeel::eColor_TextSelectBackground,
+                   bordercolor);
+      }
+      GET_PIXELS_TO_TWIPS(presContext, p2t);
+      if ((mRect.width >(3*p2t)) && (mRect.height > (3*p2t)))
+      {
+        //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
+        bordercolor = EnsureDifferentColors(bordercolor,
+                                            GetStyleBackground()->mBackgroundColor);
+        nsIRenderingContext::AutoPushTranslation
+            translate(&aRenderingContext, aPt.x, aPt.y);
+        nscoord onePixel = NSToCoordRound(p2t);
+
+        aRenderingContext.SetColor(bordercolor);
+        aRenderingContext.DrawLine(onePixel, 0, mRect.width, 0);
+        aRenderingContext.DrawLine(0, onePixel, 0, mRect.height);
+        aRenderingContext.DrawLine(onePixel, mRect.height, mRect.width, mRect.height);
+        aRenderingContext.DrawLine(mRect.width, onePixel, mRect.width, mRect.height);
+        //middle
+        aRenderingContext.DrawRect(onePixel, onePixel, mRect.width-onePixel,
+                                   mRect.height-onePixel);
+        //shading
+        aRenderingContext.DrawLine(2*onePixel, mRect.height-2*onePixel,
+                                   mRect.width-onePixel, mRect.height- (2*onePixel));
+        aRenderingContext.DrawLine(mRect.width - (2*onePixel), 2*onePixel,
+                                   mRect.width - (2*onePixel), mRect.height-onePixel);
       }
     }
   }
-  return NS_OK;
 }
 
 void
-nsTableCellFrame::PaintUnderlay(nsPresContext&           aPresContext,
-                                nsIRenderingContext&      aRenderingContext,
-                                const nsRect&             aDirtyRect,
-                                PRUint32&                 aFlags,
-                                const nsStyleBorder&      aStyleBorder,
-                                const nsStylePadding&     aStylePadding,
-                                const nsStyleTableBorder& aCellTableStyle)
+nsTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
+                                  const nsRect&        aDirtyRect,
+                                  nsPoint              aPt)
 {
-  nsRect rect(0, 0, mRect.width, mRect.height);
-  nsCSSRendering::PaintBackground(&aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, aStyleBorder, aStylePadding,
-                                  PR_TRUE);
-  PRIntn skipSides = GetSkipSides();
-  if (NS_STYLE_TABLE_EMPTY_CELLS_SHOW == aCellTableStyle.mEmptyCells ||
-      !GetContentEmpty()) {
-    nsCSSRendering::PaintBorder(&aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, aStyleBorder, mStyleContext, skipSides);
-  }
+  nsRect rect(aPt, GetSize());
+  nsCSSRendering::PaintBackground(GetPresContext(), aRenderingContext, this,
+                                  aDirtyRect, rect, *GetStyleBorder(),
+                                  *GetStylePadding(), PR_TRUE);
+}
+
+// Called by nsTablePainter
+void
+nsTableCellFrame::PaintCellBackground(nsIRenderingContext& aRenderingContext,
+                                      const nsRect& aDirtyRect, nsPoint aPt)
+{
+  if (!GetStyleVisibility()->IsVisible())
+    return;
+  if (GetContentEmpty() &&
+      NS_STYLE_TABLE_EMPTY_CELLS_HIDE == GetStyleTableBorder()->mEmptyCells)
+    return;
+
+  PaintBackground(aRenderingContext, aDirtyRect, aPt);
+}
+
+class nsDisplayTableCellBackground : public nsDisplayItem {
+public:
+  nsDisplayTableCellBackground(nsTableCellFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("TableCellBackground")
+private:
+  nsTableCellFrame* mFrame;
+};
+
+void nsDisplayTableCellBackground::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  mFrame->PaintBackground(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+}
+
+static void
+PaintTableCellSelection(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+                        const nsRect& aRect, nsPoint aPt)
+{
+  NS_STATIC_CAST(nsTableCellFrame*, aFrame)->DecorateForSelection(*aCtx, aPt);
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::Paint(nsPresContext*      aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        const nsRect&        aDirtyRect,
-                        nsFramePaintLayer    aWhichLayer,
-                        PRUint32             aFlags)
+nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                   const nsRect&           aDirtyRect,
+                                   const nsDisplayListSet& aLists)
 {
-  NS_ENSURE_TRUE(aPresContext, NS_ERROR_NULL_POINTER);
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
+  if (!IsVisibleInSelection(aBuilder))
     return NS_OK;
-  }
 
-  PRBool paintChildren = PR_TRUE;
+  PRInt32 emptyCellStyle = GetContentEmpty() ? GetStyleTableBorder()->mEmptyCells
+      : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
+  // take account of 'empty-cells'
+  if (GetStyleVisibility()->IsVisible() &&
+      (NS_STYLE_TABLE_EMPTY_CELLS_HIDE != emptyCellStyle)) {
+    nsTableFrame* tableFrame;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    NS_ASSERTION(tableFrame, "null table frame");
 
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    const nsStyleBorder*      myBorder       = nsnull;
-    const nsStylePadding*     myPadding      = nsnull;
-    const nsStyleTableBorder* cellTableStyle = nsnull;
-    const nsStyleVisibility* vis = GetStyleVisibility();
-    if (vis->IsVisible()) {
-      myBorder = GetStyleBorder();
-      myPadding = GetStylePadding();
-      cellTableStyle = GetStyleTableBorder();
-
-      // draw the border & background only when there is content or showing empty cells
-      if (NS_STYLE_TABLE_EMPTY_CELLS_HIDE != cellTableStyle->mEmptyCells ||
-          !GetContentEmpty()) {
-        PaintUnderlay(*aPresContext, aRenderingContext, aDirtyRect, aFlags,
-                      *myBorder, *myPadding, *cellTableStyle);
+    // display background if we need to. Note that we don't try to display
+    // a background item to catch events; our anonymous inner block will catch
+    // events for us.
+    if (!tableFrame->IsBorderCollapse() ||
+        aBuilder->IsAtRootOfPseudoStackingContext()) {
+      // The cell background was not painted by the nsTablePainter,
+      // so we need to do it. We have special background processing here
+      // so we need to duplicate some code from nsFrame::DisplayBorderBackgroundOutline
+      if (!GetStyleBackground()->IsTransparent() ||
+          GetStyleDisplay()->mAppearance) {
+        nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+            nsDisplayTableCellBackground(this));
+        NS_ENSURE_SUCCESS(rv, rv);
       }
-
-      // Paint outline
-      nsRect rect(0, 0, mRect.width, mRect.height);
-      const nsStyleOutline* myOutline = GetStyleOutline();
-      nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *myBorder, *myOutline,
-                                  mStyleContext, 0);
-
-      const nsStyleBackground* myColor = GetStyleBackground();
-      DecorateForSelection(aPresContext, aRenderingContext,myColor); //ignore return value
+    }
+    
+    // display borders if we need to
+    if (!tableFrame->IsBorderCollapse() && HasBorder() &&
+        emptyCellStyle == NS_STYLE_TABLE_EMPTY_CELLS_SHOW) {
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+          nsDisplayBorder(this));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    paintChildren = !(aFlags & NS_PAINT_FLAG_TABLE_CELL_BG_PASS);
-    //flags were for us; remove them for our children
-    aFlags &= ~ (NS_PAINT_FLAG_TABLE_CELL_BG_PASS | NS_PAINT_FLAG_TABLE_BG_PAINT);
+    // and display the selection border if we need to
+    PRBool isSelected =
+      (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+    if (isSelected) {
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+          nsDisplayGeneric(this, ::PaintTableCellSelection, "TableCellSelection"));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
-#ifdef DEBUG
-  // for debug...
-  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
-    aRenderingContext.SetColor(NS_RGB(0, 0, 128));
-    aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
+  // the 'empty-cells' property has no effect on 'outline'
+  nsresult rv = DisplayOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsPoint offset;
+  GetCollapseOffset(offset);
+  PRBool quirkyClip = HasPctOverHeight() &&
+    eCompatibility_NavQuirks == GetPresContext()->CompatibilityMode();
+  nsIFrame* kid = mFrames.FirstChild();
+  NS_ASSERTION(kid && !kid->GetNextSibling(), "Table cells should have just one child");
+  if (0 == offset.x && 0 == offset.y && !quirkyClip) {
+    // The child's background will go in our BorderBackground() list.
+    // This isn't a problem since it won't have a real background except for
+    // event handling. We do not call BuildDisplayListForNonBlockChildren
+    // because that/ would put the child's background in the Content() list
+    // which isn't right (e.g., would end up on top of our child floats for
+    // event handling).
+    return BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
   }
-#endif
+    
+  // Unfortunately there is some wacky clipping to do
+  nsDisplayListCollection set;
+  rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // paint the children unless we've been told not to
-  if (paintChildren) {
-    const nsStyleDisplay* disp = GetStyleDisplay();
-    // if the cell originates in a row and/or col that is collapsed, the
-    // bottom and/or right portion of the cell is painted by translating
-    // the rendering context.
-    nsPoint offset;
-    GetCollapseOffset(offset);
-    PRBool pushed = PR_FALSE;
-    if ((0 != offset.x) || (0 != offset.y)) {
-      aRenderingContext.PushState();
-      pushed = PR_TRUE;
-      aRenderingContext.Translate(offset.x, offset.y);
-      aRenderingContext.SetClipRect(nsRect(-offset.x, -offset.y, mRect.width, mRect.height),
-                                    nsClipCombine_kIntersect);
+  nsRect clip = GetOverflowRect();
+  if (quirkyClip) {
+    clip = nsRect(nsPoint(0, 0), GetSize());
+  }
+  if (offset.x < 0) {
+    // Clip off content to the left of the x=0 line. This is bogus really,
+    // but the whole handling of collapsed-offset cells is bogus.
+    if (clip.x < 0) {
+      clip.width = PR_MAX(0, clip.XMost());
+      clip.x = 0;
     }
-    else {
-      // XXXldb HIDDEN should really create a scrollframe,
-      // but use |IsTableClip| here since it doesn't.
-      if (disp->IsTableClip() ||
-          (HasPctOverHeight() && eCompatibility_NavQuirks == aPresContext->CompatibilityMode())) {
-        aRenderingContext.PushState();
-        pushed = PR_TRUE;
-        SetOverflowClipRect(aRenderingContext);
-      }    
+  }
+  if (offset.y < 0) {
+    // Clip off content above the y=0 line. This is bogus really,
+    // but the whole handling of collapsed-offset cells is bogus.
+    if (clip.y < 0) {
+      clip.height = PR_MAX(0, clip.YMost());
+      clip.y = 0;
     }
-
-    PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
-
-    if (pushed) {
-      aRenderingContext.PopState();
-    }
-  } 
-  
-  DO_GLOBAL_REFLOW_COUNT_DSP_J("nsTableCellFrame", &aRenderingContext, 0);
-  return NS_OK;
-  /*nsFrame::Paint(aPresContext,
-                        aRenderingContext,
-                        aDirtyRect,
-                        aWhichLayer);*/
-}
-
-nsIFrame*
-nsTableCellFrame::GetFrameForPoint(const nsPoint&    aPoint, 
-                                   nsFramePaintLayer aWhichLayer)
-{
-  // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer,
-                               aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND);
+  }
+  return OverflowClip(aBuilder, set, aLists, clip + aBuilder->ToReferenceFrame(this));
 }
 
 //null range means the whole thing
@@ -845,6 +869,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
     }
     kidOrigin = firstKid->GetPosition();
   }
+  nsPoint collapsedOffset;
+  GetCollapseOffset(collapsedOffset);
+  kidOrigin += collapsedOffset;
 
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(firstKid, (nsHTMLReflowState&)kidReflowState);
@@ -887,6 +914,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
       topInset    += border.top;
       bottomInset += border.bottom;
       kidOrigin.MoveTo(leftInset, topInset);
+      kidOrigin += collapsedOffset;
     }
   }
 
@@ -1168,12 +1196,24 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
+void nsTableCellFrame::UpdateChildOffset(nsPoint aDelta)
+{
+  nsIFrame* kid = mFrames.FirstChild();
+  NS_ASSERTION(kid, "Table cells must have one kid");
+  
+  // XXX this is obscene! It doesn't move views or adjust overflow areas.
+  // On the other hand, the old approach of adjusting the rendering
+  // context translation was utterly wrong too.
+  kid->SetRect(kid->GetRect() + aDelta);
+}
+
 void nsTableCellFrame::SetCollapseOffsetX(nscoord aXOffset)
 {
   // Get the frame property (creating a point struct if necessary)
   nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(this, nsLayoutAtoms::collapseOffsetProperty, aXOffset != 0);
 
   if (offset) {
+    UpdateChildOffset(nsPoint(aXOffset, 0) - *offset);
     offset->x = aXOffset;
   }
 }
@@ -1184,6 +1224,7 @@ void nsTableCellFrame::SetCollapseOffsetY(nscoord aYOffset)
   nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(this, nsLayoutAtoms::collapseOffsetProperty, aYOffset != 0);
 
   if (offset) {
+    UpdateChildOffset(nsPoint(0, aYOffset) - *offset);
     offset->y = aYOffset;
   }
 }
@@ -1288,34 +1329,25 @@ nsBCTableCellFrame::GetSelfOverflow(nsRect& aOverflowArea)
 
 
 void
-nsBCTableCellFrame::PaintUnderlay(nsPresContext&           aPresContext,
-                                  nsIRenderingContext&      aRenderingContext,
-                                  const nsRect&             aDirtyRect,
-                                  PRUint32&                 aFlags,
-                                  const nsStyleBorder&      aStyleBorder,
-                                  const nsStylePadding&     aStylePadding,
-                                  const nsStyleTableBorder& aCellTableStyle)
+nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
+                                    const nsRect&        aDirtyRect,
+                                    nsPoint              aPt)
 {
-  if (!(aFlags & NS_PAINT_FLAG_TABLE_BG_PAINT)
-      /*direct call; not table-based paint*/ ||
-      (aFlags & NS_PAINT_FLAG_TABLE_CELL_BG_PASS)
-      /*table cell background only pass*/) {
-    // make border-width reflect the half of the border-collapse
-    // assigned border that's inside the cell
-    GET_PIXELS_TO_TWIPS(&aPresContext, p2t);
-    nsMargin borderWidth;
-    GetBorderWidth(p2t, borderWidth);
+  // make border-width reflect the half of the border-collapse
+  // assigned border that's inside the cell
+  nsPresContext* presContext = GetPresContext();
+  GET_PIXELS_TO_TWIPS(presContext, p2t);
+  nsMargin borderWidth;
+  GetBorderWidth(p2t, borderWidth);
 
-    nsStyleBorder myBorder(aStyleBorder);
+  nsStyleBorder myBorder(*GetStyleBorder());
 
-    NS_FOR_CSS_SIDES(side) {
-      myBorder.SetBorderWidth(side, borderWidth.side(side));
-    }
-
-    nsRect rect(0, 0, mRect.width, mRect.height);
-    nsCSSRendering::PaintBackground(&aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, myBorder, aStylePadding,
-                                    PR_TRUE);
-    // borders are painted by nsTableFrame
+  NS_FOR_CSS_SIDES(side) {
+    myBorder.SetBorderWidth(side, borderWidth.side(side));
   }
+
+  nsRect rect(aPt, GetSize());
+  nsCSSRendering::PaintBackground(presContext, aRenderingContext, this,
+                                  aDirtyRect, rect, myBorder, *GetStylePadding(),
+                                  PR_TRUE);
 }

@@ -382,73 +382,10 @@ nsFormControlFrame::SetClickPoint(nscoord aX, nscoord aY)
   mLastClickPoint.y = aY;
 }
 
-// XXX it would be cool if form element used our rendering sw, then
-// they could be blended, and bordered, and so on...
-NS_METHOD
-nsFormControlFrame::Paint(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsFramePaintLayer    aWhichLayer,
-                          PRUint32             aFlags)
-{
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
-    return NS_OK;
-  }
-
-  nsresult rv = NS_OK;
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
-    rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                            NS_FRAME_PAINT_LAYER_BACKGROUND);
-    if (NS_FAILED(rv))
-      return rv;
-    // draw selection borders when appropriate
-    rv = nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                            NS_FRAME_PAINT_LAYER_BACKGROUND);
-    if (NS_FAILED(rv))
-      return rv;
-
-    rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                            NS_FRAME_PAINT_LAYER_FLOATS);
-    if (NS_FAILED(rv))
-      return rv;
-    // draw selection borders when appropriate
-    rv = nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                            NS_FRAME_PAINT_LAYER_FLOATS);
-    if (NS_FAILED(rv))
-      return rv;
-
-    rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                            NS_FRAME_PAINT_LAYER_FOREGROUND);
-    if (NS_FAILED(rv))
-      return rv;
-    // draw selection borders when appropriate
-    rv = nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                            NS_FRAME_PAINT_LAYER_FOREGROUND);
-  }
-  return rv;
-}
-
-nsIFrame*
-nsFormControlFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                     nsFramePaintLayer aWhichLayer)
-{
-  nsIFrame* frame = nsnull;
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
-    frame = nsLeafFrame::GetFrameForPoint(aPoint,
-                                          NS_FRAME_PAINT_LAYER_FOREGROUND);
-    if (frame)
-      return frame;
-    frame = nsLeafFrame::GetFrameForPoint(aPoint,
-                                          NS_FRAME_PAINT_LAYER_FLOATS);
-    if (frame)
-      return frame;
-    frame = nsLeafFrame::GetFrameForPoint(aPoint,
-                                          NS_FRAME_PAINT_LAYER_BACKGROUND);
-  }
-  return frame;
-}
-
+// REVIEW: All nsFormControlFrame does different with painting is to put
+// its standard decorations entirely in the "foreground" layer. But our only
+// two subclasses are radio buttons and checkboxes, which are normally inline
+// elements, so this will happen anyway.
 void 
 nsFormControlFrame::GetDesiredSize(nsPresContext*          aPresContext,
                                    const nsHTMLReflowState& aReflowState,

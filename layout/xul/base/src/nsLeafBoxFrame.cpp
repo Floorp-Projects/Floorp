@@ -58,6 +58,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsDisplayList.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
@@ -170,18 +171,24 @@ nsLeafBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
   return NS_ERROR_FAILURE;
 }
 
-nsIFrame*
-nsLeafBoxFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                 nsFramePaintLayer aWhichLayer)
-{   
-  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
-    return nsnull;
+NS_IMETHODIMP
+nsLeafBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                 const nsRect&           aDirtyRect,
+                                 const nsDisplayListSet& aLists)
+{
+  // REVIEW: GetFrameForPoint used to not report events for the background
+  // layer, whereas this code will put an event receiver for this frame in the
+  // BlockBorderBackground() list. But I don't see any need to preserve
+  // that anomalous behaviour. The important thing I'm preserving is that
+  // leaf boxes continue to receive events in the foreground layer.
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (!thisRect.Contains(aPoint))
-    return nsnull;
+  if (!aBuilder->IsForEventDelivery() || !IsVisibleForPainting(aBuilder))
+    return NS_OK;
 
-  return this;
+  return aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayEventReceiver(this));
 }
 
 NS_IMETHODIMP

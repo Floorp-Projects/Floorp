@@ -118,6 +118,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
 #include "nsIStringBundle.h"
+#include "nsDisplayList.h"
 #include "nsAttrName.h"
 
 // headers for plugin scriptability
@@ -933,258 +934,286 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-nsObjectFrame::Paint(nsPresContext*       aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect,
-                     nsFramePaintLayer    aWhichLayer,
-                     PRUint32             aFlags)
+static void PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+                             const nsRect& aDirtyRect, nsPoint aPt)
 {
-  if (!GetStyleVisibility()->IsVisibleOrCollapsed())
+  nsIRenderingContext::AutoPushTranslation translate(aCtx, aPt.x, aPt.y);
+  NS_STATIC_CAST(nsObjectFrame*, aFrame)->PrintPlugin(*aCtx, aDirtyRect);
+}
+
+static void PaintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+                        const nsRect& aDirtyRect, nsPoint aPt)
+{
+  nsIRenderingContext::AutoPushTranslation translate(aCtx, aPt.x, aPt.y);
+  NS_STATIC_CAST(nsObjectFrame*, aFrame)->PaintPlugin(*aCtx, aDirtyRect);
+}
+
+NS_IMETHODIMP
+nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsRect&           aDirtyRect,
+                                const nsDisplayListSet& aLists)
+{
+  // XXX why are we painting collapsed object frames?
+  if (!IsVisibleOrCollapsedForPainting(aBuilder))
     return NS_OK;
+    
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
   
+  nsPresContext::nsPresContextType type = GetPresContext()->Type();
+
   // If we are painting in Print Preview do nothing....
-  if (aPresContext->Type() == nsPresContext::eContext_PrintPreview) {
+  if (type == nsPresContext::eContext_PrintPreview)
     return NS_OK;
-  }
 
   // determine if we are printing
-  if (aPresContext->Type() == nsPresContext::eContext_Print) {
-    // UNIX Plugins can't PP at this time, so draw an empty box
-    // we only want to print on the content layer pass
-    if (eFramePaintLayer_Content != aWhichLayer)
-      return NS_OK;
+  if (type == nsPresContext::eContext_Print)
+    return aLists.Content()->AppendNewToTop(new (aBuilder)
+        nsDisplayGeneric(this, PaintPrintPlugin, "PrintPlugin"));
+  
+  return aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayGeneric(this, ::PaintPlugin, "Plugin"));
+}
 
-    // if we are printing, we need to get the correct nsIPluginInstance
-    // for THIS content node in order to call ->Print() on the right plugin
+void
+nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
+                           const nsRect& aDirtyRect)
+{
+  // if we are printing, we need to get the correct nsIPluginInstance
+  // for THIS content node in order to call ->Print() on the right plugin
 
-    // first, we need to get the document
-    nsIDocument* doc = mContent->GetCurrentDoc();
-    NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
+  // first, we need to get the document
+  nsIDocument* doc = mContent->GetCurrentDoc();
+  if (!doc)
+    return;
 
-    // now we need to get the shell for the screen
-    // XXX assuming that the shell at zero will always be the screen one
-    nsIPresShell *shell = doc->GetShellAt(0);
-    NS_ENSURE_TRUE(shell, NS_ERROR_NULL_POINTER);
+  // now we need to get the shell for the screen
+  // XXX assuming that the shell at zero will always be the screen one
+  nsIPresShell *shell = doc->GetShellAt(0);
+  if (!shell)
+    return;
 
-    // then the shell can give us the screen frame for this content node
-    nsIFrame* frame = shell->GetPrimaryFrameFor(mContent);
-    NS_ENSURE_TRUE(frame, NS_ERROR_NULL_POINTER);
+  // then the shell can give us the screen frame for this content node
+  nsIFrame* frame = shell->GetPrimaryFrameFor(mContent);
+  if (!frame)
+    return;
 
-    // make sure this is REALLY an nsIObjectFrame
-    // we may need to go through the children to get it
-    nsIObjectFrame* objectFrame = nsnull;
-    CallQueryInterface(frame,&objectFrame);
-    if (!objectFrame)
-      objectFrame = GetNextObjectFrame(aPresContext,frame);
-    NS_ENSURE_TRUE(objectFrame,NS_ERROR_FAILURE);
+  nsPresContext* presContext = GetPresContext();
+  // make sure this is REALLY an nsIObjectFrame
+  // we may need to go through the children to get it
+  nsIObjectFrame* objectFrame = nsnull;
+  CallQueryInterface(frame,&objectFrame);
+  if (!objectFrame)
+    objectFrame = GetNextObjectFrame(presContext,frame);
+  if (!objectFrame)
+    return;
 
-    // finally we can get our plugin instance
-    nsCOMPtr<nsIPluginInstance> pi;
-    if (NS_FAILED(objectFrame->GetPluginInstance(*getter_AddRefs(pi))) || !pi)
-      return NS_ERROR_FAILURE;
+  // finally we can get our plugin instance
+  nsCOMPtr<nsIPluginInstance> pi;
+  if (NS_FAILED(objectFrame->GetPluginInstance(*getter_AddRefs(pi))) || !pi)
+    return;
 
-    // now we need to setup the correct location for printing
-    nsresult rv;
-    nsPluginWindow    window;
-    window.window =   nsnull;
+  // now we need to setup the correct location for printing
+  nsresult rv;
+  nsPluginWindow    window;
+  window.window =   nsnull;
 
-    // prepare embedded mode printing struct
-    nsPluginPrint npprint;
-    npprint.mode = nsPluginMode_Embedded;
+  // prepare embedded mode printing struct
+  nsPluginPrint npprint;
+  npprint.mode = nsPluginMode_Embedded;
 
-    // we need to find out if we are windowless or not
-    PRBool windowless = PR_FALSE;
-    pi->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
-    window.type  =  windowless ? nsPluginWindowType_Drawable : nsPluginWindowType_Window;
+  // we need to find out if we are windowless or not
+  PRBool windowless = PR_FALSE;
+  pi->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
+  window.type  =  windowless ? nsPluginWindowType_Drawable : nsPluginWindowType_Window;
 
-    // Get the offset of the DC
-    nsTransform2D* rcTransform;
-    aRenderingContext.GetCurrentTransform(rcTransform);
-    nsPoint           origin;
-    rcTransform->GetTranslationCoord(&origin.x, &origin.y);
-    
-    // Get the conversion factor between pixels and twips
-    float t2p = aPresContext->TwipsToPixels();
-
-    // set it all up
-    // XXX is windowless different?
-    window.x = origin.x;
-    window.y = origin.y;
-    window.width = NSToCoordRound(mRect.width * t2p);
-    window.height= NSToCoordRound(mRect.height * t2p);
-    window.clipRect.bottom = 0; window.clipRect.top = 0;
-    window.clipRect.left = 0; window.clipRect.right = 0;
-    
+  // Get the offset of the DC
+  nsTransform2D* rcTransform;
+  aRenderingContext.GetCurrentTransform(rcTransform);
+  nsPoint origin;
+  rcTransform->GetTranslationCoord(&origin.x, &origin.y);
+  
+  // Get the conversion factor between pixels and twips
+  float t2p = presContext->TwipsToPixels();
+  // set it all up
+  // XXX is windowless different?
+  window.x = origin.x;
+  window.y = origin.y;
+  window.width = NSToCoordRound(mRect.width * t2p);
+  window.height= NSToCoordRound(mRect.height * t2p);
+  window.clipRect.bottom = 0; window.clipRect.top = 0;
+  window.clipRect.left = 0; window.clipRect.right = 0;
+  
 // XXX platform specific printing code
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
     /* UNIX does things completely differently:
-     * We call the plugin and it sends generated PostScript data into a
-     * file handle we provide. If the plugin returns with success we embed
-     * this PostScript code fragment into the PostScript job we send to the
-     * printer.
-     */
+   * We call the plugin and it sends generated PostScript data into a
+   * file handle we provide. If the plugin returns with success we embed
+   * this PostScript code fragment into the PostScript job we send to the
+   * printer.
+   */
 
-    PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("nsObjectFrame::Paint() start for X11 platforms\n"));
-           
-    FILE *plugintmpfile = tmpfile();
-    if (!plugintmpfile) {
-      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: could not open tmp. file, errno=%d\n", errno));
-      return NS_ERROR_FAILURE;
-    }
+  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("nsObjectFrame::Paint() start for X11 platforms\n"));
+         
+  FILE *plugintmpfile = tmpfile();
+  if (!plugintmpfile) {
+    PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: could not open tmp. file, errno=%d\n", errno));
+    return;
+  }
  
     /* Send off print info to plugin */
-    NPPrintCallbackStruct npPrintInfo;
-    npPrintInfo.type = NP_PRINT;
-    npPrintInfo.fp   = plugintmpfile;
-    npprint.print.embedPrint.platformPrint = (void *)&npPrintInfo;
-    /* aDirtyRect contains the right information for ps print */
-    window.x =   aDirtyRect.x;
-    window.y =   aDirtyRect.y;
-    window.width =   aDirtyRect.width;
-    window.height =   aDirtyRect.height;
-    npprint.print.embedPrint.window        = window;
-    rv = pi->Print(&npprint);
-    if (NS_FAILED(rv)) {
-      PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: plugin returned failure %lx\n", (long)rv));
-      fclose(plugintmpfile);
-      return rv;
-    }
-
-    /* Send data to printer */
-    rv = aRenderingContext.RenderEPS(aDirtyRect, plugintmpfile);
-
+  NPPrintCallbackStruct npPrintInfo;
+  npPrintInfo.type = NP_PRINT;
+  npPrintInfo.fp   = plugintmpfile;
+  npprint.print.embedPrint.platformPrint = (void *)&npPrintInfo;
+  /* aDirtyRect contains the right information for ps print */
+  window.x =   aDirtyRect.x;
+  window.y =   aDirtyRect.y;
+  window.width =   aDirtyRect.width;
+  window.height =   aDirtyRect.height;
+  npprint.print.embedPrint.window        = window;
+  rv = pi->Print(&npprint);
+  if (NS_FAILED(rv)) {
+    PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: plugin returned failure %lx\n", (long)rv));
     fclose(plugintmpfile);
+    return;
+  }
 
-    PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("plugin printing done, return code is %lx\n", (long)rv));
+  /* Send data to printer */
+  rv = aRenderingContext.RenderEPS(aDirtyRect, plugintmpfile);
+
+  fclose(plugintmpfile);
+
+  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("plugin printing done, return code is %lx\n", (long)rv));
 
 #else  // Windows and non-UNIX, non-Mac(Classic) cases
 
-    // we need the native printer device context to pass to plugin
-    // On Windows, this will be the HDC
-    void* dc;
-    dc = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
+  // we need the native printer device context to pass to plugin
+  // On Windows, this will be the HDC
+  void* dc;
+  dc = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
 
-    npprint.print.embedPrint.platformPrint = dc;
-    npprint.print.embedPrint.window = window;
-    // send off print info to plugin
+  npprint.print.embedPrint.platformPrint = dc;
+  npprint.print.embedPrint.window = window;
+  // send off print info to plugin
     rv = pi->Print(&npprint);
 
 #endif
 
-    // XXX Nav 4.x always sent a SetWindow call after print. Should we do the same?
-    nsDidReflowStatus status = NS_FRAME_REFLOW_FINISHED; // should we use a special status?
-    frame->DidReflow(shell->GetPresContext(),
-                     nsnull, status);  // DidReflow will take care of it
+  // XXX Nav 4.x always sent a SetWindow call after print. Should we do the same?
+  nsDidReflowStatus status = NS_FRAME_REFLOW_FINISHED; // should we use a special status?
+  frame->DidReflow(presContext,
+                   nsnull, status);  // DidReflow will take care of it
+}
 
-    return rv;  // done with printing
-  }
-
-// Screen painting code
-#ifdef XP_MACOSX
+void
+nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
+                           const nsRect& aDirtyRect)
+{
+  // Screen painting code
+#if defined(XP_MAC) || defined(XP_MACOSX)
   // delegate all painting to the plugin instance.
-  if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) && mInstanceOwner)
+  if (mInstanceOwner)
       mInstanceOwner->Paint(aDirtyRect);
 #elif defined (XP_WIN) || defined(XP_OS2)
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    nsCOMPtr<nsIPluginInstance> inst;
-    GetPluginInstance(*getter_AddRefs(inst));
-    if (inst) {
-      // Look if it's windowless
-      nsPluginWindow * window;
-      mInstanceOwner->GetWindow(window);
+  nsCOMPtr<nsIPluginInstance> inst;
+  GetPluginInstance(*getter_AddRefs(inst));
+  if (inst) {
+    // Look if it's windowless
+    nsPluginWindow * window;
+    mInstanceOwner->GetWindow(window);
 
-      if (window->type == nsPluginWindowType_Drawable) {
-        // check if we need to call SetWindow with updated parameters
-        PRBool doupdatewindow = PR_FALSE;
+    if (window->type == nsPluginWindowType_Drawable) {
+      // check if we need to call SetWindow with updated parameters
+      PRBool doupdatewindow = PR_FALSE;
 
-        // check if we need to update hdc
-        void* hdc;
-        hdc = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
-        if (NS_REINTERPRET_CAST(PRUint32, window->window) != (PRUint32)(HDC)hdc) {
-          window->window = NS_REINTERPRET_CAST(nsPluginPort*, hdc);
-          doupdatewindow = PR_TRUE;
-        }
+      // check if we need to update hdc
+      void* hdc;
+      hdc = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
+      if (NS_REINTERPRET_CAST(PRUint32, window->window) != (PRUint32)(HDC)hdc) {
+        window->window = NS_REINTERPRET_CAST(nsPluginPort*, hdc);
+        doupdatewindow = PR_TRUE;
+      }
 
-        /*
-         * Layout now has an optimized way of painting. Now we always get
-         * a new drawing surface, sized to be just what's needed. Windowless
-         * plugins need a transform applied to their origin so they paint
-         * in the right place. Since |SetWindow| is no longer being used
-         * to tell the plugin where it is, we dispatch a NPWindow through
-         * |HandleEvent| to tell the plugin when its window moved
-         */
+      /*
+       * Layout now has an optimized way of painting. Now we always get
+       * a new drawing surface, sized to be just what's needed. Windowless
+       * plugins need a transform applied to their origin so they paint
+       * in the right place. Since |SetWindow| is no longer being used
+       * to tell the plugin where it is, we dispatch a NPWindow through
+       * |HandleEvent| to tell the plugin when its window moved
+       */
 
-        // Get the offset of the DC
-        nsTransform2D* rcTransform;
-        aRenderingContext.GetCurrentTransform(rcTransform);
-        nsPoint origin;
-        rcTransform->GetTranslationCoord(&origin.x, &origin.y);
+      // Get the offset of the DC
+      nsTransform2D* rcTransform;
+      aRenderingContext.GetCurrentTransform(rcTransform);
+      nsPoint origin;
+      rcTransform->GetTranslationCoord(&origin.x, &origin.y);
 
-        if ((window->x != origin.x) || (window->y != origin.y)) {
-          window->x = origin.x;
-          window->y = origin.y;
-          doupdatewindow = PR_TRUE;
-        }
+      if ((window->x != origin.x) || (window->y != origin.y)) {
+        window->x = origin.x;
+        window->y = origin.y;
+        doupdatewindow = PR_TRUE;
+      }
 
-        // if our location or visible area has changed, we need to tell the plugin
-        if (doupdatewindow) {
+      // if our location or visible area has changed, we need to tell the plugin
+      if (doupdatewindow) {
 #ifdef XP_WIN    // Windowless plugins on windows need a special event to update their location, see bug 135737
 
-          // first, lets find out how big the window is, in pixels
-          nsIViewManager* vm = aPresContext->GetViewManager();
-            if (vm) {
-              nsIView* view;
-              vm->GetRootView(view);
-              if (view) {
-                nsIWidget* win = view->GetWidget();
-                if (win) {
-                  nsRect visibleRect;
-                  win->GetBounds(visibleRect);         
-                    
-                  // next, get our plugin's rect so we can intersect it with the visible rect so we
-                  // can tell the plugin where and how much to paint
-                  NS_ASSERTION(window->type == nsPluginWindowType_Drawable,
-                               "What happened to our window type?");
-                  origin = GetWindowOriginInPixels(PR_TRUE);
-                  nsRect winlessRect = nsRect(origin, nsSize(window->width, window->height));
-                  winlessRect.IntersectRect(winlessRect, visibleRect);
+        // first, lets find out how big the window is, in pixels
+        nsIViewManager* vm = GetPresContext()->GetViewManager();
+        if (vm) {
+          nsIView* view;
+          vm->GetRootView(view);
+          if (view) {
+            nsIWidget* win = view->GetWidget();
+            if (win) {
+              nsRect visibleRect;
+              win->GetBounds(visibleRect);         
+                  
+              // next, get our plugin's rect so we can intersect it with the visible rect so we
+              // can tell the plugin where and how much to paint
+              NS_ASSERTION(window->type == nsPluginWindowType_Drawable,
+                           "What happened to our window type?");
+              origin = GetWindowOriginInPixels(PR_TRUE);
+              nsRect winlessRect = nsRect(origin, nsSize(window->width, window->height));
+              winlessRect.IntersectRect(winlessRect, visibleRect);
 
-                  // now check our cached window and only update plugin if something has changed
-                  if (mWindowlessRect != winlessRect) {
-                    mWindowlessRect = winlessRect;
+              // now check our cached window and only update plugin if something has changed
+              if (mWindowlessRect != winlessRect) {
+                mWindowlessRect = winlessRect;
 
-                    WINDOWPOS winpos;
-                    memset(&winpos, 0, sizeof(winpos));
-                    winpos.x = mWindowlessRect.x;
-                    winpos.y = mWindowlessRect.y;
-                    winpos.cx = mWindowlessRect.width;
-                    winpos.cy = mWindowlessRect.height;
+                WINDOWPOS winpos;
+                memset(&winpos, 0, sizeof(winpos));
+                winpos.x = mWindowlessRect.x;
+                winpos.y = mWindowlessRect.y;
+                winpos.cx = mWindowlessRect.width;
+                winpos.cy = mWindowlessRect.height;
 
-                    // finally, update the plugin by sending it a WM_WINDOWPOSCHANGED event
-                    nsPluginEvent pluginEvent;
-                    pluginEvent.event = WM_WINDOWPOSCHANGED;
-                    pluginEvent.wParam = 0;
-                    pluginEvent.lParam = (uint32)&winpos;
-                    PRBool eventHandled = PR_FALSE;
+                // finally, update the plugin by sending it a WM_WINDOWPOSCHANGED event
+                nsPluginEvent pluginEvent;
+                pluginEvent.event = WM_WINDOWPOSCHANGED;
+                pluginEvent.wParam = 0;
+                pluginEvent.lParam = (uint32)&winpos;
+                PRBool eventHandled = PR_FALSE;
 
-                    inst->HandleEvent(&pluginEvent, &eventHandled);
-                  }
-                }
+                inst->HandleEvent(&pluginEvent, &eventHandled);
               }
             }
+          }
+        }
 #endif
 
-          inst->SetWindow(window);        
-        }
-
-        mInstanceOwner->Paint(aDirtyRect, (PRUint32)(HDC)hdc);
+        inst->SetWindow(window);        
       }
+
+      // This expects a dirty rect relative to the plugin's rect
+      // XXX I wonder if this breaks if we give the frame a border so the
+      // frame origin and plugin origin are not the same
+      mInstanceOwner->Paint(aDirtyRect, (PRUint32)(HDC)hdc);
     }
   }
-#endif
-  DO_GLOBAL_REFLOW_COUNT_DSP("nsObjectFrame", &aRenderingContext);
-  return NS_OK;
+#endif /* !XP_MAC */
 }
 
 NS_IMETHODIMP

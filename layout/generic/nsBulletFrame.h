@@ -55,11 +55,9 @@ public:
 
   // nsIFrame
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
-  NS_IMETHOD Paint(nsPresContext*      aCX,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
   virtual nsIAtom* GetType() const;
   NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
 #ifdef NS_DEBUG
@@ -95,6 +93,8 @@ public:
   /* get list item text, with '.' */
   PRBool GetListItemText(const nsStyleList& aStyleList,
                          nsString& aResult);
+                         
+  void PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt);
 
 protected:
   void GetDesiredSize(nsPresContext* aPresContext,

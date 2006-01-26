@@ -211,31 +211,22 @@ nsMathMLmfracFrame::CalcLineThickness(nsPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Paint(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsFramePaintLayer    aWhichLayer,
-                          PRUint32             aFlags)
+nsMathMLmfracFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists)
 {
   /////////////
   // paint the numerator and denominator
-  nsresult rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext,
-                                              aDirtyRect, aWhichLayer);
+  nsresult rv = nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   /////////////
   // paint the fraction line
   if (mSlashChar) {
     // bevelled rendering
-    mSlashChar->Paint(aPresContext, aRenderingContext,
-                      aDirtyRect, aWhichLayer, this);
-  }
-  else if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) &&
-           mStyleContext->GetStyleVisibility()->IsVisible() &&
-           !NS_MATHML_HAS_ERROR(mPresentationData.flags) &&
-           !mLineRect.IsEmpty()) {
-    // paint the fraction line with the current text color
-    aRenderingContext.SetColor(GetStyleColor()->mColor);
-    aRenderingContext.FillRect(mLineRect.x, mLineRect.y, 
-                               mLineRect.width, mLineRect.height);
+    rv = mSlashChar->Display(aBuilder, this, aLists);
+  } else {
+    rv = DisplayBar(aBuilder, this, mLineRect, aLists);
   }
 
   return rv;

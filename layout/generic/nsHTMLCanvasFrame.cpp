@@ -43,6 +43,7 @@
 
 #include "nsHTMLCanvasFrame.h"
 #include "nsICanvasElement.h"
+#include "nsDisplayList.h"
 
 nsIFrame*
 NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell)
@@ -163,53 +164,55 @@ nsHTMLCanvasFrame::GetInnerArea() const
   return r;
 }
 
-NS_IMETHODIMP
-nsHTMLCanvasFrame::Paint(nsPresContext*       aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect&        aDirtyRect,
-                         nsFramePaintLayer    aWhichLayer,
-                         PRUint32             aFlags)
+void
+nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
+                               const nsRect& aDirtyRect, nsPoint aPt) 
 {
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && 
-      isVisible && mRect.width && mRect.height)
-  {
-    // If painting is suppressed, we need to stop image painting.
-    PRBool paintingSuppressed = PR_FALSE;
-    aPresContext->PresShell()->IsPaintingSuppressed(&paintingSuppressed);
-    if (paintingSuppressed) {
-      return NS_OK;
-    }
+  nsRect inner = GetInnerArea() + aPt;
+  nsRect src(0, 0, mCanvasSize.width, mCanvasSize.height);
 
-    // make sure that the rendering context has updated the
-    // image frame
-    nsCOMPtr<nsICanvasElement> canvas(do_QueryInterface(GetContent()));
-    NS_ENSURE_TRUE(canvas, NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(canvas->UpdateImageFrame(), NS_ERROR_FAILURE);
+  // XXX this should just draw the dirty area
+  aRenderingContext.DrawImage(mImageContainer, src, inner);
+}
 
-    // from nsImageFrame
-    // First paint background and borders, which should be in the
-    // FOREGROUND or BACKGROUND paint layer if the element is
-    // inline-level or block-level, respectively (bug 36710).  (See
-    // CSS2 9.5, which is the rationale for paint layers.)
-    const nsStyleDisplay* display = GetStyleDisplay();
-    nsFramePaintLayer backgroundLayer = display->IsBlockLevel()
-      ? NS_FRAME_PAINT_LAYER_BACKGROUND
-      : NS_FRAME_PAINT_LAYER_FOREGROUND;
+static void PaintCanvas(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+                        const nsRect& aDirtyRect, nsPoint aPt)
+{
+  NS_STATIC_CAST(nsHTMLCanvasFrame*, aFrame)->PaintCanvas(*aCtx, aDirtyRect, aPt);
+}
 
-    if (aWhichLayer == backgroundLayer) {
-      PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
-    }
+NS_IMETHODIMP
+nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                    const nsRect&           aDirtyRect,
+                                    const nsDisplayListSet& aLists)
+{
+  if (!IsVisibleForPainting(aBuilder))
+    return NS_OK;
 
-    if ((aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) && mImageContainer) {
-      nsRect inner = GetInnerArea();
-      nsRect src(0, 0, mCanvasSize.width, mCanvasSize.height);
+  // REVIEW: We don't need any special logic here for deciding which layer
+  // to put the background in ... it goes in aLists.BorderBackground() and
+  // then if we have a block parent, it will put our background in the right
+  // place.
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // REVIEW: Checking mRect.IsEmpty() makes no sense to me, so I removed it.
+  // It can't have been protecting us against bad situations with zero-size
+  // images since adding a border would make the rect non-empty.
 
-      aRenderingContext.DrawImage(mImageContainer, src, inner);
-    }
+  // make sure that the rendering context has updated the
+  // image frame
+  nsCOMPtr<nsICanvasElement> canvas(do_QueryInterface(GetContent()));
+  NS_ENSURE_TRUE(canvas, NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(canvas->UpdateImageFrame(), NS_ERROR_FAILURE);
+
+  if (mImageContainer) {
+    rv = aLists.Content()->AppendNewToTop(new (aBuilder)
+            nsDisplayGeneric(this, ::PaintCanvas, "Canvas"));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, nsISelectionDisplay::DISPLAY_IMAGES);
+  return DisplaySelectionOverlay(aBuilder, aLists,
+                                 nsISelectionDisplay::DISPLAY_IMAGES);
 }
 
 NS_IMETHODIMP

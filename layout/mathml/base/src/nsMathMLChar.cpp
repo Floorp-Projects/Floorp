@@ -67,6 +67,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
 #include "nsDoubleHashtable.h"
+#include "nsDisplayList.h"
 
 #include "nsMathMLOperators.h"
 #include "nsMathMLChar.h"
@@ -1937,13 +1938,116 @@ nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
   return NS_OK;
 }
 
+class nsDisplayMathMLSelectionRect : public nsDisplayItem {
+public:
+  nsDisplayMathMLSelectionRect(nsIFrame* aFrame, const nsRect& aRect)
+  : mFrame(aFrame), mRect(aRect) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("MathMLSelectionRect")
+private:
+  nsIFrame* mFrame;
+  nsRect    mRect;
+};
+
+void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  // get color to use for selection from the look&feel object
+  nscolor bgColor = NS_RGB(0, 0, 0);
+  mFrame->GetPresContext()->LookAndFeel()->
+      GetColor(nsILookAndFeel::eColor_TextSelectBackground, bgColor);
+  aCtx->SetColor(bgColor);
+  aCtx->FillRect(mRect + aBuilder->ToReferenceFrame(mFrame));
+}
+
+class nsDisplayMathMLCharBackground : public nsDisplayItem {
+public:
+  nsDisplayMathMLCharBackground(nsIFrame* aFrame, const nsRect& aRect,
+      nsStyleContext* aStyleContext)
+  : mFrame(aFrame), mStyleContext(aStyleContext), mRect(aRect) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("MathMLCharBackground")
+private:
+  nsIFrame*       mFrame;
+  nsStyleContext* mStyleContext;
+  nsRect          mRect;
+};
+
+void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  const nsStyleBorder* border = mStyleContext->GetStyleBorder();
+  const nsStylePadding* padding = mStyleContext->GetStylePadding();
+  const nsStyleBackground* backg = mStyleContext->GetStyleBackground();
+  nsCSSRendering::PaintBackgroundWithSC(mFrame->GetPresContext(), *aCtx, mFrame,
+                                        aDirtyRect,
+                                        mRect + aBuilder->ToReferenceFrame(mFrame),
+                                        *backg, *border, *padding,
+                                        PR_TRUE);
+}
+
+class nsDisplayMathMLCharForeground : public nsDisplayItem {
+public:
+  nsDisplayMathMLCharForeground(nsIFrame* aFrame, nsMathMLChar* aChar, PRBool aIsSelected)
+  : mFrame(aFrame), mChar(aChar), mIsSelected(aIsSelected) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("MathMLCharForeground")
+private:
+  nsIFrame*     mFrame;
+  nsMathMLChar* mChar;
+  PRPackedBool  mIsSelected;
+};
+
+void nsDisplayMathMLCharForeground::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  mChar->PaintForeground(mFrame->GetPresContext(), *aCtx,
+                         aBuilder->ToReferenceFrame(mFrame), mIsSelected);
+}
+
+#ifdef NS_DEBUG
+class nsDisplayMathMLCharDebug : public nsDisplayItem {
+public:
+  nsDisplayMathMLCharDebug(nsIFrame* aFrame, const nsRect& aRect)
+  : mFrame(aFrame), mRect(aRect) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("MathMLCharDebug")
+private:
+  nsIFrame* mFrame;
+  nsRect    mRect;
+};
+
+void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  // for visual debug
+  PRIntn skipSides = 0;
+  nsPresContext* presContext = mFrame->GetPresContext();
+  const nsStyleBorder* border = mFrame->GetStyleBorder();
+  nsStyleContext* styleContext = mFrame->GetStyleContext();
+  nsRect rect = mRect + aBuilder->ToReferenceFrame(mFrame);
+  nsCSSRendering::PaintBorder(presContext, *aCtx, mFrame,
+                              aDirtyRect, rect, *border, styleContext, skipSides);
+  nsCSSRendering::PaintOutline(presContext, *aCtx, mFrame,
+                               aDirtyRect, rect, *border,
+                               *mFrame->GetStyleOutline(), styleContext, 0);
+}
+#endif
+
+
 nsresult
-nsMathMLChar::Paint(nsPresContext*      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer,
-                    nsIFrame*            aForFrame,
-                    const nsRect*        aSelectedRect)
+nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
+                      nsIFrame*               aForFrame,
+                      const nsDisplayListSet& aLists,
+                      const nsRect*           aSelectedRect)
 {
   nsresult rv = NS_OK;
   nsStyleContext* parentContext = mStyleContext->GetParent();
@@ -1961,101 +2065,112 @@ nsMathMLChar::Paint(nsPresContext*      aPresContext,
   // if the leaf style context that we use for stretchy chars has a background
   // color we use it -- this feature is mostly used for testing and debugging
   // purposes. Normally, users will set the background on the container frame.
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    // paint the selection background -- beware MathML frames overlap a lot
-    if (aSelectedRect && !aSelectedRect->IsEmpty()) {
-      // get color to use for selection from the look&feel object
-      nscolor bgColor = NS_RGB(0, 0, 0);
-      aPresContext->LookAndFeel()->
-	GetColor(nsILookAndFeel::eColor_TextSelectBackground, bgColor);
-      aRenderingContext.SetColor(bgColor);
-      aRenderingContext.FillRect(*aSelectedRect);
+  // paint the selection background -- beware MathML frames overlap a lot
+  if (aSelectedRect && !aSelectedRect->IsEmpty()) {
+    rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayMathMLSelectionRect(aForFrame, *aSelectedRect));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else if (mRect.width && mRect.height) {
+    const nsStyleBackground* backg = styleContext->GetStyleBackground();
+    if (styleContext != parentContext &&
+        0 == (backg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
+      rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+          nsDisplayMathMLCharBackground(aForFrame, mRect, styleContext));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-    else if (mRect.width && mRect.height) {
-      const nsStyleBorder* border = styleContext->GetStyleBorder();
-      const nsStylePadding* padding = styleContext->GetStylePadding();
-      const nsStyleBackground* backg = styleContext->GetStyleBackground();
-      nsRect rect(mRect); //0, 0, mRect.width, mRect.height);
-      if (styleContext != parentContext &&
-          0 == (backg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
-        nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
-                                              aDirtyRect, rect, *backg, *border, *padding,
-                                              PR_TRUE);
-      //else
-      //  our container frame will take care of painting its background
-      //  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
-      //                                  aDirtyRect, rect, *border, *padding, PR_TRUE);
+
+    //else
+    //  our container frame will take care of painting its background
+    //  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
+    //                                  aDirtyRect, rect, *border, *padding, PR_TRUE);
+
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-      // for visual debug
-      PRIntn skipSides = 0; //aForFrame->GetSkipSides();
-      const nsStyleOutline* outline = styleContext->GetStyleOutline();
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
-                                  aDirtyRect, rect, *border, styleContext, skipSides);
-      nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, aForFrame,
-                                   aDirtyRect, rect, *border, *outline, styleContext, 0);
+    // for visual debug
+    rv = aLists.BorderBackground()->AppendToTop(new (aBuilder)
+        nsDisplayMathMLCharDebug(aForFrame, mRect));
+    NS_ENSURE_SUCCESS(rv, rv);
 #endif
-    }
+  }
+  return aLists.Content()->AppendNewToTop(new (aBuilder)
+        nsDisplayMathMLCharForeground(aForFrame, this,
+                                      aSelectedRect && !aSelectedRect->IsEmpty()));
+}
+
+void
+nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              nsPoint aPt,
+                              PRBool aIsSelected)
+{
+  nsStyleContext* parentContext = mStyleContext->GetParent();
+  nsStyleContext* styleContext = mStyleContext;
+
+  if (NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
+    // normal drawing if there is nothing special about this char
+    // Set default context to the parent context
+    styleContext = parentContext;
   }
 
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    // Set color ...
-    nscolor fgColor = styleContext->GetStyleColor()->mColor;
-    if (aSelectedRect && !aSelectedRect->IsEmpty()) {
-      // get color to use for selection from the look&feel object
-      aPresContext->LookAndFeel()->
-	GetColor(nsILookAndFeel::eColor_TextSelectForeground, fgColor);
+  // Set color ...
+  nscolor fgColor = styleContext->GetStyleColor()->mColor;
+  if (aIsSelected) {
+    // get color to use for selection from the look&feel object
+    aPresContext->LookAndFeel()->
+      GetColor(nsILookAndFeel::eColor_TextSelectForeground, fgColor);
+  }
+  aRenderingContext.SetColor(fgColor);
+
+  nsAutoString fontName;
+  nsFont theFont(styleContext->GetStyleFont()->mFont);
+
+  if (NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
+    // normal drawing if there is nothing special about this char ...
+    // Set the default font and grab some metrics to adjust the placements ...
+    PRUint32 len = PRUint32(mData.Length());
+    if (1 == len) {
+      SetBaseFamily(mData[0], theFont);
     }
-    aRenderingContext.SetColor(fgColor);
-
-    nsAutoString fontName;
-    nsFont theFont(styleContext->GetStyleFont()->mFont);
-
-    if (NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
-      // normal drawing if there is nothing special about this char ...
-      // Set the default font and grab some metrics to adjust the placements ...
-      PRUint32 len = PRUint32(mData.Length());
-      if (1 == len) {
-        SetBaseFamily(mData[0], theFont);
-      }
-      aRenderingContext.SetFont(theFont, nsnull);
+    aRenderingContext.SetFont(theFont, nsnull);
 //printf("Painting %04X like a normal char\n", mData[0]);
 //aRenderingContext.SetColor(NS_RGB(255,0,0));
-      aRenderingContext.DrawString(mData.get(), len, mRect.x, mRect.y + mBoundingMetrics.ascent);
-    }
-    else {
-      // Set the stretchy font and grab some metrics to adjust the placements ...
-      mGlyphTable->GetPrimaryFontName(fontName);
-      SetFirstFamily(theFont, fontName);
-      aRenderingContext.SetFont(theFont, nsnull);
-      // if there is a glyph of appropriate size, paint that glyph
-      if (mGlyph) {
+    aRenderingContext.DrawString(mData.get(), len, mRect.x + aPt.x,
+                                 mRect.y + aPt.y + mBoundingMetrics.ascent);
+  }
+  else {
+    // Set the stretchy font and grab some metrics to adjust the placements ...
+    mGlyphTable->GetPrimaryFontName(fontName);
+    SetFirstFamily(theFont, fontName);
+    aRenderingContext.SetFont(theFont, nsnull);
+    // if there is a glyph of appropriate size, paint that glyph
+    if (mGlyph) {
 //printf("Painting %04X with a glyph of appropriate size\n", mData[0]);
 //aRenderingContext.SetColor(NS_RGB(0,0,255));
-        mGlyphTable->DrawGlyph(aRenderingContext, theFont, mGlyph,
-                               mRect.x, mRect.y + mBoundingMetrics.ascent);
-      }
-      else { // paint by parts
-        // see if this is a composite char and let children paint themselves
-        if (!mParent && mSibling) { // only a "root" having child chars can enter here
-          for (nsMathMLChar* child = mSibling; child; child = child->mSibling) {
+      mGlyphTable->DrawGlyph(aRenderingContext, theFont, mGlyph,
+                             mRect.x + aPt.x,
+                             mRect.y + aPt.y + mBoundingMetrics.ascent);
+    }
+    else { // paint by parts
+      // see if this is a composite char and let children paint themselves
+      if (!mParent && mSibling) { // only a "root" having child chars can enter here
+        for (nsMathMLChar* child = mSibling; child; child = child->mSibling) {
 //if (!mStyleContext->Equals(child->mStyleContext))
 //  printf("char contexts are out of sync\n");
-            child->Paint(aPresContext, aRenderingContext,
-                         aDirtyRect, aWhichLayer, aForFrame, aSelectedRect);
-          }
-          return NS_OK; // that's all folks
+          child->PaintForeground(aPresContext, aRenderingContext, aPt,
+                                 aIsSelected);
         }
+        return; // that's all folks
+       }
 //aRenderingContext.SetColor(NS_RGB(0,255,0));
-        if (NS_STRETCH_DIRECTION_VERTICAL == mDirection)
-          rv = PaintVertically(aPresContext, aRenderingContext, theFont, styleContext,
-                               mGlyphTable, this, mRect);
-        else if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
-          rv = PaintHorizontally(aPresContext, aRenderingContext, theFont, styleContext,
-                                 mGlyphTable, this, mRect);
-      }
+      nsRect r = mRect + aPt;
+      if (NS_STRETCH_DIRECTION_VERTICAL == mDirection)
+        PaintVertically(aPresContext, aRenderingContext, theFont, styleContext,
+                        mGlyphTable, this, r);
+      else if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
+        PaintHorizontally(aPresContext, aRenderingContext, theFont, styleContext,
+                          mGlyphTable, this, r);
     }
   }
-  return rv;
 }
 
 /* =================================================================================

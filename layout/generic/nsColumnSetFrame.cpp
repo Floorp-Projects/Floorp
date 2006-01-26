@@ -69,12 +69,16 @@ public:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  virtual nsIFrame* GetFrameForPoint(const nsPoint& aPoint, 
-                                     nsFramePaintLayer aWhichLayer);
+  // REVIEW: Now by default the background of a frame receives events,
+  // so this GetFrameForPoint override is no longer necessary.
 
   virtual nsIFrame* GetContentInsertionFrame() {
     return GetFirstChild(nsnull)->GetContentInsertionFrame();
   }
+  
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   virtual nsIAtom* GetType() const;
 
@@ -160,15 +164,6 @@ nsIAtom*
 nsColumnSetFrame::GetType() const
 {
   return nsLayoutAtoms::columnSetFrame;
-}
-
-nsIFrame*
-nsColumnSetFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                   nsFramePaintLayer aWhichLayer)
-{
-  // This frame counts as part of the background.
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer,
-                               aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND);
 }
 
 NS_IMETHODIMP
@@ -874,6 +869,23 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                   const nsRect&           aDirtyRect,
+                                   const nsDisplayListSet& aLists) {
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsIFrame* kid = mFrames.FirstChild();
+  // Our children won't have backgrounds so it doesn't matter where we put them.
+  while (kid) {
+    nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    kid = kid->GetNextSibling();
+  }
   return NS_OK;
 }
 

@@ -62,6 +62,7 @@
 #include "nsTransform2D.h"
 #include "nsRegion.h"
 #include "nsLayoutErrors.h"
+#include "nsDisplayList.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -199,154 +200,32 @@ nsContainerFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 // Painting/Events
 
 NS_IMETHODIMP
-nsContainerFrame::Paint(nsPresContext*      aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        const nsRect&        aDirtyRect,
-                        nsFramePaintLayer    aWhichLayer,
-                        PRUint32             aFlags)
+nsContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                   const nsRect&           aDirtyRect,
+                                   const nsDisplayListSet& aLists)
 {
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
-  return NS_OK;
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists);
 }
 
-// Paint the children of a container, assuming nothing about the
-// children's spatial arrangement. Given relative positioning, negative
-// margins, etc, that's probably a good thing.
-//
-// Note: aDirtyRect is in our coordinate system (and of course, child
-// rect's are also in our coordinate system)
-void
-nsContainerFrame::PaintChildren(nsPresContext*      aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect&        aDirtyRect,
-                                nsFramePaintLayer    aWhichLayer,
-                                PRUint32             aFlags)
+nsresult
+nsContainerFrame::BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aBuilder,
+                                                      const nsRect&           aDirtyRect,
+                                                      const nsDisplayListSet& aLists,
+                                                      PRUint32                aFlags)
 {
   nsIFrame* kid = mFrames.FirstChild();
+  // Put each child's background directly onto the content list
+  nsDisplayListSet set(aLists, aLists.Content());
+  // The children should be in content order
   while (kid) {
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer, aFlags);
+    nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set, aFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
     kid = kid->GetNextSibling();
   }
-}
-
-// Paint one child frame
-void
-nsContainerFrame::PaintChild(nsPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsIFrame*            aFrame,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags)
-{
-  NS_ASSERTION(aFrame, "no frame to paint!");
-  if (!aFrame->HasView()) {
-    nsRect kidRect = aFrame->GetRect();
-
-    // Compute the constrained damage area; set the overlap flag to
-    // PR_TRUE if any portion of the child frame intersects the
-    // dirty rect.
-    nsRect damageArea;
-    PRBool overlap;
-    if (NS_FRAME_OUTSIDE_CHILDREN & aFrame->GetStateBits()) {
-      // If the child frame has children that leak out of our box
-      // then we don't constrain the damageArea to just the childs
-      // bounding rect.
-      damageArea = aDirtyRect;
-      overlap = PR_TRUE;
-    }
-    else {
-      // Compute the intersection of the dirty rect and the childs
-      // rect (both are in our coordinate space). This limits the
-      // damageArea to just the portion that intersects the childs
-      // rect.
-      overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
-#ifdef NS_DEBUG
-      if (!overlap && (0 == kidRect.width) && (0 == kidRect.height)) {
-        overlap = PR_TRUE;
-      }
-#endif
-    }
-
-    if (overlap) {
-      // Translate damage area into the kids coordinate
-      // system. Translate rendering context into the kids
-      // coordinate system.
-      damageArea.x -= kidRect.x;
-      damageArea.y -= kidRect.y;
-
-      {
-        nsIRenderingContext::AutoPushTranslation
-          translate(&aRenderingContext, kidRect.x, kidRect.y);
-  
-        // Paint the kid
-        aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer, aFlags);
-      }
-
-#ifdef NS_DEBUG
-      // Draw a border around the child
-      if (nsIFrameDebug::GetShowFrameBorders() && !kidRect.IsEmpty()) {
-        aRenderingContext.SetColor(NS_RGB(255,0,0));
-        aRenderingContext.DrawRect(kidRect);
-      }
-#endif
-    }
-  }
-}
-
-nsIFrame*
-nsContainerFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                   nsFramePaintLayer aWhichLayer)
-{
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer,
-                               aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND);
-}
-
-nsIFrame*
-nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
-                                        nsIAtom*       aList,
-                                        nsFramePaintLayer aWhichLayer,
-                                        PRBool         aConsiderSelf)
-{
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  PRBool inThisFrame = thisRect.Contains(aPoint);
-
-  if (!((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame))
-    return nsnull;
-
-  nsIFrame* frame = nsnull;
-  nsIFrame* kid = GetFirstChild(aList);
-
-  while (kid) {
-    nsIFrame* hit;
-    nsPoint kidPoint = aPoint - kid->GetOffsetTo(this);
-    if (aWhichLayer == NS_FRAME_PAINT_LAYER_ALL) {
-      // Check all layers on this kid before moving on to the next one
-      hit = kid->GetFrameForPoint(kidPoint,
-                                  NS_FRAME_PAINT_LAYER_FOREGROUND);
-      if (!hit) {
-        hit = kid->GetFrameForPoint(kidPoint,
-                                    NS_FRAME_PAINT_LAYER_FLOATS);
-        if (!hit) {
-          hit = kid->GetFrameForPoint(kidPoint,
-                                      NS_FRAME_PAINT_LAYER_BACKGROUND);
-        }
-      }
-    } else {
-      hit = kid->GetFrameForPoint(kidPoint, aWhichLayer);
-    }
-
-    if (hit)
-      frame = hit;
-    kid = kid->GetNextSibling();
-  }
-
-  if (frame)
-    return frame;
-
-  if (inThisFrame && aConsiderSelf && GetStyleVisibility()->IsVisible())
-    return this;
-
-  return nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -401,6 +280,8 @@ nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame)
   vm->MoveViewTo(view, pt.x, pt.y);
 }
 
+// This code is duplicated in nsDisplayList.cpp. We'll remove the duplication
+// when we remove all this view sync code.
 static PRBool
 NonZeroStyleCoord(const nsStyleCoord& aCoord) {
   switch (aCoord.GetUnit()) {
@@ -421,13 +302,13 @@ HasNonZeroBorderRadius(nsStyleContext* aStyleContext) {
 
   nsStyleCoord coord;
   border->mBorderRadius.GetTop(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;
   border->mBorderRadius.GetRight(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;
   border->mBorderRadius.GetBottom(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;
   border->mBorderRadius.GetLeft(coord);
-  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;
 
   return PR_FALSE;
 }
@@ -446,13 +327,6 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
   PRBool hasBG =
     nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
 
-  // background-attachment: fixed is not really geometry dependent, but
-  // we set it here because it's cheap to do so
-  PRBool fixedBackground = hasBG && bg->HasFixedBackground();
-  // If the frame has a fixed background attachment, then indicate that the
-  // view's contents should be repainted and not bitblt'd
-  vm->SetViewBitBltEnabled(aView, !fixedBackground);
-
   const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
   // If the frame has a solid background color, 'background-clip:border',
   // and it's a kind of frame that paints its background, and rounded borders aren't
@@ -462,7 +336,6 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
   PRBool  viewHasTransparentContent =
     !(hasBG && !(bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
       !display->mAppearance && bg->mBackgroundClip == NS_STYLE_BG_CLIP_BORDER &&
-      aFrame->CanPaintBackground() &&
       !HasNonZeroBorderRadius(aStyleContext));
 
   PRBool drawnOnUniformField = PR_FALSE;

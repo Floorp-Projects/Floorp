@@ -37,7 +37,6 @@
 
 #include "nsFileControlFrame.h"
 
-
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -71,6 +70,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
+#include "nsDisplayList.h"
 
 #define SYNC_TEXT 0x1
 #define SYNC_BUTTON 0x2
@@ -552,23 +552,6 @@ nsFileControlFrame::IsLeaf() const
   return PR_TRUE;
 }
 
-nsIFrame*
-nsFileControlFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                     nsFramePaintLayer aWhichLayer)
-{
-#ifndef DEBUG_NEWFRAME
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (nsFormControlHelper::GetDisabled(mContent) && thisRect.Contains(aPoint)) {
-    if (GetStyleVisibility()->IsVisible()) {
-      return this;
-    }
-  } else {
-    return nsAreaFrame::GetFrameForPoint(aPoint, aWhichLayer);
-  }
-#endif
-  return nsnull;
-}
-
 #ifdef NS_DEBUG
 NS_IMETHODIMP
 nsFileControlFrame::GetFrameName(nsAString& aResult) const
@@ -609,23 +592,27 @@ nsFileControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
   return NS_OK;
 }
 
-
-
-
-NS_METHOD
-nsFileControlFrame::Paint(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsFramePaintLayer    aWhichLayer,
-                          PRUint32             aFlags)
+NS_IMETHODIMP
+nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists)
 {
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
-    return NS_OK;
-  }
-  nsresult rv = nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = nsAreaFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  if (NS_FAILED(rv))
+    return rv;
   
-  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-}
+  // Disabled file controls don't pass mouse events to their children, so we
+  // put an invisible item in the display list above the children
+  // just to catch events
+  // REVIEW: I'm not sure why we do this, but that's what nsFileControlFrame::
+  // GetFrameForPoint was doing
+  if (nsFormControlHelper::GetDisabled(mContent) && 
+      IsVisibleForPainting(aBuilder)) {
+    nsDisplayItem* item = new (aBuilder) nsDisplayEventReceiver(this);
+    if (!item)
+      return NS_ERROR_OUT_OF_MEMORY;
+    aLists.Content()->AppendToTop(item);
+  }
 
+  return DisplaySelectionOverlay(aBuilder, aLists);
+}

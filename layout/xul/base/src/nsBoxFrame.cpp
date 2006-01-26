@@ -103,6 +103,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsContentUtils.h"
+#include "nsDisplayList.h"
 
 // Needed for Print Preview
 #include "nsIDocument.h"
@@ -1350,301 +1351,242 @@ nsBoxFrame::GetDebugPref(nsPresContext* aPresContext)
 {
     gDebug = nsContentUtils::GetBoolPref("xul.debug.box");
 }
+
+class nsDisplayXULDebug : public nsDisplayItem {
+public:
+  nsDisplayXULDebug(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) {
+    mFrame->DisplayDebugInfoFor(this, aPt - aBuilder->ToReferenceFrame(mFrame));
+    return PR_TRUE;
+  }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("ComboboxFocus")
+private:
+  nsBoxFrame* mFrame;
+};
+
+void
+nsDisplayXULDebug::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  mFrame->PaintXULDebugOverlay(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+}
+
+static void
+PaintXULDebugBackground(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+                        const nsRect& aDirtyRect, nsPoint aPt)
+{
+  NS_STATIC_CAST(nsBoxFrame*, aFrame)->PaintXULDebugBackground(*aCtx, aPt);
+}
 #endif
 
-NS_IMETHODIMP
-nsBoxFrame::Paint(nsPresContext*      aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect&        aDirtyRect,
-                  nsFramePaintLayer    aWhichLayer,
-                  PRUint32             aFlags)
+nsresult
+nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                             const nsRect&           aDirtyRect,
+                             const nsDisplayListSet& aLists)
 {
-  // if collapsed nothing is drawn
-  if (GetStyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
-    return NS_OK;
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_FRAME_IS_UNFLOWABLE & mState) {
-    return NS_OK;
+#ifdef DEBUG_LAYOUT
+  // REVIEW: From GetFrameForPoint
+  if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
+    rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayGeneric(this, PaintXULDebugBackground, "XULDebugBackground"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aLists.Outlines()->AppendNewToTop(new (aBuilder)
+        nsDisplayXULDebug(this));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+#endif
 
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect, 0, PR_FALSE);
-  }
-
-  if (GetType() == nsLayoutAtoms::rootFrame) {
-    // We are wrapping the root frame of a XUL document. We
-    // need to check the pres shell to find out if painting is locked
-    // down (because we're still in the early stages of document
-    // and frame construction.  If painting is locked down, then we
-    // do not paint our children.  
-    PRBool paintingSuppressed = PR_FALSE;
-    aPresContext->PresShell()->IsPaintingSuppressed(&paintingSuppressed);
-    if (paintingSuppressed)
-      return NS_OK;
-  }
-
-  // Now paint the kids. Note that child elements have the opportunity to
-  // override the visibility property and display even if their parent is
-  // hidden.  Don't paint our children if the theme object is a leaf.
-  const nsStyleDisplay* display = GetStyleDisplay();
-  if (!(display->mAppearance && nsBox::gTheme && 
-        gTheme->ThemeSupportsWidget(aPresContext, this, display->mAppearance) &&
-        !gTheme->WidgetIsContainer(display->mAppearance)))
-    PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  rv = BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // see if we have to draw a selection frame around this container
-  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  return DisplaySelectionOverlay(aBuilder, aLists);
 }
 
-/**
- * Redefined to handle collapsed as well as removing unneeded crap having to
- * do with frame state and overlapping that only applied to HTML not XUL
- */
-void
-nsBoxFrame::PaintChild(nsPresContext*      aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect&        aDirtyRect,
-                       nsIFrame*            aFrame,
-                       nsFramePaintLayer    aWhichLayer,
-                       PRUint32             aFlags)
+NS_IMETHODIMP
+nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                        const nsRect&           aDirtyRect,
+                                        const nsDisplayListSet& aLists)
 {
-  // if collapsed don't paint the child.
-  if (aFrame->GetStyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
-     return;
-
-  if (!aFrame->HasView()) {
-    nsRect kidRect = aFrame->GetRect();
- 
-    nsRect damageArea;
-    PRBool overlap;
-    // Compute the intersection of the dirty rect and the childs
-    // rect (both are in our coordinate space). This limits the
-    // damageArea to just the portion that intersects the childs
-    // rect.
-    overlap = damageArea.IntersectRect(aDirtyRect, kidRect); 
-
-    if (overlap) {
-      // Translate damage area into the kids coordinate
-      // system. Translate rendering context into the kids
-      // coordinate system.
-      damageArea.x -= kidRect.x;
-      damageArea.y -= kidRect.y;
-
-      {
-        nsIRenderingContext::AutoPushTranslation
-          translate(&aRenderingContext, kidRect.x, kidRect.y);
-
-        // Paint the kid
-        aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer);
-      }
-    }
+  nsIFrame* kid = mFrames.FirstChild();
+  // Put each child's background onto the BlockBorderBackgrounds list
+  // to emulate the existing two-layer XUL painting scheme.
+  nsDisplayListSet set(aLists, aLists.BlockBorderBackgrounds());
+  // The children should be in the right order
+  while (kid) {
+    nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set);
+    NS_ENSURE_SUCCESS(rv, rv);
+    kid = kid->GetNextSibling();
   }
+  return NS_OK;
 }
 
+// REVIEW: PaintChildren did a few things none of which are a big deal
+// anymore:
+// * Paint some debugging rects for this frame.
+// This is done by nsDisplayXULDebugBackground, which goes in the
+// BorderBackground() layer so it isn't clipped by OVERFLOW_CLIP.
+// * Apply OVERFLOW_CLIP to the children.
+// This is now in nsFrame::BuildDisplayListForStackingContext/Child.
+// * Actually paint the children.
+// Moved to BuildDisplayList.
+// * Paint per-kid debug information.
+// This is done by nsDisplayXULDebug, which is in the Outlines()
+// layer so it goes on top. This means it is not clipped by OVERFLOW_CLIP,
+// whereas it did used to respect OVERFLOW_CLIP, but too bad.
+#ifdef DEBUG_LAYOUT
 void
-nsBoxFrame::PaintChildren(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsFramePaintLayer    aWhichLayer,
-                          PRUint32             aFlags)
+nsBoxFrame::PaintXULDebugBackground(nsIRenderingContext& aRenderingContext,
+                                    nsPoint aPt)
 {
   nsMargin border;
   nsRect inner;
 
   GetBorder(border);
 
-#ifdef DEBUG_LAYOUT
   nsMargin debugBorder;
   nsMargin debugMargin;
   nsMargin debugPadding;
 
-  if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
-  {
-        PRBool isHorizontal = IsHorizontal();
+  PRBool isHorizontal = IsHorizontal();
 
-        GetDebugBorder(debugBorder);
-        PixelMarginToTwips(aPresContext, debugBorder);
+  GetDebugBorder(debugBorder);
+  PixelMarginToTwips(GetPresContext(), debugBorder);
 
-        GetDebugMargin(debugMargin);
-        PixelMarginToTwips(aPresContext, debugMargin);
+  GetDebugMargin(debugMargin);
+  PixelMarginToTwips(GetPresContext(), debugMargin);
 
-        GetDebugPadding(debugPadding);
-        PixelMarginToTwips(aPresContext, debugPadding);
+  GetDebugPadding(debugPadding);
+  PixelMarginToTwips(GetPresContext(), debugPadding);
 
-        GetContentRect(inner);
-        inner.Deflate(debugMargin);
-        inner.Deflate(border);
-        //nsRect borderRect(inner);
+  GetContentRect(inner);
+  inner += aPt;
+  inner.Deflate(debugMargin);
+  inner.Deflate(border);
+  //nsRect borderRect(inner);
 
-        nscolor color;
-        if (isHorizontal) {
-          color = NS_RGB(0,0,255);
-        } else {
-          color = NS_RGB(255,0,0);
-        }
-
-        aRenderingContext.SetColor(color);
-
-        //left
-        nsRect r(inner);
-        r.width = debugBorder.left;
-        aRenderingContext.FillRect(r);
-
-        // top
-        r = inner;
-        r.height = debugBorder.top;
-        aRenderingContext.FillRect(r);
-
-        //right
-        r = inner;
-        r.x = r.x + r.width - debugBorder.right;
-        r.width = debugBorder.right;
-        aRenderingContext.FillRect(r);
-
-        //bottom
-        r = inner;
-        r.y = r.y + r.height - debugBorder.bottom;
-        r.height = debugBorder.bottom;
-        aRenderingContext.FillRect(r);
-
-        
-        // if we have dirty children or we are dirty 
-        // place a green border around us.
-        PRBool dirty = PR_FALSE;
-        IsDirty(dirty);
-        PRBool dirtyc = PR_FALSE;
-        HasDirtyChildren(dirtyc);
-
-        if (dirty || dirtyc) {
-           IsDirty(dirty);
-           HasDirtyChildren(dirty);
-
-           nsRect dirtyr(inner);
-           aRenderingContext.SetColor(NS_RGB(0,255,0));
-           aRenderingContext.DrawRect(dirtyr);
-           aRenderingContext.SetColor(color);
-        }
+  nscolor color;
+  if (isHorizontal) {
+    color = NS_RGB(0,0,255);
+  } else {
+    color = NS_RGB(255,0,0);
   }
-#endif
 
-  const nsStyleDisplay* disp = GetStyleDisplay();
+  aRenderingContext.SetColor(color);
 
-  // Child elements have the opportunity to override the visibility property
-  // of their parent and display even if the parent is hidden
+  //left
+  nsRect r(inner);
+  r.width = debugBorder.left;
+  aRenderingContext.FillRect(r);
 
-  nsRect r(0,0,mRect.width, mRect.height);
-  PRBool hasClipped = PR_FALSE;
+  // top
+  r = inner;
+  r.height = debugBorder.top;
+  aRenderingContext.FillRect(r);
+
+  //right
+  r = inner;
+  r.x = r.x + r.width - debugBorder.right;
+  r.width = debugBorder.right;
+  aRenderingContext.FillRect(r);
+
+  //bottom
+  r = inner;
+  r.y = r.y + r.height - debugBorder.bottom;
+  r.height = debugBorder.bottom;
+  aRenderingContext.FillRect(r);
+
   
-  // If overflow is hidden then set the clip rect so that children
-  // don't leak out of us
-  if (NS_STYLE_OVERFLOW_CLIP == disp->mOverflowX) {
-    nsMargin im(0,0,0,0);
-    GetInset(im);
-    r.Deflate(im);
-    r.Deflate(border);    
-  }
+  // if we have dirty children or we are dirty 
+  // place a green border around us.
+  PRBool dirty = PR_FALSE;
+  IsDirty(dirty);
+  PRBool dirtyc = PR_FALSE;
+  HasDirtyChildren(dirtyc);
 
-  nsIBox* kid = nsnull;
+  if (dirty || dirtyc) {
+     IsDirty(dirty);
+     HasDirtyChildren(dirty);
+
+     nsRect dirtyr(inner);
+     aRenderingContext.SetColor(NS_RGB(0,255,0));
+     aRenderingContext.DrawRect(dirtyr);
+     aRenderingContext.SetColor(color);
+  }
+}
+
+void
+nsBoxFrame::PaintXULDebugOverlay(nsIRenderingContext& aRenderingContext,
+                                 nsPoint aPt)
+  nsMargin border;
+  GetBorder(border);
+
+  nsMargin debugMargin;
+  GetDebugMargin(debugMargin);
+  PixelMarginToTwips(GetPresContext(), debugMargin);
+
+  nsRect inner;
+  GetContentRect(inner);
+  inner += aPt;
+  inner.Deflate(debugMargin);
+  inner.Deflate(border);
+
+  nscoord onePixel = GetPresContext()->IntScaledPixelsToTwips(1);
+  GetContentRect(r);
+
   GetChildBox(&kid);
   while (nsnull != kid) {
-    if (!hasClipped && NS_STYLE_OVERFLOW_CLIP == disp->mOverflowX) {
-        // if we haven't already clipped and we should
-        // check to see if the child is in out bounds. If not then
-        // we begin clipping.
+    PRBool isHorizontal = IsHorizontal();
+
+    nscoord x, y, borderSize, spacerSize;
     
-        // if our rect does not contain the childs then begin clipping
-        if (!r.Contains(kid->GetRect())) {
-            aRenderingContext.PushState();
-            aRenderingContext.SetClipRect(r, nsClipCombine_kIntersect);
-            hasClipped = PR_TRUE;
-        }
+    nsRect cr(kid->mRect);
+    nsMargin margin;
+    kid->GetMargin(margin);
+    cr.Inflate(margin);
+    
+    if (isHorizontal) 
+    {
+        cr.y = inner.y;
+        x = cr.x;
+        y = cr.y + onePixel;
+        spacerSize = debugBorder.top - onePixel*4;
+    } else {
+        cr.x = inner.x;
+        x = cr.y;
+        y = cr.x + onePixel;
+        spacerSize = debugBorder.left - onePixel*4;
     }
 
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
+    nsBoxLayoutState state(GetPresContext());
+    nscoord flex = 0;
+    kid->GetFlex(state, flex);
+
+    
+    PRBool isCollapsed = PR_FALSE;
+    kid->IsCollapsed(state, isCollapsed);
+
+    if (!isCollapsed) {
+      aRenderingContext.SetColor(NS_RGB(255,255,255));
+
+      if (isHorizontal) 
+          borderSize = cr.width;
+      else 
+          borderSize = cr.height;
+    
+      DrawSpacer(GetPresContext(), aRenderingContext, isHorizontal, flex, x, y, borderSize, spacerSize);
+    }
 
     kid->GetNextBox(&kid);
   }
-
-  if (hasClipped)
-    aRenderingContext.PopState();
-
-#ifdef DEBUG_LAYOUT
-  if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
-  {
-    nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
-    GetContentRect(r);
-
-    if (NS_STYLE_OVERFLOW_CLIP == disp->mOverflowX) {
-      GetDebugMargin(debugMargin);
-      PixelMarginToTwips(aPresContext, debugMargin);
-      r.Deflate(debugMargin);
-    }
-
-    hasClipped = PR_FALSE;
-
-    GetChildBox(&kid);
-    while (nsnull != kid) {
-         if (!hasClipped && NS_STYLE_OVERFLOW_CLIP == disp->mOverflowX) {
-            // if we haven't already clipped and we should
-            // check to see if the child is in out bounds. If not then
-            // we begin clipping.
-    
-            // if our rect does not contain the childs then begin clipping
-            if (!r.Contains(kid->mRect)) {
-                aRenderingContext.PushState();
-                aRenderingContext.SetClipRect(r, nsClipCombine_kIntersect);
-                hasClipped = PR_TRUE;
-            }
-        }
-        PRBool isHorizontal = IsHorizontal();
-
-        nscoord x, y, borderSize, spacerSize;
-        
-        nsRect cr(kid->mRect);
-        nsMargin margin;
-        kid->GetMargin(margin);
-        cr.Inflate(margin);
-        
-        if (isHorizontal) 
-        {
-            cr.y = inner.y;
-            x = cr.x;
-            y = cr.y + onePixel;
-            spacerSize = debugBorder.top - onePixel*4;
-        } else {
-            cr.x = inner.x;
-            x = cr.y;
-            y = cr.x + onePixel;
-            spacerSize = debugBorder.left - onePixel*4;
-        }
-
-        nsBoxLayoutState state(aPresContext);
-        nscoord flex = 0;
-        kid->GetFlex(state, flex);
-
-        
-        PRBool isCollapsed = PR_FALSE;
-        kid->IsCollapsed(state, isCollapsed);
-
-        if (!isCollapsed) {
-          aRenderingContext.SetColor(NS_RGB(255,255,255));
-
-          if (isHorizontal) 
-              borderSize = cr.width;
-          else 
-              borderSize = cr.height;
-        
-          DrawSpacer(aPresContext, aRenderingContext, isHorizontal, flex, x, y, borderSize, spacerSize);
-        }
-
-        kid->GetNextBox(&kid);
-    }
-
-    if (hasClipped)
-       aRenderingContext.PopState();
-  }
-#endif
 }
+#endif
 
 NS_IMETHODIMP_(nsrefcnt) 
 nsBoxFrame::AddRef(void)
@@ -1697,80 +1639,36 @@ nsBoxFrame::GetDebug(PRBool& aDebug)
 }
 #endif
 
-nsIFrame*
-nsBoxFrame::GetFrameForPoint(const nsPoint&    aPoint,
-                             nsFramePaintLayer aWhichLayer)
-{
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (!thisRect.Contains(aPoint))
-    return nsnull;
-
-  const nsStyleVisibility* vis = GetStyleVisibility();
-  if (vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
-    return nsnull;
-
-#ifdef DEBUG_LAYOUT
-  // get the debug frame.
-  if (HasView() || (mState & NS_STATE_IS_ROOT))
-  {
-    nsIBox* box = nsnull;
-    if (NS_SUCCEEDED(GetDebugBoxAt(aPoint, &box)) && box)
-    {
-      PRBool isDebug = PR_FALSE;
-      box->GetDebug(isDebug);
-      if (isDebug) {
-        return box;
-      }
-    }
-  }
-#endif
-
-  nsIFrame *hit = nsnull;
-  nsIBox* kid = nsnull;
-  GetChildBox(&kid);
-  while (kid) {
-    nsIFrame* frame = GetFrameForPointChild(aPoint, aWhichLayer, kid,
-                                            hit != nsnull);
-    if (frame)
-      hit = frame;
-    kid->GetNextBox(&kid);
-  }
-  if (hit)
-    return hit;
-
-  // if no kids were hit then select us
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND && vis->IsVisible())
-    return this;
-
-  return nsnull;
-}
-
-/* virtual */ nsIFrame*
-nsBoxFrame::GetFrameForPointChild(const nsPoint&    aPoint,
-                                  nsFramePaintLayer aWhichLayer,    
-                                  nsIFrame*         aChild,
-                                  PRBool            aCheckMouseThrough)
-{
-  nsIFrame *hit = aChild->GetFrameForPoint(aPoint - aChild->GetOffsetTo(this),
-                                           aWhichLayer);
-  if (hit) {
-    if (!aCheckMouseThrough)
-      return hit;
-    // If we had a lower frame for this point, check whether hit's box has
-    // mouse through.  If so, stick with the lower frame that we found.
-    PRBool isAdaptor = PR_FALSE;
-    nsIBox *box = GetBoxForFrame(hit, isAdaptor);
-    if (box) {
-      PRBool mouseThrough = PR_FALSE;
-      box->GetMouseThrough(mouseThrough);
-      // if the child says it can never mouse though ignore it. 
-      if (!mouseThrough)
-        return hit;
-    }
-  }
-  return nsnull;
-}
-
+// REVIEW: nsBoxFrame::GetFrameForPoint is a problem because of 'mousethrough'
+// attribute support. Here's how it works:
+// * For each child frame F, we determine the target frame T(F) by recursively
+// invoking GetFrameForPoint on the child
+// * Let F' be the last child frame such that T(F') doesn't have mousethrough.
+// If F' exists, return T(F')
+// * Otherwise let F'' be the first child frame such that T(F'') is non-null.
+// If F'' exists, return T(F'')
+// * Otherwise return this frame, if this frame contains the point
+// * Otherwise return null
+// It's not clear how this should work for more complex z-ordering situations.
+// The basic principle seems to be that if a frame F has a descendant
+// 'mousethrough' frame that includes the target position, then F
+// will not receive events (unless it overrides GetFrameForPoint).
+// A 'mousethrough' frame will only receive an event if, after applying that rule,
+// all eligible frames are 'mousethrough'; the bottom-most inner-most 'mousethrough'
+// frame is then chosen (the first eligible frame reached in a
+// traversal of the frame tree --- pre/post is irrelevant since ancestors
+// of the mousethrough frames can't be eligible).
+// IMHO this is very bogus and adds a great deal of complexity for something
+// that is very rarely used. So I'm redefining 'mousethrough' to the following:
+// a frame with mousethrough is transparent to mouse events. This is compatible
+// with the way 'mousethrough' is used in Seamonkey's navigator.xul and
+// Firefox's browser.xul. The only other place it's used is in the 'expander'
+// XBL binding, which in our tree is only used by Thunderbird SMIME Advanced
+// Preferences, and I can't figure out what that does, so I'll have to test it.
+// If it's broken I'll probably just change the binding to use it more sensibly.
+// This new behaviour is implemented in nsDisplayList::HitTest. 
+// REVIEW: This debug-box stuff is annoying. I'm just going to put debug boxes
+// in the outline layer and avoid GetDebugBoxAt.
 nsIBox*
 nsBoxFrame::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
 {
@@ -1780,93 +1678,8 @@ nsBoxFrame::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
   return aFrame;
 }
 
-/*
-NS_IMETHODIMP
-nsBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
-{
-   const nsStyleBackground* color = GetStyleBackground();
-   PRBool transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
-                         (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-
-   if (!transparentBG)
-      aMouseThrough = never;
-   else
-      return nsBox::GetMouseThrough(aMouseThrough);
-
-   return NS_OK;
-}
-*/
-
-
-
-
-NS_IMETHODIMP
-nsBoxFrame::GetCursor(const nsPoint&    aPoint,
-                      nsIFrame::Cursor& aCursor)
-{
-  /*
-    #ifdef NS_DEBUG
-    printf("Get Cursor: ");
-                            nsFrame::ListTag(stdout, this);
-    printf("\n");
-                            
-    #endif
- */
-
-#ifdef DEBUG_LAYOUT
-    nsPoint newPoint;
-    TranslateEventCoords(aPoint, newPoint);
-    
-    // if we are in debug and we are in the debug area
-    // return our own cursor and dump the debug information.
-    if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
-    {
-          // XXX aCursor is not yet inited??
-          nsresult rv = DisplayDebugInfoFor(this, GetPresContext(), newPoint,
-              aCursor.mCursor);
-          if (rv == NS_OK)
-             return rv;
-    }
-#endif
-
-    nsresult rv = nsContainerFrame::GetCursor(aPoint, aCursor);
-
-    return rv;
-}
-
-
-//XXX the event come's in in view relative coords, but really should
-//be in frame relative coords by the time it hits our frame.
-
-// Translate an point that is relative to our view (or a containing
-// view) into a localized pixel coordinate that is relative to the
-// content area of this frame (inside the border+padding).
-void
-nsBoxFrame::TranslateEventCoords(const nsPoint& aPoint,
-                                 nsPoint& aResult)
-{
-  nscoord x = aPoint.x;
-  nscoord y = aPoint.y;
-
-  // If we have a view then the event coordinates are already relative
-  // to this frame; otherwise we have to adjust the coordinates
-  // appropriately.
-  if (!HasView()) {
-    nsPoint offset;
-    nsIView* view;
-    GetOffsetFromView(offset, &view);
-    if (nsnull != view) {
-      x -= offset.x;
-      y -= offset.y;
-    }
-  }
-
-  aResult.x = x;
-  aResult.y = y;
- 
-}
-
-
+// REVIEW: GetCursor had debug-only event dumping code. I have replaced it
+// with instrumentation in nsDisplayXULDebug.
 nsresult 
 nsBoxFrame::GetContentOf(nsIContent** aContent)
 {
@@ -1885,132 +1698,6 @@ nsBoxFrame::GetContentOf(nsIContent** aContent)
     *aContent = nsnull;
     return NS_OK;
 }
-
-/*
-nsresult
-nsBoxFrame::PaintDebug(nsIBox*              aBox, 
-                       nsPresContext*      aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect&        aDirtyRect,
-                       nsFramePaintLayer    aWhichLayer)
-
-{
-    
-        PRBool isHorizontal = IsHorizontal();
-
-        nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
-
-        nsMargin debugBorder(0,0,0,0);
-        nsMargin debugMargin(0,0,0,0);
-        nsMargin debugPadding(0,0,0,0);
-
-        GetDebugBorder(debugBorder);
-        PixelMarginToTwips(aPresContext, debugBorder);
-
-        GetDebugMargin(debugMargin);
-        PixelMarginToTwips(aPresContext, debugMargin);
-
-        GetDebugPadding(debugPadding);
-        PixelMarginToTwips(aPresContext, debugPadding);
-
-        nsRect inner(0,0,0,0);
-        aBox->GetContentRect(inner);
-
-        inner.Deflate(debugMargin);
-
-        //nsRect borderRect(inner);
-
-        nscolor color;
-        if (isHorizontal) {
-          color = NS_RGB(0,0,255);
-        } else {
-          color = NS_RGB(255,0,0);
-        }
-        
-        //left
-        aRenderingContext.SetColor(color);
-        nsRect r(inner);
-        r.width = debugBorder.left;
-        aRenderingContext.FillRect(r);
-
-        // top
-        r = inner;
-        r.height = debugBorder.top;
-        aRenderingContext.FillRect(r);
-
-        //right
-        r = inner;
-        r.x = r.x + r.width - debugBorder.right;
-        r.width = debugBorder.right;
-        aRenderingContext.FillRect(r);
-
-        //bottom
-        r = inner;
-        r.y = r.y + r.height - debugBorder.bottom;
-        r.height = debugBorder.bottom;
-        aRenderingContext.FillRect(r);
-
-        // if we have dirty children or we are dirty 
-        // place a green border around us.
-        PRBool dirty = PR_FALSE;
-        IsDirty(dirty);
-        PRBool dirtyc = PR_FALSE;
-        HasDirtyChildren(dirty);
-
-        if (dirty || dirtyc) {
-           nsRect dirtyr(inner);
-           aRenderingContext.SetColor(NS_RGB(0,255,0));
-           aRenderingContext.DrawRect(dirtyr);
-        }
-
-        // paint the spacers.
-        nscoord x, y, borderSize, spacerSize;
-        
-        aRenderingContext.SetColor(NS_RGB(255,255,255));
-        
-        if (isHorizontal) 
-        {
-            x = inner.x;
-            y = inner.y + onePixel;
-            x += debugBorder.left;
-            spacerSize = debugBorder.top - onePixel*4;
-        } else {
-            x = inner.y;
-            y = inner.x + onePixel;
-            x += debugBorder.top;
-            spacerSize = debugBorder.left - onePixel*4;
-        }
-
-        nsIBox* box = nsnull;
-        aBox->GetChildBox(&box);
-        nsBoxLayoutState state(aPresContext);
-
-        while (box) {
-          nsSize size;
-          GetFrameSizeWithMargin(box, size);
-          PRBool isCollapsed = PR_FALSE;
-          box->IsCollapsed(state, isCollapsed);
-
-          if (!isCollapsed) {
-                if (isHorizontal) 
-                    borderSize = size.width;
-                else 
-                    borderSize = size.height;
-
-             
-
-                nscoord flex = 0;
-                box->GetFlex(state, flex);
-
-                DrawSpacer(aPresContext, aRenderingContext, isHorizontal, flex, x, y, borderSize, spacerSize);
-                x += borderSize;
-            }
-            box->GetNextBox(&box);
-        }
-
-        return NS_OK;
-}
-*/
 
 void
 nsBoxFrame::DrawLine(nsIRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2)
@@ -2139,7 +1826,7 @@ nsBoxFrame::GetValue(nsPresContext* aPresContext, const nsSize& a, const nsSize&
     
     if (a.width == NS_INTRINSICSIZE)
         sprintf(width,"%s","INF");
-    else 
+    else
         sprintf(width,"%d", nscoord(a.width/*/p2t*/));
     
     if (a.height == NS_INTRINSICSIZE)
@@ -2163,12 +1850,10 @@ nsBoxFrame::GetValue(nsPresContext* aPresContext, PRInt32 a, PRInt32 b, char* ch
 }
 
 nsresult
-nsBoxFrame::DisplayDebugInfoFor(nsIBox*         aBox,
-                                nsPresContext* aPresContext,
-                                nsPoint&        aPoint,
-                                PRInt32&        aCursor)
+nsBoxFrame::DisplayDebugInfoFor(nsIBox*  aBox,
+                                nsPoint& aPoint)
 {
-    nsBoxLayoutState state(aPresContext);
+    nsBoxLayoutState state(GetPresContext());
 
     nscoord x = aPoint.x;
     nscoord y = aPoint.y;
@@ -2185,114 +1870,114 @@ nsBoxFrame::DisplayDebugInfoFor(nsIBox*         aBox,
     if (!insideBorder.Contains(nsPoint(x,y)))
         return NS_ERROR_FAILURE;
 
-        //printf("%%%%%% inside box %%%%%%%\n");
+    //printf("%%%%%% inside box %%%%%%%\n");
 
-        int count = 0;
-        nsIBox* child = nsnull;
-        aBox->GetChildBox(&child);
+    int count = 0;
+    nsIBox* child = nsnull;
+    aBox->GetChildBox(&child);
 
-        nsMargin m;
-        nsMargin m2;
-        GetDebugBorder(m);
-        PixelMarginToTwips(aPresContext, m);
+    nsMargin m;
+    nsMargin m2;
+    GetDebugBorder(m);
+    PixelMarginToTwips(aPresContext, m);
 
-        GetDebugMargin(m2);
-        PixelMarginToTwips(aPresContext, m2);
+    GetDebugMargin(m2);
+    PixelMarginToTwips(aPresContext, m2);
 
-        m += m2;
+    m += m2;
 
-        if ((isHorizontal && y < insideBorder.y + m.top) ||
-            (!isHorizontal && x < insideBorder.x + m.left)) {
-            //printf("**** inside debug border *******\n");
-            while (child) 
-            {
-                const nsRect& r = child->mRect;
+    if ((isHorizontal && y < insideBorder.y + m.top) ||
+        (!isHorizontal && x < insideBorder.x + m.left)) {
+        //printf("**** inside debug border *******\n");
+        while (child) 
+        {
+            const nsRect& r = child->mRect;
 
-                // if we are not in the child. But in the spacer above the child.
-                if ((isHorizontal && x >= r.x && x < r.x + r.width) ||
-                    (!isHorizontal && y >= r.y && y < r.y + r.height)) {
-                    aCursor = NS_STYLE_CURSOR_POINTER;
-                       // found it but we already showed it.
-                        if (mDebugChild == child)
-                            return NS_OK;
+            // if we are not in the child. But in the spacer above the child.
+            if ((isHorizontal && x >= r.x && x < r.x + r.width) ||
+                (!isHorizontal && y >= r.y && y < r.y + r.height)) {
+                aCursor = NS_STYLE_CURSOR_POINTER;
+                   // found it but we already showed it.
+                    if (mDebugChild == child)
+                        return NS_OK;
 
-                        if (aBox->GetContent()) {
-                          printf("---------------\n");
-                          DumpBox(stdout);
-                          printf("\n");
-                        }
+                    if (aBox->GetContent()) {
+                      printf("---------------\n");
+                      DumpBox(stdout);
+                      printf("\n");
+                    }
 
-                        if (child->GetContent()) {
-                            printf("child #%d: ", count);
-                            child->DumpBox(stdout);
-                            printf("\n");
-                        }
+                    if (child->GetContent()) {
+                        printf("child #%d: ", count);
+                        child->DumpBox(stdout);
+                        printf("\n");
+                    }
 
-                        mDebugChild = child;
+                    mDebugChild = child;
 
-                        nsSize prefSizeCSS(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-                        nsSize minSizeCSS (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-                        nsSize maxSizeCSS (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-                        nscoord flexCSS = NS_INTRINSICSIZE;
+                    nsSize prefSizeCSS(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+                    nsSize minSizeCSS (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+                    nsSize maxSizeCSS (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+                    nscoord flexCSS = NS_INTRINSICSIZE;
 
-                        nsSize prefSize(0, 0);
-                        nsSize minSize (0, 0);
-                        nsSize maxSize (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-                        nscoord flexSize = 0;
-                        nscoord ascentSize = 0;
-
-
-                        nsIBox::AddCSSPrefSize(state, child, prefSizeCSS);
-                        nsIBox::AddCSSMinSize (state, child, minSizeCSS);
-                        nsIBox::AddCSSMaxSize (state, child, maxSizeCSS);
-                        nsIBox::AddCSSFlex    (state, child, flexCSS);
-
-                        child->GetPrefSize(state, prefSize);
-                        child->GetMinSize(state, minSize);
-                        child->GetMaxSize(state, maxSize);
-                        child->GetFlex(state, flexSize);
-                        child->GetAscent(state, ascentSize);
-
-                        char min[100];
-                        char pref[100];
-                        char max[100];
-                        char calc[100];
-                        char flex[100];
-                        char ascent[100];
-                      
-                        nsSize actualSize;
-                        GetFrameSizeWithMargin(child, actualSize);
-                        nsSize actualSizeCSS (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-
-                        GetValue(aPresContext, minSize,  minSizeCSS, min);
-                        GetValue(aPresContext, prefSize, prefSizeCSS, pref);
-                        GetValue(aPresContext, maxSize,  maxSizeCSS, max);
-                        GetValue(aPresContext, actualSize, actualSizeCSS, calc);
-                        GetValue(aPresContext, flexSize,  flexCSS, flex);
-                        GetValue(aPresContext, ascentSize,  NS_INTRINSICSIZE, ascent);
+                    nsSize prefSize(0, 0);
+                    nsSize minSize (0, 0);
+                    nsSize maxSize (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+                    nscoord flexSize = 0;
+                    nscoord ascentSize = 0;
 
 
-                        printf("min%s, pref%s, max%s, actual%s, flex=%s, ascent=%s\n\n", 
-                            min,
-                            pref,
-                            max,
-                            calc,
-                            flex,
-                            ascent
-                        );
+                    nsIBox::AddCSSPrefSize(state, child, prefSizeCSS);
+                    nsIBox::AddCSSMinSize (state, child, minSizeCSS);
+                    nsIBox::AddCSSMaxSize (state, child, maxSizeCSS);
+                    nsIBox::AddCSSFlex    (state, child, flexCSS);
 
-                        return NS_OK;   
-                }
+                    child->GetPrefSize(state, prefSize);
+                    child->GetMinSize(state, minSize);
+                    child->GetMaxSize(state, maxSize);
+                    child->GetFlex(state, flexSize);
+                    child->GetAscent(state, ascentSize);
 
-              child->GetNextBox(&child);
-              count++;
+                    char min[100];
+                    char pref[100];
+                    char max[100];
+                    char calc[100];
+                    char flex[100];
+                    char ascent[100];
+                  
+                    nsSize actualSize;
+                    GetFrameSizeWithMargin(child, actualSize);
+                    nsSize actualSizeCSS (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+
+                    GetValue(aPresContext, minSize,  minSizeCSS, min);
+                    GetValue(aPresContext, prefSize, prefSizeCSS, pref);
+                    GetValue(aPresContext, maxSize,  maxSizeCSS, max);
+                    GetValue(aPresContext, actualSize, actualSizeCSS, calc);
+                    GetValue(aPresContext, flexSize,  flexCSS, flex);
+                    GetValue(aPresContext, ascentSize,  NS_INTRINSICSIZE, ascent);
+
+
+                    printf("min%s, pref%s, max%s, actual%s, flex=%s, ascent=%s\n\n", 
+                        min,
+                        pref,
+                        max,
+                        calc,
+                        flex,
+                        ascent
+                    );
+
+                    return NS_OK;   
             }
-        } else {
+
+          child->GetNextBox(&child);
+          count++;
         }
+    } else {
+    }
 
-        mDebugChild = nsnull;
+    mDebugChild = nsnull;
 
-        return NS_OK;
+    return NS_OK;
 }
 
 void
@@ -2709,4 +2394,90 @@ void
 nsBoxFrame::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas)
 {
   nsBox::SetWasCollapsed(aState, aWas);
+}
+
+/**
+ * This wrapper class lets us redirect mouse hits from descendant frames
+ * of a menu to the menu itself, if they didn't specify 'allowevents'.
+ * 
+ * The wrapper simply turns a hit on a descendant element
+ * into a hit on the menu itself, unless there is an element between the target
+ * and the menu with the "allowevents" attribute.
+ * 
+ * This is used by nsMenuFrame and nsTreeColFrame.
+ * 
+ * Note that turning a hit on a descendant element into nsnull, so events
+ * could fall through to the menu background, might be an appealing simplification
+ * but it would mean slightly strange behaviour in some cases, because grabber
+ * wrappers can be created for many individual lists and items, so the exact
+ * fallthrough behaviour would be complex. E.g. an element with "allowevents"
+ * on top of the Content() list could receive the event even if it was covered
+ * by a PositionedDescenants() element without "allowevents". It is best to
+ * never convert a non-null hit into null.
+ */
+// REVIEW: This is roughly of what nsMenuFrame::GetFrameForPoint used to do.
+// I've made 'allowevents' affect child elements because that seems the only
+// reasonable thing to do.
+class nsDisplayXULEventRedirector : public nsDisplayWrapList {
+public:
+  nsDisplayXULEventRedirector(nsIFrame* aFrame, nsDisplayItem* aItem,
+                              nsIFrame* aTargetFrame)
+    : nsDisplayWrapList(aFrame, aItem), mTargetFrame(aTargetFrame) {}
+  nsDisplayXULEventRedirector(nsIFrame* aFrame, nsDisplayList* aList,
+                              nsIFrame* aTargetFrame)
+    : nsDisplayWrapList(aFrame, aList), mTargetFrame(aTargetFrame) {}
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual const char* Name() { return "XULEventRedirector"; }
+private:
+  nsIFrame* mTargetFrame;
+};
+
+nsIFrame* nsDisplayXULEventRedirector::HitTest(nsDisplayListBuilder* aBuilder,
+    nsPoint aPt)
+{
+  nsIFrame* frame = mList.HitTest(aBuilder, aPt);
+  if (!frame)
+    return nsnull;
+
+  for (nsIContent* content = frame->GetContent();
+       content && content != mTargetFrame->GetContent();
+       content = content->GetParent()) {
+    if (content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::allowevents,
+                             nsXULAtoms::_true, eCaseMatters)) {
+      // Events are allowed on 'frame', so let it go.
+      return frame;
+    }
+  }
+  // Treat it as a hit on the target frame itself.
+  return mTargetFrame;
+}
+
+class nsXULEventRedirectorWrapper : public nsDisplayWrapper
+{
+public:
+  nsXULEventRedirectorWrapper(nsIFrame* aTargetFrame)
+      : mTargetFrame(aTargetFrame) {}
+  virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
+                                  nsIFrame* aFrame, nsDisplayList* aList) {
+    return new (aBuilder)
+        nsDisplayXULEventRedirector(aFrame, aList, mTargetFrame);
+  }
+  virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
+                                  nsDisplayItem* aItem) {
+    return new (aBuilder)
+        nsDisplayXULEventRedirector(aItem->GetUnderlyingFrame(), aItem,
+                                    mTargetFrame);
+  }
+private:
+  nsIFrame* mTargetFrame;
+};
+
+nsresult
+nsBoxFrame::WrapListsInRedirector(nsDisplayListBuilder*   aBuilder,
+                                  const nsDisplayListSet& aIn,
+                                  const nsDisplayListSet& aOut)
+{
+  nsXULEventRedirectorWrapper wrapper(this);
+  return wrapper.WrapLists(aBuilder, this, aIn, aOut);
 }

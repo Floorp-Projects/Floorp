@@ -81,6 +81,7 @@
 #endif
 #include "nsLayoutUtils.h"
 #include "nsBoxLayoutState.h"
+#include "nsDisplayList.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -6134,218 +6135,71 @@ static void ComputeCombinedArea(nsLineList& aLines,
 }
 #endif
 
-NS_IMETHODIMP
-nsBlockFrame::IsVisibleForPainting(nsPresContext *     aPresContext, 
-                                   nsIRenderingContext& aRenderingContext,
-                                   PRBool               aCheckVis,
-                                   PRBool*              aIsVisible)
+PRBool
+nsBlockFrame::IsVisibleInSelection(nsISelection* aSelection)
 {
-  // first check to see if we are visible
-  if (aCheckVis) {
-    if (!GetStyleVisibility()->IsVisible()) {
-      *aIsVisible = PR_FALSE;
-      return NS_OK;
-    }
-  }
+  nsCOMPtr<nsIDOMHTMLHtmlElement> html(do_QueryInterface(mContent));
+  nsCOMPtr<nsIDOMHTMLBodyElement> body(do_QueryInterface(mContent));
+  if (html || body)
+    return PR_TRUE;
 
-  // Start by assuming we are visible and need to be painted
-  *aIsVisible = PR_TRUE;
-
-  // NOTE: GetSelectionforVisCheck checks the pagination to make sure we are printing
-  // In otherwords, the selection will ALWAYS be null if we are not printing, meaning
-  // the visibility will be TRUE in that case
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelectionForVisCheck(aPresContext, getter_AddRefs(selection));
-  if (NS_SUCCEEDED(rv) && selection) {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
-
-    nsCOMPtr<nsIDOMHTMLHtmlElement> html(do_QueryInterface(mContent));
-    nsCOMPtr<nsIDOMHTMLBodyElement> body(do_QueryInterface(mContent));
-
-    if (!html && !body) {
-      rv = selection->ContainsNode(node, PR_TRUE, aIsVisible);
-    }
-  }
-
-  return rv;
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
+  PRBool visible;
+  nsresult rv = aSelection->ContainsNode(node, PR_TRUE, &visible);
+  return NS_SUCCEEDED(rv) && visible;
 }
 
 /* virtual */ void
-nsBlockFrame::PaintTextDecorationLines(nsIRenderingContext& aRenderingContext, 
-                                       nscolor aColor, 
-                                       nscoord aOffset, 
-                                       nscoord aAscent, 
-                                       nscoord aSize) 
+nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext, 
+                                      nsPoint aPt,
+                                      nsLineBox* aLine,
+                                      nscolor aColor, 
+                                      nscoord aOffset, 
+                                      nscoord aAscent, 
+                                      nscoord aSize) 
 {
   aRenderingContext.SetColor(aColor);
-  for (nsLineList::iterator line = begin_lines(), line_start = line,
-         line_end = end_lines(); 
-       line != line_end; ++line) {
-    if (!line->IsBlock()) {
-      nscoord start = line->mBounds.x;
-      nscoord width = line->mBounds.width;
+  NS_ASSERTION(!aLine->IsBlock(), "Why did we ask for decorations on a block?");
 
-      if (line == line_start) {
-        // Adjust for the text-indent.  See similar code in
-        // nsLineLayout::BeginLineReflow.
-        nscoord indent = 0;
-        const nsStyleText* styleText = GetStyleText();
-        nsStyleUnit unit = styleText->mTextIndent.GetUnit();
-        if (eStyleUnit_Coord == unit) {
-          indent = styleText->mTextIndent.GetCoordValue();
-        } else if (eStyleUnit_Percent == unit) {
-          // It's a percentage of the containing block width.
-          nsIFrame* containingBlock =
-            nsHTMLReflowState::GetContainingBlockFor(this);
-          NS_ASSERTION(containingBlock, "Must have containing block!");
-          indent = nscoord(styleText->mTextIndent.GetPercentValue() *
-                           containingBlock->GetRect().width);
-        }
+  nscoord start = aLine->mBounds.x;
+  nscoord width = aLine->mBounds.width;
 
-        // Adjust the start position and the width of the decoration by the
-        // value of the indent.  Note that indent can be negative; that's OK.
-        // It'll just increase the width (which can also happen to be
-        // negative!).
-        start += indent;
-        width -= indent;
-      }
+  if (aLine == begin_lines().get()) {
+    // Adjust for the text-indent.  See similar code in
+    // nsLineLayout::BeginLineReflow.
+    nscoord indent = 0;
+    const nsStyleText* styleText = GetStyleText();
+    nsStyleUnit unit = styleText->mTextIndent.GetUnit();
+    if (eStyleUnit_Coord == unit) {
+      indent = styleText->mTextIndent.GetCoordValue();
+    } else if (eStyleUnit_Percent == unit) {
+      // It's a percentage of the containing block width.
+      nsIFrame* containingBlock =
+        nsHTMLReflowState::GetContainingBlockFor(this);
+      NS_ASSERTION(containingBlock, "Must have containing block!");
+      indent = nscoord(styleText->mTextIndent.GetPercentValue() *
+                       containingBlock->GetRect().width);
+    }
+
+    // Adjust the start position and the width of the decoration by the
+    // value of the indent.  Note that indent can be negative; that's OK.
+    // It'll just increase the width (which can also happen to be
+    // negative!).
+    start += indent;
+    width -= indent;
+  }
       
-      // Only paint if we have a positive width
-      if (width > 0) {
-        aRenderingContext.FillRect(start,
-                                   line->mBounds.y + line->GetAscent() - aOffset, 
-                                   width, aSize);
-      }
-    }
-  }
-}
-
-NS_IMETHODIMP
-nsBlockFrame::Paint(nsPresContext*      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer,
-                    PRUint32             aFlags)
-{
-  if (NS_FRAME_IS_UNFLOWABLE & mState) {
-    return NS_OK;
-  }
-
-#ifdef DEBUG
-  if (gNoisyDamageRepair) {
-    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-      PRInt32 depth = GetDepth();
-      nsRect ca;
-      ::ComputeCombinedArea(mLines, mRect.width, mRect.height, ca);
-      nsFrame::IndentBy(stdout, depth);
-      ListTag(stdout);
-      printf(": bounds=%d,%d,%d,%d dirty=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
-             mRect.x, mRect.y, mRect.width, mRect.height,
-             aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height,
-             ca.x, ca.y, ca.width, ca.height);
-    }
-  }
-#endif  
-
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
-  }
-
-  PRBool paintingSuppressed = PR_FALSE;  
-  aPresContext->PresShell()->IsPaintingSuppressed(&paintingSuppressed);
-  if (paintingSuppressed)
-    return NS_OK;
-
-  const nsStyleDisplay* disp = GetStyleDisplay();
-
-  // If overflow is hidden then set the clip rect so that children don't
-  // leak out of us. Note that because overflow'-clip' only applies to
-  // the content area we do this after painting the border and background
-  if (NS_STYLE_OVERFLOW_CLIP == disp->mOverflowX) {
-    aRenderingContext.PushState();
-    SetOverflowClipRect(aRenderingContext);
-  }
-
-  // Child elements have the opportunity to override the visibility
-  // property and display even if the parent is hidden
-  if (NS_FRAME_PAINT_LAYER_FLOATS == aWhichLayer) {
-    PaintFloats(aPresContext, aRenderingContext, aDirtyRect);
-  }
-
-  PaintDecorationsAndChildren(aPresContext, aRenderingContext,
-                              aDirtyRect, aWhichLayer, PR_TRUE);
-
-  if (NS_STYLE_OVERFLOW_CLIP == disp->mOverflowX)
-    aRenderingContext.PopState();
-
-#if 0
-  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
-    // Render the bands in the spacemanager
-    nsSpaceManager* sm = mSpaceManager;
-
-    if (nsnull != sm) {
-      nsBlockBandData band;
-      band.Init(sm, nsSize(mRect.width, mRect.height));
-      nscoord y = 0;
-      while (y < mRect.height) {
-        nsRect availArea;
-        band.GetAvailableSpace(y, PR_FALSE, availArea);
-  
-        // Render a box and a diagonal line through the band
-        aRenderingContext.SetColor(NS_RGB(0,255,0));
-        aRenderingContext.DrawRect(0, availArea.y,
-                                   mRect.width, availArea.height);
-        aRenderingContext.DrawLine(0, availArea.y,
-                                   mRect.width, availArea.YMost());
-  
-        // Render boxes and opposite diagonal lines around the
-        // unavailable parts of the band.
-        PRInt32 i;
-        for (i = 0; i < band.GetTrapezoidCount(); i++) {
-          const nsBandTrapezoid* trapezoid = band.GetTrapezoid(i);
-          if (nsBandTrapezoid::Available != trapezoid->mState) {
-            nsRect r = trapezoid->GetRect();
-            if (nsBandTrapezoid::OccupiedMultiple == trapezoid->mState) {
-              aRenderingContext.SetColor(NS_RGB(0,255,128));
-            }
-            else {
-              aRenderingContext.SetColor(NS_RGB(128,255,0));
-            }
-            aRenderingContext.DrawRect(r);
-            aRenderingContext.DrawLine(r.x, r.YMost(), r.XMost(), r.y);
-          }
-        }
-        y = availArea.YMost();
-      }
-    }
-  }
-#endif
-
-  return NS_OK;
-}
-
-void
-nsBlockFrame::PaintFloats(nsPresContext* aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect& aDirtyRect)
-{
-  for (nsIFrame* floatFrame = mFloats.FirstChild();
-       floatFrame;
-       floatFrame = floatFrame->GetNextSibling()) {
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-               floatFrame, NS_FRAME_PAINT_LAYER_BACKGROUND);
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-               floatFrame, NS_FRAME_PAINT_LAYER_FLOATS);
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-               floatFrame, NS_FRAME_PAINT_LAYER_FOREGROUND);
+  // Only paint if we have a positive width
+  if (width > 0) {
+    aRenderingContext.FillRect(start + aPt.x,
+                               aLine->mBounds.y + aLine->GetAscent() - aOffset + aPt.y, 
+                               width, aSize);
   }
 }
 
 #ifdef DEBUG
-static void DebugOutputDrawLine(nsFramePaintLayer aWhichLayer, PRInt32 aDepth,
-                                nsLineBox* aLine, PRBool aDrawn) {
-  if (nsBlockFrame::gNoisyDamageRepair &&
-      (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)) {
+static void DebugOutputDrawLine(PRInt32 aDepth, nsLineBox* aLine, PRBool aDrawn) {
+  if (nsBlockFrame::gNoisyDamageRepair) {
     nsFrame::IndentBy(stdout, aDepth+1);
     nsRect lineArea = aLine->GetCombinedArea();
     printf("%s line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
@@ -6359,51 +6213,70 @@ static void DebugOutputDrawLine(nsFramePaintLayer aWhichLayer, PRInt32 aDepth,
 }
 #endif
 
-static inline void
-PaintLine(const nsRect& aLineArea, const nsRect& aDirtyRect,
-          nsBlockFrame::line_iterator& aLine, PRInt32 aDepth,
-          PRInt32& aDrawnLines, nsPresContext* aPresContext, 
-          nsIRenderingContext& aRenderingContext,
-          nsFramePaintLayer aWhichLayer, nsBlockFrame* aFrame) {
+static nsresult
+DisplayLine(nsDisplayListBuilder* aBuilder, const nsRect& aLineArea,
+            const nsRect& aDirtyRect, nsBlockFrame::line_iterator& aLine,
+            PRInt32 aDepth, PRInt32& aDrawnLines, const nsDisplayListSet& aLists,
+            nsBlockFrame* aFrame) {
   // If the line's combined area (which includes child frames that
   // stick outside of the line's bounding box or our bounding box)
   // intersects the dirty rect then paint the line.
-  if (aLineArea.Intersects(aDirtyRect)) {
+  PRBool intersect = aLineArea.Intersects(aDirtyRect);
 #ifdef DEBUG
-    DebugOutputDrawLine(aWhichLayer, aDepth, aLine.get(), PR_TRUE);
-    if (nsBlockFrame::gLamePaintMetrics) {
-      aDrawnLines++;
-    }
+  if (nsBlockFrame::gLamePaintMetrics) {
+    aDrawnLines++;
+  }
+  DebugOutputDrawLine(aDepth, aLine.get(), intersect);
 #endif
-    nsIFrame* kid = aLine->mFirstChild;
-    PRInt32 n = aLine->GetChildCount();
-    while (--n >= 0) {
-      aFrame->PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid,
-                         aWhichLayer);
-      kid = kid->GetNextSibling();
-    }
+  if (!intersect && !(aFrame->GetStateBits() & NS_FRAME_HAS_DESCENDANT_PLACEHOLDER))
+    return NS_OK;
+
+  nsresult rv;
+  nsDisplayList aboveTextDecorations;
+  PRBool lineInline = aLine->IsInline();
+  if (lineInline) {
+    // Display the text-decoration for the hypothetical anonymous inline box
+    // that wraps these inlines
+    rv = aFrame->DisplayTextDecorations(aBuilder, aLists.Content(),
+                                        &aboveTextDecorations, aLine);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-#ifdef DEBUG
-  else {
-    DebugOutputDrawLine(aWhichLayer, aDepth, aLine.get(), PR_FALSE);
+
+  // Block-level child backgrounds go on the blockBorderBackgrounds list ...
+  // Inline-level child backgrounds go on the regular child content list.
+  nsDisplayListSet childLists(aLists,
+      lineInline ? aLists.Content() : aLists.BlockBorderBackgrounds());
+  nsIFrame* kid = aLine->mFirstChild;
+  PRInt32 n = aLine->GetChildCount();
+  while (--n >= 0) {
+    rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, childLists,
+                                          lineInline ? nsIFrame::DISPLAY_CHILD_INLINE : 0);
+    NS_ENSURE_SUCCESS(rv, rv);
+    kid = kid->GetNextSibling();
   }
-#endif  
+  
+  aLists.Content()->AppendToTop(&aboveTextDecorations);
+  return NS_OK;
 }
 
-void
-nsBlockFrame::PaintChildren(nsPresContext*      aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect&        aDirtyRect,
-                            nsFramePaintLayer    aWhichLayer,
-                            PRUint32             aFlags)
+NS_IMETHODIMP
+nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                               const nsRect&           aDirtyRect,
+                               const nsDisplayListSet& aLists)
 {
   PRInt32 drawnLines; // Will only be used if set (gLamePaintMetrics).
   PRInt32 depth = 0;
 #ifdef DEBUG
   if (gNoisyDamageRepair) {
-    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
       depth = GetDepth();
-    }
+      nsRect ca;
+      ::ComputeCombinedArea(mLines, mRect.width, mRect.height, ca);
+      nsFrame::IndentBy(stdout, depth);
+      ListTag(stdout);
+      printf(": bounds=%d,%d,%d,%d dirty(absolute)=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
+             mRect.x, mRect.y, mRect.width, mRect.height,
+             aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height,
+             ca.x, ca.y, ca.width, ca.height);
   }
   PRTime start = LL_ZERO; // Initialize these variables to silence the compiler.
   if (gLamePaintMetrics) {
@@ -6412,9 +6285,19 @@ nsBlockFrame::PaintChildren(nsPresContext*      aPresContext,
   }
 #endif
 
-  nsLineBox* cursor = GetFirstLineContaining(aDirtyRect.y);
-  line_iterator line_end = end_lines();
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
+  
+  MarkOutOfFlowChildrenForDisplayList(mFloats.FirstChild(), aDirtyRect);
+  MarkOutOfFlowChildrenForDisplayList(mAbsoluteContainer.GetFirstChild(), aDirtyRect);
 
+  // Don't use the line cursor if we have a descendant placeholder ... we could
+  // skip lines that contain placeholders but don't themselves intersect with
+  // the dirty area.
+  nsLineBox* cursor = GetStateBits() & NS_FRAME_HAS_DESCENDANT_PLACEHOLDER
+    ? nsnull : GetFirstLineContaining(aDirtyRect.y);
+  line_iterator line_end = end_lines();
+  nsresult rv = NS_OK;
+  
   if (cursor) {
     for (line_iterator line = mLines.begin(cursor);
          line != line_end;
@@ -6426,8 +6309,10 @@ nsBlockFrame::PaintChildren(nsPresContext*      aPresContext,
         if (lineArea.y >= aDirtyRect.YMost()) {
           break;
         }
-        PaintLine(lineArea, aDirtyRect, line, depth, drawnLines, aPresContext,
-                  aRenderingContext, aWhichLayer, this);
+        rv = DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
+                         aLists, this);
+        if (NS_FAILED(rv))
+          break;
       }
     }
   } else {
@@ -6439,6 +6324,10 @@ nsBlockFrame::PaintChildren(nsPresContext*      aPresContext,
          line != line_end;
          ++line) {
       nsRect lineArea = line->GetCombinedArea();
+      rv = DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
+                       aLists, this);
+      if (NS_FAILED(rv))
+        break;
       if (!lineArea.IsEmpty()) {
         if (lineArea.y < lastY
             || lineArea.YMost() < lastYMost) {
@@ -6446,24 +6335,18 @@ nsBlockFrame::PaintChildren(nsPresContext*      aPresContext,
         }
         lastY = lineArea.y;
         lastYMost = lineArea.YMost();
-
-        PaintLine(lineArea, aDirtyRect, line, depth, drawnLines, aPresContext,
-                  aRenderingContext, aWhichLayer, this);
       }
       lineCount++;
     }
 
-    if (nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
+    if (NS_SUCCEEDED(rv) && nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
       SetupLineCursor();
     }
   }
 
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    if ((nsnull != mBullet) && HaveOutsideBullet()) {
-      // Paint outside bullets manually
-      PaintChild(aPresContext, aRenderingContext, aDirtyRect, mBullet,
-                 aWhichLayer);
-    }
+  if (NS_SUCCEEDED(rv) && (nsnull != mBullet) && HaveOutsideBullet()) {
+    // Display outside bullets manually
+    rv = BuildDisplayListForChild(aBuilder, mBullet, aDirtyRect, aLists);
   }
 
 #ifdef DEBUG
@@ -6486,6 +6369,11 @@ nsBlockFrame::PaintChildren(nsPresContext*      aPresContext,
     printf("%s\n", buf);
   }
 #endif
+
+  UnmarkOutOfFlowChildrenForDisplayList(mFloats.FirstChild());
+  UnmarkOutOfFlowChildrenForDisplayList(mAbsoluteContainer.GetFirstChild());
+  
+  return rv;
 }
 
 #ifdef ACCESSIBILITY
@@ -6566,145 +6454,6 @@ nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y) {
   }
 
   return cursor.get();
-}
-
-static inline nsIFrame*
-GetFrameFromLine(nsIFrame* aBlock, const nsRect& aLineArea, const nsPoint& aTmp,
-                 nsBlockFrame::line_iterator& aLine,
-                 nsFramePaintLayer aWhichLayer) {
-  nsIFrame* frame = nsnull;
-  if (aLineArea.Contains(aTmp)) {
-    nsIFrame* kid = aLine->mFirstChild;
-    PRInt32 n = aLine->GetChildCount();
-    while (--n >= 0) {
-      nsIFrame *hit = kid->GetFrameForPoint(aTmp - kid->GetOffsetTo(aBlock),
-                                            aWhichLayer);
-      if (hit)
-        frame = hit;
-      kid = kid->GetNextSibling();
-    }
-  }
-  return frame;
-}
-
-// Optimized function that uses line combined areas to skip lines
-// we know can't contain the point
-nsIFrame*
-nsBlockFrame::GetFrameForPointUsing(const nsPoint& aPoint,
-                                    nsIAtom*       aList,
-                                    nsFramePaintLayer aWhichLayer,
-                                    PRBool         aConsiderSelf)
-{
-  if (aList)
-    return nsContainerFrame::GetFrameForPointUsing(aPoint, aList, aWhichLayer,
-                                                   aConsiderSelf);
-
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  nsIFrame* frame = nsnull;
-  PRBool inThisFrame = thisRect.Contains(aPoint);
-
-  if (!((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame)) {
-    return nsnull;
-  }
-
-  nsLineBox* cursor = GetFirstLineContaining(aPoint.y);
-  line_iterator line_end = end_lines();
-
-  if (cursor) {
-    // This is the fast path for large blocks
-    for (line_iterator line = mLines.begin(cursor);
-         line != line_end;
-         ++line) {
-      nsRect lineArea = line->GetCombinedArea();
-      // Because we have a cursor, the combinedArea.ys are non-decreasing.
-      // Once we've passed tmp.y, we can never see it again.
-      if (!lineArea.IsEmpty()) {
-        if (lineArea.y > aPoint.y) {
-          break;
-        }
-        nsIFrame* hit = GetFrameFromLine(this, lineArea, aPoint, line,
-                                         aWhichLayer);
-        if (hit)
-          frame = hit;
-      }
-    }
-  } else {
-    PRBool nonDecreasingYs = PR_TRUE;
-    PRInt32 lineCount = 0;
-    nscoord lastY = PR_INT32_MIN;
-    nscoord lastYMost = PR_INT32_MIN;
-    for (line_iterator line = mLines.begin();
-         line != line_end;
-         ++line) {
-      nsRect lineArea = line->GetCombinedArea();
-      if (!lineArea.IsEmpty()) {
-        if (lineArea.y < lastY
-            || lineArea.YMost() < lastYMost) {
-          nonDecreasingYs = PR_FALSE;
-        }
-        lastY = lineArea.y;
-        lastYMost = lineArea.YMost();
-
-        nsIFrame* hit = GetFrameFromLine(this, lineArea, aPoint, line,
-                                         aWhichLayer);
-        if (hit)
-          frame = hit;
-      }
-      lineCount++;
-    }
-
-    if (nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
-      SetupLineCursor();
-    }
-  }
-  
-  if (frame)
-    return frame;
-
-  if (inThisFrame && aConsiderSelf && GetStyleVisibility()->IsVisible())
-    return this;
-
-  return nsnull;
-}
-
-nsIFrame*
-nsBlockFrame::GetFrameForPoint(const nsPoint& aPoint,
-                               nsFramePaintLayer aWhichLayer)
-{
-  nsIFrame* frame;
-
-  switch (aWhichLayer) {
-    case NS_FRAME_PAINT_LAYER_FOREGROUND:
-      frame = GetFrameForPointUsing(aPoint, nsnull,
-                                    NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE);
-      if (frame)
-        return frame;
-      if (mBullet)
-        return GetFrameForPointUsing(aPoint, nsLayoutAtoms::bulletList,
-                                     NS_FRAME_PAINT_LAYER_FOREGROUND,
-                                     PR_FALSE);
-      return nsnull;
-
-    case NS_FRAME_PAINT_LAYER_FLOATS:
-      // we painted our floats before our children, and thus
-      // we should check floats within children first
-      frame = GetFrameForPointUsing(aPoint, nsnull,
-                                    NS_FRAME_PAINT_LAYER_FLOATS, PR_FALSE);
-      if (frame)
-        return frame;
-      if (mFloats.NotEmpty())
-        return GetFrameForPointUsing(aPoint, nsLayoutAtoms::floatList,
-                                     NS_FRAME_PAINT_LAYER_ALL, PR_FALSE);
-      return nsnull;
-
-    case NS_FRAME_PAINT_LAYER_BACKGROUND:
-      // Because this frame is a block, pass PR_TRUE to consider this frame
-      return GetFrameForPointUsing(aPoint, nsnull,
-                                   NS_FRAME_PAINT_LAYER_BACKGROUND, PR_TRUE);
-  }
-  // we shouldn't get here
-  NS_NOTREACHED("aWhichLayer was not understood");
-  return nsnull;
 }
 
 NS_IMETHODIMP

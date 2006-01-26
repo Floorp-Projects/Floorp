@@ -54,7 +54,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsITheme.h"
 #include "imgIRequest.h"
-
+#include "nsDisplayList.h"
 
 //------------------------------------------------------------
 nsIFrame*
@@ -161,97 +161,110 @@ nsGfxCheckboxControlFrame::OnChecked(nsPresContext* aPresContext,
   return aChecked;
 }
 
+static void PaintCheckMarkFromStyle(nsIFrame* aFrame,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect, nsPoint aPt) {
+  NS_STATIC_CAST(nsGfxCheckboxControlFrame*, aFrame)
+    ->PaintCheckBoxFromStyle(*aCtx, aPt, aDirtyRect);
+}
+
+class nsDisplayCheckMark : public nsDisplayItem {
+public:
+  nsDisplayCheckMark(nsGfxCheckboxControlFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  virtual const char* Name() { return "CheckMark"; }
+private:
+  nsGfxCheckboxControlFrame* mFrame;
+};
+
+void
+nsDisplayCheckMark::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+  mFrame->PaintCheckBox(*aCtx, aBuilder->ToReferenceFrame(mFrame),
+                        aDirtyRect);
+}
+
 
 //------------------------------------------------------------
 void
-nsGfxCheckboxControlFrame::PaintCheckBox(nsPresContext* aPresContext,
-                                         nsIRenderingContext& aRenderingContext,
-                                         const nsRect& aDirtyRect,
-                                         nsFramePaintLayer aWhichLayer)
+nsGfxCheckboxControlFrame::PaintCheckBox(nsIRenderingContext& aRenderingContext,
+                                         nsPoint aPt,
+                                         const nsRect& aDirtyRect)
 {
-  const nsStyleDisplay* disp = GetStyleDisplay();
-  if (disp->mAppearance) {
-    nsITheme *theme = aPresContext->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(aPresContext, this, disp->mAppearance))
-      return; // No need to paint the checkbox. The theme will do it.
-  }
-
-  // Get current checked state through content model.
-  if (!GetCheckboxState())
-    return;   // we're not checked, nothing to paint.
-
+  // REVIEW: moved the mAppearance test out so we avoid constructing
+  // a display item if it's not needed
   aRenderingContext.PushState();
 
   nsMargin borderPadding(0,0,0,0);
   CalcBorderPadding(borderPadding);
 
-  nsRect checkRect(0,0, mRect.width, mRect.height);
+  nsRect checkRect(aPt, mRect.Size());
   checkRect.Deflate(borderPadding);
 
   const nsStyleColor* color = GetStyleColor();
   aRenderingContext.SetColor(color->mColor);
 
   nsFormControlHelper::PaintCheckMark(aRenderingContext,
-                                      aPresContext->ScaledPixelsToTwips(),
+                                      GetPresContext()->ScaledPixelsToTwips(),
                                       checkRect);
 
   aRenderingContext.PopState();
 }
 
-
 //------------------------------------------------------------
-NS_METHOD 
-nsGfxCheckboxControlFrame::Paint(nsPresContext*   aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              const nsRect&        aDirtyRect,
-                              nsFramePaintLayer    aWhichLayer,
-                              PRUint32             aFlags)
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                            const nsRect&           aDirtyRect,
+                                            const nsDisplayListSet& aLists)
 {
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
-    return NS_OK;
+  nsresult rv = nsFormControlFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // Get current checked state through content model.
+  if (!GetCheckboxState() || !IsVisibleForPainting(aBuilder))
+    return NS_OK;   // we're not checked or not visible, nothing to paint.
+    
+  if (IsThemed())
+    return NS_OK; // No need to paint the checkmark. The theme will do it.
+
+  // Paint the checkmark
+  // REVIEW: this used to check !mCheckButtonFaceStyle, but that's clearly
+  // wrong ... look at the blame diff, it was reversed by accident
+  if (mCheckButtonFaceStyle) {
+    const nsStyleBackground* myColor = mCheckButtonFaceStyle->GetStyleBackground();
+    // REVIEW: I'm not sure if this is really sane. We should at least be also
+    // checking for other properties too. But this is what we had.
+    if (myColor->mBackgroundImage)
+      return aLists.Content()->AppendNewToTop(new (aBuilder)
+          nsDisplayGeneric(this, PaintCheckMarkFromStyle, "CheckMarkFromStyle"));
   }
 
-  // Paint the background
-  nsresult rv = nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    PRBool doDefaultPainting = PR_TRUE;
-    // Paint the checkmark
-    const nsStyleBorder* myBorder = mCheckButtonFaceStyle->GetStyleBorder();
-    if (!mCheckButtonFaceStyle && GetCheckboxState()) {
-      const nsStyleBackground* myColor = mCheckButtonFaceStyle->GetStyleBackground();
+  return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayCheckMark(this));
+  // REVIEW: I'm not really sure why we were painting the outline again
+  // here ... the superclass call at the top should have painted it already.
+  // Just a bug I guess.
+}
 
-      if (myColor->mBackgroundImage) {
-        const nsStylePadding* myPadding = mCheckButtonFaceStyle->GetStylePadding();
-        const nsStylePosition* myPosition = mCheckButtonFaceStyle->GetStylePosition();
+void
+nsGfxCheckboxControlFrame::PaintCheckBoxFromStyle(
+    nsIRenderingContext& aRenderingContext, nsPoint aPt, const nsRect& aDirtyRect) {
+  const nsStylePadding* myPadding = mCheckButtonFaceStyle->GetStylePadding();
+  const nsStylePosition* myPosition = mCheckButtonFaceStyle->GetStylePosition();
+  const nsStyleBorder* myBorder = mCheckButtonFaceStyle->GetStyleBorder();
 
-        nscoord width = myPosition->mWidth.GetCoordValue();
-        nscoord height = myPosition->mHeight.GetCoordValue();
-         // Position the button centered within the radio control's rectangle.
-        nscoord x = (mRect.width - width) / 2;
-        nscoord y = (mRect.height - height) / 2;
-        nsRect rect(x, y, width, height); 
+  nscoord width = myPosition->mWidth.GetCoordValue();
+  nscoord height = myPosition->mHeight.GetCoordValue();
+  // Position the button centered within the radio control's rectangle.
+  nscoord x = (mRect.width - width) / 2;
+  nscoord y = (mRect.height - height) / 2;
+  nsRect rect(aPt.x + x, aPt.y + y, width, height);
 
-        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *myBorder, *myPadding,
-                                        PR_FALSE);
-        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *myBorder, mCheckButtonFaceStyle, 0);
-        doDefaultPainting = PR_FALSE;
-      }
-    } 
-
-    nsRect rect(0, 0, mRect.width, mRect.height);
-    const nsStyleOutline* myOutline = GetStyleOutline();
-    nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *myBorder, *myOutline,
-                                  mStyleContext, 0);
-
-    if (doDefaultPainting) {
-      PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-    }
-  }
-  return rv;
+  nsCSSRendering::PaintBackground(GetPresContext(), aRenderingContext, this,
+                                  aDirtyRect, rect, *myBorder, *myPadding,
+                                  PR_FALSE);
+  nsCSSRendering::PaintBorder(GetPresContext(), aRenderingContext, this,
+                              aDirtyRect, rect, *myBorder, mCheckButtonFaceStyle, 0);
 }
 
 //------------------------------------------------------------

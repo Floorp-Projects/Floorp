@@ -51,6 +51,7 @@
 #include "nsIEventStateManager.h"
 #include "nsXULAtoms.h"
 #include "nsIDOMElement.h"
+#include "nsDisplayList.h"
 
 //
 // NS_NewXULButtonFrame
@@ -75,12 +76,15 @@ nsButtonBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
   return NS_OK;
 }
 
-nsIFrame*
-nsButtonBoxFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                   nsFramePaintLayer aWhichLayer)
+NS_IMETHODIMP
+nsButtonBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                              const nsRect&           aDirtyRect,
+                                              const nsDisplayListSet& aLists)
 {
   // override, since we don't want children to get events
-  return nsFrame::GetFrameForPoint(aPoint, aWhichLayer);
+  if (aBuilder->IsForEventDelivery())
+    return NS_OK;
+  return nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 NS_IMETHODIMP

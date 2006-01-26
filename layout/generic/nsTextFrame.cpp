@@ -75,6 +75,7 @@
 #include "nsCompatibility.h"
 #include "nsCSSColorUtils.h"
 #include "nsLayoutUtils.h"
+#include "nsDisplayList.h"
 #include "nsFrame.h"
 #include "nsTextTransformer.h"
 #include "nsITextContent.h"
@@ -252,11 +253,11 @@ public:
   nsTextFrame();
   
   // nsIFrame
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const                nsRect& aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+                              
+  void PaintText(nsIRenderingContext& aRenderingContext, nsPoint aPt);
   
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
   
@@ -327,10 +328,7 @@ public:
                                             PRInt32*                outFrameContentOffset,
                                             nsIFrame*               *outChildFrame);
   
-  NS_IMETHOD IsVisibleForPainting(nsPresContext *     aPresContext, 
-                                  nsIRenderingContext& aRenderingContext,
-                                  PRBool               aCheckVis,
-                                  PRBool*              aIsVisible);
+  virtual PRBool IsVisibleInSelection(nsISelection* aSelection);
   
   virtual PRBool IsEmpty();
   virtual PRBool IsSelfEmpty() { return IsEmpty(); }
@@ -466,11 +464,11 @@ public:
                           PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                           nscoord aWidth);
   
-  PRBool IsTextInSelection(nsPresContext* aPresContext,
-                           nsIRenderingContext& aRenderingContext);
+  // REVIEW: There is absolute no reason why IsTextInSelection should depend
+  // on a rendering context, and I've refactored the code so it doesn't.
+  PRBool IsTextInSelection();
   
-  nsresult GetTextInfoForPainting(nsPresContext*          aPresContext,
-                                  nsIRenderingContext&     aRenderingContext,
+  nsresult GetTextInfoForPainting(nsPresContext*           aPresContext,
                                   nsIPresShell**           aPresShell,
                                   nsISelectionController** aSelectionController,
                                   PRBool&                  aDisplayingSelection,
@@ -1448,7 +1446,7 @@ class DrawSelectionIterator
 {
 public:
   DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText,
-                        PRUint32 aTextLength, nsTextPaintStyle &aTextStyle,
+                        PRUint32 aTextLength, nsTextPaintStyle *aTextStyle,
                         SelectionType aCareSelections);
   ~DrawSelectionIterator();
   PRBool      First();
@@ -1459,7 +1457,6 @@ public:
   PRUnichar * CurrentTextUnicharPtr();
   char *      CurrentTextCStrPtr();
   PRUint32    CurrentLength();
-  nsTextPaintStyle & CurrentStyle();
   PRBool      IsBeforeOrAfter();
 
   /**
@@ -1484,7 +1481,7 @@ private:
   PRUint32  mLength;
   PRUint32  mCurrentIdx;
   PRUint32  mCurrentLength;
-  nsTextPaintStyle &mOldStyle; //base new styles on this one???
+  nsTextPaintStyle* mOldStyle;//base new styles on this one???
   const SelectionDetails *mDetails;
   PRBool    mDone;
   PRUint8 * mTypes;
@@ -1496,7 +1493,7 @@ private:
 DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails, 
                                              PRUnichar *aText, 
                                              PRUint32 aTextLength, 
-                                             nsTextPaintStyle &aTextStyle,
+                                             nsTextPaintStyle* aTextStyle,
                                              SelectionType aCareSelections)
                                              :mOldStyle(aTextStyle)
 {
@@ -1662,12 +1659,6 @@ DrawSelectionIterator::CurrentLength()
   return mCurrentLength;
 }
 
-nsTextPaintStyle & 
-DrawSelectionIterator::CurrentStyle()
-{
-  return mOldStyle;
-}
-
 PRBool
 DrawSelectionIterator::GetSelectionColors(nscolor *aForeColor,
                                           nscolor *aBackColor,
@@ -1676,23 +1667,23 @@ DrawSelectionIterator::GetSelectionColors(nscolor *aForeColor,
   if (mTypes) {
     // Normal selection
     if (mTypes[mCurrentIdx] & nsTextPaintStyle::eNormalSelection) {
-      mOldStyle.GetSelectionColors(aForeColor, aBackColor,
-                                   aBackIsTransparent);
+      mOldStyle->GetSelectionColors(aForeColor, aBackColor,
+                                    aBackIsTransparent);
       return PR_TRUE;
     }
 
     // IME selections
     if (mTypes[mCurrentIdx] & nsTextPaintStyle::eIMESelections) {
-      mOldStyle.GetIMESelectionColors(mTypes[mCurrentIdx],
-                                      aForeColor, aBackColor,
-                                      aBackIsTransparent);
+      mOldStyle->GetIMESelectionColors(mTypes[mCurrentIdx],
+                                       aForeColor, aBackColor,
+                                       aBackIsTransparent);
       return PR_TRUE;
     }
   }
 
   // Non-supported Selection or Non-selection text
   *aBackIsTransparent = PR_FALSE;
-  *aForeColor = mOldStyle.GetTextColor();
+  *aForeColor = mOldStyle->GetTextColor();
   return PR_FALSE;
 }
 
@@ -1875,81 +1866,98 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTextFrame::Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags)
-{
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
-    return NS_OK;
-  }
-  if ((0 != (mState & TEXT_BLINK_ON)) && nsBlinkTimer::GetBlinkIsOff()) {
-    return NS_OK;
-  }
-  nsStyleContext* sc = mStyleContext;
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && isVisible) {
-    nsCOMPtr<nsIContent> content;
-    PRInt32 offset, length;
-    GetContentAndOffsetsForSelection(aPresContext,
-                                     getter_AddRefs(content),
-                                     &offset, &length);
-    PRInt16 selectionValue;
-    if (NS_FAILED(GetSelectionStatus(aPresContext, selectionValue)))
-      selectionValue = nsISelectionController::SELECTION_NORMAL;
-    nsTextPaintStyle ts(aPresContext,
-                        aRenderingContext,
-                        mStyleContext,
-                        content,
-                        selectionValue);
-    if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)
-      || ts.mJustifying) {
-      PaintTextSlowly(aPresContext, aRenderingContext, sc, ts, 0, 0);
-    }
-    else {
-      // Get the text fragment
-      nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
-      const nsTextFragment* frag = nsnull;
-      if (tc) {
-        frag = tc->Text();
-        if (!frag) {
-          return NS_ERROR_FAILURE;
-        }
-      }
+// When we fix nsTextFrame to handle bearing (character glyphs that
+// extend outside the frame) by giving it overflow area, we'll need to fix
+// this to use the overflow area as its bounds.
+class nsDisplayText : public nsDisplayItem {
+public:
+  nsDisplayText(nsTextFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("Text")
+private:
+  nsTextFrame* mFrame;
+};
 
-      // Choose rendering pathway based on rendering context performance
-      // hint, whether it needs to be transformed, and whether it's
-      // multi-byte
-      PRBool   hasMultiByteChars = (0 != (mState & TEXT_HAS_MULTIBYTE));
-      PRUint32 hints = 0;
-      aRenderingContext.GetHints(hints);
+void
+nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+  mFrame->PaintText(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+}
+
+NS_IMETHODIMP
+nsTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists)
+{
+  if (!IsVisibleForPainting(aBuilder))
+    return NS_OK;
+  
+  if ((0 != (mState & TEXT_BLINK_ON)) && nsBlinkTimer::GetBlinkIsOff())
+    return NS_OK;
+    
+  return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayText(this));
+}
+
+void
+nsTextFrame::PaintText(nsIRenderingContext& aRenderingContext, nsPoint aPt)
+{
+  nsStyleContext* sc = mStyleContext;
+  nsPresContext* presContext = GetPresContext();
+  nsCOMPtr<nsIContent> content;
+  PRInt32 offset, length;
+  GetContentAndOffsetsForSelection(presContext,
+                                   getter_AddRefs(content),
+                                   &offset, &length);
+  PRInt16 selectionValue;
+  if (NS_FAILED(GetSelectionStatus(presContext, selectionValue)))
+    selectionValue = nsISelectionController::SELECTION_NORMAL;
+  nsTextPaintStyle ts(presContext, aRenderingContext, mStyleContext, content,
+                      selectionValue);
+  if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)
+    || ts.mJustifying) {
+    PaintTextSlowly(presContext, aRenderingContext, sc, ts, aPt.x, aPt.y);
+  }
+  else {
+    // Get the text fragment
+    nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
+    const nsTextFragment* frag = nsnull;
+    if (tc) {
+      frag = tc->Text();
+      if (!frag) {
+        return;
+      }
+    }
+
+    // Choose rendering pathway based on rendering context performance
+    // hint, whether it needs to be transformed, and whether it's
+    // multi-byte
+    PRBool   hasMultiByteChars = (0 != (mState & TEXT_HAS_MULTIBYTE));
+    PRUint32 hints = 0;
+    aRenderingContext.GetHints(hints);
 
 #ifdef IBMBIDI
-      PRBool bidiEnabled = aPresContext->BidiEnabled();
+    PRBool bidiEnabled = presContext->BidiEnabled();
 #else
-      const PRBool bidiEnabled = PR_FALSE;
+    const PRBool bidiEnabled = PR_FALSE;
 #endif // IBMBIDI
-      // * BiDi text or text with multi-byte characters must always be
-      //   rendered as Unicode.
-      // * Non-transformed, 1-byte text should always be rendered as
-      //   ASCII.
-      // * Other transformed or 2-byte text should be rendered according
-      //   to the preference of the hint from the rendering context.
-      if (bidiEnabled || hasMultiByteChars ||
-          ((0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT)) &&
-           (frag->Is2b() || (0 != (mState & TEXT_WAS_TRANSFORMED))))) {
-        PaintUnicodeText(aPresContext, aRenderingContext, sc, ts, 0, 0);
-      }
-      else {
-        PaintAsciiText(aPresContext, aRenderingContext, sc, ts, 0, 0);
-      }
-
+    // * BiDi text or text with multi-byte characters must always be
+    //   rendered as Unicode.
+    // * Non-transformed, 1-byte text should always be rendered as
+    //   ASCII.
+    // * Other transformed or 2-byte text should be rendered according
+    //   to the preference of the hint from the rendering context.
+    if (bidiEnabled || hasMultiByteChars ||
+        ((0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT)) &&
+         (frag->Is2b() || (0 != (mState & TEXT_WAS_TRANSFORMED))))) {
+      PaintUnicodeText(presContext, aRenderingContext, sc, ts, aPt.x, aPt.y);
+    }
+    else {
+      PaintAsciiText(presContext, aRenderingContext, sc, ts, aPt.x, aPt.y);
     }
   }
-  DO_GLOBAL_REFLOW_COUNT_DSP("nsTextFrame", &aRenderingContext);
-  return NS_OK;
 }
 
 PRBool
@@ -2529,8 +2537,7 @@ nsTextFrame::GetContentAndOffsetsForSelection(nsPresContext *aPresContext, nsICo
 }
 
 //---------------------------------------------------------
-nsresult nsTextFrame::GetTextInfoForPainting(nsPresContext*          aPresContext,
-                                             nsIRenderingContext&     aRenderingContext,
+nsresult nsTextFrame::GetTextInfoForPainting(nsPresContext*           aPresContext,
                                              nsIPresShell**           aPresShell,
                                              nsISelectionController** aSelectionController,
                                              PRBool&                  aDisplayingSelection,
@@ -2616,8 +2623,7 @@ nsTextFrame::GetSelectionStatus(nsPresContext* aPresContext,
 }
 
 PRBool
-nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
-                               nsIRenderingContext& aRenderingContext)
+nsTextFrame::IsTextInSelection()
 {
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsIPresShell> shell;
@@ -2626,8 +2632,8 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
   PRBool  isSelected;
   PRBool  hideStandardSelection;
   PRInt16 selectionValue;
-  if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
-                                       aRenderingContext,
+  nsPresContext* presContext = GetPresContext();
+  if (NS_FAILED(GetTextInfoForPainting(presContext, 
                                        getter_AddRefs(shell),
                                        getter_AddRefs(selCon),
                                        displaySelection,
@@ -2645,25 +2651,13 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIContent> content;
-  PRInt32 offset, length;
-  nsresult getContent = NS_OK;
-  getContent = GetContentAndOffsetsForSelection(aPresContext,
-                                                getter_AddRefs(content),
-                                                &offset, &length);
-  nsTextPaintStyle ts(aPresContext,
-                      aRenderingContext,
-                      mStyleContext,
-                      content,
-                      selectionValue);
-
   // Transform text from content into renderable form
   // XXX If the text fragment is already Unicode and the text wasn't
   // transformed when we formatted it, then there's no need to do all
   // this and we should just render the text fragment directly. See
   // PaintAsciiText()...
 
-  nsTextTransformer tx(aPresContext);
+  nsTextTransformer tx(presContext);
   PRInt32 textLength;
   // no need to worry about justification, that's always on the slow path
   PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
@@ -2684,10 +2678,17 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
     if (!frameSelection)
       frameSelection = shell->FrameSelection();
 
-    if (NS_SUCCEEDED(getContent) && content) {
-      frameSelection->LookUpSelection(content, mContentOffset,
-                                      mContentLength, &details,
-                                      PR_FALSE);
+    nsCOMPtr<nsIContent> content;
+    PRInt32 offset;
+    PRInt32 length;
+
+    nsresult rv = GetContentAndOffsetsForSelection(presContext,
+                                                   getter_AddRefs(content),
+                                                   &offset, &length);
+    if (NS_SUCCEEDED(rv) && content) {
+      rv = frameSelection->LookUpSelection(content, mContentOffset,
+                                           mContentLength, &details,
+                                           PR_FALSE);
     }
       
     //where are the selection points "really"
@@ -2699,10 +2700,7 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
     }
     //while we have substrings...
     //PRBool drawn = PR_FALSE;
-    DrawSelectionIterator iter(details,
-                               text,
-                               (PRUint32)textLength,
-                               ts,
+    DrawSelectionIterator iter(details, text, (PRUint32)textLength, nsnull,
                                nsTextPaintStyle::eNormalSelection);
     if (!iter.IsDone() && iter.First()) {
       isSelected = PR_TRUE;
@@ -2720,37 +2718,15 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
   return isSelected;
 }
 
-NS_IMETHODIMP
-nsTextFrame::IsVisibleForPainting(nsPresContext *     aPresContext, 
-                                  nsIRenderingContext& aRenderingContext,
-                                  PRBool               aCheckVis,
-                                  PRBool*              aIsVisible)
+PRBool
+nsTextFrame::IsVisibleInSelection(nsISelection* aSelection)
 {
-  if (aCheckVis) {
-    if (!GetStyleVisibility()->IsVisible()) {
-      *aIsVisible = PR_FALSE;
-      return NS_OK;
-    }
-  }
-
-  // Start by assuming we are visible and need to be painted
-  PRBool isVisible = PR_TRUE;
-
-  if (aPresContext->IsPaginated()) {
-    if (aPresContext->IsRenderingOnlySelection()) {
-      // Check the quick way first
-      PRBool isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-      if (isSelected) {
-        isVisible = IsTextInSelection(aPresContext, aRenderingContext);
-      } else {
-        isVisible = PR_FALSE;
-      }
-    }
-  } 
-
-  *aIsVisible = isVisible;
-
-  return NS_OK;
+  // Check the quick way first
+  PRBool isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+  if (!isSelected)
+    return PR_FALSE;
+    
+  return IsTextInSelection();
 }
 
 void
@@ -2772,7 +2748,6 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
 #endif
 
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
-                                       aRenderingContext,
                                        getter_AddRefs(shell),
                                        getter_AddRefs(selCon),
                                        displaySelection,
@@ -2939,10 +2914,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
 
       //while we have substrings...
       //PRBool drawn = PR_FALSE;
-      DrawSelectionIterator iter(details,
-                                 text,
-                                 (PRUint32)textLength,
-                                 aTextStyle,
+      DrawSelectionIterator iter(details, text, (PRUint32)textLength, &aTextStyle,
                                  nsTextPaintStyle::eAllSelections);
       if (!iter.IsDone() && iter.First())
       {
@@ -2958,7 +2930,6 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
         {
           PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
           PRUint32   currentlength= iter.CurrentLength();
-          //nsTextStyle &currentStyle = iter.CurrentStyle();
           nscolor    currentFGColor, currentBKColor;
           PRBool     isCurrentBKColorTransparent;
 
@@ -3513,7 +3484,6 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
   PRBool  hideStandardSelection;
   PRInt16 selectionValue;
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
-                                       aRenderingContext,
                                        getter_AddRefs(shell),
                                        getter_AddRefs(selCon),
                                        displaySelection,
@@ -3630,10 +3600,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
         sdptr = sdptr->mNext;
       }
 
-      DrawSelectionIterator iter(details,
-                                 text,
-                                 (PRUint32)textLength,
-                                 aTextStyle,
+      DrawSelectionIterator iter(details, text, (PRUint32)textLength, &aTextStyle,
                                  nsTextPaintStyle::eAllSelections);
       if (!iter.IsDone() && iter.First())
       {
@@ -3652,7 +3619,6 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
         {
           PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
           PRUint32   currentlength= iter.CurrentLength();
-          //nsTextStyle &currentStyle = iter.CurrentStyle();
           nscolor    currentFGColor, currentBKColor;
           PRBool     isCurrentBKColorTransparent;
           PRBool     isSelection = iter.GetSelectionColors(&currentFGColor,
@@ -3741,7 +3707,6 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
   PRBool  hideStandardSelection;
   PRInt16 selectionValue;
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
-                                       aRenderingContext,
                                        getter_AddRefs(shell),
                                        getter_AddRefs(selCon),
                                        displaySelection,
@@ -3884,10 +3849,8 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
 
       if (!hideStandardSelection || displaySelection) {
         //ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
-        DrawSelectionIterator iter(details,
-                                   (PRUnichar *)text,
-                                   (PRUint32)textLength,
-                                   aTextStyle,
+        DrawSelectionIterator iter(details, (PRUnichar *)text,
+                                   (PRUint32)textLength, &aTextStyle,
                                    nsTextPaintStyle::eAllSelections);
 
         // See if this rendering backend supports getting cluster
@@ -3907,7 +3870,6 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
           {
             char *currenttext  = iter.CurrentTextCStrPtr();
             PRUint32   currentlength= iter.CurrentLength();
-            //nsTextStyle &currentStyle = iter.CurrentStyle();
             nscolor    currentFGColor, currentBKColor;
             PRBool     isCurrentBKColorTransparent;
 

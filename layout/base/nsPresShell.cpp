@@ -140,6 +140,8 @@
 #include "prenv.h"
 #include "nsIAttribute.h"
 #include "nsIGlobalHistory2.h"
+#include "nsDisplayList.h"
+#include "nsRegion.h"
 
 #ifdef MOZ_REFLOW_PERF_DSP
 #include "nsIRenderingContext.h"
@@ -1153,6 +1155,11 @@ public:
   virtual nsresult ReconstructFrames(void);
   virtual void Freeze();
   virtual void Thaw();
+  
+  NS_IMETHOD RenderOffscreen(nsRect aRect, PRBool aUntrusted,
+                             PRBool aIgnoreViewportScrolling,
+                             nscolor aBackgroundColor,
+                             nsIRenderingContext** aRenderedContext);
 
 #ifdef IBMBIDI
   NS_IMETHOD SetCaretBidiLevel(PRUint8 aLevel);
@@ -1164,13 +1171,16 @@ public:
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView *aView,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect);
+                   nsIRenderingContext* aRenderingContext,
+                   const nsRegion& aDirtyRegion);
+  NS_IMETHOD ComputeRepaintRegionForCopy(nsIView*      aRootView,
+                                         nsIView*      aMovingView,
+                                         nsPoint       aDelta,
+                                         const nsRect& aCopyRect,
+                                         nsRegion*     aRepaintRegion);
   NS_IMETHOD HandleEvent(nsIView*        aView,
                          nsGUIEvent*     aEvent,
-                         nsEventStatus*  aEventStatus,
-                         PRBool          aForceHandle,
-                         PRBool&         aHandled);
+                         nsEventStatus*  aEventStatus);
   NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
                             nsEvent* aEvent,
                             nsEventStatus* aStatus);
@@ -1315,6 +1325,7 @@ protected:
   nsresult CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult);
   PRBool VerifyIncrementalReflow();
   PRBool mInVerifyReflow;
+  void ShowEventTargetDebug();
 #endif
 
     /**
@@ -1409,8 +1420,8 @@ private:
 
   PRBool InZombieDocument(nsIContent *aContent);
   nsresult RetargetEventToParent(nsIView *aView, nsGUIEvent* aEvent, 
-                                 nsEventStatus*  aEventStatus, PRBool aForceHandle,
-                                 PRBool& aHandled, nsIContent *aZombieFocusedContent);
+                                 nsEventStatus*  aEventStatus,
+                                 nsIContent *aZombieFocusedContent);
 
   void FreeDynamicStack();
 
@@ -1419,6 +1430,10 @@ private:
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
   void PopCurrentEventInfo();
   nsresult HandleEventInternal(nsEvent* aEvent, nsIView* aView, PRUint32 aFlags, nsEventStatus *aStatus);
+  nsresult HandlePositionedEvent(nsIView*       aView,
+                                 nsIFrame*      aTargetFrame,
+                                 nsGUIEvent*    aEvent,
+                                 nsEventStatus* aEventStatus);
 
   //help funcs for resize events
   void CreateResizeEventTimer();
@@ -5378,77 +5393,100 @@ PresShell::BidiStyleChangeReflow()
 
 //nsIViewObserver
 
-// Return TRUE if any clipping is to be done.
-static PRBool ComputeClipRect(nsIFrame* aFrame, nsRect& aResult) {
-  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
-  
-  // 'clip' only applies to absolutely positioned elements, and is
-  // relative to the element's border edge. 'clip' applies to the entire
-  // element: border, padding, and content areas, and even scrollbars if
-  // there are any.
-  if (display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT)) {
-    nsSize  size = aFrame->GetSize();
-
-    // Start with the 'auto' values and then factor in user specified values
-    nsRect  clipRect(0, 0, size.width, size.height);
-
-    if (display->mClipFlags & NS_STYLE_CLIP_RECT) {
-      if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
-        clipRect.y = display->mClip.y;
-      }
-      if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
-        clipRect.x = display->mClip.x;
-      }
-      if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
-        clipRect.width = display->mClip.width;
-      }
-      if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
-        clipRect.height = display->mClip.height;
-      }
-    }
-
-    aResult = clipRect;
-
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
-// If the element is absolutely positioned and has a specified clip rect
-// then it pushes the current rendering context and sets the clip rect.
-// Returns PR_TRUE if the clip rect is set and PR_FALSE otherwise
-static PRBool
-SetClipRect(nsIRenderingContext& aRenderingContext, nsIFrame* aFrame)
+NS_IMETHODIMP
+PresShell::ComputeRepaintRegionForCopy(nsIView*      aRootView,
+                                       nsIView*      aMovingView,
+                                       nsPoint       aDelta,
+                                       const nsRect& aCopyRect,
+                                       nsRegion*     aRepaintRegion)
 {
-  nsRect clipRect;
-
-  if (ComputeClipRect(aFrame, clipRect)) {
-    // Set updated clip-rect into the rendering context
-    aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
-static PRBool
-InClipRect(nsIFrame* aFrame, const nsPoint& aEventPoint)
-{
-  nsRect clipRect;
-
-  if (ComputeClipRect(aFrame, clipRect)) {
-    return clipRect.Contains(aEventPoint);
-  } else {
-    return PR_TRUE;
-  }
+  return nsLayoutUtils::ComputeRepaintRegionForCopy(
+      NS_STATIC_CAST(nsIFrame*, aRootView->GetClientData()),
+      NS_STATIC_CAST(nsIFrame*, aMovingView->GetClientData()),
+      aDelta, aCopyRect, aRepaintRegion);
 }
 
 NS_IMETHODIMP
-PresShell::Paint(nsIView              *aView,
-                 nsIRenderingContext& aRenderingContext,
-                 const nsRect&        aDirtyRect)
+PresShell::RenderOffscreen(nsRect aRect, PRBool aUntrusted,
+                           PRBool aIgnoreViewportScrolling,
+                           nscolor aBackgroundColor,
+                           nsIRenderingContext** aRenderedContext)
+{
+  nsIView* rootView;
+  mViewManager->GetRootView(rootView);
+  NS_ASSERTION(rootView, "No root view?");
+  nsIWidget* rootWidget = rootView->GetWidget();
+  NS_ASSERTION(rootWidget, "No root widget?");
+
+  *aRenderedContext = nsnull;
+
+  NS_ASSERTION(!aUntrusted, "We don't support untrusted yet");
+  if (aUntrusted)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsCOMPtr<nsIRenderingContext> tmpContext;
+  mPresContext->DeviceContext()->CreateRenderingContext(rootWidget, 
+      *getter_AddRefs(tmpContext));
+  if (!tmpContext)
+    return NS_ERROR_FAILURE;
+
+  nsRect bounds(nsPoint(0, 0), aRect.Size());
+  bounds.ScaleRoundOut(mPresContext->TwipsToPixels());
+  
+  nsIDrawingSurface* surface;
+  nsresult rv
+    = tmpContext->CreateDrawingSurface(bounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS,
+                                       surface);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIRenderingContext> localcx;
+  rv = nsLayoutUtils::CreateOffscreenContext(mPresContext->DeviceContext(),
+      surface, aRect, getter_AddRefs(localcx));
+  if (NS_FAILED(rv)) {
+    tmpContext->DestroyDrawingSurface(surface);
+    return NS_ERROR_FAILURE;
+  }
+  // clipping and translation is set by CreateOffscreenContext
+
+  localcx->SetColor(aBackgroundColor);
+  localcx->FillRect(aRect);
+
+  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
+  if (!rootFrame) {
+    localcx.swap(*aRenderedContext);
+    return NS_OK;
+  }
+  
+  nsDisplayListBuilder builder(rootFrame, PR_FALSE);
+  nsDisplayList list;
+  nsIScrollableView* scrollingView = nsnull;
+  mViewManager->GetRootScrollableView(&scrollingView);
+  nsRect r = aRect;
+  if (aIgnoreViewportScrolling && scrollingView) {
+    nscoord x, y;
+    scrollingView->GetScrollPosition(x, y);
+    localcx->Translate(x, y);
+    r.MoveBy(-x, -y);
+    builder.SetIgnoreScrollFrame(GetRootScrollFrame(rootFrame));
+  }
+
+  rv = rootFrame->BuildDisplayListForStackingContext(&builder, r, &list);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRegion region(r);
+  list.OptimizeVisibility(&builder, &region);
+  list.Paint(&builder, localcx, r);
+  // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
+  list.DeleteAll();
+
+  localcx.swap(*aRenderedContext);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::Paint(nsIView*             aView,
+                 nsIRenderingContext* aRenderingContext,
+                 const nsRegion&      aDirtyRegion)
 {
   nsIFrame* frame;
   nsresult  rv = NS_OK;
@@ -5467,31 +5505,19 @@ PresShell::Paint(nsIView              *aView,
     if (mCaret)
       mCaret->EraseCaret();
 
-    // If the frame is absolutely positioned, then the 'clip' property
-    // applies
-    PRBool  setClipRect = SetClipRect(aRenderingContext, frame);
-
-    rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
-                      NS_FRAME_PAINT_LAYER_BACKGROUND);
-    rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
-                      NS_FRAME_PAINT_LAYER_FLOATS);
-    rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
-                      NS_FRAME_PAINT_LAYER_FOREGROUND);
-                      
-    if (setClipRect)
-      aRenderingContext.PopState();
+    nsLayoutUtils::PaintFrame(aRenderingContext, frame, aDirtyRegion);
 
 #ifdef NS_DEBUG
     // Draw a border around the frame
     if (nsIFrameDebug::GetShowFrameBorders()) {
       nsRect r = frame->GetRect();
-      aRenderingContext.SetColor(NS_RGB(0,0,255));
-      aRenderingContext.DrawRect(0, 0, r.width, r.height);
+      aRenderingContext->SetColor(NS_RGB(0,0,255));
+      aRenderingContext->DrawRect(0, 0, r.width, r.height);
     }
     // Draw a border around the current event target
     if ((nsIFrameDebug::GetShowEventTargetFrameBorder()) && (aView == mCurrentTargetView)) {
-      aRenderingContext.SetColor(NS_RGB(128,0,128));
-      aRenderingContext.DrawRect(mCurrentTargetRect.x, mCurrentTargetRect.y, mCurrentTargetRect.width, mCurrentTargetRect.height);
+      aRenderingContext->SetColor(NS_RGB(128,0,128));
+      aRenderingContext->DrawRect(mCurrentTargetRect.x, mCurrentTargetRect.y, mCurrentTargetRect.width, mCurrentTargetRect.height);
     }
 #endif
   }
@@ -5579,8 +5605,6 @@ PRBool PresShell::InZombieDocument(nsIContent *aContent)
 nsresult PresShell::RetargetEventToParent(nsIView         *aView,
                                           nsGUIEvent*     aEvent,
                                           nsEventStatus*  aEventStatus,
-                                          PRBool          aForceHandle,
-                                          PRBool&         aHandled,
                                           nsIContent*     aZombieFocusedContent)
 {
   // Send this events straight up to the parent pres shell.
@@ -5645,20 +5669,15 @@ nsresult PresShell::RetargetEventToParent(nsIView         *aView,
 
   PopCurrentEventInfo();
   return parentViewObserver->HandleEvent(aView, aEvent, 
-                                         aEventStatus,
-                                         aForceHandle, 
-                                         aHandled);
+                                         aEventStatus);
 }
 
 NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
-                       nsEventStatus*  aEventStatus,
-                       PRBool          aForceHandle,
-                       PRBool&         aHandled)
+                       nsEventStatus*  aEventStatus)
 {
   NS_ASSERTION(aView, "null view");
-  aHandled = PR_TRUE;
 
   if (mIsDestroying || mIsReflowing || mChangeNestCount) {
     return NS_OK;
@@ -5689,7 +5708,6 @@ PresShell::HandleEvent(nsIView         *aView,
       nsIView *view;
       vm->GetRootView(view);
       if (view == aView) {
-        aHandled = PR_TRUE;
         *aEventStatus = nsEventStatus_eConsumeDoDefault;
         mPresContext->SysColorChanged();
         return NS_OK;
@@ -5697,13 +5715,42 @@ PresShell::HandleEvent(nsIView         *aView,
     }
     return NS_OK;
   }
-
+  
   nsIFrame* frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
 
+  PRBool dispatchUsingCoordinates =
+      !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_EVENT(aEvent) &&
+         aEvent->message != NS_CONTEXTMENU_KEY && !NS_IS_FOCUS_EVENT(aEvent);
+  nsIFrame* targetFrame;
+  if (frame && dispatchUsingCoordinates) {
+    nsPoint eventPoint
+        = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
+    targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint);
+    if (targetFrame) {
+      PresShell* shell =
+          NS_STATIC_CAST(PresShell*, targetFrame->GetPresContext()->PresShell());
+      if (shell != this) {
+        // handle the event in the correct shell.
+        nsIView* subshellRootView;
+        shell->GetViewManager()->GetRootView(subshellRootView);
+        // We pass the subshell's root view as the view to start from. This is
+        // the only correct alternative; if the event was captured then it
+        // must have been captured by us or some ancestor shell and we
+        // now ask the subshell to dispatch it normally.
+        return shell->HandlePositionedEvent(subshellRootView, targetFrame,
+                                            aEvent, aEventStatus);
+      }
+    }
+    
+    if (!targetFrame) {
+      targetFrame = frame;
+    }
+    return HandlePositionedEvent(aView, targetFrame, aEvent, aEventStatus);
+  }
+  
   // if this event has no frame, we need to retarget it at a parent
   // view that has a frame.
-  if (!frame &&
-      ((NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent)))) {
+  if (!frame && (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent))) {
     nsIView* targetView = aView;
     while (targetView && !targetView->GetClientData()) {
       targetView = targetView->GetParent();
@@ -5721,17 +5768,14 @@ PresShell::HandleEvent(nsIView         *aView,
     PushCurrentEventInfo(nsnull, nsnull);
 
     // key and IME events go to the focused frame
-    nsCOMPtr<nsIEventStateManager> manager;
-    if ((NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
-         aEvent->message == NS_CONTEXTMENU_KEY)) {
+    nsIEventStateManager *esm = mPresContext->EventStateManager();
 
-      nsIEventStateManager *esm = mPresContext->EventStateManager();
-
+    if (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
+        aEvent->message == NS_CONTEXTMENU_KEY) {
       esm->GetFocusedFrame(&mCurrentEventFrame);
       if (mCurrentEventFrame) {
         esm->GetFocusedContent(getter_AddRefs(mCurrentEventContent));
-      }
-      else {
+      } else {
 #if defined(MOZ_X11) || defined(XP_WIN)
 #if defined(MOZ_X11)
         if (NS_IS_IME_EVENT(aEvent)) {
@@ -5776,118 +5820,22 @@ PresShell::HandleEvent(nsIView         *aView,
         mCurrentEventFrame = nsnull; // XXXldb Isn't it already?
       }
       if (mCurrentEventContent && InZombieDocument(mCurrentEventContent)) {
-        return RetargetEventToParent(aView, aEvent, aEventStatus, aForceHandle,
-                                     aHandled, mCurrentEventContent);
+        return RetargetEventToParent(aView, aEvent, aEventStatus,
+                                     mCurrentEventContent);
       }
-    }
-    else if (!InClipRect(frame, 
-        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame))) {
-      // we only check for the clip rect on this frame ... all frames with clip
-      // have views so any viewless children of this frame cannot have clip. 
-      // Furthermore if the event is not in the clip for this frame, then none
-      // of the children can get it either.
-      if (aForceHandle) {
-        mCurrentEventFrame = frame;
-      }
-      else {
-        mCurrentEventFrame = nsnull;
-      }
-      aHandled = PR_FALSE;
-      rv = NS_OK;
     } else {
-      rv = NS_OK;
-      nsPoint eventPoint;
-      eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
-
-      mCurrentEventFrame = frame->GetFrameForPoint(eventPoint,
-                             NS_FRAME_PAINT_LAYER_FOREGROUND);
-      if (!mCurrentEventFrame) {
-        mCurrentEventFrame = frame->GetFrameForPoint(eventPoint,
-                               NS_FRAME_PAINT_LAYER_FLOATS);
-        if (!mCurrentEventFrame) {
-          mCurrentEventFrame = frame->GetFrameForPoint(eventPoint,
-                                 NS_FRAME_PAINT_LAYER_BACKGROUND);
-          if (!mCurrentEventFrame) {
-            if (aForceHandle) {
-              mCurrentEventFrame = frame;
-            }
-            else {
-              mCurrentEventFrame = nsnull;
-            }
-            aHandled = PR_FALSE;
-          }
-        }
-      }
-
-      if (mCurrentEventFrame) {
-        nsCOMPtr<nsIContent> targetElement;
-        mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent,
-                                               getter_AddRefs(targetElement));
-
-        // If there is no content for this frame, target it anyway.  Some
-        // frames can be targeted but do not have content, particularly
-        // windows with scrolling off.
-        if (targetElement) {
-          // Bug 103055, bug 185889: mouse events apply to *elements*, not all
-          // nodes.  Thus we get the nearest element parent here.
-          // XXX we leave the frame the same even if we find an element
-          // parent, so that the text frame will receive the event (selection
-          // and friends are the ones who care about that anyway)
-          //
-          // We use weak pointers because during this tight loop, the node
-          // will *not* go away.  And this happens on every mousemove.
-          while (targetElement &&
-                 !targetElement->IsContentOfType(nsIContent::eELEMENT)) {
-            targetElement = targetElement->GetParent();
-          }
-
-          // If we found an element, target it.  Otherwise, target *nothing*.
-          if (!targetElement) {
-            mCurrentEventContent = nsnull;
-            mCurrentEventFrame = nsnull;
-          } else if (targetElement != mCurrentEventContent) {
-            mCurrentEventContent = targetElement;
-          }
-        }
-      }
-
+      mCurrentEventFrame = frame;
     }
     if (GetCurrentEventFrame()) {
       rv = HandleEventInternal(aEvent, aView,
                                NS_EVENT_FLAG_INIT, aEventStatus);
     }
-
+  
 #ifdef NS_DEBUG
-    if ((nsIFrameDebug::GetShowEventTargetFrameBorder()) &&
-        (GetCurrentEventFrame())) {
-      nsIView *oldView = mCurrentTargetView;
-      nsPoint offset(0,0);
-      nsRect oldTargetRect(mCurrentTargetRect);
-      mCurrentTargetRect = mCurrentEventFrame->GetRect();
-      mCurrentTargetView = mCurrentEventFrame->GetView();
-      if (!mCurrentTargetView ) {
-        mCurrentEventFrame->GetOffsetFromView(offset, &mCurrentTargetView);
-      }
-      if (mCurrentTargetView) {
-        mCurrentTargetRect.x = offset.x;
-        mCurrentTargetRect.y = offset.y;
-        // use aView or mCurrentTargetView??
-        if ((mCurrentTargetRect != oldTargetRect) ||
-            (mCurrentTargetView != oldView)) {
-
-          nsIViewManager* vm = GetViewManager();
-          if (vm) {
-            vm->UpdateView(mCurrentTargetView,mCurrentTargetRect,0);
-            if (oldView)
-              vm->UpdateView(oldView,oldTargetRect,0);
-          }
-        }
-      }
-    }
+    ShowEventTargetDebug();
 #endif
     PopCurrentEventInfo();
-  }
-  else {
+  } else {
     // Focus events need to be dispatched even if no frame was found, since
     // we don't want the focus controller to be out of sync.
 
@@ -5899,13 +5847,100 @@ PresShell::HandleEvent(nsIView         *aView,
     else if (NS_IS_KEY_EVENT(aEvent)) {
       // Keypress events in new blank tabs should not be completely thrown away.
       // Retarget them -- the parent chrome shell might make use of them.
-      return RetargetEventToParent(aView, aEvent, aEventStatus, aForceHandle,
-                                   aHandled, mCurrentEventContent);
+      return RetargetEventToParent(aView, aEvent, aEventStatus,
+                                   mCurrentEventContent);
     }
-
-    aHandled = PR_FALSE;
   }
 
+  return rv;
+}
+
+#ifdef NS_DEBUG
+void
+PresShell::ShowEventTargetDebug()
+{
+  if ((nsIFrameDebug::GetShowEventTargetFrameBorder()) &&
+      (GetCurrentEventFrame())) {
+    nsIView *oldView = mCurrentTargetView;
+    nsPoint offset(0,0);
+    nsRect oldTargetRect(mCurrentTargetRect);
+    mCurrentTargetRect = mCurrentEventFrame->GetRect();
+    mCurrentTargetView = mCurrentEventFrame->GetView();
+    if (!mCurrentTargetView ) {
+      mCurrentEventFrame->GetOffsetFromView(offset, &mCurrentTargetView);
+    }
+    if (mCurrentTargetView) {
+      mCurrentTargetRect.x = offset.x;
+      mCurrentTargetRect.y = offset.y;
+      // use aView or mCurrentTargetView??
+      if ((mCurrentTargetRect != oldTargetRect) ||
+          (mCurrentTargetView != oldView)) {
+
+        nsIViewManager* vm = GetViewManager();
+        if (vm) {
+          vm->UpdateView(mCurrentTargetView,mCurrentTargetRect,0);
+          if (oldView)
+            vm->UpdateView(oldView,oldTargetRect,0);
+        }
+      }
+    }
+  }
+}
+#endif
+
+nsresult
+PresShell::HandlePositionedEvent(nsIView*       aView,
+                                 nsIFrame*      aTargetFrame,
+                                 nsGUIEvent*    aEvent,
+                                 nsEventStatus* aEventStatus)
+{
+  nsresult rv = NS_OK;
+  
+  PushCurrentEventInfo(nsnull, nsnull);
+  
+  mCurrentEventFrame = aTargetFrame;
+
+  if (mCurrentEventFrame) {
+    nsCOMPtr<nsIContent> targetElement;
+    mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent,
+                                           getter_AddRefs(targetElement));
+
+    // If there is no content for this frame, target it anyway.  Some
+    // frames can be targeted but do not have content, particularly
+    // windows with scrolling off.
+    if (targetElement) {
+      // Bug 103055, bug 185889: mouse events apply to *elements*, not all
+      // nodes.  Thus we get the nearest element parent here.
+      // XXX we leave the frame the same even if we find an element
+      // parent, so that the text frame will receive the event (selection
+      // and friends are the ones who care about that anyway)
+      //
+      // We use weak pointers because during this tight loop, the node
+      // will *not* go away.  And this happens on every mousemove.
+      while (targetElement &&
+             !targetElement->IsContentOfType(nsIContent::eELEMENT)) {
+        targetElement = targetElement->GetParent();
+      }
+
+      // If we found an element, target it.  Otherwise, target *nothing*.
+      if (!targetElement) {
+        mCurrentEventContent = nsnull;
+        mCurrentEventFrame = nsnull;
+      } else if (targetElement != mCurrentEventContent) {
+        mCurrentEventContent = targetElement;
+      }
+    }
+  }
+
+  if (GetCurrentEventFrame()) {
+    rv = HandleEventInternal(aEvent, aView,
+                             NS_EVENT_FLAG_INIT, aEventStatus);
+  }
+
+#ifdef NS_DEBUG
+  ShowEventTargetDebug();
+#endif
+  PopCurrentEventInfo();
   return rv;
 }
 

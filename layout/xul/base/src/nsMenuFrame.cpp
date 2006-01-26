@@ -83,6 +83,7 @@
 #include "nsIEventStateManager.h"
 #include "nsITimerInternal.h"
 #include "nsContentUtils.h"
+#include "nsDisplayList.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -354,26 +355,19 @@ nsMenuFrame::Destroy(nsPresContext* aPresContext)
   return nsBoxFrame::Destroy(aPresContext);
 }
 
-// Called to prevent events from going to anything inside the menu.
-nsIFrame*
-nsMenuFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer)
+NS_IMETHODIMP
+nsMenuFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                         const nsRect&           aDirtyRect,
+                                         const nsDisplayListSet& aLists)
 {
-  nsIFrame* frame = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
-  if (!frame || frame == this) {
-    return frame;
-  }
-  nsIContent* content = frame->GetContent();
-  if (content) {
-    // This allows selective overriding for subcontent.
-    nsAutoString value;
-    content->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-    if (value.EqualsLiteral("true"))
-      return frame;
-  }
-  if (GetStyleVisibility()->IsVisible())
-    return this; // Capture all events so that we can perform selection
-  return nsnull;
+  if (!aBuilder->IsForEventDelivery())
+    return nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+    
+  nsDisplayListCollection set;
+  nsresult rv = nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return WrapListsInRedirector(aBuilder, set, aLists);
 }
 
 NS_IMETHODIMP 

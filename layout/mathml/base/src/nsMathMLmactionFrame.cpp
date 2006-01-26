@@ -61,6 +61,7 @@
 #include "nsMathMLmactionFrame.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
+#include "nsDisplayList.h"
 
 //
 // <maction> -- bind actions to a subexpression - implementation
@@ -252,49 +253,29 @@ nsMathMLmactionFrame::SetInitialChildList(nsPresContext* aPresContext,
   return rv;
 }
 
-// Return the selected frame ...
-nsIFrame*
-nsMathMLmactionFrame::GetFrameForPoint(const nsPoint&    aPoint,
-                                       nsFramePaintLayer aWhichLayer)
-{
-  nsIFrame* childFrame = GetSelectedFrame();
-  if (childFrame)
-    return childFrame->GetFrameForPoint(aPoint - childFrame->GetOffsetTo(this),
-                                        aWhichLayer);
-  return nsFrame::GetFrameForPoint(aPoint, aWhichLayer);
-}
-
 //  Only paint the selected child...
 NS_IMETHODIMP
-nsMathMLmactionFrame::Paint(nsPresContext*      aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect&        aDirtyRect,
-                            nsFramePaintLayer    aWhichLayer,
-                            PRUint32             aFlags)
+nsMathMLmactionFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                       const nsRect&           aDirtyRect,
+                                       const nsDisplayListSet& aLists)
 {
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
-  }
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFrame* childFrame = GetSelectedFrame();
-  if (childFrame)
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect, childFrame, aWhichLayer);
+  if (childFrame) {
+    // Put the child's background directly onto the content list
+    nsDisplayListSet set(aLists, aLists.Content());
+    // The children should be in content order
+    rv = BuildDisplayListForChild(aBuilder, childFrame, aDirtyRect, set);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   // visual debug
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
-      NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags)) {
-    aRenderingContext.SetColor(NS_RGB(0,0,255));
-
-    nscoord x = mReference.x + mBoundingMetrics.leftBearing;
-    nscoord y = mReference.y - mBoundingMetrics.ascent;
-    nscoord w = mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing;
-    nscoord h = mBoundingMetrics.ascent + mBoundingMetrics.descent;
-
-    aRenderingContext.DrawRect(x,y,w,h);
-  }
+  rv = DisplayBoundingMetrics(aBuilder, this, mReference, mBoundingMetrics, aLists);
 #endif
-  return NS_OK;
+  return rv;
 }
 
 // Only reflow the selected child ...

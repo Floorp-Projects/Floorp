@@ -296,8 +296,7 @@ private:
     PRBool aIgnoreCoveringWidgets, PRBool aIgnoreOutsideClipping,
     nsIView* aSuppressScrolling);
   void RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
-                   const nsRegion& aRegion, nsIDrawingSurface* aRCSurface,
-                   const nsVoidArray& aDisplayList);
+                   const nsRegion& aRegion, nsIDrawingSurface* aRCSurface);
 
   void RenderDisplayListElement(DisplayListElement2* element,
                                 nsIRenderingContext* aRC);
@@ -309,9 +308,10 @@ private:
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
                                           PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut);
 
-  BlendingBuffers* CreateBlendingBuffers(nsIRenderingContext *aRC, PRBool aBorrowContext,
-                                         nsIDrawingSurface* aBorrowSurface, PRBool aNeedAlpha,
-                                         const nsRect& aArea);
+  virtual BlendingBuffers* CreateBlendingBuffers(nsIRenderingContext *aRC, PRBool aBorrowContext,
+                                                 nsIDrawingSurface* aBorrowSurface, PRBool aNeedAlpha,
+                                                 const nsRect& aArea);
+  virtual nsIBlender* GetBlender() { return mBlender; }
 
   void ReparentViews(DisplayZTreeNode* aNode, nsHashtable &);
   void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
@@ -495,10 +495,16 @@ public: // NOT in nsIViewManager, so private to the view module
    * to be rerendered.
    * @param aView view to paint. should be the nsScrollPortView that
    * got scrolled.
+   * @param aUpdateRegion ensure that this part of the view is repainted
    */
-  void UpdateViewAfterScroll(nsView *aView);
+  void UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegion);
 
-  PRBool CanScrollWithBitBlt(nsView* aView);
+  /**
+   * Asks whether we can scroll a view using bitblt. If we say 'yes', we
+   * return in aUpdateRegion an area that must be updated (relative to aView
+   * after it has been scrolled).
+   */
+  PRBool CanScrollWithBitBlt(nsView* aView, nsPoint aDelta, nsRegion* aUpdateRegion);
 
   nsresult CreateRegion(nsIRegion* *result);
 

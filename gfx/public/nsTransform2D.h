@@ -224,6 +224,7 @@ public:
 
   void Transform(float *aX, float *aY, float *aWidth, float *aHeight) const;
   void TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, nscoord *aHeight) const;
+  void TransformNoXLateCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, nscoord *aHeight) const;
 
   /**
    * Scale an array of X/Y coordinates by the X/Y scale factor in the

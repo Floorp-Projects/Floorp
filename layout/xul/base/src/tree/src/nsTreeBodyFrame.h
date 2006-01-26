@@ -96,14 +96,12 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  // Painting methods.
-  // Paint is the generic nsIFrame paint method.  We override this method
-  // to paint our contents (our rows and cells).
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+                              
+  void PaintTreeBody(nsIRenderingContext& aRenderingContext,
+                     const nsRect& aDirtyRect, nsPoint aPt);
 
   // This method paints a specific column background of the tree.
   void PaintColumn(nsTreeColumn*        aColumn,
@@ -115,9 +113,10 @@ public:
   // This method paints a single row in the tree.
   void PaintRow(PRInt32              aRowIndex,
                 const nsRect&        aRowRect,
-                nsPresContext*      aPresContext,
+                nsPresContext*       aPresContext,
                 nsIRenderingContext& aRenderingContext,
-                const nsRect&        aDirtyRect);
+                const nsRect&        aDirtyRect,
+                nsPoint              aPt);
 
   // This method paints a single separator in the tree.
   void PaintSeparator(PRInt32              aRowIndex,
@@ -130,10 +129,11 @@ public:
   void PaintCell(PRInt32              aRowIndex, 
                  nsTreeColumn*        aColumn,
                  const nsRect&        aCellRect,
-                 nsPresContext*      aPresContext,
+                 nsPresContext*       aPresContext,
                  nsIRenderingContext& aRenderingContext,
                  const nsRect&        aDirtyRect,
-                 nscoord&             aCurrX);
+                 nscoord&             aCurrX,
+                 nsPoint              aPt);
 
   // This method paints the twisty inside a cell in the primary column of an tree.
   void PaintTwisty(PRInt32              aRowIndex,

@@ -306,38 +306,6 @@ void nsIView::Destroy()
   delete this;
 }
 
-NS_IMETHODIMP nsView::Paint(nsIRenderingContext& rc, const nsRect& rect,
-                              PRUint32 aPaintFlags, PRBool &aResult)
-{
-    // Just paint, assume compositor knows what it's doing.
-    if (nsnull != mClientData) {
-      nsCOMPtr<nsIViewObserver> observer;
-      if (NS_OK == mViewManager->GetViewObserver(*getter_AddRefs(observer))) {
-        observer->Paint((nsIView *)this, rc, rect);
-      }
-    }
-        return NS_OK;
-}
-
-NS_IMETHODIMP nsView::Paint(nsIRenderingContext& rc, const nsIRegion& region,
-                              PRUint32 aPaintFlags, PRBool &aResult)
-{
-  // XXX apply region to rc
-  // XXX get bounding rect from region
-  //if (nsnull != mClientData)
-  //{
-  //  nsIViewObserver *obs;
-  //
-  //  if (NS_OK == mViewManager->GetViewObserver(obs))
-  //  {
-  //    obs->Paint((nsIView *)this, rc, rect, aPaintFlags);
-  //    NS_RELEASE(obs);
-  //  }
-  //}
-  aResult = PR_FALSE;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void nsView::SetPosition(nscoord aX, nscoord aY)
 {
   mDimBounds.x += aX - mPosX;

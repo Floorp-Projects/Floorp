@@ -96,8 +96,10 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
-  virtual nsIFrame* GetFrameForPoint(const nsPoint& aPoint,
-                                     nsFramePaintLayer aWhichLayer);
+
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   /**
    * Get the "type" of the frame
@@ -214,6 +216,20 @@ nsRootBoxFrame::Reflow(nsPresContext*          aPresContext,
   return nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
+nsresult
+nsRootBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                 const nsRect&           aDirtyRect,
+                                 const nsDisplayListSet& aLists)
+{
+  // root boxes don't need a debug border/outline or a selection overlay...
+  // They *may* have a background propagated to them, so force creation
+  // of a background display list element.
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
+}
+
 NS_IMETHODIMP
 nsRootBoxFrame::HandleEvent(nsPresContext* aPresContext, 
                        nsGUIEvent* aEvent,
@@ -233,14 +249,8 @@ nsRootBoxFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-nsIFrame*
-nsRootBoxFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                 nsFramePaintLayer aWhichLayer)
-{
-  // this should act like a block, so we need to override
-  return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
-}
-
+// REVIEW: The override here was doing nothing since nsBoxFrame is our
+// parent class
 nsIAtom*
 nsRootBoxFrame::GetType() const
 {

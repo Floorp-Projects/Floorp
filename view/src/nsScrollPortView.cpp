@@ -517,24 +517,26 @@ NS_IMETHODIMP nsScrollPortView::CanScroll(PRBool aHorizontal,
   return NS_OK;
 }
 
-PRBool nsScrollPortView::CannotBitBlt(nsView* aScrolledView)
-{
-  PRUint32  scrolledViewFlags = aScrolledView->GetViewFlags();
-
-  return (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT) ||
-         (scrolledViewFlags & NS_VIEW_FLAG_DONT_BITBLT) ||
-         (!(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT) && 
-          !mViewManager->CanScrollWithBitBlt(aScrolledView));
-}
-
-
 void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoint aPixDelta,
                               float aT2P)
 {
   if (aTwipsDelta.x != 0 || aTwipsDelta.y != 0)
   {
     nsIWidget *scrollWidget = GetWidget();
-    PRBool canBitBlit = scrollWidget && !CannotBitBlt(aScrolledView);
+    nsRegion updateRegion;
+    PRBool canBitBlit;
+    if (!scrollWidget) {
+      canBitBlit = PR_FALSE;
+    } else {
+      PRUint32  scrolledViewFlags = aScrolledView->GetViewFlags();
+
+      if ((mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT) ||
+          (scrolledViewFlags & NS_VIEW_FLAG_DONT_BITBLT) ||
+          (!(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT) && 
+           !mViewManager->CanScrollWithBitBlt(aScrolledView, aTwipsDelta, &updateRegion))) {
+        canBitBlit = PR_FALSE;
+      }
+    }
 
     if (canBitBlit) {
       // We're going to bit-blit.  Let the viewmanager know so it can
@@ -572,41 +574,9 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoin
       // Scroll the contents of the widget by the specified amount, and scroll
       // the child widgets
       scrollWidget->Scroll(aPixDelta.x, aPixDelta.y, nsnull);
-      mViewManager->UpdateViewAfterScroll(this);
+      mViewManager->UpdateViewAfterScroll(this, updateRegion);
     }
   }
-}
-
-NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& rc, const nsRect& rect,
-                                      PRUint32 aPaintFlags, PRBool &aResult)
-{
-  rc.PushState();
-  nsRect bounds;
-  GetDimensions(bounds);
-  bounds.x = bounds.y = 0;
-  rc.SetClipRect(bounds, nsClipCombine_kIntersect);
-
-  nsresult rv = nsView::Paint(rc, rect, aPaintFlags, aResult);
-
-  rc.PopState();
-    
-  return rv;
-}
-
-NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& aRC, const nsIRegion& aRegion,
-                                      PRUint32 aPaintFlags, PRBool &aResult)
-{
-  aRC.PushState();
-  nsRect bounds;
-  GetDimensions(bounds);
-  bounds.x = bounds.y = 0;
-  aRC.SetClipRect(bounds, nsClipCombine_kIntersect);
-
-  nsresult rv = nsView::Paint(aRC, aRegion, aPaintFlags, aResult);
-
-  aRC.PopState();
-    
-  return rv;
 }
 
 NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)

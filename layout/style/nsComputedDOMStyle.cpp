@@ -2735,18 +2735,10 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
     nsMargin padding;
     nsMargin border;
     nsSize size = aFrame->GetSize();
-    const nsStylePadding* paddingData = nsnull;
-    GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingData,
-                 aFrame);
-    if (paddingData) {
-      paddingData->CalcPaddingFor(aFrame, padding);
-    }
-    const nsStyleBorder* borderData = nsnull;
-    GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData,
-                 aFrame);
-    if (borderData) {
-      borderData->CalcBorderFor(aFrame, border);
-    }
+    const nsStylePadding* paddingData = aFrame->GetStylePadding();
+    paddingData->CalcPaddingFor(aFrame, padding);
+    const nsStyleBorder* borderData = aFrame->GetStyleBorder();
+    borderData->CalcBorderFor(aFrame, border);
   
     val->SetTwips(size.height - padding.top - padding.bottom -
                   border.top - border.bottom);
@@ -2804,18 +2796,10 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
     nsSize size = aFrame->GetSize();
     nsMargin padding;
     nsMargin border;
-    const nsStylePadding *paddingData = nsnull;
-    GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingData,
-                 aFrame);
-    if (paddingData) {
-      paddingData->CalcPaddingFor(aFrame, padding);
-    }
-    const nsStyleBorder *borderData = nsnull;
-    GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData,
-                 aFrame);
-    if (borderData) {
-      borderData->CalcBorderFor(aFrame, border);
-    }
+    const nsStylePadding *paddingData = aFrame->GetStylePadding();
+    paddingData->CalcPaddingFor(aFrame, padding);
+    const nsStyleBorder *borderData = aFrame->GetStyleBorder();
+    borderData->CalcBorderFor(aFrame, border);
     val->SetTwips(size.width - padding.left - padding.right -
                   border.left - border.right);
   } else {
@@ -3292,6 +3276,15 @@ nsComputedDOMStyle::GetStyleData(nsStyleStructID aID,
                                  nsIFrame* aFrame)
 {
   if (aFrame && !mPseudo) {
+    nsIAtom* type = aFrame->GetType();
+    if (type == nsLayoutAtoms::tableOuterFrame) {
+      // If the frame is an outer table frame then we should get the style
+      // from the inner table frame.
+      aFrame = aFrame->GetFirstChild(nsnull);
+      NS_ASSERTION(!aFrame->GetNextSibling(),
+                   "Outer table frames should have just one child, the inner table");
+    }
+  
     aStyleStruct = aFrame->GetStyleData(aID);
   } else if (mStyleContextHolder) {
     aStyleStruct = mStyleContextHolder->GetStyleData(aID);    

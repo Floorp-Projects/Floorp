@@ -122,14 +122,12 @@ public:
     */
   friend nsIFrame* NS_NewTableCellFrame(nsIPresShell* aPresShell);
 
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
-
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+                              
+  void PaintCellBackground(nsIRenderingContext& aRenderingContext,
+                           const nsRect& aDirtyRect, nsPoint aPt);
 
   NS_IMETHOD SetSelected(nsPresContext* aPresContext,
                          nsIDOMRange *aRange,
@@ -256,12 +254,27 @@ public:
   void    SetCollapseOffsetX(nscoord aXOffset);
   void    SetCollapseOffsetY(nscoord aYOffset);
   void    GetCollapseOffset(nsPoint& aOffset);
+  
+  /**
+   * This gets called when the collapse offset X or Y changes. Currently it's
+   * a disgusting hack (but not worse than the previous disgusting hack it
+   * replaces).
+   * XXX fix this when views have been removed.
+   */
+  void UpdateChildOffset(nsPoint aDelta);
 
   nsTableCellFrame* GetNextCell() const;
 
   virtual nsMargin* GetBorderWidth(float     aPixelsToTwips,
                                    nsMargin& aBorder) const;
 
+  virtual void PaintBackground(nsIRenderingContext& aRenderingContext,
+                               const nsRect&        aDirtyRect,
+                               nsPoint              aPt);
+
+  void DecorateForSelection(nsIRenderingContext& aRenderingContext,
+                            nsPoint              aPt);
+                                 
 protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
@@ -286,20 +299,6 @@ private:
 protected:
 
   friend class nsTableRowFrame;
-
-  virtual void PaintUnderlay(nsPresContext&           aPresContext,
-                             nsIRenderingContext&      aRenderingContext,
-                             const nsRect&             aDirtyRect,
-                             PRUint32&                 aFlags,
-                             const nsStyleBorder&      aStyleBorder,
-                             const nsStylePadding&     aStylePadding,
-                             const nsStyleTableBorder& aCellTableStyle);
-
-  nsresult  DecorateForSelection(nsPresContext* aPresContext,
-                                 nsIRenderingContext& aRenderingContext,
-                                 const nsStyleBackground* aStyleColor);
-
-protected:
 
   struct Bits {
     PRUint32 mColIndex:15;     
@@ -465,15 +464,9 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-protected:
-
-  virtual void PaintUnderlay(nsPresContext&           aPresContext,
-                             nsIRenderingContext&      aRenderingContext,
-                             const nsRect&             aDirtyRect,
-                             PRUint32&                 aFlags,
-                             const nsStyleBorder&      aStyleBorder,
-                             const nsStylePadding&     aStylePadding,
-                             const nsStyleTableBorder& aCellTableStyle);
+  virtual void PaintBackground(nsIRenderingContext& aRenderingContext,
+                               const nsRect&        aDirtyRect,
+                               nsPoint              aPt);
 
 private:
   

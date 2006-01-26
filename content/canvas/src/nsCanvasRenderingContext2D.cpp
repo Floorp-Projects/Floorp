@@ -71,8 +71,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
-#include "nsIViewManager.h"
-#include "nsIScrollableView.h"
+#include "nsIPresShell.h"
+#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 
 #include "cairo.h"
@@ -1882,12 +1882,6 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     if (!presContext)
         return NS_ERROR_FAILURE;
 
-    // Dig down past the viewport scroll stuff
-    nsIViewManager* vm = presContext->GetViewManager();
-    nsIView* view;
-    vm->GetRootView(view);
-    NS_ASSERTION(view, "Must have root view!");
-
     nscolor bgColor;
     nsresult rv = mCSSParser->ParseColorString(PromiseFlatString(aBGColor),
                                                nsnull, 0, PR_TRUE, &bgColor);
@@ -1896,11 +1890,13 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     float p2t = presContext->PixelsToTwips();
     nsRect r(aX, aY, aW, aH);
     r.ScaleRoundOut(p2t);
+    
+    nsIPresShell* presShell = presContext->PresShell();
 
     nsCOMPtr<nsIRenderingContext> blackCtx;
-    rv = vm->RenderOffscreen(view, r, PR_FALSE, PR_TRUE,
-                             NS_ComposeColors(NS_RGB(0, 0, 0), bgColor),
-                             getter_AddRefs(blackCtx));
+    rv = presShell->RenderOffscreen(r, PR_FALSE, PR_TRUE,
+                                    NS_ComposeColors(NS_RGB(0, 0, 0), bgColor),
+                                    getter_AddRefs(blackCtx));
     NS_ENSURE_SUCCESS(rv, rv);
     
     nsIDrawingSurface* blackSurface;
@@ -1921,9 +1917,9 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     // But we need to compose our given background color onto black/white
     // to get the real background to use.
     nsCOMPtr<nsIRenderingContext> whiteCtx;
-    rv = vm->RenderOffscreen(view, r, PR_FALSE, PR_TRUE,
-                             NS_ComposeColors(NS_RGB(255, 255, 255), bgColor),
-                             getter_AddRefs(whiteCtx));
+    rv = presShell->RenderOffscreen(r, PR_FALSE, PR_TRUE,
+                                    NS_ComposeColors(NS_RGB(255, 255, 255), bgColor),
+                                    getter_AddRefs(whiteCtx));
     if (NS_SUCCEEDED(rv)) {
         nsIDrawingSurface* whiteSurface;
         whiteCtx->GetDrawingSurface(&whiteSurface);

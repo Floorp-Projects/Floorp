@@ -80,6 +80,10 @@ public:
   void PostScrollPortEvent(PRBool aOverflow, nsScrollPortEvent::orientType aType);
   void PostOverflowEvents();
 
+  nsresult BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                            const nsRect&           aDirtyRect,
+                            const nsDisplayListSet& aLists);
+
   // nsIScrollPositionListener
 
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
@@ -191,6 +195,12 @@ public:
   NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
+
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) {
+    return mInner.BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  }
 
   PRBool TryLayout(ScrollReflowState* aState,
                    const nsHTMLReflowMetrics& aKidMetrics,
@@ -335,6 +345,12 @@ public:
   NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
+
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) {
+    return mInner.BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  }
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                   nsHTMLReflowMetrics&     aDesiredSize,

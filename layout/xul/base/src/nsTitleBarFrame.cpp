@@ -48,6 +48,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIViewManager.h"
 #include "nsGUIEvent.h"
+#include "nsDisplayList.h"
 
 //
 // NS_NewTitleBarFrame
@@ -91,12 +92,15 @@ nsTitleBarFrame::GetMouseThrough(PRBool& aMouseThrough)
   return NS_OK;
 }
 
-nsIFrame*
-nsTitleBarFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                  nsFramePaintLayer aWhichLayer)
+NS_IMETHODIMP
+nsTitleBarFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                             const nsRect&           aDirtyRect,
+                                             const nsDisplayListSet& aLists)
 {
   // override, since we don't want children to get events
-  return nsFrame::GetFrameForPoint(aPoint, aWhichLayer);
+  if (aBuilder->IsForEventDelivery())
+    return NS_OK;
+  return nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 NS_IMETHODIMP

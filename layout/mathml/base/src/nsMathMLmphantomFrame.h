@@ -53,12 +53,9 @@ public:
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent);
 
-  NS_IMETHOD
-  Paint(nsPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
-        const nsRect&        aDirtyRect,
-        nsFramePaintLayer    aWhichLayer,
-        PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) { return NS_OK; }
 
 protected:
   nsMathMLmphantomFrame();
