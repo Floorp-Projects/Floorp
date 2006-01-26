@@ -50,15 +50,18 @@
 
   [% FOREACH group = groups %]
     <tr>
-      <td>[% group.name FILTER html %]</td>
+      <td>
+        <a href="editgroups.cgi?action=changeform&amp;group=[% group.id FILTER url_quote %]">
+          [% group.name FILTER html %]</a>
+      </td>
       <td>[% group.description FILTER html %]</td>
-      <td>[% group.userregexp FILTER html %]&nbsp</td>
+      <td>[% group.userregexp FILTER html %]&nbsp;</td>
 
       <td align="center">
         [% IF (group.isactive != 0) && (group.isbuggroup) %]
           X
         [% ELSE %]
-          &nbsp
+          &nbsp;
         [% END %]
       </td>
 
@@ -67,9 +70,10 @@
       </td>
 
       <td align="center" valign="middle">
-        <a href="editgroups.cgi?action=changeform&amp;group=[% group.id FILTER url_quote %]">Edit</a>
         [% IF (group.isbuggroup) %]
-          | <a href="editgroups.cgi?action=del&amp;group=[% group.id FILTER url_quote %]">Delete</a>
+          <a href="editgroups.cgi?action=del&amp;group=[% group.id FILTER url_quote %]">Delete</a>
+        [% ELSE %]
+          &nbsp;
         [% END %]
       </td>
     </tr>
