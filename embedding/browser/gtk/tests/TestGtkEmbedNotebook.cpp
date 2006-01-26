@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include <gtkmozembed.h>
+#include <stdio.h>
 #include "nsStringAPI.h"
 #include "gtkmozembed_glue.cpp"
 
