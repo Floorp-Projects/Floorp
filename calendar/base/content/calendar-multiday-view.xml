@@ -1182,7 +1182,7 @@
     </implementation>
 
     <handlers>
-      <handler event="dblclick"><![CDATA[
+      <handler event="dblclick" button="0"><![CDATA[
         if (this.calendarView.controller) {
             this.calendarView.controller.createNewEvent();
         }
@@ -1412,8 +1412,10 @@
             return;
         }
 
-        // start 'single click edit' timeout
-        if (this.selected) {
+        // If the middle/right button was used for click just select the item.
+        // If the left button was used and the item is already selected start
+        // the 'single click edit' timeout. Otherwise select the item too.
+        if (this.selected && (event.button == 0)) {
             var self = this;
             if (this.editingTimer) {
                 clearTimeout(this.editingTimer);
@@ -1424,7 +1426,7 @@
         }
       ]]></handler>
 
-      <handler event="dblclick"><![CDATA[
+      <handler event="dblclick" button="0"><![CDATA[
         event.stopPropagation();
 
         // stop 'single click edit' timeout (if started)
@@ -1439,7 +1441,7 @@
         }
       ]]></handler>
 
-      <handler event="mousedown"><![CDATA[
+      <handler event="mousedown" button="0"><![CDATA[
         event.preventBubble();
 
         if (this.mEditing)
