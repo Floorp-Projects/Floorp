@@ -334,8 +334,7 @@ nsSchemaValidator::ValidateSimpletype(const nsAString & aNodeValue,
 
     case nsISchemaSimpleType::SIMPLE_TYPE_LIST: {
       // handle lists
-      rv = ValidateListSimpletype(aNodeValue, aSchemaSimpleType, nsnull,
-                                  &isValid);
+      rv = ValidateListSimpletype(aNodeValue, aSchemaSimpleType, &isValid);
       break;
     }
 
@@ -713,7 +712,6 @@ nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
 #endif
 
   PRBool isValid = PR_FALSE;
-
   switch(builtinTypeValue) {
     case nsISchemaBuiltinType::BUILTIN_TYPE_STRING: {
       isValid = PR_TRUE;
@@ -847,16 +845,8 @@ nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
 nsresult
 nsSchemaValidator::ValidateListSimpletype(const nsAString & aNodeValue,
                                           nsISchemaSimpleType *aSchemaSimpleType,
-                                          nsSchemaDerivedSimpleType *aFacets,
                                           PRBool *aResult)
 {
- /* When a datatype is derived from an list datatype, the following facets apply:
-  * length, maxLength, minLength, enumeration, pattern, whitespace
-  *
-  * The length facets apply to the whole list, ie the number of items in the list.
-  * Patterns are applied to the whole list as well.
-  */
-
   PRBool isValid = PR_FALSE;
 
   nsresult rv;
@@ -871,68 +861,16 @@ nsSchemaValidator::ValidateListSimpletype(const nsAString & aNodeValue,
     nsCStringArray stringArray;
     stringArray.ParseString(NS_ConvertUTF16toUTF8(aNodeValue).get(), " \t\r\n");
 
-    PRUint32 count = stringArray.Count();
+    PRInt32 count = stringArray.Count();
+    nsAutoString tmp;
 
-    // if facets have been provided, check them first
-    PRBool facetsValid = PR_TRUE;
-    if (aFacets) {
-      if (aFacets->length.isDefined) {
-        if (aFacets->length.value != count) {
-          facetsValid = PR_FALSE;
-          LOG(("  Not valid: List is not the right length (%d)",
-               aFacets->length.value));
-        }
-      }
+    for (PRInt32 i=0; i < count; ++i) {
+      CopyUTF8toUTF16(stringArray[i]->get(), tmp);
+      LOG(("  Validating List Item (%d): %s", i, NS_ConvertUTF16toUTF8(tmp).get()));
+      rv = ValidateSimpletype(tmp, listSimpleType, &isValid);
 
-      if (facetsValid && aFacets->maxLength.isDefined) {
-        if (aFacets->maxLength.value < count) {
-          facetsValid = PR_FALSE;
-          LOG(("  Not valid: Length (%d) of the list is too large",
-               aFacets->maxLength.value));
-        }
-      }
-
-      if (facetsValid && aFacets->minLength.isDefined) {
-        if (aFacets->minLength.value > count) {
-          facetsValid = PR_FALSE;
-          LOG(("  Not valid: Length (%d) of the list is too small",
-               aFacets->minLength.value));
-        }
-      }
-
-      if (facetsValid && aFacets->pattern.isDefined) {
-        // check if the pattern matches
-        nsCOMPtr<nsISchemaValidatorRegexp> regexp = do_GetService(kREGEXP_CID);
-        rv = regexp->RunRegexp(aNodeValue, aFacets->pattern.value, "g",
-                               &facetsValid);
-#ifdef PR_LOGGING
-        LOG(("  Checking Regular Expression"));
-        if (facetsValid) {
-          LOG(("    -- pattern validates!"));
-        } else {
-          LOG(("    -- pattern does not validate!"));
-        }
-#endif
-      }
-
-      if (facetsValid && aFacets->enumerationList.Count() > 0) {
-        facetsValid =
-          nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
-                                                    aFacets->enumerationList);
-      }
-    }
-
-    // either no facets passed in or facets validated fine
-    if (facetsValid) {
-      nsAutoString tmp;
-      for (PRUint32 i=0; i < count; ++i) {
-        CopyUTF8toUTF16(stringArray[i]->get(), tmp);
-        LOG(("  Validating List Item (%d): %s", i, NS_ConvertUTF16toUTF8(tmp).get()));
-        rv = ValidateSimpletype(tmp, listSimpleType, &isValid);
-
-        if (!isValid)
-          break;
-      }
+      if (!isValid)
+        break;
     }
   }
 
@@ -949,8 +887,7 @@ nsSchemaValidator::ValidateUnionSimpletype(const nsAString & aNodeValue,
   PRBool isValid = PR_FALSE;
 
   nsresult rv;
-  nsCOMPtr<nsISchemaUnionType> unionType = do_QueryInterface(aSchemaSimpleType,
-                                                             &rv);
+  nsCOMPtr<nsISchemaUnionType> unionType = do_QueryInterface(aSchemaSimpleType, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISchemaSimpleType> unionSimpleType;
@@ -964,50 +901,6 @@ nsSchemaValidator::ValidateUnionSimpletype(const nsAString & aNodeValue,
 
     LOG(("  Validating Untion Type #%d", i));
     rv = ValidateSimpletype(aNodeValue, unionSimpleType, &isValid);
-
-    if (isValid)
-      break;
-  }
-
-  *aResult = isValid;
-  return rv;
-}
-
-nsresult
-nsSchemaValidator::ValidateDerivedUnionSimpletype(const nsAString & aNodeValue,
-                                                  nsSchemaDerivedSimpleType *aDerived,
-                                                  PRBool *aResult)
-{
-  // This method is called when a simple type is derived from a union type
-  // via restrictions.  So we walk all the possible types, and pass in the
-  // loaded restriction facets so that they will override the ones defined
-  // my the union type.  We actually have to create a custom
-  // nsSchemaDerivedSimpleType for each type, since we need to change the basetype
-  // and to avoid any new restrictions being added to aDerived.
-
-  PRBool isValid = PR_FALSE;
-
-  nsresult rv;
-  nsCOMPtr<nsISchemaUnionType> unionType = do_QueryInterface(aDerived->mBaseType,
-                                                             &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISchemaSimpleType> unionSimpleType;
-  PRUint32 count;
-  unionType->GetUnionTypeCount(&count);
-
-  // compare against the union simpletypes in order until a match is found
-  for (PRUint32 i=0; i < count; ++i) {
-    rv = unionType->GetUnionType(i, getter_AddRefs(unionSimpleType));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsSchemaDerivedSimpleType derivedType;
-    nsSchemaValidatorUtils::CopyDerivedSimpleType(&derivedType, aDerived);
-
-    derivedType.mBaseType = unionSimpleType;
-
-    LOG(("  Validating Union Type #%d", i));
-    rv = ValidateDerivedSimpletype(aNodeValue, &derivedType, &isValid);
 
     if (isValid)
       break;
@@ -1050,8 +943,7 @@ nsSchemaValidator::ValidateBuiltinTypeString(const nsAString & aNodeValue,
   }
 
   if (isValid && aEnumerationList && (aEnumerationList->Count() > 0)) {
-    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
-                                                        *aEnumerationList);
+    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue, *aEnumerationList);
   }
 
 #ifdef PR_LOGGING
@@ -2760,9 +2652,10 @@ PRBool
 nsSchemaValidator::IsValidSchemaAnyURI(const nsAString & aString)
 {
   PRBool isValid = PR_FALSE;
+  nsresult rv;
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aString);
+  rv = NS_NewURI(getter_AddRefs(uri), aString);
 
   if (rv == NS_OK)
     isValid = PR_TRUE;
