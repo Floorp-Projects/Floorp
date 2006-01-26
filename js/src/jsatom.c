@@ -187,7 +187,7 @@ js_compare_atom_keys(const void *k1, const void *k2)
 
     v1 = (jsval)k1, v2 = (jsval)k2;
     if (JSVAL_IS_STRING(v1) && JSVAL_IS_STRING(v2))
-        return !js_CompareStrings(JSVAL_TO_STRING(v1), JSVAL_TO_STRING(v2));
+        return js_EqualStrings(JSVAL_TO_STRING(v1), JSVAL_TO_STRING(v2));
     if (JSVAL_IS_DOUBLE(v1) && JSVAL_IS_DOUBLE(v2)) {
         double d1 = *JSVAL_TO_DOUBLE(v1);
         double d2 = *JSVAL_TO_DOUBLE(v2);

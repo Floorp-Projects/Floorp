@@ -2836,6 +2836,33 @@ js_CompareStrings(JSString *str1, JSString *str2)
     return (intN)(l1 - l2);
 }
 
+JSBool
+js_EqualStrings(JSString *str1, JSString *str2)
+{
+    size_t n;
+    const jschar *s1, *s2;
+
+    /* Fast case: pointer equality could be a quick win. */
+    if (str1 == str2)
+        return JS_TRUE;
+
+    n = JSSTRING_LENGTH(str1);
+    if (n != JSSTRING_LENGTH(str2))
+        return JS_FALSE;
+
+    if (n == 0)
+        return JS_TRUE;
+
+    s1 = JSSTRING_CHARS(str1), s2 = JSSTRING_CHARS(str2);
+    do {
+        if (*s1 != *s2)
+            return JS_FALSE;
+        ++s1, ++s2;
+    } while (--n != 0);
+
+    return JS_TRUE;
+}
+
 size_t
 js_strlen(const jschar *s)
 {
