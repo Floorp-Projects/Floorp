@@ -641,7 +641,7 @@ txStepPattern::getSubExprAt(PRUint32 aPos)
 void
 txStepPattern::setSubExprAt(PRUint32 aPos, Expr* aExpr)
 {
-    return PredicateList::setSubExprAt(aPos, aExpr);
+    PredicateList::setSubExprAt(aPos, aExpr);
 }
 
 #ifdef TX_TO_STRING
