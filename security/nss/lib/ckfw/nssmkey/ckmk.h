@@ -40,7 +40,7 @@
 #define CKMK_H 1
 
 #ifdef DEBUG
-static const char CKMK_CVS_ID[] = "@(#) $RCSfile: ckmk.h,v $ $Revision: 1.1 $ $Date: 2005/11/23 23:04:08 $";
+static const char CKMK_CVS_ID[] = "@(#) $RCSfile: ckmk.h,v $ $Revision: 1.2 $ $Date: 2006/01/26 23:21:39 $";
 #endif /* DEBUG */
 
 #include <Security/SecKeychainSearch.h>
@@ -222,7 +222,7 @@ nss_ckmk_GetULongAttribute
   CK_ATTRIBUTE_TYPE type,
   CK_ATTRIBUTE *template,
   CK_ULONG templateSize,
-  CK_RV *pError;
+  CK_RV *pError
 );
 
 #define NSS_CKMK_ARRAY_SIZE(x) ((sizeof (x))/(sizeof ((x)[0])))
