@@ -61,7 +61,6 @@ class EmbedEventListener;
 
 class nsPIDOMWindow;
 class nsIDirectoryServiceProvider;
-class nsProfileDirServiceProvider;
 
 class EmbedPrivate {
 
@@ -86,6 +85,7 @@ class EmbedPrivate {
 
   static void PushStartup     (void);
   static void PopStartup      (void);
+  static void SetPath         (const char *aPath);
   static void SetCompPath     (const char *aPath);
   static void SetAppComponents (const nsModuleComponentInfo* aComps,
                                 int aNumComponents);
@@ -150,6 +150,8 @@ class EmbedPrivate {
 
   // the number of widgets that have been created
   static PRUint32                sWidgetCount;
+  // the path to the GRE
+  static char                   *sPath;
   // the path to components
   static char                   *sCompPath;
   // the list of application-specific components to register
@@ -160,10 +162,8 @@ class EmbedPrivate {
   // the list of all open windows
   static nsVoidArray            *sWindowList;
   // what is our profile path?
-  static char                   *sProfileDir;
-  static char                   *sProfileName;
-  // for profiles
-  static nsProfileDirServiceProvider *sProfileDirServiceProvider;
+  static nsILocalFile           *sProfileDir;
+  static nsISupports            *sProfileLock;
 
   static nsIDirectoryServiceProvider * sAppFileLocProvider;
 
@@ -190,9 +190,6 @@ class EmbedPrivate {
   // this will get the PIDOMWindow for this widget
   nsresult        GetPIDOMWindow   (nsPIDOMWindow **aPIWin);
   
-  static nsresult StartupProfile (void);
-  static void     ShutdownProfile(void);
-
   static nsresult RegisterAppComponents();
 
   // offscreen window methods and the offscreen widget
@@ -200,7 +197,7 @@ class EmbedPrivate {
   static void       DestroyOffscreenWindow(void);
   static GtkWidget *sOffscreenWindow;
   static GtkWidget *sOffscreenFixed;
-  
+ 
 };
 
 #endif /* __EmbedPrivate_h */

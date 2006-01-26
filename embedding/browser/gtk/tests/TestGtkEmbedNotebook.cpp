@@ -1,5 +1,8 @@
 #include <gtk/gtk.h>
 #include <gtkmozembed.h>
+#include "nsStringAPI.h"
+#include "gtkmozembed_glue.cpp"
+
 int main(int argc, char *argv[])
 {
 	GtkWidget *window;
@@ -10,6 +13,39 @@ int main(int argc, char *argv[])
 
 	gtk_init(&argc, &argv);
 	
+        static const GREVersionRange greVersion = {
+                "1.9a", PR_TRUE,
+                "2", PR_TRUE
+        };
+
+        char xpcomPath[PATH_MAX];
+
+        nsresult rv =
+                GRE_GetGREPathWithProperties(&greVersion, 1, nsnull, 0,
+                                             xpcomPath, sizeof(xpcomPath));
+        if (NS_FAILED(rv)) {
+                fprintf(stderr, "Couldn't find a compatible GRE.\n");
+                return 1;
+        }
+
+        rv = XPCOMGlueStartup(xpcomPath);
+        if (NS_FAILED(rv)) {
+                fprintf(stderr, "Couldn't start XPCOM.");
+                return 1;
+        }
+
+        rv = GTKEmbedGlueStartup();
+        if (NS_FAILED(rv)) {
+                fprintf(stderr, "Couldn't find GTKMozEmbed symbols.");
+                return 1;
+        }
+
+        char *lastSlash = strrchr(xpcomPath, '/');
+        if (lastSlash)
+                *lastSlash = '\0';
+
+        gtk_moz_embed_set_path(xpcomPath);
+
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	
 	container = gtk_notebook_new();

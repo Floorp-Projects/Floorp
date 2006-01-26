@@ -45,15 +45,9 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMUIEvent.h"
-#include "prenv.h"
 
-#ifdef NS_TRACE_MALLOC
-#include "nsTraceMalloc.h"
-#endif
-
-#ifdef MOZ_JPROF
-#include "jprof.h"
-#endif
+#include "nsStringAPI.h"
+#include "gtkmozembed_glue.cpp"
 
 typedef struct _TestGtkBrowser {
   GtkWidget  *topLevelWindow;
@@ -190,20 +184,44 @@ static void update_nav_buttons      (TestGtkBrowser *browser);
 int
 main(int argc, char **argv)
 {
-#ifdef NS_TRACE_MALLOC
-  argc = NS_TraceMallocStartupArgs(argc, argv);
-#endif
-
   gtk_set_locale();
   gtk_init(&argc, &argv);
 
-#ifdef MOZ_JPROF
-  setupProfilingStuff();
-#endif
+  static const GREVersionRange greVersion = {
+    "1.9a", PR_TRUE,
+    "2", PR_TRUE
+  };
+
+  char xpcomPath[PATH_MAX];
+
+  nsresult rv = GRE_GetGREPathWithProperties(&greVersion, 1, nsnull, 0,
+                                             xpcomPath, sizeof(xpcomPath));
+  if (NS_FAILED(rv)) {
+    fprintf(stderr, "Couldn't find a compatible GRE.\n");
+    return 1;
+  }
+
+  rv = XPCOMGlueStartup(xpcomPath);
+  if (NS_FAILED(rv)) {
+    fprintf(stderr, "Couldn't start XPCOM.");
+    return 1;
+  }
+
+  rv = GTKEmbedGlueStartup();
+  if (NS_FAILED(rv)) {
+    fprintf(stderr, "Couldn't find GTKMozEmbed symbols.");
+    return 1;
+  }
+
+  char *lastSlash = strrchr(xpcomPath, '/');
+  if (lastSlash)
+    *lastSlash = '\0';
+
+  gtk_moz_embed_set_path(xpcomPath);
 
   char *home_path;
   char *full_path;
-  home_path = PR_GetEnv("HOME");
+  home_path = getenv("HOME");
   if (!home_path) {
     fprintf(stderr, "Failed to get HOME\n");
     exit(1);
