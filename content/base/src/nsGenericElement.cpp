@@ -867,8 +867,7 @@ nsGenericElement::~nsGenericElement()
     if (document) {
       document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
                                     this, nsnull, nsnull);
-      document->PropertyTable()->
-        DeleteAllPropertiesFor(NS_STATIC_CAST(nsINode*, this));
+      document->PropertyTable()->DeleteAllPropertiesFor(this);
     }
   }
 
@@ -1927,8 +1926,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
         ownerDocument->CopyUserData(this, aDocument);
 
         // Remove all properties.
-        ownerDocument->PropertyTable()->
-          DeleteAllPropertiesFor(NS_STATIC_CAST(nsINode*, this));
+        ownerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
       }
 
       // get a new nodeinfo
