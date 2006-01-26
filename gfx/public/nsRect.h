@@ -95,7 +95,7 @@ struct NS_GFX nsRect {
   void SetRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) {
     x = aX; y = aY; width = aWidth; height = aHeight;
   }
-  void SetRect(nsPoint aPt, nsSize aSize) {
+  void SetRect(const nsPoint& aPt, const nsSize& aSize) {
     SetRect(aPt.x, aPt.y, aSize.width, aSize.height);
   }
   void MoveTo(nscoord aX, nscoord aY) {x = aX; y = aY;}
