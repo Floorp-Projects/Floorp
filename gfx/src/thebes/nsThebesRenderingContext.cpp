@@ -237,6 +237,7 @@ nsThebesRenderingContext::SetTranslation(nscoord aX, nscoord aY)
     mat->ToValues(&a, &b, &c, &d, &tx, &ty);
     gfxMatrix newMat(a, b, c, d, aX, aY);
     mThebes->SetMatrix(&newMat);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
