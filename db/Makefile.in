@@ -42,9 +42,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_MORK
 DIRS		= mdb mork
-
-ifdef MOZ_PLACES
+endif
+ifdef MOZ_MORKREADER
 DIRS		+= morkreader
 endif
 

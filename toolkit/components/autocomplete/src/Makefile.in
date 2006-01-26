@@ -55,19 +55,26 @@ REQUIRES =	xpcom \
 		string \
 		dom \
 		layout \
-		mork \
 		unicharutil \
 		toolkitcomps \
 	 	$(NULL)
 
 CPPSRCS = nsAutoCompleteController.cpp \
-          nsAutoCompleteMdbResult.cpp \
           nsAutoCompleteSimpleResult.cpp \
           $(NULL)
+
+ifdef MOZ_MORK
+REQUIRES += mork
+CPPSRCS += nsAutoCompleteMdbResult.cpp
+endif
 
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
+
+ifdef MOZ_MORKREADER
+EXTRA_DSO_LDOPTS += $(DIST)/lib/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX)
+endif
 
 include $(topsrcdir)/config/rules.mk

@@ -4156,6 +4156,8 @@ MOZ_LIBART_CFLAGS=
 MOZ_LIBART_LIBS=
 MOZ_MAIL_NEWS=
 MOZ_MATHML=1
+MOZ_MORK=1
+MOZ_MORKREADER=
 MOZ_AUTH_EXTENSION=1
 MOZ_NO_ACTIVEX_SUPPORT=1
 MOZ_NO_XPCOM_OBSOLETE=
@@ -5476,6 +5478,8 @@ MOZ_ARG_ENABLE_BOOL(places,
     MOZ_PLACES= )
 if test -n "$MOZ_PLACES"; then
     AC_DEFINE(MOZ_PLACES)
+    MOZ_MORK=
+    MOZ_MORKREADER=1
 fi
 
 dnl ========================================================
@@ -6935,6 +6939,18 @@ MOZ_ARG_DISABLE_BOOL(v1-string-abi,
 AC_SUBST(MOZ_V1_STRING_ABI)
 if test "$MOZ_V1_STRING_ABI"; then
     AC_DEFINE(MOZ_V1_STRING_ABI)
+fi
+
+dnl Only build Mork if it's required
+AC_SUBST(MOZ_MORK)
+if test "$MOZ_MORK"; then
+  AC_DEFINE(MOZ_MORK)
+fi
+
+dnl Build the lightweight Mork reader if required
+AC_SUBST(MOZ_MORKREADER)
+if test "$MOZ_MORKREADER"; then
+  AC_DEFINE(MOZ_MORKREADER)
 fi
 
 dnl ========================================================

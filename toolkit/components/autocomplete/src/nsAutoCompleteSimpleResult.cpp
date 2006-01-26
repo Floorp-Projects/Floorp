@@ -156,7 +156,12 @@ NS_IMETHODIMP
 nsAutoCompleteSimpleResult::RemoveValueAt(PRInt32 aRowIndex,
                                           PRBool aRemoveFromDb)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_TRUE(aRowIndex >= 0 && aRowIndex < mValues.Count(),
+                 NS_ERROR_ILLEGAL_VALUE);
+
+  mValues.RemoveStringAt(aRowIndex);
+  mComments.RemoveStringAt(aRowIndex);
+  return NS_OK;
 }
 
 

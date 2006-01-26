@@ -56,7 +56,8 @@
 #include "nsIDocShell.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsFormHistory.h"
+
+class nsFormHistory;
 
 class nsFormFillController : public nsIFormFillController,
                              public nsIAutoCompleteInput,

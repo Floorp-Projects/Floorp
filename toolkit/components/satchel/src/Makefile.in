@@ -64,7 +64,6 @@ REQUIRES =	\
 		content \
 		view \
 		locale \
-		mork \
 		unicharutil \
 		intl \
 		pref \
@@ -73,10 +72,25 @@ REQUIRES =	\
 		$(NULL)
 
 CPPSRCS = nsFormFillController.cpp \
-          nsFormHistory.cpp \
           $(NULL)
 
-LOCAL_INCLUDES = -I$(srcdir)/../../passwordmgr/base
+ifdef MOZ_STORAGE
+REQUIRES += storage
+CPPSRCS += nsStorageFormHistory.cpp
+ifdef MOZ_MORKREADER
+REQUIRES += morkreader
+endif
+else # MOZ_STORAGE
+ifdef MOZ_MORK
+REQUIRES += mork
+CPPSRCS += nsFormHistory.cpp
+endif
+endif # MOZ_STORAGE
+
+LOCAL_INCLUDES = \
+	-I$(srcdir)/../../passwordmgr/base \
+	-I$(srcdir)/../../build \
+	$(NULL)
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)passwordmgr_s.$(LIB_SUFFIX) \
@@ -91,3 +105,8 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
+
+ifdef MOZ_MORKREADER
+EXTRA_DSO_LDOPTS += $(DIST)/lib/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX)
+endif
+

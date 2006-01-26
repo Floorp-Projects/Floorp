@@ -36,39 +36,36 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+interface nsIFile;
 
-[scriptable, uuid(fa5a871d-29f5-489e-aaa4-c266def52b79)]
+/**
+ * The nsIFormHistory object is a service which holds a set of name/value
+ * pairs.  The names correspond to form field names, and the values correspond
+ * to values the user has submitted.  So, several values may exist for a single
+ * name.
+ *
+ * Note: this interface provides no means to access stored values.
+ * Stored values are used by the FormFillController to generate
+ * autocomplete matches.
+ */
+
+[scriptable, uuid(a61f0a62-ae0a-4382-b474-d259442ca80c)]
 interface nsIFormHistory : nsISupports
 {
   /**
-   * The total number of rows in the form history.
+   * Returns true if the form history has any entries.
    */
-  readonly attribute unsigned long rowCount;
+  readonly attribute boolean hasEntries;
   
   /**
-   * Gets the name and value at a position in the form history.
-   */
-  void getEntryAt(in unsigned long index, out AString name, out AString value);
-  
-  /**
-   * Gets just the name at a position in the form history.
-   */
-  void getNameAt(in unsigned long index, out AString name);
-
-  /**
-   * Gets just the value at a position in the form history.
-   */
-  void getValueAt(in unsigned long index, out AString value);
-  
-  /**
-   * Appends a name and value pair to the end of the form history.
+   * Adds a name and value pair to the form history.
    */
   void addEntry(in AString name, in AString value);
 
   /**
-   * Removes the entry at a position.
+   * Removes a name and value pair from the form history.
    */
-  void removeEntryAt(in unsigned long index);
+  void removeEntry(in AString name, in AString value);
 
   /**
    * Removes all entries that are paired with a name.
@@ -89,4 +86,22 @@ interface nsIFormHistory : nsISupports
    * Gets whether a name and value pair exists in the form history.
    */
   boolean entryExists(in AString name, in AString value);
+};
+
+/**
+ * nsIFormHistoryImporter is an interface for importing a Mork formhistory.dat
+ * file into the new form history storage.
+ */
+
+[scriptable, uuid(9e811188-6a5b-4d96-a92d-1bac66a41898)]
+interface nsIFormHistoryImporter : nsISupports
+{
+  /**
+   * Import the given Mork form history file.
+   *  @param file     The Mork form history file to import
+   *  @param history  A reference to the nsIFormHistory.  This is
+   *                  supplied since the importer is invoked during
+   *                  form history initialization.
+   */
+  void importFormHistory(in nsIFile file, in nsIFormHistory formHistory);
 };
