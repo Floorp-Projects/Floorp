@@ -565,17 +565,17 @@ BITMAPINFO * nsDrawingSurfaceWin :: CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHe
       mPixFormat.mGreenZeroMask = 0xff;
       mPixFormat.mBlueZeroMask = 0xff;
       mPixFormat.mAlphaZeroMask = 0;
-      mPixFormat.mRedMask = 0xff;
+      mPixFormat.mRedMask = 0xff0000;
       mPixFormat.mGreenMask = 0xff00;
-      mPixFormat.mBlueMask = 0xff0000;
+      mPixFormat.mBlueMask = 0xff;
       mPixFormat.mAlphaMask = 0;
       mPixFormat.mRedCount = 8;
       mPixFormat.mGreenCount = 8;
       mPixFormat.mBlueCount = 8;
       mPixFormat.mAlphaCount = 0;
-      mPixFormat.mRedShift = 0;
+      mPixFormat.mRedShift = 16;
       mPixFormat.mGreenShift = 8;
-      mPixFormat.mBlueShift = 16;
+      mPixFormat.mBlueShift = 0;
       mPixFormat.mAlphaShift = 0;
       
       break;
