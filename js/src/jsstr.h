@@ -388,6 +388,12 @@ extern intN
 js_CompareStrings(JSString *str1, JSString *str2);
 
 /*
+ * Test if strings are equal.
+ */
+extern JSBool
+js_EqualStrings(JSString *str1, JSString *str2);
+
+/*
  * Boyer-Moore-Horspool superlinear search for pat:patlen in text:textlen.
  * The patlen argument must be positive and no greater than BMH_PATLEN_MAX.
  * The start argument tells where in text to begin the search.

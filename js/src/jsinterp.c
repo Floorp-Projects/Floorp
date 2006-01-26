@@ -4198,7 +4198,7 @@ interrupt:
                 SEARCH_PAIRS(
                     match = (JSVAL_IS_STRING(rval) &&
                              ((str2 = JSVAL_TO_STRING(rval)) == str ||
-                              !js_CompareStrings(str2, str)));
+                              js_EqualStrings(str2, str)));
                 )
             } else if (JSVAL_IS_DOUBLE(lval)) {
                 d = *JSVAL_TO_DOUBLE(lval);
@@ -4281,7 +4281,7 @@ interrupt:
                 SEARCH_EXTENDED_PAIRS(
                     match = (JSVAL_IS_STRING(rval) &&
                              ((str2 = JSVAL_TO_STRING(rval)) == str ||
-                              !js_CompareStrings(str2, str)));
+                              js_EqualStrings(str2, str)));
                 )
             } else if (JSVAL_IS_DOUBLE(lval)) {
                 d = *JSVAL_TO_DOUBLE(lval);

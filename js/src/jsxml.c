@@ -239,7 +239,7 @@ namespace_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
         *bp = JS_FALSE;
     } else {
         ns2 = (JSXMLNamespace *) JS_GetPrivate(cx, obj2);
-        *bp = !js_CompareStrings(ns->uri, ns2->uri);
+        *bp = js_EqualStrings(ns->uri, ns2->uri);
     }
     return JS_TRUE;
 }
@@ -424,9 +424,9 @@ qname_identity(JSXMLQName *qna, JSXMLQName *qnb)
 {
     if (!qna->uri ^ !qnb->uri)
         return JS_FALSE;
-    if (qna->uri && js_CompareStrings(qna->uri, qnb->uri))
+    if (qna->uri && !js_EqualStrings(qna->uri, qnb->uri))
         return JS_FALSE;
-    return !js_CompareStrings(qna->localName, qnb->localName);
+    return js_EqualStrings(qna->localName, qnb->localName);
 }
 
 static JSBool
@@ -971,13 +971,13 @@ namespace_identity(const void *a, const void *b)
     const JSXMLNamespace *nsb = (const JSXMLNamespace *) b;
 
     if (nsa->prefix && nsb->prefix) {
-        if (js_CompareStrings(nsa->prefix, nsb->prefix))
+        if (!js_EqualStrings(nsa->prefix, nsb->prefix))
             return JS_FALSE;
     } else {
         if (nsa->prefix || nsb->prefix)
             return JS_FALSE;
     }
-    return !js_CompareStrings(nsa->uri, nsb->uri);
+    return js_EqualStrings(nsa->uri, nsb->uri);
 }
 
 static JSBool
@@ -1386,7 +1386,7 @@ ParseNodeToQName(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
             n = inScopeNSes->length;
             while (n != 0) {
                 ns = XMLARRAY_MEMBER(inScopeNSes, --n, JSXMLNamespace);
-                if (ns->prefix && !js_CompareStrings(ns->prefix, prefix)) {
+                if (ns->prefix && js_EqualStrings(ns->prefix, prefix)) {
                     uri = ns->uri;
                     break;
                 }
@@ -1715,8 +1715,8 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
             for (j = 0; j < i; j++) {
                 attrj = XMLARRAY_MEMBER(&xml->xml_attrs, j, JSXML);
                 attrjqn = attrj->name;
-                if (!js_CompareStrings(attrjqn->uri, qn->uri) &&
-                    !js_CompareStrings(attrjqn->localName, qn->localName)) {
+                if (js_EqualStrings(attrjqn->uri, qn->uri) &&
+                    js_EqualStrings(attrjqn->localName, qn->localName)) {
                     js_ReportCompileErrorNumber(cx, pn2,
                                                 JSREPORT_PN | JSREPORT_ERROR,
                                                 JSMSG_DUPLICATE_XML_ATTR,
@@ -2439,10 +2439,10 @@ GetNamespace(JSContext *cx, JSXMLQName *qn, const JSXMLArray *inScopeNSes)
              * This spec bug leads to ToXMLString results that duplicate the
              * declared namespace.
              */
-            if (!js_CompareStrings(ns->uri, qn->uri) &&
+            if (js_EqualStrings(ns->uri, qn->uri) &&
                 (ns->prefix == qn->prefix ||
                  ((ns->prefix && qn->prefix)
-                  ? !js_CompareStrings(ns->prefix, qn->prefix)
+                  ? js_EqualStrings(ns->prefix, qn->prefix)
                   : IS_EMPTY(ns->prefix ? ns->prefix : qn->prefix)))) {
                 match = ns;
                 break;
@@ -2553,8 +2553,8 @@ namespace_match(const void *a, const void *b)
     const JSXMLNamespace *nsb = (const JSXMLNamespace *) b;
 
     if (nsb->prefix)
-        return nsa->prefix && !js_CompareStrings(nsa->prefix, nsb->prefix);
-    return !js_CompareStrings(nsa->uri, nsb->uri);
+        return nsa->prefix && js_EqualStrings(nsa->prefix, nsb->prefix);
+    return js_EqualStrings(nsa->uri, nsb->uri);
 }
 
 /* ECMA-357 10.2.1 and 10.2.2 */
@@ -3053,7 +3053,7 @@ out:
     atom = cx->runtime->atomState.lazy.functionNamespaceURIAtom;
     if (qn->uri && atom &&
         (qn->uri == ATOM_TO_STRING(atom) ||
-         !js_CompareStrings(qn->uri, ATOM_TO_STRING(atom)))) {
+         js_EqualStrings(qn->uri, ATOM_TO_STRING(atom)))) {
         if (!JS_ValueToId(cx, STRING_TO_JSVAL(qn->localName), funidp))
             return NULL;
     } else {
@@ -3083,7 +3083,7 @@ AddInScopeNamespace(JSContext *cx, JSXML *xml, JSXMLNamespace *ns)
         match = NULL;
         for (i = 0, n = xml->xml_namespaces.length; i < n; i++) {
             ns2 = XMLARRAY_MEMBER(&xml->xml_namespaces, i, JSXMLNamespace);
-            if (!js_CompareStrings(ns2->uri, ns->uri)) {
+            if (js_EqualStrings(ns2->uri, ns->uri)) {
                 match = ns2;
                 break;
             }
@@ -3099,13 +3099,13 @@ AddInScopeNamespace(JSContext *cx, JSXML *xml, JSXMLNamespace *ns)
 #endif
         for (i = 0, n = xml->xml_namespaces.length; i < n; i++) {
             ns2 = XMLARRAY_MEMBER(&xml->xml_namespaces, i, JSXMLNamespace);
-            if (ns2->prefix && !js_CompareStrings(ns2->prefix, ns->prefix)) {
+            if (ns2->prefix && js_EqualStrings(ns2->prefix, ns->prefix)) {
                 match = ns2;
                 m = i;
                 break;
             }
         }
-        if (match && js_CompareStrings(match->uri, ns->uri)) {
+        if (match && !js_EqualStrings(match->uri, ns->uri)) {
             ns2 = XMLARRAY_DELETE(cx, &xml->xml_namespaces, m, JS_TRUE,
                                   JSXMLNamespace);
             JS_ASSERT(ns2 == match);
@@ -3354,9 +3354,9 @@ MatchAttrName(JSXMLQName *nameqn, JSXML *attr)
     JSXMLQName *attrqn = attr->name;
 
     return (IS_STAR(nameqn->localName) ||
-            !js_CompareStrings(attrqn->localName, nameqn->localName)) &&
+            js_EqualStrings(attrqn->localName, nameqn->localName)) &&
            (!nameqn->uri ||
-            !js_CompareStrings(attrqn->uri, nameqn->uri));
+            js_EqualStrings(attrqn->uri, nameqn->uri));
 }
 
 static JSBool
@@ -3364,10 +3364,10 @@ MatchElemName(JSXMLQName *nameqn, JSXML *elem)
 {
     return (IS_STAR(nameqn->localName) ||
             (elem->xml_class == JSXML_CLASS_ELEMENT &&
-             !js_CompareStrings(elem->name->localName, nameqn->localName))) &&
+             js_EqualStrings(elem->name->localName, nameqn->localName))) &&
            (!nameqn->uri ||
             (elem->xml_class == JSXML_CLASS_ELEMENT &&
-             !js_CompareStrings(elem->name->uri, nameqn->uri)));
+             js_EqualStrings(elem->name->uri, nameqn->uri)));
 }
 
 /* ECMA-357 9.1.1.8 XML [[Descendants]] and 9.2.1.8 XMLList [[Descendants]]. */
@@ -3478,8 +3478,8 @@ retry:
     vqn = vxml->name;
     if (qn) {
         *bp = vqn &&
-              !js_CompareStrings(qn->localName, vqn->localName) &&
-              !js_CompareStrings(qn->uri, vqn->uri);
+              js_EqualStrings(qn->localName, vqn->localName) &&
+              js_EqualStrings(qn->uri, vqn->uri);
     } else {
         *bp = vqn == NULL;
     }
@@ -3487,7 +3487,7 @@ retry:
         return JS_TRUE;
 
     if (JSXML_HAS_VALUE(xml)) {
-        *bp = !js_CompareStrings(xml->xml_value, vxml->xml_value);
+        *bp = js_EqualStrings(xml->xml_value, vxml->xml_value);
     } else if ((n = xml->xml_kids.length) != vxml->xml_kids.length) {
         *bp = JS_FALSE;
     } else {
@@ -3516,7 +3516,7 @@ retry:
                     break;
                 }
                 vattr = XMLARRAY_MEMBER(&vxml->xml_attrs, j, JSXML);
-                *bp = !js_CompareStrings(attr->xml_value, vattr->xml_value);
+                *bp = js_EqualStrings(attr->xml_value, vattr->xml_value);
                 if (!*bp)
                     break;
             }
@@ -4520,9 +4520,9 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             for (i = 0, n = xml->xml_attrs.length; i < n; i++) {
                 attr = XMLARRAY_MEMBER(&xml->xml_attrs, i, JSXML);
                 attrqn = attr->name;
-                if (!js_CompareStrings(attrqn->localName, nameqn->localName) &&
+                if (js_EqualStrings(attrqn->localName, nameqn->localName) &&
                     (!nameqn->uri ||
-                     !js_CompareStrings(attrqn->uri, nameqn->uri))) {
+                     js_EqualStrings(attrqn->uri, nameqn->uri))) {
                     if (!match) {
                         match = attr;
                     } else {
@@ -5285,7 +5285,7 @@ xml_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
                     vstr = js_ValueToString(cx, v);
                     ok = str && vstr;
                     if (ok)
-                        *bp = !js_CompareStrings(str, vstr);
+                        *bp = js_EqualStrings(str, vstr);
                     js_LeaveLocalRootScope(cx);
                 }
             } else {
@@ -5300,13 +5300,13 @@ xml_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
                 vstr = js_ValueToString(cx, v);
                 ok = str && vstr;
                 if (ok)
-                    *bp = !js_CompareStrings(str, vstr);
+                    *bp = js_EqualStrings(str, vstr);
             } else if (JSVAL_IS_STRING(v) || JSVAL_IS_NUMBER(v)) {
                 str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
                 if (!str) {
                     ok = JS_FALSE;
                 } else if (JSVAL_IS_STRING(v)) {
-                    *bp = !js_CompareStrings(str, JSVAL_TO_STRING(v));
+                    *bp = js_EqualStrings(str, JSVAL_TO_STRING(v));
                 } else {
                     ok = js_ValueToNumber(cx, STRING_TO_JSVAL(str), &d);
                     if (ok) {
@@ -5935,8 +5935,8 @@ xml_inScopeNamespaces(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 nsobj = JSVAL_TO_OBJECT(v);
                 ns2 = (JSXMLNamespace *) JS_GetPrivate(cx, nsobj);
                 if ((ns2->prefix && ns->prefix)
-                    ? !js_CompareStrings(ns2->prefix, ns->prefix)
-                    : !js_CompareStrings(ns2->uri, ns->uri)) {
+                    ? js_EqualStrings(ns2->prefix, ns->prefix)
+                    : js_EqualStrings(ns2->uri, ns->uri)) {
                     break;
                 }
             }
@@ -6128,7 +6128,7 @@ xml_namespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 return JS_FALSE;
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
             ns = (JSXMLNamespace *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(v));
-            if (ns->prefix && !js_CompareStrings(ns->prefix, prefix))
+            if (ns->prefix && js_EqualStrings(ns->prefix, prefix))
                 break;
         }
 
@@ -6411,7 +6411,7 @@ xml_processingInstructions(JSContext *cx, JSObject *obj, uintN argc,
             kid = XMLARRAY_MEMBER(&xml->xml_kids, i, JSXML);
             if (kid->xml_class == JSXML_CLASS_PROCESSING_INSTRUCTION &&
                 (IS_STAR(nameqn->localName) ||
-                 !js_CompareStrings(nameqn->localName, kid->name->localName))) {
+                 js_EqualStrings(nameqn->localName, kid->name->localName))) {
                 ok = Append(cx, list, kid);
                 if (!ok)
                     break;
@@ -6467,10 +6467,10 @@ namespace_full_match(const void *a, const void *b)
     const JSXMLNamespace *nsb = (const JSXMLNamespace *) b;
 
     if (nsa->prefix && nsb->prefix &&
-        js_CompareStrings(nsa->prefix, nsb->prefix)) {
+        !js_EqualStrings(nsa->prefix, nsb->prefix)) {
         return JS_FALSE;
     }
-    return !js_CompareStrings(nsa->uri, nsb->uri);
+    return js_EqualStrings(nsa->uri, nsb->uri);
 }
 
 static JSBool
@@ -6729,7 +6729,7 @@ xml_setName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         nsarray = &nsowner->xml_namespaces;
         for (i = 0, n = nsarray->length; i < n; i++) {
             ns = XMLARRAY_MEMBER(nsarray, i, JSXMLNamespace);
-            if (!js_CompareStrings(ns->uri, nameqn->uri)) {
+            if (js_EqualStrings(ns->uri, nameqn->uri)) {
                 nameqn->prefix = ns->prefix;
                 return JS_TRUE;
             }

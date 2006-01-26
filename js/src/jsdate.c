@@ -1940,7 +1940,7 @@ date_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         if (!str)
             return JS_FALSE;
         str2 = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER]);
-        if (!js_CompareStrings(str, str2))
+        if (js_EqualStrings(str, str2))
             return date_getTime(cx, obj, argc, argv, rval);
     }
     return date_toString(cx, obj, argc, argv, rval);
