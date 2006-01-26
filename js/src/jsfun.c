@@ -1670,22 +1670,23 @@ static JSFunctionSpec function_methods[] = {
 JSBool
 js_IsIdentifier(JSString *str)
 {
-    size_t n;
-    jschar *s, c;
+    size_t length;
+    jschar c, *chars, *end, *s;
 
-    n = JSSTRING_LENGTH(str);
-    if (n == 0)
+    length = JSSTRING_LENGTH(str);
+    if (length == 0)
         return JS_FALSE;
-    s = JSSTRING_CHARS(str);
-    c = *s;
+    chars = JSSTRING_CHARS(str);
+    c = *chars;
     if (!JS_ISIDSTART(c))
         return JS_FALSE;
-    for (n--; n != 0; n--) {
-        c = *++s;
+    end = chars + length;
+    for (s = chars + 1; s != end; ++s) {
+        c = *s;
         if (!JS_ISIDENT(c))
             return JS_FALSE;
     }
-    return JS_TRUE;
+    return !js_IsKeyword(chars, length);
 }
 
 static JSBool

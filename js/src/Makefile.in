@@ -104,6 +104,7 @@ CSRCS		= \
 
 EXPORTS		= \
 		jsautocfg.h \
+		jsautokw.h \
 		js.msg \
 		jsapi.h \
 		jsarray.h \
@@ -192,6 +193,11 @@ JSJAVA_CFLAGS	= \
 		-I$(topsrcdir)/sun-java/md-include \
 		-I$(topsrcdir)/sun-java/include \
 		$(JSJAVA_STUBHEADERS)
+
+# Define keyword generator before rules.mk, see bug 323979 comment 50
+
+HOST_SIMPLE_PROGRAMS += host_jskwgen$(HOST_BIN_SUFFIX)
+GARBAGE += jsautokw.h host_jskwgen$(HOST_BIN_SUFFIX)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -392,3 +398,8 @@ jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.c Makefile.in
 endif
 endif
 
+# Extra dependancies and rules for keyword switch code
+jsscan.$(OBJ_SUFFIX): jsautokw.h jskeyword.tbl
+
+jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX) jskeyword.tbl
+	$< $@

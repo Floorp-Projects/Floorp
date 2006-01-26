@@ -2402,7 +2402,7 @@ GetNamespace(JSContext *cx, JSXMLQName *qn, const JSXMLArray *inScopeNSes)
                              qn->prefix
                              ? js_ValueToPrintableString(cx,
                                    STRING_TO_JSVAL(qn->prefix))
-                             : js_type_str[JSTYPE_VOID]);
+                             : js_type_strs[JSTYPE_VOID]);
         return NULL;
     }
 
@@ -2906,9 +2906,9 @@ ToXMLString(JSContext *cx, jsval v)
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_XML_CONVERSION,
-                             js_type_str[JSVAL_IS_NULL(v)
-                                         ? JSTYPE_NULL
-                                         : JSTYPE_VOID]);
+                             js_type_strs[JSVAL_IS_NULL(v)
+                                          ? JSTYPE_NULL
+                                          : JSTYPE_VOID]);
         return NULL;
     }
 
