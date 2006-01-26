@@ -1869,7 +1869,7 @@ struct ProxyData {
 nsresult
 nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
 {
-  nsCOMPtr<nsIWindowsRegKey> regKey; 
+  nsCOMPtr<nsIWindowsRegKey> regKey =
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
   NS_NAMED_LITERAL_STRING(key,
     "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings");
