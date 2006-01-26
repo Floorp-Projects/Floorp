@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <math.h>
-
 #include "nsSVGPathGeometryFrame.h"
 #include "nsIDOMSVGAnimatedPathData.h"
 #include "nsIDOMSVGPathSegList.h"
