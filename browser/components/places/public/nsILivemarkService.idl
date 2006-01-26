@@ -37,12 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIBookmarksContainer.idl"
+#include "nsIRemoteContainer.idl"
 
 interface nsIURI;
 
 [scriptable, uuid(b1257934-86cf-4143-8386-734ac352b6ba)]
-interface nsILivemarkService : nsIBookmarksContainer
+interface nsILivemarkService : nsIRemoteContainer
 {
   /**
    * Creates a new livemark

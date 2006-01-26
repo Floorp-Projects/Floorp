@@ -39,9 +39,6 @@ const PREF_PLACES_GROUPING_GENERIC = "browser.places.grouping.generic";
 const PREF_PLACES_GROUPING_BOOKMARK = "browser.places.grouping.bookmark";
 
 // Default Search Queries
-const QUERY_MONTH_HISTORY = "place:&group=2&sort=1&type=1";
-const QUERY_DAY_HISTORY = "place:&beginTimeRef=1&endTimeRef=2&sort=4&type=1";
-const QUERY_BOOKMARKS_MENU = "place:&folders=3&group=3";
 const INDEX_HISTORY = 0;
 const INDEX_BOOKMARKS = 1;
 

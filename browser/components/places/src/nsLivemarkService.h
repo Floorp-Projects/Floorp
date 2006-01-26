@@ -52,7 +52,7 @@ class nsLivemarkService : public nsILivemarkService
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIBOOKMARKSCONTAINER
+  NS_DECL_NSIREMOTECONTAINER
   NS_DECL_NSILIVEMARKSERVICE
 
   nsLivemarkService();
