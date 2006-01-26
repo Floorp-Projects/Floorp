@@ -389,25 +389,26 @@ case "$target" in
             _CC_SUITE=7
         elif test "$_CC_MAJOR_VERSION" = "14"; then
             _CC_SUITE=8
+            CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
         else
             AC_MSG_ERROR([This version of the MSVC compiler, $CC_VERSION , is unsupported.])
         fi
 	
-	# bug #249782
-	# ensure that mt.exe is Microsoft (R) Manifest Tool and not magnetic tape manipulation utility (or something else)
-	if test "$_CC_SUITE" -ge "8"; then
-		MSMT_TOOL=`mt 2>&1|grep 'Microsoft (R) Manifest Tool'`
-		if test -n "MSMT_TOOL"; then
-			MSMANIFEST_TOOL_VERSION=`echo ${MSMANIFEST_TOOL}|grep -Po "(^|\s)[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?(\s|$)"`
-			if test -z "MSMANIFEST_TOOL_VERSION"; then
-				AC_MSG_WARN([Unknown version of the Microsoft (R) Manifest Tool.])
-			fi
-			MSMANIFEST_TOOL=1
-			unset MSMT_TOOL
-		else
-			AC_MSG_ERROR([Microsoft (R) Manifest Tool must be in your \$PATH.])
-		fi
-	fi
+        # bug #249782
+        # ensure that mt.exe is Microsoft (R) Manifest Tool and not magnetic tape manipulation utility (or something else)
+        if test "$_CC_SUITE" -ge "8"; then
+                MSMT_TOOL=`mt 2>&1|grep 'Microsoft (R) Manifest Tool'`
+                if test -n "MSMT_TOOL"; then
+                        MSMANIFEST_TOOL_VERSION=`echo ${MSMANIFEST_TOOL}|grep -Po "(^|\s)[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?(\s|$)"`
+                        if test -z "MSMANIFEST_TOOL_VERSION"; then
+                                AC_MSG_WARN([Unknown version of the Microsoft (R) Manifest Tool.])
+                        fi
+                        MSMANIFEST_TOOL=1
+                        unset MSMT_TOOL
+                else
+                        AC_MSG_ERROR([Microsoft (R) Manifest Tool must be in your \$PATH.])
+                fi
+        fi
 
         # Check linker version
         _LD_FULL_VERSION=`"${LD}" -v 2>&1 | sed -ne "$_MSVC_VER_FILTER"`
