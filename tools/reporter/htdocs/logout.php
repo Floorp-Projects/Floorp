@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-require_once('../../config.inc.php');
+require_once('../config.inc.php');
 require_once($config['base_path'].'/includes/iolib.inc.php');
 
 // start the session
@@ -48,7 +48,7 @@ printheaders();
 $_SESSION = array();
 session_destroy();
 
-if($_SESSION['username']){
+if(isset($_SESSION['username'])){
     // not sure if this could ever happen, but just in case.
     echo 'Failed to logout';
 } else {
