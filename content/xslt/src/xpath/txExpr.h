@@ -442,7 +442,7 @@ public:
 
     NodeTestType getType();
 
-    TX_DECL_NODE_TEST;
+    TX_DECL_NODE_TEST
 
     nsCOMPtr<nsIAtom> mPrefix;
     nsCOMPtr<nsIAtom> mLocalName;
@@ -474,7 +474,7 @@ public:
      */
     void setNodeName(const nsAString& aName);
 
-    TX_DECL_NODE_TEST;
+    TX_DECL_NODE_TEST
 
 private:
     NodeType mNodeType;
@@ -489,7 +489,7 @@ class txPredicatedNodeTest : public txNodeTest
 {
 public:
     txPredicatedNodeTest(txNodeTest* aNodeTest, Expr* aPredicate);
-    TX_DECL_NODE_TEST;
+    TX_DECL_NODE_TEST
 
 private:
     nsAutoPtr<txNodeTest> mNodeTest;
