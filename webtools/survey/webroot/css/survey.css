@@ -1,0 +1,22 @@
+.survey {
+    list-style-type: none;
+    margin: 0 .5em;
+    padding: .5em 0;
+}
+
+h2 {
+    margin: .5em 0;
+}
+
+.submit {
+    background-color: #9f9;
+    border: 2px #333 outset;
+    font-weight: bold;
+    margin-top: 1em;
+}
+
+.submit:hover {
+    background-color: #fff;
+    border: 2px #333 inset;
+    cursor: pointer;
+}
