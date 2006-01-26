@@ -6350,13 +6350,13 @@ EOF
         fi
         if test -n "$LIBIDL_PREFIX"; then
             LIBIDL_CFLAGS="-I${LIBIDL_PREFIX}/include ${GLIB_CFLAGS}"
-            if test -f "${LIBIDL_PREFIX}/lib/libidl-0.6_s.lib"; then
-                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libidl-0.6_s.lib"
+            if test -f "${LIBIDL_PREFIX}/lib/libIDL-0.6_s.lib"; then
+                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libIDL-0.6_s.lib"
                 STATIC_LIBIDL=1
-            elif test -f "${LIBIDL_PREFIX}/lib/libidl-0.6.lib"; then
-                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libidl-0.6.lib"
+            elif test -f "${LIBIDL_PREFIX}/lib/libIDL-0.6.lib"; then
+                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libIDL-0.6.lib"
             else
-                { echo "configure: error: Cannot find $LIBIDL_PREFIX/lib/libidl-0.6.lib or $LIBIDL_PREFIX/lib/libidl-0.6_s.lib" 1>&2; exit 1; }
+                { echo "configure: error: Cannot find $LIBIDL_PREFIX/lib/libIDL-0.6.lib or $LIBIDL_PREFIX/lib/libIDL-0.6_s.lib" 1>&2; exit 1; }
             fi
         fi
         LIBIDL_LIBS="${LIBIDL_LIBS} ${GLIB_LIBS}"
