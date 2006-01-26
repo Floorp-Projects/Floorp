@@ -255,8 +255,8 @@ function ComposeMessage(type, format, folder, messageArray)
         identity = getIdentityForServer(server, hintForIdentity);
 
       var messageID = hdr.messageId;
-      var messageIDScheme = messageID.split(":")[0];
-      if ((messageIDScheme == 'http' || messageIDScheme == 'https') &&  "openComposeWindowForRSSArticle" in this) 
+      var messageIDScheme = messageID ? messageID.split(":")[0] : "";
+      if (messageIDScheme && (messageIDScheme == 'http' || messageIDScheme == 'https') &&  "openComposeWindowForRSSArticle" in this) 
         openComposeWindowForRSSArticle(messageID, hdr, type); 
       else if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
                 type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSender || 
