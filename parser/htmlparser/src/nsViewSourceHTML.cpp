@@ -108,38 +108,7 @@ Stopwatch vsTimer;
 static const char kBodyId[] = "viewsource";
 static const char kBodyClassWrap[] = "wrap";
 
-/**
- *  This method gets called as part of our COM-like interfaces.
- *  Its purpose is to create an interface to parser object
- *  of some type.
- *  
- *  @update   gess 4/8/98
- *  @param    nsIID  id of object to discover
- *  @param    aInstancePtr ptr to newly discovered interface
- *  @return   NS_xxx result code
- */
-nsresult CViewSourceHTML::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-
-  if(aIID.Equals(NS_GET_IID(nsISupports)))    {  //do IUnknown...
-    *aInstancePtr = (nsIDTD*)(this);                                        
-  }
-  else if(aIID.Equals(NS_GET_IID(nsIDTD))) {  //do IParser base class...
-    *aInstancePtr = (nsIDTD*)(this);                                        
-  }
-  else {
-    *aInstancePtr=0;
-    return NS_NOINTERFACE;
-  }
-  NS_ADDREF_THIS();
-  return NS_OK;                                                        
-}
-
-NS_IMPL_ADDREF(CViewSourceHTML)
-NS_IMPL_RELEASE(CViewSourceHTML)
+NS_IMPL_ISUPPORTS1(CViewSourceHTML, nsIDTD)
 
 /********************************************
  ********************************************/

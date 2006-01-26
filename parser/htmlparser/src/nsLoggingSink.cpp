@@ -77,39 +77,7 @@ nsLoggingSink::~nsLoggingSink() {
   mOutput=0;
 }
 
-NS_IMPL_ADDREF(nsLoggingSink)
-NS_IMPL_RELEASE(nsLoggingSink)
-
-nsresult
-nsLoggingSink::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(nsnull != aInstancePtr, "null ptr");
-  if (nsnull == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {
-    nsISupports* tmp = this;
-    *aInstancePtr = (void*) tmp;
-  }
-  else if (aIID.Equals(kIContentSinkIID)) {
-    nsIContentSink* tmp = this;
-    *aInstancePtr = (void*) tmp;
-  }
-  else if (aIID.Equals(kIHTMLContentSinkIID)) {
-    nsIHTMLContentSink* tmp = this;
-    *aInstancePtr = (void*) tmp;
-  }
-  else if (aIID.Equals(kILoggingSinkIID)) {
-    nsILoggingSink* tmp = this;
-    *aInstancePtr = (void*) tmp;
-  }
-  else {
-    *aInstancePtr = nsnull;
-    return NS_NOINTERFACE;
-  }
-  NS_ADDREF(this);
-  return NS_OK;
-}
+NS_IMPL_ISUPPORTS3(nsLoggingSink, nsILoggingSink, nsIContentSink, nsIHTMLContentSink)
 
 NS_IMETHODIMP
 nsLoggingSink::SetOutputStream(PRFileDesc *aStream,PRBool autoDeleteOutput) {
