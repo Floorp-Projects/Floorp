@@ -301,10 +301,10 @@ extern JS_FRIEND_API(int)
 js_fgets(char *buf, int size, FILE *file);
 
 /*
- * Initialize the scanner, installing JS keywords into cx's global scope.
+ * Return true if the given char array forms JavaScript keyword.
  */
 extern JSBool
-js_InitScanner(JSContext *cx);
+js_IsKeyword(const jschar *str, size_t length);
 
 /*
  * Friend-exported API entry point to call a mapping function on each reserved
