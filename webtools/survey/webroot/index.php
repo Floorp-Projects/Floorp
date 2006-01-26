@@ -36,7 +36,7 @@ foreach ($issues as $id=>$text) {
 echo '</ul>';
 
 echo '<h2>Other comments or suggestions?</h2>';
-echo '<textarea name="comments" rows="11" cols="80"></textarea>';
+echo '<div><textarea name="comments" rows="11" cols="80"></textarea></div>';
 
 
 echo '<div><input name="submit" type="submit" class="submit" value="Submit &raquo;"/></div>';

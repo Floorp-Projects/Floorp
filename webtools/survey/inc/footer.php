@@ -1,6 +1,6 @@
     </div><!-- end #content div -->
 
-    <hr class="hide"/>
+    <hr class="hide">
 
     <div id="footer">
         <div id="footer-contents">

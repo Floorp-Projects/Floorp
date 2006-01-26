@@ -2,10 +2,10 @@
 <html lang="en" dir="ltr">
 <head>
     <title>Uninstall Survey | Mozilla Corporation</title>
-    <link rel="stylesheet" type="text/css" href="<?=WEB_PATH?>/css/base/template.css" media="screen"/>
-    <link rel="stylesheet" type="text/css" href="<?=WEB_PATH?>/css/rustico/template.css" title="Cavendish" media="screen"/>
-    <link rel="stylesheet" type="text/css" href="<?=WEB_PATH?>/css/rustico/content.css" title="Cavendish" media="screen"/>
-    <link rel="stylesheet" type="text/css" href="<?=WEB_PATH?>/css/survey.css" media="screen"/>
+    <link rel="stylesheet" type="text/css" href="<?=WEB_PATH?>/css/base/template.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="<?=WEB_PATH?>/css/rustico/template.css" title="Cavendish" media="screen">
+    <link rel="stylesheet" type="text/css" href="<?=WEB_PATH?>/css/rustico/content.css" title="Cavendish" media="screen">
+    <link rel="stylesheet" type="text/css" href="<?=WEB_PATH?>/css/survey.css" media="screen">
 </head>
 <body id="mozilla-com">
     <div id="header">
@@ -27,6 +27,6 @@
     want to encourage people to build up the basics with this
     in mind. -->
 
-    <hr class="hide"/>
+    <hr class="hide">
 
     <div id="content">
