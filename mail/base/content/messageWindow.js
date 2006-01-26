@@ -432,12 +432,12 @@ function ShowMenus()
 function HideToolbarButtons()
 {
   // How can we remove these two items from the palette as well? 
-  var mailToolbar = document.getElementById('mail-bar');
+  var mailToolbar = document.getElementById('mail-bar2');
   if (mailToolbar)
   {
     var defaultSet = mailToolbar.getAttribute("defaultset");
     defaultSet = defaultSet.replace(/search-container/i, "");
-    defaultSet = defaultSet.replace(/mailviews-containerr/i, "");
+    defaultSet = defaultSet.replace(/mailviews-container/i, "");
     mailToolbar.setAttribute('defaultset', defaultSet);
   }
 }
