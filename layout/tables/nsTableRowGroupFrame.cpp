@@ -53,6 +53,7 @@
 #include "nsCSSRendering.h"
 #include "nsHTMLParts.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsDisplayList.h"
 
 #include "nsCellMap.h"//table cell navigation
 
@@ -187,52 +188,40 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsPresContext*       aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsTableRowGroupFrame::Paint(nsPresContext*      aPresContext,
-                                      nsIRenderingContext& aRenderingContext,
-                                      const nsRect&        aDirtyRect,
-                                      nsFramePaintLayer    aWhichLayer,
-                                      PRUint32             aFlags)
+static void
+PaintRowGroupBackground(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+                        const nsRect& aDirtyRect, nsPoint aPt)
 {
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(aFrame, tableFrame);
+  NS_ASSERTION(tableFrame, "null table frame");
+
+  nsIRenderingContext::AutoPushTranslation translate(aCtx, aPt.x, aPt.y);
+  TableBackgroundPainter painter(tableFrame,
+                                 TableBackgroundPainter::eOrigin_TableRowGroup,
+                                 aFrame->GetPresContext(), *aCtx,
+                                 aDirtyRect - aPt);
+  painter.PaintRowGroup(NS_STATIC_CAST(nsTableRowGroupFrame*, aFrame));
+}
+
+NS_IMETHODIMP
+nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                       const nsRect&           aDirtyRect,
+                                       const nsDisplayListSet& aLists)
+{
+  if (!IsVisibleInSelection(aBuilder))
     return NS_OK;
+
+  if (aBuilder->IsAtRootOfPseudoStackingContext()) {
+    // This background is created regardless of whether this frame is
+    // visible or not. Visibility decisions are delegated to the
+    // table background painter.
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayGeneric(this, PaintRowGroupBackground, "TableRowGroupBackground"));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-
-#ifdef DEBUG
-  // for debug...
-  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
-    aRenderingContext.SetColor(NS_RGB(0,255,0));
-    aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
-  }
-#endif
-
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
-      //direct (not table-called) background paint
-      !(aFlags & (NS_PAINT_FLAG_TABLE_BG_PAINT | NS_PAINT_FLAG_TABLE_CELL_BG_PASS))) {
-    nsTableFrame* tableFrame;
-    nsTableFrame::GetTableFrame(this, tableFrame);
-    NS_ASSERTION(tableFrame, "null table frame");
-
-    TableBackgroundPainter painter(tableFrame,
-                                   TableBackgroundPainter::eOrigin_TableRowGroup,
-                                   aPresContext, aRenderingContext,
-                                   aDirtyRect);
-    nsresult rv = painter.PaintRowGroup(this);
-    if (NS_FAILED(rv)) return rv;
-    aFlags |= NS_PAINT_FLAG_TABLE_BG_PAINT;
-  }
-
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect,
-                aWhichLayer, aFlags);
-
-  // Paint outline
-  nsRect rect(0, 0, mRect.width, mRect.height);
-  const nsStyleOutline* outlineStyle = GetStyleOutline();
-  const nsStyleBorder* borderStyle  = GetStyleBorder();
-  nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                               aDirtyRect, rect, *borderStyle, *outlineStyle,
-                               mStyleContext, 0);
-  return NS_OK;
+    
+  return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists);
 }
 
 PRIntn
@@ -246,14 +235,6 @@ nsTableRowGroupFrame::GetSkipSides() const
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
-}
-
-nsIFrame*
-nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                       nsFramePaintLayer aWhichLayer)
-{
-  // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, PR_FALSE);
 }
 
 // Position and size aKidFrame and update our reflow state. The origin of

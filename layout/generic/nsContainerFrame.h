@@ -65,13 +65,6 @@ public:
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
-                                     nsFramePaintLayer aWhichLayer);
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
   virtual PRBool IsLeaf() const;
@@ -178,28 +171,37 @@ public:
 
   
   static void PositionChildViews(nsIFrame* aFrame);
+  
+  /**
+   * Builds display lists for the children. The background
+   * of each child is placed in the Content() list (suitable for inline
+   * children and other elements that behave like inlines,
+   * but not for in-flow block children of blocks).  DOES NOT
+   * paint the background/borders/outline of this frame. This should
+   * probably be avoided and eventually removed. It's currently here
+   * to emulate what nsContainerFrame::Paint did.
+   */
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
 protected:
   nsContainerFrame();
   ~nsContainerFrame();
 
-  virtual nsIFrame* GetFrameForPointUsing(const nsPoint&    aPoint,
-                                          nsIAtom*          aList,
-                                          nsFramePaintLayer aWhichLayer,
-                                          PRBool            aConsiderSelf);
-
-  virtual void PaintChildren(nsPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags = 0);
-
-  virtual void PaintChild(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsIFrame*            aFrame,
-                          nsFramePaintLayer    aWhichLayer,
-                          PRUint32             aFlags = 0);
+  /**
+   * Builds a display list for non-block children that behave like
+   * inlines. This puts the background of each child into the
+   * Content() list (suitable for inline children but not for
+   * in-flow block children of blocks).
+   * @param aForcePseudoStack forces each child into a pseudo-stacking-context
+   * so its background and all other display items (except for positioned
+   * display items) go into the Content() list.
+   */
+  nsresult BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aBuilder,
+                                               const nsRect&           aDirtyRect,
+                                               const nsDisplayListSet& aLists,
+                                               PRUint32                aFlags = 0);
 
   /**
    * Get the frames on the overflow list

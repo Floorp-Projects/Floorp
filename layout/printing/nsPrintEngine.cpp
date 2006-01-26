@@ -3681,9 +3681,7 @@ nsPrintEngine::FindSelectionBoundsWithList(nsPresContext* aPresContext,
     PRBool isSelected = (child->GetStateBits() & NS_FRAME_SELECTED_CONTENT)
       == NS_FRAME_SELECTED_CONTENT;
     if (isSelected) {
-      if (NS_FAILED(child->IsVisibleForPainting(aPresContext, aRC, PR_TRUE, &isSelected))) {
-        return NS_ERROR_FAILURE;
-      }
+      isSelected = child->IsVisibleForPainting();
     }
 
     if (isSelected) {

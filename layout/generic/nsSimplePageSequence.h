@@ -82,11 +82,15 @@ public:
   // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  // nsIFrameReflow
+  // nsIFrame
   NS_IMETHOD  Reflow(nsPresContext*      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
+
+  NS_IMETHOD  BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                               const nsRect&           aDirtyRect,
+                               const nsDisplayListSet& aLists);
 
   // nsIPageSequenceFrame
   NS_IMETHOD SetOffsets(nscoord aStartOffset, nscoord aEndOffset);

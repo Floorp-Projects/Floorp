@@ -56,6 +56,7 @@
 #include "nsIViewManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsStackLayout.h"
+#include "nsDisplayList.h"
 
 nsIFrame*
 NS_NewDeckFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager)
@@ -200,60 +201,35 @@ nsDeckFrame::GetSelectedBox()
   return GetBoxAt(index); 
 }
 
-
 NS_IMETHODIMP
-nsDeckFrame::Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags)
+nsDeckFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists)
 {
   // if a tab is hidden all its children are too.
-
   if (!GetStyleVisibility()->mVisible)
     return NS_OK;
-
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
-  }
-
-  // only paint the seleced box
-  nsIBox* box = GetSelectedBox();
-  if (box) {
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect, box, aWhichLayer);
-  }
-
-  return NS_OK;
-
+    
+  // REVIEW: The old code skipped painting of background/borders/outline for this
+  // frame and painting of debug boxes ... I've put it back.
+  return nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
-
-nsIFrame*
-nsDeckFrame::GetFrameForPoint(const nsPoint&    aPoint,
-                              nsFramePaintLayer aWhichLayer)
+NS_IMETHODIMP
+nsDeckFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                         const nsRect&           aDirtyRect,
+                                         const nsDisplayListSet& aLists)
 {
-  // if it is not inside us fail
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (!thisRect.Contains(aPoint))
-    return nsnull;
+  // only paint the selected box
+  nsIBox* box = GetSelectedBox();
+  if (!box)
+    return NS_OK;
 
-  // get the selected frame and see if the point is in it.
-  nsIBox* selectedBox = GetSelectedBox();
-  if (selectedBox) {
-    nsIFrame* frame;
-    if (frame = selectedBox->GetFrameForPoint(aPoint -
-                                                selectedBox->GetOffsetTo(this),
-                                              aWhichLayer))
-      return frame;
-  }
-
-  // if its not in our child just return us.
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND)
-    return this;
-
-  return nsnull;
+  // Putting the child in the background list. This is a little weird but
+  // it matches what we were doing before.
+  nsDisplayListSet set(aLists, aLists.BlockBorderBackgrounds());
+  return BuildDisplayListForChild(aBuilder, box, aDirtyRect, set);
 }
-
 
 NS_IMETHODIMP
 nsDeckFrame::DoLayout(nsBoxLayoutState& aState)

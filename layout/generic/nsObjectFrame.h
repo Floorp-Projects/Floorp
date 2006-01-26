@@ -71,11 +71,14 @@ public:
   NS_IMETHOD DidReflow(nsPresContext* aPresContext,
                        const nsHTMLReflowState* aReflowState,
                        nsDidReflowStatus aStatus);
-  NS_IMETHOD Paint(nsPresContext* aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer,
-                   PRUint32 aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+
+  void PrintPlugin(nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
+  void PaintPlugin(nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext,
                           nsGUIEvent* aEvent,

@@ -123,11 +123,12 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+
+  void PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt);
+
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
@@ -137,9 +138,6 @@ public:
                                nsIAtom*        aListName,
                                nsIFrame*       aChildList);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
-                                     nsFramePaintLayer aWhichLayer);
 
   virtual nsIFrame* GetContentInsertionFrame();
 
@@ -201,9 +199,6 @@ protected:
                          const nsHTMLReflowState& aReflowState,
                          nsHTMLReflowMetrics& aDesiredSize);
 #endif
-
-   // nsHTMLContainerFrame
-  virtual PRIntn GetSkipSides() const;
 
    // Utilities
   nsresult ReflowComboChildFrame(nsIFrame*           aFrame, 

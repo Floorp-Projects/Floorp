@@ -64,11 +64,6 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   virtual nsIAtom* GetType() const;
-  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer,
-                    PRUint32             aFlags = 0);
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -189,28 +184,6 @@ nsFirstLetterFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
   else
     return nsFrame::GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
 }
-
-NS_IMETHODIMP
-nsFirstLetterFrame::Paint(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsFramePaintLayer    aWhichLayer,
-                          PRUint32             aFlags)
-{
-  if (NS_FRAME_IS_UNFLOWABLE & mState) {
-    return NS_OK;
-  }
-
-  // Paint inline element backgrounds in the foreground layer.
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
-  }
-    
-  PaintDecorationsAndChildren(aPresContext, aRenderingContext, aDirtyRect,
-                              aWhichLayer, PR_FALSE, aFlags);
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,

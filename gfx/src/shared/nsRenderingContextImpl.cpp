@@ -184,6 +184,14 @@ NS_IMETHODIMP nsRenderingContextImpl::PopTranslation(PushedTranslation* aState)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextImpl::SetTranslation(nscoord aX, nscoord aY)
+{
+  nsTransform2D *theTransform; 
+  GetCurrentTransform(theTransform);
+  NS_ASSERTION(theTransform != nsnull, "The rendering context transform is null");
+  theTransform->SetTranslation(aX, aY);
+}
+
 PRBool nsRenderingContextImpl::RectFitsInside(const nsRect& aRect, PRInt32 aWidth, PRInt32 aHeight) const
 {
   if (aRect.width > aWidth)
@@ -300,14 +308,12 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawImage(imgIContainer *aImage, const nsR
   mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
   nsRect sr = aSrcRect;
-  mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+  // We should NOT be transforming the source rect (which is based on the image
+  // origin) using the rendering context's translation!
+  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y, &sr.width, &sr.height);
   
   if (sr.IsEmpty() || dr.IsEmpty())
     return NS_OK;
-
-  sr.x = aSrcRect.x;
-  sr.y = aSrcRect.y;
-  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
   nsCOMPtr<gfxIImageFrame> iframe;
   aImage->GetCurrentFrame(getter_AddRefs(iframe));

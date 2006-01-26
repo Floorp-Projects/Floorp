@@ -326,6 +326,13 @@ public:
    * @param aY The vertical translation
    */
   NS_IMETHOD Translate(nscoord aX, nscoord aY) = 0;
+  
+  /**
+   * Set the translation compoennt of the current transformation matrix.
+   * Useful to set it to a known pixel value without incurring roundoff
+   * errors.
+   */
+  NS_IMETHOD SetTranslation(nscoord aX, nscoord aY) = 0;
 
   /**
    *  Add in a scale to the RenderingContext's transformation matrix

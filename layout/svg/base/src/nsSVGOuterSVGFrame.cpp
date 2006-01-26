@@ -74,6 +74,7 @@
 #include "nsSVGRect.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
+#include "nsDisplayList.h"
 
 ////////////////////////////////////////////////////////////////////////
 // VMRectInvalidator: helper class for invalidating rects on the viewmanager.
@@ -200,16 +201,11 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer);
+  nsIFrame* GetFrameForPoint(const nsPoint& aPoint);
 
-  NS_IMETHOD  Paint(nsPresContext* aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect,
-                    nsFramePaintLayer aWhichLayer,
-                    PRUint32 aFlags = 0);
-
-  PRBool CanPaintBackground() { return PR_FALSE; }
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   /**
    * Get the "type" of the frame
@@ -217,6 +213,10 @@ public:
    * @see nsLayoutAtoms::svgOuterSVGFrame
    */
   virtual nsIAtom* GetType() const;
+  
+  void Paint(nsIRenderingContext& aRenderingContext,
+             const nsRect& aDirtyRect, nsPoint aPt);
+
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 #ifdef DEBUG
@@ -679,17 +679,37 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32         aNameSpaceID,
   return NS_OK;
 }
 
+class nsDisplaySVG : public nsDisplayItem {
+public:
+  nsDisplaySVG(nsSVGOuterSVGFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("SVGEventReceiver")
+private:
+  nsSVGOuterSVGFrame* mFrame;
+};
 
 nsIFrame*
-nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                     nsFramePaintLayer aWhichLayer)
+nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt)
+{
+  return mFrame->GetFrameForPoint(aPt - aBuilder->ToReferenceFrame(mFrame));
+}
+
+void
+nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect)
+{
+  mFrame->Paint(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+}
+
+nsIFrame*
+nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint)
 {
   // XXX This algorithm is really bad. Because we only have a
   // singly-linked list we have to test each and every SVG element for
   // a hit. What we really want is a double-linked list.
-
-  if (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND)
-    return nsnull;
 
   float x = GetPxPerTwips() * aPoint.x;
   float y = GetPxPerTwips() * aPoint.y;
@@ -718,40 +738,23 @@ nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint,
   return frame;
 }
 
-
-
 //----------------------------------------------------------------------
 // painting
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect& aDirtyRect,
-                          nsFramePaintLayer aWhichLayer,
-                          PRUint32 aFlags)
+nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists)
 {
-  
-//    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-//      if (GetStyleDisplay()->IsVisible() && mRect.width && mRect.height) {
-//        // Paint our background and border
-//        const nsStyleBorder* border = GetStyleBorder();
-//        const nsStylePadding* padding = GetStylePadding();
-//        const nsStyleOutline* outline = GetStyleOutline();
+  // XXX Not sure why this nsSVGOuterSVGFrame::Paint doesn't paint its
+  // background or respect CSS visiblity
+  return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplaySVG(this));
+}
 
-//        nsRect  rect(0, 0, mRect.width, mRect.height);
-// //       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-// //                                       aDirtyRect, rect, *border, *padding, PR_TRUE);
-//        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-//                                    aDirtyRect, rect, *border, mStyleContext, 0);
-//        nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-//                                    aDirtyRect, rect, *border, *outline, mStyleContext, 0);
-      
-//      }
-//    }
-
-  if (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND) return NS_OK;
-  if (aDirtyRect.width<=0 || aDirtyRect.height<=0) return NS_OK;
-
+void
+nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
+                          const nsRect& aDirtyRect, nsPoint aPt)
+{
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
   {
     nsCOMPtr<nsIDeviceContext>  dx;
@@ -772,7 +775,7 @@ nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
     float twipsPerPx = aPresContext->PixelsToTwips();
     printf("tw/sc(px)=%f tw/px=%f\n", twipsPerScPx, twipsPerPx);
     int fontsc;
-    aPresContext->GetFontScaler(&fontsc);
+    GetPresContext()->GetFontScaler(&fontsc);
     printf("font scale=%d\n",fontsc);
     printf("]\n");
   }
@@ -781,17 +784,21 @@ nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
   // initialize Mozilla rendering context
   aRenderingContext.PushState();
   
-  aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect);
+  nsRect clipRect;
+  clipRect.IntersectRect(aDirtyRect, nsRect(aPt, GetSize()));
+  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+  aRenderingContext.Translate(aPt.x, aPt.y);
+  nsRect dirtyRect = clipRect - aPt;
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
   PRTime start = PR_Now();
 #endif
 
   float pxPerTwips = GetPxPerTwips();
-  int x0 = (int)(aDirtyRect.x*pxPerTwips);
-  int y0 = (int)(aDirtyRect.y*pxPerTwips);
-  int x1 = (int)ceil((aDirtyRect.x+aDirtyRect.width)*pxPerTwips);
-  int y1 = (int)ceil((aDirtyRect.y+aDirtyRect.height)*pxPerTwips);
+  int x0 = (int)(dirtyRect.x*pxPerTwips);
+  int y0 = (int)(dirtyRect.y*pxPerTwips);
+  int x1 = (int)ceil((dirtyRect.XMost())*pxPerTwips);
+  int y1 = (int)ceil((dirtyRect.YMost())*pxPerTwips);
   NS_ASSERTION(x0>=0 && y0>=0, "unexpected negative coordinates");
   NS_ASSERTION(x1-x0>0 && y1-y0>0, "zero sized dirtyRect");
   nsRect dirtyRectPx(x0, y0, x1-x0, y1-y0);
@@ -801,16 +808,14 @@ nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
   // what's going on by drawing a red "X" at the appropriate spot.
   if (!mRenderer) {
     aRenderingContext.SetColor(NS_RGB(255,0,0));
-    aRenderingContext.DrawLine(mRect.x, mRect.y,
-                               mRect.x + mRect.width, mRect.y + mRect.height);
-    aRenderingContext.DrawLine(mRect.x + mRect.width, mRect.y,
-                               mRect.x, mRect.y + mRect.height);
+    aRenderingContext.DrawLine(0, 0, mRect.width, mRect.height);
+    aRenderingContext.DrawLine(mRect.width, 0, 0, mRect.height);
     aRenderingContext.PopState();
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsISVGRendererCanvas> canvas;
-  mRenderer->CreateCanvas(&aRenderingContext, aPresContext, dirtyRectPx,
+  mRenderer->CreateCanvas(&aRenderingContext, GetPresContext(), dirtyRectPx,
                           getter_AddRefs(canvas));
 
   // paint children:
@@ -819,7 +824,7 @@ nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->PaintSVG(canvas, aDirtyRect, PR_FALSE);
+      SVGFrame->PaintSVG(canvas, dirtyRect, PR_FALSE);
   }
   
   canvas->Flush();
@@ -832,10 +837,6 @@ nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
 #endif
   
   aRenderingContext.PopState();
-  
-  return NS_OK;
-  // see if we have to draw a selection frame around this container
-  //return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 nsIAtom *

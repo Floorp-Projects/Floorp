@@ -64,12 +64,6 @@ public:
 
   NS_IMETHOD Destroy(nsPresContext *aPresContext);
 
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
-
   virtual nsIAtom* GetType() const;
 
 #ifdef NS_DEBUG

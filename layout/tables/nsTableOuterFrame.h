@@ -123,18 +123,13 @@ public:
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
 
-  /** @see nsIFrame::Paint */
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
-  // the outer table does not paint its entire background if it has margins and/or captions
-  virtual PRBool CanPaintBackground() { return PR_FALSE; }
-
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer);
+  nsresult BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilder,
+                                         const nsRect&           aDirtyRect,
+                                         const nsDisplayListSet& aLists);
 
   /** process a reflow command for the table.
     * This involves reflowing the caption and the inner table.

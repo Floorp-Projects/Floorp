@@ -57,6 +57,7 @@ class nsILoadGroup;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;
+class nsDisplayImage;
 
 class nsImageFrame;
 
@@ -94,11 +95,9 @@ public:
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -149,6 +148,14 @@ public:
   static PRBool ShouldCreateImageFrameFor(nsIContent* aContent,
                                           nsStyleContext* aStyleContext);
   
+  void DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
+                          imgIRequest*         aRequest,
+                          nsPoint              aPt);
+
+  nsRect GetInnerArea() const;
+
+  nsImageMap* GetImageMap(nsPresContext* aPresContext);
+
 protected:
   // nsISupports
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -159,8 +166,6 @@ protected:
   virtual void GetDesiredSize(nsPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
-
-  nsImageMap* GetImageMap(nsPresContext* aPresContext);
 
   void TriggerLink(nsPresContext* aPresContext,
                    nsIURI* aURI,
@@ -185,12 +190,9 @@ protected:
                       const nsString&      aAltText,
                       const nsRect&        aRect);
 
-  void DisplayAltFeedback(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          imgIRequest*         aRequest);
-
-  nsRect GetInnerArea() const;
-
+  void PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
+                  const nsRect& aDirtyRect, imgIContainer* aImage);
+                  
 protected:
   friend class nsImageListener;
   nsresult OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
@@ -301,7 +303,11 @@ private:
     PRPackedBool     mPrefForceInlineAltText;
     PRPackedBool     mPrefShowPlaceholders;
   };
+  
+public:
   static IconLoad* gIconLoad; // singleton pattern: one LoadIcons instance is used
+  
+  friend class nsDisplayImage;
 };
 
 #endif /* nsImageFrame_h___ */

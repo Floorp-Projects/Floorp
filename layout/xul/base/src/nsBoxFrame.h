@@ -121,13 +121,6 @@ public:
 
   // ----- public methods -------
   
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
-                                     nsFramePaintLayer aWhichLayer);
-
-  NS_IMETHOD GetCursor(const nsPoint&    aPoint,
-                       nsIFrame::Cursor& aCursor);
-
-
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
   NS_IMETHOD  Init(nsPresContext*  aPresContext,
@@ -181,12 +174,15 @@ public:
                                      nsStyleContext* aStyleContext,
                                      PRBool aForce);
 
-  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer,
-                    PRUint32             aFlags = 0);
+  // virtual so nsStackFrame, nsButtonBoxFrame, nsSliderFrame and nsMenuFrame
+  // can override it
+  NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                         const nsRect&           aDirtyRect,
+                                         const nsDisplayListSet& aLists);
 
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   // returns true if it is an Initial Reflow and doing Print Preview
   static PRBool IsInitialReflowForPrintPreview(nsBoxLayoutState& aState, PRBool& aIsChrome);
@@ -196,16 +192,31 @@ public:
   
 #ifdef DEBUG_LAYOUT
     virtual void SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PRBool aDebug);
+    nsresult DisplayDebugInfoFor(nsIBox*  aBox, 
+                                 nsPoint& aPoint);
 #endif
 
   static nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
 
   // Fire DOM event. If no aContent argument use frame's mContent.
   void FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent = nsnull);
+  
+  /**
+   * Utility method to redirect events on descendants to this frame.
+   * Supports 'allowevents' attribute on descendant elements to allow those
+   * elements and their descendants to receive events.
+   */
+  nsresult WrapListsInRedirector(nsDisplayListBuilder*   aBuilder,
+                                 const nsDisplayListSet& aIn,
+                                 const nsDisplayListSet& aOut);
 
 protected:
 #ifdef DEBUG_LAYOUT
     virtual void GetBoxName(nsAutoString& aName);
+    void PaintXULDebugBackground(nsIRenderingContext& aRenderingContext,
+                                 nsPoint aPt);
+    void PaintXULDebugOverlay(nsIRenderingContext& aRenderingContext,
+                              nsPoint aPt);
 #endif
 
     virtual PRBool HasStyleChange();
@@ -213,21 +224,6 @@ protected:
 
     virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
     virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
-
-
-    // Paint one child frame
-    virtual void PaintChild(nsPresContext*      aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect&        aDirtyRect,
-                            nsIFrame*            aFrame,
-                            nsFramePaintLayer    aWhichLayer,
-                            PRUint32             aFlags = 0);
-
-    virtual void PaintChildren(nsPresContext*      aPresContext,
-                               nsIRenderingContext& aRenderingContext,
-                               const nsRect&        aDirtyRect,
-                               nsFramePaintLayer    aWhichLayer,
-                               PRUint32             aFlags = 0);
 
     virtual PRBool GetInitialEqualSize(PRBool& aEqualSize); 
     virtual void GetInitialOrientation(PRBool& aIsHorizontal);
@@ -249,19 +245,12 @@ protected:
 protected:
     nsresult RegUnregAccessKey(nsPresContext* aPresContext,
                                PRBool aDoReg);
-    virtual nsIFrame* GetFrameForPointChild(const nsPoint&    aPoint,
-                                           nsFramePaintLayer aWhichLayer,
-                                           nsIFrame*         aChild,
-                                           PRBool            aCheckMouseThrough);
 
   NS_HIDDEN_(void) CheckBoxOrder(nsBoxLayoutState& aState);
 
 private: 
 
     // helper methods
-    void TranslateEventCoords(const nsPoint& aPoint,
-                                    nsPoint& aResult);
-
     static PRBool AdjustTargetToScope(nsIFrame* aParent, nsIFrame*& aTargetFrame);
 
 
@@ -271,11 +260,6 @@ private:
     nsresult SetDebug(nsPresContext* aPresContext, PRBool aDebug);
     PRBool GetInitialDebug(PRBool& aDebug);
     void GetDebugPref(nsPresContext* aPresContext);
-
-    nsresult DisplayDebugInfoFor(nsIBox*         aBox, 
-                                 nsPresContext* aPresContext,
-                                 nsPoint&        aPoint,
-                                 PRInt32&        aCursor);
 
     void GetDebugBorder(nsMargin& aInset);
     void GetDebugPadding(nsMargin& aInset);

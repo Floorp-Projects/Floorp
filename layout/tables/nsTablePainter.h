@@ -72,7 +72,7 @@ class TableBackgroundPainter
       */
     TableBackgroundPainter(nsTableFrame*        aTableFrame,
                            Origin               aOrigin,
-                           nsPresContext*      aPresContext,
+                           nsPresContext*       aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect);
 
@@ -84,10 +84,6 @@ class TableBackgroundPainter
        In border-collapse, the *table* paints the cells' borders,
        so we need to make sure the backgrounds get painted first
        (underneath) by doing a cell-background-only painting pass.
-       The table must then do a no-cell-background pass that
-       continues as a normal background paint call in the cell
-       descendants.) This method doesn't handle views very well,
-       but then, nothing about BC table painting really does.
     */
 
     /* ~*~ Using nsTablePainter Background Painting ~*~
@@ -197,16 +193,13 @@ class TableBackgroundPainter
       void Clear();
 
       /** Calculate and set all data values to represent aFrame */
-      void SetFull(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   nsIFrame*            aFrame);
+      void SetFull(nsIFrame* aFrame);
 
       /** Set frame data (mFrame, mRect) but leave style data empty */
       void SetFrame(nsIFrame* aFrame);
 
       /** Calculate the style data for mFrame */
-      void SetData(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext);
+      void SetData();
 
       /** True if need to set border-collapse border; must call SetFull beforehand */
       PRBool ShouldSetBCBorder();

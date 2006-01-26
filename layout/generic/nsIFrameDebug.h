@@ -126,6 +126,8 @@ public:
   // Show frame border of event target
   static void ShowEventTargetFrameBorder(PRBool aEnable);
   static PRBool GetShowEventTargetFrameBorder();
+  
+  static void PrintDisplayList(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList);
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;

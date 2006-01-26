@@ -75,21 +75,13 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
-  //
-  // XXX: The following paint methods are TEMPORARY. It is being used to get printing working
-  // under windows. Later it may be used to GFX-render the controls to the display. 
-  // Expect this code to repackaged and moved to a new location in the future.
-  //
 
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
-  virtual void PaintRadioButton(nsPresContext* aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        const nsRect& aDirtyRect);
+  void PaintRadioButtonFromStyle(nsIRenderingContext& aRenderingContext, nsPoint aPt,
+                                 const nsRect& aDirtyRect);
 
   ///XXX: End o the temporary methods
 #ifdef DEBUG_rodsXXX

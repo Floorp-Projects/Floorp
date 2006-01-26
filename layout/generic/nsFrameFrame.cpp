@@ -82,6 +82,7 @@
 #include "nsIFrameFrame.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMNSHTMLDocument.h"
+#include "nsDisplayList.h"
 
 #ifdef NS_PRINTING
 #include "nsIWebBrowserPrint.h"
@@ -126,6 +127,10 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
@@ -286,6 +291,28 @@ PRIntn
 nsSubDocumentFrame::GetSkipSides() const
 {
   return 0;
+}
+
+NS_IMETHODIMP
+nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists)
+{
+  if (!IsVisibleForPainting(aBuilder))
+    return NS_OK;
+
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsIView* subdocView = mInnerView->GetFirstChild();
+  if (!subdocView)
+    return NS_OK;
+  nsIFrame* f = NS_STATIC_CAST(nsIFrame*, subdocView->GetClientData());
+  if (!f)
+    return NS_OK;
+  
+  nsRect dirty = aDirtyRect - f->GetOffsetTo(this);
+  return f->BuildDisplayListForStackingContext(aBuilder, dirty, aLists.Content());
 }
 
 void

@@ -61,6 +61,7 @@
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
+#include "nsDisplayList.h"
 
 class nsLegendFrame;
 
@@ -78,13 +79,12 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
                                
-  NS_IMETHOD Paint(nsPresContext*       aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
-  virtual PRBool CanPaintBackground();
+  void PaintBorderBackground(nsIRenderingContext& aRenderingContext,
+    nsPoint aPt, const nsRect& aDirtyRect);
 
   NS_IMETHOD AppendFrames(nsIAtom*       aListName,
                           nsIFrame*      aFrameList);
@@ -93,9 +93,6 @@ public:
                           nsIFrame*      aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*       aListName,
                          nsIFrame*      aOldFrame);
-
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer);
 
   virtual nsIAtom* GetType() const;
   virtual PRBool IsContainingBlock() const;
@@ -166,118 +163,146 @@ nsFieldSetFrame::SetInitialChildList(nsPresContext* aPresContext,
   return nsHTMLContainerFrame::SetInitialChildList(aPresContext, nsnull, aChildList);
 }
 
-// this is identical to nsHTMLContainerFrame::Paint except for the background and border. 
-NS_IMETHODIMP
-nsFieldSetFrame::Paint(nsPresContext*       aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect&        aDirtyRect,
-                       nsFramePaintLayer    aWhichLayer,
-                       PRUint32             aFlags)
+class nsDisplayFieldSetBorderBackground : public nsDisplayItem {
+public:
+  nsDisplayFieldSetBorderBackground(nsFieldSetFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("FieldSetBorderBackground")
+private:
+  nsFieldSetFrame* mFrame;
+};
+
+nsIFrame* nsDisplayFieldSetBorderBackground::HitTest(nsDisplayListBuilder* aBuilder,
+    nsPoint aPt)
 {
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    // Paint our background and border
-    PRBool isVisible;
-    if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && 
-                     isVisible && mRect.width && mRect.height) {
-      PRIntn skipSides = GetSkipSides();
-      const nsStyleBorder* borderStyle = GetStyleBorder();
-      const nsStylePadding* paddingStyle = GetStylePadding();
-       
-      nscoord topBorder = borderStyle->GetBorderWidth(NS_SIDE_TOP);
-
-      nscoord yoff = 0;
-      
-      // if the border is smaller than the legend. Move the border down
-      // to be centered on the legend. 
-      if (topBorder < mLegendRect.height)
-        yoff = (mLegendRect.height - topBorder)/2;
-      
-      nsRect rect(0, yoff, mRect.width, mRect.height - yoff);
-
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *borderStyle,
-                                      *paddingStyle, PR_TRUE);
-
-      if (mLegendFrame) {
-
-        // Use the rect of the legend frame, not mLegendRect, so we draw our
-        // border under the legend's left and right margins.
-        const nsRect & legendRect = mLegendFrame->GetRect();
-      
-        // we should probably use PaintBorderEdges to do this but for now just use clipping
-        // to achieve the same effect.
-
-        // draw left side
-        nsRect clipRect(rect);
-        clipRect.width = legendRect.x - rect.x;
-        clipRect.height = topBorder;
-
-        aRenderingContext.PushState();
-        aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
-        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
-  
-        aRenderingContext.PopState();
-
-
-        // draw right side
-        clipRect = rect;
-        clipRect.x = legendRect.x + legendRect.width;
-        clipRect.width -= (legendRect.x + legendRect.width);
-        clipRect.height = topBorder;
-
-        aRenderingContext.PushState();
-        aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
-        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
-  
-        aRenderingContext.PopState();
-
-      
-        // draw bottom
-        clipRect = rect;
-        clipRect.y += topBorder;
-        clipRect.height = mRect.height - (yoff + topBorder);
-      
-        aRenderingContext.PushState();
-        aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
-        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
-  
-        aRenderingContext.PopState();
-      } else {
-
-        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect,
-                                    nsRect(0,0,mRect.width, mRect.height),
-                                    *borderStyle, mStyleContext, skipSides);
-      }
-    }
-  }
-
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-
-#ifdef DEBUG
-  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
-    if (HasView()) {
-      aRenderingContext.SetColor(NS_RGB(0,0,255));
-    }
-    else {
-      aRenderingContext.SetColor(NS_RGB(255,0,0));
-    }
-    aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
-  }
-#endif
-  DO_GLOBAL_REFLOW_COUNT_DSP("nsFieldSetFrame", &aRenderingContext);
-  return NS_OK;
+  // aPt is guaranteed to be in this item's bounds. We do the hit test based on the
+  // frame bounds even though our background doesn't cover the whole frame.
+  // It's not clear whether this is correct.
+  return mFrame;
 }
 
-PRBool
-nsFieldSetFrame::CanPaintBackground()
+void
+nsDisplayFieldSetBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  // If we have a legend, we won't be painting our background across our whole
-  // rect.  So return false here, since we'll usually have a legend.
-  return PR_FALSE;
+  mFrame->PaintBorderBackground(*aCtx, aBuilder->ToReferenceFrame(mFrame),
+                                aDirtyRect);
+}
+
+NS_IMETHODIMP
+nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
+                                  const nsDisplayListSet& aLists) {
+  // Paint our background and border in a special way.
+  // REVIEW: We don't really need to check frame emptiness here; if it's empty,
+  // the background/border display item won't do anything, and if it isn't empty,
+  // we need to paint the outline
+  if (IsVisibleForPainting(aBuilder)) {
+    // don't bother checking to see if we really have a border or background.
+    // we usually will have a border.
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayFieldSetBorderBackground(this));
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    rv = DisplayOutlineUnconditional(aBuilder, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (mLegendFrame) {
+    nsDisplayListSet set(aLists, aLists.Content());
+    nsresult rv = BuildDisplayListForChild(aBuilder, mLegendFrame, aDirtyRect, set);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  if (!mContentFrame)
+    return NS_OK;
+  // Allow mContentFrame's background to go onto our BorderBackground() list,
+  // this is OK since it won't have a real background except for event
+  // handling.
+  return BuildDisplayListForChild(aBuilder, mContentFrame, aDirtyRect, aLists);
+  // REVIEW: debug borders are always painted by nsFrame::BuildDisplayListForChild
+  // (or by the PresShell for the top level painted frame)
+}
+
+void
+nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
+    nsPoint aPt, const nsRect& aDirtyRect)
+{
+  PRIntn skipSides = GetSkipSides();
+  const nsStyleBorder* borderStyle = GetStyleBorder();
+  const nsStylePadding* paddingStyle = GetStylePadding();
+       
+  nscoord topBorder = borderStyle->GetBorderWidth(NS_SIDE_TOP);
+  nscoord yoff = 0;
+  nsPresContext* presContext = GetPresContext();
+     
+  // if the border is smaller than the legend. Move the border down
+  // to be centered on the legend. 
+  if (topBorder < mLegendRect.height)
+    yoff = (mLegendRect.height - topBorder)/2;
+      
+  nsRect rect(aPt.x, aPt.y + yoff, mRect.width, mRect.height - yoff);
+
+  nsCSSRendering::PaintBackground(presContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *borderStyle,
+                                  *paddingStyle, PR_TRUE);
+
+   if (mLegendFrame) {
+
+    // Use the rect of the legend frame, not mLegendRect, so we draw our
+    // border under the legend's left and right margins.
+    nsRect legendRect = mLegendFrame->GetRect() + aPt;
+    
+    // we should probably use PaintBorderEdges to do this but for now just use clipping
+    // to achieve the same effect.
+
+    // draw left side
+    nsRect clipRect(rect);
+    clipRect.width = legendRect.x - rect.x;
+    clipRect.height = topBorder;
+
+    aRenderingContext.PushState();
+    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+    nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
+                                aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
+
+    aRenderingContext.PopState();
+
+
+    // draw right side
+    clipRect = rect;
+    clipRect.x = legendRect.XMost();
+    clipRect.width = rect.XMost() - legendRect.XMost();
+    clipRect.height = topBorder;
+
+    aRenderingContext.PushState();
+    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+    nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
+                                aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
+
+    aRenderingContext.PopState();
+
+    
+    // draw bottom
+    clipRect = rect;
+    clipRect.y += topBorder;
+    clipRect.height = mRect.height - (yoff + topBorder);
+    
+    aRenderingContext.PushState();
+    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+    nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
+                                aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
+
+    aRenderingContext.PopState();
+  } else {
+
+    nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
+                                aDirtyRect,
+                                nsRect(aPt, mRect.Size()),
+                                *borderStyle, mStyleContext, skipSides);
+  }
 }
 
 NS_IMETHODIMP 
@@ -623,15 +648,6 @@ nsFieldSetFrame::RemoveFrame(nsIAtom*       aListName,
     return NS_OK;
   }
   return mContentFrame->RemoveFrame(aListName, aOldFrame);
-}
-
-nsIFrame*
-nsFieldSetFrame::GetFrameForPoint(const nsPoint&    aPoint,
-                                  nsFramePaintLayer aWhichLayer)
-{
-  // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, 
-                               aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND);
 }
 
 #ifdef ACCESSIBILITY

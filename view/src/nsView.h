@@ -92,29 +92,6 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   /**
-   * Called to indicate that the specified rect of the view
-   * needs to be drawn via the rendering context. The rect
-   * is specified in view coordinates.
-   * @param rc rendering context to paint into
-   * @param rect damage area
-   * @param aPaintFlags see nsIView.h for flag definitions
-   * @return PR_TRUE if the entire clip region has been eliminated, else PR_FALSE
-   */
-  NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
-                    PRUint32 aPaintFlags, PRBool &aResult);
-  /**
-   * Called to indicate that the specified region of the view
-   * needs to be drawn via the rendering context. The region
-   * is specified in view coordinates.
-   * @param rc rendering context to paint into
-   * @param region damage area
-   * @param aPaintFlags see nsIView.h for flag definitions
-   * @return PR_TRUE if the entire clip region has been eliminated, else PR_FALSE
-   */
-  NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsIRegion& region,
-                    PRUint32 aPaintFlags, PRBool &aResult);
-
-  /**
    * Called to indicate that the position of the view has been changed.
    * The specified coordinates are in the parent view's coordinate space.
    * @param x new x position

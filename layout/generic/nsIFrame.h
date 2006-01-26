@@ -84,6 +84,9 @@ class nsIBoxLayout;
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif
+class nsDisplayListBuilder;
+class nsDisplayListSet;
+class nsDisplayList;
 
 struct nsPeekOffsetStruct;
 struct nsPoint;
@@ -133,6 +136,8 @@ typedef PRUint32 nsSplittableType;
 typedef PRUint32 nsFrameState;
 
 #define NS_FRAME_IN_REFLOW                            0x00000001
+// This is only set during painting
+#define NS_FRAME_HAS_DESCENDANT_PLACEHOLDER           0x00000001
 
 // This bit is set when a frame is created. After it has been reflowed
 // once (during the DidReflow with a finished state) the bit is
@@ -223,12 +228,6 @@ typedef PRUint32 nsFrameState;
 
 //----------------------------------------------------------------------
 
-enum nsFramePaintLayer {
-  eFramePaintLayer_Underlay = 1,
-  eFramePaintLayer_Content = 2,
-  eFramePaintLayer_Overlay = 4
-};
-
 enum nsSelectionAmount {
   eSelectCharacter = 0,
   eSelectWord      = 1,
@@ -256,17 +255,6 @@ enum nsSpread {
 #define NS_CARRIED_BOTTOM_MARGIN_IS_AUTO 0x2
 
 //----------------------------------------------------------------------
-
-// For HTML reflow we rename with the different paint layers are
-// actually used for.
-#define NS_FRAME_PAINT_LAYER_BACKGROUND eFramePaintLayer_Underlay
-#define NS_FRAME_PAINT_LAYER_FLOATS   eFramePaintLayer_Content
-#define NS_FRAME_PAINT_LAYER_FOREGROUND eFramePaintLayer_Overlay
-#define NS_FRAME_PAINT_LAYER_DEBUG      eFramePaintLayer_Overlay
-#define NS_FRAME_PAINT_LAYER_ALL                       \
-  (nsFramePaintLayer(NS_FRAME_PAINT_LAYER_BACKGROUND | \
-                     NS_FRAME_PAINT_LAYER_FLOATS     | \
-                     NS_FRAME_PAINT_LAYER_FOREGROUND))
 
 /**
  * Reflow status returned by the reflow methods.
@@ -676,21 +664,116 @@ public:
   }
 
   /**
-   * Paint is responsible for painting the frame. The aWhichLayer
-   * argument indicates which layer of painting should be done during
-   * the call.
+   * Builds the display lists for the content represented by this frame
+   * and its descendants. The background+borders of this element must
+   * be added first, before any other content.
+   * 
+   * This should only be called by methods in nsFrame. Instead of calling this
+   * directly, call either BuildDisplayListForStackingContext or
+   * BuildDisplayListForChild.
+   * 
+   * See nsDisplayList.h for more information about display lists.
+   * 
+   * @param aDirtyRect content outside this rectangle can be ignored; the
+   * rectangle is in frame coordinates
    */
-  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer,
-                    PRUint32             aFlags = 0) = 0;
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists) { return NS_OK; }
+
+  PRBool IsThemed() {
+    return IsThemed(GetStyleDisplay());
+  }
+  PRBool IsThemed(const nsStyleDisplay* aDisp) {
+    if (!aDisp->mAppearance)
+      return PR_FALSE;
+    nsPresContext* pc = GetPresContext();
+    nsITheme *theme = pc->GetTheme();
+    return theme && theme->ThemeSupportsWidget(pc, this, aDisp->mAppearance);
+  }
+  
+  /**
+   * Builds a display list for the content represented by this frame,
+   * treating this frame as the root of a stacking context.
+   * @param aDirtyRect content outside this rectangle can be ignored; the
+   * rectangle is in frame coordinates
+   */
+  nsresult BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
+                                              const nsRect&         aDirtyRect,
+                                              nsDisplayList*        aList);
 
   /**
-   * Does the frame paint its background? If not, then all or part of it will be
-   * painted by ancestors.
+   * Clips the display items of aFromSet, putting the results in aToSet.
+   * Only items corresponding to frames which are descendants of this frame
+   * are clipped. In other words, descendant elements whose CSS boxes do not
+   * have this frame as a container are not clipped. Also,
+   * border/background/outline items for this frame are not clipped,
+   * unless aClipBorderBackground is set to PR_TRUE. (We need this because
+   * a scrollframe must overflow-clip its scrolled child's background/borders.)
    */
-  virtual PRBool CanPaintBackground() { return PR_TRUE; }
+  nsresult OverflowClip(nsDisplayListBuilder*   aBuilder,
+                        const nsDisplayListSet& aFromSet,
+                        const nsDisplayListSet& aToSet,
+                        const nsRect&           aClipRect,
+                        PRBool                  aClipBorderBackground = PR_FALSE,
+                        PRBool                  aClipAll = PR_FALSE);
+
+  /**
+   * Clips the display items of aFromSet, putting the results in aToSet.
+   * All items are clipped.
+   */
+  nsresult Clip(nsDisplayListBuilder* aBuilder,
+                const nsDisplayListSet& aFromSet,
+                const nsDisplayListSet& aToSet,
+                const nsRect& aClipRect);
+
+  /**
+   * Out-of-flow elements are painted as if they were part of their
+   * containing element, for clipping, compositing and z-ordering (modulo
+   * special z-order rules for floats and positioned elements). Therefore
+   * we paint out-of-flow frames through their placeholders. During
+   * display list construction, a container for out-of-flow frames will invoke
+   * this method on itself to mark ancestors of relevant placeholders --- up to
+   * and including itself --- with NS_FRAME_HAS_DESCENDANT_PLACEHOLDER, to
+   * ensure that those frames are descended into during display list
+   * construction (they might otherwise be excluded if they do not
+   * intersect the dirty rect).
+   * 
+   * After display list construction of descendants has finished, we call
+   * UnmarkOutOfFlowChildrenForDisplayList on each out-of-flow child. For
+   * performance reasons we also unmark each frame after we have finished
+   * building a display list for it; this allows
+   * UnmarkOutOfFlowChildrenForDisplayList to terminate early when it reaches
+   * a frame in its parent chain without the NS_FRAME_HAS_DESCENDANT_PLACEHOLDER
+   * bit. If CSS 'visiblity' is not being used and there are no failures during
+   * painting, each out-of-flow's placeholder will have been unmarked and so
+   * UnmarkOutOfFlowChildrenForDisplayList won't need to do any real work.
+   * 
+   * @param aFirstChild the first frame to mark; we mark the entire sibling
+   * list
+   */
+  void MarkOutOfFlowChildrenForDisplayList(nsIFrame* aFirstChild,
+                                           const nsRect& aDirtyRect);
+  void UnmarkOutOfFlowChildrenForDisplayList(nsIFrame* aFirstChild);
+
+  enum {
+    DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT = 0x01,
+    DISPLAY_CHILD_INLINE = 0x02
+  };                 
+  /**
+   * Adjusts aDirtyRect for the child's offset, checks that the dirty rect
+   * actually intersects the child (or its descendants), calls BuildDisplayList
+   * on the child if necessary, and puts things in the right lists if the child
+   * is positioned.
+   *
+   * @param aFlags combination of DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT
+   * and DISPLAY_CHILD_INLINE
+   */
+  nsresult BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
+                                    nsIFrame*               aChild,
+                                    const nsRect&           aDirtyRect,
+                                    const nsDisplayListSet& aLists,
+                                    PRUint32                aFlags = 0);
 
   /**
    * Does this frame type always need a view?
@@ -762,16 +845,6 @@ public:
   NS_IMETHOD  GetCursor(const nsPoint&  aPoint,
                         Cursor&         aCursor) = 0;
 
-  /**
-   * Get the frame that should receive events for a given point in the
-   * coordinate space of this frame, if the frame is painted in
-   * the given paint layer.  A frame should return itself if it should
-   * receive the events.  A successful return value indicates that a
-   * point was found.
-   */
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer) = 0;
-  
   /**
    * Get a point (in the frame's coordinate space) given an offset into
    * the content. This point should be on the baseline of text with
@@ -1139,6 +1212,12 @@ public:
     FinishAndStoreOverflow(&aMetrics->mOverflowArea, nsSize(aMetrics->width, aMetrics->height));
   }
 
+  /**
+   * Determine whether borders should not be painted on certain sides of the
+   * frame.
+   */
+  virtual PRIntn GetSkipSides() const { return 0; }
+
   /** Selection related calls
    */
   /** 
@@ -1248,18 +1327,43 @@ public:
                                         PRBool*         aIsChild) = 0;
 
   /**
-   * Determines whether a frame is visible for painting
-   * this takes into account whether it is painting a selection or printing.
-   * @param aPresContext PresContext
-   * @param aRenderingContext PresContext
-   * @param aCheckVis indicates whether it should check for CSS visibility, 
-   *                  PR_FALSE skips the check, PR_TRUE does the check
-   * @param aIsVisible return value
+   * Determines whether a frame is visible for painting;
+   * taking into account whether it is painting a selection or printing.
    */
-  NS_IMETHOD IsVisibleForPainting(nsPresContext *     aPresContext, 
-                                  nsIRenderingContext& aRenderingContext,
-                                  PRBool               aCheckVis,
-                                  PRBool*              aIsVisible) = 0;
+  PRBool IsVisibleForPainting(nsDisplayListBuilder* aBuilder);
+  /**
+   * Determines whether a frame is visible for painting or collapsed;
+   * taking into account whether it is painting a selection or printing,
+   */
+  PRBool IsVisibleOrCollapsedForPainting(nsDisplayListBuilder* aBuilder);
+  /**
+   * As above, but slower because we have to recompute some stuff that
+   * aBuilder already has.
+   */
+  PRBool IsVisibleForPainting();
+  /**
+   * Check whether this frame is visible in the current selection. Returns
+   * PR_TRUE if there is no current selection.
+   */
+  PRBool IsVisibleInSelection(nsDisplayListBuilder* aBuilder);
+
+  /**
+   * Overridable function to determine whether this frame should be considered
+   * "in" the given non-null aSelection for visibility purposes.
+   */  
+  virtual PRBool IsVisibleInSelection(nsISelection* aSelection);
+
+  /**
+   * Determines whether this frame is a pseudo stacking context, looking
+   * only as style --- i.e., assuming that it's in-flow and not a replaced
+   * element.
+   */
+  PRBool IsPseudoStackingContextFromStyle() {
+    const nsStyleDisplay* disp = GetStyleDisplay();
+    return disp->mOpacity != 1.0f || disp->IsPositioned();
+  }
+  
+  virtual PRBool HonorPrintBackgroundSettings() { return PR_TRUE; }
 
   /**
    * Determine whether the frame is logically empty, which is roughly
@@ -1453,7 +1557,6 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug)=0;
   NS_IMETHOD GetDebug(PRBool& aDebug)=0;
-  NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox)=0;
 
   NS_IMETHOD DumpBox(FILE* out)=0;
 #endif

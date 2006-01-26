@@ -59,11 +59,9 @@ public:
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
-  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer,
-                    PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   virtual PRBool IsContainingBlock() const;
 
@@ -94,6 +92,14 @@ public:
   static  void   SetCreateWidget(PRBool aDoCreateWidget)  { mDoCreateWidget = aDoCreateWidget; }
   static  PRBool GetCreateWidget()                        { return mDoCreateWidget; }
 
+  void PaintPrintPreviewBackground(nsIRenderingContext& aRenderingContext,
+                                   nsPoint aPt);
+  void PaintHeaderFooter(nsIRenderingContext& aRenderingContext,
+                         nsPoint aPt);
+  void DrawBackground(nsIRenderingContext& aRenderingContext,
+                      const nsRect&        aDirtyRect,
+                      nsPoint              aPt);
+                      
 protected:
   nsPageFrame();
   virtual ~nsPageFrame();
@@ -145,11 +151,6 @@ protected:
 
 // XXX Part of Temporary fix for Bug 127263
   static PRBool mDoCreateWidget;
-
-private:
-  void DrawBackground(nsPresContext* aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect&  aDirtyRect);
 };
 
 

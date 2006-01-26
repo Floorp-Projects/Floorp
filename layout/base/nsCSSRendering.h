@@ -110,12 +110,13 @@ public:
    * an element.  The nsStyleBackground should first be initialized
    * using the pres context.  This applies the rules for propagating
    * backgrounds between BODY, the root element, and the canvas.
+   * @return PR_TRUE if there is some meaningful background.
    */
   static PRBool FindBackground(nsPresContext* aPresContext,
                                nsIFrame* aForFrame,
                                const nsStyleBackground** aBackground,
                                PRBool* aIsCanvas);
-
+                               
   /**
    * Find a non-transparent background, for various table-related and
    * HR-related backwards-compatibility hacks.  Be very hesitant if

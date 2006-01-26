@@ -203,6 +203,7 @@ public:
 
     NS_IMETHOD PushTranslation(PushedTranslation* aState);
     NS_IMETHOD PopTranslation(PushedTranslation* aState);
+    NS_IMETHOD SetTranslation(nscoord aX, nscoord aY);
 
 #ifdef MOZ_MATHML
     NS_IMETHOD GetBoundingMetrics(const char* aString, PRUint32 aLength, nsBoundingMetrics& aBoundingMetrics);

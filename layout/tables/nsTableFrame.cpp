@@ -78,7 +78,7 @@
 #include "nsAutoPtr.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsStyleSet.h"
-
+#include "nsDisplayList.h"
 
 /********************************************************************************
  ** nsTableReflowState                                                         **
@@ -1343,117 +1343,138 @@ nsTableFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   return nsnull;
 }
 
-void 
-nsTableFrame::PaintChildren(nsPresContext*      aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect&        aDirtyRect,
-                            nsFramePaintLayer    aWhichLayer,
-                            PRUint32             aFlags)
+class nsDisplayTableBorderBackground : public nsDisplayItem {
+public:
+  nsDisplayTableBorderBackground(nsTableFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  // With collapsed borders, parts of the collapsed border can extend outside
+  // the table frame, so allow this display element to blow out to our
+  // overflow rect.
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
+    return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+  }
+  NS_DISPLAY_DECL_NAME("TableBorderBackground")
+private:
+  nsTableFrame* mFrame;
+};
+
+void
+nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
+    nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  PRBool clip = GetStyleDisplay()->IsTableClip();
-  // If overflow is hidden then set the clip rect so that children don't
-  // leak out of us. Note that because overflow'-clip' only applies to
-  // the content area we do this after painting the border and background
-  if (clip) {
-    aRenderingContext.PushState();
-    SetOverflowClipRect(aRenderingContext);
+  mFrame->PaintTableBorderBackground(*aCtx, aDirtyRect, 
+                                     aBuilder->ToReferenceFrame(mFrame));
+}
+
+/* static */ nsresult
+nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
+                                      nsFrame* aFrame,
+                                      const nsRect& aDirtyRect,
+                                      const nsDisplayListSet& aLists)
+{
+  // Create dedicated background display items per-frame when we're
+  // handling events.
+  // XXX how to handle collapsed borders?
+  if (aBuilder->IsForEventDelivery() &&
+      aFrame->IsVisibleForPainting(aBuilder)) {
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayBackground(aFrame));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsHTMLContainerFrame::PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
-
-  if (clip)
-    aRenderingContext.PopState();
+  // This is similar to what nsContainerFrame::BuildDisplayListForNonBlockChildren
+  // does, except that we allow the children's background and borders to go
+  // in our BorderBackground list. This doesn't really affect background
+  // painting --- the children won't actually draw their own backgrounds
+  // because the nsTableFrame already drew them, unless a child has its own
+  // stacking context, in which case the child won't use its passed-in
+  // BorderBackground list anyway. It does affect cell borders though; this
+  // lets us get cell borders into the nsTableFrame's BorderBackground list.
+  nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+  while (kid) {
+    nsresult rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    kid = kid->GetNextSibling();
+  }
+  
+  return aFrame->DisplayOutline(aBuilder, aLists);
 }
 
 // table paint code is concerned primarily with borders and bg color
 // SEC: TODO: adjust the rect for captions 
-NS_METHOD 
-nsTableFrame::Paint(nsPresContext*      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer,
-                    PRUint32             aFlags)
+NS_IMETHODIMP
+nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                               const nsRect&           aDirtyRect,
+                               const nsDisplayListSet& aLists)
 {
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    TableBackgroundPainter painter(this, TableBackgroundPainter::eOrigin_Table,
-                                   aPresContext, aRenderingContext, aDirtyRect);
-    nsresult rv;
+  if (!IsVisibleInSelection(aBuilder))
+    return NS_OK;
 
-    if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode()) {
-      nsMargin deflate(0,0,0,0);
-      if (IsBorderCollapse()) {
-        GET_PIXELS_TO_TWIPS(aPresContext, p2t);
-        BCPropertyData* propData =
-          (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)this,
-                                                     nsLayoutAtoms::tableBCProperty,
-                                                     PR_FALSE);
-        if (propData) {
-          deflate.top    = BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
-          deflate.right  = BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightBorderWidth);
-          deflate.bottom = BC_BORDER_BOTTOM_HALF_COORD(p2t, propData->mBottomBorderWidth);
-          deflate.left   = BC_BORDER_LEFT_HALF_COORD(p2t, propData->mLeftBorderWidth);
-        }
+  // This background is created regardless of whether this frame is
+  // visible or not. Visibility decisions are delegated to the
+  // table background painter.
+  nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+      nsDisplayTableBorderBackground(this));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists);
+}
+
+// XXX We don't put the borders and backgrounds in tree order like we should.
+// That requires some major surgery which we aren't going to do right now.
+void
+nsTableFrame::PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
+                                         const nsRect& aDirtyRect,
+                                         nsPoint aPt)
+{
+  nsPresContext* presContext = GetPresContext();
+  nsRect dirtyRect = aDirtyRect - aPt;
+  nsIRenderingContext::AutoPushTranslation
+    translate(&aRenderingContext, aPt.x, aPt.y);
+
+  TableBackgroundPainter painter(this, TableBackgroundPainter::eOrigin_Table,
+                                 presContext, aRenderingContext, dirtyRect);
+  nsresult rv;
+  
+  if (eCompatibility_NavQuirks == presContext->CompatibilityMode()) {
+    nsMargin deflate(0,0,0,0);
+    if (IsBorderCollapse()) {
+      GET_PIXELS_TO_TWIPS(presContext, p2t);
+      BCPropertyData* propData =
+        (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)this,
+                                                   nsLayoutAtoms::tableBCProperty,
+                                                   PR_FALSE);
+      if (propData) {
+        deflate.top    = BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
+        deflate.right  = BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightBorderWidth);
+        deflate.bottom = BC_BORDER_BOTTOM_HALF_COORD(p2t, propData->mBottomBorderWidth);
+        deflate.left   = BC_BORDER_LEFT_HALF_COORD(p2t, propData->mLeftBorderWidth);
       }
-      rv = painter.PaintTable(this, &deflate);
-      if (NS_FAILED(rv)) return rv;
+    }
+    rv = painter.PaintTable(this, &deflate);
+    if (NS_FAILED(rv)) return;
+  }
+  else {
+    rv = painter.PaintTable(this, nsnull);
+    if (NS_FAILED(rv)) return;
+  }
+
+  if (GetStyleVisibility()->IsVisible()) {
+    const nsStyleBorder* border = GetStyleBorder();
+    nsRect  rect(0, 0, mRect.width, mRect.height);
+    if (!IsBorderCollapse()) {
+      PRIntn skipSides = GetSkipSides();
+      nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
+                                  dirtyRect, rect, *border, mStyleContext,
+                                  skipSides);
     }
     else {
-      rv = painter.PaintTable(this, nsnull);
-      if (NS_FAILED(rv)) return rv;
+      PaintBCBorders(aRenderingContext, dirtyRect);
     }
-
-    if (GetStyleVisibility()->IsVisible()) {
-      const nsStyleBorder* border = GetStyleBorder();
-      nsRect  rect(0, 0, mRect.width, mRect.height);
-      if (!IsBorderCollapse()) {
-        PRIntn skipSides = GetSkipSides();
-        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *border, mStyleContext,
-                                    skipSides);
-      }
-      else {
-        PaintBCBorders(aRenderingContext, aDirtyRect);
-      }
-    }
-    aFlags |= NS_PAINT_FLAG_TABLE_BG_PAINT;
-    aFlags &= ~NS_PAINT_FLAG_TABLE_CELL_BG_PASS;
   }
-
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect,
-                aWhichLayer, aFlags);
-
-  // Paint outline
-  nsRect rect(0, 0, mRect.width, mRect.height);
-  const nsStyleOutline* outlineStyle = GetStyleOutline();
-  const nsStyleBorder* borderStyle  = GetStyleBorder();
-  nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                               aDirtyRect, rect, *borderStyle, *outlineStyle,
-                               mStyleContext, 0);
-#ifdef DEBUG
-  // for debug...
-  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
-    aRenderingContext.SetColor(NS_RGB(0,255,0));
-    aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
-  }
-#endif
-
-  DO_GLOBAL_REFLOW_COUNT_DSP_J("nsTableFrame", &aRenderingContext, NS_RGB(255,128,255));
-  return NS_OK;
-  /*nsFrame::Paint(aPresContext,
-                        aRenderingContext,
-                        aDirtyRect,
-                        aWhichLayer);*/
 }
-
-nsIFrame*
-nsTableFrame::GetFrameForPoint(const nsPoint& aPoint,
-                               nsFramePaintLayer aWhichLayer)
-{
-  // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer,
-                               aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND);
-}
-
 
 //null range means the whole thing
 NS_IMETHODIMP

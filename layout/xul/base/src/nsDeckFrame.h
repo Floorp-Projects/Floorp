@@ -61,15 +61,14 @@ public:
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aState);
 
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
-                                     nsFramePaintLayer aWhichLayer);
-
+  NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                         const nsRect&           aDirtyRect,
+                                         const nsDisplayListSet& aLists);
+                                         
   NS_IMETHOD Init(nsPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -91,11 +90,12 @@ protected:
 
   nsDeckFrame(nsIPresShell* aPresShell);
 
-  virtual nsIBox* GetSelectedBox();
-  virtual void IndexChanged(nsPresContext* aPresContext);
-  virtual PRInt32 GetSelectedIndex();
-  virtual void HideBox(nsPresContext* aPresContext, nsIBox* aBox);
-  virtual void ShowBox(nsPresContext* aPresContext, nsIBox* aBox);
+  // REVIEW: Sorry, I couldn't resist devirtualizing these.
+  nsIBox* GetSelectedBox();
+  void IndexChanged(nsPresContext* aPresContext);
+  PRInt32 GetSelectedIndex();
+  void HideBox(nsPresContext* aPresContext, nsIBox* aBox);
+  void ShowBox(nsPresContext* aPresContext, nsIBox* aBox);
 
 private:
 

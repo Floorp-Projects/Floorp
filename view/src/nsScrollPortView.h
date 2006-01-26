@@ -86,10 +86,6 @@ public:
 
   // local to the view module
 
-  NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
-                    PRUint32 aPaintFlags, PRBool &Result);
-  NS_IMETHOD  Paint(nsIRenderingContext& aRC, const nsIRegion& aRegion,
-                    PRUint32 aPaintFlags, PRBool &Result);
   nsView*     GetScrolledView() const { return GetFirstChild(); }
 
 private:

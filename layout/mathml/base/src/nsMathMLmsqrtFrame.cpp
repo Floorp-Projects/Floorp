@@ -131,47 +131,31 @@ nsMathMLmsqrtFrame::TransmitAutomaticData()
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::Paint(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsFramePaintLayer    aWhichLayer,
-                          PRUint32             aFlags)
+nsMathMLmsqrtFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists)
 {
   /////////////
   // paint the content we are square-rooting
-  nsresult rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext, 
-                                              aDirtyRect, aWhichLayer);
+  nsresult rv = nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   /////////////
   // paint the sqrt symbol
   if (!NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-    mSqrChar.Paint(aPresContext, aRenderingContext,
-                   aDirtyRect, aWhichLayer, this);
+    rv = mSqrChar.Display(aBuilder, this, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
-        mStyleContext->GetStyleVisibility()->IsVisible() &&
-        !mBarRect.IsEmpty()) {
-      // paint the overline bar
-      const nsStyleColor* color = GetStyleColor();
-      aRenderingContext.SetColor(color->mColor);
-      aRenderingContext.FillRect(mBarRect);
-    }
+    rv = DisplayBar(aBuilder, this, mBarRect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
-    if (NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags)) {
-      nsRect rect;
-      mSqrChar.GetRect(rect);
-
-      nsBoundingMetrics bm;
-      mSqrChar.GetBoundingMetrics(bm);
-
-      aRenderingContext.SetColor(NS_RGB(255,0,0));
-      nscoord x = rect.x + bm.leftBearing;
-      nscoord y = rect.y;
-      nscoord w = bm.rightBearing - bm.leftBearing;
-      nscoord h = bm.ascent + bm.descent;
-      aRenderingContext.DrawRect(x,y,w,h);
-    }
+    nsRect rect;
+    mSqrChar.GetRect(rect);
+    nsBoundingMetrics bm;
+    mSqrChar.GetBoundingMetrics(bm);
+    rv = DisplayBoundingMetrics(aBuilder, this, rect.TopLeft(), bm, aLists);
 #endif
   }
 

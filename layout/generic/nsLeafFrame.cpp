@@ -47,20 +47,6 @@ nsLeafFrame::~nsLeafFrame()
 }
 
 NS_IMETHODIMP
-nsLeafFrame::Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags)
-{
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
-  }
-  DO_GLOBAL_REFLOW_COUNT_DSP("nsLeafFrame", &aRenderingContext);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsLeafFrame::Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,

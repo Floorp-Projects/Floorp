@@ -57,7 +57,9 @@
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsStyleUtil.h"
+#include "nsDisplayList.h"
 #include "nsAttrName.h"
+
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 
 
@@ -723,4 +725,75 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
 #endif
 
   return ruleCount;
+}
+
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+class nsDisplayMathMLBoundingMetrics : public nsDisplayItem {
+public:
+  nsDisplayMathMLBoundingMetrics(nsIFrame* aFrame, const nsRect& aRect)
+  : mFrame(aFrame), mRect(aRect) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("MathMLBoundingMetrics")
+private:
+  nsIFrame* mFrame;
+  nsRect    mRect;
+};
+
+void nsDisplayMathMLBoundingMetrics::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  aCtx->SetColor(NS_RGB(0,0,255));
+  aCtx->DrawRect(mRect + aBuilder->ToReferenceFrame(mFrame));
+}
+
+nsresult
+nsMathMLFrame::DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
+                                      nsIFrame* aFrame, const nsPoint& aPt,
+                                      const nsBoundingMetrics& aMetrics,
+                                      const nsDisplayListSet& aLists) {
+  if (!NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags))
+    return NS_OK;
+    
+  nscoord x = aPt.x + aMetrics.leftBearing;
+  nscoord y = aPt.y - aMetrics.ascent;
+  nscoord w = aMetrics.rightBearing - aMetrics.leftBearing;
+  nscoord h = aMetrics.ascent + aMetrics.descent;
+
+  return aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayMathMLBoundingMetrics(this, nsRect(x,y,w,h)));
+}
+#endif
+
+class nsDisplayMathMLBar : public nsDisplayItem {
+public:
+  nsDisplayMathMLBar(nsIFrame* aFrame, const nsRect& aRect)
+  : mFrame(aFrame), mRect(aRect) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("MathMLBar")
+private:
+  nsIFrame* mFrame;
+  nsRect    mRect;
+};
+
+void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  // paint the bar with the current text color
+  aCtx->SetColor(mFrame->GetStyleColor()->mColor);
+  aCtx->FillRect(mRect + aBuilder->ToReferenceFrame(mFrame));
+}
+
+nsresult
+nsMathMLFrame::DisplayBar(nsDisplayListBuilder* aBuilder,
+                          nsIFrame* aFrame, const nsRect& aRect,
+                          const nsDisplayListSet& aLists) {
+  if (!aFrame->GetStyleVisibility()->IsVisible() || aRect.IsEmpty())
+    return NS_OK;
+
+  return aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayMathMLBar(aFrame, aRect));
 }

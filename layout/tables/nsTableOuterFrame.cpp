@@ -54,6 +54,7 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
+#include "nsDisplayList.h"
 
 /* ----------- nsTableCaptionFrame ---------- */
 
@@ -240,6 +241,7 @@ nsTableOuterFrame::InsertFrames(nsIAtom*        aListName,
   if (nsLayoutAtoms::captionList == aListName) {
     mCaptionFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
     mCaptionFrame = mCaptionFrames.FirstChild();
+    return NS_OK;
   }
   else {
     NS_PRECONDITION(!aPrevFrame, "invalid previous frame");
@@ -281,66 +283,50 @@ nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
 }
 
 NS_METHOD 
-nsTableOuterFrame::Paint(nsPresContext*      aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect&        aDirtyRect,
-                         nsFramePaintLayer    aWhichLayer,
-                         PRUint32             aFlags)
+nsTableOuterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                    const nsRect&           aDirtyRect,
+                                    const nsDisplayListSet& aLists)
 {
-#ifdef DEBUG
-  // for debug...
-  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
-    aRenderingContext.SetColor(NS_RGB(255,0,0));
-    aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
-  }
-#endif
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
+  // No border, background or outline are painted because they all belong
+  // to the inner table.
+  if (!IsVisibleInSelection(aBuilder))
     return NS_OK;
-  }
 
-  // the remaining code was copied from nsContainerFrame::PaintChildren since
-  // it only paints the primary child list
-
-
-  // Child elements have the opportunity to override the visibility property
-  // of their parent and display even if the parent is hidden
+  // If there's no caption, take a short cut to avoid having to create
+  // the special display list set and then sort it.
+  if (!mCaptionFrame)
+    return BuildDisplayListForInnerTable(aBuilder, aDirtyRect, aLists);
+    
+  nsDisplayListCollection set;
+  nsresult rv = BuildDisplayListForInnerTable(aBuilder, aDirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
   
-  // If overflow is hidden then set the clip rect so that children
-  // don't leak out of us
-  PRBool clip = GetStyleDisplay()->IsTableClip();
-  if (clip) {
-    aRenderingContext.PushState();
-    SetOverflowClipRect(aRenderingContext);
-  }
-
-  if (mCaptionFrame) {
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect, mCaptionFrame, aWhichLayer);
-  }
-  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
-  }
-
-  if (clip)
-    aRenderingContext.PopState();
+  nsDisplayListSet captionSet(set, set.BlockBorderBackgrounds());
+  rv = BuildDisplayListForChild(aBuilder, mCaptionFrame, aDirtyRect, captionSet);
+  NS_ENSURE_SUCCESS(rv, rv);
   
+  // Now we have to sort everything by content order, since the caption
+  // may be somewhere inside the table
+  set.SortAllByContentOrder(aBuilder, GetContent());
+  set.MoveTo(aLists);
   return NS_OK;
 }
 
-nsIFrame*
-nsTableOuterFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                    nsFramePaintLayer aWhichLayer)
+nsresult
+nsTableOuterFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilder,
+                                                 const nsRect&           aDirtyRect,
+                                                 const nsDisplayListSet& aLists)
 {
-  // caption frames live in a different list which we need to check separately
-  if (mCaptionFrame) {
-    nsIFrame* frame = GetFrameForPointUsing(aPoint, nsLayoutAtoms::captionList,
-                                            aWhichLayer, PR_FALSE);
-    if (frame)
-      return frame;
+  // Just paint the regular children, but the children's background is our
+  // true background (there should only be one, the real table)
+  nsIFrame* kid = mFrames.FirstChild();
+  // The children should be in content order
+  while (kid) {
+    nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    kid = kid->GetNextSibling();
   }
-  // This frame should never get events (it contains the margins of the
-  // table), so always pass |PR_FALSE| for |aConsiderSelf|.
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, PR_FALSE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsPresContext* aPresContext,

@@ -40,6 +40,7 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIContent.h"
 #include "nsListControlFrame.h"
+#include "nsDisplayList.h"
 
 nsIFrame*
 NS_NewSelectsAreaFrame(nsIPresShell* aShell, PRUint32 aFlags)
@@ -97,52 +98,116 @@ nsSelectsAreaFrame::IsOptionElementFrame(nsIFrame *aFrame)
   return PR_FALSE;
 }
 
-//---------------------------------------------------------
-nsIFrame*
-nsSelectsAreaFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                     nsFramePaintLayer aWhichLayer)
+/**
+ * This wrapper class lets us redirect mouse hits from the child frame of
+ * an option element to the element's own frame.
+ * REVIEW: This is what nsSelectsAreaFrame::GetFrameForPoint used to do
+ */
+class nsDisplayOptionEventGrabber : public nsDisplayWrapList {
+public:
+  nsDisplayOptionEventGrabber(nsIFrame* aFrame, nsDisplayItem* aItem)
+    : nsDisplayWrapList(aFrame, aItem) {}
+  nsDisplayOptionEventGrabber(nsIFrame* aFrame, nsDisplayList* aList)
+    : nsDisplayWrapList(aFrame, aList) {}
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
+  NS_DISPLAY_DECL_NAME("OptionEventGrabber")
+
+  virtual nsDisplayWrapList* WrapWithClone(nsDisplayListBuilder* aBuilder,
+                                           nsDisplayItem* aItem);
+};
+
+nsIFrame* nsDisplayOptionEventGrabber::HitTest(nsDisplayListBuilder* aBuilder,
+    nsPoint aPt)
 {
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  PRBool inThisFrame = thisRect.Contains(aPoint);
-
-  if (!((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame)) {
-    return nsnull;
-  }
-
-  nsIFrame* frame = nsAreaFrame::GetFrameForPoint(aPoint, aWhichLayer);
+  nsIFrame* frame = mList.HitTest(aBuilder, aPt);
 
   if (frame) {
     nsIFrame* selectedFrame = frame;
-    while (selectedFrame && !IsOptionElementFrame(selectedFrame)) {
+    while (selectedFrame &&
+           !nsSelectsAreaFrame::IsOptionElementFrame(selectedFrame)) {
       selectedFrame = selectedFrame->GetParent();
     }
     if (selectedFrame) {
       return selectedFrame;
     }
-    // else, keep the original result as *aFrame, which could be this frame
+    // else, keep the original result, which could be this frame
   }
 
   return frame;
 }
 
-NS_IMETHODIMP
-nsSelectsAreaFrame::Paint(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsFramePaintLayer    aWhichLayer,
-                          PRUint32             aFlags)
+nsDisplayWrapList* nsDisplayOptionEventGrabber::WrapWithClone(
+    nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) {
+  return new (aBuilder) nsDisplayOptionEventGrabber(aItem->GetUnderlyingFrame(), aItem);
+}
+
+class nsOptionEventGrabberWrapper : public nsDisplayWrapper
 {
-  nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
-
-  nsIFrame* frame = this;
-  while (frame) {
-    frame = frame->GetParent();
-    if (frame->GetType() == nsLayoutAtoms::listControlFrame) {
-      nsListControlFrame* listFrame = NS_STATIC_CAST(nsListControlFrame*, frame);
-      listFrame->PaintFocus(aRenderingContext, aWhichLayer);
-      return NS_OK;
-    }
+public:
+  nsOptionEventGrabberWrapper() {}
+  virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
+                                  nsIFrame* aFrame, nsDisplayList* aList) {
+    // We can't specify the underlying frame here. We need this list to be
+    // exploded if sorted.
+    return new (aBuilder) nsDisplayOptionEventGrabber(nsnull, aList);
   }
+  virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
+                                  nsDisplayItem* aItem) {
+    return new (aBuilder) nsDisplayOptionEventGrabber(aItem->GetUnderlyingFrame(), aItem);
+  }
+};
 
+static nsListControlFrame* GetEnclosingListFrame(nsIFrame* aSelectsAreaFrame)
+{
+  nsIFrame* frame = aSelectsAreaFrame->GetParent();
+  while (frame) {
+    if (frame->GetType() == nsLayoutAtoms::listControlFrame)
+      return NS_STATIC_CAST(nsListControlFrame*, frame);
+    frame = frame->GetParent();
+  }
+  return nsnull;
+}
+
+static void PaintListFocus(nsIFrame* aFrame,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect, nsPoint aPt)
+{
+  nsListControlFrame* listFrame = GetEnclosingListFrame(aFrame);
+  // listFrame must be non-null or we wouldn't get called.
+  listFrame->PaintFocus(*aCtx, aPt - aFrame->GetOffsetTo(listFrame));
+}
+
+NS_IMETHODIMP
+nsSelectsAreaFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists)
+{
+  if (!aBuilder->IsForEventDelivery())
+    return BuildDisplayListInternal(aBuilder, aDirtyRect, aLists);
+    
+  nsDisplayListCollection set;
+  nsresult rv = BuildDisplayListInternal(aBuilder, aDirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsOptionEventGrabberWrapper wrapper;
+  return wrapper.WrapLists(aBuilder, this, set, aLists);
+}
+
+nsresult
+nsSelectsAreaFrame::BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
+                                             const nsRect&           aDirtyRect,
+                                             const nsDisplayListSet& aLists)
+{
+  nsresult rv = nsAreaFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsListControlFrame* listFrame = GetEnclosingListFrame(this);
+  if (listFrame && listFrame->IsFocused()) {
+    // we can't just associate the display item with the list frame,
+    // because then the list's scrollframe won't clip it (the scrollframe
+    // only clips contained descendants).
+    return aLists.Outlines()->AppendNewToTop(new (aBuilder)
+      nsDisplayGeneric(this, PaintListFocus, "ListFocus"));
+  }
+  
   return NS_OK;
 }

@@ -109,11 +109,9 @@ public:
                        nsDidReflowStatus         aStatus);
   NS_IMETHOD Destroy(nsPresContext *aPresContext);
 
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   virtual nsIFrame* GetContentInsertionFrame();
 
@@ -192,7 +190,8 @@ public:
   // Helper
   void SetPassId(PRInt16 aId)  { mPassId = aId; }
 
-  void PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer aWhichLayer);
+  PRBool IsFocused() { return this == mFocused; }
+  void PaintFocus(nsIRenderingContext& aRC, nsPoint aPt);
 
 #ifdef ACCESSIBILITY
   void FireMenuItemActiveEvent(); // Inform assistive tech what got focused
@@ -289,7 +288,7 @@ protected:
   nsSize       mCachedAvailableSize;
 
   static nsListControlFrame * mFocused;
-
+  
 #ifdef DO_REFLOW_COUNTER
   PRInt32 mReflowId;
 #endif

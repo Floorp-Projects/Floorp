@@ -615,9 +615,6 @@ public:
 #ifdef MOZ_REFLOW_PERF
   NS_HIDDEN_(void) CountReflows(const char * aName,
                                 PRUint32 aType, nsIFrame * aFrame);
-  NS_HIDDEN_(void) PaintCount(const char * aName,
-                              nsIRenderingContext* aRendingContext,
-                              nsIFrame * aFrame, PRUint32 aColor);
 #endif
 
   /**
@@ -764,19 +761,5 @@ protected:
 #else
 #define DO_GLOBAL_REFLOW_COUNT(_name, _type)
 #endif // MOZ_REFLOW_PERF
-
-#if defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF)
-#define DO_GLOBAL_REFLOW_COUNT_DSP(_name, _rend) \
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) { \
-    aPresContext->PaintCount((_name), (_rend), (nsIFrame*)this, 0); \
-  }
-#define DO_GLOBAL_REFLOW_COUNT_DSP_J(_name, _rend, _just) \
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) { \
-    aPresContext->PaintCount((_name), (_rend), (nsIFrame*)this, (_just)); \
-  }
-#else
-#define DO_GLOBAL_REFLOW_COUNT_DSP(_name, _rend)
-#define DO_GLOBAL_REFLOW_COUNT_DSP_J(_name, _rend, _just)
-#endif // MOZ_REFLOW_PERF_DSP
 
 #endif /* nsPresContext_h___ */

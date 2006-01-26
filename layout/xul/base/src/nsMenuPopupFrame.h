@@ -134,9 +134,6 @@ public:
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer);
-
   virtual nsresult CreateWidgetForView(nsIView* aView);
 
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState);

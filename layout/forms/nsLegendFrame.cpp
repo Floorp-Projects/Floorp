@@ -107,21 +107,8 @@ nsLegendFrame::Reflow(nsPresContext*          aPresContext,
   return nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-
-NS_IMETHODIMP
-nsLegendFrame::Paint(nsPresContext*      aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect,
-                     nsFramePaintLayer    aWhichLayer,
-                     PRUint32             aFlags)
-{
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
-    return NS_OK;
-  }
-  return nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-}
-
+// REVIEW: We don't need to override BuildDisplayList, nsAreaFrame will honour
+// our visibility setting
 PRInt32 nsLegendFrame::GetAlign()
 {
   PRInt32 intValue = NS_STYLE_TEXT_ALIGN_LEFT;

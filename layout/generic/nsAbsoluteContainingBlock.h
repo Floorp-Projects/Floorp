@@ -68,6 +68,7 @@ public:
   nsresult FirstChild(const nsIFrame* aDelegatingFrame,
                       nsIAtom*        aListName,
                       nsIFrame**      aFirstChild) const;
+  nsIFrame* GetFirstChild() { return mAbsoluteFrames.FirstChild(); }
   
   nsresult SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                nsPresContext* aPresContext,

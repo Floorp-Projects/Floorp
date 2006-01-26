@@ -46,6 +46,7 @@ class nsIAtom;
 class nsIScrollableView;
 class nsIScrollableFrame;
 class nsIDOMEvent;
+class nsRegion;
 
 #include "prtypes.h"
 #include "nsStyleContext.h"
@@ -156,6 +157,13 @@ public:
   static nsIView* FindSiblingViewFor(nsIView* aParentView, nsIFrame* aFrame);
 
   /**
+   * Get the parent of aFrame. If aFrame is the root frame for a document,
+   * and the document has a parent document in the same view hierarchy, then
+   * we try to return the subdocumentframe in the parent document.
+   */
+  static nsIFrame* GetCrossDocParentFrame(nsIFrame* aFrame);
+  
+  /**
    * IsProperAncestorFrame checks whether aAncestorFrame is an ancestor
    * of aFrame and not equal to aFrame.
    * @param aCommonAncestor nsnull, or a common ancestor of aFrame and
@@ -164,6 +172,12 @@ public:
    */
   static PRBool IsProperAncestorFrame(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
                                       nsIFrame* aCommonAncestor = nsnull);
+
+  /**
+   * Like IsProperAncestorFrame, but looks across document boundaries.
+   */
+  static PRBool IsProperAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
+                                              nsIFrame* aCommonAncestor = nsnull);
 
   /**
     * GetFrameFor returns the root frame for a view
@@ -299,6 +313,74 @@ public:
   static nsPoint TranslateWidgetToView(nsPresContext* aPresContext, 
                                        nsIWidget* aWidget, nsIntPoint aPt,
                                        nsIView* aView);
+
+  /**
+   * Given aFrame, the root frame of a stacking context, find its descendant
+   * frame under the point aPt that receives a mouse event at that location,
+   * or nsnull if there is no such frame.
+   * @param aPt the point, relative to the frame origin
+   */
+  static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt);
+
+  /**
+   * Given aFrame, the root frame of a stacking context, paint it and its
+   * descendants to aRenderingContext. 
+   * @param aRenderingContext a rendering context translated so that (0,0)
+   * is the origin of aFrame
+   * @param aDirtyRegion the region that must be painted, in the coordinates
+   * of aFrame
+   */
+  static nsresult PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
+                             const nsRegion& aDirtyRegion);
+
+  /**
+   * @param aRootFrame the root frame of the tree to be displayed
+   * @param aMovingFrame a frame that has moved
+   * @param aPt the amount by which aMovingFrame has moved and the rect will
+   * be copied
+   * @param aCopyRect a rectangle that will be copied, relative to aRootFrame
+   * @param aRepaintRegion a subregion of aCopyRect+aDelta that must be repainted
+   * after doing the bitblt
+   * 
+   * Ideally this function would actually have the rect-to-copy as an output
+   * rather than an input, but for now, scroll bitblitting is limited to
+   * the whole of a single widget, so we cannot choose the rect.
+   * 
+   * This function assumes that the caller will do a bitblt copy of aCopyRect
+   * to aCopyRect+aPt. It computes a region that must be repainted in order
+   * for the resulting rendering to be correct.
+   * 
+   * The region consists of:
+   * a) any visible background-attachment:fixed areas in the after-move display
+   * list
+   * b) any visible areas of the before-move display list corresponding to
+   * frames that will not move (translated by aDelta)
+   * c) any visible areas of the after-move display list corresponding to
+   * frames that did not move
+   * d) except that if the same display list element is visible in b) and c)
+   * for a frame that did not move and paints a uniform color within its
+   * bounds, then the intersection of its old and new bounds can be excluded
+   * when it is processed by b) and c).
+   * 
+   * We may return a larger region if computing the above region precisely is
+   * too expensive.
+   */
+  static nsresult ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
+                                              nsIFrame* aMovingFrame,
+                                              nsPoint aDelta,
+                                              const nsRect& aCopyRect,
+                                              nsRegion* aRepaintRegion);
+                                       
+  static nsresult CreateOffscreenContext(nsIDeviceContext* deviceContext,
+                                         nsIDrawingSurface* surface,
+                                         const nsRect& aRect,
+                                         nsIRenderingContext** aResult);
+
+  /**
+   * Compute the used z-index of aFrame; returns zero for elements to which
+   * z-index does not apply, and for z-index:auto
+   */
+  static PRInt32 GetZIndex(nsIFrame* aFrame);
 
   /**
    * Uses a binary search for find where the cursor falls in the line of text

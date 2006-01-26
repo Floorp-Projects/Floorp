@@ -37,7 +37,9 @@
 #include "nsILayoutDebugger.h"
 #include "nsIFrame.h"
 #include "nsIFrameDebug.h"
+#include "nsDisplayList.h"
 
+#include <stdio.h>
 
 #ifdef NS_DEBUG
 class nsLayoutDebugger : public nsILayoutDebugger {
@@ -141,4 +143,50 @@ nsLayoutDebugger::GetStyleSize(nsIPresShell* aPresentation,
   *aSizeInBytesResult = 0;
   return NS_ERROR_FAILURE;
 }
+
+static void
+PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
+                   PRInt32 aIndent, FILE* aOutput)
+{
+  for (nsDisplayItem* i = aList.GetBottom(); i != nsnull; i = i->GetAbove()) {
+    for (PRInt32 j = 0; j < aIndent; ++j) {
+      fputc(' ', aOutput);
+    }
+    nsIFrame* f = i->GetUnderlyingFrame();
+    nsIFrameDebug* fDebug = nsnull;
+    if (f) {
+      CallQueryInterface(f, &fDebug);
+    }
+    nsAutoString fName;
+    if (fDebug) {
+      fDebug->GetFrameName(fName);
+    }
+    nsRect rect = i->GetBounds(aBuilder);
+    switch (i->GetType()) {
+      case nsDisplayItem::TYPE_CLIP: {
+        nsDisplayClip* c = NS_STATIC_CAST(nsDisplayClip*, i);
+        rect = c->GetClipRect();
+        break;
+      }
+      default:
+        break;
+    }
+    fprintf(aOutput, "%s %p(%s) (%d,%d,%d,%d)%s%s\n", i->Name(),
+            (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
+            rect.x, rect.y, rect.width, rect.height,
+            i->IsOpaque(aBuilder) ? " opaque" : "",
+            i->IsUniform(aBuilder) ? " uniform" : "");
+    nsDisplayList* list = i->GetList();
+    if (list) {
+      PrintDisplayListTo(aBuilder, *list, aIndent + 4, aOutput);
+    }
+  }
+}
+
+void
+nsIFrameDebug::PrintDisplayList(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList)
+{
+  PrintDisplayListTo(aBuilder, aList, 0, stderr);
+}
+
 #endif

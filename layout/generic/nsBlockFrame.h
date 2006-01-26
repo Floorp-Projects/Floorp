@@ -159,11 +159,9 @@ public:
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
   virtual PRBool IsContainingBlock() const;
   virtual PRBool IsFloatContainingBlock() const;
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
   virtual nsIAtom* GetType() const;
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
@@ -183,7 +181,7 @@ public:
   // empty combinedAreas never participate in event handling or
   // painting), and the block has sufficient number of lines. The
   // cursor property points to a "recently used" line. If we get a
-  // series of GetFrameForPoint or Paint requests that work on lines
+  // series of requests that work on lines
   // "near" the cursor, then we can find those nearby lines quickly by
   // starting our search at the cursor.
 
@@ -200,18 +198,8 @@ public:
   // are non-decreasing.
   void SetupLineCursor();
 
-  virtual nsIFrame* GetFrameForPointUsing(const nsPoint&    aPoint,
-                                          nsIAtom*          aList,
-                                          nsFramePaintLayer aWhichLayer,
-                                          PRBool            aConsiderSelf);
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer);
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
-
-  NS_IMETHOD IsVisibleForPainting(nsPresContext *     aPresContext, 
-                                  nsIRenderingContext& aRenderingContext,
-                                  PRBool               aCheckVis,
-                                  PRBool*              aIsVisible);
+  virtual PRBool IsVisibleInSelection(nsISelection* aSelection);
 
   virtual PRBool IsEmpty();
   virtual PRBool IsSelfEmpty();
@@ -257,16 +245,6 @@ public:
   void UndoSplitPlaceholders(nsBlockReflowState& aState,
                              nsIFrame*           aLastPlaceholder);
   
-  virtual void PaintChild(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsIFrame*            aFrame,
-                          nsFramePaintLayer    aWhichLayer,
-                          PRUint32             aFlags = 0) {
-    nsContainerFrame::PaintChild(aPresContext, aRenderingContext,
-                                 aDirtyRect, aFrame, aWhichLayer, aFlags);
-  }
-
   PRBool HandleOverflowPlaceholdersForPulledFrame(
     nsBlockReflowState& aState, nsIFrame* aFrame);
 
@@ -288,11 +266,13 @@ protected:
    * Overides member function of nsHTMLContainerFrame. Needed to handle the 
    * lines in a nsBlockFrame properly.
    */
-  virtual void PaintTextDecorationLines(nsIRenderingContext& aRenderingContext,
-                                        nscolor aColor,
-                                        nscoord aOffset,
-                                        nscoord aAscent,
-                                        nscoord aSize);
+  virtual void PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
+                                       nsPoint aPt,
+                                       nsLineBox* aLine,
+                                       nscolor aColor,
+                                       nscoord aOffset,
+                                       nscoord aAscent,
+                                       nscoord aSize);
 
   void TryAllLines(nsLineList::iterator* aIterator,
                    nsLineList::iterator* aEndIterator,
@@ -527,18 +507,6 @@ protected:
 
   void ReparentFloats(nsIFrame* aFirstFrame,
                       nsBlockFrame* aOldParent, PRBool aFromOverflow);
-
-  //----------------------------------------
-  //XXX
-  virtual void PaintChildren(nsPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags = 0);
-
-  void PaintFloats(nsPresContext* aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
 
   void PropagateFloatDamage(nsBlockReflowState& aState,
                             nsLineBox* aLine,

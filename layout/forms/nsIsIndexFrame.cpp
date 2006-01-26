@@ -103,19 +103,8 @@ nsIsIndexFrame::~nsIsIndexFrame()
   }
 }
 
-NS_IMETHODIMP
-nsIsIndexFrame::Paint(nsPresContext*      aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect&        aDirtyRect,
-                      nsFramePaintLayer    aWhichLayer,
-                      PRUint32             aFlags)
-{
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
-    return NS_OK;
-  }
-  return nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-}
+// REVIEW: We don't need to override BuildDisplayList, nsAreaFrame will honour
+// our visibility setting
 
 NS_IMETHODIMP
 nsIsIndexFrame::UpdatePromptLabel()

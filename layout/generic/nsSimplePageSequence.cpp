@@ -51,6 +51,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsContentUtils.h"
+#include "nsDisplayList.h"
 
 // DateTime Includes
 #include "nsDateTimeFormatCID.h"
@@ -963,6 +964,20 @@ nsSimplePageSequenceFrame::SetClipRect(nsPresContext*  aPresContext, nsRect* aRe
 }
 
 //------------------------------------------------------------------------------
+NS_IMETHODIMP
+nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                            const nsRect&           aDirtyRect,
+                                            const nsDisplayListSet& aLists)
+{
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Treat each page as a psuedo-stack so everything goes in the Content() list.
+  return
+    BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
+                                        DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+}
+
 nsIAtom*
 nsSimplePageSequenceFrame::GetType() const
 {

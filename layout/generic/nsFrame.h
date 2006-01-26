@@ -184,11 +184,6 @@ public:
   NS_IMETHOD  SetParent(const nsIFrame* aParent);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
-  NS_IMETHOD  Paint(nsPresContext*      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer,
-                    PRUint32             aFlags = 0);
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus);
@@ -197,8 +192,6 @@ public:
                                  nsIContent** aContent);
   NS_IMETHOD  GetCursor(const nsPoint&    aPoint,
                         nsIFrame::Cursor& aCursor);
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD  GetPointFromOffset(nsPresContext*        inPresContext,
                                  nsIRenderingContext*   inRendContext,
@@ -259,12 +252,6 @@ public:
   NS_IMETHOD GetParentStyleContextFrame(nsPresContext* aPresContext,
                                         nsIFrame**      aProviderFrame,
                                         PRBool*         aIsChild);
-
-  // Check Style Visibility and mState for Selection (when printing)
-  NS_IMETHOD IsVisibleForPainting(nsPresContext *     aPresContext, 
-                                  nsIRenderingContext& aRenderingContext,
-                                  PRBool               aCheckVis,
-                                  PRBool*              aIsVisible);
 
   virtual PRBool IsEmpty();
   virtual PRBool IsSelfEmpty();
@@ -446,21 +433,55 @@ public:
   static void DisplayReflowShutdown();
 #endif
 
+  /**
+   * Adds display items for standard CSS borders, background and outline for
+   * for this frame, as necessary. Checks IsVisibleForPainting and won't
+   * display anything if the frame is not visible.
+   * @param aForceBackground draw the background even if the frame
+   * background style appears to have no background --- this is useful
+   * for frames that might receive a propagated background via
+   * nsCSSRendering::FindBackground
+   */
+  nsresult DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
+                                          const nsDisplayListSet& aLists,
+                                          PRBool aForceBackground = PR_FALSE);
+  /**
+   * Add a display item for the CSS outline. Does not check visibility.
+   */
+  nsresult DisplayOutlineUnconditional(nsDisplayListBuilder*   aBuilder,
+                                       const nsDisplayListSet& aLists);
+  /**
+   * Add a display item for the CSS outline, after calling
+   * IsVisibleForPainting to confirm we are visible.
+   */
+  nsresult DisplayOutline(nsDisplayListBuilder*   aBuilder,
+                          const nsDisplayListSet& aLists);
+
 protected:
   // Protected constructor and destructor
   nsFrame();
   virtual ~nsFrame();
 
   /**
-   * To be called by |Paint| of this class or derived classes to paint
-   * the background, border, and outline, when in the correct layer to
-   * do so.
+   * @return PR_FALSE if this frame definitely has no borders at all
+   */                 
+  PRBool HasBorder() {
+    const nsStyleBorder* border = GetStyleBorder();
+    for (PRInt32 i = 0; i < 4; ++i) {
+      if (border->GetBorderStyle(i) != NS_STYLE_BORDER_STYLE_NONE)
+        return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
+  /**
+   * To be called by |BuildDisplayLists| of this class or derived classes to add
+   * a translucent overlay if this frame's content is selected.
+   * @param aContentType an nsISelectionDisplay DISPLAY_ constant identifying
+   * which kind of content this is for
    */
-  void PaintSelf(nsPresContext*      aPresContext,
-                 nsIRenderingContext& aRenderingContext,
-                 const nsRect&        aDirtyRect,
-                 PRIntn               aSkipSides = 0,
-                 PRBool               aUsePrintBackgroundSettings = PR_TRUE);
+  nsresult DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
+      const nsDisplayListSet& aLists, PRUint16 aContentType = nsISelectionDisplay::DISPLAY_FRAMES);
 
   PRInt16 DisplaySelection(nsPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
   
@@ -469,9 +490,6 @@ protected:
 
   // Style post processing hook
   NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
-
-  // Helper routine for determining whether to print selection
-  nsresult GetSelectionForVisCheck(nsPresContext * aPresContext, nsISelection** aSelection);
 
   //return the line number of the aFrame
   static PRInt32 GetLineNumber(nsIFrame *aFrame);
@@ -498,12 +516,6 @@ protected:
                                       PRInt32 *aTarget);
 
   virtual PRBool ParentDisablesSelection() const;
-
-  // Set the overflow clip rect into the rendering-context. Used for block-level
-  // elements and replaced elements that have 'overflow' set to 'hidden'. This
-  // member function assumes that the caller has checked that the clip property
-  // applies to its situation.
-  void SetOverflowClipRect(nsIRenderingContext& aRenderingContext);
 
   // Fills aCursor with the appropriate information from ui
   static void FillCursorInformationFromStyle(const nsStyleUserInterface* ui,

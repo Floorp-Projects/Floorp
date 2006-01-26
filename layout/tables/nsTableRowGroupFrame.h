@@ -130,23 +130,9 @@ public:
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-  /** @see nsIFrame::Paint */
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
-
-  // row groups don't paint their own background -- the cells do
-  virtual PRBool CanPaintBackground() { return PR_FALSE; }
-
-  /**
-   * Find the correct descendant frame.
-   * Return PR_TRUE if a frame containing the point is found.
-   * @see nsContainerFrame::GetFrameForPoint
-   */
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
-                                     nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
    /** calls Reflow for all of its child rows.
     * Rows are all set to the same width and stacked vertically.

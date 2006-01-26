@@ -53,7 +53,7 @@
 #include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
 #include "nsCOMPtr.h"
-
+#include "nsDisplayList.h"
 
 struct nsTableCellReflowState : public nsHTMLReflowState
 {
@@ -554,60 +554,66 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
   return GetHeight();
 }
 
-NS_METHOD nsTableRowFrame::Paint(nsPresContext*      aPresContext,
-                                 nsIRenderingContext& aRenderingContext,
-                                 const nsRect&        aDirtyRect,
-                                 nsFramePaintLayer    aWhichLayer,
-                                 PRUint32             aFlags)
+/**
+ * We need a custom display item for table row backgrounds. This is only used
+ * when the table row is the root of a stacking context (e.g., has 'opacity').
+ * Table row backgrounds can extend beyond the row frame bounds, when
+ * the row contains row-spanning cells.
+ */
+class nsDisplayTableRowBackground : public nsDisplayItem {
+public:
+  nsDisplayTableRowBackground(nsTableRowFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
+    // the overflow rect contains any row-spanning cells, so it contains
+    // our background. Note that this means we may not be opaque even if
+    // the background style is a solid color.
+    return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+  }
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("TableRowBackground")
+private:
+  nsTableRowFrame* mFrame;
+};
+
+void
+nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
+    nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(mFrame, tableFrame);
+  NS_ASSERTION(tableFrame, "null table frame");
+
+  nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
+  nsIRenderingContext::AutoPushTranslation translate(aCtx, pt.x, pt.y);
+  TableBackgroundPainter painter(tableFrame,
+                                 TableBackgroundPainter::eOrigin_TableRow,
+                                 mFrame->GetPresContext(), *aCtx,
+                                 aDirtyRect - pt);
+  painter.PaintRow(mFrame);
+}
+
+NS_IMETHODIMP
+nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
+                                  const nsDisplayListSet& aLists)
 {
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
+  if (!IsVisibleInSelection(aBuilder))
     return NS_OK;
+
+  if (aBuilder->IsAtRootOfPseudoStackingContext()) {
+    // This background is created regardless of whether this frame is
+    // visible or not. Visibility decisions are delegated to the
+    // table background painter.
+    // We would use nsDisplayGeneric for this rare case except that we
+    // need the background to be larger than the row frame in some
+    // cases.
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayTableRowBackground(this));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-
-#ifdef DEBUG
-  // for debug...
-  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
-    aRenderingContext.SetColor(NS_RGB(0,255,0));
-    aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
-  }
-#endif
-
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
-      //direct (not table-called) background paint
-      !(aFlags & (NS_PAINT_FLAG_TABLE_BG_PAINT | NS_PAINT_FLAG_TABLE_CELL_BG_PASS))) {
-    nsTableFrame* tableFrame;
-    nsTableFrame::GetTableFrame(this, tableFrame);
-    NS_ASSERTION(tableFrame, "null table frame");
-
-    TableBackgroundPainter painter(tableFrame,
-                                   TableBackgroundPainter::eOrigin_TableRow,
-                                   aPresContext, aRenderingContext,
-                                   aDirtyRect);
-    nsresult rv = painter.PaintRow(this);
-    if (NS_FAILED(rv)) return rv;
-    aFlags |= NS_PAINT_FLAG_TABLE_BG_PAINT;
-  }
-
-  PRBool clip = GetStyleDisplay()->IsTableClip();
-  if (clip) {
-    aRenderingContext.PushState();
-    SetOverflowClipRect(aRenderingContext);
-  }
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect,
-                aWhichLayer, aFlags);
-
-  // Paint outline
-  nsRect rect(0, 0, mRect.width, mRect.height);
-  const nsStyleOutline* outlineStyle = GetStyleOutline();
-  const nsStyleBorder* borderStyle  = GetStyleBorder();
-  nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                               aDirtyRect, rect, *borderStyle, *outlineStyle,
-                               mStyleContext, 0);
-  if (clip)
-    aRenderingContext.PopState();
-  return NS_OK;
-
+  
+  return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists);
 }
 
 PRIntn
@@ -621,40 +627,6 @@ nsTableRowFrame::GetSkipSides() const
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
-}
-
-
-/* we overload this here because rows have children that can span outside of themselves.
- * so the default "get the child rect, see if it contains the event point" action isn't
- * sufficient.  We have to ask the row if it has a child that contains the point.
- */
-nsIFrame*
-nsTableRowFrame::GetFrameForPoint(const nsPoint&    aPoint,
-                                  nsFramePaintLayer aWhichLayer)
-{
-  // XXX This would not need to exist (except as a one-liner, to make this
-  // frame work like a block frame) if rows with rowspan cells made the
-  // the NS_FRAME_OUTSIDE_CHILDREN bit of mState set correctly (see
-  // nsIFrame.h).
-
-  // XXXldb Do we need this anymore?
-
-  // I imagine fixing this would help performance of GetFrameForPoint in
-  // tables.  It may also fix problems with relative positioning.
-
-  // This is basically copied from nsContainerFrame::GetFrameForPointUsing,
-  // except for one bit removed
-
-  nsIFrame* kid = GetFirstChild(nsnull);
-  nsIFrame* frame = nsnull;
-  while (kid) {
-    nsIFrame* hit = kid->GetFrameForPoint(aPoint - kid->GetOffsetTo(this),
-                                          aWhichLayer);
-    if (hit)
-      frame = hit;
-    kid = kid->GetNextSibling();
-  }
-  return frame;
 }
 
 // Calculate the cell's actual size given its pass2 desired width and height.

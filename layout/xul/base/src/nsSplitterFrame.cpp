@@ -76,6 +76,7 @@
 #include "nsContentCID.h"
 #include "nsStyleSet.h"
 #include "nsLayoutUtils.h"
+#include "nsDisplayList.h"
 
 // was used in nsSplitterFrame::Init but now commented out
 //static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
@@ -427,25 +428,23 @@ nsSplitterFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-nsIFrame* nsSplitterFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                            nsFramePaintLayer aWhichLayer)
+NS_IMETHODIMP
+nsSplitterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
+                                  const nsDisplayListSet& aLists)
 {
+  nsresult rv = nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   // if the mouse is captured always return us as the frame.
   if (mInner->mDragging)
   {
     // XXX It's probably better not to check visibility here, right?
-    return this;
+    return aLists.Outlines()->AppendNewToTop(new (aBuilder)
+        nsDisplayEventReceiver(this));
   }
 
-  nsIFrame* frame = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
-
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (!frame && aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND &&
-      thisRect.Contains(aPoint)) {
-    return this;
-  }
-
-  return frame;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

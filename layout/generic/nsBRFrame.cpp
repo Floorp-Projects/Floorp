@@ -54,13 +54,7 @@
 class BRFrame : public nsFrame {
 public:
   // nsIFrame
-#ifdef NS_DEBUG
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
-#endif
+  // REVIEW: Removed debug-only Paint() method rather than porting it
   NS_IMETHOD GetPositionHelper(const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
@@ -69,12 +63,12 @@ public:
   NS_IMETHOD PeekOffset(nsPresContext* aPresContext, 
                          nsPeekOffsetStruct *aPos);
 
-  // nsIHTMLReflow
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
   virtual nsIAtom* GetType() const;
+  
 protected:
   virtual ~BRFrame();
 };
@@ -88,25 +82,6 @@ NS_NewBRFrame(nsIPresShell* aPresShell)
 BRFrame::~BRFrame()
 {
 }
-
-#ifdef NS_DEBUG
-NS_IMETHODIMP
-BRFrame::Paint(nsPresContext*      aPresContext,
-               nsIRenderingContext& aRenderingContext,
-               const nsRect&        aDirtyRect,
-               nsFramePaintLayer    aWhichLayer,
-               PRUint32             aFlags)
-{
-  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
-    float p2t;
-    p2t = aPresContext->PixelsToTwips();
-    nscoord five = NSIntPixelsToTwips(5, p2t);
-    aRenderingContext.SetColor(NS_RGB(0, 255, 255));
-    aRenderingContext.FillRect(0, 0, five, five*2);
-  }
-  return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP
 BRFrame::Reflow(nsPresContext* aPresContext,

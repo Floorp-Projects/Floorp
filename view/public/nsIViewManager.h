@@ -42,9 +42,11 @@
 #include "nsIView.h"
 #include "nsColor.h"
 #include "nsEvent.h"
+#include "nsIRenderingContext.h"
 
 class nsIScrollableView;
 class nsIWidget;
+class nsIBlender;
 class nsICompositeListener;
 struct nsRect;
 class nsRegion;
@@ -566,6 +568,45 @@ public:
    * (aFromScroll is false) or scrolled (aFromScroll is true).
    */
   NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll)=0;
+  
+  /**
+   TEMPORARY. Expose BlendingBuffers to layout so layout can
+   paint with opacity. This will go away with cairo/thebes, or be moved
+   to layout, depending on what happens first.
+   
+    This class represents an offscreen buffer which may have an alpha channel.
+    Currently, if an alpha channel is required, we implement it by rendering into
+    two buffers: one with a black background, one with a white background. We can
+    recover the alpha values by comparing corresponding final values for each pixel.
+  */
+  class BlendingBuffers {
+  public:
+    BlendingBuffers(nsIRenderingContext* aCleanupContext);
+    ~BlendingBuffers();
+  
+    // used by the destructor to cleanup resources
+    nsCOMPtr<nsIRenderingContext> mCleanupContext;
+    // The primary rendering context. When an alpha channel is in use, this
+    // holds the black background.
+    nsCOMPtr<nsIRenderingContext> mBlackCX;
+    // Only used when an alpha channel is required; holds the white background.
+    nsCOMPtr<nsIRenderingContext> mWhiteCX;
+  
+    PRBool mOwnBlackSurface;
+    // drawing surface for mBlackCX
+    nsIDrawingSurface*  mBlack;
+    // drawing surface for mWhiteCX
+    nsIDrawingSurface*  mWhite;
+  
+    // The offset within the current widget at which this buffer will
+    // eventually be composited
+    nsPoint mOffset;
+  };
+
+  virtual BlendingBuffers* CreateBlendingBuffers(nsIRenderingContext *aRC, PRBool aBorrowContext,
+                                                 nsIDrawingSurface* aBorrowSurface, PRBool aNeedAlpha,
+                                                 const nsRect& aArea) = 0;
+  virtual nsIBlender* GetBlender() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)

@@ -990,7 +990,7 @@ const nscolor kBlackColor = NS_RGB(0,0,0);
             dashRect.x = borderOutside.x;
           }
 
-          temp = borderOutside.YMost();
+          temp = borderOutside.height;
           temp1 = temp/dashRect.height;
 
           currRect = dashRect;
@@ -1001,16 +1001,17 @@ const nscolor kBlackColor = NS_RGB(0,0,0);
             FillOrInvertRect(aContext,  dashRect.x, borderOutside.y,dashRect.width, dashRect.height-adjust,isInvert);
             FillOrInvertRect(aContext,dashRect.x,(borderOutside.YMost()-(dashRect.height-adjust)),dashRect.width, dashRect.height-adjust,isInvert);
             currRect.y += (dashRect.height-adjust);
-            temp = temp-= (dashRect.height-adjust);
+            temp-= (dashRect.height-adjust);
           } else {
             adjust = (temp%dashRect.width)/2;                   // adjust a tad longer
             // draw in the left and right
             FillOrInvertRect(aContext, dashRect.x, borderOutside.y,dashRect.width, dashRect.height+adjust,isInvert);
             FillOrInvertRect(aContext, dashRect.x,(borderOutside.YMost()-(dashRect.height+adjust)),dashRect.width, dashRect.height+adjust,isInvert);
             currRect.y += (dashRect.height+adjust);
-            temp = temp-= (dashRect.height+adjust);
+            temp-= (dashRect.height+adjust);
           }
         
+          temp += borderOutside.y;
           if( temp > ywidth)
             temp = ywidth;
 
@@ -1021,7 +1022,7 @@ const nscolor kBlackColor = NS_RGB(0,0,0);
             if((temp1%2)==1){
               bSolid = PR_TRUE;
             }
-         }
+          }
 
           while(currRect.y<temp) {
             //draw if necessary
@@ -1056,7 +1057,7 @@ const nscolor kBlackColor = NS_RGB(0,0,0);
             dashRect.y = borderOutside.y;
           }
 
-          temp = borderOutside.XMost();
+          temp = borderOutside.width;
           temp1 = temp/dashRect.width;
 
           currRect = dashRect;
@@ -1067,17 +1068,17 @@ const nscolor kBlackColor = NS_RGB(0,0,0);
             FillOrInvertRect(aContext, borderOutside.x,dashRect.y,dashRect.width-adjust,dashRect.height,isInvert);
             FillOrInvertRect(aContext, (borderOutside.XMost()-(dashRect.width-adjust)),dashRect.y,dashRect.width-adjust,dashRect.height,isInvert);
             currRect.x += (dashRect.width-adjust);
-            temp = temp-= (dashRect.width-adjust);
+            temp-= (dashRect.width-adjust);
           } else {
             adjust = (temp%dashRect.width)/2;
             // draw in the left and right
             FillOrInvertRect(aContext, borderOutside.x,dashRect.y,dashRect.width+adjust,dashRect.height,isInvert);
             FillOrInvertRect(aContext, (borderOutside.XMost()-(dashRect.width+adjust)),dashRect.y,dashRect.width+adjust,dashRect.height,isInvert);
             currRect.x += (dashRect.width+adjust);
-            temp = temp-= (dashRect.width+adjust);
+            temp-= (dashRect.width+adjust);
           }
        
-
+          temp += borderOutside.x;
           if( temp > xwidth)
             temp = xwidth;
 
@@ -2131,7 +2132,7 @@ nscoord width, offset;
 
   // get the offset for our outline
   aOutlineStyle.GetOutlineOffset(offset);
-  nsRect outside(*overflowArea);
+  nsRect outside(*overflowArea + aBorderArea.TopLeft());
   nsRect inside(outside);
   if (width + offset >= 0) {
     // the overflow area is exactly the outside edge of the outline
@@ -2804,6 +2805,30 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
                         aBorder, aPadding, aUsePrintSettings, aBGClipRect);
 }
 
+/**
+ * Return the largest 'v' such that v = aTileOffset + N*aTileSize, for some
+ * integer N, and v <= aDirtyStart.
+ */
+static nscoord
+FindTileStart(nscoord aDirtyStart, nscoord aTileOffset, nscoord aTileSize)
+{
+  // Find largest integer N such that aTileOffset + N*aTileSize <= aDirtyStart
+  PRInt32 n = NSToIntFloor((aDirtyStart*1.0f - aTileOffset)/aTileSize);
+  return aTileOffset + n*aTileSize;
+}
+
+/**
+ * Return the smallest 'v' such that v = aTileOffset + N*aTileSize, for some
+ * integer N, and v >= aDirtyEnd.
+ */
+static nscoord
+FindTileEnd(nscoord aDirtyEnd, nscoord aTileOffset, nscoord aTileSize)
+{
+  // Find smallest integer N such that aTileOffset + N*aTileSize >= aDirtyEnd
+  PRInt32 n = NSToIntCeil((aDirtyEnd*1.0f - aTileOffset)/aTileSize);
+  return aTileOffset + n*aTileSize;
+}
+
 void
 nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
@@ -2833,8 +2858,14 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   if (displayData->mAppearance) {
     nsITheme *theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame, displayData->mAppearance)) {
+      nsPoint offset = aBorderArea.TopLeft();
+      nsIRenderingContext::AutoPushTranslation
+          translate(&aRenderingContext, offset.x, offset.y);
+      nsRect dirty;
+      nsRect border = aBorderArea - offset;
+      dirty.IntersectRect(aDirtyRect - offset, border);
       theme->DrawWidgetBackground(&aRenderingContext, aForFrame, 
-                                  displayData->mAppearance, aBorderArea, aDirtyRect); 
+                                  displayData->mAppearance, border, dirty);
       return;
     }
   }
@@ -3002,6 +3033,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // When tiling, the anchor coordinate values will be negative offsets
   // from the background-origin area.
 
+  // relative to the origin of aForFrame
   nsPoint anchor;
   if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
     // If it's a fixed background attachment, then the image is placed 
@@ -3033,15 +3065,12 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       viewportArea.Deflate(scrollbars);
     }
 
-    // Get the anchor point
+    // Get the anchor point, relative to rootFrame
     ComputeBackgroundAnchorPoint(aColor, viewportArea, viewportArea, tileWidth, tileHeight, anchor);
 
-    // Convert the anchor point to aForFrame's coordinate space
-    nsPoint offset(0, 0);
-    nsIView* view = aForFrame->GetClosestView(&offset);
-    anchor -= offset;
-    NS_ASSERTION(view, "expected a view");
-    anchor -= view->GetOffsetTo(viewportView);
+    // Convert the anchor point from viewport coordinates (relative to aRootFrame) to
+    // relative to aForFrame
+    anchor -= aForFrame->GetOffsetTo(rootFrame);
   } else {
     if (frameType == nsLayoutAtoms::canvasFrame) {
       // If the frame is the canvas, the image is placed relative to
@@ -3062,7 +3091,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
         firstRootElementFrameArea.Deflate(borderStyle->GetBorder());
 
         // Get the anchor point
-        ComputeBackgroundAnchorPoint(aColor, firstRootElementFrameArea, bgClipArea, tileWidth, tileHeight, anchor);
+        ComputeBackgroundAnchorPoint(aColor, firstRootElementFrameArea +
+            aBorderArea.TopLeft(), bgClipArea, tileWidth, tileHeight, anchor);
       } else {
         ComputeBackgroundAnchorPoint(aColor, bgOriginArea, bgClipArea, tileWidth, tileHeight, anchor);
       }
@@ -3071,8 +3101,11 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       // simply placed relative to the frame's background-clip area
       ComputeBackgroundAnchorPoint(aColor, bgOriginArea, bgClipArea, tileWidth, tileHeight, anchor);
     }
-  }
 
+    // For scrolling attachment, the anchor is within the 'background-clip'
+    anchor.x += bgClipArea.x - aBorderArea.x;
+    anchor.y += bgClipArea.y - aBorderArea.y;
+  }
 
 #if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
   // Setup clipping so that rendering doesn't leak out of the computed
@@ -3181,52 +3214,33 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
 
   */
 
-  // first do the horizontal case
-  nscoord x0, x1;
-  // For scrolling attachment, the anchor is within the 'background-clip'
-  // For fixed attachment, the anchor is within the bounds of the nearest
-  // scrolling ancestor (or the viewport)
-  x0 = (NS_STYLE_BG_ATTACHMENT_SCROLL == aColor.mBackgroundAttachment) ?
-       bgClipArea.x : 0;
+  // relative to aBorderArea.TopLeft()
+  nsRect tileRect(anchor, nsSize(tileWidth, tileHeight));
   if (repeat & NS_STYLE_BG_REPEAT_X) {
     // When tiling in the x direction, adjust the starting position of the
     // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
     // will be a negative value used to adjust the starting coordinate.
-    x0 += anchor.x + 
-          ((dirtyRect.x - (bgClipArea.x + anchor.x)) / tileWidth) * tileWidth;
-    x1 = x0 + ((dirtyRect.x + dirtyRect.width - x0 + tileWidth - 1) / tileWidth) * tileWidth;
+    nscoord x0 = FindTileStart(dirtyRect.x - aBorderArea.x, anchor.x, tileWidth);
+    nscoord x1 = FindTileEnd(dirtyRect.XMost() - aBorderArea.x, anchor.x, tileWidth);
+    tileRect.x = x0;
+    tileRect.width = x1 - x0;
   }
-  else {
-    x0 += anchor.x;
-    x1 = x0 + tileWidth;
-  }
-
-  // now do all that again with the vertical case
-  nscoord y0, y1;
-  // For scrolling attachment, the anchor is within the 'background-clip'
-  // For fixed attachment, the anchor is within the bounds of the nearest
-  // scrolling ancestor (or the viewport)
-  y0 = (NS_STYLE_BG_ATTACHMENT_SCROLL == aColor.mBackgroundAttachment) ?
-       bgClipArea.y : 0;
   if (repeat & NS_STYLE_BG_REPEAT_Y) {
     // When tiling in the y direction, adjust the starting position of the
     // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
     // will be a negative value used to adjust the starting coordinate.
-    y0 += anchor.y + 
-          ((dirtyRect.y - (bgClipArea.y + anchor.y)) / tileHeight) * tileHeight;
-    y1 = y0 + ((dirtyRect.y + dirtyRect.height - y0 + tileHeight - 1) / tileHeight) * tileHeight;
-  }
-  else {
-    y0 += anchor.y;
-    y1 = y0 + tileHeight;
+    nscoord y0 = FindTileStart(dirtyRect.y - aBorderArea.y, anchor.y, tileHeight);
+    nscoord y1 = FindTileEnd(dirtyRect.YMost() - aBorderArea.y, anchor.y, tileHeight);
+    tileRect.y = y0;
+    tileRect.height = y1 - y0;
   }
 
   // Take the intersection again to paint only the required area
-  nsRect tileRect(x0, y0, (x1 - x0), (y1 - y0));
+  nsRect absTileRect = tileRect + aBorderArea.TopLeft();
   nsRect drawRect;
-
-  if (drawRect.IntersectRect(tileRect, dirtyRect))
-    aRenderingContext.DrawTile(image, x0, y0, &drawRect);
+  if (drawRect.IntersectRect(absTileRect, dirtyRect)) {
+    aRenderingContext.DrawTile(image, absTileRect.x, absTileRect.y, &drawRect);
+  }
 
 #if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
   // Restore clipping
@@ -3815,11 +3829,13 @@ RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRIn
   nscoord x,y,width,height;
   int     i;
 
-  // convert this rect to pixel boundaries
-  x = (aLeft/aNumTwipPerPix)*aNumTwipPerPix;
-  y = (aTop/aNumTwipPerPix)*aNumTwipPerPix;
-  width = (aWidth/aNumTwipPerPix)*aNumTwipPerPix;
-  height = (aHeight/aNumTwipPerPix)*aNumTwipPerPix;
+  // Convert this rect to pixel boundaries. Preserve the same pixel centers.
+  // It's important that this preserve the same drawn-pixels as gfx's
+  // rounding.
+  x = NSToCoordRound((float)aLeft/aNumTwipPerPix)*aNumTwipPerPix;
+  y = NSToCoordRound((float)aTop/aNumTwipPerPix)*aNumTwipPerPix;
+  width = (NSToCoordRound((float)aLeft + aWidth)/aNumTwipPerPix)*aNumTwipPerPix - x;
+  height = (NSToCoordRound((float)aTop + aHeight)/aNumTwipPerPix)*aNumTwipPerPix - y;
 
 
   for(i=0;i<4;i++) {

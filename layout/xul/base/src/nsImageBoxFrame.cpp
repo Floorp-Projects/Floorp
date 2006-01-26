@@ -91,6 +91,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsGUIEvent.h"
+#include "nsDisplayList.h"
 
 #include "nsContentUtils.h"
 
@@ -384,41 +385,54 @@ nsImageBoxFrame::UpdateLoadFlags()
     mLoadFlags = nsIRequest::LOAD_NORMAL;
 }
 
-NS_IMETHODIMP
-nsImageBoxFrame::Paint(nsPresContext*      aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect&        aDirtyRect,
-                       nsFramePaintLayer    aWhichLayer,
-                       PRUint32             aFlags)
-{	
-  if (!GetStyleVisibility()->IsVisible())
-    return NS_OK;
+class nsDisplayXULImage : public nsDisplayItem {
+public:
+  nsDisplayXULImage(nsImageBoxFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  // Doesn't handle HitTest because nsLeafBoxFrame already creates an
+  // event receiver for us
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("XULImage")
+private:
+  nsImageBoxFrame* mFrame;
+};
 
-  nsresult rv = nsLeafBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-
-  PaintImage(aRenderingContext, aDirtyRect, aWhichLayer);
-
-  return rv;
+void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  mFrame->PaintImage(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
 }
 
+NS_IMETHODIMP
+nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
+                                  const nsDisplayListSet& aLists)
+{       
+  nsresult rv = nsLeafBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-void
-nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect,
-                            nsFramePaintLayer aWhichLayer)
-{
   if ((0 == mRect.width) || (0 == mRect.height)) {
     // Do not render when given a zero area. This avoids some useless
     // scaling work while we wait for our image dimensions to arrive
     // asynchronously.
-    return;
+    return NS_OK;
   }
 
+  if (!IsVisibleForPainting(aBuilder))
+    return NS_OK;
+
+  return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayXULImage(this));
+}
+
+void
+nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect, nsPoint aPt)
+{
   nsRect rect;
   GetClientRect(rect);
 
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer)
-    return;
+  rect += aPt;
 
   if (!mImageRequest)
     return;

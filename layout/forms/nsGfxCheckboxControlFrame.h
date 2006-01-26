@@ -65,11 +65,9 @@ public:
   }
 #endif
 
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags = 0);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -93,16 +91,15 @@ public:
                     nsReflowStatus&          aStatus);
 #endif
 
+  void PaintCheckBox(nsIRenderingContext& aRenderingContext,
+                     nsPoint aPt, const nsRect& aDirtyRect);
+
+  void PaintCheckBoxFromStyle(nsIRenderingContext& aRenderingContext,
+                              nsPoint aPt, const nsRect& aDirtyRect);
+
 protected:
 
   PRBool GetCheckboxState();
-
-protected:
-
-  virtual void PaintCheckBox(nsPresContext* aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect,
-                             nsFramePaintLayer aWhichLayer);
 
   //GFX-rendered state variables
   PRBool           mInClickEvent;

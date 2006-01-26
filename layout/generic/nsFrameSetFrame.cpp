@@ -71,6 +71,7 @@
 #include "nsStyleSet.h"
 #include "nsLayoutAtoms.h"
 #include "nsIContent.h"
+#include "nsDisplayList.h"
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -135,17 +136,12 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  nsIFrame* GetFrameForPoint(const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer);
-
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,
                        nsIFrame::Cursor& aCursor);
   
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -155,6 +151,8 @@ public:
   PRBool GetVisibility() { return mVisibility || mVisibilityOverride; }
   void SetVisibility(PRBool aVisibility);
   void SetColor(nscolor aColor);
+
+  void PaintBorder(nsIRenderingContext& aRenderingContext, nsPoint aPt);
 
 protected:
   nsHTMLFramesetBorderFrame(PRInt32 aWidth, PRBool aVertical, PRBool aVisible);
@@ -184,11 +182,9 @@ public:
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  NS_IMETHOD Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags);
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -839,26 +835,22 @@ nsHTMLFramesetFrame::GetCursor(const nsPoint&    aPoint,
   return NS_OK;
 }
 
-nsIFrame*
-nsHTMLFramesetFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                      nsFramePaintLayer aWhichLayer)
-{
-  //XXX Temporary to deal with event handling in both this and FramsetBorderFrame
-  if (mDragger)
-    return this;
-  return nsContainerFrame::GetFrameForPoint(aPoint, aWhichLayer);
-}
-
 NS_IMETHODIMP
-nsHTMLFramesetFrame::Paint(nsPresContext*      aPresContext,
-                           nsIRenderingContext& aRenderingContext,
-                           const nsRect&        aDirtyRect,
-                           nsFramePaintLayer    aWhichLayer,
-                           PRUint32             aFlags)
+nsHTMLFramesetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                      const nsRect&           aDirtyRect,
+                                      const nsDisplayListSet& aLists)
 {
-  //printf("frameset paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
-                                     aDirtyRect, aWhichLayer);
+  nsresult rv = nsHTMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (mDragger && aBuilder->IsForEventDelivery()) {
+    // REVIEW: GetFrameForPoint would always target ourselves if mDragger set
+    nsDisplayItem* item = new (aBuilder) nsDisplayEventReceiver(this);
+    if (!item)
+      return NS_ERROR_OUT_OF_MEMORY;
+    aLists.Content()->AppendToTop(item);
+  }
+  return rv;
 }
 
 void 
@@ -1315,7 +1307,6 @@ nsHTMLFramesetFrame::CanResize(PRBool aVertical,
 PRBool
 nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame) 
 {
-  PRBool result = PR_FALSE;
   nsIContent* content = aChildFrame->GetContent();
 
   return content && content->HasAttr(kNameSpaceID_None, nsHTMLAtoms::noresize);
@@ -1627,22 +1618,49 @@ nsHTMLFramesetBorderFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
-NS_METHOD
-nsHTMLFramesetBorderFrame::Paint(nsPresContext*      aPresContext,
-                                 nsIRenderingContext& aRenderingContext,
-                                 const nsRect&        aDirtyRect,
-                                 nsFramePaintLayer    aWhichLayer,
-                                 PRUint32             aFlags)
+class nsDisplayFramesetBorder : public nsDisplayItem {
+public:
+  nsDisplayFramesetBorder(nsHTMLFramesetBorderFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  // REVIEW: see old GetFrameForPoint
+  // Receives events in its bounds
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("FramesetBorder")
+private:
+  nsHTMLFramesetBorderFrame* mFrame;
+};
+
+void nsDisplayFramesetBorder::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
-    return NS_OK;
-  }
-  //printf("border frame paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  mFrame->PaintBorder(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+}
+
+NS_IMETHODIMP
+nsHTMLFramesetBorderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                            const nsRect&           aDirtyRect,
+                                            const nsDisplayListSet& aLists)
+{
+  nsDisplayItem* item = new (aBuilder) nsDisplayFramesetBorder(this);
+  if (!item)
+    return NS_ERROR_OUT_OF_MEMORY;
+  aLists.Content()->AppendToTop(item);
+  return NS_OK;
+}
+
+void nsHTMLFramesetBorderFrame::PaintBorder(nsIRenderingContext& aRenderingContext,
+                                            nsPoint aPt)
+{
   nscolor WHITE    = NS_RGB(255, 255, 255);
   nscolor bgColor  = NS_RGB(200,200,200);
   nscolor fgColor  = NS_RGB(0,0,0);
   nscolor hltColor = NS_RGB(255,255,255);
   nscolor sdwColor = NS_RGB(128,128,128);
+
+  nsIRenderingContext::AutoPushTranslation
+    translate(&aRenderingContext, aPt.x, aPt.y);
 
   {
     nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
@@ -1654,16 +1672,16 @@ nsHTMLFramesetBorderFrame::Paint(nsPresContext*      aPresContext,
     }
   }
 
+  nsPresContext* presContext = GetPresContext();
   float t2p;
-  t2p = aPresContext->TwipsToPixels();
+  t2p = presContext->TwipsToPixels();
   nscoord widthInPixels = NSTwipsToIntPixels(mWidth, t2p);
   float p2t;
-  p2t = aPresContext->PixelsToTwips();
+  p2t = presContext->PixelsToTwips();
   nscoord pixelWidth    = NSIntPixelsToTwips(1, p2t);
 
-  if (widthInPixels <= 0) {
-    return NS_OK;
-  }
+  if (widthInPixels <= 0)
+    return;
 
   nscoord x0 = 0;
   nscoord y0 = 0;
@@ -1687,9 +1705,8 @@ nsHTMLFramesetBorderFrame::Paint(nsPresContext*      aPresContext,
     }
   }
 
-  if (!mVisibility && !mVisibilityOverride) {
-    return NS_OK;
-  }
+  if (!mVisibility && !mVisibilityOverride)
+    return;
 
   if (widthInPixels >= 5) {
     aRenderingContext.SetColor(hltColor);
@@ -1717,8 +1734,6 @@ nsHTMLFramesetBorderFrame::Paint(nsPresContext*      aPresContext,
     y1 = (mVertical) ? mRect.height : y0;
     aRenderingContext.DrawLine(x0, y0, x1, y1);
   }
-
-  return NS_OK;
 }
 
 
@@ -1745,17 +1760,6 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
 	    break;
   }
   return NS_OK;
-}
-
-nsIFrame*
-nsHTMLFramesetBorderFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                            nsFramePaintLayer aWhichLayer)
-{
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND ||
-       !((mState & NS_FRAME_OUTSIDE_CHILDREN) || thisRect.Contains(aPoint)))
-    return nsnull;
-  return this;
 }
 
 NS_IMETHODIMP
@@ -1808,37 +1812,23 @@ nsHTMLFramesetBlankFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
-NS_METHOD
-nsHTMLFramesetBlankFrame::Paint(nsPresContext*      aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect&        aDirtyRect,
-                                nsFramePaintLayer    aWhichLayer,
-                                PRUint32             aFlags)
+class nsDisplayFramesetBlank : public nsDisplayItem {
+public:
+  nsDisplayFramesetBlank(nsIFrame* aFrame) : mFrame(aFrame) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("FramesetBlank")
+private:
+  nsIFrame* mFrame;
+};
+
+void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
-    return NS_OK;
-  }
   nscolor white = NS_RGB(255,255,255);
-  aRenderingContext.SetColor (white);
-  // XXX FillRect doesn't seem to work
-  //aRenderingContext.FillRect (mRect);
-
-  float p2t;
-  p2t = aPresContext->PixelsToTwips();
-  nscoord x0 = 0;
-  nscoord y0 = 0;
-  nscoord x1 = x0;
-  nscoord y1 = mRect.height;
-  nscoord pixel = NSIntPixelsToTwips(1, p2t);
-
-  aRenderingContext.SetColor(white);
-  for (int i = 0; i < mRect.width; i += pixel) {
-    aRenderingContext.DrawLine (x0, y0, x1, y1);
-    x0 += NSIntPixelsToTwips(1, p2t);
-    x1 =  x0;
-  }
-
-  return NS_OK;
+  aCtx->SetColor (white);
+  aCtx->FillRect (nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize()));
 }
 
 #ifdef DEBUG
@@ -1846,7 +1836,19 @@ NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(FILE*   out,
                                              PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
-  fprintf(out, "%p BLANK \n", this);
+  fprintf(out, "%p BLANK \n", (void*)this);
   return nsLeafFrame::List(out, aIndent);
 }
 #endif
+
+NS_IMETHODIMP
+nsHTMLFramesetBlankFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                           const nsRect&           aDirtyRect,
+                                           const nsDisplayListSet& aLists)
+{
+  nsDisplayItem* item = new (aBuilder) nsDisplayFramesetBlank(this);
+  if (!item)
+    return NS_ERROR_OUT_OF_MEMORY;
+  aLists.Content()->AppendToTop(item);
+  return NS_OK;
+}

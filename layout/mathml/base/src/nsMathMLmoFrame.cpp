@@ -127,11 +127,9 @@ nsMathMLmoFrame::IsFrameInSelection(nsIFrame* aFrame)
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::Paint(nsPresContext*      aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect&        aDirtyRect,
-                       nsFramePaintLayer    aWhichLayer,
-                       PRUint32             aFlags)
+nsMathMLmoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
+                                  const nsDisplayListSet& aLists)
 {
   nsresult rv = NS_OK;
   PRBool useMathMLChar =
@@ -140,12 +138,14 @@ nsMathMLmoFrame::Paint(nsPresContext*      aPresContext,
     NS_MATHML_OPERATOR_IS_CENTERED(mFlags) ||
     NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags);
 
-  if (!useMathMLChar || NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    // let the base class paint the background, border, outline
-    rv = nsMathMLTokenFrame::Paint(aPresContext, aRenderingContext,
-                                   aDirtyRect, aWhichLayer);
-  }
-  if (useMathMLChar) {
+  if (!useMathMLChar) {
+    // let the base class do everything
+    rv = nsMathMLTokenFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
     // make our char selected if our inner child text frame is selected
     PRBool isSelected = PR_FALSE;
     nsRect selectedRect;
@@ -154,19 +154,12 @@ nsMathMLmoFrame::Paint(nsPresContext*      aPresContext,
       selectedRect = firstChild->GetRect();
       isSelected = PR_TRUE;
     }
-    rv = mMathMLChar.Paint(aPresContext, aRenderingContext, aDirtyRect,
-                           aWhichLayer, this, isSelected ? &selectedRect : nsnull);
+    rv = mMathMLChar.Display(aBuilder, this, aLists, isSelected ? &selectedRect : nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+  
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
-    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
-        NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags)) {
-      aRenderingContext.SetColor(NS_RGB(0,255,255));
-      nscoord x = mReference.x + mBoundingMetrics.leftBearing;
-      nscoord y = mReference.y - mBoundingMetrics.ascent;
-      nscoord w = mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing;
-      nscoord h = mBoundingMetrics.ascent + mBoundingMetrics.descent;
-      aRenderingContext.DrawRect(x,y,w,h);
-    }
+    rv = DisplayBoundingMetrics(aBuilder, this, mReference, mBoundingMetrics, aLists);
 #endif
   }
   return rv;

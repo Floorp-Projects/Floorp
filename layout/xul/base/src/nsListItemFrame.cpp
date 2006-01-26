@@ -42,6 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsINameSpaceManager.h" 
 #include "nsXULAtoms.h"
+#include "nsDisplayList.h"
 
 NS_IMETHODIMP_(nsrefcnt) 
 nsListItemFrame::AddRef(void)
@@ -79,20 +80,19 @@ nsListItemFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   return NS_OK;
 }
 
-nsIFrame*
-nsListItemFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                  nsFramePaintLayer aWhichLayer)
+NS_IMETHODIMP
+nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                             const nsRect&           aDirtyRect,
+                                             const nsDisplayListSet& aLists)
 {
-  nsAutoString value;
-  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-  if (value.EqualsLiteral("true")) {
-    return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
+  if (aBuilder->IsForEventDelivery()) {
+    nsAutoString value;
+    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
+    if (!value.EqualsLiteral("true"))
+      return NS_OK;
   }
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (thisRect.Contains(aPoint) && GetStyleVisibility()->IsVisible())
-    // Capture all events so that we can perform selection and expand/collapse.
-    return this;
-  return nsnull;
+  
+  return nsGridRowLeafFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

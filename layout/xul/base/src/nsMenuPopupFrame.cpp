@@ -1987,14 +1987,8 @@ nsMenuPopupFrame::Destroy(nsPresContext* aPresContext)
   return nsBoxFrame::Destroy(aPresContext);
 }
 
-nsIFrame*
-nsMenuPopupFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                   nsFramePaintLayer aWhichLayer)
-{
-  return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
-}
-
-
+// REVIEW: The override here was doing nothing at all since nsBoxFrame is our
+// parent class
 //
 // Notify
 //

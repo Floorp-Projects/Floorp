@@ -45,6 +45,7 @@
 #include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
 #include "nsSimplePageSequence.h"
+#include "nsDisplayList.h"
 
 #include "nsIView.h"
 
@@ -163,14 +164,10 @@ nsPageContentFrame::IsContainingBlock() const
 
 //------------------------------------------------------------------------------
 NS_IMETHODIMP
-nsPageContentFrame::Paint(nsPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer,
-                   PRUint32             aFlags)
+nsPageContentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists)
 {
-  aRenderingContext.PushState();
-
   nsRect rect;
   if (mClipRect.width != -1 || mClipRect.height != -1) {
     rect = mClipRect;
@@ -180,24 +177,9 @@ nsPageContentFrame::Paint(nsPresContext*      aPresContext,
     rect.y = 0;
   }
 
-  aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace);
+  nsDisplayListCollection set;
+  nsresult rv = nsContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    nsRect r = mRect;
-    r.x = 0;
-    r.y = 0;
-    aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-    aRenderingContext.DrawRect(r);
-  }
-#endif
-
-  aRenderingContext.PopState();
-
-  return rv;
+  return Clip(aBuilder, set, aLists, rect);
 }
-
-
-

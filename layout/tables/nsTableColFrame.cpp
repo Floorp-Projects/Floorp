@@ -128,29 +128,6 @@ void nsTableColFrame::ResetSizingInfo()
   SetConstraint(eNoConstraint);
 }
 
-NS_METHOD 
-nsTableColFrame::Paint(nsPresContext*      aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect&        aDirtyRect,
-                       nsFramePaintLayer    aWhichLayer,
-                       PRUint32             aFlags)
-{
-  PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
-    return NS_OK;
-  }
-
-  return NS_OK;
-}
-
-// override, since we want to act like a block
-nsIFrame*
-nsTableColFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                  nsFramePaintLayer aWhichLayer)
-{
-  return nsnull;
-}
-
 NS_METHOD nsTableColFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,

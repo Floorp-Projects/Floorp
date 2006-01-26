@@ -70,6 +70,7 @@
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
+#include "nsDisplayList.h"
 
 nsIFrame*
 NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell)
@@ -196,41 +197,27 @@ nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 
-nsIFrame*
-nsHTMLButtonControlFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                           nsFramePaintLayer aWhichLayer)
-{
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND &&
-      thisRect.Contains(aPoint) && GetStyleVisibility()->IsVisible()) {
-    return this;
-  }
-  return nsnull;
-}
-
-
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::Paint(nsPresContext*      aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect&        aDirtyRect,
-                                nsFramePaintLayer    aWhichLayer,
-                                PRUint32             aFlags)
+nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                           const nsRect&           aDirtyRect,
+                                           const nsDisplayListSet& aLists)
 {
-  PRBool isVisible;
-  if (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND ||
-      (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible)) {
-    return NS_OK;
+  nsDisplayList onTop;
+  if (IsVisibleForPainting(aBuilder)) {
+    nsresult rv = mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+  
+  nsDisplayListCollection set;
+  nsresult rv =
+    BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), aDirtyRect, set,
+                             DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // That should put the display items in set.Content()
+  
+  // Put the foreground outline and focus rects on top of the children
+  set.Content()->AppendToTop(&onTop);
 
-  nsRect rect(0, 0, mRect.width, mRect.height);
-  mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, rect);
-
-#if 0 // old way
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_BACKGROUND);
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATS);
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FOREGROUND);
-
-#else // temporary
     // XXX This is temporary
   // clips to its size minus the border 
   // but the real problem is the FirstChild (the AreaFrame)
@@ -240,28 +227,17 @@ nsHTMLButtonControlFrame::Paint(nsPresContext*      aPresContext,
   nsMargin border;
   border.SizeTo(0, 0, 0, 0);
   borderStyle->CalcBorderFor(this, border);
-
+  nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
   rect.Deflate(border);
-  aRenderingContext.PushState();
-
-  aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect);
-
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_BACKGROUND);
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATS);
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FOREGROUND);
-
-  aRenderingContext.PopState();
-
-#endif
-
-  // Paint outline
-  const nsStyleOutline* outlineStyle = GetStyleOutline();
-  nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                               aDirtyRect, rect, *borderStyle, *outlineStyle,
-                               mStyleContext, 0);
+  
+  rv = OverflowClip(aBuilder, set, aLists, rect);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = DisplayOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // to draw border when selected in editor
-  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  return DisplaySelectionOverlay(aBuilder, aLists);
 }
 
 

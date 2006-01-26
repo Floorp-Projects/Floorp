@@ -61,88 +61,154 @@
 #include "nsIFontMetrics.h"
 #include "nsReflowPath.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsDisplayList.h"
+#include "nsBlockFrame.h"
+#include "nsLineBox.h"
+#include "nsDisplayList.h"
 
-NS_IMETHODIMP
-nsHTMLContainerFrame::Paint(nsPresContext*      aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect&        aDirtyRect,
-                            nsFramePaintLayer    aWhichLayer,
-                            PRUint32             aFlags)
-{
-  if (NS_FRAME_IS_UNFLOWABLE & mState) {
-    return NS_OK;
-  }
-
-  // Paint inline element backgrounds in the foreground layer, but
-  // others in the background (bug 36710).  (nsInlineFrame::Paint does
-  // this differently.)
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
-  }
-    
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
-  return NS_OK;
-}
+class nsDisplayTextDecoration : public nsDisplayItem {
+public:
+  nsDisplayTextDecoration(nsHTMLContainerFrame* aFrame, PRUint8 aDecoration,
+                          nscolor aColor, nsLineBox* aLine)
+    : mFrame(aFrame), mLine(aLine), mColor(aColor), mDecoration(aDecoration) {}
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  virtual const char* Name() { return "TextDecoration"; }
+private:
+  nsHTMLContainerFrame* mFrame;
+  nsLineBox*            mLine;
+  nscolor               mColor;
+  PRUint8               mDecoration;
+};
 
 void
-nsHTMLContainerFrame::PaintDecorationsAndChildren(
-                                       nsPresContext*      aPresContext,
-                                       nsIRenderingContext& aRenderingContext,
-                                       const nsRect&        aDirtyRect,
-                                       nsFramePaintLayer    aWhichLayer,
-                                       PRBool               aIsBlock,
-                                       PRUint32             aFlags)
+nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
+    nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+  // REVIEW: From nsHTMLContainerFrame::PaintTextDecorationsAndChildren
+  const nsStyleFont* font = mFrame->GetStyleFont();
+  NS_ASSERTION(font->mFont.decorations == NS_FONT_DECORATION_NONE,
+               "fonts on style structs shouldn't have decorations");
+
+  // XXX This is relatively slow and shouldn't need to be used here.
+  nsCOMPtr<nsIDeviceContext> deviceContext;
+  aCtx->GetDeviceContext(*getter_AddRefs(deviceContext));
+  nsCOMPtr<nsIFontMetrics> normalFont;
+  const nsStyleVisibility* visibility = mFrame->GetStyleVisibility();      
+  nsCOMPtr<nsIFontMetrics> fm;
+  deviceContext->GetMetricsFor(font->mFont, visibility->mLangGroup,
+      *getter_AddRefs(fm));
+      
+  nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
+
+  // REVIEW: From nsHTMLContainerFrame::PaintTextDecorations
+  nscoord ascent, offset, size;
+  fm->GetMaxAscent(ascent);
+  if (mDecoration != NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
+    fm->GetUnderline(offset, size);
+    if (mDecoration == NS_STYLE_TEXT_DECORATION_UNDERLINE) {
+      mFrame->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, offset, ascent, size);
+    } else if (mDecoration == NS_STYLE_TEXT_DECORATION_OVERLINE) {
+      mFrame->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, ascent, ascent, size);
+    }
+  } else {
+    fm->GetStrikeout(offset, size);
+    mFrame->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, offset, ascent, size);
+  }
+}
+
+nsresult
+nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
+                                             nsDisplayList* aBelowTextDecorations,
+                                             nsDisplayList* aAboveTextDecorations,
+                                             nsLineBox* aLine)
 {
+  if (eCompatibility_NavQuirks == GetPresContext()->CompatibilityMode())
+    return NS_OK;
+  if (!IsVisibleForPainting(aBuilder))
+    return NS_OK;
+  
   // Do standards mode painting of 'text-decoration's: under+overline
   // behind children, line-through in front.  For Quirks mode, see
   // nsTextFrame::PaintTextDecorations.  (See bug 1777.)
   nscolor underColor, overColor, strikeColor;
   PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE;
-  nsCOMPtr<nsIFontMetrics> fm;
-  PRBool isVisible;
+  GetTextDecorations(GetPresContext(), aLine != nsnull, decorations, underColor, 
+                     overColor, strikeColor);
 
-  if (eCompatibility_NavQuirks != aPresContext->CompatibilityMode() && 
-      NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
-      NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext,
-                                        PR_TRUE, &isVisible)) &&
-      isVisible) {
-    GetTextDecorations(aPresContext, aIsBlock, decorations, underColor, 
-                       overColor, strikeColor);
-    if (decorations & (NS_STYLE_TEXT_DECORATION_UNDERLINE |
-                       NS_STYLE_TEXT_DECORATION_OVERLINE |
-                       NS_STYLE_TEXT_DECORATION_LINE_THROUGH)) {
-      const nsStyleFont* font = GetStyleFont();
-      NS_ASSERTION(font->mFont.decorations == NS_FONT_DECORATION_NONE,
-                   "fonts on style structs shouldn't have decorations");
-
-      // XXX This is relatively slow and shouldn't need to be used here.
-      nsCOMPtr<nsIDeviceContext> deviceContext;
-      aRenderingContext.GetDeviceContext(*getter_AddRefs(deviceContext));
-      nsCOMPtr<nsIFontMetrics> normalFont;
-      const nsStyleVisibility* visibility = GetStyleVisibility();      
-      deviceContext->GetMetricsFor(font->mFont, visibility->mLangGroup, *getter_AddRefs(fm));
-    }
-    if (decorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
-      PaintTextDecorations(aRenderingContext, fm,
-                           NS_STYLE_TEXT_DECORATION_UNDERLINE, underColor);
-    }
-    if (decorations & NS_STYLE_TEXT_DECORATION_OVERLINE) {
-      PaintTextDecorations(aRenderingContext, fm,
-                           NS_STYLE_TEXT_DECORATION_OVERLINE, overColor);
-    }
+  if (decorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
+    nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
+      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_UNDERLINE, underColor, aLine));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect,
-                aWhichLayer, aFlags);
-
+  if (decorations & NS_STYLE_TEXT_DECORATION_OVERLINE) {
+    nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
+      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_OVERLINE, overColor, aLine));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   if (decorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
-    PaintTextDecorations(aRenderingContext, fm,
-                         NS_STYLE_TEXT_DECORATION_LINE_THROUGH, strikeColor);
+    nsresult rv = aAboveTextDecorations->AppendNewToTop(new (aBuilder)
+      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_LINE_THROUGH, strikeColor, aLine));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+  return NS_OK;
+}
+
+nsresult
+nsHTMLContainerFrame::DisplayTextDecorationsAndChildren(
+    nsDisplayListBuilder* aBuilder, const nsRect& aDirtyRect,
+    const nsDisplayListSet& aLists)
+{
+  nsDisplayList aboveChildrenDecorations;
+  nsresult rv = DisplayTextDecorations(aBuilder, aLists.Content(),
+      &aboveChildrenDecorations, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
+                                           DISPLAY_CHILD_INLINE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  aLists.Content()->AppendToTop(&aboveChildrenDecorations);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                       const nsRect&           aDirtyRect,
+                                       const nsDisplayListSet& aLists) {
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return DisplayTextDecorationsAndChildren(aBuilder, aDirtyRect, aLists);
 }
 
 static PRBool 
 HasTextFrameDescendantOrInFlow(nsPresContext* aPresContext, nsIFrame* aFrame);
+
+/*virtual*/ void
+nsHTMLContainerFrame::PaintTextDecorationLine(
+                   nsIRenderingContext& aRenderingContext, 
+                   nsPoint aPt,
+                   nsLineBox* aLine,
+                   nscolor aColor, 
+                   nscoord aOffset, 
+                   nscoord aAscent, 
+                   nscoord aSize) 
+{
+  nsMargin bp;
+  NS_ASSERTION(!aLine, "Should not have passed a linebox to a non-block frame");
+  CalcBorderPadding(bp);
+  PRIntn skip = GetSkipSides();
+  NS_FOR_CSS_SIDES(side) {
+    if (skip & (1 << side)) {
+      bp.side(side) = 0;
+    }
+  }
+  aRenderingContext.SetColor(aColor);
+  nscoord innerWidth = mRect.width - bp.left - bp.right;
+  aRenderingContext.FillRect(bp.left + aPt.x, 
+                             bp.top + aAscent - aOffset + aPt.y, innerWidth, aSize);
+}
 
 void
 nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext, 
@@ -250,54 +316,6 @@ HasTextFrameDescendantOrInFlow(nsPresContext* aPresContext, nsIFrame* aFrame)
       return PR_TRUE;
   }
   return PR_FALSE;
-}
-
-/*virtual*/ void
-nsHTMLContainerFrame::PaintTextDecorationLines(
-                   nsIRenderingContext& aRenderingContext, 
-                   nscolor aColor, 
-                   nscoord aOffset, 
-                   nscoord aAscent, 
-                   nscoord aSize) 
-{
-  nsMargin bp;
-  CalcBorderPadding(bp);
-  PRIntn skip = GetSkipSides();
-  NS_FOR_CSS_SIDES(side) {
-    if (skip & (1 << side)) {
-      bp.side(side) = 0;
-    }
-  }
-  aRenderingContext.SetColor(aColor);
-  nscoord innerWidth = mRect.width - bp.left - bp.right;
-  aRenderingContext.FillRect(bp.left, 
-                             bp.top + aAscent - aOffset, innerWidth, aSize);
-}
-
-void
-nsHTMLContainerFrame::PaintTextDecorations(
-                            nsIRenderingContext& aRenderingContext,
-                            nsIFontMetrics* aFontMetrics,
-                            PRUint8 aDecoration,
-                            nscolor aColor)
-{
-  nscoord ascent, offset, size;
-  aFontMetrics->GetMaxAscent(ascent);
-  if (aDecoration & 
-      (NS_STYLE_TEXT_DECORATION_UNDERLINE 
-       | NS_STYLE_TEXT_DECORATION_OVERLINE)) {
-    aFontMetrics->GetUnderline(offset, size);
-    if (NS_STYLE_TEXT_DECORATION_UNDERLINE & aDecoration) {
-      PaintTextDecorationLines(aRenderingContext, aColor, offset, ascent, size);
-    }
-    else if (NS_STYLE_TEXT_DECORATION_OVERLINE & aDecoration) {
-      PaintTextDecorationLines(aRenderingContext, aColor, ascent, ascent, size);
-    }
-  }
-  else if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & aDecoration) {
-    aFontMetrics->GetStrikeout(offset, size);
-    PaintTextDecorationLines(aRenderingContext, aColor, offset, ascent, size);
-  }
 }
 
 /**
@@ -561,13 +579,9 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
     }
   }
 
-  // XXX If it's fixed positioned, then create a widget so it floats
-  // above the scrolling area
-  const nsStyleDisplay* display = aFrame->GetStyleContext()->GetStyleDisplay();
-  if (NS_STYLE_POSITION_FIXED == display->mPosition) {
-    aFrame->CreateWidgetForView(view);
-  }
-
+  // REVIEW: Don't create a widget for fixed-pos elements anymore.
+  // ComputeRepaintRegionForCopy will calculate the right area to repaint
+  // when we scroll.
   // Reparent views on any child frames (or their descendants) to this
   // view. We can just call ReparentFrameViewTo on this frame because
   // we know this frame has no view, so it will crawl the children. Also,

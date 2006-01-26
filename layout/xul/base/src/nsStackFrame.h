@@ -61,29 +61,11 @@ public:
   }
 #endif
 
-      // Paint one child frame
-  virtual void PaintChild(nsPresContext*         aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsIFrame*            aFrame,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags = 0);
-
-  virtual void PaintChildren(nsPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags = 0);
-
-  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
-                                     nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
+                                         const nsRect&           aDirtyRect,
+                                         const nsDisplayListSet& aLists);
 
 protected:
-
-  virtual nsIFrame* GetFrameForPointChild(const nsPoint&    aPoint,
-                                          nsFramePaintLayer aWhichLayer,
-                                          nsIFrame*         aChild,
-                                          PRBool            aCheckMouseThrough);
 
   nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayout = nsnull);
 
