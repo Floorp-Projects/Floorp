@@ -297,8 +297,14 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
       nsCOMPtr<nsIURI> uri;
       nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(aSHEntry));
       if (hEntry) {
+        PRInt32 currentIndex = mIndex;
         hEntry->GetURI(getter_AddRefs(uri));
         listener->OnHistoryNewEntry(uri);
+
+        // If a listener has changed mIndex, we need to get currentTxn again,
+        // otherwise we'll be left at an inconsistent state (see bug 320742)
+        if (currentIndex != mIndex)
+          GetTransactionAtIndex(mIndex, getter_AddRefs(currentTxn));
       }
     }
   }
@@ -317,7 +323,7 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
   if(!mListRoot)
     mListRoot = txn;
 
-  //Purge History list if it is too long
+  // Purge History list if it is too long
   if ((gHistoryMaxSize >= 0) && (mLength > gHistoryMaxSize))
     PurgeHistory(mLength-gHistoryMaxSize);
   
