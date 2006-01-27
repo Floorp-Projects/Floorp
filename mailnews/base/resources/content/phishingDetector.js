@@ -76,7 +76,7 @@ function isMsgEmailScam(aUrl)
   {
     var forms = msgDocument.getElementsByTagName("form");
     for (index = 0; index < forms.length && !isEmailScam; index++)
-      isEmailScam = !/^addbook:/.test(forms[index].action);
+      isEmailScam = forms[index].action != "" && !/^addbook:/.test(forms[index].action);
   }
 
   // we'll add more checks here as our detector matures....
