@@ -328,6 +328,7 @@ bin\AccessibleMarshal.dll
 bin\components\lwbrk.xpt
 bin\components\nsCloseAllWindows.js
 bin\components\winhooks.xpt
+bin\components\pluginGlue.js
 
 bin\res\hiddenWindow.html
 bin\res\ua.css

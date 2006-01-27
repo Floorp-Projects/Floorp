@@ -371,7 +371,7 @@ components/libfileview.so
 ; Optional - only if you need plugin support
 ;components/libgkplugin.so
 ;components/plugin.xpt
-
+;components/pluginGlue.js
 
 ; wallet
 ; Optional - only if you need password persistence
