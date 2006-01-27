@@ -432,7 +432,22 @@ var PlacesController = {
    * @returns true if the node is a container item, false otherwise
    */
   nodeIsContainer: function PC_nodeIsContainer(node) {
-    return node.folderType != "";
+    const NHRN = Ci.nsINavHistoryResultNode;
+    return node.type == NHRN.RESULT_TYPE_HOST ||
+           node.type == NHRN.RESULT_TYPE_QUERY ||
+           node.type == NHRN.RESULT_TYPE_FOLDER ||
+           node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER;
+  },
+
+  /**
+   * Determines whether or not a ResultNode is a remotecontainer item or not
+   * @param   node
+   *          A NavHistoryResultNode
+   * @returns true if the node is a container item, false otherwise
+   */
+  nodeIsRemoteContainer: function PC_nodeIsRemoteContainer(node) {
+    const NHRN = Ci.nsINavHistoryResultNode;
+    return node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER;
   },
   
   /**
@@ -495,7 +510,7 @@ var PlacesController = {
    *    is-mutable    "mutable"
    *    is-removable  "removable"
    *    is-multiselect"multiselect"
-   *    is-container  "container"
+   *    is-container  "remotecontainer"
    * @returns an object with each of the properties above set if the selection
    *          matches that rule. 
    */
@@ -509,8 +524,8 @@ var PlacesController = {
       var selectedNode = this._activeView.selectedNode;
       if (this.nodeIsFolder(selectedNode))
         metadata["folder"] = true;
-      if (this.nodeIsContainer(selectedNode))
-        metadata["container"] = true;
+      if (this.nodeIsRemoteContainer(selectedNode))
+        metadata["remotecontainer"] = true;
     }
     
     var foundNonLeaf = false;
@@ -519,7 +534,8 @@ var PlacesController = {
       var node = nodes[i];
       if (node.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_URI)
         foundNonLeaf = true;
-      if (!node.readonly && node.folderType == "")
+      if (!node.readonly && 
+           node.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_REMOTE_CONTAINER)
         metadata["mutable"] = true;
     }
     if (this._activeView.getAttribute("seltype") != "single")
@@ -655,15 +671,13 @@ var PlacesController = {
   openLinksInTabs: function PC_openLinksInTabs() {
     var node = this._activeView.selectedNode;
     if (this._activeView.hasSingleSelection && this.nodeIsFolder(node)) {
-      var queries = node.getQueries({});
-      var kids = this._hist.executeQueries(queries, queries.length,
-                                           node.queryOptions);
-      var cc = kids.childCount;
+      node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+      var cc = node.childCount;
       for (var i = 0; i < cc; ++i) {
-        var node = kids.getChild(i);
-        if (this.nodeIsURI(node))
+        var childNode = node.getChild(i);
+        if (this.nodeIsURI(childNode))
           this._activeView.browserWindow.openNewTabWith(
-              node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri,
+              childNode.QueryInterface(Ci.nsINavHistoryURIResultNode).uri,
               null, null);
       }
     }
@@ -773,14 +787,15 @@ var PlacesController = {
       var node = nodes[i];
       var index = this.getIndexOfNode(node);
       if (this.nodeIsFolder(node)) {
-        txns.push(new PlacesRemoveFolderTransaction(node.folderId, 
-                                                    node.parent.folderId, 
+        // TODO -- node.parent might be a query and not a folder.  See bug 324948
+        txns.push(new PlacesRemoveFolderTransaction(node.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId, 
+                                                    node.parent.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId, 
                                                     index));
       }
       else if (this.nodeIsFolder(node.parent)) {
         // this item is in a bookmark folder
         txns.push(new PlacesRemoveItemTransaction(this._uri(node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri),
-                                                  node.parent.folderId,
+                                                  node.parent.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId,
                                                   index));
       }
       else {
@@ -815,10 +830,10 @@ var PlacesController = {
    */
   getIndexOfNode: function PC_getIndexOfNode(node) {
     var parent = node.parent;
-    if (!parent)
+    if (!parent || !this.nodeIsContainer(parent))
       return -1;
-    var cc = parent.childCount;
-    for (var i = 0; i < cc && parent.getChild(i) != node; ++i);
+    var cc = parent.QueryInterface(Ci.nsINavHistoryContainerResultNode).childCount;
+    for (var i = 0; i < cc && parent.QueryInterface(Ci.nsINavHistoryContainerResultNode).getChild(i) != node; ++i);
     return i < cc ? i : -1;
   },
   
@@ -835,7 +850,24 @@ var PlacesController = {
     switch (type) {
     case TYPE_X_MOZ_PLACE_CONTAINER:
     case TYPE_X_MOZ_PLACE: 
-      return node.folderId + "\n" + node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri + "\n" + node.parent.folderId + "\n" + this.getIndexOfNode(node);
+      var wrapped = "";
+      if (this.nodeIsFolder(node))
+        wrapped += node.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId + "\n";
+      else
+        wrapped += "0\n";
+        
+      if (this.nodeIsURI(node))
+        wrapped += node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri + "\n";
+      else
+        wrapped += "\n";
+        
+      if (this.nodeIsFolder(node.parent))
+        wrapped += node.parent.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId + "\n";
+      else
+        wrapped += "0\n";
+        
+      wrapped += this.getIndexOfNode(node);
+      return wrapped;
     case TYPE_X_MOZ_URL:
       return node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri + "\n" + node.title;
     case TYPE_HTML:
@@ -863,9 +895,9 @@ var PlacesController = {
       case TYPE_X_MOZ_PLACE_CONTAINER:
       case TYPE_X_MOZ_PLACE:
         nodes.push({  folderId: parseInt(parts[i++]),
-                      uri: parts[i] ? this._uri(parts[i++]) : null,
-                      parent: parseInt(parts[i++]),
-                      index: parseInt(parts[i]) });
+                      uri: parts[i] ? this._uri(parts[i]) : null,
+                      parent: parseInt(parts[++i]),
+                      index: parseInt(parts[++i]) });
         break;
       case TYPE_X_MOZ_URL:
         nodes.push({  uri: this._uri(parts[i++]),

@@ -287,7 +287,7 @@ var PlacesPage = {
   search: function PP_applyFilter(filterString) {
     switch (PlacesSearchBox.filterCollection) {
     case "collection":
-      var folder = this._content.getResult().folderId;
+      var folder = this._content.getResult().root.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
       this._content.applyFilter(filterString, true, folder);
       this._setHeader("results", filterString);
       break;
