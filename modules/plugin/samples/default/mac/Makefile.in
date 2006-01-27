@@ -94,6 +94,10 @@ libs install:: install-plugin
 install-plugin: build-plugin
 	$(INSTALL) "$(XCODE_PRODUCT_DIR)/Default Plugin.plugin" $(DIST)/bin/plugins
 
+resources:
+	@echo These .rsrc files are now distributed as resources in data forks.
+	@echo No further processing is necessary.
+
 build-plugin:
 	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_ARG)
 	echo -n NSPLMOSS > "$(XCODE_PRODUCT_DIR)/Default Plugin.plugin/Contents/PkgInfo"
