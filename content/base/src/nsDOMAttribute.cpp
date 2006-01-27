@@ -46,6 +46,7 @@
 #include "nsDOMString.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOM3Attr.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsITextContent.h"
 
@@ -88,6 +89,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMAttribute)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
+  NS_INTERFACE_MAP_ENTRY(nsIDOM3Attr)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMAttr)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Attr)
 NS_INTERFACE_MAP_END
@@ -681,6 +683,33 @@ nsDOMAttribute::GetUserData(const nsAString& aKey, nsIVariant** aResult)
 
   return document->GetUserData(this, aKey,
                                aResult);
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::GetIsId(PRBool* aReturn)
+{
+  nsIContent* content = GetContentInternal();
+  if (!content)
+  {
+    *aReturn = PR_FALSE;
+    return NS_OK;
+  }
+
+  nsIAtom* idAtom = content->GetIDAttributeName();
+  if (!idAtom)
+  {
+    *aReturn = PR_FALSE;
+    return NS_OK;
+  }
+
+  *aReturn = mNodeInfo->Equals(idAtom, kNameSpaceID_None);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::GetSchemaTypeInfo(nsIDOM3TypeInfo** aReturn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsINodeInfo.h"
 #include "nsIDOM3Node.h"
+#include "nsIDOM3Attr.h"
 #include "nsDOMAttributeMap.h"
 
 class nsDOMAttribute;
@@ -69,9 +70,9 @@ protected:
 };
 
 // Attribute helper class used to wrap up an attribute with a dom
-// object that implements nsIDOMAttr and nsIDOMNode
+// object that implements nsIDOMAttr, nsIDOM3Attr, nsIDOMNode, nsIDOM3Node
 class nsDOMAttribute : public nsIDOMAttr,
-                       public nsIDOM3Node,
+                       public nsIDOM3Attr,
                        public nsIAttribute
 {
 public:
@@ -93,6 +94,9 @@ public:
 
   // nsIDOMAttr interface
   NS_DECL_NSIDOMATTR
+
+  // nsIDOM3Attr interface
+  NS_DECL_NSIDOM3ATTR
 
   // nsIAttribute interface
   void SetMap(nsDOMAttributeMap *aMap);
