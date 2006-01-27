@@ -130,7 +130,7 @@ nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsA
     if (NS_FAILED(rv)) return rv;
 
     parser->SetDocumentCharset(NS_LITERAL_CSTRING("UTF-8"),
-                               kCharsetFromDocTypeDefault);
+                               kCharsetFromOtherComponent);
     parser->SetContentSink(sink);
 
     rv = parser->Parse(aBaseURI);
