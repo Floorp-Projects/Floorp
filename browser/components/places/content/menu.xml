@@ -9,34 +9,18 @@
   <binding id="places-menupopup" 
            extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation>
-      <constructor><![CDATA[ 
-        this._places = 
-          Cc["@mozilla.org/browser/nav-history-service;1"].
-          getService(Ci.nsINavHistoryService);
-        this._bms = 
-          Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-          getService(Ci.nsINavBookmarksService);
-          
-        this._bms.addObserver(this._observer, false);
+      <constructor><![CDATA[
       ]]></constructor>
       
-      <destructor><![CDATA[ 
-        this._bms.removeObserver(this._observer);
+      <destructor><![CDATA[
       ]]></destructor>
-      
-      <property name="folderId" 
-                onget="return parseInt(this.getAttribute('folderId'));"
-                onset="this.setAttribute('folderId', val); return val;"/>
-      
+            
       <method name="onPopupShowing">
         <body><![CDATA[
-        var query = this._places.getNewQuery();
-        query.setFolders([this.folderId], 1);
-        var options = this._places.getNewQueryOptions();
-        options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-        // options.setExpandPlaces();  ?
-        this._result = this._places.executeQuery(query, options);
-        
+        if (PlacesController.nodeIsContainer(this._resultNode)) {
+          this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+          this._resultNode.containerOpen = true;
+        }
         this._rebuild();
         if (this.popupShowingCallback)
           this.popupShowingCallback();
@@ -46,6 +30,16 @@
       <field name="_selection">null</field>
       
       <field name="_result">null</field>
+      <filed name="_resultNode">null</filed>
+      <method name="setResultAndNode">
+        <parameter name="result"/>
+        <parameter name="resultNode"/>
+        <body><![CDATA[
+          this._result = result;
+          this._resultNode = resultNode;
+          this._rebuild();
+        ]]></body>
+      </method>
       <method name="getResult">
         <body><![CDATA[
           return this._result;
@@ -84,20 +78,24 @@
         <body><![CDATA[
           this._cleanMenu();
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          var cc = this._result.root.childCount;
+          if (PlacesController.nodeIsContainer(this._resultNode))
+            this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+          else
+            return; // Nothing to do if this menu isn't a container.
+          var cc = this._resultNode.childCount;
           if (cc > 0) {
             for (var i = 0; i < cc; ++i) {
-              var child = this._result.root.getChild(i);
+              var child = this._resultNode.getChild(i);
               var element = null;
               if (PlacesController.nodeIsURI(child)) {
                 element = document.createElementNS(XULNS, "menuitem");
                 element.setAttribute("label", child.title);
-                element.setAttribute("url", child.QueryInterface(nsINavHistoryURIResultNode).uri);
+                element.setAttribute("url", child.QueryInterface(Ci.nsINavHistoryURIResultNode).uri);
                 element.setAttribute("statustext", child.url);
                 element.setAttribute("image", child.icon.spec);
                 element.className = "menuitem-iconic bookmark-item";
               }
-              else if (PlacesController.nodeIsFolder(child)) {
+              else if (PlacesController.nodeIsContainer(child)) {
                 element = document.createElementNS(XULNS, "menu");
                 element.setAttribute("type", "menu");
                 element.setAttribute("container", "true");
@@ -108,7 +106,8 @@
                 // The context menu is set here instead of in the xbl constructor
                 // because it doesn't get initialized properly if set in the constructor.
                 popup.setAttribute("context", "placesContext");
-                popup.folderId = child.folderId;
+                popup._result = this._result;
+                popup._resultNode = child;
                 element.className = "menu-iconic bookmark-item";
               }
               // else if (nodeIsQuery) ... add menu to build kids
@@ -126,16 +125,6 @@
             element.setAttribute("disabled", true);
             this.appendChild(element);
           }
-        ]]></body>
-      </method>
-      
-      <method name="load">
-        <parameter name="queries"/>
-        <parameter name="options"/>
-        <body><![CDATA[ 
-          this._result = this._places.executeQueries(queries, queries.length,
-                                                     options);
-          this._rebuild();
         ]]></body>
       </method>
       
@@ -186,17 +175,20 @@
         <getter><![CDATA[ 
           // By default, the insertion point is at the top level, at the end. 
           var index = -1;
-          var folderId = this._result.folderId;
+          var folderId = 0;
+          if(PlacesController.nodeIsFolder(this._resultNode))
+            folderId = this._resultNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
           
           if (this.hasSelection) {
-            if(PlacesController.nodeIsFolder(this.selectedNode))
+            if(PlacesController.nodeIsFolder(this.selectedNode)) {
               // If there is a folder selected, the insertion point is the
               // end of the folder.
               folderId = this.selectedNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
-            else
+            } else {
               // If there is another type of node selected, the insertion point
               // is after that node.
               index = PlacesController.getIndexOfNode(this.selectedNode)
+            }
           }
           return new InsertionPoint(folderId, index);
         ]]></getter>
@@ -218,49 +210,6 @@
         ]]></body>
       </method>
       
-      <!-- nsINavBookmarkObserver -->
-      <field name="_observer"><![CDATA[({
-        _numBatches: 0,
-        _self: this,
-        onBeginUpdateBatch: function TB_O_onBeginUpdateBatch() {
-          ++this._numBatches;
-        },
-        onEndUpdateBatch: function TB_O_onEndUpdateBatch() {
-          if (!--this._numBatches) ;
-            //this._self.init();
-        },
-        onItemAdded: function TB_O_onItemAdded(bookmark, folder, index) {
-          //this._self.init();
-        },
-        onItemRemoved: function TB_O_onItemRemoved(bookmark, folder, index) {
-          //this._self.init();
-        },
-        onItemMoved: function TB_O_onItemMoved(bookmark, folder, oldIndex, newIndex) {
-          //this._self.init();
-        },
-        onItemChanged: function TB_O_onItemChanged(bookmark, property, value) {
-          //this._self.init();
-        },
-        onItemVisited: function TB_0_onItemVisited(bookmark, visitId, time) {
-          //this._self.init();
-        },
-        onItemReplaced: function TB_0_onItemReplaced(filder, item, newItem) {
-          // this._self.init();
-        },
-        onFolderAdded: function TB_O_onFolderAdded(folder, parent, index) {
-          //this._self.init();
-        },
-        onFolderRemoved: function TB_O_onFolderRemoved(folder, parent, index) {
-          //this._self.init();
-        },
-        onFolderMoved: function TB_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
-          //this._self.init();
-        },
-        onFolderChanged: function TB_O_onFolderChanged(folder, property) {
-          //this._self.init();
-        },
-      })]]></field>
-      
       <method name="saveSelection">
         <body><![CDATA[
         ]]></body>
@@ -278,11 +227,9 @@
       </handler>
       <handler event="popuphidden">
         if (event.target == this) {
-          // If this is a container, notify the service.
-          if (PlacesController.nodeIsContainer(this._result)) {
-            var serv = Cc[this._result.folderType]
-                       .getService(Ci.nsIBookmarksContainer);
-            serv.onContainerClosed(this._result.folderId);
+          if (PlacesController.nodeIsContainer(this._resultNode)) {
+            this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+            this._resultNode.containerOpen = false;
           }
         }
       </handler>

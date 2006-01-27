@@ -74,7 +74,8 @@
               // it doesn't get initialized properly in the constructor.
               popup.setAttribute("context", "placesContext");
               button.appendChild(popup);
-              popup.folderId = child.folderId;
+              popup._result = this._result;
+              popup._resultNode = child;
             }
             button.className = "menuitem-iconic bookmark-item";
             button.node = child;
@@ -97,7 +98,8 @@
           // This is set here and not in the XBL constructor for the menu because
           // it doesn't get initialized properly in the constructor.
           popup.setAttribute("context", "placesContext");
-          popup.folderId = this._result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
+          popup._result = this._result;
+          popup._resultNode = this._result.root;
           var t = this;
           popup.popupShowingCallback = function() {t.chevronPopupShowing();};
           this._chevron.appendChild(popup);
@@ -214,18 +216,22 @@
         <getter><![CDATA[
           // By default, the insertion point is at the top level, at the end. 
           var index = -1;
-          var folderId = this._result.root.QueryInterface(nsINavHistoryFolderResultNode).folderId;
+          var folderId = this._result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
           
           if (this.hasSelection) {
-            if(PlacesController.nodeIsFolder(this.selectedNode))
+            if(PlacesController.nodeIsFolder(this.selectedNode)) {
               // If there is a folder selected, the insertion point is the
               // end of the folder.
-              folderId = this.selectedNode.folderId;
-            else
+              dump("Selected node is folder. ");
+              folderId = this.selectedNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
+            } else {
               // If there is another type of node selected, the insertion point
               // is after that node.
+              dump("Selected node is node. ");
               index = PlacesController.getIndexOfNode(this.selectedNode)
+            }
           }
+          dump("setting insertion point to index " + index + " folderId " + folderId + "\n");
           return new InsertionPoint(folderId, index);
         ]]></getter>
       </property>
@@ -313,11 +319,15 @@
         },
         onDrop: function TBV_DO_onDrop(event, dropData, session) {
           var result = this._self.getResult();
-          var destContainer = result.folderId;
+          if (!PlacesController.nodeIsFolder(result.root))
+            return;
+          result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+          var destContainer = result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
           var destIndex = -1;
           var orientation = 1;
           if (event.target.localName == "toolbarbutton") {
             if (PlacesController.nodeIsFolder(event.target.node)) {
+              event.target.node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
               destContainer = event.target.node.folderId;
               destIndex = -1;
               orientation = 0;
@@ -359,7 +369,7 @@
         if (event.target.localName == "toolbarbutton")
           this._selection = event.target.node;
         else 
-          this._selection = this.getResult();
+          this._selection = this.getResult().root;
         PlacesController.activeView = this;
         document.commandDispatcher.updateCommands("mousedown");
       ]]></handler>

@@ -52,12 +52,22 @@ PlacesBrowserShim.init = function PBS_init() {
   this._lms = 
       Cc["@mozilla.org/browser/livemark-service;1"].
       getService(Ci.nsILivemarkService);
+      
+  this._hist = 
+      Cc["@mozilla.org/browser/nav-history-service;1"].
+      getService(Ci.nsINavHistoryService);
 
   // Override the old addLivemark function
   BookmarksUtils.addLivemark = function(a,b,c,d) {PlacesBrowserShim.addLivemark(a,b,c,d);};
   
   var newMenuPopup = document.getElementById("bookmarksMenuPopup");
-  newMenuPopup.folderId = this._bms.bookmarksRoot;
+  var query = this._hist.getNewQuery();
+  query.setFolders([this._bms.bookmarksRoot], 1);
+  var options = this._hist.getNewQueryOptions();
+  options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+  var result = this._hist.executeQuery(query, options);
+  newMenuPopup._result = result;
+  newMenuPopup._resultNode = result.root;
 };
 
 PlacesBrowserShim.addBookmark = function PBS_addBookmark() {
