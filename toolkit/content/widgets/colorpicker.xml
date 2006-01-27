@@ -434,7 +434,8 @@
         <xul:popup class="colorpicker-button-menupopup" anonid="colorpopup"
                    onmousedown="event.stopPropagation()"
                    onpopupshowing="this._colorPicker.onPopupShowing()"
-                   onpopuphiding="this._colorPicker.onPopupHiding()">
+                   onpopuphiding="this._colorPicker.onPopupHiding()"
+                   onselect="this._colorPicker.pickerChange()">
            <xul:colorpicker xbl:inherits="palettename,disabled" allowevents="true" anonid="colorpicker"/>
          </xul:popup>
        </xul:popupset>
@@ -571,9 +572,6 @@
         this.showPopup();
       ]]></handler>
       
-      <handler event="select">
-        this.pickerChange();
-      </handler>
     </handlers>
   </binding>
 
