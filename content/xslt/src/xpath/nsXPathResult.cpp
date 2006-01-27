@@ -248,12 +248,18 @@ nsXPathResult::ContentRemoved(nsIDocument* aDocument,
 nsresult
 nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
 {
+    mResultType = aResultType;
+
+    if ((isSnapshot() || isIterator() || isNode()) &&
+        aExprResult->getResultType() != txAExprResult::NODESET) {
+        return NS_ERROR_DOM_TYPE_ERR;
+    }
+
     if (mDocument) {
         mDocument->RemoveObserver(this);
         mDocument = nsnull;
     }
  
-    mResultType = aResultType;
     mResult.set(aExprResult);
 
     if (!isIterator()) {
