@@ -87,7 +87,8 @@
 
             <row align="center">
                 <label value="&calendarproperties.location.label;"/>
-                <textbox id="calendar-uri" oninput="checkURL()"/>
+                <!-- XXX Make location field readonly until Bug 315307 is fixed -->
+                <textbox id="calendar-uri" readonly="true" oninput="checkURL()"/>
             </row>
             <row align="center">
                 <checkbox id="read-only" label="&calendarproperties.readonly.label;"/>
