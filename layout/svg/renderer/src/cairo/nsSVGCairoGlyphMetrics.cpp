@@ -251,10 +251,14 @@ nsSVGCairoGlyphMetrics::Update(PRUint32 updatemask, PRBool *_retval)
     *_retval = PR_TRUE;
   }
 
-  SelectFont(mCT);
-
   nsAutoString text;
   mSource->GetCharacterData(text);
+  if (text.IsEmpty()) {
+    memset(&mExtents, 0, sizeof(cairo_text_extents_t));
+    return NS_OK;
+  }
+
+  SelectFont(mCT);
   cairo_text_extents(mCT, 
                      NS_ConvertUCS2toUTF8(text).get(),
                      &mExtents);
