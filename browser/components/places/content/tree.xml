@@ -128,12 +128,12 @@
       <property name="queryString">
         <getter><![CDATA[
           var result = this.getResult();
-          var queries = result.getQueries({ });
-          var options = result.queryOptions;
+          var queries = result.root.getQueries({ });
+          var options = result.root.queryOptions;
 
           const NH = Ci.nsINavHistoryService;
           return this._places.queriesToQueryString(queries, queries.length,
-                                                  options);
+                                                   options);
         ]]></getter>
         <setter><![CDATA[
           var queries = { }, options = { };
@@ -281,7 +281,7 @@
         <body><![CDATA[ 
           const NHRVO = Ci.nsINavHistoryResultViewObserver;
           var result = this.getResult();
-          var container = result;
+          var container = result.root;
           // When there's no selection, assume the container is the container
           // the view is populated from (i.e. the result's folderId).
           if (index != -1) {
@@ -302,7 +302,8 @@
               index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
             }
           }
-          return new InsertionPoint(container.folderId, index, orientation);
+          var folder = container.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+          return new InsertionPoint(folder.folderId, index, orientation);
         ]]></body>
       </method>
       
@@ -367,8 +368,8 @@
       <method name="getSupportedFlavours">
         <body><![CDATA[
           var flavorSet = new FlavourSet();
-          for (var i = 0; i < this._self.supportedDropTypes.length; ++i)
-            flavorSet.appendFlavour(this._self.supportedDropTypes[i]);
+          for (var i = 0; i < this.supportedDropTypes.length; ++i)
+            flavorSet.appendFlavour(this.supportedDropTypes[i]);
           return flavorSet;
         ]]></body>
       </method>
@@ -383,8 +384,8 @@
           var index = insertionPoint.index;
           if (insertionPoint.index == 0) 
             index = 0;
-          else if (insertionPoint.index == -1)
-            index = result.childCount - 1;
+          else if (insertionPoint.index == -1 || insertionPoint.index >= result.root.childCount)
+            index = result.root.childCount - 1;
           return index > -1 ? result.root.getChild(index) : null;
         ]]></body>
       </method>
