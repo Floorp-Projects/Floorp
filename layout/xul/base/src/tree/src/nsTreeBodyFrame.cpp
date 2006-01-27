@@ -2452,8 +2452,9 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
       if (currCol->GetWidth()) {
         nsRect cellRect;
         CalcColumnRect(cellRect, currCol, rowRect.y, rowRect.height);
-        cellRect.x += aPt.x;
         if (OffsetForHorzScroll(cellRect, PR_FALSE)) {
+          cellRect.x += aPt.x;
+          
           nsRect dirtyRect;
           nscoord dummy;
           if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
