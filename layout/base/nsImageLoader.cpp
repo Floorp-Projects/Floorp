@@ -123,7 +123,13 @@ nsImageLoader::Load(imgIRequest *aImage)
     mRequest = nsnull;
   }
 
-  return aImage->Clone(this, getter_AddRefs(mRequest));
+  // Make sure to clone into a temporary, then set mRequest, since
+  // cloning may notify and we don't want to trigger paints from this
+  // code.
+  nsCOMPtr<imgIRequest> newRequest;
+  nsresult rv = aImage->Clone(this, getter_AddRefs(newRequest));
+  mRequest.swap(newRequest);
+  return rv;
 }
 
                     
