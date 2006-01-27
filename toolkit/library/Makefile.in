@@ -117,6 +117,10 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(NULL)
+
+ifdef MOZ_ENABLE_GTK
+EXTRA_DSO_LDOPTS += -L$(DIST)/lib -lgtksuperwin
+endif
 endif
 
 DEFINES += -DIMPL_XREAPI
