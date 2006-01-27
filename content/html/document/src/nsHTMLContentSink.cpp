@@ -375,6 +375,10 @@ protected:
   // yet.  We want to make sure to only do this once.
   PRPackedBool mNotifiedRootInsertion;
 
+  // Boolean indicating whether we've seen a <head> tag that might have had
+  // attributes once already.
+  PRPackedBool mHaveSeenHead;
+
   nsCOMPtr<nsIObserverEntry> mObservers;
 
   void StartLayout();
@@ -796,9 +800,26 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
   // attributes backwards; this ensures that the first attribute in the set
   // wins.  This does mean that we do some extra work in the case when the same
   // attribute is set multiple times, but we save a HasAttr call in the much
-  // more common case of reasonable HTML.
+  // more common case of reasonable HTML.  Note that if aCheckIfPresent is set
+  // then we actually want to loop _forwards_ to preserve the "first attribute
+  // wins" behavior.  That does mean that when aCheckIfPresent is set the order
+  // of attributes will get "reversed" from the point of view of the
+  // serializer.  But aCheckIfPresent is only true for malformed documents with
+  // multiple <html>, <head>, or <body> tags, so we're doing fixup anyway at
+  // that point.
+
+  PRInt32 i, limit, step;
+  if (aCheckIfPresent) {
+    i = 0;
+    limit = ac;
+    step = 1;
+  } else {
+    i = ac - 1;
+    limit = -1;
+    step = -1;
+  }
   
-  for (PRInt32 i = ac - 1; i >= 0; i--) {
+  for (; i != limit; i += step) {
     // Get lower-cased key
     const nsAString& key = aNode.GetKeyAt(i);
     // Copy up-front to avoid shared-buffer overhead (and convert to UTF-8
@@ -2875,7 +2896,8 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
     case eHTMLTag_head:
       rv = OpenHeadContext();
       if (NS_SUCCEEDED(rv)) {
-        rv = AddAttributes(aNode, mHead, PR_FALSE, PR_TRUE);
+        rv = AddAttributes(aNode, mHead, PR_FALSE, mHaveSeenHead);
+        mHaveSeenHead = PR_TRUE;
       }
       break;
     case eHTMLTag_body:
@@ -2883,7 +2905,9 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       break;
     case eHTMLTag_html:
       if (mRoot) {
-        AddAttributes(aNode, mRoot, PR_TRUE, PR_TRUE);
+        // If we've already hit this code once, need to check for
+        // already-present attributes on the root.
+        AddAttributes(aNode, mRoot, PR_TRUE, mNotifiedRootInsertion);
         if (!mNotifiedRootInsertion) {
           NS_ASSERTION(!mLayoutStarted,
                        "How did we start layout without notifying on root?");
