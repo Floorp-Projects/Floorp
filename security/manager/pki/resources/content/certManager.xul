@@ -76,6 +76,11 @@
         <vbox id="CACerts" flex="1"/>
       </tabpanels>
     </tabbox>
+
+    <hbox align="center">
+      <description id="ocsp_info" hidden="true">&certmgr.ocsp_info;</description>
+    </hbox>
+
   </vbox>
 
 </dialog>
