@@ -286,7 +286,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_RESULTNODE_TO_BASE_EXCEPT_GETTYPE
   NS_IMETHOD GetType(PRUint32* type)
-    { *type = nsINavHistoryResultNode::RESULT_TYPE_URI; return NS_OK; }
+    { *type = nsNavHistoryResultNode::RESULT_TYPE_URI; return NS_OK; }
   NS_IMPLEMENT_URIRESULT
 
 public:
@@ -312,7 +312,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_RESULTNODE_TO_BASE_EXCEPT_GETTYPE
   NS_IMETHOD GetType(PRUint32* type)
-    { *type = nsINavHistoryResultNode::RESULT_TYPE_VISIT; return NS_OK; }
+    { *type = nsNavHistoryResultNode::RESULT_TYPE_VISIT; return NS_OK; }
   NS_IMPLEMENT_VISITRESULT
 
 public:
@@ -344,7 +344,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_RESULTNODE_TO_BASE_EXCEPT_GETTYPE
   NS_IMETHOD GetType(PRUint32* type)
-    { *type = nsINavHistoryResultNode::RESULT_TYPE_FULL_VISIT; return NS_OK; }
+    { *type = nsNavHistoryResultNode::RESULT_TYPE_FULL_VISIT; return NS_OK; }
   NS_IMPLEMENT_FULLVISITRESULT
 
 public:
@@ -519,7 +519,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_RESULTNODE_TO_BASE_EXCEPT_GETTYPE
   NS_IMETHOD GetType(PRUint32* type)
-    { *type = nsINavHistoryResultNode::RESULT_TYPE_QUERY; return NS_OK; }
+    { *type = nsNavHistoryResultNode::RESULT_TYPE_QUERY; return NS_OK; }
   NS_FORWARD_CONTAINERNODE_EXCEPT_HASCHILDREN
   NS_IMETHOD GetHasChildren(PRBool* aHasChildren);
   NS_DECL_NSINAVHISTORYQUERYRESULTNODE
@@ -583,7 +583,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_RESULTNODE_TO_BASE_EXCEPT_GETTYPE
   NS_IMETHOD GetType(PRUint32* type)
-    { *type = nsINavHistoryResultNode::RESULT_TYPE_FOLDER; return NS_OK; }
+    { *type = nsNavHistoryResultNode::RESULT_TYPE_FOLDER; return NS_OK; }
   NS_FORWARD_CONTAINERNODE_EXCEPT_HASCHILDREN
   NS_IMETHOD GetHasChildren(PRBool* aHasChildren);
   NS_DECL_NSINAVHISTORYQUERYRESULTNODE
