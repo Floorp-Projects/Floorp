@@ -178,6 +178,22 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
                                           nsIFile* location,
                                           nsIModule** result)
 {
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+	/* *sob* - seems necessary to open the .so as RTLD_GLOBAL.  Without
+	this we see:
+	    Traceback (most recent call last):
+	      File "<string>", line 1, in ?
+	      File "/usr/lib/python2.4/logging/__init__.py", line 29, in ?
+	        import sys, os, types, time, string, cStringIO, traceback
+	    ImportError: /usr/lib/python2.4/lib-dynload/time.so: undefined
+	                                                symbol: PyExc_IOError
+
+	On osx, ShaneC writes that is it unnecessary (and fails anyway since 
+	PYTHON_SO is wrong.)  More clues about this welcome!
+	*/
+
+	dlopen(PYTHON_SO,RTLD_NOW | RTLD_GLOBAL);
+#endif
 	PRBool bDidInitPython = !Py_IsInitialized(); // well, I will next line, anyway :-)
 	if (bDidInitPython) {
 		NS_TIMELINE_START_TIMER("PyXPCOM: Python initializing");
