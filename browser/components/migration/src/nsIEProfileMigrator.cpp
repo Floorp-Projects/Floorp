@@ -46,6 +46,7 @@
 #include "nsBrowserProfileMigratorUtils.h"
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
+#include "nsDocShellCID.h"
 #include "nsDebug.h"
 #include "nsDependentString.h"
 #include "nsDirectoryServiceDefs.h"
@@ -82,7 +83,12 @@
 #include "nsIRDFService.h"
 #include "nsIRDFContainer.h"
 #include "nsIURL.h"
+#ifdef MOZ_PLACES
+#include "nsINavBookmarksService.h"
+#include "nsBrowserCompsCID.h"
+#else
 #include "nsIBookmarksService.h"
+#endif
 #include "nsIStringBundle.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
@@ -91,7 +97,6 @@
 #include "nsIWindowsRegKey.h"
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 #define TRIDENTPROFILE_BUNDLE       "chrome://browser/locale/migration/migration.properties"
 
 const int sInitialCookieBufferSize = 1024; // but it can grow
@@ -549,7 +554,7 @@ nsIEProfileMigrator::~nsIEProfileMigrator()
 nsresult
 nsIEProfileMigrator::CopyHistory(PRBool aReplace) 
 {
-  nsCOMPtr<nsIBrowserHistory> hist(do_GetService(kGlobalHistoryCID));
+  nsCOMPtr<nsIBrowserHistory> hist(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
   nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
 
   // First, Migrate standard IE History entries...
@@ -1102,6 +1107,13 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
   // a folder called "Imported IE Favorites" and place all the Bookmarks there. 
   nsresult rv;
 
+#ifdef MOZ_PLACES
+  nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt64 root;
+  rv = bms->GetBookmarksRoot(&root);
+  NS_ENSURE_SUCCESS(rv, rv);
+#else
   nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1"));
   nsCOMPtr<nsIRDFResource> root;
   rdf->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"), getter_AddRefs(root));
@@ -1110,10 +1122,15 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
   NS_ENSURE_TRUE(bms, NS_ERROR_FAILURE);
   PRBool dummy;
   bms->ReadBookmarks(&dummy);
+#endif
 
   nsAutoString personalToolbarFolderName;
 
+#ifdef MOZ_PLACES
+  PRInt64 folder;
+#else
   nsCOMPtr<nsIRDFResource> folder;
+#endif
   if (!aReplace) {
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -1130,7 +1147,11 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
     bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
                                  sourceNameStrings, 1, getter_Copies(importedIEFavsTitle));
 
+#ifdef MOZ_PLACES
+    bms->CreateFolder(root, importedIEFavsTitle, -1, &folder);
+#else
     bms->CreateFolderInContainer(importedIEFavsTitle.get(), root, -1, getter_AddRefs(folder));
+#endif
   }
   else {
     // Locate the Links toolbar folder, we want to replace the Personal Toolbar content with 
@@ -1171,7 +1192,11 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
 }
 
 nsresult
+#ifdef MOZ_PLACES
+nsIEProfileMigrator::CopySmartKeywords(PRInt64 aParentFolder)
+#else
 nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
+#endif
 { 
   nsCOMPtr<nsIWindowsRegKey> regKey = 
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
@@ -1180,8 +1205,16 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
   if (regKey && 
       NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
                                 searchUrlKey, nsIWindowsRegKey::ACCESS_READ))) {
+
+#ifdef MOZ_PLACES
+    nsresult rv;
+    nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRInt64 keywordsFolder;
+#else
     nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1"));
     nsCOMPtr<nsIRDFResource> keywordsFolder, bookmark;
+#endif
 
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID);
     
@@ -1204,8 +1237,12 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
         nsXPIDLString importedIESearchUrlsTitle;
         bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
                                     sourceNameStrings, 1, getter_Copies(importedIESearchUrlsTitle));
+#ifdef MOZ_PLACES
+        bms->CreateFolder(aParentFolder, importedIESearchUrlsTitle, -1, &keywordsFolder);
+#else
         bms->CreateFolderInContainer(importedIESearchUrlsTitle.get(), aParentFolder, -1, 
                                      getter_AddRefs(keywordsFolder));
+#endif
       }
 
       nsCOMPtr<nsIWindowsRegKey> childKey; 
@@ -1236,6 +1273,10 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
           rv = bundle->FormatStringFromName(
                        NS_LITERAL_STRING("importedSearchUrlDesc").get(),
                        descStrings, 2, getter_Copies(keywordDesc));
+#ifdef MOZ_PLACES
+          bms->InsertItem(keywordsFolder, uri, -1);
+          bms->SetItemTitle(uri, keyName);
+#else
           bms->CreateBookmarkInContainer(keywordName.get(), 
                                          url.get(),
                                          keyName.get(), 
@@ -1245,6 +1286,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
                                          keywordsFolder, 
                                          -1, 
                                          getter_AddRefs(bookmark));
+#endif
         }
         childKey->Close();
       }
@@ -1287,10 +1329,15 @@ nsIEProfileMigrator::ResolveShortcut(const nsAFlatString &aFileName, char** aOut
 
 nsresult
 nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory, 
+#ifdef MOZ_PLACES
+                                          PRInt64 aParentFolder,
+                                          nsINavBookmarksService* aBookmarksService,
+#else
                                           nsIRDFResource* aParentResource,
-                                          nsIBookmarksService* aBookmarksService, 
+                                          nsIBookmarksService* aBookmarksService,
+#endif 
                                           const nsAString& aPersonalToolbarFolderName,
-                                          PRBool aIsAtRootLevel) 
+                                          PRBool aIsAtRootLevel)
 {
   nsresult rv;
 
@@ -1342,18 +1389,27 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       NS_ENSURE_SUCCESS(rv, rv);
       if (!isDir) continue;
 
-      nsCAutoString spec;
-      nsCOMPtr<nsIFile> filePath(localFile);
-      // Get the file url format (file:///...) of the native file path.
-      rv = NS_GetURLSpecFromFile(filePath, spec);
-      if (NS_FAILED(rv)) continue;
-
       // Look for and strip out the .lnk extension.
       NS_NAMED_LITERAL_STRING(lnkExt, ".lnk");
       PRInt32 lnkExtStart = bookmarkName.Length() - lnkExt.Length();
       if (StringEndsWith(bookmarkName, lnkExt,
                          nsCaseInsensitiveStringComparator()))
         bookmarkName.Truncate(lnkExtStart);
+
+#ifdef MOZ_PLACES
+      nsCOMPtr<nsIURI> bookmarkURI;
+      rv = NS_NewFileURI(getter_AddRefs(bookmarkURI), localFile);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = aBookmarksService->InsertItem(aParentFolder, bookmarkURI, -1);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = aBookmarksService->SetItemTitle(bookmarkURI, bookmarkName);
+      NS_ENSURE_SUCCESS(rv, rv);
+#else
+      nsCAutoString spec;
+      nsCOMPtr<nsIFile> filePath(localFile);
+      // Get the file url format (file:///...) of the native file path.
+      rv = NS_GetURLSpecFromFile(filePath, spec);
+      if (NS_FAILED(rv)) continue;
 
       nsCOMPtr<nsIRDFResource> bookmark;
       // Here it's assumed that NS_GetURLSpecFromFile returns spec in UTF-8.
@@ -1369,11 +1425,22 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
                                                    aParentResource, 
                                                    -1, 
                                                    getter_AddRefs(bookmark));
+#endif
       if (NS_FAILED(rv)) continue;
     }
     else if (isDir) {
+#ifdef MOZ_PLACES
+      PRInt64 folder;
+#else
       nsCOMPtr<nsIRDFResource> folder;
+#endif
       if (bookmarkName.Equals(aPersonalToolbarFolderName)) {
+#ifdef MOZ_PLACES
+        aBookmarksService->GetToolbarRoot(&folder);
+        // If we're here, it means the user's doing a _replace_ import which means
+        // clear out the content of this folder, and replace it with the new content
+        aBookmarksService->RemoveFolderChildren(folder);
+#else
         aBookmarksService->GetBookmarksToolbarFolder(getter_AddRefs(folder));
         
         // If we're here, it means the user's doing a _replace_ import which means
@@ -1395,12 +1462,20 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
 
           e->HasMoreElements(&hasMore);
         }
+#endif
       }
       else {
+#ifdef MOZ_PLACES
+        rv = aBookmarksService->CreateFolder(aParentFolder,
+                                             bookmarkName,
+                                             -1,
+                                             &folder);
+#else
         rv = aBookmarksService->CreateFolderInContainer(bookmarkName.get(), 
                                                         aParentResource, 
                                                         -1, 
                                                         getter_AddRefs(folder));
+#endif
         if (NS_FAILED(rv)) continue;
       }
 
@@ -1425,6 +1500,14 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       nsXPIDLCString resolvedURL;
       ResolveShortcut(path, getter_Copies(resolvedURL));
 
+#ifdef MOZ_PLACES
+      nsCOMPtr<nsIURI> resolvedURI;
+      rv = NS_NewURI(getter_AddRefs(resolvedURI), resolvedURL);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = aBookmarksService->InsertItem(aParentFolder, resolvedURI, -1);
+      if (NS_FAILED(rv)) continue;
+      rv = aBookmarksService->SetItemTitle(resolvedURI, name);
+#else
       nsCOMPtr<nsIRDFResource> bookmark;
       // As far as I can tell reading the MSDN API document,
       // IUniformResourceLocator::GetURL (used by ResolveShortcut) returns a 
@@ -1440,6 +1523,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
                                                         aParentResource, 
                                                         -1, 
                                                         getter_AddRefs(bookmark));
+#endif
       if (NS_FAILED(rv)) continue;
     }
   }
