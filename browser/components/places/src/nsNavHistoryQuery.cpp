@@ -730,6 +730,13 @@ NS_IMETHODIMP nsNavHistoryQuery::GetHasBeginTime(PRBool* _retval)
   return NS_OK;
 }
 
+/* readonly attribute PRTime absoluteBeginTime; */
+NS_IMETHODIMP nsNavHistoryQuery::GetAbsoluteBeginTime(PRTime* _retval)
+{
+  *_retval = nsNavHistory::NormalizeTime(mBeginTimeReference, mBeginTime);
+  return NS_OK;
+}
+
 /* attribute PRTime endTime; */
 NS_IMETHODIMP nsNavHistoryQuery::GetEndTime(PRTime *aEndTime)
 {
@@ -760,6 +767,13 @@ NS_IMETHODIMP nsNavHistoryQuery::SetEndTimeReference(PRUint32 aReference)
 NS_IMETHODIMP nsNavHistoryQuery::GetHasEndTime(PRBool* _retval)
 {
   *_retval = ! (mEndTimeReference == TIME_RELATIVE_EPOCH && mEndTime == 0);
+  return NS_OK;
+}
+
+/* readonly attribute PRTime absoluteEndTime; */
+NS_IMETHODIMP nsNavHistoryQuery::GetAbsoluteEndTime(PRTime* _retval)
+{
+  *_retval = nsNavHistory::NormalizeTime(mEndTimeReference, mEndTime);
   return NS_OK;
 }
 

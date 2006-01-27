@@ -225,24 +225,29 @@ var PlacesPage = {
    */
   rangeSelected: function PP_rangeSelected() {
     var result = this._content.getResult();
-    var queries = result.getQueries({ });
-    
+    var queries = this.getCurrentQueries();
+
     var calendar = document.getElementById("historyCalendar");
     var begin = calendar.beginrange.getTime();
     var end = calendar.endrange.getTime();
-    if (begin == end) {
-      const DAY_MSEC = 86400000;
-      end = begin + DAY_MSEC;
-    }    
+
+    // The calendar restuns values in terms of whole days at midnight, inclusive.
+    // The end time range therefor must be moved to the evening of the end
+    // include that day in the query.
+    const DAY_MSEC = 86400000;
+    end += DAY_MSEC;
+
     var newQueries = [];
     for (var i = 0; i < queries.length; ++i) {
       var query = queries[i].clone();
+      query.beginTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_EPOCH;
       query.beginTime = begin * 1000;
+      query.endTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_EPOCH;
       query.endTime = end * 1000;
       newQueries.push(query);
     }
     
-    this._content.load(newQueries, result.queryOptions);
+    this._content.load(newQueries, this.getCurrentOptions());
     
     return true;
   },
@@ -333,48 +338,72 @@ var PlacesPage = {
    * current result. 
    */
   _updateCalendar: function PP__updateCalendar() {
-    // Make sure that by updating the calendar widget we don't fire selection
-    // events and cause the UI to infinitely reload.
     var calendar = document.getElementById("historyCalendar");
-    calendar.suppressRangeEvents = true;
 
     var result = this._content.getResult();
     if (result.root.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
       result.root.QueryInterface(Ci.nsINavHistoryQueryResultNode);
     else if (result.root.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER)
       result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode);
-    else
+    else {
+      calendar.selectNothing = true;
       return;
-    var queries = result.root.getQueries({ });
-    if (!queries.length)
-      return;
-    
-    // Query values are OR'ed together, so just use the first.
-    // FIXME: if there is more than one query, we probably do NOT want to
-    // highlight the date range in the calendar.
-    var query = queries[0];
-    
-    const NOW = new Date();
-    var begin = Math.floor(query.beginTime / 1000);
-    var end = Math.floor(query.endTime / 1000);
-    if (query.beginTimeReference == Ci.nsINavHistoryQuery.TIME_RELATIVE_TODAY) {
-      if (query.beginTime == 0) {
-        var d = new Date();
-        d.setFullYear(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
-        d.setHours(0, 0, 0, 0);
-        begin += d.getTime();
-      }
-      else
-        begin += NOW.getTime();
-      end += NOW.getTime();
     }
-    calendar.beginrange = new Date(begin);
-    calendar.endrange = new Date(end);
-    
-    // Allow user selection events once again. 
+    var queries = this.getCurrentQueries();
+
+    // if there is more than one query, make sure that they all specify the
+    // same date range. If there isn't a unique date range, don't display
+    // anything.
+    if (queries.length < 1) {
+      calendar.selectNothing = true;
+      return;
+    }
+    var absBegin = queries[0].absoluteBeginTime;
+    var absEnd = queries[0].absoluteEndTime;
+    for (var i = 1; i < queries.length; i ++) {
+      if (queries[i].absoluteBeginTime != absBegin ||
+          queries[i].absoluteEndTime != absEnd) {
+        calendar.selectNothing = true;
+        return;
+      }
+    }
+
+    var query = queries[0];
+
+    // Make sure that by updating the calendar widget we don't fire selection
+    // events and cause the UI to infinitely reload.
+    calendar.suppressRangeEvents = true;
+
+    // begin
+    var beginRange = null;
+    if (query.hasBeginTime)
+      beginRange = new Date(query.absoluteBeginTime / 1000);
+
+    // end
+    var endRange = null;
+    if (query.hasEndTime) {
+      endRange = new Date(query.absoluteEndTime / 1000);
+
+      // here, we have to do a little work. Normally a day query will start
+      // at midnight and end exactly 24 hours later. However, this spans two
+      // actual days, and will show up as such in the calendar. Therefore, if
+      // the end day is exactly midnight, we will bump it back a day.
+      if (endRange.getHours() == 0 && endRange.getMinutes() == 0 &&
+          endRange.getSeconds() == 0 && endRange.getMilliseconds() == 0) {
+        // Here, we have to be careful to not set the end range to before the
+        // beginning. Somebody stupid might set them to be the same, and we
+        // don't want to suddenly make an invalid range.
+        if (! beginRange ||
+            (beginRange && beginRange.getTime() != endRange.getTime()))
+          endRange.setTime(endRange.getTime() - 1);
+      }
+    }
+    calendar.setRange(beginRange, endRange, true);
+
+    // Allow user selection events once again.
     calendar.suppressRangeEvents = false;
   },
-  
+
   /**
    * Update the Places UI when the content of the right tree changes. 
    */
@@ -394,8 +423,27 @@ var PlacesPage = {
     document.getElementById("historyCalendar").setAttribute("hidden", isBookmarks);
     
     // Update the calendar with the current date range, if applicable. 
-    if (!isBookmarks)
+    if (!isBookmarks) {
       this._updateCalendar();
+    }
+  },
+
+  /**
+   * Returns the query array associated with the query currently loaded in
+   * the main places pane.
+   */
+  getCurrentQueries: function PP_getCurrentQueries() {
+    var result = this._content.getResult();
+    return result.root.QueryInterface(Ci.nsINavHistoryQueryResultNode).getQueries({});
+  },
+
+  /**
+   * Returns the options associated with the query currently loaded in the
+   * main places pane.
+   */
+  getCurrentOptions: function PP_getCurrentOptions() {
+    var result = this._content.getResult();
+    return result.root.QueryInterface(Ci.nsINavHistoryQueryResultNode).queryOptions;
   },
 };
 
@@ -868,16 +916,17 @@ var PlacesQueryBuilder = {
     
     // Set max results
     var result = PlacesPage._content.getResult();
+    var options = PlacesPage.getCurrentOptions();
     if (document.getElementById("advancedSearchHasMax").checked) {
       var max = parseInt(document.getElementById("advancedSearchMaxResults").value);
       if (isNaN(max))
         max = 100;
-      result.queryOptions.maxResults = max;
-      dump("Max results = " + result.queryOptions.maxResults + "(" + max + ")\n");
+      options.maxResults = max;
+      dump("Max results = " + options.maxResults + "(" + max + ")\n");
     }
     // Make sure we're getting uri results, not visits
-    result.queryOptions.resultType = result.queryOptions.RESULT_TYPE_URI;
+    options.resultType = options.RESULT_TYPE_URI;
 
-    PlacesPage._content.load(queries, result.queryOptions);
+    PlacesPage._content.load(queries, options);
   },
 };

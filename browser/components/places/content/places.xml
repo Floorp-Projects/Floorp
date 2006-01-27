@@ -145,6 +145,7 @@
         this._currentMonth = -1;
         this._currentYear = -1;
         this._cell0Date = null; // date for top left of calendar
+        this._selectNothing = false;
         this._selectBegin = null;
         this._selectEnd = null;
 
@@ -203,6 +204,7 @@
             return new Date(this._selectBegin);
         </getter>
         <setter>
+          this._selectNothing = false;
           this._selectBegin = val;
           this.updateSelection(this._selectBegin, this._selectEnd);
           this.fireRangeEvent();
@@ -216,9 +218,47 @@
             return new Date(this._selectEnd);
         </getter>
         <setter>
+          this._selectNothing = false;
           this._selectEnd = val;
           this.updateSelection(this._selectBegin, this._selectEnd);
           this.fireRangeEvent();
+        </setter>
+      </property>
+
+      <!-- Use this to set the range at once. It will be more efficient than
+           setting begin and end independently since there will be only one
+           redraw. Set updateVisible to have the calendar change the active
+           month if necessary. -->
+      <method name="setRange">
+        <parameter name="begin"/>
+        <parameter name="end"/>
+        <parameter name="updateVisible"/>
+        <body><![CDATA[
+          if (updateVisible && end) {
+            // this just tries to make the end range visible. If there is no
+            // end range, we don't do anything. We might want to set the visible
+            // month to the begin range in this case, but I don't think this
+            // situation arises in practice.
+            var daysToEnd = this.daysBetweenDates(end, this._cell0Date);
+            if (daysToEnd < 0 || daysToEnd >= this._numCells) {
+              // reselect month for end range
+              this.visibleMonth = end;
+            }
+          }
+          this._selectNothing = false;
+          this.updateSelection(begin, end);
+          this.fireRangeEvent();
+        ]]></body>
+      </method>
+
+      <!-- Normally, null begin and end means select all, so you can set
+           this if you don't want anything selected.-->
+      <property name="selectNothing">
+        <getter>
+          return this._selectNothing;
+        </getter>
+        <setter>
+          this._selectNothing = val;
         </setter>
       </property>
 
@@ -241,6 +281,7 @@
           var date = this.cellToDate(event.target.getAttribute("anonid"));
           if (! date)
             return;
+          this._selectNothing = false;
           this._dragging = true;
           this._mouseDownOn = date;
           this.updateSelection(date, date);
@@ -324,18 +365,23 @@
       <!--===== drawSelection =====-->
       <method name="drawSelection"><body><![CDATA[
         var beginIndex;
-        if (! this._selectBegin) {
-          beginIndex = 0;
-        } else {
-          beginIndex = this.daysBetweenDates(this._selectBegin, this._cell0Date);
-        }
         var endIndex;
-        if (! this._selectEnd) {
-          endIndex = this._numCells - 1;
+        if (this._selectNothing) {
+          beginIndex = -1;
+          endIndex = -1;
         } else {
-          endIndex = this.daysBetweenDates(this._selectEnd, this._cell0Date);
+          if (! this._selectBegin) {
+            beginIndex = 0;
+          } else {
+            beginIndex = this.daysBetweenDates(this._selectBegin, this._cell0Date);
+          }
+          if (! this._selectEnd) {
+            endIndex = this._numCells - 1;
+          } else {
+            endIndex = this.daysBetweenDates(this._selectEnd, this._cell0Date);
+          }
         }
-        
+
         for (var i = 0; i < this._numCells; i ++) {
           var sel = (i >= beginIndex && i <= endIndex);
           if (sel != this._selected[i]) {
