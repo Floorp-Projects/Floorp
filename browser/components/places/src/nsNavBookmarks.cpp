@@ -191,11 +191,6 @@ nsNavBookmarks::Init()
 
   NS_NAMED_LITERAL_CSTRING(orderByPosition, " ORDER BY a.position");
 
-  // mDBGetFolderChildren: select only folder children of a given folder (unsorted)
-  rv = dbConn->CreateStatement(selectFolderChildren,
-                               getter_AddRefs(mDBGetFolderChildren));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // mDBGetChildren: select all children of a given folder, sorted by position
   rv = dbConn->CreateStatement(selectItemChildren +
                                NS_LITERAL_CSTRING(" UNION ALL ") +
@@ -788,36 +783,55 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
 NS_IMETHODIMP
 nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
 {
-  nsresult rv;
-  nsCAutoString buffer;
-  mozIStorageConnection *dbConn = DBConn();
+  mozStorageTransaction transaction(DBConn(), PR_FALSE);
 
-  // Now locate all of the folder children, so we can recursively remove them.
   nsTArray<PRInt64> folderChildren;
+  nsCOMArray<nsIURI> itemChildren;
+  nsresult rv;
   {
-    mozStorageStatementScoper scope(mDBGetFolderChildren);
-    rv = mDBGetFolderChildren->BindInt64Parameter(0, aFolder);
+    mozStorageStatementScoper scope(mDBGetChildren);
+    rv = mDBGetChildren->BindInt64Parameter(0, aFolder);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBGetFolderChildren->BindInt32Parameter(1, 0);
+    rv = mDBGetChildren->BindInt32Parameter(1, 0);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBGetFolderChildren->BindInt32Parameter(2, PR_INT32_MAX);
+    rv = mDBGetChildren->BindInt32Parameter(2, PR_INT32_MAX);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool more;
-    while (NS_SUCCEEDED(rv = mDBGetFolderChildren->ExecuteStep(&more)) && more) {
-      folderChildren.AppendElement(mDBGetFolderChildren->AsInt64(kGetChildrenIndex_FolderChild));
+    PRBool hasMore;
+    while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&hasMore)) && hasMore) {
+      PRBool isFolder = ! mDBGetChildren->IsNull(kGetChildrenIndex_FolderChild);
+      nsCOMPtr<nsNavHistoryResultNode> node;
+      if (isFolder) {
+        // folder
+        folderChildren.AppendElement(
+            mDBGetChildren->AsInt64(kGetChildrenIndex_FolderChild));
+      } else {
+        // item (URI)
+        nsCOMPtr<nsIURI> uri;
+        nsCAutoString spec;
+        mDBGetChildren->GetUTF8String(nsNavHistory::kGetInfoIndex_URL, spec);
+        rv = NS_NewURI(getter_AddRefs(uri), spec);
+        NS_ENSURE_SUCCESS(rv, rv);
+        PRBool success = itemChildren.AppendObject(uri);
+        NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
+      }
     }
   }
 
-  for (PRUint32 i = 0; i < folderChildren.Length(); ++i) {
-    RemoveFolder(folderChildren[i]);
+  // remove folders
+  PRUint32 i;
+  for (i = 0; i < folderChildren.Length(); ++i) {
+    rv = RemoveFolder(folderChildren[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Now remove the remaining items
-  buffer.AssignLiteral("DELETE FROM moz_bookmarks WHERE parent = ");
-  buffer.AppendInt(aFolder);
-  rv = dbConn->ExecuteSimpleSQL(buffer);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // remove items
+  for (i = 0; i < PRUint32(itemChildren.Count()); ++i) {
+    rv = RemoveItem(aFolder, itemChildren[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  transaction.Commit();
   return NS_OK;
 }
 
