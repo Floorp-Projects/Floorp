@@ -59,22 +59,33 @@
 
 class nsIAutoCompleteSimpleResult;
 class nsIAutoCompleteResult;
+class nsFormHistory;
 
-#define NS_FORMHISTORY_IID \
+#define NS_IFORMHISTORYPRIVATE_IID \
 {0xc4a47315, 0xaeb5, 0x4039, {0x9f, 0x34, 0x45, 0x11, 0xb3, 0xa7, 0x58, 0xdd}}
 
+class nsIFormHistoryPrivate : public nsISupports
+{
+ public:
+#ifdef MOZILLA_1_8_BRANCH
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMHISTORYPRIVATE_IID)
+#else
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMHISTORYPRIVATE_IID)
+#endif
+
+  mozIStorageConnection* GetStorageConnection() { return mDBConn; }
+
+ protected:
+  nsCOMPtr<mozIStorageConnection> mDBConn;
+};
+
 class nsFormHistory : public nsIFormHistory,
+                      public nsIFormHistoryPrivate,
                       public nsIObserver,
                       public nsIFormSubmitObserver,
                       public nsSupportsWeakReference
 {
 public:
-#ifdef MOZILLA_1_8_BRANCH
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_FORMHISTORY_IID)
-#else
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_FORMHISTORY_IID)
-#endif
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFORMHISTORY
   NS_DECL_NSIOBSERVER
@@ -92,8 +103,6 @@ public:
       }
       return gFormHistory;
     }
-
-  mozIStorageConnection* GetStorageConnection() { return mDBConn; }
 
   nsresult AutoCompleteSearch(const nsAString &aInputName,
 			      const nsAString &aInputValue,
@@ -115,7 +124,6 @@ public:
 
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   nsCOMPtr<mozIStorageService> mStorageService;
-  nsCOMPtr<mozIStorageConnection> mDBConn;
   nsCOMPtr<mozIStorageStatement> mDBGetMatchingField;
   nsCOMPtr<mozIStorageStatement> mDBFindEntry;
   nsCOMPtr<mozIStorageStatement> mDBFindEntryByName;
