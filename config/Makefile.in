@@ -68,6 +68,13 @@ TARGETS		+= elf-dynstr-gc
 endif
 endif
 
+ifeq ($(OS_ARCH), Darwin)
+# XXX Setting CPP_PROG_LINK is ugly, but it works (it makes nsinstall
+# link with $(CXX)).  asdecode should really be in its own directory.
+CPP_PROG_LINK	= 1
+SIMPLE_PROGRAMS	+= asdecode
+endif
+
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
 # a recursive rule for finding nsinstall and the Perl scripts.
 ifdef NSBUILDROOT

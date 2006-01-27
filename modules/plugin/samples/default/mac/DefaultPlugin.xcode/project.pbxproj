@@ -343,7 +343,7 @@
 		F5E0C34D036A12DF01A96660 = {
 			isa = PBXFileReference;
 			lastKnownFileType = file;
-			path = NullPlugin.rsrc;
+			path = _NullPlugin.rsrc;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};

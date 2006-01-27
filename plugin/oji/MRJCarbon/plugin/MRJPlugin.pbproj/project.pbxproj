@@ -406,14 +406,14 @@
 		};
 		F59D146D02AC308301000104 = {
 			isa = PBXFileReference;
-			name = Dialogs.rsrc;
-			path = Resources/Dialogs.rsrc;
+			name = _Dialogs.rsrc;
+			path = Resources/_Dialogs.rsrc;
 			refType = 2;
 		};
 		F59D146E02AC308301000104 = {
 			isa = PBXFileReference;
-			name = Strings.rsrc;
-			path = Resources/Strings.rsrc;
+			name = _Strings.rsrc;
+			path = Resources/_Strings.rsrc;
 			refType = 2;
 		};
 		F59D146F02AC308301000104 = {
