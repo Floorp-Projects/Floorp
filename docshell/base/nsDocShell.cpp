@@ -3820,12 +3820,12 @@ nsDocShell::SetVisibility(PRBool aVisibility)
     if (!mContentViewer)
         return NS_OK;
     if (aVisibility) {
-        NS_ENSURE_SUCCESS(EnsureContentViewer(), NS_ERROR_FAILURE);
         mContentViewer->Show();
     }
-    else if (mContentViewer)
+    else {
         mContentViewer->Hide();
-
+    }
+    
     return NS_OK;
 }
 
