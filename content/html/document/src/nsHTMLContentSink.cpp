@@ -2554,6 +2554,8 @@ HTMLContentSink::CloseHTML()
       mContextStack.RemoveElementAt(numContexts);
     }
 
+    NS_ASSERTION(mHeadContext->mTextLength == 0, "Losing text");
+
     mHeadContext->End();
 
     delete mHeadContext;
@@ -3524,9 +3526,15 @@ HTMLContentSink::OpenHeadContext()
 void
 HTMLContentSink::CloseHeadContext()
 {
-  if (mCurrentContext && !mCurrentContext->IsCurrentContainer(eHTMLTag_head))
-    return;
+  if (mCurrentContext) {
+    if (!mCurrentContext->IsCurrentContainer(eHTMLTag_head))
+      return;
 
+    mCurrentContext->FlushTextAndRelease();
+  }
+
+  NS_ASSERTION(mContextStack.Count() > 0, "Stack should not be empty");
+  
   PRInt32 n = mContextStack.Count() - 1;
   mCurrentContext = (SinkContext*) mContextStack.ElementAt(n);
   mContextStack.RemoveElementAt(n);
