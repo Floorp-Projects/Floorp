@@ -37,7 +37,6 @@
 
 #include "nsProfileMigrator.h"
 
-#include "nsIBookmarksService.h"
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMWindowInternal.h"

@@ -37,7 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBrowserProfileMigratorUtils.h"
+#ifdef MOZ_PLACES
+#include "nsINavBookmarksService.h"
+#include "nsBrowserCompsCID.h"
+#else
 #include "nsIBookmarksService.h"
+#endif
 #include "nsIFile.h"
 #include "nsIInputStream.h"
 #include "nsILineInputStream.h"
@@ -219,6 +224,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
 {
   nsresult rv;
 
+#ifndef MOZ_PLACES
   nsCOMPtr<nsIBookmarksService> bms = 
     do_GetService("@mozilla.org/browser/bookmarks-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -251,6 +257,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
   rv = rdfs->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"),
                          getter_AddRefs(root));
   NS_ENSURE_SUCCESS(rv, rv);
+#endif // MOZ_PLACES
 
   // Look for the localized name of the bookmarks toolbar
   nsCOMPtr<nsIStringBundleService> bundleService =
@@ -270,6 +277,30 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
                                sourceNameStrings, 1, 
                                getter_Copies(importedBookmarksTitle));
 
+#ifdef MOZ_PLACES
+  // Get the bookmarks service
+  nsCOMPtr<nsINavBookmarksService> bms =
+    do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the file:// uri for the bookmarks file.
+  nsCOMPtr<nsIURI> fileURI;
+  rv = NS_NewFileURI(getter_AddRefs(fileURI), aBookmarksFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create an imported bookmarks folder under the bookmarks menu.
+  PRInt64 root;
+  rv = bms->GetBookmarksRoot(&root);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt64 folder;
+  rv = bms->CreateFolder(root, importedBookmarksTitle, -1, &folder);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Import the bookmarks into the folder.
+  rv = bms->ImportBookmarksHTMLToFolder(fileURI, folder);
+  NS_ENSURE_SUCCESS(rv, rv);
+#else
   nsCOMPtr<nsIRDFResource> folder;
   bms->CreateFolderInContainer(importedBookmarksTitle.get(), root, -1,
                                getter_AddRefs(folder));
@@ -290,4 +321,5 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return ds->DoCommand(sources, importCmd, params);
+#endif
 }

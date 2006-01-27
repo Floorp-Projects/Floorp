@@ -57,7 +57,6 @@ REQUIRES	= \
 		  pref \
 		  rdf \
 		  satchel \
-		  bookmarks \
 		  intl \
 		  unicharutil \
 		  windowwatcher \
@@ -65,6 +64,12 @@ REQUIRES	= \
 		  docshell \
 		  xulapp \
 		  $(NULL)
+		  
+ifdef MOZ_PLACES
+REQUIRES += places
+else
+REQUIRES += bookmarks
+endif
 
 CPPSRCS  = nsProfileMigrator.cpp \
            nsBrowserProfileMigratorUtils.cpp \

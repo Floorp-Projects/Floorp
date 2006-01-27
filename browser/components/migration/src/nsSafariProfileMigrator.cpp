@@ -40,7 +40,13 @@
 #include "nsBrowserProfileMigratorUtils.h"
 #include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDocShellCID.h"
+#ifdef MOZ_PLACES
+#include "nsINavBookmarksService.h"
+#include "nsBrowserCompsCID.h"
+#else
 #include "nsIBookmarksService.h"
+#endif
 #include "nsIBrowserHistory.h"
 #include "nsICookieManager2.h"
 #include "nsIFileProtocolHandler.h"
@@ -75,7 +81,6 @@
 #define MIGRATION_BUNDLE                  "chrome://browser/locale/migration/migration.properties"
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsSafariProfileMigrator
@@ -843,7 +848,7 @@ nsSafariProfileMigrator::CopyHistory(PRBool aReplace)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIBrowserHistory> history(do_GetService(kGlobalHistoryCID));
+  nsCOMPtr<nsIBrowserHistory> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
 
   CFArrayRef children = (CFArrayRef)
                 ::CFDictionaryGetValue(safariHistory, CFSTR("WebHistoryDates"));
@@ -886,6 +891,15 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
   // a folder called "Imported IE Favorites" and place all the Bookmarks there.
   nsresult rv;
 
+#ifdef MOZ_PLACES
+  nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt64 root;
+  rv = bms->GetBookmarksRoot(&root);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt64 folder;
+#else
   nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1"));
   nsCOMPtr<nsIRDFResource> root;
   rdf->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"), getter_AddRefs(root));
@@ -896,6 +910,7 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
   bms->ReadBookmarks(&dummy);
 
   nsCOMPtr<nsIRDFResource> folder;
+#endif
   if (!aReplace) {
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -913,8 +928,12 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
                                  sourceNameStrings, 1,
                                  getter_Copies(importedSafariBookmarksTitle));
 
+#ifdef MOZ_PLACES
+    bms->CreateFolder(root, importedSafariBookmarksTitle, -1, &folder);
+#else
     bms->CreateFolderInContainer(importedSafariBookmarksTitle.get(), root, -1,
                                  getter_AddRefs(folder));
+#endif
   }
   else {
     // In non-replace mode we are merging at the top level.
@@ -967,8 +986,13 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
 
 nsresult
 nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
+#ifdef MOZ_PLACES
+                                              PRInt64 aParentFolder,
+                                              nsINavBookmarksService * aBookmarksService,
+#else
                                               nsIRDFResource* aParentResource,
                                               nsIBookmarksService* aBookmarksService,
+#endif
                                               PRBool aIsAtRootLevel)
 {
   nsresult rv;
@@ -997,8 +1021,13 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
       // Look for the BookmarksBar Bookmarks and add them into the appropriate
       // Personal Toolbar Root
       if (title.EqualsLiteral("BookmarksBar") && aIsAtRootLevel) {
+#ifdef MOZ_PLACES
+        PRInt64 toolbarFolder;
+        aBookmarksService->GetToolbarRoot(&toolbarFolder);
+#else
         nsCOMPtr<nsIRDFResource> toolbarFolder;
         aBookmarksService->GetBookmarksToolbarFolder(getter_AddRefs(toolbarFolder));
+#endif
 
         rv |= ParseBookmarksFolder(children,
                                    toolbarFolder,
@@ -1008,18 +1037,28 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
       // Look for the BookmarksMenu Bookmarks and flatten them into the top level
       else if (title.EqualsLiteral("BookmarksMenu") && aIsAtRootLevel) {
         rv |= ParseBookmarksFolder(children,
+#ifdef MOZ_PLACES
+                                   aParentFolder,
+#else
                                    aParentResource,
+#endif
                                    aBookmarksService,
                                    PR_TRUE);
       }
       else {
         // Encountered a Folder, so create one in our Bookmarks DataSource and then
         // parse the contents of the Safari one into it...
+#ifdef MOZ_PLACES
+        PRInt64 folder;
+        rv |= aBookmarksService->CreateFolder(aParentFolder,
+                                              title, -1, &folder);
+#else
         nsCOMPtr<nsIRDFResource> folder;
         rv |= aBookmarksService->CreateFolderInContainer(title.get(),
                                                          aParentResource,
                                                          -1,
                                                          getter_AddRefs(folder));
+#endif
         rv |= ParseBookmarksFolder(children,
                                    folder,
                                    aBookmarksService,
@@ -1033,6 +1072,12 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
       nsAutoString title, url;
       if (GetDictionaryStringValue(URIDictionary, CFSTR("title"), title) &&
           GetDictionaryStringValue(entry, CFSTR("URLString"), url)) {
+#ifdef MOZ_PLACES
+        nsCOMPtr<nsIURI> uri;
+        rv |= NS_NewURI(getter_AddRefs(uri), url);
+        rv |= aBookmarksService->InsertItem(aParentFolder, uri, -1);
+        rv |= aBookmarksService->SetItemTitle(uri, title);
+#else
         nsCOMPtr<nsIRDFResource> bookmark;
         rv |= aBookmarksService->CreateBookmarkInContainer(title.get(),
                                                            url.get(),
@@ -1043,6 +1088,7 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
                                                            aParentResource,
                                                            -1,
                                                            getter_AddRefs(bookmark));
+#endif
       }
     }
   }

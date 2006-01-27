@@ -196,7 +196,8 @@ class BookmarkContentSink : public nsIHTMLContentSink
 {
 public:
   nsresult Init(PRBool aAllowRootChanges,
-                nsINavBookmarksService* bookmarkService);
+                nsINavBookmarksService* bookmarkService,
+                PRInt64 aFolder);
 
   NS_DECL_ISUPPORTS
 
@@ -259,6 +260,11 @@ protected:
   // to reparent it on import.
   PRBool mAllowRootChanges;
 
+  // If a folder was specified to import into, then ignore flags to put
+  // bookmarks in the bookmarks menu or toolbar and keep them inside
+  // the folder.
+  PRBool mFolderSpecified;
+
   void HandleContainerBegin(const nsIParserNode& node);
   void HandleContainerEnd();
   void HandleHead1Begin(const nsIParserNode& node);
@@ -293,7 +299,8 @@ protected:
 
 nsresult
 BookmarkContentSink::Init(PRBool aAllowRootChanges,
-                          nsINavBookmarksService* bookmarkService)
+                          nsINavBookmarksService* bookmarkService,
+                          PRInt64 aFolder)
 {
   nsresult rv;
   mBookmarksService = bookmarkService;
@@ -308,8 +315,15 @@ BookmarkContentSink::Init(PRBool aAllowRootChanges,
 
   // initialize the root frame with the menu root
   PRInt64 menuRoot;
-  rv = mBookmarksService->GetBookmarksRoot(&menuRoot);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aFolder == 0) {
+    rv = mBookmarksService->GetBookmarksRoot(&menuRoot);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mFolderSpecified = false;
+  }
+  else {
+    menuRoot = aFolder;
+    mFolderSpecified = true;
+  }
   if (! mFrames.AppendElement(BookmarkImportFrame(menuRoot)))
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -496,13 +510,15 @@ BookmarkContentSink::HandleHeadBegin(const nsIParserNode& node)
   // processed.
   PRInt32 attrCount = node.GetAttributeCount();
   frame.mLastContainerType = BookmarkImportFrame::Container_Normal;
-  for (PRInt32 i = 0; i < attrCount; i ++) {
-    if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_TOOLBARFOLDER_LOWER)) {
-      frame.mLastContainerType = BookmarkImportFrame::Container_Toolbar;
-      break;
-    } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_BOOKMARKSMENU_LOWER)) {
-      frame.mLastContainerType = BookmarkImportFrame::Container_Menu;
-      break;
+  if (!mFolderSpecified) {
+    for (PRInt32 i = 0; i < attrCount; i ++) {
+      if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_TOOLBARFOLDER_LOWER)) {
+        frame.mLastContainerType = BookmarkImportFrame::Container_Toolbar;
+        break;
+      } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_BOOKMARKSMENU_LOWER)) {
+        frame.mLastContainerType = BookmarkImportFrame::Container_Menu;
+        break;
+      }
     }
   }
   CurFrame().mPreviousText.Truncate(0);
@@ -843,12 +859,20 @@ NS_IMETHODIMP
 nsNavBookmarks::ImportBookmarksHTML(nsIURI* aURL)
 {
   // this version is exposed on the interface and disallows changing of roots
-  return ImportBookmarksHTMLInternal(aURL, PR_FALSE);
+  return ImportBookmarksHTMLInternal(aURL, PR_FALSE, 0);
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::ImportBookmarksHTMLToFolder(nsIURI* aURL, PRInt64 aFolder)
+{
+  // this version is exposed on the interface and disallows changing of roots
+  return ImportBookmarksHTMLInternal(aURL, PR_FALSE, aFolder);
 }
 
 nsresult
 nsNavBookmarks::ImportBookmarksHTMLInternal(nsIURI* aURL,
-                                            PRBool aAllowRootChanges)
+                                            PRBool aAllowRootChanges,
+                                            PRInt64 aFolder)
 {
   // wrap the import in a transaction to make it faster
   mozStorageTransaction transaction(DBConn(), PR_FALSE);
@@ -859,7 +883,7 @@ nsNavBookmarks::ImportBookmarksHTMLInternal(nsIURI* aURL,
 
   BookmarkContentSink* sink = new BookmarkContentSink;
   NS_ENSURE_TRUE(sink, NS_ERROR_OUT_OF_MEMORY);
-  rv = sink->Init(aAllowRootChanges, this);
+  rv = sink->Init(aAllowRootChanges, this, aFolder);
   NS_ENSURE_SUCCESS(rv, rv);
   parser->SetContentSink(sink);
 
