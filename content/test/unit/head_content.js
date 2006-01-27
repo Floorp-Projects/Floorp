@@ -37,11 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This file contains common code that is loaded with each test file.
 const I                    = Components.interfaces;
 const C                    = Components.classes;
-const nsIEventQueueService = I.nsIEventQueueService;
-const nsIEventQueue        = I.nsIEventQueue;
+
 const nsILocalFile         = I.nsILocalFile;
 const nsIProperties        = I.nsIProperties;
 const nsIFileInputStream   = I.nsIFileInputStream;
@@ -55,97 +53,6 @@ const nsIDOMNode           = I.nsIDOMNode;
 const nsIDOMCharacterData  = I.nsIDOMCharacterData;
 const nsIDOMAttr           = I.nsIDOMAttr;
 const nsIDOMProcessingInstruction = I.nsIDOMProcessingInstruction;
-
-var _eqs;
-var _quit = false;
-var _fail = false;
-var _running_event_loop = false;
-var _tests_pending = 0;
-
-function _TimerCallback(expr) {
-  this._expr = expr;
-}
-_TimerCallback.prototype = {
-  _expr: "",
-  QueryInterface: function(iid) {
-    if (iid.Equals(Components.interfaces.nsITimerCallback) ||
-        iid.Equals(Components.interfaces.nsISupports))
-      return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-  notify: function(timer) {
-    eval(this._expr);  
-  }
-};
-
-function do_timeout(delay, expr) {
-  var timer = Components.classes["@mozilla.org/timer;1"]
-                        .createInstance(Components.interfaces.nsITimer);
-  timer.initWithCallback(new _TimerCallback(expr), delay, timer.TYPE_ONE_SHOT);
-}
-
-function do_main() {
-  if (_quit)
-    return;
-
-  dump("*** running event loop\n");
-  var eq = _eqs.getSpecialEventQueue(_eqs.CURRENT_THREAD_EVENT_QUEUE);
-
-  _running_event_loop = true;
-  eq.eventLoop();  // unblocked via interrupt from do_quit()
-  _running_event_loop = false;
-
-  // process any remaining events before exiting
-  eq.processPendingEvents();
-  eq.stopAcceptingEvents();
-  eq.processPendingEvents();
-}
-
-function do_quit() {
-  dump("*** exiting\n");
-
-  _quit = true;
-
-  if (_running_event_loop) {
-    // interrupt the current thread to make eventLoop return.
-    var thr = Components.classes["@mozilla.org/thread;1"]
-                        .createInstance(Components.interfaces.nsIThread);
-    thr.currentThread.interrupt();
-  }
-}
-
-function do_throw(text) {
-  _fail = true;
-  do_quit();
-  dump("*** CHECK FAILED: " + text + "\n");
-  var frame = Components.stack;
-  while (frame != null) {
-    dump(frame + "\n");
-    frame = frame.caller;
-  }
-  throw Components.results.NS_ERROR_ABORT;
-}
-
-function do_check_neq(_left, _right) {
-  if (_left == _right)
-    do_throw(_left + " != " + _right);
-}
-
-function do_check_eq(_left, _right) {
-  if (_left != _right)
-    do_throw(_left + " == " + _right);
-}
-
-function do_test_pending() {
-  dump("*** test pending\n");
-  _tests_pending++;
-}
-
-function do_test_finished() {
-  dump("*** test finished\n");
-  if (--_tests_pending == 0)
-    do_quit();
-}
 
 function DOMParser() {
   return C["@mozilla.org/xmlextras/domparser;1"].createInstance(nsIDOMParser);
@@ -257,7 +164,3 @@ function do_check_serialize(dom) {
   do_check_equiv(dom, roundtrip(dom));
 }
 
-// setup the main thread event queue
-_eqs = Components.classes["@mozilla.org/event-queue-service;1"]
-                 .getService(nsIEventQueueService);
-_eqs.createMonitoredThreadEventQueue();
