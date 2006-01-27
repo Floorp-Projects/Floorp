@@ -10203,7 +10203,6 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
           // get out of flow frame and start over there
           nsIFrame* outOfFlowFrame =
             nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
-          NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
 
           DoApplyRenderingChangeToTree(outOfFlowFrame, aViewManager,
                                        aFrameManager, aChange);
