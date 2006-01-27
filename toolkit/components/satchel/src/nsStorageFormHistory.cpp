@@ -133,13 +133,7 @@ nsFormHistoryResult::RemoveValueAt(PRInt32 aRowIndex, PRBool aRemoveFromDB)
 
 NS_INTERFACE_MAP_BEGIN(nsFormHistory)
   NS_INTERFACE_MAP_ENTRY(nsIFormHistory)
-  // Have to do this one by hand because it's an ambiguous conversion
-  // to nsISupports.
-  if (aIID.Equals(NS_GET_IID(nsFormHistory))) {
-    NS_ADDREF_THIS();
-    *aInstancePtr = this;
-    return NS_OK;
-  } else
+  NS_INTERFACE_MAP_ENTRY(nsIFormHistoryPrivate)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIFormSubmitObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -604,10 +598,10 @@ nsFormHistoryImporter::ImportFormHistory(nsIFile *aFile,
   reader.EnumerateColumns(EnumerateColumnsCB, &data);
 
   // Add the rows to form history
-  nsCOMPtr<nsFormHistory> formHistory = do_QueryInterface(aFormHistory);
-  NS_ENSURE_TRUE(formHistory, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIFormHistoryPrivate> fhPrivate = do_QueryInterface(aFormHistory);
+  NS_ENSURE_TRUE(fhPrivate, NS_ERROR_FAILURE);
 
-  mozIStorageConnection *conn = formHistory->GetStorageConnection();
+  mozIStorageConnection *conn = fhPrivate->GetStorageConnection();
   NS_ENSURE_TRUE(conn, NS_ERROR_NOT_INITIALIZED);
   mozStorageTransaction transaction(conn, PR_FALSE);
 
