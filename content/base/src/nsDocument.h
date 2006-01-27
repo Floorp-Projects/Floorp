@@ -306,13 +306,16 @@ public:
   virtual void Reset(nsIChannel *aChannel, nsILoadGroup *aLoadGroup);
   virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup);
 
+  // StartDocumentLoad is pure virtual so that subclasses must override it.
+  // The nsDocument StartDocumentLoad does some setup, but does NOT set
+  // *aDocListener; this is the job of subclasses.
   virtual nsresult StartDocumentLoad(const char* aCommand,
                                      nsIChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
                                      nsIStreamListener **aDocListener,
                                      PRBool aReset = PR_TRUE,
-                                     nsIContentSink* aContentSink = nsnull);
+                                     nsIContentSink* aContentSink = nsnull) = 0;
 
   virtual void StopDocumentLoad();
 
