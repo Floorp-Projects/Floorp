@@ -65,6 +65,7 @@ PlacesBrowserShim.init = function PBS_init() {
   query.setFolders([this._bms.bookmarksRoot], 1);
   var options = this._hist.getNewQueryOptions();
   options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+  options.expandQueries = true;
   var result = this._hist.executeQuery(query, options);
   newMenuPopup._result = result;
   newMenuPopup._resultNode = result.root;

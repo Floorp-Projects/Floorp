@@ -34,6 +34,7 @@
         query.setFolders([this._bms.toolbarRoot], 1);
         var options = this._places.getNewQueryOptions();
         options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+        options.expandQueries = true;
         this._result = this._places.executeQuery(query, options);
         this._rebuild();
         ]]></body>
@@ -65,7 +66,7 @@
               child = child.QueryInterface(Ci.nsINavHistoryURIResultNode);
               button.setAttribute("url", child.uri);
               button.setAttribute("image", child.icon.spec);
-            } else if (PlacesController.nodeIsFolder(child)) {
+            } else if (PlacesController.nodeIsContainer(child)) {
               button.setAttribute("type", "menu");
               button.setAttribute("container", "true");
               var popup = document.createElementNS(XULNS, "menupopup");
