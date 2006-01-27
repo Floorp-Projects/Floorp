@@ -571,11 +571,20 @@ nsSubDocumentFrame::Destroy(nsPresContext* aPresContext)
         // can safely go away when this frame is destroyed.
 
         content_viewer->SetSticky(PR_FALSE);
-
-        // Hide the content viewer now that the frame is going away...
-
-        content_viewer->Hide();
       }
+
+      nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(docShell);
+      NS_ASSERTION(baseWin, "Docshell must be an nsIBaseWindow");
+
+      // Now reverse the steps we took in ShowDocShell().  But don't call
+      // Destroy(); that will be handled by destroying our frame loader, if
+      // needed.
+
+      // Hide the content viewer now that the frame is going away...
+      baseWin->SetVisibility(PR_FALSE);
+
+      // Clear out the parentWidget, since it's about to die with us
+      baseWin->SetParentWidget(nsnull);
     }
   }
 
