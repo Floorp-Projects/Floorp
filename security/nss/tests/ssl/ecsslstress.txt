@@ -19,7 +19,6 @@
      0      -c_:C004  -c_10_-C_:C004_-N    Stress TLS ECDH-ECDSA AES 128 CBC with SHA (no reuse)
      0      -c_:C00E  -c_10_-C_:C00E_-N    Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse)
      0      -c_:C013  -c_100_-C_:C013     Stress TLS ECDHE-RSA AES 128 CBC with SHA
-
 #
 # add client auth versions here...
 #
