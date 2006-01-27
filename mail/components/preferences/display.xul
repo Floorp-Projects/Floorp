@@ -229,26 +229,19 @@
                 <row align="center" class="indent">
                   <label control="sendDefaultCharsetList"
                          value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"/>
-                  <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
-                            preference="mailnews.send_default_charset" onsyncfrompreference="return gDisplayPane.readDefaultCharset();">
-                    <template>
-                      <menupopup>
-                        <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
-                      </menupopup>
-                    </template>
+
+                  <menulist id="sendDefaultCharsetList" flex="1" preference="mailnews.send_default_charset" onsyncfrompreference="return gDisplayPane.readDefaultCharset();">
+                    <menupopup id="sendDefaultCharset-menupopup">
+                    </menupopup>
                   </menulist>
                 </row> 
         
                 <row align="center" class="indent">
                   <label control="viewDefaultCharsetList"
                          value="&viewDefaultCharsetList.label;" accesskey="&viewDefaultCharsetList.accesskey;"/>
-                  <menulist id="viewDefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
-                            preference="mailnews.view_default_charset">
-                    <template>
-                      <menupopup>
-                        <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
-                      </menupopup>
-                    </template>
+                  <menulist id="viewDefaultCharsetList" preference="mailnews.view_default_charset">
+                    <menupopup id="viewDefaultCharset-menupopup">
+                    </menupopup>
                   </menulist>
                 </row>
               </rows>
