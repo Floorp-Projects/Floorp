@@ -179,7 +179,7 @@
       
       <property name="isBookmarks">
         <getter><![CDATA[ 
-          return PlacesController.nodeIsFolder(this.getResult());
+          return PlacesController.nodeIsFolder(this.getResult().root);
         ]]></getter>
       </property>
     

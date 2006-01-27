@@ -634,6 +634,9 @@ interface nsINavHistoryQuery : nsISupports
    * the time is not part of the query. This is the default, so an empty query
    * will match any time. The has* functions return whether the corresponding
    * time is considered.
+   *
+   * You can read absolute*Time to get the time value that the currently loaded
+   * reference points + offset resolve to.
    */
   const PRUint32 TIME_RELATIVE_EPOCH = 0;
   const PRUint32 TIME_RELATIVE_TODAY = 1;
@@ -642,10 +645,12 @@ interface nsINavHistoryQuery : nsISupports
   attribute PRTime beginTime;
   attribute PRUint32 beginTimeReference;
   readonly attribute boolean hasBeginTime;
+  readonly attribute PRTime absoluteBeginTime;
 
   attribute PRTime endTime;
   attribute PRUint32 endTimeReference;
   readonly attribute boolean hasEndTime;
+  readonly attribute PRTime absoluteEndTime;
 
   /**
    * Text search terms.
