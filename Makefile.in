@@ -425,6 +425,11 @@ tier_99_dirs += \
 	$(NULL)
 endif
 
+# test harnesses 
+ifdef ENABLE_TESTS
+tier_99_dirs	+= tools/test-harness
+endif
+
 default alldep all:: $(SUBMAKEFILES)
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include
