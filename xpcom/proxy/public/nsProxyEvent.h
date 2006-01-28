@@ -90,8 +90,10 @@ class nsProxyObjectCallInfo;
 class nsProxyObject
 {
 public:
-    nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject);
-    nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID);
+    nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject,
+		nsIEventQueueService* eventQService);
+    nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, const nsCID &aClass,  
+		nsISupports *aDelegate,  const nsIID &aIID, nsIEventQueueService* eventQService);
 
     void AddRef();
     void Release();
