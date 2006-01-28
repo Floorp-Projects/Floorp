@@ -263,7 +263,6 @@ protected:
 
   static void             RegisterSpecialDropdownHooks();
   static void             UnregisterSpecialDropdownHooks();
-
 #endif
 
   static BOOL             DealWithPopups (HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult);
@@ -448,6 +447,10 @@ protected:
 
   // Drag & Drop
   nsNativeDragTarget * mNativeDragTarget;
+
+#ifdef WINCE
+  HWND                    mSoftKeyMenuBar;
+#endif
 
   // Enumeration of the methods which are accessible on the "main GUI thread"
   // via the CallMethod(...) mechanism...
