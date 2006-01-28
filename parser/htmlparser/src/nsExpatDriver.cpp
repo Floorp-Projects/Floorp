@@ -954,7 +954,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
       // the error occurred).
 
       // The length of the last line that Expat has parsed.
-      PRUint32 lastLineLength = XML_GetCurrentColumnNumber(mExpatParser);
+      PRInt32 lastLineLength = XML_GetCurrentColumnNumber(mExpatParser);
 
       if (lastLineLength <= consumed) {
         // The length of the last line was less than what expat consumed, so
