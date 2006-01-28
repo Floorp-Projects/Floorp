@@ -45,6 +45,7 @@
 #include "secoidt.h"
 #include "keythi.h"
 #include "ec.h"
+#include "pqgutil.h"
 #if 0
 #include "../../lib/freebl/mpi/mpi.h"
 #endif
@@ -3587,7 +3588,7 @@ dsa_sigver_test(char *reqfn)
                         "and 1024, inclusive");
                 goto loser;
             }
-            //calculate the size of p, g, and y then allocate items
+            /* calculate the size of p, g, and y then allocate items */
             pgySize = modulus/8;
             SECITEM_AllocItem(NULL, &pubkey.params.prime, pgySize);
             SECITEM_AllocItem(NULL, &pubkey.params.base, pgySize);
