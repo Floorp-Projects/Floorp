@@ -138,6 +138,8 @@ NS_MSG_BASE nsresult MSGApopMD5(const char *text, PRInt32 text_len, const char *
 NS_MSG_BASE void PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
 NS_MSG_BASE void PRTime2Seconds(PRTime prTime, PRInt32 *seconds);
 NS_MSG_BASE void Seconds2PRTime(PRUint32 seconds, PRTime *prTime);
+// helper function to generate current date+time as a string
+NS_MSG_BASE void MsgGenerateNowStr(nsACString &nowStr);
 
 // Appends the correct summary file extension onto the supplied fileLocation
 // and returns it in summaryLocation.

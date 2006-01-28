@@ -1708,6 +1708,10 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
       srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
     return OnCopyCompleted(srcSupport, PR_FALSE);
   }
+
+  if (!(mFlags & MSG_FOLDER_FLAG_TRASH|MSG_FOLDER_FLAG_JUNK))
+    SetMRUTime();
+
   nsXPIDLCString uri;
   rv = srcFolder->GetURI(getter_Copies(uri));
   nsCAutoString protocolType(uri);
@@ -2292,14 +2296,10 @@ nsresult nsMsgLocalMailFolder::WriteStartOfNewMessage()
   if (mCopyState->m_dummyEnvelopeNeeded)
   {
     nsCString result;
-    char timeBuffer[128];
-    PRExplodedTime now;
-    PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
-    PR_FormatTimeUSEnglish(timeBuffer, sizeof(timeBuffer),
-                           "%a %b %d %H:%M:%S %Y",
-                           &now);
+    nsCAutoString nowStr;
+    MsgGenerateNowStr(nowStr);
     result.Append("From - ");
-    result.Append(timeBuffer);
+    result.Append(nowStr);
     result.Append(MSG_LINEBREAK);
 
     // *** jt - hard code status line for now; come back later
