@@ -869,6 +869,7 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
   nsresult rv = OpenChannel(channel,
                             aIsContentPreferred ? IS_CONTENT_PREFERRED : 0,
                             aWindowContext,
+                            PR_FALSE,
                             getter_AddRefs(loader));
 
   if (NS_SUCCEEDED(rv)) {
@@ -893,10 +894,11 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
   return rv;
 }
 
-NS_IMETHODIMP nsURILoader::OpenChannel(nsIChannel* channel,
-                                       PRUint32 aFlags,
-                                       nsIInterfaceRequestor* aWindowContext,
-                                       nsIStreamListener** aListener)
+nsresult nsURILoader::OpenChannel(nsIChannel* channel,
+                                  PRUint32 aFlags,
+                                  nsIInterfaceRequestor* aWindowContext,
+                                  PRBool aChannelIsOpen,
+                                  nsIStreamListener** aListener)
 {
   NS_ASSERTION(channel, "Trying to open a null channel!");
   NS_ASSERTION(aWindowContext, "Window context must not be null");
@@ -961,20 +963,17 @@ NS_IMETHODIMP nsURILoader::OpenChannel(nsIChannel* channel,
 
   // If the channel is pending, then we need to remove it from its current
   // loadgroup
-  PRBool pending;
-  if (NS_SUCCEEDED(channel->IsPending(&pending)) && pending) {
+  if (aChannelIsOpen) {
     nsCOMPtr<nsILoadGroup> oldGroup;
     channel->GetLoadGroup(getter_AddRefs(oldGroup));
     if (oldGroup) {
       oldGroup->RemoveRequest(channel, nsnull, NS_BINDING_RETARGETED);
     }
-  } else {
-    pending = PR_FALSE;
   }
 
   channel->SetLoadGroup(loadGroup);
 
-  if (pending) {
+  if (aChannelIsOpen) {
     loadGroup->AddRequest(channel, nsnull);
   }
 
@@ -983,6 +982,19 @@ NS_IMETHODIMP nsURILoader::OpenChannel(nsIChannel* channel,
   if (NS_SUCCEEDED(rv))
     NS_ADDREF(*aListener = loader);
   return rv;
+}
+
+NS_IMETHODIMP nsURILoader::OpenChannel(nsIChannel* channel,
+                                       PRUint32 aFlags,
+                                       nsIInterfaceRequestor* aWindowContext,
+                                       nsIStreamListener** aListener)
+{
+  PRBool pending;
+  if (NS_FAILED(channel->IsPending(&pending))) {
+    pending = PR_FALSE;
+  }
+
+  return OpenChannel(channel, aFlags, aWindowContext, pending, aListener);
 }
 
 NS_IMETHODIMP nsURILoader::Stop(nsISupports* aLoadCookie)

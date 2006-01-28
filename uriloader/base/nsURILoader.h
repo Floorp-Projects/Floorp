@@ -66,6 +66,16 @@ public:
 
 protected:
   /**
+   * Equivalent to nsIURILoader::openChannel, but allows specifying whether the
+   * channel is opened already.
+   */
+  NS_HIDDEN_(nsresult) OpenChannel(nsIChannel* channel,
+                                   PRUint32 aFlags,
+                                   nsIInterfaceRequestor* aWindowContext,
+                                   PRBool aChannelOpen,
+                                   nsIStreamListener** aListener);
+
+  /**
    * we shouldn't need to have an owning ref count on registered
    * content listeners because they are supposed to unregister themselves
    * when they go away. This array stores weak references
