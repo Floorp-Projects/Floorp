@@ -55,9 +55,9 @@ class nsProxyEventObject;
 class nsProxyEventClass;
 
 #define NS_PROXYEVENT_CLASS_IID                  \
-{ 0xeea90d42, 									 \
-  0xb059, 										 \
-  0x11d2,						                 \
+{ 0xeea90d42,                                    \
+  0xb059,                                        \
+  0x11d2,                                        \
  {0x91, 0x5e, 0xc1, 0x2b, 0x69, 0x6c, 0x93, 0x33}\
 } 
 
@@ -97,7 +97,7 @@ private:
     nsCOMPtr<nsIInterfaceInfo> mInfo;
     uint32*                    mDescriptors;
 
-	nsresult	      CallQueryInterfaceOnProxy(nsProxyEventObject* self, 
+    nsresult          CallQueryInterfaceOnProxy(nsProxyEventObject* self,
                                                 REFNSIID aIID, 
                                                 nsProxyEventObject** aInstancePtr);
 };
@@ -135,7 +135,8 @@ public:
                        PRInt32 proxyType,
                        nsISupports* aObj,
                        nsProxyEventClass* aClass,
-                       nsProxyEventObject* root);
+                       nsProxyEventObject* root,
+                       nsIEventQueueService* eventQService);
     
     nsProxyEventObject*   LockedFind(REFNSIID aIID);
 
