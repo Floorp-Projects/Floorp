@@ -154,7 +154,7 @@ class AddOn extends AMO_Object {
      */
     function getHistory() {
         $this->db->query("
-             SELECT
+             SELECT DISTINCT
                  TV.vID,
                  TV.Version,
                  TV.MinAppVer,
@@ -172,8 +172,10 @@ class AddOn extends AMO_Object {
             WHERE
                 TV.ID = {$this->ID} AND
                 approved = 'YES'
+            GROUP BY
+                TV.Version
             ORDER BY
-               VerDateAdded DESC
+                TV.vID DESC
         ", SQL_ALL, SQL_ASSOC);
 
         $this->History = $this->db->record;
