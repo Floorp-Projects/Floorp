@@ -7,9 +7,9 @@
     <li><a href="./previews.php?id={$addon->ID}">Screenshots</a></li>
     {/if}
     <li><a href="./comments.php?id={$addon->ID}">Comments</a></li>
-    <li><a href="./history.php?id={$addon->ID}">Version History</a></li>
     <li><a href="./addcomment.php?id={$addon->ID}">Add a Comment</a></li>
     <li><a href="./author.php?id={$addon->UserID}">About the Author</a></li>
+    <li><a href="./history.php?id={$addon->ID}">Version History</a></li>
     </ul>
 </li>
 <li><span>Find Similar Add-ons</span>
