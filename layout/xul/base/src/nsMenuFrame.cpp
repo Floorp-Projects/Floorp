@@ -1719,39 +1719,24 @@ nsMenuFrame::OnCreate()
           nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
 
           if ( commandContent ) {
-            nsAutoString commandAttr, menuAttr;
-            commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, commandAttr);
-            grandChild->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, menuAttr);
-            if (!commandAttr.Equals(menuAttr)) {
-              // The menu's disabled state needs to be updated to match the command.
-              if (commandAttr.IsEmpty()) 
-                grandChild->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
-              else grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, commandAttr, PR_TRUE);
-            }
+            nsAutoString commandAttr;
+            // The menu's disabled state needs to be updated to match the command.
+            if (commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, commandAttr))
+              grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, commandAttr, PR_TRUE);
+            else
+              grandChild->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
 
-            // The menu's label, accesskey, and checked states need to be updated to match the command.
-            // Note that (unlike the disabled state) if the command has *no* label for either, we
-            // assume the menu is supplying its own.
-            commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, commandAttr);
-            grandChild->GetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, menuAttr);
-            if (!commandAttr.Equals(menuAttr)) {
-              if (!commandAttr.IsEmpty()) 
-                grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, commandAttr, PR_TRUE);
-            }
+            // The menu's label, accesskey and checked states need to be updated
+            // to match the command. Note that unlike the disabled state if the
+            // command has *no* value, we assume the menu is supplying its own.
+            if (commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, commandAttr))
+              grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, commandAttr, PR_TRUE);
 
-            commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandAttr);
-            grandChild->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, menuAttr);
-            if (!commandAttr.Equals(menuAttr)) {
-              if (!commandAttr.IsEmpty()) 
-                grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandAttr, PR_TRUE);
-            }
+            if (commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandAttr))
+              grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandAttr, PR_TRUE);
 
-            commandContent->GetAttr(kNameSpaceID_None, nsXULAtoms::label, commandAttr);
-            grandChild->GetAttr(kNameSpaceID_None, nsXULAtoms::label, menuAttr);
-            if (!commandAttr.Equals(menuAttr)) {
-              if (!commandAttr.IsEmpty()) 
-                grandChild->SetAttr(kNameSpaceID_None, nsXULAtoms::label, commandAttr, PR_TRUE);
-            }
+            if (commandContent->GetAttr(kNameSpaceID_None, nsXULAtoms::label, commandAttr))
+              grandChild->SetAttr(kNameSpaceID_None, nsXULAtoms::label, commandAttr, PR_TRUE);
           }
         }
       }
