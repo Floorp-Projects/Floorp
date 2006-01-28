@@ -1221,10 +1221,6 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
     return eType_Image;
   }
 
-  if ((caps & eSupportPlugins) && IsSupportedPlugin(aMIMEType)) {
-    return eType_Plugin;
-  }
-
   PRBool isSVG = aMIMEType.LowerCaseEqualsLiteral("image/svg+xml");
 #ifdef MOZ_SVG
   PRBool supportedSVG = isSVG && (caps & eSupportSVG);
@@ -1234,6 +1230,10 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
   if (((caps & eSupportDocuments) || supportedSVG) &&
       IsSupportedDocument(aMIMEType)) {
     return eType_Document;
+  }
+
+  if ((caps & eSupportPlugins) && IsSupportedPlugin(aMIMEType)) {
+    return eType_Plugin;
   }
 
   nsCOMPtr<nsIContent> thisContent = 
