@@ -5200,7 +5200,7 @@ dnl ========================================================
 dnl Image decoders
 dnl ========================================================
 case "$MOZ_WIDGET_TOOLKIT" in
-windows|os2|mac|cocoa)
+beos|windows|os2|mac|cocoa)
     ;;
 *)
     if test -z "$MOZ_ENABLE_GNOMEUI"; then

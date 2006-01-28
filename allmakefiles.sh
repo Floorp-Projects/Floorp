@@ -1174,6 +1174,7 @@ embedding/components/profilesharingsetup/src/Makefile
         modules/libpr0n/decoders/icon/Makefile
         modules/libpr0n/decoders/icon/win/Makefile
         modules/libpr0n/decoders/icon/gtk/Makefile
+        modules/libpr0n/decoders/icon/beos/Makefile
         modules/libpr0n/decoders/xbm/Makefile
         modules/libpr0n/encoders/Makefile
         modules/libpr0n/encoders/png/Makefile
