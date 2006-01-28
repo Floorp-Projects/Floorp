@@ -1,3 +1,4 @@
+<div id="mBody">
 
 <h1 class="first">Search Engines</h1>
 <p>We've put a few popular search sites in the Search Bar in the upper-right corner of Firefox.  If you'd like to add more, there are hundreds to choose from.  Click on a Search Engine to add it to your Firefox Search Bar:</p>
@@ -54,3 +55,4 @@
 
 <p>Special thanks to the Mycroft Project for their work on Firefox Search Engines.</p>
 
+</div>

@@ -9,7 +9,7 @@ released on {$addon->VersionDateAdded|date_format}
 <ul id="opinions">
 {section name=comments loop=$addon->Comments max=10}
 <li>
-<div class="opinions-vote">{$addon->Comments[comments].CommentVote}<span class="opinions-caption">out of 10</span></div>
+<div class="opinions-vote">{$addon->Comments[comments].CommentVote}<span class="opinions-caption">out of 5</span></div>
 <h4 class="opinions-title">{$addon->Comments[comments].CommentTitle}</h4>
 <p class="opinions-info">by {$addon->Comments[comments].CommentName}, {$addon->Comments[comments].CommentDate|date_format}</p>
 <p class="opinions-text">{$addon->Comments[comments].CommentNote}</p>

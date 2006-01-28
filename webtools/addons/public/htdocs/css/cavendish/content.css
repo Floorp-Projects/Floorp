@@ -253,21 +253,19 @@
     padding: 0;
 }
 
+#opinions li {
+    border-top: 1px solid #eee;
+    padding: 1em 0;
+}
 
 #opinions h4 {
-
-   border-top: 1px solid #999;
     clear: right;
-
-   margin: 0;
-
-   padding: .5em 0 0 0;
-
+    margin: 0;
+    padding: .5em 0 0 0;
 }
 
 .opinions-info {
-
-   color: #666;
+    color: #666;
     margin: 0;
     padding: 0 0 .5em 0;
 
@@ -283,8 +281,7 @@
 }
 
 .opinions-text {
-
-   margin: .8em 0 0 0;
+    margin: .8em 0 0 0;
     padding: 0;
 }
 
@@ -301,7 +298,6 @@
 
 }
 
-
 .opinions-caption {
     display: block;
     font-size: x-small;
@@ -311,21 +307,16 @@
 
 }
 
-
 .opinions-rating {
-
-   margin: 0;
+    margin: 0;
     padding: .5em 0;
 }
 
 .opinions-helpful {
-
-   font-style: italic;
-
-   border: 1px dashed #eee;
+    font-style: italic;
+    border: 1px dashed #eee;
     padding: .2em;
     margin: .7em 0;
-
 }
 
 .tooltip {
