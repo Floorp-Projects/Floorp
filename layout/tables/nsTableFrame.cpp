@@ -3211,14 +3211,25 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
         if (NS_UNCONSTRAINEDSIZE != aReflowState.availSize.height) {
           aReflowState.availSize.height -= cellSpacingY;
         }
-        // record the next in flow in case it gets destroyed and the row group array
-        // needs to be recomputed.
+        // record the presence of a next in flow, it might get destroyed so we
+        // need to reorder the row group array
         nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
-  
+        PRBool reorder = PR_FALSE;
+        if (kidFrame->GetNextInFlow())
+          reorder = PR_TRUE;
+      
         rv = ReflowChild(kidFrame, presContext, desiredSize, kidReflowState,
                          aReflowState.x, aReflowState.y, 0, aStatus);
         haveReflowedRowGroup = PR_TRUE;
-        
+
+        if (reorder) {
+          // reorder row groups the reflow may have changed the nextinflows
+          OrderRowGroups(rowGroups, numRowGroups, &aReflowState.firstBodySection, &thead, &tfoot);
+          for (childX = 0; childX < numRowGroups; childX++) {
+            if (kidFrame == (nsIFrame*)rowGroups.ElementAt(childX))
+              break;
+          }
+        }
         // see if the rowgroup did not fit on this page might be pushed on
         // the next page
         if (NS_FRAME_IS_COMPLETE(aStatus) && isPaginated &&
