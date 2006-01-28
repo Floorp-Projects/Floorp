@@ -53,19 +53,25 @@ ifeq (,$(filter-out all,$(BUILD_MODULES))$(MOZ_XSLT_STANDALONE))
 SUPPRESS_DEFAULT_RULES = 1
 
 # Make sure that the existing rulesets work
-DIRS = \
-	$(tier_0_dirs) \
+
+DIRS += $(tier_0_dirs)
+
+ifndef LIBXUL_SDK
+# only build gecko if --with-libxul-sdk isn't passed
+DIRS += \
 	$(tier_1_dirs) \
 	$(tier_2_dirs) \
 	$(tier_9_dirs) \
 	$(tier_50_dirs) \
 	$(NULL)
 
+endif # LIBXUL_SDK
+
 ifdef GC_LEAK_DETECTOR
 DIRS += gc/boehm
 endif
 
-DIRS	+= $(tier_99_dirs)
+DIRS += $(tier_99_dirs)
 
 #
 # tier 0 - base build config dirs
@@ -434,13 +440,17 @@ default alldep all:: $(SUBMAKEFILES)
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include
 	$(MAKE) -C config export
+ifndef LIBXUL_SDK
 	$(MAKE) nspr
+endif
 	$(MAKE) ldap
 	$(MAKE) tier_0
+ifndef LIBXUL_SDK
 	$(MAKE) tier_1
 	$(MAKE) tier_2
 	$(MAKE) tier_9
 	$(MAKE) tier_50
+endif
 	$(MAKE) tier_99
 
 include $(topsrcdir)/config/config.mk

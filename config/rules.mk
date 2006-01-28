@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #  Chase Phillips <chase@mozilla.org>
+#  Benjamin Smedberg <benjamin@smedbergs.us>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -86,6 +87,9 @@ endif
 
 # Add $(DIST)/lib to VPATH so that -lfoo dependencies are followed
 VPATH += $(DIST)/lib
+ifdef LIBXUL_SDK
+VPATH += $(LIBXUL_SDK)/lib
+endif
 
 ifdef _LIBNAME_RELATIVE_PATHS
 EXPAND_LIBNAME = $(addsuffix .$(LIB_SUFFIX),$(1))
@@ -1260,15 +1264,12 @@ ifneq ($(PREF_JS_EXPORTS),)
 ifdef GRE_MODULE
 PREF_DIR = greprefs
 else
-ifdef XPI_NAME
+ifneq (,$(XPI_NAME)$(LIBXUL_SDK))
 PREF_DIR = defaults/preferences
 else
 PREF_DIR = defaults/pref
 endif
 endif
-
-$(FINAL_TARGET)/$(PREF_DIR) $(DESTDIR)$(mozappdir)/$(PREF_DIR):
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 # on win32, pref files need CRLF line endings... see bug 206029
 ifeq (WINNT,$(OS_ARCH))
@@ -1276,7 +1277,8 @@ PREF_PPFLAGS = --line-endings=crlf
 endif
 
 ifndef NO_DIST_INSTALL
-libs:: $(PREF_JS_EXPORTS) $(FINAL_TARGET)/$(PREF_DIR)
+libs:: $(PREF_JS_EXPORTS)
+	if ! test -d $(FINAL_TARGET)/$(PREF_DIR); then $(NSINSTALL) -D $(FINAL_TARGET)/$(PREF_DIR); fi
 	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); \
 	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $$i > $(FINAL_TARGET)/$(PREF_DIR)/`basename $$i`; \
@@ -1284,7 +1286,8 @@ libs:: $(PREF_JS_EXPORTS) $(FINAL_TARGET)/$(PREF_DIR)
 endif
 
 ifndef NO_INSTALL
-install:: $(PREF_JS_EXPORTS) $(DESTDIR)$(mozappdir)/$(PREF_DIR)
+install:: $(PREF_JS_EXPORTS)
+	if ! test -d $(DESTDIR)$(mozappdir)/$(PREF_DIR); then $(NSINSTALL) -D $(DESTDIR)$(mozappdir)/$(PREF_DIR); fi
 	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); \
 	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DESTDIR)$(mozappdir)/$(PREF_DIR)/`basename $$i`; \
@@ -1344,7 +1347,7 @@ $(XPIDL_GEN_DIR)/.done:
 
 $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
-	$(ELOG) $(XPIDL_COMPILE) -m header -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
+	$(ELOG) $(XPIDL_COMPILE) -m header -w $(XPIDL_FLAGS) -o $(XPIDL_GEN_DIR)/$* $(_VPATH_SRCS)
 	@if test -n "$(findstring $*.h, $(EXPORTS) $(SDK_HEADERS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
 
@@ -1353,7 +1356,7 @@ ifndef NO_GEN_XPT
 # into $(XPIDL_MODULE).xpt and export it to $(FINAL_TARGET)/components.
 $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
-	$(ELOG) $(XPIDL_COMPILE) -m typelib -w -I $(IDL_DIR) -I$(srcdir) -e $@ -d $(MDDEPDIR)/$*.pp $(_VPATH_SRCS)
+	$(ELOG) $(XPIDL_COMPILE) -m typelib -w $(XPIDL_FLAGS) -e $@ -d $(MDDEPDIR)/$*.pp $(_VPATH_SRCS)
 
 # no need to link together if XPIDLSRCS contains only XPIDL_MODULE
 ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
