@@ -1011,7 +1011,7 @@ nsNavBookmarks::GetChildFolder(PRInt64 aFolder, const nsAString& aSubFolder,
 NS_IMETHODIMP
 nsNavBookmarks::SetItemTitle(nsIURI *aURI, const nsAString &aTitle)
 {
-  return History()->SetPageTitle(aURI, aTitle);
+  return History()->SetPageUserTitle(aURI, aTitle);
 }
 
 
@@ -1032,7 +1032,15 @@ nsNavBookmarks::GetItemTitle(nsIURI *aURI, nsAString &aTitle)
     return NS_ERROR_INVALID_ARG;
   }
 
-  return statement->GetString(nsNavHistory::kGetInfoIndex_Title, aTitle);
+  // First check for a user title
+  if (!statement->IsNull(nsNavHistory::kGetInfoIndex_UserTitle))
+    return statement->GetString(nsNavHistory::kGetInfoIndex_UserTitle, aTitle);
+
+  // If there is no user title, check for a history title.
+  rv = statement->GetString(nsNavHistory::kGetInfoIndex_Title, aTitle);  
+  if (statement->IsNull(nsNavHistory::kGetInfoIndex_Title))
+    aTitle.SetIsVoid(PR_TRUE);
+  return rv;
 }
 
 NS_IMETHODIMP
