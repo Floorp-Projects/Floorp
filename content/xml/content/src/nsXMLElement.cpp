@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXMLElement.h"
+#include "nsGkAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
@@ -328,9 +329,11 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
             verb = eLinkVerb_Embed;
           }
 
+          nsAutoString target;
+          GetAttr(kNameSpaceID_XLink, nsGkAtoms::_moz_target, target);
           nsCOMPtr<nsIURI> baseURI = GetBaseURI();
           ret = TriggerLink(aPresContext, verb, baseURI, uri,
-                            EmptyString(), PR_TRUE, PR_TRUE);
+                            target, PR_TRUE, PR_TRUE);
 
           *aEventStatus = nsEventStatus_eConsumeDoDefault; 
         }
