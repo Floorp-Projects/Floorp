@@ -74,7 +74,7 @@ class AMO_Smarty extends Smarty
         $this->assign('config',
             array(  'webpath'   => WEB_PATH,
                     'rootpath'  => ROOT_PATH,
-                    'repo'      => REPO_DIR)
+                    'host'      => HTTP_HOST)
         );
     }
 }
