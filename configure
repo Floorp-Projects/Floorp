@@ -11474,7 +11474,7 @@ elif test -n "$LIBXUL_SDK_DIR" -a "$LIBXUL_SDK_DIR" != "no"; then
         { echo "configure: error: $LIBXUL_SDK/sdk/include/xpcom-config.h doesn't exist" 1>&2; exit 1; }
     fi
 
-    if "$MOZ_BUILD_APP" = "xulrunner"; then
+    if test "$MOZ_BUILD_APP" = "xulrunner"; then
         { echo "configure: error: Building XULRunner --with-libxul-sdk doesn't make sense; XULRunner provides the libxul SDK." 1>&2; exit 1; }
     fi
 fi
