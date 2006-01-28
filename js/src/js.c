@@ -423,10 +423,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
 
         case 'f':
-            if (++i == argc) {
+            if (++i == argc)
                 return usage();
-            }
+
             Process(cx, obj, argv[i], JS_FALSE);
+
             /*
              * XXX: js -f foo.js should interpret foo.js and then
              * drop into interactive mode, but that breaks the test
@@ -439,9 +440,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         {
             jsval rval;
 
-            if (++i == argc) {
+            if (++i == argc)
                 return usage();
-            }
 
             /* Pass a filename of -e to imitate PERL */
             JS_EvaluateScript(cx, obj, argv[i], strlen(argv[i]),
