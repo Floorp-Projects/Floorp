@@ -295,7 +295,7 @@ var folderListener = {
                    viewDebug("searching gDefaultSearchViewTerms and rerootingFolder\n");
                    Search("");
                  }
-                 else
+                 else if (document.getElementById("mailviews-container")) // only load the folder view if the views toolbar is visible
                  {
                    viewDebug("changing view by value\n");
                    ViewChangeByValue(result);

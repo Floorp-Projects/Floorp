@@ -192,6 +192,11 @@ function view_init()
     threads_menuitem.setAttribute("disabled", gAccountCentralLoaded);
   }
 
+  // hide the views menu item if the user doesn't have the views toolbar button visible
+  viewsToolbarButton = document.getElementById("mailviews-container");
+  if (!viewsToolbarButton)
+    document.getElementById('viewMessageViewMenu').collapsed = true;
+
   // Initialize the View Attachment Inline menu
   var viewAttachmentInline = pref.getBoolPref("mail.inline_attachments");
   document.getElementById("viewAttachmentsInlineMenuitem").setAttribute("checked", viewAttachmentInline ? "true" : "false");
