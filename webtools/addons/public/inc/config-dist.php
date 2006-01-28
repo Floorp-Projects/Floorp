@@ -11,18 +11,22 @@
 define('DISPLAY_ERRORS',1);
 define('ERROR_REPORTING',2047);
 
+// This is the base of the URL.  It includes https|http.
+define('HTTP_HOST','https://YOURHOST.DOMAIN.TLD');
+
 // This is the root directory for public.
-define('ROOT_PATH','/home/morgamic/public_html/v2/public');
+define('ROOT_PATH','/file/path/to/public');
 
 // This is the web path from the hostname.
-// In production, it's typically just "".
-define('WEB_PATH','/~morgamic/v2/public/htdocs');
-
-// The repository directory is the place to store all addons binaries.
-define('REPO_DIR',ROOT_PATH.'/files');
+// In production, it's typically just ''.
+// However, if the URL to your installation is something like:
+//     https://update-staging.mozilla.org/~morgamic/v2/public/htdocs/
+// Then WEB_PATH would be:
+//     /~morgamic/v2/public/htdocs 
+define('WEB_PATH','/web/relative/path/to/htdocs');
 
 // Shared library directory contains all class definitions and central code.
-define('LIB','/home/morgamic/public_html/v2/shared/lib');
+define('LIB','/file/path/to/shared/lib');
 
 // Smarty configuration.
 define('SMARTY_BASEDIR','/usr/local/lib/php/Smarty');
@@ -37,5 +41,4 @@ define('DB_PASS','');
 define('DB_HOST','');
 define('DB_NAME','');
 define('DB_PORT', '');
-
 ?>
