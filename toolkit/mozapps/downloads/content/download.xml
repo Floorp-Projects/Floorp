@@ -39,6 +39,12 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+#ifdef XP_WIN
+#define SHOW_ICONS
+#endif
+#ifdef XP_BEOS
+#define SHOW_ICONS
+#endif
 
 <!DOCTYPE window [
   <!ENTITY % downloadDTD SYSTEM "chrome://mozapps/locale/downloads/downloads.dtd" >
@@ -131,7 +137,7 @@
   <binding id="download-starting" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef XP_WIN
+#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
@@ -151,7 +157,7 @@
   <binding id="download-downloading" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1" class="downloadContentBox" xbl:inherits="animated,animated-temp">
-#ifdef XP_WIN
+#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
@@ -292,7 +298,7 @@
   <binding id="download-paused" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef XP_WIN
+#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
@@ -331,7 +337,7 @@
   <binding id="download-done" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef XP_WIN
+#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
@@ -353,7 +359,7 @@
   <binding id="download-canceled" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef XP_WIN
+#ifdef SHOW_ICONS
         <xul:vbox pack="start"> 
           <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
@@ -375,7 +381,7 @@
   <binding id="download-failed" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef XP_WIN
+#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
