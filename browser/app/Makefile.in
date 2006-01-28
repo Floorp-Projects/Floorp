@@ -22,6 +22,7 @@
 #  Brian Ryner <bryner@brianryner.com>
 #  Jonathan Wilson <jonwil@tpgi.com.au>
 #  Dan Mosedale <dmose@mozilla.org>
+#  Benjamin Smedberg <benjamin@smedbergs.us>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,8 +45,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOZILLA_INTERNAL_API = 1
-
 DIRS		= profile/extensions
 
 PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js \
@@ -56,6 +55,30 @@ PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js \
 AB_CD = en-US
 
 DEFINES += -DAB_CD=$(AB_CD)
+
+APP_VERSION = $(shell cat $(srcdir)/../config/version.txt)
+DEFINES += -DAPP_VERSION="$(APP_VERSION)"
+
+ifdef LIBXUL_SDK
+# Build application.ini for a XULRunner app
+
+DIST_FILES = application.ini
+
+# GRE_BUILD_ID is only available in nsBuildID.h in a form that we can't use
+# directly. So munge it. Beware makefile and shell escaping
+AWK_EXPR = '/\#define GRE_BUILD_ID/ { print gensub(/"/, "", "g", $$3) }'
+AWK_CMD = awk $(AWK_EXPR) < $(DEPTH)/config/nsBuildID.h
+
+GRE_BUILD_ID = $(shell $(AWK_CMD))
+
+DEFINES += -DGRE_BUILD_ID=$(GRE_BUILD_ID)
+
+include $(topsrcdir)/config/rules.mk
+
+else
+# Build a binary bootstrapping with XRE_main
+
+MOZILLA_INTERNAL_API = 1
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = firefox$(BIN_SUFFIX)
@@ -185,9 +208,6 @@ DEFINES += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIS
 ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
 endif
-
-APP_VERSION = $(shell cat $(srcdir)/../config/version.txt)
-DEFINES += -DAPP_VERSION="$(APP_VERSION)"
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 ifdef BUILD_STATIC_LIBS
@@ -350,6 +370,8 @@ libs repackage:: $(PROGRAM)
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
 
 endif
+
+endif # LIBXUL_SDK
 
 libs::
 	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin

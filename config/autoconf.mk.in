@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+# Benjamin Smedberg <benjamin@smedbergs.us>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -65,6 +66,13 @@ mredir		= $(libdir)/mre/mre-$(MOZ_APP_VERSION)
 mrelibdir	= $(mredir)/lib
 
 DIST		= $(DEPTH)/dist
+LIBXUL_SDK      = @LIBXUL_SDK@
+
+ifdef LIBXUL_SDK
+LIBXUL_DIST = $(LIBXUL_SDK)
+else
+LIBXUL_DIST = $(DIST)
+endif
 
 MOZ_CHROME_FILE_FORMAT	= @MOZ_CHROME_FILE_FORMAT@
 

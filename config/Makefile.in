@@ -119,6 +119,7 @@ endif
 
 
 # Copy NSPR to the SDK
+ifndef LIBXUL_SDK
 ifndef MOZ_NATIVE_NSPR
 ABS_DIST = cd $(DIST) && pwd
 ifeq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
@@ -136,7 +137,8 @@ ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 else
 	$(RM) -f $(DIST)/sdk/lib/$(LIB_PREFIX)nspr4.$(LIB_SUFFIX) $(DIST)/sdk/lib/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) $(DIST)/sdk/lib/$(LIB_PREFIX)plds4.$(LIB_SUFFIX)
 endif
-endif
+endif # MOZ_NATIVE_NSPR
+endif # LIBXUL_SDK
 
 ifdef WRAP_SYSTEM_INCLUDES
 export::
