@@ -6,7 +6,8 @@
  * @subpackage docs
  */
 
-require_once('includes.php');
+startProcessing('ratecomment.tpl', null, null);
+require_once 'includes.php';
 
 // If some of the inputs don't exist, throw an error and exit
 if (empty($_GET['aid']) || empty($_GET['cid']) || empty($_GET['r'])) {
