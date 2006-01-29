@@ -3606,7 +3606,7 @@ if test "$LIBXUL_SDK_DIR" = "yes"; then
 elif test -n "$LIBXUL_SDK_DIR" -a "$LIBXUL_SDK_DIR" != "no"; then
     LIBXUL_SDK=`cd "$LIBXUL_SDK_DIR" && pwd`
 
-    if ! test -f "$LIBXUL_SDK/sdk/include/xpcom-config.h"; then
+    if test ! -f "$LIBXUL_SDK/sdk/include/xpcom-config.h"; then
         AC_MSG_ERROR([$LIBXUL_SDK/sdk/include/xpcom-config.h doesn't exist])
     fi
 
