@@ -1,4 +1,4 @@
-{include file="inc/header.tpl"}
+{include file="inc/wrappers/nonav-header.tpl"}
 
 <hr class="hide">
 
@@ -21,7 +21,7 @@
 
 <hr class="hide">
 
-{include file="inc/footer.tpl"}
+{include file="inc/wrappers/nonav-footer.tpl"}
 
 </div>
 <!-- close container -->
