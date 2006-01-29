@@ -25,9 +25,11 @@ switch (strtolower($rssapp)) {
 
 $rsstype = !empty($_GET['type']) && ctype_alpha($_GET['type']) ? $_GET['type'] : null;
 switch (strtolower($rsstype)) {
+    case 'themes':
     case 't':
         $clean['type'] = 't';
         break;
+    case 'extensions':
     case 'e':
     default:
         $clean['type'] = 'e';
