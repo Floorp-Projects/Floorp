@@ -126,10 +126,19 @@ nsMathMLContainerFrame::ReflowError(nsIRenderingContext& aRenderingContext,
   return NS_OK;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLError)
 class nsDisplayMathMLError : public nsDisplayItem {
 public:
   nsDisplayMathMLError(nsIFrame* aFrame)
-  : mFrame(aFrame) {}
+    : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayMathMLError);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayMathMLError() {
+    MOZ_COUNT_DTOR(nsDisplayMathMLError);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);

@@ -358,9 +358,18 @@ nsTableCellFrame::PaintCellBackground(nsIRenderingContext& aRenderingContext,
   PaintBackground(aRenderingContext, aDirtyRect, aPt);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayTableCellBackground)
 class nsDisplayTableCellBackground : public nsDisplayItem {
 public:
-  nsDisplayTableCellBackground(nsTableCellFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayTableCellBackground(nsTableCellFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayTableCellBackground);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayTableCellBackground() {
+    MOZ_COUNT_DTOR(nsDisplayTableCellBackground);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,

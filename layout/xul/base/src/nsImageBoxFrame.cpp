@@ -385,9 +385,18 @@ nsImageBoxFrame::UpdateLoadFlags()
     mLoadFlags = nsIRequest::LOAD_NORMAL;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayXULImage)
 class nsDisplayXULImage : public nsDisplayItem {
 public:
-  nsDisplayXULImage(nsImageBoxFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayXULImage(nsImageBoxFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayXULImage);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayXULImage() {
+    MOZ_COUNT_DTOR(nsDisplayXULImage);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   // Doesn't handle HitTest because nsLeafBoxFrame already creates an
   // event receiver for us

@@ -280,9 +280,18 @@ nsTextBoxFrame::UpdateAttributes(nsPresContext*  aPresContext,
 
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayXULTextBox)
 class nsDisplayXULTextBox : public nsDisplayItem {
 public:
-  nsDisplayXULTextBox(nsTextBoxFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayXULTextBox(nsTextBoxFrame* aFrame) : mFrame(aFrame) {
+      MOZ_COUNT_CTOR(nsDisplayXULTextBox);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayXULTextBox() {
+      MOZ_COUNT_DTOR(nsDisplayXULTextBox);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);

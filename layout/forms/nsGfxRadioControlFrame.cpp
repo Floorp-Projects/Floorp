@@ -189,9 +189,19 @@ nsGfxRadioControlFrame::PaintRadioButtonFromStyle(
                               aDirtyRect, rect, *myBorder, mRadioButtonFaceStyle, 0);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayRadioButtonFromStyle)
 class nsDisplayRadioButtonFromStyle : public nsDisplayItem {
 public:
-  nsDisplayRadioButtonFromStyle(nsGfxRadioControlFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayRadioButtonFromStyle(nsGfxRadioControlFrame* aFrame)
+    : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayRadioButtonFromStyle);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayRadioButtonFromStyle() {
+    MOZ_COUNT_DTOR(nsDisplayRadioButtonFromStyle);
+  }
+#endif
+  
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);

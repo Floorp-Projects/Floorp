@@ -560,9 +560,18 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
  * Table row backgrounds can extend beyond the row frame bounds, when
  * the row contains row-spanning cells.
  */
+MOZ_DECL_CTOR_COUNTER(nsDisplayTableRowBackground)
 class nsDisplayTableRowBackground : public nsDisplayItem {
 public:
-  nsDisplayTableRowBackground(nsTableRowFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayTableRowBackground(nsTableRowFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayTableRowBackground);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayTableRowBackground() {
+    MOZ_COUNT_DTOR(nsDisplayTableRowBackground);
+  }
+#endif
+
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
     // the overflow rect contains any row-spanning cells, so it contains
     // our background. Note that this means we may not be opaque even if

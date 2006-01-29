@@ -763,10 +763,19 @@ nsFrame::DisplaySelection(nsPresContext* aPresContext, PRBool isOkToTurnOn)
   return selType;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplaySelectionOverlay)
 class nsDisplaySelectionOverlay : public nsDisplayItem {
 public:
   nsDisplaySelectionOverlay(nsFrame* aFrame, PRInt16 aSelectionValue)
-      : mFrame(aFrame), mSelectionValue(aSelectionValue) {}
+    : mFrame(aFrame), mSelectionValue(aSelectionValue) {
+    MOZ_COUNT_CTOR(nsDisplaySelectionOverlay);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplaySelectionOverlay() {
+    MOZ_COUNT_DTOR(nsDisplaySelectionOverlay);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);

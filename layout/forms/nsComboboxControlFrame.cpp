@@ -2124,9 +2124,19 @@ nsComboboxControlFrame::UpdateRecentIndex(PRInt32 aIndex)
   return index;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayComboboxFocus)
 class nsDisplayComboboxFocus : public nsDisplayItem {
 public:
-  nsDisplayComboboxFocus(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayComboboxFocus(nsComboboxControlFrame* aFrame)
+    : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayComboboxFocus);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayComboboxFocus() {
+    MOZ_COUNT_DTOR(nsDisplayComboboxFocus);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);

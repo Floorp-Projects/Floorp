@@ -217,6 +217,10 @@ public:
   };
   
 private:
+  // This class is only used on stack, so we don't have to worry about leaking
+  // it.  Don't let us be heap-allocated!
+  void* operator new(size_t sz) CPP_THROW_NEW;
+  
   nsIFrame*              mReferenceFrame;
   nsIFrame*              mMovingFrame;
   nsIFrame*              mIgnoreScrollFrame;
@@ -235,7 +239,10 @@ class nsDisplayList;
  * highest in z-order.
  */
 class nsDisplayItemLink {
+  // This is never instantiated directly, so no need to count constructors and
+  // destructors.
 protected:
+  nsDisplayItemLink() {}
   nsDisplayItem* mAbove;  
   
   friend class nsDisplayList;
@@ -258,9 +265,12 @@ protected:
  */
 class nsDisplayItem : public nsDisplayItemLink {
 public:
+  // This is never instantiated directly (it has pure virtual methods), so no
+  // need to count constructors and destructors.
   virtual ~nsDisplayItem() {}
   
-  void* operator new(size_t aSize, nsDisplayListBuilder* aBuilder) {
+  void* operator new(size_t aSize,
+                     nsDisplayListBuilder* aBuilder) CPP_THROW_NEW {
     return aBuilder->Allocate(aSize);
   }
 
@@ -546,6 +556,10 @@ public:
   nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) const;
   
 private:
+  // This class is only used on stack, so we don't have to worry about leaking
+  // it.  Don't let us be heap-allocated!
+  void* operator new(size_t sz) CPP_THROW_NEW;
+  
   // Utility function used to massage the list during OptimizeVisibility.
   void FlattenTo(nsVoidArray* aElements);
   // Utility function used to massage the list during sorting, to rewrite
@@ -629,7 +643,12 @@ public:
    * destination.
    */
   void MoveTo(const nsDisplayListSet& aDestination) const;
-  
+
+private:
+  // This class is only used on stack, so we don't have to worry about leaking
+  // it.  Don't let us be heap-allocated!
+  void* operator new(size_t sz) CPP_THROW_NEW;
+
 protected:
   nsDisplayList* mBorderBackground;
   nsDisplayList* mBlockBorderBackgrounds;
@@ -661,6 +680,10 @@ struct nsDisplayListCollection : public nsDisplayListSet {
   }
 
 private:
+  // This class is only used on stack, so we don't have to worry about leaking
+  // it.  Don't let us be heap-allocated!
+  void* operator new(size_t sz) CPP_THROW_NEW;
+
   nsDisplayList mLists[6];
 };
 
@@ -674,17 +697,26 @@ private:
  * custom display item class could be, and fractionally slower. However it does
  * save code size. We use this for infrequently-used item types.
  */
+MOZ_DECL_CTOR_COUNTER(nsDisplayGeneric)
 class nsDisplayGeneric : public nsDisplayItem {
 public:
   typedef void (* PaintCallback)(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                                  const nsRect& aDirtyRect, nsPoint aFramePt);
 
-  nsDisplayGeneric(nsIFrame* aFrame, PaintCallback aPaint, const char* aName) 
+  nsDisplayGeneric(nsIFrame* aFrame, PaintCallback aPaint, const char* aName)
     : mFrame(aFrame), mPaint(aPaint)
 #ifdef DEBUG
       , mName(aName)
 #endif
-     {}
+  {
+    MOZ_COUNT_CTOR(nsDisplayGeneric);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayGeneric() {
+    MOZ_COUNT_DTOR(nsDisplayGeneric);
+  }
+#endif
+  
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect) {
@@ -702,9 +734,18 @@ protected:
 /**
  * The standard display item to paint the CSS borders of a frame.
  */
+MOZ_DECL_CTOR_COUNTER(nsDisplayBorder)
 class nsDisplayBorder : public nsDisplayItem {
 public:
-  nsDisplayBorder(nsIFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayBorder(nsIFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayBorder);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayBorder() {
+    MOZ_COUNT_DTOR(nsDisplayBorder);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
@@ -716,9 +757,18 @@ private:
 /**
  * The standard display item to paint the CSS background of a frame.
  */
+MOZ_DECL_CTOR_COUNTER(nsDisplayBackground)
 class nsDisplayBackground : public nsDisplayItem {
 public:
-  nsDisplayBackground(nsIFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayBackground(nsIFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayBackground);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayBackground() {
+    MOZ_COUNT_DTOR(nsDisplayBackground);
+  }
+#endif
+
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
@@ -735,9 +785,18 @@ private:
 /**
  * The standard display item to paint the CSS outline of a frame.
  */
+MOZ_DECL_CTOR_COUNTER(nsDisplayOutline)
 class nsDisplayOutline : public nsDisplayItem {
 public:
-  nsDisplayOutline(nsIFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayOutline(nsIFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayOutline);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayOutline() {
+    MOZ_COUNT_DTOR(nsDisplayOutline);
+  }
+#endif
+
   virtual Type GetType() { return TYPE_OUTLINE; }
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
@@ -751,9 +810,18 @@ private:
 /**
  * A class that lets you receive events within the frame bounds but never paints.
  */
+MOZ_DECL_CTOR_COUNTER(nsDisplayEventReceiver)
 class nsDisplayEventReceiver : public nsDisplayItem {
 public:
-  nsDisplayEventReceiver(nsIFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayEventReceiver(nsIFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayEventReceiver);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayEventReceiver() {
+    MOZ_COUNT_DTOR(nsDisplayEventReceiver);
+  }
+#endif
+
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   NS_DISPLAY_DECL_NAME("EventReceiver")
@@ -776,6 +844,9 @@ private:
  * detect and handle this case.
  */
 class nsDisplayWrapList : public nsDisplayItem {
+  // This is never instantiated directly, so no need to count constructors and
+  // destructors.
+
 public:
   /**
    * Takes all the items from aList and puts them in our list.
@@ -816,6 +887,8 @@ public:
   }
 
 protected:
+  nsDisplayWrapList() {}
+  
   nsDisplayList mList;
   nsIFrame*     mFrame;
 };
@@ -829,6 +902,9 @@ protected:
  */
 class nsDisplayWrapper {
 public:
+  // This is never instantiated directly (it has pure virtual methods), so no
+  // need to count constructors and destructors.
+
   virtual PRBool WrapBorderBackground() { return PR_TRUE; }
   virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
                                   nsIFrame* aFrame, nsDisplayList* aList) = 0;
@@ -839,15 +915,22 @@ public:
                      const nsDisplayListSet& aIn, const nsDisplayListSet& aOut);
   nsresult WrapListsInPlace(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             const nsDisplayListSet& aLists);
+protected:
+  nsDisplayWrapper() {}
 };
                               
 /**
  * The standard display item to paint a stacking context with translucency
  * set by the stacking context root frame's 'opacity' style.
  */
+MOZ_DECL_CTOR_COUNTER(nsDisplayOpacity)
 class nsDisplayOpacity : public nsDisplayWrapList {
 public:
   nsDisplayOpacity(nsIFrame* aFrame, nsDisplayList* aList);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayOpacity();
+#endif
+  
   virtual Type GetType() { return TYPE_OPACITY; }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
@@ -875,6 +958,10 @@ class nsDisplayClip : public nsDisplayWrapList {
 public:
   nsDisplayClip(nsIFrame* aFrame, nsDisplayItem* aItem, const nsRect& aRect);
   nsDisplayClip(nsIFrame* aFrame, nsDisplayList* aList, const nsRect& aRect);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayClip();
+#endif
+  
   virtual Type GetType() { return TYPE_CLIP; }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,

@@ -728,10 +728,19 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
 }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLBoundingMetrics)
 class nsDisplayMathMLBoundingMetrics : public nsDisplayItem {
 public:
   nsDisplayMathMLBoundingMetrics(nsIFrame* aFrame, const nsRect& aRect)
-  : mFrame(aFrame), mRect(aRect) {}
+    : mFrame(aFrame), mRect(aRect) {
+    MOZ_COUNT_CTOR(nsDisplayMathMLBoundingMetrics);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayMathMLBoundingMetrics() {
+    MOZ_COUNT_DTOR(nsDisplayMathMLBoundingMetrics);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
@@ -766,10 +775,19 @@ nsMathMLFrame::DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
 }
 #endif
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLBar)
 class nsDisplayMathMLBar : public nsDisplayItem {
 public:
   nsDisplayMathMLBar(nsIFrame* aFrame, const nsRect& aRect)
-  : mFrame(aFrame), mRect(aRect) {}
+    : mFrame(aFrame), mRect(aRect) {
+    MOZ_COUNT_CTOR(nsDisplayMathMLBar);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayMathMLBar() {
+    MOZ_COUNT_DTOR(nsDisplayMathMLBar);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
