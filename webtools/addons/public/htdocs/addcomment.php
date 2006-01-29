@@ -6,7 +6,7 @@
  * @subpackage docs
  *
  * Variables:
- *   $_GET['id'] = Addon ID (integer)
+ *   $_GET['aid'] = Addon ID (integer)
  */
 
 startProcessing('addcomment.tpl', null, null);
@@ -14,14 +14,14 @@ require_once 'includes.php';
 
 session_start();
 
-if ((!array_key_exists('id', $_GET)) || !is_numeric($_GET['id'])) {
+if ((!array_key_exists('aid', $_GET)) || !is_numeric($_GET['aid'])) {
     triggerError('There was an error processing your request.');
 }
 
 //This is a secure page, so we'll check the session
 if (!$_auth->validSession()) {
     //id is already verified to be numeric from above
-    header('Location: '.WEB_PATH."/login.php?dest=comment&id={$_GET['id']}");
+    header('Location: '.WEB_PATH."/login.php?dest=comment&aid={$_GET['aid']}");
     exit;
 }
 
@@ -29,7 +29,7 @@ if (!$_auth->validSession()) {
 $_errors = array();
 
 // This will be used in queries and the template
-$addon = new AddOn($_GET['id']);
+$addon = new AddOn($_GET['aid']);
 
 // If the comment is added successfully, this will toggle (used in the template)
 $added_comment = false;
