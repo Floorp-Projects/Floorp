@@ -1278,7 +1278,7 @@ endif
 
 ifndef NO_DIST_INSTALL
 libs:: $(PREF_JS_EXPORTS)
-	if ! test -d $(FINAL_TARGET)/$(PREF_DIR); then $(NSINSTALL) -D $(FINAL_TARGET)/$(PREF_DIR); fi
+	if test ! -d $(FINAL_TARGET)/$(PREF_DIR); then $(NSINSTALL) -D $(FINAL_TARGET)/$(PREF_DIR); fi
 	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); \
 	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $$i > $(FINAL_TARGET)/$(PREF_DIR)/`basename $$i`; \
@@ -1287,7 +1287,7 @@ endif
 
 ifndef NO_INSTALL
 install:: $(PREF_JS_EXPORTS)
-	if ! test -d $(DESTDIR)$(mozappdir)/$(PREF_DIR); then $(NSINSTALL) -D $(DESTDIR)$(mozappdir)/$(PREF_DIR); fi
+	if test ! -d $(DESTDIR)$(mozappdir)/$(PREF_DIR); then $(NSINSTALL) -D $(DESTDIR)$(mozappdir)/$(PREF_DIR); fi
 	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); \
 	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DESTDIR)$(mozappdir)/$(PREF_DIR)/`basename $$i`; \
