@@ -30,7 +30,7 @@ Requires: {$addon->AppName} {$addon->MinAppVer} - {$addon->MaxAppVer} <img src="
 
 <h3 id="user-comments">User Comments</h3>
 
-<p><strong><a href="./addcomment.php?id={$addon->ID}">Add your own comment &#187;</a></strong></p>
+<p><strong><a href="./addcomment.php?aid={$addon->ID}">Add your own comment &#187;</a></strong></p>
 
 <ul id="opinions">
 {section name=comments loop=$addon->Comments max=10}

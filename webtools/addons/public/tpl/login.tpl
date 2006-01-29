@@ -14,7 +14,7 @@
         <label for="password" title="Password">Password:</label>
         <input id="password" name="password" type="password" accesskey="p" size="40">
         <input type="submit" value="Go">
-        </div>
+        </div><a href="createaccount.php">Create an account</a>
     </form>
 </div>
 
