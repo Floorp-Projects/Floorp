@@ -1343,9 +1343,18 @@ nsTableFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   return nsnull;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayTableBorderBackground)
 class nsDisplayTableBorderBackground : public nsDisplayItem {
 public:
-  nsDisplayTableBorderBackground(nsTableFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayTableBorderBackground(nsTableFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayTableBorderBackground);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayTableBorderBackground() {
+    MOZ_COUNT_DTOR(nsDisplayTableBorderBackground);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);

@@ -1618,9 +1618,18 @@ nsHTMLFramesetBorderFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayFramesetBorder)
 class nsDisplayFramesetBorder : public nsDisplayItem {
 public:
-  nsDisplayFramesetBorder(nsHTMLFramesetBorderFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayFramesetBorder(nsHTMLFramesetBorderFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayFramesetBorder);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayFramesetBorder() {
+    MOZ_COUNT_DTOR(nsDisplayFramesetBorder);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   // REVIEW: see old GetFrameForPoint
   // Receives events in its bounds
@@ -1812,9 +1821,18 @@ nsHTMLFramesetBlankFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayFramesetBlank)
 class nsDisplayFramesetBlank : public nsDisplayItem {
 public:
-  nsDisplayFramesetBlank(nsIFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayFramesetBlank(nsIFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayFramesetBlank);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayFramesetBlank() {
+    MOZ_COUNT_DTOR(nsDisplayFramesetBlank);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);

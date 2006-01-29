@@ -174,9 +174,18 @@ nsBulletFrame::DidSetStyleContext(nsPresContext* aPresContext)
   return NS_OK;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayBullet)
 class nsDisplayBullet : public nsDisplayItem {
 public:
-  nsDisplayBullet(nsBulletFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayBullet(nsBulletFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayBullet);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayBullet() {
+    MOZ_COUNT_DTOR(nsDisplayBullet);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);

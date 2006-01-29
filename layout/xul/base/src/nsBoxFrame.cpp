@@ -1352,9 +1352,18 @@ nsBoxFrame::GetDebugPref(nsPresContext* aPresContext)
     gDebug = nsContentUtils::GetBoolPref("xul.debug.box");
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayXULDebug)
 class nsDisplayXULDebug : public nsDisplayItem {
 public:
-  nsDisplayXULDebug(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayXULDebug(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayXULDebug);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayXULDebug() {
+    MOZ_COUNT_DTOR(nsDisplayXULDebug);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) {
     mFrame->DisplayDebugInfoFor(this, aPt - aBuilder->ToReferenceFrame(mFrame));

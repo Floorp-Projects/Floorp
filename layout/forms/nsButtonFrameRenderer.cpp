@@ -93,9 +93,19 @@ nsButtonFrameRenderer::isDisabled()
                                        nsHTMLAtoms::disabled);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayButtonBorderBackground)
 class nsDisplayButtonBorderBackground : public nsDisplayItem {
 public:
-  nsDisplayButtonBorderBackground(nsButtonFrameRenderer* aRenderer) : mBFR(aRenderer) {}
+  nsDisplayButtonBorderBackground(nsButtonFrameRenderer* aRenderer)
+    : mBFR(aRenderer) {
+    MOZ_COUNT_CTOR(nsDisplayButtonBorderBackground);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayButtonBorderBackground() {
+    MOZ_COUNT_DTOR(nsDisplayButtonBorderBackground);
+  }
+#endif  
+  
   virtual nsIFrame* GetUnderlyingFrame() { return mBFR->GetFrame(); }
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) {
     return mBFR->GetFrame();
@@ -107,9 +117,19 @@ private:
   nsButtonFrameRenderer* mBFR;
 };
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayButtonForeground)
 class nsDisplayButtonForeground : public nsDisplayItem {
 public:
-  nsDisplayButtonForeground(nsButtonFrameRenderer* aRenderer) : mBFR(aRenderer) {}
+  nsDisplayButtonForeground(nsButtonFrameRenderer* aRenderer)
+    : mBFR(aRenderer) {
+    MOZ_COUNT_CTOR(nsDisplayButtonForeground);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayButtonForeground() {
+    MOZ_COUNT_DTOR(nsDisplayButtonForeground);
+  }
+#endif  
+
   virtual nsIFrame* GetUnderlyingFrame() { return mBFR->GetFrame(); }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
@@ -118,8 +138,9 @@ private:
   nsButtonFrameRenderer* mBFR;
 };
 
-void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect)
+void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
+                                            nsIRenderingContext* aCtx,
+                                            const nsRect& aDirtyRect)
 {
   nsIFrame* f = mBFR->GetFrame();
   NS_ASSERTION(f, "No frame?");
@@ -130,8 +151,9 @@ void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder, nsIR
   mBFR->PaintBorderAndBackground(pc, *aCtx, aDirtyRect, r);
 }
 
-void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect)
+void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
+                                      nsIRenderingContext* aCtx,
+                                      const nsRect& aDirtyRect)
 {
   nsIFrame* f = mBFR->GetFrame();
   NS_ASSERTION(f, "No frame?");

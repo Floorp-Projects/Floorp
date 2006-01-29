@@ -123,7 +123,7 @@ nsDisplayList::FlattenTo(nsVoidArray* aElements) {
   while ((item = RemoveBottom()) != nsnull) {
     if (item->GetType() == nsDisplayItem::TYPE_WRAPLIST) {
       item->GetList()->FlattenTo(aElements);
-      item->nsDisplayItem::~nsDisplayItem();
+      item->~nsDisplayItem();
     } else {
       aElements->AppendElement(item);
     }
@@ -142,7 +142,7 @@ nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
       NS_STATIC_CAST(nsDisplayItem*, elements.ElementAt(i - 1));
 
     if (belowItem && item->TryMerge(aBuilder, belowItem)) {
-      belowItem->nsDisplayItem::~nsDisplayItem();
+      belowItem->~nsDisplayItem();
       elements.ReplaceElementAt(item, i - 1);
       continue;
     }
@@ -150,7 +150,7 @@ nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
     if (item->OptimizeVisibility(aBuilder, aVisibleRegion)) {
       AppendToBottom(item);
     } else {
-      item->nsDisplayItem::~nsDisplayItem();
+      item->~nsDisplayItem();
     }
   }
 }
@@ -186,14 +186,14 @@ nsDisplayItem* nsDisplayList::RemoveBottom() {
 void nsDisplayList::DeleteBottom() {
   nsDisplayItem* item = RemoveBottom();
   if (item) {
-    item->nsDisplayItem::~nsDisplayItem();
+    item->~nsDisplayItem();
   }
 }
 
 void nsDisplayList::DeleteAll() {
   nsDisplayItem* item;
   while ((item = RemoveBottom()) != nsnull) {
-    item->nsDisplayItem::~nsDisplayItem();
+    item->~nsDisplayItem();
   }
 }
 
@@ -307,7 +307,7 @@ void nsDisplayList::ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder) {
         tmp.AppendToTop(NS_STATIC_CAST(nsDisplayWrapList*, i)->
             WrapWithClone(aBuilder, j));
       }
-      i->nsDisplayItem::~nsDisplayItem();
+      i->~nsDisplayItem();
     }
   }
   
@@ -587,9 +587,18 @@ nsresult nsDisplayWrapper::WrapListsInPlace(nsDisplayListBuilder* aBuilder,
   return WrapEachDisplayItem(aBuilder, aLists.Outlines(), this);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayOpacity)
+  
 nsDisplayOpacity::nsDisplayOpacity(nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayWrapList(aFrame, aList), mNeedAlpha(PR_TRUE) {
+  MOZ_COUNT_CTOR(nsDisplayOpacity);
 }
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayOpacity::~nsDisplayOpacity() {
+  MOZ_COUNT_DTOR(nsDisplayOpacity);
+}
+#endif
 
 PRBool nsDisplayOpacity::IsOpaque(nsDisplayListBuilder* aBuilder) {
   // We are never opaque, if our opacity was < 1 then we wouldn't have
@@ -668,14 +677,18 @@ PRBool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem*
   return PR_TRUE;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayClip)
+
 nsDisplayClip::nsDisplayClip(nsIFrame* aFrame, nsDisplayItem* aItem,
     const nsRect& aRect)
    : nsDisplayWrapList(aFrame, aItem), mClip(aRect) {
+  MOZ_COUNT_CTOR(nsDisplayClip);
 }
 
 nsDisplayClip::nsDisplayClip(nsIFrame* aFrame, nsDisplayList* aList,
     const nsRect& aRect)
    : nsDisplayWrapList(aFrame, aList), mClip(aRect) {
+  MOZ_COUNT_CTOR(nsDisplayClip);
 }
 
 nsRect nsDisplayClip::GetBounds(nsDisplayListBuilder* aBuilder) {
@@ -683,6 +696,12 @@ nsRect nsDisplayClip::GetBounds(nsDisplayListBuilder* aBuilder) {
   r.IntersectRect(mClip, r);
   return r;
 }
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayClip::~nsDisplayClip() {
+  MOZ_COUNT_DTOR(nsDisplayClip);
+}
+#endif
 
 void nsDisplayClip::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {

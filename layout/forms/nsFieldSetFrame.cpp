@@ -163,9 +163,19 @@ nsFieldSetFrame::SetInitialChildList(nsPresContext* aPresContext,
   return nsHTMLContainerFrame::SetInitialChildList(aPresContext, nsnull, aChildList);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayFieldSetBorderBackground)
 class nsDisplayFieldSetBorderBackground : public nsDisplayItem {
 public:
-  nsDisplayFieldSetBorderBackground(nsFieldSetFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayFieldSetBorderBackground(nsFieldSetFrame* aFrame)
+    : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayFieldSetBorderBackground);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayFieldSetBorderBackground() {
+    MOZ_COUNT_DTOR(nsDisplayFieldSetBorderBackground);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,

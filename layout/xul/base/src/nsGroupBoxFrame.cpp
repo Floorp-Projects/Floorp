@@ -102,9 +102,18 @@ nsGroupBoxFrame::nsGroupBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell)
 {
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayXULGroupBackground)
 class nsDisplayXULGroupBackground : public nsDisplayItem {
 public:
-  nsDisplayXULGroupBackground(nsGroupBoxFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayXULGroupBackground(nsGroupBoxFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayXULGroupBackground);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayXULGroupBackground() {
+    MOZ_COUNT_DTOR(nsDisplayXULGroupBackground);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,

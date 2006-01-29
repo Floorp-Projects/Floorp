@@ -66,11 +66,20 @@
 #include "nsLineBox.h"
 #include "nsDisplayList.h"
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayTextDecoration)
 class nsDisplayTextDecoration : public nsDisplayItem {
 public:
   nsDisplayTextDecoration(nsHTMLContainerFrame* aFrame, PRUint8 aDecoration,
                           nscolor aColor, nsLineBox* aLine)
-    : mFrame(aFrame), mLine(aLine), mColor(aColor), mDecoration(aDecoration) {}
+    : mFrame(aFrame), mLine(aLine), mColor(aColor), mDecoration(aDecoration) {
+    MOZ_COUNT_CTOR(nsDisplayTextDecoration);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayTextDecoration() {
+    MOZ_COUNT_DTOR(nsDisplayTextDecoration);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);

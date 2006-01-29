@@ -114,9 +114,18 @@ nsTreeColFrame::Destroy(nsPresContext* aPresContext)
   return nsBoxFrame::Destroy(aPresContext);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplayXULTreeColSplitterTarget)
 class nsDisplayXULTreeColSplitterTarget : public nsDisplayItem {
 public:
-  nsDisplayXULTreeColSplitterTarget(nsIFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayXULTreeColSplitterTarget(nsIFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayXULTreeColSplitterTarget);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayXULTreeColSplitterTarget() {
+    MOZ_COUNT_DTOR(nsDisplayXULTreeColSplitterTarget);
+  }
+#endif
+
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   NS_DISPLAY_DECL_NAME("XULTreeColSplitterTarget")

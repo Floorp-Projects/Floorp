@@ -1869,9 +1869,18 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
 // When we fix nsTextFrame to handle bearing (character glyphs that
 // extend outside the frame) by giving it overflow area, we'll need to fix
 // this to use the overflow area as its bounds.
+MOZ_DECL_CTOR_COUNTER(nsDisplayText)
 class nsDisplayText : public nsDisplayItem {
 public:
-  nsDisplayText(nsTextFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplayText(nsTextFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayText);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayText() {
+    MOZ_COUNT_DTOR(nsDisplayText);
+  }
+#endif
+
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,

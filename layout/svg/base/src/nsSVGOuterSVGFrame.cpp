@@ -679,9 +679,18 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32         aNameSpaceID,
   return NS_OK;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsDisplaySVG)
 class nsDisplaySVG : public nsDisplayItem {
 public:
-  nsDisplaySVG(nsSVGOuterSVGFrame* aFrame) : mFrame(aFrame) {}
+  nsDisplaySVG(nsSVGOuterSVGFrame* aFrame) : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplaySVG);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplaySVG() {
+    MOZ_COUNT_DTOR(nsDisplaySVG);
+  }
+#endif
+
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
   virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
