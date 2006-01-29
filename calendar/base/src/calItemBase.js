@@ -250,7 +250,7 @@ calItemBase.prototype = {
             // item returning and enumerator advancing, which makes
             // no sense.
             return {
-                firstEnumerator: this.mProperties.eumerator,
+                firstEnumerator: this.mProperties.enumerator,
                 secondEnumerator: this.mParentItem.propertyEnumerator,
                 handledProperties: { },
 
