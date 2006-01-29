@@ -51,8 +51,8 @@
 % locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
     locale/browser/help/help.rdf                      (%chrome/help/firebirdhelp.rdf)
-    locale/browser/help/firebird-index1.rdf           (%chrome/help/firebird-index1.rdf)
     locale/browser/help/firebird-toc.rdf              (%chrome/help/firebird-toc.rdf)
+    locale/browser/help/search-db.rdf                 (%chrome/help/search-db.rdf)
     locale/browser/help/cookies.xhtml                 (%chrome/help/cookies.xhtml)
     locale/browser/help/forieusers.xhtml              (%chrome/help/forieusers.xhtml)
     locale/browser/help/menu_reference.xhtml          (%chrome/help/menu_reference.xhtml)
@@ -67,7 +67,6 @@
     locale/browser/help/platformStrings.dtd           (%chrome/help/platformStrings.dtd)
     locale/browser/help/tabbed_browsing.xhtml         (%chrome/help/tabbed_browsing.xhtml)
     locale/browser/help/glossary.xhtml                (%chrome/help/glossary.xhtml)
-    locale/browser/help/firebird-glossary.rdf         (%chrome/help/firebird-glossary.rdf)
 # the following files are browser-specific overrides
 *   locale/@AB_CD@/global/netError.dtd                (%chrome/overrides/netError.dtd)
 *   locale/@AB_CD@/global/appstrings.properties       (%chrome/overrides/appstrings.properties)
