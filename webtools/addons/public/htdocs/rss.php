@@ -72,7 +72,7 @@ unset($rsslist);
 $tpl = new AMO_Smarty();
 
 // Set our cache timeout to 2 hours, which is reasonable.
-$tpl->caching = 0;
+$tpl->caching = 1;
 $tpl->cache_timeout = 7200;
 
 // Determine our cache_id based on the RSS feed's arguments.
