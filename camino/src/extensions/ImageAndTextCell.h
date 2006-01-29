@@ -55,7 +55,7 @@ Copyright © 2005 Apple Computer, Inc., All Rights Reserved
 @interface ImageAndTextCell : NSTextFieldCell
 {
 @private
-    NSImage *mImage;
+    NSImage* mImage;
 }
 
 - (void)setImage:(NSImage *)anImage;
