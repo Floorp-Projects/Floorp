@@ -540,9 +540,21 @@ DOMViewer.prototype =
   {
     var re = new RegExp(this.mFindParams[0], "i");
 
-    return aWalker.currentNode
-           && "id" in aWalker.currentNode
-           && re.test(aWalker.currentNode.id);
+    var node = aWalker.currentNode;
+    if (!node)
+      return false;
+
+    if (node.nodeType != Components.interfaces.nsIDOMNode.ELEMENT_NODE)
+      return false;
+
+    for (var i = 0; i < node.attributes.length; i++) {
+      var attr = node.attributes[i];
+      if (attr.isId && re.test(attr.nodeValue)) {
+        return true;
+      }
+    }
+
+    return false;
   },
 
   doFindElementsByTagName: function(aWalker)
