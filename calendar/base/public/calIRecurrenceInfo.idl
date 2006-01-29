@@ -159,7 +159,7 @@ interface calIRecurrenceInfo : nsISupports
                            out unsigned long aCount, [array,size_is(aCount),retval] out calIDateTime aDates);
 
   /**
-   * Return an array of calIItemOccurrence representing all
+   * Return an array of calIItemBase representing all
    * occurrences of this event between start (inclusive) and end (non-inclusive).
    */
   void getOccurrences (in calIDateTime aRangeStart,

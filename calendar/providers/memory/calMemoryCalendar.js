@@ -348,7 +348,6 @@ calMemoryCalendar.prototype = {
         const calIItemBase = Components.interfaces.calIItemBase;
         const calIEvent = Components.interfaces.calIEvent;
         const calITodo = Components.interfaces.calITodo;
-        const calIItemOccurrence = Components.interfaces.calIItemOccurrence;
         const calIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
 
         var itemsFound = Array();

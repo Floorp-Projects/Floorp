@@ -40,7 +40,6 @@
 
 interface calIItemBase;
 interface calIDateTime;
-interface calIItemOccurrence;
 
 interface calIIcalProperty;
 
