@@ -491,7 +491,7 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
 }
 
-// base class does the title compare
+// base class does the title, keyword and description compares
 
 - (NSComparisonResult)compareType:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
 {

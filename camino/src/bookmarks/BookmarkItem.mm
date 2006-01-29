@@ -431,6 +431,18 @@ static BOOL gSuppressAllUpdates = NO;
   return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
 }
 
+- (NSComparisonResult)compareKeyword:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  NSComparisonResult result = [[self keyword] compare:[aItem keyword] options:NSCaseInsensitiveSearch];
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
+}
+
+- (NSComparisonResult)compareDescription:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  NSComparisonResult result = [[self itemDescription] compare:[aItem itemDescription] options:NSCaseInsensitiveSearch];
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
+}
+
 - (NSComparisonResult)compareType:(BookmarkItem *)aItem sortDescending:(NSNumber*)inDescending
 {
   return NSOrderedSame;

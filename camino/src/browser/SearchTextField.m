@@ -280,7 +280,7 @@
 
 - (NSMenuItem*)selectedPopupMenuItem
 {
-  return [[[self cell] popUpButtonCell] selectedItem];
+  return (NSMenuItem*)[[[self cell] popUpButtonCell] selectedItem];
 }
 
 #pragma mark -

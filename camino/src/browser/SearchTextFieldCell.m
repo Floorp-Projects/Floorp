@@ -39,6 +39,8 @@
 #import "STFPopUpButtonCell.h"
 #import "SearchTextFieldCell.h"
 
+#import "SearchTextField.h"
+
 
 const float STFSymbolXOffset = 4.0;
 const float STFSymbolYOffset = 4.0;
@@ -210,7 +212,7 @@ const float STFSymbolYOffset = 4.0;
     [mCancelImage compositeToPoint:cancelImageOrigin operation:NSCompositeSourceOver];
   }
 
-  [self showSelectedPopUpItem:([self controlView] && ![[self controlView] isFirstResponder])];
+  [self showSelectedPopUpItem:([self controlView] && ![(SearchTextField*)[self controlView] isFirstResponder])];
 
   // draw the focus ring ourselves
   BOOL showingFirstResponder = [self showsFirstResponder];
