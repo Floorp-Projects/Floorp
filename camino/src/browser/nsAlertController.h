@@ -46,6 +46,10 @@
 - (IBAction)hitButton2:(id)sender;
 - (IBAction)hitButton3:(id)sender;
 
+// 
+// Nota Bene: all of these methods can throw Objective-C exceptions
+// if there was an error displaying the dialog.
+//
 - (void)alert:(NSWindow*)parent title:(NSString*)title text:(NSString*)text;
 - (void)alertCheck:(NSWindow*)parent title:(NSString*)title text:(NSString*)text checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue;
 
@@ -64,9 +68,5 @@
 - (BOOL)promptPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck;
 
 - (BOOL)postToInsecureFromSecure:(NSWindow*)parent;
-
-- (BOOL)badCert:(NSWindow*)parent;
-- (BOOL)expiredCert:(NSWindow*)parent;
-- (int)unknownCert:(NSWindow*)parent;
 
 @end

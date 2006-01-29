@@ -386,15 +386,21 @@ static inline u_int ns_get16(u_char* buffer)
           {
             // get a username for ftp, since most local servers won't support anonymous login
             nsAlertController* controller = CHBrowserService::GetAlertController();
-            BOOL checked = NO;
             
             NSMutableString* userName = [NSMutableString string];
             
-            BOOL confirmed = [controller prompt:[NSApp mainWindow]
-                title:NSLocalizedString(@"UserNameRequestTitle", @"")
-                text:[NSString stringWithFormat:NSLocalizedString(@"UsernameRequestFormat", @""), [NSString stringWithCString:escapedTarget]]
-                promptText:userName
-                checkMsg:@"" checkValue:&checked doCheck:NO];
+            BOOL confirmed = NO;
+            NS_DURING
+              confirmed = [controller prompt:[NSApp mainWindow]
+                                       title:NSLocalizedString(@"UserNameRequestTitle", @"")
+                                        text:[NSString stringWithFormat:NSLocalizedString(@"UsernameRequestFormat", @""), [NSString stringWithCString:escapedTarget]]
+                                  promptText:userName
+                                    checkMsg:@""
+                                  checkValue:nsnull
+                                     doCheck:NO];
+            NS_HANDLER
+            NS_ENDHANDLER
+            
             if (!confirmed)
               return;   // fix
           

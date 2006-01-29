@@ -337,14 +337,20 @@ const int kReuseWindowOnAE = 2;
     [NSApp activateIgnoringOtherApps:YES];
     nsAlertController* controller = CHBrowserService::GetAlertController();
     BOOL dontShowAgain = NO;
-    BOOL confirmed = [controller confirmCheckEx:nil
-                                          title:quitAlertMsg
-                                            text:quitAlertExpl
-                                         button1:NSLocalizedString(@"QuitButtonText", @"")
-                                         button2:NSLocalizedString(@"CancelButtonText", @"")
-                                         button3:nil
-                                        checkMsg:NSLocalizedString(@"QuitWithMultipleTabsCheckboxLabel", @"")
-                                      checkValue:&dontShowAgain];
+    BOOL confirmed = NO;
+    
+    NS_DURING
+      confirmed = [controller confirmCheckEx:nil
+                                       title:quitAlertMsg
+                                         text:quitAlertExpl
+                                      button1:NSLocalizedString(@"QuitButtonText", @"")
+                                      button2:NSLocalizedString(@"CancelButtonText", @"")
+                                      button3:nil
+                                     checkMsg:NSLocalizedString(@"QuitWithMultipleTabsCheckboxLabel", @"")
+                                   checkValue:&dontShowAgain];
+    NS_HANDLER
+    NS_ENDHANDLER
+
     if (dontShowAgain)
       [prefManager setPref:"camino.warn_when_closing" toBoolean:NO];
 
@@ -462,15 +468,20 @@ const int kReuseWindowOnAE = 2;
     {
       nsAlertController* controller = [[nsAlertController alloc] init];
       BOOL dontAskAgain = NO;
-      int result = [controller confirmCheckEx:nil // parent
-                                            title:NSLocalizedString(@"DefaultBrowserTitle", nil)
-                                             text:NSLocalizedString(@"DefaultBrowserMessage", nil)
-                                          button1:NSLocalizedString(@"DefaultBrowserAcceptButton", nil)
-                                          button2:NSLocalizedString(@"DefaultBrowserDenyButton", nil)
-                                          button3:nil
-                                         checkMsg:NSLocalizedString(@"DefaultBrowserChecboxTitle", nil)
-                                       checkValue:&dontAskAgain];
-
+      int result = NSAlertErrorReturn;
+      
+      NS_DURING
+        result = [controller confirmCheckEx:nil // parent
+                                      title:NSLocalizedString(@"DefaultBrowserTitle", nil)
+                                       text:NSLocalizedString(@"DefaultBrowserMessage", nil)
+                                    button1:NSLocalizedString(@"DefaultBrowserAcceptButton", nil)
+                                    button2:NSLocalizedString(@"DefaultBrowserDenyButton", nil)
+                                    button3:nil
+                                   checkMsg:NSLocalizedString(@"DefaultBrowserChecboxTitle", nil)
+                                 checkValue:&dontAskAgain];
+      NS_HANDLER
+      NS_ENDHANDLER
+      
       if (result == NSAlertDefaultReturn)
       {
         [[NSWorkspace sharedWorkspace] setDefaultBrowserWithIdentifier:myIdentifier];
@@ -1402,6 +1413,12 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     if (browserController != nil)
       return (![browserController bookmarkManagerIsVisible]);
     return NO;
+  }
+  
+    // disable open menu items if a sheet is up (maybe disable others too)
+  if (action == @selector(openFile:) ||
+      action == @selector(openLocation:)) {
+    return (!browserController || [[browserController window] attachedSheet] == nil);
   }
     
   // check what the state of the personal toolbar should be, but only if there is a browser

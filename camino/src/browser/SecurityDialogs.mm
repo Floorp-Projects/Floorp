@@ -248,21 +248,32 @@ NS_IMETHODIMP SecurityDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
 
   // XXX ideally we should use a custom dialog here, following the recommendations above.
   NSMutableString* thePassword = [[NSMutableString alloc] init];
-  BOOL confirmed = [controller promptPassword:nil /* no parent, sucky APIs */
-                                        title:NSLocalizedStringFromTable(@"PKCS12BackupRestoreTitle", @"CertificateDialogs", @"")
-                                         text:NSLocalizedStringFromTable(@"PKCS12BackupRestoreMsg", @"CertificateDialogs", @"")
-                                 passwordText:thePassword
-                                     checkMsg:nil
-                                   checkValue:NULL
-                                      doCheck:NO];
-  *_retval = confirmed;
+  BOOL confirmed = NO;
+  
+  nsresult rv = NS_OK;
+  NS_DURING
+    confirmed = [controller promptPassword:nil /* no parent, sucky APIs */
+                                     title:NSLocalizedStringFromTable(@"PKCS12BackupRestoreTitle", @"CertificateDialogs", @"")
+                                      text:NSLocalizedStringFromTable(@"PKCS12BackupRestoreMsg", @"CertificateDialogs", @"")
+                              passwordText:thePassword
+                                  checkMsg:nil
+                                checkValue:NULL
+                                   doCheck:NO];
+  NS_HANDLER
+    rv = NS_ERROR_FAILURE;
+  NS_ENDHANDLER
 
-  if (confirmed)
-    [thePassword assignTo_nsAString:password];
+  if (NS_SUCCEEDED(rv))
+  {
+    *_retval = confirmed;
 
+    if (confirmed)
+      [thePassword assignTo_nsAString:password];
+  }
+  
   [thePassword release];
 
-  return NS_OK;
+  return rv;
 }
 
 /**
@@ -690,25 +701,35 @@ SecurityDialogs::GetPassword(nsIInterfaceRequestor *ctx, const PRUnichar *tokenN
   
   NSString* msgFormat = NSLocalizedStringFromTable(@"GetTokenPasswordTitle", @"CertificateDialogs", @"");
   NSString* messageStr = [NSString stringWithFormat:msgFormat, [NSString stringWithPRUnichars:tokenName]];
-  BOOL confirmed = [controller promptPassword:nil /* no parent, sucky APIs */
-                                        title:messageStr
-                                         text:NSLocalizedStringFromTable(@"GetTokenPasswordMsg", @"CertificateDialogs", @"")
-                                 passwordText:thePassword
-                                     checkMsg:nil
-                                   checkValue:NULL
-                                      doCheck:NO];
 
-  if (confirmed)
-  {  
-    *password = [thePassword createNewUnicodeBuffer];
-    *canceled = YES;
+  BOOL confirmed = NO;
+  nsresult rv = NS_OK;
+  NS_DURING
+    confirmed = [controller promptPassword:nil /* no parent, sucky APIs */
+                                     title:messageStr
+                                      text:NSLocalizedStringFromTable(@"GetTokenPasswordMsg", @"CertificateDialogs", @"")
+                              passwordText:thePassword
+                                  checkMsg:nil
+                                checkValue:NULL
+                                   doCheck:NO];
+  NS_HANDLER
+    rv = NS_ERROR_FAILURE;
+  NS_ENDHANDLER
+
+  if (NS_SUCCEEDED(rv))
+  {
+    if (confirmed)
+    {  
+      *password = [thePassword createNewUnicodeBuffer];
+      *canceled = YES;
+    }
+    else
+      *canceled = YES;
   }
-  else
-    *canceled = YES;
-
+  
   [thePassword release];
 
-  return NS_OK;
+  return rv;
 }
 
   /**

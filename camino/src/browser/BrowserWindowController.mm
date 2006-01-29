@@ -596,16 +596,22 @@ enum BWCOpenDest {
 
       nsAlertController* controller = CHBrowserService::GetAlertController();
       BOOL dontShowAgain = NO;
-      // note that this is a pseudo-sheet (and causes Cocoa to complain about runModalForWindow:relativeToWindow).
-      // Ideally, we'd be able to get a panel from nsAlertController and run it as a sheet ourselves.
-      int result = [controller confirmCheckEx:[self window]
-                                        title:NSLocalizedString(@"CloseWindowWithMultipleTabsMsg", @"")
-                                         text:[NSString stringWithFormat:closeMultipleTabWarning, numberOfTabs]
-                                      button1:NSLocalizedString(@"CloseWindowWithMultipleTabsButton", @"")
-                                      button2:NSLocalizedString(@"CancelButtonText", @"")
-                                      button3:nil
-                                     checkMsg:NSLocalizedString(@"CloseWindowWithMultipleTabsCheckboxLabel", @"")
-                                   checkValue:&dontShowAgain];
+      int result = NSAlertErrorReturn;
+
+      NS_DURING
+        // note that this is a pseudo-sheet (and causes Cocoa to complain about runModalForWindow:relativeToWindow).
+        // Ideally, we'd be able to get a panel from nsAlertController and run it as a sheet ourselves.
+        result = [controller confirmCheckEx:[self window]
+                                      title:NSLocalizedString(@"CloseWindowWithMultipleTabsMsg", @"")
+                                       text:[NSString stringWithFormat:closeMultipleTabWarning, numberOfTabs]
+                                    button1:NSLocalizedString(@"CloseWindowWithMultipleTabsButton", @"")
+                                    button2:NSLocalizedString(@"CancelButtonText", @"")
+                                    button3:nil
+                                   checkMsg:NSLocalizedString(@"CloseWindowWithMultipleTabsCheckboxLabel", @"")
+                                 checkValue:&dontShowAgain];
+      NS_HANDLER
+      NS_ENDHANDLER
+      
       if (dontShowAgain)
         [[PreferenceManager sharedInstance] setPref:"camino.warn_when_closing" toBoolean:NO];
       

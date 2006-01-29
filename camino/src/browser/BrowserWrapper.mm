@@ -827,16 +827,22 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
       // A popup is being opened while the page is currently loading.  Offer to block the
       // popup.
       nsAlertController* controller = CHBrowserService::GetAlertController();
-      BOOL confirm = [controller confirm: [self window] title: NSLocalizedString(@"PopupBlockTitle",@"")
-                                text: [NSString stringWithFormat: NSLocalizedString(@"PopupBlockMsg", @""), NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)]];
+      
+      BOOL confirm = NO;
+      NS_DURING
+        confirm = [controller confirm:[self window]
+                                title:NSLocalizedString(@"PopupBlockTitle",@"")
+                                 text:[NSString stringWithFormat:NSLocalizedString(@"PopupBlockMsg", @""), NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)]];
 
-      // This is a one-time dialog.
-      [[PreferenceManager sharedInstance] setPref:"browser.popups.showPopupBlocker" toBoolean:NO];
+        // This is a one-time dialog.
+        [[PreferenceManager sharedInstance] setPref:"browser.popups.showPopupBlocker" toBoolean:NO];
+      NS_HANDLER
+      NS_ENDHANDLER
       
       if (confirm)
         [[PreferenceManager sharedInstance] setPref:"dom.disable_open_during_load" toBoolean:YES];
 
-      [[PreferenceManager sharedInstance] savePrefsFile];
+      [[PreferenceManager sharedInstance] savePrefsFile]; // really necessary?
 
       if (confirm)
         return nil;

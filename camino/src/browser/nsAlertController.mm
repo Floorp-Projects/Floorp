@@ -38,7 +38,6 @@
 #import "nsAlertController.h"
 #import "CHBrowserService.h"
 
-
 const int kMinDialogWidth = 500;
 const int kMaxDialogHeight = 400;
 const int kMinDialogHeight = 130;
@@ -87,6 +86,8 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
 
 @interface nsAlertController (nsAlertControllerPrivateMethods)
 
+- (int)runModalWindow:(NSWindow*)inDialog relativeToWindow:(NSWindow*)inParentWindow;
+
 - (NSPanel*)getAlertPanelWithTitle:(NSString*)title
         message:(NSString*)message
         defaultButton:(NSString*)defaultLabel
@@ -132,10 +133,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
 - (void)alert:(NSWindow*)parent title:(NSString*)title text:(NSString*)text
 { 
   NSPanel* panel = [self getAlertPanelWithTitle: title message: text defaultButton: NSLocalizedString(@"OKButtonText", @"") altButton: nil otherButton: nil extraView: nil lastResponder:nil];
-  if (parent)
-    [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    [NSApp runModalForWindow:panel];
+  [self runModalWindow:panel relativeToWindow:parent];
   [panel close];
 }
 
@@ -152,10 +150,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   NSPanel* panel = [self getAlertPanelWithTitle: title message: text defaultButton: NSLocalizedString(@"OKButtonText", @"") altButton: nil otherButton: nil extraView: checkboxView lastResponder: checkBox];
   [panel setInitialFirstResponder: checkBox];
 
-  if (parent)
-    [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    [NSApp runModalForWindow:panel];
+  [self runModalWindow:panel relativeToWindow:parent];
 
   *checkValue = ([checkBox state] == NSOnState);  
   [panel close];
@@ -165,12 +160,8 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
 {
   NSPanel* panel = [self getAlertPanelWithTitle: title message: text defaultButton: NSLocalizedString(@"OKButtonText", @"") altButton: NSLocalizedString(@"CancelButtonText", @"") otherButton: nil extraView: nil lastResponder: nil];
   
-  int result;
-  if (parent)
-    result = [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    result = [NSApp runModalForWindow:panel];
-
+  int result = [self runModalWindow:panel relativeToWindow:parent];
+  
   [panel close];
 
   return (result == NSAlertDefaultReturn);
@@ -193,11 +184,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   NSPanel* panel = [self getAlertPanelWithTitle: title message: text defaultButton: okButton altButton: cancelButton otherButton: nil extraView: checkboxView lastResponder: checkBox];
   [panel setInitialFirstResponder: checkBox];
 
-  int result;
-  if (parent)
-    result = [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    result = [NSApp runModalForWindow:panel];
+  int result = [self runModalWindow:panel relativeToWindow:parent];
 
   *checkValue = ([checkBox state] == NSOnState);  
   [panel close];
@@ -209,11 +196,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
 {
    NSPanel* panel = [self getAlertPanelWithTitle: title message: text defaultButton: btn1 altButton: btn2 otherButton: btn3 extraView: nil lastResponder: nil];
 
-  int result;
-  if (parent)
-    result = [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    result = [NSApp runModalForWindow:panel];
+  int result = [self runModalWindow:panel relativeToWindow:parent];
 
    [panel close];
    return result;
@@ -232,11 +215,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   NSPanel* panel = [self getAlertPanelWithTitle: title message: text defaultButton: btn1 altButton: btn2 otherButton: btn3 extraView: checkboxView lastResponder: checkBox];
   [panel setInitialFirstResponder: checkBox];
 
-  int result;
-  if (parent)
-    result = [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    result = [NSApp runModalForWindow:panel];
+  int result = [self runModalWindow:panel relativeToWindow:parent];
 
   *checkValue = ([checkBox state] == NSOnState);  
   [panel close];
@@ -281,11 +260,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   NSPanel* panel = [self getAlertPanelWithTitle: title message: text defaultButton: okButton altButton: cancelButton otherButton: nil extraView: extraView lastResponder:lastResponder];
   [panel setInitialFirstResponder: field];
 
-  int result;
-  if (parent)
-    result = [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    result = [NSApp runModalForWindow:panel];
+  int result = [self runModalWindow:panel relativeToWindow:parent];
 
   [panel close];
   
@@ -340,11 +315,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   NSPanel* panel = [self getAlertPanelWithTitle: title message: text defaultButton: okButton altButton: cancelButton otherButton: nil extraView: extraView lastResponder:lastResponder];
   [panel setInitialFirstResponder: userField];
 
-  int result;
-  if (parent)
-    result = [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    result = [NSApp runModalForWindow:panel];
+  int result = [self runModalWindow:panel relativeToWindow:parent];
 
   [panel close];
   
@@ -391,11 +362,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   NSPanel* panel = [self getAlertPanelWithTitle: title message: text defaultButton: okButton altButton: cancelButton otherButton: nil extraView: extraView lastResponder:lastResponder];
   [panel setInitialFirstResponder: passField];
 
-  int result;
-  if (parent)
-    result = [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    result = [NSApp runModalForWindow:panel];
+  int result = [self runModalWindow:panel relativeToWindow:parent];
 
   [panel close];
   
@@ -417,99 +384,40 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   
   id panel = NSGetAlertPanel(title, message, continueButton, stopButton, nil);
 
-  int result;
-  if (parent)
-    result = [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    result = [NSApp runModalForWindow:panel];
+  int result = [self runModalWindow:panel relativeToWindow:parent];
 
   [panel close];
   NSReleaseAlertPanel(panel);
   
   return (result == NSAlertDefaultReturn);
 }
-
-
-- (BOOL)badCert:(NSWindow*)parent
-{
-  NSString* title = NSLocalizedString(@"Security Warning", @"");
-  NSString* message = NSLocalizedString(@"Security Mismatch", @"");
-  NSString* continueButton = NSLocalizedString(@"ContinueButton", @"");
-  NSString* stopButton = NSLocalizedString(@"StopButton", @"");
-  
-  id panel = NSGetAlertPanel(title, message, continueButton, stopButton, nil);
-
-  int result;
-  if (parent)
-    result = [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    result = [NSApp runModalForWindow:panel];
-
-  [panel close];
-  NSReleaseAlertPanel(panel);
-  
-  return (result == NSAlertDefaultReturn);
-}
-
-- (BOOL)expiredCert:(NSWindow*)parent
-{
-  NSString* title = NSLocalizedString(@"Security Warning", @"");
-  NSString* message = NSLocalizedString(@"Expired Certification", @"");
-  NSString* continueButton = NSLocalizedString(@"ContinueButton", @"");
-  NSString* stopButton = NSLocalizedString(@"StopButton", @"");
-  
-  id panel = NSGetAlertPanel(title, message, continueButton, stopButton, nil);
-
-  int result;
-  if (parent)
-    result = [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    result = [NSApp runModalForWindow:panel];
-
-  [panel close];
-  NSReleaseAlertPanel(panel);
-  
-  return (result == NSAlertDefaultReturn);
-}
-
-
-- (int)unknownCert:(NSWindow*)parent
-{
-  // this dialog is a little backward, with "Stop" returning 0, and the default returning
-  // 1. That's just how nsIBadCertListener defines its constants. *shrug*
-  NSString* title = NSLocalizedString(@"Security Warning", @"");
-  NSString* message = NSLocalizedString(@"Unknown Certification", @"");
-  NSString* alwaysAcceptButton = NSLocalizedString(@"Accept Always", @"");
-  NSString* oneAcceptButton = NSLocalizedString(@"Accept Once", @"");
-  NSString* stopButton = NSLocalizedString(@"StopButton", @"");
-  
-  id panel = NSGetAlertPanel(title, message, oneAcceptButton, stopButton, alwaysAcceptButton);
-
-  int result;
-  if (parent)
-    result = [NSApp runModalForWindow:panel relativeToWindow:parent];
-  else
-    result = [NSApp runModalForWindow:panel];
-
-  [panel close];
-  NSReleaseAlertPanel(panel);
-  
-  int returnValue;
-  if (result == NSAlertDefaultReturn)
-    returnValue = 1;
-  else if (result == NSAlertOtherReturn)
-    returnValue = 2;
-  else
-    returnValue = 0;
-  
-  return returnValue;
-}
-
 
 #pragma mark -
 
-
 //  implementation of private methods
+
+- (int)runModalWindow:(NSWindow*)inDialog relativeToWindow:(NSWindow*)inParentWindow
+{
+  // If there is already a modal window up, convert a sheet into a modal window,
+  // because AppKit will hang if you try to do this (possibly because we're using
+  // the deprecated and sucky runModalForWindow:relativeToWindow:).
+  // Also, if the parent window already has an attached sheet, also null out
+  // the parent and show this as a modal dialog.
+  if ([NSApp modalWindow] || (inParentWindow && [inParentWindow attachedSheet]))
+    inParentWindow = nil;
+
+  int result;
+  if (inParentWindow)
+    result = [NSApp runModalForWindow:inDialog relativeToWindow:inParentWindow];
+  else
+    result = [NSApp runModalForWindow:inDialog];
+
+  // Convert any error into an exception
+  if (result == NSAlertErrorReturn)
+      [NSException raise:NSInternalInconsistencyException format:@"-runModalForWindow returned error"];
+  
+  return result;
+}
 
 // The content width is determined by how much space is needed to display all 3 buttons,
 // since every other view in the dialog can wrap if necessary
