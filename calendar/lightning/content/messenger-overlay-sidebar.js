@@ -153,6 +153,14 @@ function showCalendarView(type)
     previousCommand.setAttribute("label", previousCommand.getAttribute("label-"+type));
 }
 
+function goToToday()
+{
+    // set the current date in the minimonth control;
+    // note, that the current view in the calendar-view-box is automatically updated
+    var currentDay = today();
+    document.getElementById( "ltnMinimonth" ).value = currentDay.jsDate;
+}
+
 function selectedCalendarPane(event)
 {
     var deck = document.getElementById("displayDeck");

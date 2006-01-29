@@ -72,6 +72,10 @@
         <menuitem id="ltnChangeViewMonth" 
                   label="&lightning.toolbar.monthview.label;" 
                   oncommand="showCalendarView('month')"/>
+        <menuseparator/>
+        <menuitem id="ltnGoToToday" 
+                  label="&calendar.context.gototoday.label;" 
+                  oncommand="goToToday()"/>
       </menupopup>
     </menu>
   </menubar>
@@ -102,6 +106,11 @@
                    label="&calendar.dayview.button.label;" 
                    tooltiptext="&calendar.dayview.button.tooltip;" 
                    oncommand="showCalendarView('day')"/>
+    <toolbarbutton id="calendar-go-to-today-button" 
+                   class="cal-toolbarbutton-1" 
+                   label="&calendar.gototoday.button.label;" 
+                   tooltiptext="&calendar.gototoday.button.tooltip;" 
+                   oncommand="goToToday()"/>
   </toolbarpalette>
 
 </overlay>
