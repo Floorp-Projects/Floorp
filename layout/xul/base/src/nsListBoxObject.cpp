@@ -68,7 +68,7 @@ protected:
 };
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsListBoxObject, nsBoxObject, nsIListBoxObject,
-                             nsPIListBoxObject);
+                             nsPIListBoxObject)
 
 nsListBoxObject::nsListBoxObject()
   : mListBoxBody(nsnull)
