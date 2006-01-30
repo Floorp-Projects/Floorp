@@ -101,6 +101,11 @@ CSRCS   += cairo-win32-font.c \
 EXPORTS += cairo-win32.h
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CSRCS   += cairo-os2-surface.c
+EXPORTS += cairo-os2.h cairo-os2-private.h
+endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CSRCS   += cairo-quartz-surface.c \
            cairo-atsui-font.c

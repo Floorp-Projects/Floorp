@@ -122,6 +122,8 @@ class nsOffscreenSurface : public nsDrawingSurfaceOS2
    NS_IMETHOD Init( HPS aCompatiblePS, PRInt32 aWidth, PRInt32 aHeight, PRUint32 aFlags);
    NS_IMETHOD Init(HPS aPS);
 
+   HDC GetDC() { return mDC; }
+
    // nsIDrawingSurface methods
    NS_IMETHOD Lock( PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
                     void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,

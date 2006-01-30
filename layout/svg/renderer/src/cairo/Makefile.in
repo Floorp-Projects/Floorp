@@ -139,3 +139,7 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT), windows)
 LOCAL_INCLUDES += -I$(topsrcdir)/gfx/src/windows
 endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT), os2)
+LOCAL_INCLUDES += -I$(topsrcdir)/gfx/src/os2
+endif
