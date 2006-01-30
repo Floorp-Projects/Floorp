@@ -19083,6 +19083,13 @@ EOF
            WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
            WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
        fi
+       if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
+           OS2_SURFACE_FEATURE="#define CAIRO_HAS_OS2_SURFACE 1"
+           FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+           MOZ_ENABLE_CAIRO_FT=1
+           CAIRO_FT_CFLAGS="-I${FREETYPE2}/include -I${FONTCONFIG2}/include"
+           CAIRO_FT_LIBS="${FREETYPE2}/lib/freetype.lib ${FONTCONFIG2}/lib/fontcfg.lib"
+       fi
        if test "$MOZ_ENABLE_GLITZ"; then
            GLITZ_SURFACE_FEATURE="#define CAIRO_HAS_GLITZ_SURFACE 1"
        fi
@@ -19093,7 +19100,7 @@ EOF
     # Extract the first word of "pkg-config", so it can be a program name with args.
 set dummy pkg-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:19097: checking for $ac_word" >&5
+echo "configure:19104: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_PKG_CONFIG'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -19137,19 +19144,19 @@ fi
      PKG_CONFIG_MIN_VERSION=0.9.0
      if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
         echo $ac_n "checking for fontconfig freetype2""... $ac_c" 1>&6
-echo "configure:19141: checking for fontconfig freetype2" >&5
+echo "configure:19148: checking for fontconfig freetype2" >&5
 
         if $PKG_CONFIG --exists "fontconfig freetype2" ; then
             echo "$ac_t""yes" 1>&6
             succeeded=yes
 
             echo $ac_n "checking CAIRO_FT_CFLAGS""... $ac_c" 1>&6
-echo "configure:19148: checking CAIRO_FT_CFLAGS" >&5
+echo "configure:19155: checking CAIRO_FT_CFLAGS" >&5
             CAIRO_FT_CFLAGS=`$PKG_CONFIG --cflags "fontconfig freetype2"`
             echo "$ac_t""$CAIRO_FT_CFLAGS" 1>&6
 
             echo $ac_n "checking CAIRO_FT_LIBS""... $ac_c" 1>&6
-echo "configure:19153: checking CAIRO_FT_LIBS" >&5
+echo "configure:19160: checking CAIRO_FT_LIBS" >&5
             ## Remove evil flags like -Wl,--export-dynamic
             CAIRO_FT_LIBS="`$PKG_CONFIG --libs \"fontconfig freetype2\" |sed s/-Wl,--export-dynamic//g`"
             echo "$ac_t""$CAIRO_FT_LIBS" 1>&6
@@ -19205,6 +19212,7 @@ echo "configure:19153: checking CAIRO_FT_LIBS" >&5
        
        
        
+       
 
        if test "$_WIN32_MSVC"; then
            MOZ_CAIRO_LIBS='$(LIBXUL_DIST)/lib/mozcairo.lib $(LIBXUL_DIST)/lib/mozlibpixman.lib'
@@ -19239,7 +19247,7 @@ echo "configure:19153: checking CAIRO_FT_LIBS" >&5
     # Extract the first word of "pkg-config", so it can be a program name with args.
 set dummy pkg-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:19243: checking for $ac_word" >&5
+echo "configure:19251: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_PKG_CONFIG'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -19283,19 +19291,19 @@ fi
      PKG_CONFIG_MIN_VERSION=0.9.0
      if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
         echo $ac_n "checking for cairo >= $CAIRO_VERSION""... $ac_c" 1>&6
-echo "configure:19287: checking for cairo >= $CAIRO_VERSION" >&5
+echo "configure:19295: checking for cairo >= $CAIRO_VERSION" >&5
 
         if $PKG_CONFIG --exists "cairo >= $CAIRO_VERSION" ; then
             echo "$ac_t""yes" 1>&6
             succeeded=yes
 
             echo $ac_n "checking CAIRO_CFLAGS""... $ac_c" 1>&6
-echo "configure:19294: checking CAIRO_CFLAGS" >&5
+echo "configure:19302: checking CAIRO_CFLAGS" >&5
             CAIRO_CFLAGS=`$PKG_CONFIG --cflags "cairo >= $CAIRO_VERSION"`
             echo "$ac_t""$CAIRO_CFLAGS" 1>&6
 
             echo $ac_n "checking CAIRO_LIBS""... $ac_c" 1>&6
-echo "configure:19299: checking CAIRO_LIBS" >&5
+echo "configure:19307: checking CAIRO_LIBS" >&5
             ## Remove evil flags like -Wl,--export-dynamic
             CAIRO_LIBS="`$PKG_CONFIG --libs \"cairo >= $CAIRO_VERSION\" |sed s/-Wl,--export-dynamic//g`"
             echo "$ac_t""$CAIRO_LIBS" 1>&6
@@ -19359,7 +19367,7 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c python/xpcom` -ne 0; then
         # Extract the first word of "python", so it can be a program name with args.
 set dummy python; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:19363: checking for $ac_word" >&5
+echo "configure:19371: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_PYTHON'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -19646,14 +19654,14 @@ ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$a
 cross_compiling=$ac_cv_prog_cc_cross
 
     cat > conftest.$ac_ext <<EOF
-#line 19650 "configure"
+#line 19658 "configure"
 #include "confdefs.h"
 #include <gmodule.h>
 int main() {
  int x = 1; x++; 
 ; return 0; }
 EOF
-if { (eval echo configure:19657: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:19665: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
@@ -19958,7 +19966,7 @@ if test "$MOZ_X11"; then
                 _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $XCFLAGS"
     cat > conftest.$ac_ext <<EOF
-#line 19962 "configure"
+#line 19970 "configure"
 #include "confdefs.h"
 
         #include <stdio.h>
@@ -19974,7 +19982,7 @@ int main() {
     
 ; return 0; }
 EOF
-if { (eval echo configure:19978: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:19986: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
@@ -20563,6 +20571,7 @@ s%@XLIB_SURFACE_FEATURE@%$XLIB_SURFACE_FEATURE%g
 s%@QUARTZ_SURFACE_FEATURE@%$QUARTZ_SURFACE_FEATURE%g
 s%@XCB_SURFACE_FEATURE@%$XCB_SURFACE_FEATURE%g
 s%@WIN32_SURFACE_FEATURE@%$WIN32_SURFACE_FEATURE%g
+s%@OS2_SURFACE_FEATURE@%$OS2_SURFACE_FEATURE%g
 s%@BEOS_SURFACE_FEATURE@%$BEOS_SURFACE_FEATURE%g
 s%@GLITZ_SURFACE_FEATURE@%$GLITZ_SURFACE_FEATURE%g
 s%@DIRECTFB_SURFACE_FEATURE@%$DIRECTFB_SURFACE_FEATURE%g
