@@ -59,6 +59,11 @@ EXPORTS = \
 PRIVATE_EXPORTS = \
 	pk11pars.h \
 	pkcs11ni.h \
+	lowkeyi.h \
+	lowkeyti.h \
+	pcertt.h \
+	softoken.h \
+	softoknt.h \
 	$(NULL)
 
 CSRCS = \
