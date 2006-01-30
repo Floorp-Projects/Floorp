@@ -121,6 +121,10 @@ static PRBool test_basic_array(ElementType *data,
   ary.AppendElements(nsnull, 0);
   ary.AppendElements(empty);
 
+  // See bug 324981
+  ary.RemoveElement(extra);
+  ary.RemoveElement(extra);
+
   return PR_TRUE;
 }
 
