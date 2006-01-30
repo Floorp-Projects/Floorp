@@ -110,18 +110,12 @@
 static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 
 // Enumeration function that cancels all the image requests in our cache
-PR_STATIC_CALLBACK(PRBool)
-CancelImageRequest(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+CancelImageRequest(const nsAString& aKey,
+                   nsTreeImageCacheEntry aEntry, void* aData)
 {
-  nsISupports* supports = NS_STATIC_CAST(nsISupports*, aData);
-  nsCOMPtr<imgIRequest> request = do_QueryInterface(supports);
-  nsCOMPtr<imgIDecoderObserver> observer;
-  request->GetDecoderObserver(getter_AddRefs(observer));
-  NS_ASSERTION(observer, "No observer?  We're leaking!");
-  request->Cancel(NS_ERROR_FAILURE);
-  imgIDecoderObserver* observer2 = observer;
-  NS_RELEASE(observer2);  // Balance out the addref from GetImage()
-  return PR_TRUE;
+  aEntry.request->Cancel(NS_BINDING_ABORTED);
+  return PL_DHASH_NEXT;
 }
 
 //
@@ -150,7 +144,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 
 // Constructor
 nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell)
-:nsLeafBoxFrame(aPresShell), mTreeBoxObject(nsnull), mImageCache(nsnull),
+:nsLeafBoxFrame(aPresShell), mTreeBoxObject(nsnull),
  mScrollbar(nsnull), mHorzScrollbar(nsnull), mColScrollContent(nsnull), mColScrollView(nsnull), 
  mHorzPosition(0), mHorzWidth(0), mRowHeight(0), mIndentation(0), mStringWidth(-1),
  mTopRowIndex(0), mFocused(PR_FALSE), mHasFixedRowCount(PR_FALSE), 
@@ -164,10 +158,7 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell)
 // Destructor
 nsTreeBodyFrame::~nsTreeBodyFrame()
 {
-  if (mImageCache) {
-    mImageCache->Enumerate(CancelImageRequest);
-    delete mImageCache;
-  }
+  mImageCache.EnumerateRead(CancelImageRequest, nsnull);
   delete mSlots;
 }
 
@@ -251,6 +242,7 @@ nsTreeBodyFrame::Init(nsPresContext* aPresContext, nsIContent* aContent,
   mIndentation = GetIndentation();
   mRowHeight = GetRowHeight();
 
+  NS_ENSURE_TRUE(mImageCache.Init(16), NS_ERROR_OUT_OF_MEMORY);
   return rv;
 }
 
@@ -1742,29 +1734,27 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseCont
     uri->GetSpec(spec);
     CopyUTF8toUTF16(spec, imageSrc);
   }
-  nsStringKey key(imageSrc);
 
-  if (mImageCache) {
-    // Look the image up in our cache.
-    nsCOMPtr<imgIRequest> imgReq = getter_AddRefs(NS_STATIC_CAST(imgIRequest*, mImageCache->Get(&key)));
-    if (imgReq) {
-      // Find out if the image has loaded.
-      PRUint32 status;
-      imgReq->GetImageStatus(&status);
-      imgReq->GetImage(aResult); // We hand back the image here.  The GetImage call addrefs *aResult.
-      PRUint32 numFrames = 1;
-      if (*aResult)
-        (*aResult)->GetNumFrames(&numFrames);
+  // Look the image up in our cache.
+  nsTreeImageCacheEntry entry;
+  if (mImageCache.Get(imageSrc, &entry)) {
+    // Find out if the image has loaded.
+    PRUint32 status;
+    imgIRequest *imgReq = entry.request;
+    imgReq->GetImageStatus(&status);
+    imgReq->GetImage(aResult); // We hand back the image here.  The GetImage call addrefs *aResult.
+    PRUint32 numFrames = 1;
+    if (*aResult)
+      (*aResult)->GetNumFrames(&numFrames);
 
-      if ((!(status & imgIRequest::STATUS_LOAD_COMPLETE)) || numFrames > 1) {
-        // We either aren't done loading, or we're animating. Add our row as a listener for invalidations.
-        nsCOMPtr<imgIDecoderObserver> obs;
-        imgReq->GetDecoderObserver(getter_AddRefs(obs));
-        nsCOMPtr<nsITreeImageListener> listener(do_QueryInterface(obs));
-        if (listener)
-          listener->AddCell(aRowIndex, aCol);
-        return NS_OK;
-      }
+    if ((!(status & imgIRequest::STATUS_LOAD_COMPLETE)) || numFrames > 1) {
+      // We either aren't done loading, or we're animating. Add our row as a listener for invalidations.
+      nsCOMPtr<imgIDecoderObserver> obs;
+      imgReq->GetDecoderObserver(getter_AddRefs(obs));
+      nsCOMPtr<nsITreeImageListener> listener(do_QueryInterface(obs));
+      if (listener)
+        listener->AddCell(aRowIndex, aCol);
+      return NS_OK;
     }
   }
 
@@ -1815,15 +1805,8 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseCont
 
     // In a case it was already cached.
     imageRequest->GetImage(aResult);
-
-    if (!mImageCache) {
-      mImageCache = new nsSupportsHashtable(16);
-      if (!mImageCache)
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mImageCache->Put(&key, imageRequest);
-    imgIDecoderObserver* decoderObserverPtr = imgDecoderObserver;
-    NS_ADDREF(decoderObserverPtr);  // Will get released when we remove the cache entry.
+    nsTreeImageCacheEntry cacheEntry = { imageRequest, imgDecoderObserver };
+    mImageCache.Put(imageSrc, cacheEntry);
   }
   return NS_OK;
 }
@@ -3682,11 +3665,8 @@ NS_IMETHODIMP
 nsTreeBodyFrame::ClearStyleAndImageCaches()
 {
   mStyleCache.Clear();
-  if (mImageCache) {
-    mImageCache->Enumerate(CancelImageRequest);
-    delete mImageCache;
-  }
-  mImageCache = nsnull;
+  mImageCache.EnumerateRead(CancelImageRequest, nsnull);
+  mImageCache.Clear();
   mScrollbar = nsnull;
   return NS_OK;
 }
