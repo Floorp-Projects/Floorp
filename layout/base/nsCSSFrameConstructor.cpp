@@ -284,7 +284,7 @@ static FrameCtorDebugFlags gFlags[] = {
 #include "nsPopupSetFrame.h"
 #include "nsTreeColFrame.h"
 #include "nsIBoxObject.h"
-#include "nsIListBoxObject.h"
+#include "nsPIListBoxObject.h"
 #include "nsListBoxBodyFrame.h"
 #include "nsListItemFrame.h"
 
@@ -9296,10 +9296,9 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
     nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(aContainer);
     nsCOMPtr<nsIBoxObject> boxObject;
     xulElement->GetBoxObject(getter_AddRefs(boxObject));
-    nsCOMPtr<nsIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
+    nsCOMPtr<nsPIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
     if (listBoxObject) {
-      nsIListBoxObject* listboxBody;
-      listBoxObject->GetListboxBody(&listboxBody);
+      nsIListBoxObject* listboxBody = listBoxObject->GetListBoxBody();
       if (listboxBody) {
         nsListBoxBodyFrame *listBoxBodyFrame = NS_STATIC_CAST(nsListBoxBodyFrame*, listboxBody);
         if (aOperation == CONTENT_REMOVED)

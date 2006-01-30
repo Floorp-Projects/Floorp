@@ -71,6 +71,7 @@
 #include "nsPIBoxObject.h"
 #include "nsINodeInfo.h"
 #include "nsLayoutUtils.h"
+#include "nsPIListBoxObject.h"
 
 /////////////// nsListScrollSmoother //////////////////
 
@@ -283,10 +284,9 @@ nsListBoxBodyFrame::Destroy(nsPresContext* aPresContext)
       nsCOMPtr<nsIBoxObject> box;
       nsdoc->GetBoxObjectFor(e, getter_AddRefs(box));
 
-      nsCOMPtr<nsPIBoxObject> pibox(do_QueryInterface(box));
-
-      if (pibox) {
-        pibox->InvalidatePresentationStuff();
+      nsCOMPtr<nsPIListBoxObject> piBox = do_QueryInterface(box);
+      if (piBox) {
+        piBox->ClearCachedListBoxBody();
       }
 
       break;
