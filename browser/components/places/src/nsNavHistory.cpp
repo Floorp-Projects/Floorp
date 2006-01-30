@@ -1060,15 +1060,17 @@ nsNavHistory::VacuumDB(PRTime aTimeAgo, PRBool aCompress)
   rv = nsFaviconService::VacuumFavicons(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  transaction.Commit();
+
   // compress the tables
   if (aCompress) {
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_history"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_historyvisit"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_anno"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM moz_favicon"));
+#ifdef DEBUG
+    PRBool inProgress = PR_FALSE;
+    rv = mDBConn->GetTransactionInProgress(&inProgress);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't get transaction status");
+    NS_ASSERTION(! inProgress, "You must not have a transaction in progress to vacuum!");
+#endif
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1411,7 +1413,7 @@ nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
 {
   nsCOMPtr<mozIStorageStatement> dbSelectStatement;
   nsresult rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT url FROM moz_history LIMIT 1"),
+      NS_LITERAL_CSTRING("SELECT visit_id FROM moz_historyvisit LIMIT 1"),
       getter_AddRefs(dbSelectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
   return dbSelectStatement->ExecuteStep(aHasEntries);
@@ -1998,41 +2000,21 @@ nsNavHistory::GetLastPageVisited(nsACString & aLastPageVisited)
 
 // nsNavHistory::GetCount
 //
-//    Finds the total number of history items.
-//
-//    This function is useless, please don't use it. It's also very slow
-//    since in sqlite, count enumerates all results to see how many there are.
-//
-//    If you want to see if there is any history, use HasHistoryEntries
+//    This function is used in legacy code to see if there is any history to
+//    clear. Counting the actual number of history entries is very slow, so
+//    we just see if there are any and return 0 or 1, which is enough to make
+//    all the code that uses this function happy.
 
 NS_IMETHODIMP
 nsNavHistory::GetCount(PRUint32 *aCount)
 {
-  NS_WARNING("Don't use history.count: it is slow and useless. Try hasHistoryEntries.");
-
-  nsCOMPtr<mozIStorageStatement> dbSelectStatement;
-  nsresult rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT count(url) FROM moz_history"),
-      getter_AddRefs(dbSelectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool moreResults;
-  rv = dbSelectStatement->ExecuteStep(&moreResults);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!moreResults) {
-    // huh? count() should always return one result
-    return NS_ERROR_FAILURE;
-  }
-
-  PRInt32 countSigned;
-  rv = dbSelectStatement->GetInt32(0, &countSigned);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (countSigned < 0)
-    *aCount = 0;
+  PRBool hasEntries = PR_FALSE;
+  nsresult rv = GetHasHistoryEntries(&hasEntries);
+  if (hasEntries)
+    *aCount = 1;
   else
-    *aCount = NS_STATIC_CAST(PRUint32, countSigned);
-  return NS_OK;
+    *aCount = 0;
+  return rv;
 }
 
 
