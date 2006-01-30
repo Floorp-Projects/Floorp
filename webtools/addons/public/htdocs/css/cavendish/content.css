@@ -177,9 +177,23 @@
     margin-top: 0.2em;
 }
 
+.recommended {
+    clear: both;
+    padding: 1em 0;
+}
+
+.recommended h2 {
+    padding: 1em 0 0 215px;
+    margin: 0;
+}
+
+.recommended p {
+    padding-left: 215px;
+}
+
 .recommended-download h3 {
 	font: small tahoma, verdana, sans-serif;
-	margin: 5px 0 0 0;
+	margin: 0;
 	background: url("../../images/download.gif") 0 100%;
     font-size: small;
 	padding-bottom: 5px;
@@ -202,20 +216,15 @@
 }
 
 .recommended-download {
-    clear: left;
+    display: block;
 	width: 200px;
-    padding: 5px;
-    float: left;
+    padding: 15px 0 0 215px;
 }
 
 .recommended-img {
     border: 2px outset #eee;
     float: left;
     margin: 1em 1em 0 0;
-}
-
-.recommended h2 {
-    padding-top: 1em;
 }
 
 .iconbar {

@@ -11,7 +11,7 @@
         <h2><a href="{$config.webpath}/addon.php?id=1532">del.icio.us</a></h2>
         <p class="first">Harness the power of social bookmarking right in your browser with the del.icio.us Firefox extension! The del.icio.us extension for Firefox offers everything you need to seamlessly integrate the del.icio.us service with your Firefox browser. <a href="{$config.webpath}/addon.php?id=1532">Learn more...</a></p>
     </div>
-    <a class="top-feature" href="{$config.webpath}/recommended.php"><img src="{$config.webpath}/images/feature-recommend.png" width="213" height="128" style="padding-left: 12px;" alt="We Recommend: See some of our favorite extensions to get you started."></a>
+    <a class="top-feature" href="{$config.webpath}/{$app}/recommended/"><img src="{$config.webpath}/images/feature-recommend.png" width="213" height="128" style="padding-left: 12px;" alt="We Recommend: See some of our favorite extensions to get you started."></a>
 
     <div class="split-feature-two">
     <h2><img src="{$config.webpath}/images/title-topdownloads.gif" width="150" height="24" alt="Top 10 Downloads"></h2>
