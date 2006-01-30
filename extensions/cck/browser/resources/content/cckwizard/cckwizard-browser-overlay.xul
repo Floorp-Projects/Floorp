@@ -4,7 +4,7 @@
   
   <menupopup id="menu_ToolsPopup">
     <menuitem label="CCK Wizard" insertafter="devToolsSeparator" 
-              oncommand="window.openDialog('chrome://cckwizard/content/cckwizard.xul','cckwizard','chrome,modal');"
+              oncommand="window.openDialog('chrome://cckwizard/content/cckwizard.xul','cckwizard','chrome');"
               onclick="checkForMiddleClick(this, event);"/>
   </menupopup>
 </overlay>
