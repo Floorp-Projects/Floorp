@@ -398,14 +398,17 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
 
 - (int)runModalWindow:(NSWindow*)inDialog relativeToWindow:(NSWindow*)inParentWindow
 {
-  // If there is already a modal window up, convert a sheet into a modal window,
-  // because AppKit will hang if you try to do this (possibly because we're using
-  // the deprecated and sucky runModalForWindow:relativeToWindow:).
-  // Also, if the parent window already has an attached sheet, also null out
-  // the parent and show this as a modal dialog.
-  if ([NSApp modalWindow] || (inParentWindow && [inParentWindow attachedSheet]))
-    inParentWindow = nil;
-
+  if (inParentWindow)
+  {
+    // If there is already a modal window up, convert a sheet into a modal window,
+    // because AppKit will hang if you try to do this (possibly because we're using
+    // the deprecated and sucky runModalForWindow:relativeToWindow:).
+    // Also, if the parent window already has an attached sheet, or is not visible,
+    // also null out the parent and show this as a modal dialog.
+    if ([NSApp modalWindow] || [inParentWindow attachedSheet] || ![inParentWindow isVisible])
+      inParentWindow = nil;
+  }
+  
   int result;
   if (inParentWindow)
     result = [NSApp runModalForWindow:inDialog relativeToWindow:inParentWindow];
