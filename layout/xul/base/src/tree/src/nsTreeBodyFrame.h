@@ -55,6 +55,8 @@
 #include "nsTreeImageListener.h"
 #include "nsAutoPtr.h"
 #include "nsDataHashtable.h"
+#include "imgIRequest.h"
+#include "imgIDecoderObserver.h"
 
 // An entry in the tree's image cache
 struct nsTreeImageCacheEntry
