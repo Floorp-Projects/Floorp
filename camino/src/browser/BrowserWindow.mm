@@ -100,6 +100,21 @@ static const int kEscapeKeyCode = 53;
 	mSuppressMakeKeyFront = inSuppress;
 }
 
+- (void)becomeMainWindow
+{
+  [super becomeMainWindow];
+  // There appears to be a bug on 10.4 where mouse moves don't get reactivated
+  // when showing the application after it has been hidden. Furthermore,
+  // we seem to have to do this after a delay (perhaps because we're not
+  // actually the main window yet).
+  [self performSelector:@selector(delayedTurnOnMouseMoves) withObject:nil afterDelay:0];
+}
+
+- (void)delayedTurnOnMouseMoves
+{
+  [self setAcceptsMouseMovedEvents:YES];
+}
+
 // Pass command-return off to the controller so that locations/searches may be opened in a new tab.
 // Pass command-plus off to the controller to enlarge the text size.
 // Pass command-shift-r off to the controller for force-reload.
