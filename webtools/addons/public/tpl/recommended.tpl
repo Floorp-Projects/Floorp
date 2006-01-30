@@ -1,7 +1,7 @@
 <div id="mBody">
 <h1>Getting Started with Extensions</h1>
 
-<p>With over 300 extensions available for Firefox, there's something for everyone. To get you started, here's a list of some of our recommended extensions that make use of popular online services.</p>
+<p>With over thousands of extensions available, there's something for everyone. To get you started, here's a list of some of our recommended extensions that make use of popular online services.</p>
 
 {section name=re loop=$recommendedExtensions step=1 start=0}
 <div class="recommended">

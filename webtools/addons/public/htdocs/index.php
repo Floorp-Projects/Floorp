@@ -35,34 +35,12 @@ switch( $_GET['app'] ) {
 // We have to ucfirst() it because the DB has caps.
 $sql['app'] = $clean['app'];
 
-// Get most popular extensions based on application.
-$db->query("
-    SELECT DISTINCT
-        TM.ID ID, 
-        TM.Name name, 
-        TM.downloadcount dc
-    FROM
-        main TM
-    INNER JOIN version TV ON TM.ID = TV.ID
-    INNER JOIN applications TA ON TV.AppID = TA.AppID
-    INNER JOIN os TOS ON TV.OSID = TOS.OSID
-    WHERE
-        AppName = '{$sql['app']}' AND 
-        downloadcount > '0' AND
-        approved = 'YES' AND
-        Type = 'E'
-    ORDER BY
-        downloadcount DESC 
-    LIMIT 
-        5 
-", SQL_ALL, SQL_ASSOC);
-
-$popularExtensions = $db->record;
-
+$amo = new AMO_Object();
 
 // Assign template variables.
 $tpl->assign(
-    array(  'popularExtensions' => $popularExtensions,
+    array(  'popularExtensions' => $amo->getPopularAddons($sql['app'],'E',5),
+            'feature'           => $amo->getFeature($sql['app']),
             'title'             => $clean['app'].' Addons',
             'currentTab'        => $currentTab)
 );

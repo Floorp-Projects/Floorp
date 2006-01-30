@@ -215,7 +215,7 @@ class AMO_Object
      }
 
     /**
-     * Get most popular addons.
+     * Get recommended addons.
      *
      * @param string $app
      * @param string $type
@@ -262,5 +262,52 @@ class AMO_Object
         return $this->db->record;
      }
 
+    /**
+     * Get feature for front page.
+     *
+     * @param string $app
+     * @param string $type
+     * @return array
+     */
+     function getFeature($app='firefox',$type='E') {
+
+        // Return a random feature.
+        // Yes, rand(now()) is a random (hehe) way to do it.
+        // I'm open to suggestions.
+        $this->db->query("
+            SELECT DISTINCT
+                m.id, 
+                m.name, 
+                m.downloadcount,
+                v.dateupdated,
+                v.uri,
+                r.body,
+                r.title,
+                v.size,
+                v.version,
+                p.previewuri
+            FROM
+                main m
+            INNER JOIN version v ON m.ID = v.ID
+            INNER JOIN applications TA ON v.AppID = TA.AppID
+            INNER JOIN os o ON v.OSID = o.OSID
+            INNER JOIN reviews r ON m.ID = r.ID
+            INNER JOIN previews p ON p.ID = m.ID
+            WHERE
+                AppName = '{$app}' AND 
+                downloadcount > '0' AND
+                approved = 'YES' AND
+                Type = '{$type}' AND
+                r.featured = 'YES' AND
+                p.preview = 'YES'
+            GROUP BY
+                m.ID
+            ORDER BY
+                rand(now())
+            LIMIT 1
+        ", SQL_INIT, SQL_ASSOC);
+
+        return $this->db->record;
+     }
 }
 ?>

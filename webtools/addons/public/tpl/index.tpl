@@ -3,13 +3,13 @@
     <div class="split-feature-one">
         <div class="feature-download">
             <!-- Feature Image must be 200px wide... any height is fine, but around 170-200 is preferred -->
-            <a href="{$config.webpath}/addon.php?id=1532"><img src="{$config.webpath}/images/features/del.icio.us.png" width="200" height="213" alt="del.icio.us Extension"></a>
-            <h3><a href="http://releases.mozilla.org/pub/mozilla.org/extensions/del.icio.us/del.icio.us-1.0.2-fx.xpi" onclick="return install(event,'del.icio.us 1.0.2', '{$config.webpath}/images/default.png');" title="Install del.icio.us 1.0.2 (Right-Click to Download)">Install Extension (62 KB)</a> </h3>
+            <a href="{$config.webpath}/{$app}/{$feature.id}/"><img src="{$config.webpath}{$feature.previewuri}" alt="{$feature.name} Extension"></a>
+            <h3><a href="{$feature.uri}" onclick="return install(event,'{$feature.name} {$feature.version}', '{$config.webpath}/images/default.png');" title="Install {$feature.name} {$feature.version} (Right-Click to Download)">Install Extension ({$feature.size} KB)</a> </h3>
 
         </div>
         <h2>Featured Extension</h2>
-        <h2><a href="{$config.webpath}/addon.php?id=1532">del.icio.us</a></h2>
-        <p class="first">Harness the power of social bookmarking right in your browser with the del.icio.us Firefox extension! The del.icio.us extension for Firefox offers everything you need to seamlessly integrate the del.icio.us service with your Firefox browser. <a href="{$config.webpath}/addon.php?id=1532">Learn more...</a></p>
+        <h2><a href="{$config.webpath}/{$app}/{$feature.id}/">{$feature.name}</a></h2>
+        <p class="first">{$feature.body|nl2br} <a href="{$config.webpath}/{$app}/{$feature.id}/">Learn more...</a></p>
     </div>
     <a class="top-feature" href="{$config.webpath}/{$app}/recommended/"><img src="{$config.webpath}/images/feature-recommend.png" width="213" height="128" style="padding-left: 12px;" alt="We Recommend: See some of our favorite extensions to get you started."></a>
 
