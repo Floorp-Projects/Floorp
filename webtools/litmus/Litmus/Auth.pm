@@ -315,7 +315,7 @@ sub processLoginForm {
     $userobj->bugzilla_uid("0");
     $userobj->realname($realname);
     $userobj->disabled(0);
-    $userobj->is_admin(0);
+#    $userobj->is_admin(0);
     $userobj->irc_nickname($nickname);
     $userobj->update();
     

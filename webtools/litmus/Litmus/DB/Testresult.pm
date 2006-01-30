@@ -184,7 +184,7 @@ sub getTestResults($\@\@$) {
     my $limit = 'LIMIT ';
 
     foreach my $criterion (@$where_criteria) {
-        $criterion->{'value'} = quotemeta( $criterion->{'value'} );
+         $criterion->{'value'} =~ s/'/\'/g;
         if ($criterion->{'field'} eq 'branch') {
             $where .= " AND b.name='" . $criterion->{'value'} . "'";
         } elsif ($criterion->{'field'} eq 'locale') {
@@ -280,7 +280,7 @@ sub getTestResults($\@\@$) {
     }
     
     my $sql = "$select $from $where $order_by $limit";
-
+#print $sql,"<br/>\n";
     Litmus::DB::Testresult->set_sql(TestResults => qq{
         $sql
         });
