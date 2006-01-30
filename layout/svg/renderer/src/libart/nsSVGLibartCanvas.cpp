@@ -410,6 +410,13 @@ nsSVGLibartCanvas::PopSurface()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsSVGLibartCanvas::GetSurfaceSize(PRUint32 *aWidth, PRUint32 *aHeight)
+{
+  // XXX
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /** Implements  void compositeSurface(in nsISVGRendererSurface surface,
                                       in unsigned long x, in unsigned long y,
                                       in float opacity); */

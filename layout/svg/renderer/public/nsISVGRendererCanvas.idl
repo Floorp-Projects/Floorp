@@ -69,7 +69,7 @@ interface nsISVGRendererSurface;
  * Mozilla-native rendering object with a call to
  * nsISVGRenderer::createCanvas().
  */
-[scriptable, uuid(9cdf3f86-a511-4948-83f8-e25460f03b83)]
+[scriptable, uuid(a1ea0d56-765f-43be-88dc-e54576e5735b)]
 interface nsISVGRendererCanvas : nsISupports
 {
   /**
@@ -132,6 +132,11 @@ interface nsISVGRendererCanvas : nsISupports
    */
   void pushSurface(in nsISVGRendererSurface surface);
   void popSurface();
+
+  /**
+   * Get the current drawing surface dimensions.
+   */
+  void getSurfaceSize(out unsigned long width, out unsigned long height);
 
   /**
    * Surface composition.

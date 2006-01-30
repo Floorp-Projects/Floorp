@@ -59,6 +59,7 @@ class nsIURI;
 class nsISVGOuterSVGFrame;
 class nsISVGRendererSurface;
 class nsIPresShell;
+class nsISVGRendererCanvas;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -142,8 +143,9 @@ public:
   static float
   AngleBisect(float a1, float a2);
 
-  /* Generate a new rendering surface the size of the outer svg frame */
+  /* Generate a new rendering surface the size of the current surface */
   static nsresult GetSurface(nsISVGOuterSVGFrame *aOuterSVGFrame,
+                             nsISVGRendererCanvas *aCanvas,
                              nsISVGRendererSurface **aSurface);
 
 private:
