@@ -151,24 +151,24 @@ class AMO_Object
         // Get most popular extensions based on application.
         $this->db->query("
             SELECT DISTINCT
-                TM.ID ID, 
-                TM.Name name, 
-                TM.downloadcount dc,
-                TV.DateUpdated as dateupdated
+                m.ID ID, 
+                m.Name name, 
+                m.downloadcount dc,
+                v.DateUpdated as dateupdated
             FROM
-                main TM
-            INNER JOIN version TV ON TM.ID = TV.ID
-            INNER JOIN applications TA ON TV.AppID = TA.AppID
-            INNER JOIN os TOS ON TV.OSID = TOS.OSID
+                main m
+            INNER JOIN version v ON m.ID = v.ID
+            INNER JOIN applications TA ON v.AppID = TA.AppID
+            INNER JOIN os o ON v.OSID = o.OSID
             WHERE
                 AppName = '{$app}' AND 
                 downloadcount > '0' AND
                 approved = 'YES' AND
                 Type = '{$type}'
             GROUP BY
-                TM.ID
+                m.ID
             ORDER BY
-                TV.dateupdated DESC , downloadcount DESC, rating DESC
+                v.dateupdated DESC , downloadcount DESC, rating DESC
             LIMIT 
                 {$limit}
         ", SQL_ALL, SQL_ASSOC);
@@ -189,29 +189,78 @@ class AMO_Object
         // Return most popular addons.
         $this->db->query("
             SELECT DISTINCT
-                TM.ID ID, 
-                TM.Name name, 
-                TM.downloadcount dc,
-                TV.DateUpdated as dateupdated
+                m.ID ID, 
+                m.Name name, 
+                m.downloadcount dc,
+                v.DateUpdated as dateupdated
             FROM
-                main TM
-            INNER JOIN version TV ON TM.ID = TV.ID
-            INNER JOIN applications TA ON TV.AppID = TA.AppID
-            INNER JOIN os TOS ON TV.OSID = TOS.OSID
+                main m
+            INNER JOIN version v ON m.ID = v.ID
+            INNER JOIN applications TA ON v.AppID = TA.AppID
+            INNER JOIN os o ON v.OSID = o.OSID
             WHERE
                 AppName = '{$app}' AND 
                 downloadcount > '0' AND
                 approved = 'YES' AND
                 Type = '{$type}'
             GROUP BY
-                TM.ID
+                m.ID
             ORDER BY
-                downloadcount DESC, rating DESC, TV.dateupdated DESC 
+                downloadcount DESC, rating DESC, v.dateupdated DESC 
             LIMIT 
                 {$limit}
         ", SQL_ALL, SQL_ASSOC);
 
         return $this->db->record;
      }
+
+    /**
+     * Get most popular addons.
+     *
+     * @param string $app
+     * @param string $type
+     * @param int $limit
+     * @return array
+     */
+     function getRecommendedAddons($app='firefox',$type='E', $limit=10) {
+
+        // Return most popular addons.
+        $this->db->query("
+            SELECT DISTINCT
+                m.id, 
+                m.name, 
+                m.downloadcount,
+                v.dateupdated,
+                v.uri,
+                r.body,
+                r.title,
+                v.size,
+                v.version,
+                p.previewuri
+            FROM
+                main m
+            INNER JOIN version v ON m.ID = v.ID
+            INNER JOIN applications TA ON v.AppID = TA.AppID
+            INNER JOIN os o ON v.OSID = o.OSID
+            INNER JOIN reviews r ON m.ID = r.ID
+            INNER JOIN previews p ON p.ID = m.ID
+            WHERE
+                AppName = '{$app}' AND 
+                downloadcount > '0' AND
+                approved = 'YES' AND
+                Type = '{$type}' AND
+                r.featured = 'YES' AND
+                p.preview = 'YES'
+            GROUP BY
+                m.ID
+            ORDER BY
+                m.Name
+            LIMIT 
+                {$limit}
+        ", SQL_ALL, SQL_ASSOC);
+
+        return $this->db->record;
+     }
+
 }
 ?>
