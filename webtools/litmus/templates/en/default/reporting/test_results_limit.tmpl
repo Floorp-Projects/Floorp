@@ -27,15 +27,28 @@
 
 [% PROCESS global/selects.none.tmpl %]
 
-<form name="search_results" method="get" action="search_results.cgi" onSubmit="if(this.summary.value=='-Summary-'){this.summary.value = '';}if(this.email.value=='-Submitted By-'){this.email.value = '';}">
-
 <script type="text/javascript">
 function init()
 {
     FormInit(document.forms['search_results'], document.location.search);
 }
+
+function checkSearchForm(f)
+{
+    if ( ! checkNumber(f.limit,true)) {
+	return false;
+    }
+
+    if (f.summary.value=='-Summary-') {
+        f.summary.value = '';
+    }
+    if (f.email.value=='-Submitted By-') {
+        f.email.value = '';
+    }
+}
 </script>
 
+<form name="search_results" method="get" action="search_results.cgi" onSubmit="return checkSearchForm(this);">
 
 <!--# Add a row to order the results by each field. -->
 <tr class="search">

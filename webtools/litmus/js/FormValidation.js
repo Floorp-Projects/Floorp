@@ -1,4 +1,5 @@
 var iBugNumber = "This field must be a valid, positive integer (>0). Please re-enter it now.";
+var iNumber = iBugNumber;
 var iEmail = "This field must be a valid email address (like foo@bar.com). Please re-enter it now.";
 var iBuildId = "This field must be a valid build id, which is a string of 8 digits most easily found in the About dialog. Please re-enter it now.";
 var iPasswordMismatch = "The passwords you entered did not match.";
@@ -208,6 +209,24 @@ function checkBuildId (theField, emptyOK)
     }
 }
 
+// checkNumber (TEXTFIELD theField [, BOOLEAN emptyOK==false])
+//
+// Check that string theField.value is a valid, positive integer.
+//
+// For explanation of optional argument emptyOK,
+// see comments of function isInteger.
+function checkNumber (theField, emptyOK)
+{   
+    if (checkNumber.arguments.length == 1) { 
+	emptyOK = defaultEmptyOK;
+    }
+
+    if (isPositiveInteger(theField.value,emptyOK)) {
+        return true;
+    } else {
+        return warnInvalid (theField, iNumber);
+    }
+}
 
 // isInteger (STRING s [, BOOLEAN emptyOK])
 // 
