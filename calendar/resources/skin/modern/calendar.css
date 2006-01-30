@@ -210,9 +210,9 @@
     padding-top:	1px;
     -moz-image-region: rect(68px 45px 102px 0px);
   }
-#calendar-multiweek-view-button[disabled="true"],
-#calendar-multiweek-view-button[disabled="true"]:hover,
-#calendar-multiweek-view-button[disabled="true"]:hover:active,
+#calendar-multiweek-view-button[checked="true"],
+#calendar-multiweek-view-button[checked="true"]:hover,
+#calendar-multiweek-view-button[checked="true"]:hover:active,
 #calendar-multiweek-view-button:hover:active
   {
     -moz-image-region: rect(68px 135px 102px 90px);
@@ -232,9 +232,9 @@
     padding-top:	1px;
     -moz-image-region: rect(102px 45px 136px 0px);
   }
-#calendar-month-view-button[disabled="true"],
-#calendar-month-view-button[disabled="true"]:hover,
-#calendar-month-view-button[disabled="true"]:hover:active,
+#calendar-month-view-button[checked="true"],
+#calendar-month-view-button[checked="true"]:hover,
+#calendar-month-view-button[checked="true"]:hover:active,
 #calendar-month-view-button:hover:active
   {
     -moz-image-region: rect(102px 135px 136px 90px);
@@ -254,9 +254,9 @@
     padding-top:	1px;
     -moz-image-region: rect(34px 45px 68px 0px);
   }
-#calendar-week-view-button[disabled="true"],
-#calendar-week-view-button[disabled="true"]:hover,
-#calendar-week-view-button[disabled="true"]:hover:active,
+#calendar-week-view-button[checked="true"],
+#calendar-week-view-button[checked="true"]:hover,
+#calendar-week-view-button[checked="true"]:hover:active,
 #calendar-week-view-button:hover:active
   {
     -moz-image-region: rect(34px 135px 68px 90px);
@@ -276,9 +276,9 @@
     padding-top:	1px;
     -moz-image-region: rect(0 45px 34px 0px);
   }
-#calendar-day-view-button[disabled="true"],
-#calendar-day-view-button[disabled="true"]:hover,
-#calendar-day-view-button[disabled="true"]:hover:active,
+#calendar-day-view-button[checked="true"],
+#calendar-day-view-button[checked="true"]:hover,
+#calendar-day-view-button[checked="true"]:hover:active,
 #calendar-day-view-button:hover:active
   {
     -moz-image-region: rect(0 135px 34px 90px);

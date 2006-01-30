@@ -213,7 +213,7 @@ toolbar[iconsize="small"] #calendar-choose-date-button[disabled="true"] {
 #calendar-multiweek-view-button:active {
     -moz-image-region: rect(32px 192px 64px 160px);
 }
-#calendar-multiweek-view-button[disabled="true"] {
+#calendar-multiweek-view-button[checked="true"] {
     -moz-image-region: rect(96px 192px 128px 160px);
 }
 
@@ -224,7 +224,7 @@ toolbar[iconsize="small"] #calendar-multiweek-view-button {
 toolbar[iconsize="small"] #calendar-multiweek-view-button:active {
     -moz-image-region: rect(24px 144px 48px 120px);
 }
-toolbar[iconsize="small"] #calendar-multiweek-view-button[disabled="true"] {
+toolbar[iconsize="small"] #calendar-multiweek-view-button[checked="true"] {
     -moz-image-region: rect(72px 144px 96px 120px);
 }
 
@@ -239,7 +239,7 @@ toolbar[iconsize="small"] #calendar-multiweek-view-button[disabled="true"] {
     -moz-image-region: rect(32px 224px 64px 192px);
 }
 #calendar-month-view-button:hover:active,
-#calendar-month-view-button[disabled="true"] {
+#calendar-month-view-button[checked="true"] {
     -moz-image-region: rect(96px 224px 128px 192px);
     color: ButtonText;
 }
@@ -251,7 +251,7 @@ toolbar[iconsize="small"] #calendar-month-view-button {
 toolbar[iconsize="small"] #calendar-month-view-button:active {
     -moz-image-region: rect(24px 168px 48px 144px);
 }
-toolbar[iconsize="small"] #calendar-month-view-button[disabled="true"] {
+toolbar[iconsize="small"] #calendar-month-view-button[checked="true"] {
     -moz-image-region: rect(72px 168px 96px 144px);
 }
 
@@ -266,7 +266,7 @@ toolbar[iconsize="small"] #calendar-month-view-button[disabled="true"] {
     -moz-image-region: rect(32px 160px 64px 128px);
 }
 #calendar-week-view-button:hover:active,
-#calendar-week-view-button[disabled="true"] {
+#calendar-week-view-button[checked="true"] {
     -moz-image-region: rect(96px 160px 128px 128px);
 }
 
@@ -278,7 +278,7 @@ toolbar[iconsize="small"] #calendar-week-view-button:active {
     -moz-image-region: rect(24px 120px 48px 96px);
 }
 toolbar[iconsize="small"] #calendar-week-view-button:hover:active,
-toolbar[iconsize="small"] #calendar-week-view-button[disabled="true"] {
+toolbar[iconsize="small"] #calendar-week-view-button[checked="true"] {
     -moz-image-region: rect(72px 120px 96px 96px);
 }
 
@@ -293,7 +293,7 @@ toolbar[iconsize="small"] #calendar-week-view-button[disabled="true"] {
     -moz-image-region: rect(32px 128px 64px 96px);
 }
 #calendar-day-view-button:hover:active,
-#calendar-day-view-button[disabled="true"] {
+#calendar-day-view-button[checked="true"] {
     -moz-image-region: rect(96px 128px 128px 96px);
 }
 
@@ -305,7 +305,7 @@ toolbar[iconsize="small"] #calendar-day-view-button:active {
     -moz-image-region: rect(24px 96px 48px 72px);
 }
 toolbar[iconsize="small"] #calendar-day-view-button:hover:active,
-toolbar[iconsize="small"] #calendar-day-view-button[disabled="true"] {
+toolbar[iconsize="small"] #calendar-day-view-button[checked="true"] {
     -moz-image-region: rect(72px 96px 96px 72px);
 }
 

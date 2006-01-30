@@ -131,20 +131,6 @@
             accesskey="&calendar.context.gototoday.accesskey;"
             observes="go_today_command"/>
   <menuseparator/>
-  <menuitem label="&calendar.context.dayview.label;"
-            accesskey="&calendar.context.dayview.accesskey;"
-            observes="day_view_command"/>
-  <menuitem label="&calendar.context.weekview.label;"
-            accesskey="&calendar.context.weekview.accesskey;"
-            observes="week_view_command"/>
-  <menuitem label="&calendar.context.monthview.label;"
-            accesskey="&calendar.context.monthview.accesskey;"
-            observes="month_view_command"/>
-  <menuitem label="&calendar.context.multiweekview.label;"
-            accesskey="&calendar.context.multiweekview.accesskey;"
-            observes="multiweek_view_command"/>
-
-  <menuseparator/>
   <menuitem id="only-workday-checkbox-2"
             type="checkbox"
             label="&calendar.onlyworkday.checkbox.label;"
@@ -295,21 +281,29 @@
                    observes="delete_command"/>
     <toolbarbutton class="toolbarbutton-1"
                    id="calendar-day-view-button"
+                   type="radio"
+                   group="calendarViews"
                    label="&calendar.dayview.button.label;"
                    tooltiptext="&calendar.dayview.button.tooltip;"
                    observes="day_view_command"/>
     <toolbarbutton class="toolbarbutton-1"
                    id="calendar-week-view-button"
+                   type="radio"
+                   group="calendarViews"
                    label="&calendar.weekview.button.label;"
                    tooltiptext="&calendar.weekview.button.tooltip;"
                    observes="week_view_command"/>
     <toolbarbutton class="toolbarbutton-1"
                    id="calendar-multiweek-view-button"
+                   type="radio"
+                   group="calendarViews"
                    label="&calendar.multiweekview.button.label;"
                    tooltiptext="&calendar.multiweekview.button.tooltip;"
                    observes="multiweek_view_command"/>
     <toolbarbutton class="toolbarbutton-1"
                    id="calendar-month-view-button"
+                   type="radio"
+                   group="calendarViews"
                    label="&calendar.monthview.button.label;"
                    tooltiptext="&calendar.monthview.button.tooltip;"
                    observes="month_view_command"/>

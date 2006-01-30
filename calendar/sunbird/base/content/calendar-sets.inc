@@ -75,10 +75,10 @@
   <command id="go_today_command" oncommand="gCalendarWindow.goToToday()"/>
   <command id="go_date_command" oncommand="gCalendarWindow.pickAndGoToDate()"/>
 
-  <command id="day_view_command"  oncommand="gCalendarWindow.switchToDayView()" disabled="true"/>
-  <command id="week_view_command"  oncommand="gCalendarWindow.switchToWeekView()" disabled="true"/>
-  <command id="month_view_command" oncommand="gCalendarWindow.switchToMonthView()" disabled="true"/>
-  <command id="multiweek_view_command" oncommand="gCalendarWindow.switchToMultiweekView()" disabled="false"/>
+  <command id="day_view_command"  oncommand="gCalendarWindow.switchToDayView()"/>
+  <command id="week_view_command"  oncommand="gCalendarWindow.switchToWeekView()"/>
+  <command id="month_view_command" oncommand="gCalendarWindow.switchToMonthView()"/>
+  <command id="multiweek_view_command" oncommand="gCalendarWindow.switchToMultiweekView()"/>
 
   <command id="import_command" oncommand="loadEventsFromFile()"/>
   <command id="export_command" oncommand="saveEventsToFile(gCalendarWindow.EventSelection.selectedEvents)" disabled="true" disabledwhennoeventsselected="true"/>
