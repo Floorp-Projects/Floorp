@@ -4,16 +4,16 @@
 
 {if $addon->PreviewURI}
 <p class="screenshot">
-<a href="./previews.php?id={$addon->ID}" title="See more {$addon->Name} previews.">
+<a href="{$config.webpath}/{$app}/{$addon->ID}/previews/" title="See more {$addon->Name} previews.">
 <img src="{$config.webpath}{$addon->PreviewURI}" height="{$addon->PreviewHeight}" width="{$addon->PreviewWidth}" alt="{$addon->Name} screenshot">
 </a>
-<strong><a href="./previews.php?id={$addon->ID}" title="See more {$addon->Name} previews.">More Previews &raquo;</a></strong>
+<strong><a href="{$config.webpath}/{$app}/{$addon->ID}/previews/" title="See more {$addon->Name} previews.">More Previews &raquo;</a></strong>
 </p>
 {/if}
 
 <p class="first">
-<strong><a href="./addon.php?id={$addon->ID}">{$addon->Name} {$addon->Version}</a></strong>,
-by <a href="./author.php?id={$addon->UserID}">{$addon->UserName}</a>,
+<strong><a href="{$config.webpath}/{$app}/{$addon->ID}/">{$addon->Name} {$addon->Version}</a></strong>,
+by <a href="{$config.webpath}/{$app}/{$addon->UserID}/author/">{$addon->UserName}</a>,
 released on {$addon->VersionDateAdded|date_format}
 </p>
 
@@ -30,7 +30,7 @@ Requires: {$addon->AppName} {$addon->MinAppVer} - {$addon->MaxAppVer} <img src="
 
 <h3 id="user-comments">User Comments</h3>
 
-<p><strong><a href="./addcomment.php?aid={$addon->ID}">Add your own comment &#187;</a></strong></p>
+<p><strong><a href="{$config.webpath}/addcomment.php?aid={$addon->ID}&amp;app={$app}">Add your own comment &#187;</a></strong></p>
 
 <ul id="opinions">
 {section name=comments loop=$addon->Comments max=10}
@@ -40,25 +40,25 @@ Requires: {$addon->AppName} {$addon->MinAppVer} - {$addon->MaxAppVer} <img src="
 <p class="opinions-info">by {$addon->Comments[comments].CommentName}, {$addon->Comments[comments].CommentDate|date_format}</p>
 <p class="opinions-text">{$addon->Comments[comments].CommentNote}</p>
 <p class="opinions-helpful"><strong>{$addon->Comments[comments].helpful_yes}</strong> out of <strong>{$addon->Comments[comments].helpful_total}</strong> viewers found this comment helpful<br>
-Was this comment helpful? <a href="./ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=yes">Yes</a> &#124; <a href="./ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=no">No</a></p>
+Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=yes&amp;app={$app}">Yes</a> &#124; <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=no&amp;app={$app}">No</a></p>
 </li>
 {/section}
 </ul>
 
-<p><strong><a href="./comments.php?id={$addon->ID}">Read all comments &#187;</a></strong></p>
+<p><strong><a href="{$config.webpath}/{$app}/{$addon->ID}/comments/">Read all comments &#187;</a></strong></p>
 
 <h3>Addon Details</h3>
 <ul>
 <li>Categories: 
 <ul>
 {section name=cats loop=$addon->AddonCats}
-<li><a href="./search.php?cat={$addon->AddonCats[cats].CategoryID}" title="See other Addons in this category.">{$addon->AddonCats[cats].CatName}</a></li>
+<li><a href="{$config.webpath}/search.php?cat={$addon->AddonCats[cats].CategoryID}" title="See other Addons in this category.">{$addon->AddonCats[cats].CatName}</a></li>
 {/section}
 </ul>
 </li>
 <li>Last Updated: {$addon->DateUpdated|date_format}</li>
 <li>Total Downloads: {$addon->TotalDownloads} &nbsp;&#8212;&nbsp; Downloads this Week: {$addon->downloadcount}</li>
-<li>See <a href="./history.php?id={$addon->ID}">all previous releases</a> of this addon.</li>
+<li>See <a href="{$config.webpath}/{$app}/{$addon->ID}/history/">all previous releases</a> of this addon.</li>
 {if $addon->UserWebsite}
 <li>View the <a href="{$addon->Homepage}">Author's homepage</a> for this addon.</li>
 {/if}

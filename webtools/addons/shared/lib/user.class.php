@@ -37,7 +37,7 @@ class User extends AMO_Object
         if (!empty($UserID)) {
             $this->setVar('UserID',$UserID);
             $this->getUser();
-            $this->GetAddons();
+            $this->getAddons();
         }
     }
 

@@ -83,7 +83,7 @@ class AddOn extends AMO_Object {
      */
     function getAddOn() {
         $this->getAddonCats();
-        $this->getComments();
+        $this->getComments('3');
         $this->getCurrentVersion();
         $this->getMainPreview();
         $this->getUserInfo();
@@ -248,7 +248,11 @@ class AddOn extends AMO_Object {
      * @param int $limit number of rows to limit by.
      * @todo add left/right limit clauses i.e. LIMIT 10,20 to work with pagination
      */
-    function getComments($limit=5) {
+    function getComments($limit=null) {
+
+        // Set the LIMIT if it is not null.
+        $_limitSql = !empty($limit) ? " LIMIT {$limit} " : null;
+    
         // Gather 10 latest comments.
         $this->db->query("
             SELECT
@@ -268,7 +272,7 @@ class AddOn extends AMO_Object {
                 CommentNote IS NOT NULL
             ORDER BY
                 CommentDate DESC
-            LIMIT {$limit}
+            {$_limitSql}
         ", SQL_ALL, SQL_ASSOC);
         
         $this->setVar('Comments',$this->db->record);

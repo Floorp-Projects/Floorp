@@ -2,14 +2,14 @@
 <ul id="nav">
 <li><span>{$addon->Name}</span>
     <ul>
-    <li><a href="./addon.php?id={$addon->ID}">Overview</a></li>
+    <li><a href="{$config.webpath}/{$app}/{$addon->ID}/">Overview</a></li>
     {if $addon->PreviewID}
-    <li><a href="./previews.php?id={$addon->ID}">Screenshots</a></li>
+    <li><a href="{$config.webpath}/{$app}/{$addon->ID}/previews/">Previews &amp; Screenshots</a></li>
     {/if}
-    <li><a href="./comments.php?id={$addon->ID}">Comments</a></li>
-    <li><a href="./addcomment.php?id={$addon->ID}">Add a Comment</a></li>
-    <li><a href="./author.php?id={$addon->UserID}">About the Author</a></li>
-    <li><a href="./history.php?id={$addon->ID}">Version History</a></li>
+    <li><a href="{$config.webpath}/{$app}/{$addon->ID}/comments/">Comments</a></li>
+    <li><a href="{$config.webpath}/addcomment.php?aid={$addon->ID}&amp;app={$app}">Add a Comment</a></li>
+    <li><a href="{$config.webpath}/{$app}/{$addon->UserID}/author/">About the Author</a></li>
+    <li><a href="{$config.webpath}/{$app}/{$addon->ID}/history/">Version History</a></li>
     </ul>
 </li>
 <li><span>Find Similar Add-ons</span>

@@ -30,7 +30,7 @@
 {if $smarty.get.app eq "thunderbird"}
     {assign var="app" value="thunderbird"}
         <h1><a href="{$config.webpath}/?app=thunderbird" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-thunderbird.gif" width="355" height="54" alt="Thunderbird Add-ons Beta"></a></h1>
-{elseif $app eq "mozilla"}
+{elseif $smarty.get.app eq "mozilla"}
     {assign var="app" value="mozilla"}
         <h1><a href="{$config.webpath}/?app=mozilla" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-suite.gif" width="370" height="54" alt="Mozilla Suite Add-ons Beta"></a></h1>
 {else}
@@ -50,11 +50,11 @@
 
 	<div id="key-menu">	
         <ul id="menu-firefox">
-            <li{if $currentTab eq "home"} class="current"{/if}><a href="{$config.webpath}/?app={$app}">Home</a></li>
-            <li{if $currentTab eq "extensions"} class="current"{/if}><a href="{$config.webpath}/extensions.php?app={$app}">Extensions</a></li>
+            <li{if $currentTab eq "home"} class="current"{/if}><a href="{$config.webpath}/{$app}/">Home</a></li>
+            <li{if $currentTab eq "extensions"} class="current"{/if}><a href="{$config.webpath}/{$app}/extensions/">Extensions</a></li>
             <li{if $currentTab eq "pfs"} class="current"{/if}><a href="https://pfs.mozilla.org/plugins/?app={$app}">Plugins</a></li>
-            <li{if $currentTab eq "search-engines"} class="current"{/if}><a href="{$config.webpath}/search-engines.php?app={$app}">Search Engines</a></li>
-            <li{if $currentTab eq "themes"} class="current"{/if}><a href="{$config.webpath}/themes.php?app={$app}">Themes</a></li>
+            <li{if $currentTab eq "search-engines"} class="current"{/if}><a href="{$config.webpath}/{$app}/search-engines/">Search Engines</a></li>
+            <li{if $currentTab eq "themes"} class="current"{/if}><a href="{$config.webpath}/{$app}/themes/">Themes</a></li>
         </ul>
     </div>
     <!-- end key-menu -->

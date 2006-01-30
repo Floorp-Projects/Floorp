@@ -16,7 +16,7 @@ startProcessing('comments.tpl',$cacheId,$compileId);
 require_once('includes.php');
 
 $addon = new AddOn($sql['ID']);
-$addon->getComments('50');
+$addon->getComments();
 
 // Assign template variables.
 $tpl->assign(

@@ -27,7 +27,7 @@
         {/if}
         {if $error_email_duplicate}
             <p>The E-Mail address you entered is already in use.  If this is your
-            account, you can <a href="recoverpassword.php?email={$email_value|escape:"url"}">
+            account, you can <a href="{$config.webpath}/recoverpassword.php?email={$email_value|escape:"url"}">
             send yourself a password recovery e-mail</a>.</p>
         {/if}
         <label for="email">E-Mail Address:</label>

@@ -19,7 +19,7 @@ Email not disclosed
 <h3>Addons by {$user->UserName}</h3>
 <dl>
 {section name=aa loop=$user->AddOns}
-<dt><a href="./addon.php?id={$user->AddOns[aa].ID}">{$user->AddOns[aa].Name}</a></dt>
+<dt><a href="{$config.webpath}/{$app}/{$user->AddOns[aa].ID}/">{$user->AddOns[aa].Name}</a></dt>
 <dd>{$user->AddOns[aa].Description|nl2br}</dd>
 </dl>
 {/section}
