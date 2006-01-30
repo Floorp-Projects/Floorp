@@ -1563,55 +1563,70 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 
 char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 {
-	/* we are going to try to be smart in how we generate our server
-	   pref name. We'll try to convert the description into a pref name
-	   and then verify that it is unique. If it is unique then use it... */
-	char * leafName = nsnull;
-	char * prefName = nsnull;
-	PRBool isUnique = PR_FALSE;
+  /* we are going to try to be smart in how we generate our server
+     pref name. We'll try to convert the description into a pref name
+     and then verify that it is unique. If it is unique then use it... */
+  char * leafName = nsnull;
+  char * prefName = nsnull;
+  PRBool isUnique = PR_FALSE;
 
-	if (name)
-        leafName = nsCRT::strdup(name);
-	else
-		leafName = dir_ConvertDescriptionToPrefName (server);
-	if (leafName)
-	{
-		PRInt32 uniqueIDCnt = 0;
+  if (name)
+    leafName = nsCRT::strdup(name);
+  else
+    leafName = dir_ConvertDescriptionToPrefName (server);
+
+  if (!leafName || !*leafName)
+  {
+    // we need to handle this in case the description has no alphanumeric chars
+    // it's very common for cjk users
+    leafName = nsCRT::strdup("_nonascii");
+  }
+
+  if (leafName)
+  {
+    PRInt32 uniqueIDCnt = 0;
         char **children = nsnull;
-		/* we need to verify that this pref string name is unique */
-		prefName = PR_smprintf(PREF_LDAP_SERVER_TREE_NAME".%s", leafName);
-		isUnique = PR_FALSE;
-        PRUint32 prefCount;
-        nsresult rv = dir_GetChildList(NS_LITERAL_CSTRING(PREF_LDAP_SERVER_TREE_NAME "."),
-                                       &prefCount, &children);
-        if (NS_SUCCEEDED(rv))
+    /* we need to verify that this pref string name is unique */
+    prefName = PR_smprintf(PREF_LDAP_SERVER_TREE_NAME".%s", leafName);
+    isUnique = PR_FALSE;
+    PRUint32 prefCount;
+    nsresult rv = dir_GetChildList(NS_LITERAL_CSTRING(PREF_LDAP_SERVER_TREE_NAME "."),
+                                   &prefCount, &children);
+    if (NS_SUCCEEDED(rv))
+    {
+      while (!isUnique && prefName)
+      {
+        isUnique = PR_TRUE; /* now flip the logic and assume we are unique until we find a match */
+        for (PRUint32 i = 0; i < prefCount && isUnique; ++i)
         {
-            while (!isUnique && prefName)
-            {
-                isUnique = PR_TRUE; /* now flip the logic and assume we are unique until we find a match */
-                for (PRUint32 i = 0; i < prefCount && isUnique; ++i)
-				{
-                    if (!nsCRT::strcasecmp(children[i], prefName)) /* are they the same branch? */
-                        isUnique = PR_FALSE;
-				}
-				if (!isUnique) /* then try generating a new pref name and try again */
-				{
-					PR_smprintf_free(prefName);
-					prefName = PR_smprintf(PREF_LDAP_SERVER_TREE_NAME".%s_%d", leafName, ++uniqueIDCnt);
-				}
-			} /* if we have a list of pref Names */
+          if (!nsCRT::strcasecmp(children[i], prefName)) /* are they the same branch? */
+            isUnique = PR_FALSE;
+        }
+        if (!isUnique) /* then try generating a new pref name and try again */
+        {
+          PR_smprintf_free(prefName);
+          prefName = PR_smprintf(PREF_LDAP_SERVER_TREE_NAME".%s_%d", leafName, ++uniqueIDCnt);
+        }
+      } /* if we have a list of pref Names */
 
-            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, children);
-		} /* while we don't have a unique name */
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, children);
+    } /* while we don't have a unique name */
 
-		PR_Free(leafName);
+    // fallback to "user_directory_N" form if we failed to verify
+    if (!isUnique && prefName)
+    {
+      PR_smprintf_free(prefName);
+      prefName = nsnull;
+    }
 
-	} /* if leafName */
+    PR_Free(leafName);
 
-	if (!prefName) /* last resort if we still don't have a pref name is to use user_directory string */
-		return PR_smprintf(PREF_LDAP_SERVER_TREE_NAME".user_directory_%d", ++dir_UserId);
-	else
-		return prefName;
+  } /* if leafName */
+
+  if (!prefName) /* last resort if we still don't have a pref name is to use user_directory string */
+    return PR_smprintf(PREF_LDAP_SERVER_TREE_NAME".user_directory_%d", ++dir_UserId);
+  else
+    return prefName;
 }
 
 void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool oldstyle /* 4.0 Branch */)
