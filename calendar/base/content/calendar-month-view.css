@@ -4,6 +4,7 @@
 /*== calendar-month-view ==*/
 calendar-month-view { 
   -moz-binding: url(chrome://calendar/content/calendar-month-view.xml#calendar-month-view);
+  -moz-user-focus: normal;
 }
 
 .calendar-month-view-grid-column {
