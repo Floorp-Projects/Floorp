@@ -1078,7 +1078,8 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 
 -(void) itemAddedNote:(BookmarkItem *)theItem atIndex:(unsigned)anIndex
 {
-  if (![BookmarkItem allowNotifications]) return;
+  if ([[BookmarkManager sharedBookmarkManager] areChangeNotificationsSuppressed])
+    return;
   
   NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:
                                             theItem, BookmarkFolderChildKey,
@@ -1091,7 +1092,8 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 
 -(void) itemRemovedNote:(BookmarkItem *)theItem
 {
-  if (![BookmarkItem allowNotifications]) return;
+  if ([[BookmarkManager sharedBookmarkManager] areChangeNotificationsSuppressed])
+    return;
   
   NSDictionary *dict = [NSDictionary dictionaryWithObject:theItem forKey:BookmarkFolderChildKey];
   NSNotification *note = [NSNotification notificationWithName:BookmarkFolderDeletionNotification object:self userInfo:dict];

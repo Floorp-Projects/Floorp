@@ -61,6 +61,3 @@ extern NSString* const BookmarkFolderDockMenuChangeNotificaton; // self is NEW d
 extern NSString* const BookmarkItemChangedNotification;         // self is object, userInfo contains change flags
   extern NSString* const BookmarkItemChangedFlagsKey;
 
-extern NSString* const BookmarkIconChangedNotification;         // no userinfo, self is object
-
-

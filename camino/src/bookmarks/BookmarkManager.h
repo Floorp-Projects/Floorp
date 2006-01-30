@@ -75,6 +75,9 @@ const int kBookmarksContextMenuArrangeSeparatorTag = 100;
   
   BOOL                            mBookmarksLoaded;
   BOOL                            mShowSiteIcons;
+  
+  int                             mNotificationsSuppressedCount;
+  NSRecursiveLock*                mNotificationsSuppressedLock;    // make mNotificationsSuppressedCount threadsafe
 }
 
 // Class Methods & shutdown stuff
@@ -111,6 +114,11 @@ const int kBookmarksContextMenuArrangeSeparatorTag = 100;
 
 - (BOOL)itemsShareCommonParent:(NSArray*)inItems;
 
+// these may be nested, and are threadsafe
+- (void)startSuppressingChangeNotifications;
+- (void)stopSuppressingChangeNotifications;
+
+- (BOOL)areChangeNotificationsSuppressed;
 
 // get/set folder last used by "Add Bookmarks"
 - (BookmarkFolder*)lastUsedBookmarkFolder;

@@ -100,7 +100,6 @@ const long kOpenInTabsTag = 0xBEEF;
   [nc addObserver:self selector:@selector(bookmarkAdded:)   name:BookmarkFolderAdditionNotification object:nil];
   [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
   [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
-  [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkIconChangedNotification object:nil];
 
   // register for menu display
   [[NSNotificationCenter defaultCenter] addObserver:self
@@ -283,8 +282,6 @@ const long kOpenInTabsTag = 0xBEEF;
 
   if (noteChangeFlags)
     changeFlags = [noteChangeFlags unsignedIntValue];
-  else if ([[inNotification name] isEqualToString:BookmarkIconChangedNotification])
-    changeFlags = kBookmarkItemIconChangedMask;
 
   // if it changed to or from a separator (or everything changed), just do a rebuild later
   if (changeFlags & kBookmarkItemStatusChangedMask)

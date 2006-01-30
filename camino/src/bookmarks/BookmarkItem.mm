@@ -38,14 +38,13 @@
 
 #import "NSString+Utils.h"
 
+#import "BookmarkManager.h"
 #import "BookmarksClient.h"
 #import "BookmarkItem.h"
 
 // Notifications
 NSString* const BookmarkItemChangedNotification = @"bookmark_changed";
   NSString* const BookmarkItemChangedFlagsKey = @"change_flags";
-
-NSString* const BookmarkIconChangedNotification = @"bookmark_icon_changed";
 
 // all our saving/loading keys
 // Safari & Camino plist keys
@@ -90,9 +89,6 @@ NSString* const CaminoTrueKey = @"true";
 
 
 @implementation BookmarkItem
-
-static BOOL gSuppressAllUpdates = NO;
-
 
 + (BOOL)bookmarkChangedNotificationUserInfo:(NSDictionary*)inUserInfo containsFlags:(unsigned int)inFlags
 {
@@ -254,15 +250,13 @@ static BOOL gSuppressAllUpdates = NO;
 -(void) setIcon:(NSImage *)aIcon
 {
   if (!aIcon)
-    return;
+    return;   // XXX should be allowed to just remove the icon
+
   [aIcon retain];
   [mIcon release];
   mIcon = aIcon;
-  
-  if (![BookmarkItem allowNotifications]) return;
-  NSNotification *note = [NSNotification notificationWithName:BookmarkIconChangedNotification
-                                                       object:self userInfo:nil];
-  [[NSNotificationCenter defaultCenter] postNotification:note];
+
+  [self itemUpdatedNote:kBookmarkItemIconChangedMask];
 }
 
 -(void) setUUID:(NSString*)aUUID
@@ -299,19 +293,6 @@ static BOOL gSuppressAllUpdates = NO;
   return NO;
 }
 
-
-// Prevents all NSNotification posting from any BookmarkItem.
-// Useful for suppressing all the pointless notifications during load.
-+(void) setSuppressAllUpdateNotifications:(BOOL)suppressUpdates
-{
-  gSuppressAllUpdates = suppressUpdates;
-}
-
-+(BOOL) allowNotifications
-{
-  return !gSuppressAllUpdates;
-}
-
 // Helps prevent spamming from itemUpdatedNote:
 // calling with YES will prevent itemUpdatedNote from doing anything
 // and calling with NO will restore itemUpdatedNote and then call it.
@@ -330,7 +311,7 @@ static BOOL gSuppressAllUpdates = NO;
 
 -(void) itemUpdatedNote:(unsigned int)inChangeMask
 {
-  if (gSuppressAllUpdates)
+  if ([[BookmarkManager sharedBookmarkManager] areChangeNotificationsSuppressed])
     return;   // don't even accumulate the flags. caller is expected to update stuff manually
     
   // don't let 'em change the pending flag

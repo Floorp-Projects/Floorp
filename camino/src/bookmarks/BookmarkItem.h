@@ -118,8 +118,6 @@ enum
 -(BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag;
 
 // Notification of Change
-+(void) setSuppressAllUpdateNotifications:(BOOL)suppressUpdates;
-+(BOOL) allowNotifications;
 -(void) setAccumulateUpdateNotifications:(BOOL)suppressUpdates; // does not nest
 -(void) itemUpdatedNote:(unsigned int)inChangeMask; // not everything triggers an item update, only certain properties changing
 

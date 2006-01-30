@@ -97,7 +97,6 @@ static const int kBMBarScanningStep = 5;
     [nc addObserver:self selector:@selector(bookmarkAdded:) name:BookmarkFolderAdditionNotification object:nil];
     [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
     [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
-    [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkIconChangedNotification object:nil];
     
     // register for notifications of when the BM manager starts up. Since it does it on a separate thread,
     // it can be created after we are and if we don't update ourselves, the bar will be blank. This
@@ -240,6 +239,7 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
     return;
 
   BookmarkFolder* toolbarFolder = [[BookmarkManager sharedBookmarkManager] toolbarFolder];
+  if (!toolbarFolder) return;   // bookmarks haven't loaded yet
 
   [mButtons removeAllObjects];
   [self removeAllSubviews];
@@ -752,6 +752,9 @@ static void VerticalGrayGradient(void* inInfo, float const* inData, float* outDa
   BookmarkItem* changedItem = [aNote object];
   BookmarkFolder* toolbarFolder = [[BookmarkManager sharedBookmarkManager] toolbarFolder];
   
+  if (!toolbarFolder)
+    return;   // haven't finished loading bookmarks yet
+    
   if (changedItem == toolbarFolder)
   {
     const unsigned int kSignificantRootChangeFlags = (kBookmarkItemTitleChangedMask |

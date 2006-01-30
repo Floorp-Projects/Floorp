@@ -213,6 +213,8 @@ static BookmarkManager* gBookmarkManager = nil;
 
     mBookmarksLoaded        = NO;
     mShowSiteIcons          = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
+    
+    mNotificationsSuppressedLock = [[NSRecursiveLock alloc] init];
   }
   
   return self;
@@ -241,6 +243,8 @@ static BookmarkManager* gBookmarkManager = nil;
   [mBookmarkURLMap release];
   [mBookmarkFaviconURLMap release];
 
+  [mNotificationsSuppressedLock release];
+  
   [super dealloc];
 }
 
@@ -263,57 +267,67 @@ static BookmarkManager* gBookmarkManager = nil;
   [pool release];
 }
 
+// NB: this is called on a thread!
 - (void)loadBookmarks
 {
-  BookmarkFolder* root = [[BookmarkFolder alloc] init];
-  
-  // We used to do this:
-  // [root setParent:self];
-  // but it was unclear why, and it broke logic in a bunch of places (like -setIsRoot).
-
-  [root setIsRoot:YES];
-  [root setTitle:NSLocalizedString(@"BookmarksRootName", @"")];
-  [self setRootBookmarks:root];
-  [root release];
-
   // Turn off the posting of update notifications while reading in bookmarks.
   // All interested parties haven't been init'd yet, and/or will receive the
   // managerStartedNotification when setup is actually complete.
-  [BookmarkItem setSuppressAllUpdateNotifications:YES];
+  // Note that it's important that notifications are off while loading bookmarks
+  // on this thread, because notifications are handled on the thread they are posted
+  // on, and our code assumes that bookmark notifications happen on the main thread.
+  [self startSuppressingChangeNotifications];
 
-  BOOL bookmarksReadOK = [self readBookmarks];
-  if (!bookmarksReadOK)
-  {
-    // We'll come here either when reading the bookmarks totally failed, or
-    // when we did a partial read of the xml file. The xml reading code already
-    // fixed up the toolbar folder.
-    if ([root count] == 0)
+  // handle exceptions to ensure that turn notification suppression back off
+  NS_DURING
+    BookmarkFolder* root = [[BookmarkFolder alloc] init];
+    
+    // We used to do this:
+    // [root setParent:self];
+    // but it was unclear why, and it broke logic in a bunch of places (like -setIsRoot).
+
+    [root setIsRoot:YES];
+    [root setTitle:NSLocalizedString(@"BookmarksRootName", @"")];
+    [self setRootBookmarks:root];
+    [root release];
+
+    BOOL bookmarksReadOK = [self readBookmarks];
+    if (!bookmarksReadOK)
     {
-      // failed to read any folders. make some by hand.
-      BookmarkFolder* menuFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksMenuFolderIdentifier] autorelease];
-      [menuFolder setTitle:NSLocalizedString(@"Bookmark Menu", @"")];
-      [root appendChild:menuFolder];
+      // We'll come here either when reading the bookmarks totally failed, or
+      // when we did a partial read of the xml file. The xml reading code already
+      // fixed up the toolbar folder.
+      if ([root count] == 0)
+      {
+        // failed to read any folders. make some by hand.
+        BookmarkFolder* menuFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksMenuFolderIdentifier] autorelease];
+        [menuFolder setTitle:NSLocalizedString(@"Bookmark Menu", @"")];
+        [root appendChild:menuFolder];
 
-      BookmarkFolder* toolbarFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksToolbarFolderIdentifier] autorelease];
-      [toolbarFolder setTitle:NSLocalizedString(@"Bookmark Toolbar", @"")];
-      [toolbarFolder setIsToolbar:YES];
-      [root appendChild:toolbarFolder];
+        BookmarkFolder* toolbarFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksToolbarFolderIdentifier] autorelease];
+        [toolbarFolder setTitle:NSLocalizedString(@"Bookmark Toolbar", @"")];
+        [toolbarFolder setIsToolbar:YES];
+        [root appendChild:toolbarFolder];
+      }
     }
-  }
+    
+    // make sure that the root folder has the special flag
+    [[self rootBookmarks] setIsRoot:YES];
+
+    // setup special folders
+    [self setupSmartCollections];
+
+    mSmartFolderManager = [[KindaSmartFolderManager alloc] initWithBookmarkManager:self];
+
+    // set the localized titles of these folders
+    [[self toolbarFolder] setTitle:NSLocalizedString(@"Bookmark Bar", @"")];
+    [[self bookmarkMenuFolder] setTitle:NSLocalizedString(@"Bookmark Menu", @"")]; 
+
+  NS_HANDLER
+      NSLog(@"Exception caught in loadBookmarks: %@", localException);
+  NS_ENDHANDLER
   
-  [BookmarkItem setSuppressAllUpdateNotifications:NO];
-
-  // make sure that the root folder has the special flag
-  [[self rootBookmarks] setIsRoot:YES];
-
-  // setup special folders
-  [self setupSmartCollections];
-
-  mSmartFolderManager = [[KindaSmartFolderManager alloc] initWithBookmarkManager:self];
-
-  // set the localized titles of these folders
-  [[self toolbarFolder] setTitle:NSLocalizedString(@"Bookmark Bar", @"")];
-  [[self bookmarkMenuFolder] setTitle:NSLocalizedString(@"Bookmark Menu", @"")]; 
+  [self stopSuppressingChangeNotifications];
 
   // don't do this until after we've read in the bookmarks
   mUndoManager = [[NSUndoManager alloc] init];
@@ -501,6 +515,25 @@ static BookmarkManager* gBookmarkManager = nil;
   }
 
   return YES;
+}
+
+- (void)startSuppressingChangeNotifications
+{
+  [mNotificationsSuppressedLock lockBeforeDate:[NSDate distantFuture]];
+  ++mNotificationsSuppressedCount;
+  [mNotificationsSuppressedLock unlock];
+}
+
+- (void)stopSuppressingChangeNotifications
+{
+  [mNotificationsSuppressedLock lockBeforeDate:[NSDate distantFuture]];
+  --mNotificationsSuppressedCount;
+  [mNotificationsSuppressedLock unlock];
+}
+
+- (BOOL)areChangeNotificationsSuppressed
+{
+  return (mNotificationsSuppressedCount > 0);
 }
 
 

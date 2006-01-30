@@ -273,7 +273,6 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [nc addObserver:self selector:@selector(bookmarkAdded:)   name:BookmarkFolderAdditionNotification object:nil];
   [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
   [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
-  [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkIconChangedNotification object:nil];
   [nc addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
 
   // get notified when the action button pops up, to set its menu
@@ -1970,6 +1969,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (void)bookmarkChanged:(NSNotification *)note
 {
   const unsigned int kVisibleAttributeChangedFlags = (kBookmarkItemTitleChangedMask |
+                                                      kBookmarkItemIconChangedMask |
                                                       kBookmarkItemURLChangedMask |
                                                       kBookmarkItemKeywordChangedMask |
                                                       kBookmarkItemDescriptionChangedMask |
