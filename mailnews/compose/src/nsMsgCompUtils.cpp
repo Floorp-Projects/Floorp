@@ -2072,7 +2072,7 @@ ConvertBufToPlainText(nsString &aConBuf, PRBool formatflowed /* = PR_FALSE */)
 
     parser->SetContentSink(sink);
 
-    parser->Parse(aConBuf, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+    parser->Parse(aConBuf, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
     //
     // Now if we get here, we need to get from ASCII text to 
     // UTF-8 format or there is a problem downstream...

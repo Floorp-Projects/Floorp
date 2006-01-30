@@ -498,7 +498,7 @@ nsFeedLoadListener::ParseHTMLFragment(nsAString &aFragString,
 
     // parse the fragment
     parser->SetContentSink(sink);
-    parser->Parse(aFragString, (void*)0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE, eDTDMode_fragment);
+    parser->Parse(aFragString, (void*)0, NS_LITERAL_CSTRING("text/html"), PR_TRUE, eDTDMode_fragment);
     // get the fragment node
     nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
     rv = fragSink->GetFragment(getter_AddRefs(contextfrag));

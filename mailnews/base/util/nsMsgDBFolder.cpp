@@ -5213,7 +5213,7 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
     nsAutoString msgBodyStr;
     // need to do an appropriate conversion here.
     msgBodyStr.AssignWithConversion(msgBody);
-    rv = parser->Parse(msgBodyStr, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+    rv = parser->Parse(msgBodyStr, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
     CopyUTF16toUTF8(bodyText, msgBody);
   }
   msgHdr->SetStringProperty("preview", msgBody.get());

@@ -578,7 +578,7 @@ NS_IMETHODIMP nsMsgComposeService::GetParamsForMailto(nsIURI * aURI, nsIMsgCompo
             sanSink->Initialize(&sanitizedBody, 0, NS_ConvertASCIItoUTF16(allowedTags));
 
             parser->SetContentSink(sink);
-            rv = parser->Parse(rawBody, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+            rv = parser->Parse(rawBody, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
             if (NS_FAILED(rv))
             {
               // Something went horribly wrong with parsing for html format

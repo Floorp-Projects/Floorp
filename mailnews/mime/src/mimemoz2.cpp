@@ -2188,8 +2188,7 @@ HTML2Plaintext(const nsString& inString, nsString& outString,
 
   parser->SetContentSink(sink);
 
-  rv = parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"),
-                     PR_FALSE, PR_TRUE);
+  rv = parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
 
   // Aah! How can NS_ERROR and NS_ABORT_IF_FALSE be no-ops in release builds???
   if (NS_FAILED(rv))
@@ -2248,8 +2247,7 @@ HTMLSanitize(const nsString& inString, nsString& outString,
 
   parser->SetContentSink(sink);
 
-  rv = parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"),
-                     PR_FALSE, PR_TRUE);
+  rv = parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
   if (NS_FAILED(rv))
   {
     NS_ERROR("Parse() failed!");

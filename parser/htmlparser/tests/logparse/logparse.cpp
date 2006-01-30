@@ -101,7 +101,7 @@ nsresult GenerateBaselineFile(const char* aSourceFilename,const char* aBaselineF
   // Parse the document, having the sink write the data to fp
   parser->SetContentSink(sink);
 
-  rv = parser->Parse(inputURI, 0, PR_FALSE, 0, eDTDMode_unknown);
+  rv = parser->Parse(inputURI, 0, PR_FALSE, eDTDMode_unknown);
 
   return rv;
 }

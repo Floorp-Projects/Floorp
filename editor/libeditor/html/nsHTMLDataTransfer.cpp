@@ -2553,7 +2553,7 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
   // parse the fragment
   parser->SetContentSink(sink);
   if (bContext)
-    parser->Parse(aFragStr, (void*)0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE, eDTDMode_fragment);
+    parser->Parse(aFragStr, (void*)0, NS_LITERAL_CSTRING("text/html"), PR_TRUE, eDTDMode_fragment);
   else
     parser->ParseFragment(aFragStr, 0, aTagStack, PR_FALSE, NS_LITERAL_CSTRING("text/html"), eDTDMode_quirks);
   // get the fragment node

@@ -192,7 +192,7 @@ ConvertBufToPlainText(nsString &aConBuf)
 
     parser->SetContentSink(sink);
 
-    parser->Parse(aConBuf, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+    parser->Parse(aConBuf, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
 
     //
     // Now if we get here, we need to get from ASCII text to 

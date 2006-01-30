@@ -948,7 +948,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     mParser->SetContentSink(sink);
     // parser the content of the URI
-    mParser->Parse(uri, nsnull, PR_FALSE, (void *)this);
+    mParser->Parse(uri, nsnull, (void *)this);
   }
 
   return rv;
@@ -2148,11 +2148,10 @@ nsHTMLDocument::Close()
     if (mContentType.EqualsLiteral("text/html")) {
       rv = mParser->Parse(NS_LITERAL_STRING("</HTML>"),
                           mParser->GetRootContextKey(),
-                          mContentType, PR_FALSE,
-                          PR_TRUE);
+                          mContentType, PR_TRUE);
     } else {
       rv = mParser->Parse(EmptyString(), mParser->GetRootContextKey(),
-                          mContentType, PR_FALSE, PR_TRUE);
+                          mContentType, PR_TRUE);
     }
     --mWriteLevel;
 
@@ -2252,11 +2251,11 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
   // why pay that price when we don't need to?
   if (aNewlineTerminate) {
     rv = mParser->Parse(aText + new_line,
-                        key, mContentType, PR_FALSE,
+                        key, mContentType,
                         (mWriteState == eNotWriting || (mWriteLevel > 1)));
   } else {
     rv = mParser->Parse(aText,
-                        key, mContentType, PR_FALSE,
+                        key, mContentType,
                         (mWriteState == eNotWriting || (mWriteLevel > 1)));
   }
 

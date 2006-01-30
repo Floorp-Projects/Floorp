@@ -67,7 +67,6 @@
 #include "nsViewSourceHTML.h"
 #endif
 
-#define NS_PARSER_FLAG_DTD_VERIFICATION       0x00000001
 #define NS_PARSER_FLAG_PARSER_ENABLED         0x00000002
 #define NS_PARSER_FLAG_OBSERVERS_ENABLED      0x00000004
 #define NS_PARSER_FLAG_PENDING_CONTINUE_EVENT 0x00000008
@@ -1249,7 +1248,6 @@ nsParser::SetCanInterrupt(PRBool aCanInterrupt)
 NS_IMETHODIMP
 nsParser::Parse(nsIURI* aURL,
                 nsIRequestObserver* aListener,
-                PRBool aVerifyEnabled,
                 void* aKey,
                 nsDTDMode aMode)
 {
@@ -1258,12 +1256,6 @@ nsParser::Parse(nsIURI* aURL,
 
   nsresult result=kBadURL;
   mObserver = aListener;
-
-  if (aVerifyEnabled) {
-    mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
-  } else {
-    mFlags &= ~NS_PARSER_FLAG_DTD_VERIFICATION;
-  }
 
   if (aURL) {
     nsCAutoString spec;
@@ -1304,16 +1296,9 @@ nsParser::Parse(nsIURI* aURL,
 NS_IMETHODIMP
 nsParser::Parse(nsIInputStream* aStream,
                 const nsACString& aMimeType,
-                PRBool aVerifyEnabled,
                 void* aKey,
                 nsDTDMode aMode)
 {
-  if (aVerifyEnabled) {
-    mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
-  } else {
-    mFlags &= ~NS_PARSER_FLAG_DTD_VERIFICATION;
-  }
-
   nsresult  result = NS_ERROR_OUT_OF_MEMORY;
 
   // Ok, time to create our tokenizer and begin the process
@@ -1353,7 +1338,6 @@ NS_IMETHODIMP
 nsParser::Parse(const nsAString& aSourceBuffer,
                 void* aKey,
                 const nsACString& aMimeType,
-                PRBool aVerifyEnabled,
                 PRBool aLastCall,
                 nsDTDMode aMode)
 {
@@ -1378,12 +1362,6 @@ nsParser::Parse(const nsAString& aSourceBuffer,
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
 
   if (aLastCall || !aSourceBuffer.IsEmpty() || !mUnusedInput.IsEmpty()) {
-    if (aVerifyEnabled) {
-      mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
-    } else {
-      mFlags &= ~NS_PARSER_FLAG_DTD_VERIFICATION;
-    }
-
     // Note: The following code will always find the parser context associated
     // with the given key, even if that context has been suspended (e.g., for
     // another document.write call). This doesn't appear to be exactly what IE
@@ -1502,8 +1480,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
 
   // First, parse the context to build up the DTD's tag stack. Note that we
   // pass PR_FALSE for the aLastCall parameter.
-  result = Parse(theContext, (void*)&theContext, aMimeType,
-                 PR_FALSE, PR_FALSE, aMode);
+  result = Parse(theContext, (void*)&theContext, aMimeType, PR_FALSE, aMode);
   if (NS_FAILED(result)) {
     mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;
     return result;
@@ -1552,7 +1529,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
   // Now, parse the actual content. Note that this is the last call for HTML
   // content, but for XML, we will want to build and parse the end tags.
   result = Parse(aSourceBuffer, (void*)&theContext, aMimeType,
-                 PR_FALSE, !aXMLMode, aMode);
+                 !aXMLMode, aMode);
   fragSink->DidBuildContent();
 
   if (aXMLMode && NS_SUCCEEDED(result)) {
@@ -1569,8 +1546,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
       endContext.AppendLiteral(">");
     }
 
-    result = Parse(endContext, (void*)&theContext, aMimeType,
-                   PR_FALSE, PR_TRUE, aMode);
+    result = Parse(endContext, (void*)&theContext, aMimeType, PR_TRUE, aMode);
   }
 
   mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;

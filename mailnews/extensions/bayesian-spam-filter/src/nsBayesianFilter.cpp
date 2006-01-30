@@ -559,7 +559,7 @@ nsresult Tokenizer::stripHTML(const nsAString& inString, nsAString& outString)
 
   parser->SetContentSink(sink);
 
-  return parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+  return parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
 }
 
 void Tokenizer::tokenize(char* aText)
