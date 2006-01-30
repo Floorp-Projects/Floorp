@@ -306,7 +306,7 @@ extern "C" NS_EXPORT int DebugRobot(
     parser->SetContentSink(sink);
     g_bReadyForNextUrl = PR_FALSE;  
 
-    parser->Parse(url, nsnull,PR_TRUE);/* XXX hook up stream listener here! */
+    parser->Parse(url, nsnull);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {
       if (yieldProc != NULL) {
         nsCAutoString spec;

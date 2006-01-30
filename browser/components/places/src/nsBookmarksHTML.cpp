@@ -906,7 +906,7 @@ nsNavBookmarks::ImportBookmarksHTMLInternal(nsIURI* aURL,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // init parser
-  rv = parser->Parse(aURL, nsnull, PR_FALSE);
+  rv = parser->Parse(aURL, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // feed the parser the data

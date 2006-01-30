@@ -98,7 +98,7 @@ nsresult ParseData(char* anInputStream,char* anOutputStream) {
 
   sink->SetOutputStream(out);
   parser->SetContentSink(sink);
-  result = parser->Parse(stream, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+  result = parser->Parse(stream, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
   
   PR_Close(in);
   PR_Close(out);

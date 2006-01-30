@@ -196,7 +196,6 @@ class nsParser : public nsIParser,
      */
     NS_IMETHOD Parse(nsIURI* aURL,
                      nsIRequestObserver* aListener = nsnull,
-                     PRBool aEnableVerify = PR_FALSE,
                      void* aKey = 0,
                      nsDTDMode aMode = eDTDMode_autodetect);
 
@@ -208,7 +207,6 @@ class nsParser : public nsIParser,
      */
     NS_IMETHOD Parse(nsIInputStream* aStream,
                      const nsACString& aMimeType,
-                     PRBool aEnableVerify = PR_FALSE,
                      void* aKey = 0,
                      nsDTDMode aMode = eDTDMode_autodetect);
 
@@ -221,7 +219,6 @@ class nsParser : public nsIParser,
     NS_IMETHOD Parse(const nsAString& aSourceBuffer,
                      void* aKey,
                      const nsACString& aContentType,
-                     PRBool aEnableVerify,
                      PRBool aLastCall,
                      nsDTDMode aMode = eDTDMode_autodetect);
 

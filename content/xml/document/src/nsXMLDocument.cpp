@@ -620,7 +620,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   mParser->SetDocumentCharset(charset, charsetSource);
   mParser->SetCommand(aCommand);
   mParser->SetContentSink(sink);
-  mParser->Parse(aUrl, nsnull, PR_FALSE, (void *)this);
+  mParser->Parse(aUrl, nsnull, (void *)this);
 
   return NS_OK;
 }

@@ -226,18 +226,15 @@ class nsIParser : public nsISupports {
     
     NS_IMETHOD Parse(nsIURI* aURL,
                      nsIRequestObserver* aListener = nsnull,
-                     PRBool aEnableVerify = PR_FALSE,
                      void* aKey = 0,
                      nsDTDMode aMode = eDTDMode_autodetect) = 0;
     NS_IMETHOD Parse(nsIInputStream* aStream,
                      const nsACString& aMimeType,
-                     PRBool aEnableVerify = PR_FALSE,
                      void* aKey = 0,
                      nsDTDMode aMode = eDTDMode_autodetect) = 0;
     NS_IMETHOD Parse(const nsAString& aSourceBuffer,
                      void* aKey,
                      const nsACString& aMimeType,
-                     PRBool aEnableVerify,
                      PRBool aLastCall,
                      nsDTDMode aMode = eDTDMode_autodetect) = 0;
 
