@@ -12,20 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Mozilla.org.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David W. Hyatt (hyatt@netscape.com) (Original Author)
- *   Joe Hewitt (hewitt@netscape.com)
+ *     Boris Zbarsky <bzbarsky@mit.edu> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,31 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIBoxObject.idl"
+#ifndef nsPITreeBoxObject_h__
+#define nsPITreeBoxObject_h__
 
-interface nsIDOMElement;
+#define NS_PITREEBOXOBJECT_IID \
+{ 0xafcd2a82, 0xc484, 0x4f86, \
+ { 0x83, 0x77, 0xd9, 0xb8, 0x59, 0x31, 0xef, 0xf0 } }
 
-[scriptable, uuid(FDE7C970-0B4E-49f4-B1EB-974AE6C96336)]
-interface nsIListBoxObject : nsISupports
-{
-  // listboxBody is always null.  It's only here to avoid changing the
-  // interface.
-  readonly attribute nsIListBoxObject listboxBody;
+#include "nsITreeBoxObject.h"
 
-  long getRowCount();
-  long getNumberOfVisibleRows();
-  long getIndexOfFirstVisibleRow();
+class nsPITreeBoxObject : public nsITreeBoxObject {
+ public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_PITREEBOXOBJECT_IID)
 
-  void ensureIndexIsVisible(in long rowIndex);
-  void scrollToIndex(in long rowIndex);
-  void scrollByLines(in long numLines);
-
-  nsIDOMElement getItemAtIndex(in long index);
-  long getIndexOfItem(in nsIDOMElement item);
+  /**
+   * Clear the cached tree body frame from this box object.  This should be
+   * called when the frame in question is destroyed.
+  */
+  virtual void ClearCachedTreeBody() = 0;
 };
 
-%{C++
-nsresult
-NS_NewListBoxObject(nsIBoxObject** aResult);
+NS_DEFINE_STATIC_IID_ACCESSOR(nsPITreeBoxObject, NS_PITREEBOXOBJECT_IID)
 
-%}
+#endif // nsPITreeBoxObject_h__

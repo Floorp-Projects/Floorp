@@ -40,7 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsITreeBoxObject.h"
+#include "nsPITreeBoxObject.h"
 #include "nsITreeView.h"
 #include "nsITreeSelection.h"
 #include "nsBoxObject.h"
@@ -50,7 +50,7 @@
 #include "nsXULAtoms.h"
 #include "nsChildIterator.h"
 
-class nsTreeBoxObject : public nsITreeBoxObject, public nsBoxObject
+class nsTreeBoxObject : public nsPITreeBoxObject, public nsBoxObject
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -65,10 +65,17 @@ public:
   NS_IMETHOD Init(nsIContent* aContent, nsIPresShell* aPresShell);
   NS_IMETHOD SetDocument(nsIDocument* aDocument);
   NS_IMETHOD InvalidatePresentationStuff();
+
+  // nsPITreeBoxObject
+  virtual void ClearCachedTreeBody();  
+
+protected:
+  nsITreeBoxObject* mTreeBody;
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS_INHERITED1(nsTreeBoxObject, nsBoxObject, nsITreeBoxObject)
+NS_IMPL_ISUPPORTS_INHERITED2(nsTreeBoxObject, nsBoxObject, nsITreeBoxObject,
+                             nsPITreeBoxObject)
 
 
 NS_IMETHODIMP
@@ -97,13 +104,14 @@ nsTreeBoxObject::SetDocument(nsIDocument* aDocument)
 NS_IMETHODIMP
 nsTreeBoxObject::InvalidatePresentationStuff()
 {
-  SetPropertyAsSupports(NS_LITERAL_STRING("treebody").get(), nsnull);
+  ClearCachedTreeBody();
   SetPropertyAsSupports(NS_LITERAL_STRING("view").get(), nsnull);
 
   return nsBoxObject::InvalidatePresentationStuff();
 }
   
 nsTreeBoxObject::nsTreeBoxObject()
+  : mTreeBody(nsnull)
 {
 }
 
@@ -142,15 +150,11 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
   }
 }
 
-inline nsITreeBoxObject*
+nsITreeBoxObject*
 nsTreeBoxObject::GetTreeBody()
 {
-  nsCOMPtr<nsISupports> supp;
-  GetPropertyAsSupports(NS_LITERAL_STRING("treebody").get(), getter_AddRefs(supp));
-
-  if (supp) {
-    nsCOMPtr<nsITreeBoxObject> body(do_QueryInterface(supp));
-    return body;
+  if (mTreeBody) {
+    return mTreeBody;
   }
 
   nsIFrame* frame = GetFrame();
@@ -166,10 +170,8 @@ nsTreeBoxObject::GetTreeBody()
      return nsnull;
 
   // It's a frame. Refcounts are irrelevant.
-  nsCOMPtr<nsITreeBoxObject> body;
-  frame->QueryInterface(NS_GET_IID(nsITreeBoxObject), getter_AddRefs(body));
-  SetPropertyAsSupports(NS_LITERAL_STRING("treebody").get(), body);
-  return body;
+  CallQueryInterface(frame, &mTreeBody);
+  return mTreeBody;
 }
 
 NS_IMETHODIMP nsTreeBoxObject::GetView(nsITreeView * *aView)
@@ -463,6 +465,12 @@ NS_IMETHODIMP nsTreeBoxObject::ClearStyleAndImageCaches()
     return body->ClearStyleAndImageCaches();
   return NS_OK;
 }
+
+void
+nsTreeBoxObject::ClearCachedTreeBody()
+{
+  mTreeBody = nsnull;
+}    
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

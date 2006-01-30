@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIListBoxObject.h"
+#include "nsPIListBoxObject.h"
 #include "nsBoxObject.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
@@ -48,41 +48,30 @@
 #include "nsXULAtoms.h"
 #include "nsIScrollableFrame.h"
 
-class nsListBoxObject : public nsIListBoxObject, public nsBoxObject
+class nsListBoxObject : public nsPIListBoxObject, public nsBoxObject
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSILISTBOXOBJECT
+
+  // nsPIListBoxObject
+  virtual void ClearCachedListBoxBody();
+  virtual nsIListBoxObject* GetListBoxBody();
 
   nsListBoxObject();
   virtual ~nsListBoxObject();
 
-  nsIListBoxObject* GetListBoxBody();
-
   NS_IMETHOD InvalidatePresentationStuff();
   
 protected:
+  nsIListBoxObject* mListBoxBody;
 };
 
-NS_IMPL_ADDREF(nsListBoxObject)
-NS_IMPL_RELEASE(nsListBoxObject)
+NS_IMPL_ISUPPORTS_INHERITED2(nsListBoxObject, nsBoxObject, nsIListBoxObject,
+                             nsPIListBoxObject);
 
-NS_IMETHODIMP 
-nsListBoxObject::QueryInterface(REFNSIID iid, void** aResult)
-{
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
-  
-  if (iid.Equals(NS_GET_IID(nsIListBoxObject))) {
-    *aResult = (nsIListBoxObject*)this;
-    NS_ADDREF(this);
-    return NS_OK;
-  }
-
-  return nsBoxObject::QueryInterface(iid, aResult);
-}
-  
 nsListBoxObject::nsListBoxObject()
+  : mListBoxBody(nsnull)
 {
 }
 
@@ -97,8 +86,7 @@ nsListBoxObject::~nsListBoxObject()
 NS_IMETHODIMP
 nsListBoxObject::GetListboxBody(nsIListBoxObject * *aListboxBody)
 {
-  *aListboxBody = GetListBoxBody();
-  NS_IF_ADDREF(*aListboxBody);
+  *aListboxBody = nsnull;
   return NS_OK;
 }
 
@@ -175,6 +163,12 @@ nsListBoxObject::GetIndexOfItem(nsIDOMElement* aElement, PRInt32 *aResult)
   return NS_OK;
 }
 
+void
+nsListBoxObject::ClearCachedListBoxBody()
+{
+  mListBoxBody = nsnull;
+}
+
 //////////////////////
 
 static void
@@ -206,14 +200,8 @@ FindBodyContent(nsIContent* aParent, nsIContent** aResult)
 nsIListBoxObject*
 nsListBoxObject::GetListBoxBody()
 {
-  NS_NAMED_LITERAL_STRING(listboxbody, "listboxbody");
-
-  nsCOMPtr<nsISupports> supp;
-  GetPropertyAsSupports(listboxbody.get(), getter_AddRefs(supp));
-
-  if (supp) {
-    nsCOMPtr<nsIListBoxObject> body(do_QueryInterface(supp));
-    return body;
+  if (mListBoxBody) {
+    return mListBoxBody;
   }
 
   nsIFrame* frame = GetFrame();
@@ -239,16 +227,14 @@ nsListBoxObject::GetListBoxBody()
      return nsnull;
 
   // It's a frame. Refcounts are irrelevant.
-  nsCOMPtr<nsIListBoxObject> body;
-  yeahBaby->QueryInterface(NS_GET_IID(nsIListBoxObject), getter_AddRefs(body));
-  SetPropertyAsSupports(listboxbody.get(), body);
-  return body;
+  CallQueryInterface(yeahBaby, &mListBoxBody);
+  return mListBoxBody;
 }
 
 NS_IMETHODIMP
 nsListBoxObject::InvalidatePresentationStuff()
 {
-  SetPropertyAsSupports(NS_LITERAL_STRING("listboxbody").get(), nsnull);
+  ClearCachedListBoxBody();
 
   return nsBoxObject::InvalidatePresentationStuff();
 }

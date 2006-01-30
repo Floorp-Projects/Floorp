@@ -144,7 +144,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 
 // Constructor
 nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell)
-:nsLeafBoxFrame(aPresShell), mTreeBoxObject(nsnull),
+:nsLeafBoxFrame(aPresShell),
  mScrollbar(nsnull), mHorzScrollbar(nsnull), mColScrollContent(nsnull), mColScrollView(nsnull), 
  mHorzPosition(0), mHorzWidth(0), mRowHeight(0), mIndentation(0), mStringWidth(-1),
  mTopRowIndex(0), mFocused(PR_FALSE), mHasFixedRowCount(PR_FALSE), 
@@ -355,8 +355,7 @@ nsTreeBodyFrame::Destroy(nsPresContext* aPresContext)
     }
 
     // Always null out the cached tree body frame.
-    nsAutoString treeBody(NS_LITERAL_STRING("treebody"));
-    box->RemoveProperty(treeBody.get());
+    mTreeBoxObject->ClearCachedTreeBody();
 
     mTreeBoxObject = nsnull; // Drop our ref here.
   }
@@ -402,12 +401,14 @@ nsTreeBodyFrame::EnsureView()
     nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
     if (box) {
       nsCOMPtr<nsISupports> suppView;
-      box->GetPropertyAsSupports(NS_LITERAL_STRING("view").get(), getter_AddRefs(suppView));
+      box->GetPropertyAsSupports(NS_LITERAL_STRING("view").get(),
+                                 getter_AddRefs(suppView));
       nsCOMPtr<nsITreeView> treeView(do_QueryInterface(suppView));
 
       if (treeView) {
         nsXPIDLString rowStr;
-        box->GetProperty(NS_LITERAL_STRING("topRow").get(), getter_Copies(rowStr));
+        box->GetProperty(NS_LITERAL_STRING("topRow").get(),
+                         getter_Copies(rowStr));
         nsAutoString rowStr2(rowStr);
         PRInt32 error;
         PRInt32 rowIndex = rowStr2.ToInteger(&error);
@@ -524,7 +525,7 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
   EnsureBoxObject();
   nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
   
-  nsAutoString view(NS_LITERAL_STRING("view"));
+  NS_NAMED_LITERAL_STRING(view, "view");
   
   if (mView) {
     nsCOMPtr<nsITreeSelection> sel;
