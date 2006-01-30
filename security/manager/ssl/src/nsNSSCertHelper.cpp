@@ -63,10 +63,12 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 /* Object Identifier constants */
 #define CONST_OID static const unsigned char
 #define MICROSOFT_OID 0x2b, 0x6, 0x1, 0x4, 0x1, 0x82, 0x37
+#define PKIX_OID 0x2b, 0x6, 0x01, 0x05, 0x05, 0x07
 CONST_OID msCertExtCerttype[]      = { MICROSOFT_OID, 20, 2};
 CONST_OID msNTPrincipalName[]      = { MICROSOFT_OID, 20, 2, 3 };
 CONST_OID msCertsrvCAVersion[]     = { MICROSOFT_OID, 21, 1 };
 CONST_OID msNTDSReplication[]      = { MICROSOFT_OID, 25, 1 };
+CONST_OID pkixLogotype[]           = { PKIX_OID, 1, 12 };
 
 #define OI(x) { siDEROID, (unsigned char *)x, sizeof x }
 #define OD(oid,desc,mech,ext) {OI(oid), SEC_OID_UNKNOWN, desc, mech, ext}
@@ -76,12 +78,12 @@ static SECOidData more_oids[] = {
     /* Microsoft OIDs */
     #define MS_CERT_EXT_CERTTYPE 0
     OD( msCertExtCerttype,
-        "Microsoft Certificate Type", 
+        "Microsoft Certificate Template Name", 
         CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
 
     #define MS_NT_PRINCIPAL_NAME 1
     OD( msNTPrincipalName,
-        "Microsoft NT User Principal Name", 
+        "Microsoft Principal Name", 
         CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
 
     #define MS_CERTSERV_CA_VERSION 2
@@ -92,6 +94,11 @@ static SECOidData more_oids[] = {
     #define MS_NTDS_REPLICATION 3
     OD( msNTDSReplication,
         "Microsoft Domain GUID", 
+        CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+
+    #define PKIX_LOGOTYPE 4
+    OD( pkixLogotype,
+        "Logotype", 
         CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
 };
 
@@ -395,6 +402,10 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text)
       bundlekey = "CertDumpMSCAVersion";
       break;
     }
+    if (oidTag == SEC_OID(PKIX_LOGOTYPE)) {
+      bundlekey = "CertDumpLogotype";
+      break;
+    }
     /* fallthrough */
   }
 
@@ -556,10 +567,11 @@ ProcessBasicConstraints(SECItem  *extData,
   SECStatus rv;
   nsresult rv2;
 
+  value.pathLenConstraint = -1;
   rv = CERT_DecodeBasicConstraintValue (&value, extData);
   if (rv != SECSuccess) {
-    NS_ASSERTION(0,"Could not decode basic constraints");
-    return NS_ERROR_FAILURE;
+    ProcessRawBytes(extData, text);
+    return NS_OK;
   }
   if (value.isCA)
     rv2 = nssComponent->GetPIPNSSBundleString("CertDumpIsCA", local);
@@ -568,9 +580,12 @@ ProcessBasicConstraints(SECItem  *extData,
   if (NS_FAILED(rv2))
     return rv2;
   text.Append(local.get());
-  if (value.pathLenConstraint >= 0) {
+  if (value.pathLenConstraint != -1) {
     nsAutoString depth;
-    depth.AppendInt(value.pathLenConstraint);
+    if (value.pathLenConstraint == CERT_UNLIMITED_PATH_CONSTRAINT)
+      nssComponent->GetPIPNSSBundleString("CertDumpPathLenUnlimited", depth);
+    else
+      depth.AppendInt(value.pathLenConstraint);
     const PRUnichar *params[1] = {depth.get()};
     rv2 = nssComponent->PIPBundleFormatStringFromName("CertDumpPathLen",
                                                       params, 1, local);
@@ -610,13 +625,19 @@ ProcessExtKeyUsage(SECItem  *extData,
     NS_ConvertUTF16toUTF8 bk_ascii(bundlekey);
     
     rv = nssComponent->GetPIPNSSBundleString(bk_ascii.get(), local);
-    if (NS_FAILED(rv))
+    nsresult rv2 = GetDefaultOIDFormat(oid, oidname, '.');
+    if (NS_FAILED(rv2))
+      return rv2;
+    if (NS_SUCCEEDED(rv)) {
+      // display name and OID in parentheses
+      text.Append(local);
+      text.Append(NS_LITERAL_STRING(" ("));
+      text.Append(oidname);
+      text.Append(NS_LITERAL_STRING(")"));
+    } else
       // If there is no bundle string, just display the OID itself
-      rv = GetDefaultOIDFormat(oid, local, ' ');
-    if (NS_FAILED(rv))
-      return rv;
+      text.Append(oidname);
 
-    text.Append(local.get());
     text.Append(NS_LITERAL_STRING(SEPARATOR).get());
     oids++;
   }
@@ -1251,6 +1272,7 @@ ProcessCrlDistPoints(SECItem  *extData,
 	nssComponent->GetPIPNSSBundleString("CertDumpHold", local);
 	text.Append(local); comma = 1;
       }
+      text.Append(NS_LITERAL_STRING(SEPARATOR));
     }
     if (point->crlIssuer) {
       nssComponent->GetPIPNSSBundleString("CertDumpIssuer", local);
@@ -1261,7 +1283,6 @@ ProcessCrlDistPoints(SECItem  *extData,
       if (NS_FAILED(rv))
 	goto finish;
     }
-    text.Append(NS_LITERAL_STRING(SEPARATOR));
   }
   
  finish:
@@ -1290,11 +1311,14 @@ ProcessAuthInfoAccess(SECItem  *extData,
   while (*aia != NULL) {
     desc = *aia++;
     switch (SECOID_FindOIDTag(&desc->method)) {
+    case SEC_OID_PKIX_OCSP:
+      nssComponent->GetPIPNSSBundleString("CertDumpOCSPResponder", local);
+      break;
     case SEC_OID_PKIX_CA_ISSUERS:
-      nssComponent->GetPIPNSSBundleString("CertDumpCAIssuers", text);
+      nssComponent->GetPIPNSSBundleString("CertDumpCAIssuers", local);
       break;
     default:
-      rv = GetDefaultOIDFormat(&desc->method, text, '.');
+      rv = GetDefaultOIDFormat(&desc->method, local, '.');
       if (NS_FAILED(rv))
 	goto finish;
     }
@@ -1303,7 +1327,6 @@ ProcessAuthInfoAccess(SECItem  *extData,
     rv = ProcessGeneralName(arena, desc->location, text, nssComponent);
     if (NS_FAILED(rv))
       goto finish;
-    text.Append(NS_LITERAL_STRING(SEPARATOR));
   }
 
  finish:
