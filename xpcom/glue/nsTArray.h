@@ -473,7 +473,7 @@ class nsTArray : public nsTArray_base {
     template<class Item, class Comparator>
     void RemoveElement(const Item& item, const Comparator& comp) {
       index_type i = IndexOf(item, 0, comp);
-      if (i >= 0) 
+      if (i != NoIndex)
         RemoveElementAt(i);
     }
 
