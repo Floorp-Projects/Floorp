@@ -181,7 +181,7 @@ nsDOMMouseEvent::GetButton(PRUint16* aButton)
       break;
     default:
       // This event doesn't have a mouse button associated with it
-      *aButton = (PRUint16)-1;
+      *aButton = (PRUint16)0;
       break;
     }
   }
