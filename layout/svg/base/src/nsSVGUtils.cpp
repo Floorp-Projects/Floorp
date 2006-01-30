@@ -66,6 +66,7 @@
 #include "nsSVGPoint.h"
 #include "nsDOMError.h"
 #include "nsISVGOuterSVGFrame.h"
+#include "nsISVGRendererCanvas.h"
 
 #if defined(MOZ_SVG_RENDERER_GDIPLUS)
 #include <windows.h>
@@ -397,21 +398,11 @@ nsSVGUtils::TransformPoint(nsIDOMSVGMatrix *matrix,
 
 nsresult
 nsSVGUtils::GetSurface(nsISVGOuterSVGFrame *aOuterSVGFrame,
+                       nsISVGRendererCanvas *aCanvas,
                        nsISVGRendererSurface **aSurface)
 {
-  if (!aOuterSVGFrame)
-    return NS_ERROR_FAILURE;
-
-  nsIFrame *frame = nsnull;
-  CallQueryInterface(aOuterSVGFrame, &frame);
-  
-  if (!frame)
-    return NS_ERROR_FAILURE;
-
-  nsSize size = frame->GetSize();
-  float p2t = frame->GetPresContext()->ScaledPixelsToTwips();
-  PRUint32 width = (PRUint32)ceil(size.width/p2t);
-  PRUint32 height = (PRUint32)ceil(size.height/p2t);
+  PRUint32 width, height;
+  aCanvas->GetSurfaceSize(&width, &height);
   
   nsCOMPtr<nsISVGRenderer> renderer;
   aOuterSVGFrame->GetRenderer(getter_AddRefs(renderer));

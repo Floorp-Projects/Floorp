@@ -701,6 +701,12 @@ nsSVGCairoCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
   return NS_OK;
 }
 
+struct ctxEntry {
+  cairo_t *mCR;
+  PRUint32 mWidth;
+  PRUint32 mHeight;
+};
+
 /** Implements pushSurface(in nsISVGRendererSurface surface); */
 NS_IMETHODIMP
 nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface)
@@ -709,11 +715,19 @@ nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface)
   if (!cairoSurface)
     return NS_ERROR_FAILURE;
 
-  cairo_t* oldCR = mCR;
-  mContextStack.AppendElement(NS_STATIC_CAST(void*, oldCR));
+  ctxEntry *ctx = new ctxEntry;
+  if (!ctx)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  ctx->mCR = mCR;
+  ctx->mWidth = mWidth;
+  ctx->mHeight = mHeight;
+
+  mContextStack.AppendElement(NS_STATIC_CAST(void*, ctx));
 
   mCR = cairo_create(cairoSurface->GetSurface());
-  // XXX Copy state over from oldCR?
+  aSurface->GetWidth(&mWidth);
+  aSurface->GetHeight(&mHeight);
 
   return NS_OK;
 }
@@ -725,10 +739,22 @@ nsSVGCairoCanvas::PopSurface()
   PRUint32 count = mContextStack.Count();
   if (count != 0) {
     cairo_destroy(mCR);
-    mCR = NS_STATIC_CAST(cairo_t*, mContextStack[count - 1]);
+    ctxEntry *ctx = NS_STATIC_CAST(ctxEntry*, mContextStack[count - 1]);
+    mCR = ctx->mCR;
+    mWidth = ctx->mWidth;
+    mHeight = ctx->mHeight;
+    delete ctx;
     mContextStack.RemoveElementAt(count - 1);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGCairoCanvas::GetSurfaceSize(PRUint32 *aWidth, PRUint32 *aHeight)
+{
+  *aWidth = mWidth;
+  *aHeight = mHeight;
   return NS_OK;
 }
 
