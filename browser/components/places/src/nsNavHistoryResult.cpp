@@ -4407,15 +4407,24 @@ nsNavHistoryResult::RowReplaced(PRInt32 aVisibleIndex,
 
 // nsINavBookmarkObserver implementation
 
+// Here, it is important that we create a COPY of the observer array. Some
+// observers will requery themselves, which may cause the observer array to
+// be modified or added to.
 #define ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(_folderId, _functionCall) \
-  FolderObserverList* _fol = BookmarkObserversForId(_folderId, PR_FALSE); \
-  if (_fol) { \
-    for (PRUint32 _fol_i = 0; _fol_i < _fol->Length(); _fol_i ++) \
-      (*_fol)[_fol_i]->_functionCall; \
+  { \
+    FolderObserverList* _fol = BookmarkObserversForId(_folderId, PR_FALSE); \
+    if (_fol) { \
+      FolderObserverList _listCopy(*_fol); \
+      for (PRUint32 _fol_i = 0; _fol_i < _listCopy.Length(); _fol_i ++) \
+        _listCopy[_fol_i]->_functionCall; \
+    } \
   }
 #define ENUMERATE_HISTORY_OBSERVERS(_functionCall) \
-  for (PRUint32 _obs_i = 0; _obs_i < mEverythingObservers.Length(); _obs_i ++) \
-    mEverythingObservers[_obs_i]->_functionCall;
+  { \
+    nsTArray<nsNavHistoryQueryResultNode*> observerCopy(mEverythingObservers); \
+    for (PRUint32 _obs_i = 0; _obs_i < observerCopy.Length(); _obs_i ++) \
+      observerCopy[_obs_i]->_functionCall; \
+  }
 
 // nsNavHistoryResult::OnBeginUpdateBatch (nsINavBookmark/HistoryObserver)
 
