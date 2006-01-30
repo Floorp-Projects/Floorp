@@ -46,23 +46,21 @@ ulimit -c 20480 2> /dev/null
 # we need to know that dir path in order to find xpcshell
 bin=${MOZILLA_FIVE_HOME:-`dirname $0`}
 
-# convert bin to absolute path, so it will work after the cd to the test dir
-bin=`cd $bin; pwd`
-
 exit_status=0
 
 # The sample Makefile for the xpcshell-simple harness adds the directory
 # where the *.js files reside as an arg.  If no arg is specified, assume 
 # the current directory is where the *.js files live.
-if [ "x$1" != "x" ]; then
-    cd $1
+testdir="$1"
+if [ "x$testdir" = "x" ]; then
+    testdir=.
 fi
 
 headfiles="-f $bin/test-harness/xpcshell-simple/head.js"
 
 # files matching the pattern head_*.js are treated like test setup files
 # - they are run after head.js but before the test file
-for h in head_*.js
+for h in $testdir/head_*.js
 do
     if [ -f $h ]; then
 	headfiles="$headfiles -f $h"
@@ -72,14 +70,14 @@ done
 tailfiles="-f $bin/test-harness/xpcshell-simple/tail.js"
 # files matching the pattern tail_*.js are treated like teardown files
 # - they are run after tail.js
-for t in tail_*.js
+for t in $testdir/tail_*.js
 do
     if [ -f $t ]; then
 	tailfiles="$tailfiles -f $t"
     fi
 done
 
-for t in test_*.js
+for t in $testdir/test_*.js
 do
     echo -n "$t: "
     $bin/xpcshell $headfiles -f $t $tailfiles 2> $t.log 1>&2
