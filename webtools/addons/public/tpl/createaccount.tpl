@@ -1,5 +1,5 @@
-<h1 class="first">{$title}</h1>
-<div class="front-section">
+<div id="mBody">
+<h1>{$title}</h1>
 {if $account_created}
     <p>Your account has been created successfully. An e-mail has been sent to you
     with instructions on how to activate your account so you can begin using it.</p>
@@ -7,70 +7,86 @@
 {else}
     
     {if $bad_input}
-        <p>Errors were found with your input.  Please review the messages below.</p>
-    {else}
-        <p>Joining Mozilla Update is easy!  Just fill out the form below and click the join button.</p>
+        <div class="amo-form-error">Errors were found with your input.  Please review the messages below.</div>
     {/if}
 
-    <form name="createaccount" method="post" action="">
+    <form name="createaccount" method="post" action="" class="amo-form">
+
         <p>Your e-mail address is used as your username to login. You'll also receive a
         confirmation e-mail to this address. In order for your account to be activated
         succesfully, you must specify a valid e-mail address.</p>
+
         {if $error_email_empty}
-            <p>E-Mail address is a required field.</p>
+            <div class="amo-form-error">E-Mail address is a required field.</div>
         {/if}
         {if $error_email_malformed}
-            <p>A valid E-Mail address is required.</p>
+            <div class="amo-form-error">A valid E-Mail address is required.</div>
         {/if}
         {if $error_emailconfirm_nomatch}
-            <p>The E-Mail addresses do not match.</p>
+            <div class="amo-form-error">The E-Mail addresses do not match.</div>
         {/if}
         {if $error_email_duplicate}
-            <p>The E-Mail address you entered is already in use.  If this is your
+            <div class="amo-form-error">The E-Mail address you entered is already in use.  If this is your
             account, you can <a href="{$config.webpath}/recoverpassword.php?email={$email_value|escape:"url"}">
-            send yourself a password recovery e-mail</a>.</p>
+            send yourself a password recovery e-mail</a>.</div>
         {/if}
-        <label for="email">E-Mail Address:</label>
-        <input id="email" name="email" type="text" value="{$email_value|escape}"/>
 
-        <label for="emailconfirm">Confirm E-Mail:</label>
+        <div>
+        <label class="amo-label-large" for="email">E-Mail Address:</label>
+        <input id="email" name="email" type="text" value="{$email_value|escape}"/>
+        </div>
+
+        <div>
+        <label class="amo-label-large" for="emailconfirm">Confirm E-Mail:</label>
         <input id="emailconfirm" name="emailconfirm" type="text" value="{$emailconfirm_value|escape}"/>
+        </div>
 
         <p>How do you want to be known to visitors of Mozilla Update? This is your "author
         name" and it will be shown with your extension/theme listings on the Mozilla Update
         web site.</p>
+
         {if $error_name_empty}
-            <p>Name is a required field.</p>
+            <div class="amo-form-error">Name is a required field.</div>
         {/if}
-        <label for="name">Your Name</label>
+
+        <div>
+        <label class="amo-label-large" for="name">Your Name:</label>
         <input id="name" name="name" type="text" value="{$name_value|escape}"/>
+        </div>
 
         <p>If you have a website, enter the URL here. (including the http:// ) Your website
         will be shown to site visitors on your author profile page. This field is optional;
         if you don't have a website or don't want it linked to from Mozilla Update, leave 
         this box blank.</p>
-        <label for="website">Your Website</label>
-        <input id="website" name="website" type="text" value="{$website_value|escape}"/>
 
-        <p>Your desired password. This along with your e-mail will allow you to login, so
-        make it something memorable but not easy to guess. Type it in both fields below.  The
-        two fields must match.</p>
+        <div>
+        <label class="amo-label-large" for="website">Your Website:</label>
+        <input id="website" name="website" type="text" value="{$website_value|escape}"/>
+        </div>
+
         {if $error_password_empty}
-            <p>Password is a required field.</p>
+            <div class="amo-form-error">Password is a required field.</div>
         {/if}
         {if $error_passwordconfirm_nomatch}
-            <p>The passwords do not match.</p>
+            <div class="amo-form-error">The passwords do not match.</div>
         {/if}
-        <label for="password">Password:</label>
+        
+        <div>
+        <label class="amo-label-large" for="password">Password:</label>
         <input id="password" name="password" type="password" />
+        </div>
 
-        <label for="passwordconfirm">Confirm Password:</label>
+        <div>
+        <label class="amo-label-large" for="passwordconfirm">Confirm Password:</label>
         <input id="passwordconfirm" name="passwordconfirm" type="password" />
+        </div>
 
         <p>Review what you entered above. If everything's correct, click the "Join Mozilla
         Update" button. If you want to start over, click "Clear Form".</p>
-        <input name="submit" type="submit" value="Join Mozilla Update" />
-        <input name="reset" type="reset" value="Clear Form" />
+
+        <div>
+        <input name="submit" type="submit" value="Join Mozilla Update &raquo;" class="amo-submit"/>
+        </div>
     </form>
 {/if}
 </div>

@@ -10,6 +10,7 @@
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/cavendish/content.css" title="Cavendish" media="all">
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/base/template.css" media="screen">
     <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/cavendish/template.css" title="Cavendish" media="screen">
+    <link rel="stylesheet" type="text/css" href="{$config.webpath}/css/forms.css" media="screen">
     <link rel="home" title="Home" href="https://addons.mozilla.org/">
     <link rel="alternate" type="application/rss+xml" title="New Firefox Extensions Additions" href="{$config.webpath}/rss/?app=firefox&amp;type=E&amp;list=newest">
     <link rel="icon" href="{$config.webpath}/images/favicon.ico" type="image/png">

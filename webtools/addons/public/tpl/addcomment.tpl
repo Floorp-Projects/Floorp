@@ -1,42 +1,56 @@
+<h2><strong>{$addon->Name}</strong> &raquo; Add a Comment</h2>
 
-<h1>{$addon->Name|escape} - Firefox Extension</h1>
-<p>{$addon->Name|escape} {$addon->Version|escape}, by {$addon->UserName|escape} released on {$addon->DateUpdated|date_format:"%B %d, %Y"}</p>
-<h2 class="first">Your comments about {$addon->Name|escape}</h2>
-<div class="front-section">
+<p class="first">
+<strong><a href="{$config.webpath}/{$app}/{$addon->ID}/">{$addon->Name} {$addon->Version}</a></strong>,
+by <a href="{$config.webpath}/{$app}/{$addon->UserID}/author/">{$addon->UserName}</a>,
+released on {$addon->VersionDateAdded|date_format}
+</p>
+
 {if $c_added_comment}
 <p>You comment has been added successfully.</p>
 <ul>
 <li><a href="addon.php?id={$addon->ID}">Return to {$addon->Name|escape}</a></li>
 </ul>
 {else}
-<form id="commentform" name="commentform" method="post" action="">
-    <label for="c_rating">Rating:</label>
+<form id="commentform" class="amo-form" name="commentform" method="post" action="">
+
+    <p>All fields are required.</p>
+
+    <div>
+    <label class="amo-label-small" for="c_rating">Rating:</label>
     <select id="c_rating" name="c_rating">
         {html_options values=$rate_select_value output=$rate_select_name selected=$c_rating_value}
     </select>
     {if $c_errors.c_rating}
-        <div>
-            <p>Please choose a rating.</p>
+        <div class="amo-form-error">
+            Please choose a rating.
         </div>
     {/if}
-    <label for="c_title">Title:</label>
-    <input type="text" id="c_title" name="c_title" value="{$c_title_value|escape}"/>
+    </div>
+
+    <div>
+    <label class="amo-label-small" for="c_title">Title:</label>
+    <input type="text" id="c_title" name="c_title" value="{$c_title_value|escape}" size="36" maxlength="255"/>
     {if $c_errors.c_title}
-        <div>
-            <p>Please provide a title with your comments.</p>
+        <div class="amo-form-error">
+            Please provide a title with your comments.
         </div>
     {/if}
-    <label for="c_comments">Comments:</label>
-    <textarea id="c_comments" name="c_comments">{$c_comments_value|escape}</textarea>
+    </div>
+
+    <div>
+    <label class="amo-label-small" for="c_comments">Comments:</label>
+    <textarea id="c_comments" name="c_comments" cols="31" rows="7">{$c_comments_value|escape}</textarea>
     {if $c_errors.c_comments}
-        <div>
-            <p>Please include some valid comments.</p>
+        <div class="amo-form-error">
+            Please include some valid comments.
         </div>
     {/if}
-    <input type="submit" id="c_submit" name="c_submit" value="Post" />
-    <p>All fields are required.</p>
+    </div>
+
+    <div>
+    <input class="amo-submit" type="submit" id="c_submit" name="c_submit" value="Submit Comment &raquo;" />
+    </div>
+
 </form>
 {/if}
-</div>
-
-

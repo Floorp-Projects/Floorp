@@ -110,7 +110,7 @@ $website_value      = array_key_exists('website', $_POST) ? $_POST['website'] : 
 
 // Assign template variables.
 $tpl->assign(
-    array(  'title'                         => 'Create a Mozilla Addons Account',
+    array(  'title'                         => 'Create an Account',
             'currentTab'                    => null,
             'account_created'               => $account_created,
             'bad_input'                     => $_bad_input,
