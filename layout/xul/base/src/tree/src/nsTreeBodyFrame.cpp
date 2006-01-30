@@ -1805,7 +1805,7 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseCont
 
     // In a case it was already cached.
     imageRequest->GetImage(aResult);
-    nsTreeImageCacheEntry cacheEntry = { imageRequest, imgDecoderObserver };
+    nsTreeImageCacheEntry cacheEntry(imageRequest, imgDecoderObserver);
     mImageCache.Put(imageSrc, cacheEntry);
   }
   return NS_OK;
