@@ -586,6 +586,13 @@ NS_IMETHODIMP
 nsFormHistoryImporter::ImportFormHistory(nsIFile *aFile,
                                          nsIFormHistory *aFormHistory)
 {
+  // Check that the file exists before we try to open it
+  PRBool exists;
+  aFile->Exists(&exists);
+  if (!exists) {
+    return NS_OK;
+  }
+  
   nsMorkReader reader;
   nsresult rv = reader.Init();
   NS_ENSURE_SUCCESS(rv, rv);
