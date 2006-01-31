@@ -260,6 +260,7 @@ NS_IMETHODIMP
 nsThebesDeviceContext::CreateRenderingContext(nsIView *aView,
                                               nsIRenderingContext *&aContext)
 {
+    // This is currently only called by the caret code
     NS_ENSURE_ARG_POINTER(aView);
     NS_PRECONDITION(aView->HasWidget(), "View has no widget!");
 
@@ -302,8 +303,6 @@ nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
         nsRefPtr<gfxASurface> surface(aWidget->GetThebesSurface());
         if (surface)
             rv = pContext->Init(this, surface);
-        else
-            rv = pContext->Init(this, aWidget);
         if (NS_SUCCEEDED(rv)) {
             aContext = pContext;
             NS_ADDREF(aContext);

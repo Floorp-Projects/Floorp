@@ -139,22 +139,8 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
 NS_IMETHODIMP
 nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSurface)
 {
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p ds %p\n", this, aContext, aSurface));
-
-    nsThebesDrawingSurface *cds = (nsThebesDrawingSurface *) aSurface;
-
-    mDeviceContext = aContext;
-    mWidget = nsnull;
-
-    mLocalDrawingSurface = (nsThebesDrawingSurface *) cds;
-    mDrawingSurface = mLocalDrawingSurface;
-
-    mThebes = new gfxContext(mLocalDrawingSurface->GetThebesSurface());
-
-    //mThebes->SetColor(gfxRGBA(1.0, 1.0, 1.0, 1.0));
-    //mThebes->Paint();
-
-    return (CommonInit());
+    NS_ERROR("Should never be called.");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

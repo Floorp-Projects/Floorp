@@ -75,15 +75,7 @@ nsThebesDrawingSurface::~nsThebesDrawingSurface()
     // destroy this before any other bits are destroyed,
     // in case they depend on them
     mSurface = nsnull;
-
-#ifdef XP_WIN
-    if (mWidget)
-        mWidget->FreeNativeData(mNativeWidget, NS_NATIVE_GRAPHIC);
-#endif
 }
-
-#ifdef MOZ_ENABLE_GTK2
-#endif
 
 nsresult
 nsThebesDrawingSurface::Init(nsThebesDeviceContext *aDC, gfxASurface *aSurface)
@@ -141,40 +133,15 @@ nsThebesDrawingSurface::Init(nsThebesDeviceContext *aDC, PRUint32 aWidth, PRUint
 nsresult
 nsThebesDrawingSurface::Init (nsThebesDeviceContext *aDC, nsIWidget *aWidget)
 {
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsThebesDrawingSurface::Init aDC %p aWidget %p\n", this, aDC, aWidget));
-
-#ifdef MOZ_ENABLE_GTK2
-    mNativeWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);
-#elif XP_WIN
-    mWidget = aWidget; // hold a pointer to this.. not a reference.. because we have to free the dc...
-    mNativeWidget = aWidget->GetNativeData(NS_NATIVE_GRAPHIC);
-#else
-#error Write me!
-#endif
-
-    Init(aDC, mNativeWidget);
-
-    return NS_OK;
+    NS_ERROR("Should never be called.");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
 nsThebesDrawingSurface::Init (nsThebesDeviceContext *aDC, nsNativeWidget aWidget)
 {
-    mDC = aDC;
-    mNativeWidget = aWidget;
-    mWidth = 0;
-    mHeight = 0;
-
-#ifdef MOZ_ENABLE_GTK2
     NS_ERROR("Should never be called.");
-#elif XP_WIN
-    HDC nativeDC = (HDC)aWidget;
-    mSurface = new gfxWindowsSurface(nativeDC);
-#else
-#error write me
-#endif    
-
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 #ifdef MOZ_ENABLE_GTK2
