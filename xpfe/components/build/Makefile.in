@@ -90,11 +90,6 @@ endif
 
 CPPSRCS		= nsModule.cpp
 
-ifdef MOZ_LDAP_XPCOM
-REQUIRES	+= mozldap
-DEFINES		+= -DMOZ_LDAP_XPCOM
-endif
-
 ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS	+= mozutil_s
 endif

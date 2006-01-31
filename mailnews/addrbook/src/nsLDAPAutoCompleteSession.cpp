@@ -38,15 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Work around lack of conditional build logic in codewarrior's
-// build system.  The MOZ_LDAP_XPCOM preprocessor symbol is only 
-// defined on Mac because noone else needs this weirdness; thus 
-// the XP_MAC check first.  This conditional encloses the entire
-// file, so that in the case where the ldap option is turned off
-// in the mac build, a dummy (empty) object will be generated.
-//
-#if !defined(XP_MAC) || defined(MOZ_LDAP_XPCOM)
-
 #include "nsString.h"
 #include "nsLDAPAutoCompleteSession.h"
 #include "nsIComponentManager.h"
@@ -1654,5 +1645,3 @@ nsLDAPAutoCompleteSession::SetSearchClientControls(nsIMutableArray *aControls)
     mSearchClientControls = aControls;
     return NS_OK;
 }
-
-#endif
