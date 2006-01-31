@@ -306,24 +306,29 @@ AC_ARG_WITH(system-svrcore,
     [  --with-system-svrcore   Use system installed SVRCORE],
     [   if test "$withval" = "yes"; then
             _SYSTEM_SVRCORE=1
+            HAVE_SVRCORE=1
 	    else
             _SYSTEM_SVRCORE=
 	    fi], _SYSTEM_SVRCORE= )
 
-# first, see if user has specified explicit SVRCORE include and lib paths
-AM_PATH_GIVEN_SVRCORE()
+# _SYSTEM_SVRCORE means /usr/lib and /usr/include so no need to add additional
+# include or lib paths
+if test -z "$_SYSTEM_SVRCORE" ; then
+   # first, see if user has specified explicit SVRCORE include and lib paths
+   AM_PATH_GIVEN_SVRCORE()
 
-# next, see if user explicitly said to use system svrcore
-if test -z "$SVRCORE_CFLAGS" -a -z "$SVRCORE_LIBS" ; then
-    if test -n "$_SYSTEM_SVRCORE"; then
-        AM_PATH_SVRCORE(4.0.1, [MOZ_NATIVE_SVRCORE=1], [MOZ_NATIVE_SVRCORE=])
-    else
-# see if we are being built in the same build tree as svrcore
-        AM_PATH_INTREE_SVRCORE(../../dist)
-# failing that, see if we can find svrcore-config or pkg-config svrcore
-        if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
-            AM_PATH_SVRCORE(4.0.1, [MOZ_NATIVE_SVRCORE=1], [MOZ_NATIVE_SVRCORE=])
-        fi
+   # next, see if user explicitly said to use system svrcore
+   if test -z "$SVRCORE_CFLAGS" -a -z "$SVRCORE_LIBS" ; then
+       if test -n "$_SYSTEM_SVRCORE"; then
+           AM_PATH_SVRCORE(4.0.1, [MOZ_NATIVE_SVRCORE=1], [MOZ_NATIVE_SVRCORE=])
+       else
+       # see if we are being built in the same build tree as svrcore
+           AM_PATH_INTREE_SVRCORE(../../dist)
+           # failing that, see if we can find svrcore-config or pkg-config svrcore
+           if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
+               AM_PATH_SVRCORE(4.0.1, [MOZ_NATIVE_SVRCORE=1], [MOZ_NATIVE_SVRCORE=])
+           fi
+       fi
     fi
 fi
 
