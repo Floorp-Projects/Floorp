@@ -307,6 +307,8 @@ AC_ARG_WITH(system-svrcore,
     [   if test "$withval" = "yes"; then
             _SYSTEM_SVRCORE=1
             HAVE_SVRCORE=1
+            SVRCORE_LIBS=-lsvrcore
+            AC_SUBST(SVRCORE_LIBS)
 	    else
             _SYSTEM_SVRCORE=
 	    fi], _SYSTEM_SVRCORE= )
