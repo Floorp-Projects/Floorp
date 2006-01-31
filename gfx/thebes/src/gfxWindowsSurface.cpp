@@ -39,29 +39,36 @@
 
 THEBES_IMPL_REFCOUNTING(gfxWindowsSurface)
 
+gfxWindowsSurface::gfxWindowsSurface(HWND wnd) :
+    mOwnsDC(PR_TRUE), mWnd(wnd), mOrigBitmap(nsnull)
+{
+    mDC = ::GetDC(mWnd);
+    Init(cairo_win32_surface_create(mDC));
+}
+
 gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRBool deleteDC) :
-    mOwnsDC(deleteDC), mDC(dc), mOrigBitmap(nsnull)
+    mOwnsDC(deleteDC), mDC(dc),mWnd(nsnull), mOrigBitmap(nsnull)
 {
     Init(cairo_win32_surface_create(mDC));
 }
 
 gfxWindowsSurface::gfxWindowsSurface(HDC dc, unsigned long width, unsigned long height) :
-    mOwnsDC(PR_TRUE), mWidth(width), mHeight(height)
+    mOwnsDC(PR_TRUE), mWnd(nsnull), mWidth(width), mHeight(height)
 {
-    mDC = CreateCompatibleDC(dc);
+    mDC = ::CreateCompatibleDC(dc);
     // set the clip region on it so that cairo knows the surface
     // dimensions
-    HRGN clipRegion = CreateRectRgn(0, 0, width, height);
-    if (SelectClipRgn(mDC, clipRegion) == ERROR) {
+    HRGN clipRegion = ::CreateRectRgn(0, 0, width, height);
+    if (::SelectClipRgn(mDC, clipRegion) == ERROR) {
         NS_ERROR("gfxWindowsSurface: SelectClipRgn failed\n");
     }
-    DeleteObject(clipRegion);
+    ::DeleteObject(clipRegion);
 
     // Creating with width or height of 0 will create a
     // 1x1 monotone bitmap, which isn't what we want
-    HBITMAP tbits = CreateCompatibleBitmap(dc, PR_MAX(2, width), PR_MAX(2, height));
+    HBITMAP tbits = ::CreateCompatibleBitmap(dc, PR_MAX(2, width), PR_MAX(2, height));
 
-    mOrigBitmap = (HBITMAP)SelectObject(mDC, tbits);
+    mOrigBitmap = (HBITMAP)::SelectObject(mDC, tbits);
 
     Init(cairo_win32_surface_create(mDC));
 }
@@ -71,11 +78,15 @@ gfxWindowsSurface::~gfxWindowsSurface()
     Destroy();
 
     if (mDC && mOrigBitmap) {
-        HBITMAP tbits = (HBITMAP)SelectObject(mDC, mOrigBitmap);
+        HBITMAP tbits = (HBITMAP)::SelectObject(mDC, mOrigBitmap);
         if (tbits)
             DeleteObject(tbits);
     }
 
-    if (mOwnsDC)
-        DeleteDC(mDC);
+    if (mOwnsDC) {
+        if (mWnd)
+            ::ReleaseDC(mWnd, mDC);
+        else
+            ::DeleteDC(mDC);
+    }
 }
