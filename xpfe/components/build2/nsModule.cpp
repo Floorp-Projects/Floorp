@@ -46,8 +46,6 @@
 #include "nsFontPackageHandler.h"
 #include "nsWindowDataSource.h"
 #include "nsRDFCID.h"
-#include "nsDownloadManager.h"
-#include "nsDownloadProxy.h"
 
 #if defined(XP_WIN)
 #include "nsWindowsHooks.h"
@@ -59,8 +57,6 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 
 #if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
@@ -84,9 +80,6 @@ RegisterWindowDS(nsIComponentManager *aCompMgr,
 }
 
 static const nsModuleComponentInfo components[] = {
-    { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID, nsDownloadManagerConstructor },
-    { "Download", NS_DOWNLOAD_CID, NS_TRANSFER_CONTRACTID, nsDownloadProxyConstructor },
-
     { "nsCharsetMenu", NS_CHARSETMENU_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
       NS_NewCharsetMenu },
