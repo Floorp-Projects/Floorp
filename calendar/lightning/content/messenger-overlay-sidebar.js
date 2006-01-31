@@ -110,7 +110,10 @@ function showCalendarView(type)
     if (calendarViewBox.style.visibility == "collapse") {
         collapseElement(GetMessagePane());
         collapseElement(document.getElementById("threadpane-splitter"));
-        collapseElement(gSearchBox);
+        var searchBox = findMailSearchBox();
+        if (searchBox) {
+            collapseElement(searchBox);
+        }
         uncollapseElement(calendarViewBox);
 
         // Thunderbird is smart.  It won't reload the message list if the user
@@ -193,7 +196,10 @@ function LtnObserveDisplayDeckChange(event)
         collapseElement(document.getElementById("calendar-view-box"));
         uncollapseElement(GetMessagePane());
         uncollapseElement(document.getElementById("threadpane-splitter"));
-        uncollapseElement(gSearchBox);
+        var searchBox = findMailSearchBox();
+        if (searchBox) {
+            uncollapseElement(searchBox);
+        }
     }
 }
 
@@ -235,6 +241,24 @@ var ltnPrefObserver =
 
 function onMouseOverItem(event) {
 //set the item's context-menu text here
+}
+
+// After 1.5 was released, the search box was moved into an optional toolbar
+// item, with a different ID.  This function keeps us compatible with both.
+function findMailSearchBox() {
+    var tb15Box = document.getElementById("searchBox");
+    if (tb15Box) {
+        return tb15Box;
+    }
+
+    var tb2Box = document.getElementById("searchInput");
+    if (tb2Box) {
+        return tb2Box;
+    }
+
+    // In later versions, it's possible that a user removed the search box from
+    // the toolbar.
+    return null;
 }
 
 document.getElementById("displayDeck").
