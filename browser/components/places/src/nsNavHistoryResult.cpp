@@ -4119,8 +4119,10 @@ NS_IMETHODIMP nsNavHistoryResult::GetCellText(PRInt32 row,
 NS_IMETHODIMP nsNavHistoryResult::SetTree(nsITreeBoxObject* tree)
 {
   mTree = tree;
-  if (mTree)
+  if (mTree) {
+    mRootNode->SetContainerOpen(PR_TRUE);
     SetTreeSortingIndicator();
+  }
   // if there is no tree, BuildVisibleList will clear everything for us
   return BuildVisibleList();
 }
@@ -4746,4 +4748,3 @@ nsNavHistoryResult::OnPageChanged(nsIURI *aURI,
   ENUMERATE_HISTORY_OBSERVERS(OnPageChanged(aURI, aWhat, aValue));
   return NS_OK;
 }
-
