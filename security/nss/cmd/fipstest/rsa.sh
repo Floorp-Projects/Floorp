@@ -12,9 +12,9 @@
 request=SigGen15.req
 response=`echo $request | sed -e "s/req/rsp/"`
 echo $request $response
-fipstest dsa siggen $request > $response
+fipstest rsa siggen $request > $response
 
 request=SigVer15.req
 response=`echo $request | sed -e "s/req/rsp/"`
 echo $request $response
-fipstest dsa sigver $request > $response
+fipstest rsa sigver $request > $response
