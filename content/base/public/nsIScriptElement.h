@@ -43,10 +43,9 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 
-#define NS_ISCRIPTELEMENT_IID                      \
-{ /*fa304da4-5e9c-45a6-a017-8cb011dc46b4 */        \
- 0xfa304da4, 0x5e9c, 0x45a6,                       \
- {0xa0, 0x17, 0x8c, 0xb0, 0x11, 0xdc, 0x46, 0xb4}} \
+#define NS_ISCRIPTELEMENT_IID \
+{ 0x0511fba1, 0x1b67, 0x4338, \
+  { 0x98, 0xff, 0x42, 0xb9, 0x02, 0x0b, 0xeb, 0x92 } }
 
 /**
  * Internal interface implemented by script elements
@@ -76,6 +75,8 @@ public:
   
   virtual void SetScriptLineNumber(PRUint32 aLineNumber) = 0;
   virtual PRUint32 GetScriptLineNumber() = 0;
+  virtual void SetIsMalformed() = 0;
+  virtual PRBool IsMalformed() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptElement, NS_ISCRIPTELEMENT_IID)

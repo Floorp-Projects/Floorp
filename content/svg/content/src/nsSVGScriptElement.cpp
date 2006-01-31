@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -89,6 +90,8 @@ public:
   virtual void GetScriptCharset(nsAString& charset); 
   virtual void SetScriptLineNumber(PRUint32 aLineNumber);
   virtual PRUint32 GetScriptLineNumber();
+  virtual void SetIsMalformed();
+  virtual PRBool IsMalformed();
 
   // nsISVGValueObserver specializations:
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
@@ -339,6 +342,17 @@ nsSVGScriptElement::GetScriptLineNumber()
   return mLineNumber;
 }
 
+// Note: The following two methods don't apply to us.
+void
+nsSVGScriptElement::SetIsMalformed()
+{
+}
+
+PRBool
+nsSVGScriptElement::IsMalformed()
+{
+  return PR_FALSE;
+}
 
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods

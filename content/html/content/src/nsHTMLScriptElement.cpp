@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -337,6 +338,8 @@ public:
   virtual void GetScriptCharset(nsAString& charset); 
   virtual void SetScriptLineNumber(PRUint32 aLineNumber);
   virtual PRUint32 GetScriptLineNumber();
+  virtual void SetIsMalformed();
+  virtual PRBool IsMalformed();
 
   // nsIContent
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -367,9 +370,10 @@ protected:
   PRPackedBool mIsEvaluated;
   PRPackedBool mEvaluating;
   PRPackedBool mDoneAddingChildren;
+  PRPackedBool mMalformed;
 
   // Pointer to the script handler helper object (OWNING reference)
-  nsHTMLScriptEventHandler *mScriptEventHandler;
+  nsCOMPtr<nsHTMLScriptEventHandler> mScriptEventHandler;
 
   /**
    * Processes the script if it's in the document-tree and links to or
@@ -394,17 +398,16 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Script)
 nsHTMLScriptElement::nsHTMLScriptElement(nsINodeInfo *aNodeInfo,
                                          PRBool aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
-    mDoneAddingChildren(!aFromParser)
+    mLineNumber(0),
+    mIsEvaluated(PR_FALSE),
+    mEvaluating(PR_FALSE),
+    mDoneAddingChildren(!aFromParser),
+    mMalformed(PR_FALSE)
 {
-  mLineNumber = 0;
-  mIsEvaluated = PR_FALSE;
-  mEvaluating = PR_FALSE;
-  mScriptEventHandler = nsnull;
 }
 
 nsHTMLScriptElement::~nsHTMLScriptElement()
 {
-  NS_IF_RELEASE(mScriptEventHandler);
 }
 
 
@@ -504,6 +507,7 @@ nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
   // script clones the node.
   it->mIsEvaluated = mIsEvaluated || mEvaluating;
   it->mLineNumber = mLineNumber;
+  it->mMalformed = mMalformed;
 
   kungFuDeathGrip.swap(*aResult);
 
@@ -665,6 +669,18 @@ nsHTMLScriptElement::GetScriptLineNumber()
   return mLineNumber;
 }
 
+void
+nsHTMLScriptElement::SetIsMalformed()
+{
+  mMalformed = PR_TRUE;
+}
+
+PRBool
+nsHTMLScriptElement::IsMalformed()
+{
+  return mMalformed;
+}
+
 // variation of this code in nsSVGScriptElement - check if changes
 // need to be transfered when modifying
 
@@ -698,8 +714,6 @@ nsHTMLScriptElement::MaybeProcessScript()
       if (!mScriptEventHandler) {
         return;
       }
-
-      NS_ADDREF(mScriptEventHandler);
 
       // The script-loader will make sure that the script is not evaluated
       // right away.

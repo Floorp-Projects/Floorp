@@ -177,6 +177,18 @@ public:
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag) = 0;
 
   /**
+   * This method is used when we're closing a tag that was malformed
+   * in some way. This way, the content sink can do special processing
+   * (e.g., not execute a malformed script tag).
+   *
+   * @param aTag The tag to be closed.
+   */
+  NS_IMETHOD CloseMalformedContainer(const nsHTMLTag aTag)
+  {
+    return CloseContainer(aTag);
+  }
+
+  /**
    * This gets called by the parser when you want to add
    * a leaf node to the current container in the content
    * model.

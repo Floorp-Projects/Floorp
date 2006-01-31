@@ -310,11 +310,9 @@ private:
      * one or more open containers.
      * @return  error code - 0 if all went well.
      */
-    nsresult CloseContainer(const eHTMLTags aTag);
-    nsresult CloseContainersTo(eHTMLTags aTag,
-                               PRBool aClosedByStartTag);
-    nsresult CloseContainersTo(PRInt32 anIndex,
-                               eHTMLTags aTag,
+    nsresult CloseContainer(const eHTMLTags aTag, PRBool aMalformed);
+    nsresult CloseContainersTo(eHTMLTags aTag, PRBool aClosedByStartTag);
+    nsresult CloseContainersTo(PRInt32 anIndex, eHTMLTags aTag,
                                PRBool aClosedByStartTag);
 
     /**

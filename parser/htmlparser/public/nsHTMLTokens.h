@@ -271,8 +271,7 @@ public:
                     nsScannerIterator& aEnd);
   virtual void Bind(const nsAString& aStr);
 
-  nsresult ConsumeCharacterData(PRBool aConservativeConsume,
-                                PRBool aIgnoreComments,
+  nsresult ConsumeCharacterData(PRBool aIgnoreComments,
                                 nsScanner& aScanner,
                                 const nsAString& aEndTagName,
                                 PRInt32 aFlag,

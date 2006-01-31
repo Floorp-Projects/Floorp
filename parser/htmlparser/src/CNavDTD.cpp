@@ -1558,11 +1558,11 @@ CNavDTD::HandleEndToken(CToken* aToken)
 
     case eHTMLTag_head:
       StripWSFollowingTag(theChildTag, mTokenizer, mTokenAllocator, mLineNumber);
-      result = CloseContainer(eHTMLTag_head);
+      result = CloseContainer(eHTMLTag_head, PR_FALSE);
       break;
 
     case eHTMLTag_form:
-      result = CloseContainer(eHTMLTag_form);
+      result = CloseContainer(eHTMLTag_form, PR_FALSE);
       break;
 
     case eHTMLTag_br:
@@ -1599,7 +1599,7 @@ CNavDTD::HandleEndToken(CToken* aToken)
       }
 
       mBodyContext->Pop();
-      result = CloseContainer(eHTMLTag_script);
+      result = CloseContainer(eHTMLTag_script, aToken->IsInError());
       break;
 
     default:
@@ -2489,7 +2489,7 @@ CNavDTD::OpenBody(const nsCParserNode *aNode)
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenBody(), this=%p\n", this));
 
     // Make sure the head is closed by the time the body is opened.
-    CloseContainer(eHTMLTag_head);
+    CloseContainer(eHTMLTag_head, PR_FALSE);
 
     // Now we can open the body.
     result = mSink ? mSink->OpenContainer(*aNode) : NS_OK; 
@@ -2580,7 +2580,7 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
 
     case eHTMLTag_frameset:
       // Make sure that the head is closed before we try to open this frameset.
-      CloseContainer(eHTMLTag_head);
+      CloseContainer(eHTMLTag_head, PR_FALSE);
 
       // Now that the head is closed, continue on with opening this frameset.
       mFlags |= NS_DTD_FLAG_HAD_FRAMESET;
@@ -2644,7 +2644,7 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
  * @return  TRUE if ok, FALSE if error
  */
 nsresult
-CNavDTD::CloseContainer(const eHTMLTags aTag)
+CNavDTD::CloseContainer(const eHTMLTags aTag, PRBool aMalformed)
 {
   nsresult   result = NS_OK;
   PRBool     done   = PR_TRUE;
@@ -2687,16 +2687,18 @@ CNavDTD::CloseContainer(const eHTMLTags aTag)
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseContainer(), this=%p\n", this));
 
-    result = mSink
-             ? mSink->CloseContainer(aTag)
-             : NS_OK; // XXX Can this case really happen?
+    if (mSink) {
+      result = !aMalformed
+               ? mSink->CloseContainer(aTag)
+               : mSink->CloseMalformedContainer(aTag);
+    }
 
     // If we were dealing with a head container in the body, make sure to
     // close the head context now, so that body content doesn't get sucked
     // into the head.
     if (mBodyContext->GetCount() == mHeadContainerPosition) {
       mHeadContainerPosition = -1;
-      nsresult headresult = CloseContainer(eHTMLTag_head);
+      nsresult headresult = CloseContainer(eHTMLTag_head, PR_FALSE);
 
       // Note: we could be assigning NS_OK into NS_OK here, but that's ok.
       // This test is to avoid a successful CloseHead result stomping over a
@@ -2736,7 +2738,7 @@ CNavDTD::CloseContainersTo(PRInt32 anIndex, eHTMLTags aTarget,
       nsEntryStack* theChildStyleStack = 0;
       eHTMLTags theTag = mBodyContext->Last();
       nsCParserNode* theNode = mBodyContext->Pop(theChildStyleStack);
-      result = CloseContainer(theTag);
+      result = CloseContainer(theTag, PR_FALSE);
 
       PRBool theTagIsStyle = nsHTMLElement::IsResidualStyleTag(theTag);
       // If the current tag cannot leak out then we shouldn't leak out of the target - Fix 40713
@@ -2985,7 +2987,7 @@ CNavDTD::AddHeadContent(nsIParserNode *aNode)
 
       if (mFlags & NS_DTD_FLAG_HAS_MAIN_CONTAINER) {
         // Close the head now so that body content doesn't get sucked into it.
-        CloseContainer(eHTMLTag_head);
+        CloseContainer(eHTMLTag_head, PR_FALSE);
       }
     } else {
       if ((mFlags & NS_DTD_FLAG_HAS_MAIN_CONTAINER) &&

@@ -361,7 +361,7 @@ nsScriptLoader::DoProcessScriptElement(nsIScriptElement *aElement,
   // suppresses script evaluation within it and that we should be
   // evaluating scripts for this document in the first place.
   if (!mEnabled || !mDocument->IsScriptEnabled() ||
-      InNonScriptingContainer(aElement)) {
+      aElement->IsMalformed() || InNonScriptingContainer(aElement)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
