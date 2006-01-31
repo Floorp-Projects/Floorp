@@ -51,12 +51,17 @@
 
   <script type="application/x-javascript" 
           src="chrome://calendar/content/calendar-item-editing.js"/>
+  <script type="application/x-javascript" 
+          src="chrome://lightning/content/calendar-management.js"/>
 
   <menupopup id="menu_NewPopup">
-    <menuitem id="ltnNewEvent" label="&event.title.new;" 
+    <menuseparator />
+    <menuitem id="ltnNewEvent" label="&lightning.menupopup.new.event.label;" 
               oncommand="createEventWithDialog(ltnSelectedCalendar());"/>
-    <menuitem id="ltnNewTask" label="&todo.title.new;" 
+    <menuitem id="ltnNewTask" label="&lightning.menupopup.new.task.label;" 
               oncommand="createTodoWithDialog(ltnSelectedCalendar());"/>
+    <menuitem id="ltnNewCalendar" label="&lightning.menupopup.new.calendar.label;" 
+              oncommand="ltnNewCalendar();"/>
   </menupopup>
 
   <menubar id="mail-menubar">

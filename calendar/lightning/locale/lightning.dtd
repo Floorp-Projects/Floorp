@@ -39,6 +39,11 @@
 <!-- Tools menu -->
 <!ENTITY lightning.taskLabel "Lightning">
 
+<!-- New menu popup in File menu -->
+<!ENTITY lightning.menupopup.new.event.label    "Event...">
+<!ENTITY lightning.menupopup.new.task.label     "Task...">
+<!ENTITY lightning.menupopup.new.calendar.label "Calendar...">
+
 <!-- Agenda Tree View -->
 <!ENTITY agenda.treeview.label           "View:">
 <!ENTITY agenda.treeview.menu.label      "View">
