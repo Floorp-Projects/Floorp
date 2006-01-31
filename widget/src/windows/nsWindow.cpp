@@ -799,6 +799,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 #endif
 {
   mWnd                = 0;
+  mPaintDC                 = 0;
   mPrevWndProc        = NULL;
   mBackground         = ::GetSysColor(COLOR_BTNFACE);
   mBrush              = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
@@ -5736,6 +5737,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #endif // NS_DEBUG
 
   HDC hDC = aDC ? aDC : (::BeginPaint(mWnd, &ps));
+  mPaintDC = hDC;
   RECT paintRect;
 
 #ifdef MOZ_XUL
@@ -5779,13 +5781,25 @@ PRBool nsWindow::OnPaint(HDC aDC)
                            (PRInt32) mWnd);
 #endif // NS_DEBUG
 
+#ifdef MOZ_CAIRO_GFX
+      nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
+      event.renderingContext = rc;
+      result = DispatchWindowEvent(&event, eventStatus);
+      event.renderingContext = nsnull;
+
+      if (mIsTranslucent && IsAlphaTranslucencySupported())
+      {
+        // Data from offscreen drawing surface was copied to memory bitmap of transparent
+        // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
+        // that displayed on the screen.
+        UpdateTranslucentWindow();
+      }
+      rc = nsnull;
+#else
+
       if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext)))
       {
-#ifdef MOZ_CAIRO_GFX
-        nsIThebesRenderingContext *winrc;
-#else
         nsIRenderingContextWin *winrc;
-#endif
         if (NS_SUCCEEDED(CallQueryInterface(event.renderingContext, &winrc)))
         {
           nsIDrawingSurface* surf;
@@ -5816,6 +5830,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
       }
       else
         result = PR_FALSE;
+#endif
 
       NS_RELEASE(event.widget);
     }
@@ -5824,6 +5839,8 @@ PRBool nsWindow::OnPaint(HDC aDC)
   if (!aDC) {
     ::EndPaint(mWnd, &ps);
   }
+
+  mPaintDC = nsnull;
 
 #ifdef NS_DEBUG
   if (debug_WantPaintFlashing())
@@ -8128,6 +8145,18 @@ nsWindow* nsWindow::GetTopLevelWindow()
       return curWindow;
   }
 }
+
+#ifdef MOZ_CAIRO_GFX
+#include "gfxWindowsSurface.h"
+
+gfxASurface *nsWindow::GetThebesSurface()
+{
+  if (mPaintDC)
+    return (new gfxWindowsSurface(mPaintDC));
+
+  return (new gfxWindowsSurface(mWnd));
+}
+#endif
 
 void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight)
 {
