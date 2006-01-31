@@ -253,7 +253,9 @@ var PlacesController = {
     options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     options.excludeItems = excludeItems;
     options.expandQueries = expandQueries;
-    return this._hist.executeQuery(query, options);
+    var result = this._hist.executeQuery(query, options);
+    result.root.containerOpen = true;
+    return result;
   },
   
   /**
@@ -1554,5 +1556,3 @@ PlacesEditItemTransaction.prototype = {
  Determine the state of commands!
 
 */
-
-

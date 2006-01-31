@@ -36,6 +36,7 @@
         options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
         options.expandQueries = true;
         this._result = this._places.executeQuery(query, options);
+	this._result.root.containerOpen = true;
         this._rebuild();
         ]]></body>
       </method>
@@ -166,6 +167,7 @@
         <body><![CDATA[
           this._result = this._places.executeQueries(queries, queries.length,
                                                      options);
+	  this._result.root.containerOpen = true;
           this._rebuild();
         ]]></body>
       </method>
