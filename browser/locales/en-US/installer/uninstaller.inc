@@ -3,10 +3,19 @@
 # This file is in the UTF-8 encoding
 
 #define BRAND_COMPANY_NAME Mozilla
+#ifdef OFFICIAL_BRANDING
 #define BRAND_PRODUCT_NAME Mozilla Firefox
+#else
+#define BRAND_PRODUCT_NAME Deer Park Alpha 2
+#endif
 
+#ifdef OFFICIAL_BRANDING
 #define UNINST_RUNNING Mozilla Firefox is detected to be currently running.  Please quit Mozilla Firefox before continuing.  Click OK to exit Mozilla Firefox automatically and proceed with uninstallation.
 #define UNINST_SHUTDOWN Shutting down Mozilla Firefox.  Please wait...
+#else
+#define UNINST_RUNNING Deer Park Alpha 2 is detected to be currently running.  Please quit Deer Park Alpha 2 before continuing.  Click OK to exit Deer Park Alpha 2 automatically and proceed with uninstallation.
+#define UNINST_SHUTDOWN Shutting down Deer Park Alpha 2.  Please wait...
+#endif
 #define UNINST_FONT MS Sans Serif
 #define UNINST_FONTSIZE 8
 #define UNINST_CHARSET 0
@@ -20,7 +29,11 @@
 #  CHINESEBIG5_CHARSET = 136
 #  OEM_CHARSET 255
 
+#ifdef OFFICIAL_BRANDING
 #define UNINST_TITLE Mozilla Firefox Uninstaller
+#else
+#define UNINST_TITLE Deer Park Alpha 2 Uninstaller
+#endif
 #define UNINST_MESSAGE0 Are you sure you want to completely remove %s and all of its components?
 #define BTN_UNINST &Uninstall
 #define BTN_CANCEL &Cancel
@@ -54,6 +67,10 @@
 #define MSG_FORCE_QUIT_PROCESS Uninstall has detected that %s (%s) is still running.  Click OK to quit %s and proceed with uninstallation. Alternatively, use the Windows Task Manager to quit %s, and then click OK to continue with uninstallation.
 #define MSG_FORCE_QUIT_PROCESS_FAILED Uninstall will now exit.  Uninstall could not continue because %s (%s) is still running. Try manually quitting %s using Windows Task Manager, and then run Uninstall again.
 #define MSG_DELETE_INSTALLATION_PATH Not all files were uninstalled from the installation directory:\n\n  %s\n\nDo you want to completely delete this directory?
+#ifdef OFFICIAL_BRANDING
 #define MSG_INSTALLATION_PATH_WITHIN_WINDIR Uninstall has detected that the installation path of Mozilla Firefox is installed to a folder within your Windows folder.  Uninstall will not attempt to delete this installation due to the potential removal of critical system files.
+#else
+#define MSG_INSTALLATION_PATH_WITHIN_WINDIR Uninstall has detected that the installation path of Deer Park Alpha 2 is installed to a folder within your Windows folder.  Uninstall will not attempt to delete this installation due to the potential removal of critical system files.
+#endif
 
 #unfilter emptyLines
