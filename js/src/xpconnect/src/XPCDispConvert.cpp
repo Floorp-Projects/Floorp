@@ -131,7 +131,19 @@ JSBool XPCDispConvert::JSArrayToCOMArray(XPCCallContext& ccx, JSObject *obj,
                 ++varArray;
         }
     }
-    SafeArrayUnaccessData(array);
+    if(!array)
+    {
+        array = SafeArrayCreateVector(VT_VARIANT, 0, 0);
+        if(!array)
+        {
+            err = NS_ERROR_OUT_OF_MEMORY;
+            return JS_FALSE;
+        }
+    }
+    else
+    {
+        SafeArrayUnaccessData(array);
+    }
     var.vt = VT_ARRAY | VT_VARIANT;
     var.parray = array;
     return JS_TRUE;
