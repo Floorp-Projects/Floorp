@@ -2647,6 +2647,7 @@ if test "${with_system_svrcore+set}" = set; then
   withval="$with_system_svrcore"
      if test "$withval" = "yes"; then
             _SYSTEM_SVRCORE=1
+            HAVE_SVRCORE=1
 	    else
             _SYSTEM_SVRCORE=
 	    fi
@@ -2654,7 +2655,10 @@ else
   _SYSTEM_SVRCORE=
 fi;
 
-# first, see if user has specified explicit SVRCORE include and lib paths
+# _SYSTEM_SVRCORE means /usr/lib and /usr/include so no need to add additional
+# include or lib paths
+if test -z "$_SYSTEM_SVRCORE" ; then
+   # first, see if user has specified explicit SVRCORE include and lib paths
 
     echo "$as_me:$LINENO: checking for --with-svrcore" >&5
 echo $ECHO_N "checking for --with-svrcore... $ECHO_C" >&6
@@ -2730,9 +2734,9 @@ fi;
 
 
 
-# next, see if user explicitly said to use system svrcore
-if test -z "$SVRCORE_CFLAGS" -a -z "$SVRCORE_LIBS" ; then
-    if test -n "$_SYSTEM_SVRCORE"; then
+   # next, see if user explicitly said to use system svrcore
+   if test -z "$SVRCORE_CFLAGS" -a -z "$SVRCORE_LIBS" ; then
+       if test -n "$_SYSTEM_SVRCORE"; then
 
 	no_svrcore=""
     echo "$as_me:$LINENO: checking Trying pkg-config svrcore" >&5
@@ -2805,8 +2809,8 @@ echo "${ECHO_T}no" >&6
 
 
 
-    else
-# see if we are being built in the same build tree as svrcore
+       else
+       # see if we are being built in the same build tree as svrcore
 
     svrcorelibpath=`echo ../../dist/*.OBJ/lib | cut -f1 -d' '`
     savedir=`pwd`
@@ -2838,8 +2842,8 @@ echo $ECHO_N "checking could not find in-tree SVRCORE in ../../dist... $ECHO_C" 
 echo "${ECHO_T}no" >&6
     fi
 
-# failing that, see if we can find svrcore-config or pkg-config svrcore
-        if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
+           # failing that, see if we can find svrcore-config or pkg-config svrcore
+           if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
 
 	no_svrcore=""
     echo "$as_me:$LINENO: checking Trying pkg-config svrcore" >&5
@@ -2912,7 +2916,8 @@ echo "${ECHO_T}no" >&6
 
 
 
-        fi
+           fi
+       fi
     fi
 fi
 
