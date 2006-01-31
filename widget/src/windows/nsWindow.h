@@ -200,6 +200,10 @@ public:
   NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
   nsWindow*               GetTopLevelWindow();
 
+#ifdef MOZ_CAIRO_GFX
+  gfxASurface             *GetThebesSurface();
+#endif
+
 #ifdef MOZ_XUL
   NS_IMETHOD              SetWindowTranslucency(PRBool aTransparent);
   NS_IMETHOD              GetWindowTranslucency(PRBool& aTransparent);
@@ -381,6 +385,7 @@ protected:
   static        nsWindow* gCurrentWindow;
   nsPoint       mLastPoint;
   HWND          mWnd;
+  HDC           mPaintDC; // only set during painting
 #if 0
   HPALETTE      mPalette;
 #endif

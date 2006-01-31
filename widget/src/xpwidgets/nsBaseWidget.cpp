@@ -612,9 +612,7 @@ nsIRenderingContext* nsBaseWidget::GetRenderingContext()
 
   rv = mContext->CreateRenderingContextInstance(*getter_AddRefs(renderingCtx));
   if (NS_SUCCEEDED(rv)) {
-    // this should be all MOZ_CAIRO_GFX, but none of the other
-    // platforms have GetThebesSurface() implemented yet
-#if defined(MOZ_CAIRO_GFX) && defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_CAIRO_GFX)
     rv = renderingCtx->Init(mContext, GetThebesSurface());
 #else
     rv = renderingCtx->Init(mContext, this);
