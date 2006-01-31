@@ -404,10 +404,18 @@ JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx,
     jsval val;
     for(long index = lbound; index <= ubound; ++index)
     {
-        // Devine the type of our array
+        HRESULT hr;
         _variant_t var;
-        var.vt = vartype;
-        if(FAILED(SafeArrayGetElement(src.parray, &index, &var.byref)))
+        if(vartype == VT_VARIANT)
+        {
+            hr = SafeArrayGetElement(src.parray, &index, &var);
+        }
+        else
+        {
+            var.vt = vartype;
+            hr = SafeArrayGetElement(src.parray, &index, &var.byref);
+        }
+        if(FAILED(hr))
         {
             err = NS_ERROR_FAILURE;
             return JS_FALSE;
