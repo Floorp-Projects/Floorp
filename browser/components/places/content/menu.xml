@@ -152,6 +152,12 @@
         ]]></body>
       </method>
       
+      <method name="getRemovableSelectionRanges">
+        <body><![CDATA[ 
+          return [this.getSelectionNodes()];
+        ]]></body>
+      </method>
+      
       <method name="getCopyableSelection">
         <body><![CDATA[ 
           return this.getSelectionNodes();
@@ -196,6 +202,8 @@
       
       <property name="browserWindow" onget="return window;"/>
       
+      <property name="filterTransactions">false</property>
+      
       <field name="supportedDropTypes">
         [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
       </field>
@@ -211,6 +219,7 @@
       </method>
       
       <method name="saveSelection">
+        <parameter name="mode"/>
         <body><![CDATA[
         ]]></body>
       </method>

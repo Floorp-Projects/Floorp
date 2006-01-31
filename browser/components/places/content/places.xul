@@ -27,7 +27,7 @@
 #include commands.inc
 
   <keyset id="placesKeyset">
-    <key id="placesKey_find" command="placesCmd_find" key="f" modifiers="accel"/>
+    <key id="placesKey_find" command="placesCmd_find" key="&cmd.find.key;" modifiers="accel"/>
     <key id="placesKey_select:all" command="placesCmd_select:all" key="&cmd.select_all.key;" modifiers="accel"/>
     <key id="placesKey_edit:cut" command="placesCmd_edit:cut" key="&cmd.edit_cut.key;" modifiers="accel"/>
     <key id="placesKey_edit:copy" command="placesCmd_edit:copy" key="&cmd.edit_copy.key;" modifiers="accel"/>

@@ -39,6 +39,39 @@ function LOG(str) {
   dump("*** " + str + "\n");
 }
 
+var gTraceOnAssert = true;
+
+// XXXben - develop this further into a multi-purpose assertion system. 
+function ASSERT(condition, message) {
+  if (!condition) {
+    var caller = arguments.callee.caller;
+    var str = "ASSERT: ";
+    str += message;
+    LOG(str);
+    var assertionText = str + "\n";
+    
+    var stackText = "Stack Trace: \n";
+    if (gTraceOnAssert) {
+      var count = 0;
+      while (caller) {
+        stackText += count++ + ":" + caller.name + "(";
+        for (var i = 0; i < caller.arguments.length; ++i) {
+          var arg = caller.arguments[i];
+          stackText += arg;
+          if (i < caller.arguments.length - 1)
+            stackText += ",";
+        }
+        stackText += ")\n";
+        caller = caller.arguments.callee.caller;
+      }
+    }
+    var ps = 
+        Cc["@mozilla.org/embedcomp/prompt-service;1"].
+        getService(Ci.nsIPromptService);
+    ps.alert(window, "Assertion Failed", assertionText + stackText);
+  }
+}
+
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
@@ -104,12 +137,13 @@ function InsertionPoint(folderId, index, orientation) {
  * Initialization Configuration for a View
  * @constructor
  */
-function ViewConfig(dropTypes, dropOnTypes, excludeItems, expandQueries, firstDropIndex) {
+function ViewConfig(dropTypes, dropOnTypes, excludeItems, expandQueries, firstDropIndex, filterTransactions) {
   this.dropTypes = dropTypes;
   this.dropOnTypes = dropOnTypes;
   this.excludeItems = excludeItems;
   this.expandQueries = expandQueries;
   this.firstDropIndex = firstDropIndex;
+  this.filterTransactions = filterTransactions;
 }
 ViewConfig.GENERIC_DROP_TYPES = [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE,
                                  TYPE_X_MOZ_URL];
@@ -189,6 +223,22 @@ PrefHandler.prototype = {
   },
 };
 
+function QI_node(node, iid) {
+  var result = null;
+  try {
+    result = node.QueryInterface(iid);
+  }
+  catch (e) {
+  }
+  ASSERT(result, "Node QI Failed");
+  return result;
+}
+function asURI(node)      { return QI_node(node, Ci.nsINavHistoryURIResultNode);      }
+function asFolder(node)   { return QI_node(node, Ci.nsINavHistoryFolderResultNode);   }
+function asVisit(node)    { return QI_node(node, Ci.nsINavHistoryVisitResultNode);    }
+function asFullVisit(node){ return QI_node(node, Ci.nsINavHistoryFullVisitResultNode);}
+function asContainer(node){ return QI_node(node, Ci.nsINavHistoryContainerResultNode);}
+function asQuery(node)    { return QI_node(node, Ci.nsINavHistoryQueryResultNode);    }
 
 /**
  * The Master Places Controller
@@ -255,7 +305,7 @@ var PlacesController = {
     options.expandQueries = expandQueries;
     var result = this._hist.executeQuery(query, options);
     result.root.containerOpen = true;
-    return result;
+    return asContainer(result.root);
   },
   
   /**
@@ -285,6 +335,16 @@ var PlacesController = {
   },
   
   /**
+   * The top window
+   */
+  topWindow: null,
+  
+  /**
+   * The Transaction Manager for this window.
+   */
+  tm: null,
+  
+  /**
    * The current groupable Places view.
    */
   _groupableView: null,
@@ -298,20 +358,30 @@ var PlacesController = {
   
   isCommandEnabled: function PC_isCommandEnabled(command) {
     //LOG("isCommandEnabled: " + command);
+    if (command == "cmd_undo")
+      return this.tm.numberOfUndoItems > 0;
+    if (command == "cmd_redo")
+      return this.tm.numberOfRedoItems > 0;
     return document.getElementById(command).getAttribute("disabled") == "true";
   },
 
   supportsCommand: function PC_supportsCommand(command) {
     //LOG("supportsCommand: " + command);
+    if (command == "cmd_undo" || command == "cmd_redo")
+      return true;
     return document.getElementById(command) != null;
   },
 
   doCommand: function PC_doCommand(command) {
     LOG("doCommand: " + command);
+    if (command == "cmd_undo")
+      this.tm.undoTransaction();
+    else if (command == "cmd_redo")
+      this.tm.redoTransaction();
   },
 
   onEvent: function PC_onEvent(eventName) {
-    LOG("onEvent: " + eventName);
+    //LOG("onEvent: " + eventName);
   },
   
   /**
@@ -643,8 +713,7 @@ var PlacesController = {
   openLinkInNewTab: function PC_openLinkInNewTab() {
     var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.openNewTabWith(
-          node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri, null, null);
+      this._activeView.browserWindow.openNewTabWith(asURI(node).uri, null, null);
   },
 
   /**
@@ -653,8 +722,7 @@ var PlacesController = {
   openLinkInNewWindow: function PC_openLinkInNewWindow() {
     var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.openNewWindowWith(
-          node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri, null, null);
+      this._activeView.browserWindow.openNewWindowWith(asURI(node).uri, null, null);
   },
 
   /**
@@ -663,8 +731,7 @@ var PlacesController = {
   openLinkInCurrentWindow: function PC_openLinkInCurrentWindow() {
     var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.loadURI(
-          node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri, null, null);
+      this._activeView.browserWindow.loadURI(asURI(node).uri, null, null);
   },
   
   /**
@@ -673,13 +740,12 @@ var PlacesController = {
   openLinksInTabs: function PC_openLinksInTabs() {
     var node = this._activeView.selectedNode;
     if (this._activeView.hasSingleSelection && this.nodeIsFolder(node)) {
-      node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+      asFolder(node);
       var cc = node.childCount;
       for (var i = 0; i < cc; ++i) {
         var childNode = node.getChild(i);
         if (this.nodeIsURI(childNode))
-          this._activeView.browserWindow.openNewTabWith(
-              childNode.QueryInterface(Ci.nsINavHistoryURIResultNode).uri,
+          this._activeView.browserWindow.openNewTabWith(asURI(childNode).uri,
               null, null);
       }
     }
@@ -687,8 +753,7 @@ var PlacesController = {
       var nodes = this._activeView.getSelectionNodes();
       for (var i = 0; i < nodes.length; ++i) {
         if (this.nodeIsURI(nodes[i]))
-          this._activeView.browserWindow.openNewTabWith(
-              nodes[i].QueryInterface(Ci.nsINavHistoryURIResultNode).uri,
+          this._activeView.browserWindow.openNewTabWith(asURI(nodes[i]).uri,
               null, null);
       }
     }
@@ -711,7 +776,7 @@ var PlacesController = {
     if (!this._groupableView)
       return;
     var result = this._groupableView.getResult();
-    var root = result.root.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+    var root = asQuery(result.root);
     var queries = root.getQueries({ });
     var newOptions = root.queryOptions.clone();
     
@@ -757,6 +822,7 @@ var PlacesController = {
   newFolder: function PC_newFolder() {
     var view = this._activeView;
     
+    view.saveSelection(view.SAVE_SELECTION_REMOVE);
     var ps =
         Cc["@mozilla.org/embedcomp/prompt-service;1"].
         getService(Ci.nsIPromptService);
@@ -768,58 +834,92 @@ var PlacesController = {
       var ip = view.insertionPoint;
       var txn = new PlacesCreateFolderTransaction(value.value, ip.folderId, 
                                                   ip.index);
-      this._hist.transactionManager.doTransaction(txn);
+      this.tm.doTransaction(txn);
       this._activeView.focus();
+      view.restoreSelection();
     }
   },
   
   /**
+   * Creates a set of transactions for the removal of a range of items. A range is 
+   * an array of adjacent nodes in a view.
+   * @param   range
+   *          An array of nodes to remove. Should all be adjacent. 
+   * @param   transactions
+   *          An array of transactions.
+   */
+  _removeRange: function PC__removeRange(range, transactions) {
+    ASSERT(transactions instanceof Array, "Must pass a transactions array");
+    var index = this.getIndexOfNode(range[0]);
+    
+    // Walk backwards to preserve insertion order on undo
+    for (var i = range.length - 1; i >= 0; --i) {
+      var node = range[i];
+      if (this.nodeIsFolder(node)) {
+        // TODO -- node.parent might be a query and not a folder.  See bug 324948
+        transactions.push(new PlacesRemoveFolderTransaction(
+          asFolder(node).folderId, asFolder(node.parent).folderId, index));
+      }
+      else if (this.nodeIsFolder(node.parent)) {
+        // A Bookmark in a Bookmark Folder.
+        transactions.push(new PlacesRemoveItemTransaction(
+          this._uri(asURI(node).uri), asFolder(node.parent).folderId, index));
+      }
+    }
+  },
+  
+  /**
+   * Removes the set of selected ranges from bookmarks.
+   * @param   txnName
+   *          See |remove|.
+   */
+  _removeRowsFromBookmarks: function PC__removeRowsFromBookmarks(txnName) {
+    var ranges = this._activeView.getRemovableSelectionRanges();
+    var transactions = [];
+    for (var i = ranges.length - 1; i >= 0 ; --i)
+      this._removeRange(ranges[i], transactions);
+    if (transactions.length > 0) {
+      var txn = new PlacesAggregateTransaction(txnName, transactions);
+      this.tm.doTransaction(txn);
+    }
+  },
+  
+  /**
+   * Removes the set of selected ranges from history. 
+   */
+  _removeRowsFromHistory: function PC__removeRowsFromHistory() {
+    // Other containers are history queries, just delete from history
+    // history deletes are not undoable.
+    var nodes = this._activeView.getSelectionNodes();
+    for (i = 0; i < nodes.length; ++i) {
+      var node = nodes[i];
+      var bhist = this._hist.QueryInterface(Ci.nsIBrowserHistory);
+      if (this.nodeIsHost(node))
+        bhist.removePagesFromHost(node.title, true);
+      else if (this.nodeIsURI(node))
+        bhist.removePage(this._uri(asURI(node).uri));
+    }
+  },
+   
+  /**
    * Removes the selection
    * @param   txnName
-   *          An optional name for the transaction if this is being performed
+   *          A name for the transaction if this is being performed
    *          as part of another operation.
    */
   remove: function PC_remove(txnName) {
-    var nodes = this._activeView.getSelectionNodes();
-    this._activeView.saveSelection();
+    ASSERT(txnName !== undefined, "Must supply Transaction Name");
+    this._activeView.saveSelection(this._activeView.SAVE_SELECTION_REMOVE);
 
-    // delete bookmarks
-    var txns = [];
-    for (var i = 0; i < nodes.length; ++i) {
-      var node = nodes[i];
-      var index = this.getIndexOfNode(node);
-      if (this.nodeIsFolder(node)) {
-        // TODO -- node.parent might be a query and not a folder.  See bug 324948
-        txns.push(new PlacesRemoveFolderTransaction(node.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId, 
-                                                    node.parent.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId, 
-                                                    index));
-      }
-      else if (this.nodeIsFolder(node.parent)) {
-        // this item is in a bookmark folder
-        txns.push(new PlacesRemoveItemTransaction(this._uri(node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri),
-                                                  node.parent.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId,
-                                                  index));
-      }
-      else {
-        // other containers are history queries, just delete from history
-        // history deletes are not undoable.
-        var hist = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsIBrowserHistory);
-        for (var i = 0; i < nodes.length; ++i) {
-          var node = nodes[i];
-          if (this.nodeIsHost(node)) {
-            hist.removePagesFromHost(node.title, true);
-          } else if (this.nodeIsURI(node)) {
-            hist.removePage(this._uri(node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri));
-          }
-        }
-      }
+    // Delete the selected rows. Do this by walking the selection backward, so
+    // that when undo is performed they are re-inserted in the correct order.
+    var type = this._activeView.getResult().root.type; 
+    LOG("TYPE: " + type);
+    if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER)
+      this._removeRowsFromBookmarks(txnName);
+    else
+      this._removeRowsFromHistory();
 
-      if (txns.length > 0) {
-        var txn = new PlacesAggregateTransaction(txnName || "RemoveItems", txns);
-        this._hist.transactionManager.doTransaction(txn);
-      }
-    }
     this._activeView.restoreSelection();
   },
 
@@ -834,8 +934,8 @@ var PlacesController = {
     var parent = node.parent;
     if (!parent || !this.nodeIsContainer(parent))
       return -1;
-    var cc = parent.QueryInterface(Ci.nsINavHistoryContainerResultNode).childCount;
-    for (var i = 0; i < cc && parent.QueryInterface(Ci.nsINavHistoryContainerResultNode).getChild(i) != node; ++i);
+    var cc = asContainer(parent).childCount;
+    for (var i = 0; i < cc && asContainer(parent).getChild(i) != node; ++i);
     return i < cc ? i : -1;
   },
   
@@ -854,29 +954,29 @@ var PlacesController = {
     case TYPE_X_MOZ_PLACE: 
       var wrapped = "";
       if (this.nodeIsFolder(node))
-        wrapped += node.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId + "\n";
+        wrapped += asFolder(node).folderId + "\n";
       else
         wrapped += "0\n";
         
       if (this.nodeIsURI(node))
-        wrapped += node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri + "\n";
+        wrapped += asURI(node).uri + "\n";
       else
         wrapped += "\n";
         
       if (this.nodeIsFolder(node.parent))
-        wrapped += node.parent.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId + "\n";
+        wrapped += asFolder(node.parent).folderId + "\n";
       else
         wrapped += "0\n";
         
       wrapped += this.getIndexOfNode(node);
       return wrapped;
     case TYPE_X_MOZ_URL:
-      return node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri + "\n" + node.title;
+      return asURI(node).uri + "\n" + node.title;
     case TYPE_HTML:
-      return "<A HREF=\"" + node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri + "\">" + node.title + "</A>";
+      return "<A HREF=\"" + asURI(node).uri + "\">" + node.title + "</A>";
     }
     // case TYPE_UNICODE:
-    return node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri;
+    return asURI(node).uri;
   },
   
   /**
@@ -963,7 +1063,7 @@ var PlacesController = {
         if (self.nodeIsFolder(node))
           createTransactions(node.folderId, folderId, i);
         else if (this.nodeIsURI(node)) {
-          var uri = self._uri(node.QueryInterface(Ci.nsINavHistoryURIResultNode).uri);
+          var uri = self._uri(asURI(node).uri);
           transactions.push(self._getItemCopyTransaction(uri, container, 
                                                          index));
         }
@@ -1052,14 +1152,20 @@ var PlacesController = {
     var dataSet = new TransferDataSet();
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
-              
+      
       var data = new TransferData();
       var self = this;
       function addData(type) {
         data.addDataForFlavour(type, self._wrapString(self.wrapNode(node, type)));
       }
-      if (this.nodeIsFolder(node) || this.nodeIsQuery(node))
+      
+      if (this.nodeIsFolder(node) || this.nodeIsQuery(node)) {
+        // Look up this node's place: URI in the annotation service to see if 
+        // it is a special, non-movable folder. 
+        // XXXben: TODO
+        
         addData(TYPE_X_MOZ_PLACE_CONTAINER);
+      }
       else {
         // This order is _important_! It controls how this and other 
         // applications select data to be inserted based on type. 
@@ -1132,7 +1238,7 @@ var PlacesController = {
    */
   cut: function() {
     this.copy();
-    this.remove("Cut");
+    this.remove("Cut Selection");
   },
   
   /**
@@ -1163,7 +1269,7 @@ var PlacesController = {
                                              ip.folderId, ip.index, true));
     
     var txn = new PlacesAggregateTransaction("Paste", transactions);
-    this._hist.transactionManager.doTransaction(txn);
+    this.tm.doTransaction(txn);
   },
 };
 
@@ -1274,7 +1380,7 @@ var PlacesControllerDragHelper = {
     }
     
     var txn = new PlacesAggregateTransaction("DropItems", transactions);
-    PlacesController._hist.transactionManager.doTransaction(txn);
+    PlacesController.tm.doTransaction(txn);
   }
 };
 
@@ -1291,6 +1397,8 @@ PlacesBaseTransaction.prototype = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   
+  pageTransaction: false,
+  
   get isTransient() {
     return false;
   },
@@ -1306,6 +1414,9 @@ PlacesBaseTransaction.prototype = {
 function PlacesAggregateTransaction(name, transactions) {
   this._transactions = transactions;
   this._name = name;
+  this.redoTransaction = this.doTransaction;
+  this.pageTransaction = PlacesController.activeView.filterTransactions;
+  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesAggregateTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1338,6 +1449,9 @@ function PlacesCreateFolderTransaction(name, container, index) {
   this._container = container;
   this._index = index;
   this._id = null;
+  this.redoTransaction = this.doTransaction;
+  this.pageTransaction = PlacesController.activeView.filterTransactions;
+  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesCreateFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1360,6 +1474,9 @@ function PlacesCreateItemTransaction(uri, container, index) {
   this._uri = uri;
   this._container = container;
   this._index = index;
+  this.redoTransaction = this.doTransaction;
+  this.pageTransaction = PlacesController.activeView.filterTransactions;
+  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesCreateItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1384,6 +1501,9 @@ function PlacesMoveFolderTransaction(id, oldContainer, oldIndex, newContainer, n
   this._oldIndex = oldIndex;
   this._newContainer = newContainer;
   this._newIndex = newIndex;
+  this.redoTransaction = this.doTransaction;
+  this.pageTransaction = PlacesController.activeView.filterTransactions;
+  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesMoveFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1408,6 +1528,9 @@ function PlacesMoveItemTransaction(uri, oldContainer, oldIndex, newContainer, ne
   this._oldIndex = oldIndex;
   this._newContainer = newContainer;
   this._newIndex = newIndex;
+  this.redoTransaction = this.doTransaction;
+  this.pageTransaction = PlacesController.activeView.filterTransactions;
+  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesMoveItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1426,26 +1549,109 @@ PlacesMoveItemTransaction.prototype = {
 };
 
 /**
- * Remove a Folder
+ * A named leaf item.
+ * @param   name
+ *          The name of the item
+ * @param   uri
+ *          The URI fo the item
  */
+function PlacesRemoveFolderSaveChildItem(name, uri) {
+  this.name = name;
+  var ios = 
+      Cc["@mozilla.org/network/io-service;1"].
+      getService(Ci.nsIIOService);  
+  this.uri = ios.newURI(uri, null, null);
+}
+/**
+ * A named folder, with children.
+ * @param   name
+ *          The name of the folder.
+ */
+function PlacesRemoveFolderSaveChildFolder(name) {
+  this.name = name;
+  this.children = [];
+} 
+/**
+ * Remove a Folder
+ * This is a little complicated. When we remove a container we need to remove 
+ * all of its children. We can't just repurpose our existing transactions for
+ * this since they cache their parent container id. Since the folder structure
+ * is being removed, this id is being destroyed and when it is re-created will
+ * likely have a different id.
+ */
+
 function PlacesRemoveFolderTransaction(id, oldContainer, oldIndex) {
   this._id = id;
   this._oldContainer = oldContainer;
   this._oldIndex = oldIndex;
   this._oldFolderTitle = null;
+  this._contents = null; // The encoded contents of this folder
+  this.redoTransaction = this.doTransaction;
+  this.pageTransaction = PlacesController.activeView.filterTransactions;
+  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesRemoveFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
+  
+  /**
+   * Save the contents of a folder (items and containers) for restoration 
+   * purposes later.
+   * @param   id
+   *          The id of the folder
+   * @param   parent
+   *          The parent PlacesRemoveFolderSaveChildFolder object
+   */
+  _saveFolderContents: function PRFT__saveFolderContents(id, parent) {
+    var contents = PlacesController.getFolderContents(id, false, false);
+    for (var i = contents.childCount - 1; i >= 0; --i) {
+      var child = contents.getChild(i);
+      var obj = null;
+      if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
+        obj = new PlacesRemoveFolderSaveChildFolder(child.title);
+        parent.children.push(obj);
+        this._saveFolderContents(asFolder(child).folderId, obj);
+      }
+      else {
+        obj = new PlacesRemoveFolderSaveChildItem(child.title, asURI(child).uri);
+        parent.children.push(obj);
+      }
+    }
+  },
+  
+  /**
+   * Recreate a folder hierarchy from a saved data set.
+   * @param   parent
+   *          The id of the folder to create the items beneath
+   * @param   item
+   *          The object that contains the saved data.
+   */
+  _restore: function PRFT__restore(parent, item) {
+    if (item instanceof PlacesRemoveFolderSaveChildFolder) {
+      var id = this._bms.createFolder(parent, item.name, 0);
+      this._restore(id, item);
+    }
+    else {
+      this._bms.insertItem(parent, item.uri, 0);
+      this._bms.setItemTitle(item.uri, item.name);
+    }    
+  },
 
   doTransaction: function PRFT_doTransaction() {
-    LOG("Remove Folder: " + this._id + " from: " + this._oldContainer + "," + this._oldIndex);
     this._oldFolderTitle = this._bms.getFolderTitle(this._id);
+    LOG("Remove Folder: " + this._oldFolderTitle + " from: " + this._oldContainer + "," + this._oldIndex);
+    
+    this._contents = new PlacesRemoveFolderSaveChildFolder(this._oldFolderTitle);
+    this._saveFolderContents(this._id, this._contents);
+
     this._bms.removeFolder(this._id);
   },
   
   undoTransaction: function PRFT_undoTransaction() {
-    LOG("UNRemove Folder: " + this._id + " from: " + this._oldContainer + "," + this._oldIndex);
+    LOG("UNRemove Folder: " + this._oldFolderTitle + " from: " + this._oldContainer + "," + this._oldIndex);
     this._id = this._bms.createFolder(this._oldContainer, this._oldFolderTitle, this._oldIndex);
+    
+    for (var i = 0; i < this._contents.children.length; ++i)
+      this._restore(this._id, this._contents.children[i]);
   },
 };
 
@@ -1456,18 +1662,23 @@ function PlacesRemoveItemTransaction(uri, oldContainer, oldIndex) {
   this._uri = uri;
   this._oldContainer = oldContainer;
   this._oldIndex = oldIndex;
+  this.redoTransaction = this.doTransaction;
+  this.pageTransaction = PlacesController.activeView.filterTransactions;
+  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesRemoveItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
-
+  
   doTransaction: function PRIT_doTransaction() {
     LOG("Remove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
     this._bms.removeItem(this._oldContainer, this._uri);
+    LOG("DO: PAGETXN: " + this.pageTransaction);
   },
   
   undoTransaction: function PRIT_undoTransaction() {
     LOG("UNRemove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
     this._bms.insertItem(this._oldContainer, this._uri, this._oldIndex);
+    LOG("UNDO: PAGETXN: " + this.pageTransaction);
   },
 };
 
@@ -1478,6 +1689,9 @@ function PlacesEditFolderTransaction(id, oldAttributes, newAttributes) {
   this._id = id;
   this._oldAttributes = oldAttributes;
   this._newAttributes = newAttributes;
+  this.redoTransaction = this.doTransaction;
+  this.pageTransaction = PlacesController.activeView.filterTransactions;
+  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesEditFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
@@ -1500,6 +1714,9 @@ function PlacesEditItemTransaction(uri, newAttributes) {
   this._uri = uri;
   this._newAttributes = newAttributes;
   this._oldAttributes = { };
+  this.redoTransaction = this.doTransaction;
+  this.pageTransaction = PlacesController.activeView.filterTransactions;
+  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesEditItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 

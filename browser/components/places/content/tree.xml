@@ -32,6 +32,7 @@
           this.supportedDropOnTypes = viewConfig.dropOnTypes;
           this.excludeItems = viewConfig.excludeItems;
           this.firstDropIndex = viewConfig.firstDropIndex;
+          this.filterTransactions = viewConfig.filterTransactions;
         ]]></body>
       </method>
       
@@ -215,6 +216,57 @@
         ]]></body>
       </method>
       
+      <method name="getRemovableSelectionRanges">
+        <body><![CDATA[ 
+          // This function exists in addition to getSelectionNodes because it
+          // encodes selection ranges (which only occur in list views) into
+          // the return value. For each removed range, the index at which items
+          // will be re-inserted upon the remove transaction being performed is
+          // the first index of the range, so that the view updates correctly. 
+          //
+          // For example, if we remove rows 2,3,4 and 7,8 from a list, when we
+          // undo that operation, if we insert what was at row 3 at row 3 again,
+          // it will show up _after_ the item that was at row 5. So we need to 
+          // insert all items at row 2, and the tree view will update correctly. 
+          //
+          // Also, this function collapses the selection to remove redundant
+          // data, e.g. when deleting this selection:
+          //
+          //      http://www.foo.com/
+          //  (-) Some Folder
+          //        http://www.bar.com/
+          //
+          // ... returning http://www.bar.com/ as part of the selection is 
+          // redundant because it is implied by removing "Some Folder". We 
+          // filter out all such redundancies since some partial amount of
+          // the folder's children may be selected.          
+          //
+          var selection = this.view.selection;
+          var rc = selection.getRangeCount();
+          var nodes = [];
+          var result = this.getResult();
+          // This list is kept independently of the range selected (i.e. OUTSIDE
+          // the for loop) since the row index of a container is unique for the
+          // entire view, and we could have some really wacky selection and we
+          // don't want to blow up.
+          var containers = { };
+          for (var i = 0; i < rc; ++i) {
+            var range = [];
+            var min = { }, max = { };
+            selection.getRangeAt(i, min, max);
+            
+            for (var j = min.value; j <= max.value; ++j) {
+              if (this.view.isContainer(j))
+                containers[j] = true;
+              if (!(this.view.getParentIndex(j) in containers))
+                range.push(result.nodeForTreeIndex(j));
+            }
+            nodes.push(range);
+          }
+          return nodes;
+        ]]></body>
+      </method>
+      
       <!-- AVI Method -->
       <method name="getCopyableSelection">
         <body><![CDATA[ 
@@ -311,6 +363,9 @@
       <property name="browserWindow" onget="return this._browserWindow"/>
       
       <!-- AVI Method -->
+      <property name="filterTransactions">true</property>
+      
+      <!-- AVI Method -->
       <field name="firstDropIndex">0</field>
       
       <!-- AVI Method -->
@@ -386,6 +441,7 @@
             index = 0;
           else if (insertionPoint.index == -1 || insertionPoint.index >= result.root.childCount)
             index = result.root.childCount - 1;
+          ASSERT(index < result.childCount, "index out of range: " + index + " > " + result);
           return index > -1 ? result.root.getChild(index) : null;
         ]]></body>
       </method>
@@ -498,28 +554,54 @@
         onPerformActionOnCell: function VO_onPerformActionOnCell(action, row, column) { },      
       })]]></field>
       
-      <field name="_nextSelection">-1</field>
+      <field name="_nextSelection">[]</field>
+      <field name="SAVE_SELECTION_RELOAD">0</field>
+      <field name="SAVE_SELECTION_INSERT">1</field>
+      <field name="SAVE_SELECTION_REMOVE">2</field>
       <method name="saveSelection">
+        <parameter name="mode"/>
         <body><![CDATA[ 
+          // mode can be one of any of the SAVE_SELECTION field values, 
+          // specifying how selection is to be saved.
           var s = this.view.selection;
           var rc = s.getRangeCount();
-          var min = { }, max = { };
-          s.getRangeAt(rc - 1, min, max);
-          var rowCount = this.view.rowCount;
-          if (max.value == (rowCount - 1) || 
-              this.view.getLevel(max.value + 1) != this.view.getLevel(max.value))
-            this._nextSelection = max.value - s.count;
-          else
-            this._nextSelection = max.value - s.count + 1;
-          LOG("NS = " + this._nextSelection);
+          switch (mode) {
+          case this.SAVE_SELECTION_REMOVE:
+            var min = { }, max = { };
+            s.getRangeAt(rc - 1, min, max);
+            var rowCount = this.view.rowCount;
+            var index = -1;
+            if (max.value == (rowCount - 1) || 
+                this.view.getLevel(max.value + 1) != this.view.getLevel(max.value))
+              index = max.value - s.count;
+            else
+              index = max.value - s.count + 1;
+            this._nextSelection = [{ min: index, max: index }];
+            break;
+          case this.SAVE_SELECTION_INSERT:
+            var min = { }, max = { };
+            s.getRangeAt(rc - 1, min, max);
+            this._nextSelection = [{ min: max.value, max: max.value }];
+            break;
+          case this.SAVE_SELECTION_RELOAD:
+            this._nextSelection = [];
+            for (var i = 0; i < rc; ++i) {
+              var min = { }, max = { };
+              s.getRangeAt(i, range.min, range.max);
+              this._nextSelection.push({ min: range.min, max: range.max });
+            }
+            break;
+          }
         ]]></body>
       </method>
 
       <method name="restoreSelection">
         <body><![CDATA[
-          LOG("RNS = " + this._nextSelection);
-          if (this._nextSelection != -1)
-            this.view.selection.select(this._nextSelection);
+          for (var i = 0; i < this._nextSelection.length; ++i) {
+            var range = this._nextSelection[i];
+            if (range.min > -1 && range.max > -1)
+              this.view.selection.rangedSelect(range.min, range.max, true);
+          }
         ]]></body>
       </method>
       

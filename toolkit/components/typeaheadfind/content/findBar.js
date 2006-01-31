@@ -58,6 +58,7 @@ const CHAR_CODE_APOSTROPHE = "'".charCodeAt(0);
  */
 
 var gFindBar = {
+  mFindEnabled: true,
   mFindMode: FIND_NORMAL,
   mFoundLink: null,
   mCurrentWindow: null,
@@ -401,6 +402,13 @@ var gFindBar = {
 
   openFindBar: function ()
   {
+   // Notify anyone else that might want to handle this event
+   var findActivatedEvent = document.createEvent("Events");
+   findActivatedEvent.initEvent("find-activated", false, true);
+   window.dispatchEvent(findActivatedEvent);
+   if (!this.mFindEnabled)
+     throw Components.results.NS_OK;
+ 
     if (!this.mNotFoundStr || !this.mWrappedToTopStr ||
         !this.mWrappedToBottomStr) {
       var bundle = document.getElementById("bundle_findBar");
@@ -658,7 +666,13 @@ var gFindBar = {
         (this.mTypeAheadLinksOnly && evt.charCode != CHAR_CODE_SLASH)) ?
           FIND_LINKS : FIND_TYPEAHEAD;
       this.setFindMode(findMode);
-      if (this.openFindBar()) {
+      try {
+        var opened = this.openFindBar();
+      }
+      catch (e) {
+        return;
+      }    
+      if (opened) {
         this.setFindCloseTimeout();
         this.selectFindBar();
         this.focusFindBar();
@@ -804,8 +818,12 @@ var gFindBar = {
 
   onFindCmd: function ()
   {
+    try {
+      this.openFindBar();
+    }
+    catch (e) {
+    }
     this.setFindMode(FIND_NORMAL);
-    this.openFindBar();
     if (this.mFlashFindBar) {
       this.mFlashFindBarTimeout = setInterval(this.flashFindBar, 500);
       var prefService =
@@ -829,7 +847,12 @@ var gFindBar = {
 
     var res = this.findNext();
     if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND) {
-      if (this.openFindBar()) {
+      try {
+        var opened = this.openFindBar();
+      }
+      catch(e) {
+      }
+      if (opened) {
         this.focusFindBar();
         this.selectFindBar();
         if (this.mFindMode != FIND_NORMAL)
@@ -850,7 +873,12 @@ var gFindBar = {
 
     var res = this.findPrevious();
     if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND) {
-      if (this.openFindBar()) {
+      try {
+        var opened = this.openFindBar();
+      }
+      catch (e) {
+      }
+      if (opened) {
         this.focusFindBar();
         this.selectFindBar();
         if (this.mFindMode != FIND_NORMAL)
@@ -977,9 +1005,6 @@ var gFindBar = {
 
   setFindMode: function (mode)
   {
-    if (mode == this.mFindMode)
-      return;
-
     this.mFindMode = mode;
   }
 };

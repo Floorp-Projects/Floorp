@@ -1,7 +1,8 @@
   <commandset id="placesCommands" 
               commandupdater="true" events="focus,select,mousedown" 
               oncommandupdate="PlacesController.onCommandUpdate()">
-    <command id="placesCmd_find" label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"/>
+    <command id="placesCmd_find" label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"
+             oncommand="PlacesSearchBox.focus();"/>
     <command id="placesCmd_export" label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"/>
     <command id="placesCmd_import"/>
     <command id="placesCmd_search:save"/>
@@ -30,7 +31,7 @@
                oncommand="PlacesController.paste();"/>
       <command id="placesCmd_edit:delete" 
                label="&cmd.edit_delete.label;" accesskey="&cmd.edit_delete.accesskey;"
-               oncommand="PlacesController.remove();"/>
+               oncommand="PlacesController.remove('Remove Selection');"/>
       <command id="placesCmd_rename" label="&cmd.rename.label;" accesskey="&cmd.rename.accesskey;"/>
     </commandset>
     <commandset type="link" readonly="true">

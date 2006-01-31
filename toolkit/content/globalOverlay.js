@@ -66,89 +66,100 @@ function goQuitApplication()
   return true;
 }
 
-//
-// Command Updater functions
-//
-function goUpdateCommand(command)
-{
-  try {
-    var controller = top.document.commandDispatcher.getControllerForCommand(command);
-
-    var enabled = false;
-
-    if ( controller )
-      enabled = controller.isCommandEnabled(command);
-
-    goSetCommandEnabled(command, enabled);
-  }
-  catch (e) {
-    dump("An error occurred updating the "+command+" command\n");
-  }
-}
-
-function goDoCommand(command)
-{
-  try {
-    var controller = top.document.commandDispatcher.getControllerForCommand(command);
-    if ( controller && controller.isCommandEnabled(command))
-      controller.doCommand(command);
-  }
-  catch (e) {
-    dump("An error occurred executing the " + command + " command\n" + e + "\n");
-  }
-}
-
-
-function goSetCommandEnabled(id, enabled)
-{
-  var node = document.getElementById(id);
-
-  if ( node )
-  {
-    if ( enabled )
-      node.removeAttribute("disabled");
+/**
+ * Command Updater
+ */
+var CommandUpdater = {
+  /**
+   * Gets a controller that can handle a particular command. 
+   * @param   command
+   *          A command to locate a controller for, preferring controllers that
+   *          show the command as enabled.
+   * @returns In this order of precedence:
+   *            - the first controller supporting the specified command 
+   *              associated with the focused element that advertises the
+   *              command as ENABLED
+   *            - the first controller supporting the specified command 
+   *              associated with the global window that advertises the
+   *              command as ENABLED
+   *            - the first controller supporting the specified command
+   *              associated with the focused element
+   *            - the first controller supporting the specified command
+   *              associated with the global window
+   */
+  _getControllerForCommand: function(command) {
+    try {
+      var controller = 
+          top.document.commandDispatcher.getControllerForCommand(command);
+      if (controller && controller.isCommandEnabled(command))
+        return controller;
+    }
+    catch(e) {
+    }
+    var controllerCount = window.controllers.getControllerCount();
+    for (var i = 0; i < controllerCount; ++i) {
+      var current = window.controllers.getControllerAt(i);
+      try {
+        if (current.supportsCommand(command) && current.isCommandEnabled(command))
+          return current;
+      }
+      catch (e) {
+      }
+    }
+    return controller || window.controllers.getControllerForCommand(command);
+  },
+  
+  /**
+   * Updates the state of a XUL <command> element for the specified command
+   * depending on its state.
+   * @param   command
+   *          The name of the command to update the XUL <command> element for
+   */
+  updateCommand: function(command) {
+    var controller = this._getControllerForCommand(command);
+    if (!controller)
+      return;
+    try {
+      this.enableCommand(command, controller.isCommandEnabled(command));
+    }
+    catch (e) {
+    }
+  },
+  
+  /**
+   * Enables or disables a XUL <command> element.
+   * @param   command
+   *          The name of the command to enable or disable
+   * @param   enabled
+   *          true if the command should be enabled, false otherwise.
+   */
+  enableCommand: function(command, enabled) {
+    var element = document.getElementById(command);
+    if (!element)
+      return;
+    if (enabled)
+      element.removeAttribute("disabled");
     else
-      node.setAttribute('disabled', 'true');
-  }
-}
-
-function goSetMenuValue(command, labelAttribute)
-{
-  var commandNode = top.document.getElementById(command);
-  if ( commandNode )
-  {
-    var label = commandNode.getAttribute(labelAttribute);
-    if ( label )
-      commandNode.setAttribute('label', label);
-  }
-}
-
-function goSetAccessKey(command, valueAttribute)
-{
-  var commandNode = top.document.getElementById(command);
-  if ( commandNode )
-  {
-    var value = commandNode.getAttribute(valueAttribute);
-    if ( value )
-      commandNode.setAttribute('accesskey', value);
-  }
-}
-
-// this function is used to inform all the controllers attached to a node that an event has occurred
-// (e.g. the tree controllers need to be informed of blur events so that they can change some of the
-// menu items back to their default values)
-function goOnEvent(node, event)
-{
-  var numControllers = node.controllers.getControllerCount();
-  var controller;
-
-  for ( var controllerIndex = 0; controllerIndex < numControllers; controllerIndex++ )
-  {
-    controller = node.controllers.getControllerAt(controllerIndex);
-    if ( controller )
-      controller.onEvent(event);
-  }
-}
+      element.setAttribute("disabled", "true");
+  },
+  
+  /**
+   * Performs the action associated with a specified command using the most
+   * relevant controller.
+   * @param   command
+   *          The command to perform.
+   */
+  doCommand: function(command) {
+    var controller = this._getControllerForCommand(command);
+    if (!controller)
+      return;
+    controller.doCommand(command);
+  }  
+};
+// Shim for compatibility with existing code. 
+function goDoCommand(command) { CommandUpdater.doCommand(command); }
+function goUpdateCommand(command) { CommandUpdater.updateCommand(command); }
+function goSetCommandEnabled(command, enabled) { CommandUpdater.enableCommand(command, enabled); }
 
 function visitLink(aEvent) {
   var node = aEvent.target;
