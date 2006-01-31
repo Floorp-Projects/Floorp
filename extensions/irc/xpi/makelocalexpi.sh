@@ -1,14 +1,16 @@
 #!/bin/sh
 
+# Set up locale.
+if [ -z "$LOCALE" ]; then LOCALE=$1; fi
+
 # Set up paths for finding files.
 if [ -z "$FEDIR" ]; then FEDIR=$PWD/..; fi
 if [ -z "$CONFIGDIR" ]; then CONFIGDIR=$FEDIR/../../config; fi
-if [ -z "$XPIFILES" ]; then XPIFILES=$PWD/resources; fi
-if [ -z "$XPIROOT" ]; then XPIROOT=$PWD/xpi-tree; fi
+if [ -z "$XPILOCALEFILES" ]; then XPILOCALEFILES=$PWD/locale-resources; fi
+if [ -z "$XPIROOT" ]; then XPIROOT=$PWD/xpi-tree-$LOCALE; fi
 if [ -z "$JARROOT" ]; then JARROOT=$PWD/jar-tree; fi
 if [ -z "$PERL" ]; then PERL=perl; fi
 if [ -z "$DEBUG" ]; then DEBUG=0; fi
-
 
 function showParams()
 {
@@ -114,6 +116,11 @@ if ! [ -d "$CONFIGDIR" ]; then
   exit 1
 fi
 
+if [ -z "$LOCALE" ]; then
+  echo "ERROR: You need to provide a locale identifier (ab-CD)"
+  exit 1
+fi
+
 
 # Extract version number.
 VERSION=`grep "const __cz_version" "$FEDIR/xul/content/static.js" | sed "s|.*\"\([^\"]\{1,\}\)\".*|\1|"`
@@ -123,11 +130,11 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
-echo Beginning build of ChatZilla $VERSION...
+echo "Beginning build of $LOCALE locale for ChatZilla $VERSION..."
 
 
 # Check for existing.
-if [ -r "chatzilla-$VERSION.xpi" ]; then
+if [ -r "chatzilla-$LOCALE-$VERSION.xpi" ]; then
   echo "  WARNING: output XPI will be overwritten."
 fi
 
@@ -135,47 +142,34 @@ fi
 # Check for required directory layouts.
 echo -n "  Checking XPI structure"
 echo -n .
-if ! [ -d xpi-tree ]; then mkdir xpi-tree; fi
+if ! [ -d "xpi-tree-$LOCALE" ]; then mkdir "xpi-tree-$LOCALE"; fi
 echo -n .
-if ! [ -d xpi-tree/chrome ]; then mkdir xpi-tree/chrome; fi
-echo -n .
-if ! [ -d xpi-tree/components ]; then mkdir xpi-tree/components; fi
-echo -n .
-if ! [ -d xpi-tree/defaults ]; then mkdir xpi-tree/defaults; fi
-echo   ".            done"
+if ! [ -d "xpi-tree-$LOCALE/chrome" ]; then mkdir "xpi-tree-$LOCALE/chrome"; fi
+echo   ".                        done"
 
 echo -n "  Checking JAR structure"
 echo -n .
 if ! [ -d jar-tree ]; then mkdir jar-tree; fi
-echo   ".               done"
+echo   ".                         done"
 
 
 # Make Firefox updates.
 echo -n "  Updating Firefox Extension files"
 echo -n .
-safeCommand sed "s|@REVISION@|$VERSION|g" '<' "$XPIFILES/install.rdf" '>' "$XPIROOT/install.rdf"
+safeCommand sed "--expression=s|@REVISION@|$VERSION|g" "--expression=s|@LOCALE@|$LOCALE|g" '<' "$XPILOCALEFILES/$LOCALE/install.rdf" '>' "$XPIROOT/install.rdf"
 echo -n .
-safeCommand cp "$XPIFILES/chatzilla-window.ico" "$XPIROOT/defaults/chatzilla-window.ico"
-echo -n .
-safeCommand cp "$XPIFILES/chatzilla-window.xpm" "$XPIROOT/defaults/chatzilla-window.xpm"
-echo -n .
-safeCommand cp "$XPIFILES/chatzilla-window16.xpm" "$XPIROOT/defaults/chatzilla-window16.xpm"
-echo   ".  done"
+echo   ".              done"
 
 
 # Make Mozilla Suite updates.
 echo -n "  Updating Mozilla Extension files"
 echo -n .
-safeCommand sed "s|@REVISION@|$VERSION|g" '<' "$XPIFILES/install.js" '>' "$XPIROOT/install.js"
-echo -n .
-safeCommand mv "$FEDIR/xul/content/contents.rdf" "$FEDIR/xul/content/contents.rdf.in"
-safeCommand sed "s|@MOZILLA_VERSION@|cz-$VERSION|g;s|\(chrome:displayName=\)\"[^\"]\{1,\}\"|\1\"ChatZilla $VERSION\"|g" '<' "$FEDIR/xul/content/contents.rdf.in" '>' "$FEDIR/xul/content/contents.rdf"
-safeCommand rm "$FEDIR/xul/content/contents.rdf.in"
+safeCommand sed "--expression=s|@REVISION@|$VERSION|g" "--expression=s|@LOCALE@|$LOCALE|g" '<' "$XPILOCALEFILES/$LOCALE/install.js" '>' "$XPIROOT/install.js"
 echo -n .
 safeCommand mv "$FEDIR/xul/locale/en-US/contents.rdf" "$FEDIR/xul/locale/en-US/contents.rdf.in"
 safeCommand sed "s|@MOZILLA_VERSION@|cz-$VERSION|g" '<' "$FEDIR/xul/locale/en-US/contents.rdf.in" '>' "$FEDIR/xul/locale/en-US/contents.rdf"
 safeCommand rm "$FEDIR/xul/locale/en-US/contents.rdf.in"
-echo   ".   done"
+echo   ".              done"
 
 
 # Create JAR.
@@ -185,32 +179,26 @@ OLDPWD=`pwd`
 cd "$CONFIGDIR"
 echo -n .
 
-safeCommand $PERL make-jars.pl -v -z zip -p preprocessor.pl -s "$FEDIR" -d "$JARROOT" '<' "$FEDIR/jar.mn"
+safeCommand sed "s|@LOCALE@|$LOCALE|g" '<' "$FEDIR/locale-jar.mn" '>' "$FEDIR/$LOCALE-jar.mn"
 echo -n .
-safeCommand $PERL make-jars.pl -v -z zip -p preprocessor.pl -s "$FEDIR/sm" -d "$JARROOT" '<' "$FEDIR/sm/jar.mn"
-echo -n .
-safeCommand $PERL make-jars.pl -v -z zip -p preprocessor.pl -s "$FEDIR/ff" -d "$JARROOT" '<' "$FEDIR/ff/jar.mn"
+safeCommand $PERL make-jars.pl -v -z zip -p preprocessor.pl -s "$FEDIR" -d "$JARROOT" '<' "$FEDIR/$LOCALE-jar.mn"
 echo -n .
 cd "$OLDPWD"
-echo   ".         done"
+echo   ".                    done"
 
 
 # Make XPI.
 echo -n "  Constructing XPI package"
 echo -n .
-safeCommand cp -v "$JARROOT/chatzilla.jar" "$XPIROOT/chrome/"
+safeCommand cp -v "$JARROOT/chatzilla-$LOCALE.jar" "$XPIROOT/chrome/"
 echo -n .
-safeCommand cp -v "$FEDIR/js/lib/chatzilla-service.js" "$XPIROOT/components/"
-echo -n .
-safeCommand chmod 664 "$XPIROOT/chrome/chatzilla.jar"
-echo -n .
-safeCommand chmod 664 "$XPIROOT/components/chatzilla-service.js"
+safeCommand chmod 664 "$XPIROOT/chrome/chatzilla-$LOCALE.jar"
 echo -n .
 OLDPWD=`pwd`
 cd "$XPIROOT"
-safeCommand zip -vr ../chatzilla-$VERSION.xpi . -i "*" -x log*
+safeCommand zip -vr ../chatzilla-$LOCALE-$VERSION.xpi . -i "*" -x log*
 cd "$OLDPWD"
-echo   ".         done"
+echo   ".                     done"
 
 
-echo "Build of ChatZilla $VERSION...        ALL DONE"
+echo "Build of $LOCALE locale for ChatZilla $VERSION... ALL DONE"

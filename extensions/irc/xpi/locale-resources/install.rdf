@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+	<Description about="urn:mozilla:install-manifest">
+		<!-- core data -->
+		<!-- NOTES FOR LOCALIZERS
+		If you're using this file, remember to:
+		   * Copy this file to a new 'ab-CD' subdirectory, where 'ab-CD' is the
+		     localization you are doing. Doing this before modifying anything
+		     might be a good idea.
+		   * Change the front-end metadata to reflect the names of the translators
+		   * Change the following UUID to one you use for this translation only
+		     (do NOT use ChatZilla's UUID for this)  -->
+		<em:id>{00000000-0000-0000-0000-000000000000}</em:id>
+		<em:version>@REVISION@</em:version>
+		
+		<!-- target: Mozilla, version 1.0 to 1.8 -->
+		<em:targetApplication>
+			<Description>
+				<em:id>{86c18b42-e466-45a9-ae7a-9b95ba6f5640}</em:id>
+				<em:minVersion>1.0</em:minVersion>
+				<em:maxVersion>1.8</em:maxVersion>
+			</Description>
+		</em:targetApplication>
+		
+		<!-- target: Mozilla Firefox, version 0.9 to 1.6 -->
+		<em:targetApplication>
+			<Description>
+				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+				<em:minVersion>0.9</em:minVersion>
+				<em:maxVersion>1.6</em:maxVersion>
+			</Description>
+		</em:targetApplication>
+		
+		<!-- front-end metadata -->
+		<em:name>ChatZilla @LOCALE@ localization</em:name>
+		<em:description>ChatZilla Localization.</em:description>
+		<em:creator>Some Localizer</em:creator>
+		<em:contributor>Some Contributor</em:contributor>
+		<em:iconURL>chrome://chatzilla/skin/images/logo.png</em:iconURL>
+		<em:homepageURL>http://my.locale.homepage.com/</em:homepageURL>
+		
+		<!-- package files -->
+		<em:file>
+			<Description about="urn:mozilla:extension:file:chatzilla-@LOCALE@.jar">
+				<em:locale>locale/@LOCALE@/chatzilla/</em:locale>
+			</Description>
+		</em:file>
+	</Description>
+</RDF>

@@ -1,0 +1,9 @@
+chatzilla-@LOCALE@.jar:
+	locale/@LOCALE@/chatzilla/chatzillaOverlay.dtd  (xul/locale/@LOCALE@/chatzillaOverlay.dtd) 
+	locale/@LOCALE@/chatzilla/browserOverlay.dtd    (xul/locale/@LOCALE@/browserOverlay.dtd) 
+	locale/@LOCALE@/chatzilla/pref-irc.dtd          (xul/locale/@LOCALE@/pref-irc.dtd)
+	locale/@LOCALE@/chatzilla/chatzilla.dtd         (xul/locale/@LOCALE@/chatzilla.dtd) 
+	locale/@LOCALE@/chatzilla/chatzilla.properties  (xul/locale/@LOCALE@/chatzilla.properties) 
+	locale/@LOCALE@/chatzilla/config.dtd            (xul/locale/@LOCALE@/config.dtd) 
+	locale/@LOCALE@/chatzilla/channels.dtd          (xul/locale/@LOCALE@/channels.dtd) 
+*	locale/@LOCALE@/chatzilla/contents.rdf          (xul/locale/@LOCALE@/contents.rdf)
