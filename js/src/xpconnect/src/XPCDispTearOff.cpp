@@ -335,6 +335,7 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
         JSObject* thisObj;
         AutoScriptEvaluate scriptEval(ccx);
         XPCJSRuntime* rt = ccx.GetRuntime();
+        int j;
 
         thisObj = obj = GetJSObject();;
 
@@ -403,7 +404,7 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
         uintN err;
         // build the args
         // NOTE: COM expects args in DISPPARAMS to be in reverse order
-        for ( int j = argc - 1; j >= 0; --j )
+        for (j = argc - 1; j >= 0; --j )
         {
             jsval val;
             if((pDispParams->rgvarg[j].vt & VT_BYREF) == 0)
