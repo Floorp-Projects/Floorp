@@ -632,7 +632,6 @@ nsSoftKeyBoardService::CloseSIP()
   if (hWndSIP)
   {
     ShowWindow( hWndSIP, SW_HIDE );
-    SetWindowPos(hWndSIP, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
   }
 
   hWndSIP = FindWindow( _T( "MS_SIPBUTTON" ), NULL );
