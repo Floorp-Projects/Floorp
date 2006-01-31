@@ -789,11 +789,7 @@ nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
           CTextToken* textToken = NS_STATIC_CAST(CTextToken*, text);
 
           if (isCDATA) {
-            // The only tags that consume conservatively are <script> and
-            // <style>, the rest all consume until the end of the document.
-            result = textToken->ConsumeCharacterData(theTag == eHTMLTag_script ||
-                                                     theTag == eHTMLTag_style,
-                                                     theTag != eHTMLTag_script,
+            result = textToken->ConsumeCharacterData(theTag != eHTMLTag_script,
                                                      aScanner,
                                                      endTagName,
                                                      mFlags,
@@ -836,12 +832,24 @@ nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
                            "CTextToken::Consume*Data is broken!");
 #endif
               result = ConsumeEndTag(PRUnichar('/'), endToken, aScanner);
+              if (!(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE) &&
+                  NS_SUCCEEDED(result)) {
+                // If ConsumeCharacterData returned a success result (and
+                // we're not in view source), then we want to make sure that
+                // we're going to execute this script (since the result means
+                // that we've found an end tag that satisfies all of the right
+                // conditions).
+                endToken->SetInError(PR_FALSE);
+              }
             } else if (result == kFakeEndTag &&
                       !(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE)) {
               result = NS_OK;
               endToken = theAllocator->CreateTokenOfType(eToken_end, theTag,
                                                          endTagName);
               AddToken(endToken, result, &mTokenDeque, theAllocator);
+              if (endToken) {
+                endToken->SetInError(PR_TRUE);
+              }
             } else if (result == kFakeEndTag) {
               // If we are here, we are both faking having seen the end tag
               // and are in view-source.

@@ -590,8 +590,7 @@ CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 aFlag)
  *  @return  error result
  */
 nsresult
-CTextToken::ConsumeCharacterData(PRBool aConservativeConsume,
-                                 PRBool aIgnoreComments,
+CTextToken::ConsumeCharacterData(PRBool aIgnoreComments,
                                  nsScanner& aScanner,
                                  const nsAString& aEndTagName,
                                  PRInt32 aFlag,
@@ -634,7 +633,7 @@ CTextToken::ConsumeCharacterData(PRBool aConservativeConsume,
   //    iteration. If there is no premature terminal string and we're being
   //    conservative in our consumption (aConservativeConsume), then don't
   //    consume anything from the scanner. Otherwise, we consume all the way
-  //    until the end (for <xmp>).
+  //    until the end.
 
   NS_NAMED_LITERAL_STRING(ltslash, "</");
   const nsString theTerminalString = ltslash + aEndTagName;
@@ -714,21 +713,17 @@ CTextToken::ConsumeCharacterData(PRBool aConservativeConsume,
       // a) when the buffer runs out ot data.
       // b) when the terminal string is not found.
       if (!aScanner.IsIncremental()) {
-        if (theAltTermStrPos != endPos && aConservativeConsume) {
+        if (theAltTermStrPos != endPos) {
           // If you're here it means that we hit the rock bottom and therefore
-          // switch to plan B.
+          // switch to plan B, since we have an alternative terminating string.
           theCurrOffset = theAltTermStrPos;
           theLastIteration = PR_TRUE;
-        } else if (!aConservativeConsume) {
+        } else {
+          // Oops, We fell all the way down to the end of the document.
           done = PR_TRUE; // Do this to fix Bug. 35456
           result = kFakeEndTag;
           aScanner.BindSubstring(mTextValue, theStartOffset, endPos);
           aScanner.SetPosition(endPos);
-        } else {
-          done = PR_TRUE;
-          result = kFakeEndTag;
-          // We need to bind our value to a non-empty string.
-          aScanner.BindSubstring(mTextValue, theStartOffset, theStartOffset);
         }
       } else {
         result = kEOF;

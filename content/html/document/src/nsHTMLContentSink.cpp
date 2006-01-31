@@ -236,6 +236,7 @@ public:
   // nsIHTMLContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
+  NS_IMETHOD CloseMalformedContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
@@ -407,7 +408,8 @@ protected:
   // Routines for tags that require special handling when we reach their end
   // tag.
   nsresult ProcessSCRIPTEndTag(nsGenericHTMLElement* content,
-                               PRBool aHaveNotified);
+                               PRBool aHaveNotified,
+                               PRBool aMalformed);
   nsresult ProcessSTYLEEndTag(nsGenericHTMLElement* content);
 
   nsresult OpenHeadContext();
@@ -701,7 +703,7 @@ public:
   nsresult Begin(nsHTMLTag aNodeType, nsGenericHTMLElement* aRoot,
                  PRUint32 aNumFlushed, PRInt32 aInsertionPoint);
   nsresult OpenContainer(const nsIParserNode& aNode);
-  nsresult CloseContainer(const nsHTMLTag aTag);
+  nsresult CloseContainer(const nsHTMLTag aTag, PRBool aMalformed);
   nsresult AddLeaf(const nsIParserNode& aNode);
   nsresult AddLeaf(nsGenericHTMLElement* aContent);
   nsresult AddComment(const nsIParserNode& aNode);
@@ -1301,7 +1303,7 @@ SinkContext::HaveNotifiedForCurrentContent() const
 }
 
 nsresult
-SinkContext::CloseContainer(const nsHTMLTag aTag)
+SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
 {
   nsresult result = NS_OK;
 
@@ -1381,7 +1383,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
       // of invalid form nesting. When the end FORM tag comes through,
       // we'll ignore it.
       if (aTag != nodeType) {
-        result = CloseContainer(aTag);
+        result = CloseContainer(aTag, PR_FALSE);
       }
     }
 
@@ -1400,7 +1402,8 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
 
   case eHTMLTag_script:
     result = mSink->ProcessSCRIPTEndTag(content,
-                                        HaveNotifiedForCurrentContent());
+                                        HaveNotifiedForCurrentContent(),
+                                        aMalformed);
     break;
 
   case eHTMLTag_style:
@@ -2691,7 +2694,7 @@ HTMLContentSink::CloseBody()
              ("HTMLContentSink::CloseBody: layout final body content"));
 
   mCurrentContext->FlushTags(PR_TRUE);
-  mCurrentContext->CloseContainer(eHTMLTag_body);
+  mCurrentContext->CloseContainer(eHTMLTag_body, PR_FALSE);
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseBody()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -2758,7 +2761,7 @@ HTMLContentSink::CloseForm()
   if (mCurrentForm) {
     // if this is a well-formed form, close it too
     if (mCurrentContext->IsCurrentContainer(eHTMLTag_form)) {
-      result = mCurrentContext->CloseContainer(eHTMLTag_form);
+      result = mCurrentContext->CloseContainer(eHTMLTag_form, PR_FALSE);
       mFlags &= ~NS_SINK_FLAG_FORM_ON_STACK;
     }
 
@@ -2853,7 +2856,7 @@ HTMLContentSink::CloseFrameset()
     sc->FlushTags(PR_TRUE);
   }
 
-  rv = sc->CloseContainer(eHTMLTag_frameset);    
+  rv = sc->CloseContainer(eHTMLTag_frameset, PR_FALSE);    
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseFrameset()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -2965,7 +2968,7 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
       rv = CloseForm();
       break;
     default:
-      rv = mCurrentContext->CloseContainer(aTag);
+      rv = mCurrentContext->CloseContainer(aTag, PR_FALSE);
       break;
   }
 
@@ -2973,6 +2976,12 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
   MOZ_TIMER_STOP(mWatch);
 
   return rv;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::CloseMalformedContainer(const eHTMLTags aTag)
+{
+  return mCurrentContext->CloseContainer(aTag, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -3849,13 +3858,19 @@ HTMLContentSink::PostEvaluateScript(nsIScriptElement *aElement)
 
 nsresult
 HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content,
-                                     PRBool aHaveNotified)
+                                     PRBool aHaveNotified,
+                                     PRBool aMalformed)
 {
   nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
   NS_ASSERTION(sele, "Not really closing a script tag?");
 
   nsRefPtr<nsGenericHTMLElement> parent =
     mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
+
+  if (aMalformed) {
+    // Make sure to serialize this script correctly, for nice round tripping.
+    sele->SetIsMalformed();
+  }
 
   nsCOMPtr<nsIScriptLoader> loader;
   if (mFrameset) {
@@ -3892,15 +3907,17 @@ HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content,
   // and call our ScriptAvailable method.
   content->DoneAddingChildren(aHaveNotified);
   
-  // To prevent script evaluation in a frameset document, we suspended
-  // the script loader. Now that the script content has been handled,
-  // let's resume the script loader.
+  // To prevent script evaluation in a frameset document we suspended the
+  // script loader. Now that the script content has been handled, let's resume
+  // the script loader.
   if (loader) {
     loader->SetEnabled(PR_TRUE);
   }
 
   // If the act of insertion evaluated the script, we're fine.
   // Else, block the parser till the script has loaded.
+  // Note: If the script is malformed, we'll get a ScriptAvailable call to
+  // take care of this test.
   if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {
     return NS_ERROR_HTMLPARSER_BLOCK;
   }

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -58,6 +59,7 @@
 #include "nsIParserService.h"
 #include "nsContentUtils.h"
 #include "nsLWBrkCIID.h"
+#include "nsIScriptElement.h"
 #include "nsAttrName.h"
 
 #define kIndentStr NS_LITERAL_STRING("  ")
@@ -632,10 +634,10 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
                                             nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
-  
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   if (!content) return NS_ERROR_FAILURE;
-  
+
   // The _moz_dirty attribute is emitted by the editor to
   // indicate that this element should be pretty printed
   // even if we're not in pretty printing mode
@@ -754,6 +756,18 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
                                          nsLayoutAtoms::mozdirty);
 
   nsIAtom *name = content->Tag();
+
+  if (name == nsHTMLAtoms::script) {
+    nsCOMPtr<nsIScriptElement> script = do_QueryInterface(aElement);
+    NS_ASSERTION(script, "What kind of weird script element is this?");
+
+    if (script->IsMalformed()) {
+      // We're looking at a malformed script tag. This means that the end tag
+      // was missing in the source. Imitate that here by not serializing the end
+      // tag.
+      return NS_OK;
+    }
+  }
 
   if (name == nsHTMLAtoms::pre ||
       name == nsHTMLAtoms::script ||
