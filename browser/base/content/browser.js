@@ -5083,20 +5083,21 @@ function asyncOpenWebPanel(event)
      return true;
    } else {
      // Try simple XLink
-     var href, realHref;
+     var href, realHref, baseURI;
      linkNode = target;
      while (linkNode) {
        if (linkNode.nodeType == Node.ELEMENT_NODE) {
          wrapper = linkNode;
 
          realHref = wrapper.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-         if (realHref)
+         if (realHref) {
            href = realHref;
+           baseURI = wrapper.baseURI
+         }
        }
        linkNode = linkNode.parentNode;
      }
      if (href) {
-       var baseURI = linkNode.baseURI;
        href = makeURLAbsolute(baseURI, href);
        handleLinkClick(event, href, null);
        return true;
