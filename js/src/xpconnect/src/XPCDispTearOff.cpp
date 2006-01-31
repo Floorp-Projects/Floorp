@@ -402,12 +402,13 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
 
         uintN err;
         // build the args
-        for(i = 0; i < argc; i++)
+        // NOTE: COM expects args in DISPPARAMS to be in reverse order
+        for ( int j = argc - 1; j >= 0; --j )
         {
             jsval val;
-            if((pDispParams->rgvarg[i].vt & VT_BYREF) == 0)
+            if((pDispParams->rgvarg[j].vt & VT_BYREF) == 0)
             {
-                if(!XPCDispConvert::COMToJS(ccx, pDispParams->rgvarg[i], val, err))
+                if(!XPCDispConvert::COMToJS(ccx, pDispParams->rgvarg[j], val, err))
                     goto pre_call_clean_up;
                 *sp++ = val;
             }
