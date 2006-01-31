@@ -44,11 +44,12 @@
 #include "nsAlertsService.h"
 #endif
 
-#ifndef MOZ_THUNDERBIRD
 #ifdef MOZ_XPINSTALL
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
 #endif
+
+#ifndef MOZ_THUNDERBIRD
 #include "nsTypeAheadFind.h"
 #endif
 
@@ -61,12 +62,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
 
-#ifndef MOZ_THUNDERBIRD
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
 #ifdef MOZ_XPINSTALL
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init) 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 #endif
+
+#ifndef MOZ_THUNDERBIRD
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -88,7 +90,6 @@ static const nsModuleComponentInfo components[] =
     NS_ALERTSERVICE_CONTRACTID,
     nsAlertsServiceConstructor },
 #endif
-#ifndef MOZ_THUNDERBIRD
 #ifdef MOZ_XPINSTALL
   { "Download Manager",
     NS_DOWNLOADMANAGER_CID,
@@ -99,7 +100,7 @@ static const nsModuleComponentInfo components[] =
     NS_TRANSFER_CONTRACTID,
     nsDownloadProxyConstructor },
 #endif
-
+#ifndef MOZ_THUNDERBIRD
   { "TypeAheadFind Component", NS_TYPEAHEADFIND_CID,
     NS_TYPEAHEADFIND_CONTRACTID, nsTypeAheadFindConstructor
   },

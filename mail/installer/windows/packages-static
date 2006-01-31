@@ -150,10 +150,8 @@ bin\components\wallet.xpt
 bin\components\signonviewer.xpt 
 
 ; download progress
-bin\components\nsProgressDialog.js
 bin\components\nsHelperAppDlg.js
-bin\components\nsDownloadProgressListener.js
-bin\components\downloadmanager.xpt
+bin\components\nsProgressDialog.js
 
 ; spellchecker (may not be present)
 bin\components\myspell.dll
