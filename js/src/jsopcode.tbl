@@ -398,3 +398,10 @@ OPDEF(JSOP_SETMETHOD,     194,"setmethod",   NULL,    3,  2,  1,  1,  JOF_CONST|
  * interpreter an extra branch test on every DO_NEXT_OP (see jsinterp.c).
  */
 OPDEF(JSOP_STOP,          195,"stop",        NULL,    1,  0,  0,  0,  JOF_BYTE)
+
+/*
+ * Get an extant property or element value, throwing ReferenceError if the
+ * identified property does not exist.
+ */
+OPDEF(JSOP_GETXPROP,      196,"getxprop",    NULL,    3,  1,  1, 11,  JOF_CONST|JOF_PROP)
+OPDEF(JSOP_GETXELEM,      197,"getxelem",    NULL,    1,  2,  1, 11,  JOF_BYTE |JOF_ELEM|JOF_LEFTASSOC)

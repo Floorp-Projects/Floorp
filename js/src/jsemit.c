@@ -1669,6 +1669,7 @@ EmitAtomIndexOp(JSContext *cx, JSOp op, jsatomid atomIndex, JSCodeGenerator *cg)
           case JSOP_FORNAME:    op = JSOP_FORELEM; break;
           case JSOP_FORPROP:    op = JSOP_FORELEM; break;
           case JSOP_GETPROP:    op = JSOP_GETELEM; break;
+          case JSOP_GETXPROP:   op = JSOP_GETXELEM; break;
           case JSOP_IMPORTPROP: op = JSOP_IMPORTELEM; break;
           case JSOP_INCNAME:    op = JSOP_INCELEM; break;
           case JSOP_INCPROP:    op = JSOP_INCELEM; break;
@@ -4139,7 +4140,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
               case TOK_DOT:
                 if (js_Emit1(cx, cg, JSOP_DUP) < 0)
                     return JS_FALSE;
-                EMIT_ATOM_INDEX_OP(JSOP_GETPROP, atomIndex);
+                EMIT_ATOM_INDEX_OP((pn2->pn_type == TOK_NAME)
+                                   ? JSOP_GETXPROP
+                                   : JSOP_GETPROP,
+                                   atomIndex);
                 break;
               case TOK_LB:
 #if JS_HAS_LVALUE_RETURN
