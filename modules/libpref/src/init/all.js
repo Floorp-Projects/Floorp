@@ -274,18 +274,18 @@ pref("capability.policy.default.Navigator.preferenceinternal.set", "UniversalPre
 
 pref("capability.policy.default.Window.blur.get", "allAccess");
 pref("capability.policy.default.Window.close.get", "allAccess");
-pref("capability.policy.default.Window.closed", "allAccess");
-pref("capability.policy.default.Window.document", "allAccess");
+pref("capability.policy.default.Window.closed.get", "allAccess");
+pref("capability.policy.default.Window.document.get", "allAccess");
 pref("capability.policy.default.Window.focus.get", "allAccess");
-pref("capability.policy.default.Window.frames", "allAccess");
-pref("capability.policy.default.Window.history", "allAccess");
-pref("capability.policy.default.Window.length", "allAccess");
+pref("capability.policy.default.Window.frames.get", "allAccess");
+pref("capability.policy.default.Window.history.get", "allAccess");
+pref("capability.policy.default.Window.length.get", "allAccess");
 pref("capability.policy.default.Window.location", "allAccess");
-pref("capability.policy.default.Window.opener", "allAccess");
-pref("capability.policy.default.Window.parent", "allAccess");
-pref("capability.policy.default.Window.self", "allAccess");
-pref("capability.policy.default.Window.top", "allAccess");
-pref("capability.policy.default.Window.window", "allAccess");
+pref("capability.policy.default.Window.opener.get", "allAccess");
+pref("capability.policy.default.Window.parent.get", "allAccess");
+pref("capability.policy.default.Window.self.get", "allAccess");
+pref("capability.policy.default.Window.top.get", "allAccess");
+pref("capability.policy.default.Window.window.get", "allAccess");
 
 // Restrictions on the DOM for mail/news - see bugs 66938 and 84545
 pref("capability.policy.mailnews.sites", "mailbox: imap: news:");
