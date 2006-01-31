@@ -49,8 +49,12 @@ var PlacesUIHook = {
   _bundle: null,
   
   init: function PUIH_init(placesList) {
+    this._bundle = document.getElementById("placeBundle");
+    
     try {
       this._topWindow = placesList.browserWindow;
+      PlacesController.topWindow = this._topWindow;
+      PlacesController.tm = PlacesController.topWindow.PlacesTransactionManager;
       this._tabbrowser = this._topWindow.getBrowser();
 
       // Hook into the tab strip to get notifications about when the Places Page is
@@ -64,9 +68,8 @@ var PlacesUIHook = {
       this._showPlacesUI();
     }
     catch (e) { 
+      LOG("Something bad happened initializing the UI Hook: " + e);
     }
-    
-    this._bundle = document.getElementById("placeBundle");
     
     // Stop the browser from handling certain types of events. 
     function onDragEvent(event) {
@@ -111,23 +114,45 @@ var PlacesUIHook = {
   },
 
   onTabSelect: function PP_onTabSelect(event) {
-    var tabURI = this._tabbrowser.selectedBrowser.currentURI.spec;
-    var isPlaces = tabURI.substr(0, this._placesURI.length) == this._placesURI;
+    var tabURI = this._tabbrowser.selectedBrowser.currentURI;
+    if (!tabURI)
+      var isPlaces = false;
+    else
+      isPlaces = 
+        tabURI.spec.substr(0, this._placesURI.length) == this._placesURI;
     isPlaces ? this._showPlacesUI() : this._hidePlacesUI();
   },
   
   _topElement: function PUIH__topElement(id) {
     return this._topWindow.document.getElementById(id);
   },
+  
+  onFindActivated: function PUIH_onFindActivated(event) {
+    PlacesSearchBox.focus();
+  },
 
+  _findWasHidden: false,
+  
   _showPlacesUI: function PP__showPlacesUI() {
     this._tabbrowser.setAttribute("places", "true");
     var statusbar = this._topElement("status-bar");
     statusbar.hidden = true;
+    
+    var findbar = this._topWindow.document.getElementById("FindToolbar");
+    this._findWasHidden = findbar.hidden;
+    findbar.hidden = true;    
+    
     this._disableCommands();
     
     var findItem = this._topWindow.document.getElementById("menu_find");
     findItem.setAttribute("label", this._bundle.getString("findPlaceLabel"));
+
+    PlacesController.tm.hidePageTransactions = false;
+    PlacesController.tm.updateCommands();
+    
+    // Disable the find bar so that we can capture key presses. 
+    this._topWindow.gFindEnabled = false;
+    this._topWindow.addEventListener("find-activated", this.onFindActivated, false);
   },
 
   _hidePlacesUI: function PP__hidePlacesUI() {
@@ -142,10 +167,23 @@ var PlacesUIHook = {
     var statusbarMenu = this._topWindow.document.getElementById("toggle_taskbar");
     var statusbar = this._topElement("status-bar");
     statusbar.hidden = statusbarMenu.getAttribute("checked") != "true";
+    
+    if (!this._findWasHidden) {
+      var findbar = this._topWindow.document.getElementById("FindToolbar");
+      findbar.hidden = false;
+    }
+    
     this._enableCommands();
 
     var findItem = this._topWindow.document.getElementById("menu_find");
     findItem.setAttribute("label", this._bundle.getString("findPageLabel"));
+    
+    PlacesController.tm.hidePageTransactions = true;
+    PlacesController.tm.updateCommands();
+
+    // Enable the find bar again
+    this._topWindow.gFindEnabled = true;
+    this._topWindow.removeEventListener("find-activated", this.onFindActivated, false);
   },
 };
 
@@ -172,10 +210,10 @@ var PlacesPage = {
     
     this._places.init(new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER],
                                      ViewConfig.GENERIC_DROP_TYPES,
-                                     true, false, 3));
+                                     true, false, 3, true));
     this._content.init(new ViewConfig(ViewConfig.GENERIC_DROP_TYPES,
                                       ViewConfig.GENERIC_DROP_TYPES,
-                                      false, false, 0));
+                                      false, false, 0, true));
 
     PlacesController.groupableView = this._content;
 
@@ -463,6 +501,14 @@ var PlacesSearchBox = {
     var searchFilter = document.getElementById("searchFilter");
     searchFilter.setAttribute("collection", collectionName);
     return collectionName;
+  },
+  
+  /**
+   * Focus the search box
+   */
+  focus: function PS_focus() {
+    var searchFilter = document.getElementById("searchFilter");
+    searchFilter.focus();
   },
   
   /**

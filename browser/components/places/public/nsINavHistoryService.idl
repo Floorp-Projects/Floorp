@@ -46,7 +46,6 @@ interface nsINavHistoryQueryResultNode;
 interface nsINavHistoryFolderResultNode;
 interface nsINavHistoryQuery;
 interface nsINavHistoryQueryOptions;
-interface nsITransactionManager;
 interface nsITreeColumn;
 interface nsIWritablePropertyBag;
 
@@ -1060,12 +1059,6 @@ interface nsINavHistoryService : nsISupports
    * done changing. Should match beginUpdateBatch or bad things will happen.
    */
   void endUpdateBatch();
-
-  /**
-   * The Transaction Manager for edit operations performed on History and 
-   * Bookmark items.
-   */
-  readonly attribute nsITransactionManager transactionManager;
 };
 
 /**

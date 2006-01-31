@@ -69,6 +69,11 @@ PlacesBrowserShim.init = function PBS_init() {
   var result = this._hist.executeQuery(query, options);
   newMenuPopup._result = result;
   newMenuPopup._resultNode = result.root;
+
+  window.controllers.appendController(PlacesController);
+  
+  PlacesController.topWindow = window;
+  PlacesController.tm = PlacesTransactionManager;
 };
 
 PlacesBrowserShim.addBookmark = function PBS_addBookmark() {
@@ -102,6 +107,171 @@ PlacesBrowserShim.addLivemark = function PBS_addLivemark(aURL, aFeedURL, aTitle,
                           ios.newURI(aURL, null, null),
                           ios.newURI(aFeedURL, null, null),
                           -1);
+};
+
+/**
+ * This is a custom implementation of nsITransactionManager. We do not chain 
+ * or aggregate the default implementation because the order in which 
+ * transactions are performed and undone is important to the user experience. 
+ * There are two classes of transactions - those done by the browser window 
+ * that contains this transaction manager, and those done by the embedded 
+ * Places page. All transactions done in either part of the UI are recorded 
+ * here, but ones performed by actions taken in the Places page affect the
+ * Undo/Redo menu items and keybindings in the browser window only when the
+ * Places page is the active tab. This is to prevent the user from accidentally
+ * undoing/redoing their changes while the Places page is not selected, and the
+ * user not noticing. 
+ * 
+ * When the Places page is navigated away from, the undo items registered for
+ * it are destroyed and the ability to undo those actions ceases. 
+ */
+var PlacesTransactionManager = {
+  _undoItems: [],
+  _redoItems: [],
+  
+  hidePageTransactions: true,
+  
+  _getNextVisibleIndex: function PTM__getNextVisibleItem(list) {
+    if (!this.hidePageTransactions)
+      return list.length - 1;
+      
+    for (var i = list.length - 1; i >= 0; --i) {
+      if (!list[i].pageTransaction)
+        return i;
+    }
+    return -1;
+  },
+  
+  updateCommands: function PTM__updateCommands() {
+    CommandUpdater.updateCommand("cmd_undo");
+    CommandUpdater.updateCommand("cmd_redo");
+  },
+
+  doTransaction: function PTM_doTransaction(transaction) {
+    transaction.doTransaction();
+    this._undoItems.push(transaction);
+    this._redoItems = [];
+    this.updateCommands();
+  },
+  
+  undoTransaction: function PTM_undoTransaction() {
+    var index = this._getNextVisibleIndex(this._undoItems);
+    ASSERT(index >= 0, "Invalid Transaction index");
+    var transaction = this._undoItems.splice(index, 1)[0];
+    transaction.undoTransaction();
+    this._redoItems.push(transaction);
+    this.updateCommands();
+  },
+
+  redoTransaction: function PTM_redoTransaction() {
+    var index = this._getNextVisibleIndex(this._redoItems);
+    ASSERT(index >= 0, "Invalid Transaction index");
+    var transaction = this._redoItems.splice(index, 1)[0];
+    transaction.redoTransaction();
+    this._undoItems.push(transaction);    
+    this.updateCommands();
+  },
+  
+  clear: function PTM_clear() {
+    this._undoItems = [];
+    this._redoItems = [];
+    this.updateCommands();
+  },
+  
+  beginBatch: function PTM_beginBatch() {
+  },
+  
+  endBatch: function PTM_endBatch() {
+  },
+  
+  get numberOfUndoItems() {
+    return this.getUndoList().numItems;
+  },
+  get numberOfRedoItems() {
+    return this.getRedoList().numItems;
+  },
+  
+  maxTransactionCount: -1,
+  
+  peekUndoStack: function PTM_peekUndoStack() {
+    var index = this._getNextVisibleIndex(this._undoItems);
+    ASSERT(index >= 0, "Invalid Transaction index");
+    return this._undoItems[index];
+  },
+  peekRedoStack: function PTM_peekRedoStack() {
+    var index = this._getNextVisibleIndex(this._redoItems);
+    ASSERT(index >= 0, "Invalid Transaction index");
+    return this._redoItems[index];
+  },
+  
+  _filterList: function PTM__filterList(list) {
+    if (!this.hidePageTransactions)
+      return list;
+    
+    var transactions = [];
+    for (var i = 0; i < list.length; ++i) {
+      if (!list[i].pageTransaction)
+        transactions.push(list[i]);
+    }
+    return transactions;
+  },
+  
+  getUndoList: function PTM_getUndoList() {
+    return new TransactionList(this._filterList(this._undoItems));
+  },
+  getRedoList: function PTM_getRedoList() {
+    return new TransactionList(this._filterList(this._redoItems));
+  },
+  
+  _listeners: [],  
+  AddListener: function PTM_AddListener(listener) {
+    this._listeners.push(listener);
+  },
+  RemoveListener: function PTM_RemoveListener(listener) {
+    for (var i = 0; i < this._listeners.length; ++i) {
+      if (this._listeners[i] == listener)
+        this._listeners.splice(i, 1);
+    }
+  },
+
+  QueryInterface: function PTM_QueryInterface(iid) {
+    if (iid.equals(Ci.nsITransactionManager) ||
+        iid.equals(Ci.nsISupports))
+      return this;
+    throw Cr.NS_ERROR_NOINTERFACE;
+  }
+};
+
+function TransactionList(transactions) {
+  this._transactions = transactions;
+}
+TransactionList.prototype = {
+  get numItems() {
+    return this._transactions.length;
+  },
+  
+  itemIsBatch: function TL_itemIsBatch(index) {
+    return false;
+  },
+  
+  getItem: function TL_getItem(index) {
+    return this._transactions[i];
+  },
+  
+  getNumChildrenForItem: function TL_getNumChildrenForItem(index) {
+    return 0;
+  },
+  
+  getChildListForItem: function TL_getChildListForItem(index) {
+    return null;
+  },
+  
+  QueryInterface: function TL_QueryInterface(iid) {
+    if (iid.equals(Ci.nsITransactionList) ||
+        iid.equals(Ci.nsISupports))
+      return this;
+    throw Cr.NS_ERROR_NOINTERFACE;
+  }
 };
 
 addEventListener("load", function () { PlacesBrowserShim.init(); }, false);

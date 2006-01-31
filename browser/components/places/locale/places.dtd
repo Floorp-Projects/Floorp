@@ -196,3 +196,5 @@
   "descending">
 <!ENTITY advancedSearch.max.label
   "Maximum results: ">
+<!ENTITY cmd.find.key
+  "f">
