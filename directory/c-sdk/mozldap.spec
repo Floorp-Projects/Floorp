@@ -57,7 +57,7 @@ Header and Library files for doing development with Network Security Services.
 arg64="--enable-64bit"
 %endif
 cd mozilla/directory/c-sdk
-./configure $arg64 --with-nss --system-svrcore --enable-optimize --disable-debug
+./configure $arg64 --with-nss --with-system-svrcore --enable-optimize --disable-debug
 
 %build
 
@@ -174,7 +174,7 @@ cp -r mozilla/directory/c-sdk/ldap/examples $RPM_BUILD_ROOT/usr/share/mozldap
 
 %changelog
 * Tue Jan 31 2006 Rich Megginson <rmeggins@redhat.com> - 5.17-2
-- use --system-svrcore to configure
+- use --with-system-svrcore to configure
 
 * Mon Dec 19 2005 Rich Megginson <rmeggins@redhat.com> - 5.17-1
 - Initial revision
