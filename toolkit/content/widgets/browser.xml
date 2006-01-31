@@ -481,10 +481,17 @@
               this.pageReport = new Array();
             }
 
+#ifdef MOZILLA_1_8_BRANCH
+# bug 314700
+            var obj = { requestingWindowURI: evt.requestingWindowURI,
+                        popupWindowURI: evt.popupWindowURI,
+                        popupWindowFeatures: evt.popupWindowFeatures };
+#else
             var obj = { requestingWindowURI: evt.requestingWindowURI,
                         popupWindowURI: evt.popupWindowURI,
                         popupWindowFeatures: evt.popupWindowFeatures,
                         popupWindowName: evt.popupWindowName };
+#endif
             this.pageReport.push(obj);
             this.updatePageReport()
           ]]> 
