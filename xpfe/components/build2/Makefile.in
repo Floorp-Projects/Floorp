@@ -73,11 +73,6 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= nsModule.cpp
 
-ifdef MOZ_LDAP_XPCOM
-REQUIRES	+= mozldap
-DEFINES		+= -DMOZ_LDAP_XPCOM
-endif
-
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
