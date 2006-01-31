@@ -53,30 +53,27 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
                                         PRInt16 *aDecision)
 {
   *aDecision = nsIContentPolicy::ACCEPT;
-  if (aContentType == nsIContentPolicy::TYPE_IMAGE ||
-      aContentType == nsIContentPolicy::TYPE_STYLESHEET ||
-      aContentType == nsIContentPolicy::TYPE_SCRIPT) {
-    // Look for the document.  In most cases, aRequestingContext is a
-    // content node.
-    nsCOMPtr<nsIDocument> doc;
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aRequestingContext);
-    if (content) {
-      doc = content->GetOwnerDoc();
-    } else {
-      doc = do_QueryInterface(aRequestingContext);
-      if (!doc) {
-        nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(aRequestingContext);
-        if (window) {
-          nsCOMPtr<nsIDOMDocument> domDoc;
-          window->GetDocument(getter_AddRefs(domDoc));
-          doc = do_QueryInterface(domDoc);
-        }
+  // Look for the document.  In most cases, aRequestingContext is a
+  // content node.
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aRequestingContext);
+  if (content) {
+    doc = content->GetOwnerDoc();
+  } else {
+    doc = do_QueryInterface(aRequestingContext);
+    if (!doc) {
+      nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(aRequestingContext);
+      if (window) {
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        window->GetDocument(getter_AddRefs(domDoc));
+        doc = do_QueryInterface(domDoc);
       }
     }
-    if (doc && doc->IsLoadedAsData()) {
-      *aDecision = nsIContentPolicy::REJECT_TYPE;
-    }
   }
+  if (doc && doc->IsLoadedAsData()) {
+    *aDecision = nsIContentPolicy::REJECT_TYPE;
+  }
+
   return NS_OK;
 }
 
