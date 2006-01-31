@@ -51,7 +51,7 @@
 
 /* Don't use the listbox appearance as that gives us a blue-grey top border
    that collides with the primary toolbar border */
-#threadTree {
+#threadTree, #folderTree {
   -moz-appearance:  none;
   background-color: -moz-Field;
   color: -moz-FieldText;
@@ -872,9 +872,6 @@ treechildren::-moz-tree-cell-text(lc-black, selected, focus) {
 /* ..... folder pane adjustments ..... */
 
 #folderPaneHeader {
-  height: 29px;
-  border: none;
-  background-color: transparent;
 }
 
 #folderpane-title {
@@ -886,15 +883,13 @@ treechildren::-moz-tree-cell-text(lc-black, selected, focus) {
 /* ..... splitter adjustments ..... */
 
 #folderpane_splitter {
-  border: none;
-  background-color: transparent;
+  border-right: none;
 }
 
 #gray_vertical_splitter,
 #threadpane-splitter {
   border: none;
   min-height: 5px;
-  background-color: transparent;
 }
 
 /* ..... tree adjustments ..... */

@@ -176,9 +176,9 @@
     <vbox id="folderPaneBox" minwidth="100" width="200" persist="collapsed width">
     
       <label id="folderColumnLabel" hidden="true" value="&folderColumn.label;"/>
-      <hbox id="folderPaneHeader" align="center">
+      <sidebarheader id="folderPaneHeader" align="center">
         <label id="folderpane-title" value="&folderPaneHeader.label;"/>
-      </hbox>
+      </sidebarheader>
       
       <tree id="folderTree" class="plain focusring" flex="1" seltype="single" selstyle="primary"
             context="folderPaneContext"
