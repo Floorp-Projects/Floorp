@@ -384,7 +384,10 @@ const gPopupBlockerObserver = {
         menuitem.setAttribute("requestingWindowURI", pageReport[i].requestingWindowURI.spec);
         menuitem.setAttribute("popupWindowURI", popupURIspec);
         menuitem.setAttribute("popupWindowFeatures", pageReport[i].popupWindowFeatures);
+#ifndef MOZILLA_1_8_BRANCH
+# bug 314700
         menuitem.setAttribute("popupWindowName", pageReport[i].popupWindowName);
+#endif
         menuitem.setAttribute("oncommand", "gPopupBlockerObserver.showBlockedPopup(event);");
         aEvent.target.appendChild(menuitem);
       }
@@ -413,14 +416,22 @@ const gPopupBlockerObserver = {
 
     var popupWindowURI = aEvent.target.getAttribute("popupWindowURI");
     var features = aEvent.target.getAttribute("popupWindowFeatures");
+#ifndef MOZILLA_1_8_BRANCH
+# bug 314700
     var name = aEvent.target.getAttribute("popupWindowName");
+#endif
 
     var shell = findChildShell(null, gBrowser.selectedBrowser.docShell,
                                requestingWindowURI);
     if (shell) {
       var ifr = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
       var dwi = ifr.getInterface(Components.interfaces.nsIDOMWindowInternal);
+#ifdef MOZILLA_1_8_BRANCH
+# bug 314700
+      dwi.open(popupWindowURI, "", features);
+#else
       dwi.open(popupWindowURI, name, features);
+#endif
     }
   },
 
