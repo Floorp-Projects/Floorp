@@ -1917,6 +1917,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 /* FALL THROUGH */
 
               case JSOP_GETPROP:
+              case JSOP_GETXPROP:
                 atom = GET_ATOM(cx, jp->script, pc);
 
               do_getprop:
@@ -1968,6 +1969,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 /* FALL THROUGH */
 
               case JSOP_GETELEM:
+              case JSOP_GETXELEM:
                 op = JSOP_NOP;           /* turn off parens */
                 xval = POP_STR();
                 op = JSOP_GETELEM;

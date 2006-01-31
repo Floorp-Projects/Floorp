@@ -3593,6 +3593,7 @@ interrupt:
           }
 
           BEGIN_CASE(JSOP_GETPROP)
+          BEGIN_CASE(JSOP_GETXPROP)
             /* Get an immediate atom naming the property. */
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
@@ -3614,6 +3615,7 @@ interrupt:
           END_CASE(JSOP_SETPROP)
 
           BEGIN_CASE(JSOP_GETELEM)
+          BEGIN_CASE(JSOP_GETXELEM)
             ELEMENT_OP(-1, CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval)));
             sp--;
             STORE_OPND(-1, rval);
