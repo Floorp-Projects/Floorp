@@ -40,6 +40,8 @@
 #define __nsSchemaValidatorUtils_h__
 
 #include "nsCOMPtr.h"
+#include "nsString.h"
+#include "nsISchema.h"
 #include "nsISchemaDuration.h"
 #include "nsCOMArray.h"
 
@@ -94,6 +96,50 @@ const nsMonthShortHand monthShortHand[] = {
   { "12", "Dec" }
 };
 
+class nsSchemaStringFacet
+{
+public:
+  PRBool isDefined;
+  nsString value;
+  nsSchemaStringFacet() {
+    isDefined = PR_FALSE;
+  }
+};
+
+class nsSchemaIntFacet
+{
+public:
+  PRBool isDefined;
+  PRUint32 value;
+  nsSchemaIntFacet() {
+    isDefined = PR_FALSE;
+    value = 0;
+  }
+};
+
+struct nsSchemaDerivedSimpleType {
+  nsISchemaSimpleType* mBaseType;
+
+  nsSchemaIntFacet length;
+  nsSchemaIntFacet minLength;
+  nsSchemaIntFacet maxLength;
+
+  nsSchemaStringFacet pattern;
+
+  PRBool isWhitespaceDefined;
+  unsigned short whitespace;
+
+  nsSchemaStringFacet maxInclusive;
+  nsSchemaStringFacet minInclusive;
+  nsSchemaStringFacet maxExclusive;
+  nsSchemaStringFacet minExclusive;
+
+  nsSchemaIntFacet totalDigits;
+  nsSchemaIntFacet fractionDigits;
+
+  nsStringArray enumerationList;
+};
+
 class nsSchemaValidatorUtils
 {
 public:
@@ -142,6 +188,10 @@ public:
   static void RemoveLeadingZeros(nsAString & aString);
   static void RemoveTrailingZeros(nsAString & aString);
 
+  static nsresult GetDerivedSimpleType(nsISchemaSimpleType *aSimpleType,
+                                       nsSchemaDerivedSimpleType *aDerived);
+  static void CopyDerivedSimpleType(nsSchemaDerivedSimpleType *aDerivedDest,
+                                    nsSchemaDerivedSimpleType *aDerivedSrc);
 private:
   nsSchemaValidatorUtils();
   ~nsSchemaValidatorUtils();

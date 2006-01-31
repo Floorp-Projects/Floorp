@@ -334,13 +334,58 @@ nsSchemaValidator::ValidateSimpletype(const nsAString & aNodeValue,
 
     case nsISchemaSimpleType::SIMPLE_TYPE_LIST: {
       // handle lists
-      rv = ValidateListSimpletype(aNodeValue, aSchemaSimpleType, &isValid);
+      rv = ValidateListSimpletype(aNodeValue, aSchemaSimpleType, nsnull,
+                                  &isValid);
       break;
     }
 
     case nsISchemaSimpleType::SIMPLE_TYPE_UNION: {
       // handle unions
       rv = ValidateUnionSimpletype(aNodeValue, aSchemaSimpleType, &isValid);
+      break;
+    }
+  }
+
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateDerivedSimpletype(const nsAString & aNodeValue,
+                                             nsSchemaDerivedSimpleType *aDerived,
+                                             PRBool *aResult)
+{
+  // This method is called when validating a simpletype that derives from another
+  // simpletype.
+
+  PRBool isValid = PR_FALSE;
+
+  PRUint16 simpleTypeValue;
+  nsresult rv = aDerived->mBaseType->GetSimpleType(&simpleTypeValue);
+
+  switch (simpleTypeValue) {
+    case nsISchemaSimpleType::SIMPLE_TYPE_BUILTIN: {
+      rv = ValidateDerivedBuiltinType(aNodeValue, aDerived, &isValid);
+      break;
+    }
+
+    case nsISchemaSimpleType::SIMPLE_TYPE_RESTRICTION: {
+      // this happens when for example someone derives from a union which then
+      // derives from another type.
+      rv = nsSchemaValidatorUtils::GetDerivedSimpleType(aDerived->mBaseType,
+                                                        aDerived);
+      ValidateDerivedSimpletype(aNodeValue, aDerived, &isValid);
+      break;
+    }
+
+    case nsISchemaSimpleType::SIMPLE_TYPE_LIST: {
+      rv = ValidateListSimpletype(aNodeValue, aDerived->mBaseType, aDerived,
+                                  &isValid);
+      break;
+    }
+
+    case nsISchemaSimpleType::SIMPLE_TYPE_UNION: {
+      rv = ValidateDerivedUnionSimpletype(aNodeValue, aDerived, &isValid);
       break;
     }
   }
@@ -358,6 +403,8 @@ nsSchemaValidator::ValidateRestrictionSimpletype(const nsAString & aNodeValue,
                                                  nsISchemaSimpleType *aType,
                                                  PRBool *aResult)
 {
+  PRBool isValid = PR_FALSE;
+
   nsCOMPtr<nsISchemaRestrictionType> restrictionType = do_QueryInterface(aType);
   NS_ENSURE_STATE(restrictionType);
 
@@ -367,151 +414,43 @@ nsSchemaValidator::ValidateRestrictionSimpletype(const nsAString & aNodeValue,
   nsresult rv = restrictionType->GetBaseType(getter_AddRefs(simpleBaseType));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // get the amount of restriction facet defined.
-  PRUint32 facetCount;
-  rv = restrictionType->GetFacetCount(&facetCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-  LOG(("    %d facet(s) defined.", facetCount));
+  nsSchemaDerivedSimpleType derivedType;
+  rv = nsSchemaValidatorUtils::GetDerivedSimpleType(aType, &derivedType);
+  rv = ValidateDerivedSimpletype(aNodeValue, &derivedType, &isValid);
+  *aResult = isValid;
+  return rv;
+}
 
-  // we create variables for all possible restriction facets and populate them
-  // if we run into them.  This is faster than having the same code repeated
-  // for each built-in type and only handling the relevant facets.
-  PRBool isLengthDefined = PR_FALSE;
-  PRUint32 length = 0;
-  PRBool isMinLengthDefined = PR_FALSE;
-  PRUint32 minLength = 0;
-  PRBool isMaxLengthDefined = PR_FALSE;
-  PRUint32 maxLength = 0;
-  nsAutoString pattern;
-  unsigned short whitespace = 0;
-  nsAutoString maxInclusive;
-  nsAutoString minInclusive;
-  nsAutoString maxExclusive;
-  nsAutoString minExclusive;
-  PRUint32 totalDigits = 0;
-  // since fractionDigits is 0..n, need a bool to remember if it was set or not.
-  PRBool fractionDigitsSet = PR_FALSE;
-  PRUint32 fractionDigits = 0;
-  nsAutoString enumeration;
-  nsStringArray enumerationList;
-
-  nsCOMPtr<nsISchemaFacet> facet;
-  PRUint32 facetCounter;
-  PRUint16 facetType;
-
-  // handle all defined facets
-  for (facetCounter = 0; facetCounter < facetCount; ++facetCounter) {
-    rv = restrictionType->GetFacet(facetCounter, getter_AddRefs(facet));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    facet->GetFacetType(&facetType);
-
-    switch (facetType) {
-      case nsISchemaFacet::FACET_TYPE_LENGTH: {
-        isLengthDefined = PR_TRUE;
-        facet->GetLengthValue(&length);
-        LOG(("  - Length Facet found (value is %d)", length));
-        break;
-      }
-
-      case nsISchemaFacet::FACET_TYPE_MINLENGTH: {
-        isMinLengthDefined = PR_TRUE;
-        facet->GetLengthValue(&minLength);
-        LOG(("  - Min Length Facet found (value is %d)", minLength));
-        break;
-      }
-
-      case nsISchemaFacet::FACET_TYPE_MAXLENGTH: {
-        isMaxLengthDefined = PR_TRUE;
-        facet->GetLengthValue(&maxLength);
-        LOG(("  - Max Length Facet found (value is %d)", maxLength));
-        break;
-      }
-
-      case nsISchemaFacet::FACET_TYPE_PATTERN: {
-        facet->GetValue(pattern);
-        LOG(("  - Pattern Facet found (value is %s)",
-             NS_ConvertUTF16toUTF8(pattern).get()));
-        break;
-      }
-
-      case nsISchemaFacet::FACET_TYPE_ENUMERATION: {
-        facet->GetValue(enumeration);
-        enumerationList.AppendString(enumeration);
-        LOG(("  - Enumeration found (%s)",
-             NS_ConvertUTF16toUTF8(enumeration).get()));
-        break;
-      }
-
-      case nsISchemaFacet::FACET_TYPE_WHITESPACE: {
-        // XXX whitespace not supported yet
-        facet->GetWhitespaceValue(&whitespace);
-        break;
-      }
-
-      case nsISchemaFacet::FACET_TYPE_MAXINCLUSIVE: {
-        facet->GetValue(maxInclusive);
-        LOG(("  - Max Inclusive Facet found (value is %s)",
-          NS_ConvertUTF16toUTF8(maxInclusive).get()));
-        break;
-      }
-
-      case nsISchemaFacet::FACET_TYPE_MININCLUSIVE: {
-        facet->GetValue(minInclusive);
-        LOG(("  - Min Inclusive Facet found (value is %s)",
-          NS_ConvertUTF16toUTF8(minInclusive).get()));
-        break;
-      }
-
-      case nsISchemaFacet::FACET_TYPE_MAXEXCLUSIVE: {
-        facet->GetValue(maxExclusive);
-        LOG(("  - Max Exclusive Facet found (value is %s)",
-          NS_ConvertUTF16toUTF8(maxExclusive).get()));
-        break;
-      }
-
-      case nsISchemaFacet::FACET_TYPE_MINEXCLUSIVE: {
-        facet->GetValue(minExclusive);
-        LOG(("  - Min Exclusive Facet found (value is %s)",
-          NS_ConvertUTF16toUTF8(minExclusive).get()));
-        break;
-      }
-
-      case nsISchemaFacet::FACET_TYPE_TOTALDIGITS: {
-        facet->GetDigitsValue(&totalDigits);
-        LOG(("  - Totaldigits Facet found (value is %d)", totalDigits));
-        break;
-      }
-
-      case nsISchemaFacet::FACET_TYPE_FRACTIONDIGITS: {
-        fractionDigitsSet = PR_TRUE;
-        facet->GetDigitsValue(&fractionDigits);
-        LOG(("  - Fractiondigits Facet found (value is %d)", fractionDigits));
-        break;
-      }
-    }
-  }
-
+nsresult
+nsSchemaValidator::ValidateDerivedBuiltinType(const nsAString & aNodeValue,
+                                              nsSchemaDerivedSimpleType *aDerived,
+                                              PRBool *aResult)
+{
+  PRBool isValid = PR_FALSE;
   // now that we have loaded all the restriction facets,
   // check the base type and validate
-  PRUint16 builtinTypeValue;
   nsCOMPtr<nsISchemaBuiltinType> schemaBuiltinType =
-    do_QueryInterface(simpleBaseType);
+    do_QueryInterface(aDerived->mBaseType);
   NS_ENSURE_STATE(schemaBuiltinType);
 
-  schemaBuiltinType->GetBuiltinType(&builtinTypeValue);
+  PRUint16 builtinTypeValue;
+  nsresult rv = schemaBuiltinType->GetBuiltinType(&builtinTypeValue);
 
 #ifdef PR_LOGGING
   DumpBaseType(schemaBuiltinType);
 #endif
 
-  PRBool isValid = PR_FALSE;
-  switch(builtinTypeValue) {
+  switch (builtinTypeValue) {
     case nsISchemaBuiltinType::BUILTIN_TYPE_STRING: {
-      rv = ValidateBuiltinTypeString(aNodeValue, length, isLengthDefined,
-                                     minLength, isMinLengthDefined,
-                                     maxLength, isMaxLengthDefined,
-                                     &enumerationList, &isValid);
+      rv = ValidateBuiltinTypeString(aNodeValue,
+                                     aDerived->length.value,
+                                     aDerived->length.isDefined,
+                                     aDerived->minLength.value,
+                                     aDerived->minLength.isDefined,
+                                     aDerived->maxLength.value,
+                                     aDerived->maxLength.isDefined,
+                                     &aDerived->enumerationList,
+                                     &isValid);
       break;
     }
 
@@ -521,147 +460,233 @@ nsSchemaValidator::ValidateRestrictionSimpletype(const nsAString & aNodeValue,
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_GDAY: {
-      rv = ValidateBuiltinTypeGDay(aNodeValue, maxExclusive, minExclusive,
-                                   maxInclusive, minInclusive, &isValid);
+      rv = ValidateBuiltinTypeGDay(aNodeValue,
+                                   aDerived->maxExclusive.value,
+                                   aDerived->minExclusive.value,
+                                   aDerived->maxInclusive.value,
+                                   aDerived->minInclusive.value,
+                                   &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_GMONTH: {
-      rv = ValidateBuiltinTypeGMonth(aNodeValue, maxExclusive, minExclusive,
-                                     maxInclusive, minInclusive, &isValid);
+      rv = ValidateBuiltinTypeGMonth(aNodeValue,
+                                     aDerived->maxExclusive.value,
+                                     aDerived->minExclusive.value,
+                                     aDerived->maxInclusive.value,
+                                     aDerived->minInclusive.value,
+                                     &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_GYEAR: {
-      rv = ValidateBuiltinTypeGYear(aNodeValue, maxExclusive, minExclusive,
-                                    maxInclusive, minInclusive, &isValid);
+      rv = ValidateBuiltinTypeGYear(aNodeValue,
+                                    aDerived->maxExclusive.value,
+                                    aDerived->minExclusive.value,
+                                    aDerived->maxInclusive.value,
+                                    aDerived->minInclusive.value,
+                                    &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_GYEARMONTH: {
-      rv = ValidateBuiltinTypeGYearMonth(aNodeValue, maxExclusive, minExclusive,
-                                         maxInclusive, minInclusive, &isValid);
+      rv = ValidateBuiltinTypeGYearMonth(aNodeValue,
+                                         aDerived->maxExclusive.value,
+                                         aDerived->minExclusive.value,
+                                         aDerived->maxInclusive.value,
+                                         aDerived->minInclusive.value,
+                                         &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_GMONTHDAY: {
-      rv = ValidateBuiltinTypeGMonthDay(aNodeValue, maxExclusive, minExclusive,
-                                        maxInclusive, minInclusive, &isValid);
+      rv = ValidateBuiltinTypeGMonthDay(aNodeValue,
+                                        aDerived->maxExclusive.value,
+                                        aDerived->minExclusive.value,
+                                        aDerived->maxInclusive.value,
+                                        aDerived->minInclusive.value,
+                                        &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_DATE: {
-      rv = ValidateBuiltinTypeDate(aNodeValue, maxExclusive, minExclusive,
-                                   maxInclusive, minInclusive, &isValid);
+      rv = ValidateBuiltinTypeDate(aNodeValue,
+                                   aDerived->maxExclusive.value,
+                                   aDerived->minExclusive.value,
+                                   aDerived->maxInclusive.value,
+                                   aDerived->minInclusive.value,
+                                   &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_TIME: {
-      rv = ValidateBuiltinTypeTime(aNodeValue, maxExclusive, minExclusive,
-                                   maxInclusive, minInclusive, &isValid);
+      rv = ValidateBuiltinTypeTime(aNodeValue,
+                                   aDerived->maxExclusive.value,
+                                   aDerived->minExclusive.value,
+                                   aDerived->maxInclusive.value,
+                                   aDerived->minInclusive.value,
+                                   &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_DATETIME: {
-      rv = ValidateBuiltinTypeDateTime(aNodeValue, maxExclusive, minExclusive,
-                                       maxInclusive, minInclusive, &isValid);
+      rv = ValidateBuiltinTypeDateTime(aNodeValue,
+                                       aDerived->maxExclusive.value,
+                                       aDerived->minExclusive.value,
+                                       aDerived->maxInclusive.value,
+                                       aDerived->minInclusive.value,
+                                       &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_DURATION: {
-      rv = ValidateBuiltinTypeDuration(aNodeValue, maxExclusive, minExclusive,
-                                       maxInclusive, minInclusive, &isValid);
+      rv = ValidateBuiltinTypeDuration(aNodeValue,
+                                       aDerived->maxExclusive.value,
+                                       aDerived->minExclusive.value,
+                                       aDerived->maxInclusive.value,
+                                       aDerived->minInclusive.value,
+                                       &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_INTEGER: {
-      rv = ValidateBuiltinTypeInteger(aNodeValue, totalDigits, maxExclusive,
-                                      minExclusive, maxInclusive, minInclusive,
-                                      &enumerationList, &isValid);
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
       break;
     }
 
     /* http://w3.org/TR/xmlschema-2/#nonPositiveInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER: {
-      if (maxExclusive.IsEmpty()) {
-        maxExclusive.AssignLiteral("1");
+      if (aDerived->maxExclusive.value.IsEmpty()) {
+        aDerived->maxExclusive.value.AssignLiteral("1");
       }
 
-      if (minInclusive.IsEmpty()) {
-        minInclusive.AssignLiteral("0");
+      if (aDerived->minInclusive.value.IsEmpty()) {
+        aDerived->minInclusive.value.AssignLiteral("0");
       }
 
-      rv = ValidateBuiltinTypeInteger(aNodeValue, totalDigits, maxExclusive,
-                                      minExclusive, maxInclusive, minInclusive,
-                                      &enumerationList, &isValid);
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
       break;
     }
 
     /* http://www.w3.org/TR/xmlschema-2/#negativeInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER: {
-      if (maxExclusive.IsEmpty()) {
-        maxExclusive.AssignLiteral("0");
+      if (aDerived->maxExclusive.value.IsEmpty()) {
+        aDerived->maxExclusive.value.AssignLiteral("0");
       }
 
-      if (minInclusive.IsEmpty()) {
-        minInclusive.AssignLiteral("-1");
+      if (aDerived->minInclusive.value.IsEmpty()) {
+        aDerived->minInclusive.value.AssignLiteral("-1");
       }
 
-      rv = ValidateBuiltinTypeInteger(aNodeValue, totalDigits,maxExclusive,
-                                      minExclusive, maxInclusive, minInclusive,
-                                      &enumerationList, &isValid);
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_BYTE: {
-      rv = ValidateBuiltinTypeByte(aNodeValue, totalDigits, maxExclusive,
-                                   minExclusive, maxInclusive, minInclusive,
-                                   &enumerationList, &isValid);
+      rv = ValidateBuiltinTypeByte(aNodeValue,
+                                   aDerived->totalDigits.value,
+                                   aDerived->maxExclusive.value,
+                                   aDerived->minExclusive.value,
+                                   aDerived->maxInclusive.value,
+                                   aDerived->minInclusive.value,
+                                   &aDerived->enumerationList,
+                                   &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_FLOAT: {
-      rv = ValidateBuiltinTypeFloat(aNodeValue, totalDigits, maxExclusive,
-                                    minExclusive, maxInclusive, minInclusive,
-                                    &enumerationList, &isValid);
+      rv = ValidateBuiltinTypeFloat(aNodeValue,
+                                    aDerived->totalDigits.value,
+                                    aDerived->maxExclusive.value,
+                                    aDerived->minExclusive.value,
+                                    aDerived->maxInclusive.value,
+                                    aDerived->minInclusive.value,
+                                    &aDerived->enumerationList,
+                                    &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_DECIMAL: {
-      rv = ValidateBuiltinTypeDecimal(aNodeValue, totalDigits, fractionDigits,
-                                      fractionDigitsSet, maxExclusive,
-                                      minExclusive, maxInclusive, minInclusive,
-                                      &enumerationList, &isValid);
+      rv = ValidateBuiltinTypeDecimal(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->fractionDigits.value,
+                                      aDerived->fractionDigits.isDefined,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_ANYURI: {
-      rv = ValidateBuiltinTypeAnyURI(aNodeValue, length, minLength, maxLength,
-                                     &enumerationList, &isValid);
+      rv = ValidateBuiltinTypeAnyURI(aNodeValue,
+                                     aDerived->length.value,
+                                     aDerived->minLength.value,
+                                     aDerived->maxLength.value,
+                                     &aDerived->enumerationList,
+                                     &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_BASE64BINARY: {
-      rv = ValidateBuiltinTypeBase64Binary(aNodeValue, length, isLengthDefined,
-                                           minLength, isMinLengthDefined,
-                                           maxLength, isMaxLengthDefined,
-                                           &enumerationList, &isValid);
+      rv = ValidateBuiltinTypeBase64Binary(aNodeValue,
+                                           aDerived->length.value,
+                                           aDerived->length.isDefined,
+                                           aDerived->minLength.value,
+                                           aDerived->minLength.isDefined,
+                                           aDerived->maxLength.value,
+                                           aDerived->maxLength.isDefined,
+                                           &aDerived->enumerationList,
+                                           &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY: {
-      rv = ValidateBuiltinTypeHexBinary(aNodeValue, length, isLengthDefined,
-                                        minLength, isMinLengthDefined,
-                                        maxLength, isMaxLengthDefined,
-                                        &enumerationList, &isValid);
+      rv = ValidateBuiltinTypeHexBinary(aNodeValue,
+                                        aDerived->length.value,
+                                        aDerived->length.isDefined,
+                                        aDerived->minLength.value,
+                                        aDerived->minLength.isDefined,
+                                        aDerived->maxLength.value,
+                                        aDerived->maxLength.isDefined,
+                                        &aDerived->enumerationList,
+                                        &isValid);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_QNAME: {
-      rv = ValidateBuiltinTypeQName(aNodeValue, length, isLengthDefined,
-                                    minLength, isMinLengthDefined,
-                                    maxLength, isMaxLengthDefined,
-                                    &enumerationList, &isValid);
+      rv = ValidateBuiltinTypeQName(aNodeValue,
+                                    aDerived->length.value,
+                                    aDerived->length.isDefined,
+                                    aDerived->minLength.value,
+                                    aDerived->minLength.isDefined,
+                                    aDerived->maxLength.value,
+                                    aDerived->maxLength.isDefined,
+                                    &aDerived->enumerationList,
+                                    &isValid);
       break;
     }
 
@@ -672,10 +697,11 @@ nsSchemaValidator::ValidateRestrictionSimpletype(const nsAString & aNodeValue,
 
   // finally check if a pattern is defined, as all types can be constrained by
   // regexp patterns.
-  if (isValid && !pattern.IsEmpty()) {
+  if (isValid && aDerived->pattern.isDefined) {
     // check if the pattern matches
     nsCOMPtr<nsISchemaValidatorRegexp> regexp = do_GetService(kREGEXP_CID);
-    rv = regexp->RunRegexp(aNodeValue, pattern, "g", &isValid);
+    rv = regexp->RunRegexp(aNodeValue, aDerived->pattern.value, "g", &isValid);
+    NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef PR_LOGGING
     LOG(("  Checking Regular Expression"));
@@ -712,6 +738,7 @@ nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
 #endif
 
   PRBool isValid = PR_FALSE;
+
   switch(builtinTypeValue) {
     case nsISchemaBuiltinType::BUILTIN_TYPE_STRING: {
       isValid = PR_TRUE;
@@ -845,8 +872,16 @@ nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
 nsresult
 nsSchemaValidator::ValidateListSimpletype(const nsAString & aNodeValue,
                                           nsISchemaSimpleType *aSchemaSimpleType,
+                                          nsSchemaDerivedSimpleType *aFacets,
                                           PRBool *aResult)
 {
+ /* When a datatype is derived from an list datatype, the following facets apply:
+  * length, maxLength, minLength, enumeration, pattern, whitespace
+  *
+  * The length facets apply to the whole list, ie the number of items in the list.
+  * Patterns are applied to the whole list as well.
+  */
+
   PRBool isValid = PR_FALSE;
 
   nsresult rv;
@@ -861,16 +896,68 @@ nsSchemaValidator::ValidateListSimpletype(const nsAString & aNodeValue,
     nsCStringArray stringArray;
     stringArray.ParseString(NS_ConvertUTF16toUTF8(aNodeValue).get(), " \t\r\n");
 
-    PRInt32 count = stringArray.Count();
-    nsAutoString tmp;
+    PRUint32 count = stringArray.Count();
 
-    for (PRInt32 i=0; i < count; ++i) {
-      CopyUTF8toUTF16(stringArray[i]->get(), tmp);
-      LOG(("  Validating List Item (%d): %s", i, NS_ConvertUTF16toUTF8(tmp).get()));
-      rv = ValidateSimpletype(tmp, listSimpleType, &isValid);
+    // if facets have been provided, check them first
+    PRBool facetsValid = PR_TRUE;
+    if (aFacets) {
+      if (aFacets->length.isDefined) {
+        if (aFacets->length.value != count) {
+          facetsValid = PR_FALSE;
+          LOG(("  Not valid: List is not the right length (%d)",
+               aFacets->length.value));
+        }
+      }
 
-      if (!isValid)
-        break;
+      if (facetsValid && aFacets->maxLength.isDefined) {
+        if (aFacets->maxLength.value < count) {
+          facetsValid = PR_FALSE;
+          LOG(("  Not valid: Length (%d) of the list is too large",
+               aFacets->maxLength.value));
+        }
+      }
+
+      if (facetsValid && aFacets->minLength.isDefined) {
+        if (aFacets->minLength.value > count) {
+          facetsValid = PR_FALSE;
+          LOG(("  Not valid: Length (%d) of the list is too small",
+               aFacets->minLength.value));
+        }
+      }
+
+      if (facetsValid && aFacets->pattern.isDefined) {
+        // check if the pattern matches
+        nsCOMPtr<nsISchemaValidatorRegexp> regexp = do_GetService(kREGEXP_CID);
+        rv = regexp->RunRegexp(aNodeValue, aFacets->pattern.value, "g",
+                               &facetsValid);
+#ifdef PR_LOGGING
+        LOG(("  Checking Regular Expression"));
+        if (facetsValid) {
+          LOG(("    -- pattern validates!"));
+        } else {
+          LOG(("    -- pattern does not validate!"));
+        }
+#endif
+      }
+
+      if (facetsValid && aFacets->enumerationList.Count() > 0) {
+        facetsValid =
+          nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
+                                                    aFacets->enumerationList);
+      }
+    }
+
+    // either no facets passed in or facets validated fine
+    if (facetsValid) {
+      nsAutoString tmp;
+      for (PRUint32 i=0; i < count; ++i) {
+        CopyUTF8toUTF16(stringArray[i]->get(), tmp);
+        LOG(("  Validating List Item (%d): %s", i, NS_ConvertUTF16toUTF8(tmp).get()));
+        rv = ValidateSimpletype(tmp, listSimpleType, &isValid);
+
+        if (!isValid)
+          break;
+      }
     }
   }
 
@@ -887,7 +974,8 @@ nsSchemaValidator::ValidateUnionSimpletype(const nsAString & aNodeValue,
   PRBool isValid = PR_FALSE;
 
   nsresult rv;
-  nsCOMPtr<nsISchemaUnionType> unionType = do_QueryInterface(aSchemaSimpleType, &rv);
+  nsCOMPtr<nsISchemaUnionType> unionType = do_QueryInterface(aSchemaSimpleType,
+                                                             &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISchemaSimpleType> unionSimpleType;
@@ -901,6 +989,50 @@ nsSchemaValidator::ValidateUnionSimpletype(const nsAString & aNodeValue,
 
     LOG(("  Validating Untion Type #%d", i));
     rv = ValidateSimpletype(aNodeValue, unionSimpleType, &isValid);
+
+    if (isValid)
+      break;
+  }
+
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateDerivedUnionSimpletype(const nsAString & aNodeValue,
+                                                  nsSchemaDerivedSimpleType *aDerived,
+                                                  PRBool *aResult)
+{
+  // This method is called when a simple type is derived from a union type
+  // via restrictions.  So we walk all the possible types, and pass in the
+  // loaded restriction facets so that they will override the ones defined
+  // my the union type.  We actually have to create a custom
+  // nsSchemaDerivedSimpleType for each type, since we need to change the basetype
+  // and to avoid any new restrictions being added to aDerived.
+
+  PRBool isValid = PR_FALSE;
+
+  nsresult rv;
+  nsCOMPtr<nsISchemaUnionType> unionType = do_QueryInterface(aDerived->mBaseType,
+                                                             &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISchemaSimpleType> unionSimpleType;
+  PRUint32 count;
+  unionType->GetUnionTypeCount(&count);
+
+  // compare against the union simpletypes in order until a match is found
+  for (PRUint32 i=0; i < count; ++i) {
+    rv = unionType->GetUnionType(i, getter_AddRefs(unionSimpleType));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsSchemaDerivedSimpleType derivedType;
+    nsSchemaValidatorUtils::CopyDerivedSimpleType(&derivedType, aDerived);
+
+    derivedType.mBaseType = unionSimpleType;
+
+    LOG(("  Validating Union Type #%d", i));
+    rv = ValidateDerivedSimpletype(aNodeValue, &derivedType, &isValid);
 
     if (isValid)
       break;
@@ -943,7 +1075,8 @@ nsSchemaValidator::ValidateBuiltinTypeString(const nsAString & aNodeValue,
   }
 
   if (isValid && aEnumerationList && (aEnumerationList->Count() > 0)) {
-    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue, *aEnumerationList);
+    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
+                                                        *aEnumerationList);
   }
 
 #ifdef PR_LOGGING
@@ -2652,10 +2785,9 @@ PRBool
 nsSchemaValidator::IsValidSchemaAnyURI(const nsAString & aString)
 {
   PRBool isValid = PR_FALSE;
-  nsresult rv;
 
   nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), aString);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aString);
 
   if (rv == NS_OK)
     isValid = PR_TRUE;
