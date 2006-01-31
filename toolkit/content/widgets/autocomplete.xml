@@ -423,8 +423,7 @@
             case KeyEvent.DOM_VK_BACK_SPACE:
 #endif
             case KeyEvent.DOM_VK_DELETE:
-              if (aEvent.shiftKey)
-                cancel = this.mController.handleDelete();
+              cancel = this.mController.handleDelete();
               break;
             case KeyEvent.DOM_VK_DOWN:
             case KeyEvent.DOM_VK_UP:
