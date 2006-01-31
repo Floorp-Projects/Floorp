@@ -211,6 +211,10 @@ nsIFrame*
 NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 PRBool 
 NS_SVG_TestFeatures (const nsAString& value);
+PRBool 
+NS_SVG_TestsSupported (const nsIAtom *atom);
+PRBool 
+NS_SVG_LangSupported (const nsIAtom *atom);
 extern nsIFrame*
 NS_NewSVGLinearGradientFrame(nsIPresShell *aPresShell, nsIContent *aContent);
 extern nsIFrame*
@@ -7747,6 +7751,30 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     // adding to the undisplayed content map.
     *aHaltProcessing = PR_TRUE;
     return NS_OK;
+  }
+  
+  // See if this element supports conditionals & if it does,
+  // handle it
+  if (((aContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::requiredFeatures) ||
+        aContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::requiredExtensions)) &&
+        NS_SVG_TestsSupported(aTag)) ||
+      (aContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::systemLanguage) &&
+       NS_SVG_LangSupported(aTag))) {
+
+    PRBool hasRequiredExtentions = PR_FALSE;
+    PRBool hasRequiredFeatures = PR_FALSE;
+    PRBool hasSystemLanguage = PR_FALSE;
+    TestSVGConditions(aContent, hasRequiredExtentions, 
+                      hasRequiredFeatures, hasSystemLanguage);
+    // Note that just returning is probably not right.  According
+    // to the spec, <use> is allowed to use an element that fails its
+    // conditional, but because we never actually create the frame when
+    // a conditional fails and when we use GetReferencedFrame to find the
+    // references, things don't work right.
+    // XXX FIXME XXX
+    if (!hasRequiredExtentions || !hasRequiredFeatures ||
+        !hasSystemLanguage)
+      return NS_OK;
   }
 
   // Make sure to keep IsSpecialContent in synch with this code
