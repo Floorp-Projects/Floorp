@@ -561,9 +561,9 @@
   <!-- The main address book three pane -->
   <hbox id="abContent" flex="1">
     <vbox id="dirTreeBox" persist="width collapsed">
-      <hbox id="abDirTreeHeader" align="center">
+      <sidebarheader id="abDirTreeHeader" align="center">
         <label id="abDirTreeHeader-title" value="&dirTreeHeader.label;"/>
-      </hbox>
+      </sidebarheader>
 
       <!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
       <tree id="dirTree" class="abDirectory plain" seltype="single" minwidth="150" flex="1" persist="width"

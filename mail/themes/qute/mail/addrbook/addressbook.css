@@ -234,9 +234,6 @@ toolbar[iconsize="small"] #button-abdelete[disabled] {
 /* ::::: directory pane adjustments ::::: */
 
 #abDirTreeHeader {
-  height: 29px;
-  border: none;
-  background-color: transparent;
 }
 
 #abDirTreeHeader-title {
@@ -262,6 +259,20 @@ treechildren::-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/secure-remote-addrbook.png");
 }
 
+/* Don't use the listbox appearance as that gives us a blue-grey top border
+   that collides with the primary toolbar border */
+#dirTree {
+  -moz-appearance:  none;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  border-left: 1px solid;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+}
+
 #dirTree [sortDirection="ascending"],
 #dirTree [sortDirection="descending"] {
   list-style-image: none;
@@ -270,16 +281,12 @@ treechildren::-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
 /* ::::: splitters ::::: */
 
 #dirTree-splitter {
-  border-left: none;
   border-right: none;
-  border-bottom: none;
-  background-color: transparent;
 }
 
 #results-splitter {
   border: none;
   min-height: 5px;
-  background-color: transparent;
 }
 
 /* ::::: results pane ::::: */
@@ -380,10 +387,4 @@ html|a {
 
 html|p {
   border: none !important;
-}
-
-#searchBox {
-  border-top: 1px solid ThreeDHighlight;
-  height: 30px;
-  background-color: transparent;
 }
