@@ -804,7 +804,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool aState)
   if (aState && !mBounds.IsEmpty()) {
     if (mIsSheet) {
       if (parentWindowRef) {
-        WindowPtr top = GetWindowTop(parentWindowRef);
+        WindowPtr top = parentWindowRef;
         if (piParentWidget) {
           piParentWidget->SetIgnoreDeactivate(PR_TRUE);
 
