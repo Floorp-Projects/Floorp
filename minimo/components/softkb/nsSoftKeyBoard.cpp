@@ -811,7 +811,7 @@ nsSoftKeyBoardService::Observe(nsISupports *aSubject, const char *aTopic, const 
     
     prefBranch->AddObserver("skey.", this, PR_FALSE);
 
-    HandlePref("snav.enabled", prefBranch);
+    HandlePref("skey.enabled", prefBranch);
     return NS_OK;
   }
 
