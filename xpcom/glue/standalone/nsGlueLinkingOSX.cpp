@@ -45,6 +45,8 @@
 #include <string.h>
 #include <stdio.h>
 
+static const mach_header* sXULLibImage;
+
 static void
 ReadDependentCB(const char *aDependentLib)
 {
@@ -53,9 +55,35 @@ ReadDependentCB(const char *aDependentLib)
                       NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
 }
 
+static void*
+LookupSymbol(const mach_header* aLib, const char* aSymbolName)
+{
+    // Try to use |NSLookupSymbolInImage| since it is faster than searching
+    // the global symbol table.  If we couldn't get a mach_header pointer
+    // for the XPCOM dylib, then use |NSLookupAndBindSymbol| to search the
+    // global symbol table (this shouldn't normally happen, unless the user
+    // has called XPCOMGlueStartup(".") and relies on libxpcom.dylib
+    // already being loaded).
+    NSSymbol sym = nsnull;
+    if (aLib) {
+        sym = NSLookupSymbolInImage(aLib, aSymbolName,
+                                 NSLOOKUPSYMBOLINIMAGE_OPTION_BIND |
+                                 NSLOOKUPSYMBOLINIMAGE_OPTION_RETURN_ON_ERROR);
+    } else {
+        if (NSIsSymbolNameDefined(aSymbolName))
+            sym = NSLookupAndBindSymbol(aSymbolName);
+    }
+    if (!sym)
+        return nsnull;
+
+    return NSAddressOfSymbol(sym);
+}
+
 GetFrozenFunctionsFunc
 XPCOMGlueLoad(const char *xpcomFile)
 {
+    const mach_header* lib = nsnull;
+
     if (xpcomFile[0] != '.' || xpcomFile[1] != '\0') {
         char xpcomDir[PATH_MAX];
         if (realpath(xpcomFile, xpcomDir)) {
@@ -64,22 +92,23 @@ XPCOMGlueLoad(const char *xpcomFile)
                 *lastSlash = '\0';
 
                 XPCOMGlueLoadDependentLibs(xpcomDir, ReadDependentCB);
+
+                snprintf(lastSlash, PATH_MAX - strlen(xpcomDir), "/" XUL_DLL);
+
+                sXULLibImage = NSAddImage(xpcomDir,
+                              NSADDIMAGE_OPTION_RETURN_ON_ERROR |
+                              NSADDIMAGE_OPTION_WITH_SEARCHING |
+                              NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
             }
         }
 
-        (void) NSAddImage(xpcomFile,
-                          NSADDIMAGE_OPTION_RETURN_ON_ERROR |
-                          NSADDIMAGE_OPTION_WITH_SEARCHING |
-                          NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
-        // We don't really care if this fails, as long as we can get
-        // NS_GetFrozenFunctions below.
+        lib = NSAddImage(xpcomFile,
+                         NSADDIMAGE_OPTION_RETURN_ON_ERROR |
+                         NSADDIMAGE_OPTION_WITH_SEARCHING |
+                         NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
     }
 
-    if (!NSIsSymbolNameDefined("_NS_GetFrozenFunctions"))
-      return nsnull;
-
-    NSSymbol sym = NSLookupAndBindSymbol("_NS_GetFrozenFunctions");
-    return (GetFrozenFunctionsFunc) NSAddressOfSymbol(sym);
+    return (GetFrozenFunctionsFunc) LookupSymbol(lib, "_NS_GetFrozenFunctions");
 }
 
 void
@@ -96,13 +125,9 @@ XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad *symbols)
         char buffer[512];
         snprintf(buffer, sizeof(buffer), "_%s", symbols->functionName);
 
-        if (!NSIsSymbolNameDefined(buffer)) {
+        *symbols->function = (NSFuncPtr) LookupSymbol(sXULLibImage, buffer);
+        if (!*symbols->function)
             rv = NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
-        }
-        else {
-            NSSymbol sym = NSLookupAndBindSymbol(buffer);
-            *symbols->function = (NSFuncPtr) NSAddressOfSymbol(sym);
-        }
 
         ++symbols;
     }
