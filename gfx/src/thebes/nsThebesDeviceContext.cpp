@@ -605,8 +605,8 @@ nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle,
                                      PRInt32     aEndPage)
 {
     nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
-    thebes->BeginPrinting(nsDependentString(aTitle ? aTitle : NS_L("")),
-                          nsDependentString(aPrintToFileName ? aPrintToFileName : NS_L("")));
+    thebes->BeginPrinting(nsDependentString(aTitle ? aTitle : (PRUnichar*)NS_L("")),
+                          nsDependentString(aPrintToFileName ? aPrintToFileName : (PRUnichar*)NS_L("")));
     return NS_OK;
 }
 
