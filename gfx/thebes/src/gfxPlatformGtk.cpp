@@ -71,84 +71,79 @@ gfxPlatformGtk::gfxPlatformGtk()
 }
 
 gfxASurface*
-gfxPlatformGtk::CreateOffscreenSurface (PRUint32 width,
-                                        PRUint32 height,
-                                        gfxASurface::gfxImageFormat imageFormat,
-                                        PRBool fastPixelAccess)
+gfxPlatformGtk::CreateOffscreenSurface(PRUint32 width,
+                                       PRUint32 height,
+                                       gfxASurface::gfxImageFormat imageFormat)
 {
     gfxASurface *newSurface = nsnull;
 
-    if (fastPixelAccess) {
-        newSurface = new gfxImageSurface(imageFormat, width, height);
+    int bpp, glitzf;
+    int bestbpp = gdk_visual_get_best_depth();
+    switch (imageFormat) {
+        case gfxASurface::ImageFormatARGB32:
+            bpp = 32;
+            glitzf = 0; // GLITZ_STANDARD_ARGB32;
+            break;
+        case gfxASurface::ImageFormatRGB24:
+            bpp = 24;
+            glitzf = 1; // GLITZ_STANDARD_RGB24;
+            break;
+        case gfxASurface::ImageFormatA8:
+            bpp = 8;
+            glitzf = 2; // GLITZ_STANDARD_A8;
+        case gfxASurface::ImageFormatA1:
+            bpp = 1;
+            glitzf = 3; // GLITZ_STANDARD_A1;
+            break;
+        default:
+            return nsnull;
+    }
+
+    if (bestbpp < bpp)
+        bpp = bestbpp;
+
+    if (!UseGlitz()) {
+        GdkPixmap *pixmap = ::gdk_pixmap_new(nsnull, width, height, bpp);
+        gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), gdk_rgb_get_colormap());
+
+        newSurface = new gfxXlibSurface(GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(pixmap)),
+                                        GDK_WINDOW_XWINDOW(GDK_DRAWABLE(pixmap)),
+                                        GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(GDK_DRAWABLE(pixmap))),
+                                        width, height);
+
+        // set up the surface to auto-unref the gdk pixmap when the surface
+        // is released
+        cairo_surface_set_user_data(newSurface->CairoSurface(),
+                                    &cairo_gdk_pixmap_key,
+                                    pixmap,
+                                    do_gdk_pixmap_unref);
     } else {
-        int bpp, glitzf;
-        int bestbpp = gdk_visual_get_best_depth();
-        switch (imageFormat) {
-            case gfxASurface::ImageFormatARGB32:
-                bpp = 32;
-                glitzf = 0; // GLITZ_STANDARD_ARGB32;
-                break;
-            case gfxASurface::ImageFormatRGB24:
-                bpp = 24;
-                glitzf = 1; // GLITZ_STANDARD_RGB24;
-                break;
-            case gfxASurface::ImageFormatA8:
-                bpp = 8;
-                glitzf = 2; // GLITZ_STANDARD_A8;
-            case gfxASurface::ImageFormatA1:
-                bpp = 1;
-                glitzf = 3; // GLITZ_STANDARD_A1;
-                break;
-            default:
-                return nsnull;
-        }
-
-        if (bestbpp < bpp)
-            bpp = bestbpp;
-
-        if (!UseGlitz()) {
-            GdkPixmap *pixmap = ::gdk_pixmap_new(nsnull, width, height, bpp);
-            gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), gdk_rgb_get_colormap());
-
-            newSurface = new gfxXlibSurface(GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(pixmap)),
-                                            GDK_WINDOW_XWINDOW(GDK_DRAWABLE(pixmap)),
-                                            GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(GDK_DRAWABLE(pixmap))),
-                                            width, height);
-
-            // set up the surface to auto-unref the gdk pixmap when the surface
-            // is released
-            cairo_surface_set_user_data (newSurface->CairoSurface(),
-                                         &cairo_gdk_pixmap_key,
-                                         pixmap,
-                                         do_gdk_pixmap_unref);
-        } else {
 #ifdef MOZ_ENABLE_GLITZ
-            glitz_drawable_format_t *gdformat = glitz_glx_find_pbuffer_format
-                (GDK_DISPLAY(),
-                 gdk_x11_get_default_screen(),
-                 0, NULL, 0);
+        glitz_drawable_format_t *gdformat = glitz_glx_find_pbuffer_format
+            (GDK_DISPLAY(),
+             gdk_x11_get_default_screen(),
+             0, NULL, 0);
 
-            glitz_drawable_t *gdraw =
-                glitz_glx_create_pbuffer_drawable (GDK_DISPLAY(),
-                                                   DefaultScreen(GDK_DISPLAY()),
-                                                   gdformat,
-                                                   width,
-                                                   height);
-            glitz_format_t *gformat =
-                glitz_find_standard_format (gdraw, (glitz_format_name_t) glitzf);
+        glitz_drawable_t *gdraw =
+            glitz_glx_create_pbuffer_drawable(GDK_DISPLAY(),
+                                              DefaultScreen(GDK_DISPLAY()),
+                                              gdformat,
+                                              width,
+                                              height);
+        glitz_format_t *gformat =
+            glitz_find_standard_format(gdraw, (glitz_format_name_t)glitzf);
 
-            glitz_surface_t *gsurf =
-                glitz_surface_create (gdraw,
-                                      gformat,
-                                      width,
-                                      height,
-                                      0,
-                                      NULL);
+        glitz_surface_t *gsurf =
+            glitz_surface_create(gdraw,
+                                 gformat,
+                                 width,
+                                 height,
+                                 0,
+                                 NULL);
 
-            glitz_surface_attach (gsurf, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
-            newSurface = new gfxGlitzSurface (gdraw, gsurf, PR_TRUE);
+        glitz_surface_attach(gsurf, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
+        newSurface = new gfxGlitzSurface(gdraw, gsurf, PR_TRUE);
 #endif
-        }
     }
 
     return newSurface;
@@ -173,10 +168,10 @@ void
 gfxPlatformGtk::SetSurfaceGdkWindow(gfxASurface *aSurf,
                                     GdkWindow *win)
 {
-    cairo_surface_set_user_data (aSurf->CairoSurface(),
-                                 &cairo_gdk_window_key,
-                                 win,
-                                 nsnull);
+    cairo_surface_set_user_data(aSurf->CairoSurface(),
+                                &cairo_gdk_window_key,
+                                win,
+                                nsnull);
 }
 
 // this is in nsFontConfigUtils.h

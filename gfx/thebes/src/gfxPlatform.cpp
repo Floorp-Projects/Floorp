@@ -38,7 +38,7 @@
 #include "gfxPlatform.h"
 
 #if defined(XP_WIN)
-//#include "gfxPlatformWindows.h"
+#include "gfxWindowsPlatform.h"
 #elif defined(XP_MACOSX)
 #include "gfxPlatformMac.h"
 #elif defined(MOZ_WIDGET_GTK2)
@@ -57,8 +57,7 @@ gfxPlatform::GetPlatform()
 {
     if (!gPlatform) {
 #if defined(XP_WIN)
-//        gPlatform = new gfxPlatformWindows;
-        return nsnull;
+        gPlatform = new gfxWindowsPlatform;
 #elif defined(XP_MACOSX)
         gPlatform = new gfxPlatformMac;
 #elif defined(MOZ_WIDGET_GTK2)

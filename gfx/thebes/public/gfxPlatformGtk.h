@@ -52,8 +52,7 @@ public:
 
     gfxASurface *CreateOffscreenSurface(PRUint32 width,
                                         PRUint32 height,
-                                        gfxASurface::gfxImageFormat imageFormat,
-                                        PRBool fastPixelAccess);
+                                        gfxASurface::gfxImageFormat imageFormat);
 
     GdkDrawable *GetSurfaceGdkDrawable(gfxASurface *aSurf);
 

@@ -80,6 +80,17 @@ gfxWindowsFont::~gfxWindowsFont()
     cairo_scaled_font_destroy(mScaledFont);
 }
 
+void
+gfxWindowsFont::UpdateFonts(cairo_t *cr)
+{
+    cairo_font_face_destroy(mFontFace);
+    cairo_scaled_font_destroy(mScaledFont);
+    
+    mFontFace = MakeCairoFontFace();
+    NS_ASSERTION(mFontFace, "Failed to make font face");
+    mScaledFont = MakeCairoScaledFont(nsnull);
+    NS_ASSERTION(mScaledFont, "Failed to make scaled font");
+}
 
 cairo_font_face_t *
 gfxWindowsFont::MakeCairoFontFace()
@@ -96,8 +107,6 @@ gfxWindowsFont::MakeCairoFontFace()
 cairo_scaled_font_t *
 gfxWindowsFont::MakeCairoScaledFont(cairo_t *cr)
 {
-    //    cairo_win32_set_global_font_dc(mDC);
-
     cairo_scaled_font_t *font = nsnull;
 
     cairo_matrix_t sizeMatrix, ctm;
@@ -352,6 +361,7 @@ TRY_AGAIN_SAME_SCRIPT:
         SaveDC(aDC);
 
         gfxWindowsFont *currentFont = static_cast<gfxWindowsFont*>(mGroup->mFonts[fontIndex]);
+        currentFont->UpdateFonts(cr);
         fontFace = currentFont->CairoFontFace();
         scaledFont = currentFont->CairoScaledFont();
 

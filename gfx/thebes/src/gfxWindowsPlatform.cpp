@@ -12,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Oracle Corporation code.
+ * The Original Code is Mozilla Foundation code.
  *
- * The Initial Developer of the Original Code is Oracle Corporation.
+ * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,28 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_WINDOWSSURFACE_H
-#define GFX_WINDOWSSURFACE_H
+#include "gfxWindowsPlatform.h"
 
-#include "gfxASurface.h"
+#include "gfxImageSurface.h"
+#include "gfxWindowsSurface.h"
 
-#include <cairo-win32.h>
+gfxWindowsPlatform::gfxWindowsPlatform()
+{
+}
 
-class NS_EXPORT gfxWindowsSurface : public gfxASurface {
-    THEBES_DECL_ISUPPORTS_INHERITED
+gfxASurface*
+gfxWindowsPlatform::CreateOffscreenSurface(PRUint32 width,
+                                           PRUint32 height,
+                                           gfxASurface::gfxImageFormat imageFormat)
+{
+    return new gfxWindowsSurface(nsnull, width, height);
+}
 
-public:
-    gfxWindowsSurface(HWND wnd);
-    gfxWindowsSurface(HDC dc, PRBool deleteDC = PR_FALSE);
-    gfxWindowsSurface(HDC dc, unsigned long width, unsigned long height);
-    virtual ~gfxWindowsSurface();
-
-    HDC GetDC() { return mDC; }
-private:
-    PRBool mOwnsDC;
-    HDC mDC;
-    HWND mWnd;
-    HBITMAP mOrigBitmap;
-};
-
-#endif /* GFX_WINDOWSSURFACE_H */
+nsresult
+gfxWindowsPlatform::GetFontList(const nsACString& aLangGroup,
+                                const nsACString& aGenericFamily,
+                                nsStringArray& aListOfFonts)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
