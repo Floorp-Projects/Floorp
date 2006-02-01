@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.27 2006/01/12 23:46:31 wtchang%redhat.com Exp $ */
+/* $Id: loader.c,v 1.28 2006/02/01 21:18:44 wtchang%redhat.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1630,4 +1630,23 @@ RNG_SystemInfoForRNG(void)
       return ;
   (vector->p_RNG_SystemInfoForRNG)();
 
+}
+
+SECStatus
+FIPS186Change_GenerateX(unsigned char *XKEY, const unsigned char *XSEEDj,
+                        unsigned char *x_j)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_FIPS186Change_GenerateX)(XKEY, XSEEDj, x_j);
+}
+
+SECStatus
+FIPS186Change_ReduceModQForDSA(const unsigned char *w,
+                               const unsigned char *q,
+                               unsigned char *xj)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_FIPS186Change_ReduceModQForDSA)(w, q, xj);
 }

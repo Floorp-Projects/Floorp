@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.13 2005/09/21 03:01:49 nelsonb%netscape.com Exp $ */
+/* $Id: ldvector.c,v 1.14 2006/02/01 21:18:44 wtchang%redhat.com Exp $ */
 
 #include "loader.h"
 #include "alghmac.h"
@@ -222,6 +222,11 @@ static const struct FREEBLVectorStr vector =
     RNG_SystemInfoForRNG,
 
     /* End of Version 3.008. */
+
+    FIPS186Change_GenerateX,
+    FIPS186Change_ReduceModQForDSA,
+
+    /* End of Version 3.009. */
 };
 
 const FREEBLVector * 

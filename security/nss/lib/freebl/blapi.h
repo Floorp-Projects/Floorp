@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.23 2005/09/07 02:47:16 saul.edwards%sun.com Exp $ */
+/* $Id: blapi.h,v 1.24 2006/02/01 21:18:43 wtchang%redhat.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -983,6 +983,50 @@ extern SECStatus RNG_GenerateGlobalRandomBytes(void *dest, size_t len);
 extern void  RNG_RNGShutdown(void);
 
 extern void RNG_SystemInfoForRNG(void);
+
+/*
+ * FIPS 186-2 Change Notice 1 RNG Algorithm 1, used both to
+ * generate the DSA X parameter and as a generic purpose RNG.
+ *
+ * The following two FIPS186Change functions are needed for
+ * NIST RNG Validation System.
+ */
+
+/*
+ * Given the seed-key and the seed, generate the random output.
+ *
+ * Parameters:
+ *   XKEY [input/output]: the state of the RNG (seed-key)
+ *   XSEEDj [input]: optional user input (seed)
+ *   x_j [output]: output of the RNG
+ *
+ * Return value:
+ * This function usually returns SECSuccess.  The only reason
+ * this function returns SECFailure is that XSEEDj equals
+ * XKEY, including the intermediate XKEY value between the two
+ * iterations.  (This test is actually a FIPS 140-2 requirement
+ * and not required for FIPS algorithm testing, but it is too
+ * hard to separate from this function.)  If this function fails,
+ * XKEY is not updated, but some data may have been written to
+ * x_j, which should be ignored.
+ */
+extern SECStatus
+FIPS186Change_GenerateX(unsigned char *XKEY,
+                        const unsigned char *XSEEDj,
+                        unsigned char *x_j);
+
+/*
+ * When generating the DSA X parameter, we generate 2*GSIZE bytes
+ * of random output and reduce it mod q.
+ *
+ * Input: w, 2*GSIZE bytes
+ *        q, DSA_SUBPRIME_LEN bytes
+ * Output: xj, DSA_SUBPRIME_LEN bytes
+ */
+extern SECStatus
+FIPS186Change_ReduceModQForDSA(const unsigned char *w,
+                               const unsigned char *q,
+                               unsigned char *xj);
 
 /* Generate PQGParams and PQGVerify structs.
  * Length of seed and length of h both equal length of P. 
