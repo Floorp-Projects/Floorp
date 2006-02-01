@@ -1644,6 +1644,18 @@ ShouldScrollRootView(nsPresContext* aPresContext)
   return (aPresContext->Type() == nsPresContext::eContext_PrintPreview);
 }
 
+static nsIFrame*
+GetParentFrameToScroll(nsPresContext* aPresContext, nsIFrame* aFrame)
+{
+  if (!aPresContext || !aFrame)
+    return nsnull;
+
+  if (aFrame->GetStyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED)
+    return aPresContext->GetPresShell()->GetRootScrollFrame();
+
+  return aFrame->GetParent();
+}
+
 nsresult
 nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
                                   nsIFrame* aTargetFrame,
@@ -1750,7 +1762,8 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
   nsIFrame* scrollFrame = aTargetFrame;
   PRBool passToParent = !scrollRootView;
 
-  for( ; scrollFrame && passToParent; scrollFrame = scrollFrame->GetParent()) {
+  for (; scrollFrame && passToParent;
+       scrollFrame = GetParentFrameToScroll(aPresContext, scrollFrame)) {
     // Check whether the frame wants to provide us with a scrollable view.
     scrollView = nsnull;
     nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(scrollFrame);
