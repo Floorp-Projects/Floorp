@@ -142,7 +142,7 @@ var CommandUpdater = {
     else
       element.setAttribute("disabled", "true");
   },
-  
+
   /**
    * Performs the action associated with a specified command using the most
    * relevant controller.
@@ -154,12 +154,70 @@ var CommandUpdater = {
     if (!controller)
       return;
     controller.doCommand(command);
+  }, 
+  
+  /**
+   * Changes the label attribute for the specified command.
+   * @param   command
+   *          The command to update.
+   * @param   labelAttribute
+   *          The label value to use.
+   */
+  setMenuValue: function(command, labelAttribute) {
+    var commandNode = top.document.getElementById(command);
+    if (commandNode)
+    {
+      var label = commandNode.getAttribute(labelAttribute);
+      if ( label )
+        commandNode.setAttribute('label', label);
+    }
+  },
+  
+  /**
+   * Changes the accesskey attribute for the specified command.
+   * @param   command
+   *          The command to update.
+   * @param   valueAttribute
+   *          The value attribute to use.
+   */
+  setAccessKey: function(command, valueAttribute) {
+    var commandNode = top.document.getElementById(command);
+    if (commandNode)
+    {
+      var value = commandNode.getAttribute(valueAttribute);
+      if ( value )
+        commandNode.setAttribute('accesskey', value);
+    }
+  },
+
+  /**
+   * Inform all the controllers attached to a node that an event has occurred
+   * (e.g. the tree controllers need to be informed of blur events so that they can change some of the
+   * menu items back to their default values)
+   * @param   node
+   *          The node receiving the event
+   * @param   event
+   *          The event.
+   */
+  onEvent: function(node, event) {
+    var numControllers = node.controllers.getControllerCount();
+    var controller;
+
+    for ( var controllerIndex = 0; controllerIndex < numControllers; controllerIndex++ )
+    {
+      controller = node.controllers.getControllerAt(controllerIndex);
+      if ( controller )
+        controller.onEvent(event);
+    }
   }  
 };
 // Shim for compatibility with existing code. 
 function goDoCommand(command) { CommandUpdater.doCommand(command); }
 function goUpdateCommand(command) { CommandUpdater.updateCommand(command); }
 function goSetCommandEnabled(command, enabled) { CommandUpdater.enableCommand(command, enabled); }
+function goSetMenuValue(command, labelAttribute) { CommandUpdater.setMenuValue(command, labelAttribute); }
+function goSetAccessKey(command, valueAttribute) { CommandUpdater.setAccessKey(command, valueAttribute); }
+function goOnEvent(node, event) { CommandUpdater.onEvent(node, event); }
 
 function visitLink(aEvent) {
   var node = aEvent.target;
