@@ -7,7 +7,7 @@
 #define WCE_INC   "c:/Program Files/Windows CE Tools/wce420/POCKET PC 2003/Include/Armv4/"
 #define WCE_LIB   "c:/Program Files/Windows CE Tools/wce420/POCKET PC 2003/Lib/Armv4/"
 
-#define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/static/ARMV4Dbg/"
+#define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/static/ARMV4Rel/"
 #define SHUNT_INC TOPSRCDIR "/build/wince/shunt/include/"
 
 #define ASM_PATH WCE_BIN "armasm.exe"
