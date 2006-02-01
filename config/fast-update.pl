@@ -46,7 +46,7 @@ if (!$hours) {
 # if there is no such file, this will all just fail, which is ok
 open REPOSITORY, "<CVS/Repository";
 $rootdir = <REPOSITORY>;
-chop $rootdir;
+$rootdir =~ tr/\r\n//d; # Remove newlines
 close REPOSITORY;
 
 # try to guess the current branch by looking at all the
