@@ -94,16 +94,21 @@ var gDownloadsPane = {
   
   _getSpecialFolderKey: function (aFolderType)
   {
+    if (aFolderType == "Desktop")
+      return "Desk";
+
+    if (aFolderType != "Downloads")
+      throw "ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'";
+
 #ifdef XP_WIN
-    return aFolderType == "Desktop" ? "DeskP" : "Pers";
-#endif
+    return "Pers";
+#else
 #ifdef XP_MACOSX
-    return aFolderType == "Desktop" ? "UsrDsk" : "UsrDocs";
-#endif
-#ifdef XP_OS2
-    return aFolderType == "Desktop" ? "Desk" : "Home";
-#endif
+    return "UsrDocs";
+#else
     return "Home";
+#endif
+#endif
   },
 
   _getDownloadsFolder: function (aFolder)
