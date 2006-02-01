@@ -91,17 +91,12 @@ public:
     /* utility functions */
     gfxASurface *GetThebesSurface(void) { return mSurface; }
     PRInt32 GetDepth() { /* XXX */ return 24; }
-    nsNativeWidget GetNativeWidget(void) { return mNativeWidget; }
 
     nsresult PushFilter(const nsIntRect& aRect, PRBool aAreaIsOpaque, float aOpacity);
     void PopFilter();
 private:
     nsRefPtr<gfxASurface> mSurface;
     nsThebesDeviceContext *mDC;
-    nsNativeWidget mNativeWidget;
-#ifdef XP_WIN
-    nsIWidget *mWidget;
-#endif
 
     PRUint32 mWidth, mHeight;
 };

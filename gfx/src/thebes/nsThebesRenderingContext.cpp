@@ -750,8 +750,6 @@ nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
     {
         if (mWidget && mDrawingSurface == mLocalDrawingSurface)
             return mWidget->GetNativeData(NS_NATIVE_WIDGET);
-        else if (mDrawingSurface != mLocalDrawingSurface)
-            return mDrawingSurface->GetNativeWidget();
     }
     if (aType == NATIVE_THEBES_CONTEXT)
         return mThebes;

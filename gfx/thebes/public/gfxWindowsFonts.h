@@ -54,6 +54,7 @@ public:
 
     cairo_font_face_t *CairoFontFace() { return mFontFace; }
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
+    void UpdateFonts(cairo_t *cr);
 
 protected:
     cairo_font_face_t *MakeCairoFontFace();

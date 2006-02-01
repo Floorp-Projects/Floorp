@@ -12,10 +12,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Oracle Corporation code.
+ * The Original Code is Mozilla Foundation code.
  *
- * The Initial Developer of the Original Code is Oracle Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,28 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_WINDOWSSURFACE_H
-#define GFX_WINDOWSSURFACE_H
+#ifndef GFX_WINDOWS_PLATFORM_H
+#define GFX_WINDOWS_PLATFORM_H
 
-#include "gfxASurface.h"
+#include "gfxPlatform.h"
 
-#include <cairo-win32.h>
-
-class NS_EXPORT gfxWindowsSurface : public gfxASurface {
-    THEBES_DECL_ISUPPORTS_INHERITED
-
+class NS_EXPORT gfxWindowsPlatform : public gfxPlatform {
 public:
-    gfxWindowsSurface(HWND wnd);
-    gfxWindowsSurface(HDC dc, PRBool deleteDC = PR_FALSE);
-    gfxWindowsSurface(HDC dc, unsigned long width, unsigned long height);
-    virtual ~gfxWindowsSurface();
+    gfxWindowsPlatform();
 
-    HDC GetDC() { return mDC; }
-private:
-    PRBool mOwnsDC;
-    HDC mDC;
-    HWND mWnd;
-    HBITMAP mOrigBitmap;
+    static gfxWindowsPlatform *GetPlatform() {
+        return (gfxWindowsPlatform*) gfxPlatform::GetPlatform();
+    }
+
+    gfxASurface *CreateOffscreenSurface(PRUint32 width,
+                                        PRUint32 height,
+                                        gfxASurface::gfxImageFormat imageFormat);
+
+    nsresult GetFontList(const nsACString& aLangGroup,
+                         const nsACString& aGenericFamily,
+                         nsStringArray& aListOfFonts);
+
 };
 
-#endif /* GFX_WINDOWSSURFACE_H */
+#endif /* GFX_WINDOWS_PLATFORM_H */

@@ -39,8 +39,9 @@ EXTRA_DSO_LDOPTS += \
 
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
-CPPSRCS	+= 	gfxWindowsSurface.cpp \
-		gfxWindowsFonts.cpp \
+CPPSRCS	+= 	gfxWindowsFonts.cpp \
+		gfxWindowsPlatform.cpp \
+		gfxWindowsSurface.cpp \
 		$(NULL)
 
 _OS_LIBS	= usp10

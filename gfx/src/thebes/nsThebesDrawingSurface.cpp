@@ -41,9 +41,7 @@
 
 #include "nsMemory.h"
 
-#if defined(MOZ_ENABLE_GTK2)
 #include "gfxPlatform.h"
-#endif
 
 #include "gfxImageSurface.h"
 
@@ -51,13 +49,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include "gfxXlibSurface.h"
-# ifdef MOZ_ENABLE_GLITZ
-# include "gfxGlitzSurface.h"
-# include "glitz-glx.h"
 # endif
-#elif XP_WIN
-#include "gfxWindowsSurface.h"
-#endif
 
 #include <stdlib.h>
 
@@ -65,9 +57,6 @@ NS_IMPL_ISUPPORTS1(nsThebesDrawingSurface, nsIDrawingSurface)
 
 nsThebesDrawingSurface::nsThebesDrawingSurface()
 {
-#ifdef XP_WIN
-    mWidget = nsnull;
-#endif
 }
 
 nsThebesDrawingSurface::~nsThebesDrawingSurface()
@@ -87,7 +76,6 @@ nsThebesDrawingSurface::Init(nsThebesDeviceContext *aDC, gfxASurface *aSurface)
     mWidth = 0;
     mHeight = 0;
 
-    mNativeWidget = nsnull;
     return NS_OK;
 }
 
@@ -102,30 +90,11 @@ nsThebesDrawingSurface::Init(nsThebesDeviceContext *aDC, PRUint32 aWidth, PRUint
     mWidth = aWidth;
     mHeight = aHeight;
     mDC = aDC;
-    mNativeWidget = nsnull;
 
-#if defined(MOZ_ENABLE_GTK2)
+    // XXX Performance Problem
+    // because we don't pass aDC->GetWidget() (a HWND on Windows) to this function,
+    // we get DIBs instead of DDBs.
     mSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(aWidth, aHeight, gfxImageSurface::ImageFormatARGB32);
-#elif XP_WIN
-    if (aFastAccess) {
-        mSurface = new gfxImageSurface(gfxImageSurface::ImageFormatARGB32, aWidth, aHeight);
-      } else {
-        // this may or may not be null.  this is currently only called from a spot
-        // where this will be a hwnd
-        nsNativeWidget widget = aDC->GetWidget();
-        HDC dc = nsnull;
-        if (widget)
-            dc = GetDC((HWND)widget);
-
-        mSurface = new gfxWindowsSurface(dc, aWidth, aHeight);
-
-        if (widget)
-            ReleaseDC((HWND)widget, dc);
-
-    }
-#else
-#error Write me!
-#endif
 
     return NS_OK;
 }

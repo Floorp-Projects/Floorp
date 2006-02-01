@@ -32,6 +32,7 @@ endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
 EXPORTS	+=	gfxWindowsFonts.h \
+		gfxWindowsPlatform.h \
 		gfxWindowsSurface.h
 
 ifdef MOZ_ENABLE_GLITZ
