@@ -542,7 +542,7 @@ NS_IMETHODIMP
 nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                            nsIDeviceContext *&aContext)
 {
-#if 1
+#if 0
     nsThebesDeviceContext *newDevCon = new nsThebesDeviceContext();
 
     if (newDevCon) {
