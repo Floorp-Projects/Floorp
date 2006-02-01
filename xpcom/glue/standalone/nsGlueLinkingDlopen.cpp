@@ -94,7 +94,7 @@ XPCOMGlueLoad(const char *xpcomFile)
 
             XPCOMGlueLoadDependentLibs(xpcomDir, ReadDependentCB);
 
-            sprintf(lastSlash, "/" XUL_DLL);
+            snprintf(lastSlash, MAXPATHLEN - strlen(xpcomDir), "/" XUL_DLL);
 
             sXULLibHandle = dlopen(xpcomDir, RTLD_GLOBAL | RTLD_LAZY);
         }
