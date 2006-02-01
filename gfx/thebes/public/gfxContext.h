@@ -504,12 +504,15 @@ public:
      */
     void PopFilter();
 
-
     /**
-     * ...
-     *
+     * Printing functions
      */
-    void ShowPage();
+    // XXX look and see if the arguments here should be a seperate object
+    void BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
+    void EndPrinting();
+    void AbortPrinting();
+    void BeginPage();
+    void EndPage();
 
 private:
     cairo_t *mCairo;
