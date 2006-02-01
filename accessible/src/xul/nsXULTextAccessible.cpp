@@ -110,7 +110,7 @@ NS_IMETHODIMP nsXULTooltipAccessible::GetRole(PRUint32 *_retval)
  * For XUL text links
  */
 nsXULLinkAccessible::nsXULLinkAccessible(nsIDOMNode *aDomNode, nsIWeakReference *aShell):
-nsXULTextAccessible(aDomNode, aShell)
+nsLinkableAccessible(aDomNode, aShell)
 {
 }
 

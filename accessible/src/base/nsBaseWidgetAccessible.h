@@ -91,6 +91,7 @@ public:
   NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD TakeFocus();
   NS_IMETHOD GetKeyboardShortcut(nsAString& _retval);
+  NS_IMETHOD Init();
   NS_IMETHOD Shutdown();
 
 protected:

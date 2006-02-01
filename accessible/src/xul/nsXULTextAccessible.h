@@ -40,6 +40,7 @@
 #ifndef _nsXULTextAccessible_H_
 #define _nsXULTextAccessible_H_
 
+#include "nsBaseWidgetAccessible.h"
 #include "nsTextAccessibleWrap.h"
 
 class nsIWeakReference;
@@ -64,7 +65,7 @@ public:
   NS_IMETHOD GetRole(PRUint32 *_retval); 
 };
 
-class nsXULLinkAccessible : public nsXULTextAccessible
+class nsXULLinkAccessible : public nsLinkableAccessible
 {
 
 public:
