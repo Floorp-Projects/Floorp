@@ -3937,6 +3937,17 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
 
 	    crv = NSC_Encrypt(hSession, (CK_BYTE_PTR)pText.data, 
 		              pText.len, pWrappedKey, pulWrappedKeyLen);
+	    /* always force a finalize, both on errors and when
+	     * we are just getting the size */
+	    if (crv != CKR_OK || pWrappedKey == NULL) {
+	    	CK_RV lcrv ;
+		lcrv = sftk_GetContext(hSession,&context,
+				       SFTK_ENCRYPT,PR_FALSE,NULL);
+		sftk_SetContextByType(session, SFTK_ENCRYPT, NULL);
+	    	if (lcrv == CKR_OK && context) {
+		    sftk_FreeContext(context);
+		}
+    	    }
 
 	    if (pText.data != (unsigned char *)attribute->attrib.pValue) 
 	    	PORT_ZFree(pText.data, pText.len);
@@ -3947,6 +3958,7 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
 	case CKO_PRIVATE_KEY:
 	    {
 		SECItem *bpki = sftk_PackagePrivateKey(key, &crv);
+		SFTKSessionContext *context = NULL;
 
 		if(!bpki) {
 		    break;
@@ -3962,6 +3974,16 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
 
 		crv = NSC_Encrypt(hSession, bpki->data, bpki->len,
 					pWrappedKey, pulWrappedKeyLen);
+		/* always force a finalize */
+		if (crv != CKR_OK || pWrappedKey == NULL) {
+	    	    CK_RV lcrv ;
+		    lcrv = sftk_GetContext(hSession,&context,
+					   SFTK_ENCRYPT,PR_FALSE,NULL);
+		    sftk_SetContextByType(session, SFTK_ENCRYPT, NULL);
+	    	    if (lcrv == CKR_OK && context)  {
+			sftk_FreeContext(context);
+		    }
+		}
 		SECITEM_ZfreeItem(bpki, PR_TRUE);
 		break;
 	    }
