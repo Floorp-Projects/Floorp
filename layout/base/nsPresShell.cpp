@@ -5466,7 +5466,7 @@ PresShell::RenderOffscreen(nsRect aRect, PRBool aUntrusted,
     scrollingView->GetScrollPosition(x, y);
     localcx->Translate(x, y);
     r.MoveBy(-x, -y);
-    builder.SetIgnoreScrollFrame(GetRootScrollFrame(rootFrame));
+    builder.SetIgnoreScrollFrame(GetRootScrollFrame());
   }
 
   rv = rootFrame->BuildDisplayListForStackingContext(&builder, r, &list);
