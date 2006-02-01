@@ -292,18 +292,25 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
 #ifndef WINCE
     case WM_MOUSEACTIVATE: {
-      // This seems to be the only way we're
-      // notified when a child window that doesn't have this handler proc
-      // (read as: windows created by plugins like Adobe Acrobat)
-      // has been activated via clicking.
-      // should be handled here because some plugins won't forward
-      // messages to original WinProc.
-      nsCOMPtr<nsIWidget> widget;
-      win->GetPluginWidget(getter_AddRefs(widget));
-      if (widget) {
-        nsFocusEvent event(PR_TRUE, NS_PLUGIN_ACTIVATE, widget);
-        nsEventStatus status;
-        widget->DispatchEvent(&event, status);
+      // If a child window of this plug-in is already focused,
+      // don't focus the parent to avoid focus dance.
+      // The following WM_SETFOCUS message will give the focus
+      // to the appropriate window anyway.
+      HWND focusedWnd = ::GetFocus();
+      if (!::IsChild((HWND)win->window, focusedWnd)) {
+        // This seems to be the only way we're
+        // notified when a child window that doesn't have this handler proc
+        // (read as: windows created by plugins like Adobe Acrobat)
+        // has been activated via clicking.
+        // should be handled here because some plugins won't forward
+        // messages to original WinProc.
+        nsCOMPtr<nsIWidget> widget;
+        win->GetPluginWidget(getter_AddRefs(widget));
+        if (widget) {
+          nsFocusEvent event(PR_TRUE, NS_PLUGIN_ACTIVATE, widget);
+          nsEventStatus status;
+          widget->DispatchEvent(&event, status);
+        }
       }
     }
     break;
