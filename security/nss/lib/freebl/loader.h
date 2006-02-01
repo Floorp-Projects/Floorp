@@ -37,14 +37,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.17 2005/09/14 04:12:49 nelsonb%netscape.com Exp $ */
+/* $Id: loader.h,v 1.18 2006/02/01 21:18:44 wtchang%redhat.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0308
+#define FREEBL_VERSION 0x0309
 
 struct FREEBLVectorStr {
 
@@ -449,6 +449,15 @@ struct FREEBLVectorStr {
  void (* p_RNG_SystemInfoForRNG)(void);
 
   /* Version 3.008 came to here */
+
+ SECStatus (* p_FIPS186Change_GenerateX)(unsigned char *XKEY,
+                                         const unsigned char *XSEEDj,
+                                         unsigned char *x_j);
+ SECStatus (* p_FIPS186Change_ReduceModQForDSA)(const unsigned char *w,
+                                                const unsigned char *q,
+                                                unsigned char *xj);
+
+  /* Version 3.009 came to here */
 };
 
 typedef struct FREEBLVectorStr FREEBLVector;
