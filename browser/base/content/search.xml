@@ -389,9 +389,13 @@
 
         doCommand: function (aCommand)
         {
+          // Clear the searchbar and its undo history
+          this.mOuter.value = "";
+          this.mOuter.editor.enableUndo(false);
+          this.mOuter.editor.enableUndo(true);
+
           this.mOuter.formHistSvc.removeEntriesForName(
               this.mOuter.getAttribute("autocompletesearchparam"));
-          this.mOuter.value = "";
         }
       })
       ]]></field>
