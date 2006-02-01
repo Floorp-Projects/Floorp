@@ -40,6 +40,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://calendar/skin/calendar-toolbar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://lightning/skin/lightning.css" type="text/css"?>
 
 <!DOCTYPE overlay 
 [
