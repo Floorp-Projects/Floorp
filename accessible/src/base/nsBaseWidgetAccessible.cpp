@@ -164,7 +164,6 @@ nsLinkableAccessible::nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* 
   mIsLink(PR_FALSE),
   mIsOnclick(PR_FALSE)
 {
-  CacheActionContent();
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsAccessible)
@@ -313,6 +312,12 @@ void nsLinkableAccessible::CacheActionContent()
       mIsOnclick = PR_TRUE;
     }
   }
+}
+
+NS_IMETHODIMP nsLinkableAccessible::Init()
+{
+  CacheActionContent();
+  return nsAccessibleWrap::Init();
 }
 
 NS_IMETHODIMP nsLinkableAccessible::Shutdown()
