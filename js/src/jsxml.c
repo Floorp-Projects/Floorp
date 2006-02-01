@@ -1263,6 +1263,12 @@ enum xml_static_tinyid {
 };
 
 static JSBool
+xml_setting_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    return JS_TRUE;
+}
+
+static JSBool
 xml_setting_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSBool b;
@@ -1282,16 +1288,16 @@ xml_setting_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 static JSPropertySpec xml_static_props[] = {
     {js_ignoreComments_str,     XML_IGNORE_COMMENTS,   JSPROP_PERMANENT,
-                                NULL, xml_setting_setter},
+                                xml_setting_getter, xml_setting_setter},
     {js_ignoreProcessingInstructions_str,
                    XML_IGNORE_PROCESSING_INSTRUCTIONS, JSPROP_PERMANENT,
-                                NULL, xml_setting_setter},
+                                xml_setting_getter, xml_setting_setter},
     {js_ignoreWhitespace_str,   XML_IGNORE_WHITESPACE, JSPROP_PERMANENT,
-                                NULL, xml_setting_setter},
+                                xml_setting_getter, xml_setting_setter},
     {js_prettyPrinting_str,     XML_PRETTY_PRINTING,   JSPROP_PERMANENT,
-                                NULL, xml_setting_setter},
+                                xml_setting_getter, xml_setting_setter},
     {js_prettyIndent_str,       XML_PRETTY_INDENT,     JSPROP_PERMANENT,
-                                NULL, NULL},
+                                xml_setting_getter, NULL},
     {0,0,0,0,0}
 };
 
@@ -1829,23 +1835,44 @@ GetXMLSetting(JSContext *cx, const char *name, jsval *vp)
 }
 
 static JSBool
+FillSettingsCache(JSContext *cx)
+{
+    int i;
+    const char *name;
+    jsval v;
+    JSBool isSet;
+
+    /* Note: XML_PRETTY_INDENT is not a boolean setting. */
+    for (i = XML_IGNORE_COMMENTS; i < XML_PRETTY_INDENT; i++) {
+        name = xml_static_props[i].name;
+        if (!GetXMLSetting(cx, name, &v) || !js_ValueToBoolean(cx, v, &isSet))
+            return JS_FALSE;
+        if (isSet)
+            cx->xmlSettingFlags |= JS_BIT(i);
+        else
+            cx->xmlSettingFlags &= ~JS_BIT(i);
+    }
+
+    cx->xmlSettingFlags |= XSF_CACHE_VALID;
+    return JS_TRUE;
+}
+
+static JSBool
 GetBooleanXMLSetting(JSContext *cx, const char *name, JSBool *bp)
 {
     int i;
-    jsval v;
 
-    if (cx->xmlSettingFlags & XSF_CACHE_VALID) {
-        for (i = 0; xml_static_props[i].name; i++) {
-            if (!strcmp(xml_static_props[i].name, name)) {
-                *bp = (cx->xmlSettingFlags & JS_BIT(i)) != 0;
-                return JS_TRUE;
-            }
+    if (!(cx->xmlSettingFlags & XSF_CACHE_VALID) && !FillSettingsCache(cx))
+        return JS_FALSE;
+
+    for (i = 0; xml_static_props[i].name; i++) {
+        if (!strcmp(xml_static_props[i].name, name)) {
+            *bp = (cx->xmlSettingFlags & JS_BIT(i)) != 0;
+            return JS_TRUE;
         }
-        *bp = JS_FALSE;
-        return JS_TRUE;
     }
-
-    return GetXMLSetting(cx, name, &v) && js_ValueToBoolean(cx, v, bp);
+    *bp = JS_FALSE;
+    return JS_TRUE;
 }
 
 static JSBool
