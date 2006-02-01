@@ -93,6 +93,7 @@ components/libwalletviewers.so
 ; download progress
 components/nsProgressDialog.js
 components/nsHelperAppDlg.js
+components/downloads.xpt
 
 ; spellchecker (may not be present)
 components/libmyspell.so

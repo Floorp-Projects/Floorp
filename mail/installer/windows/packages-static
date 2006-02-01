@@ -152,6 +152,7 @@ bin\components\signonviewer.xpt
 ; download progress
 bin\components\nsHelperAppDlg.js
 bin\components\nsProgressDialog.js
+bin\components\downloads.xpt
 
 ; spellchecker (may not be present)
 bin\components\myspell.dll
