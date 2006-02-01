@@ -526,7 +526,26 @@ void gfxContext::PopFilter()
 
 }
 
-void gfxContext::ShowPage()
+void gfxContext::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
 {
-    cairo_show_page(mCairo);
+    mSurface->BeginPrinting(aTitle, aPrintToFileName);
+}
+
+void gfxContext::EndPrinting()
+{
+    mSurface->EndPrinting();
+}
+void gfxContext::AbortPrinting()
+{
+    mSurface->AbortPrinting();
+}
+void gfxContext::BeginPage()
+{
+    mSurface->BeginPage();
+}
+
+void gfxContext::EndPage()
+{
+    if (NS_FAILED(mSurface->EndPage()))
+        cairo_show_page(mCairo);
 }

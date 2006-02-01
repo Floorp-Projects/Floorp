@@ -42,6 +42,7 @@
 
 #include "gfxTypes.h"
 #include "gfxRect.h"
+#include "nsStringFwd.h"
 
 /**
  * A surface is something you can draw on. Instantiate a subclass of this
@@ -77,6 +78,13 @@ public:
                                            (int) r.pos.x, (int) r.pos.y,
                                            (int) r.size.width, (int) r.size.height);
     }
+
+    /* Printing backend functions */
+    virtual nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName) { return NS_ERROR_NOT_IMPLEMENTED; }
+    virtual nsresult EndPrinting() { return NS_ERROR_NOT_IMPLEMENTED; }
+    virtual nsresult AbortPrinting() { return NS_ERROR_NOT_IMPLEMENTED; }
+    virtual nsresult BeginPage() { return NS_ERROR_NOT_IMPLEMENTED; }
+    virtual nsresult EndPage() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 protected:
     void Init(cairo_surface_t* surface) {

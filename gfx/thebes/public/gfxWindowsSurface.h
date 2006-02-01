@@ -52,6 +52,13 @@ public:
     virtual ~gfxWindowsSurface();
 
     HDC GetDC() { return mDC; }
+
+    nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
+    nsresult EndPrinting();
+    nsresult AbortPrinting();
+    nsresult BeginPage();
+    nsresult EndPage();
+
 private:
     PRBool mOwnsDC;
     HDC mDC;
