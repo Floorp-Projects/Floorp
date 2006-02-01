@@ -236,6 +236,14 @@ class nsPropertyTable
     DeleteAllProperties();
   }
 
+  /**
+   * Function useable as destructor function for property data that is
+   * XPCOM objects. The function will call NS_IF_RELASE on the value
+   * to destroy it.
+   */
+  static void SupportsDtorFunc(void *aObject, nsIAtom *aPropertyName,
+                               void *aPropertyValue, void *aData);
+
   class PropertyList;
 
  private:

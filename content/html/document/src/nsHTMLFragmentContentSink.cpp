@@ -60,6 +60,8 @@
 #include "nsEscape.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsNetUtil.h"
+#include "nsIScriptSecurityManager.h"
 
 //
 // XXX THIS IS TEMPORARY CODE
@@ -146,8 +148,8 @@ public:
   PRInt32 mTextLength;
   PRInt32 mTextSize;
 
-  nsString mBaseHREF;
-  nsString mBaseTarget;
+  nsCOMPtr<nsIURI> mBaseHref;
+  nsCOMPtr<nsIAtom> mBaseTarget;
 
   nsCOMPtr<nsIDocument> mTargetDocument;
   nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
@@ -299,22 +301,48 @@ nsHTMLFragmentContentSink::ProcessBaseTag(nsIContent* aContent)
 {
   nsAutoString value;
   if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
-    mBaseHREF = value;
+    nsCOMPtr<nsIURI> baseHrefURI;
+    nsresult rv = NS_NewURI(getter_AddRefs(baseHrefURI), value, nsnull);
+    if (NS_FAILED(rv))
+      return;
+
+    nsIScriptSecurityManager *securityManager =
+      nsContentUtils::GetSecurityManager();
+
+    rv = securityManager->
+      CheckLoadURIWithPrincipal(mTargetDocument->GetPrincipal(), baseHrefURI,
+                                nsIScriptSecurityManager::STANDARD);
+    if (NS_SUCCEEDED(rv)) {
+      mBaseHref = baseHrefURI;
+    }
   }
   if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
-    mBaseTarget = value;
+    mBaseTarget = do_GetAtom(value);
   }
 }
 
 void
 nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
 {
-  if (aContent) {
-    if (!mBaseHREF.IsEmpty()) {
-      aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseHref, mBaseHREF, PR_FALSE);
+  if (!aContent) {
+    return;
+  }
+
+  nsresult rv;
+  if (mBaseHref) {
+    rv = aContent->SetProperty(nsHTMLAtoms::htmlBaseHref, mBaseHref,
+                               nsPropertyTable::SupportsDtorFunc);
+    if (NS_SUCCEEDED(rv)) {
+      // circumvent nsDerivedSafe
+      NS_ADDREF(NS_STATIC_CAST(nsIURI*, mBaseHref));
     }
-    if (!mBaseTarget.IsEmpty()) {
-      aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseTarget, mBaseTarget, PR_FALSE);
+  }
+  if (mBaseTarget) {
+    rv = aContent->SetProperty(nsHTMLAtoms::htmlBaseTarget, mBaseTarget,
+                               nsPropertyTable::SupportsDtorFunc);
+    if (NS_SUCCEEDED(rv)) {
+      // circumvent nsDerivedSafe
+      NS_ADDREF(NS_STATIC_CAST(nsIAtom*, mBaseTarget));
     }
   }
 }

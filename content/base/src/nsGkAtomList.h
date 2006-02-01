@@ -62,8 +62,6 @@
 //---------------------------------------------------------------------------
 
 GK_ATOM(_empty, "")
-GK_ATOM(_baseHref, "_base_href")
-GK_ATOM(_baseTarget, "_base_target")
 GK_ATOM(mozdirty, "_moz_dirty")
 GK_ATOM(_moz_target, "_moz_target")
 GK_ATOM(menuactive, "_moz-menuactive")
@@ -351,6 +349,8 @@ GK_ATOM(href, "href")
 GK_ATOM(hreflang, "hreflang")
 GK_ATOM(hspace, "hspace")
 GK_ATOM(html, "html")
+GK_ATOM(htmlBaseHref, "html-base-href")
+GK_ATOM(htmlBaseTarget, "html-base-target")
 GK_ATOM(httpEquiv, "http-equiv")
 GK_ATOM(i, "i")
 GK_ATOM(id, "id")
