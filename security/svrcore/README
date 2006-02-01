@@ -46,3 +46,5 @@ The LDAP C SDK tools use svrcore.  They also implemented their
 own PIN object to allow command line PIN entry.  The directory
 server also implemented its own PIN object to allow a watchdog
 process to cache the PIN and restart the server.
+
+See INSTALL for build instructions
