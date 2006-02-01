@@ -54,7 +54,7 @@
       
       <field name="_chevron">null</field>
       <method name="_rebuild">
-        <body><![CDATA[ 
+        <body><![CDATA[
           while (this.hasChildNodes())
             this.removeChild(this.firstChild);
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -66,7 +66,6 @@
             if (PlacesController.nodeIsURI(child)) {
               child = child.QueryInterface(Ci.nsINavHistoryURIResultNode);
               button.setAttribute("url", child.uri);
-              button.setAttribute("image", child.icon.spec);
             } else if (PlacesController.nodeIsContainer(child)) {
               button.setAttribute("type", "menu");
               button.setAttribute("container", "true");
@@ -79,6 +78,8 @@
               popup._result = this._result;
               popup._resultNode = child;
             }
+            if (child.icon)
+              button.setAttribute("image", child.icon.spec);
             button.className = "menuitem-iconic bookmark-item";
             button.node = child;
             this.appendChild(button);
@@ -231,23 +232,20 @@
             if(PlacesController.nodeIsFolder(this.selectedNode)) {
               // If there is a folder selected, the insertion point is the
               // end of the folder.
-              dump("Selected node is folder. ");
               folderId = this.selectedNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
             } else {
               // If there is another type of node selected, the insertion point
               // is after that node.
-              dump("Selected node is node. ");
               index = PlacesController.getIndexOfNode(this.selectedNode)
             }
           }
-          dump("setting insertion point to index " + index + " folderId " + folderId + "\n");
           return new InsertionPoint(folderId, index);
         ]]></getter>
       </property>
       
       <property name="browserWindow" onget="return window;"/>
       
-      <property name="filterTransactions">false</property>
+      <field name="filterTransactions">false</field>
       
       <field name="supportedDropTypes">
         [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
@@ -267,50 +265,57 @@
       <field name="_observer"><![CDATA[({
         _numBatches: 0,
         _self: this,
+        _batchedOperation: false,
         onBeginUpdateBatch: function TB_O_onBeginUpdateBatch() {
           ++this._numBatches;
         },
         onEndUpdateBatch: function TB_O_onEndUpdateBatch() {
-          if (!--this._numBatches)
-            this._self.init();
+          if (!--this._numBatches && this._batchedOperation)
+            this.doRebuild();
         },
         onItemAdded: function TB_O_onItemAdded(bookmark, folder, index) {
-          if (!this._numBatches)
-            this._self.init();
+          if (folder == this._self._bms.toolbarRoot)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onItemRemoved: function TB_O_onItemRemoved(bookmark, folder, index) {
-          if (!this._numBatches)
-            this._self.init();
+          if (folder == this._self._bms.toolbarRoot)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onItemMoved: function TB_O_onItemMoved(bookmark, folder, oldIndex, newIndex) {
-          if (!this._numBatches)
-            this._self.init();
+          if (folder == this._self._bms.toolbarRoot)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onItemChanged: function TB_O_onItemChanged(bookmark, property, value) {
-          if (!this._numBatches)
-            this._self.init();
+          this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onItemVisited: function TB_0_onItemVisited(bookmark, visitId, time) {
           //this._self.init();
         },
-        onItemReplaced: function TB_0_onItemReplaced(filder, item, newItem) {
-          // this._self.init();
+        onItemReplaced: function TB_0_onItemReplaced(folder, item, newItem) {
+          if (folder == this._self._bms.toolbarRoot)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderAdded: function TB_O_onFolderAdded(folder, parent, index) {
-          if (!this._numBatches)
-            this._self.init();
+          if (folder == this._self._bms.toolbarRoot)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderRemoved: function TB_O_onFolderRemoved(folder, parent, index) {
-          if (!this._numBatches)
-            this._self.init();
+          if (folder == this._self._bms.toolbarRoot)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderMoved: function TB_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
-          if (!this._numBatches)
-            this._self.init();
+          if (folder == this._self._bms.toolbarRoot)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderChanged: function TB_O_onFolderChanged(folder, property) {
-          if (!this._numBatches)
-            this._self.init();
+          if (folder == this._self._bms.toolbarRoot)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        },
+        doRebuild: function TB_O_doRebuild() {
+          function hitch(obj, meth) {
+            return function() { meth.apply(obj, arguments); }
+          }
+          setTimeout(hitch(this._self, this._self._rebuild), 1);
         },
       })]]></field>
       <field name="_DNDObserver"><![CDATA[({

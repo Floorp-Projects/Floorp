@@ -92,7 +92,6 @@
                 element.setAttribute("label", child.title);
                 element.setAttribute("url", child.QueryInterface(Ci.nsINavHistoryURIResultNode).uri);
                 element.setAttribute("statustext", child.url);
-                element.setAttribute("image", child.icon.spec);
                 element.className = "menuitem-iconic bookmark-item";
               }
               else if (PlacesController.nodeIsContainer(child)) {
@@ -115,6 +114,8 @@
                 element.node = child;
                 this.appendChild(element);
               }
+              if (child.icon)
+                element.setAttribute("image", child.icon.spec);
             }
           } else {
             var bundle = document.getElementById("placeBundle");
@@ -202,7 +203,7 @@
       
       <property name="browserWindow" onget="return window;"/>
       
-      <property name="filterTransactions">false</property>
+      <field name="filterTransactions">false</field>
       
       <field name="supportedDropTypes">
         [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]

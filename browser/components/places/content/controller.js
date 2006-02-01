@@ -519,7 +519,12 @@ var PlacesController = {
    */
   nodeIsRemoteContainer: function PC_nodeIsRemoteContainer(node) {
     const NHRN = Ci.nsINavHistoryResultNode;
-    return node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER;
+    if (node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER)
+      return true;
+    if (node.type == NHRN.RESULT_TYPE_FOLDER)
+      return asFolder(node).folderType != "";
+    
+    return false;
   },
   
   /**
