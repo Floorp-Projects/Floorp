@@ -542,7 +542,7 @@ NS_IMETHODIMP
 nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                            nsIDeviceContext *&aContext)
 {
-#if 0
+#if 1
     nsThebesDeviceContext *newDevCon = new nsThebesDeviceContext();
 
     if (newDevCon) {
@@ -597,23 +597,6 @@ nsThebesDeviceContext::PrepareDocument(PRUnichar * aTitle,
     return NS_OK;
 }
 
-#ifdef XP_WIN
-static char*
-GetACPString(const nsAString& aStr)
-{
-    int acplen = aStr.Length() * 2 + 1;
-    char * acp = new char[acplen];
-    if(acp) {
-        int outlen = ::WideCharToMultiByte(CP_ACP, 0, 
-                                           PromiseFlatString(aStr).get(),
-                                           aStr.Length(),
-                                           acp, acplen, NULL, NULL);
-        if (outlen > 0)
-            acp[outlen] = '\0';  // null terminate
-    }
-    return acp;
-}
-#endif
 
 NS_IMETHODIMP
 nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle, 
@@ -621,39 +604,9 @@ nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle,
                                      PRInt32     aStartPage, 
                                      PRInt32     aEndPage)
 {
-#ifdef XP_WIN
-#define DOC_TITLE_LENGTH 30
-    nsresult rv = NS_ERROR_GFX_PRINTER_STARTDOC;
-    HDC dc = GetHDC();
-    if (dc) {
-        DOCINFO docinfo;
-
-        nsString titleStr;
-        titleStr = aTitle;
-        if (titleStr.Length() > DOC_TITLE_LENGTH) {
-            titleStr.SetLength(DOC_TITLE_LENGTH-3);
-            titleStr.AppendLiteral("...");
-        }
-        char *title = GetACPString(titleStr);
-
-        char* docName = nsnull;
-        nsAutoString str(aPrintToFileName);
-        if (!str.IsEmpty()) {
-            docName = ToNewCString(str);
-        }
-
-        docinfo.cbSize = sizeof(docinfo);
-        docinfo.lpszDocName = title ? title : "Mozilla Document";
-        docinfo.lpszOutput = docName;
-        docinfo.lpszDatatype = NULL;
-        docinfo.fwType = 0;
-
-        ::StartDoc((HDC)dc, &docinfo);
-        
-        if (title != nsnull) delete [] title;
-        if (docName != nsnull) nsMemory::Free(docName);
-    }
-#endif
+    nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
+    thebes->BeginPrinting(nsDependentString(aTitle ? aTitle : NS_L("")),
+                          nsDependentString(aPrintToFileName ? aPrintToFileName : NS_L("")));
     return NS_OK;
 }
 
@@ -661,11 +614,8 @@ nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle,
 NS_IMETHODIMP
 nsThebesDeviceContext::EndDocument(void)
 {
-#ifdef XP_WIN
-    HDC dc = GetHDC();
-    if (dc)
-        ::EndDoc(dc);
-#endif
+    nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
+    thebes->EndPrinting();
     return NS_OK;
 }
 
@@ -673,12 +623,8 @@ nsThebesDeviceContext::EndDocument(void)
 NS_IMETHODIMP
 nsThebesDeviceContext::AbortDocument(void)
 {
-#ifdef XP_WIN
-    HDC dc = GetHDC();
-    if (dc)
-        ::AbortDoc(dc);
-#endif
-
+    nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
+    thebes->AbortPrinting();
     return NS_OK;
 }
 
@@ -686,38 +632,16 @@ nsThebesDeviceContext::AbortDocument(void)
 NS_IMETHODIMP
 nsThebesDeviceContext::BeginPage(void)
 {
-#ifdef XP_WIN
-    HDC dc = GetHDC();
-    if (dc)
-        ::StartPage(dc);
-#endif
-
+    nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
+    thebes->BeginPage();
     return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsThebesDeviceContext::EndPage(void)
 {
-#ifdef XP_WIN
-    /*
-    if (mDC) {
-        nsRefPtr<gfxWindowsSurface> surface = new gfxWindowsSurface((HDC)mDC);
-        nsRefPtr<gfxContext> context = new gfxContext(surface);
-
-        context->ShowPage();
-    }
-    */
-    HDC dc = GetHDC();
-    if (dc)
-        ::EndPage(dc);
-#else
-    if (mPrintingSurface) {
-        nsRefPtr<gfxContext> context = new gfxContext(mPrintingSurface);
-        context->ShowPage();
-    }
-#endif
-    
+    nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
+    thebes->EndPage();
     return NS_OK;
 }
 
