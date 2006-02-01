@@ -604,9 +604,10 @@ nsThebesDeviceContext::BeginDocument(PRUnichar*  aTitle,
                                      PRInt32     aStartPage, 
                                      PRInt32     aEndPage)
 {
+    static const PRUnichar kEmpty[] = { '\0' };
     nsRefPtr<gfxContext> thebes = new gfxContext(mPrintingSurface);
-    thebes->BeginPrinting(nsDependentString(aTitle ? aTitle : (PRUnichar*)NS_L("")),
-                          nsDependentString(aPrintToFileName ? aPrintToFileName : (PRUnichar*)NS_L("")));
+    thebes->BeginPrinting(nsDependentString(aTitle ? aTitle : kEmpty),
+                          nsDependentString(aPrintToFileName ? aPrintToFileName : kEmpty));
     return NS_OK;
 }
 
