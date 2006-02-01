@@ -157,14 +157,6 @@
   locale/@AB_CD@/communicator/wallet/wallet.properties       (%chrome/communicator/wallet/wallet.properties)
   locale/@AB_CD@/communicator/wallet/SignonViewer.properties (%chrome/communicator/wallet/SignonViewer.properties)
   locale/@AB_CD@/communicator/wallet/SignonViewer.dtd        (%chrome/communicator/wallet/SignonViewer.dtd)
-% locale navigator @AB_CD@ %locale/@AB_CD@/navigator/
-  locale/@AB_CD@/navigator/navigator.properties (%chrome/navigator/navigator.properties)
-% locale navigator-platform @AB_CD@ %locale/@AB_CD@/navigator-platform/
-  locale/@AB_CD@/navigator-platform/win/navigator.properties            (%chrome/navigator-platform/win/navigator.properties)
-  locale/@AB_CD@/navigator-platform/mac/platformNavigationBindings.dtd  (%chrome/navigator-platform/mac/platformNavigationBindings.dtd)
-  locale/@AB_CD@/navigator-platform/mac/navigator.properties            (%chrome/navigator-platform/mac/navigator.properties)
-  locale/@AB_CD@/navigator-platform/unix/platformNavigationBindings.dtd (%chrome/navigator-platform/unix/platformNavigationBindings.dtd)
-  locale/@AB_CD@/navigator-platform/unix/navigator.properties           (%chrome/navigator-platform/unix/navigator.properties)
 + locale/@AB_CD@/global/charset.dtd                 (%chrome/global/charset.dtd)
   locale/@AB_CD@/global-platform/win/nsWindowsHooks.properties (%chrome/global-platform/win/nsWindowsHooks.properties)
 #ifdef MOZ_USE_GENERIC_BRANDING
