@@ -343,8 +343,8 @@ protected:
   PRInt32 mNumOpenIFRAMES;
   nsCOMPtr<nsIRequest> mDummyParserRequest;
 
-  nsString mBaseHREF;
-  nsString mBaseTarget;
+  nsCOMPtr<nsIURI> mBaseHref;
+  nsCOMPtr<nsIAtom> mBaseTarget;
 
   // depth of containment within <noembed>, <noframes> etc
   PRInt32 mInsideNoXXXTag;
@@ -3513,14 +3513,22 @@ HTMLContentSink::TryToScrollToRef()
 void
 HTMLContentSink::AddBaseTagInfo(nsIContent* aContent)
 {
-  if (!mBaseHREF.IsEmpty()) {
-    aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseHref, mBaseHREF,
-                      PR_FALSE);
+  nsresult rv;
+  if (mBaseHref) {
+    rv = aContent->SetProperty(nsHTMLAtoms::htmlBaseHref, mBaseHref,
+                               nsPropertyTable::SupportsDtorFunc);
+    if (NS_SUCCEEDED(rv)) {
+      // circumvent nsDerivedSafe
+      NS_ADDREF(NS_STATIC_CAST(nsIURI*, mBaseHref));
+    }
   }
-
-  if (!mBaseTarget.IsEmpty()) {
-    aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseTarget,
-                      mBaseTarget, PR_FALSE);
+  if (mBaseTarget) {
+    rv = aContent->SetProperty(nsHTMLAtoms::htmlBaseTarget, mBaseTarget,
+                               nsPropertyTable::SupportsDtorFunc);
+    if (NS_SUCCEEDED(rv)) {
+      // circumvent nsDerivedSafe
+      NS_ADDREF(NS_STATIC_CAST(nsIAtom*, mBaseTarget));
+    }
   }
 }
 
@@ -3604,7 +3612,7 @@ HTMLContentSink::ProcessBASEElement(nsGenericHTMLElement* aElement)
         CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), baseHrefURI,
                                   nsIScriptSecurityManager::STANDARD);
       if (NS_SUCCEEDED(rv)) {
-        mBaseHREF = attrValue;
+        mBaseHref = baseHrefURI;
       }
     }
   }
@@ -3616,7 +3624,7 @@ HTMLContentSink::ProcessBASEElement(nsGenericHTMLElement* aElement)
       mDocument->SetBaseTarget(attrValue);
     } else {
       // NAV compatibility quirk
-      mBaseTarget = attrValue;
+      mBaseTarget = do_GetAtom(attrValue);
     }
   }
 }

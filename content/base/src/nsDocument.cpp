@@ -3881,16 +3881,6 @@ nsDocument::GetUserData(const nsAString &aKey,
   return GetUserData(this, key, aResult);
 }
 
-static void
-ReleaseDOMUserData(void *aObject,
-                   nsIAtom *aPropertyName,
-                   void *aPropertyValue,
-                   void *aData)
-{
-  nsISupports *propertyValue = NS_STATIC_CAST(nsISupports*, aPropertyValue);
-  NS_RELEASE(propertyValue);
-}
-
 nsresult
 nsDocument::SetUserData(const nsINode *aObject,
                         nsIAtom *aKey,
@@ -3910,7 +3900,7 @@ nsDocument::SetUserData(const nsINode *aObject,
   void *data;
   if (aData) {
     rv = mPropertyTable.SetProperty(aObject, DOM_USER_DATA, aKey, aData,
-                                    ReleaseDOMUserData, &data);
+                                    nsPropertyTable::SupportsDtorFunc, &data);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ADDREF(aData);
@@ -3925,7 +3915,8 @@ nsDocument::SetUserData(const nsINode *aObject,
 
   if (aData && aHandler) {
     rv = mPropertyTable.SetProperty(aObject, DOM_USER_DATA_HANDLER, aKey,
-                                    aHandler, ReleaseDOMUserData);
+                                    aHandler,
+                                    nsPropertyTable::SupportsDtorFunc);
     if (NS_SUCCEEDED(rv)) {
       NS_ADDREF(aHandler);
     }

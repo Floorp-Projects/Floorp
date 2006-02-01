@@ -309,6 +309,23 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep) const
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // Copy the baseuri and basetarget
+  void* prop;
+  if ((prop = GetProperty(nsHTMLAtoms::htmlBaseHref))) {
+    rv = aDst->SetProperty(nsHTMLAtoms::htmlBaseHref, prop,
+                           nsPropertyTable::SupportsDtorFunc);
+    if (NS_SUCCEEDED(rv)) {
+      NS_ADDREF(NS_STATIC_CAST(nsIURI*, prop));
+    }
+  }
+  if ((prop = GetProperty(nsHTMLAtoms::htmlBaseTarget))) {
+    rv = aDst->SetProperty(nsHTMLAtoms::htmlBaseTarget, prop,
+                           nsPropertyTable::SupportsDtorFunc);
+    if (NS_SUCCEEDED(rv)) {
+      NS_ADDREF(NS_STATIC_CAST(nsIAtom*, prop));
+    }
+  }
+
   nsIDocument *newDoc = aDst->GetOwnerDoc();
 
   if (aDeep) {
@@ -1860,20 +1877,11 @@ nsGenericHTMLElement::GetBaseURI() const
 {
   nsIDocument* doc = GetOwnerDoc();
 
-  const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsHTMLAtoms::_baseHref);
-  if (val) {
-    // We have a _baseHref attribute; that will determine our base URI
-    nsAutoString str;
-    val->ToString(str);
-
-    nsIURI* docBaseURL = nsnull;
-    if (doc) {
-      docBaseURL = doc->GetBaseURI();
-    }
-
-    nsIURI* uri = nsnull;
-    NS_NewURI(&uri, str, nsnull, docBaseURL);
-
+  void* prop;
+  if (HasProperties() && (prop = GetProperty(nsHTMLAtoms::htmlBaseHref))) {
+    nsIURI* uri = NS_STATIC_CAST(nsIURI*, prop);
+    NS_ADDREF(uri);
+    
     return uri;
   }
 
@@ -1896,9 +1904,10 @@ nsGenericHTMLElement::GetBaseURI() const
 void
 nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
-  const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsHTMLAtoms::_baseTarget);
-  if (val) {
-    val->ToString(aBaseTarget);
+  void* prop;
+  if (HasProperties() && (prop = GetProperty(nsHTMLAtoms::htmlBaseHref))) {
+    NS_STATIC_CAST(nsIAtom*, prop)->ToString(aBaseTarget);
+    
     return;
   }
 

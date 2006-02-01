@@ -330,3 +330,12 @@ nsPropertyTable::PropertyList::DeletePropertyFor(nsPropertyOwner aObject)
 
   return PR_TRUE;
 }
+
+/* static */
+void
+nsPropertyTable::SupportsDtorFunc(void *aObject, nsIAtom *aPropertyName,
+                                  void *aPropertyValue, void *aData)
+{
+  nsISupports *propertyValue = NS_STATIC_CAST(nsISupports*, aPropertyValue);
+  NS_IF_RELEASE(propertyValue);
+}
