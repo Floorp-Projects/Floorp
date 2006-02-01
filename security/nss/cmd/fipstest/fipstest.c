@@ -2556,17 +2556,253 @@ loser:
 }
 #endif /* NSS_ENABLE_ECC */
 
-void do_random()
+/*
+ * Perform the RNG Variable Seed Test (VST) for the RNG algorithm
+ * "DSA - Generation of X", used both as specified and as a generic
+ * purpose RNG.  The presence of "Q = ..." in the REQUEST file
+ * indicates we are using the algorithm as specified.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+rng_vst(char *reqfn)
 {
-    int i, j, k = 0;
-    unsigned char buf[500];
-    for (i=0; i<5; i++) {
-	RNG_GenerateGlobalRandomBytes(buf, sizeof buf);
-	for (j=0; j<sizeof buf / 2; j++) {
-	    printf("0x%02x%02x", buf[2*j], buf[2*j+1]);
-	    if (++k % 8 == 0) printf("\n"); else printf(" ");
+    char buf[256];      /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "XSeed = <128 hex digits>\n".
+                         */
+    FILE *rngreq;       /* input stream from the REQUEST file */
+    FILE *rngresp;      /* output stream to the RESPONSE file */
+    unsigned int i, j;
+    unsigned char Q[DSA_SUBPRIME_LEN];
+    PRBool hasQ = PR_FALSE;
+    unsigned int b;  /* 160 <= b <= 512, b is a multiple of 8 */
+    unsigned char XKey[512/8];
+    unsigned char XSeed[512/8];
+    unsigned char GENX[2*SHA1_LENGTH];
+    unsigned char DSAX[DSA_SUBPRIME_LEN];
+    SECStatus rv;
+
+    rngreq = fopen(reqfn, "r");
+    rngresp = stdout;
+    while (fgets(buf, sizeof buf, rngreq) != NULL) {
+	/* a comment or blank line */
+	if (buf[0] == '#' || buf[0] == '\n') {
+	    fputs(buf, rngresp);
+	    continue;
+	}
+	/* [Xchange - SHA1] */
+	if (buf[0] == '[') {
+	    fputs(buf, rngresp);
+	    continue;
+	}
+	/* Q = ... */
+	if (buf[0] == 'Q') {
+	    i = 1;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; j<sizeof Q; i+=2,j++) {
+		hex_from_2char(&buf[i], &Q[j]);
+	    }
+	    fputs(buf, rngresp);
+	    hasQ = PR_TRUE;
+	    continue;
+	}
+	/* "COUNT = x" begins a new data set */
+	if (strncmp(buf, "COUNT", 5) == 0) {
+	    /* zeroize the variables for the test with this data set */
+	    b = 0;
+	    memset(XKey, 0, sizeof XKey);
+	    memset(XSeed, 0, sizeof XSeed);
+	    fputs(buf, rngresp);
+	    continue;
+	}
+	/* b = ... */
+	if (buf[0] == 'b') {
+	    i = 1;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    b = atoi(&buf[i]);
+	    if (b < 160 || b > 512 || b%8 != 0) {
+		goto loser;
+	    }
+	    fputs(buf, rngresp);
+	    continue;
+	}
+	/* XKey = ... */
+	if (strncmp(buf, "XKey", 4) == 0) {
+	    i = 4;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; j<b/8; i+=2,j++) {
+		hex_from_2char(&buf[i], &XKey[j]);
+	    }
+	    fputs(buf, rngresp);
+	    continue;
+	}
+	/* XSeed = ... */
+	if (strncmp(buf, "XSeed", 5) == 0) {
+	    i = 5;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; j<b/8; i+=2,j++) {
+		hex_from_2char(&buf[i], &XSeed[j]);
+	    }
+	    fputs(buf, rngresp);
+
+	    rv = FIPS186Change_GenerateX(XKey, XSeed, GENX);
+	    if (rv != SECSuccess) {
+		goto loser;
+	    }
+	    fputs("X = ", rngresp);
+	    if (hasQ) {
+		rv = FIPS186Change_ReduceModQForDSA(GENX, Q, DSAX);
+		if (rv != SECSuccess) {
+		    goto loser;
+		}
+		to_hex_str(buf, DSAX, sizeof DSAX);
+	    } else {
+		to_hex_str(buf, GENX, sizeof GENX);
+	    }
+	    fputs(buf, rngresp);
+	    fputc('\n', rngresp);
+	    continue;
 	}
     }
+loser:
+    fclose(rngreq);
+}
+
+/*
+ * Perform the RNG Monte Carlo Test (MCT) for the RNG algorithm
+ * "DSA - Generation of X", used both as specified and as a generic
+ * purpose RNG.  The presence of "Q = ..." in the REQUEST file
+ * indicates we are using the algorithm as specified.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+rng_mct(char *reqfn)
+{
+    char buf[256];      /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "XSeed = <128 hex digits>\n".
+                         */
+    FILE *rngreq;       /* input stream from the REQUEST file */
+    FILE *rngresp;      /* output stream to the RESPONSE file */
+    unsigned int i, j;
+    unsigned char Q[DSA_SUBPRIME_LEN];
+    PRBool hasQ = PR_FALSE;
+    unsigned int b;  /* 160 <= b <= 512, b is a multiple of 8 */
+    unsigned char XKey[512/8];
+    unsigned char XSeed[512/8];
+    unsigned char GENX[2*SHA1_LENGTH];
+    unsigned char DSAX[DSA_SUBPRIME_LEN];
+    SECStatus rv;
+
+    rngreq = fopen(reqfn, "r");
+    rngresp = stdout;
+    while (fgets(buf, sizeof buf, rngreq) != NULL) {
+	/* a comment or blank line */
+	if (buf[0] == '#' || buf[0] == '\n') {
+	    fputs(buf, rngresp);
+	    continue;
+	}
+	/* [Xchange - SHA1] */
+	if (buf[0] == '[') {
+	    fputs(buf, rngresp);
+	    continue;
+	}
+	/* Q = ... */
+	if (buf[0] == 'Q') {
+	    i = 1;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; j<sizeof Q; i+=2,j++) {
+		hex_from_2char(&buf[i], &Q[j]);
+	    }
+	    fputs(buf, rngresp);
+	    hasQ = PR_TRUE;
+	    continue;
+	}
+	/* "COUNT = x" begins a new data set */
+	if (strncmp(buf, "COUNT", 5) == 0) {
+	    /* zeroize the variables for the test with this data set */
+	    b = 0;
+	    memset(XKey, 0, sizeof XKey);
+	    memset(XSeed, 0, sizeof XSeed);
+	    fputs(buf, rngresp);
+	    continue;
+	}
+	/* b = ... */
+	if (buf[0] == 'b') {
+	    i = 1;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    b = atoi(&buf[i]);
+	    if (b < 160 || b > 512 || b%8 != 0) {
+		goto loser;
+	    }
+	    fputs(buf, rngresp);
+	    continue;
+	}
+	/* XKey = ... */
+	if (strncmp(buf, "XKey", 4) == 0) {
+	    i = 4;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; j<b/8; i+=2,j++) {
+		hex_from_2char(&buf[i], &XKey[j]);
+	    }
+	    fputs(buf, rngresp);
+	    continue;
+	}
+	/* XSeed = ... */
+	if (strncmp(buf, "XSeed", 5) == 0) {
+	    unsigned int k;
+	    i = 5;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; j<b/8; i+=2,j++) {
+		hex_from_2char(&buf[i], &XSeed[j]);
+	    }
+	    fputs(buf, rngresp);
+
+	    for (k = 0; k < 10000; k++) {
+		rv = FIPS186Change_GenerateX(XKey, XSeed, GENX);
+		if (rv != SECSuccess) {
+		    goto loser;
+		}
+	    }
+	    fputs("X = ", rngresp);
+	    if (hasQ) {
+		rv = FIPS186Change_ReduceModQForDSA(GENX, Q, DSAX);
+		if (rv != SECSuccess) {
+		    goto loser;
+		}
+		to_hex_str(buf, DSAX, sizeof DSAX);
+	    } else {
+		to_hex_str(buf, GENX, sizeof GENX);
+	    }
+	    fputs(buf, rngresp);
+	    fputc('\n', rngresp);
+	    continue;
+	}
+    }
+loser:
+    fclose(rngreq);
 }
 
 /*
@@ -4316,7 +4552,14 @@ int main(int argc, char **argv)
     /*   RNG     */
     /*************/
     } else if (strcmp(argv[1], "rng") == 0) {
-	do_random();
+	/* argv[2]=vst|mct argv[3]=<test name>.req */
+	if (       strcmp(argv[2], "vst") == 0) {
+	    /* Variable Seed Test */
+	    rng_vst(argv[3]);
+	} else if (strcmp(argv[2], "mct") == 0) {
+	    /* Monte Carlo Test */
+	    rng_mct(argv[3]);
+	}
     }
     return 0;
 }
