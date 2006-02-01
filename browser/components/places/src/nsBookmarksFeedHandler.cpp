@@ -237,6 +237,7 @@ nsLivemarkLoadListener::OnStopRequest(nsIRequest *aRequest,
   //
 
   // Try parsing as RDF
+  mLivemarkService->BeginUpdateBatch();
   rv = TryParseAsRDF();
 
   // Try parsing as Atom/Simple RSS
@@ -248,6 +249,7 @@ nsLivemarkLoadListener::OnStopRequest(nsIRequest *aRequest,
   if (!NS_SUCCEEDED(rv)) {
     rv = mLivemarkService->InsertLivemarkFailedItem(mLivemark->folderId);
   }
+  mLivemarkService->EndUpdateBatch();
 
   // Set an expiration on the livemark, for reloading the data
   PRInt32 ttl;
