@@ -223,6 +223,10 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
       mCloseWhenPaneIsReady = NO;
       [mPendingPaneIdentifier autorelease];
       mPendingPaneIdentifier = [identifier retain];
+
+      // set the selected toolbar item back
+      if ([NSToolbar instancesRespondToSelector:@selector(setSelectedItemIdentifier:)])
+        [[mWindow toolbar] setSelectedItemIdentifier:mCurrentPaneIdentifier];
       return;
     }
     

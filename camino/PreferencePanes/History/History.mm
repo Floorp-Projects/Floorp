@@ -51,6 +51,7 @@ const int kDefaultExpireDays = 9;
 
 - (void)doClearDiskCache;
 - (void)doClearGlobalHistory;
+- (BOOL)historyDaysValid;
 
 @end
 
@@ -80,25 +81,47 @@ const int kDefaultExpireDays = 9;
   [textFieldHistoryDays setIntValue:expireDays];
 }
 
+- (NSPreferencePaneUnselectReply)shouldUnselect
+{
+  // make sure the history days value is numbers only (should use a formatter for this?)
+  if (![self historyDaysValid])
+  {
+    [[textFieldHistoryDays window] makeFirstResponder:textFieldHistoryDays];
+    [textFieldHistoryDays selectText:nil];
+    NSBeep();
+    return NSUnselectCancel;
+  }
+  return NSUnselectNow;
+}
+
+- (void)didUnselect
+{
+  if (!mPrefService)
+    return;
+  
+  if ([self historyDaysValid])
+    [self setPref:"browser.history_expire_days" toInt:[textFieldHistoryDays intValue]];
+}
+
 - (IBAction)historyDaysModified:(id)sender
 {
   if (!mPrefService)
     return;
   
-  if (sender == textFieldHistoryDays) {
-    // If any non-numeric characters were entered make some noise and spit it out.
-    if (([[textFieldHistoryDays stringValue] rangeOfCharacterFromSet:[[NSCharacterSet decimalDigitCharacterSet] invertedSet]]).length) {
-      BOOL gotPref;
-      int prefValue = [self getIntPref:"browser.history_expire_days" withSuccess:&gotPref];
-      if (!gotPref)
-        prefValue = kDefaultExpireDays;
-      [textFieldHistoryDays setIntValue:prefValue];
-      NSBeep ();
-      return;
-    }
+  if ([self historyDaysValid])
+  {
+    [self setPref:"browser.history_expire_days" toInt:[sender intValue]];
   }
-  
-  [self setPref:"browser.history_expire_days" toInt:[sender intValue]];
+  else
+  {
+    // If any non-numeric characters were entered make some noise and spit it out.
+    BOOL gotPref;
+    int prefValue = [self getIntPref:"browser.history_expire_days" withSuccess:&gotPref];
+    if (!gotPref)
+      prefValue = kDefaultExpireDays;
+    [textFieldHistoryDays setIntValue:prefValue];
+    NSBeep();
+  }
 }
 
 // Clear the user's disk cache
@@ -161,6 +184,13 @@ const int kDefaultExpireDays = 9;
   nsCOMPtr<nsIBrowserHistory> hist ( do_GetService("@mozilla.org/browser/global-history;2") );
   if ( hist )
     hist->RemoveAllPages();
+}
+
+- (BOOL)historyDaysValid
+{
+  NSCharacterSet* nonDigitsSet = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
+  NSRange nonDigitsRange = [[textFieldHistoryDays stringValue] rangeOfCharacterFromSet:nonDigitsSet];
+  return (nonDigitsRange.length == 0);
 }
 
 @end
