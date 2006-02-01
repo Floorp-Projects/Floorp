@@ -2658,19 +2658,6 @@ static void CheckForFocus(nsPIDOMWindow* aOurWindow,
   aFocusController->SetFocusedWindow(ourWin);
 }
 
-static nsIFrame*
-GetRootScrollFrame(nsIFrame* aRootFrame) {
-  // Ensure root frame is a viewport frame
-  if (aRootFrame && nsLayoutAtoms::viewportFrame == aRootFrame->GetType()) {
-    nsIFrame* theFrame = aRootFrame->GetFirstChild(nsnull);
-    if (theFrame && nsLayoutAtoms::scrollFrame == theFrame->GetType()) {
-      return theFrame;
-    }
-  }
-
-  return nsnull;
-}
-
 NS_IMETHODIMP
 PresShell::GetDidInitialReflow(PRBool *aDidInitialReflow)
 {
@@ -3409,6 +3396,19 @@ nsIPresShell::GetRootFrame() const
   return FrameManager()->GetRootFrame();
 }
 
+nsIFrame*
+nsIPresShell::GetRootScrollFrame() const
+{
+  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
+  // Ensure root frame is a viewport frame
+  if (!rootFrame || nsLayoutAtoms::viewportFrame != rootFrame->GetType())
+    return nsnull;
+  nsIFrame* theFrame = rootFrame->GetFirstChild(nsnull);
+  if (!theFrame || nsLayoutAtoms::scrollFrame != theFrame->GetType())
+    return nsnull;
+  return theFrame;
+}
+
 NS_IMETHODIMP
 PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
 {
@@ -3469,7 +3469,6 @@ PresShell::EndLoad(nsIDocument *aDocument)
 {
 
   // Restore frame state for the root scroll frame
-  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   nsCOMPtr<nsILayoutHistoryState> historyState =
     aDocument->GetLayoutHistoryState();
   // Make sure we don't reenter reflow via the sync paint that happens while
@@ -3478,8 +3477,8 @@ PresShell::EndLoad(nsIDocument *aDocument)
   // it'll get all confused.
   ++mChangeNestCount;
 
-  if (rootFrame && historyState) {
-    nsIFrame* scrollFrame = GetRootScrollFrame(rootFrame);
+  if (historyState) {
+    nsIFrame* scrollFrame = GetRootScrollFrame();
     if (scrollFrame) {
       nsIScrollableFrame* scrollableFrame;
       CallQueryInterface(scrollFrame, &scrollableFrame);
@@ -4545,7 +4544,7 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
   // As the scroll position is 0 and this will cause us to loose
   // our previously saved place!
   if (aLeavingPage) {
-    nsIFrame* scrollFrame = GetRootScrollFrame(rootFrame);
+    nsIFrame* scrollFrame = GetRootScrollFrame();
     if (scrollFrame) {
       FrameManager()->CaptureFrameStateFor(scrollFrame, historyState,
                                            nsIStatefulFrame::eDocumentScrollState);

@@ -93,8 +93,8 @@ class nsCSSFrameConstructor;
 class nsISelection;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x775a6c25, 0x326f, 0x4a99, \
- { 0xbb, 0x9d, 0x65, 0xdf, 0x15, 0xb3, 0x06, 0xa3 } }
+{ 0xcd6d6c1d, 0x4180, 0x432a, \
+ { 0x83, 0xbb, 0x1f, 0xc6, 0x50, 0xd2, 0x11, 0xa7 } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -290,6 +290,11 @@ public:
    * instead, as it's more efficient.
    */
   virtual NS_HIDDEN_(nsIFrame*) GetRootFrame() const;
+
+  /*
+   * Get root scroll frame from FrameManager()->GetRootFrame().
+   */
+  nsIFrame* GetRootScrollFrame() const;
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.
