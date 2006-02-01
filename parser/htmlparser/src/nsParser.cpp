@@ -299,11 +299,17 @@ nsParser::~nsParser()
   }
 #endif
 
-#ifdef DEBUG_mrbkap
-  NS_ASSERTION(!mParserContext || !mParserContext->mPrevContext,
-               "Leaking parsercontexts");
+#ifdef DEBUG
+  if (mParserContext && mParserContext->mPrevContext) {
+    NS_WARNING("Extra parser contexts still on the parser stack");
+  }
 #endif
-  delete mParserContext;
+
+  while (mParserContext) {
+    CParserContext *pc = mParserContext->mPrevContext;
+    delete mParserContext;
+    mParserContext = pc;
+  }
 
   if (mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) {
     NS_ASSERTION(mEventQueue != nsnull, "Event queue is null");
@@ -1342,6 +1348,11 @@ nsParser::Parse(const nsAString& aSourceBuffer,
                 nsDTDMode aMode)
 {
   nsresult result = NS_OK;
+
+  // Don't bother if we're never going to parse this.
+  if (mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING) {
+    return result;
+  }
 
   if (!aLastCall && aSourceBuffer.IsEmpty()) {
     // Nothing is being passed to the parser so return
