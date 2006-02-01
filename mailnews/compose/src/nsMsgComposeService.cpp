@@ -1387,7 +1387,12 @@ nsMsgComposeService::Handle(nsICommandLine* aCmdLine)
 
   if (count >= found) {
     aCmdLine->GetArgument(found + 1, uristr);
-    if (StringBeginsWith(uristr, NS_LITERAL_STRING("mailto:"))) {
+    if (StringBeginsWith(uristr, NS_LITERAL_STRING("mailto:"))  ||
+	StringBeginsWith(uristr, NS_LITERAL_STRING("to="))  ||
+	StringBeginsWith(uristr, NS_LITERAL_STRING("cc="))  ||
+	StringBeginsWith(uristr, NS_LITERAL_STRING("subject="))  ||
+	StringBeginsWith(uristr, NS_LITERAL_STRING("body="))  ||
+	StringBeginsWith(uristr, NS_LITERAL_STRING("attachment="))) {
       end++;
       // mailto: URIs are frequently passed with spaces in them. They should be
       // escaped with %20, but we hack around broken clients. See bug 231032.
