@@ -62,19 +62,47 @@ static CERTSignedCrl *FindCRL
 {
     CERTSignedCrl *crl = NULL;    
     CERTCertificate *cert = NULL;
+    SECItem derName;
 
+    derName.data = NULL;
+    derName.len = 0;
 
-    cert = CERT_FindCertByNickname(certHandle, name);
+    cert = CERT_FindCertByNicknameOrEmailAddr(certHandle, name);
     if (!cert) {
-	SECU_PrintError(progName, "could not find certificate named %s", name);
-	return ((CERTSignedCrl *)NULL);
+        CERTName *certName = NULL;
+        PRArenaPool *arena = NULL;
+    
+        certName = CERT_AsciiToName(name);
+        if (certName) {
+            arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+            if (arena) {
+                SECItem *nameItem = 
+                    SEC_ASN1EncodeItem (arena, NULL, (void *)certName,
+                                        SEC_ASN1_GET(CERT_NameTemplate));
+                if (nameItem) {
+                    SECITEM_CopyItem(NULL, &derName, nameItem);
+                }
+                PORT_FreeArena(arena, PR_FALSE);
+            }
+            CERT_DestroyName(certName);
+        }
+
+        if (!derName.len || !derName.data) {
+            SECU_PrintError(progName, "could not find certificate named '%s'", name);
+            return ((CERTSignedCrl *)NULL);
+        }
+    } else {
+        SECITEM_CopyItem(NULL, &derName, &cert->derSubject);
+        CERT_DestroyCertificate (cert);
     }
-	
-    crl = SEC_FindCrlByName(certHandle, &cert->derSubject, type);
+ 
+    crl = SEC_FindCrlByName(certHandle, &derName, type);
     if (crl ==NULL) 
 	SECU_PrintError
 		(progName, "could not find %s's CRL", name);
-    CERT_DestroyCertificate (cert);
+    if (derName.data) {
+        SECITEM_FreeItem(&derName, PR_FALSE);
+    }
     return (crl);
 }
 
@@ -128,16 +156,39 @@ static void ListCRLNames (CERTCertDBHandle *certHandle, int crlType, PRBool dele
         fprintf (stdout, "\n");
 	fprintf (stdout, "\n%-40s %-5s\n\n", "CRL names", "CRL Type");
 	while (crlNode) {
-	   char* asciiname = NULL;
-	   name = &crlNode->crl->crl.name;
-	   if (!name){
-		fprintf(stderr, "%s: fail to get the CRL issuer name (%s)\n", progName,
-		SECU_Strerror(PORT_GetError()));
-		break;
+	    char* asciiname = NULL;
+	    CERTCertificate *cert = NULL;
+	    if (crlNode->crl && &crlNode->crl->crl.derName) {
+	        cert = CERT_FindCertByName(certHandle,
+	                                   &crlNode->crl->crl.derName);
+	        if (!cert) {
+	            SECU_PrintError(progName, "could not find signing "
+	                         "certificate in database");
+	        }
 	    }
-
-	    asciiname = CERT_NameToAscii(name);
-	    fprintf (stdout, "\n%-40s %-5s\n", asciiname, "CRL");
+	    if (cert) {
+	        char* certName = NULL;
+                 if (cert->nickname && PORT_Strlen(cert->nickname) > 0) {
+	            certName = cert->nickname;
+	        } else if (cert->emailAddr && PORT_Strlen(cert->emailAddr) > 0) {
+	            certName = cert->emailAddr;
+	        }
+	        if (certName) {
+	            asciiname = PORT_Strdup(certName);
+	        }
+	        CERT_DestroyCertificate(cert);
+	    }
+                
+	    if (!asciiname) {
+	        name = &crlNode->crl->crl.name;
+	        if (!name){
+	            SECU_PrintError(progName, "fail to get the CRL "
+	                           "issuer name");
+	            continue;
+	        }
+	        asciiname = CERT_NameToAscii(name);
+	    }
+	    fprintf (stdout, "%-40s %-5s\n", asciiname, "CRL");
 	    if (asciiname) {
 		PORT_Free(asciiname);
 	    }
