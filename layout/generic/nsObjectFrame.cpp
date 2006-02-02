@@ -43,12 +43,8 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nscore.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
-#include "nsHTMLParts.h"
-#include "nsHTMLContainerFrame.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsStyleSet.h"
 #include "nsWidgetsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -60,7 +56,6 @@
 #include "prmem.h"
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
-#include "nsIHTMLDocument.h"
 #include "nsINodeInfo.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -71,7 +66,6 @@
 #ifdef OJI
 #include "nsIJVMPluginTagInfo.h"
 #endif
-#include "nsINameSpaceManager.h"
 #include "nsIEventListener.h"
 #include "nsIScrollableView.h"
 #include "nsIScrollPositionListener.h"
@@ -79,8 +73,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIWebNavigation.h"
-#include "nsIWebNavigationInfo.h"
 #include "nsDocShellCID.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMElement.h"
@@ -88,10 +80,6 @@
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLAppletElement.h"
-#include "nsIDOMElementCSSInlineStyle.h"
-#include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMCSS2Properties.h"
-#include "nsContentPolicyUtils.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMMouseListener.h"
@@ -110,14 +98,11 @@
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
 #include "npapi.h"
-#include "nsGfxCIID.h"
-#include "nsUnicharUtils.h"
 #include "nsTransform2D.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
-#include "nsIStringBundle.h"
 #include "nsDisplayList.h"
 #include "nsAttrName.h"
 
@@ -127,18 +112,6 @@
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 #include "nsIClassInfo.h"
-#include "jsapi.h"
-
-#include "nsCSSPseudoClasses.h"
-
-// XXX For temporary paint code
-#include "nsStyleContext.h"
-
-// For mime types
-#include "nsMimeTypes.h"
-#include "nsIMIMEService.h"
-#include "nsCExternalHandlerService.h"
-#include "imgILoader.h"
 
 #include "nsObjectFrame.h"
 #include "nsIObjectFrame.h"
@@ -179,10 +152,6 @@ static NS_DEFINE_CID(kRangeCID, NS_RANGE_CID);
 static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #endif /* PR_LOGGING */
 
-// True if the default plugin is disabled. Initialize to non-boolean
-// value so that we know if we've checked the pref or not.
-static PRBool sDefaultPluginDisabled = 0xffffffff;
-
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
 // same class
@@ -197,8 +166,8 @@ public:
 
   NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent);
   
-  nsresult Init(nsObjectFrame *aFrame);
-  nsresult Destroy(nsObjectFrame *aFrame);
+  nsresult Init(nsIContent* aContent);
+  nsresult Destroy(nsIContent* aContent);
   
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)
   {
@@ -365,7 +334,8 @@ public:
 
   //locals
 
-  NS_IMETHOD Init(nsPresContext *aPresContext, nsObjectFrame *aFrame);
+  nsresult Init(nsPresContext* aPresContext, nsObjectFrame* aFrame,
+                nsIContent* aContent);
 
   nsPluginPort* GetPluginPort();
   void ReleasePluginPort(nsPluginPort * pluginPort);
@@ -378,9 +348,12 @@ public:
 #endif
 
 private:
+  void FixUpURLS(const nsString &name, nsAString &value);
+
   nsPluginNativeWindow       *mPluginWindow;
   nsCOMPtr<nsIPluginInstance> mInstance;
   nsObjectFrame              *mOwner;
+  nsCOMPtr<nsIContent>        mContent;
   nsCString                   mDocumentBase;
   char                       *mTagText;
   nsCOMPtr<nsIWidget>         mWidget;
@@ -497,11 +470,6 @@ nsObjectFrame::Init(nsPresContext*   aPresContext,
 #ifdef DEBUG
   mInstantiating = PR_FALSE;
 #endif
-
-  if (sDefaultPluginDisabled == (PRBool)0xffffffff) {
-    sDefaultPluginDisabled =
-      nsContentUtils::GetBoolPref("plugin.default_plugin_disabled");
-  }
 
   nsresult rv = nsObjectFrameSuper::Init(aPresContext, aContent, aParent,
                                          aContext, aPrevInFlow);
@@ -702,7 +670,6 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsObjectFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
-  nsresult rv = NS_OK;
 
   // Get our desired size
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
@@ -712,13 +679,13 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
   // plugin needs to see that haven't arrived yet.
   if (!GetContent()->IsDoneAddingChildren()) {
     aStatus = NS_FRAME_COMPLETE;
-    return rv;
+    return NS_OK;
   }
 
   // if we are printing or print previewing, bail for now
   if (aPresContext->Medium() == nsLayoutAtoms::print) {
     aStatus = NS_FRAME_COMPLETE;
-    return rv;
+    return NS_OK;
   }
 
 
@@ -727,7 +694,7 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -1281,7 +1248,7 @@ nsObjectFrame::PrepareInstanceOwner()
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(mInstanceOwner);
-  mInstanceOwner->Init(GetPresContext(), this);
+  mInstanceOwner->Init(GetPresContext(), this, GetContent());
   return NS_OK;
 }
 
@@ -1514,44 +1481,24 @@ nsPluginDOMContextMenuListener::ContextMenu(nsIDOMEvent* aContextMenuEvent)
   return NS_OK;
 }
 
-nsresult nsPluginDOMContextMenuListener::Init(nsObjectFrame *aFrame)
+nsresult nsPluginDOMContextMenuListener::Init(nsIContent* aContent)
 {
-  nsIContent* content = aFrame->GetContent();
-
-  // Register context menu listener
-  if (content) {
-    nsCOMPtr<nsIDOMEventTarget> receiver(do_QueryInterface(content));
-    if (receiver) {
-      nsCOMPtr<nsIDOMContextMenuListener> cxMenuListener;
-      QueryInterface(NS_GET_IID(nsIDOMContextMenuListener), getter_AddRefs(cxMenuListener));
-      if (cxMenuListener) {
-        receiver->AddEventListener(NS_LITERAL_STRING("contextmenu"), cxMenuListener, PR_TRUE);
-        return NS_OK;
-      }
-    }
+  nsCOMPtr<nsIDOMEventTarget> receiver(do_QueryInterface(aContent));
+  if (receiver) {
+    receiver->AddEventListener(NS_LITERAL_STRING("contextmenu"), this, PR_TRUE);
+    return NS_OK;
   }
 
   return NS_ERROR_NO_INTERFACE;
 }
 
-nsresult nsPluginDOMContextMenuListener::Destroy(nsObjectFrame *aFrame)
+nsresult nsPluginDOMContextMenuListener::Destroy(nsIContent* aContent)
 {
-  nsIContent* content = aFrame->GetContent();
-
   // Unregister context menu listener
-  if (content) {
-    nsCOMPtr<nsIDOMEventTarget> receiver(do_QueryInterface(content));
-    if (receiver) {
-      nsCOMPtr<nsIDOMContextMenuListener> cxMenuListener;
-      QueryInterface(NS_GET_IID(nsIDOMContextMenuListener), getter_AddRefs(cxMenuListener));
-      if (cxMenuListener) { 
-        receiver->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), cxMenuListener, PR_TRUE);
-      }
-      else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
-    }
-    else NS_ASSERTION(PR_FALSE, "plugin was not an event listener");
+  nsCOMPtr<nsIDOMEventTarget> receiver(do_QueryInterface(aContent));
+  if (receiver) {
+    receiver->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), this, PR_TRUE);
   }
-  else NS_ASSERTION(PR_FALSE, "plugin had no content");
 
   return NS_OK;
 }
@@ -1726,19 +1673,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttribute(const char* name, const char* 
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(nsIDOMElement* *result)
 {
-  NS_ENSURE_ARG_POINTER(result);
-  nsresult rv = NS_ERROR_FAILURE;
-
-  *result = nsnull;
-
-  if (nsnull != mOwner) {
-    nsIContent* cont = mOwner->GetContent();
-    if (cont) {
-      rv = CallQueryInterface(cont, result);
-    }
-  }
-
-  return rv;
+  return CallQueryInterface(mContent, result);
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)
@@ -1762,16 +1697,13 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   nsAutoString  unitarget;
   unitarget.AssignASCII(aTarget); // XXX could this be nonascii?
 
-  NS_ASSERTION(mOwner->GetContent(), "Must have a content");
-  nsCOMPtr<nsIURI> baseURI = mOwner->GetContent()->GetBaseURI();
+  nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
 
   // Create an absolute URL
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, baseURI);
 
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-  nsIContent* content = mOwner->GetContent();
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIInputStream> postDataStream;
   nsCOMPtr<nsIInputStream> headersDataStream;
@@ -1802,7 +1734,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
     nsContentUtils::GetIntPref("privacy.popups.disable_from_plugins");
   nsAutoPopupStatePusher popupStatePusher((PopupControlState)blockPopups);
 
-  rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
+  rv = lh->OnLinkClick(mContent, eLinkVerb_Replace, 
                        uri, unitarget.get(), 
                        postDataStream, headersDataStream);
 
@@ -1856,11 +1788,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
   if (!aDocument)
     return NS_ERROR_NULL_POINTER;
 
-  *aDocument = nsnull;
-  if (mOwner) {
-    nsIDocument* doc = mOwner->GetContent()->GetCurrentDoc();
-    NS_IF_ADDREF(*aDocument = doc);
-  }
+  // XXX sXBL/XBL2 issue: current doc or owner doc?
+  // But keep in mind bug 322414 comment 33
+  NS_IF_ADDREF(*aDocument = mContent->GetOwnerDoc());
   return NS_OK;
 }
 
@@ -1938,27 +1868,19 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
 {
   NS_ENSURE_ARG_POINTER(result);
-  nsresult rv = NS_ERROR_FAILURE;
 
   *result = nsPluginTagType_Unknown;
 
-  if (mOwner) {
-    nsIContent* cont = mOwner->GetContent();
-    if (cont) {
-      nsIAtom *atom = cont->Tag();
+  nsIAtom *atom = mContent->Tag();
 
-      if (atom == nsHTMLAtoms::applet)
-        *result = nsPluginTagType_Applet;
-      else if (atom == nsHTMLAtoms::embed)
-        *result = nsPluginTagType_Embed;
-      else if (atom == nsHTMLAtoms::object)
-        *result = nsPluginTagType_Object;
+  if (atom == nsHTMLAtoms::applet)
+    *result = nsPluginTagType_Applet;
+  else if (atom == nsHTMLAtoms::embed)
+    *result = nsPluginTagType_Embed;
+  else if (atom == nsHTMLAtoms::object)
+    *result = nsPluginTagType_Object;
 
-      rv = NS_OK;
-    }
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
@@ -1966,11 +1888,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
     NS_ENSURE_ARG_POINTER(result);
     if (nsnull == mTagText) {
         nsresult rv;
-        nsIContent* content = mOwner->GetContent();
-
-        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content, &rv));
+        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent, &rv));
         if (NS_FAILED(rv))
             return rv;
+
         nsCOMPtr<nsIDocument> document;
         rv = GetDocument(getter_AddRefs(document));
         if (NS_FAILED(rv))
@@ -2049,10 +1970,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
       return NS_ERROR_FAILURE;
     }
 
-    NS_ASSERTION(mOwner && mOwner->GetContent(),
-                 "Must have an owner and a content");
-
-    nsIDocument* doc = mOwner->GetContent()->GetOwnerDoc();
+    nsIDocument* doc = mContent->GetOwnerDoc();
     NS_ASSERTION(doc, "Must have an owner doc");
     rv = doc->GetBaseURI()->GetSpec(mDocumentBase);
   }
@@ -2306,21 +2224,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
 }
 #endif /* OJI */
 
-// Little helper function to resolve relative URL in
-// |value| for certain inputs of |name|
-void nsObjectFrame::FixUpURLS(const nsString &name, nsAString &value)
-{
-  if (name.LowerCaseEqualsLiteral("pluginurl") ||
-      name.LowerCaseEqualsLiteral("pluginspage")) {        
-    
-    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
-    nsAutoString newURL;
-    NS_MakeAbsoluteURI(newURL, value, baseURI);
-    if (!newURL.IsEmpty())
-      value = newURL;
-  }
-}
-
 // Cache the attributes and/or parameters of our tag into a single set
 // of arrays to be compatible with 4.x. The attributes go first,
 // followed by a PARAM/null and then any PARAM tags. Also, hold the
@@ -2342,11 +2245,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // arrays count up attributes
   mNumCachedAttrs = 0;
 
-  nsIContent* content = mOwner->GetContent();
-  nsresult rv = NS_OK;
-  NS_ENSURE_TRUE(content, rv);
-
-  PRUint32 cattrs = content->GetAttrCount();
+  PRUint32 cattrs = mContent->GetAttrCount();
 
   if (cattrs < 0x0000FFFF) {
     // unsigned 32 bits to unsigned 16 bits conversion
@@ -2366,17 +2265,17 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   mNumCachedParams = 0;
   nsCOMPtr<nsISupportsArray> ourParams;
-  rv = NS_NewISupportsArray(getter_AddRefs(ourParams));
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(ourParams));
   NS_ENSURE_SUCCESS(rv, rv);
  
   // use the DOM to get us ALL our dependent PARAM tags, even if not
   // ours
-  nsCOMPtr<nsIDOMElement> mydomElement = do_QueryInterface(content);
+  nsCOMPtr<nsIDOMElement> mydomElement = do_QueryInterface(mContent);
   NS_ENSURE_TRUE(mydomElement, NS_ERROR_NO_INTERFACE);
 
   nsCOMPtr<nsIDOMNodeList> allParams; 
 
-  nsINodeInfo *ni = content->NodeInfo();
+  nsINodeInfo *ni = mContent->NodeInfo();
 
   // Making DOM method calls can cause our frame to go away, which
   // might kill us...
@@ -2431,9 +2330,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
           if (domapplet || domobject) {
             if (domapplet)
-              parent = do_QueryInterface(domapplet);
+              parent = domapplet;
             else
-              parent = do_QueryInterface(domobject);
+              parent = domobject;
 
             // now check to see if this PARAM's parent is us. if so,
             // cache it for later
@@ -2465,9 +2364,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // to the bottom of the array if there isn't already a "src" specified.
   PRInt16 numRealAttrs = mNumCachedAttrs;
   nsAutoString data;
-  if (content->Tag() == nsHTMLAtoms::object
-    && !content->HasAttr(kNameSpaceID_None, nsHTMLAtoms::src)
-    && content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data)) {
+  if (mContent->Tag() == nsHTMLAtoms::object
+    && !mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::src)
+    && mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data)) {
       mNumCachedAttrs++;
   }
 
@@ -2487,8 +2386,8 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // source order, while in XML and XHTML it's the same as the source order
   // (see the AddAttributes functions in the HTML and XML content sinks).
   PRInt16 start, end, increment;
-  if (content->IsContentOfType(nsIContent::eHTML) &&
-      content->NodeInfo()->NamespaceEquals(kNameSpaceID_None)) {
+  if (mContent->IsContentOfType(nsIContent::eHTML) &&
+      mContent->NodeInfo()->NamespaceEquals(kNameSpaceID_None)) {
     // HTML.  Walk attributes in reverse order.
     start = numRealAttrs - 1;
     end = -1;
@@ -2500,14 +2399,14 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
     increment = 1;
   }
   for (PRInt16 index = start; index != end; index += increment) {
-    const nsAttrName* attrName = content->GetAttrNameAt(index);
+    const nsAttrName* attrName = mContent->GetAttrNameAt(index);
     nsIAtom* atom = attrName->LocalName();
     nsAutoString value;
-    content->GetAttr(attrName->NamespaceID(), atom, value);
+    mContent->GetAttr(attrName->NamespaceID(), atom, value);
     nsAutoString name;
     atom->ToString(name);
 
-    mOwner->FixUpURLS(name, value);
+    FixUpURLS(name, value);
 
     mCachedAttrParamNames [c] = ToNewUTF8String(name);
     mCachedAttrParamValues[c] = ToNewUTF8String(value);
@@ -2534,7 +2433,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
      param->GetAttribute(NS_LITERAL_STRING("name"), name); // check for empty done above
      param->GetAttribute(NS_LITERAL_STRING("value"), value);
 
-     mOwner->FixUpURLS(name, value);
+     FixUpURLS(name, value);
 
      /*
       * According to the HTML 4.01 spec, at
@@ -2578,7 +2477,7 @@ void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord
     case NS_FOCUS_EVENT_START:   // this is the same as NS_FOCUS_CONTENT
         aMacEvent.what = nsPluginEventType_GetFocusEvent;
         if (presContext) {
-            nsIContent* content = mOwner->GetContent();
+            nsIContent* content = mContent;
             if (content)
                 content->SetFocus(presContext);
         }
@@ -2587,7 +2486,7 @@ void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord
     case NS_BLUR_CONTENT:
         aMacEvent.what = nsPluginEventType_LoseFocusEvent;
         if (presContext) {
-            nsIContent* content = mOwner->GetContent();
+            nsIContent* content = mContent;
             if (content)
                 content->RemoveFocus(presContext);
         }
@@ -2923,9 +2822,7 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
   // otherwise, we might not get key events
   if (mOwner && mPluginWindow &&
       mPluginWindow->type == nsPluginWindowType_Drawable) {
-    nsIContent* content = mOwner->GetContent();
-    if (content)
-      content->SetFocus(mOwner->GetPresContext());
+    mContent->SetFocus(mOwner->GetPresContext());
   }
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
@@ -3108,18 +3005,16 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 nsresult
 nsPluginInstanceOwner::Destroy()
 {
-  nsIContent* content = mOwner->GetContent();
-
   // stop the timer explicitly to reduce reference count.
   CancelTimer();
 
   // unregister context menu listener
   if (mCXMenuListener) {
-    mCXMenuListener->Destroy(mOwner);    
+    mCXMenuListener->Destroy(mContent);
     NS_RELEASE(mCXMenuListener);
   }
 
-  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
   if (receiver) {
 
     nsCOMPtr<nsIDOMEventListener> listener;
@@ -3288,12 +3183,12 @@ void nsPluginInstanceOwner::CancelTimer()
     }
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::Init(nsPresContext* aPresContext, nsObjectFrame *aFrame)
+nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
+                                     nsObjectFrame* aFrame,
+                                     nsIContent*    aContent)
 {
-  //do not addref to avoid circular refs. MMP
   mOwner = aFrame;
-  
-  nsIContent* content = mOwner->GetContent();
+  mContent = aContent;
   
   // Some plugins require a specific sequence of shutdown and startup when
   // a page is reloaded. Shutdown happens usually when the last instance
@@ -3305,10 +3200,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsPresContext* aPresContext, nsObjectF
   mCXMenuListener = new nsPluginDOMContextMenuListener();
   if (mCXMenuListener) {    
     NS_ADDREF(mCXMenuListener);    
-    mCXMenuListener->Init(aFrame);
+    mCXMenuListener->Init(aContent);
   }
 
-  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
   if (receiver) {
 
     nsCOMPtr<nsIDOMEventListener> listener;
@@ -3364,8 +3259,8 @@ nsPluginPort* nsPluginInstanceOwner::GetPluginPort()
     else
 #endif
       result = (nsPluginPort*) mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
-    }
-    return result;
+  }
+  return result;
 }
 
 void nsPluginInstanceOwner::ReleasePluginPort(nsPluginPort * pluginPort)
@@ -3563,4 +3458,20 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 }
 
 #endif // XP_MACOSX
+
+// Little helper function to resolve relative URL in
+// |value| for certain inputs of |name|
+void nsPluginInstanceOwner::FixUpURLS(const nsString &name, nsAString &value)
+{
+  if (name.LowerCaseEqualsLiteral("pluginurl") ||
+      name.LowerCaseEqualsLiteral("pluginspage")) {        
+    
+    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
+    nsAutoString newURL;
+    NS_MakeAbsoluteURI(newURL, value, baseURI);
+    if (!newURL.IsEmpty())
+      value = newURL;
+  }
+}
+
 
