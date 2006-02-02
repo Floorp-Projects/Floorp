@@ -122,15 +122,15 @@ public:
 protected:
   friend class nsDocument;
   friend class nsXULPrototypeDocument;
-  friend nsresult (::NS_NewDOMDocumentType(nsIDOMDocumentType** ,
-                                           nsNodeInfoManager *,
-                                           nsIPrincipal *,
-                                           nsIAtom *,
-                                           nsIDOMNamedNodeMap *,
-                                           nsIDOMNamedNodeMap *,
-                                           const nsAString& ,
-                                           const nsAString& ,
-                                           const nsAString& ));
+  friend nsresult NS_NewDOMDocumentType(nsIDOMDocumentType** ,
+                                        nsNodeInfoManager *,
+                                        nsIPrincipal *,
+                                        nsIAtom *,
+                                        nsIDOMNamedNodeMap *,
+                                        nsIDOMNamedNodeMap *,
+                                        const nsAString& ,
+                                        const nsAString& ,
+                                        const nsAString& );
 
   /**
    * Sets the principal of the document this nodeinfo manager belongs to.
