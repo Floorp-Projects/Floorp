@@ -220,8 +220,8 @@ if ($cgi->param('update')) {
                 else {
                     my $o_day         = $cgi->param("orig_day_$sid") || '';
                     my $day           = $cgi->param("day_$sid") || '';
-                    my $o_time        = $cgi->param("orig_time_$sid") || '';
-                    my $time          = $cgi->param("time_$sid") || '';
+                    my $o_time        = $cgi->param("orig_time_$sid") || 0;
+                    my $time          = $cgi->param("time_$sid") || 0;
                     my $o_mailto      = $cgi->param("orig_mailto_$sid") || '';
                     my $mailto        = $cgi->param("mailto_$sid") || '';
                     my $o_mailto_type = $cgi->param("orig_mailto_type_$sid") || 0;

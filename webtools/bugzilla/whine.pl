@@ -564,6 +564,10 @@ sub reset_timer {
     $sth->execute($schedule_id);
     my ($run_day, $run_time) = $sth->fetchrow_array;
 
+    # It may happen that the run_time field is NULL or blank due to
+    # a bug in editwhines.cgi when this field was initially 0.
+    $run_time ||= 0;
+
     my $run_today = 0;
     my $minute_offset = 0;
 
