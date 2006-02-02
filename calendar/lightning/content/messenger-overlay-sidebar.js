@@ -89,6 +89,11 @@ function ltnOnLoad(event)
     pb2.addObserver("calendar.", ltnPrefObserver, false);
     ltnPrefObserver.observe(null, null, "");
 
+    // fire up the alarm service
+    var alarmSvc = Components.classes["@mozilla.org/calendar/alarm-service;1"]
+                   .getService(Components.interfaces.calIAlarmService);
+    alarmSvc.startup();
+
     // Add an unload function to the window so we don't leak the pref observer
     document.getElementById("messengerWindow")
             .addEventListener("unload", ltnFinish, false);

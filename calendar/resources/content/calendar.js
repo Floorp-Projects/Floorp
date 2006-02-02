@@ -122,6 +122,11 @@ function calendarInit()
 
    initCalendarManager();
 
+   // fire up the alarm service
+   var alarmSvc = Components.classes["@mozilla.org/calendar/alarm-service;1"]
+                  .getService(Components.interfaces.calIAlarmService);
+   alarmSvc.startup();
+
    if (("arguments" in window) && (window.arguments.length) &&
        (typeof(window.arguments[0]) == "object") &&
        ("channel" in window.arguments[0]) ) {

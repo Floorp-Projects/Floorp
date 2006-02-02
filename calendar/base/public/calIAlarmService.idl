@@ -50,6 +50,14 @@ interface calIAlarmServiceObserver : nsISupports
 [scriptable,uuid(03669cf3-bf4f-4692-97a1-cca891964a1d)]
 interface calIAlarmService : nsISupports
 {
+  /**
+   * Cause the alarm service to start up, create a list of upcoming
+   * alarms in all registered calendars, add observers to watch for
+   * calendar registration and unregistration, and setup a timer to
+   * maintain that list and fire alarms.
+   */
+  void startup();
+
   /* add and remove observers that will be notified when an
      alarm has gone off.  It is up to the application to display
      the alarm.

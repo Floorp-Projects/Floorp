@@ -174,13 +174,8 @@ calAlarmService.prototype = {
 
     /* nsIObserver */
     observe: function (subject, topic, data) {
-        observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-
-        if (topic == "app-startup") {
-            observerService.addObserver(this, "profile-after-change", false);
-            observerService.addObserver(this, "xpcom-shutdown", false);
-        }
         if (topic == "profile-after-change") {
+            this.shutdown();
             this.startup();
         }
         if (topic == "xpcom-shutdown") {
@@ -232,7 +227,13 @@ calAlarmService.prototype = {
             return;
 
         dump("Starting calendar alarm service\n");
-        this.mStarted = true;
+
+        var observerSvc = Components.classes["@mozilla.org/observer-service;1"]
+                          .getService
+                          (Components.interfaces.nsIObserverService);
+
+        observerSvc.addObserver(this, "profile-after-change", false);
+        observerSvc.addObserver(this, "xpcom-shutdown", false);
 
         this.calendarManager = Components.classes["@mozilla.org/calendar/manager;1"].getService(Components.interfaces.calICalendarManager);
         var calendarManager = this.calendarManager;
@@ -254,6 +255,8 @@ calAlarmService.prototype = {
         };
 
         this.mUpdateTimer = newTimerWithCallback(timerCallback, kHoursBetweenUpdates * 3600000, true);
+
+        this.mStarted = true;
 
         /* tell people that we're alive so they can start monitoring alarms */
         this.notifier = Components.classes["@mozilla.org/embedcomp/appstartup-notifier;1"].getService(Components.interfaces.nsIObserver);
@@ -294,6 +297,13 @@ calAlarmService.prototype = {
         this.notifier = null;
         this.mRangeStart = null;
         this.mRangeEnd = null;
+
+        var observerSvc = Components.classes["@mozilla.org/observer-service;1"]
+                          .getService
+                          (Components.interfaces.nsIObserverService);
+
+        observerSvc.removeObserver(this, "profile-after-change");
+        observerSvc.removeObserver(this, "xpcom-shutdown");
 
         this.mStarted = false;
     },

@@ -94,8 +94,6 @@ const componentData =
      contractid: "@mozilla.org/calendar/alarm-service;1",
      script: "calAlarmService.js",
      constructor: "calAlarmService",
-     category: "app-startup",
-     categoryEntry: "alarm-service-startup",
      service: true},
 
     {cid: Components.ID("{974339d5-ab86-4491-aaaf-2b2ca177c12b}"),
