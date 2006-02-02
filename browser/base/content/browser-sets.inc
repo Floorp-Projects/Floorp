@@ -324,6 +324,9 @@
     <key id="key_switchTextDirection" key="&bidiSwitchTextDirectionItem.commandkey;" command="cmd_switchTextDirection" modifiers="accel,shift" />
 
     <key id="key_sanitize" command="Tools:Sanitize" keycode="VK_DELETE" modifiers="accel,shift"/>
+#ifdef XP_MACOSX
+    <key id="key_quitApplicationCmdMac" key="&quitApplicationCmdMac.key;" modifiers="accel"/>
+#endif
   </keyset>
 
 # Used by baseMenuOverlay
