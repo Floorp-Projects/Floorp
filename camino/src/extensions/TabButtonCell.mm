@@ -37,9 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "ImageAdditions.h"
+#import "NSBezierPath+Utils.h"
+
 #import "TabButtonCell.h"
 #import "TruncatingTextAndImageCell.h"
-#import "BrowserTabBarView.h"
 
 static const int kTabLeftMargin = 4; //distance between left edge and close button
 static const int kTabCloseButtonPad = 2; //distance between close button and label

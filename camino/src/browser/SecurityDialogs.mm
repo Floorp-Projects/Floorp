@@ -133,12 +133,7 @@ NS_IMETHODIMP SecurityDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
 
   // XXX fix window parenting
   NSWindow* parentWindow = [(MainController*)[NSApp delegate] getFrontmostBrowserWindow];
-  int result;
-  if (parentWindow)
-    result = [NSApp runModalForWindow:[downloadCertDialogController window] relativeToWindow:parentWindow];
-  else
-    result = [NSApp runModalForWindow:[downloadCertDialogController window]];
-
+  int result = [nsAlertController safeRunModalForWindow:[downloadCertDialogController window] relativeToWindow:parentWindow];
   if (result == NSAlertDefaultReturn)
   {
     *trust   = [downloadCertDialogController trustMaskSetting];
@@ -148,7 +143,7 @@ NS_IMETHODIMP SecurityDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
     *_retval = PR_FALSE;
 
   [downloadCertDialogController release];
-  return NS_OK;
+  return (result == NSAlertErrorReturn) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 /**
@@ -202,16 +197,13 @@ NS_IMETHODIMP SecurityDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   [pwDialogController setTitle:titleString message:messageString];
   [pwDialogController hideChangePasswordField];
 
+  NSWindow* parentWindow = nil;
   // XXX fix window parenting
 #if 0
-  NSWindow* parentWindow = [(MainController*)[NSApp delegate] getFrontmostBrowserWindow];
-  int result;
-  if (parentWindow)
-    result = [NSApp runModalForWindow:[pwDialogController window] relativeToWindow:parentWindow];
-  else
+  parentWindow = [(MainController*)[NSApp delegate] getFrontmostBrowserWindow];
 #endif
 
-  int result = [NSApp runModalForWindow:[pwDialogController window]];
+  int result = [nsAlertController safeRunModalForWindow:[pwDialogController window] relativeToWindow:parentWindow];
   BOOL confirmed = (result == NSAlertDefaultReturn);
 
   NSString* thePassword = [pwDialogController newPassword];
@@ -220,7 +212,7 @@ NS_IMETHODIMP SecurityDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
     [thePassword assignTo_nsAString:password];
 
   [pwDialogController release];
-  return NS_OK;
+  return (result == NSAlertErrorReturn) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 /**
@@ -375,13 +367,8 @@ SecurityDialogs::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo,
   // HACK: there is no way to get which window this is for from the API. The
   // security team in mozilla just cheats and assumes the frontmost window so
   // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
-
   NSWindow* parentWindow = [(MainController*)[NSApp delegate] getFrontmostBrowserWindow];
-  int result;
-  if (parentWindow)
-    result = [NSApp runModalForWindow:[dialogController window] relativeToWindow:parentWindow];
-  else
-    result = [NSApp runModalForWindow:[dialogController window]];
+  int result = [nsAlertController safeRunModalForWindow:[dialogController window] relativeToWindow:parentWindow];
 
   switch (result)
   {
@@ -403,7 +390,7 @@ SecurityDialogs::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo,
   }
 
   [dialogController release];
-  return NS_OK;
+  return (result == NSAlertErrorReturn) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 /**
@@ -436,16 +423,12 @@ SecurityDialogs::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo,
 
   // XXX fix window parenting
   NSWindow* parentWindow = [(MainController*)[NSApp delegate] getFrontmostBrowserWindow];
-  int result;
-  if (parentWindow)
-    result = [NSApp runModalForWindow:[certDialogController window] relativeToWindow:parentWindow];
-  else
-    result = [NSApp runModalForWindow:[certDialogController window]];
+  int result = [nsAlertController safeRunModalForWindow:[certDialogController window] relativeToWindow:parentWindow];
   
   *_retval = (result == NSAlertDefaultReturn);
 
   [certDialogController release];
-  return NS_OK;
+  return (result == NSAlertErrorReturn) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 /**
@@ -474,15 +457,12 @@ SecurityDialogs::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo,
   [expiredCertController setCertificateItem:[CertificateItem certificateItemWithCert:cert]];
   // XXX fix window parenting
   NSWindow* parentWindow = [(MainController*)[NSApp delegate] getFrontmostBrowserWindow];
-  int result;
-  if (parentWindow)
-    result = [NSApp runModalForWindow:[expiredCertController window] relativeToWindow:parentWindow];
-  else
-    result = [NSApp runModalForWindow:[expiredCertController window]];
+  int result = [nsAlertController safeRunModalForWindow:[expiredCertController window] relativeToWindow:parentWindow];
   
   *_retval = (result == NSAlertDefaultReturn);
   [expiredCertController release];
-  return NS_OK;
+  
+  return (result == NSAlertErrorReturn) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 /**
@@ -651,37 +631,35 @@ SecurityDialogs::SetPassword(nsIInterfaceRequestor *ctx, const PRUnichar *tokenN
   if (!showOldPasswordField)
     [pwDialogController hideChangePasswordField];
   
+  NSWindow* parentWindow = nil;
   // XXX fix window parenting
 #if 0
-  NSWindow* parentWindow = [(MainController*)[NSApp delegate] getFrontmostBrowserWindow];
-  int result;
-  if (parentWindow)
-    result = [NSApp runModalForWindow:[pwDialogController window] relativeToWindow:parentWindow];
-  else
+  parentWindow = [(MainController*)[NSApp delegate] getFrontmostBrowserWindow];
 #endif
-
-  int result = [NSApp runModalForWindow:[pwDialogController window]];
+  int result = [nsAlertController safeRunModalForWindow:[pwDialogController window] relativeToWindow:parentWindow];
 
   [pwDialogController setDelegate:nil];
 
-  if (result != NSAlertDefaultReturn)
+  nsresult rv;
+  if (result == NSAlertDefaultReturn)
+  {
+    *canceled = PR_FALSE;
+
+    nsAutoString oldPassword, newPassword;
+    [[pwDialogController currentPassword] assignTo_nsAString:oldPassword];
+    [[pwDialogController newPassword] assignTo_nsAString:newPassword];
+
+    if (slotStatus == nsIPKCS11Slot::SLOT_UNINITIALIZED)
+      rv = theToken->InitPassword(newPassword.get());
+    else
+      rv = theToken->ChangePassword(oldPassword.get(), newPassword.get());
+  }
+  else
   {
     *canceled = PR_TRUE;
-    return NS_OK;
+    rv = (result == NSAlertErrorReturn) ? NS_ERROR_FAILURE : NS_OK;
   }
-
-  *canceled = PR_FALSE;
-
-  nsAutoString oldPassword, newPassword;
-  [[pwDialogController currentPassword] assignTo_nsAString:oldPassword];
-  [[pwDialogController newPassword] assignTo_nsAString:newPassword];
-
-  nsresult rv;
-  if (slotStatus == nsIPKCS11Slot::SLOT_UNINITIALIZED)
-    rv = theToken->InitPassword(newPassword.get());
-  else
-    rv = theToken->ChangePassword(oldPassword.get(), newPassword.get());
-
+  
   [pwDialogController release];
   return rv;
 }
@@ -791,11 +769,7 @@ SecurityDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *
 
   // XXX fix window parenting
   NSWindow* parentWindow = [(MainController*)[NSApp delegate] getFrontmostBrowserWindow];
-  int result;
-  if (parentWindow)
-    result = [NSApp runModalForWindow:[dialogController window] relativeToWindow:parentWindow];
-  else
-    result = [NSApp runModalForWindow:[dialogController window]];
+  int result = [nsAlertController safeRunModalForWindow:[dialogController window] relativeToWindow:parentWindow];
 
   if (result == NSAlertDefaultReturn)
   {
@@ -809,7 +783,7 @@ SecurityDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *
   
   [dialogController release];
   
-  return NS_OK;
+  return (result == NSAlertErrorReturn) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 // nsITokenDialogs
@@ -902,7 +876,7 @@ SecurityDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *ctx, nsIKey
   nsCOMPtr<nsIObserver> completionObserver = new GenKeyPairCompletionObserver(dialogController);
   runnable->StartKeyGeneration(completionObserver);
 
-  int result = [NSApp runModalForWindow:[dialogController window]];
+  int result = [nsAlertController safeRunModalForWindow:[dialogController window] relativeToWindow:nil];
 
   eventQueueService->PopThreadEventQueue(newQueue);
 
@@ -916,7 +890,7 @@ SecurityDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *ctx, nsIKey
     return NS_ERROR_FAILURE;
   }
   
-  return NS_OK;
+  return (result == NSAlertErrorReturn) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 
