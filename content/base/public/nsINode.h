@@ -56,15 +56,19 @@ class nsIPrincipal;
 { 0x6b7a8e08, 0xf34b, 0x4210, \
  { 0xaf, 0x93, 0xec, 0x7a, 0x76, 0x94, 0x98, 0xe9 } }
 
+// hack to make egcs / gcc 2.95.2 happy
+class nsINode_base : public nsIDOMGCParticipant {
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
+};
+
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
  * nsIContent and nsIDocument share.  An instance of this interface has a list
  * of nsIContent children and provides access to them.
  */
-class nsINode : public nsIDOMGCParticipant {
+class nsINode : public nsINode_base {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
-
 #ifdef MOZILLA_INTERNAL_API
   // If you're using the external API, the only thing you can know about
   // nsINode is that it exists with an IID, if that....
@@ -247,6 +251,6 @@ protected:
 #endif // MOZILLA_INTERNAL_API
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsINode, NS_INODE_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsINode_base, NS_INODE_IID)
 
 #endif /* nsINode_h___ */
