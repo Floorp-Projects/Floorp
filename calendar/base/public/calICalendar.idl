@@ -413,7 +413,7 @@ interface calIOperationListener : nsISupports
                            in string aId,
                            in nsIVariant aDetail);
   const unsigned long ADD = 1;
-  const unsigned long MOVE = 2;
+  const unsigned long MODIFY = 2;
   const unsigned long DELETE = 3;
   const unsigned long GET = 4;
 

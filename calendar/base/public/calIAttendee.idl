@@ -58,9 +58,9 @@ interface calIAttendee : nsISupports
 
   /**
    * CHAIR
-   * REQUIRED_PARTICIPANT
-   * OPTIONAL_PARTICIPANT
-   * NON_PARTICIPANT
+   * REQ-PARTICIPANT
+   * OPT-PARTICIPANT
+   * NON-PARTICIPANT
    */
   attribute AUTF8String    role;
 
@@ -71,7 +71,7 @@ interface calIAttendee : nsISupports
    * TENTATIVE
    * DELEGATED
    * COMPLETED
-   * INPROCESS
+   * IN-PROCESS
    */
   attribute AUTF8String    participationStatus;
 
