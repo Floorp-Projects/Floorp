@@ -483,15 +483,17 @@
 	       // The selection manager is smart enough to call this only when
 	       // the selection really did change, so don't bother checking
                if (this.calView.mSelectedItem) {
-                   var oldbox = this.calView.findBoxForItem(this.calView.mSelectedItem);
-                   if (oldbox)
+                   var oldboxes = this.calView.findBoxesForItem(this.calView.mSelectedItem);
+                   for each (oldbox in oldboxes) {
                        oldbox.box.unselectItem(this.calView.mSelectedItem);
+                   }
                }
                this.calView.mSelectedItem = itemSelectionArray[0];
 
-               var newbox = this.calView.findBoxForItem(this.calView.mSelectedItem);
-               if (newbox)
+               var newboxes = this.calView.findBoxesForItem(this.calView.mSelectedItem);
+               for each (newbox in newboxes) {
                    newbox.box.selectItem(this.calView.mSelectedItem);
+               }
           }
       })
       ]]></field>
@@ -579,17 +581,19 @@
         ]]></getter>
         <setter><![CDATA[
           if (this.mSelectedItem) {
-              var oldbox = this.findBoxForItem(this.mSelectedItem);
-              if (oldbox)
+              var oldboxes = this.findBoxesForItem(this.mSelectedItem);
+              for each (oldbox in oldboxes) {
                   oldbox.box.unselectItem(this.mSelectedItem);
+              }
           }
 
           this.mSelectedItem = val;
 
           if (this.mSelectedItem) {
-              var newbox = this.findBoxForItem(this.mSelectedItem);
-              if (newbox)
+              var newboxes = this.findBoxesForItem(this.mSelectedItem);
+              for each (newbox in newboxes) {
                   newbox.box.selectItem(this.mSelectedItem);
+              }
               if (this.mController.selectionManager)
                   this.mController.selectionManager.replaceSelection(this.mSelectedItem);
           }
@@ -949,46 +953,84 @@
           return null;
         ]]></body>
       </method>
-
-      <method name="findBoxForItem">
+      <method name="findBoxesForItem">
         <parameter name="aItem"/>
         <body><![CDATA[
           var targetDate = null;
+          var finishDate = null;
+          var boxes = new Array();
+
+          // All our boxes are in default tz, so we need these times in them too.
           if (aItem instanceof Components.interfaces.calIEvent) {
-            targetDate = aItem.startDate;
+            targetDate = aItem.startDate.getInTimezone(this.mTimezone);
+            finishDate = aItem.endDate.getInTimezone(this.mTimezone);
           } else if (aItem instanceof Components.interfaces.calITodo) {
-            targetDate = aItem.startDate || aItem.entryDate;
+            if (aItem.entryDate) {
+              targetDate = aItem.entryDate.getInTimezone(this.mTimezone);
+              if (aItem.dueDate) {
+                finishDate = aItem.dueDate.getInTimezone(this.mTimezone);
+              }
+            }
           }
 
           if (!targetDate)
-            return null;
+            return boxes;
 
-          return this.findBoxForDate(targetDate);
+          if (!finishDate) {
+            boxes.push(this.findBoxForDate(targetDate));
+            return boxes;
+          }
+
+          if (!targetDate.isDate) {
+            // Reset the time to 00:00, so that we really get all the boxes
+            targetDate.hour = 0;
+            targetDate.minute = 0;
+            targetDate.second = 0;
+          }
+
+          while (targetDate.compare(finishDate) == -1) {
+            var box = this.findBoxForDate(targetDate);
+
+            // This might not exist, if the event spans the view start or end
+            if (box) {
+                boxes.push(box);
+            }
+            targetDate.day += 1;
+            targetDate.normalize();
+          }
+
+          return boxes;
 	]]></body>
       </method>
 
       <method name="doAddItem">
         <parameter name="aItem"/>
         <body><![CDATA[
-          var box = this.findBoxForItem(aItem);
-          if (!box)
+          var boxes = this.findBoxesForItem(aItem);
+
+          if (!boxes.length)
             return;
 
-          box.box.addItem(aItem);
+          for each (box in boxes) {
+            box.box.addItem(aItem);
+          }
         ]]></body>
       </method>
 
       <method name="doDeleteItem">
         <parameter name="aItem"/>
         <body><![CDATA[
-          var box = this.findBoxForItem(aItem);
-          if (!box)
+          var boxes = this.findBoxesForItem(aItem);
+
+          if (!boxes.length)
             return;
 
           if (this.mSelectedItem == aItem)
               this.mSelectedItem = null;
 
-          box.box.deleteItem(aItem);
+          for each (box in boxes) {
+            box.box.deleteItem(aItem);
+          }
         ]]></body>
       </method>
 
