@@ -393,6 +393,10 @@ case "$target" in
         else
             AC_MSG_ERROR([This version of the MSVC compiler, $CC_VERSION , is unsupported.])
         fi
+
+        if test -n "$WIN32_REDIST_DIR"; then
+            WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
+        fi
 	
         # bug #249782
         # ensure that mt.exe is Microsoft (R) Manifest Tool and not magnetic tape manipulation utility (or something else)
@@ -7170,6 +7174,10 @@ AC_SUBST(FIREFOX_VERSION)
 AC_SUBST(THUNDERBIRD_VERSION)
 AC_SUBST(SEAMONKEY_VERSION)
 
+AC_SUBST(MOZILLA_OFFICIAL)
+AC_SUBST(BUILD_OFFICIAL)
+AC_SUBST(MOZ_MILESTONE_RELEASE)
+
 dnl win32 options
 AC_SUBST(MOZ_PROFILE)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
@@ -7179,6 +7187,7 @@ AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
 AC_SUBST(CYGWIN_WRAPPER)
 AC_SUBST(AS_PERL)
+AC_SUBST(WIN32_REDIST_DIR)
 
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \

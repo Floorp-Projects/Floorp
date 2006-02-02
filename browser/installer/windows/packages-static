@@ -37,6 +37,10 @@ bin\nspr4.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
 bin\xpcom_compat.dll
+bin\Microsoft.VC80.CRT.manifest
+bin\msvcm80.dll
+bin\msvcp80.dll
+bin\msvcr80.dll
 
 [browser]
 ; [Base Browser Files]
