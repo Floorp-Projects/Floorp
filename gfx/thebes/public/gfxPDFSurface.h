@@ -40,8 +40,6 @@
 
 #include "gfxASurface.h"
 
-#include <cairo-pdf.h>
-
 class NS_EXPORT gfxPDFSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
@@ -51,8 +49,12 @@ public:
                   double height_in_points);
     virtual ~gfxPDFSurface();
 
+    void SetDPI(double x, double y);
+    void GetDPI(double *xDPI, double *yDPI);
 
 private:
+    double mXDPI;
+    double mYDPI;
 };
 
 #endif /* GFX_WINDOWSSURFACE_H */

@@ -37,9 +37,12 @@
 
 #include "gfxPDFSurface.h"
 
+#include <cairo-pdf.h>
+
 THEBES_IMPL_REFCOUNTING(gfxPDFSurface)
 
 gfxPDFSurface::gfxPDFSurface(const char *filename, double width, double height)
+    : mXDPI(-1), mYDPI(-1)
 {
     Init(cairo_pdf_surface_create(filename, width, height));
 }
@@ -47,4 +50,19 @@ gfxPDFSurface::gfxPDFSurface(const char *filename, double width, double height)
 gfxPDFSurface::~gfxPDFSurface()
 {
     Destroy();
+}
+
+void
+gfxPDFSurface::SetDPI(double xDPI, double yDPI)
+{
+    mXDPI = xDPI;
+    mYDPI = yDPI;
+    cairo_pdf_surface_set_dpi(CairoSurface(), xDPI, yDPI);
+}
+
+void
+gfxPDFSurface::GetDPI(double *xDPI, double *yDPI)
+{
+    *xDPI = mXDPI;
+    *yDPI = mYDPI;
 }
