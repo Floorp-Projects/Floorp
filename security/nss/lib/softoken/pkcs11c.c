@@ -2202,7 +2202,6 @@ finish_rsa:
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
 	}
-	context->multi = PR_FALSE;
 	pubKey = sftk_GetPubKey(key,CKK_EC,&crv);
 	if (pubKey == NULL) {
 	    crv = CKR_HOST_MEMORY;
