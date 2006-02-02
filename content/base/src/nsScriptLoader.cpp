@@ -500,7 +500,7 @@ nsScriptLoader::DoProcessScriptElement(nsIScriptElement *aElement,
   nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
   if (scriptURI) {
     // Check that the containing page is allowed to load this URI.
-    nsIPrincipal *docPrincipal = mDocument->GetPrincipal();
+    nsIPrincipal *docPrincipal = mDocument->GetNodePrincipal();
     NS_ENSURE_TRUE(docPrincipal, NS_ERROR_UNEXPECTED);
     rv = nsContentUtils::GetSecurityManager()->
       CheckLoadURIWithPrincipal(docPrincipal, scriptURI,
@@ -715,7 +715,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  nsIPrincipal *principal = mDocument->GetPrincipal();
+  nsIPrincipal *principal = mDocument->GetNodePrincipal();
   // We can survive without a principal, but we really should
   // have one.
   NS_ASSERTION(principal, "principal required for document");
@@ -986,7 +986,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
       nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
 
       if (principal) {
-        nsIPrincipal *docPrincipal = mDocument->GetPrincipal();
+        nsIPrincipal *docPrincipal = mDocument->GetNodePrincipal();
         if (docPrincipal) {
           nsCOMPtr<nsIPrincipal> newPrincipal =
               IntersectPrincipalCerts(docPrincipal, principal);

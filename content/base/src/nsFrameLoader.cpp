@@ -162,7 +162,9 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
     // to inherit an owner from the current document.
 
     loadInfo->SetInheritOwner(PR_TRUE);
-    principal = doc->GetPrincipal();
+    principal = mOwnerContent->GetNodePrincipal();
+    NS_ASSERTION(principal == doc->GetNodePrincipal(),
+                 "Principal mismatch.  Should not happen");
   }
 
   if (!principal) {

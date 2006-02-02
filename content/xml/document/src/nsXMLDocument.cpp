@@ -297,7 +297,14 @@ nsXMLDocument::OnChannelRedirect(nsIChannel *aOldChannel,
       return rv;
   }
 
-  return secMan->GetCodebasePrincipal(newLocation, getter_AddRefs(mPrincipal));
+  // XXXbz Shouldn't we look at the owner on the new channel at some point?
+  // It's not gonna be right here, but eventually it will....
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = secMan->GetCodebasePrincipal(newLocation, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  SetPrincipal(principal);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -410,12 +417,12 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   // remain. This should be done before the security check is done to
   // ensure that the document is reset even if the new document can't
   // be loaded.
-  nsCOMPtr<nsIPrincipal> principal(mPrincipal);
+  nsCOMPtr<nsIPrincipal> principal = GetNodePrincipal();
   nsCOMPtr<nsIEventListenerManager> elm(mListenerManager);
 
   ResetToURI(uri, nsnull);
 
-  mPrincipal = principal;
+  SetPrincipal(principal);
   mListenerManager = elm;
 
   // Get security manager, check to see if we're allowed to load this URI
@@ -467,18 +474,21 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   }
 
   // Set a principal for this document
+  // XXXbz StartDocumentLoad should handle that.... And we shouldn't be calling
+  // StartDocumentLoad until we get an OnStartRequest from this channel!
   nsCOMPtr<nsISupports> channelOwner;
   rv = channel->GetOwner(getter_AddRefs(channelOwner));
 
   // We don't care if GetOwner() succeeded here, if it failed,
   // channelOwner will be null, which is what we want in that case.
+  principal = do_QueryInterface(channelOwner);
 
-  mPrincipal = do_QueryInterface(channelOwner);
-
-  if (NS_FAILED(rv) || !mPrincipal) {
-    rv = secMan->GetCodebasePrincipal(uri, getter_AddRefs(mPrincipal));
-    NS_ENSURE_TRUE(mPrincipal, rv);
+  if (NS_FAILED(rv) || !principal) {
+    rv = secMan->GetCodebasePrincipal(uri, getter_AddRefs(principal));
+    NS_ENSURE_TRUE(principal, rv);
   }
+
+  SetPrincipal(principal);
 
   nsCOMPtr<nsIEventQueue> modalEventQueue;
 

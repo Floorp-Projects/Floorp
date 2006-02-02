@@ -1587,13 +1587,12 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
       case NS_UI_ACTIVATE:
         if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
           nsAutoString target;
-          nsCOMPtr<nsIURI> baseURI = GetBaseURI();
           GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, target);
           if (target.IsEmpty()) {
             GetBaseTarget(target);
           }
 
-          ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURI, hrefURI,
+          ret = TriggerLink(aPresContext, eLinkVerb_Replace, hrefURI,
                             target, PR_TRUE, PR_TRUE);
         }
         break;
@@ -1617,12 +1616,11 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
       case NS_FOCUS_CONTENT:
       {
         nsAutoString target;
-        nsCOMPtr<nsIURI> baseURI = GetBaseURI();
         GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, target);
         if (target.IsEmpty()) {
           GetBaseTarget(target);
         }
-        ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURI,
+        ret = TriggerLink(aPresContext, eLinkVerb_Replace,
                           hrefURI, target, PR_FALSE, PR_TRUE);
       }
       break;

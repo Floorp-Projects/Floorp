@@ -91,10 +91,10 @@ class nsIVariant;
 class nsIDOMUserDataHandler;
 
 // IID for the nsIDocument interface
-// bc831b59-2148-4016-a3c8-bf65f68da758
+// 0a87ec89-5589-4690-93b9-6c6c86e1e072
 #define NS_IDOCUMENT_IID \
-{ 0xbc831b59, 0x2148, 0x4016, \
- { 0xa3, 0xc8, 0xbf, 0x65, 0xf6, 0x8d, 0xa7, 0x58 } }
+{ 0x0a87ec89, 0x5589, 0x4690, \
+ { 0x93, 0xb9, 0x6c, 0x6c, 0x86, 0xe1, 0xe0, 0x72 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -172,11 +172,6 @@ public:
   {
     mDocumentURI = aURI;
   }
-
-  /**
-   * Return the principal responsible for this document.
-   */
-  virtual nsIPrincipal* GetPrincipal() = 0;
 
   /**
    * Set the principal responsible for this document.

@@ -541,11 +541,11 @@ public:
   /**
    * Trigger a link with uri aLinkURI.  If aClick is false, this triggers a
    * mouseover on the link, otherwise it triggers a load, after doing a
-   * security check.
+   * security check.  The node principal of |this| is used for the security
+   * check.
+   *
    * @param aPresContext the pres context.
    * @param aVerb how the link will be loaded (replace page, new window, etc.)
-   * @param aOriginURI the URI the request originates from.  Used as the origin
-   *        uri for a CheckLoadURI call. 
    * @param aLinkURI the URI of the link
    * @param aTargetSpec the target (like target=, may be empty)
    * @param aClick whether this was a click or not (if false, it assumes you
@@ -556,7 +556,6 @@ public:
    */
   nsresult TriggerLink(nsPresContext* aPresContext,
                        nsLinkVerb aVerb,
-                       nsIURI* aOriginURI,
                        nsIURI* aLinkURI,
                        const nsAFlatString& aTargetSpec,
                        PRBool aClick,

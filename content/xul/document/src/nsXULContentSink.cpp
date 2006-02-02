@@ -1282,7 +1282,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
 
                   if (NS_SUCCEEDED(rv)) {
                       rv = mSecMan->
-                          CheckLoadURIWithPrincipal(doc->GetPrincipal(),
+                          CheckLoadURIWithPrincipal(doc->GetNodePrincipal(),
                                                     script->mSrcURI,
                                                     nsIScriptSecurityManager::ALLOW_CHROME);
                   }

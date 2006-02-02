@@ -174,7 +174,7 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
 
     // Reset and set up document
     nsCOMPtr<nsIDocument> sourceDoc = do_QueryInterface(aSourceDocument);
-    nsIPrincipal* sourcePrincipal = sourceDoc->GetPrincipal();
+    nsIPrincipal* sourcePrincipal = sourceDoc->GetNodePrincipal();
     if (!sourcePrincipal) {
         return;
     }

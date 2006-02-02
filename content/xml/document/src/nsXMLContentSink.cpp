@@ -598,7 +598,8 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
     return NS_ERROR_FAILURE;
   }
 
-  return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup, mDocument->GetPrincipal());
+  return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup,
+                                        mDocument->GetNodePrincipal());
 }
 
 nsresult
@@ -637,7 +638,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     // Do security check
     nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
     rv = secMan->
-      CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), url,
+      CheckLoadURIWithPrincipal(mDocument->GetNodePrincipal(), url,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 

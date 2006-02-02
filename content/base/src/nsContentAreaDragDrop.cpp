@@ -563,9 +563,9 @@ nsContentAreaDragDrop::DragDrop(nsIDOMEvent* inMouseEvent)
       session->GetSourceDocument(getter_AddRefs(sourceDocument));
 
       nsCOMPtr<nsIDocument> sourceDoc(do_QueryInterface(sourceDocument));
-      if (sourceDoc && sourceDoc->GetPrincipal()) {
+      if (sourceDoc && sourceDoc->GetNodePrincipal()) {
         nsCOMPtr<nsIURI> sourceUri;
-        sourceDoc->GetPrincipal()->GetURI(getter_AddRefs(sourceUri));
+        sourceDoc->GetNodePrincipal()->GetURI(getter_AddRefs(sourceUri));
 
         if (sourceUri) {
           nsCAutoString sourceUriStr;

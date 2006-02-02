@@ -1512,13 +1512,16 @@ void
 nsImageFrame::TriggerLink(nsPresContext* aPresContext,
                           nsIURI* aURI,
                           const nsString& aTargetSpec,
+                          nsINode* aTriggerNode,
                           PRBool aClick)
 {
+  NS_PRECONDITION(aTriggerNode, "Must have triggering node");
+  
   // We get here with server side image map
   nsILinkHandler *handler = aPresContext->GetLinkHandler();
   if (handler) {
     if (aClick) {
-      // Check that this page is allowed to load this URI.
+      // Check that the triggering node is allowed to load this URI.
       // Almost a copy of the similarly named method in nsGenericElement
       nsresult rv;
       nsCOMPtr<nsIScriptSecurityManager> securityManager = 
@@ -1527,22 +1530,20 @@ nsImageFrame::TriggerLink(nsPresContext* aPresContext,
       if (NS_FAILED(rv))
         return;
 
-      nsIPresShell *ps = aPresContext->GetPresShell();
-      if (!ps)
+      nsIPrincipal* principal = aTriggerNode->GetNodePrincipal();
+      if (!principal) {
         return;
-
-      nsIDocument *doc = ps->GetDocument();
-      if (doc) {
-        rv = securityManager->
-          CheckLoadURIWithPrincipal(doc->GetPrincipal(), aURI,
-                                    nsIScriptSecurityManager::STANDARD);
-
-        // Only pass off the click event if the script security manager
-        // says it's ok.
-        if (NS_SUCCEEDED(rv))
-          handler->OnLinkClick(mContent, eLinkVerb_Replace, aURI,
-                               aTargetSpec.get());
       }
+
+      rv = securityManager->
+        CheckLoadURIWithPrincipal(principal, aURI,
+                                  nsIScriptSecurityManager::STANDARD);
+
+      // Only pass off the click event if the script security manager
+      // says it's ok.
+      if (NS_SUCCEEDED(rv))
+        handler->OnLinkClick(mContent, eLinkVerb_Replace, aURI,
+                             aTargetSpec.get());
     }
     else {
       handler->OnOverLink(mContent, aURI, aTargetSpec.get());
@@ -1580,10 +1581,13 @@ nsImageFrame::TranslateEventCoords(const nsPoint& aPoint,
 }
 
 PRBool
-nsImageFrame::GetAnchorHREFAndTarget(nsIURI** aHref, nsString& aTarget)
+nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
+                                         nsINode** aNode)
 {
   PRBool status = PR_FALSE;
   aTarget.Truncate();
+  *aHref = nsnull;
+  *aNode = nsnull;
 
   // Walk up the content tree, looking for an nsIDOMAnchorElement
   for (nsIContent* content = mContent->GetParent();
@@ -1597,6 +1601,7 @@ nsImageFrame::GetAnchorHREFAndTarget(nsIURI** aHref, nsString& aTarget)
       if (anchor) {
         anchor->GetTarget(aTarget);
       }
+      NS_ADDREF(*aNode = content);
       break;
     }
   }
@@ -1680,7 +1685,9 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
           // element to provide the basis for the destination url.
           nsCOMPtr<nsIURI> uri;
           nsAutoString target;
-          if (GetAnchorHREFAndTarget(getter_AddRefs(uri), target)) {
+          nsCOMPtr<nsINode> anchorNode;
+          if (GetAnchorHREFTargetAndNode(getter_AddRefs(uri), target,
+                                         getter_AddRefs(anchorNode))) {
             // XXX if the mouse is over/clicked in the border/padding area
             // we should probably just pretend nothing happened. Nav4
             // keeps the x,y coordinates positive as we do; IE doesn't
@@ -1698,7 +1705,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
               *aEventStatus = nsEventStatus_eConsumeDoDefault; 
               clicked = PR_TRUE;
             }
-            TriggerLink(aPresContext, uri, target, clicked);
+            TriggerLink(aPresContext, uri, target, anchorNode, clicked);
           }
         }
       }

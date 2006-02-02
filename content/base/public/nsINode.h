@@ -48,12 +48,13 @@
 
 class nsIContent;
 class nsIDocument;
+class nsIPrincipal;
 
 // IID for the nsINode interface
-// 9c74e48b-b417-4058-aa23-83cd7eb15131
+// 6b7a8e08-f34b-4210-af93-ec7a769498e9
 #define NS_INODE_IID \
-{ 0x9c74e48b, 0xb417, 0x4058, \
- { 0xaa, 0x23, 0x83, 0xcd, 0x7e, 0xb1, 0x51, 0x31 } }
+{ 0x6b7a8e08, 0xf34b, 0x4210, \
+ { 0xaf, 0x93, 0xec, 0x7a, 0x76, 0x94, 0x98, 0xe9 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -224,6 +225,15 @@ public:
    */
   virtual void* UnsetProperty(nsIAtom  *aPropertyName,
                               nsresult *aStatus = nsnull);
+  
+  /**
+   * Return the principal of this node.  This may return null; in that case the
+   * caller should assume that all same-origin checks against this node fail
+   * and that this node has no permissions to do anything.
+   */
+  nsIPrincipal* GetNodePrincipal() const {
+    return mNodeInfo->NodeInfoManager()->GetDocumentPrincipal();
+  }
 
   /**
    * IsNodeOfType()?  Do we need a non-QI way to tell apart documents and

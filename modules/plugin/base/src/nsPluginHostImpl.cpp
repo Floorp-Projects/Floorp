@@ -3385,7 +3385,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
     if (!doc)
       return NS_ERROR_NULL_POINTER;
 
-    rv = secMan->CheckLoadURIWithPrincipal(doc->GetPrincipal(), aURL, 0);
+    rv = secMan->CheckLoadURIWithPrincipal(doc->GetNodePrincipal(), aURL, 0);
     if (NS_FAILED(rv))
       return rv;
 
@@ -5758,7 +5758,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       if (doc)
       {
         // Set the owner of channel to the document principal...
-        channel->SetOwner(doc->GetPrincipal());
+        channel->SetOwner(doc->GetNodePrincipal());
       }
 
       // deal with headers and post data
@@ -5840,7 +5840,7 @@ nsPluginHostImpl::DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
   if (NS_FAILED(rv))
     return rv;
 
-  return secMan->CheckLoadURIWithPrincipal(doc->GetPrincipal(), targetURL,
+  return secMan->CheckLoadURIWithPrincipal(doc->GetNodePrincipal(), targetURL,
                                            nsIScriptSecurityManager::STANDARD);
 
 }

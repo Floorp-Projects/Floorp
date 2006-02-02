@@ -115,6 +115,7 @@ public:
 #include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsIDocument.h"
+#include "nsIScriptObjectPrincipal.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
@@ -824,7 +825,7 @@ END_COM_MAP()
         if (!scriptContext)
             return E_UNEXPECTED;
 
-        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));
+        nsCOMPtr<nsIScriptObjectPrincipal> doc(do_QueryInterface(domDocument));
         if (!doc)
             return E_UNEXPECTED;
 

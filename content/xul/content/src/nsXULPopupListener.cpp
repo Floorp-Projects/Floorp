@@ -238,12 +238,10 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
       // The user wants his contextmenus.  Let's make sure that this is a website
       // and not chrome since there could be places in chrome which don't want
       // contextmenus.
-      nsCOMPtr<nsIDocument> doc;
-      nsCOMPtr<nsIPrincipal> prin;
-      nsContentUtils::GetDocumentAndPrincipal(targetNode,
-                                              getter_AddRefs(doc),
-                                              getter_AddRefs(prin));
-      if (prin) {
+      nsCOMPtr<nsINode> node = do_QueryInterface(targetNode);
+      if (node) {
+        nsIPrincipal* prin = node->GetNodePrincipal();
+
         nsIScriptSecurityManager *securityManager =
             nsContentUtils::GetSecurityManager();
 

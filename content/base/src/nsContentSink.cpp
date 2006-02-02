@@ -328,7 +328,7 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     // We use the original codebase in case the codebase was changed
     // by SetDomain
 
-    nsIPrincipal *docPrincipal = mDocument->GetPrincipal();
+    nsIPrincipal *docPrincipal = mDocument->GetNodePrincipal();
     if (!docPrincipal) {
       return NS_ERROR_FAILURE;
     }

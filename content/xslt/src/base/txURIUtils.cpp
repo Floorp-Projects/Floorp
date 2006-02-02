@@ -206,26 +206,22 @@ void URIUtils::resolveHref(const nsAString& href, const nsAString& base,
 void
 URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
 {
-    if (!aSourceNode) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(aSourceNode);
+    if (!node) {
         // XXXbz passing nsnull as the first arg to Reset is illegal
         aNewDoc->Reset(nsnull, nsnull);
         return;
     }
 
-    nsCOMPtr<nsIDocument> sourceDoc = do_QueryInterface(aSourceNode);
+    nsCOMPtr<nsIDocument> sourceDoc = node->GetOwnerDoc();
     if (!sourceDoc) {
-        nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
-        aSourceNode->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
-        sourceDoc = do_QueryInterface(sourceDOMDocument);
-    }
-    if (!sourceDoc) {
-        NS_ASSERTION(0, "no source document found");
+        NS_ERROR("no source document found");
         // XXXbz passing nsnull as the first arg to Reset is illegal
         aNewDoc->Reset(nsnull, nsnull);
         return;
     }
 
-    nsIPrincipal* sourcePrincipal = sourceDoc->GetPrincipal();
+    nsIPrincipal* sourcePrincipal = sourceDoc->GetNodePrincipal();
     if (!sourcePrincipal) {
         return;
     }

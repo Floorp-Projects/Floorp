@@ -61,9 +61,9 @@
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
 
-// Needed for nsIDocument::FlushPendingNotifications(...)
 #include "nsIDOMDocument.h"
-#include "nsIDocument.h"
+#include "nsIScriptObjectPrincipal.h"
+#include "nsIURI.h"
 
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -625,7 +625,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
       nsCOMPtr<nsIDocShellTreeItem> dsitem;
       GetPrimaryContentShell(getter_AddRefs(dsitem));
       nsCOMPtr<nsIDOMDocument> domdoc(do_GetInterface(dsitem));
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
+      nsCOMPtr<nsIScriptObjectPrincipal> doc(do_QueryInterface(domdoc));
       if (doc) {
         nsCOMPtr<nsIURI> uri;
         nsIPrincipal* principal = doc->GetPrincipal();
