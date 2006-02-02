@@ -95,7 +95,9 @@ interface nsIURILoader : nsISupports
    * Note to self: we may want to optimize things a bit more by requiring
    * the content types the registered content listener cares about.
    *
-   * @param aContentListener the listener to register
+   * @param aContentListener
+   *        The listener to register. This listener must implement
+   *        nsISupportsWeakReference.
    *
    * @see the nsIURILoader class description
    */
