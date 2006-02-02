@@ -3614,10 +3614,8 @@ CERTCertificate *
 SECU_FindCrlIssuer(CERTCertDBHandle *dbhandle, SECItem* subject,
                    CERTAuthKeyID* authorityKeyID, PRTime validTime)
 {
-    CERTCertListNode *node;
-    CERTCertificate * issuerCert = NULL, *cert = NULL;
+    CERTCertificate *issuerCert = NULL;
     CERTCertList *certList = NULL;
-    SECStatus rv = SECFailure;
 
     if (!subject) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -3627,32 +3625,24 @@ SECU_FindCrlIssuer(CERTCertDBHandle *dbhandle, SECItem* subject,
     certList =
         CERT_CreateSubjectCertList(NULL, dbhandle, subject,
                                    validTime, PR_TRUE);
-    if (!certList) {
-        goto loser;
-    }
-
-    node = CERT_LIST_HEAD(certList);
-    
-    /* XXX and authoritykeyid in the future */
-    while ( ! CERT_LIST_END(node, certList) ) {
-	cert = node->cert;
-        if (CERT_CheckCertUsage(cert, KU_CRL_SIGN) != SECSuccess ||
-            !cert->trust) {
-            continue;
-        }
-        /* select the first (newest) user cert */
-        if (CERT_IsUserCert(cert)) {
-            rv = SECSuccess;
-            goto success;
-        }
-    }
-
-  success:
-    if (rv == SECSuccess) {
-        issuerCert = CERT_DupCertificate(cert);
-    }
-  loser:
     if (certList) {
+        CERTCertListNode *node = CERT_LIST_HEAD(certList);
+    
+        /* XXX and authoritykeyid in the future */
+        while ( ! CERT_LIST_END(node, certList) ) {
+            CERTCertificate *cert = node->cert;
+            /* check cert CERTCertTrust data is allocated, check cert
+               usage extension, check that cert has pkey in db. Select
+               the first (newest) user cert */
+            if (cert->trust &&
+                CERT_CheckCertUsage(cert, KU_CRL_SIGN) == SECSuccess &&
+                CERT_IsUserCert(cert)) {
+                
+                issuerCert = CERT_DupCertificate(cert);
+                break;
+            }
+            node = CERT_LIST_NEXT(node);   
+        }
         CERT_DestroyCertList(certList);
     }
     return(issuerCert);
