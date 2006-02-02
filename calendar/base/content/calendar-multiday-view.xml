@@ -2298,10 +2298,18 @@
           // We don't support tasks here, yet
           if (!(aItem instanceof Components.interfaces.calIEvent))
               return columns;
+          var tz = this.mDateColumns[0].date.timezone;
 
           // Note that these may be dates or datetimes
-          var targetDate = aItem.startDate.clone();
-          var finishDate = aItem.endDate;
+          var targetDate = aItem.startDate.getInTimezone(tz);
+          var finishDate = aItem.endDate.getInTimezone(tz);
+
+          if (!targetDate.isDate) {
+            // Set the time to 00:00 so that we get all the boxes
+            targetDate.hour = 0;
+            targetDate.minute = 0;
+            targetDate.second = 0;
+          }
 
           while (targetDate.compare(finishDate) == -1) {
             var col = this.findColumnForDate(targetDate);
