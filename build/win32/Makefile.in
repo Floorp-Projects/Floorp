@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,19 +11,19 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Communicator client code, released
-# March 31, 1998.
+# The Original Code is Mozilla core build scripts.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
-# the Initial Developer. All Rights Reserved.
+# Benjamin Smedberg <benjamin@smedbergs.us>
+#
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
 #
 # Contributor(s):
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either of the GNU General Public License Version 2 or later (the "GPL"),
-# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,32 +35,30 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = build
-PACKAGE_FILE = build.pkg
-
-ifeq (,$(filter WINCE WINNT OS2,$(OS_ARCH)))
-DIRS		= unix
-endif
-
-ifeq (WINNT,$(OS_ARCH))
-DIRS = win32
-endif
-
 include $(topsrcdir)/config/rules.mk
 
-# Install bloaturls.txt file for tinderbox bloat test.
-libs:: bloaturls.txt
-	$(INSTALL) $< $(DIST)/bin
+ifdef WIN32_REDIST_DIR
 
-# Install bloatcycle.html into dist/bin/res, for auto-cycling
-# of bloaturls.txt.  This is for browsers that can't do -f
-# autocycling of URLs.
-libs:: bloatcycle.html
-	$(INSTALL) $< $(DIST)/bin/res
+ifeq (1400,$(_MSC_VER))
+REDIST_FILES = \
+	Microsoft.VC80.CRT.manifest \
+	msvcm80.dll \
+	msvcp80.dll \
+	msvcr80.dll \
+	$(NULL)
+endif
+
+endif
+
+ifdef REDIST_FILES
+libs:: $(addprefix $(WIN32_REDIST_DIR)/,$(REDIST_FILES))
+	$(INSTALL) $^ $(FINAL_TARGET)
+endif
+
