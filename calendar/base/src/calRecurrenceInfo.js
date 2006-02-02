@@ -328,8 +328,16 @@ calRecurrenceInfo.prototype = {
 
         var startDate = this.mBaseItem.recurrenceStartDate;
         var dates = [];
-
-        for each (ritem in this.mRecurrenceItems) {
+        
+        // apply positive items before negative:
+        var sortedRecurrenceItems = [];
+        for each ( var ritem in this.mRecurrenceItems ) {
+            if (ritem.isNegative)
+                sortedRecurrenceItems.push(ritem);
+            else
+                sortedRecurrenceItems.unshift(ritem);
+        }
+        for each (ritem in sortedRecurrenceItems) {
             var cur_dates;
 
             // if both range start and end are specified, we ask for all of the occurrences,
