@@ -66,6 +66,7 @@ main(int argc, char **argv)
   char *lastSlash;
 
   char iniPath[MAXPATHLEN];
+  char tmpPath[MAXPATHLEN];
 
 #ifdef XP_WIN
   if (!::GetModuleFileName(NULL, iniPath, sizeof(iniPath)))
@@ -96,11 +97,12 @@ main(int argc, char **argv)
     PRBool found = PR_FALSE;
     char *token = strtok(pathdup, ":");
     while (token) {
-      sprintf(iniPath, "%s/%s", token, argv[0]);
-      if (stat(iniPath, &fileStat) == 0) {
+      sprintf(tmpPath, "%s/%s", token, argv[0]);
+      if (realpath(tmpPath, iniPath) && stat(iniPath, &fileStat) == 0) {
         found = PR_TRUE;
         break;
       }
+      token = strtok(NULL, ":");
     }
     free (pathdup);
     if (!found)
