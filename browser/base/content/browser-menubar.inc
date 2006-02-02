@@ -72,12 +72,14 @@
 #ifdef XP_WIN
         label="&quitApplicationCmdWin.label;"
         accesskey="&quitApplicationCmdWin.accesskey;"
-#elif XP_MACOSX
+#else
+#ifdef XP_MACOSX
         label="&quitApplicationCmdMac.label;"
         key="key_quitApplicationCmdMac"
 #else
-        label="&quitApplicationCmd.label;" 
-        accesskey="&quitApplicationCmd.accesskey;" 
+        label="&quitApplicationCmd.label;"
+        accesskey="&quitApplicationCmd.accesskey;"
+#endif
 #endif
         oncommand="goQuitApplication();"/>
               </menupopup>
