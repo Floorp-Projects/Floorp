@@ -1385,7 +1385,7 @@ nsMsgComposeService::Handle(nsICommandLine* aCmdLine)
   rv = aCmdLine->GetLength(&count);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (count > found) {
+  if (count > found + 1) {
     aCmdLine->GetArgument(found + 1, uristr);
     if (StringBeginsWith(uristr, NS_LITERAL_STRING("mailto:"))  ||
 	StringBeginsWith(uristr, NS_LITERAL_STRING("to="))  ||
