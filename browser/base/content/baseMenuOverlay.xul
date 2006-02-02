@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #   Asaf Romano <mozilla.mano@sent.com>
+#   Josh Aas <josh@mozilla.com>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,9 +52,13 @@
 <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
 #ifdef XP_MACOSX
-<!-- nsMenuBarX moves menu_preferences to the Application Menu -->
+<!-- nsMenuBarX hides these and uses them to build the Application menu -->
     <menupopup id="menu_ToolsPopup">
-        <menuitem id="menu_preferences" oncommand="openPreferences();"/>
+        <menuitem id="menu_preferences" label="&preferencesCmdMac.label;" key="key_preferencesCmdMac" oncommand="openPreferences();"/>
+        <menuitem id="menu_mac_services" label="&servicesMenuMac.label;"/>
+        <menuitem id="menu_mac_hide_app" label="&hideThisAppCmdMac.label;" key="key_hideThisAppCmdMac"/>
+        <menuitem id="menu_mac_hide_others" label="&hideOtherAppsCmdMac.label;" key="key_hideOtherAppsCmdMac"/>
+        <menuitem id="menu_mac_show_all" label="&showAllAppsCmdMac.label;"/>
     </menupopup>
 <!-- Mac window menu -->
 #include ../../../toolkit/content/macWindowMenu.inc
@@ -113,9 +118,9 @@
 # VK_HELP doesn't work on other platforms yet
 #ifdef XP_MACOSX
             keycode="&openHelpMac.commandkey;"/>
-# On mac, we support both the help key and Cmd+?
-# ...Map Cmd+Shift+/, show Cmd+?
-# (that's for en-US, it might be different for other keyboard layouts)
+<!-- On mac, we support both the help key and Cmd+?
+     ...Map Cmd+Shift+/, show Cmd+
+     (that's for en-US, it might be different for other keyboard layouts) -->
         <key id="key_openHelpMac"
              oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
              key="&openHelpMac2.commandkey;"
@@ -123,6 +128,16 @@
         <key id="key_openHelpMacFrontend"
              key="&openHelpMac2.frontendCommandkey;"
              modifiers="&openHelpMac2.frontendModifiers;"/>
+<!-- These are used to build the Application menu under Cocoa widgets -->
+        <key id="key_preferencesCmdMac"
+             key="&preferencesCmdMac.commandkey;"
+             modifiers="&preferencesCmdMac.modifiers;"/>
+        <key id="key_hideThisAppCmdMac"
+             key="&hideThisAppCmdMac.commandkey;"
+             modifiers="&hideThisAppCmdMac.modifiers;"/>
+        <key id="key_hideOtherAppsCmdMac"
+             key="&hideOtherAppsCmdMac.commandkey;"
+             modifiers="&hideOtherAppsCmdMac.modifiers;"/>
 #else
              keycode="&openHelp.commandkey;"/>
 #endif
