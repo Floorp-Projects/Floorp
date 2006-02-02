@@ -148,7 +148,7 @@ crlu()
 {
     echo "$SCRIPTNAME: ${CU_ACTION} --------------------------"
     
-    CRLUTIL=crlutil
+    CRLUTIL="crlutil -q"
     echo "$CRLUTIL $*"
     $CRLUTIL $*
     RET=$?
@@ -763,7 +763,7 @@ cert_crl_ssl()
 update=$CRLUPDATE
 addcert ${CRL_GRP_1_BEGIN}-${CRL_GRP_END_} $CRL_GRP_DATE
 addext reasonCode 0 4
-addext issuerAltNames 0 "rfc822Name:caemail@ca.com|dnsName:ca.com|x400Address:x400Address|directoryName:CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US|URI:http://ca.com|ipAddress:192.168.0.1|registerID=reg CA"
+addext issuerAltNames 0 "rfc822Name:caemail@ca.com|dnsName:ca.com|directoryName:CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US|URI:http://ca.com|ipAddress:192.168.0.1|registerID=reg CA"
 EOF_CRLINI
 # This extension should be added to the list, but currently nss has bug
 #addext authKeyId 0 "CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US" 1
