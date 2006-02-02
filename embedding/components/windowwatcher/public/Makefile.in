@@ -49,13 +49,13 @@ GRE_MODULE	= 1
 
 SDK_XPIDLSRCS   = nsIWindowWatcher.idl \
 		  nsIPromptService.idl \
-		  nsINonBlockingAlertService.idl \
 		  $(NULL)
 
 XPIDLSRCS	= nsIDialogParamBlock.idl \
                   nsPIPromptService.idl \
                   nsPIWindowWatcher.idl \
                   nsIAuthPromptWrapper.idl \
+                  nsINonBlockingAlertService.idl \
                   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
