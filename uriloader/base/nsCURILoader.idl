@@ -62,6 +62,21 @@ nsIURILoader
 #define NS_CONTENT_HANDLER_CONTRACTID               "@mozilla.org/uriloader/content-handler;1"
 #define NS_CONTENT_HANDLER_CONTRACTID_PREFIX	     NS_CONTENT_HANDLER_CONTRACTID "?type="
 
+/**
+ * A category where content listeners can register. The name of the entry must
+ * be the content that this listener wants to handle, the value must be a
+ * contract ID for the listener. It will be created using createInstance (not
+ * getService).
+ *
+ * Listeners added this way are tried after the initial target of the load and
+ * after explicitly registered listeners (nsIURILoader::registerContentListener).
+ *
+ * These listeners must implement at least nsIURIContentListener (and
+ * nsISupports).
+ *
+ * @see nsICategoryManager
+ * @see nsIURIContentListener
+ */
 #define NS_CONTENT_LISTENER_CATEGORYMANAGER_ENTRY   "external-uricontentlisteners"
 
 %}
