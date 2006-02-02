@@ -7,7 +7,7 @@
 Summary:          Mozilla LDAP C SDK
 Name:             mozldap
 Version:          %{major}.%{minor}
-Release:          2
+Release:          3
 License:          MPL/GPL/LGPL
 URL:              http://www.mozilla.org/directory/csdk.html
 Group:            System Environment/Libraries
@@ -45,11 +45,11 @@ Mozilla LDAP C SDK libraries.
 Summary:          Development libraries and examples for Mozilla LDAP C SDK
 Group:            Development/Libraries
 Requires:         mozldap = %{version}-%{release}
-Requires:         nspr-devel >= %{nspr_version}, nss-devel >= %{nspr_version}
+Requires:         nspr-devel >= %{nspr_version}, nss-devel >= %{nss_version}
 Provides:         mozldap-devel
 
 %description devel
-Header and Library files for doing development with Network Security Services.
+Header and Library files for doing development with the Mozilla LDAP C SDK
 
 %prep
 %setup -q
@@ -90,7 +90,8 @@ make BUILDCLU=1 HAVE_SVRCORE=1 BUILD_OPT=1
                           -e "s,%%exec_prefix%%,%{_prefix},g" \
                           -e "s,%%includedir%%,%{_includedir}/mozldap,g" \
                           -e "s,%%NSPR_VERSION%%,%{nspr_version},g" \
-                          -e "s,%%NSS_VERSION%%,%{nss_version},g" > \
+                          -e "s,%%NSS_VERSION%%,%{nss_version},g" \
+                          -e "s,%%SVRCORE_VERSION%%,%{svrcore_version},g" \
                           -e "s,%%MOZLDAP_VERSION%%,%{version},g" > \
                           $RPM_BUILD_ROOT/%{_libdir}/pkgconfig/mozldap.pc
 
@@ -106,12 +107,7 @@ make BUILDCLU=1 HAVE_SVRCORE=1 BUILD_OPT=1
 for file in libssldap50.so libprldap50.so libldap50.so
 do
   %{__install} -m 755 mozilla/dist/lib/$file $RPM_BUILD_ROOT/%{_libdir}
-  mv $RPM_BUILD_ROOT/%{_libdir}/$file $RPM_BUILD_ROOT/%{_libdir}/$file.%{major}.%{minor}
-  ln -s $RPM_BUILD_ROOT/%{_libdir}/$file.%{major}.%{minor} $RPM_BUILD_ROOT/%{_libdir}/$file.%{major}
-  ln -s $RPM_BUILD_ROOT/%{_libdir}/$file.%{major} $RPM_BUILD_ROOT/%{_libdir}/$file
 done
-# Rename the libraries and create the symlinks
-
 
 # Copy the binaries we want
 for file in ldapsearch ldapmodify ldapdelete ldapcmp ldapcompare
@@ -133,6 +129,15 @@ cp -r mozilla/directory/c-sdk/ldap/examples $RPM_BUILD_ROOT/usr/share/mozldap
 %{__install} -m 644 mozilla/directory/c-sdk/ldap/libraries/libldap/ldaptemplates.conf $RPM_BUILD_ROOT/usr/share/mozldap/etc
 %{__install} -m 644 mozilla/directory/c-sdk/ldap/libraries/libldap/ldapfilter.conf $RPM_BUILD_ROOT/usr/share/mozldap/etc
 %{__install} -m 644 mozilla/directory/c-sdk/ldap/libraries/libldap/ldapsearchprefs.conf $RPM_BUILD_ROOT/usr/share/mozldap/etc
+
+# Rename the libraries and create the symlinks
+cd $RPM_BUILD_ROOT/%{_libdir}
+for file in libssldap50.so libprldap50.so libldap50.so
+do
+  mv $file $file.${major}.${minor}
+  ln -s $file.${major}.%{minor} $file.${major}
+  ln -s $file.${major} $file
+done
 
 %clean
 %{__rm} -rf $RPM_BUILD_ROOT
