@@ -49,14 +49,34 @@ function updateStyleSheetForCalendar(aCalendar)
 function addCalendarToTree(aCalendar)
 {
     var boxobj = document.getElementById("calendarTree").treeBoxObject;
-    boxobj.rowCountChanged(getCalendars().indexOf(aCalendar), 1);
+
+    // XXXdmose in theory, we should be able to do something along the lines
+    //
+    // var calendarRow = getCalendars().indexOf(aCalendar);
+    // boxobj.rowCountChanged(calendarRow, 1);
+    //
+    // Unfortunately, the indexOf in that statement will currently fail
+    // since it's not possible to compare "interface pointers" for identity
+    // because of XPConnect wrapping vagaries.  Bug 325650 covers fixing
+    // this the right way.  But for now...
+    boxobj.invalidate();
+
     updateStyleSheetForCalendar(aCalendar);
 }
 
 function removeCalendarFromTree(aCalendar)
 {
     var boxobj = document.getElementById("calendarTree").treeBoxObject;
-    boxobj.rowCountChanged(getCalendars().indexOf(aCalendar), -1);
+
+    // XXXdmose in theory, we should be able to do something along the lines
+    //
+    // boxobj.rowCountChanged(getCalendars().indexOf(aCalendar), -1);
+    //
+    // Unfortunately, the indexOf in that statement will currently fail
+    // since it's not possible to compare "interface pointers" for identity
+    // because of XPConnect wrapping vagaries.  Bug 325650 covers fixing this
+    // the right way.  But for now...
+    boxobj.invalidate();
 }
 
 var ltnCalendarManagerObserver = {
