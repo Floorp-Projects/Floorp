@@ -37,20 +37,17 @@
 #ifndef nsObjectFrame_h___
 #define nsObjectFrame_h___
 
-#include "nsHTMLParts.h"
-#include "nsHTMLContainerFrame.h"
-#include "nsPresContext.h"
-#include "nsIPresShell.h"
-#include "nsIPluginHost.h"
-#include "nsplugin.h"
-#include "nsIWidget.h"
 #include "nsIObjectFrame.h"
+#include "nsFrame.h"
 
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif
 
 class nsPluginInstanceOwner;
+class nsIPluginHost;
+class nsIPluginInstance;
+class nsPresContext;
 
 #define nsObjectFrameSuper nsFrame
 
@@ -121,8 +118,6 @@ public:
   // for a given aRoot, this walks the frame tree looking for the next outFrame
   static nsIObjectFrame* GetNextObjectFrame(nsPresContext* aPresContext,
                                             nsIFrame* aRoot);
-
-  void FixUpURLS(const nsString &name, nsAString &value);
 
 protected:
   // nsISupports
