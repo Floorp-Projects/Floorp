@@ -312,8 +312,11 @@ nsHTMLFragmentContentSink::ProcessBaseTag(nsIContent* aContent)
     nsIScriptSecurityManager *securityManager =
       nsContentUtils::GetSecurityManager();
 
+    NS_ASSERTION(aContent->GetNodePrincipal() == mTargetDocument->GetNodePrincipal(),
+                 "How'd that happpen?");
+    
     rv = securityManager->
-      CheckLoadURIWithPrincipal(mTargetDocument->GetPrincipal(), baseHrefURI,
+      CheckLoadURIWithPrincipal(mTargetDocument->GetNodePrincipal(), baseHrefURI,
                                 nsIScriptSecurityManager::STANDARD);
     if (NS_SUCCEEDED(rv)) {
       mBaseHref = baseHrefURI;
