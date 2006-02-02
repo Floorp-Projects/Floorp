@@ -2811,6 +2811,7 @@ ExtensionManager.prototype = {
             isDirty = true;
           
           if (!(id in actualItems) && 
+              StartupCache.entries[location.name][id].op != OP_NEEDS_UNINSTALL &&
               StartupCache.entries[location.name][id].op != OP_NEEDS_INSTALL &&
               StartupCache.entries[location.name][id].op != OP_NEEDS_UPGRADE) {
             // We have an entry for this id in the Extensions database, for this 
