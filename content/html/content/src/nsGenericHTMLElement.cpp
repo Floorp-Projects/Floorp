@@ -1905,7 +1905,7 @@ void
 nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
   void* prop;
-  if (HasProperties() && (prop = GetProperty(nsHTMLAtoms::htmlBaseHref))) {
+  if (HasProperties() && (prop = GetProperty(nsHTMLAtoms::htmlBaseTarget))) {
     NS_STATIC_CAST(nsIAtom*, prop)->ToString(aBaseTarget);
     
     return;
