@@ -6,9 +6,9 @@ The head and body tags appear side by side in this test: <br>&lt;/HEAD&gt;&lt;BO
 <script type="text/javascript">
 
 for(i=0; i<3; i++){
-  var oWhat=document.firstChild.childNodes[i];
+  var oWhat=document.documentElement.childNodes[i];
   document.write(oWhat +"<BR>");
 }
 
-</script>undefined<br>undefined<br>undefined<br>
+</script>
 </body></html>
