@@ -2126,6 +2126,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                    JSObject *parent, uintN argc, jsval *argv)
 {
     jsval cval, rval;
+    JSTempValueRooter tvr;
     JSObject *obj, *ctor;
 
     if (!js_FindConstructor(cx, parent, clasp->name, &cval))
@@ -2134,6 +2135,13 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
         js_ReportIsNotFunction(cx, &cval, JSV2F_CONSTRUCT | JSV2F_SEARCH_STACK);
         return NULL;
     }
+
+    /*
+     * Protect cval in case a crazy getter for .prototype uproots it.  After
+     * this point, all control flow must exit through label out with obj set.
+     */
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, cval, &tvr);
+    obj = NULL;
 
     /*
      * If proto or parent are NULL, set them to Constructor.prototype and/or
@@ -2147,7 +2155,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                               ATOM_TO_JSID(cx->runtime->atomState
                                            .classPrototypeAtom),
                               &rval)) {
-            return NULL;
+            goto out;
         }
         if (JSVAL_IS_OBJECT(rval))
             proto = JSVAL_TO_OBJECT(rval);
@@ -2155,14 +2163,19 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 
     obj = js_NewObject(cx, clasp, proto, parent);
     if (!obj)
-        return NULL;
+        goto out;
 
-    if (!js_InternalConstruct(cx, obj, cval, argc, argv, &rval))
-        goto bad;
-    return JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : obj;
-bad:
-    cx->newborn[GCX_OBJECT] = NULL;
-    return NULL;
+    if (!js_InternalConstruct(cx, obj, cval, argc, argv, &rval)) {
+        cx->newborn[GCX_OBJECT] = NULL;
+        obj = NULL;
+        goto out;
+    }
+
+    if (!JSVAL_IS_PRIMITIVE(rval))
+        obj = JSVAL_TO_OBJECT(rval);
+out:
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return obj;
 }
 
 void
