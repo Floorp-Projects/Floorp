@@ -178,7 +178,9 @@ build_number: FORCE
 
 nsBuildID.h: nsBuildID.h.in build_number $(srcdir)/milestone.txt Makefile
 	$(RM) $@
-	MOZ_MILESTONE_RELEASE=$(MOZ_MILESTONE_RELEASE) $(PERL) -I$(srcdir) $(srcdir)/aboutime.pl -m $(srcdir)/milestone.txt $@ build_number $(srcdir)/nsBuildID.h.in
+	MOZ_MILESTONE_RELEASE=$(MOZ_MILESTONE_RELEASE); \
+	export MOZ_MILESTONE_RELEASE; \
+	$(PERL) -I$(srcdir) $(srcdir)/aboutime.pl -m $(srcdir)/milestone.txt $@ build_number $(srcdir)/nsBuildID.h.in
 
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
