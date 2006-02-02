@@ -41,11 +41,12 @@
 
 #include "nsIStringBundle.h"
 #include "nsIPromptService.h"
+#include "nsINonBlockingAlertService.h"
 #include "nsICookiePromptService.h"
 #include "nsCOMPtr.h"
 #import <Cocoa/Cocoa.h>
 
-class CocoaPromptService : public nsIPromptService, public nsICookiePromptService
+class CocoaPromptService : public nsIPromptService, public nsICookiePromptService, public nsINonBlockingAlertService
 {
 public:
   CocoaPromptService();
@@ -54,6 +55,7 @@ public:
   NS_DECL_ISUPPORTS;
   NS_DECL_NSIPROMPTSERVICE;
   NS_DECL_NSICOOKIEPROMPTSERVICE;
+  NS_DECL_NSINONBLOCKINGALERTSERVICE;
 
 private:
   NSString *GetCommonDialogLocaleString(const char *s);

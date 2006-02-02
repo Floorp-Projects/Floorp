@@ -55,6 +55,7 @@
     MODULE(xpcomObsoleteModule) \
     MODULE(nsI18nModule) \
     MODULE(nsUConvModule) \
+    MODULE(nsUCvMathModule) \
     MODULE(nsJarModule) \
     MODULE(xpconnect) \
     MODULE(necko) \

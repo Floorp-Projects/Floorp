@@ -54,7 +54,7 @@ CocoaPromptService::~CocoaPromptService()
 {
 }
 
-NS_IMPL_ISUPPORTS2(CocoaPromptService, nsIPromptService, nsICookiePromptService)
+NS_IMPL_ISUPPORTS3(CocoaPromptService, nsIPromptService, nsINonBlockingAlertService, nsICookiePromptService)
 
 /* void alert (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text); */
 NS_IMETHODIMP
@@ -84,6 +84,31 @@ CocoaPromptService::Alert(nsIDOMWindow *parent,
   [browserView doAfterPromptDismissal];
 
   return rv;
+}
+
+// nsINonBlockingService implementation
+/* void showNonBlockingAlert (in nsIDOMWindow aParent, in wstring aDialogTitle, in wstring aText); */
+NS_IMETHODIMP
+CocoaPromptService::ShowNonBlockingAlert(nsIDOMWindow *aParent,
+                                         const PRUnichar *aDialogTitle,
+                                         const PRUnichar *aText)
+
+{
+  NSString* titleStr = [NSString stringWithPRUnichars:aDialogTitle];
+  NSString* msgStr = [NSString stringWithPRUnichars:aText];
+  NSWindow* parentWindow =
+    [[CHBrowserView browserViewFromDOMWindow:aParent] getNativeWindow];
+  if (!parentWindow) {
+    NS_WARNING("ShowNonBlockingAlert: failed to get the parent window.");
+    return NS_ERROR_FAILURE;
+  }
+  NSBeginInformationalAlertSheet(titleStr,
+                                 @"OK", nil, nil, // only one button
+                                 parentWindow,
+                                 nil, // no delegate
+                                 NULL, NULL, nil, // no delegate selectors
+                                 msgStr);
+  return NS_OK;
 }
 
 /* void alertCheck (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text, in wstring checkMsg, inout boolean checkValue); */

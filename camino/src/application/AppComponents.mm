@@ -60,6 +60,10 @@
 #define NS_PROMPTSERVICE_CID \
   {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
 
+// {7F47B9CB-7091-11DA-B9A4-00039386357A}
+#define NS_NONBLOCKINGALERTSERVICE_CID \
+  {0x7F47B9CB, 0x7091, 0x11DA,{0xB9, 0xA4, 0x00, 0x03, 0x93, 0x86, 0x35, 0x7A}}
+
 #define NS_KEYCHAINPROMPT_CID                    \
     { 0x64997e60, 0x17fe, 0x11d4, {0x8c, 0xee, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3}}
 
@@ -184,6 +188,12 @@ static const nsModuleComponentInfo gAppComponents[] = {
     "Prompt Service",
     NS_PROMPTSERVICE_CID,
     "@mozilla.org/embedcomp/prompt-service;1",
+    CocoaPromptServiceConstructor
+  },
+  {
+    "Nonblocking Alert Service",
+    NS_NONBLOCKINGALERTSERVICE_CID,
+    "@mozilla.org/embedcomp/nbalert-service;1",
     CocoaPromptServiceConstructor
   },
   {

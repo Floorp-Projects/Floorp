@@ -1017,7 +1017,7 @@ nsWindowWatcher::FindWindowEntry(nsIDOMWindow *aWindow)
   found = PR_FALSE;
   while (info != listEnd && NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDOMWindow> infoWindow(do_QueryReferent(info->mWindow));
-    if (!infoWindow) // clean up dangling reference, while we're here
+    if (!infoWindow) { // clean up dangling reference, while we're here
       rv = RemoveWindow(info);
     }
     else if (infoWindow.get() == aWindow)

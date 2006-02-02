@@ -85,7 +85,8 @@ private:
  ************************ nsPromptService ***********************
  ****************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsPromptService, nsIPromptService, nsPIPromptService)
+NS_IMPL_ISUPPORTS3(nsPromptService, nsIPromptService,
+                   nsPIPromptService, nsINonBlockingAlertService)
 
 nsPromptService::nsPromptService() {
 }
@@ -603,6 +604,32 @@ nsPromptService::Select(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
   *_retval = buttonPressed ? PR_FALSE : PR_TRUE;
 
   return rv;
+}
+
+/* void showNonBlockingAlert (in nsIDOMWindow aParent, in wstring aDialogTitle, in wstring aText); */
+NS_IMETHODIMP
+nsPromptService::ShowNonBlockingAlert(nsIDOMWindow *aParent,
+                                      const PRUnichar *aDialogTitle,
+                                      const PRUnichar *aText)
+{
+  NS_ENSURE_ARG(aParent);
+  if (!mWatcher)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDialogParamBlock> paramBlock(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
+  if (!paramBlock)
+    return NS_ERROR_FAILURE;
+
+  paramBlock->SetInt(nsPIPromptService::eNumberButtons, 1);
+  paramBlock->SetString(nsPIPromptService::eIconClass, NS_LITERAL_STRING("alert-icon").get());
+  paramBlock->SetString(nsPIPromptService::eDialogTitle, aDialogTitle);
+  paramBlock->SetString(nsPIPromptService::eMsg, aText);
+
+  nsCOMPtr<nsIDOMWindow> dialog;
+  mWatcher->OpenWindow(aParent, "chrome://global/content/commonDialog.xul",
+                       "_blank", "dependent,centerscreen,chrome,titlebar",
+                       paramBlock, getter_AddRefs(dialog));
+  return NS_OK;
 }
 
 nsresult

@@ -63,7 +63,7 @@
 #include "prprf.h"         // For PR_snprintf()
 
 #include "nsIDOMWindow.h"
-#include "nsIDialogParamBlock.h"
+#include "nsINonBlockingAlertService.h"
 #include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
 #include "nsDoubleHashtable.h"
@@ -169,30 +169,15 @@ AlertMissingFonts(nsString& aMissingFonts)
   if (!wwatch)
     return;
 
-  nsCOMPtr<nsIDialogParamBlock> paramBlock(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
-  if (!paramBlock)
-    return;
-
-  // copied from nsICommonDialogs.idl which curiously isn't part of the build
-  // (mozilla/xpfe/appshell/public/nsICommonDialogs.idl)
-  enum {eMsg=0, eCheckboxMsg=1, eIconClass=2, eTitleMessage=3, eEditfield1Msg=4,
-        eEditfield2Msg=5, eEditfield1Value=6, eEditfield2Value=7, eButton0Text=8,
-        eButton1Text=9, eButton2Text=10, eButton3Text=11,eDialogTitle=12};
-  enum {eButtonPressed=0, eCheckboxState=1, eNumberButtons=2, eNumberEditfields=3,
-        eEditField1Password=4};
-
-  paramBlock->SetInt(eNumberButtons, 1);
-  paramBlock->SetString(eIconClass, NS_LITERAL_STRING("alert-icon").get());
-  paramBlock->SetString(eDialogTitle, title.get());
-  paramBlock->SetString(eMsg, message.get());
-
   nsCOMPtr<nsIDOMWindow> parent;
   wwatch->GetActiveWindow(getter_AddRefs(parent));
+  nsresult rv;
+  nsCOMPtr<nsINonBlockingAlertService> prompter =
+    do_GetService("@mozilla.org/embedcomp/nbalert-service;1", &rv);
 
-  nsCOMPtr<nsIDOMWindow> dialog;
-  wwatch->OpenWindow(parent, "chrome://global/content/commonDialog.xul", "_blank",
-                     "dependent,centerscreen,chrome,titlebar", paramBlock,
-                     getter_AddRefs(dialog));
+  if (prompter && parent) {
+    prompter->ShowNonBlockingAlert(parent, title.get(), message.get());
+  }
 }
 
 // helper to trim off comments from data in a MathFont Property File

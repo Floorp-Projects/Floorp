@@ -75,4 +75,16 @@
 #define NS_PROMPTSERVICE_CONTRACTID \
  "@mozilla.org/embedcomp/prompt-service;1"
 
+/**
+ * Non Blocking Alert Service ContractID
+ *   This service is for posing non blocking alerts to the user.
+ *
+ * This contract implements the following interfaces:
+ * nsINonBlockingAlertService
+ *
+ * Embedders may override this ContractID with their own implementation.
+ */
+#define NS_NONBLOCKINGALERTSERVICE_CONTRACTID \
+ "@mozilla.org/embedcomp/nbalert-service;1"
+
 #endif // NSEMBEDCID_H

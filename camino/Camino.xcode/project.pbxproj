@@ -950,6 +950,243 @@
 //082
 //083
 //084
+//0E0
+//0E1
+//0E2
+//0E3
+//0E4
+		0E6A9882097DFF9A007962C1 = {
+			isa = PBXFileReference;
+			lastKnownFileType = "compiled.mach-o.bundle";
+			name = libucvmath.dylib;
+			path = ../dist/Embed/components/libucvmath.dylib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0E6A9883097DFF9A007962C1 = {
+			fileRef = 0E6A9882097DFF9A007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A9886097DFFD4007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			name = mathml.css;
+			path = ../dist/Embed/res/mathml.css;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0E6A9888097DFFF4007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text.xml;
+			path = mathml.dtd;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0E6A988C097E0007007962C1 = {
+			children = (
+				0E6A988D097E0044007962C1,
+				0E6A988E097E0044007962C1,
+				0E6A988F097E0044007962C1,
+				0E6A9890097E0044007962C1,
+				0E6A9891097E0044007962C1,
+				0E6A9892097E0044007962C1,
+				0E6A9893097E0044007962C1,
+				0E6A9894097E0044007962C1,
+				0E6A9895097E0044007962C1,
+				0E6A9896097E0044007962C1,
+			);
+			isa = PBXGroup;
+			name = fonts;
+			path = ../dist/Embed/res/fonts;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0E6A988D097E0044007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = fontEncoding.properties;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0E6A988E097E0044007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = mathfont.properties;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0E6A988F097E0044007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = mathfontCMEX10.properties;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0E6A9890097E0044007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = mathfontCMSY10.properties;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0E6A9891097E0044007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = mathfontMath1.properties;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0E6A9892097E0044007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = mathfontMath2.properties;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0E6A9893097E0044007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = mathfontMath4.properties;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0E6A9894097E0044007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = mathfontMTExtra.properties;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0E6A9895097E0044007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = mathfontPUA.properties;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0E6A9896097E0044007962C1 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = mathfontSymbol.properties;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0E6A98A1097E0091007962C1 = {
+			fileRef = 0E6A9882097DFF9A007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98A2097E00A6007962C1 = {
+			fileRef = 0E6A9886097DFFD4007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98A3097E00BB007962C1 = {
+			fileRef = 0E6A9888097DFFF4007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98A6097E00CD007962C1 = {
+			buildActionMask = 2147483647;
+			dstPath = res/fonts;
+			dstSubfolderSpec = 6;
+			files = (
+				0E6A98A8097E010C007962C1,
+				0E6A98A9097E010C007962C1,
+				0E6A98AA097E010C007962C1,
+				0E6A98AB097E010C007962C1,
+				0E6A98AC097E010C007962C1,
+				0E6A98AD097E010C007962C1,
+				0E6A98AE097E010C007962C1,
+				0E6A98AF097E010C007962C1,
+				0E6A98B0097E010C007962C1,
+				0E6A98B1097E010C007962C1,
+			);
+			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0E6A98A8097E010C007962C1 = {
+			fileRef = 0E6A988D097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98A9097E010C007962C1 = {
+			fileRef = 0E6A988E097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98AA097E010C007962C1 = {
+			fileRef = 0E6A988F097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98AB097E010C007962C1 = {
+			fileRef = 0E6A9890097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98AC097E010C007962C1 = {
+			fileRef = 0E6A9891097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98AD097E010C007962C1 = {
+			fileRef = 0E6A9892097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98AE097E010C007962C1 = {
+			fileRef = 0E6A9893097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98AF097E010C007962C1 = {
+			fileRef = 0E6A9894097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98B0097E010C007962C1 = {
+			fileRef = 0E6A9895097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0E6A98B1097E010C007962C1 = {
+			fileRef = 0E6A9896097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//0E0
+//0E1
+//0E2
+//0E3
+//0E4
 //0F0
 //0F1
 //0F2
@@ -1352,6 +1589,7 @@
 			dstPath = components;
 			dstSubfolderSpec = 6;
 			files = (
+				0E6A98A1097E0091007962C1,
 				82180ACB07368BF2002EFA6D,
 				3F44ACD005BDFB9F00CB4B08,
 				3F44ACD605BDFB9F00CB4B08,
@@ -3672,6 +3910,7 @@
 				0F66E4AC07D6D9B000444E2A,
 				3F44AD2D05BDFB9F00CB4B08,
 				3F44AD3E05BDFB9F00CB4B08,
+				0E6A98A6097E00CD007962C1,
 				3F44AD4005BDFB9F00CB4B08,
 				3F44AD4605BDFB9F00CB4B08,
 				3F44AD5105BDFB9F00CB4B08,
@@ -4454,6 +4693,7 @@
 				0F01117408F2FE7C00423C02,
 				0FEA7E650926BFC600B06154,
 				0F8FC52F092ED71C0042429E,
+				0E6A9883097DFF9A007962C1,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6008,6 +6248,7 @@
 			dstPath = res;
 			dstSubfolderSpec = 6;
 			files = (
+				0E6A98A2097E00A6007962C1,
 				82180AC807368B21002EFA6D,
 				3F44AD2E05BDFB9F00CB4B08,
 				3F44AD2F05BDFB9F00CB4B08,
@@ -6109,6 +6350,7 @@
 			dstPath = res/dtd;
 			dstSubfolderSpec = 6;
 			files = (
+				0E6A98A3097E00BB007962C1,
 				3F44AD3F05BDFB9F00CB4B08,
 			);
 			isa = PBXCopyFilesBuildPhase;
@@ -7594,6 +7836,7 @@
 				3F44AF0905BDFBA000CB4B08,
 				3F44AF4805BDFBA000CB4B08,
 				3F44AF5905BDFBA000CB4B08,
+				4DD0EFFA09918BE100B6BBFD,
 				3F44AF5B05BDFBA000CB4B08,
 				3F44AF6105BDFBA000CB4B08,
 				3F44AF6C05BDFBA000CB4B08,
@@ -9799,6 +10042,7 @@
 				3F44AF5305BDFBA000CB4C08,
 				3F44AF5405BDFBA000CB4B08,
 				3F44AF5505BDFBA000CB4B08,
+				4DD0EFF709918B3200B6BBFD,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -9887,6 +10131,7 @@
 			dstSubfolderSpec = 6;
 			files = (
 				3F44AF5A05BDFBA000CB4B08,
+				4DD0EFF809918BCF00B6BBFD,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10351,6 +10596,7 @@
 				34884A37074F7C5D000EA76B,
 				0F518835088593F30091F3FB,
 				0FF288550961EDDD007527B4,
+				4DC28F5E099184B80081939B,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -12665,6 +12911,20 @@
 			settings = {
 			};
 		};
+		4DC28F5D099184B80081939B = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libucvmath.a;
+			path = ../dist/lib/components/libucvmath.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		4DC28F5E099184B80081939B = {
+			fileRef = 4DC28F5D099184B80081939B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		4DC41D3C0869D7A400947044 = {
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
@@ -12740,6 +13000,97 @@
 //4D2
 //4D3
 //4D4
+		4DD0EFF709918B3200B6BBFD = {
+			fileRef = 0E6A9886097DFFD4007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DD0EFF809918BCF00B6BBFD = {
+			fileRef = 0E6A9888097DFFF4007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DD0EFFA09918BE100B6BBFD = {
+			buildActionMask = 2147483647;
+			dstPath = res/fonts;
+			dstSubfolderSpec = 6;
+			files = (
+				4DD0F00009918C2300B6BBFD,
+				4DD0F00109918C2300B6BBFD,
+				4DD0F00209918C2300B6BBFD,
+				4DD0F00309918C2300B6BBFD,
+				4DD0F00409918C2300B6BBFD,
+				4DD0F00509918C2300B6BBFD,
+				4DD0F00609918C2300B6BBFD,
+				4DD0F00709918C2300B6BBFD,
+				4DD0F00809918C2300B6BBFD,
+				4DD0F00909918C2300B6BBFD,
+			);
+			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4DD0F00009918C2300B6BBFD = {
+			fileRef = 0E6A988D097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DD0F00109918C2300B6BBFD = {
+			fileRef = 0E6A988E097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DD0F00209918C2300B6BBFD = {
+			fileRef = 0E6A988F097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DD0F00309918C2300B6BBFD = {
+			fileRef = 0E6A9890097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DD0F00409918C2300B6BBFD = {
+			fileRef = 0E6A9891097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DD0F00509918C2300B6BBFD = {
+			fileRef = 0E6A9892097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DD0F00609918C2300B6BBFD = {
+			fileRef = 0E6A9893097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DD0F00709918C2300B6BBFD = {
+			fileRef = 0E6A9894097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DD0F00809918C2300B6BBFD = {
+			fileRef = 0E6A9895097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DD0F00909918C2300B6BBFD = {
+			fileRef = 0E6A9896097E0044007962C1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //790
 //791
 //792
@@ -15826,6 +16177,7 @@
 				4DC41D3E0869D7A400947044,
 				4DC41D3E0869D7A400947045,
 				4DC41D3E0869D7A400947046,
+				4DC28F5D099184B80081939B,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";
@@ -16296,6 +16648,7 @@
 		};
 		F5949A46030D58A1014E8430 = {
 			children = (
+				0E6A9888097DFFF4007962C1,
 				F5949A47030D58A1014E8430,
 			);
 			isa = PBXGroup;
@@ -17192,6 +17545,7 @@
 				F6BD638201B30EA301A962F7,
 				F50DCB4302C2856001A967F3,
 				F6BD638701B30F5301A962F7,
+				0E6A9882097DFF9A007962C1,
 				3FE5B9FC068A090F0001CECD,
 				F5F14E9602A5A43A01A967F3,
 				F5461CBB03AAC25C01A96660,
@@ -17838,9 +18192,11 @@
 				F6BD64BC01B316DA01A962F7,
 				F5949A46030D58A1014E8430,
 				F6BD64D701B3172601A962F7,
+				0E6A988C097E0007007962C1,
 				F6BD64DD01B3172601A962F7,
 				F5A70906036DB46201202892,
 				F6BD64DE01B3172601A962F7,
+				0E6A9886097DFFD4007962C1,
 				F6BD64DF01B3172601A962F7,
 				F6BD64DF01B3172601A963F7,
 				F6BD64E001B3172601A962F7,
