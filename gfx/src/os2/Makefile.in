@@ -84,6 +84,7 @@ CPPSRCS		= \
 
 EXPORTS	= \
 		nsIRenderingContextOS2.h \
+		nsDrawingSurfaceOS2.h \
 		$(NULL)
 
 EXTRA_DSO_LIBS	= gkgfx mozutil_s gfxshared_s
