@@ -206,7 +206,7 @@ case "$target" in
     rm shunt.out
     $srcdir/build/wince/tools/topsrcdir.h
 
-    `$srcdir/build/cygwin-wrapper evc $srcdir/build/wince/shunt/build/static/shunt.vcw /MAKE ALL > shunt.out <<\EOF`
+    `$srcdir/build/cygwin-wrapper evc $srcdir/build/wince/shunt/build/static/static.vcw /MAKE ALL > shunt.out <<\EOF`
     cat shunt.out
     rm shunt.out
 
