@@ -302,7 +302,10 @@ nsHTMLFragmentContentSink::ProcessBaseTag(nsIContent* aContent)
   nsAutoString value;
   if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
     nsCOMPtr<nsIURI> baseHrefURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(baseHrefURI), value, nsnull);
+    nsresult rv = 
+      nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(baseHrefURI),
+                                                value, mTargetDocument,
+                                                nsnull);
     if (NS_FAILED(rv))
       return;
 

@@ -3590,7 +3590,9 @@ HTMLContentSink::ProcessBASEElement(nsGenericHTMLElement* aElement)
     //-- Make sure this page is allowed to load this URI
     nsresult rv;
     nsCOMPtr<nsIURI> baseHrefURI;
-    rv = NS_NewURI(getter_AddRefs(baseHrefURI), attrValue, nsnull);
+    rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(baseHrefURI),
+                                                   attrValue, mDocument,
+                                                   nsnull);
     if (NS_FAILED(rv))
       return;
 
