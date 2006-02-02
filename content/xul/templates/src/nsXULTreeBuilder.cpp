@@ -785,18 +785,13 @@ nsXULTreeBuilder::SetTree(nsITreeBoxObject* tree)
     if (! mBoxObject)
         return NS_OK;
 
-    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
-    NS_ASSERTION(doc, "element has no document");
-    if (!doc)
-        return NS_ERROR_UNEXPECTED;
-
-    // Grab the doc's principal...
-    nsIPrincipal* docPrincipal = doc->GetPrincipal();
-    if (!docPrincipal)
+    // Get our root's principal
+    nsIPrincipal* rootPrincipal = mRoot->GetNodePrincipal();
+    if (!rootPrincipal)
         return NS_ERROR_FAILURE;
 
     PRBool isTrusted = PR_FALSE;
-    nsresult rv = IsSystemPrincipal(docPrincipal, &isTrusted);
+    nsresult rv = IsSystemPrincipal(rootPrincipal, &isTrusted);
     if (NS_SUCCEEDED(rv) && isTrusted) {
         // Get the datasource we intend to use to remember open state.
         nsAutoString datasourceStr;

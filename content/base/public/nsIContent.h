@@ -64,10 +64,10 @@ class nsAttrValue;
 class nsAttrName;
 
 // IID for the nsIContent interface
-// bb761f7a-62a8-43d4-9694-1cf7850b0453
+// b61222e2-88b6-4f7f-ae81-679484a4493a
 #define NS_ICONTENT_IID \
-{ 0xbb761f7a, 0x62a8, 0x43d4, \
- { 0x96, 0x94, 0x1c, 0xf7, 0x85, 0x0b, 0x04, 0x53 } }
+{ 0xb61222e2, 0x88b6, 0x4f7f, \
+ { 0xae, 0x81, 0x67, 0x94, 0x84, 0xa4, 0x49, 0x3a } }
 
 /**
  * A node of content in a document's content model. This interface

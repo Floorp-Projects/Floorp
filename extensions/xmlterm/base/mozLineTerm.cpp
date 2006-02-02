@@ -224,7 +224,7 @@ NS_IMETHODIMP mozLineTerm::GetSecurePrincipal(nsIDOMDocument *domDoc,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsIPrincipal *principal = doc->GetPrincipal();
+  nsIPrincipal *principal = doc->GetNodePrincipal();
   if (!principal) 
     return NS_ERROR_FAILURE;
 

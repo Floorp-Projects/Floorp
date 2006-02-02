@@ -364,14 +364,6 @@ nsXULDocument::~nsXULDocument()
         mStyleAttrStyleSheet = nsnull;
         mAttrStyleSheet = nsnull;
     }
-
-    // This is done in nsDocument::~nsDocument() too, but since this
-    // call ends up calling back into the document through virtual
-    // methods (nsIDocument::GetPrincipal()) we must do it here before
-    // we go out of nsXULDocument's destructor.
-    if (mNodeInfoManager) {
-        mNodeInfoManager->DropDocumentReference();
-    }
 }
 
 nsresult
@@ -521,6 +513,9 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
         mMasterPrototype = mCurrentPrototype = proto;
 
+        // Set up the right principal on ourselves.
+        SetPrincipal(proto->GetDocumentPrincipal());
+
         // Add cloned style sheet references only if the prototype has in
         // fact already loaded.  It may still be loading when we hit the XUL
         // prototype cache.
@@ -577,22 +572,6 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     NS_IF_ADDREF(*aDocListener);
     return NS_OK;
 }
-
-nsIPrincipal*
-nsXULDocument::GetPrincipal()
-{
-    NS_ASSERTION(mMasterPrototype, "Missing master prototype. See bug 169036");
-    NS_ENSURE_TRUE(mMasterPrototype, nsnull);
-
-    return mMasterPrototype->GetDocumentPrincipal();
-}
-
-void
-nsXULDocument::SetPrincipal(nsIPrincipal *aPrincipal)
-{
-    NS_NOTREACHED("SetPrincipal");
-}
-
 
 void
 nsXULDocument::EndLoad()
@@ -2102,13 +2081,21 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     if (NS_FAILED(rv)) return rv;
 
     // Bootstrap the master document prototype.
+    PRBool isMasterProto = PR_FALSE;
     if (! mMasterPrototype) {
         mMasterPrototype = mCurrentPrototype;
         mMasterPrototype->SetDocumentPrincipal(aDocumentPrincipal);
+        isMasterProto = PR_TRUE;
     }
 
     rv = mCurrentPrototype->SetURI(aURI);
     if (NS_FAILED(rv)) return rv;
+
+    if (isMasterProto) {
+        // Set our principal based on the master proto.  Note that this MUST
+        // come after the SetURI and SetDocumentPrincipal calls above.
+        SetPrincipal(mMasterPrototype->GetDocumentPrincipal());
+    }
 
     // Create a XUL content sink, a parser, and kick off a load for
     // the overlay.

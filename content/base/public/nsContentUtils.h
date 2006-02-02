@@ -427,10 +427,6 @@ public:
     return sWordBreaker;
   }
 
-  static nsresult GetDocumentAndPrincipal(nsIDOMNode* aNode,
-                                          nsIDocument** aDocument,
-                                          nsIPrincipal** aPrincipal);
-
   /**
    * @return PR_TRUE if aContent has an attribute aName in namespace aNameSpaceID,
    * and the attribute value is non-empty.

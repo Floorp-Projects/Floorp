@@ -706,9 +706,12 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* doc)
 		mCompDB->SetAllowNegativeAssertions(PR_FALSE);
 
     // Grab the doc's principal...
-    nsIPrincipal *docPrincipal = doc->GetPrincipal();
+    nsIPrincipal *docPrincipal = doc->GetNodePrincipal();
     if (!docPrincipal)
         return NS_ERROR_FAILURE;
+
+    NS_ASSERTION(docPrincipal == mRoot->GetNodePrincipal(),
+                 "Principal mismatch?  Which one to use?");
 
     PRBool isTrusted = PR_FALSE;
     rv = IsSystemPrincipal(docPrincipal, &isTrusted);

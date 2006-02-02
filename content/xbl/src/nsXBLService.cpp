@@ -554,7 +554,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
     nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
     rv = secMan->
-      CheckLoadURIWithPrincipal(document->GetPrincipal(), aURL,
+      CheckLoadURIWithPrincipal(document->GetNodePrincipal(), aURL,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
     if (NS_FAILED(rv))
       return rv;

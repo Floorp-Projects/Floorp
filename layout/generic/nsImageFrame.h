@@ -170,6 +170,7 @@ protected:
   void TriggerLink(nsPresContext* aPresContext,
                    nsIURI* aURI,
                    const nsString& aTargetSpec,
+                   nsINode* aTriggerNode,
                    PRBool aClick);
 
   PRBool IsServerImageMap();
@@ -177,7 +178,8 @@ protected:
   void TranslateEventCoords(const nsPoint& aPoint,
                             nsPoint& aResult);
 
-  PRBool GetAnchorHREFAndTarget(nsIURI** aHref, nsString& aTarget);
+  PRBool GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
+                                    nsINode** aNode);
 
   void MeasureString(const PRUnichar*     aString,
                      PRInt32              aLength,

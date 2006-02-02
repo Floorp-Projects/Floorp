@@ -48,6 +48,12 @@ class nsINodeInfo;
 class nsNodeInfo;
 class nsIPrincipal;
 class nsIURI;
+class nsDocument;
+class nsIDOMDocumentType;
+class nsIDOMDocument;
+class nsAString;
+class nsIDOMNamedNodeMap;
+class nsXULPrototypeDocument;
 
 class nsNodeInfoManager
 {
@@ -105,17 +111,31 @@ public:
   }
 
   /**
-   * Gets the principal of the document associated with this.
+   * Gets the principal of the document this nodeinfo manager belongs to.
    */
-  nsIPrincipal *GetDocumentPrincipal();
-
-  /**
-   * Sets the principal of the nodeinfo manager. This should only be called
-   * when this nodeinfo manager isn't connected to an nsIDocument.
-   */
-  void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
+  nsIPrincipal *GetDocumentPrincipal() const {
+    return mPrincipal;
+  }
 
   void RemoveNodeInfo(nsNodeInfo *aNodeInfo);
+
+protected:
+  friend class nsDocument;
+  friend class nsXULPrototypeDocument;
+  friend nsresult (::NS_NewDOMDocumentType(nsIDOMDocumentType** ,
+                                           nsNodeInfoManager *,
+                                           nsIPrincipal *,
+                                           nsIAtom *,
+                                           nsIDOMNamedNodeMap *,
+                                           nsIDOMNamedNodeMap *,
+                                           const nsAString& ,
+                                           const nsAString& ,
+                                           const nsAString& ));
+
+  /**
+   * Sets the principal of the document this nodeinfo manager belongs to.
+   */
+  void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
 
 private:
   static PRIntn PR_CALLBACK NodeInfoInnerKeyCompare(const void *key1,
@@ -127,7 +147,8 @@ private:
 
   PLHashTable *mNodeInfoHash;
   nsIDocument *mDocument; // WEAK
-  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsIPrincipal *mPrincipal; // STRONG, but not nsCOMPtr to avoid include hell
+                            // while inlining of GetPrincipal()
   nsINodeInfo *mTextNodeInfo; // WEAK to avoid circular ownership
   nsINodeInfo *mCommentNodeInfo; // WEAK to avoid circular ownership
   nsINodeInfo *mDocumentNodeInfo; // WEAK to avoid circular ownership

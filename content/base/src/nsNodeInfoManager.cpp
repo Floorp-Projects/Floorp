@@ -81,6 +81,7 @@ nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
 
 nsNodeInfoManager::nsNodeInfoManager()
   : mDocument(nsnull),
+    mPrincipal(nsnull),
     mTextNodeInfo(nsnull),
     mCommentNodeInfo(nsnull),
     mDocumentNodeInfo(nsnull)
@@ -108,6 +109,8 @@ nsNodeInfoManager::~nsNodeInfoManager()
   if (gNodeManagerCount == 0) {
     nsNodeInfo::ClearCache();
   }
+
+  NS_IF_RELEASE(mPrincipal);
 
 #ifdef DEBUG_jst
   printf ("Removing NodeInfoManager, gcount = %d\n", gNodeManagerCount);
@@ -147,9 +150,6 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
   NS_ENSURE_TRUE(mNodeInfoHash, NS_ERROR_OUT_OF_MEMORY);
 
   mDocument = aDocument;
-  if (aDocument) {
-    mPrincipal = nsnull;
-  }
 
   return NS_OK;
 }
@@ -157,17 +157,6 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
 void
 nsNodeInfoManager::DropDocumentReference()
 {
-  if (mDocument) {
-    // If the document has a uri we'll ask for it's principal. Otherwise we'll
-    // consider this document 'anonymous'. We don't want to call GetPrincipal
-    // on a document that doesn't have a URI since that'll give an assertion
-    // that we're creating a principal without having a uri.
-    // This happens in a few cases where a document is created and then
-    // immediately dropped without ever getting a URI.
-    if (mDocument->GetDocumentURI()) {
-      mPrincipal = mDocument->GetPrincipal();
-    }
-  }
   mDocument = nsnull;
 }
 
@@ -304,33 +293,11 @@ nsNodeInfoManager::GetDocumentNodeInfo()
   return mDocumentNodeInfo;
 }
 
-nsIPrincipal*
-nsNodeInfoManager::GetDocumentPrincipal()
-{
-  NS_ASSERTION(!mDocument || !mPrincipal,
-               "how'd we end up with both a document and a principal?");
-
-  if (mDocument) {
-    // If the document has a uri we'll ask for it's principal. Otherwise we'll
-    // consider this document 'anonymous'
-    if (!mDocument->GetDocumentURI()) {
-      return nsnull;
-    }
-
-    return mDocument->GetPrincipal();
-  }
-
-  return mPrincipal;
-}
-
 void
 nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal *aPrincipal)
 {
-  NS_ASSERTION(!mDocument,
-               "Don't set a principal, we already have a document.");
-  if (!mDocument) {
-    mPrincipal = aPrincipal;
-  }
+  NS_IF_RELEASE(mPrincipal);
+  NS_IF_ADDREF(mPrincipal = aPrincipal);
 }
 
 void

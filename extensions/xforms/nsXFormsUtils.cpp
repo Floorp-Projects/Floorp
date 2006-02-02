@@ -1112,7 +1112,7 @@ nsXFormsUtils::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI)
   nsresult rv;
 
   // get the base document's principal
-  nsIPrincipal *basePrincipal = aBaseDocument->GetPrincipal();
+  nsIPrincipal *basePrincipal = aBaseDocument->GetNodePrincipal();
 
   if (basePrincipal) {
     // check for the UniversalBrowserRead capability.
@@ -1123,19 +1123,18 @@ nsXFormsUtils::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI)
       return PR_TRUE;
 
     // check the security manager and do a same original check on the principal
-  nsCOMPtr<nsIScriptSecurityManager> secMan =
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-  if (secMan) {
+    if (secMan) {
       // get a principal for the uri we are testing
       nsCOMPtr<nsIPrincipal> testPrincipal;
       rv = secMan->GetCodebasePrincipal(aTestURI, getter_AddRefs(testPrincipal));
 
       if (NS_SUCCEEDED(rv)) {
-        rv = secMan->CheckSameOriginPrincipal(aBaseDocument->GetPrincipal(),
-                                              testPrincipal);
-    if (NS_SUCCEEDED(rv))
-      return PR_TRUE;
-  }
+        rv = secMan->CheckSameOriginPrincipal(basePrincipal, testPrincipal);
+        if (NS_SUCCEEDED(rv))
+          return PR_TRUE;
+      }
     }
   }
 

@@ -493,68 +493,6 @@ nsContentUtils::GetClassInfoInstance(nsDOMClassInfoID aID)
   return sDOMScriptObjectFactory->GetClassInfoInstance(aID);
 }
 
-// static
-nsresult
-nsContentUtils::GetDocumentAndPrincipal(nsIDOMNode* aNode,
-                                        nsIDocument** aDocument,
-                                        nsIPrincipal** aPrincipal)
-{
-  // For performance reasons it's important to try to QI the node to
-  // nsIContent before trying to QI to nsIDocument since a QI miss on
-  // a node is potentially expensive.
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  nsCOMPtr<nsIAttribute> attr;
-
-  if (!content) {
-    CallQueryInterface(aNode, aDocument);
-
-    if (!*aDocument) {
-      attr = do_QueryInterface(aNode);
-      if (!attr) {
-        // aNode is not a nsIContent, a nsIAttribute or a nsIDocument,
-        // something weird is going on...
-
-        NS_ERROR("aNode is not nsIContent, nsIAttribute or nsIDocument!");
-
-        return NS_ERROR_UNEXPECTED;
-      }
-    }
-  }
-
-  if (!*aDocument) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    if (!domDoc) {
-      // if we can't get a doc then lets try to get principal through nodeinfo
-      // manager
-      nsINodeInfo *ni = content ? content->NodeInfo() : attr->NodeInfo();
-
-      *aPrincipal = ni->NodeInfoManager()->GetDocumentPrincipal();
-      if (!*aPrincipal) {
-        // we can't get to the principal so we'll give up
-
-        return NS_OK;
-      }
-
-      NS_ADDREF(*aPrincipal);
-    }
-    else {
-      CallQueryInterface(domDoc, aDocument);
-      if (!*aDocument) {
-        NS_ERROR("QI to nsIDocument failed");
-
-        return NS_ERROR_UNEXPECTED;
-      }
-    }
-  }
-
-  if (!*aPrincipal) {
-    NS_IF_ADDREF(*aPrincipal = (*aDocument)->GetPrincipal());
-  }
-
-  return NS_OK;
-}
-
 /**
  * Checks whether two nodes come from the same origin. aTrustedNode is
  * considered 'safe' in that a user can operate on it and that it isn't
@@ -578,81 +516,22 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
   }
 
   /*
-   * Get hold of each node's document or principal
+   * Get hold of each node's principal
    */
+  nsCOMPtr<nsINode> trustedNode = do_QueryInterface(aTrustedNode);
+  nsCOMPtr<nsINode> unTrustedNode = do_QueryInterface(aUnTrustedNode);
 
-  // In most cases this is a document, so lets try that first
-  nsCOMPtr<nsIDocument> trustedDoc = do_QueryInterface(aTrustedNode);
-  nsIPrincipal* trustedPrincipal = nsnull;
+  // Make sure these are both real nodes
+  NS_ENSURE_TRUE(trustedNode && unTrustedNode, NS_ERROR_UNEXPECTED);
 
-  if (!trustedDoc) {
-#ifdef DEBUG
-    nsCOMPtr<nsIContent> trustCont = do_QueryInterface(aTrustedNode);
-    NS_ASSERTION(trustCont,
-                 "aTrustedNode is neither nsIContent nor nsIDocument!");
-#endif
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aTrustedNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsIPrincipal* trustedPrincipal = trustedNode->GetNodePrincipal();
+  nsIPrincipal* unTrustedPrincipal = unTrustedNode->GetNodePrincipal();
 
-    if (!domDoc) {
-      // In theory this should never happen. But since theory and reality are
-      // different for XUL elements we'll try to get the principal from the
-      // nsNodeInfoManager.
+  // Make sure we have both principals
+  NS_ENSURE_TRUE(trustedPrincipal && unTrustedPrincipal, NS_ERROR_UNEXPECTED);
 
-      nsCOMPtr<nsIContent> cont = do_QueryInterface(aTrustedNode);
-      NS_ENSURE_TRUE(cont, NS_ERROR_UNEXPECTED);
-
-      trustedPrincipal = cont->NodeInfo()->NodeInfoManager()->
-        GetDocumentPrincipal();
-
-      if (!trustedPrincipal) {
-        // Can't get principal of aTrustedNode so we can't check security
-        // against it
-
-        return NS_ERROR_UNEXPECTED;
-      }
-    } else {
-      trustedDoc = do_QueryInterface(domDoc);
-      NS_ASSERTION(trustedDoc, "QI to nsIDocument failed");
-    }
-  }
-
-  nsCOMPtr<nsIDocument> unTrustedDoc;
-  nsCOMPtr<nsIPrincipal> unTrustedPrincipal;
-
-  nsresult rv = GetDocumentAndPrincipal(aUnTrustedNode,
-                                        getter_AddRefs(unTrustedDoc),
-                                        getter_AddRefs(unTrustedPrincipal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!unTrustedDoc && !unTrustedPrincipal) {
-    // We can't get hold of the principal for this node. This should happen
-    // very rarely, like for textnodes out of the tree and <option>s created
-    // using 'new Option'.
-    // If we didn't allow access to nodes like this you wouldn't be able to
-    // insert these nodes into a document.
-
+  if (trustedPrincipal == unTrustedPrincipal) {
     return NS_OK;
-  }
-
-  /*
-   * Compare the principals
-   */
-
-  // If they are in the same document then everything is just fine
-  if (trustedDoc == unTrustedDoc && trustedDoc) {
-    return NS_OK;
-  }
-
-  if (!trustedPrincipal) {
-    trustedPrincipal = trustedDoc->GetPrincipal();
-
-    if (!trustedPrincipal) {
-      // If the trusted node doesn't have a principal we can't check
-      // security against it
-
-      return NS_ERROR_DOM_SECURITY_ERR;
-    }
   }
 
   return sSecurityManager->CheckSameOriginPrincipal(trustedPrincipal,
@@ -663,6 +542,9 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
 PRBool
 nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 {
+  // XXXbz why not check the IsCapabilityEnabled thing up front, and not bother
+  // with the system principal games?  But really, there should be a simpler
+  // API here, dammit.
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
   sSecurityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
 
@@ -681,26 +563,18 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
     return PR_TRUE;
   }
 
-  nsCOMPtr<nsIDocument> document;
-  nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, PR_FALSE);
 
-  nsresult rv = GetDocumentAndPrincipal(aNode,
-                                        getter_AddRefs(document),
-                                        getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  nsIPrincipal* principal = node->GetNodePrincipal();
 
-  if (!document && !principal) {
-    // We can't get hold of the principal for this node. This should happen
-    // very rarely, like for textnodes out of the tree and <option>s created
-    // using 'new Option'.
-    // If we didn't allow access to nodes like this you wouldn't be able to
-    // insert these nodes into a document.
-
-    return PR_TRUE;
+  if (!principal) {
+    // We can't get hold of the principal for this node. No access allowed.
+    return PR_FALSE;
   }
 
-  rv = sSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
-                                                  principal);
+  nsresult rv = sSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
+                                                           principal);
   if (NS_SUCCEEDED(rv)) {
     return PR_TRUE;
   }
@@ -1896,7 +1770,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
     // Editor apps get special treatment here, editors can load images
     // from anywhere.
     rv = sSecurityManager->
-      CheckLoadURIWithPrincipal(aLoadingDocument->GetPrincipal(), aURI,
+      CheckLoadURIWithPrincipal(aLoadingDocument->GetNodePrincipal(), aURI,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
     if (NS_FAILED(rv)) {
       if (aImageBlockingStatus) {
@@ -2061,13 +1935,11 @@ nsContentUtils::GetXLinkURI(nsIContent* aContent)
 {
   NS_PRECONDITION(aContent, "Must have content node to work with");
 
-  nsAutoString value;
-  aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
-  if (value.EqualsLiteral("simple")) {
+  if (aContent->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
+                            nsGkAtoms::simple, eCaseMatters)) {
+    nsAutoString value;
     // Check that we have a URI
-    aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, value);
-
-    if (!value.IsEmpty()) {
+    if (aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, value)) {
       //  Resolve it relative to aContent's base URI.
       nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
 
@@ -2413,7 +2285,7 @@ PRBool
 nsContentUtils::IsChromeDoc(nsIDocument *aDocument)
 {
   nsIPrincipal *principal;
-  if (!aDocument || !(principal = aDocument->GetPrincipal())) {
+  if (!aDocument || !(principal = aDocument->GetNodePrincipal())) {
     return PR_FALSE;
   }
 

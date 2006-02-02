@@ -105,10 +105,6 @@ public:
                                        PRBool aReset = PR_TRUE,
                                        nsIContentSink* aSink = nsnull);
 
-    virtual nsIPrincipal* GetPrincipal();
-
-    virtual void SetPrincipal(nsIPrincipal *aPrincipal);
-
     virtual void SetContentType(const nsAString& aContentType);
 
     virtual void EndLoad();

@@ -551,6 +551,7 @@ nsDOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
   nsCOMPtr<nsIAtom> name = do_GetAtom(aQualifiedName);
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
+  // XXXbz shouldn't this use the original document principal instead?
   nsCOMPtr<nsIPrincipal> principal;
   rv = nsContentUtils::GetSecurityManager()->
     GetCodebasePrincipal(mBaseURI, getter_AddRefs(principal));
@@ -928,9 +929,12 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 
   if (aChannel) {
     nsCOMPtr<nsISupports> owner;
-    aChannel->GetOwner(getter_AddRefs(owner));
-
-    mPrincipal = do_QueryInterface(owner);
+    if (NS_SUCCEEDED(aChannel->GetOwner(getter_AddRefs(owner)))) {
+      nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
+      if (principal) {
+        SetPrincipal(principal);
+      }
+    }
   }
 
   mChannel = aChannel;
@@ -951,7 +955,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 
   mDocumentTitle.SetIsVoid(PR_TRUE);
 
-  mPrincipal = nsnull;
+  SetPrincipal(nsnull);
   mSecurityInfo = nsnull;
 
   mDocumentLoadGroup = nsnull;
@@ -1004,6 +1008,19 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   mReferrer.Truncate();
 
   mXMLDeclarationBits = 0;
+
+  // Now get our new principal
+  nsIScriptSecurityManager *securityManager =
+    nsContentUtils::GetSecurityManager();
+  if (securityManager) {
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv =
+      securityManager->GetCodebasePrincipal(mDocumentURI,
+                                            getter_AddRefs(principal));
+    if (NS_SUCCEEDED(rv)) {
+      SetPrincipal(principal);
+    }
+  }
 }
 
 nsresult
@@ -1210,31 +1227,13 @@ nsDocument::GetLastModified(nsAString& aLastModified)
 nsIPrincipal*
 nsDocument::GetPrincipal()
 {
-  if (!mPrincipal) {
-    nsIScriptSecurityManager *securityManager =
-      nsContentUtils::GetSecurityManager();
-
-    if (!securityManager) {
-      return nsnull;
-    }
-
-    NS_WARN_IF_FALSE(mDocumentURI, "no URI!");
-    nsresult rv =
-      securityManager->GetCodebasePrincipal(mDocumentURI,
-                                            getter_AddRefs(mPrincipal));
-
-    if (NS_FAILED(rv)) {
-      return nsnull;
-    }
-  }
-
-  return mPrincipal;
+  return GetNodePrincipal();
 }
 
 void
 nsDocument::SetPrincipal(nsIPrincipal *aNewPrincipal)
 {
-  mPrincipal = aNewPrincipal;
+  mNodeInfoManager->SetDocumentPrincipal(aNewPrincipal);
 }
 
 NS_IMETHODIMP
@@ -1268,7 +1267,7 @@ nsDocument::SetBaseURI(nsIURI* aURI)
   nsresult rv = NS_OK;
 
   if (aURI) {
-    nsIPrincipal* principal = GetPrincipal();
+    nsIPrincipal* principal = GetNodePrincipal();
     NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
     
     nsIScriptSecurityManager* securityManager =
@@ -4643,7 +4642,7 @@ nsDocument::IsScriptEnabled()
   nsCOMPtr<nsIScriptSecurityManager> sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
   NS_ENSURE_TRUE(sm, PR_TRUE);
 
-  nsIPrincipal* principal = GetPrincipal();
+  nsIPrincipal* principal = GetNodePrincipal();
   NS_ENSURE_TRUE(principal, PR_TRUE);
 
   nsIScriptGlobalObject* globalObject = GetScriptGlobalObject();

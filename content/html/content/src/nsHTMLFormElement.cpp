@@ -1410,7 +1410,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   nsIScriptSecurityManager *securityManager =
       nsContentUtils::GetSecurityManager();
   rv = securityManager->
-    CheckLoadURIWithPrincipal(document->GetPrincipal(), actionURL,
+    CheckLoadURIWithPrincipal(GetNodePrincipal(), actionURL,
                               nsIScriptSecurityManager::STANDARD);
   NS_ENSURE_SUCCESS(rv, rv);
 

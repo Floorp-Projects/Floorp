@@ -1222,7 +1222,7 @@ nsXBLBinding::AllowScripts()
 
   nsCOMPtr<nsIDocument> ourDocument;
   mPrototypeBinding->XBLDocumentInfo()->GetDocument(getter_AddRefs(ourDocument));
-  nsIPrincipal* principal = ourDocument->GetPrincipal();
+  nsIPrincipal* principal = ourDocument->GetNodePrincipal();
   if (!principal) {
     return PR_FALSE;
   }

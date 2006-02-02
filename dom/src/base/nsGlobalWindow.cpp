@@ -487,7 +487,7 @@ nsGlobalWindow::FreeInnerObjects(JSContext *cx)
     NS_ASSERTION(mDoc, "Why is mDoc null?");
 
     // Remember the document's principal.
-    mDocumentPrincipal = mDoc->GetPrincipal();
+    mDocumentPrincipal = mDoc->GetNodePrincipal();
   }
 
   // Remove our reference to the document and the document principal.
@@ -640,6 +640,9 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument, PRBool useDocUR
   if (mOpenerScriptURL) {
     if (sSecMan) {
       PRBool isSameOrigin = PR_FALSE;
+      // XXXbz shouldn't we store the opener _principal_ and use
+      // CheckSameOriginPrincipal here instead?  That would make a lot more
+      // sense to me...
       sSecMan->SecurityCompareURIs(mOpenerScriptURL, newURI, &isSameOrigin);
       if (isSameOrigin) {
         // The origin is the same.
@@ -954,14 +957,14 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   nsIPrincipal *oldPrincipal = nsnull;
 
   if (oldDoc) {
-    oldPrincipal = oldDoc->GetPrincipal();
+    oldPrincipal = oldDoc->GetNodePrincipal();
   }
 
   // Drop our reference to the navigator object unless we're reusing
   // the existing inner window or the new document is from the same
   // origin as the old document.
   if (!reUseInnerWindow && mNavigator && oldPrincipal) {
-    nsIPrincipal *newPrincipal = aDocument->GetPrincipal();
+    nsIPrincipal *newPrincipal = aDocument->GetNodePrincipal();
     rv = NS_ERROR_FAILURE;
 
     if (newPrincipal) {
@@ -1346,7 +1349,7 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       NS_ASSERTION(mDoc, "Must have doc!");
       
       // Remember the document's principal.
-      mDocumentPrincipal = mDoc->GetPrincipal();
+      mDocumentPrincipal = mDoc->GetNodePrincipal();
 
       // Release our document reference
       mDocument = nsnull;
@@ -1764,7 +1767,7 @@ nsGlobalWindow::GetPrincipal()
 {
   if (mDoc) {
     // If we have a document, get the principal from the document
-    return mDoc->GetPrincipal();
+    return mDoc->GetNodePrincipal();
   }
 
   if (mDocumentPrincipal) {

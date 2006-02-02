@@ -3328,7 +3328,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 
     // Use the enclosing document's principal
     // XXX is this right? or should we use the protodoc's?
-    nsIPrincipal *principal = aDocument->GetPrincipal();
+    nsIPrincipal *principal = aDocument->GetNodePrincipal();
     if (!principal)
         return NS_ERROR_FAILURE;
 

@@ -1991,7 +1991,7 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
 {
   NS_ENSURE_TRUE(aDoc && aContainer, PR_TRUE);
 
-  nsIPrincipal *principal = aDoc->GetPrincipal();
+  nsIPrincipal *principal = aDoc->GetNodePrincipal();
   NS_ENSURE_TRUE(principal, PR_TRUE);
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject = aDoc->GetScriptGlobalObject();
@@ -3611,7 +3611,7 @@ HTMLContentSink::ProcessBASEElement(nsGenericHTMLElement* aElement)
         nsContentUtils::GetSecurityManager();
 
       rv = securityManager->
-        CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), baseHrefURI,
+        CheckLoadURIWithPrincipal(mDocument->GetNodePrincipal(), baseHrefURI,
                                   nsIScriptSecurityManager::STANDARD);
       if (NS_SUCCEEDED(rv)) {
         mBaseHref = baseHrefURI;

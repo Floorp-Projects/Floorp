@@ -1071,7 +1071,7 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
     nsCOMPtr<nsIDocument> targetDocument(do_QueryInterface(targetDOMDocument));
     NS_ENSURE_TRUE(targetDocument, PR_TRUE);
 
-    nsIPrincipal *targetPrincipal = targetDocument->GetPrincipal();
+    nsIPrincipal *targetPrincipal = targetDocument->GetNodePrincipal();
     NS_ENSURE_TRUE(targetPrincipal, PR_TRUE);
 
     nsCOMPtr<nsIURI> targetPrincipalURI;
@@ -6725,7 +6725,7 @@ nsDocShell::GetCurrentDocumentOwner(nsISupports ** aOwner)
 
     //-- Get the document's principal
     if (document) {
-        *aOwner = document->GetPrincipal();
+        *aOwner = document->GetNodePrincipal();
     }
 
     NS_IF_ADDREF(*aOwner);
