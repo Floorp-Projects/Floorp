@@ -2,7 +2,7 @@
 <h2><strong>{$addon->Name}</strong> &raquo; Comments</h2>
 <p class="first">
 <strong><a href="{$config.webpath}/{$app}/{$addon->ID}/">{$addon->Name} {$addon->Version}</a></strong>,
-by <a href="{$config.webpath}/{$addon->UserID}/author/">{$addon->UserName}</a>,
+by <a href="{$config.webpath}/{$app}/{$addon->UserID}/author/">{$addon->UserName}</a>,
 released on {$addon->VersionDateAdded|date_format}
 </p>
 
