@@ -60,7 +60,7 @@ class nsCocoaWindow;
 class nsCocoaWindow : public nsBaseWidget
 {
 private:
-	typedef nsBaseWidget Inherited;
+  typedef nsBaseWidget Inherited;
 
 public:
 
@@ -72,32 +72,32 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
       
     NS_IMETHOD              Create(nsNativeWidget aParent,
-                                     const nsRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
-                                     nsIDeviceContext *aContext,
-                                     nsIAppShell *aAppShell = nsnull,
-                                     nsIToolkit *aToolkit = nsnull,
-                                     nsWidgetInitData *aInitData = nsnull);
+                                   const nsRect &aRect,
+                                   EVENT_CALLBACK aHandleEventFunction,
+                                   nsIDeviceContext *aContext,
+                                   nsIAppShell *aAppShell = nsnull,
+                                   nsIToolkit *aToolkit = nsnull,
+                                   nsWidgetInitData *aInitData = nsnull);
 
     NS_IMETHOD              Create(nsIWidget* aParent,
-                                     const nsRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
-                                     nsIDeviceContext *aContext,
-                                     nsIAppShell *aAppShell = nsnull,
-                                     nsIToolkit *aToolkit = nsnull,
-                                     nsWidgetInitData *aInitData = nsnull);
+                                   const nsRect &aRect,
+                                   EVENT_CALLBACK aHandleEventFunction,
+                                   nsIDeviceContext *aContext,
+                                   nsIAppShell *aAppShell = nsnull,
+                                   nsIToolkit *aToolkit = nsnull,
+                                   nsWidgetInitData *aInitData = nsnull);
 
      // Utility method for implementing both Create(nsIWidget ...) and
      // Create(nsNativeWidget...)
 
     virtual nsresult        StandardCreate(nsIWidget *aParent,
-				                            const nsRect &aRect,
-				                            EVENT_CALLBACK aHandleEventFunction,
-				                            nsIDeviceContext *aContext,
-				                            nsIAppShell *aAppShell,
-				                            nsIToolkit *aToolkit,
-				                            nsWidgetInitData *aInitData,
-				                            nsNativeWidget aNativeParent = nsnull);
+                                    const nsRect &aRect,
+                                    EVENT_CALLBACK aHandleEventFunction,
+                                    nsIDeviceContext *aContext,
+                                    nsIAppShell *aAppShell,
+                                    nsIToolkit *aToolkit,
+                                    nsWidgetInitData *aInitData,
+                                    nsNativeWidget aNativeParent = nsnull);
 
     NS_IMETHOD              Show(PRBool aState);
     
@@ -124,11 +124,11 @@ public:
 
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
-    NS_IMETHOD            	GetScreenBounds(nsRect &aRect);
+    NS_IMETHOD              GetScreenBounds(nsRect &aRect);
     virtual PRBool          OnPaint(nsPaintEvent &event);
     void                    ReportSizeEvent();
 
-		NS_IMETHOD              SetTitle(const nsAString& aTitle);
+    NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
     virtual nsIFontMetrics* GetFont(void) { return nsnull; }
     NS_IMETHOD SetFont(const nsFont &aFont) { return NS_OK; }
@@ -144,7 +144,7 @@ public:
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent) { return NS_OK; }
     
-		// be notified that a some form of drag event needs to go into Gecko
+    // be notified that a some form of drag event needs to go into Gecko
     virtual PRBool DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers ) ;
 
     // Helpers to prevent recursive resizing during live-resize
@@ -154,8 +154,8 @@ public:
     
     void ComeToFront();
 
-  	// nsIKBStateControl interface
-  	NS_IMETHOD ResetInputState();
+    // nsIKBStateControl interface
+    NS_IMETHOD ResetInputState();
 
     void MoveToGlobalPoint(PRInt32 aX, PRInt32 aY);
 
@@ -164,10 +164,10 @@ public:
 
 protected:
   
-	nsIWidget*           mOffsetParent;   // if we're a popup, this is our parent [WEAK]
-	PRBool				       mIsDialog;       // true if the window is a dialog
-	PRBool               mIsResizing;     // we originated the resize, prevent infinite recursion
-	PRBool               mWindowMadeHere; // true if we created the window, false for embedding
+  nsIWidget*           mOffsetParent;   // if we're a popup, this is our parent [WEAK]
+  PRBool               mIsDialog;       // true if the window is a dialog
+  PRBool               mIsResizing;     // we originated the resize, prevent infinite recursion
+  PRBool               mWindowMadeHere; // true if we created the window, false for embedding
   NSWindow*            mWindow;         // our cocoa window [STRONG]
   WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]
   nsCOMPtr<nsIMenuBar> mMenuBar;
