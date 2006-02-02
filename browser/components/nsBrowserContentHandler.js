@@ -339,6 +339,8 @@ var nsBrowserContentHandler = {
       openPreferences();
       cmdLine.preventDefault = true;
     }
+    if (cmdLine.handleFlag("silent", false))
+      cmdLine.preventDefault = true;
   },
 
   helpInfo : "  -browser            Open a browser window.\n",
