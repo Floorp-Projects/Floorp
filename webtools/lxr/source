@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.16 2001/10/25 01:05:07 timeless%mac.com Exp $
+# $Id: source,v 1.17 2006/02/02 12:14:33 timeless%mozdev.org Exp $
 # source --	Present sourcecode as html, complete with references
 #
 #	Arne Georg Gleditsch <argggh@ifi.uio.no>
@@ -239,13 +239,13 @@ sub printfile {
 	if (open(SRCFILE, $Path->{'realf'})) {
 	    if (($Path->{'file'} =~ /\.(html)$/)) {
 		print <SRCFILE>;
-	    } elsif ($Path->{'file'} =~ /README$/) {
-		print("<PRE>");
+	    } elsif ($Path->{'file'} =~ /README$/i) {
+		print("<pre lang='en'>");
 		while(<SRCFILE>) {
             	    $string = $string . $_;
         	}
                 print(markupstring($string, $Path->{'virt'}));
-		print("</PRE>");
+		print("</pre>");
 	    } else {
 	        if (($Path->{'file'} =~ /nsI\w*\.idl$/)) {
 	          my $base = basename($Path->{'file'}, ".idl"); 
@@ -268,7 +268,7 @@ sub printfile {
                   print(" <a href=\"" . $doxRoot . "graph_legend.html\">Graph Legend</a> ]\n");
                   print("</P>\n");
                 }
-		print("<pre>");
+		print("<pre lang='en'>");
 		&markupfile(\*SRCFILE, $Path->{'virt'}, $Path->{'file'},
                              sub { print shift });
 		print("</pre>");
