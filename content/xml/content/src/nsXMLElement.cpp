@@ -330,7 +330,7 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
           }
 
           nsAutoString target;
-          GetAttr(kNameSpaceID_XLink, nsGkAtoms::_moz_target, target);
+          GetAttr(kNameSpaceID_XLink, nsLayoutAtoms::_moz_target, target);
           nsCOMPtr<nsIURI> baseURI = GetBaseURI();
           ret = TriggerLink(aPresContext, verb, baseURI, uri,
                             target, PR_TRUE, PR_TRUE);
