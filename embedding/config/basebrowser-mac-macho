@@ -250,19 +250,19 @@ res/fonts/fontEncoding.properties
 ;
 ; Optional for MathML
 ;
-;res/mathml.css
-;res/dtd/mathml.dtd
-;res/entityTables/mathml20.properties
-;res/fonts/mathfont.properties
-;res/fonts/mathfontCMEX10.properties
-;res/fonts/mathfontCMSY10.properties
-;res/fonts/mathfontMath1.properties
-;res/fonts/mathfontMath2.properties
-;res/fonts/mathfontMath4.properties
-;res/fonts/mathfontMTExtra.properties
-;res/fonts/mathfontPUA.properties
-;res/fonts/mathfontSymbol.properties
-;Components/ucvmath.dylib
+res/mathml.css
+res/dtd/mathml.dtd
+res/entityTables/mathml20.properties
+res/fonts/mathfont.properties
+res/fonts/mathfontCMEX10.properties
+res/fonts/mathfontCMSY10.properties
+res/fonts/mathfontMath1.properties
+res/fonts/mathfontMath2.properties
+res/fonts/mathfontMath4.properties
+res/fonts/mathfontMTExtra.properties
+res/fonts/mathfontPUA.properties
+res/fonts/mathfontSymbol.properties
+components/libucvmath.dylib
 
 ; p3p
 components/libp3p.dylib

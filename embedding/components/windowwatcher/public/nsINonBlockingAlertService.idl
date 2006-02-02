@@ -1,0 +1,30 @@
+#include "nsISupports.idl"
+interface nsIDOMWindow;
+
+/**
+ * This is the interface to the embeddable non blocking alert
+ * service.  A non blocking alert is a less serious informative alert
+ * that does not need to block the program's execution to get the
+ * user's response.
+ *
+ * The way to present the alert is left to the implementations.  It
+ * may be a dialog separate from the parent window, or a window modal
+ * sheet (as the ones in Mac OSX) attached to that.
+ */
+[uuid(E7A87451-6ED3-11DA-A42F-00039386357A)]
+interface nsINonBlockingAlertService : nsISupports {
+  /**
+   * This shows a non blocking alert with the specified title and
+   * message text. This function requires a valid parent window to
+   * which the alert is associated.
+   *
+   * @param aParent
+   *        The parent window. This must not be null.
+   * @param aDialogTitle
+   *        Text to appear in the title of the alert.
+   * @param aText
+   *        Text to appear in the body of the alert.
+   */
+  void showNonBlockingAlert(in nsIDOMWindow aParent,
+			    in wstring aDialogTitle, in wstring aText);
+};
