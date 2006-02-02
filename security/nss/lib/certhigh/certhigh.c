@@ -720,11 +720,9 @@ CERT_FindCertByNameString(CERTCertDBHandle *handle, char *nameStr)
     if ( name ) {
 	nameItem = SEC_ASN1EncodeItem (arena, NULL, (void *)name,
 				       CERT_NameTemplate);
-	if ( nameItem == NULL ) {
-	    goto loser;
+	if ( nameItem != NULL ) {
+            cert = CERT_FindCertByName(handle, nameItem);
 	}
-
-	cert = CERT_FindCertByName(handle, nameItem);
 	CERT_DestroyName(name);
     }
 
