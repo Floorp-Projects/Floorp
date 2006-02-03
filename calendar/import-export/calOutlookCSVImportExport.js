@@ -268,13 +268,13 @@ function csv_importFromStream(aStream, aCount) {
                                       .createInstance(Components.interfaces.calIEvent);
 
                 event.title = title;
-                event.isAllDay = (localeEn.True == eventFields[args.allDayIndex]);
+                sDate.isDate = (localeEn.True == eventFields[args.allDayIndex]);
                 if (localeEn.True == eventFields[args.privateIndex])
                     event.privacy = "PRIVATE";
 
                 if (!eDate && sDate) {
                     eDate = sDate.clone();
-                    if (event.isAllDay) {
+                    if (sDate.isDate) {
                         // end date is exclusive, so set to next day after start.
                        eDate.day = eDate.day + 1;
                     }
@@ -436,7 +436,7 @@ function csv_exportToStream(aStream, aCount, aItems) {
         line.push(timeString(item.startDate));
         line.push(dateString(item.endDate));
         line.push(timeString(item.endDate));
-        line.push(item.isAllDay ? localeEn.valueTrue : localeEn.valueFalse);
+        line.push(item.startDate.isDate ? localeEn.valueTrue : localeEn.valueFalse);
         line.push(""); //XXX add alarm support
         line.push(""); //XXX add alarm support
         line.push(""); //XXX add alarm support
