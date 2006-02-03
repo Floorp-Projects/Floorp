@@ -8,6 +8,19 @@ function bmInit(targetDoc, targetElement) {
 
 }
 
+/* This is called and currently being used from minimo.js, 
+ * See the path bookmarks/... 
+ */
+function bmInitXUL(targetDoc, targetElement) {
+
+    var testLoad=new bmProcessor();
+    testLoad.xslSet("bookmarks/bookmark_template_xul.xml");
+    testLoad.setTargetDocument(targetDoc);
+    testLoad.setTargetElement(targetElement);
+    testLoad.run();
+    
+}
+
 function bmProcessor() {
 	this.xmlRef=document.implementation.createDocument("","",null);
 	this.xslRef=document.implementation.createDocument("http://www.w3.org/1999/XSL/Transform","stylesheet",null);
