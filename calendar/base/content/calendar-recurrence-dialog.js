@@ -240,10 +240,8 @@ function updateDuration()
 
     if (durationSelection == "ntimes") {
         setElementValue("repeat-ntimes-count", false, "disabled");
-        setElementValue("repeat-ntimes-units", false, "disabled");
     } else {
         setElementValue("repeat-ntimes-count", "true", "disabled");
-        setElementValue("repeat-ntimes-units", "true", "disabled");
     }
 
     if (durationSelection == "until") {

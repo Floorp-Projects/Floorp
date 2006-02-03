@@ -168,17 +168,10 @@
           </row>
           <row>
             <radio label="&newevent.repeat.for.label;" value="ntimes"/>
-            <hbox>
+            <hbox align="center">
               <textbox id="repeat-ntimes-count" size="3" value="5" oninput="validateIntegers(event); updateAccept();"/>
               <spacer flex="0.5"/>
-              <menulist id="repeat-ntimes-units">
-                <menupopup>
-                  <menuitem label="&repeat.units.days.both;"/>
-                  <menuitem label="&repeat.units.weeks.both;"/>
-                  <menuitem label="&repeat.units.months.both;"/>
-                  <menuitem label="&repeat.units.years.both;"/>
-                </menupopup>
-              </menulist>
+              <label value="&repeat.units.occurence.both;"/>
               <spacer flex="1"/>
             </hbox>
           </row>
