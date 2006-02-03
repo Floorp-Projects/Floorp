@@ -52,7 +52,6 @@
 #include "nsCRT.h"
 #include "nsFIXptr.h"
 #include "nsXPointer.h"
-#include "nsINode.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
