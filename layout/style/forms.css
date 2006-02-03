@@ -690,4 +690,14 @@ input[type="file"] > input[type="button"] {
   margin: 0px 0px 2px 5px !important;
 }
 
+/* make sure disabled images have transparent background */
+input[type="image"][disabled] {
+  background-color: transparent;
+}
+
+/* avoid flickering size when file selector buttons with large text are activated */
+input[type="file"] > input[type="button"]:active:hover {
+  font-size: inherit;
+}
+
 %endif
