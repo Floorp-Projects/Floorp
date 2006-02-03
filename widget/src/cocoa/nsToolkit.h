@@ -40,8 +40,6 @@
 
 #include "nsToolkitBase.h"
 
-#include "nsCOMPtr.h"
-
 /**
  * The toolkit abstraction is necessary because the message pump must
  * execute within the same thread that created the widget under Win32.
@@ -78,6 +76,5 @@ protected:
   virtual nsresult  InitEventQueue(PRThread * aThread);
 
 };
-
 
 #endif  // TOOLKIT_H
