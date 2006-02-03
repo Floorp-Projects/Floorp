@@ -304,6 +304,8 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
   
+  if (!mInnerView)
+    return NS_OK;
   nsIView* subdocView = mInnerView->GetFirstChild();
   if (!subdocView)
     return NS_OK;
