@@ -243,6 +243,8 @@ function saveDialog(item)
     setItemProperty(item, "title",       getElementValue("item-title"));
     setItemProperty(item, "LOCATION",    getElementValue("item-location"));
 
+    var kDefaultTimezone = calendarDefaultTimezone();
+
     if (isEvent(item)) {
         var startDate = jsDateToDateTime(getElementValue("event-starttime"));
         var endDate = jsDateToDateTime(getElementValue("event-endtime"));
@@ -256,6 +258,9 @@ function saveDialog(item)
             endDate.day += 1;
             endDate.normalize();
         }
+
+        startDate = startDate.getInTimezone(kDefaultTimezone);
+        endDate = endDate.getInTimezone(kDefaultTimezone);
         setItemProperty(item, "startDate",   startDate);
         setItemProperty(item, "endDate",     endDate);
     }
@@ -263,10 +268,16 @@ function saveDialog(item)
     if (isToDo(item)) {
         var entryDate = getElementValue("todo-has-entrydate", "checked") ? 
             jsDateToDateTime(getElementValue("todo-entrydate")) : null;
+        if (entryDate) {
+            entryDate = entryDate.getInTimezone(kDefaultTimezone);
+        }
         setItemProperty(item, "entryDate",   entryDate);
 
         var dueDate = getElementValue("todo-has-duedate", "checked") ? 
             jsDateToDateTime(getElementValue("todo-duedate")) : null;
+        if (dueDate) {
+            dueDate = dueDate.getInTimezone(kDefaultTimezone);
+        }
         setItemProperty(item, "dueDate",     dueDate);
     }
 
@@ -604,12 +615,14 @@ function setItemProperty(item, propertyName, value)
     case "startDate":
         if (value.isDate && !item.startDate.isDate ||
             !value.isDate && item.startDate.isDate ||
+            value.timezone != item.startDate.timezone ||
             value.compare(item.startDate) != 0)
             item.startDate = value;
         break;
     case "endDate":
         if (value.isDate && !item.endDate.isDate ||
             !value.isDate && item.endDate.isDate ||
+            value.timezone != item.endDate.timezone ||
             value.compare(item.endDate) != 0)
             item.endDate = value;
         break;
@@ -619,6 +632,7 @@ function setItemProperty(item, propertyName, value)
             break;
         if ((value && !item.entryDate) ||
             (!value && item.entryDate) ||
+            (value.timezone != item.entryDate.timezone) ||
             (value.compare(item.entryDate) != 0))
             item.entryDate = value;
         break;
@@ -627,6 +641,7 @@ function setItemProperty(item, propertyName, value)
             break;
         if ((value && !item.dueDate) ||
             (!value && item.dueDate) ||
+            (value.timezone != item.dueDate.timezone) ||
             (value.compare(item.dueDate) != 0))
             item.dueDate = value;
         break;
