@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.69 2005/10/12 19:04:13 wtchang%redhat.com Exp $ */
+/* $Id: nssinit.c,v 1.70 2006/02/03 18:13:14 kaie%kuix.de Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -57,6 +57,7 @@
 #include "pki3hack.h"
 #include "certi.h"
 #include "secmodi.h"
+#include "ocspi.h"
 
 /*
  * On Windows nss3.dll needs to export the symbol 'mktemp' to be
@@ -417,6 +418,10 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     }
 
     if (SECSuccess != InitCRLCache()) {
+        return SECFailure;
+    }
+    
+    if (SECSuccess != InitOCSPGlobal()) {
         return SECFailure;
     }
 
