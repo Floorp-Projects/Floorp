@@ -522,7 +522,7 @@ nsSystemPrefService::OnPrefChange(PRUint32 aPrefAtom, void *aData)
     if (observer)
         observer->Observe(NS_STATIC_CAST(nsIPrefBranch *, this),
                           NS_SYSTEMPREF_PREFCHANGE_TOPIC_ID,
-                          NS_ConvertUTF8toUCS2(mGConf->GetMozKey(aPrefAtom)).
+                          NS_ConvertUTF8toUTF16(mGConf->GetMozKey(aPrefAtom)).
                           get());
 }
 

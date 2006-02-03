@@ -1597,7 +1597,7 @@ NS_IMETHODIMP nsXULWindow::GetDOMElementById(char* aID, nsIDOMElement** aDOMElem
    if(!domdoc) 
       return NS_ERROR_FAILURE;
    
-   NS_ENSURE_SUCCESS(domdoc->GetElementById(NS_ConvertASCIItoUCS2(aID), aDOMElement), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(domdoc->GetElementById(NS_ConvertASCIItoUTF16(aID), aDOMElement), NS_ERROR_FAILURE);
 
    return NS_OK;
 }

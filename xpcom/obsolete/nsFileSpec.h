@@ -546,7 +546,7 @@ class NS_COM_OBSOLETE nsFileURL
         void                    operator = (const char* inURLString);
         void                    operator = (const nsString& inURLString)
                                 {
-                                    *this = NS_LossyConvertUCS2toASCII(inURLString).get();
+                                    *this = NS_LossyConvertUTF16toASCII(inURLString).get();
                                 }
         void                    operator = (const nsFilePath& inOther);
         void                    operator = (const nsFileSpec& inOther);
@@ -604,7 +604,7 @@ class NS_COM_OBSOLETE nsFilePath
         void                    operator = (const char* inUnixPathString);
         void                    operator = (const nsString& inUnixPathString)
                                 {
-                                    *this = NS_LossyConvertUCS2toASCII(inUnixPathString).get();
+                                    *this = NS_LossyConvertUTF16toASCII(inUnixPathString).get();
                                 }
         void                    operator = (const nsFileURL& inURL);
         void                    operator = (const nsFileSpec& inOther);

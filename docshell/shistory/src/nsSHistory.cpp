@@ -471,7 +471,7 @@ nsSHistory::PrintHistory()
 
               printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
               printf("\t\t URL = %s\n", url);
-              printf("\t\t Title = %s\n", NS_LossyConvertUCS2toASCII(title).get());
+              printf("\t\t Title = %s\n", NS_LossyConvertUTF16toASCII(title).get());
               printf("\t\t layout History Data = %x\n", layoutHistoryState);
 #endif
       

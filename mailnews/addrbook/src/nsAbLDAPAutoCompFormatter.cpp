@@ -125,7 +125,7 @@ nsAbLDAPAutoCompFormatter::Format(nsILDAPMessage *aMsg,
 
     // this is that part that actually gets autocompleted to
     //
-    rv = item->SetValue(NS_ConvertUTF8toUCS2(value));
+    rv = item->SetValue(NS_ConvertUTF8toUTF16(value));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsAbLDAPAutoCompFormatter::Format(): "
                  "item->SetValue failed");
@@ -137,7 +137,7 @@ nsAbLDAPAutoCompFormatter::Format(nsILDAPMessage *aMsg,
     nsCAutoString comment;
     rv = ProcessFormat(mCommentFormat, aMsg, &comment, 0);
     if (NS_SUCCEEDED(rv)) {
-        rv = item->SetComment(NS_ConvertUTF8toUCS2(comment).get());
+        rv = item->SetComment(NS_ConvertUTF8toUTF16(comment).get());
         if (NS_FAILED(rv)) {
             NS_WARNING("nsAbLDAPAutoCompFormatter::Format():"
                        " item->SetComment() failed");

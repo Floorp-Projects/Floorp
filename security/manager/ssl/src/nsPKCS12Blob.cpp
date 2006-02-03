@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsPKCS12Blob.cpp,v 1.45 2006/01/10 02:51:24 kaie%kuix.de Exp $ */
+/* $Id: nsPKCS12Blob.cpp,v 1.46 2006/02/03 14:18:28 cbiesinger%web.de Exp $ */
 
 #include "prmem.h"
 #include "prprf.h"
@@ -294,7 +294,7 @@ nsPKCS12Blob::LoadCerts(const PRUnichar **certNames, int numCerts)
   }
   /* Add the certs */
   for (int i=0; i<numCerts; i++) {
-    strcpy(namecpy, NS_ConvertUCS2toUTF8(certNames[i]));
+    strcpy(namecpy, NS_ConvertUTF16toUTF8(certNames[i]));
     CERTCertificate *nssCert = PK11_FindCertFromNickname(namecpy, NULL);
     if (!nssCert) {
       if (!handleError())

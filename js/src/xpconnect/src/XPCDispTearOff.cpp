@@ -262,7 +262,7 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
     }
     // Get the name as a flat string
     // This isn't that efficient, but we have to make the conversion somewhere
-    NS_LossyConvertUCS2toASCII name(pTypeInfo->GetNameForDispID(dispIdMember));
+    NS_LossyConvertUTF16toASCII name(pTypeInfo->GetNameForDispID(dispIdMember));
     if(name.IsEmpty())
         return E_FAIL;
     // Decide if this is a getter or setter

@@ -614,7 +614,7 @@ PRBool nsImapOfflineSync::CreateOfflineFolder(nsIMsgFolder *folder)
    nsXPIDLCString onlineName;
   imapFolder->GetOnlineName(getter_Copies(onlineName));
 
-  NS_ConvertASCIItoUCS2 folderName(onlineName);
+  NS_ConvertASCIItoUTF16 folderName(onlineName);
   nsresult rv = imapFolder->PlaybackOfflineFolderCreate(folderName.get(), nsnull,  getter_AddRefs(createFolderURI));
   if (createFolderURI && NS_SUCCEEDED(rv))
   {

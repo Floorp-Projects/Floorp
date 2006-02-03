@@ -104,7 +104,7 @@ void nsMyListener::Start(const char *arg2)
         if (NS_SUCCEEDED( rv )) {
           nsCOMPtr<nsIDOMNSDocument> pDOMNSDocument = do_QueryInterface( doc, &rv );
           if (NS_SUCCEEDED( rv )) {
-            rv = pDOMNSDocument->Load( NS_ConvertASCIItoUCS2(arg2) );
+            rv = pDOMNSDocument->Load( NS_ConvertASCIItoUTF16(arg2) );
           }
         }
       }

@@ -356,7 +356,7 @@ void CTests::OnTestsChangeUrl()
 	if (myDialog.DoModal() == IDOK)
 	{
 		QAOutput("Begin Change URL test.", 1);
-		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(myDialog.m_urlfield).get(),
+		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUTF16(myDialog.m_urlfield).get(),
 								myDialog.m_flagvalue, nsnull,nsnull, nsnull);
 
 	    RvTestResult(rv, "rv LoadURI() test", 1);
@@ -831,7 +831,7 @@ void CTests::OnToolsViewLogfile()
 	myFile.Close();
 
 	strcpy(theURI, "file://C|/temp/TestOutput.txt");
-	rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theURI).get(),
+	rv = qaWebNav->LoadURI(NS_ConvertASCIItoUTF16(theURI).get(),
 		 nsIWebNavigation::LOAD_FLAGS_NONE, nsnull,nsnull, nsnull);
 }
 

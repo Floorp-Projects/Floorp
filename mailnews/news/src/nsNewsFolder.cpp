@@ -1410,7 +1410,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
       rv = CreateNewsgroupPasswordUrlForSignon(mURI.get(), getter_Copies(signonURL));
       if (NS_FAILED(rv)) return rv;
 
-      rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, signonURL)).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
+      rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUTF16(NS_STATIC_CAST(const char*, signonURL)).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                   getter_Copies(uniGroupPassword), &okayValue);
       if (NS_FAILED(rv)) return rv;
 
@@ -1421,7 +1421,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
       }
 
       // we got a password back...so remember it
-      rv = SetGroupPassword(NS_LossyConvertUCS2toASCII(uniGroupPassword).get());
+      rv = SetGroupPassword(NS_LossyConvertUTF16toASCII(uniGroupPassword).get());
       if (NS_FAILED(rv)) return rv;
 
     } // if we got a prompt dialog
@@ -1478,7 +1478,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
       rv = CreateNewsgroupUsernameUrlForSignon(mURI.get(), getter_Copies(signonURL));
       if (NS_FAILED(rv)) return rv;
       
-      rv = dialog->Prompt(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUCS2(signonURL).get(), 
+      rv = dialog->Prompt(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUTF16(signonURL).get(), 
         nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, nsnull,
         getter_Copies(uniGroupUsername), &okayValue);
       if (NS_FAILED(rv)) return rv;
@@ -1490,7 +1490,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
       }
       
       // we got a username back, remember it
-      rv = SetGroupUsername(NS_LossyConvertUCS2toASCII(uniGroupUsername).get());
+      rv = SetGroupUsername(NS_LossyConvertUTF16toASCII(uniGroupUsername).get());
       if (NS_FAILED(rv)) return rv;
       
     } // if we got a prompt dialog

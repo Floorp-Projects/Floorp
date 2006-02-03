@@ -1269,7 +1269,7 @@ nsParser::Parse(nsIURI* aURL,
     if (rv != NS_OK) {
       return rv;
     }
-    NS_ConvertUTF8toUCS2 theName(spec);
+    NS_ConvertUTF8toUTF16 theName(spec);
 
     nsScanner* theScanner = new nsScanner(theName, PR_FALSE, mCharset,
                                           mCharsetSource);

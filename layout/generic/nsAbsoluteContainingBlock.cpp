@@ -444,7 +444,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
       if (NS_SUCCEEDED(CallQueryInterface(aKidFrame, &frameDebug))) {
         nsAutoString name;
         frameDebug->GetFrameName(name);
-        printf("%s ", NS_LossyConvertUCS2toASCII(name).get());
+        printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
       }
     }
     printf("r=%d",aReflowState.reason);
@@ -664,7 +664,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
         if (NS_SUCCEEDED(CallQueryInterface(aKidFrame, &frameDebug))) {
           nsAutoString name;
           frameDebug->GetFrameName(name);
-          printf("%s ", NS_LossyConvertUCS2toASCII(name).get());
+          printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
         }
       }
       printf("%p rect=%d,%d,%d,%d", aKidFrame, rect.x, rect.y, rect.width, rect.height);

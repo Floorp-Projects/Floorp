@@ -55,12 +55,12 @@ public:
     const char *GetName() {
         return mName.get();
     }
-    void SetName(nsAString &aString) { mName = NS_ConvertUCS2toUTF8(aString); }
+    void SetName(nsAString &aString) { mName = NS_ConvertUTF16toUTF8(aString); }
 
     const char *GetKeyBinding() {
         return mKeyBinding.get(); 
     }
-    void SetKeyBinding(nsAString &aString) { mKeyBinding = NS_ConvertUCS2toUTF8(aString); }
+    void SetKeyBinding(nsAString &aString) { mKeyBinding = NS_ConvertUTF16toUTF8(aString); }
 private:
     nsCString mName;
     nsCString mKeyBinding;

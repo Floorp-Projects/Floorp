@@ -53,7 +53,7 @@ ChatFrame::ChatFrame(wxWindow* aParent)
     SetupDefaultGeckoWindow();
 
     nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
-    webNav->LoadURI(NS_ConvertASCIItoUCS2("about:blank").get(),
+    webNav->LoadURI(NS_ConvertASCIItoUTF16("about:blank").get(),
         nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
 
 }

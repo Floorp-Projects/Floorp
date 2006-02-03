@@ -596,7 +596,7 @@ nsHTMLSelectElement::PrintOptions(nsIContent* aOptions, PRInt32 tabs)
   if (elem) {
     nsAutoString s;
     elem->GetTagName(s);
-    printf("<%s>\n", NS_ConvertUCS2toUTF8(s).get());
+    printf("<%s>\n", NS_ConvertUTF16toUTF8(s).get());
   } else {
     printf(">>text\n");
   }

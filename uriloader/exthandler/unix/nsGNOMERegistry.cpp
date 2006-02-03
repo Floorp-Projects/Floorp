@@ -307,7 +307,7 @@ nsGNOMERegistry::GetFromType(const char *aMIMEType)
   _gnome_vfs_mime_extensions_list_free(extensions);
 
   const char *description = _gnome_vfs_mime_get_description(aMIMEType);
-  mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(description));
+  mimeInfo->SetDescription(NS_ConvertUTF8toUTF16(description));
 
   // Convert UTF-8 registry value to filesystem encoding, which
   // g_find_program_in_path() uses.
@@ -334,7 +334,7 @@ nsGNOMERegistry::GetFromType(const char *aMIMEType)
                         getter_AddRefs(appFile));
   if (appFile) {
     mimeInfo->SetDefaultApplication(appFile);
-    mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUCS2(handlerApp->name));
+    mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUTF16(handlerApp->name));
     mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
   }
 

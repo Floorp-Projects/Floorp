@@ -4275,7 +4275,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString buf;
   mNodeInfo->GetQualifiedName(buf);
-  fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buf).get(), out);
 
   fprintf(out, "@%p", this);
 
@@ -4293,7 +4293,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
     buffer.Append(value);
 
     fputs(" ", out);
-    fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
   }
 
   fprintf(out, " refcount=%d<", mRefCnt.get());

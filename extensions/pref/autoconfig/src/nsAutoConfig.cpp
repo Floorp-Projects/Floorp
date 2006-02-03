@@ -592,7 +592,7 @@ nsresult nsAutoConfig::PromptForEMailAddress(nsACString &emailAddress)
     if (!success)
       return NS_ERROR_FAILURE;
     NS_ENSURE_SUCCESS(rv, rv);
-    CopyUCS2toASCII(emailResult, emailAddress);
+    LossyCopyUTF16toASCII(emailResult, emailAddress);
     return NS_OK;
 }
 

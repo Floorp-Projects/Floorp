@@ -405,7 +405,7 @@ nsDownloadManager::SaveState()
       downloads->GetNext(getter_AddRefs(supports));
       res = do_QueryInterface(supports);
       res->GetValueConst(&uri);
-      AssertProgressInfoFor(NS_ConvertASCIItoUCS2(uri).get());
+      AssertProgressInfoFor(NS_ConvertASCIItoUTF16(uri).get());
       downloads->HasMoreElements(&hasMoreElements);
     }
   }

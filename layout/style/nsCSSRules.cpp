@@ -230,7 +230,7 @@ CSSCharsetRuleImpl::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
   fputs("@charset \"", out);
-  fputs(NS_LossyConvertUCS2toASCII(mEncoding).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(mEncoding).get(), out);
   fputs("\"\n", out);
 
   return NS_OK;
@@ -432,12 +432,12 @@ CSSImportRuleImpl::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
   fputs("@import \"", out);
-  fputs(NS_LossyConvertUCS2toASCII(mURLSpec).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(mURLSpec).get(), out);
   fputs("\" ", out);
 
   nsAutoString mediaText;
   mMedia->GetText(mediaText);
-  fputs(NS_LossyConvertUCS2toASCII(mediaText).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(mediaText).get(), out);
   fputs("\n", out);
 
   return NS_OK;
@@ -927,7 +927,7 @@ nsCSSMediaRule::List(FILE* out, PRInt32 aIndent) const
   if (mMedia) {
     nsAutoString mediaText;
     mMedia->GetText(mediaText);
-    fputs(NS_LossyConvertUCS2toASCII(mediaText).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(mediaText).get(), out);
   }
 
   return nsCSSGroupRule::List(out, aIndent);
@@ -1319,12 +1319,12 @@ CSSNameSpaceRuleImpl::List(FILE* out, PRInt32 aIndent) const
 
   if (mPrefix) {
     mPrefix->ToString(buffer);
-    fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
     fputs(" ", out);
   }
 
   fputs("url(", out);
-  fputs(NS_LossyConvertUCS2toASCII(mURLSpec).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(mURLSpec).get(), out);
   fputs(")\n", out);
   return NS_OK;
 }

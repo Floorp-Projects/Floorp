@@ -247,7 +247,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
     rv = aUrl->GetSpec(tmpStr);
     if (NS_FAILED(rv)) return rv;
 
-    NS_ConvertUTF8toUCS2 urlString(tmpStr);
+    NS_ConvertUTF8toUTF16 urlString(tmpStr);
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
     rv = webNav->LoadURI(urlString.get(),

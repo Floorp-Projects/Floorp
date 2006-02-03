@@ -413,7 +413,7 @@ static void DebugPrintCompResult(const nsString& string1, const nsString& string
   printf(" %s\n", s);
 #else
     // Warning: casting to char*
-    printf(NS_LossyConvertUCS2toASCII(string1).get() << ' ');
+    printf(NS_LossyConvertUTF16toASCII(string1).get() << ' ');
 
     switch ((int)result) {
     case 0:
@@ -426,7 +426,7 @@ static void DebugPrintCompResult(const nsString& string1, const nsString& string
       printf('<');
       break;
     }
-    printf(' ' << NS_LossyConvertUCS2toASCII(string2).get() << '\n');
+    printf(' ' << NS_LossyConvertUTF16toASCII(string2).get() << '\n');
 #endif
 }
 
@@ -879,27 +879,27 @@ static void Test_nsLocale()
     localeName.AssignLiteral("en-US");
     res = win32Locale->GetPlatformLocale(localeName, &lcid);
     printf("LCID for en-US is 1033\n");
-    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUTF16toASCII(localeName).get(), lcid, lcid);
 
     localeName.AssignLiteral("en-GB");
     res = win32Locale->GetPlatformLocale(localeName, &lcid);
     printf("LCID for en-GB is 2057\n");
-    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUTF16toASCII(localeName).get(), lcid, lcid);
 
     localeName.AssignLiteral("fr-FR");
     res = win32Locale->GetPlatformLocale(localeName, &lcid);
     printf("LCID for fr-FR is 1036\n");
-    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUTF16toASCII(localeName).get(), lcid, lcid);
 
     localeName.AssignLiteral("de-DE");
     res = win32Locale->GetPlatformLocale(localeName, &lcid);
     printf("LCID for de-DE is 1031\n");
-    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUTF16toASCII(localeName).get(), lcid, lcid);
 
     localeName.AssignLiteral("ja-JP");
     res = win32Locale->GetPlatformLocale(localeName, &lcid);
     printf("LCID for ja-JP is 1041\n");
-    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUTF16toASCII(localeName).get(), lcid, lcid);
 
   }
 #else
@@ -912,23 +912,23 @@ static void Test_nsLocale()
   if (posixLocale) {
     localeName.AssignLiteral("en-US");
     res = posixLocale->GetPlatformLocale(localeName, locale, length);
-    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
+    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUTF16toASCII(localeName).get(), locale);
 
     localeName.AssignLiteral("en-GB");
     res = posixLocale->GetPlatformLocale(localeName, locale, length);
-    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
+    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUTF16toASCII(localeName).get(), locale);
 
     localeName.AssignLiteral("fr-FR");
     res = posixLocale->GetPlatformLocale(localeName, locale, length);
-    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
+    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUTF16toASCII(localeName).get(), locale);
 
     localeName.AssignLiteral("de-DE");
     res = posixLocale->GetPlatformLocale(localeName, locale, length);
-    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
+    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUTF16toASCII(localeName).get(), locale);
 
     localeName.AssignLiteral("ja-JP");
     res = posixLocale->GetPlatformLocale(localeName, locale, length);
-    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
+    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUTF16toASCII(localeName).get(), locale);
 
   }
   else {

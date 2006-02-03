@@ -1663,20 +1663,20 @@ nsPasswordManager::WriteSignonEntryEnumerator(const nsACString& aKey,
   stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
 
   for (SignonDataEntry* e = aEntry->head; e; e = e->next) {
-    NS_ConvertUCS2toUTF8 userField(e->userField);
+    NS_ConvertUTF16toUTF8 userField(e->userField);
     userField.Append(NS_LINEBREAK);
     stream->Write(userField.get(), userField.Length(), &bytesWritten);
 
-    buffer.Assign(NS_ConvertUCS2toUTF8(e->userValue));
+    buffer.Assign(NS_ConvertUTF16toUTF8(e->userValue));
     buffer.Append(NS_LINEBREAK);
     stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
 
     buffer.Assign("*");
-    buffer.Append(NS_ConvertUCS2toUTF8(e->passField));
+    buffer.Append(NS_ConvertUTF16toUTF8(e->passField));
     buffer.Append(NS_LINEBREAK);
     stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
 
-    buffer.Assign(NS_ConvertUCS2toUTF8(e->passValue));
+    buffer.Assign(NS_ConvertUTF16toUTF8(e->passValue));
     buffer.Append(NS_LINEBREAK);
     stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
   }
@@ -1732,7 +1732,7 @@ nsPasswordManager::AddSignonData(const nsACString& aRealm,
 nsPasswordManager::DecryptData(const nsAString& aData,
                                nsAString& aPlaintext)
 {
-  NS_ConvertUCS2toUTF8 flatData(aData);
+  NS_ConvertUTF16toUTF8 flatData(aData);
   char* buffer = nsnull;
 
   if (flatData.CharAt(0) == '~') {
@@ -1757,7 +1757,7 @@ nsPasswordManager::DecryptData(const nsAString& aData,
 
   }
 
-  aPlaintext.Assign(NS_ConvertUTF8toUCS2(buffer));
+  aPlaintext.Assign(NS_ConvertUTF8toUTF16(buffer));
   PR_Free(buffer);
 
   return NS_OK;
@@ -1776,7 +1776,7 @@ nsPasswordManager::EncryptData(const nsAString& aPlaintext,
   NS_ENSURE_TRUE(sDecoderRing, NS_ERROR_FAILURE);
 
   char* buffer;
-  if (NS_FAILED(sDecoderRing->EncryptString(NS_ConvertUCS2toUTF8(aPlaintext).get(), &buffer)))
+  if (NS_FAILED(sDecoderRing->EncryptString(NS_ConvertUTF16toUTF8(aPlaintext).get(), &buffer)))
     return NS_ERROR_FAILURE;
 
   aEncrypted.Assign(buffer);
@@ -1793,7 +1793,7 @@ nsPasswordManager::EncryptDataUCS2(const nsAString& aPlaintext,
   nsresult rv = EncryptData(aPlaintext, buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aEncrypted.Assign(NS_ConvertUTF8toUCS2(buffer));
+  aEncrypted.Assign(NS_ConvertUTF8toUTF16(buffer));
   return NS_OK;
 }
 

@@ -475,7 +475,7 @@ nsNSSCertificate::GetEmailAddresses(PRUint32 *aLength, PRUnichar*** aAddresses)
        ;
        aAddr = CERT_GetNextEmailAddress(mCert, aAddr), ++iAddr)
   {
-    (*aAddresses)[iAddr] = ToNewUnicode(NS_ConvertUTF8toUCS2(aAddr));
+    (*aAddresses)[iAddr] = ToNewUnicode(NS_ConvertUTF8toUTF16(aAddr));
   }
 
   return NS_OK;
@@ -498,7 +498,7 @@ nsNSSCertificate::ContainsEmailAddress(const nsAString &aEmailAddress, PRBool *r
        ;
        aAddr = CERT_GetNextEmailAddress(mCert, aAddr))
   {
-    NS_ConvertUTF8toUCS2 certAddr(aAddr);
+    NS_ConvertUTF8toUTF16 certAddr(aAddr);
     ToLowerCase(certAddr);
 
     nsAutoString testAddr(aEmailAddress);
@@ -526,7 +526,7 @@ nsNSSCertificate::GetCommonName(nsAString &aCommonName)
   if (mCert) {
     char *commonName = CERT_GetCommonName(&mCert->subject);
     if (commonName) {
-      aCommonName = NS_ConvertUTF8toUCS2(commonName);
+      aCommonName = NS_ConvertUTF8toUTF16(commonName);
       PORT_Free(commonName);
     } /*else {
       *aCommonName = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
@@ -546,7 +546,7 @@ nsNSSCertificate::GetOrganization(nsAString &aOrganization)
   if (mCert) {
     char *organization = CERT_GetOrgName(&mCert->subject);
     if (organization) {
-      aOrganization = NS_ConvertUTF8toUCS2(organization);
+      aOrganization = NS_ConvertUTF8toUTF16(organization);
       PORT_Free(organization);
     } /*else {
       *aOrganization = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
@@ -566,7 +566,7 @@ nsNSSCertificate::GetIssuerCommonName(nsAString &aCommonName)
   if (mCert) {
     char *commonName = CERT_GetCommonName(&mCert->issuer);
     if (commonName) {
-      aCommonName = NS_ConvertUTF8toUCS2(commonName);
+      aCommonName = NS_ConvertUTF8toUTF16(commonName);
       PORT_Free(commonName);
     }
   }
@@ -584,7 +584,7 @@ nsNSSCertificate::GetIssuerOrganization(nsAString &aOrganization)
   if (mCert) {
     char *organization = CERT_GetOrgName(&mCert->issuer);
     if (organization) {
-      aOrganization = NS_ConvertUTF8toUCS2(organization);
+      aOrganization = NS_ConvertUTF8toUTF16(organization);
       PORT_Free(organization);
     } else {
       return GetIssuerCommonName(aOrganization);
@@ -604,7 +604,7 @@ nsNSSCertificate::GetIssuerOrganizationUnit(nsAString &aOrganizationUnit)
   if (mCert) {
     char *organizationUnit = CERT_GetOrgUnitName(&mCert->issuer);
     if (organizationUnit) {
-      aOrganizationUnit = NS_ConvertUTF8toUCS2(organizationUnit);
+      aOrganizationUnit = NS_ConvertUTF8toUTF16(organizationUnit);
       PORT_Free(organizationUnit);
     }
   }
@@ -643,7 +643,7 @@ nsNSSCertificate::GetOrganizationalUnit(nsAString &aOrganizationalUnit)
   if (mCert) {
     char *orgunit = CERT_GetOrgUnitName(&mCert->subject);
     if (orgunit) {
-      aOrganizationalUnit = NS_ConvertUTF8toUCS2(orgunit);
+      aOrganizationalUnit = NS_ConvertUTF8toUTF16(orgunit);
       PORT_Free(orgunit);
     } /*else {
       *aOrganizationalUnit = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
@@ -733,7 +733,7 @@ nsNSSCertificate::GetSubjectName(nsAString &_subjectName)
 
   _subjectName.Truncate();
   if (mCert->subjectName) {
-    _subjectName = NS_ConvertUTF8toUCS2(mCert->subjectName);
+    _subjectName = NS_ConvertUTF8toUTF16(mCert->subjectName);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -748,7 +748,7 @@ nsNSSCertificate::GetIssuerName(nsAString &_issuerName)
 
   _issuerName.Truncate();
   if (mCert->issuerName) {
-    _issuerName = NS_ConvertUTF8toUCS2(mCert->issuerName);
+    _issuerName = NS_ConvertUTF8toUTF16(mCert->issuerName);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -764,7 +764,7 @@ nsNSSCertificate::GetSerialNumber(nsAString &_serialNumber)
   _serialNumber.Truncate();
   nsXPIDLCString tmpstr; tmpstr.Adopt(CERT_Hexify(&mCert->serialNumber, 1));
   if (tmpstr.get()) {
-    _serialNumber = NS_ConvertASCIItoUCS2(tmpstr);
+    _serialNumber = NS_ConvertASCIItoUTF16(tmpstr);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -787,7 +787,7 @@ nsNSSCertificate::GetSha1Fingerprint(nsAString &_sha1Fingerprint)
   fpItem.len = SHA1_LENGTH;
   nsXPIDLCString fpStr; fpStr.Adopt(CERT_Hexify(&fpItem, 1));
   if (fpStr.get()) {
-    _sha1Fingerprint = NS_ConvertASCIItoUCS2(fpStr);
+    _sha1Fingerprint = NS_ConvertASCIItoUTF16(fpStr);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -810,7 +810,7 @@ nsNSSCertificate::GetMd5Fingerprint(nsAString &_md5Fingerprint)
   fpItem.len = MD5_LENGTH;
   nsXPIDLCString fpStr; fpStr.Adopt(CERT_Hexify(&fpItem, 1));
   if (fpStr.get()) {
-    _md5Fingerprint = NS_ConvertASCIItoUCS2(fpStr);
+    _md5Fingerprint = NS_ConvertASCIItoUTF16(fpStr);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -836,7 +836,7 @@ nsNSSCertificate::GetTokenName(nsAString &aTokenName)
     if (mCert->slot) {
       char *token = PK11_GetTokenName(mCert->slot);
       if (token) {
-        aTokenName = NS_ConvertUTF8toUCS2(token);
+        aTokenName = NS_ConvertUTF8toUTF16(token);
       }
     } else {
       nsresult rv;
@@ -1093,7 +1093,7 @@ DumpASN1Object(nsIASN1Object *object, unsigned int level)
   object->GetDisplayName(dispNameU);
   nsCOMPtr<nsIASN1Sequence> sequence(do_QueryInterface(object));
   if (sequence) {
-    printf ("%s ", NS_ConvertUCS2toUTF8(dispNameU).get());
+    printf ("%s ", NS_ConvertUTF16toUTF8(dispNameU).get());
     sequence->GetIsValidContainer(&processObjects);
     if (processObjects) {
       printf("\n");
@@ -1105,12 +1105,12 @@ DumpASN1Object(nsIASN1Object *object, unsigned int level)
       }
     } else { 
       object->GetDisplayValue(dispValU);
-      printf("= %s\n", NS_ConvertUCS2toUTF8(dispValU).get()); 
+      printf("= %s\n", NS_ConvertUTF16toUTF8(dispValU).get()); 
     }
   } else { 
     object->GetDisplayValue(dispValU);
-    printf("%s = %s\n",NS_ConvertUCS2toUTF8(dispNameU).get(), 
-                       NS_ConvertUCS2toUTF8(dispValU).get()); 
+    printf("%s = %s\n",NS_ConvertUTF16toUTF8(dispNameU).get(), 
+                       NS_ConvertUTF16toUTF8(dispValU).get()); 
   }
 }
 #endif

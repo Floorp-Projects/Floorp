@@ -151,7 +151,7 @@ WSPAsyncProxyCreator::OnError(nsresult status, const nsAString & statusMessage)
   // exception class!
 
   nsCOMPtr<nsIException> e = new WSPException(status, 
-    NS_ConvertUCS2toUTF8(statusMessage).get(), nsnull);
+    NS_ConvertUTF16toUTF8(statusMessage).get(), nsnull);
   if (!e) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

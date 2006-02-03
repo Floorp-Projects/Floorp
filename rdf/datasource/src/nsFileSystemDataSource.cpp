@@ -1189,7 +1189,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
             fullURI.Append('/');
         }
 
-        char    *escLeafStr = nsEscape(NS_ConvertUCS2toUTF8(leafStr).get(), url_Path);
+        char    *escLeafStr = nsEscape(NS_ConvertUTF16toUTF8(leafStr).get(), url_Path);
         leafStr.Truncate();
 
         if (!escLeafStr)
@@ -1510,7 +1510,7 @@ FileSystemDataSource::getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL
     *urlLiteral = nsnull;
 
     nsCOMPtr<nsIFile> f;
-    NS_GetFileFromURLSpec(NS_ConvertUCS2toUTF8(aFileURL), getter_AddRefs(f)); 
+    NS_GetFileFromURLSpec(NS_ConvertUTF16toUTF8(aFileURL), getter_AddRefs(f)); 
 
     PRBool value;
 
@@ -1628,7 +1628,7 @@ FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileUR
 
 
     nsCOMPtr<nsIFile> f;
-    NS_GetFileFromURLSpec(NS_ConvertUCS2toUTF8(aFileURL), getter_AddRefs(f)); 
+    NS_GetFileFromURLSpec(NS_ConvertUTF16toUTF8(aFileURL), getter_AddRefs(f)); 
 
 
 

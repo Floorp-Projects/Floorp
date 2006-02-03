@@ -394,7 +394,7 @@ txStylesheetCompiler::doneLoading()
 {
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("Compiler::doneLoading: %s\n",
-            NS_LossyConvertUCS2toASCII(mURI).get()));
+            NS_LossyConvertUTF16toASCII(mURI).get()));
     if (NS_FAILED(mStatus)) {
         return mStatus;
     }
@@ -410,7 +410,7 @@ txStylesheetCompiler::cancel(nsresult aError, const PRUnichar *aErrorText,
 {
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("Compiler::cancel: %s, module: %d, code %d\n",
-            NS_LossyConvertUCS2toASCII(mURI).get(),
+            NS_LossyConvertUTF16toASCII(mURI).get(),
             NS_ERROR_GET_MODULE(aError),
             NS_ERROR_GET_CODE(aError)));
     if (NS_SUCCEEDED(mStatus)) {
@@ -438,8 +438,8 @@ txStylesheetCompiler::loadURI(const nsAString& aUri,
 {
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("Compiler::loadURI forwards %s thru %s\n",
-            NS_LossyConvertUCS2toASCII(aUri).get(),
-            NS_LossyConvertUCS2toASCII(mURI).get()));
+            NS_LossyConvertUTF16toASCII(aUri).get(),
+            NS_LossyConvertUTF16toASCII(mURI).get()));
     if (mURI.Equals(aUri)) {
         return NS_ERROR_XSLT_LOAD_RECURSION;
     }
@@ -749,7 +749,7 @@ txStylesheetCompilerState::loadIncludedStylesheet(const nsAString& aURI)
 {
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("CompilerState::loadIncludedStylesheet: %s\n",
-            NS_LossyConvertUCS2toASCII(aURI).get()));
+            NS_LossyConvertUTF16toASCII(aURI).get()));
     if (mURI.Equals(aURI)) {
         return NS_ERROR_XSLT_LOAD_RECURSION;
     }
@@ -794,7 +794,7 @@ txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
 {
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("CompilerState::loadImportedStylesheet: %s\n",
-            NS_LossyConvertUCS2toASCII(aURI).get()));
+            NS_LossyConvertUTF16toASCII(aURI).get()));
     if (mURI.Equals(aURI)) {
         return NS_ERROR_XSLT_LOAD_RECURSION;
     }

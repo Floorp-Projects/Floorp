@@ -181,7 +181,7 @@ nsresult nsOEAddressIterator::EnumList( const PRUnichar * pName, LPENTRYID pEid,
   rv = m_database->GetNewListRow(getter_AddRefs(listRow));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = m_database->AddListName(listRow, NS_ConvertUCS2toUTF8(pName).get());
+  rv = m_database->AddListName(listRow, NS_ConvertUTF16toUTF8(pName).get());
   NS_ENSURE_SUCCESS(rv, rv);
   rv = m_database->AddCardRowToDB(listRow);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -357,19 +357,19 @@ PRBool nsOEAddressIterator::BuildCard( const PRUnichar * pName, nsIMdbRow *newRo
   // We now have the required fields
   // write them out followed by any optional fields!
   if (!displayName.IsEmpty()) {
-    m_database->AddDisplayName( newRow, NS_ConvertUCS2toUTF8(displayName).get());
+    m_database->AddDisplayName( newRow, NS_ConvertUTF16toUTF8(displayName).get());
   }
   if (!firstName.IsEmpty()) {
-    m_database->AddFirstName( newRow, NS_ConvertUCS2toUTF8(firstName).get());
+    m_database->AddFirstName( newRow, NS_ConvertUTF16toUTF8(firstName).get());
   }
   if (!lastName.IsEmpty()) {
-    m_database->AddLastName( newRow, NS_ConvertUCS2toUTF8(lastName).get());
+    m_database->AddLastName( newRow, NS_ConvertUTF16toUTF8(lastName).get());
   }
   if (!nickName.IsEmpty()) {
-    m_database->AddNickName( newRow, NS_ConvertUCS2toUTF8(nickName).get());
+    m_database->AddNickName( newRow, NS_ConvertUTF16toUTF8(nickName).get());
   }
   if (!eMail.IsEmpty()) {
-    m_database->AddPrimaryEmail( newRow, NS_ConvertUCS2toUTF8(eMail).get());
+    m_database->AddPrimaryEmail( newRow, NS_ConvertUTF16toUTF8(eMail).get());
   }
   
   // Do all of the extra fields!

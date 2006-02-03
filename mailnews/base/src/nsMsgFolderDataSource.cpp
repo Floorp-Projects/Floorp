@@ -1230,7 +1230,7 @@ nsMsgFolderDataSource::createFolderServerTypeNode(nsIMsgFolder* folder,
   rv = server->GetType(getter_Copies(serverType));
   if (NS_FAILED(rv)) return rv;
 
-  createNode(NS_ConvertASCIItoUCS2(serverType).get(), target, getRDFService());
+  createNode(NS_ConvertASCIItoUTF16(serverType).get(), target, getRDFService());
   return NS_OK;
 }
 
@@ -1269,7 +1269,7 @@ nsMsgFolderDataSource::createFolderRedirectorTypeNode(nsIMsgFolder* folder,
   rv = server->GetRedirectorType(getter_Copies(redirectorType));
   if (NS_FAILED(rv)) return rv;
 
-  createNode(NS_ConvertASCIItoUCS2(redirectorType).get(), target, getRDFService());
+  createNode(NS_ConvertASCIItoUTF16(redirectorType).get(), target, getRDFService());
   return NS_OK;
 }
 
@@ -1642,7 +1642,7 @@ nsMsgFolderDataSource::createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **targ
   nsXPIDLCString charset;
   nsresult rv = folder->GetCharset(getter_Copies(charset));
   if (NS_SUCCEEDED(rv))
-    createNode(NS_ConvertASCIItoUCS2(charset).get(), target, getRDFService());
+    createNode(NS_ConvertASCIItoUTF16(charset).get(), target, getRDFService());
   else
     createNode(EmptyString().get(), target, getRDFService());
   return NS_OK;
@@ -2178,7 +2178,7 @@ nsresult nsMsgFolderDataSource::DoFolderAssert(nsIMsgFolder *folder, nsIRDFResou
       const PRUnichar* value;
       rv = literal->GetValueConst(&value);
       if(NS_SUCCEEDED(rv))
-        rv = folder->SetCharset(NS_LossyConvertUCS2toASCII(value).get());
+        rv = folder->SetCharset(NS_LossyConvertUTF16toASCII(value).get());
     }
     else
       rv = NS_ERROR_FAILURE;

@@ -173,7 +173,7 @@ nsSOAPException::ToString(char **_retval)
     if (str) {
       s.AppendLiteral(", called by ");
       nsAutoString i;
-      CopyASCIItoUCS2(nsDependentCString(str),i);
+      CopyASCIItoUTF16(nsDependentCString(str),i);
       nsMemory::Free(str);
       s.Append(i);
     }
@@ -183,7 +183,7 @@ nsSOAPException::ToString(char **_retval)
     mInner->ToString(&str);
     if (str) {
       nsAutoString i;
-      CopyASCIItoUCS2(nsDependentCString(str),i);
+      CopyASCIItoUTF16(nsDependentCString(str),i);
       nsMemory::Free(str);
       s.AppendLiteral(", caused by ");
       s.Append(i);

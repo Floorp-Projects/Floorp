@@ -446,7 +446,7 @@ EmbedWindow::SetTitle(const PRUnichar *aTitle)
 			}
 		}
   else {
-		NS_ConvertUCS2toUTF8 theUnicodeString( mTitleString );
+		NS_ConvertUTF16toUTF8 theUnicodeString( mTitleString );
 		str = theUnicodeString.get( );
 		}
 

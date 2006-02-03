@@ -76,7 +76,7 @@ int main(int argc, char** argv)
       continue;
     }
 
-    id = nsColorNames::LookupName(NS_ConvertASCIItoUCS2(tagName));
+    id = nsColorNames::LookupName(NS_ConvertASCIItoUTF16(tagName));
     if (id == eColorName_UNKNOWN) {
       printf("bug: can't find '%s'\n", tagName.get());
       rv = -1;
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 
     // fiddle with the case to make sure we can still find it
     tagName.SetCharAt(tagName.CharAt(0) - 32, 0);
-    id = nsColorNames::LookupName(NS_ConvertASCIItoUCS2(tagName));
+    id = nsColorNames::LookupName(NS_ConvertASCIItoUTF16(tagName));
     if (id == eColorName_UNKNOWN) {
       printf("bug: can't find '%s'\n", tagName.get());
       rv = -1;
@@ -100,7 +100,7 @@ int main(int argc, char** argv)
 
     // Check that color lookup by name gets the right rgb value
     nscolor rgb;
-    if (!NS_ColorNameToRGB(NS_ConvertASCIItoUCS2(tagName), &rgb)) {
+    if (!NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tagName), &rgb)) {
       printf("bug: name='%s' didn't NS_ColorNameToRGB\n", tagName.get());
       rv = -1;
     }
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     char cbuf[50];
     PR_snprintf(cbuf, sizeof(cbuf), "%02x%02x%02x", r, g, b);
     nscolor hexrgb;
-    if (!NS_HexToRGB(NS_ConvertASCIItoUCS2(cbuf), &hexrgb)) {
+    if (!NS_HexToRGB(NS_ConvertASCIItoUTF16(cbuf), &hexrgb)) {
       printf("bug: hex conversion to color of '%s' failed\n", cbuf);
       rv = -1;
     }
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
   // Now make sure we don't find some garbage
   for (int i = 0; i < (int) (sizeof(kJunkNames) / sizeof(const char*)); i++) {
     const char* tag = kJunkNames[i];
-    id = nsColorNames::LookupName(NS_ConvertASCIItoUCS2(tag));
+    id = nsColorNames::LookupName(NS_ConvertASCIItoUTF16(tag));
     if (id > eColorName_UNKNOWN) {
       printf("bug: found '%s'\n", tag ? tag : "(null)");
       rv = -1;

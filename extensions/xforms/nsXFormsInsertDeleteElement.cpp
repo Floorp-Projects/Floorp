@@ -169,7 +169,7 @@ nsXFormsInsertDeleteElement::HandleAction(nsIDOMEvent            *aEvent,
 #ifdef DEBUG_XF_INSERTDELETE
   if (mIsInsert) {
     printf("Will try to INSERT node _%s_ index %d (set size: %d)\n",
-           NS_ConvertUCS2toUTF8(position).get(),
+           NS_ConvertUTF16toUTF8(position).get(),
            atInt,
            setSize);
   } else {

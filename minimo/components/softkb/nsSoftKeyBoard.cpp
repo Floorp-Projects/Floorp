@@ -820,7 +820,7 @@ nsSoftKeyBoardService::Observe(nsISupports *aSubject, const char *aTopic, const 
     nsCOMPtr<nsIPrefBranch2> prefBranch = do_QueryInterface(aSubject);
     nsXPIDLCString cstr;
     
-    const char* pref = NS_ConvertUCS2toUTF8(aData).get();
+    const char* pref = NS_ConvertUTF16toUTF8(aData).get();
 
     HandlePref(pref, prefBranch);
     return NS_OK;

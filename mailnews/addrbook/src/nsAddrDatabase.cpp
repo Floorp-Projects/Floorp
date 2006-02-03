@@ -559,7 +559,7 @@ NS_IMETHODIMP nsAddrDatabase::Open
 
         // if this fails, we don't care
         (void)AlertAboutCorruptMabFile(originalMabFileName.get(), 
-          NS_ConvertASCIItoUCS2(backupMabFileName).get());
+          NS_ConvertASCIItoUTF16(backupMabFileName).get());
       }
     }
   }
@@ -881,13 +881,13 @@ nsresult nsAddrDatabase::AddRowToDeletedCardsTable(nsIAbCard *card, nsIMdbRow **
       if (merror != NS_OK) return NS_ERROR_FAILURE;
       nsXPIDLString unicodeStr;
       card->GetFirstName(getter_Copies(unicodeStr));
-      AddFirstName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+      AddFirstName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
       card->GetLastName(getter_Copies(unicodeStr));
-      AddLastName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+      AddLastName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
       card->GetDisplayName(getter_Copies(unicodeStr));
-      AddDisplayName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+      AddDisplayName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
 
       card->GetPrimaryEmail(getter_Copies(unicodeStr));
       if (unicodeStr)
@@ -1177,7 +1177,7 @@ nsresult nsAddrDatabase::ConvertAndAddLowercaseColumn
     nsresult rv = GetStringColumn(row, fromCol, colString);
     if (!colString.IsEmpty())
     {
-        rv = AddLowercaseColumn(row, toCol, NS_ConvertUCS2toUTF8(colString).get());
+        rv = AddLowercaseColumn(row, toCol, NS_ConvertUTF16toUTF8(colString).get());
     }
     return rv;
 }
@@ -1185,10 +1185,10 @@ nsresult nsAddrDatabase::ConvertAndAddLowercaseColumn
 // Change the unicode string to lowercase, then convert to UTF8 string to store in db
 nsresult nsAddrDatabase::AddUnicodeToColumn(nsIMdbRow * row, mdb_token aColToken, mdb_token aLowerCaseColToken, const PRUnichar* aUnicodeStr)
 {
-  nsresult rv = AddCharStringColumn(row, aColToken, NS_ConvertUCS2toUTF8(aUnicodeStr).get());
+  nsresult rv = AddCharStringColumn(row, aColToken, NS_ConvertUTF16toUTF8(aUnicodeStr).get());
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = AddLowercaseColumn(row, aLowerCaseColToken, NS_ConvertUCS2toUTF8(aUnicodeStr).get());
+  rv = AddLowercaseColumn(row, aLowerCaseColToken, NS_ConvertUTF16toUTF8(aUnicodeStr).get());
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
@@ -1321,35 +1321,35 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
   {
     nsXPIDLString unicodeStr;
     card->GetFirstName(getter_Copies(unicodeStr));
-    AddFirstName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddFirstName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetLastName(getter_Copies(unicodeStr));
-    AddLastName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddLastName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetPhoneticFirstName(getter_Copies(unicodeStr));
-    AddPhoneticFirstName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddPhoneticFirstName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetPhoneticLastName(getter_Copies(unicodeStr));
-    AddPhoneticLastName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddPhoneticLastName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetDisplayName(getter_Copies(unicodeStr));
-    AddDisplayName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddDisplayName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetNickName(getter_Copies(unicodeStr));
-    AddNickName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddNickName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetPrimaryEmail(getter_Copies(unicodeStr));
     if (unicodeStr)
       AddUnicodeToColumn(cardRow, m_PriEmailColumnToken, m_LowerPriEmailColumnToken, unicodeStr);
 
     card->GetSecondEmail(getter_Copies(unicodeStr));
-    Add2ndEmail(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    Add2ndEmail(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetDefaultEmail(getter_Copies(unicodeStr));
-    AddDefaultEmail(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddDefaultEmail(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetCardType(getter_Copies(unicodeStr));
-    AddCardType(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddCardType(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     PRUint32 format = nsIAbPreferMailFormat::unknown;
     card->GetPreferMailFormat(&format);
@@ -1360,134 +1360,134 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
     AddPopularityIndex(cardRow, popularityIndex);
     
     card->GetWorkPhone(getter_Copies(unicodeStr));
-    AddWorkPhone(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddWorkPhone(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetHomePhone(getter_Copies(unicodeStr));
-    AddHomePhone(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddHomePhone(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetFaxNumber(getter_Copies(unicodeStr));
-    AddFaxNumber(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddFaxNumber(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetPagerNumber(getter_Copies(unicodeStr));
-    AddPagerNumber(cardRow,NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddPagerNumber(cardRow,NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetCellularNumber(getter_Copies(unicodeStr));
-    AddCellularNumber(cardRow,NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddCellularNumber(cardRow,NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetWorkPhoneType(getter_Copies(unicodeStr));
-    AddWorkPhoneType(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddWorkPhoneType(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetHomePhoneType(getter_Copies(unicodeStr));
-    AddHomePhoneType(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddHomePhoneType(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetFaxNumberType(getter_Copies(unicodeStr));
-    AddFaxNumberType(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddFaxNumberType(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetPagerNumberType(getter_Copies(unicodeStr));
-    AddPagerNumberType(cardRow,NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddPagerNumberType(cardRow,NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetCellularNumberType(getter_Copies(unicodeStr));
-    AddCellularNumberType(cardRow,NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddCellularNumberType(cardRow,NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetHomeAddress(getter_Copies(unicodeStr));
-    AddHomeAddress(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddHomeAddress(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetHomeAddress2(getter_Copies(unicodeStr)); 
-    AddHomeAddress2(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddHomeAddress2(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetHomeCity(getter_Copies(unicodeStr)); 
-    AddHomeCity(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddHomeCity(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetHomeState(getter_Copies(unicodeStr)); 
-    AddHomeState(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddHomeState(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetHomeZipCode(getter_Copies(unicodeStr)); 
-    AddHomeZipCode(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddHomeZipCode(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetHomeCountry(getter_Copies(unicodeStr)); 
-    AddHomeCountry(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddHomeCountry(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetWorkAddress(getter_Copies(unicodeStr));  
-    AddWorkAddress(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddWorkAddress(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     card->GetWorkAddress2(getter_Copies(unicodeStr)); 
-    AddWorkAddress2(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddWorkAddress2(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     card->GetWorkCity(getter_Copies(unicodeStr)); 
-    AddWorkCity(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddWorkCity(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     card->GetWorkState(getter_Copies(unicodeStr)); 
-    AddWorkState(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddWorkState(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
      
     card->GetWorkZipCode(getter_Copies(unicodeStr)); 
-    AddWorkZipCode(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddWorkZipCode(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
      
     card->GetWorkCountry(getter_Copies(unicodeStr)); 
-    AddWorkCountry(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddWorkCountry(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     card->GetJobTitle(getter_Copies(unicodeStr)); 
-    AddJobTitle(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddJobTitle(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     card->GetDepartment(getter_Copies(unicodeStr)); 
-    AddDepartment(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddDepartment(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     card->GetCompany(getter_Copies(unicodeStr)); 
-    AddCompany(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddCompany(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
      
     // AimScreenName
     card->GetAimScreenName(getter_Copies(unicodeStr)); 
-    AddAimScreenName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddAimScreenName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
      
     card->GetAnniversaryYear(getter_Copies(unicodeStr)); 
-    AddAnniversaryYear(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddAnniversaryYear(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
   
     card->GetAnniversaryMonth(getter_Copies(unicodeStr)); 
-    AddAnniversaryMonth(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddAnniversaryMonth(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
   
     card->GetAnniversaryDay(getter_Copies(unicodeStr)); 
-    AddAnniversaryDay(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddAnniversaryDay(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
 
     card->GetSpouseName(getter_Copies(unicodeStr)); 
-    AddSpouseName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddSpouseName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
 
     card->GetFamilyName(getter_Copies(unicodeStr)); 
-    AddFamilyName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddFamilyName(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
 
     card->GetDefaultAddress(getter_Copies(unicodeStr)); 
-    AddDefaultAddress(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddDefaultAddress(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
 
     card->GetCategory(getter_Copies(unicodeStr)); 
-    AddCategory(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddCategory(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
 
     card->GetWebPage1(getter_Copies(unicodeStr)); 
-    AddWebPage1(cardRow,NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddWebPage1(cardRow,NS_ConvertUTF16toUTF8(unicodeStr).get());
      
     card->GetWebPage2(getter_Copies(unicodeStr)); 
-    AddWebPage2(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddWebPage2(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
      
     card->GetBirthYear(getter_Copies(unicodeStr)); 
-    AddBirthYear(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddBirthYear(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     card->GetBirthMonth(getter_Copies(unicodeStr)); 
-    AddBirthMonth(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddBirthMonth(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     card->GetBirthDay(getter_Copies(unicodeStr)); 
-    AddBirthDay(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddBirthDay(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     card->GetCustom1(getter_Copies(unicodeStr)); 
-    AddCustom1(cardRow,NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddCustom1(cardRow,NS_ConvertUTF16toUTF8(unicodeStr).get());
      
     card->GetCustom2(getter_Copies(unicodeStr)); 
-    AddCustom2(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddCustom2(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     card->GetCustom3(getter_Copies(unicodeStr)); 
-    AddCustom3(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddCustom3(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     card->GetCustom4(getter_Copies(unicodeStr)); 
-    AddCustom4(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddCustom4(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
     
     card->GetNotes(getter_Copies(unicodeStr)); 
-    AddNotes(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    AddNotes(cardRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
       
     PRUint32 lastModDate = 0;
     card->GetLastModifiedDate(&lastModDate);
@@ -1628,7 +1628,7 @@ NS_IMETHODIMP nsAddrDatabase::AddListCardColumnsToRow
     nsIMdbRow    *pCardRow = nsnull;
     // Please DO NOT change the 3rd param of GetRowFromAttribute() call to 
     // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
-    err = GetRowFromAttribute(kPriEmailColumn, NS_ConvertUCS2toUTF8(email).get(), PR_FALSE /* retain case */, &pCardRow);
+    err = GetRowFromAttribute(kPriEmailColumn, NS_ConvertUTF16toUTF8(email).get(), PR_FALSE /* retain case */, &pCardRow);
     PRBool cardWasAdded = PR_FALSE;
     if (NS_FAILED(err) || !pCardRow)
     {
@@ -1637,7 +1637,7 @@ NS_IMETHODIMP nsAddrDatabase::AddListCardColumnsToRow
       
       if (NS_SUCCEEDED(err) && pCardRow)
       {
-        AddPrimaryEmail(pCardRow, NS_ConvertUCS2toUTF8(email).get());
+        AddPrimaryEmail(pCardRow, NS_ConvertUTF16toUTF8(email).get());
         err = m_mdbPabTable->AddRow(m_mdbEnv, pCardRow);
         // Create a key for this row as well.
         if (NS_SUCCEEDED(err))
@@ -1652,7 +1652,7 @@ NS_IMETHODIMP nsAddrDatabase::AddListCardColumnsToRow
     nsXPIDLString name;
     pCard->GetDisplayName(getter_Copies(name));
     if (!name.IsEmpty()) {
-      AddDisplayName(pCardRow, NS_ConvertUCS2toUTF8(name).get());
+      AddDisplayName(pCardRow, NS_ConvertUTF16toUTF8(name).get());
       err = m_mdbPabTable->AddRow(m_mdbEnv, pCardRow);
     }
 
@@ -1716,10 +1716,10 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
             AddUnicodeToColumn(listRow, m_ListNameColumnToken, m_LowerListNameColumnToken, unicodeStr);
 
         list->GetListNickName(getter_Copies(unicodeStr));
-        AddListNickName(listRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+        AddListNickName(listRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
         
         list->GetDescription(getter_Copies(unicodeStr));
-        AddListDescription(listRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+        AddListDescription(listRow, NS_ConvertUTF16toUTF8(unicodeStr).get());
             
     // XXX todo, this code has problems if you manually enter duplicate emails.
         nsCOMPtr <nsISupportsArray> pAddressLists;
@@ -2032,7 +2032,7 @@ NS_IMETHODIMP nsAddrDatabase::SetCardValue(nsIAbCard *card, const char *name, co
   rv = m_mdbStore->StringToToken(m_mdbEnv, name, &token);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = AddCharStringColumn(cardRow, token, NS_ConvertUCS2toUTF8(value).get());
+  rv = AddCharStringColumn(cardRow, token, NS_ConvertUTF16toUTF8(value).get());
   return rv;
 }
 
@@ -2499,7 +2499,7 @@ nsresult nsAddrDatabase::GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken,
     {
       struct mdbYarn yarn;
       cardCell->AliasYarn(m_mdbEnv, &yarn);
-      NS_ConvertUTF8toUCS2 uniStr((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
+      NS_ConvertUTF8toUTF16 uniStr((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
       if (!uniStr.IsEmpty())
         str.Assign(uniStr);
       else
@@ -2621,9 +2621,9 @@ nsresult nsAddrDatabase::AddLowercaseColumn
   nsresult rv = NS_OK;
   if (columnValue)
   {
-    NS_ConvertUTF8toUCS2 newUnicodeString(columnValue);
+    NS_ConvertUTF8toUTF16 newUnicodeString(columnValue);
     ToLowerCase(newUnicodeString);
-    rv = AddCharStringColumn(row, columnToken, NS_ConvertUCS2toUTF8(newUnicodeString).get());   
+    rv = AddCharStringColumn(row, columnToken, NS_ConvertUTF16toUTF8(newUnicodeString).get());   
   }
   return rv;
 }
@@ -3452,7 +3452,7 @@ nsresult nsAddrDatabase::CreateABListCard(nsIMdbRow* listRow, nsIAbCard **result
     nsAutoString fileName;
     rv = m_dbName->GetLeafName(fileName);
     NS_ENSURE_SUCCESS(rv, rv);
-    listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, NS_ConvertUCS2toUTF8(fileName).get(), rowID);
+    listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, NS_ConvertUTF16toUTF8(fileName).get(), rowID);
 
     nsCOMPtr<nsIAbCard> personCard;
     nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory, &rv));
@@ -3506,7 +3506,7 @@ nsresult nsAddrDatabase::CreateABList(nsIMdbRow* listRow, nsIAbDirectory **resul
     m_dbName->GetLeafName(fileName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, NS_ConvertUCS2toUTF8(fileName).get(), rowID);
+    listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, NS_ConvertUTF16toUTF8(fileName).get(), rowID);
 
     nsCOMPtr<nsIAbDirectory> mailList;
     nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory, &rv));
@@ -3580,7 +3580,7 @@ nsresult nsAddrDatabase::GetRowFromAttribute(const char *aName, const char *aUTF
   mdb_token token;
   m_mdbStore->StringToToken(m_mdbEnv, aName, &token);
   
-    NS_ConvertUTF8toUCS2 newUnicodeString(aUTF8Value);
+    NS_ConvertUTF8toUTF16 newUnicodeString(aUTF8Value);
 
   if (aCaseInsensitive)
     ToLowerCase(newUnicodeString);
@@ -3635,7 +3635,7 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
 
         parentURI = NS_LITERAL_STRING(kMDBDirectoryRoot) + parentURI;
 
-        rv = rdfService->GetResource(NS_ConvertUCS2toUTF8(parentURI), getter_AddRefs(parentResource));
+        rv = rdfService->GetResource(NS_ConvertUTF16toUTF8(parentURI), getter_AddRefs(parentResource));
         nsCOMPtr<nsIAbDirectory> parentDir;
         rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
                                     parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
@@ -3685,7 +3685,7 @@ nsAddrDatabase::HasRowButDeletedForCharColumn(const PRUnichar *unicodeStr, mdb_c
 
   mdbYarn    sourceYarn;
   
-  NS_ConvertUCS2toUTF8 UTF8String(unicodeStr);
+  NS_ConvertUTF16toUTF8 UTF8String(unicodeStr);
   sourceYarn.mYarn_Buf = (void *) UTF8String.get();
   sourceYarn.mYarn_Fill = UTF8String.Length();
   sourceYarn.mYarn_Form = 0;

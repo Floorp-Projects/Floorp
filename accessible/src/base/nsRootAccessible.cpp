@@ -545,13 +545,13 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 #ifdef DEBUG_aleventhal
   // Very useful for debugging, please leave this here.
   if (eventType.LowerCaseEqualsLiteral("popupshown")) {
-    printf("\ndebugging dommenuitemactive events for %s", NS_ConvertUCS2toUTF8(localName).get());
+    printf("\ndebugging dommenuitemactive events for %s", NS_ConvertUTF16toUTF8(localName).get());
   }
   if (localName.EqualsIgnoreCase("popup")) {
-    printf("\ndebugging events in popup, event is %s", NS_ConvertUCS2toUTF8(eventType).get());
+    printf("\ndebugging events in popup, event is %s", NS_ConvertUTF16toUTF8(eventType).get());
   }
   if (localName.EqualsIgnoreCase("select")) {
-    printf("\ndebugging events in select, event is %s", NS_ConvertUCS2toUTF8(eventType).get());
+    printf("\ndebugging events in select, event is %s", NS_ConvertUTF16toUTF8(eventType).get());
   }
 #endif
 

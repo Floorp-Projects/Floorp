@@ -163,7 +163,7 @@ void nsAbPalmHotSync::ConvertAssignPalmIDAttrib(PRUint32 id, nsIAbMDBCard * card
     char buf[128];
     PR_cnvtf(buf, 128, 0, f);
     card->SetAbDatabase(mABDB);
-    card->SetStringAttribute(CARD_ATTRIB_PALMID,NS_ConvertASCIItoUCS2(buf).get());
+    card->SetStringAttribute(CARD_ATTRIB_PALMID,NS_ConvertASCIItoUTF16(buf).get());
 }
 
 nsresult nsAbPalmHotSync::GetABInterface()
@@ -827,7 +827,7 @@ nsresult nsAbPalmHotSync::UpdateMozABWithPalmRecords()
           {
             nsCOMPtr<nsIAbMDBCard> dbCard = do_QueryInterface(existingCard);
 
-            dbCard->SetStringAttribute(CARD_ATTRIB_PALMID, NS_ConvertASCIItoUCS2(recordIDBuf).get());
+            dbCard->SetStringAttribute(CARD_ATTRIB_PALMID, NS_ConvertASCIItoUTF16(recordIDBuf).get());
             continue;
           }
 
@@ -884,7 +884,7 @@ nsresult nsAbPalmHotSync::UpdateMozABWithPalmRecords()
             {
                 // now set the attribute for the PalmRecID in the card in the DB
                 dbCard->SetAbDatabase(mABDB);
-                dbCard->SetStringAttribute(CARD_ATTRIB_PALMID, NS_ConvertASCIItoUCS2(recordIDBuf).get());
+                dbCard->SetStringAttribute(CARD_ATTRIB_PALMID, NS_ConvertASCIItoUTF16(recordIDBuf).get());
                 newCard = do_QueryInterface(dbCard, &rv);
                 if(NS_SUCCEEDED(rv))
                     rv = mABDB->EditCard(newCard, PR_FALSE);

@@ -138,7 +138,7 @@ nsSpellCheckUtils::CreateUnicodeConverters(const PRUnichar*    aCharset,
   nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_LossyConvertUCS2toASCII charset(aCharset);
+  NS_LossyConvertUTF16toASCII charset(aCharset);
 
   rv = ccm->GetUnicodeDecoder(charset.get(), aUnicodeDecoder);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -209,14 +209,14 @@ nsSpellCheckUtils::DumpWords(const PRUnichar*      aText,
   printf("\n");
   for (i=0;i<7;i++) printf("0123456789");
   printf("\n");
-  char* line = strdup(NS_LossyConvertUCS2toASCII(aText).get());
+  char* line = strdup(NS_LossyConvertUTF16toASCII(aText).get());
   for (i=0;i<aTextLen;i++)
     if (line[i] < 32) 
       putc('_', stdout);
     else 
       putc(line[i], stdout);
   printf("\n");
-  //printf("%s\n", NS_LossyConvertUCS2toASCII(aText).get());
+  //printf("%s\n", NS_LossyConvertUTF16toASCII(aText).get());
   free(line);
 
   nsresult rv;
@@ -233,7 +233,7 @@ nsSpellCheckUtils::DumpWords(const PRUnichar*      aText,
     const PRUnichar* start = (const PRUnichar*)(aText+offset);
     PRUnichar* word = nsCRT::strndup(start, wlen);
     nsString str(word);
-    printf("[%s]\n", NS_LossyConvertUCS2toASCII(str).get());
+    printf("[%s]\n", NS_LossyConvertUTF16toASCII(str).get());
     nsMemory::Free(word);
     offset = res.mEnd;
   }

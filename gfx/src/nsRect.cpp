@@ -220,7 +220,7 @@ FILE* operator<<(FILE* out, const nsRect& rect)
   tmp.AppendLiteral(", ");
   tmp.AppendFloat(NSTwipsToFloatPoints(rect.height));
   tmp.AppendLiteral("}");
-  fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
   return out;
 }
 

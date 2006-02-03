@@ -887,7 +887,7 @@ ShowNativePrintDialog(HWND              aHWnd,
   pDevNames->wOutputOffset = sizeof(DEVNAMES)+len+1;
   pDevNames->wDefault      = 0;
   char* device = &(((char*)pDevNames)[pDevNames->wDeviceOffset]);
-  strcpy(device, NS_ConvertUCS2toUTF8(printerName).get());
+  strcpy(device, NS_ConvertUTF16toUTF8(printerName).get());
   ::GlobalUnlock(hDevNames);
 
   // Create a Moveable Memory Object that holds a new DevMode
@@ -899,7 +899,7 @@ ShowNativePrintDialog(HWND              aHWnd,
 #ifdef UNICODE
   hGlobalDevMode = CreateGlobalDevModeAndInit(printerName, aPrintSettings);
 #else 
-  hGlobalDevMode = CreateGlobalDevModeAndInit(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(printerName).get()), aPrintSettings);
+  hGlobalDevMode = CreateGlobalDevModeAndInit(NS_CONST_CAST(char*, NS_ConvertUTF16toUTF8(printerName).get()), aPrintSettings);
 #endif
 
   // Prepare to Display the Print Dialog
@@ -1193,7 +1193,7 @@ ShowNativePrintDialogEx(HWND              aHWnd,
 #ifdef UNICODE
     hGlobalDevMode = CreateGlobalDevModeAndInit(printerName, aPrintSettings);
 #else 
-    hGlobalDevMode = CreateGlobalDevModeAndInit(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(printerName).get()), aPrintSettings);
+    hGlobalDevMode = CreateGlobalDevModeAndInit(NS_CONST_CAST(char*, NS_ConvertUTF16toUTF8(printerName).get()), aPrintSettings);
 #endif
   }
 

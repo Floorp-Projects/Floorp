@@ -298,7 +298,7 @@ nsRDFConInstanceTestNode::CanPropagate(nsIRDFResource* aSource,
 
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsRDFConInstanceTestNode[%p]: CanPropagate([%s]==[%s]=>[%s]) => %s",
-                this, source, property, NS_ConvertUCS2toUTF8(target).get(),
+                this, source, property, NS_ConvertUTF16toUTF8(target).get(),
                 canpropagate ? "true" : "false"));
     }
 #endif

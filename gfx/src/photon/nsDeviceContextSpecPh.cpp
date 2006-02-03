@@ -87,7 +87,7 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 
 	if( printer ) {
 		int res = 111;
-		NS_ConvertUCS2toUTF8 pname(printer);
+		NS_ConvertUTF16toUTF8 pname(printer);
 		if( !strcmp( pname.get(), "<Preview>" ) ) {
 			char preview = 1;
 			PpSetPC( mPC, Pp_PC_DO_PREVIEW, &preview, 0 );
@@ -108,7 +108,7 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 		aPS->GetPrintToFile(&tofile);
 		if( tofile == PR_TRUE ) {
 			aPS->GetToFileName(&printfile);
-			if( printfile ) PpSetPC( mPC, Pp_PC_FILENAME, NS_ConvertUCS2toUTF8(printfile).get(), 0 );
+			if( printfile ) PpSetPC( mPC, Pp_PC_FILENAME, NS_ConvertUTF16toUTF8(printfile).get(), 0 );
 			}
 
 		aPS->GetNumCopies(&copies);

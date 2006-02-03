@@ -1364,7 +1364,7 @@ GetCustomEncoding(const char* aFontName, nsCString& aValue, PRBool* aIsWide)
     fname[0] = 0;
     MultiByteToWideChar(CP_ACP, 0, aFontName,
     strlen(aFontName) + 1, fname, sizeof(fname)/sizeof(fname[0]));
-    name.Assign(NS_LITERAL_CSTRING("encoding.") + NS_ConvertUCS2toUTF8(fname) + NS_LITERAL_CSTRING(".ttf"));
+    name.Assign(NS_LITERAL_CSTRING("encoding.") + NS_ConvertUTF16toUTF8(fname) + NS_LITERAL_CSTRING(".ttf"));
   }
 
   name.StripWhitespace();
@@ -3391,7 +3391,7 @@ nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUint32 aChar, const nsString& aName
     // woah, this seems bad
     const nsACString& fontName =
       nsDependentCString(((nsFontWin*)mLoadedFonts[i])->mName);
-    if (aName.Equals(NS_ConvertASCIItoUCS2(fontName),
+    if (aName.Equals(NS_ConvertASCIItoUTF16(fontName),
                      nsCaseInsensitiveStringComparator()))
       return nsnull;
 
@@ -3492,7 +3492,7 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUint32 aChar)
     }
 
     AppendGenericFontFromPref(font.name, langGroup, 
-                              NS_ConvertUCS2toUTF8(mGeneric).get());
+                              NS_ConvertUTF16toUTF8(mGeneric).get());
   }
 
   // Iterate over the list of names using the callback mechanism of nsFont...
@@ -3505,8 +3505,8 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUint32 aChar)
 #if defined(DEBUG_rbs) || defined(DEBUG_shanjian)
   const char* lang;
   mLangGroup->GetUTF8String(&lang);
-  NS_ConvertUCS2toUTF8 generic(mGeneric);
-  NS_ConvertUCS2toUTF8 family(mFont.name);
+  NS_ConvertUTF16toUTF8 generic(mGeneric);
+  NS_ConvertUTF16toUTF8 family(mFont.name);
   printf("FindGenericFont missed:U+%04X langGroup:%s generic:%s mFont.name:%s\n", 
          aChar, lang, generic.get(), family.get());
 #endif
@@ -3542,15 +3542,15 @@ nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
   if (unicodeRange < kRangeSpecificItemNum) {
     // a single language is identified
     AppendGenericFontFromPref(font.name, LangGroupFromUnicodeRange(unicodeRange), 
-                              NS_ConvertUCS2toUTF8(mGeneric).get());
+                              NS_ConvertUTF16toUTF8(mGeneric).get());
   } else if (kRangeSetLatin == unicodeRange) { 
     // Character is from a latin language set, so try western and central european
     // If mLangGroup is western or central european, this most probably will not be
     // used, but is here as a fallback scenario.    
     AppendGenericFontFromPref(font.name, "x-western",
-                              NS_ConvertUCS2toUTF8(mGeneric).get());
+                              NS_ConvertUTF16toUTF8(mGeneric).get());
     AppendGenericFontFromPref(font.name, "x-central-euro",
-                              NS_ConvertUCS2toUTF8(mGeneric).get());
+                              NS_ConvertUTF16toUTF8(mGeneric).get());
   } else if (kRangeSetCJK == unicodeRange) { 
     // CJK, we have to be careful about the order, use locale info as hint
     
@@ -3559,7 +3559,7 @@ nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
       nsCAutoString usersLocaleLangGroup;
       gUsersLocale->ToUTF8String(usersLocaleLangGroup);
       AppendGenericFontFromPref(font.name, usersLocaleLangGroup.get(), 
-                                NS_ConvertUCS2toUTF8(mGeneric).get());
+                                NS_ConvertUTF16toUTF8(mGeneric).get());
     }
     
     // then system locale (os language)
@@ -3567,30 +3567,30 @@ nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
       nsCAutoString systemLocaleLangGroup;
       gSystemLocale->ToUTF8String(systemLocaleLangGroup);
       AppendGenericFontFromPref(font.name, systemLocaleLangGroup.get(), 
-                                NS_ConvertUCS2toUTF8(mGeneric).get());
+                                NS_ConvertUTF16toUTF8(mGeneric).get());
     }
 
     // try all other languages in this set.
     if (mLangGroup != gJA && gUsersLocale != gJA && gSystemLocale != gJA)
       AppendGenericFontFromPref(font.name, "ja",
-                                NS_ConvertUCS2toUTF8(mGeneric).get());
+                                NS_ConvertUTF16toUTF8(mGeneric).get());
     if (mLangGroup != gZHCN && gUsersLocale != gZHCN && gSystemLocale != gZHCN)
       AppendGenericFontFromPref(font.name, "zh-CN",
-                                NS_ConvertUCS2toUTF8(mGeneric).get());
+                                NS_ConvertUTF16toUTF8(mGeneric).get());
     if (mLangGroup != gZHTW && gUsersLocale != gZHTW && gSystemLocale != gZHTW)
       AppendGenericFontFromPref(font.name, "zh-TW",
-                                NS_ConvertUCS2toUTF8(mGeneric).get());
+                                NS_ConvertUTF16toUTF8(mGeneric).get());
     if (mLangGroup != gZHHK && gUsersLocale != gZHHK && gSystemLocale != gZHHK)
       AppendGenericFontFromPref(font.name, "zh-HK",
-                                NS_ConvertUCS2toUTF8(mGeneric).get());
+                                NS_ConvertUTF16toUTF8(mGeneric).get());
     if (mLangGroup != gKO && gUsersLocale != gKO && gSystemLocale != gKO)
       AppendGenericFontFromPref(font.name, "ko",
-                                NS_ConvertUCS2toUTF8(mGeneric).get());
+                                NS_ConvertUTF16toUTF8(mGeneric).get());
   } 
 
   // always try unicode as fallback
   AppendGenericFontFromPref(font.name, "x-unicode",
-                            NS_ConvertUCS2toUTF8(mGeneric).get());
+                            NS_ConvertUTF16toUTF8(mGeneric).get());
   
   // use the font list to find font
   GenericFontEnumContext context = {aDC, aChar, nsnull, this};

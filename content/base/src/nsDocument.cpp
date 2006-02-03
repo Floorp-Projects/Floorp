@@ -1248,7 +1248,7 @@ void
 nsDocument::SetContentType(const nsAString& aContentType)
 {
   NS_ASSERTION(mContentType.IsEmpty() ||
-               mContentType.Equals(NS_ConvertUCS2toUTF8(aContentType)),
+               mContentType.Equals(NS_ConvertUTF16toUTF8(aContentType)),
                "Do you really want to change the content-type?");
 
   CopyUTF16toUTF8(aContentType, mContentType);
@@ -2915,7 +2915,7 @@ nsDocument::GetPreferredStylesheetSet(nsAString& aStyleTitle)
 NS_IMETHODIMP
 nsDocument::GetCharacterSet(nsAString& aCharacterSet)
 {
-  CopyASCIItoUCS2(GetDocumentCharacterSet(), aCharacterSet);
+  CopyASCIItoUTF16(GetDocumentCharacterSet(), aCharacterSet);
   return NS_OK;
 }
 
@@ -3428,7 +3428,7 @@ nsDocument::SetDir(const nsAString& aDirection)
   PRUint32 options = GetBidiOptions();
 
   for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
-    if (aDirection == NS_ConvertASCIItoUCS2(elt->mName)) {
+    if (aDirection == NS_ConvertASCIItoUTF16(elt->mName)) {
       if (GET_BIDI_OPTION_DIRECTION(options) != elt->mValue) {
         SET_BIDI_OPTION_DIRECTION(options, elt->mValue);
         nsIPresShell *shell = GetShellAt(0);
@@ -4891,7 +4891,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
         httpChannel->GetResponseHeader(nsDependentCString(*name), headerVal);
       if (NS_SUCCEEDED(rv) && !headerVal.IsEmpty()) {
         nsCOMPtr<nsIAtom> key = do_GetAtom(*name);
-        SetHeaderData(key, NS_ConvertASCIItoUCS2(headerVal));
+        SetHeaderData(key, NS_ConvertASCIItoUTF16(headerVal));
       }
       ++name;
     }
@@ -4917,7 +4917,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
         rv = partChannel->GetContentDisposition(contentDisp);
         if (NS_SUCCEEDED(rv) && !contentDisp.IsEmpty()) {
           SetHeaderData(nsHTMLAtoms::headerContentDisposition,
-                        NS_ConvertASCIItoUCS2(contentDisp));
+                        NS_ConvertASCIItoUTF16(contentDisp));
         }
       }
     }

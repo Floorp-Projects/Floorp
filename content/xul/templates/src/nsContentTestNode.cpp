@@ -77,7 +77,7 @@ nsContentTestNode::nsContentTestNode(InnerNode* aParent,
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsContentTestNode[%p]: parent=%p content-var=%d id-var=%d tag=%s",
                 this, aParent, mContentVariable, mIdVariable,
-                NS_ConvertUCS2toUTF8(tag).get()));
+                NS_ConvertUTF16toUTF8(tag).get()));
     }
 #endif
 }
@@ -121,7 +121,7 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
 
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("nsContentTestNode[%p]: FilterInstantiations() content=%s id=%s",
-                    this, NS_LossyConvertUCS2toASCII(content).get(), id));
+                    this, NS_LossyConvertUTF16toASCII(content).get(), id));
         }
 #endif
 
@@ -226,7 +226,7 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
             const char* uri;
             VALUE_TO_IRDFRESOURCE(idValue)->GetValueConst(&uri);
 
-            mDocument->GetElementsForID(NS_ConvertUTF8toUCS2(uri), elements);
+            mDocument->GetElementsForID(NS_ConvertUTF8toUTF16(uri), elements);
 
             PRUint32 count;
             elements->Count(&count);
@@ -250,7 +250,7 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
                         ElementToString(content, str);
 
                         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                               ("    => %s", NS_LossyConvertUCS2toASCII(str).get()));
+                               ("    => %s", NS_LossyConvertUTF16toASCII(str).get()));
                     }
 #endif                    
 

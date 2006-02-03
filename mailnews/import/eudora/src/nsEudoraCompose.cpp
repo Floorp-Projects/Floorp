@@ -634,14 +634,14 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
       headerVal = m_defCharset;
     }
   }
-  m_pMsgFields->SetCharacterSet( NS_LossyConvertUCS2toASCII(headerVal).get() );
+  m_pMsgFields->SetCharacterSet( NS_LossyConvertUTF16toASCII(headerVal).get() );
   charSet = headerVal;
 	GetHeaderValue( m_pHeaders, m_headerLen, "CC:", headerVal);
 	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetCc( headerVal);
 	GetHeaderValue( m_pHeaders, m_headerLen, "Message-ID:", headerVal);
 	if (!headerVal.IsEmpty())
-		m_pMsgFields->SetMessageId( NS_LossyConvertUCS2toASCII(headerVal).get() );
+		m_pMsgFields->SetMessageId( NS_LossyConvertUTF16toASCII(headerVal).get() );
 	GetHeaderValue( m_pHeaders, m_headerLen, "Reply-To:", headerVal);
 	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetReplyTo( headerVal);

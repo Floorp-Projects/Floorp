@@ -772,7 +772,7 @@ nsMsgIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
 NS_IMETHODIMP
 nsMsgIncomingServer::ToString(PRUnichar** aResult) {
   *aResult = ToNewUnicode(NS_LITERAL_STRING("[nsIMsgIncomingServer: ") +
-                          NS_ConvertASCIItoUCS2(m_serverKey) +
+                          NS_ConvertASCIItoUTF16(m_serverKey) +
                           NS_LITERAL_STRING("]"));
   NS_ASSERTION(*aResult, "no server name!");
   return NS_OK;
@@ -888,7 +888,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 
       PRUint32 savePasswordType = (passwordProtectLocalCache) ? nsIAuthPrompt::SAVE_PASSWORD_FOR_SESSION : nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY;
       rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, 
-        NS_ConvertASCIItoUCS2(serverUri).get(), savePasswordType,
+        NS_ConvertASCIItoUTF16(serverUri).get(), savePasswordType,
         getter_Copies(uniPassword), okayValue);
       if (NS_FAILED(rv)) return rv;
       
@@ -942,7 +942,7 @@ nsMsgIncomingServer::StorePassword()
     rv = CreateServicesForPasswordManager();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = observerService->NotifyObservers(uri, "login-succeeded", NS_ConvertUTF8toUCS2(pwd).get());
+    rv = observerService->NotifyObservers(uri, "login-succeeded", NS_ConvertUTF8toUTF16(pwd).get());
     NS_ENSURE_SUCCESS(rv,rv);
     nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID);
     if (accountManager)

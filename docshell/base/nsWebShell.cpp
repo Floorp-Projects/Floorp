@@ -727,7 +727,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
                           nsnull,             // No onwer
                           INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner from document
                           target.get(),       // Window target
-                          NS_LossyConvertUCS2toASCII(typeHint).get(),
+                          NS_LossyConvertUTF16toASCII(typeHint).get(),
                           aPostDataStream,    // Post data stream
                           aHeadersDataStream, // Headers stream
                           LOAD_LINK,          // Load type
@@ -1001,7 +1001,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         {
           nsCAutoString newSpec;
           newURI->GetSpec(newSpec);
-          NS_ConvertUTF8toUCS2 newSpecW(newSpec);
+          NS_ConvertUTF8toUTF16 newSpecW(newSpec);
 
           // This seems evil, since it is modifying the original URL
           rv = url->SetSpec(newSpec);

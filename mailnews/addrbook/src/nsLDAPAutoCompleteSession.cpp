@@ -533,7 +533,7 @@ nsLDAPAutoCompleteSession::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus
         // bug in egcs 1.1.2 (the version of gcc that comes with Red Hat 6.2),
         // which is the default compiler for Mozilla on linux at the moment.
         //
-        NS_ConvertASCIItoUCS2 hostTemp(host);
+        NS_ConvertASCIItoUTF16 hostTemp(host);
         const PRUnichar *hostArray[1] = { hostTemp.get() };
 
         // format the hostname into the authprompt text string
@@ -556,7 +556,7 @@ nsLDAPAutoCompleteSession::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus
         //
         rv = mAuthPrompter->PromptPassword(
             authPromptTitle.get(), authPromptText.get(),
-            NS_ConvertUTF8toUCS2(spec).get(),
+            NS_ConvertUTF8toUTF16(spec).get(),
             nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, getter_Copies(passwd),
             &status);
         if (NS_FAILED(rv) || status == PR_FALSE) {
@@ -608,7 +608,7 @@ nsLDAPAutoCompleteSession::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus
     PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
            ("nsLDAPAutoCompleteSession:OnLDAPInit(): initiating "
             "SimpleBind\n"));
-    rv = mOperation->SimpleBind(NS_ConvertUCS2toUTF8(passwd)); 
+    rv = mOperation->SimpleBind(NS_ConvertUTF16toUTF8(passwd)); 
     if (NS_FAILED(rv)) {
 
         switch (rv) {
@@ -962,7 +962,7 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
     rv = ldapSvc->CreateFilter(MAX_AUTOCOMPLETE_FILTER_SIZE,
                                mFilterTemplate,
                                prefix, suffix, EmptyCString(), 
-                               NS_ConvertUCS2toUTF8(mSearchString),
+                               NS_ConvertUTF16toUTF8(mSearchString),
                                searchFilter);
     if (NS_FAILED(rv)) {
         switch(rv) {

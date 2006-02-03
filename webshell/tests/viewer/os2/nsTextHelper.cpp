@@ -77,7 +77,7 @@ NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
 { 
   mText = aText;
 
-  WinSetWindowText(mWnd, NS_LossyConvertUCS2toASCII(aText).get());
+  WinSetWindowText(mWnd, NS_LossyConvertUTF16toASCII(aText).get());
   aActualSize = aText.Length();
   return NS_OK;
 }

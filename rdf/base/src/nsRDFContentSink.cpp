@@ -735,7 +735,7 @@ RDFContentSinkImpl::ParseText(nsIRDFNode **aResult)
 
     case eRDFContentSinkParseMode_Date:
         {
-            PRTime t = rdf_ParseDate(nsDependentCString(NS_LossyConvertUCS2toASCII(value).get(), value.Length()));
+            PRTime t = rdf_ParseDate(nsDependentCString(NS_LossyConvertUTF16toASCII(value).get(), value.Length()));
             nsIRDFDate *result;
             gRDFService->GetDateLiteral(t, &result);
             *aResult = result;
@@ -866,13 +866,13 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
             nsAutoString relURI(aAttributes[1]);
             if (rdf_RequiresAbsoluteURI(relURI)) {
                 nsCAutoString uri;
-                rv = mDocumentURL->Resolve(NS_ConvertUCS2toUTF8(aAttributes[1]), uri);
+                rv = mDocumentURL->Resolve(NS_ConvertUTF16toUTF8(aAttributes[1]), uri);
                 if (NS_FAILED(rv)) return rv;
                 
                 return gRDFService->GetResource(uri, 
                                                 aResource);
             } 
-            return gRDFService->GetResource(NS_ConvertUCS2toUTF8(aAttributes[1]), 
+            return gRDFService->GetResource(NS_ConvertUTF16toUTF8(aAttributes[1]), 
                                             aResource);
         }
         else if (localName == kIdAtom) {
@@ -940,12 +940,12 @@ RDFContentSinkImpl::GetResourceAttribute(const PRUnichar** aAttributes,
               nsresult rv;
               nsCAutoString uri;
 
-              rv = mDocumentURL->Resolve(NS_ConvertUCS2toUTF8(aAttributes[1]), uri);
+              rv = mDocumentURL->Resolve(NS_ConvertUTF16toUTF8(aAttributes[1]), uri);
               if (NS_FAILED(rv)) return rv;
 
               return gRDFService->GetResource(uri, aResource);
           } 
-          return gRDFService->GetResource(NS_ConvertUCS2toUTF8(aAttributes[1]), 
+          return gRDFService->GetResource(NS_ConvertUTF16toUTF8(aAttributes[1]), 
                                           aResource);
       }
   }

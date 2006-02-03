@@ -299,7 +299,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
       focusController = privateWindow->GetRootFocusController();
     }
 
-    NS_LossyConvertUCS2toASCII command(mHandlerText);
+    NS_LossyConvertUTF16toASCII command(mHandlerText);
     if (focusController)
       focusController->GetControllerForCommand(command.get(), getter_AddRefs(controller));
     else

@@ -1377,7 +1377,7 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
   if (msg.IsEmpty()) {
 #ifdef DEBUG
     printf("nsXFormsUtils::ReportError() Failed to get message string for message id '%s'!\n",
-           NS_ConvertUCS2toUTF8(aMessageName).get());
+           NS_ConvertUTF16toUTF8(aMessageName).get());
 #endif
     return;
   }
@@ -1442,7 +1442,7 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
 
   // Log the message to JavaScript Console
 #ifdef DEBUG
-  printf("ERR: %s\n", NS_ConvertUCS2toUTF8(msg).get());
+  printf("ERR: %s\n", NS_ConvertUTF16toUTF8(msg).get());
 #endif
   nsresult rv = errorObject->Init(msg.get(), srcFile.get(), srcLine.get(),
                                   0, 0, aErrorFlag, "XForms");

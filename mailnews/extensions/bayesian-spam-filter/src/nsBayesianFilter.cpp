@@ -491,7 +491,7 @@ char_class getCharClass(PRUnichar c)
 
 static PRBool isJapanese(const char* word)
 {
-  nsString text = NS_ConvertUTF8toUCS2(word);
+  nsString text = NS_ConvertUTF8toUTF16(word);
   PRUnichar* p = (PRUnichar*)text.get();
   PRUnichar c;
     
@@ -517,7 +517,7 @@ void Tokenizer::tokenize_japanese_word(char* chunk)
 {
   PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("entering tokenize_japanese_word(%s)", chunk));
     
-  nsString srcStr = NS_ConvertUTF8toUCS2(chunk);
+  nsString srcStr = NS_ConvertUTF8toUTF16(chunk);
   const PRUnichar* p1 = srcStr.get();
   const PRUnichar* p2 = p1;
   if(!*p2) return;
@@ -528,7 +528,7 @@ void Tokenizer::tokenize_japanese_word(char* chunk)
     if(cc == getCharClass(*p2)) 
       continue;
    
-    nsCString token = NS_ConvertUCS2toUTF8(p1, p2-p1);
+    nsCString token = NS_ConvertUTF16toUTF8(p1, p2-p1);
     if( (!isDecimalNumber(token.get())) && (!isFWNumeral(p1, p2)))      
       add(PromiseFlatCString(NS_LITERAL_CSTRING("JA:") + token).get());
         
@@ -570,7 +570,7 @@ void Tokenizer::tokenize(char* aText)
     // uggh but first we have to blow up our string into UCS2
     // since that's what the document encoder wants. UTF8/UCS2, I wish we all
     // spoke the same language here..
-    nsString text = NS_ConvertUTF8toUCS2(aText);
+    nsString text = NS_ConvertUTF8toUTF16(aText);
     nsString strippedUCS2;
     stripHTML(text, strippedUCS2);
     
@@ -584,7 +584,7 @@ void Tokenizer::tokenize(char* aText)
         ++substr_start;
     }
     
-    nsCString strippedStr = NS_ConvertUCS2toUTF8(strippedUCS2);
+    nsCString strippedStr = NS_ConvertUTF16toUTF8(strippedUCS2);
     char * strippedText = (char *) strippedStr.get(); // bleh
     PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("tokenize stripped html: %s", strippedText));
 
@@ -610,7 +610,7 @@ void Tokenizer::tokenize(char* aText)
             if (mScanner) {
                 mScanner->Start("UTF-8");
                 // convert this word from UTF-8 into UCS2.
-                NS_ConvertUTF8toUCS2 uword(word);
+                NS_ConvertUTF8toUTF16 uword(word);
                 ToLowerCase(uword);
                 const PRUnichar* utext = uword.get();
                 PRInt32 len = uword.Length(), pos = 0, begin, end;
@@ -618,7 +618,7 @@ void Tokenizer::tokenize(char* aText)
                 while (pos < len) {
                     rv = mScanner->Next(utext, len, pos, PR_TRUE, &begin, &end, &gotUnit);
                     if (NS_SUCCEEDED(rv) && gotUnit) {
-                        NS_ConvertUCS2toUTF8 utfUnit(utext + begin, end - begin);
+                        NS_ConvertUTF16toUTF8 utfUnit(utext + begin, end - begin);
                         add(utfUnit.get());
                         // advance to end of current unit.
                         pos = end;
@@ -742,7 +742,7 @@ NS_IMETHODIMP TokenStreamListener::ProcessHeaders(nsIUTF8StringEnumerator *aHead
 
 NS_IMETHODIMP TokenStreamListener::HandleAttachment(const char *contentType, const char *url, const PRUnichar *displayName, const char *uri, PRBool aIsExternalAttachment)
 {
-    mTokenizer.tokenizeAttachment(contentType, NS_ConvertUCS2toUTF8(displayName).get());
+    mTokenizer.tokenizeAttachment(contentType, NS_ConvertUTF16toUTF8(displayName).get());
     return NS_OK;
 }
 

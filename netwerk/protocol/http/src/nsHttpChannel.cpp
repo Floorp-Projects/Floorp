@@ -2644,11 +2644,11 @@ nsHttpChannel::GetIdentityFromURI(PRUint32 authFlags, nsHttpAuthIdentity &ident)
     mURI->GetUsername(buf);
     if (!buf.IsEmpty()) {
         NS_UnescapeURL(buf);
-        CopyASCIItoUCS2(buf, userBuf);
+        CopyASCIItoUTF16(buf, userBuf);
         mURI->GetPassword(buf);
         if (!buf.IsEmpty()) {
             NS_UnescapeURL(buf);
-            CopyASCIItoUCS2(buf, passBuf);
+            CopyASCIItoUTF16(buf, passBuf);
         }
     }
 

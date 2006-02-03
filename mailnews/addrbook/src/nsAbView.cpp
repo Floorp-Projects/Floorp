@@ -470,7 +470,7 @@ nsresult nsAbView::GetCardValue(nsIAbCard *card, const PRUnichar *colID, PRUnich
     NS_ENSURE_SUCCESS(rv,rv);
   }
   else {
-      rv = card->GetCardValue(NS_LossyConvertUCS2toASCII(colID).get(), _retval);
+      rv = card->GetCardValue(NS_LossyConvertUTF16toASCII(colID).get(), _retval);
   }
   return rv;
 }

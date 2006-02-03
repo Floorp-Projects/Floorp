@@ -1693,7 +1693,7 @@ nsLongEncoder::Encode(nsISOAPEncoding * aEncoding,
   if (!ptr)
     return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString value;
-  CopyASCIItoUCS2(nsDependentCString(ptr), value);
+  CopyASCIItoUTF16(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
@@ -1725,7 +1725,7 @@ nsIntEncoder::Encode(nsISOAPEncoding * aEncoding,
   if (!ptr)
     return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString value;
-  CopyASCIItoUCS2(nsDependentCString(ptr), value);
+  CopyASCIItoUTF16(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
@@ -1757,7 +1757,7 @@ nsShortEncoder::Encode(nsISOAPEncoding * aEncoding,
   if (!ptr)
     return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString value;
-  CopyASCIItoUCS2(nsDependentCString(ptr), value);
+  CopyASCIItoUTF16(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
@@ -1789,7 +1789,7 @@ nsByteEncoder::Encode(nsISOAPEncoding * aEncoding,
   if (!ptr)
     return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString value;
-  CopyASCIItoUCS2(nsDependentCString(ptr), value);
+  CopyASCIItoUTF16(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
@@ -1821,7 +1821,7 @@ nsUnsignedLongEncoder::Encode(nsISOAPEncoding * aEncoding,
   if (!ptr)
     return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString value;
-  CopyASCIItoUCS2(nsDependentCString(ptr), value);
+  CopyASCIItoUTF16(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
@@ -1853,7 +1853,7 @@ nsUnsignedIntEncoder::Encode(nsISOAPEncoding * aEncoding,
   if (!ptr)
     return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString value;
-  CopyASCIItoUCS2(nsDependentCString(ptr), value);
+  CopyASCIItoUTF16(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
@@ -1984,7 +1984,7 @@ nsUnsignedShortEncoder::Encode(nsISOAPEncoding * aEncoding,
   if (!ptr)
     return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString value;
-  CopyASCIItoUCS2(nsDependentCString(ptr), value);
+  CopyASCIItoUTF16(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
@@ -2016,7 +2016,7 @@ nsUnsignedByteEncoder::Encode(nsISOAPEncoding * aEncoding,
   if (!ptr)
     return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString value;
-  CopyASCIItoUCS2(nsDependentCString(ptr), value);
+  CopyASCIItoUTF16(nsDependentCString(ptr), value);
   PR_smprintf_free(ptr);
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
@@ -3274,7 +3274,7 @@ nsDoubleEncoder::Decode(nsISOAPEncoding* aEncoding,
 
   double f;
   PRUint32 n;
-  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lf %n", &f, &n);
+  PRInt32 r = PR_sscanf(NS_ConvertUTF16toUTF8(value).get(), " %lf %n", &f, &n);
   if (r == 0 || n < value.Length()) {
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,
                           "SOAP_ILLEGAL_DOUBLE",
@@ -3308,7 +3308,7 @@ nsFloatEncoder::Decode(nsISOAPEncoding* aEncoding,
 
   float f;
   PRUint32 n;
-  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %f %n", &f, &n);
+  PRInt32 r = PR_sscanf(NS_ConvertUTF16toUTF8(value).get(), " %f %n", &f, &n);
   if (r == 0 || n < value.Length()) {
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,
                           "SOAP_ILLEGAL_FLOAT",
@@ -3342,7 +3342,7 @@ nsLongEncoder::Decode(nsISOAPEncoding* aEncoding,
 
   PRInt64 f;
   PRUint32 n;
-  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lld %n", &f, &n);
+  PRInt32 r = PR_sscanf(NS_ConvertUTF16toUTF8(value).get(), " %lld %n", &f, &n);
   if (r == 0 || n < value.Length()) {
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,
                           "SOAP_ILLEGAL_LONG",
@@ -3376,7 +3376,7 @@ nsIntEncoder::Decode(nsISOAPEncoding* aEncoding,
 
   PRInt32 f;
   PRUint32 n;
-  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %ld %n", &f, &n);
+  PRInt32 r = PR_sscanf(NS_ConvertUTF16toUTF8(value).get(), " %ld %n", &f, &n);
   if (r == 0 || n < value.Length()) {
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,
                           "SOAP_ILLEGAL_INT",
@@ -3409,7 +3409,7 @@ nsShortEncoder::Decode(nsISOAPEncoding* aEncoding,
 
   PRInt16 f;
   PRUint32 n;
-  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hd %n", &f, &n);
+  PRInt32 r = PR_sscanf(NS_ConvertUTF16toUTF8(value).get(), " %hd %n", &f, &n);
   if (r == 0 || n < value.Length()) {
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,
                           "SOAP_ILLEGAL_SHORT",
@@ -3442,7 +3442,7 @@ nsByteEncoder::Decode(nsISOAPEncoding* aEncoding,
 
   PRInt16 f;
   PRUint32 n;
-  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hd %n", &f, &n);
+  PRInt32 r = PR_sscanf(NS_ConvertUTF16toUTF8(value).get(), " %hd %n", &f, &n);
   if (r == 0 || n < value.Length() || f < -128 || f > 127) {
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,
                           "SOAP_ILLEGAL_BYTE",
@@ -3475,7 +3475,7 @@ nsUnsignedLongEncoder::Decode(nsISOAPEncoding* aEncoding,
 
   PRUint64 f;
   PRUint32 n;
-  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %llu %n", &f, &n);
+  PRInt32 r = PR_sscanf(NS_ConvertUTF16toUTF8(value).get(), " %llu %n", &f, &n);
   if (r == 0 || n < value.Length()) {
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,
                           "SOAP_ILLEGAL_ULONG",
@@ -3508,7 +3508,7 @@ nsUnsignedIntEncoder::Decode(nsISOAPEncoding* aEncoding,
 
   PRUint32 f;
   PRUint32 n;
-  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lu %n", &f, &n);
+  PRInt32 r = PR_sscanf(NS_ConvertUTF16toUTF8(value).get(), " %lu %n", &f, &n);
   if (r == 0 || n < value.Length()) {
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,
                           "SOAP_ILLEGAL_UINT",
@@ -3583,7 +3583,7 @@ nsUnsignedShortEncoder::Decode(nsISOAPEncoding* aEncoding,
 
   PRUint16 f;
   PRUint32 n;
-  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hu %n", &f, &n);
+  PRInt32 r = PR_sscanf(NS_ConvertUTF16toUTF8(value).get(), " %hu %n", &f, &n);
   if (r == 0 || n < value.Length()) {
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,
                           "SOAP_ILLEGAL_USHORT",
@@ -3616,7 +3616,7 @@ nsUnsignedByteEncoder::Decode(nsISOAPEncoding* aEncoding,
 
   PRUint16 f;
   PRUint32 n;
-  PRInt32 r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hu %n", &f, &n);
+  PRInt32 r = PR_sscanf(NS_ConvertUTF16toUTF8(value).get(), " %hu %n", &f, &n);
   if (r == 0 || n < value.Length() || f > 255) {
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,
                           "SOAP_ILLEGAL_UBYTE",

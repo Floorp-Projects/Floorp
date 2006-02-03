@@ -215,7 +215,7 @@ nsresult ConvertAndSanitizeFileName(const char * displayName, PRUnichar ** unico
      The display name is in UTF-8 because it has been escaped from JS
   */ 
   NS_UnescapeURL(unescapedName);
-  NS_ConvertUTF8toUCS2 ucs2Str(unescapedName);
+  NS_ConvertUTF8toUTF16 ucs2Str(unescapedName);
 
   nsresult rv = NS_OK;
 #if defined(XP_MAC)  /* reviewed for 1.4, XP_MACOSX not needed */
@@ -1284,7 +1284,7 @@ nsMessenger::Alert(const char *stringName)
 
         if (dialog) {
             rv = dialog->Alert(nsnull,
-                               GetString(NS_ConvertASCIItoUCS2(stringName)).get());
+                               GetString(NS_ConvertASCIItoUTF16(stringName)).get());
         }
     }
     return rv;

@@ -143,7 +143,7 @@ nsresult nsHTMLScriptEventHandler::ParseEventString(const nsAString &aValue)
   }
 
   // Javascript expects all argument names to be ASCII.
-  NS_LossyConvertUCS2toASCII sig(Substring(next, end));
+  NS_LossyConvertUTF16toASCII sig(Substring(next, end));
 
   // Store each (comma separated) argument in mArgNames
   mArgNames.ParseString(sig.get(), ",");
@@ -592,7 +592,7 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
     nsCAutoString spec;
     aURI->GetSpec(spec);
 
-    NS_ConvertUTF8toUCS2 fileName(spec);
+    NS_ConvertUTF8toUTF16 fileName(spec);
     event.fileName = fileName.get();
 
     nsCOMPtr<nsPresContext> presContext = GetPresContext();

@@ -72,7 +72,7 @@ nsresult Register(nsIComponentRegistrar* registrar, const char *path)
   nsCOMPtr<nsILocalFile> file;
   nsresult rv =
     NS_NewLocalFile(
-      NS_ConvertUTF8toUCS2(path),
+      NS_ConvertUTF8toUTF16(path),
       PR_TRUE,
       getter_AddRefs(file));
   if (NS_FAILED(rv)) return rv;

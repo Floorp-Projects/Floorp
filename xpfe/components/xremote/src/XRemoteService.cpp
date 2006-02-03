@@ -700,7 +700,7 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
     return rv;
   
   // pass the second argument as parameter
-  arg->SetData(NS_ConvertUTF8toUCS2(restArgument));
+  arg->SetData(NS_ConvertUTF8toUTF16(restArgument));
 
   // someone requested opening mail/news
   if (aArgument.LowerCaseEqualsLiteral("openinbox")) {

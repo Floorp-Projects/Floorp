@@ -2483,7 +2483,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
             return NS_OK;
     }
 
-    // printf("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n", NS_LossyConvertUCS2toASCII(parentCS).get(), mItemType);
+    // printf("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n", NS_LossyConvertUTF16toASCII(parentCS).get(), mItemType);
 
     return NS_OK;
 }
@@ -2896,7 +2896,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
         rv = NS_NewURI(getter_AddRefs(uri), uriString);
     } else {
         // Call the fixup object
-        rv = sURIFixup->CreateFixupURI(NS_ConvertUCS2toUTF8(aURI),
+        rv = sURIFixup->CreateFixupURI(NS_ConvertUTF16toUTF8(aURI),
                                        nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
                                        getter_AddRefs(uri));
     }
@@ -2949,7 +2949,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         // extract the scheme
         nsCAutoString scheme;
         aURI->GetScheme(scheme);
-        CopyASCIItoUCS2(scheme, formatStrs[0]);
+        CopyASCIItoUTF16(scheme, formatStrs[0]);
         formatStrCount = 1;
         error.AssignLiteral("protocolNotFound");
     }
@@ -3252,7 +3252,7 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
                           nsnull,         // No owner
                           INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner from document
                           nsnull,         // No window target
-                          NS_LossyConvertUCS2toASCII(contentTypeHint).get(),
+                          NS_LossyConvertUTF16toASCII(contentTypeHint).get(),
                           nsnull,         // No post data
                           nsnull,         // No headers data
                           type,           // Load type
@@ -7206,9 +7206,9 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
         // In that case, we should just fall through to using the
         // page's charset.
         rv = NS_ERROR_FAILURE;
-        NS_ConvertUTF8toUCS2 uStr(str);
+        NS_ConvertUTF8toUTF16 uStr(str);
         if (!uStr.IsEmpty()) {
-            rv = shell->GoToAnchor(NS_ConvertUTF8toUCS2(str), scroll);
+            rv = shell->GoToAnchor(NS_ConvertUTF8toUTF16(str), scroll);
         }
         nsMemory::Free(str);
 

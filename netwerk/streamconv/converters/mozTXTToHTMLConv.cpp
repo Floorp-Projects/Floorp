@@ -422,7 +422,7 @@ mozTXTToHTMLConv::CheckURLAndCreateHTML(
     return PR_FALSE;
 
   // See if the url should be linkified.
-  NS_ConvertUCS2toUTF8 utf8URL(txtURL);
+  NS_ConvertUTF16toUTF8 utf8URL(txtURL);
   if (!ShouldLinkify(utf8URL))
     return PR_FALSE;
 
@@ -723,7 +723,7 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool 
             )
             && IsSpace(aInString[delim + 1])
         )
-        && ItMatchesDelimited(aInString, aLength, NS_ConvertASCIItoUCS2(tagTXT).get(), tagLen, 
+        && ItMatchesDelimited(aInString, aLength, NS_ConvertASCIItoUTF16(tagTXT).get(), tagLen, 
                               col0 ? LT_IGNORE : LT_DELIMITER, LT_IGNORE)
 	        // Note: tests at different pos for LT_IGNORE and LT_DELIMITER
     )

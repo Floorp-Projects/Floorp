@@ -247,7 +247,7 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
           s->mAlias = new nsGlobalNameStruct::ConstructorAlias;
           if (!s->mAlias) {
             // Free entry
-            NS_ConvertASCIItoUCS2 key(categoryEntry);
+            NS_ConvertASCIItoUTF16 key(categoryEntry);
             PL_DHashTableOperate(&mGlobalNames,
                                  &key,
                                  PL_DHASH_REMOVE);

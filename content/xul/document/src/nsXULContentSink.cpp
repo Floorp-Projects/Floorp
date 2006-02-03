@@ -1078,7 +1078,7 @@ XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes,
             aNodeInfo->GetName(anodeC);
             PR_LOG(gLog, PR_LOG_ERROR,
                    ("xul: unable to create element '%s' at line %d",
-                    NS_ConvertUCS2toUTF8(anodeC).get(),
+                    NS_ConvertUTF16toUTF8(anodeC).get(),
                     -1)); // XXX pass in line number
         }
 #endif
@@ -1121,7 +1121,7 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
             aNodeInfo->GetName(anodeC);
             PR_LOG(gLog, PR_LOG_ERROR,
                    ("xul: unable to create element '%s' at line %d",
-                    NS_ConvertUCS2toUTF8(anodeC).get(),
+                    NS_ConvertUTF16toUTF8(anodeC).get(),
                     aLineNumber));
         }
 #endif
@@ -1368,9 +1368,9 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
           PR_LOG(gLog, PR_LOG_DEBUG,
                  ("xul: %.5d. %s    %s=%s",
                   -1, // XXX pass in line number
-                  NS_ConvertUCS2toUTF8(extraWhiteSpace).get(),
-                  NS_ConvertUCS2toUTF8(qnameC).get(),
-                  NS_ConvertUCS2toUTF8(valueC).get()));
+                  NS_ConvertUTF16toUTF8(extraWhiteSpace).get(),
+                  NS_ConvertUTF16toUTF8(qnameC).get(),
+                  NS_ConvertUTF16toUTF8(valueC).get()));
       }
 #endif
   }

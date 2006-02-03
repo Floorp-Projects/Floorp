@@ -1450,7 +1450,7 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
 
         NS_ADDREF(data);
         data->Init(bestMessage.get(),
-                   NS_ConvertASCIItoUCS2(report->filename).get(),
+                   NS_ConvertASCIItoUTF16(report->filename).get(),
                    (const PRUnichar *)report->uclinebuf, report->lineno,
                    report->uctokenptr - report->uclinebuf, report->flags,
                    "XPConnect JavaScript");

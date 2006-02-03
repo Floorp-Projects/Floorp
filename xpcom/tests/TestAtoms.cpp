@@ -88,7 +88,7 @@ int main(int argc, char** argv)
       id->ToString(s1);
       ids[i]->ToString(s2);
       printf("find failed: id='%s' ids[%d]='%s'\n",
-             NS_LossyConvertUCS2toASCII(s1).get(), i, NS_LossyConvertUCS2toASCII(s2).get());
+             NS_LossyConvertUTF16toASCII(s1).get(), i, NS_LossyConvertUTF16toASCII(s2).get());
       return -1;
     }
     NS_RELEASE(id);

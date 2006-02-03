@@ -52,7 +52,7 @@ XPathCompilerException(const char      *aMsg,
 {
   printf("XPathCompilerException: %s, %s [o: %d, l: %d]\n",
          aMsg,
-         NS_ConvertUCS2toUTF8(aExpression).get(), aOffset, aLength);
+         NS_ConvertUTF16toUTF8(aExpression).get(), aOffset, aLength);
 
   printf("WARNING: Houston we have a problem, and unlike Apollo 13, we're not going to make it!\n");
   NS_ABORT();
@@ -857,7 +857,7 @@ nsXFormsXPathParser::Parse(const nsAString& aExpression)
 {
 #ifdef DEBUG_XF_PARSER
   printf("=====================================\n");
-  printf("Parsing: %s\n", NS_ConvertUCS2toUTF8(aExpression).get());
+  printf("Parsing: %s\n", NS_ConvertUTF16toUTF8(aExpression).get());
   printf("=====================================\n");
 #endif
 
@@ -916,6 +916,6 @@ void
 nsXFormsXPathParser::OutputSubExpression(PRInt32 aOffset, PRInt32 aEndOffset)
 {
   const nsDependentSubstring expr = Substring(mScanner.Expression(), aOffset, aEndOffset - aOffset);
-  printf("%s\n", NS_ConvertUCS2toUTF8(expr).get());
+  printf("%s\n", NS_ConvertUTF16toUTF8(expr).get());
 }
 #endif

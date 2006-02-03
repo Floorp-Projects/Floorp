@@ -183,7 +183,7 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsISimpleEnumerator* *aResult)
       properties = do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv,rv);
       
-      NS_ConvertUTF8toUCS2 description (server->description);
+      NS_ConvertUTF8toUTF16 description (server->description);
       rv = properties->SetDescription(description);
       NS_ENSURE_SUCCESS(rv,rv);
       
@@ -455,9 +455,9 @@ NS_IMETHODIMP nsAbBSDirectory::ModifyDirectory(nsIAbDirectory *directory, nsIAbD
   rv = aProperties->GetDescription(description);
   NS_ENSURE_SUCCESS(rv, rv);
  
-  NS_ConvertUTF8toUCS2 oldValue(server->description);
+  NS_ConvertUTF8toUTF16 oldValue(server->description);
   nsCRT::free(server->description);
-  NS_ConvertUCS2toUTF8 utf8str(description.get());
+  NS_ConvertUTF16toUTF8 utf8str(description.get());
   server->description = ToNewCString(utf8str);
 
   rv = aProperties->GetURI(getter_Copies(uri));

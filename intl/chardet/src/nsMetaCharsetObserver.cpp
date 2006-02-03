@@ -322,7 +322,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
         if (!compatCharset.IsEmpty()) {
           res = NotifyWebShell(aWebShell,
                                aChannel,
-                               NS_ConvertUCS2toUTF8(compatCharset).get(), 
+                               NS_ConvertUTF16toUTF8(compatCharset).get(), 
                                kCharsetFromMetaTag);
         }
       }
@@ -371,7 +371,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
               // also some charsets which should have been found in
               // the BOM detection.
               nsString* currentCharset = values->StringAt(numOfAttributes-3);
-              if (!preferred.Equals(NS_LossyConvertUCS2toASCII(*currentCharset)) &&
+              if (!preferred.Equals(NS_LossyConvertUTF16toASCII(*currentCharset)) &&
                   !preferred.EqualsLiteral("UTF-16") &&
                   !preferred.EqualsLiteral("UTF-16BE") &&
                   !preferred.EqualsLiteral("UTF-16LE") &&

@@ -2251,7 +2251,7 @@ mozSqlResultStream::EnsureBuffer()
         else {
           PRInt32 type = cell->GetType();
           if (type == mozISqlResult::TYPE_STRING)
-            mBuffer.Append(NS_ConvertUCS2toUTF8(cell->mString));
+            mBuffer.Append(NS_ConvertUTF16toUTF8(cell->mString));
           else if (type == mozISqlResult::TYPE_INT)
             mBuffer.AppendInt(cell->mInt);
           else if (type == mozISqlResult::TYPE_FLOAT ||
@@ -2266,7 +2266,7 @@ mozSqlResultStream::EnsureBuffer()
                                   type != mozISqlResult::TYPE_DATE ? kTimeFormatSeconds : kTimeFormatNone,
                                   PRTime(cell->mDate),
                                   value);
-            mBuffer.Append(NS_ConvertUCS2toUTF8(value));
+            mBuffer.Append(NS_ConvertUTF16toUTF8(value));
           }
           else if (type == mozISqlResult::TYPE_BOOL) {
             if (cell->mBool)

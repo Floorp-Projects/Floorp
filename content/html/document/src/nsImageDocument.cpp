@@ -638,7 +638,7 @@ nsImageDocument::CreateSyntheticDocument()
   nsCAutoString src;
   mDocumentURI->GetSpec(src);
 
-  NS_ConvertUTF8toUCS2 srcString(src);
+  NS_ConvertUTF8toUTF16 srcString(src);
   // Make sure not to start the image load from here...
   imageLoader->SetLoadingEnabled(PR_FALSE);
   mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src, srcString, PR_FALSE);

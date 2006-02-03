@@ -199,7 +199,7 @@ nsComm4xProfile::GetMailDir(const PRUnichar *aProfile, PRUnichar **_retval)
             if (NS_FAILED(rv)) return rv;
             if (prefValue) {
 #if defined(XP_MAC) || defined(XP_MACOSX)
-                rv = profileLocation->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(prefValue));
+                rv = profileLocation->SetPersistentDescriptor(NS_ConvertUTF16toUTF8(prefValue));
                 if (NS_FAILED(rv)) return rv;
                 nsAutoString path;
                 rv = profileLocation->GetPath(path);

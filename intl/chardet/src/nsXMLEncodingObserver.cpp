@@ -136,13 +136,13 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
          if(0==nsCRT::strcmp(nameArray[i], NS_LITERAL_STRING("charset").get())) 
          {
            bGotCurrentCharset = PR_TRUE;
-           CopyUCS2toASCII(nsDependentString(valueArray[i]), currentCharset);
+           LossyCopyUTF16toASCII(nsDependentString(valueArray[i]), currentCharset);
          } else if(0==nsCRT::strcmp(nameArray[i], NS_LITERAL_STRING("charsetSource").get())) {
            bGotCurrentCharsetSource = PR_TRUE;
            charsetSourceStr = valueArray[i];
          } else if(nsDependentString(nameArray[i]).LowerCaseEqualsLiteral("encoding")) { 
            bGotEncoding = PR_TRUE;
-           CopyUCS2toASCII(nsDependentString(valueArray[i]), encoding);
+           LossyCopyUTF16toASCII(nsDependentString(valueArray[i]), encoding);
          }
       }
 

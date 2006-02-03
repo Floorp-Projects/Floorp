@@ -501,10 +501,10 @@ nsresult nsMsgDBView::FetchAuthor(nsIMsgDBHdr * aHdr, PRUnichar ** aSenderString
   if (mHeaderParser)
   {
     nsXPIDLCString name;
-    rv = mHeaderParser->ExtractHeaderAddressName("UTF-8", NS_ConvertUCS2toUTF8(unparsedAuthor).get(), getter_Copies(name));
+    rv = mHeaderParser->ExtractHeaderAddressName("UTF-8", NS_ConvertUTF16toUTF8(unparsedAuthor).get(), getter_Copies(name));
     if (NS_SUCCEEDED(rv) && (const char*)name)
     {
-      *aSenderString = nsCRT::strdup(NS_ConvertUTF8toUCS2(name).get());
+      *aSenderString = nsCRT::strdup(NS_ConvertUTF8toUTF16(name).get());
       return NS_OK;
     }
   }
@@ -562,10 +562,10 @@ nsresult nsMsgDBView::FetchRecipients(nsIMsgDBHdr * aHdr, PRUnichar ** aRecipien
   if (mHeaderParser)
   {
     nsXPIDLCString names;
-    rv = mHeaderParser->ExtractHeaderAddressNames("UTF-8", NS_ConvertUCS2toUTF8(unparsedRecipients).get(), getter_Copies(names));
+    rv = mHeaderParser->ExtractHeaderAddressNames("UTF-8", NS_ConvertUTF16toUTF8(unparsedRecipients).get(), getter_Copies(names));
     if (NS_SUCCEEDED(rv) && (const char*)names)
     {
-      *aRecipientsString = nsCRT::strdup(NS_ConvertUTF8toUCS2(names).get());
+      *aRecipientsString = nsCRT::strdup(NS_ConvertUTF8toUTF16(names).get());
       return NS_OK;
     }
   }
@@ -1655,7 +1655,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAStr
     {
       nsXPIDLCString junkScoreStr;
       msgHdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
-      CopyASCIItoUCS2(junkScoreStr, aValue);
+      CopyASCIItoUTF16(junkScoreStr, aValue);
     }
     break;
   case 'i': // id

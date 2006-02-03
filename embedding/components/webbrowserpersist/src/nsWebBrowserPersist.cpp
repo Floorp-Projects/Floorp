@@ -2710,7 +2710,7 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
             GetXMLStyleSheetLink(nodeAsPI, href);
             if (!href.IsEmpty())
             {
-                StoreURI(NS_ConvertUCS2toUTF8(href).get());
+                StoreURI(NS_ConvertUTF16toUTF8(href).get());
             }
         }
     }
@@ -3295,7 +3295,7 @@ nsWebBrowserPersist::StoreURIAttributeNS(
         attrNode->GetNodeValue(oldValue);
         if (!oldValue.IsEmpty())
         {
-            NS_ConvertUCS2toUTF8 oldCValue(oldValue);
+            NS_ConvertUTF16toUTF8 oldCValue(oldValue);
             return StoreURI(oldCValue.get(), aNeedsPersisting, aData);
         }
     }
@@ -3435,7 +3435,7 @@ nsWebBrowserPersist::FixupAnchor(nsIDOMNode *aNode)
     {
         nsString oldValue;
         attrNode->GetNodeValue(oldValue);
-        NS_ConvertUCS2toUTF8 oldCValue(oldValue);
+        NS_ConvertUTF16toUTF8 oldCValue(oldValue);
 
         // Skip empty values and self-referencing bookmarks
         if (oldCValue.IsEmpty() || oldCValue.CharAt(0) == '#')
@@ -3463,7 +3463,7 @@ nsWebBrowserPersist::FixupAnchor(nsIDOMNode *aNode)
             newURI->SetUserPass(EmptyCString());
             nsCAutoString uriSpec;
             newURI->GetSpec(uriSpec);
-            attrNode->SetNodeValue(NS_ConvertUTF8toUCS2(uriSpec));
+            attrNode->SetNodeValue(NS_ConvertUTF8toUTF16(uriSpec));
         }
     }
 
@@ -3580,7 +3580,7 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
     nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(contractID.get(), &rv);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    NS_ConvertASCIItoUCS2 newContentType(aFormatType);
+    NS_ConvertASCIItoUTF16 newContentType(aFormatType);
     rv = encoder->Init(aDocument, newContentType, aFlags);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
@@ -3896,7 +3896,7 @@ nsWebBrowserPersist::SetDocumentBase(
     }
     nsCAutoString uriSpec;
     aBaseURI->GetSpec(uriSpec);
-    NS_ConvertUTF8toUCS2 href(uriSpec);
+    NS_ConvertUTF8toUTF16 href(uriSpec);
     baseElement->SetAttribute(NS_LITERAL_STRING("href"), href);
 
     return NS_OK;

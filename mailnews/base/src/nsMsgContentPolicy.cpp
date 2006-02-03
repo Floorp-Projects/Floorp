@@ -416,7 +416,7 @@ NS_IMETHODIMP nsMsgContentPolicy::Observe(nsISupports *aSubject, const char *aTo
 {
   if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) 
   {
-    NS_LossyConvertUCS2toASCII pref(aData);
+    NS_LossyConvertUTF16toASCII pref(aData);
 
     nsresult rv;
 

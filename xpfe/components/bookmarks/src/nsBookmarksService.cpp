@@ -2038,7 +2038,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 
 #ifdef  DEBUG_BOOKMARK_PING_OUTPUT
             printf("nsBookmarksService::FireTimer - Pinging '%s'\n",
-                   NS_ConvertUCS2toUTF8(url).get());
+                   NS_ConvertUTF16toUTF8(url).get());
 #endif
 
             nsCOMPtr<nsIURI>    uri;
@@ -2099,7 +2099,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     if (NS_SUCCEEDED(rv = GetURLFromResource(busyResource, url)))
     {
 #ifdef  DEBUG_BOOKMARK_PING_OUTPUT
-        printf("Finished polling '%s'\n", NS_ConvertUCS2toUTF8(url).get());
+        printf("Finished polling '%s'\n", NS_ConvertUTF16toUTF8(url).get());
 #endif
     }
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -2110,11 +2110,11 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 
         nsCAutoString val;
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("ETag"), val)))
-            CopyASCIItoUCS2(val, eTagValue);
+            CopyASCIItoUTF16(val, eTagValue);
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Last-Modified"), val)))
-            CopyASCIItoUCS2(val, lastModValue);
+            CopyASCIItoUTF16(val, lastModValue);
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Length"), val)))
-            CopyASCIItoUCS2(val, contentLengthValue);
+            CopyASCIItoUTF16(val, contentLengthValue);
         val.Truncate();
 
         PRBool      changedFlag = PR_FALSE;
@@ -2127,7 +2127,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                 if (!eTagValue.IsEmpty())
                 {
 #ifdef  DEBUG_BOOKMARK_PING_OUTPUT
-                    printf("eTag: '%s'\n", NS_ConvertUCS2toUTF8(eTagValue).get());
+                    printf("eTag: '%s'\n", NS_ConvertUTF16toUTF8(eTagValue).get());
 #endif
                     nsAutoString        eTagStr;
                     nsCOMPtr<nsIRDFNode>    currentETagNode;
@@ -3335,7 +3335,7 @@ nsBookmarksService::IsBookmarked(const char* aURL, PRBool* aIsBookmarked)
     *aIsBookmarked = PR_FALSE;
 
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
+    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUTF16(aURL).get(),
                                    getter_AddRefs(urlLiteral));
     if (NS_FAILED(rv))
         return rv;
@@ -3369,7 +3369,7 @@ nsBookmarksService::RequestCharset(nsIWebNavigation* aWebNavigation,
     uri->GetSpec(urlSpec);
    
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(urlSpec).get(),
+    rv = gRDF->GetLiteral(NS_ConvertUTF8toUTF16(urlSpec).get(),
                                    getter_AddRefs(urlLiteral));
     if (NS_FAILED(rv))
         return rv;
@@ -3421,7 +3421,7 @@ NS_IMETHODIMP
 nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const PRUnichar *aIconURL)
 {
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
+    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUTF16(aURL).get(),
                                    getter_AddRefs(urlLiteral));
     if (NS_FAILED(rv))
         return rv;
@@ -3461,7 +3461,7 @@ NS_IMETHODIMP
 nsBookmarksService::RemoveBookmarkIcon(const char *aURL, const PRUnichar *aIconURL)
 {
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
+    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUTF16(aURL).get(),
                                    getter_AddRefs(urlLiteral));
     if (NS_FAILED(rv))
         return rv;
@@ -3516,7 +3516,7 @@ nsBookmarksService::UpdateLastVisitedDate(const char *aURL,
         return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
+    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUTF16(aURL).get(),
                                    getter_AddRefs(urlLiteral));
     if (NS_FAILED(rv))
         return rv;
@@ -3672,7 +3672,7 @@ nsBookmarksService::GetLastCharset(const nsACString &aURL, nsAString &aCharset)
     aCharset.Truncate(); 
 
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
+    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUTF16(aURL).get(),
                                    getter_AddRefs(urlLiteral));
 
     if (NS_FAILED(rv))

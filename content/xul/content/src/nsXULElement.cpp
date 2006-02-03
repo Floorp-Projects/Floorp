@@ -1582,7 +1582,7 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
 
     nsAutoString as;
     mNodeInfo->GetQualifiedName(as);
-    fputs(NS_LossyConvertUCS2toASCII(as).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(as).get(), out);
 
     fprintf(out, "@%p", (void *)this);
 
@@ -1599,9 +1599,9 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
         nsAutoString s;
         name->GetQualifiedName(s);
 
-        fputs(NS_LossyConvertUCS2toASCII(s).get(), out);
+        fputs(NS_LossyConvertUTF16toASCII(s).get(), out);
         fputs("=", out);
-        fputs(NS_LossyConvertUCS2toASCII(v).get(), out);
+        fputs(NS_LossyConvertUTF16toASCII(v).get(), out);
     }
 
     PRUint32 nchildren = GetChildCount();

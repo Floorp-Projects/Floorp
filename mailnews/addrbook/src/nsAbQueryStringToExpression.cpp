@@ -331,7 +331,7 @@ nsresult nsAbQueryStringToExpression::CreateBooleanConditionString (
             value, getter_Copies(valueUCS2));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        NS_ConvertUCS2toUTF8 attributeUTF8(attributeUCS2);
+        NS_ConvertUTF16toUTF8 attributeUTF8(attributeUCS2);
 
         rv = cs->SetName (attributeUTF8.get ());
         NS_ENSURE_SUCCESS(rv, rv);
@@ -340,7 +340,7 @@ nsresult nsAbQueryStringToExpression::CreateBooleanConditionString (
     }
     else
     {
-        NS_ConvertUTF8toUCS2 valueUCS2(value);
+        NS_ConvertUTF8toUTF16 valueUCS2(value);
 
         rv = cs->SetName (attribute);
         NS_ENSURE_SUCCESS(rv, rv);

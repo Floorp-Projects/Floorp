@@ -201,7 +201,7 @@ nsWSDLLoader::doLoad(const nsAString& wsdlURI, const nsAString& portName,
   nsCAutoString spec;
   resolvedURI->GetSpec(spec);
 
-  rv = request->LoadDefinition(NS_ConvertUTF8toUCS2(spec));
+  rv = request->LoadDefinition(NS_ConvertUTF8toUTF16(spec));
 
   if (NS_SUCCEEDED(rv) && !aListener) {
     request->GetPort(_retval);
@@ -469,7 +469,7 @@ nsWSDLLoadRequest::HandleEvent(nsIDOMEvent *event)
             }
           }
 
-          rv = PushContext(document, NS_ConvertUTF8toUCS2(spec));
+          rv = PushContext(document, NS_ConvertUTF8toUTF16(spec));
 
           if (NS_SUCCEEDED(rv)) {
             rv = ContineProcessingTillDone();
@@ -957,7 +957,7 @@ nsWSDLLoadRequest::ProcessImportElement(nsIDOMElement* aElement,
   nsCAutoString spec;
   uri->GetSpec(spec);
 
-  rv = LoadDefinition(NS_ConvertUTF8toUCS2(spec.get()));
+  rv = LoadDefinition(NS_ConvertUTF8toUTF16(spec.get()));
   if (NS_FAILED(rv)) {
     return rv;
   }

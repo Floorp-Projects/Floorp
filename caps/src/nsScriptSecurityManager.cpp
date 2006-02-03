@@ -1405,8 +1405,8 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
 
     // Localize the error message
     nsXPIDLString message;
-    NS_ConvertASCIItoUCS2 ucsSourceSpec(sourceSpec);
-    NS_ConvertASCIItoUCS2 ucsTargetSpec(targetSpec);
+    NS_ConvertASCIItoUTF16 ucsSourceSpec(sourceSpec);
+    NS_ConvertASCIItoUTF16 ucsTargetSpec(targetSpec);
     const PRUnichar *formatStrings[] = { ucsSourceSpec.get(), ucsTargetSpec.get() };
     rv = sStrBundle->FormatStringFromName(PromiseFlatString(messageTag).get(),
                                           formatStrings,
@@ -1437,7 +1437,7 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
 
         console->LogStringMessage(message.get());
 #ifdef DEBUG
-        fprintf(stderr, "%s\n", NS_LossyConvertUCS2toASCII(message).get());
+        fprintf(stderr, "%s\n", NS_LossyConvertUTF16toASCII(message).get());
 #endif
     }
     return NS_OK;
@@ -2947,7 +2947,7 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aTopic,
                                  const PRUnichar* aMessage)
 {
     nsresult rv = NS_OK;
-    NS_ConvertUCS2toUTF8 messageStr(aMessage);
+    NS_ConvertUTF16toUTF8 messageStr(aMessage);
     const char *message = messageStr.get();
 
     static const char jsPrefix[] = "javascript.";

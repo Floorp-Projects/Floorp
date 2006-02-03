@@ -557,7 +557,7 @@ nsSingleSignOnPrompt::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text
   nsresult rv;
   rv = SINGSIGN_Prompt(
     dialogTitle, text, defaultText, result,
-    NS_ConvertUCS2toUTF8(passwordRealm).get(), mPrompt, _retval, savePassword);
+    NS_ConvertUTF16toUTF8(passwordRealm).get(), mPrompt, _retval, savePassword);
   return rv;
 }
 
@@ -569,7 +569,7 @@ nsSingleSignOnPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle, co
   nsresult rv;
   rv = SINGSIGN_PromptUsernameAndPassword(
     dialogTitle, text, user, pwd,
-    NS_ConvertUCS2toUTF8(passwordRealm).get(), mPrompt, _retval, savePassword);
+    NS_ConvertUTF16toUTF8(passwordRealm).get(), mPrompt, _retval, savePassword);
   return rv;
 }
 
@@ -581,7 +581,7 @@ nsSingleSignOnPrompt::PromptPassword(const PRUnichar *dialogTitle, const PRUnich
   nsresult rv;
   rv = SINGSIGN_PromptPassword(
     dialogTitle, text, pwd,
-    NS_ConvertUCS2toUTF8(passwordRealm).get(), mPrompt, _retval, savePassword);
+    NS_ConvertUTF16toUTF8(passwordRealm).get(), mPrompt, _retval, savePassword);
   return rv;
 }
 

@@ -186,7 +186,7 @@ printf("Can't output: %s\n", line);
     will behave then. It's not worth the trouble for me to figure this all out.
    */
   nsCString linestr(line, length);
-  NS_ConvertUTF8toUCS2 line_ucs2(linestr.get());
+  NS_ConvertUTF8toUTF16 line_ucs2(linestr.get());
   if (length && line_ucs2.IsEmpty())
     line_ucs2.AssignWithConversion(linestr.get());
   (textHTMLPlain->complete_buffer)->Append(line_ucs2);

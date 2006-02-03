@@ -92,7 +92,7 @@ nsMsgSearchValueImpl::GetStr(PRUnichar** aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_TRUE(IS_STRING_ATTRIBUTE(mValue.attribute), NS_ERROR_ILLEGAL_VALUE);
-    *aResult = ToNewUnicode(NS_ConvertUTF8toUCS2(mValue.string));
+    *aResult = ToNewUnicode(NS_ConvertUTF8toUTF16(mValue.string));
     return NS_OK;
 }
 

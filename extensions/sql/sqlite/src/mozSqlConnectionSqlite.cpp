@@ -114,7 +114,7 @@ mozSqlConnectionSqlite::Init(const nsAString& aHost,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
   	
-  rv = sqlite3_open(NS_ConvertUCS2toUTF8(path).get(), &mConnection);
+  rv = sqlite3_open(NS_ConvertUTF16toUTF8(path).get(), &mConnection);
   if (rv != SQLITE_OK)
     return rv;
 
@@ -155,7 +155,7 @@ mozSqlConnectionSqlite::GetPrimaryKeys(const nsAString& aSchema,
   preselect.Append(NS_LITERAL_STRING("';"));
   common.Append(NS_LITERAL_STRING("' as TABLE_NAME, '"));
   
-  stat = sqlite3_get_table(mConnection, NS_ConvertUCS2toUTF8(preselect).get(),
+  stat = sqlite3_get_table(mConnection, NS_ConvertUTF16toUTF8(preselect).get(),
                            &r, &nrow, &ncolumn, &errmsg);
   if (stat != SQLITE_OK) {
     CopyUTF8toUTF16(errmsg, mErrorMessage);
@@ -164,9 +164,9 @@ mozSqlConnectionSqlite::GetPrimaryKeys(const nsAString& aSchema,
   }
   
   // now we parse that statement in order to find primary key columns
-  nsAutoString aToken = NS_ConvertUTF8toUCS2(nsDependentCString("PRIMARY KEY"));
+  nsAutoString aToken = NS_ConvertUTF8toUTF16(nsDependentCString("PRIMARY KEY"));
   nsAutoString aKeyColumn;
-  NS_ConvertUTF8toUCS2 buffer(r[1]);
+  NS_ConvertUTF8toUTF16 buffer(r[1]);
   nsAString::const_iterator start, end, iter, iter2;
   buffer.BeginReading(start);
   buffer.EndReading(end);
@@ -279,7 +279,7 @@ mozSqlConnectionSqlite::Setup()
     return NS_ERROR_FAILURE;
   }
 
-  NS_ConvertUTF8toUCS2 buffer(sqlite3_version);
+  NS_ConvertUTF8toUTF16 buffer(sqlite3_version);
   nsAString::const_iterator start, end, iter;
   PRInt32 numbers[3] = {0,0,0};
   buffer.BeginReading(iter);
@@ -316,7 +316,7 @@ mozSqlConnectionSqlite::RealExec(const nsAString& aQuery,
   char **r, *errmsg;
   PRInt32 stat, nrow, ncolumn;
 
-  stat = sqlite3_get_table(mConnection, NS_ConvertUCS2toUTF8(aQuery).get(), &r,
+  stat = sqlite3_get_table(mConnection, NS_ConvertUTF16toUTF8(aQuery).get(), &r,
                            &nrow, &ncolumn, &errmsg);
   PRInt32 changed = sqlite3_total_changes(mConnection) - oldChange;
   oldChange += changed;

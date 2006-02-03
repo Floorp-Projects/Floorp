@@ -346,7 +346,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
     rv = NS_NewLocalFileInputStream(getter_AddRefs(spoolInputStream), spoolFile);
     if (NS_FAILED(rv)) {
         const PRUnichar *params[] = {
-            NS_ConvertUTF8toUCS2(spoolPath).get()
+            NS_ConvertUTF8toUTF16(spoolPath).get()
         };
         Error(MOVEMAIL_CANT_OPEN_SPOOL_FILE, params, 1);
         return rv;
@@ -395,7 +395,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
 
     // Try and obtain the lock for the spool file
     if (!ObtainSpoolLock(spoolPath.get(), 5)) {
-        nsAutoString lockFile = NS_ConvertUTF8toUCS2(spoolPath);
+        nsAutoString lockFile = NS_ConvertUTF8toUTF16(spoolPath);
         lockFile.AppendLiteral(".lock");
         const PRUnichar *params[] = {
             lockFile.get()
@@ -444,13 +444,13 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
     rv = spoolFile->SetFileSize(0);
     if (NS_FAILED(rv)) {
         const PRUnichar *params[] = {
-            NS_ConvertUTF8toUCS2(spoolPath).get()
+            NS_ConvertUTF8toUTF16(spoolPath).get()
         };
         Error(MOVEMAIL_CANT_TRUNCATE_SPOOL_FILE, params, 1);
     }
 
     if (!YieldSpoolLock(spoolPath.get())) {
-        nsAutoString spoolLock = NS_ConvertUTF8toUCS2(spoolPath);
+        nsAutoString spoolLock = NS_ConvertUTF8toUTF16(spoolPath);
         spoolLock.AppendLiteral(".lock");
         const PRUnichar *params[] = {
             spoolLock.get()

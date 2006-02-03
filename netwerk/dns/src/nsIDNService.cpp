@@ -152,7 +152,7 @@ nsIDNService::~nsIDNService()
 NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const nsACString & input, nsACString & ace)
 {
   nsresult rv;
-  NS_ConvertUTF8toUCS2 ustr(input);
+  NS_ConvertUTF8toUTF16 ustr(input);
 
   // map ideographic period to ASCII period etc.
   normalizeFullStops(ustr);
@@ -477,13 +477,13 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out)
   }
 
   if (IsASCII(in))
-    CopyUCS2toASCII(in, out);
+    LossyCopyUTF16toASCII(in, out);
   else {
     nsAutoString strPrep;
     rv = stringPrep(in, strPrep);
     if (NS_SUCCEEDED(rv)) {
       if (IsASCII(strPrep))
-        CopyUCS2toASCII(strPrep, out);
+        LossyCopyUTF16toASCII(strPrep, out);
       else
         rv = encodeToACE(strPrep, out);
     }

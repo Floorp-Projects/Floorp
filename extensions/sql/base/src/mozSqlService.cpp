@@ -141,7 +141,7 @@ mozSqlService::Init()
   nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mInner);
   if (sink) {
     nsCOMPtr<nsIAtom> prefix = do_GetAtom("SQL");
-    sink->AddNameSpace(prefix, NS_ConvertASCIItoUCS2(SQL_NAMESPACE_URI));
+    sink->AddNameSpace(prefix, NS_ConvertASCIItoUTF16(SQL_NAMESPACE_URI));
   }
 
   return gRDFService->RegisterDataSource(this, PR_FALSE);

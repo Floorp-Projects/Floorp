@@ -315,14 +315,14 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
         // when can we fail to get the service, anyway? - bbaetz
         aIdx->SetLocation(filename.get());
         if (!mHasDescription) {
-          aIdx->SetDescription(NS_ConvertUTF8toUCS2(value).get());
+          aIdx->SetDescription(NS_ConvertUTF8toUTF16(value).get());
         }
       }
     }
       break;
     case FIELD_DESCRIPTION:
       nsUnescape(value);
-      aIdx->SetDescription(NS_ConvertUTF8toUCS2(value).get());
+      aIdx->SetDescription(NS_ConvertUTF8toUTF16(value).get());
       break;
     case FIELD_CONTENTLENGTH:
       {

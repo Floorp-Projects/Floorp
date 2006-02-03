@@ -72,7 +72,7 @@ nsSingleSignonPrompt::Prompt(const PRUnichar* aDialogTitle,
     nsCAutoString outHost;
     nsAutoString outUser, outPassword;
 
-    mgrInternal->FindPasswordEntry(NS_ConvertUCS2toUTF8(aPasswordRealm),
+    mgrInternal->FindPasswordEntry(NS_ConvertUTF16toUTF8(aPasswordRealm),
                                    emptyString,
                                    emptyString,
                                    outHost,
@@ -102,7 +102,7 @@ nsSingleSignonPrompt::Prompt(const PRUnichar* aDialogTitle,
 
       nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
 
-      manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
+      manager->AddUser(NS_ConvertUTF16toUTF8(aPasswordRealm),
                        nsDependentString(value),
                        emptyString);
     }
@@ -144,7 +144,7 @@ nsSingleSignonPrompt::PromptUsernameAndPassword(const PRUnichar* aDialogTitle,
     nsCAutoString outHost;
     nsAutoString outUser, outPassword;
 
-    mgrInternal->FindPasswordEntry(NS_ConvertUCS2toUTF8(aPasswordRealm),
+    mgrInternal->FindPasswordEntry(NS_ConvertUTF16toUTF8(aPasswordRealm),
                                    emptyString,
                                    emptyString,
                                    outHost,
@@ -172,7 +172,7 @@ nsSingleSignonPrompt::PromptUsernameAndPassword(const PRUnichar* aDialogTitle,
 
       nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
 
-      manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
+      manager->AddUser(NS_ConvertUTF16toUTF8(aPasswordRealm),
                        nsDependentString(user),
                        nsDependentString(password));
     }
@@ -218,7 +218,7 @@ nsSingleSignonPrompt::PromptPassword(const PRUnichar* aDialogTitle,
     nsCAutoString outHost;
     nsAutoString outUser, outPassword;
 
-    mgrInternal->FindPasswordEntry(NS_ConvertUCS2toUTF8(aPasswordRealm),
+    mgrInternal->FindPasswordEntry(NS_ConvertUTF16toUTF8(aPasswordRealm),
                                    emptyString,
                                    emptyString,
                                    outHost,
@@ -244,7 +244,7 @@ nsSingleSignonPrompt::PromptPassword(const PRUnichar* aDialogTitle,
 
       nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
 
-      manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
+      manager->AddUser(NS_ConvertUTF16toUTF8(aPasswordRealm),
                        emptyString,
                        nsDependentString(password));
     }

@@ -4065,7 +4065,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     
     // Scroll to the top/left if the anchor can not be
     // found and it is labelled top (quirks mode only). @see bug 80784
-    if ((NS_LossyConvertUCS2toASCII(aAnchorName).LowerCaseEqualsLiteral("top")) &&
+    if ((NS_LossyConvertUTF16toASCII(aAnchorName).LowerCaseEqualsLiteral("top")) &&
         (mPresContext->CompatibilityMode() == eCompatibility_NavQuirks)) {
       rv = NS_OK;
       // Check |aScroll| after setting |rv| so we set |rv| to the same
@@ -4360,11 +4360,11 @@ NS_IMETHODIMP PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation
               NS_ENSURE_SUCCESS(rv, rv);
 
               nsCOMPtr<nsIURI> baseURI;
-              rv = ios->NewURI(NS_ConvertUCS2toUTF8(base),nsnull,nsnull,getter_AddRefs(baseURI));
+              rv = ios->NewURI(NS_ConvertUTF16toUTF8(base),nsnull,nsnull,getter_AddRefs(baseURI));
               NS_ENSURE_SUCCESS(rv, rv);
 
               nsCAutoString spec;
-              rv = baseURI->Resolve(NS_ConvertUCS2toUTF8(anchorText),spec);
+              rv = baseURI->Resolve(NS_ConvertUTF16toUTF8(anchorText),spec);
               NS_ENSURE_SUCCESS(rv, rv);
 
               CopyUTF8toUTF16(spec, anchorText);
@@ -6600,7 +6600,7 @@ PresShell::ReflowCommandAdded(nsHTMLReflowCommand* aRC)
 
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("presshell=%p, ReflowCommandAdded(%p) target=%p[%s] mRCCreatedDuringLoad=%d\n",
-                this, aRC, target, NS_ConvertUCS2toUTF8(typeStr).get(), mRCCreatedDuringLoad));
+                this, aRC, target, NS_ConvertUTF16toUTF8(typeStr).get(), mRCCreatedDuringLoad));
       }
 #endif
 
@@ -6817,7 +6817,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   else {
     name.Assign(NS_LITERAL_STRING("(null)"));
   }
-  fputs(NS_LossyConvertUCS2toASCII(name).get(), stdout);
+  fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
 
   printf(" != ");
 
@@ -6832,7 +6832,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   else {
     name.Assign(NS_LITERAL_STRING("(null)"));
   }
-  fputs(NS_LossyConvertUCS2toASCII(name).get(), stdout);
+  fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
 
   printf(" %s", aMsg);
 }
@@ -6849,7 +6849,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
                                       (void**)&frameDebug))) {
     fprintf(stdout, "  ");
     frameDebug->GetFrameName(name);
-    fputs(NS_LossyConvertUCS2toASCII(name).get(), stdout);
+    fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
     fprintf(stdout, " %p ", (void*)k1);
   }
   printf("{%d, %d, %d, %d}", r1.x, r1.y, r1.width, r1.height);
@@ -6860,7 +6860,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
                                       (void**)&frameDebug))) {
     fprintf(stdout, "  ");
     frameDebug->GetFrameName(name);
-    fputs(NS_LossyConvertUCS2toASCII(name).get(), stdout);
+    fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
     fprintf(stdout, " %p ", (void*)k2);
   }
   printf("{%d, %d, %d, %d}\n", r2.x, r2.y, r2.width, r2.height);
@@ -7070,14 +7070,14 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       nsAutoString tmp;
       if (nsnull != listName1) {
         listName1->ToString(tmp);
-        fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
+        fputs(NS_LossyConvertUTF16toASCII(tmp).get(), stdout);
       }
       else
         fputs("(null)", stdout);
       printf(" != ");
       if (nsnull != listName2) {
         listName2->ToString(tmp);
-        fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
+        fputs(NS_LossyConvertUTF16toASCII(tmp).get(), stdout);
       }
       else
         fputs("(null)", stdout);

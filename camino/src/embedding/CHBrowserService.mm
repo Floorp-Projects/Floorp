@@ -258,7 +258,7 @@ CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext,
         // got it already.
         nsCAutoString hostName;
         sourceURI->GetHost(hostName);
-        leafName = NS_ConvertUTF8toUCS2(hostName);
+        leafName = NS_ConvertUTF8toUTF16(hostName);
         leafName.Append(NS_LITERAL_STRING(" download"));
       }
       else

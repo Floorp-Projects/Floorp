@@ -1413,7 +1413,7 @@ PRBool nsTextFormatter::SelfTest()
     ret = nsTextFormatter::snprintf(buf, 256, fmt.get(), d, 333, utf8, ucs2);
     printf("ret = %d\n", ret);
     nsAutoString out(buf);
-    printf("%s \n", NS_LossyConvertUCS2toASCII(out).get());
+    printf("%s \n", NS_LossyConvertUTF16toASCII(out).get());
     const PRUnichar *uout = out.get();
     for(PRUint32 i=0;i<out.Length();i++)
         printf("%2X ", uout[i]);

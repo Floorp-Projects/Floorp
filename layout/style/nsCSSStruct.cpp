@@ -93,7 +93,7 @@ void nsCSSFont::List(FILE* out, PRInt32 aIndent) const
   mSize.AppendToString(buffer, eCSSProperty_font_size);
   mSizeAdjust.AppendToString(buffer, eCSSProperty_font_size_adjust);
   mStretch.AppendToString(buffer, eCSSProperty_font_stretch);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -182,7 +182,7 @@ void nsCSSColor::List(FILE* out, PRInt32 aIndent) const
   mBackClip.AppendToString(buffer, eCSSProperty__moz_background_clip);
   mBackOrigin.AppendToString(buffer, eCSSProperty__moz_background_origin);
   mBackInlinePolicy.AppendToString(buffer, eCSSProperty__moz_background_inline_policy);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -239,7 +239,7 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
   mUnicodeBidi.AppendToString(buffer, eCSSProperty_unicode_bidi);
   mLineHeight.AppendToString(buffer, eCSSProperty_line_height);
   mWhiteSpace.AppendToString(buffer, eCSSProperty_white_space);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -299,7 +299,7 @@ void nsCSSRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent) const
   mRight.AppendToString(buffer);
   mBottom.AppendToString(buffer); 
   mLeft.AppendToString(buffer);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 
 void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const
@@ -329,7 +329,7 @@ void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) co
     mLeft.AppendToString(buffer);
   }
 
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -404,7 +404,7 @@ void nsCSSValueListRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent)
   mRight.AppendToString(buffer);
   mBottom.AppendToString(buffer); 
   mLeft.AppendToString(buffer);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 #endif
 }
 
@@ -436,7 +436,7 @@ void nsCSSValueListRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aT
     mLeft.AppendToString(buffer);
   }
 
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 #endif
 }
 #endif
@@ -491,12 +491,12 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
   mVisibility.AppendToString(buffer, eCSSProperty_visibility);
   mOpacity.AppendToString(buffer, eCSSProperty_opacity);
 
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
   mClip.List(out, eCSSProperty_clip);
   buffer.SetLength(0);
   mOverflowX.AppendToString(buffer, eCSSProperty_overflow_x);
   mOverflowY.AppendToString(buffer, eCSSProperty_overflow_y);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -601,7 +601,7 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
     mOutlineRadius.List(out, aIndent, trbl);
   }
   mFloatEdge.AppendToString(buffer, eCSSProperty_float_edge);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -646,7 +646,7 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
   mMaxHeight.AppendToString(buffer, eCSSProperty_max_height);
   mBoxSizing.AppendToString(buffer, eCSSProperty_box_sizing);
   mZIndex.AppendToString(buffer, eCSSProperty_z_index);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 
   static const nsCSSProperty trbl[] = {
     eCSSProperty_top,
@@ -689,7 +689,7 @@ void nsCSSList::List(FILE* out, PRInt32 aIndent) const
   mType.AppendToString(buffer, eCSSProperty_list_style_type);
   mImage.AppendToString(buffer, eCSSProperty_list_style_image);
   mPosition.AppendToString(buffer, eCSSProperty_list_style_position);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 
   static const nsCSSProperty trbl[] = {
     eCSSProperty_top,
@@ -736,7 +736,7 @@ void nsCSSTable::List(FILE* out, PRInt32 aIndent) const
   mEmptyCells.AppendToString(buffer, eCSSProperty_empty_cells);
   mLayout.AppendToString(buffer, eCSSProperty_table_layout);
 
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -779,7 +779,7 @@ void nsCSSBreaks::List(FILE* out, PRInt32 aIndent) const
   //mPageBreakBefore.AppendToString(buffer, eCSSProperty_page_break_before);
   mPageBreakInside.AppendToString(buffer, eCSSProperty_page_break_inside);
 
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -812,7 +812,7 @@ void nsCSSPage::List(FILE* out, PRInt32 aIndent) const
   mMarks.AppendToString(buffer, eCSSProperty_marks);
   mSize.AppendToString(buffer, eCSSProperty_size);
 
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -957,7 +957,7 @@ void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
     quotes = quotes->mNext;
   }
 
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -1007,7 +1007,7 @@ void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
 
   mForceBrokenImageIcon.AppendToString(buffer,eCSSProperty_force_broken_image_icon);
 
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -1070,7 +1070,7 @@ void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
   mVoiceFamily.AppendToString(buffer, eCSSProperty_voice_family);
   mVolume.AppendToString(buffer, eCSSProperty_volume);
 
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -1107,7 +1107,7 @@ void nsCSSXUL::List(FILE* out, PRInt32 aIndent) const
   mBoxOrient.AppendToString(buffer, eCSSProperty_box_orient);
   mBoxPack.AppendToString(buffer, eCSSProperty_box_pack);
   mBoxOrdinal.AppendToString(buffer, eCSSProperty_box_ordinal_group);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -1140,7 +1140,7 @@ void nsCSSColumn::List(FILE* out, PRInt32 aIndent) const
   mColumnWidth.AppendToString(buffer, eCSSProperty__moz_column_width);
   mColumnGap.AppendToString(buffer, eCSSProperty__moz_column_gap);
   mColumnCount.AppendToString(buffer, eCSSProperty__moz_column_count);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 
@@ -1230,7 +1230,7 @@ void nsCSSSVG::List(FILE* out, PRInt32 aIndent) const
   mStrokeWidth.AppendToString(buffer, eCSSProperty_stroke_width);
   mTextAnchor.AppendToString(buffer, eCSSProperty_text_anchor);
   mTextRendering.AppendToString(buffer, eCSSProperty_text_rendering);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 }
 #endif
 

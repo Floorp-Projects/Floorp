@@ -129,7 +129,7 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
   if (NULL == mWnd) {
     return NS_ERROR_FAILURE;
   }
-  VERIFY(::SetWindowText(mWnd, NS_LossyConvertUCS2toASCII(aText).get()));
+  VERIFY(::SetWindowText(mWnd, NS_LossyConvertUTF16toASCII(aText).get()));
   return NS_OK;
 }
 

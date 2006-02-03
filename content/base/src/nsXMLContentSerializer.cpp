@@ -126,7 +126,7 @@ nsXMLContentSerializer::AppendTextData(nsIDOMNode* aNode,
                    aTranslateEntities, aIncrColumn);
   }
   else {
-    AppendToString(NS_ConvertASCIItoUCS2(frag->Get1b()+aStartOffset, length),
+    AppendToString(NS_ConvertASCIItoUTF16(frag->Get1b()+aStartOffset, length),
                    aStr, aTranslateEntities, aIncrColumn);
   }
 

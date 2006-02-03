@@ -106,7 +106,7 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindowInternal *parent,
 
     // Open the dialog.
     nsCOMPtr<nsIDOMWindow> newWindow;
-    rv = parent->OpenDialog(NS_ConvertASCIItoUCS2(dialogURL),
+    rv = parent->OpenDialog(NS_ConvertASCIItoUTF16(dialogURL),
                             NS_LITERAL_STRING("_blank"),
                             NS_LITERAL_STRING("chrome,titlebar,dependent,centerscreen"),
                             array, getter_AddRefs(newWindow));

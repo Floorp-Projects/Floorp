@@ -595,7 +595,7 @@ void nsStyleContext::List(FILE* out, PRInt32 aIndent)
   if (mPseudoTag) {
     nsAutoString  buffer;
     mPseudoTag->ToString(buffer);
-    fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
     fputs(" ", out);
   }
 

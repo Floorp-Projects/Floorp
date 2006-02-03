@@ -244,7 +244,7 @@ SetOperator(OperatorData*   aOperatorData,
   gOperatorTable->Put(&key, aOperatorData);
 
 #ifdef NS_DEBUG
-  NS_LossyConvertUCS2toASCII str(aAttributes);
+  NS_LossyConvertUTF16toASCII str(aAttributes);
 #endif
   // Loop over the space-delimited list of attributes to get the name:value pairs
   aAttributes.Append(kNullCh);  // put an extra null at the end

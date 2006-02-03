@@ -214,7 +214,7 @@ rdf_BlockingWrite(nsIOutputStream* stream, const nsCSubstring& s)
 static nsresult
 rdf_BlockingWrite(nsIOutputStream* stream, const nsAString& s)
 {
-    NS_ConvertUCS2toUTF8 utf8(s);
+    NS_ConvertUTF16toUTF8 utf8(s);
     return rdf_BlockingWrite(stream, utf8.get(), utf8.Length());
 }
 

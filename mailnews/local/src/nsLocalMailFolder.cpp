@@ -1299,7 +1299,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::SetPrettyName(const PRUnichar *aName)
   NS_ENSURE_SUCCESS(rv, rv);
   nsXPIDLCString folderName;
   rv = GetStringProperty("folderName", getter_Copies(folderName));
-  NS_ConvertUCS2toUTF8 utf8FolderName(mName);
+  NS_ConvertUTF16toUTF8 utf8FolderName(mName);
   if (!NS_SUCCEEDED(rv) || !folderName.Equals(utf8FolderName.get()))
     return SetStringProperty("folderName", utf8FolderName.get());
   else
@@ -1381,7 +1381,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElem
 {
   NS_ENSURE_ARG_POINTER(element);
   nsMsgDBFolder::WriteToFolderCacheElem(element);
-  return element->SetStringProperty("folderName", NS_ConvertUCS2toUTF8(mName).get());
+  return element->SetStringProperty("folderName", NS_ConvertUTF16toUTF8(mName).get());
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals(PRBool force)

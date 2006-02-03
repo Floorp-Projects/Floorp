@@ -332,7 +332,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsILDAPConnection *aConn,
         // bug in egcs 1.1.2 (the version of gcc that comes with Red Hat 6.2),
         // which is the default compiler for Mozilla on linux at the moment.
         //
-        NS_ConvertASCIItoUCS2 hostTemp(host);
+        NS_ConvertASCIItoUTF16 hostTemp(host);
         const PRUnichar *hostArray[1] = { hostTemp.get() };
 
         // format the hostname into the authprompt text string
@@ -388,7 +388,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsILDAPConnection *aConn,
         //
         rv = authPrompter->PromptPassword(
             authPromptTitle.get(), authPromptText.get(),
-            NS_ConvertUTF8toUCS2(spec).get(),
+            NS_ConvertUTF8toUTF16(spec).get(),
             nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, getter_Copies(passwd),
             &status);
         if (NS_FAILED(rv) || !status) {
@@ -412,7 +412,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsILDAPConnection *aConn,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Bind
-    rv = ldapOperation->SimpleBind(NS_ConvertUCS2toUTF8(passwd));
+    rv = ldapOperation->SimpleBind(NS_ConvertUTF16toUTF8(passwd));
     NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;

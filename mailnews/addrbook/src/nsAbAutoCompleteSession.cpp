@@ -164,12 +164,12 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
       else
         utf8Email.Adopt(ToNewUTF8String(nsDependentString(pEmailStr)));
 
-      mParser->MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(pDisplayNameStr).get(),
+      mParser->MakeFullAddress(nsnull, NS_ConvertUTF16toUTF8(pDisplayNameStr).get(),
                                utf8Email, getter_Copies(fullAddress));
       if (!fullAddress.IsEmpty())
       {
         /* We need to convert back the result from UTF-8 to Unicode */
-        fullAddrStr = nsCRT::strdup(NS_ConvertUTF8toUCS2(fullAddress.get()).get());
+        fullAddrStr = nsCRT::strdup(NS_ConvertUTF8toUTF16(fullAddress.get()).get());
       }
     }
   

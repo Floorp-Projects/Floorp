@@ -138,7 +138,7 @@ void CnsICmdParams::GetStringValueTest(char *stringVal, const char *stateType, i
 		FormatAndPrintOutput("The input string = ", stringVal, displayMode);
 		FormatAndPrintOutput("The input state type = ", stateType, displayMode);
 
-		rv = cmdParamObj->SetStringValue(stateType, NS_ConvertASCIItoUCS2(stringVal));		
+		rv = cmdParamObj->SetStringValue(stateType, NS_ConvertASCIItoUTF16(stringVal));		
 		rv = cmdParamObj->GetStringValue(stateType, retval);
 		RvTestResult(rv, "GetStringValue test", displayMode);
 //		FormatAndPrintOutput("GetStringValue() return string = ", retval, displayMode);
@@ -171,7 +171,7 @@ void CnsICmdParams::GetCStringValueTest(const char *aCommand, const char *stateT
 	    QAOutput("GetCStringValueTest: We didn't get nsICommandParams object.", 1);
 }
 
-// NS_ConvertASCIItoUCS2
+// NS_ConvertASCIItoUTF16
 
 void CnsICmdParams::SetBooleanValueTest(PRBool value, const char *stateType, int displayMode)
 {
@@ -218,7 +218,7 @@ void CnsICmdParams::SetStringValueTest(char *value, const char *stateType, int d
 	if (cmdParamObj) {
 		FormatAndPrintOutput("The input state type = ", stateType, displayMode);
 		FormatAndPrintOutput("The input value = ", value, displayMode);
-		rv = cmdParamObj->SetStringValue(stateType, NS_ConvertASCIItoUCS2(value));
+		rv = cmdParamObj->SetStringValue(stateType, NS_ConvertASCIItoUTF16(value));
 		RvTestResult(rv, "SetStringValue() test", displayMode);
 	}
 	else

@@ -302,7 +302,7 @@ OSErr nsMacCommandLine::OpenURL(const char* aURL)
     browserURL.Assign("chrome://navigator/content/navigator.xul");
   }
      
-  rv = OpenWindow(browserURL.get(), NS_ConvertASCIItoUCS2(aURL).get());
+  rv = OpenWindow(browserURL.get(), NS_ConvertASCIItoUTF16(aURL).get());
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
     

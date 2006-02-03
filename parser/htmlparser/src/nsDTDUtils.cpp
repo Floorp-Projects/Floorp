@@ -1055,7 +1055,7 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
       PRInt32   theCharsetSource;
       nsCAutoString      charset;
       aParser->GetDocumentCharset(charset,theCharsetSource);
-      NS_ConvertASCIItoUCS2 theCharsetValue(charset);
+      NS_ConvertASCIItoUTF16 theCharsetValue(charset);
 
       PRInt32 theAttrCount = aNode->GetAttributeCount(); 
       PRInt32 theObserversCount = theObservers->Count(); 

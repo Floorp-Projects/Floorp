@@ -686,7 +686,7 @@ nsIOService::Observe(nsISupports *subject,
     if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
-            PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
+            PrefsChanged(prefBranch, NS_ConvertUTF16toUTF8(data).get());
     }
     else if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
         if (!mOffline) {

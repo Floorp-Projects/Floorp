@@ -274,7 +274,7 @@ nsWebCrawler::DumpRegressionData()
               PerformRegressionTest(regressionFileName);
             }
             else {
-              fputs(NS_LossyConvertUCS2toASCII(regressionFileName).get(),
+              fputs(NS_LossyConvertUTF16toASCII(regressionFileName).get(),
                     stdout);
               printf(" - being written\n");
             }
@@ -300,7 +300,7 @@ nsWebCrawler::DumpRegressionData()
               PerformRegressionTest(regressionFileName);
             }
             else {
-              fputs(NS_LossyConvertUCS2toASCII(regressionFileName).get(),
+              fputs(NS_LossyConvertUTF16toASCII(regressionFileName).get(),
                     stdout);
               printf(" - being written\n");
             }
@@ -524,7 +524,7 @@ nsWebCrawler::GetOutputFile(nsIURI *aURL, nsString& aOutputName)
     char *inputFileName;
     nsCAutoString file;
     (void)aURL->GetPath(file);
-    NS_ConvertUTF8toUCS2 inputFileFullPath(file);
+    NS_ConvertUTF8toUTF16 inputFileFullPath(file);
     PRInt32 fileNameOffset = inputFileFullPath.RFindChar('/');
     if (-1==fileNameOffset)
     {
@@ -571,7 +571,7 @@ nsWebCrawler::AddURL(const nsString& aURL)
   mPendingURLs.AppendElement(url);
   if (mVerbose) {
     printf("WebCrawler: adding '");
-    fputs(NS_LossyConvertUCS2toASCII(aURL).get(), stdout);
+    fputs(NS_LossyConvertUTF16toASCII(aURL).get(), stdout);
     printf("'\n");
   }
 }
@@ -712,7 +712,7 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
         nsString* s = (nsString*) mAvoidDomains.ElementAt(i);
         if (s && EndsWith(*s, host.get(), hostlen)) {
           printf("Avoiding '");
-          fputs(NS_LossyConvertUCS2toASCII(aURLSpec).get(), stdout);
+          fputs(NS_LossyConvertUTF16toASCII(aURLSpec).get(), stdout);
           printf("'\n");
           return PR_FALSE;
         }
@@ -742,7 +742,7 @@ void
 nsWebCrawler::RecordLoadedURL(const nsString& aURL)
 {
   if (nsnull != mRecord) {
-    fputs(NS_LossyConvertUCS2toASCII(aURL).get(), mRecord);
+    fputs(NS_LossyConvertUTF16toASCII(aURL).get(), mRecord);
     fputs("\n", mRecord);
     fflush(mRecord);
   }
@@ -772,14 +772,14 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
           mPendingURLs.AppendElement(new nsString(absURLSpec));
           if (mVerbose) {
             printf("Adding '");
-            fputs(NS_LossyConvertUCS2toASCII(absURLSpec).get(), stdout);
+            fputs(NS_LossyConvertUTF16toASCII(absURLSpec).get(), stdout);
             printf("'\n");
           }
         }
         else {
           if (mVerbose) {
             printf("Skipping '");
-            fputs(NS_LossyConvertUCS2toASCII(absURLSpec).get(), stdout);
+            fputs(NS_LossyConvertUTF16toASCII(absURLSpec).get(), stdout);
             printf("'\n");
           }
         }
@@ -787,7 +787,7 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
       else {
         if (mVerbose) {
           printf("Already visited '");
-          fputs(NS_LossyConvertUCS2toASCII(absURLSpec).get(), stdout);
+          fputs(NS_LossyConvertUTF16toASCII(absURLSpec).get(), stdout);
           printf("'\n");
         }
       }

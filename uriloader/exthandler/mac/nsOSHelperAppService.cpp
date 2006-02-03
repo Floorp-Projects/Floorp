@@ -103,7 +103,7 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
             if (rv == NS_OK)
             {
               nsXPIDLString errorStr;
-              NS_ConvertASCIItoUCS2 proto(aProtocolScheme);
+              NS_ConvertASCIItoUTF16 proto(aProtocolScheme);
               const PRUnichar *formatStrings[] = { brandName.get(), proto.get() };
               rv = appLauncherBundle->FormatStringFromName(NS_LITERAL_STRING("protocolNotHandled").get(),
                                                            formatStrings,

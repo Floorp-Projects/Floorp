@@ -336,7 +336,7 @@ FindFont(const nsString& aFamily, PRBool aGeneric, void *aData)
   FindFontStruct* font_data = (FindFontStruct*) aData;
   
 #ifdef DEBUG
-  printf("trying to instantiate font %s, generic=%d\n", NS_ConvertUCS2toUTF8(aFamily).get(),
+  printf("trying to instantiate font %s, generic=%d\n", NS_ConvertUTF16toUTF8(aFamily).get(),
          aGeneric);
 #endif
 
@@ -359,7 +359,7 @@ FindFont(const nsString& aFamily, PRBool aGeneric, void *aData)
     }
   }
   else {
-    family_name = NS_ConvertUCS2toUTF8(aFamily);
+    family_name = NS_ConvertUTF16toUTF8(aFamily);
     ToLowerCase(family_name);
   }
   
@@ -390,7 +390,7 @@ FindFont(const nsString& aFamily, PRBool aGeneric, void *aData)
   else {
     // try alias if there is one:
     const nsString *alias = nsnull;
-    nsSVGLibartGlyphMetricsFT::sFontAliases.Get(NS_ConvertUTF8toUCS2(family_name),
+    nsSVGLibartGlyphMetricsFT::sFontAliases.Get(NS_ConvertUTF8toUTF16(family_name),
                                                 &alias);
     if (alias) {
       // XXX this might cause a stack-overflow if there are cyclic

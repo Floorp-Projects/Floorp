@@ -123,53 +123,53 @@ void testStrings(nsIDocument* aDoc) {
 
   PRBool val;
   // regular Equals
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsLiteral("mrString"); // XXXjag
+  val = (NS_ConvertASCIItoUTF16("mrString")).EqualsLiteral("mrString"); // XXXjag
   if (PR_TRUE != val) {
     printf("test 0 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsLiteral("MRString"); // XXXjag
+  val = (NS_ConvertASCIItoUTF16("mrString")).EqualsLiteral("MRString"); // XXXjag
   if (PR_FALSE != val) {
     printf("test 1 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsLiteral("mrStri"); // XXXjag
+  val = (NS_ConvertASCIItoUTF16("mrString")).EqualsLiteral("mrStri"); // XXXjag
   if (PR_FALSE != val) {
     printf("test 2 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrStri")).EqualsLiteral("mrString"); // XXXjag
+  val = (NS_ConvertASCIItoUTF16("mrStri")).EqualsLiteral("mrString"); // XXXjag
   if (PR_FALSE != val) {
     printf("test 3 failed\n");
   }
   // EqualsIgnoreCase
-  val = (NS_ConvertASCIItoUCS2("mrString")).LowerCaseEqualsLiteral("mrstring");
+  val = (NS_ConvertASCIItoUTF16("mrString")).LowerCaseEqualsLiteral("mrstring");
   if (PR_TRUE != val) {
     printf("test 4 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).LowerCaseEqualsLiteral("mrstring");
+  val = (NS_ConvertASCIItoUTF16("mrString")).LowerCaseEqualsLiteral("mrstring");
   if (PR_TRUE != val) {
     printf("test 5 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).LowerCaseEqualsLiteral("mrstri");
+  val = (NS_ConvertASCIItoUTF16("mrString")).LowerCaseEqualsLiteral("mrstri");
   if (PR_FALSE != val) {
     printf("test 6 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrStri")).LowerCaseEqualsLiteral("mrstring");
+  val = (NS_ConvertASCIItoUTF16("mrStri")).LowerCaseEqualsLiteral("mrstring");
   if (PR_FALSE != val) {
     printf("test 7 failed\n");
   }
   // String vs. Ident
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase(NS_NewAtom("mrString"));
+  val = (NS_ConvertASCIItoUTF16("mrString")).EqualsIgnoreCase(NS_NewAtom("mrString"));
   if (PR_TRUE != val) {
     printf("test 8 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase(NS_NewAtom("MRStrINg"));
+  val = (NS_ConvertASCIItoUTF16("mrString")).EqualsIgnoreCase(NS_NewAtom("MRStrINg"));
   if (PR_TRUE != val) {
     printf("test 9 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase(NS_NewAtom("mrStri"));
+  val = (NS_ConvertASCIItoUTF16("mrString")).EqualsIgnoreCase(NS_NewAtom("mrStri"));
   if (PR_FALSE != val) {
     printf("test 10 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrStri")).EqualsIgnoreCase(NS_NewAtom("mrString"));
+  val = (NS_ConvertASCIItoUTF16("mrStri")).EqualsIgnoreCase(NS_NewAtom("mrString"));
   if (PR_FALSE != val) {
     printf("test 11 failed\n");
   }

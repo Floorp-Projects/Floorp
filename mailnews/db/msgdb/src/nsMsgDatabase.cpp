@@ -3181,7 +3181,7 @@ nsresult nsMsgDatabase::RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_t
   }
   if (NS_SUCCEEDED(ret))
   {
-    ret = CreateCollationKey(NS_ConvertUTF8toUCS2(name), result, len);
+    ret = CreateCollationKey(NS_ConvertUTF8toUTF16(name), result, len);
   }
   
   return ret;
@@ -3238,7 +3238,7 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
       
       err = m_mimeConverter->DecodeMimeHeader(nakedString, getter_Copies(decodedStr), charSet, characterSetOverride);
       if (NS_SUCCEEDED(err))
-        err = CreateCollationKey(NS_ConvertUTF8toUCS2(decodedStr), result, len);
+        err = CreateCollationKey(NS_ConvertUTF8toUTF16(decodedStr), result, len);
     }
   }
   return err;

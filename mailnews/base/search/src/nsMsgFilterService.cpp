@@ -256,7 +256,7 @@ nsMsgFilterService::GetStringFromBundle(const char *aMsgName, PRUnichar **aResul
   nsCOMPtr <nsIStringBundle> bundle;
   rv = GetFilterStringBundle(getter_AddRefs(bundle));
   if (NS_SUCCEEDED(rv) && bundle)
-    rv=bundle->GetStringFromName(NS_ConvertASCIItoUCS2(aMsgName).get(), aResult);
+    rv=bundle->GetStringFromName(NS_ConvertASCIItoUTF16(aMsgName).get(), aResult);
   return rv;
   
 }

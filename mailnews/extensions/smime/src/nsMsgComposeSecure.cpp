@@ -399,7 +399,7 @@ void nsMsgComposeSecure::SetErrorWithParam(nsIMsgSendReport *sendReport, const P
   nsresult res;
   const PRUnichar *params[1];
 
-  NS_ConvertASCIItoUCS2 ucs2(param);
+  NS_ConvertASCIItoUTF16 ucs2(param);
   params[0]= ucs2.get();
 
   res = SMIMEBundleFormatStringFromName(bundle_string,

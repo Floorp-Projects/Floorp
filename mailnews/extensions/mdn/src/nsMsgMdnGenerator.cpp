@@ -507,7 +507,7 @@ nsresult nsMsgMdnGenerator::CreateFirstPart()
         conformToStandard);
     parm = PR_smprintf("From: %s" CRLF, convbuf ? convbuf : m_email.get());
 
-    rv = FormatStringFromName(NS_LITERAL_STRING("MsgMdnMsgSentTo").get(), NS_ConvertASCIItoUCS2(m_email).get(),
+    rv = FormatStringFromName(NS_LITERAL_STRING("MsgMdnMsgSentTo").get(), NS_ConvertASCIItoUTF16(m_email).get(),
                             getter_Copies(firstPart1));
     if (NS_FAILED(rv)) 
         return rv;
@@ -572,7 +572,7 @@ nsresult nsMsgMdnGenerator::CreateFirstPart()
         conformToStandard);
     tmpBuffer = PR_smprintf("Subject: %s - %s" CRLF, 
                             (receipt_string ? 
-                             NS_LossyConvertUCS2toASCII(receipt_string).get() :
+                             NS_LossyConvertUTF16toASCII(receipt_string).get() :
                              "Return Receipt"),
                             (convbuf ? convbuf : 
                              (subject.Length() ? subject.get() : 
@@ -625,7 +625,7 @@ report-type=disposition-notification;\r\n\tboundary=\"%s\"" CRLF CRLF,
   
     if (!firstPart1.IsEmpty())
     {
-        tmpBuffer = PR_smprintf("%s" CRLF CRLF, NS_LossyConvertUCS2toASCII(firstPart1).get());
+        tmpBuffer = PR_smprintf("%s" CRLF CRLF, NS_LossyConvertUTF16toASCII(firstPart1).get());
         PUSH_N_FREE_STRING(tmpBuffer);
     }
 
@@ -673,7 +673,7 @@ report-type=disposition-notification;\r\n\tboundary=\"%s\"" CRLF CRLF,
     {
         tmpBuffer = 
             PR_smprintf("%s" CRLF CRLF, 
-                        NS_LossyConvertUCS2toASCII(firstPart2).get()); 
+                        NS_LossyConvertUTF16toASCII(firstPart2).get()); 
         PUSH_N_FREE_STRING(tmpBuffer);
     }
     

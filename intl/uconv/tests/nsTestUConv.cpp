@@ -1078,13 +1078,13 @@ nsresult  testPlatformCharset()
 
   nsString value;
   res = cinfo->GetCharset(kPlatformCharsetSel_PlainTextInClipboard , value);
-  printf("Clipboard plain text encoding = %s\n", NS_LossyConvertUCS2toASCII(value).get());
+  printf("Clipboard plain text encoding = %s\n", NS_LossyConvertUTF16toASCII(value).get());
   
   res = cinfo->GetCharset(kPlatformCharsetSel_FileName , value);
-  printf("File Name encoding = %s\n", NS_LossyConvertUCS2toASCII(value).get());
+  printf("File Name encoding = %s\n", NS_LossyConvertUTF16toASCII(value).get());
 
   res = cinfo->GetCharset(kPlatformCharsetSel_Menu , value);
-  printf("Menu encoding = %s\n", NS_LossyConvertUCS2toASCII(value).get());
+  printf("Menu encoding = %s\n", NS_LossyConvertUTF16toASCII(value).get());
 
   cinfo->Release();
   return res;

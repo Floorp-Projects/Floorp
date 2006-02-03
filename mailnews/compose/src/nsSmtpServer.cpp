@@ -417,7 +417,7 @@ nsSmtpServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 
             PRUint32 savePasswordType = (passwordProtectLocalCache) ? nsIAuthPrompt::SAVE_PASSWORD_FOR_SESSION : nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY;
             rv = aDialog->PromptPassword(aPromptTitle, aPromptMessage, 
-                    NS_ConvertASCIItoUCS2(serverUri).get(), savePasswordType,
+                    NS_ConvertASCIItoUTF16(serverUri).get(), savePasswordType,
                     getter_Copies(uniPassword), &okayValue);
             if (NS_FAILED(rv))
                 return rv;
@@ -466,7 +466,7 @@ nsSmtpServer::GetUsernamePasswordWithUI(const PRUnichar * aPromptMessage, const
             if (NS_FAILED(rv))
                 return rv;
             rv = aDialog->PromptUsernameAndPassword(aPromptTitle, aPromptMessage, 
-                                         NS_ConvertASCIItoUCS2(serverUri).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
+                                         NS_ConvertASCIItoUTF16(serverUri).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                          getter_Copies(uniUsername), getter_Copies(uniPassword), &okayValue);
             if (NS_FAILED(rv))
                 return rv;

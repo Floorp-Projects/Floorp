@@ -812,7 +812,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
     nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID));
     if (parser) {
       // convert to UTF8 before passing to MakeFullAddress
-      parser->MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(fullName).get(), email, &sender);
+      parser->MakeFullAddress(nsnull, NS_ConvertUTF16toUTF8(fullName).get(), email, &sender);
     }
   
   if (!sender)
@@ -1111,7 +1111,7 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
               else
               {
                   userid.AppendLiteral(".vcf");
-                  attachment->SetName(NS_ConvertASCIItoUCS2(userid));
+                  attachment->SetName(NS_ConvertASCIItoUTF16(userid));
               }
  
               attachment->SetUrl(vCardUrl.get());
@@ -2072,7 +2072,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
                   // take care "On %s"
                   PRUnichar *formatedString = nsnull;
                   formatedString = nsTextFormatter::smprintf(replyHeaderOndate.get(), 
-                                                             NS_ConvertUCS2toUTF8(formattedDateString.get()).get());
+                                                             NS_ConvertUTF16toUTF8(formattedDateString.get()).get());
                   if (formatedString) 
                   {
                     citePrefixDate.Assign(formatedString);
@@ -2360,7 +2360,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         if (! references.IsEmpty())
           references.Append(PRUnichar(' '));
         references += messageId;
-        compFields->SetReferences(NS_LossyConvertUCS2toASCII(references).get());
+        compFields->SetReferences(NS_LossyConvertUTF16toASCII(references).get());
         
         if (needToRemoveDup)
         {
@@ -4200,8 +4200,8 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                     {
                       nsXPIDLCString fullAddress;
 
-                      parser->MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(pDisplayName).get(),
-                                              NS_ConvertUCS2toUTF8(pEmail).get(), getter_Copies(fullAddress));
+                      parser->MakeFullAddress(nsnull, NS_ConvertUTF16toUTF8(pDisplayName).get(),
+                                              NS_ConvertUTF16toUTF8(pEmail).get(), getter_Copies(fullAddress));
                       if (!fullAddress.IsEmpty())
                       {
                         /* We need to convert back the result from UTF-8 to Unicode */
@@ -4264,7 +4264,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
             // Then if we have a card for this email address
             // Please DO NOT change the 4th param of GetCardFromAttribute() call to 
             // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
-            rv = abDataBase->GetCardFromAttribute(abDirectory, kPriEmailColumn, NS_LossyConvertUCS2toASCII(recipient->mEmail).get(), PR_FALSE /* case insensitive */, getter_AddRefs(existingCard));
+            rv = abDataBase->GetCardFromAttribute(abDirectory, kPriEmailColumn, NS_LossyConvertUTF16toASCII(recipient->mEmail).get(), PR_FALSE /* case insensitive */, getter_AddRefs(existingCard));
             if (NS_SUCCEEDED(rv) && existingCard)
             {
               recipient->mPreferFormat = nsIAbPreferMailFormat::unknown;

@@ -99,8 +99,8 @@ nsWSAUtils::VerifyIsEqual()
   static PRUint32 size = NS_ARRAY_LENGTH(kStrings);
   PRUint32 i;
   for (i = 0; i < size; ++i) {
-    if (IsEqual(NS_ConvertUTF8toUCS2(kStrings[i].lhs), 
-                NS_ConvertUTF8toUCS2(kStrings[i].rhs)) 
+    if (IsEqual(NS_ConvertUTF8toUTF16(kStrings[i].lhs), 
+                NS_ConvertUTF8toUTF16(kStrings[i].rhs)) 
                 != kStrings[i].equal) {
       const char* equal = 
         kStrings[i].equal ? "equivalent" : 

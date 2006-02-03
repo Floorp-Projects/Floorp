@@ -1769,7 +1769,7 @@ nsSmtpProtocol::GetPassword(char **aPassword)
     rv = smtpServer->GetUsername(getter_Copies(username));
     NS_ENSURE_SUCCESS(rv, rv);
     
-    NS_ConvertASCIItoUCS2 usernameUTF16(username);
+    NS_ConvertASCIItoUTF16 usernameUTF16(username);
     const PRUnichar *formatStrings[] =
     {
       usernameUTF16.get(),
@@ -1869,7 +1869,7 @@ nsSmtpProtocol::GetUsernamePassword(char **aUsername, char **aPassword)
 
     const PRUnichar *formatStrings[] =
     {
-      NS_ConvertASCIItoUCS2(hostname).get(),
+      NS_ConvertASCIItoUTF16(hostname).get(),
       nsnull
     };
 

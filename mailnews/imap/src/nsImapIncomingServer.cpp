@@ -1583,7 +1583,7 @@ NS_IMETHODIMP nsImapIncomingServer::ConvertFolderName(const char *originalName, 
   if (NS_SUCCEEDED(rv) && (nsnull != sBundleService)) 
     rv = sBundleService->CreateBundle(propertyURL.get(), getter_AddRefs(stringBundle));
   if (NS_SUCCEEDED(rv))
-    rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(originalName).get(), convertedName);
+    rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(originalName).get(), convertedName);
 
   if (NS_SUCCEEDED(rv) && ((!*convertedName) || (!**convertedName)))
     return NS_ERROR_FAILURE;
@@ -2353,7 +2353,7 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
     }
 
     nsXPIDLString passwordText;
-    rv = GetFormattedStringFromID(NS_ConvertASCIItoUCS2(promptValue).get(), IMAP_ENTER_PASSWORD_PROMPT, getter_Copies(passwordText));
+    rv = GetFormattedStringFromID(NS_ConvertASCIItoUTF16(promptValue).get(), IMAP_ENTER_PASSWORD_PROMPT, getter_Copies(passwordText));
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv =  GetPasswordWithUI(passwordText, passwordTitle, aMsgWindow,

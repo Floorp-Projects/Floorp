@@ -199,7 +199,7 @@ ProcessSerialNumberDER(SECItem         *serialItem,
   if (serialNumber == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = printableItem->SetDisplayValue(NS_ConvertASCIItoUCS2(serialNumber));
+  rv = printableItem->SetDisplayValue(NS_ConvertASCIItoUTF16(serialNumber));
   *retItem = printableItem;
   NS_ADDREF(*retItem);
   return rv;
@@ -1812,7 +1812,7 @@ nsNSSCertificate::CreateASN1Struct()
   nsXPIDLCString title;
   GetWindowTitle(getter_Copies(title));
   
-  mASN1Structure->SetDisplayName(NS_ConvertUTF8toUCS2(title));
+  mASN1Structure->SetDisplayName(NS_ConvertUTF8toUTF16(title));
   // This sequence will be contain the tbsCertificate, signatureAlgorithm,
   // and signatureValue.
   nsresult rv;
@@ -1893,8 +1893,8 @@ getNSSCertNicknamesFromCertList(CERTCertList *certList)
   notYetValidStringLeadingSpace.Append(NS_LITERAL_STRING(" "));
   notYetValidStringLeadingSpace.Append(notYetValidString);
 
-  NS_ConvertUCS2toUTF8 aUtf8ExpiredString(expiredStringLeadingSpace);
-  NS_ConvertUCS2toUTF8 aUtf8NotYetValidString(notYetValidStringLeadingSpace);
+  NS_ConvertUTF16toUTF8 aUtf8ExpiredString(expiredStringLeadingSpace);
+  NS_ConvertUTF16toUTF8 aUtf8NotYetValidString(notYetValidStringLeadingSpace);
 
   return CERT_NicknameStringsFromCertList(certList,
                                           NS_CONST_CAST(char*, aUtf8ExpiredString.get()),

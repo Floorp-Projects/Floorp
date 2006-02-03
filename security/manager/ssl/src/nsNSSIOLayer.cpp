@@ -485,11 +485,11 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
 
   char buf[80];
   PR_snprintf(buf, 80, "%ld", err);
-  NS_ConvertASCIItoUCS2 errorCode(buf);
+  NS_ConvertASCIItoUTF16 errorCode(buf);
 
   nsXPIDLCString hostName;
   socketInfo->GetHostName(getter_Copies(hostName));
-  NS_ConvertASCIItoUCS2 hostNameU(hostName);
+  NS_ConvertASCIItoUTF16 hostNameU(hostName);
 
   NS_DEFINE_CID(StringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
   nsCOMPtr<nsIStringBundleService> service = 
@@ -2046,15 +2046,15 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
     /* Get CN and O of the subject and O of the issuer */
     char *ccn = CERT_GetCommonName(&serverCert->subject);
-    NS_ConvertUTF8toUCS2 cn(ccn);
+    NS_ConvertUTF8toUTF16 cn(ccn);
     if (ccn) PORT_Free(ccn);
 
     char *corg = CERT_GetOrgName(&serverCert->subject);
-    NS_ConvertUTF8toUCS2 org(corg);
+    NS_ConvertUTF8toUTF16 org(corg);
     if (corg) PORT_Free(corg);
 
     char *cissuer = CERT_GetOrgName(&serverCert->issuer);
-    NS_ConvertUTF8toUCS2 issuer(cissuer);
+    NS_ConvertUTF8toUTF16 issuer(cissuer);
     if (cissuer) PORT_Free(cissuer);
 
     CERT_DestroyCertificate(serverCert);

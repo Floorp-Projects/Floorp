@@ -135,7 +135,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
 
       NS_ADDREF(tempCert);
 
-      nsAutoString i_nickname(NS_ConvertUTF8toUCS2(nicknames->nicknames[CertsToUse]));
+      nsAutoString i_nickname(NS_ConvertUTF8toUTF16(nicknames->nicknames[CertsToUse]));
       nsAutoString nickWithSerial;
       nsAutoString details;
 

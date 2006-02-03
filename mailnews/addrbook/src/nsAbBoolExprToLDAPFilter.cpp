@@ -203,7 +203,7 @@ nsresult nsAbBoolExprToLDAPFilter::FilterCondition (
     nsXPIDLString value;
     rv = condition->GetValue (getter_Copies (value));
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ConvertUCS2toUTF8 vUTF8 (value);
+    NS_ConvertUTF16toUTF8 vUTF8 (value);
 
     switch (conditionType)
     {

@@ -294,7 +294,7 @@ ChangePassword()
   if (!slot) return NS_ERROR_NOT_AVAILABLE;
 
   /* Convert UTF8 token name to UCS2 */
-  NS_ConvertUTF8toUCS2 tokenName(PK11_GetTokenName(slot));
+  NS_ConvertUTF8toUTF16 tokenName(PK11_GetTokenName(slot));
 
   PK11_FreeSlot(slot);
 

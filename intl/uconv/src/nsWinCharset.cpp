@@ -117,7 +117,7 @@ nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharse
     return rv;
   }
 
-  CopyUCS2toASCII(charset, outCharset);
+  LossyCopyUTF16toASCII(charset, outCharset);
   return NS_OK;
 }
 

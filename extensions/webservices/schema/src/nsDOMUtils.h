@@ -136,7 +136,7 @@ public:
       else if (mNumNamespaces) {
         PRUint32 i;
         for (i = 0; i < mNumNamespaces; i++) {
-          if (!namespaceURI.Equals(NS_ConvertASCIItoUCS2(mNamespaceArray[i]))) {
+          if (!namespaceURI.Equals(NS_ConvertASCIItoUTF16(mNamespaceArray[i]))) {
             continue;
           }
         }

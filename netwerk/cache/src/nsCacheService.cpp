@@ -238,7 +238,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
                                     const PRUnichar * data_unicode)
 {
     nsresult rv;
-    NS_ConvertUCS2toUTF8 data(data_unicode);
+    NS_ConvertUTF16toUTF8 data(data_unicode);
     CACHE_LOG_ALWAYS(("Observe [topic=%s data=%s]\n", topic, data.get()));
 
     if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, topic)) {

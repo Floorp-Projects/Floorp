@@ -100,7 +100,7 @@ nsNSSCertificateDB::FindCertByNickname(nsISupports *aToken,
   nsNSSShutDownPreventionLock locker;
   CERTCertificate *cert = NULL;
   char *asciiname = NULL;
-  NS_ConvertUCS2toUTF8 aUtf8Nickname(nickname);
+  NS_ConvertUTF16toUTF8 aUtf8Nickname(nickname);
   asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", asciiname));
 #if 0
@@ -1125,12 +1125,12 @@ GetOCSPResponders (CERTCertificate *aCert,
   // Get the AIA and nickname //
   serviceURL = CERT_GetOCSPAuthorityInfoAccessLocation(aCert);
   if (serviceURL) {
-    url = ToNewUnicode(NS_ConvertUTF8toUCS2(serviceURL));
+    url = ToNewUnicode(NS_ConvertUTF8toUTF16(serviceURL));
     PORT_Free(serviceURL);
   }
 
   nickname = aCert->nickname;
-  nn = ToNewUnicode(NS_ConvertUTF8toUCS2(nickname));
+  nn = ToNewUnicode(NS_ConvertUTF8toUTF16(nickname));
 
   nsCOMPtr<nsIOCSPResponder> new_entry = new nsOCSPResponder(nn, url);
   nsMemory::Free(nn);
@@ -1226,7 +1226,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
       char *namestr = NULL;
       nsAutoString certstr;
       rv = pipCert.GetDbKey(&dbkey);
-      nsAutoString keystr = NS_ConvertASCIItoUCS2(dbkey);
+      nsAutoString keystr = NS_ConvertASCIItoUTF16(dbkey);
       PR_FREEIF(dbkey);
       if (type == nsIX509Cert::EMAIL_CERT) {
         namestr = node->cert->emailAddr;
@@ -1235,7 +1235,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
         char *sc = strchr(namestr, ':');
         if (sc) *sc = DELIM;
       }
-      nsAutoString certname = NS_ConvertASCIItoUCS2(namestr);
+      nsAutoString certname = NS_ConvertASCIItoUTF16(namestr);
       certstr.Append(PRUnichar(DELIM));
       certstr += certname;
       certstr.Append(PRUnichar(DELIM));
@@ -1280,7 +1280,7 @@ nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString &aNickname, nsIX509C
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsNSSCertificate *nssCert = nsnull;
   char *asciiname = NULL;
-  NS_ConvertUCS2toUTF8 aUtf8Nickname(aNickname);
+  NS_ConvertUTF16toUTF8 aUtf8Nickname(aNickname);
   asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
 
   /* Find a good cert in the user's database */
@@ -1320,7 +1320,7 @@ nsNSSCertificateDB::FindEmailSigningCert(const nsAString &aNickname, nsIX509Cert
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsNSSCertificate *nssCert = nsnull;
   char *asciiname = NULL;
-  NS_ConvertUCS2toUTF8 aUtf8Nickname(aNickname);
+  NS_ConvertUTF16toUTF8 aUtf8Nickname(aNickname);
   asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
 
   /* Find a good cert in the user's database */

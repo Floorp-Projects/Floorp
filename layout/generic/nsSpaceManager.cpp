@@ -1122,7 +1122,7 @@ nsSpaceManager::List(FILE* out)
     if (NS_SUCCEEDED(mFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->GetFrameName(tmp);
       fprintf(out, " frame=");
-      fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
+      fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
       fprintf(out, "@%p", mFrame);
     }
   }
@@ -1142,7 +1142,7 @@ nsSpaceManager::List(FILE* out)
         if (NS_SUCCEEDED(band->mFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
           frameDebug->GetFrameName(tmp);
           fprintf(out, " frame=");
-          fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
+          fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
           fprintf(out, "@%p", band->mFrame);
         }
       }
@@ -1157,7 +1157,7 @@ nsSpaceManager::List(FILE* out)
 
             if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
               frameDebug->GetFrameName(tmp);
-              fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
+              fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
               fprintf(out, "@%p ", frame);
             }
           }

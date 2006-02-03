@@ -177,13 +177,13 @@ void nsPrintSetupDialog::SetSetupInfoInternal(const PrintSetupInfo & aPSI)
 
   char str[64];
   sprintf(str, "%5.2f", aPSI.mTopMargin);
-  SetText(NS_LITERAL_STRING("toptext"), NS_ConvertASCIItoUCS2(str));
+  SetText(NS_LITERAL_STRING("toptext"), NS_ConvertASCIItoUTF16(str));
   sprintf(str, "%5.2f", aPSI.mLeftMargin);
-  SetText(NS_LITERAL_STRING("lefttext"), NS_ConvertASCIItoUCS2(str));
+  SetText(NS_LITERAL_STRING("lefttext"), NS_ConvertASCIItoUTF16(str));
   sprintf(str, "%5.2f", aPSI.mBottomMargin);
-  SetText(NS_LITERAL_STRING("bottomtext"), NS_ConvertASCIItoUCS2(str));
+  SetText(NS_LITERAL_STRING("bottomtext"), NS_ConvertASCIItoUTF16(str));
   sprintf(str, "%5.2f", aPSI.mRightMargin);
-  SetText(NS_LITERAL_STRING("righttext"),  NS_ConvertASCIItoUCS2(str));
+  SetText(NS_LITERAL_STRING("righttext"),  NS_ConvertASCIItoUTF16(str));
 
   SetText(NS_LITERAL_STRING("headertext"),  aPSI.mHeaderText);
   SetText(NS_LITERAL_STRING("footertext"),  aPSI.mFooterText);

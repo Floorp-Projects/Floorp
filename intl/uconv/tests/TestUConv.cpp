@@ -305,7 +305,7 @@ nsresult nsTestUConv::DisplayDetectors()
     nsAutoString title;
     res = ccMan->GetCharsetTitle(detectorName.get(), title);
     if (NS_FAILED(res)) title.SetLength(0);
-    printf("\"%s\"\n", NS_LossyConvertUCS2toASCII(title).get());
+    printf("\"%s\"\n", NS_LossyConvertUTF16toASCII(title).get());
 
     detectors->HasMore(&hasMore);
   }
@@ -435,7 +435,7 @@ nsresult nsTestUConv::DisplayCharsets()
     printf("(%3d, %3d) ", encCount, decCount);
     res = ccMan->GetCharsetTitle(charset->get(), str);
     if (NS_FAILED(res)) str.SetLength(0);
-    NS_LossyConvertUCS2toASCII buff2(str);
+    NS_LossyConvertUTF16toASCII buff2(str);
     printf(" \"%s\"\n", buff2.get());
   }
 

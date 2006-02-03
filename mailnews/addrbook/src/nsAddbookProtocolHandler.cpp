@@ -124,7 +124,7 @@ nsAddbookProtocolHandler::GenerateXMLOutputChannel( nsString &aOutput,
 {
   nsIChannel                *channel;
   nsCOMPtr<nsIInputStream>  inStr;
-  NS_ConvertUCS2toUTF8 utf8String(aOutput.get());
+  NS_ConvertUTF16toUTF8 utf8String(aOutput.get());
 
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inStr), utf8String);
   NS_ENSURE_SUCCESS(rv, rv);

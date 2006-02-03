@@ -191,11 +191,6 @@ class NS_ConvertUTF8toUTF16 : public nsAutoString
 
 
 // the following are included/declared for backwards compatibility
-
-typedef NS_ConvertUTF16toUTF8 NS_ConvertUCS2toUTF8;
-typedef NS_LossyConvertUTF16toASCII NS_LossyConvertUCS2toASCII;
-typedef NS_ConvertASCIItoUTF16 NS_ConvertASCIItoUCS2;
-typedef NS_ConvertUTF8toUTF16 NS_ConvertUTF8toUCS2;
 typedef nsAutoString nsVoidableString;
 
 #ifndef nsDependentString_h___

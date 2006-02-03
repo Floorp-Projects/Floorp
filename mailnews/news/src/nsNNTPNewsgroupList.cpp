@@ -181,7 +181,7 @@ openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL,
     ifptr->SetDataIID(&NS_GET_IID(nsINewsDownloadDialogArgs));
 
     nsCOMPtr<nsIDOMWindow> dialogWindow;
-    rv = parentWindow->OpenDialog(NS_ConvertASCIItoUCS2(chromeURL),
+    rv = parentWindow->OpenDialog(NS_ConvertASCIItoUTF16(chromeURL),
                                   NS_LITERAL_STRING("_blank"),
                                   NS_LITERAL_STRING("centerscreen,chrome,modal,titlebar"),
                                   ifptr, getter_AddRefs(dialogWindow));

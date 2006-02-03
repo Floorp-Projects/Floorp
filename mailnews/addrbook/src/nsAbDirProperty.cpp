@@ -334,7 +334,7 @@ NS_IMETHODIMP nsAbDirProperty::GetDirectoryProperties(nsIAbDirectoryProperties *
     nsCOMPtr<nsIAbDirectoryProperties> properties = do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv);
 
     if (NS_SUCCEEDED(rv)) {
-      NS_ConvertUTF8toUCS2 description (server->description);
+      NS_ConvertUTF8toUTF16 description (server->description);
 
       rv = properties->SetDescription(description);
 

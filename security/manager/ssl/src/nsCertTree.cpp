@@ -953,7 +953,7 @@ nsCertTree::dumpMap()
 {
   for (int i=0; i<mNumOrgs; i++) {
     nsAutoString org(mTreeArray[i].orgName);
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("ORG[%s]", NS_LossyConvertUCS2toASCII(org).get()));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("ORG[%s]", NS_LossyConvertUTF16toASCII(org).get()));
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("OPEN[%d]", mTreeArray[i].open));
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("INDEX[%d]", mTreeArray[i].certIndex));
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NCHILD[%d]", mTreeArray[i].numChildren));
@@ -962,14 +962,14 @@ nsCertTree::dumpMap()
     treeArrayEl *el = GetThreadDescAtIndex(i);
     if (el != nsnull) {
       nsAutoString td(el->orgName);
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("thread desc[%d]: %s", i, NS_LossyConvertUCS2toASCII(td).get()));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("thread desc[%d]: %s", i, NS_LossyConvertUTF16toASCII(td).get()));
     }
     nsCOMPtr<nsIX509Cert> ct = dont_AddRef(GetCertAtIndex(i));
     if (ct != nsnull) {
       PRUnichar *goo;
       ct->GetCommonName(&goo);
       nsAutoString doo(goo);
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("cert [%d]: %s", i, NS_LossyConvertUCS2toASCII(doo).get()));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("cert [%d]: %s", i, NS_LossyConvertUTF16toASCII(doo).get()));
     }
   }
 }
@@ -1047,7 +1047,7 @@ nsCertTree::CmpInitCriterion(nsIX509Cert *cert, CompareCacheHashEntry *entry,
           PR_ExplodeTime(notBefore, PR_GMTParameters, &explodedTime);
           char datebuf[20]; // 4 + 2 + 2 + 2 + 2 + 2 + 1 = 15
           if (0 != PR_FormatTime(datebuf, sizeof(datebuf), "%Y%m%d%H%M%S", &explodedTime)) {
-            str = NS_ConvertASCIItoUCS2(nsDependentCString(datebuf));
+            str = NS_ConvertASCIItoUTF16(nsDependentCString(datebuf));
           }
         }
       }

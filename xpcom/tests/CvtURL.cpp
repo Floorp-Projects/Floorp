@@ -46,7 +46,7 @@
 
 static nsString* ConvertCharacterSetName(const char* aName)
 {
-  return new nsString(NS_ConvertASCIItoUCS2(aName));
+  return new nsString(NS_ConvertASCIItoUTF16(aName));
 }
 
 int main(int argc, char** argv)

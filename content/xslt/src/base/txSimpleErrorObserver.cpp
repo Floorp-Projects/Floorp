@@ -70,7 +70,7 @@ void SimpleErrorObserver::receiveError(const nsAString& errorMessage,
         *errStream << "error: ";
     }
 
-    *errStream << NS_LossyConvertUCS2toASCII(errorMessage).get() << endl;
+    *errStream << NS_LossyConvertUTF16toASCII(errorMessage).get() << endl;
     errStream->flush();
 #endif
 }

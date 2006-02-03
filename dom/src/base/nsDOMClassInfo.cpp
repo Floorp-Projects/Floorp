@@ -4699,7 +4699,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_UNEXPECTED;
   }
 
-  gNameSpaceManager->LookupName(NS_ConvertASCIItoUCS2(dom_class->name),
+  gNameSpaceManager->LookupName(NS_ConvertASCIItoUTF16(dom_class->name),
                                 &name_struct);
   if (!name_struct) {
     // Name isn't in hash, not a DOM object.
@@ -5212,7 +5212,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID));
     NS_ENSURE_TRUE(sof, NS_ERROR_FAILURE);
 
-    rv = creator->RegisterDOMCI(NS_ConvertUCS2toUTF8(name).get(), sof);
+    rv = creator->RegisterDOMCI(NS_ConvertUTF16toUTF8(name).get(), sof);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = gNameSpaceManager->LookupName(name, &name_struct);

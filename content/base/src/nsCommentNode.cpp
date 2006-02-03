@@ -183,7 +183,7 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString tmp;
   ToCString(tmp, 0, mText.GetLength());
-  fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
 
   fputs("-->\n", out);
 }

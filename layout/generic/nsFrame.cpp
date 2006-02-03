@@ -3600,7 +3600,7 @@ nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aInd
   nsAutoString name;
   GetFrameName(name);
   XMLQuote(name);
-  fputs(NS_LossyConvertUCS2toASCII(name).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(name).get(), out);
   fprintf(out, "\" state=\"%d\" parent=\"%ld\">\n",
           GetDebugStateBits(), PRUptrdiff(mParent));
 
@@ -3662,7 +3662,7 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
         list->ToString(listName);
         fprintf(out, "<child-list name=\"");
         XMLQuote(listName);
-        fputs(NS_LossyConvertUCS2toASCII(listName).get(), out);
+        fputs(NS_LossyConvertUTF16toASCII(listName).get(), out);
         fprintf(out, "\">\n");
       }
       else {
@@ -6920,7 +6920,7 @@ void DR_State::DisplayFrameTypeInfo(nsIFrame* aFrame,
       nsIFrameDebug*  frameDebug;
       if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
        frameDebug->GetFrameName(name);
-       printf("%s %p ", NS_LossyConvertUCS2toASCII(name).get(), (void*)aFrame);
+       printf("%s %p ", NS_LossyConvertUTF16toASCII(name).get(), (void*)aFrame);
       }
       else {
         printf("%s %p ", frameTypeInfo->mNameAbbrev, (void*)aFrame);

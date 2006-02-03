@@ -82,14 +82,6 @@ NS_COM void AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest );
 NS_COM void AppendUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest );
 NS_COM void AppendUTF8toUTF16( const char* aSource, nsAString& aDest );
 
-// Backward compatibility
-inline 
-NS_COM void CopyUCS2toASCII( const nsAString& aSource, nsACString& aDest )
-{ LossyCopyUTF16toASCII(aSource, aDest); }
-inline 
-NS_COM void CopyASCIItoUCS2( const nsACString& aSource, nsAString& aDest )
-{ CopyASCIItoUTF16(aSource, aDest); }
-
   /**
    * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
    *

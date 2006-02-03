@@ -189,7 +189,7 @@ nsSVGCairoGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retva
   SelectFont(mCT);
   if (charnum > 0) {
     cairo_text_extents(mCT,
-                       NS_ConvertUCS2toUTF8(Substring(text,
+                       NS_ConvertUTF16toUTF8(Substring(text,
                                                       0,
                                                       charnum)).get(),
                        &preceding_extent);
@@ -198,7 +198,7 @@ nsSVGCairoGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retva
     preceding_extent.y_advance = 0.0;
   }
   cairo_text_extents(mCT,
-                     NS_ConvertUCS2toUTF8(Substring(text, charnum, 1)).get(),
+                     NS_ConvertUTF16toUTF8(Substring(text, charnum, 1)).get(),
                      &charnum_extent);
 
   nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
@@ -229,7 +229,7 @@ nsSVGCairoGlyphMetrics::GetAdvanceOfChar(PRUint32 charnum, float *advance)
 
   SelectFont(mCT);
   cairo_text_extents(mCT,
-                     NS_ConvertUCS2toUTF8(Substring(text, charnum, 1)).get(),
+                     NS_ConvertUTF16toUTF8(Substring(text, charnum, 1)).get(),
                      &extent);
 
   *advance = extent.x_advance;
@@ -260,7 +260,7 @@ nsSVGCairoGlyphMetrics::Update(PRUint32 updatemask, PRBool *_retval)
 
   SelectFont(mCT);
   cairo_text_extents(mCT, 
-                     NS_ConvertUCS2toUTF8(text).get(),
+                     NS_ConvertUTF16toUTF8(text).get(),
                      &mExtents);
   
   return NS_OK;

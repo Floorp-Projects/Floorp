@@ -303,7 +303,7 @@ nsresult OpenWebPage(const char *url)
         nsCOMPtr<nsIWebBrowser> newBrowser;
         chrome->GetWebBrowser(getter_AddRefs(newBrowser));
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
-        return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).get(),
+        return webNav->LoadURI(NS_ConvertASCIItoUTF16(url).get(),
                                nsIWebNavigation::LOAD_FLAGS_NONE,
                                nsnull,
                                nsnull,
@@ -624,7 +624,7 @@ MRESULT EXPENTRY BrowserDlgProc(HWND hwndDlg, ULONG uMsg, MPARAM wParam, MPARAM 
                 memset(szURL, 0, sizeof(szURL));
                 WinQueryDlgItemText(hwndDlg, IDC_ADDRESS, sizeof(szURL) / sizeof(szURL[0]) - 1, szURL);
                 webNavigation->LoadURI(
-                    NS_ConvertASCIItoUCS2(szURL).get(),
+                    NS_ConvertASCIItoUTF16(szURL).get(),
                     nsIWebNavigation::LOAD_FLAGS_NONE,
                     nsnull,
                     nsnull,

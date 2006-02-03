@@ -135,7 +135,7 @@ NS_METHOD nsLabel::SetAlignment(nsLabelAlignment aAlignment)
 //-------------------------------------------------------------------------
 NS_METHOD nsLabel::SetLabel(const nsString& aText)
 {
-  WinSetWindowText(mWnd, NS_LossyConvertUCS2toASCII(aText).get());
+  WinSetWindowText(mWnd, NS_LossyConvertUTF16toASCII(aText).get());
   return NS_OK;
 }
 

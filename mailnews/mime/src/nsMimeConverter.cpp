@@ -96,9 +96,9 @@ nsMimeConverter::DecodeMimeHeader(const char *header,
   decodedCstr = MIME_DecodeMimeHeader(header, default_charset,
                                       override_charset, eatContinuations);
   if (nsnull == decodedCstr) {
-    *decodedString = ToNewUnicode(NS_ConvertUTF8toUCS2(header));
+    *decodedString = ToNewUnicode(NS_ConvertUTF8toUTF16(header));
   } else {
-    *decodedString = ToNewUnicode(NS_ConvertUTF8toUCS2(decodedCstr));
+    *decodedString = ToNewUnicode(NS_ConvertUTF8toUTF16(decodedCstr));
     PR_FREEIF(decodedCstr);
   }
   if (!(*decodedString))
@@ -142,7 +142,7 @@ nsMimeConverter::EncodeMimePartIIStr(const char    *header,
   nsAutoString tempUnicodeString;
   nsresult rv = ConvertToUnicode(mailCharset, header, tempUnicodeString);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = EncodeMimePartIIStr_UTF8(NS_ConvertUCS2toUTF8(tempUnicodeString).get(), structured, mailCharset, fieldnamelen, encodedWordSize, encodedString);
+  rv = EncodeMimePartIIStr_UTF8(NS_ConvertUTF16toUTF8(tempUnicodeString).get(), structured, mailCharset, fieldnamelen, encodedWordSize, encodedString);
   return rv;
 }
 

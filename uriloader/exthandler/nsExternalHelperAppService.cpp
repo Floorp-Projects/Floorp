@@ -2823,7 +2823,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const nsAC
       {
           // This is the one. Set attributes appropriately.
           aMIMEInfo->SetFileExtensions(nsDependentCString(extraMimeEntries[index].mFileExtensions));
-          aMIMEInfo->SetDescription(NS_ConvertASCIItoUCS2(extraMimeEntries[index].mDescription));
+          aMIMEInfo->SetDescription(NS_ConvertASCIItoUTF16(extraMimeEntries[index].mDescription));
           aMIMEInfo->SetMacType(extraMimeEntries[index].mMactype);
           aMIMEInfo->SetMacCreator(extraMimeEntries[index].mMacCreator);
 

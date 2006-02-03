@@ -668,7 +668,7 @@ nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
         {
             // Unicode converters not present (likely wizard case)
             // so do our best with the vanilla conversion.
-            mFileSpec->AppendNative(NS_LossyConvertUCS2toASCII(segment));
+            mFileSpec->AppendNative(NS_LossyConvertUTF16toASCII(segment));
         }
     } while ( start < aRelativePath.Length() );
 }
@@ -687,7 +687,7 @@ nsInstallFolder::MapNameToEnum(const nsAString& name)
 	while ( DirectoryTable[i].directoryName[0] != 0 )
 	{
     // safe compare because all strings in DirectoryTable are ASCII
-    if ( name.Equals(NS_ConvertASCIItoUCS2(DirectoryTable[i].directoryName), nsCaseInsensitiveStringComparator()) )
+    if ( name.Equals(NS_ConvertASCIItoUTF16(DirectoryTable[i].directoryName), nsCaseInsensitiveStringComparator()) )
 			return DirectoryTable[i].folderEnum;
 		i++;
 	}

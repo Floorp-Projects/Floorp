@@ -551,7 +551,7 @@ nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
 nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 {
-    NS_LossyConvertUCS2toASCII cstring(inString);
+    NS_LossyConvertUTF16toASCII cstring(inString);
     if (!inString.Length())
         return;
     NS_ASSERTION(strstr(cstring.get(), kFileURLPrefix) == cstring.get(),

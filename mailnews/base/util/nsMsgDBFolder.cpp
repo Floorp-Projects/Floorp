@@ -2039,8 +2039,8 @@ nsresult nsMsgDBFolder::PromptForCachePassword(nsIMsgIncomingServer *server, nsI
   bundle->GetStringFromName(NS_LITERAL_STRING("passwordTitle").get(), getter_Copies(passwordTitle));
   bundle->GetStringFromName(NS_LITERAL_STRING("passwordPrompt").get(), getter_Copies(passwordTemplate));
 
-  NS_ConvertASCIItoUCS2 userNameStr(userName);
-  NS_ConvertASCIItoUCS2 hostNameStr(hostName);
+  NS_ConvertASCIItoUTF16 userNameStr(userName);
+  NS_ConvertASCIItoUTF16 hostNameStr(hostName);
 
   const PRUnichar *stringParams[2] = { userNameStr.get(), hostNameStr.get() };
 
@@ -2082,7 +2082,7 @@ nsresult nsMsgDBFolder::PromptForCachePassword(nsIMsgIncomingServer *server, nsI
           break;
         // compare the user-entered password with the saved password with
         // the munged uri.
-        passwordCorrect = password.Equals(NS_ConvertUCS2toUTF8(passwordFound).get());
+        passwordCorrect = password.Equals(NS_ConvertUTF16toUTF8(passwordFound).get());
         if (!passwordCorrect)
           server->SetPassword("");
         else
@@ -4835,7 +4835,7 @@ nsMsgDBFolder::GetStringFromBundle(const char *msgName, PRUnichar **aResult)
   nsCOMPtr <nsIStringBundle> bundle;
   rv = GetBaseStringBundle(getter_AddRefs(bundle));
   if (NS_SUCCEEDED(rv) && bundle)
-    rv=bundle->GetStringFromName(NS_ConvertASCIItoUCS2(msgName).get(), aResult);
+    rv=bundle->GetStringFromName(NS_ConvertASCIItoUTF16(msgName).get(), aResult);
   return rv;
 
 }
@@ -4872,7 +4872,7 @@ nsMsgDBFolder::GetStringWithFolderNameFromBundle(const char *msgName, PRUnichar 
       folderName,
       kLocalizedBrandShortName
     };
-    rv = bundle->FormatStringFromName(NS_ConvertASCIItoUCS2(msgName).get(),
+    rv = bundle->FormatStringFromName(NS_ConvertASCIItoUTF16(msgName).get(),
                                       formatStrings, 2, aResult);
   }
   return rv;

@@ -717,7 +717,7 @@ nsMsgPrintEngine::PrintMsgWindow()
       else
       {
         // Tell the user we started printing...
-        PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2(kMsgKeys[mMsgInx]).get());
+        PRUnichar *msg = GetString(NS_ConvertASCIItoUTF16(kMsgKeys[mMsgInx]).get());
         SetStatusMessage( msg );
         CRTFREEIF(msg)
       }

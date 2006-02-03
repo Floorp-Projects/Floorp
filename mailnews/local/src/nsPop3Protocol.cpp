@@ -2215,7 +2215,7 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
     nsCAutoString hostName;
     m_url->GetHost(hostName);
     
-    NS_ConvertUTF8toUCS2 hostNameUnicode(hostName);
+    NS_ConvertUTF8toUTF16 hostNameUnicode(hostName);
     
     const PRUnichar *formatStrings[] =
     {

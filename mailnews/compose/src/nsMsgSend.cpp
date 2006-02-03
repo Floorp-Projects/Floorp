@@ -2133,13 +2133,13 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       // STRING USE WARNING: hoisting the following conversion might save code-space, since it happens along every path
 
     if (anchor)
-      anchor->SetHref(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
+      anchor->SetHref(NS_ConvertASCIItoUTF16(domSaveArray[i].url));
     else if (link)
-      link->SetHref(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
+      link->SetHref(NS_ConvertASCIItoUTF16(domSaveArray[i].url));
     else if (image)
-      image->SetSrc(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
+      image->SetSrc(NS_ConvertASCIItoUTF16(domSaveArray[i].url));
     else if (body)
-      body->SetBackground(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
+      body->SetBackground(NS_ConvertASCIItoUTF16(domSaveArray[i].url));
 
     nsMemory::Free(domSaveArray[i].url);
   }

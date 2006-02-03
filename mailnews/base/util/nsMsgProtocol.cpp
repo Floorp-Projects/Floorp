@@ -898,7 +898,7 @@ nsresult nsMsgProtocol::DoGSSAPIStep1(const char *service, const char *username,
     m_authModule = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "sasl-gssapi", &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    m_authModule->Init(service, nsIAuthModule::REQ_DEFAULT, nsnull, NS_ConvertUTF8toUCS2(username).get(), nsnull);
+    m_authModule->Init(service, nsIAuthModule::REQ_DEFAULT, nsnull, NS_ConvertUTF8toUTF16(username).get(), nsnull);
 
     void *outBuf;
     PRUint32 outBufLen;
@@ -983,8 +983,8 @@ nsresult nsMsgProtocol::DoNtlmStep1(const char *username, const char *password, 
     if (NS_FAILED(rv) || !m_authModule)
         return rv;
 
-    m_authModule->Init(nsnull, 0, nsnull, NS_ConvertUTF8toUCS2(username).get(),
-                       NS_ConvertUTF8toUCS2(password).get());
+    m_authModule->Init(nsnull, 0, nsnull, NS_ConvertUTF8toUTF16(username).get(),
+                       NS_ConvertUTF8toUTF16(password).get());
 
     void *outBuf;
     PRUint32 outBufLen;

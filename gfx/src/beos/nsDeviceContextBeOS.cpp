@@ -474,7 +474,7 @@ nsDeviceContextBeOS::GetSystemFontInfo(const BFont *theFont, nsSystemFontID anID
     theFont->GetFamilyAndStyle(&family, &style);
 
     face = theFont->Face();
-    aFont->name.Assign(NS_ConvertUTF8toUCS2(family));
+    aFont->name.Assign(NS_ConvertUTF8toUTF16(family));
     aFont->size = NSIntPixelsToTwips(uint32(theFont->Size()), mPixelsToTwips); 
 
     if(face & B_ITALIC_FACE)

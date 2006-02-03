@@ -208,7 +208,7 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
   if (!foldingonly) {
 
     // Deal with UCS2 pointer
-    pUCS2 = _pUCS2 = ToNewUnicode(NS_ConvertUTF8toUCS2(pUTF8));
+    pUCS2 = _pUCS2 = ToNewUnicode(NS_ConvertUTF8toUTF16(pUTF8));
     if (!pUCS2)
       return -1;
 

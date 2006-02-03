@@ -5701,7 +5701,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
           nsAutoString tmp(aTx.GetWordBuffer(), lastWordLen);
           ListTag(stdout);
           printf(": start='");
-          fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
+          fputs(NS_LossyConvertUTF16toASCII(tmp).get(), stdout);
           printf("' lastWordLen=%d baseWidth=%d prevOffset=%d offset=%d next=",
                  lastWordLen, lastWordDimensions.width, prevOffset, aTextData.mOffset);
           ListTag(stdout, next);
@@ -6468,7 +6468,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
 #ifdef DEBUG_WORD_WRAPPING
     nsAutoString tmp(bp, wordLen);
     printf("  fragment='");
-    fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
+    fputs(NS_LossyConvertUTF16toASCII(tmp).get(), stdout);
     printf("' width=%d [wordLen=%d contentLen=%d ContentLength=%d]\n",
            dimensions.width, wordLen, contentLen, tx.GetContentLength());
 #endif
@@ -6624,7 +6624,7 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
     nsAutoString atomString;
     pseudoTag->ToString(atomString);
     fprintf(out, " pst=%s",
-            NS_LossyConvertUCS2toASCII(atomString).get());
+            NS_LossyConvertUTF16toASCII(atomString).get());
   }
   fputs("<\n", out);
 
@@ -6633,7 +6633,7 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
 
   IndentBy(out, aIndent);
   fputs("\"", out);
-  fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
   fputs("\"\n", out);
 
   aIndent--;

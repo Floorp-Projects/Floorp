@@ -508,7 +508,7 @@ nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTit
       {
         rv = alertsService->ShowAlertNotification(NS_LITERAL_STRING(NEW_MAIL_ALERT_ICON), nsDependentString(aAlertTitle),
                                                   nsDependentString(aAlertText), PR_TRUE, 
-                                                  NS_ConvertASCIItoUCS2(aFolderURI), this); 
+                                                  NS_ConvertASCIItoUTF16(aFolderURI), this); 
         mAlertInProgress = PR_TRUE;
       }
     }
@@ -518,7 +518,7 @@ nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTit
     {
       rv = alertsService->ShowAlertNotification(NS_LITERAL_STRING(NEW_MAIL_ALERT_ICON), nsDependentString(aAlertTitle),
                                                 nsDependentString(aAlertText), PR_TRUE, 
-                                                NS_ConvertASCIItoUCS2(aFolderURI), this); 
+                                                NS_ConvertASCIItoUTF16(aFolderURI), this); 
       mAlertInProgress = PR_TRUE;
     }
 #endif
@@ -951,7 +951,7 @@ nsMessengerWinIntegration::RemoveCurrentFromRegistry()
       if (!deleteKey.IsEmpty()) {
         // delete this key and berak out of the loop
         RegDeleteKey(HKEY_CURRENT_USER, 
-                     NS_ConvertUCS2toUTF8(deleteKey).get());
+                     NS_ConvertUTF16toUTF8(deleteKey).get());
         break;
       }
       else {

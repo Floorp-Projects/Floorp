@@ -159,7 +159,7 @@ NS_INTERFACE_MAP_END
 
 #define LOOP_CHARS(func) \
     if (!cp) { \
-      func(ctx, NS_ConvertUCS2toUTF8(text).get()); \
+      func(ctx, NS_ConvertUTF16toUTF8(text).get()); \
     } else { \
       for (PRUint32 i=0; i<text.Length(); i++) { \
         if (cp[i].draw == PR_FALSE) \
@@ -168,7 +168,7 @@ NS_INTERFACE_MAP_END
         cairo_get_matrix(ctx, &matrix); \
         cairo_move_to(ctx, cp[i].x, cp[i].y); \
         cairo_rotate(ctx, cp[i].angle); \
-        func(ctx, NS_ConvertUCS2toUTF8(Substring(text, i, 1)).get()); \
+        func(ctx, NS_ConvertUTF16toUTF8(Substring(text, i, 1)).get()); \
         cairo_set_matrix(ctx, &matrix); \
       } \
     }
@@ -540,11 +540,11 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 
   if (!cp) {
     if (hasCoveredStroke) {
-      cairo_text_path(ctx, NS_ConvertUCS2toUTF8(text).get());
+      cairo_text_path(ctx, NS_ConvertUTF16toUTF8(text).get());
     } else {
       cairo_text_extents_t extent;
       cairo_text_extents(ctx,
-                         NS_ConvertUCS2toUTF8(text).get(),
+                         NS_ConvertUTF16toUTF8(text).get(),
                          &extent);
       cairo_rectangle(ctx, x + extent.x_bearing, y + extent.y_bearing,
                       extent.width, extent.height);
@@ -556,11 +556,11 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
       cairo_move_to(ctx, cp[i].x, cp[i].y);
       cairo_rotate(ctx, cp[i].angle);
       if (hasCoveredStroke) {
-        cairo_text_path(ctx, NS_ConvertUCS2toUTF8(Substring(text, i, 1)).get());
+        cairo_text_path(ctx, NS_ConvertUTF16toUTF8(Substring(text, i, 1)).get());
       } else {
         cairo_text_extents_t extent;
         cairo_text_extents(ctx,
-                           NS_ConvertUCS2toUTF8(Substring(text, i, 1)).get(),
+                           NS_ConvertUTF16toUTF8(Substring(text, i, 1)).get(),
                            &extent);
         cairo_rel_move_to(ctx, extent.x_bearing, extent.y_bearing);
         cairo_rel_line_to(ctx, extent.width, 0);
@@ -681,7 +681,7 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
 
     cairo_text_extents_t extent;
     cairo_text_extents(ctx,
-                       NS_ConvertUCS2toUTF8(Substring(text, i, 1)).get(),
+                       NS_ConvertUTF16toUTF8(Substring(text, i, 1)).get(),
                        &extent);
     cairo_rel_move_to(ctx, extent.x_bearing, extent.y_bearing);
     cairo_rel_line_to(ctx, extent.width, 0);

@@ -116,7 +116,7 @@ nsXFormsSetIndexElement::HandleAction(nsIDOMEvent            *aEvent,
 
 #ifdef DEBUG_XF_SETINDEX
   printf("<setindex>: Setting index '%s' to '%d'\n",
-         NS_ConvertUCS2toUTF8(id).get(),
+         NS_ConvertUTF16toUTF8(id).get(),
          indexInt);
 #endif  
   nsCOMPtr<nsIDOMElement> repeatElem;

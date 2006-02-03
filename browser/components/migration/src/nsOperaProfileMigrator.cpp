@@ -1180,7 +1180,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
     if (url.IsEmpty() || keyword.IsEmpty() || name.IsEmpty())
       continue;
 
-    NS_ConvertUTF8toUCS2 nameStr(name);
+    NS_ConvertUTF8toUTF16 nameStr(name);
     PRUint32 length = nameStr.Length();
     PRInt32 index = 0; 
     do {
@@ -1208,7 +1208,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
     uri->GetHost(hostCStr);
     nsAutoString host; host.AssignWithConversion(hostCStr.get());
 
-    const PRUnichar* descStrings[] = { NS_ConvertUTF8toUCS2(keyword).get(), host.get() };
+    const PRUnichar* descStrings[] = { NS_ConvertUTF8toUTF16(keyword).get(), host.get() };
     nsXPIDLString keywordDesc;
     aBundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchUrlDesc").get(),
                                   descStrings, 2, getter_Copies(keywordDesc));
@@ -1367,7 +1367,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       name = data;
       break;
     case LineType_URL:
-      url.Assign(NS_ConvertUCS2toUTF8(data));
+      url.Assign(NS_ConvertUTF16toUTF8(data));
       break;
     case LineType_KEYWORD:
       keyword = data;

@@ -1198,7 +1198,7 @@ nsAutoCompleteController::CompleteValue(nsString &aValue, PRBool selectDifferenc
     // XXX There might be a pref someday for doing it this way instead.
     // The textbox value does not match the beginning of the default value, so we
     // have to append the entire default value
-    // mInput->SetTextValue(mSearchString + NS_ConvertUTF8toUCS2(kCompleteConcatSeparator) + aValue);
+    // mInput->SetTextValue(mSearchString + NS_ConvertUTF8toUTF16(kCompleteConcatSeparator) + aValue);
     // mInput->SelectTextRange(mSearchString.Length(), -1);
   }
 

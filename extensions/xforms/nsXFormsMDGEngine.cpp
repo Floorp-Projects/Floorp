@@ -165,7 +165,7 @@ nsXFormsMDGEngine::AddMIP(ModelItemPropName         aType,
   nsAutoString nodename;
   aContextNode->GetNodeName(nodename);
   printf("nsXFormsMDGEngine::AddMIP(aContextNode=%s, aExpression=%p, aDependencies=|%d|,\n",
-         NS_ConvertUCS2toUTF8(nodename).get(),
+         NS_ConvertUTF16toUTF8(nodename).get(),
          (void*) aExpression,
          aDependencies ? aDependencies->Count() : 0);
   printf("                          aContextPos=%d, aContextSize=%d, aType=%s, aDynFunc=%d)\n",
@@ -275,7 +275,7 @@ nsXFormsMDGEngine::PrintDot(const char* aFile)
       
       if (g->IsDirty()) {
         fprintf(FD, "\t%s [color=red];\n",
-                NS_ConvertUCS2toUTF8(domNodeName).get());
+                NS_ConvertUTF16toUTF8(domNodeName).get());
       }
 
       for (PRInt32 j = 0; j < g->mSuc.Count(); ++j) {
@@ -285,8 +285,8 @@ nsXFormsMDGEngine::PrintDot(const char* aFile)
           nsAutoString sucName;
           sucnode->mContextNode->GetNodeName(sucName);
           fprintf(FD, "\t%s -> %s [label=\"%s\"];\n",
-                  NS_ConvertUCS2toUTF8(sucName).get(),
-                  NS_ConvertUCS2toUTF8(domNodeName).get(),
+                  NS_ConvertUTF16toUTF8(sucName).get(),
+                  NS_ConvertUTF16toUTF8(domNodeName).get(),
                   gMIPNames[sucnode->mType]);
         }
       }
@@ -345,7 +345,7 @@ nsXFormsMDGEngine::Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes)
     printf("\tNode #%d: This=%p, Dirty=%d, DynFunc=%d, Type=%d, Count=%d, Suc=%d, CSize=%d, CPos=%d, Next=%p, domnode=%s\n",
            i, (void*) g, g->IsDirty(), g->mDynFunc, g->mType,
            g->mCount, g->mSuc.Count(), g->mContextSize, g->mContextPosition,
-           (void*) g->mNext, NS_ConvertUCS2toUTF8(domNodeName).get());
+           (void*) g->mNext, NS_ConvertUTF16toUTF8(domNodeName).get());
 #endif
 
     // Ignore node if it is not dirty

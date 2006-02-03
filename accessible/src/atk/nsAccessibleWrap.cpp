@@ -735,10 +735,10 @@ getNameCB(AtkObject *aAtkObj)
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     if (uniName.Length() > 0) {
-        NS_ConvertUTF8toUCS2 objName(aAtkObj->name);
+        NS_ConvertUTF8toUTF16 objName(aAtkObj->name);
         if (!uniName.Equals(objName)) {
             atk_object_set_name(aAtkObj,
-                                NS_ConvertUCS2toUTF8(uniName).get());
+                                NS_ConvertUTF16toUTF8(uniName).get());
         }
     }
     return aAtkObj->name;
@@ -762,7 +762,7 @@ getDescriptionCB(AtkObject *aAtkObj)
         len = uniDesc.Length();
         if (len > 0) {
             atk_object_set_description(aAtkObj,
-                                       NS_ConvertUCS2toUTF8(uniDesc).get());
+                                       NS_ConvertUTF16toUTF8(uniDesc).get());
         }
     }
     return aAtkObj->description;

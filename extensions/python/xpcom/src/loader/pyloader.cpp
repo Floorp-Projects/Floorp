@@ -96,7 +96,7 @@ void AddStandardPaths()
 		LogError("The Python XPCOM loader could not get the Python sys.path variable\n");
 		return;
 	}
-	NS_LossyConvertUCS2toASCII pathCBuf(pathBuf);
+	NS_LossyConvertUTF16toASCII pathCBuf(pathBuf);
 	LogDebug("The Python XPCOM loader is adding '%s' to sys.path\n", pathCBuf.get());
 	PyObject *newStr = PyString_FromString(pathCBuf.get());
 	PyList_Insert(obPath, 0, newStr);

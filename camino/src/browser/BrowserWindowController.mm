@@ -1799,7 +1799,7 @@ enum BWCOpenDest {
   {
     nsAutoString url;
     [theURL assignTo_nsAString:url];
-    NS_ConvertUCS2toUTF8 utf8URL(url);
+    NS_ConvertUTF16toUTF8 utf8URL(url);
     
     nsCOMPtr<nsIURI> fixedURI;
     mDataOwner->mURIFixer->CreateFixupURI(utf8URL, 0, getter_AddRefs(fixedURI));

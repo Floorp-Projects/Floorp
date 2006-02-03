@@ -339,7 +339,7 @@ NS_IMETHODIMP nsAccessible::Init()
       PRUint32 length = prefix.Length();
       if (length > 1 && StringBeginsWith(roleString, prefix)) {
         roleString.Cut(0, length);
-        nsCString utf8Role = NS_ConvertUCS2toUTF8(roleString); // For easy comparison
+        nsCString utf8Role = NS_ConvertUTF16toUTF8(roleString); // For easy comparison
         ToLowerCase(utf8Role);
         PRUint32 index;
         for (index = 0; gWAIRoleMap[index].roleString; index ++) {

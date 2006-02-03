@@ -708,7 +708,7 @@ nsNSSComponent::InstallLoadableRoots()
       }
 
       /* If a module exists with the same name, delete it. */
-      NS_ConvertUCS2toUTF8 modNameUTF8(modName);
+      NS_ConvertUTF16toUTF8 modNameUTF8(modName);
       int modType;
       SECMOD_DeleteModule(NS_CONST_CAST(char*, modNameUTF8.get()), &modType);
       SECStatus rv_add = 
@@ -760,14 +760,14 @@ nsNSSComponent::ConfigureInternalPKCS11Token()
   rv = GetPIPNSSBundleString("FipsPrivateSlotDescription", fipsPrivateSlotDescription);
   if (NS_FAILED(rv)) return rv;
 
-  PK11_ConfigurePKCS11(NS_ConvertUCS2toUTF8(manufacturerID).get(),
-                       NS_ConvertUCS2toUTF8(libraryDescription).get(),
-                       NS_ConvertUCS2toUTF8(tokenDescription).get(),
-                       NS_ConvertUCS2toUTF8(privateTokenDescription).get(),
-                       NS_ConvertUCS2toUTF8(slotDescription).get(),
-                       NS_ConvertUCS2toUTF8(privateSlotDescription).get(),
-                       NS_ConvertUCS2toUTF8(fipsSlotDescription).get(),
-                       NS_ConvertUCS2toUTF8(fipsPrivateSlotDescription).get(),
+  PK11_ConfigurePKCS11(NS_ConvertUTF16toUTF8(manufacturerID).get(),
+                       NS_ConvertUTF16toUTF8(libraryDescription).get(),
+                       NS_ConvertUTF16toUTF8(tokenDescription).get(),
+                       NS_ConvertUTF16toUTF8(privateTokenDescription).get(),
+                       NS_ConvertUTF16toUTF8(slotDescription).get(),
+                       NS_ConvertUTF16toUTF8(privateSlotDescription).get(),
+                       NS_ConvertUTF16toUTF8(fipsSlotDescription).get(),
+                       NS_ConvertUTF16toUTF8(fipsPrivateSlotDescription).get(),
                        0, 0);
   return NS_OK;
 }
@@ -1892,7 +1892,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
   else if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) { 
     nsNSSShutDownPreventionLock locker;
     PRBool enabled;
-    NS_ConvertUCS2toUTF8  prefName(someData);
+    NS_ConvertUTF16toUTF8  prefName(someData);
 
     if (prefName.Equals("security.enable_ssl2")) {
       mPrefBranch->GetBoolPref("security.enable_ssl2", &enabled);
@@ -2267,7 +2267,7 @@ setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx)
   if (PK11_NeedUserInit(slot)) {
     nsITokenPasswordDialogs *dialogs;
     PRBool canceled;
-    NS_ConvertUTF8toUCS2 tokenName(PK11_GetTokenName(slot));
+    NS_ConvertUTF8toUTF16 tokenName(PK11_GetTokenName(slot));
 
     rv = getNSSDialogs((void**)&dialogs,
                        NS_GET_IID(nsITokenPasswordDialogs),

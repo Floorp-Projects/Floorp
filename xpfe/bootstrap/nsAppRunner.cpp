@@ -409,7 +409,7 @@ static nsresult OpenWindow(const nsCString& aChromeURL,
 
 #ifdef DEBUG_CMD_LINE
   printf("OpenWindow(%s, %s, %d, %d)\n", aChromeURL.get(),
-                                         NS_ConvertUCS2toUTF8(aAppArgs).get(),
+                                         NS_ConvertUTF16toUTF8(aAppArgs).get(),
                                          aWidth, aHeight);
 #endif /* DEBUG_CMD_LINE */
 

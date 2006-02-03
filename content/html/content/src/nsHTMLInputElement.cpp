@@ -508,7 +508,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
           mType != NS_FORM_INPUT_PASSWORD &&
           mType != NS_FORM_INPUT_FILE) {
         SetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
-                NS_ConvertUTF8toUCS2(mValue), PR_FALSE);
+                NS_ConvertUTF8toUTF16(mValue), PR_FALSE);
         if (mValue) {
           nsMemory::Free(mValue);
           mValue = nsnull;
@@ -2226,7 +2226,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                          nsCaseInsensitiveStringComparator())) {
       // Converts the URL string into the corresponding nsIFile if possible.
       // A local file will be created if the URL string begins with file://.
-      rv = NS_GetFileFromURLSpec(NS_ConvertUCS2toUTF8(value),
+      rv = NS_GetFileFromURLSpec(NS_ConvertUTF16toUTF8(value),
                                  getter_AddRefs(file));
     }
 

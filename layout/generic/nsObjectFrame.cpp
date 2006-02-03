@@ -1745,7 +1745,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const char *aStatusMsg)
 {
   nsresult  rv = NS_ERROR_FAILURE;
   
-  rv = this->ShowStatus(NS_ConvertUTF8toUCS2(aStatusMsg).get());
+  rv = this->ShowStatus(NS_ConvertUTF8toUTF16(aStatusMsg).get());
   
   return rv;
 }

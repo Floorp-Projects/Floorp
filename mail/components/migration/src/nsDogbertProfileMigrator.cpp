@@ -1504,7 +1504,7 @@ nsresult nsDogbertProfileMigrator::DoTheCopyAndRename(nsIFileSpec * aPathSpec, P
   rv = NS_FileSpecToIFile(&path, getter_AddRefs(localFileDirectory));
   if (NS_FAILED(rv))
     return rv;
-  nsAutoString newName = NS_ConvertUTF8toUCS2(aNewName);
+  nsAutoString newName = NS_ConvertUTF8toUTF16(aNewName);
   localFileOld->CopyTo(localFileDirectory, newName);
 
   return NS_OK;
@@ -1550,7 +1550,7 @@ nsresult nsDogbertProfileMigrator::AddFileCopyToList(nsFileSpec * aOldPath, nsFi
   fileTransactionEntry* fileEntry = new fileTransactionEntry;
   fileEntry->srcFile = do_QueryInterface(oldPathFile);
   fileEntry->destFile = do_QueryInterface(newPathFile);
-  fileEntry->newName = NS_ConvertUTF8toUCS2(newName);
+  fileEntry->newName = NS_ConvertUTF8toUTF16(newName);
   mFileCopyTransactions->AppendElement((void*) fileEntry);
 
   return NS_OK;

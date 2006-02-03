@@ -754,7 +754,7 @@ nsMsgSearchSession::MatchHdr(nsIMsgDBHdr *aMsgHdr, nsIMsgDatabase *aDatabase, PR
     {  
       nsXPIDLString nullCharset, folderCharset;
       scope->m_adapter->GetSearchCharsets(getter_Copies(nullCharset), getter_Copies(folderCharset));
-      NS_ConvertUCS2toUTF8 charset(folderCharset.get());
+      NS_ConvertUTF16toUTF8 charset(folderCharset.get());
       nsMsgSearchOfflineMail::MatchTermsForSearch(aMsgHdr, m_termList, charset.get(), scope, aDatabase, &m_expressionTree, aResult);
     }
   }

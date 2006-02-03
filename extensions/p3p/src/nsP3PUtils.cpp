@@ -236,7 +236,7 @@ nsP3PUtils::DeterminePolicyScope(const nsVoidArray& aNodeList,
     child->GetNodeValue(value);
     static const char* kWhitespace = " \n\r\t\b";
     value = TrimCharsInSet(kWhitespace, value);
-    *aOut = IsPathIncluded(value, NS_ConvertUTF8toUCS2(aPath));
+    *aOut = IsPathIncluded(value, NS_ConvertUTF8toUTF16(aPath));
   }
 
   return NS_OK;

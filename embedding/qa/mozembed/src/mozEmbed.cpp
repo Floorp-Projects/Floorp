@@ -627,7 +627,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 GetDlgItemText(hwndDlg, IDC_ADDRESS, szURL,
                     sizeof(szURL) / sizeof(szURL[0]) - 1);
                 webNavigation->LoadURI(
-                    NS_ConvertASCIItoUCS2(szURL).get(),
+                    NS_ConvertASCIItoUTF16(szURL).get(),
                     nsIWebNavigation::LOAD_FLAGS_NONE,
                     nsnull,
                     nsnull,
@@ -1433,7 +1433,7 @@ nsQABrowserUIGlue::LoadURL(const char * aURL)
   mBrowserView->GetWebBrowser(getter_AddRefs(newBrowser));
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser, &rv));
   if (webNav)
-    return webNav->LoadURI(NS_ConvertASCIItoUCS2(aURL).get(),
+    return webNav->LoadURI(NS_ConvertASCIItoUTF16(aURL).get(),
                            nsIWebNavigation::LOAD_FLAGS_NONE,
                            nsnull,
                            nsnull,

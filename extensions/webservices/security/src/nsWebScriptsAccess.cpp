@@ -479,7 +479,7 @@ nsWebScriptsAccess::CheckAccess(AccessInfoEntry* aEntry,
 
   nsXPIDLCString tmp;
   codebase_uri->GetSpec(tmp);
-  const nsAString& codebase = NS_ConvertUTF8toUCS2(tmp);
+  const nsAString& codebase = NS_ConvertUTF8toUTF16(tmp);
 
   PRUint32 count = aEntry->mInfoArray.Count();
   PRUint32 index;
@@ -701,7 +701,7 @@ nsWebScriptsAccess::IsPublicService(const char* aHost, PRBool* aReturn)
         }
       }
       const nsAFlatString& transportURI =
-        NS_ConvertUTF8toUCS2(Substring(uri_begin, uri_end));
+        NS_ConvertUTF8toUTF16(Substring(uri_begin, uri_end));
       if (!transportURI.IsEmpty())
         mMasterServices.AppendString(transportURI);
       begin = (*curr == ',' && curr != end) ? ++curr : curr;

@@ -467,7 +467,7 @@ static PRBool FindFontFamily(const nsString& aFamily, PRBool aGeneric, void *aDa
   PRBool retval = PR_TRUE;
   
 #ifdef DEBUG
-//   printf("trying to instantiate font %s, generic=%d\n", NS_ConvertUCS2toUTF8(aFamily).get(),
+//   printf("trying to instantiate font %s, generic=%d\n", NS_ConvertUTF16toUTF8(aFamily).get(),
 //          aGeneric);
 #endif
   
@@ -559,7 +559,7 @@ nsSVGGDIPlusGlyphMetrics::InitializeFontInfo()
 //     mFont->GetFamily(&fontFamily);
 //     WCHAR familyName[100];
 //     fontFamily.GetFamilyName(familyName);
-//     printf("font loaded: "); printf(NS_ConvertUCS2toUTF8(familyName).get()); printf("\n");
+//     printf("font loaded: "); printf(NS_ConvertUTF16toUTF8(familyName).get()); printf("\n");
 //   }
 #endif
 }

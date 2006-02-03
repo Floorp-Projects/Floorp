@@ -779,7 +779,7 @@ CHBrowserListener::HandleLinkAddedEvent(nsIDOMEvent* inEvent)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIURI> iconURI;
-  rv = NS_NewURI(getter_AddRefs(iconURI), NS_ConvertUCS2toUTF8(iconHref), nsnull, documentURI);
+  rv = NS_NewURI(getter_AddRefs(iconURI), NS_ConvertUTF16toUTF8(iconHref), nsnull, documentURI);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   // only accept http and https icons (should we allow https, even?)

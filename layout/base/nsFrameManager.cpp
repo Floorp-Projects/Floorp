@@ -735,7 +735,7 @@ DumpContext(nsIFrame* aFrame, nsStyleContext* aContext)
 
     if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->GetFrameName(name);
-      fputs(NS_LossyConvertUCS2toASCII(name).get(), stdout);
+      fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
     }
     fprintf(stdout, " (%p)", NS_STATIC_CAST(void*, aFrame));
   }
@@ -746,7 +746,7 @@ DumpContext(nsIFrame* aFrame, nsStyleContext* aContext)
     if (pseudoTag) {
       nsAutoString  buffer;
       pseudoTag->ToString(buffer);
-      fputs(NS_LossyConvertUCS2toASCII(buffer).get(), stdout);
+      fputs(NS_LossyConvertUTF16toASCII(buffer).get(), stdout);
       fputs(" ", stdout);
     }
 

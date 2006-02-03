@@ -958,7 +958,7 @@ nsresult nsAddressBook::AppendProperty(const char *aProperty, const PRUnichar *a
     LossyAppendUTF16toASCII(aValue, aResult);
   }
   else {
-    char *base64Str = PL_Base64Encode(NS_ConvertUCS2toUTF8(aValue).get(), 0, nsnull);
+    char *base64Str = PL_Base64Encode(NS_ConvertUTF16toUTF8(aValue).get(), 0, nsnull);
     if (!base64Str)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1039,7 +1039,7 @@ static void convertNameValue(VObject *vObj, nsIAbCard *aCard)
       return;
 
   char *cardColValue = getCString(vObj);
-  aCard->SetCardValue(cardColName, NS_ConvertUTF8toUCS2(cardColValue).get());
+  aCard->SetCardValue(cardColName, NS_ConvertUTF8toUTF16(cardColValue).get());
   PR_FREEIF(cardColValue);
   return;
 }

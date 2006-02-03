@@ -611,7 +611,7 @@ const long NSFindPanelActionSetFindString = 7;
   // again to an NSDate. Why doesn't nsIDOMNSDocument have an accessor
   // which can give me a date directly?
   PRTime time;
-  PRStatus st = PR_ParseTimeString(NS_ConvertUCS2toUTF8(lastModifiedDate).get(), PR_FALSE /* local time */, &time);
+  PRStatus st = PR_ParseTimeString(NS_ConvertUTF16toUTF8(lastModifiedDate).get(), PR_FALSE /* local time */, &time);
   if (st == PR_SUCCESS)
     return [NSDate dateWithPRTime:time];
 

@@ -868,7 +868,7 @@ nsMsgFilter::GetVersion()
 void nsMsgFilter::Dump()
 {
   nsCAutoString s;
-  CopyUCS2toASCII(m_filterName, s);
+  LossyCopyUTF16toASCII(m_filterName, s);
   printf("filter %s type = %c desc = %s\n", s.get(), m_type + '0', m_description.get());
 }
 #endif

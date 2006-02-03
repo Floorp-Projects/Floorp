@@ -82,7 +82,7 @@ nsXFormsXPathAnalyzer::Analyze(nsIDOMNode                *aContextNode,
 
 #ifdef DEBUG_XF_ANALYZER
   printf("=====================================\n");
-  printf("Analyzing: %s\n", NS_ConvertUCS2toUTF8(*mCurExprString).get());
+  printf("Analyzing: %s\n", NS_ConvertUTF16toUTF8(*mCurExprString).get());
   printf("=====================================\n");
 #endif
 
@@ -216,11 +216,11 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
 #endif
       if (aNode->mChild || (!aNode->mChild && hasContinue)) {
 #ifdef DEBUG_XF_ANALYZER
-        printf("iterating '%s'\n", NS_ConvertUCS2toUTF8(xp).get());
+        printf("iterating '%s'\n", NS_ConvertUTF16toUTF8(xp).get());
 #endif
       } else {
 #ifdef DEBUG_XF_ANALYZER
-        printf("collecting '%s'\n", NS_ConvertUCS2toUTF8(xp).get());
+        printf("collecting '%s'\n", NS_ConvertUTF16toUTF8(xp).get());
 #endif
         mCurSet->AppendObject(node);
       }

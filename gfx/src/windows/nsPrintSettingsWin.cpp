@@ -229,13 +229,13 @@ Tester::Tester()
     ps->SetPrintBGColors(PR_TRUE);
     ps->SetPrintBGImages(PR_TRUE);
     ps->SetPrintRange(15);
-    ps->SetHeaderStrLeft(NS_ConvertUTF8toUCS2("Left").get());
-    ps->SetHeaderStrCenter(NS_ConvertUTF8toUCS2("Center").get());
-    ps->SetHeaderStrRight(NS_ConvertUTF8toUCS2("Right").get());
-    ps->SetFooterStrLeft(NS_ConvertUTF8toUCS2("Left").get());
-    ps->SetFooterStrCenter(NS_ConvertUTF8toUCS2("Center").get());
-    ps->SetFooterStrRight(NS_ConvertUTF8toUCS2("Right").get());
-    ps->SetPaperName(NS_ConvertUTF8toUCS2("Paper Name").get());
+    ps->SetHeaderStrLeft(NS_ConvertUTF8toUTF16("Left").get());
+    ps->SetHeaderStrCenter(NS_ConvertUTF8toUTF16("Center").get());
+    ps->SetHeaderStrRight(NS_ConvertUTF8toUTF16("Right").get());
+    ps->SetFooterStrLeft(NS_ConvertUTF8toUTF16("Left").get());
+    ps->SetFooterStrCenter(NS_ConvertUTF8toUTF16("Center").get());
+    ps->SetFooterStrRight(NS_ConvertUTF8toUTF16("Right").get());
+    ps->SetPaperName(NS_ConvertUTF8toUTF16("Paper Name").get());
     ps->SetPaperSizeType(10);
     ps->SetPaperData(1);
     ps->SetPaperWidth(100.0);
@@ -245,11 +245,11 @@ Tester::Tester()
     ps->SetPrintInColor(PR_TRUE);
     ps->SetPaperSize(5);
     ps->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
-    ps->SetPrintCommand(NS_ConvertUTF8toUCS2("Command").get());
+    ps->SetPrintCommand(NS_ConvertUTF8toUTF16("Command").get());
     ps->SetNumCopies(2);
-    ps->SetPrinterName(NS_ConvertUTF8toUCS2("Printer Name").get());
+    ps->SetPrinterName(NS_ConvertUTF8toUTF16("Printer Name").get());
     ps->SetPrintToFile(PR_TRUE);
-    ps->SetToFileName(NS_ConvertUTF8toUCS2("File Name").get());
+    ps->SetToFileName(NS_ConvertUTF8toUTF16("File Name").get());
     ps->SetPrintPageDelay(1000);
 
     nsCOMPtr<nsIPrintSettings> ps2;

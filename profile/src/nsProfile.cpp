@@ -412,7 +412,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
         printf(" install new UILocaleName: %s\n", mUILocaleName.get());
 #endif
         rv = chromeRegistry->SelectLocaleForProfile(mUILocaleName,
-                                          NS_ConvertUTF8toUCS2(fileStr).get());
+                                          NS_ConvertUTF8toUTF16(fileStr).get());
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -421,7 +421,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
         printf(" install new mContentLocaleName: %s\n", mContentLocaleName.get());
 #endif
         rv = chromeRegistry->SelectLocaleForProfile(mContentLocaleName,
-                                          NS_ConvertUTF8toUCS2(fileStr).get());
+                                          NS_ConvertUTF8toUTF16(fileStr).get());
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -1589,10 +1589,10 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
     {
       printf("ProfileManager : CreateNewProfileWithLocales\n");
 
-      printf("Profile Name: %s\n", NS_LossyConvertUCS2toASCII(profileName).get());
+      printf("Profile Name: %s\n", NS_LossyConvertUTF16toASCII(profileName).get());
 
       if (nativeProfileDir)
-        printf("Profile Dir: %s\n", NS_LossyConvertUCS2toASCII(nativeProfileDir).get());
+        printf("Profile Dir: %s\n", NS_LossyConvertUTF16toASCII(nativeProfileDir).get());
     }
 #endif
 
@@ -1717,7 +1717,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
 
         if (!uiLocale.IsEmpty()) {
             rv = chromeRegistry->SelectLocaleForProfile(uiLocale, 
-                                                        NS_ConvertUTF8toUCS2(fileStr).get());
+                                                        NS_ConvertUTF8toUTF16(fileStr).get());
             // Remember which profile has been created with the UILocale
             // didn't use gProfileDataAccess because just needed one time
             if (NS_SUCCEEDED(rv)) {
@@ -1731,7 +1731,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
         rv = packageRegistry->GetSelectedSkin(NS_LITERAL_CSTRING("global"),currentSkinName);
         if (!currentSkinName.IsEmpty()) {
             rv = chromeRegistry->SelectSkinForProfile(currentSkinName,
-                                         NS_ConvertUTF8toUCS2(fileStr).get());
+                                         NS_ConvertUTF8toUTF16(fileStr).get());
         }
 
         if (!contentLocale.IsEmpty()) {
@@ -1753,7 +1753,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
             }
 
             rv = chromeRegistry->SelectLocaleForProfile(contentLocale, 
-                                                        NS_ConvertUTF8toUCS2(fileStr).get());
+                                                        NS_ConvertUTF8toUTF16(fileStr).get());
             // Remember which profile has been created with the UILocale
             // didn't use gProfileDataAccess because just needed one time
             if (NS_SUCCEEDED(rv)) {
@@ -1807,10 +1807,10 @@ nsProfile::RenameProfile(const PRUnichar* oldName, const PRUnichar* newName)
       printf("ProfileManager : Renaming profile\n");
 
       nsCAutoString temp1; temp1.AssignWithConversion(oldName);
-      printf("Old name:  %s\n", NS_LossyConvertUCS2toASCII(oldName).get());
+      printf("Old name:  %s\n", NS_LossyConvertUTF16toASCII(oldName).get());
 
       nsCAutoString temp2; temp2.AssignWithConversion(newName);
-      printf("New name:  %s\n", NS_LossyConvertUCS2toASCII(newName).get());
+      printf("New name:  %s\n", NS_LossyConvertUTF16toASCII(newName).get());
     }
 #endif
 

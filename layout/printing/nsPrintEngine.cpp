@@ -940,8 +940,8 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
           PRUnichar * docURLStr;
 
           GetDisplayTitleAndURL(mPrt->mPrintObject, mPrt->mPrintSettings, mPrt->mBrandName, &docTitleStr, &docURLStr, eDocTitleDefURLDoc); 
-          PR_PL(("Title: %s\n", docTitleStr?NS_LossyConvertUCS2toASCII(docTitleStr).get():""));
-          PR_PL(("URL:   %s\n", docURLStr?NS_LossyConvertUCS2toASCII(docURLStr).get():""));
+          PR_PL(("Title: %s\n", docTitleStr?NS_LossyConvertUTF16toASCII(docTitleStr).get():""));
+          PR_PL(("URL:   %s\n", docURLStr?NS_LossyConvertUTF16toASCII(docURLStr).get():""));
 
           rv = mPrt->mPrintDC->PrepareDocument(docTitleStr, fileName);
 
@@ -4730,7 +4730,7 @@ static void DumpFrames(FILE*                 out,
     if (NS_SUCCEEDED(CallQueryInterface(child, &frameDebug))) {
       frameDebug->GetFrameName(tmp);
     }
-    fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
     PRBool isSelected;
     if (NS_SUCCEEDED(child->IsVisibleForPainting(aPresContext, *aRendContext, PR_TRUE, &isSelected))) {
       fprintf(out, " %p %s", child, isSelected?"VIS":"UVS");

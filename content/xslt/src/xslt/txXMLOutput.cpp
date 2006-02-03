@@ -304,7 +304,7 @@ void txXMLOutput::printUTF8Char(PRUnichar& ch)
 
 void txXMLOutput::printUTF8Chars(const nsAString& aData)
 {
-    *mOut << NS_ConvertUCS2toUTF8(aData).get();
+    *mOut << NS_ConvertUTF16toUTF8(aData).get();
 }
 
 void txXMLOutput::printWithXMLEntities(const nsAString& aData,

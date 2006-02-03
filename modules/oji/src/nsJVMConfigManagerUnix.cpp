@@ -492,7 +492,7 @@ nsJVMConfigManagerUnix::SearchDefault()
     prefs->GetCharPref(defaultLocationName,
                        getter_Copies(defaultLocationXPIDLValue));
 
-    NS_ConvertUTF8toUCS2 defaultLocation(defaultLocationXPIDLValue);
+    NS_ConvertUTF8toUTF16 defaultLocation(defaultLocationXPIDLValue);
 
 #ifdef SPARC
     // On Solaris, the default location is the java home

@@ -379,7 +379,7 @@ nsresult
 txXPathNodeUtils::getXSLTId(const txXPathNode& aNode,
                             nsAString& aResult)
 {
-    CopyASCIItoUCS2(nsPrintfCString(kFmtSize, gPrintfFmt, aNode.mInner),
+    CopyASCIItoUTF16(nsPrintfCString(kFmtSize, gPrintfFmt, aNode.mInner),
                     aResult);
 
     return NS_OK;

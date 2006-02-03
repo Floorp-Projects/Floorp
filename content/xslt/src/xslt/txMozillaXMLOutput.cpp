@@ -764,7 +764,7 @@ void txMozillaXMLOutput::processHTTPEquiv(nsIAtom* aHeader, const nsAString& aVa
     // For now we only handle "refresh". There's a longer list in
     // HTMLContentSink::ProcessHeaderData
     if (aHeader == txHTMLAtoms::refresh)
-        CopyUCS2toASCII(aValue, mRefreshString);
+        LossyCopyUTF16toASCII(aValue, mRefreshString);
 }
 
 nsresult

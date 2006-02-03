@@ -73,12 +73,12 @@ mozSqlConnectionMysql::Init(const nsAString &aHost, PRInt32 aPort,
   }
 
   if (!mysql_real_connect(mConnection, 
-                          NS_ConvertUCS2toUTF8(aHost).get(),
-                          NS_ConvertUCS2toUTF8(aUsername).get(),
-                          NS_ConvertUCS2toUTF8(aPassword).get(),
-                          NS_ConvertUCS2toUTF8(aDatabase).get(),
+                          NS_ConvertUTF16toUTF8(aHost).get(),
+                          NS_ConvertUTF16toUTF8(aUsername).get(),
+                          NS_ConvertUTF16toUTF8(aPassword).get(),
+                          NS_ConvertUTF16toUTF8(aDatabase).get(),
                           aPort, nsnull, 0)){
-    mErrorMessage.Assign(NS_ConvertUTF8toUCS2(mysql_error(mConnection)));
+    mErrorMessage.Assign(NS_ConvertUTF8toUTF16(mysql_error(mConnection)));
     mConnection = nsnull;
 
     return NS_ERROR_FAILURE;
@@ -94,7 +94,7 @@ mozSqlConnectionMysql::GetServerVersion(nsAString &aServerVersion)
     return NS_ERROR_NOT_INITIALIZED;
 
   if (mServerVersion.IsEmpty()){
-    mServerVersion.Assign(NS_ConvertUTF8toUCS2(mysql_get_server_info(mConnection)));
+    mServerVersion.Assign(NS_ConvertUTF8toUTF16(mysql_get_server_info(mConnection)));
   }
   aServerVersion.Assign(mServerVersion);
 
@@ -119,8 +119,8 @@ mozSqlConnectionMysql::RealExec(const nsAString& aQuery,
   if (!mConnection)
     return NS_ERROR_NOT_INITIALIZED;
 
-  if (mysql_query(mConnection, NS_ConvertUCS2toUTF8(aQuery).get())){
-    mErrorMessage.Assign(NS_ConvertUTF8toUCS2(mysql_error(mConnection)));
+  if (mysql_query(mConnection, NS_ConvertUTF16toUTF8(aQuery).get())){
+    mErrorMessage.Assign(NS_ConvertUTF8toUTF16(mysql_error(mConnection)));
 
     return NS_ERROR_FAILURE;
   }
@@ -139,7 +139,7 @@ mozSqlConnectionMysql::RealExec(const nsAString& aQuery,
 
   MYSQL_RES *rowresults = mysql_store_result(mConnection);
   if (!rowresults){
-    mErrorMessage.Assign(NS_ConvertUTF8toUCS2(mysql_error(mConnection)));
+    mErrorMessage.Assign(NS_ConvertUTF8toUTF16(mysql_error(mConnection)));
 
     return NS_ERROR_FAILURE;
   }
@@ -170,7 +170,7 @@ mozSqlConnectionMysql::CancelExec()
   mysql_kill(mConnection, id);
 
   if (mysql_errno(mConnection)) {
-    mErrorMessage.Assign(NS_ConvertUTF8toUCS2(mysql_error(mConnection)));
+    mErrorMessage.Assign(NS_ConvertUTF8toUTF16(mysql_error(mConnection)));
     return NS_ERROR_FAILURE;
   }
 

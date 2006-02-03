@@ -860,8 +860,8 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     {
         if ( mUninstallPackage )
         {
-            VR_UninstallCreateNode( NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(mRegistryPackageName).get()),
-                                    NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(mUIName).get()));
+            VR_UninstallCreateNode( NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(mRegistryPackageName).get()),
+                                    NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(mUIName).get()));
         }
 
         // Install the Component into the Version Registry.
@@ -877,7 +877,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             if (mPackageFolder)
                 mPackageFolder->GetDirectoryPath(path);
 
-            VR_Install( NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(mRegistryPackageName).get()),
+            VR_Install( NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(mRegistryPackageName).get()),
                         NS_CONST_CAST(char *, path.get()),
                         NS_CONST_CAST(char *, versionCString.get()),
                         PR_TRUE );
@@ -898,7 +898,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                 if (objString)
                 {
                     mListener->OnFinalizeProgress(
-                                    NS_ConvertASCIItoUCS2(objString).get(),
+                                    NS_ConvertASCIItoUTF16(objString).get(),
                                     (i+1), mInstalledFiles->Count());
                     delete [] objString;
                 }
@@ -1026,7 +1026,7 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
         return NS_OK;
     }
 
-    NS_ConvertUCS2toUTF8 componentCString(tempString);
+    NS_ConvertUTF16toUTF8 componentCString(tempString);
 
     if((err = VR_GetDefaultDirectory( NS_CONST_CAST(char *, componentCString.get()), sizeof(dir), dir )) != REGERR_OK)
     {
@@ -1516,7 +1516,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
 
     mPackageFolder = nsnull;
     if(REGERR_OK == VR_GetDefaultDirectory(
-                        NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(mRegistryPackageName).get()),
+                        NS_CONST_CAST(char *, NS_ConvertUTF16toUTF8(mRegistryPackageName).get()),
                         sizeof(szRegPackagePath), szRegPackagePath))
     {
         // found one saved in the registry
@@ -2308,7 +2308,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     // flash current item
 
     if (mListener)
-        mListener->OnItemScheduled(NS_ConvertASCIItoUCS2(objString).get());
+        mListener->OnItemScheduled(NS_ConvertASCIItoUTF16(objString).get());
 
 
     // do any unpacking or other set-up
@@ -2728,7 +2728,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
         extractHereSpec = temp;
     }
 
-    rv = mJarFileData->Extract(NS_LossyConvertUCS2toASCII(aJarfile).get(),
+    rv = mJarFileData->Extract(NS_LossyConvertUTF16toASCII(aJarfile).get(),
                                extractHereSpec);
     if (NS_FAILED(rv))
     {
@@ -2807,7 +2807,7 @@ nsInstall::GetResourcedString(const nsAString& aResName)
     ** than nothing due to failure above: always the case for the Install Wizards.
     */
     return nsCRT::strdup(nsInstallResources::GetDefaultVal(
-                    NS_LossyConvertUCS2toASCII(aResName).get()));
+                    NS_LossyConvertUTF16toASCII(aResName).get()));
 }
 
 
@@ -2824,7 +2824,7 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVoidArray *paths)
         PRInt32 prefix_length = directory.Length()+1; // account for slash
 
         nsresult rv = mJarFileData->FindEntries(
-                          NS_LossyConvertUCS2toASCII(pattern).get(),
+                          NS_LossyConvertUTF16toASCII(pattern).get(),
                           &jarEnum );
         if (NS_FAILED(rv) || !jarEnum)
             goto handle_err;

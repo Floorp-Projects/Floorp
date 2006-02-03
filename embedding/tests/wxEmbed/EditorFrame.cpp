@@ -71,7 +71,7 @@ EditorFrame::EditorFrame(wxWindow* aParent)
     mCommandManager = do_GetInterface(mWebBrowser);
 
     nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
-    webNav->LoadURI(NS_ConvertASCIItoUCS2("www.mozilla.org").get(),
+    webNav->LoadURI(NS_ConvertASCIItoUTF16("www.mozilla.org").get(),
         nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
 
 }

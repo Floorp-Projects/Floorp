@@ -511,7 +511,7 @@ GetEncoding(const nsCString& aFontName, nsACString& aValue)
   nsAutoString value;
   rv = gFontEncodingProperties->GetStringProperty(name, value);
   if (NS_SUCCEEDED(rv))
-    CopyUCS2toASCII(value, aValue);
+    LossyCopyUTF16toASCII(value, aValue);
   return rv;
 }
 
@@ -565,7 +565,7 @@ nsresult
 nsMacUnicodeFontInfo::GetConverterAndCCMap(const nsString& aFontName, nsIUnicodeEncoder** aConverter,
     PRUint16** aCCMap)
 {
-    if(NS_SUCCEEDED(GetConverter(NS_ConvertUCS2toUTF8(aFontName), aConverter)) && *aConverter)
+    if(NS_SUCCEEDED(GetConverter(NS_ConvertUTF16toUTF8(aFontName), aConverter)) && *aConverter)
     {
         // make sure we have the hashtable
         if(!gFontMaps)

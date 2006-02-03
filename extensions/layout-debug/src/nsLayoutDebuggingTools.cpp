@@ -351,7 +351,7 @@ static void DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* out, PRInt32 aI
     fprintf(out, "%p '", NS_STATIC_CAST(void*, aShellItem));
     aShellItem->GetName(getter_Copies(name));
     aShellItem->GetSameTypeParent(getter_AddRefs(parent));
-    fputs(NS_LossyConvertUCS2toASCII(name).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(name).get(), out);
     fprintf(out, "' parent=%p <\n", NS_STATIC_CAST(void*, parent));
 
     ++aIndent;

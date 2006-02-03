@@ -516,7 +516,7 @@ nsScriptLoader::DoProcessScriptElement(nsIScriptElement *aElement,
                                      scriptURI,
                                      docURI,
                                      aElement,
-                                     NS_LossyConvertUCS2toASCII(type),
+                                     NS_LossyConvertUTF16toASCII(type),
                                      nsnull,    //extra
                                      &shouldLoad,
                                      nsContentUtils::GetContentPolicy());

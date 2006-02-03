@@ -60,7 +60,7 @@ static void _PanicErrorWrite(const char *msg)
 {
 	nsCOMPtr<nsIConsoleService> consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
 	if (consoleService)
-		consoleService->LogStringMessage(NS_ConvertASCIItoUCS2(msg).get());
+		consoleService->LogStringMessage(NS_ConvertASCIItoUTF16(msg).get());
 	PR_fprintf(PR_STDERR,"%s\n", msg);
 }
 

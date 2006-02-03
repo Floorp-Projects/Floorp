@@ -95,7 +95,7 @@ NS_IMETHODIMP nsFontPackageHandler::NeedFontPackage(const char *aFontPackID)
   
   // turn (const char *)xx-YY into (PRUnichar *)xx-yy
   nsAutoString langCode;
-  CopyASCIItoUCS2(nsDependentCString(colonPos + 1), langCode);
+  CopyASCIItoUTF16(nsDependentCString(colonPos + 1), langCode);
   ToLowerCase(langCode);
 
   // check for xx or xx-yy in handled_languages

@@ -1104,7 +1104,7 @@ typedef enum EProxyConfig {
   rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(profDirFile));
   if (NS_SUCCEEDED(rv)) {
     // profDirDesc is ASCII so no loss
-    rv = profDirFile->SetPersistentDescriptor(NS_LossyConvertUCS2toASCII(profDirDesc));
+    rv = profDirFile->SetPersistentDescriptor(NS_LossyConvertUTF16toASCII(profDirDesc));
     PRBool exists;
     if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(profDirFile->Exists(&exists)) && exists) {
       nsCAutoString nativePath;

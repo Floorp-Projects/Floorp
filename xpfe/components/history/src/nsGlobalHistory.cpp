@@ -853,7 +853,7 @@ nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   // eventually turn this on when we're confident in mork's abilitiy
   // to handle yarn forms properly
 #if 0
-  NS_ConvertUCS2toUTF8 utf8Value(aValue);
+  NS_ConvertUTF16toUTF8 utf8Value(aValue);
   printf("Storing utf8 value %s\n", utf8Value.get());
   mdbYarn yarn = { (void *)utf8Value.get(), utf8Value.Length(), utf8Value.Length(), 0, 1, nsnull };
 #else
@@ -1708,7 +1708,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     if (aProperty == kNC_URL && !IsFindResource(aSource)) {
       
       nsCOMPtr<nsIRDFLiteral> uriLiteral;
-      rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri).get(), getter_AddRefs(uriLiteral));
+      rv = gRDFService->GetLiteral(NS_ConvertUTF8toUTF16(uri).get(), getter_AddRefs(uriLiteral));
       if (NS_FAILED(rv))    return(rv);
       *aTarget = uriLiteral;
       NS_ADDREF(*aTarget);
@@ -1722,7 +1722,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       // for sorting, we sort by uri, so just return the URI as a literal
       if (aProperty == kNC_NameSort) {
         nsCOMPtr<nsIRDFLiteral> uriLiteral;
-        rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri).get(),
+        rv = gRDFService->GetLiteral(NS_ConvertUTF8toUTF16(uri).get(),
                                      getter_AddRefs(uriLiteral));
         if (NS_FAILED(rv))    return(rv);
         
@@ -3976,7 +3976,7 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       rowVal.BeginReading(start);
       rowVal.EndReading(end);
   
-      NS_ConvertUCS2toUTF8 utf8Value(term->text);
+      NS_ConvertUTF16toUTF8 utf8Value(term->text);
       
       if (term->method.Equals("is")) {
         if (!utf8Value.Equals(rowVal, nsCaseInsensitiveCStringComparator()))
@@ -4111,7 +4111,7 @@ nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
   nsCAutoString url;
   mHistory->GetRowValue(aRow, mURLColumn, url);
 
-  NS_ConvertUTF8toUCS2 utf8Url(url);
+  NS_ConvertUTF8toUTF16 utf8Url(url);
 
   PRBool result = mHistory->AutoCompleteCompare(utf8Url, mSelectValue, mExclude); 
   
@@ -4129,7 +4129,7 @@ nsGlobalHistory::AutoCompleteEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsI
   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
   NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
 
-  newItem->SetValue(NS_ConvertUTF8toUCS2(url.get()));
+  newItem->SetValue(NS_ConvertUTF8toUTF16(url.get()));
   newItem->SetParam(aRow);
   newItem->SetComment(comments.get());
 

@@ -148,7 +148,7 @@ nsresult nsAbCardProperty::GetCardTypeFromString(const char *aCardTypeStr, PRBoo
   nsresult rv = GetCardType(getter_Copies(cardType));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  *aValue = ((aEmptyIsTrue && cardType.IsEmpty()) || cardType.Equals(NS_ConvertASCIItoUCS2(aCardTypeStr)));
+  *aValue = ((aEmptyIsTrue && cardType.IsEmpty()) || cardType.Equals(NS_ConvertASCIItoUTF16(aCardTypeStr)));
   return NS_OK;
 }
 
@@ -1345,7 +1345,7 @@ static VObject* myAddPropValue(VObject *o, const char *propName, const PRUnichar
 {
     if (aCardHasData)
         *aCardHasData = PR_TRUE;
-    return addPropValue(o, propName, NS_ConvertUCS2toUTF8(propValue).get());
+    return addPropValue(o, propName, NS_ConvertUTF16toUTF8(propValue).get());
 }
 
 NS_IMETHODIMP nsAbCardProperty::ConvertToEscapedVCard(char **aResult)
@@ -1585,7 +1585,7 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToBase64EncodedXML(char **result)
   xmlStr.Append(xmlSubstr);
   xmlStr.AppendLiteral("</directory>\n");
 
-  *result = PL_Base64Encode(NS_ConvertUCS2toUTF8(xmlStr).get(), 0, nsnull);
+  *result = PL_Base64Encode(NS_ConvertUTF16toUTF8(xmlStr).get(), 0, nsnull);
   return (*result ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
 
@@ -1871,7 +1871,7 @@ nsresult nsAbCardProperty::AppendLabel(const AppendItem &aItem,
   if (attrValue.IsEmpty())
     return NS_OK;
 
-  rv = aBundle->GetStringFromName(NS_ConvertASCIItoUCS2(aItem.mLabel).get(), getter_Copies(label));
+  rv = aBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aItem.mLabel).get(), getter_Copies(label));
   NS_ENSURE_SUCCESS(rv, rv);
 
   aResult.AppendLiteral("<labelrow><label>");

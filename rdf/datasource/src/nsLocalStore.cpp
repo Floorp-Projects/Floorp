@@ -520,7 +520,7 @@ LocalStoreImpl::Observe(nsISupports *aSubject, const char *aTopic, const PRUnich
         // profile-less.
         mInner = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "in-memory-datasource");
 
-        if (!nsCRT::strcmp(NS_ConvertUCS2toUTF8(someData).get(), "shutdown-cleanse")) {
+        if (!nsCRT::strcmp(NS_ConvertUTF16toUTF8(someData).get(), "shutdown-cleanse")) {
             nsCOMPtr<nsIFile> aFile;
             rv = NS_GetSpecialDirectory(NS_APP_LOCALSTORE_50_FILE, getter_AddRefs(aFile));
             if (NS_SUCCEEDED(rv))

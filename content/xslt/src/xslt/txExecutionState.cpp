@@ -464,7 +464,7 @@ txExecutionState::retrieveDocument(const nsAString& aUri)
                  "Remove the fragment.");
 
     PR_LOG(txLog::xslt, PR_LOG_DEBUG,
-           ("Retrieve Document %s", NS_LossyConvertUCS2toASCII(aUri).get()));
+           ("Retrieve Document %s", NS_LossyConvertUTF16toASCII(aUri).get()));
 
     // try to get already loaded document
     txLoadedDocumentEntry *entry = mLoadedDocuments.PutEntry(aUri);

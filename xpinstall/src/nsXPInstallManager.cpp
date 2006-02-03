@@ -223,7 +223,7 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
     nsXPITriggerItem *item = mTriggers->Get(--mOutstandingCertLoads);
 
     nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(item->mURL));
+    NS_NewURI(getter_AddRefs(uri), NS_ConvertUTF16toUTF8(item->mURL));
     nsCOMPtr<nsIStreamListener> listener = new CertReader(uri, nsnull, this);
     if (listener)
         rv = NS_OpenURI(listener, nsnull, uri);
@@ -365,7 +365,7 @@ nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPac
             return rv;
         }
 
-        rv = parentWindow->OpenDialog(NS_ConvertASCIItoUCS2(confirmDialogURL),
+        rv = parentWindow->OpenDialog(NS_ConvertASCIItoUTF16(confirmDialogURL),
                                       NS_LITERAL_STRING("_blank"),
                                       NS_LITERAL_STRING("chrome,centerscreen,modal,titlebar"),
                                       ifptr,
@@ -1228,7 +1228,7 @@ nsXPInstallManager::OnCertAvailable(nsIURI *aURI,
     item = mTriggers->Get(--mOutstandingCertLoads);
 
     nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(item->mURL.get()).get());
+    NS_NewURI(getter_AddRefs(uri), NS_ConvertUTF16toUTF8(item->mURL.get()).get());
 
     if (!uri || mChromeType != NOT_CHROME)
         return OnCertAvailable(uri, context, NS_ERROR_FAILURE, nsnull);

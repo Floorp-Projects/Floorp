@@ -406,7 +406,7 @@ void CNsIHistory::GetTitleHistTest(nsIHistoryEntry* theHistoryEntry,
 	}
 
 	FormatAndPrintOutput("The title = ",
-                        NS_ConvertUCS2toUTF8(theTitle).get(), displayMode);
+                        NS_ConvertUTF16toUTF8(theTitle).get(), displayMode);
 }
 
 void CNsIHistory::GetIsSubFrameTest(nsIHistoryEntry* theHistoryEntry,

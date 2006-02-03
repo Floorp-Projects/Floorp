@@ -515,7 +515,7 @@ CocoaPromptService::GetCommonDialogLocaleString(const char *key)
   }
 
   nsXPIDLString string;
-  rv = mCommonDialogStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(key).get(), getter_Copies(string));
+  rv = mCommonDialogStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(key).get(), getter_Copies(string));
   if (NS_FAILED(rv)) return returnValue;
 
   returnValue = [NSString stringWithPRUnichars:string];

@@ -1214,7 +1214,7 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
       mInterfaceTable = new nsSupportsHashtable(4);
 
     // The user specified at least one attribute.
-    NS_ConvertUCS2toUTF8 utf8impl(aImpls);
+    NS_ConvertUTF16toUTF8 utf8impl(aImpls);
     char* str = utf8impl.BeginWriting();
     char* newStr;
     // XXX We should use a strtok function that tokenizes PRUnichars

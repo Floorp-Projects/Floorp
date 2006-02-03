@@ -174,8 +174,8 @@ nsJVMAuthTools::SetAuthenticationInfo(const char* protocol,
                                                realmString,
                                                EmptyCString(),
                                                EmptyString(), 
-                                               NS_ConvertUTF8toUCS2(username),
-                                               NS_ConvertUTF8toUCS2(password));
+                                               NS_ConvertUTF8toUTF16(username),
+                                               NS_ConvertUTF8toUTF16(password));
     return rv;
 }
 

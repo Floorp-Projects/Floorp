@@ -639,7 +639,7 @@ NS_IMETHODIMP nsRegistry::AddKey( nsRegistryKey baseKey, const PRUnichar *keynam
     if ( !keyname ) 
         return NS_ERROR_NULL_POINTER;
 
-    return AddSubtree( baseKey, NS_ConvertUCS2toUTF8(keyname).get(), _retval );
+    return AddSubtree( baseKey, NS_ConvertUTF16toUTF8(keyname).get(), _retval );
 }
 
 /*--------------------------- nsRegistry::GetKey -------------------------------
@@ -650,7 +650,7 @@ NS_IMETHODIMP nsRegistry::GetKey(nsRegistryKey baseKey, const PRUnichar *keyname
     if ( !keyname || !_retval ) 
         return NS_ERROR_NULL_POINTER;
 
-    return GetSubtree( baseKey, NS_ConvertUCS2toUTF8(keyname).get(), _retval );
+    return GetSubtree( baseKey, NS_ConvertUTF16toUTF8(keyname).get(), _retval );
 }
 
 /*--------------------------- nsRegistry::RemoveKey ----------------------------
@@ -661,7 +661,7 @@ NS_IMETHODIMP nsRegistry::RemoveKey(nsRegistryKey baseKey, const PRUnichar *keyn
     if ( !keyname ) 
         return NS_ERROR_NULL_POINTER;
 
-    return RemoveSubtree( baseKey, NS_ConvertUCS2toUTF8(keyname).get() );
+    return RemoveSubtree( baseKey, NS_ConvertUTF16toUTF8(keyname).get() );
 }
 
 NS_IMETHODIMP nsRegistry::GetString(nsRegistryKey baseKey, const PRUnichar *valname, PRUnichar **_retval)
@@ -674,7 +674,7 @@ NS_IMETHODIMP nsRegistry::GetString(nsRegistryKey baseKey, const PRUnichar *valn
     *_retval = nsnull;
     nsXPIDLCString tmpstr;
 
-    nsresult rv = GetStringUTF8( baseKey, NS_ConvertUCS2toUTF8(valname).get(), getter_Copies(tmpstr) );
+    nsresult rv = GetStringUTF8( baseKey, NS_ConvertUTF16toUTF8(valname).get(), getter_Copies(tmpstr) );
 
     if (NS_SUCCEEDED(rv))
     {
@@ -692,8 +692,8 @@ NS_IMETHODIMP nsRegistry::SetString(nsRegistryKey baseKey, const PRUnichar *valn
         return NS_ERROR_NULL_POINTER;
 
     return SetStringUTF8( baseKey,
-                          NS_ConvertUCS2toUTF8(valname).get(),
-                          NS_ConvertUCS2toUTF8(value).get() );
+                          NS_ConvertUTF16toUTF8(valname).get(),
+                          NS_ConvertUTF16toUTF8(value).get() );
 }
 
 /*--------------------------- nsRegistry::GetString ----------------------------

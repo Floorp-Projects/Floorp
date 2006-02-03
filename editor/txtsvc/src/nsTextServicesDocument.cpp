@@ -4779,7 +4779,7 @@ nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
   nsresult result;
 
   aContent->Tag()->ToString(tmpStr);
-  printf("%s", NS_LossyConvertUCS2toASCII(tmpStr).get());
+  printf("%s", NS_LossyConvertUTF16toASCII(tmpStr).get());
 
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContent);
 
@@ -4799,7 +4799,7 @@ nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
       if (NS_FAILED(result))
         return;
 
-      printf(":  \"%s\"", NS_LossyConvertUCS2toASCII(str).get());
+      printf(":  \"%s\"", NS_LossyConvertUTF16toASCII(str).get());
     }
   }
 

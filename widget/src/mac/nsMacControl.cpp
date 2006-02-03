@@ -483,7 +483,7 @@ void nsMacControl::StringToStr255(const nsAString& aText, Str255& aStr255)
 
 	if (NS_FAILED(rv)) {
 //		NS_ASSERTION(0, "error: charset conversion");
-		NS_LossyConvertUCS2toASCII buffer(Substring(aText,0,254));
+		NS_LossyConvertUTF16toASCII buffer(Substring(aText,0,254));
 		PRInt32 len = buffer.Length();
 		memcpy(&aStr255[1], buffer.get(), len);
 		aStr255[0] = len;

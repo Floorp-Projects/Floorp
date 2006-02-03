@@ -786,8 +786,8 @@ si_DumpUserList(nsVoidArray &list)
     for (j=0; j<data_count; ++j) {
       si_SignonDataStruct *data = (si_SignonDataStruct *) user->signonData_list[j];
       LOG(("  (%s,%s)\n",
-          NS_ConvertUCS2toUTF8(data->name).get(),
-          NS_ConvertUCS2toUTF8(data->value).get()));
+          NS_ConvertUTF16toUTF8(data->name).get(),
+          NS_ConvertUTF16toUTF8(data->value).get()));
     }
   }
 }
@@ -2112,7 +2112,7 @@ si_SaveSignonDataLocked(char * state, PRBool notify) {
   if (notify) {
     nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
     if (os) {
-      os->NotifyObservers(nsnull, "signonChanged", NS_ConvertASCIItoUCS2(state).get());
+      os->NotifyObservers(nsnull, "signonChanged", NS_ConvertASCIItoUTF16(state).get());
     }
   }
 
@@ -2378,8 +2378,8 @@ si_RestoreSignonData(nsIPrompt* dialog,
     for (PRInt32 i=0; i<dataCount; i++) {
       data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list.ElementAt(i));
       LOG(("  got [name=%s value=%s]\n",
-              NS_LossyConvertUCS2toASCII(data->name).get(),
-              NS_LossyConvertUCS2toASCII(data->value).get()));
+              NS_LossyConvertUTF16toASCII(data->name).get(),
+              NS_LossyConvertUTF16toASCII(data->value).get()));
       if(!correctedName.IsEmpty() && (data->name == correctedName)) {
         nameFound = PR_TRUE;
       }
@@ -2433,8 +2433,8 @@ si_RestoreSignonData(nsIPrompt* dialog,
     for (PRInt32 i=0; i<dataCount; i++) {
       data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list.ElementAt(i));
       LOG(("  got [name=%s value=%s]\n",
-              NS_LossyConvertUCS2toASCII(data->name).get(),
-              NS_LossyConvertUCS2toASCII(data->value).get()));
+              NS_LossyConvertUTF16toASCII(data->name).get(),
+              NS_LossyConvertUTF16toASCII(data->value).get()));
       if(!correctedName.IsEmpty() && (data->name == correctedName)) {
         nsAutoString password;
         if (NS_SUCCEEDED(Wallet_Decrypt(data->value, password))) {
@@ -2466,7 +2466,7 @@ SINGSIGN_RestoreSignonData(nsIPrompt* dialog, nsIURI* passwordRealm, const PRUni
   si_RestoreSignonData(dialog, realm.get(), legacyRealm.get(), name, value, formNumber, elementNumber);
 
   LOG(("exit SINGSIGN_RestoreSignonData [value=%s]\n",
-      *value ? NS_LossyConvertUCS2toASCII(*value).get() : "(null)"));
+      *value ? NS_LossyConvertUTF16toASCII(*value).get() : "(null)"));
 }
 
 /*
@@ -2512,10 +2512,10 @@ si_RestoreOldSignonDataFromBrowser
   /* get the data from previous time this URL was visited */
   si_lock_signon_list();
   if (!username.IsEmpty()) {
-    user = si_GetSpecificUser(passwordRealm, username, NS_ConvertASCIItoUCS2(USERNAMEFIELD));
+    user = si_GetSpecificUser(passwordRealm, username, NS_ConvertASCIItoUTF16(USERNAMEFIELD));
   } else {
     si_LastFormForWhichUserHasBeenSelected = -1;
-    user = si_GetUser(dialog, passwordRealm, nsnull, pickFirstUser, NS_ConvertASCIItoUCS2(USERNAMEFIELD), 0);
+    user = si_GetUser(dialog, passwordRealm, nsnull, pickFirstUser, NS_ConvertASCIItoUTF16(USERNAMEFIELD), 0);
   }
   if (!user) {
     /* leave original username and password from caller unchanged */

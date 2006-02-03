@@ -529,7 +529,7 @@ nsStaticAtomWrapper::ToString(nsAString& aBuf)
   // to generate the tables, and to avoid unnecessary conversion
   NS_ASSERTION(nsCRT::IsAscii(mStaticAtom->mString),
                "Data loss - atom should be ASCII");
-  CopyASCIItoUCS2(nsDependentCString(mStaticAtom->mString), aBuf);
+  CopyASCIItoUTF16(nsDependentCString(mStaticAtom->mString), aBuf);
   return NS_OK;
 }
 

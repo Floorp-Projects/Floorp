@@ -329,7 +329,7 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
   }
 
 
-  NS_ConvertASCIItoUCS2 typeStr(aTypeStr);
+  NS_ConvertASCIItoUTF16 typeStr(aTypeStr);
   nsXPIDLString title;
 
   if (mStringBundle) {
@@ -343,14 +343,14 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
       if (!fileStr.IsEmpty()) {
         const PRUnichar *formatStrings[4]  = {fileStr.get(), typeStr.get(), 
           widthStr.get(), heightStr.get()};
-        NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithDimAndFile]);
+        NS_ConvertASCIItoUTF16 fmtName(aFormatNames[eWithDimAndFile]);
         mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 4,
                                             getter_Copies(title));
       } 
       else {
         const PRUnichar *formatStrings[3]  = {typeStr.get(), widthStr.get(), 
           heightStr.get()};
-        NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithDim]);
+        NS_ConvertASCIItoUTF16 fmtName(aFormatNames[eWithDim]);
         mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 3,
                                             getter_Copies(title));
       }
@@ -359,13 +359,13 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
     // If we got a filename, display it
       if (!fileStr.IsEmpty()) {
         const PRUnichar *formatStrings[2] = {fileStr.get(), typeStr.get()};
-        NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithFile]);
+        NS_ConvertASCIItoUTF16 fmtName(aFormatNames[eWithFile]);
         mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 2,
                                             getter_Copies(title));
       }
       else {
         const PRUnichar *formatStrings[1] = {typeStr.get()};
-        NS_ConvertASCIItoUCS2 fmtName(aFormatNames[eWithNoInfo]);
+        NS_ConvertASCIItoUTF16 fmtName(aFormatNames[eWithNoInfo]);
         mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 1,
                                             getter_Copies(title));
       }

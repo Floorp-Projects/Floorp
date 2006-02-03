@@ -72,7 +72,7 @@ nsStubListener::OnItemScheduled(const PRUnichar* message )
 {
     if (m_progress)
       {
-        m_progress( NS_LossyConvertUCS2toASCII(message).get(), 0, 0 );
+        m_progress( NS_LossyConvertUTF16toASCII(message).get(), 0, 0 );
       }
     return NS_OK;
 }
@@ -82,7 +82,7 @@ nsStubListener::OnFinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PR
 {
     if (m_progress)
       {
-        m_progress( NS_LossyConvertUCS2toASCII(message).get(), itemNum, totNum );
+        m_progress( NS_LossyConvertUTF16toASCII(message).get(), itemNum, totNum );
       }
     return NS_OK;
 }

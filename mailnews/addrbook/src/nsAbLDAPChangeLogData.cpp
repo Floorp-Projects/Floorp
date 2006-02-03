@@ -303,7 +303,7 @@ nsresult nsAbLDAPProcessChangeLogData::GetAuthData()
     nsXPIDLString password;
     PRBool btnResult = PR_FALSE;
 	rv = dialog->PromptUsernameAndPassword(title, desc, 
-                                            NS_ConvertUTF8toUCS2(serverUri).get(), 
+                                            NS_ConvertUTF8toUTF16(serverUri).get(), 
                                             nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                             getter_Copies(username), getter_Copies(password), 
                                             &btnResult);
@@ -359,9 +359,9 @@ nsresult nsAbLDAPProcessChangeLogData::ParseRootDSEEntry(nsILDAPMessage *aMessag
             if (!PL_strcasecmp(attrs[i], "changelog"))
                 CopyUTF16toUTF8(vals[0], mRootDSEEntry.changeLogDN);
             if (!PL_strcasecmp(attrs[i], "firstChangeNumber"))
-                mRootDSEEntry.firstChangeNumber = atol(NS_LossyConvertUCS2toASCII(vals[0]).get());
+                mRootDSEEntry.firstChangeNumber = atol(NS_LossyConvertUTF16toASCII(vals[0]).get());
             if (!PL_strcasecmp(attrs[i], "lastChangeNumber"))
-                mRootDSEEntry.lastChangeNumber = atol(NS_LossyConvertUCS2toASCII(vals[0]).get());
+                mRootDSEEntry.lastChangeNumber = atol(NS_LossyConvertUTF16toASCII(vals[0]).get());
             if (!PL_strcasecmp(attrs[i], "dataVersion"))
                 CopyUTF16toUTF8(vals[0], mRootDSEEntry.dataVersion);
         }
@@ -456,7 +456,7 @@ nsresult nsAbLDAPProcessChangeLogData::ParseChangeLogEntries(nsILDAPMessage *aMe
 
 #ifdef DEBUG_rdayal
     printf ("ChangeLog Replication : Updated Entry : %s for OpType : %u\n", 
-                                    NS_ConvertUCS2toUTF8(targetDN).get(), operation);
+                                    NS_ConvertUTF16toUTF8(targetDN).get(), operation);
 #endif
 
     switch(operation) {
@@ -525,7 +525,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnFindingChangesDone()
 
     // decrement the count first to get the correct array element
     mEntriesAddedQueryCount--;
-    rv = mChangeLogQuery->QueryChangedEntries(NS_ConvertUCS2toUTF8(*(mEntriesToAdd[mEntriesAddedQueryCount])));
+    rv = mChangeLogQuery->QueryChangedEntries(NS_ConvertUTF16toUTF8(*(mEntriesToAdd[mEntriesAddedQueryCount])));
     if (NS_FAILED(rv))
         return rv;
 
@@ -563,7 +563,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnReplicatingChangeDone()
     if(mEntriesAddedQueryCount < mEntriesToAdd.Count() && mEntriesAddedQueryCount >= 0)
         mEntriesToAdd.RemoveStringAt(mEntriesAddedQueryCount);
     mEntriesAddedQueryCount--;
-    rv = mChangeLogQuery->QueryChangedEntries(NS_ConvertUCS2toUTF8(*(mEntriesToAdd[mEntriesAddedQueryCount])));
+    rv = mChangeLogQuery->QueryChangedEntries(NS_ConvertUTF16toUTF8(*(mEntriesToAdd[mEntriesAddedQueryCount])));
 
     return rv;
 }

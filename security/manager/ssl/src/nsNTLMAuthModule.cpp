@@ -655,7 +655,7 @@ GenerateType3Msg(const nsString &domain,
   if (unicode)
   {
     // hostname is ASCII, so we can do a simple zero-pad expansion:
-    CopyASCIItoUCS2(nsDependentCString(hostBuf, hostLen), ucsHostBuf);
+    CopyASCIItoUTF16(nsDependentCString(hostBuf, hostLen), ucsHostBuf);
     hostPtr = ucsHostBuf.get();
     hostLen = ucsHostBuf.Length() * 2;
 #ifdef IS_BIG_ENDIAN

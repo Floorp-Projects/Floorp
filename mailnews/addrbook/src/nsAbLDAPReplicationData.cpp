@@ -385,7 +385,7 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchEntry(nsILDAPMessage *aMess
     if(NS_SUCCEEDED(rv) && !authDN.IsEmpty())
     {
         dbCard->SetAbDatabase(mReplicationDB);
-        dbCard->SetStringAttribute("_DN", NS_ConvertUTF8toUCS2(authDN).get());
+        dbCard->SetStringAttribute("_DN", NS_ConvertUTF8toUTF16(authDN).get());
     }
 
     newCard = do_QueryInterface(dbCard, &rv);
@@ -612,7 +612,7 @@ void nsAbLDAPProcessReplicationData::Done(PRBool aSuccess)
 nsresult nsAbLDAPProcessReplicationData::DeleteCard(nsString & aDn)
 {
     nsCOMPtr<nsIAbCard> cardToDelete;
-    mReplicationDB->GetCardFromAttribute(nsnull, "_DN", NS_ConvertUCS2toUTF8(aDn).get(),
+    mReplicationDB->GetCardFromAttribute(nsnull, "_DN", NS_ConvertUTF16toUTF8(aDn).get(),
                                          PR_FALSE, getter_AddRefs(cardToDelete));
     return mReplicationDB->DeleteCard(cardToDelete, PR_FALSE);
 }

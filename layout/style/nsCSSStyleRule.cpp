@@ -1483,7 +1483,7 @@ CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
     mSelector->ToString(buffer, mSheet);
 
   buffer.AppendLiteral(" ");
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
   if (nsnull != mDeclaration) {
     mDeclaration->List(out);
   }

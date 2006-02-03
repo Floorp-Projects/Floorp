@@ -93,7 +93,7 @@ NS_IMETHODIMP nsAbIPCCard::Copy(nsIAbCard *srcCard)
         nsXPIDLString palmIDStr;
         nsresult rv = dbCard->GetStringAttribute(CARD_ATTRIB_PALMID, getter_Copies(palmIDStr));
         if(NS_SUCCEEDED(rv) && palmIDStr.get()) {
-            PRFloat64 f = PR_strtod(NS_LossyConvertUCS2toASCII(palmIDStr).get(), nsnull);
+            PRFloat64 f = PR_strtod(NS_LossyConvertUTF16toASCII(palmIDStr).get(), nsnull);
             PRInt64 l;
             LL_D2L(l, f);
             LL_L2UI(mRecordId, l);
@@ -778,7 +778,7 @@ PRBool nsAbIPCCard::Same(nsIAbCard *card)
         rv = dbCard->GetStringAttribute(CARD_ATTRIB_PALMID, getter_Copies(palmIDStr));
         if(NS_SUCCEEDED(rv) && palmIDStr.get()) {
             PRInt32 palmID=0;
-            PRFloat64 f = PR_strtod(NS_LossyConvertUCS2toASCII(palmIDStr).get(), nsnull);
+            PRFloat64 f = PR_strtod(NS_LossyConvertUTF16toASCII(palmIDStr).get(), nsnull);
             PRInt64 l;
             LL_D2L(l, f);
             LL_L2UI(palmID, l);

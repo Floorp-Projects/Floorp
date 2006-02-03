@@ -317,7 +317,7 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     nsCOMPtr<nsIRDFResource> entry;
     rv = mDirRDF->GetResource(entryuriC, getter_AddRefs(entry));
     
-    NS_ConvertUTF8toUCS2 uriUnicode(entryuriC);
+    NS_ConvertUTF8toUTF16 uriUnicode(entryuriC);
 
     nsCOMPtr<nsIRDFLiteral> URLVal;
     rv = mDirRDF->GetLiteral(uriUnicode.get(), getter_AddRefs(URLVal));
@@ -364,7 +364,7 @@ nsHTTPIndex::OnStopRequest(nsIRequest *request,
   mParser->GetComment(getter_Copies(commentStr));
 
   nsCOMPtr<nsIRDFLiteral> comment;
-  rv = mDirRDF->GetLiteral(NS_ConvertASCIItoUCS2(commentStr).get(), getter_AddRefs(comment));
+  rv = mDirRDF->GetLiteral(NS_ConvertASCIItoUTF16(commentStr).get(), getter_AddRefs(comment));
   if (NS_FAILED(rv)) return rv;
 
   rv = Assert(mDirectory, kNC_Comment, comment, PR_TRUE);

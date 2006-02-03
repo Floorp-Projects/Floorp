@@ -511,11 +511,11 @@ static void DumpNode(nsIDOMNode* aNode)
     nsAutoString newText;
     textContent->CopyText(newText);
     printf(">>>> Text node (node name %s): '%s'\n",
-           NS_LossyConvertUCS2toASCII(nodeName).get(),
-           NS_LossyConvertUCS2toASCII(newText).get());
+           NS_LossyConvertUTF16toASCII(nodeName).get(),
+           NS_LossyConvertUTF16toASCII(newText).get());
   }
   else
-    printf(">>>> Node: %s\n", NS_LossyConvertUCS2toASCII(nodeName).get());
+    printf(">>>> Node: %s\n", NS_LossyConvertUTF16toASCII(nodeName).get());
 }
 
 static void DumpRange(nsIDOMRange* aRange)
@@ -935,7 +935,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
 {
 #ifdef DEBUG_FIND
   printf("============== nsFind::Find('%s'%s, %p, %p, %p)\n",
-         NS_LossyConvertUCS2toASCII(aPatText).get(),
+         NS_LossyConvertUTF16toASCII(aPatText).get(),
          mFindBackward ? " (backward)" : " (forward)",
          (void*)aSearchRange, (void*)aStartPoint, (void*)aEndPoint);
 #endif
@@ -1092,7 +1092,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         t1b = nsnull;
 #ifdef DEBUG_FIND
         nsAutoString str2(t2b, fragLen);
-        printf("2 byte, '%s'\n", NS_LossyConvertUCS2toASCII(str2).get());
+        printf("2 byte, '%s'\n", NS_LossyConvertUTF16toASCII(str2).get());
 #endif
       }
       else

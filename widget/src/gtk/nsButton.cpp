@@ -121,7 +121,7 @@ void nsButton::InitCallbacks(char * aName)
 NS_IMETHODIMP nsButton::SetLabel(const nsString& aText)
 {
   gtk_label_set(GTK_LABEL(GTK_BIN (mWidget)->child),
-                NS_LossyConvertUCS2toASCII(aText).get());
+                NS_LossyConvertUTF16toASCII(aText).get());
   return (NS_OK);
 }
 

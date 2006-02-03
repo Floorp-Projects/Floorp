@@ -1258,14 +1258,14 @@ NS_ShutdownNativeCharsetUtils()
 NS_COM nsresult
 NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output)
 {
-    CopyASCIItoUCS2(input, output);
+    CopyASCIItoUTF16(input, output);
     return NS_OK;
 }
 
 NS_COM nsresult
 NS_CopyUnicodeToNative(const nsAString  &input, nsACString &output)
 {
-    CopyUCS2toASCII(input, output);
+    LossyCopyUTF16toASCII(input, output);
     return NS_OK;
 }
 

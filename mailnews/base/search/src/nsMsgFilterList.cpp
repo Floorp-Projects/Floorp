@@ -825,7 +825,7 @@ nsresult
 nsMsgFilterList::WriteWstrAttr(nsMsgFilterFileAttribValue attrib,
                                const PRUnichar *aFilterName, nsIOFileStream *aStream)
 {
-    WriteStrAttr(attrib, NS_ConvertUCS2toUTF8(aFilterName).get(), aStream);
+    WriteStrAttr(attrib, NS_ConvertUTF16toUTF8(aFilterName).get(), aStream);
     return NS_OK;
 }
 

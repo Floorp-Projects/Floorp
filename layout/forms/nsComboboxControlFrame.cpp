@@ -723,7 +723,7 @@ nsComboboxControlFrame::ReflowItems(nsPresContext* aPresContext,
             maxWidth = width;
           }
           //maxWidth = PR_MAX(width, maxWidth);
-          //printf("[%d] - %d %s \n", i, width, NS_LossyConvertUCS2toASCII(text).get());
+          //printf("[%d] - %d %s \n", i, width, NS_LossyConvertUTF16toASCII(text).get());
         }
       }
     }
@@ -1647,7 +1647,7 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
   mDisplayedIndex = aIndex;
 
   REFLOW_DEBUG_MSG2("RedisplayText \"%s\"\n",
-                    NS_LossyConvertUCS2toASCII(mDisplayedOptionText).get());
+                    NS_LossyConvertUTF16toASCII(mDisplayedOptionText).get());
 
   // Send reflow command because the new text maybe larger
   nsresult rv = NS_OK;

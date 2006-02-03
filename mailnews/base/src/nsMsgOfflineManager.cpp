@@ -287,7 +287,7 @@ nsresult nsMsgOfflineManager::ShowStatus(const char *statusMsgName)
   if (mStringBundle)
   {
     nsXPIDLString statusString;
-		res = mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(statusMsgName).get(), getter_Copies(statusString));
+		res = mStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(statusMsgName).get(), getter_Copies(statusString));
 
     if ( NS_SUCCEEDED(res))
       OnStatus(statusString);

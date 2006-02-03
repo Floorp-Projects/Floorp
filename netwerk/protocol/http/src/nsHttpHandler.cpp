@@ -1096,7 +1096,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             nsXPIDLString uval;
             pls->ToString(getter_Copies(uval));
             if (uval)
-                SetAcceptLanguages(NS_ConvertUCS2toUTF8(uval).get());
+                SetAcceptLanguages(NS_ConvertUTF16toUTF8(uval).get());
         } 
     }
 
@@ -1109,7 +1109,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             nsXPIDLString uval;
             pls->ToString(getter_Copies(uval));
             if (uval)
-                SetAcceptCharsets(NS_ConvertUCS2toUTF8(uval).get());
+                SetAcceptCharsets(NS_ConvertUTF16toUTF8(uval).get());
         } 
     }
 
@@ -1667,7 +1667,7 @@ nsHttpHandler::Observe(nsISupports *subject,
     if (strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
-            PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
+            PrefsChanged(prefBranch, NS_ConvertUTF16toUTF8(data).get());
     }
     else if (strcmp(topic, "profile-change-net-teardown")    == 0 ||
              strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)    == 0) {

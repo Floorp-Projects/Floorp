@@ -286,7 +286,7 @@ PRBool nsMapiHook::VerifyUserName(const PRUnichar *aUsername, char **aIdKey)
             if (index != -1)
                 aEmail.Truncate(index);
 
-			if (nsDependentString(aUsername) == NS_ConvertASCIItoUCS2(aEmail))  // == overloaded
+			if (nsDependentString(aUsername) == NS_ConvertASCIItoUTF16(aEmail))  // == overloaded
                 return NS_SUCCEEDED(thisIdentity->GetKey(aIdKey));
         }
     }
@@ -479,7 +479,7 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
         }
     }
 
-    PR_LOG(MAPI, PR_LOG_DEBUG, ("to: %s cc: %s bcc: %s \n", NS_ConvertUCS2toUTF8(To).get(), NS_ConvertUCS2toUTF8(Cc).get(), NS_ConvertUCS2toUTF8(Bcc).get()));
+    PR_LOG(MAPI, PR_LOG_DEBUG, ("to: %s cc: %s bcc: %s \n", NS_ConvertUTF16toUTF8(To).get(), NS_ConvertUTF16toUTF8(Cc).get(), NS_ConvertUTF16toUTF8(Bcc).get()));
     // set To, Cc, Bcc
     aCompFields->SetTo (To) ;
     aCompFields->SetCc (Cc) ;
@@ -687,7 +687,7 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
     aCompFields->SetCc (Cc) ;
     aCompFields->SetBcc (Bcc) ;
 
-    PR_LOG(MAPI, PR_LOG_DEBUG, ("to: %s cc: %s bcc: %s \n", NS_ConvertUCS2toUTF8(To).get(), NS_ConvertUCS2toUTF8(Cc).get(), NS_ConvertUCS2toUTF8(Bcc).get()));
+    PR_LOG(MAPI, PR_LOG_DEBUG, ("to: %s cc: %s bcc: %s \n", NS_ConvertUTF16toUTF8(To).get(), NS_ConvertUTF16toUTF8(Cc).get(), NS_ConvertUTF16toUTF8(Bcc).get()));
 
     nsCAutoString platformCharSet;
     // set subject

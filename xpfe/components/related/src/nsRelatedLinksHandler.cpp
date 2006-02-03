@@ -383,7 +383,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ct
 		if (oneLiner.IsEmpty())	break;
 
 #if 0
-		printf("RL: '%s'\n", NS_LossyConvertUCS2toASCII(oneLiner).get());
+		printf("RL: '%s'\n", NS_LossyConvertUTF16toASCII(oneLiner).get());
 #endif
 
 		// yes, very primitive RDF parsing follows
@@ -496,7 +496,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ct
 		{
 
 #if 0
-			printf("RL: '%s'  -  '%s'\n", NS_LossyConvertUCS2toASCII(title).get(), NS_LossyConvertUCS2toASCII(child).get());
+			printf("RL: '%s'  -  '%s'\n", NS_LossyConvertUTF16toASCII(title).get(), NS_LossyConvertUTF16toASCII(child).get());
 #endif
 			const PRUnichar	*url = child.get();
 			if (nsnull != url)

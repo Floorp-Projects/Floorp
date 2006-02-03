@@ -170,7 +170,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
               printf("nsClipboard: Error getting data from transferable\n");
 #endif /* DEBUG_CLIPBOARD */
             if (dataSize && data != nsnull) {
-              NS_ConvertUCS2toUTF8 cv((const PRUnichar *)data, (PRUint32)dataSize / 2);
+              NS_ConvertUTF16toUTF8 cv((const PRUnichar *)data, (PRUint32)dataSize / 2);
               const char *utf8Str = cv.get();
               uint32 utf8Len = strlen(utf8Str);
 #ifdef DEBUG_CLIPBOARD

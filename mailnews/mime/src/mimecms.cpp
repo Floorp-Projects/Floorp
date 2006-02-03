@@ -301,7 +301,7 @@ PRBool MimeCMSHeadersAndCertsMatch(MimeObject *obj,
     {
       if (from_addr && *from_addr)
       {
-        NS_ConvertASCIItoUCS2 ucs2From(from_addr);
+        NS_ConvertASCIItoUTF16 ucs2From(from_addr);
         if (NS_FAILED(signerCert->ContainsEmailAddress(ucs2From, &foundFrom)))
         {
           foundFrom = PR_FALSE;
@@ -310,7 +310,7 @@ PRBool MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 
       if (sender_addr && *sender_addr)
       {
-        NS_ConvertASCIItoUCS2 ucs2Sender(sender_addr);
+        NS_ConvertASCIItoUTF16 ucs2Sender(sender_addr);
         if (NS_FAILED(signerCert->ContainsEmailAddress(ucs2Sender, &foundSender)))
         {
           foundSender = PR_FALSE;

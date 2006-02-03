@@ -72,11 +72,11 @@ mozSqlConnectionPgsql::Init(const nsAString & aHost, PRInt32 aPort,
   char tty[] = "";
   PR_snprintf(port, 11, "%d", aPort);
 
-  mConnection = PQsetdbLogin(NS_ConvertUCS2toUTF8(aHost).get(),
+  mConnection = PQsetdbLogin(NS_ConvertUTF16toUTF8(aHost).get(),
                              port, options, tty,
-                             NS_ConvertUCS2toUTF8(aDatabase).get(),
-                             NS_ConvertUCS2toUTF8(aUsername).get(),
-                             NS_ConvertUCS2toUTF8(aPassword).get());
+                             NS_ConvertUTF16toUTF8(aDatabase).get(),
+                             NS_ConvertUTF16toUTF8(aUsername).get(),
+                             NS_ConvertUTF16toUTF8(aPassword).get());
 
   return Setup();
 }
@@ -142,7 +142,7 @@ mozSqlConnectionPgsql::Setup()
     return NS_ERROR_FAILURE;
   }
   char* version = PQgetvalue(result, 0, 0);
-  NS_ConvertUTF8toUCS2 buffer(version);
+  NS_ConvertUTF8toUTF16 buffer(version);
   nsAString::const_iterator start, end, iter;
   buffer.BeginReading(iter);
   buffer.EndReading(end);
@@ -181,7 +181,7 @@ mozSqlConnectionPgsql::RealExec(const nsAString& aQuery,
     return NS_ERROR_NOT_INITIALIZED;
 
   PGresult* r;
-  r = PQexec(mConnection, NS_ConvertUCS2toUTF8(aQuery).get());
+  r = PQexec(mConnection, NS_ConvertUTF16toUTF8(aQuery).get());
   PRInt32 stat = PQresultStatus(r);
 
   if (PQstatus(mConnection) == CONNECTION_BAD) {
@@ -189,7 +189,7 @@ mozSqlConnectionPgsql::RealExec(const nsAString& aQuery,
     nsresult rv = Setup();
     if (NS_FAILED(rv))
       return rv;
-    r = PQexec(mConnection, NS_ConvertUCS2toUTF8(aQuery).get());
+    r = PQexec(mConnection, NS_ConvertUTF16toUTF8(aQuery).get());
     stat = PQresultStatus(r);
   }
 

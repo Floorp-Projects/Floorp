@@ -767,7 +767,7 @@ nsXFormsModelElement::Revalidate()
     nsAutoString name;
     node->GetNodeName(name);
     printf("\t%s [%p]\n",
-           NS_ConvertUCS2toUTF8(name).get(),
+           NS_ConvertUTF16toUTF8(name).get(),
            (void*) node);
   }
 #endif
@@ -827,7 +827,7 @@ nsXFormsModelElement::Refresh()
             boundNode->GetNodeName(boundName);
           printf("\tDependencies: %d, Bound to: '%s' [%p]\n",
                  depCount,
-                 NS_ConvertUCS2toUTF8(boundName).get(),
+                 NS_ConvertUTF16toUTF8(boundName).get(),
                  (void*) boundNode);
 
           nsAutoString depNodeName;
@@ -836,7 +836,7 @@ nsXFormsModelElement::Refresh()
             if (tmpdep) {
               tmpdep->GetNodeName(depNodeName);
               printf("\t\t%s [%p]\n",
-                     NS_ConvertUCS2toUTF8(depNodeName).get(),
+                     NS_ConvertUTF16toUTF8(depNodeName).get(),
                      (void*) tmpdep);
             }
           }

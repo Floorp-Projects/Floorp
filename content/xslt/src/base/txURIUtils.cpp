@@ -136,7 +136,7 @@ txParsedURL::resolve(const txParsedURL& aRef, txParsedURL& aDest)
 **/
 istream* URIUtils::getInputStream(const nsAString& href, nsAString& errMsg)
 {
-    return new ifstream(NS_LossyConvertUCS2toASCII(href).get(), ios::in);
+    return new ifstream(NS_LossyConvertUTF16toASCII(href).get(), ios::in);
 } //-- getInputStream
 
 /**

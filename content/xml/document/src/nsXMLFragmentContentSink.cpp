@@ -322,8 +322,8 @@ nsXMLFragmentContentSink::ReportError(const PRUnichar* aErrorText,
   // Report the error to stderr.
   fprintf(stderr,
           "\n%s\n%s\n\n",
-          NS_LossyConvertUCS2toASCII(aErrorText).get(),
-          NS_LossyConvertUCS2toASCII(aSourceText).get());
+          NS_LossyConvertUTF16toASCII(aErrorText).get(),
+          NS_LossyConvertUTF16toASCII(aSourceText).get());
 #endif
 
   // The following code is similar to the cleanup in nsXMLContentSink::ReportError()

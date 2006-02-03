@@ -109,14 +109,14 @@ nsresult FillResultsArray(const char * aName, const char *aAddress, PRUnichar **
   if (aAddress)
   {
     result = MIME_DecodeMimeHeader(aAddress, NULL, PR_FALSE, PR_TRUE);
-    *aOutgoingEmailAddress = ToNewUnicode(NS_ConvertUTF8toUCS2(result ? result : aAddress));
+    *aOutgoingEmailAddress = ToNewUnicode(NS_ConvertUTF8toUTF16(result ? result : aAddress));
     PR_FREEIF(result);
   }
   
   if (aName)
   {
     result = MIME_DecodeMimeHeader(aName, NULL, PR_FALSE, PR_TRUE);
-    *aOutgoingName = ToNewUnicode(NS_ConvertUTF8toUCS2(result ? result : aName));
+    *aOutgoingName = ToNewUnicode(NS_ConvertUTF8toUTF16(result ? result : aName));
     PR_FREEIF(result);
   }
 
@@ -131,7 +131,7 @@ nsresult FillResultsArray(const char * aName, const char *aAddress, PRUnichar **
     aParser->UnquotePhraseOrAddr(fullAddress, PR_TRUE, getter_Copies(unquotedAddress));
     if (!unquotedAddress.IsEmpty())
       fullAddress = unquotedAddress;
-    *aOutgoingFullName = ToNewUnicode(NS_ConvertUTF8toUCS2(fullAddress.get()));
+    *aOutgoingFullName = ToNewUnicode(NS_ConvertUTF8toUTF16(fullAddress.get()));
   }
   else
     *aOutgoingFullName = nsnull;
@@ -264,11 +264,11 @@ nsresult nsMsgHeaderParser::MakeFullAddress (const char *charset, const char* na
 nsresult nsMsgHeaderParser::MakeFullAddressWString (const PRUnichar* name, const PRUnichar* addr, PRUnichar ** fullAddress)
 {
   nsXPIDLCString utf8Str;
-  nsresult rv = MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(name).get(), 
-                                NS_ConvertUCS2toUTF8(addr).get(), getter_Copies(utf8Str));
+  nsresult rv = MakeFullAddress(nsnull, NS_ConvertUTF16toUTF8(name).get(), 
+                                NS_ConvertUTF16toUTF8(addr).get(), getter_Copies(utf8Str));
   if (NS_SUCCEEDED(rv))
   {
-    *fullAddress = ToNewUnicode(NS_ConvertUTF8toUCS2(utf8Str.get()));
+    *fullAddress = ToNewUnicode(NS_ConvertUTF8toUTF16(utf8Str.get()));
     if (*fullAddress == nsnull)
       rv = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -285,10 +285,10 @@ nsresult nsMsgHeaderParser::UnquotePhraseOrAddr (const char *line, PRBool preser
 nsresult nsMsgHeaderParser::UnquotePhraseOrAddrWString (const PRUnichar *line, PRBool preserveIntegrity, PRUnichar ** result)
 {
   nsXPIDLCString utf8Str;
-  nsresult rv = msg_unquote_phrase_or_addr(NS_ConvertUCS2toUTF8(line).get(), preserveIntegrity, getter_Copies(utf8Str));
+  nsresult rv = msg_unquote_phrase_or_addr(NS_ConvertUTF16toUTF8(line).get(), preserveIntegrity, getter_Copies(utf8Str));
   if (NS_SUCCEEDED(rv))
   {
-    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(utf8Str.get()));
+    *result = ToNewUnicode(NS_ConvertUTF8toUTF16(utf8Str.get()));
     if (*result == nsnull)
       rv = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -301,7 +301,7 @@ nsresult nsMsgHeaderParser::ReformatUnquotedAddresses (const PRUnichar *line, PR
   NS_ENSURE_ARG_POINTER(result);
   *result = nsnull;
 
-  NS_ConvertUCS2toUTF8 convertedLine(line);
+  NS_ConvertUTF16toUTF8 convertedLine(line);
 
   PRInt32 lineLen = convertedLine.Length();
   PRInt32 outputMaxLen = (lineLen * sizeof (char) * 2) + 2; //Let's presume we need to escape every char
@@ -377,7 +377,7 @@ nsresult nsMsgHeaderParser::ReformatUnquotedAddresses (const PRUnichar *line, PR
   else
     strncpy(writePtr, startRecipient, endOutputPtr - writePtr);
 
-  *result = ToNewUnicode(NS_ConvertUTF8toUCS2(outputStr));
+  *result = ToNewUnicode(NS_ConvertUTF8toUTF16(outputStr));
   PR_Free(outputStr);
   if (*result == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;

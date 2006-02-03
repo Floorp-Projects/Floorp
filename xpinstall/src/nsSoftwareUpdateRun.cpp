@@ -194,7 +194,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
         PRUint32 column = report->uctokenptr - report->uclinebuf;
 
         rv = errorObject->Init(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage),
-                               NS_ConvertASCIItoUCS2(report->filename).get(),
+                               NS_ConvertASCIItoUTF16(report->filename).get(),
                                NS_REINTERPRET_CAST(const PRUnichar*, report->uclinebuf),
                                report->lineno, column, report->flags,
                                "XPInstall JavaScript");
@@ -677,7 +677,7 @@ extern "C" void RunChromeInstallOnThread(void *data)
                 
             if (NS_SUCCEEDED(rv) && selected)
             {
-                NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
+                NS_ConvertUTF16toUTF8 utf8Args(info->GetArguments());
                 rv = reg->SelectSkin(utf8Args, PR_TRUE);
             }
         }
@@ -688,7 +688,7 @@ extern "C" void RunChromeInstallOnThread(void *data)
 
             if (NS_SUCCEEDED(rv) && selected)
             {
-                NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
+                NS_ConvertUTF16toUTF8 utf8Args(info->GetArguments());
                 rv = reg->SelectLocale(utf8Args, PR_TRUE);
             }
         }
