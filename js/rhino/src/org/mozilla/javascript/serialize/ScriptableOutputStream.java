@@ -83,15 +83,22 @@ public class ScriptableOutputStream extends ObjectOutputStream {
      * serialization. Names excluded from serialization are looked up
      * in the new scope and replaced upon deserialization.
      * @param name a fully qualified name (of the form "a.b.c", where
-     *             "a" must be a property of the top-level object)
+     *             "a" must be a property of the top-level object). If it does
+     *             not exist, it is ignored.
+     * @throws IllegalArgumentException if the object with the specified name is
+     *             not a Scriptable.
      */
     public void addExcludedName(String name) {
         Object obj = lookupQualifiedName(scope, name);
-        if (!(obj instanceof Scriptable)) {
-            throw new IllegalArgumentException("Object for excluded name " +
-                                               name + " not found.");
+        if(obj != null) {
+            if (!(obj instanceof Scriptable)) {
+                throw new IllegalArgumentException(
+                        "Object for excluded name " + name + 
+                        " is not a Scriptable, it is a " + 
+                        obj.getClass().getName());
+            }
+            table.put(obj, name);
         }
-        table.put(obj, name);
     }
 
     /**
