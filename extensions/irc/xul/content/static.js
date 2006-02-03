@@ -1025,6 +1025,19 @@ function insertChannelLink (matchText, containerTag, eventData)
     containerTag.appendChild (anchor);
 }
 
+function insertTalkbackLink(matchText, containerTag, eventData)
+{
+    var anchor = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                          "html:a");
+
+    anchor.setAttribute("href", "http://talkback-public.mozilla.org/" +
+                        "talkback/fastfind.jsp?search=2&type=iid&id=" + 
+                        matchText);
+    anchor.setAttribute("class", "chatzilla-link");
+    insertHyphenatedWord(matchText, anchor);
+    containerTag.appendChild(anchor);
+}
+
 function insertBugzillaLink (matchText, containerTag, eventData)
 {
     var idOrAlias = matchText.match(/bug\s+#?(\d{3,6}|[^\s,]{1,20})/i)[1];

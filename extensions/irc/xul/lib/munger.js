@@ -84,6 +84,8 @@ function initMunger()
     munger.addRule ("channel-link",
                 /(?:\s|\W|^)[@+]?(#[^<>\[\](){}\"\s\u201d]*[^:,.<>\[\](){}\'\"\s\u201d])/i,
                     insertChannelLink);
+    munger.addRule("talkback-link", /(?:\W|^)(TB\d+[A-Z]?)(?:\W|$)/,
+                   insertTalkbackLink);
     
     munger.addRule ("face",
          /((^|\s)(?:[>]?[B8=:;(xX][~']?[-^v"]?(?:[)|(PpSs0oO\?\[\]\/\\]|D+)|>[-^v]?\)|[oO9][._][oO9])(\s|$))/,

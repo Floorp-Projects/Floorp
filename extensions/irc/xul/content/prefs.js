@@ -185,6 +185,7 @@ function initPrefs()
          ["munger.mailto",      true,     "munger"],
          ["munger.quote",       true,     "munger"],
          ["munger.rheet",       true,     "munger"],
+         ["munger.talkback-link", true,   "munger"],
          ["munger.teletype",    true,     "munger"],
          ["munger.underline",   true,     "munger"],
          ["munger.word-hyphenator", true, "munger"],
@@ -738,6 +739,14 @@ function onPrefChanged(prefName, newValue, oldValue)
         case "aliases":
             initAliases();
             break;
+
+        default:
+            // Make munger prefs apply without a restart
+            if ((m = prefName.match(/^munger\.(\S+)$/))
+                && (m[1] in client.munger.entries))
+            {
+                client.munger.entries[m[1]].enabled = newValue;
+            }
     }
 }
 
