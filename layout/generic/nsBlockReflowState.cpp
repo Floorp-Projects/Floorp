@@ -165,7 +165,11 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mMaxElementWidth = 0;
   SetFlag(BRS_COMPUTEMAXWIDTH, 
           (NS_REFLOW_CALC_MAX_WIDTH == (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH)));
-  mMaximumWidth = 0;
+
+  // Preset mMaximumWidth to our left border + padding.  All the values we'll
+  // try to set it to already include that, and we depend on it always
+  // including the left border + padding in nsBlockFrame::ComputeFinalSize.
+  mMaximumWidth = BorderPadding().left;
 
   mMinLineHeight = nsHTMLReflowState::CalcLineHeight(mPresContext,
                                                      aReflowState.rendContext,
