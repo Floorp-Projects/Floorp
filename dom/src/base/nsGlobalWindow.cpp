@@ -6231,7 +6231,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   mTimeoutInsertionPoint = &dummy_timeout.mNext;
 
   prev = nsnull;
-  for (timeout = mTimeouts; timeout != &dummy_timeout; timeout = next) {
+  for (timeout = mTimeouts; timeout != &dummy_timeout && !IsFrozen(); timeout = next) {
     next = timeout->mNext;
 
     if (timeout->mFiringDepth != firingDepth) {
@@ -6322,12 +6322,16 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       return;
     }
 
+    PRBool isInterval = PR_FALSE;
+
     // If we have a regular interval timer, we re-schedule the
     // timeout, accounting for clock drift.
     if (timeout->mInterval) {
       // Compute time to next timeout for interval timer.
-      timeout->mWhen += PR_MillisecondsToInterval(timeout->mInterval);
-      PRInt32 delay = timeout->mWhen - PR_IntervalNow();
+      // XXX Units?
+      PRIntervalTime nextInterval =
+        timeout->mWhen + PR_MillisecondsToInterval(timeout->mInterval);
+      PRInt32 delay = nextInterval - PR_IntervalNow();
 
       // If the next interval timeout is already supposed to have
       // happened then run the timeout immediately.
@@ -6344,32 +6348,39 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
         delay = DOM_MIN_TIMEOUT_VALUE;
       }
 
-      // Reschedule the OS timer. Don't bother returning any error
-      // codes if this fails since nobody who cares about them is
-      // listening anyways.
-      nsresult rv =
-        timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout, delay,
-                                              nsITimer::TYPE_ONE_SHOT);
+      if (timeout->mTimer) {
+        timeout->mWhen = nextInterval;
 
-      if (NS_FAILED(rv)) {
-        NS_ERROR("Error initializing timer for DOM timeout!");
+        // Reschedule the OS timer. Don't bother returning any error
+        // codes if this fails since nobody who cares about them is
+        // listening anyways.
+        nsresult rv =
+          timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout, delay,
+                                                nsITimer::TYPE_ONE_SHOT);
 
-        // We failed to initialize the new OS timer, this timer does
-        // us no good here so we just cancel it (just in case) and
-        // null out the pointer to the OS timer, this will release the
-        // OS timer. As we continue executing the code below we'll end
-        // up deleting the timeout since it's not an interval timeout
-        // any more (since timeout->mTimer == nsnull).
-        timeout->mTimer->Cancel();
-        timeout->mTimer = nsnull;
+        if (NS_FAILED(rv)) {
+          NS_ERROR("Error initializing timer for DOM timeout!");
 
-        // Now that the OS timer no longer has a reference to the
-        // timeout we need to drop that reference.
-        timeout->Release(scx);
+          // We failed to initialize the new OS timer, this timer does
+          // us no good here so we just cancel it (just in case) and
+          // null out the pointer to the OS timer, this will release the
+          // OS timer. As we continue executing the code below we'll end
+          // up deleting the timeout since it's not an interval timeout
+          // any more (since timeout->mTimer == nsnull).
+          timeout->mTimer->Cancel();
+          timeout->mTimer = nsnull;
+
+          // Now that the OS timer no longer has a reference to the
+          // timeout we need to drop that reference.
+          timeout->Release(scx);
+        }
+      } else {
+        NS_ASSERTION(IsFrozen(), "How'd our timer end up null if we're not frozen?");
+
+        timeout->mWhen = delay;
+        isInterval = PR_TRUE;
       }
     }
-
-    PRBool isInterval = PR_FALSE;
 
     if (timeout->mTimer) {
       if (timeout->mInterval) {
