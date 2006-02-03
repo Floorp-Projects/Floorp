@@ -302,14 +302,12 @@ NS_IMETHODIMP nsMenuX::GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem)
 
 NS_IMETHODIMP nsMenuX::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem)
 {
-  NS_ASSERTION(0, "Not implemented");
   return NS_OK;
 }
 
 
 NS_IMETHODIMP nsMenuX::RemoveItem(const PRUint32 aPos)
 {
-  NS_WARNING("Not implemented");
   return NS_OK;
 }
 
