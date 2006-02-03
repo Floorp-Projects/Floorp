@@ -23,6 +23,7 @@ minimo.jar:
     content/minimo/bookmarks/bmview.js            (content/bookmarks/bmview.js)
     content/minimo/bookmarks/bmview.xhtml         (content/bookmarks/bmview.xhtml)
     content/minimo/bookmarks/bookmark_template.xml  (content/bookmarks/bookmark_template.xml)
+    content/minimo/bookmarks/bookmark_template_xul.xml  (content/bookmarks/bookmark_template_xul.xml)
 	content/minimo/bindings/preferences.css  (content/bindings/preferences.css)
 	content/minimo/bindings/preferences.xml  (content/bindings/preferences.xml)
 	locale/en-US/minimo/minimo.dtd	      (locale/en-US/minimo.dtd)
