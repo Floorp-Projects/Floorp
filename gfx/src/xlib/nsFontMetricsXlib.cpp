@@ -1925,7 +1925,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
 #ifdef REALLY_NOISY_FONTS
   printf("font = '");
-  fputs(NS_LossyConvertUCS2toASCII(aFamily).get(), stdout);
+  fputs(NS_LossyConvertUTF16toASCII(aFamily).get(), stdout);
   printf("'\n");
 #endif
 
@@ -2890,7 +2890,7 @@ static PRBool
 DumpFamilyEnum(nsHashKey* hashKey, void *aData, void* closure)
 {
   printf("family: %s\n",
-         NS_LossyConvertUCS2toASCII(*NS_STATIC_CAST(nsString*,he->key)));
+         NS_LossyConvertUTF16toASCII(*NS_STATIC_CAST(nsString*,he->key)));
   nsFontFamilyXlib* family = (nsFontFamilyXlib*) he->value;
   DumpFamily(family);
 

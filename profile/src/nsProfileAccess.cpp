@@ -1399,7 +1399,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 #if defined(XP_MAC) || defined(XP_MACOSX)
             rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(tempLocal));
         if (NS_SUCCEEDED(rv)) // regLocationData is ASCII so no loss
-            rv = tempLocal->SetPersistentDescriptor(NS_LossyConvertUCS2toASCII(regLocationData));
+            rv = tempLocal->SetPersistentDescriptor(NS_LossyConvertUTF16toASCII(regLocationData));
 #else
         rv = NS_NewLocalFile(regLocationData, PR_TRUE, getter_AddRefs(tempLocal));
 #endif

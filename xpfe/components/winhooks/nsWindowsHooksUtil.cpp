@@ -482,7 +482,7 @@ static void setWindowsXP() {
                 RegistryEntry tmp_entry4( HKEY_LOCAL_MACHINE,
                                nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\properties" ) ).get(),
                                "", 
-                               NS_ConvertUCS2toUTF8( label ).get() );
+                               NS_ConvertUTF16toUTF8( label ).get() );
                 tmp_entry4.set();
             }
             RegistryEntry tmp_entry5( HKEY_LOCAL_MACHINE,

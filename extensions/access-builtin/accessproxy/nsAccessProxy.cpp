@@ -112,7 +112,7 @@ NS_IMETHODIMP nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
     return rv;
   // Print event name and styles debugging messages
   #ifdef NS_DEBUG_ACCESS_BUILTIN
-  printf("\n==== %s event occurred ====\n",NS_ConvertUCS2toUTF8(eventNameStr).get());
+  printf("\n==== %s event occurred ====\n",NS_ConvertUTF16toUTF8(eventNameStr).get());
   #endif
 
   ////////// Get Target Node - place in document where event was fired ////////////

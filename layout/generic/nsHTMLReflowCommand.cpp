@@ -135,7 +135,7 @@ nsHTMLReflowCommand::List(FILE* out) const
     fprintf(out, " list=");
     nsAutoString attr;
     mListName->ToString(attr);
-    fputs(NS_LossyConvertUCS2toASCII(attr).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(attr).get(), out);
   }
   fprintf(out, "\n");
 

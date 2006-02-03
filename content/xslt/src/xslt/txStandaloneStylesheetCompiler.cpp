@@ -85,7 +85,7 @@ TX_CompileStylesheetPath(const txParsedURL& aURL, txStylesheet** aResult)
     aURL.getFile(filePath);
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("TX_CompileStylesheetPath: %s\n",
-            NS_LossyConvertUCS2toASCII(filePath).get()));
+            NS_LossyConvertUTF16toASCII(filePath).get()));
     istream* xslInput = URIUtils::getInputStream(filePath, errMsg);
     if (!xslInput) {
         return NS_ERROR_FAILURE;

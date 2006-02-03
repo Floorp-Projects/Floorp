@@ -229,8 +229,8 @@ nsXBLContentSink::ReportError(const PRUnichar* aErrorText,
   // Report the error to stderr.
   fprintf(stderr,
           "\n%s\n%s\n\n",
-          NS_LossyConvertUCS2toASCII(aErrorText).get(),
-          NS_LossyConvertUCS2toASCII(aSourceText).get());
+          NS_LossyConvertUTF16toASCII(aErrorText).get(),
+          NS_LossyConvertUTF16toASCII(aSourceText).get());
 #endif
 
   // Most of what this does won't be too useful, but whatever...

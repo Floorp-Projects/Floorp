@@ -216,7 +216,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString & characterSet)
               // set attribute to <original prefix> charset=text/html
               result = nsEditor::SetAttribute(metaElement, content,
                                               Substring(originalStart, start) +
-                                              charsetEquals + NS_ConvertASCIItoUCS2(characterSet)); 
+                                              charsetEquals + NS_ConvertASCIItoUTF16(characterSet)); 
               if (NS_SUCCEEDED(result)) 
                 newMetaCharset = PR_FALSE; 
               break; 
@@ -247,7 +247,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsACString & characterSet)
                 if (NS_SUCCEEDED(result)) { 
                   // not undoable, undo should undo CreateNode 
                   result = metaElement->SetAttribute(NS_LITERAL_STRING("content"),
-                                                     NS_LITERAL_STRING("text/html;charset=") + NS_ConvertASCIItoUCS2(characterSet)); 
+                                                     NS_LITERAL_STRING("text/html;charset=") + NS_ConvertASCIItoUTF16(characterSet)); 
                 } 
               } 
             } 

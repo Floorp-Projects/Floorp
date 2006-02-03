@@ -127,7 +127,7 @@ nsNetscapeProfileMigratorBase::GetProfileDataFromRegistry(nsILocalFile* aRegistr
 #ifdef XP_MACOSX
     rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(dir));
     if (NS_FAILED(rv)) return rv;
-    dir->SetPersistentDescriptor(NS_LossyConvertUCS2toASCII(directory));
+    dir->SetPersistentDescriptor(NS_LossyConvertUTF16toASCII(directory));
 #else
     rv = NS_NewLocalFile(directory, PR_TRUE, getter_AddRefs(dir));
     if (NS_FAILED(rv)) return rv;
@@ -188,7 +188,7 @@ nsNetscapeProfileMigratorBase::GetWString(void* aTransform, nsIPrefBranch* aBran
     nsXPIDLString data;
     prefValue->ToString(getter_Copies(data));
 
-    xform->stringValue = ToNewCString(NS_ConvertUCS2toUTF8(data));
+    xform->stringValue = ToNewCString(NS_ConvertUTF16toUTF8(data));
     xform->prefHasValue = PR_TRUE;
   }
   return rv;
@@ -213,7 +213,7 @@ nsNetscapeProfileMigratorBase::SetWString(void* aTransform, nsIPrefBranch* aBran
   PrefTransform* xform = (PrefTransform*)aTransform;
   if (xform->prefHasValue) {
     nsCOMPtr<nsIPrefLocalizedString> pls(do_CreateInstance("@mozilla.org/pref-localizedstring;1"));
-    nsAutoString data = NS_ConvertUTF8toUCS2(xform->stringValue);
+    nsAutoString data = NS_ConvertUTF8toUTF16(xform->stringValue);
     pls->SetData(data.get());
     return aBranch->SetComplexValue(xform->targetPrefName ? xform->targetPrefName : xform->sourcePrefName, NS_GET_IID(nsIPrefLocalizedString), pls);
   }

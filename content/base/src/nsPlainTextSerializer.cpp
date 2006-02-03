@@ -1567,7 +1567,7 @@ nsPlainTextSerializer::Write(const nsAString& aString)
 {
 #ifdef DEBUG_wrapping
   printf("Write(%s): wrap col = %d\n",
-         NS_ConvertUCS2toUTF8(aString).get(), mWrapColumn);
+         NS_ConvertUTF16toUTF8(aString).get(), mWrapColumn);
 #endif
 
   PRInt32 bol = 0;

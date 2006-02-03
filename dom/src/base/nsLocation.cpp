@@ -417,7 +417,7 @@ nsLocation::SetHash(const nsAString& aHash)
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
 
   if (url) {
-    url->SetRef(NS_ConvertUCS2toUTF8(aHash));
+    url->SetRef(NS_ConvertUTF16toUTF8(aHash));
     SetURI(url);
   }
 
@@ -456,7 +456,7 @@ nsLocation::SetHost(const nsAString& aHost)
   result = GetWritableURI(getter_AddRefs(uri));
 
   if (uri) {
-    uri->SetHostPort(NS_ConvertUCS2toUTF8(aHost));
+    uri->SetHostPort(NS_ConvertUTF16toUTF8(aHost));
     SetURI(uri);
   }
 
@@ -495,7 +495,7 @@ nsLocation::SetHostname(const nsAString& aHostname)
   result = GetWritableURI(getter_AddRefs(uri));
 
   if (uri) {
-    uri->SetHost(NS_ConvertUCS2toUTF8(aHostname));
+    uri->SetHost(NS_ConvertUTF16toUTF8(aHostname));
     SetURI(uri);
   }
 
@@ -672,7 +672,7 @@ nsLocation::SetPathname(const nsAString& aPathname)
   result = GetWritableURI(getter_AddRefs(uri));
 
   if (uri) {
-    uri->SetPath(NS_ConvertUCS2toUTF8(aPathname));
+    uri->SetPath(NS_ConvertUTF16toUTF8(aPathname));
     SetURI(uri);
   }
 
@@ -716,7 +716,7 @@ nsLocation::SetPort(const nsAString& aPort)
 
   if (uri) {
     // perhaps use nsReadingIterators at some point?
-    NS_ConvertUCS2toUTF8 portStr(aPort);
+    NS_ConvertUTF16toUTF8 portStr(aPort);
     const char *buf = portStr.get();
     PRInt32 port = -1;
 
@@ -769,7 +769,7 @@ nsLocation::SetProtocol(const nsAString& aProtocol)
   result = GetWritableURI(getter_AddRefs(uri));
 
   if (uri) {
-    uri->SetScheme(NS_ConvertUCS2toUTF8(aProtocol));
+    uri->SetScheme(NS_ConvertUTF16toUTF8(aProtocol));
     SetURI(uri);
   }
 
@@ -812,7 +812,7 @@ nsLocation::SetSearch(const nsAString& aSearch)
 
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (url) {
-    result = url->SetQuery(NS_ConvertUCS2toUTF8(aSearch));
+    result = url->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
     SetURI(uri);
   }
 

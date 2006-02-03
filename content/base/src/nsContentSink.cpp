@@ -360,7 +360,7 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
 
     rv = cookieServ->SetCookieString(codebaseURI,
                                      prompt,
-                                     NS_ConvertUCS2toUTF8(aValue).get(),
+                                     NS_ConvertUTF16toUTF8(aValue).get(),
                                      channel);
     if (NS_FAILED(rv)) {
       return rv;
@@ -395,7 +395,7 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
         const char* header;
         (void)aHeader->GetUTF8String(&header);
         (void)httpChannel->SetResponseHeader(nsDependentCString(header),
-                                             NS_ConvertUCS2toUTF8(aValue),
+                                             NS_ConvertUTF16toUTF8(aValue),
                                              PR_TRUE);
       }
     }
@@ -758,7 +758,7 @@ nsContentSink::ScrollToRef(PRBool aReallyScroll)
   nsresult rv = NS_ERROR_FAILURE;
   // We assume that the bytes are in UTF-8, as it says in the spec:
   // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
-  NS_ConvertUTF8toUCS2 ref(unescapedRef);
+  NS_ConvertUTF8toUTF16 ref(unescapedRef);
 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {

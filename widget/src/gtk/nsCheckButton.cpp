@@ -168,7 +168,7 @@ NS_METHOD nsCheckButton::GetState(PRBool& aState)
 NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 {
   if (mWidget) {
-    NS_LossyConvertUCS2toASCII label(aText);
+    NS_LossyConvertUTF16toASCII label(aText);
     if (mLabel) {
       gtk_label_set(GTK_LABEL(mLabel), label.get());
     } else {

@@ -801,7 +801,7 @@ nsXULTreeBuilder::SetTree(nsITreeBoxObject* tree)
         // if non specified, use localstore, which gives us
         // persistence across sessions
         if (! datasourceStr.IsEmpty()) {
-            gRDFService->GetDataSource(NS_ConvertUCS2toUTF8(datasourceStr).get(),
+            gRDFService->GetDataSource(NS_ConvertUTF16toUTF8(datasourceStr).get(),
                                        getter_AddRefs(mPersistStateStore));
         }
         else {

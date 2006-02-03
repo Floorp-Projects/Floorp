@@ -374,7 +374,7 @@ nsCopySupport::GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISele
   if (aMimeType.Equals("text/plain"))
     flags |= nsIDocumentEncoder::OutputPreformatted;
 
-  NS_ConvertASCIItoUCS2 unicodeMimeType(aMimeType);
+  NS_ConvertASCIItoUTF16 unicodeMimeType(aMimeType);
   rv = docEncoder->Init(aDoc, unicodeMimeType, flags);
   if (NS_FAILED(rv)) return rv;
   

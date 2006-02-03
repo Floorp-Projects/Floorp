@@ -369,7 +369,7 @@ nsGenericDOMDataNode::GetData(nsAString& aData) const
     const char *data = mText.Get1b();
 
     if (data) {
-      CopyASCIItoUCS2(Substring(data, data + mText.GetLength()), aData);
+      CopyASCIItoUTF16(Substring(data, data + mText.GetLength()), aData);
     } else {
       aData.Truncate();
     }
@@ -428,7 +428,7 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart, PRUint32 aCount,
     // terminated strings.
 
     const char *data = mText.Get1b() + aStart;
-    CopyASCIItoUCS2(Substring(data, data + amount), aReturn);
+    CopyASCIItoUTF16(Substring(data, data + amount), aReturn);
   }
 
   return NS_OK;

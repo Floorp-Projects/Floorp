@@ -673,7 +673,7 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32         aNameSpaceID,
 //    nsAutoString str;
 //    aAttribute->ToString(str);
 //    printf("** nsSVGOuterSVGFrame::AttributeChanged(%s)\n",
-//           NS_LossyConvertUCS2toASCII(str).get());
+//           NS_LossyConvertUTF16toASCII(str).get());
 //  }
 #endif
   return NS_OK;

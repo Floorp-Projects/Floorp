@@ -485,32 +485,32 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS,
     aPS->GetMarginRight(&dright);
 
     if (printfile)
-      PL_strncpyz(mPath,      NS_ConvertUCS2toUTF8(printfile).get(), sizeof(mPath));
+      PL_strncpyz(mPath,      NS_ConvertUTF16toUTF8(printfile).get(), sizeof(mPath));
     if (command)
-      PL_strncpyz(mCommand,   NS_ConvertUCS2toUTF8(command).get(),   sizeof(mCommand));  
+      PL_strncpyz(mCommand,   NS_ConvertUTF16toUTF8(command).get(),   sizeof(mCommand));  
     if (printer) 
-      PL_strncpyz(mPrinter,   NS_ConvertUCS2toUTF8(printer).get(),   sizeof(mPrinter));        
+      PL_strncpyz(mPrinter,   NS_ConvertUTF16toUTF8(printer).get(),   sizeof(mPrinter));        
     if (papername) 
-      PL_strncpyz(mPaperName, NS_ConvertUCS2toUTF8(papername).get(), sizeof(mPaperName));  
+      PL_strncpyz(mPaperName, NS_ConvertUTF16toUTF8(papername).get(), sizeof(mPaperName));  
     if (plexname) 
-      PL_strncpyz(mPlexName,  NS_ConvertUCS2toUTF8(plexname).get(),  sizeof(mPlexName));  
+      PL_strncpyz(mPlexName,  NS_ConvertUTF16toUTF8(plexname).get(),  sizeof(mPlexName));  
     if (resolutionname) 
-      PL_strncpyz(mResolutionName, NS_ConvertUCS2toUTF8(resolutionname).get(), sizeof(mResolutionName));  
+      PL_strncpyz(mResolutionName, NS_ConvertUTF16toUTF8(resolutionname).get(), sizeof(mResolutionName));  
     if (colorspace) 
-      PL_strncpyz(mColorspace, NS_ConvertUCS2toUTF8(colorspace).get(), sizeof(mColorspace));  
+      PL_strncpyz(mColorspace, NS_ConvertUTF16toUTF8(colorspace).get(), sizeof(mColorspace));  
 
     DO_PR_DEBUG_LOG(("margins:   %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright));
     DO_PR_DEBUG_LOG(("printRange %d\n",   printRange));
     DO_PR_DEBUG_LOG(("fromPage   %d\n",   fromPage));
     DO_PR_DEBUG_LOG(("toPage     %d\n",   toPage));
     DO_PR_DEBUG_LOG(("tofile     %d\n",   tofile));
-    DO_PR_DEBUG_LOG(("printfile  '%s'\n", printfile? NS_ConvertUCS2toUTF8(printfile).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("command    '%s'\n", command? NS_ConvertUCS2toUTF8(command).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("printer    '%s'\n", printer? NS_ConvertUCS2toUTF8(printer).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("papername  '%s'\n", papername? NS_ConvertUCS2toUTF8(papername).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("plexname   '%s'\n", plexname? NS_ConvertUCS2toUTF8(plexname).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("resolution '%s'\n", resolutionname? NS_ConvertUCS2toUTF8(resolutionname).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("colorspace '%s'\n", colorspace? NS_ConvertUCS2toUTF8(colorspace).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("printfile  '%s'\n", printfile? NS_ConvertUTF16toUTF8(printfile).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("command    '%s'\n", command? NS_ConvertUTF16toUTF8(command).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("printer    '%s'\n", printer? NS_ConvertUTF16toUTF8(printer).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("papername  '%s'\n", papername? NS_ConvertUTF16toUTF8(papername).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("plexname   '%s'\n", plexname? NS_ConvertUTF16toUTF8(plexname).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("resolution '%s'\n", resolutionname? NS_ConvertUTF16toUTF8(resolutionname).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("colorspace '%s'\n", colorspace? NS_ConvertUTF16toUTF8(colorspace).get():"<NULL>"));
 
     mTop         = dtop;
     mBottom      = dbottom;
@@ -808,7 +808,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetDefaultPrinterName(PRUnichar **aDefault
 
   GlobalPrinters::GetInstance()->GetDefaultPrinterName(aDefaultPrinterName);
 
-  DO_PR_DEBUG_LOG(("GetDefaultPrinterName(): default printer='%s'.\n", NS_ConvertUCS2toUTF8(*aDefaultPrinterName).get()));
+  DO_PR_DEBUG_LOG(("GetDefaultPrinterName(): default printer='%s'.\n", NS_ConvertUTF16toUTF8(*aDefaultPrinterName).get()));
   return NS_OK;
 }
 
@@ -830,8 +830,8 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 
   nsXPIDLCString fullPrinterName, /* Full name of printer incl. driver-specific prefix */ 
                  printerName;     /* "Stripped" name of printer */
-  fullPrinterName.Assign(NS_ConvertUCS2toUTF8(aPrinterName));
-  printerName.Assign(NS_ConvertUCS2toUTF8(aPrinterName));
+  fullPrinterName.Assign(NS_ConvertUTF16toUTF8(aPrinterName));
+  printerName.Assign(NS_ConvertUTF16toUTF8(aPrinterName));
   DO_PR_DEBUG_LOG(("printerName='%s'\n", printerName.get()));
   
   PrintMethod type = pmInvalid;
@@ -870,7 +870,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
       filename.Assign("mozilla.ps");  
   }  
   DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", filename.get()));
-  aPrintSettings->SetToFileName(NS_ConvertUTF8toUCS2(filename).get());
+  aPrintSettings->SetToFileName(NS_ConvertUTF8toUTF16(filename).get());
 
   aPrintSettings->SetIsInitializedFromPrinter(PR_TRUE);
 
@@ -956,7 +956,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
       default_plex = &plexlist[0]; /* First entry is the default one */
     
       DO_PR_DEBUG_LOG(("setting default plex to '%s'\n", default_plex->plex));
-      aPrintSettings->SetPlexName(NS_ConvertUTF8toUCS2(default_plex->plex).get());
+      aPrintSettings->SetPlexName(NS_ConvertUTF8toUTF16(default_plex->plex).get());
 
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
       int i;
@@ -1015,7 +1015,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
       aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
       aPrintSettings->SetPaperWidth(total_width);
       aPrintSettings->SetPaperHeight(total_height);
-      aPrintSettings->SetPaperName(NS_ConvertUTF8toUCS2(papername).get());     
+      aPrintSettings->SetPaperName(NS_ConvertUTF8toUTF16(papername).get());     
 
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
       int i;
@@ -1058,7 +1058,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
                        default_resolution->name,
                        default_resolution->x_dpi,
                        default_resolution->y_dpi));
-      aPrintSettings->SetResolutionName(NS_ConvertUTF8toUCS2(default_resolution->name).get());
+      aPrintSettings->SetResolutionName(NS_ConvertUTF8toUTF16(default_resolution->name).get());
 
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
       int i;
@@ -1091,7 +1091,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
       default_colorspace = &cslist[0]; /* First entry is the default one */
     
       DO_PR_DEBUG_LOG(("setting default colorspace to '%s'\n", default_colorspace->name));
-      aPrintSettings->SetColorspace(NS_ConvertUTF8toUCS2(default_colorspace->name).get());
+      aPrintSettings->SetColorspace(NS_ConvertUTF8toUTF16(default_colorspace->name).get());
 
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
       int i;
@@ -1220,7 +1220,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 	aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
         aPrintSettings->SetPaperWidth(paper.Width_mm());
         aPrintSettings->SetPaperHeight(paper.Height_mm());
-        aPrintSettings->SetPaperName(NS_ConvertASCIItoUCS2(paper.Name()).get());
+        aPrintSettings->SetPaperName(NS_ConvertASCIItoUTF16(paper.Name()).get());
       }
       else {
         DO_PR_DEBUG_LOG(("Unknown paper size '%s' given.\n", papername.get()));
@@ -1262,7 +1262,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
             printerName, "print_command", getter_Copies(command)))) {
         DO_PR_DEBUG_LOG(("setting default print command to '%s'\n",
             command.get()));
-        aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUCS2(command).get());
+        aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUTF16(command).get());
       }
     }
     
@@ -1320,7 +1320,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     for( i = 0 ; i < printerCount ; i++ )
     {
       /* Add name to our list of printers... */
-      mGlobalPrinterList->AppendString(nsString(NS_ConvertUTF8toUCS2(plist[i].name)));
+      mGlobalPrinterList->AppendString(nsString(NS_ConvertUTF8toUTF16(plist[i].name)));
 
       /* ... and store the description text for this printer */
       pPrefs->SetCharPref(nsPrintfCString(256, "print.printer_%s.printer_description", plist[i].name).get(), plist[i].desc);      

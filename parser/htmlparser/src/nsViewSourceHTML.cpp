@@ -337,7 +337,7 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
       fprintf(gDumpFile, "<head>\n");
       fprintf(gDumpFile, "<title>");
       fprintf(gDumpFile, "Source of: ");
-      fputs(NS_ConvertUCS2toUTF8(mFilename).get(), gDumpFile);
+      fputs(NS_ConvertUTF16toUTF8(mFilename).get(), gDumpFile);
       fprintf(gDumpFile, "</title>\n");
       fprintf(gDumpFile, "<link rel=\"stylesheet\" type=\"text/css\" href=\"resource://gre/res/viewsource.css\">\n");
       fprintf(gDumpFile, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n");
@@ -468,12 +468,12 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
 
           AddAttrToNode(bodyNode, theAllocator,
                         NS_LITERAL_STRING("id"),
-                        NS_ConvertASCIItoUCS2(kBodyId));
+                        NS_ConvertASCIItoUTF16(kBodyId));
           
           if (mWrapLongLines) {
             AddAttrToNode(bodyNode, theAllocator,
                           NS_LITERAL_STRING("class"),
-                          NS_ConvertASCIItoUCS2(kBodyClassWrap));
+                          NS_ConvertASCIItoUTF16(kBodyClassWrap));
           }
           result = mSink->OpenContainer(bodyNode);
           if(NS_SUCCEEDED(result)) mHasOpenBody=PR_TRUE;
@@ -551,7 +551,7 @@ void CViewSourceHTML::StartNewPreBlock(void){
   nsCParserStartNode startNode(theToken, theAllocator);
   AddAttrToNode(startNode, theAllocator,
                 NS_LITERAL_STRING("id"),
-                NS_ConvertASCIItoUCS2(nsPrintfCString("line%d", mLineNumber)));
+                NS_ConvertASCIItoUTF16(nsPrintfCString("line%d", mLineNumber)));
   mSink->OpenContainer(startNode);
   
 #ifdef DUMP_TO_FILE
@@ -829,7 +829,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
     theContext.mStartNode.Init(theTagToken, theAllocator);
     AddAttrToNode(theContext.mStartNode, theAllocator,
                   NS_LITERAL_STRING("class"),
-                  NS_ConvertASCIItoUCS2(kElementClasses[aTagType]));
+                  NS_ConvertASCIItoUTF16(kElementClasses[aTagType]));
     mSink->OpenContainer(theContext.mStartNode);  //emit <starttag>...
 #ifdef DUMP_TO_FILE
     if (gDumpFile) {
@@ -848,7 +848,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
   mSink->AddLeaf(theNode);
 #ifdef DUMP_TO_FILE
   if (gDumpFile) {
-    fputs(NS_ConvertUCS2toUTF8(aText).get(), gDumpFile);
+    fputs(NS_ConvertUTF16toUTF8(aText).get(), gDumpFile);
   }
 #endif // DUMP_TO_FILE
 

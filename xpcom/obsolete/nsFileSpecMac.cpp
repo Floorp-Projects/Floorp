@@ -626,7 +626,7 @@ nsFileSpec::nsFileSpec(const nsString& inNativePathString, PRBool inCreateDirs)
 
 	mError = NS_FILE_RESULT(
 		MacFileHelpers::FSSpecFromPathname(
-			NS_LossyConvertUCS2toASCII(inNativePathString).get(),
+			NS_LossyConvertUTF16toASCII(inNativePathString).get(),
 			mSpec, inCreateDirs));
 	if (mError == NS_FILE_RESULT(fnfErr))
 		mError = NS_OK;
@@ -1232,7 +1232,7 @@ nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
 nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 {
-	AssignFromPath(*this, NS_LossyConvertUCS2toASCII(inString).get(),
+	AssignFromPath(*this, NS_LossyConvertUTF16toASCII(inString).get(),
 	               inCreateDirs);
 }
 
@@ -1308,7 +1308,7 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 :	 mURL(nsnull)
 {
-	NS_LossyConvertUCS2toASCII cstring(inString);
+	NS_LossyConvertUTF16toASCII cstring(inString);
 	mURL = cstring.get();
 	NS_ASSERTION(strstr(cstring.get(), kFileURLPrefix) == cstring.get(),
 	             "Not a URL!");

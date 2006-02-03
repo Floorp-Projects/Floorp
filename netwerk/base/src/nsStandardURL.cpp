@@ -190,7 +190,7 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
         if (mCharset && *mCharset && !nsCRT::IsAscii(str + pos, len)) {
             // we have to encode this segment
             if (mEncoder || InitUnicodeEncoder()) {
-                NS_ConvertUTF8toUCS2 ucsBuf(Substring(str + pos, str + pos + len));
+                NS_ConvertUTF8toUTF16 ucsBuf(Substring(str + pos, str + pos + len));
                 if (NS_SUCCEEDED(EncodeString(mEncoder, ucsBuf, encBuf))) {
                     str = encBuf.get();
                     pos = 0;

@@ -369,7 +369,7 @@ NS_METHOD nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& a
 /* void append (in AString node); */
 NS_IMETHODIMP nsLocalFile::Append(const nsAString& aNode)
 {
-  return AppendNative(NS_ConvertUCS2toUTF8(aNode));
+  return AppendNative(NS_ConvertUTF16toUTF8(aNode));
 }
 
 /* [noscript] void appendNative (in ACString node); */
@@ -499,7 +499,7 @@ NS_IMETHODIMP nsLocalFile::GetLeafName(nsAString& aLeafName)
 
 NS_IMETHODIMP nsLocalFile::SetLeafName(const nsAString& aLeafName)
 {
-  return SetNativeLeafName(NS_ConvertUCS2toUTF8(aLeafName));
+  return SetNativeLeafName(NS_ConvertUTF16toUTF8(aLeafName));
 }
 
 /* [noscript] attribute ACString nativeLeafName; */
@@ -551,7 +551,7 @@ NS_IMETHODIMP nsLocalFile::CopyTo(nsIFile *newParentDir, const nsAString& newNam
 /* [noscrpit] void CopyToNative (in nsIFile newParentDir, in ACString newName); */
 NS_IMETHODIMP nsLocalFile::CopyToNative(nsIFile *newParentDir, const nsACString& newName)
 {
-    return MoveCopy(newParentDir, NS_ConvertUTF8toUCS2(newName), PR_TRUE, PR_FALSE);
+    return MoveCopy(newParentDir, NS_ConvertUTF8toUTF16(newName), PR_TRUE, PR_FALSE);
 }
 
 /* void copyToFollowingLinks (in nsIFile newParentDir, in AString newName); */
@@ -563,7 +563,7 @@ NS_IMETHODIMP nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const nsA
 /* [noscript] void copyToFollowingLinksNative (in nsIFile newParentDir, in ACString newName); */
 NS_IMETHODIMP nsLocalFile::CopyToFollowingLinksNative(nsIFile *newParentDir, const nsACString& newName)
 {
-    return MoveCopy(newParentDir, NS_ConvertUTF8toUCS2(newName), PR_TRUE, PR_TRUE);
+    return MoveCopy(newParentDir, NS_ConvertUTF8toUTF16(newName), PR_TRUE, PR_TRUE);
 }
 
 /* void moveTo (in nsIFile newParentDir, in AString newName); */
@@ -575,7 +575,7 @@ NS_IMETHODIMP nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString& newNam
 /* [noscript] void moveToNative (in nsIFile newParentDir, in ACString newName); */
 NS_IMETHODIMP nsLocalFile::MoveToNative(nsIFile *newParentDir, const nsACString& newName)
 {
-    return MoveCopy(newParentDir, NS_ConvertUTF8toUCS2(newName), FALSE, FALSE);
+    return MoveCopy(newParentDir, NS_ConvertUTF8toUTF16(newName), FALSE, FALSE);
 }
 
 /* void remove (in boolean recursive); */
@@ -1122,7 +1122,7 @@ NS_IMETHODIMP nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator **aDirectoryE
 /* void initWithPath (in AString filePath); */
 NS_IMETHODIMP nsLocalFile::InitWithPath(const nsAString& filePath)
 {
-  return InitWithNativePath(NS_ConvertUCS2toUTF8(filePath));
+  return InitWithNativePath(NS_ConvertUTF16toUTF8(filePath));
 }
 
 /* [noscript] void initWithNativePath (in ACString filePath); */
@@ -1294,7 +1294,7 @@ NS_IMETHODIMP nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 /* void appendRelativePath (in AString relativeFilePath); */
 NS_IMETHODIMP nsLocalFile::AppendRelativePath(const nsAString& relativeFilePath)
 {
-  return AppendRelativeNativePath(NS_ConvertUCS2toUTF8(relativeFilePath));
+  return AppendRelativeNativePath(NS_ConvertUTF16toUTF8(relativeFilePath));
 }
 
 /* [noscript] void appendRelativeNativePath (in ACString relativeFilePath); */
@@ -2102,7 +2102,7 @@ nsresult NS_NewLocalFile(const nsAString& path, PRBool followLinks, nsILocalFile
 
 nsresult NS_NewNativeLocalFile(const nsACString& path, PRBool followLinks, nsILocalFile **result)
 {
-    return NS_NewLocalFile(NS_ConvertUTF8toUCS2(path), followLinks, result);
+    return NS_NewLocalFile(NS_ConvertUTF8toUTF16(path), followLinks, result);
 }
 
 nsresult NS_NewLocalFileWithFSSpec(const FSSpec* inSpec, PRBool followLinks, nsILocalFileMac **result)

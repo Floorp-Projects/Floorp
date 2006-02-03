@@ -459,7 +459,7 @@ NS_IMETHODIMP nsWebBrowserChrome::OnLocationChange(nsIWebProgress* aWebProgress,
    if(mBrowserWindow->mLocation && !isSubFrameLoad)
       {
       PRUint32 size;
-      NS_ConvertUTF8toUCS2 tmp(spec);
+      NS_ConvertUTF8toUTF16 tmp(spec);
       mBrowserWindow->mLocation->SetText(tmp,size);
       }
 
@@ -543,7 +543,7 @@ mCurrent=mTotal=mProgress=mMaxProgress=0;
 
         uri->GetSpec(uriString);
 
-        NS_ConvertUTF8toUCS2 url(uriString);
+        NS_ConvertUTF8toUTF16 url(uriString);
         url.AppendLiteral(": start");
         PRUint32 size;
         mBrowserWindow->mStatus->SetText(url,size);
@@ -578,13 +578,13 @@ void nsWebBrowserChrome::OnLoadFinished(nsIRequest* aRequest,
       uri->GetSpec(uriString);
     }
   }  
-  NS_ConvertUTF8toUCS2 msg(uriString);
+  NS_ConvertUTF8toUTF16 msg(uriString);
 
   PRTime endLoadTime = PR_Now();
   if(mBrowserWindow->mShowLoadTimes)
      {
      printf("Loading ");
-     fputs(NS_LossyConvertUCS2toASCII(msg).get(), stdout);
+     fputs(NS_LossyConvertUTF16toASCII(msg).get(), stdout);
      PRTime delta;
      LL_SUB(delta, endLoadTime, mBrowserWindow->mLoadStartTime);
      double usecs;
@@ -617,7 +617,7 @@ void nsWebBrowserChrome::OnStatusConnecting(nsIChannel* aChannel)
       uri->GetSpec(uriString);
       }
    
-   NS_ConvertUTF8toUCS2 msg(NS_LITERAL_CSTRING("Connecting to ") + uriString);
+   NS_ConvertUTF8toUTF16 msg(NS_LITERAL_CSTRING("Connecting to ") + uriString);
       
    PRUint32 size;
    mBrowserWindow->mStatus->SetText(msg,size);

@@ -412,7 +412,7 @@ PyObject *LogConsoleMessage(PyObject *self, PyObject *args)
 
 	nsCOMPtr<nsIConsoleService> consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
 	if (consoleService)
-		consoleService->LogStringMessage(NS_ConvertASCIItoUCS2(msg).get());
+		consoleService->LogStringMessage(NS_ConvertASCIItoUTF16(msg).get());
 	else {
 	// This either means no such service, or in shutdown - hardly worth
 	// the warning, and not worth reporting an error to Python about - its

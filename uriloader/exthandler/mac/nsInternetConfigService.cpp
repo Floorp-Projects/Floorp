@@ -305,10 +305,10 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
     info->SetMacType(entry.fileType);
     info->SetMacCreator(entry.fileCreator);
     temp.Assign((char *) &entry.entryName[1], entry.entryName[0]);
-    info->SetDescription(NS_ConvertASCIItoUCS2(temp));
+    info->SetDescription(NS_ConvertASCIItoUTF16(temp));
     
     temp.Assign((char *) &entry.postAppName[1], entry.postAppName[0]);
-    info->SetDefaultDescription(NS_ConvertASCIItoUCS2(temp));
+    info->SetDefaultDescription(NS_ConvertASCIItoUTF16(temp));
     
     if (entry.flags & kICMapPostMask)
     {

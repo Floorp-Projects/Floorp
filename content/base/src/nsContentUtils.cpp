@@ -2197,7 +2197,7 @@ nsresult nsContentUtils::GetLocalizedString(PropertiesFile aFile,
   NS_ENSURE_SUCCESS(rv, rv);
   nsIStringBundle *bundle = sStringBundles[aFile];
 
-  return bundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).get(),
+  return bundle->GetStringFromName(NS_ConvertASCIItoUTF16(aKey).get(),
                                    getter_Copies(aResult));
 }
 
@@ -2212,7 +2212,7 @@ nsresult nsContentUtils::FormatLocalizedString(PropertiesFile aFile,
   NS_ENSURE_SUCCESS(rv, rv);
   nsIStringBundle *bundle = sStringBundles[aFile];
 
-  return bundle->FormatStringFromName(NS_ConvertASCIItoUCS2(aKey).get(),
+  return bundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aKey).get(),
                                       aParams, aParamsLength,
                                       getter_Copies(aResult));
 }

@@ -88,7 +88,7 @@ TestParams::TestWCharStrTypeArrayIn(PRUint32 aCount, const PRUnichar** aArray)
 
   for (PRUint32 i = 0; i < aCount; i++) {
     nsAutoString tmp(aArray[i]);
-    printf("[%d]  %s\n", i, NS_LossyConvertUCS2toASCII(tmp).get());
+    printf("[%d]  %s\n", i, NS_LossyConvertUTF16toASCII(tmp).get());
   }
   return NS_OK;
 }
@@ -114,7 +114,7 @@ TestParams::TestIfaceTypeArrayIn(PRUint32 aCount, nsILocalFile** aArray)
   for (PRUint32 i = 0; i < aCount; i++) {
     nsAutoString path;
     aArray[i]->GetPath(path);
-    printf("[%d]  %s\n", i, NS_LossyConvertUCS2toASCII(path).get());
+    printf("[%d]  %s\n", i, NS_LossyConvertUTF16toASCII(path).get());
   }
   return NS_OK;
 }
@@ -273,7 +273,7 @@ TestParams::TestWCharStrTypeArrayInOut(PRUint32 aCount, PRUnichar*** aArray)
   PRUint32 i;
   for (i = 0; i < aCount; i++) {
     nsAutoString tmp(aArray[0][i]);
-    printf("[%d]  %s\n", i, NS_LossyConvertUCS2toASCII(tmp).get());
+    printf("[%d]  %s\n", i, NS_LossyConvertUTF16toASCII(tmp).get());
   }
 
   for (i = 0; i < aCount/2; i++) {
@@ -319,7 +319,7 @@ TestParams::TestIfaceTypeArrayInOut(PRUint32 aCount, nsILocalFile*** aArray)
   for (i = 0; i < aCount; i++) {
     nsAutoString path;
     aArray[0][i]->GetPath(path);
-    printf("[%d]  %s\n", i, NS_LossyConvertUCS2toASCII(path).get());
+    printf("[%d]  %s\n", i, NS_LossyConvertUTF16toASCII(path).get());
   }
 
   for (i = 0; i < aCount/2; i++) {

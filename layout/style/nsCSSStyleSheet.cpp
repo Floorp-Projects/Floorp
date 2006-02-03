@@ -456,7 +456,7 @@ RuleHash::~RuleHash()
         value->mSelector->ToString(selectorText, cssSheet);
 
         printf("    line %d, %s\n",
-               lineNumber, NS_ConvertUCS2toUTF8(selectorText).get());
+               lineNumber, NS_ConvertUTF16toUTF8(selectorText).get());
         value = value->mNext;
       } while (value);
     }
@@ -1888,7 +1888,7 @@ static PRBool ListCascade(nsHashKey* aKey, void* aValue, void* aClosure)
   fputs("\nRules in cascade order for medium: \"", data->mOut);
   nsAutoString  buffer;
   key->mAtom->ToString(buffer);
-  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), data->mOut);
+  fputs(NS_LossyConvertUTF16toASCII(buffer).get(), data->mOut);
   fputs("\"\n", data->mOut);
 
   ListRules(cascade->mWeightedRules, data->mOut, data->mIndent);

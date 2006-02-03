@@ -626,7 +626,7 @@ nsSpellCheckController::FindNextMisspelledWord(const PRUnichar* aText,
 
     result = mSpellChecker->Check(word, &aIsMisspelled);
 #if DEBUG_rods
-    printf("Word [%s] MSP: %s\n", NS_LossyConvertUCS2toASCII(word).get(), aIsMisspelled ? "YES":"NO");
+    printf("Word [%s] MSP: %s\n", NS_LossyConvertUTF16toASCII(word).get(), aIsMisspelled ? "YES":"NO");
 #endif
     if (NS_FAILED(result)) {
       nsMemory::Free(word);

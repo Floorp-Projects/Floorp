@@ -1341,7 +1341,7 @@ InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     ConvertJSValToStr(path, cx, argv[2]);
   }
 
-  *rval = INT_TO_JSVAL(nativeThis->RegisterChrome(chrome, chromeType, NS_ConvertUCS2toUTF8(path).get()));
+  *rval = INT_TO_JSVAL(nativeThis->RegisterChrome(chrome, chromeType, NS_ConvertUTF16toUTF8(path).get()));
 
   return JS_TRUE;
 }

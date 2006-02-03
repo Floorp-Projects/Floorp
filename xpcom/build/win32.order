@@ -204,7 +204,7 @@
 ??0nsGetServiceByCID@@QAE@ABUnsID@@PAVnsISupports@@PAI@Z ; 91521
 ?Release@nsEventQueueImpl@@UAGKXZ ; 87880
 ?EqualsIgnoreCase@nsString@@QBEHPBDH@Z ; 86030
-?Init@NS_ConvertUTF8toUCS2@@IAEXPBDI@Z ; 85607
+?Init@NS_ConvertUTF8toUTF16@@IAEXPBDI@Z ; 85607
 ?Rebind@nsSlidingSubstring@@QAEXABVnsSlidingString@@ABV?$nsReadingIterator@G@@1@Z ; 83943
 ?do_AppendFromElementPtr@nsAString@@MAEXPBG@Z ; 83867
 ??0nsSupportsArray@@QAE@XZ ; 83106
@@ -227,7 +227,7 @@
 ?do_AssignFromElementPtr@nsACString@@MAEXPBD@Z ; 62916
 ?Length@nsPromiseCSubstring@@UBEIXZ ; 62793
 ?CompareWithConversion@nsCString@@QBEHPBDHH@Z ; 62172
-??0NS_ConvertASCIItoUCS2@@QAE@PBD@Z ; 61750
+??0NS_ConvertASCIItoUTF16@@QAE@PBD@Z ; 61750
 ?CreateInstanceByContractID@nsComponentManagerImpl@@UAGIPBDPAVnsISupports@@ABUnsID@@PAPAX@Z ; 61075
 ?CreateInstance@nsComponentManager@@SAIPBDPAVnsISupports@@ABUnsID@@PAPAX@Z ; 61075
 ?Exit@nsAutoMonitor@@QAEXXZ ; 59293
@@ -307,7 +307,7 @@ PL_DHashStringKey ; 29743
 ??1nsProxyObjectCallInfo@@UAE@XZ ; 27609
 ?CallMethod@nsProxyEventObject@@UAGIGPBVnsXPTMethodInfo@@PAUnsXPTCMiniVariant@@@Z ; 27609
 ??0nsProxyObjectCallInfo@@QAE@PAVnsProxyObject@@PAVnsXPTMethodInfo@@IPAUnsXPTCVariant@@IPAUPLEvent@@@Z ; 27609
-?Append@NS_ConvertUCS2toUTF8@@IAEXPBGI@Z ; 27265
+?Append@NS_ConvertUTF16toUTF8@@IAEXPBGI@Z ; 27265
 ?ReplaceChar@nsString@@QAEXPBDG@Z ; 26980
 ?CompressSet@nsString@@QAEXPBDGHH@Z ; 26980
 ?CompressChars2@@YAHPADIPBD@Z ; 26980
@@ -372,7 +372,7 @@ PL_IsQueueOnCurrentThread ; 25382
 ?CompressChars1@@YAHPADIPBD@Z ; 13776
 ?CompressSet@nsCString@@QAEXPBDGHH@Z ; 13776
 ?ReplaceChar@nsCString@@QAEXPBDG@Z ; 13776
-??0NS_ConvertUCS2toUTF8@@QAE@ABVnsAString@@@Z ; 13501
+??0NS_ConvertUTF16toUTF8@@QAE@ABVnsAString@@@Z ; 13501
 ??0nsCString@@QAE@ABVnsACString@@@Z ; 13490
 ?Compact@nsVoidArray@@QAEXXZ ; 13069
 ?ResolveAndStat@nsLocalFile@@AAEIH@Z ; 13042
@@ -447,7 +447,7 @@ NS_NewLocalFile ; 8952
 ??1AtomImpl@@UAE@XZ ; 7566
 ??0nsCString@@QAE@PBD@Z ; 7541
 ??0nsAutoString@@QAE@ABVCBufDescriptor@@@Z ; 7529
-??0NS_ConvertASCIItoUCS2@@QAE@PBDI@Z ; 7452
+??0NS_ConvertASCIItoUTF16@@QAE@PBDI@Z ; 7452
 ??0nsString@@QAE@ABVnsAString@@@Z ; 7419
 ??0CBufDescriptor@@QAE@PAGHIH@Z ; 7406
 ??0nsCreateInstanceByContractID@@QAE@PBDPAVnsISupports@@PAI@Z ; 7402
@@ -823,7 +823,7 @@ PL_DHashMatchEntryStub ; 442
 ?GetModule@nsDll@@QAEIPAVnsISupports@@PAPAVnsIModule@@@Z ; 331
 ?Release@nsStorageStream@@UAGKXZ ; 328
 ?Release@nsSupportsIDImpl@@UAGKXZ ; 327
-?CopyASCIItoUCS2@@YAXABVnsACString@@AAVnsAString@@@Z ; 327
+?CopyASCIItoUTF16@@YAXABVnsACString@@AAVnsAString@@@Z ; 327
 ?copy_string@@YAAAV?$LossyConvertEncoding@DG@@AAV?$nsReadingIterator@D@@ABV2@AAV1@@Z ; 327
 ??_EnsCString@@UAEPAXI@Z ; 324
 ?StringAt@nsStringArray@@QBEXHAAVnsAString@@@Z ; 321

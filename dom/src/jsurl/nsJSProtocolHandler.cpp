@@ -275,7 +275,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
     nsString result;
     PRBool bIsUndefined;
 
-    rv = scriptContext->EvaluateString(NS_ConvertUTF8toUCS2(script),
+    rv = scriptContext->EvaluateString(NS_ConvertUTF8toUTF16(script),
                                        globalJSObject, // obj
                                        principal,
                                        url.get(),      // url
@@ -764,7 +764,7 @@ nsJSProtocolHandler::EnsureUTF8Spec(const nsAFlatCString &aSpec, const char *aCh
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!IsASCII(uStr))
-    NS_EscapeURL(NS_ConvertUCS2toUTF8(uStr), esc_AlwaysCopy | esc_OnlyNonASCII, aUTF8Spec);
+    NS_EscapeURL(NS_ConvertUTF16toUTF8(uStr), esc_AlwaysCopy | esc_OnlyNonASCII, aUTF8Spec);
 
   return NS_OK;
 }

@@ -152,7 +152,7 @@ NS_IMETHODIMP
 nsSVGStringProxyValue::SetValueString(const nsAString& aValue)
 {
 #ifdef DEBUG
-  printf("nsSVGStringProxyValue(%p)::SetValueString(%s)\n", this, NS_ConvertUCS2toUTF8(aValue).get());
+  printf("nsSVGStringProxyValue(%p)::SetValueString(%s)\n", this, NS_ConvertUTF16toUTF8(aValue).get());
 #endif
   if (NS_FAILED(mProxiedValue->SetValueString(aValue))) {
 #ifdef DEBUG

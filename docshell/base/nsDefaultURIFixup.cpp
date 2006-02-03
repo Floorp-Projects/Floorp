@@ -514,10 +514,10 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsACString& aIn,
         // to stop using AssignWithConversion and do things correctly.  See bug
         // 58866 for what happens if we remove this
         // PossiblyByteExpandedFileName check.
-        NS_ConvertUTF8toUCS2 in(aIn);
+        NS_ConvertUTF8toUTF16 in(aIn);
         if (PossiblyByteExpandedFileName(in)) {
           // removes high byte
-          rv = NS_NewNativeLocalFile(NS_LossyConvertUCS2toASCII(in), PR_FALSE, getter_AddRefs(filePath));
+          rv = NS_NewNativeLocalFile(NS_LossyConvertUTF16toASCII(in), PR_FALSE, getter_AddRefs(filePath));
         }
         else {
           // input is unicode

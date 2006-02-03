@@ -2017,7 +2017,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 
 #ifdef  DEBUG_BOOKMARK_PING_OUTPUT
             printf("nsBookmarksService::FireTimer - Pinging '%s'\n",
-                   NS_ConvertUCS2toUTF8(url).get());
+                   NS_ConvertUTF16toUTF8(url).get());
 #endif
 
             nsCOMPtr<nsIURI>    uri;
@@ -2100,7 +2100,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     if (NS_SUCCEEDED(rv = GetURLFromResource(busyResource, url)))
     {
 #ifdef  DEBUG_BOOKMARK_PING_OUTPUT
-        printf("Finished polling '%s'\n", NS_ConvertUCS2toUTF8(url).get());
+        printf("Finished polling '%s'\n", NS_ConvertUTF16toUTF8(url).get());
 #endif
     }
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -2111,11 +2111,11 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 
         nsCAutoString val;
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("ETag"), val)))
-            CopyASCIItoUCS2(val, eTagValue);
+            CopyASCIItoUTF16(val, eTagValue);
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Last-Modified"), val)))
-            CopyASCIItoUCS2(val, lastModValue);
+            CopyASCIItoUTF16(val, lastModValue);
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Length"), val)))
-            CopyASCIItoUCS2(val, contentLengthValue);
+            CopyASCIItoUTF16(val, contentLengthValue);
         val.Truncate();
 
         PRBool      changedFlag = PR_FALSE;
@@ -2128,7 +2128,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                 if (!eTagValue.IsEmpty())
                 {
 #ifdef  DEBUG_BOOKMARK_PING_OUTPUT
-                    printf("eTag: '%s'\n", NS_ConvertUCS2toUTF8(eTagValue).get());
+                    printf("eTag: '%s'\n", NS_ConvertUTF16toUTF8(eTagValue).get());
 #endif
                     nsAutoString        eTagStr;
                     nsCOMPtr<nsIRDFNode>    currentETagNode;
@@ -3125,7 +3125,7 @@ nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const char *aMIMEType,
                                        const PRUint8* aIconData, const PRUint32 aIconDataLen)
 {
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
+    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUTF16(aURL).get(),
                                    getter_AddRefs(urlLiteral));
     if (NS_FAILED(rv))
         return rv;
@@ -3206,7 +3206,7 @@ NS_IMETHODIMP
 nsBookmarksService::RemoveBookmarkIcon(const char *aURL)
 {
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
+    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUTF16(aURL).get(),
                                    getter_AddRefs(urlLiteral));
     if (NS_FAILED(rv))
         return rv;
@@ -3268,7 +3268,7 @@ nsBookmarksService::UpdateLastVisitedDate(const char *aURL,
         return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
+    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUTF16(aURL).get(),
                                    getter_AddRefs(urlLiteral));
     if (NS_FAILED(rv))
         return rv;
@@ -3418,7 +3418,7 @@ nsBookmarksService::GetLastCharset(const nsACString &aURL, nsAString &aCharset)
     aCharset.Truncate(); 
 
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
+    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUTF16(aURL).get(),
                                    getter_AddRefs(urlLiteral));
 
     if (NS_FAILED(rv))
@@ -5075,7 +5075,7 @@ nsBookmarksService::WriteBookmarkIdAndName(nsIRDFDataSource *aDs,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString  nameString(title);
-    nsCAutoString name = NS_ConvertUCS2toUTF8(nameString);
+    nsCAutoString name = NS_ConvertUTF16toUTF8(nameString);
     if (name.IsEmpty())
         return NS_OK;
 

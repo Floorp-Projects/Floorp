@@ -249,7 +249,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
       JSObject* getterObject = nsnull;
       rv = aContext->CompileFunction(aClassObject,
                                      NS_LITERAL_CSTRING("get_") +
-                                     NS_ConvertUCS2toUTF8(mName),
+                                     NS_ConvertUTF16toUTF8(mName),
                                      0,
                                      nsnull,
                                      getter, 
@@ -305,7 +305,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
       JSObject* setterObject = nsnull;
       rv = aContext->CompileFunction(aClassObject,
                                      NS_LITERAL_CSTRING("set_") +
-                                     NS_ConvertUCS2toUTF8(mName),
+                                     NS_ConvertUTF16toUTF8(mName),
                                      1,
                                      gPropertyArgs,
                                      setter, 

@@ -500,7 +500,7 @@ nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
 
 #ifdef DEBUG_PRINTING
     PR_PL(("Page: %p", this));
-    PR_PL((" [%s]", NS_ConvertUCS2toUTF8(str).get()));
+    PR_PL((" [%s]", NS_ConvertUTF16toUTF8(str).get()));
     char justStr[64];
     switch (aJust) {
       case nsIPrintSettings::kJustLeft:strcpy(justStr, "Left");break;

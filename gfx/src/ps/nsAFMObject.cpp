@@ -330,7 +330,7 @@ PRUint32    i = gNumSubstituteMap;
   for (k=0;k<fontNames.Count() && !found;k++) {
     char * fontName = (char*)fontNames[k];
     for(i=0;i<gNumSubstituteMap;i++) {
-      //printf("Looking for Name[%s] Checking [%s]\n", NS_LossyConvertUCS2toASCII(name).get(),gSubstituteMap[i].name);
+      //printf("Looking for Name[%s] Checking [%s]\n", NS_LossyConvertUTF16toASCII(name).get(),gSubstituteMap[i].name);
       if(!nsCRT::strcasecmp(fontName, gSubstituteMap[i].name) && 
          (aFontName.style != NS_FONT_STYLE_NORMAL)== gSubstituteMap[i].italic &&
          NS_IS_BOLD(aFontName.weight) == gSubstituteMap[i].bold) {
@@ -349,7 +349,7 @@ PRUint32    i = gNumSubstituteMap;
   if(i == gNumSubstituteMap){
 
 #ifdef DEBUG
-    printf(" NO FONT WAS FOUND Name[%s]\n", NS_LossyConvertUCS2toASCII(aFontName.name).get());
+    printf(" NO FONT WAS FOUND Name[%s]\n", NS_LossyConvertUTF16toASCII(aFontName.name).get());
 #endif
     if(aFontName.style == NS_FONT_STYLE_NORMAL){
       ourfont = NS_IS_BOLD(aFontName.weight) ? 1 : 0;

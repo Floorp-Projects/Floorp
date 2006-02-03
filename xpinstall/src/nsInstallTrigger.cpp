@@ -535,7 +535,7 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
     *aReturn = NOT_FOUND;  // assume failure.
 
     VERSION              cVersion;
-    NS_ConvertUCS2toUTF8 regName(aRegName);
+    NS_ConvertUTF16toUTF8 regName(aRegName);
     REGERR               status;
     nsInstallVersion     regNameVersion;
 
@@ -562,7 +562,7 @@ NS_IMETHODIMP
 nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
 {
     VERSION              cVersion;
-    NS_ConvertUCS2toUTF8 regName(component);
+    NS_ConvertUTF16toUTF8 regName(component);
     REGERR               status;
 
     status = VR_GetVersion( NS_CONST_CAST(char *, regName.get()), &cVersion );

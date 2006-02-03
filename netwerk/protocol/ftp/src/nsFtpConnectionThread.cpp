@@ -1038,7 +1038,7 @@ nsFtpState::S_user() {
             nsCAutoString prePath;
             rv = mURL->GetPrePath(prePath);
             if (NS_FAILED(rv)) return rv;
-            NS_ConvertUTF8toUCS2 prePathU(prePath);
+            NS_ConvertUTF8toUTF16 prePathU(prePath);
 
             nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
@@ -1142,7 +1142,7 @@ nsFtpState::S_pass() {
             nsCAutoString prePath;
             rv = mURL->GetPrePath(prePath);
             if (NS_FAILED(rv)) return rv;
-            NS_ConvertUTF8toUCS2 prePathU(prePath);
+            NS_ConvertUTF8toUTF16 prePathU(prePath);
             
             nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
@@ -2401,7 +2401,7 @@ nsFtpState::StopProcessing()
         nsCOMPtr<nsIPrompt> prompter;
         mChannel->GetCallback(prompter);
         if (prompter)
-            prompter->Alert(nsnull, NS_ConvertASCIItoUCS2(mResponseMsg).get());
+            prompter->Alert(nsnull, NS_ConvertASCIItoUTF16(mResponseMsg).get());
     }
     
     nsresult broadcastErrorCode = mControlStatus;

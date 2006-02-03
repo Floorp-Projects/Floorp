@@ -61,7 +61,7 @@ nsROCSSPrimitiveValue::GetEscapedURI(nsIURI *aURI, PRUnichar **aReturn)
 {
   nsCAutoString specUTF8;
   aURI->GetSpec(specUTF8);
-  NS_ConvertUTF8toUCS2 spec(specUTF8);
+  NS_ConvertUTF8toUTF16 spec(specUTF8);
 
   PRUint16 length = spec.Length();
   PRUnichar *escaped = (PRUnichar *)nsMemory::Alloc(length * 2 * sizeof(PRUnichar) + sizeof(PRUnichar('\0')));

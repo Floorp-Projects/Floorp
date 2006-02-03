@@ -471,7 +471,7 @@ nsDeviceContextQt::Observe(nsISupports* aSubject, const char* aTopic,
   nsCOMPtr<nsIPrefBranch> prefBranch(do_QueryInterface(aSubject));
   NS_ASSERTION(prefBranch,
                "All pref change observer subjects implement nsIPrefBranch");
-  nsCAutoString prefName(NS_LossyConvertUCS2toASCII(aData).get());
+  nsCAutoString prefName(NS_LossyConvertUTF16toASCII(aData).get());
 
   if (prefName.Equals(NS_LITERAL_CSTRING("browser.display.screen_resolution"))) {
     PRInt32 dpi;

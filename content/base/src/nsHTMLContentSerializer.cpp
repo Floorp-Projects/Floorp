@@ -509,7 +509,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-      escapedURI.Adopt(nsEscape(NS_ConvertUCS2toUTF8(part).get(), url_Path));
+      escapedURI.Adopt(nsEscape(NS_ConvertUTF16toUTF8(part).get(), url_Path));
     }
     AppendASCIItoUTF16(escapedURI, aEscapedURI);
 
@@ -527,7 +527,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-      escapedURI.Adopt(nsEscape(NS_ConvertUCS2toUTF8(part).get(), url_Path));
+      escapedURI.Adopt(nsEscape(NS_ConvertUTF16toUTF8(part).get(), url_Path));
     }
     AppendASCIItoUTF16(escapedURI, aEscapedURI);
   }

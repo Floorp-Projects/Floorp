@@ -321,7 +321,7 @@ nsListCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
 
   // Need to use mTagName????
   PRBool inList = (0 == nsCRT::strcmp(tagStr,
-                   NS_ConvertASCIItoUCS2(mTagName).get()));
+                   NS_ConvertASCIItoUTF16(mTagName).get()));
   aParams->SetBooleanValue(STATE_ALL, !bMixed && inList);
   aParams->SetBooleanValue(STATE_MIXED, bMixed);
   aParams->SetBooleanValue(STATE_ENABLED, PR_TRUE);
@@ -1136,7 +1136,7 @@ nsAbsolutePositioningCommand::GetCurrentState(nsIEditor *aEditor, const char* aT
     outStateString.AssignLiteral("absolute");
 
   aParams->SetBooleanValue(STATE_MIXED,PR_FALSE);
-  aParams->SetCStringValue(STATE_ATTRIBUTE, NS_ConvertUCS2toUTF8(outStateString).get());
+  aParams->SetCStringValue(STATE_ATTRIBUTE, NS_ConvertUTF16toUTF8(outStateString).get());
   return NS_OK;
 }
 
@@ -1527,7 +1527,7 @@ nsInsertTagCommand::DoCommand(const char *aCmdName, nsISupports *refCon)
 
     nsCOMPtr<nsIDOMElement> domElem;
     nsresult rv;
-    rv = editor->CreateElementWithDefaults(NS_ConvertASCIItoUCS2(mTagName),
+    rv = editor->CreateElementWithDefaults(NS_ConvertASCIItoUTF16(mTagName),
                                            getter_AddRefs(domElem));
     if (NS_FAILED(rv))
       return rv;
@@ -1575,7 +1575,7 @@ nsInsertTagCommand::DoCommandParams(const char *aCommandName,
   }
 
   nsCOMPtr<nsIDOMElement> domElem;
-  rv = editor->CreateElementWithDefaults(NS_ConvertASCIItoUCS2(mTagName),
+  rv = editor->CreateElementWithDefaults(NS_ConvertASCIItoUTF16(mTagName),
                                          getter_AddRefs(domElem));
   if (NS_FAILED(rv))
     return rv;

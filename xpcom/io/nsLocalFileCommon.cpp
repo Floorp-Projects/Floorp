@@ -211,7 +211,7 @@ nsLocalFile::GetRelativeDescriptor(nsILocalFile *fromFile, nsACString& _retval)
     for (nodeIndex = branchIndex; nodeIndex < fromNodeCnt; nodeIndex++) 
       _retval.AppendLiteral("../");
     for (nodeIndex = branchIndex; nodeIndex < thisNodeCnt; nodeIndex++) {
-      NS_ConvertUCS2toUTF8 nodeStr(thisNodes[nodeIndex]);
+      NS_ConvertUTF16toUTF8 nodeStr(thisNodes[nodeIndex]);
 #ifdef XP_MAC
       nodeStr.ReplaceSubstring(kSlashStr, kESCSlashStr);
 #endif
@@ -264,9 +264,9 @@ nsLocalFile::SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString& rel
 #ifdef XP_MAC
       nsCAutoString nodeString(Substring(nodeBegin, nodeEnd));      
       nodeString.ReplaceSubstring(kESCSlashStr, kSlashStr);
-      targetFile->Append(NS_ConvertUTF8toUCS2(nodeString));
+      targetFile->Append(NS_ConvertUTF8toUTF16(nodeString));
 #else
-      targetFile->Append(NS_ConvertUTF8toUCS2(Substring(nodeBegin, nodeEnd)));
+      targetFile->Append(NS_ConvertUTF8toUTF16(Substring(nodeBegin, nodeEnd)));
 #endif
       if (nodeEnd != strEnd) // If there's more left in the string, inc over the '/' nodeEnd is on.
         ++nodeEnd;

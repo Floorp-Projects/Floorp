@@ -1469,7 +1469,7 @@ nsresult nsCharsetMenu::AddFromPrefsToMenu(
   if (pls) {
     nsXPIDLString ucsval;
     pls->ToString(getter_Copies(ucsval));
-    NS_ConvertUCS2toUTF8 utf8val(ucsval);
+    NS_ConvertUTF16toUTF8 utf8val(ucsval);
     if (ucsval)
       res = AddFromStringToMenu(utf8val.BeginWriting(), aArray,
                                 aContainer, aDecs, aIDPrefix);
@@ -1831,7 +1831,7 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
   nsresult res = NS_OK;
 
   if (mBrowserMenuInitialized) {
-    res = AddCharsetToCache(NS_LossyConvertUCS2toASCII(aCharset),
+    res = AddCharsetToCache(NS_LossyConvertUTF16toASCII(aCharset),
                             &mBrowserMenu, kNC_BrowserCharsetMenuRoot, 
                             mBrowserCacheStart, mBrowserCacheSize,
                             mBrowserMenuRDFPosition);
@@ -1857,7 +1857,7 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentMailCharset(const PRUnichar * aCharset)
   nsresult res = NS_OK;
 
   if (mMailviewMenuInitialized) {
-    res = AddCharsetToCache(NS_LossyConvertUCS2toASCII(aCharset),
+    res = AddCharsetToCache(NS_LossyConvertUTF16toASCII(aCharset),
                             &mMailviewMenu, kNC_MailviewCharsetMenuRoot, 
                             mMailviewCacheStart, mMailviewCacheSize,
                             mMailviewMenuRDFPosition);
@@ -1881,7 +1881,7 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentComposerCharset(const PRUnichar * aCharse
 
   if (mComposerMenuInitialized) {
 
-    res = AddCharsetToCache(NS_LossyConvertUCS2toASCII(aCharset),
+    res = AddCharsetToCache(NS_LossyConvertUTF16toASCII(aCharset),
                             &mComposerMenu, kNC_ComposerCharsetMenuRoot, 
                             mComposerCacheStart, mComposerCacheSize,
                             mComposerMenuRDFPosition);

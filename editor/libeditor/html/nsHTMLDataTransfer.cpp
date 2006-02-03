@@ -934,7 +934,7 @@ nsHTMLEditor::RelativizeURIForNode(nsIDOMNode *aNode, nsIURL *aDestURL)
     attrNode->GetNodeValue(oldValue);
     if (!oldValue.IsEmpty())
     {
-      NS_ConvertUCS2toUTF8 oldCValue(oldValue);
+      NS_ConvertUTF16toUTF8 oldCValue(oldValue);
       nsCOMPtr<nsIURI> currentNodeURI;
       rv = NS_NewURI(getter_AddRefs(currentNodeURI), oldCValue);
       if (NS_SUCCEEDED(rv))
@@ -943,7 +943,7 @@ nsHTMLEditor::RelativizeURIForNode(nsIDOMNode *aNode, nsIURL *aDestURL)
         aDestURL->GetRelativeSpec(currentNodeURI, newRelativePath);
         if (!newRelativePath.IsEmpty())
         {
-          NS_ConvertUTF8toUCS2 newCValue(newRelativePath);
+          NS_ConvertUTF8toUTF16 newCValue(newRelativePath);
           attrNode->SetNodeValue(newCValue);
         }
       }
@@ -1246,8 +1246,8 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
   RemoveFragComments(contextUTF8);
 
   // convert both strings to usc2
-  const nsAFlatString& fragUcs2Str = NS_ConvertUTF8toUCS2(fragmentUTF8);
-  const nsAFlatString& cntxtUcs2Str = NS_ConvertUTF8toUCS2(contextUTF8);
+  const nsAFlatString& fragUcs2Str = NS_ConvertUTF8toUTF16(fragmentUTF8);
+  const nsAFlatString& cntxtUcs2Str = NS_ConvertUTF8toUTF16(contextUTF8);
   
   // translate platform linebreaks for fragment
   PRInt32 oldLengthInChars = fragUcs2Str.Length() + 1;  // +1 to include null terminator
@@ -2160,7 +2160,7 @@ nsHTMLEditor::InsertTextWithQuotations(const nsAString &aStringToInsert)
 #ifdef DEBUG_akkana_verbose
     printf("==== Inserting text as %squoted: ---\n%s---\n",
            curHunkIsQuoted ? "" : "non-",
-           NS_LossyConvertUCS2toASCII(curHunk).get());
+           NS_LossyConvertUTF16toASCII(curHunk).get());
 #endif
     if (curHunkIsQuoted)
       rv = InsertAsPlaintextQuotation(curHunk, PR_FALSE,
@@ -2589,7 +2589,7 @@ nsresult nsHTMLEditor::CreateTagStack(nsVoidArray &aTagStack, nsIDOMNode *aNode)
 	      return NS_ERROR_OUT_OF_MEMORY;
 
       aTagStack.AppendElement(name);
-      // printf("%s\n",NS_LossyConvertUCS2toASCII(tagName).get());
+      // printf("%s\n",NS_LossyConvertUTF16toASCII(tagName).get());
     }
 
     res = temp->GetParentNode(getter_AddRefs(node));

@@ -111,7 +111,7 @@ nsAutoCompleteMdbResult::GetValueAt(PRInt32 aIndex, nsAString & _retval)
   } else if (mValueType == kCharType) {
     nsCAutoString value;
     GetUTF8RowValue(row, mValueToken, value);
-    _retval = NS_ConvertUTF8toUCS2(value);
+    _retval = NS_ConvertUTF8toUTF16(value);
   }
   
   /* // TESTING: return ordinaly labeled values   
@@ -138,7 +138,7 @@ nsAutoCompleteMdbResult::GetCommentAt(PRInt32 aIndex, nsAString & _retval)
   } else if (mCommentType == kCharType) {
     nsCAutoString value;
     GetUTF8RowValue(row, mCommentToken, value);
-    _retval = NS_ConvertUTF8toUCS2(value);
+    _retval = NS_ConvertUTF8toUTF16(value);
   }
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -249,7 +249,7 @@ nsAutoCompleteMdbResult::GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAString
       aValue.Assign((const PRUnichar *)yarn.mYarn_Buf, yarn.mYarn_Fill/sizeof(PRUnichar));
       break;
     case 1: // utf 8
-      aValue.Assign(NS_ConvertUTF8toUCS2((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill));
+      aValue.Assign(NS_ConvertUTF8toUTF16((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill));
       break;
     default:
       return NS_ERROR_UNEXPECTED;

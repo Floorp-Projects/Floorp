@@ -286,7 +286,7 @@ void CNsIWebNav::LoadURITest(char *theUrl, PRUint32 theFlag,
       if (myDialog.DoModal() == IDOK)
 	  {
 		QAOutput("Begin Change URL test.", 1);
-		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(myDialog.m_urlfield).get(),
+		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUTF16(myDialog.m_urlfield).get(),
 								myDialog.m_flagvalue, nsnull,nsnull, nsnull);
 
 	    RvTestResult(rv, "rv LoadURI() test", 1);
@@ -328,7 +328,7 @@ void CNsIWebNav::LoadURITest(char *theUrl, PRUint32 theFlag,
 	   break;
    }
 
-   rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
+   rv = qaWebNav->LoadURI(NS_ConvertASCIItoUTF16(theUrl).get(), 
                           theFlag,
                           nsnull,
                           nsnull,
@@ -394,7 +394,7 @@ void CNsIWebNav::StopURITest(char *theUrl, PRUint32 theFlag,
    else
 	   strcpy(flagString, "STOP_CONTENT");
 
-   qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
+   qaWebNav->LoadURI(NS_ConvertASCIItoUTF16(theUrl).get(), 
                      nsIWebNavigation::LOAD_FLAGS_NONE,
                      nsnull,
                      nsnull,
@@ -456,7 +456,7 @@ void CNsIWebNav::GetReferringURITest(PRInt16 displayMode)
 		 QAOutput("We DIDN'T GET the URI.", 1);
 	  rv = qaWebNav->GetReferringURI(getter_AddRefs(theURI));
 	  RvTestResult(rv, "GetReferringURI() test", displayMode);
-//	  rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(myDialog.m_urlfield).get(),
+//	  rv = qaWebNav->LoadURI(NS_ConvertASCIItoUTF16(myDialog.m_urlfield).get(),
 //								myDialog.m_flagvalue, theURI, nsnull, nsnull);
    }
    if (!theURI) {

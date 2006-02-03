@@ -214,7 +214,7 @@ XBL_ProtoErrorReporter(JSContext *cx,
 
     errorObject->Init
          (NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage),
-          NS_ConvertUTF8toUCS2(report->filename).get(),
+          NS_ConvertUTF8toUTF16(report->filename).get(),
           NS_REINTERPRET_CAST(const PRUnichar*, report->uclinebuf),
           report->lineno, column, report->flags,
           "xbl javascript"

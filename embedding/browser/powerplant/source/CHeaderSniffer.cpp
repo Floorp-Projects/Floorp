@@ -262,7 +262,7 @@ nsresult CHeaderSniffer::PerformSave(nsIURI* inOriginalURI, const ESaveFormat in
     if (!fileURL)
         return rv;
      
-    fileURL->SetFilePath(NS_ConvertUCS2toUTF8(defaultFileName));
+    fileURL->SetFilePath(NS_ConvertUTF16toUTF8(defaultFileName));
     
     nsCAutoString fileExtension;
     fileURL->GetFileExtension(fileExtension);

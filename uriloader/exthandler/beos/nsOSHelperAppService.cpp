@@ -155,12 +155,12 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsMIMEI
 
 		char desc[B_MIME_TYPE_LENGTH + 1];
 		if (mimeType.GetShortDescription(desc) == B_OK) {
-			mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(desc));
+			mimeInfo->SetDescription(NS_ConvertUTF8toUTF16(desc));
 		} else {
 			if (mimeType.GetLongDescription(desc) == B_OK) {
-				mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(desc));
+				mimeInfo->SetDescription(NS_ConvertUTF8toUTF16(desc));
 			} else {
-				mimeInfo->SetDescription(NS_ConvertUTF8toUCS2(aMIMEType));
+				mimeInfo->SetDescription(NS_ConvertUTF8toUTF16(aMIMEType));
 			}
 		}
 		
@@ -181,12 +181,12 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsMIMEI
 
 				LOG(("    Got our path!\n"));
 				nsCOMPtr<nsIFile> handlerFile;
-				rv = GetFileTokenForPath(NS_ConvertUTF8toUCS2(path.Path()).get(), getter_AddRefs(handlerFile));
+				rv = GetFileTokenForPath(NS_ConvertUTF8toUTF16(path.Path()).get(), getter_AddRefs(handlerFile));
 
 				if (NS_SUCCEEDED(rv)) {
 					mimeInfo->SetDefaultApplication(handlerFile);
 					mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-					mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUCS2(path.Leaf()));
+					mimeInfo->SetDefaultDescription(NS_ConvertUTF8toUTF16(path.Leaf()));
 					LOG(("    Preferred App: %s\n",path.Leaf()));
 					doSave = false;
 				}

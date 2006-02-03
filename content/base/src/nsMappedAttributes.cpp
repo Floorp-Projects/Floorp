@@ -217,10 +217,10 @@ nsMappedAttributes::List(FILE* out, PRInt32 aIndent) const
     else {
       Attrs()[i].mName.NodeInfo()->GetQualifiedName(buffer);
     }
-    fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 
     Attrs()[i].mValue.ToString(buffer);
-    fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
     fputs("\n", out);
   }
 

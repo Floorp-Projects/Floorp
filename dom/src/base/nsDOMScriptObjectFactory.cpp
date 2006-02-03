@@ -132,7 +132,7 @@ nsDOMScriptObjectFactory::GetExternalClassInfoInstance(const nsAString& aName)
       nsCOMPtr<nsIDOMCIExtension> creator(do_CreateInstance(globalStruct->mCID, &rv));
       NS_ENSURE_SUCCESS(rv, nsnull);
 
-      rv = creator->RegisterDOMCI(NS_ConvertUCS2toUTF8(aName).get(), this);
+      rv = creator->RegisterDOMCI(NS_ConvertUTF16toUTF8(aName).get(), this);
       NS_ENSURE_SUCCESS(rv, nsnull);
 
       rv = gNameSpaceManager->LookupName(aName, &globalStruct);

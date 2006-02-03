@@ -601,7 +601,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
             // XXX because gcc-2.7.2.3 is too dumb to keep a
             // compiler-generated temporary around.
-            NS_ConvertUTF8toUCS2 x(uri);
+            NS_ConvertUTF8toUTF16 x(uri);
             const nsAString& id = x;
             rv = realKid->SetAttr(kNameSpaceID_None, nsXULAtoms::id, id, PR_FALSE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
@@ -1431,7 +1431,7 @@ nsXULContentBuilder::GetElementsForResource(nsIRDFResource* aResource,
     if (! xuldoc)
         return NS_ERROR_FAILURE;
 
-    return xuldoc->GetElementsForID(NS_ConvertUTF8toUCS2(uri), aElements);
+    return xuldoc->GetElementsForID(NS_ConvertUTF8toUTF16(uri), aElements);
 }
 
 nsresult

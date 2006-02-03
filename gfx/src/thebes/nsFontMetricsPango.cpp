@@ -903,7 +903,7 @@ nsFontMetricsPango::FamilyExists(nsIDeviceContext *aDevice,
     if (!IsASCIIFontName(aName))
         return NS_ERROR_FAILURE;
 
-    NS_ConvertUCS2toUTF8 name(aName);
+    NS_ConvertUTF16toUTF8 name(aName);
 
     nsresult rv = NS_ERROR_FAILURE;
     PangoContext *context = pango_xft_get_context(GDK_DISPLAY(), 0);

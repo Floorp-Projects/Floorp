@@ -339,23 +339,23 @@ NS_IMETHODIMP nsDeviceContextSpecQt::Init(nsIPrintSettings *aPS)
     aPS->GetMarginRight(&dright);
 
     if (printfile)
-      strcpy(mPath,    NS_ConvertUCS2toUTF8(printfile).get());
+      strcpy(mPath,    NS_ConvertUTF16toUTF8(printfile).get());
     if (command)
-      strcpy(mCommand, NS_ConvertUCS2toUTF8(command).get());
+      strcpy(mCommand, NS_ConvertUTF16toUTF8(command).get());
     if (printer)
-      strcpy(mPrinter, NS_ConvertUCS2toUTF8(printer).get());
+      strcpy(mPrinter, NS_ConvertUTF16toUTF8(printer).get());
     if (papername)
-      strcpy(mPaperName, NS_ConvertUCS2toUTF8(papername).get());
+      strcpy(mPaperName, NS_ConvertUTF16toUTF8(papername).get());
 
     DO_PR_DEBUG_LOG(("margins:   %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright));
     DO_PR_DEBUG_LOG(("printRange %d\n",   printRange));
     DO_PR_DEBUG_LOG(("fromPage   %d\n",   fromPage));
     DO_PR_DEBUG_LOG(("toPage     %d\n",   toPage));
     DO_PR_DEBUG_LOG(("tofile     %d\n",   tofile));
-    DO_PR_DEBUG_LOG(("printfile  '%s'\n", printfile? NS_ConvertUCS2toUTF8(printfile).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("command    '%s'\n", command? NS_ConvertUCS2toUTF8(command).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("printer    '%s'\n", printer? NS_ConvertUCS2toUTF8(printer).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("papername  '%s'\n", papername? NS_ConvertUCS2toUTF8(papername).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("printfile  '%s'\n", printfile? NS_ConvertUTF16toUTF8(printfile).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("command    '%s'\n", command? NS_ConvertUTF16toUTF8(command).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("printer    '%s'\n", printer? NS_ConvertUTF16toUTF8(printer).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("papername  '%s'\n", papername? NS_ConvertUTF16toUTF8(papername).get():"<NULL>"));
 
     mTop         = dtop;
     mBottom      = dbottom;
@@ -622,7 +622,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::GetDefaultPrinterName(PRUnichar **aDefaultP
 
   GlobalPrinters::GetInstance()->GetDefaultPrinterName(aDefaultPrinterName);
 
-  DO_PR_DEBUG_LOG(("GetDefaultPrinterName(): default printer='%s'.\n", NS_ConvertUCS2toUTF8(*aDefaultPrinterName).get()));
+  DO_PR_DEBUG_LOG(("GetDefaultPrinterName(): default printer='%s'.\n", NS_ConvertUTF16toUTF8(*aDefaultPrinterName).get()));
   return NS_OK;
 }
 
@@ -644,8 +644,8 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
 
   nsXPIDLCString fullPrinterName, /* Full name of printer incl. driver-specific prefix */
                  printerName;     /* "Stripped" name of printer */
-  fullPrinterName.Assign(NS_ConvertUCS2toUTF8(aPrinterName));
-  printerName.Assign(NS_ConvertUCS2toUTF8(aPrinterName));
+  fullPrinterName.Assign(NS_ConvertUTF16toUTF8(aPrinterName));
+  printerName.Assign(NS_ConvertUTF16toUTF8(aPrinterName));
   DO_PR_DEBUG_LOG(("printerName='%s'\n", printerName.get()));
 
   PrintMethod type = pmInvalid;
@@ -682,7 +682,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
       filename.Assign("mozilla.ps");
   }
   DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", filename.get()));
-  aPrintSettings->SetToFileName(NS_ConvertUTF8toUCS2(filename).get());
+  aPrintSettings->SetToFileName(NS_ConvertUTF8toUTF16(filename).get());
 
   aPrintSettings->SetIsInitializedFromPrinter(PR_TRUE);
 #ifdef USE_XPRINT
@@ -784,7 +784,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
       aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
       aPrintSettings->SetPaperWidth(total_width);
       aPrintSettings->SetPaperHeight(total_height);
-      aPrintSettings->SetPaperName(NS_ConvertUTF8toUCS2(papername).get());
+      aPrintSettings->SetPaperName(NS_ConvertUTF8toUTF16(papername).get());
 
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
       int i;
@@ -889,7 +889,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
         aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeInches);
         aPrintSettings->SetPaperWidth(PSPaperSizeRec_FullPaperWidth(default_paper));
         aPrintSettings->SetPaperHeight(PSPaperSizeRec_FullPaperHeight(default_paper));
-        aPrintSettings->SetPaperName(NS_ConvertUTF8toUCS2(default_paper->name).get());
+        aPrintSettings->SetPaperName(NS_ConvertUTF8toUTF16(default_paper->name).get());
       }
       else {
         DO_PR_DEBUG_LOG(("Unknown paper size '%s' given.\n", papername.get()));
@@ -915,7 +915,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(const PRUnicha
     nsXPIDLCString command;
     if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "print_command", getter_Copies(command)))) {
       DO_PR_DEBUG_LOG(("setting default print command to '%s'\n", command.get()));
-      aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUCS2(command).get());
+      aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUTF16(command).get());
     }
 
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
@@ -954,7 +954,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     int i;
     for(  i = 0 ; i < mGlobalNumPrinters ; i++ )
     {
-      mGlobalPrinterList->AppendString(nsString(NS_ConvertASCIItoUCS2(plist[i].name)));
+      mGlobalPrinterList->AppendString(nsString(NS_ConvertASCIItoUTF16(plist[i].name)));
     }
 
     XpuFreePrinterList(plist);
@@ -995,8 +995,8 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
         added_default_printer = PR_TRUE;
 
       mGlobalPrinterList->AppendString(
-        nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME)) +
-        nsString(NS_ConvertASCIItoUCS2(name)));
+        nsString(NS_ConvertASCIItoUTF16(NS_POSTSCRIPT_DRIVER_NAME)) +
+        nsString(NS_ConvertASCIItoUTF16(name)));
       mGlobalNumPrinters++;
     }
 
@@ -1008,7 +1008,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   if (!added_default_printer)
   {
     mGlobalPrinterList->AppendString(
-      nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
+      nsString(NS_ConvertASCIItoUTF16(NS_POSTSCRIPT_DRIVER_NAME "default")));
     mGlobalNumPrinters++;
   }
 #endif /* USE_POSTSCRIPT */

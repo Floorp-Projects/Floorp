@@ -323,7 +323,7 @@ void nsCSSScanner::OutputError()
 #ifdef DEBUG
   fprintf(stderr, "CSS Error (%s :%u.%u): %s\n",
                   mFileName.get(), mErrorLineNumber, mErrorColNumber,
-                  NS_ConvertUCS2toUTF8(mError).get());
+                  NS_ConvertUTF16toUTF8(mError).get());
 #endif
 
   // Log it to the JavaScript console

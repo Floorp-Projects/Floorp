@@ -874,7 +874,7 @@ nsVariant::ConvertToAString(const nsDiscriminatedUnion& data,
         _retval.Assign(*data.u.mAStringValue);
         return NS_OK;
     case nsIDataType::VTYPE_CSTRING:
-        CopyASCIItoUCS2(*data.u.mCStringValue, _retval);
+        CopyASCIItoUTF16(*data.u.mCStringValue, _retval);
         return NS_OK;
     case nsIDataType::VTYPE_UTF8STRING:
         CopyUTF8toUTF16(*data.u.mUTF8StringValue, _retval);
@@ -886,7 +886,7 @@ nsVariant::ConvertToAString(const nsDiscriminatedUnion& data,
         _retval.Assign(data.u.wstr.mWStringValue);
         return NS_OK;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-        CopyASCIItoUCS2(nsDependentCString(data.u.str.mStringValue,
+        CopyASCIItoUTF16(nsDependentCString(data.u.str.mStringValue,
                                            data.u.str.mStringLength),
                         _retval);
         return NS_OK;
@@ -916,7 +916,7 @@ nsVariant::ConvertToACString(const nsDiscriminatedUnion& data,
     {
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_DOMSTRING:
-        CopyUCS2toASCII(*data.u.mAStringValue, _retval);
+        LossyCopyUTF16toASCII(*data.u.mAStringValue, _retval);
         return NS_OK;
     case nsIDataType::VTYPE_CSTRING:
         _retval.Assign(*data.u.mCStringValue);
@@ -925,27 +925,27 @@ nsVariant::ConvertToACString(const nsDiscriminatedUnion& data,
         // XXX This is an extra copy that should be avoided
         // once Jag lands support for UTF8String and associated
         // conversion methods.
-        CopyUCS2toASCII(NS_ConvertUTF8toUCS2(*data.u.mUTF8StringValue),
+        LossyCopyUTF16toASCII(NS_ConvertUTF8toUTF16(*data.u.mUTF8StringValue),
                         _retval);
         return NS_OK;
     case nsIDataType::VTYPE_CHAR_STR:
         _retval.Assign(*data.u.str.mStringValue);
         return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
-        CopyUCS2toASCII(nsDependentString(data.u.wstr.mWStringValue),
+        LossyCopyUTF16toASCII(nsDependentString(data.u.wstr.mWStringValue),
                         _retval);
         return NS_OK;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
         _retval.Assign(data.u.str.mStringValue, data.u.str.mStringLength);
         return NS_OK;
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-        CopyUCS2toASCII(nsDependentString(data.u.wstr.mWStringValue,
+        LossyCopyUTF16toASCII(nsDependentString(data.u.wstr.mWStringValue,
                         data.u.wstr.mWStringLength), _retval);
         return NS_OK;
     case nsIDataType::VTYPE_WCHAR:
     {
         const PRUnichar* str = &data.u.mWCharValue;
-        CopyUCS2toASCII(Substring(str, str + 1), _retval);
+        LossyCopyUTF16toASCII(Substring(str, str + 1), _retval);
         return NS_OK;
     }
     default:
@@ -1054,7 +1054,7 @@ nsVariant::ConvertToStringWithSize(const nsDiscriminatedUnion& data,
         // *size = *data.mUTF8StringValue->Length();
         // *str = ToNewCString(*data.mUTF8StringValue);
         // But this will have to do for now.
-        NS_ConvertUTF8toUCS2 tempString(*data.u.mUTF8StringValue);
+        NS_ConvertUTF8toUTF16 tempString(*data.u.mUTF8StringValue);
         *size = tempString.Length();
         *str = ToNewCString(tempString);
         break;

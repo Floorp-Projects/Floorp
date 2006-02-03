@@ -646,7 +646,7 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
     if (mOwningElement) {
       nsAutoString elementCharset;
       mOwningElement->GetCharset(elementCharset);
-      CopyUCS2toASCII(elementCharset, aCharset);
+      LossyCopyUTF16toASCII(elementCharset, aCharset);
 #ifdef PR_LOGGING
       if (! aCharset.IsEmpty()) {
         LOG(("  Setting from property on element: %s",

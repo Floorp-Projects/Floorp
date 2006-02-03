@@ -287,7 +287,7 @@ public:
         }
 
         if (NS_FAILED(rv)) {
-          printf("######### PageCycler couldn't asynchronously load: %s\n", NS_ConvertUCS2toUTF8(mLastRequest).get());
+          printf("######### PageCycler couldn't asynchronously load: %s\n", NS_ConvertUTF16toUTF8(mLastRequest).get());
         }
       }
     }
@@ -307,7 +307,7 @@ public:
 
     // load the URL
     const PRUnichar* url = self->mLastRequest.get();
-    printf("########## PageCycler starting: %s\n", NS_ConvertUCS2toUTF8(url).get());
+    printf("########## PageCycler starting: %s\n", NS_ConvertUTF16toUTF8(url).get());
 
     self->mIntervalTime = PR_IntervalNow();
     self->mAppCore->LoadUrl(url);
@@ -428,7 +428,7 @@ nsBrowserInstance::ReinitializeContentVariables()
       if (docShellAsItem) {
         nsXPIDLString name;
         docShellAsItem->GetName(getter_Copies(name));
-        printf("Attaching to Content WebShell [%s]\n", NS_LossyConvertUCS2toASCII(name).get());
+        printf("Attaching to Content WebShell [%s]\n", NS_LossyConvertUTF16toASCII(name).get());
       }
     }
   }
@@ -560,7 +560,7 @@ nsBrowserInstance::StartPageCycler(PRBool* aIsPageCycling)
 
     if (!urlstr.IsEmpty()) {
       // A url was provided. Load it
-      if (APP_DEBUG) printf("Got Command line URL to load %s\n", NS_ConvertUCS2toUTF8(urlstr).get());
+      if (APP_DEBUG) printf("Got Command line URL to load %s\n", NS_ConvertUTF16toUTF8(urlstr).get());
       rv = LoadUrl( urlstr.get() );
       sCmdLineURLUsed = PR_TRUE;
       return rv;
@@ -591,7 +591,7 @@ nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
       // inform our top level webshell that we are its parent URI content listener...
       nsXPIDLString name;
       docShellAsItem->GetName(getter_Copies(name));
-      printf("Attaching to WebShellWindow[%s]\n", NS_LossyConvertUCS2toASCII(name).get());
+      printf("Attaching to WebShellWindow[%s]\n", NS_LossyConvertUTF16toASCII(name).get());
     }
   }
 

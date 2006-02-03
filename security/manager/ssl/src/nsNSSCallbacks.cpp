@@ -185,7 +185,7 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   if (NS_FAILED(rv))
     return nsnull; 
 
-  const PRUnichar* formatStrings[1] = { ToNewUnicode(NS_ConvertUTF8toUCS2(PK11_GetTokenName(slot))) };
+  const PRUnichar* formatStrings[1] = { ToNewUnicode(NS_ConvertUTF8toUTF16(PK11_GetTokenName(slot))) };
   rv = nssComponent->PIPBundleFormatStringFromName("CertPassPrompt",
                                       formatStrings, 1,
                                       promptString);
@@ -258,7 +258,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
   }
 
   nsAutoString shortDesc;
-  const PRUnichar* formatStrings[1] = { ToNewUnicode(NS_ConvertUTF8toUCS2(caName)) };
+  const PRUnichar* formatStrings[1] = { ToNewUnicode(NS_ConvertUTF8toUTF16(caName)) };
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (NS_SUCCEEDED(rv)) {
     rv = nssComponent->PIPBundleFormatStringFromName("SignedBy",

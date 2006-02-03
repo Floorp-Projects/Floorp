@@ -148,7 +148,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
 
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("nsRDFConMemberTestNode[%p]: FilterInstantiations() container=[%s] member=[%s]",
-                    this, container, NS_ConvertUCS2toUTF8(member).get()));
+                    this, container, NS_ConvertUTF16toUTF8(member).get()));
         }
 #endif
 
@@ -248,7 +248,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
                     nsXULContentUtils::GetTextForNode(node, member);
 
                     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                           ("    member => %s", NS_ConvertUCS2toUTF8(member).get()));
+                           ("    member => %s", NS_ConvertUTF16toUTF8(member).get()));
                 }
 #endif
 
@@ -411,7 +411,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
                             nsXULContentUtils::GetTextForNode(member, s);
 
                             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                                   ("    member => %s", NS_ConvertUCS2toUTF8(s).get()));
+                                   ("    member => %s", NS_ConvertUTF16toUTF8(s).get()));
                         }
 #endif
 
@@ -532,7 +532,7 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
 
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsRDFConMemberTestNode[%p]: CanPropagate([%s]==[%s]=>[%s]) => %s",
-                this, source, property, NS_ConvertUCS2toUTF8(target).get(),
+                this, source, property, NS_ConvertUTF16toUTF8(target).get(),
                 canpropagate ? "true" : "false"));
     }
 #endif

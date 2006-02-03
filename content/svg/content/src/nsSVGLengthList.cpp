@@ -149,7 +149,7 @@ nsSVGLengthList::SetValueString(const nsAString& aValue)
 
   while ((token = nsCRT::strtok(rest, delimiters, &rest))) {
     nsCOMPtr<nsISVGLength> length;
-    NS_NewSVGLength(getter_AddRefs(length), NS_ConvertASCIItoUCS2(token));
+    NS_NewSVGLength(getter_AddRefs(length), NS_ConvertASCIItoUTF16(token));
     if (!length) {
       rv = NS_ERROR_FAILURE;
       break;

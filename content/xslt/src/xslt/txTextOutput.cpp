@@ -56,7 +56,7 @@ void txTextOutput::attribute(const nsAString& aName,
 
 void txTextOutput::characters(const nsAString& aData, PRBool aDOE)
 {
-    *mOut << NS_ConvertUCS2toUTF8(aData).get();
+    *mOut << NS_ConvertUTF16toUTF8(aData).get();
 }
 
 void txTextOutput::comment(const nsAString& aData)

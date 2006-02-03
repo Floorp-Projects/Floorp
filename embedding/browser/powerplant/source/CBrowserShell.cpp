@@ -632,7 +632,7 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
                 ThrowIfError_(rv);
                 
                 nsCOMPtr<nsIURI> linkURI;
-                rv = NS_NewURI(getter_AddRefs(linkURI), NS_ConvertUCS2toUTF8(linkText));
+                rv = NS_NewURI(getter_AddRefs(linkURI), NS_ConvertUTF16toUTF8(linkText));
                 ThrowIfError_(rv);
 
                 SaveLink(linkURI);
@@ -1055,7 +1055,7 @@ NS_METHOD CBrowserShell::LoadURL(const nsACString& urlText, const nsACString& re
         nsresult rv = NS_NewURI(getter_AddRefs(referrerURI), referrer);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to make URI for referrer.");
     }
-    return mWebBrowserAsWebNav->LoadURI(NS_ConvertUTF8toUCS2(urlText).get(),
+    return mWebBrowserAsWebNav->LoadURI(NS_ConvertUTF8toUTF16(urlText).get(),
                                         nsIWebNavigation::LOAD_FLAGS_NONE,
                                         referrerURI,
                                         nsnull,
@@ -1101,7 +1101,7 @@ NS_METHOD CBrowserShell::SaveDocument(ESaveFormat inSaveFormat)
       return rv;
 
     nsCOMPtr<nsIURI> documentURI;
-    rv = NS_NewURI(getter_AddRefs(documentURI), NS_ConvertUCS2toUTF8(docLocation));
+    rv = NS_NewURI(getter_AddRefs(documentURI), NS_ConvertUTF16toUTF8(docLocation));
     if (NS_FAILED(rv))
       return rv;
 

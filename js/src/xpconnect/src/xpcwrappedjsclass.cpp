@@ -946,7 +946,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                 }
 
                                 rv = scriptError->Init(newMessage.get(),
-                                                       NS_ConvertASCIItoUCS2(sourceName).get(),
+                                                       NS_ConvertASCIItoUTF16(sourceName).get(),
                                                        nsnull,
                                                        lineNumber, 0, 0,
                                                        "XPConnect JavaScript");

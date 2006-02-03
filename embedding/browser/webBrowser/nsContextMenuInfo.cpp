@@ -187,7 +187,7 @@ nsContextMenuInfo::GetImageSrc(nsIURI **aURI)
     nsAutoString imgSrcSpec;
     nsresult rv = imgElement->GetSrc(imgSrcSpec);
     if (NS_SUCCEEDED(rv))
-      return NS_NewURI(aURI, NS_ConvertUCS2toUTF8(imgSrcSpec));
+      return NS_NewURI(aURI, NS_ConvertUTF16toUTF8(imgSrcSpec));
   }
   
   // If not, dig deeper.

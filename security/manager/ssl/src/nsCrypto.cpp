@@ -2020,7 +2020,7 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
     }
     delete []certArr;
   }
-  aReturn.Assign(NS_ConvertASCIItoUCS2(retString));
+  aReturn.Assign(NS_ConvertASCIItoUTF16(retString));
   if (freeString != nsnull) {
     PR_smprintf_free(freeString);
   }

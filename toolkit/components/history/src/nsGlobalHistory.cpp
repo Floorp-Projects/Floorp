@@ -926,7 +926,7 @@ nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   // eventually turn this on when we're confident in mork's abilitiy
   // to handle yarn forms properly
 #if 0
-  NS_ConvertUCS2toUTF8 utf8Value(aValue);
+  NS_ConvertUTF16toUTF8 utf8Value(aValue);
   printf("Storing utf8 value %s\n", utf8Value.get());
   mdbYarn yarn = { (void *)utf8Value.get(), utf8Value.Length(), utf8Value.Length(), 0, 1, nsnull };
 #else
@@ -1010,7 +1010,7 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
 
     // eventually we'll be supporting this in SetRowValue()
   case 1:                       // UTF8
-    aResult.Assign(NS_ConvertUTF8toUCS2((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill));
+    aResult.Assign(NS_ConvertUTF8toUTF16((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill));
     break;
 
   default:
@@ -1797,7 +1797,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     if (aProperty == kNC_URL && !IsFindResource(aSource)) {
       
       nsCOMPtr<nsIRDFLiteral> uriLiteral;
-      rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri).get(), getter_AddRefs(uriLiteral));
+      rv = gRDFService->GetLiteral(NS_ConvertUTF8toUTF16(uri).get(), getter_AddRefs(uriLiteral));
       if (NS_FAILED(rv))    return(rv);
       *aTarget = uriLiteral;
       NS_ADDREF(*aTarget);
@@ -1820,7 +1820,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
           tokenPair* token = NS_STATIC_CAST(tokenPair*, tokenList[i]);
 
           if (!strncmp(token->tokenName, "text", token->tokenNameLength)) {
-            rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(Substring(token->tokenValue, token->tokenValue + token->tokenValueLength)).get(),
+            rv = gRDFService->GetLiteral(NS_ConvertUTF8toUTF16(Substring(token->tokenValue, token->tokenValue + token->tokenValueLength)).get(),
                                          getter_AddRefs(literal));
             // We don't break out of the loop here because there could be other text tokens in the string.
             // The last one is the most specific so wait and see if we've got one...
@@ -1926,7 +1926,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
         if (NS_FAILED(rv)) return rv;
         
         // assume the url is in UTF8
-        title = NS_ConvertUTF8toUCS2(filename);
+        title = NS_ConvertUTF8toUTF16(filename);
       }
       if (NS_FAILED(rv)) return rv;
 
@@ -3738,11 +3738,11 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
   nsAutoString stringName(NS_LITERAL_STRING("finduri-"));
 
   // property
-  stringName.Append(NS_ConvertASCIItoUCS2(term->property));
+  stringName.Append(NS_ConvertASCIItoUTF16(term->property));
   stringName.Append(PRUnichar('-'));
 
   // and now the method, such as "is" or "isgreater"
-  stringName.Append(NS_ConvertASCIItoUCS2(term->method));
+  stringName.Append(NS_ConvertASCIItoUTF16(term->method));
 
   // try adding -<text> to see if there's a match
   // for example, to match
@@ -3940,7 +3940,7 @@ nsGlobalHistory::GetFindUriPrefix(const searchQuery& aQuery,
     aResult.Append(term->method);
 
     aResult.Append("&text=");
-    aResult.Append(NS_ConvertUCS2toUTF8(term->text));
+    aResult.Append(NS_ConvertUTF16toUTF8(term->text));
   }
 
   if (aQuery.groupBy == 0) return;
@@ -4405,7 +4405,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString &aSearchString,
       nsCAutoString url;
       GetRowValue(row, kToken_URLColumn, url);
 
-      NS_ConvertUTF8toUCS2 utf8Url(url);
+      NS_ConvertUTF8toUTF16 utf8Url(url);
       if (AutoCompleteCompare(utf8Url, aSearchString, aExclude))
         resultArray.AppendObject(row);
     } while (row);

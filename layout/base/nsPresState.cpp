@@ -84,7 +84,7 @@ nsPresState::SetStateProperty(const nsAString& aName, const nsAString& aValue)
   nsCOMPtr<nsISupportsCString> supportsStr(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
   NS_ENSURE_TRUE(supportsStr, NS_ERROR_OUT_OF_MEMORY);
 
-  supportsStr->SetData(NS_ConvertUCS2toUTF8(aValue));
+  supportsStr->SetData(NS_ConvertUTF16toUTF8(aValue));
 
   mPropertyTable.Put(aName, supportsStr);
   return NS_OK;

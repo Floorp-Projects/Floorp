@@ -709,7 +709,7 @@ void CBrowserView::OnFileSaveAs()
 
 void CBrowserView::OpenURL(const char* pUrl)
 {
-    OpenURL(NS_ConvertASCIItoUCS2(pUrl).get());
+    OpenURL(NS_ConvertASCIItoUTF16(pUrl).get());
 }
 
 void CBrowserView::OpenURL(const PRUnichar* pUrl)

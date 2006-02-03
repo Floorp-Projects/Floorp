@@ -358,7 +358,7 @@ GetSlotWithMechanism(PRUint32 aMechanism,
         slotElement = PK11_GetFirstSafe(slotList);
         nsAutoString tokenStr(unicodeTokenChosen);
         while (slotElement) {
-            if (tokenStr.Equals(NS_ConvertUTF8toUCS2(PK11_GetTokenName(slotElement->slot)))) {
+            if (tokenStr.Equals(NS_ConvertUTF8toUTF16(PK11_GetTokenName(slotElement->slot)))) {
                 *aSlot = slotElement->slot;
                 break;
             }

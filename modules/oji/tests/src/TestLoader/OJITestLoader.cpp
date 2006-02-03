@@ -111,7 +111,7 @@ TestResult* OJITestLoader::runTest(const char* testCase, const char* libName) {
 void OJITestLoader::registerRes(TestResult* res, char* tc){
 	char *outBuf = (char*)calloc(1, res->comment.Length() + PL_strlen(tc) + 100);
 	
-	sprintf(outBuf, "%s: %s (%s)\n", tc, res->status?"PASS":"FAILED", NS_LossyConvertUCS2toASCII(res->comment).get());
+	sprintf(outBuf, "%s: %s (%s)\n", tc, res->status?"PASS":"FAILED", NS_LossyConvertUTF16toASCII(res->comment).get());
 	if (fdResFile) {	
 		printf("%s", outBuf);	
 		if (PR_Write(fdResFile, outBuf, PL_strlen(outBuf)) < PL_strlen(outBuf))

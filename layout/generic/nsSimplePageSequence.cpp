@@ -189,7 +189,7 @@ nsSimplePageSequenceFrame::GetEdgePaperMarginCoord(char* aPrefName,
 {
   nsresult rv = mPageData->mPrintOptions->
     GetPrinterPrefInt(mPageData->mPrintSettings, 
-                      NS_ConvertASCIItoUCS2(aPrefName).get(),
+                      NS_ConvertASCIItoUTF16(aPrefName).get(),
                       &aCoord);
 
   if (NS_SUCCEEDED(rv)) {

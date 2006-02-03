@@ -253,7 +253,7 @@ nsSVGScriptElement::ScriptAvailable(nsresult aResult,
     nsCAutoString spec;
     aURI->GetSpec(spec);
 
-    NS_ConvertUTF8toUCS2 fileName(spec);
+    NS_ConvertUTF8toUTF16 fileName(spec);
     event.fileName = fileName.get();
 
     HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,

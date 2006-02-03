@@ -61,7 +61,7 @@ public:
     int loadStylesheet (char * filename)
     {
         txParsedURL url;
-        url.init(NS_ConvertASCIItoUCS2(filename));
+        url.init(NS_ConvertASCIItoUTF16(filename));
         nsresult rv =
             TX_CompileStylesheetPath(url, getter_AddRefs(mStylesheet));
         return NS_SUCCEEDED(rv) ? 0 : 1;

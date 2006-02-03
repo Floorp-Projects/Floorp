@@ -183,9 +183,9 @@ nsSystemPref::Observe(nsISupports *aSubject,
     }
     // sSysPrefString value was changed, update ...
     else if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) &&
-             NS_ConvertUTF8toUCS2(sSysPrefString).Equals(aData)) {
+             NS_ConvertUTF8toUTF16(sSysPrefString).Equals(aData)) {
         SYSPREF_LOG(("++++++ Notify: topic=%s data=%s\n",
-                     aTopic, NS_ConvertUCS2toUTF8(aData).get()));
+                     aTopic, NS_ConvertUTF16toUTF8(aData).get()));
 
         nsCOMPtr<nsIPrefBranch> prefBranch =
             do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
@@ -211,7 +211,7 @@ nsSystemPref::Observe(nsISupports *aSubject,
         NS_ASSERTION(mEnabled == PR_TRUE, "Should not listen when disabled");
         SYSPREF_LOG(("====== System Pref Notify topic=%s data=%s\n",
                      aTopic, (char*)aData));
-        rv = ReadSystemPref(NS_LossyConvertUCS2toASCII(aData).get());
+        rv = ReadSystemPref(NS_LossyConvertUTF16toASCII(aData).get());
         return NS_OK;
     } else if (!nsCRT::strcmp(aTopic,"profile-before-change")) {
       //roll back to mozilla prefs

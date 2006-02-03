@@ -932,7 +932,7 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
                                  // install dir for the packages required to bring up the profile UI.
         rv = SelectProviderForPackage(aProvider,
                                       aProviderName,
-                                      NS_ConvertASCIItoUCS2(packageName).get(),
+                                      NS_ConvertASCIItoUTF16(packageName).get(),
                                       aArc, useProfile, PR_TRUE);
         if (NS_FAILED(rv))
           return NS_ERROR_FAILURE;
@@ -1183,7 +1183,7 @@ nsChromeRegistry::LoadDataSource(const nsACString &aFileName,
   // Seed the datasource with the ``chrome'' namespace
   nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(*aResult);
   if (sink)
-    sink->AddNameSpace(sCPrefix, NS_ConvertASCIItoUCS2(CHROME_URI));
+    sink->AddNameSpace(sCPrefix, NS_ConvertASCIItoUTF16(CHROME_URI));
 
   nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(*aResult);
   if (! remote)
@@ -1711,13 +1711,13 @@ NS_IMETHODIMP nsChromeRegistry::SelectLocaleForProfile(const nsACString& aLocale
                                                        const PRUnichar *aProfilePath)
 {
   // to be changed to use given path
-  return SetProvider(NS_LITERAL_CSTRING("locale"), mSelectedLocale, aLocale, PR_TRUE, NS_ConvertUCS2toUTF8(aProfilePath).get(), PR_TRUE);
+  return SetProvider(NS_LITERAL_CSTRING("locale"), mSelectedLocale, aLocale, PR_TRUE, NS_ConvertUTF16toUTF8(aProfilePath).get(), PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::SelectSkinForProfile(const nsACString& aSkin,
                                                      const PRUnichar *aProfilePath)
 {
-  return SetProvider(NS_LITERAL_CSTRING("skin"), mSelectedSkin, aSkin, PR_TRUE, NS_ConvertUCS2toUTF8(aProfilePath).get(), PR_TRUE);
+  return SetProvider(NS_LITERAL_CSTRING("skin"), mSelectedSkin, aSkin, PR_TRUE, NS_ConvertUTF16toUTF8(aProfilePath).get(), PR_TRUE);
 }
 
 /* void setRuntimeProvider (in boolean runtimeProvider); */
@@ -2367,7 +2367,7 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
         }
 
         nsCOMPtr<nsIRDFLiteral> baseLiteral;
-        mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(baseURL).get(), getter_AddRefs(baseLiteral));
+        mRDFService->GetLiteral(NS_ConvertASCIItoUTF16(baseURL).get(), getter_AddRefs(baseLiteral));
 
         rv = nsChromeRegistry::UpdateArc(installSource, resource, mBaseURL, baseLiteral, aRemove);
         if (NS_FAILED(rv)) return rv;
@@ -2478,7 +2478,7 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
               }
 
               nsCOMPtr<nsIRDFLiteral> baseLiteral;
-              mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(baseURL).get(), getter_AddRefs(baseLiteral));
+              mRDFService->GetLiteral(NS_ConvertASCIItoUTF16(baseURL).get(), getter_AddRefs(baseLiteral));
 
               rv = nsChromeRegistry::UpdateArc(installSource, entry, mBaseURL, baseLiteral, aRemove);
               if (NS_FAILED(rv)) return rv;
@@ -2569,7 +2569,7 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
                   if (imageURL.FindChar(':') == -1) {
                     // We're relative. Prepend the base URL of the
                     // package.
-                    NS_ConvertUTF8toUCS2 fullURL(aBaseURL);
+                    NS_ConvertUTF8toUTF16 fullURL(aBaseURL);
                     fullURL += imageURL;
                     mRDFService->GetLiteral(fullURL.get(), getter_AddRefs(literal));
                     newTarget = do_QueryInterface(literal);
@@ -3352,7 +3352,7 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
     mChromeDataSource = nsnull;
     mInstallInitialized = mProfileInitialized = PR_FALSE;
 
-    if (!strcmp("shutdown-cleanse", NS_ConvertUCS2toUTF8(someData).get())) {
+    if (!strcmp("shutdown-cleanse", NS_ConvertUTF16toUTF8(someData).get())) {
       nsCOMPtr<nsIFile> userChromeDir;
       rv = NS_GetSpecialDirectory(NS_APP_USER_CHROME_DIR, getter_AddRefs(userChromeDir));
       if (NS_SUCCEEDED(rv) && userChromeDir)

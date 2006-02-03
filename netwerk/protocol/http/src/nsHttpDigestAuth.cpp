@@ -327,7 +327,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   // calculate credentials
   //
 
-  NS_ConvertUCS2toUTF8 cUser(username), cPass(password);
+  NS_ConvertUTF16toUTF8 cUser(username), cPass(password);
   rv = CalculateHA1(cUser, cPass, realm, algorithm, nonce, cnonce, ha1_digest);
   if (NS_FAILED(rv)) return rv;
 

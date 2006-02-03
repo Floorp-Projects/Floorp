@@ -189,7 +189,7 @@ nsLoggingProgressListener::OnInstallStart(const PRUnichar *URL)
     mLogStream->seek(logFile->GetFileSize());
 
     *mLogStream << "-------------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << NS_ConvertUCS2toUTF8(URL).get() << "  --  " << time << nsEndl;
+    *mLogStream << NS_ConvertUTF16toUTF8(URL).get() << "  --  " << time << nsEndl;
     *mLogStream << "-------------------------------------------------------------------------------" << nsEndl;
     *mLogStream << nsEndl;
 

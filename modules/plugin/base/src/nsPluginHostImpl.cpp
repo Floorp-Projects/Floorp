@@ -4304,7 +4304,7 @@ public:
   NS_METHOD NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn)
   {
     for (int index = mPluginTag.mVariants - 1; index >= 0; --index) {
-      if (aName.Equals(NS_ConvertASCIItoUCS2(mPluginTag.mMimeTypeArray[index])))
+      if (aName.Equals(NS_ConvertASCIItoUTF16(mPluginTag.mMimeTypeArray[index])))
         return Item(index, aReturn);
     }
     return NS_OK;
@@ -4933,7 +4933,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     PRInt64 fileModTime = pfd->mModTime;
 
     // Look for it in our cache
-    nsPluginTag *pluginTag = RemoveCachedPluginsInfo(NS_ConvertUCS2toUTF8(pfd->mFilename).get());
+    nsPluginTag *pluginTag = RemoveCachedPluginsInfo(NS_ConvertUTF16toUTF8(pfd->mFilename).get());
 
     if (pluginTag) {
       // If plugin changed, delete cachedPluginTag and don't use cache

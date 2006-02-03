@@ -262,7 +262,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
       } else {
         rv = GetCharPref(aPrefName, getter_Copies(utf8String));
         if (NS_SUCCEEDED(rv)) {
-          rv = theString->SetData(NS_ConvertUTF8toUCS2(utf8String).get());
+          rv = theString->SetData(NS_ConvertUTF8toUTF16(utf8String).get());
         }
       }
       if (NS_SUCCEEDED(rv)) {
@@ -340,7 +340,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     nsCOMPtr<nsISupportsString> theString(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
 
     if (NS_SUCCEEDED(rv)) {
-      rv = theString->SetData(NS_ConvertUTF8toUCS2(utf8String));
+      rv = theString->SetData(NS_ConvertUTF8toUTF16(utf8String));
       if (NS_SUCCEEDED(rv)) {
         nsISupportsString *temp = theString;
 
@@ -435,7 +435,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
       rv = theString->GetData(wideString);
       if (NS_SUCCEEDED(rv)) {
-        rv = SetCharPref(aPrefName, NS_ConvertUCS2toUTF8(wideString).get());
+        rv = SetCharPref(aPrefName, NS_ConvertUTF16toUTF8(wideString).get());
       }
     }
     return rv;
@@ -449,7 +449,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
       rv = theString->GetData(getter_Copies(wideString));
       if (NS_SUCCEEDED(rv)) {
-        rv = SetCharPref(aPrefName, NS_ConvertUCS2toUTF8(wideString).get());
+        rv = SetCharPref(aPrefName, NS_ConvertUTF16toUTF8(wideString).get());
       }
     }
     return rv;

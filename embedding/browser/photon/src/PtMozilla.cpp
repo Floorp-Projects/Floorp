@@ -351,7 +351,7 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 			char translation[1024];
 			strcpy( translation, (char*)argt->value );
 			fix_translation_string( translation );
- 			pref->SetUnicharPref( "intl.charset.default", NS_ConvertASCIItoUCS2( translation ).get());
+ 			pref->SetUnicharPref( "intl.charset.default", NS_ConvertASCIItoUTF16( translation ).get());
 			pref->SavePrefFile( nsnull );
 			}
 			break;
@@ -383,7 +383,7 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 
 				case Pt_MOZ_COMMAND_FIND: {
 					nsCOMPtr<nsIWebBrowserFind> finder( do_GetInterface( moz->EmbedRef->mWindow->mWebBrowser ) );
-					finder->SetSearchString( NS_ConvertASCIItoUCS2(wdata->FindInfo.string).get() );
+					finder->SetSearchString( NS_ConvertASCIItoUTF16(wdata->FindInfo.string).get() );
 					finder->SetMatchCase( wdata->FindInfo.flags & Pt_WEB_FIND_MATCH_CASE );
 					finder->SetFindBackwards( wdata->FindInfo.flags & Pt_WEB_FIND_GO_BACKWARDS );
 					finder->SetWrapFind( wdata->FindInfo.flags & Pt_WEB_FIND_START_AT_TOP );
@@ -531,7 +531,7 @@ mozilla_get_info( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const
 			PRUnichar *charset = nsnull;
 			static char encoding[256];
 			pref->GetLocalizedUnicharPref( "intl.charset.default", &charset );
-			strcpy( encoding, NS_ConvertUCS2toUTF8(charset).get() );
+			strcpy( encoding, NS_ConvertUTF16toUTF8(charset).get() );
 			*(char**)argt->value = encoding;
 			}
 			break;
@@ -582,22 +582,22 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 
 /* HTML Options */
 	if( !strcmp( option, "A:visited color" ) ) {
-		pref->SetUnicharPref( "browser.visited_color", NS_ConvertASCIItoUCS2(value).get() );
+		pref->SetUnicharPref( "browser.visited_color", NS_ConvertASCIItoUTF16(value).get() );
 		}
 	else if( !strcmp( option, "A:link color" ) ) {
-		pref->SetUnicharPref( "browser.anchor_color", NS_ConvertASCIItoUCS2(value).get() );
+		pref->SetUnicharPref( "browser.anchor_color", NS_ConvertASCIItoUTF16(value).get() );
 		}
 
 /* the mozserver already has A:link color == browser.anchor_color for this */
 //	else if( !strcmp( option, "A:active color" ) ) {
-//		pref->SetUnicharPref( "browser.anchor_color", NS_ConvertASCIItoUCS2(value).get() );
+//		pref->SetUnicharPref( "browser.anchor_color", NS_ConvertASCIItoUTF16(value).get() );
 //		}
 
 	else if( !strcmp( option, "BODY color" ) ) {
-		pref->SetUnicharPref( "browser.display.foreground_color", NS_ConvertASCIItoUCS2(value).get() );
+		pref->SetUnicharPref( "browser.display.foreground_color", NS_ConvertASCIItoUTF16(value).get() );
 		}
 	else if( !strcmp( option, "BODY background" ) ) {
-		pref->SetUnicharPref( "browser.display.background_color", NS_ConvertASCIItoUCS2(value).get() );
+		pref->SetUnicharPref( "browser.display.background_color", NS_ConvertASCIItoUTF16(value).get() );
 		}
 	else if( !strcmp( option, "bIgnoreDocumentAttributes" ) )
 		pref->SetBoolPref( "browser.display.use_document_colors", stricmp( value, "TRUE" ) ? PR_FALSE : PR_TRUE );

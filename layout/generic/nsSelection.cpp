@@ -6485,8 +6485,8 @@ nsTypedSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYe
           nsAutoString name, value;
           aNode->GetNodeName(name);
           aNode->GetNodeValue(value);
-          printf("%s [%s]: %d, %d\n", NS_LossyConvertUCS2toASCII(name).get(),
-                 NS_LossyConvertUCS2toASCII(value).get(),
+          printf("%s [%s]: %d, %d\n", NS_LossyConvertUTF16toASCII(name).get(),
+                 NS_LossyConvertUTF16toASCII(value).get(),
                  nodeStartsBeforeRange, nodeEndsAfterRange);
 #endif
           PRUint16 nodeType;

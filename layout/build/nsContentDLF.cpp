@@ -408,7 +408,7 @@ nsContentDLF::CreateDocument(const char* aCommand,
   if (nsnull != aURL) {
     nsAutoString tmp;
     aURL->ToString(tmp);
-    fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
+    fputs(NS_LossyConvertUTF16toASCII(tmp).get(), stdout);
     printf(": creating document\n");
   }
 #endif

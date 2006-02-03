@@ -425,7 +425,7 @@ nsLeafIterator::Prev()
           res = atom->ToString(aString);
           if ( NS_SUCCEEDED(res) ) {
             printf("%s:%d\n", __FILE__, __LINE__);
-            printf("FrameType: %s\n", NS_ConvertUCS2toUTF8(aString).get());
+            printf("FrameType: %s\n", NS_ConvertUTF16toUTF8(aString).get());
           }
         }
   #endif

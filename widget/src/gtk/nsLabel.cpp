@@ -135,7 +135,7 @@ GtkJustification nsLabel::GetNativeAlignment()
 NS_METHOD nsLabel::SetLabel(const nsString& aText)
 {
   gtk_label_set(GTK_LABEL(mWidget),
-                NS_LossyConvertUCS2toASCII(aText).get());
+                NS_LossyConvertUTF16toASCII(aText).get());
   return NS_OK;
 
 }

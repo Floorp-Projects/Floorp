@@ -428,7 +428,7 @@ nsPresContext::GetFontPreferences()
 #ifdef DEBUG_rbs
     printf("%s Family-list:%s size:%d sizeAdjust:%.2f\n",
            generic_dot_langGroup.get(),
-           NS_ConvertUCS2toUTF8(font->name).get(), font->size,
+           NS_ConvertUTF16toUTF8(font->name).get(), font->size,
            font->sizeAdjust);
 #endif
   }
@@ -833,7 +833,7 @@ nsPresContext::Observe(nsISupports* aSubject,
                         const PRUnichar* aData)
 {
   if (!nsCRT::strcmp(aTopic, "charset")) {
-    UpdateCharSet(NS_LossyConvertUCS2toASCII(aData));
+    UpdateCharSet(NS_LossyConvertUTF16toASCII(aData));
     mDeviceContext->FlushFontCache();
     ClearStyleDataAndReflow();
 

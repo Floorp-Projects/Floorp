@@ -701,7 +701,7 @@ InternetSearchDataSource::isSearchCategoryEngineBasenameURI(nsIRDFNode *r)
       const PRUnichar *uriUni = nsnull;
       aLit->GetValueConst(&uriUni);
       if ((uriUni) && (!nsCRT::strncmp(uriUni,
-               NS_ConvertASCIItoUCS2(kURINC_SearchCategoryEngineBasenamePrefix).get(),
+               NS_ConvertASCIItoUTF16(kURINC_SearchCategoryEngineBasenamePrefix).get(),
         (int)sizeof(kURINC_SearchCategoryEngineBasenamePrefix) - 1)))
       {
         isSearchCategoryEngineBasenameURIFlag = PR_TRUE;
@@ -2451,7 +2451,7 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
   if (NS_FAILED(context->GetBufferLength(&bufferLength))) return(rv);
   if (bufferLength < 1) return(NS_OK);
   
-  rv = outFile->Append(NS_ConvertUTF8toUCS2(baseName));
+  rv = outFile->Append(NS_ConvertUTF8toUTF16(baseName));
   if (NS_FAILED(rv)) return rv;
   
   // save data to file
@@ -3322,7 +3322,7 @@ InternetSearchDataSource::DecodeData(const char *aCharset, const PRUnichar *aInS
 
   // This fixes the corruption occured in InternetSearchDataSource::ReadFileContents()
   // (eg. aValue contains "0x0082 0x00a1" for "0x82 0xa1" shift_jis double-byte char)
-  NS_LossyConvertUCS2toASCII value(aInString);
+  NS_LossyConvertUTF16toASCII value(aInString);
 
   PRInt32 srcLength = value.Length();
   PRInt32 outUnicodeLen;
@@ -3860,7 +3860,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
     nsCOMPtr <nsICharsetConverterManager> charsetConv = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
-                  NS_LossyConvertUCS2toASCII charset(resultEncodingStr);
+                  NS_LossyConvertUTF16toASCII charset(resultEncodingStr);
                   rv = charsetConv->GetUnicodeDecoder(charset.get(),
                                                       getter_AddRefs(unicodeDecoder));
     }
@@ -4271,7 +4271,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 
                 for (int ext_count = 0; extensions[ext_count] != nsnull; ext_count++) {
                         temp = Substring(uri, 0, uri.Length()-4);
-                        temp.Append(NS_ConvertASCIItoUCS2(extensions[ext_count]));
+                        temp.Append(NS_ConvertASCIItoUTF16(extensions[ext_count]));
                         rv = NS_NewLocalFile(temp, PR_TRUE, getter_AddRefs(loopFile));
                         if (NS_FAILED(rv)) return rv;
                         rv = loopFile->Exists(&foundIconFlag);
@@ -4719,7 +4719,7 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
     {
       ++i;
       sprintf(prefNameBuf, "browser.search.param.%s.%d.", 
-              NS_ConvertUCS2toUTF8(engineName).get(), i);
+              NS_ConvertUTF16toUTF8(engineName).get(), i);
 
       nsCOMPtr<nsIPrefBranch> pb;
       rv = pserv->GetBranch(prefNameBuf, getter_AddRefs(pb));
@@ -4799,7 +4799,7 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
     if (NS_SUCCEEDED(rv))
     {
       sprintf(prefNameBuf, "browser.search.order.%s.%d",
-              NS_ConvertUCS2toUTF8(engineName).get(), i);
+              NS_ConvertUTF16toUTF8(engineName).get(), i);
       
       nsCOMPtr<nsIPrefLocalizedString> orderParam;
       rv = rootBranch->GetComplexValue(prefNameBuf, 
@@ -4808,7 +4808,7 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
       if (NS_FAILED(rv))
       {
         sprintf(prefNameBuf, "browser.search.order.%s",
-                NS_ConvertUCS2toUTF8(engineName).get());
+                NS_ConvertUTF16toUTF8(engineName).get());
         rv = rootBranch->GetComplexValue(prefNameBuf, 
                                          NS_GET_IID(nsIPrefLocalizedString),
                                          getter_AddRefs(orderParam));
@@ -5066,7 +5066,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     nsCOMPtr<nsIRDFLiteral> newValue;
     if (!lastModValue.IsEmpty())
     {
-      mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(lastModValue).get(),
+      mRDFService->GetLiteral(NS_ConvertASCIItoUTF16(lastModValue).get(),
         getter_AddRefs(newValue));
       if (newValue)
       {
@@ -5078,7 +5078,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     }
     if (!contentLengthValue.IsEmpty())
     {
-      mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(contentLengthValue).get(),
+      mRDFService->GetLiteral(NS_ConvertASCIItoUTF16(contentLengthValue).get(),
         getter_AddRefs(newValue));
       if (newValue)
       {
@@ -5583,7 +5583,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
           absURI->GetPath(absPath);
           if (!absPath.IsEmpty())
           {
-                        NS_ConvertUTF8toUCS2 absPathStr(absPath);
+                        NS_ConvertUTF8toUTF16 absPathStr(absPath);
             PRInt32 pathOptionsOffset = absPathStr.FindChar(PRUnichar('?'));
             if (pathOptionsOffset >= 0)
               absPathStr.Truncate(pathOptionsOffset);

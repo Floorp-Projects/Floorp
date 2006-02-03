@@ -712,7 +712,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
 
   /* Remember the last used printer as new "default" printer as long this
    * Mozilla instance is running */
-  uEnv->Set(NS_LITERAL_STRING("XPRINTER"), NS_ConvertUTF8toUCS2(printername));
+  uEnv->Set(NS_LITERAL_STRING("XPRINTER"), NS_ConvertUTF8toUTF16(printername));
 
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
          ("nsXPrintContext::SetupPrintContext: name='%s', display='%s', vendor='%s', release=%ld\n",
@@ -843,7 +843,7 @@ nsXPrintContext::SetResolution(const char *resolution_name)
 NS_IMETHODIMP
 nsXPrintContext::BeginDocument( PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage )
 {
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::BeginDocument(aTitle='%s')\n", ((aTitle)?(NS_ConvertUCS2toUTF8(aTitle).get()):("<NULL>"))));
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::BeginDocument(aTitle='%s')\n", ((aTitle)?(NS_ConvertUTF16toUTF8(aTitle).get()):("<NULL>"))));
   
   nsXPIDLCString job_title;
        
@@ -852,7 +852,7 @@ nsXPrintContext::BeginDocument( PRUnichar * aTitle, PRUnichar* aPrintToFileName,
     /* Note that this is _only_ a _hack_ until bug 73446 
      * ("RFE: Need NS_ConvertUCS2ToLocalEncoding() and 
      * NS_ConvertLocalEncodingToUCS2()") is implemented...) */
-    job_title.Assign(NS_ConvertUCS2toUTF8(aTitle));
+    job_title.Assign(NS_ConvertUTF16toUTF8(aTitle));
   }
   else
   {

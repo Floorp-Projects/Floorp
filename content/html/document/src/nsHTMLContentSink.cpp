@@ -841,8 +841,8 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
       nsContentUtils::TrimCharsInSet(kWhitespace, aNode.GetValueAt(i));
 
     if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
-      NS_ConvertUCS2toUTF8 cname(v);
-      NS_ConvertUTF8toUCS2 uv(nsUnescape(cname.BeginWriting()));
+      NS_ConvertUTF16toUTF8 cname(v);
+      NS_ConvertUTF8toUTF16 uv(nsUnescape(cname.BeginWriting()));
 
       // Add attribute to content
       aContent->SetAttr(kNameSpaceID_None, keyAtom, uv, aNotify);

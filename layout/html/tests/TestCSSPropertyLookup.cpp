@@ -83,7 +83,7 @@ int TestProps() {
     if (('a' <= tagName[0]) && (tagName[0] <= 'z')) {
       tagName[0] = tagName[0] - 32;
     }
-    id = nsCSSProps::LookupProperty(NS_ConvertASCIItoUCS2(tagName));
+    id = nsCSSProps::LookupProperty(NS_ConvertASCIItoUTF16(tagName));
     if (id < 0) {
       printf("bug: can't find '%s'\n", tagName);
       rv = -1;

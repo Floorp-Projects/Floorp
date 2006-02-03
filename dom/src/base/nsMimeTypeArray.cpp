@@ -133,7 +133,7 @@ nsMimeTypeArray::NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn)
   nsCOMPtr<nsIMIMEService> mimeSrv = do_GetService("@mozilla.org/mime;1");
   if (mimeSrv) {
     nsCOMPtr<nsIMIMEInfo> mimeInfo;
-    mimeSrv->GetFromTypeAndExtension(NS_ConvertUCS2toUTF8(aName), EmptyCString(),
+    mimeSrv->GetFromTypeAndExtension(NS_ConvertUTF16toUTF8(aName), EmptyCString(),
                                      getter_AddRefs(mimeInfo));
     if (mimeInfo) {
       // Now we check whether we can really claim to support this type

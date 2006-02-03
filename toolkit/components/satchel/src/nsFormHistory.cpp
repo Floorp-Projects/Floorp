@@ -334,7 +334,7 @@ nsFormHistory::OpenDatabase()
   nsCOMPtr <nsIFile> historyFile;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(historyFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  historyFile->Append(NS_ConvertUTF8toUCS2(kFormHistoryFileName));
+  historyFile->Append(NS_ConvertUTF8toUTF16(kFormHistoryFileName));
 
   // Get an Mdb Factory
   static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);

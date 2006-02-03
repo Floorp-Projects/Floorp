@@ -537,7 +537,7 @@ GetMathMLAttributeStyleSheet(nsPresContext* aPresContext,
     nsCOMPtr<nsICSSStyleSheet> cssSheet(do_QueryInterface(sheet));
     if (cssSheet) {
       cssSheet->GetTitle(title);
-      if (title.Equals(NS_ConvertASCIItoUCS2(kTitle))) {
+      if (title.Equals(NS_ConvertASCIItoUTF16(kTitle))) {
         *aSheet = sheet;
         NS_IF_ADDREF(*aSheet);
         return;
@@ -554,7 +554,7 @@ GetMathMLAttributeStyleSheet(nsPresContext* aPresContext,
   if (!cssSheet)
     return;
   cssSheet->SetURIs(uri, uri);
-  cssSheet->SetTitle(NS_ConvertASCIItoUCS2(kTitle));
+  cssSheet->SetTitle(NS_ConvertASCIItoUTF16(kTitle));
   // all done, no further activity from the net involved, so we better do this
   cssSheet->SetComplete();
 
@@ -616,7 +616,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
       ++map;
     if (!map->attrAtom)
       continue;
-    nsAutoString cssProperty(NS_ConvertASCIItoUCS2(map->cssProperty));
+    nsAutoString cssProperty(NS_ConvertASCIItoUTF16(map->cssProperty));
 
     nsAutoString attrValue;
     aContent->GetAttr(kNameSpaceID_None, attrAtom, attrValue);

@@ -7605,8 +7605,8 @@ nsCSSFrameConstructor::TestSVGConditions(nsIContent* aContent,
       langPrefs.StripWhitespace();
       value.StripWhitespace();
 #ifdef  DEBUG_scooter
-      printf("Calling SVG_TestLanguage('%s','%s')\n", NS_ConvertUCS2toUTF8(value).get(), 
-                                                      NS_ConvertUCS2toUTF8(langPrefs).get());
+      printf("Calling SVG_TestLanguage('%s','%s')\n", NS_ConvertUTF16toUTF8(value).get(), 
+                                                      NS_ConvertUTF16toUTF8(langPrefs).get());
 #endif
       aHasSystemLanguage = SVG_TestLanguage(value, langPrefs);
     } else {
@@ -7654,7 +7654,7 @@ nsCSSFrameConstructor::SVGSwitchProcessChildren(nsFrameConstructorState& aState,
 #ifdef DEBUG_scooter
     nsAutoString str;
     child->Tag()->ToString(str);
-    printf("Child tag: %s\n", NS_ConvertUCS2toUTF8(str).get());
+    printf("Child tag: %s\n", NS_ConvertUTF16toUTF8(str).get());
     printf("SwitchProcessChildren: Required Extensions = %s, Required Features = %s, System Language = %s\n",
             hasRequiredExtensions ? "true" : "false",
             hasRequiredFeatures ? "true" : "false",
@@ -7873,7 +7873,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     // printf("Warning: Creating SVGGenericContainerFrame for tag <");
     // nsAutoString str;
     // aTag->ToString(str);
-    // printf("%s>\n", NS_ConvertUCS2toUTF8(str).get());
+    // printf("%s>\n", NS_ConvertUTF16toUTF8(str).get());
 #endif
     newFrame = NS_NewSVGGenericContainerFrame(mPresShell, aContent);
   }  

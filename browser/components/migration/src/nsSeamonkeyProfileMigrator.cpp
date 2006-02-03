@@ -259,7 +259,7 @@ nsSeamonkeyProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
       prefValue->ToString(getter_Copies(data));
 
       nsCAutoString val;
-      val = ToNewCString(NS_ConvertUCS2toUTF8(data));
+      val = ToNewCString(NS_ConvertUTF16toUTF8(data));
 
       aResult.Assign(val);
     }

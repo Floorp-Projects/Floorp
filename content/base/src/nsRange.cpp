@@ -2406,7 +2406,7 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
     if (document) {
       nsAutoString buf;
       document->GetContentType(buf);
-      CopyUCS2toASCII(buf, contentType);
+      LossyCopyUTF16toASCII(buf, contentType);
       bCaseSensitive = document->IsCaseSensitive();
     }
     else {

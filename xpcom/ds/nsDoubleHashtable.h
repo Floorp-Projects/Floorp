@@ -111,7 +111,7 @@
  *
  *   // Get the entry
  *   DictionaryEntry* b = d.GetEntry(NS_LITERAL_STRING("doomed"));
- *   printf("doomed: %s\n", NS_ConvertUCS2toUTF8(b->mDefinition).get());
+ *   printf("doomed: %s\n", NS_ConvertUTF16toUTF8(b->mDefinition).get());
  *
  *   // Entries will be automagically cleaned up when the Dictionary object goes away
  *   return 0;

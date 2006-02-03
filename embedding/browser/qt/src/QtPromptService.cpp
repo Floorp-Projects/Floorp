@@ -284,7 +284,7 @@ QtPromptService::Prompt(nsIDOMWindow* aParent,
     if (*aConfirm) {
         if (*aValue) nsMemory::Free(*aValue);
         *aValue =
-            ToNewUnicode(NS_ConvertUTF8toUCS2(d.input->text().utf8()));
+            ToNewUnicode(NS_ConvertUTF8toUTF16(d.input->text().utf8()));
     }
 
     return NS_OK;
@@ -347,10 +347,10 @@ QtPromptService::PromptUsernameAndPassword(nsIDOMWindow* aParent,
     if (*aConfirm) {
         if (*aUsername) nsMemory::Free(*aUsername);
         *aUsername =
-            ToNewUnicode(NS_ConvertUTF8toUCS2(d.username->text().utf8()));
+            ToNewUnicode(NS_ConvertUTF8toUTF16(d.username->text().utf8()));
         if (*aPassword) nsMemory::Free(*aPassword);
         *aPassword =
-            ToNewUnicode(NS_ConvertUTF8toUCS2(d.password->text().utf8()));
+            ToNewUnicode(NS_ConvertUTF8toUTF16(d.password->text().utf8()));
     }
 
     return NS_OK;
@@ -407,7 +407,7 @@ QtPromptService::PromptPassword(nsIDOMWindow* aParent,
     if (*aConfirm) {
         if (*aPassword) nsMemory::Free(*aPassword);
         *aPassword =
-            ToNewUnicode(NS_ConvertUTF8toUCS2(d.password->text().utf8()));
+            ToNewUnicode(NS_ConvertUTF8toUTF16(d.password->text().utf8()));
     }
 
     return NS_OK;

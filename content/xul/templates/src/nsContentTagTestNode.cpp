@@ -62,7 +62,7 @@ nsContentTagTestNode::nsContentTagTestNode(InnerNode* aParent,
 
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsContentTagTestNode[%p]: parent=%p content-var=%d tag=%s",
-                this, aParent, aContentVariable, NS_ConvertUCS2toUTF8(tag).get()));
+                this, aParent, aContentVariable, NS_ConvertUTF16toUTF8(tag).get()));
     }
 #endif
 }

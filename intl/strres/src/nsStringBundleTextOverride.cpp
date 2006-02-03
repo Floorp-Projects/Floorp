@@ -213,7 +213,7 @@ nsStringBundleTextOverride::Init()
         prop->GetKey(key);
         prop->GetValue(value);
 
-        printf("%s = '%s'\n", key.get(), NS_ConvertUCS2toUTF8(value).get());
+        printf("%s = '%s'\n", key.get(), NS_ConvertUTF16toUTF8(value).get());
 
         enumerator->HasMoreElements(&hasMore);
     } while (hasMore);

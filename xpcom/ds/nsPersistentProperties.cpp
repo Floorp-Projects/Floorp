@@ -251,7 +251,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
 
       value.Trim(trimThese, PR_TRUE, PR_TRUE);
       nsAutoString oldValue;
-      mSubclass->SetStringProperty(NS_ConvertUCS2toUTF8(key), value, oldValue);
+      mSubclass->SetStringProperty(NS_ConvertUTF16toUTF8(key), value, oldValue);
     }
   }
   mIn->Close();

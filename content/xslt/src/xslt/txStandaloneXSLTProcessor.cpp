@@ -152,7 +152,7 @@ txStandaloneXSLTProcessor::transform(nsACString& aXMLPath,
         return NS_ERROR_FAILURE;
     }
     txParsedURL path;
-    path.init(NS_ConvertASCIItoUCS2(aXSLPath));
+    path.init(NS_ConvertASCIItoUTF16(aXSLPath));
     nsRefPtr<txStylesheet> style;
     nsresult rv = TX_CompileStylesheetPath(path, getter_AddRefs(style));
     if (NS_FAILED(rv)) {
@@ -358,7 +358,7 @@ void txStandaloneXSLTProcessor::parseStylesheetPI(const nsAFlatString& aData,
 txXPathNode*
 txStandaloneXSLTProcessor::parsePath(const nsACString& aPath, ErrorObserver& aErr)
 {
-    NS_ConvertASCIItoUCS2 path(aPath);
+    NS_ConvertASCIItoUTF16 path(aPath);
 
     ifstream xmlInput(PromiseFlatCString(aPath).get(), ios::in);
     if (!xmlInput) {

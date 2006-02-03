@@ -74,14 +74,14 @@ nsPKCS11Slot::refreshSlotInfo()
     const nsACString &cDesc = Substring(
       ccDesc, 
       ccDesc+PL_strnlen(ccDesc, sizeof(slot_info.slotDescription)));
-    mSlotDesc = NS_ConvertUTF8toUCS2(cDesc);
+    mSlotDesc = NS_ConvertUTF8toUTF16(cDesc);
     mSlotDesc.Trim(" ", PR_FALSE, PR_TRUE);
     // Set the Manufacturer field
     const char *ccManID = (const char*)slot_info.manufacturerID;
     const nsACString &cManID = Substring(
       ccManID, 
       ccManID+PL_strnlen(ccManID, sizeof(slot_info.manufacturerID)));
-    mSlotManID = NS_ConvertUTF8toUCS2(cManID);
+    mSlotManID = NS_ConvertUTF8toUTF16(cManID);
     mSlotManID.Trim(" ", PR_FALSE, PR_TRUE);
     // Set the Hardware Version field
     mSlotHWVersion = EmptyString();
@@ -133,7 +133,7 @@ nsPKCS11Slot::GetName(PRUnichar **aName)
 
   char *csn = PK11_GetSlotName(mSlot);
   if (*csn) {
-    *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(csn));
+    *aName = ToNewUnicode(NS_ConvertUTF8toUTF16(csn));
   } else if (PK11_HasRootCerts(mSlot)) {
     // This is a workaround to an Root Module bug - the root certs module has
     // no slot name.  Not bothering to localize, because this is a workaround
@@ -234,7 +234,7 @@ nsPKCS11Slot::GetTokenName(PRUnichar **aName)
   }
 
 
-  *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(PK11_GetTokenName(mSlot)));
+  *aName = ToNewUnicode(NS_ConvertUTF8toUTF16(PK11_GetTokenName(mSlot)));
   if (!*aName) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -307,7 +307,7 @@ nsPKCS11Module::GetName(PRUnichar **aName)
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-  *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(mModule->commonName));
+  *aName = ToNewUnicode(NS_ConvertUTF8toUTF16(mModule->commonName));
   return NS_OK;
 }
 
@@ -320,7 +320,7 @@ nsPKCS11Module::GetLibName(PRUnichar **aName)
     return NS_ERROR_NOT_AVAILABLE;
 
   if ( mModule->dllName ) {
-    *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(mModule->dllName));
+    *aName = ToNewUnicode(NS_ConvertUTF8toUTF16(mModule->dllName));
   } else {
     *aName = NULL;
   }
@@ -454,7 +454,7 @@ nsPKCS11ModuleDB::FindModuleByName(const PRUnichar *aName,
                                    nsIPKCS11Module **_retval)
 {
   nsNSSShutDownPreventionLock locker;
-  NS_ConvertUCS2toUTF8 aUtf8Name(aName);
+  NS_ConvertUTF16toUTF8 aUtf8Name(aName);
   SECMODModule *mod =
     SECMOD_FindModule(NS_CONST_CAST(char *, aUtf8Name.get()));
   if (!mod)
@@ -477,7 +477,7 @@ nsPKCS11ModuleDB::FindSlotByName(const PRUnichar *aName,
                                  nsIPKCS11Slot **_retval)
 {
   nsNSSShutDownPreventionLock locker;
-  NS_ConvertUCS2toUTF8 aUtf8Name(aName);
+  NS_ConvertUTF16toUTF8 aUtf8Name(aName);
   PK11SlotInfo *slotinfo =
    PK11_FindSlotByName(NS_CONST_CAST(char*, aUtf8Name.get()));
   if (!slotinfo)

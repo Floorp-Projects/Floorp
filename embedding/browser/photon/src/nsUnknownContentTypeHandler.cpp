@@ -85,7 +85,7 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsIHelperAppLaun
 	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) w;
 
 	/* get the suggested filename */
-	NS_ConvertUCS2toUTF8 theUnicodeString( aDefaultFile );
+	NS_ConvertUTF16toUTF8 theUnicodeString( aDefaultFile );
 	const char *filename = theUnicodeString.get( );
 
 	/* get the url */

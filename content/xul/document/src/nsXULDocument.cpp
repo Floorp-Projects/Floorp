@@ -2170,7 +2170,7 @@ nsXULDocument::ApplyPersistentAttributes()
             continue;
 
         nsAutoString id;
-        nsXULContentUtils::MakeElementID(this, NS_ConvertASCIItoUCS2(uri), id);
+        nsXULContentUtils::MakeElementID(this, NS_ConvertASCIItoUTF16(uri), id);
 
         // This will clear the array if there are no elements.
         GetElementsForID(id, elements);
@@ -4059,7 +4059,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild, PRBool aNo
         char* token = nsCRT::strtok(str, ", ", &rest);
 
         while (token) {
-            rv = domDocument->GetElementById(NS_ConvertASCIItoUCS2(token),
+            rv = domDocument->GetElementById(NS_ConvertASCIItoUTF16(token),
                                              getter_AddRefs(domElement));
             if (domElement)
                 break;

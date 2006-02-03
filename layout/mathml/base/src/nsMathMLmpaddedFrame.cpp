@@ -206,7 +206,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   if (number.IsEmpty()) {
 #ifdef NS_DEBUG
     printf("mpadded: attribute with bad numeric value: %s\n",
-            NS_LossyConvertUCS2toASCII(aString).get());
+            NS_LossyConvertUTF16toASCII(aString).get());
 #endif
     aSign = NS_MATHML_SIGN_INVALID;
     return PR_FALSE;
@@ -289,7 +289,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 
 #ifdef NS_DEBUG
   printf("mpadded: attribute with bad numeric value: %s\n",
-          NS_LossyConvertUCS2toASCII(aString).get());
+          NS_LossyConvertUTF16toASCII(aString).get());
 #endif
   // if we reach here, it means we encounter an unexpected input
   aSign = NS_MATHML_SIGN_INVALID;

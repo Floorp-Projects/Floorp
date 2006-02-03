@@ -61,7 +61,7 @@ nsTempfilePS::nsTempfilePS()
 
     // Append an arbitrary subdirectory name to the temp dir...
     rv = mTempDir->Append(
-            NS_ConvertASCIItoUCS2(nsPrintfCString("%lx.tmp", mCount++)));
+            NS_ConvertASCIItoUTF16(nsPrintfCString("%lx.tmp", mCount++)));
     if (NS_FAILED(rv)) {
         mTempDir = nsnull;
         return;
@@ -99,7 +99,7 @@ nsTempfilePS::CreateTempFile(nsILocalFile** aFile)
             "NS_NewLocalFile succeeded but tmpfile is invalid");
 
     rv = tmpfile->Append(
-            NS_ConvertASCIItoUCS2(nsPrintfCString("%lx.tmp", mCount++)));
+            NS_ConvertASCIItoUTF16(nsPrintfCString("%lx.tmp", mCount++)));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create the temporary file. This may adjust the file's basename.

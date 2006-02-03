@@ -1095,7 +1095,7 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
     nsAutoString atomString;
     pseudoTag->ToString(atomString);
     fprintf(out, " pst=%s",
-            NS_LossyConvertUCS2toASCII(atomString).get());
+            NS_LossyConvertUTF16toASCII(atomString).get());
   }
 
   // Output the children
@@ -1112,7 +1112,7 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
       nsAutoString tmp;
       if (nsnull != listName) {
         listName->ToString(tmp);
-        fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
+        fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
       }
       fputs("<\n", out);
       while (nsnull != kid) {

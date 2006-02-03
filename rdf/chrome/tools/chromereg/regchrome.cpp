@@ -212,7 +212,7 @@ WriteAttributes(nsIRDFDataSource* aDataSource,
         if (literal) {
             const PRUnichar* literalValue;
             literal->GetValueConst(&literalValue);
-            fprintf(out, "%s.%s.%s=%s\n", aProviderType, aProvider, arcValue, NS_ConvertUCS2toUTF8(literalValue).get());
+            fprintf(out, "%s.%s.%s=%s\n", aProviderType, aProvider, arcValue, NS_ConvertUTF16toUTF8(literalValue).get());
         }
 
         nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(valueNode);

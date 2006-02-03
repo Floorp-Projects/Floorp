@@ -4195,7 +4195,7 @@ nsGlobalWindow::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
   // use the base URI to build what would have been the popup's URI
   nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
   if (ios)
-    ios->NewURI(NS_ConvertUCS2toUTF8(aPopupURL), 0, baseURL,
+    ios->NewURI(NS_ConvertUTF16toUTF8(aPopupURL), 0, baseURL,
                 getter_AddRefs(popupURI));
 
   // fire an event chock full of informative URIs
@@ -5004,7 +5004,7 @@ nsGlobalWindow::Atob(const nsAString& aAsciiBase64String,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  CopyASCIItoUCS2(Substring(bin_data, bin_data + resultLen), aBinaryData);
+  CopyASCIItoUTF16(Substring(bin_data, bin_data + resultLen), aBinaryData);
 
   nsMemory::Free(base64);
   PR_Free(bin_data);
@@ -5036,7 +5036,7 @@ nsGlobalWindow::Btoa(const nsAString& aBinaryData,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  CopyASCIItoUCS2(nsDependentCString(base64, resultLen), aAsciiBase64String);
+  CopyASCIItoUTF16(nsDependentCString(base64, resultLen), aAsciiBase64String);
 
   PR_Free(base64);
   nsMemory::Free(bin_data);
@@ -5809,8 +5809,8 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
       do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
 
     if (wwatch) {
-      NS_ConvertUCS2toUTF8 options(aOptions);
-      NS_ConvertUCS2toUTF8 name(aName);
+      NS_ConvertUTF16toUTF8 options(aOptions);
+      NS_ConvertUTF16toUTF8 name(aName);
 
       const char *options_ptr = aOptions.IsEmpty() ? nsnull : options.get();
       const char *name_ptr = aName.IsEmpty() ? nsnull : name.get();
@@ -7206,7 +7206,7 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
   PRInt32 cursor;
 
   // use C strings to keep the code/data size down
-  NS_ConvertUCS2toUTF8 cursorString(aCursor);
+  NS_ConvertUTF16toUTF8 cursorString(aCursor);
 
   if (cursorString.Equals("auto"))
     cursor = NS_STYLE_CURSOR_AUTO;
@@ -7357,7 +7357,7 @@ nsNavigator::GetUserAgent(nsAString& aUserAgent)
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString ua;
     rv = service->GetUserAgent(ua);
-    CopyASCIItoUCS2(ua, aUserAgent);
+    CopyASCIItoUTF16(ua, aUserAgent);
   }
 
   return rv;
@@ -7448,7 +7448,7 @@ nsNavigator::GetLanguage(nsAString& aLanguage)
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString lang;
     rv = service->GetLanguage(lang);
-    CopyASCIItoUCS2(lang, aLanguage);
+    CopyASCIItoUTF16(lang, aLanguage);
   }
 
   return rv;
@@ -7504,7 +7504,7 @@ nsNavigator::GetOscpu(nsAString& aOSCPU)
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString oscpu;
     rv = service->GetOscpu(oscpu);
-    CopyASCIItoUCS2(oscpu, aOSCPU);
+    CopyASCIItoUTF16(oscpu, aOSCPU);
   }
 
   return rv;
@@ -7519,7 +7519,7 @@ nsNavigator::GetVendor(nsAString& aVendor)
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString vendor;
     rv = service->GetVendor(vendor);
-    CopyASCIItoUCS2(vendor, aVendor);
+    CopyASCIItoUTF16(vendor, aVendor);
   }
 
   return rv;
@@ -7535,7 +7535,7 @@ nsNavigator::GetVendorSub(nsAString& aVendorSub)
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString vendor;
     rv = service->GetVendorSub(vendor);
-    CopyASCIItoUCS2(vendor, aVendorSub);
+    CopyASCIItoUTF16(vendor, aVendorSub);
   }
 
   return rv;
@@ -7550,7 +7550,7 @@ nsNavigator::GetProduct(nsAString& aProduct)
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString product;
     rv = service->GetProduct(product);
-    CopyASCIItoUCS2(product, aProduct);
+    CopyASCIItoUTF16(product, aProduct);
   }
 
   return rv;
@@ -7565,7 +7565,7 @@ nsNavigator::GetProductSub(nsAString& aProductSub)
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString productSub;
     rv = service->GetProductSub(productSub);
-    CopyASCIItoUCS2(productSub, aProductSub);
+    CopyASCIItoUTF16(productSub, aProductSub);
   }
 
   return rv;

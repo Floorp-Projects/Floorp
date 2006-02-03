@@ -200,7 +200,7 @@ STDMETHODIMP nsAccessNodeWrap::get_attributes(
     const nsAttrName* name = content->GetAttrNameAt(index);
     aNameSpaceIDs[index] = NS_STATIC_CAST(short, name->NamespaceID());
     name->LocalName()->GetUTF8String(&pszAttributeName);
-    aAttribNames[index] = ::SysAllocString(NS_ConvertUTF8toUCS2(pszAttributeName).get());
+    aAttribNames[index] = ::SysAllocString(NS_ConvertUTF8toUTF16(pszAttributeName).get());
     content->GetAttr(name->NamespaceID(), name->LocalName(), attributeValue);
     aAttribValues[index] = ::SysAllocString(attributeValue.get());
   }

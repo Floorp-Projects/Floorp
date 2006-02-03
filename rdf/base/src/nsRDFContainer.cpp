@@ -738,7 +738,7 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
     nextValStr.Truncate();
     nextValStr.AppendInt(nextVal, 10);
 
-    rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2(nextValStr).get(), getter_AddRefs(nextValLiteral));
+    rv = gRDFService->GetLiteral(NS_ConvertASCIItoUTF16(nextValStr).get(), getter_AddRefs(nextValLiteral));
     if (NS_FAILED(rv)) return rv;
 
     rv = mDataSource->Assert(mContainer, kRDF_nextVal, nextValLiteral, PR_TRUE);

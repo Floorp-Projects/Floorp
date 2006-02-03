@@ -105,14 +105,14 @@ nsresult nsPlatformCharset::MapToCharset(short script, short region, nsACString&
   nsAutoString uCharset;
   rv = gInfo->Get(key, uCharset);
   if (NS_SUCCEEDED(rv))
-    CopyUCS2toASCII(uCharset, outCharset);
+    LossyCopyUTF16toASCII(uCharset, outCharset);
   else {
     key.AssignLiteral("script.");
     key.AppendInt(script, 10);
     rv = gInfo->Get(key, uCharset);
     // not found in the .property file, assign x-mac-roman
     if (NS_SUCCEEDED(rv))
-      CopyUCS2toASCII(uCharset, outCharset);
+      LossyCopyUTF16toASCII(uCharset, outCharset);
     else {
       outCharset.AssignLiteral("x-mac-roman");
     }

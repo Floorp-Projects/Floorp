@@ -135,7 +135,7 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(InnerNode* aParent,
 
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsRDFPropertyTestNode[%p]: parent=%p source=%s property=%s target=%d",
-                this, aSourceVariable, prop, NS_ConvertUCS2toUTF8(target).get()));
+                this, aSourceVariable, prop, NS_ConvertUTF16toUTF8(target).get()));
     }
 #endif
 }
@@ -182,7 +182,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations, v
 
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("nsRDFPropertyTestNode[%p]: FilterInstantiations() source=[%s] target=[%s]",
-                    this, source, NS_ConvertUCS2toUTF8(target).get()));
+                    this, source, NS_ConvertUTF16toUTF8(target).get()));
         }
 #endif
 
@@ -267,7 +267,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations, v
                             nsXULContentUtils::GetTextForNode(target, s);
 
                         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                               ("    target => %s", NS_ConvertUCS2toUTF8(s).get()));
+                               ("    target => %s", NS_ConvertUTF16toUTF8(s).get()));
                     }
 #endif
 
@@ -385,7 +385,7 @@ nsRDFPropertyTestNode::CanPropagate(nsIRDFResource* aSource,
 
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsRDFPropertyTestNode[%p]: CanPropagate([%s]==[%s]=>[%s]) => %s",
-                this, source, property, NS_ConvertUCS2toUTF8(target).get(),
+                this, source, property, NS_ConvertUTF16toUTF8(target).get(),
                 result ? "true" : "false"));
     }
 #endif
@@ -414,7 +414,7 @@ nsRDFPropertyTestNode::Retract(nsIRDFResource* aSource,
 
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("nsRDFPropertyTestNode[%p]: Retract([%s]==[%s]=>[%s])",
-                    this, source, property, NS_ConvertUCS2toUTF8(target).get()));
+                    this, source, property, NS_ConvertUTF16toUTF8(target).get()));
         }
 #endif
 

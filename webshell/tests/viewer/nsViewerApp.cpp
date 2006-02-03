@@ -348,7 +348,7 @@ PrintHelpInfo(char **argv)
 static void
 AddTestDocsFromFile(nsWebCrawler* aCrawler, const nsString& aFileName)
 {
-  NS_LossyConvertUCS2toASCII cfn(aFileName);
+  NS_LossyConvertUTF16toASCII cfn(aFileName);
 #if defined(XP_WIN) || defined(XP_OS2)
   FILE* fp = fopen(cfn.get(), "rb");
 #else
@@ -456,7 +456,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           exit(-1);
         }
         mCrawler->SetEnableRegression(PR_TRUE);
-        mCrawler->SetRegressionDir(NS_ConvertASCIItoUCS2(argv[i]));
+        mCrawler->SetRegressionDir(NS_ConvertASCIItoUTF16(argv[i]));
       }
       else if (PL_strcmp(argv[i], "-o") == 0) {
         i++;
@@ -465,7 +465,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           PrintHelpInfo(argv);
           exit(-1);
         }
-        mCrawler->SetOutputDir(NS_ConvertASCIItoUCS2(argv[i]));
+        mCrawler->SetOutputDir(NS_ConvertASCIItoUTF16(argv[i]));
       }
       else if (PL_strcmp(argv[i], "-w") == 0) {
         int width;
@@ -519,7 +519,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           PrintHelpInfo(argv);
           exit(-1);
         }
-        mCrawler->AddSafeDomain(NS_ConvertASCIItoUCS2(argv[i]));
+        mCrawler->AddSafeDomain(NS_ConvertASCIItoUTF16(argv[i]));
       }
       else if (PL_strcmp(argv[i], "-A") == 0) {
         i++;
@@ -527,7 +527,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           PrintHelpInfo(argv);
           exit(-1);
         }
-        mCrawler->AddAvoidDomain(NS_ConvertASCIItoUCS2(argv[i]));
+        mCrawler->AddAvoidDomain(NS_ConvertASCIItoUTF16(argv[i]));
       }
       else if (PL_strcmp(argv[i], "-N") == 0) {
         int pages;
@@ -615,7 +615,7 @@ nsViewerApp::OpenWindow()
       for (int docnum = 0; docnum < mNumSamples; docnum++) {
         char url[500];
         PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, docnum);
-        mCrawler->AddURL(NS_ConvertASCIItoUCS2(url));
+        mCrawler->AddURL(NS_ConvertASCIItoUTF16(url));
       }
     }
     mCrawler->Start();
@@ -923,7 +923,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   CallCreateInstance(kCheckButtonCID, &mUpdateChkBtn);
 #endif
   NS_CreateCheckButton(mRobotDialog, mUpdateChkBtn,rect,HandleRobotEvent,&font);
-  mUpdateChkBtn->SetLabel(NS_ConvertASCIItoUCS2("Update Display (Visual)"));
+  mUpdateChkBtn->SetLabel(NS_ConvertASCIItoUTF16("Update Display (Visual)"));
   mUpdateChkBtn->SetState(PR_TRUE);
   y += 24 + 2;
 
@@ -937,7 +937,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 #endif
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Right);
-  label->SetLabel(NS_ConvertASCIItoUCS2("Verfication Directory:"));
+  label->SetLabel(NS_ConvertASCIItoUTF16("Verfication Directory:"));
   x += w + 1;
 
   // Create TextField
@@ -970,7 +970,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 #endif
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Right);
-  label->SetLabel(NS_ConvertASCIItoUCS2("Stop after:"));
+  label->SetLabel(NS_ConvertASCIItoUTF16("Stop after:"));
   x += w + 2;
 
   // Create TextField
@@ -985,7 +985,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   {
     widget->SetBackgroundColor(textBGColor);
     widget->SetForegroundColor(textFGColor);
-    mStopAfterTxt->SetText(NS_ConvertASCIItoUCS2("5000"),size);
+    mStopAfterTxt->SetText(NS_ConvertASCIItoUTF16("5000"),size);
   }
   x += 75 + 2;
 
@@ -998,7 +998,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 #endif
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Left);
-  label->SetLabel(NS_ConvertASCIItoUCS2("(page loads)"));
+  label->SetLabel(NS_ConvertASCIItoUTF16("(page loads)"));
   y += txtHeight + 2;
   
 
@@ -1013,7 +1013,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   CallCreateInstance(kButtonCID, &mStartBtn);
 #endif
   NS_CreateButton(mRobotDialog,mStartBtn,rect,HandleRobotEvent,&font);
-  mStartBtn->SetLabel(NS_ConvertASCIItoUCS2("Start"));
+  mStartBtn->SetLabel(NS_ConvertASCIItoUTF16("Start"));
   
   xx += w + xx;
   // Create Cancel Button
@@ -1024,7 +1024,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   CallCreateInstance(kButtonCID, &mCancelBtn);
 #endif
   NS_CreateButton(mRobotDialog,mCancelBtn,rect,HandleRobotEvent,&font);
-  mCancelBtn->SetLabel(NS_ConvertASCIItoUCS2("Cancel"));
+  mCancelBtn->SetLabel(NS_ConvertASCIItoUTF16("Cancel"));
   
   NS_ShowWidget(mRobotDialog,PR_TRUE);
   NS_SetFocusToWidget(mStartBtn);
@@ -1359,7 +1359,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 #endif
     NS_CreateLabel(mSiteDialog,label,rect,HandleSiteEvent,&font);
     label->SetAlignment(eAlign_Right);
-    label->SetLabel(NS_ConvertASCIItoUCS2("Site:"));
+    label->SetLabel(NS_ConvertASCIItoUTF16("Site:"));
     x += w + 1;
 
     w = 250;
@@ -1385,7 +1385,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     CallCreateInstance(kButtonCID, &mSitePrevBtn);
 #endif
     NS_CreateButton(mSiteDialog,mSitePrevBtn,rect,HandleSiteEvent,&font);
-    mSitePrevBtn->SetLabel(NS_ConvertASCIItoUCS2("<< Previous"));
+    mSitePrevBtn->SetLabel(NS_ConvertASCIItoUTF16("<< Previous"));
     x += spacing + w;
 
     // Create Next Button
@@ -1396,7 +1396,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     CallCreateInstance(kButtonCID, &mSiteNextBtn);
 #endif
     NS_CreateButton(mSiteDialog,mSiteNextBtn,rect,HandleSiteEvent,&font);
-    mSiteNextBtn->SetLabel(NS_ConvertASCIItoUCS2("Next >>"));
+    mSiteNextBtn->SetLabel(NS_ConvertASCIItoUTF16("Next >>"));
     x += spacing + w;
   
     // Create Cancel Button
@@ -1407,7 +1407,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     CallCreateInstance(kButtonCID, &mSiteCancelBtn);
 #endif
     NS_CreateButton(mSiteDialog,mSiteCancelBtn,rect,HandleSiteEvent,&font);
-    mSiteCancelBtn->SetLabel(NS_ConvertASCIItoUCS2("Cancel"));
+    mSiteCancelBtn->SetLabel(NS_ConvertASCIItoUTF16("Cancel"));
 
     /////////////////////////
     w  = 65;
@@ -1455,7 +1455,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     CallCreateInstance(kButtonCID, &mSiteJumpBtn);
 #endif
     NS_CreateButton(mSiteDialog,mSiteJumpBtn,rect,HandleSiteEvent,&font);
-    mSiteJumpBtn->SetLabel(NS_ConvertASCIItoUCS2("Jump to Index"));
+    mSiteJumpBtn->SetLabel(NS_ConvertASCIItoUTF16("Jump to Index"));
   }
 
 

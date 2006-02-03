@@ -134,7 +134,7 @@ nsBox::DumpBox(FILE* aFile)
 {
   nsAutoString s;
   ListBox(s);
-  fprintf(aFile, "%s", NS_LossyConvertUCS2toASCII(s).get());
+  fprintf(aFile, "%s", NS_LossyConvertUTF16toASCII(s).get());
   return NS_OK;
 }
 

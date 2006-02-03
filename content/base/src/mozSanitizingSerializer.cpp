@@ -99,7 +99,7 @@ mozSanitizingHTMLSerializer::mozSanitizingHTMLSerializer()
 mozSanitizingHTMLSerializer::~mozSanitizingHTMLSerializer()
 {
 #ifdef DEBUG_BenB
-  printf("Output:\n%s\n", NS_LossyConvertUCS2toASCII(*mOutputString).get());
+  printf("Output:\n%s\n", NS_LossyConvertUTF16toASCII(*mOutputString).get());
 #endif
   mAllowedTags.Enumerate(ReleaseProperties);
 }
@@ -155,7 +155,7 @@ NS_IMETHODIMP
 mozSanitizingHTMLSerializer::Flush(nsAString& aStr)
 {
 #ifdef DEBUG_BenB
-  printf("Flush: -%s-", NS_LossyConvertUCS2toASCII(aStr).get());
+  printf("Flush: -%s-", NS_LossyConvertUTF16toASCII(aStr).get());
 #endif
   Write(aStr);
   return NS_OK;
@@ -331,7 +331,7 @@ mozSanitizingHTMLSerializer::SetDocumentCharset(nsACString& aCharset)
   Write(NS_LITERAL_STRING("\n<meta http-equiv=\"Context-Type\" content=\"text/html; charset=")
         /* Danger: breaking the line within the string literal, like
            "foo"\n"bar", breaks win32! */
-        + nsAdoptingString(escape(NS_ConvertASCIItoUCS2(aCharset)))
+        + nsAdoptingString(escape(NS_ConvertASCIItoUTF16(aCharset)))
         + NS_LITERAL_STRING("\">\n"));
   return NS_OK;
 }
@@ -512,7 +512,7 @@ mozSanitizingHTMLSerializer::SanitizeAttrValue(nsHTMLTag aTag,
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCAutoString scheme;
-    rv = ioService->ExtractScheme(NS_LossyConvertUCS2toASCII(aValue), scheme);
+    rv = ioService->ExtractScheme(NS_LossyConvertUTF16toASCII(aValue), scheme);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!scheme.Equals("cid", nsCaseInsensitiveCStringComparator()))
@@ -521,8 +521,8 @@ mozSanitizingHTMLSerializer::SanitizeAttrValue(nsHTMLTag aTag,
 
 #ifdef DEBUG_BenB
   printf("attribute value for %s: -%s-\n",
-         NS_LossyConvertUCS2toASCII(anAttrName).get(),
-         NS_LossyConvertUCS2toASCII(aValue).get());
+         NS_LossyConvertUTF16toASCII(anAttrName).get(),
+         NS_LossyConvertUTF16toASCII(aValue).get());
 #endif
 
   return NS_OK;
@@ -553,7 +553,7 @@ mozSanitizingHTMLSerializer::IsAllowedAttribute(nsHTMLTag aTag,
 #ifdef DEBUG_BenB
   printf("IsAllowedAttribute %d, -%s-\n",
          aTag,
-         NS_LossyConvertUCS2toASCII(anAttributeName).get());
+         NS_LossyConvertUTF16toASCII(anAttributeName).get());
 #endif
   nsresult rv;
 
@@ -564,7 +564,7 @@ mozSanitizingHTMLSerializer::IsAllowedAttribute(nsHTMLTag aTag,
   PRBool allowed;
   nsAutoString attr(anAttributeName);
   ToLowerCase(attr);
-  rv = attr_bag->Has(NS_LossyConvertUCS2toASCII(attr).get(),
+  rv = attr_bag->Has(NS_LossyConvertUTF16toASCII(attr).get(),
                      &allowed);
   if (NS_FAILED(rv))
     return PR_FALSE;

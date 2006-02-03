@@ -1730,7 +1730,7 @@ nsTextTransformer::SelfTest(nsPresContext* aPresContext)
       if (gNoisy) {
         nsAutoString uc2(st->text);
         printf("%s forwards test: '", isAsciiTest ? "ascii" : "unicode");
-        fputs(NS_ConvertUCS2toUTF8(uc2).get(), stdout);
+        fputs(NS_ConvertUTF16toUTF8(uc2).get(), stdout);
         printf("'\n");
       }
       tx.Init2(&frag, 0, preModeValue[preMode], NS_STYLE_TEXT_TRANSFORM_NONE);
@@ -1745,7 +1745,7 @@ nsTextTransformer::SelfTest(nsPresContext* aPresContext)
         if (gNoisy) {
           nsAutoString tmp(bp, wordLen);
           printf("  '");
-          fputs(NS_ConvertUCS2toUTF8(tmp).get(), stdout);
+          fputs(NS_ConvertUTF16toUTF8(tmp).get(), stdout);
           printf("': ws=%s wordLen=%d (%d) contentLen=%d (offset=%d)\n",
                  ws ? "yes" : "no",
                  wordLen, *expectedResults, contentLen, tx.mOffset);
@@ -1769,7 +1769,7 @@ nsTextTransformer::SelfTest(nsPresContext* aPresContext)
       if (gNoisy) {
         nsAutoString uc2(st->text);
         printf("%s backwards test: '", isAsciiTest ? "ascii" : "unicode");
-        fputs(NS_ConvertUCS2toUTF8(uc2).get(), stdout);
+        fputs(NS_ConvertUTF16toUTF8(uc2).get(), stdout);
         printf("'\n");
       }
       tx.Init2(&frag, frag.GetLength(), NS_STYLE_WHITESPACE_NORMAL,
@@ -1783,7 +1783,7 @@ nsTextTransformer::SelfTest(nsPresContext* aPresContext)
         if (gNoisy) {
           nsAutoString tmp(bp, wordLen);
           printf("  '");
-          fputs(NS_ConvertUCS2toUTF8(tmp).get(), stdout);
+          fputs(NS_ConvertUTF16toUTF8(tmp).get(), stdout);
           printf("': ws=%s wordLen=%d contentLen=%d (offset=%d)\n",
                  ws ? "yes" : "no",
                  wordLen, contentLen, tx.mOffset);

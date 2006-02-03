@@ -442,7 +442,7 @@ nsIndexedToHTML::FormatInputStream(nsIRequest* aRequest, nsISupports *aContext, 
                                       inputData, 0, dstLength);
     }
     else {
-      NS_ConvertUCS2toUTF8 utf8Buffer(aBuffer);
+      NS_ConvertUTF16toUTF8 utf8Buffer(aBuffer);
       rv = NS_NewCStringInputStream(getter_AddRefs(inputData), utf8Buffer);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = mListener->OnDataAvailable(aRequest, aContext,
@@ -499,7 +499,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     // need to escape links
     nsCAutoString escapeBuf;
 
-    NS_ConvertUCS2toUTF8 utf8UnEscapeSpec(unEscapeSpec);
+    NS_ConvertUTF16toUTF8 utf8UnEscapeSpec(unEscapeSpec);
 
     // now minimally re-escape the location...
     PRUint32 escFlags;

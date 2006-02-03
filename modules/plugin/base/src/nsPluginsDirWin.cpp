@@ -73,7 +73,7 @@ static char* GetKeyValue(char* verbuf, char* key)
         // On windows CE, the verbuf is wide and the shunt
         // layer can't do much about it.  So, here we
         // convert the wide string.
-		return PL_strdup(NS_ConvertUCS2toUTF8((PRUnichar*)buf).get());
+		return PL_strdup(NS_ConvertUTF16toUTF8((PRUnichar*)buf).get());
 #else
 		return PL_strdup(buf);	
 #endif

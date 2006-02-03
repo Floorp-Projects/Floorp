@@ -790,7 +790,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
   }
 
   /* if the stuff above failed, replace multibyte with .... */
-  XStoreName(mDisplay, mBaseWindow, NS_LossyConvertUCS2toASCII(aTitle).get());
+  XStoreName(mDisplay, mBaseWindow, NS_LossyConvertUTF16toASCII(aTitle).get());
 
   return NS_OK;
 }

@@ -317,9 +317,9 @@ PRInt32 nsInstallFile::Complete()
     {
         nsCAutoString path;
         mFinalFile->GetNativePath(path);
-        VR_Install( NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(*mVersionRegistryName).get()),
+        VR_Install( NS_CONST_CAST(char*, NS_ConvertUTF16toUTF8(*mVersionRegistryName).get()),
                     NS_CONST_CAST(char*, path.get()),
-                    NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(*mVersionInfo).get()),
+                    NS_CONST_CAST(char*, NS_ConvertUTF16toUTF8(*mVersionInfo).get()),
                     PR_FALSE );
     }
     

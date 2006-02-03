@@ -1077,7 +1077,7 @@ RDFServiceImpl::GetResource(const nsACString& aURI, nsIRDFResource** aResource)
 NS_IMETHODIMP
 RDFServiceImpl::GetUnicodeResource(const nsAString& aURI, nsIRDFResource** aResource)
 {
-    return GetResource(NS_ConvertUCS2toUTF8(aURI), aResource);
+    return GetResource(NS_ConvertUTF16toUTF8(aURI), aResource);
 }
 
 

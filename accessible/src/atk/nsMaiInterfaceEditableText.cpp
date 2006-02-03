@@ -142,7 +142,7 @@ setTextContentsCB(AtkEditableText *aText, const gchar *aString)
 
     MAI_LOG_DEBUG(("EditableText: setTextContentsCB, aString=%s", aString));
 
-    NS_ConvertUTF8toUCS2 strContent(aString);
+    NS_ConvertUTF8toUTF16 strContent(aString);
     nsresult rv = accText->SetTextContents(strContent);
 
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
@@ -163,7 +163,7 @@ insertTextCB(AtkEditableText *aText,
     if (!accText)
         return;
 
-    NS_ConvertUTF8toUCS2 strContent(aString);
+    NS_ConvertUTF8toUTF16 strContent(aString);
 
     // interface changed in nsIAccessibleEditableText.idl ???
     //

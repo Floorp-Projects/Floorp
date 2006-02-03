@@ -945,7 +945,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
                                                       metaCommandOutput);
               nsCAutoString cstrout;
               if (NS_SUCCEEDED(result))
-                CopyUCS2toASCII(metaCommandOutput, cstrout);
+                LossyCopyUTF16toASCII(metaCommandOutput, cstrout);
               else
                 cstrout = "Error in displaying URL\n";
               XMLT_LOG(mozXMLTermSession::ReadAll,63,
@@ -980,7 +980,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
                                                       metaCommandOutput);
               nsCAutoString cstrout;
               if (NS_SUCCEEDED(result))
-                CopyUCS2toASCII(metaCommandOutput, cstrout);
+                LossyCopyUTF16toASCII(metaCommandOutput, cstrout);
               else
                 cstrout = "Error in executing JavaScript command\n";
               XMLT_LOG(mozXMLTermSession::ReadAll,63,

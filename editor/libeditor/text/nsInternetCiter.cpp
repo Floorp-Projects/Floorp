@@ -221,10 +221,10 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
   {
 #ifdef DEBUG_wrapping
     printf("Outer loop: '%s'\n",
-           NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
+           NS_LossyConvertUTF16toASCII(Substring(tString, posInString,
                                                 length-posInString)).get());
     printf("out string is now: '%s'\n",
-           NS_LossyConvertUCS2toASCII(aOutString).get());
+           NS_LossyConvertUTF16toASCII(aOutString).get());
 
 #endif
 
@@ -313,7 +313,7 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
         NS_ASSERTION(PR_FALSE, "possible infinite loop in nsInternetCiter\n");
 
       printf("Inner loop: '%s'\n",
-             NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
+             NS_LossyConvertUTF16toASCII(Substring(tString, posInString,
                                               nextNewline-posInString)).get());
 #endif
 
@@ -425,13 +425,13 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
     } // end inner loop within one line of aInString
 #ifdef DEBUG_wrapping
     printf("---------\nEnd inner loop: out string is now '%s'\n-----------\n",
-           NS_LossyConvertUCS2toASCII(aOutString).get());
+           NS_LossyConvertUTF16toASCII(aOutString).get());
 #endif
   } // end outer loop over lines of aInString
 
 #ifdef DEBUG_wrapping
   printf("Final out string is now: '%s'\n",
-         NS_LossyConvertUCS2toASCII(aOutString).get());
+         NS_LossyConvertUTF16toASCII(aOutString).get());
 
 #endif
   return NS_OK;

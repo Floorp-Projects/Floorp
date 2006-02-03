@@ -267,7 +267,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
                 gchar* new_text = wait_for_text(clipboard);
                 if (new_text) {
                     // Convert utf-8 into our unicode format.
-                    NS_ConvertUTF8toUCS2 ucs2string(new_text);
+                    NS_ConvertUTF8toUTF16 ucs2string(new_text);
                     data = (guchar *)ToNewUnicode(ucs2string);
                     length = ucs2string.Length() * 2;
                     g_free(new_text);

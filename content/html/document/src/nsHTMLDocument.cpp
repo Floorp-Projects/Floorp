@@ -172,7 +172,7 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
     PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,
                DETECTOR_CONTRACTID_MAX);
     PL_strncat(g_detector_contractid,
-               NS_ConvertUCS2toUTF8(detector_name).get(),
+               NS_ConvertUTF16toUTF8(detector_name).get(),
                DETECTOR_CONTRACTID_MAX);
     gPlugDetector = PR_TRUE;
   } else {
@@ -3335,7 +3335,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 #ifdef DEBUG_jst
     {
       printf ("nsHTMLDocument name cache miss for name '%s'\n",
-              NS_ConvertUCS2toUTF8(aName).get());
+              NS_ConvertUTF16toUTF8(aName).get());
     }
 #endif
 
@@ -3843,7 +3843,7 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
         outParam.Truncate();
       }
       else {
-        NS_ConvertUCS2toUTF8 convertedParam(inParam);
+        NS_ConvertUTF16toUTF8 convertedParam(inParam);
 
         // check to see if we need to convert the parameter
         PRUint32 j;

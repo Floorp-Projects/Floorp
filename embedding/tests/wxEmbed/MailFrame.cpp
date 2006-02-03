@@ -209,7 +209,7 @@ void MailFrame::OnArticleClick(wxListEvent &event)
                 hdrPanel->Show(TRUE);
 
             nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
-            webNav->LoadURI(NS_ConvertASCIItoUCS2(url.c_str()).get(),
+            webNav->LoadURI(NS_ConvertASCIItoUTF16(url.c_str()).get(),
                                    nsIWebNavigation::LOAD_FLAGS_NONE,
                                    nsnull,
                                    nsnull,

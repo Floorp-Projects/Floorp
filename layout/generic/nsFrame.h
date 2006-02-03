@@ -396,7 +396,7 @@ public:
     if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->GetFrameName(tmp);
     }
-    fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
     fprintf(out, "@%p", NS_STATIC_CAST(void*, aFrame));
   }
 

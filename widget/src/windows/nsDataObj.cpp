@@ -895,7 +895,7 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
   else if ( aFE.cfFormat == nsClipboard::CF_HTML ) {
     // Someone is asking for win32's HTML flavor. Convert our html fragment
     // from unicode to UTF-8 then put it into a format specified by msft.
-    NS_ConvertUCS2toUTF8 converter ( NS_REINTERPRET_CAST(PRUnichar*, data) );
+    NS_ConvertUTF16toUTF8 converter ( NS_REINTERPRET_CAST(PRUnichar*, data) );
     char* utf8HTML = nsnull;
     nsresult rv = BuildPlatformHTML ( converter.get(), &utf8HTML );      // null terminates
     

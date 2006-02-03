@@ -343,7 +343,7 @@ nsEditorTxnLog::WriteTransaction(nsITransaction *aTransaction)
       str.AssignLiteral("<NULL>");
   }
 
-  return Write(NS_LossyConvertUCS2toASCII(str).get());
+  return Write(NS_LossyConvertUTF16toASCII(str).get());
 }
 
 nsresult

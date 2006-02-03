@@ -327,7 +327,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
 
 #ifdef DEBUG_ComputedDOMStyle
   if (i == length) {
-    NS_WARNING(PromiseFlatCString(NS_ConvertUCS2toUTF8(aPropertyName) + 
+    NS_WARNING(PromiseFlatCString(NS_ConvertUTF16toUTF8(aPropertyName) + 
                                   NS_LITERAL_CSTRING(" is not queryable!")).get());
   }
 #endif
@@ -379,7 +379,7 @@ nsComputedDOMStyle::Item(PRUint32 aIndex, nsAString& aReturn)
   PRUint32 length = 0;
   const ComputedStyleMapEntry* propMap = GetQueryablePropertyMap(&length);
   if (aIndex < length) {
-    CopyASCIItoUCS2(nsCSSProps::GetStringValue(propMap[aIndex].mProperty),
+    CopyASCIItoUTF16(nsCSSProps::GetStringValue(propMap[aIndex].mProperty),
                     aReturn);
   }
 

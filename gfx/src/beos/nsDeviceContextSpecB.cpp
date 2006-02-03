@@ -209,11 +209,11 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS::Init(nsIPrintSettings* aPS)
 
     if (command != nsnull && printfile != nsnull) {
       // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
-      strcpy(mPrData.command, NS_ConvertUCS2toUTF8(command).get());  
-      strcpy(mPrData.path,    NS_ConvertUCS2toUTF8(printfile).get());
+      strcpy(mPrData.command, NS_ConvertUTF16toUTF8(command).get());  
+      strcpy(mPrData.path,    NS_ConvertUTF16toUTF8(printfile).get());
     }
     if (printer != nsnull) 
-      strcpy(mPrData.printer, NS_ConvertUCS2toUTF8(printer).get());        
+      strcpy(mPrData.printer, NS_ConvertUTF16toUTF8(printer).get());        
 #ifdef DEBUG_rods
     printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
     printf("printRange     %d\n", printRange);
@@ -496,7 +496,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 
   /* add an entry for the default printer (see nsPostScriptObj.cpp) */
   mGlobalPrinterList->AppendString(
-    nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
+    nsString(NS_ConvertASCIItoUTF16(NS_POSTSCRIPT_DRIVER_NAME "default")));
   mGlobalNumPrinters++;
 
   /* get the list of printers */
@@ -527,8 +527,8 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
          name = PL_strtok_r(nsnull, " ", &tok_lasts) )
     {
       mGlobalPrinterList->AppendString(
-        nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME)) + 
-        nsString(NS_ConvertASCIItoUCS2(name)));
+        nsString(NS_ConvertASCIItoUTF16(NS_POSTSCRIPT_DRIVER_NAME)) + 
+        nsString(NS_ConvertASCIItoUTF16(name)));
       mGlobalNumPrinters++;      
     }
 
