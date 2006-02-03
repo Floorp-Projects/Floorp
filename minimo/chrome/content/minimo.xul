@@ -69,6 +69,7 @@
   <script type="application/x-javascript" src="chrome://minimo/content/minimo.js"/>
   <script type="application/x-javascript" src="chrome://minimo/content/common.js"/>
   <script type="application/x-javascript" src="chrome://minimo/content/rssview/rssload.js"/>
+  <script type="application/x-javascript" src="chrome://minimo/content/bookmarks/bmview.js"/>
   
   <popupset id="mainPopupSet">
     <popup type="autocomplete" id="PopupAutoComplete"/>
@@ -87,9 +88,11 @@
 
   </keyset>
   
-  <hbox flex="1" >
+  <hbox flex="1">
     <hbox id="appcontent" flex="100%">
-      <hbox id="browser" context="context" flex="1">
+      <vbox id="browserleftbar" >
+      </vbox>
+      <vbox id="browser" context="context" flex="1">
         <tabbrowser id="content" 
                     contentcontextmenu="contentAreaContextMenu"
                     disablehistory="false"
@@ -98,7 +101,9 @@
                     flex="1" 
                     autocompletepopup="PopupAutoComplete"
                     onnewtab="BrowserOpenTab()"/>
-      </hbox>
+      </vbox>
+      <vbox id="browserrightbar" >
+      </vbox>
     </hbox>
   </hbox>
   
