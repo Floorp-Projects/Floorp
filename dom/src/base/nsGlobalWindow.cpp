@@ -3515,16 +3515,19 @@ nsGlobalWindow::Blur()
 {
   FORWARD_TO_OUTER(Blur, (), NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv = NS_ERROR_FAILURE;
+  // If embedding apps don't implement nsIEmbeddingSiteWindow2, we
+  // shouldn't throw exceptions to web content.
+  nsresult rv = NS_OK;
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   GetTreeOwner(getter_AddRefs(treeOwner));
   nsCOMPtr<nsIEmbeddingSiteWindow2> siteWindow(do_GetInterface(treeOwner));
-  if (siteWindow)
+  if (siteWindow) {
     rv = siteWindow->Blur();
 
-  if (NS_SUCCEEDED(rv))
-    mDocShell->SetHasFocus(PR_FALSE);
+    if (NS_SUCCEEDED(rv))
+      mDocShell->SetHasFocus(PR_FALSE);
+  }
 
   return rv;
 }
