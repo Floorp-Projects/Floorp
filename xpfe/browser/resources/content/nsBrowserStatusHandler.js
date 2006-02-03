@@ -112,7 +112,7 @@ nsBrowserStatusHandler.prototype =
     this.updateStatusField();
   },
 
-  setOverLink : function(link)
+  setOverLink : function(link, context)
   {
     this.overLink = link;
     // clear out 'Done' (or other message) on first hover

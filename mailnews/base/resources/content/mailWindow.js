@@ -358,7 +358,7 @@ nsMsgStatusFeedback.prototype =
         this.statusTextFld.label = status;
       }
     },
-  setOverLink : function(link)
+  setOverLink : function(link, context)
     {
       this.ensureStatusFields();
       this.statusTextFld.label = link;
