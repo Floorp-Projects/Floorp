@@ -40,7 +40,7 @@
 
 #include "nsDocShell.h"
 #include "nsWebShell.h"
-#include "nsIWebBrowserChrome.h"
+#include "nsIWebBrowserChrome2.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgress.h"
@@ -161,18 +161,102 @@ IsOffline()
 
 //----------------------------------------------------------------------
 
+// Check prefs to see if pings are enabled
+static PRBool
+PingsEnabled()
+{
+  PRBool allow = PR_FALSE;
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRBool val;
+    if (NS_SUCCEEDED(prefs->GetBoolPref("browser.send_pings", &val)))
+      allow = val;
+  }
+
+  return allow;
+}
+
+typedef void (* ForEachPingCallback)(void *closure, nsIContent *content,
+                                     nsIURI *uri, nsIIOService *ios);
+
+static void
+ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
+{
+  // NOTE: Using nsIDOMNSHTMLAnchorElement2::GetPing isn't really worth it here
+  //       since we'd still need to parse the resulting string.  Instead, we
+  //       just parse the raw attribute.  It might be nice if the content node
+  //       implemented an interface that exposed an enumeration of nsIURIs.
+
+  // Make sure we are dealing with either an <A> or <AREA> element in the HTML
+  // or XHTML namespace.
+  if (!content->IsContentOfType(nsIContent::eHTML))
+    return;
+  nsIAtom *nameAtom = content->Tag();
+  if (!nameAtom->EqualsUTF8(NS_LITERAL_CSTRING("a")) &&
+      !nameAtom->EqualsUTF8(NS_LITERAL_CSTRING("area")))
+    return;
+
+  nsCOMPtr<nsIAtom> pingAtom = do_GetAtom("ping");
+  if (!pingAtom)
+    return;
+
+  nsAutoString value;
+  content->GetAttr(kNameSpaceID_None, pingAtom, value);
+  if (value.IsEmpty())
+    return;
+
+  nsCOMPtr<nsIIOService> ios = do_GetIOService();
+  if (!ios)
+    return;
+
+  nsIDocument *doc = content->GetOwnerDoc();
+  if (!doc)
+    return;
+
+  // value contains relative URIs split on spaces (U+0020)
+  const PRUnichar *start = value.BeginReading();
+  const PRUnichar *end   = value.EndReading();
+  const PRUnichar *iter  = start;
+  for (;;) {
+    if (iter < end && *iter != ' ') {
+      ++iter;
+    } else {  // iter is pointing at either end or a space
+      while (*start == ' ' && start < iter)
+        ++start;
+      if (iter != start) {
+        nsCOMPtr<nsIURI> uri, baseURI = content->GetBaseURI();
+        ios->NewURI(NS_ConvertUTF16toUTF8(Substring(start, iter)),
+                    doc->GetDocumentCharacterSet().get(),
+                    baseURI, getter_AddRefs(uri));
+        if (uri) {
+          // Ignore non-HTTP(S) pings:
+          PRBool match;
+          if ((NS_SUCCEEDED(uri->SchemeIs("http", &match)) && match) ||
+              (NS_SUCCEEDED(uri->SchemeIs("https", &match)) && match))
+            callback(closure, content, uri, ios);
+        }
+      }
+      start = iter = iter + 1;
+      if (iter >= end)
+        break;
+    }
+  }
+}
+
+//----------------------------------------------------------------------
+
 // We wait this many milliseconds before killing the ping channel...
 #define PING_TIMEOUT 10000
 
 static void
 OnPingTimeout(nsITimer *timer, void *closure)
 {
-  nsIRequest *request = NS_STATIC_CAST(nsIRequest *, closure);
-  request->Cancel(NS_BINDING_ABORTED);
-  request->Release();
+  nsILoadGroup *loadGroup = NS_STATIC_CAST(nsILoadGroup *, closure);
+  loadGroup->Cancel(NS_ERROR_ABORT);
+  loadGroup->Release();
 }
-
-//----------------------------------------------------------------------
 
 class nsPingListener : public nsIStreamListener
 {
@@ -207,14 +291,16 @@ nsPingListener::OnStopRequest(nsIRequest *request, nsISupports *context,
 }
 
 static void
-SendPing(const nsSubstring &relSpec, nsIDocument *doc, nsIURI *referrer,
-         nsIIOService *ios)
+SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
 {
+  nsIURI *referrer = NS_STATIC_CAST(nsIURI *, closure);
+
+  nsIDocument *doc = content->GetOwnerDoc();
+  if (!doc)
+    return;
+
   nsCOMPtr<nsIChannel> chan;
-  ios->NewChannel(NS_ConvertUTF16toUTF8(relSpec),
-                  doc->GetDocumentCharacterSet().get(),
-                  doc->GetBaseURI(),
-                  getter_AddRefs(chan));
+  ios->NewChannelFromURI(uri, getter_AddRefs(chan));
   if (!chan)
     return;
 
@@ -222,124 +308,90 @@ SendPing(const nsSubstring &relSpec, nsIDocument *doc, nsIURI *referrer,
   chan->SetLoadFlags(nsIRequest::INHIBIT_CACHING);
 
   nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(chan);
-  if (httpChan) {
-    // This is needed in order for 3rd-party cookie blocking to work.
-    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(httpChan);
-    if (httpInternal)
-      httpInternal->SetDocumentURI(doc->GetBaseURI());
+  if (!httpChan)
+    return;
 
-    if (referrer)
-      httpChan->SetReferrer(referrer);
+  // This is needed in order for 3rd-party cookie blocking to work.
+  nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(httpChan);
+  if (httpInternal)
+    httpInternal->SetDocumentURI(doc->GetDocumentURI());
 
-    httpChan->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+  if (referrer)
+    httpChan->SetReferrer(referrer);
 
-    // Remove extraneous request headers (to reduce request size)
-    httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept"),
-                               EmptyCString(), PR_FALSE);
-    httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-language"),
-                               EmptyCString(), PR_FALSE);
-    httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-charset"),
-                               EmptyCString(), PR_FALSE);
-    httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-encoding"),
-                               EmptyCString(), PR_FALSE);
+  httpChan->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
 
-    nsCOMPtr<nsIUploadChannel> uploadChan = do_QueryInterface(httpChan);
-    if (!uploadChan)
-      return;
+  // Remove extraneous request headers (to reduce request size)
+  httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept"),
+                             EmptyCString(), PR_FALSE);
+  httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-language"),
+                             EmptyCString(), PR_FALSE);
+  httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-charset"),
+                             EmptyCString(), PR_FALSE);
+  httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-encoding"),
+                             EmptyCString(), PR_FALSE);
 
-    // To avoid sending an unnecessary Content-Type header, we encode the
-    // closing portion of the headers in the POST body.
-    NS_NAMED_LITERAL_CSTRING(uploadData, "Content-Length: 0\r\n\r\n");
+  nsCOMPtr<nsIUploadChannel> uploadChan = do_QueryInterface(httpChan);
+  if (!uploadChan)
+    return;
 
-    nsCOMPtr<nsIInputStream> uploadStream;
-    NS_NewPostDataStream(getter_AddRefs(uploadStream), PR_FALSE,
-                         uploadData, 0);
-    if (!uploadStream)
-      return;
+  // To avoid sending an unnecessary Content-Type header, we encode the
+  // closing portion of the headers in the POST body.
+  NS_NAMED_LITERAL_CSTRING(uploadData, "Content-Length: 0\r\n\r\n");
 
-    uploadChan->SetUploadStream(uploadStream, EmptyCString(), -1);
-  }
+  nsCOMPtr<nsIInputStream> uploadStream;
+  NS_NewPostDataStream(getter_AddRefs(uploadStream), PR_FALSE,
+                       uploadData, 0);
+  if (!uploadStream)
+    return;
+
+  uploadChan->SetUploadStream(uploadStream, EmptyCString(), -1);
+
+  // The channel needs to have a loadgroup associated with it, so that we can
+  // cancel the channel and any redirected channels it may create.
+  nsCOMPtr<nsILoadGroup> loadGroup =
+      do_CreateInstance(NS_LOADGROUP_CONTRACTID);
+  if (!loadGroup)
+    return;
+  chan->SetLoadGroup(loadGroup);
 
   // Construct a listener that merely discards any response.  If successful at
   // opening the channel, then it is not necessary to hold a reference to the
   // channel.  The networking subsystem will take care of that for us.
   nsCOMPtr<nsIStreamListener> listener = new nsPingListener();
-  if (listener) {
-    chan->AsyncOpen(listener, nsnull);
+  if (!listener)
+    return;
 
-    // Prevent ping requests from stalling and never being garbage collected...
-    nsCOMPtr<nsITimer> timer =
-        do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (timer) {
-      nsresult rv = timer->InitWithFuncCallback(OnPingTimeout, chan,
-                                                PING_TIMEOUT,
-                                                nsITimer::TYPE_ONE_SHOT);
-      if (NS_SUCCEEDED(rv)) {
-        // When the timer expires, the callback function will release this
-        // reference to the channel.
-        NS_STATIC_CAST(nsIChannel *, chan.get())->AddRef();
-      }
+  chan->AsyncOpen(listener, nsnull);
+
+  // Prevent ping requests from stalling and never being garbage collected...
+  nsCOMPtr<nsITimer> timer =
+      do_CreateInstance(NS_TIMER_CONTRACTID);
+  if (timer) {
+    nsresult rv = timer->InitWithFuncCallback(OnPingTimeout, loadGroup,
+                                              PING_TIMEOUT,
+                                              nsITimer::TYPE_ONE_SHOT);
+    if (NS_SUCCEEDED(rv)) {
+      // When the timer expires, the callback function will release this
+      // reference to the loadgroup.
+      NS_STATIC_CAST(nsILoadGroup *, loadGroup.get())->AddRef();
+      loadGroup = 0;
     }
   }
+  
+  // If we failed to setup the timer, then we should just cancel the channel
+  // because we won't be able to ensure that it goes away in a timely manner.
+  if (loadGroup)
+    chan->Cancel(NS_ERROR_ABORT);
 }
 
 // Spec: http://whatwg.org/specs/web-apps/current-work/#ping
 static void
 DispatchPings(nsIContent *content, nsIURI *referrer)
 {
-  // Make sure we are dealing with either an <A> or <AREA> element in the HTML
-  // or XHTML namespace.
-  if (!content->IsContentOfType(nsIContent::eHTML))
+  if (!PingsEnabled())
     return;
-  nsIAtom *nameAtom = content->Tag();
-  if (!nameAtom->EqualsUTF8(NS_LITERAL_CSTRING("a")) &&
-      !nameAtom->EqualsUTF8(NS_LITERAL_CSTRING("area")))
-    return;
-
-  nsCOMPtr<nsIAtom> pingAtom = do_GetAtom("ping");
-  if (!pingAtom)
-    return;
-
-  nsAutoString value;
-  content->GetAttr(kNameSpaceID_None, pingAtom, value);
-  if (value.IsEmpty())
-    return;
-
-  // check prefs to see if pings are enabled
-  nsCOMPtr<nsIPrefBranch> prefs =
-      do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    PRBool allow = PR_TRUE;
-    prefs->GetBoolPref("browser.send_pings", &allow);
-    if (!allow)
-      return;
-  }
-
-  nsCOMPtr<nsIIOService> ios = do_GetIOService();
-  if (!ios)
-    return;
-
-  nsIDocument *doc = content->GetOwnerDoc();
-  if (!doc)
-    return;
-
-  // value contains relative URIs split on spaces (U+0020)
-  const PRUnichar *start = value.BeginReading();
-  const PRUnichar *end   = value.EndReading();
-  const PRUnichar *iter  = start;
-  for (;;) {
-    if (iter < end && *iter != ' ') {
-      ++iter;
-    } else {  // iter is pointing at either end or a space
-      while (*start == ' ' && start < iter)
-        ++start;
-      if (iter != start)
-        SendPing(Substring(start, iter), doc, referrer, ios);
-      start = iter = iter + 1;
-      if (iter >= end)
-        break;
-    }
-  }
+  ForEachPing(content, SendPing, referrer);
 }
 
 //----------------------------------------------------------------------
@@ -755,27 +807,40 @@ nsWebShell::OnOverLink(nsIContent* aContent,
                        nsIURI* aURI,
                        const PRUnichar* aTargetSpec)
 {
-  nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
+  nsCOMPtr<nsIWebBrowserChrome2> browserChrome2 = do_GetInterface(mTreeOwner);
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (browserChrome)  {
-    nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+  if (!browserChrome2) {
+    browserChrome = do_GetInterface(mTreeOwner);
+    if (!browserChrome)
+      return rv;
+  }
 
-    // use url origin charset to unescape the URL
-    nsCAutoString charset;
-    rv = aURI->GetOriginCharset(charset);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsITextToSubURI> textToSubURI =
+      do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
 
-    nsCAutoString spec;
-    rv = aURI->GetSpec(spec);
-    NS_ENSURE_SUCCESS(rv, rv);
+  // use url origin charset to unescape the URL
+  nsCAutoString charset;
+  rv = aURI->GetOriginCharset(charset);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString uStr;
-    rv = textToSubURI->UnEscapeURIForUI(charset, spec, uStr);    
+  nsCAutoString spec;
+  rv = aURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_SUCCEEDED(rv))
-      rv = browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, uStr.get());
+  nsAutoString uStr;
+  rv = textToSubURI->UnEscapeURIForUI(charset, spec, uStr);    
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (browserChrome2) {
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);
+    rv = browserChrome2->SetStatusWithContext(nsIWebBrowserChrome::STATUS_LINK,
+                                              uStr, element);
+  } else {
+    rv = browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, uStr.get());
   }
   return rv;
 }
