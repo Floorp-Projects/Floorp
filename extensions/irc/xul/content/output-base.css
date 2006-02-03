@@ -226,6 +226,10 @@ a.chatzilla-link:hover {
     font-weight: bold;
 }
 
+.chatzilla-decor {
+    display: none;
+}
+
 /* mirc colors */
 .chatzilla-fg00 {
     color: #FFFFFF;
