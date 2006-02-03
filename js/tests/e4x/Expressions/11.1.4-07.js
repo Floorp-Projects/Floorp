@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Brendan Eich
+ * Contributor(s): Biju
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,23 +35,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Parsing - Comment hiding parsing/scanning");
+START("11.1.4 - XML Initializer - <p:{b}b>x</p:bb>");
 
-var bug = 311157;
-var summary = 'Comment-hiding compromise left E4X parsing/scanning inconsistent';
-var actual;
-var expect;
+var bug = 321549;
+var summary = '<p:{b}b>x</p:bb>';
+var actual = 'No error';
+var expect = 'No error';
 
 printBugNumber (bug);
 printStatus (summary);
 
-XML.ignoreWhitespace = false;
+var b = 'b';
 
-var x = <bye> <![CDATA[ duh ]]>
-    there </bye>;
+try
+{
+    actual = (<a xmlns:p='http://a.uri/'><p:b{b}>x</p:bb></a>).
+        toString();
+}
+catch(e)
+{
+    actual = e + '';
+}
 
-actual = x.toString();
-expect = '  duh \n    there ';
+expect = (<a xmlns:p='http://a.uri/'><p:bb>x</p:bb></a>).toString();
+
 TEST(1, expect, actual);
+
+try
+{
+    actual = (<a xmlns:p='http://a.uri/'><p:{b}b>x</p:bb></a>).
+        toString();
+}
+catch(e)
+{
+    actual = e + '';
+}
+
+expect = (<a xmlns:p='http://a.uri/'><p:bb>x</p:bb></a>).toString();
+
+TEST(2, expect, actual);
 
 END();
