@@ -402,9 +402,9 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType,
                                             const PRUnichar* aStatus)
 {
   return SetStatusWithContext(aStatusType,
-                              aStatus ? nsDependentString(aStatus)
-                                      : EmptyString(),
-                              nsnull);
+      aStatus ? NS_STATIC_CAST(const nsString &, nsDependentString(aStatus))
+              : EmptyString(),
+      nsnull);
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetWebBrowser(nsIWebBrowser* aWebBrowser)
