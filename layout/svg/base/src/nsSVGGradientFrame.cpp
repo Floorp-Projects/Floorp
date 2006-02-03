@@ -539,7 +539,16 @@ nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
   } else {
     nsIFrame *frame = nsnull;
     CallQueryInterface(aSource, &frame);
-    mSourceContent = frame->GetContent();
+
+    // If this gradient is applied to text, our caller
+    // will be the glyph, which is not a container, so we
+    // need to get the parent
+    nsIAtom *callerType = frame->GetType();
+    if (callerType ==  nsLayoutAtoms::svgGlyphFrame)
+      mSourceContent = frame->GetContent()->GetParent();
+    else
+      mSourceContent = frame->GetContent();
+    NS_ASSERTION(mSourceContent, "Can't get content for gradient");
   }
 
   if (!bboxTransform)
