@@ -52,16 +52,17 @@
 #include "cairo-paginated-surface-private.h"
 
 cairo_surface_t *
-_test_paginated_surface_create_for_data (unsigned char	*data,
-					 cairo_format_t	 format,
-					 int		 width,
-					 int		 height,
-					 int		 stride)
+_test_paginated_surface_create_for_data (unsigned char		*data,
+					 cairo_content_t	 content,
+					 int		 	 width,
+					 int		 	 height,
+					 int		 	 stride)
 {
     cairo_surface_t *target;
 
-    target = cairo_image_surface_create_for_data (data, format,
-						  width, height, stride);
+    target = _cairo_image_surface_create_for_data_with_content (data, content,
+								width, height,
+								stride);
 
-    return _cairo_paginated_surface_create (target, width, height);
+    return _cairo_paginated_surface_create (target, content, width, height);
 }

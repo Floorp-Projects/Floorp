@@ -865,10 +865,27 @@ _cairo_surface_composite (cairo_operator_t	op,
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
     if (dst->backend->composite) {
+        int backend_src_x = src_x;
+        int backend_src_y = src_y;
+        int backend_mask_x = mask_x;
+        int backend_mask_y = mask_y;
+
+        if (src->type == CAIRO_PATTERN_SURFACE) {
+            cairo_surface_t *src_surface = ((cairo_surface_pattern_t*)src)->surface;
+            backend_src_x = BACKEND_X(src_surface, src_x);
+            backend_src_y = BACKEND_X(src_surface, src_y);
+        }
+
+        if (mask && mask->type == CAIRO_PATTERN_SURFACE) {
+            cairo_surface_t *mask_surface = ((cairo_surface_pattern_t*)mask)->surface;
+            backend_mask_x = BACKEND_X(mask_surface, mask_x);
+            backend_mask_y = BACKEND_X(mask_surface, mask_y);
+        }
+
 	status = dst->backend->composite (op,
 					  src, mask, dst,
-					  src_x, src_y,
-					  mask_x, mask_y,
+                                          backend_src_x, backend_src_y,
+                                          backend_mask_x, backend_mask_y,
                                           BACKEND_X(dst, dst_x),
                                           BACKEND_Y(dst, dst_y),
 					  width, height);

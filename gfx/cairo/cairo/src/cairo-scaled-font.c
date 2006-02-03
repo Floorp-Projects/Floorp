@@ -1,4 +1,4 @@
-/* $Id: cairo-scaled-font.c,v 1.3 2006/01/18 22:15:25 vladimir%pobox.com Exp $
+/* $Id: cairo-scaled-font.c,v 1.4 2006/02/03 04:49:23 vladimir%pobox.com Exp $
  *
  * Copyright © 2005 Keith Packard
  *
@@ -405,6 +405,9 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     cairo_scaled_font_map_t *font_map;
     cairo_scaled_font_t key, *scaled_font = NULL;
 
+    if (font_face->status)
+	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+
     font_map = _cairo_scaled_font_map_lock ();
     if (font_map == NULL)
 	goto UNWIND;
@@ -582,14 +585,61 @@ cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
 }
 
 /**
+ * cairo_scaled_font_text_extents:
+ * @scaled_font: a #cairo_scaled_font_t
+ * @utf8: a string of text, encoded in UTF-8
+ * @extents: a #cairo_text_extents_t which to store the retrieved extents.
+ *
+ * Gets the extents for a string of text. The extents describe a
+ * user-space rectangle that encloses the "inked" portion of the text
+ * drawn at the origin (0,0) (as it would be drawn by cairo_show_text()
+ * if the cairo graphics state were set to the same font_face,
+ * font_matrix, ctm, and font_options as @scaled_font).  Additionally,
+ * the x_advance and y_advance values indicate the amount by which the
+ * current point would be advanced by cairo_show_text().
+ *
+ * Note that whitespace characters do not directly contribute to the
+ * size of the rectangle (extents.width and extents.height). They do
+ * contribute indirectly by changing the position of non-whitespace
+ * characters. In particular, trailing whitespace characters are
+ * likely to not affect the size of the rectangle, though they will
+ * affect the x_advance and y_advance values.
+ **/
+void
+cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
+				const char            *utf8,
+				cairo_text_extents_t  *extents)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_glyph_t *glyphs;
+    int num_glyphs;
+
+    status = _cairo_scaled_font_text_to_glyphs (scaled_font, 0., 0., utf8, &glyphs, &num_glyphs);
+    if (status) {
+        _cairo_scaled_font_set_error (scaled_font, status);
+        return;
+    }
+    cairo_scaled_font_glyph_extents (scaled_font, glyphs, num_glyphs, extents);
+    free (glyphs);
+}
+
+/**
  * cairo_scaled_font_glyph_extents:
  * @scaled_font: a #cairo_scaled_font_t
  * @glyphs: an array of glyph IDs with X and Y offsets.
  * @num_glyphs: the number of glyphs in the @glyphs array
  * @extents: a #cairo_text_extents_t which to store the retrieved extents.
- * 
- * cairo_font_glyph_extents() gets the overall metrics for a string of
- * glyphs. The X and Y offsets in @glyphs are taken from an origin of 0,0. 
+ *
+ * Gets the extents for an array of glyphs. The extents describe a
+ * user-space rectangle that encloses the "inked" portion of the
+ * glyphs, (as they would be drawn by cairo_show_glyphs() if the cairo
+ * graphics state were set to the same font_face, font_matrix, ctm,
+ * and font_options as @scaled_font).  Additionally, the x_advance and
+ * y_advance values indicate the amount by which the current point
+ * would be advanced by cairo_show_glyphs.
+ *
+ * Note that whitespace glyphs do not contribute to the size of the
+ * rectangle (extents.width and extents.height).
  **/
 void
 cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
@@ -1190,4 +1240,79 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
     CAIRO_MUTEX_UNLOCK (cairo_scaled_font_map_mutex);
 
     return status;
+}
+
+/**
+ * cairo_scaled_font_get_font_face:
+ * @scaled_font: a #cairo_scaled_font_t
+ * 
+ * Return value: The #cairo_font_face_t with which @scaled_font was
+ * created.
+ **/
+cairo_font_face_t *
+cairo_scaled_font_get_font_face (cairo_scaled_font_t *scaled_font)
+{
+    if (scaled_font->status)
+	return (cairo_font_face_t*) &_cairo_font_face_nil;
+
+    return scaled_font->font_face;
+}
+
+/**
+ * cairo_scaled_font_get_font_matrix:
+ * @scaled_font: a #cairo_scaled_font_t
+ * @font_matrix: return value for the matrix
+ * 
+ * Stores the font matrix with which @scaled_font was created into
+ * @matrix.
+ **/
+void
+cairo_scaled_font_get_font_matrix (cairo_scaled_font_t	*scaled_font,
+				   cairo_matrix_t	*font_matrix)
+{
+    if (scaled_font->status) {
+	cairo_matrix_init_identity (font_matrix);
+	return;
+    }
+
+    *font_matrix = scaled_font->font_matrix;
+}
+
+/**
+ * cairo_scaled_font_get_ctm:
+ * @scaled_font: a #cairo_scaled_font_t
+ * @ctm: return value for the CTM
+ * 
+ * Stores the CTM with which @scaled_font was created into @ctm.
+ **/
+void
+cairo_scaled_font_get_ctm (cairo_scaled_font_t	*scaled_font,
+			   cairo_matrix_t	*ctm)
+{
+    if (scaled_font->status) {
+	cairo_matrix_init_identity (ctm);
+	return;
+    }
+
+    *ctm = scaled_font->ctm;
+}
+
+/**
+ * cairo_scaled_font_get_font_options:
+ * @scaled_font: a #cairo_scaled_font_t
+ * @options: return value for the font options
+ * 
+ * Stores the font options with which @scaled_font was created into
+ * @ctm.
+ **/
+void
+cairo_scaled_font_get_font_options (cairo_scaled_font_t		*scaled_font,
+				    cairo_font_options_t	*options)
+{
+    if (scaled_font->status) {
+	_cairo_font_options_init_default (options);
+	return;
+    }
+
+    _cairo_font_options_init_copy (options, &scaled_font->options);
 }

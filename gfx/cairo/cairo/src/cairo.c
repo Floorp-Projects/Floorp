@@ -433,7 +433,7 @@ cairo_pop_group (cairo_t *cr)
      * surface, so this pattern will be positioned at the right place.
      * XXXvlad - er, this doesn't make sense, why does it work?
      */
-    cairo_surface_set_device_offset (group_surface, 0, 0);
+    //cairo_surface_set_device_offset (group_surface, 0, 0);
 
     group_pattern = cairo_pattern_create_for_surface (group_surface);
     if (!group_pattern) {
@@ -1202,8 +1202,8 @@ cairo_curve_to (cairo_t *cr,
  * to the path to connect the current point to the beginning of the
  * arc.
  *
- * Angles are measured in radians. An angle of 0 is in the direction
- * of the positive X axis (in user-space). An angle of %M_PI radians
+ * Angles are measured in radians. An angle of 0.0 is in the direction
+ * of the positive X axis (in user-space). An angle of %M_PI/2.0 radians
  * (90 degrees) is in the direction of the positive Y axis (in
  * user-space). Angles increase in the direction from the positive X
  * axis toward the positive Y axis. So with the default transformation

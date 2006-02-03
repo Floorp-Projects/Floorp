@@ -743,7 +743,7 @@ emit_radial_pattern (cairo_svg_surface_t *surface,
     xmlNodePtr child;
     xmlBufferPtr id;
     double x0, y0, x1, y1, r0, r1;
-    double start_offset, fx, fy;
+    double fx, fy;
     char buffer[CAIRO_SVG_DTOSTR_BUFFER_LEN];
     
     child = xmlNewChild (document->xml_node_defs, NULL, CC2XML ("radialGradient"), NULL);
@@ -779,9 +779,7 @@ emit_radial_pattern (cairo_svg_surface_t *surface,
     fx = (r1 * x0 - r0 * x1) / (r1 - r0);
     fy = (r1 * y0 - r0 * y1) / (r1 - r0);
 
-    start_offset = (fx - x0) / (fx - x1);
-
-    emit_pattern_stops (child, &pattern->base, start_offset);
+    emit_pattern_stops (child, &pattern->base, r0 / r1);
 
     _cairo_dtostr (buffer, sizeof buffer, x1);
     xmlSetProp (child, CC2XML ("cx"), C2XML (buffer));
