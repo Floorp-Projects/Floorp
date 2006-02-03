@@ -82,20 +82,9 @@ void DemangleSymbol(const char * aSymbol,
 #endif // MOZ_DEMANGLE_SYMBOLS
 }
 
-#if defined(linux) // Linux
-#if (__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 3)) // use glibc backtrace()
-#include <execinfo.h>
-void DumpStackToFile(FILE* aStream)
-{
-  void *array[20];
-  size_t size;
 
-  fflush(aStream);
-  size = backtrace (array, 20);
-  backtrace_symbols_fd (array, size, fileno(aStream));
-}
+#if defined(linux) && defined(__GLIBC__) && (defined(__i386) || defined(PPC)) // i386 or PPC Linux stackwalking code
 
-#elif defined(__GLIBC__) && (defined(__i386) || defined(PPC)) // old style i386 or PPC Linux stackwalking code
 #include <setjmp.h>
 //
 
@@ -150,13 +139,6 @@ void DumpStackToFile(FILE* aStream)
     }
   }
 }
-
-#else // not implemented
-void DumpStackToFile(FILE* aStream)
-{
-  fprintf(aStream, "Info: Stacktrace not implemented for this Linux platform\n");
-}
-#endif // Linux
 
 #elif defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386))
 
