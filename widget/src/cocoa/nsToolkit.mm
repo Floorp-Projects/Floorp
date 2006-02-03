@@ -36,20 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsToolkit.h"
-#include "nsWidgetAtoms.h"
-
-#include <Gestalt.h>
-#include <Appearance.h>
-
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
-#include "nsIServiceManager.h"
-#include "nsIPref.h"
-
-// for some reason, this must come last. otherwise the appshell 
-// component fails to instantiate correctly at runtime.
-#undef DARWIN
-#import <Cocoa/Cocoa.h>
 
 //-------------------------------------------------------------------------
 //
