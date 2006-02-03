@@ -313,6 +313,9 @@ ber_get_stringal( BerElement *ber, struct berval **bv )
 		return( LBER_DEFAULT );
 	}
 
+	(*bv)->bv_val = NULL;
+	(*bv)->bv_len = 0;
+
 	if ( (tag = ber_skip_tag( ber, &len )) == LBER_DEFAULT ) {
 		return( LBER_DEFAULT );
 	}
@@ -528,14 +531,25 @@ ber_scanf( BerElement *ber, const char *fmt, ... )
 				if ( *sss == NULL ) {
 				    /* Make room for at least 15 strings */
 				    *sss = (char **)NSLBERI_MALLOC(16 * sizeof(char *) );
+                                    if (!*sss) {
+                                        rc = LBER_DEFAULT;
+                                        break; /* out of memory - cannot continue */
+                                    }
 				    array_size = 16;
 				} else {
+				    char **save_sss = *sss;
 				    if ( (size_t)(j+2) > array_size) {
 					/* We'v overflowed our buffer */
 					*sss = (char **)NSLBERI_REALLOC( *sss, (array_size * 2) * sizeof(char *) );
 					array_size = array_size * 2;
 				    }
+				    if (!*sss) {
+					rc = LBER_DEFAULT;
+					ber_svecfree(save_sss);
+					break; /* out of memory - cannot continue */
+				    }
 				}
+				(*sss)[j] = NULL;
 				rc = ber_get_stringa( ber, &((*sss)[j]) );
 				j++;
 			}
@@ -543,8 +557,9 @@ ber_scanf( BerElement *ber, const char *fmt, ... )
 			    tag != LBER_END_OF_SEQORSET ) {
 				rc = LBER_DEFAULT;
 			}
-			if ( j > 0 )
+			if ( *sss && (j > 0) ) {
 				(*sss)[j] = NULL;
+			}
 			break;
 
 		case 'V':	/* sequence of strings + lengths */
@@ -558,10 +573,20 @@ ber_scanf( BerElement *ber, const char *fmt, ... )
 				if ( *bv == NULL ) {
 					*bv = (struct berval **)NSLBERI_MALLOC(
 					    2 * sizeof(struct berval *) );
+					if (!*bv) {
+                                            rc = LBER_DEFAULT;
+					    break; /* out of memory - cannot continue */
+					}
 				} else {
+					struct berval **save_bv = *bv;
 					*bv = (struct berval **)NSLBERI_REALLOC(
 					    *bv,
 					    (j + 2) * sizeof(struct berval *) );
+					if (!*bv) {
+					    rc = LBER_DEFAULT;
+					    ber_bvecfree(save_bv);
+					    break; /* out of memory - cannot continue */
+					}
 				}
 				rc = ber_get_stringal( ber, &((*bv)[j]) );
 				j++;
@@ -570,8 +595,9 @@ ber_scanf( BerElement *ber, const char *fmt, ... )
 			    tag != LBER_END_OF_SEQORSET ) {
 				rc = LBER_DEFAULT;
 			}
-			if ( j > 0 )
+			if ( *bv && (j > 0) ) {
 				(*bv)[j] = NULL;
+			}
 			break;
 
 		case 'x':	/* skip the next element - whatever it is */
