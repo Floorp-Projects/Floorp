@@ -12,12 +12,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 # 
-# The Original Code is Mozilla Communicator client code, released
-# March 31, 1998.
+# The Original Code is mozilla.org code.
 # 
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998-1999
+#   Rich Megginson <richm@stanfordalumni.org>
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 # 
 # Contributor(s):
@@ -36,20 +35,51 @@
 # 
 # ***** END LICENSE BLOCK ***** 
 
-MOD_DEPTH = ../..
-srcdir = @srcdir@
-topsrcdir = @top_srcdir@
+
+
+MOD_DEPTH	= ../../..
+srcdir		= @srcdir@
+topsrcdir 	= @top_srcdir@
 
 include $(MOD_DEPTH)/config/autoconf.mk
+include $(topsrcdir)/build.mk
 
-DIRS		= liblber libldif libiutil libldap libprldap
+SRCS = getopt.c
 
-ifdef USE_NSS
-DIRS		+= libssldap
-endif
+REALOBJS        = $(SRCS:.c=.$(OBJ_SUFFIX))
 
-ifeq ($(OS_ARCH),WINNT)
-DIRS		+= libutil
-endif
+UTILOBJDEST	= $(OBJDIR_NAME)
+OBJS		= $(addprefix $(UTILOBJDEST)/, $(REALOBJS))
+
+DISTHDIR	= $(DIST)/public/ldap
+HDIR		= $(topsrcdir)/ldap/include
+
+LIBUTIL	= $(addprefix $(UTILOBJDEST)/, \
+		  $(LIB_PREFIX)$(UTIL_LIBNAME).$(LIB_SUFFIX))
+
+INSTALLDIR      = $(DIST)/$(OBJDIR_NAME)
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= $(DEFS)
+
+
+export::    $(OBJDEST) $(LIBDIR) $(OBJS) $(LIBUTIL)
+
+$(LIBDIR):
+	$(MKDIR) $(LIBDIR)
+
+$(LIBUTIL): $(OBJS) $(LIBDIR)
+	@echo ======= making $(LIBUTIL)
+ifdef SO_FILES_TO_REMOVE
+	-$(RM) $(SO_FILES_TO_REMOVE)
+endif
+	$(LINK_LIB)
+
+veryclean:: clean
+
+$(OBJDEST):
+	$(MKDIR) $(OBJDEST)
+
+export::	$(LIBUTIL)
+	$(INSTALL) -m 444 $(LIBUTIL) $(dist_libdir)

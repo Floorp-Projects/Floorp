@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os CC dist_prefix dist_bindir dist_libdir NSPR_CONFIG PKG_CONFIG NSPR_CFLAGS NSPR_LIBS NSS_CONFIG NSS_CFLAGS NSS_LIBS SVRCORE_LIBS SVRCORE_CFLAGS WHOAMI CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CFLAGS ac_ct_CC CPP RANLIB ac_ct_RANLIB AS AR LD STRIP WINDRES HOST_CC PERL EGREP SHELL_OVERRIDE MOZILLA_CLIENT HOST_CFLAGS GNU_CC CROSS_COMPILE MOZ_OPTIMIZE USE_CPLUS USE_IPV6 USE_N32 USE_64 OBJECT_MODE GC_LEAK_DETECTOR ENABLE_STRIP USE_PTHREADS USE_BTHREADS USE_USER_PTHREADS USE_NATIVE_THREADS USE_NSPR_THREADS USE_NSS CPU_ARCH OBJ_SUFFIX LIB_SUFFIX LIB_PREFIX DLL_SUFFIX ASM_SUFFIX PROG_SUFFIX MKSHLIB DSO_CFLAGS DSO_LDOPTS OS_TARGET OS_ARCH OS_RELEASE OS_TEST DEFINES AR_FLAGS ASFLAGS FILTER IMPLIB OS_LIBS RESOLVE_LINK_SYMBOLS NOSUCHFILE MOZ_OBJFORMAT ULTRASPARC_LIBRARY ULTRASPARC_FILTER_LIBRARY OBJDIR OBJDIR_NAME NSINSTALL OPTIMIZER RC DLLFLAGS EXEFLAGS OS_DLLFLAGS CYGWIN_WRAPPER WIN_TOP_SRC LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os CC dist_prefix dist_bindir dist_libdir NSPR_CONFIG PKG_CONFIG NSPR_CFLAGS NSPR_LIBS NSS_CONFIG NSS_CFLAGS NSS_LIBS SVRCORE_LIBS SVRCORE_CFLAGS WHOAMI CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CFLAGS ac_ct_CC CPP RANLIB ac_ct_RANLIB AS AR LD STRIP WINDRES HOST_CC PERL EGREP HAVE_MSVC_LIB SHELL_OVERRIDE MOZILLA_CLIENT HOST_CFLAGS GNU_CC CROSS_COMPILE MOZ_OPTIMIZE USE_CPLUS USE_IPV6 USE_N32 USE_64 OBJECT_MODE GC_LEAK_DETECTOR ENABLE_STRIP USE_PTHREADS USE_BTHREADS USE_USER_PTHREADS USE_NATIVE_THREADS USE_NSPR_THREADS USE_NSS CPU_ARCH OBJ_SUFFIX LIB_SUFFIX LIB_PREFIX DLL_SUFFIX ASM_SUFFIX PROG_SUFFIX MKSHLIB DSO_CFLAGS DSO_LDOPTS OS_TARGET OS_ARCH OS_RELEASE OS_TEST DEFINES AR_FLAGS ASFLAGS FILTER IMPLIB OS_LIBS RESOLVE_LINK_SYMBOLS NOSUCHFILE MOZ_OBJFORMAT ULTRASPARC_LIBRARY ULTRASPARC_FILTER_LIBRARY OBJDIR OBJDIR_NAME NSINSTALL OPTIMIZER RC DLLFLAGS EXEFLAGS OS_DLLFLAGS CYGWIN_WRAPPER WIN_TOP_SRC LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -2721,7 +2721,7 @@ if test "${with_svrcore_lib+set}" = set; then
       then
         echo "$as_me:$LINENO: result: using $withval" >&5
 echo "${ECHO_T}using $withval" >&6
-        SVRCORE_LIBS="-L$withval -lsvrcore"
+        SVRCORE_LIBS="-L$withval"
       else
         echo
         { { echo "$as_me:$LINENO: error: $withval not found" >&5
@@ -2828,7 +2828,7 @@ echo "${ECHO_T}no" >&6
         SVRCORE_CFLAGS="-I$abs_svrcoreincpath"
     fi
     if test -d "$abs_svrcorelibpath" ; then
-        SVRCORE_LIBS="-L$abs_svrcorelibpath -lsvrcore"
+        SVRCORE_LIBS="-L$abs_svrcorelibpath"
     fi
     if test -n "$SVRCORE_CFLAGS" -a -n "$SVRCORE_LIBS" ; then
         echo "$as_me:$LINENO: checking using in-tree SVRCORE from $svrcoreincpath $svrcorelibpath" >&5
@@ -2920,6 +2920,48 @@ echo "${ECHO_T}no" >&6
 
            fi
        fi
+    fi
+fi
+
+
+case "$target" in
+*-cygwin*) USE_WINDOWS_PATHS=1 ;;
+esac
+
+if test -n "$_WIN32_MSVC" -a -n "$USE_WINDOWS_PATHS" ; then
+    if test -n "$NSPR_CFLAGS" ; then
+        path=`echo $NSPR_CFLAGS | sed -e 's/^-I//'`
+        path=`cygpath -m $path`
+        NSPR_CFLAGS="/I$path"
+    fi
+    if test -n "$NSPR_LIBS" ; then
+        path=`echo $NSPR_LIBS | sed -e 's/^-L//'`
+        path=`cygpath -m $path`
+        NSPR_LIBS="/LIBPATH:$path"
+    fi
+
+    if test -n "$NSS_CFLAGS" ; then
+        path=`echo $NSS_CFLAGS | sed -e 's/^-I//'`
+        path=`cygpath -m $path`
+        NSS_CFLAGS="/I$path"
+    fi
+
+    if test -n "$NSS_LIBS" ; then
+        path=`echo $NSS_LIBS | sed -e 's/^-L//'`
+        path=`cygpath -m $path`
+        NSS_LIBS="/LIBPATH:$path"
+    fi
+
+    if test -n "$SVRCORE_CFLAGS" ; then
+        path=`echo $SVRCORE_CFLAGS | sed -e 's/^-I//'`
+        path=`cygpath -m $path`
+        SVRCORE_CFLAGS="/I$path"
+    fi
+
+    if test -n "$SVRCORE_LIBS" ; then
+        path=`echo $SVRCORE_LIBS | sed -e 's/^-L//'`
+        path=`cygpath -m $path`
+        SVRCORE_LIBS="/LIBPATH:$path"
     fi
 fi
 
@@ -8082,7 +8124,47 @@ _ACEOF
         CC=cl
         CXX=cl
         LD=link
-        AR='lib -NOLOGO -OUT:"$@"'
+        # if the lib program is available, use it, otherwise use link /lib
+        # Extract the first word of "lib", so it can be a program name with args.
+set dummy lib; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_prog_HAVE_MSVC_LIB+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$HAVE_MSVC_LIB"; then
+  ac_cv_prog_HAVE_MSVC_LIB="$HAVE_MSVC_LIB" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_HAVE_MSVC_LIB="1"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+fi
+fi
+HAVE_MSVC_LIB=$ac_cv_prog_HAVE_MSVC_LIB
+if test -n "$HAVE_MSVC_LIB"; then
+  echo "$as_me:$LINENO: result: $HAVE_MSVC_LIB" >&5
+echo "${ECHO_T}$HAVE_MSVC_LIB" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+        if test "$HAVE_MSVC_LIB" = "1" ; then
+            AR='lib -NOLOGO -OUT:"$@"'
+        else
+            AR='$(LD) /lib -NOLOGO -OUT:"$@"'
+        fi
         AR_FLAGS=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
@@ -9982,6 +10064,7 @@ ldap/libraries/libldif/Makefile
 ldap/libraries/liblber/Makefile
 ldap/libraries/libiutil/Makefile
 ldap/libraries/libssldap/Makefile
+ldap/libraries/libutil/Makefile
 "
 
 mkdir ldap > /dev/null 2>&1
@@ -10101,9 +10184,10 @@ for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
   # 1. Remove the extension, and $U if already installed.
   ac_i=`echo "$ac_i" |
 	 sed 's/\$U\././;s/\.o$//;s/\.obj$//'`
-  # 2. Add them.
-  ac_libobjs="$ac_libobjs $ac_i\$U.$ac_objext"
-  ac_ltlibobjs="$ac_ltlibobjs $ac_i"'$U.lo'
+  # 2. Prepend LIBOBJDIR.  When used with automake>=1.10 LIBOBJDIR
+  #    will be set to the directory where LIBOBJS objects are built.
+  ac_libobjs="$ac_libobjs \${LIBOBJDIR}$ac_i\$U.$ac_objext"
+  ac_ltlibobjs="$ac_ltlibobjs \${LIBOBJDIR}$ac_i"'$U.lo'
 done
 LIBOBJS=$ac_libobjs
 
@@ -10668,6 +10752,7 @@ s,@WINDRES@,$WINDRES,;t t
 s,@HOST_CC@,$HOST_CC,;t t
 s,@PERL@,$PERL,;t t
 s,@EGREP@,$EGREP,;t t
+s,@HAVE_MSVC_LIB@,$HAVE_MSVC_LIB,;t t
 s,@SHELL_OVERRIDE@,$SHELL_OVERRIDE,;t t
 s,@MOZILLA_CLIENT@,$MOZILLA_CLIENT,;t t
 s,@HOST_CFLAGS@,$HOST_CFLAGS,;t t

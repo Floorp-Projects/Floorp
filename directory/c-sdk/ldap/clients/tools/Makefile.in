@@ -70,7 +70,6 @@ endif
 ifeq ($(LDAP_TOOL_ARGPIN),1)
 INCLUDES += $(SVRCORE_CFLAGS)
 DEFS+=-DLDAP_TOOL_ARGPIN -DLDAP_TOOL_PKCS11
-SVRCORE_LINK=$(SVRCORE_LIBS)
 endif
 
 ifdef HAVE_LIBNLS
@@ -169,7 +168,7 @@ endif
 ifeq ($(OS_ARCH), WINNT)
 PLATFORMLIBS =wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib \
             comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib \
-            rpcrt4.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib
+            rpcrt4.lib uuid.lib winmm.lib
 endif
 
 ifeq ($(OS_ARCH), OSF1)

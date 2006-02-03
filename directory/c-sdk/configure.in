@@ -335,6 +335,57 @@ if test -z "$_SYSTEM_SVRCORE" ; then
 fi
 
 dnl ========================================================
+dnl If using cygwin (or another Windows shell that uses unix
+dnl style paths by default - mingw?) and using MSVC, we need
+dnl to convert the include and lib paths to the more MSVC
+dnl friendly format - it's easier and faster to do it here
+dnl than in cygwin-wrapper
+dnl ========================================================
+
+dnl add other runtime environments that use unix style paths
+dnl *-cygwin*|*-mingw*|*-msvc*|*-mks*)
+case "$target" in
+*-cygwin*) USE_WINDOWS_PATHS=1 ;;
+esac
+
+if test -n "$_WIN32_MSVC" -a -n "$USE_WINDOWS_PATHS" ; then
+    if test -n "$NSPR_CFLAGS" ; then
+        path=`echo $NSPR_CFLAGS | sed -e 's/^-I//'`
+        path=`cygpath -m $path`
+        NSPR_CFLAGS="/I$path"
+    fi
+    if test -n "$NSPR_LIBS" ; then
+        path=`echo $NSPR_LIBS | sed -e 's/^-L//'`
+        path=`cygpath -m $path`
+        NSPR_LIBS="/LIBPATH:$path"
+    fi
+
+    if test -n "$NSS_CFLAGS" ; then
+        path=`echo $NSS_CFLAGS | sed -e 's/^-I//'`
+        path=`cygpath -m $path`
+        NSS_CFLAGS="/I$path"
+    fi
+
+    if test -n "$NSS_LIBS" ; then
+        path=`echo $NSS_LIBS | sed -e 's/^-L//'`
+        path=`cygpath -m $path`
+        NSS_LIBS="/LIBPATH:$path"
+    fi
+
+    if test -n "$SVRCORE_CFLAGS" ; then
+        path=`echo $SVRCORE_CFLAGS | sed -e 's/^-I//'`
+        path=`cygpath -m $path`
+        SVRCORE_CFLAGS="/I$path"
+    fi
+
+    if test -n "$SVRCORE_LIBS" ; then
+        path=`echo $SVRCORE_LIBS | sed -e 's/^-L//'`
+        path=`cygpath -m $path`
+        SVRCORE_LIBS="/LIBPATH:$path"
+    fi
+fi
+
+dnl ========================================================
 dnl =
 dnl = Set the threading model
 dnl =
@@ -1283,7 +1334,13 @@ case "$target" in
         CC=cl
         CXX=cl
         LD=link
-        AR='lib -NOLOGO -OUT:"$@"'
+        # if the lib program is available, use it, otherwise use link /lib
+        AC_CHECK_PROG(HAVE_MSVC_LIB, lib, 1)
+        if test "$HAVE_MSVC_LIB" = "1" ; then
+            AR='lib -NOLOGO -OUT:"$@"'
+        else
+            AR='$(LD) /lib -NOLOGO -OUT:"$@"'
+        fi
         AR_FLAGS=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
@@ -2331,6 +2388,7 @@ ldap/libraries/libldif/Makefile
 ldap/libraries/liblber/Makefile
 ldap/libraries/libiutil/Makefile
 ldap/libraries/libssldap/Makefile
+ldap/libraries/libutil/Makefile
 "
 
 dnl since configure won't handle 2 levels of directory

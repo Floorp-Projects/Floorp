@@ -63,7 +63,7 @@ static char sccsid[] = "@(#)getopt.c    4.12 (Berkeley) 6/1/90";
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
-#include "lber.h"
+
 #define index strchr
 #define rindex strrchr
 

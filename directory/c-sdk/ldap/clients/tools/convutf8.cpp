@@ -38,7 +38,10 @@
 
 #ifdef _WIN32
 #define  VC_EXTRALEAN
-#include <afxwin.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <tchar.h>
 #include <winnls.h>
 static char *win_char_converter(const char *instr, int bFromUTF8);
 #else
