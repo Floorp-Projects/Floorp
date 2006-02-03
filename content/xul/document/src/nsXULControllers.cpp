@@ -102,7 +102,6 @@ NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 NS_INTERFACE_MAP_BEGIN(nsXULControllers)
   NS_INTERFACE_MAP_ENTRY(nsIControllers)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULControllers)
 NS_INTERFACE_MAP_END
 
 
