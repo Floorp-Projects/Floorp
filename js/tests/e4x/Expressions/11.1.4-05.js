@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-START("Parsing - Comment hiding parsing/scanning");
+START("11.1.4 - XML Initializer - Comment hiding parsing/scanning");
 
 var bug = 311157;
 var summary = 'Comment-hiding compromise left E4X parsing/scanning inconsistent';
@@ -45,13 +45,13 @@ var expect;
 printBugNumber (bug);
 printStatus (summary);
 
+XML.ignoreWhitespace = false;
 
-var x = <hi> <!-- duh -->
-    there </hi>;
+var x = <bye> <![CDATA[ duh ]]>
+    there </bye>;
 
 actual = x.toString();
-expect = '\n    there ';
-
+expect = '  duh \n    there ';
 TEST(1, expect, actual);
 
 END();
