@@ -80,7 +80,7 @@ ac_add_app_options() {
   APP=$1
   shift;
   if [ "$APP" == "$MOZ_BUILD_APP" ]; then
-      ac_add_options $*;
+      ac_add_options "$*";
   fi
 }
 
