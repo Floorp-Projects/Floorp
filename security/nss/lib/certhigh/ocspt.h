@@ -37,7 +37,7 @@
 /*
  * Public header for exported OCSP types.
  *
- * $Id: ocspt.h,v 1.5 2006/02/03 18:13:04 kaie%kuix.de Exp $
+ * $Id: ocspt.h,v 1.6 2006/02/03 20:22:52 kaie%kuix.de Exp $
  */
 
 #ifndef _OCSPT_H_
@@ -147,7 +147,7 @@ typedef SECStatus (*SEC_HttpServer_FreeSessionFcn)(
  */
 typedef SECStatus (*SEC_HttpRequest_CreateFcn)(
    SEC_HTTP_SERVER_SESSION session,
-   const char *http_protocol_variant, // usually "http"
+   const char *http_protocol_variant, /* usually "http" */
    const char *path_and_query_string,
    const char *http_request_method, 
    const PRIntervalTime timeout, 
