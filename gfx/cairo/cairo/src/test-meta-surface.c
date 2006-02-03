@@ -68,9 +68,9 @@ static cairo_int_status_t
 _test_meta_surface_show_page (void *abstract_surface);
 
 cairo_surface_t *
-_test_meta_surface_create (cairo_format_t	 format,
-			   int		 	 width,
-			   int		 	 height)
+_test_meta_surface_create (cairo_content_t	content,
+			   int		 	width,
+			   int		 	height)
 {
     test_meta_surface_t *surface;
 
@@ -80,11 +80,12 @@ _test_meta_surface_create (cairo_format_t	 format,
 
     _cairo_surface_init (&surface->base, &test_meta_surface_backend);
 
-    surface->meta = _cairo_meta_surface_create (width, height);
+    surface->meta = _cairo_meta_surface_create (content, width, height);
     if (cairo_surface_status (surface->meta))
 	goto FAIL_CLEANUP_SURFACE;
 
-    surface->image = cairo_image_surface_create (format, width, height);
+    surface->image = _cairo_image_surface_create_with_content (content,
+							       width, height);
     if (cairo_surface_status (surface->image))
 	goto FAIL_CLEANUP_META;
 

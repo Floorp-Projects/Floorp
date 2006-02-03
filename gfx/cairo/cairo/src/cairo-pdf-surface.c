@@ -38,6 +38,7 @@
 #include "cairo-pdf.h"
 #include "cairo-font-subset-private.h"
 #include "cairo-ft-private.h"
+#include "cairo-paginated-surface-private.h"
 
 #include <time.h>
 #include <zlib.h>
@@ -286,11 +287,11 @@ _cairo_pdf_surface_add_font (cairo_pdf_surface_t *surface, unsigned int id)
 
 static cairo_surface_t *
 _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
-					       double			width,
-					       double			height)
+					       double			 width,
+					       double			 height)
 {
     cairo_pdf_document_t *document;
-    cairo_surface_t *surface;
+    cairo_surface_t *target;
 
     document = _cairo_pdf_document_create (stream, width, height);
     if (document == NULL) {
@@ -298,19 +299,39 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    surface = _cairo_pdf_surface_create_for_document (document, width, height);
+    target = _cairo_pdf_surface_create_for_document (document, width, height);
 
-    document->owner = surface;
+    document->owner = target;
     _cairo_pdf_document_destroy (document);
 
-    return surface;
+    return _cairo_paginated_surface_create (target,
+					    CAIRO_CONTENT_COLOR_ALPHA,
+					    width, height);
 }
 
+/**
+ * cairo_pdf_surface_create_for_stream:
+ * @write: a #cairo_write_func_t to accept the output data
+ * @closure: the closure argument for @write
+ * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
+ * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
+ * 
+ * Creates a PDF surface of the specified size in points to be written
+ * incrementally to the stream represented by @write and @closure.
+ *
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ */
 cairo_surface_t *
-cairo_pdf_surface_create_for_stream (cairo_write_func_t		write,
+cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write,
 				     void			*closure,
-				     double			width,
-				     double			height)
+				     double			 width_in_points,
+				     double			 height_in_points)
 {
     cairo_output_stream_t *stream;
 
@@ -320,13 +341,32 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		write,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    return _cairo_pdf_surface_create_for_stream_internal (stream, width, height);
+    return _cairo_pdf_surface_create_for_stream_internal (stream,
+							  width_in_points,
+							  height_in_points);
 }
 
+/**
+ * cairo_pdf_surface_create:
+ * @filename: a filename for the PDF output (must be writable)
+ * @width_in_points: width of the surface, in points (1 point == 1/72.0 inch)
+ * @height_in_points: height of the surface, in points (1 point == 1/72.0 inch)
+ * 
+ * Creates a PDF surface of the specified size in points to be written
+ * to @filename.
+ * 
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ **/
 cairo_surface_t *
-cairo_pdf_surface_create (const char	*filename,
-			  double	width,
-			  double	height)
+cairo_pdf_surface_create (const char		*filename,
+			  double		 width_in_points,
+			  double		 height_in_points)
 {
     cairo_output_stream_t *stream;
 
@@ -336,7 +376,15 @@ cairo_pdf_surface_create (const char	*filename,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    return _cairo_pdf_surface_create_for_stream_internal (stream, width, height);
+    return _cairo_pdf_surface_create_for_stream_internal (stream,
+							  width_in_points,
+							  height_in_points);
+}
+
+static cairo_bool_t
+_cairo_surface_is_pdf (cairo_surface_t *surface)
+{
+    return surface->backend == &cairo_pdf_surface_backend;
 }
 
 /**
@@ -345,16 +393,33 @@ cairo_pdf_surface_create (const char	*filename,
  * @x_dpi: horizontal dpi
  * @y_dpi: vertical dpi
  * 
- * Set horizontal and vertical resolution for image fallbacks.  When
- * the pdf backend needs to fall back to image overlays, it will use
- * this resolution.
+ * Set the horizontal and vertical resolution for image fallbacks.
+ * When the pdf backend needs to fall back to image overlays, it will
+ * use this resolution. These DPI values are not used for any other
+ * purpose, (in particular, they do not have any bearing on the size
+ * passed to cairo_pdf_surface_create() nor on the CTM).
  **/
 void
 cairo_pdf_surface_set_dpi (cairo_surface_t	*surface,
 			   double		x_dpi,
 			   double		y_dpi)
 {
-    cairo_pdf_surface_t *pdf_surface = (cairo_pdf_surface_t *) surface;
+    cairo_surface_t *target;
+    cairo_pdf_surface_t *pdf_surface;
+
+    if (! _cairo_surface_is_paginated (surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    target = _cairo_paginated_surface_get_target (surface);
+
+    if (! _cairo_surface_is_pdf (surface)) {
+	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    pdf_surface = (cairo_pdf_surface_t *) target;
 
     pdf_surface->document->x_dpi = x_dpi;    
     pdf_surface->document->y_dpi = y_dpi;    
@@ -559,9 +624,12 @@ compress_dup (const void *data, unsigned long data_size,
     return compressed;
 }
 
+/* XXX: This should be rewritten to use the standard cairo_status_t
+ * return and the error paths here need to be checked for memory
+ * leaks. */
 static unsigned int
-emit_image_data (cairo_pdf_document_t *document,
-		 cairo_image_surface_t *image)
+emit_image_rgb_data (cairo_pdf_document_t *document,
+		     cairo_image_surface_t *image)
 {
     cairo_output_stream_t *output = document->output_stream;
     cairo_pdf_stream_t *stream;
@@ -569,17 +637,55 @@ emit_image_data (cairo_pdf_document_t *document,
     int i, x, y;
     unsigned long rgb_size, compressed_size;
     pixman_bits_t *pixel;
+    cairo_surface_t *opaque;
+    cairo_image_surface_t *opaque_image;
+    cairo_pattern_union_t pattern;
 
     rgb_size = image->height * image->width * 3;
     rgb = malloc (rgb_size);
     if (rgb == NULL)
 	return 0;
 
+    /* XXX: We could actually output the alpha channels through PDF
+     * 1.4's SMask. But for now, all we support is opaque image data,
+     * so we must flatten any ARGB image by blending over white
+     * first. */
+    if (image->format != CAIRO_FORMAT_RGB24) {
+	opaque = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
+					     image->width,
+					     image->height);
+	if (opaque->status)
+	    return 0;
+    
+	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
+    
+	_cairo_surface_fill_rectangle (opaque,
+				       CAIRO_OPERATOR_SOURCE,
+				       CAIRO_COLOR_WHITE,
+				       0, 0, image->width, image->height);
+
+	_cairo_surface_composite (CAIRO_OPERATOR_OVER,
+				  &pattern.base,
+				  NULL,
+				  opaque,
+				  0, 0,
+				  0, 0,
+				  0, 0,
+				  image->width,
+				  image->height);
+    
+	_cairo_pattern_fini (&pattern.base);
+	opaque_image = (cairo_image_surface_t *) opaque;
+    } else {
+	opaque = &image->base;
+	opaque_image = image;
+    }
+
     i = 0;
     for (y = 0; y < image->height; y++) {
-	pixel = (pixman_bits_t *) (image->data + y * image->stride);
+	pixel = (pixman_bits_t *) (opaque_image->data + y * opaque_image->stride);
 
-	for (x = 0; x < image->width; x++, pixel++) {
+	for (x = 0; x < opaque_image->width; x++, pixel++) {
 	    rgb[i++] = (*pixel & 0x00ff0000) >> 16;
 	    rgb[i++] = (*pixel & 0x0000ff00) >>  8;
 	    rgb[i++] = (*pixel & 0x000000ff) >>  0;
@@ -612,6 +718,9 @@ emit_image_data (cairo_pdf_document_t *document,
     free (rgb);
     free (compressed);
 
+    if (opaque_image != image)
+	cairo_surface_destroy (opaque);
+
     return stream->id;
 }
 
@@ -633,7 +742,7 @@ _cairo_pdf_surface_composite_image (cairo_pdf_surface_t	*dst,
     if (status)
 	return status;
 
-    id = emit_image_data (dst->document, image);
+    id = emit_image_rgb_data (dst->document, image);
     if (id == 0) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto bail;
@@ -813,7 +922,7 @@ emit_surface_pattern (cairo_pdf_surface_t	*dst,
 
     _cairo_pdf_document_close_stream (document);
 
-    id = emit_image_data (dst->document, image);
+    id = emit_image_rgb_data (dst->document, image);
 
     /* BBox must be smaller than XStep by YStep or acroread wont
      * display the pattern. */

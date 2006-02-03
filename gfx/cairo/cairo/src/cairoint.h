@@ -1857,6 +1857,18 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 					int			height,
 					int			stride);
 
+cairo_private cairo_surface_t *
+_cairo_image_surface_create_with_content (cairo_content_t	content,
+					  int			width,
+					  int			height);
+
+cairo_private cairo_surface_t *
+_cairo_image_surface_create_for_data_with_content (unsigned char	*data,
+						   cairo_content_t	 content,
+						   int			 width,
+						   int			 height,
+						   int			 stride);
+
 cairo_private void
 _cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface);
 

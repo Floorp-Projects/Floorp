@@ -72,6 +72,7 @@ CSRCS   = \
         cairo-matrix.c \
 	cairo-meta-surface.c \
         cairo-output-stream.c \
+	cairo-paginated-surface.c \
         cairo-path.c \
         cairo-path-bounds.c \
         cairo-path-data.c \

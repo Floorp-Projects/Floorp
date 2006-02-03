@@ -155,7 +155,7 @@ Index: src/cairoint.h
  cairo_private cairo_surface_t *
  _cairo_gstate_get_target (cairo_gstate_t *gstate);
  
-@@ -2157,6 +2163,7 @@ slim_hidden_proto(cairo_restore)
+@@ -2169,6 +2175,7 @@ slim_hidden_proto(cairo_restore)
  slim_hidden_proto(cairo_save)
  slim_hidden_proto(cairo_stroke_preserve)
  slim_hidden_proto(cairo_surface_destroy)

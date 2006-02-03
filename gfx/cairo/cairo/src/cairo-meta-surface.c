@@ -60,7 +60,9 @@
 static const cairo_surface_backend_t cairo_meta_surface_backend;
 
 cairo_surface_t *
-_cairo_meta_surface_create (int width_pixels, int height_pixels)
+_cairo_meta_surface_create (cairo_content_t	content,
+			    int			width_pixels,
+			    int			height_pixels)
 {
     cairo_meta_surface_t *meta;
 
@@ -72,6 +74,7 @@ _cairo_meta_surface_create (int width_pixels, int height_pixels)
 
     _cairo_surface_init (&meta->base, &cairo_meta_surface_backend);
 
+    meta->content = content;
     meta->width_pixels = width_pixels;
     meta->height_pixels = height_pixels;
 
@@ -87,7 +90,7 @@ _cairo_meta_surface_create_similar (void	       *abstract_surface,
 				    int			width,
 				    int			height)
 {
-    return _cairo_meta_surface_create (width, height);
+    return _cairo_meta_surface_create (content, width, height);
 }
 
 static cairo_status_t

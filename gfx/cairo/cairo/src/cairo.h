@@ -932,10 +932,30 @@ cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
 			   cairo_font_extents_t *extents);
 
 cairo_public void
+cairo_scaled_font_text_extents (cairo_scaled_font_t  *scaled_font,
+				const char  	     *utf8,
+				cairo_text_extents_t *extents);
+
+cairo_public void
 cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 				 cairo_glyph_t         *glyphs, 
 				 int                   num_glyphs,
 				 cairo_text_extents_t  *extents);
+
+cairo_public cairo_font_face_t *
+cairo_scaled_font_get_font_face (cairo_scaled_font_t *scaled_font);
+
+cairo_public void
+cairo_scaled_font_get_font_matrix (cairo_scaled_font_t	*scaled_font,
+				   cairo_matrix_t	*font_matrix);
+
+cairo_public void
+cairo_scaled_font_get_ctm (cairo_scaled_font_t	*scaled_font,
+			   cairo_matrix_t	*ctm);
+
+cairo_public void
+cairo_scaled_font_get_font_options (cairo_scaled_font_t		*scaled_font,
+				    cairo_font_options_t	*options);
 
 /* Query functions */
 

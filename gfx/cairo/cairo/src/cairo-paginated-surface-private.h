@@ -40,7 +40,14 @@
 
 cairo_private cairo_surface_t *
 _cairo_paginated_surface_create (cairo_surface_t	*target,
+				 cairo_content_t	 content,
 				 int			 width,
 				 int			 height);
+
+cairo_private cairo_surface_t *
+_cairo_paginated_surface_get_target (cairo_surface_t *surface);
+
+cairo_bool_t
+_cairo_surface_is_paginated (cairo_surface_t *surface);
 
 #endif /* CAIRO_PAGINATED_SURFACE_H */
