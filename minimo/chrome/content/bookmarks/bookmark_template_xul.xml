@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE stylesheet [
+<!ATTLIST xsl:sort id ID #IMPLIED>
+<!ATTLIST xsl:variable id ID #IMPLIED>
+]>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:dc="http://purl.org/dc/elements/1.1/"  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+
+xmlns:rss="http://purl.org/rss/1.0/"
+>
+
+<xsl:output  indent="yes"/>
+
+<xsl:template match="/">
+
+<vbox>
+		<xsl:for-each select="/bm/li">
+  			<toolbarbutton >
+				<xsl:attribute name="image" >
+	                         <xsl:value-of select="@iconsrc"/>
+				</xsl:attribute> 	
+				<xsl:attribute name="oncommand">BrowserOpenURLasTab('<xsl:value-of select="."/>')
+				</xsl:attribute> 	
+			</toolbarbutton >
+
+		</xsl:for-each>
+</vbox>
+
+</xsl:template>
+
+
+</xsl:stylesheet>
