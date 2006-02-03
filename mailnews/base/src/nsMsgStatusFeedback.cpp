@@ -242,7 +242,7 @@ nsMsgStatusFeedback::SetStatusString(const PRUnichar *status)
 {
   nsCOMPtr <nsIXULBrowserWindow> xulBrowserWindow = do_QueryInterface(mStatusFeedback);
   if (xulBrowserWindow)
-    xulBrowserWindow->SetJSDefaultStatus(status);
+    xulBrowserWindow->SetJSDefaultStatus(nsDependentString(status));
   return NS_OK;
 }
 
