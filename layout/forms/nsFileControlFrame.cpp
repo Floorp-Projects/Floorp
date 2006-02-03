@@ -582,11 +582,17 @@ nsFileControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
   aValue.Truncate();  // initialize out param
 
   if (nsHTMLAtoms::value == aName) {
-    if (mTextFrame) {
-      mTextFrame->GetValue(aValue, PR_FALSE);
-    }
-    else if (mCachedState) {
+    NS_ASSERTION(!mCachedState || !mTextFrame,
+                 "If we have a cached state, we better have no mTextFrame");
+    if (mCachedState) {
       aValue.Assign(*mCachedState);
+    } else if (mTextContent) {
+      nsCOMPtr<nsIDOMHTMLInputElement> textControl =
+        do_QueryInterface(mTextContent);
+      NS_ASSERTION(textControl,
+                   "<input> element not implementing nsIDOMHTMLInputElement?");
+
+      textControl->GetValue(aValue);
     }
   }
   return NS_OK;
