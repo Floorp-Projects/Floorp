@@ -902,6 +902,11 @@ extensions/typeaheadfind/src/Makefile
 extensions/typeaheadfind/Makefile
 "
 
+MAKEFILES_metrics="
+extensions/metrics/Makefile
+extensions/metrics/src/Makefile
+"
+
 MAKEFILES_phoenix="
 browser/Makefile
 browser/app/Makefile
