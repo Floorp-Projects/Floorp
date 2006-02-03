@@ -2143,6 +2143,17 @@ interrupt:
                         LOAD_INTERRUPT_HANDLER(rt);
                     }
                 }
+
+#if JS_HAS_CALL_OBJECT
+                /*
+                 * If frame has a call object, sync values and clear the back-
+                 * pointer. This can happen for a lightweight function if it
+                 * calls eval unexpectedly (in a way that is hidden from the
+                 * compiler). See bug 325540.
+                 */
+                if (fp->callobj)
+                    ok &= js_PutCallObject(cx, fp);
+#endif
 #if JS_HAS_ARGS_OBJECT
                 if (fp->argsobj)
                     ok &= js_PutArgsObject(cx, fp);
