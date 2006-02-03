@@ -2923,7 +2923,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   image->GetHeight(&imageSize.height);
 
   float p2t;
-  p2t = aPresContext->PixelsToTwips();
+  p2t = aPresContext->ScaledPixelsToTwips();
   imageSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
   imageSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
 
