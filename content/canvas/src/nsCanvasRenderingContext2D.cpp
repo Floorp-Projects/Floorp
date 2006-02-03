@@ -1935,6 +1935,25 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     return rv;
 }
 
+/**
+ * Given aBits, the number of bits in a color channel, compute a number N
+ * such that for values v with aBits bits, floor((N*v)/256) is close to
+ * v*255.0/(2^aBits - 1) and in particular we need
+ * floor((N*(2^aBits - 1))/256) = 255.
+ * We'll just use a table that gives good results :-).
+ */
+static PRUint32 ComputeScaleFactor(PRUint32 aBits)
+{
+  static PRUint32 table[9] = {
+    0, 255*256, 85*256, 9330, 17*256, 2110, 1038, 515, 256
+  };
+  
+  NS_ASSERTION(aBits <= 8, "more than 8 bits in a color channel not supported");
+  NS_ASSERTION(((table[aBits]*((1 << aBits) - 1)) >> 8) == 255,
+               "Invalid table entry");
+  return table[aBits];
+}
+
 nsresult
 nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
                                                nsIDrawingSurface* aWhiteSurface,
@@ -2072,6 +2091,11 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
     // Convert the data
     PRUint8* dest = tmpBuf;
     PRInt32 index = 0;
+    
+    PRUint32 RScale = ComputeScaleFactor(format.mRedCount);
+    PRUint32 GScale = ComputeScaleFactor(format.mGreenCount);
+    PRUint32 BScale = ComputeScaleFactor(format.mBlueCount);
+    
     for (PRInt32 i = 0; i < aSurfaceSize.height; ++i) {
         PRUint8* src = data + i*rowSpan;
         for (PRInt32 j = 0; j < aSurfaceSize.width; ++j) {
@@ -2085,12 +2109,12 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
             // Note that because aBlackSurface is the image rendered
             // onto black, the channel values we get here have
             // effectively been premultipled by the alpha value.
-            dest[BLUE_BYTE] = (PRUint8)(((v & format.mBlueMask) >> format.mBlueShift)
-                                << (8 - format.mBlueCount));
-            dest[GREEN_BYTE] = (PRUint8)(((v & format.mGreenMask) >> format.mGreenShift)
-                                << (8 - format.mGreenCount));
-            dest[RED_BYTE] = (PRUint8)(((v & format.mRedMask) >> format.mRedShift)
-                                << (8 - format.mRedCount));
+            dest[BLUE_BYTE] = 
+              (PRUint8)((((v & format.mBlueMask) >> format.mBlueShift)*BScale) >> 8);
+            dest[GREEN_BYTE] =
+              (PRUint8)((((v & format.mGreenMask) >> format.mGreenShift)*GScale) >> 8);
+            dest[RED_BYTE] =
+              (PRUint8)((((v & format.mRedMask) >> format.mRedShift)*RScale) >> 8);
             dest[ALPHA_BYTE] = alphas ? alphas[index++] : 0xFF;
             src += bytesPerPix;
             dest += 4;
