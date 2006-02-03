@@ -114,6 +114,7 @@ NS_INTERFACE_MAP_BEGIN(nsContentTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome2)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIEmbeddingSiteWindow, mSiteWindow2)
    NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIEmbeddingSiteWindow2, mSiteWindow2)
@@ -357,10 +358,12 @@ nsContentTreeOwner::GetPersistence(PRBool* aPersistPosition,
 }
 
 //*****************************************************************************
-// nsContentTreeOwner::nsIWebBrowserChrome
+// nsContentTreeOwner::nsIWebBrowserChrome2
 //*****************************************************************************   
 
-NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
+NS_IMETHODIMP nsContentTreeOwner::SetStatusWithContext(PRUint32 aStatusType,
+                                                       const nsAString &aStatusText,
+                                                       nsISupports *aStatusContext)
 {
   // We only allow the status to be set from the primary content shell
   if (!mPrimary)
@@ -369,23 +372,39 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnicha
   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
   mXULWindow->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
 
-   if (xulBrowserWindow)
-   {
-     switch(aStatusType)
-     {
-     case STATUS_SCRIPT:
-       xulBrowserWindow->SetJSStatus(aStatus);
-       break;
-     case STATUS_SCRIPT_DEFAULT:
-       xulBrowserWindow->SetJSDefaultStatus(aStatus);
-       break;
-     case STATUS_LINK:
-       xulBrowserWindow->SetOverLink(aStatus);
-       break;
-     }
-   }
+  if (xulBrowserWindow)
+  {
+    switch(aStatusType)
+    {
+    case STATUS_SCRIPT:
+      xulBrowserWindow->SetJSStatus(aStatusText);
+      break;
+    case STATUS_SCRIPT_DEFAULT:
+      xulBrowserWindow->SetJSDefaultStatus(aStatusText);
+      break;
+    case STATUS_LINK:
+      {
+        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aStatusContext);
+        xulBrowserWindow->SetOverLink(aStatusText, element);
+        break;
+      }
+    }
+  }
 
   return NS_OK;
+}
+
+//*****************************************************************************
+// nsContentTreeOwner::nsIWebBrowserChrome
+//*****************************************************************************   
+
+NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType,
+                                            const PRUnichar* aStatus)
+{
+  return SetStatusWithContext(aStatusType,
+                              aStatus ? nsDependentString(aStatus)
+                                      : EmptyString(),
+                              nsnull);
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetWebBrowser(nsIWebBrowser* aWebBrowser)

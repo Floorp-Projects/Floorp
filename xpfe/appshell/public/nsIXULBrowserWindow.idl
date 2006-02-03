@@ -39,30 +39,31 @@
 
 #include "nsISupports.idl"
 
+interface nsIRequest;
+interface nsIDOMElement;
+
 /**
  * The nsIXULBrowserWindow supplies the methods that may be called from the
  * internals of the browser area to tell the containing xul window to update
  * it's ui. 
  */
-
-interface nsIRequest;
-
-[scriptable, uuid(46B4015C-0121-11d4-9877-00C04FA0D27A)]
+[scriptable, uuid(67a601df-f091-4894-a2e2-2e6cfebb35ea)]
 interface nsIXULBrowserWindow : nsISupports
 {
-	/*
-	 Sets the status according to JS' version of status.
-	*/
-	void setJSStatus(in wstring status);
+  /**
+   * Sets the status according to JS' version of status.
+   */
+  void setJSStatus(in AString status);
 
-	/*
-	 Sets the default status according to JS' version of default status.
-	*/
-	void setJSDefaultStatus(in wstring status);
+  /**
+   * Sets the default status according to JS' version of default status.
+   */
+  void setJSDefaultStatus(in AString status);
 
-	/*
-	 Tells the object implementing this function what link we are currently over.
-	*/
-	void setOverLink(in wstring link);
+  /**
+   * Tells the object implementing this function what link we are currently
+   * over.
+   */
+  void setOverLink(in AString link, in nsIDOMElement element);
 };
 
