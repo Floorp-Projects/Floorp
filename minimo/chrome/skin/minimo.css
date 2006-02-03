@@ -261,3 +261,13 @@ caption {
 
 
 window { width: 240px ; height: 320px; }
+
+#browserleftbar {
+    padding:2px ! important;
+    display:none;
+}
+
+#browserrightbar {
+    padding:2px ! important;
+    display:none;
+}
