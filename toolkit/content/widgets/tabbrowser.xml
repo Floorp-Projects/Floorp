@@ -1165,7 +1165,7 @@
 
               if (aPostData === undefined)
                 aPostData = null;
-              b.loadURIWithFlags(aURI, nsIWebNavigation.LOAD_FLAGS_NONE,
+              b.loadURIWithFlags(aURI, Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE,
                                  aReferrerURI, aCharset, aPostData);
             }
 
