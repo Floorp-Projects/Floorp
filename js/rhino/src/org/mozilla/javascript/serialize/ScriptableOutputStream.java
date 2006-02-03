@@ -83,22 +83,40 @@ public class ScriptableOutputStream extends ObjectOutputStream {
      * serialization. Names excluded from serialization are looked up
      * in the new scope and replaced upon deserialization.
      * @param name a fully qualified name (of the form "a.b.c", where
-     *             "a" must be a property of the top-level object). If it does
-     *             not exist, it is ignored.
-     * @throws IllegalArgumentException if the object with the specified name is
-     *             not a Scriptable.
+     *             "a" must be a property of the top-level object). The object
+     *             need not exist, in which case the name is ignored.
+     * @throws IllegalArgumentException if the object is not a
+     *         {@link Scriptable}.
      */
-    public void addExcludedName(String name) {
+    public void addOptionalExcludedName(String name) {
         Object obj = lookupQualifiedName(scope, name);
         if(obj != null) {
             if (!(obj instanceof Scriptable)) {
                 throw new IllegalArgumentException(
                         "Object for excluded name " + name + 
-                        " is not a Scriptable, it is a " + 
+                        " is not a Scriptable, it is " + 
                         obj.getClass().getName());
             }
             table.put(obj, name);
         }
+    }
+
+    /**
+     * Adds a qualified name to the list of object to be excluded from
+     * serialization. Names excluded from serialization are looked up
+     * in the new scope and replaced upon deserialization.
+     * @param name a fully qualified name (of the form "a.b.c", where
+     *             "a" must be a property of the top-level object)
+     * @throws IllegalArgumentException if the object is not found or is not
+     *         a {@link Scriptable}.
+     */
+    public void addExcludedName(String name) {
+        Object obj = lookupQualifiedName(scope, name);
+        if (!(obj instanceof Scriptable)) {
+            throw new IllegalArgumentException("Object for excluded name " +
+                                               name + " not found.");
+        }
+        table.put(obj, name);
     }
 
     /**
@@ -132,10 +150,16 @@ public class ScriptableOutputStream extends ObjectOutputStream {
                            "Script", "Script.prototype",
                            "Continuation", "Continuation.prototype",
                            "XML", "XML.prototype",
-                           "XMLList", "XMLList.prototype",
                          };
         for (int i=0; i < names.length; i++) {
             addExcludedName(names[i]);
+        }
+        
+        String[] optionalNames = { 
+                "XMLList", "XMLList.prototype",
+        };
+        for (int i=0; i < optionalNames.length; i++) {
+            addOptionalExcludedName(optionalNames[i]);
         }
     }
 
