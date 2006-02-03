@@ -171,7 +171,7 @@ nsresult util_GetLocaleString(const char *aKey, PRUnichar **aResult)
   rv = stringService->CreateBundle(kCommonDialogsProperties, getter_AddRefs(stringBundle));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-  rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).get(), aResult);
+  rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aKey).get(), aResult);
 
   return rv;
 

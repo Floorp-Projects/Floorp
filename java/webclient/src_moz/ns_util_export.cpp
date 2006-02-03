@@ -41,7 +41,7 @@ JNIEXPORT jint JNICALL util_StoreClassMapping(const char* jniClassName,
         }
     }
 
-    NS_ConvertASCIItoUCS2 keyString(jniClassName);
+    NS_ConvertASCIItoUTF16 keyString(jniClassName);
     nsStringKey key(keyString);
     gClassMappingTable->Put(&key, yourClassType);
 
@@ -56,7 +56,7 @@ JNIEXPORT jclass JNICALL util_GetClassMapping(const char* jniClassName)
         return nsnull;
     }
 
-    NS_ConvertASCIItoUCS2 keyString(jniClassName);
+    NS_ConvertASCIItoUTF16 keyString(jniClassName);
     nsStringKey key(keyString);
     result = (jclass) gClassMappingTable->Get(&key);
     

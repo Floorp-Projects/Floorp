@@ -181,7 +181,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
 
     urlChars         = (PRUnichar *) ::util_GetStringChars(env, absoluteURL);
     urlLen           = (PRInt32) ::util_GetStringLength(env, absoluteURL);
-    NS_ConvertUCS2toUTF8 uriACString(urlChars);
+    NS_ConvertUTF16toUTF8 uriACString(urlChars);
 
     if (::util_ExceptionOccurred(env)) {
         ::util_ThrowExceptionToJava(env, "nativePost Exception: unable to extract Java string");
