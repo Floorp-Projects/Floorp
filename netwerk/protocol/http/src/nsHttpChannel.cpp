@@ -3347,7 +3347,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         return rv;
 
     // Remember the cookie header that was set, if any
-    const char* cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
+    const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
     if (cookieHeader)
         mUserSetCookieHeader = cookieHeader;
 
@@ -3356,6 +3356,13 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     // notify "http-on-modify-request" observers
     gHttpHandler->OnModifyRequest(this);
+
+    // Adjust mCaps according to our request headers:
+    //  - If "Connection: close" is set as a request header, then do not bother
+    //    trying to establish a keep-alive connection.
+    const char *connHeader = mRequestHead.PeekHeader(nsHttp::Connection);
+    if (PL_strcasestr(connHeader, "close"))
+        mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING);
     
     mIsPending = PR_TRUE;
 
