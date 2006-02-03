@@ -15,7 +15,7 @@ xmlns:rss="http://purl.org/rss/1.0/"
 <xsl:template match="/">
 
 <vbox>
-		<xsl:for-each select="/bm/li">
+		<xsl:for-each select="/bm/homebase/li">
   			<toolbarbutton >
 				<xsl:attribute name="image" >
 	                         <xsl:value-of select="@iconsrc"/>
