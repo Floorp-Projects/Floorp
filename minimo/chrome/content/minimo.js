@@ -368,6 +368,13 @@ nsBrowserStatusHandler.prototype =
    */
   gURLBarBoxObject=(document.getBoxObjectFor(document.getElementById("urlbar").inputField));
   
+  /* 
+   * Homebar init...
+   */
+   
+  bmInitXUL(document,document.getElementById("browserleftbar"));
+  document.getElementById("browserleftbar").style.display="block";
+  
 }
 
 /* 
@@ -617,6 +624,19 @@ function BrowserOpenLinkAsTab()
       alert(e);
     }
   }
+}
+
+/*
+ * Used by the Homebar - Open URL as Tab. 
+ * WARNING: We need to validate this URL through an existing security mechanism. 
+ */
+
+function BrowserOpenURLasTab(tabUrl) {
+  try {  
+    gBrowser.selectedTab = gBrowser.addTab(tabUrl);   
+    browserInit(gBrowser.selectedTab);
+  } catch (e) {
+  }  
 }
 
 /**
