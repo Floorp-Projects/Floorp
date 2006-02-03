@@ -365,7 +365,7 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void)
   NS_ASSERTION(mConsiderQuitStopper > 0, "consider quit stopper out of bounds");
   --mConsiderQuitStopper;
 
-  if (mRunning && mConsiderQuitStopper == 0)
+  if (!mShuttingDown && mRunning && mConsiderQuitStopper == 0)
     Quit(eAttemptQuit);
 
   return NS_OK;

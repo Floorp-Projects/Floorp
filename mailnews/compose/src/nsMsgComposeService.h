@@ -107,7 +107,7 @@ private:
   nsMsgCachedWindowInfo *mCachedWindows;
   
   nsresult OpenWindow( const char *chrome, nsIMsgComposeParams *params);
-  void CloseWindow(nsIDOMWindowInternal *domWindow);
+  void CloseHiddenCachedWindow(nsIDOMWindowInternal *domWindow);
 
   nsresult ShowCachedComposeWindow(nsIDOMWindowInternal *aComposeWindow, PRBool aShow);
 
