@@ -634,7 +634,7 @@ function ClearQSIfNecessary()
 {
   GetSearchInput();
 
-  if (gSearchInput.value == "")
+  if (!gSearchInput || gSearchInput.value == "")
     return;
 
   Search("");

@@ -372,8 +372,11 @@ function viewRefreshCustomMailViews(aCurrentViewValue)
 function ViewMessagesBy(id)
 {
   var viewPicker = document.getElementById('viewPicker');
-  viewPicker.selectedItem = document.getElementById(id);
-  viewChange(viewPicker, viewPicker.value);
+  if (viewPicker)
+  {
+    viewPicker.selectedItem = document.getElementById(id);
+    viewChange(viewPicker, viewPicker.value);
+  }
 }
 
 function InitMessageMenu()
