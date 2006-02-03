@@ -118,7 +118,7 @@ static PRBool test_basic_array(ElementType *data,
 
   // These shouldn't crash!
   nsTArray<ElementType> empty;
-  ary.AppendElements(nsnull, 0);
+  ary.AppendElements(NS_REINTERPRET_CAST(ElementType *, 0), 0);
   ary.AppendElements(empty);
 
   // See bug 324981
@@ -250,6 +250,14 @@ static PRBool test_string_array() {
       return PR_FALSE;
   }
 
+  const char kextra[] = "foo bar";
+  PRUint32 oldLen = strArray.Length();
+  if (!strArray.AppendElement(kextra))
+    return PR_FALSE;
+  strArray.RemoveElement(kextra);
+  if (oldLen != strArray.Length())
+    return PR_FALSE;
+
   if (strArray.IndexOf("e") != 1)
     return PR_FALSE;
 
@@ -320,8 +328,8 @@ class RefcountedObject {
       if (--rc == 0)
         delete this;
     }
-  private:
     ~RefcountedObject() {}
+  private:
     PRInt32 rc;
 };
 
