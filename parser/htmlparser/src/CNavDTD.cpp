@@ -1000,22 +1000,6 @@ CNavDTD::WillHandleStartTag(CToken* aToken, eHTMLTags aTag,
 {
   nsresult result = NS_OK;
 
-  // This little gem creates a special attribute for the editor team to use.
-  // The attribute only get's applied to unknown tags, and is used by ender
-  // (during editing) to display a special icon for unknown tags.
-  if (eHTMLTag_userdefined == aTag) {
-    CToken* tempToken = mTokenAllocator->CreateTokenOfType(eToken_attribute,
-                                                           aTag);
-    CAttributeToken* theToken = NS_STATIC_CAST(CAttributeToken*, tempToken);
-    if (theToken) {
-      theToken->SetKey(NS_LITERAL_STRING("_moz-userdefined"));
-      aNode.AddAttribute(theToken);
-
-      // Make sure to remember that we added this attribute.
-      aToken->SetAttributeCount(aNode.GetAttributeCount());
-    }
-  }
-
   PRInt32 stackDepth = mBodyContext->GetCount();
   if (stackDepth >= FONTSTYLE_IGNORE_DEPTH &&
       gHTMLElements[aTag].IsMemberOf(kFontStyle)) {
