@@ -59,6 +59,7 @@ calendar-month-day-box-item {
   margin: 1px;
   padding: 0px;
   padding-left: 1px;
+  font-size: x-small;
 }
 
 calendar-month-day-box-item[selected="true"] { 
@@ -66,9 +67,13 @@ calendar-month-day-box-item[selected="true"] {
 }
 
 .calendar-month-day-box-item-label {
-  font-size: 0.9em;
   padding: 0px;
   margin: 0px;
+}
+
+.calendar-event-box-container {
+  padding: 0px;
+  padding-left: 2px;
 }
 
 /*== calendar-month-view-column-header ==*/
