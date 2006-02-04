@@ -667,24 +667,6 @@
                       chunkBox.setAttribute("context", this.getAttribute("item-context") || this.getAttribute("context"));
                       chunkBox.setAttribute("style", "min-width: 1px; min-height: 1px;");
                       chunkBox.setAttribute("orient", orient);
-                      // chunkBox.setAttribute("style", "background: #eeeeff; padding: 0px 1px 0px 1px");
-
-                      // chunkBox.setAttribute("flex", "1");
-
-                      chunkBox.setAttribute("tooltip", "itemTooltip");
-
-                      var categoriesSelectorList = "";
-                      if (chunk.event.event.getProperty("CATEGORIES") != null) {
-                        var categoriesList = chunk.event.event.getProperty("CATEGORIES").split(",");
-                        for (var i = 0; i < categoriesList.length; i++ ) {
-                          // Remove illegal chars.
-                          categoriesList[i] = categoriesList[i].replace(' ','_');
-                          categoriesList[i] = categoriesList[i].toLowerCase();
-                        }
-                        categoriesSelectorList = categoriesList.join(" ");
-                      }
-                      chunkBox.setAttribute("item-category", categoriesSelectorList);
-
                       if (orient == "vertical")
                           chunkBox.setAttribute("height", duration * this.mPixPerMin);
                       else
@@ -695,7 +677,6 @@
                       chunkBox.calendarView = this.calendarView;
                       chunkBox.occurrence = chunk.event.event;
                       chunkBox.parentColumn = this;
-                      chunkBox.setAttribute("item-calendar", chunk.event.event.calendar.uri.spec);
 
                       chunk.event.eventbox = chunkBox;
                   } else {
@@ -1232,7 +1213,7 @@
   <!--
      -  An individual event box, to be inserted into a column.
     -->
-  <binding id="calendar-event-box">
+  <binding id="calendar-event-box" extends="chrome://calendar/content/calendar-view-core.xml#calendar-editable-item">
 
     <content>
       <xul:box anonid="eventbox" xbl:inherits="orient,width,height" flex="1">
@@ -1268,13 +1249,7 @@
       ]]></constructor>
 
       <!-- fields -->
-      <field name="mOccurrence">null</field>
       <field name="mParentColumn">null</field>
-      <field name="mCalendarView">null</field>
-      <field name="mSelected">null</field>
-      <property name="calendarView"
-        onget="return this.mCalendarView;"
-        onset="return (this.mCalendarView = val);" />
 
       <!-- methods/properties -->
       <method name="setAttribute">
@@ -1307,48 +1282,6 @@
         ]]></body>
       </method>
 
-      <property name="eventNameLabel" readonly="true"
-        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name');"/>
-      <property name="eventNameTextbox" readonly="true"
-        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name-textbox');"/>
-      <property name="eventNameInput" readonly="true"
-        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name-textbox').inputField;"/>
-
-      <property name="occurrence">
-        <getter><![CDATA[
-          return this.mOccurrence;
-        ]]></getter>
-        <setter><![CDATA[
-          this.mOccurrence = val;
-          var evl = this.eventNameLabel;
-
-          while (evl.firstChild)
-              evl.removeChild(evl.firstChild);
-
-          if (val && val != "")
-              evl.appendChild(document.createTextNode(val.title));
-          else
-              evl.appendChild(document.createTextNode("Untitled Event"));
-          return val;
-        ]]></setter>
-      </property>
-
-      <property name="selected">
-        <getter><![CDATA[
-          return this.mSelected;
-        ]]></getter>
-        <setter><![CDATA[
-          if (val && !this.mSelected) {
-              this.mSelected = true;
-              this.setAttribute("selected", "true");
-          } else if (!val && this.mSelected) {
-              this.mSelected = null;
-              this.removeAttribute("selected");
-          }
-          return val;
-        ]]></setter>
-      </property>
-
       <property name="parentColumn"
         onget="return this.mParentColumn;"
         onset="return (this.mParentColumn = val);"/>
@@ -1358,89 +1291,9 @@
 
       <property name="endMinute" readonly="true"
         onget="if (!this.mOccurrence) return 0; return this.mOccurrence.endDate.hour * 60 + this.mOccurrence.endDate.minute"/>
-
-      <method name="startEditing">
-        <body><![CDATA[
-          this.editingTimer = null;
-          this.mOriginalTextLabel = this.mOccurrence.title;
-
-          this.eventNameLabel.setAttribute("hidden", "true");
-
-          this.mEditing = true;
-
-          this.eventNameTextbox.value = this.mOriginalTextLabel;
-          this.eventNameTextbox.removeAttribute("hidden");
-          if (this.calendarView)
-              this.calendarView.activeInPlaceEdit = true;
-          this.eventNameInput.focus();
-          this.eventNameInput.select();
-        ]]></body>
-      </method>
-
-      <method name="stopEditing">
-        <parameter name="saveChanges"/>
-        <body><![CDATA[
-          this.mEditing = false;
-
-          if (this.calendarView)
-              this.calendarView.activeInPlaceEdit = false;
-
-          if (!saveChanges) {
-              this.eventNameTextbox.setAttribute("hidden", "true");
-              this.eventNameLabel.removeAttribute("hidden");
-              return;
-          }
-
-          if (this.eventNameTextbox.value != this.mOriginalTextLabel) {
-              var clone = this.mOccurrence.clone();
-              clone.title = this.eventNameTextbox.value;
-              clone.calendar.modifyItem(clone, this.mOccurrence, null);
-
-              // Note that as soon as we do the modifyItem, this element ceases to exist,
-              // so don't bother trying to modify anything further here! ('this' exists,
-              // because it's being kept alive, but our child content etc. is all gone)
-          }
-        ]]></body>
-      </method>
     </implementation>
 
     <handlers>
-      <handler event="click"><![CDATA[
-        var evTime = Date.now();
-        if (this.mMouseDownTime && (evTime - this.mMouseDownTime > 1000)) {
-            // not even a click!
-            return;
-        }
-
-        // If the middle/right button was used for click just select the item.
-        // If the left button was used and the item is already selected start
-        // the 'single click edit' timeout. Otherwise select the item too.
-        if (this.selected && (event.button == 0)) {
-            var self = this;
-            if (this.editingTimer) {
-                clearTimeout(this.editingTimer);
-            }
-            this.editingTimer = setTimeout(function () { self.startEditing(); }, 350);
-        } else {
-            this.calendarView.selectedItem = this.mOccurrence;
-        }
-      ]]></handler>
-
-      <handler event="dblclick" button="0"><![CDATA[
-        event.stopPropagation();
-
-        // stop 'single click edit' timeout (if started)
-        if (this.editingTimer) {
-            clearTimeout(this.editingTimer);
-            this.editingTimer = null;
-        }
-
-        if (this.calendarView.controller && this.mOccurrence) {
-            var occurrence = (event.ctrlKey) ? this.mOccurrence.parentItem : this.mOccurrence;
-            this.calendarView.controller.modifyOccurrence(occurrence);
-        }
-      ]]></handler>
-
       <handler event="mousedown" button="0"><![CDATA[
         event.preventBubble();
 
@@ -1450,7 +1303,6 @@
         this.mInMouseDown = true;
         this.mMouseX = event.screenX;
         this.mMouseY = event.screenY;
-        this.mMouseDownTime = Date.now();
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[

@@ -45,46 +45,26 @@
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="calendar-month-day-box-item">
+  <binding id="calendar-month-day-box-item" extends="chrome://calendar/content/calendar-view-core.xml#calendar-editable-item">
     <content>
-      <xul:label anonid="item-label" crop="end" class="calendar-month-day-box-item-label" xbl:inherits="context"/>
+      <xul:hbox>
+        <xul:label anonid="item-label" crop="end" class="calendar-month-day-box-item-label" xbl:inherits="context"/>
+        <xul:vbox class="calendar-event-box-container" xbl:inherits="context" flex="1" align="left">
+          <xul:label anonid="event-name" style="margin: 0px;" flex="1" crop="right"/>
+          <xul:textbox class="plain" style="background: transparent !important"
+            anonid="event-name-textbox" crop="right" hidden="true" wrap="true"/>
+          <xul:spacer flex="1"/>
+        </xul:vbox>
+      </xul:hbox>
     </content>
 
     <implementation>
-      <field name="mItem">null</field>
-      <field name="mSelected">false</field>
-      <field name="mCalendarView">null</field>
-
-      <property name="selected">
+      <property name="occurrence">
         <getter><![CDATA[
-          return this.mSelected;
-        ]]></getter>
-        <setter><![CDATA[
-          if (val && !this.mSelected) {
-              this.mSelected = true;
-              this.setAttribute("selected", "true");
-          } else if (!val && this.mSelected) {
-              this.mSelected = false;
-              this.removeAttribute("selected");
-          }
-        ]]></setter>
-      </property>
-      <property name="calendarView">
-        <getter><![CDATA[
-          return this.mCalendarView;
-        ]]></getter>
-        <setter><![CDATA[
-          this.mCalendarView = val;
-        ]]></setter>
-      </property>
-
-
-      <property name="item">
-        <getter><![CDATA[
-	  return this.mItem;
+	  return this.mOccurrence;
 	]]></getter>
         <setter><![CDATA[
-          this.mItem = val;
+          this.mOccurrence = val;
 
           function formatTime(aTime) {
             var m = aTime.minute;
@@ -93,45 +73,24 @@
 
           var str = null;
           if (val instanceof Components.interfaces.calIEvent) {
-            str = formatTime(val.startDate.getInTimezone(this.calendarView.mTimezone)) + " " + val.title;
+            str = formatTime(val.startDate.getInTimezone(this.calendarView.mTimezone)) 
           } else if (val instanceof Components.interfaces.calITodo) {
             // yeah, this should really be a little picture instead of a "*"
-            str = "* " + val.title;
+            str = "* "
           } else {
-            str = val.title;
+            str = " ";
           }
 
           var label = document.getAnonymousElementByAttribute(this, "anonid", "item-label");
           if (label.firstChild)
             label.removeChild(label.firstChild);
           label.appendChild(document.createTextNode(str));
-          this.setAttribute("class", "calendar-item");
-          this.setAttribute("item-calendar", val.calendar.uri.spec);
 
-          return val;
+          this.setEditableLabel();
+          this.setCSSClasses();
         ]]></setter>
       </property>
     </implementation>
-
-    <handlers>
-      <handler event="click"><![CDATA[
-        if (this.calendarView)
-            this.calendarView.selectedItem = this.item;
-      ]]></handler>
-      <handler event="mouseover"><![CDATA[
-        if (this.calendarView && this.calendarView.controller) {
-            event.preventBubble();
-            onMouseOverItem(event);
-        }
-      ]]></handler>
-      <handler event="dblclick"><![CDATA[
-        if (this.calendarView && this.calendarView.controller) {
-            event.preventBubble();
-            var occurrence = (event.ctrlKey) ? this.item.parentItem : this.item;
-            this.calendarView.controller.modifyOccurrence(occurrence);
-        }
-      ]]></handler>
-    </handlers>
   </binding>
 
   <binding id="calendar-month-day-box">
@@ -1155,7 +1114,7 @@
         if (event.keyCode == kKE.DOM_VK_BACK_SPACE ||
             event.keyCode == kKE.DOM_VK_DELETE)
         {
-            if (this.selectedItem && this.controller) {
+            if (!this.activeInPlaceEdit && this.selectedItem && this.controller) {
                 var item = (event.ctrlKey) ? this.selectedItem.parentItem : this.selectedItem;
                 this.controller.deleteOccurrence(item);
             }

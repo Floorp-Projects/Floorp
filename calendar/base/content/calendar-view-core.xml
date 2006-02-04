@@ -1,0 +1,241 @@
+<?xml version="1.0"?>
+<!--
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Calendar view code.
+   -
+   - The Initial Developer of the Original Code is
+   -   Joey Minta <jminta@gmail.com>
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK *****
+-->
+
+<bindings id="calendar-core-view-bindings"
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="calendar-editable-item">
+    <content>
+        <xul:vbox class="calendar-event-box-container" xbl:inherits="context" flex="1" align="left">
+          <xul:label anonid="event-name" style="margin: 0px;" flex="1" crop="right"/>
+          <xul:textbox class="plain" style="background: transparent !important"
+            anonid="event-name-textbox" crop="right" hidden="true" wrap="true"/>
+          <xul:spacer flex="1"/>
+        </xul:vbox>
+    </content>
+
+    <implementation>
+      <constructor><![CDATA[
+         this.setAttribute("tooltip", "itemTooltip");
+         this.setAttribute("class", "calendar-item");
+
+         var self = this;
+         this.eventNameInput.onblur = function alldayItemBlur() { self.stopEditing(true); };
+         this.eventNameInput.onkeypress = function alldayItemKeyPress(event) {
+             // save on enter
+             if (event.keyCode == 13)
+                 self.stopEditing(true);
+             // abort on escape
+             else if (event.keyCode == 27)
+                 self.stopEditing(false);
+         };
+      ]]></constructor>
+      <field name="mOccurrence">null</field>
+      <field name="mSelected">false</field>
+      <field name="mCalendarView">null</field>
+
+      <property name="selected">
+        <getter><![CDATA[
+          return this.mSelected;
+        ]]></getter>
+        <setter><![CDATA[
+          if (val && !this.mSelected) {
+              this.mSelected = true;
+              this.setAttribute("selected", "true");
+          } else if (!val && this.mSelected) {
+              this.mSelected = false;
+              this.removeAttribute("selected");
+          }
+        ]]></setter>
+      </property>
+      <property name="calendarView">
+        <getter><![CDATA[
+          return this.mCalendarView;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mCalendarView = val;
+        ]]></setter>
+      </property>
+
+
+      <property name="occurrence">
+        <getter><![CDATA[
+	  return this.mOccurrence;
+	]]></getter>
+        <setter><![CDATA[
+          this.mOccurrence = val;
+          this.setEditableLabel();
+          this.setCSSClasses();
+        ]]></setter>
+      </property>
+
+      <property name="eventNameLabel" readonly="true"
+        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name');"/>
+      <property name="eventNameTextbox" readonly="true"
+        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name-textbox');"/>
+      <property name="eventNameInput" readonly="true"
+        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name-textbox').inputField;"/>
+      <method name="setEditableLabel">
+        <body><![CDATA[
+          var evl = this.eventNameLabel;
+          var item = this.mOccurrence;
+
+          while (evl.firstChild) {
+            evl.removeChild(evl.firstChild);
+          }
+
+          if (item.title && item.title != "") {
+            evl.appendChild(document.createTextNode(item.title));
+          } else {
+            var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                .getService(Components.interfaces.nsIStringBundleService);
+            var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+            evl.appendChild(document.createTextNode(props.GetStringFromName("eventUntitled")));
+          }
+        ]]></body>
+      </method>
+
+      <method name="setCSSClasses">
+        <body><![CDATA[
+          var item = this.mOccurrence
+          this.setAttribute("item-calendar", item.calendar.uri.spec);
+
+          var categoriesSelectorList = "";
+          if (item.getProperty("CATEGORIES") != null) {
+            var categoriesList = item.getProperty("CATEGORIES").split(",");
+            for (var i = 0; i < categoriesList.length; i++ ) {
+              // Remove illegal chars.
+              categoriesList[i] = categoriesList[i].replace(' ','_');
+              categoriesList[i] = categoriesList[i].toLowerCase();
+            }
+            categoriesSelectorList = categoriesList.join(" ");
+          }
+
+          this.setAttribute("item-category", categoriesSelectorList);
+        ]]></body>
+      </method>
+
+      <method name="startEditing">
+        <body><![CDATA[
+          this.editingTimer = null;
+          this.mOriginalTextLabel = this.mOccurrence.title;
+
+          this.eventNameLabel.setAttribute("hidden", "true");
+
+          this.mEditing = true;
+
+          this.eventNameTextbox.value = this.mOriginalTextLabel;
+          this.eventNameTextbox.removeAttribute("hidden");
+          if (this.calendarView)
+              this.calendarView.activeInPlaceEdit = true;
+          this.eventNameInput.focus();
+          this.eventNameInput.select();
+        ]]></body>
+      </method>
+
+      <method name="stopEditing">
+        <parameter name="saveChanges"/>
+        <body><![CDATA[
+          if (!this.mEditing)
+            return;
+
+          this.mEditing = false;
+
+          if (saveChanges && (this.eventNameTextbox.value != this.mOriginalTextLabel)) {
+              var clone = this.mOccurrence.clone();
+              clone.title = this.eventNameTextbox.value;
+              clone.calendar.modifyItem(clone, this.mOccurrence, null);
+
+              // Note that as soon as we do the modifyItem, this element ceases to exist,
+              // so don't bother trying to modify anything further here! ('this' exists,
+              // because it's being kept alive, but our child content etc. is all gone)
+              return;
+          }
+
+          this.eventNameTextbox.setAttribute("hidden", "true");
+          this.eventNameLabel.removeAttribute("hidden");
+          return;
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="click"><![CDATA[
+        if (this.mEditing) {
+            return;
+        }
+
+        // start 'single click edit' timeout
+        if (this.selected) {
+            var self = this;
+            if (this.editingTimer) {
+                clearTimeout(this.editingTimer);
+            }
+            this.editingTimer = setTimeout(function alldayTimeout() { self.startEditing(); }, 350);
+        } else {
+            this.calendarView.selectedItem = this.mOccurrence;
+        }
+      ]]></handler>
+
+      <handler event="dblclick"><![CDATA[
+        event.stopPropagation();
+
+        // stop 'single click edit' timeout (if started)
+        if (this.editingTimer) {
+            clearTimeout(this.editingTimer);
+            this.editingTimer = null;
+        }
+
+        if (this.calendarView.controller) {
+            var item = (event.ctrlKey) ? this.mOccurrence.parentItem : this.mOccurrence;
+            this.calendarView.controller.modifyOccurrence(item);
+        }
+      ]]></handler>
+      <handler event="mouseover"><![CDATA[
+        if (this.calendarView && this.calendarView.controller) {
+            event.preventBubble();
+            onMouseOverItem(event);
+        }
+      ]]></handler>
+    </handlers>
+  </binding>
+</bindings>

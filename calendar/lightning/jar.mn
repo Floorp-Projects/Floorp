@@ -42,6 +42,8 @@ calendar.jar:
   content/calendar/calendar-multiday-view.xml	(/calendar/base/content/calendar-multiday-view.xml)
   content/calendar/calendar-month-view.css	(/calendar/base/content/calendar-month-view.css)
   content/calendar/calendar-month-view.xml	(/calendar/base/content/calendar-month-view.xml)
+  content/calendar/calendar-view-core.xml	(/calendar/base/content/calendar-view-core.xml)
+  content/calendar/calendar-view-core.css	(/calendar/base/content/calendar-view-core.css)
   content/calendar/calendar-item-editing.js	(/calendar/base/content/calendar-item-editing.js)
   content/calendar/calendar-alarm-dialog.xul	(/calendar/base/content/calendar-alarm-dialog.xul)
   content/calendar/calendar-alarm-dialog.js	(/calendar/base/content/calendar-alarm-dialog.js)

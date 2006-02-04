@@ -52,6 +52,7 @@
 <?xml-stylesheet href="chrome://calendar/content/calendar-multiday-view.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/calendar-month-view.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/calendar-decorated-views.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/calendar-view-core.css" type="text/css"?>
 
 <!-- Overlays -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
