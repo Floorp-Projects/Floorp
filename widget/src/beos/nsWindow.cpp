@@ -2038,7 +2038,6 @@ bool nsWindow::CallMethod(MethodInfo *info)
 				((nsWindowBeOS *)mView->Window())->fJustGotBounds = true;
 				mView->UnlockLooper();
 			}
-			SetBounds(r);
 			OnResize(r);
 		}
 		break;
