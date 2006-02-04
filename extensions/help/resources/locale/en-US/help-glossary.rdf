@@ -114,6 +114,7 @@
         <rdf:li> <rdf:Description nc:name="third-party cookie" nc:link="glossary.xhtml#third-party_cookie"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="TLS" nc:link="glossary.xhtml#tls"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="token" nc:link="glossary.xhtml#token"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="tooltip" nc:link="glossary.xhtml#tooltip"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="trust" nc:link="glossary.xhtml#trust"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="URL" nc:link="glossary.xhtml#url"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="web page" nc:link="glossary.xhtml#web_page"/> </rdf:li>
