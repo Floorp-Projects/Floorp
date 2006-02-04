@@ -67,7 +67,7 @@ EC_DecodeParams(const SECItem *encodedParams, ECParams **ecparams);
 #define RSA_MAX_TEST_MODULUS_BYTES    RSA_MAX_TEST_MODULUS_BITS/8
 
 SECStatus
-hex_from_2char(const unsigned char *c2, unsigned char *byteval)
+hex_from_2char(const char *c2, unsigned char *byteval)
 {
     int i;
     unsigned char offset;
@@ -90,7 +90,7 @@ hex_from_2char(const unsigned char *c2, unsigned char *byteval)
 }
 
 SECStatus
-char2_from_hex(unsigned char byteval, unsigned char *c2, char a)
+char2_from_hex(unsigned char byteval, char *c2, char a)
 {
     int i;
     unsigned char offset;
@@ -2901,7 +2901,7 @@ void sha_test(char *reqfn)
     int i, j;
     unsigned int MDlen;   /* the length of the Message Digest in Bytes  */
     unsigned int msgLen;  /* the length of the input Message in Bytes */
-    char *msg = NULL;      /* holds the message to digest.*/
+    unsigned char *msg = NULL; /* holds the message to digest.*/
     size_t bufSize = 25608; /*MAX buffer size */
     char *buf = NULL;      /* holds one line from the input REQUEST file.*/
     unsigned char seed[HASH_LENGTH_MAX];   /* max size of seed 64 bytes */
@@ -3025,9 +3025,9 @@ loser:
 static SECStatus
 hmac_calc(unsigned char *hmac_computed,
           const unsigned int hmac_length,
-          const char *secret_key,
+          const unsigned char *secret_key,
           const unsigned int secret_key_length,
-          const char *message,
+          const unsigned char *message,
           const unsigned int message_length,
           const HASH_HashType hashAlg )
 {
@@ -3071,10 +3071,10 @@ void hmac_test(char *reqfn)
     size_t bufSize =      288;    /* MAX buffer size */
     char *buf = NULL;  /* holds one line from the input REQUEST file.*/
     unsigned int keyLen;          /* Key Length */  
-    char key[140];                /* key MAX size = 140 */
+    unsigned char key[140];       /* key MAX size = 140 */
     unsigned int msgLen = 128;    /* the length of the input  */
                                   /*  Message is always 128 Bytes */
-    char *msg = NULL;             /* holds the message to digest.*/
+    unsigned char *msg = NULL;    /* holds the message to digest.*/
     unsigned int HMACLen;         /* the length of the HMAC Bytes  */
     unsigned char HMAC[HASH_LENGTH_MAX];  /* computed HMAC */
     HASH_HashType hash_alg;       /* HMAC type */
@@ -3452,7 +3452,7 @@ dsa_pqgver_test(char *reqfn)
         /* c = ... */
         if (buf[0] == 'c') {
 
-            if (sscanf(buf, "c = %d", &vfy.counter) != 1) {
+            if (sscanf(buf, "c = %u", &vfy.counter) != 1) {
                 goto loser;
             }
 
@@ -3893,7 +3893,6 @@ dsa_sigver_test(char *reqfn)
         /* Msg = ... */
         if (strncmp(buf, "Msg", 3) == 0) {
             unsigned char msg[128]; /* MAX msg 128 */
-            unsigned int len = 0;
             memset(sha1, 0, sizeof sha1);
 
             i = 3;
