@@ -79,8 +79,10 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint3
 
     if (curCapacity != size_type(-1))
       {
-        if (capacity <= curCapacity)
+        if (capacity <= curCapacity) {
+          mFlags &= ~F_VOIDED;  // mutation clears voided flag
           return PR_TRUE;
+        }
 
         if (curCapacity > 0)
           {
@@ -119,6 +121,7 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint3
 
             hdr = newHdr;
             mData = (char_type*) hdr->Data();
+            mFlags &= ~F_VOIDED;  // mutation clears voided flag
             return PR_TRUE;
           }
       }
@@ -562,6 +565,11 @@ nsTSubstring_CharT::SetCapacity( size_type capacity )
 void
 nsTSubstring_CharT::SetLength( size_type length )
   {
+    if (mLength == length) {
+      mFlags &= ~F_VOIDED;  // mutation clears voided flag
+      return;
+    }
+
     SetCapacity(length);
 
     // XXX(darin): SetCapacity may fail, but it doesn't give us a way to find
