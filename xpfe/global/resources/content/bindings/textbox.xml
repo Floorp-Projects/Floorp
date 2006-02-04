@@ -146,7 +146,7 @@
         ]]>
       </handler>
 
-      <handler event="mousedown" phase="capturing">
+      <handler event="mousedown">
         <![CDATA[
           this.mIgnoreClick = this.hasAttribute("focused");
 
@@ -157,7 +157,7 @@
         ]]>
       </handler>
 
-      <handler event="click" phase="capturing">
+      <handler event="click">
         <![CDATA[
           if (!this.mIgnoreClick && this.clickSelectsAll &&
               this.inputField.selectionStart == this.inputField.selectionEnd)
