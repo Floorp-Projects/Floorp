@@ -109,9 +109,6 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
-                         nsGUIEvent*     aEvent,
-                         nsEventStatus*  aEventStatus);
   virtual PRBool IsContainingBlock() const { return PR_TRUE; }
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -579,40 +576,6 @@ PRIntn
 CanvasFrame::GetSkipSides() const
 {
   return 0;
-}
-
-NS_IMETHODIMP
-CanvasFrame::HandleEvent(nsPresContext* aPresContext, 
-                         nsGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus)
-{
-  NS_ENSURE_ARG_POINTER(aEventStatus);
-  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
-    return NS_OK;
-  }
-
-  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP ||
-      aEvent->message == NS_MOUSE_MIDDLE_BUTTON_UP ||
-      aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP ||
-      aEvent->message == NS_MOUSE_MOVE ) {
-    nsIFrame *firstChild = GetFirstChild(nsnull);
-    //canvas frame needs to pass mouse events to its area frame so that mouse movement
-    //and selection code will work properly. this will still have the necessary effects
-    //that would have happened if nsFrame::HandleEvent was called.
-    if (firstChild) {
-      nsIView* eventView;
-      nsIView* newEventView;
-      nsPoint pt1, pt2;
-      GetOffsetFromView(pt1, &eventView);
-      firstChild->GetOffsetFromView(pt2, &newEventView);
-      nsPoint offset = eventView->GetOffsetTo(newEventView);
-      firstChild->HandleEvent(aPresContext, aEvent, aEventStatus);
-    } else {
-      nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-    }
-  }
-
-  return NS_OK;
 }
 
 nsIAtom*
