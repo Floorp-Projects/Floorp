@@ -358,6 +358,11 @@ struct nsDiskCacheHeader {
         mEntryCount  = htonl(mEntryCount);
         mIsDirty     = htonl(mIsDirty);
         mRecordCount = htonl(mRecordCount);
+
+        for (PRUint32 i = 0; i < kBuckets ; i++) {
+            mEvictionRank[i] = htonl(mEvictionRank[i]);
+            mBucketUsage[i]  = htonl(mBucketUsage[i]);
+        }
 #endif
     }
     
@@ -369,6 +374,11 @@ struct nsDiskCacheHeader {
         mEntryCount  = ntohl(mEntryCount);
         mIsDirty     = ntohl(mIsDirty);
         mRecordCount = ntohl(mRecordCount);
+
+        for (PRUint32 i = 0; i < kBuckets ; i++) {
+            mEvictionRank[i] = ntohl(mEvictionRank[i]);
+            mBucketUsage[i]  = ntohl(mBucketUsage[i]);
+        }
 #endif
     }
 };
