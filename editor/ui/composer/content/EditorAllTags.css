@@ -43,7 +43,7 @@
    (Note that "_" must be escaped)
 */
 
-*[\_moz-userdefined] {
+*:not(a):not(abbr):not(acronym):not(address):not(applet):not(area):not(b):not(base):not(basefont):not(bdo):not(bgsound):not(big):not(blink):not(blockquote):not(body):not(br):not(button):not(canvas):not(caption):not(center):not(cite):not(code):not(col):not(colgroup):not(dd):not(del):not(dfn):not(dir):not(div):not(dl):not(dt):not(em):not(embed):not(fieldset):not(font):not(form):not(frame):not(frameset):not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not(head):not(hr):not(html):not(i):not(iframe):not(image):not(img):not(input):not(ins):not(isindex):not(kbd):not(keygen):not(label):not(legend):not(li):not(link):not(listing):not(map):not(marquee):not(menu):not(meta):not(multicol):not(nobr):not(noembed):not(noframes):not(noscript):not(object):not(ol):not(optgroup):not(option):not(p):not(param):not(plaintext):not(pre):not(q):not(s):not(samp):not(script):not(select):not(server):not(small):not(sound):not(spacer):not(span):not(strike):not(strong):not(style):not(sub):not(sup):not(table):not(tbody):not(td):not(textarea):not(tfoot):not(th):not(thead):not(title):not(tr):not(tt):not(u):not(ul):not(var):not(wbr):not(xmp) {
   display: inline;
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 16px; 
