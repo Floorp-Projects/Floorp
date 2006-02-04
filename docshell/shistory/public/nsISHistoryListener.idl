@@ -40,140 +40,89 @@
 
 interface nsIURI;
 
-
-/**
- * nsISHistoryListener defines the interface for an object that wishes
- * to receive notifications about activities in History. A history 
- * listener will be notified when pages are added, removed and loaded 
- * from session history. A listener to session history can be registered 
- * using the interface nsISHistory.
- *
- * @status FROZEN
- */
 %{C++
 #define NS_SHISTORYLISTENER_CONTRACTID "@mozilla.org/browser/shistorylistener;1"
 %}
 
-// interface nsISHistoryListener
-
+/**
+ * nsISHistoryListener defines the interface one can implement to receive
+ * notifications about activities in session history and to be able to
+ * cancel them.
+ *
+ * A session history listener will be notified when pages are added, removed
+ * and loaded from session history. It can prevent any action (except adding
+ * a new session history entry) from happening by returning false from the
+ * corresponding callback method.
+ *
+ * A session history listener can be registered on a particular nsISHistory
+ * instance via the nsISHistory::addSHistoryListener() method.
+ *
+ * @status FROZEN
+ */
 [scriptable, uuid(3b07f591-e8e1-11d4-9882-00c04fa02f40)]
 interface nsISHistoryListener : nsISupports 
 {
-
   /**
-   * called to notify a listener when a new document is
-   * added to session history. New documents are added to 
-   * session history by docshell when new pages are loaded
-   * in a frame or content area. 
+   * Called when a new document is added to session history. New documents are
+   * added to session history by docshell when new pages are loaded in a frame
+   * or content area, for example via nsIWebNavigation::loadURI()
    *
-   * @param aNewURI     The uri of the document to be added to session history
-   *
-   * @return            <CODE>NS_OK</CODE> notification sent out successfully
+   * @param aNewURI     The URI of the document to be added to session history.
    */
    void OnHistoryNewEntry(in nsIURI aNewURI);
 
   /**
-   * called to notify a listener when the user presses the 'back' button
-   * of the browser OR when the user attempts to go back one page
-   * in history thro' other means, from javascript or using nsIWebNavigation
+   * Called when navigating to a previous session history entry, for example
+   * due to a nsIWebNavigation::goBack() call.
    *
-   * @param aBackURI        The uri of the previous page  which is to be 
-   *                        loaded.
-   * 
-   * @return aReturn        A boolean flag returned by the listener to
-   *                        indicate if the back operation is to be aborted 
-   *                        or continued.  If the listener returns 'true', it indicates 
-   *                        that the back operation can be continued. If the listener
-   *                        returns 'false', then the back operation will be aborted.
-   *                        This is a mechanism for the listener to control user's 
-   *                        operations with history.
-   * 
+   * @param aBackURI    The URI of the session history entry being navigated to.
+   * @return            Whether the operation can proceed.
    */
    boolean OnHistoryGoBack(in nsIURI aBackURI);
 
   /**
-   * called to notify a listener when the user presses the 'forward' button
-   * of the browser OR when the user attempts to go forward one page
-   * in history thro' other means, from javascript or using nsIWebNavigation
+   * Called when navigating to a next session history entry, for example
+   * due to a nsIWebNavigation::goForward() call.
    *
-   * @param aForwardURI     The uri of the next page  which is to be 
-   *                        loaded.
-   * 
-   * @return aReturn        A boolean flag returned by the listener to
-   *                        indicate if the forward operation is to be aborted 
-   *                        or continued.  If the listener returns 'true', it indicates 
-   *                        that the forward operation can be continued. If the listener
-   *                        returns 'false', then the forward operation will be aborted.
-   *                        This is a mechanism for the listener to control user's 
-   *                        operations with history.
-   * 
+   * @param aForwardURI   The URI of the session history entry being navigated to.
+   * @return              Whether the operation can proceed.
    */
    boolean OnHistoryGoForward(in nsIURI aForwardURI);
 
   /** 
-   * called to notify a listener when the user presses the 'reload' button
-   * of the browser OR when the user attempts to reload the current document
-   * through other means, like from javascript or using nsIWebNavigation
+   * Called when the current document is reloaded, for example due to a
+   * nsIWebNavigation::reload() call.
    *
-   * @param aReloadURI    The uri of the current document  to be reloaded.
+   * @param aReloadURI    The URI of the document to be reloaded.
    * @param aReloadFlags  Flags that indicate how the document is to be 
-   *                      refreshed. For example, from cache or bypassing
-   *                      cache and/or Proxy server. 
-   * @return aReturn      A boolean flag returned by the listener to indicate 
-   *                      if the reload operation is to be aborted or continued.
-   *                      If the listener returns 'true', it indicates that the 
-   *                      reload operation can be continued. If the listener
-   *                      returns 'false', then the reload operation will be aborted.
-   *                      This is a mechanism for the listener to control user's 
-   *                      operations with history.
+   *                      refreshed. See constants on the nsIWebNavigation
+   *                      interface.
+   * @return              Whether the operation can proceed.
+   *
    * @see  nsIWebNavigation
-   *  
    */
    boolean OnHistoryReload(in nsIURI aReloadURI, in unsigned long aReloadFlags);
 
   /**
-   * called to notify a listener when the user visits a page using the 'Go' menu
-   * of the browser OR when the user attempts to go to a page at a particular index
-   * through other means, like from javascript or using nsIWebNavigation
+   * Called when navigating to a session history entry by index, for example,
+   * when nsIWebNavigation::gotoIndex() is called.
    *
-   * @param aIndex        The index in history of the document to be loaded.
-   * @param aGotoURI      The uri of the document to be loaded.
-   * 
-   * @return aReturn      A boolean flag  returned by the listener to
-   *                      indicate if the GotoIndex operation is to be aborted 
-   *                      or continued.  If the listener returns 'true', it indicates 
-   *                      that the GotoIndex operation can be continued. If the listener
-   *                      returns 'false', then the GotoIndex operation will be aborted.
-   *                      This is a mechanism for the listener to control user's 
-   *                      operations with history.
-   * 
+   * @param aIndex        The index in session history of the entry to be loaded.
+   * @param aGotoURI      The URI of the session history entry to be loaded.
+   * @return              Whether the operation can proceed.
    */
    boolean OnHistoryGotoIndex(in long aIndex, in nsIURI aGotoURI);
 
   /**
-   * called to notify a listener when documents are removed from session
-   * history. Documents can be removed from session history for various 
-   * reasons. For example to control the memory usage of the browser, to 
-   * prevent users from loading documents from history, to erase evidence of
-   * prior page loads etc... To purge documents from session history call
-   * nsISHistory::PurgeHistory()
+   * Called when entries are removed from session history. Entries can be
+   * removed from session history for various reasons, for example to control
+   * the memory usage of the browser, to prevent users from loading documents
+   * from history, to erase evidence of prior page loads, etc.
    *
-   * @param aNumEntries   The number of documents to be removed from session history.
-   * 
-   * @return aReturn      A boolean flag returned by the listener to
-   *                      indicate if the purge operation is to be aborted 
-   *                      or continued.  If the listener returns 'true', it indicates 
-   *                      that the purge operation can be continued. If the listener
-   *                      returns 'false', then the purge operation will be aborted.
-   *                      This is a mechanism for the listener to control user's 
-   *                      operations with history.
+   * To purge documents from session history call nsISHistory::PurgeHistory()
    *
-   * @note                While purging history, the older documents are removed
-   *                      and newly loaded documents are kept. For example  if there
-   *                      are 5 documents in history, and nsISHistory::PurgeHistory(3)
-   *                      is called, then, document 1, 2 and 3 are removed from history
-   *                      and most recently loaded document 4 and 5 are kept.
-   * 
+   * @param aNumEntries   The number of entries to be removed from session history.
+   * @return              Whether the operation can proceed.
    */
    boolean OnHistoryPurge(in long aNumEntries);
 };
