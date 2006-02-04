@@ -1240,44 +1240,45 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            if (aDragSession.sourceNode &&
-                aDragSession.sourceNode.parentNode == this.mTabContainer) {
-              var ib = document.getAnonymousElementByAttribute(this, "class", "tab-drop-indicator-bar");
+            var ib = document.getAnonymousElementByAttribute(this, "class", "tab-drop-indicator-bar");
 
-              if (!aDragSession.canDrop)
-              {
-                ib.hidden = true;
-                return;
-              }
-
-              var ind = document.getAnonymousElementByAttribute(this, "class", "tab-drop-indicator");
-
-              var newIndex = this.getDropIndex(aEvent);
-              var tabAtPrevIndex = (newIndex > 0) ? this.mTabs[newIndex - 1] : null;
-
-              if (window.getComputedStyle(this, null).direction == "ltr") {
-                if (newIndex == this.mTabs.length) {
-                  ind.style.marginLeft = tabAtPrevIndex.boxObject.x + 
-                                         tabAtPrevIndex.boxObject.width - this.boxObject.x + 'px';
-                }
-                else {
-                  ind.style.marginLeft = this.mTabs[newIndex].boxObject.x - this.boxObject.x + 'px';
-                }            
-              } else {
-                if (newIndex == this.mTabs.length) {
-                  ind.style.marginRight = this.boxObject.width + this.boxObject.x -
-                                          tabAtPrevIndex.boxObject.x + 'px';
-                }
-                else {
-                  var tabAtNewIndex = this.mTabs[newIndex];
-                  ind.style.marginRight = this.boxObject.width + this.boxObject.x -
-                                          tabAtNewIndex.boxObject.x -
-                                          tabAtNewIndex.boxObject.width + 'px';
-                }
-              }
-
-              ib.hidden = false;
+            if (!aDragSession.canDrop) {
+              ib.hidden = true;
+              return;
             }
+
+            var ind = document.getAnonymousElementByAttribute(this, "class", "tab-drop-indicator");
+
+            var newIndexOn = aDragSession.sourceNode &&
+                             aDragSession.sourceNode.parentNode == this.mTabContainer ?
+                             -1 : this.getDropOnIndex(aEvent);
+            var newIndexBetween = newIndexOn == -1 ? this.getDropIndex(aEvent) : -1;
+
+            var ltr = window.getComputedStyle(this, null).direction == "ltr";
+            var arrowX, tabBoxObject;
+            if (newIndexOn != -1) {
+              tabBoxObject = this.mTabs[newIndexOn].boxObject;
+              arrowX = tabBoxObject.x + tabBoxObject.width / 2;
+            }
+            else if (newIndexBetween == this.mTabs.length) {
+              tabBoxObject = this.mTabs[this.mTabs.length - 1].boxObject;
+              arrowX = tabBoxObject.x;
+              if (ltr) // for LTR "after" is on the right-hand side of the tab
+                arrowX += tabBoxObject.width;
+            }
+            else {
+              tabBoxObject = this.mTabs[newIndexBetween].boxObject;
+              arrowX = tabBoxObject.x;
+              if (!ltr) // for RTL "before" is on the right-hand side of the tab
+                arrowX += tabBoxObject.width;
+            }
+
+            if (ltr)
+              ind.style.marginLeft = (arrowX - this.boxObject.x) + "px";
+            else
+              ind.style.marginRight = (this.boxObject.x + this.boxObject.width - arrowX) + "px";
+
+            ib.hidden = false;
           ]]>
         </body>
       </method>
@@ -1288,10 +1289,11 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
+            var newIndex = this.getDropIndex(aEvent);
+            var tabIndex;
             if (aDragSession.sourceNode &&
                 aDragSession.sourceNode.parentNode == this.mTabContainer) {
-              var newIndex = this.getDropIndex(aEvent);
-              var tabIndex = this.getTabIndex(aDragSession.sourceNode);
+              tabIndex = this.getTabIndex(aDragSession.sourceNode);
               if (newIndex > tabIndex)
                 newIndex--;
               this.moveTabTo(tabIndex, newIndex);
@@ -1310,14 +1312,17 @@
               var bgLoad = this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
 
               var tab = null;
-              if (aEvent.originalTarget.localName != "tab") {
-                // We're adding a new tab.
-                tab = this.addTab(getShortcutOrURI(url));
+              tabIndex = this.getDropOnIndex(aEvent);
+              if (tabIndex != -1) {
+                // Load in an existing tab
+                tab = this.mTabs[tabIndex];
+                tab.linkedBrowser.loadURI(getShortcutOrURI(url));
               }
               else {
-                // Load in an existing tab.
-                tab = aEvent.originalTarget;
-                tab.linkedBrowser.loadURI(getShortcutOrURI(url));
+                // We're adding a new tab
+                tab = this.addTab(getShortcutOrURI(url));
+                if (newIndex != this.mTabs.length - 1)
+                  this.moveTabTo(this.mTabs.length - 1, newIndex);
               }
               if (this.mCurrentTab != tab && !bgLoad)
                 this.selectedTab = tab;
@@ -1331,19 +1336,16 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            if (aDragSession.sourceNode &&
-                aDragSession.sourceNode.parentNode == this.mTabContainer) {
-              var target = aEvent.relatedTarget;
-              while (target && target != this.mStrip)
-                target = target.parentNode;
+            var target = aEvent.relatedTarget;
+            while (target && target != this.mStrip)
+              target = target.parentNode;
 
-              if (target)
-                return;
+            if (target)
+              return;
 
-              document.getAnonymousElementByAttribute(this, "class",
-                                                      "tab-drop-indicator-bar")
-                      .hidden = true;
-            }
+            document.getAnonymousElementByAttribute(this, "class",
+                                                    "tab-drop-indicator-bar")
+                    .hidden = true;
           ]]>
         </body>
       </method>
@@ -1389,17 +1391,35 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[     
-            for (var i = 0; i < this.mTabs.length; i++) {
+            for (var i = 0; i < this.mTabs.length; ++i) {
+              var coord = this.mTabs[i].boxObject.x +
+                          this.mTabs[i].boxObject.width / 2;
               if (window.getComputedStyle(this, null).direction == "ltr") {
-                if (aEvent.clientX < this.mTabs[i].boxObject.x + this.mTabs[i].boxObject.width / 2) 
+                if (aEvent.clientX < coord) 
                   return i;
               } else {
-                if (aEvent.clientX > this.mTabs[i].boxObject.x + this.mTabs[i].boxObject.width / 2) 
+                if (aEvent.clientX > coord) 
                   return i;
               }
             }
 
             return this.mTabs.length;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getDropOnIndex">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[     
+            for (var i = 0; i < this.mTabs.length; ++i) {
+              var tabBoxObject = this.mTabs[i].boxObject;
+              if (aEvent.clientX > tabBoxObject.x + tabBoxObject.width * .25 &&
+                  aEvent.clientX < tabBoxObject.x + tabBoxObject.width * .75)
+                return i;
+            }
+
+            return -1;
           ]]>
         </body>
       </method>
