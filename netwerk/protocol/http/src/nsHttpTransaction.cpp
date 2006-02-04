@@ -44,8 +44,10 @@
 #include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
 #include "nsHttpChunkedDecoder.h"
+#include "nsNetSegmentUtils.h"
 #include "nsTransportUtils.h"
 #include "nsIOService.h"
+#include "nsNetUtil.h"
 #include "nsAutoLock.h"
 #include "pratom.h"
 #include "plevent.h"
@@ -236,7 +238,12 @@ nsHttpTransaction::Init(PRUint8 caps,
         rv = multi->AppendStream(requestBody);
         if (NS_FAILED(rv)) return rv;
 
-        mRequestStream = multi;
+        // wrap the multiplexed input stream with a buffered input stream, so
+        // that we write data in the largest chunks possible.  this is actually
+        // necessary to workaround some common server bugs (see bug 137155).
+        rv = NS_NewBufferedInputStream(getter_AddRefs(mRequestStream), multi,
+                                       NET_DEFAULT_SEGMENT_SIZE);
+        if (NS_FAILED(rv)) return rv;
     }
     else
         mRequestStream = headers;
