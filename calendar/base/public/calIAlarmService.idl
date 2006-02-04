@@ -38,7 +38,7 @@
 #include "nsISupports.idl"
 
 interface calIItemBase;
-interface calIDateTime;
+interface calIDuration;
 
 [scriptable,uuid(c9c97643-db45-4790-9441-05384ae5c272)]
 interface calIAlarmServiceObserver : nsISupports
@@ -74,6 +74,6 @@ interface calIAlarmService : nsISupports
      This will cause an event to be scheduled even if it was not
      previously scheduled.
   */
-  void snoozeEvent(in calIItemBase item, in calIDateTime duration);
+  void snoozeEvent(in calIItemBase item, in calIDuration duration);
 };
 
