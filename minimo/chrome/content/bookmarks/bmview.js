@@ -86,22 +86,29 @@ bmProcessor.prototype.setTargetElement = function (targetEle) {
 	this.targetElement=targetEle;
 }
 
+
 bmProcessor.prototype.apply = function () {
 
-    if(this.xmlRef.getElementsByTagName("li").length<1) {
-        this.targetDocument.getElementById("message-empty").style.display="block";
-    } else {
-        if(this.xmlLoadedState&&this.xslLoadedState) {	
-            var xsltProcessor = new XSLTProcessor();
-            var htmlFragment=null;
-            try {
-              xsltProcessor.importStylesheet(this.xslRef);
-              htmlFragment = xsltProcessor.transformToFragment(this.xmlRef, this.targetDocument);
-            } catch (e) {
-            }
-            this.targetElement.appendChild(htmlFragment.firstChild);
+    if( this.xmlRef.getElementsByTagName("li").length < 1) {
+      if( this.targetDocument && this.targetDocument ) {
+        if(this.targetDocument.getElementById("message-empty")) {
+            this.targetDocument.getElementById("message-empty").style.display="block";
         }
+        // ... other checks? other formatting...
+      } 
+      return; 
     }
+
+    if(this.xmlLoadedState&&this.xslLoadedState) {	
+        var xsltProcessor = new XSLTProcessor();
+        var htmlFragment=null;
+        try {
+          xsltProcessor.importStylesheet(this.xslRef);
+          htmlFragment = xsltProcessor.transformToFragment(this.xmlRef, this.targetDocument);
+        } catch (e) {
+        }
+        this.targetElement.appendChild(htmlFragment.firstChild);
+    }    
 }
 
 bmProcessor.prototype.run = function () {
