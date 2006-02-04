@@ -46,6 +46,8 @@ calendar-month-day-box[selected="true"] {
 .calendar-month-day-box-date-label { 
   color: #556;
   font-weight: bold;
+  margin-bottom: 0px;
+  margin-top: 0px;
 }
 
 .calendar-month-day-box-date-event { 
@@ -54,6 +56,9 @@ calendar-month-day-box[selected="true"] {
 /*== calendar-month-day-box-item ==*/
 calendar-month-day-box-item { 
   -moz-binding: url(chrome://calendar/content/calendar-month-view.xml#calendar-month-day-box-item);
+  margin: 1px;
+  padding: 0px;
+  padding-left: 1px;
 }
 
 calendar-month-day-box-item[selected="true"] { 
@@ -61,7 +66,9 @@ calendar-month-day-box-item[selected="true"] {
 }
 
 .calendar-month-day-box-item-label {
-  font-size: small;
+  font-size: 0.9em;
+  padding: 0px;
+  margin: 0px;
 }
 
 /*== calendar-month-view-column-header ==*/
