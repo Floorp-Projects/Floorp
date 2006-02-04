@@ -125,6 +125,18 @@ calICSCalendar.prototype = {
         this.mUri = aUri;
         this.mMemoryCalendar.uri = this.mUri;
 
+        // Use the ioservice, to create a channel, which makes finding the
+        // right hooks to use easier.
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                  .getService(Components.interfaces.nsIIOService);
+        var channel = ioService.newChannelFromURI(fixupUri(this.mUri));
+
+        if (channel instanceof Components.interfaces.nsIHttpChannel) {
+            this.mHooks = new httpHooks();
+        } else {
+            this.mHooks = new dummyHooks();
+        }
+
         this.refresh();
     },
 
@@ -140,6 +152,10 @@ calICSCalendar.prototype = {
         var channel = ioService.newChannelFromURI(fixupUri(this.mUri));
         channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
         channel.notificationCallbacks = this;
+
+        // Allow the hook to do its work, like a performing a quick check to
+        // see if the remote file really changed. Might save a lot of time
+        this.mHooks.onBeforeGet(channel);
 
         var streamLoader = Components.classes["@mozilla.org/network/stream-loader;1"]
                                      .createInstance(Components.interfaces.nsIStreamLoader);
@@ -164,6 +180,9 @@ calICSCalendar.prototype = {
 
     onStreamComplete: function(loader, ctxt, status, resultLength, result)
     {
+        // Allow the hook to get needed data (like an etag) of the channel
+        this.mHooks.onAfterGet(loader.request.QueryInterface(Components.interfaces.nsIChannel));
+
         // Create a new calendar, to get rid of all the old events
         this.mMemoryCalendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
                                          .createInstance(Components.interfaces.calICalendar);
@@ -288,6 +307,11 @@ calICSCalendar.prototype = {
                         .getService(Components.interfaces.nsIIOService);
                     var channel = ioService.newChannelFromURI(
                         fixupUri(savedthis.mUri));
+
+                    // Allow the hook to add things to the channel, like a
+                    // header that checks etags
+                    savedthis.mHooks.onBeforePut(channel);
+
                     channel.notificationCallbacks = savedthis;
                     var uploadChannel = channel.QueryInterface(
                         Components.interfaces.nsIUploadChannel);
@@ -358,6 +382,10 @@ calICSCalendar.prototype = {
                                    "Publishing the calendar file failed\n" +
                                        "Status code: "+request.status.toString(16)+"\n");
         }
+
+        // Allow the hook to grab data of the channel, like the new etag
+        ctxt.mHooks.onAfterPut(channel);
+
         ctxt.locked = false;
         ctxt.processQueue();
     },
@@ -752,6 +780,119 @@ calICSObserver.prototype = {
                 newObservers.push(obs);
         }
         this.mObservers = newObservers;
+    }
+};
+
+/***************************
+ * Transport Abstraction Hooks
+ *
+ * Those hooks provide a way to do checks before or after publishing an
+ * ics file. The main use will be to check etags (or some other way to check
+ * for remote changes) to protect remote changes from being overwritten.
+ *
+ * Different protocols need different checks (webdav can do etag, but
+ * local files need last-modified stamps), hence different hooks for each
+ * types
+ */
+
+// dummyHooks are for transport types that don't have hooks of their own.
+// Also serves as poor-mans interface definition.
+function dummyHooks() {
+}
+
+dummyHooks.prototype = {
+    onBeforeGet: function(aChannel) {
+        return true;
+    },
+    
+    onAfterGet: function(aChannel) {
+        return true;
+    },
+
+    onBeforePut: function(aChannel) {
+        return true;
+    },
+    
+    onAfterPut: function(aChannel) {
+        return true;
+    },
+}
+
+function httpHooks() {
+}
+
+httpHooks.prototype = {
+    onBeforeGet: function(aChannel) {
+        return true;
+    },
+    
+    onAfterGet: function(aChannel) {
+        var httpchannel = aChannel.QueryInterface(Components.interfaces.nsIHttpChannel);
+        try {
+            this.mEtag = httpchannel.getResponseHeader("ETag");
+        } catch(e) {
+            // No etag header. Now what?
+            this.mEtag = null;
+        }
+        return true;
+    },
+
+    onBeforePut: function(aChannel) {
+        if (this.mEtag) {
+            var httpchannel = aChannel.QueryInterface(Components.interfaces.nsIHttpChannel);
+            httpchannel.setRequestHeader("If", '(['+this.mEtag+'])', false);
+        }
+        return true;
+    },
+    
+    onAfterPut: function(aChannel) {
+        var httpchannel = aChannel.QueryInterface(Components.interfaces.nsIHttpChannel);
+        try {
+            this.mEtag = httpchannel.getResponseHeader("ETag");
+            dump("new etag: "+this.mEtag+"\n");
+        } catch(e) {
+            // There was no ETag header on the response. This means that
+            // putting is not atomic. This is bad. Race conditions can happen,
+            // because there is a time in which we don't know the right
+            // etag.
+            // Try to do the best we can, by immediatly getting the etag.
+            var res = new WebDavResource(aChannel.URI);
+            var webSvc = Components.classes['@mozilla.org/webdav/service;1']
+                                   .getService(Components.interfaces.nsIWebDAVService);
+            // The namespace is 'DAV:', not just 'DAV'.
+            webSvc.getResourceProperties(res, 1, ['DAV: getetag'], false,
+                                         this, null);
+        }
+        return true;
+    },
+
+    onOperationComplete: function(aStatusCode, aResource, aOperation, aClosure) {
+    },
+
+    onOperationDetail: function(aStatusCode, aResource, aOperation, aDetail, aClosure) {
+        var props = aDetail.QueryInterface(Components.interfaces.nsIProperties);
+        try {
+            this.mEtag = props.get('DAV: getetag', Components.interfaces.nsISupportsString).toString();
+        } catch(e) {
+            // No etag header. Now what?
+            this.mEtag = null;
+        }
+    },
+}
+
+function WebDavResource(url) {
+    this.mResourceURL = url;
+}
+
+WebDavResource.prototype = {
+    mResourceURL: {},
+    get resourceURL() { return this.mResourceURL; },
+    QueryInterface: function(iid) {
+        if (iid.equals(CI.nsIWebDAVResource) ||
+            iid.equals(CI.nsISupports)) {
+            return this;
+        }
+        throw Components.interfaces.NS_NO_INTERFACE;
     }
 };
 
