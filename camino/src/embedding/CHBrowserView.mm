@@ -753,7 +753,7 @@ const long NSFindPanelActionSetFindString = 7;
   if (mUseGlobalPrintSettings) {
     psService->GetGlobalPrintSettings(&mPrintSettings);
     if (mPrintSettings)
-      psService->InitPrintSettingsFromPrefs(mPrintSettings, PR_FALSE,
+      psService->InitPrintSettingsFromPrefs(mPrintSettings, 
                                             nsIPrintSettings::kInitSaveNativeData);
   }
   else
