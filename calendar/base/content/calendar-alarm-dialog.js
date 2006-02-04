@@ -95,7 +95,13 @@ function onDismissAlarm(event)
 {
   // everything is just visual at this point. we don't need to do anything special.
   var alarmWidget = event.target;
-  alarmWidget.parentNode.removeChild(alarmWidget);
+  var parent = alarmWidget.parentNode;
+  parent.removeChild(alarmWidget);
+
+  if (!parent.hasChildNodes()) {
+    // If this was the last alarm, close the window.
+    window.close();
+  }
 
 }
 
