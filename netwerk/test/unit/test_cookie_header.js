@@ -41,14 +41,14 @@ var listener = {
 function makeChan() {
   var ios = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(Components.interfaces.nsIIOService);
-  var chan = ios.newChannel("http://www.mozilla.org/", null, null)
+  var chan = ios.newChannel("http://localhost:4444/", null, null)
                 .QueryInterface(Components.interfaces.nsIHttpChannel);
 
   return chan;
 }
 
 function run_test() {
-  dump("Note: This test needs a network connection\n");
+  start_server(4444);
 
   var chan = makeChan();
 
