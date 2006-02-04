@@ -209,7 +209,7 @@ function setPrinterDefaultsForSelectedPrinter()
   printService.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
   
   // now augment them with any values from last time
-  printService.initPrintSettingsFromPrefs(gPrintSettings, true, gPrintSetInterface.kInitSaveAll);
+  printService.initPrintSettingsFromPrefs(gPrintSettings, gPrintSetInterface.kInitSaveAll);
   
   if (doDebug) {
     dump("setPrinterDefaultsForSelectedPrinter: printerName='"+gPrintSettings.printerName+"', paperName='"+gPrintSettings.paperName+"'\n");
