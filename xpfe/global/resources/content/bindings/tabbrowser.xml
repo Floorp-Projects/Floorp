@@ -270,7 +270,8 @@
                 if (this.mIcon) {
                   this.mTab.setAttribute("image", this.mIcon);
                 }
-                else if (this.mBrowser.contentDocument instanceof ImageDocument) {
+                else if (this.mBrowser.contentDocument instanceof ImageDocument &&
+                         this.mTabBrowser.mPrefs.getBoolPref("browser.chrome.site_icons")) {
                   var req = this.mBrowser.contentDocument.imageRequest;
                   var sz = this.mTabBrowser.mPrefs.getIntPref("browser.chrome.image_icons.max_size");
                   if (req && req.image.width <= sz && req.image.height <= sz)
