@@ -613,6 +613,68 @@ PRBool test_stringbuffer()
     return rv;
   }
 
+PRBool test_voided()
+  {
+    const char kData[] = "hello world";
+
+    nsXPIDLCString str;
+    if (str)
+      return PR_FALSE;
+    if (!str.IsVoid())
+      return PR_FALSE;
+    if (!str.IsEmpty())
+      return PR_FALSE;
+
+    str.Assign(kData);
+    if (strcmp(str, kData) != 0)
+      return PR_FALSE;
+
+    str.SetIsVoid(PR_TRUE);
+    if (str)
+      return PR_FALSE;
+    if (!str.IsVoid())
+      return PR_FALSE;
+    if (!str.IsEmpty())
+      return PR_FALSE;
+
+    str.SetIsVoid(PR_FALSE);
+    if (strcmp(str, "") != 0)
+      return PR_FALSE;
+
+    return PR_TRUE;
+  }
+
+PRBool test_voided_autostr()
+  {
+    const char kData[] = "hello world";
+
+    nsCAutoString str;
+    if (str.IsVoid())
+      return PR_FALSE;
+    if (!str.IsEmpty())
+      return PR_FALSE;
+
+    str.Assign(kData);
+    if (strcmp(str.get(), kData) != 0)
+      return PR_FALSE;
+
+    str.SetIsVoid(PR_TRUE);
+    if (!str.IsVoid())
+      return PR_FALSE;
+    if (!str.IsEmpty())
+      return PR_FALSE;
+
+    str.Assign(kData);
+    if (str.IsVoid())
+      return PR_FALSE;
+    if (str.IsEmpty())
+      return PR_FALSE;
+    if (strcmp(str.get(), kData) != 0)
+      return PR_FALSE;
+
+    return PR_TRUE;
+  }
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -651,6 +713,8 @@ tests[] =
     { "test_findcharinset", test_findcharinset },
     { "test_rfindcharinset", test_rfindcharinset },
     { "test_stringbuffer", test_stringbuffer },
+    { "test_voided", test_voided },
+    { "test_voided_autostr", test_voided_autostr },
     { nsnull, nsnull }
   };
 
