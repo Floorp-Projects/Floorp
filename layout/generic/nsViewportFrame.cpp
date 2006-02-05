@@ -89,10 +89,12 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // that display list construction is guaranteed to recurse into their
   // ancestors.
   MarkOutOfFlowChildrenForDisplayList(mFixedContainer.GetFirstChild(), aDirtyRect);
-  // Put the regular child in a pseudo-stack.
-  nsresult rv =
-    BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
-                                        DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+  nsIFrame* kid = mFrames.FirstChild();
+  nsresult rv = NS_OK;
+  if (kid) {
+    // make the kid's BorderBackground our own.
+    rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+  }
   UnmarkOutOfFlowChildrenForDisplayList(mFixedContainer.GetFirstChild());
   return rv;
 }

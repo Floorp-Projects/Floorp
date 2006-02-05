@@ -1392,7 +1392,8 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect clip = frameClip + aBuilder->ToReferenceFrame(mOuter);
   // mScrolledFrame may have given us a background, e.g., the scrolled canvas
-  // frame below the viewport. If so, we want it to be clipped.
+  // frame below the viewport. If so, we want it to be clipped. We also want
+  // to end up on our BorderBackground list.
   // If we are the viewport scrollframe, then clip all our descendants (to ensure
   // that fixed-pos elements get clipped by us).
   rv = mOuter->OverflowClip(aBuilder, set, aLists, clip, PR_TRUE, mIsRoot);
