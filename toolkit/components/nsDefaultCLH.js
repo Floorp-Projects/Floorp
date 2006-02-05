@@ -77,6 +77,22 @@ var nsDefaultCLH = {
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(nsIPrefBranch);
 
+    try {
+      var singletonWindowType =
+                              prefs.getCharPref("toolkit.singletonWindowType");
+      var windowMediator =
+                Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                          .getService(Components.interfaces.nsIWindowMediator);
+
+      var win = windowMediator.getMostRecentWindow(singletonWindowType);
+      if (win) {
+        win.focus();
+    	  cmdLine.preventDefault = true;
+	      return;
+      }
+    }
+    catch (e) { }
+
     // if the pref is missing, ignore the exception 
     try {
       var chromeURI = prefs.getCharPref("toolkit.defaultChromeURI");
