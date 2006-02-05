@@ -1210,6 +1210,93 @@
     </handlers>
   </binding>
 
+  <binding id="calendar-header-container">
+    <content>
+      <xul:vbox xbl:inherits="selected" anonid="thebox" flex="1" class="calendar-vent-column-header"/>
+    </content>
+
+    <implementation>
+      <field name="mItemBoxes">null</field>
+      <field name="mDate">null</field>
+      <field name="mCalendarView">null</field>
+
+      <constructor><![CDATA[
+        this.mItemBoxes = new Array();
+      ]]></constructor>
+
+      <property name="mainbox">
+        <getter><![CDATA[
+          return document.getAnonymousElementByAttribute(this, 'anonid', 'thebox');
+        ]]></getter>
+      </property>
+
+      <property name="date">
+        <getter><![CDATA[
+          return this.mDate;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mDate = val;
+        ]]></setter>
+      </property>
+
+      <property name="calendarView">
+        <getter><![CDATA[
+          return this.mCalendarView;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mCalendarView = val;
+        ]]></setter>
+      </property>
+
+      <method name="addEvent">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          function createXULElement(el) {
+            return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
+          }
+          var itemBox = createXULElement("calendar-editable-item");
+
+          this.mainbox.appendChild(itemBox);
+          itemBox.calendarView = this.calendarView;
+          itemBox.occurrence = aItem;
+
+          this.mItemBoxes.push(itemBox);
+        ]]></body>
+      </method>
+
+      <method name="deleteEvent">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          for (var i in this.mItemBoxes) {
+            if (this.mItemBoxes[i].occurrence.id == aItem.id) {
+              this.mainbox.removeChild(this.mItemBoxes[i]);
+              this.mItemBoxes.splice(i, 1);
+            }
+          }
+        ]]></body>
+      </method>
+
+      <method name="selectOccurrence">
+        <parameter name="aItem"/>
+        <body><![CDATA[
+          for each (itemBox in this.mItemBoxes) {
+            if (aItem && itemBox.occurrence.id == aItem.id) {
+              itemBox.selected = true;
+            } else {
+              itemBox.selected = false;
+            }
+          }
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="dblclick" button="0"><![CDATA[
+        this.calendarView.controller.createNewEvent();
+      ]]></handler>
+    </handlers>
+  </binding>
+
   <!--
      -  An individual event box, to be inserted into a column.
     -->
@@ -1444,7 +1531,11 @@
                if (this.calView.mSelectedItem) {
                    var cols = this.calView.findColumnsForItem(this.calView.mSelectedItem);
                    for each (col in cols) {
-                       col.column.selectOccurrence(null);
+                       if (!this.calView.mSelectedItem.startDate.isDate) {
+                           col.column.selectOccurrence(null);
+                       } else {
+                           col.header.selectOccurrence(null);
+                       }
                    }
                }
                this.calView.mSelectedItem = itemSelectionArray[0];
@@ -1456,7 +1547,11 @@
                    this.calView.showDate(this.calView.mSelectedItem.entryDate);
                var cols = this.calView.findColumnsForItem(this.calView.mSelectedItem);
                for each (col in cols) {
-                   col.column.selectOccurrence(this.calView.mSelectedItem);
+                   if (!this.calView.mSelectedItem.startDate.isDate) {
+                       col.column.selectOccurrence(this.calView.mSelectedItem);
+                   } else {
+                       col.header.selectOccurrence(this.calView.mSelectedItem);
+                   }
                }
           }
       })
@@ -2083,11 +2178,11 @@
               dayEventsBox.date = d;
               dayEventsBox.calendarView = this;
 
-              var dayHeaderBox = createXULElement("box");
-              dayHeaderBox.setAttribute("class", "calendar-event-column-header");
+              var dayHeaderBox = createXULElement("calendar-header-container");
               dayHeaderBox.setAttribute("flex", "1");
               headerdaybox.appendChild(dayHeaderBox);
 
+              dayHeaderBox.calendarView = this;
               dayHeaderBox.setAttribute("orient", orient);
 
               var labelbox = createXULElement("box");
@@ -2212,7 +2307,7 @@
 
               var estart = aEvent.startDate;
               if (estart.isDate) {
-                  // add it to header
+                  header.addEvent(aEvent);
               } else {
                   column.addEvent(aEvent);
               }
@@ -2233,7 +2328,7 @@
 
               var estart = aEvent.startDate;
               if (estart.isDate) {
-                  // remove from header
+                  header.deleteEvent(aEvent);
               } else {
                   column.deleteEvent(aEvent);
               }

@@ -16,11 +16,11 @@ calendar-event-column[selected="true"] {
   background: #ffe79c !important;
 }
 
-.calendar-event-column-header[selected="true"] { 
+calendar-header-container[selected="true"] { 
   background: #ffe79c !important;
 }
 
-.calendar-event-column-header { 
+calendar-header-container { 
   border-left: 1px solid #999999;
   border-top: 1px solid #999999;
 }
@@ -181,4 +181,9 @@ calendar-multiday-view[hidden="true"] {
   font-weight: bold;
   font-size: large;
   text-align: center;
+}
+
+
+calendar-header-container { 
+  -moz-binding: url(chrome://calendar/content/calendar-multiday-view.xml#calendar-header-container);
 }

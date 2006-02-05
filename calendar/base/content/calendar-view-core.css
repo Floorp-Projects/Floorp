@@ -39,3 +39,7 @@
 calendar-editable-item { 
   -moz-binding: url(chrome://calendar/content/calendar-view-core.xml#calendar-editable-item);
 }
+
+calendar-editable-item[selected="true"] .calendar-event-box-container { 
+  background: #ffdb67 !important;
+}
