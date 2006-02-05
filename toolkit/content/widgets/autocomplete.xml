@@ -333,11 +333,9 @@
 
       <method name="showHistoryPopup">
         <body><![CDATA[
-#ifndef MOZILLA_1_8_BRANCH
           // This is an autocomplete widget, but we want the rollup event
           // to be consumed, as if we were a menulist.
           this.popup.popupBoxObject.setConsumeRollupEvent(Components.interfaces.nsIPopupBoxObject.ROLLUP_CONSUME);
-#endif
 
           this.maxRows = 14;
           this.attachController();
@@ -728,16 +726,7 @@
           controller.handleEnter();
         ]]></body>
       </method>
-#ifdef MOZILLA_1_8_BRANCH
-
-      <method name="clearOpenProperty">
-        <parameter name="aPopupNode"/>
-        <body><![CDATA[
-          aPopupNode.mPopupOpen = false;
-        ]]></body>
-      </method>
-#endif
-
+      
     </implementation>
 
     <handlers>
@@ -746,11 +735,7 @@
       </handler>
 
       <handler event="popuphiding">
-#ifdef MOZILLA_1_8_BRANCH
-        setTimeout(this.clearOpenProperty, 0, this);
-#else
         this.mPopupOpen = false;
-#endif
         this.mInput.maxRows = 6;
       </handler>
     </handlers>
@@ -834,13 +819,7 @@
       <method name="showPopup">
         <body><![CDATA[
           var textbox = document.getBindingParent(this);
-#ifdef MOZILLA_1_8_BRANCH
-          if (!textbox.popup.mPopupOpen) { 
-            textbox.showHistoryPopup();
-          }
-#else
           textbox.showHistoryPopup();
-#endif
         ]]></body>
       </method>
     </implementation>
