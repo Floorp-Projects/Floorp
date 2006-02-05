@@ -231,7 +231,7 @@ function DisplayCardViewPane(card)
     visible = HandleLink(data.cvEmail1, zPrimaryEmail, card.primaryEmail, data.cvEmail1Box, "mailto:" + card.primaryEmail) || visible;
   }
 
-  var onlineCheckAllowed = gPrefs.getBoolPref("mail.addr_book.im.online_check_allowed");
+  var onlineCheckAllowed = gPrefs.getBoolPref("mail.addr_book.im.onlineCheckAllowed");
   var goimURL = "aim:goim?screenname=" + card.aimScreenName;
   var hasScreenName = HandleLink(data.cvScreenname, zScreenName, card.aimScreenName, data.cvScreennameBox, goimURL);
 

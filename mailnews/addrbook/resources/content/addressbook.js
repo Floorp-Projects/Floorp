@@ -59,7 +59,7 @@ const kLastNameFirst = 1;
 const kFirstNameFirst = 2;
 const kLDAPDirectory = 0; // defined in nsDirPrefs.h
 const kPABDirectory  = 2; // defined in nsDirPrefs.h
-const kPrefOnlineCheckAllowed = "mail.addr_book.im.online_check_allowed";
+const kPrefOnlineCheckAllowed = "mail.addr_book.im.onlineCheckAllowed";
 
 // Note: We need to keep this listener as it does not just handle dir
 // pane deletes but also deletes of address books and lists from places like
