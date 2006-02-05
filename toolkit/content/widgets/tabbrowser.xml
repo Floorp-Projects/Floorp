@@ -2164,7 +2164,6 @@
         <![CDATA[
           this.mCurrentBrowser = this.mPanelContainer.childNodes[0].firstChild.nextSibling;
           this.mCurrentTab = this.mTabContainer.firstChild;
-          this.mTabBox.handleCtrlTab = !/Mac/.test(navigator.platform);
           document.addEventListener("keypress", this._keyEventHandler, false);
 
           var uniqueId = "panel" + Date.now();
