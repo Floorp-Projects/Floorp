@@ -98,7 +98,6 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
    //nsCOMPtr<nsIURI> theURI;
    // do_QueryInterface
    // NS_HISTORYENTRY_CONTRACTID
-   // NS_SHISTORYLISTENER_CONTRACTID
 
 	// get Session History through web nav iface
    if (qaWebNav) {
