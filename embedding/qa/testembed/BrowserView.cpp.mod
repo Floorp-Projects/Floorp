@@ -1506,10 +1506,8 @@ void CBrowserView::OnInterfacesNsishistory()
 
    nsCOMPtr<nsISHistory> theSessionHistory(do_CreateInstance(NS_SHISTORY_CONTRACTID));
    nsCOMPtr<nsIHistoryEntry> theHistoryEntry(do_CreateInstance(NS_HISTORYENTRY_CONTRACTID));
-   nsCOMPtr<nsISHistoryListener> theSHListener(do_CreateInstance(NS_SHISTORYLISTENER_CONTRACTID));
    // do_QueryInterface
    // NS_HISTORYENTRY_CONTRACTID
-   // NS_SHISTORYLISTENER_CONTRACTID
 
   
    if (!theSessionHistory)

@@ -40,10 +40,6 @@
 
 interface nsIURI;
 
-%{C++
-#define NS_SHISTORYLISTENER_CONTRACTID "@mozilla.org/browser/shistorylistener;1"
-%}
-
 /**
  * nsISHistoryListener defines the interface one can implement to receive
  * notifications about activities in session history and to be able to
