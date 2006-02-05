@@ -331,26 +331,13 @@ function HandleBookmarkIcon(iconURL, addFlag)
 function UpdateInternetSearchResults(event)
 {
   var url = getWebNavigation().currentURI.spec;
-  if (url) {
-    try {
-      var autoOpenSearchPanel = 
-        pref.getBoolPref("browser.search.opensidebarsearchpanel");
+  if (url && isSearchPanelOpen())
+  {
+    if (!gSearchService)
+      gSearchService = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                                     .getService(Components.interfaces.nsIInternetSearchService);
 
-      if (autoOpenSearchPanel || isSearchPanelOpen())
-      {
-        if (!gSearchService)
-          gSearchService = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                                         .getService(Components.interfaces.nsIInternetSearchService);
-
-        var searchInProgressFlag = gSearchService.FindInternetSearchResults(url);
-
-        if (searchInProgressFlag) {
-          if (autoOpenSearchPanel)
-            RevealSearchPanel();
-        }
-      }
-    } catch (ex) {
-    }
+    gSearchService.FindInternetSearchResults(url);
   }
 }
 
