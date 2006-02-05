@@ -291,44 +291,66 @@
       </property>
       <property name="href" onget="return this.getAttribute('href');"
                             onset="this.setAttribute('href', val); return val;" />
-      <method name="open">    
+      <method name="open">
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          if (this.disabled || aEvent.getPreventDefault())
+          var href = this.href;
+          if (!href || this.disabled || aEvent.getPreventDefault())
             return;
-          var href = this.getAttribute('href');
 
-          if (href)
-          {
+          var uri = null;
+          try {
+            const nsISSM = Components.interfaces.nsIScriptSecurityManager;
+            const secMan =
+                     Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                               .getService(nsISSM);
+
+            const ioService =
+                     Components.classes["@mozilla.org/network/io-service;1"]
+                               .getService(Components.interfaces.nsIIOService);
+
+            uri = ioService.newURI(href, null, null);
+            var safeURI = ioService.newURI("about:blank", null, null);
+
             try {
-              var uri = Components.classes["@mozilla.org/network/io-service;1"]
-                                  .getService(Components.interfaces.nsIIOService)
-                                  .newURI(href, null, null);
+              secMan.checkLoadURI(safeURI, uri, nsISSM.DISALLOW_SCRIPT_OR_DATA)
+            } catch (ex) {
+              var msg = "Error: Cannot open a " + uri.scheme + ": link using \
+                         the text-link binding.";
+              Components.utils.reportError(msg);
+              return;
+            }
 
-              var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
-                                          .getService(Components.interfaces.nsIExternalProtocolService);
-              // if the scheme is not an exposed protocol, then opening this link should 
-              // be deferred to the system's external protocol handler
-              if (!protocolSvc.isExposedProtocol(uri.scheme))
-              {
-                protocolSvc.loadUrl(uri);
-                aEvent.preventDefault()
-                return;
-              }
+            const cID = "@mozilla.org/uriloader/external-protocol-service;1";
+            const nsIEPS = Components.interfaces.nsIExternalProtocolService;
+            var protocolSvc = Components.classes[contractID]
+                                        .getService(nsIEPS);
+
+            // if the scheme is not an exposed protocol, then opening this link
+            // should be deferred to the system's external protocol handler
+            if (!protocolSvc.isExposedProtocol(uri.scheme)) {
+              protocolSvc.loadUrl(uri);
+              aEvent.preventDefault()
+              return;
             }
-            catch (ex) {}
-          
-            // otherwise, fall back to opening the anchor directly
-            var win = window;
-            if (window instanceof Components.interfaces.nsIDOMChromeWindow) {
-              while (win.opener && !win.opener.closed) 
-                win = win.opener;
-            }
+
+          } catch (ex) {}
+
+          // otherwise, fall back to opening the anchor directly
+          var win = window;
+          if (window instanceof Components.interfaces.nsIDOMChromeWindow) {
+            while (win.opener && !win.opener.closed)
+              win = win.opener;
+          }
+
+          if (uri)
+            win.open(uri.spec);
+          else
             win.open(href);
 
-            aEvent.preventDefault();
-          }
+          aEvent.preventDefault();
+
         ]]>
         </body>
       </method>
@@ -336,7 +358,7 @@
 
     <handlers>
       <handler event="click" phase="capturing" button="0" action="this.open(event)"/>
-      <handler event="keypress" preventdefault="true" keycode="VK_ENTER" action="this.click()" />
+      <handler event="keypress" preventdefault="true" keycode="VK_ENTER"  action="this.click()" />
       <handler event="keypress" preventdefault="true" keycode="VK_RETURN" action="this.click()" />
     </handlers>
   </binding>
