@@ -92,7 +92,9 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsIFrame* kid = mFrames.FirstChild();
   nsresult rv = NS_OK;
   if (kid) {
-    // make the kid's BorderBackground our own.
+    // make the kid's BorderBackground our own. This ensures that the canvas
+    // frame's background becomes our own background and therefore appears
+    // below negative z-index elements.
     rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
   }
   UnmarkOutOfFlowChildrenForDisplayList(mFixedContainer.GetFirstChild());
