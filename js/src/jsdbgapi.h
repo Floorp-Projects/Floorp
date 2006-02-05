@@ -266,7 +266,7 @@ JS_SetDestroyScriptHook(JSRuntime *rt, JSDestroyScriptHook hook,
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
-                          const jschar *bytes, uintN length,
+                          const jschar *chars, uintN length,
                           const char *filename, uintN lineno,
                           jsval *rval);
 
