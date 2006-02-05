@@ -2880,6 +2880,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     if (aColor.mBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {
       NS_ASSERTION(aColor.mBackgroundClip == NS_STYLE_BG_CLIP_PADDING,
                    "unknown background-clip value");
+      // XXXldb What about skipSides?
       bgClipArea.Deflate(aBorder.GetBorder());
     }
   }
@@ -2932,19 +2933,22 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   nsRect bgOriginArea;
 
   nsIAtom* frameType = aForFrame->GetType();
-  if (frameType == nsLayoutAtoms::inlineFrame) {
+  if (frameType == nsLayoutAtoms::inlineFrame ||
+      frameType == nsLayoutAtoms::positionedInlineFrame) {
     switch (aColor.mBackgroundInlinePolicy) {
     case NS_STYLE_BG_INLINE_POLICY_EACH_BOX:
       bgOriginArea = aBorderArea;
       break;
     case NS_STYLE_BG_INLINE_POLICY_BOUNDING_BOX:
-      bgOriginArea = gInlineBGData.GetBoundingRect(aForFrame);
+      bgOriginArea = gInlineBGData.GetBoundingRect(aForFrame) +
+                     aBorderArea.TopLeft();
       break;
     default:
       NS_ERROR("Unknown background-inline-policy value!  "
                "Please, teach me what to do.");
     case NS_STYLE_BG_INLINE_POLICY_CONTINUOUS:
-      bgOriginArea = gInlineBGData.GetContinuousRect(aForFrame);
+      bgOriginArea = gInlineBGData.GetContinuousRect(aForFrame) +
+                     aBorderArea.TopLeft();
       break;
     }
   }
@@ -2955,11 +2959,13 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // Background images are tiled over the 'background-clip' area
   // but the origin of the tiling is based on the 'background-origin' area
   if (aColor.mBackgroundOrigin != NS_STYLE_BG_ORIGIN_BORDER) {
+    // XXXldb What about SkipSides?
     bgOriginArea.Deflate(aBorder.GetBorder());
     if (aColor.mBackgroundOrigin != NS_STYLE_BG_ORIGIN_PADDING) {
       nsMargin padding;
       // XXX CalcPaddingFor is deprecated, but we need it for percentage padding
       aPadding.CalcPaddingFor(aForFrame, padding);
+      // XXXldb What about SkipSides?
       bgOriginArea.Deflate(padding);
       NS_ASSERTION(aColor.mBackgroundOrigin == NS_STYLE_BG_ORIGIN_CONTENT,
                    "unknown background-origin value");
