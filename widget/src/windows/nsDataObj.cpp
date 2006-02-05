@@ -65,9 +65,6 @@
 #include "nsCRT.h"
 #include "nsPrintfCString.h"
 #include "nsIStringBundle.h"
-#include "nsEscape.h"
-#include "nsIURL.h"
-#include "nsNetUtil.h"
 
 #if 0
 #define PRNTDEBUG(_x) printf(_x);
@@ -941,47 +938,30 @@ HRESULT nsDataObj::GetFile(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
 {
   HRESULT res = S_OK;
   if (strcmp(PromiseFlatCString(aDataFlavor).get(), kFilePromiseMime) == 0) {
-    // If we have a cached file just pass it to HGLOBAL
-    // otherwise create an empty file in the temp location.
-    // The download will start after the user drops the file.
+    // XXX We are copying the file twice below.  Once from the original location to the temporary
+    // one (here) and then from the temporary location to the drop location (done by the drop target
+    // when this function returns).  If the file being drag-dropped is in the cache, we should be able to
+    // just pass back its file name to the drop target and save a copy.  Need help here!
     nsresult rv;
     if (!mCachedTempFile) {
-      // Get system temp directory
+      // Save the file to a temporary location.      
       nsCOMPtr<nsILocalFile> dropDirectory;
       nsCOMPtr<nsIProperties> directoryService = 
         do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-      if (!directoryService || NS_FAILED(rv))
-          return ResultFromScode(E_FAIL);
+      if (!directoryService || NS_FAILED(rv)) return ResultFromScode(E_FAIL);
       directoryService->Get(NS_OS_TEMP_DIR, 
                             NS_GET_IID(nsIFile), 
                             getter_AddRefs(dropDirectory));
-
-      nsCOMPtr<nsILocalFile> destFile = do_QueryInterface(dropDirectory);
-      if (!destFile)
-          return E_FAIL;
-
-      // Get the filename form the kFilePromiseURLFlavour
-      nsAutoString wideFileName;
-      nsCOMPtr<nsIURI> sourceURI;
-      rv = nsDataObj::GetDownloadDetails(mTransferable,
-                                         getter_AddRefs(sourceURI),
-                                         wideFileName);
-      if (NS_FAILED(rv))
-          return rv;
-
-      rv = destFile->Append(wideFileName);
-      if (NS_FAILED(rv))
-          return rv;
-
-      // Try to create the file.
-      rv = destFile->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
-      // Bail out if it fails for a reason other than the existence of the file.
-      if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)
-          return rv;
-
-      mCachedTempFile = do_QueryInterface(destFile);
-      if (!mCachedTempFile)
-          return ResultFromScode(E_FAIL);
+      nsCOMPtr<nsISupports> localFileISupports = do_QueryInterface(dropDirectory);
+      rv = mTransferable->SetTransferData(kFilePromiseDirectoryMime, localFileISupports, sizeof(nsILocalFile*));
+      if (NS_FAILED(rv)) return ResultFromScode(E_FAIL);
+      nsCOMPtr<nsISupports> fileDataPrimitive;
+      PRUint32 dataSize = 0;
+      rv = mTransferable->GetTransferData(kFilePromiseMime, getter_AddRefs(fileDataPrimitive), &dataSize);
+      if (NS_FAILED(rv)) return ResultFromScode(E_FAIL);      
+      
+      mCachedTempFile = do_QueryInterface(fileDataPrimitive);
+      if (!mCachedTempFile) return ResultFromScode(E_FAIL);
     }
 
     // Pass the file name back to the drop target so that it can copy to the drop location
@@ -1376,59 +1356,3 @@ nsDataObj::ExtractUniformResourceLocatorW(FORMATETC& aFE, STGMEDIUM& aSTG )
 
   return result;
 }
-
-// Gets the filename from the kFilePromiseURLMime flavour
-nsresult nsDataObj::GetDownloadDetails(nsITransferable *aTransferable,
-                                       nsIURI **aSourceURI,
-                                       nsAString &aFilename)
-{
-    if (!aTransferable)
-        return NS_ERROR_FAILURE;
-
-    // get the URI from the kFilePromiseURLMime flavor
-    nsCOMPtr<nsISupports> urlPrimitive;
-    PRUint32 dataSize = 0;
-    aTransferable->GetTransferData(kFilePromiseURLMime, getter_AddRefs(urlPrimitive), &dataSize);
-    nsCOMPtr<nsISupportsString> srcUrlPrimitive = do_QueryInterface(urlPrimitive);
-    if (!srcUrlPrimitive)
-        return NS_ERROR_FAILURE;
-
-    // Get data for flavor
-    // The format of the data is (URLSTRING\nFILENAME)
-    nsAutoString strData;
-    srcUrlPrimitive->GetData(strData);
-    if (strData.IsEmpty())
-        return NS_ERROR_FAILURE;
-
-    // Now figure if there is a "\n" delimiter in the data string.
-    // If there is, the string after the "\n" is a filename.
-    // If there is no delimiter then just get the filename from the url.
-    nsCAutoString strFileName;
-    nsCOMPtr<nsIURI> sourceURI;
-    // New line char is used as a delimiter (hardcoded)
-    PRInt32 nPos = strData.FindChar('\n');
-    // Store source uri
-    NS_NewURI(aSourceURI, Substring(strData, 0, nPos));
-    if (nPos != -1) {
-        // if there is delimiter
-        CopyUTF16toUTF8(Substring(strData, nPos + 1, strData.Length()), strFileName);
-    } else {
-        // no filename was supplied - try to get it from a URL
-        nsCOMPtr<nsIURL> sourceURL = do_QueryInterface(*aSourceURI);
-        sourceURL->GetFileName(strFileName);
-    }
-    // check for an error; the URL must point to a file
-    if (strFileName.IsEmpty())
-        return NS_ERROR_FAILURE;
-
-    NS_UnescapeURL(strFileName);
-    NS_ConvertUTF8toUTF16 wideFileName(strFileName);
-
-    // make the name safe for the filesystem
-    MangleTextToValidFilename(wideFileName);
-
-    aFilename = wideFileName;
-
-    return NS_OK;
-}
-

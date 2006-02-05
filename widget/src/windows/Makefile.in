@@ -67,9 +67,6 @@ REQUIRES	= xpcom \
 			xuldoc \
 			view \
 			imglib2 \
-			uriloader \
-			webbrowserpersist \
-			unicharutil \
 			$(NULL)
 
 ifdef MOZ_ENABLE_CAIRO_GFX
