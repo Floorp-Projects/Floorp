@@ -225,6 +225,22 @@ PRUint32 VirtualKey::GetNativeUniChars (PRUint8 aShiftState, PRUint16* aUniChars
 
 
 
+KeyboardLayout::KeyboardLayout ()
+{
+#ifndef WINCE
+  mDeadKeyTableListHead = nsnull;
+#endif
+
+  LoadLayout ();
+}
+
+KeyboardLayout::~KeyboardLayout ()
+{
+#ifndef WINCE
+  ReleaseDeadKeyTables ();
+#endif
+}
+
 PRBool KeyboardLayout::IsPrintableCharKey (PRUint8 aVirtualKey)
 {
 #ifndef WINCE
@@ -369,22 +385,24 @@ void KeyboardLayout::LoadLayout ()
       else
         rv = ::ToAsciiEx (virtualKey, 0, kbdState, &ascii, 0, mKeyboardLayout);
 
-      if (rv == -1)   // dead-key
+      if (rv < 0)   // dead-key
       {      
         shiftStatesWithDeadKeys |= 1 << shiftState;
         
         // Repeat dead-key to deactivate it and get its character representation.
-        PRUint16 deadChar;
+        PRUint16 deadChar [2];
 
         if (nsToolkit::mIsNT)
-          ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)&deadChar, 1, 0);
+          rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)deadChar, NS_ARRAY_LENGTH (deadChar), 0);
         else
         {
           rv = ::ToAsciiEx (virtualKey, 0, kbdState, &ascii, 0, mKeyboardLayout);
-          ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, rv, (WCHAR*)&deadChar, 1);
+          ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, 1, (WCHAR*)deadChar, 1);
         }
 
-        mVirtualKeys [vki].SetDeadChar (shiftState, deadChar);
+        NS_ASSERTION (rv == 2, "Expecting twice repeated dead-key character");
+
+        mVirtualKeys [vki].SetDeadChar (shiftState, deadChar [0]);
       } else
       {
         if (rv == 1)  // dead-key can pair only with exactly one base character.
@@ -485,11 +503,12 @@ void KeyboardLayout::SetShiftState (PBYTE aKbdState, PRUint8 aShiftState)
 
 inline PRInt32 KeyboardLayout::GetKeyIndex (PRUint8 aVirtualKey)
 {
-// Currently these 49 (NUM_OF_KEYS) virtual keys are assumed
+// Currently these 50 (NUM_OF_KEYS) virtual keys are assumed
 // to produce visible representation:
 // 0x20 - VK_SPACE          ' '
 // 0x30..0x39               '0'..'9'
 // 0x41..0x5A               'A'..'Z'
+// 0x6E - VK_DECIMAL        '.'
 // 0xBA - VK_OEM_1          ';:' for US
 // 0xBB - VK_OEM_PLUS       '+' any country
 // 0xBC - VK_OEM_COMMA      ',' any country
@@ -513,14 +532,14 @@ inline PRInt32 KeyboardLayout::GetKeyIndex (PRUint8 aVirtualKey)
      1,  2,  3,  4,  5,  6,  7,  8,  9, 10, -1, -1, -1, -1, -1, -1,   // 30
     -1, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,   // 40
     26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, -1, -1, -1, -1, -1,   // 50
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // 60
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 37, -1,   // 60
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // 70
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // 80
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // 90
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // A0
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 37, 38, 39, 40, 41, 42,   // B0
-    43, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // C0
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 44, 45, 46, 47, 48,   // D0
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 38, 39, 40, 41, 42, 43,   // B0
+    44, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // C0
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 45, 46, 47, 48, 49,   // D0
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // E0
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1    // F0
   };
@@ -577,13 +596,13 @@ PRBool KeyboardLayout::EnsureDeadKeyActive (PRBool aIsActive, PRUint8 aDeadKey, 
     else
       rv = ::ToAsciiEx (aDeadKey, 0, (PBYTE)aDeadKeyKbdState, dummyChars, 0, mKeyboardLayout);
     // returned values:
-    // -1 - Dead key state is active. The keyboard driver will wait for next character.
+    // <0 - Dead key state is active. The keyboard driver will wait for next character.
     //  1 - Previous pressed key was a valid base character that produced exactly one composite character.
     // >1 - Previous pressed key does not produce any composite characters. Return dead-key character 
     //      followed by base character(s).
-  } while ((rv == -1) != aIsActive);
+  } while ((rv < 0) != aIsActive);
 
-  return (rv == -1);
+  return (rv < 0);
 }
 
 void KeyboardLayout::DeactivateDeadKeyState ()
@@ -644,26 +663,16 @@ PRUint32 KeyboardLayout::GetDeadKeyCombinations (PRUint8 aDeadKey, const PBYTE a
         // Depending on the character the followed the dead-key, the keyboard driver can produce
         // one composite character, or a dead-key character followed by a second character.
         PRUint16 compositeChars [5];
+        WORD ascii;
         PRInt32 rv;
 
         if (nsToolkit::mIsNT)
           rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)compositeChars, NS_ARRAY_LENGTH (compositeChars), 0);
         else
-        {
-          WORD ascii;
           rv = ::ToAsciiEx (virtualKey, 0, kbdState, &ascii, 0, mKeyboardLayout);
-
-          if (rv == 1)
-            ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, 1, (WCHAR*)compositeChars, NS_ARRAY_LENGTH (compositeChars));
-        }
 
         switch (rv)
         {
-          case -1:
-            // Unexpected dead-key
-            deadKeyActive = PR_FALSE;
-            break;
-
           case 0:
             // This key combination does not produce any characters. The dead-key is still in active state.
             break;
@@ -678,14 +687,15 @@ PRUint32 KeyboardLayout::GetDeadKeyCombinations (PRUint8 aDeadKey, const PBYTE a
               rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)baseChars, NS_ARRAY_LENGTH (baseChars), 0);
             else
             {
-              WORD ascii;
-              rv = ::ToAsciiEx (virtualKey, 0, kbdState, &ascii, 0, mKeyboardLayout);
+              ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, 1, (WCHAR*)compositeChars, NS_ARRAY_LENGTH (compositeChars));
 
-              if (rv == 1)
-                ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, 1, (WCHAR*)baseChars, NS_ARRAY_LENGTH (baseChars));
+              rv = ::ToAsciiEx (virtualKey, 0, kbdState, &ascii, 0, mKeyboardLayout);
+              rv = ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)&ascii, rv, (WCHAR*)baseChars, NS_ARRAY_LENGTH (baseChars));
             }
 
-            if (entries < aMaxEntries)
+            NS_ASSERTION (rv == 1, "One base character expected");
+
+            if (rv == 1 && entries < aMaxEntries)
               if (AddDeadKeyEntry (baseChars [0], compositeChars [0], aDeadKeyArray, entries))
                 entries++;
             
@@ -694,7 +704,8 @@ PRUint32 KeyboardLayout::GetDeadKeyCombinations (PRUint8 aDeadKey, const PBYTE a
           }
 
           default:
-            // More than one character generated. This is not a valid dead-key and base character combination.
+            // 1. Unexpected dead-key. Dead-key chaining is not supported.
+            // 2. More than one character generated. This is not a valid dead-key and base character combination.
             deadKeyActive = PR_FALSE;
             break;
         }
