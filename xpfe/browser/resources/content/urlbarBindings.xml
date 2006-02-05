@@ -162,8 +162,14 @@
       
       <method name="getOverrideValue">
         <body><![CDATA[
-          if (this.mSearchBox.selectedIndex != null)
+          if (this.mSearchBox.selectedIndex != null) {
+            try {
+              if (pref.getBoolPref("browser.search.opensidebarsearchpanel"))
+                RevealSearchPanel();
+            } catch (ex) {
+            }
             return this.mSearchBox.getOverrideValue();
+          }
           return null;
         ]]></body>
       </method>
