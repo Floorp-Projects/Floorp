@@ -63,11 +63,6 @@
 <!ENTITY  useDefaultFontSerif.label               "Serif">
 <!ENTITY  useDefaultFontSansSerif.label           "Sans Serif">
 
-<!ENTITY  resolution.label                        "Display resolution:">
-<!ENTITY  resolution.accesskey                    "D">
-<!ENTITY  resolution.system.label                 "System setting">
-<!ENTITY  resolution.other                        "Other...">
-
 <!ENTITY  allowPagesToUse.label                   "Allow pages to choose their own fonts, instead of my selections above">
 <!ENTITY  allowPagesToUse.accesskey               "A">
 
