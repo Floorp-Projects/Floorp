@@ -99,13 +99,13 @@
       </method>
 
       <constructor><![CDATA[
-        var str = this.boxObject.getProperty('value');
+        var str = this.boxObject.getProperty("value");
         if (str) {
           this.inputField.value = str;
-          this.boxObject.removeProperty('value');
+          this.boxObject.removeProperty("value");
         }
 
-        str = this.getAttribute('newlines');
+        str = this.getAttribute("newlines");
         if (str) {
           const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
           for (var x in nsIPlaintextEditor) {
@@ -245,7 +245,7 @@
 
     <implementation>
       <method name="doPopupItemEnabling">
-        <parameter name="popupNode"/> 
+        <parameter name="popupNode"/>
         <body>
           <![CDATA[
             var children = popupNode.childNodes;
@@ -257,7 +257,7 @@
                 if (enabled)
                   children[i].removeAttribute("disabled");
                 else
-                  children[i].setAttribute("disabled", "true");               
+                  children[i].setAttribute("disabled", "true");
               }
             }
           ]]>
