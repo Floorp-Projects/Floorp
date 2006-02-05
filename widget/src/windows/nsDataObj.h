@@ -186,11 +186,6 @@ class nsDataObj : public IDataObject
 		// released the interface pointer after a drop).
 		ULONG GetRefCount() const;
 
-    // Gets the filename from the kFilePromiseURLMime flavour
-    static nsresult GetDownloadDetails(nsITransferable *aTransferable,
-                                       nsIURI **aSourceURI,
-                                       nsAString &aFilename);
-
 	protected:
 	
 	    // Help determine if the drag should create an internet shortcut
