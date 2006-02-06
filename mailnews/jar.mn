@@ -3,7 +3,6 @@ messenger.jar:
 *   content/messenger/contents.rdf                                             (base/resources/content/contents.rdf)
 *   content/messenger-region/contents.rdf                                      (base/resources/content/contents-region.rdf)
     content/messenger/addressbook/pref-addressing.xul                          (addrbook/prefs/resources/content/pref-addressing.xul)
-    content/messenger/addressbook/pref-addressbookOverlay.xul                  (addrbook/prefs/resources/content/pref-addressbookOverlay.xul)
     content/messenger/addressbook/pref-directory.js                            (addrbook/prefs/resources/content/pref-directory.js)
     content/messenger/addressbook/pref-directory-add.js                        (addrbook/prefs/resources/content/pref-directory-add.js)
     content/messenger/addressbook/pref-directory-add.xul                       (addrbook/prefs/resources/content/pref-directory-add.xul)
