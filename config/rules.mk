@@ -1577,7 +1577,7 @@ endif
 
 ifneq ($(XPI_PKGNAME),)
 libs realchrome::
-ifndef PKG_SKIP_STRIP
+ifdef STRIP_XPI
 	@echo "Stripping $(XPI_PKGNAME) package directory..."
 	@echo $(FINAL_TARGET)
 	@cd $(FINAL_TARGET) && find . ! -type d \
