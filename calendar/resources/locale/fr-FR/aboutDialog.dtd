@@ -36,7 +36,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY aboutDialog.title      "À propos de &brandFullName;">
-<!ENTITY copyright              "Crédits">
+<!ENTITY copyright              "Contributeurs">
 <!ENTITY aboutLink              "&lt; À propos de &brandFullName;">
 <!ENTITY aboutVersion           "version">
 <!ENTITY copyrightText          "&#169;1998-2006 Contributors. All rights

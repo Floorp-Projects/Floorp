@@ -55,6 +55,8 @@
 <!ENTITY alarm.start.warning   "Cette alarme nécessite une date de début" >
 <!ENTITY alarm.due.warning     "Cette alarme nécessite une date de fin" >
 
+<!ENTITY repeat.units.occurence.both         "occurrence(s)" >
+
 <!ENTITY repeat.units.days.both         "Jour(s)" >
 <!ENTITY repeat.units.weeks.both        "Semaine(s)" >
 <!ENTITY repeat.units.months.both       "Mois" >
