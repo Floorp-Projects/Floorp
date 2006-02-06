@@ -34,10 +34,12 @@
         <textarea name="[% param.name FILTER html %]" rows="10" cols="80">
             [% Param(param.name) FILTER html %]</textarea>
       [% ELSIF param.type == "b" %]
-        <input type="radio" name="[% param.name FILTER html %]"
-               value=1 [% "checked=\"checked\"" IF Param(param.name) %]>On
-        <input type="radio" name="[% param.name FILTER html %]"
-               value=0 [% "checked=\"checked\"" IF !Param(param.name) %]>Off
+        <input type="radio" name="[% param.name FILTER html %]" id="[% param.name FILTER html %]-on"
+               value=1 [% "checked=\"checked\"" IF Param(param.name) %]>
+        <label for="[% param.name FILTER html %]-on">On</label>
+        <input type="radio" name="[% param.name FILTER html %]" id="[% param.name FILTER html %]-off"
+               value=0 [% "checked=\"checked\"" IF !Param(param.name) %]>
+        <label for="[% param.name FILTER html %]-off">Off</label>
       [% ELSIF param.type == "m" %]
         [% boxSize = 5 %]
         [% boxSize = param.choices.size IF param.choices.size < 5 %]
@@ -47,7 +49,7 @@
           [% FOREACH item = param.choices %]
             <option value="[% item FILTER html %]"
                     [% " selected=\"selected\"" IF lsearch(Param(param.name), item) != -1 %]>
-              [% item FILTER html %]                                                                
+              [% item FILTER html %]
             </option>
           [% END %]
         </select>
@@ -67,7 +69,9 @@
       [% END %]  
       </p>
       <p>
-        <input type="checkbox" name="reset-[% param.name FILTER html %]">Reset
+        <input type="checkbox" name="reset-[% param.name FILTER html %]"
+               id="reset-[% param.name FILTER html %]">
+        <label for="reset-[% param.name FILTER html %]">Reset</label>
       </p>
       <hr>
     </dd>
