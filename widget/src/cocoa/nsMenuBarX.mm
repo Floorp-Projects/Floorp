@@ -231,6 +231,12 @@ nsMenuBarX::AquifyMenuBar()
     // so we can invoke its command later.
     HideItem(domDoc, NS_LITERAL_STRING("menu_PrefsSeparator"), nsnull);
     HideItem(domDoc, NS_LITERAL_STRING("menu_preferences"), getter_AddRefs(mPrefItemContent));
+    
+    // hide items that we use for the Application menu
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_services"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_app"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_others"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_show_all"), nsnull);
   }
 } // AquifyMenuBar
 
