@@ -125,6 +125,7 @@ static void DIR_SetIntPref(const char *prefRoot, const char *prefLeaf, PRInt32 v
 static DIR_Server *dir_MatchServerPrefToServer(nsVoidArray *wholeList, const char *pref);
 static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fullprefname);
 static void DIR_DeleteServerList(nsVoidArray *wholeList);
+static char *dir_CreateServerPrefName(DIR_Server *server);
 
 
 static PRInt32      dir_UserId = 0;
@@ -376,7 +377,7 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
     {
       // Need to return pref names here so the caller will be able to get the
       // right directory properties. For migration, pref names were already
-      // created so no need to get unique ones via DIR_CreateServerPrefName().
+      // created so no need to get unique ones via dir_CreateServerPrefName().
       if (!strcmp(server->fileName, kPersonalAddressbook))
         server->prefName = nsCRT::strdup("ldap_2.servers.pab");
       else if (!strcmp(server->fileName, kCollectedAddressbook))
@@ -1515,7 +1516,7 @@ static char * dir_ConvertDescriptionToPrefName(DIR_Server * server)
 }
 
 
-void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
+void DIR_SetServerFileName(DIR_Server *server)
 {
 	char * tempName = nsnull; 
 	const char * prefName = nsnull;
@@ -1526,7 +1527,7 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
           PR_FREEIF(server->fileName); // might be one byte empty string.
 		/* make sure we have a pref name...*/
 		if (!server->prefName || !*server->prefName)
-			server->prefName = DIR_CreateServerPrefName (server, nsnull);
+			server->prefName = dir_CreateServerPrefName(server);
 
 		/* set default personal address book file name*/
 		if ((server->position == 1) && (server->dirType == PABDirectory))
@@ -1561,19 +1562,14 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 	}
 }
 
-char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
+static char *dir_CreateServerPrefName (DIR_Server *server)
 {
   /* we are going to try to be smart in how we generate our server
      pref name. We'll try to convert the description into a pref name
      and then verify that it is unique. If it is unique then use it... */
-  char * leafName = nsnull;
+  char * leafName = dir_ConvertDescriptionToPrefName(server);
   char * prefName = nsnull;
   PRBool isUnique = PR_FALSE;
-
-  if (name)
-    leafName = nsCRT::strdup(name);
-  else
-    leafName = dir_ConvertDescriptionToPrefName (server);
 
   if (!leafName || !*leafName)
   {
@@ -1689,7 +1685,7 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 
   server->fileName = DIR_GetStringPref (prefstring, "filename", "");
   if ( (!server->fileName || !*(server->fileName)) && !oldstyle) /* if we don't have a file name and this is the new branch get a file name */
-    DIR_SetServerFileName (server, server->serverName);
+    DIR_SetServerFileName (server);
   if (server->fileName && *server->fileName)
     DIR_ConvertServerFileName(server);
 
@@ -1799,7 +1795,7 @@ static PRInt32 dir_GetPrefsFrom40Branch(nsVoidArray **list)
           server->prefName = prefName;
           DIR_GetPrefsForOneServer(server, PR_FALSE, PR_TRUE);				
           PR_smprintf_free(server->prefName);
-          server->prefName = DIR_CreateServerPrefName (server, nsnull);
+          server->prefName = dir_CreateServerPrefName(server);
           /* Leave room for Netcenter */
           server->position = (server->dirType == PABDirectory ? i : i + 1);
           (*list)->AppendElement(server);
@@ -1992,7 +1988,7 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
               /* since the pref name has now been set, we can generate a proper
               file name in case we don't have one already */
               if (!oldServer->fileName || !*oldServer->fileName)
-                DIR_SetServerFileName(oldServer, nsnull); 
+                DIR_SetServerFileName(oldServer);
               
               oldServer->flags     = newServer->flags;
               
@@ -2257,7 +2253,7 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
   char * csidAsString = nsnull;
 
   if (server->prefName == nsnull)
-    server->prefName = DIR_CreateServerPrefName (server, nsnull);
+    server->prefName = dir_CreateServerPrefName(server);
   prefstring = server->prefName;
 
   DIR_SetFlag(server, DIR_SAVING_SERVER);

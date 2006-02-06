@@ -81,10 +81,9 @@ nsresult nsAbLDAPReplicationQuery::InitLDAPData()
     if (!nsCRT::strcasecmp(mDirServer->fileName,kPersonalAddressbook) 
         || !mDirServer->fileName || !(*mDirServer->fileName)) {
         // initialize mDirServer->filename is null or else DIR_SetServerFileName doesnot work
-        // and no point in passing the 2nd param (leafName) to it as it doesnot use that.
         PR_FREEIF(mDirServer->fileName);
         mDirServer->fileName=nsnull;
-        DIR_SetServerFileName (mDirServer, nsnull);
+        DIR_SetServerFileName(mDirServer);
     }
     // use the dir server filename for replication
     PR_FREEIF(mDirServer->replInfo->fileName);

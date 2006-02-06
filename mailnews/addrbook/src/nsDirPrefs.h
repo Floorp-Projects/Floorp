@@ -190,8 +190,7 @@ nsresult DIR_SaveServerPreferences(nsVoidArray *wholeList);
 void    DIR_GetPrefsForOneServer(DIR_Server *server, PRBool reinitialize, PRBool oldstyle);
 void    DIR_SavePrefsForOneServer(DIR_Server *server);
 
-char   *DIR_CreateServerPrefName (DIR_Server *server, char *name);
-void	DIR_SetServerFileName(DIR_Server* pServer, const char* leafName);
+void DIR_SetServerFileName(DIR_Server* pServer);
 
 DIR_PrefId  DIR_AtomizePrefName(const char *prefname);
 
