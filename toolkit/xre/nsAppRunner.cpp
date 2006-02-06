@@ -2292,11 +2292,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         rv = cmdLine->Init(gArgc, gArgv,
                            workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
         NS_ENSURE_SUCCESS(rv, 1);
-
-        // Kick off the prebinding update now that we know we won't be
-        // relaunching.
-
-        UpdatePrebinding();
 #endif
         nsCOMPtr<nsIObserverService> obsService
           (do_GetService("@mozilla.org/observer-service;1"));

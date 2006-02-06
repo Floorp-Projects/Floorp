@@ -39,63 +39,6 @@
 #include "MacLaunchHelper.h"
 
 #include <Cocoa/Cocoa.h>
-#include <mach-o/dyld.h>
-#include <sys/utsname.h>
-
-@interface TaskMonitor : NSObject
--(void)prebindFinished:(NSNotification *)aNotification;
-@end
-
-@implementation TaskMonitor
--(void)prebindFinished:(NSNotification *)aNotification
-{
-  /* Delete the task and the TaskMonitor */
-  [[aNotification object] release];
-  [self release];
-}
-@end
-
-void
-UpdatePrebinding()
-{
-#ifdef _BUILD_STATIC_BIN
-  struct utsname u;
-  uname(&u);
-
-  // We run the redo-prebinding script in these cases:
-  // 10.1.x (5.x): No auto-update of prebinding exists
-  // On 10.3.x, prebinding fails to update automatically but this script
-  // doesn't work either.  It doesn't matter though, because in 10.3.4 and
-  // higher, the loader is improved so that prebinding is unnecessary.
-  if (u.release[0] != '5')
-    return;
-
-  if (!_dyld_launched_prebound()) {
-    NSTask *task;
-    NSArray *args;
-    TaskMonitor *monitor;
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
-    NSLog(@"Not prebound, launching update script");
-    task = [[NSTask alloc] init];
-    args = [NSArray arrayWithObject: @"redo-prebinding.sh"];
-
-    [task setCurrentDirectoryPath:[[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent]];
-    [task setLaunchPath:@"/bin/sh"];
-    [task setArguments:args];
-
-    monitor = [[TaskMonitor alloc] init];
-
-    [[NSNotificationCenter defaultCenter] addObserver:monitor
-     selector:@selector(prebindFinished:)
-     name:NSTaskDidTerminateNotification
-     object:nil];
-
-    [task launch];
-    [pool release];
-  }
-#endif
-}
 
 void LaunchChildMac(int aArgc, char** aArgv)
 {

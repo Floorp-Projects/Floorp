@@ -213,10 +213,3 @@ DEFINES += -DTOOLKIT_EM_VERSION=\"$(shell $(PERL) $(topsrcdir)/config/milestone.
 
 export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS) $(SHAREDCMMSRCS)) $(STACKWALK_CPPSRCS)
 	$(INSTALL) $^ .
-
-ifdef USE_PREBINDING
-libs::
-	$(INSTALL) $(srcdir)/redo-prebinding.sh $(DIST)/bin
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(DESTDIR)$(bindir)
-endif
