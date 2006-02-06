@@ -142,6 +142,12 @@ NS_IMETHODIMP CDownload::GetStartTime(PRInt64 *aStartTime)
     return NS_OK;
 }
 
+/* readonly attribute double speed; */
+NS_IMETHODIMP CDownload::GetSpeed(double *aSpeed)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* readonly attribute nsIMIMEInfo MIMEInfo; */
 NS_IMETHODIMP CDownload::GetMIMEInfo(nsIMIMEInfo * *aMIMEInfo)
 {

@@ -154,6 +154,11 @@ public:
     return mInner->GetTargetFile(aTargetFile);
   }
 
+  NS_IMETHODIMP GetSpeed(double* aSpeed)
+  {
+    return mInner->GetSpeed(aSpeed);
+  }
+
   NS_IMETHODIMP OnStateChange(nsIWebProgress* aWebProgress,
                               nsIRequest* aRequest, PRUint32 aStateFlags,
                               PRUint32 aStatus)

@@ -159,6 +159,7 @@ public:
   }
   void SetStartTime(PRInt64 aStartTime) {
     mStartTime = aStartTime;
+    mLastUpdate = aStartTime;
   }
 private:
   nsDownloadManager* mDownloadManager;
@@ -179,6 +180,7 @@ private:
   PRUint64 mMaxBytes;
   PRTime mStartTime;
   PRTime mLastUpdate;
+  double mSpeed;
 };
 
 #endif

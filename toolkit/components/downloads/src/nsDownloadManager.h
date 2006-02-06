@@ -259,8 +259,9 @@ private:
   PRInt32 mPercentComplete;
   PRUint64 mCurrBytes;
   PRUint64 mMaxBytes;
-  PRInt64 mStartTime;
+  PRTime mStartTime;
   PRTime mLastUpdate;
+  double mSpeed;
 
   friend class nsDownloadManager;
 };

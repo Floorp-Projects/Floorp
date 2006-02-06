@@ -43,7 +43,6 @@ function nsDownloadProgressListener() {
 }
 
 nsDownloadProgressListener.prototype = {
-    elapsed: 0,
     rateChanges: 0,
     rateChangeLimit: 0,
     priorRate: "",
@@ -93,14 +92,6 @@ nsDownloadProgressListener.prototype = {
       // Update this time.
       this.lastUpdate = now;
 
-      // Update download rate.
-      this.elapsed = now - (aDownload.startTime / 1000);
-      var rate; // aCurTotalProgress/sec
-      if ( this.elapsed )
-        rate = ( aCurTotalProgress * 1000 ) / this.elapsed;
-      else
-        rate = 0;
-
       var aDownloadID = aDownload.targetFile.path
       var elt = this.doc.getElementById(aDownloadID).firstChild.firstChild;
       if (this.doc.getElementById("TimeElapsed").getAttribute("hidden") != "true") {
@@ -144,6 +135,7 @@ nsDownloadProgressListener.prototype = {
          status = replaceInsert( status, 2, "??" );
       
       var rateMsg = getString( "rateMsg", this.doc );
+      var rate = aDownload.speed;
       if ( rate )
       {
         // rate is bytes/sec
