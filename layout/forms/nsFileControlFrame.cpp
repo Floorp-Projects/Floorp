@@ -603,9 +603,13 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
-  nsresult rv = nsAreaFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsDisplayListCollection tempList;
+  nsresult rv = nsAreaFrame::BuildDisplayList(aBuilder, aDirtyRect, tempList);
   if (NS_FAILED(rv))
     return rv;
+
+  tempList.BorderBackground()->DeleteAll();
+  tempList.MoveTo(aLists);
   
   // Disabled file controls don't pass mouse events to their children, so we
   // put an invisible item in the display list above the children
