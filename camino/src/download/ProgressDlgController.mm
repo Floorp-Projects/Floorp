@@ -985,7 +985,7 @@ static id gSharedProgressController = nil;
 
 -(NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
-  return [NSArray arrayWithObjects:@"removebutton", @"cleanupbutton", @"cancelbutton", @"pauseresumebutton", @"openbutton", @"revealbutton", NSToolbarFlexibleSpaceItemIdentifier, nil];
+  return [NSArray arrayWithObjects:@"cleanupbutton", @"removebutton", @"cancelbutton", @"pauseresumebutton", @"openbutton", @"revealbutton", NSToolbarFlexibleSpaceItemIdentifier, nil];
 }
 
 -(NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
