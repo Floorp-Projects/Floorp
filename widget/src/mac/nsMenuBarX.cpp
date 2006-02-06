@@ -225,13 +225,20 @@ nsMenuBarX :: AquifyMenuBar ( )
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mMenuBarContent->GetDocument()));
   if ( domDoc ) {
     // remove quit item and its separator
-    HideItem ( domDoc, NS_LITERAL_STRING("menu_FileQuitSeparator"), nsnull );
-    HideItem ( domDoc, NS_LITERAL_STRING("menu_FileQuitItem"), getter_AddRefs(mQuitItemContent) );
+    HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitSeparator"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitItem"), getter_AddRefs(mQuitItemContent));
   
     // remove prefs item and its separator, but save off the pref content node
     // so we can invoke its command later.
-    HideItem ( domDoc, NS_LITERAL_STRING("menu_PrefsSeparator"), nsnull );
-    HideItem ( domDoc, NS_LITERAL_STRING("menu_preferences"), getter_AddRefs(mPrefItemContent) );
+    HideItem(domDoc, NS_LITERAL_STRING("menu_PrefsSeparator"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_preferences"), getter_AddRefs(mPrefItemContent));
+    
+    // Cocoa menus compatibility - hide items that we use for the Application menu in Cocoa menus.
+    // This way, a menu setup for the Cocoa application menu will also work for Carbon menus.
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_services"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_app"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_others"), nsnull);
+    HideItem(domDoc, NS_LITERAL_STRING("menu_mac_show_all"), nsnull);
   }
       
 } // AquifyMenuBar
