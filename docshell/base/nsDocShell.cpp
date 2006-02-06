@@ -157,6 +157,7 @@
 #include "nsISelectionDisplay.h"
 
 #include "nsIGlobalHistory2.h"
+#include "nsIGlobalHistory3.h"
 
 #ifdef DEBUG_DOCSHELL_FOCUS
 #include "nsIEventStateManager.h"
@@ -4753,30 +4754,9 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
             EndPageLoad(aProgress, channel, aStatus);
         }
     }
-    else if ((~aStateFlags & (STATE_IS_DOCUMENT | STATE_REDIRECTING)) == 0) {
-        // XXX Is it enough if I check just for the above 2 flags for redirection 
-        nsCOMPtr<nsIWebProgress> webProgress =
-            do_QueryInterface(GetAsSupports(this));
-
-        // Is the document stop notification for this document?
-        if (aProgress == webProgress.get()) {
-            nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-            if (channel) {
-                // Get the uri from the channel
-                nsCOMPtr<nsIURI> uri;
-                nsCOMPtr<nsIURI> referrer;
-                channel->GetURI(getter_AddRefs(uri));
-                // Get the referrer uri from the channel
-                nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aRequest));
-                if (httpchannel)
-                    httpchannel->GetReferrer(getter_AddRefs(referrer));
-                // Add the original url to global History so that
-                // visited url color changes happen.
-                if (uri)
-                    AddToGlobalHistory(uri, PR_TRUE, referrer);
-            }                   // channel
-        }                       // aProgress
-    }
+    // note that redirect state changes will go through here as well, but it
+    // is better to handle those in OnRedirectStateChange where more
+    // information is available.
     return NS_OK;
 }
 
@@ -4786,6 +4766,39 @@ nsDocShell::OnLocationChange(nsIWebProgress * aProgress,
 {
     NS_NOTREACHED("notification excluded in AddProgressListener(...)");
     return NS_OK;
+}
+
+void
+nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
+                                  nsIChannel* aNewChannel,
+                                  PRUint32 aRedirectFlags,
+                                  PRUint32 aStateFlags)
+{
+    NS_ASSERTION(aStateFlags & STATE_REDIRECTING,
+                 "Calling OnRedirectStateChange when there is no redirect");
+    if (!(aStateFlags & STATE_IS_DOCUMENT))
+        return; // not a toplevel document
+
+    nsCOMPtr<nsIGlobalHistory3> history3(do_QueryInterface(mGlobalHistory));
+    if (history3) {
+        // notify global history of this redirect
+        history3->AddToplevelRedirect(aOldChannel, aNewChannel,
+                                      aRedirectFlags);
+    } else {
+        // when there is no GlobalHistory3, we fall back to GlobalHistory2.
+        // Just notify that the redirecting page was a redirect so it will
+        // be link colored but not visible.
+        nsCOMPtr<nsIURI> oldURI;
+        aOldChannel->GetURI(getter_AddRefs(oldURI));
+        if (! oldURI)
+            return; // nothing to tell anybody about
+
+        nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aOldChannel));
+        nsCOMPtr<nsIURI> referrer;
+        if (httpchannel)
+            httpchannel->GetReferrer(getter_AddRefs(referrer));
+        AddToGlobalHistory(oldURI, PR_TRUE, referrer);
+    }
 }
 
 NS_IMETHODIMP

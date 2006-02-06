@@ -68,12 +68,12 @@ struct nsListenerInfo;
  * nsDocLoader implementation...
  ****************************************************************************/
 
-#define NS_THIS_DOCLOADER_IMPL_CID                 \
- { /* 2f7f940d-d67e-40bc-b1ba-8c46de2b4cec */         \
-     0x2f7f940d,                                      \
-     0xd67e,                                          \
-     0x40bc,                                          \
-     {0xb1, 0xba, 0x8c, 0x46, 0xde, 0x2b, 0x4c, 0xec} \
+#define NS_THIS_DOCLOADER_IMPL_CID                    \
+ { /* b4ec8387-98aa-4c08-93b6-6d23069c06f2 */         \
+     0xb4ec8387,                                      \
+     0x98aa,                                          \
+     0x4c08,                                          \
+     {0x93, 0xb6, 0x6d, 0x23, 0x06, 0x9c, 0x06, 0xf2} \
  }
 
 class nsDocLoader : public nsIDocumentLoader, 
@@ -172,6 +172,17 @@ protected:
     void FireOnLocationChange(nsIWebProgress* aWebProgress,
                               nsIRequest* aRequest,
                               nsIURI *aUri);
+
+    // this function is overridden by the docshell, it is provided so that we
+    // can pass more information about redirect state (the normal OnStateChange
+    // doesn't get the new channel).
+    // @param aRedirectFlags The flags being sent to OnStateChange that
+    //                       indicate the type of redirect.
+    // @param aStateFlags    The channel flags normally sent to OnStateChange.
+    virtual void OnRedirectStateChange(nsIChannel* aOldChannel,
+                                       nsIChannel* aNewChannel,
+                                       PRUint32 aRedirectFlags,
+                                       PRUint32 aStateFlags) {}
 
     void doStartDocumentLoad();
     void doStartURLLoad(nsIRequest *request);
