@@ -587,6 +587,7 @@ nsLayoutUtils::IsInitialContainingBlock(nsIFrame* aFrame)
 
 static PRBool gDumpPaintList = 0;
 static PRBool gDumpEventList = 0;
+static PRBool gDumpRepaintRegionForCopy = 0;
 #endif
 
 nsIFrame*
@@ -646,6 +647,23 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 }
 
 static void
+AccumulateItemInRegion(nsRegion* aRegion, const nsRect& aAreaRect,
+                       const nsRect& aItemRect, nsDisplayItem* aItem)
+{
+  nsRect damageRect;
+  if (damageRect.IntersectRect(aAreaRect, aItemRect)) {
+#ifdef DEBUG
+    if (gDumpRepaintRegionForCopy) {
+      fprintf(stderr, "Adding rect %d,%d,%d,%d for frame %p\n",
+              damageRect.x, damageRect.y, damageRect.width, damageRect.height,
+              (void*)aItem->GetUnderlyingFrame());
+    }
+#endif
+    aRegion->Or(*aRegion, damageRect);
+  }
+}
+
+static void
 AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
                  const nsRect& aRect, const nsRect& aClipRect, nsPoint aDelta,
                  nsRegion* aRegion)
@@ -671,28 +689,21 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
           nsIFrame* f = item->GetUnderlyingFrame();
           NS_ASSERTION(f, "Must have an underlying frame for leaf item");
           inMovingSubtree = aBuilder->IsMovingFrame(f);
-          nsRect damageRect;
-          if (damageRect.IntersectRect(aRect + aDelta, r)) {
-            aRegion->Or(*aRegion, damageRect);
-          }
+          AccumulateItemInRegion(aRegion, aRect + aDelta, r, item);
         }
       
         if (!inMovingSubtree) {
           // if it's uniform and it includes both the old and new areas, then
           // we don't need to paint it
-          if (!(r.Contains(aRect) && r.Contains(aRect + aDelta) &&
-                item->IsVaryingRelativeToFrame(aBuilder, aBuilder->GetRootMovingFrame()))) {
+          PRBool skip = r.Contains(aRect) && r.Contains(aRect + aDelta) &&
+              item->IsUniform(aBuilder);
+          if (!skip) {
             // area where a non-moving element is visible must be repainted
-            nsRect damageRect;
-            if (damageRect.IntersectRect(aRect + aDelta, r)) {
-              aRegion->Or(*aRegion, damageRect);
-            }
+            AccumulateItemInRegion(aRegion, aRect + aDelta, r, item);
             // we may have bitblitted an area that was painted by a non-moving
             // element. This bitblitted data is invalid and was copied to
             // "r + aDelta".
-            if (damageRect.IntersectRect(aRect + aDelta, r + aDelta)) {
-              aRegion->Or(*aRegion, damageRect);
-            }
+            AccumulateItemInRegion(aRegion, aRect + aDelta, r + aDelta, item);
           }
         }
       }
@@ -722,11 +733,27 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
     aRootFrame->BuildDisplayListForStackingContext(&builder, rect, &list);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef DEBUG
+  if (gDumpRepaintRegionForCopy) {
+    fprintf(stderr,
+            "Repaint region for copy --- before optimization (area %d,%d,%d,%d, frame %p):\n",
+            rect.x, rect.y, rect.width, rect.height, (void*)aMovingFrame);
+    nsIFrameDebug::PrintDisplayList(&builder, list);
+  }
+#endif
+
   // Optimize for visibility, but frames under aMovingFrame will not be
   // considered opaque, so they don't cover non-moving frames.
   nsRegion visibleRegion(aCopyRect);
   visibleRegion.Or(visibleRegion, aCopyRect + aDelta);
   list.OptimizeVisibility(&builder, &visibleRegion);
+
+#ifdef DEBUG
+  if (gDumpRepaintRegionForCopy) {
+    fprintf(stderr, "Repaint region for copy --- after optimization:\n");
+    nsIFrameDebug::PrintDisplayList(&builder, list);
+  }
+#endif
 
   aRepaintRegion->SetEmpty();
   // Any visible non-moving display items get added to the repaint region
