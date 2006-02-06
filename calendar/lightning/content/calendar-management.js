@@ -177,7 +177,7 @@ var ltnCalendarViewController = {
             aCalendar.addItem(event, null);
         } else {
             // default pop up the dialog
-            var date = document.getElementById("calendar-view-box").selectedPanel.selectedDay;
+            var date = document.getElementById("calendar-view-box").selectedPanel.selectedDay.clone();
             date.isDate = false;
             createEventWithDialog(aCalendar, date, date);
         }

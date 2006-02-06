@@ -2213,6 +2213,7 @@
               // they're likely to be immutable.
               var d2 = d.clone();
               d2.isDate = true;
+              d2.makeImmutable();
 
               this.mDateColumns.push ( { date: d2, column: dayEventsBox, header: dayHeaderBox } );
           }
