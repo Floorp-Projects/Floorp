@@ -137,6 +137,8 @@ nsPluginInstallerWizard.prototype.showPluginList = function (){
   for (var run = myPluginList.childNodes.length; run > 0; run--)
     myPluginList.removeChild(myPluginList.childNodes.item(run));
 
+  this.pluginsToInstallNum = 0;
+
   for (pluginInfoItem in this.mPluginInfoArray){
     // [plugin image] [Plugin_Name Plugin_Version]
 
@@ -154,6 +156,9 @@ nsPluginInstallerWizard.prototype.showPluginList = function (){
 
     if (pluginInfo.InstallerShowsUI == "true")
       hasPluginWithInstallerUI = true;
+
+    // keep a running count of plugins the user wants to install
+    this.pluginsToInstallNum++;
   }
 
   if (hasPluginWithInstallerUI)
