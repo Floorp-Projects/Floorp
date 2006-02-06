@@ -59,7 +59,6 @@ function DownloadProgressListener (aDocument, aStringBundle)
 
 DownloadProgressListener.prototype = 
 {
-  elapsed: 0,
   rateChanges: 0,
   rateChangeLimit: 0,
   priorRate: 0,
@@ -90,14 +89,6 @@ DownloadProgressListener.prototype =
 
     // Update this time.
     this.lastUpdate = now;
-
-    // Update download rate.
-    this.elapsed = now - (aDownload.startTime / 1000);
-    var rate; // aCurTotalProgress/sec
-    if (this.elapsed)
-      rate = (aCurTotalProgress * 1024) / this.elapsed;
-    else
-      rate = 0;
 
     var aDownloadID = aDownload.targetFile.path;
     var download = this.doc.getElementById(aDownloadID);
@@ -138,6 +129,7 @@ DownloadProgressListener.prototype =
     if (download)
       download.setAttribute("status-internal", kbProgress);
 
+    var rate = aDownload.speed;
     if (rate) {
       // rate is bytes/sec
       var kRate = rate / 1024; // K bytes/sec;
@@ -157,13 +149,13 @@ DownloadProgressListener.prototype =
       else
         this.rateChanges = 0;
 
-        var fraction = kRate % 10;
-        kRate = parseInt((kRate - fraction) / 10);
+      var fraction = kRate % 10;
+      kRate = parseInt((kRate - fraction) / 10);
 
-        // Insert 3 is the download rate (in kilobytes/sec).
-        if (kRate < 100)
-          kRate += "." + fraction;
-        status = this._replaceInsert(status, 2, kRate);
+      // Insert 3 is the download rate (in kilobytes/sec).
+      if (kRate < 100)
+        kRate += "." + fraction;
+      status = this._replaceInsert(status, 2, kRate);
     }
     else
       status = this._replaceInsert(status, 2, "??.?");

@@ -180,6 +180,13 @@ nsDownloadListener::GetStartTime(PRInt64 *aStartTime)
   return NS_OK;
 }
 
+/* readonly attribute double speed; */
+NS_IMETHODIMP
+nsDownloadListener::GetSpeed(double* aSpeed)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* readonly attribute nsIMIMEInfo MIMEInfo; */
 NS_IMETHODIMP
 nsDownloadListener::GetMIMEInfo(nsIMIMEInfo * *aMIMEInfo)
