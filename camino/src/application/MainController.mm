@@ -749,7 +749,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   }
   else
   {
-    [browserController openURLArray:urlStringsArray tabOpenPolicy:eAppendFromCurrentTab allowPopups:YES];
+    [browserController openURLArray:urlStringsArray tabOpenPolicy:eReplaceFromCurrentTab allowPopups:YES];
   }
 }
 

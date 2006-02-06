@@ -2879,7 +2879,7 @@ enum BWCOpenDest {
     
     if (tabPolicy == eReplaceTabs && i < curNumTabs)
       tabViewItem = [mTabBrowser tabViewItemAtIndex: i];
-    else if (tabPolicy == eAppendFromCurrentTab && selectedTabIndex < curNumTabs)
+    else if (tabPolicy == eReplaceFromCurrentTab && selectedTabIndex < curNumTabs)
       tabViewItem = [mTabBrowser tabViewItemAtIndex: selectedTabIndex++];
     else
     {
@@ -2895,8 +2895,13 @@ enum BWCOpenDest {
                           flags: NSLoadFlagsNone activate:(i == 0) allowPopups:inAllowPopups];
   }
   
-  // select the first tab that we changed
-  [mTabBrowser selectTabViewItem:tabViewToSelect];  
+  // if we replace all tabs (because we opened a tab group), or we open additional tabs
+  // with the "focus new tab"-pref on, focus the first new tab.
+  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+  
+  if (!((tabPolicy == eAppendTabs) && loadInBackground))
+    [mTabBrowser selectTabViewItem:tabViewToSelect];
+    
 }
 
 -(void) openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra allowPopups:(BOOL)inAllowPopups

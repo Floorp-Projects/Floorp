@@ -91,7 +91,7 @@ typedef enum
 {
   eAppendTabs,
   eReplaceTabs,
-  eAppendFromCurrentTab
+  eReplaceFromCurrentTab
 	  
 } ETabOpenPolicy;
 
