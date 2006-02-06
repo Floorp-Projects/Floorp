@@ -69,3 +69,5 @@ locale/XXXX/cookie/contents.rdf,                    XXXX/locale/XXXX/cookie/cont
 # Marquee stuff
 content/xbl-marquee,                                comm/content/xbl-marquee
 
+# SVG
+content/global/svg,                                 toolkit/content/global/svg
