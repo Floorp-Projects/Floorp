@@ -1,0 +1,5 @@
+<!ENTITY  brandShortName        "Sunbird">
+<!ENTITY  brandFullName         "Mozilla Sunbird">
+<!ENTITY  vendorShortName       "Mozilla">
+
+<!ENTITY  releaseURL            "http://www.mozilla.org/projects/calendar/releases/sunbird_0.3alpha1.html">
