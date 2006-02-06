@@ -1099,6 +1099,7 @@ calendar/providers/Makefile
 calendar/providers/memory/Makefile
 calendar/providers/storage/Makefile
 calendar/providers/composite/Makefile
+calendar/xpi/Makefile
 "
 
 MAKEFILES_sunbird="
