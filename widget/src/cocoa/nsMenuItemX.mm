@@ -161,13 +161,6 @@ NS_METHOD nsMenuItemX::GetMenuItemType(EMenuItemType *aType)
 }
 
 
-NS_METHOD nsMenuItemX::GetTarget(nsIWidget *& aTarget)
-{
-  NS_IF_ADDREF(aTarget = mTarget);
-  return NS_OK;
-}
-
-
 NS_METHOD nsMenuItemX::GetNativeData(void *& aData)
 {
   aData = mNativeMenuItem;

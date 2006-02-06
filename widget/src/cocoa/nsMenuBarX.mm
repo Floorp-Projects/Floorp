@@ -256,8 +256,7 @@ nsMenuBarX::InstallCommandEventHandler()
    WindowRef myWindowRef = (WindowRef)[myWindow windowRef];
    NS_ASSERTION(myWindowRef, "Can't get WindowRef to install command handler!");
    if (myWindowRef && sCommandEventHandler) {
-     const EventTypeSpec commandEventList[] = {{kEventClassCommand, kEventCommandProcess},
-                                               {kEventClassCommand, kEventCommandUpdateStatus}};
+     const EventTypeSpec commandEventList[] = {{kEventClassCommand, kEventCommandProcess}};
      err = ::InstallWindowEventHandler(myWindowRef, sCommandEventHandler, 2, commandEventList, this, NULL);
      NS_ASSERTION(err == noErr, "Uh oh, command handler not installed");
    }
@@ -335,22 +334,6 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
           break;
         }
       } // switch on commandID
-      break;
-    }
-      
-    // enable/disable menu id's
-    case kEventCommandUpdateStatus:
-    {
-      //XXXJOSH implement this Cocoa-style
-      // only enable the preferences item in the app menu if we found a pref
-      // item DOM node in this menubar.
-      if (command.commandID == kHICommandPreferences) {
-        if (self->mPrefItemContent)
-          ::EnableMenuCommand(nsnull, kHICommandPreferences);
-        else
-          ::DisableMenuCommand(nsnull, kHICommandPreferences);
-        handled = noErr;
-      }
       break;
     }
   } // switch on event type
