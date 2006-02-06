@@ -181,5 +181,5 @@ nsPageContentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = nsContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return Clip(aBuilder, set, aLists, rect);
+  return Clip(aBuilder, set, aLists, rect + aBuilder->ToReferenceFrame(this));
 }

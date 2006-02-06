@@ -573,7 +573,8 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 #ifdef DEBUG_PRINTING
     printf("*** ClipRect: %5d,%5d,%5d,%5d\n", mClipRect.x, mClipRect.y, mClipRect.width, mClipRect.height);
 #endif
-    return Clip(aBuilder, set, aLists, mClipRect);
+    return Clip(aBuilder, set, aLists,
+                mClipRect + aBuilder->ToReferenceFrame(this));
   }
 
   set.MoveTo(aLists);
