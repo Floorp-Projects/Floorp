@@ -43,6 +43,7 @@
 #include "nsMai.h"
 #include "nsAppRootAccessible.h"
 #include "prlink.h"
+#include "nsIServiceManager.h"
 
 #include <gtk/gtk.h>
 #include <atk/atk.h>
@@ -568,13 +569,32 @@ NS_IMETHODIMP nsAppRootAccessible::Shutdown()
 
 NS_IMETHODIMP nsAppRootAccessible::GetName(nsAString& _retval)
 {
-    _retval.AssignLiteral("Mozilla");
+    nsCOMPtr<nsIStringBundleService> bundleService = 
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+
+    NS_ASSERTION(bundleService, "String bundle service must be present!");
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    bundleService->CreateBundle("chrome://branding/locale/brand.properties",
+                                getter_AddRefs(bundle));
+    nsXPIDLString appName;
+
+    if (bundle) {
+      bundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                getter_Copies(appName));
+    } else {
+      NS_WARNING("brand.properties not present, using default app name");
+      appName.AssignLiteral("Mozilla");
+    }
+
+    _retval.Assign(appName);
     return NS_OK;
 }
 
 NS_IMETHODIMP nsAppRootAccessible::GetDescription(nsAString& aDescription)
 {
-    aDescription.AssignLiteral("Mozilla Root Accessible");
+    GetName(aDescription);
+    aDescription.AppendLiteral(" Root Accessible");
     return NS_OK;
 }
 
