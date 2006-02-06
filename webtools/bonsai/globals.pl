@@ -1156,7 +1156,7 @@ sub MarkUpText {
      $bugsrpl = PerformSubsts($bugsrpl, \%substs);
 
      $text =~ s{((ftp|http)://\S*[^\s.])}{<a href=\"$1\">$1</a>}g;
-     $text =~ s/(&lt;(.*@.*)&gt;)/<a href=\"mailto:$2\">$1<\/a>/g;
+     $text =~ s/(&lt;(\S+@\S+)&gt;)/<a href=\"mailto:$2\">$1<\/a>/g;
 
      $bugsmatch = 2
           unless ($bugsmatch =~ /^\+?\d+$/);
