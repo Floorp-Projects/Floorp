@@ -164,7 +164,7 @@ ifndef CROSS_COMPILE
 ifdef MOZ_PSM
 SIGN_NSS		= @echo signing nss libraries;
 
-SIGN_CMD	= $(DIST)/bin/run-mozilla.sh $(DIST)/bin/shlibsign -v -i
+SIGN_CMD	= $(DIST)/bin/run-mozilla.sh $(DEPTH)/nss/shlibsign -v -i
 
 SOFTOKN		= $(DIST)/$(MOZ_PKG_APPNAME)$(_BINPATH)/$(DLL_PREFIX)softokn3$(DLL_SUFFIX)
 FREEBL		= $(DIST)/$(MOZ_PKG_APPNAME)$(_BINPATH)/$(DLL_PREFIX)freebl3$(DLL_SUFFIX)
