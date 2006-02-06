@@ -1036,7 +1036,17 @@ CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,
         PRBool inCDATA = (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) &&
           StringBeginsWith(mTextValue, NS_LITERAL_STRING("[CDATA["));
         if (inCDATA) {
-          result = aScanner.Peek(aChar);
+          // Consume all right square brackets to catch cases such as:
+          // <![CDATA[foo]]]>
+          while (true) {
+            result = aScanner.Peek(aChar);
+            if (result != NS_OK || aChar != kRightSquareBracket) {
+              break;
+            }
+
+            mTextValue.Append(aChar);
+            aScanner.GetChar(aChar);
+          }
         } else {
           nsAutoString dummy; // Skip any bad data
           result = aScanner.ReadUntil(dummy, kGreaterThan, PR_FALSE);
