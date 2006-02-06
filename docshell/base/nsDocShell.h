@@ -395,6 +395,13 @@ protected:
                                        WalkHistoryEntriesFunc aCallback,
                                        void *aData);
 
+    // overridden from nsDocLoader, this provides more information than the
+    // normal OnStateChange with flags STATE_REDIRECTING
+    virtual void OnRedirectStateChange(nsIChannel* aOldChannel,
+                                       nsIChannel* aNewChannel,
+                                       PRUint32 aRedirectFlags,
+                                       PRUint32 aStateFlags);
+
     // Global History
     nsresult AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect, nsIURI * aReferrer);
 
