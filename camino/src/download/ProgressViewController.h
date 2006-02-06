@@ -24,6 +24,7 @@
  *   Simon Fraser <sfraser@netscape.com>
  *   Josh Aas <josha@mac.com>
  *   Nick Kreeger <nick.kreeger@park.edu>
+ *   Bruce Davidson <mozilla@transoceanic.org.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -106,18 +107,19 @@ enum {
 -(IBAction)remove:(id)sender;
 -(IBAction)reveal:(id)sender;
 -(IBAction)open:(id)sender;
+-(IBAction)deleteFile:(id)sender;
 -(IBAction)pause:(id)sender;
 -(IBAction)resume:(id)sender;
 
 -(BOOL)isActive;
 -(BOOL)isCanceled;
+-(BOOL)isSelected;
 -(BOOL)isPaused;
 -(BOOL)fileExists;
 
--(BOOL)isSelected;
--(void)setSelected:(BOOL)inSelected;
 
 -(void)checkFileExists;
+-(void)setSelected:(BOOL)inSelected;
 
 -(NSDictionary*)downloadInfoDictionary;
 

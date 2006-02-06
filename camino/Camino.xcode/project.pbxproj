@@ -3589,6 +3589,20 @@
 			settings = {
 			};
 		};
+		34D112DD08E9B17400989FD5 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = dl_trash.tif;
+			path = resources/images/toolbar/dl_trash.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		34D112DE08E9B17400989FD5 = {
+			fileRef = 34D112DD08E9B17400989FD5;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //340
 //341
 //342
@@ -4689,6 +4703,7 @@
 				0FBB8CC808D260D800D58D8D,
 				0FBB8CC908D260D800D58D8D,
 				0FBB8CCA08D260D800D58D8D,
+				34D112DE08E9B17400989FD5,
 				0F01117408F2FE7C00423C02,
 				0FEA7E650926BFC600B06154,
 				0F8FC52F092ED71C0042429E,
@@ -8623,6 +8638,7 @@
 				0F01117508F2FE7C00423C02,
 				0FEA7E660926BFC600B06154,
 				0F8FC52E092ED71C0042429E,
+				4DD988E708EB7D3700AD0788,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -13083,6 +13099,12 @@
 			settings = {
 			};
 		};
+		4DD988E708EB7D3700AD0788 = {
+			fileRef = 34D112DD08E9B17400989FD5;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //790
 //791
 //792
@@ -15257,6 +15279,7 @@
 		};
 		F5264FCB020D4C25010001CA = {
 			children = (
+				34D112DD08E9B17400989FD5,
 				3FC0FB8305A0D2F4002F47DE,
 				3FC0FB8405A0D2F4002F47DE,
 				3FC0FB8505A0D2F4002F47DE,

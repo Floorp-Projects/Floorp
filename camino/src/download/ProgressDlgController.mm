@@ -23,6 +23,7 @@
  *   Calum Robinson <calumr@mac.com>
  *   Josh Aas <josha@mac.com>
  *   Nick Kreeger <nick.kreeger@park.edu>
+ *   Bruce Davidson <mozilla@transoceanic.org.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,6 +56,7 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 -(void)showErrorSheetForDownload:(id <CHDownloadProgressDisplay>)progressDisplay withStatus:(nsresult)inStatus;
 -(void)rebuildViews;
 -(NSArray*)selectedProgressViewControllers;
+-(ProgressViewController*)progressViewControllerAtIndex:(unsigned)inIndex;
 -(void)deselectDLInstancesInArray:(NSArray*)instances;
 -(void)scrollIntoView:(ProgressViewController*)controller;
 -(void)killDownloadTimer;
@@ -167,32 +169,44 @@ static id gSharedProgressController = nil;
   [[self selectedProgressViewControllers] makeObjectsPerformSelector:@selector(open:) withObject:sender];
 }
 
-// remove all selected instances, don't remove anything that is active as a guard against bad things
--(IBAction)remove:(id)sender
+//
+// Take care of selecting a download instance to replace the selection being removed
+//
+-(void)setSelectionForRemovalOfItems:(NSArray*) selectionToRemove
 {
   // take care of selecting a download instance to replace the selection being removed
   NSArray* selected = [self selectedProgressViewControllers];
   unsigned int selectedCount = [selected count];
   if (selectedCount == 0) return;
-
+  
   unsigned int indexOfLastSelection = [mProgressViewControllers indexOfObject:[selected lastObject]];
   // if dl instance after last selection exists, select it or look for something else to select
   if ((indexOfLastSelection + 1) < [mProgressViewControllers count]) {
     [(ProgressViewController*)[mProgressViewControllers objectAtIndex:(indexOfLastSelection + 1)] setSelected:YES];
   }
   else { // find the first unselected DL instance before the last one marked for removal and select it
-    // use an int in the loop, not unsigned because we might make it negative
+         // use an int in the loop, not unsigned because we might make it negative
     for (int i = ([mProgressViewControllers count] - 1); i >= 0; i--)
     {
       ProgressViewController* curProgressViewController = [mProgressViewControllers objectAtIndex:i];
       if (![curProgressViewController isSelected])
       {
-          [curProgressViewController setSelected:YES];
-          break;
+        [curProgressViewController setSelected:YES];
+        break;
       }
     }
   }
+  
   mSelectionPivotIndex = -1; // nothing is selected any more so nothing to pivot on
+}
+
+// remove all selected instances, don't remove anything that is active as a guard against bad things
+-(IBAction)remove:(id)sender
+{
+  NSArray* selected = [self selectedProgressViewControllers];
+  unsigned int selectedCount = [selected count];
+  
+  [self setSelectionForRemovalOfItems:selected];
   
   // now remove stuff
   for (unsigned int i = 0; i < selectedCount; i++)
@@ -200,6 +214,24 @@ static id gSharedProgressController = nil;
     ProgressViewController* selProgressViewController = [selected objectAtIndex:i];
     if (![selProgressViewController isActive])
       [self removeDownload:selProgressViewController];
+  }
+  
+  [self rebuildViews];
+  [self saveProgressViewControllers];
+}
+
+// delete the selected download(s), moving files to trash and clearing them from the list
+-(IBAction)deleteDownloads:(id)sender
+{
+  NSArray* selected = [self selectedProgressViewControllers];
+  unsigned int selectedCount = [selected count];
+  
+  [self setSelectionForRemovalOfItems:selected];
+  
+  // now remove stuff, don't need to check if active, the toolbar/menu validates
+  for (unsigned int i = 0; i < selectedCount; i++) {
+    [[selected objectAtIndex:i] deleteFile:sender];
+    [self removeDownload:[selected objectAtIndex:i]];
   }
   
   [self rebuildViews];
@@ -463,6 +495,11 @@ static id gSharedProgressController = nil;
   }
   [selectedArray autorelease];
   return selectedArray;
+}
+
+-(ProgressViewController*)progressViewControllerAtIndex:(unsigned)inIndex
+{
+  return (ProgressViewController*) [mProgressViewControllers objectAtIndex:inIndex];
 }
 
 -(void)scrollIntoView:(ProgressViewController*)controller
@@ -784,6 +821,19 @@ static id gSharedProgressController = nil;
   return [[self window] isKeyWindow];
 }
 
+-(BOOL)shouldAllowMoveToTrashAction
+{
+  NSEnumerator* progViewEnum = [[self selectedProgressViewControllers] objectEnumerator];
+  ProgressViewController* curController;
+  while ((curController = [progViewEnum nextObject]))
+  {
+    if ([curController isActive] || ![curController fileExists]) {
+      return NO;
+    }
+  }
+  return YES;
+}
+
 -(BOOL)fileExistsForSelectedItems
 {
   NSEnumerator* progViewEnum = [[self selectedProgressViewControllers] objectEnumerator];
@@ -856,6 +906,9 @@ static id gSharedProgressController = nil;
   }
   else if (action == @selector(resume:)) {
     return [self shouldAllowResumeAction];
+  }
+  else if (action == @selector(deleteDownloads:)) {
+    return [self shouldAllowMoveToTrashAction];
   }
   return YES;
 }
@@ -974,6 +1027,13 @@ static id gSharedProgressController = nil;
     [theItem setAction:@selector(cleanUpDownloads:)];
     [theItem setImage:[NSImage imageNamed:@"dl_clearall.tif"]];
   }
+  else if ([itemIdentifier isEqualToString:@"movetotrashbutton"]) {
+    [theItem setToolTip:NSLocalizedString(@"dlTrashButtonTooltip", nil)];
+    [theItem setLabel:NSLocalizedString(@"dlTrashButtonLabel", nil)];
+    [theItem setPaletteLabel:NSLocalizedString(@"dlTrashButtonLabel", nil)];
+    [theItem setAction:@selector(deleteDownloads:)];
+    [theItem setImage:[NSImage imageNamed:@"dl_trash.tif"]];
+  }
   else if ([itemIdentifier isEqualToString:@"pauseresumebutton"]) {
     [self setPauseResumeToolbarItem:theItem];
   }
@@ -985,7 +1045,7 @@ static id gSharedProgressController = nil;
 
 -(NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
-  return [NSArray arrayWithObjects:@"cleanupbutton", @"removebutton", @"cancelbutton", @"pauseresumebutton", @"openbutton", @"revealbutton", NSToolbarFlexibleSpaceItemIdentifier, nil];
+  return [NSArray arrayWithObjects:@"cleanupbutton", @"removebutton", @"cancelbutton", @"pauseresumebutton", @"openbutton", @"revealbutton", @"movetotrashbutton", NSToolbarFlexibleSpaceItemIdentifier, nil];
 }
 
 -(NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar

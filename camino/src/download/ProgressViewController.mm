@@ -24,6 +24,7 @@
  *   Simon Fraser <sfraser@netscape.com>
  *   Josh Aas <josha@mac.com>
  *   Nick Kreeger <nick.kreeger@park.edu>
+ *   Bruce Davidson <mozilla@transoceanic.org.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -351,6 +352,19 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   [self refreshDownloadInfo];
 }
 
+// Delete the file we downloaded and remove this item from the list
+-(IBAction)deleteFile:(id)sender
+{
+  NSString* fileName = [mDestPath lastPathComponent];
+  NSString* path = [mDestPath stringByDeletingLastPathComponent];
+
+  [[NSWorkspace sharedWorkspace] performFileOperation:NSWorkspaceRecycleOperation
+                                               source:path
+                                          destination:@""
+                                                files:[NSArray arrayWithObject:fileName]
+                                                  tag:nil];
+}
+
 -(void)downloadDidEnd
 {
   if (!mDownloadDone) { // some error conditions can cause this to get called twice
@@ -570,6 +584,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   NSMenuItem *removeItem;
   NSMenuItem *pauseResumeItem; // alternates pause and resume
   NSMenuItem *openItem;
+  NSMenuItem *deleteItem;
   NSMenuItem *copySourceURLItem;
   
   revealItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlRevealCMLabel", nil)
@@ -588,6 +603,8 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
                                    action:@selector(remove:) keyEquivalent:@""];
   openItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlOpenCMLabel", nil)
                                    action:@selector(open:) keyEquivalent:@""];
+  deleteItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlTrashCMLabel", nil)
+                                   action:@selector(deleteDownloads:) keyEquivalent:@""];
   copySourceURLItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlCopySourceURLCMLabel", nil)
                                    action:@selector(copySourceURL:) keyEquivalent:@""];
   [revealItem setTarget:mProgressWindowController];
@@ -595,6 +612,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   [pauseResumeItem setTarget:mProgressWindowController];
   [removeItem setTarget:mProgressWindowController];
   [openItem setTarget:mProgressWindowController];
+  [deleteItem setTarget:mProgressWindowController];
   [copySourceURLItem setTarget:self];
   
   [menu addItem:revealItem];
@@ -602,6 +620,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   [menu addItem:pauseResumeItem];
   [menu addItem:removeItem];
   [menu addItem:openItem];
+  [menu addItem:deleteItem];
   [menu addItem:[NSMenuItem separatorItem]];
   [menu addItem:copySourceURLItem];
   
@@ -610,6 +629,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   [pauseResumeItem release];
   [removeItem release];
   [openItem release];
+  [deleteItem release];
   [copySourceURLItem release];
   
   return [menu autorelease];    
@@ -621,7 +641,7 @@ static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void
   if (action == @selector(cancel:)) {
     return ((!mUserCancelled) && (!mDownloadDone));
   }
-  if (action == @selector(remove:)) {
+  if (action == @selector(remove:) || action == @selector(deleteDownloads:)) {
     return (mUserCancelled || mDownloadDone);
   }
   return YES;
