@@ -1191,7 +1191,7 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
 
 static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, EventHandlerRef* outHandler)
 {
-  //XXXJOSH do we really need all these events?
+  // do we really need all these events?
   static EventTypeSpec eventList[] = {
   {kEventClassMenu, kEventMenuBeginTracking},
   {kEventClassMenu, kEventMenuEndTracking},

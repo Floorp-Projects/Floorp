@@ -126,12 +126,6 @@ class nsIMenuItem : public nsISupports {
     NS_IMETHOD GetMenuItemType(EMenuItemType *aType) = 0;
     
    /**
-    * Gets the target for MenuItem
-    *
-    */
-    NS_IMETHOD GetTarget(nsIWidget *& aTarget) = 0;
-    
-   /**
     * Gets Native Menu Handle
     *
     */

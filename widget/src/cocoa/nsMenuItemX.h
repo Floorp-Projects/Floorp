@@ -78,7 +78,6 @@ public:
   NS_IMETHOD SetChecked(PRBool aIsEnabled);
   NS_IMETHOD GetChecked(PRBool *aIsEnabled);
   NS_IMETHOD GetMenuItemType(EMenuItemType *aIsCheckbox);
-  NS_IMETHOD GetTarget(nsIWidget *& aTarget);
   NS_IMETHOD GetNativeData(void*& aData);
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
@@ -110,7 +109,6 @@ protected:
   nsIMenu*                  mMenuParent;          // weak, parent owns us
   nsIChangeManager*         mManager;             // weak
 
-  nsCOMPtr<nsIWidget>       mTarget;              // never set?
   nsCOMPtr<nsIMenuListener> mXULCommandListener;
   
   nsWeakPtr                 mDocShellWeakRef;     // weak ref to docshell
