@@ -6888,7 +6888,7 @@ ExtensionsDataSource.prototype = {
                     stripPrefix(item.Value, PREFIX_ITEM_URI)) + 
                     stripPrefix(property.Value, PREFIX_NS_EM);
     var i = 0;
-    do {
+    while (true) {
       try {
         var value = gPref.getComplexValue(prefName + "." + ++i, 
                                           Components.interfaces.nsIPrefLocalizedString);
@@ -6907,8 +6907,7 @@ ExtensionsDataSource.prototype = {
         break;
       }
     }
-    while (1);
-    return values;
+    return values.length > 0 ? values : null;
   },
   
   /**
@@ -6934,7 +6933,7 @@ ExtensionsDataSource.prototype = {
       return null;
       
     var ary = null;
-    var getter = "_rdfGets_" + stripPrefix(source.Value, EM_NS);
+    var getter = "_rdfGets_" + stripPrefix(property.Value, PREFIX_NS_EM);
     if (getter in this)
       ary = this[getter](source, property);
     
