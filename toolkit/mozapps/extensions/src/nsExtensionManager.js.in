@@ -660,8 +660,7 @@ function getManifestProperty(installManifest, property) {
  *          returns TYPE_EXTENSION if attempts to determine the type fail.
  */
 function getAddonTypeFromInstallManifest(installManifest) {
-  var typeArc = gRDF.GetResource(EM_NS("type"));
-  var type = intData(installManifest.GetTarget(gInstallManifestRoot, typeArc, true));
+  var type = getManifestProperty(installManifest, "type");
   if (type !== undefined)
     return type;
 
