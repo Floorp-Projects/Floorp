@@ -5498,28 +5498,45 @@ PresShell::Paint(nsIView*             aView,
   NS_ASSERTION(!(nsnull == aView), "null view");
 
   frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
-     
-  if (nsnull != frame)
-  {
-    if (mCaret)
-      mCaret->EraseCaret();
+  nscolor backgroundColor;
+  mViewManager->GetDefaultBackgroundColor(&backgroundColor);
+  nsIView* rootView;
+  mViewManager->GetRootView(rootView);
+  if (!rootView->GetParent() && rootView->HasWidget()) {
+    PRBool widgetIsTranslucent;
+    rootView->GetWidget()->GetWindowTranslucency(widgetIsTranslucent);
+    if (widgetIsTranslucent) {
+      backgroundColor = NS_RGBA(0,0,0,0);
+    }
+  }
+  
+  if (!frame) {
+    if (NS_GET_A(backgroundColor) > 0) {
+      aRenderingContext->SetColor(backgroundColor);
+      aRenderingContext->FillRect(aDirtyRegion.GetBounds());
+    }
+    return NS_OK;
+  }
+  
+  if (mCaret)
+    mCaret->EraseCaret();
 
-    nsLayoutUtils::PaintFrame(aRenderingContext, frame, aDirtyRegion);
+  nsLayoutUtils::PaintFrame(aRenderingContext, frame, aDirtyRegion,
+                            backgroundColor);
 
 #ifdef NS_DEBUG
-    // Draw a border around the frame
-    if (nsIFrameDebug::GetShowFrameBorders()) {
-      nsRect r = frame->GetRect();
-      aRenderingContext->SetColor(NS_RGB(0,0,255));
-      aRenderingContext->DrawRect(0, 0, r.width, r.height);
-    }
-    // Draw a border around the current event target
-    if ((nsIFrameDebug::GetShowEventTargetFrameBorder()) && (aView == mCurrentTargetView)) {
-      aRenderingContext->SetColor(NS_RGB(128,0,128));
-      aRenderingContext->DrawRect(mCurrentTargetRect.x, mCurrentTargetRect.y, mCurrentTargetRect.width, mCurrentTargetRect.height);
-    }
-#endif
+  // Draw a border around the frame
+  if (nsIFrameDebug::GetShowFrameBorders()) {
+    nsRect r = frame->GetRect();
+    aRenderingContext->SetColor(NS_RGB(0,0,255));
+    aRenderingContext->DrawRect(0, 0, r.width, r.height);
   }
+  // Draw a border around the current event target
+  if ((nsIFrameDebug::GetShowEventTargetFrameBorder()) && (aView == mCurrentTargetView)) {
+    aRenderingContext->SetColor(NS_RGB(128,0,128));
+    aRenderingContext->DrawRect(mCurrentTargetRect.x, mCurrentTargetRect.y, mCurrentTargetRect.width, mCurrentTargetRect.height);
+  }
+#endif
 
   return rv;
 }

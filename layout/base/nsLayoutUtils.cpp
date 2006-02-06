@@ -611,9 +611,42 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt)
   return result;
 }
 
+/**
+ * A simple display item that just renders a solid color across the entire
+ * visible area.
+ */
+MOZ_DECL_CTOR_COUNTER(nsDisplaySolidColor)
+class nsDisplaySolidColor : public nsDisplayItem {
+public:
+  nsDisplaySolidColor(nsIFrame* aFrame, nscolor aColor)
+    : mFrame(aFrame), mColor(aColor) {
+    MOZ_COUNT_CTOR(nsDisplaySolidColor);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplaySolidColor() {
+    MOZ_COUNT_DTOR(nsDisplaySolidColor);
+  }
+#endif
+
+  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("SolidColor")
+private:
+  nsIFrame* mFrame;
+  nscolor   mColor;
+};
+
+void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  aCtx->SetColor(mColor);
+  aCtx->FillRect(aDirtyRect);
+}
+
 nsresult
 nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
-                          const nsRegion& aDirtyRegion)
+                          const nsRegion& aDirtyRegion, nscolor aBackground)
 {
   nsDisplayListBuilder builder(aFrame, PR_FALSE);
   nsDisplayList list;
@@ -621,6 +654,16 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   nsresult rv =
     aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (NS_GET_A(aBackground) > 0) {
+    // Fill the visible area with a background color. In the common case,
+    // the visible area is entirely covered by the background of the root
+    // document (at least!) so this will be removed by the optimizer. In some
+    // cases we might not have a root frame, so this will prevent garbage
+    // from being drawn.
+    rv = list.AppendNewToBottom(new (&builder) nsDisplaySolidColor(aFrame, aBackground));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
 #ifdef DEBUG
   if (gDumpPaintList) {

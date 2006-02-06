@@ -442,6 +442,17 @@ public:
   }
   
   /**
+   * Append a new item to the bottom of the list. If the item is null we return
+   * NS_ERROR_OUT_OF_MEMORY. The intended usage is AppendNewToBottom(new ...);
+   */
+  nsresult AppendNewToBottom(nsDisplayItem* aItem) {
+    if (!aItem)
+      return NS_ERROR_OUT_OF_MEMORY;
+    AppendToBottom(aItem);
+    return NS_OK;
+  }
+  
+  /**
    * Append a new item to the bottom of the list. The item must be non-null
    * and not already in a list.
    */
