@@ -49,10 +49,10 @@
 #define VK_OEM_PERIOD           0xBE   // '.' any country
 #define VK_OEM_2                0xBF   // '/?' for US
 #define VK_OEM_3                0xC0   // '`~' for US
-#define VK_OEM_4                0xDB   // '[{' for US
-#define VK_OEM_5                0xDC   // '\|' for US
-#define VK_OEM_6                0xDD   // ']}' for US
-#define VK_OEM_7                0xDE   // ''"' for US
+#define VK_OEM_4                0xDB  //  '[{' for US
+#define VK_OEM_5                0xDC  //  '\|' for US
+#define VK_OEM_6                0xDD  //  ']}' for US
+#define VK_OEM_7                0xDE  //  ''"' for US
 #define VK_OEM_8                0xDF
 
 
@@ -143,7 +143,7 @@ class KeyboardLayout
     PRUint8 data [1];
   };
 
-  #define NUM_OF_KEYS   50
+  #define NUM_OF_KEYS   49
 
   UINT mCodePage;                         // Used for Win9x only
   HKL mKeyboardLayout;
@@ -172,8 +172,17 @@ class KeyboardLayout
 #endif
 
 public:
-  KeyboardLayout ();
-  ~KeyboardLayout ();
+  KeyboardLayout ()
+  {
+    LoadLayout ();
+  }
+
+  ~KeyboardLayout ()
+  {
+#ifndef WINCE
+    ReleaseDeadKeyTables ();
+#endif
+  }
 
   static PRBool IsPrintableCharKey (PRUint8 aVirtualKey);
 
