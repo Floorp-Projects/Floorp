@@ -61,7 +61,6 @@ public:
   // To get the DevMode from the Global memory Handle it must lock it 
   // So this call must be paired with a call to UnlockGlobalHandle
   void GetDevMode(LPDEVMODE &aDevMode);
-  void UnlockDevMode()  { if (mIsDEVMODEGlobalHandle && mGlobalDevMode) ::GlobalUnlock(mGlobalDevMode); }
 
   // helper functions
   nsresult GetDataFromPrinter(const PRUnichar * aName, nsIPrintSettings* aPS = nsnull);
@@ -73,7 +72,6 @@ protected:
 
   void SetDeviceName(char* aDeviceName);
   void SetDriverName(char* aDriverName);
-  void SetGlobalDevMode(HGLOBAL aHGlobal);
   void SetDevMode(LPDEVMODE aDevMode);
 
   void SetupPaperInfoFromSettings();
@@ -82,9 +80,7 @@ protected:
 
   char*     mDriverName;
   char*     mDeviceName;
-  HGLOBAL   mGlobalDevMode;
   LPDEVMODE mDevMode;
-  PRBool    mIsDEVMODEGlobalHandle;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
 };
