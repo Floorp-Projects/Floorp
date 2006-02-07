@@ -60,6 +60,7 @@ nsPrintSettings::nsPrintSettings() :
   mHowToEnableFrameUI(kFrameEnableNone),
   mIsCancelled(PR_FALSE),
   mPrintSilent(PR_FALSE),
+	mPrintPreview(PR_FALSE),
   mShrinkToFit(PR_TRUE),
   mPrintPageDelay(500),
   mPaperData(0),
@@ -577,6 +578,20 @@ NS_IMETHODIMP nsPrintSettings::SetPrintSilent(PRBool aPrintSilent)
   mPrintSilent = aPrintSilent;
   return NS_OK;
 }
+
+/* attribute boolean printPreview; */
+NS_IMETHODIMP nsPrintSettings::GetIsPrintPreview(PRBool *aPrintPreview)
+{
+  NS_ENSURE_ARG_POINTER(aPrintPreview);
+  *aPrintPreview = mPrintPreview;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetIsPrintPreview(PRBool aPrintPreview)
+{
+  mPrintPreview = aPrintPreview;
+  return NS_OK;
+}
+
 
 /* attribute boolean shrinkToFit; */
 NS_IMETHODIMP nsPrintSettings::GetShrinkToFit(PRBool *aShrinkToFit)
