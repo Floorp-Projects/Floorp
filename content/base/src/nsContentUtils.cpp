@@ -2812,8 +2812,11 @@ nsContentUtils::LookupListenerManager(nsIContent *aContent)
     NS_STATIC_CAST(EventListenerManagerMapEntry *,
                    PL_DHashTableOperate(&sEventListenerManagersHash, aContent,
                                         PL_DHASH_LOOKUP));
+  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+    return entry->mListenerManager;
+  }
 
-  return PL_DHASH_ENTRY_IS_BUSY(entry) ? entry->mListenerManager : nsnull;
+  return nsnull;
 }
 
 /* static */
