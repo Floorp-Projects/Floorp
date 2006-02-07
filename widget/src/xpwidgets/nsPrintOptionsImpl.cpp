@@ -1057,7 +1057,7 @@ nsresult nsPrintOptions::ReadPrefString(const char * aPrefId,
   char * str = nsnull;
   nsresult rv = mPrefBranch->GetCharPref(aPrefId, &str);
   if (NS_SUCCEEDED(rv) && str) {
-    aString.AssignWithConversion(str);
+    CopyUTF8toUTF16(str, aString);
     nsMemory::Free(str);
   }
   return rv;
@@ -1071,16 +1071,10 @@ nsresult nsPrintOptions::WritePrefString(PRUnichar*& aStr, const char* aPrefId)
   NS_ENSURE_STATE(mPrefBranch);
   if (!aStr) return NS_ERROR_FAILURE;
 
-  nsresult rv = NS_ERROR_FAILURE;
-  if (aStr) {
-    nsCOMPtr<nsISupportsString> prefStr = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-    if (prefStr) {
-      prefStr->SetData(nsDependentString(aStr));
-      rv = mPrefBranch->SetComplexValue(aPrefId, NS_GET_IID(nsISupportsString), prefStr);
-    }
-    nsMemory::Free(aStr);
-    aStr = nsnull;
-  }
+  nsresult rv = mPrefBranch->SetCharPref(aPrefId,
+                                         NS_ConvertUTF16toUTF8(aStr).get());
+  nsMemory::Free(aStr);
+  aStr = nsnull;
   return rv;
 }
 
@@ -1090,20 +1084,8 @@ nsresult nsPrintOptions::WritePrefString(const char * aPrefId,
   NS_ENSURE_STATE(mPrefBranch);
   NS_ENSURE_ARG_POINTER(aPrefId);
 
-  PRUnichar * str = ToNewUnicode(aString);
-  if (!str) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsISupportsString> prefStr = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-  if (prefStr) {
-    prefStr->SetData(nsDependentString(str));
-    rv = mPrefBranch->SetComplexValue(aPrefId, NS_GET_IID(nsISupportsString), prefStr);
-  }
-
-  nsMemory::Free(str);
-  return rv;
+  return mPrefBranch->SetCharPref(aPrefId,
+                                  NS_ConvertUTF16toUTF8(aString).get());
 }
 
 nsresult nsPrintOptions::ReadPrefDouble(const char * aPrefId, 
