@@ -57,6 +57,11 @@ our \$db_pass = "";
 our \$user_cookiename = "litmus_login";
 our \$sysconfig_cookiename = "litmustestingconfiguration";
 
+our \$tr_host = "";
+our \$tr_name = "";
+our \$tr_user = "";
+our \$tr_pass = "";
+
 our \$bugzilla_db = "bugzilla";
 our \$bugzilla_host = "localhost";
 our \$bugzilla_user = "litmus";
