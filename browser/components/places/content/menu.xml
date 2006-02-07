@@ -90,7 +90,7 @@
               if (PlacesController.nodeIsURI(child)) {
                 element = document.createElementNS(XULNS, "menuitem");
                 element.setAttribute("label", child.title);
-                element.setAttribute("url", child.QueryInterface(Ci.nsINavHistoryURIResultNode).uri);
+                element.setAttribute("url", child.uri);
                 element.setAttribute("statustext", child.url);
                 element.className = "menuitem-iconic bookmark-item";
               }

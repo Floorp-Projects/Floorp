@@ -233,7 +233,6 @@ function QI_node(node, iid) {
   ASSERT(result, "Node QI Failed");
   return result;
 }
-function asURI(node)      { return QI_node(node, Ci.nsINavHistoryURIResultNode);      }
 function asFolder(node)   { return QI_node(node, Ci.nsINavHistoryFolderResultNode);   }
 function asVisit(node)    { return QI_node(node, Ci.nsINavHistoryVisitResultNode);    }
 function asFullVisit(node){ return QI_node(node, Ci.nsINavHistoryFullVisitResultNode);}
@@ -718,7 +717,7 @@ var PlacesController = {
   openLinkInNewTab: function PC_openLinkInNewTab() {
     var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.openNewTabWith(asURI(node).uri, null, null);
+      this._activeView.browserWindow.openNewTabWith(node.uri, null, null);
   },
 
   /**
@@ -727,7 +726,7 @@ var PlacesController = {
   openLinkInNewWindow: function PC_openLinkInNewWindow() {
     var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.openNewWindowWith(asURI(node).uri, null, null);
+      this._activeView.browserWindow.openNewWindowWith(node.uri, null, null);
   },
 
   /**
@@ -736,7 +735,7 @@ var PlacesController = {
   openLinkInCurrentWindow: function PC_openLinkInCurrentWindow() {
     var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.loadURI(asURI(node).uri, null, null);
+      this._activeView.browserWindow.loadURI(node.uri, null, null);
   },
   
   /**
@@ -750,7 +749,7 @@ var PlacesController = {
       for (var i = 0; i < cc; ++i) {
         var childNode = node.getChild(i);
         if (this.nodeIsURI(childNode))
-          this._activeView.browserWindow.openNewTabWith(asURI(childNode).uri,
+          this._activeView.browserWindow.openNewTabWith(childNode.uri,
               null, null);
       }
     }
@@ -758,7 +757,7 @@ var PlacesController = {
       var nodes = this._activeView.getSelectionNodes();
       for (var i = 0; i < nodes.length; ++i) {
         if (this.nodeIsURI(nodes[i]))
-          this._activeView.browserWindow.openNewTabWith(asURI(nodes[i]).uri,
+          this._activeView.browserWindow.openNewTabWith(nodes[i].uri,
               null, null);
       }
     }
@@ -868,7 +867,7 @@ var PlacesController = {
       else if (this.nodeIsFolder(node.parent)) {
         // A Bookmark in a Bookmark Folder.
         transactions.push(new PlacesRemoveItemTransaction(
-          this._uri(asURI(node).uri), asFolder(node.parent).folderId, index));
+          this._uri(node.uri), asFolder(node.parent).folderId, index));
       }
     }
   },
@@ -902,7 +901,7 @@ var PlacesController = {
       if (this.nodeIsHost(node))
         bhist.removePagesFromHost(node.title, true);
       else if (this.nodeIsURI(node))
-        bhist.removePage(this._uri(asURI(node).uri));
+        bhist.removePage(this._uri(node.uri));
     }
   },
    
@@ -964,7 +963,7 @@ var PlacesController = {
         wrapped += "0\n";
         
       if (this.nodeIsURI(node))
-        wrapped += asURI(node).uri + "\n";
+        wrapped += node.uri + "\n";
       else
         wrapped += "\n";
         
@@ -976,12 +975,12 @@ var PlacesController = {
       wrapped += this.getIndexOfNode(node);
       return wrapped;
     case TYPE_X_MOZ_URL:
-      return asURI(node).uri + "\n" + node.title;
+      return node.uri + "\n" + node.title;
     case TYPE_HTML:
-      return "<A HREF=\"" + asURI(node).uri + "\">" + node.title + "</A>";
+      return "<A HREF=\"" + node.uri + "\">" + node.title + "</A>";
     }
     // case TYPE_UNICODE:
-    return asURI(node).uri;
+    return node.uri;
   },
   
   /**
@@ -1068,7 +1067,7 @@ var PlacesController = {
         if (self.nodeIsFolder(node))
           createTransactions(node.folderId, folderId, i);
         else if (this.nodeIsURI(node)) {
-          var uri = self._uri(asURI(node).uri);
+          var uri = self._uri(node.uri);
           transactions.push(self._getItemCopyTransaction(uri, container, 
                                                          index));
         }
@@ -1617,7 +1616,7 @@ PlacesRemoveFolderTransaction.prototype = {
         this._saveFolderContents(asFolder(child).folderId, obj);
       }
       else {
-        obj = new PlacesRemoveFolderSaveChildItem(child.title, asURI(child).uri);
+        obj = new PlacesRemoveFolderSaveChildItem(child.title, child.uri);
         parent.children.push(obj);
       }
     }

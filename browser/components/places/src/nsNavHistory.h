@@ -241,7 +241,7 @@ public:
                                         PRBool* aHasSearchTerms);
   PRBool EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                               nsNavHistoryQueryOptions* aOptions,
-                              nsNavHistoryURIResultNode* aNode);
+                              nsNavHistoryResultNode* aNode);
 
   static nsresult AsciiHostNameFromHostString(const nsACString& aHostName,
                                               nsACString& aAscii);
