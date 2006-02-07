@@ -267,6 +267,23 @@ interface nsIPrintOptions : nsISupports
 interface nsIPrinterEnumerator : nsISupports
 {
   /**
+   * The name of the default printer 
+   * This name must be in the list of printer names returned by
+   * "availablePrinters"
+   * 
+   */
+  readonly attribute wstring defaultPrinterName;
+
+  /**
+   * Initializes certain settings from the native printer into the PrintSettings
+   * These settings include, but are not limited to:
+   *   Page Orientation
+   *   Page Size
+   *   Number of Copies
+   */
+  void initPrintSettingsFromPrinter(in wstring aPrinterName, in nsIPrintSettings aPrintSettings);
+
+  /**
    * Returns an array of the names of all installed printers.
    *
    * @param  aCount     returns number of printers returned
