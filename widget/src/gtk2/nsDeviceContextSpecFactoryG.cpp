@@ -42,13 +42,10 @@ nsDeviceContextSpecFactoryGTK :: ~nsDeviceContextSpecFactoryGTK()
 {
 }
 
-static NS_DEFINE_IID(kDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
-static NS_DEFINE_IID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
+static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecFactoryGTK, kDeviceContextSpecFactoryIID)
-NS_IMPL_ADDREF(nsDeviceContextSpecFactoryGTK)
-NS_IMPL_RELEASE(nsDeviceContextSpecFactoryGTK)
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryGTK, nsIDeviceContextSpecFactory)
 
 /** -------------------------------------------------------
  *  Initialize the device context spec factory
