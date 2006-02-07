@@ -33,13 +33,12 @@
   # 
 #%]
 
-
 [% PROCESS global/selects.none.tmpl %]
 
 [% title="Testcase ID #$test.testid - $test.summary" %]
 [% includeselects=1 %]
 
-[% INCLUDE global/html_header.tmpl js_files=['js/EditTests.js', 'js/SelectBoxes.js'] %] 
+[% INCLUDE global/html_header.tmpl js_files=['js/EditTests.js', 'js/SelectBoxes.js', 'js/FormValidation.js'] %] 
 [% INCLUDE global/litmus_header.tmpl %]
 
 <div id="page">
@@ -53,19 +52,15 @@
 <div class="section-full">
   <div class="section-content">
 
-<form action="process_test.cgi" method="post" name="form" id="form">
+<form action="process_test.cgi" method="post" name="form" id="show_test_form">
 <input name="isTestResult" type="hidden" value="true">
 <input name="editingTestcases" id="editingTestcases" type="hidden" value="">
-<input name="return" type="hidden" value="show_test.cgi?id=[% test.testid FILTER html %]">
+<input name="return" type="hidden" value="show_test.cgi?id=[% test.testid | html %]">
+<input name="id" type="hidden" value="[% test.testid | html %]">
 
-<table border="0">
-[% INCLUDE test/test.html.tmpl test=test results=results showedit=show_admin %]
-
-<tr>
-<td><br /><input type="submit" id="Submit" name="Submit" value="Submit Results" onclick="findEdited()"></td>
-</tr>
-<tr><td colspan="3"><hr /></td></tr>
-</table>
+    <div class="testcase-content">
+    [% INCLUDE test/test.html.tmpl test=test results=results showedit=show_admin %]
+    </div>
   </div>
 </div>
 

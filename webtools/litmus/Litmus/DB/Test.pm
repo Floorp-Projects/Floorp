@@ -50,10 +50,12 @@ Litmus::DB::Test->column_alias("subgroup_id", "subgroup");
 Litmus::DB::Test->column_alias("status_id", "status");
 Litmus::DB::Test->column_alias("community_enabled", "communityenabled");
 Litmus::DB::Test->column_alias("format_id", "format");
+Litmus::DB::Test->column_alias("author_id", "author");
 
 Litmus::DB::Test->has_a(subgroup => "Litmus::DB::Subgroup");
 Litmus::DB::Test->has_a(status => "Litmus::DB::Status");
 Litmus::DB::Test->has_a("format" => "Litmus::DB::Format");
+Litmus::DB::Test->has_a(author => "Litmus::DB::User");
 
 Litmus::DB::Test->has_many(testresults => "Litmus::DB::Testresult", {order_by => 'submission_time DESC'});
 

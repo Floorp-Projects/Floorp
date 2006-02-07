@@ -1,6 +1,6 @@
 var editedtests = new Array();
 var fields = ["product", "summary", "testgroup", "subgroup", 
-    "communityenabled_row"];
+              "steps", "results", "admin"];
 
 function MM_findObj(n) {
   var x = document.getElementById(n);
@@ -15,8 +15,9 @@ function showEdit(testid) {
     
     hide(getField("editlink", testid));
     show(getField("canceleditlink", testid));
-    
-    MM_findObj("Submit").value = "Submit Results and Edits";
+
+    document.getElementById("show_test_form").action = "show_test.cgi";
+     
     editedtests.push(testid);
 }
 
@@ -41,10 +42,8 @@ function cancelEdit(testid) {
         }
     }
     editedtests=newarray;
-    
-    if (! editedtests[0]) {
-        MM_findObj("Submit").value = "Submit Results";
-    }
+
+    document.getElementById("show_test_form").action = "process_test.cgi";
 }
 
 // fields are in the format fieldname_testid

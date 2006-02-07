@@ -63,9 +63,12 @@ sub getRealPasswd {
 sub getDisplayName() {
   my $self = shift;
   
-  return $self->irc_nickname if ($self->irc_nickname ne '');
-  return $self->realname if ($self->realname ne '');
-  return $self->email if ($self->email ne '');
+  return $self->irc_nickname if ($self->irc_nickname and
+                                 $self->irc_nickname ne '');
+  return $self->realname if ($self->realname and
+                             $self->realname ne '');
+  return $self->email if ($self->email and
+                          $self->email ne '');
   return undef;
 }
 

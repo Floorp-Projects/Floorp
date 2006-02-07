@@ -183,46 +183,6 @@ foreach my $curtestid (@tests) {
 
 }
   
-# process changes to testcases:
-my @changed;
-if ($c->param("editingTestcases") && 
-    Litmus::Auth::canEdit(Litmus::Auth::getCookie())) {
-  # only users with canedit can edit testcases, duh!
-  
-  # the editingTestcases param contains a comma-separated list of 
-  # testids that the user has made changes to (well, has clicked 
-  # the edit button for). 
-  @changed = split(',' => $c->param("editingTestcases"));
-  foreach my $editid (@changed) {
-    my $edittest = Litmus::DB::Test->retrieve($editid);
-    if (! $edittest) {invalidInputError("Test $editid does not exist")}
-    
-    $edittest->summary($c->param("summary_edit_$editid"));
-    if ($c->param("communityenabled_$editid")) {
-      $edittest->communityenabled(1);
-    } else {
-      $edittest->communityenabled(0);
-    }
-    my $product = Litmus::DB::Product->retrieve($c->param("product_$editid"));
-    my $group = Litmus::DB::Testgroup->retrieve($c->param("testgroup_$editid"));
-    my $subgroup = Litmus::DB::Subgroup->retrieve($c->param("subgroup_$editid"));
-    requireField("product", $product);
-    requireField("group", $group);
-    requireField("subgroup", $subgroup);
-    $edittest->product($product);
-    $edittest->testgroup($group);
-    $edittest->subgroup($subgroup);
-    
-    $edittest->steps($c->param("steps_edit_$editid"));
-    $edittest->expected_results($c->param("results_edit_$editid"));
-    
-    $edittest->update();
-  }
-} elsif ($c->param("editingTestcases") && 
-         ! Litmus::Auth::canEdit(Litmus::Auth::getCookie())) {
-  invalidInputError("You do not have permissions to edit testcases. ");
-}
-
 my $testgroup;
 if ($c->param("testgroup")) {
   $testgroup = Litmus::DB::Testgroup->retrieve($c->param("testgroup")),
@@ -235,18 +195,12 @@ my $cookie =  Litmus::Auth::getCookie();
 $vars->{"defaultemail"} = $cookie;
 $vars->{"show_admin"} = Litmus::Auth::istrusted($cookie);
 
-# show the normal thank you page unless we're in simpletest mode where 
-# we should show a special page:
-if ($c->param("isSimpleTest")) {
-  Litmus->template()->process("simpletest/resultssubmitted.html.tmpl", $vars) || internalError(Litmus->template()->error());    
-} else {
-  $vars->{'testcount'} = $testcount;
-  $vars->{'product'} = $product || undef;
-  $vars->{'resultcounts'} = \%resultcounts || undef;
-  $vars->{'changedlist'} = \@changed || undef;
-  $vars->{'testgroup'} = $testgroup || undef;
-  $vars->{'return'} = $c->param("return") || undef;
+$vars->{'testcount'} = $testcount;
+$vars->{'product'} = $product || undef;
+$vars->{'resultcounts'} = \%resultcounts || undef;
+$vars->{'testgroup'} = $testgroup || undef;
+$vars->{'return'} = $c->param("return") || undef;
 
-  Litmus->template()->process("process/process.html.tmpl", $vars) ||
-    internalError(Litmus->template()->error());    
-}
+Litmus->template()->process("process/process.html.tmpl", $vars) ||
+  internalError(Litmus->template()->error());    
+

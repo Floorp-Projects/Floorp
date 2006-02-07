@@ -132,45 +132,9 @@
 
   <div id="t[% i %]-content" class="testcase-content">
 
-  <table cellspacing="0" cellpadding="0" class="tcm">
-  <tr>
-   <td width="50%" class="content"><div class="dh">Steps to Perform:</div>
-     <div class="dv">[% curtest.steps %]</div></td>
-   <td width="50%" class="content"><div class="dh">Expected Results:</div>
-     <div class="dv">[% curtest.expected_results %]</div></td>
-  </tr>
+  [% INCLUDE test/test.html.tmpl test=curtest showedit=0 %]
 
-  <tr>
-   <td class="content" colspan="2">
-
-    <table cellspacing="0" cellpadding="0" class="tcmf">
-    <tr>
-     <td width="210px">
-      <div class="dh">Result:</div>
-      [% INCLUDE form_widgets/radio_testresults.tmpl test_id=curtest.testid %]
-      <br/>
-      <div><input class="button" type="submit" id="Submit[% curtest.testid | html %]" name="Submit[% curtest.testid | html %]" value="Submit This Result" onClick="return confirmPartialSubmission()"/>
-      </div>
-     </td>
-
-     <td>
-      <div class="dh">Notes/Comments (optional):</div>
-      <div class="dv">
-       <textarea name="comment_[% curtest.testid | html %]" 
-         cols="45" rows="4" id="note_[% curtest.testid | html %]"></textarea></div>
-      <div class="dh">Associated Bug #s:</div>
-      <div class="dv"><input type="text" name="bugs_[% curtest.testid | html %]" 
-        class="result_bug" /> (bug #,bug #,...)</div>
-     </td>
-    </tr>
-
-    </table>
-
-   </td>
-  </tr>
-  </table>
-
- </div>
+  </div>
 
 </div>
 

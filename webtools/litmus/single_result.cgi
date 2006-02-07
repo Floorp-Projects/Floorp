@@ -99,8 +99,10 @@ if ($c->param && $c->param('id')) {
               result => $result,
              };
   
-  $vars->{"defaultemail"} = Litmus::Auth::getCookie();
-  $vars->{"show_admin"} = $cookie->is_admin();
+  if ($cookie) {
+    $vars->{"defaultemail"} = $cookie;
+    $vars->{"show_admin"} = $cookie->is_admin();
+  }
   
   Litmus->template()->process("reporting/single_result.tmpl", $vars) || 
     internalError("Error loading template.");
