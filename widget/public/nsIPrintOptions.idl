@@ -79,6 +79,11 @@ interface nsIPrintOptions : nsISupports
   nsISimpleEnumerator availablePrinters ();
 
   /**
+   * Get a prefixed integer pref 
+   */
+   PRInt32 getPrinterPrefInt(in nsIPrintSettings aPrintSettings, in wstring aPrefName);
+
+  /**
    * display Printer Job Properties dialog
    */
    void displayJobProperties (in wstring aPrinter, in nsIPrintSettings aPrintSettings, out boolean aDisplayed);
