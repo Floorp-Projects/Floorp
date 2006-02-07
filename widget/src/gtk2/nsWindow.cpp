@@ -704,7 +704,8 @@ nsWindow::SetFocus(PRBool aRaise)
         
         // Set focus to the window
         if (gRaiseWindows && aRaise && toplevelWidget &&
-            !GTK_WIDGET_HAS_FOCUS(toplevelWidget))
+            !GTK_WIDGET_HAS_FOCUS(toplevelWidget) &&
+            !mNeedsResize)
           gtk_window_present(GTK_WINDOW(owningWindow->mShell));
         
         gtk_widget_grab_focus(owningWidget);
