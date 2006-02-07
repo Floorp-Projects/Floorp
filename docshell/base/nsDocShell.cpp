@@ -7027,13 +7027,12 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
         loadFlags |= nsIRequest::LOAD_FROM_CACHE;
         break;
     
-
     case LOAD_RELOAD_NORMAL:
+    case LOAD_REFRESH:
         loadFlags |= nsIRequest::VALIDATE_ALWAYS;
         break;
 
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-    case LOAD_REFRESH:
         loadFlags |= nsIRequest::LOAD_BYPASS_CACHE;
         break;
 
