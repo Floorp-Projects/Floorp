@@ -66,12 +66,11 @@ enum PopupControlState {
 enum OpenAllowValue {
   allowNot = 0,     // the window opening is denied
   allowNoAbuse,     // allowed: not a popup
-  allowSelf,        // allowed: it's the same window (_self, _top, et.al.)
-  allowExtant,      // allowed: an already open window
   allowWhitelisted  // allowed: it's whitelisted or popup blocking is disabled
 };
 
 class nsIDocShell;
+class nsIDocShellTreeItem;
 class nsIFocusController;
 class nsIDocument;
 struct nsTimeout;
@@ -258,6 +257,11 @@ public:
                                                   PRBool aForce) const = 0;
   virtual void PopPopupControlState(PopupControlState state) const = 0;
   virtual PopupControlState GetPopupControlState() const = 0;
+
+  // GetOpenAllow must not be called on a window that no longer has a docshell
+  // This function is deprecated.  It will assume that there is no existing
+  // window with name aName for purposes of its answer.  Expect this function
+  // to get removed soon!
   virtual OpenAllowValue GetOpenAllow(const nsAString &aName) = 0;
 
   // Returns an object containing the window's state.  This also suspends

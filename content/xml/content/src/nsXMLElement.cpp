@@ -62,7 +62,6 @@
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 #include "nsPresContext.h"
-#include "nsIBrowserDOMWindow.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
@@ -221,17 +220,10 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 
         // XXX Should probably do this using atoms 
         if (value.EqualsLiteral("new")) {
-          if (nsContentUtils::GetBoolPref("dom.disable_open_during_load")) {
-            // disabling open during load
-
-            return NS_OK;
-          }
-
-          if (nsContentUtils::GetIntPref("browser.link.open_newwindow",
-                                     nsIBrowserDOMWindow::OPEN_NEWWINDOW) ==
-              nsIBrowserDOMWindow::OPEN_NEWWINDOW) {
-            verb = eLinkVerb_New;
-          }
+          // We should just act like an HTML link with target="_blank" and if
+          // someone diverts or blocks those, that's fine with us.  We don't
+          // care.
+          verb = eLinkVerb_New;
         } else if (value.EqualsLiteral("replace")) {
           // We want to actually stop processing the current document now.
           // We do this by returning the correct value so that the one
@@ -307,11 +299,7 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
 
           // XXX Should probably do this using atoms 
           if (show.EqualsLiteral("new")) {
-            if (nsContentUtils::GetIntPref("browser.link.open_newwindow",
-                                      nsIBrowserDOMWindow::OPEN_NEWWINDOW) ==
-                nsIBrowserDOMWindow::OPEN_NEWWINDOW) {
-              verb = eLinkVerb_New;
-            }
+            verb = eLinkVerb_New;
           } else if (show.EqualsLiteral("replace")) {
             verb = eLinkVerb_Replace;
           } else if (show.EqualsLiteral("embed")) {

@@ -71,6 +71,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  intl \
 		  windowwatcher \
+		  embed_base \
 		  caps \
 		  unicharutil \
 		  uconv \

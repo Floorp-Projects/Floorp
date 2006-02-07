@@ -150,6 +150,13 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
   //[noscript] long           setInterval(/* in function,
   //                                        in unsigned long timeout */);
 
+  /**
+   * Open a new window with this one as the parent.  This method will
+   * NOT examine the JS stack for purposes of determining a caller.
+   * This window will be used for security checks during the search by
+   * name and the default character set on the newly opened window
+   * will just be the default character set of this window.
+   */
   [noscript] nsIDOMWindow   open(in DOMString url, in DOMString name,
                                  in DOMString options);
   // This method works like open except that aExtraArgument gets

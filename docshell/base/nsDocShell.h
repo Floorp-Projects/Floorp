@@ -439,10 +439,6 @@ protected:
       return t_sec;
     }
 
-    nsresult FindTarget(const PRUnichar *aTargetName,
-                        PRBool *aIsNewWindow,
-                        nsIDocShell **aResult);
-
     PRBool IsFrame();
 
     //

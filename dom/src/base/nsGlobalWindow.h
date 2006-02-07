@@ -321,11 +321,46 @@ protected:
   }
 
   // Window Control Functions
-  NS_IMETHOD OpenInternal(const nsAString& aUrl,
-                          const nsAString& aName,
-                          const nsAString& aOptions,
-                          PRBool aDialog, jsval *argv, PRUint32 argc,
-                          nsISupports *aExtraArgument, nsIDOMWindow **aReturn);
+  /**
+   * @param aURL the URL to load in the new window
+   * @param aName the name to use for the new window
+   * @param aOptions the window options to use for the new window
+   * @param aDialog true when called from variants of OpenDialog.  If this is
+   *                true, this method will skip popup blocking checks.  The
+   *                aDialog argument is passed on to the window watcher.
+   * @param aCalledNoScript true when called via the [noscript] open()
+   *                        and openDialog() methods.  When this is true, we do
+   *                        NOT want to use the JS stack for things like caller
+   *                        determination.
+   * @param aDoJSFixups true when this is the content-accessible JS version of
+   *                    window opening.  When true, popups do not cause us to
+   *                    throw, we save the caller's principal in the new window
+   *                    for later consumption, and we make sure that there is a
+   *                    document in the newly-opened window.  Note that this
+   *                    last will only be done if the newly-opened window is
+   *                    non-chrome.
+   * @param argv The arguments to pass to the new window.  The first
+   *             three args, if present, will be aURL, aName, and aOptions.  So
+   *             this param only matters if there are more than 3 arguments.
+   * @param argc The number of arguments in argv.
+   * @param aExtraArgument Another way to pass arguments in.  This is mutually
+   *                       exclusive with the argv/argc approach.
+   * @param aReturn [out] The window that was opened, if any.
+   *
+   * @note that the boolean args are const because the function shouldn't be
+   * messing with them.  That also makes it easier for the compiler to sort out
+   * its build warning stuff.
+   */
+  NS_HIDDEN_(nsresult) OpenInternal(const nsAString& aUrl,
+                                    const nsAString& aName,
+                                    const nsAString& aOptions,
+                                    PRBool aDialog,
+                                    PRBool aCalledNoScript,
+                                    PRBool aDoJSFixups,
+                                    jsval *argv, PRUint32 argc,
+                                    nsISupports *aExtraArgument,
+                                    nsIDOMWindow **aReturn);
+
   static void CloseWindow(nsISupports* aWindow);
   static void ClearWindowScope(nsISupports* aWindow);
 
@@ -350,8 +385,7 @@ protected:
                             nsIURI **aBuiltURI,
                             PRBool *aFreeSecurityPass, JSContext **aCXused);
   PopupControlState CheckForAbusePoint();
-  OpenAllowValue CheckOpenAllow(PopupControlState aAbuseLevel,
-                                const nsAString &aName);
+  OpenAllowValue CheckOpenAllow(PopupControlState aAbuseLevel);
   void     FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
                            const nsAString &aPopupURL,
                            const nsAString &aPopupWindowName,
@@ -390,7 +424,10 @@ protected:
 
   PRBool DispatchCustomEvent(const char *aEventName);
 
-  PRBool WindowExists(const nsAString& aName);
+  // If aLookForCallerOnJSStack is true, this method will look at the JS stack
+  // to determine who the caller is.  If it's false, it'll use |this| as the
+  // caller.
+  PRBool WindowExists(const nsAString& aName, PRBool aLookForCallerOnJSStack);
 
   already_AddRefed<nsIWidget> GetMainWidget();
 

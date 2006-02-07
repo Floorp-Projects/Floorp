@@ -1097,160 +1097,6 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
                                    documentDomainSet);
 }
 
-nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
-                                PRBool *aIsNewWindow,
-                                nsIDocShell **aResult)
-{
-    nsresult rv = NS_OK;
-
-    *aResult      = nsnull;
-    *aIsNewWindow = PR_FALSE;
-
-    // Try to locate the target window...
-    nsCOMPtr<nsIDocShellTreeItem> treeItem;
-    FindItemWithName(aWindowTarget, nsnull, this, getter_AddRefs(treeItem));
-
-    PRInt32 linkPref = nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW;
-    // XXXbz this should live inside FindItemWithName, I think...
-    if (!treeItem) {
-        mPrefs->GetIntPref("browser.link.open_newwindow", &linkPref);
-        if (linkPref == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
-            // force new window to go to _top
-            FindItemWithName(NS_LITERAL_STRING("_top").get(),
-                             nsnull, this, getter_AddRefs(treeItem));
-            NS_ASSERTION(treeItem,
-                         "We better get a treeitem when asking for '_top' "
-                         "with |this| as the original requestor");
-        }
-    }
-
-    if (!treeItem)
-    {
-        /// XXXbz this should really happen in FindItemWithName too, I think...
-        nsCOMPtr<nsIDOMWindow> newWindow;
-        nsCOMPtr<nsIDOMWindowInternal> parentWindow;
-
-        // This DocShell is the parent window
-        parentWindow = do_GetInterface(GetAsSupports(this));
-        if (!parentWindow) {
-            NS_ASSERTION(0, "Can't get nsIDOMWindowInternal from nsDocShell!");
-            return NS_ERROR_FAILURE;
-        }
-
-        if (linkPref == nsIBrowserDOMWindow::OPEN_NEWTAB) {
-
-            // is it a popup?
-
-            PRBool allowTab = PR_TRUE;
-            nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(mScriptGlobal);
-            if (pWindow) {
-              // skip the window search-by-name of GetOpenAllow
-              // by using _self. we don't care about that at this point.
-              OpenAllowValue allow = pWindow->GetOpenAllow(
-                                      NS_LITERAL_STRING("_self"));
-              if (allow == allowNot || allow == allowSelf)
-                  allowTab = PR_FALSE;
-            }
-
-            // try to get our tab-opening interface
-
-            if (allowTab) {
-                nsCOMPtr<nsIBrowserDOMWindow> bwin;
-
-                nsCOMPtr<nsIDocShellTreeItem> rootItem;
-                GetRootTreeItem(getter_AddRefs(rootItem));
-                nsCOMPtr<nsIDOMWindow> rootWin(do_GetInterface(rootItem));
-                nsCOMPtr<nsIDOMChromeWindow> chromeWin(
-                                                do_QueryInterface(rootWin));
-                if (chromeWin)
-                  chromeWin->GetBrowserDOMWindow(getter_AddRefs(bwin));
-
-                // open a new tab
-                if (bwin) {
-                    rv = bwin->OpenURI(0, 0, nsIBrowserDOMWindow::OPEN_NEWTAB,
-                                       nsIBrowserDOMWindow::OPEN_NEW,
-                                       getter_AddRefs(newWindow));
-
-                    nsCOMPtr<nsPIDOMWindow> newPIWindow =
-                        do_GetInterface(newWindow);
-                    if (newPIWindow)
-                        newPIWindow->SetOpenerWindow(parentWindow);
-                }
-            }
-            // else fall through to the normal Open method, from which
-            // the appropriate measures will be taken when the popup fails
-        }
-
-        if (!newWindow) {
-            nsAutoString name(aWindowTarget);
-            // XXXbz this should be handled somewhere else....  and in fact, it
-            // may be safe to just pass those through here.  Check.
-            if (name.LowerCaseEqualsLiteral("_blank") ||
-                name.LowerCaseEqualsLiteral("_new")) {
-                name.Truncate();
-            }
-            rv = parentWindow->Open(EmptyString(),          // URL to load
-                                    name,                   // Window name
-                                    EmptyString(),          // Window features
-                                    getter_AddRefs(newWindow));
-        }
-        if (NS_FAILED(rv)) return rv;
-
-        {
-            // Get the DocShell from the new window...
-            nsCOMPtr<nsPIDOMWindow> piwindow(do_QueryInterface(newWindow));
-
-            // *aResult will be AddRef()'ed below...
-            *aResult = piwindow->GetDocShell();
-        }
-
-        // If all went well, indicate that a new window has been created.
-        if (*aResult) {
-            NS_ADDREF(*aResult);
-
-            *aIsNewWindow = PR_TRUE;
-
-            // if we just open a new window for this link, charset from current docshell 
-            // should be kept, as what we did in js openNewWindowWith(url)
-            nsCOMPtr<nsIMarkupDocumentViewer> muCV, target_muCV;
-            nsCOMPtr<nsIContentViewer> cv, target_cv;
-            this->GetContentViewer(getter_AddRefs(cv));
-            (*aResult)->GetContentViewer(getter_AddRefs(target_cv));
-            if (cv && target_cv) {
-              muCV = do_QueryInterface(cv);            
-              target_muCV = do_QueryInterface(target_cv);            
-              if (muCV && target_muCV) {
-                nsCAutoString defaultCharset;
-                nsCAutoString prevDocCharset;
-                rv = muCV->GetDefaultCharacterSet(defaultCharset);
-                if(NS_SUCCEEDED(rv)) {
-                  target_muCV->SetDefaultCharacterSet(defaultCharset);
-                }
-                rv = muCV->GetPrevDocCharacterSet(prevDocCharset);
-                if(NS_SUCCEEDED(rv)) {
-                  target_muCV->SetPrevDocCharacterSet(prevDocCharset);
-                }
-              }
-            } 
-        }
-
-        return rv;
-    }
-    else
-    {
-        if (treeItem)
-        {
-            NS_ASSERTION(!*aResult, "aResult should be null if treeItem is set!");
-            treeItem->QueryInterface(NS_GET_IID(nsIDocShell), (void **)aResult);
-        }
-        else
-        {
-            NS_IF_ADDREF(*aResult);
-        }
-    }
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDocShell::GetEldestPresContext(nsPresContext** aPresContext)
 {
@@ -6336,68 +6182,38 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // load to it...
     //
     if (aWindowTarget && *aWindowTarget) {
-        PRBool bIsNewWindow;
-        nsCOMPtr<nsIDocShell> targetDocShell;
-        nsAutoString name(aWindowTarget);
-
-        //
-        // This is a hack to prevent top-level windows from ever being
-        // created.  It really doesn't belong here, but until there is a
-        // way for embeddors to get involved in window targeting, this is
-        // as good a place as any...
-        // XXXbz no, it's not.... fixme!!!!
-        //
-        PRInt32 linkPref = nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW;
-        mPrefs->GetIntPref("browser.link.open_newwindow", &linkPref);
-        if (linkPref == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
-            PRBool bIsChromeOrResource = PR_FALSE;
-            if (mCurrentURI)
-                mCurrentURI->SchemeIs("chrome", &bIsChromeOrResource);
-            if (!bIsChromeOrResource) {
-                aURI->SchemeIs("chrome", &bIsChromeOrResource);
-                if (!bIsChromeOrResource) {
-                    aURI->SchemeIs("resource", &bIsChromeOrResource);
-                }
-            }
-            if (!bIsChromeOrResource) {
-                if (name.LowerCaseEqualsLiteral("_blank") ||
-                    name.LowerCaseEqualsLiteral("_new")) {
-                    name.AssignLiteral("_top");
-                }
-                // _main is an IE target which should be case-insensitive but isn't
-                // see bug 217886 for details
-                else if (!name.LowerCaseEqualsLiteral("_parent") &&
-                         !name.LowerCaseEqualsLiteral("_self") &&
-                         !name.LowerCaseEqualsLiteral("_content") &&
-                         !name.EqualsLiteral("_main")) {
-                    nsCOMPtr<nsIDocShellTreeItem> targetTreeItem;
-                    FindItemWithName(name.get(),
-                                     nsnull,
-                                     this,
-                                     getter_AddRefs(targetTreeItem));
-                    if (targetTreeItem)
-                        targetDocShell = do_QueryInterface(targetTreeItem);
-                    else
-                        name.AssignLiteral("_top");
-                }
-            }
-        }
-
-        //
         // Locate the target DocShell.
         // This may involve creating a new toplevel window - if necessary.
         //
-        if (!targetDocShell) {
-            rv = FindTarget(name.get(), &bIsNewWindow,
-                            getter_AddRefs(targetDocShell));
-        }
+        nsCOMPtr<nsIDocShellTreeItem> targetItem;
+        FindItemWithName(aWindowTarget, nsnull, this,
+                         getter_AddRefs(targetItem));
 
-        NS_ASSERTION(targetDocShell, "No Target docshell could be found!");
+        nsCOMPtr<nsIDocShell> targetDocShell = do_QueryInterface(targetItem);
+        
+        PRBool isNewWindow = PR_FALSE;
+        if (!targetDocShell) {
+            nsCOMPtr<nsIDOMWindowInternal> win =
+                do_GetInterface(GetAsSupports(this));
+            NS_ENSURE_TRUE(win, NS_ERROR_NOT_AVAILABLE);
+
+            isNewWindow = PR_TRUE;
+            nsDependentString name(aWindowTarget);
+            nsCOMPtr<nsIDOMWindow> newWin;
+            rv = win->Open(EmptyString(), // URL to load
+                           name,          // window name
+                           EmptyString(), // Features
+                           getter_AddRefs(newWin));
+
+            nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(newWin);
+            targetDocShell = do_QueryInterface(webNav);
+        }
+        
         //
         // Transfer the load to the target DocShell...  Pass nsnull as the
         // window target name from to prevent recursive retargeting!
         //
-        if (targetDocShell) {
+        if (NS_SUCCEEDED(rv) && targetDocShell) {
             rv = targetDocShell->InternalLoad(aURI,
                                               aReferrer,
                                               owner,
@@ -6412,7 +6228,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                                               aDocShell,
                                               aRequest);
             if (rv == NS_ERROR_NO_CONTENT) {
-                if (bIsNewWindow) {
+                // XXXbz except we never reach this code!
+                if (isNewWindow) {
                     //
                     // At this point, a new window has been created, but the
                     // URI did not have any data associated with it...
@@ -6420,18 +6237,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                     // So, the best we can do, is to tear down the new window
                     // that was just created!
                     //
-                    nsCOMPtr<nsIDocShellTreeItem> treeItem;
-                    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-
-                    treeItem = do_QueryInterface(targetDocShell);
-                    treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
-                    if (treeOwner) {
-                        nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-
-                        treeOwnerAsWin = do_QueryInterface(treeOwner);
-                        if (treeOwnerAsWin) {
-                            treeOwnerAsWin->Destroy();
-                        }
+                    nsCOMPtr<nsIDOMWindowInternal> domWin =
+                        do_GetInterface(targetDocShell);
+                    if (domWin) {
+                        domWin->Close();
                     }
                 }
                 //
@@ -6442,12 +6251,16 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 //
                 rv = NS_OK;
             }
-            else if (bIsNewWindow) {
+            else if (isNewWindow) {
                 // XXX: Once new windows are created hidden, the new
                 //      window will need to be made visible...  For now,
                 //      do nothing.
             }
         }
+
+        // Else we ran out of memory, or were a popup and got blocked,
+        // or something.
+        
         return rv;
     }
 

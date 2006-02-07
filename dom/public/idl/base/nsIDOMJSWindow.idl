@@ -77,8 +77,16 @@ interface nsIDOMJSWindow : nsISupports
    */
   DOMString                 prompt();
 
-  // This is the script version of nsIDOMWindowInternal::open() that
-  // takes 3 optional arguments
+  /**
+   * These are the scriptable versions of nsIDOMWindowInternal::open() and
+   * nsIDOMWindowInternal::openDialog() that take 3 optional arguments.  Unlike
+   * the nsIDOMWindowInternal methods, these methods assume that they are
+   * called from JavaScript and hence will look on the JS context stack to
+   * determine the caller and hence correct security context for doing their
+   * search for an existing named window.  Also, these methods will set the
+   * default charset on the newly opened window based on the current document
+   * charset in the caller.
+   */
   nsIDOMWindow              open();
   nsIDOMWindow              openDialog();
 

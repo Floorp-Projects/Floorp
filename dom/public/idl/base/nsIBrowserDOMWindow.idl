@@ -44,26 +44,50 @@ interface nsIURI;
 
 /**
  * The C++ source has access to the browser script source through
- * nsIBrowserWindow. It is intended to be attached to the chrome
- * DOMWindow of a browser window. A DOMWindow that does not happen to
- * be a browser chrome window will simply have no access to any such
+ * nsIBrowserDOMWindow. It is intended to be attached to the chrome DOMWindow
+ * of a toplevel browser window (a XUL window). A DOMWindow that does not
+ * happen to be a browser chrome window will simply have no access to any such
  * interface.
  */
 interface nsIBrowserDOMWindow : nsISupports
 {
   /**
-   * values for openURI's aWhere parameter
+   * Values for openURI's aWhere parameter.
+   */
+  /**
+   * Do whatever the default is based on application state, user preferences,
+   * and the value of the aContext parameter to openURI.
    */
   const short OPEN_DEFAULTWINDOW = 0;
+  /**
+   * Open in the "current window".  If aOpener is provided, this should be the
+   * top window in aOpener's window hierarchy, but exact behavior is
+   * application-dependent.  If aOpener is not provided, it's up to the
+   * application to decide what constitutes a "current window".
+   */
   const short OPEN_CURRENTWINDOW = 1;
+  /**
+   * Open in a new window.
+   */
   const short OPEN_NEWWINDOW     = 2;
+  /**
+   * Open in a new content tab in the toplevel browser window corresponding to
+   * this nsIBrowserDOMWindow.
+   */
   const short OPEN_NEWTAB        = 3;
 
   /**
-   * values for openURI's aContext parameter
+   * Values for openURI's aContext parameter.  These affect the behavior of
+   * OPEN_DEFAULTWINDOW.
    */
-  const short OPEN_EXTERNAL      = 1; // external link
-  const short OPEN_NEW           = 2; // internal open new window
+  /**
+   * external link (load request from another application, xremote, etc).
+   */
+  const short OPEN_EXTERNAL      = 1;
+  /**
+   * internal open new window
+   */
+  const short OPEN_NEW           = 2; 
 
   /**
    * Load a URI
@@ -80,7 +104,7 @@ interface nsIBrowserDOMWindow : nsISupports
   /**
    * @param  aWindow the window to test.
    * @return whether the window is the main content window for any
-   *         currently open tab.
+   *         currently open tab in this toplevel browser window.
    */
   boolean      isTabContentWindow(in nsIDOMWindow aWindow);
 };
