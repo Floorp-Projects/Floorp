@@ -40,6 +40,7 @@
 #include "nsCoord.h"
 #include "nsUnitConversion.h"
 #include "nsReadableUtils.h"
+#include "nsIPrintSession.h"
 
 NS_IMPL_ISUPPORTS1(nsPrintSettings, nsIPrintSettings)
 
@@ -110,6 +111,34 @@ nsPrintSettings::~nsPrintSettings()
 {
 }
 
+/* [noscript] attribute nsIPrintSession printSession; */
+NS_IMETHODIMP nsPrintSettings::GetPrintSession(nsIPrintSession **aPrintSession)
+{
+  NS_ENSURE_ARG_POINTER(aPrintSession);
+  *aPrintSession = nsnull;
+  
+  nsCOMPtr<nsIPrintSession> session = do_QueryReferent(mSession);
+  if (!session)
+    return NS_ERROR_NOT_INITIALIZED;
+  *aPrintSession = session;
+  NS_ADDREF(*aPrintSession);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetPrintSession(nsIPrintSession *aPrintSession)
+{
+  // Clearing it by passing NULL is not allowed. That's why we
+  // use a weak ref so that it doesn't have to be cleared.
+  NS_ENSURE_ARG(aPrintSession);
+  
+  mSession = getter_AddRefs(NS_GetWeakReference(aPrintSession));
+  if (!mSession) {
+    // This may happen if the implementation of this object does
+    // not support weak references - programmer error.
+    NS_ERROR("Could not get a weak reference from aPrintSession");
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
 
 /* attribute long startPageRange; */
 NS_IMETHODIMP nsPrintSettings::GetStartPageRange(PRInt32 *aStartPageRange)
