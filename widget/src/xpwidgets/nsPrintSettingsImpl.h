@@ -67,6 +67,7 @@ protected:
   PRBool        mHowToEnableFrameUI;
   PRBool        mIsCancelled;
   PRBool        mPrintSilent;
+  PRBool        mShrinkToFit;
   PRInt32       mPrintPageDelay;
 
   nsString      mTitle;
