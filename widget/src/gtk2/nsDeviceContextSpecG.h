@@ -35,7 +35,7 @@
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec ,
                                       public nsIDeviceContextSpecPS
 #ifdef USE_XPRINT
-																		, public nsIDeviceContextSpecXP
+																		, public nsIDeviceContextSpecXp
 #endif
 {
 public:
