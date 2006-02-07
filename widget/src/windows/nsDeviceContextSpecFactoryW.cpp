@@ -26,6 +26,9 @@
 #include <commdlg.h>
 #include "nsGfxCIID.h"
 #include "plstr.h"
+#include "nsIServiceManager.h"
+
+#include "nsIPrintOptions.h"
 
 nsDeviceContextSpecFactoryWin :: nsDeviceContextSpecFactoryWin()
 {
@@ -38,6 +41,7 @@ nsDeviceContextSpecFactoryWin :: ~nsDeviceContextSpecFactoryWin()
 
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_IID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryWin, nsIDeviceContextSpecFactory)
 
@@ -52,19 +56,30 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIDevice
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
-  PRINTDLG  prntdlg;
   nsresult  rv = NS_ERROR_FAILURE;
+  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+
+  PRINTDLG  prntdlg;
 
   prntdlg.lStructSize = sizeof(prntdlg);
   prntdlg.hwndOwner = NULL;               //XXX need to find a window here. MMP
   prntdlg.hDevMode = NULL;
   prntdlg.hDevNames = NULL;
   prntdlg.hDC = NULL;
-  prntdlg.Flags = PD_ALLPAGES | PD_RETURNIC | PD_NOSELECTION | PD_HIDEPRINTTOFILE;
-  prntdlg.nFromPage = 0;
-  prntdlg.nToPage = 0;
+  prntdlg.Flags = PD_ALLPAGES | PD_RETURNIC | PD_HIDEPRINTTOFILE;
+
+  // if there is a current selection then enable the "Selection" radio button
+  if (printService) {
+    PRBool isOn;
+    printService->GetPrintOptions(NS_PRINT_OPTIONS_ENABLE_SELECTION_RADIO, &isOn);
+    if (!isOn) {
+      prntdlg.Flags |= PD_NOSELECTION;
+    }
+  }
+  prntdlg.nFromPage = 1;
+  prntdlg.nToPage = 1;
   prntdlg.nMinPage = 0;
-  prntdlg.nMaxPage = 0;
+  prntdlg.nMaxPage = 1000;
   prntdlg.nCopies = 1;
   prntdlg.hInstance = NULL;
   prntdlg.lCustData = 0;
@@ -80,8 +95,6 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIDevice
     prntdlg.Flags = PD_RETURNDEFAULT;
   }
 
-
-
   BOOL res = ::PrintDlg(&prntdlg);
 
   if (TRUE == res)
@@ -95,9 +108,47 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIDevice
     PL_strcpy(device, &(((char *)devnames)[devnames->wDeviceOffset]));
     PL_strcpy(driver, &(((char *)devnames)[devnames->wDriverOffset]));
 
-#ifdef NS_DEBUG
-printf("printer: driver %s, device %s\n", driver, device);
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+    printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
 #endif
+
+    // fill the print options with the info from the dialog
+    if(printService) {
+
+      if (prntdlg.Flags & PD_SELECTION) {
+        printService->SetPrintRange(ePrintRange_Selection);
+
+      } else if (prntdlg.Flags & PD_PAGENUMS) {
+        printService->SetPrintRange(ePrintRange_SpecifiedPageRange);
+        printService->SetPageRange(prntdlg.nFromPage, prntdlg.nToPage);
+
+      } else { // (prntdlg.Flags & PD_ALLPAGES)
+        printService->SetPrintRange(ePrintRange_AllPages);
+      }
+    }  
+
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+    PRBool  printSelection = prntdlg.Flags & PD_SELECTION;
+    PRBool  printAllPages  = prntdlg.Flags & PD_ALLPAGES;
+    PRBool  printNumPages  = prntdlg.Flags & PD_PAGENUMS;
+    PRInt32 fromPageNum    = 0;
+    PRInt32 toPageNum      = 0;
+
+    if (printNumPages) {
+      fromPageNum = prntdlg.nFromPage;
+      toPageNum   = prntdlg.nToPage;
+    } 
+    if (printSelection) {
+      printf("Printing the selection\n");
+
+    } else if (printAllPages) {
+      printf("Printing all the pages\n");
+
+    } else {
+      printf("Printing from page no. %d to %d\n", fromPageNum, toPageNum);
+    }
+#endif
+    
 
     nsIDeviceContextSpec  *devspec = nsnull;
 
