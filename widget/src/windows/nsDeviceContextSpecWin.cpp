@@ -739,6 +739,8 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
   if (aPrintSettings == nsnull) {
     return NS_ERROR_FAILURE;
   }
+  aPrintSettings->SetIsInitializedFromPrinter(PR_TRUE);
+
   BOOL doingNumCopies   = aDevMode->dmFields & DM_COPIES;
   BOOL doingOrientation = aDevMode->dmFields & DM_ORIENTATION;
   BOOL doingPaperSize   = aDevMode->dmFields & DM_PAPERSIZE;
@@ -769,6 +771,12 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
   if (doingPaperSize) {
     aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeNativeData);
     aPrintSettings->SetPaperData(aDevMode->dmPaperSize);
+    for (PRInt32 i=0;i<kNumPaperSizes;i++) {
+      if (kPaperSizes[i].mPaperSize == aDevMode->dmPaperSize) {
+        aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches?nsIPrintSettings::kPaperSizeInches:nsIPrintSettings::kPaperSizeMillimeters);
+        break;
+      }
+    }
 
   } else if (doingPaperLength && doingPaperWidth) {
     PRBool found = PR_FALSE;
@@ -777,7 +785,7 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
         aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
         aPrintSettings->SetPaperWidth(kPaperSizes[i].mWidth);
         aPrintSettings->SetPaperHeight(kPaperSizes[i].mHeight);
-        aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches?nsIPrintSettings::kPaperSizeInches:nsIPrintSettings::kPaperSizeInches);
+        aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches?nsIPrintSettings::kPaperSizeInches:nsIPrintSettings::kPaperSizeMillimeters);
         found = PR_TRUE;
         break;
       }
@@ -855,6 +863,7 @@ nsPrinterEnumeratorWin::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterNa
   devSpecWin->GetDevMode(devmode);
   NS_ASSERTION(devmode, "DevMode can't be NULL here");
   if (devmode) {
+    aPrintSettings->SetPrinterName(aPrinterName);
     nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(aPrintSettings, devmode);
   }
 
