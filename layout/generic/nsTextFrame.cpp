@@ -491,7 +491,24 @@ public:
                       nsStyleContext* aStyleContext,
                       nsTextPaintStyle& aStyle,
                       nscoord dx, nscoord dy);
-  
+
+ /**
+  * ComputeTotalWordDimensions and ComputeWordFragmentDimensions work
+  * together to measure a text that spans multiple frames, e.g., as in
+  *   "baseText<b>moreText<i>moreDeepText</i></b>moreAlsoHere"
+  * where the total text shoudn't be broken (or the joined pieces should be
+  * passed to the linebreaker for examination, especially in i18n cases).
+  *
+  * ComputeTotalWordDimensions will loop over ComputeWordFragmentDimensions
+  * to look-ahead and accumulate the joining fragments.
+  *
+  * @param aNextFrame is the first textFrame after the baseText's textFrame.
+  *
+  * @param aBaseDimensions is the dimension of baseText.
+  *
+  * @param aCanBreakBefore is false when it is not possible to break before
+  * the baseText (e.g., when this is the first word on the line).
+  */
   nsTextDimensions ComputeTotalWordDimensions(nsPresContext* aPresContext,
                                               nsLineLayout& aLineLayout,
                                               const nsHTMLReflowState& aReflowState,
@@ -501,14 +518,27 @@ public:
                                               PRUint32   aWordBufLen,
                                               PRUint32   aWordBufSize,
                                               PRBool     aCanBreakBefore);
-  
+
+ /**
+  * @param aNextFrame is the textFrame following the current fragment.
+  *
+  * @param aMoreSize plays a double role. The process should continue
+  * normally when it is zero. But when it returns -1, it means that there is
+  * no more fragment of interest and the look-ahead should be stopped. When
+  * it returns a positive value, it means that the current buffer (aWordBuf 
+  * of size aWordBufSize) is not big enough to accumulate the current fragment. 
+  * The returned positive value is the shortfall. 
+  *
+  * @param aWordBufLen is the accumulated length of the fragments that have
+  * been accounted for so far.
+  */
   nsTextDimensions ComputeWordFragmentDimensions(nsPresContext* aPresContext,
                                                  nsLineLayout& aLineLayout,
                                                  const nsHTMLReflowState& aReflowState,
                                                  nsIFrame* aNextFrame,
                                                  nsIContent* aContent,
                                                  nsITextContent* aText,
-                                                 PRBool* aStop,
+                                                 PRInt32* aMoreSize,
                                                  const PRUnichar* aWordBuf,
                                                  PRUint32 &aWordBufLen,
                                                  PRUint32 aWordBufSize,
@@ -6278,19 +6308,18 @@ nsTextFrame::ComputeTotalWordDimensions(nsPresContext* aPresContext,
 
     nsCOMPtr<nsITextContent> tc(do_QueryInterface(content));
     if (tc) {
-      PRBool stop = PR_FALSE;
+      PRInt32 moreSize = 0;
       nsTextDimensions moreDimensions;
       moreDimensions = ComputeWordFragmentDimensions(aPresContext,
                                                      aLineLayout,
                                                      aReflowState,
                                                      aNextFrame, content, tc,
-                                                     &stop,
+                                                     &moreSize,
                                                      newWordBuf,
                                                      aWordLen,
                                                      newWordBufSize,
                                                      aCanBreakBefore);
-      if (moreDimensions.width < 0) {
-        PRUint32 moreSize = -moreDimensions.width;
+      if (moreSize > 0) {
         //Oh, wordBuf is too small, we have to grow it
         newWordBufSize += moreSize;
         if (newWordBuf != aWordBuf) {
@@ -6308,13 +6337,13 @@ nsTextFrame::ComputeTotalWordDimensions(nsPresContext* aPresContext,
           moreDimensions =
             ComputeWordFragmentDimensions(aPresContext,
                                           aLineLayout, aReflowState,
-                                          aNextFrame, content, tc, &stop,
+                                          aNextFrame, content, tc, &moreSize,
                                           newWordBuf, aWordLen, newWordBufSize,
                                           aCanBreakBefore);
-          NS_ASSERTION((moreDimensions.width >= 0),
-                       "ComputeWordFragmentWidth is returning negative");
+          NS_ASSERTION((moreSize <= 0),
+                       "ComputeWordFragmentDimensions is asking more buffer");
         } else {
-          stop = PR_TRUE;
+          moreSize = -1;
           moreDimensions.Clear();
         }  
       }
@@ -6324,7 +6353,7 @@ nsTextFrame::ComputeTotalWordDimensions(nsPresContext* aPresContext,
       printf("  moreWidth=%d (addedWidth=%d) stop=%c\n", moreDimensions.width,
              addedDimensions.width, stop?'T':'F');
 #endif
-      if (stop) {
+      if (moreSize == -1) {
         goto done;
       }
     }
@@ -6357,7 +6386,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
                                       nsIFrame* aNextFrame,
                                       nsIContent* aContent,
                                       nsITextContent* aText,
-                                      PRBool* aStop,
+                                      PRInt32* aMoreSize,
                                       const PRUnichar* aWordBuf,
                                       PRUint32& aRunningWordLen,
                                       PRUint32 aWordBufSize,
@@ -6377,6 +6406,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
     wordLen = -1;
   }
 #endif // IBMBIDI
+  *aMoreSize = 0;
   PRUnichar* bp = tx.GetNextWord(PR_TRUE, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
   if (!bp) {
     //empty text node, but we need to continue lookahead measurement
@@ -6388,17 +6418,18 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
 
   if (isWhitespace) {
     // Don't bother measuring nothing
-    *aStop = PR_TRUE;
+    *aMoreSize = -1; // flag that we should stop now
     return dimensions; // 0
   }
 
-  // We need to adjust the length by look at the two pieces together
-  // but if we have to grow aWordBuf, ask caller do it by return a negative value of size
+  // We need to adjust the length by looking at the two pieces together. But if
+  // we have to grow aWordBuf, ask the caller to do it by returning the shortfall
   if ((wordLen + aRunningWordLen) > aWordBufSize) {
-    dimensions.width = aWordBufSize - wordLen - aRunningWordLen; 
-    return dimensions;
+    *aMoreSize = wordLen + aRunningWordLen - aWordBufSize; 
+    return dimensions; // 0
   }
-  *aStop = contentLen < tx.GetContentLength();
+  if (contentLen < tx.GetContentLength())
+    *aMoreSize = -1;
 
   // Convert any spaces in the current word back to nbsp's. This keeps
   // the breaking logic happy.
@@ -6420,13 +6451,13 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
           wordLen = breakP - aRunningWordLen;
           if(wordLen < 0)
               wordLen = 0;
-          *aStop = PR_TRUE;
+          *aMoreSize = -1;
         }
       
       // if we don't stop, we need to extend the buf so the next one can
       // see this part otherwise, it does not matter since we will stop
       // anyway
-      if(! *aStop) 
+      if (*aMoreSize != -1) 
         aRunningWordLen += wordLen;
     }
   }
@@ -6438,11 +6469,11 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
                                             aRunningWordLen, bp, wordLen);
     if (canBreak) {
       wordLen = 0;
-      *aStop = PR_TRUE;
+      *aMoreSize = -1;
     }
   }
 
-  if((*aStop) && (wordLen == 0))
+  if ((*aMoreSize == -1) && (wordLen == 0))
     return dimensions; // 0;
 
   nsStyleContext* sc = aNextFrame->GetStyleContext();
@@ -6479,7 +6510,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
     return dimensions;
   }
 
-  *aStop = PR_TRUE;
+  *aMoreSize = -1;
   return dimensions; // 0
 }
 
