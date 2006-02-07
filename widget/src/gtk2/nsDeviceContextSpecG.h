@@ -93,6 +93,7 @@ public:
   NS_IMETHOD GetPrintMethod(PrintMethod &aMethod);
   static nsresult GetPrintMethod(const char *aPrinter, PrintMethod &aMethod);
   NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
+  NS_IMETHOD GetPaperName(const char **aPaperName);
   virtual ~nsDeviceContextSpecGTK();
   
 protected:
@@ -104,6 +105,7 @@ protected:
   char   mCommand[PATH_MAX];  /* Print command e.g., lpr */
   char   mPath[PATH_MAX];     /* If toPrinter = PR_FALSE, dest file */
   char   mPrinter[256];       /* Printer name */
+  char   mPaperName[256];     /* Printer name */
   int    mCopies;             /* number of copies */
   PRBool mCancel;             /* If PR_TRUE, user cancelled */
   float  mLeft;               /* left margin */
