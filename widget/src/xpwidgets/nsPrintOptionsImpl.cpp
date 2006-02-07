@@ -877,8 +877,11 @@ NS_IMETHODIMP nsPrintOptions::GetTitle(PRUnichar * *aTitle)
 }
 NS_IMETHODIMP nsPrintOptions::SetTitle(const PRUnichar * aTitle)
 {
-  NS_ENSURE_ARG_POINTER(aTitle);
-  mTitle = aTitle;
+  if (aTitle) {
+    mTitle = aTitle;
+  } else {
+    mTitle.SetLength(0);
+  }
   return NS_OK;
 }
 
@@ -891,8 +894,11 @@ NS_IMETHODIMP nsPrintOptions::GetDocURL(PRUnichar * *aDocURL)
 }
 NS_IMETHODIMP nsPrintOptions::SetDocURL(const PRUnichar * aDocURL)
 {
-  NS_ENSURE_ARG_POINTER(aDocURL);
-  mURL = aDocURL;
+  if (aDocURL) {
+    mURL = aDocURL;
+  } else {
+    mURL.SetLength(0);
+  }
   return NS_OK;
 }
 
@@ -1373,6 +1379,25 @@ NS_IMETHODIMP nsPrintOptions::CreatePrintSettings(nsIPrintSettings **_retval)
   InitPrintSettingsFromPrefs(*_retval); // ignore return value
 
   return rv;
+}
+
+/* readonly attribute nsIPrintSettings globalPrintSettings; */
+NS_IMETHODIMP nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings)
+{
+  if (!mGlobalPrintSettings) {
+    CreatePrintSettings(getter_AddRefs(mGlobalPrintSettings));
+    NS_ASSERTION(mGlobalPrintSettings, "Can't be NULL!");
+  }
+
+  // If this still NULL, we have some very big problems going on
+  if (!mGlobalPrintSettings) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aGlobalPrintSettings = mGlobalPrintSettings.get();
+  NS_ADDREF(*aGlobalPrintSettings);
+
+  return NS_OK;
 }
 
 
