@@ -70,7 +70,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
   nsresult rv = NS_ERROR_FAILURE;
   nsIDeviceContextSpec* devspec = nsnull;
 
-  nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devspec);
+  CallCreateInstance(kDeviceContextSpecCID, &devspec);
 
   if (nsnull != devspec){
     nsDeviceContextSpecWin* specWin = NS_STATIC_CAST(nsDeviceContextSpecWin*, devspec);
