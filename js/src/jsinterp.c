@@ -3854,7 +3854,7 @@ interrupt:
 
                 /* Push the frame and set interpreter registers. */
                 cx->fp = fp = &newifp->frame;
-                pc = script->code;
+                fp->pc = pc = script->code;
 #ifndef JS_THREADED_INTERP
                 endpc = pc + script->length;
 #endif
