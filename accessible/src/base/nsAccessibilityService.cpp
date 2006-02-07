@@ -495,6 +495,9 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
   else if (tag == nsAccessibilityAtoms::optgroup) {
     *aAccessible = new nsHTMLSelectOptGroupAccessible(aNode, aWeakShell);
   }
+  else if (tag == nsAccessibilityAtoms::caption) {
+    *aAccessible = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_CAPTION);
+  }
 #ifndef MOZ_ACCESSIBILITY_ATK
   else if (tag == nsAccessibilityAtoms::ul || tag == nsAccessibilityAtoms::ol) {
     *aAccessible = new nsHTMLListAccessible(aNode, aWeakShell);
