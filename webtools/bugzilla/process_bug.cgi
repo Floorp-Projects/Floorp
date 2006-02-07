@@ -24,7 +24,7 @@
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Myk Melez <myk@mozilla.org>
 #                 Jeff Hedlund <jeff.hedlund@matrixsi.com>
-#                 Frédéric Buclin <LpSolit@gmail.com>
+#                 FrÃ©dÃ©ric Buclin <LpSolit@gmail.com>
 #                 Lance Larsh <lance.larsh@oracle.com>
 
 # Implementation notes for this file:
@@ -742,10 +742,14 @@ sub DoComma {
     $::comma = ",";
 }
 
+# $everconfirmed is used by ChangeStatus() to determine whether we are
+# confirming the bug or not.
+my $everconfirmed;
 sub DoConfirm {
     if (CheckCanChangeField("canconfirm", scalar $cgi->param('id'), 0, 1)) {
         DoComma();
         $::query .= "everconfirmed = 1";
+        $everconfirmed = 1;
     }
 }
 
@@ -787,11 +791,18 @@ sub ChangeStatus {
 
             my @open_state = map(SqlQuote($_), OpenStates());
             my $open_state = join(", ", @open_state);
+
+            # If we are changing everconfirmed to 1, we have to take this change
+            # into account and the new bug status is given by $str.
+            my $cond = SqlQuote($str);
+            # If we are not setting everconfirmed, the new bug status depends on
+            # the actual value of everconfirmed, which is bug-specific.
+            unless ($everconfirmed) {
+                $cond = "(CASE WHEN everconfirmed = 1 THEN " . $cond .
+                        " ELSE 'UNCONFIRMED' END)";
+            }
             $::query .= "bug_status = CASE WHEN bug_status IN($open_state) THEN " .
-                                        "(CASE WHEN everconfirmed = 1 THEN " .
-                                            SqlQuote($str) . " ELSE " .
-                                            " 'UNCONFIRMED' END) ELSE " .
-                                        "bug_status END";
+                                      $cond . " ELSE bug_status END";
         } else {
             $::query .= "bug_status = " . SqlQuote($str);
         }
