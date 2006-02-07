@@ -885,6 +885,10 @@ JS_YieldRequest(JSContext *cx)
     /* XXXbe give the GC or another request calling it a chance to run here?
              Assumes FIFO scheduling */
     JS_LOCK_GC(rt);
+    if (rt->gcThread != cx->thread) {
+        while (rt->gcLevel > 0)
+            JS_AWAIT_GC_DONE(rt);
+    }
     rt->requestCount++;
     JS_UNLOCK_GC(rt);
 }
@@ -1466,7 +1470,7 @@ static JSIdArray *
 AddAtomToArray(JSContext *cx, JSAtom *atom, JSIdArray *ida, jsint *ip)
 {
     jsint i, length;
-    
+
     i = *ip;
     length = ida->length;
     if (i >= length) {
@@ -3195,7 +3199,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     void *pdata;
     jsint index;
     JSIdArray *ida;
-    
+
     CHECK_REQUEST(cx);
     iterobj = js_NewObject(cx, &prop_iter_class, NULL, obj);
     if (!iterobj)
@@ -3271,7 +3275,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         ida = (JSIdArray *) JS_GetPrivate(cx, iterobj);
         JS_ASSERT(i <= ida->length);
         if (i == 0) {
-            *idp = JSVAL_VOID; 
+            *idp = JSVAL_VOID;
         } else {
             *idp = ida->vector[--i];
             OBJ_SET_SLOT(cx, iterobj, JSSLOT_ITER_INDEX, INT_TO_JSVAL(i));
