@@ -27,6 +27,8 @@
 #include "nsMargin.h"  
 #include "nsString.h"  
 
+class nsIPrintSettings;
+
 //*****************************************************************************
 //***    nsPrintSettings
 //*****************************************************************************
@@ -74,7 +76,6 @@ protected:
   nsString      mHeaderStrs[3];
   nsString      mFooterStrs[3];
 
-  nsString      mPaperName;
   PRInt16       mPaperData;
   PRInt16       mPaperSizeType;
   double        mPaperWidth;
