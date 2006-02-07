@@ -63,10 +63,10 @@ typedef enum
 
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec
 #ifdef USE_POSTSCRIPT
-                             , public nsIDeviceContextSpecPS
+                              , public nsIDeviceContextSpecPS
 #endif /* USE_POSTSCRIPT */
 #ifdef USE_XPRINT
-                             , public nsIDeviceContextSpecXp
+                              , public nsIDeviceContextSpecXp
 #endif /* USE_XPRINT */
 {
 public:
@@ -74,7 +74,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool        aQuiet);
+  NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aQuiet);
   NS_IMETHOD ClosePrintManager(); 
 
   NS_IMETHOD GetToPrinter(PRBool &aToPrinter); 
@@ -91,6 +91,7 @@ public:
   NS_IMETHOD GetLandscape (PRBool &aLandscape);
   NS_IMETHOD GetUserCancelled(PRBool &aCancel);      
   NS_IMETHOD GetPrintMethod(PrintMethod &aMethod);
+  static nsresult GetPrintMethod(const char *aPrinter, PrintMethod &aMethod);
   NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
   virtual ~nsDeviceContextSpecGTK();
   
@@ -99,7 +100,6 @@ protected:
   PRBool mToPrinter;          /* If PR_TRUE, print to printer */
   PRBool mFpf;                /* If PR_TRUE, first page first */
   PRBool mGrayscale;          /* If PR_TRUE, print grayscale */
-  int    mSize;               /* Paper size e.g., SizeLetter */
   int    mOrientation;        /* Orientation e.g. Portrait */
   char   mCommand[PATH_MAX];  /* Print command e.g., lpr */
   char   mPath[PATH_MAX];     /* If toPrinter = PR_FALSE, dest file */
@@ -121,10 +121,6 @@ public:
   nsPrinterEnumeratorGTK();
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTERENUMERATOR
-
-protected:
 };
 
-
 #endif /* !nsDeviceContextSpecGTK_h___ */
-
