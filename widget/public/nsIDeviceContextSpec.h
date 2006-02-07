@@ -47,7 +47,10 @@
 class nsIDeviceContextSpec : public nsISupports
 {
 public:
-   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_SPEC_IID)
+   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_SPEC_IID)
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDeviceContextSpec,
+                              NS_IDEVICE_CONTEXT_SPEC_IID)
 
 #endif
