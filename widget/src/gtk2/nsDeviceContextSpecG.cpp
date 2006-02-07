@@ -1070,9 +1070,18 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 #ifdef USE_POSTSCRIPT
   nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID);
   PRBool psPrintModuleEnabled = PR_TRUE;
-  if (pPrefs) {
-    if (NS_FAILED(pPrefs->GetBoolPref("print.postscript.enabled", &psPrintModuleEnabled))) {
-      psPrintModuleEnabled = PR_TRUE;
+
+  const char *val = PR_GetEnv("MOZILLA_POSTSCRIPT_ENABLED");
+  if (val) {
+    if (val[0] == '0' || !strcasecmp(val, "false"))
+      psPrintModuleEnabled = PR_FALSE;
+  }
+  else
+  {
+    if (pPrefs) {
+      if (NS_FAILED(pPrefs->GetBoolPref("print.postscript.enabled", &psPrintModuleEnabled))) {
+        psPrintModuleEnabled = PR_TRUE;
+      }
     }
   }
 
