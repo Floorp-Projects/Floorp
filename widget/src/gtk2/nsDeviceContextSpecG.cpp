@@ -34,7 +34,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIServiceManager.h"
 #include "nsIDialogParamBlock.h"
-#include "nsINetSupportDialogService.h"
 
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
