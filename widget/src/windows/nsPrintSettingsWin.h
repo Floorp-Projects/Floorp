@@ -39,13 +39,23 @@ public:
   NS_DECL_NSIPRINTSETTINGSWIN
 
   nsPrintSettingsWin();
-  nsPrintSettingsWin(const nsPrintSettingsWin* aPS);
+  nsPrintSettingsWin(const nsPrintSettingsWin& aPS);
   virtual ~nsPrintSettingsWin();
 
   /**
    * Makes a new copy
    */
-  virtual nsresult CloneObj(nsIPrintSettings **_retval);
+  virtual nsresult _Clone(nsIPrintSettings **_retval);
+
+  /**
+   * Assigns values
+   */
+  virtual nsresult _Assign(nsIPrintSettings* aPS);
+
+  /**
+   * Assignment
+   */
+  nsPrintSettingsWin& operator=(const nsPrintSettingsWin& rhs);
 
 protected:
   char*     mDeviceName;
