@@ -50,6 +50,8 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIDOMChromeWindow.h"
+#include "nsIBrowserDOMWindow.h"
 #include "nsIDOMXULElement.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIEmbeddingSiteWindow2.h"
@@ -60,6 +62,9 @@
 #include "nsIPrincipal.h"
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIWebNavigation.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -116,6 +121,9 @@ NS_INTERFACE_MAP_BEGIN(nsContentTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome2)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
+   // XXXbz why not just implement those interfaces directly on this object?
+   // Should file a followup and fix.
    NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIEmbeddingSiteWindow, mSiteWindow2)
    NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIEmbeddingSiteWindow2, mSiteWindow2)
 NS_INTERFACE_MAP_END
@@ -680,6 +688,108 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
   }
 
   return mXULWindow->SetTitle(title.get());
+}
+
+//*****************************************************************************
+// nsContentTreeOwner: nsIWindowProvider
+//*****************************************************************************   
+NS_IMETHODIMP
+nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
+                                  PRUint32 aChromeFlags,
+                                  PRBool aPositionSpecified,
+                                  PRBool aSizeSpecified,
+                                  nsIURI* aURI,
+                                  const nsAString& aName,
+                                  const nsACString& aFeatures,
+                                  nsIDOMWindow** aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aParent);
+  
+  *aReturn = nsnull;
+
+  if (!mXULWindow) {
+    // Nothing to do here
+    return NS_OK;
+  }
+
+#ifdef DEBUG
+  nsCOMPtr<nsIWebNavigation> parentNav = do_GetInterface(aParent);
+  nsCOMPtr<nsIDocShellTreeOwner> parentOwner = do_GetInterface(parentNav);
+  NS_ASSERTION(SameCOMIdentity(parentOwner,
+                               NS_STATIC_CAST(nsIDocShellTreeOwner*, this)),
+               "Parent from wrong docshell tree?");
+#endif
+
+  // First check what our prefs say
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefs) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPrefBranch> branch;
+  prefs->GetBranch("browser.link.", getter_AddRefs(branch));
+  if (!branch) {
+    return NS_OK;
+  }
+
+  // Where should we open this?
+  PRInt32 containerPref;
+  if (NS_FAILED(branch->GetIntPref("open_newwindow", &containerPref))) {
+    return NS_OK;
+  }
+
+  if (containerPref != nsIBrowserDOMWindow::OPEN_NEWTAB &&
+      containerPref != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
+    // Just open a window normally
+    return NS_OK;
+  }
+
+  /* Now check our restriction pref.  The restriction pref is a power-user's
+     fine-tuning pref. values:     
+     0: no restrictions - divert everything
+     1: don't divert window.open at all
+     2: don't divert window.open with features
+  */
+  PRInt32 restrictionPref;
+  if (NS_FAILED(branch->GetIntPref("open_newwindow.restriction",
+                                   &restrictionPref)) ||
+      restrictionPref < 0 ||
+      restrictionPref > 2) {
+    restrictionPref = 2; // Sane default behavior
+  }
+
+  if (restrictionPref == 1) {
+    return NS_OK;
+  }
+
+  if (restrictionPref == 2 &&
+      // Only continue if there are no size/position features and no special
+      // chrome flags.
+      (aChromeFlags != nsIWebBrowserChrome::CHROME_ALL ||
+       aPositionSpecified || aSizeSpecified)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMWindowInternal> domWin;
+  mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWin));
+  nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(domWin);
+  if (!chromeWin) {
+    // Really odd... but whatever
+    NS_WARNING("nsXULWindow's DOMWindow is not a chrome window");
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
+  chromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
+  if (!browserDOMWin) {
+    return NS_OK;
+  }
+
+  // Get a new rendering area from the browserDOMWin.  To make this
+  // safe for cases when it'll try to return an existing window or
+  // something, get it with a null URI.
+  return browserDOMWin->OpenURI(nsnull, aParent, containerPref,
+                                nsIBrowserDOMWindow::OPEN_NEW, aReturn);
 }
 
 //*****************************************************************************

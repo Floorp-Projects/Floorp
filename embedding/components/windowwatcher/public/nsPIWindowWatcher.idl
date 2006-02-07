@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -79,13 +79,23 @@ interface nsPIWindowWatcher : nsISupports
              method will effectively act as if aParent were null.
       @param aURL url to which to open the new window. Must already be
              escaped, if applicable. can be null.
-      @param aName window name from JS window.open. can be null.
+      @param aName window name from JS window.open. can be null.  If a window
+             with this name already exists, the openWindow call may just load
+             aUrl in it (if aUrl is not null) and return it.
       @param aFeatures window features from JS window.open. can be null.
       @param aDialog use dialog defaults (see nsIDOMWindowInternal::openDialog)
       @param argc count of argv arguments
       @param argv extra JS arguments, if any
                   (see nsIDOMWindowInternal::openDialog)
       @return the new window
+
+      @note This method may examine the JS context stack for purposes of
+            determining the security context to use for the search for a given
+            window named aName.
+      @note This method should try to set the default charset for the new
+            window to the default charset of the document in the calling window
+            (which is determined based on the JS stack and the value of
+            aParent).  This is not guaranteed, however.
   */
   nsIDOMWindow openWindowJS(in nsIDOMWindow aParent, in string aUrl,
                in string aName, in string aFeatures, in boolean aDialog,
@@ -114,10 +124,4 @@ interface nsPIWindowWatcher : nsISupports
                                        in nsIDocShellTreeItem aRequestor,
                                        in nsIDocShellTreeItem aOriginalRequestor);
 };
-
-%{C++
-// {d535806e-afaf-47d1-8d89-783ad088c62a}
-#define NS_PWINDOWWATCHER_IID \
- {0xd535806e, 0xafaf, 0x47d1, {0x8d, 0x89, 0x78, 0x3a, 0xd0, 0x88, 0xc6, 0x2a}}
-%}
 

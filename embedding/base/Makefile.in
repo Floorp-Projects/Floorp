@@ -78,6 +78,7 @@ SDK_LIBRARY     =                        \
 
 XPIDLSRCS	    = \
                 nsIWindowCreator2.idl \
+                nsIWindowProvider.idl \
                 $(NULL)
 
 include $(srcdir)/objs.mk

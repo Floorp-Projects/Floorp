@@ -435,7 +435,7 @@ nsGlobalWindow::CleanUp()
   }
   mChromeEventHandler = nsnull; // Forces Release
 
-  if (IsPopupSpamWindow()) {
+  if (IsOuterWindow() && IsPopupSpamWindow()) {
     SetPopupSpamWindow(PR_FALSE);
     --gOpenPopupSpamCount;
   }
@@ -2960,43 +2960,29 @@ GetCallerDocShellTreeItem()
 }
 
 PRBool
-nsGlobalWindow::WindowExists(const nsAString& aName)
+nsGlobalWindow::WindowExists(const nsAString& aName,
+                             PRBool aLookForCallerOnJSStack)
 {
-  nsCOMPtr<nsIDocShellTreeItem> caller = GetCallerDocShellTreeItem();
-  PRBool foundWindow = PR_FALSE;
+  NS_PRECONDITION(IsOuterWindow(), "Must be outer window");
+  NS_PRECONDITION(mDocShell, "Must have docshell");
+
+  nsCOMPtr<nsIDocShellTreeItem> caller;
+  if (aLookForCallerOnJSStack) {
+    caller = GetCallerDocShellTreeItem();
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> docShell = do_QueryInterface(mDocShell);
+  NS_ASSERTION(docShell,
+               "Docshell doesn't implement nsIDocShellTreeItem?");
 
   if (!caller) {
-    // If we can't reach a caller, try to use our own docshell
-    caller = do_QueryInterface(GetDocShell());
+    caller = docShell;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> docShell =
-    do_QueryInterface(GetDocShell());
-
-  if (docShell) {
-    nsCOMPtr<nsIDocShellTreeItem> namedItem;
-
-    docShell->FindItemWithName(PromiseFlatString(aName).get(), nsnull, caller,
-                               getter_AddRefs(namedItem));
-
-    foundWindow = !!namedItem;
-  } else {
-    // No caller reachable and we don't have a docshell any more. Fall
-    // back to using the windowwatcher service to find any window by
-    // name.
-
-    nsCOMPtr<nsIWindowWatcher> wwatch =
-      do_GetService(NS_WINDOWWATCHER_CONTRACTID);
-    if (wwatch) {
-      nsCOMPtr<nsIDOMWindow> namedWindow;
-      wwatch->GetWindowByName(PromiseFlatString(aName).get(), nsnull,
-                              getter_AddRefs(namedWindow));
-
-      foundWindow = !!namedWindow;
-    }
-  }
-
-  return foundWindow;
+  nsCOMPtr<nsIDocShellTreeItem> namedItem;
+  docShell->FindItemWithName(PromiseFlatString(aName).get(), nsnull, caller,
+                             getter_AddRefs(namedItem));
+  return namedItem != nsnull;
 }
 
 already_AddRefed<nsIWidget>
@@ -4072,15 +4058,16 @@ nsGlobalWindow::CheckForAbusePoint()
 {
   FORWARD_TO_OUTER(CheckForAbusePoint, (), openAbused);
 
+  NS_ASSERTION(mDocShell, "Must have docshell");
+  
   nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(mDocShell));
 
-  if (item) {
-    PRInt32 type = nsIDocShellTreeItem::typeChrome;
+  NS_ASSERTION(item, "Docshell doesn't implenent nsIDocShellTreeItem?");
 
-    item->GetItemType(&type);
-    if (type != nsIDocShellTreeItem::typeContent)
-      return openAllowed;
-  }
+  PRInt32 type = nsIDocShellTreeItem::typeChrome;
+  item->GetItemType(&type);
+  if (type != nsIDocShellTreeItem::typeContent)
+    return openAllowed;
 
   // level of abuse we've detected, initialized to the current popup
   // state
@@ -4097,37 +4084,21 @@ nsGlobalWindow::CheckForAbusePoint()
 }
 
 /* Allow or deny a window open based on whether popups are suppressed.
-   A popup generally will be allowed if it's from a white-listed domain,
-   or if its target is an extant window.
+   A popup generally will be allowed if it's from a white-listed domain.
    Returns a value from the CheckOpenAllow enum. */
 OpenAllowValue
-nsGlobalWindow::CheckOpenAllow(PopupControlState aAbuseLevel,
-                               const nsAString &aName)
+nsGlobalWindow::CheckOpenAllow(PopupControlState aAbuseLevel)
 {
+  NS_PRECONDITION(GetDocShell(), "Must have docshell");
+
   OpenAllowValue allowWindow = allowNoAbuse; // (also used for openControlled)
   
   if (aAbuseLevel >= openAbused) {
     allowWindow = allowNot;
 
     // However it might still not be blocked.
-    if (aAbuseLevel == openAbused && !IsPopupBlocked(mDocument))
+    if (aAbuseLevel == openAbused && !IsPopupBlocked(mDocument)) {
       allowWindow = allowWhitelisted;
-    else {
-      // Special case items that don't actually open new windows.
-      if (!aName.IsEmpty()) {
-        // _main is an IE target which should be case-insensitive but isn't
-        // see bug 217886 for details
-        if (aName.LowerCaseEqualsLiteral("_top") ||
-            aName.LowerCaseEqualsLiteral("_self") ||
-            aName.LowerCaseEqualsLiteral("_content") ||
-            aName.EqualsLiteral("_main"))
-          allowWindow = allowSelf;
-        else {
-          if (WindowExists(aName)) {
-            allowWindow = allowExtant;
-          }
-        }
-      }
     }
   }
 
@@ -4137,7 +4108,8 @@ nsGlobalWindow::CheckOpenAllow(PopupControlState aAbuseLevel,
 OpenAllowValue
 nsGlobalWindow::GetOpenAllow(const nsAString &aName)
 {
-  return CheckOpenAllow(CheckForAbusePoint(), aName);
+  NS_ENSURE_TRUE(GetDocShell(), allowNot);
+  return CheckOpenAllow(CheckForAbusePoint());
 }
 
 /* If a window open is blocked, fire the appropriate DOM events.
@@ -4211,29 +4183,12 @@ NS_IMETHODIMP
 nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
                      const nsAString& aOptions, nsIDOMWindow **_retval)
 {
-  nsresult rv;
-
-  PopupControlState abuseLevel = CheckForAbusePoint();
-  OpenAllowValue allowReason = CheckOpenAllow(abuseLevel, aName);
-  if (allowReason == allowNot) {
-    FireAbuseEvents(PR_TRUE, PR_FALSE, aUrl, aName, aOptions);
-    return NS_ERROR_FAILURE; // unlike the public Open method, return an error
-  }
-
-  rv = OpenInternal(aUrl, aName, aOptions, PR_FALSE, nsnull, 0, nsnull,
-                    _retval);
-  if (NS_SUCCEEDED(rv)) {
-    if (abuseLevel >= openControlled && allowReason != allowSelf) {
-      nsGlobalWindow *opened = NS_STATIC_CAST(nsGlobalWindow *, *_retval);
-      if (!opened->IsPopupSpamWindow()) {
-        opened->SetPopupSpamWindow(PR_TRUE);
-        ++gOpenPopupSpamCount;
-      }
-    }
-    if (abuseLevel >= openAbused)
-      FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl, aName, aOptions);
-  }
-  return rv;
+  return OpenInternal(aUrl, aName, aOptions,
+                      PR_FALSE,          // aDialog
+                      PR_TRUE,           // aCalledNoScript
+                      PR_FALSE,          // aDoJSFixups
+                      nsnull, 0, nsnull, // No args
+                      _retval);
 }
 
 NS_IMETHODIMP
@@ -4275,51 +4230,12 @@ nsGlobalWindow::Open(nsIDOMWindow **_retval)
     }
   }
 
-  PopupControlState abuseLevel = CheckForAbusePoint();
-  OpenAllowValue allowReason = CheckOpenAllow(abuseLevel, name);
-  if (allowReason == allowNot) {
-    FireAbuseEvents(PR_TRUE, PR_FALSE, url, name, options);
-    return NS_OK; // don't open the window, but also don't throw a JS exception
-  }
-
-  rv = OpenInternal(url, name, options, PR_FALSE, nsnull, 0, nsnull, _retval);
-
-  nsCOMPtr<nsIDOMChromeWindow> chrome_win(do_QueryInterface(*_retval));
-
-  if (NS_SUCCEEDED(rv)) {
-    if (!chrome_win) {
-    // A new non-chrome window was created from a call to
-    // window.open() from JavaScript, make sure there's a document in
-    // the new window. We do this by simply asking the new window for
-    // its document, this will synchronously create an empty document
-    // if there is no document in the window.
-
-#ifdef DEBUG_jst
-    {
-      nsCOMPtr<nsPIDOMWindow> pidomwin(do_QueryInterface(*_retval));
-
-      nsIDOMDocument *temp = pidomwin->GetExtantDocument();
-
-      NS_ASSERTION(temp, "No document in new window!!!");
-    }
-#endif
-
-      nsCOMPtr<nsIDOMDocument> doc;
-      (*_retval)->GetDocument(getter_AddRefs(doc));
-    }
-    
-    if (abuseLevel >= openControlled && allowReason != allowSelf) {
-      nsGlobalWindow *opened = NS_STATIC_CAST(nsGlobalWindow*, *_retval);
-      if (!opened->IsPopupSpamWindow()) {
-        opened->SetPopupSpamWindow(PR_TRUE);
-        ++gOpenPopupSpamCount;
-      }
-    }
-    if (abuseLevel >= openAbused)
-      FireAbuseEvents(PR_FALSE, PR_TRUE, url, name, options);
-  }
-
-  return rv;
+  return OpenInternal(url, name, options,
+                      PR_FALSE,          // aDialog
+                      PR_FALSE,          // aCalledNoScript
+                      PR_TRUE,           // aDoJSFixups
+                      nsnull, 0, nsnull, // No args
+                      _retval);
 }
 
 // like Open, but attaches to the new window any extra parameters past
@@ -4329,8 +4245,12 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                            const nsAString& aOptions,
                            nsISupports* aExtraArgument, nsIDOMWindow** _retval)
 {
-  return OpenInternal(aUrl, aName, aOptions, PR_TRUE, nsnull, 0,
-                      aExtraArgument, _retval);
+  return OpenInternal(aUrl, aName, aOptions,
+                      PR_TRUE,                    // aDialog
+                      PR_TRUE,                    // aCalledNoScript
+                      PR_FALSE,                   // aDoJSFixups
+                      nsnull, 0, aExtraArgument,  // Arguments
+                      _retval);
 }
 
 NS_IMETHODIMP
@@ -4373,7 +4293,11 @@ nsGlobalWindow::OpenDialog(nsIDOMWindow** _retval)
     }
   }
 
-  return OpenInternal(url, name, options, PR_TRUE, argv, argc, nsnull,
+  return OpenInternal(url, name, options,
+                      PR_TRUE,             // aDialog
+                      PR_FALSE,            // aCalledNoScript
+                      PR_FALSE,            // aDoJSFixups
+                      argv, argc, nsnull,  // Arguments
                       _retval);
 }
 
@@ -5657,17 +5581,28 @@ nsGlobalWindow::GetParentInternal()
   return parentInternal;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                              const nsAString& aOptions, PRBool aDialog,
+                             PRBool aCalledNoScript, PRBool aDoJSFixups,
                              jsval *argv, PRUint32 argc,
                              nsISupports *aExtraArgument,
                              nsIDOMWindow **aReturn)
 {
-  FORWARD_TO_OUTER(OpenInternal, (aUrl, aName, aOptions, aDialog, argv, argc,
-                                  aExtraArgument, aReturn),
+  FORWARD_TO_OUTER(OpenInternal, (aUrl, aName, aOptions, aDialog,
+                                  aCalledNoScript, aDoJSFixups,
+                                  argv, argc, aExtraArgument, aReturn),
                    NS_ERROR_NOT_INITIALIZED);
 
+  NS_PRECONDITION(!aExtraArgument || (!argv && argc == 0),
+                  "Can't pass in arguments both ways");
+  NS_PRECONDITION(!aCalledNoScript || (!argv && argc == 0),
+                  "Can't pass JS args when called via the noscript methods");
+  NS_PRECONDITION(!aDoJSFixups || !aCalledNoScript,
+                  "JS fixups should not be done when called noscript");
+
+  *aReturn = nsnull;
+  
   nsCOMPtr<nsIWebBrowserChrome> chrome;
   GetWebBrowserChrome(getter_AddRefs(chrome));
   if (!chrome) {
@@ -5675,11 +5610,29 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
     // -- see nsIWindowWatcher.idl
     return NS_ERROR_NOT_AVAILABLE;
   }
-  
-  nsXPIDLCString url;
-  nsresult rv = NS_OK;  
 
-  *aReturn = nsnull;
+  NS_ASSERTION(mDocShell, "Must have docshell here");
+
+  const PRBool checkForPopup =
+    !aDialog && !WindowExists(aName, !aCalledNoScript);
+  
+  // These next two variables are only accessed when checkForPopup is true
+  PopupControlState abuseLevel;
+  OpenAllowValue allowReason;
+  if (checkForPopup) {
+    abuseLevel = CheckForAbusePoint();
+    allowReason = CheckOpenAllow(abuseLevel);
+    if (allowReason == allowNot) {
+      FireAbuseEvents(PR_TRUE, PR_FALSE, aUrl, aName, aOptions);
+      return aDoJSFixups ? NS_OK : NS_ERROR_FAILURE;
+    }
+  }    
+
+  // Note: it's very important that this be an nsXPIDLCString, since we want
+  // .get() on it to return nsnull until we write stuff to it.  The window
+  // watcher expects a null URL string if there is no URL to load.
+  nsXPIDLCString url;
+  nsresult rv = NS_OK;
 
   if (!aUrl.IsEmpty()) {
     // fix bug 35076
@@ -5708,150 +5661,71 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   if (NS_FAILED(rv))
     return rv;
 
-  // determine whether we must divert the open window to a new tab.
-
-  PRBool divertOpen = !WindowExists(aName);
-
-  // also check what the prefs prescribe?
-  // XXXbz this duplicates docshell code.  Need to consolidate.
-
-  PRInt32 containerPref = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
-
-  nsCOMPtr<nsIURI> tabURI;
-  if (!aUrl.IsEmpty()) {
-    PRBool whoCares;
-    BuildURIfromBase(url.get(), getter_AddRefs(tabURI), &whoCares, 0);
-  }
-
-  if (divertOpen) { // no such named window
-    divertOpen = PR_FALSE; // more tests to pass:
-    if (!aExtraArgument) {
-      nsCOMPtr<nsIDOMChromeWindow> thisChrome =
-        do_QueryInterface(NS_STATIC_CAST(nsIDOMWindow *, this));
-      PRBool chromeTab = PR_FALSE;
-      if (tabURI)
-        tabURI->SchemeIs("chrome", &chromeTab);
-
-      if (!thisChrome && !chromeTab) {
-        containerPref =
-          nsContentUtils::GetIntPref("browser.link.open_newwindow",
-                                     nsIBrowserDOMWindow::OPEN_NEWWINDOW);
-        PRInt32 restrictionPref = nsContentUtils::GetIntPref(
-                                "browser.link.open_newwindow.restriction");
-        /* The restriction pref is a power-user's fine-tuning pref. values:
-          0: no restrictions - divert everything
-          1: don't divert window.open at all
-          2: don't divert window.open with features */
-
-        if (containerPref == nsIBrowserDOMWindow::OPEN_NEWTAB ||
-            containerPref == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
-          divertOpen = restrictionPref != 1;
-          if (divertOpen && !aOptions.IsEmpty() && restrictionPref == 2)
-            divertOpen = PR_FALSE;
-        }
-      }
-    }
-  }
-
   nsCOMPtr<nsIDOMWindow> domReturn;
 
-  // divert the window.open into a new tab or into this window, if required
+  nsCOMPtr<nsIWindowWatcher> wwatch =
+    do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+  NS_ENSURE_TRUE(wwatch, rv);
 
-  if (divertOpen) {
-    if (containerPref == nsIBrowserDOMWindow::OPEN_NEWTAB ||
-        !aUrl.IsEmpty()) {
-#ifdef DEBUG
-    printf("divert window.open to new tab\n");
-#endif
-      // get nsIBrowserDOMWindow interface
+  NS_ConvertUTF16toUTF8 options(aOptions);
+  NS_ConvertUTF16toUTF8 name(aName);
 
-      nsCOMPtr<nsIBrowserDOMWindow> bwin;
+  const char *options_ptr = aOptions.IsEmpty() ? nsnull : options.get();
+  const char *name_ptr = aName.IsEmpty() ? nsnull : name.get();
 
-      nsCOMPtr<nsIDocShellTreeItem> docItem(do_QueryInterface(mDocShell));
-      if (docItem) {
-        nsCOMPtr<nsIDocShellTreeItem> rootItem;
-        docItem->GetRootTreeItem(getter_AddRefs(rootItem));
-        nsCOMPtr<nsIDOMWindow> rootWin(do_GetInterface(rootItem));
-        nsCOMPtr<nsIDOMChromeWindow> chromeWin(do_QueryInterface(rootWin));
-        if (chromeWin)
-          chromeWin->GetBrowserDOMWindow(getter_AddRefs(bwin));
-      }
+  {
+    // Reset popup state while opening a window to prevent the
+    // current state from being active the whole time a modal
+    // dialog is open.
+    nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
 
-      // open new tab
-
-      if (bwin) {
-        // open the tab with the URL
-        // discard features (meaningless in this case)
-        bwin->OpenURI(tabURI, this,
-              containerPref, nsIBrowserDOMWindow::OPEN_NEW,
-              getter_AddRefs(domReturn));
-
-        nsCOMPtr<nsPIDOMWindow> domWin(do_GetInterface(domReturn));
-        if (domWin) {
-          domWin->SetOpenerWindow(this);
-        }
-      }
+    if (!aCalledNoScript) {
+      nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
+      NS_ASSERTION(pwwatch,
+                   "Unable to open windows from JS because window watcher "
+                   "is broken");
+      NS_ENSURE_TRUE(pwwatch, NS_ERROR_UNEXPECTED);
+        
+      PRUint32 extraArgc = argc >= 3 ? argc - 3 : 0;
+      rv = pwwatch->OpenWindowJS(this, url.get(), name_ptr, options_ptr,
+                                 aDialog, extraArgc, argv + 3,
+                                 getter_AddRefs(domReturn));
     } else {
-#ifdef DEBUG
-      printf("divert window.open to current window\n");
-#endif
-      GetTop(getter_AddRefs(domReturn));
-    }
+      // Push a null JSContext here so that the window watcher won't screw us
+      // up.  We do NOT want this case looking at the JS context on the stack
+      // when searching.  Compare comments on
+      // nsIDOMWindowInternal::OpenWindow and nsIWindowWatcher::OpenWindow.
+      nsCOMPtr<nsIJSContextStack> stack =
+        do_GetService(sJSStackContractID);
 
-    if (domReturn && !aName.LowerCaseEqualsLiteral("_blank") &&
-        !aName.LowerCaseEqualsLiteral("_new"))
-      domReturn->SetName(aName);
-  }
+      if (stack) {
+        rv = stack->Push(nsnull);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+        
+      rv = wwatch->OpenWindow(this, url.get(), name_ptr, options_ptr,
+                              aExtraArgument, getter_AddRefs(domReturn));
 
-  // lacking specific instructions, or just as an error fallback,
-  // open a new window.
-
-  if (!domReturn) {
-    nsCOMPtr<nsIWindowWatcher> wwatch =
-      do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-
-    if (wwatch) {
-      NS_ConvertUTF16toUTF8 options(aOptions);
-      NS_ConvertUTF16toUTF8 name(aName);
-
-      const char *options_ptr = aOptions.IsEmpty() ? nsnull : options.get();
-      const char *name_ptr = aName.IsEmpty() ? nsnull : name.get();
-
-      {
-        // Reset popup state while opening a window to prevent the
-        // current state from being active the whole time a modal
-        // dialog is open.
-        nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
-
-        if (argc) {
-          nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
-          if (pwwatch) {
-            PRUint32 extraArgc = argc >= 3 ? argc - 3 : 0;
-            rv = pwwatch->OpenWindowJS(this, url.get(), name_ptr, options_ptr,
-                                       aDialog, extraArgc, argv + 3,
-                                       getter_AddRefs(domReturn));
-          } else {
-            NS_ERROR("WindowWatcher service not a nsPIWindowWatcher!");
-
-            rv = NS_ERROR_UNEXPECTED;
-          }
-        } else {
-          rv = wwatch->OpenWindow(this, url.get(), name_ptr, options_ptr,
-                                  aExtraArgument, getter_AddRefs(domReturn));
-        }
+      if (stack) {
+        JSContext* cx;
+        stack->Pop(&cx);
+        NS_ASSERTION(!cx, "Unexpected JSContext popped!");
       }
     }
   }
+
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // success!
 
   if (domReturn) {
-    CallQueryInterface(domReturn, aReturn);
-
     // Save the principal of the calling script
     // We need it to decide whether to clear the scope in SetNewDocument
     NS_ASSERTION(sSecMan, "No Security Manager Found!");
-    if (sSecMan) {
+    // Note that the opener script URL is not relevant for openDialog
+    // callers, since those already have chrome privileges.  So we
+    // only want to do this wen aDoJSFixups is true.
+    if (aDoJSFixups && sSecMan) {
       nsCOMPtr<nsIPrincipal> principal;
       sSecMan->GetSubjectPrincipal(getter_AddRefs(principal));
       if (principal) {
@@ -5863,8 +5737,50 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         }
       }
     }
+
+    domReturn.swap(*aReturn);
   }
 
+  
+
+  if (NS_SUCCEEDED(rv)) {
+    if (aDoJSFixups) {      
+      nsCOMPtr<nsIDOMChromeWindow> chrome_win(do_QueryInterface(*aReturn));
+      if (!chrome_win) {
+        // A new non-chrome window was created from a call to
+        // window.open() from JavaScript, make sure there's a document in
+        // the new window. We do this by simply asking the new window for
+        // its document, this will synchronously create an empty document
+        // if there is no document in the window.
+        // XXXbz should this just use EnsureInnerWindow()?
+#ifdef DEBUG_jst
+        {
+          nsCOMPtr<nsPIDOMWindow> pidomwin(do_QueryInterface(*aReturn));
+
+          nsIDOMDocument *temp = pidomwin->GetExtantDocument();
+
+          NS_ASSERTION(temp, "No document in new window!!!");
+        }
+#endif
+
+        nsCOMPtr<nsIDOMDocument> doc;
+        (*aReturn)->GetDocument(getter_AddRefs(doc));
+      }
+    }
+    
+    if (checkForPopup) {
+      if (abuseLevel >= openControlled) {
+        nsGlobalWindow *opened = NS_STATIC_CAST(nsGlobalWindow *, *aReturn);
+        if (!opened->IsPopupSpamWindow()) {
+          opened->SetPopupSpamWindow(PR_TRUE);
+          ++gOpenPopupSpamCount;
+        }
+      }
+      if (abuseLevel >= openAbused)
+        FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl, aName, aOptions);
+    }
+  }
+  
   return rv;
 }
 
