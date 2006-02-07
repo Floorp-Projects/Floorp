@@ -120,7 +120,6 @@ public:
   NS_IMETHOD GetPrintThisPage(PRBool*  aPrintThisPage) { *aPrintThisPage = mPrintThisPage; return NS_OK; }
   NS_IMETHOD SetOffset(nscoord aX, nscoord aY) { mOffsetX = aX; mOffsetY = aY; return NS_OK; }
   NS_IMETHOD SuppressHeadersAndFooters(PRBool aDoSup);
-  NS_IMETHOD SetClipRect(nsPresContext* aPresContext, nsRect* aSize);
 
   /**
    * Get the "type" of the frame

@@ -170,11 +170,6 @@ public:
                     nsPrintObject *         aPO);
   nsresult ReflowDocList(nsPrintObject * aPO, PRBool aSetPixelScale,
                          PRBool aDoCalcShrink);
-  void SetClipRect(nsPrintObject*  aPO,
-                   const nsRect& aClipRect,
-                   nscoord       aOffsetX,
-                   nscoord       aOffsetY,
-                   PRBool        aDoingSetClip);
 
   nsresult ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink);
   nsresult CalcPageFrameLocation(nsIPresShell * aPresShell,

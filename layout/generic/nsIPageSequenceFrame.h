@@ -89,7 +89,6 @@ public:
   NS_IMETHOD GetPrintThisPage(PRBool* aPrintThisPage) = 0;
   NS_IMETHOD SetOffset(nscoord aX, nscoord aY) = 0;
   NS_IMETHOD SuppressHeadersAndFooters(PRBool aDoSup) = 0;
-  NS_IMETHOD SetClipRect(nsPresContext*  aPresContext, nsRect* aSize) = 0;
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) = 0;
 
   NS_IMETHOD SetTotalNumPages(PRInt32 aTotal) = 0;

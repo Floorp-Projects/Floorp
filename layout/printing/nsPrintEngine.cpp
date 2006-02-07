@@ -2383,14 +2383,6 @@ nsPrintEngine::SetupToPrintContent(nsIDeviceContext* aDContext,
   PR_PL(("-------------------------------------------------------\n"));
   PR_PL(("\n"));
 
-  // Set up the clipping rectangle for all documents
-  // When frames are being printed as part of a frame set and also IFrames,
-  // they are reflowed with a very large page height. We need to setup the
-  // clipping so they do not rpint over top of anything else
-  PR_PL(("SetClipRect-------------------------------------------------------\n"));
-  nsRect clipRect(-1,-1,-1, -1);
-  SetClipRect(mPrt->mPrintObject, clipRect, 0, 0, PR_FALSE);
-
   CalcNumPrintableDocsAndPages(mPrt->mNumPrintableDocs, mPrt->mNumPrintablePages);
 
   PR_PL(("--- Printing %d docs and %d pages\n", mPrt->mNumPrintableDocs, mPrt->mNumPrintablePages));
@@ -3508,40 +3500,6 @@ nsPrintEngine::PrintPage(nsPresContext*   aPresContext,
     nsPrintData::DoOnProgressChange(mPrt->mPrintProgressListeners, curPage, endPage);
   }
 
-  // Set Clip when Printing "AsIs" or
-  // when printing an IFrame for SelectedFrame or EachFrame
-  PRBool setClip = PR_FALSE;
-  switch (mPrt->mPrintFrameType) {
-
-    case nsIPrintSettings::kFramesAsIs:
-      setClip = PR_TRUE;
-      break;
-
-    case nsIPrintSettings::kSelectedFrame:
-      if (aPO->mPrintAsIs) {
-        if (aPO->mFrameType == eIFrame) {
-          setClip = aPO != mPrt->mSelectedPO;
-        }
-      }
-      break;
-
-    case nsIPrintSettings::kEachFrameSep:
-      if (aPO->mPrintAsIs) {
-        if (aPO->mFrameType == eIFrame) {
-          setClip = PR_TRUE;
-        }
-      }
-      break;
-
-  } //switch
-
-  if (setClip) {
-    // Always set the clip x,y to zero because it isn't going to have any margins
-    aPO->mClipRect.x = 0;
-    aPO->mClipRect.y = 0;
-    mPageSeqFrame->SetClipRect(aPO->mPresContext, &aPO->mClipRect);
-  }
-
   // Print the Page
   // if a print job was cancelled externally, an EndPage or BeginPage may
   // fail and the failure is passed back here.
@@ -4047,72 +4005,6 @@ nsPrintEngine::SetPrintAsIs(nsPrintObject* aPO, PRBool aAsIs)
     SetPrintAsIs((nsPrintObject*)aPO->mKids[i], aAsIs);
   }
 }
-
-
-//-------------------------------------------------------
-// Recursively sets the clip rect on all thchildren
-void
-nsPrintEngine::SetClipRect(nsPrintObject*  aPO,
-                                const nsRect& aClipRect,
-                                nscoord       aOffsetX,
-                                nscoord       aOffsetY,
-                                PRBool        aDoingSetClip)
-{
-  NS_ASSERTION(aPO, "Pointer is null!");
-
-  nsRect clipRect = aClipRect;
-  if (aDoingSetClip) {
-    nscoord width  = (aPO->mRect.x+aPO->mRect.width) > aClipRect.width?aClipRect.width-aPO->mRect.x:aPO->mRect.width;
-    nscoord height = (aPO->mRect.y+aPO->mRect.height) > aClipRect.height?aClipRect.height-aPO->mRect.y:aPO->mRect.height;
-    aPO->mClipRect.SetRect(aPO->mRect.x, aPO->mRect.y, width, height);
-
-  }
-
-  PRBool doClip = aDoingSetClip;
-
-  if (aPO->mFrameType == eFrame) {
-    if (aDoingSetClip) {
-      aPO->mClipRect.SetRect(aOffsetX, aOffsetY, aPO->mClipRect.width, aPO->mClipRect.height);
-      clipRect = aPO->mClipRect;
-    } else if (mPrt->mPrintFrameType == nsIPrintSettings::kFramesAsIs) {
-      aPO->mClipRect.SetRect(aOffsetX, aOffsetY, aPO->mRect.width, aPO->mRect.height);
-      clipRect = aPO->mClipRect;
-      doClip = PR_TRUE;
-    }
-
-  } else if (aPO->mFrameType == eIFrame) {
-
-    if (aDoingSetClip) {
-      aPO->mClipRect.SetRect(aOffsetX, aOffsetY, aPO->mClipRect.width, aPO->mClipRect.height);
-      clipRect = aPO->mClipRect;
-    } else {
-
-      if (mPrt->mPrintFrameType == nsIPrintSettings::kSelectedFrame) {
-        if (aPO->mParent && aPO->mParent == mPrt->mSelectedPO) {
-          aPO->mClipRect.SetRect(aOffsetX, aOffsetY, aPO->mRect.width, aPO->mRect.height);
-          clipRect = aPO->mClipRect;
-          doClip = PR_TRUE;
-        }
-      } else {
-        aPO->mClipRect.SetRect(aOffsetX, aOffsetY, aPO->mRect.width, aPO->mRect.height);
-        clipRect = aPO->mClipRect;
-        doClip = PR_TRUE;
-      }
-    }
-
-  }
-
-
-  PR_PL(("In DV::SetClipRect PO: %p (%9s) ", aPO, gFrameTypesStr[aPO->mFrameType]));
-  PR_PL(("%5d,%5d,%5d,%5d\n", aPO->mClipRect.x, aPO->mClipRect.y,aPO->mClipRect.width, aPO->mClipRect.height));
-
-  PRInt32 cnt = aPO->mKids.Count();
-  for (PRInt32 i=0;i<cnt;i++) {
-    SetClipRect((nsPrintObject *)aPO->mKids[i], clipRect,
-                aOffsetX+aPO->mRect.x, aOffsetY+aPO->mRect.y, doClip);
-  }
-}
-
 
 //-------------------------------------------------------
 // Given a DOMWindow it recursively finds the PO object that matches

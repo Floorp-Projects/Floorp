@@ -60,8 +60,7 @@ NS_NewPageContentFrame(nsIPresShell* aPresShell)
   return new (aPresShell) nsPageContentFrame;
 }
 
-nsPageContentFrame::nsPageContentFrame() :
-  mClipRect(-1, -1, -1, -1)
+nsPageContentFrame::nsPageContentFrame()
 {
 }
 
@@ -168,18 +167,10 @@ nsPageContentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
-  nsRect rect;
-  if (mClipRect.width != -1 || mClipRect.height != -1) {
-    rect = mClipRect;
-  } else {
-    rect = mRect;
-    rect.x = 0;
-    rect.y = 0;
-  }
-
   nsDisplayListCollection set;
   nsresult rv = nsContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return Clip(aBuilder, set, aLists, rect + aBuilder->ToReferenceFrame(this));
+  return Clip(aBuilder, set, aLists,
+              nsRect(aBuilder->ToReferenceFrame(this), GetSize()));
 }

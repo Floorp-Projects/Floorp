@@ -48,7 +48,6 @@ nsPrintObject::nsPrintObject() :
   mRect(0,0,0,0), mReflowRect(0,0,0,0),
   mParent(nsnull), mHasBeenPrinted(PR_FALSE), mDontPrint(PR_TRUE),
   mPrintAsIs(PR_FALSE), mSkippedPageEject(PR_FALSE), mSharedPresShell(PR_FALSE), mIsHidden(PR_FALSE), mInvisible(PR_FALSE),
-  mClipRect(-1,-1, -1, -1),
   mImgAnimationMode(imgIContainer::kNormalAnimMode),
   mDocTitle(nsnull), mDocURL(nsnull), mShrinkRatio(1.0), mXMost(0)
 {

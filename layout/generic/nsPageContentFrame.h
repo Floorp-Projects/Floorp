@@ -60,8 +60,6 @@ public:
 
   virtual PRBool IsContainingBlock() const;
 
-  virtual void  SetClipRect(nsRect* aClipRect) { mClipRect = *aClipRect; }
-
   virtual void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
   /**
@@ -79,7 +77,6 @@ public:
 protected:
   nsPageContentFrame();
 
-  nsRect                    mClipRect;
   nsSharedPageData*         mPD;
 };
 
