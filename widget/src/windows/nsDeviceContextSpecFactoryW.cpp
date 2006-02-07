@@ -270,13 +270,13 @@ void Show(HWND aWnd, PRBool bState)
 
 //--------------------------------------------------------
 // Create a child window "control"
-static HWND CreateControl(LPCTSTR         aType,
-                          DWORD           aStyle,
-                          HINSTANCE       aHInst, 
-                          HWND            aHdlg, 
-                          int             aId, 
-                          const nsString& aStr, 
-                          const nsRect&   aRect)
+static HWND CreateControl(LPCTSTR          aType,
+                          DWORD            aStyle,
+                          HINSTANCE        aHInst, 
+                          HWND             aHdlg, 
+                          int              aId, 
+                          const nsAString& aStr, 
+                          const nsRect&    aRect)
 {
   char* pStr = nsDeviceContextWin::GetACPString(aStr);
   if (pStr == NULL) return NULL;
@@ -301,22 +301,22 @@ static HWND CreateControl(LPCTSTR         aType,
 
 //--------------------------------------------------------
 // Create a Radio Button
-static HWND CreateRadioBtn(HINSTANCE       aHInst, 
-                           HWND            aHdlg, 
-                           int             aId, 
-                           const nsString& aStr, 
-                           const nsRect&   aRect)
+static HWND CreateRadioBtn(HINSTANCE        aHInst, 
+                           HWND             aHdlg, 
+                           int              aId, 
+                           const nsAString& aStr, 
+                           const nsRect&    aRect)
 {
   return CreateControl("BUTTON", BS_RADIOBUTTON, aHInst, aHdlg, aId, aStr, aRect);
 }
 
 //--------------------------------------------------------
 // Create a Group Box
-static HWND CreateGroupBox(HINSTANCE       aHInst, 
-                           HWND            aHdlg, 
-                           int             aId, 
-                           const nsString& aStr, 
-                           const nsRect&   aRect)
+static HWND CreateGroupBox(HINSTANCE        aHInst, 
+                           HWND             aHdlg, 
+                           int              aId, 
+                           const nsAString& aStr, 
+                           const nsRect&    aRect)
 {
   return CreateControl("BUTTON", BS_GROUPBOX, aHInst, aHdlg, aId, aStr, aRect);
 }
@@ -393,12 +393,12 @@ UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
     // hide the others and bail out
     //
     rect.SetRect(rad1Rect.left, y, rbWidth,radHgt);
-    HWND rad4Wnd = CreateRadioBtn(hInst, hdlg, rad4, nsAutoString(NS_ConvertASCIItoUCS2("As &laid out on the screen")), rect);
+    HWND rad4Wnd = CreateRadioBtn(hInst, hdlg, rad4, NS_LITERAL_STRING("As &laid out on the screen"), rect);
     if (rad4Wnd == NULL) return 0L;
     y += radHgt + rbGap;
 
     rect.SetRect(rad1Rect.left, y, rbWidth, radHgt);
-    HWND rad5Wnd = CreateRadioBtn(hInst, hdlg, rad5, nsAutoString(NS_ConvertASCIItoUCS2("The selected &frame")), rect);
+    HWND rad5Wnd = CreateRadioBtn(hInst, hdlg, rad5, NS_LITERAL_STRING("The selected &frame"), rect);
     if (rad5Wnd == NULL) {
       Show(rad4Wnd, FALSE); // hide
       return 0L;
@@ -406,7 +406,7 @@ UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
     y += radHgt + rbGap;
 
     rect.SetRect(rad1Rect.left, y, rbWidth, radHgt);
-    HWND rad6Wnd = CreateRadioBtn(hInst, hdlg, rad6, nsAutoString(NS_ConvertASCIItoUCS2("&Each frame separately")), rect);
+    HWND rad6Wnd = CreateRadioBtn(hInst, hdlg, rad6, NS_LITERAL_STRING("&Each frame separately"), rect);
     if (rad6Wnd == NULL) {
       Show(rad4Wnd, FALSE); // hide
       Show(rad5Wnd, FALSE); // hide
@@ -416,7 +416,7 @@ UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 
     // Create and position the group box
     rect.SetRect (dlgRect.left, top, dlgRect.right-dlgRect.left+1, y-top+1);
-    HWND grpBoxWnd = CreateGroupBox(hInst, hdlg, grp3, nsAutoString(NS_ConvertASCIItoUCS2("Print Frame")), rect);
+    HWND grpBoxWnd = CreateGroupBox(hInst, hdlg, grp3, NS_LITERAL_STRING("Print Frame"), rect);
     if (grpBoxWnd == NULL) {
       Show(rad4Wnd, FALSE); // hide
       Show(rad5Wnd, FALSE); // hide
