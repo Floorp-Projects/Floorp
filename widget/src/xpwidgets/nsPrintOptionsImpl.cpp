@@ -1439,7 +1439,7 @@ nsresult nsPrintOptions::ReadPrefDouble(nsIPref *    aPref,
   char * str = nsnull;
   nsresult rv = aPref->CopyCharPref(aPrefId, &str);
   if (NS_SUCCEEDED(rv) && str) {
-    sscanf(str, "%6.2", &aVal);
+    sscanf(str, "%6.2f", &aVal);
     nsMemory::Free(str);
   }
   return rv;
