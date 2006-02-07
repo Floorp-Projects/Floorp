@@ -65,7 +65,7 @@ var PlacesUIHook = {
       }
       this._tabbrowser.mTabContainer.addEventListener("select", onTabSelect, false);
 
-      this._showPlacesUI();
+      this.showPlacesUI();
     }
     catch (e) { 
       LOG("Something bad happened initializing the UI Hook: " + e);
@@ -109,10 +109,6 @@ var PlacesUIHook = {
         removeAttribute("disabled");
   },
   
-  uninit: function PUIH_uninit() {
-    this._hidePlacesUI();
-  },
-
   onTabSelect: function PP_onTabSelect(event) {
     var tabURI = this._tabbrowser.selectedBrowser.currentURI;
     if (!tabURI)
@@ -120,7 +116,7 @@ var PlacesUIHook = {
     else
       isPlaces = 
         tabURI.spec.substr(0, this._placesURI.length) == this._placesURI;
-    isPlaces ? this._showPlacesUI() : this._hidePlacesUI();
+    isPlaces ? this.showPlacesUI() : this.hidePlacesUI();
   },
   
   _topElement: function PUIH__topElement(id) {
@@ -133,7 +129,9 @@ var PlacesUIHook = {
 
   _findWasHidden: false,
   
-  _showPlacesUI: function PP__showPlacesUI() {
+  showPlacesUI: function PP_showPlacesUI() {
+    ASSERT(PlacesController, "PlacesController does not exist anymore?!");
+
     this._tabbrowser.setAttribute("places", "true");
     var statusbar = this._topElement("status-bar");
     statusbar.hidden = true;
@@ -155,7 +153,9 @@ var PlacesUIHook = {
     this._topWindow.addEventListener("find-activated", this.onFindActivated, false);
   },
 
-  _hidePlacesUI: function PP__hidePlacesUI() {
+  hidePlacesUI: function PP_hidePlacesUI() {
+    ASSERT(PlacesController, "PlacesController does not exist anymore?!");
+
     this._tabbrowser.removeAttribute("places");
     
     // Approaches that cache the value of the status bar before the Places page
@@ -251,12 +251,20 @@ var PlacesPage = {
     
     // Set up the advanced query builder UI
     PlacesQueryBuilder.init();
+    
+    // We attach event listeners like this instead of using the more succinct
+    // "onpageshow/hide" inline handlers because they don't work for XUL. See:
+    //   https://bugzilla.mozilla.org/show_bug.cgi?id=326260
+    function onPageShow() {
+      PlacesUIHook.showPlacesUI();
+    }
+    function onPageHide() {
+      PlacesUIHook.hidePlacesUI();
+    }
+    window.addEventListener("pageshow", onPageShow, false);
+    window.addEventListener("pagehide", onPageHide, false);
   },
 
-  uninit: function PP_uninit() {
-    PlacesUIHook.uninit();
-  },
-  
   /**
    * A range has been selected from the calendar picker. Update the view
    * to show only those results within the selected range. 
@@ -497,7 +505,6 @@ var PlacesSearchBox = {
     return searchFilter.getAttribute("collection");
   },
   set filterCollection(collectionName) {
-    LOG("SET COLN: " + collectionName);
     var searchFilter = document.getElementById("searchFilter");
     searchFilter.setAttribute("collection", collectionName);
     return collectionName;

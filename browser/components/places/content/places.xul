@@ -9,7 +9,7 @@
 
 <window id="places" title="&places.title;" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="PlacesPage.init();" onunload="PlacesPage.uninit();">
+        onload="PlacesPage.init();">
   
   <script type="application/x-javascript"
           src="chrome://browser/content/places/controller.js"/>
