@@ -204,7 +204,6 @@ interface nsIPrintSettings : nsISupports
   attribute short   printFrameTypeUsage; /* indicates whether to use the interal value or not  */
   attribute short   printFrameType;
   attribute boolean printSilent;	     /* print without putting up the dialog */
-  attribute boolean isPrintPreview;		 /* indicates whether we are in print preview mode */
   attribute boolean shrinkToFit;	     /* shrinks content to fit on page      */
   attribute boolean showPrintProgress;   /* indicates whether the progress dialog should be shown */
 

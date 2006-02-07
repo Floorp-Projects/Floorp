@@ -189,6 +189,13 @@ nsDeviceContextSpecWin::~nsDeviceContextSpecWin()
   SetDevMode(NULL);
   SetGlobalDevMode(NULL);
 
+  nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(mPrintSettings));
+  if (psWin) {
+    psWin->SetDeviceName(nsnull);
+    psWin->SetDriverName(nsnull);
+    psWin->SetDevMode(NULL);
+  }
+
   // Free them, we won't need them for a while
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 }
