@@ -418,7 +418,7 @@
         <toolbarbutton class="tabs-closebutton" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="toggleSidebar();"/>
       </sidebarheader>        
       <browser id="sidebar" flex="1" autoscroll="false"
-               style="min-width: 150px; width: 200px; max-width: 400px;"/>
+               style="min-width: 14em; width: 18em; max-width: 36em;"/>
     </vbox>    
     
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" hidden="true"/>
