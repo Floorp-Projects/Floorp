@@ -141,7 +141,7 @@ foreach my $id (keys %$testgroups) {
       if ($testcase->{'version'} > $testcase->{'testrunner_case_version'} and
           $tr_testcase->{'case_version'} > $testcase->{'testrunner_case_version'}) {
         print "# Testcase update collision detected.\n";
-        print "Litmus testcase ID#: " . $testcase->{'test_id'} . "; TR case ID#: " . $tr_testcase->{'case_id'} . "\n";
+        print "# Litmus testcase ID#: " . $testcase->{'test_id'} . "; TR case ID#: " . $tr_testcase->{'case_id'} . "\n";
         next;
       }
       
