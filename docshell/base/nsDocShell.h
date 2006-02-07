@@ -403,7 +403,8 @@ protected:
                                        PRUint32 aStateFlags);
 
     // Global History
-    nsresult AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect, nsIURI * aReferrer);
+    nsresult AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect,
+                                nsIChannel * aChannel);
 
     // Helper Routines
     NS_IMETHOD GetPromptAndStringBundle(nsIPrompt ** aPrompt,
