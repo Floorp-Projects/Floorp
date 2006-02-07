@@ -19,6 +19,7 @@ classic.jar:
     skin/classic/browser/places/bookmarks_menu.png       (skin-win/bookmarks_menu.png)
     skin/classic/browser/places/bookmarks_toolbar.png    (skin-win/bookmarks_toolbar.png)
     skin/classic/browser/places/livemark_item.png        (skin-win/livemark_item.png)
+    skin/classic/browser/places/places-icon.png          (skin-win/places-icon.png)
 
 en-US.jar:
     locale/browser/places/places.dtd                     (locale/places.dtd)
