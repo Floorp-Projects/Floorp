@@ -27,6 +27,8 @@
 #include "nsMargin.h"  
 #include "nsString.h"  
 
+#define NUM_HEAD_FOOT 3
+
 //*****************************************************************************
 //***    nsPrintSettings
 //*****************************************************************************
@@ -37,16 +39,21 @@ public:
   NS_DECL_NSIPRINTSETTINGS
 
   nsPrintSettings();
-  nsPrintSettings(const nsPrintSettings* aPS);
+  nsPrintSettings(const nsPrintSettings& aPS);
   virtual ~nsPrintSettings();
 
-protected:
-  virtual nsresult CloneObj(nsIPrintSettings **_retval);
+  nsPrintSettings& operator=(const nsPrintSettings& rhs);
 
+protected:
+  // May be implemented by the platform-specific derived class                       
+  virtual nsresult _Clone(nsIPrintSettings **_retval);
+  virtual nsresult _Assign(nsIPrintSettings *aPS);
+  
   typedef enum {
     eHeader,
     eFooter
   } nsHeaderFooterEnum;
+
 
   nsresult GetMarginStrs(PRUnichar * *aTitle, nsHeaderFooterEnum aType, PRInt16 aJust);
   nsresult SetMarginStrs(const PRUnichar * aTitle, nsHeaderFooterEnum aType, PRInt16 aJust);
@@ -76,8 +83,8 @@ protected:
   nsString      mTitle;
   nsString      mURL;
   nsString      mPageNumberFormat;
-  nsString      mHeaderStrs[3];
-  nsString      mFooterStrs[3];
+  nsString      mHeaderStrs[NUM_HEAD_FOOT];
+  nsString      mFooterStrs[NUM_HEAD_FOOT];
 
   nsString      mPaperName;
   PRInt16       mPaperData;
