@@ -50,6 +50,14 @@ protected:
   nsresult ReadPrefString(nsIPref * aPref, const char * aPrefId, nsString& aString);
   nsresult WritePrefString(nsIPref * aPref, const char * aPrefId, nsString& aString);
 
+  typedef enum {
+    eHeader,
+    eFooter
+  } nsHeaderFooterEnum;
+
+  nsresult GetMarginStrs(PRUnichar * *aTitle, nsHeaderFooterEnum aType, PRInt16 aJust);
+  nsresult SetMarginStrs(const PRUnichar * aTitle, nsHeaderFooterEnum aType, PRInt16 aJust);
+
   // Members 
   nsMargin      mMargin;
   PRInt32       mPrintOptions;
@@ -58,7 +66,6 @@ protected:
   PRInt16       mPrintRange;
   PRInt32       mStartPageNum; // only used for ePrintRange_SpecifiedRange
   PRInt32       mEndPageNum;
-  PRInt16       mPageNumJust;
 
   PRInt16       mPrintFrameType;
   PRBool        mHowToEnableFrameUI;
@@ -66,9 +73,11 @@ protected:
   PRBool        mPrintSilent;
   PRInt32       mPrintPageDelay;
 
-  nsFont*       mDefaultFont;
   nsString      mTitle;
   nsString      mURL;
+  nsString      mPageNumberFormat;
+  nsString      mHeaderStrs[3];
+  nsString      mFooterStrs[3];
 
   PRBool        mPrintReversed;
   PRBool        mPrintInColor; // a false means grayscale
@@ -78,6 +87,7 @@ protected:
   PRBool        mPrintToFile;
   nsString      mToFileName;
 
+  static nsFont* mDefaultFont;
 };
 
 
