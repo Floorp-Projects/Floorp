@@ -40,6 +40,7 @@
 #ifndef nsPrintSettingsImpl_h__
 #define nsPrintSettingsImpl_h__
 
+#include "gfxCore.h"
 #include "nsIPrintSettings.h"  
 #include "nsMargin.h"  
 #include "nsString.h"
