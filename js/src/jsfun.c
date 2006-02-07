@@ -722,7 +722,7 @@ static JSBool
 call_enumerate(JSContext *cx, JSObject *obj)
 {
     JSStackFrame *fp;
-    JSObject *funobj;
+    JSObject *funobj, *pobj;
     JSScope *scope;
     JSScopeProperty *sprop, *cprop;
     JSPropertyOp getter;
@@ -771,9 +771,20 @@ call_enumerate(JSContext *cx, JSObject *obj)
         JS_ASSERT(atom->flags & ATOM_HIDDEN);
         atom = atom->entry.value;
 
-        if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &obj, &prop))
+        if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
             return JS_FALSE;
-        JS_ASSERT(obj && prop);
+
+        /*
+         * If we found the property in a different object, don't try sticking
+         * it into wrong slots vector. This can occur because we have a mutable
+         * __proto__ slot, and cloned function objects rely on their __proto__
+         * to delegate to the object that contains the var and arg properties.
+         */
+        if (!prop || pobj != obj) {
+            if (prop)
+                OBJ_DROP_PROPERTY(cx, pobj, prop);
+            continue;
+        }
         cprop = (JSScopeProperty *)prop;
         LOCKED_OBJ_SET_SLOT(obj, cprop->slot, vec[(uint16) sprop->shortid]);
         OBJ_DROP_PROPERTY(cx, obj, prop);
