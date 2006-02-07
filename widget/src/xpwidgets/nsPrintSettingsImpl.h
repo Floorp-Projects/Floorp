@@ -67,6 +67,7 @@ protected:
   PRBool        mPrintSilent;
   PRBool        mPrintPreview;
   PRBool        mShrinkToFit;
+  PRBool        mShowPrintProgress;
   PRInt32       mPrintPageDelay;
 
   nsString      mTitle;
