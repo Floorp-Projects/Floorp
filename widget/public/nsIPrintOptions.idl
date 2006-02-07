@@ -75,6 +75,12 @@ interface nsIPrintOptions : nsISupports
   const short kA3PaperSize        = 4;
 
   /**
+   * Orientation Constants
+   */
+  const short kPortraitOrientation  = 0;
+  const short kLandscapeOrientation = 1;
+
+  /**
    * Print Frame Constants
    */
   const short kNoFrames      = 0;
@@ -143,6 +149,7 @@ interface nsIPrintOptions : nsISupports
   attribute boolean printReversed;
   attribute boolean printInColor;  /* a false means grayscale */
   attribute long    paperSize;     /*  see page size consts */
+  attribute long    orientation;   /*  see orientation consts */
   attribute wstring printCommand;
   attribute boolean printToFile;
   attribute wstring toFileName;

@@ -72,6 +72,7 @@ const char * kPrintDate       = "print.print_date";
 const char * kPrintReversed   = "print.print_reversed";
 const char * kPrintColor      = "print.print_color";
 const char * kPrintPaperSize  = "print.print_paper_size";
+const char * kPrintOrientation= "print.print_orientation";
 const char * kPrintCommand    = "print.print_command";
 const char * kPrintFile       = "print.print_file";
 const char * kPrintToFile     = "print.print_tofile";
@@ -102,6 +103,7 @@ nsPrintOptions::nsPrintOptions() :
   mPrintReversed(PR_FALSE),
   mPrintInColor(PR_TRUE),
   mPaperSize(kLetterPaperSize),
+  mOrientation(kPortraitOrientation),
   mPrintToFile(PR_FALSE),
   mPrintFrameType(kFramesAsIs),
   mHowToEnableFrameUI(kFrameEnableNone),
@@ -282,6 +284,7 @@ nsPrintOptions::ReadPrefs()
     prefs->GetBoolPref(kPrintReversed,   &mPrintReversed);
     prefs->GetBoolPref(kPrintColor,      &mPrintInColor);
     prefs->GetIntPref(kPrintPaperSize,   &mPaperSize);
+    prefs->GetIntPref(kPrintOrientation, &mOrientation);
     ReadPrefString(prefs, kPrintCommand, mPrintCommand);
     prefs->GetBoolPref(kPrintFile,       &mPrintToFile);
     ReadPrefString(prefs, kPrintToFile,  mToFileName);
@@ -320,6 +323,7 @@ nsPrintOptions::WritePrefs()
     prefs->SetBoolPref(kPrintReversed,    mPrintReversed);
     prefs->SetBoolPref(kPrintColor,       mPrintInColor);
     prefs->SetIntPref(kPrintPaperSize,    mPaperSize);
+    prefs->SetIntPref(kPrintOrientation,  mOrientation);
     WritePrefString(prefs, kPrintCommand, mPrintCommand);
     prefs->SetBoolPref(kPrintFile,        mPrintToFile);
     WritePrefString(prefs, kPrintToFile,  mToFileName);
@@ -392,6 +396,19 @@ NS_IMETHODIMP nsPrintOptions::GetPaperSize(PRInt32 *aPaperSize)
 NS_IMETHODIMP nsPrintOptions::SetPaperSize(PRInt32 aPaperSize)
 {
   mPaperSize = aPaperSize;
+  return NS_OK;
+}
+
+/* attribute short orientation; */
+NS_IMETHODIMP nsPrintOptions::GetOrientation(PRInt32 *aOrientation)
+{
+  //NS_ENSURE_ARG_POINTER(aOrientation);
+  *aOrientation = mOrientation;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetOrientation(PRInt32 aOrientation)
+{
+  mOrientation = aOrientation;
   return NS_OK;
 }
 
