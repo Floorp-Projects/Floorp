@@ -45,68 +45,46 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
-//NS_IMPL_ISUPPORTS1(nsPrintOptions, nsIPrintOptions)
-  NS_IMPL_ADDREF(nsPrintOptions)                       
-  NS_IMPL_RELEASE(nsPrintOptions)                      
-NS_IMETHODIMP nsPrintOptions::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aInstancePtr = NULL;
-
-  if (aIID.Equals(NS_GET_IID(nsIPrintOptions))) {
-    *aInstancePtr = (void*) (nsIPrintOptions*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*) ((nsISupports*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS1(nsPrintOptions, nsIPrintOptions)
 
 // Pref Constants
-const char * kMarginTop       = "print.print_margin_top";
-const char * kMarginLeft      = "print.print_margin_left";
-const char * kMarginBottom    = "print.print_margin_bottom";
-const char * kMarginRight     = "print.print_margin_right";
+const char kMarginTop[]       = "print.print_margin_top";
+const char kMarginLeft[]      = "print.print_margin_left";
+const char kMarginBottom[]    = "print.print_margin_bottom";
+const char kMarginRight[]     = "print.print_margin_right";
 
 // Prefs for Print Options
-const char * kPrintEvenPages  = "print.print_evenpages";
-const char * kPrintOddPages   = "print.print_oddpages";
-const char * kPrintHeaderStr1 = "print.print_headerleft";
-const char * kPrintHeaderStr2 = "print.print_headercenter";
-const char * kPrintHeaderStr3 = "print.print_headerright";
-const char * kPrintFooterStr1 = "print.print_footerleft";
-const char * kPrintFooterStr2 = "print.print_footercenter";
-const char * kPrintFooterStr3 = "print.print_footerright";
+const char kPrintEvenPages[]  = "print.print_evenpages";
+const char kPrintOddPages[]   = "print.print_oddpages";
+const char kPrintHeaderStr1[] = "print.print_headerleft";
+const char kPrintHeaderStr2[] = "print.print_headercenter";
+const char kPrintHeaderStr3[] = "print.print_headerright";
+const char kPrintFooterStr1[] = "print.print_footerleft";
+const char kPrintFooterStr2[] = "print.print_footercenter";
+const char kPrintFooterStr3[] = "print.print_footerright";
 
 // Additional Prefs
-const char * kPrintReversed   = "print.print_reversed";
-const char * kPrintColor      = "print.print_color";
-const char * kPrintPaperSize  = "print.print_paper_size";
-const char * kPrintOrientation= "print.print_orientation";
-const char * kPrintCommand    = "print.print_command";
-const char * kPrintFile       = "print.print_file";
-const char * kPrintToFile     = "print.print_tofile";
-const char * kPrintPageDelay  = "print.print_pagedelay";
+const char kPrintReversed[]   = "print.print_reversed";
+const char kPrintColor[]      = "print.print_color";
+const char kPrintPaperSize[]  = "print.print_paper_size";
+const char kPrintOrientation[]= "print.print_orientation";
+const char kPrintCommand[]    = "print.print_command";
+const char kPrintFile[]       = "print.print_file";
+const char kPrintToFile[]     = "print.print_tofile";
+const char kPrintPageDelay[]  = "print.print_pagedelay";
 
 // There are currently NOT supported
-//const char * kPrintBevelLines    = "print.print_bevellines";
-//const char * kPrintBlackText     = "print.print_blacktext";
-//const char * kPrintBlackLines    = "print.print_blacklines";
-//const char * kPrintLastPageFirst = "print.print_lastpagefirst";
-//const char * kPrintBackgrounds   = "print.print_backgrounds";
+//const char kPrintBevelLines[]    = "print.print_bevellines";
+//const char kPrintBlackText[]     = "print.print_blacktext";
+//const char kPrintBlackLines[]    = "print.print_blacklines";
+//const char kPrintLastPageFirst[] = "print.print_lastpagefirst";
+//const char kPrintBackgrounds[]   = "print.print_backgrounds";
 
-const char * kLeftJust   = "left";
-const char * kCenterJust = "center";
-const char * kRightJust  = "right";
+const char kLeftJust[]   = "left";
+const char kCenterJust[] = "center";
+const char kRightJust[]  = "right";
 
-nsFont* nsPrintOptions::mDefaultFont = nsnull;
+nsFont* nsPrintOptions::sDefaultFont = nsnull;
 
 /** ---------------------------------------------------
  *  See documentation in nsPrintOptionsImpl.h
@@ -136,8 +114,8 @@ nsPrintOptions::nsPrintOptions() :
 
   mPrintOptions = kOptPrintOddPages | kOptPrintEvenPages;
 
-  if (mDefaultFont == nsnull) {
-    mDefaultFont = new nsFont("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
+  if (sDefaultFont == nsnull) {
+    sDefaultFont = new nsFont("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
                                NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(10));
   }
 
@@ -157,9 +135,9 @@ nsPrintOptions::nsPrintOptions() :
  */
 nsPrintOptions::~nsPrintOptions()
 {
-  if (mDefaultFont != nsnull) {
-    delete mDefaultFont;
-    mDefaultFont = nsnull;
+  if (sDefaultFont != nsnull) {
+    delete sDefaultFont;
+    sDefaultFont = nsnull;
   }
 }
 
@@ -170,9 +148,9 @@ nsPrintOptions::~nsPrintOptions()
 NS_IMETHODIMP 
 nsPrintOptions::SetFontNamePointSize(nsString& aFontName, PRInt32 aPointSize)
 {
-  if (mDefaultFont != nsnull && aFontName.Length() > 0 && aPointSize > 0) {
-    mDefaultFont->name = aFontName;
-    mDefaultFont->size = NSIntPointsToTwips(aPointSize);
+  if (sDefaultFont != nsnull && aFontName.Length() > 0 && aPointSize > 0) {
+    sDefaultFont->name = aFontName;
+    sDefaultFont->size = NSIntPointsToTwips(aPointSize);
   }
   return NS_OK;
 }
@@ -184,10 +162,10 @@ nsPrintOptions::SetFontNamePointSize(nsString& aFontName, PRInt32 aPointSize)
 NS_IMETHODIMP 
 nsPrintOptions::SetDefaultFont(nsFont &aFont)
 {
-  if (mDefaultFont != nsnull) {
-    delete mDefaultFont;
+  if (sDefaultFont != nsnull) {
+    delete sDefaultFont;
   }
-  mDefaultFont = new nsFont(aFont);
+  sDefaultFont = new nsFont(aFont);
   return NS_OK;
 }
 
@@ -198,7 +176,7 @@ nsPrintOptions::SetDefaultFont(nsFont &aFont)
 NS_IMETHODIMP 
 nsPrintOptions::GetDefaultFont(nsFont &aFont)
 {
-  aFont = *mDefaultFont;
+  aFont = *sDefaultFont;
   return NS_OK;
 }
 
@@ -232,8 +210,7 @@ nsPrintOptions::GetMarginInTwips(nsMargin& aMargin)
 NS_IMETHODIMP 
 nsPrintOptions::ShowNativeDialog()
 {
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /** ---------------------------------------------------
@@ -737,6 +714,14 @@ NS_IMETHODIMP nsPrintOptions::SetPrintSilent(PRBool aPrintSilent)
   return NS_OK;
 }
 
+/* [noscript] voidPtr GetNativeData (in short aDataType); */
+NS_IMETHODIMP nsPrintOptions::GetNativeData(PRInt16 aDataType, void * *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //-----------------------------------------------------
 //-- Protected Methods

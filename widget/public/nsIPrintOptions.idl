@@ -188,4 +188,11 @@ interface nsIPrintOptions : nsISupports
   [noscript] void GetDefaultFont(in nsNativeFontRef aMargin);
 
 
+  /**
+   * Native data constants
+   */
+  const short kNativeDataPrintRecord        = 0;
+
+  [noscript] voidPtr GetNativeData(in short aDataType);
+
 };
