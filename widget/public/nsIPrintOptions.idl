@@ -54,9 +54,11 @@ interface nsISimpleEnumerator;
   [ref] native nsNativeStringRef(nsString);
 
 /**
- * Simplified graphics interface for JS rendering.
+ * Print options interface
  *
- * @status UNDER_REVIEW
+ * Do not attempt to freeze this API - it still needs lots of work. Consult
+ * John Keiser <jkeiser@netscape.com> and Roland Mainz
+ * <roland.mainz@informatik.med.uni-giessen.de> for futher details.
  */
 [scriptable, uuid(CAE87E20-479E-11d4-A856-00105A183419)]
 
@@ -75,6 +77,8 @@ interface nsIPrintOptions : nsISupports
 
   /**
    * available Printers
+   * It returns an enumerator object or throws an exception on error cases
+   * like if internal setup failed and/or no printers are available.
    */
   nsISimpleEnumerator availablePrinters ();
 
