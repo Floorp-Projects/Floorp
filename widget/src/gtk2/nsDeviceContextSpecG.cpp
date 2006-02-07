@@ -861,12 +861,12 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
              total_height = default_medium->ma3 + default_medium->ma4;
 
       /* Either "paper" or "tray/paper" */
+      papername.Truncate();
       if (default_medium->tray_name) {
-        papername = nsPrintfCString(256, "%s/%s", default_medium->tray_name, default_medium->medium_name);
+        papername.Append(default_medium->tray_name);
+        papername.Append("/");
       }
-      else {
-        papername.Assign(default_medium->medium_name);
-      }
+      papername.Append(default_medium->medium_name);
  
       DO_PR_DEBUG_LOG(("setting default paper size to '%s' (%g/%g mm)\n", papername.get(), total_width, total_height));
       aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
@@ -882,12 +882,13 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
         XpuMediumSourceSizeRec *curr = &mlist[i];
         double total_width  = curr->ma1 + curr->ma2,
                total_height = curr->ma3 + curr->ma4;
+
+        papername.Truncate();
         if (curr->tray_name) {
-          papername = nsPrintfCString(256, "%s/%s", curr->tray_name, curr->medium_name);
+          papername.Append(curr->tray_name);
+          papername.Append("/");
         }
-        else {
-          papername.Assign(curr->medium_name);
-        }
+        papername.Append(curr->medium_name);
 
         printerFeatures.SetPaperRecord(i, papername, PRInt32(total_width), PRInt32(total_height), PR_FALSE);
       }
