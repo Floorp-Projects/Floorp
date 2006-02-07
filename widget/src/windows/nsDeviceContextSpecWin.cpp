@@ -49,6 +49,9 @@
 #include "nsReadableUtils.h"
 #include "nsGfxCIID.h"
 
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
+
 // File Picker
 #include "nsILocalFile.h"
 #include "nsIFile.h"
