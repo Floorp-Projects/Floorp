@@ -42,83 +42,25 @@
 
 #include "primpl.h"
 
-#if defined(WIN16)
-#include <win/compobj.h>
-#define QueryPerformanceFrequency(x)   FALSE
-#define QueryPerformanceCounter(x)     FALSE
-#endif
-
-static PRIntn _nt_bitShift = 0;
-static PRInt32 _nt_ticksPerSec = -1;
-
 void
 _PR_MD_INTERVAL_INIT()
 {
-    LARGE_INTEGER count;
-
-    if (QueryPerformanceFrequency(&count)) {
-        /*
-         * HighPart is signed (LONG).  Assert that its sign bit is 0
-         * because we will be right shifting it.  LowPart is unsigned
-         * (DWORD).
-         */
-        PR_ASSERT(count.HighPart >= 0);
-        while(count.HighPart) {
-            count.LowPart = (count.HighPart << 31) + (count.LowPart >> 1);
-            count.HighPart >>= 1;
-            _nt_bitShift++;
-        }
-        while(count.LowPart > PR_INTERVAL_MAX) {
-            count.LowPart >>= 1;
-            _nt_bitShift++;
-        }
-
-        /*
-         * We can't use the performance counter if after
-         * normalization we are left with fewer than 32 bits.
-         */
-        if (_nt_bitShift <= 32) {
-            _nt_ticksPerSec = count.LowPart;
-            PR_ASSERT(_nt_ticksPerSec > PR_INTERVAL_MIN);
-            return;
-        }
-    }
-    _nt_ticksPerSec = -1;
 }
 
 PRIntervalTime 
 _PR_MD_GET_INTERVAL()
 {
-    LARGE_INTEGER count;
-
-   /* Sadly; nspr requires the interval to range from 1000 ticks per second
-    * to only 100000 ticks per second; QueryPerformanceCounter is too high
-    * resolution...
-    */
-    if (_nt_ticksPerSec != -1) {
-        (void)QueryPerformanceCounter(&count);
-        PR_ASSERT(_nt_bitShift <= 32);
-        if (_nt_bitShift == 32) {
-            return (PRUint32)count.HighPart;
-        } else {
-            return (PRUint32)((count.HighPart << (32 - _nt_bitShift))
-                    + (count.LowPart >> _nt_bitShift));
-        }
-    } else
 #if defined(__MINGW32__)
-        return time();
+    return time();
 #elif defined(WIN16)
-        return clock();        /* milliseconds since application start */
+    return clock();        /* milliseconds since application start */
 #else
-        return GetTickCount();  /* milliseconds since system start */
+    return timeGetTime();  /* milliseconds since system start */
 #endif
 }
 
 PRIntervalTime 
 _PR_MD_INTERVAL_PER_SEC()
 {
-    if (_nt_ticksPerSec != -1)
-        return _nt_ticksPerSec;
-    else
-        return 1000;
+    return 1000;
 }
