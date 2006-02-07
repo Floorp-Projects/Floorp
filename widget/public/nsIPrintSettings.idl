@@ -236,6 +236,24 @@ interface nsIPrintSettings : nsISupports
 
   attribute long    printPageDelay; /* in milliseconds */
   
+  /* initialize helpers */
+  /**
+   * This attribute tracks whether the PS has been initialized 
+   * from a printer specified by the "printerName" attr. 
+   * If a different name is set into the "printerName" 
+   * attribute than the one it was initialized with the PS
+   * will then get intialized from that printer.
+   */
+  attribute boolean isInitializedFromPrinter;
+
+  /**
+   * This attribute tracks whether the PS has been initialized 
+   * from prefs. If a different name is set into the "printerName" 
+   * attribute than the one it was initialized with the PS
+   * will then get intialized from prefs again.
+   */
+  attribute boolean isInitializedFromPrefs;
+
   /* C++ Helper Functions */
   [noscript] void SetMarginInTwips(in nsNativeMarginRef aMargin);
   /* Purposely made this an "in" arg */

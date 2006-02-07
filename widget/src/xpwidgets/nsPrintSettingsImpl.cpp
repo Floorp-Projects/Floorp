@@ -74,7 +74,9 @@ nsPrintSettings::nsPrintSettings() :
   mPrintInColor(PR_TRUE),
   mOrientation(kPortraitOrientation),
   mNumCopies(1),
-  mPrintToFile(PR_FALSE)
+  mPrintToFile(PR_FALSE),
+  mIsInitedFromPrinter(PR_FALSE),
+  mIsInitedFromPrefs(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 
@@ -208,7 +210,7 @@ NS_IMETHODIMP nsPrintSettings::SetPaperSize(PRInt32 aPaperSize)
 /* attribute short orientation; */
 NS_IMETHODIMP nsPrintSettings::GetOrientation(PRInt32 *aOrientation)
 {
-  //NS_ENSURE_ARG_POINTER(aOrientation);
+  NS_ENSURE_ARG_POINTER(aOrientation);
   *aOrientation = mOrientation;
   return NS_OK;
 }
@@ -221,24 +223,25 @@ NS_IMETHODIMP nsPrintSettings::SetOrientation(PRInt32 aOrientation)
 /* attribute wstring printer; */
 NS_IMETHODIMP nsPrintSettings::GetPrinterName(PRUnichar * *aPrinter)
 {
-   //NS_ENSURE_ARG_POINTER(aPrinter);
+   NS_ENSURE_ARG_POINTER(aPrinter);
    *aPrinter = ToNewUnicode(mPrinter);
    return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettings::SetPrinterName(const PRUnichar * aPrinter)
 {
-  if (aPrinter) {
-    mPrinter = aPrinter;
-  } else {
-    mPrinter.SetLength(0);
+  if (!aPrinter || !mPrinter.Equals(aPrinter)) {
+    mIsInitedFromPrinter = PR_FALSE;
+    mIsInitedFromPrefs   = PR_FALSE;
   }
+
+  mPrinter.Assign(aPrinter);
   return NS_OK;
 }
 
 /* attribute long numCopies; */
 NS_IMETHODIMP nsPrintSettings::GetNumCopies(PRInt32 *aNumCopies)
 {
-  //NS_ENSURE_ARG_POINTER(aNumCopies);
+  NS_ENSURE_ARG_POINTER(aNumCopies);
   *aNumCopies = mNumCopies;
   return NS_OK;
 }
@@ -304,6 +307,32 @@ NS_IMETHODIMP nsPrintSettings::GetPrintPageDelay(PRInt32 *aPrintPageDelay)
 NS_IMETHODIMP nsPrintSettings::SetPrintPageDelay(PRInt32 aPrintPageDelay)
 {
   mPrintPageDelay = aPrintPageDelay;
+  return NS_OK;
+}
+
+/* attribute boolean isInitializedFromPrinter; */
+NS_IMETHODIMP nsPrintSettings::GetIsInitializedFromPrinter(PRBool *aIsInitializedFromPrinter)
+{
+  NS_ENSURE_ARG_POINTER(aIsInitializedFromPrinter);
+  *aIsInitializedFromPrinter = (PRBool)mIsInitedFromPrinter;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetIsInitializedFromPrinter(PRBool aIsInitializedFromPrinter)
+{
+  mIsInitedFromPrinter = (PRPackedBool)aIsInitializedFromPrinter;
+  return NS_OK;
+}
+
+/* attribute boolean isInitializedFromPrefs; */
+NS_IMETHODIMP nsPrintSettings::GetIsInitializedFromPrefs(PRBool *aInitializedFromPrefs)
+{
+  NS_ENSURE_ARG_POINTER(aInitializedFromPrefs);
+  *aInitializedFromPrefs = (PRBool)mIsInitedFromPrefs;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetIsInitializedFromPrefs(PRBool aInitializedFromPrefs)
+{
+  mIsInitedFromPrefs = (PRPackedBool)aInitializedFromPrefs;
   return NS_OK;
 }
 

@@ -102,9 +102,11 @@ protected:
   PRInt32       mOrientation;  // see orientation consts
   nsString      mPrintCommand;
   PRInt32       mNumCopies;
-  nsString      mPrinter;
+  nsXPIDLString mPrinter;
   PRBool        mPrintToFile;
   nsString      mToFileName;
+  PRPackedBool  mIsInitedFromPrinter;
+  PRPackedBool  mIsInitedFromPrefs;
 
 };
 
