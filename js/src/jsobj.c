@@ -2126,13 +2126,18 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                    JSObject *parent, uintN argc, jsval *argv)
 {
     jsval cval, rval;
-    JSTempValueRooter tvr;
+    JSTempValueRooter argtvr, tvr;
     JSObject *obj, *ctor;
 
-    if (!js_FindConstructor(cx, parent, clasp->name, &cval))
+    JS_PUSH_TEMP_ROOT(cx, argc, argv, &argtvr);
+
+    if (!js_FindConstructor(cx, parent, clasp->name, &cval)) {
+        JS_POP_TEMP_ROOT(cx, &argtvr);
         return NULL;
+    }
     if (JSVAL_IS_PRIMITIVE(cval)) {
         js_ReportIsNotFunction(cx, &cval, JSV2F_CONSTRUCT | JSV2F_SEARCH_STACK);
+        JS_POP_TEMP_ROOT(cx, &argtvr);
         return NULL;
     }
 
@@ -2141,7 +2146,6 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
      * this point, all control flow must exit through label out with obj set.
      */
     JS_PUSH_SINGLE_TEMP_ROOT(cx, cval, &tvr);
-    obj = NULL;
 
     /*
      * If proto or parent are NULL, set them to Constructor.prototype and/or
@@ -2155,6 +2159,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                               ATOM_TO_JSID(cx->runtime->atomState
                                            .classPrototypeAtom),
                               &rval)) {
+            obj = NULL;
             goto out;
         }
         if (JSVAL_IS_OBJECT(rval))
@@ -2165,17 +2170,37 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     if (!obj)
         goto out;
 
-    if (!js_InternalConstruct(cx, obj, cval, argc, argv, &rval)) {
-        cx->newborn[GCX_OBJECT] = NULL;
-        obj = NULL;
+    if (!js_InternalConstruct(cx, obj, cval, argc, argv, &rval))
+        goto bad;
+
+    if (JSVAL_IS_PRIMITIVE(rval))
         goto out;
+    obj = JSVAL_TO_OBJECT(rval);
+
+    /*
+     * If the given class has both the JSCLASS_HAS_PRIVATE and the
+     * JSCLASS_CONSTRUCT_PROTOTYPE flags, then the class should have its private
+     * data set. If it doesn't, then it means the constructor was replaced, and
+     * we should throw a typerr.
+     */
+    if (OBJ_GET_CLASS(cx, obj) != clasp ||
+        (!(~clasp->flags & (JSCLASS_HAS_PRIVATE |
+                            JSCLASS_CONSTRUCT_PROTOTYPE)) &&
+         !JS_GetPrivate(cx, obj))) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_WRONG_CONSTRUCTOR, clasp->name);
+        goto bad;
     }
 
-    if (!JSVAL_IS_PRIMITIVE(rval))
-        obj = JSVAL_TO_OBJECT(rval);
 out:
     JS_POP_TEMP_ROOT(cx, &tvr);
+    JS_POP_TEMP_ROOT(cx, &argtvr);
     return obj;
+
+bad:
+    cx->newborn[GCX_OBJECT] = NULL;
+    obj = NULL;
+    goto out;
 }
 
 void
