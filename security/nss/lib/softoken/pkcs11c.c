@@ -2481,9 +2481,13 @@ nsc_pbe_key_gen(NSSPKCS5PBEParameter *pkcs5_pbe, CK_MECHANISM_PTR pMechanism,
     SECITEM_ZfreeItem(pbe_key, PR_TRUE);
     pbe_key = NULL;
 
-    if (iv.data && pbe_params->pInitVector != NULL) {
-	PORT_Memcpy(pbe_params->pInitVector, iv.data, iv.len);
+    if (iv.data) {
+        if (pbe_params->pInitVector != NULL) {
+	    PORT_Memcpy(pbe_params->pInitVector, iv.data, iv.len);
+        }
+        PORT_Free(iv.data);
     }
+
     return CKR_OK;
 }
 static CK_RV
