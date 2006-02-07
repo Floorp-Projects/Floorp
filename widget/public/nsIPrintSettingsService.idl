@@ -43,7 +43,7 @@
 
 interface nsIPrintSettings;
 
-[scriptable, uuid(841387C8-72E6-484b-9296-BF6EEA80D58A)]
+[scriptable, uuid(1a64316f-402d-4b0d-a434-ba419dbe539e)]
 interface nsIPrintSettingsService : nsISupports
 {
   /**
@@ -72,7 +72,7 @@ interface nsIPrintSettingsService : nsISupports
   readonly attribute nsIPrintSettings newPrintSettings;
 
   /**
-   * The name of the default printer 
+   * The name of the last printer used, or else the system default printer.
    */
   readonly attribute wstring defaultPrinterName;
 
@@ -90,21 +90,23 @@ interface nsIPrintSettingsService : nsISupports
    * Reads PrintSettings values from Prefs,
    * the values to be read are indicated by the "flags" arg.
    *
-   * First it reads in the "generic" set of PrintSetings not associated with any printer
-   * then it uses the PrinterName in the PrinterSettings to read any settings that were saved
+   * aPrintSettings should be initialized with the name of a printer. First
+   * it reads in the PrintSettings from the last print job. Then it uses the
+   * PrinterName in the PrinterSettings to read any settings that were saved
    * just for that printer.
    *
    * aPS - PrintSettings to have its settings read
-   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
-   * aFlags - indicates which prefs to read, see nsIPrintSettings.idl for the const values.
+   * aFlags - indicates which prefs to read, see nsIPrintSettings.idl for the
+   *          const values.
    *
    * Items not read:
    *   startPageRange, endPageRange, scaling, printRange, title
    *   docURL, howToEnableFrameUI, isCancelled, printFrameTypeUsage
-   *   printFrameType, printSilent, shrinkToFit, numCopies
+   *   printFrameType, printSilent, shrinkToFit, numCopies,
+   *   printerName
    *
    */
-  void initPrintSettingsFromPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
+  void initPrintSettingsFromPrefs(in nsIPrintSettings aPrintSettings, in unsigned long aFlags);
 
   /**
    * Writes PrintSettings values to Prefs, 
