@@ -1651,10 +1651,7 @@ nsDeviceContextSpecWin :: ShowXPPrintDialog(PRBool aQuiet)
 
       if (printerName != nsnull) {
         // Gets DEVMODE, Device and Driver Names
-        rv = GetDataFromPrinter(printerName);
-
-        // Set into DevMode Paper Size and Orientation here
-        SetupPaperInfoFromSettings();
+        rv = GetDataFromPrinter(printerName, mPrintSettings);
 
         nsMemory::Free(printerName);
       } else {
