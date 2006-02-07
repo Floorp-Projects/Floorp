@@ -106,60 +106,16 @@ nsDeviceContextSpecGTK :: ~nsDeviceContextSpecGTK()
 {
 }
 
-static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
-static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID);
 #ifdef USE_XPRINT
-static NS_DEFINE_IID(kIDeviceContextSpecXPIID, NS_IDEVICE_CONTEXT_SPEC_XP_IID);
-#endif
-
-NS_IMETHODIMP nsDeviceContextSpecGTK :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  if (aIID.Equals(kIDeviceContextSpecIID))
-  {
-    nsIDeviceContextSpec* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kIDeviceContextSpecPSIID))
-  {
-    nsIDeviceContextSpecPS* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-#ifdef USE_XPRINT
-  if (aIID.Equals(kIDeviceContextSpecXPIID))
-  {
-    nsIDeviceContextSpecXp *tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
+NS_IMPL_ISUPPORTS3(nsDeviceContextSpecGTK,
+                   nsIDeviceContextSpec,
+                   nsIDeviceContextSpecPS,
+                   nsIDeviceContextSpecXp)
+#else
+NS_IMPL_ISUPPORTS2(nsDeviceContextSpecGTK,
+                   nsIDeviceContextSpec,
+                   nsIDeviceContextSpecPS)
 #endif /* USE_XPRINT */
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(kISupportsIID))
-  {
-    nsIDeviceContextSpec* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsDeviceContextSpecGTK)
-NS_IMPL_RELEASE(nsDeviceContextSpecGTK)
-
 
 static nsresult DisplayXPDialog(nsIPrintSettings* aPS,
                                 const char* aChromeURL, 
