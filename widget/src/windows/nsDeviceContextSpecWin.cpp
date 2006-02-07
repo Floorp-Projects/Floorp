@@ -39,7 +39,7 @@
 #include "nsDeviceContextSpecWin.h"
 #include "prmem.h"
 #include <winspool.h>
-#include <TCHAR.H>
+#include <tchar.h>
 
 #include "nsVoidArray.h"
 #include "nsIPrintSettingsWin.h"
