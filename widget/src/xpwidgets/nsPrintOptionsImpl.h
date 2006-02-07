@@ -24,6 +24,7 @@
 #ifndef nsPrintOptionsImpl_h__
 #define nsPrintOptionsImpl_h__
 
+#include "nsCOMPtr.h"
 #include "nsIPrintOptions.h"  
 #include "nsIPrintSettingsService.h"  
 class nsIPref;
