@@ -403,7 +403,7 @@ NS_IMETHODIMP
 nsPrintSettings::GetPrintOptions(PRInt32 aType, PRBool *aTurnOnOff)
 {
   NS_ENSURE_ARG_POINTER(aTurnOnOff);
-  *aTurnOnOff = mPrintOptions & aType;
+  *aTurnOnOff = mPrintOptions & aType ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 /** ---------------------------------------------------
