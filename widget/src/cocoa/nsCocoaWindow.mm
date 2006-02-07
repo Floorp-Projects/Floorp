@@ -82,7 +82,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
 //
 
 nsCocoaWindow::nsCocoaWindow()
-: mOffsetParent(nsnull)
+: mParent(nsnull)
 , mIsDialog(PR_FALSE)
 , mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
@@ -123,10 +123,10 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
 {
   Inherited::BaseCreate(aParent, aRect, aHandleEventFunction, aContext, aAppShell,
                         aToolkit, aInitData);
+  
+  mParent = aParent;
                             
   if (!aNativeParent || (aInitData && aInitData->mWindowType == eWindowType_popup)) {
-    mOffsetParent = aParent;
-
     nsWindowType windowType = eWindowType_toplevel;
     if (aInitData) {
       mWindowType = aInitData->mWindowType;
@@ -299,8 +299,8 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
       nsRect localRect, globalRect; 
       localRect.x = aX;
       localRect.y = aY;  
-      if (mOffsetParent) {
-        mOffsetParent->WidgetToScreen(localRect,globalRect);
+      if (mParent) {
+        mParent->WidgetToScreen(localRect,globalRect);
         aX=globalRect.x;
         aY=globalRect.y;
      }

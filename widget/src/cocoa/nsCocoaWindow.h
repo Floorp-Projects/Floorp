@@ -164,15 +164,15 @@ public:
 
 protected:
   
-  nsIWidget*           mOffsetParent;   // if we're a popup, this is our parent [WEAK]
-  PRBool               mIsDialog;       // true if the window is a dialog
-  PRBool               mIsResizing;     // we originated the resize, prevent infinite recursion
-  PRBool               mWindowMadeHere; // true if we created the window, false for embedding
+  nsIWidget*           mParent;         // if we're a popup, this is our parent [WEAK]
   NSWindow*            mWindow;         // our cocoa window [STRONG]
   WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]
   nsCOMPtr<nsIMenuBar> mMenuBar;
-
-  PRBool               mVisible;        // Whether or not we're visible.
+  
+  PRPackedBool         mIsDialog;       // true if the window is a dialog
+  PRPackedBool         mIsResizing;     // we originated the resize, prevent infinite recursion
+  PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
+  PRPackedBool         mVisible;        // Whether or not we're visible.
 };
 
 
