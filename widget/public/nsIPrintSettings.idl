@@ -200,6 +200,7 @@ interface nsIPrintSettings : nsISupports
   attribute boolean printSilent;	     /* print without putting up the dialog */
   attribute boolean isPrintPreview;		 /* indicates whether we are in print preview mode */
   attribute boolean shrinkToFit;	     /* shrinks content to fit on page      */
+  attribute boolean showPrintProgress;   /* indicates whether the progress dialog should be shown */
 
   /* Additional XP Related */
   attribute wstring paperName;     /* name of paper */

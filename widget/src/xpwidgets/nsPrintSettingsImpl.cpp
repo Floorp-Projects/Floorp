@@ -62,6 +62,7 @@ nsPrintSettings::nsPrintSettings() :
   mPrintSilent(PR_FALSE),
 	mPrintPreview(PR_FALSE),
   mShrinkToFit(PR_TRUE),
+  mShowPrintProgress(PR_TRUE),
   mPrintPageDelay(500),
   mPaperData(0),
   mPaperSizeType(kPaperSizeDefined),
@@ -603,6 +604,19 @@ NS_IMETHODIMP nsPrintSettings::GetShrinkToFit(PRBool *aShrinkToFit)
 NS_IMETHODIMP nsPrintSettings::SetShrinkToFit(PRBool aShrinkToFit)
 {
   mShrinkToFit = aShrinkToFit;
+  return NS_OK;
+}
+
+/* attribute boolean showPrintProgress; */
+NS_IMETHODIMP nsPrintSettings::GetShowPrintProgress(PRBool *aShowPrintProgress)
+{
+  NS_ENSURE_ARG_POINTER(aShowPrintProgress);
+  *aShowPrintProgress = mShowPrintProgress;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetShowPrintProgress(PRBool aShowPrintProgress)
+{
+  mShowPrintProgress = aShowPrintProgress;
   return NS_OK;
 }
 
