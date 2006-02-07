@@ -67,10 +67,6 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-#if JS_HAS_JIT
-#include "jsjit.h"
-#endif
-
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
@@ -349,7 +345,7 @@ static JSClass prop_iterator_class = {
             CHECK_VOID_TOSTRING(cx, v);                                       \
             *vp = v;                                                          \
         } else {                                                              \
-            SAVE_SP(fp);                                                      \
+            SAVE_SP_AND_PC(fp);                                               \
             CHECK_EAGER_TOSTRING(hint);                                       \
             ok = OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), hint, vp);         \
             if (!ok)                                                          \
@@ -491,8 +487,8 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-JSBool
-js_ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
+JSObject *
+js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv)
 {
     JSObject *parent;
 
@@ -500,11 +496,7 @@ js_ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
         /* Some objects (e.g., With) delegate 'this' to another object. */
         thisp = OBJ_THIS_OBJECT(cx, thisp);
         if (!thisp)
-            return JS_FALSE;
-
-        /* Default return value for a constructor is the new object. */
-        if (fp->flags & JSFRAME_CONSTRUCTING)
-            fp->rval = OBJECT_TO_JSVAL(thisp);
+            return NULL;
     } else {
         /*
          * ECMA requires "the global object", but in the presence of multiple
@@ -522,9 +514,8 @@ js_ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
          *
          * The alert should display "true".
          */
-        JS_ASSERT(!(fp->flags & JSFRAME_CONSTRUCTING));
-        if (JSVAL_IS_PRIMITIVE(fp->argv[-2]) ||
-            !(parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fp->argv[-2])))) {
+        if (JSVAL_IS_PRIMITIVE(argv[-2]) ||
+            !(parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2])))) {
             thisp = cx->globalObject;
         } else {
             /* walk up to find the top-level object */
@@ -533,10 +524,121 @@ js_ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
                 thisp = parent;
         }
     }
-    fp->thisp = thisp;
-    fp->argv[-1] = OBJECT_TO_JSVAL(thisp);
-    return JS_TRUE;
+    argv[-1] = OBJECT_TO_JSVAL(thisp);
+    return thisp;
 }
+
+#if JS_HAS_NO_SUCH_METHOD
+
+static JSBool
+NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
+             uintN *argcp)
+{
+    jsval v, *sp, *newsp;
+    JSObject *thisp, *argsobj;
+    jsid id;
+    jsbytecode *pc;
+    jsatomid atomIndex;
+    JSAtom *atom;
+    uintN argc;
+    JSArena *a;
+
+    /*
+     * We must call js_ComputeThis here to censor Call objects.  A performance
+     * hit, since we'll call it again in the normal sequence of invoke events,
+     * but at least it's idempotent.
+     *
+     * Normally, we call ComputeThis after all frame members have been set,
+     * and in particular, after any revision of the callee value at *vp  due
+     * to clasp->convert (see below).  This matters because ComputeThis may
+     * access *vp via fp->argv[-2], to follow the parent chain to a global
+     * object to use as the 'this' parameter.
+     *
+     * Obviously, here in the JSVAL_IS_PRIMITIVE(v) case, there can't be any
+     * such defaulting of 'this' to callee (v, *vp) ancestor.
+     */
+    JS_ASSERT(JSVAL_IS_PRIMITIVE(vp[0]));
+    RESTORE_SP(fp);
+    thisp = js_ComputeThis(cx, JSVAL_TO_OBJECT(vp[1]), vp + 2);
+    if (!thisp)
+        return JS_FALSE;
+
+    id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
+    if (OBJECT_IS_XML(cx, thisp)) {
+        JSXMLObjectOps *ops;
+
+        ops = (JSXMLObjectOps *) thisp->map->ops;
+        thisp = ops->getMethod(cx, thisp, id, &v);
+        if (!thisp)
+            return JS_FALSE;
+        vp[1] = OBJECT_TO_JSVAL(thisp);
+    } else {
+        if (!OBJ_GET_PROPERTY(cx, thisp, id, &v))
+            return JS_FALSE;
+    }
+    if (JSVAL_IS_PRIMITIVE(v))
+        goto bad;
+
+    pc = (jsbytecode *) vp[-(intN)fp->script->depth];
+    switch ((JSOp) *pc) {
+      case JSOP_NAME:
+      case JSOP_GETPROP:
+#if JS_HAS_XML_SUPPORT
+      case JSOP_GETMETHOD:
+#endif
+        atomIndex = GET_ATOM_INDEX(pc);
+        atom = js_GetAtom(cx, &fp->script->atomMap, atomIndex);
+        argc = *argcp;
+        argsobj = js_NewArrayObject(cx, argc, vp + 2);
+        if (!argsobj)
+            return JS_FALSE;
+
+        sp = vp + 4;
+        if (argc < 2) {
+            a = cx->stackPool.current;
+            if ((jsuword)sp > a->limit) {
+                /*
+                 * Arguments must be contiguous, and must include argv[-1]
+                 * and argv[-2], so allocate more stack, advance sp, and
+                 * set newsp[1] to thisp (vp[1]).  The other argv elements
+                 * will be set below, using negative indexing from sp.
+                 */
+                newsp = js_AllocRawStack(cx, 4, NULL);
+                if (!newsp)
+                    return JS_FALSE;
+                newsp[1] = OBJECT_TO_JSVAL(thisp);
+                sp = newsp + 4;
+            } else if ((jsuword)sp > a->avail) {
+                /*
+                 * Inline, optimized version of JS_ARENA_ALLOCATE to claim
+                 * the small number of words not already allocated as part
+                 * of the caller's operand stack.
+                 */
+                JS_ArenaCountAllocation(&cx->stackPool,
+                                        (jsuword)sp - a->avail);
+                a->avail = (jsuword)sp;
+            }
+        }
+
+        sp[-4] = v;
+        JS_ASSERT(sp[-3] == OBJECT_TO_JSVAL(thisp));
+        sp[-2] = ATOM_KEY(atom);
+        sp[-1] = OBJECT_TO_JSVAL(argsobj);
+        SAVE_SP(fp);
+        *argcp = 2;
+        break;
+
+      default:
+        goto bad;
+    }
+    return JS_TRUE;
+
+bad:
+    js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_CONSTRUCT);
+    return JS_FALSE;
+}
+
+#endif /* JS_HAS_NO_SUCH_METHOD */
 
 #ifdef DUMP_CALL_TABLE
 
@@ -916,17 +1018,14 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
      * Set vp to the callee value's stack slot (it's where rval goes).
      * Once vp is set, control should flow through label out2: to return.
      * Set frame.rval early so native class and object ops can throw and
-     * return false, causing a goto out2 with ok set to false.  Also set
-     * frame.flags to flags so that ComputeThis can test bits in it.
+     * return false, causing a goto out2 with ok set to false.
      */
     vp = sp - (2 + argc);
     v = *vp;
     frame.rval = JSVAL_VOID;
-    frame.flags = flags;
-    thisp = JSVAL_TO_OBJECT(vp[1]);
 
     /*
-     * A callee must be an object reference, unless its |this| parameter
+     * A callee must be an object reference, unless its 'this' parameter
      * implements the __noSuchMethod__ method, in which case that method will
      * be called like so:
      *
@@ -938,113 +1037,20 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
      */
     if (JSVAL_IS_PRIMITIVE(v)) {
 #if JS_HAS_NO_SUCH_METHOD
-        jsid id;
-        jsbytecode *pc;
-        jsatomid atomIndex;
-        JSAtom *atom;
-        JSObject *argsobj;
-        JSArena *a;
-
         if (!fp->script || (flags & JSINVOKE_INTERNAL))
             goto bad;
-
-        /*
-         * We must ComputeThis here to censor Call objects; performance hit,
-         * but at least it's idempotent.
-         *
-         * Normally, we call ComputeThis after all frame members have been
-         * set, and in particular, after any revision of the callee value at
-         * *vp  due to clasp->convert (see below).  This matters because
-         * ComputeThis may access *vp via fp->argv[-2], to follow the parent
-         * chain to a global object to use as the |this| parameter.
-         *
-         * Obviously, here in the JSVAL_IS_PRIMITIVE(v) case, there can't be
-         * any such defaulting of |this| to callee (v, *vp) ancestor.
-         */
-        frame.argv = vp + 2;
-        ok = js_ComputeThis(cx, thisp, &frame);
+        ok = NoSuchMethod(cx, fp, vp, flags, &argc);
         if (!ok)
             goto out2;
-        thisp = frame.thisp;
-
-        id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
-        if (OBJECT_IS_XML(cx, thisp)) {
-            JSXMLObjectOps *ops;
-
-            ops = (JSXMLObjectOps *) thisp->map->ops;
-            thisp = ops->getMethod(cx, thisp, id, &v);
-            if (!thisp) {
-                ok = JS_FALSE;
-                goto out2;
-            }
-            vp[1] = OBJECT_TO_JSVAL(thisp);
-        } else {
-            ok = OBJ_GET_PROPERTY(cx, thisp, id, &v);
-        }
-        if (!ok)
-            goto out2;
-        if (JSVAL_IS_PRIMITIVE(v))
-            goto bad;
-
-        pc = (jsbytecode *) vp[-(intN)fp->script->depth];
-        switch ((JSOp) *pc) {
-          case JSOP_NAME:
-          case JSOP_GETPROP:
-#if JS_HAS_XML_SUPPORT
-          case JSOP_GETMETHOD:
-#endif
-            atomIndex = GET_ATOM_INDEX(pc);
-            atom = js_GetAtom(cx, &fp->script->atomMap, atomIndex);
-            argsobj = js_NewArrayObject(cx, argc, vp + 2);
-            if (!argsobj) {
-                ok = JS_FALSE;
-                goto out2;
-            }
-
-            sp = vp + 4;
-            if (argc < 2) {
-                a = cx->stackPool.current;
-                if ((jsuword)sp > a->limit) {
-                    /*
-                     * Arguments must be contiguous, and must include argv[-1]
-                     * and argv[-2], so allocate more stack, advance sp, and
-                     * set newsp[1] to thisp (vp[1]).  The other argv elements
-                     * will be set below, using negative indexing from sp.
-                     */
-                    newsp = js_AllocRawStack(cx, 4, NULL);
-                    if (!newsp) {
-                        ok = JS_FALSE;
-                        goto out2;
-                    }
-                    newsp[1] = OBJECT_TO_JSVAL(thisp);
-                    sp = newsp + 4;
-                } else if ((jsuword)sp > a->avail) {
-                    /*
-                     * Inline, optimized version of JS_ARENA_ALLOCATE to claim
-                     * the small number of words not already allocated as part
-                     * of the caller's operand stack.
-                     */
-                    JS_ArenaCountAllocation(&cx->stackPool,
-                                            (jsuword)sp - a->avail);
-                    a->avail = (jsuword)sp;
-                }
-            }
-
-            sp[-4] = v;
-            JS_ASSERT(sp[-3] == OBJECT_TO_JSVAL(thisp));
-            sp[-2] = ATOM_KEY(atom);
-            sp[-1] = OBJECT_TO_JSVAL(argsobj);
-            fp->sp = sp;
-            argc = 2;
-            break;
-
-          default:
-            goto bad;
-        }
+        RESTORE_SP(fp);
+        v = *vp;
 #else
         goto bad;
 #endif
     }
+
+    /* Load thisp after potentially calling NoSuchMethod, which may set it. */
+    thisp = JSVAL_TO_OBJECT(vp[1]);
 
     funobj = JSVAL_TO_OBJECT(v);
     parent = OBJ_GET_PARENT(cx, funobj);
@@ -1121,13 +1127,20 @@ have_fun:
     frame.spbase = NULL;
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
+    frame.flags = flags;
     frame.dormantNext = NULL;
     frame.xmlNamespace = NULL;
 
     /* Compute the 'this' parameter and store it in frame as frame.thisp. */
-    ok = js_ComputeThis(cx, thisp, &frame);
-    if (!ok)
+    frame.thisp = js_ComputeThis(cx, thisp, frame.argv);
+    if (!frame.thisp) {
+        ok = JS_FALSE;
         goto out2;
+    }
+
+    /* Default return value for a constructor is the new object. */
+    if (flags & JSINVOKE_CONSTRUCT)
+        frame.rval = OBJECT_TO_JSVAL(thisp);
 
     /* From here on, control must flow through label out: to return. */
     cx->fp = &frame;
@@ -2167,7 +2180,7 @@ interrupt:
                 }
 
                 /* Store the return value in the caller's operand frame. */
-                vp = fp->argv - 2;
+                vp = ifp->rvp;
                 *vp = fp->rval;
 
                 /* Restore cx->fp and release the inline frame's space. */
@@ -3272,7 +3285,7 @@ interrupt:
             } else {
                 /*
                  * Get the constructor prototype object for this function.
-                 * Use the nominal |this| parameter slot, vp[1], as a local
+                 * Use the nominal 'this' parameter slot, vp[1], as a local
                  * root to protect this prototype, in case it has no other
                  * strong refs.
                  */
@@ -3677,17 +3690,28 @@ interrupt:
             vp = sp - (argc + 2);
             lval = *vp;
             SAVE_SP_AND_PC(fp);
+#if JS_HAS_NO_SUCH_METHOD
+            if (JSVAL_IS_PRIMITIVE(lval)) {
+                ok = NoSuchMethod(cx, fp, vp, 0, &argc);
+                if (!ok)
+                    goto out;
+                RESTORE_SP(fp);
+                lval = *vp;
+            }
+#endif
 
             if (JSVAL_IS_FUNCTION(cx, lval) &&
                 (obj = JSVAL_TO_OBJECT(lval),
                  fun = (JSFunction *) JS_GetPrivate(cx, obj),
-                 fun->interpreted &&
-                 !(fun->flags & (JSFUN_HEAVYWEIGHT | JSFUN_BOUND_METHOD)) &&
-                 argc >= (uintN)fun->nargs))
+                 fun->interpreted))
           /* inline_call: */
             {
-                uintN nframeslots, nvars;
+                uintN nframeslots, nvars, nslots, missing;
+                JSArena *a;
+                jsuword avail, nbytes;
+                JSBool overflow;
                 void *newmark;
+                jsval *rvp;
                 JSInlineFrame *newifp;
                 JSInterpreterHook hook;
 
@@ -3699,32 +3723,69 @@ interrupt:
                     goto out;
                 }
 
-#if JS_HAS_JIT
-                /* ZZZbe should do this only if interpreted often enough. */
-                ok = jsjit_Compile(cx, fun);
-                if (!ok)
-                    goto out;
-#endif
-
-                /* Compute the number of stack slots needed for fun. */
-                nframeslots = (sizeof(JSInlineFrame) + sizeof(jsval) - 1)
-                              / sizeof(jsval);
+                /* Compute the total number of stack slots needed for fun. */
+                nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
                 nvars = fun->u.i.nvars;
                 script = fun->u.i.script;
                 depth = (jsint) script->depth;
+                nslots = nframeslots + nvars + 2 * depth;
 
-                /* Allocate the frame and space for vars and operands. */
-                newsp = js_AllocRawStack(cx, nframeslots + nvars + 2 * depth,
-                                         &newmark);
-                if (!newsp) {
-                    ok = JS_FALSE;
-                    goto bad_inline_call;
+                /* Allocate missing expected args adjacent to actual args. */
+                missing = (fun->nargs > argc) ? fun->nargs - argc : 0;
+                a = cx->stackPool.current;
+                avail = a->avail;
+                newmark = (void *) avail;
+                if (missing) {
+                    newsp = sp + missing;
+                    overflow = (jsuword) newsp > a->limit;
+                    if (overflow)
+                        nslots += 2 + argc + missing;
+                    else if ((jsuword) newsp > avail)
+                        avail = a->avail = (jsuword) newsp;
                 }
+#ifdef __GNUC__
+                else overflow = JS_FALSE;   /* suppress bogus gcc warnings */
+#endif
+
+                /* Allocate the inline frame with its vars and operand slots. */
+                newsp = (jsval *) avail;
+                nbytes = nslots * sizeof(jsval);
+                avail += nbytes;
+                if (avail <= a->limit) {
+                    a->avail = avail;
+                } else {
+                    JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool,
+                                           nbytes);
+                    if (!newsp) {
+                        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                             JSMSG_STACK_OVERFLOW,
+                                             (fp && fp->fun)
+                                             ? JS_GetFunctionName(fp->fun)
+                                             : "script");
+                        goto bad_inline_call;
+                    }
+                }
+
+                /* Move args if missing overflow arena a, push missing args. */
+                rvp = vp;
+                if (missing) {
+                    if (overflow) {
+                        memcpy(newsp, vp, (2 + argc) * sizeof(jsval));
+                        vp = newsp;
+                        sp = vp + 2 + argc;
+                        newsp = sp + missing;
+                    }
+                    do {
+                        PUSH(JSVAL_VOID);
+                    } while (--missing != 0);
+                }
+
+                /* Claim space for the stack frame and initialize it. */
                 newifp = (JSInlineFrame *) newsp;
                 newsp += nframeslots;
-
-                /* Initialize the stack frame. */
-                memset(newifp, 0, sizeof(JSInlineFrame));
+                newifp->frame.callobj = NULL;
+                newifp->frame.argsobj = NULL;
+                newifp->frame.varobj = NULL;
                 newifp->frame.script = script;
                 newifp->frame.fun = fun;
                 newifp->frame.argc = argc;
@@ -3733,12 +3794,24 @@ interrupt:
                 newifp->frame.nvars = nvars;
                 newifp->frame.vars = newsp;
                 newifp->frame.down = fp;
-                newifp->frame.scopeChain = OBJ_GET_PARENT(cx, obj);
+                newifp->frame.annotation = NULL;
+                newifp->frame.scopeChain = parent = OBJ_GET_PARENT(cx, obj);
+                newifp->frame.sharpDepth = 0;
+                newifp->frame.sharpArray = NULL;
+                newifp->frame.flags = 0;
+                newifp->frame.dormantNext = NULL;
+                newifp->frame.xmlNamespace = NULL;
+                newifp->rvp = rvp;
                 newifp->mark = newmark;
 
                 /* Compute the 'this' parameter now that argv is set. */
-                ok = js_ComputeThis(cx, JSVAL_TO_OBJECT(vp[1]), &newifp->frame);
-                if (!ok) {
+                newifp->frame.thisp =
+                    js_ComputeThis(cx,
+                                   (fun->flags & JSFUN_BOUND_METHOD)
+                                   ? parent
+                                   : JSVAL_TO_OBJECT(vp[1]),
+                                   newifp->frame.argv);
+                if (!newifp->frame.thisp) {
                     js_FreeRawStack(cx, newmark);
                     goto bad_inline_call;
                 }
@@ -3760,6 +3833,15 @@ interrupt:
                     newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
                                             cx->runtime->callHookData);
                     LOAD_INTERRUPT_HANDLER(rt);
+                } else {
+                    newifp->hookData = NULL;
+                }
+
+                /* Scope with a call object parented by the callee's parent. */
+                if ((fun->flags & JSFUN_HEAVYWEIGHT) &&
+                    !js_GetCallObject(cx, &newifp->frame, parent)) {
+                    ok = JS_FALSE;
+                    goto out;
                 }
 
                 /* Switch to new version if currentVersion wasn't overridden. */
@@ -3786,6 +3868,7 @@ interrupt:
               bad_inline_call:
                 script = fp->script;
                 depth = (jsint) script->depth;
+                ok = JS_FALSE;
                 goto out;
             }
 
@@ -4539,6 +4622,7 @@ interrupt:
 
             /* Lookup id in order to check for redeclaration problems. */
             id = ATOM_TO_JSID(atom);
+            SAVE_SP_AND_PC(fp);
             ok = js_CheckRedeclaration(cx, obj, id, attrs, &obj2, &prop);
             if (!ok)
                 goto out;
@@ -4664,6 +4748,7 @@ interrupt:
              * as well as multiple HTML script tags.
              */
             parent = fp->varobj;
+            SAVE_SP_AND_PC(fp);
             ok = js_CheckRedeclaration(cx, parent, id, attrs, NULL, NULL);
             if (ok) {
                 ok = OBJ_DEFINE_PROPERTY(cx, parent, id, rval,
