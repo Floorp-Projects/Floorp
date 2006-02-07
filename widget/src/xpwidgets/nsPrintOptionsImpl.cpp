@@ -28,7 +28,29 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
-NS_IMPL_ISUPPORTS1(nsPrintOptions, nsIPrintOptions)
+//NS_IMPL_ISUPPORTS1(nsPrintOptions, nsIPrintOptions)
+  NS_IMPL_ADDREF(nsPrintOptions)                       
+  NS_IMPL_RELEASE(nsPrintOptions)                      
+NS_IMETHODIMP nsPrintOptions::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aInstancePtr = NULL;
+
+  if (aIID.Equals(NS_GET_IID(nsIPrintOptions))) {
+    *aInstancePtr = (void*) (nsIPrintOptions*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
+    *aInstancePtr = (void*) ((nsISupports*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
 
 // Pref Constants
 const char * kMarginTop       = "print.print_margin_top";
@@ -36,7 +58,7 @@ const char * kMarginLeft      = "print.print_margin_left";
 const char * kMarginBottom    = "print.print_margin_bottom";
 const char * kMarginRight     = "print.print_margin_right";
 
-// Prefs for Print Option
+// Prefs for Print Options
 const char * kPrintEvenPages  = "print.print_evenpages";
 const char * kPrintOddPages   = "print.print_oddpages";
 const char * kPrintDocTitle   = "print.print_doctitle";
@@ -45,6 +67,14 @@ const char * kPageNums        = "print.print_pagenumbers";
 const char * kPageNumsJust    = "print.print_pagenumjust";
 const char * kPrintPageTotals = "print.print_pagetotals";
 const char * kPrintDate       = "print.print_date";
+
+// Additional Prefs
+const char * kPrintReversed   = "print.print_reversed";
+const char * kPrintColor      = "print.print_color";
+const char * kPrintPaperSize  = "print.print_paper_size";
+const char * kPrintCommand    = "print.print_command";
+const char * kPrintFile       = "print.print_file";
+const char * kPrintToFile     = "print.print_tofile";
 
 // There are currently NOT supported
 //const char * kPrintBevelLines    = "print.print_bevellines";
@@ -64,24 +94,31 @@ const char * kRightJust  = "right";
  *	@update 6/21/00 dwc
  */
 nsPrintOptions::nsPrintOptions() :
-  mPrintRange(ePrintRange_AllPages),
-  mStartPageNum(0),
-  mEndPageNum(0),
-  mPrintOptions(0L)
+  mPrintRange(kRangeAllPages),
+  mStartPageNum(1),
+  mEndPageNum(1),
+  mPrintOptions(0L),
+  mPrintReversed(PR_FALSE),
+  mPrintInColor(PR_TRUE),
+  mPaperSize(kLetterPaperSize),
+  mPrintToFile(PR_FALSE),
+  mPrintFrameType(kSelectedFrame),
+  mIsPrintFrame(PR_FALSE),
+  mPageNumJust(kJustLeft)
 {
   NS_INIT_ISUPPORTS();
 
   /* member initializers and constructor code */
   nscoord halfInch = NS_INCHES_TO_TWIPS(0.5);
-  SetMargins(halfInch, halfInch, halfInch, halfInch);
+  mMargin.SizeTo(halfInch, halfInch, halfInch, halfInch);
 
-  mPrintOptions = NS_PRINT_OPTIONS_PRINT_EVEN_PAGES   |
-                  NS_PRINT_OPTIONS_PRINT_ODD_PAGES    |
-                  NS_PRINT_OPTIONS_PRINT_DOC_LOCATION |
-                  NS_PRINT_OPTIONS_PRINT_DOC_TITLE    |
-                  NS_PRINT_OPTIONS_PRINT_PAGE_NUMS    |
-                  NS_PRINT_OPTIONS_PRINT_PAGE_TOTAL   |
-                  NS_PRINT_OPTIONS_PRINT_DATE_PRINTED;
+  mPrintOptions = kOptPrintOddPages    |
+                  kOptPrintEvenPages   |
+                  kOptPrintDocTitle    |
+                  kOptPrintDocLoc      |
+                  kOptPrintPageNums    |
+                  kOptPrintPageTotal   |
+                  kOptPrintDatePrinted;
 
   mDefaultFont = new nsFont("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
                              NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(10));
@@ -105,12 +142,12 @@ nsPrintOptions::~nsPrintOptions()
  *	@update 1/12/01 rods
  */
 NS_IMETHODIMP 
-nsPrintOptions::SetDefaultFont(const nsFont &aFont)
+nsPrintOptions::SetFontNamePointSize(nsString& aFontName, PRInt32 aPointSize)
 {
-  if (mDefaultFont != nsnull) {
-    delete mDefaultFont;
+  if (mDefaultFont != nsnull && aFontName.Length() > 0 && aPointSize > 0) {
+    mDefaultFont->name = aFontName;
+    mDefaultFont->size = NSIntPointsToTwips(aPointSize);
   }
-  mDefaultFont = new nsFont(aFont);
   return NS_OK;
 }
 
@@ -119,12 +156,12 @@ nsPrintOptions::SetDefaultFont(const nsFont &aFont)
  *	@update 1/12/01 rods
  */
 NS_IMETHODIMP 
-nsPrintOptions::SetFontNamePointSize(const nsString& aFontName, nscoord aPointSize)
+nsPrintOptions::SetDefaultFont(nsFont &aFont)
 {
-  if (mDefaultFont != nsnull && aFontName.Length() > 0 && aPointSize > 0) {
-    mDefaultFont->name = aFontName;
-    mDefaultFont->size = NSIntPointsToTwips(aPointSize);
+  if (mDefaultFont != nsnull) {
+    delete mDefaultFont;
   }
+  mDefaultFont = new nsFont(aFont);
   return NS_OK;
 }
 
@@ -145,30 +182,9 @@ nsPrintOptions::GetDefaultFont(nsFont &aFont)
  *	@update 1/12/01 rods
  */
 NS_IMETHODIMP 
-nsPrintOptions::SetMargins(PRInt32 aTop, PRInt32 aLeft, PRInt32 aRight, PRInt32 aBottom)
+nsPrintOptions::SetMarginInTwips(nsMargin& aMargin)
 {
-  mMargin.SizeTo(aLeft, aTop, aRight, aBottom);
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 6/21/00 dwc
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::GetMargins(PRInt32 *aTop, PRInt32 *aLeft, PRInt32 *aRight, PRInt32 *aBottom)
-{
-  NS_ENSURE_ARG_POINTER(aTop);
-  NS_ENSURE_ARG_POINTER(aLeft);
-  NS_ENSURE_ARG_POINTER(aRight);
-  NS_ENSURE_ARG_POINTER(aBottom);
-
-  *aTop    = mMargin.top;
-  *aLeft   = mMargin.left;
-  *aRight  = mMargin.right;
-  *aBottom = mMargin.bottom;
-
+  mMargin = aMargin;
   return NS_OK;
 }
 
@@ -177,10 +193,9 @@ nsPrintOptions::GetMargins(PRInt32 *aTop, PRInt32 *aLeft, PRInt32 *aRight, PRInt
  *	@update 6/21/00 dwc
  */
 NS_IMETHODIMP 
-nsPrintOptions::GetMargin(nsMargin& aMargin)
+nsPrintOptions::GetMarginInTwips(nsMargin& aMargin)
 {
   aMargin = mMargin;
-  //aMargin.SizeTo(mLeftMargin, mTopMargin, mRightMargin, mBottomMargin);
   return NS_OK;
 }
 
@@ -192,56 +207,6 @@ NS_IMETHODIMP
 nsPrintOptions::ShowNativeDialog()
 {
 
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::SetPrintRange(PRInt32 aPrintRange)
-{
-  mPrintRange = (nsPrintRange)aPrintRange;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::GetPrintRange(PRInt32 *aPrintRange)
-{
-  NS_ENSURE_ARG_POINTER(aPrintRange);
-
-  *aPrintRange = (PRInt32)mPrintRange;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::SetPageRange(PRInt32 aStartPage, PRInt32 aEndPage)
-{
-  mStartPageNum = aStartPage;
-  mEndPageNum   = aEndPage;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::GetPageRange(PRInt32 *aStartPage, PRInt32 *aEndPage)
-{
-  NS_ENSURE_ARG_POINTER(aStartPage);
-  NS_ENSURE_ARG_POINTER(aEndPage);
-  *aStartPage = mStartPageNum;
-  *aEndPage   = mEndPageNum;
   return NS_OK;
 }
 
@@ -284,77 +249,6 @@ nsPrintOptions::GetPrintOptionsBits(PRInt32 *aBits)
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::SetTitle(const PRUnichar *aTitle)
-{
-  NS_ENSURE_ARG_POINTER(aTitle);
-  mTitle = aTitle;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::GetTitle(PRUnichar **aTitle)
-{
-  NS_ENSURE_ARG_POINTER(aTitle);
-  *aTitle = mTitle.ToNewUnicode();
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::SetURL(const PRUnichar *aURL)
-{
-  NS_ENSURE_ARG_POINTER(aURL);
-  mURL = aURL;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::GetURL(PRUnichar **aURL)
-{
-  NS_ENSURE_ARG_POINTER(aURL);
-  *aURL = mURL.ToNewUnicode();
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::SetPageNumJust(PRInt32 aJust)
-{
-  mPageNumJust = aJust;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 1/12/01 rods
- */
-NS_IMETHODIMP 
-nsPrintOptions::GetPageNumJust(PRInt32 *aJust)
-{
-  NS_ENSURE_ARG_POINTER(aJust);
-
-  *aJust = (PRInt32)mPageNumJust;
-  return NS_OK;
-}
 
 /** ---------------------------------------------------
  *  See documentation in nsPrintOptionsImpl.h
@@ -370,15 +264,23 @@ nsPrintOptions::ReadPrefs()
     ReadInchesToTwipsPref(prefs, kMarginBottom, mMargin.bottom);
     ReadInchesToTwipsPref(prefs, kMarginRight,  mMargin.right);
 
-    ReadBitFieldPref(prefs, kPrintEvenPages,  NS_PRINT_OPTIONS_PRINT_EVEN_PAGES);
-    ReadBitFieldPref(prefs, kPrintOddPages,   NS_PRINT_OPTIONS_PRINT_ODD_PAGES);
-    ReadBitFieldPref(prefs, kPrintDocTitle,   NS_PRINT_OPTIONS_PRINT_DOC_TITLE);
-    ReadBitFieldPref(prefs, kPrintDocLoc,     NS_PRINT_OPTIONS_PRINT_DOC_LOCATION);
-    ReadBitFieldPref(prefs, kPageNums,        NS_PRINT_OPTIONS_PRINT_PAGE_NUMS);
-    ReadBitFieldPref(prefs, kPrintPageTotals, NS_PRINT_OPTIONS_PRINT_PAGE_TOTAL);
-    ReadBitFieldPref(prefs, kPrintDate,       NS_PRINT_OPTIONS_PRINT_DATE_PRINTED);
+    ReadBitFieldPref(prefs, kPrintEvenPages,  kOptPrintEvenPages);
+    ReadBitFieldPref(prefs, kPrintOddPages,   kOptPrintOddPages);
+    ReadBitFieldPref(prefs, kPrintDocTitle,   kOptPrintDocTitle);
+    ReadBitFieldPref(prefs, kPrintDocLoc,     kOptPrintDocLoc);
+    ReadBitFieldPref(prefs, kPageNums,        kOptPrintPageNums);
+    ReadBitFieldPref(prefs, kPrintPageTotals, kOptPrintPageTotal);
+    ReadBitFieldPref(prefs, kPrintDate,       kOptPrintDatePrinted);
 
-    ReadJustification(prefs, kPageNumsJust, mPageNumJust, NS_PRINT_JUSTIFY_LEFT);
+    ReadJustification(prefs, kPageNumsJust, mPageNumJust, kJustLeft);
+
+    // Read Additional XP Prefs
+    prefs->GetBoolPref(kPrintReversed,   &mPrintReversed);
+    prefs->GetBoolPref(kPrintColor,      &mPrintInColor);
+    prefs->GetIntPref(kPrintPaperSize,   &mPaperSize);
+    ReadPrefString(prefs, kPrintCommand, mPrintCommand);
+    prefs->GetBoolPref(kPrintFile,       &mPrintToFile);
+    ReadPrefString(prefs, kPrintToFile,  mToFileName);
 
     return NS_OK;
   }
@@ -399,24 +301,296 @@ nsPrintOptions::WritePrefs()
     WriteInchesFromTwipsPref(prefs, kMarginBottom, mMargin.bottom);
     WriteInchesFromTwipsPref(prefs, kMarginRight,  mMargin.right);
 
-    WriteBitFieldPref(prefs, kPrintEvenPages,  NS_PRINT_OPTIONS_PRINT_EVEN_PAGES);
-    WriteBitFieldPref(prefs, kPrintOddPages,   NS_PRINT_OPTIONS_PRINT_ODD_PAGES);
-    WriteBitFieldPref(prefs, kPrintDocTitle,   NS_PRINT_OPTIONS_PRINT_DOC_TITLE);
-    WriteBitFieldPref(prefs, kPrintDocLoc,     NS_PRINT_OPTIONS_PRINT_DOC_LOCATION);
-    WriteBitFieldPref(prefs, kPageNums,        NS_PRINT_OPTIONS_PRINT_PAGE_NUMS);
-    WriteBitFieldPref(prefs, kPrintPageTotals, NS_PRINT_OPTIONS_PRINT_PAGE_TOTAL);
-    WriteBitFieldPref(prefs, kPrintDate,       NS_PRINT_OPTIONS_PRINT_DATE_PRINTED);
+    WriteBitFieldPref(prefs, kPrintEvenPages,  kOptPrintEvenPages);
+    WriteBitFieldPref(prefs, kPrintOddPages,   kOptPrintOddPages);
+    WriteBitFieldPref(prefs, kPrintDocTitle,   kOptPrintDocTitle);
+    WriteBitFieldPref(prefs, kPrintDocLoc,     kOptPrintDocLoc);
+    WriteBitFieldPref(prefs, kPageNums,        kOptPrintPageNums);
+    WriteBitFieldPref(prefs, kPrintPageTotals, kOptPrintPageTotal);
+    WriteBitFieldPref(prefs, kPrintDate,       kOptPrintDatePrinted);
 
     WriteJustification(prefs, kPageNumsJust, mPageNumJust);
+
+    // Write Additional XP Prefs
+    prefs->SetBoolPref(kPrintReversed,    mPrintReversed);
+    prefs->SetBoolPref(kPrintColor,       mPrintInColor);
+    prefs->SetIntPref(kPrintPaperSize,    mPaperSize);
+    WritePrefString(prefs, kPrintCommand, mPrintCommand);
+    prefs->SetBoolPref(kPrintFile,        mPrintToFile);
+    WritePrefString(prefs, kPrintToFile,  mToFileName);
 
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
 
+/* attribute long startPageRange; */
+NS_IMETHODIMP nsPrintOptions::GetStartPageRange(PRInt32 *aStartPageRange)
+{
+  //NS_ENSURE_ARG_POINTER(aStartPageRange);
+  *aStartPageRange = mStartPageNum;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetStartPageRange(PRInt32 aStartPageRange)
+{
+  mStartPageNum = aStartPageRange;
+  return NS_OK;
+}
+
+/* attribute long endPageRange; */
+NS_IMETHODIMP nsPrintOptions::GetEndPageRange(PRInt32 *aEndPageRange)
+{
+  //NS_ENSURE_ARG_POINTER(aEndPageRange);
+  *aEndPageRange = mEndPageNum;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetEndPageRange(PRInt32 aEndPageRange)
+{
+  mEndPageNum = aEndPageRange;
+  return NS_OK;
+}
+
+/* attribute boolean printReversed; */
+NS_IMETHODIMP nsPrintOptions::GetPrintReversed(PRBool *aPrintReversed)
+{
+  //NS_ENSURE_ARG_POINTER(aPrintReversed);
+  *aPrintReversed = mPrintReversed;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrintReversed(PRBool aPrintReversed)
+{
+  mPrintReversed = aPrintReversed;
+  return NS_OK;
+}
+
+/* attribute boolean printInColor; */
+NS_IMETHODIMP nsPrintOptions::GetPrintInColor(PRBool *aPrintInColor)
+{
+  //NS_ENSURE_ARG_POINTER(aPrintInColor);
+  *aPrintInColor = mPrintInColor;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrintInColor(PRBool aPrintInColor)
+{
+  mPrintInColor = aPrintInColor;
+  return NS_OK;
+}
+
+/* attribute short paperSize; */
+NS_IMETHODIMP nsPrintOptions::GetPaperSize(PRInt32 *aPaperSize)
+{
+  //NS_ENSURE_ARG_POINTER(aPaperSize);
+  *aPaperSize = mPaperSize;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPaperSize(PRInt32 aPaperSize)
+{
+  mPaperSize = aPaperSize;
+  return NS_OK;
+}
+
+/* attribute wstring printCommand; */
+NS_IMETHODIMP nsPrintOptions::GetPrintCommand(PRUnichar * *aPrintCommand)
+{
+  //NS_ENSURE_ARG_POINTER(aPrintCommand);
+  *aPrintCommand = mPrintCommand.ToNewUnicode();
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrintCommand(const PRUnichar * aPrintCommand)
+{
+  mPrintCommand = aPrintCommand;
+  return NS_OK;
+}
+
+/* attribute boolean printToFile; */
+NS_IMETHODIMP nsPrintOptions::GetPrintToFile(PRBool *aPrintToFile)
+{
+  //NS_ENSURE_ARG_POINTER(aPrintToFile);
+  *aPrintToFile = mPrintToFile;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrintToFile(PRBool aPrintToFile)
+{
+  mPrintToFile = aPrintToFile;
+  return NS_OK;
+}
+
+/* attribute wstring toFileName; */
+NS_IMETHODIMP nsPrintOptions::GetToFileName(PRUnichar * *aToFileName)
+{
+  //NS_ENSURE_ARG_POINTER(aToFileName);
+  *aToFileName = mToFileName.ToNewUnicode();
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetToFileName(const PRUnichar * aToFileName)
+{
+  mToFileName = aToFileName;
+  return NS_OK;
+}
+
+/* attribute double marginTop; */
+NS_IMETHODIMP nsPrintOptions::GetMarginTop(double *aMarginTop)
+{
+  NS_ENSURE_ARG_POINTER(aMarginTop);
+  *aMarginTop = NS_TWIPS_TO_INCHES(mMargin.top);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetMarginTop(double aMarginTop)
+{
+  mMargin.top = NS_INCHES_TO_TWIPS(float(aMarginTop));
+  return NS_OK;
+}
+
+/* attribute double marginLeft; */
+NS_IMETHODIMP nsPrintOptions::GetMarginLeft(double *aMarginLeft)
+{
+  NS_ENSURE_ARG_POINTER(aMarginLeft);
+  *aMarginLeft = NS_TWIPS_TO_INCHES(mMargin.left);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetMarginLeft(double aMarginLeft)
+{
+  mMargin.left = NS_INCHES_TO_TWIPS(float(aMarginLeft));
+  return NS_OK;
+}
+
+/* attribute double marginBottom; */
+NS_IMETHODIMP nsPrintOptions::GetMarginBottom(double *aMarginBottom)
+{
+  NS_ENSURE_ARG_POINTER(aMarginBottom);
+  *aMarginBottom = NS_TWIPS_TO_INCHES(mMargin.bottom);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetMarginBottom(double aMarginBottom)
+{
+  mMargin.bottom = NS_INCHES_TO_TWIPS(float(aMarginBottom));
+  return NS_OK;
+}
+
+/* attribute double marginRight; */
+NS_IMETHODIMP nsPrintOptions::GetMarginRight(double *aMarginRight)
+{
+  NS_ENSURE_ARG_POINTER(aMarginRight);
+  *aMarginRight = NS_TWIPS_TO_INCHES(mMargin.right);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetMarginRight(double aMarginRight)
+{
+  mMargin.right = NS_INCHES_TO_TWIPS(float(aMarginRight));
+  return NS_OK;
+}
+
+/* attribute long printRange; */
+NS_IMETHODIMP nsPrintOptions::GetPrintRange(PRInt16 *aPrintRange)
+{
+  NS_ENSURE_ARG_POINTER(aPrintRange);
+  *aPrintRange = mPrintRange;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrintRange(PRInt16 aPrintRange)
+{
+  mPrintRange = aPrintRange;
+  return NS_OK;
+}
+
+/* attribute long pageNumJust; */
+NS_IMETHODIMP nsPrintOptions::GetPageNumJust(PRInt16 *aPageNumJust)
+{
+  NS_ENSURE_ARG_POINTER(aPageNumJust);
+  *aPageNumJust = mPageNumJust;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPageNumJust(PRInt16 aPageNumJust)
+{
+  mPageNumJust = aPageNumJust;
+  return NS_OK;
+}
+
+/* attribute wstring docTitle; */
+NS_IMETHODIMP nsPrintOptions::GetTitle(PRUnichar * *aTitle)
+{
+  NS_ENSURE_ARG_POINTER(aTitle);
+  *aTitle = mTitle.ToNewUnicode();
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetTitle(const PRUnichar * aTitle)
+{
+  NS_ENSURE_ARG_POINTER(aTitle);
+  mTitle = aTitle;
+  return NS_OK;
+}
+
+/* attribute wstring docURL; */
+NS_IMETHODIMP nsPrintOptions::GetDocURL(PRUnichar * *aDocURL)
+{
+  NS_ENSURE_ARG_POINTER(aDocURL);
+  *aDocURL = mURL.ToNewUnicode();
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetDocURL(const PRUnichar * aDocURL)
+{
+  NS_ENSURE_ARG_POINTER(aDocURL);
+  mURL = aDocURL;
+  return NS_OK;
+}
+
+/* attribute boolean isPrintFrame; */
+NS_IMETHODIMP nsPrintOptions::GetIsPrintFrame(PRBool *aIsPrintFrame)
+{
+  NS_ENSURE_ARG_POINTER(aIsPrintFrame);
+  *aIsPrintFrame = (PRInt32)mIsPrintFrame;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetIsPrintFrame(PRBool aIsPrintFrame)
+{
+  mIsPrintFrame = aIsPrintFrame;
+  return NS_OK;
+}
+
+/* attribute long printFrame; */
+NS_IMETHODIMP nsPrintOptions::GetPrintFrameType(PRInt16 *aPrintFrameType)
+{
+  NS_ENSURE_ARG_POINTER(aPrintFrameType);
+  *aPrintFrameType = (PRInt32)mPrintFrameType;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrintFrameType(PRInt16 aPrintFrameType)
+{
+  mPrintFrameType = aPrintFrameType;
+  return NS_OK;
+}
+
 //-----------------------------------------------------
 //-- Protected Methods
 //-----------------------------------------------------
+//---------------------------------------------------
+nsresult nsPrintOptions::ReadPrefString(nsIPref *    aPref, 
+                                        const char * aPrefId, 
+                                        nsString&    aString)
+{
+  char * str = nsnull;
+  nsresult rv = aPref->CopyCharPref(aPrefId, &str);
+  if (NS_SUCCEEDED(rv) && str) {
+    aString.AssignWithConversion(str);
+    nsMemory::Free(str);
+  }
+  return rv;
+}
+
+nsresult nsPrintOptions::WritePrefString(nsIPref *    aPref, 
+                                         const char * aPrefId, 
+                                         nsString&    aString)
+{
+  NS_ENSURE_ARG_POINTER(aPref);
+  NS_ENSURE_ARG_POINTER(aPrefId);
+
+  PRUnichar * str = aString.ToNewUnicode();
+  nsresult rv = aPref->SetUnicharPref(aPrefId, str);
+  nsMemory::Free(str);
+
+  return rv;
+}
+
 void nsPrintOptions::ReadBitFieldPref(nsIPref *    aPref, 
                                       const char * aPrefId, 
                                       PRInt32      anOption)
@@ -474,49 +648,45 @@ void nsPrintOptions::WriteInchesFromTwipsPref(nsIPref *    aPref,
   }
 }
 
-//---------------------------------------------------
 void nsPrintOptions::ReadJustification(nsIPref *    aPref, 
                                        const char * aPrefId, 
-                                       PRInt32&     aJust,
-                                       PRInt32      aInitValue)
+                                       PRInt16&     aJust,
+                                       PRInt16      aInitValue)
 {
   aJust = aInitValue;
-  char * str = nsnull;
-  nsresult rv = aPref->CopyCharPref(aPrefId, &str);
-  if (NS_SUCCEEDED(rv) && str) {
-    nsAutoString justStr;
-    justStr.AssignWithConversion(str);
-
+  nsAutoString justStr;
+  if (NS_SUCCEEDED(ReadPrefString(aPref, aPrefId, justStr))) {
     if (justStr.EqualsWithConversion(kRightJust)) {
-      aJust = NS_PRINT_JUSTIFY_RIGHT;
+      aJust = kJustRight;
 
     } else if (justStr.EqualsWithConversion(kCenterJust)) {
-      aJust = NS_PRINT_JUSTIFY_CENTER;
+      aJust = kJustCenter;
 
     } else {
-      aJust = NS_PRINT_JUSTIFY_LEFT;
+      aJust = kJustLeft;
     }
-    nsMemory::Free(str);
   }
 }
 
 //---------------------------------------------------
 void nsPrintOptions::WriteJustification(nsIPref *    aPref, 
                                         const char * aPrefId, 
-                                        PRInt32      aJust)
+                                        PRInt16      aJust)
 {
   switch (aJust) {
-    case NS_PRINT_JUSTIFY_LEFT: 
+    case kJustLeft: 
       aPref->SetCharPref(aPrefId, kLeftJust);
       break;
 
-    case NS_PRINT_JUSTIFY_CENTER: 
+    case kJustCenter: 
       aPref->SetCharPref(aPrefId, kCenterJust);
       break;
 
-    case NS_PRINT_JUSTIFY_RIGHT: 
+    case kJustRight: 
       aPref->SetCharPref(aPrefId, kRightJust);
       break;
   } //switch
 }
+
+
 
