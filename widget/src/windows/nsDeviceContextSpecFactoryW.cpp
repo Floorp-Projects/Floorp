@@ -30,6 +30,11 @@
 
 #include "nsIPrintOptions.h"
 
+// For Localization
+#include "nsIStringBundle.h"
+#include "nsDeviceContext.h"
+#include "nsDeviceContextWin.h"
+
 // This is for extending the dialog
 #include <dlgs.h>
 
@@ -54,9 +59,41 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: Init(void)
   return NS_OK;
 }
 
-//--------------------------------------------------------
-//--------------------------------------------------------
+//----------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 static UINT gFrameSelectedRadioBtn = NULL;
+
+#define PRINTDLG_PROPERTIES "chrome://communicator/locale/gfx/printdialog.properties"
+#define TEMPLATE_NAME "PRINTDLGNEW"
+
+//--------------------------------------------------------
+// Set a multi-byte string in the control
+static void SetTextOnWnd(HWND aControl, const nsString& aStr)
+{
+  char* pStr = nsDeviceContextWin::GetACPString(aStr);
+  if (pStr) {
+    ::SetWindowText(aControl, pStr);
+    delete [] pStr;
+  }
+}
+
+//--------------------------------------------------------
+// Will get the control and localized string by "key"
+static void SetText(HWND             aParent, 
+                    UINT             aId, 
+                    nsIStringBundle* aStrBundle,
+                    const char*      aKey) 
+{
+  HWND wnd = GetDlgItem (aParent, aId);
+  if (!wnd) {
+    return;
+  }
+  nsAutoString str;
+  nsresult rv = DeviceContextImpl::GetLocalizedString(aStrBundle, aKey, str);
+  if (NS_SUCCEEDED(rv)) {
+    SetTextOnWnd(wnd, str);
+  }
+}
 
 //--------------------------------------------------------
 static void SetRadio(HWND         aParent, 
@@ -77,6 +114,44 @@ static void SetRadio(HWND         aParent,
 }
 
 //--------------------------------------------------------
+typedef struct {
+  char * mKeyStr;
+  long   mKeyId;
+} PropKeyInfo;
+
+// These are the control ids used in the dialog and 
+// defined by MS-Windows in commdlg.h
+static PropKeyInfo gAllPropKeys[] = {
+    {"Printer", grp4},
+    {"Name", stc6},
+    {"Properties", psh2},
+    {"Status", stc8},
+    {"Type", stc7},
+    {"Where", stc10},
+    {"Comment", stc9},
+    {"Printtofile", chx1},
+    {"Printrange", grp1},
+    {"All", rad1},
+    {"Pages", rad3},
+    {"Selection", rad2},
+    {"from", stc2},
+    {"to", stc3},
+    {"Copies", grp2},
+    {"Numberofcopies", stc5},
+    {"Collate", chx2},
+    {"PrintFrames", grp3},
+    {"Aslaid", rad4},
+    {"selectedframe", rad5},
+    {"Eachframe", rad6},
+    {"OK", IDOK},
+    {"Cancel", IDCANCEL},
+    {NULL, NULL}};
+    //{"stc11", stc11},
+    //{"stc12", stc12},
+    //{"stc14", stc14},
+    //{"stc13", stc13},
+
+//--------------------------------------------------------
 UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam) 
 {
   if (uiMsg == WM_COMMAND) {
@@ -93,6 +168,21 @@ UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
       ::ShowWindow(collateChk, SW_SHOW);
     }
 
+    // Localize the print dialog
+    nsCOMPtr<nsIStringBundle> strBundle;
+    if (NS_SUCCEEDED(DeviceContextImpl::GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle)))) {
+      PRInt32 i = 0;
+      while (gAllPropKeys[i].mKeyStr != NULL) {
+        SetText(hdlg, gAllPropKeys[i].mKeyId, strBundle, gAllPropKeys[i].mKeyStr);
+        i++;
+      }
+      nsAutoString titleStr;
+      if (NS_SUCCEEDED(DeviceContextImpl::GetLocalizedString(strBundle, "title", titleStr))) {
+        SetTextOnWnd(hdlg, titleStr);
+      }
+    }
+
+    // Set up radio buttons
     if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAll) {
       SetRadio(hdlg, rad4, PR_TRUE);  
       SetRadio(hdlg, rad5, PR_FALSE); 
@@ -156,6 +246,19 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
     printService->GetHowToEnableFrameUI(&howToEnableFrameUI);
   }
 
+  // Get the template name from the string bundle
+  nsAutoString templateName;
+  nsCOMPtr<nsIStringBundle> strBundle;
+  nsresult res = DeviceContextImpl::GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle));
+  if (NS_SUCCEEDED(res)) {
+    res = DeviceContextImpl::GetLocalizedString(strBundle, "templateName", templateName);
+  }
+  if (NS_FAILED(res)) {
+    templateName.AssignWithConversion(TEMPLATE_NAME);
+  }
+
+  char * tmpStr = templateName.ToNewCString();
+
   prntdlg.nFromPage           = 0xFFFF;
   prntdlg.nToPage             = 0xFFFF;
   prntdlg.nMinPage            = 1;
@@ -165,19 +268,20 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
   prntdlg.lCustData           = (DWORD)howToEnableFrameUI;
   prntdlg.lpfnPrintHook       = PrintHookProc;
   prntdlg.lpfnSetupHook       = NULL;
-  prntdlg.lpPrintTemplateName = (LPCTSTR)"PRINTDLGNEW";
+  prntdlg.lpPrintTemplateName = (LPCTSTR)tmpStr?tmpStr:TEMPLATE_NAME;
   prntdlg.lpSetupTemplateName = NULL;
   prntdlg.hPrintTemplate      = NULL;
   prntdlg.hSetupTemplate      = NULL;
-
 
   if(PR_TRUE == aQuiet){
     prntdlg.Flags = PD_ALLPAGES | PD_RETURNDEFAULT | PD_RETURNIC | PD_USEDEVMODECOPIESANDCOLLATE;
   }
 
-  BOOL res = ::PrintDlg(&prntdlg);
+  BOOL result = ::PrintDlg(&prntdlg);
 
-  if (TRUE == res)
+  nsMemory::Free(tmpStr); // free template name
+
+  if (TRUE == result)
   {
     DEVNAMES *devnames = (DEVNAMES *)::GlobalLock(prntdlg.hDevNames);
 
