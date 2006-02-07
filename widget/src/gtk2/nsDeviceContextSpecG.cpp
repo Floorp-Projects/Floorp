@@ -52,6 +52,9 @@ nsDeviceContextSpecGTK :: ~nsDeviceContextSpecGTK()
 
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID);
+#ifdef USE_XPRINT
+static NS_DEFINE_IID(kIDeviceContextSpecXPIID, NS_IDEVICE_CONTEXT_SPEC_XP_IID);
+#endif
 
 #if 0
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecGTK, kDeviceContextSpecIID)
@@ -79,6 +82,15 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: QueryInterface(REFNSIID aIID, void** aIn
     NS_ADDREF_THIS();
     return NS_OK;
   }
+
+#ifdef USE_XPRINT
+  if (aIID.Equals(kIDeviceContextSpecXPIID))
+  {
+    *aInstancePtr = (void*) (nsIDeviceContextSpecXP*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+#endif
 
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -114,7 +126,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 
   nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_PROGID, &rv);
 //  NS_WITH_SERVICE(nsIPref, pPrefs, NS_PREF_PROGID, &rv);
-  if(!NS_FAILED(rv) && pPrefs) {
+  if (NS_SUCCEEDED(rv) && pPrefs) {
    	(void) pPrefs->GetBoolPref("print.print_reversed", &reversed);
    	(void) pPrefs->GetBoolPref("print.print_color", &color);
    	(void) pPrefs->GetBoolPref("print.print_landscape", &landscape);
@@ -258,6 +270,22 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: GetUserCancelled( PRBool &aCancel )
   aCancel = mPrData.cancel;
   return NS_OK;
 }
+
+#ifdef USE_XPRINT
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetPrintMethod(int &aMethod )     
+{
+  nsresult rv;
+  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_PROGID, &rv);
+  if (NS_SUCCEEDED(rv) && pPrefs) {
+    PRInt32 method = 0;
+    (void) pPrefs->GetIntPref("print.print_method", &method);
+    aMethod = method;
+  } else {
+    aMethod = 0;
+  }
+  return NS_OK;
+}
+#endif
 
 /** -------------------------------------------------------
  * Closes the printmanager if it is open.
