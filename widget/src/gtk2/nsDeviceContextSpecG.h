@@ -101,11 +101,11 @@ public:
   
 protected:
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
-  PRBool mToPrinter : 1;      /* If PR_TRUE, print to printer */
-  PRBool mIsPPreview : 1;     /* If PR_TRUE, is print preview */
-  PRBool mFpf : 1;            /* If PR_TRUE, first page first */
-  PRBool mGrayscale : 1;      /* If PR_TRUE, print grayscale */
-  PRBool mCancel : 1;         /* If PR_TRUE, user cancelled */
+  PRPackedBool mToPrinter : 1;      /* If PR_TRUE, print to printer */
+  PRPackedBool mIsPPreview : 1;     /* If PR_TRUE, is print preview */
+  PRPackedBool mFpf : 1;            /* If PR_TRUE, first page first */
+  PRPackedBool mGrayscale : 1;      /* If PR_TRUE, print grayscale */
+  PRPackedBool mCancel : 1;         /* If PR_TRUE, user cancelled */
   int    mOrientation;        /* Orientation e.g. Portrait */
   char   mCommand[PATH_MAX];  /* Print command e.g., lpr */
   char   mPath[PATH_MAX];     /* If toPrinter = PR_FALSE, dest file */

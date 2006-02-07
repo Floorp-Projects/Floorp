@@ -432,6 +432,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS,
     mToPrinter   = !tofile;
     mCopies      = copies;
     mIsPPreview  = aIsPrintPreview;
+    mCancel      = PR_FALSE;
   }
 
   return rv;
