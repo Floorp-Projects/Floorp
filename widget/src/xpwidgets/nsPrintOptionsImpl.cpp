@@ -290,7 +290,7 @@ nsPrintOptions::ShowPrintSetupDialog(nsIPrintSettings *aPS)
    nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
    NS_ASSERTION(array, "array must be a supports");
 
-   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
    if (wwatch) {
      nsCOMPtr<nsIDOMWindow> active;
      wwatch->GetActiveWindow(getter_AddRefs(active));           nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
