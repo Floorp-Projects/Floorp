@@ -38,9 +38,6 @@
 
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
-//#include "prmem.h"
-//#include "plstr.h"
-
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecGTK
  *  @update   dc 12/02/98
@@ -219,36 +216,36 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
       }
 
 #ifdef DEBUG_rods
-	    printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
-	    printf("printRange     %d\n", printRange);
-	    printf("fromPage       %d\n", fromPage);
-	    printf("toPage         %d\n", toPage);
+    printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
+    printf("printRange     %d\n", printRange);
+    printf("fromPage       %d\n", fromPage);
+    printf("toPage         %d\n", toPage);
 #endif
      } else {
 #ifndef VMS
-      sprintf( mPrData.command, "lpr" );
+    sprintf( mPrData.command, "lpr" );
 #else
 	    // Note to whoever puts the "lpr" into the prefs file. Please contact me
 	    // as I need to make the default be "print" instead of "lpr" for OpenVMS.
 	    sprintf( mPrData.command, "print" );
 #endif
-      }
-
-      mPrData.top     = dtop;
-      mPrData.bottom    = dbottom;
-      mPrData.left      = dleft;
-      mPrData.right     = dright;
-      mPrData.fpf       = !reversed;
-      mPrData.grayscale = !color;
-      mPrData.size      = paper_size;
-      mPrData.toPrinter = !tofile;
-
-      // PWD, HOME, or fail 
+  }
+  
+  mPrData.top     = dtop;
+  mPrData.bottom    = dbottom;
+  mPrData.left      = dleft;
+  mPrData.right     = dright;
+  mPrData.fpf       = !reversed;
+  mPrData.grayscale = !color;
+  mPrData.size      = paper_size;
+  mPrData.toPrinter = !tofile;
+  
+  // PWD, HOME, or fail 
     
-      if (!printfile) {
-	      if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
-	        if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
-	          strcpy( mPrData.path, "mozilla.ps" );
+  if (!printfile) {
+    if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
+      if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
+        strcpy( mPrData.path, "mozilla.ps" );
 	          if ( path != (char *) NULL )
 	            sprintf( mPrData.path, "%s/mozilla.ps", path );
 	          else
