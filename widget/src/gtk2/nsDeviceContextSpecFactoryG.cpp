@@ -82,7 +82,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryGTK :: CreateDeviceContextSpec(nsIWidget
   nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    rv = ((nsDeviceContextSpecGTK *)devSpec.get())->Init(aPrintSettings);
+    rv = ((nsDeviceContextSpecGTK *)devSpec.get())->Init(aPrintSettings, aIsPrintPreview);
     if (NS_SUCCEEDED(rv))
     {
       aNewSpec = devSpec;

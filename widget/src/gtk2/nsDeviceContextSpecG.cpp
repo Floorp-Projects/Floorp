@@ -319,13 +319,11 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
  * - Xlib-toolkit: 
  *   file:     mozilla/gfx/src/xlib/nsDeviceContextSpecXlib.cpp 
  *   function: NS_IMETHODIMP nsDeviceContextSpecXlib::Init()
- * - Qt-toolkit:
- *   file:     mozilla/gfx/src/qt/nsDeviceContextSpecQT.cpp
- *   function: NS_IMETHODIMP nsDeviceContextSpecQT::Init()
  * 
  * ** Please update the other toolkits when changing this function.
  */
-NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS)
+NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS,
+        PRBool aIsPrintPreview)
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::Init(aPS=%p)\n", aPS));
   nsresult rv = NS_ERROR_FAILURE;
@@ -408,6 +406,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS)
     mOrientation = orientation;
     mToPrinter   = !tofile;
     mCopies      = copies;
+    mIsPPreview  = aIsPrintPreview;
   }
 
   return rv;
@@ -416,6 +415,12 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS)
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetToPrinter(PRBool &aToPrinter)
 {
   aToPrinter = mToPrinter;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK::GetIsPrintPreview(PRBool &aIsPPreview)
+{
+  aIsPPreview = mIsPPreview;
   return NS_OK;
 }
 
