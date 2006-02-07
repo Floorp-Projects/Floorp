@@ -662,11 +662,11 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
       if (olist) {
         default_orientation = &olist[0]; /* First entry is the default one */
       
-        if (!strcasecmp(default_orientation->orientation, "portrait")) {
+        if (!PL_strcasecmp(default_orientation->orientation, "portrait")) {
           DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
           aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
         }
-        else if (!strcasecmp(default_orientation->orientation, "landscape")) {
+        else if (!PL_strcasecmp(default_orientation->orientation, "landscape")) {
           DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
           aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
         }  
@@ -741,11 +741,11 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
     if (doingOrientation) {
       nsXPIDLCString orientation;
       if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "orientation", getter_Copies(orientation)))) {
-        if (!strcasecmp(orientation, "portrait")) {
+        if (!PL_strcasecmp(orientation, "portrait")) {
           DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
           aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
         }
-        else if (!strcasecmp(orientation, "landscape")) {
+        else if (!PL_strcasecmp(orientation, "landscape")) {
           DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
           aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);  
         }
@@ -767,7 +767,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
         {
           const PSPaperSizeRec *curr = &postscript_module_paper_sizes[i];
 
-          if (!strcasecmp(papername, curr->name)) {          
+          if (!PL_strcasecmp(papername, curr->name)) {          
             width  = curr->width;  
             height = curr->height;
             break;
