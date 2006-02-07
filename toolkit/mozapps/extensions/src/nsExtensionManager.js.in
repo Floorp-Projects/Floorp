@@ -5311,7 +5311,7 @@ RDFItemUpdater.prototype = {
                             .createInstance(Components.interfaces.nsIXMLHttpRequest);
     request.open("GET", uri.spec, true);
     request.overrideMimeType("text/xml");
-    request.setRequestHeader("Cache-Control", "no-cache");
+    request.channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
 
     var self = this;
     request.onerror     = function(event) { self.onXMLError(event, aItem);    };
