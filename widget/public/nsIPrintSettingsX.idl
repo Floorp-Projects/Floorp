@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,10 +16,12 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2000
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Conrad Carlen <ccarlen@netscape.com>
+ *   Don Cone <dcone@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,29 +38,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDeviceContextSpecFactoryW_h___
-#define nsDeviceContextSpecFactoryW_h___
+#include "nsISupports.idl"
 
-#include "nsIDeviceContextSpecFactory.h"
-#include "nsIDeviceContextSpec.h"
+%{ C++
+#include <PMApplication.h>
+%}
 
-class nsIPrintSettings;
+/**
+ * Native types
+ */
+native nsPMPageFormat(PMPageFormat);
+native nsPMPrintSettings(PMPrintSettings);
 
-class nsDeviceContextSpecFactoryWin : public nsIDeviceContextSpecFactory
+
+/**
+ * Simplified PrintSettings for OSX interface 
+ *
+ * @status UNDER_REVIEW
+ */
+[scriptable, uuid(CD2A0A4F-0DE9-4c51-9232-42668F559F94)]
+
+interface nsIPrintSettingsX : nsISupports
 {
-public:
-  nsDeviceContextSpecFactoryWin();
 
-  NS_DECL_ISUPPORTS
+  /*
+   * PMPageFormat and PMPrintSettings attributes
+   *
+   * Getter returns a clone of the current data
+   * Setter copies (does not take ownership of) the input
+   */
+  [noscript] attribute nsPMPageFormat pMPageFormat;
 
-  NS_IMETHOD Init(void);
-  NS_IMETHOD CreateDeviceContextSpec(nsIWidget *aWidget,
-                                     nsIPrintSettings* aPrintSettings,
-                                     nsIDeviceContextSpec *&aNewSpec,
-                                     PRBool aIsPrintPreview);
+  [noscript] attribute nsPMPrintSettings pMPrintSettings;
 
-protected:
-  ~nsDeviceContextSpecFactoryWin();
+  /*
+   * readPageFormatFromPrefs and writePageFormatToPrefs
+   *
+   * Read and write a flattened PMPageFormat to/from prefs.
+   * This also contains any custom data we appended to the dialog
+   */
+  [noscript] void readPageFormatFromPrefs();
+  [noscript] void writePageFormatToPrefs();
 };
-
-#endif

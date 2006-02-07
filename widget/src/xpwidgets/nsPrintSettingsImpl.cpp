@@ -95,6 +95,46 @@ nsPrintSettings::nsPrintSettings() :
  *  See documentation in nsPrintSettingsImpl.h
  *	@update 6/21/00 dwc
  */
+nsPrintSettings::nsPrintSettings(const nsPrintSettings* aPS) :
+  mPrintOptions(aPS->mPrintOptions),
+  mPrintRange(aPS->mPrintRange),
+  mStartPageNum(aPS->mStartPageNum),
+  mEndPageNum(aPS->mEndPageNum),
+  mScaling(aPS->mScaling),
+  mPrintBGColors(aPS->mPrintBGColors),
+  mPrintBGImages(aPS->mPrintBGImages),
+  mPrintFrameTypeUsage(aPS->mPrintFrameTypeUsage),
+  mPrintFrameType(aPS->mPrintFrameType),
+  mHowToEnableFrameUI(aPS->mHowToEnableFrameUI),
+  mIsCancelled(aPS->mIsCancelled),
+  mPrintSilent(aPS->mPrintSilent),
+	mPrintPreview(aPS->mPrintPreview),
+  mShrinkToFit(aPS->mShrinkToFit),
+  mPrintPageDelay(aPS->mPrintPageDelay),
+  mPaperData(aPS->mPaperData),
+  mPaperSizeType(aPS->mPaperSizeType),
+  mPaperWidth(aPS->mPaperWidth),
+  mPaperHeight(aPS->mPaperHeight),
+  mPaperSizeUnit(aPS->mPaperSizeUnit),
+  mPrintReversed(aPS->mPrintReversed),
+  mPrintInColor(aPS->mPrintInColor),
+  mOrientation(aPS->mOrientation),
+  mNumCopies(aPS->mNumCopies),
+  mPrintToFile(aPS->mPrintToFile),
+  mMargin(aPS->mMargin)
+{
+  NS_INIT_ISUPPORTS();
+
+  for (PRInt32 i=0;i<3;i++) {
+    mHeaderStrs[i] = aPS->mHeaderStrs[i];
+    mFooterStrs[i] = aPS->mFooterStrs[i];
+  }
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsPrintSettingsImpl.h
+ *	@update 6/21/00 dwc
+ */
 nsPrintSettings::~nsPrintSettings()
 {
 }
@@ -769,3 +809,16 @@ nsPrintSettings::GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight)
   return NS_OK;
 }
 
+nsresult 
+nsPrintSettings::CloneObj(nsIPrintSettings **_retval)
+{
+  nsPrintSettings* printSettings = new nsPrintSettings(this);
+  return printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
+}
+
+/* nsIPrintSettings clone (); */
+NS_IMETHODIMP 
+nsPrintSettings::Clone(nsIPrintSettings **_retval)
+{
+  return CloneObj(_retval);
+}
