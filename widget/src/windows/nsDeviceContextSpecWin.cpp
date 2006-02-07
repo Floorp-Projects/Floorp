@@ -41,73 +41,39 @@
 #define WINVER 0x0500
 #endif
 
+//#include <unknwn.h>
+//#include <commdlg.h>
+#include <windows.h>
+
 #include "nsDeviceContextSpecWin.h"
 #include "prmem.h"
-#include "plstr.h"
+//#include "plstr.h"
 #include <windows.h>
+#include <winspool.h>
+//#include "prenv.h" /* for PR_GetEnv */
 #include <TCHAR.H>
 
-#include <unknwn.h>
-#include <commdlg.h>
-
-#include "nsIDOMWindow.h"
-#include "nsIServiceManager.h"
-#include "nsIDialogParamBlock.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIWindowWatcher.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsVoidArray.h"
-#include "nsSupportsArray.h"
+#include "nsIPrintSettingsWin.h"
 
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsGfxCIID.h"
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
-#include "nsIPromptService.h"
+
+// File Picker
+#include "nsILocalFile.h"
+#include "nsIFile.h"
+#include "nsIFilePicker.h"
+#include "nsIStringBundle.h"
+#define NS_ERROR_GFX_PRINTER_BUNDLE_URL "chrome://communicator/locale/printing.properties"
 
 #include "nsIPref.h"
-#include "prenv.h" /* for PR_GetEnv */
-
-#include <windows.h>
-#include <winspool.h> 
-
-// For Localization
-#include "nsIStringBundle.h"
-#include "nsDeviceContext.h"
-#include "nsDeviceContextWin.h"
-
-// This is for extending the dialog
-#include <dlgs.h>
-
-static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-
-// For PrintDlgEx
-// needed because there are unicode/ansi versions of this routine
-// and we need to make sure we get the correct one.
-#ifdef UNICODE
-#define GetPrintDlgExQuoted "PrintDlgExW"
-#else
-#define GetPrintDlgExQuoted "PrintDlgExA"
-#endif
-
-// Default labels for the radio buttons
-const char* kAsLaidOutOnScreenStr = "As &laid out on the screen";
-const char* kTheSelectedFrameStr  = "The selected &frame";
-const char* kEachFrameSeparately  = "&Each frame separately";
-
 
 //-----------------------------------------------
 // Global Data
 //-----------------------------------------------
-// Identifies which new radio btn was cliked on
-static UINT gFrameSelectedRadioBtn = 0;
-
-// Indicates whether the native print dialog was successfully extended
-static PRPackedBool gDialogWasExtended     = PR_FALSE;
-
-#define PRINTDLG_PROPERTIES "chrome://global/locale/printdialog.properties"
-
 static HWND gParentWnd = NULL;
 
 //----------------------------------------------------------------------------------
@@ -200,8 +166,7 @@ const NativePaperSizes kPaperSizes[] = {
 const PRInt32 kNumPaperSizes = 41;
 
 //----------------------------------------------------------------------------------
-nsDeviceContextSpecWin::nsDeviceContextSpecWin() :
-  mUseExtendedPrintDlg(NULL)
+nsDeviceContextSpecWin::nsDeviceContextSpecWin()
 {
   NS_INIT_REFCNT();
 
@@ -211,12 +176,6 @@ nsDeviceContextSpecWin::nsDeviceContextSpecWin() :
   mGlobalDevMode = NULL;
   mIsDEVMODEGlobalHandle = PR_FALSE;
 
-#ifdef MOZ_REQUIRE_CURRENT_SDK
-  HMODULE lib = GetModuleHandle("comdlg32.dll");
-  if ( lib ) {
-    mUseExtendedPrintDlg = GetProcAddress(lib, GetPrintDlgExQuoted);
-  }
-#endif
 }
 
 
@@ -234,6 +193,334 @@ nsDeviceContextSpecWin::~nsDeviceContextSpecWin()
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 }
 
+
+//------------------------------------------------------------------
+// helper
+static PRUnichar * GetDefaultPrinterNameFromGlobalPrinters()
+{
+  PRUnichar * printerName;
+  LPTSTR lpPrtName;
+  GlobalPrinters::GetInstance()->GetDefaultPrinterName(lpPrtName);
+  nsString str;
+#ifdef UNICODE
+  str.AppendWithConversion((PRUnichar *)lpPrtName);
+#else 
+  str.AssignWithConversion((char*)lpPrtName);
+#endif
+  printerName = ToNewUnicode(str);
+  free(lpPrtName);
+  return printerName;
+}
+
+//----------------------------------------------------------------
+static nsresult 
+EnumerateNativePrinters(DWORD aWhichPrinters, LPTSTR aPrinterName, PRBool& aIsFound, PRBool& aIsFile)
+{
+  DWORD             dwSizeNeeded;
+  DWORD             dwNumItems;
+  LPPRINTER_INFO_2 lpInfo = NULL;
+
+  // Get buffer size
+  ::EnumPrinters ( aWhichPrinters, NULL, 2, NULL, 0, &dwSizeNeeded, &dwNumItems );
+
+  // allocate memory
+  lpInfo = (LPPRINTER_INFO_2)HeapAlloc ( GetProcessHeap (), HEAP_ZERO_MEMORY, dwSizeNeeded );
+  if ( lpInfo == NULL ) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (::EnumPrinters ( PRINTER_ENUM_LOCAL, NULL, 2, (LPBYTE)lpInfo, dwSizeNeeded, &dwSizeNeeded, &dwNumItems) == 0 ) {
+    return NS_OK;
+  }
+
+
+  for (DWORD i = 0; i < dwNumItems; i++ ) {
+    if (_tcscmp(lpInfo[i].pPrinterName, aPrinterName)) {
+      aIsFound = PR_TRUE;
+      aIsFile  = _tcscmp(lpInfo[i].pPortName, _T("FILE:")) == 0;
+      break;
+    }
+  }
+
+  HeapFree(GetProcessHeap (), 0, lpInfo);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------
+static nsresult 
+CheckForPrintToFile(LPTSTR aPrinterName, PRBool& aIsFile)
+{
+  PRBool isFound = PR_FALSE;
+  aIsFile = PR_FALSE;
+  nsresult rv = EnumerateNativePrinters(PRINTER_ENUM_LOCAL, aPrinterName, isFound, aIsFile);
+  if (isFound || NS_FAILED(rv)) return rv;
+
+  rv = EnumerateNativePrinters(PRINTER_ENUM_NETWORK, aPrinterName, isFound, aIsFile);
+  if (isFound || NS_FAILED(rv)) return rv;
+
+  rv = EnumerateNativePrinters(PRINTER_ENUM_SHARED, aPrinterName, isFound, aIsFile);
+  if (isFound || NS_FAILED(rv)) return rv;
+
+  rv = EnumerateNativePrinters(PRINTER_ENUM_REMOTE, aPrinterName, isFound, aIsFile);
+  if (isFound || NS_FAILED(rv)) return rv;
+
+  return NS_OK;
+}
+
+static nsresult 
+GetFileNameForPrintSettings(nsIPrintSettings* aPS)
+{
+  // for testing
+#ifdef DEBUG_rods
+  return NS_OK;
+#endif
+
+  nsresult rv;
+
+  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle(NS_ERROR_GFX_PRINTER_BUNDLE_URL, getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLString title;
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("PrintToFile").get(), getter_Copies(title));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = filePicker->Init(nsnull, title.get(), nsIFilePicker::modeSave);
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  rv = filePicker->AppendFilters(nsIFilePicker::filterAll);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUnichar* fileName;
+  aPS->GetToFileName(&fileName);
+
+  if (fileName) {
+    if (*fileName) {
+      nsCAutoString leafName;
+      nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+      if (file) {
+        rv = file->InitWithPath(NS_ConvertUCS2toUTF8(fileName));
+        if (NS_SUCCEEDED(rv)) {
+          file->GetLeafName(leafName);
+          filePicker->SetDisplayDirectory(file);
+        }
+      }
+      if (!leafName.IsEmpty()) {
+        NS_ConvertUTF8toUCS2 unicodeFileName(leafName);
+        rv = filePicker->SetDefaultString(unicodeFileName.get());
+      }
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    nsMemory::Free(fileName);
+  }
+
+  PRInt16 dialogResult;
+  filePicker->Show(&dialogResult);
+
+  if (dialogResult == nsIFilePicker::returnCancel) {
+    return NS_ERROR_ABORT;
+  }
+
+  nsCOMPtr<nsILocalFile> localFile;
+  rv = filePicker->GetFile(getter_AddRefs(localFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (dialogResult == nsIFilePicker::returnReplace) {
+    // be extra safe and only delete when the file is really a file
+    PRBool isFile;
+    rv = localFile->IsFile(&isFile);
+    if (NS_SUCCEEDED(rv) && isFile) {
+      rv = localFile->Remove(PR_FALSE /* recursive delete */);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  nsCAutoString cPath;
+  rv = localFile->GetPath(cPath);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (cPath.IsEmpty()) {
+    rv = NS_ERROR_ABORT;
+  }
+
+  NS_ConvertUTF8toUCS2 unicodePath(cPath);
+  if (NS_SUCCEEDED(rv)) aPS->SetToFileName(unicodePath.get());
+
+  return rv;
+}
+
+//----------------------------------------------------------------------------------
+static nsresult
+CheckForPrintToFile(nsIPrintSettings* aPS, LPTSTR aPrinterName, PRUnichar* aUPrinterName)
+{
+  nsresult rv = NS_OK;
+
+  if (!aPrinterName && !aUPrinterName) return rv;
+
+  PRBool toFile;
+#ifdef UNICODE
+  CheckForPrintToFile(aPrinterName?aPrinterName:aUPrinterName, toFile);
+#else
+  if (aPrinterName) {
+    CheckForPrintToFile(aPrinterName, toFile);
+  } else {
+    CheckForPrintToFile((char*)NS_ConvertUCS2toUTF8(aUPrinterName).get(), toFile);
+  }
+#endif
+  aPS->SetPrintToFile(toFile);
+  if (toFile) {
+    rv = GetFileNameForPrintSettings(aPS);
+  }
+  return rv;
+}
+
+//----------------------------------------------------------------------------------
+NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget, 
+                                           nsIPrintSettings* aPrintSettings,
+                                           PRBool aIsPrintPreview)
+{
+  mPrintSettings = aPrintSettings;
+
+  gParentWnd = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
+
+  nsresult rv = NS_ERROR_FAILURE;
+  if (aPrintSettings) {
+    nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
+    if (psWin) {
+      char* deviceName;
+      char* driverName;
+      psWin->GetDeviceName(&deviceName); // creates new memory (makes a copy)
+      psWin->GetDriverName(&driverName); // creates new memory (makes a copy)
+
+      LPDEVMODE devMode;
+      psWin->GetDevMode(&devMode);       // creates new memory (makes a copy)
+
+      if (deviceName && driverName && devMode) {
+        // Scaling is special, it is one of the few
+        // devMode items that we control in layout
+        if (devMode->dmFields & DM_SCALE) {
+          double scale = double(devMode->dmScale) / 100.0f;
+          if (scale != 1.0) {
+            aPrintSettings->SetScaling(scale);
+            devMode->dmScale = 100;
+          }
+        }
+
+        SetDeviceName(deviceName);
+        SetDriverName(driverName);
+        SetDevMode(devMode);
+
+        if (!aIsPrintPreview) {
+          rv = CheckForPrintToFile(mPrintSettings, deviceName, nsnull);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        // clean up
+        nsCRT::free(deviceName);
+        nsCRT::free(driverName);
+
+        return NS_OK;
+      } else {
+        if (deviceName) nsCRT::free(deviceName);
+        if (driverName) nsCRT::free(driverName);
+        if (devMode) free(devMode);
+      }
+    }
+  } 
+
+  LPDEVMODE pDevMode  = NULL;
+  HGLOBAL   hDevNames = NULL;
+
+  // Get the Print Name to be used
+  PRUnichar * printerName;
+  mPrintSettings->GetPrinterName(&printerName);
+
+  // If there is no name then use the default printer
+  if (!printerName || (printerName && !*printerName)) {
+    printerName = GetDefaultPrinterNameFromGlobalPrinters();
+  }
+
+  NS_ASSERTION(printerName, "We have to have a printer name");
+  if (!printerName || !*printerName) return NS_ERROR_FAILURE;
+
+  if (!aIsPrintPreview) {
+    CheckForPrintToFile(mPrintSettings, nsnull, printerName);
+  }
+ 
+  return GetDataFromPrinter(printerName, mPrintSettings);
+}
+
+//----------------------------------------------------------
+// Helper Function - Free and reallocate the string
+static void CleanAndCopyString(char*& aStr, char* aNewStr)
+{
+  if (aStr != nsnull) {
+    if (aNewStr != nsnull && strlen(aStr) > strlen(aNewStr)) { // reuse it if we can
+      PL_strcpy(aStr, aNewStr);
+      return;
+    } else {
+      PR_Free(aStr);
+      aStr = nsnull;
+    }
+  }
+
+  if (nsnull != aNewStr) {
+    aStr = (char *)PR_Malloc(PL_strlen(aNewStr) + 1);
+    PL_strcpy(aStr, aNewStr);
+  }
+}
+
+//----------------------------------------------------------------------------------
+void nsDeviceContextSpecWin::SetDeviceName(char* aDeviceName)
+{
+  CleanAndCopyString(mDeviceName, aDeviceName);
+}
+
+//----------------------------------------------------------------------------------
+void nsDeviceContextSpecWin::SetDriverName(char* aDriverName)
+{
+  CleanAndCopyString(mDriverName, aDriverName);
+}
+
+//----------------------------------------------------------------------------------
+void nsDeviceContextSpecWin::SetGlobalDevMode(HGLOBAL aHGlobal)
+{
+  if (mGlobalDevMode) {
+    ::GlobalFree(mGlobalDevMode);
+    mGlobalDevMode = NULL;
+  }
+  mGlobalDevMode = aHGlobal;
+  mIsDEVMODEGlobalHandle = PR_TRUE;
+}
+
+//----------------------------------------------------------------------------------
+void nsDeviceContextSpecWin::SetDevMode(LPDEVMODE aDevMode)
+{
+  if (mDevMode) free(mDevMode);
+
+  mDevMode = aDevMode;
+  mIsDEVMODEGlobalHandle = PR_FALSE;
+}
+
+//------------------------------------------------------------------
+void 
+nsDeviceContextSpecWin::GetDevMode(LPDEVMODE &aDevMode)
+{
+  if (mIsDEVMODEGlobalHandle) {
+    if (mGlobalDevMode) {
+      aDevMode = (DEVMODE *)::GlobalLock(mGlobalDevMode);
+    } else {
+      aDevMode = NULL;
+    }
+  } else {
+    aDevMode = mDevMode;
+  }
+}
 
 //----------------------------------------------------------------------------------
 // Map an incoming size to a Windows Native enum in the DevMode
@@ -327,1216 +614,6 @@ SetupDevModeFromSettings(LPDEVMODE aDevMode, nsIPrintSettings* aPrintSettings)
 }
 
 //----------------------------------------------------------------------------------
-// Helper Function - Free and reallocate the string
-nsresult 
-nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, 
-                                                    LPDEVMODE         aDevMode)
-{
-  if (aPrintSettings == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-  BOOL doingNumCopies   = aDevMode->dmFields & DM_COPIES;
-  BOOL doingOrientation = aDevMode->dmFields & DM_ORIENTATION;
-  BOOL doingPaperSize   = aDevMode->dmFields & DM_PAPERSIZE;
-  BOOL doingPaperLength = aDevMode->dmFields & DM_PAPERLENGTH;
-  BOOL doingPaperWidth  = aDevMode->dmFields & DM_PAPERWIDTH;
-
-  if (doingOrientation) {
-    PRInt32 orientation  = aDevMode->dmOrientation == DMORIENT_PORTRAIT?
-      nsIPrintSettings::kPortraitOrientation:nsIPrintSettings::kLandscapeOrientation;
-    aPrintSettings->SetOrientation(orientation);
-  }
-
-  // Setup Number of Copies
-  if (doingNumCopies) {
-    aPrintSettings->SetNumCopies(PRInt32(aDevMode->dmCopies));
-  }
-
-  if (aDevMode->dmFields & DM_SCALE) {
-    double scale = double(aDevMode->dmScale) / 100.0f;
-    if (scale != 1.0) {
-      aPrintSettings->SetScaling(scale);
-      aDevMode->dmScale = 100;
-      // To turn this on you must change where the mPrt->mShrinkToFit is being set in the DocumentViewer
-      //aPrintSettings->SetShrinkToFit(PR_FALSE);
-    }
-  }
-
-  if (doingPaperSize) {
-    aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeNativeData);
-    aPrintSettings->SetPaperData(aDevMode->dmPaperSize);
-
-  } else if (doingPaperLength && doingPaperWidth) {
-    PRBool found = PR_FALSE;
-    for (PRInt32 i=0;i<kNumPaperSizes;i++) {
-      if (kPaperSizes[i].mPaperSize == aDevMode->dmPaperSize) {
-        aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
-        aPrintSettings->SetPaperWidth(kPaperSizes[i].mWidth);
-        aPrintSettings->SetPaperHeight(kPaperSizes[i].mHeight);
-        aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches?nsIPrintSettings::kPaperSizeInches:nsIPrintSettings::kPaperSizeInches);
-        found = PR_TRUE;
-        break;
-      }
-    }
-    if (!found) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------------------
-NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget, 
-                                           nsIPrintSettings* aPrintSettings,
-                                           PRBool aQuiet)
-{
-  mPrintSettings = aPrintSettings;
-
-  gParentWnd = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
-
-  PRBool doNativeDialog = PR_FALSE;
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    pPrefs->GetBoolPref("print.use_native_print_dialog", &doNativeDialog);
-  }
-
-  if (doNativeDialog || aQuiet) {
-#ifdef MOZ_REQUIRE_CURRENT_SDK
-    if (mUseExtendedPrintDlg) {
-      rv = ShowNativePrintDialogEx(aWidget, aQuiet);
-    } else {
-      rv = ShowNativePrintDialog(aWidget, aQuiet);
-    }
-#else
-      rv = ShowNativePrintDialog(aWidget, aQuiet);
-#endif
-  } else {
-    rv = ShowXPPrintDialog(aQuiet);
-  }
-
-  return rv;
-}
-
-//----------------------------------------------------------
-// Helper Function - Free and reallocate the string
-static void CleanAndCopyString(char*& aStr, char* aNewStr)
-{
-  if (aStr != nsnull) {
-    if (aNewStr != nsnull && strlen(aStr) > strlen(aNewStr)) { // reuse it if we can
-      PL_strcpy(aStr, aNewStr);
-      return;
-    } else {
-      PR_Free(aStr);
-      aStr = nsnull;
-    }
-  }
-
-  if (nsnull != aNewStr) {
-    aStr = (char *)PR_Malloc(PL_strlen(aNewStr) + 1);
-    PL_strcpy(aStr, aNewStr);
-  }
-}
-
-//----------------------------------------------------------------------------------
-void nsDeviceContextSpecWin::SetDeviceName(char* aDeviceName)
-{
-  CleanAndCopyString(mDeviceName, aDeviceName);
-}
-
-//----------------------------------------------------------------------------------
-void nsDeviceContextSpecWin::SetDriverName(char* aDriverName)
-{
-  CleanAndCopyString(mDriverName, aDriverName);
-}
-
-//----------------------------------------------------------------------------------
-void nsDeviceContextSpecWin::SetGlobalDevMode(HGLOBAL aHGlobal)
-{
-  if (mGlobalDevMode) {
-    ::GlobalFree(mGlobalDevMode);
-    mGlobalDevMode = NULL;
-  }
-  mGlobalDevMode = aHGlobal;
-  mIsDEVMODEGlobalHandle = PR_TRUE;
-}
-
-//----------------------------------------------------------------------------------
-void nsDeviceContextSpecWin::SetDevMode(LPDEVMODE aDevMode)
-{
-  if (mDevMode) free(mDevMode);
-
-  mDevMode = aDevMode;
-  mIsDEVMODEGlobalHandle = PR_FALSE;
-}
-
-//----------------------------------------------------------------------------------
-// Return localized bundle for resource strings
-static nsresult
-GetLocalizedBundle(const char * aPropFileName, nsIStringBundle** aStrBundle)
-{
-  NS_ENSURE_ARG_POINTER(aPropFileName);
-  NS_ENSURE_ARG_POINTER(aStrBundle);
-
-  nsresult rv;
-  nsCOMPtr<nsIStringBundle> bundle;
-  
-
-  // Create bundle
-  nsCOMPtr<nsIStringBundleService> stringService = 
-    do_GetService(kStringBundleServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && stringService) {
-    rv = stringService->CreateBundle(aPropFileName, aStrBundle);
-  }
-  
-  return rv;
-}
-
-//--------------------------------------------------------
-// Return localized string 
-static nsresult
-GetLocalizedString(nsIStringBundle* aStrBundle, const char* aKey, nsString& oVal)
-{
-  NS_ENSURE_ARG_POINTER(aStrBundle);
-  NS_ENSURE_ARG_POINTER(aKey);
-
-  // Determine default label from string bundle
-  nsXPIDLString valUni;
-  nsAutoString key; 
-  key.AssignWithConversion(aKey);
-  nsresult rv = aStrBundle->GetStringFromName(key.get(), getter_Copies(valUni));
-  if (NS_SUCCEEDED(rv) && valUni) {
-    oVal.Assign(valUni);
-  } else {
-    oVal.Truncate();
-  }
-  return rv;
-}
-
-//--------------------------------------------------------
-// Set a multi-byte string in the control
-static void SetTextOnWnd(HWND aControl, const nsString& aStr)
-{
-  char* pStr = nsDeviceContextWin::GetACPString(aStr);
-  if (pStr) {
-    ::SetWindowText(aControl, pStr);
-    delete [] pStr;
-  }
-}
-
-//--------------------------------------------------------
-// Will get the control and localized string by "key"
-static void SetText(HWND             aParent, 
-                    UINT             aId, 
-                    nsIStringBundle* aStrBundle,
-                    const char*      aKey) 
-{
-  HWND wnd = GetDlgItem (aParent, aId);
-  if (!wnd) {
-    return;
-  }
-  nsAutoString str;
-  nsresult rv = GetLocalizedString(aStrBundle, aKey, str);
-  if (NS_SUCCEEDED(rv)) {
-    SetTextOnWnd(wnd, str);
-  }
-}
-
-//--------------------------------------------------------
-static void SetRadio(HWND         aParent, 
-                     UINT         aId, 
-                     PRBool       aIsSet,
-                     PRBool       isEnabled = PR_TRUE) 
-{
-  HWND wnd = ::GetDlgItem (aParent, aId);
-  if (!wnd) {
-    return;
-  }
-  if (!isEnabled) {
-    ::EnableWindow(wnd, FALSE);
-    return;
-  }
-  ::EnableWindow(wnd, TRUE);
-  ::SendMessage(wnd, BM_SETCHECK, (WPARAM)aIsSet, (LPARAM)0);
-}
-
-//--------------------------------------------------------
-static void SetRadioOfGroup(HWND aDlg, int aRadId)
-{
-  int radioIds[] = {rad4, rad5, rad6};
-  int numRads = 3;
-
-  for (int i=0;i<numRads;i++) {
-    HWND radWnd = ::GetDlgItem(aDlg, radioIds[i]);
-    if (radWnd != NULL) {
-      ::SendMessage(radWnd, BM_SETCHECK, (WPARAM)(radioIds[i] == aRadId), (LPARAM)0);
-    }
-  }
-}
-
-//--------------------------------------------------------
-typedef struct {
-  char * mKeyStr;
-  long   mKeyId;
-} PropKeyInfo;
-
-// These are the control ids used in the dialog and 
-// defined by MS-Windows in commdlg.h
-static PropKeyInfo gAllPropKeys[] = {
-    {"PrintFrames", grp3},
-    {"Aslaid", rad4},
-    {"selectedframe", rad5},
-    {"Eachframe", rad6},
-    {NULL, NULL}};
-
-    // This is a list of other controls Ids in the native dialog
-    // I am leaving these here for documentation purposes
-    //
-    //{"Printer", grp4},
-    //{"Name", stc6},
-    //{"Properties", psh2},
-    //{"Status", stc8},
-    //{"Type", stc7},
-    //{"Where", stc10},
-    //{"Comment", stc9},
-    //{"Printtofile", chx1},
-    //{"Printrange", grp1},
-    //{"All", rad1},
-    //{"Pages", rad3},
-    //{"Selection", rad2},
-    //{"from", stc2},
-    //{"to", stc3},
-    //{"Copies", grp2},
-    //{"Numberofcopies", stc5},
-    //{"Collate", chx2},
-    //{"OK", IDOK},
-    //{"Cancel", IDCANCEL},
-    //{"stc11", stc11},
-    //{"stc12", stc12},
-    //{"stc14", stc14},
-    //{"stc13", stc13},
-
-//--------------------------------------------------------
-//--------------------------------------------------------
-//--------------------------------------------------------
-//--------------------------------------------------------
-// Get the absolute coords of the child windows relative
-// to its parent window
-static void GetLocalRect(HWND aWnd, RECT& aRect, HWND aParent)
-{
-  RECT wr;
-  ::GetWindowRect(aParent, &wr);
-
-  RECT cr;
-  ::GetClientRect(aParent, &cr);
-
-  ::GetWindowRect(aWnd, &aRect);
-
-  int borderH = (wr.bottom-wr.top+1) - (cr.bottom-cr.top+1);
-  int borderW = ((wr.right-wr.left+1) - (cr.right-cr.left+1))/2;
-  aRect.top    -= wr.top+borderH-borderW;
-  aRect.left   -= wr.left+borderW;
-  aRect.right  -= wr.left+borderW;
-  aRect.bottom -= wr.top+borderH-borderW;
-}
-
-//--------------------------------------------------------
-// Show or Hide the control
-void Show(HWND aWnd, PRBool bState)
-{
-  if (aWnd) {
-    ::ShowWindow(aWnd, bState?SW_SHOW:SW_HIDE);
-  }
-}
-
-//--------------------------------------------------------
-// Create a child window "control"
-static HWND CreateControl(LPCTSTR          aType,
-                          DWORD            aStyle,
-                          HINSTANCE        aHInst, 
-                          HWND             aHdlg, 
-                          int              aId, 
-                          const nsAString& aStr, 
-                          const nsRect&    aRect)
-{
-  char* pStr = nsDeviceContextWin::GetACPString(aStr);
-  if (pStr == NULL) return NULL;
-
-  HWND hWnd = ::CreateWindow (aType, pStr,
-                              WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | aStyle,
-                              aRect.x, aRect.y, aRect.width, aRect.height,
-                              (HWND)aHdlg, (HMENU)aId,
-                              aHInst, NULL);
-  if (hWnd == NULL) return NULL;
-
-  delete [] pStr;
-
-  // get the native font for the dialog and 
-  // set it into the new control
-  HFONT hFont = (HFONT)::SendMessage(aHdlg, WM_GETFONT, (WPARAM)0, (LPARAM)0);
-  if (hFont != NULL) {
-    ::SendMessage(hWnd, WM_SETFONT, (WPARAM) hFont, (LPARAM)0);
-  }
-  return hWnd;
-}
-
-//--------------------------------------------------------
-// Create a Radio Button
-static HWND CreateRadioBtn(HINSTANCE        aHInst, 
-                           HWND             aHdlg, 
-                           int              aId, 
-                           const char*      aStr, 
-                           const nsRect&    aRect)
-{
-  nsString cStr;
-  cStr.AssignWithConversion(aStr);
-  return CreateControl("BUTTON", BS_RADIOBUTTON, aHInst, aHdlg, aId, cStr, aRect);
-}
-
-//--------------------------------------------------------
-// Create a Group Box
-static HWND CreateGroupBox(HINSTANCE        aHInst, 
-                           HWND             aHdlg, 
-                           int              aId, 
-                           const nsAString& aStr, 
-                           const nsRect&    aRect)
-{
-  return CreateControl("BUTTON", BS_GROUPBOX, aHInst, aHdlg, aId, aStr, aRect);
-}
-
-//--------------------------------------------------------
-// Localizes and initializes the radio buttons and group
-void InitializeExtendedDialog(HWND hdlg, PRInt16 aHowToEnableFrameUI) 
-{
-  // Localize the new controls in the print dialog
-  nsCOMPtr<nsIStringBundle> strBundle;
-  if (NS_SUCCEEDED(GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle)))) {
-    PRInt32 i = 0;
-    while (gAllPropKeys[i].mKeyStr != NULL) {
-      SetText(hdlg, gAllPropKeys[i].mKeyId, strBundle, gAllPropKeys[i].mKeyStr);
-      i++;
-    }
-  }
-
-  // Set up radio buttons
-  if (aHowToEnableFrameUI == nsIPrintSettings::kFrameEnableAll) {
-    SetRadio(hdlg, rad4, PR_FALSE);  
-    SetRadio(hdlg, rad5, PR_TRUE); 
-    SetRadio(hdlg, rad6, PR_FALSE);
-    // set default so user doesn't have to actually press on it
-    gFrameSelectedRadioBtn = rad5;
-
-  } else if (aHowToEnableFrameUI == nsIPrintSettings::kFrameEnableAsIsAndEach) {
-    SetRadio(hdlg, rad4, PR_FALSE);  
-    SetRadio(hdlg, rad5, PR_FALSE, PR_FALSE); 
-    SetRadio(hdlg, rad6, PR_TRUE);
-    // set default so user doesn't have to actually press on it
-    gFrameSelectedRadioBtn = rad6;
-
-
-  } else {  // nsIPrintSettings::kFrameEnableNone
-    // we are using this function to disabe the group box
-    SetRadio(hdlg, grp3, PR_FALSE, PR_FALSE); 
-    // now disable radiobuttons
-    SetRadio(hdlg, rad4, PR_FALSE, PR_FALSE); 
-    SetRadio(hdlg, rad5, PR_FALSE, PR_FALSE); 
-    SetRadio(hdlg, rad6, PR_FALSE, PR_FALSE); 
-  }
-
-}
-
-
-//--------------------------------------------------------
-// Special Hook Procedure for handling the print dialog messages
-UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam) 
-{
-
-  if (uiMsg == WM_COMMAND) {
-    UINT id = LOWORD(wParam);
-    if (id == rad4 || id == rad5 || id == rad6) {
-      gFrameSelectedRadioBtn = id;
-      SetRadioOfGroup(hdlg, id);
-    }
-
-  } else if (uiMsg == WM_INITDIALOG) {
-    PRINTDLG * printDlg = (PRINTDLG *)lParam;
-    if (printDlg == NULL) return 0L;
-
-    PRInt16 howToEnableFrameUI = (PRInt16)printDlg->lCustData;
-
-    HINSTANCE hInst = (HINSTANCE)::GetWindowLong(hdlg, GWL_HINSTANCE);
-    if (hInst == NULL) return 0L;
-
-    // Start by getting the local rects of several of the controls
-    // so we can calculate where the new controls are
-    HWND wnd = ::GetDlgItem(hdlg, grp1);
-    if (wnd == NULL) return 0L;
-    RECT dlgRect;
-    GetLocalRect(wnd, dlgRect, hdlg);
-
-    wnd = ::GetDlgItem(hdlg, rad1); // this is the top control "All"
-    if (wnd == NULL) return 0L;
-    RECT rad1Rect;
-    GetLocalRect(wnd, rad1Rect, hdlg);
-
-    wnd = ::GetDlgItem(hdlg, rad2); // this is the bottom control "Selection"
-    if (wnd == NULL) return 0L;
-    RECT rad2Rect;
-    GetLocalRect(wnd, rad2Rect, hdlg);
-
-    wnd = ::GetDlgItem(hdlg, rad3); // this is the middle control "Pages"
-    if (wnd == NULL) return 0L;
-    RECT rad3Rect;
-    GetLocalRect(wnd, rad3Rect, hdlg);
-
-    HWND okWnd = ::GetDlgItem(hdlg, IDOK);
-    if (okWnd == NULL) return 0L;
-    RECT okRect;
-    GetLocalRect(okWnd, okRect, hdlg);
-
-    wnd = ::GetDlgItem(hdlg, grp4); // this is the "Print range" groupbox
-    if (wnd == NULL) return 0L;
-    RECT prtRect;
-    GetLocalRect(wnd, prtRect, hdlg);
-
-
-    // calculate various different "gaps" for layout purposes
-
-    int rbGap     = rad3Rect.top - rad1Rect.bottom;     // gap between radiobtns
-    int grpBotGap = dlgRect.bottom - rad2Rect.bottom;   // gap from bottom rb to bottom of grpbox
-    int grpGap    = dlgRect.top - prtRect.bottom ;      // gap between group boxes
-    int top       = dlgRect.bottom + grpGap;            
-    int radHgt    = rad1Rect.bottom - rad1Rect.top + 1; // top of new group box
-    int y         = top+(rad1Rect.top-dlgRect.top);     // starting pos of first radio
-    int rbWidth   = dlgRect.right - rad1Rect.left - 5;  // measure from rb left to the edge of the groupbox
-                                                        // (5 is arbitrary)
-    nsRect rect;
-
-    // Create and position the radio buttons
-    //
-    // If any one control cannot be created then 
-    // hide the others and bail out
-    //
-    rect.SetRect(rad1Rect.left, y, rbWidth,radHgt);
-    HWND rad4Wnd = CreateRadioBtn(hInst, hdlg, rad4, kAsLaidOutOnScreenStr, rect);
-    if (rad4Wnd == NULL) return 0L;
-    y += radHgt + rbGap;
-
-    rect.SetRect(rad1Rect.left, y, rbWidth, radHgt);
-    HWND rad5Wnd = CreateRadioBtn(hInst, hdlg, rad5, kTheSelectedFrameStr, rect);
-    if (rad5Wnd == NULL) {
-      Show(rad4Wnd, FALSE); // hide
-      return 0L;
-    }
-    y += radHgt + rbGap;
-
-    rect.SetRect(rad1Rect.left, y, rbWidth, radHgt);
-    HWND rad6Wnd = CreateRadioBtn(hInst, hdlg, rad6, kEachFrameSeparately, rect);
-    if (rad6Wnd == NULL) {
-      Show(rad4Wnd, FALSE); // hide
-      Show(rad5Wnd, FALSE); // hide
-      return 0L;
-    }
-    y += radHgt + grpBotGap;
-
-    // Create and position the group box
-    rect.SetRect (dlgRect.left, top, dlgRect.right-dlgRect.left+1, y-top+1);
-    HWND grpBoxWnd = CreateGroupBox(hInst, hdlg, grp3, NS_LITERAL_STRING("Print Frame"), rect);
-    if (grpBoxWnd == NULL) {
-      Show(rad4Wnd, FALSE); // hide
-      Show(rad5Wnd, FALSE); // hide
-      Show(rad6Wnd, FALSE); // hide
-      return 0L;
-    }
-
-    // Here we figure out the old height of the dlg
-    // then figure it's gap from the old grpbx to the bottom
-    // then size the dlg
-    RECT pr, cr; 
-    ::GetWindowRect(hdlg, &pr);
-    ::GetClientRect(hdlg, &cr);
-
-    int dlgHgt = (cr.bottom - cr.top) + 1;
-    int bottomGap = dlgHgt - okRect.bottom;
-    pr.bottom += (dlgRect.bottom-dlgRect.top) + grpGap + 1 - (dlgHgt-dlgRect.bottom) + bottomGap;
-
-    ::SetWindowPos(hdlg, NULL, pr.left, pr.top, pr.right-pr.left+1, pr.bottom-pr.top+1, 
-                   SWP_NOMOVE|SWP_NOREDRAW|SWP_NOZORDER);
-
-    // figure out the new height of the dialog
-    ::GetClientRect(hdlg, &cr);
-    dlgHgt = (cr.bottom - cr.top) + 1;
- 
-    // Reposition the OK and Cancel btns
-    int okHgt = okRect.bottom - okRect.top + 1;
-    ::SetWindowPos(okWnd, NULL, okRect.left, dlgHgt-bottomGap-okHgt, 0, 0, 
-                   SWP_NOSIZE|SWP_NOREDRAW|SWP_NOZORDER);
-
-    HWND cancelWnd = ::GetDlgItem(hdlg, IDCANCEL);
-    if (cancelWnd == NULL) return 0L;
-
-    RECT cancelRect;
-    GetLocalRect(cancelWnd, cancelRect, hdlg);
-    int cancelHgt = cancelRect.bottom - cancelRect.top + 1;
-    ::SetWindowPos(cancelWnd, NULL, cancelRect.left, dlgHgt-bottomGap-cancelHgt, 0, 0, 
-                   SWP_NOSIZE|SWP_NOREDRAW|SWP_NOZORDER);
-
-    // localize and initialize the groupbox and radiobuttons
-    InitializeExtendedDialog(hdlg, howToEnableFrameUI);
-
-    // Looks like we were able to extend the dialog
-    gDialogWasExtended = PR_TRUE;
-  }
-  return 0L;
-}
-
-//----------------------------------------------------------------------------------
-// Returns a Global Moveable Memory Handle to a DevMode
-// from the Printer byt the name of aPrintName
-static HGLOBAL CreateGlobalDevModeAndInit(LPTSTR aPrintName, nsIPrintSettings* aPS)
-{
-  HGLOBAL hGlobalDevMode = NULL;
-
-  nsresult rv = NS_ERROR_FAILURE;
-  HANDLE hPrinter = NULL;
-  BOOL status = ::OpenPrinter(aPrintName, &hPrinter, NULL);
-  if (status) {
-
-    LPDEVMODE   pNewDevMode;
-    DWORD       dwNeeded, dwRet;
-
-    // Allocate a buffer of the correct size.
-    dwNeeded = ::DocumentProperties(gParentWnd, hPrinter, aPrintName, NULL, NULL, 0);
-
-    pNewDevMode = (LPDEVMODE)malloc(dwNeeded);
-    if (!pNewDevMode) return NULL;
-
-    hGlobalDevMode = (HGLOBAL)::GlobalAlloc(GHND, dwNeeded);
-    if (!hGlobalDevMode) {
-      free(pNewDevMode);
-    }
-
-    dwRet = ::DocumentProperties(gParentWnd, hPrinter, aPrintName, pNewDevMode, NULL, DM_OUT_BUFFER);
-
-    if (dwRet != IDOK) {
-      free(pNewDevMode);
-      ::GlobalFree(hGlobalDevMode);
-      ::ClosePrinter(hPrinter);
-      return NULL;
-    }
-
-    // Lock memory and copy contents from DEVMODE (current printer)
-    // to Global Memory DEVMODE
-    LPDEVMODE devMode = (DEVMODE *)::GlobalLock(hGlobalDevMode);
-    if (devMode) {
-      memcpy(devMode, pNewDevMode, dwNeeded);
-      // Initialize values from the PrintSettings
-      SetupDevModeFromSettings(devMode, aPS);
-      ::GlobalUnlock(hGlobalDevMode);
-    } else {
-      ::GlobalFree(hGlobalDevMode);
-      hGlobalDevMode = NULL;
-    }
-
-    free(pNewDevMode);
-
-    ::ClosePrinter(hPrinter);
-
-  } else {
-    return NULL;
-  }
-
-  return hGlobalDevMode;
-}
-
-//------------------------------------------------------------------
-// helper
-static PRUnichar * GetDefaultPrinterNameFromGlobalPrinters()
-{
-  PRUnichar * printerName;
-  LPTSTR lpPrtName;
-  GlobalPrinters::GetInstance()->GetDefaultPrinterName(lpPrtName);
-  nsString str;
-#ifdef UNICODE
-  str.AppendWithConversion((PRUnichar *)lpPrtName);
-#else 
-  str.AssignWithConversion((char*)lpPrtName);
-#endif
-  printerName = ToNewUnicode(str);
-  free(lpPrtName);
-  return printerName;
-}
-
-
-//------------------------------------------------------------------
-void 
-nsDeviceContextSpecWin::GetDevMode(LPDEVMODE &aDevMode)
-{
-  if (mIsDEVMODEGlobalHandle) {
-    if (mGlobalDevMode) {
-      aDevMode = (DEVMODE *)::GlobalLock(mGlobalDevMode);
-    } else {
-      aDevMode = NULL;
-    }
-  } else {
-    aDevMode = mDevMode;
-  }
-}
-
-//------------------------------------------------------------------
-// Displays the native Print Dialog
-nsresult 
-nsDeviceContextSpecWin::ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuiet)
-{
-  NS_ENSURE_ARG_POINTER(aWidget);
-  nsresult  rv = NS_ERROR_FAILURE;
-  gDialogWasExtended  = PR_FALSE;
-
-  HGLOBAL hGlobalDevMode = NULL;
-  HGLOBAL hDevNames      = NULL;
-
-  // Get the Print Name to be used
-  PRUnichar * printerName;
-  mPrintSettings->GetPrinterName(&printerName);
-
-  // If there is no name then use the default printer
-  if (!printerName || (printerName && !*printerName)) {
-    printerName = GetDefaultPrinterNameFromGlobalPrinters();
-  }
-
-  NS_ASSERTION(printerName, "We have to have a printer name");
-  if (!printerName) return NS_ERROR_FAILURE;
-
-  if (!aQuiet) {
-    // Now create a DEVNAMES struct so the the dialog is initialized correctly.
-    PRUint32 len = nsCRT::strlen(printerName);
-    PRUint32 len2 = len+sizeof(DEVNAMES);
-    hDevNames = (HGLOBAL)::GlobalAlloc(GHND, len+sizeof(DEVNAMES)+1);
-    DEVNAMES* pDevNames = (DEVNAMES*)::GlobalLock(hDevNames);
-    pDevNames->wDriverOffset = sizeof(DEVNAMES);
-    pDevNames->wDeviceOffset = sizeof(DEVNAMES);
-    pDevNames->wOutputOffset = sizeof(DEVNAMES)+len+1;
-    pDevNames->wDefault      = 0;
-    char* device = &(((char*)pDevNames)[pDevNames->wDeviceOffset]);
-    strcpy(device, (char*)NS_ConvertUCS2toUTF8(printerName).get());
-    ::GlobalUnlock(hDevNames);
-
-    // Create a Moveable Memory Object that holds a new DevMode
-    // from the Printer Name
-    // The PRINTDLG.hDevMode requires that it be a moveable memory object
-    // NOTE: We only need to free hGlobalDevMode when the dialog is cancelled
-    // When the user prints, it comes back in the printdlg struct and 
-    // is used and cleaned up later
-#ifdef UNICODE
-    hGlobalDevMode = CreateGlobalDevModeAndInit(printerName, mPrintSettings);
-#else 
-    hGlobalDevMode = CreateGlobalDevModeAndInit((char*)NS_ConvertUCS2toUTF8(printerName).get(), mPrintSettings);
-#endif
-  } else {
-    // For aQuiet create a LPDEVMODE from the printer name
-    // set it into the mDeviceMode
-    // then transfer the appropriate PrintSettnigs to it.
-    return GetDataFromPrinter(printerName, mPrintSettings);
-  }
-
-  // Prepare to Display the Print Dialog
-  PRINTDLG  prntdlg;
-  memset(&prntdlg, 0, sizeof(PRINTDLG));
-
-  prntdlg.lStructSize = sizeof(prntdlg);
-  prntdlg.hwndOwner   = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
-  prntdlg.hDevMode    = hGlobalDevMode;
-  prntdlg.hDevNames   = hDevNames;
-  prntdlg.hDC         = NULL;
-  prntdlg.Flags       = PD_ALLPAGES | PD_RETURNIC | PD_HIDEPRINTTOFILE | PD_USEDEVMODECOPIESANDCOLLATE;
-
-  // if there is a current selection then enable the "Selection" radio button
-  PRInt16 howToEnableFrameUI = nsIPrintSettings::kFrameEnableNone;
-  if (mPrintSettings != nsnull) {
-    PRBool isOn;
-    mPrintSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &isOn);
-    if (!isOn) {
-      prntdlg.Flags |= PD_NOSELECTION;
-    }
-    mPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
-  }
-
-  // Determine whether we have a completely native dialog
-  // or whether we cshould extend it
-  // true  - do only the native
-  // false - extend the dialog
-  PRPackedBool doExtend = PR_FALSE;
-  nsCOMPtr<nsIStringBundle> strBundle;
-  if (NS_SUCCEEDED(GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle)))) {
-    nsAutoString doExtendStr;
-    if (NS_SUCCEEDED(GetLocalizedString(strBundle, "extend", doExtendStr))) {
-      doExtend = doExtendStr.Equals(NS_LITERAL_STRING("true"));
-    }
-  }
-
-  prntdlg.nFromPage           = 0xFFFF;
-  prntdlg.nToPage             = 0xFFFF;
-  prntdlg.nMinPage            = 1;
-  prntdlg.nMaxPage            = 0xFFFF;
-  prntdlg.nCopies             = 1;
-  prntdlg.lpfnSetupHook       = NULL;
-  prntdlg.lpSetupTemplateName = NULL;
-  prntdlg.hPrintTemplate      = NULL;
-  prntdlg.hSetupTemplate      = NULL;
-
-  prntdlg.hInstance           = NULL;
-  prntdlg.lpPrintTemplateName = NULL;
-
-  if (!doExtend) {
-    prntdlg.lCustData         = NULL;
-    prntdlg.lpfnPrintHook     = NULL;
-  } else {
-    // Set up print dialog "hook" procedure for extending the dialog
-    prntdlg.lCustData         = (DWORD)howToEnableFrameUI;
-    prntdlg.lpfnPrintHook     = (LPPRINTHOOKPROC)PrintHookProc;
-    prntdlg.Flags            |= PD_ENABLEPRINTHOOK;
-  }
-
-  BOOL result = ::PrintDlg(&prntdlg);
-
-  if (TRUE == result) {
-    if (mPrintSettings && prntdlg.hDevMode != NULL) {
-      // Transfer the settings from the native data to the PrintSettings
-      LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
-      SetPrintSettingsFromDevMode(mPrintSettings, devMode);
-      ::GlobalUnlock(prntdlg.hDevMode);
-    }
-    DEVNAMES *devnames = (DEVNAMES *)::GlobalLock(prntdlg.hDevNames);
-    if ( NULL != devnames ) {
-
-      char* device = &(((char *)devnames)[devnames->wDeviceOffset]);
-      char* driver = &(((char *)devnames)[devnames->wDriverOffset]);
-
-      // Setup local Data members
-      SetDeviceName(device);
-      SetDriverName(driver);
-
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-      printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
-#endif
-      // fill the print options with the info from the dialog
-      if (mPrintSettings != nsnull) {
-        nsString printerName;
-        printerName.AssignWithConversion(device);
-
-        mPrintSettings->SetPrinterName(printerName.get());
-
-        if (prntdlg.Flags & PD_SELECTION) {
-          mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSelection);
-
-        } else if (prntdlg.Flags & PD_PAGENUMS) {
-          mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
-          mPrintSettings->SetStartPageRange(prntdlg.nFromPage);
-          mPrintSettings->SetEndPageRange( prntdlg.nToPage);
-
-        } else { // (prntdlg.Flags & PD_ALLPAGES)
-          mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
-        }
-
-        if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
-          // make sure the dialog got extended
-          if (gDialogWasExtended) {
-            // check to see about the frame radio buttons
-            switch (gFrameSelectedRadioBtn) {
-              case rad4: 
-                mPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
-                break;
-              case rad5: 
-                mPrintSettings->SetPrintFrameType(nsIPrintSettings::kSelectedFrame);
-                break;
-              case rad6: 
-                mPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
-                break;
-            } // switch
-          } else {
-            // if it didn't get extended then have it default to printing
-            // each frame separately
-            mPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
-          }
-        } else {
-          mPrintSettings->SetPrintFrameType(nsIPrintSettings::kNoFrames);
-        }
-      }
-      ::GlobalUnlock(prntdlg.hDevNames);
-
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-    PRBool  printSelection = prntdlg.Flags & PD_SELECTION;
-    PRBool  printAllPages  = prntdlg.Flags & PD_ALLPAGES;
-    PRBool  printNumPages  = prntdlg.Flags & PD_PAGENUMS;
-    PRInt32 fromPageNum    = 0;
-    PRInt32 toPageNum      = 0;
-
-    if (printNumPages) {
-      fromPageNum = prntdlg.nFromPage;
-      toPageNum   = prntdlg.nToPage;
-    } 
-    if (printSelection) {
-      printf("Printing the selection\n");
-
-    } else if (printAllPages) {
-      printf("Printing all the pages\n");
-
-    } else {
-      printf("Printing from page no. %d to %d\n", fromPageNum, toPageNum);
-    }
-#endif
-    
-      SetGlobalDevMode(prntdlg.hDevMode);
-
-      // Set into DevMode Paper Size and Orientation here
-      // remove comment if you want to override the values from
-      // the native setup with those specified in the Page Setup
-      // mainly Paper Size, Orientation
-      if (aQuiet) {
-        SetupPaperInfoFromSettings();
-      }
-
-    }
-  } else {
-    ::GlobalFree(hGlobalDevMode);
-    return NS_ERROR_ABORT;
-  }
-
-  return NS_OK;
-}
-
-
-#ifdef MOZ_REQUIRE_CURRENT_SDK
-//------------------------------------------------------------------
-// Callback for Property Sheet
-BOOL APIENTRY PropSheetCallBack(HWND hdlg, UINT uiMsg, UINT wParam, LONG lParam)
-{
-  if (uiMsg == WM_COMMAND) {
-    UINT id = LOWORD(wParam);
-    if (id == rad4 || id == rad5 || id == rad6) {
-      gFrameSelectedRadioBtn = id;
-      SetRadioOfGroup(hdlg, id);
-    }
-
-  } else if (uiMsg == WM_INITDIALOG) {
-    // Create the groupbox and Radiobuttons on the "Options" Property Sheet
-
-    // We temporarily borrowed the global value for initialization
-    // now clear it before the dialog appears
-    PRInt16 howToEnableFrameUI = gFrameSelectedRadioBtn;
-    gFrameSelectedRadioBtn     = 0;
-
-    HINSTANCE hInst = (HINSTANCE)::GetWindowLong(hdlg, GWL_HINSTANCE);
-    if (hInst == NULL) return 0L;
-
-    // Get default font for the dialog & then its font metrics
-    // we need the text height to determine the height of the radio buttons
-    TEXTMETRIC metrics;
-    HFONT hFont = (HFONT)::SendMessage(hdlg, WM_GETFONT, (WPARAM)0, (LPARAM)0);
-    HDC localDC = ::GetDC(hdlg);
-    ::SelectObject(localDC, (HGDIOBJ)hFont);
-    ::GetTextMetrics(localDC, &metrics);
-    ::ReleaseDC(hdlg, localDC);
-
-    // calculate various different "gaps" for layout purposes
-     RECT dlgr; 
-    ::GetWindowRect(hdlg, &dlgr);
-
-    int horzGap    = 5;                                 // generic horz gap
-    int vertGap    = 5;                                 // generic vert gap
-    int rbGap      = metrics.tmHeight / 2;               // gap between radiobtns
-    int top        = vertGap*2;                            // start at the top
-    int radHgt     = metrics.tmHeight;                   // top of new group box
-    int y          = top;                                // starting pos of first radio
-    int x          = horzGap*2;
-    int rbWidth    = dlgr.right - dlgr.left - (5*horzGap);  
-    int grpWidth   = dlgr.right - dlgr.left - (2*horzGap);  
-
-    nsRect rect;
-
-    // Create and position the radio buttons
-    //
-    // If any one control cannot be created then 
-    // hide the others and bail out
-    //
-    x += horzGap*2;
-    y += vertGap + metrics.tmHeight;
-    rect.SetRect(x, y, rbWidth,radHgt);
-    HWND rad4Wnd = CreateRadioBtn(hInst, hdlg, rad4, kAsLaidOutOnScreenStr, rect);
-    if (rad4Wnd == NULL) return 0L;
-    y += radHgt + rbGap;
-
-    rect.SetRect(x, y, rbWidth, radHgt);
-    HWND rad5Wnd = CreateRadioBtn(hInst, hdlg, rad5, kTheSelectedFrameStr, rect);
-    if (rad5Wnd == NULL) {
-      Show(rad4Wnd, FALSE); // hide
-      return 0L;
-    }
-    y += radHgt + rbGap;
-
-    rect.SetRect(x, y, rbWidth, radHgt);
-    HWND rad6Wnd = CreateRadioBtn(hInst, hdlg, rad6, kEachFrameSeparately, rect);
-    if (rad6Wnd == NULL) {
-      Show(rad4Wnd, FALSE); // hide
-      Show(rad5Wnd, FALSE); // hide
-      return 0L;
-    }
-    y += radHgt + (vertGap*2);
-
-    x -= horzGap*2;
-    // Create and position the group box
-    rect.SetRect (x, top, grpWidth, y-top+1);
-    HWND grpBoxWnd = CreateGroupBox(hInst, hdlg, grp3, NS_LITERAL_STRING("Print Frame"), rect);
-    if (grpBoxWnd == NULL) {
-      Show(rad4Wnd, FALSE); // hide
-      Show(rad5Wnd, FALSE); // hide
-      Show(rad6Wnd, FALSE); // hide
-      return 0L;
-    }
-
-    // localize and initialize the groupbox and radiobuttons
-    InitializeExtendedDialog(hdlg, howToEnableFrameUI);
-
-    // Looks like we were able to extend the dialog
-    gDialogWasExtended = PR_TRUE;
-  }
-  return 0L;
-}
-
-//------------------------------------------------------------------
-// Creates the "Options" Property Sheet
-static HPROPSHEETPAGE ExtendPrintDialog(HWND aHWnd, char* aTitle)
-{
-  // The resource "OPTPROPSHEET" comes out of the widget/build/widget.rc file
-  HINSTANCE hInst = (HINSTANCE)::GetWindowLong(aHWnd, GWL_HINSTANCE);
-  PROPSHEETPAGE psp;
-  memset(&psp, 0, sizeof(PROPSHEETPAGE));
-  psp.dwSize      = sizeof(PROPSHEETPAGE);
-  psp.dwFlags     = PSP_USETITLE | PSP_PREMATURE;
-  psp.hInstance   = hInst;
-  psp.pszTemplate = "OPTPROPSHEET";
-  psp.pfnDlgProc  = PropSheetCallBack;
-  psp.pszTitle    = aTitle?aTitle:"Options";
-
-  HPROPSHEETPAGE newPropSheet = ::CreatePropertySheetPage(&psp);
-  return newPropSheet;
-
-}
-
-//------------------------------------------------------------------
-// Displays the native Print Dialog
-nsresult 
-nsDeviceContextSpecWin::ShowNativePrintDialogEx(nsIWidget *aWidget, PRBool aQuiet)
-{
-  NS_ENSURE_ARG_POINTER(aWidget);
-
-  nsresult  rv = NS_ERROR_FAILURE;
-  gDialogWasExtended  = PR_FALSE;
-
-  // Create a Moveable Memory Object that holds a new DevMode
-  // from the Printer Name
-  // The PRINTDLG.hDevMode requires that it be a moveable memory object
-  // NOTE: We only need to free hGlobalDevMode when the dialog is cancelled
-  // When the user prints, it comes back in the printdlg struct and 
-  // is used and cleaned up later
-  PRUnichar * printerName;
-  mPrintSettings->GetPrinterName(&printerName);
-  HGLOBAL hGlobalDevMode = NULL;
-  if (printerName) {
-#ifdef UNICODE
-    hGlobalDevMode = CreateGlobalDevModeAndInit(printerName, mPrintSettings);
-#else 
-    hGlobalDevMode = CreateGlobalDevModeAndInit((char*)NS_ConvertUCS2toUTF8(printerName).get(), mPrintSettings);
-#endif
-  }
-
-  // Prepare to Display the Print Dialog
-  PRINTDLGEX  prntdlg;
-  memset(&prntdlg, 0, sizeof(PRINTDLGEX));
-
-  prntdlg.lStructSize = sizeof(prntdlg);
-  prntdlg.hwndOwner   = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
-  prntdlg.hDevMode    = hGlobalDevMode;
-  prntdlg.Flags       = PD_ALLPAGES | PD_RETURNDC | PD_HIDEPRINTTOFILE | PD_USEDEVMODECOPIESANDCOLLATE |
-                        PD_NOCURRENTPAGE;
-  prntdlg.nStartPage  = START_PAGE_GENERAL;
-
-  // if there is a current selection then enable the "Selection" radio button
-  PRInt16 howToEnableFrameUI = nsIPrintSettings::kFrameEnableNone;
-  if (mPrintSettings != nsnull) {
-    PRBool isOn;
-    mPrintSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &isOn);
-    if (!isOn) {
-      prntdlg.Flags |= PD_NOSELECTION;
-    }
-    mPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
-  }
-
-  // Determine whether we have a completely native dialog
-  // or whether we cshould extend it
-  // true  - do only the native
-  // false - extend the dialog
-  PRPackedBool doExtend = PR_FALSE;
-  nsCOMPtr<nsIStringBundle> strBundle;
-  if (NS_SUCCEEDED(GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle)))) {
-    nsAutoString doExtendStr;
-    if (NS_SUCCEEDED(GetLocalizedString(strBundle, "extend", doExtendStr))) {
-      doExtend = doExtendStr.EqualsIgnoreCase("true");
-    }
-  }
-
-  // At the moment we can only support one page range
-  // from all the documentation I can find, it appears that this 
-  // will get cleanup automatically when the struct goes away
-  const int kNumPageRanges     = 1;
-  LPPRINTPAGERANGE pPageRanges = (LPPRINTPAGERANGE) GlobalAlloc(GPTR, kNumPageRanges * sizeof(PRINTPAGERANGE));
-  if (!pPageRanges)
-      return E_OUTOFMEMORY;
-
-  prntdlg.nPageRanges    = 0;
-  prntdlg.nMaxPageRanges = kNumPageRanges;
-  prntdlg.lpPageRanges   = pPageRanges;
-  prntdlg.nMinPage       = 1;
-  prntdlg.nMaxPage       = 0xFFFF;
-  prntdlg.nCopies        = 1;
-
-  if (doExtend && !aQuiet) {
-    // lLcalize the Property Sheet (Tab) title
-    char* pTitle = NULL;
-    nsString optionsStr;
-    if (NS_SUCCEEDED(GetLocalizedString(strBundle, "options", optionsStr))) {
-      pTitle = nsDeviceContextWin::GetACPString(optionsStr);
-    }
-
-    // Temporarily borrow this variable for setting up the radiobuttons
-    // if we don't use this, we will need to define a new global var
-    gFrameSelectedRadioBtn = howToEnableFrameUI;
-    HPROPSHEETPAGE psp[1];
-    psp[0] = ExtendPrintDialog((HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW), pTitle);
-    prntdlg.nPropertyPages      = 1;
-    prntdlg.lphPropertyPages    = psp;
-  }
-
-  if (PR_TRUE == aQuiet){
-    prntdlg.Flags = PD_ALLPAGES | PD_RETURNDEFAULT | PD_RETURNIC | PD_USEDEVMODECOPIESANDCOLLATE;
-  }
-
-  HRESULT result = ::PrintDlgEx(&prntdlg);
-
-  if (S_OK == result && 
-      (prntdlg.dwResultAction == PD_RESULT_PRINT || 
-       (prntdlg.dwResultAction == PD_RESULT_CANCEL && aQuiet))) {
-    if (mPrintSettings && prntdlg.hDevMode != NULL) {
-      // when it is quite use the printsettings passed 
-      if (!aQuiet) {
-        LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
-        SetPrintSettingsFromDevMode(mPrintSettings, devMode);
-        ::GlobalUnlock(prntdlg.hDevMode);
-      }
-    }
-    DEVNAMES *devnames = (DEVNAMES *)::GlobalLock(prntdlg.hDevNames);
-    if ( NULL != devnames ) {
-
-      char* device = &(((char *)devnames)[devnames->wDeviceOffset]);
-      char* driver = &(((char *)devnames)[devnames->wDriverOffset]);
-
-      // Setup local Data members
-      SetDeviceName(device);
-      SetDriverName(driver);
-
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-      printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
-#endif
-      ::GlobalUnlock(prntdlg.hDevNames);
-
-      // fill the print options with the info from the dialog
-      if (mPrintSettings != nsnull) {
-
-        if (prntdlg.Flags & PD_SELECTION) {
-          mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSelection);
-
-        } else if (prntdlg.Flags & PD_PAGENUMS) {
-          mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
-          mPrintSettings->SetStartPageRange(pPageRanges->nFromPage);
-          mPrintSettings->SetEndPageRange(pPageRanges->nToPage);
-
-        } else { // (prntdlg.Flags & PD_ALLPAGES)
-          mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
-        }
-
-        if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
-          // make sure the dialog got extended
-          if (gDialogWasExtended) {
-            // check to see about the frame radio buttons
-            switch (gFrameSelectedRadioBtn) {
-              case rad4: 
-                mPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
-                break;
-              case rad5: 
-                mPrintSettings->SetPrintFrameType(nsIPrintSettings::kSelectedFrame);
-                break;
-              case rad6: 
-                mPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
-                break;
-            } // switch
-          } else {
-            // if it didn't get extended then have it default to printing
-            // each frame separately
-            mPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
-          }
-        } else {
-          mPrintSettings->SetPrintFrameType(nsIPrintSettings::kNoFrames);
-        }
-      }
-
-
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-    PRBool  printSelection = prntdlg.Flags & PD_SELECTION;
-    PRBool  printAllPages  = prntdlg.Flags & PD_ALLPAGES;
-    PRBool  printNumPages  = prntdlg.Flags & PD_PAGENUMS;
-    PRInt32 fromPageNum    = 0;
-    PRInt32 toPageNum      = 0;
-
-    if (printNumPages) {
-      fromPageNum = pPageRanges->nFromPage;
-      toPageNum   = pPageRanges->nToPage;
-    } 
-    if (printSelection) {
-      printf("Printing the selection\n");
-
-    } else if (printAllPages) {
-      printf("Printing all the pages\n");
-
-    } else {
-      printf("Printing from page no. %d to %d\n", fromPageNum, toPageNum);
-    }
-#endif
-    
-      SetGlobalDevMode(prntdlg.hDevMode);
-
-      // Set into DevMode Paper Size and Orientation here
-      // remove comment if you want to override the values from
-      // the native setup with those specified in the Page Setup
-      // mainly Paper Size, Orientation
-      if (aQuiet) {
-       SetupPaperInfoFromSettings();
-      }
-
-    }
-  } else {
-    if (hGlobalDevMode) ::GlobalFree(hGlobalDevMode);
-    return NS_ERROR_ABORT;
-  }
-
-  ::GlobalFree(pPageRanges);
-
-  return NS_OK;
-}
-#endif // MOZ_REQUIRE_CURRENT_SDK
-
-//----------------------------------------------------------------------------------
 // Setup the object's data member with the selected printer's data
 nsresult
 nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSettings* aPS)
@@ -1616,92 +693,64 @@ nsDeviceContextSpecWin::SetupPaperInfoFromSettings()
 }
 
 //----------------------------------------------------------------------------------
+// Helper Function - Free and reallocate the string
 nsresult 
-nsDeviceContextSpecWin::ShowXPPrintDialog(PRBool aQuiet)
+nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, 
+                                                    LPDEVMODE         aDevMode)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  if (aPrintSettings == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+  BOOL doingNumCopies   = aDevMode->dmFields & DM_COPIES;
+  BOOL doingOrientation = aDevMode->dmFields & DM_ORIENTATION;
+  BOOL doingPaperSize   = aDevMode->dmFields & DM_PAPERSIZE;
+  BOOL doingPaperLength = aDevMode->dmFields & DM_PAPERLENGTH;
+  BOOL doingPaperWidth  = aDevMode->dmFields & DM_PAPERWIDTH;
 
-  NS_ASSERTION(mPrintSettings, "Can't have a null PrintSettings!");
-
-  // if there is a current selection then enable the "Selection" radio button
-  PRBool isOn;
-  mPrintSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &isOn);
-  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    (void) pPrefs->SetBoolPref("print.selection_radio_enabled", isOn);
+  if (doingOrientation) {
+    PRInt32 orientation  = aDevMode->dmOrientation == DMORIENT_PORTRAIT?
+      nsIPrintSettings::kPortraitOrientation:nsIPrintSettings::kLandscapeOrientation;
+    aPrintSettings->SetOrientation(orientation);
   }
 
-  PRBool canPrint = PR_FALSE;
-  if (!aQuiet ) {
-    rv = NS_ERROR_FAILURE;
+  // Setup Number of Copies
+  if (doingNumCopies) {
+    aPrintSettings->SetNumCopies(PRInt32(aDevMode->dmCopies));
+  }
 
-    // create a nsISupportsArray of the parameters 
-    // being passed to the window
-    nsCOMPtr<nsISupportsArray> array;
-    NS_NewISupportsArray(getter_AddRefs(array));
-    if (!array) return NS_ERROR_FAILURE;
+  if (aDevMode->dmFields & DM_SCALE) {
+    double scale = double(aDevMode->dmScale) / 100.0f;
+    if (scale != 1.0) {
+      aPrintSettings->SetScaling(scale);
+      aDevMode->dmScale = 100;
+      // To turn this on you must change where the mPrt->mShrinkToFit is being set in the DocumentViewer
+      //aPrintSettings->SetShrinkToFit(PR_FALSE);
+    }
+  }
 
-    nsCOMPtr<nsISupports> psSupports(do_QueryInterface(mPrintSettings));
-    NS_ASSERTION(psSupports, "PrintSettings must be a supports");
-    array->AppendElement(psSupports);
+  if (doingPaperSize) {
+    aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeNativeData);
+    aPrintSettings->SetPaperData(aDevMode->dmPaperSize);
 
-    nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
-    if (ioParamBlock) {
-      ioParamBlock->SetInt(0, 0);
-      nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(ioParamBlock));
-      NS_ASSERTION(blkSupps, "IOBlk must be a supports");
-
-      array->AppendElement(blkSupps);
-      nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
-      NS_ASSERTION(array, "array must be a supports");
-
-      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-      if (wwatch) {
-        nsCOMPtr<nsIDOMWindow> active;
-        wwatch->GetActiveWindow(getter_AddRefs(active));      
-        nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
-
-        nsCOMPtr<nsIDOMWindow> newWindow;
-        rv = wwatch->OpenWindow(parent, "chrome://global/content/printdialog.xul",
-                      "_blank", "chrome,modal,centerscreen", array,
-                      getter_AddRefs(newWindow));
+  } else if (doingPaperLength && doingPaperWidth) {
+    PRBool found = PR_FALSE;
+    for (PRInt32 i=0;i<kNumPaperSizes;i++) {
+      if (kPaperSizes[i].mPaperSize == aDevMode->dmPaperSize) {
+        aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
+        aPrintSettings->SetPaperWidth(kPaperSizes[i].mWidth);
+        aPrintSettings->SetPaperHeight(kPaperSizes[i].mHeight);
+        aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches?nsIPrintSettings::kPaperSizeInches:nsIPrintSettings::kPaperSizeInches);
+        found = PR_TRUE;
+        break;
       }
     }
-
-    if (NS_SUCCEEDED(rv)) {
-      PRInt32 buttonPressed = 0;
-      ioParamBlock->GetInt(0, &buttonPressed);
-      if (buttonPressed == 1) {
-        canPrint = PR_TRUE;
-      } else {
-        rv = NS_ERROR_ABORT;
-      }
+    if (!found) {
+      return NS_ERROR_FAILURE;
     }
   } else {
-    canPrint = PR_TRUE;
+    return NS_ERROR_FAILURE;
   }
-
-  if (canPrint) {
-    if (mPrintSettings != nsnull) {
-      PRUnichar *printerName = nsnull;
-      mPrintSettings->GetPrinterName(&printerName);
-
-      if (printerName != nsnull) {
-        // Gets DEVMODE, Device and Driver Names
-        rv = GetDataFromPrinter(printerName, mPrintSettings);
-
-        nsMemory::Free(printerName);
-      } else {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-    return NS_OK;
-  }
-
-  // Free them, we won't need them for a while
-  GlobalPrinters::GetInstance()->FreeGlobalPrinters();
-
-  return rv;
+  return NS_OK;
 }
 
 //***********************************************************
