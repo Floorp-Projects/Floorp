@@ -925,12 +925,11 @@ NS_IMETHODIMP nsPrintOptions::GetNativeData(PRInt16 aDataType, void * *_retval)
 nsresult nsPrintOptions::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
   nsresult rv = NS_OK;
-  nsPrintSettings* printSettings = new nsPrintSettings(); // does not initially ref count
-  NS_ASSERTION(printSettings, "Can't be NULL!");
 
-  rv = printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  nsPrintSettings * printSettings = new nsPrintSettings(); // does not initially ref count
+  NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
 
+  NS_ADDREF(*_retval = printSettings); // ref count
   InitPrintSettingsFromPrefs(*_retval, PR_FALSE, nsIPrintSettings::kInitSaveAll); // ignore return value
 
   return rv;
