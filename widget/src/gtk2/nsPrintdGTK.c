@@ -38,6 +38,7 @@
 
 /* Original Code: Syd Logan (syd@netscape.com) 3/12/99 */
 
+#include <string.h>
 #include <gtk/gtk.h>
 
 #include "nspr.h"
