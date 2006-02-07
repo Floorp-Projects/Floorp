@@ -326,16 +326,16 @@ const char* nsPrintOptions::GetPrefName(const char *    aPrefName,
     return aPrefName;
   }
 
-  nsCAutoString prefName;
+  mPrefName.AssignWithConversion(NS_LITERAL_STRING("print."));
 
   if (aPrinterName.Length()) {
-    prefName.AppendWithConversion(NS_LITERAL_STRING("printer_"));
-    prefName.AppendWithConversion(aPrinterName);
-    prefName.AppendWithConversion(NS_LITERAL_STRING("."));
+    mPrefName.AppendWithConversion(NS_LITERAL_STRING("printer_"));
+    mPrefName.AppendWithConversion(aPrinterName);
+    mPrefName.AppendWithConversion(NS_LITERAL_STRING("."));
   }
-  prefName += aPrefName;
+  mPrefName += aPrefName;
 
-  return prefName.get();
+  return mPrefName.get();
 }
 
 //----------------------------------------------------------------------
