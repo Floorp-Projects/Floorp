@@ -2205,7 +2205,7 @@ nsChildView::Idle()
     }
 
     if ([[currView superview] isMemberOfClass:[ChildView class]])
-        currView = [currView superview];
+        currView = (ChildView*)[currView superview];
     else
         currView = nil;
   }
@@ -2216,7 +2216,7 @@ nsChildView::Idle()
 // set the closed hand cursor and record the starting scroll positions
 - (void) startHandScroll:(NSEvent*)theEvent
 {
-  mHandScrollStartMouseLoc = [[self window] convertBaseToScreen: [theEvent locationInWindow]];
+  mHandScrollStartMouseLoc = [[self window] convertBaseToScreen:[theEvent locationInWindow]];
 
   nsIScrollableView* aScrollableView = [self getScrollableView]; 
 
@@ -2235,7 +2235,7 @@ nsChildView::Idle()
   if (!aScrollableView)
     return;
   
-  NSPoint newMouseLoc = [[self window] convertBaseToScreen: [theEvent locationInWindow]];
+  NSPoint newMouseLoc = [[self window] convertBaseToScreen:[theEvent locationInWindow]];
 
   PRInt32 deltaX = (PRInt32)(mHandScrollStartMouseLoc.x - newMouseLoc.x);
   PRInt32 deltaY = (PRInt32)(newMouseLoc.y - mHandScrollStartMouseLoc.y);
@@ -2265,7 +2265,7 @@ nsChildView::Idle()
   // The command and option key should be held down; ignore caps lock. We only
   // check the low word because Apple started using it in panther for other purposes
   // (no idea what).
-  modifiers |= NSAlphaShiftKeyMask;          // ignore capsLock by setting it explicitly to match
+  modifiers |= NSAlphaShiftKeyMask; // ignore capsLock by setting it explicitly to match
   return modifiers >> 16 == (NSAlphaShiftKeyMask | NSCommandKeyMask | NSAlternateKeyMask) >> 16;
 }
 
@@ -2282,9 +2282,10 @@ nsChildView::Idle()
     [self removeTrackingRect:mMouseEnterExitTag];
 
   if ([self window])
-    mMouseEnterExitTag = [self addTrackingRect:[self bounds] owner:self
-                                      userData:nil assumeInside: [[self window]
-                                      acceptsMouseMovedEvents]];
+    mMouseEnterExitTag = [self addTrackingRect:[self bounds]
+                                         owner:self
+                                      userData:nil
+                                  assumeInside:[[self window] acceptsMouseMovedEvents]];
 }
 
 
@@ -2327,11 +2328,10 @@ nsChildView::Idle()
 - (BOOL)childViewHasPlugin
 {
   NSArray* subviews = [self subviews];
-  for (unsigned int i = 0; i < [subviews count]; i ++)
-  {
+  for (unsigned int i = 0; i < [subviews count]; i ++) {
     id subview = [subviews objectAtIndex:i];
     if ([subview respondsToSelector:@selector(getIsPluginView)] && [subview getIsPluginView])
-        return YES;
+      return YES;
   }
   
   return NO;
@@ -2439,8 +2439,7 @@ nsChildView::Idle()
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect
 {
   unsigned int numSubviews = [[self subviews] count];
-  for (unsigned int i = 0; i < numSubviews; i++)
-  {
+  for (unsigned int i = 0; i < numSubviews; i++) {
     NSRect subviewFrame = [[[self subviews] objectAtIndex:i] frame];
     if (NSContainsRect(subviewFrame, inRect))
       return YES;
