@@ -18,13 +18,13 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
+ *   Jessica Blanco <jblanco@us.ibm.com>
  */
 
 #ifndef nsPrintOptionsImpl_h__
 #define nsPrintOptionsImpl_h__
 
 #include "nsIPrintOptions.h"  
-
 class nsIPref;
 class nsIPrintSettings;
 
@@ -85,6 +85,8 @@ protected:
   PRInt32       mPaperSize;    // see page size consts
   PRInt32       mOrientation;  // see orientation consts
   nsString      mPrintCommand;
+  PRInt32       mNumCopies;
+  nsString      mPrinter;
   PRBool        mPrintToFile;
   nsString      mToFileName;
 
