@@ -49,6 +49,8 @@
  * Native types
  */
   [ref] native nsNativeMarginRef(nsMargin);
+  
+interface nsIPrintSession;
 
 /**
  * Simplified graphics interface for JS rendering.
@@ -179,6 +181,8 @@ interface nsIPrintSettings : nsISupports
   /**
    * Data Members
    */
+  [noscript] attribute nsIPrintSession printSession; /* We hold a weak reference */
+
   attribute long    startPageRange;    
   attribute long    endPageRange;    
 
@@ -231,7 +235,7 @@ interface nsIPrintSettings : nsISupports
   attribute wstring toFileName;
 
   attribute long    printPageDelay; /* in milliseconds */
-
+  
   /* C++ Helper Functions */
   [noscript] void SetMarginInTwips(in nsNativeMarginRef aMargin);
   /* Purposely made this an "in" arg */
