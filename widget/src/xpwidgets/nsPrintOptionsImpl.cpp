@@ -1105,8 +1105,11 @@ nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
 
   // Get the Printer Name from the PrintSettings
   // to use as a prefix for Pref Names
-  GetAdjustedPrinterName(aPS, aUsePNP, prtName);
-  NS_ENSURE_FALSE(prtName.IsEmpty(), NS_OK);
+  rv = GetAdjustedPrinterName(aPS, aUsePNP, prtName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (prtName.IsEmpty())
+    return NS_OK;
 
   // Now read any printer specific prefs
   rv = ReadPrefs(aPS, prtName, aFlags);
@@ -1116,9 +1119,9 @@ nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  This will save into prefs most all the PrintSettings either generically (not
- *  specified printer) or to a specific printer.
+/**
+ *  Save all of the printer settings; if we can find a printer name, save
+ *  printer-specific preferences. Otherwise, save generic ones.
  */
 nsresult
 nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS,
@@ -1128,16 +1131,12 @@ nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS,
   NS_ENSURE_ARG_POINTER(aPS);
   nsAutoString prtName;
 
-  // Get the Printer Name from the PrinterSettings
-  // to use as a prefix for Pref Names
+  // Get the printer name from the PrinterSettings for an optional prefix.
   nsresult rv = GetAdjustedPrinterName(aPS, aUsePrinterNamePrefix, prtName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Now write any printer specific prefs
-  // XXX but when |prtName| is empty, how can we write printer specific prefs?
-  rv = WritePrefs(aPS, prtName, aFlags);
- 
-  return rv;
+  // Write the prefs, with or without a printer name prefix.
+  return WritePrefs(aPS, prtName, aFlags);
 }
 
 
