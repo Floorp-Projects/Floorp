@@ -103,7 +103,7 @@ nsPrintOptions::nsPrintOptions() :
   mPrintInColor(PR_TRUE),
   mPaperSize(kLetterPaperSize),
   mPrintToFile(PR_FALSE),
-  mPrintFrameType(kSelectedFrame),
+  mPrintFrameType(kFramesAsIs),
   mHowToEnableFrameUI(kFrameEnableNone),
   mPageNumJust(kJustLeft),
   mIsCancelled(PR_FALSE),
