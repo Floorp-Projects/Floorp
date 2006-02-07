@@ -108,7 +108,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 
   PRBool reversed = PR_FALSE, color = PR_FALSE, landscape = PR_FALSE;
   PRInt32 paper_size = NS_LETTER_SIZE;
-  float left, right, top, bottom; // XXX later
+  int ileft = 500, iright = 0, itop = 500, ibottom = 0; 
   char *command;
   nsresult rv;
 
@@ -120,6 +120,10 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
    	(void) pPrefs->GetBoolPref("print.print_landscape", &landscape);
    	(void) pPrefs->GetIntPref("print.print_paper_size", &paper_size);
    	(void) pPrefs->CopyCharPref("print.print_command", (char **) &command);
+   	(void) pPrefs->GetIntPref("print.print_margin_top", &itop);
+   	(void) pPrefs->GetIntPref("print.print_margin_left", &ileft);
+   	(void) pPrefs->GetIntPref("print.print_margin_bottom", &ibottom);
+   	(void) pPrefs->GetIntPref("print.print_margin_right", &iright);
   	sprintf( mPrData.command, command );
   } else {
 #ifndef VMS
@@ -131,6 +135,10 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 #endif
   }
 
+  mPrData.top = itop / 1000.0; 
+  mPrData.bottom = ibottom / 1000.0;
+  mPrData.left = ileft / 1000.0;
+  mPrData.right = iright / 1000.0;
   mPrData.toPrinter = PR_TRUE;
   mPrData.fpf = !reversed;
   mPrData.grayscale = !color;
@@ -155,6 +163,10 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 		pPrefs->SetBoolPref("print.print_color", !mPrData.grayscale);
 		pPrefs->SetBoolPref("print.print_landscape", landscape);
 		pPrefs->SetIntPref("print.print_paper_size", mPrData.size);
+   		pPrefs->SetIntPref("print.print_margin_top", (int)(mPrData.top * 1000));
+   		pPrefs->SetIntPref("print.print_margin_left", (int)(mPrData.left * 1000));
+   		pPrefs->SetIntPref("print.print_margin_bottom", (int)(mPrData.bottom * 1000));
+   		pPrefs->SetIntPref("print.print_margin_right", (int)(mPrData.right * 1000));
   		if ( mPrData.toPrinter == PR_FALSE )
 			pPrefs->SetCharPref("print.print_command", mPrData.command);
 	}
