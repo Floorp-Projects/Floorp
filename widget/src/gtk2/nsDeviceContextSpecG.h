@@ -27,10 +27,16 @@
 #include "nsDeviceContextSpecG.h"
 #include "nsIDeviceContextSpecPS.h"
 
+#ifdef USE_XPRINT
+#include "nsIDeviceContextSpecXPrint.h"
+#endif
 #include "nsPrintdGTK.h"
 
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec ,
                                       public nsIDeviceContextSpecPS
+#ifdef USE_XPRINT
+																		, public nsIDeviceContextSpecXP
+#endif
 {
 public:
 /**
@@ -87,6 +93,9 @@ public:
 
   NS_IMETHOD GetUserCancelled( PRBool &aCancel );      
 
+#ifdef USE_XPRINT
+  NS_IMETHOD GetPrintMethod(int &aMethod ); 
+#endif
 protected:
 /**
  * Destuct a nsDeviceContextSpecMac, this will release the printrecord
