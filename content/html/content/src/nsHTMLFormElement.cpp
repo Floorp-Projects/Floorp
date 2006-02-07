@@ -58,6 +58,7 @@
 #include "nsContentList.h"
 #include "nsGUIEvent.h"
 #include "nsCOMArray.h"
+#include "nsAutoPtr.h"
 
 // form submission
 #include "nsIFormSubmitObserver.h"
@@ -295,7 +296,7 @@ protected:
   // Data members
   //
   /** The list of controls (form.elements as well as stuff not in elements) */
-  nsFormControlList *mControls;
+  nsRefPtr<nsFormControlList> mControls;
   /** The currently selected radio button of each group */
   nsInterfaceHashtable<nsStringCaseInsensitiveHashKey,nsIDOMHTMLInputElement> mSelectedRadioButtons;
   /** Whether we are currently processing a submit event or not */
@@ -336,13 +337,12 @@ class nsFormControlList : public nsIDOMNSHTMLFormControlList,
                           public nsIDOMHTMLCollection
 {
 public:
-  nsFormControlList(nsIDOMHTMLFormElement* aForm);
+  nsFormControlList(nsHTMLFormElement* aForm);
   virtual ~nsFormControlList();
 
   nsresult Init();
 
-  void Clear();
-  void SetForm(nsIDOMHTMLFormElement* aForm);
+  void DropFormReference();
 
   NS_DECL_ISUPPORTS
 
@@ -352,9 +352,6 @@ public:
   // nsIDOMNSHTMLFormControlList interface
   NS_DECL_NSIDOMNSHTMLFORMCONTROLLIST
 
-  nsresult GetNamedObject(const nsAString& aName,
-                          nsISupports **aResult);
-
   nsresult AddElementToTable(nsIFormControl* aChild,
                              const nsAString& aName);
   nsresult RemoveElementFromTable(nsIFormControl* aChild,
@@ -362,7 +359,7 @@ public:
   nsresult IndexOfControl(nsIFormControl* aControl,
                           PRInt32* aIndex);
 
-  nsIDOMHTMLFormElement* mForm;  // WEAK - the form owns me
+  nsHTMLFormElement* mForm;  // WEAK - the form owns me
 
   nsAutoVoidArray mElements;  // Holds WEAK references - bug 36639
 
@@ -374,6 +371,12 @@ public:
   nsSmallVoidArray mNotInElements; // Holds WEAK references
 
 protected:
+  // Drop all our references to the form elements
+  void Clear();
+
+  // Flush out the content model so it's up to date.
+  void FlushPendingNotifications();
+  
   // A map from an ID or NAME attribute to the form control(s), this
   // hash holds strong references either to the named form control, or
   // to a list of named form controls, in the case where this hash
@@ -476,10 +479,7 @@ nsHTMLFormElement::nsHTMLFormElement(nsINodeInfo *aNodeInfo)
 nsHTMLFormElement::~nsHTMLFormElement()
 {
   if (mControls) {
-    mControls->Clear();
-    mControls->SetForm(nsnull);
-
-    NS_RELEASE(mControls);
+    mControls->DropFormReference();
   }
 }
 
@@ -495,13 +495,10 @@ nsHTMLFormElement::Init()
   
   if (NS_FAILED(rv))
   {
-    delete mControls;
     mControls = nsnull;
     return rv;
   }
   
-  NS_ADDREF(mControls);
-
   NS_ENSURE_TRUE(mSelectedRadioButtons.Init(4),
                  NS_ERROR_OUT_OF_MEMORY);
 
@@ -535,7 +532,7 @@ NS_IMETHODIMP
 nsHTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
 {
   *aElements = mControls;
-  NS_ADDREF(mControls);
+  NS_ADDREF(*aElements);
   return NS_OK;
 }
 
@@ -1185,8 +1182,6 @@ static PRInt32 CompareFormControlPosition(nsIFormControl *control1, nsIFormContr
 NS_IMETHODIMP
 nsHTMLFormElement::AddElement(nsIFormControl* aChild)
 {
-  NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
-
   if (ShouldBeInElements(aChild)) {
     PRUint32 count;
     GetElementCount(&count);
@@ -1259,8 +1254,6 @@ NS_IMETHODIMP
 nsHTMLFormElement::AddElementToTable(nsIFormControl* aChild,
                                      const nsAString& aName)
 {
-  NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
-
   return mControls->AddElementToTable(aChild, aName);  
 }
 
@@ -1268,8 +1261,6 @@ nsHTMLFormElement::AddElementToTable(nsIFormControl* aChild,
 NS_IMETHODIMP 
 nsHTMLFormElement::RemoveElement(nsIFormControl* aChild) 
 {
-  NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
-
   //
   // Remove it from the radio group if it's a radio button
   //
@@ -1292,8 +1283,6 @@ NS_IMETHODIMP
 nsHTMLFormElement::RemoveElementFromTable(nsIFormControl* aElement,
                                           const nsAString& aName)
 {
-  NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
-
   return mControls->RemoveElementFromTable(aElement, aName);
 }
 
@@ -1301,7 +1290,7 @@ NS_IMETHODIMP
 nsHTMLFormElement::ResolveName(const nsAString& aName,
                                nsISupports **aResult)
 {
-  return mControls->GetNamedObject(aName, aResult);
+  return mControls->NamedItem(aName, aResult);
 }
 
 NS_IMETHODIMP
@@ -1525,8 +1514,6 @@ nsHTMLFormElement::GetControlEnumerator(nsISimpleEnumerator** aEnum)
 NS_IMETHODIMP
 nsHTMLFormElement::IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex)
 {
-  NS_ENSURE_TRUE(mControls, NS_ERROR_FAILURE);
-
   return mControls->IndexOfControl(aControl, aIndex);
 }
 
@@ -1744,7 +1731,7 @@ nsHTMLFormElement::RemoveFromRadioGroup(const nsAString& aName,
 // nsFormControlList implementation, this could go away if there were
 // a lightweight collection implementation somewhere
 
-nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm) :
+nsFormControlList::nsFormControlList(nsHTMLFormElement* aForm) :
   mForm(aForm)
 {
 }
@@ -1765,9 +1752,10 @@ nsresult nsFormControlList::Init()
 }
 
 void
-nsFormControlList::SetForm(nsIDOMHTMLFormElement* aForm)
+nsFormControlList::DropFormReference()
 {
-  mForm = aForm; // WEAK - the form owns me
+  mForm = nsnull;
+  Clear();
 }
 
 void
@@ -1796,6 +1784,16 @@ nsFormControlList::Clear()
   mNameLookupTable.Clear();
 }
 
+void
+nsFormControlList::FlushPendingNotifications()
+{
+  if (mForm) {
+    nsIDocument* doc = mForm->GetCurrentDoc();
+    if (doc) {
+      doc->FlushPendingNotifications(Flush_ContentAndNotify);
+    }
+  }
+}
 
 // XPConnect interface list for nsFormControlList
 NS_INTERFACE_MAP_BEGIN(nsFormControlList)
@@ -1815,6 +1813,7 @@ NS_IMPL_RELEASE(nsFormControlList)
 NS_IMETHODIMP    
 nsFormControlList::GetLength(PRUint32* aLength)
 {
+  FlushPendingNotifications();
   *aLength = mElements.Count();
   return NS_OK;
 }
@@ -1822,6 +1821,7 @@ nsFormControlList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
+  FlushPendingNotifications();
   nsIFormControl *control = NS_STATIC_CAST(nsIFormControl *,
                                            mElements.SafeElementAt(aIndex));
   if (control) {
@@ -1833,27 +1833,12 @@ nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-nsresult
-nsFormControlList::GetNamedObject(const nsAString& aName,
-                                  nsISupports** aResult)
-{
-  *aResult = nsnull;
-
-  if (!mForm) {
-    // No form, no named objects
-    return NS_OK;
-  }
-  
-  // Get the hash entry
-  mNameLookupTable.Get(aName, aResult);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsFormControlList::NamedItem(const nsAString& aName,
                              nsIDOMNode** aReturn)
 {
+  FlushPendingNotifications();
+
   *aReturn = nsnull;
 
   nsresult rv = NS_OK;
@@ -1887,6 +1872,8 @@ NS_IMETHODIMP
 nsFormControlList::NamedItem(const nsAString& aName,
                              nsISupports** aReturn)
 {
+  FlushPendingNotifications();
+
   mNameLookupTable.Get(aName, aReturn);
 
   return NS_OK;
@@ -1962,6 +1949,8 @@ nsresult
 nsFormControlList::IndexOfControl(nsIFormControl* aControl,
                                   PRInt32* aIndex)
 {
+  // Note -- not a DOM method; callers should handle flushing themselves
+  
   NS_ENSURE_ARG_POINTER(aIndex);
 
   *aIndex = mElements.IndexOf(aControl);
