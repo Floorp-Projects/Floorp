@@ -365,7 +365,7 @@ CheckForPrintToFile(nsIPrintSettings* aPS, LPTSTR aPrinterName, PRUnichar* aUPri
   if (aPrinterName) {
     CheckForPrintToFileWithName(aPrinterName, toFile);
   } else {
-    CheckForPrintToFileWithName((char*)NS_ConvertUCS2toUTF8(aUPrinterName).get(), toFile);
+    CheckForPrintToFileWithName(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aUPrinterName).get()), toFile);
   }
 #endif
   // Since the driver wasn't a "Print To File" Driver, check to see
@@ -654,27 +654,27 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
   }
 
   HANDLE hPrinter = NULL;
-  BOOL status = ::OpenPrinter((char*)NS_ConvertUCS2toUTF8(aName).get(), &hPrinter, NULL);
+  BOOL status = ::OpenPrinter(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aName).get()), &hPrinter, NULL);
   if (status) {
 
     LPDEVMODE   pDevMode;
     DWORD       dwNeeded, dwRet;
 
     // Allocate a buffer of the correct size.
-    dwNeeded = DocumentProperties(gParentWnd, hPrinter, (char*)NS_ConvertUCS2toUTF8(aName).get(), 
+    dwNeeded = DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aName).get()), 
                                   NULL, NULL, 0);
 
     pDevMode = (LPDEVMODE)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeeded);
     if (!pDevMode) return NS_ERROR_FAILURE;
 
     // Get the default DevMode for the printer and modify it for our needs.
-    dwRet = DocumentProperties(gParentWnd, hPrinter, (char*)NS_ConvertUCS2toUTF8(aName).get(),
+    dwRet = DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aName).get()),
                                pDevMode, NULL, DM_OUT_BUFFER);
 
     if (dwRet == IDOK && aPS) {
       SetupDevModeFromSettings(pDevMode, aPS);
       // Sets back the changes we made to the DevMode into the Printer Driver
-      dwRet = ::DocumentProperties(gParentWnd, hPrinter, (char*)NS_ConvertUCS2toUTF8(aName).get(), pDevMode, pDevMode, DM_IN_BUFFER | DM_OUT_BUFFER);
+      dwRet = ::DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aName).get()), pDevMode, pDevMode, DM_IN_BUFFER | DM_OUT_BUFFER);
     }
 
     if (dwRet != IDOK) {
@@ -687,7 +687,7 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
 
     SetDevMode(pDevMode); // cache the pointer and takes responsibility for the memory
 
-    SetDeviceName((char*)NS_ConvertUCS2toUTF8(aName).get());
+    SetDeviceName(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aName).get()));
   
     // The driver should be NULL for Win95/Win98
     OSVERSIONINFO os;
@@ -925,7 +925,7 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
 {
   nsresult rv = NS_ERROR_FAILURE;
   HANDLE hPrinter = NULL;
-  BOOL status = ::OpenPrinter((char*)NS_ConvertUCS2toUTF8(aPrinterName).get(), &hPrinter, NULL);
+  BOOL status = ::OpenPrinter(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), &hPrinter, NULL);
   if (status) {
 
     LPDEVMODE   pDevMode;
@@ -934,13 +934,13 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
 
     // Get the buffer correct buffer size
     dwNeeded = ::DocumentProperties(gParentWnd, hPrinter,
-                                   (char*)NS_ConvertUCS2toUTF8(aPrinterName).get(), NULL, NULL, 0);
+                                   NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), NULL, NULL, 0);
 
     // Allocate a buffer of the correct size.
     pNewDevMode = (LPDEVMODE)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeeded);
     if (!pNewDevMode) return NS_ERROR_FAILURE;
 
-    dwRet = ::DocumentProperties(gParentWnd, hPrinter, (char*)NS_ConvertUCS2toUTF8(aPrinterName).get(), 
+    dwRet = ::DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), 
                                pNewDevMode, NULL, DM_OUT_BUFFER);
 
     if (dwRet != IDOK) {
@@ -953,7 +953,7 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
     pDevMode = (LPDEVMODE)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeeded);
     if (!pDevMode) return NS_ERROR_FAILURE;
 
-    dwRet = ::DocumentProperties(gParentWnd, hPrinter, (char*)NS_ConvertUCS2toUTF8(aPrinterName).get(), 
+    dwRet = ::DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), 
                                pDevMode, NULL, DM_OUT_BUFFER);
 
     if (dwRet != IDOK) {
@@ -971,9 +971,9 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
       // Display the Dialog and get the new DevMode
 #if 0 // need more to do more work to see why AdvancedDocumentProperties fails 
       // when cancel is pressed
-      LONG stat = ::AdvancedDocumentProperties(gParentWnd, hPrinter, (char*)NS_ConvertUCS2toUTF8(aPrinterName).get(), pNewDevMode, pDevMode);
+      LONG stat = ::AdvancedDocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), pNewDevMode, pDevMode);
 #else
-      LONG stat = ::DocumentProperties(gParentWnd, hPrinter, (char*)NS_ConvertUCS2toUTF8(aPrinterName).get(), pDevMode, NULL, DM_IN_PROMPT|DM_OUT_BUFFER);
+      LONG stat = ::DocumentProperties(gParentWnd, hPrinter, NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aPrinterName).get()), pDevMode, NULL, DM_IN_PROMPT|DM_OUT_BUFFER);
 #endif
       if (stat == IDOK) {
         // Now set the print options from the native Page Setup
