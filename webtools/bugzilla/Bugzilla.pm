@@ -94,8 +94,8 @@ if (!$^C
     # Generate and return a message about the downtime, appropriately
     # for if we're a command-line script or a CGI sript.
     my $extension;
-    if (i_am_cgi() && (!Bugzilla->cgi->param('format') 
-                       || Bugzilla->cgi->param('format') eq 'html')) {
+    if (i_am_cgi() && (!Bugzilla->cgi->param('ctype')
+                       || Bugzilla->cgi->param('ctype') eq 'html')) {
         $extension = 'html';
     }
     else {
