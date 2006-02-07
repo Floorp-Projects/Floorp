@@ -59,26 +59,6 @@ nsPrintSettingsWin::nsPrintSettingsWin() :
  *  See documentation in nsPrintSettingsWin.h
  *	@update 
  */
-nsPrintSettingsWin::nsPrintSettingsWin(const nsPrintSettingsWin* aPS) :
-  nsPrintSettings(aPS),
-  mDeviceName(nsnull),
-  mDriverName(nsnull),
-  mDevMode(nsnull)
-{
-  if (aPS->mDeviceName) mDeviceName = nsCRT::strdup(aPS->mDeviceName);
-  if (aPS->mDriverName) mDriverName = nsCRT::strdup(aPS->mDriverName);
-
-  if (aPS->mDevMode) {
-    size_t size = sizeof(*aPS->mDevMode);
-    mDevMode = (LPDEVMODE)malloc(size);
-    memcpy(mDevMode, aPS->mDevMode, size);
-  }
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintSettingsWin.h
- *	@update 
- */
 nsPrintSettingsWin::~nsPrintSettingsWin()
 {
   if (mDeviceName) nsCRT::free(mDeviceName);
@@ -145,12 +125,4 @@ NS_IMETHODIMP nsPrintSettingsWin::SetDevMode(DEVMODE * aDevMode)
     memcpy(mDevMode, aDevMode, size);
   }
   return NS_OK;
-}
-
-/* nsIPrintSettings clone (); */
-nsresult 
-nsPrintSettingsWin::CloneObj(nsIPrintSettings **_retval)
-{
-  nsPrintSettingsWin* printSettings = new nsPrintSettingsWin(this);
-  return printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
 }
