@@ -48,6 +48,7 @@ static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryWin, nsIDeviceContextSpecFactory)
 
+
 NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: Init(void)
 {
   return NS_OK;
@@ -93,18 +94,18 @@ UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
     }
 
     if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAll) {
-      SetRadio(hdlg, rad4, PR_FALSE, PR_FALSE);  // XXX this is just temporary (should be enabled)
-      SetRadio(hdlg, rad5, PR_TRUE); 
+      SetRadio(hdlg, rad4, PR_TRUE);  
+      SetRadio(hdlg, rad5, PR_FALSE); 
       SetRadio(hdlg, rad6, PR_FALSE);
       // set default so user doesn't have to actually press on it
-      gFrameSelectedRadioBtn = rad5;
+      gFrameSelectedRadioBtn = rad4;
 
     } else if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAsIsAndEach) {
-      SetRadio(hdlg, rad4, PR_FALSE, PR_FALSE);  // XXX this is just temporary (should be enabled)
+      SetRadio(hdlg, rad4, PR_TRUE);  
       SetRadio(hdlg, rad5, PR_FALSE, PR_FALSE); 
-      SetRadio(hdlg, rad6, PR_TRUE);
+      SetRadio(hdlg, rad6, PR_FALSE);
       // set default so user doesn't have to actually press on it
-      gFrameSelectedRadioBtn = rad6;
+      gFrameSelectedRadioBtn = rad4;
 
 
     } else {  // nsIPrintOptions::kFrameEnableNone
@@ -171,7 +172,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
 
 
   if(PR_TRUE == aQuiet){
-    prntdlg.Flags = PD_ALLPAGES | PD_RETURNDEFAULT;
+    prntdlg.Flags = PD_ALLPAGES | PD_RETURNDEFAULT | PD_RETURNIC | PD_USEDEVMODECOPIESANDCOLLATE;
   }
 
   BOOL res = ::PrintDlg(&prntdlg);
@@ -206,18 +207,22 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
         printService->SetPrintRange(nsIPrintOptions::kRangeAllPages);
       }
 
-      // check to see about the frame radio buttons
-      switch (gFrameSelectedRadioBtn) {
-        case rad4: 
-          printService->SetPrintFrameType(nsIPrintOptions::kFramesAsIs);
-          break;
-        case rad5: 
-          printService->SetPrintFrameType(nsIPrintOptions::kSelectedFrame);
-          break;
-        case rad6: 
-          printService->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
-          break;
-      } // switch 
+      if (howToEnableFrameUI != nsIPrintOptions::kFrameEnableNone) {
+        // check to see about the frame radio buttons
+        switch (gFrameSelectedRadioBtn) {
+          case rad4: 
+            printService->SetPrintFrameType(nsIPrintOptions::kFramesAsIs);
+            break;
+          case rad5: 
+            printService->SetPrintFrameType(nsIPrintOptions::kSelectedFrame);
+            break;
+          case rad6: 
+            printService->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
+            break;
+        } // switch 
+      } else {
+        printService->SetPrintFrameType(nsIPrintOptions::kNoFrames);
+      }
     }
 
 
