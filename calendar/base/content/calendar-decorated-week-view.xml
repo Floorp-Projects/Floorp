@@ -186,18 +186,20 @@
                     var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                                         .getService(Components.interfaces.nsIStringBundleService);
                     var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-                    var weekString = props.GetStringFromName("Week");
                     for (var i = -2; i < 3; i++) {
                         var date = aDate.clone();
                         // Add/subtract i number of weeks
                         date.day = aDate.day + i*7;
                         date.normalize();
 
-                        //XXX This isn't quite right, but it's close.  We need
-                        //    to get some better dateUtils into calDateTime
-                        var weekno = Math.floor ((date.yearday - date.weekday) / 7);
+                        var weekformatter =
+                            Components.classes["@mozilla.org/calendar/weektitle-service;1"]
+                                      .getService(Components.interfaces.calIWeekTitleService);
+                        var weekno = weekformatter.getWeekTitle(date);
 
-                        nameArray.push(weekString + weekno);
+                        var weekTitle = 
+                            props.formatStringFromName('WeekTitle', [weekno], 1);
+                        nameArray.push(weekTitle);
                     }
                     document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
                 ]]></body>

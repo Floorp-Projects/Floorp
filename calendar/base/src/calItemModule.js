@@ -124,7 +124,12 @@ const componentData =
     {cid: Components.ID("{4123da9a-f047-42da-a7d0-cc4175b9f36a}"),
      contractid: "@mozilla.org/calendar/datetime-formatter;1",
      script: "calDateTimeFormatter.js",
-     constructor: "calDateTimeFormatter"}
+     constructor: "calDateTimeFormatter"},
+
+    {cid: Components.ID("{6877bbdd-f336-46f5-98ce-fe86d0285cc1}"),
+     contractid: "@mozilla.org/calendar/weektitle-service;1",
+     script: "calWeekTitleService.js",
+     constructor: "calWeekTitleService"}
     ];
 
 var calItemModule = {
