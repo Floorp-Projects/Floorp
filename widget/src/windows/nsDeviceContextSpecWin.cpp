@@ -106,7 +106,7 @@ static UINT gFrameSelectedRadioBtn = 0;
 // Indicates whether the native print dialog was successfully extended
 static PRPackedBool gDialogWasExtended     = PR_FALSE;
 
-#define PRINTDLG_PROPERTIES "chrome://communicator/locale/gfx/printdialog.properties"
+#define PRINTDLG_PROPERTIES "chrome://communicator-platform/locale/gfx/printdialog.properties"
 
 static HWND gParentWnd = NULL;
 
