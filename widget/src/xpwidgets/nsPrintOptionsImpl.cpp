@@ -43,6 +43,15 @@
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
 
+#include "nsIDOMWindow.h"
+#include "nsIServiceManager.h"
+#include "nsIDialogParamBlock.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsVoidArray.h"
+#include "nsSupportsArray.h"
+
 // For Prefs
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
@@ -333,9 +342,47 @@ nsPrintOptions::GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight)
  *	@update 6/21/00 dwc
  */
 NS_IMETHODIMP 
-nsPrintOptions::ShowNativeDialog()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+nsPrintOptions::ShowPrintSetupDialog(nsIPrintSettings *aPS)
+{  
+ NS_ASSERTION(aPS, "Can't have a null PrintSettings!");
+ if (aPS == nsnull) return NS_OK;
+
+ nsresult rv = NS_ERROR_FAILURE;
+
+ // create a nsISupportsArray of the parameters
+ // being passed to the window
+ nsCOMPtr<nsISupportsArray> array;
+ NS_NewISupportsArray(getter_AddRefs(array));
+ if (!array) return NS_ERROR_FAILURE;
+
+ nsCOMPtr<nsISupports> psSupports(do_QueryInterface(aPS));
+ NS_ASSERTION(psSupports, "PrintSettings must be a supports");
+ array->AppendElement(psSupports);
+
+ nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+ if (ioParamBlock) {
+   ioParamBlock->SetInt(0, 0);
+   nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(ioParamBlock));
+   NS_ASSERTION(blkSupps, "IOBlk must be a supports");
+
+   array->AppendElement(blkSupps);
+   nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
+   NS_ASSERTION(array, "array must be a supports");
+
+   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+   if (wwatch) {
+     nsCOMPtr<nsIDOMWindow> active;
+     wwatch->GetActiveWindow(getter_AddRefs(active));           nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
+
+     nsCOMPtr<nsIDOMWindow> newWindow;
+     rv = wwatch->OpenWindow(parent, "chrome://communicator/content/printPageSetup.xul",
+                   "_blank", "chrome,modal,centerscreen", array,
+                   getter_AddRefs(newWindow));
+   }
+ }
+
+ return rv;
+  
 }
 
 /** ---------------------------------------------------
