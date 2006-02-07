@@ -304,7 +304,7 @@
           // only URI nodes should be returned
           var node = this.getResult().nodeForTreeIndex(min.value);
           if (PlacesController.nodeIsURI(node))
-            return node.QueryInterface(Ci.nsINavHistoryURIResultNode);
+            return node;
           return null;
         ]]></getter>
       </property>

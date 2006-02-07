@@ -64,7 +64,6 @@
             var button = document.createElementNS(XULNS, "toolbarbutton");
             button.setAttribute("label", child.title);
             if (PlacesController.nodeIsURI(child)) {
-              child = child.QueryInterface(Ci.nsINavHistoryURIResultNode);
               button.setAttribute("url", child.uri);
             } else if (PlacesController.nodeIsContainer(child)) {
               button.setAttribute("type", "menu");

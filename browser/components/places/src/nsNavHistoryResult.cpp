@@ -91,9 +91,10 @@ NS_IMPL_ISUPPORTS2(nsNavHistoryResultNode,
                    nsNavHistoryResultNode, nsINavHistoryResultNode)
 
 nsNavHistoryResultNode::nsNavHistoryResultNode(
-    const nsACString& aTitle, PRUint32 aAccessCount,
+    const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
     PRTime aTime, const nsACString& aIconURI) :
   mParent(nsnull),
+  mURI(aURI),
   mTitle(aTitle),
   mAccessCount(aAccessCount),
   mTime(aTime),
@@ -206,31 +207,16 @@ nsNavHistoryResultNode::GetGeneratingOptions()
 }
 
 
-// nsNavHistoryURIResultNode ***************************************************
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryURIResultNode,
-                             nsNavHistoryResultNode,
-                             nsINavHistoryURIResultNode)
-
-nsNavHistoryURIResultNode::nsNavHistoryURIResultNode(
-    const nsACString& aTitle, PRUint32 aAccessCount,
-    PRTime aTime, const nsACString& aIconURI, const nsACString& aURI) :
-  nsNavHistoryResultNode(aTitle, aAccessCount, aTime, aIconURI),
-  mURI(aURI)
-{
-}
-
-
 // nsNavHistoryVisitResultNode *************************************************
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryVisitResultNode,
-                             nsNavHistoryURIResultNode,
+                             nsNavHistoryResultNode,
                              nsINavHistoryVisitResultNode)
 
 nsNavHistoryVisitResultNode::nsNavHistoryVisitResultNode(
-    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
-    const nsACString& aIconURI, const nsACString& aURI, PRInt64 aSession) :
-  nsNavHistoryURIResultNode(aTitle, aAccessCount, aTime, aIconURI, aURI),
+    const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
+    PRTime aTime, const nsACString& aIconURI, PRInt64 aSession) :
+  nsNavHistoryResultNode(aURI, aTitle, aAccessCount, aTime, aIconURI),
   mSessionId(aSession)
 {
 }
@@ -243,10 +229,10 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryFullVisitResultNode,
                              nsINavHistoryFullVisitResultNode)
 
 nsNavHistoryFullVisitResultNode::nsNavHistoryFullVisitResultNode(
-    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
-    const nsACString& aIconURI, const nsACString& aURI, PRInt64 aSession,
+    const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
+    PRTime aTime, const nsACString& aIconURI, PRInt64 aSession,
     PRInt64 aVisitId, PRInt64 aReferringVisitId, PRInt32 aTransitionType) :
-  nsNavHistoryVisitResultNode(aTitle, aAccessCount, aTime, aIconURI, aURI,
+  nsNavHistoryVisitResultNode(aURI, aTitle, aAccessCount, aTime, aIconURI,
                               aSession),
   mVisitId(aVisitId),
   mReferringVisitId(aReferringVisitId),
@@ -261,10 +247,10 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryContainerResultNode,
                              nsINavHistoryContainerResultNode)
 
 nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
-    const nsACString& aTitle, const nsACString& aIconURI,
-    PRUint32 aContainerType, PRBool aReadOnly,
+    const nsACString& aURI, const nsACString& aTitle,
+    const nsACString& aIconURI, PRUint32 aContainerType, PRBool aReadOnly,
     const nsACString& aRemoteContainerType) :
-  nsNavHistoryResultNode(aTitle, 0, 0, aIconURI),
+  nsNavHistoryResultNode(aURI, aTitle, 0, 0, aIconURI),
   mResult(nsnull),
   mContainerType(aContainerType),
   mExpanded(PR_FALSE),
@@ -671,9 +657,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TitleLess(
   if (value == 0) {
     // resolve by URI
     if (a->IsURI()) {
-      nsNavHistoryURIResultNode* aURI = a->GetAsURI();
-      nsNavHistoryURIResultNode* bURI = b->GetAsURI();
-      value = aURI->mURI.Compare(bURI->mURI.get());
+      value = a->mURI.Compare(b->mURI.get());
     }
     if (value == 0) {
       // resolve by date
@@ -742,9 +726,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_URILess(
   PRInt32 value;
   if (a->IsURI()) {
     // normal URI or visit
-    nsNavHistoryURIResultNode* aURI = a->GetAsURI();
-    nsNavHistoryURIResultNode* bURI = b->GetAsURI();
-    value = aURI->mURI.Compare(bURI->mURI.get());
+    value = a->mURI.Compare(b->mURI.get());
   } else {
     // for everything else, use title (= host name)
     nsICollation* collation = NS_STATIC_CAST(nsICollation*, closure);
@@ -794,16 +776,15 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_VisitCountGr
 //    Searches this folder for a node with the given URI. Returns null if not
 //    found. Does not addref the node!
 
-nsNavHistoryURIResultNode*
+nsNavHistoryResultNode*
 nsNavHistoryContainerResultNode::FindChildURI(const nsACString& aSpec,
     PRUint32* aNodeIndex)
 {
   for (PRInt32 i = 0; i < mChildren.Count(); i ++) {
     if (mChildren[i]->IsURI()) {
-      nsNavHistoryURIResultNode* uri = mChildren[i]->GetAsURI();
-      if (aSpec.Equals(uri->mURI)) {
+      if (aSpec.Equals(mChildren[i]->mURI)) {
         *aNodeIndex = i;
-        return uri;
+        return mChildren[i];
       }
     }
   }
@@ -1017,10 +998,10 @@ nsNavHistoryContainerResultNode::MergeResults(
       } else {
         // add the URI, replacing a current one if any
         PRUint32 oldIndex;
-        nsNavHistoryURIResultNode* oldNode =
-          FindChildURI(curAddition->GetAsURI()->mURI, &oldIndex);
+        nsNavHistoryResultNode* oldNode =
+          FindChildURI(curAddition->mURI, &oldIndex);
         if (oldNode)
-          ReplaceChildURIAt(oldIndex, curAddition->GetAsURI());
+          ReplaceChildURIAt(oldIndex, curAddition);
         else
           InsertSortedChild(curAddition);
       }
@@ -1040,13 +1021,13 @@ nsNavHistoryContainerResultNode::MergeResults(
 
 nsresult
 nsNavHistoryContainerResultNode::ReplaceChildURIAt(PRUint32 aIndex,
-    nsNavHistoryURIResultNode* aNode)
+    nsNavHistoryResultNode* aNode)
 {
   NS_ASSERTION(aIndex < PRUint32(mChildren.Count()),
                "Invalid index for replacement");
   NS_ASSERTION(mChildren[aIndex]->IsURI(),
                "Can not use ReplaceChildAt for a node of another type");
-  NS_ASSERTION(mChildren[aIndex]->GetAsURI()->mURI.Equals(aNode->mURI),
+  NS_ASSERTION(mChildren[aIndex]->mURI.Equals(aNode->mURI),
                "We must replace a URI with an updated one of the same");
 
   aNode->mParent = this;
@@ -1170,7 +1151,7 @@ nsNavHistoryContainerResultNode::RecursiveFindURIs(PRBool aOnlyOne,
     aContainer->mChildren[child]->GetType(&type);
     if (nsNavHistoryResultNode::IsTypeURI(type)) {
       // compare URIs
-      nsNavHistoryURIResultNode* uriNode = aContainer->mChildren[child]->GetAsURI();
+      nsNavHistoryResultNode* uriNode = aContainer->mChildren[child];
       if (uriNode->mURI.Equals(aSpec)) {
         // found
         aMatches->AppendObject(uriNode);
@@ -1199,7 +1180,7 @@ nsNavHistoryContainerResultNode::RecursiveFindURIs(PRBool aOnlyOne,
 void
 nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
     PRBool aUpdateSort, const nsCString& aSpec,
-    void (*aCallback)(nsNavHistoryURIResultNode*,void*), void* aClosure)
+    void (*aCallback)(nsNavHistoryResultNode*,void*), void* aClosure)
 {
   nsNavHistoryResult* result = GetResult();
   if (! result) {
@@ -1215,7 +1196,7 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
     RecursiveFindURIs(aOnlyOne, this, aSpec, &matches);
   } else if (aOnlyOne) {
     PRUint32 nodeIndex;
-    nsNavHistoryURIResultNode* node = FindChildURI(aSpec, &nodeIndex);
+    nsNavHistoryResultNode* node = FindChildURI(aSpec, &nodeIndex);
     if (node)
       matches.AppendObject(node);
   } else {
@@ -1246,7 +1227,7 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
     }
     PRUint32 oldAccessCount = node->mAccessCount;
     PRTime oldTime = node->mTime;
-    aCallback(node->GetAsURI(), aClosure);
+    aCallback(node, aClosure);
 
     if (oldAccessCount != node->mAccessCount || oldTime != node->mTime) {
       // need to update/redraw the parent
@@ -1283,7 +1264,7 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
 //    their own callbacks registered.
 
 static void PR_CALLBACK setTitleCallback(
-    nsNavHistoryURIResultNode* aNode, void* aClosure)
+    nsNavHistoryResultNode* aNode, void* aClosure)
 {
   const nsACString* newTitle = NS_REINTERPRET_CAST(nsACString*, aClosure);
   aNode->mTitle = *newTitle;
@@ -1385,16 +1366,15 @@ nsNavHistoryContainerResultNode::GetRemoteContainerType(
 
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::AppendURINode(
-    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
-    const nsACString& aIconURI, const nsACString& aURI,
-    nsINavHistoryURIResultNode** _retval)
+    const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
+    PRTime aTime, const nsACString& aIconURI, nsINavHistoryResultNode** _retval)
 {
   *_retval = nsnull;
   if (mRemoteContainerType.IsEmpty() || ! CanRemoteContainersChange())
     return NS_ERROR_INVALID_ARG; // we must be a remote container
 
-  nsRefPtr<nsNavHistoryURIResultNode> result =
-      new nsNavHistoryURIResultNode(aTitle, aAccessCount, aTime, aIconURI, aURI);
+  nsRefPtr<nsNavHistoryResultNode> result =
+      new nsNavHistoryResultNode(aURI, aTitle, aAccessCount, aTime, aIconURI);
   NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
   // append to our list
@@ -1409,8 +1389,8 @@ nsNavHistoryContainerResultNode::AppendURINode(
 
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::AppendVisitNode(
-    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
-    const nsACString& aIconURI, const nsACString& aURI, PRInt64 aSession,
+    const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
+    PRTime aTime, const nsACString& aIconURI, PRInt64 aSession,
     nsINavHistoryVisitResultNode** _retval)
 {
   *_retval = nsnull;
@@ -1418,8 +1398,8 @@ nsNavHistoryContainerResultNode::AppendVisitNode(
     return NS_ERROR_INVALID_ARG; // we must be a remote container
 
   nsRefPtr<nsNavHistoryVisitResultNode> result =
-      new nsNavHistoryVisitResultNode(aTitle, aAccessCount, aTime,
-                                      aIconURI, aURI, aSession);
+      new nsNavHistoryVisitResultNode(aURI, aTitle, aAccessCount, aTime,
+                                      aIconURI, aSession);
   NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
   // append to our list
@@ -1434,8 +1414,8 @@ nsNavHistoryContainerResultNode::AppendVisitNode(
 
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::AppendFullVisitNode(
-    const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime,
-    const nsACString& aIconURI, const nsACString& aURI, PRInt64 aSession,
+    const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
+    PRTime aTime, const nsACString& aIconURI, PRInt64 aSession,
     PRInt64 aVisitId, PRInt64 aReferringVisitId, PRInt32 aTransitionType,
     nsINavHistoryFullVisitResultNode** _retval)
 {
@@ -1444,10 +1424,9 @@ nsNavHistoryContainerResultNode::AppendFullVisitNode(
     return NS_ERROR_INVALID_ARG; // we must be a remote container
 
   nsRefPtr<nsNavHistoryFullVisitResultNode> result =
-      new nsNavHistoryFullVisitResultNode(aTitle, aAccessCount, aTime,
-                                          aIconURI, aURI, aSession,
-                                          aVisitId, aReferringVisitId,
-                                          aTransitionType);
+      new nsNavHistoryFullVisitResultNode(aURI, aTitle, aAccessCount, aTime,
+                                          aIconURI, aSession, aVisitId,
+                                          aReferringVisitId, aTransitionType);
   NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
   // append to our list
@@ -1480,8 +1459,9 @@ nsNavHistoryContainerResultNode::AppendContainerNode(
     return NS_ERROR_INVALID_ARG; // non-remote containers must NOT have r.c. type
 
   nsRefPtr<nsNavHistoryContainerResultNode> result =
-      new nsNavHistoryContainerResultNode(aTitle, aIconURI, aContainerType,
-                                          PR_TRUE, aRemoteContainerType);
+      new nsNavHistoryContainerResultNode(EmptyCString(), aTitle, aIconURI,
+                                          aContainerType, PR_TRUE,
+                                          aRemoteContainerType);
   NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
   // append to our list
@@ -1496,15 +1476,15 @@ nsNavHistoryContainerResultNode::AppendContainerNode(
 
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::AppendQueryNode(
-    const nsACString& aTitle, const nsACString& aIconURI,
-    const nsACString& aQueryString, nsINavHistoryQueryResultNode** _retval)
+    const nsACString& aQueryURI, const nsACString& aTitle,
+    const nsACString& aIconURI, nsINavHistoryQueryResultNode** _retval)
 {
   *_retval = nsnull;
   if (mRemoteContainerType.IsEmpty() || ! CanRemoteContainersChange())
     return NS_ERROR_INVALID_ARG; // we must be a remote container
 
   nsRefPtr<nsNavHistoryQueryResultNode> result =
-      new nsNavHistoryQueryResultNode(aTitle, aIconURI, aQueryString);
+      new nsNavHistoryQueryResultNode(aQueryURI, aTitle, aIconURI);
   NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
   // append to our list
@@ -1593,10 +1573,9 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryQueryResultNode,
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     const nsACString& aTitle, const nsACString& aIconURI,
     const nsACString& aQueryURI) :
-  nsNavHistoryContainerResultNode(aTitle, aIconURI,
+  nsNavHistoryContainerResultNode(aQueryURI, aTitle, aIconURI,
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
                                   PR_TRUE, EmptyCString()),
-  mQueryURI(aQueryURI),
   mHasSearchTerms(PR_FALSE),
   mContentsValid(PR_FALSE),
   mBatchInProgress(PR_FALSE)
@@ -1610,7 +1589,7 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     const nsACString& aTitle, const nsACString& aIconURI,
     const nsCOMArray<nsNavHistoryQuery>& aQueries,
     nsNavHistoryQueryOptions* aOptions) :
-  nsNavHistoryContainerResultNode(aTitle, aIconURI,
+  nsNavHistoryContainerResultNode(EmptyCString(), aTitle, aIconURI,
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
                                   PR_TRUE, EmptyCString()),
   mQueries(aQueries),
@@ -1619,11 +1598,6 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
   mBatchInProgress(PR_FALSE)
 {
   NS_ASSERTION(aQueries.Count() > 0, "Must have at least one query");
-  /*
-  for (PRUint32 i = 0; i < aQueryCount; i ++)
-    mQueries.AppendObject(aQueries[i]);
-  aOptions->Clone(getter_AddRefs(mOptions));
-*/
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ASSERTION(history, "History service missing");
@@ -1723,14 +1697,18 @@ nsNavHistoryQueryResultNode::GetHasChildren(PRBool* aHasChildren)
 }
 
 
-// nsNavHistoryQueryResultNode::GetQueryURI
+// nsNavHistoryQueryResultNode::GetUri
+//
+//    This doesn't just return mURI because in the case of queries that may
+//    be lazily constructed from the query objects.
 
 NS_IMETHODIMP
-nsNavHistoryQueryResultNode::GetQueryURI(nsIURI** aQueryURI)
+nsNavHistoryQueryResultNode::GetUri(nsACString& aURI)
 {
   nsresult rv = VerifyQueriesSerialized();
   NS_ENSURE_SUCCESS(rv, rv);
-  return NS_NewURI(aQueryURI, mQueryURI);
+  aURI = mURI;
+  return NS_OK;
 }
 
 
@@ -1780,13 +1758,13 @@ nsNavHistoryQueryResultNode::VerifyQueriesParsed()
     NS_ASSERTION(mOptions, "If a result has queries, it also needs options");
     return NS_OK;
   }
-  NS_ASSERTION(! mQueryURI.IsEmpty(),
+  NS_ASSERTION(! mURI.IsEmpty(),
                "Query nodes must have either a URI or query/options");
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = history->QueryStringToQueryArray(mQueryURI, &mQueries,
+  nsresult rv = history->QueryStringToQueryArray(mURI, &mQueries,
                                                  getter_AddRefs(mOptions));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1801,7 +1779,7 @@ nsNavHistoryQueryResultNode::VerifyQueriesParsed()
 nsresult
 nsNavHistoryQueryResultNode::VerifyQueriesSerialized()
 {
-  if (! mQueryURI.IsEmpty()) {
+  if (! mURI.IsEmpty()) {
     return NS_OK;
   }
   NS_ASSERTION(mQueries.Count() > 0 && mOptions,
@@ -1816,9 +1794,10 @@ nsNavHistoryQueryResultNode::VerifyQueriesSerialized()
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = history->QueriesToQueryString(flatQueries.Elements(),
-                                              flatQueries.Length(), mOptions, mQueryURI);
+                                              flatQueries.Length(),
+                                              mOptions, mURI);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(! mQueryURI.IsEmpty(), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(! mURI.IsEmpty(), NS_ERROR_FAILURE);
   return NS_OK;
 }
 
@@ -2048,8 +2027,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, PRInt64 aVisitId,
       rv = history->VisitIdToResultNode(aVisitId, mOptions,
                                         getter_AddRefs(addition));
       NS_ENSURE_SUCCESS(rv, rv);
-      if (! history->EvaluateQueryForNode(mQueries, mOptions,
-                                          addition->GetAsURI()))
+      if (! history->EvaluateQueryForNode(mQueries, mOptions, addition))
         return NS_OK; // don't need to include in our query
       break;
     }
@@ -2197,7 +2175,7 @@ nsNavHistoryQueryResultNode::OnClearHistory()
 //
 
 static void PR_CALLBACK setFaviconCallback(
-   nsNavHistoryURIResultNode* aNode, void* aClosure)
+   nsNavHistoryResultNode* aNode, void* aClosure)
 {
   const nsCString* newFavicon = NS_STATIC_CAST(nsCString*, aClosure);
   aNode->mFaviconURI = *newFavicon;
@@ -2359,7 +2337,7 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsNavHistoryFolderResultNode,
 nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
     const nsACString& aTitle, nsNavHistoryQueryOptions* aOptions,
     PRInt64 aFolderId, const nsACString& aRemoteContainerType) :
-  nsNavHistoryContainerResultNode(aTitle, EmptyCString(),
+  nsNavHistoryContainerResultNode(EmptyCString(), aTitle, EmptyCString(),
                                   nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
                                   PR_FALSE, aRemoteContainerType),
   mContentsValid(PR_FALSE),
@@ -2376,6 +2354,9 @@ nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
   if (! bookmarks)
     return;
 
+  // This is the folder URI used for the favicon. It IS NOT the folder URI
+  // that we will return from GetUri. That one will include the options for
+  // this specific query, while the folderURI is invariant w.r.t. options.
   nsCOMPtr<nsIURI> folderURI;
   nsresult rv = bookmarks->GetFolderURI(aFolderId, getter_AddRefs(folderURI));
   if (NS_FAILED(rv))
@@ -2462,11 +2443,19 @@ nsNavHistoryFolderResultNode::GetHasChildren(PRBool* aHasChildren)
 }
 
 
-// nsNavHistoryFolderResultNode::GetQueryURI
+// nsNavHistoryFolderResultNode::GetUri
+//
+//    This lazily computes the URI for this specific folder query with
+//    the current options.
 
 NS_IMETHODIMP
-nsNavHistoryFolderResultNode::GetQueryURI(nsIURI** aQueryURI)
+nsNavHistoryFolderResultNode::GetUri(nsACString& aURI)
 {
+  if (! mURI.IsEmpty()) {
+    aURI = mURI;
+    return NS_OK;
+  }
+
   PRUint32 queryCount;
   nsINavHistoryQuery** queries;
   nsresult rv = GetQueries(&queryCount, &queries);
@@ -2475,11 +2464,9 @@ nsNavHistoryFolderResultNode::GetQueryURI(nsIURI** aQueryURI)
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   nsCAutoString queryString;
-  rv = history->QueriesToQueryString(queries, queryCount, mOptions, queryString);
+  rv = history->QueriesToQueryString(queries, queryCount, mOptions, aURI);
   nsMemory::Free(queries);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_NewURI(aQueryURI, queryString);
+  return rv;
 }
 
 
@@ -2684,7 +2671,7 @@ nsNavHistoryFolderResultNode::OnItemRemoved(nsIURI* aBookmark, PRInt64 aFolder,
   // sorting could be different, or the bookmark services indices and ours might
   // be out of sync somehow.
   PRUint32 nodeIndex;
-  nsNavHistoryURIResultNode* node = FindChildURI(aBookmark, &nodeIndex);
+  nsNavHistoryResultNode* node = FindChildURI(aBookmark, &nodeIndex);
   if (! node)
     return NS_ERROR_FAILURE; // can't find it
 
@@ -2707,7 +2694,7 @@ nsNavHistoryFolderResultNode::OnItemMoved(nsIURI* aBookmark, PRInt64 aFolder,
     return NS_OK;
 
   PRUint32 nodeIndex;
-  nsNavHistoryURIResultNode* node = FindChildURI(aBookmark, &nodeIndex);
+  nsNavHistoryResultNode* node = FindChildURI(aBookmark, &nodeIndex);
   if (! node)
     return NS_ERROR_FAILURE; // can't find bookmark
 
@@ -2749,7 +2736,7 @@ nsNavHistoryFolderResultNode::OnItemChanged(nsIURI* aBookmark,
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 nodeIndex;
-  nsNavHistoryURIResultNode* node = FindChildURI(aBookmark, &nodeIndex);
+  nsNavHistoryResultNode* node = FindChildURI(aBookmark, &nodeIndex);
   if (! node)
     return NS_ERROR_FAILURE;
 
@@ -2784,7 +2771,7 @@ nsNavHistoryFolderResultNode::OnItemVisited(nsIURI* aBookmark, PRInt64 aVisitId,
     return NS_OK;
 
   PRUint32 nodeIndex;
-  nsNavHistoryURIResultNode* node = FindChildURI(aBookmark, &nodeIndex);
+  nsNavHistoryResultNode* node = FindChildURI(aBookmark, &nodeIndex);
   if (! node)
     return NS_ERROR_FAILURE;
 
@@ -2812,7 +2799,7 @@ nsNavHistoryFolderResultNode::OnItemVisited(nsIURI* aBookmark, PRInt64 aVisitId,
     NS_ASSERTION(childIndex >= 0, "Could not find child we just got a reference to");
     if (childIndex >= 0) {
       SortComparator comparator = GetSortingComparator(GetSortType()); 
-      nsCOMPtr<nsINavHistoryURIResultNode> nodeLock(node);
+      nsCOMPtr<nsINavHistoryResultNode> nodeLock(node);
       RemoveChildAt(childIndex, PR_TRUE);
       InsertChildAt(node, FindInsertionPoint(node, comparator), PR_TRUE);
     }
@@ -2840,7 +2827,7 @@ nsNavHistoryFolderResultNode::OnItemReplaced(PRInt64 aFolder, nsIURI *aOldItem,
     return NS_OK;
 
   PRUint32 nodeIndex;
-  nsNavHistoryURIResultNode* oldNode = FindChildURI(aOldItem, &nodeIndex);
+  nsNavHistoryResultNode* oldNode = FindChildURI(aOldItem, &nodeIndex);
   if (! oldNode) {
     NS_NOTREACHED("Bad bookmark message");
     return NS_ERROR_FAILURE;
@@ -4093,7 +4080,7 @@ NS_IMETHODIMP nsNavHistoryResult::GetCellText(PRInt32 row,
     case Column_URI:
     {
       if (node->IsURI())
-        _retval = NS_ConvertUTF8toUTF16(node->GetAsURI()->mURI);
+        _retval = NS_ConvertUTF8toUTF16(node->mURI);
       else
         _retval.Truncate(0);
       break;
