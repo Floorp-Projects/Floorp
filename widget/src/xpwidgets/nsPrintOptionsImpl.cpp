@@ -206,11 +206,11 @@ NS_IMETHODIMP nsPrinterListEnumerator::GetNext(nsISupports **aPrinter)
    }
 
    PRUnichar *printerName = mPrinters[mIndex++];
-   nsCOMPtr<nsISupportsWString> printerNameWrapper;
+   nsCOMPtr<nsISupportsString> printerNameWrapper;
    nsresult rv;
 
-   rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, nsnull,
-                                           NS_GET_IID(nsISupportsWString), getter_AddRefs(printerNameWrapper));
+   rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull,
+                                           NS_GET_IID(nsISupportsString), getter_AddRefs(printerNameWrapper));
    NS_ENSURE_SUCCESS(rv, rv);
    NS_ENSURE_TRUE(printerNameWrapper, NS_ERROR_OUT_OF_MEMORY);
    printerNameWrapper->SetData(NS_CONST_CAST(PRUnichar*, printerName));
