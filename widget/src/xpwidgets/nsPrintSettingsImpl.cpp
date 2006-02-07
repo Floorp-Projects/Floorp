@@ -60,7 +60,7 @@ nsPrintSettings::nsPrintSettings() :
   mHowToEnableFrameUI(kFrameEnableNone),
   mIsCancelled(PR_FALSE),
   mPrintSilent(PR_FALSE),
-  mShrinkToFit(PR_FALSE),
+  mShrinkToFit(PR_TRUE),
   mPrintPageDelay(500),
   mPaperData(0),
   mPaperSizeType(kPaperSizeDefined),
