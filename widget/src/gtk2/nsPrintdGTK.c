@@ -204,7 +204,7 @@ DoPrintGTK (GtkWidget *widget, UnixPrOps *prOps)
         gtk_window_set_transient_for (GTK_WINDOW (dialog), 
 		GTK_WINDOW (prOps->widgets.toplevel));
 #endif
-      	gtk_window_set_title( GTK_WINDOW(dialog), "Netscape: Print" );
+      	gtk_window_set_title( GTK_WINDOW(dialog), "Print" );
 
 	vbox = gtk_vbox_new (PR_FALSE, 0);
         gtk_container_add (GTK_CONTAINER (dialog), vbox);

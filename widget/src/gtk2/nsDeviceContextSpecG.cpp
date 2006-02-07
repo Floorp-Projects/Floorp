@@ -21,6 +21,12 @@
  */
 
 #include "nsDeviceContextSpecG.h"
+
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+
+#include "nsIPref.h"
+
 #include "prenv.h" /* for PR_GetEnv */
 
 //#include "prmem.h"
@@ -100,19 +106,35 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 {
   char *path;
 
-  // XXX these settings should eventually come out of preferences 
+  PRBool reversed = PR_FALSE, color = PR_FALSE, landscape = PR_FALSE;
+  PRInt32 paper_size = NS_LETTER_SIZE;
+  float left, right, top, bottom; // XXX later
+  char *command;
+  nsresult rv;
 
-  mPrData.toPrinter = PR_TRUE;
-  mPrData.fpf = PR_TRUE;
-  mPrData.grayscale = PR_FALSE;
-  mPrData.size = NS_LETTER_SIZE;
+  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_PROGID, &rv);
+//  NS_WITH_SERVICE(nsIPref, pPrefs, NS_PREF_PROGID, &rv);
+  if(!NS_FAILED(rv) && pPrefs) {
+   	(void) pPrefs->GetBoolPref("print.print_reversed", &reversed);
+   	(void) pPrefs->GetBoolPref("print.print_color", &color);
+   	(void) pPrefs->GetBoolPref("print.print_landscape", &landscape);
+   	(void) pPrefs->GetIntPref("print.print_paper_size", &paper_size);
+   	(void) pPrefs->CopyCharPref("print.print_command", (char **) &command);
+  	sprintf( mPrData.command, command );
+  } else {
 #ifndef VMS
-  sprintf( mPrData.command, "lpr" );
+  	sprintf( mPrData.command, "lpr" );
 #else
   // Note to whoever puts the "lpr" into the prefs file. Please contact me
   // as I need to make the default be "print" instead of "lpr" for OpenVMS.
-  sprintf( mPrData.command, "print" );
+  	sprintf( mPrData.command, "print" );
 #endif
+  }
+
+  mPrData.toPrinter = PR_TRUE;
+  mPrData.fpf = !reversed;
+  mPrData.grayscale = !color;
+  mPrData.size = paper_size;
 
   // PWD, HOME, or fail 
 
@@ -127,8 +149,17 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
   ::UnixPrDialog( &mPrData );
   if ( mPrData.cancel == PR_TRUE ) 
 	return NS_ERROR_FAILURE;
-  else
+  else {
+  	if(pPrefs) {
+		pPrefs->SetBoolPref("print.print_reversed", !mPrData.fpf);
+		pPrefs->SetBoolPref("print.print_color", !mPrData.grayscale);
+		pPrefs->SetBoolPref("print.print_landscape", landscape);
+		pPrefs->SetIntPref("print.print_paper_size", mPrData.size);
+  		if ( mPrData.toPrinter == PR_FALSE )
+			pPrefs->SetCharPref("print.print_command", mPrData.command);
+	}
         return NS_OK;
+  }
 }
 
 NS_IMETHODIMP nsDeviceContextSpecGTK :: GetToPrinter( PRBool &aToPrinter )     
