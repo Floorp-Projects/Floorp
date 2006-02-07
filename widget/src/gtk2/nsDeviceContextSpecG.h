@@ -44,6 +44,7 @@
 #include "nsIPrintOptions.h"
 #include "nsVoidArray.h"
 #include "nsIDeviceContextSpecPS.h"
+#include "nsIPrintSettings.h"
 #ifdef USE_XPRINT
 #include "nsIDeviceContextSpecXPrint.h"
 #endif /* USE_XPRINT */
@@ -81,7 +82,7 @@ public:
  *        printer).
  * @return error status
  */
-  NS_IMETHOD Init(PRBool	aQuiet);
+  NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aQuiet);
   
   
 /**
@@ -95,7 +96,7 @@ public:
 
   NS_IMETHOD GetToPrinter( PRBool &aToPrinter ); 
 
-  NS_IMETHOD GetPrinter ( char **aPrinter );
+  NS_IMETHOD GetPrinterName ( char **aPrinter );
 
   NS_IMETHOD GetCopies ( int &aCopies );
 
@@ -131,11 +132,8 @@ public:
  */
   virtual ~nsDeviceContextSpecGTK();
   
-  static nsStringArray *globalPrinterList;
-  static int globalNumPrinters;
-  int InitializeGlobalPrinters();
-  void FreeGlobalPrinters();
 protected:
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
   UnixPrData mPrData;
 };
 

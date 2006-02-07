@@ -39,11 +39,7 @@
 
 #include "nsDeviceContextSpecG.h"
 
-#include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
-#include "nsIPrintOptions.h"
 #include "nsReadableUtils.h"
-#include "nsGfxCIID.h"
 
 #include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
@@ -54,15 +50,44 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsISupportsArray.h"
 
 #ifdef USE_XPRINT
 #include "xprintutil.h"
 #endif /* USE_XPRINT */
 
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+//----------------------------------------------------------------------------------
+// The printer data is shared between the PrinterEnumerator and the nsDeviceContextSpecG
+// The PrinterEnumerator creates the printer info
+// but the nsDeviceContextSpecG cleans it up
+// If it gets created (via the Page Setup Dialog) but the user never prints anything
+// then it will never be delete, so this class takes care of that.
+class GlobalPrinters {
+public:
+  static GlobalPrinters* GetInstance()   { return &mGlobalPrinters; }
+  ~GlobalPrinters()                      { FreeGlobalPrinters(); }
 
-nsStringArray* nsDeviceContextSpecGTK::globalPrinterList = nsnull;
-int nsDeviceContextSpecGTK::globalNumPrinters = 0;
+  void      FreeGlobalPrinters();
+  nsresult  InitializeGlobalPrinters();
+
+  PRBool    PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
+  PRInt32   GetNumPrinters()             { return mGlobalNumPrinters; }
+  nsString* GetStringAt(PRInt32 aInx)    { return mGlobalPrinterList->StringAt(aInx); }
+
+protected:
+  GlobalPrinters() {}
+
+  static GlobalPrinters mGlobalPrinters;
+  static nsStringArray* mGlobalPrinterList;
+  static int            mGlobalNumPrinters;
+
+};
+//---------------
+// static members
+GlobalPrinters GlobalPrinters::mGlobalPrinters;
+nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
+int            GlobalPrinters::mGlobalNumPrinters = 0;
+//---------------
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecGTK
@@ -136,81 +161,63 @@ NS_IMPL_ADDREF(nsDeviceContextSpecGTK)
 NS_IMPL_RELEASE(nsDeviceContextSpecGTK)
 
 
-int nsDeviceContextSpecGTK::InitializeGlobalPrinters ()
+static nsresult DisplayXPDialog(nsIPrintSettings* aPS,
+                                const char* aChromeURL, 
+                                PRBool& aClickedOK)
 {
-  globalNumPrinters = 0;
-  globalPrinterList = new nsStringArray();
-  if (!globalPrinterList) 
-    return NS_ERROR_OUT_OF_MEMORY;
-      
-#ifdef USE_XPRINT   
-  XPPrinterList plist = XpuGetPrinterList(nsnull, &globalNumPrinters);
-  
-  if (plist && (globalNumPrinters > 0))
-  {  
-    int i;
-    for(  i = 0 ; i < globalNumPrinters ; i++ )
-    {
-      globalPrinterList->AppendString(nsString(NS_ConvertASCIItoUCS2(plist[i].name)));
-    }
-    
-    XpuFreePrinterList(plist);
-  }  
-#endif /* USE_XPRINT */
+  NS_ASSERTION(aPS, "Must have a print settings!");
 
-  /* add an entry for the default printer (see nsPostScriptObj.cpp) */
-  globalPrinterList->AppendString(
-    nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
-  globalNumPrinters++;
+  aClickedOK = PR_FALSE;
+  nsresult rv = NS_ERROR_FAILURE;
 
-  /* get the list of printers */
-  char *printerList = nsnull;
-  
-  /* the env var MOZILLA_PRINTER_LIST can "override" the prefs */
-  printerList = PR_GetEnv("MOZILLA_PRINTER_LIST");
-  
-  if (!printerList) {
-    nsresult rv;
-    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      (void) pPrefs->CopyCharPref("print.printer_list", &printerList);
-    }
-  }  
+  // create a nsISupportsArray of the parameters 
+  // being passed to the window
+  nsCOMPtr<nsISupportsArray> array;
+  NS_NewISupportsArray(getter_AddRefs(array));
+  if (!array) return NS_ERROR_FAILURE;
 
-  if (printerList) {
-    char *tok_lasts;
-    char *name;
-    
-    /* PL_strtok_r() will modify the string - copy it! */
-    printerList = strdup(printerList);
-    if (!printerList)
-      return NS_ERROR_OUT_OF_MEMORY;    
-    
-    for( name = PL_strtok_r(printerList, " ", &tok_lasts) ; 
-         name != nsnull ; 
-         name = PL_strtok_r(nsnull, " ", &tok_lasts) )
-    {
-      globalPrinterList->AppendString(
-        nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME)) + 
-        nsString(NS_ConvertASCIItoUCS2(name)));
-      globalNumPrinters++;      
+  nsCOMPtr<nsIPrintSettings> ps = aPS;
+  nsCOMPtr<nsISupports> psSupports(do_QueryInterface(ps));
+  NS_ASSERTION(psSupports, "PrintSettings must be a supports");
+  array->AppendElement(psSupports);
+
+  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+  if (ioParamBlock) {
+    ioParamBlock->SetInt(0, 0);
+    nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(ioParamBlock));
+    NS_ASSERTION(blkSupps, "IOBlk must be a supports");
+
+    array->AppendElement(blkSupps);
+    nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
+    NS_ASSERTION(array, "array must be a supports");
+
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch) {
+      nsCOMPtr<nsIDOMWindow> active;
+      wwatch->GetActiveWindow(getter_AddRefs(active));    
+      nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
+
+      nsCOMPtr<nsIDOMWindow> newWindow;
+      rv = wwatch->OpenWindow(parent, aChromeURL,
+            "_blank", "chrome,modal,centerscreen", array,
+            getter_AddRefs(newWindow));
     }
-    
-    free(printerList);
   }
-      
-  if (globalNumPrinters == 0)
-    return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAIULABLE; 
 
-  return NS_OK;
+  if (NS_SUCCEEDED(rv)) {
+    PRInt32 buttonPressed = 0;
+    ioParamBlock->GetInt(0, &buttonPressed);
+    if (buttonPressed == 1) {
+      aClickedOK = PR_TRUE;
+    } else {
+      rv = NS_ERROR_ABORT;
+    }
+  } else {
+    rv = NS_ERROR_ABORT;
+  }
+  return rv;
 }
 
-void nsDeviceContextSpecGTK::FreeGlobalPrinters()
-{
-  delete globalPrinterList;
-  globalPrinterList = nsnull;
-  globalNumPrinters = 0;
-}
 
 
 /** -------------------------------------------------------
@@ -232,17 +239,16 @@ void nsDeviceContextSpecGTK::FreeGlobalPrinters()
  * 
  * ** Please update the other toolkits when changing this function.
  */
-NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings* aPS, PRBool aQuiet)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPrintOptions> printService(do_GetService(kPrintOptionsCID, &rv));
-  NS_ASSERTION(nsnull != printService, "No print service.");
-  
+  mPrintSettings = aPS;
+
   // if there is a current selection then enable the "Selection" radio button
-  if (NS_SUCCEEDED(rv) && printService) {
+  if (mPrintSettings) {
     PRBool isOn;
-    printService->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, &isOn);
+    mPrintSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &isOn);
     nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       (void) pPrefs->SetBoolPref("print.selection_radio_enabled", isOn);
@@ -254,7 +260,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
   PRBool     reversed       = PR_FALSE;
   PRBool     color          = PR_FALSE;
   PRBool     tofile         = PR_FALSE;
-  PRInt16    printRange     = nsIPrintOptions::kRangeAllPages;
+  PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
   PRInt32    paper_size     = NS_LETTER_SIZE;
   PRInt32    orientation    = NS_PORTRAIT;
   PRInt32    fromPage       = 1;
@@ -268,71 +274,39 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
   double     dtop           = 0.5;
   double     dbottom        = 0.5; 
 
-  if( !globalPrinterList )
-    if (InitializeGlobalPrinters())
-       return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAIULABLE;
-  if( globalNumPrinters && !globalPrinterList->Count() ) 
-     return NS_ERROR_OUT_OF_MEMORY;
+  rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   if (!aQuiet ) {
-    rv = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
-
-    nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
-    if (ioParamBlock)
-      paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
-
-    if (paramBlockWrapper) {
-      paramBlockWrapper->SetData(ioParamBlock);
-      paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
-
-      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-      if (wwatch) {
-        nsCOMPtr<nsIDOMWindow> active;
-        wwatch->GetActiveWindow(getter_AddRefs(active));      
-        nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
-
-        nsCOMPtr<nsIDOMWindow> newWindow;
-        rv = wwatch->OpenWindow(parent, "chrome://global/content/printdialog.xul",
-                      "_blank", "chrome,modal", paramBlockWrapper,
-                      getter_AddRefs(newWindow));
-      }
-    }
-    if (NS_SUCCEEDED(rv)) {
-      PRInt32 buttonPressed = 0;
-      ioParamBlock->GetInt(0, &buttonPressed);
-      if (buttonPressed == 0) {
-        canPrint = PR_TRUE;
-      }
-      else {
-        rv = NS_ERROR_ABORT;
-      }
-    }
+    rv = DisplayXPDialog(mPrintSettings, 
+                         "chrome://global/content/printdialog.xul", canPrint);
   }
   else {
     canPrint = PR_TRUE;
   }
   
-  FreeGlobalPrinters();
+  GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
   if (canPrint) {
-    if (printService) {
-      printService->GetPrinter(&printer);
-      printService->GetPrintReversed(&reversed);
-      printService->GetPrintInColor(&color);
-      printService->GetPaperSize(&paper_size);
-      printService->GetOrientation(&orientation);
-      printService->GetPrintCommand(&command);
-      printService->GetPrintRange(&printRange);
-      printService->GetToFileName(&printfile);
-      printService->GetPrintToFile(&tofile);
-      printService->GetStartPageRange(&fromPage);
-      printService->GetEndPageRange(&toPage);
-      printService->GetNumCopies(&copies);
-      printService->GetMarginTop(&dtop);
-      printService->GetMarginLeft(&dleft);
-      printService->GetMarginBottom(&dbottom);
-      printService->GetMarginRight(&dright);
+    if (aPS != nsnull) {
+      aPS->GetPrinterName(&printer);
+      aPS->GetPrintReversed(&reversed);
+      aPS->GetPrintInColor(&color);
+      aPS->GetPaperSize(&paper_size);
+      aPS->GetOrientation(&orientation);
+      aPS->GetPrintCommand(&command);
+      aPS->GetPrintRange(&printRange);
+      aPS->GetToFileName(&printfile);
+      aPS->GetPrintToFile(&tofile);
+      aPS->GetStartPageRange(&fromPage);
+      aPS->GetEndPageRange(&toPage);
+      aPS->GetNumCopies(&copies);
+      aPS->GetMarginTop(&dtop);
+      aPS->GetMarginLeft(&dleft);
+      aPS->GetMarginBottom(&dbottom);
+      aPS->GetMarginRight(&dright);
 
       if (command != nsnull && printfile != nsnull) {
         // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
@@ -342,10 +316,18 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
       if (printer != nsnull) 
         strcpy(mPrData.printer, NS_ConvertUCS2toUTF8(printer).get());        
 #ifdef DEBUG_rods
-      printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
+      printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", 
+             dtop, dleft, dbottom, dright);
       printf("printRange     %d\n", printRange);
       printf("fromPage       %d\n", fromPage);
       printf("toPage         %d\n", toPage);
+      printf("tofile         %d\n", tofile);
+      printf("printfile      %s\n", 
+             printfile? NS_ConvertUCS2toUTF8(printfile).get():"NULL");
+      printf("command        %s\n", 
+              command? NS_ConvertUCS2toUTF8(command).get():"NULL");
+      printf("printer        %s\n", 
+              printer? NS_ConvertUCS2toUTF8(printer).get():"NULL");
 #endif /* DEBUG_rods */
     } else {
 #ifdef VMS
@@ -382,9 +364,9 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
     }
     
 #ifdef NOT_IMPLEMENTED_YET
-    if (globalNumPrinters) {
-       for(int i = 0; (i < globalNumPrinters) && !mQueue; i++) {
-          if (!(globalPrinterList->StringAt(i)->CompareWithConversion(mPrData.printer, TRUE, -1)))
+    if (mGlobalNumPrinters) {
+       for(int i = 0; (i < mGlobalNumPrinters) && !mQueue; i++) {
+          if (!(mGlobalPrinterList->StringAt(i)->CompareWithConversion(mPrData.printer, TRUE, -1)))
              mQueue = PrnDlg.SetPrinterQueue(i);
        }
     }
@@ -396,7 +378,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
     if (printfile != nsnull) {
       nsMemory::Free(printfile);
     }
-
     return NS_OK;
   }
 
@@ -409,7 +390,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetToPrinter(PRBool &aToPrinter)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetPrinter ( char **aPrinter )
+NS_IMETHODIMP nsDeviceContextSpecGTK::GetPrinterName ( char **aPrinter )
 {
    *aPrinter = &mPrData.printer[0];
    return NS_OK;
@@ -535,7 +516,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::ClosePrintManager()
   return NS_OK;
 }
 
-
 //  Printer Enumerator
 nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK()
 {
@@ -544,8 +524,20 @@ nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK()
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorGTK, nsIPrinterEnumerator)
 
+NS_IMETHODIMP nsPrinterEnumeratorGTK::EnumeratePrintersExtended(PRUint32* aCount, PRUnichar*** aResult)
+{
+  NS_ENSURE_ARG(aCount);
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aCount = 0;
+  *aResult = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPrinterEnumeratorGTK::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
 {
+  NS_ENSURE_ARG(aCount);
+  NS_ENSURE_ARG_POINTER(aResult);
+
   if (aCount) 
     *aCount = 0;
   else 
@@ -556,21 +548,32 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::EnumeratePrinters(PRUint32* aCount, PRUnic
   else 
     return NS_ERROR_NULL_POINTER;
   
+  nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(nsDeviceContextSpecGTK::globalNumPrinters * sizeof(PRUnichar*));
-  if (!array && nsDeviceContextSpecGTK::globalNumPrinters) 
+  PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
+
+  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(numPrinters * sizeof(PRUnichar*));
+  if (!array && numPrinters > 0) {
+    GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
+  }
   
   int count = 0;
-  while( count < nsDeviceContextSpecGTK::globalNumPrinters )
+  while( count < numPrinters )
   {
-    PRUnichar *str = ToNewUnicode(*nsDeviceContextSpecGTK::globalPrinterList->StringAt(count));
+
+    PRUnichar *str = ToNewUnicode(*GlobalPrinters::GetInstance()->GetStringAt(count));
 
     if (!str) {
       for (int i = count - 1; i >= 0; i--) 
         nsMemory::Free(array[i]);
       
       nsMemory::Free(array);
+
+      GlobalPrinters::GetInstance()->FreeGlobalPrinters();
       return NS_ERROR_OUT_OF_MEMORY;
     }
     array[count++] = str;
@@ -578,14 +581,13 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::EnumeratePrinters(PRUint32* aCount, PRUnic
   }
   *aCount = count;
   *aResult = array;
+  GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const PRUnichar *aPrinter)
+NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings* aPrintSettings)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  
   /* fixme: We simply ignore the |aPrinter| argument here
    * We should get the supported printer attributes from the printer and 
    * populate the print job options dialog with these data instead of using 
@@ -594,32 +596,94 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const PRUnichar *aPri
    * of patches ... ;-(
    */
 
-  nsCOMPtr<nsIPrintOptions> printService(do_GetService(kPrintOptionsCID, &rv));
+  PRBool pressedOK;
+  return DisplayXPDialog(aPrintSettings,
+                         "chrome://global/content/printjoboptions.xul", 
+                         pressedOK);
 
-  rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+}
 
-  nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
-  if (ioParamBlock)
-    paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
-
-  if (paramBlockWrapper) {
-    paramBlockWrapper->SetData(ioParamBlock);
-    paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
-
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-    if (wwatch) {
-      nsCOMPtr<nsIDOMWindow> active;
-      wwatch->GetActiveWindow(getter_AddRefs(active));
-      nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
-
-      nsCOMPtr<nsIDOMWindow> newWindow;
-      rv = wwatch->OpenWindow(parent, "chrome://global/content/printjoboptions.xul",
-                    "_blank", "chrome,modal", paramBlockWrapper,
-                    getter_AddRefs(newWindow));
-    }
+//----------------------------------------------------------------------
+nsresult GlobalPrinters::InitializeGlobalPrinters ()
+{
+  if (PrintersAreAllocated()) {
+    return NS_OK;
   }
 
-  return rv;
+  mGlobalNumPrinters = 0;
+  mGlobalPrinterList = new nsStringArray();
+  if (!mGlobalPrinterList) 
+    return NS_ERROR_OUT_OF_MEMORY;
+      
+#ifdef USE_XPRINT   
+  XPPrinterList plist = XpuGetPrinterList(nsnull, &mGlobalNumPrinters);
+  
+  if (plist && (mGlobalNumPrinters > 0))
+  {  
+    int i;
+    for(  i = 0 ; i < mGlobalNumPrinters ; i++ )
+    {
+      mGlobalPrinterList->AppendString(nsString(NS_ConvertASCIItoUCS2(plist[i].name)));
+    }
+    
+    XpuFreePrinterList(plist);
+  }  
+#endif /* USE_XPRINT */
+
+  /* add an entry for the default printer (see nsPostScriptObj.cpp) */
+  mGlobalPrinterList->AppendString(
+    nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
+  mGlobalNumPrinters++;
+
+  /* get the list of printers */
+  char *printerList = nsnull;
+  
+  /* the env var MOZILLA_PRINTER_LIST can "override" the prefs */
+  printerList = PR_GetEnv("MOZILLA_PRINTER_LIST");
+  
+  if (!printerList) {
+    nsresult rv;
+    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      (void) pPrefs->CopyCharPref("print.printer_list", &printerList);
+    }
+  }  
+
+  if (printerList) {
+    char *tok_lasts;
+    char *name;
+    
+    /* PL_strtok_r() will modify the string - copy it! */
+    printerList = strdup(printerList);
+    if (!printerList)
+      return NS_ERROR_OUT_OF_MEMORY;    
+    
+    for( name = PL_strtok_r(printerList, " ", &tok_lasts) ; 
+         name != nsnull ; 
+         name = PL_strtok_r(nsnull, " ", &tok_lasts) )
+    {
+      mGlobalPrinterList->AppendString(
+        nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME)) + 
+        nsString(NS_ConvertASCIItoUCS2(name)));
+      mGlobalNumPrinters++;      
+    }
+    
+    free(printerList);
+  }
+      
+  if (mGlobalNumPrinters == 0)
+    return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE; 
+
+  return NS_OK;
 }
+
+//----------------------------------------------------------------------
+void GlobalPrinters::FreeGlobalPrinters()
+{
+  delete mGlobalPrinterList;
+  mGlobalPrinterList = nsnull;
+  mGlobalNumPrinters = 0;
+}
+
+
 
