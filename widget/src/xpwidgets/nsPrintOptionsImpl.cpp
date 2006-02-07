@@ -143,7 +143,7 @@ nsPrintOptions::nsPrintOptions() :
   mHeaderStrs[0].AssignWithConversion("&T");
   mHeaderStrs[2].AssignWithConversion("&U");
 
-  mFooterStrs[0].AssignWithConversion("&P"); // Use &P (Page Num Only) or &PT (Page Num of Page Total)
+  mFooterStrs[0].AssignWithConversion("&PT"); // Use &P (Page Num Only) or &PT (Page Num of Page Total)
   mFooterStrs[2].AssignWithConversion("&D");
 
   ReadPrefs();
