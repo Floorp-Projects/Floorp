@@ -349,33 +349,33 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetGrayscale(PRBool &aGrayscale)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetLandscape(PRBool &landscape)
+NS_IMETHODIMP nsDeviceContextSpecGTK::GetLandscape(PRBool &aLandscape)
 {
-  landscape = (mOrientation == NS_LANDSCAPE);
+  aLandscape = (mOrientation == NS_LANDSCAPE);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetTopMargin(float &value)      
+NS_IMETHODIMP nsDeviceContextSpecGTK::GetTopMargin(float &aValue)      
 {
-  value = mTop;
+  aValue = mTop;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetBottomMargin(float &value)      
+NS_IMETHODIMP nsDeviceContextSpecGTK::GetBottomMargin(float &aValue)      
 {
-  value = mBottom;
+  aValue = mBottom;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetRightMargin(float &value)      
+NS_IMETHODIMP nsDeviceContextSpecGTK::GetRightMargin(float &aValue)      
 {
-  value = mRight;
+  aValue = mRight;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetLeftMargin(float &value)      
+NS_IMETHODIMP nsDeviceContextSpecGTK::GetLeftMargin(float &aValue)      
 {
-  value = mLeft;
+  aValue = mLeft;
   return NS_OK;
 }
 
