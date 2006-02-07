@@ -33,6 +33,10 @@
 //*****************************************************************************
 //***    nsPrintSettings
 //*****************************************************************************
+
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY default
+
 class NS_GFX nsPrintSettings : public nsIPrintSettings
 {
 public:
@@ -111,6 +115,7 @@ protected:
 
 };
 
-
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY hidden
 
 #endif /* nsPrintSettings_h__ */
