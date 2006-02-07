@@ -65,6 +65,31 @@
 #include "nsPaperPS.h"  /* Paper size list */
 #endif /* USE_POSTSCRIPT */
 
+#include "prlink.h"
+
+typedef struct				/**** Printer Options ****/
+{
+  char		*name;			/* Name of option */
+  char		*value;			/* Value of option */
+} cups_option_t;
+
+typedef struct               /**** Destination ****/
+{
+  char          *name,       /* Printer or class name */
+                *instance;   /* Local instance name or NULL */
+  int           is_default;  /* Is this printer the default? */
+  int           num_options; /* Number of options */
+  cups_option_t *options;    /* Options */
+} cups_dest_t;
+
+typedef int (PR_CALLBACK *CupsGetDestsType)(cups_dest_t **dests);
+typedef cups_dest_t * (PR_CALLBACK *CupsGetDestType)(const char  *name,
+                                                     const char  *instance,
+                                                     int         num_dests,
+                                                     cups_dest_t *dests);
+typedef int (PR_CALLBACK *CupsFreeDestsType)(int         num_dests,
+                                         cups_dest_t *dests);
+
 /* Ensure that the result is always equal to either PR_TRUE or PR_FALSE */
 #define MAKE_PR_BOOL(val) ((val)?(PR_TRUE):(PR_FALSE))
 
@@ -1090,7 +1115,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
       (void) pPrefs->CopyCharPref("print.printer_list", &printerList);
     }  
 
-    if (printerList) {
+    if (printerList && *printerList) {
       char       *tok_lasts;
       const char *name;
 
@@ -1114,6 +1139,53 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
       }
 
       free(printerList);
+    } else {
+      /* Try to use CUPS */
+      PRLibrary *clib = PR_LoadLibrary("libcups.so.2");
+      if (clib) {
+        CupsGetDestsType  CupsGetDests;
+        CupsGetDestType   CupsGetDest;
+        CupsFreeDestsType CupsFreeDests;
+
+        CupsGetDests = (CupsGetDestsType) PR_FindSymbol( clib, "cupsGetDests");
+        CupsGetDest = (CupsGetDestType) PR_FindSymbol( clib, "cupsGetDest");
+        CupsFreeDests = (CupsFreeDestsType) PR_FindSymbol( clib, "cupsFreeDests");
+
+        if (CupsGetDests && CupsGetDest && CupsFreeDests) {
+          int               num_dests;
+          cups_dest_t      *dests;
+
+          /* Get the list of destinations */
+          num_dests = (*CupsGetDests)(&dests);
+
+          if (num_dests > 0) {
+            int               i;
+            cups_dest_t      *defdest;
+
+            /* Get the default destination */
+            defdest = (*CupsGetDest)(NULL, NULL, num_dests, dests);
+
+            /* Add default destination as first in list */
+            mGlobalPrinterList->AppendString(
+            nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME)) + 
+            nsString(NS_ConvertASCIItoUCS2(defdest->name)));
+            mGlobalNumPrinters++;      
+            added_default_printer = PR_TRUE;
+
+            for (i = 0; i < num_dests; i ++) {
+              /* Don't add the default printer again */
+              if (strcmp(dests[i].name, defdest->name) != 0) {
+                mGlobalPrinterList->AppendString(
+                  nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME)) + 
+                  nsString(NS_ConvertASCIItoUCS2(dests[i].name)));
+                mGlobalNumPrinters++;
+              }
+            }
+            (*CupsFreeDests)(num_dests, dests);
+          }
+        }
+        PR_UnloadLibrary(clib);
+      }
     }
 
     /* Add an entry for the default printer (see nsPostScriptObj.cpp) if we
