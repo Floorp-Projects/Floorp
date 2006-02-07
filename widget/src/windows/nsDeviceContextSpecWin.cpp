@@ -36,21 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_REQUIRE_CURRENT_SDK
-#undef WINVER
-#define WINVER 0x0500
-#endif
-
-//#include <unknwn.h>
-//#include <commdlg.h>
-#include <windows.h>
-
 #include "nsDeviceContextSpecWin.h"
 #include "prmem.h"
-//#include "plstr.h"
-#include <windows.h>
 #include <winspool.h>
-//#include "prenv.h" /* for PR_GetEnv */
 #include <TCHAR.H>
 
 #include "nsVoidArray.h"
@@ -70,6 +58,14 @@
 #define NS_ERROR_GFX_PRINTER_BUNDLE_URL "chrome://global/locale/printing.properties"
 
 #include "nsIPref.h"
+
+#include "prlog.h"
+#ifdef PR_LOGGING 
+extern PRLogModuleInfo * kPrintingLogMod;
+#define PR_PL(_p1)  PR_LOG(kPrintingLogMod, PR_LOG_DEBUG, _p1)
+#else
+#define PR_PL(_p1)
+#endif
 
 //-----------------------------------------------
 // Global Data
@@ -430,18 +426,14 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
 
         return NS_OK;
       } else {
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-        printf("***** nsDeviceContextSpecWin::Init - deviceName/driverName/devMode was NULL!\n");
-#endif
+        PR_PL(("***** nsDeviceContextSpecWin::Init - deviceName/driverName/devMode was NULL!\n"));
         if (deviceName) nsCRT::free(deviceName);
         if (driverName) nsCRT::free(driverName);
         if (devMode) free(devMode);
       }
     }
   } else {
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-    printf("***** nsDeviceContextSpecWin::Init - aPrintSettingswas NULL!\n");
-#endif
+    PR_PL(("***** nsDeviceContextSpecWin::Init - aPrintSettingswas NULL!\n"));
   }
 
   LPDEVMODE pDevMode  = NULL;
@@ -657,12 +649,10 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
 
   if (!GlobalPrinters::GetInstance()->PrintersAreAllocated()) {
     rv = GlobalPrinters::GetInstance()->EnumeratePrinterList();
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
     if (NS_FAILED(rv)) {
-      printf("***** nsDeviceContextSpecWin::GetDataFromPrinter - Couldn't enumerate printers!\n");
+      PR_PL(("***** nsDeviceContextSpecWin::GetDataFromPrinter - Couldn't enumerate printers!\n"));
       DISPLAY_LAST_ERROR
     }
-#endif
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -686,10 +676,8 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
     if (dwRet != IDOK) {
        free(pDevMode);
        ::ClosePrinter(hPrinter);
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-       printf("***** nsDeviceContextSpecWin::GetDataFromPrinter - DocumentProperties call failed code: %d/0x%x\n", dwRet, dwRet);
+       PR_PL(("***** nsDeviceContextSpecWin::GetDataFromPrinter - DocumentProperties call failed code: %d/0x%x\n", dwRet, dwRet));
        DISPLAY_LAST_ERROR
-#endif
        return rv;
     }
 
@@ -714,6 +702,7 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
     rv = NS_OK;
   } else {
     rv = NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
+    PR_PL(("***** nsDeviceContextSpecWin::GetDataFromPrinter - Couldn't open printer: [%s]\n", NS_ConvertUCS2toUTF8(aName).get()));
     DISPLAY_LAST_ERROR
   }
   return rv;
@@ -883,6 +872,7 @@ nsPrinterEnumeratorWin::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult
   NS_ENSURE_ARG_POINTER(aResult);
 
   if (NS_FAILED(GlobalPrinters::GetInstance()->EnumeratePrinterList())) {
+    PR_PL(("***** nsDeviceContextSpecWin::EnumeratePrinters - Couldn't enumerate printers!\n"));
     return NS_ERROR_FAILURE;
   }
 
@@ -948,6 +938,7 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
     if (dwRet != IDOK) {
        free(pNewDevMode);
        ::ClosePrinter(hPrinter);
+       PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't get DocumentProperties (pNewDevMode) for [%s]\n", NS_ConvertUCS2toUTF8(aPrinterName).get()));
        return NS_ERROR_FAILURE;
     }
 
@@ -959,6 +950,7 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
        free(pDevMode);
        free(pNewDevMode);
        ::ClosePrinter(hPrinter);
+       PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't get DocumentProperties (pDevMode) for [%s]\n", NS_ConvertUCS2toUTF8(aPrinterName).get()));
        return NS_ERROR_FAILURE;
     }
 
@@ -987,7 +979,9 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
     ::ClosePrinter(hPrinter);
 
   } else {
-    rv = NS_ERROR_OUT_OF_MEMORY;
+    rv = NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
+    PR_PL(("***** nsDeviceContextSpecWin::DisplayPropertiesDlg - Couldn't open printer [%s]\n", NS_ConvertUCS2toUTF8(aPrinterName).get()));
+    DISPLAY_LAST_ERROR
   }
 
   return rv;
@@ -1028,6 +1022,9 @@ GlobalPrinters::EnumerateNativePrinters()
 {
   nsresult rv = NS_ERROR_FAILURE;
 
+  PR_PL(("-----------------------\n"));
+  PR_PL(("EnumerateNativePrinters\n"));
+
   TCHAR szDefaultPrinterName[1024];    
   DWORD status = GetProfileString("devices", 0, ",", szDefaultPrinterName, sizeof(szDefaultPrinterName)/sizeof(TCHAR));
   if (status > 0) {
@@ -1039,9 +1036,7 @@ GlobalPrinters::EnumerateNativePrinters()
       if (*sPtr == NULL) {
         LPTSTR name = _tcsdup(prvPtr);
         mPrinters->AppendElement(name);
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-        printf("Printer Name:    %s\n" , prvPtr);
-#endif
+        PR_PL(("Printer Name:    %s\n", prvPtr));
         prvPtr = sPtr+1;
         count++;
       }
@@ -1049,6 +1044,7 @@ GlobalPrinters::EnumerateNativePrinters()
     }
     rv = NS_OK;
   }
+  PR_PL(("-----------------------\n"));
 
   return rv;
 }
@@ -1074,9 +1070,7 @@ GlobalPrinters::GetDefaultPrinterName(LPTSTR& aDefaultPrinterName)
     aDefaultPrinterName = _tcsdup("");
   }
 
-#ifdef DEBUG_rods
-  printf("DEFAULT PRINTER [%s]\n", aDefaultPrinterName);
-#endif
+  PR_PL(("DEFAULT PRINTER [%s]\n", aDefaultPrinterName));
 }
 
 //----------------------------------------------------------------------------------
@@ -1116,6 +1110,7 @@ GlobalPrinters::EnumeratePrinterList()
 
   // make sure we at least tried to get the printers
   if (!PrintersAreAllocated()) {
+    PR_PL(("***** nsDeviceContextSpecWin::EnumeratePrinterList - Printers aren`t allocated\n"));
     return NS_ERROR_FAILURE;
   }
 
