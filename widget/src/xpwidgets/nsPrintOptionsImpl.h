@@ -125,7 +125,7 @@ protected:
 
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
 
-  nsFont* mDefaultFont;
+  nsFont mDefaultFont;
 private:
   // These are not supported and are not implemented!
   nsPrintOptions(const nsPrintOptions& x);
