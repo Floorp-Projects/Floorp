@@ -87,6 +87,9 @@ nsBrowserStatusHandler.prototype =
   {
     this.urlBar           = document.getElementById("urlbar");
     this.progressBGPosition = 0;  /* To be removed, fix in onProgressChange ... */ 
+
+    var securityUI = gBrowser.securityUI;
+    this.onSecurityChange(null, null, nsIWebProgressListener.STATE_IS_INSECURE);
   },
   
   destroy : function()
@@ -310,16 +313,11 @@ nsBrowserStatusHandler.prototype =
     
     gBrowser.addProgressListener(gBrowserStatusHandler, nsCI.nsIWebProgress.NOTIFY_ALL);
     
-    
-    window.browserDOMWindow = new nsBrowserAccess(gBrowser);
-    
-    // Current build was not able to get it. Taking it from the tab browser element. 
-    // var webNavigation=gBrowser.webNavigation;
-    
-    var refBrowser=gBrowser.getBrowserForTab(currentTab);
-    var webNavigation=refBrowser.webNavigation;
-    
-    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(nsCI.nsISHistory);
+    window.QueryInterface(nsCI.nsIDOMChromeWindow).browserDOMWindow =
+      new nsBrowserAccess();
+
+    gBrowser.webNavigation.sessionHistory = 
+      Components.classes["@mozilla.org/browser/shistory;1"].createInstance(nsCI.nsISHistory);
     
     gBrowser.docShell.QueryInterface(nsCI.nsIDocShellHistory).useGlobalHistory = true;
     
@@ -1256,18 +1254,12 @@ function BrowserSetDeck(dMode,menuElement) {
 
 
 // ripped from browser.js, this should be shared in toolkit.
-function nsBrowserAccess( browser )
+function nsBrowserAccess()
 {
-  this.init(browser);
 }
 
 nsBrowserAccess.prototype =
 {
-  init: function(browser)
-  {
-    this.browser = browser;
-  },
-  
   QueryInterface : function(aIID)
   {
     if (aIID.equals(nsCI.nsIBrowserDOMWindow) ||
@@ -1278,12 +1270,12 @@ nsBrowserAccess.prototype =
   
   openURI : function(aURI, aOpener, aWhere, aContext)
   {
-    var newWindow = null;
-    var referrer = null;
-    
-    var newTab = this.browser.addTab("about:blank");
-    
-    throw Components.results.NS_NOINTERFACE;
+    var url = aURI ? aURI.spec : "about:blank";
+    var newTab     = gBrowser.addTab(url);
+    var newWindow  = gBrowser.getBrowserForTab(newTab).docShell
+                             .QueryInterface(nsCI.nsIInterfaceRequestor)
+                             .getInterface(nsCI.nsIDOMWindow);
+    return newWindow;
   },
   
   isTabContentWindow : function(aWindow)
@@ -1295,4 +1287,3 @@ nsBrowserAccess.prototype =
     return false;
   }
 }
-  
