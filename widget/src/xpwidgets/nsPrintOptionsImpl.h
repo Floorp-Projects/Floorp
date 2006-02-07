@@ -50,61 +50,25 @@ protected:
 
   nsresult ReadPrefString(nsIPref * aPref, const char * aPrefId, nsString& aString);
   nsresult WritePrefString(nsIPref * aPref, const char * aPrefId, nsString& aString);
+  nsresult WritePrefString(nsIPref* aPref, PRUnichar*& aStr, const char* aPrefId);
   nsresult ReadPrefDouble(nsIPref * aPref, const char * aPrefId, double& aVal);
   nsresult WritePrefDouble(nsIPref * aPref, const char * aPrefId, double aVal);
 
-  typedef enum {
-    eHeader,
-    eFooter
-  } nsHeaderFooterEnum;
-
-  nsresult GetMarginStrs(PRUnichar * *aTitle, nsHeaderFooterEnum aType, PRInt16 aJust);
-  nsresult SetMarginStrs(const PRUnichar * aTitle, nsHeaderFooterEnum aType, PRInt16 aJust);
+  nsresult ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
+  nsresult WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
+  const char* GetPrefName(const char *     aPrefName, 
+                          const nsString&  aPrinterName);
 
   // Members 
-  nsMargin      mMargin;
-  PRInt32       mPrintOptions;
-
-  // scriptable data members
-  PRInt16       mPrintRange;
-  PRInt32       mStartPageNum; // only used for ePrintRange_SpecifiedRange
-  PRInt32       mEndPageNum;
-  double        mScaling;
-  PRBool        mPrintBGColors;  // print background colors
-  PRBool        mPrintBGImages;  // print background images
-
-  PRInt16       mPrintFrameTypeUsage;
-  PRInt16       mPrintFrameType;
-  PRBool        mHowToEnableFrameUI;
   PRBool        mIsCancelled;
-  PRBool        mPrintSilent;
-  PRInt32       mPrintPageDelay;
-
   nsString      mTitle;
   nsString      mURL;
-  nsString      mPageNumberFormat;
-  nsString      mHeaderStrs[3];
-  nsString      mFooterStrs[3];
-
-  nsIPrintSettings* mPrintSettingsObj; //weak ref, hold address only
-
-  PRInt16       mPaperData;
-  PRInt16       mPaperSizeType;
-  double        mPaperWidth;
-  double        mPaperHeight;
-  PRInt16       mPaperSizeUnit;
-
-  PRInt32       mPaperSize;    // this has been deprecated
-  PRBool        mPrintReversed;
-  PRBool        mPrintInColor; // a false means grayscale
-  PRInt32       mOrientation;  // see orientation consts
-  nsString      mPrintCommand;
-  PRInt32       mNumCopies;
-  nsString      mPrinter;
   PRBool        mPrintToFile;
   nsString      mToFileName;
 
   nsCOMPtr<nsIPrintSettings> mGlobalPrintSettings;
+
+  nsCString mPrefName;
 
   static nsFont* sDefaultFont;
 };
