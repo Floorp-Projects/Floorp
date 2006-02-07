@@ -4,13 +4,13 @@
 @AB_CD@.jar:
 #else
 reporter.jar:
-#endif
 * locale/@AB_CD@/reporter/contents.rdf                      (generic/chrome/contents.rdf)
+#endif
 % locale reporter @AB_CD@ %locale/@AB_CD@/reporter/
-  locale/@AB_CD@/reporter/reportWizard.dtd                  (@AB_CD@/chrome/reportWizard.dtd)
-  locale/@AB_CD@/reporter/about.dtd                         (@AB_CD@/chrome/about.dtd)
-  locale/@AB_CD@/reporter/reporterOverlay.dtd               (@AB_CD@/chrome/reporterOverlay.dtd)
-  locale/@AB_CD@/reporter/reportResults.dtd                 (@AB_CD@/chrome/reportResults.dtd)
-  locale/@AB_CD@/reporter/reporter.dtd                      (@AB_CD@/chrome/reporter.dtd)
-  locale/@AB_CD@/reporter/reportWizard.properties           (@AB_CD@/chrome/reportWizard.properties)
-  locale/@AB_CD@/reporter/reporterOverlay.properties        (@AB_CD@/chrome/reporterOverlay.properties)
+  locale/@AB_CD@/reporter/reportWizard.dtd                  (%chrome/reportWizard.dtd)
+  locale/@AB_CD@/reporter/about.dtd                         (%chrome/about.dtd)
+  locale/@AB_CD@/reporter/reporterOverlay.dtd               (%chrome/reporterOverlay.dtd)
+  locale/@AB_CD@/reporter/reportResults.dtd                 (%chrome/reportResults.dtd)
+  locale/@AB_CD@/reporter/reporter.dtd                      (%chrome/reporter.dtd)
+  locale/@AB_CD@/reporter/reportWizard.properties           (%chrome/reportWizard.properties)
+  locale/@AB_CD@/reporter/reporterOverlay.properties        (%chrome/reporterOverlay.properties)
