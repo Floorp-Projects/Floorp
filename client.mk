@@ -160,6 +160,7 @@ MODULES_browser :=                              \
 LOCALES_browser :=                              \
   $(LOCALES_toolkit)                            \
   browser                                       \
+  extensions/reporter                           \
   other-licenses/branding/firefox               \
   $(NULL)
 
