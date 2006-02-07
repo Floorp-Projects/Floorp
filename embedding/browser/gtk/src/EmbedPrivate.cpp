@@ -662,13 +662,18 @@ EmbedPrivate::SetProfilePath(const char *aDir, const char *aName)
 
   nsresult rv =
     NS_NewNativeLocalFile(nsDependentCString(aDir), PR_TRUE, &sProfileDir);
-  if (NS_SUCCEEDED(rv)) {
+
+  if (NS_SUCCEEDED(rv) && aName)
+    rv = sProfileDir->AppendNative(nsDependentCString(aName));
+
+  if (NS_SUCCEEDED(rv))
     rv = XRE_LockProfileDirectory(sProfileDir, &sProfileLock);
-    if (NS_SUCCEEDED(rv)) {
-      if (sWidgetCount)
-        XRE_NotifyProfile();
-      return;
-    }
+
+  if (NS_SUCCEEDED(rv)) {
+    if (sWidgetCount)
+      XRE_NotifyProfile();
+
+    return;
   }
 
   NS_WARNING("Failed to lock profile.");
