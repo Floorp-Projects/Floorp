@@ -200,7 +200,7 @@ const NativePaperSizes kPaperSizes[] = {
 const PRInt32 kNumPaperSizes = 41;
 
 //----------------------------------------------------------------------------------
-nsDeviceContextSpecWin :: nsDeviceContextSpecWin() :
+nsDeviceContextSpecWin::nsDeviceContextSpecWin() :
   mUseExtendedPrintDlg(NULL)
 {
   NS_INIT_REFCNT();
@@ -223,7 +223,7 @@ nsDeviceContextSpecWin :: nsDeviceContextSpecWin() :
 //----------------------------------------------------------------------------------
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecWin, nsIDeviceContextSpec)
 
-nsDeviceContextSpecWin :: ~nsDeviceContextSpecWin()
+nsDeviceContextSpecWin::~nsDeviceContextSpecWin()
 {
   SetDeviceName(nsnull);
   SetDriverName(nsnull);
@@ -328,7 +328,9 @@ SetupDevModeFromSettings(LPDEVMODE aDevMode, nsIPrintSettings* aPrintSettings)
 
 //----------------------------------------------------------------------------------
 // Helper Function - Free and reallocate the string
-static nsresult SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, LPDEVMODE aDevMode)
+nsresult 
+nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, 
+                                                    LPDEVMODE         aDevMode)
 {
   if (aPrintSettings == nsnull) {
     return NS_ERROR_FAILURE;
@@ -376,9 +378,9 @@ static nsresult SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, LP
 }
 
 //----------------------------------------------------------------------------------
-NS_IMETHODIMP nsDeviceContextSpecWin :: Init(nsIWidget* aWidget, 
-                                             nsIPrintSettings* aPrintSettings,
-                                             PRBool aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget, 
+                                           nsIPrintSettings* aPrintSettings,
+                                           PRBool aQuiet)
 {
   mPrintSettings = aPrintSettings;
 
@@ -429,19 +431,19 @@ static void CleanAndCopyString(char*& aStr, char* aNewStr)
 }
 
 //----------------------------------------------------------------------------------
-void nsDeviceContextSpecWin :: SetDeviceName(char* aDeviceName)
+void nsDeviceContextSpecWin::SetDeviceName(char* aDeviceName)
 {
   CleanAndCopyString(mDeviceName, aDeviceName);
 }
 
 //----------------------------------------------------------------------------------
-void nsDeviceContextSpecWin :: SetDriverName(char* aDriverName)
+void nsDeviceContextSpecWin::SetDriverName(char* aDriverName)
 {
   CleanAndCopyString(mDriverName, aDriverName);
 }
 
 //----------------------------------------------------------------------------------
-void nsDeviceContextSpecWin :: SetGlobalDevMode(HGLOBAL aHGlobal)
+void nsDeviceContextSpecWin::SetGlobalDevMode(HGLOBAL aHGlobal)
 {
   if (mGlobalDevMode) {
     ::GlobalFree(mGlobalDevMode);
@@ -452,7 +454,7 @@ void nsDeviceContextSpecWin :: SetGlobalDevMode(HGLOBAL aHGlobal)
 }
 
 //----------------------------------------------------------------------------------
-void nsDeviceContextSpecWin :: SetDevMode(LPDEVMODE aDevMode)
+void nsDeviceContextSpecWin::SetDevMode(LPDEVMODE aDevMode)
 {
   if (mDevMode) free(mDevMode);
 
@@ -939,11 +941,44 @@ static HGLOBAL CreateGlobalDevModeAndInit(LPTSTR aPrintName, nsIPrintSettings* a
   return hGlobalDevMode;
 }
 
+//------------------------------------------------------------------
+// helper
+static PRUnichar * GetDefaultPrinterNameFromGlobalPrinters()
+{
+  PRUnichar * printerName;
+  LPTSTR lpPrtName;
+  GlobalPrinters::GetInstance()->GetDefaultPrinterName(lpPrtName);
+  nsString str;
+#ifdef UNICODE
+  str.AppendWithConversion((PRUnichar *)lpPrtName);
+#else 
+  str.AssignWithConversion((char*)lpPrtName);
+#endif
+  printerName = ToNewUnicode(str);
+  free(lpPrtName);
+  return printerName;
+}
+
+
+//------------------------------------------------------------------
+void 
+nsDeviceContextSpecWin::GetDevMode(LPDEVMODE &aDevMode)
+{
+  if (mIsDEVMODEGlobalHandle) {
+    if (mGlobalDevMode) {
+      aDevMode = (DEVMODE *)::GlobalLock(mGlobalDevMode);
+    } else {
+      aDevMode = NULL;
+    }
+  } else {
+    aDevMode = mDevMode;
+  }
+}
 
 //------------------------------------------------------------------
 // Displays the native Print Dialog
 nsresult 
-nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuiet)
+nsDeviceContextSpecWin::ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuiet)
 {
   NS_ENSURE_ARG_POINTER(aWidget);
   nsresult  rv = NS_ERROR_FAILURE;
@@ -958,16 +993,7 @@ nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuie
 
   // If there is no name then use the default printer
   if (!printerName || (printerName && !*printerName)) {
-    LPTSTR lpPrtName;
-    GlobalPrinters::GetInstance()->GetDefaultPrinterName(lpPrtName);
-    nsString str;
-#ifdef UNICODE
-    str.AppendWithConversion((PRUnichar *)lpPrtName);
-#else 
-    str.AssignWithConversion((char*)lpPrtName);
-#endif
-    printerName = ToNewUnicode(str);
-    free(lpPrtName);
+    printerName = GetDefaultPrinterNameFromGlobalPrinters();
   }
 
   NS_ASSERTION(printerName, "We have to have a printer name");
@@ -1286,7 +1312,7 @@ static HPROPSHEETPAGE ExtendPrintDialog(HWND aHWnd, char* aTitle)
 //------------------------------------------------------------------
 // Displays the native Print Dialog
 nsresult 
-nsDeviceContextSpecWin :: ShowNativePrintDialogEx(nsIWidget *aWidget, PRBool aQuiet)
+nsDeviceContextSpecWin::ShowNativePrintDialogEx(nsIWidget *aWidget, PRBool aQuiet)
 {
   NS_ENSURE_ARG_POINTER(aWidget);
 
@@ -1497,7 +1523,7 @@ nsDeviceContextSpecWin :: ShowNativePrintDialogEx(nsIWidget *aWidget, PRBool aQu
 //----------------------------------------------------------------------------------
 // Setup the object's data member with the selected printer's data
 nsresult
-nsDeviceContextSpecWin :: GetDataFromPrinter(PRUnichar * aName, nsIPrintSettings* aPS)
+nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSettings* aPS)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -1560,27 +1586,21 @@ nsDeviceContextSpecWin :: GetDataFromPrinter(PRUnichar * aName, nsIPrintSettings
 // if it is a HGLOBAL then we need to "lock" it to get the LPDEVMODE
 // and unlock it when we are done.
 void 
-nsDeviceContextSpecWin :: SetupPaperInfoFromSettings()
+nsDeviceContextSpecWin::SetupPaperInfoFromSettings()
 {
   LPDEVMODE devMode;
 
-  if (mDevMode == NULL && mGlobalDevMode == NULL) {
-    return;
+  GetDevMode(devMode);
+  NS_ASSERTION(devMode, "DevMode can't be NULL here");
+  if (devMode) {
+    SetupDevModeFromSettings(devMode, mPrintSettings);
   }
-  if (mGlobalDevMode != nsnull) {
-    devMode = (DEVMODE *)::GlobalLock(mGlobalDevMode);
-  } else {
-    devMode = mDevMode;
-  }
-
-  SetupDevModeFromSettings(devMode, mPrintSettings);
-
-  if (mGlobalDevMode != nsnull) ::GlobalUnlock(mGlobalDevMode);
+  UnlockDevMode();
 }
 
 //----------------------------------------------------------------------------------
 nsresult 
-nsDeviceContextSpecWin :: ShowXPPrintDialog(PRBool aQuiet)
+nsDeviceContextSpecWin::ShowXPPrintDialog(PRBool aQuiet)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -1694,6 +1714,53 @@ static void CleanupArray(PRUnichar**& aArray, PRInt32& aCount)
   aCount = 0;
 }
 
+ //----------------------------------------------------------------------------------
+// Return the Default Printer name
+/* readonly attribute wstring defaultPrinterName; */
+NS_IMETHODIMP 
+nsPrinterEnumeratorWin::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
+
+  *aDefaultPrinterName = GetDefaultPrinterNameFromGlobalPrinters(); // helper
+
+  return NS_OK;
+}
+
+/* void initPrintSettingsFromPrinter (in wstring aPrinterName, in nsIPrintSettings aPrintSettings); */
+NS_IMETHODIMP 
+nsPrinterEnumeratorWin::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
+{
+  NS_ENSURE_ARG_POINTER(aPrinterName);
+  NS_ENSURE_ARG_POINTER(aPrintSettings);
+
+  if (!*aPrinterName) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsDeviceContextSpecWin> devSpecWin = new nsDeviceContextSpecWin();
+  if (!devSpecWin) return NS_ERROR_OUT_OF_MEMORY;
+
+  if (NS_FAILED(GlobalPrinters::GetInstance()->EnumeratePrinterList())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  devSpecWin->GetDataFromPrinter(aPrinterName);
+
+  LPDEVMODE devmode;
+  devSpecWin->GetDevMode(devmode);
+  NS_ASSERTION(devmode, "DevMode can't be NULL here");
+  if (devmode) {
+    nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(aPrintSettings, devmode);
+  }
+  devSpecWin->UnlockDevMode();
+
+  // Free them, we won't need them for a while
+  GlobalPrinters::GetInstance()->FreeGlobalPrinters();
+  return NS_OK;
+}
+
+
 //----------------------------------------------------------------------------------
 // Enumerate all the Printers from the global array and pass their
 // names back (usually to script)
@@ -1796,7 +1863,7 @@ NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPri
 #endif
       if (stat == IDOK) {
         // Now set the print options from the native Page Setup
-        SetPrintSettingsFromDevMode(aPrintSettings, pDevMode);
+        nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(aPrintSettings, pDevMode);
       }
       free(pDevMode);
       free(pNewDevMode);
