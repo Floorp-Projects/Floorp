@@ -54,8 +54,6 @@
 
 #include "nsIEventQueueService.h"
 
-#include <CFString.h>
-
 #include <Quickdraw.h>
 
 // Define Class IDs -- i hate having to do this
@@ -83,10 +81,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
 
 nsCocoaWindow::nsCocoaWindow()
 : mParent(nsnull)
+, mWindow(nil)
 , mIsDialog(PR_FALSE)
 , mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
-, mWindow(nil)
 {
 
 }
