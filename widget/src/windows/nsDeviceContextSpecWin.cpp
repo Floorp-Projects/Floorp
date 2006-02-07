@@ -308,18 +308,17 @@ GetFileNameForPrintSettings(nsIPrintSettings* aPS)
 
   if (fileName) {
     if (*fileName) {
-      nsCAutoString leafName;
+      nsAutoString leafName;
       nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
       if (file) {
-        rv = file->InitWithPath(NS_ConvertUCS2toUTF8(fileName));
+        rv = file->InitWithPath(nsDependentString(fileName));
         if (NS_SUCCEEDED(rv)) {
           file->GetLeafName(leafName);
           filePicker->SetDisplayDirectory(file);
         }
       }
       if (!leafName.IsEmpty()) {
-        NS_ConvertUTF8toUCS2 unicodeFileName(leafName);
-        rv = filePicker->SetDefaultString(unicodeFileName.get());
+        rv = filePicker->SetDefaultString(leafName.get());
       }
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -347,15 +346,14 @@ GetFileNameForPrintSettings(nsIPrintSettings* aPS)
     }
   }
 
-  nsCAutoString cPath;
-  rv = localFile->GetPath(cPath);
+  nsAutoString unicodePath;
+  rv = localFile->GetPath(unicodePath);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  if (cPath.IsEmpty()) {
+  if (unicodePath.IsEmpty()) {
     rv = NS_ERROR_ABORT;
   }
 
-  NS_ConvertUTF8toUCS2 unicodePath(cPath);
   if (NS_SUCCEEDED(rv)) aPS->SetToFileName(unicodePath.get());
 
   return rv;
