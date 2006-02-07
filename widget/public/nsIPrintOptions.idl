@@ -41,7 +41,7 @@
 #include "nsIPrintSettings.idl"
 
 %{ C++
-#include "nsFont.h"
+struct nsFont;
 %}
 
 interface nsISimpleEnumerator;
@@ -49,8 +49,7 @@ interface nsISimpleEnumerator;
 /**
  * Native types
  */
-  [ref] native nsNativeFontRef(nsFont);
-  [ref] native nsNativeStringRef(nsString);
+[ref] native nsNativeFontRef(nsFont);
 
 /**
  * Print options interface
