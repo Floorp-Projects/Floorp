@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsDeviceContextSpecG_h___
@@ -26,16 +27,28 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecG.h"
 #include "nsIDeviceContextSpecPS.h"
-
 #ifdef USE_XPRINT
 #include "nsIDeviceContextSpecXPrint.h"
-#endif
+#endif /* USE_XPRINT */
 #include "nsPrintdGTK.h"
+
+typedef enum
+{
+  pmAuto = 0, /* default */
+  pmXprint,
+  pmPostScript
+} PrintMethod;
+
+/* make Xprint the default print system if user/admin has set the XPSERVERLIST"
+ * env var. See Xprt config README (/usr/openwin/server/etc/XpConfig/README) 
+ * for details.
+ */
+#define NS_DEFAULT_PRINT_METHOD ((PR_GetEnv("XPSERVERLIST")!=nsnull)?(pmXprint):(pmPostScript))
 
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec ,
                                       public nsIDeviceContextSpecPS
 #ifdef USE_XPRINT
-																		, public nsIDeviceContextSpecXp
+                                    , public nsIDeviceContextSpecXp
 #endif
 {
 public:
@@ -93,9 +106,7 @@ public:
 
   NS_IMETHOD GetUserCancelled( PRBool &aCancel );      
 
-#ifdef USE_XPRINT
-  NS_IMETHOD GetPrintMethod(int &aMethod ); 
-#endif
+  NS_IMETHOD GetPrintMethod(PrintMethod &aMethod ); 
 protected:
 /**
  * Destuct a nsDeviceContextSpecMac, this will release the printrecord
