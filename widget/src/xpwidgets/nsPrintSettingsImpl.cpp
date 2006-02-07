@@ -69,6 +69,7 @@ nsPrintSettings::nsPrintSettings() :
   mPaperHeight(11.0),
   mPaperSizeUnit(kPaperSizeInches),
   mPrintSilent(PR_FALSE),
+  mShrinkToFit(PR_FALSE),
   mHowToEnableFrameUI(kFrameEnableNone),
   mIsCancelled(PR_FALSE)
 {
@@ -574,6 +575,19 @@ NS_IMETHODIMP nsPrintSettings::GetPrintSilent(PRBool *aPrintSilent)
 NS_IMETHODIMP nsPrintSettings::SetPrintSilent(PRBool aPrintSilent)
 {
   mPrintSilent = aPrintSilent;
+  return NS_OK;
+}
+
+/* attribute boolean shrinkToFit; */
+NS_IMETHODIMP nsPrintSettings::GetShrinkToFit(PRBool *aShrinkToFit)
+{
+  NS_ENSURE_ARG_POINTER(aShrinkToFit);
+  *aShrinkToFit = mShrinkToFit;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetShrinkToFit(PRBool aShrinkToFit)
+{
+  mShrinkToFit = aShrinkToFit;
   return NS_OK;
 }
 
