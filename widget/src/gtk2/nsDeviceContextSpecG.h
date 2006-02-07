@@ -44,6 +44,7 @@
 #include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h" 
 #include "nsVoidArray.h"
+#include "nsCOMPtr.h"
 #ifdef USE_POSTSCRIPT
 #include "nsIDeviceContextSpecPS.h"
 #endif /* USE_POSTSCRIPT */
