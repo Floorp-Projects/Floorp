@@ -957,7 +957,7 @@ nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuie
   PRUnichar * printerName;
   mPrintSettings->GetPrinterName(&printerName);
   HGLOBAL hGlobalDevMode = NULL;
-  if (printerName) {
+  if (printerName && !aQuiet) {
 #ifdef UNICODE
     hGlobalDevMode = CreateGlobalDevModeAndInit(printerName, mPrintSettings);
 #else 
