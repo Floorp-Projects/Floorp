@@ -17,28 +17,36 @@
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
- *   Travis Bogard <travis@netscape.com>
+ *   
  */
 
-#ifndef nsPrintOptionsWin_h__
-#define nsPrintOptionsWin_h__
+#ifndef nsPrintSettingsWin_h__
+#define nsPrintSettingsWin_h__
 
-#include "nsPrintOptionsImpl.h"  
+#include "nsPrintSettingsImpl.h"  
+#include "nsIPrintSettingsWin.h"  
+#include <windows.h>  
 
 
 //*****************************************************************************
-//***    nsPrintOptions
+//***    nsPrintSettingsWin
 //*****************************************************************************
-class nsPrintOptionsWin : public nsPrintOptions
+class nsPrintSettingsWin : public nsPrintSettings,
+                           public nsIPrintSettingsWin
 {
 public:
-  nsPrintOptionsWin();
-  virtual ~nsPrintOptionsWin();
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIPRINTSETTINGSWIN
 
-  NS_IMETHOD CreatePrintSettings(nsIPrintSettings **_retval);
+  nsPrintSettingsWin();
+  virtual ~nsPrintSettingsWin();
 
+protected:
+  char*     mDeviceName;
+  char*     mDriverName;
+  LPDEVMODE mDevMode;
 };
 
 
 
-#endif /* nsPrintOptions_h__ */
+#endif /* nsPrintSettingsWin_h__ */

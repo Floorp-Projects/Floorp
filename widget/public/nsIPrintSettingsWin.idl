@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,10 +16,11 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2000
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Don Cone <dcone@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -35,39 +36,43 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsPrintOptionsWin.h"
-#include "nsPrintSettingsWin.h"
 
+#include "nsISupports.idl"
 
+%{ C++
+#include "windows.h"
+%}
 
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsWin.h
- *	@update 6/21/00 dwc
+/**
+ * Native types
  */
-nsPrintOptionsWin::nsPrintOptionsWin()
-{
+  [ptr] native nsDevMode(DEVMODE);
 
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 6/21/00 dwc
+/**
+ * Simplified PrintSettings for Windows interface 
+ *
+ * @status UNDER_REVIEW
  */
-nsPrintOptionsWin::~nsPrintOptionsWin()
+[scriptable, uuid(FF328FE4-41D5-4b78-82AB-6B1FBC7930AF)]
+
+interface nsIPrintSettingsWin : nsISupports
 {
-}
+  /**
+   * Data Members
+   *
+   * Each of these data members make a copy 
+   * of the contents. If you get the value, 
+   * you own the memory.
+   *
+   * The following three pieces of data are needed
+   * to create a DC for printing. These are typcially 
+   * gotten via the PrintDLG call ro can be obtained
+   * via the "m_pd" data member of the CPrintDialog
+   * in MFC.
+   */
+  [noscript] attribute charPtr deviceName;
+  [noscript] attribute charPtr driverName;
 
-/* nsIPrintSettings CreatePrintSettings (); */
-NS_IMETHODIMP nsPrintOptionsWin::CreatePrintSettings(nsIPrintSettings **_retval)
-{
-  nsresult rv = NS_OK;
-  nsPrintSettingsWin* printSettings = new nsPrintSettingsWin(); // does not initially ref count
-  NS_ASSERTION(printSettings, "Can't be NULL!");
+  [noscript] attribute nsDevMode devMode;
 
-  rv = printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  InitPrintSettingsFromPrefs(*_retval, PR_FALSE, 0); // ignore return value
-
-  return rv;
-}
+};
