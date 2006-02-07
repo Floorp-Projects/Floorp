@@ -139,6 +139,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
   }
 
   char *path;
+  PRBool     canPrint       = PR_FALSE;
   PRBool     reversed       = PR_FALSE;
   PRBool     color          = PR_FALSE;
   PRBool     tofile         = PR_FALSE;
@@ -153,73 +154,83 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
   double     dtop           = 0.5;
   double     dbottom        = 0.5; 
 
-  rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
 
-  nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
-  if (ioParamBlock)
-    paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
+  if (PR_FALSE == aQuiet ) {
+    rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
 
-  if (paramBlockWrapper) {
-    paramBlockWrapper->SetData(ioParamBlock);
-    paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+    nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
+    if (ioParamBlock)
+      paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
 
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-    if (wwatch) {
-      nsCOMPtr<nsIDOMWindow> newWindow;
-      rv = wwatch->OpenWindow(0, "chrome://global/content/printdialog.xul",
-		    "_blank", "chrome,modal", paramBlockWrapper,
-		    getter_AddRefs(newWindow));
+    if (paramBlockWrapper) {
+      paramBlockWrapper->SetData(ioParamBlock);
+      paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch) {
+        nsCOMPtr<nsIDOMWindow> newWindow;
+        rv = wwatch->OpenWindow(0, "chrome://global/content/printdialog.xul",
+		      "_blank", "chrome,modal", paramBlockWrapper,
+		      getter_AddRefs(newWindow));
+      }
     }
+    if (NS_SUCCEEDED(rv)) {
+      PRInt32 buttonPressed = 0;
+      ioParamBlock->GetInt(0, &buttonPressed);
+      if (buttonPressed == 0) {
+        canPrint = PR_TRUE;
+      }
+    }
+  } else {
+    canPrint = PR_TRUE;
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 buttonPressed = 0;
-    ioParamBlock->GetInt(0, &buttonPressed);
-    if (buttonPressed == 0) {
 
-      if (printService) {
-	printService->GetPrintReversed(&reversed);
-	printService->GetPrintInColor(&color);
-	printService->GetPaperSize(&paper_size);
-	printService->GetPrintCommand(&command);
-	printService->GetPrintRange(&printRange);
-	printService->GetToFileName(&printfile);
-	printService->GetPrintToFile(&tofile);
-	printService->GetStartPageRange(&fromPage);
-	printService->GetEndPageRange(&toPage);
-	printService->GetMarginTop(&dtop);
-	printService->GetMarginLeft(&dleft);
-	printService->GetMarginBottom(&dbottom);
-	printService->GetMarginRight(&dright);
 
-	if (command != nsnull && printfile != nsnull) {
-	  // convert Unicode strings to cstrings
-	  nsAutoString cmdStr;
-	  nsAutoString printFileStr;
-	  cmdStr        = command;
-	  printFileStr  = printfile;
-	  char *       pCmdStr       = cmdStr.ToNewCString();
-	  char *       pPrintFileStr = printFileStr.ToNewCString();
-	  sprintf( mPrData.command, pCmdStr );
-	  sprintf( mPrData.path, pPrintFileStr);
-	  nsMemory::Free(pCmdStr);
-	  nsMemory::Free(pPrintFileStr);
-	}
+  if (canPrint) {
+    if (printService) {
+      printService->GetPrintReversed(&reversed);
+      printService->GetPrintInColor(&color);
+      printService->GetPaperSize(&paper_size);
+      printService->GetPrintCommand(&command);
+      printService->GetPrintRange(&printRange);
+      printService->GetToFileName(&printfile);
+      printService->GetPrintToFile(&tofile);
+      printService->GetStartPageRange(&fromPage);
+      printService->GetEndPageRange(&toPage);
+      printService->GetMarginTop(&dtop);
+      printService->GetMarginLeft(&dleft);
+      printService->GetMarginBottom(&dbottom);
+      printService->GetMarginRight(&dright);
+
+      if (command != nsnull && printfile != nsnull) {
+	      // convert Unicode strings to cstrings
+	      nsAutoString cmdStr;
+	      nsAutoString printFileStr;
+	      cmdStr        = command;
+	      printFileStr  = printfile;
+	      char *       pCmdStr       = cmdStr.ToNewCString();
+	      char *       pPrintFileStr = printFileStr.ToNewCString();
+	      sprintf( mPrData.command, pCmdStr );
+	      sprintf( mPrData.path, pPrintFileStr);
+	      nsMemory::Free(pCmdStr);
+	      nsMemory::Free(pPrintFileStr);
+      }
 
 #ifdef DEBUG_rods
-	printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
-	printf("printRange     %d\n", printRange);
-	printf("fromPage       %d\n", fromPage);
-	printf("toPage         %d\n", toPage);
+	    printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
+	    printf("printRange     %d\n", printRange);
+	    printf("fromPage       %d\n", fromPage);
+	    printf("toPage         %d\n", toPage);
 #endif
-      } else {
+     } else {
 #ifndef VMS
-	sprintf( mPrData.command, "lpr" );
+      sprintf( mPrData.command, "lpr" );
 #else
-	// Note to whoever puts the "lpr" into the prefs file. Please contact me
-	// as I need to make the default be "print" instead of "lpr" for OpenVMS.
-	sprintf( mPrData.command, "print" );
+	    // Note to whoever puts the "lpr" into the prefs file. Please contact me
+	    // as I need to make the default be "print" instead of "lpr" for OpenVMS.
+	    sprintf( mPrData.command, "print" );
 #endif
       }
 
@@ -235,25 +246,22 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
       // PWD, HOME, or fail 
     
       if (!printfile) {
-	if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
-	  if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
-	    strcpy( mPrData.path, "mozilla.ps" );
-	if ( path != (char *) NULL )
-	  sprintf( mPrData.path, "%s/mozilla.ps", path );
-	else
-	  return NS_ERROR_FAILURE;
+	      if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
+	        if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
+	          strcpy( mPrData.path, "mozilla.ps" );
+	          if ( path != (char *) NULL )
+	            sprintf( mPrData.path, "%s/mozilla.ps", path );
+	          else
+	            return NS_ERROR_FAILURE;
       }
       if (command != nsnull) {
-	nsMemory::Free(command);
+	      nsMemory::Free(command);
       }
       if (printfile != nsnull) {
-	nsMemory::Free(printfile);
+	      nsMemory::Free(printfile);
       }
-
-      return NS_OK;
-    }
+    return NS_OK;
   }
-
   return NS_ERROR_FAILURE;
 }
 
