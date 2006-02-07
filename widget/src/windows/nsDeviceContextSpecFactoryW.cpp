@@ -36,13 +36,10 @@ nsDeviceContextSpecFactoryWin :: ~nsDeviceContextSpecFactoryWin()
 {
 }
 
-static NS_DEFINE_IID(kDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_IID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecFactoryWin, kDeviceContextSpecFactoryIID)
-NS_IMPL_ADDREF(nsDeviceContextSpecFactoryWin)
-NS_IMPL_RELEASE(nsDeviceContextSpecFactoryWin)
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryWin, nsIDeviceContextSpecFactory)
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: Init(void)
 {
