@@ -244,14 +244,6 @@ interface nsIPrintOptions : nsISupports
   nsISimpleEnumerator availablePrinters ();
 
   /**
-   * Indicates whether the list of printers contains the extended
-   * information. i.e. That there are "pairs" of values returned. Where the second
-   * value is either "FILE", "PRINTER", "BOTH"
-   * 
-   */
-  readonly attribute boolean isExtended;
-  
-  /**
    * display Printer Job Properties dialog
    */
    void displayJobProperties (in wstring aPrinter, in nsIPrintSettings aPrintSettings, out boolean aDisplayed);
@@ -275,25 +267,6 @@ interface nsIPrinterEnumerator : nsISupports
    * @return void
    */
   void enumeratePrinters(out PRUint32 aCount,[retval, array, size_is(aCount)] out wstring aResult);
-
-  /**
-   * Returns an array of "pairs" of strings
-   * The first string in the pair is the printer name 
-   * the second string in the pair is can be "FILE", "PRINTER", or "BOTH"
-   *    which indicates whether the printer driver associated with this printer
-   *    ALWAYS "spools" to a file or to a printer.
-   * 
-   * If this type of information is not available, it should return zero items
-   *
-   * Note: On some platforms any given driveris able to spool to either
-   *
-   * @param  aCount     returns number of printers AND info strings returned
-   *                    i.e If there are 5 printers define the 
-   *                    "count" returned will be 10
-   * @param  aResult    returns array of names
-   * @return void
-   */
-  void enumeratePrintersExtended(out PRUint32 aCount,[retval, array, size_is(aCount)] out wstring aResult);
 
   /*  takes printer selected and will display job properties dlg for that printer
    *  returns true if dialog displays
