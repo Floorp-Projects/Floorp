@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Jessica Blanco <jblanco@us.ibm.com>
- *   Bastiaan Jacques <baafie@planet.nl>
+ *   Bastiaan Jacques <b.jacques@planet.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -119,26 +119,18 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 
 
 nsPrintOptions::nsPrintOptions()
+: mDefaultFont("Times", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+               NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(10))
 {
 }
 
 nsPrintOptions::~nsPrintOptions()
 {
-  if (mDefaultFont) {
-    delete mDefaultFont;
-  }
 }
-
-
 
 nsresult
 nsPrintOptions::Init()
 {
-  mDefaultFont = new nsFont("Times", NS_FONT_STYLE_NORMAL,
-                            NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0,
-                            NSIntPointsToTwips(10));
-  NS_ENSURE_TRUE(mDefaultFont, NS_ERROR_OUT_OF_MEMORY);
-
   nsresult rv;
   nsCOMPtr<nsIPrefService> prefService =
       do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
@@ -179,14 +171,8 @@ nsPrinterListEnumerator::nsPrinterListEnumerator() :
 
 nsPrinterListEnumerator::~nsPrinterListEnumerator()
 {
-  if (!mPrinters)
-    return;
-
-  PRUint32 i;
-  for (i = 0; i < mCount; i++ ) {
-    nsMemory::Free(mPrinters[i]);
-  }
-  nsMemory::Free(mPrinters);
+  if (mPrinters)
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mCount, mPrinters);
 }
 
 NS_IMPL_ISUPPORTS1(nsPrinterListEnumerator, nsISimpleEnumerator)
@@ -195,11 +181,9 @@ NS_IMETHODIMP
 nsPrinterListEnumerator::Init()
 {
   nsresult rv;
-  nsCOMPtr<nsIPrinterEnumerator> printerEnumerator;
-
-  printerEnumerator = do_CreateInstance(kCPrinterEnumerator, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsIPrinterEnumerator> printerEnumerator =
+    do_CreateInstance(kCPrinterEnumerator, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return printerEnumerator->EnumeratePrinters(&mCount, &mPrinters);
 }
@@ -214,16 +198,15 @@ nsPrinterListEnumerator::HasMoreElements(PRBool *result)
 NS_IMETHODIMP
 nsPrinterListEnumerator::GetNext(nsISupports **aPrinter)
 {
-  if (mIndex >= mCount) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  NS_ENSURE_STATE(mIndex < mCount);
 
   PRUnichar *printerName = mPrinters[mIndex++];
-  nsCOMPtr<nsISupportsString> printerNameWrapper;
-  nsresult rv;
 
-  printerNameWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+  nsresult rv;
+  nsCOMPtr<nsISupportsString> printerNameWrapper =
+    do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
   printerNameWrapper->SetData(nsDependentString(printerName));
   *aPrinter = NS_STATIC_CAST(nsISupports*, printerNameWrapper);
   NS_ADDREF(*aPrinter);
@@ -234,31 +217,25 @@ NS_IMETHODIMP
 nsPrintOptions::SetFontNamePointSize(const nsAString& aFontName,
                                      PRInt32 aPointSize)
 {
-  if (mDefaultFont && !aFontName.IsEmpty() && aPointSize > 0) {
-    mDefaultFont->name = aFontName;
-    mDefaultFont->size = NSIntPointsToTwips(aPointSize);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  if (!aFontName.IsEmpty())
+    mDefaultFont.name = aFontName;
+  if (aPointSize > 0)
+    mDefaultFont.size = NSIntPointsToTwips(aPointSize);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPrintOptions::SetDefaultFont(nsFont &aFont)
 {
-  if (mDefaultFont)
-    delete mDefaultFont;
-
-  mDefaultFont = new nsFont(aFont);
-  NS_ENSURE_TRUE(mDefaultFont, NS_ERROR_OUT_OF_MEMORY);
-
+  mDefaultFont = aFont;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPrintOptions::GetDefaultFont(nsFont &aFont)
 {
-  NS_ENSURE_STATE(mDefaultFont);
-  aFont = *mDefaultFont;
+  aFont = mDefaultFont;
   return NS_OK;
 }
 
@@ -944,9 +921,8 @@ nsPrintOptions::DisplayJobProperties(const PRUnichar *aPrinter,
   *aDisplayed = PR_FALSE;
 
   nsresult rv;
-  nsCOMPtr<nsIPrinterEnumerator> propDlg;
-
-  propDlg = do_CreateInstance(kCPrinterEnumerator, &rv);
+  nsCOMPtr<nsIPrinterEnumerator> propDlg =
+    do_CreateInstance(kCPrinterEnumerator, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ENSURE_ARG_POINTER(aPrintSettings);
