@@ -872,20 +872,6 @@ NS_IMETHODIMP nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings * *aGlobal
   if (!mGlobalPrintSettings) {
     CreatePrintSettings(getter_AddRefs(mGlobalPrintSettings));
     NS_ASSERTION(mGlobalPrintSettings, "Can't be NULL!");
-    // The very first we should initialize from the default printer
-    if (mGlobalPrintSettings) {
-      nsresult rv;
-      nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        PRUnichar* printerName = nsnull;
-        // Not sure if all platforms will return the proper error code
-        // so for insurance, make sure there is a printer name
-        if (NS_SUCCEEDED(prtEnum->GetDefaultPrinterName(&printerName)) && printerName && *printerName) {
-          prtEnum->InitPrintSettingsFromPrinter(printerName, mGlobalPrintSettings);
-          nsMemory::Free(printerName);
-        }
-      }
-    }
   }
 
   // If this still NULL, we have some very big problems going on
@@ -904,11 +890,7 @@ NS_IMETHODIMP
 nsPrintOptions::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
 {
     NS_ENSURE_ARG_POINTER(aNewPrintSettings);
-
-    nsresult rv = CreatePrintSettings(aNewPrintSettings);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = InitPrintSettingsFromPrinter(nsnull, *aNewPrintSettings);
-    return rv;
+    return CreatePrintSettings(aNewPrintSettings);
 }
 
 //-----------------------------------------------------------------------
@@ -930,19 +912,12 @@ NS_IMETHODIMP
 nsPrintOptions::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
 {
     NS_ENSURE_ARG_POINTER(aPrintSettings);
+    NS_ENSURE_ARG_POINTER(aPrinterName);
 
-    PRUnichar* printerName = nsnull;
-    if (!aPrinterName) {
-        GetDefaultPrinterName(&printerName);
-        if (!printerName || !*printerName) return NS_OK;
-    }
     nsresult rv;
     nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID, &rv);
     if (prtEnum) {
-        rv = prtEnum->InitPrintSettingsFromPrinter(aPrinterName?aPrinterName:printerName, aPrintSettings);
-    }
-    if (printerName) {
-        nsMemory::Free(printerName);
+      rv = prtEnum->InitPrintSettingsFromPrinter(aPrinterName, aPrintSettings);
     }
     return rv;
 }
