@@ -602,10 +602,18 @@ mozStorageStatement::GetUTF8String(PRUint32 aIndex, nsACString & _retval)
     if (!mExecuting)
         return NS_ERROR_FAILURE;
 
-    int slen = sqlite3_column_bytes (mDBStatement, aIndex);
-    const unsigned char *cstr = sqlite3_column_text (mDBStatement, aIndex);
-    _retval.Assign ((char *) cstr, slen);
-
+    PRInt32 t;
+    nsresult rv = GetTypeOfIndex (aIndex, &t);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (t == VALUE_TYPE_NULL) {
+        // null columns get IsVoid set to distinguish them from empty strings
+        _retval.Truncate(0);
+        _retval.SetIsVoid(PR_TRUE);
+    } else {
+        int slen = sqlite3_column_bytes (mDBStatement, aIndex);
+        const unsigned char *cstr = sqlite3_column_text (mDBStatement, aIndex);
+        _retval.Assign ((char *) cstr, slen);
+    }
     return NS_OK;
 }
 
@@ -617,11 +625,19 @@ mozStorageStatement::GetString(PRUint32 aIndex, nsAString & _retval)
     if (!mExecuting)
         return NS_ERROR_FAILURE;
 
-    int slen = sqlite3_column_bytes16 (mDBStatement, aIndex);
-    const void *text = sqlite3_column_text16 (mDBStatement, aIndex);
-    const PRUnichar *wstr = NS_STATIC_CAST(const PRUnichar *, text);
-    _retval.Assign (wstr, slen/2);
-
+    PRInt32 t;
+    nsresult rv = GetTypeOfIndex (aIndex, &t);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (t == VALUE_TYPE_NULL) {
+        // null columns get IsVoid set to distinguish them from empty strings
+        _retval.Truncate(0);
+        _retval.SetIsVoid(PR_TRUE);
+    } else {
+        int slen = sqlite3_column_bytes16 (mDBStatement, aIndex);
+        const void *text = sqlite3_column_text16 (mDBStatement, aIndex);
+        const PRUnichar *wstr = NS_STATIC_CAST(const PRUnichar *, text);
+        _retval.Assign (wstr, slen/2);
+    }
     return NS_OK;
 }
 
