@@ -116,8 +116,6 @@ nsFont* nsPrintOptions::sDefaultFont = nsnull;
  */
 nsPrintOptions::nsPrintOptions()
 {
-  NS_INIT_ISUPPORTS();
-
   /* member initializers and constructor code */
   if (sDefaultFont == nsnull) {
     sDefaultFont = new nsFont("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
@@ -170,7 +168,6 @@ nsPrinterListEnumerator : public nsISimpleEnumerator
 nsPrinterListEnumerator::nsPrinterListEnumerator() :
   mPrinters(nsnull), mCount(0), mIndex(0)
 {
-   NS_INIT_ISUPPORTS();
 }
 
 nsPrinterListEnumerator::~nsPrinterListEnumerator()

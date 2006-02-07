@@ -216,7 +216,6 @@ int            GlobalPrinters::mGlobalNumPrinters = 0;
 nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()\n"));
-  NS_INIT_ISUPPORTS();
 }
 
 nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
@@ -537,7 +536,6 @@ nsresult CopyPrinterCharPref(nsIPref *pref, const char *modulename, const char *
 //  Printer Enumerator
 nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorGTK, nsIPrinterEnumerator)
