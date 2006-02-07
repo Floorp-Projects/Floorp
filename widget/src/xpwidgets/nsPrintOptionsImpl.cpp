@@ -1228,7 +1228,7 @@ nsPrintOptions::WritePrefDouble(const char * aPrefId, double aVal)
   NS_ENSURE_ARG_POINTER(aPrefId);
 
   char str[16]; // max 9 chars in below snprintf(), 16 will do nicely
-  int ret = snprintf(str, sizeof(str), "%6.2f", aVal);
+  int ret = PR_snprintf(str, sizeof(str), "%6.2f", aVal);
   NS_ENSURE_TRUE(ret >= 0, NS_ERROR_FAILURE);
 
   return mPrefBranch->SetCharPref(aPrefId, str);
