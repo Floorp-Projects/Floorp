@@ -48,6 +48,9 @@
 //***    nsPrintSession
 //*****************************************************************************
 
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY default
+
 class NS_GFX nsPrintSession : public nsIPrintSession,
                               public nsSupportsWeakReference
 {
@@ -60,5 +63,8 @@ public:
   
   virtual nsresult Init();
 };
+
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY hidden
 
 #endif // nsPrintSession_h__
