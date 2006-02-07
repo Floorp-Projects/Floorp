@@ -1312,7 +1312,7 @@ Tester::Tester()
       {"All", nsIPrintSettings::kInitSaveAll},
       {nsnull, 0}};
 
-    nsString prefix; prefix.AssignWithConversion("Printer Name");
+    nsString prefix; prefix.AssignLiteral("Printer Name");
     PRInt32 i = 0;
     while (gSettings[i].mName != nsnull) {
       printf("------------------------------------------------\n");
