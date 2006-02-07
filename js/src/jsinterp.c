@@ -2152,6 +2152,7 @@ interrupt:
                 if (hookData) {
                     JSInterpreterHook hook = cx->runtime->callHook;
                     if (hook) {
+                        SAVE_SP_AND_PC(fp);
                         hook(cx, fp, JS_FALSE, &ok, hookData);
                         LOAD_INTERRUPT_HANDLER(rt);
                     }
@@ -3834,6 +3835,7 @@ interrupt:
                 /* Call the debugger hook if present. */
                 hook = cx->runtime->callHook;
                 if (hook) {
+                    newifp->frame.pc = NULL;
                     newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
                                             cx->runtime->callHookData);
                     LOAD_INTERRUPT_HANDLER(rt);
