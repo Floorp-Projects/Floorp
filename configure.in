@@ -4225,10 +4225,12 @@ NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http keyword res viewsource"
 NECKO_SMALL_BUFFERS=
 SUNCTL=
 JS_STATIC_BUILD=
+XPC_IDISPATCH_SUPPORT=
 
 case "$target_os" in
     msvc*|mks*|cygwin*|mingw*)
         if test -z "$GNU_CC"; then 
+            XPC_IDISPATCH_SUPPORT=1
             MOZ_NO_ACTIVEX_SUPPORT=
             MOZ_ACTIVEX_SCRIPTING_SUPPORT=1
         fi
@@ -5431,6 +5433,15 @@ AC_SUBST(MOZ_UPDATE_PACKAGING)
 dnl ========================================================
 dnl ActiveX
 dnl ========================================================
+
+MOZ_ARG_DISABLE_BOOL(xpconnect-idispatch,
+[  --disable-xpconnect-idispatch
+                          Disable building of xpconnect support for IDispatch
+                          (win32 only)],
+    XPC_IDISPATCH_SUPPORT=,
+    XPC_IDISPATCH_SUPPORT=1)
+AC_SUBST(XPC_IDISPATCH_SUPPORT)
+
 MOZ_ARG_DISABLE_BOOL(activex,
 [  --disable-activex       Disable building of ActiveX control (win32 only)],
     MOZ_NO_ACTIVEX_SUPPORT=1,
