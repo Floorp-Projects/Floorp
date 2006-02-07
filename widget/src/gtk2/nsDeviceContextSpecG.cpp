@@ -160,9 +160,9 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 
   if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
 	if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
-  		strcpy( mPrData.path, "netscape.ps" );
+  		strcpy( mPrData.path, "mozilla.ps" );
   if ( path != (char *) NULL )
-	sprintf( mPrData.path, "%s/netscape.ps", path );
+	sprintf( mPrData.path, "%s/mozilla.ps", path );
   else
 	return NS_ERROR_FAILURE;
 
