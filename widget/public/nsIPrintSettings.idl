@@ -88,6 +88,7 @@ interface nsIPrintSettings : nsISupports
   const unsigned long kInitSaveToFileName     = 0x00400000;
   const unsigned long kInitSavePageDelay      = 0x00800000;
   const unsigned long kInitSaveMargins        = 0x01000000;
+  const unsigned long kInitSaveNativeData     = 0x02000000;
   const unsigned long kInitSaveAll            = 0xFFFFFFFF;
 
   /* Print Option Flags for Bit Field*/
@@ -164,6 +165,11 @@ interface nsIPrintSettings : nsISupports
    * Returns W/H in Twips from Paper Size H/W
    */
   void GetPageSizeInTwips(out long aWidth, out long aHeight);
+
+  /**
+   * Makes a new copy
+   */
+    nsIPrintSettings clone();
 
   /**
    * Data Members
