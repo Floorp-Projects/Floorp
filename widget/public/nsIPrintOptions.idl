@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Don Cone <dcone@netscape.com>
+ *   Jessica Blanco <jblanco@us.ibm.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -44,6 +45,8 @@
 #include "nsMargin.h"
 #include "nsFont.h"
 %}
+
+interface nsISimpleEnumerator;
 
 /**
  * Native types
@@ -171,6 +174,8 @@ interface nsIPrintOptions : nsISupports
   attribute long    paperSize;     /*  see page size consts */
   attribute long    orientation;   /*  see orientation consts */
   attribute wstring printCommand;
+  attribute long    numCopies;
+  attribute wstring printer;
   attribute boolean printToFile;
   attribute wstring toFileName;
 
@@ -188,6 +193,15 @@ interface nsIPrintOptions : nsISupports
   /* Purposely made this an "in" arg */
   [noscript] void GetDefaultFont(in nsNativeFontRef aMargin);
 
+  /**
+   * available Printers
+   */
+  nsISimpleEnumerator availablePrinters ();
+  
+  /**
+   * display Printer Job Properties dialog
+   */
+   void displayJobProperties (in wstring aPrinter, out boolean aDisplayed);
 
   /**
    * Native data constants
@@ -195,5 +209,23 @@ interface nsIPrintOptions : nsISupports
   const short kNativeDataPrintRecord        = 0;
 
   [noscript] voidPtr GetNativeData(in short aDataType);
-
 };
+
+[scriptable, uuid(a6cf9128-15b3-11d2-932e-00805f8add32)]
+interface nsIPrinterEnumerator : nsISupports
+{
+  /**
+   * Return an array of the names of all installed printers.
+   *
+   * @param  aCount     returns number of printers returned
+   * @param  aResult    returns array of names
+   * @return void
+   */
+  void enumeratePrinters(out PRUint32 aCount,[retval, array, size_is(aCount)] out wstring aResult);
+
+  /*  takes printer selected and will display job properties dlg for that printer
+   *  returns true if dialog displays
+   */
+  void displayPropertiesDlg(in wstring aPrinter);
+};
+
