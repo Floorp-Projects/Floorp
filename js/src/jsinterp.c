@@ -2164,12 +2164,16 @@ interrupt:
                  * calls eval unexpectedly (in a way that is hidden from the
                  * compiler). See bug 325540.
                  */
-                if (fp->callobj)
+                if (fp->callobj) {
+                    SAVE_SP_AND_PC(fp);
                     ok &= js_PutCallObject(cx, fp);
+                }
 #endif
 #if JS_HAS_ARGS_OBJECT
-                if (fp->argsobj)
+                if (fp->argsobj) {
+                    SAVE_SP_AND_PC(fp);
                     ok &= js_PutArgsObject(cx, fp);
+                }
 #endif
 
                 /* Restore context version only if callee hasn't set version. */
@@ -3854,7 +3858,7 @@ interrupt:
 
                 /* Push the frame and set interpreter registers. */
                 cx->fp = fp = &newifp->frame;
-                fp->pc = pc = script->code;
+                pc = script->code;
 #ifndef JS_THREADED_INTERP
                 endpc = pc + script->length;
 #endif
