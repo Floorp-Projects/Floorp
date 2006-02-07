@@ -75,6 +75,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryGTK :: Init(void)
  *  @update   dc 2/16/98
  */
 NS_IMETHODIMP nsDeviceContextSpecFactoryGTK :: CreateDeviceContextSpec(nsIWidget *aWidget,
+                                                                       nsIPrintSettings* aPrintSettings,
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
@@ -83,14 +84,13 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryGTK :: CreateDeviceContextSpec(nsIWidget
   nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    rv = ((nsDeviceContextSpecGTK *)devSpec.get())->Init(aQuiet);
+    rv = ((nsDeviceContextSpecGTK *)devSpec.get())->Init(aPrintSettings, aQuiet);
     if (NS_SUCCEEDED(rv))
     {
       aNewSpec = devSpec;
       NS_ADDREF(aNewSpec);
     }
   }
-
   return rv;  
 }
 

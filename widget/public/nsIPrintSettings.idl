@@ -39,6 +39,17 @@
 
 #include "nsISupports.idl"
 
+
+%{ C++
+#include "nsMargin.h"
+#include "nsFont.h"
+%}
+
+/**
+ * Native types
+ */
+  [ref] native nsNativeMarginRef(nsMargin);
+
 /**
  * Simplified graphics interface for JS rendering.
  *
@@ -46,14 +57,13 @@
  */
 [scriptable, uuid(83427530-F790-11d4-A869-00105A183419)]
 
-
-
 interface nsIPrintSettings : nsISupports
 {
+
   /* Print Option Flags for Bit Field*/
-  const long kOptPrintOddPages              = 0x00000001;
-  const long kOptPrintEvenPages             = 0x00000002;
-  const long kPrintOptionsEnableSelectionRB = 0x00000004;
+  const long kPrintOddPages     = 0x00000001;
+  const long kPrintEvenPages    = 0x00000002;
+  const long kEnableSelectionRB = 0x00000004;
 
   /* Print Range Enums */
   const long kRangeAllPages           = 0;
@@ -67,13 +77,22 @@ interface nsIPrintSettings : nsISupports
   const long kJustRight  = 2;
 
   /**
-   * Page Size Constants
+   * FrameSet Default Type Constants
    */
-  const short kLetterPaperSize    = 0;
-  const short kLegalPaperSize     = 1;
-  const short kExecutivePaperSize = 2;
-  const short kA4PaperSize        = 3;
-  const short kA3PaperSize        = 4;
+  const short kUseInternalDefault    = 0;
+  const short kUseSettingWhenPossible = 1;
+
+  /**
+   * Page Size Type Constants
+   */
+  const short kPaperSizeNativeData  = 0;
+  const short kPaperSizeDefined     = 1;
+
+  /**
+   * Page Size Unit Constants
+   */
+  const short kPaperSizeInches      = 0;
+  const short kPaperSizeMillimeters = 1;
 
   /**
    * Orientation Constants
@@ -90,6 +109,13 @@ interface nsIPrintSettings : nsISupports
   const short kEachFrameSep  = 3;
 
   /**
+   * How to Enable Frame Set Printing Constants
+   */
+  const short kFrameEnableNone        = 0;
+  const short kFrameEnableAll         = 1;
+  const short kFrameEnableAsIsAndEach = 2;
+
+  /**
    * Set PrintOptions 
    */
   void SetPrintOptions(in PRInt32 aType, in PRBool aTurnOnOff);
@@ -103,6 +129,11 @@ interface nsIPrintSettings : nsISupports
    * Set PrintOptions Bit field
    */
   PRInt32 GetPrintOptionsBits();
+
+  /**
+   * Returns W/H in Twips from Paper Size H/W
+   */
+  void GetPageSizeInTwips(out long aWidth, out long aHeight);
 
   /**
    * Data Members
@@ -132,18 +163,34 @@ interface nsIPrintSettings : nsISupports
   attribute wstring footerStrCenter;
   attribute wstring footerStrRight;
 
+  attribute short   howToEnableFrameUI;  /* indicates how to enable the frameset UI            */
+  attribute boolean isCancelled;         /* indicates whether the print job has been cancelled */
+  attribute short   printFrameTypeUsage; /* indicates whether to use the interal value or not  */
   attribute short   printFrameType;
-  attribute boolean PrintSilent;	/* print without putting up the dialog */
+  attribute boolean printSilent;	/* print without putting up the dialog */
 
   /* Additional XP Related */
+  attribute short   paperSizeType; /* use native data or is defined here */
+  attribute short   paperData;     /* native data value */
+  attribute double  paperWidth;    /* width of the paper in inches or mm */
+  attribute double  paperHeight;   /* height of the paper in inches or mm */
+  attribute short   paperSizeUnit; /* paper is in inches or mm */
+
   attribute boolean printReversed;
   attribute boolean printInColor;  /* a false means grayscale */
   attribute long    paperSize;     /*  see page size consts */
   attribute long    orientation;   /*  see orientation consts */
   attribute wstring printCommand;
+  attribute long    numCopies;
+  attribute wstring printerName;
   attribute boolean printToFile;
   attribute wstring toFileName;
 
   attribute long    printPageDelay; /* in milliseconds */
+
+  /* C++ Helper Functions */
+  [noscript] void SetMarginInTwips(in nsNativeMarginRef aMargin);
+  /* Purposely made this an "in" arg */
+  [noscript] void GetMarginInTwips(in nsNativeMarginRef aMargin);
 
 };

@@ -42,6 +42,8 @@
 #include "nsIDeviceContextSpecFactory.h"
 #include "nsIDeviceContextSpec.h"
 
+class nsIPrintSettings;
+
 class nsDeviceContextSpecFactoryWin : public nsIDeviceContextSpecFactory
 {
 public:
@@ -51,6 +53,7 @@ public:
 
   NS_IMETHOD Init(void);
   NS_IMETHOD CreateDeviceContextSpec(nsIWidget *aWidget,
+                                     nsIPrintSettings* aPrintSettings,
                                      nsIDeviceContextSpec *&aNewSpec,
                                      PRBool aQuiet);
 

@@ -43,6 +43,7 @@
 
 class nsIDeviceContextSpec;
 class nsIWidget;
+class nsIPrintSettings;
 
 #define NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID   \
 { 0xf6669570, 0x7b3d, 0x11d2, \
@@ -78,6 +79,7 @@ public:
    * @return error status
    */
   NS_IMETHOD CreateDeviceContextSpec(nsIWidget *aWidget,
+                                     nsIPrintSettings* aPrintSettings,
                                      nsIDeviceContextSpec *&aNewSpec,
                                      PRBool aQuiet) = 0;
 };

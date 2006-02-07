@@ -40,6 +40,8 @@
 #define nsDeviceContextSpecWin_h___
 
 #include "nsIDeviceContextSpec.h"
+#include "nsIPrintOptions.h" // For nsIPrinterEnumerator
+#include "nsIPrintSettings.h"
 #include <windows.h>
 
 class nsDeviceContextSpecWin : public nsIDeviceContextSpec
@@ -49,17 +51,52 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(char *aDriverName, char *aDeviceName, HGLOBAL aDEVMODE);
-  NS_IMETHOD GetDriverName(char *&aDriverName) const;
-  NS_IMETHOD GetDeviceName(char *&aDeviceName) const;
-  NS_IMETHOD GetDEVMODE(HGLOBAL &aDevMode) const;
+  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, PRBool aQuiet);
+
+  void   GetDriverName(char *&aDriverName) const   { aDriverName = mDriverName;     }
+  void   GetDeviceName(char *&aDeviceName) const   { aDeviceName = mDeviceName;     }
+  void   GetGlobalDevMode(HGLOBAL &aHGlobal) const { aHGlobal = mGlobalDevMode;     }
+  void   GetDevMode(LPDEVMODE &aDevMode) const     { aDevMode = mDevMode;           }
+  PRBool IsDEVMODEGlobalHandle()  const            { return mIsDEVMODEGlobalHandle; }
 
 protected:
+  nsresult ShowXPPrintDialog(PRBool aQuiet);
+  nsresult ShowNativePrintDialog(nsIWidget* aWidget, PRBool aQuiet);
+
+  void SetDeviceName(char* aDeviceName);
+  void SetDriverName(char* aDriverName);
+  void SetGlobalDevMode(HGLOBAL aHGlobal);
+  void SetDevMode(LPDEVMODE aDevMode);
+
+  void GetDataFromPrinter(PRUnichar * aName);
+  void SetupPaperInfoFromSettings();
+
   virtual ~nsDeviceContextSpecWin();
 
-  char    *mDriverName;
-  char    *mDeviceName;
-  HGLOBAL mDEVMODE;
+  char*     mDriverName;
+  char*     mDeviceName;
+  HGLOBAL   mGlobalDevMode;
+  LPDEVMODE mDevMode;
+  PRBool    mIsDEVMODEGlobalHandle;
+
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
+};
+
+
+//-------------------------------------------------------------------------
+// Printer Enumerator
+//-------------------------------------------------------------------------
+class nsPrinterEnumeratorWin : public nsIPrinterEnumerator
+{
+public:
+  nsPrinterEnumeratorWin();
+  ~nsPrinterEnumeratorWin();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRINTERENUMERATOR
+
+private:
+  // helper 
+  nsresult DoEnumeratePrinters(PRBool aDoExtended, PRUint32* aCount, PRUnichar*** aResult);
 };
 
 #endif
