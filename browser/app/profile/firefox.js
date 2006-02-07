@@ -438,3 +438,5 @@ pref("layout.textarea.spellcheckDefault", true);
 
 pref("view_source.editor.path", "");
 pref("view_source.editor.external", false);
+
+pref("browser.send_pings", true);
