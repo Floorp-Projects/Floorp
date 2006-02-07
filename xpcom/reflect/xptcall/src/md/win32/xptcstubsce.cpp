@@ -44,7 +44,7 @@
 extern "C" {
 
 
-nsresult
+nsresult __stdcall
 PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 {
 #define PARAM_BUFFER_COUNT     16
@@ -80,32 +80,6 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 		const nsXPTParamInfo& param = info->GetParam(i);
 		const nsXPTType& type = param.GetType();
 		nsXPTCMiniVariant* dp = &dispatchParams[i];
-
-        // Aaron Reed suggestion:
-		if(i==4)
-		{
-			// PrepareAndDispatch makes an assumption that is causing us problems.  It
-			// assumes that all of the parameters that need to go to the method that we
-			// are resolving are contiguous and on the stack.  However, ARM keeps
-			// parameters 1-3 in registers and pushes parameters 4 and above when it
-			// makes function calls.  This is causing us problems.  In our error scenario,
-			// STACK_ENTRY(x) is called.  All parameters EXCEPT 1-3 come into
-			// STACK_ENTRY(x) on the stack.  When SharedStubs is eventually called, it
-			// will do the push of 1-3 on to the stack.  But to get to SharedStubs,
-			// STACK_ENTRY(x) has to make a c++ function call to 
-			// asmXPTCStubBase_Stub##n().  The preparation of which pushes r0, r12, and
-			// the return address onto the stack, as well as making room for two more
-			// double words on the stack.  For a total of 5 double words on the stack
-			// between parameter 3 and parameter 4.  asmXPTCStubBase_Stub##n() will then
-			// call SharedStubs, which will call PrepareAndDispatch.
-			//
-			// NOTE: this is ARM DEPENDENT.  This should not be compiled for other
-			// processors.
-			//
-			// NOTE: this also assumes that this WinCE PrepareAndDispatch can only be 
-			// called in the sequence mentioned above.
-			ap += 5;
-		}
 
 		if(param.IsOut() || !type.IsArithmetic())
 		{
