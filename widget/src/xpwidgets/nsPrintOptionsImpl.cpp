@@ -950,13 +950,12 @@ NS_IMETHODIMP nsPrintOptions::CreatePrintSettings(nsIPrintSettings **_retval)
 /* readonly attribute nsIPrintSettings globalPrintSettings; */
 NS_IMETHODIMP nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings)
 {
-  if (!mGlobalPrintSettings) {
-    CreatePrintSettings(getter_AddRefs(mGlobalPrintSettings));
-    NS_ASSERTION(mGlobalPrintSettings, "Can't be NULL!");
-  }
+  nsresult rv;
+  rv = CreatePrintSettings(getter_AddRefs(mGlobalPrintSettings));
+  NS_ASSERTION(NS_FAILED(rv) || mGlobalPrintSettings, "Can't be NULL!");
 
   // If this still NULL, we have some very big problems going on
-  if (!mGlobalPrintSettings) {
+  if (NS_FAILED(rv) || !mGlobalPrintSettings) {
     return NS_ERROR_FAILURE;
   }
 
