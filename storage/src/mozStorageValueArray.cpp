@@ -134,10 +134,18 @@ mozStorageStatementRowValueArray::GetUTF8String(PRUint32 aIndex, nsACString &_re
 {
     NS_ASSERTION (aIndex < mNumEntries, "aIndex out of range");
 
-    PRUint32 slen = (PRUint32) sqlite3_column_bytes (mSqliteStatement, aIndex);
-    const char *cstr = (const char *) sqlite3_column_text (mSqliteStatement, aIndex);
-    _retval.Assign(cstr, slen);
-
+    PRInt32 type;
+    nsresult rv = GetTypeOfIndex (aIndex, &type);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (type == SQLITE_NULL) {
+        // null columns get IsVoid set to distinguish them from empty strings
+        _retval.Truncate(0);
+        _retval.SetIsVoid(PR_TRUE);
+    } else {
+        PRUint32 slen = (PRUint32) sqlite3_column_bytes (mSqliteStatement, aIndex);
+        const char *cstr = (const char *) sqlite3_column_text (mSqliteStatement, aIndex);
+        _retval.Assign(cstr, slen);
+    }
     return NS_OK;
 }
 
@@ -146,10 +154,18 @@ mozStorageStatementRowValueArray::GetString(PRUint32 aIndex, nsAString & _retval
 {
     NS_ASSERTION (aIndex < mNumEntries, "aIndex out of range");
 
-    int slen = sqlite3_column_bytes16 (mSqliteStatement, aIndex);
-    const PRUnichar *wstr = (const PRUnichar *) sqlite3_column_text16 (mSqliteStatement, aIndex);
-    _retval.Assign (wstr, slen/2);
-
+    PRInt32 type;
+    nsresult rv = GetTypeOfIndex (aIndex, &type);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (type == SQLITE_NULL) {
+        // null columns get IsVoid set to distinguish them from empty strings
+        _retval.Truncate(0);
+        _retval.SetIsVoid(PR_TRUE);
+    } else {
+        int slen = sqlite3_column_bytes16 (mSqliteStatement, aIndex);
+        const PRUnichar *wstr = (const PRUnichar *) sqlite3_column_text16 (mSqliteStatement, aIndex);
+        _retval.Assign (wstr, slen/2);
+    }
     return NS_OK;
 }
 
@@ -312,10 +328,15 @@ mozStorageArgvValueArray::GetUTF8String(PRUint32 aIndex, nsACString & _retval)
 {
     NS_ASSERTION (aIndex < mArgc, "aIndex out of range");
 
-    int slen = sqlite3_value_bytes (mArgv[aIndex]);
-    const unsigned char *cstr = sqlite3_value_text (mArgv[aIndex]);
-    _retval.Assign ((char *) cstr, slen);
-
+    if (sqlite3_value_type (mArgv[aIndex]) == SQLITE_NULL) {
+        // null columns get IsVoid set to distinguish them from empty strings
+        _retval.Truncate(0);
+        _retval.SetIsVoid(PR_TRUE);
+    } else {
+        int slen = sqlite3_value_bytes (mArgv[aIndex]);
+        const unsigned char *cstr = sqlite3_value_text (mArgv[aIndex]);
+        _retval.Assign ((char *) cstr, slen);
+    }
     return NS_OK;
 }
 
@@ -324,10 +345,15 @@ mozStorageArgvValueArray::GetString(PRUint32 aIndex, nsAString & _retval)
 {
     NS_ASSERTION (aIndex < mArgc, "aIndex out of range");
 
-    int slen = sqlite3_value_bytes16 (mArgv[aIndex]);
-    const PRUnichar *wstr = (const PRUnichar *) sqlite3_value_text16 (mArgv[aIndex]);
-    _retval.Assign (wstr, slen);
-
+    if (sqlite3_value_type (mArgv[aIndex]) == SQLITE_NULL) {
+        // null columns get IsVoid set to distinguish them from empty strings
+        _retval.Truncate(0);
+        _retval.SetIsVoid(PR_TRUE);
+    } else {
+        int slen = sqlite3_value_bytes16 (mArgv[aIndex]);
+        const PRUnichar *wstr = (const PRUnichar *) sqlite3_value_text16 (mArgv[aIndex]);
+        _retval.Assign (wstr, slen);
+    }
     return NS_OK;
 }
 
