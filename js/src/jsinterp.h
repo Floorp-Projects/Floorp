@@ -48,7 +48,9 @@
 JS_BEGIN_EXTERN_C
 
 /*
- * JS stack frame, allocated on the C stack.
+ * JS stack frame, may be allocated on the C stack by native callers.  Always
+ * allocated on cx->stackPool for calls from the interpreter to an interpreted
+ * function.
  */
 struct JSStackFrame {
     JSObject        *callobj;       /* lazily created Call object */
@@ -77,6 +79,7 @@ struct JSStackFrame {
 
 typedef struct JSInlineFrame {
     JSStackFrame    frame;          /* base struct */
+    jsval           *rvp;           /* ptr to caller's return value slot */
     void            *mark;          /* mark before inline frame */
     void            *hookData;      /* debugger call hook data */
     JSVersion       callerVersion;  /* dynamic version of calling script */
@@ -257,18 +260,14 @@ extern void         js_DumpCallTable(JSContext *cx);
 #endif
 
 /*
- * Compute the 'this' parameter and store it in frame as frame.thisp.
+ * Compute the 'this' parameter for a call with nominal 'this' given by thisp
+ * and arguments including argv[-1] (nominal 'this') and argv[-2] (callee).
  * Activation objects ("Call" objects not created with "new Call()", i.e.,
  * "Call" objects that have private data) may not be referred to by 'this',
- * as dictated by ECMA.
- *
- * N.B.: fp->argv must be set, fp->argv[-1] the nominal 'this' parameter as
- * a jsval, and fp->argv[-2] must be the callee object reference, usually a
- * function object.  Also, fp->flags must contain JSFRAME_CONSTRUCTING if we
- * are preparing for a constructor call.
+ * per ECMA-262, so js_ComputeThis censors them.
  */
-extern JSBool
-js_ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp);
+extern JSObject *
+js_ComputeThis(JSContext *cx, JSObject *thisp, jsval *argv);
 
 /*
  * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp

@@ -3487,8 +3487,10 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      * the 'this' param if no args.
      */
     JS_ASSERT(cx->fp->argv == argv);
-    if (!js_ComputeThis(cx, JSVAL_TO_OBJECT(argv[-1]), cx->fp))
+    tmp = js_ComputeThis(cx, JSVAL_TO_OBJECT(argv[-1]), argv);
+    if (!tmp)
         return JS_FALSE;
+    cx->fp->thisp = tmp;
 
     /*
      * Protect against argc - 1 underflowing below. By calling js_ComputeThis,
