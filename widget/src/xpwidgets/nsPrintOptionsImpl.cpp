@@ -113,8 +113,7 @@ nsFont* nsPrintOptions::sDefaultFont = nsnull;
  *  See documentation in nsPrintOptionsImpl.h
  *	@update 6/21/00 dwc
  */
-nsPrintOptions::nsPrintOptions() :
-  mDoUncontrainedReflow(PR_FALSE)
+nsPrintOptions::nsPrintOptions()
 {
   NS_INIT_ISUPPORTS();
 
@@ -257,21 +256,6 @@ NS_IMETHODIMP
 nsPrintOptions::GetDefaultFont(nsFont &aFont)
 {
   aFont = *sDefaultFont;
-  return NS_OK;
-}
-
-/* [noscript] attribute boolean doUncontrainedReflow; */
-NS_IMETHODIMP 
-nsPrintOptions::GetDoUncontrainedReflow(PRBool *aDoUncontrainedReflow)
-{
-  NS_ENSURE_ARG_POINTER(aDoUncontrainedReflow);
-  *aDoUncontrainedReflow = mDoUncontrainedReflow;
-  return NS_OK;
-}
-NS_IMETHODIMP 
-nsPrintOptions::SetDoUncontrainedReflow(PRBool aDoUncontrainedReflow)
-{
-  mDoUncontrainedReflow = aDoUncontrainedReflow;
   return NS_OK;
 }
 
