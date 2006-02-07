@@ -62,6 +62,8 @@ protected:
 
   PRInt16       mPrintFrameType;
   PRBool        mHowToEnableFrameUI;
+  PRBool        mIsCancelled;
+  PRInt32       mPrintPageDelay;
 
   nsFont*       mDefaultFont;
   nsString      mTitle;

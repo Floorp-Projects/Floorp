@@ -133,6 +133,7 @@ interface nsIPrintOptions : nsISupports
 
   attribute short   howToEnableFrameUI;
   attribute short   printFrameType;
+  attribute boolean isCancelled;
 
   /* Additional XP Related */
   attribute boolean printReversed;
@@ -141,6 +142,8 @@ interface nsIPrintOptions : nsISupports
   attribute wstring printCommand;
   attribute boolean printToFile;
   attribute wstring toFileName;
+
+  attribute long    printPageDelay; /* in milliseconds */
 
   /* No Script Methods */
 
