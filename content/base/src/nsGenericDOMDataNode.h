@@ -299,9 +299,6 @@ protected:
 private:
   enum { PARENT_BIT_IS_IN_A_HASH = 0x2 };
 
-  void LookupListenerManager(nsIEventListenerManager **aListenerManager) const;
-  nsVoidArray *LookupRangeList() const;
-
   void SetBidiStatus();
 
   already_AddRefed<nsIAtom> GetCurrentValueAtom();
@@ -327,12 +324,12 @@ private:
 
   PRBool CouldHaveRangeList() const
   {
-    return GetIsInAHash() && nsGenericElement::sRangeListsHash.ops;
+    return GetIsInAHash();
   }
 
   PRBool CouldHaveEventListenerManager() const
   {
-    return GetIsInAHash() && nsGenericElement::sEventListenerManagersHash.ops;
+    return GetIsInAHash();
   }
 };
 

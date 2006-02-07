@@ -65,6 +65,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIEventListenerManager.h"
 
 nsSVGElement::nsSVGElement(nsINodeInfo *aNodeInfo)
   : nsGenericElement(aNodeInfo)

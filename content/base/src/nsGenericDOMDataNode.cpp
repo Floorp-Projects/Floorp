@@ -77,13 +77,11 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
   }
 
   if (CouldHaveEventListenerManager()) {
-    PL_DHashTableOperate(&nsGenericElement::sEventListenerManagersHash,
-                         this, PL_DHASH_REMOVE);
+    nsContentUtils::RemoveListenerManager(this);
   }
 
   if (CouldHaveRangeList()) {
-    PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
-                         this, PL_DHASH_REMOVE);
+    nsContentUtils::RemoveRangeList(this);
   }
 }
 
@@ -385,7 +383,7 @@ nsGenericDOMDataNode::SetData(const nsAString& aData)
   // we can lie and say we are deleting all the text, since in a total
   // text replacement we should just collapse all the ranges.
 
-  nsVoidArray *rangeList = LookupRangeList();
+  const nsVoidArray *rangeList = GetRangeList();
   if (rangeList) {
     nsRange::TextOwnerChanged(this, rangeList, 0, mText.GetLength(), 0);
   }
@@ -516,7 +514,7 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
   }
 
   // inform any enclosed ranges of change
-  nsVoidArray *rangeList = LookupRangeList();
+  const nsVoidArray *rangeList = GetRangeList();
   if (rangeList) {
     nsRange::TextOwnerChanged(this, rangeList, aOffset, endOffset, dataLength);
   }
@@ -546,38 +544,12 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
 nsresult
 nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager **aResult)
 {
-  nsCOMPtr<nsIEventListenerManager> listener_manager;
-  LookupListenerManager(getter_AddRefs(listener_manager));
-
-  if (listener_manager) {
-    *aResult = listener_manager;
-    NS_ADDREF(*aResult);
-
-    return NS_OK;
+  PRBool created;
+  nsresult rv = nsContentUtils::GetListenerManager(this, aResult, &created);
+  if (NS_SUCCEEDED(rv) && created) {
+    SetHasEventListenerManager();
   }
-
-  if (!nsGenericElement::sEventListenerManagersHash.ops) {
-    nsresult rv = nsGenericElement::InitHashes();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsresult rv = NS_NewEventListenerManager(aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Add a mapping to the hash table
-  EventListenerManagerMapEntry *entry =
-    NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                   PL_DHashTableOperate(&nsGenericElement::
-                                        sEventListenerManagersHash, this,
-                                        PL_DHASH_ADD));
-
-  entry->mListenerManager = *aResult;
-
-  entry->mListenerManager->SetListenerTarget(this);
-
-  SetHasEventListenerManager();
-
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -875,8 +847,12 @@ nsGenericDOMDataNode::HandleDOMEvent(nsPresContext* aPresContext,
     }
   }
 
-  nsCOMPtr<nsIEventListenerManager> listener_manager;
-  LookupListenerManager(getter_AddRefs(listener_manager));
+  // Weak pointer, which is fine since the hash table owns the
+  // listener manager
+  nsIEventListenerManager *listener_manager = nsnull;
+  if (CouldHaveEventListenerManager()) {
+    listener_manager = nsContentUtils::LookupListenerManager(this);
+  }
 
   //Local handling stage
   //Check for null ELM, check if we're a non-bubbling event in the bubbling state (bubbling state
@@ -988,79 +964,26 @@ nsGenericDOMDataNode::MayHaveFrame() const
 nsresult
 nsGenericDOMDataNode::RangeAdd(nsIDOMRange* aRange)
 {
-  // lazy allocation of range list
-
-  if (!nsGenericElement::sRangeListsHash.ops) {
-    nsresult rv = nsGenericElement::InitHashes();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  RangeListMapEntry *entry =
-    NS_STATIC_CAST(RangeListMapEntry *,
-                   PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
-                                        this, PL_DHASH_ADD));
-
-  if (!entry) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsVoidArray *range_list = entry->mRangeList;
-
-  if (!range_list) {
-    range_list = new nsAutoVoidArray();
-
-    if (!range_list) {
-      PL_DHashTableRawRemove(&nsGenericElement::sRangeListsHash, entry);
-
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    entry->mRangeList = range_list;
-
+  PRBool created;
+  nsresult rv = nsContentUtils::AddToRangeList(this, aRange, &created);
+  if (NS_SUCCEEDED(rv) && created) {
     SetHasRangeList();
-  } else {
-    // Make sure we don't add a range that is already
-    // in the list!
-    PRInt32 i = range_list->IndexOf(aRange);
-
-    if (i >= 0) {
-      // Range is already in the list, so there is nothing to do!
-
-      return NS_OK;
-    }
   }
-
-  // don't need to addref - this call is made by the range object itself
-  PRBool rv = range_list->AppendElement(aRange);
-
-  return rv ? NS_OK : NS_ERROR_FAILURE;
+  return rv;
 }
-
 
 void
 nsGenericDOMDataNode::RangeRemove(nsIDOMRange* aRange)
 {
-  if (!CouldHaveRangeList()) {
-    return;
-  }
-
-  RangeListMapEntry *entry =
-    NS_STATIC_CAST(RangeListMapEntry *,
-                   PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
-                                        this, PL_DHASH_LOOKUP));
-
-  // Don't need to release: this call is made by the range object itself.
-  if (entry && PL_DHASH_ENTRY_IS_BUSY(entry) &&
-      entry->mRangeList->RemoveElement(aRange) &&
-      entry->mRangeList->Count() == 0) {
-    PL_DHashTableRawRemove(&nsGenericElement::sRangeListsHash, entry);
+  if (CouldHaveRangeList()) {
+    nsContentUtils::RemoveFromRangeList(this, aRange);
   }
 }
 
 const nsVoidArray *
 nsGenericDOMDataNode::GetRangeList() const
 {
-  return LookupRangeList();
+  return CouldHaveRangeList() ? nsContentUtils::LookupRangeList(this) : nsnull;
 }
 
 nsIContent *
@@ -1347,46 +1270,6 @@ void
 nsGenericDOMDataNode::AppendTextTo(nsAString& aResult)
 {
   mText.AppendTo(aResult);
-}
-
-void
-nsGenericDOMDataNode::LookupListenerManager(nsIEventListenerManager **aListenerManager) const
-{
-  *aListenerManager = nsnull;
-
-  if (!CouldHaveEventListenerManager()) {
-    return;
-  }
-
-  EventListenerManagerMapEntry *entry =
-    NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                   PL_DHashTableOperate(&nsGenericElement::
-                                        sEventListenerManagersHash, this,
-                                        PL_DHASH_LOOKUP));
-
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    *aListenerManager = entry->mListenerManager;
-    NS_ADDREF(*aListenerManager);
-  }
-}
-
-nsVoidArray *
-nsGenericDOMDataNode::LookupRangeList() const
-{
-  if (!CouldHaveRangeList()) {
-    return nsnull;
-  }
-
-  RangeListMapEntry *entry =
-    NS_STATIC_CAST(RangeListMapEntry *,
-                   PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
-                                        this, PL_DHASH_LOOKUP));
-
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    return entry->mRangeList;
-  }
-
-  return nsnull;
 }
 
 void nsGenericDOMDataNode::SetBidiStatus()

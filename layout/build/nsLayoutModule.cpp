@@ -131,6 +131,7 @@
 // Transformiix stuff
 #include "nsXPathEvaluator.h"
 #include "txMozillaXSLTProcessor.h"
+#include "txXSLTProcessor.h"
 #include "nsXPath1Scheme.h"
 #include "nsXFormsXPathEvaluator.h"
 
@@ -281,6 +282,10 @@ Initialize(nsIModule* aSelf)
     return NS_OK;
   }
 
+  NS_ASSERTION(sizeof(PtrBits) == sizeof(void *),
+               "Eeek! You'll need to adjust the size of PtrBits to the size "
+               "of a pointer on your platform.");
+
   gInitialized = PR_TRUE;
 
   nsJSEnvironment::Startup();
@@ -390,7 +395,7 @@ Shutdown()
   txXSLTProcessor::shutdown();
   nsDOMAttribute::Shutdown();
   nsRange::Shutdown();
-  nsGenericElement::Shutdown();
+  nsDOMEventRTTearoff::Shutdown();
   nsEventListenerManager::Shutdown();
   nsContentList::Shutdown();
   nsComputedDOMStyle::Shutdown();
