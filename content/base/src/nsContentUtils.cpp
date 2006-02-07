@@ -101,7 +101,6 @@
 #include "nsILoadGroup.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDOMString.h"
-#include "nsGenericElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsCRT.h"
 #include "nsIDOMEvent.h"
@@ -128,6 +127,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsEscape.h"
 #include "nsICharsetConverterManager.h"
 #include "nsXULAtoms.h"
+#include "nsIEventListenerManager.h"
 
 // for ReportToConsole
 #include "nsIStringBundle.h"
@@ -166,6 +166,98 @@ PRInt32 nsContentUtils::sScriptRootCount = 0;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
+static PLDHashTable sRangeListsHash;
+static PLDHashTable sEventListenerManagersHash;
+
+class RangeListMapEntry : public PLDHashEntryHdr
+{
+public:
+  RangeListMapEntry(const void *aKey)
+    : mKey(aKey), mRangeList(nsnull)
+  {
+  }
+
+  ~RangeListMapEntry()
+  {
+    delete mRangeList;
+  }
+
+private:
+  const void *mKey; // must be first to look like PLDHashEntryStub
+
+public:
+  // We want mRangeList to be an nsAutoVoidArray but we can't make an
+  // nsAutoVoidArray a direct member of RangeListMapEntry since it
+  // will be moved around in memory, and nsAutoVoidArray can't deal
+  // with that.
+  nsVoidArray *mRangeList;
+};
+
+class EventListenerManagerMapEntry : public PLDHashEntryHdr
+{
+public:
+  EventListenerManagerMapEntry(const void *aKey)
+    : mKey(aKey)
+  {
+  }
+
+  ~EventListenerManagerMapEntry()
+  {
+    if (mListenerManager) {
+      mListenerManager->Disconnect();
+    }
+  }
+
+private:
+  const void *mKey; // must be first, to look like PLDHashEntryStub
+
+public:
+  nsCOMPtr<nsIEventListenerManager> mListenerManager;
+};
+
+PR_STATIC_CALLBACK(PRBool)
+RangeListHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
+                       const void *key)
+{
+  // Initialize the entry with placement new
+  new (entry) RangeListMapEntry(key);
+  return PR_TRUE;
+}
+
+PR_STATIC_CALLBACK(void)
+RangeListHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  RangeListMapEntry *r = NS_STATIC_CAST(RangeListMapEntry *, entry);
+
+  // Let the RangeListMapEntry clean itself up...
+  r->~RangeListMapEntry();
+}
+
+PR_STATIC_CALLBACK(PRBool)
+EventListenerManagerHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
+                                  const void *key)
+{
+  // Initialize the entry with placement new
+  new (entry) EventListenerManagerMapEntry(key);
+  return PR_TRUE;
+}
+
+PR_STATIC_CALLBACK(void)
+EventListenerManagerHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  EventListenerManagerMapEntry *lm =
+    NS_STATIC_CAST(EventListenerManagerMapEntry *, entry);
+
+  // Let the EventListenerManagerMapEntry clean itself up...
+  lm->~EventListenerManagerMapEntry();
+}
+
+PR_STATIC_CALLBACK(void)
+NopClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  // Do nothing
+}
+
 // static
 nsresult
 nsContentUtils::Init()
@@ -187,9 +279,6 @@ nsContentUtils::Init()
   CallGetService(NS_PREF_CONTRACTID, &sPref);
 
   rv = NS_GetNameSpaceManager(&sNameSpaceManager);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = nsGenericElement::InitHashes();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
@@ -224,6 +313,53 @@ nsContentUtils::Init()
   sPtrsToPtrsToRelease = new nsVoidArray();
   if (!sPtrsToPtrsToRelease) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!sRangeListsHash.ops) {
+    static PLDHashTableOps hash_table_ops =
+    {
+      PL_DHashAllocTable,
+      PL_DHashFreeTable,
+      PL_DHashGetKeyStub,
+      PL_DHashVoidPtrKeyStub,
+      PL_DHashMatchEntryStub,
+      PL_DHashMoveEntryStub,
+      RangeListHashClearEntry,
+      PL_DHashFinalizeStub,
+      RangeListHashInitEntry
+    };
+
+    if (!PL_DHashTableInit(&sRangeListsHash, &hash_table_ops, nsnull,
+                           sizeof(RangeListMapEntry), 16)) {
+      sRangeListsHash.ops = nsnull;
+
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  if (!sEventListenerManagersHash.ops) {
+    static PLDHashTableOps hash_table_ops =
+    {
+      PL_DHashAllocTable,
+      PL_DHashFreeTable,
+      PL_DHashGetKeyStub,
+      PL_DHashVoidPtrKeyStub,
+      PL_DHashMatchEntryStub,
+      PL_DHashMoveEntryStub,
+      EventListenerManagerHashClearEntry,
+      PL_DHashFinalizeStub,
+      EventListenerManagerHashInitEntry
+    };
+
+    if (!PL_DHashTableInit(&sEventListenerManagersHash, &hash_table_ops,
+                           nsnull, sizeof(EventListenerManagerMapEntry), 16)) {
+      sEventListenerManagersHash.ops = nsnull;
+
+      PL_DHashTableFinish(&sRangeListsHash);
+      sRangeListsHash.ops = nsnull;
+
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   sInitialized = PR_TRUE;
@@ -472,6 +608,53 @@ nsContentUtils::Shutdown()
     }
     delete sPtrsToPtrsToRelease;
     sPtrsToPtrsToRelease = nsnull;
+  }
+
+  if (sRangeListsHash.ops) {
+    NS_ASSERTION(sRangeListsHash.entryCount == 0,
+                 "Range list hash not empty at shutdown!");
+
+    // We're already being shut down and if there are entries left in
+    // this hash at this point it means we leaked nsGenericElements or
+    // nsGenericDOMDataNodes. Since we're already partly through the
+    // shutdown process it's too late to release what's held on to by
+    // this hash (since the teardown code relies on some things being
+    // around that aren't around any more) so we rather leak what's
+    // already leaked in stead of crashing trying to release what
+    // should've been released much earlier on.
+
+    // Copy the ops out of the hash table
+    PLDHashTableOps hash_table_ops = *sRangeListsHash.ops;
+
+    // Set the clearEntry hook to be a nop
+    hash_table_ops.clearEntry = NopClearEntry;
+
+    // Set the ops in the hash table to be the new ops
+    sRangeListsHash.ops = &hash_table_ops;
+
+    PL_DHashTableFinish(&sRangeListsHash);
+
+    sRangeListsHash.ops = nsnull;
+  }
+
+  if (sEventListenerManagersHash.ops) {
+    NS_ASSERTION(sEventListenerManagersHash.entryCount == 0,
+                 "Event listener manager hash not empty at shutdown!");
+
+    // See comment above.
+
+    // Copy the ops out of the hash table
+    PLDHashTableOps hash_table_ops = *sEventListenerManagersHash.ops;
+
+    // Set the clearEntry hook to be a nop
+    hash_table_ops.clearEntry = NopClearEntry;
+
+    // Set the ops in the hash table to be the new ops
+    sEventListenerManagersHash.ops = &hash_table_ops;
+
+    PL_DHashTableFinish(&sEventListenerManagersHash);
+
+    sEventListenerManagersHash.ops = nsnull;
   }
 }
 
@@ -2613,4 +2796,198 @@ nsContentUtils::HasNonEmptyAttr(nsIContent* aContent, PRInt32 aNameSpaceID,
   static nsIContent::AttrValuesArray strings[] = {&nsXULAtoms::_empty, nsnull};
   return aContent->FindAttrValueIn(aNameSpaceID, aName, strings, eCaseMatters)
     == nsIContent::ATTR_VALUE_NO_MATCH;
+}
+
+/* static */
+nsIEventListenerManager*
+nsContentUtils::LookupListenerManager(nsIContent *aContent)
+{
+  if (!sEventListenerManagersHash.ops) {
+    // We're already shut down.
+
+    return nsnull;
+  }
+
+  EventListenerManagerMapEntry *entry =
+    NS_STATIC_CAST(EventListenerManagerMapEntry *,
+                   PL_DHashTableOperate(&sEventListenerManagersHash, aContent,
+                                        PL_DHASH_LOOKUP));
+
+  return PL_DHASH_ENTRY_IS_BUSY(entry) ? entry->mListenerManager : nsnull;
+}
+
+/* static */
+nsresult
+nsContentUtils::GetListenerManager(nsIContent *aContent,
+                                   nsIEventListenerManager **aResult,
+                                   PRBool *aCreated)
+{
+  *aResult = nsnull;
+  *aCreated = PR_FALSE;
+
+  if (!sEventListenerManagersHash.ops) {
+    // We're already shut down, don't bother creating an event listener
+    // manager.
+
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  EventListenerManagerMapEntry *entry =
+    NS_STATIC_CAST(EventListenerManagerMapEntry *,
+                   PL_DHashTableOperate(&sEventListenerManagersHash, aContent,
+                                        PL_DHASH_ADD));
+
+  if (!entry) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!entry->mListenerManager) {
+    nsresult rv =
+      NS_NewEventListenerManager(getter_AddRefs(entry->mListenerManager));
+
+    if (NS_FAILED(rv)) {
+      PL_DHashTableRawRemove(&sEventListenerManagersHash, entry);
+
+      return rv;
+    }
+
+    entry->mListenerManager->SetListenerTarget(aContent);
+
+    *aCreated = PR_TRUE;
+  }
+
+  NS_ADDREF(*aResult = entry->mListenerManager);
+
+  return NS_OK;
+}
+
+/* static */
+void
+nsContentUtils::RemoveListenerManager(nsIContent *aContent)
+{
+  if (sEventListenerManagersHash.ops) {
+    PL_DHashTableOperate(&sEventListenerManagersHash, aContent,
+                         PL_DHASH_REMOVE);
+  }
+}
+
+/* static */
+nsresult
+nsContentUtils::AddToRangeList(nsIContent *aContent, nsIDOMRange *aRange,
+                               PRBool *aCreated)
+{
+  *aCreated = PR_FALSE;
+
+  if (!sRangeListsHash.ops) {
+    // We've already been shut down, don't bother adding a range...
+
+    return NS_OK;
+  }
+
+  RangeListMapEntry *entry =
+    NS_STATIC_CAST(RangeListMapEntry *,
+                   PL_DHashTableOperate(&sRangeListsHash, aContent,
+                                        PL_DHASH_ADD));
+
+  if (!entry) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // lazy allocation of range list
+  if (!entry->mRangeList) {
+    entry->mRangeList = new nsAutoVoidArray();
+
+    if (!entry->mRangeList) {
+      PL_DHashTableRawRemove(&sRangeListsHash, entry);
+
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    *aCreated = PR_TRUE;
+  }
+  else {
+    // Make sure we don't add a range that is already in the list!
+    PRInt32 i = entry->mRangeList->IndexOf(aRange);
+
+    if (i >= 0) {
+      // Range is already in the list, so there is nothing to do!
+
+      return NS_OK;
+    }
+  }
+
+  // dont need to addref - this call is made by the range object
+  // itself
+  PRBool rv = entry->mRangeList->AppendElement(aRange);
+  if (!rv) {
+    if (entry->mRangeList->Count() == 0) {
+      // Fresh entry, remove it from the hash...
+
+      PL_DHashTableRawRemove(&sRangeListsHash, entry);
+    }
+
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
+}
+
+/* static */
+PRBool
+nsContentUtils::RemoveFromRangeList(nsIContent *aContent, nsIDOMRange *aRange)
+{
+  if (!sRangeListsHash.ops) {
+    // We've already been shut down, don't bother removing a range...
+
+    return PR_FALSE;
+  }
+
+  RangeListMapEntry *entry =
+    NS_STATIC_CAST(RangeListMapEntry *,
+                   PL_DHashTableOperate(&sRangeListsHash, aContent,
+                                        PL_DHASH_LOOKUP));
+
+  if (PL_DHASH_ENTRY_IS_FREE(entry)) {
+    return PR_FALSE;
+  }
+
+  NS_ASSERTION(entry->mRangeList, "In the hash but without an object?");
+
+  // dont need to release - this call is made by the range object itself
+  entry->mRangeList->RemoveElement(aRange);
+
+  if (entry->mRangeList->Count() != 0) {
+    return PR_FALSE;
+  }
+
+  PL_DHashTableRawRemove(&sRangeListsHash, entry);
+
+  return PR_TRUE;
+}
+
+/* static */
+const nsVoidArray*
+nsContentUtils::LookupRangeList(const nsIContent *aContent)
+{
+  if (!sRangeListsHash.ops) {
+    // We've already been shut down, don't bother getting a range list...
+
+    return nsnull;
+  }
+
+  RangeListMapEntry *entry =
+    NS_STATIC_CAST(RangeListMapEntry *,
+                   PL_DHashTableOperate(&sRangeListsHash, aContent,
+                                        PL_DHASH_LOOKUP));
+
+  return PL_DHASH_ENTRY_IS_BUSY(entry) ? entry->mRangeList : nsnull;
+}
+
+/* static */
+void
+nsContentUtils::RemoveRangeList(nsIContent *aContent)
+{
+  if (sRangeListsHash.ops) {
+    PL_DHashTableOperate(&sRangeListsHash, aContent, PL_DHASH_REMOVE);
+  }
 }

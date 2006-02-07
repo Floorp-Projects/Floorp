@@ -48,9 +48,7 @@
 #include "nsIDOMNSEventTarget.h"
 #include "nsILinkHandler.h"
 #include "nsGenericDOMNodeList.h"
-#include "nsIEventListenerManager.h"
 #include "nsContentUtils.h"
-#include "pldhash.h"
 #include "nsAttrAndChildArray.h"
 
 class nsIDOMAttr;
@@ -66,6 +64,7 @@ class nsVoidArray;
 class nsINodeInfo;
 class nsIControllers;
 class nsIDOMNSFeatureFactory;
+class nsIEventListenerManager;
 
 typedef unsigned long PtrBits;
 
@@ -174,53 +173,6 @@ public:
     nsIControllers* mControllers; // [OWNER]
   };
 };
-
-class RangeListMapEntry : public PLDHashEntryHdr
-{
-public:
-  RangeListMapEntry(const void *aKey)
-    : mKey(aKey), mRangeList(nsnull)
-  {
-  }
-
-  ~RangeListMapEntry()
-  {
-    delete mRangeList;
-  }
-
-private:
-  const void *mKey; // must be first to look like PLDHashEntryStub
-
-public:
-  // We want mRangeList to be an nsAutoVoidArray but we can't make an
-  // nsAutoVoidArray a direct member of RangeListMapEntry since it
-  // will be moved around in memory, and nsAutoVoidArray can't deal
-  // with that.
-  nsVoidArray *mRangeList;
-};
-
-class EventListenerManagerMapEntry : public PLDHashEntryHdr
-{
-public:
-  EventListenerManagerMapEntry(const void *aKey)
-    : mKey(aKey)
-  {
-  }
-
-  ~EventListenerManagerMapEntry()
-  {
-    if (mListenerManager) {
-      mListenerManager->Disconnect();
-    }
-  }
-
-private:
-  const void *mKey; // must be first, to look like PLDHashEntryStub
-
-public:
-  nsCOMPtr<nsIEventListenerManager> mListenerManager;
-};
-
 
 /**
  * A tearoff class for nsGenericElement to implement the nsIDOM3Node functions
@@ -348,9 +300,6 @@ public:
    * get an interface for this element.
    */
   nsresult PostQueryInterface(REFNSIID aIID, void** aInstancePtr);
-
-  /** Free globals, to be called from module destructor */
-  static void Shutdown();
 
   // nsIDOMGCParticipant interface methods
   virtual nsIDOMGCParticipant* GetSCCIndex();
@@ -712,11 +661,6 @@ public:
                                   nsIDocument* aDocument,
                                   nsAttrAndChildArray& aChildArray);
   
-  static nsresult InitHashes();
-
-  static PLDHashTable sEventListenerManagersHash;
-  static PLDHashTable sRangeListsHash;
-
   /**
    * Struct that stores info on an attribute.  The name and value must
    * either both be null or both be non-null.
@@ -965,15 +909,14 @@ protected:
   {
     PtrBits flags = GetFlags();
 
-    return (flags & GENERIC_ELEMENT_HAS_RANGELIST && sRangeListsHash.ops);
+    return (flags & GENERIC_ELEMENT_HAS_RANGELIST);
   }
 
   PRBool HasEventListenerManager() const
   {
     PtrBits flags = GetFlags();
 
-    return (flags & GENERIC_ELEMENT_HAS_LISTENERMANAGER &&
-            sEventListenerManagersHash.ops);
+    return (flags & GENERIC_ELEMENT_HAS_LISTENERMANAGER);
   }
 
   PRBool HasProperties() const

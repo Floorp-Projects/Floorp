@@ -82,6 +82,7 @@ class nsILineBreaker;
 class nsIWordBreaker;
 class nsIEventQueueService;
 class nsIJSRuntimeService;
+class nsIEventListenerManager;
 struct JSRuntime;
 #ifdef MOZ_XTF
 class nsIXTFService;
@@ -710,6 +711,77 @@ public:
                                        PRBool aCanBubble,
                                        PRBool aCancelable,
                                        PRBool *aDefaultAction = nsnull);
+
+  /**
+   * Add aRange to the list of ranges with a start- or endpoint containing
+   * aContent. aCreated will be set to PR_TRUE if this call created a new list
+   * (meaning the list was empty before the call to AddToRangeList).
+   *
+   * @param aContent The node contained in the start- or endpoint of aRange.
+   * @param aRange The range containing aContent in its start- or endpoint.
+   * @param aCreated [out] Set to PR_TRUE if a new list was created.
+   */
+  static nsresult AddToRangeList(nsIContent *aContent, nsIDOMRange *aRange,
+                                 PRBool *aCreated);
+
+  /**
+   * Remove aRange from the list of ranges with a start- or endpoint containing
+   * aContent. This will return PR_TRUE if aRange was the last range in the
+   * list.
+   *
+   * @param aContent The node for which to remove aRange.
+   * @param aRange The range to remove.
+   * @return PR_TRUE if aRange was the last range in the list.
+   */
+  static PRBool RemoveFromRangeList(nsIContent *aContent, nsIDOMRange *aRange);
+
+  /**
+   * Look up the list of ranges containing aContent.
+   *
+   * @param aContent The node for which to look up the range list.
+   * @return The range list if one exists.
+   */
+  static const nsVoidArray* LookupRangeList(const nsIContent *aContent);
+
+  /**
+   * Remove the list of ranges containing aContent as their start- or endpoint.
+   *
+   * @param aContent The node for which to remove the range list.
+   */
+  static void RemoveRangeList(nsIContent *aContent);
+
+  /**
+   * Look up the eventlistener manager for aContent.
+   *
+   * @param aContent The node for which to look up the eventlistener manager.
+   * @return The eventlistener manager if one exists.
+   */
+  static nsIEventListenerManager *LookupListenerManager(nsIContent *aContent);
+
+  /**
+   * Get the eventlistener manager for aContent. This creates a new event-
+   * listener manager if none exist, in that case aCreated is set to PR_TRUE.
+   *
+   * @param aContent The node for which to get the eventlistener manager.
+   * @param aResult [out] Set to the eventlistener manager for aContent.
+   * @param aCreated [out] Set to PR_TRUE if a new eventlistener manager was
+   *                       created.
+   */
+  static nsresult GetListenerManager(nsIContent *aContent,
+                                     nsIEventListenerManager **aResult,
+                                     PRBool *aCreated);
+
+  /**
+   * Remove the eventlistener manager for aContent.
+   *
+   * @param aContent The node for which to remove the eventlistener manager.
+   */
+  static void RemoveListenerManager(nsIContent *aContent);
+
+  static PRBool IsInitialized()
+  {
+    return sInitialized;
+  }
 
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,

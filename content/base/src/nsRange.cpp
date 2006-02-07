@@ -2250,7 +2250,7 @@ nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, n
   
 
 nsresult
-nsRange::TextOwnerChanged(nsIContent* aTextNode, nsVoidArray *aRangeList,
+nsRange::TextOwnerChanged(nsIContent* aTextNode, const nsVoidArray *aRangeList,
                           PRInt32 aStartChanged, PRInt32 aEndChanged,
                           PRInt32 aReplaceLength)
 {

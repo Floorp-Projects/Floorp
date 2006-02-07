@@ -43,7 +43,6 @@
 #include "prenv.h"  
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
-#include "nsExpatDriver.h"
 
 MOZ_DECL_CTOR_COUNTER(CParserContext)
 
