@@ -63,12 +63,7 @@ interface nsIPrintOptions : nsISupports
   /* Print Option Flags for Bit Field*/
   const long kOptPrintOddPages              = 0x00000001;
   const long kOptPrintEvenPages             = 0x00000002;
-  const long kOptPrintDocTitle              = 0x00000004;
-  const long kOptPrintDocLoc                = 0x00000008;
-  const long kOptPrintPageNums              = 0x00000010;
-  const long kOptPrintPageTotal             = 0x00000020;
-  const long kOptPrintDatePrinted           = 0x00000040;
-  const long kPrintOptionsEnableSelectionRB = 0x00000080;
+  const long kPrintOptionsEnableSelectionRB = 0x00000004;
 
   /* Print Range Enums */
   const long kRangeAllPages           = 0;
@@ -151,9 +146,17 @@ interface nsIPrintOptions : nsISupports
   attribute double  marginRight;
 
   attribute short   printRange; 
-  attribute short   pageNumJust; 
+
   attribute wstring title;
   attribute wstring docURL;
+
+  attribute wstring headerStrLeft;
+  attribute wstring headerStrCenter;
+  attribute wstring headerStrRight;
+
+  attribute wstring footerStrLeft;
+  attribute wstring footerStrCenter;
+  attribute wstring footerStrRight;
 
   attribute short   howToEnableFrameUI;
   attribute short   printFrameType;
