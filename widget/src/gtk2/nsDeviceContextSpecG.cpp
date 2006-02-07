@@ -133,7 +133,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
   // if there is a current selection then enable the "Selection" radio button
   if (NS_SUCCEEDED(rv) && printService) {
     PRBool isOn;
-    printService->GetPrintOptions(NS_PRINT_OPTIONS_ENABLE_SELECTION_RADIO, &isOn);
+    printService->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, &isOn);
     nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv) && pPrefs) {
       (void) pPrefs->SetBoolPref("print.selection_radio_enabled", isOn);
@@ -141,14 +141,19 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
   }
 
   char *path;
-
-  PRBool reversed = PR_FALSE, color = PR_FALSE, landscape = PR_FALSE;
-  PRBool tofile = PR_FALSE, allpagesRange = PR_TRUE, pageRange = PR_FALSE, selectionRange = PR_FALSE;
-  PRInt32 paper_size = NS_LETTER_SIZE;
-  PRInt32 fromPage = 1, toPage = 1;
-  int ileft = 500, iright = 500, itop = 500, ibottom = 500; 
-  char *command;
-  char *printfile = nsnull;
+  PRBool     reversed       = PR_FALSE;
+  PRBool     color          = PR_FALSE;
+  PRBool     tofile         = PR_FALSE;
+  PRInt16    printRange     = nsIPrintOptions::kRangeAllPages;
+  PRInt32    paper_size     = NS_LETTER_SIZE;
+  PRInt32    fromPage       = 1;
+  PRInt32    toPage         = 1;
+  PRUnichar *command        = nsnull;
+  PRUnichar *printfile      = nsnull;
+  double     dleft          = 0.5;
+  double     dright         = 0.5;
+  double     dtop           = 0.5;
+  double     dbottom        = 0.5; 
 
   rv = NS_OK;
   nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
@@ -189,65 +194,42 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
             PRInt32 buttonPressed = 0;
             ioParamBlock->GetInt(0, &buttonPressed);
             if (buttonPressed == 0) {
-              nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-              if (NS_SUCCEEDED(rv) && pPrefs) {
-                (void) pPrefs->GetBoolPref("print.print_reversed", &reversed);
-                (void) pPrefs->GetBoolPref("print.print_color", &color);
-                (void) pPrefs->GetBoolPref("print.print_landscape", &landscape);
-                (void) pPrefs->GetIntPref("print.print_paper_size", &paper_size);
-                (void) pPrefs->CopyCharPref("print.print_command", (char **) &command);
 
-                // the _js extention means these were set via script with the xp
-                // dialog as integers, int * 1000, meaning a 0.5 inches is 500
-                // the "real" values are set into the prefs as strings
-                // the PrintOption object will save out these values as twips
-                // in the prefs with these names without the _js extention
-                (void) pPrefs->GetIntPref("print.print_margin_top_js", &itop);
-                (void) pPrefs->GetIntPref("print.print_margin_left_js", &ileft);
-                (void) pPrefs->GetIntPref("print.print_margin_bottom_js", &ibottom);
-                (void) pPrefs->GetIntPref("print.print_margin_right_js", &iright);
+              if (printService) {
+                printService->GetPrintReversed(&reversed);
+                printService->GetPrintInColor(&color);
+                printService->GetPaperSize(&paper_size);
+                printService->GetPrintCommand(&command);
+                printService->GetPrintRange(&printRange);
+                printService->GetToFileName(&printfile);
+                printService->GetPrintToFile(&tofile);
+                printService->GetStartPageRange(&fromPage);
+                printService->GetEndPageRange(&toPage);
+                printService->GetMarginTop(&dtop);
+                printService->GetMarginLeft(&dleft);
+                printService->GetMarginBottom(&dbottom);
+                printService->GetMarginRight(&dright);
 
-                (void) pPrefs->CopyCharPref("print.print_file", (char **) &printfile);
-                (void) pPrefs->GetBoolPref("print.print_tofile", &tofile);
+                if (command != nsnull && printfile != nsnull) {
+                  // convert Unicode strings to cstrings
+                  nsAutoString cmdStr;
+                  nsAutoString printFileStr;
+                  cmdStr        = command;
+                  printFileStr  = printfile;
+                  char *       pCmdStr       = cmdStr.ToNewCString();
+                  char *       pPrintFileStr = printFileStr.ToNewCString();
+                  sprintf( mPrData.command, pCmdStr );
+                  sprintf( mPrData.path, pPrintFileStr);
+                  nsMemory::Free(pCmdStr);
+                  nsMemory::Free(pPrintFileStr);
+                }
 
-                (void) pPrefs->GetBoolPref("print.print_allpagesrange", &allpagesRange);
-                (void) pPrefs->GetBoolPref("print.print_pagerange", &pageRange);
-                (void) pPrefs->GetBoolPref("print.print_selectionrange", &selectionRange);
-                (void) pPrefs->GetIntPref("print.print_frompage", &fromPage);
-                (void) pPrefs->GetIntPref("print.print_topage", &toPage);
-                sprintf( mPrData.command, command );
-                sprintf( mPrData.path, printfile );
-
-                // fill the print options with the info from the dialog
-                if(printService) {
-                  // convert the script values to twips
-                  nsMargin margin;
-                  margin.SizeTo(NS_INCHES_TO_TWIPS(float(ileft)/1000.0), 
-                                NS_INCHES_TO_TWIPS(float(itop)/1000.0),
-                                NS_INCHES_TO_TWIPS(float(iright)/1000.0),
-                                NS_INCHES_TO_TWIPS(float(ibottom)/1000.0));
-                  printService->SetMargins(margin.top, margin.left, margin.right, margin.bottom);
 #ifdef DEBUG_rods
-                printf("margins:       %d,%d,%d,%d\n", itop, ileft, ibottom, iright);
-                printf("margins:       %d,%d,%d,%d (twips)\n", margin.top, margin.left,  margin.bottom,  margin.right);
-                printf("allpagesRange  %d\n", allpagesRange);
-                printf("pageRange      %d\n", pageRange);
-                printf("selectionRange %d\n", selectionRange);
+                printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
+                printf("printRange     %d\n", printRange);
                 printf("fromPage       %d\n", fromPage);
                 printf("toPage         %d\n", toPage);
 #endif
-                  if (selectionRange) {
-                    printService->SetPrintRange(ePrintRange_Selection);
-
-                  } else if (pageRange) {
-                    printService->SetPrintRange(ePrintRange_SpecifiedPageRange);
-                    printService->SetPageRange(fromPage, toPage);
-
-                  } else { // (allpagesRange)
-                    printService->SetPrintRange(ePrintRange_AllPages);
-                  }
-                }  
-
               } else {
 #ifndef VMS
                 sprintf( mPrData.command, "lpr" );
@@ -258,25 +240,31 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 #endif
               }
 
-              mPrData.top = itop / 1000.0; 
-              mPrData.bottom = ibottom / 1000.0;
-              mPrData.left = ileft / 1000.0;
-              mPrData.right = iright / 1000.0;
-              mPrData.fpf = !reversed;
+              mPrData.top     = dtop;
+              mPrData.bottom    = dbottom;
+              mPrData.left      = dleft;
+              mPrData.right     = dright;
+              mPrData.fpf       = !reversed;
               mPrData.grayscale = !color;
-              mPrData.size = paper_size;
+              mPrData.size      = paper_size;
               mPrData.toPrinter = !tofile;
 
               // PWD, HOME, or fail 
             
               if (!printfile) {
                 if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
-	            if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
-  		            strcpy( mPrData.path, "mozilla.ps" );
+                  if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
+                    strcpy( mPrData.path, "mozilla.ps" );
                 if ( path != (char *) NULL )
-	            sprintf( mPrData.path, "%s/mozilla.ps", path );
+                  sprintf( mPrData.path, "%s/mozilla.ps", path );
                 else
-	            return NS_ERROR_FAILURE;
+                  return NS_ERROR_FAILURE;
+              }
+              if (command != nsnull) {
+                nsMemory::Free(command);
+              }
+              if (printfile != nsnull) {
+                nsMemory::Free(printfile);
               }
 
               return NS_OK;
@@ -288,7 +276,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
   }
 
   return NS_ERROR_FAILURE;
-
 }
 
 NS_IMETHODIMP nsDeviceContextSpecGTK :: GetToPrinter( PRBool &aToPrinter )     
