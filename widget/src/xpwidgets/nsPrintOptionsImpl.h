@@ -69,7 +69,6 @@ protected:
   nsCOMPtr<nsIPrintSettings> mGlobalPrintSettings;
 
   nsCString mPrefName;
-  PRBool    mDoUncontrainedReflow;
 
   static nsFont* sDefaultFont;
 };
