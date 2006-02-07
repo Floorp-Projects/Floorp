@@ -232,7 +232,7 @@ if ($webdotbase =~ /^https?:/) {
                                                      SUFFIX => '.png',
                                                      DIR => $webdotdir);
     binmode $pngfh;
-    open(DOT, "$webdotbase -Tpng $filename|");
+    open(DOT, "\"$webdotbase\" -Tpng $filename|");
     binmode DOT;
     print $pngfh $_ while <DOT>;
     close DOT;
@@ -251,7 +251,7 @@ if ($webdotbase =~ /^https?:/) {
                                                      SUFFIX => '.map',
                                                      DIR => $webdotdir);
     binmode $mapfh;
-    open(DOT, "$webdotbase -Tismap $filename|");
+    open(DOT, "\"$webdotbase\" -Tismap $filename|");
     binmode DOT;
     print $mapfh $_ while <DOT>;
     close DOT;
