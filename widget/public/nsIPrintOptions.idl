@@ -134,6 +134,7 @@ interface nsIPrintOptions : nsISupports
   attribute short   howToEnableFrameUI;
   attribute short   printFrameType;
   attribute boolean isCancelled;
+  attribute boolean PrintSilent;	/* print without putting up the dialog */
 
 
   /* Additional XP Related */
