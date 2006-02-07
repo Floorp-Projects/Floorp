@@ -451,7 +451,9 @@ nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS)
 {
   nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
   if (prefs) {
+    nscoord halfInch = NS_INCHES_TO_TWIPS(0.5);
     nsMargin margin;
+    margin.SizeTo(halfInch, halfInch, halfInch, halfInch);
     ReadInchesToTwipsPref(prefs, kMarginTop,    margin.top);
     ReadInchesToTwipsPref(prefs, kMarginLeft,   margin.left);
     ReadInchesToTwipsPref(prefs, kMarginBottom, margin.bottom);
