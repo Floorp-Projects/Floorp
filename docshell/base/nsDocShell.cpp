@@ -4792,12 +4792,7 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
         aOldChannel->GetURI(getter_AddRefs(oldURI));
         if (! oldURI)
             return; // nothing to tell anybody about
-
-        nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aOldChannel));
-        nsCOMPtr<nsIURI> referrer;
-        if (httpchannel)
-            httpchannel->GetReferrer(getter_AddRefs(referrer));
-        AddToGlobalHistory(oldURI, PR_TRUE, referrer);
+        AddToGlobalHistory(oldURI, PR_TRUE, aOldChannel);
     }
 }
 
@@ -7428,11 +7423,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         // Update Global history
         if (aAddToGlobalHistory) {
             // Get the referrer uri from the channel
-            nsCOMPtr<nsIURI> referrer;
-            nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aChannel));
-            if (httpchannel)
-                httpchannel->GetReferrer(getter_AddRefs(referrer));
-            AddToGlobalHistory(aURI, PR_FALSE, referrer);
+            AddToGlobalHistory(aURI, PR_FALSE, aChannel);
         }
     }
 
@@ -8178,7 +8169,8 @@ NS_IMETHODIMP nsDocShell::MakeEditable(PRBool inWaitForUriLoad)
 }
 
 nsresult
-nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect, nsIURI * aReferrer)
+nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect,
+                               nsIChannel * aChannel)
 {
     if (mItemType != typeContent || !mGlobalHistory)
         return NS_OK;
@@ -8187,8 +8179,19 @@ nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect, nsIURI * aReferr
     nsresult rv = mGlobalHistory->IsVisited(aURI, &visited);
     if (NS_FAILED(rv))
         return rv;
-    
-    rv = mGlobalHistory->AddURI(aURI, aRedirect, !IsFrame(), aReferrer);
+
+    // Get referrer from the channel. We have to check for a property on a
+    // property bag because the referrer may be empty for security reasons (for
+    // example, when loading a http page with a https referrer).
+    nsCOMPtr<nsIURI> referrer;
+    nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(aChannel));
+    if (props) {
+        props->GetPropertyAsInterface(NS_LITERAL_STRING("docshell.internalReferrer"),
+                                      NS_GET_IID(nsIURI),
+                                      getter_AddRefs(referrer));
+    }
+
+    rv = mGlobalHistory->AddURI(aURI, aRedirect, !IsFrame(), referrer);
     if (NS_FAILED(rv))
         return rv;
 
