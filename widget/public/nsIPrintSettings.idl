@@ -94,6 +94,8 @@ interface nsIPrintSettings : nsISupports
   const unsigned long kInitSaveMargins        = 0x01000000;
   const unsigned long kInitSaveNativeData     = 0x02000000;
   const unsigned long kInitSavePlexName       = 0x04000000;
+  const unsigned long kInitSaveShrinkToFit    = 0x08000000;
+  const unsigned long kInitSaveScaling        = 0x10000000;
   const unsigned long kInitSaveAll            = 0xFFFFFFFF;
 
   /* Print Option Flags for Bit Field*/
