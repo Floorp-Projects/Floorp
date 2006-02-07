@@ -1736,7 +1736,11 @@ PresShell::Init(nsIDocument* aDocument,
   //SetCaretEnabled(PR_TRUE);       // make it show in browser windows
 #endif  
   //set up selection to be displayed in document
-  SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
+  // Don't enable selection for print media
+  nsPresContext::nsPresContextType type = aPresContext->Type();
+  if (type != nsPresContext::eContext_PrintPreview &&
+      type != nsPresContext::eContext_Print)
+    SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
   
   if (gMaxRCProcessingTime == -1) {
     gMaxRCProcessingTime =

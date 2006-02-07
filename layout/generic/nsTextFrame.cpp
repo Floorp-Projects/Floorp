@@ -2599,15 +2599,15 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsPresContext*           aPresConte
   if (NS_FAILED(rv) || !(*aSelectionController))
     return NS_ERROR_FAILURE;
 
-  aIsPaginated = aPresContext->IsPaginated();
-
   (*aSelectionController)->GetDisplaySelection(&aSelectionValue);
 
-  if (aIsPaginated) {
-    aDisplayingSelection = aPresContext->IsRenderingOnlySelection();
+  if (aPresContext->IsRenderingOnlySelection()) {
+    aIsPaginated = PR_TRUE;
+    aDisplayingSelection = PR_TRUE;
   } else {
-    //if greater than hidden then we display some kind of selection
-    aDisplayingSelection = (aSelectionValue > nsISelectionController::SELECTION_HIDDEN);
+    aIsPaginated = PR_FALSE;
+    aDisplayingSelection =
+      (aSelectionValue > nsISelectionController::SELECTION_HIDDEN);
   }
 
   PRInt16 textSel=0; 
