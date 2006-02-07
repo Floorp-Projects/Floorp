@@ -1172,7 +1172,7 @@ public:
 };
 Tester::Tester()
 {
-  const char* kPrintOptionsCID = "@mozilla.org/gfx/printsettings-service;1";
+  static const char* kPrintOptionsCID = "@mozilla.org/gfx/printsettings-service;1";
   nsCOMPtr<nsIPrintSettings> ps;
   nsresult rv;
   nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
