@@ -425,9 +425,9 @@ interface nsIAccessible : nsISupports
   // The object represents a main window for a application
   enum { ROLE_APPLICATION = 73U }; // ATK_ROLE_APPLICATION
   // The object represents a document window, only for MDI windows
-  enum { ROLE_DOCUMENT = 68U };    // ATK_ROLE_WINDOW
+  enum { ROLE_DOCUMENT = 80U };    // ATK_ROLE_DOCUMENT_FRAME
   enum { ROLE_PANE = 38U };        // ATK_ROLE_PANEL
-  enum { ROLE_CHART = 26U };       // ATK_ROLE_IMAGE
+  enum { ROLE_CHART = 78U };       // ATK_ROLE_CHART
   enum { ROLE_DIALOG = 16U };      // ATK_ROLE_DIALOG
   enum { ROLE_BORDER = 66U };      // ATK_ROLE_UNKNOWN
   enum { ROLE_GROUPING = 38U };    // ATK_ROLE_PANEL
@@ -526,6 +526,15 @@ interface nsIAccessible : nsISupports
   enum { ROLE_PARAGRAPH = 71U };           // ATK_ROLE_PARAGRAPH
   enum { ROLE_RULER = 72U };               // ATK_ROLE_RULER
   enum { ROLE_AUTOCOMPLETE = 74U };        // ATK_ROLE_AUTOCOMPLETE
+  enum { ROLE_EDITBAR = 75U };             // ATK_ROLE_EDITBAR
+  enum { ROLE_EMBEDDED = 76U };            // ATK_ROLE_EMBEDDED
+  enum { ROLE_ENTRY = 77U };               // ATK_ROLE_ENTRY
+  enum { ROLE_CAPTION = 79U };             // ATK_ROLE_CAPTION
+  enum { ROLE_DOCUMENT_FRAME = 80U };      // ATK_ROLE_DOCUMENT_FRAME
+  enum { ROLE_HEADING = 81U };             // ATK_ROLE_HEADING
+  enum { ROLE_PAGE = 82U };                // ATK_ROLE_PAGE
+  enum { ROLE_SECTION = 83U };             // ATK_ROLE_SECTION
+  enum { ROLE_REDUNDANT_OBJECT = 84U };    // ATK_ROLE_REDUNDANT_OBJECT
 #else
 // MSAA Roles - only one per nsIAccessible or IAccessible
   enum { ROLE_TITLEBAR = 1U };
@@ -600,6 +609,16 @@ interface nsIAccessible : nsISupports
 // When in doubt map them to ROLE_NOTHING so that the role string is exposed
   enum { ROLE_ICON = ROLE_NOTHING };
   enum { ROLE_PASSWORD_TEXT = ROLE_TEXT };
+  enum { ROLE_AUTOCOMPLETE = ROLE_COMBOBOX };
+  enum { ROLE_EDITBAR = ROLE_NOTHING };
+  enum { ROLE_EMBEDDED = ROLE_NOTHING };
+  enum { ROLE_ENTRY = ROLE_NOTHING };
+  enum { ROLE_CAPTION = ROLE_NOTHING };
+  enum { ROLE_DOCUMENT_FRAME = ROLE_NOTHING };
+  enum { ROLE_HEADING = ROLE_NOTHING };
+  enum { ROLE_PAGE = ROLE_NOTHING };
+  enum { ROLE_SECTION = ROLE_NOTHING };
+  enum { ROLE_REDUNDANT_OBJECT = ROLE_NOTHING };
 
 // MSAA relationship extensions to accNavigate
   enum { NAVRELATION_CONTROLLED_BY = 0x1000 };

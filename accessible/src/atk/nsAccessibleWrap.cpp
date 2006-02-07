@@ -534,12 +534,12 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, PRUint32 aExtState, void *aAt
     if (aState & nsIAccessible::STATE_INVALID)
         atk_state_set_add_state (state_set, ATK_STATE_INVALID);
 
-#ifdef MAI_HAS_ATK_STATE_DEFAULT
+#ifdef ATK_STATE_DEFAULT
     if (aState & nsIAccessible::STATE_DEFAULT)
         atk_state_set_add_state (state_set, ATK_STATE_DEFAULT);
 #endif
 
-#ifdef MAI_HAS_ATK_STATE_REQUIRED
+#ifdef ATK_STATE_REQUIRED
     if (aState & nsIAccessible::STATE_REQUIRED)
         atk_state_set_add_state (state_set, ATK_STATE_REQUIRED);
 #endif
@@ -798,6 +798,16 @@ getRoleCB(AtkObject *aAtkObj)
             }
             accRole = linkRole;
         }
+#ifndef ATK_ROLE_AUTOCOMPLETE
+        else if (accRole == nsIAccessible::ROLE_AUTOCOMPLETE) {
+			accRole == ATK_ROLE_COMBO_BOX;
+		}
+#endif
+#ifndef ATK_ROLE_CAPTION
+        else if (accRole == nsIAccessible::ROLE_CAPTION) {
+			accRole == ATK_ROLE_LABEL;
+		}
+#endif
         aAtkObj->role = NS_STATIC_CAST(AtkRole, accRole);
     }
     return aAtkObj->role;
