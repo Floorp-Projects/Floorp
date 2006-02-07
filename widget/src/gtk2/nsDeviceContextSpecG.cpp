@@ -1068,55 +1068,63 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 #endif /* USE_XPRINT */
 
 #ifdef USE_POSTSCRIPT
-  /* Get the list of PostScript-module printers */
-  char   *printerList           = nsnull;
-  PRBool  added_default_printer = PR_FALSE; /* Did we already add the default printer ? */
-  
-  /* The env var MOZILLA_POSTSCRIPT_PRINTER_LIST can "override" the prefs */
-  printerList = PR_GetEnv("MOZILLA_POSTSCRIPT_PRINTER_LIST");
-  
-  if (!printerList) {
-    nsresult rv;
-    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      (void) pPrefs->CopyCharPref("print.printer_list", &printerList);
+  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID);
+  PRBool psPrintModuleEnabled = PR_TRUE;
+  if (pPrefs) {
+    if (NS_FAILED(pPrefs->GetBoolPref("print.postscript.enabled", &psPrintModuleEnabled))) {
+      psPrintModuleEnabled = PR_TRUE;
     }
-  }  
-
-  if (printerList) {
-    char       *tok_lasts;
-    const char *name;
-    
-    /* PL_strtok_r() will modify the string - copy it! */
-    printerList = strdup(printerList);
-    if (!printerList)
-      return NS_ERROR_OUT_OF_MEMORY;    
-    
-    for( name = PL_strtok_r(printerList, " ", &tok_lasts) ; 
-         name != nsnull ; 
-         name = PL_strtok_r(nsnull, " ", &tok_lasts) )
-    {
-      /* Is this the "default" printer ? */
-      if (!strcmp(name, "default"))
-        added_default_printer = PR_TRUE;
-
-      mGlobalPrinterList->AppendString(
-        nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME)) + 
-        nsString(NS_ConvertASCIItoUCS2(name)));
-      mGlobalNumPrinters++;      
-    }
-    
-    free(printerList);
   }
 
-  /* Add an entry for the default printer (see nsPostScriptObj.cpp) if we
-   * did not add it already... */
-  if (!added_default_printer)
-  {
-    mGlobalPrinterList->AppendString(
-      nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
-    mGlobalNumPrinters++;
-  }  
+  if (psPrintModuleEnabled) {
+    /* Get the list of PostScript-module printers */
+    char   *printerList           = nsnull;
+    PRBool  added_default_printer = PR_FALSE; /* Did we already add the default printer ? */
+
+    /* The env var MOZILLA_POSTSCRIPT_PRINTER_LIST can "override" the prefs */
+    printerList = PR_GetEnv("MOZILLA_POSTSCRIPT_PRINTER_LIST");
+
+    if (!printerList) {
+      if (pPrefs) {
+        (void) pPrefs->CopyCharPref("print.printer_list", &printerList);
+      }
+    }  
+
+    if (printerList) {
+      char       *tok_lasts;
+      const char *name;
+
+      /* PL_strtok_r() will modify the string - copy it! */
+      printerList = strdup(printerList);
+      if (!printerList)
+        return NS_ERROR_OUT_OF_MEMORY;    
+
+      for( name = PL_strtok_r(printerList, " ", &tok_lasts) ; 
+           name != nsnull ; 
+           name = PL_strtok_r(nsnull, " ", &tok_lasts) )
+      {
+        /* Is this the "default" printer ? */
+        if (!strcmp(name, "default"))
+          added_default_printer = PR_TRUE;
+
+        mGlobalPrinterList->AppendString(
+          nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME)) + 
+          nsString(NS_ConvertASCIItoUCS2(name)));
+        mGlobalNumPrinters++;      
+      }
+
+      free(printerList);
+    }
+
+    /* Add an entry for the default printer (see nsPostScriptObj.cpp) if we
+     * did not add it already... */
+    if (!added_default_printer)
+    {
+      mGlobalPrinterList->AppendString(
+        nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
+      mGlobalNumPrinters++;
+    }
+  }
 #endif /* USE_POSTSCRIPT */  
       
   /* If there are no printers available after all checks, return an error */
