@@ -1041,11 +1041,11 @@
 
             var newIndex = -1;
             if (currentIndex > index)
-              newIndex = currentIndex-1;
+              newIndex = currentIndex - 1;
             else if (currentIndex < index)
               newIndex = currentIndex;
             else if (index == l - 1)
-              newIndex = index-1;
+              newIndex = index - 1;
             else
               newIndex = index;
 
@@ -1252,7 +1252,6 @@
             var newIndexOn = aDragSession.sourceNode &&
                              aDragSession.sourceNode.parentNode == this.mTabContainer ?
                              -1 : this.getDropOnIndex(aEvent);
-            var newIndexBetween = newIndexOn == -1 ? this.getDropIndex(aEvent) : -1;
 
             var ltr = window.getComputedStyle(this, null).direction == "ltr";
             var arrowX, tabBoxObject;
@@ -1260,17 +1259,20 @@
               tabBoxObject = this.mTabs[newIndexOn].boxObject;
               arrowX = tabBoxObject.x + tabBoxObject.width / 2;
             }
-            else if (newIndexBetween == this.mTabs.length) {
-              tabBoxObject = this.mTabs[this.mTabs.length - 1].boxObject;
-              arrowX = tabBoxObject.x;
-              if (ltr) // for LTR "after" is on the right-hand side of the tab
-                arrowX += tabBoxObject.width;
-            }
             else {
-              tabBoxObject = this.mTabs[newIndexBetween].boxObject;
-              arrowX = tabBoxObject.x;
-              if (!ltr) // for RTL "before" is on the right-hand side of the tab
-                arrowX += tabBoxObject.width;
+              var newIndexBetween = this.getDropIndex(aEvent);
+              if (newIndexBetween == this.mTabs.length) {
+                tabBoxObject = this.mTabs[this.mTabs.length - 1].boxObject;
+                arrowX = tabBoxObject.x;
+                if (ltr) // for LTR "after" is on the right-hand side of the tab
+                  arrowX += tabBoxObject.width;
+              }
+              else {
+                tabBoxObject = this.mTabs[newIndexBetween].boxObject;
+                arrowX = tabBoxObject.x;
+                if (!ltr) // for RTL "before" is on the right-hand side of the tab
+                  arrowX += tabBoxObject.width;
+              }
             }
 
             if (ltr)
