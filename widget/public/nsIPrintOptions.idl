@@ -163,6 +163,13 @@ interface nsIPrintOptions : nsISupports
   nsIPrintSettings CreatePrintSettings();
 
   /**
+   * Creates a new PrintSettnigs Object if it doesn't exist
+   * otherwise it always hand back the same one.
+   * This is THE global PrintSettings
+   */
+  readonly attribute nsIPrintSettings globalPrintSettings;
+
+  /**
    * Initialize the values in the PrintSettings from Prefs
    */
   void InitPrintSettingsFromPrefs(in nsIPrintSettings aPO);
