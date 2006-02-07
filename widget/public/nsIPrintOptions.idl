@@ -107,15 +107,6 @@ interface nsIPrintOptions : nsISupports
    */
    void displayJobProperties (in wstring aPrinter, in nsIPrintSettings aPrintSettings, out boolean aDisplayed);
 
-  // Attributes
-  attribute boolean isCancelled;
-
-  attribute wstring title;
-  attribute wstring docURL;
-
-  attribute boolean printToFile;
-  attribute wstring toFileName;
-
   // no script methods
   [noscript] void SetFontNamePointSize(in nsNativeStringRef aName, in PRInt32 aPointSize);
 
