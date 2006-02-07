@@ -660,19 +660,21 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
     dwRet = DocumentProperties(gParentWnd, hPrinter, (char*)NS_ConvertUCS2toUTF8(aName).get(),
                                pDevMode, NULL, DM_OUT_BUFFER);
 
-    if (dwRet != IDOK) {
-       ::HeapFree(::GetProcessHeap(), 0, pDevMode);
-       ::ClosePrinter(hPrinter);
-       PR_PL(("***** nsDeviceContextSpecWin::GetDataFromPrinter - DocumentProperties call failed code: %d/0x%x\n", dwRet, dwRet));
-       DISPLAY_LAST_ERROR
-       return rv;
-    }
-
-    if (aPS) {
+    if (dwRet == IDOK && aPS) {
       SetupDevModeFromSettings(pDevMode, aPS);
+      // Sets back the changes we made to the DevMode into the Printer Driver
+      dwRet = ::DocumentProperties(gParentWnd, hPrinter, (char*)NS_ConvertUCS2toUTF8(aName).get(), pDevMode, pDevMode, DM_IN_BUFFER | DM_OUT_BUFFER);
     }
 
-    SetDevMode(pDevMode);
+    if (dwRet != IDOK) {
+      ::HeapFree(::GetProcessHeap(), 0, pDevMode);
+      ::ClosePrinter(hPrinter);
+      PR_PL(("***** nsDeviceContextSpecWin::GetDataFromPrinter - DocumentProperties call failed code: %d/0x%x\n", dwRet, dwRet));
+      DISPLAY_LAST_ERROR
+      return NS_ERROR_FAILURE;
+    }
+
+    SetDevMode(pDevMode); // cache the pointer and takes responsibility for the memory
 
     SetDeviceName((char*)NS_ConvertUCS2toUTF8(aName).get());
   
