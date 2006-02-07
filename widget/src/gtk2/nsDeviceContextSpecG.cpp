@@ -26,8 +26,16 @@
 #include "nsIServiceManager.h"
 
 #include "nsIPref.h"
-
 #include "prenv.h" /* for PR_GetEnv */
+
+#include "nsIAppShellComponentImpl.h"
+#include "nsIDOMWindow.h"
+#include "nsIServiceManager.h"
+#include "nsIDialogParamBlock.h"
+#include "nsINetSupportDialogService.h"
+
+static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
+static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 
 //#include "prmem.h"
 //#include "plstr.h"
@@ -119,71 +127,107 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
   char *path;
 
   PRBool reversed = PR_FALSE, color = PR_FALSE, landscape = PR_FALSE;
+  PRBool tofile = PR_FALSE;
   PRInt32 paper_size = NS_LETTER_SIZE;
   int ileft = 500, iright = 0, itop = 500, ibottom = 0; 
   char *command;
-  nsresult rv;
+  char *printfile = nsnull;
 
-  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_PROGID, &rv);
-//  NS_WITH_SERVICE(nsIPref, pPrefs, NS_PREF_PROGID, &rv);
-  if (NS_SUCCEEDED(rv) && pPrefs) {
-   	(void) pPrefs->GetBoolPref("print.print_reversed", &reversed);
-   	(void) pPrefs->GetBoolPref("print.print_color", &color);
-   	(void) pPrefs->GetBoolPref("print.print_landscape", &landscape);
-   	(void) pPrefs->GetIntPref("print.print_paper_size", &paper_size);
-   	(void) pPrefs->CopyCharPref("print.print_command", (char **) &command);
-   	(void) pPrefs->GetIntPref("print.print_margin_top", &itop);
-   	(void) pPrefs->GetIntPref("print.print_margin_left", &ileft);
-   	(void) pPrefs->GetIntPref("print.print_margin_bottom", &ibottom);
-   	(void) pPrefs->GetIntPref("print.print_margin_right", &iright);
-  	sprintf( mPrData.command, command );
-  } else {
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
+
+  rv = nsComponentManager::CreateInstance(kDialogParamBlockCID,
+                                          nsnull,
+                                          NS_GET_IID(nsIDialogParamBlock),
+                                          getter_AddRefs(ioParamBlock));
+
+  if (NS_SUCCEEDED(rv)) {
+    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIDOMWindow> hiddenWindow;
+      nsCOMPtr<nsIDOMWindow> mWindow;
+
+      JSContext *jsContext;
+      rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow), &jsContext);
+      if (NS_SUCCEEDED(rv)) {
+        void *stackPtr;
+        jsval *argv = JS_PushArguments(jsContext,
+                                       &stackPtr,
+                                       "sss%ip",
+                                       "chrome://global/content/printdialog.xul",
+                                       "_blank",
+                                       "chrome,modal",
+                                       (const nsIID *) (&NS_GET_IID(nsIDialogParamBlock)),
+                                       (nsISupports *) ioParamBlock);
+        if (argv) {
+          nsCOMPtr<nsIDOMWindow> newWindow;
+
+          rv = hiddenWindow->OpenDialog(jsContext,
+                                        argv,
+                                        4,
+                                        getter_AddRefs(newWindow));
+
+          if (NS_SUCCEEDED(rv)) {
+            JS_PopArguments(jsContext, stackPtr);
+            PRInt32 buttonPressed = 0;
+            ioParamBlock->GetInt(0, &buttonPressed);
+            if (buttonPressed == 0) {
+              nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_PROGID, &rv);
+              if (NS_SUCCEEDED(rv) && pPrefs) {
+                (void) pPrefs->GetBoolPref("print.print_reversed", &reversed);
+                (void) pPrefs->GetBoolPref("print.print_color", &color);
+                (void) pPrefs->GetBoolPref("print.print_landscape", &landscape);
+                (void) pPrefs->GetIntPref("print.print_paper_size", &paper_size);
+                (void) pPrefs->CopyCharPref("print.print_command", (char **) &command);
+                (void) pPrefs->GetIntPref("print.print_margin_top", &itop);
+                (void) pPrefs->GetIntPref("print.print_margin_left", &ileft);
+                (void) pPrefs->GetIntPref("print.print_margin_bottom", &ibottom);
+                (void) pPrefs->GetIntPref("print.print_margin_right", &iright);
+                (void) pPrefs->CopyCharPref("print.print_file", (char **) &printfile);
+                (void) pPrefs->GetBoolPref("print.print_tofile", &tofile);
+                sprintf( mPrData.command, command );
+                sprintf( mPrData.path, printfile );
+              } else {
 #ifndef VMS
-  	sprintf( mPrData.command, "lpr" );
+                sprintf( mPrData.command, "lpr" );
 #else
-  // Note to whoever puts the "lpr" into the prefs file. Please contact me
-  // as I need to make the default be "print" instead of "lpr" for OpenVMS.
-  	sprintf( mPrData.command, "print" );
+                // Note to whoever puts the "lpr" into the prefs file. Please contact me
+                // as I need to make the default be "print" instead of "lpr" for OpenVMS.
+                sprintf( mPrData.command, "print" );
 #endif
+              }
+
+              mPrData.top = itop / 1000.0; 
+              mPrData.bottom = ibottom / 1000.0;
+              mPrData.left = ileft / 1000.0;
+              mPrData.right = iright / 1000.0;
+              mPrData.fpf = !reversed;
+              mPrData.grayscale = !color;
+              mPrData.size = paper_size;
+              mPrData.toPrinter = !tofile;
+
+              // PWD, HOME, or fail 
+            
+              if (!printfile) {
+                if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
+	            if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
+  		            strcpy( mPrData.path, "mozilla.ps" );
+                if ( path != (char *) NULL )
+	            sprintf( mPrData.path, "%s/mozilla.ps", path );
+                else
+	            return NS_ERROR_FAILURE;
+              }
+
+              return NS_OK;
+            }
+          }
+        }
+      }
+    }
   }
 
-  mPrData.top = itop / 1000.0; 
-  mPrData.bottom = ibottom / 1000.0;
-  mPrData.left = ileft / 1000.0;
-  mPrData.right = iright / 1000.0;
-  mPrData.toPrinter = PR_TRUE;
-  mPrData.fpf = !reversed;
-  mPrData.grayscale = !color;
-  mPrData.size = paper_size;
+  return NS_ERROR_FAILURE;
 
-  // PWD, HOME, or fail 
-
-  if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
-	if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
-  		strcpy( mPrData.path, "mozilla.ps" );
-  if ( path != (char *) NULL )
-	sprintf( mPrData.path, "%s/mozilla.ps", path );
-  else
-	return NS_ERROR_FAILURE;
-
-  ::UnixPrDialog( &mPrData );
-  if ( mPrData.cancel == PR_TRUE ) 
-	return NS_ERROR_FAILURE;
-  else {
-  	if(pPrefs) {
-		pPrefs->SetBoolPref("print.print_reversed", !mPrData.fpf);
-		pPrefs->SetBoolPref("print.print_color", !mPrData.grayscale);
-		pPrefs->SetBoolPref("print.print_landscape", landscape);
-		pPrefs->SetIntPref("print.print_paper_size", mPrData.size);
-   		pPrefs->SetIntPref("print.print_margin_top", (int)(mPrData.top * 1000));
-   		pPrefs->SetIntPref("print.print_margin_left", (int)(mPrData.left * 1000));
-   		pPrefs->SetIntPref("print.print_margin_bottom", (int)(mPrData.bottom * 1000));
-   		pPrefs->SetIntPref("print.print_margin_right", (int)(mPrData.right * 1000));
-  		if ( mPrData.toPrinter == PR_FALSE )
-			pPrefs->SetCharPref("print.print_command", mPrData.command);
-	}
-        return NS_OK;
-  }
 }
 
 NS_IMETHODIMP nsDeviceContextSpecGTK :: GetToPrinter( PRBool &aToPrinter )     
