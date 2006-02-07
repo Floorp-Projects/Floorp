@@ -59,7 +59,7 @@
 <input name="id" type="hidden" value="[% test.testid | html %]">
 
     <div class="testcase-content">
-    [% INCLUDE test/test.html.tmpl test=test results=results showedit=show_admin %]
+    [% INCLUDE test/test.html.tmpl test=test results=results showedit=show_admin show_config=1 %]
     </div>
   </div>
 </div>

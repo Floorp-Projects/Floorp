@@ -26,15 +26,18 @@
 #%]
 
 [%# INTERFACE:
-  # $test       - the test object to show
-  # @results   - the list of all possible test results
-  # $showedit (optional) - include UI to edit the test?
-  #                           for this to work, you must include the 
-  #                           required scripts in the head
+  # $test       - the testcase object to show
+  # @results    - the list of all possible test results
+  # $showedit (optional) - include UI to edit the testcase?
+  #                        for this to work, you must include the 
+  #                        required scripts in the head
+  # $show_config  - display the config options (testgroup, subgroup, etc.)
+  #                 for a given testcase
 #%]
 
 [% PROCESS global/selects.none.tmpl %]
 
+[% IF show_config %]
 <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
   <td width="20%"><b>Product:</b></td>
@@ -78,6 +81,7 @@
 </table>
 
 <br clear="all" />
+[% END %]
 
 <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
