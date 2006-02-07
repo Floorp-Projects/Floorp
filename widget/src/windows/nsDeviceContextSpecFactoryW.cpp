@@ -27,6 +27,7 @@
 #include "nsGfxCIID.h"
 #include "plstr.h"
 #include "nsIServiceManager.h"
+#include "nsIStringBundle.h"
 
 #include "nsIPrintOptions.h"
 
@@ -37,6 +38,51 @@
 
 // This is for extending the dialog
 #include <dlgs.h>
+
+static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
+
+//----------------------------------------------------------------------------------
+// Return localized bundle for resource strings
+static nsresult
+GetLocalizedBundle(const char * aPropFileName, nsIStringBundle** aStrBundle)
+{
+  NS_ENSURE_ARG_POINTER(aPropFileName);
+  NS_ENSURE_ARG_POINTER(aStrBundle);
+
+  nsresult rv;
+  nsCOMPtr<nsIStringBundle> bundle;
+  
+
+  // Create bundle
+  nsCOMPtr<nsIStringBundleService> stringService = 
+    do_GetService(kStringBundleServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && stringService) {
+    rv = stringService->CreateBundle(aPropFileName, aStrBundle);
+  }
+  
+  return rv;
+}
+
+//--------------------------------------------------------
+// Return localized string 
+static nsresult
+GetLocalizedString(nsIStringBundle* aStrBundle, const char* aKey, nsString& oVal)
+{
+  NS_ENSURE_ARG_POINTER(aStrBundle);
+  NS_ENSURE_ARG_POINTER(aKey);
+
+  // Determine default label from string bundle
+  nsXPIDLString valUni;
+  nsAutoString key; 
+  key.AssignWithConversion(aKey);
+  nsresult rv = aStrBundle->GetStringFromName(key.get(), getter_Copies(valUni));
+  if (NS_SUCCEEDED(rv) && valUni) {
+    oVal.Assign(valUni);
+  } else {
+    oVal.Truncate();
+  }
+  return rv;
+}
 
 nsDeviceContextSpecFactoryWin :: nsDeviceContextSpecFactoryWin()
 {
@@ -93,7 +139,7 @@ static void SetText(HWND             aParent,
     return;
   }
   nsAutoString str;
-  nsresult rv = DeviceContextImpl::GetLocalizedString(aStrBundle, aKey, str);
+  nsresult rv = GetLocalizedString(aStrBundle, aKey, str);
   if (NS_SUCCEEDED(rv)) {
     SetTextOnWnd(wnd, str);
   }
@@ -396,7 +442,7 @@ UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 
     // Localize the new controls in the print dialog
     nsCOMPtr<nsIStringBundle> strBundle;
-    if (NS_SUCCEEDED(DeviceContextImpl::GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle)))) {
+    if (NS_SUCCEEDED(GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle)))) {
       PRInt32 i = 0;
       while (gAllPropKeys[i].mKeyStr != NULL) {
         SetText(hdlg, gAllPropKeys[i].mKeyId, strBundle, gAllPropKeys[i].mKeyStr);
@@ -477,9 +523,9 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
   // false - extend the dialog
   PRPackedBool doExtend = PR_FALSE;
   nsCOMPtr<nsIStringBundle> strBundle;
-  if (NS_SUCCEEDED(DeviceContextImpl::GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle)))) {
+  if (NS_SUCCEEDED(GetLocalizedBundle(PRINTDLG_PROPERTIES, getter_AddRefs(strBundle)))) {
     nsAutoString doExtendStr;
-    if (NS_SUCCEEDED(DeviceContextImpl::GetLocalizedString(strBundle, "extend", doExtendStr))) {
+    if (NS_SUCCEEDED(GetLocalizedString(strBundle, "extend", doExtendStr))) {
       doExtend = doExtendStr.EqualsIgnoreCase("true");
     }
   }
