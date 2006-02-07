@@ -203,6 +203,8 @@ txExprParser::createExprInternal(const nsSubstring& aExpression,
         nsASingleFragmentString::const_char_iterator start;
         aExpression.BeginReading(start);
         aContext->SetErrorOffset(lexer.peek()->mStart - start + aSubStringPos);
+
+        return rv;
     }
 
     txXPathOptimizer optimizer;
