@@ -1433,23 +1433,17 @@ GlobalPrinters::EnumerateNativePrinters(DWORD aWhichPrinters, char* aDefPrinter)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  PRInt32 defInx          = -1;
+  LPPRINTER_INFO_2 defPtr = nsnull;
+
   for (DWORD i=0;i<dwNumItems;i++ ) {
     PRBool isDef  = aDefPrinter && !PL_strcmp(printerInfo[i].pPrinterName, aDefPrinter);
     // put the default printer at the beginning of list
     if (isDef) {
-      // shift all the items in the list
-      PRInt32 lastInx = mPrinters->Count()-1;
-      for (PRInt32 inx=lastInx;inx>=0;inx--) {
-        if (inx == lastInx) {
-          mPrinters->AppendElement(mPrinters->ElementAt(inx));
-        } else {
-          mPrinters->ReplaceElementAt(mPrinters->ElementAt(inx), inx-1);
-        }
-      }
-      mPrinters->ReplaceElementAt((void*)&printerInfo[i], 0);
-    } else {
-      mPrinters->AppendElement((void*)&printerInfo[i]);
+      defInx = i;
+      defPtr = &printerInfo[i];
     }
+    mPrinters->AppendElement((void*)&printerInfo[i]);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
     printf("-------- %d ---------\n", i);
@@ -1464,6 +1458,14 @@ GlobalPrinters::EnumerateNativePrinters(DWORD aWhichPrinters, char* aDefPrinter)
     }
 #endif
   }
+
+  // swap the default printer with the zero'th item
+  if (defInx > 0) {
+    LPPRINTER_INFO_2 ptr = (LPPRINTER_INFO_2)mPrinters->ElementAt(0);
+    mPrinters->ReplaceElementAt((void*)defPtr, 0);
+    mPrinters->ReplaceElementAt((void*)ptr, defInx);
+  }
+
 
   // hang onto the pointer until we are done
   mPrinterInfoArray->AppendElement((void*)printerInfo);
