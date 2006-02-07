@@ -1086,7 +1086,7 @@ GlobalPrinters::GetDefaultPrinterName(LPTSTR& aDefaultPrinterName)
 }
 
 //----------------------------------------------------------------------------------
-// This goes and gets the list of of avilable printers and puts
+// This goes and gets the list of available printers and puts
 // the default printer at the beginning of the list
 nsresult 
 GlobalPrinters::EnumeratePrinterList()
