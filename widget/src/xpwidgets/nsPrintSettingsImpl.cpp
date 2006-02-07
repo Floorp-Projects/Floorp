@@ -216,6 +216,61 @@ NS_IMETHODIMP nsPrintSettings::SetOrientation(PRInt32 aOrientation)
   return NS_OK;
 }
 
+/* attribute wstring colorspace; */
+NS_IMETHODIMP nsPrintSettings::GetColorspace(PRUnichar * *aColorspace)
+{
+  NS_ENSURE_ARG_POINTER(aColorspace);
+  if (!mColorspace.IsEmpty()) {
+    *aColorspace = ToNewUnicode(mColorspace);
+  } else {
+    *aColorspace = nsnull;
+  }
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetColorspace(const PRUnichar * aColorspace)
+{
+  if (aColorspace) {
+    mColorspace = aColorspace;
+  } else {
+    mColorspace.SetLength(0);
+  }
+  return NS_OK;
+}
+
+/* attribute wstring resolutionname; */
+NS_IMETHODIMP nsPrintSettings::GetResolutionName(PRUnichar * *aResolutionName)
+{
+  NS_ENSURE_ARG_POINTER(aResolutionName);
+  if (!mResolutionName.IsEmpty()) {
+    *aResolutionName = ToNewUnicode(mResolutionName);
+  } else {
+    *aResolutionName = nsnull;
+  }
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetResolutionName(const PRUnichar * aResolutionName)
+{
+  if (aResolutionName) {
+    mResolutionName = aResolutionName;
+  } else {
+    mResolutionName.SetLength(0);
+  }
+  return NS_OK;
+}
+
+/* attribute boolean downloadFonts; */
+NS_IMETHODIMP nsPrintSettings::GetDownloadFonts(PRBool *aDownloadFonts)
+{
+  //NS_ENSURE_ARG_POINTER(aDownloadFonts);
+  *aDownloadFonts = mDownloadFonts;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetDownloadFonts(PRBool aDownloadFonts)
+{
+  mDownloadFonts = aDownloadFonts;
+  return NS_OK;
+}
+
 /* attribute wstring printer; */
 NS_IMETHODIMP nsPrintSettings::GetPrinterName(PRUnichar * *aPrinter)
 {

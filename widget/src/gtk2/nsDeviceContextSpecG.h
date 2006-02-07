@@ -97,6 +97,9 @@ public:
   NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
   NS_IMETHOD GetPaperName(const char **aPaperName);
   NS_IMETHOD GetPlexName(const char **aPlexName);
+  NS_IMETHOD GetResolutionName(const char **aResolutionName);
+  NS_IMETHOD GetColorspace(const char **aColorspace);
+  NS_IMETHOD GetDownloadFonts(PRBool &aDownloadFonts);   
   virtual ~nsDeviceContextSpecGTK();
   
 protected:
@@ -105,6 +108,7 @@ protected:
   PRPackedBool mIsPPreview : 1;     /* If PR_TRUE, is print preview */
   PRPackedBool mFpf : 1;            /* If PR_TRUE, first page first */
   PRPackedBool mGrayscale : 1;      /* If PR_TRUE, print grayscale */
+  PRPackedBool mDownloadFonts : 1;  /* If PR_TRUE, download fonts to printer */
   PRPackedBool mCancel : 1;         /* If PR_TRUE, user cancelled */
   int    mOrientation;        /* Orientation e.g. Portrait */
   char   mCommand[PATH_MAX];  /* Print command e.g., lpr */
@@ -112,6 +116,8 @@ protected:
   char   mPrinter[256];       /* Printer name */
   char   mPaperName[256];     /* Printer name */
   char   mPlexName[256];      /* Plex mode name */
+  char   mResolutionName[256];/* Resolution name */
+  char   mColorspace[256];    /* Colorspace */
   int    mCopies;             /* number of copies */
   float  mLeft;               /* left margin */
   float  mRight;              /* right margin */
