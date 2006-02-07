@@ -912,8 +912,8 @@ nsPrinterEnumeratorWin::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult
   PRInt32 printerInx = 0;
   while( count < numItems ) {
     LPTSTR name = GlobalPrinters::GetInstance()->GetItemFromList(printerInx++);
-    nsString newName; 
-    newName.AssignWithConversion(name);
+    nsAutoString newName; 
+    NS_CopyNativeToUnicode(nsDependentCString(name), newName);
     PRUnichar *str = ToNewUnicode(newName);
     if (!str) {
       CleanupArray(array, count);
