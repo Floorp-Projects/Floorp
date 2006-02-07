@@ -398,7 +398,7 @@ public:
 
   // overridded by descendents to populate
   virtual nsresult OpenContainer();
-  nsresult CloseContainer();
+  nsresult CloseContainer(PRBool aUpdateVisible = PR_TRUE);
 
   // this points to the result that owns this container. All containers have
   // their result pointer set so we can quickly get to the result without having

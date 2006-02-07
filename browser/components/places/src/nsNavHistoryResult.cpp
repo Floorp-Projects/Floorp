@@ -361,11 +361,23 @@ nsNavHistoryContainerResultNode::OpenContainer()
 
 
 // nsNavHistoryContainerResultNode::CloseContainer
+//
+//    Set aUpdateVisible to redraw the screen, this is the normal operation.
+//    This is set to false for the recursive calls since the root container
+//    that is being closed will handle recomputation of the visible elements
+//    for its entire subtree.
 
 nsresult
-nsNavHistoryContainerResultNode::CloseContainer()
+nsNavHistoryContainerResultNode::CloseContainer(PRBool aUpdateVisible)
 {
   NS_ASSERTION(mExpanded, "Container must be expanded to close it");
+
+  // recursively close all child containers
+  for (PRInt32 i = 0; i < mChildren.Count(); i ++) {
+    if (mChildren[i]->IsContainer() && mChildren[i]->GetAsContainer()->mExpanded)
+      mChildren[i]->GetAsContainer()->CloseContainer(PR_FALSE);
+  }
+
   mExpanded = PR_FALSE;
 
   nsresult rv;
@@ -376,10 +388,12 @@ nsNavHistoryContainerResultNode::CloseContainer()
       remote->OnContainerClosed(this);
   }
 
-  nsNavHistoryResult* result = GetResult();
-  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
-  rv = result->RefreshVisibleSection(this);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aUpdateVisible) {
+    nsNavHistoryResult* result = GetResult();
+    NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+    rv = result->RefreshVisibleSection(this);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 
