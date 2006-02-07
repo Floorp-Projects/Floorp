@@ -102,8 +102,6 @@ public:
   PRPackedBool     mIsHidden;         // Indicates PO is hidden, not reflowed, not shown
   PRPackedBool     mInvisible;        // Indicates PO is set to not visible by CSS
 
-  nsRect           mClipRect;
-
   PRUint16         mImgAnimationMode;
   PRUnichar*       mDocTitle;
   PRUnichar*       mDocURL;

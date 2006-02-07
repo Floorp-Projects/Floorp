@@ -844,9 +844,6 @@ nsSimplePageSequenceFrame::PrintNextPage(nsPresContext*  aPresContext)
       if (pf != nsnull) {
         pf->SetPageNumInfo(mPrintedPageNum, mTotalPages);
         pf->SetSharedPageData(mPageData);
-        if (mSelectionHeight > -1) {
-          pf->SetClipRect(&slidingRect);
-        }
       }
 
       // Print the page
@@ -946,18 +943,6 @@ nsSimplePageSequenceFrame::SuppressHeadersAndFooters(PRBool aDoSup)
     nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, f);
     if (pf != nsnull) {
       pf->SuppressHeadersAndFooters(aDoSup);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSimplePageSequenceFrame::SetClipRect(nsPresContext*  aPresContext, nsRect* aRect)
-{
-  for (nsIFrame* f = mFrames.FirstChild(); f; f = f->GetNextSibling()) {
-    nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, f);
-    if (pf != nsnull) {
-      pf->SetClipRect(aRect);
     }
   }
   return NS_OK;
