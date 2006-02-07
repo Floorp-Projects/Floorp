@@ -280,7 +280,7 @@ nsPrintOptions::ShowPrintSetupDialog(nsIPrintSettings *aPS)
  NS_ASSERTION(psSupports, "PrintSettings must be a supports");
  array->AppendElement(psSupports);
 
- nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+ nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
  if (ioParamBlock) {
    ioParamBlock->SetInt(0, 0);
    nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(ioParamBlock));
