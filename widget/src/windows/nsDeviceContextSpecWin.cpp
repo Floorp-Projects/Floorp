@@ -372,6 +372,21 @@ CheckForPrintToFile(nsIPrintSettings* aPS, LPTSTR aPrinterName, PRUnichar* aUPri
     CheckForPrintToFileWithName((char*)NS_ConvertUCS2toUTF8(aUPrinterName).get(), toFile);
   }
 #endif
+  // Since the driver wasn't a "Print To File" Driver, check to see
+  // if the name of the file has been set to the special "FILE:"
+  if (!toFile) {
+    nsXPIDLString toFileName;
+    aPS->GetToFileName(getter_Copies(toFileName));
+    if (toFileName) {
+      if (*toFileName) {
+        if (toFileName.Equals(NS_LITERAL_STRING("FILE:"))) {
+          // this skips the setting of the "print to file" info below
+          // which we don't want to do.
+          return NS_OK; 
+        }
+      }
+    }
+  }
   aPS->SetPrintToFile(toFile);
   if (toFile) {
     rv = GetFileNameForPrintSettings(aPS);
