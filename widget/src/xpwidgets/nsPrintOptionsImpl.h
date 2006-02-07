@@ -25,17 +25,19 @@
 #define nsPrintOptionsImpl_h__
 
 #include "nsIPrintOptions.h"  
+#include "nsIPrintSettingsService.h"  
 class nsIPref;
-class nsIPrintSettings;
+//class nsIPrintSettings;
 
 //*****************************************************************************
 //***    nsPrintOptions
 //*****************************************************************************
-class NS_GFX nsPrintOptions : public nsIPrintOptions
+class NS_GFX nsPrintOptions : public nsIPrintOptions, public nsIPrintSettingsService
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTOPTIONS
+  NS_DECL_NSIPRINTSETTINGSSERVICE
 
   nsPrintOptions();
   virtual ~nsPrintOptions();
