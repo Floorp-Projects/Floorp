@@ -30,7 +30,7 @@ class nsIPref;
 //*****************************************************************************
 //***    nsPrintOptions
 //*****************************************************************************
-class nsPrintOptions : public nsIPrintOptions
+class NS_GFX nsPrintOptions : public nsIPrintOptions
 {
 public:
   NS_DECL_ISUPPORTS
