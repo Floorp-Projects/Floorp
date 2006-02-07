@@ -496,12 +496,16 @@ nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS)
     ReadInchesToTwipsPref(prefs, kMarginRight,  margin.right);
     aPS->SetMarginInTwips(margin);
 
+    // Note: Following prefs are not required to be in a pref
+    // each has a proper default defined here.
+    // The following two are special in that they set a bit field
+    // which is initialized in the constructor.
     PRBool b;
-    prefs->GetBoolPref(kPrintEvenPages, &b);
-    aPS->SetPrintOptions(kOptPrintEvenPages, b);
+    if (NS_SUCCEEDED(prefs->GetBoolPref(kPrintEvenPages, &b)))
+      aPS->SetPrintOptions(kOptPrintEvenPages, b);
 
-    prefs->GetBoolPref(kPrintOddPages, &b);
-    aPS->SetPrintOptions(kOptPrintOddPages, b);
+    if (NS_SUCCEEDED(prefs->GetBoolPref(kPrintOddPages, &b)))
+      aPS->SetPrintOptions(kOptPrintOddPages, b);
 
     nsString str;
     str.SetLength(0);
