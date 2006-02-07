@@ -67,6 +67,9 @@ protected:
   PRInt16       mPrintRange;
   PRInt32       mStartPageNum; // only used for ePrintRange_SpecifiedRange
   PRInt32       mEndPageNum;
+  double        mScaling;
+  PRBool        mPrintBGColors;  // print background colors
+  PRBool        mPrintBGImages;  // print background images
 
   PRInt16       mPrintFrameType;
   PRBool        mHowToEnableFrameUI;

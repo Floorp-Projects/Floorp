@@ -103,6 +103,7 @@ nsPrintOptions::nsPrintOptions() :
   mPrintRange(kRangeAllPages),
   mStartPageNum(1),
   mEndPageNum(1),
+  mScaling(1.0),
   mNumCopies(1),
   mPrintFrameType(kFramesAsIs),
   mHowToEnableFrameUI(kFrameEnableNone),
@@ -667,6 +668,46 @@ NS_IMETHODIMP nsPrintOptions::SetMarginRight(double aMarginRight)
   return NS_OK;
 }
 
+/* attribute double scaling; */
+NS_IMETHODIMP nsPrintOptions::GetScaling(double *aScaling)
+{
+  NS_ENSURE_ARG_POINTER(aScaling);
+  *aScaling = mScaling;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrintOptions::SetScaling(double aScaling)
+{
+  mScaling = aScaling;
+  return NS_OK;
+}
+
+/* attribute boolean printBGColors; */
+NS_IMETHODIMP nsPrintOptions::GetPrintBGColors(PRBool *aPrintBGColors)
+{
+  NS_ENSURE_ARG_POINTER(aPrintBGColors);
+  *aPrintBGColors = mPrintBGColors;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrintBGColors(PRBool aPrintBGColors)
+{
+  mPrintBGColors = aPrintBGColors;
+  return NS_OK;
+}
+
+/* attribute boolean printBGImages; */
+NS_IMETHODIMP nsPrintOptions::GetPrintBGImages(PRBool *aPrintBGImages)
+{
+  NS_ENSURE_ARG_POINTER(aPrintBGImages);
+  *aPrintBGImages = mPrintBGImages;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrintBGImages(PRBool aPrintBGImages)
+{
+  mPrintBGImages = aPrintBGImages;
+  return NS_OK;
+}
+
 /* attribute long printRange; */
 NS_IMETHODIMP nsPrintOptions::GetPrintRange(PRInt16 *aPrintRange)
 {
@@ -908,6 +949,10 @@ NS_IMETHODIMP nsPrintOptions::SetPrintSettings(nsIPrintSettings * aPrintSettings
 
   aPrintSettings->GetMarginRight(&dblVal);
   SetMarginRight(dblVal);
+
+  aPrintSettings->GetScaling(&mScaling);
+  aPrintSettings->GetPrintBGColors(&mPrintBGColors);
+  aPrintSettings->GetPrintBGImages(&mPrintBGImages);
 
   aPrintSettings->GetPrintRange(&mPrintRange);
 
