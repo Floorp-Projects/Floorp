@@ -65,6 +65,7 @@ protected:
   PRBool        mHowToEnableFrameUI;
   PRBool        mIsCancelled;
   PRBool        mPrintSilent;
+  PRBool        mPrintPreview;
   PRBool        mShrinkToFit;
   PRInt32       mPrintPageDelay;
 
