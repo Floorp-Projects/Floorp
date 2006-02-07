@@ -452,11 +452,9 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
 
   PRINTDLG  prntdlg;
   memset(&prntdlg, 0, sizeof(PRINTDLG));
-  HWND      hWnd      = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
-  HINSTANCE hInstance = (HINSTANCE)::GetWindowLong(hWnd, GWL_HINSTANCE);
 
   prntdlg.lStructSize = sizeof(prntdlg);
-  prntdlg.hwndOwner   = NULL;               //XXX need to find a window here. MMP
+  prntdlg.hwndOwner   = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
   prntdlg.hDevMode    = NULL;
   prntdlg.hDevNames   = NULL;
   prntdlg.hDC         = NULL;
