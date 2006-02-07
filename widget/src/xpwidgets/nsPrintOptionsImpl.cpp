@@ -89,6 +89,7 @@ const char kPrintPaperSize[]     = "print_paper_size"; // this has been deprecat
 const char kPrintReversed[]      = "print_reversed";
 const char kPrintInColor[]       = "print_in_color";
 const char kPrintPaperName[]     = "print_paper_name";
+const char kPrintPlexName[]      = "print_plex_name";
 const char kPrintPaperSizeType[] = "print_paper_size_type";
 const char kPrintPaperData[]     = "print_paper_data";
 const char kPrintPaperSizeUnit[] = "print_paper_size_unit";
@@ -493,6 +494,13 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUi
     }
   }
 
+  if (aFlags & nsIPrintSettings::kInitSavePlexName) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintPlexName, aPrefName), str))) {
+      aPS->SetPlexName(str.get());
+      DUMP_STR(kReadStr, kPrintPlexName, str.get());
+    }
+  }
+
   if (aFlags & nsIPrintSettings::kInitSavePaperSizeUnit) {
     if (NS_SUCCEEDED(mPrefBranch->GetIntPref(GetPrefName(kPrintPaperSizeUnit, aPrefName),  &iVal))) {
       aPS->SetPaperSizeUnit(iVal);
@@ -706,6 +714,13 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsString& aPrefName, PRU
     }
   }
 
+  if (aFlags & nsIPrintSettings::kInitSavePlexName) {
+    if (NS_SUCCEEDED(aPS->GetPlexName(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintPlexName, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintPlexName, aPrefName));
+    }
+  }
+  
   if (aFlags & nsIPrintSettings::kInitSavePaperSizeUnit) {
     if (NS_SUCCEEDED(aPS->GetPaperSizeUnit(&iVal16))) {
       DUMP_INT(kWriteStr, kPrintPaperSizeUnit, iVal16);
@@ -1235,6 +1250,7 @@ Tester::Tester()
     ps->SetFooterStrCenter(NS_ConvertUTF8toUCS2("Center").get());
     ps->SetFooterStrRight(NS_ConvertUTF8toUCS2("Right").get());
     ps->SetPaperName(NS_ConvertUTF8toUCS2("Paper Name").get());
+    ps->SetPlexName(NS_ConvertUTF8toUCS2("Plex Name").get());
     ps->SetPaperSizeType(10);
     ps->SetPaperData(1);
     ps->SetPaperWidth(100.0);
@@ -1267,6 +1283,7 @@ Tester::Tester()
       {kPrintBGImages, nsIPrintSettings::kInitSaveBGImages},
       {kPrintPaperSize, nsIPrintSettings::kInitSavePaperSize},
       {kPrintPaperName, nsIPrintSettings::kInitSavePaperName},
+      {kPrintPlexName, nsIPrintSettings::kInitSavePlexName},
       {kPrintPaperSizeUnit, nsIPrintSettings::kInitSavePaperSizeUnit},
       {kPrintPaperSizeType, nsIPrintSettings::kInitSavePaperSizeType},
       {kPrintPaperData, nsIPrintSettings::kInitSavePaperData},
