@@ -46,6 +46,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIDialogParamBlock.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindowInternal.h"
