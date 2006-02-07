@@ -49,7 +49,7 @@ protected:
   void WriteBitFieldPref(const char * aPrefId, PRInt32 anOption);
   void ReadJustification(const char * aPrefId, PRInt16& aJust, PRInt16 aInitValue);
   void WriteJustification(const char * aPrefId, PRInt16 aJust);
-  void ReadInchesToTwipsPref(const char * aPrefId, nscoord&  aTwips);
+  void ReadInchesToTwipsPref(const char * aPrefId, nscoord&  aTwips, const char * aMarginPref);
   void WriteInchesFromTwipsPref(const char * aPrefId, nscoord aTwips);
 
   nsresult ReadPrefString(const char * aPrefId, nsString& aString);
