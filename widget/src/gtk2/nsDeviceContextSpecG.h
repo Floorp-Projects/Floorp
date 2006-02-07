@@ -44,7 +44,9 @@
 #include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h" 
 #include "nsVoidArray.h"
+#ifdef USE_POSTSCRIPT
 #include "nsIDeviceContextSpecPS.h"
+#endif /* USE_POSTSCRIPT */
 #ifdef USE_XPRINT
 #include "nsIDeviceContextSpecXPrint.h"
 #endif /* USE_XPRINT */
@@ -59,10 +61,12 @@ typedef enum
   pmPostScript
 } PrintMethod;
 
-class nsDeviceContextSpecGTK : public nsIDeviceContextSpec,
-                                public nsIDeviceContextSpecPS
+class nsDeviceContextSpecGTK : public nsIDeviceContextSpec
+#ifdef USE_POSTSCRIPT
+                             , public nsIDeviceContextSpecPS
+#endif /* USE_POSTSCRIPT */
 #ifdef USE_XPRINT
-                              , public nsIDeviceContextSpecXp
+                             , public nsIDeviceContextSpecXp
 #endif /* USE_XPRINT */
 {
 public:
