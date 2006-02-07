@@ -947,7 +947,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     }
     
     XpuFreePrinterList(plist);
-  }  
+  }
 #endif /* USE_XPRINT */
 
 #ifdef USE_POSTSCRIPT
@@ -1002,8 +1002,21 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   }  
 #endif /* USE_POSTSCRIPT */  
       
+  /* If there are no printers available after all checks, return an error */
   if (mGlobalNumPrinters == 0)
-    return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE; 
+  {
+    /* Make sure we do not cache an empty printer list */
+    FreeGlobalPrinters();
+
+#ifdef USE_XPRINT
+    /* Check if there are actually any Xprint servers available */
+    if (!XpuXprintServersAvailable()) {
+      return NS_ERROR_GFX_PRINTER_XPRINT_NO_XPRINT_SERVERS_FOUND;
+    }
+#endif /* USE_XPRINT */
+
+    return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
+  }
 
   return NS_OK;
 }
