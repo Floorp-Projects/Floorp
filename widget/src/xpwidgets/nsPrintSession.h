@@ -41,7 +41,7 @@
 
 #include "nsIPrintSession.h" 
 #include "nsWeakReference.h"
-#include "nsComObsolete.h"
+#include "gfxCore.h"
 
 //*****************************************************************************
 //***    nsPrintSession
