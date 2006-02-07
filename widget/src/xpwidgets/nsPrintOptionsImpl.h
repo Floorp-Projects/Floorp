@@ -27,7 +27,8 @@
 #include "nsCOMPtr.h"
 #include "nsIPrintOptions.h"  
 #include "nsIPrintSettingsService.h"  
-class nsIPref;
+#include "nsIPrefBranch.h"
+
 //class nsIPrintSettings;
 
 //*****************************************************************************
@@ -44,23 +45,23 @@ public:
   virtual ~nsPrintOptions();
 
 protected:
-  void ReadBitFieldPref(nsIPref * aPref, const char * aPrefId, PRInt32 anOption);
-  void WriteBitFieldPref(nsIPref * aPref, const char * aPrefId, PRInt32 anOption);
-  void ReadJustification(nsIPref *  aPref, const char * aPrefId, PRInt16& aJust, PRInt16 aInitValue);
-  void WriteJustification(nsIPref * aPref, const char * aPrefId, PRInt16 aJust);
-  void ReadInchesToTwipsPref(nsIPref * aPref, const char * aPrefId, nscoord&  aTwips);
-  void WriteInchesFromTwipsPref(nsIPref * aPref, const char * aPrefId, nscoord aTwips);
+  void ReadBitFieldPref(const char * aPrefId, PRInt32 anOption);
+  void WriteBitFieldPref(const char * aPrefId, PRInt32 anOption);
+  void ReadJustification(const char * aPrefId, PRInt16& aJust, PRInt16 aInitValue);
+  void WriteJustification(const char * aPrefId, PRInt16 aJust);
+  void ReadInchesToTwipsPref(const char * aPrefId, nscoord&  aTwips);
+  void WriteInchesFromTwipsPref(const char * aPrefId, nscoord aTwips);
 
-  nsresult ReadPrefString(nsIPref * aPref, const char * aPrefId, nsString& aString);
-  nsresult WritePrefString(nsIPref * aPref, const char * aPrefId, nsString& aString);
-  nsresult WritePrefString(nsIPref* aPref, PRUnichar*& aStr, const char* aPrefId);
-  nsresult ReadPrefDouble(nsIPref * aPref, const char * aPrefId, double& aVal);
-  nsresult WritePrefDouble(nsIPref * aPref, const char * aPrefId, double aVal);
+  nsresult ReadPrefString(const char * aPrefId, nsString& aString);
+  nsresult WritePrefString(const char * aPrefId, nsString& aString);
+  nsresult WritePrefString(PRUnichar*& aStr, const char* aPrefId);
+  nsresult ReadPrefDouble(const char * aPrefId, double& aVal);
+  nsresult WritePrefDouble(const char * aPrefId, double aVal);
 
   virtual nsresult ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
   virtual nsresult WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
-  const char* GetPrefName(const char *     aPrefName, 
-                          const nsString&  aPrinterName);
+  static const char* GetPrefName(const char *     aPrefName, 
+                                 const nsString&  aPrinterName);
   
   // May be implemented by the platform-specific derived class                       
   virtual nsresult _CreatePrintSettings(nsIPrintSettings **_retval);
@@ -68,7 +69,7 @@ protected:
   // Members 
   nsCOMPtr<nsIPrintSettings> mGlobalPrintSettings;
 
-  nsCString mPrefName;
+  nsCOMPtr<nsIPrefBranch> mPrefBranch;
 
   static nsFont* sDefaultFont;
 };
