@@ -1,5 +1,7 @@
 <!ENTITY places.title
   "Places">
+<!ENTITY places.toolbar.label
+  "Places Toolbar">
 <!ENTITY cmd.find.label 
   "Find in Bookmarks/History...">
 <!ENTITY cmd.find.accesskey
@@ -198,3 +200,25 @@
   "Maximum results: ">
 <!ENTITY cmd.find.key
   "f">
+<!ENTITY feed.subscribe.label
+  "Feed">
+<!ENTITY feed.subscribe.tooltip
+  "Subscribe">
+<!ENTITY location.status.not_bookmarked
+  "Star (Off)">
+<!ENTITY location.status.bookmarked
+  "Star (On)">
+<!ENTITY bookmark.property.title
+  "Title">
+<!ENTITY bookmark.property.folders
+  "Folders">
+<!ENTITY bookmark.property.folder_list
+  "Folder List">
+<!ENTITY bookmark.property.location
+  "Bookmark Location">
+<!ENTITY cmd.show_bookmarks.label
+  "See all bookmarks">
+<!ENTITY cmd.delete_bookmark.label
+  "Delete Bookmark">
+<!ENTITY cmd.hide_bookmark_properties.label
+  "Done">
