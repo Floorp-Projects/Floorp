@@ -214,6 +214,9 @@ nsMacWindow::nsMacWindow() : Inherited()
   , mShown(PR_FALSE)
   , mSheetNeedsShow(PR_FALSE)
   , mMacEventHandler(nsnull)
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
+  , mNeedsResize(PR_FALSE)
+#endif
 {
   mMacEventHandler.reset(new nsMacEventHandler(this));
   WIDGET_SET_CLASSNAME("nsMacWindow");  
@@ -1480,6 +1483,24 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 nsresult nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint, PRBool aFromUI)
 {
   if (mWindowMadeHere) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
+    if (mInUpdate && nsToolkit::OSXVersion() < MAC_OS_X_VERSION_10_3_HEX) {
+      // Calling SizeWindow in the middle of an update will hang on 10.2,
+      // even if care is taken to break out of the update with EndUpdate.
+      // On 10.2, defer the resize until the update is done.  Update will
+      // call back into Resize with these values after the update is
+      // finished.
+      mResizeTo.width = aWidth;
+      mResizeTo.height = aHeight;
+      mResizeTo.repaint = aRepaint;
+      mResizeTo.fromUI = aFromUI;
+
+      mNeedsResize = PR_TRUE;
+
+      return NS_OK;
+    }
+#endif
+
     Rect windowRect;
     if (::GetWindowBounds(mWindowPtr, kWindowContentRgn, &windowRect)
         != noErr) {
@@ -2142,4 +2163,24 @@ NS_IMETHODIMP nsMacWindow::GetChildSheet(PRBool aShown, nsMacWindow** _retval)
 
   *_retval = nsnull;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMacWindow::Update()
+{
+  nsresult rv = Inherited::Update();
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
+  if (NS_SUCCEEDED(rv) && mNeedsResize) {
+    // Something wanted to resize this window in the middle of the update
+    // above, and the host OS is 10.2.  The resize would have caused a
+    // hang in SizeWindow, so it was deferred.  Now that the update is
+    // done, it's safe to resize.
+    mNeedsResize = PR_FALSE;
+
+    Resize(mResizeTo.width, mResizeTo.height,
+           mResizeTo.repaint, mResizeTo.fromUI);
+  }
+#endif
+
+  return rv;
 }
