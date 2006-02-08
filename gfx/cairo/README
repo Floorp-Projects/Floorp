@@ -20,6 +20,8 @@ if cairo is enabled.  Please upgrade to VC7.1/8.
 
 ==== Patches ====
 
+Last update: 07 Feb 2006
+
 mozilla-misc.patch
   - Misc compilation fixes for pixman (submitted upstream)
   - temporary moz_cairo_set_target API (not for upstream)
@@ -36,16 +38,24 @@ mozilla-misc.patch
 cairo-debug-helpers.patch
   - some stuff for cairo-debug.[ch]
 
+fbcompose-bandaid.patch (Updated 7 Feb 06)
+  - Workaround for https://bugs.freedesktop.org/show_bug.cgi?id=5777
+
 cairo-win32-clip.patch
   - Make mark_dirty() reset a surface's clip, so that we can call it
     when we RestoreDC() after native win32 drawing (submitted upstream)
   - Rework win32 surface clip and extents handling for correctness
     (submitted upstream)
 
-device-offset-scale.path
+cairo-win32-alphablend.patch (Updated 7 Feb 06)
+  - Use AlphaBlend if the dst surface is either RGB24 or ARGB32, not
+    just RGB24 
+  - Add cairo_win32_surface_get_dc()
+
+device-offset-scale.patch (Updated 7 Feb 06)
   - Move device offset/scale handling into surface layer; large rework
     of device offset/scale.  (submitted upstream)
 
-push-pop-group.patch
+push-pop-group.patch (Updated 7 Feb 06)
   - Implementation of push/pop group API; depends on device-offset-scale.
     (submitted upstream)

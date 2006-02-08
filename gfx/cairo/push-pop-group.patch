@@ -1,7 +1,7 @@
 Index: src/cairo-gstate-private.h
 ===================================================================
---- src/cairo-gstate-private.h.orig	2006-02-02 16:23:28.687500000 -0800
-+++ src/cairo-gstate-private.h	2006-02-02 16:23:52.218750000 -0800
+--- src/cairo-gstate-private.h.orig	2006-02-07 16:54:23.625000000 -0800
++++ src/cairo-gstate-private.h	2006-02-07 16:59:51.171875000 -0800
 @@ -55,7 +55,9 @@
  
      cairo_clip_t clip;
@@ -15,8 +15,8 @@ Index: src/cairo-gstate-private.h
      cairo_matrix_t ctm_inverse;
 Index: src/cairo-gstate.c
 ===================================================================
---- src/cairo-gstate.c.orig	2006-02-02 16:23:28.692500000 -0800
-+++ src/cairo-gstate.c	2006-02-02 16:23:52.234375000 -0800
+--- src/cairo-gstate.c.orig	2006-02-07 16:55:54.671875000 -0800
++++ src/cairo-gstate.c	2006-02-07 16:59:51.171875000 -0800
 @@ -119,6 +119,8 @@
      _cairo_clip_init (&gstate->clip, target);
  
@@ -277,9 +277,9 @@ Index: src/cairo-gstate.c
  			  cairo_pattern_t *source)
 Index: src/cairo.c
 ===================================================================
---- src/cairo.c.orig	2006-02-02 16:23:28.697500000 -0800
-+++ src/cairo.c	2006-02-02 16:24:08.984375000 -0800
-@@ -347,33 +347,120 @@
+--- src/cairo.c.orig	2006-02-07 16:54:23.652000000 -0800
++++ src/cairo.c	2006-02-07 17:00:28.109375000 -0800
+@@ -347,33 +347,116 @@
  }
  slim_hidden_def(moz_cairo_set_target);
  
@@ -307,10 +307,7 @@ Index: src/cairo.c
 +    cairo_status_t status;
 +    cairo_rectangle_t extents;
 +    cairo_surface_t *group_surface = NULL;
- 
--    cr->status = cairoPush (cr);
--    if (cr->status)
--	return;
++
 +    /* Get the extents that we'll use in creating our new group surface */
 +    _cairo_surface_get_extents (_cairo_gstate_get_target (cr->gstate), &extents);
 +    status = _cairo_clip_intersect_to_rectangle (_cairo_gstate_get_clip (cr->gstate), &extents);
@@ -367,26 +364,24 @@ Index: src/cairo.c
 +    cairo_surface_reference (group_surface);
 +
 +    cairo_restore (cr);
-+
-+    if (cr->status)
+ 
+-    cr->status = cairoPush (cr);
+     if (cr->status)
+-	return;
 +	goto done;
-+
-+    /* Undo the device offset we used; we're back in a normal-sized
-+     * surface, so this pattern will be positioned at the right place.
-+     * XXXvlad - er, this doesn't make sense, why does it work?
-+     */
-+    //cairo_surface_set_device_offset (group_surface, 0, 0);
 +
 +    group_pattern = cairo_pattern_create_for_surface (group_surface);
 +    if (!group_pattern) {
 +        cr->status = CAIRO_STATUS_NO_MEMORY;
 +        goto done;
 +    }
-+
-+done:
-+    cairo_surface_destroy (group_surface);
  
 -    cr->status = _cairo_gstate_begin_group (cr->gstate);
++    _cairo_gstate_get_matrix (cr->gstate, &group_matrix);
++    cairo_pattern_set_matrix (cr->gstate, &group_matrix);
++done:
++    cairo_surface_destroy (group_surface);
++
 +    return group_pattern;
  }
 +slim_hidden_def(cairo_pop_group);
@@ -415,19 +410,41 @@ Index: src/cairo.c
  
  /**
   * cairo_set_operator:
-@@ -2421,7 +2508,7 @@
+@@ -2421,6 +2504,30 @@
      if (cr->status)
  	return (cairo_surface_t*) &_cairo_surface_nil;
  
--    return _cairo_gstate_get_target (cr->gstate);
 +    return _cairo_gstate_get_original_target (cr->gstate);
++}
++
++/**
++ * cairo_get_group_target:
++ * @cr: a cairo context
++ * 
++ * Gets the target surface for the current transparency group
++ * started by the last cairo_push_group() call on the cairo
++ * context.
++ *
++ * This function may return NULL if there is no transparency
++ * group on the target.
++ * 
++ * Return value: the target group surface, or NULL if none.  This
++ * object is owned by cairo. To keep a reference to it, you must call
++ * cairo_surface_reference().
++ **/
++cairo_surface_t *
++cairo_get_group_target (cairo_t *cr)
++{
++    if (cr->status)
++	return (cairo_surface_t*) &_cairo_surface_nil;
++
+     return _cairo_gstate_get_target (cr->gstate);
  }
  
- /**
 Index: src/cairo.h
 ===================================================================
---- src/cairo.h.orig	2006-02-02 16:23:28.701500000 -0800
-+++ src/cairo.h	2006-02-02 16:23:52.250000000 -0800
+--- src/cairo.h.orig	2006-02-07 16:57:25.890625000 -0800
++++ src/cairo.h	2006-02-07 17:00:08.843750000 -0800
 @@ -255,13 +255,14 @@
  cairo_public void
  moz_cairo_set_target (cairo_t *cr, cairo_surface_t *target);
@@ -446,10 +463,20 @@ Index: src/cairo.h
  
  /* Modify state */
  
+@@ -996,6 +997,9 @@
+ cairo_public cairo_surface_t *
+ cairo_get_target (cairo_t *cr);
+ 
++cairo_public cairo_surface_t *
++cairo_get_group_target (cairo_t *cr);
++
+ typedef enum _cairo_path_data_type {
+     CAIRO_PATH_MOVE_TO,
+     CAIRO_PATH_LINE_TO,
 Index: src/cairoint.h
 ===================================================================
---- src/cairoint.h.orig	2006-02-02 16:23:28.709500000 -0800
-+++ src/cairoint.h	2006-02-02 16:23:52.250000000 -0800
+--- src/cairoint.h.orig	2006-02-07 16:55:54.687500000 -0800
++++ src/cairoint.h	2006-02-07 16:59:51.265625000 -0800
 @@ -1077,9 +1077,24 @@
  cairo_private void
  _moz_cairo_gstate_set_target (cairo_gstate_t *gstate, cairo_surface_t *target);
@@ -487,8 +514,8 @@ Index: src/cairoint.h
  CAIRO_END_DECLS
 Index: test/Makefile.am
 ===================================================================
---- test/Makefile.am.orig	2006-02-02 16:23:28.719500000 -0800
-+++ test/Makefile.am	2006-02-02 16:23:52.250000000 -0800
+--- test/Makefile.am.orig	2006-02-07 16:54:23.790000000 -0800
++++ test/Makefile.am	2006-02-07 16:59:51.265625000 -0800
 @@ -59,7 +59,8 @@
  unantialiased-shapes		\
  unbounded-operator		\
@@ -510,7 +537,7 @@ Index: test/Makefile.am
 Index: test/push-group.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ test/push-group.c	2006-02-02 16:23:52.265625000 -0800
++++ test/push-group.c	2006-02-07 16:59:51.265625000 -0800
 @@ -0,0 +1,119 @@
 +/*
 + * Copyright © 2005 Mozilla Corporation
