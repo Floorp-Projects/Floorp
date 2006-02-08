@@ -2372,6 +2372,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #if JS_HAS_LEXICAL_CLOSURE
               BEGIN_LITOPX_CASE(JSOP_CLOSURE)
                 JS_ASSERT(ATOM_IS_OBJECT(atom));
+                todo = -2;
                 goto do_function;
               END_LITOPX_CASE
 #endif
