@@ -1,5 +1,0 @@
-<!-- Entities for the Sample Extension Options Dialog go here -->
-<!ENTITY reporterMenu.title                         "Rapporter un site non fonctionnel">
-<!ENTITY reporterMenu.tooltip                       "Rapporter un site non fonctionnel">
-<!ENTITY reporterMenu.accesskey                     "R">
-

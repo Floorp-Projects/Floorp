@@ -1,5 +1,0 @@
-<!-- Entities for the Sample Extension Options Dialog go here -->
-<!ENTITY reporterMenu.title                         "Informar sitio web roto">
-<!ENTITY reporterMenu.tooltip                       "Informar sitio web roto">
-<!ENTITY reporterMenu.accesskey                     "R">
-
