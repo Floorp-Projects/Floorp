@@ -196,12 +196,15 @@ NS_IMETHODIMP calDuration::SetSeconds(PRInt16 aValue)
 
 NS_IMETHODIMP calDuration::GetInSeconds(PRInt32 *_retval)
 {
-    *_retval = 
+	PRInt32 retval =
         (((PRInt32)((PRInt16)mDuration.weeks   * SECONDS_PER_WEEK)) + 
          ((PRInt32)((PRInt16)mDuration.days    * SECONDS_PER_DAY)) +
          ((PRInt32)((PRInt16)mDuration.hours   * SECONDS_PER_HOUR)) +
          ((PRInt32)((PRInt16)mDuration.minutes * SECONDS_PER_MINUTE)) +
          ((PRInt32)((PRInt16)mDuration.seconds)));
+    if (mDuration.is_neg)
+		retval=-retval;
+    *_retval = retval;
 
     return NS_OK;
 }
@@ -238,7 +241,11 @@ NS_IMETHODIMP calDuration::AddDuration(calIDuration *aDuration)
     struct icaldurationtype idt;
     aDuration->ToIcalDuration(&idt);
 
-    if (!idt.is_neg) {
+    // Calculate the new absolute value of the duration
+    // For two negative durations, the abs. value will increase,
+    // so use + in that case.
+    // Of course, also use + when both durations are positive.
+    if (idt.is_neg != mDuration.is_neg) {
         mDuration.weeks   += idt.weeks;
         mDuration.days    += idt.days;
         mDuration.hours   += idt.hours;

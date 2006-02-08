@@ -709,58 +709,61 @@
             throw NS_ERROR_FAILURE;
 
           // If we've already drawn a view once, then in almost all cases we
-          // can resuse most of the grid.  We may need to add or subtract a row
+          // can reuse most of the grid.  We may need to add or subtract a row
           // but this is still much faster than recreating all rows.
-          var canReuse = false;
-          if (this.mDateBoxes) {
-            canReuse = true;
-            var oldDuration = this.mDateBoxes[this.mDateBoxes.length-1].date.subtractDate(this.mDateBoxes[0].date);
-            var newDuration = this.mEndDate.subtractDate(this.mStartDate);
-            newDuration.isNegative = true;
-            newDuration.normalize();
-            newDuration.addDuration(oldDuration);
-
-            switch (newDuration.days + newDuration.weeks*7) {
-              case 0: // Perfect!
-                break;
-              case -7:
-                // The new month takes up an extra week, so we need to create
-                // a new row and fill it with day-boxes
-                var newGridRow =  createXULElement("row");
-                newGridRow.setAttribute("flex", "1");
-                newGridRow.setAttribute("class", "calendar-month-view-grid-row");
-                this.monthgridrows.appendChild(newGridRow);
-                for (var i = 0; i < 7; i++) {
-                  var box = createXULElement("calendar-month-day-box");
-                  box.setAttribute("context", this.getAttribute("context"));
-                  box.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
-                  box.setAttribute("class", boxClass);
-                  box.monthView = this;
-                  newGridRow.appendChild(box);
-                  var boxdata = {
-                    date: null,
-                    row: curRow,
-                    box: box
-                  };
-                  this.mDateBoxes.push(boxdata);
-                }
-                break;
-              case 7:
-                // The old month took up an extra week, so remove a row
-                this.monthgridrows.removeChild(this.monthgridrows.lastChild);
-                this.mDateBoxes.splice(this.mDateBoxes.length - 7, 7);
-                break;
-              default: //Right now, this can never happen, but some day it might
-                canReuse = false;
-                break;
-            }
-          }
-
-          if (canReuse) {
-            this.reuseExistingGrid();
-          } else {
+          if (!this.mDateBoxes) {
+            // There are no dateBoxes, so we must start from scratch.
             this.createDayGrid();
+            return;
           }
+
+          var oldDuration = this.mDateBoxes[this.mDateBoxes.length-1].date.subtractDate(this.mDateBoxes[0].date);
+          var newDuration = this.mEndDate.subtractDate(this.mStartDate);
+          newDuration.isNegative = true;
+          newDuration.normalize();
+          newDuration.addDuration(oldDuration);
+
+          if ((newDuration.days + newDuration.weeks*7) == 0) {
+            // OK, our grid is perfect, so just reuse it exactly.
+            this.reuseExistingGrid();
+            return;
+          } else if ((newDuration.days + newDuration.weeks*7) != 7) {
+            // This case shouldn't ever happen, at least until we introduce
+            // the ability to remove weekends
+            this.createDayGrid();
+            return;
+          }
+
+          // OK, so we're off by one week.  We either need to add or subtract
+          // a row depending on whether the newDuration is positive or negative
+          if (!newDuration.isNegative) {
+            // The new month takes up an extra week, so we need to create
+            // a new row and fill it with day-boxes
+            var newGridRow =  createXULElement("row");
+            newGridRow.setAttribute("flex", "1");
+            newGridRow.setAttribute("class", "calendar-month-view-grid-row");
+            var newRowIndex = this.monthgridrows.length;
+            this.monthgridrows.appendChild(newGridRow);
+            for (var i = 0; i < 7; i++) {
+              var box = createXULElement("calendar-month-day-box");
+              box.setAttribute("context", this.getAttribute("context"));
+              box.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
+              box.monthView = this;
+              newGridRow.appendChild(box);
+              var boxdata = {
+                date: null,
+                row: newRowIndex,
+                box: box
+              };
+              this.mDateBoxes.push(boxdata);
+            }
+          } else {
+            // The old month took up an extra week, so remove a row
+            this.monthgridrows.removeChild(this.monthgridrows.lastChild);
+            this.mDateBoxes.splice(this.mDateBoxes.length - 7, 7);
+          }
+
+          this.reuseExistingGrid();
 	]]></body>
       </method>
 
@@ -875,7 +878,7 @@
 
             if (dayCount == 7) {
               // start adding to the next row
-              curRow = gridrows.childNodes[gridRowCount];
+              curRow = this.monthgridrows.childNodes[gridRowCount];
               gridRowCount++;
 
               dayCount = 0;
