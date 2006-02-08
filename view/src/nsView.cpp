@@ -39,7 +39,6 @@
 #include "nsIWidget.h"
 #include "nsViewManager.h"
 #include "nsIWidget.h"
-#include "nsIButton.h"
 #include "nsGUIEvent.h"
 #include "nsIDeviceContext.h"
 #include "nsIComponentManager.h"
