@@ -38,7 +38,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.29 2005/09/02 01:24:56 wtchang%redhat.com Exp $
+ * $Id: cmssiginfo.c,v 1.30 2006/02/08 06:13:43 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -262,7 +262,13 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest, SECItem *c
 	                &encoded_attrs) == NULL)
 	    goto loser;
 
-	signAlgTag = NSS_CMSUtil_MakeSignatureAlgorithm(digestalgtag, pubkAlgTag);
+	signAlgTag = SEC_GetSignatureAlgorithmOidTag(privkey->keyType, 
+                                                     digestalgtag);
+	if (signAlgTag == SEC_OID_UNKNOWN) {
+	    PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+	    goto loser;
+	}
+
 	rv = SEC_SignData(&signature, encoded_attrs.data, encoded_attrs.len, 
 	                  privkey, signAlgTag);
 	PORT_FreeArena(tmppoolp, PR_FALSE); /* awkward memory management :-( */
@@ -350,7 +356,6 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
     PLArenaPool *poolp;
     SECOidTag    digestalgtag;
     SECOidTag    pubkAlgTag;
-    SECOidTag    signAlgTag;
 
     if (signerinfo == NULL)
 	return SECFailure;
@@ -370,34 +375,11 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
     }
 
     digestalgtag = NSS_CMSSignerInfo_GetDigestAlgTag(signerinfo);
-
-    /*
-     * XXX This may not be the right set of algorithms to check.
-     * I'd prefer to trust that just calling VFY_Verify{Data,Digest}
-     * would do the right thing (and set an error if it could not);
-     * then additional algorithms could be handled by that code
-     * and we would Just Work.  So this check should just be removed,
-     * but not until the VFY code is better at setting errors.
-     */
     pubkAlgTag = SECOID_GetAlgorithmTag(&(signerinfo->digestEncAlg));
-    switch (pubkAlgTag) {
-    case SEC_OID_PKCS1_RSA_ENCRYPTION:
-    case SEC_OID_ANSIX9_DSA_SIGNATURE:
-    case SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST:
-    case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
-    case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
-    case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
-	/* ok */
-	break;
-    case SEC_OID_UNKNOWN:
+    if ((pubkAlgTag == SEC_OID_UNKNOWN) || (digestalgtag == SEC_OID_UNKNOWN)) {
 	vs = NSSCMSVS_SignatureAlgorithmUnknown;
 	goto loser;
-    default:
-	vs = NSSCMSVS_SignatureAlgorithmUnsupported;
-	goto loser;
     }
-
-    signAlgTag = NSS_CMSUtil_MakeSignatureAlgorithm(digestalgtag, pubkAlgTag);
 
     if (!NSS_CMSArray_IsEmpty((void **)signerinfo->authAttr)) {
 	if (contentType) {
@@ -461,10 +443,10 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
 	    goto loser;
 	}
 
-	vs = (VFY_VerifyData (encoded_attrs.data, encoded_attrs.len,
-			publickey, &(signerinfo->encDigest), signAlgTag,
-			signerinfo->cmsg->pwfn_arg) != SECSuccess) 
-			? NSSCMSVS_BadSignature : NSSCMSVS_GoodSignature;
+	vs = (VFY_VerifyDataDirect(encoded_attrs.data, encoded_attrs.len,
+		publickey, &(signerinfo->encDigest), pubkAlgTag,
+		digestalgtag, NULL, signerinfo->cmsg->pwfn_arg) != SECSuccess) 
+		? NSSCMSVS_BadSignature : NSSCMSVS_GoodSignature;
 
 	PORT_FreeArena(poolp, PR_FALSE);  /* awkward memory management :-( */
 
@@ -479,16 +461,17 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
 	    goto loser;
 
 	vs = (!digest || 
-	      VFY_VerifyDigest(digest, publickey, sig, signAlgTag,
-			signerinfo->cmsg->pwfn_arg) != SECSuccess) 
-			? NSSCMSVS_BadSignature : NSSCMSVS_GoodSignature;
+	      VFY_VerifyDigestDirect(digest, publickey, sig, pubkAlgTag,
+		digestalgtag, signerinfo->cmsg->pwfn_arg) != SECSuccess) 
+		? NSSCMSVS_BadSignature : NSSCMSVS_GoodSignature;
     }
 
     if (vs == NSSCMSVS_BadSignature) {
+	int error = PORT_GetError();
 	/*
 	 * XXX Change the generic error into our specific one, because
 	 * in that case we get a better explanation out of the Security
-	 * Advisor.  This is really a bug in our error strings (the
+	 * Advisor.  This is really a bug in the PSM error strings (the
 	 * "generic" error has a lousy/wrong message associated with it
 	 * which assumes the signature verification was done for the
 	 * purposes of checking the issuer signature on a certificate)
@@ -501,8 +484,17 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
 	 * certificate signature check that failed during the cert
 	 * verification done above.  Our error handling is really a mess.
 	 */
-	if (PORT_GetError() == SEC_ERROR_BAD_SIGNATURE)
+	if (error == SEC_ERROR_BAD_SIGNATURE)
 	    PORT_SetError(SEC_ERROR_PKCS7_BAD_SIGNATURE);
+	/*
+	 * map algorithm failures to NSSCMSVS values 
+	 */
+	if ((error == SEC_ERROR_PKCS7_KEYALG_MISMATCH) ||
+	    (error == SEC_ERROR_INVALID_ALGORITHM)) {
+	    /* keep the same error code as 3.11 and before */
+	    PORT_SetError(SEC_ERROR_PKCS7_BAD_SIGNATURE);
+	    vs = NSSCMSVS_SignatureAlgorithmUnsupported;
+	}
     }
 
     if (publickey != NULL)

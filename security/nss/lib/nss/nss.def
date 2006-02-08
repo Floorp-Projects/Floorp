@@ -875,6 +875,12 @@ SECMOD_OpenUserDB;
 ;+NSS_3.12 { 	# NSS 3.12 release
 ;+    global:
 PK11_GetAllSlotsForCert;
+VFY_CreateContextDirect;
+VFY_CreateContextWithAlgorithmID;
+VFY_VerifyDataDirect;
+VFY_VerifyDataWithAlgorithmID;
+VFY_VerifyDigestDirect;
+VFY_VerifyDigestWithAlgorithmID;
 ;+    local:
 ;+       *;
 ;+};

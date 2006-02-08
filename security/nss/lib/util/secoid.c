@@ -166,6 +166,8 @@
 #define ANSI_X962_CURVE_OID     ANSI_X962_OID, 0x03
 #define ANSI_X962_GF2m_OID      ANSI_X962_CURVE_OID, 0x00
 #define ANSI_X962_GFp_OID       ANSI_X962_CURVE_OID, 0x01
+#define ANSI_X962_SIGNATURE_OID ANSI_X962_OID, 0x04
+#define ANSI_X962_SPECIFY_OID   ANSI_X962_SIGNATURE_OID, 0x03
 
 #define CONST_OID static const unsigned char
 
@@ -453,8 +455,14 @@ CONST_OID sha256[]                              = { SHAXXX, 1 };
 CONST_OID sha384[]                              = { SHAXXX, 2 };
 CONST_OID sha512[]                              = { SHAXXX, 3 };
 
-CONST_OID ansix962ECPublicKey[]                 = { ANSI_X962_OID, 0x02, 0x01 };
-CONST_OID ansix962ECDSASignaturewithSHA1Digest[] = { ANSI_X962_OID, 0x04, 0x01 };
+CONST_OID ansix962ECPublicKey[]             = { ANSI_X962_OID, 0x02, 0x01 };
+CONST_OID ansix962SignaturewithSHA1Digest[] = { ANSI_X962_SIGNATURE_OID, 0x01 };
+CONST_OID ansix962SignatureRecommended[]    = { ANSI_X962_SIGNATURE_OID, 0x02 };
+CONST_OID ansix962SignatureSpecified[]      = { ANSI_X962_SPECIFY_OID };
+CONST_OID ansix962SignaturewithSHA224Digest[] = { ANSI_X962_SPECIFY_OID, 0x01 };
+CONST_OID ansix962SignaturewithSHA256Digest[] = { ANSI_X962_SPECIFY_OID, 0x02 };
+CONST_OID ansix962SignaturewithSHA384Digest[] = { ANSI_X962_SPECIFY_OID, 0x03 };
+CONST_OID ansix962SignaturewithSHA512Digest[] = { ANSI_X962_SPECIFY_OID, 0x04 };
 
 /* ANSI X9.62 prime curve OIDs */
 /* NOTE: prime192v1 is the same as secp192r1, prime256v1 is the
@@ -1150,8 +1158,8 @@ const static SECOidData oids[] = {
     OD( ansix962ECPublicKey, SEC_OID_ANSIX962_EC_PUBLIC_KEY,
 	"X9.62 elliptic curve public key", CKM_ECDH1_DERIVE,
 	INVALID_CERT_EXTENSION ),
-    OD( ansix962ECDSASignaturewithSHA1Digest, 
-	SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST,
+    OD( ansix962SignaturewithSHA1Digest, 
+	SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE,
 	"X9.62 ECDSA signature with SHA1", CKM_ECDSA_SHA1,
 	INVALID_CERT_EXTENSION ),
 
@@ -1435,6 +1443,32 @@ const static SECOidData oids[] = {
     OD( pkcs9ExtensionRequest, SEC_OID_PKCS9_EXTENSION_REQUEST,
     	"PKCS #9 Extension Request",
         CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
+
+    /* more ECC Signature Oids */
+    OD( ansix962SignatureRecommended,
+	SEC_OID_ANSIX962_ECDSA_SIGNATURE_RECOMMENDED_DIGEST,
+	"X9.62 ECDSA signature with recommended digest", CKM_INVALID_MECHANISM,
+	INVALID_CERT_EXTENSION ),
+    OD( ansix962SignatureSpecified,
+	SEC_OID_ANSIX962_ECDSA_SIGNATURE_SPECIFIED_DIGEST,
+	"X9.62 ECDSA signature with specified digest", CKM_ECDSA,
+	INVALID_CERT_EXTENSION ),
+    OD( ansix962SignaturewithSHA224Digest,
+	SEC_OID_ANSIX962_ECDSA_SHA224_SIGNATURE,
+	"X9.62 ECDSA signature with SHA224", CKM_INVALID_MECHANISM,
+	INVALID_CERT_EXTENSION ),
+    OD( ansix962SignaturewithSHA256Digest,
+	SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE,
+	"X9.62 ECDSA signature with SHA256", CKM_INVALID_MECHANISM,
+	INVALID_CERT_EXTENSION ),
+    OD( ansix962SignaturewithSHA384Digest,
+	SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE,
+	"X9.62 ECDSA signature with SHA384", CKM_INVALID_MECHANISM,
+	INVALID_CERT_EXTENSION ),
+    OD( ansix962SignaturewithSHA512Digest,
+	SEC_OID_ANSIX962_ECDSA_SHA512_SIGNATURE,
+	"X9.62 ECDSA signature with SHA512", CKM_INVALID_MECHANISM,
+	INVALID_CERT_EXTENSION ),
 };
 
 /*

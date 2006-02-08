@@ -192,7 +192,7 @@ common_EncodeDerSig(SECItem *dest, SECItem *src)
 ** For ECDSA, len depends on the key size used to create the signature.
 */
 static SECItem *
-common_DecodeDerSig(SECItem *item, unsigned int len)
+common_DecodeDerSig(const SECItem *item, unsigned int len)
 {
     SECItem *         result = NULL;
     SECStatus         status;
@@ -283,7 +283,7 @@ DSAU_EncodeDerSigWithLen(SECItem *dest, SECItem *src, unsigned int len)
 ** followed by 20 bytes of s.
 */
 SECItem *
-DSAU_DecodeDerSig(SECItem *item)
+DSAU_DecodeDerSig(const SECItem *item)
 {
     return common_DecodeDerSig(item, DSA_SUBPRIME_LEN);
 }
@@ -294,7 +294,7 @@ DSAU_DecodeDerSig(SECItem *item)
 ** r followed by s (both padded to take up exactly len/2 bytes).
 */
 SECItem *
-DSAU_DecodeDerSigToLen(SECItem *item, unsigned int len)
+DSAU_DecodeDerSigToLen(const SECItem *item, unsigned int len)
 {
     return common_DecodeDerSig(item, len/2);
 }

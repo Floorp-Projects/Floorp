@@ -38,7 +38,7 @@
 /*
  * PKCS7 encoding.
  *
- * $Id: p7encode.c,v 1.11 2005/09/02 01:24:56 wtchang%redhat.com Exp $
+ * $Id: p7encode.c,v 1.12 2006/02/08 06:14:19 rrelyea%redhat.com Exp $
  */
 
 #include "nssrenam.h"
@@ -835,56 +835,6 @@ SEC_PKCS7EncoderUpdate (SEC_PKCS7EncoderContext *p7ecx,
 					PR_FALSE);
 }
 
-
-/*
- * XXX I would *really* like to not have to do this, but the current
- * signing interface gives me little choice.
- */
-static SECOidTag
-sec_pkcs7_pick_sign_alg (SECOidTag hashalg, SECOidTag encalg)
-{
-    switch (encalg) {
-      case SEC_OID_PKCS1_RSA_ENCRYPTION:
-	switch (hashalg) {
-	  case SEC_OID_MD2:
-	    return SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION;
-	  case SEC_OID_MD5:
-	    return SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
-	  case SEC_OID_SHA1:
-	    return SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION;
-	  case SEC_OID_SHA256:
-	    return SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
-	  case SEC_OID_SHA384:
-	    return SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION;
-	  case SEC_OID_SHA512:
-	    return SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION;
-	  default:
-	    return SEC_OID_UNKNOWN;
-	}
-      case SEC_OID_ANSIX9_DSA_SIGNATURE:
-      case SEC_OID_MISSI_KEA_DSS:
-      case SEC_OID_MISSI_DSS:
-	switch (hashalg) {
-	  case SEC_OID_SHA1:
-	    return SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
-	  default:
-	    return SEC_OID_UNKNOWN;
-	}
-      case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
-	switch (hashalg) {
-	  case SEC_OID_SHA1:
-	    return SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST;
-	  default:
-	    return SEC_OID_UNKNOWN;
-	}
-      default:
-	break;
-    }
-
-    return encalg;		/* maybe it is already the right algid */
-}
-
-
 static SECStatus
 sec_pkcs7_encoder_sig_and_certs (SEC_PKCS7ContentInfo *cinfo,
 				 SECKEYGetPasswordKey pwfn, void *pwfnarg)
@@ -1000,6 +950,7 @@ sec_pkcs7_encoder_sig_and_certs (SEC_PKCS7ContentInfo *cinfo,
 		SEC_PKCS7Attribute *attr;
 		SECItem encoded_attrs;
 		SECItem *dummy;
+		SECOidTag algid;
 
 		/*
 		 * First, find and fill in the message digest attribute.
@@ -1050,11 +1001,17 @@ sec_pkcs7_encoder_sig_and_certs (SEC_PKCS7ContentInfo *cinfo,
 		    return SECFailure;
 		}
 
+	        algid = SEC_GetSignatureAlgorithmOidTag(privkey->keyType,
+ 							digestalgtag);
+		if (algid == SEC_OID_UNKNOWN) {
+		    PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+		    SECKEY_DestroyPrivateKey (privkey);
+		    return SECFailure;
+		}
 		rv = SEC_SignData (&signature,
 				   encoded_attrs.data, encoded_attrs.len,
 				   privkey,
-				   sec_pkcs7_pick_sign_alg (digestalgtag,
-							    signalgtag));
+				   algid);
 		SECITEM_FreeItem (&encoded_attrs, PR_FALSE);
 	    } else {
 		rv = SGN_Digest (privkey, digestalgtag, &signature,

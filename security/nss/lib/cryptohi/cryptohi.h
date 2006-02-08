@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: cryptohi.h,v 1.9 2005/03/08 07:08:48 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: cryptohi.h,v 1.10 2006/02/08 06:14:07 rrelyea%redhat.com Exp $ */
 
 #ifndef _CRYPTOHI_H_
 #define _CRYPTOHI_H_
@@ -65,7 +65,7 @@ SEC_BEGIN_PROTOS
  * functions convert between formats.
  */
 extern SECStatus DSAU_EncodeDerSig(SECItem *dest, SECItem *src);
-extern SECItem *DSAU_DecodeDerSig(SECItem *item);
+extern SECItem *DSAU_DecodeDerSig(const SECItem *item);
 
 /*
  * Unlike DSA, raw ECDSA signatures do not have a fixed length.
@@ -81,7 +81,7 @@ extern SECItem *DSAU_DecodeDerSig(SECItem *item);
  */
 extern SECStatus DSAU_EncodeDerSigWithLen(SECItem *dest, SECItem *src, 
 					  unsigned int len);
-extern SECItem *DSAU_DecodeDerSigToLen(SECItem *item, unsigned int len);
+extern SECItem *DSAU_DecodeDerSigToLen(const SECItem *item, unsigned int len);
 
 /****************************************/
 /*
@@ -187,17 +187,59 @@ extern SECOidTag SEC_GetSignatureAlgorithmOidTag(KeyType keyType,
 */
 
 /*
+** Create a signature verification context. This version is deprecated,
+**  This function is deprecated. Use VFY_CreateContextDirect or 
+**  VFY_CreateContextWithAlgorithmID instead.
+**	"key" the public key to verify with
+**	"sig" the encrypted signature data if sig is NULL then
+**	   VFY_EndWithSignature must be called with the correct signature at
+**	   the end of the processing.
+**	"sigAlg" specifies the signing algorithm to use (including the 
+**         hash algorthim).  This must match the key type.
+**	"wincx" void pointer to the window context
+*/
+extern VFYContext *VFY_CreateContext(SECKEYPublicKey *key, SECItem *sig,
+				     SECOidTag sigAlg, void *wincx);
+/*
 ** Create a signature verification context.
 **	"key" the public key to verify with
 **	"sig" the encrypted signature data if sig is NULL then
 **	   VFY_EndWithSignature must be called with the correct signature at
 **	   the end of the processing.
-**	"algid" specifies the signing algorithm to use.  This must match
-**	    the key type.
+**	"pubkAlg" specifies the cryptographic signing algorithm to use (the
+**         raw algorithm without any hash specified.  This must match the key 
+**         type.
+**	"hashAlg" specifies the hashing algorithm used. If the key is an 
+**	   RSA key, and sig is not NULL, then hashAlg can be SEC_OID_UNKNOWN.
+**	   the hash is selected from data in the sig.
+**	"hash" optional pointer to return the actual hash algorithm used.
+**	   in practice this should always match the passed in hashAlg (the
+**	   exception is the case where hashAlg is SEC_OID_UNKNOWN above).
+**         If this value is NULL no, hash oid is returned.
 **	"wincx" void pointer to the window context
 */
-extern VFYContext *VFY_CreateContext(SECKEYPublicKey *key, SECItem *sig,
-				     SECOidTag algid, void *wincx);
+extern VFYContext *VFY_CreateContextDirect(const SECKEYPublicKey *key,
+					   const SECItem *sig,
+	     				   SECOidTag pubkAlg, 
+					   SECOidTag hashAlg, 
+					   SECOidTag *hash, void *wincx);
+/*
+** Create a signature verification context from a algorithm ID.
+**	"key" the public key to verify with
+**	"sig" the encrypted signature data if sig is NULL then
+**	   VFY_EndWithSignature must be called with the correct signature at
+**	   the end of the processing.
+**	"algid" specifies the signing algorithm and parameters to use.
+**         This must match the key type.
+**      "hash" optional pointer to return the oid of the actual hash used in 
+**         the signature. If this value is NULL no, hash oid is returned.
+**	"wincx" void pointer to the window context
+*/
+extern VFYContext *VFY_CreateContextWithAlgorithmID(const SECKEYPublicKey *key, 
+				     const SECItem *sig,
+				     const SECAlgorithmID *algid, 
+				     SECOidTag *hash,
+				     void *wincx);
 
 /*
 ** Destroy a verification-context object.
@@ -216,7 +258,7 @@ extern SECStatus VFY_Begin(VFYContext *cx);
 **	"input" the input data
 **	"inputLen" the amount of input data
 */
-extern SECStatus VFY_Update(VFYContext *cx, unsigned char *input,
+extern SECStatus VFY_Update(VFYContext *cx, const unsigned char *input,
 			    unsigned int inputLen);
 
 /*
@@ -246,14 +288,93 @@ extern SECStatus VFY_EndWithSignature(VFYContext *cx, SECItem *sig);
 ** Verify the signature on a block of data for which we already have
 ** the digest. The signature data is an RSA private key encrypted
 ** block of data formatted according to PKCS#1.
+**  This function is deprecated. Use VFY_VerifyDigestDirect or 
+**  VFY_VerifyDigestWithAlgorithmID instead.
 ** 	"dig" the digest
 ** 	"key" the public key to check the signature with
 ** 	"sig" the encrypted signature data
-**	"algid" specifies the signing algorithm to use.  This must match
+**	"sigAlg" specifies the signing algorithm to use.  This must match
 **	    the key type.
+**	"wincx" void pointer to the window context
 **/
 extern SECStatus VFY_VerifyDigest(SECItem *dig, SECKEYPublicKey *key,
-				  SECItem *sig, SECOidTag algid, void *wincx);
+				  SECItem *sig, SECOidTag sigAlg, void *wincx);
+/*
+** Verify the signature on a block of data for which we already have
+** the digest. The signature data is an RSA private key encrypted
+** block of data formatted according to PKCS#1.
+** 	"dig" the digest
+** 	"key" the public key to check the signature with
+** 	"sig" the encrypted signature data
+**	"pubkAlg" specifies the cryptographic signing algorithm to use (the
+**         raw algorithm without any hash specified.  This must match the key 
+**         type.
+**	"hashAlg" specifies the hashing algorithm used.
+**	"wincx" void pointer to the window context
+**/
+extern SECStatus VFY_VerifyDigestDirect(const SECItem *dig, 
+					const SECKEYPublicKey *key,
+					const SECItem *sig, SECOidTag pubkAlg, 
+					SECOidTag hashAlg, void *wincx);
+/*
+** Verify the signature on a block of data for which we already have
+** the digest. The signature data is an RSA private key encrypted
+** block of data formatted according to PKCS#1.
+**	"key" the public key to verify with
+**	"sig" the encrypted signature data if sig is NULL then
+**	   VFY_EndWithSignature must be called with the correct signature at
+**	   the end of the processing.
+**	"algid" specifies the signing algorithm and parameters to use.
+**         This must match the key type.
+**      "hash" oid of the actual hash used to create digest. If this  value is
+**         not set to SEC_OID_UNKNOWN, it must match the hash of the signature.
+**	"wincx" void pointer to the window context
+*/
+extern SECStatus VFY_VerifyDigestWithAlgorithmID(const SECItem *dig, 
+				const SECKEYPublicKey *key, const SECItem *sig,
+				const SECAlgorithmID *algid, SECOidTag hash,
+				void *wincx);
+
+/*
+** Verify the signature on a block of data. The signature data is an RSA
+** private key encrypted block of data formatted according to PKCS#1.
+**   This function is deprecated. Use VFY_VerifyDataDirect or 
+**   VFY_VerifyDataWithAlgorithmID instead.
+** 	"buf" the input data
+** 	"len" the length of the input data
+** 	"key" the public key to check the signature with
+** 	"sig" the encrypted signature data
+**	"sigAlg" specifies the signing algorithm to use.  This must match
+**	    the key type.
+**	"wincx" void pointer to the window context
+*/
+extern SECStatus VFY_VerifyData(unsigned char *buf, int len,
+				SECKEYPublicKey *key, SECItem *sig,
+				SECOidTag sigAlg, void *wincx);
+/*
+** Verify the signature on a block of data. The signature data is an RSA
+** private key encrypted block of data formatted according to PKCS#1.
+** 	"buf" the input data
+** 	"len" the length of the input data
+** 	"key" the public key to check the signature with
+** 	"sig" the encrypted signature data
+**	"pubkAlg" specifies the cryptographic signing algorithm to use (the
+**         raw algorithm without any hash specified.  This must match the key 
+**         type.
+**	"hashAlg" specifies the hashing algorithm used. If the key is an 
+**	   RSA key, and sig is not NULL, then hashAlg can be SEC_OID_UNKNOWN.
+**	   the hash is selected from data in the sig.
+**	"hash" optional pointer to return the actual hash algorithm used.
+**	   in practice this should always match the passed in hashAlg (the
+**	   exception is the case where hashAlg is SEC_OID_UNKNOWN above).
+**         If this value is NULL no, hash oid is returned.
+**	"wincx" void pointer to the window context
+*/
+extern SECStatus VFY_VerifyDataDirect(const unsigned char *buf, int len,
+				      const SECKEYPublicKey *key, 
+				      const SECItem *sig,
+				      SECOidTag pubkAlg, SECOidTag hashAlg, 
+				      SECOidTag *hash, void *wincx);
 
 /*
 ** Verify the signature on a block of data. The signature data is an RSA
@@ -262,12 +383,17 @@ extern SECStatus VFY_VerifyDigest(SECItem *dig, SECKEYPublicKey *key,
 ** 	"len" the length of the input data
 ** 	"key" the public key to check the signature with
 ** 	"sig" the encrypted signature data
-**	"algid" specifies the signing algorithm to use.  This must match
-**	    the key type.
+**	"algid" specifies the signing algorithm and parameters to use.
+**         This must match the key type.
+**      "hash" optional pointer to return the oid of the actual hash used in 
+**         the signature. If this value is NULL no, hash oid is returned.
+**	"wincx" void pointer to the window context
 */
-extern SECStatus VFY_VerifyData(unsigned char *buf, int len,
-				SECKEYPublicKey *key, SECItem *sig,
-				SECOidTag algid, void *wincx);
+extern SECStatus VFY_VerifyDataWithAlgorithmID(const unsigned char *buf, 
+				int len, const SECKEYPublicKey *key,
+				 const SECItem *sig,
+				const SECAlgorithmID *algid, SECOidTag *hash,
+				void *wincx);
 
 
 SEC_END_PROTOS

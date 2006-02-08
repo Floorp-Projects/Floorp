@@ -101,7 +101,6 @@ CERT_VerifySignedDataWithPublicKey(CERTSignedData *sd,
 		                   void *wincx)
 {
     SECStatus        rv;
-    SECOidTag        algid;
     SECItem          sig;
 
     if ( !pubKey || !sd ) {
@@ -114,9 +113,8 @@ CERT_VerifySignedDataWithPublicKey(CERTSignedData *sd,
     /* convert sig->len from bit counts to byte count. */
     DER_ConvertBitString(&sig);
 
-    algid = SECOID_GetAlgorithmTag(&sd->signatureAlgorithm);
-    rv = VFY_VerifyData(sd->data.data, sd->data.len, pubKey, &sig,
-			algid, wincx);
+    rv = VFY_VerifyDataWithAlgorithmID(sd->data.data, sd->data.len, pubKey, 
+			&sig, &sd->signatureAlgorithm, NULL, wincx);
 
     return rv ? SECFailure : SECSuccess;
 }
