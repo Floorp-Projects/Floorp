@@ -944,7 +944,13 @@ function DirectoryInstallLocation(name, location, restricted, priority) {
       throw new Error("location must be a directoy!");
   }
   else {
-    location.create(nsILocalFile.DIRECTORY_TYPE, 0775);
+    try {
+      location.create(nsILocalFile.DIRECTORY_TYPE, 0775);
+    }
+    catch (e) {
+      LOG("DirectoryInstallLocation: failed to create location " + 
+          " directory = " + location.path + ", exception = " + e + "\n");
+    }
   }
 
   this._location = location;
