@@ -247,11 +247,11 @@
       <field name="filterTransactions">false</field>
       
       <field name="supportedDropTypes">
-        [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
+        [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE_SEPARATOR, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
       </field>
 
       <field name="supportedDropOnTypes">
-        [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
+        [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE_SEPARATOR, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
       </field>
       
       <method name="selectAll">
@@ -316,6 +316,14 @@
           }
           setTimeout(hitch(this._self, this._self._rebuild), 1);
         },
+        onSeparatorAdded: function TB_O_onSeparatorAdded(parent, index) {
+          if (!this._numBatches)
+            this._self.init();
+        },
+        onSeparatorRemoved: function TB_O_onSeparatorRemoved(parent, index) {
+          if (!this._numBatches)
+            this._self.init();
+        }
       })]]></field>
       <field name="_DNDObserver"><![CDATA[({
         // XXXben ew.

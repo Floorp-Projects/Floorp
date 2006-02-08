@@ -86,7 +86,9 @@ const SELECTION_IS_MOVABLE = 0x40;
 
 // Place entries that are containers, e.g. bookmark folders or queries. 
 const TYPE_X_MOZ_PLACE_CONTAINER = "text/x-moz-place-container";
-// Place entries that are not containers
+// Place entries that are bookmark separators.
+const TYPE_X_MOZ_PLACE_SEPARATOR = "text/x-moz-place-separator";
+// Place entries that are not containers or separators
 const TYPE_X_MOZ_PLACE = "text/x-moz-place";
 // Place entries in shortcut url format (url\ntitle)
 const TYPE_X_MOZ_URL = "text/x-moz-url";
@@ -145,8 +147,9 @@ function ViewConfig(dropTypes, dropOnTypes, excludeItems, expandQueries, firstDr
   this.firstDropIndex = firstDropIndex;
   this.filterTransactions = filterTransactions;
 }
-ViewConfig.GENERIC_DROP_TYPES = [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE,
-                                 TYPE_X_MOZ_URL];
+ViewConfig.GENERIC_DROP_TYPES = [TYPE_X_MOZ_PLACE_CONTAINER,
+                                 TYPE_X_MOZ_PLACE_SEPARATOR, TYPE_X_MOZ_PLACE,
+                                 TYPE_X_MOZ_URL]
 
 /**
  * Manages grouping options for a particular view type. 
@@ -283,7 +286,7 @@ var PlacesController = {
   },
   
   /**
-   * Generates a HistoryResult for the contents of a folder. 
+   * Generates a HistoryResultNode for the contents of a folder. 
    * @param   folderId
    *          The folder to open
    * @param   excludeItems
@@ -293,7 +296,7 @@ var PlacesController = {
    *          True to make query items expand as new containers. For managing,
    *          you want this to be false, for menus and such, you want this to
    *          be true.
-   * @returns A HistoryResult containing the contents of the folder. 
+   * @returns A HistoryResultNode containing the contents of the folder. 
    */
   getFolderContents: function PC_getFolderContents(folderId, excludeItems, expandQueries) {
     var query = this._hist.getNewQuery();
@@ -464,6 +467,16 @@ var PlacesController = {
   },
   
   /**
+   * Determines whether or not a ResultNode is a Bookmark separator.
+   * @param   node
+   *          A NavHistoryResultNode
+   * @returns true if the node is a Bookmark separator, false otherwise
+   */
+  nodeIsSeparator: function PC_nodeIsSeparator(node) {
+    return (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR);
+  },
+
+  /**
    * Determines whether or not a ResultNode is a URL item or not
    * @param   node
    *          A NavHistoryResultNode
@@ -570,8 +583,7 @@ var PlacesController = {
     // New Folder
     this._setEnabled("placesCmd_new:folder", viewIsFolder);
     // New Separator
-    // ...
-    this._setEnabled("placesCmd_new:separator", false);
+    this._setEnabled("placesCmd_new:separator", viewIsFolder);
     // Feed Reload
     this._setEnabled("placesCmd_reload", false);
   },
@@ -843,7 +855,17 @@ var PlacesController = {
       view.restoreSelection();
     }
   },
-  
+
+  /**
+   * Create a new Bookmark separator somewhere.
+   */
+  newSeparator: function PC_newSeparator() {
+    var ip = this._activeView.insertionPoint;
+    var txn = new PlacesInsertSeparatorTransaction(ip.folderId, ip.index);
+    this.tm.doTransaction(txn);
+    this._activeView.focus();
+  },
+
   /**
    * Creates a set of transactions for the removal of a range of items. A range is 
    * an array of adjacent nodes in a view.
@@ -863,6 +885,11 @@ var PlacesController = {
         // TODO -- node.parent might be a query and not a folder.  See bug 324948
         transactions.push(new PlacesRemoveFolderTransaction(
           asFolder(node).folderId, asFolder(node.parent).folderId, index));
+      }
+      else if (this.nodeIsSeparator(node)) {
+        // A Bookmark separator.
+        transactions.push(new PlacesRemoveSeparatorTransaction(
+          asFolder(node.parent).folderId, index));
       }
       else if (this.nodeIsFolder(node.parent)) {
         // A Bookmark in a Bookmark Folder.
@@ -956,6 +983,7 @@ var PlacesController = {
     switch (type) {
     case TYPE_X_MOZ_PLACE_CONTAINER:
     case TYPE_X_MOZ_PLACE: 
+    case TYPE_X_MOZ_PLACE_SEPARATOR:
       var wrapped = "";
       if (this.nodeIsFolder(node))
         wrapped += asFolder(node).folderId + "\n";
@@ -1000,6 +1028,7 @@ var PlacesController = {
       switch (type) {
       case TYPE_X_MOZ_PLACE_CONTAINER:
       case TYPE_X_MOZ_PLACE:
+      case TYPE_X_MOZ_PLACE_SEPARATOR:
         nodes.push({  folderId: parseInt(parts[i++]),
                       uri: parts[i] ? this._uri(parts[i]) : null,
                       parent: parseInt(parts[++i]),
@@ -1111,6 +1140,19 @@ var PlacesController = {
       return new PlacesMoveItemTransaction(data.uri, data.parent, 
                                            data.index, container, 
                                            index);
+    case TYPE_X_MOZ_PLACE_SEPARATOR:
+      if (copy) {
+        // There is no data in a separator, so copying it just amounts to
+        // inserting a new separator.
+        return new PlacesInsertSeparatorTransaction(container, index);
+      }
+      // Similarly, moving a separator is just removing the old one and
+      // then creating a new one.
+      var removeTxn =
+        new PlacesRemoveSeparatorTransaction(data.parent, data.index);
+      var createTxn =
+        new PlacesInsertSeparatorTransaction(container, index);
+      return new PlacesAggregateTransaction("SeparatorMove", [removeTxn, createTxn]);
     case TYPE_X_MOZ_URL:
       // Creating and Setting the title is a two step process, so create
       // a transaction for each then aggregate them. 
@@ -1170,6 +1212,9 @@ var PlacesController = {
         
         addData(TYPE_X_MOZ_PLACE_CONTAINER);
       }
+      else if (this.nodeIsSeparator(node)) {
+        addData(TYPE_X_MOZ_PLACE_SEPARATOR);
+      }
       else {
         // This order is _important_! It controls how this and other 
         // applications select data to be inserted based on type. 
@@ -1193,7 +1238,7 @@ var PlacesController = {
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
     var foundFolder = false, foundLink = false;
-    var pcString = placeString = mozURLString = htmlString = unicodeString = "";
+    var pcString = psString = placeString = mozURLString = htmlString = unicodeString = "";
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
       var self = this;
@@ -1203,6 +1248,9 @@ var PlacesController = {
       }
       if (this.nodeIsFolder(node) || this.nodeIsQuery(node)) 
         pcString += generateChunk(TYPE_X_MOZ_PLACE_CONTAINER);
+      else if (this.nodeIsSeparator(node)) {
+        psString += generateChunk(TYPE_X_MOZ_PLACE_SEPARATOR);
+      }
       else {
         placeString += generateChunk(TYPE_X_MOZ_PLACE);
         mozURLString += generateChunk(TYPE_X_MOZ_URL);
@@ -1220,6 +1268,8 @@ var PlacesController = {
     // select data to be inserted based on type. 
     if (pcString)
       addData(TYPE_X_MOZ_PLACE_CONTAINER, pcString);
+    if (psString)
+      addData(TYPE_X_MOZ_PLACE_SEPARATOR, psString);
     if (placeString)
       addData(TYPE_X_MOZ_PLACE, placeString);
     if (unicodeString)
@@ -1229,7 +1279,7 @@ var PlacesController = {
     if (mozURLString)
       addData(TYPE_X_MOZ_URL, mozURLString);
     
-    if (pcString || placeString || unicodeString || htmlString || 
+    if (pcString || psString || placeString || unicodeString || htmlString || 
         mozURLString) {
       var clipboard = 
           Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
@@ -1253,6 +1303,7 @@ var PlacesController = {
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
     xferable.addDataFlavor(TYPE_X_MOZ_PLACE_CONTAINER);
+    xferable.addDataFlavor(TYPE_X_MOZ_PLACE_SEPARATOR);
     xferable.addDataFlavor(TYPE_X_MOZ_PLACE);
     xferable.addDataFlavor(TYPE_X_MOZ_URL);
     xferable.addDataFlavor(TYPE_UNICODE);
@@ -1497,6 +1548,28 @@ PlacesCreateItemTransaction.prototype = {
 };
 
 /**
+ * Create a new Separator
+ */
+function PlacesInsertSeparatorTransaction(container, index) {
+  this._container = container;
+  this._index = index;
+  this._id = null;
+}
+PlacesInsertSeparatorTransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+
+  doTransaction: function PIST_doTransaction() {
+    LOG("Create separator in: " + this._container + "," + this._index);
+    this._id = this._bms.insertSeparator(this._container, this._index);
+  },
+  
+  undoTransaction: function PIST_undoTransaction() {
+    LOG("UNCreate separator from: " + this._container + "," + this._index);
+    this._bms.removeChildAt(this._container, this._index);
+  },
+};
+
+/**
  * Move a Folder
  */
 function PlacesMoveFolderTransaction(id, oldContainer, oldIndex, newContainer, newIndex) {
@@ -1683,6 +1756,27 @@ PlacesRemoveItemTransaction.prototype = {
     LOG("UNRemove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
     this._bms.insertItem(this._oldContainer, this._uri, this._oldIndex);
     LOG("UNDO: PAGETXN: " + this.pageTransaction);
+  },
+};
+
+/**
+ * Remove a separator
+ */
+function PlacesRemoveSeparatorTransaction(oldContainer, oldIndex) {
+  this._oldContainer = oldContainer;
+  this._oldIndex = oldIndex;
+}
+PlacesRemoveSeparatorTransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype, 
+
+  doTransaction: function PRST_doTransaction() {
+    LOG("Remove Separator from: " + this._oldContainer + "," + this._oldIndex);
+    this._bms.removeChildAt(this._oldContainer, this._oldIndex);
+  },
+  
+  undoTransaction: function PRST_undoTransaction() {
+    LOG("UNRemove Separator from: " + this._oldContainer + "," + this._oldIndex);
+    this._bms.insertSeparator(this._oldContainer, this._oldIndex);
   },
 };
 

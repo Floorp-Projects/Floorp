@@ -130,6 +130,7 @@ private:
 
   nsCOMPtr<mozIStorageStatement> mDBIndexOfItem;
   nsCOMPtr<mozIStorageStatement> mDBIndexOfFolder;
+  nsCOMPtr<mozIStorageStatement> mDBGetChildAt;
 
   nsCOMPtr<nsIStringBundle> mBundle;
 

@@ -81,6 +81,7 @@ interface nsINavHistoryResultNode : nsISupports
   const PRUint32 RESULT_TYPE_REMOTE_CONTAINER = 4; // nsINavHistoryContainerResultNode
   const PRUint32 RESULT_TYPE_QUERY = 5;            // nsINavHistoryQueryResultNode
   const PRUint32 RESULT_TYPE_FOLDER = 6;           // nsINavHistoryFolderResultNode
+  const PRUint32 RESULT_TYPE_SEPARATOR = 7;        // nsINavHistoryResultNode
   readonly attribute PRUint32 type;
 
   /**
@@ -814,10 +815,10 @@ interface nsINavHistoryQueryOptions : nsISupports
   attribute PRUint32 resultType;
 
   /**
-   * This option excludes all URIs from a bookmarks query. This would be used
-   * if you just wanted a list of bookmark folders and queries (such as the left
-   * pane of the places page). Ignored for queries over history.
-   * Defaults to false.
+   * This option excludes all URIs and separators from a bookmarks query.
+   * This would be used if you just wanted a list of bookmark folders and
+   * queries (such as the left pane of the places page).
+   * Ignored for queries over history. Defaults to false.
    */
   attribute boolean excludeItems;
 

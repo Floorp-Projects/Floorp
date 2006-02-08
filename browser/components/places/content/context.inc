@@ -12,6 +12,8 @@
                 selection="link|links|folder"/>
       <menuitem id="placesContext_new:folder" command="placesCmd_new:folder"
                 selection="mutable"/>
+      <menuitem id="placesContext_new:separator" command="placesCmd_new:separator"
+                selection="mutable"/>
       <menuseparator id="placesContext_newSeparator"
                 selection="mutable"/>
       <menuitem id="placesContext_edit:cut" command="placesCmd_edit:cut"

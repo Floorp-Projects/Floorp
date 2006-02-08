@@ -39,7 +39,7 @@
   -moz-appearance: listbox;
 }
 
-treechildren::-moz-tree-image(title) {
+treechildren::-moz-tree-image(title, container) {
   padding-right: 2px;
   margin: 0px 2px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;

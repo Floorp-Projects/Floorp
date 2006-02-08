@@ -61,7 +61,8 @@
       <command id="placesCmd_new:folder" 
                label="&cmd.new_folder.label;" accesskey="&cmd.new_folder.accesskey;"
                oncommand="PlacesController.newFolder()"/>
-      <command id="placesCmd_new:separator" label="&cmd.new_separator.label;" accesskey="&cmd.new_separator.accesskey;"/>
+      <command id="placesCmd_new:separator" label="&cmd.new_separator.label;" accesskey="&cmd.new_separator.accesskey;"
+               oncommand="PlacesController.newSeparator()"/>
     </commandset>
     <commandset type="container|feed" readonly="true">
       <command id="placesCmd_reload" label="&cmd.reload.label;" accesskey="&cmd.reload.accesskey;"/>

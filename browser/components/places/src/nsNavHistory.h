@@ -180,6 +180,9 @@ public:
   mozIStorageStatement* DBGetURLPageInfoFull()
   { return mDBGetURLPageInfoFull; }
 
+  // select a history row by id
+  mozIStorageStatement* DBGetIdPageInfo() { return mDBGetIdPageInfo; }
+
   // select a history row by id, with visit date info (extra work)
   mozIStorageStatement* DBGetIdPageInfoFull()
   { return mDBGetIdPageInfoFull; }
@@ -196,6 +199,7 @@ public:
   static nsIAtom* sToolbarRootAtom;
   static nsIAtom* sSessionStartAtom;
   static nsIAtom* sSessionContinueAtom;
+  static nsIAtom* sContainerAtom;
 
   // this actually executes a query and gives you results, it is used by
   // nsNavHistoryQueryResultNode
@@ -282,6 +286,7 @@ protected:
   //nsCOMPtr<mozIStorageStatement> mDBGetVisitPageInfo; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfo;   // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfoFull; // kGetInfoIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBGetIdPageInfo;     // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetIdPageInfoFull; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBFullAutoComplete; // kAutoCompleteIndex_* results, 1 arg (max # results)
   static const PRInt32 kAutoCompleteIndex_URL;

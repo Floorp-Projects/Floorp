@@ -189,12 +189,26 @@ nsNavBookmarks::Init()
     "JOIN moz_bookmarks_folders c ON c.id = a.folder_child "
     "WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3");
 
+  // Construct a result where the first columns are padded out to the width
+  // of mDBGetVisitPageInfo, containing additional columns for position,
+  // item_child, and folder_child from moz_bookmarks.  This selects only
+  // _separator_ children which are in moz_bookmarks.  Results are
+  // kGetInfoIndex_* kGetChildrenIndex_*.  item_child and folder_child will
+  // be NULL for separators.
+  NS_NAMED_LITERAL_CSTRING(selectSeparatorChildren,
+    "SELECT null, null, null, null, null, null, null, null, null, a.position, null, null, null "
+    "FROM moz_bookmarks a "
+    "WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3 AND "
+    "a.item_child ISNULL and a.folder_child ISNULL");
+
   NS_NAMED_LITERAL_CSTRING(orderByPosition, " ORDER BY a.position");
 
   // mDBGetChildren: select all children of a given folder, sorted by position
   rv = dbConn->CreateStatement(selectItemChildren +
                                NS_LITERAL_CSTRING(" UNION ALL ") +
-                               selectFolderChildren + orderByPosition,
+                               selectFolderChildren +
+                               NS_LITERAL_CSTRING(" UNION ALL ") +
+                               selectSeparatorChildren + orderByPosition,
                                getter_AddRefs(mDBGetChildren));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -210,6 +224,10 @@ nsNavBookmarks::Init()
 
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT position FROM moz_bookmarks WHERE folder_child = ?1 AND parent = ?2"),
                                getter_AddRefs(mDBIndexOfFolder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT item_child, folder_child FROM moz_bookmarks WHERE parent = ?1 AND position = ?2"),
+                               getter_AddRefs(mDBGetChildAt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = InitRoots();
@@ -446,7 +464,7 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
       if (item->itemURI) {
         nsIURI *uri = item->itemURI;
         obs->OnItemMoved(uri, aFolder, oldPosition, newPosition);
-      } else {
+      } else if (item->folderChild) {
         obs->OnFolderMoved(item->folderChild, aFolder, oldPosition,
                            aFolder, newPosition);
       }
@@ -710,6 +728,135 @@ nsNavBookmarks::CreateContainer(PRInt64 aParent, const nsAString &aName,
 
 
 NS_IMETHODIMP
+nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex)
+{
+  mozIStorageConnection *dbConn = DBConn();
+  mozStorageTransaction transaction(dbConn, PR_FALSE);
+
+  PRInt32 index = (aIndex == -1) ? FolderCount(aParent) : aIndex;
+
+  nsresult rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks "
+                                          "(parent, position) VALUES (?1,?2)"),
+                               getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindInt64Parameter(0, aParent);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt32Parameter(1, index);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnSeparatorAdded(aParent, index))
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavBookmarks::RemoveChildAt(PRInt64 aParent, PRInt32 aIndex)
+{
+  mozIStorageConnection *dbConn = DBConn();
+  mozStorageTransaction transaction(dbConn, PR_FALSE);
+  nsresult rv;
+  PRInt64 item, folder;
+
+  {
+    mozStorageStatementScoper scope(mDBGetChildAt);
+    rv = mDBGetChildAt->BindInt64Parameter(0, aParent);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBGetChildAt->BindInt32Parameter(1, aIndex);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasMore;
+    rv = mDBGetChildAt->ExecuteStep(&hasMore);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!hasMore) {
+      // Child doesn't exist
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    if (mDBGetChildAt->IsNull(0)) {
+      item = 0;
+      folder = mDBGetChildAt->AsInt64(1);
+    } else {
+      folder = 0;
+      item = mDBGetChildAt->AsInt64(0);
+    }
+  }
+
+  if (item != 0) {
+    // We're removing an item, go find its URI.
+    mozIStorageStatement *pageInfo = History()->DBGetIdPageInfo();
+    nsCOMPtr<nsIURI> uri;
+    {
+      mozStorageStatementScoper scope(pageInfo);
+      rv = pageInfo->BindInt64Parameter(0, item);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRBool hasMore;
+      rv = pageInfo->ExecuteStep(&hasMore);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!hasMore) {
+        return NS_ERROR_INVALID_ARG;
+      }
+      nsCAutoString spec;
+      rv = pageInfo->GetUTF8String(1, spec);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = NS_NewURI(getter_AddRefs(uri), spec);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Commit this transaction so that we don't notify observers mid-tranaction
+    rv = transaction.Commit();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return RemoveItem(aParent, uri);
+  }
+  if (folder != 0) {
+    // Commit this transaction so that we don't notify observers mid-tranaction
+    rv = transaction.Commit();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return RemoveFolder(folder);
+  }
+
+  // No item or folder, so this is a separator.
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_bookmarks WHERE parent = ?1 AND position = ?2"),
+                               getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindInt64Parameter(0, aParent);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt32Parameter(1, aIndex);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AdjustIndices(aParent, aIndex + 1, PR_INT32_MAX, -1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnSeparatorRemoved(aParent, aIndex))
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
 {
   // If this is a container bookmark, try to notify its service.
@@ -785,6 +932,7 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
 {
   mozStorageTransaction transaction(DBConn(), PR_FALSE);
 
+  nsTArray<PRInt32> separatorChildren; // separator indices
   nsTArray<PRInt64> folderChildren;
   nsCOMArray<nsIURI> itemChildren;
   nsresult rv;
@@ -805,6 +953,9 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
         // folder
         folderChildren.AppendElement(
             mDBGetChildren->AsInt64(kGetChildrenIndex_FolderChild));
+      } else if (mDBGetChildren->IsNull(kGetChildrenIndex_ItemChild)) {
+        // separator
+        separatorChildren.AppendElement(mDBGetChildren->AsInt32(kGetChildrenIndex_Position));
       } else {
         // item (URI)
         nsCOMPtr<nsIURI> uri;
@@ -818,8 +969,16 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolder)
     }
   }
 
-  // remove folders
+  // Remove separators.  The list of separators will already be sorted since
+  // we order by position, so by enumerating it backwards, we avoid having to
+  // deal with shifting indices.
   PRUint32 i;
+  for (i = separatorChildren.Length() - 1; i != PRUint32(-1); --i) {
+    rv = RemoveChildAt(aFolder, separatorChildren[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // remove folders
   for (i = 0; i < folderChildren.Length(); ++i) {
     rv = RemoveFolder(folderChildren[i]);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1201,6 +1360,13 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
       rv = ResultNodeForFolder(folder, aOptions, getter_AddRefs(node));
       if (NS_FAILED(rv))
         continue;
+    } else if (mDBGetChildren->IsNull(kGetChildrenIndex_ItemChild)) {
+      // separator
+      if (aOptions->ExcludeItems()) {
+        continue;
+      }
+      node = new nsNavHistorySeparatorResultNode();
+      NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
     } else {
       rv = History()->RowToResult(mDBGetChildren, options,
                                   getter_AddRefs(node));
