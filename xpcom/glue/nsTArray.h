@@ -235,7 +235,7 @@ class nsTArray : public nsTArray_base {
     // array.  It is optimized to reuse existing storage if possible.
     // @param other  The array object to copy.
     nsTArray& operator=(const self_type& other) {
-      ReplaceElementsAt(0, Length(), other);
+      ReplaceElementsAt(0, Length(), other.Elements(), other.Length());
       return *this;
     }
 
@@ -362,44 +362,51 @@ class nsTArray : public nsTArray_base {
     //                  and these elements must not already exist in the array
     //                  being modified.
     // @param arrayLen  The number of values to copy into this array.
-    // @return          True if the operation succeeded; false otherwise.
-    PRBool ReplaceElementsAt(index_type start, size_type count,
-                             const elem_type* array, size_type arrayLen) {
+    // @return          A pointer to the new elements in the array, or null if
+    //                  the operation failed due to insufficient memory.
+    template<class Item>
+    elem_type *ReplaceElementsAt(index_type start, size_type count,
+                                 const Item* array, size_type arrayLen) {
       // Adjust memory allocation up-front to catch errors.
       if (!EnsureCapacity(Length() + arrayLen - count, sizeof(elem_type)))
-        return PR_FALSE;
+        return nsnull;
       DestructRange(start, count);
       ShiftData(start, count, arrayLen, sizeof(elem_type));
       AssignRange(start, arrayLen, array);
-      return PR_TRUE;
+      return Elements() + start;
     }
 
     // A variation on the ReplaceElementsAt method defined above.
-    PRBool ReplaceElementsAt(index_type start, size_type count,
-                             const self_type& array) {
+    template<class Item>
+    elem_type *ReplaceElementsAt(index_type start, size_type count,
+                                 const nsTArray<Item>& array) {
       return ReplaceElementsAt(start, count, array.Elements(), array.Length());
     }
 
     // A variation on the ReplaceElementsAt method defined above.
-    PRBool ReplaceElementsAt(index_type start, size_type count,
-                             const elem_type& elem) {
-      return ReplaceElementsAt(start, count, &elem, 1);
+    template<class Item>
+    elem_type *ReplaceElementsAt(index_type start, size_type count,
+                                 const Item& item) {
+      return ReplaceElementsAt(start, count, &item, 1);
     }
     
     // A variation on the ReplaceElementsAt method defined above.
-    PRBool InsertElementsAt(index_type index, const elem_type* array,
-                            size_type arrayLen) {
+    template<class Item>
+    elem_type *InsertElementsAt(index_type index, const Item* array,
+                                size_type arrayLen) {
       return ReplaceElementsAt(index, 0, array, arrayLen);
     }
 
     // A variation on the ReplaceElementsAt method defined above.
-    PRBool InsertElementsAt(index_type index, const self_type& array) {
+    template<class Item>
+    elem_type *InsertElementsAt(index_type index, const nsTArray<Item>& array) {
       return ReplaceElementsAt(index, 0, array.Elements(), array.Length());
     }
 
     // A variation on the ReplaceElementsAt method defined above.
-    PRBool InsertElementAt(index_type index, const elem_type& elem) {
-      return ReplaceElementsAt(index, 0, &elem, 1);
+    template<class Item>
+    elem_type *InsertElementAt(index_type index, const Item& item) {
+      return ReplaceElementsAt(index, 0, &item, 1);
     }
 
     // Insert a new element without copy-constructing. This is useful to avoid
@@ -417,29 +424,34 @@ class nsTArray : public nsTArray_base {
     // This method appends elements to the end of this array.
     // @param array     The elements to append to this array.
     // @param arrayLen  The number of elements to append to this array.
-    // @return          True if the operation succeeded; false otherwise.
-    PRBool AppendElements(const elem_type* array, size_type arrayLen) {
+    // @return          A pointer to the new elements in the array, or null if
+    //                  the operation failed due to insufficient memory.
+    template<class Item>
+    elem_type *AppendElements(const Item* array, size_type arrayLen) {
       if (!EnsureCapacity(Length() + arrayLen, sizeof(elem_type)))
-        return PR_FALSE;
-      AssignRange(Length(), arrayLen, array);
+        return nsnull;
+      index_type len = Length();
+      AssignRange(len, arrayLen, array);
       IncrementLength(arrayLen);
-      return PR_TRUE;
+      return Elements() + len;
     }
 
     // A variation on the AppendElements method defined above.
-    PRBool AppendElements(const self_type& array) {
+    template<class Item>
+    elem_type *AppendElements(const nsTArray<Item>& array) {
       return AppendElements(array.Elements(), array.Length());
     }
 
     // A variation on the AppendElements method defined above.
-    PRBool AppendElement(const elem_type& elem) {
-      return AppendElements(&elem, 1);
+    template<class Item>
+    elem_type *AppendElement(const Item& item) {
+      return AppendElements(&item, 1);
     }
 
     // Append a new element without copy-constructing. This is useful to avoid
     // temporaries.
     // @return A pointer to the newly appended element, or null on OOM.
-    elem_type* AppendElement() {
+    elem_type *AppendElement() {
       if (!EnsureCapacity(Length() + 1, sizeof(elem_type)))
          return nsnull;
       elem_type *elem = Elements() + Length();
@@ -562,8 +574,9 @@ class nsTArray : public nsTArray_base {
     // @param start   The index of the first element to construct.
     // @param count   The number of elements to construct. 
     // @param values  The array of elements to copy. 
+    template<class Item>
     void AssignRange(index_type start, size_type count,
-                     const elem_type *values) {
+                     const Item *values) {
       elem_type *iter = Elements() + start, *end = iter + count;
       for (; iter != end; ++iter, ++values) {
         elem_traits::Construct(iter, *values);
