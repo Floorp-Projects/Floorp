@@ -660,9 +660,12 @@ function getManifestProperty(installManifest, property) {
  *          returns TYPE_EXTENSION if attempts to determine the type fail.
  */
 function getAddonTypeFromInstallManifest(installManifest) {
-  var type = getManifestProperty(installManifest, "type");
-  if (type !== undefined)
-    return type;
+  var target = installManifest.GetTarget(gInstallManifestRoot, 
+                                         gRDF.GetResource(EM_NS("type")), true);
+  if (target) {
+    var type = stringData(target);
+    return type === undefined ? intData(target) : parseInt(type);
+  }
 
   // Firefox 1.0 and earlier did not support addon-type annotation on the 
   // Install Manifest, so we fall back to a theme-only property to 
