@@ -2314,7 +2314,12 @@ function OnMsgLoaded(aUrl)
     // if the user clicks on another message then that message stays selected
     // and the selection does not "snap back" to the message chosen by
     // SetNextMessageAfterDelete() when the operation completes (bug 243532).
-    gNextMessageViewIndexAfterDelete = -2;
+    // But the just loaded message might be getting deleted, if the user
+    // deletes it before the message is loaded (bug 183394)
+    var treeSelection = GetThreadTree().view.selection;
+
+    if (treeSelection.currentIndex != gSelectedIndexWhenDeleting)
+      gNextMessageViewIndexAfterDelete = -2;
 
     if (!(/type=application\/x-message-display/.test(msgURI)))
       msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);

@@ -76,6 +76,7 @@ var gCurrentDisplayedMessage = null;
 var gNextMessageAfterDelete = null;
 var gNextMessageAfterLoad = null;
 var gNextMessageViewIndexAfterDelete = -2;
+var gSelectedIndexWhenDeleting = -1;
 var gCurrentlyDisplayedMessage=nsMsgViewIndex_None;
 var gStartFolderUri = null;
 var gStartMsgKey = nsMsgKey_None;
@@ -1554,7 +1555,10 @@ function SetNextMessageAfterDelete()
   var treeSelection = GetThreadTree().view.selection;
 
   if (treeSelection.isSelected(treeSelection.currentIndex))
+  {
     gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;
+    gSelectedIndexWhenDeleting = treeSelection.currentIndex;
+  }
   else if(gDBView.removeRowOnMoveOrDelete)
   {
     // Only set gThreadPaneDeleteOrMoveOccurred to true if the message was
