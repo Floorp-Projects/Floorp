@@ -1143,6 +1143,8 @@ nsXFormsUtils::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI)
 
   nsCOMPtr<nsIPermissionManager> permMgr =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(permMgr, PR_FALSE);
+
   PRUint32 perm;
   rv = permMgr->TestPermission(aBaseDocument->GetDocumentURI(), "xforms-load",
                                &perm);

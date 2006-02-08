@@ -260,7 +260,7 @@ nsXFormsItemElement::SelectItemByNode(nsIDOMNode *aNode, nsIDOMNode **aSelected)
   }
 
   nsCOMPtr<nsIDOMNode> copyNode;
-  nsresult rv = GetCopyNode(getter_AddRefs(copyNode));
+  GetCopyNode(getter_AddRefs(copyNode));
   NS_ENSURE_STATE(copyNode);
 
   PRUint16 nodeType;
