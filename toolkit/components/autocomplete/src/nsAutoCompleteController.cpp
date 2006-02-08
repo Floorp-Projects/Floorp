@@ -1066,20 +1066,22 @@ nsAutoCompleteController::ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteRes
   if (result == nsIAutoCompleteResult::RESULT_FAILURE) {
     nsAutoString error;
     aResult->GetErrorDescription(error);
-    if (!error.IsEmpty())
+    if (!error.IsEmpty()) {
       ++mRowCount;
+      if (mTree)
+        mTree->RowCountChanged(oldRowCount, 1);
+    }
   } else if (result == nsIAutoCompleteResult::RESULT_SUCCESS) {
     // Increase the match count for all matches in this result
     PRUint32 matchCount = 0;
     aResult->GetMatchCount(&matchCount);
     mRowCount += matchCount;
+    if (mTree)
+      mTree->RowCountChanged(oldRowCount, matchCount);
 
     // Try to autocomplete the default index for this search
     CompleteDefaultIndex(aSearchIndex);
   }
-
-  if (oldRowCount != mRowCount && mTree)
-    mTree->RowCountChanged(oldRowCount, mRowCount - oldRowCount);
 
   // Refresh the popup view to display the new search results
   nsCOMPtr<nsIAutoCompletePopup> popup;
