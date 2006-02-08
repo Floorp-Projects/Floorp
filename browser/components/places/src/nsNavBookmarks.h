@@ -110,7 +110,13 @@ private:
   PRInt64 mRoot;
   PRInt64 mBookmarksRoot;
   PRInt64 mToolbarRoot;
+
+  // the level of nesting of batches, 0 when no batches are open
   PRInt32 mBatchLevel;
+
+  // true if the outermost batch has an associated transaction that should
+  // be committed when our batch level reaches 0 again.
+  PRBool mBatchHasTransaction;
 
   nsCOMPtr<mozIStorageStatement> mDBGetFolderInfo;    // kGetFolderInfoIndex_* results
 
@@ -139,5 +145,12 @@ private:
                                        PRBool aAllowRootChanges,
                                        PRInt64 aFolder);
 };
+
+struct nsBookmarksUpdateBatcher
+{
+  nsBookmarksUpdateBatcher() { nsNavBookmarks::GetBookmarksService()->BeginUpdateBatch(); }
+  ~nsBookmarksUpdateBatcher() { nsNavBookmarks::GetBookmarksService()->EndUpdateBatch(); }
+};
+
 
 #endif // nsNavBookmarks_h_
