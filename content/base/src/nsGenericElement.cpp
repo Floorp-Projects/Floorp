@@ -1997,8 +1997,7 @@ nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
   nsIEventListenerManager *lm = nsnull;
 
   if (HasEventListenerManager()) {
-    lm = nsContentUtils::LookupListenerManager(NS_STATIC_CAST(nsIXMLContent*,
-                                                              this));
+    lm = nsContentUtils::LookupListenerManager(this);
     if (!lm) {
 #ifdef DEBUG
       if (nsContentUtils::IsInitialized()) {
@@ -2288,9 +2287,7 @@ nsresult
 nsGenericElement::RangeAdd(nsIDOMRange* aRange)
 {
   PRBool created;
-  nsresult rv =
-    nsContentUtils::AddToRangeList(NS_STATIC_CAST(nsIXMLContent*, this),
-                                   aRange, &created);
+  nsresult rv = nsContentUtils::AddToRangeList(this, aRange, &created);
   if (NS_SUCCEEDED(rv) && created) {
     NS_ASSERTION(!HasRangeList(),
                  "Huh, nsGenericElement flags don't reflect reality!!!");
@@ -2306,9 +2303,7 @@ nsGenericElement::RangeRemove(nsIDOMRange* aRange)
     return;
   }
 
-  PRBool removed =
-    nsContentUtils::RemoveFromRangeList(NS_STATIC_CAST(nsIXMLContent*, this),
-                                        aRange);
+  PRBool removed = nsContentUtils::RemoveFromRangeList(this, aRange);
   if (removed) {
     UnsetFlags(GENERIC_ELEMENT_HAS_RANGELIST);
   }
@@ -2321,8 +2316,7 @@ nsGenericElement::GetRangeList() const
     return nsnull;
   }
 
-  const nsVoidArray* rangeList =
-    nsContentUtils::LookupRangeList(NS_STATIC_CAST(const nsIXMLContent*, this));
+  const nsVoidArray* rangeList = nsContentUtils::LookupRangeList(this);
 
   NS_ASSERTION(rangeList || !nsContentUtils::IsInitialized(),
                "Huh, our bit says we have a range list, but there's nothing "
@@ -2405,9 +2399,7 @@ nsresult
 nsGenericElement::GetListenerManager(nsIEventListenerManager **aResult)
 {
   PRBool created;
-  nsresult rv =
-    nsContentUtils::GetListenerManager(NS_STATIC_CAST(nsIXMLContent*, this),
-                                       aResult, &created);
+  nsresult rv = nsContentUtils::GetListenerManager(this, aResult, &created);
   if (NS_SUCCEEDED(rv) && created) {
     SetFlags(GENERIC_ELEMENT_HAS_LISTENERMANAGER);
   }
