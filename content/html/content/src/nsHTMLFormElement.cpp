@@ -193,7 +193,8 @@ public:
                                 const PRBool aPrevious,
                                 nsIDOMHTMLInputElement*  aFocusedRadio,
                                 nsIDOMHTMLInputElement** aRadioOut);
-  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor);
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
+                            PRBool aFlushContent);
   NS_IMETHOD AddToRadioGroup(const nsAString& aName,
                              nsIFormControl* aRadio);
   NS_IMETHOD RemoveFromRadioGroup(const nsAString& aName,
@@ -292,6 +293,17 @@ protected:
    */
   nsresult NotifySubmitObservers(nsIURI* aActionURL, PRBool* aCancelSubmit);
 
+  /**
+   * Just like GetElementCount(), but doesn't flush
+   */
+  PRUint32 ElementCount() const;
+
+  /**
+   * Just like ResolveName(), but takes an arg for whether to flush
+   */
+  nsresult DoResolveName(const nsAString& aName, PRBool aFlushContent,
+                         nsISupports** aReturn);
+  
   //
   // Data members
   //
@@ -358,6 +370,9 @@ public:
                                   const nsAString& aName);
   nsresult IndexOfControl(nsIFormControl* aControl,
                           PRInt32* aIndex);
+
+  void NamedItemInternal(const nsAString& aName, PRBool aFlushContent,
+                         nsISupports **aResult);
 
   nsHTMLFormElement* mForm;  // WEAK - the form owns me
 
@@ -1183,8 +1198,7 @@ NS_IMETHODIMP
 nsHTMLFormElement::AddElement(nsIFormControl* aChild)
 {
   if (ShouldBeInElements(aChild)) {
-    PRUint32 count;
-    GetElementCount(&count);
+    PRUint32 count = ElementCount();
 
     nsCOMPtr<nsIFormControl> element;
 
@@ -1290,7 +1304,16 @@ NS_IMETHODIMP
 nsHTMLFormElement::ResolveName(const nsAString& aName,
                                nsISupports **aResult)
 {
-  return mControls->NamedItem(aName, aResult);
+  return DoResolveName(aName, PR_TRUE, aResult);
+}
+
+nsresult
+nsHTMLFormElement::DoResolveName(const nsAString& aName,
+                                 PRBool aFlushContent,
+                                 nsISupports **aResult)
+{
+  mControls->NamedItemInternal(aName, aFlushContent, aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1427,9 +1450,10 @@ nsHTMLFormElement::SetEncoding(const nsAString& aEncoding)
 NS_IMETHODIMP    
 nsHTMLFormElement::GetLength(PRInt32* aLength)
 {
-  *aLength = mControls->mElements.Count();
-  
-  return NS_OK;
+  PRUint32 length;
+  nsresult rv = mControls->GetLength(&length);
+  *aLength = length;
+  return rv;
 }
 
 void
@@ -1641,7 +1665,8 @@ nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
 
 NS_IMETHODIMP
 nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
-                                  nsIRadioVisitor* aVisitor)
+                                  nsIRadioVisitor* aVisitor,
+                                  PRBool aFlushContent)
 {
   nsresult rv = NS_OK;
 
@@ -1675,7 +1700,7 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
     // Get the control / list of controls from the form using form["name"]
     //
     nsCOMPtr<nsISupports> item;
-    rv = ResolveName(aName, getter_AddRefs(item));
+    rv = DoResolveName(aName, aFlushContent, getter_AddRefs(item));
 
     if (item) {
       //
@@ -1726,6 +1751,11 @@ nsHTMLFormElement::RemoveFromRadioGroup(const nsAString& aName,
   return NS_OK;
 }
 
+PRUint32
+nsHTMLFormElement::ElementCount() const
+{
+  return mControls->mElements.Count();
+}
 
 //----------------------------------------------------------------------
 // nsFormControlList implementation, this could go away if there were
@@ -1790,7 +1820,7 @@ nsFormControlList::FlushPendingNotifications()
   if (mForm) {
     nsIDocument* doc = mForm->GetCurrentDoc();
     if (doc) {
-      doc->FlushPendingNotifications(Flush_ContentAndNotify);
+      doc->FlushPendingNotifications(Flush_Content);
     }
   }
 }
@@ -1872,11 +1902,20 @@ NS_IMETHODIMP
 nsFormControlList::NamedItem(const nsAString& aName,
                              nsISupports** aReturn)
 {
-  FlushPendingNotifications();
+  NamedItemInternal(aName, PR_TRUE, aReturn);
+  return NS_OK;
+}
+
+void
+nsFormControlList::NamedItemInternal(const nsAString& aName,
+                                     PRBool aFlushContent,
+                                     nsISupports** aReturn)
+{
+  if (aFlushContent) {
+    FlushPendingNotifications();
+  }
 
   mNameLookupTable.Get(aName, aReturn);
-
-  return NS_OK;
 }
 
 nsresult

@@ -4824,7 +4824,8 @@ nsDocument::RemoveFromRadioGroup(const nsAString& aName,
 
 NS_IMETHODIMP
 nsDocument::WalkRadioGroup(const nsAString& aName,
-                           nsIRadioVisitor* aVisitor)
+                           nsIRadioVisitor* aVisitor,
+                           PRBool aFlushContent)
 {
   nsRadioGroupStruct* radioGroup = nsnull;
   GetRadioGroup(aName, &radioGroup);
