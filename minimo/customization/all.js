@@ -665,4 +665,4 @@ pref("nglayout.initialpaint.delay", 750);
 pref("browser.chrome.favicons",true);
 pref("browser.chrome.site_icons",true);
 
-pref("dom.max_script_run_time", 30);
+pref("dom.max_script_run_time", 60);
