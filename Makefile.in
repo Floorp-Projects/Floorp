@@ -403,13 +403,6 @@ endif
 endif
 endif
 
-# viewer
-ifneq (,$(ENABLE_TESTS))
-ifndef MOZ_ENABLE_LIBXUL
-tier_99_dirs += webshell/tests
-endif
-endif
-
 # winembed, mfcembed
 ifeq ($(OS_ARCH),WINNT)
 ifneq (,$(ENABLE_TESTS)$(MOZILLA_OFFICIAL))
