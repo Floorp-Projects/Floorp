@@ -90,6 +90,13 @@ public:
   void AddInstance(nsIInstanceElementPrivate *aInstance);
 
   /**
+   * Remove an instance element
+   *
+   * @param aInstance         The instance element
+   */
+  void RemoveInstance(nsIInstanceElementPrivate *aInstance);
+
+  /**
    * Get the instance document at a given index
    *
    * @note Does NOT addref the returned element!
@@ -269,12 +276,17 @@ private:
   PRBool mInstancesInitialized;
 
   /**
+   * Indicates whether the model's handled the xforms-ready event already
+   */
+  PRBool mReadyHandled;
+
+  /**
    * All instance documents contained by this model, including lazy-authored
    * instance documents.
    */
   nsRefPtr<nsXFormsModelInstanceDocuments> mInstanceDocuments;
 
-  /** Indicates whether the model's instance was built by lazy authoring */
+  // Indicates whether the model's instance was built by lazy authoring
   PRBool mLazyModel;
 };
 

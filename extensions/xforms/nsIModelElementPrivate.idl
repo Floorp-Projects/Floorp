@@ -134,7 +134,18 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
   void addInstanceElement(in nsIInstanceElementPrivate aInstanceElement);
 
   /**
+   * Remove an instance element from the model's instance list
+   * @param aInstanceElement        The instance element to remove from the list
+   */
+  void removeInstanceElement(in nsIInstanceElementPrivate aInstanceElement);
+
+  /**
    * This attribute is set when the model's instance was lazy authored
    */
   readonly attribute boolean lazyAuthored;
+
+  /**
+   * This attribute is set when the model handled xforms-ready event
+   */
+  readonly attribute boolean isReady;
 };

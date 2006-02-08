@@ -75,6 +75,8 @@ public:
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aNewValue);
   NS_IMETHOD AttributeRemoved(nsIAtom *aName);
+  NS_IMETHOD WillChangeParent(nsIDOMElement *aNewParent);
+  NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
   NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
 
   nsXFormsInstanceElement() NS_HIDDEN;
@@ -82,7 +84,7 @@ public:
 private:
   NS_HIDDEN_(nsresult) CloneInlineInstance();
   NS_HIDDEN_(void) LoadExternalInstance(const nsAString &aSrc);
-  NS_HIDDEN_(nsresult) CreateInstanceDocument();
+  NS_HIDDEN_(nsresult) CreateInstanceDocument(const nsAString &aQualifiedName);
   NS_HIDDEN_(already_AddRefed<nsIModelElementPrivate>) GetModel();
 
   nsCOMPtr<nsIDOMDocument>    mDocument;

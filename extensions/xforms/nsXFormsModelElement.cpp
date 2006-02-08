@@ -260,6 +260,7 @@ nsXFormsModelElement::nsXFormsModelElement()
     mDocumentLoaded(PR_FALSE),
     mNeedsRefresh(PR_FALSE),
     mInstancesInitialized(PR_FALSE),
+    mReadyHandled(PR_FALSE),
     mInstanceDocuments(nsnull),
     mLazyModel(PR_FALSE)
 {
@@ -551,6 +552,7 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
     rv = ConstructDone();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Ready].name)) {
     Ready();
+    mReadyHandled = PR_TRUE;
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Reset].name)) {
     Reset();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_BindingException].name)) {
@@ -1169,6 +1171,20 @@ nsXFormsModelElement::HandleInstanceDataNode(nsIDOMNode *aInstanceDataNode, unsi
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsModelElement::GetLazyAuthored(PRBool *aLazyInstance)
+{
+  *aLazyInstance = mLazyModel;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::GetIsReady(PRBool *aIsReady)
+{
+  *aIsReady = mReadyHandled;
+  return NS_OK;
+}
+
 // nsIXFormsContextControl
 
 NS_IMETHODIMP
@@ -1221,13 +1237,6 @@ nsXFormsModelElement::GetContext(nsAString      &aModelID,
   mElement->GetAttribute(NS_LITERAL_STRING("id"), id);
   aModelID.Assign(id);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsModelElement::GetLazyAuthored(PRBool *aLazyInstance)
-{
-  *aLazyInstance = mLazyModel;
   return NS_OK;
 }
 
@@ -1474,7 +1483,7 @@ nsXFormsModelElement::MaybeNotifyCompletion()
   for (i = 0; i < models->Count(); ++i) {
     nsXFormsModelElement *model =
         NS_STATIC_CAST(nsXFormsModelElement *, models->ElementAt(i));
-    nsXFormsUtils::DispatchEvent(model->mElement, eEvent_Ready);  
+    nsXFormsUtils::DispatchEvent(model->mElement, eEvent_Ready);
   }
 }
 
@@ -1700,6 +1709,15 @@ nsXFormsModelElement::AddInstanceElement(nsIInstanceElementPrivate *aInstEle)
   return NS_OK;
 }
 
+nsresult
+nsXFormsModelElement::RemoveInstanceElement(nsIInstanceElementPrivate *aInstEle)
+{
+  NS_ENSURE_STATE(mInstanceDocuments);
+  mInstanceDocuments->RemoveInstance(aInstEle);
+
+  return NS_OK;
+}
+
 /* static */ void
 nsXFormsModelElement::Startup()
 {
@@ -1909,6 +1927,12 @@ nsXFormsModelInstanceDocuments::AddInstance(nsIInstanceElementPrivate *aInst)
   // document order since the first instance element is the default instance
   // document for the model.
   mInstanceList.AppendObject(aInst);
+}
+
+void
+nsXFormsModelInstanceDocuments::RemoveInstance(nsIInstanceElementPrivate *aInst)
+{
+  mInstanceList.RemoveObject(aInst);
 }
 
 void
