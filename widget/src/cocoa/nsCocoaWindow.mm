@@ -123,34 +123,35 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
                         aToolkit, aInitData);
   
   mParent = aParent;
-                            
+  
   if (!aNativeParent || (aInitData && aInitData->mWindowType == eWindowType_popup)) {
     nsWindowType windowType = eWindowType_toplevel;
     if (aInitData) {
       mWindowType = aInitData->mWindowType;
       // if a toplevel window was requested without a titlebar, use a dialog windowproc
-      if (aInitData->mWindowType == eWindowType_toplevel &&
-        (aInitData->mBorderStyle == eBorderStyle_none ||
-         aInitData->mBorderStyle != eBorderStyle_all && !(aInitData->mBorderStyle & eBorderStyle_title)))
+      if (mWindowType == eWindowType_toplevel &&
+          (aInitData->mBorderStyle == eBorderStyle_none ||
+           aInitData->mBorderStyle != eBorderStyle_all && !(aInitData->mBorderStyle & eBorderStyle_title)))
         windowType = eWindowType_dialog;
-    } 
+    }
     else {
       mWindowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
     }
+    
+#ifdef MOZ_MACBROWSER
+    if (mWindowType == eWindowType_popup)
+      return NS_OK;
+#endif
     
     // create the cocoa window
     NSRect rect;
     rect.origin.x = rect.origin.y = 1.0;
     rect.size.width = rect.size.height = 1.0;
-    unsigned int features = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask 
-                              | NSResizableWindowMask;
+    unsigned int features = NSTitledWindowMask | NSClosableWindowMask |
+                            NSMiniaturizableWindowMask | NSResizableWindowMask;
+    
     if (mWindowType == eWindowType_popup || mWindowType == eWindowType_invisible)
       features = 0;
-
-#ifdef MOZ_MACBROWSER
-    if (mWindowType == eWindowType_popup)
-      return NS_OK;
-#endif
 
     mWindow = [[NSWindow alloc] initWithContentRect:rect styleMask:features 
                                 backing:NSBackingStoreBuffered defer:NO];
@@ -162,9 +163,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
       [mWindow setReleasedWhenClosed: NO];
 
     // create a quickdraw view as the toplevel content view of the window
-    NSQuickDrawView* content = [[[NSQuickDrawView alloc] init] autorelease];
-    [content setFrame:[[mWindow contentView] frame]];
-    [mWindow setContentView:content];
+    [mWindow setContentView:[[[NSQuickDrawView alloc] init] autorelease]];
     
     // register for mouse-moved events. The default is to ignore them for perf reasons.
     [mWindow setAcceptsMouseMovedEvents:YES];
