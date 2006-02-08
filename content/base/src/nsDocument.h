@@ -533,7 +533,8 @@ public:
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
-                            nsIRadioVisitor* aVisitor);
+                            nsIRadioVisitor* aVisitor,
+                            PRBool aFlushContent);
   NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
                                    nsIDOMHTMLInputElement* aRadio);
   NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
