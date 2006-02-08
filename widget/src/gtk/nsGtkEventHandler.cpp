@@ -43,7 +43,6 @@
 
 #include "nsGUIEvent.h"
 
-#include "nsTextWidget.h"
 #include "nsGtkIMEHelper.h"
 
 
@@ -461,77 +460,6 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 
   delete event.windowSize;
 }
-
-// GTK's text widget already does XIM, so we don't want to do this again
-gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
-                                     gpointer p)
-{
-  nsTextWidget* win = (nsTextWidget*)p;
-
-  // work around for annoying things.
-  if (event->keyval == GDK_Tab)
-    if (event->state & GDK_CONTROL_MASK)
-      if (event->state & GDK_MOD1_MASK)
-        return PR_FALSE;
-
-  NS_ADDREF(win);
-  nsKeyEvent keyDownEvent(PR_TRUE, NS_KEY_DOWN, win);
-  InitKeyEvent(event, keyDownEvent);
-  PRBool noDefault = win->OnKey(keyDownEvent);
-
-  // Don't pass Shift, Control, Alt and Meta as NS_KEY_PRESS events.
-  if (event->keyval == GDK_Shift_L
-      || event->keyval == GDK_Shift_R
-      || event->keyval == GDK_Control_L
-      || event->keyval == GDK_Control_R
-      || event->keyval == GDK_Alt_L
-      || event->keyval == GDK_Alt_R
-      || event->keyval == GDK_Meta_L
-      || event->keyval == GDK_Meta_R
-     )
-    return PR_TRUE;
-
-  //
-  // Second, dispatch the Key event as a key press event w/ a Unicode
-  //  character code.  Note we have to check for modifier keys, since
-  // gtk returns a character value for them
-  //
-  nsKeyEvent keyPressEvent(PR_TRUE, NS_KEY_PRESS, win);
-  InitKeyPressEvent(event, keyPressEvent);
-  if (noDefault) {  // If prevent default set for onkeydown, do the same for onkeypress
-   keyPressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-  }
-
-  win->OnKey(keyPressEvent);
-
-  NS_RELEASE(win);
-  if (w)
-  {
-    gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
-  }
-
-  return PR_TRUE;
-}
-
-// GTK's text widget already does XIM, so we don't want to do this again
-gint handle_key_release_event_for_text(GtkObject *w, GdkEventKey* event,
-                                       gpointer p)
-{
-  nsTextWidget* win = (nsTextWidget*)p;
-  nsKeyEvent kevent(PR_TRUE, NS_KEY_UP, win);
-  InitKeyEvent(event, kevent);
-  NS_ADDREF(win);
-  win->OnKey(kevent);
-  NS_RELEASE(win);
-  
-  if (w)
-  {
-    gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_release_event");
-  }
-
-  return PR_TRUE;
-}
-
 
 //==============================================================
 gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
