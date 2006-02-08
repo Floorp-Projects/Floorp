@@ -1196,10 +1196,7 @@ nsNavBookmarks::GetItemTitle(nsIURI *aURI, nsAString &aTitle)
     return statement->GetString(nsNavHistory::kGetInfoIndex_UserTitle, aTitle);
 
   // If there is no user title, check for a history title.
-  rv = statement->GetString(nsNavHistory::kGetInfoIndex_Title, aTitle);  
-  if (statement->IsNull(nsNavHistory::kGetInfoIndex_Title))
-    aTitle.SetIsVoid(PR_TRUE);
-  return rv;
+  return statement->GetString(nsNavHistory::kGetInfoIndex_Title, aTitle);  
 }
 
 NS_IMETHODIMP
