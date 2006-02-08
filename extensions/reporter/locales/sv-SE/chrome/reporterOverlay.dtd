@@ -1,5 +1,0 @@
-<!-- Entities for the Sample Extension Options Dialog go here -->
-<!ENTITY reporterMenu.title                         "Rapportera problem med webbplats">
-<!ENTITY reporterMenu.tooltip                       "Rapportera ett problem du har med en webbplats">
-<!ENTITY reporterMenu.accesskey                     "R">
-

@@ -1,5 +1,0 @@
-<!-- Entities for the Sample Extension Options Dialog go here -->
-<!ENTITY reporterMenu.title                         "Prijava pokvarjene spletne strani">
-<!ENTITY reporterMenu.tooltip                       "Prijavi pokvarjeno spletno stran">
-<!ENTITY reporterMenu.accesskey                     "P">
-

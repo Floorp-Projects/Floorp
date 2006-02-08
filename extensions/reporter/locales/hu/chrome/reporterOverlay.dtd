@@ -1,6 +1,0 @@
-<!-- Entities for the Sample Extension Options Dialog go here -->
-<!ENTITY reporterMenu.title                         "Hibás webhely bejelentése">
-<!ENTITY reporterMenu.tooltip                       "Hibás webhely bejelentése">
-<!ENTITY reporterMenu.accesskey                     "H">
-
-
