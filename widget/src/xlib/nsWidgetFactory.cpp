@@ -44,13 +44,9 @@
 #include "nsWidgetsCID.h"
 
 #include "nsWindow.h"
-#include "nsButton.h"
-#include "nsCheckButton.h"
-#include "nsTextWidget.h"
 #include "nsAppShell.h"
 #include "nsToolkit.h"
 #include "nsLookAndFeel.h"
-#include "nsLabel.h"
 #include "nsTransferable.h"
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
@@ -63,13 +59,9 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCheckButton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
@@ -89,18 +81,6 @@ static const nsModuleComponentInfo components[] =
     NS_CHILD_CID,
     "@mozilla.org/widgets/child_window/xlib;1",
     ChildWindowConstructor },
-  { "Xlib Button",
-    NS_BUTTON_CID,
-    "@mozilla.org/widgets/button/xlib;1",
-    nsButtonConstructor },
-  { "Xlib Check Button",
-    NS_CHECKBUTTON_CID,
-    "@mozilla.org/widgets/checkbutton/xlib;1",
-    nsCheckButtonConstructor },
-  { "Xlib Text Widget",
-    NS_TEXTFIELD_CID,
-    "@mozilla.org/widgets/textwidget/xlib;1",
-    nsTextWidgetConstructor },
   { "Xlib AppShell",
     NS_APPSHELL_CID,
     "@mozilla.org/widget/appshell/xlib;1",
@@ -113,10 +93,6 @@ static const nsModuleComponentInfo components[] =
     NS_LOOKANDFEEL_CID,
     "@mozilla.org/widget/lookandfeel;1",
     nsLookAndFeelConstructor },
-  { "Xlib Label",
-    NS_LABEL_CID,
-    "@mozilla.org/widget/label/xlib;1",
-    nsLabelConstructor },
   { "Xlib Sound",
     NS_SOUND_CID,
       "@mozilla.org/sound;1",

@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGfxCheckboxControlFrame.h"
-#include "nsICheckButton.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"

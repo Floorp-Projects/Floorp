@@ -55,9 +55,6 @@
 #include "nsIFormControl.h"
 #include "nsIDeviceContext.h"
 #include "nsHTMLAtoms.h"
-#include "nsIButton.h"  // remove this when GetCID is pure virtual
-#include "nsICheckButton.h"  //remove this
-#include "nsITextWidget.h"  //remove this
 #include "nsISupports.h"
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"

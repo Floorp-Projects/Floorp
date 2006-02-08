@@ -126,18 +126,6 @@ public:
   // new behavior
 
   /**
-    * Get the class id of the widget associated with this frame
-    * @return the class id
-    */
-  virtual const nsIID& GetCID(); 
-
-  /**
-    * Get the interface id of widget associated with this frame
-    * @return the interface id
-    */
-  virtual const nsIID& GetIID(); 
-
-  /**
     * Respond to a enter key being pressed
     */
   virtual void EnterPressed(nsPresContext* aPresContext) {} 

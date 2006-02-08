@@ -66,31 +66,9 @@
 #include "nsNativeThemeMac.h"
 #include "nsScreenManagerMac.h"
 
-#if USE_NATIVE_VERSION
-
-#include "nsIButton.h"
-#include "nsITextWidget.h"
-
-#include "nsButton.h"
-#include "nsCheckButton.h"
-#include "nsTextWidget.h"
-#include "nsLabel.h"
-
-#endif
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-#if USE_NATIVE_VERSION
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCheckButton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsComboBox)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsRadioButton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsListBox)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextAreaWidget)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)  // used by Viewer?
-#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
@@ -111,20 +89,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerMac)
 
 static const nsModuleComponentInfo gComponents[] =
 {
-#if USE_NATIVE_VERSION
-  { "Text Field",
-    NS_TEXTFIELD_CID,
-    "@mozilla.org/widgets/textwidget/mac;1",
-    nsTextWidgetConstructor },
-  { "Label",
-    NS_LABEL_CID,
-    "@mozilla.org/widget/label/mac;1",
-    nsLabelConstructor },
-  { "Button",
-    NS_BUTTON_CID,
-    "@mozilla.org/widgets/button/mac;1",
-    nsButtonConstructor },
-#endif
   { "nsWindow",
     NS_WINDOW_CID,
     "@mozilla.org/widgets/window/mac;1",

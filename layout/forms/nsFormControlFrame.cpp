@@ -54,9 +54,6 @@
 #include "nsIFormControl.h"
 #include "nsIDeviceContext.h"
 #include "nsHTMLAtoms.h"
-#include "nsIButton.h"  // remove this when GetCID is pure virtual
-#include "nsICheckButton.h"  //remove this
-#include "nsITextWidget.h"  //remove this
 #include "nsISupports.h"
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
@@ -518,24 +515,6 @@ nsFormControlFrame::RegUnRegAccessKey(nsPresContext* aPresContext, nsIFrame * aF
 void 
 nsFormControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-}
-
-/*
- * FIXME: this ::GetIID() method has no meaning in life and should be
- * removed.
- * Pierre Phaneuf <pp@ludusdesign.com>
- */
-const nsIID&
-nsFormControlFrame::GetIID()
-{
-  return NS_GET_IID(nsIButton);
-}
-  
-const nsIID&
-nsFormControlFrame::GetCID()
-{
-  static NS_DEFINE_IID(kButtonCID, NS_BUTTON_CID);
-  return kButtonCID;
 }
 
 NS_METHOD

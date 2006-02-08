@@ -44,13 +44,9 @@
 #include "nsWidgetsCID.h"
 
 #include "nsWindow.h"
-#include "nsButton.h"
-#include "nsCheckButton.h"
-#include "nsTextWidget.h"
 #include "nsAppShell.h"
 #include "nsToolkit.h"
 #include "nsLookAndFeel.h"
-#include "nsLabel.h"
 #include "nsTransferable.h"
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
@@ -67,13 +63,9 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCheckButton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
@@ -96,18 +88,6 @@ static const nsModuleComponentInfo components[] =
     NS_CHILD_CID,
     "@mozilla.org/widgets/child_window/gtk;1",
     ChildWindowConstructor },
-  { "Gtk Button",
-    NS_BUTTON_CID,
-    "@mozilla.org/widgets/button/gtk;1",
-    nsButtonConstructor },
-  { "Gtk Check Button",
-    NS_CHECKBUTTON_CID,
-    "@mozilla.org/widgets/checkbutton/gtk;1",
-    nsCheckButtonConstructor },
-  { "Gtk Text Widget",
-    NS_TEXTFIELD_CID,
-    "@mozilla.org/widgets/textwidget/gtk;1",
-    nsTextWidgetConstructor },
   { "Gtk AppShell",
     NS_APPSHELL_CID,
     "@mozilla.org/widget/appshell/gtk;1",
@@ -120,10 +100,6 @@ static const nsModuleComponentInfo components[] =
     NS_LOOKANDFEEL_CID,
     "@mozilla.org/widget/lookandfeel;1",
     nsLookAndFeelConstructor },
-  { "Gtk Label",
-    NS_LABEL_CID,
-    "@mozilla.org/widget/label/gtk;1",
-    nsLabelConstructor },
   { "Gtk Sound",
     NS_SOUND_CID,
     //    "@mozilla.org/widget/sound/gtk;1"
