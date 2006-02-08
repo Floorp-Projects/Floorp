@@ -132,6 +132,8 @@ public:
     WindowPtr GetWindowTop(WindowPtr baseWindowRef);
     void UpdateWindowMenubar(WindowPtr parentWindow, PRBool enableFlag);
 
+    NS_IMETHOD              Update();
+
 protected:
   
   void InstallBorderlessDefProc ( WindowPtr inWindow ) ;
@@ -165,6 +167,15 @@ protected:
 	auto_ptr<nsMacEventHandler>     mMacEventHandler;
 	nsIWidget                      *mOffsetParent;
 	
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
+	PRPackedBool                    mNeedsResize;
+	struct {
+	  PRInt32      width;
+	  PRInt32      height;
+	  PRPackedBool repaint;
+	  PRPackedBool fromUI;
+	}                               mResizeTo;
+#endif
 };
 
 #endif // MacWindow_h__
