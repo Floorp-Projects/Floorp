@@ -7,6 +7,86 @@ menupopup[type="places"] {
   -moz-binding: url("chrome://browser/content/places/menu.xml#places-menupopup");
 }
 
+#places-info-popup {
+  position: fixed;
+  left: 50px;
+  top: 50px;
+  width: 100px;
+  height: 100px;
+  background-color: yellow;
+}
+
+#edit-urlbar {
+ left: 5px;
+ top: 5px;
+ margin: 0px;
+ -moz-box-flex: 1;
+}
+
+#edit-urlbox {
+ position: fixed;
+}
+
+#places-info-options {
+  position: fixed;
+  font-size: 9pt;
+}
+
+#places-info-grid {
+}
+
+.tag{
+  padding: 2px;
+  margin: 0px;
+  cursor: pointer;
+}
+
+.tag[selected="true"] {
+  background-color: red;
+}
+
+.tag[isparent="true"] {
+  font-weight: bold;
+}
+
+.tag:hover {
+  background-color: orange;
+}
+
+#places-link {
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.l0 {
+  margin-left: 0px;
+}
+
+.l1 {
+  margin-left: 10px;
+}
+
+.l2 {
+  margin-left: 20px;
+}
+
+.l3 {
+  margin-left: 30px;
+}
+
+.l4 {
+  margin-left: 40px;
+}
+
+.l5 {
+  margin-left: 50px;
+}
+
+.l6 {
+  margin-left: 60px;
+}
+
 #bookmarksBarShowPlaces {
   list-style-image: url("chrome://browser/skin/places/places-icon.png");
 }
