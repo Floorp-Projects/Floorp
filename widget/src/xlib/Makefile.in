@@ -73,18 +73,13 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsAppShell.cpp \
 		nsBidiKeyboard.cpp \
-		nsButton.cpp \
-		nsCheckButton.cpp \
 		nsClipboard.cpp \
 		nsDragService.cpp \
 		nsKeyCode.cpp \
-		nsLabel.cpp \
 		nsLookAndFeel.cpp \
 		nsScreenXlib.cpp \
 		nsScreenManagerXlib.cpp \
 		nsSound.cpp \
-		nsTextHelper.cpp \
-		nsTextWidget.cpp \
 		nsToolkit.cpp \
 		nsWidget.cpp \
 		nsWidgetFactory.cpp \

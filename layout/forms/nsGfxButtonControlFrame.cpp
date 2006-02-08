@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGfxButtonControlFrame.h"
-#include "nsIButton.h"
 #include "nsWidgetsCID.h"
 #include "nsIFontMetrics.h"
 #include "nsFormControlFrame.h"
@@ -93,24 +92,6 @@ nsGfxButtonControlFrame::IsFileBrowseButton(PRInt32 type)
     rv = formCtrl && formCtrl->GetType() == NS_FORM_INPUT_FILE;
   }
   return rv;
-}
-
-/*
- * FIXME: this ::GetIID() method has no meaning in life and should be
- * removed.
- * Pierre Phaneuf <pp@ludusdesign.com>
- */
-const nsIID&
-nsGfxButtonControlFrame::GetIID()
-{
-  return NS_GET_IID(nsIButton);
-}
-  
-const nsIID&
-nsGfxButtonControlFrame::GetCID()
-{
-  static NS_DEFINE_IID(kButtonCID, NS_BUTTON_CID);
-  return kButtonCID;
 }
 
 #ifdef DEBUG

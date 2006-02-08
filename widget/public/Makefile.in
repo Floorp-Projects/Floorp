@@ -54,9 +54,6 @@ EXPORTS		= \
 		nsStringUtil.h \
 		nsIWidget.h \
 		nsIKBStateControl.h \
-		nsIButton.h \
-		nsICheckButton.h \
-		nsITextWidget.h \
 		nsGUIEvent.h \
 		nsEvent.h \
 		nsIMouseListener.h \
@@ -64,7 +61,6 @@ EXPORTS		= \
 		nsIMenuListener.h \
 		nsWidgetsCID.h \
 		nsILookAndFeel.h \
-		nsILabel.h \
 		nsIDragSessionGTK.h \
 		nsIDragSessionXlib.h \
 		nsIDragSessionMac.h \

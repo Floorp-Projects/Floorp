@@ -80,18 +80,13 @@ CSRCS		= \
 CPPSRCS		= \
 		nsAppShell.cpp \
 		nsBidiKeyboard.cpp \
-		nsButton.cpp \
-		nsCheckButton.cpp \
 		nsClipboard.cpp \
 		nsDragService.cpp \
 		nsGtkEventHandler.cpp \
 		nsGtkUtils.cpp \
 		nsKeyboardUtils.cpp \
-		nsLabel.cpp \
 		nsLookAndFeel.cpp \
 		nsSound.cpp \
-		nsTextHelper.cpp \
-		nsTextWidget.cpp \
 		nsToolkit.cpp \
 		nsWidget.cpp \
 		nsWidgetFactory.cpp \

@@ -45,16 +45,12 @@
 
 struct nsRect;
 class nsIAppShell;
-class nsIButton;
 class nsIEventListener;
-class nsILabel;
 class nsILookAndFeel;
 class nsIMouseListener;
 class nsIToolkit;
 class nsIWidget;
-class nsICheckButton;
 class nsITooltipWidget;
-class nsITextWidget;
 
 #if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
 // A top-level widget stores a reference to itself as a window property
@@ -65,46 +61,6 @@ enum {
   kTopLevelWidgetRefPropertyTag  = 'GEKO'
 };
 #endif
-
-// These are a series of support methods which help in the creation
-// of widgets. They are not needed, but are provided as a convenience
-// mechanism when creating widgets
-
-extern nsresult 
-NS_CreateButton( nsISupports* aParent, 
-								nsIButton* aButton, 
-								const nsRect& aRect, 
-								EVENT_CALLBACK aHandleEventFunction,
-								const nsFont* aFont = nsnull);
-
-extern nsresult 
-NS_CreateCheckButton( nsISupports* aParent, 
-											nsICheckButton* aCheckButton, 
-											const nsRect& aRect, 
-											EVENT_CALLBACK aHandleEventFunction,
-											const nsFont* aFont = nsnull);
-
-extern nsresult 
-NS_CreateLabel( nsISupports* aParent,	
-                nsILabel* aLabel, 
-                const nsRect& aRect, 
-                EVENT_CALLBACK aHandleEventFunction,
-                const nsFont* aFont = nsnull);
-
-extern nsresult 
-NS_CreateTextWidget(nsISupports* aParent,	
-                    nsITextWidget* aWidget, 
-                    const nsRect& aRect, 
-                    EVENT_CALLBACK aHandleEventFunction,
-                    const nsFont* aFont = nsnull);
-
-extern nsresult 
-NS_CreateTooltipWidget(nsISupports* aParent,	
-                      nsITooltipWidget* aWidget, 
-                      const nsRect& aRect, 
-                      EVENT_CALLBACK aHandleEventFunction,
-                      const nsFont* aFont = nsnull);
-
 
 extern nsresult 
 NS_ShowWidget(nsISupports* aWidget, PRBool aShow);
