@@ -997,6 +997,9 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix);
 cairo_public cairo_surface_t *
 cairo_get_target (cairo_t *cr);
 
+cairo_public cairo_surface_t *
+cairo_get_group_target (cairo_t *cr);
+
 typedef enum _cairo_path_data_type {
     CAIRO_PATH_MOVE_TO,
     CAIRO_PATH_LINE_TO,
@@ -1204,6 +1207,11 @@ cairo_public void
 cairo_surface_set_device_offset (cairo_surface_t *surface,
 				 double           x_offset,
 				 double           y_offset);
+
+cairo_public void
+cairo_surface_get_device_offset (cairo_surface_t *surface,
+				 double          *x_offset,
+				 double          *y_offset);
 
 /* Image-surface functions */
 

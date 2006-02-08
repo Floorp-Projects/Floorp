@@ -1,0 +1,75 @@
+Index: cairo/src/cairo-win32-surface.c
+===================================================================
+--- cairo.orig/src/cairo-win32-surface.c	2006-02-07 17:06:46.750000000 -0800
++++ cairo/src/cairo-win32-surface.c	2006-02-07 17:07:03.312500000 -0800
+@@ -612,7 +612,7 @@
+ 		      src_x, src_y,
+ 		      width, height,
+ 		      blend_function))
+-	return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite");
++	return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite(AlphaBlend)");
+     
+     return CAIRO_STATUS_SUCCESS;
+ }
+@@ -675,13 +675,13 @@
+ 		     src->dc,
+ 		     src_x + itx, src_y + ity,
+ 		     SRCCOPY))
+-	    return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite");
++	    return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite(BitBlt)");
+ 
+ 	return CAIRO_STATUS_SUCCESS;
+ 	
+     } else if (integer_transform &&
+ 	       (src->format == CAIRO_FORMAT_RGB24 || src->format == CAIRO_FORMAT_ARGB32) &&
+-	       dst->format == CAIRO_FORMAT_RGB24 &&
++	       (dst->format == CAIRO_FORMAT_RGB24 || dst->format == CAIRO_FORMAT_ARGB32) &&
+ 	       op == CAIRO_OPERATOR_OVER) {
+ 
+ 	return _composite_alpha_blend (dst, src, alpha,
+@@ -1007,6 +1007,31 @@
+     return surface->backend == &cairo_win32_surface_backend;
+ }
+ 
++/**
++ * cairo_win32_surface_get_dc
++ * @surface: a #cairo_surface_t
++ *
++ * Returns the HDC associated with this surface, or NULL if none.
++ * Also returns NULL if the surface is not a win32 surface.
++ *
++ * Return value: HDC or NULL if no HDC available.
++ **/
++HDC
++cairo_win32_surface_get_dc (cairo_surface_t *surface)
++{
++    cairo_win32_surface_t *winsurf;
++
++    if (surface == NULL)
++	return NULL;
++
++    if (!_cairo_surface_is_win32(surface))
++	return NULL;
++
++    winsurf = (cairo_win32_surface_t *) surface;
++
++    return winsurf->dc;
++}
++
+ static const cairo_surface_backend_t cairo_win32_surface_backend = {
+     _cairo_win32_surface_create_similar,
+     _cairo_win32_surface_finish,
+Index: cairo/src/cairo-win32.h
+===================================================================
+--- cairo.orig/src/cairo-win32.h	2006-02-07 17:12:24.734375000 -0800
++++ cairo/src/cairo-win32.h	2006-02-07 17:13:53.203125000 -0800
+@@ -60,6 +60,9 @@
+ cairo_public double
+ cairo_win32_scaled_font_get_metrics_factor (cairo_scaled_font_t *scaled_font);
+ 
++cairo_public HDC
++cairo_win32_surface_get_dc (cairo_surface_t *surface);
++
+ CAIRO_END_DECLS
+ 
+ #else  /* CAIRO_HAS_WIN32_SURFACE */

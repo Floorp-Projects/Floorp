@@ -1,8 +1,8 @@
 Index: pixman/src/pixman-xserver-compat.h
 ===================================================================
---- pixman/src/pixman-xserver-compat.h.orig
-+++ pixman/src/pixman-xserver-compat.h
-@@ -72,8 +72,8 @@ typedef pixman_triangle_t	xTriangle;
+--- pixman/src/pixman-xserver-compat.h.orig	2005-08-10 21:10:13.000000000 -0700
++++ pixman/src/pixman-xserver-compat.h	2006-02-02 16:00:06.109375000 -0800
+@@ -72,8 +72,8 @@
  #define FB_SHIFT IC_SHIFT 
  #define FB_MASK IC_MASK
  #define FB_ALLONES IC_ALLONES
@@ -14,9 +14,9 @@ Index: pixman/src/pixman-xserver-compat.h
   * ugly hacks... */
 Index: pixman/src/pixregion.c
 ===================================================================
---- pixman/src/pixregion.c.orig
-+++ pixman/src/pixregion.c
-@@ -60,7 +60,7 @@ SOFTWARE.
+--- pixman/src/pixregion.c.orig	2005-08-22 12:15:28.000000000 -0700
++++ pixman/src/pixregion.c	2006-02-02 16:00:06.109375000 -0800
+@@ -60,7 +60,7 @@
  #endif
  
  #undef assert
@@ -25,7 +25,7 @@ Index: pixman/src/pixregion.c
  #define assert(expr) {if (!(expr)) \
  		FatalError("Assertion failed file %s, line %d: expr\n", \
  			__FILE__, __LINE__); }
-@@ -208,7 +208,7 @@ if (((numRects) < ((reg)->data->size >> 
+@@ -208,7 +208,7 @@
  }
  
  
@@ -34,7 +34,7 @@ Index: pixman/src/pixregion.c
  int
  pixman_region16_print(rgn)
      pixman_region16_t * rgn;
-@@ -302,7 +302,7 @@ pixman_region16_valid(reg)
+@@ -302,7 +302,7 @@
      }
  }
  
@@ -45,9 +45,9 @@ Index: pixman/src/pixregion.c
  /*	Create a new empty region	*/
 Index: src/cairo-gstate.c
 ===================================================================
---- src/cairo-gstate.c.orig
-+++ src/cairo-gstate.c
-@@ -241,6 +241,13 @@ _cairo_gstate_clone (cairo_gstate_t *oth
+--- src/cairo-gstate.c.orig	2006-01-06 14:11:07.000000000 -0800
++++ src/cairo-gstate.c	2006-02-02 16:00:06.125000000 -0800
+@@ -241,6 +241,13 @@
      return gstate;
  }
  
@@ -63,9 +63,9 @@ Index: src/cairo-gstate.c
  cairo_status_t
 Index: src/cairo.c
 ===================================================================
---- src/cairo.c.orig
-+++ src/cairo.c
-@@ -324,6 +324,29 @@ cairo_restore (cairo_t *cr)
+--- src/cairo.c.orig	2006-01-18 09:46:42.000000000 -0800
++++ src/cairo.c	2006-02-02 16:00:06.125000000 -0800
+@@ -324,6 +324,29 @@
  }
  slim_hidden_def(cairo_restore);
  
@@ -97,9 +97,9 @@ Index: src/cairo.c
  cairo_push_group (cairo_t *cr)
 Index: src/cairo.h
 ===================================================================
---- src/cairo.h.orig
-+++ src/cairo.h
-@@ -252,6 +252,9 @@ cairo_save (cairo_t *cr);
+--- src/cairo.h.orig	2006-01-22 02:33:26.000000000 -0800
++++ src/cairo.h	2006-02-02 16:00:06.125000000 -0800
+@@ -252,6 +252,9 @@
  cairo_public void
  cairo_restore (cairo_t *cr);
  
@@ -111,8 +111,8 @@ Index: src/cairo.h
  cairo_push_group (cairo_t *cr);
 Index: src/cairoint.h
 ===================================================================
---- src/cairoint.h.orig
-+++ src/cairoint.h
+--- src/cairoint.h.orig	2006-01-17 17:01:40.000000000 -0800
++++ src/cairoint.h	2006-02-02 16:00:06.125000000 -0800
 @@ -66,6 +66,10 @@
  #include "cairo-debug.h"
  #include <pixman.h>
@@ -124,7 +124,7 @@ Index: src/cairoint.h
  CAIRO_BEGIN_DECLS
  
  #if __GNUC__ >= 3 && defined(__ELF__)
-@@ -132,6 +136,7 @@ CAIRO_BEGIN_DECLS
+@@ -132,6 +136,7 @@
  #define INLINE
  #endif
  
@@ -132,7 +132,7 @@ Index: src/cairoint.h
  #if HAVE_PTHREAD_H
  # include <pthread.h>
  # define CAIRO_MUTEX_DECLARE(name) static pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
-@@ -159,11 +164,9 @@ cairo_private void _cairo_beos_unlock(vo
+@@ -159,11 +164,9 @@
  # define CAIRO_MUTEX_LOCK(name) _cairo_beos_lock (&name)
  # define CAIRO_MUTEX_UNLOCK(name) _cairo_beos_unlock (&name)
  #endif
@@ -145,7 +145,7 @@ Index: src/cairoint.h
  # define CAIRO_MUTEX_DECLARE(name)
  # define CAIRO_MUTEX_DECLARE_GLOBAL(name)
  # define CAIRO_MUTEX_LOCK(name)
-@@ -1071,6 +1074,9 @@ _cairo_gstate_destroy (cairo_gstate_t *g
+@@ -1071,6 +1074,9 @@
  cairo_private cairo_gstate_t *
  _cairo_gstate_clone (cairo_gstate_t *gstate);
  
@@ -155,7 +155,7 @@ Index: src/cairoint.h
  cairo_private cairo_surface_t *
  _cairo_gstate_get_target (cairo_gstate_t *gstate);
  
-@@ -2169,6 +2175,7 @@ slim_hidden_proto(cairo_restore)
+@@ -2169,6 +2175,7 @@
  slim_hidden_proto(cairo_save)
  slim_hidden_proto(cairo_stroke_preserve)
  slim_hidden_proto(cairo_surface_destroy)
@@ -165,8 +165,8 @@ Index: src/cairoint.h
  
 Index: pixman/src/fbcompose.c
 ===================================================================
---- pixman/src/fbcompose.c.orig
-+++ pixman/src/fbcompose.c
+--- pixman/src/fbcompose.c.orig	2006-01-04 16:39:23.000000000 -0800
++++ pixman/src/fbcompose.c	2006-02-02 16:00:06.140625000 -0800
 @@ -33,8 +33,16 @@
  
  #include "pixregionint.h"
@@ -186,8 +186,8 @@ Index: pixman/src/fbcompose.c
  
 Index: src/cairo-atsui-font.c
 ===================================================================
---- src/cairo-atsui-font.c.orig
-+++ src/cairo-atsui-font.c
+--- src/cairo-atsui-font.c.orig	2006-01-10 07:54:17.000000000 -0800
++++ src/cairo-atsui-font.c	2006-02-02 16:00:06.140625000 -0800
 @@ -40,6 +40,16 @@
  #include "cairo.h"
  #include "cairo-quartz-private.h"
@@ -207,8 +207,8 @@ Index: src/cairo-atsui-font.c
  
 Index: src/cairo-features.h.in
 ===================================================================
---- src/cairo-features.h.in.orig
-+++ src/cairo-features.h.in
+--- src/cairo-features.h.in.orig	2005-12-29 07:17:01.000000000 -0800
++++ src/cairo-features.h.in	2006-02-02 16:00:06.140625000 -0800
 @@ -37,6 +37,8 @@
  #ifndef CAIRO_FEATURES_H
  #define CAIRO_FEATURES_H
@@ -236,9 +236,9 @@ Index: src/cairo-features.h.in
  
 Index: src/cairo-win32-surface.c
 ===================================================================
---- src/cairo-win32-surface.c.orig
-+++ src/cairo-win32-surface.c
-@@ -1062,6 +1062,9 @@ CRITICAL_SECTION cairo_toy_font_face_has
+--- src/cairo-win32-surface.c.orig	2005-12-16 03:02:35.000000000 -0800
++++ src/cairo-win32-surface.c	2006-02-02 16:00:06.140625000 -0800
+@@ -1062,6 +1062,9 @@
  CRITICAL_SECTION cairo_scaled_font_map_mutex;
  CRITICAL_SECTION cairo_ft_unscaled_font_map_mutex;
  
@@ -248,7 +248,7 @@ Index: src/cairo-win32-surface.c
  BOOL WINAPI
  DllMain (HINSTANCE hinstDLL,
  	 DWORD     fdwReason,
-@@ -1083,4 +1086,6 @@ DllMain (HINSTANCE hinstDLL,
+@@ -1083,4 +1086,6 @@
    }
    return TRUE;
  }

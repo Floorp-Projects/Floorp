@@ -612,7 +612,7 @@ _composite_alpha_blend (cairo_win32_surface_t *dst,
 		      src_x, src_y,
 		      width, height,
 		      blend_function))
-	return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite");
+	return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite(AlphaBlend)");
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -675,13 +675,13 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
 		     src->dc,
 		     src_x + itx, src_y + ity,
 		     SRCCOPY))
-	    return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite");
+	    return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite(BitBlt)");
 
 	return CAIRO_STATUS_SUCCESS;
 	
     } else if (integer_transform &&
 	       (src->format == CAIRO_FORMAT_RGB24 || src->format == CAIRO_FORMAT_ARGB32) &&
-	       dst->format == CAIRO_FORMAT_RGB24 &&
+	       (dst->format == CAIRO_FORMAT_RGB24 || dst->format == CAIRO_FORMAT_ARGB32) &&
 	       op == CAIRO_OPERATOR_OVER) {
 
 	return _composite_alpha_blend (dst, src, alpha,
@@ -1005,6 +1005,31 @@ int
 _cairo_surface_is_win32 (cairo_surface_t *surface)
 {
     return surface->backend == &cairo_win32_surface_backend;
+}
+
+/**
+ * cairo_win32_surface_get_dc
+ * @surface: a #cairo_surface_t
+ *
+ * Returns the HDC associated with this surface, or NULL if none.
+ * Also returns NULL if the surface is not a win32 surface.
+ *
+ * Return value: HDC or NULL if no HDC available.
+ **/
+HDC
+cairo_win32_surface_get_dc (cairo_surface_t *surface)
+{
+    cairo_win32_surface_t *winsurf;
+
+    if (surface == NULL)
+	return NULL;
+
+    if (!_cairo_surface_is_win32(surface))
+	return NULL;
+
+    winsurf = (cairo_win32_surface_t *) surface;
+
+    return winsurf->dc;
 }
 
 static const cairo_surface_backend_t cairo_win32_surface_backend = {
