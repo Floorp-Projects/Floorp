@@ -60,6 +60,7 @@ typedef unsigned char Bool;
 */
 struct Cursor {
   BtCursor *pCursor;    /* The cursor structure of the backend */
+  int iDb;              /* Index of cursor database in db->aDb[] (or -1) */
   i64 lastRowid;        /* Last rowid from a Next or NextIdx operation */
   i64 nextRowid;        /* Next rowid returned by OP_NewRowid */
   Bool zeroed;          /* True if zeroed out and ready for reuse */
@@ -85,9 +86,10 @@ struct Cursor {
 
   /* Cached information about the header for the data record that the
   ** cursor is currently pointing to.  Only valid if cacheValid is true.
-  ** zRow might point to (ephemeral) data for the current row, or it might
-  ** be NULL. */
-  Bool cacheValid;      /* True if the cache is valid */
+  ** aRow might point to (ephemeral) data for the current row, or it might
+  ** be NULL.
+  */
+  int cacheStatus;      /* Cache is valid if this matches Vdbe.cacheCtr */
   int payloadSize;      /* Total number of bytes in the record */
   u32 *aType;           /* Type values for all entries in the record */
   u32 *aOffset;         /* Cached offsets to the start of each columns data */
@@ -101,6 +103,11 @@ typedef struct Cursor Cursor;
 ** For Strings.
 */
 #define NBFS 32
+
+/*
+** A value for Cursor.cacheValid that means the cache is always invalid.
+*/
+#define CACHE_STALE 0
 
 /*
 ** Internally, the vdbe manipulates nearly all SQL values as Mem
@@ -250,7 +257,7 @@ struct Fifo {
 */
 typedef struct Context Context;
 struct Context {
-  int lastRowid;    /* Last insert rowid (sqlite3.lastRowid) */
+  i64 lastRowid;    /* Last insert rowid (sqlite3.lastRowid) */
   int nChange;      /* Statement changes (Vdbe.nChanges)     */
   Fifo sFifo;       /* Records that will participate in a DELETE or UPDATE */
 };
@@ -286,6 +293,7 @@ struct Vdbe {
   int nMem;               /* Number of memory locations currently allocated */
   Mem *aMem;              /* The memory locations */
   int nCallback;          /* Number of callbacks invoked so far */
+  int cacheCtr;           /* Cursor row cache generation counter */
   Fifo sFifo;             /* A list of ROWIDs */
   int contextStackTop;    /* Index of top element in the context stack */
   int contextStackDepth;  /* The size of the "context" stack */
@@ -306,6 +314,7 @@ struct Vdbe {
   u8 changeCntOn;         /* True to update the change-counter */
   u8 aborted;             /* True if ROLLBACK in another VM causes an abort */
   u8 expired;             /* True if the VM needs to be recompiled */
+  u8 minWriteFileFormat;  /* Minimum file format for writable database files */
   int nChange;            /* Number of db changes made since last reset */
   i64 startTime;          /* Time when query started - used for profiling */
 };
@@ -331,8 +340,8 @@ void sqlite3VdbePrintOp(FILE*, int, Op*);
 void sqlite3VdbePrintSql(Vdbe*);
 #endif
 int sqlite3VdbeSerialTypeLen(u32);
-u32 sqlite3VdbeSerialType(Mem*);
-int sqlite3VdbeSerialPut(unsigned char*, Mem*);
+u32 sqlite3VdbeSerialType(Mem*, int);
+int sqlite3VdbeSerialPut(unsigned char*, Mem*, int);
 int sqlite3VdbeSerialGet(const unsigned char*, u32, Mem*);
 void sqlite3VdbeDeleteAuxData(VdbeFunc*, int);
 
@@ -360,10 +369,12 @@ int sqlite3VdbeMemStringify(Mem*, int);
 i64 sqlite3VdbeIntValue(Mem*);
 int sqlite3VdbeMemIntegerify(Mem*);
 double sqlite3VdbeRealValue(Mem*);
+void sqlite3VdbeIntegerAffinity(Mem*);
 int sqlite3VdbeMemRealify(Mem*);
+int sqlite3VdbeMemNumerify(Mem*);
 int sqlite3VdbeMemFromBtree(BtCursor*,int,int,int,Mem*);
 void sqlite3VdbeMemRelease(Mem *p);
-void sqlite3VdbeMemFinalize(Mem*, FuncDef*);
+int sqlite3VdbeMemFinalize(Mem*, FuncDef*);
 #ifndef NDEBUG
 void sqlite3VdbeMemSanity(Mem*, u8);
 int sqlite3VdbeOpcodeNoPush(u8);

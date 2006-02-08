@@ -12,7 +12,7 @@
 ** This header file defines the interface that the SQLite library
 ** presents to client programs.
 **
-** @(#) $Id: sqlite.h.in,v 1.141 2005/09/08 10:58:52 drh Exp $
+** @(#) $Id: sqlite.h.in,v 1.156 2006/01/12 02:50:10 drh Exp $
 */
 #ifndef _SQLITE3_H_
 #define _SQLITE3_H_
@@ -31,7 +31,7 @@ extern "C" {
 #ifdef SQLITE_VERSION
 # undef SQLITE_VERSION
 #endif
-#define SQLITE_VERSION         "3.2.7"
+#define SQLITE_VERSION         "3.3.3"
 
 /*
 ** The format of the version string is "X.Y.Z<trailing string>", where
@@ -48,7 +48,7 @@ extern "C" {
 #ifdef SQLITE_VERSION_NUMBER
 # undef SQLITE_VERSION_NUMBER
 #endif
-#define SQLITE_VERSION_NUMBER 3002007
+#define SQLITE_VERSION_NUMBER 3003003
 
 /*
 ** The version string is also compiled into the library so that a program
@@ -86,6 +86,13 @@ typedef struct sqlite3 sqlite3;
   typedef unsigned long long int sqlite_uint64;
 #endif
 
+/*
+** If compiling for a processor that lacks floating point support,
+** substitute integer for floating-point
+*/
+#ifdef SQLITE_OMIT_FLOATING_POINT
+# define double sqlite_int64
+#endif
 
 /*
 ** A function to close the database.
@@ -185,6 +192,7 @@ int sqlite3_exec(
 #define SQLITE_NOTADB      26   /* File opened that is not a database file */
 #define SQLITE_ROW         100  /* sqlite3_step() has another row ready */
 #define SQLITE_DONE        101  /* sqlite3_step() has finished executing */
+/* end-of-return-codes */
 
 /*
 ** Each entry in an SQLite table has a unique integer key.  (The key is
@@ -1251,7 +1259,7 @@ extern char *sqlite3_temp_directory;
 ** This functionality can be omitted from a build by defining the 
 ** SQLITE_OMIT_GLOBALRECOVER at compile time.
 */
-int sqlite3_global_recover();
+int sqlite3_global_recover(void);
 
 /*
 ** Test to see whether or not the database connection is in autocommit
@@ -1268,6 +1276,106 @@ int sqlite3_get_autocommit(sqlite3*);
 ** the statement in the first place.
 */
 sqlite3 *sqlite3_db_handle(sqlite3_stmt*);
+
+/*
+** Register a callback function with the database connection identified by the 
+** first argument to be invoked whenever a row is updated, inserted or deleted.
+** Any callback set by a previous call to this function for the same 
+** database connection is overridden.
+**
+** The second argument is a pointer to the function to invoke when a 
+** row is updated, inserted or deleted. The first argument to the callback is
+** a copy of the third argument to sqlite3_update_hook. The second callback 
+** argument is one of SQLITE_INSERT, SQLITE_DELETE or SQLITE_UPDATE, depending
+** on the operation that caused the callback to be invoked. The third and 
+** fourth arguments to the callback contain pointers to the database and 
+** table name containing the affected row. The final callback parameter is 
+** the rowid of the row. In the case of an update, this is the rowid after 
+** the update takes place.
+**
+** The update hook is not invoked when internal system tables are
+** modified (i.e. sqlite_master and sqlite_sequence).
+**
+** If another function was previously registered, its pArg value is returned.
+** Otherwise NULL is returned.
+*/
+void *sqlite3_update_hook(
+  sqlite3*, 
+  void(*)(void *,int ,char const *,char const *,sqlite_int64),
+  void*
+);
+
+/*
+** Register a callback to be invoked whenever a transaction is rolled
+** back. 
+**
+** The new callback function overrides any existing rollback-hook
+** callback. If there was an existing callback, then it's pArg value 
+** (the third argument to sqlite3_rollback_hook() when it was registered) 
+** is returned. Otherwise, NULL is returned.
+**
+** For the purposes of this API, a transaction is said to have been 
+** rolled back if an explicit "ROLLBACK" statement is executed, or
+** an error or constraint causes an implicit rollback to occur. The 
+** callback is not invoked if a transaction is automatically rolled
+** back because the database connection is closed.
+*/
+void *sqlite3_rollback_hook(sqlite3*, void(*)(void *), void*);
+
+/*
+** This function is only available if the library is compiled without
+** the SQLITE_OMIT_SHARED_CACHE macro defined. It is used to enable or
+** disable (if the argument is true or false, respectively) the 
+** "shared pager" feature.
+*/
+int sqlite3_enable_shared_cache(int);
+
+/*
+** Attempt to free N bytes of heap memory by deallocating non-essential
+** memory allocations held by the database library (example: memory 
+** used to cache database pages to improve performance).
+**
+** This function is not a part of standard builds.  It is only created
+** if SQLite is compiled with the SQLITE_ENABLE_MEMORY_MANAGEMENT macro.
+*/
+int sqlite3_release_memory(int);
+
+/*
+** Place a "soft" limit on the amount of heap memory that may be allocated by
+** SQLite within the current thread. If an internal allocation is requested 
+** that would exceed the specified limit, sqlite3_release_memory() is invoked
+** one or more times to free up some space before the allocation is made.
+**
+** The limit is called "soft", because if sqlite3_release_memory() cannot free
+** sufficient memory to prevent the limit from being exceeded, the memory is
+** allocated anyway and the current operation proceeds.
+**
+** This function is only available if the library was compiled with the 
+** SQLITE_ENABLE_MEMORY_MANAGEMENT option set.
+** memory-management has been enabled.
+*/
+void sqlite3_soft_heap_limit(int);
+
+/*
+** This routine makes sure that all thread-local storage has been
+** deallocated for the current thread.
+**
+** This routine is not technically necessary.  All thread-local storage
+** will be automatically deallocated once memory-management and
+** shared-cache are disabled and the soft heap limit has been set
+** to zero.  This routine is provided as a convenience for users who
+** want to make absolutely sure they have not forgotten something
+** prior to killing off a thread.
+*/
+void sqlite3_thread_cleanup(void);
+
+/*
+** Undo the hack that converts floating point types to integer for
+** builds on processors without floating point support.
+*/
+#ifdef SQLITE_OMIT_FLOATING_POINT
+# undef double
+#endif
 
 /*
 ** Given a wildcard parameter name, return the set of indexes of the

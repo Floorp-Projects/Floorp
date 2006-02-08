@@ -12,7 +12,7 @@
 ** This file contains code to implement the "sqlite" command line
 ** utility for accessing SQLite databases.
 **
-** $Id: shell.c,v 1.128 2005/09/11 02:03:04 drh Exp $
+** $Id: shell.c,v 1.131 2006/01/25 15:55:38 drh Exp $
 */
 #include <stdlib.h>
 #include <string.h>
@@ -81,7 +81,7 @@ static char continuePrompt[20]; /* Continuation prompt. default: "   ...> " */
 /*
 ** Determines if a string is a number of not.
 */
-static int isNumber(const unsigned char *z, int *realnum){
+static int isNumber(const char *z, int *realnum){
   if( *z=='-' || *z=='+' ) z++;
   if( !isdigit(*z) ){
     return 0;
@@ -690,8 +690,9 @@ static int dump_callback(void *pArg, int nArg, char **azArg, char **azCol){
     zSelect = appendText(zSelect, " || ' VALUES(' || ", 0);
     rc = sqlite3_step(pTableInfo);
     while( rc==SQLITE_ROW ){
+      const char *zText = (const char *)sqlite3_column_text(pTableInfo, 1);
       zSelect = appendText(zSelect, "quote(", 0);
-      zSelect = appendText(zSelect, sqlite3_column_text(pTableInfo, 1), '"');
+      zSelect = appendText(zSelect, zText, '"');
       rc = sqlite3_step(pTableInfo);
       if( rc==SQLITE_ROW ){
         zSelect = appendText(zSelect, ") || ', ' || ", 0);
@@ -773,9 +774,6 @@ static char zHelp[] =
   ".prompt MAIN CONTINUE  Replace the standard prompts\n"
   ".quit                  Exit this program\n"
   ".read FILENAME         Execute SQL in FILENAME\n"
-#ifdef SQLITE_HAS_CODEC
-  ".rekey OLD NEW NEW     Change the encryption key\n"
-#endif
   ".schema ?TABLE?        Show the CREATE statements\n"
   ".separator STRING      Change separator used by output mode and .import\n"
   ".show                  Show the current values for various settings\n"
@@ -795,9 +793,6 @@ static void open_db(struct callback_data *p){
   if( p->db==0 ){
     sqlite3_open(p->zDbFilename, &p->db);
     db = p->db;
-#ifdef SQLITE_HAS_CODEC
-    sqlite3_key(p->db, p->zKey, p->zKey ? strlen(p->zKey) : 0);
-#endif
     sqlite3_create_function(db, "shellstatic", 0, SQLITE_UTF8, 0,
         shellstaticFunc, 0, 0);
     if( SQLITE_OK!=sqlite3_errcode(db) ){
@@ -829,7 +824,7 @@ static void resolve_backslashes(char *z){
       }else if( c=='r' ){
         c = '\r';
       }else if( c>='0' && c<='7' ){
-        c =- '0';
+        c -= '0';
         if( z[i+1]>='0' && z[i+1]<='7' ){
           i++;
           c = (c<<3) + z[i] - '0';
@@ -1226,22 +1221,6 @@ static int do_meta_command(char *zLine, struct callback_data *p){
     }
   }else
 
-#ifdef SQLITE_HAS_CODEC
-  if( c=='r' && strncmp(azArg[0],"rekey", n)==0 && nArg==4 ){
-    char *zOld = p->zKey;
-    if( zOld==0 ) zOld = "";
-    if( strcmp(azArg[1],zOld) ){
-      fprintf(stderr,"old key is incorrect\n");
-    }else if( strcmp(azArg[2], azArg[3]) ){
-      fprintf(stderr,"2nd copy of new key does not match the 1st\n");
-    }else{
-      sqlite3_free(p->zKey);
-      p->zKey = sqlite3_mprintf("%s", azArg[2]);
-      sqlite3_rekey(p->db, p->zKey, strlen(p->zKey));
-    }
-  }else
-#endif
-
   if( c=='s' && strncmp(azArg[0], "schema", n)==0 ){
     struct callback_data data;
     char *zErrMsg = 0;
@@ -1619,9 +1598,6 @@ static const char zOptions[] =
   "   -[no]header          turn headers on or off\n"
   "   -column              set output mode to 'column'\n"
   "   -html                set output mode to HTML\n"
-#ifdef SQLITE_HAS_CODEC
-  "   -key KEY             encryption key\n"
-#endif                 
   "   -line                set output mode to 'line'\n"
   "   -list                set output mode to 'list'\n"
   "   -separator 'x'       set output field separator (|)\n"

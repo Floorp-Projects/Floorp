@@ -16,9 +16,11 @@
 ** These routines are in a separate files so that they will not be linked
 ** if they are not used.
 */
+#include "sqliteInt.h"
 #include <stdlib.h>
 #include <string.h>
-#include "sqliteInt.h"
+
+#ifndef SQLITE_OMIT_GET_TABLE
 
 /*
 ** This structure is used to pass data from sqlite3_get_table() through
@@ -193,3 +195,5 @@ void sqlite3_free_table(
     free(azResult);
   }
 }
+
+#endif /* SQLITE_OMIT_GET_TABLE */

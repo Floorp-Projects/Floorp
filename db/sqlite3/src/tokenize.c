@@ -15,7 +15,7 @@
 ** individual tokens and sends those tokens one-by-one over to the
 ** parser for analysis.
 **
-** $Id: tokenize.c,v 1.107 2005/08/23 11:31:26 drh Exp $
+** $Id: tokenize.c,v 1.116 2006/01/20 17:56:33 drh Exp $
 */
 #include "sqliteInt.h"
 #include "os.h"
@@ -196,9 +196,13 @@ static int getToken(const unsigned char *z, int *tokenType){
           }
         }
       }
-      if( c ) i++;
-      *tokenType = TK_STRING;
-      return i;
+      if( c ){
+        *tokenType = TK_STRING;
+        return i+1;
+      }else{
+        *tokenType = TK_ILLEGAL;
+        return i;
+      }
     }
     case '.': {
 #ifndef SQLITE_OMIT_FLOATING_POINT
@@ -344,7 +348,6 @@ int sqlite3RunParser(Parse *pParse, const char *zSql, char **pzErrMsg){
   i = 0;
   pEngine = sqlite3ParserAlloc((void*(*)(int))sqlite3MallocX);
   if( pEngine==0 ){
-    sqlite3SetString(pzErrMsg, "out of memory", (char*)0);
     return SQLITE_NOMEM;
   }
   assert( pParse->sLastToken.dyn==0 );
@@ -355,9 +358,9 @@ int sqlite3RunParser(Parse *pParse, const char *zSql, char **pzErrMsg){
   assert( pParse->nVarExprAlloc==0 );
   assert( pParse->apVarExpr==0 );
   pParse->zTail = pParse->zSql = zSql;
-  while( sqlite3_malloc_failed==0 && zSql[i]!=0 ){
+  while( !sqlite3MallocFailed() && zSql[i]!=0 ){
     assert( i>=0 );
-    pParse->sLastToken.z = &zSql[i];
+    pParse->sLastToken.z = (u8*)&zSql[i];
     assert( pParse->sLastToken.dyn==0 );
     pParse->sLastToken.n = getToken((unsigned char*)&zSql[i],&tokenType);
     i += pParse->sLastToken.n;
@@ -403,12 +406,11 @@ abort_parse:
     sqlite3Parser(pEngine, 0, pParse->sLastToken, pParse);
   }
   sqlite3ParserFree(pEngine, sqlite3FreeX);
-  if( sqlite3_malloc_failed ){
+  if( sqlite3MallocFailed() ){
     pParse->rc = SQLITE_NOMEM;
   }
   if( pParse->rc!=SQLITE_OK && pParse->rc!=SQLITE_DONE && pParse->zErrMsg==0 ){
-    sqlite3SetString(&pParse->zErrMsg, sqlite3ErrStr(pParse->rc),
-                    (char*)0);
+    sqlite3SetString(&pParse->zErrMsg, sqlite3ErrStr(pParse->rc), (char*)0);
   }
   if( pParse->zErrMsg ){
     if( pzErrMsg && *pzErrMsg==0 ){
@@ -423,6 +425,13 @@ abort_parse:
     sqlite3VdbeDelete(pParse->pVdbe);
     pParse->pVdbe = 0;
   }
+#ifndef SQLITE_OMIT_SHARED_CACHE
+  if( pParse->nested==0 ){
+    sqliteFree(pParse->aTableLock);
+    pParse->aTableLock = 0;
+    pParse->nTableLock = 0;
+  }
+#endif
   sqlite3DeleteTable(pParse->db, pParse->pNewTable);
   sqlite3DeleteTrigger(pParse->pNewTrigger);
   sqliteFree(pParse->apVarExpr);

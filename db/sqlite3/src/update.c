@@ -12,13 +12,13 @@
 ** This file contains C code routines that are called by the parser
 ** to handle UPDATE statements.
 **
-** $Id: update.c,v 1.112 2005/09/20 17:42:23 drh Exp $
+** $Id: update.c,v 1.121 2006/01/18 16:51:36 danielk1977 Exp $
 */
 #include "sqliteInt.h"
 
 /*
-** The most recently coded instruction was an OP_Column to retrieve column
-** 'i' of table pTab. This routine sets the P3 parameter of the 
+** The most recently coded instruction was an OP_Column to retrieve the
+** i-th column of table pTab. This routine sets the P3 parameter of the 
 ** OP_Column to the default value, if any.
 **
 ** The default value of a column is specified by a DEFAULT clause in the 
@@ -44,7 +44,7 @@
 void sqlite3ColumnDefault(Vdbe *v, Table *pTab, int i){
   if( pTab && !pTab->pSelect ){
     sqlite3_value *pValue;
-    u8 enc = sqlite3VdbeDb(v)->enc;
+    u8 enc = ENC(sqlite3VdbeDb(v));
     Column *pCol = &pTab->aCol[i];
     sqlite3ValueFromExpr(pCol->pDflt, enc, pCol->affinity, &pValue);
     if( pValue ){
@@ -89,6 +89,7 @@ void sqlite3Update(
   int openAll = 0;       /* True if all indices need to be opened */
   AuthContext sContext;  /* The authorization context */
   NameContext sNC;       /* The name-context to resolve expressions in */
+  int iDb;               /* Database containing the table being updated */
 
 #ifndef SQLITE_OMIT_TRIGGER
   int isView;                  /* Trying to update a view */
@@ -99,7 +100,9 @@ void sqlite3Update(
   int oldIdx      = -1;  /* index of trigger "old" temp table       */
 
   sContext.pParse = 0;
-  if( pParse->nErr || sqlite3_malloc_failed ) goto update_cleanup;
+  if( pParse->nErr || sqlite3MallocFailed() ){
+    goto update_cleanup;
+  }
   db = pParse->db;
   assert( pTabList->nSrc==1 );
 
@@ -107,6 +110,7 @@ void sqlite3Update(
   */
   pTab = sqlite3SrcListLookup(pParse, pTabList);
   if( pTab==0 ) goto update_cleanup;
+  iDb = sqlite3SchemaToIndex(pParse->db, pTab->pSchema);
 
   /* Figure out if we have any triggers and if the table being
   ** updated is a view
@@ -192,7 +196,7 @@ void sqlite3Update(
     {
       int rc;
       rc = sqlite3AuthCheck(pParse, SQLITE_UPDATE, pTab->zName,
-                           pTab->aCol[j].zName, db->aDb[pTab->iDb].zName);
+                           pTab->aCol[j].zName, db->aDb[iDb].zName);
       if( rc==SQLITE_DENY ){
         goto update_cleanup;
       }else if( rc==SQLITE_IGNORE ){
@@ -231,7 +235,6 @@ void sqlite3Update(
       }
     }
     if( i<pIdx->nColumn ){
-      if( sqlite3CheckIndexCollSeq(pParse, pIdx) ) goto update_cleanup;
       apIdx[nIdx++] = pIdx;
       aIdxUsed[j] = 1;
     }else{
@@ -257,7 +260,7 @@ void sqlite3Update(
   v = sqlite3GetVdbe(pParse);
   if( v==0 ) goto update_cleanup;
   if( pParse->nested==0 ) sqlite3VdbeCountChanges(v);
-  sqlite3BeginWriteOperation(pParse, 1, pTab->iDb);
+  sqlite3BeginWriteOperation(pParse, 1, iDb);
 
   /* If we are trying to update a view, realize that view into
   ** a ephemeral table.
@@ -307,7 +310,7 @@ void sqlite3Update(
       /* Open a cursor and make it point to the record that is
       ** being updated.
       */
-      sqlite3OpenTableForReading(v, iCur, pTab);
+      sqlite3OpenTable(pParse, iCur, iDb, pTab, OP_OpenRead);
     }
     sqlite3VdbeAddOp(v, OP_MoveGe, iCur, 0);
 
@@ -362,9 +365,7 @@ void sqlite3Update(
     ** action, then we need to open all indices because we might need
     ** to be deleting some records.
     */
-    sqlite3VdbeAddOp(v, OP_Integer, pTab->iDb, 0);
-    sqlite3VdbeAddOp(v, OP_OpenWrite, iCur, pTab->tnum);
-    sqlite3VdbeAddOp(v, OP_SetNumColumns, iCur, pTab->nCol);
+    sqlite3OpenTable(pParse, iCur, iDb, pTab, OP_OpenWrite); 
     if( onError==OE_Replace ){
       openAll = 1;
     }else{
@@ -378,9 +379,10 @@ void sqlite3Update(
     }
     for(i=0, pIdx=pTab->pIndex; pIdx; pIdx=pIdx->pNext, i++){
       if( openAll || aIdxUsed[i] ){
-        sqlite3VdbeAddOp(v, OP_Integer, pIdx->iDb, 0);
+        KeyInfo *pKey = sqlite3IndexKeyinfo(pParse, pIdx);
+        sqlite3VdbeAddOp(v, OP_Integer, iDb, 0);
         sqlite3VdbeOp3(v, OP_OpenWrite, iCur+i+1, pIdx->tnum,
-                       (char*)&pIdx->keyInfo, P3_KEYINFO);
+                       (char*)pKey, P3_KEYINFO_HANDOFF);
         assert( pParse->nTab>iCur+i+1 );
       }
     }

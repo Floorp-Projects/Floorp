@@ -14,9 +14,10 @@
 ** Most of the code in this file may be omitted by defining the
 ** SQLITE_OMIT_VACUUM macro.
 **
-** $Id: vacuum.c,v 1.45 2005/06/07 09:21:07 danielk1977 Exp $
+** $Id: vacuum.c,v 1.58 2006/01/18 16:51:36 danielk1977 Exp $
 */
 #include "sqliteInt.h"
+#include "vdbeInt.h"
 #include "os.h"
 
 #ifndef SQLITE_OMIT_VACUUM
@@ -58,7 +59,7 @@ static int execExecSql(sqlite3 *db, const char *zSql){
   if( rc!=SQLITE_OK ) return rc;
 
   while( SQLITE_ROW==sqlite3_step(pStmt) ){
-    rc = execSql(db, sqlite3_column_text(pStmt, 0));
+    rc = execSql(db, (char*)sqlite3_column_text(pStmt, 0));
     if( rc!=SQLITE_OK ){
       sqlite3_finalize(pStmt);
       return rc;
@@ -100,11 +101,12 @@ int sqlite3RunVacuum(char **pzErrMsg, sqlite3 *db){
   Btree *pMain;           /* The database being vacuumed */
   Btree *pTemp;
   char *zSql = 0;
-  int writeschema_flag;   /* Saved value of the write-schema flag */
+  int saved_flags;       /* Saved value of the db->flags */
+  Db *pDb = 0;           /* Database to detach at end of vacuum */
 
   /* Save the current value of the write-schema flag before setting it. */
-  writeschema_flag = db->flags&SQLITE_WriteSchema;
-  db->flags |= SQLITE_WriteSchema;
+  saved_flags = db->flags;
+  db->flags |= SQLITE_WriteSchema | SQLITE_IgnoreChecks;
 
   if( !db->autoCommit ){
     sqlite3SetString(pzErrMsg, "cannot VACUUM from within a transaction", 
@@ -164,19 +166,23 @@ int sqlite3RunVacuum(char **pzErrMsg, sqlite3 *db){
   sqliteFree(zSql);
   zSql = 0;
   if( rc!=SQLITE_OK ) goto end_of_vacuum;
+  pDb = &db->aDb[db->nDb-1];
   assert( strcmp(db->aDb[db->nDb-1].zName,"vacuum_db")==0 );
   pTemp = db->aDb[db->nDb-1].pBt;
   sqlite3BtreeSetPageSize(pTemp, sqlite3BtreeGetPageSize(pMain),
      sqlite3BtreeGetReserve(pMain));
   assert( sqlite3BtreeGetPageSize(pTemp)==sqlite3BtreeGetPageSize(pMain) );
-  execSql(db, "PRAGMA vacuum_db.synchronous=OFF");
+  rc = execSql(db, "PRAGMA vacuum_db.synchronous=OFF");
+  if( rc!=SQLITE_OK ){
+    goto end_of_vacuum;
+  }
 
 #ifndef SQLITE_OMIT_AUTOVACUUM
   sqlite3BtreeSetAutoVacuum(pTemp, sqlite3BtreeGetAutoVacuum(pMain));
 #endif
 
   /* Begin a transaction */
-  rc = execSql(db, "BEGIN;");
+  rc = execSql(db, "BEGIN EXCLUSIVE;");
   if( rc!=SQLITE_OK ) goto end_of_vacuum;
 
   /* Query the schema of the main database. Create a mirror schema
@@ -247,7 +253,7 @@ int sqlite3RunVacuum(char **pzErrMsg, sqlite3 *db){
   ** opened for writing. This way, the SQL transaction used to create the
   ** temporary database never needs to be committed.
   */
-  if( sqlite3BtreeIsInTrans(pTemp) ){
+  if( rc==SQLITE_OK ){
     u32 meta;
     int i;
 
@@ -264,26 +270,27 @@ int sqlite3RunVacuum(char **pzErrMsg, sqlite3 *db){
        6, 0,    /* Preserve the user version */
     };
 
-    assert( 0==sqlite3BtreeIsInTrans(pMain) );
-    rc = sqlite3BtreeBeginTrans(pMain, 1);
-    if( rc!=SQLITE_OK ) goto end_of_vacuum;
+    assert( 1==sqlite3BtreeIsInTrans(pTemp) );
+    assert( 1==sqlite3BtreeIsInTrans(pMain) );
 
     /* Copy Btree meta values */
     for(i=0; i<sizeof(aCopy)/sizeof(aCopy[0]); i+=2){
       rc = sqlite3BtreeGetMeta(pMain, aCopy[i], &meta);
       if( rc!=SQLITE_OK ) goto end_of_vacuum;
       rc = sqlite3BtreeUpdateMeta(pTemp, aCopy[i], meta+aCopy[i+1]);
+      if( rc!=SQLITE_OK ) goto end_of_vacuum;
     }
 
     rc = sqlite3BtreeCopyFile(pMain, pTemp);
+    if( rc!=SQLITE_OK ) goto end_of_vacuum;
+    rc = sqlite3BtreeCommit(pTemp);
     if( rc!=SQLITE_OK ) goto end_of_vacuum;
     rc = sqlite3BtreeCommit(pMain);
   }
 
 end_of_vacuum:
-  /* Restore the original value of the write-schema flag. */
-  db->flags &= ~SQLITE_WriteSchema;
-  db->flags |= writeschema_flag;
+  /* Restore the original value of db->flags */
+  db->flags = saved_flags;
 
   /* Currently there is an SQL level transaction open on the vacuum
   ** database. No locks are held on any other files (since the main file
@@ -293,16 +300,28 @@ end_of_vacuum:
   ** is closed by the DETACH.
   */
   db->autoCommit = 1;
-  if( rc==SQLITE_OK ){
-    rc = execSql(db, "DETACH vacuum_db;");
-  }else{
-    execSql(db, "DETACH vacuum_db;");
+
+  if( pDb ){
+    sqlite3MallocDisallow();
+    sqlite3BtreeClose(pDb->pBt);
+    sqlite3MallocAllow();
+    pDb->pBt = 0;
+    pDb->pSchema = 0;
   }
+
+  /* If one of the execSql() calls above returned SQLITE_NOMEM, then the
+  ** mallocFailed flag will be clear (because execSql() calls sqlite3_exec()).
+  ** Fix this so the flag and return code match.
+  */
+  if( rc==SQLITE_NOMEM ){
+    sqlite3MallocFailed();
+  }
+
   if( zTemp ){
     sqlite3OsDelete(zTemp);
     sqliteFree(zTemp);
   }
-  if( zSql ) sqliteFree( zSql );
+  sqliteFree( zSql );
   sqlite3ResetInternalSchema(db, 0);
 #endif
 
