@@ -79,6 +79,10 @@ interface mozIStorageValueArray : nsISupports {
    * if the specific type matters, getTypeOfIndex should be used
    * first to identify the column type, and then the appropriate
    * get method should be called.
+   *
+   * If you ask for a string value for a NULL column, you will get an empty
+   * string with IsVoid set to distinguish it from an explicitly set empty
+   * string.
    */
   long getInt32(in unsigned long aIndex);
   long long getInt64(in unsigned long aIndex);
