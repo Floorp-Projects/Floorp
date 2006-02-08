@@ -563,12 +563,6 @@ EmbedPrivate::PushStartup(void)
     if (NS_FAILED(rv))
       return;
 
-    // we no longer need a reference to the DirectoryServiceProvider
-    if (sAppFileLocProvider) {
-      NS_RELEASE(sAppFileLocProvider);
-      sAppFileLocProvider = nsnull;
-    }
-
     if (sProfileDir)
       XRE_NotifyProfile();
 
@@ -601,6 +595,12 @@ EmbedPrivate::PopStartup(void)
 
     // destroy the offscreen window
     DestroyOffscreenWindow();
+
+    // we no longer need a reference to the DirectoryServiceProvider
+    if (sAppFileLocProvider) {
+      NS_RELEASE(sAppFileLocProvider);
+      sAppFileLocProvider = nsnull;
+    }
 
     if (sAppShell) {
       // Shutdown the appshell service.
