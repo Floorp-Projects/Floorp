@@ -483,7 +483,9 @@ nsLivemarkService::DeleteLivemarkChildren(PRInt64 aLivemarkFolderId)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 cc;
+  root->SetContainerOpen(PR_TRUE);
   rv = root->GetChildCount(&cc);
+  NS_ENSURE_SUCCESS(rv, rv);
   for (PRUint32 i = 0; i < cc; i++) {
     nsCOMPtr<nsINavHistoryResultNode> node;
     rv = root->GetChild(i, getter_AddRefs(node));
@@ -502,22 +504,6 @@ nsLivemarkService::DeleteLivemarkChildren(PRInt64 aLivemarkFolderId)
   // Get the folder children.
   rv = bookmarks->RemoveFolderChildren(aLivemarkFolderId);
   return rv;
-}
-
-nsresult
-nsLivemarkService::BeginUpdateBatch()
-{
-  nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-  return bookmarks->BeginUpdateBatch();
-}
-
-nsresult
-nsLivemarkService::EndUpdateBatch()
-{
-  nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-  return bookmarks->EndUpdateBatch();
 }
 
 nsresult

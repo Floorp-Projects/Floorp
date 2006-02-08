@@ -80,6 +80,7 @@
 #include "nsIFragmentContentSink.h"
 #include "nsIContentSink.h"
 #include "nsIDocument.h"
+#include "nsNavBookmarks.h"
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
@@ -219,6 +220,10 @@ nsLivemarkLoadListener::OnStopRequest(nsIRequest *aRequest,
     return NS_OK;
   }
 
+  // enclose all the changes (deletes and a bunch of adds) in a batch to
+  // avoid UI and DB updates
+  nsBookmarksUpdateBatcher bookmarksBatch;
+
   // Clear out any child nodes of the livemark folder, since
   // they're about to be replaced.
   rv = mLivemarkService->DeleteLivemarkChildren(mLivemark->folderId);
@@ -237,7 +242,6 @@ nsLivemarkLoadListener::OnStopRequest(nsIRequest *aRequest,
   //
 
   // Try parsing as RDF
-  mLivemarkService->BeginUpdateBatch();
   rv = TryParseAsRDF();
 
   // Try parsing as Atom/Simple RSS
@@ -249,7 +253,6 @@ nsLivemarkLoadListener::OnStopRequest(nsIRequest *aRequest,
   if (!NS_SUCCEEDED(rv)) {
     rv = mLivemarkService->InsertLivemarkFailedItem(mLivemark->folderId);
   }
-  mLivemarkService->EndUpdateBatch();
 
   // Set an expiration on the livemark, for reloading the data
   PRInt32 ttl;

@@ -65,14 +65,9 @@ nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 #define BOOKMARKS_ANNO_PREFIX "bookmarks/"
 #define ANNO_FOLDER_READONLY BOOKMARKS_ANNO_PREFIX "readonly"
 
-struct UpdateBatcher
-{
-  UpdateBatcher() { nsNavBookmarks::GetBookmarksService()->BeginUpdateBatch(); }
-  ~UpdateBatcher() { nsNavBookmarks::GetBookmarksService()->EndUpdateBatch(); }
-};
-
 nsNavBookmarks::nsNavBookmarks()
-  : mRoot(0), mBookmarksRoot(0), mToolbarRoot(0), mBatchLevel(0)
+  : mRoot(0), mBookmarksRoot(0), mToolbarRoot(0), mBatchLevel(0),
+    mBatchHasTransaction(PR_FALSE)
 {
   NS_ASSERTION(!sInstance, "Multiple nsNavBookmarks instances!");
   sInstance = this;
@@ -449,7 +444,7 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  UpdateBatcher batch;
+  nsBookmarksUpdateBatcher batch;
 
   for (PRUint32 j = 0; j < mObservers.Length(); ++j) {
     const nsCOMPtr<nsINavBookmarkObserver> &obs = mObservers[j];
@@ -1504,9 +1499,18 @@ NS_IMETHODIMP
 nsNavBookmarks::BeginUpdateBatch()
 {
   if (mBatchLevel++ == 0) {
+    mozIStorageConnection* conn = DBConn();
+    PRBool transactionInProgress = PR_TRUE; // default to no transaction on err
+    conn->GetTransactionInProgress(&transactionInProgress);
+    mBatchHasTransaction = ! transactionInProgress;
+    if (mBatchHasTransaction)
+      conn->BeginTransaction();
+
     ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                         OnBeginUpdateBatch())
   }
+  mozIStorageConnection *dbConn = DBConn();
+  mozStorageTransaction transaction(dbConn, PR_FALSE);
   return NS_OK;
 }
 
@@ -1514,6 +1518,9 @@ NS_IMETHODIMP
 nsNavBookmarks::EndUpdateBatch()
 {
   if (--mBatchLevel == 0) {
+    if (mBatchHasTransaction)
+      DBConn()->CommitTransaction();
+    mBatchHasTransaction = PR_FALSE;
     ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                         OnEndUpdateBatch())
   }
