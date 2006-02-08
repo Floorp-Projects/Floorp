@@ -13,8 +13,11 @@
 ** subsystem.  The page cache subsystem reads and writes a file a page
 ** at a time and provides a journal for rollback.
 **
-** @(#) $Id: pager.h,v 1.46 2005/09/19 19:05:21 drh Exp $
+** @(#) $Id: pager.h,v 1.48 2005/12/19 14:18:11 danielk1977 Exp $
 */
+
+#ifndef _PAGER_H_
+#define _PAGER_H_
 
 /*
 ** The default size of a database page.
@@ -105,6 +108,7 @@ int sqlite3pager_rename(Pager*, const char *zNewName);
 void sqlite3pager_set_codec(Pager*,void(*)(void*,void*,Pgno,int),void*);
 int sqlite3pager_movepage(Pager*,void*,Pgno);
 int sqlite3pager_reset(Pager*);
+int sqlite3pager_release_memory(int);
 
 #if defined(SQLITE_DEBUG) || defined(SQLITE_TEST)
 int sqlite3pager_lockstate(Pager*);
@@ -114,3 +118,5 @@ int sqlite3pager_lockstate(Pager*);
 void sqlite3pager_refdump(Pager*);
 int pager3_refinfo_enable;
 #endif
+
+#endif /* _PAGER_H_ */

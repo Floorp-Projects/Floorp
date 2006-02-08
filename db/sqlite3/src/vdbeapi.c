@@ -58,7 +58,7 @@ sqlite_int64 sqlite3_value_int64(sqlite3_value *pVal){
   return sqlite3VdbeIntValue((Mem*)pVal);
 }
 const unsigned char *sqlite3_value_text(sqlite3_value *pVal){
-  return (const char *)sqlite3ValueText(pVal, SQLITE_UTF8);
+  return (const unsigned char *)sqlite3ValueText(pVal, SQLITE_UTF8);
 }
 #ifndef SQLITE_OMIT_UTF16
 const void *sqlite3_value_text16(sqlite3_value* pVal){
@@ -95,10 +95,12 @@ void sqlite3_result_error(sqlite3_context *pCtx, const char *z, int n){
   pCtx->isError = 1;
   sqlite3VdbeMemSetStr(&pCtx->s, z, n, SQLITE_UTF8, SQLITE_TRANSIENT);
 }
+#ifndef SQLITE_OMIT_UTF16
 void sqlite3_result_error16(sqlite3_context *pCtx, const void *z, int n){
   pCtx->isError = 1;
   sqlite3VdbeMemSetStr(&pCtx->s, z, n, SQLITE_UTF16NATIVE, SQLITE_TRANSIENT);
 }
+#endif
 void sqlite3_result_int(sqlite3_context *pCtx, int iVal){
   sqlite3VdbeMemSetInt64(&pCtx->s, (i64)iVal);
 }
@@ -155,6 +157,9 @@ int sqlite3_step(sqlite3_stmt *pStmt){
   Vdbe *p = (Vdbe*)pStmt;
   sqlite3 *db;
   int rc;
+
+  /* Assert that malloc() has not failed */
+  assert( !sqlite3MallocFailed() );
 
   if( p==0 || p->magic!=VDBE_MAGIC_RUN ){
     return SQLITE_MISUSE;
@@ -238,7 +243,8 @@ int sqlite3_step(sqlite3_stmt *pStmt){
   }
 #endif
 
-  sqlite3Error(p->db, rc, p->zErrMsg ? "%s" : 0, p->zErrMsg);
+  sqlite3Error(p->db, rc, 0);
+  p->rc = sqlite3ApiExit(p->db, p->rc);
   return rc;
 }
 
@@ -375,30 +381,76 @@ static Mem *columnMem(sqlite3_stmt *pStmt, int i){
   return &pVm->pTos[(1-vals)+i];
 }
 
+/*
+** This function is called after invoking an sqlite3_value_XXX function on a 
+** column value (i.e. a value returned by evaluating an SQL expression in the
+** select list of a SELECT statement) that may cause a malloc() failure. If 
+** malloc() has failed, the threads mallocFailed flag is cleared and the result
+** code of statement pStmt set to SQLITE_NOMEM.
+**
+** Specificly, this is called from within:
+**
+**     sqlite3_column_int()
+**     sqlite3_column_int64()
+**     sqlite3_column_text()
+**     sqlite3_column_text16()
+**     sqlite3_column_real()
+**     sqlite3_column_bytes()
+**     sqlite3_column_bytes16()
+**
+** But not for sqlite3_column_blob(), which never calls malloc().
+*/
+static void columnMallocFailure(sqlite3_stmt *pStmt)
+{
+  /* If malloc() failed during an encoding conversion within an
+  ** sqlite3_column_XXX API, then set the return code of the statement to
+  ** SQLITE_NOMEM. The next call to _step() (if any) will return SQLITE_ERROR
+  ** and _finalize() will return NOMEM.
+  */
+  Vdbe *p = (Vdbe *)pStmt;
+  p->rc = sqlite3ApiExit(0, p->rc);
+}
+
 /**************************** sqlite3_column_  *******************************
 ** The following routines are used to access elements of the current row
 ** in the result set.
 */
 const void *sqlite3_column_blob(sqlite3_stmt *pStmt, int i){
-  return sqlite3_value_blob( columnMem(pStmt,i) );
+  const void *val;
+  sqlite3MallocDisallow();
+  val = sqlite3_value_blob( columnMem(pStmt,i) );
+  sqlite3MallocAllow();
+  return val;
 }
 int sqlite3_column_bytes(sqlite3_stmt *pStmt, int i){
-  return sqlite3_value_bytes( columnMem(pStmt,i) );
+  int val = sqlite3_value_bytes( columnMem(pStmt,i) );
+  columnMallocFailure(pStmt);
+  return val;
 }
 int sqlite3_column_bytes16(sqlite3_stmt *pStmt, int i){
-  return sqlite3_value_bytes16( columnMem(pStmt,i) );
+  int val = sqlite3_value_bytes16( columnMem(pStmt,i) );
+  columnMallocFailure(pStmt);
+  return val;
 }
 double sqlite3_column_double(sqlite3_stmt *pStmt, int i){
-  return sqlite3_value_double( columnMem(pStmt,i) );
+  double val = sqlite3_value_double( columnMem(pStmt,i) );
+  columnMallocFailure(pStmt);
+  return val;
 }
 int sqlite3_column_int(sqlite3_stmt *pStmt, int i){
-  return sqlite3_value_int( columnMem(pStmt,i) );
+  int val = sqlite3_value_int( columnMem(pStmt,i) );
+  columnMallocFailure(pStmt);
+  return val;
 }
 sqlite_int64 sqlite3_column_int64(sqlite3_stmt *pStmt, int i){
-  return sqlite3_value_int64( columnMem(pStmt,i) );
+  sqlite_int64 val = sqlite3_value_int64( columnMem(pStmt,i) );
+  columnMallocFailure(pStmt);
+  return val;
 }
 const unsigned char *sqlite3_column_text(sqlite3_stmt *pStmt, int i){
-  return sqlite3_value_text( columnMem(pStmt,i) );
+  const unsigned char *val = sqlite3_value_text( columnMem(pStmt,i) );
+  columnMallocFailure(pStmt);
+  return val;
 }
 #if 0
 sqlite3_value *sqlite3_column_value(sqlite3_stmt *pStmt, int i){
@@ -407,7 +459,9 @@ sqlite3_value *sqlite3_column_value(sqlite3_stmt *pStmt, int i){
 #endif
 #ifndef SQLITE_OMIT_UTF16
 const void *sqlite3_column_text16(sqlite3_stmt *pStmt, int i){
-  return sqlite3_value_text16( columnMem(pStmt,i) );
+  const void *val = sqlite3_value_text16( columnMem(pStmt,i) );
+  columnMallocFailure(pStmt);
+  return val;
 }
 #endif /* SQLITE_OMIT_UTF16 */
 int sqlite3_column_type(sqlite3_stmt *pStmt, int i){
@@ -436,6 +490,7 @@ static const void *columnName(
   const void *(*xFunc)(Mem*),
   int useType
 ){
+  const void *ret;
   Vdbe *p = (Vdbe *)pStmt;
   int n = sqlite3_column_count(pStmt);
 
@@ -443,9 +498,14 @@ static const void *columnName(
     return 0;
   }
   N += useType*n;
-  return xFunc(&p->aColName[N]);
-}
+  ret = xFunc(&p->aColName[N]);
 
+  /* A malloc may have failed inside of the xFunc() call. If this is the case,
+  ** clear the mallocFailed flag and return NULL.
+  */
+  sqlite3ApiExit(0, 0);
+  return ret;
+}
 
 /*
 ** Return the name of the Nth column of the result set returned by SQL
@@ -571,13 +631,12 @@ static int bindText(
   }
   pVar = &p->aVar[i-1];
   rc = sqlite3VdbeMemSetStr(pVar, zData, nData, encoding, xDel);
-  if( rc ){
-    return rc;
-  }
   if( rc==SQLITE_OK && encoding!=0 ){
-    rc = sqlite3VdbeChangeEncoding(pVar, p->db->enc);
+    rc = sqlite3VdbeChangeEncoding(pVar, ENC(p->db));
   }
-  return rc;
+
+  sqlite3Error(((Vdbe *)pStmt)->db, rc, 0);
+  return sqlite3ApiExit(((Vdbe *)pStmt)->db, rc);
 }
 
 
@@ -705,39 +764,6 @@ int sqlite3_bind_parameter_index(sqlite3_stmt *pStmt, const char *zName){
 }
 
 /*
-** Transfer all bindings from the first statement over to the second.
-** If the two statements contain a different number of bindings, then
-** an SQLITE_ERROR is returned.
-*/
-int sqlite3_transfer_bindings(sqlite3_stmt *pFromStmt, sqlite3_stmt *pToStmt){
-  Vdbe *pFrom = (Vdbe*)pFromStmt;
-  Vdbe *pTo = (Vdbe*)pToStmt;
-  int i, rc = SQLITE_OK;
-  if( (pFrom->magic!=VDBE_MAGIC_RUN && pFrom->magic!=VDBE_MAGIC_HALT)
-    || (pTo->magic!=VDBE_MAGIC_RUN && pTo->magic!=VDBE_MAGIC_HALT) ){
-    return SQLITE_MISUSE;
-  }
-  if( pFrom->nVar!=pTo->nVar ){
-    return SQLITE_ERROR;
-  }
-  for(i=0; rc==SQLITE_OK && i<pFrom->nVar; i++){
-    rc = sqlite3VdbeMemMove(&pTo->aVar[i], &pFrom->aVar[i]);
-  }
-  return rc;
-}
-
-/*
-** Return the sqlite3* database handle to which the prepared statement given
-** in the argument belongs.  This is the same database handle that was
-** the first argument to the sqlite3_prepare() that was used to create
-** the statement in the first place.
-*/
-sqlite3 *sqlite3_db_handle(sqlite3_stmt *pStmt){
-  return pStmt ? ((Vdbe*)pStmt)->db : 0;
-}
-
-/** experimental **/
-/*
 ** Given a wildcard parameter name, return the set of indexes of the
 ** variables with that name.  If there are no variables with the given
 ** name, return 0.  Otherwise, return the number of indexes returned
@@ -754,7 +780,7 @@ int sqlite3_bind_parameter_indexes(
   if( p==0 ){
     return 0;
   }
-  createVarMap(p); 
+  createVarMap(p);
   if( !zName )
     return 0;
   /* first count */
@@ -774,9 +800,43 @@ int sqlite3_bind_parameter_indexes(
   }
   *pIndexes = indexes;
   return nVars;
+} 
+  
+void sqlite3_free_parameter_indexes(int *pIndexes)
+{   
+  sqliteFree( pIndexes );
+} 
+
+/*
+** Transfer all bindings from the first statement over to the second.
+** If the two statements contain a different number of bindings, then
+** an SQLITE_ERROR is returned.
+*/
+int sqlite3_transfer_bindings(sqlite3_stmt *pFromStmt, sqlite3_stmt *pToStmt){
+  Vdbe *pFrom = (Vdbe*)pFromStmt;
+  Vdbe *pTo = (Vdbe*)pToStmt;
+  int i, rc = SQLITE_OK;
+  if( (pFrom->magic!=VDBE_MAGIC_RUN && pFrom->magic!=VDBE_MAGIC_HALT)
+    || (pTo->magic!=VDBE_MAGIC_RUN && pTo->magic!=VDBE_MAGIC_HALT) ){
+    return SQLITE_MISUSE;
+  }
+  if( pFrom->nVar!=pTo->nVar ){
+    return SQLITE_ERROR;
+  }
+  for(i=0; rc==SQLITE_OK && i<pFrom->nVar; i++){
+    sqlite3MallocDisallow();
+    rc = sqlite3VdbeMemMove(&pTo->aVar[i], &pFrom->aVar[i]);
+    sqlite3MallocAllow();
+  }
+  return rc;
 }
 
-void sqlite3_free_parameter_indexes(int *pIndexes)
-{
-  sqliteFree( pIndexes );
+/*
+** Return the sqlite3* database handle to which the prepared statement given
+** in the argument belongs.  This is the same database handle that was
+** the first argument to the sqlite3_prepare() that was used to create
+** the statement in the first place.
+*/
+sqlite3 *sqlite3_db_handle(sqlite3_stmt *pStmt){
+  return pStmt ? ((Vdbe*)pStmt)->db : 0;
 }

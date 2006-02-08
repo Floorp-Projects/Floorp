@@ -69,6 +69,7 @@ CSRCS = \
 	legacy.c \
 	main.c \
 	opcodes.c \
+	os.c \
 	os_unix.c \
 	os_win.c \
 	os_os2.c \

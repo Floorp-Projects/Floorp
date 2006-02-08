@@ -13,7 +13,7 @@
 ** This file contains functions used to access the internal hash tables
 ** of user defined functions and collation sequences.
 **
-** $Id: callback.c,v 1.2 2005/12/13 19:49:35 vladimir%pobox.com Exp $
+** $Id: callback.c,v 1.4 2006/02/22 20:47:51 brettw%gmail.com Exp $
 */
 
 #include "sqliteInt.h"
@@ -29,17 +29,19 @@ static void callCollNeeded(sqlite3 *db, const char *zName, int nName){
   if( db->xCollNeeded ){
     char *zExternal = sqliteStrNDup(zName, nName);
     if( !zExternal ) return;
-    db->xCollNeeded(db->pCollNeededArg, db, (int)db->enc, zExternal);
+    db->xCollNeeded(db->pCollNeededArg, db, (int)ENC(db), zExternal);
     sqliteFree(zExternal);
   }
 #ifndef SQLITE_OMIT_UTF16
   if( db->xCollNeeded16 ){
     char const *zExternal;
-    sqlite3_value *pTmp = sqlite3GetTransientValue(db);
-    sqlite3ValueSetStr(pTmp, -1, zName, SQLITE_UTF8, SQLITE_STATIC);
+    sqlite3_value *pTmp = sqlite3ValueNew();
+    sqlite3ValueSetStr(pTmp, nName, zName, SQLITE_UTF8, SQLITE_STATIC);
     zExternal = sqlite3ValueText(pTmp, SQLITE_UTF16NATIVE);
-    if( !zExternal ) return;
-    db->xCollNeeded16(db->pCollNeededArg, db, (int)db->enc, zExternal);
+    if( zExternal ){
+      db->xCollNeeded16(db->pCollNeededArg, db, (int)ENC(db), zExternal);
+    }
+    sqlite3ValueFree(pTmp);
   }
 #endif
 }
@@ -90,14 +92,14 @@ CollSeq *sqlite3GetCollSeq(
 
   p = pColl;
   if( !p ){
-    p = sqlite3FindCollSeq(db, db->enc, zName, nName, 0);
+    p = sqlite3FindCollSeq(db, ENC(db), zName, nName, 0);
   }
   if( !p || !p->xCmp ){
     /* No collation sequence of this type for this encoding is registered.
     ** Call the collation factory to see if it can supply us with one.
     */
     callCollNeeded(db, zName, nName);
-    p = sqlite3FindCollSeq(db, db->enc, zName, nName, 0);
+    p = sqlite3FindCollSeq(db, ENC(db), zName, nName, 0);
   }
   if( p && !p->xCmp && synthCollSeq(db, p) ){
     p = 0;
@@ -128,6 +130,7 @@ int sqlite3CheckCollSeq(Parse *pParse, CollSeq *pColl){
       pParse->nErr++;
       return SQLITE_ERROR;
     }
+    assert( p==pColl );
   }
   return SQLITE_OK;
 }
@@ -175,7 +178,8 @@ static CollSeq *findCollSeqEntry(
       ** return the pColl pointer to be deleted (because it wasn't added
       ** to the hash table).
       */
-      assert( !pDel || (sqlite3_malloc_failed && pDel==pColl) );
+      assert( !pDel ||
+              (sqlite3MallocFailed() && pDel==pColl) );
       sqliteFree(pDel);
     }
   }
@@ -197,7 +201,12 @@ CollSeq *sqlite3FindCollSeq(
   int nName,
   int create
 ){
-  CollSeq *pColl = findCollSeqEntry(db, zName, nName, create);
+  CollSeq *pColl;
+  if( zName ){
+    pColl = findCollSeqEntry(db, zName, nName, create);
+  }else{
+    pColl = db->pDfltColl;
+  }
   assert( SQLITE_UTF8==1 && SQLITE_UTF16LE==2 && SQLITE_UTF16BE==3 );
   assert( enc>=SQLITE_UTF8 && enc<=SQLITE_UTF16BE );
   if( pColl ) pColl += enc-1;
@@ -286,7 +295,7 @@ FuncDef *sqlite3FindFunction(
   ** new entry to the hash table and return it.
   */
   if( createFlag && bestmatch<6 && 
-      (pBest = sqliteMalloc(sizeof(*pBest)+nName)) ){
+      (pBest = sqliteMalloc(sizeof(*pBest)+nName))!=0 ){
     pBest->nArg = nArg;
     pBest->pNext = pFirst;
     pBest->iPrefEnc = enc;
