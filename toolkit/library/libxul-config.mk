@@ -50,6 +50,8 @@ CPPSRCS += \
 	nsDllMain.cpp \
 	$(NULL)
 
+RCINCLUDE = widget.rc
+
 ifndef MOZ_NATIVE_ZLIB
 CPPSRCS += dlldeps-zlib.cpp
 DEFINES += -DZLIB_INTERNAL
@@ -238,4 +240,3 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LIBS += macmorefiles_s
 EXTRA_DEPS += $(DIST)/lib/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX)
 endif
-

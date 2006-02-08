@@ -51,7 +51,11 @@ else
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
 
-LOCAL_INCLUDES += -I$(topsrcdir)/config
+# need widget/src/windows for resource.h (included from widget.rc)
+LOCAL_INCLUDES += \
+	-I$(topsrcdir)/config \
+	-I$(topsrcdir)/widget/src/windows \
+	$(NULL)
 
 OS_LIBS += $(LIBICONV)
 
@@ -77,7 +81,10 @@ ifneq (,$(MOZ_ENABLE_CANVAS)$(MOZ_SVG_RENDERER_CAIRO))
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
 endif
 
-export:: dlldeps.cpp dlldeps-obs.cpp
+export:: dlldeps.cpp dlldeps-obs.cpp widget.rc
+
+widget.rc: $(topsrcdir)/widget/src/build/widget.rc
+	$(INSTALL) $^ .
 
 dlldeps.cpp: $(topsrcdir)/xpcom/build/dlldeps.cpp
 	$(INSTALL) $^ .
