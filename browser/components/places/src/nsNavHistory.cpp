@@ -183,6 +183,7 @@ nsIAtom* nsNavHistory::sMenuRootAtom = nsnull;
 nsIAtom* nsNavHistory::sToolbarRootAtom = nsnull;
 nsIAtom* nsNavHistory::sSessionStartAtom = nsnull;
 nsIAtom* nsNavHistory::sSessionContinueAtom = nsnull;
+nsIAtom* nsNavHistory::sContainerAtom = nsnull;
 
 nsNavHistory* nsNavHistory::gHistoryService;
 
@@ -199,6 +200,7 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
   sToolbarRootAtom = NS_NewAtom("toolbar-root");
   sSessionStartAtom = NS_NewAtom("session-start");
   sSessionContinueAtom = NS_NewAtom("session-continue");
+  sContainerAtom = NS_NewAtom("container");
 }
 
 
@@ -219,6 +221,7 @@ nsNavHistory::~nsNavHistory()
   NS_IF_RELEASE(sToolbarRootAtom);
   NS_IF_RELEASE(sSessionStartAtom);
   NS_IF_RELEASE(sSessionContinueAtom);
+  NS_IF_RELEASE(sContainerAtom);
 }
 
 
@@ -433,6 +436,13 @@ nsNavHistory::InitDB()
       "LEFT OUTER JOIN moz_favicon f ON h.favicon = f.id "
       "WHERE h.url = ?1 "),
     getter_AddRefs(mDBGetURLPageInfoFull));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBGetIdPageInfo
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT h.id, h.url, h.title, h.user_title, h.rev_host, h.visit_count "
+      "FROM moz_history h WHERE h.id = ?1"),
+                                getter_AddRefs(mDBGetIdPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBGetIdPageInfoFull

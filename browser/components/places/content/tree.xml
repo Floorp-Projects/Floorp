@@ -433,16 +433,16 @@
         <parameter name="insertionPoint"/>
         <parameter name="excludeItems"/>
         <body><![CDATA[ 
-          var result = 
+          var folder = 
             PlacesController.getFolderContents(insertionPoint.folderId,
                                                excludeItems, false);
           var index = insertionPoint.index;
           if (insertionPoint.index == 0) 
             index = 0;
-          else if (insertionPoint.index == -1 || insertionPoint.index >= result.root.childCount)
-            index = result.root.childCount - 1;
-          ASSERT(index < result.childCount, "index out of range: " + index + " > " + result);
-          return index > -1 ? result.root.getChild(index) : null;
+          else if (insertionPoint.index == -1 || insertionPoint.index >= folder.childCount)
+            index = folder.childCount - 1;
+          ASSERT(index < folder.childCount, "index out of range: " + index + " > " + folder);
+          return index > -1 ? folder.getChild(index) : null;
         ]]></body>
       </method>
       

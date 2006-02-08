@@ -553,9 +553,8 @@ nsNavHistoryContainerResultNode::GetSortingComparator(PRUint32 aSortType)
 
 // nsNavHistoryContainerResultNode::RecursiveSort
 //
-//    This is used by Result::SortAll and it is static so it can also be used
-//    by nsNavHistory::GetQueryResults to sort node arrays without having a
-//    root container.
+//    This is used by Result::SortAll and QueryResultNode::FillChildren to sort
+//    the child list.
 //
 //    This does NOT update any visibility or tree information. The caller will
 //    have to completely rebuild the visible list after this.
@@ -2307,7 +2306,17 @@ nsNavHistoryQueryResultNode::OnFolderChanged(PRInt64 aFolder,
     return Refresh();
   return NS_OK;
 }
-
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::OnSeparatorAdded(PRInt64 aParent, PRInt32 aIndex)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::OnSeparatorRemoved(PRInt64 aParent,
+                                                PRInt32 aIndex)
+{
+  return NS_OK;
+}
 
 // nsNavHistoryFolderResultNode ************************************************
 //
@@ -2959,6 +2968,87 @@ nsNavHistoryFolderResultNode::OnFolderChanged(PRInt64 aFolder,
   return NS_OK;
 }
 
+// nsNavHistoryFolderResultNode::OnSeparatorAdded (nsINavBookmarkObserver)
+
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::OnSeparatorAdded(PRInt64 aParent, PRInt32 aIndex)
+{
+  NS_ASSERTION(aParent == mFolderId, "Got wrong bookmark update");
+  if (! StartIncrementalUpdate())
+    return NS_OK;
+
+  // We remove all separators if the folder view is sorted, so only
+  // bother updating if there is no sort in effect.
+  if (GetSortType() != nsINavHistoryQueryOptions::SORT_BY_NONE) {
+    return NS_OK;
+  }
+
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+
+  nsNavHistoryResultNode* node = new nsNavHistorySeparatorResultNode();
+  NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
+
+  return InsertChildAt(node, aIndex);
+}
+
+// nsNavHistoryFolderResultNode::OnSeparatorRemoved (nsINavBookmarkObserver)
+
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::OnSeparatorRemoved(PRInt64 aParent,
+                                                 PRInt32 aIndex)
+{
+  NS_ASSERTION(aParent == mFolderId, "Got wrong bookmark update");
+  if (! StartIncrementalUpdate())
+    return NS_OK;
+
+  // We remove all separators if the folder view is sorted, so only
+  // bother updating if there is no sort in effect.
+  if (GetSortType() != nsINavHistoryQueryOptions::SORT_BY_NONE) {
+    return NS_OK;
+  }
+
+  if (aIndex >= mChildren.Count()) {
+    NS_NOTREACHED("Removing separator at invalid index");
+    return NS_OK;
+  }
+
+  if (!mChildren[aIndex]->IsSeparator()) {
+    NS_NOTREACHED("OnSeparatorRemoved called for a non-separator node");
+    return NS_OK;
+  }
+
+  return RemoveChildAt(aIndex);
+}
+
+// nsNavHistoryFolderResultNode::RecursiveSort
+
+void
+nsNavHistoryFolderResultNode::RecursiveSort(
+    nsICollation* aCollation, SortComparator aComparator)
+{
+  if (GetSortType() != nsINavHistoryQueryOptions::SORT_BY_NONE) {
+    // We weren't sorted before, but now we are.
+    // Remove any separators so that they don't appear in the sorted list.
+
+    for (PRUint32 i = mChildren.Count() - 1; i != PRUint32(-1); --i) {
+      if (mChildren[i]->IsSeparator()) {
+        mChildren.RemoveObjectAt(i);
+      }
+    }
+  }
+
+  nsNavHistoryContainerResultNode::RecursiveSort(aCollation, aComparator);
+}
+
+// nsNavHistorySeparatorResultNode
+//
+// Separator nodes do not hold any data
+
+nsNavHistorySeparatorResultNode::nsNavHistorySeparatorResultNode()
+  : nsNavHistoryResultNode(EmptyCString(), 0, 0, EmptyCString())
+{
+}
 
 // nsNavHistoryResult **********************************************************
 
@@ -3788,9 +3878,16 @@ NS_IMETHODIMP nsNavHistoryResult::GetRowProperties(PRInt32 row,
   if (row < 0 || row >= PRInt32(mVisibleElements.Length()))
     return NS_ERROR_INVALID_ARG;
 
+  nsNavHistoryResultNode *node = mVisibleElements[row];
+
+  // Add the container property if it's applicable for this row.
+  if (node->IsContainer()) {
+    properties->AppendElement(nsNavHistory::sContainerAtom);
+  }
+
+  // Next handle properties for session information.
   if (! mShowSessions)
     return NS_OK; // don't need to bother to compute session boundaries
-  nsNavHistoryResultNode *node = mVisibleElements[row];
   if (! node->IsVisit())
     return NS_OK; // not a visit, so there are no sessions
 
@@ -3909,13 +4006,13 @@ NS_IMETHODIMP nsNavHistoryResult::IsContainerEmpty(PRInt32 row, PRBool *_retval)
 
 
 // nsNavHistoryResult::IsSeparator (nsITreeView)
-//
-//    We don't support separators
-//    FIXME: do bookmark separators
 
 NS_IMETHODIMP nsNavHistoryResult::IsSeparator(PRInt32 row, PRBool *_retval)
 {
-  *_retval = PR_FALSE;
+  if (row < 0 || row >= PRInt32(mVisibleElements.Length()))
+    return NS_ERROR_INVALID_ARG;
+
+  *_retval = mVisibleElements[row]->IsSeparator();
   return NS_OK;
 }
 
@@ -4022,7 +4119,9 @@ NS_IMETHODIMP nsNavHistoryResult::GetImageSrc(PRInt32 row, nsITreeColumn *col,
 
   // Containers may or may not have favicons. If not, we will return nothing
   // as the image, and the style rule should pick up the default.
-  if (node->IsContainer() && node->mFaviconURI.IsEmpty()) {
+  // Separator rows never have icons.
+  if (node->IsSeparator() ||
+      (node->IsContainer() && node->mFaviconURI.IsEmpty())) {
     _retval.Truncate(0);
     return NS_OK;
   }
@@ -4079,7 +4178,9 @@ NS_IMETHODIMP nsNavHistoryResult::GetCellText(PRInt32 row,
       // items in the tree view so return a special string if the title is
       // empty. Do it here so that callers can still get at the 0 length title
       // if they go through the "result" API.
-      if (! node->mTitle.IsEmpty()) {
+      if (node->IsSeparator()) {
+        _retval.Truncate(0);
+      } else if (! node->mTitle.IsEmpty()) {
         _retval = NS_ConvertUTF8toUTF16(node->mTitle);
       } else {
         nsXPIDLString value;
@@ -4114,7 +4215,11 @@ NS_IMETHODIMP nsNavHistoryResult::GetCellText(PRInt32 row,
     }
     case Column_VisitCount:
     {
-      _retval = NS_ConvertUTF8toUTF16(nsPrintfCString("%d", node->mAccessCount));
+      if (node->IsSeparator()) {
+        _retval.Truncate(0);
+      } else {
+        _retval = NS_ConvertUTF8toUTF16(nsPrintfCString("%d", node->mAccessCount));
+      }
       break;
     }
     default:
@@ -4702,6 +4807,30 @@ nsNavHistoryResult::OnFolderChanged(PRInt64 aFolder,
   ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aFolder,
       OnFolderChanged(aFolder, aProperty));
   ENUMERATE_HISTORY_OBSERVERS(OnFolderChanged(aFolder, aProperty));
+  return NS_OK;
+}
+
+
+// nsNavHistoryResult::OnSeparatorAdded (nsINavBookmarkObserver)
+
+NS_IMETHODIMP
+nsNavHistoryResult::OnSeparatorAdded(PRInt64 aParent, PRInt32 aIndex)
+{
+  // Separators only appear in folder nodes, so history observers don't care.
+  ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aParent,
+      OnSeparatorAdded(aParent, aIndex));
+  return NS_OK;
+}
+
+
+// nsNavHistoryResult::OnSeparatorRemoved (nsINavBookmarkObserver)
+
+NS_IMETHODIMP
+nsNavHistoryResult::OnSeparatorRemoved(PRInt64 aParent, PRInt32 aIndex)
+{
+  // Separators only appear in folder nodes, so history observers don't care.
+  ENUMERATE_BOOKMARK_OBSERVERS_FOR_FOLDER(aParent,
+      OnSeparatorRemoved(aParent, aIndex));
   return NS_OK;
 }
 
