@@ -44,6 +44,7 @@
 #include "nsIMsgImapMailFolder.h"
 #include "nsImapCore.h"
 #include "nsIMsgHdr.h"
+#include "nsIDBFolderInfo.h"
 
 nsMsgQuickSearchDBView::nsMsgQuickSearchDBView()
 {
@@ -150,6 +151,46 @@ NS_IMETHODIMP nsMsgQuickSearchDBView::OnHdrChange(nsIMsgDBHdr *aHdrChanged, PRUi
             nsMsgViewIndex deletedIndex = FindHdr(aHdrChanged);
             if (deletedIndex != nsMsgViewIndex_None)
               RemoveByIndex(deletedIndex);
+          }
+        }
+      }
+    }
+  }
+  else if (m_viewFolder && (aOldFlags & MSG_FLAG_READ) != (aNewFlags & MSG_FLAG_READ))
+  {
+    // if we're displaying a single folder virtual folder for an imap folder,
+    // the search criteria might be on message body, and we might not have the
+    // message body offline, in which case we can't tell if the message 
+    // matched or not. But if the unread flag changed, we need to update the
+    // unread counts. Normally, VirtualFolderChangeListener::OnHdrChange will
+    // handle this, but it won't work for body criteria when we don't have the
+    // body offline.
+    nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_viewFolder);
+    if (imapFolder)
+    {
+      nsMsgViewIndex hdrIndex = FindHdr(aHdrChanged);
+      if (hdrIndex != nsMsgViewIndex_None)
+      {
+        nsCOMPtr <nsIMsgSearchSession> searchSession = do_QueryReferent(m_searchSession);
+        if (searchSession)
+        {
+          PRBool oldMatch, newMatch;
+          rv = searchSession->MatchHdr(aHdrChanged, m_db, &newMatch);
+          aHdrChanged->SetFlags(aOldFlags);
+          rv = searchSession->MatchHdr(aHdrChanged, m_db, &oldMatch);
+          aHdrChanged->SetFlags(aNewFlags); 
+          // if it doesn't match the criteria, VirtualFolderChangeListener::OnHdrChange
+          // won't tweak the read/unread counts. So do it here:
+          if (!oldMatch && !newMatch)
+          {
+            nsCOMPtr <nsIMsgDatabase> virtDatabase;
+            nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+
+            rv = m_viewFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(virtDatabase));
+            NS_ENSURE_SUCCESS(rv, rv);
+            dbFolderInfo->ChangeNumUnreadMessages((aOldFlags & MSG_FLAG_READ) ? 1 : -1);
+            m_viewFolder->UpdateSummaryTotals(PR_TRUE); // force update from db.
+            virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
           }
         }
       }
