@@ -545,7 +545,7 @@ var PlacesController = {
    */
   onCommandUpdate: function PC_onCommandUpdate() {
     if (!this._activeView) {
-      // Initial command update, no view yet. 
+      // Initial update, no view is set yet
       return;
     }
 
@@ -576,8 +576,12 @@ var PlacesController = {
       this.nodeIsFolder(this._activeView.selectedNode);
     this._setEnabled("placesCmd_open:tabs", 
       singleFolderSelected || !hasSingleSelection);
-      
-    var viewIsFolder = this.nodeIsFolder(this._activeView.getResult().root);
+    
+    // Some views, like menupopups, destroy their result as they hide, but they
+    // are still the "last-active" view. Don't barf. 
+    var result = this._activeView.getResult();
+    var viewIsFolder = result ? this.nodeIsFolder(result.root) : false;
+
     // Persistent Sort
     this._setEnabled("placesCmd_sortby:name", viewIsFolder);
     // New Folder
@@ -1410,6 +1414,8 @@ var PlacesControllerDragHelper = {
    *          The number of visible items to be inserted. This can be zero
    *          even when items are dropped because this is how many items will
    *          be _visible_ in the resulting tree. 
+   *          XXXben this parameter appears to be unused! check call sites.
+   *                 check d&d feedback.
    */
   onDrop: function PCDH_onDrop(sourceView, targetView, insertionPoint, 
                                visibleInsertCount) {
