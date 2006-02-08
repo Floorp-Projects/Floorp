@@ -74,6 +74,7 @@
 #endif
 
 static char _progname[1024] = "huh?";
+static unsigned int _gdb_sleep_duration = 300;
 
 #if defined(LINUX) && defined(DEBUG) && (defined(__i386) || defined(PPC))
 #define CRAWL_STACK_ON_SIGSEGV
@@ -94,11 +95,11 @@ void abnormal_exit_handler(int signum)
     printf("prog = %s\npid = %d\nsignal = %s\n", 
            _progname, getpid(), strsignal(signum));
 
-    printf("Sleeping for 5 minutes.\n");
+    printf("Sleeping for %d seconds.\n",_gdb_sleep_duration);
     printf("Type 'gdb %s %d' to attach your debugger to this thread.\n",
            _progname, getpid());
 
-    sleep(300);
+    sleep(_gdb_sleep_duration);
 
     printf("Done sleeping...\n");
   }
@@ -123,12 +124,12 @@ ah_crap_handler(int signum)
   printf("Stack:\n");
   DumpStackToFile(stdout);
 
-  printf("Sleeping for 5 minutes.\n");
+  printf("Sleeping for %d seconds.\n",_gdb_sleep_duration);
   printf("Type 'gdb %s %d' to attach your debugger to this thread.\n",
          _progname,
          getpid());
 
-  sleep(300);
+  sleep(_gdb_sleep_duration);
 
   printf("Done sleeping...\n");
 }
@@ -157,6 +158,15 @@ void beos_signal_handler(int signum) {
 void InstallUnixSignalHandlers(const char *ProgramName)
 {
   PL_strncpy(_progname,ProgramName, (sizeof(_progname)-1) );
+
+  const char *gdbSleep = PR_GetEnv("MOZ_GDB_SLEEP");
+  if (gdbSleep && *gdbSleep)
+  {
+    unsigned int s;
+    if (1 == sscanf(gdbSleep, "%u", &s)) {
+      _gdb_sleep_duration = s;
+    }
+  }
 
 #if defined(MOZ_WIDGET_PHOTON)
  /* Neutrino need this to free shared memory in case of a crash */
