@@ -37,7 +37,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.20 2004/04/25 15:03:15 gerv%gerv.net Exp $
+ * $Id: cms.h,v 1.21 2006/02/08 06:13:43 rrelyea%redhat.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -409,13 +409,6 @@ NSS_CMSAlgArray_GetIndexByAlgTag(SECAlgorithmID **algorithmArray, SECOidTag algt
 
 extern const SECHashObject *
 NSS_CMSUtil_GetHashObjByAlgID(SECAlgorithmID *algid);
-
-/*
- * XXX I would *really* like to not have to do this, but the current
- * signing interface gives me little choice.
- */
-extern SECOidTag
-NSS_CMSUtil_MakeSignatureAlgorithm(SECOidTag hashalg, SECOidTag encalg);
 
 extern const SEC_ASN1Template *
 NSS_CMSUtil_GetTemplateByTypeTag(SECOidTag type);

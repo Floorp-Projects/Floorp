@@ -414,14 +414,9 @@ createNewCert(CERTCertificate**issuedCert,CERTCertificateRequest *oldCertReq,
   if (issuerPrivKey == NULL) {
     rv = COULD_NOT_FIND_ISSUER_PRIVATE_KEY;
   }
-  switch(issuerPrivKey->keyType) {
-  case rsaKey:
-    signTag = SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
-    break;
-  case dsaKey:
-    signTag = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
-    break;
-  default:
+  signTag = SEC_GetSignatureAlgorithmOidTag(issuerPrivatekey->keytype, 
+					    SEC_OID_UNKNOWN);
+  if (signTag == SEC_OID_UNKNOWN) {
     rv = UNSUPPORTED_SIGN_OPERATION_FOR_ISSUER;
     goto loser;
   }
@@ -644,8 +639,8 @@ verifySignature(CGIVarTable *varTable, CRMFCertReqMsg *currReq,
     rv = ERROR_ENCODING_CERT_REQ_FOR_POP;
     goto loser;
   }
-  srv = VFY_VerifyData(reqDER->data, reqDER->len, pubKey, signature,
-		       SECOID_FindOIDTag(&algID->algorithm), varTable);
+  srv = VFY_VerifyDataWithAlgorithmID(reqDER->data, reqDER->len, pubKey, 
+			signature, &algID->algorithm, NULL, varTable);
   if (srv != SECSuccess) {
     rv = ERROR_VERIFYING_SIGNATURE_POP;
     goto loser;

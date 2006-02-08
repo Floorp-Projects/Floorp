@@ -40,7 +40,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.19 2005/03/07 18:34:48 wtchang%redhat.com Exp $
+ * $Id: secoidt.h,v 1.20 2006/02/08 06:14:31 rrelyea%redhat.com Exp $
  */
 
 #include "secitem.h"
@@ -314,7 +314,10 @@ typedef enum {
 
     /* Elliptic Curve Cryptography (ECC) OIDs */
     SEC_OID_ANSIX962_EC_PUBLIC_KEY  = 200,
-    SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST = 201,
+    SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE = 201,
+
+#define SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST \
+	SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE
 
     /* ANSI X9.62 named elliptic curves (prime field) */
     SEC_OID_ANSIX962_EC_PRIME192V1  = 202,
@@ -403,6 +406,13 @@ typedef enum {
     SEC_OID_PKIX_CA_ISSUERS          = 273,
     SEC_OID_PKCS9_EXTENSION_REQUEST  = 274,
 
+    /* new EC Signature oids */
+    SEC_OID_ANSIX962_ECDSA_SIGNATURE_RECOMMENDED_DIGEST = 275,
+    SEC_OID_ANSIX962_ECDSA_SIGNATURE_SPECIFIED_DIGEST = 276,
+    SEC_OID_ANSIX962_ECDSA_SHA224_SIGNATURE = 277,
+    SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE = 278,
+    SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE = 279,
+    SEC_OID_ANSIX962_ECDSA_SHA512_SIGNATURE = 280,
     SEC_OID_TOTAL
 } SECOidTag;
 

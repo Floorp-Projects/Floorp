@@ -455,18 +455,10 @@ sign_cert(CERTCertificate *cert, SECKEYPrivateKey *privk)
     void	*dummy;
     SECOidTag alg = SEC_OID_UNKNOWN;
 
-    switch (privk->keyType) {
-    case rsaKey:
-	alg = SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
-	break;
-
-    case dsaKey:
-	alg = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
-	break;
-    default:
+    alg = SEC_GetSignatureAlgorithmOidTag(privk->keyType, SEC_OID_UNKNOWN);
+    if (alg == SEC_OID_UNKNOWN) {
 	FatalError("Unknown key type");
     }
-    PORT_Assert(alg != SEC_OID_UNKNOWN);
 
     rv = SECOID_SetAlgorithmID (cert->arena, &cert->signature, alg, 0);
 

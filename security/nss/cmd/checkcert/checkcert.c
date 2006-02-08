@@ -146,48 +146,6 @@ void checkName(CERTName *n, char *fieldName, int verbose)
 }
 
 
-
-
-/*
- * Private version of verification that checks for agreement between
- * signature algorithm oid (at the SignedData level) and oid in DigestInfo.
- *
- */
-
-
-/* Returns the tag for the hash algorithm in the given signature algorithm */
-     static
-     int hashAlg(int sigAlgTag) {
-	 int rv;
-	 switch(sigAlgTag) {
-	   case SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION:
-	     rv = SEC_OID_MD2;
-	     break;
-	   case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
-	     rv = SEC_OID_MD5;
-	     break;
-	   case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
-	     rv = SEC_OID_SHA1;
-	     break;
-	   default:
-	     rv = -1;
-	 }
-	 return rv;
-     }
-
-
-
-struct VFYContextStr {
-    int alg;
-    unsigned char digest[32];
-    void *hasher;
-    void (*begin)(void *);
-    void (*update)(void *, unsigned char*, unsigned);
-    SECStatus (*end)(void *, unsigned char*, unsigned int*, unsigned);
-    void (*destroy)(void *, PRBool);
-};
-
-
 static
 SECStatus
 OurVerifyData(unsigned char *buf, int len, SECKEYPublicKey *key,
@@ -200,8 +158,8 @@ OurVerifyData(unsigned char *buf, int len, SECKEYPublicKey *key,
     int hashAlgTag;
     int showDigestOid=0;
 
-    cx = VFY_CreateContext(key, sig, SECOID_GetAlgorithmTag(sigAlgorithm),
-			   NULL);
+    cx = VFY_CreateContextWithAlgorithmID(key, sig, sigAlgorithm, &hashAlgTag, 
+                                          NULL);
     if (cx == NULL)
 	return SECFailure;
 
@@ -210,18 +168,9 @@ OurVerifyData(unsigned char *buf, int len, SECKEYPublicKey *key,
 	return SECFailure;
     sigAlgTag = sigAlgOid->offset;
 
-    hashAlgTag = hashAlg(sigAlgTag);
-    if (hashAlgTag == -1) {
-	printf("PROBLEM: Unsupported Digest Algorithm in DigestInfo");
-	showDigestOid = 1;
-    } else if (hashAlgTag != cx->alg) {
-	printf("PROBLEM: Digest OID in DigestInfo is incompatible "
-	       "with Signature Algorithm\n");
-	showDigestOid = 1;
-    } 
 
     if (showDigestOid) {
-	oiddata = SECOID_FindOIDByTag(cx->alg);
+	oiddata = SECOID_FindOIDByTag(hashAlgTag);
 	if ( oiddata ) {
 	    printf("PROBLEM: (cont) Digest OID is %s\n", oiddata->desc);
 	} else {

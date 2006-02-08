@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.22 2006/02/03 18:13:04 kaie%kuix.de Exp $
+ * $Id: ocsp.c,v 1.23 2006/02/08 06:13:57 rrelyea%redhat.com Exp $
  */
 
 #include "prerror.h"
@@ -2678,10 +2678,9 @@ ocsp_CheckSignature(ocspSignature *signature, void *tbs,
      */
     DER_ConvertBitString(&rawSignature);
 
-    rv = VFY_VerifyData(encodedTBS->data, encodedTBS->len, signerKey,
-			&rawSignature,
-			SECOID_GetAlgorithmTag(&signature->signatureAlgorithm),
-			pwArg);
+    rv = VFY_VerifyDataWithAlgorithmID(encodedTBS->data, encodedTBS->len, 
+			signerKey, &rawSignature,
+			&signature->signatureAlgorithm, NULL, pwArg);
 
 finish:
     if (signature->wasChecked)

@@ -2153,17 +2153,11 @@ SignCert(CERTCertificate   *cert,
 	
     arena = cert->arena;
 
-    switch(caPrivateKey->keyType) {
-      case rsaKey:
-	algID = SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
-	break;
-      case dsaKey:
-	algID = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
-	break;
-      default:
+    algID = SEC_GetSignatureAlgorithmOidTag(caPrivateKey->keyType,
+					    SEC_OID_UNKNOWN);
+    if (algID == SEC_OID_UNKNOWN) {
 	error_out("ERROR: Unknown key type for issuer.");
 	goto done;
-	break;
     }
 
     rv = SECOID_SetAlgorithmID(arena, &cert->signature, algID, 0);
