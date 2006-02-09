@@ -42,6 +42,7 @@ var PlacesBrowserShim = {
   _ios: null,  // IO Service, useful for making nsIURI objects
   _currentURI: null, // URI of the bookmark being modified
   _strings: null, // Localization string bundle
+  _assignableFolderResult: null, // root of user-writable folders
   MAX_INDENT_DEPTH: 6, // maximum indentation level of "tag" display
 
   init: function PBS_init() {
@@ -79,6 +80,8 @@ var PlacesBrowserShim = {
     newMenuPopup._result = result;
     newMenuPopup._resultNode = result.root;
 
+    this._initAssignableFolderResult();
+
     this._registerEventHandlers();
 
     window.controllers.appendController(PlacesController);
@@ -87,6 +90,22 @@ var PlacesBrowserShim = {
     PlacesController.tm = PlacesTransactionManager;
   },
 
+  /**
+   * This method creates a query for the set of assignable folders.
+   * This only needs to be created once; when closed (using
+   * root.containerOpen = false) and reopened, the results will be regenerated
+   * if the data has changed since the close.
+   */
+
+  _initAssignableFolderResult: function PBS__initAssignableFolderRoot() {
+    var query = this._hist.getNewQuery();
+    query.setFolders([this._bms.placesRoot], 1);
+    var options = this._hist.getNewQueryOptions();
+    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+    options.excludeItems = true;
+
+    this._assignableFolderResult = this._hist.executeQuery(query, options);
+  },
 
   addBookmark: function PBS_addBookmark() {
     var selectedBrowser = getBrowser().selectedBrowser;
@@ -234,14 +253,6 @@ var PlacesBrowserShim = {
     var title = this._bms.getItemTitle(this._makeURI(urlbar.value));
     titlebox.value = title;
 
-    var query = this._hist.getNewQuery();
-    query.setFolders([this._bms.placesRoot], 1);
-    var options = this._hist.getNewQueryOptions();
-    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-    options.excludeItems = true;
-
-    this._result = this._hist.executeQuery(query, options);
-
     var tagArea = document.getElementById("tagbox");
 
     while (tagArea.hasChildNodes()) {
@@ -250,7 +261,7 @@ var PlacesBrowserShim = {
 
     var elementDict = {};
 
-    var root = this._result.root; // Note that root is always a container.
+    var root = this._assignableFolderResult.root; //Root is always a container.
     root.containerOpen = true;
     this._populateTags(root, 0, tagArea, elementDict);
     root.containerOpen = false;
