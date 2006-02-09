@@ -607,13 +607,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 
   // damageRect is the clipped damage area bounds, in twips-relative-to-view-origin
   nsRect damageRect = damageRegion.GetBounds();
-  // widgetDamageRectInPixels is the clipped damage area bounds,
-  // in pixels-relative-to-widget-origin
-  nsRect widgetDamageRectInPixels = damageRect;
-  widgetDamageRectInPixels.MoveBy(-viewRect.x, -viewRect.y);
-  float t2p;
-  t2p = mContext->AppUnitsToDevUnits();
-  widgetDamageRectInPixels.ScaleRoundOut(t2p);
+  float t2p = mContext->AppUnitsToDevUnits();
 
 #ifdef MOZ_CAIRO_GFX
   nsRefPtr<gfxContext> ctx = (gfxContext*) localcx->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
@@ -621,7 +615,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 
   ctx->Save();
 
-  ctx->Translate(gfxPoint(viewRect.x * t2p, viewRect.y * t2p));
+  ctx->Translate(gfxPoint(NSToIntRound(viewRect.x * t2p), NSToIntRound(viewRect.y * t2p)));
   ctx->NewPath();
 
   if (aRegion) {
@@ -636,7 +630,10 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     aRegion->FreeRects(rs);
   }
 
-  ctx->Rectangle(gfxRect(damageRect.x * t2p, damageRect.y * t2p, damageRect.width * t2p, damageRect.height * t2p));
+  ctx->Rectangle(gfxRect(NSToIntRound(damageRect.x * t2p),
+                         NSToIntRound(damageRect.y * t2p),
+                         NSToIntRound(damageRect.width * t2p),
+                         NSToIntRound(damageRect.height * t2p)));
   ctx->Clip();
 
   if (usingDoubleBuffer)
@@ -656,6 +653,12 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 
   ctx->Restore();
 #else
+  // widgetDamageRectInPixels is the clipped damage area bounds,
+  // in pixels-relative-to-widget-origin
+  nsRect widgetDamageRectInPixels = damageRect;
+  widgetDamageRectInPixels.MoveBy(-viewRect.x, -viewRect.y);
+  widgetDamageRectInPixels.ScaleRoundOut(t2p);
+
   // On the Mac, we normally turn doublebuffering off because Quartz is
   // doublebuffering for us. But we need to turn it on anyway if we need
   // to use our blender, which requires access to the "current pixel values"
