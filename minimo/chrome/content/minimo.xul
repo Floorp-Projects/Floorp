@@ -72,6 +72,10 @@
   <script type="application/x-javascript" src="chrome://minimo/content/rssview/rssload.js"/>
   <script type="application/x-javascript" src="chrome://minimo/content/bookmarks/bmview.js"/>
   
+  <stringbundleset id="stringbundleset"> 
+    <stringbundle id="minimo_properties" src="chrome://minimo/locale/minimo.properties"/>
+  </stringbundleset>
+
   <popupset id="mainPopupSet">
     <popup type="autocomplete" id="PopupAutoComplete"/>
   </popupset>
