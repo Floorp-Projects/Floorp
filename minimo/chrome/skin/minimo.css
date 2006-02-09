@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* This CSS rule has to be here because code is accessing styleSheets[1].rules[0]! */ 
-
 /* 	background-position:0px 100%; */
 
 #urlbar input {
@@ -47,7 +45,17 @@
  	border:1px solid black;
 }
 
-/* This CSS rule has to be here because JS code shall access it via */
+/* This should be placed in with Toolbars section */ 
+
+#toolbar-download-tag input {
+	background-repeat:no-repeat;
+	background-image:url(chrome://minimo/skin/transfer.jpg);
+	padding:0px;
+	margin:0px;
+ 	border:1px solid black;
+}
+
+/* This CSS rule has to be here because JS code shall access it via DOM StyleSheet */
 
 toolbar *, #appcontent *, * {
   font-size: 10px;
