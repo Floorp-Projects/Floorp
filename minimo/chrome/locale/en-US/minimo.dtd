@@ -73,5 +73,5 @@
 
 <!-- toolbar download -->
 <!ENTITY downloadText.label          "Download Viewer " >
-<!ENTITY downloadCancelText.label    "Cancel Download" >
+<!ENTITY downloadCancelText.label    "Cancel" >
 
