@@ -244,12 +244,8 @@ nsTextBoxFrame::UpdateAttributes(nsPresContext*  aPresContext,
     }
 
     if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::value) {
-        nsAutoString value;
-        mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value);
-        if (!value.Equals(mTitle)) {
-            mTitle = value;
-            doUpdateTitle = PR_TRUE;
-        }
+        mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, mTitle);
+        doUpdateTitle = PR_TRUE;
     }
 
     if (aAttribute == nsnull || aAttribute == nsXULAtoms::accesskey) {
@@ -264,9 +260,7 @@ nsTextBoxFrame::UpdateAttributes(nsPresContext*  aPresContext,
         if (!accesskey.Equals(mAccessKey)) {
             if (!doUpdateTitle) {
                 // Need to get clean mTitle and didn't already
-                nsAutoString value;
-                mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value);
-                mTitle = value;
+                mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, mTitle);
                 doUpdateTitle = PR_TRUE;
             }
             mAccessKey = accesskey;
