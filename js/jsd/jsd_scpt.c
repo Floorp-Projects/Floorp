@@ -498,8 +498,11 @@ jsd_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc)
 {
     uintN first = jsdscript->lineBase;
     uintN last = first + jsd_GetScriptLineExtent(jsdc, jsdscript) - 1;
-    uintN line = JS_PCToLineNumber(jsdc->dumbContext, 
-                                     jsdscript->script, (jsbytecode*)pc);
+    uintN line = pc
+        ? JS_PCToLineNumber(jsdc->dumbContext, 
+                            jsdscript->script,
+                            (jsbytecode*)pc)
+        : 0;
 
     if( line < first )
         return first;
