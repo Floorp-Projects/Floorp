@@ -129,7 +129,10 @@ public:
   inline void SetSpaceWidth(nscoord aSpaceWidth) { mSpaceWidth = aSpaceWidth; };
 
   inline nsDeviceContextPS* GetDeviceContext() { return mDeviceContext; }
-  inline nsVoidArray* GetFontsPS() { return mFontsPS; };
+  inline nsVoidArray* GetFontsPS() {
+    NS_ASSERTION(mFontsPS, "kherron says this shouldn't happen, see bug 324929");
+    return mFontsPS;
+  };
   inline nsHashtable *GetFontsAlreadyLoadedList() {return mFontsAlreadyLoaded;};
   inline int GetFontPSState() { return mFontPSState; };
   inline void IncrementFontPSState() { mFontPSState++; };
