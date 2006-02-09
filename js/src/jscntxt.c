@@ -153,6 +153,9 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
      * as well as "first".
      */
     if (first) {
+#ifdef JS_THREADSAFE
+        JS_BeginRequest(cx);
+#endif
         /*
          * Both atomState and the scriptFilenameTable may be left over from a
          * previous episode of non-zero contexts alive in rt, so don't re-init
@@ -173,6 +176,9 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
             js_DestroyContext(cx, JS_NO_GC);
             return NULL;
         }
+#ifdef JS_THREADSAFE
+        JS_EndRequest(cx);
+#endif
 
         JS_LOCK_GC(rt);
         rt->state = JSRTS_UP;
