@@ -53,8 +53,12 @@
       <command id="placesCmd_groupby:page" 
                label="&cmd.groupby_page.label;" accesskey="&cmd.groupby_page.accesskey;"
                oncommand="PlacesController.groupByPage();"/>
-      <command id="placesCmd_groupby:feed" label="&cmd.groupby_feed.label;" accesskey="&cmd.groupby_feed.accesskey;"/>
-      <command id="placesCmd_groupby:post" label="&cmd.groupby_post.label;" accesskey="&cmd.groupby_post.accesskey;"/>
+      <command id="placesCmd_groupby:feed" 
+               label="&cmd.groupby_feed.label;" accesskey="&cmd.groupby_feed.accesskey;"
+               oncommand="PlacesPage.groupByFeed();"/>
+      <command id="placesCmd_groupby:post" 
+               label="&cmd.groupby_post.label;" accesskey="&cmd.groupby_post.accesskey;"
+               oncommand="PlacesPage.groupByPost();"/>
     </commandset>
     <commandset type="container">
       <command id="placesCmd_sortby:name" label="&cmd.sortby_name.label;" accesskey="&cmd.sortby_name.accesskey;"/>

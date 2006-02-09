@@ -66,7 +66,7 @@
       <vbox id="placesListContainer" flex="1">
         <tree id="placesList" class="placesTree" flex="1" type="places" 
               hidecolumnpicker="true" context="placesContext"
-              onselect="PlacesPage.placeSelected(event);"
+              onselect="PlacesPage.onPlaceSelected(event);"
               seltype="single">
           <treecols>
             <treecol id="title" flex="1" primary="true" hideheader="true"/>
@@ -297,13 +297,11 @@
             <button id="saveSearch_history" command="placesCmd_saveSearch" hidden="true"/>
           </hbox>
           <hbox class="commands" id="commands_feed" flex="1">
-            <button id="subscribe" command="placesCmd_new:folder"/>
-            <separator/>
             <button id="groupOption0" class="commandGroupButton first" 
-                    view="placeContent" command="placesCmd_groupby:site"/>
+                    view="placeContent" command="placesCmd_groupby:feed"/>
             <spacer class="groupSpacer"/>
             <button id="groupOption1" class="commandGroupButton last" 
-                    view="placeContent" command="placesCmd_groupby:page"/>
+                    view="placeContent" command="placesCmd_groupby:post"/>
             <spacer flex="1"/>
             <button id="saveSearch_feed" command="placesCmd_saveSearch" hidden="true"/>
           </hbox>

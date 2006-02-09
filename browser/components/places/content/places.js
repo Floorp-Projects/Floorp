@@ -352,32 +352,40 @@ var PlacesPage = {
   /**
    * Called when a place folder is selected in the left pane.
    */
-  placeSelected: function PP_placeSelected(event) {
-    var node = this._places.selectedNode;
-    if (!node || this._places.suppressSelection)
+  onPlaceSelected: function PP_onPlaceSelected(event) {
+    var node = asQuery(this._places.selectedNode);
+    if (!node)
       return;
-    if (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER)
-      node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
-    else if (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
-      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-    else
-      return; // should not get here
-    var queries = node.getQueries({});
-    var newQueries = [];
-    for (var i = 0; i < queries.length; ++i) {
-      var query = queries[i].clone();
-      newQueries.push(query);
-    }
-    var newOptions = node.queryOptions.clone();
-
-    var isBookmark = PlacesController.nodeIsFolder(node);
-    if (isBookmark)
-      groupings = PlacesController.groupers.bookmark.value;
-
-    this._content.load(newQueries, newOptions);
+      
+    var sortingMode = node.queryOptions.sortingMode;    
+    var groupings = PlacesController.groupers.generic;
+    if (PlacesController.nodeIsFolder(node)) 
+      groupings = PlacesController.groupers.bookmark;
+    PlacesController.loadNodeIntoView(this._content, node, groupings, 
+                                      sortingMode);
 
     this._setHeader("showing", node.title);
   },
+
+  /**
+   * Shows all subscribed feeds (Live Bookmarks) grouped under their parent 
+   * feed.
+   */
+  groupByFeed: function PP_groupByFeed() {
+    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER];
+    var sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
+    PlacesController.groupByAnnotation("livemark/feedURI", [], 0);
+  },
+  
+  /**
+   * Shows all subscribed feed (Live Bookmarks) content in a flat list
+   */
+  groupByPost: function PP_groupByPost() {
+    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER];
+    var sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
+    PlacesController.groupByAnnotation("livemark/bookmarkFeedURI", [], 0);
+  },
+  
   
   /**
    * Updates the calendar widget to show the range of dates selected in the
@@ -455,13 +463,15 @@ var PlacesPage = {
    */
   onContentChanged: function PP_onContentChanged() {
     var panelID = "commands_history";
-    var filterButtonID = "filterList_history";
+    
     var isBookmarks = this._content.isBookmarks;
-    if (isBookmarks) {
-      // if (query.annotation == "feed") {
+    var node = asQuery(this._content.getResult().root);
+    var queries = node.getQueries({});
+    if (queries[0].annotation.indexOf("livemark/") > -1)
+      panelID = "commands_feed";
+    else if (isBookmarks)
       panelID = "commands_bookmark";
-      filterButtonID = "filterList_bookmark";
-    }
+
     var commandBar = document.getElementById("commandBar");
     commandBar.selectedPanel = document.getElementById(panelID);
 
