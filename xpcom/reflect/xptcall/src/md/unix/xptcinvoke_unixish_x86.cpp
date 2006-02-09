@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -78,38 +79,58 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
 {
 #ifdef __GNUC__            /* Gnu compiler. */
   PRUint32 result;
-  // Each param takes at most 2, 4-byte words
-  // It doesn't matter if we push too many words, and calculating the exact
-  // ammount takes time.
+  /* Each param takes at most 2, 4-byte words
+     It doesn't matter if we push too many words, and calculating the exact
+     amount takes time. */
   PRUint32 n = paramCount << 3;
   void (*fn_copy) (unsigned int, nsXPTCVariant *, PRUint32 *) = invoke_copy_to_stack;
-  int temp1, temp2, temp3;
+  int temp1, temp2;
  
-#ifdef XP_MACOSX
-  unsigned int saved_esp;
-  __asm__ __volatile__(
-    "movl %%esp, %0\n\t"
-    : "=r"(saved_esp));
-#endif
+  /* These are only significant when KEEP_STACK_16_BYTE_ALIGNED is
+     defined.  Otherwise, they're just placeholders to keep the parameter
+     indices the same for aligned and unaligned users in the inline asm
+     block. */
+  unsigned int saved_esp, stack_params;
   
  __asm__ __volatile__(
-    "subl  %8, %%esp\n\t" /* make room for params */
-#ifdef XP_MACOSX
-    /* the subl and the addl around the andl compensate for the push
-       of the this parameter below */
-    "subl $0x4, %%esp\n\t"
-    "andl $0xfffffff0, %%esp\n\t" /* make sure stack is 16-byte aligned */
-    "addl $0x4, %%esp\n\t"
+#ifdef KEEP_STACK_16_BYTE_ALIGNED
+    "movl  %%esp, %3\n\t"
 #endif
+    "subl  %9, %%esp\n\t" /* make room for params */
+#ifdef KEEP_STACK_16_BYTE_ALIGNED
+    /* For the second CALL, there will be one parameter before the ones
+       copied by invoke_copy_to_stack.  Make sure that the stack will be
+       aligned for that CALL. */
+    "subl  $4, %%esp\n\t"
+    "andl  $0xfffffff0, %%esp\n\t"
+    /* For the first CALL, there are three parameters.  Leave padding to
+       ensure alignment. */
+    "subl  $4, %%esp\n\t"
+    /* The third parameter to invoke_copy_to_stack is the destination pointer.
+       It needs to point into the parameter area prepared for the second CALL,
+       leaving room for the |that| parameter.  This reuses |n|, which was
+       the stack space to reserve, but that's OK because it's no longer needed
+       if the stack is being kept aligned. */
+    "leal  8(%%esp), %4\n\t"
+    "pushl %4\n\t"
+#else
     "pushl %%esp\n\t"
+#endif
+    "pushl %8\n\t"
     "pushl %7\n\t"
-    "pushl %6\n\t"
-    "call  *%0\n\t"       /* copy params */
+    "call  *%10\n\t"       /* copy params */
+#ifdef KEEP_STACK_16_BYTE_ALIGNED
+    /* The stack is still aligned from the first CALL.  Keep it aligned for
+       the next one by popping past the parameters from the first CALL and
+       leaving space for the first (|that|) parameter for the second CALL. */
+    "addl  $0x14, %%esp\n\t"
+#else
     "addl  $0xc, %%esp\n\t"
-    "movl  %4, %%ecx\n\t"
+#endif
+    "movl  %5, %%ecx\n\t"
 #ifdef CFRONT_STYLE_THIS_ADJUST
     "movl  (%%ecx), %%edx\n\t"
-    "movl  %5, %%eax\n\t"   /* function index */
+    "movl  %6, %%eax\n\t"   /* function index */
     "shl   $3, %%eax\n\t"   /* *= 8 */
     "addl  $8, %%eax\n\t"   /* += 8 skip first entry */
     "addl  %%eax, %%edx\n\t"
@@ -120,7 +141,7 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
 #else /* THUNK_BASED_THIS_ADJUST */
     "pushl %%ecx\n\t"
     "movl  (%%ecx), %%edx\n\t"
-    "movl  %5, %%eax\n\t"   /* function index */
+    "movl  %6, %%eax\n\t"   /* function index */
 #if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
     "leal  (%%edx,%%eax,4), %%edx\n\t"
 #else /* not G++ V3 ABI  */
@@ -128,31 +149,31 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
 #endif /* G++ V3 ABI */
 #endif
     "call  *(%%edx)\n\t"    /* safe to not cleanup esp */
+#ifdef KEEP_STACK_16_BYTE_ALIGNED
+    "movl  %3, %%esp\n\t"
+#else
     "addl  $4, %%esp\n\t"
-    "addl  %8, %%esp"
+    "addl  %9, %%esp"
+#endif
     : "=a" (result),        /* %0 */
       "=c" (temp1),         /* %1 */
       "=d" (temp2),         /* %2 */
-      "=g" (temp3)          /* %3 */
-    : "g" (that),           /* %4 */
-      "g" (methodIndex),    /* %5 */
-      "1" (paramCount),     /* %6 */
-      "2" (params),         /* %7 */
-      "g" (n),              /* %8 */
-      "0" (fn_copy)         /* %3 */
+      "=g" (saved_esp),     /* %3 */
+#ifdef KEEP_STACK_16_BYTE_ALIGNED
+      "=D" (stack_params)   /* %4 */
+#else
+      /* Don't waste a register, this isn't used if alignment is unimportant */
+      "=m" (stack_params)   /* %4 */
+#endif
+    : "g" (that),           /* %5 */
+      "g" (methodIndex),    /* %6 */
+      "1" (paramCount),     /* %7 */
+      "2" (params),         /* %8 */
+      "g" (n),              /* %9 */
+      "0" (fn_copy)         /* %10 */
     : "memory"
-#ifdef XP_MACOSX
-      , "%esp"
-#endif 
     );
     
-#ifdef XP_MACOSX
- __asm__ __volatile__(
-    "movl %0, %%esp\n\t"
-    :
-    : "r"(saved_esp));
-#endif 
- 
   return result;
 
 #else

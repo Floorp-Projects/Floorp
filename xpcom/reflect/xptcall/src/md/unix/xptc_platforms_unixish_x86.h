@@ -159,3 +159,11 @@
 #if defined(THUNK_BASED_THIS_ADJUST) && defined(CFRONT_STYLE_THIS_ADJUST)
 #error "need to define only ONE 'this' adjust scheme"    
 #endif
+
+/* Define KEEP_STACK_16_BYTE_ALIGNED if the stack needs to maintain alignment
+ * in a CALL for some good reason (like ABI compliance). */
+
+#ifdef XP_MACOSX
+/* http://developer.apple.com/documentation/DeveloperTools/Conceptual/LowLevelABI/Articles/IA32.html */
+#define KEEP_STACK_16_BYTE_ALIGNED
+#endif
