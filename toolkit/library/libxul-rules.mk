@@ -55,6 +55,7 @@ endif
 LOCAL_INCLUDES += \
 	-I$(topsrcdir)/config \
 	-I$(topsrcdir)/widget/src/windows \
+	-I$(topsrcdir)/widget/src/build \
 	$(NULL)
 
 OS_LIBS += $(LIBICONV)
@@ -81,10 +82,7 @@ ifneq (,$(MOZ_ENABLE_CANVAS)$(MOZ_SVG_RENDERER_CAIRO))
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
 endif
 
-export:: dlldeps.cpp dlldeps-obs.cpp widget.rc
-
-widget.rc: $(topsrcdir)/widget/src/build/widget.rc
-	$(INSTALL) $^ .
+export:: dlldeps.cpp dlldeps-obs.cpp
 
 dlldeps.cpp: $(topsrcdir)/xpcom/build/dlldeps.cpp
 	$(INSTALL) $^ .

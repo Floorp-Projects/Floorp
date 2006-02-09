@@ -50,7 +50,7 @@ CPPSRCS += \
 	nsDllMain.cpp \
 	$(NULL)
 
-RCINCLUDE = widget.rc
+RESFILE = xulrunner.res
 
 ifndef MOZ_NATIVE_ZLIB
 CPPSRCS += dlldeps-zlib.cpp
