@@ -18,6 +18,7 @@
 <!ENTITY link-lang.label       "Target language:">
 <!ENTITY link-rel.label        "Relation:">
 <!ENTITY link-rev.label        "Reversed relation:">
+<!ENTITY link-ping.label       "Will notify:">
 <!ENTITY misc-sec.label        "Miscellaneous Properties">
 <!ENTITY misc-lang.label       "Text language:">
 <!ENTITY misc-title.label      "Title:">
