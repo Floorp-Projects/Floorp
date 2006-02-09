@@ -1323,14 +1323,8 @@ nsBrowserAccess.prototype =
  * Download Service - Work-in-progress not-for-long
  */
 
-function BrowserViewDownload() {
-  document.getElementById("toolbar-download").collapsed=!document.getElementById("toolbar-download").collapsed;
-  if(document.getElementById("toolbar-download").collapsed &&  document.getElementById("command_ViewDownload").getAttribute("checked")=="true") {
-	document.getElementById("command_ViewDownload").setAttribute("checked","false");
-
-  }
-
-
+function BrowserViewDownload(cMode) {
+  document.getElementById("toolbar-download").collapsed=!cMode;
 }
 
 function DownloadSet( aCurTotalProgress, aMaxTotalProgress ) {
@@ -1345,7 +1339,8 @@ function DownloadSet( aCurTotalProgress, aMaxTotalProgress ) {
 function DownloadCancel(refId) {
 
   try {  document.getElementById("toolbar-download-tag").cachedCancelable.cancel(NS_BINDING_ABORTED) } catch (e) { alert(e) };
-  BrowserViewDownload();
+  document.getElementById("download-button-stop").disabled=false;
+  BrowserViewDownload(false);
 
 }
 
@@ -1379,8 +1374,9 @@ TransferItem.prototype = {
   init: function (aSource, aTarget, aDisplayName, aMIMEInfo, startTime, aTempFile, aCancelable) {
     
    // document.getElementById("statusbar").hidden=false;
-    BrowserViewDownload();
+    BrowserViewDownload(true);
     document.getElementById("toolbar-download-tag").cachedCancelable=aCancelable;
+    document.getElementById("download-button-stop").disabled=false;
 
   },
   
