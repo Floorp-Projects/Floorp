@@ -347,7 +347,9 @@ var PlacesController = {
   tm: null,
   
   /**
-   * The current groupable Places view.
+   * The current groupable Places view. This is tracked independently of the 
+   * |activeView| because the activeView may change to something that isn't
+   * groupable, but clicking the Grouping buttons should still work. 
    */
   _groupableView: null,
   get groupableView() {
@@ -780,6 +782,42 @@ var PlacesController = {
   },
   
   /**
+   * Loads the contents of a query node into a view with the specified grouping
+   * and sort options.
+   * @param   view
+   *          The tree view to load the contents of the node into
+   * @param   node
+   *          The node to load the contents of
+   * @param   groupings
+   *          Groupings to be applied to the displayed contents, [] for no 
+   *          grouping
+   * @param   sortingMode
+   *          The sorting mode to be applied to the displayed contents. 
+   */
+  loadNodeIntoView: function PC_loadQueries(view, node, groupings, sortingMode) {
+    ASSERT(view, "Must have a view to load node contents into!");
+    var node = asQuery(node);
+    var queries = node.getQueries({ });
+    var newQueries = [];
+    for (var i = 0; i < queries.length; ++i) {
+      var query = queries[i].clone();
+      newQueries.push(query);
+    }
+    var newOptions = node.queryOptions.clone();
+    
+    // Update the grouping mode only after persisting, so that the URI is not 
+    // changed. 
+    newOptions.setGroupingMode(groupings, groupings.length);
+    
+    // Set the sort order of the results
+    newOptions.sortingMode = sortingMode;
+    
+    // Reload the view 
+    view.load(newQueries, newOptions);
+  },
+  
+  
+  /**
    * A hash of groupers that supply grouping options for queries of a given 
    * type. This is an override of grouping options that might be encoded in
    * a saved place: URI
@@ -791,48 +829,70 @@ var PlacesController = {
    * @param   groupings
    *          An array of grouping options, see nsINavHistoryQueryOptions
    *          for details.
+   * @param   sortingMode
+   *          The type of sort that should be applied to the results.
    */
-  setGroupingMode: function PC_setGroupingOptions(groupings) {
+  setGroupingMode: function PC_setGroupingMode(groupings, sortingMode) {
     if (!this._groupableView)
       return;
-    var result = this._groupableView.getResult();
-    var root = asQuery(result.root);
-    var queries = root.getQueries({ });
-    var newOptions = root.queryOptions.clone();
-    
-    // Update the grouping mode only after persisting, so that the URI is not 
-    // changed. 
-    newOptions.setGroupingMode(groupings, groupings.length);
-    
+    var node = this._groupableView.getResult().root;
+    this.loadNodeIntoView(this._groupableView, node, groupings, sortingMode);
+
     // Persist this selection
     if (this._groupableView.isBookmarks && "bookmark" in this.groupers)
       this.groupers.bookmark.value = groupings;
     else if ("generic" in this.groupers)
       this.groupers.generic.value = groupings;
-
-    // Reload the view 
-    this._groupableView.load(queries, newOptions);
   },
   
   /**
    * Group the current content view by domain
    */
   groupBySite: function PC_groupBySite() {
-    this.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_DOMAIN]);
+    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_DOMAIN];
+    var sortMode = Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING;
+    this.setGroupingMode(groupings, sortMode);
   },
   
   /**
    * Group the current content view by folder
    */
   groupByFolder: function PC_groupByFolder() {
-    this.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER]);
+    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER];
+    var sortMode = Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
+    this.setGroupingMode(groupings, sortMode);
   },
   
   /**
    * Ungroup the current content view (i.e. show individual pages)
    */
   groupByPage: function PC_groupByPage() {
-    this.setGroupingMode([]);
+    this.setGroupingMode([], 
+      Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING);
+  },
+  
+  /**
+   * Loads all results matching a certain annotation, grouped and sorted as 
+   * specified.
+   * @param   annotation
+   *          The annotation to match
+   * @param   groupings
+   *          The grouping to apply to the displayed results
+   * @param   sortingMode
+   *          The sorting to apply to the displayed results
+   */
+  groupByAnnotation: 
+  function PC_groupByAnnotation(annotation, groupings, sortingMode) {
+    ASSERT(this._groupableView, "Need a groupable view to load!");
+    if (!this._groupableView)
+      return null;
+    var query = this._hist.getNewQuery();
+    var options = this._hist.getNewQueryOptions();
+    options.setGroupingMode(groupings, groupings.length);
+    options.sortingMode = sortingMode;
+    query.annotation = annotation;
+    this.groupableView.load([query], options);
+    LOG("CS: " + this._hist.queriesToQueryString([query], 1, options));
   },
   
   /**
