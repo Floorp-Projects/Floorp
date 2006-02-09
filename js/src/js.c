@@ -1427,7 +1427,11 @@ ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 BuildDate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    fprintf(gOutFile, "built on %s at %s\n", __DATE__, __TIME__);
+    char version[20] = "\n";
+#if JS_VERSION < 150
+    sprintf(version, " for version %d\n", JS_VERSION);
+#endif
+    fprintf(gOutFile, "built on %s at %s%s", __DATE__, __TIME__, version);
     return JS_TRUE;
 }
 
