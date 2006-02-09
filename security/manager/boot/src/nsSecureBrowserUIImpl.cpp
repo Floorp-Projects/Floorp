@@ -194,9 +194,13 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
   nsCOMPtr<nsIStringBundleService> service(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
   
-  rv = service->CreateBundle(SECURITY_STRING_BUNDLE_URL,
-                             getter_AddRefs(mStringBundle));
-  if (NS_FAILED(rv)) return rv;
+  // We do not need to test for mStringBundle here...
+  // Anywhere we use it, we will test before using.  Some
+  // embedded users of PSM may want to reuse our
+  // nsSecureBrowserUIImpl implementation without the
+  // bundle.
+  service->CreateBundle(SECURITY_STRING_BUNDLE_URL, getter_AddRefs(mStringBundle));
+  
   
   // hook up to the form post notifications:
   nsCOMPtr<nsIObserverService> svc(do_GetService("@mozilla.org/observer-service;1", &rv));
