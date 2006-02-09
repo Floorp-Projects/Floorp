@@ -63,6 +63,8 @@ const nsIWebProgressListener2  = Components.interfaces.nsIWebProgressListener2;
 const nsIXULWindow             = Components.interfaces.nsIXULWindow;
 const nsITransfer              = Components.interfaces.nsITransfer;
 
+const NS_BINDING_ABORTED = 0x804b0002;
+
 var appCore = null;
 var gBrowser = null;
 var gBookmarksDoc=null; 
@@ -1325,23 +1327,27 @@ function BrowserViewDownload() {
   document.getElementById("toolbar-download").collapsed=!document.getElementById("toolbar-download").collapsed;
   if(document.getElementById("toolbar-download").collapsed &&  document.getElementById("command_ViewDownload").getAttribute("checked")=="true") {
 	document.getElementById("command_ViewDownload").setAttribute("checked","false");
-  }
+
+  }
+
+
 }
 
-function DownloadSet( refId, aCurTotalProgress, aMaxTotalProgress ) {
+function DownloadSet( aCurTotalProgress, aMaxTotalProgress ) {
   gInputBoxObject=(document.getBoxObjectFor(document.getElementById("toolbar-download-tag").inputField));
   var percentage = parseInt((aCurTotalProgress/aMaxTotalProgress)*parseInt(gInputBoxObject.width));
   if(percentage<0) percentage=2;
   document.getElementById("toolbar-download-tag").inputField.style.backgroundPosition=percentage+"px 100%";
-  document.getElementById("toolbar-download-tag").value=refId;
+  document.getElementById("toolbar-download-tag").value=document.getElementById("minimo_properties").getString("downloadProgress")+":"+parseInt((aCurTotalProgress/aMaxTotalProgress)*100)+"%";
   document.getElementById("toolbar-download-tag").setAttribute("currentid",refId);
 }
 
 function DownloadCancel(refId) {
-  // you can retrieve the 
-  // document.getElementById("toolbar-download-tag").getAttribute("currentid");
-}
 
+  try {  document.getElementById("toolbar-download-tag").cachedCancelable.cancel(NS_BINDING_ABORTED) } catch (e) { alert(e) };
+  BrowserViewDownload();
+
+}
 
 function TransferItemFactory() {
 }
@@ -1372,11 +1378,14 @@ TransferItem.prototype = {
   
   init: function (aSource, aTarget, aDisplayName, aMIMEInfo, startTime, aTempFile, aCancelable) {
     
-    document.getElementById("statusbar").hidden=false;
-    
+   // document.getElementById("statusbar").hidden=false;
+    BrowserViewDownload();
+    document.getElementById("toolbar-download-tag").cachedCancelable=aCancelable;
+
   },
   
   onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
+
   },
   
   onProgressChange: function( aWebProgress,
@@ -1397,7 +1406,10 @@ TransferItem.prototype = {
                                 aCurTotalProgress,
                                 aMaxTotalProgress ) {
     
-    document.getElementById("statusbar-text").label= "dbg:onProgressChange " + aCurTotalProgress + " " + aMaxTotalProgress;
+    //document.getElementById("statusbar-text").label= "dbg:onProgressChange " + aCurTotalProgress + " " + aMaxTotalProgress;
+
+    DownloadSet( aCurTotalProgress, aMaxTotalProgress );
+
   },
   
   onStatusChange: function( aWebProgress, aRequest, aStatus, aMessage ) {
@@ -1410,3 +1422,4 @@ TransferItem.prototype = {
   },
 }
   
+x
