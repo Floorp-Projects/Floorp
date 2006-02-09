@@ -81,6 +81,11 @@ public:
     gfxASurface* CurrentSurface();
 
     /**
+     * Return the current transparency group target, if any
+     */
+    gfxASurface* CurrentGroupSurface();
+
+    /**
      * Set a new surface to render to; the previous
      * surface is lost, but the current graphics state
      * is maintained.

@@ -57,6 +57,10 @@ REQUIRES	= xpcom \
 		  pref \
 		  $(NULL)
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+REQUIRES += thebes cairo
+endif
+
 EXTRA_DSO_LIBS = gkgfx
 
 CPPSRCS		= \

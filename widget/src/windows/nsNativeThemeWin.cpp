@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -61,6 +61,7 @@
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxMatrix.h"
+#include "cairo-win32.h"
 #endif
 /* 
  * The following constants are used to determine how a widget is drawn using
@@ -742,56 +743,81 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   nsCOMPtr<nsIDeviceContext> dc;
   aContext->GetDeviceContext(*getter_AddRefs(dc));
   float T2P = dc->TwipsToDevUnits();
-  nsTransform2D* transformMatrix;
-  aContext->GetCurrentTransform(transformMatrix);
   RECT widgetRect;
   RECT clipRect;
-	nsRect tr(aRect);
+  nsRect tr(aRect);
   nsRect cr(aClipRect);
-	transformMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+
 #ifdef MOZ_CAIRO_GFX
   tr.x = NSToCoordRound(tr.x * T2P);
   tr.y = NSToCoordRound(tr.y * T2P);
   tr.width  = NSToCoordRound(tr.width * T2P);
   tr.height = NSToCoordRound(tr.height * T2P);
-#endif
-  GetNativeRect(tr, widgetRect);
-  transformMatrix->TransformCoord(&cr.x,&cr.y,&cr.width,&cr.height);
-#ifdef MOZ_CAIRO_GFX
+
   cr.x = NSToCoordRound(cr.x * T2P);
   cr.y = NSToCoordRound(cr.y * T2P);
   cr.width  = NSToCoordRound(cr.width * T2P);
   cr.height = NSToCoordRound(cr.height * T2P);
-#endif
-  GetNativeRect(cr, clipRect);
+
+  nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+
+  nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface();
+  if (!surf)
+    surf = ctx->CurrentSurface();
+
+  HDC hdc = cairo_win32_surface_get_dc (surf->CairoSurface());
+  SaveDC(hdc);
+  SetGraphicsMode(hdc, GM_ADVANCED);
+
+  /* Need to force the clip to be set */
+  ctx->NewPath();
+  ctx->Rectangle(gfxRect(0,0,0,0));
+  ctx->Fill();
+
+  //ctx->CurrentSurface()->Flush();
+
+  /* Set the device offsets as appropriate */
+  gfxFloat xoff, yoff;
+  POINT origViewportOrigin;
+  surf->GetDeviceOffset(&xoff, &yoff);
+  GetViewportOrgEx(hdc, &origViewportOrigin);
+  SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
+
+  /* Covert the current transform to a world transform */
+  gfxMatrix m = ctx->CurrentMatrix();
+  XFORM xform;
+  double dm[6];
+  m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
+  xform.eM11 = (FLOAT) dm[0];
+  xform.eM12 = (FLOAT) dm[1];
+  xform.eM21 = (FLOAT) dm[2];
+  xform.eM22 = (FLOAT) dm[3];
+  xform.eDx  = (FLOAT) dm[4];
+  xform.eDy  = (FLOAT) dm[5];
+  SetWorldTransform (hdc, &xform);
+
+#else /* non-MOZ_CAIRO_GFX */
+
+  nsTransform2D* transformMatrix;
+  aContext->GetCurrentTransform(transformMatrix);
+
+  transformMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+  transformMatrix->TransformCoord(&cr.x,&cr.y,&cr.width,&cr.height);
+
   HDC hdc = (HDC)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
   if (!hdc)
     return NS_ERROR_FAILURE;
 
   SaveDC(hdc);
+
 #ifndef WINCE
   SetGraphicsMode(hdc, GM_ADVANCED);
 #endif
 
-#ifdef MOZ_CAIRO_GFX
-  gfxContext *ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+#endif /* MOZ_CAIRO_GFX */
 
-  ctx->CurrentSurface()->Flush();
-
-#if 0
-  gfxMatrix m = ctx->CurrentMatrix();
-  XFORM xform;
-  double dm[6];
-  m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
-  xform.eM11 = dm[0];
-  xform.eM21 = dm[1];
-  xform.eM12 = dm[2];
-  xform.eM22 = dm[3];
-  xform.eDx  = dm[4];
-  xform.eDy  = dm[5];
-  SetWorldTransform (hdc, &xform);
-#endif
-#endif
+  GetNativeRect(tr, widgetRect);
+  GetNativeRect(cr, clipRect);
 
   // For left edge and right edge tabs, we need to adjust the widget
   // rects and clip rects so that the edges don't get drawn.
@@ -854,7 +880,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   RestoreDC(hdc, -1);
 
 #ifdef MOZ_CAIRO_GFX
-  ctx->CurrentSurface()->MarkDirty();
+  surf->MarkDirty();
 #endif
 
   return NS_OK;
@@ -1783,47 +1809,63 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   nsCOMPtr<nsIDeviceContext> dc;
   aContext->GetDeviceContext(*getter_AddRefs(dc));
   float T2P = dc->TwipsToDevUnits();
-
-  nsTransform2D* transformMatrix;
-  aContext->GetCurrentTransform(transformMatrix);
   RECT widgetRect;
-	nsRect tr(aRect);
-	transformMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+  nsRect tr(aRect);
+
 #ifdef MOZ_CAIRO_GFX
-  gfxContext *ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-
-  // flush the surface to make sure things are set up right
-  ctx->CurrentSurface()->Flush();
-
   tr.x = NSToCoordRound(tr.x * T2P);
   tr.y = NSToCoordRound(tr.y * T2P);
   tr.width  = NSToCoordRound(tr.width * T2P);
   tr.height = NSToCoordRound(tr.height * T2P);
-#endif
-  GetNativeRect(tr, widgetRect); 
+
+  nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+
+  nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface();
+  if (!surf)
+    surf = ctx->CurrentSurface();
+
+  HDC hdc = cairo_win32_surface_get_dc (surf->CairoSurface());
+  SaveDC(hdc);
+  SetGraphicsMode(hdc, GM_ADVANCED);
+
+  /* Need to force the clip to be set */
+  ctx->NewPath();
+  ctx->Rectangle(gfxRect(0,0,0,0));
+  ctx->Fill();
+
+  /* Set the device offsets as appropriate */
+  gfxFloat xoff, yoff;
+  POINT origViewportOrigin;
+  surf->GetDeviceOffset(&xoff, &yoff);
+  GetViewportOrgEx(hdc, &origViewportOrigin);
+  SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
+
+  /* Covert the current transform to a world transform */
+  gfxMatrix m = ctx->CurrentMatrix();
+  XFORM xform;
+  double dm[6];
+  m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
+  xform.eM11 = (FLOAT) dm[0];
+  xform.eM12 = (FLOAT) dm[1];
+  xform.eM21 = (FLOAT) dm[2];
+  xform.eM22 = (FLOAT) dm[3];
+  xform.eDx  = (FLOAT) dm[4];
+  xform.eDy  = (FLOAT) dm[5];
+  SetWorldTransform (hdc, &xform);
+
+#else /* non-MOZ_CAIRO_GFX */
+
+  nsTransform2D* transformMatrix;
+  aContext->GetCurrentTransform(transformMatrix);
+  transformMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
 
   HDC hdc = (HDC)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
 
   SaveDC(hdc);
 
-#ifdef MOZ_CAIRO_GFX
-#if 0
-  SetGraphicsMode(hdc, GM_ADVANCED);
+#endif /* MOZ_CAIRO_GFX */
 
-  gfxContext *c = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-  gfxMatrix m = c->CurrentMatrix();
-  XFORM xform;
-  double dm[6];
-  m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
-  xform.eM11 = dm[0];
-  xform.eM21 = dm[1];
-  xform.eM12 = dm[2];
-  xform.eM22 = dm[3];
-  xform.eDx  = dm[4];
-  xform.eDy  = dm[5];
-  SetWorldTransform (hdc, &xform);
-#endif
-#endif
+  GetNativeRect(tr, widgetRect); 
 
   rv = NS_OK;
   switch (aWidgetType) { 
@@ -2096,7 +2138,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   RestoreDC(hdc, -1);
 
 #ifdef MOZ_CAIRO_GFX
-  ctx->CurrentSurface()->MarkDirty();
+  surf->MarkDirty();
 #endif
 
   return rv;

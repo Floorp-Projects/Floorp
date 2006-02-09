@@ -48,6 +48,9 @@
 #include "gfxASurface.h"
 #include "gfxPattern.h"
 
+// this doesn't really belong here, but it doesn't need
+// its own file
+THEBES_IMPL_REFCOUNTING(gfxUnknownSurface)
 
 THEBES_IMPL_REFCOUNTING(gfxContext)
 
@@ -64,6 +67,15 @@ gfxContext::~gfxContext()
 gfxASurface *gfxContext::CurrentSurface()
 {
     return mSurface;
+}
+
+gfxASurface *gfxContext::CurrentGroupSurface()
+{
+    cairo_surface_t *s = cairo_get_group_target(mCairo);
+    if (!s)
+        return NULL;
+
+    return new gfxUnknownSurface(s);
 }
 
 void gfxContext::SetTarget(gfxASurface *target)

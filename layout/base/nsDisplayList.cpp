@@ -614,8 +614,19 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   // cairo with support for real alpha channels in surfaces, so we don't have
   // to do this white/black hack anymore.
   nsIViewManager* vm = mFrame->GetPresContext()->GetViewManager();
+  float opacity = mFrame->GetStyleDisplay()->mOpacity;
+
   nsRect bounds;
   bounds.IntersectRect(GetBounds(aBuilder), aDirtyRect);
+
+  nsresult rv = aCtx->PushFilter(GetBounds(aBuilder), mNeedAlpha, opacity);
+  if (NS_SUCCEEDED(rv)) {
+    // Thebes path
+    nsDisplayWrapList::Paint(aBuilder, aCtx, bounds);
+    aCtx->PopFilter();
+    return;
+  }
+
   nsIViewManager::BlendingBuffers* buffers =
       vm->CreateBlendingBuffers(aCtx, PR_FALSE, nsnull, mNeedAlpha, bounds);
   if (!buffers) {
@@ -631,7 +642,7 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   }
 
   nsTransform2D* transform;
-  nsresult rv = aCtx->GetCurrentTransform(transform);
+  rv = aCtx->GetCurrentTransform(transform);
   if (NS_FAILED(rv))
     return;
 
@@ -643,7 +654,7 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   blender->Blend(0, 0, damageRectInPixels.width, damageRectInPixels.height,
                  buffers->mBlackCX, aCtx,
                  damageRectInPixels.x, damageRectInPixels.y,
-                 mFrame->GetStyleDisplay()->mOpacity, buffers->mWhiteCX,
+                 opacity, buffers->mWhiteCX,
                  NS_RGB(0, 0, 0), NS_RGB(255, 255, 255));
   delete buffers;
 }
