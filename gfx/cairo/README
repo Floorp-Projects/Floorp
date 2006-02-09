@@ -51,6 +51,7 @@ cairo-win32-alphablend.patch (Updated 7 Feb 06)
   - Use AlphaBlend if the dst surface is either RGB24 or ARGB32, not
     just RGB24 
   - Add cairo_win32_surface_get_dc()
+    (Submitted upstream: https://bugs.freedesktop.org/show_bug.cgi?id=5845)
 
 device-offset-scale.patch (Updated 7 Feb 06)
   - Move device offset/scale handling into surface layer; large rework
