@@ -149,7 +149,7 @@
       </method>
     </implementation>
   </binding>
-  
+
   <!-- OUTPUT: <DEFAULT> -->
   <binding id="xformswidget-output"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
@@ -161,7 +161,7 @@
       <html:span class="xf-value" anonid="content"> </html:span>
       <children/>
     </content>
-    
+
     <implementation implements="nsIXFormsUIWidget">
       <method name="refresh">
         <body>
@@ -416,6 +416,14 @@
     <implementation>
       <method name="refresh">
         <body>
+          this.inputField.value = this.stringValue;
+          if (this.accessors.isReadonly()) {
+            this.inputField.setAttribute("readonly", "readonly");
+            this.dropmarker.setAttribute("disabled", "true");
+          } else {
+            this.inputField.removeAttribute("readonly");
+            this.dropmarker.removeAttribute("disabled");
+          }
           return true;
         </body>
       </method>
@@ -428,6 +436,17 @@
               document.getAnonymousElementByAttribute(this, "anonid", "picker");
           }
           return this._picker;
+        </getter>
+      </property>
+
+      <field name="_dropmarker">null</field>
+      <property name="dropmarker" readonly="true">
+        <getter>
+          if (!this._dropmarker) {
+            this._dropmarker =
+              document.getAnonymousElementByAttribute(this, "anonid", "dropmarker");
+          }
+          return this._dropmarker;
         </getter>
       </property>
 
@@ -465,12 +484,12 @@
       <method name="_showPicker">
         <body>
         <![CDATA[
-          // show the picker
-          var picker = this.picker;
-
-          if (this._isPickerVisible) {
+          if (this._isPickerVisible || this.accessors.isReadonly()) {
             return;
           }
+
+          // show the picker
+          var picker = this.picker;
 
           picker.style.display = "block";
           this._isPickerVisible = true;
@@ -738,15 +757,19 @@
         <parameter name="aCellNum"/>
         <body>
         <![CDATA[
-          if (aCellNum == this._currentCellIndex)
-            return;
+          if (aCellNum == this._currentCellIndex) {
+            // make sure it is focused.  We keep the currentCellIndex even if we
+            // switch to the prev/next buttons, so we just need to refocus the
+            // cell.
+            this._cells[this._currentCellIndex].node.focus();
+          } else {
+            this._cells[this._currentCellIndex].node.setAttribute("tabindex", "-1");
 
-          this._cells[this._currentCellIndex].node.setAttribute("tabindex", "-1");
+            this._currentCellIndex = aCellNum;
 
-          this._currentCellIndex = aCellNum;
-
-          this._cells[this._currentCellIndex].node.setAttribute("tabindex", "0");
-          this._cells[this._currentCellIndex].node.focus();
+            this._cells[this._currentCellIndex].node.setAttribute("tabindex", "0");
+            this._cells[this._currentCellIndex].node.focus();
+          }
         ]]>
         </body>
       </method>
@@ -791,7 +814,7 @@
             if (currentElement.localName == "input") {
               // if we are on the button, down should focus the current selected
               // cell
-              this.selectCell(this._currentCellIndex);
+              this.selectCell(index);
             } else if ((index + 7) < this._cells.length) {
               this.selectCell(index + 7);
             }
