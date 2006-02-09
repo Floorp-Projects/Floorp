@@ -97,6 +97,9 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase,
 
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+
+  // recursion prevention flag
+  PRPackedBool mInUse;
 };
 
 NS_INTERFACE_MAP_BEGIN(nsSVGClipPathFrame)
@@ -169,6 +172,15 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
                               nsISVGChildFrame* aParent,
                               nsCOMPtr<nsIDOMSVGMatrix> aMatrix)
 {
+  // If the flag is set when we get here, it means this clipPath frame
+  // has already been used painting the current clip, and the document
+  // has a clip reference loop.
+  if (mInUse) {
+    NS_WARNING("Clip loop detected!");
+    return NS_OK;
+  }
+  mInUse = PR_TRUE;
+
   nsRect dirty;
   nsresult rv;
 
@@ -205,6 +217,8 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
 
   canvas->SetRenderMode(nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL);
 
+  mInUse = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -213,10 +227,20 @@ nsSVGClipPathFrame::ClipHitTest(nsISVGChildFrame* aParent,
                                 nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
                                 float aX, float aY, PRBool *aHit)
 {
+  *aHit = PR_FALSE;
+
+  // If the flag is set when we get here, it means this clipPath frame
+  // has already been used in hit testing against the current clip,
+  // and the document has a clip reference loop.
+  if (mInUse) {
+    NS_WARNING("Clip loop detected!");
+    return NS_OK;
+  }
+  mInUse = PR_TRUE;
+
   nsRect dirty;
   mClipParent = aParent,
   mClipParentMatrix = aMatrix;
-  *aHit = PR_FALSE;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
@@ -232,10 +256,13 @@ nsSVGClipPathFrame::ClipHitTest(nsISVGChildFrame* aParent,
       nsresult rv = SVGFrame->GetFrameForPointSVG(aX, aY, &temp);
       if (NS_SUCCEEDED(rv) && temp) {
         *aHit = PR_TRUE;
+        mInUse = PR_FALSE;
         return NS_OK;
       }
     }
   }
+
+  mInUse = PR_FALSE;
 
   return NS_OK;
 }
