@@ -48,6 +48,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsWeakReference.h"
+#include "mozISpellI18NUtil.h"
 
 class nsIDOMMouseEventListener;
 
