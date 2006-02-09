@@ -1287,3 +1287,31 @@ nsBrowserAccess.prototype =
     return false;
   }
 }
+
+/*
+ * Download Service - Work-in-progress
+ */
+
+function BrowserViewDownload() {
+  document.getElementById("toolbar-download").collapsed=!document.getElementById("toolbar-download").collapsed;
+  if(document.getElementById("toolbar-download").collapsed &&  document.getElementById("command_ViewDownload").getAttribute("checked")=="true") {
+	document.getElementById("command_ViewDownload").setAttribute("checked","false");
+  }
+}
+
+function DownloadSet( refId, aCurTotalProgress, aMaxTotalProgress ) {
+  gInputBoxObject=(document.getBoxObjectFor(document.getElementById("toolbar-download-tag").inputField));
+  var percentage = parseInt((aCurTotalProgress/aMaxTotalProgress)*parseInt(gInputBoxObject.width));
+  if(percentage<0) percentage=2;
+  document.getElementById("toolbar-download-tag").inputField.style.backgroundPosition=percentage+"px 100%";
+  document.getElementById("toolbar-download-tag").value=refId;
+  document.getElementById("toolbar-download-tag").setAttribute("currentid",refId);
+}
+
+function DownloadCancel(refId) {
+  // you can retrieve the 
+  // document.getElementById("toolbar-download-tag").getAttribute("currentid");
+}
+
+ 
+ 
