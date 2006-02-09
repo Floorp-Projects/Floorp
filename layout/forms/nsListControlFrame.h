@@ -180,10 +180,12 @@ public:
   nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 
   // Static Methods
-  static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
-  static nsIDOMHTMLOptionsCollection* GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect = nsnull);
-  static nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLOptionsCollection* aOptions, PRInt32 aIndex);
-  static already_AddRefed<nsIContent> GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection,PRInt32 aIndex);
+  static already_AddRefed<nsIDOMHTMLOptionsCollection>
+    GetOptions(nsIContent * aContent);
+  static already_AddRefed<nsIDOMHTMLOptionElement>
+    GetOption(nsIDOMHTMLOptionsCollection* aOptions, PRInt32 aIndex);
+  static already_AddRefed<nsIContent>
+    GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection,PRInt32 aIndex);
 
   static void ComboboxFocusSet();
 
