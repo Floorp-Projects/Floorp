@@ -57,11 +57,15 @@
 #include "nsISVGGradient.h"
 #include "nsSVGCairoGradient.h"
 #include "nsISVGPattern.h"
+#include "nsISVGCairoSurface.h"
 #include "nsSVGCairoPattern.h"
 #include "nsIDOMSVGRect.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
 #include "nsISVGPathFlatten.h"
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 
 extern cairo_surface_t *gSVGCairoDummySurface;
 
@@ -369,7 +373,8 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
         mSource->GetFillPattern(getter_AddRefs(aPat));
         // Paint the pattern -- note that because we will call back into the
         // layout layer to paint, we need to pass the canvas, not just the context
-        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, mSource);
+        nsCOMPtr<nsISVGRendererSurface> patSurface;
+        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, mSource, getter_AddRefs(patSurface));
         if (pattern) {
           cairo_set_source(ctx, pattern);
           cairo_fill_preserve(ctx);
@@ -413,7 +418,8 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
         mSource->GetStrokePattern(getter_AddRefs(aPat));
         // Paint the pattern -- note that because we will call back into the
         // layout layer to paint, we need to pass the canvas, not just the context
-        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, mSource);
+        nsCOMPtr<nsISVGRendererSurface> patSurface;
+        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, mSource, getter_AddRefs(patSurface));
         if (pattern) {
           cairo_set_source(ctx, pattern);
           cairo_stroke(ctx);
@@ -576,6 +582,9 @@ nsSVGCairoPathGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
   GeneratePath(ctx, nsnull);
 
   cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+#ifdef DEBUG_scooter
+  printf("CairoPathGeometry::GetBoundingBox returns (%f,%f,%f,%f)\n",xmin,ymin,xmax,ymax);
+#endif
 
   /* cairo_fill_extents doesn't work on degenerate paths */
   if (xmin ==  32767 &&

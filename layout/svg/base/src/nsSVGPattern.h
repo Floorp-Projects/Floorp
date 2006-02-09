@@ -42,6 +42,7 @@
 #include "nsISVGPattern.h"
 #include "nsIURI.h"
 #include "nsIContent.h"
+#include "nsIPresShell.h"
 
 nsresult NS_GetSVGPattern(nsISVGPattern**        result, 
                           nsIURI*                 aURI, 

@@ -822,7 +822,8 @@ nsSVGGlyphFrame::GetStrokePattern(nsISVGPattern **aPat)
     // Now have the URI.  Get the gradient 
     rv = NS_GetSVGPattern(getter_AddRefs(mStrokePattern), aServer, mContent, 
                           nsSVGGlyphFrameBase::GetPresContext()->PresShell());
-    NS_ADD_SVGVALUE_OBSERVER(mStrokePattern);
+    if (mStrokePattern)
+      NS_ADD_SVGVALUE_OBSERVER(mStrokePattern);
   }
   *aPat = mStrokePattern;
   return rv;
@@ -886,7 +887,8 @@ nsSVGGlyphFrame::GetFillPattern(nsISVGPattern **aPat)
     // Now have the URI.  Get the gradient 
     rv = NS_GetSVGPattern(getter_AddRefs(mFillPattern), aServer, mContent, 
                           nsSVGGlyphFrameBase::GetPresContext()->PresShell());
-    NS_ADD_SVGVALUE_OBSERVER(mFillPattern);
+    if (mFillPattern)
+      NS_ADD_SVGVALUE_OBSERVER(mFillPattern);
   }
   *aPat = mFillPattern;
   return rv;

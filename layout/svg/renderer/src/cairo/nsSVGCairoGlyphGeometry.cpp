@@ -58,6 +58,7 @@
 #include "nsISVGGradient.h"
 #include "nsSVGCairoGradient.h"
 #include "nsISVGPattern.h"
+#include "nsISVGCairoSurface.h"
 #include "nsSVGCairoPattern.h"
 #include "nsIDOMSVGRect.h"
 #include "nsSVGTypeCIDs.h"
@@ -314,7 +315,8 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
           // Paint the pattern -- note that because we will call back into the
           // layout layer to paint, we need to pass the canvas, not just the context
           nsCOMPtr<nsISVGGeometrySource> aGsource = do_QueryInterface(mSource);
-          cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aGsource);
+          nsCOMPtr<nsISVGRendererSurface> patSurface;
+          cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aGsource, getter_AddRefs(patSurface));
           if (pattern) {
             cairo_set_source(ctx, pattern);
             LOOP_CHARS(cairo_show_text)
@@ -409,7 +411,8 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
         // Paint the pattern -- note that because we will call back into the
         // layout layer to paint, we need to pass the canvas, not just the context
         nsCOMPtr<nsISVGGeometrySource> aGsource = do_QueryInterface(mSource);
-        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aGsource);
+        nsCOMPtr<nsISVGRendererSurface> patSurface;
+        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aGsource, getter_AddRefs(patSurface));
         if (pattern) {
           cairo_set_source(ctx, pattern);
           cairo_stroke(ctx);

@@ -51,6 +51,7 @@
 cairo_pattern_t *
 CairoPattern(nsISVGRendererCanvas *canvas,
              nsISVGPattern *aPat,
-             nsISVGGeometrySource *aSource);
+             nsISVGGeometrySource *aSource,
+             nsISVGRendererSurface **aSurface);
 
 #endif
