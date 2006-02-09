@@ -36,9 +36,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsCI               = Components.interfaces;
-const nsIWebNavigation = nsCI.nsIWebNavigation;
-const nsIWebProgressListener = nsCI.nsIWebProgressListener;
+const imgICache                = Components.interfaces.imgICache;
+const nsIBrowserDOMWindow      = Components.interfaces.nsIBrowserDOMWindow;
+const nsIBrowserHistory        = Components.interfaces.nsIBrowserHistory;
+const nsIClipboard             = Components.interfaces.nsIClipboard;
+const nsIDOMChromeWindow       = Components.interfaces.nsIDOMChromeWindow;
+const nsIDOMDocument           = Components.interfaces.nsIDOMDocument;
+const nsIDOMWindow             = Components.interfaces.nsIDOMWindow;
+const nsIDocShellHistory       = Components.interfaces.nsIDocShellHistory;
+const nsIDocShellTreeItem      = Components.interfaces.nsIDocShellTreeItem;
+const nsIDocShellTreeNode      = Components.interfaces.nsIDocShellTreeNode;
+const nsIInterfaceRequestor    = Components.interfaces.nsIInterfaceRequestor;
+const nsIPhoneSupport          = Components.interfaces.nsIPhoneSupport;
+const nsIPrefBranch            = Components.interfaces.nsIPrefBranch;
+const nsIPrefService           = Components.interfaces.nsIPrefService;
+const nsISHistory              = Components.interfaces.nsISHistory;
+const nsISupportsString        = Components.interfaces.nsISupportsString;
+const nsISupportsWeakReference = Components.interfaces.nsISupportsWeakReference;
+const nsITransferable          = Components.interfaces.nsITransferable;
+const nsIURIFixup              = Components.interfaces.nsIURIFixup;
+const nsIWebNavigation         = Components.interfaces.nsIWebNavigation;
+const nsIXULBrowserWindow      = Components.interfaces.nsIXULBrowserWindow;
+const nsIWebProgress           = Components.interfaces.nsIWebProgress;
+const nsIWebProgressListener   = Components.interfaces.nsIWebProgressListener;
+const nsIWebProgressListener2  = Components.interfaces.nsIWebProgressListener2;
+const nsIXULWindow             = Components.interfaces.nsIXULWindow;
+const nsITransfer              = Components.interfaces.nsITransfer;
 
 var appCore = null;
 var gBrowser = null;
@@ -73,10 +96,10 @@ nsBrowserStatusHandler.prototype =
 {
   QueryInterface : function(aIID)
   {
-    if (aIID.equals(nsCI.nsIWebProgressListener) ||
-        aIID.equals(nsCI.nsIXULBrowserWindow) ||
-        aIID.equals(nsCI.nsISupportsWeakReference) ||
-        aIID.equals(nsCI.nsISupports))
+    if (aIID.equals(nsIWebProgressListener) ||
+        aIID.equals(nsIXULBrowserWindow) ||
+        aIID.equals(nsISupportsWeakReference) ||
+        aIID.equals(nsISupports))
     {
       return this;
     }
@@ -166,7 +189,7 @@ nsBrowserStatusHandler.prototype =
         // 
         //        try {
         //          var imageCache = Components.classes["@mozilla.org/image/cache;1"]
-        //                                   .getService(nsCI.imgICache);
+        //                                   .getService(imgICache);
         //          imageCache.clearCache(false);
         //        }
         //        catch(e) {}
@@ -304,34 +327,34 @@ nsBrowserStatusHandler.prototype =
     gBrowserStatusHandler.init();
     
     window.XULBrowserWindow = gBrowserStatusHandler;
-    window.QueryInterface(nsCI.nsIInterfaceRequestor)
+    window.QueryInterface(nsIInterfaceRequestor)
       .getInterface(nsIWebNavigation)
-      .QueryInterface(nsCI.nsIDocShellTreeItem).treeOwner
-      .QueryInterface(nsCI.nsIInterfaceRequestor)
-      .getInterface(nsCI.nsIXULWindow)
+      .QueryInterface(nsIDocShellTreeItem).treeOwner
+      .QueryInterface(nsIInterfaceRequestor)
+      .getInterface(nsIXULWindow)
       .XULBrowserWindow = window.XULBrowserWindow;
     
-    gBrowser.addProgressListener(gBrowserStatusHandler, nsCI.nsIWebProgress.NOTIFY_ALL);
+    gBrowser.addProgressListener(gBrowserStatusHandler, nsIWebProgress.NOTIFY_ALL);
     
-    window.QueryInterface(nsCI.nsIDOMChromeWindow).browserDOMWindow =
+    window.QueryInterface(nsIDOMChromeWindow).browserDOMWindow =
       new nsBrowserAccess();
 
     gBrowser.webNavigation.sessionHistory = 
-      Components.classes["@mozilla.org/browser/shistory;1"].createInstance(nsCI.nsISHistory);
+      Components.classes["@mozilla.org/browser/shistory;1"].createInstance(nsISHistory);
     
-    gBrowser.docShell.QueryInterface(nsCI.nsIDocShellHistory).useGlobalHistory = true;
+    gBrowser.docShell.QueryInterface(nsIDocShellHistory).useGlobalHistory = true;
     
     gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-      .getService(nsCI.nsIBrowserHistory);
+      .getService(nsIBrowserHistory);
     
     gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
-      .getService(nsCI.nsIURIFixup);
+      .getService(nsIURIFixup);
     
     var bookmarkstore=null; 
     
     try {
       gPref = Components.classes["@mozilla.org/preferences-service;1"]
-        .getService(nsCI.nsIPrefBranch);
+        .getService(nsIPrefBranch);
       
       var page = gPref.getCharPref("browser.startup.homepage");
       var bookmarkstore = gPref.getCharPref("browser.bookmark.store");
@@ -346,7 +369,13 @@ nsBrowserStatusHandler.prototype =
   } catch (e) {
     alert("Error trying to startup browser.  Please report this as a bug:\n" + e);
   }
-  
+
+  var reg = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+  reg.registerFactory(Components.ID("{fe4d6bd5-e4cd-45f9-95bd-1e1796d2c7f7}"),
+                       "Minimo Transfer Item",
+                       "@mozilla.org/transfer;1",
+                       new TransferItemFactory());
+
   loadURI(homepage);
   loadBookmarks(bookmarkstore);
   
@@ -497,14 +526,14 @@ function BrowserUpdateBackForwardState() {
 
 
 function findChildShell(aDocument, aDocShell, aSoughtURI) {
-  aDocShell.QueryInterface(nsCI.nsIWebNavigation);
-  aDocShell.QueryInterface(nsCI.nsIInterfaceRequestor);
-  var doc = aDocShell.getInterface(nsCI.nsIDOMDocument);
+  aDocShell.QueryInterface(nsIWebNavigation);
+  aDocShell.QueryInterface(nsIInterfaceRequestor);
+  var doc = aDocShell.getInterface(nsIDOMDocument);
   if ((aDocument && doc == aDocument) || 
       (aSoughtURI && aSoughtURI.spec == aDocShell.currentURI.spec))
     return aDocShell;
   
-  var node = aDocShell.QueryInterface(nsCI.nsIDocShellTreeNode);
+  var node = aDocShell.QueryInterface(nsIDocShellTreeNode);
   for (var i = 0; i < node.childCount; ++i) {
     var docShell = node.getChildAt(i);
     docShell = findChildShell(aDocument, docShell, aSoughtURI);
@@ -546,7 +575,7 @@ function MiniNavShutdown()
   if(gPrefAdded) {
 	try {
       var psvc = Components.classes["@mozilla.org/preferences-service;1"]
-        .getService(nsCI.nsIPrefService);
+        .getService(nsIPrefService);
       
       psvc.savePrefFile(null);
       
@@ -735,7 +764,7 @@ function BrowserResetZoomMinus() {
 
 function MenuMainPopupShowing () {
   try {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsCI.nsIPrefBranch);
+    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefBranch);
     if (pref.getBoolPref("snav.enabled"))
     {
       document.getElementById("snav_toggle").label = "Enable arrow key scrolling";
@@ -954,14 +983,14 @@ function DoPanelPreferences() {
    Testing the SMS and Call Services 
 */
 function DoTestSendCall(toCall) {
-  var phoneInterface= Components.classes["@mozilla.org/phone/support;1"].createInstance(nsCI.nsIPhoneSupport);
+  var phoneInterface= Components.classes["@mozilla.org/phone/support;1"].createInstance(nsIPhoneSupport);
   phoneInterface.makeCall(toCall,"");
 }
 
 function DoSSRToggle()
 {
   try {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsCI.nsIPrefBranch);
+    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefBranch);
     pref.setBoolPref("ssr.enabled", !pref.getBoolPref("ssr.enabled"));
     
     gBrowser.webNavigation.reload(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
@@ -973,7 +1002,7 @@ function DoSSRToggle()
 function DoSNavToggle()
 {
   try {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsCI.nsIPrefBranch);
+    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefBranch);
     pref.setBoolPref("snav.enabled", !pref.getBoolPref("snav.enabled"));
     
     content.focus();    
@@ -985,7 +1014,7 @@ function DoSNavToggle()
 function DoToggleSoftwareKeyboard()
 {
   try {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsCI.nsIPrefBranch);
+    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefBranch);
     pref.setBoolPref("skey.enabled", !pref.getBoolPref("skey.enabled"));
   }
   catch(ex) { alert(ex); }
@@ -1012,14 +1041,14 @@ function DoFullScreen()
 function DoClipCopy()
 {
   var copytext=gBrowser.selectedBrowser.contentDocument.getSelection().toString();
-  var str = Components.classes["@mozilla.org/supports-string;1"].createInstance(nsCI.nsISupportsString);
+  var str = Components.classes["@mozilla.org/supports-string;1"].createInstance(nsISupportsString);
   if (!str) return false;
   str.data = copytext;
-  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(nsCI.nsITransferable);
+  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(nsITransferable);
   if (!trans) return false;
   trans.addDataFlavor("text/unicode");
   trans.setTransferData("text/unicode",str,copytext.length * 2);
-  var clipid = nsCI.nsIClipboard;
+  var clipid = nsIClipboard;
   var clip = Components.classes["@mozilla.org/widget/clipboard;1"].getService(clipid);
   if (!clip) return false;
   clip.setData(trans,null,clipid.kGlobalClipboard);
@@ -1030,9 +1059,9 @@ function DoClipCopy()
 */
 function DoClipCheckPaste()
 {
-  var clip = Components.classes["@mozilla.org/widget/clipboard;1"].getService(nsCI.nsIClipboard);
+  var clip = Components.classes["@mozilla.org/widget/clipboard;1"].getService(nsIClipboard);
   if (!clip) return false;
-  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(nsCI.nsITransferable);
+  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(nsITransferable);
   if (!trans) return false;
   trans.addDataFlavor("text/unicode");
   clip.getData(trans,clip.kGlobalClipboard);
@@ -1040,7 +1069,7 @@ function DoClipCheckPaste()
   var strLength = new Object();
   var pastetext = null;
   trans.getTransferData("text/unicode",str,strLength);
-  if (str) str = str.value.QueryInterface(nsCI.nsISupportsString);
+  if (str) str = str.value.QueryInterface(nsISupportsString);
   if (str) pastetext = str.data.substring(0,strLength.value / 2);
   if(pastetext) {
     return pastetext;
@@ -1262,8 +1291,8 @@ nsBrowserAccess.prototype =
 {
   QueryInterface : function(aIID)
   {
-    if (aIID.equals(nsCI.nsIBrowserDOMWindow) ||
-        aIID.equals(nsCI.nsISupports))
+    if (aIID.equals(nsIBrowserDOMWindow) ||
+        aIID.equals(nsISupports))
       return this;
     throw Components.results.NS_NOINTERFACE;
   },
@@ -1273,8 +1302,8 @@ nsBrowserAccess.prototype =
     var url = aURI ? aURI.spec : "about:blank";
     var newTab     = gBrowser.addTab(url);
     var newWindow  = gBrowser.getBrowserForTab(newTab).docShell
-                             .QueryInterface(nsCI.nsIInterfaceRequestor)
-                             .getInterface(nsCI.nsIDOMWindow);
+                             .QueryInterface(nsIInterfaceRequestor)
+                             .getInterface(nsIDOMWindow);
     return newWindow;
   },
   
@@ -1289,7 +1318,7 @@ nsBrowserAccess.prototype =
 }
 
 /*
- * Download Service - Work-in-progress
+ * Download Service - Work-in-progress not-for-long
  */
 
 function BrowserViewDownload() {
@@ -1313,5 +1342,71 @@ function DownloadCancel(refId) {
   // document.getElementById("toolbar-download-tag").getAttribute("currentid");
 }
 
- 
- 
+
+function TransferItemFactory() {
+}
+
+TransferItemFactory.prototype = {
+   createInstance: function(delegate, iid) {
+    return new TransferItem().QueryInterface(iid);
+  },
+  lockFactory: function(lock) {
+  }
+};
+
+function TransferItem() {
+}
+
+TransferItem.prototype = {
+  
+  QueryInterface: function (iid) {
+    if (iid.equals(nsITransfer) ||
+        iid.equals(nsIWebProgressListener) ||
+        iid.equals(nsIWebProgressListener2) ||
+        iid.equals(nsISupports))
+      return this;
+    
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
+  },
+  
+  init: function (aSource, aTarget, aDisplayName, aMIMEInfo, startTime, aTempFile, aCancelable) {
+    
+    document.getElementById("statusbar").hidden=false;
+    
+  },
+  
+  onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
+  },
+  
+  onProgressChange: function( aWebProgress,
+                              aRequest,
+                              aCurSelfProgress,
+                              aMaxSelfProgress,
+                              aCurTotalProgress,
+                              aMaxTotalProgress ) {
+    
+    return onProgressChange64(aWebProgress, aRequest, aCurSelfProgress, 
+                              aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+  },
+  
+  onProgressChange64: function( aWebProgress,
+                                aRequest,
+                                aCurSelfProgress,
+                                aMaxSelfProgress,
+                                aCurTotalProgress,
+                                aMaxTotalProgress ) {
+    
+    document.getElementById("statusbar-text").label= "dbg:onProgressChange " + aCurTotalProgress + " " + aMaxTotalProgress;
+  },
+  
+  onStatusChange: function( aWebProgress, aRequest, aStatus, aMessage ) {
+  },
+  
+  onLocationChange: function( aWebProgress, aRequest, aLocation ) {
+  },
+  
+  onSecurityChange: function( aWebProgress, aRequest, state ) {
+  },
+}
+  
