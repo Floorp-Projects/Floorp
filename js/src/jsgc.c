@@ -580,7 +580,11 @@ js_RemoveRoot(JSRuntime *rt, void *rp)
     return JS_TRUE;
 }
 
-#ifdef DEBUG_brendan
+#if defined(DEBUG_brendan) || defined(DEBUG_timeless)
+#define DEBUG_gchist
+#endif
+
+#ifdef DEBUG_gchist
 #define NGCHIST 64
 
 static struct GCHist {
@@ -728,7 +732,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
      */
     thing->next = NULL;
     thing->flagp = NULL;
-#ifdef DEBUG_brendan
+#ifdef DEBUG_gchist
     gchist[gchpos].lastDitch = tried_gc;
     gchist[gchpos].freeList = arenaList->freeList;
     if (++gchpos == NGCHIST)
@@ -1738,7 +1742,7 @@ js_GC(JSContext *cx, uintN gcflags)
     /* Drop atoms held by the property cache, and clear property weak links. */
     js_DisablePropertyCache(cx);
     js_FlushPropertyCache(cx);
-#ifdef DEBUG_notme
+#ifdef DEBUG_scopemeters
   { extern void js_DumpScopeMeters(JSRuntime *rt);
     js_DumpScopeMeters(rt);
   }
@@ -1996,7 +2000,7 @@ restart:
 
     if (rt->gcCallback)
         (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
-#ifdef DEBUG_notme
+#ifdef DEBUG_srcnotesize
   { extern void DumpSrcNoteSizeHist();
     DumpSrcNoteSizeHist();
     printf("GC HEAP SIZE %lu (%lu)\n",

@@ -5214,6 +5214,10 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
 }
 
 #ifdef DEBUG_brendan
+#define DEBUG_srcnotesize
+#endif
+
+#ifdef DEBUG_srcnotesize
 #define NBINS 10
 static uint32 hist[NBINS];
 

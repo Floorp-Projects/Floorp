@@ -4192,6 +4192,10 @@ MeterEntryCount(uintN count)
     js_entry_count_hist[JS_MIN(count, 10)]++;
 }
 
+#define DEBUG_scopemeters
+#endif /* DEBUG_brendan */
+
+#ifdef DEBUG_scopemeters
 void
 js_DumpScopeMeters(JSRuntime *rt)
 {
@@ -4232,8 +4236,7 @@ js_DumpScopeMeters(JSRuntime *rt)
     memset(js_entry_count_hist, 0, sizeof js_entry_count_hist);
     fflush(logfp);
 }
-
-#endif /* DEBUG_brendan */
+#endif
 
 uint32
 js_Mark(JSContext *cx, JSObject *obj, void *arg)
