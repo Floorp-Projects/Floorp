@@ -441,17 +441,23 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	    break;
 	}
 	context->multi = PR_FALSE;
-	context->cipherInfo =  isEncrypt ? 
-			(void *)sftk_GetPubKey(key,CKK_RSA,&crv) :
-				(void *)sftk_GetPrivKey(key,CKK_RSA,&crv);
-	if (context->cipherInfo == NULL) {
-	    break;
-	}
 	if (isEncrypt) {
+	    NSSLOWKEYPublicKey *pubKey = sftk_GetPubKey(key,CKK_RSA,&crv);
+	    if (pubKey == NULL) {
+		break;
+	    }
+	    context->maxLen = nsslowkey_PublicModulusLen(pubKey);
+	    context->cipherInfo =  (void *)pubKey;
 	    context->update = (SFTKCipher) 
 		(pMechanism->mechanism == CKM_RSA_X_509
 					? RSA_EncryptRaw : RSA_EncryptBlock);
 	} else {
+	    NSSLOWKEYPrivateKey *privKey = sftk_GetPrivKey(key,CKK_RSA,&crv);
+	    if (privKey == NULL) {
+		break;
+	    }
+	    context->maxLen = nsslowkey_PrivateModulusLen(privKey);
+	    context->cipherInfo =  (void *)privKey;
 	    context->update = (SFTKCipher) 
 		(pMechanism->mechanism == CKM_RSA_X_509
 					? RSA_DecryptRaw : RSA_DecryptBlock);
@@ -717,6 +723,18 @@ CK_RV NSC_EncryptUpdate(CK_SESSION_HANDLE hSession,
     crv = sftk_GetContext(hSession,&context,SFTK_ENCRYPT,PR_TRUE,NULL);
     if (crv != CKR_OK) return crv;
 
+    if (!pEncryptedPart) {
+	if (context->doPad) {
+	    CK_ULONG totalDataAvailable = ulPartLen + context->padDataLength;
+	    CK_ULONG blocksToSend = totalDataAvailable/context->blockSize;
+
+	    *pulEncryptedPartLen = blocksToSend * context->blockSize;
+	    return CKR_OK;
+	}
+	*pulEncryptedPartLen = ulPartLen;
+	return CKR_OK;
+    }
+
     /* do padding */
     if (context->doPad) {
 	/* deal with previous buffered data */
@@ -837,7 +855,8 @@ CK_RV NSC_Encrypt (CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
     if (crv != CKR_OK) return crv;
 
     if (!pEncryptedData) {
-	*pulEncryptedDataLen = ulDataLen + 2 * context->blockSize;
+	*pulEncryptedDataLen = context->multi ? 
+		ulDataLen + 2 * context->blockSize : context->maxLen;
 	goto finish;
     }
 
@@ -923,6 +942,35 @@ CK_RV NSC_DecryptUpdate(CK_SESSION_HANDLE hSession,
     crv = sftk_GetContext(hSession,&context,SFTK_DECRYPT,PR_TRUE,NULL);
     if (crv != CKR_OK) return crv;
 
+    /* this can only happen on an NSS programming error */
+    PORT_Assert((context->padDataLength == 0) 
+		|| context->padDataLength == context->blockSize);
+
+
+    if (!pPart) {
+	if (context->doPad) {
+	    /* we can check the data length here because if we are padding,
+	     * then we must be using a block cipher. In the non-padding case
+	     * the error will be returned by the underlying decryption
+	     * function when do do the actual decrypt. We need to do the
+	     * check here to avoid returning a negative length to the caller.
+ 	     */
+	    if ((ulEncryptedPartLen == 0) ||
+		(ulEncryptedPartLen % context->blockSize) != 0) {
+		return CKR_ENCRYPTED_DATA_LEN_RANGE;
+	    }
+	    *pulPartLen = 
+		ulEncryptedPartLen + context->padDataLength - context->blockSize;
+	    return CKR_OK;
+	}
+	/* for stream ciphers there is are no constraints on ulEncryptedPartLen.
+	 * for block ciphers, it must be a multiple of blockSize. The error is
+	 * detected when this function is called again do decrypt the output.
+	 */
+	*pulPartLen = ulEncryptedPartLen;
+	return CKR_OK;
+    }
+
     if (context->doPad) {
 	/* first decrypt our saved buffer */
 	if (context->padDataLength != 0) {
@@ -957,7 +1005,6 @@ CK_RV NSC_DecryptFinal(CK_SESSION_HANDLE hSession,
     unsigned int maxout = *pulLastPartLen;
     CK_RV crv;
     SECStatus rv = SECSuccess;
-    PRBool contextFinished = PR_TRUE;
 
     /* make sure we're legal */
     crv = sftk_GetContext(hSession,&context,SFTK_DECRYPT,PR_TRUE,&session);
@@ -967,9 +1014,9 @@ CK_RV NSC_DecryptFinal(CK_SESSION_HANDLE hSession,
     if (!pLastPart) {
 	/* caller is checking the amount of remaining data */
 	if (context->padDataLength > 0) {
-	    *pulLastPartLen = 2 * context->blockSize;
-	    contextFinished = PR_FALSE; /* still have padding to go */
+	    *pulLastPartLen = context->padDataLength;
 	}
+	rv = SECSuccess;
 	goto finish;
     }
 
@@ -992,11 +1039,9 @@ CK_RV NSC_DecryptFinal(CK_SESSION_HANDLE hSession,
 	}
     }
 
+    sftk_SetContextByType(session, SFTK_DECRYPT, NULL);
+    sftk_FreeContext(context);
 finish:
-    if (contextFinished) {
-	sftk_SetContextByType(session, SFTK_DECRYPT, NULL);
-	sftk_FreeContext(context);
-    }
     sftk_FreeSession(session);
     return (rv == SECSuccess) ? CKR_OK : CKR_DEVICE_ERROR;
 }
@@ -2413,12 +2458,21 @@ CK_RV NSC_VerifyRecover(CK_SESSION_HANDLE hSession,
     crv = sftk_GetContext(hSession,&context,SFTK_VERIFY_RECOVER,
 							PR_FALSE,&session);
     if (crv != CKR_OK) return crv;
+    if (pData == NULL) {
+	/* to return the actual size, we need  to do the decrypt, just return
+	 * the max size, which is the size of the input signature. */
+	*pulDataLen = ulSignatureLen;
+	rv = SECSuccess;
+	goto finish;
+    }
 
     rv = (*context->update)(context->cipherInfo, pData, &outlen, maxoutlen, 
 						pSignature, ulSignatureLen);
     *pulDataLen = (CK_ULONG) outlen;
+
     sftk_FreeContext(context);
     sftk_SetContextByType(session, SFTK_VERIFY_RECOVER, NULL);
+finish:
     sftk_FreeSession(session);
     return (rv == SECSuccess)  ? CKR_OK : CKR_DEVICE_ERROR;
 }
