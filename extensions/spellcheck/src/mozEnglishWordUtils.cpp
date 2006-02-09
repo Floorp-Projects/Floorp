@@ -175,6 +175,11 @@ NS_IMETHODIMP mozEnglishWordUtils::FindNextWord(const PRUnichar *word, PRUint32 
   const PRUnichar *startWord=p;
   if(p<endbuf){
     // XXX These loops should be modified to handle non-BMP characters.
+    // if previous character is a word character, need to advance out of the word
+    if (offset > 0 && ucIsAlpha(*(p-1))) {
+      while (p < endbuf && ucIsAlpha(*p))
+        p++;
+    }
     while((p < endbuf) && (!ucIsAlpha(*p)))
       {
         p++;

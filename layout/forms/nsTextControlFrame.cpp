@@ -133,7 +133,7 @@
 
 #define DEFAULT_COLUMN_WIDTH 20
 
-#define PREF_DEFAULT_SPELLCHECK "layout.textarea.spellcheckDefault"
+#define PREF_DEFAULT_SPELLCHECK "layout.spellcheckDefault"
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
@@ -1422,6 +1422,8 @@ nsTextControlFrame::PreDestroy(nsPresContext* aPresContext)
 NS_IMETHODIMP 
 nsTextControlFrame::Destroy(nsPresContext* aPresContext)
 {
+  nsContentUtils::UnregisterPrefCallback(PREF_DEFAULT_SPELLCHECK,
+                                         nsTextControlFrame::RealTimeSpellCallback, this);
   if (!mDidPreDestroy) {
     PreDestroy(aPresContext);
   }
@@ -1705,14 +1707,32 @@ nsTextControlFrame::SyncRealTimeSpell()
   }
 
   PRBool enable = PR_FALSE;
-  if (!readOnly && !IsSingleLineTextControl()) {
-    // multi-line text control: check the pref to see what the default should be
-    // GetBoolPref defaults the value to PR_FALSE is the pref is not set
-    enable = nsContentUtils::GetBoolPref(PREF_DEFAULT_SPELLCHECK);
+  if (!readOnly) {
+    // check the pref to see what the default should be, default is 0: never spellcheck
+    PRInt32 spellcheckLevel = nsContentUtils::GetIntPref(PREF_DEFAULT_SPELLCHECK, 0);
+    switch (spellcheckLevel) {
+      case SpellcheckAllTextFields:
+        enable = PR_TRUE;
+        break;
+      case SpellcheckMultiLineOnly:
+        enable = !IsSingleLineTextControl();
+        break;
+    }
   }
   SetEnableRealTimeSpell(enable);
 }
 
+// PrefCallback for real time spell pref
+// static
+int PR_CALLBACK nsTextControlFrame::RealTimeSpellCallback(const char* aPref, void* aContext)
+{
+  if (strcmp(aPref, PREF_DEFAULT_SPELLCHECK) == 0) {
+    nsTextControlFrame* frame = NS_STATIC_CAST(nsTextControlFrame*, aContext);
+    NS_ASSERTION(frame, "Pref callback: aContext was of an unexpected type");
+    frame->SyncRealTimeSpell();
+  }
+  return 0;
+}
 
 nsresult
 nsTextControlFrame::InitEditor()
@@ -1799,6 +1819,8 @@ nsTextControlFrame::InitEditor()
   transMgr->SetMaxTransactionCount(DEFAULT_UNDO_CAP);
 
   SyncRealTimeSpell();
+  nsContentUtils::RegisterPrefCallback(PREF_DEFAULT_SPELLCHECK, 
+                                       nsTextControlFrame::RealTimeSpellCallback, this);
 
   if (IsPasswordTextControl()) {
     // Disable undo for password textfields.  Note that we want to do this at

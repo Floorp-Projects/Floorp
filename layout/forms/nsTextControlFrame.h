@@ -50,6 +50,7 @@
 #include "nsWeakReference.h" //for service and presshell pointers
 #include "nsIScrollableViewProvider.h"
 #include "nsIPhonetic.h"
+#include "nsContentUtils.h"
 
 class nsISupportsArray;
 class nsIEditor;
@@ -184,6 +185,12 @@ public: //for methods who access nsTextControlFrame directly
 
   /* called to free up native keybinding services */
   static NS_HIDDEN_(void) ShutDown();
+  
+  enum SpellcheckDefaultState {
+    SpellcheckNone = 0,
+    SpellcheckMultiLineOnly = 1,
+    SpellcheckAllTextFields = 2
+  };
 
 protected:
   /**
@@ -265,6 +272,7 @@ private:
   
   void SetEnableRealTimeSpell(PRBool aEnabled);
   void SyncRealTimeSpell();
+  static int PR_CALLBACK RealTimeSpellCallback(const char* aPref, void* aContext);
 
 private:
   nsCOMPtr<nsIEditor> mEditor;
