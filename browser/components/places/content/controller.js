@@ -415,10 +415,21 @@ var PlacesController = {
    *          false otherwise. 
    */
   _hasRemovableSelection: function PC__hasRemovableSelection() {
+    ASSERT(this._activeView, "No active view - cannot paste!");
+    if (!this._activeView)
+      return false;
     var nodes = this._activeView.getSelectionNodes();
     for (var i = 0; i < nodes.length; ++i) {
-      if (nodes[i].readonly) 
+      var parent = nodes[i].parent;
+      if (parent.childrenReadOnly)
         return false;
+      try {
+        parent = parent.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+        if (this._bms.getFolderReadonly(parent.folderId))
+          return false;
+      }
+      catch (e) {
+      }
     }
     return true;
   },
@@ -453,8 +464,20 @@ var PlacesController = {
    * content of the clipboard and the selection within the active view.
    */
   _canPaste: function PC__canPaste() {
-    // XXXben: check selection to see if insertion point would suggest pasting 
-    //         into an immutable container. 
+    ASSERT(this._activeView, "No active view - cannot paste!");
+    if (!this._activeView)
+      return false;
+    var nodes = this._activeView.getSelectionNodes();
+    for (var i = 0; i < nodes.length; ++i) {
+      var parent = nodes[i].parent;
+      try {
+        parent = parent.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+        if (this._bms.getFolderReadonly(parent.folderId))
+          return false;
+      }
+      catch (e) {
+      }
+    }
     return this._hasClipboardData();
   },
   
@@ -1085,7 +1108,7 @@ var PlacesController = {
    * @returns An array of objects representing each item contained by the source.
    */
   unwrapNodes: function PC_unwrapNodes(blob, type) {
-    var parts = blob.split("\n");
+    var parts = blob.split("\r\n");
     var nodes = [];
     for (var i = 0; i < parts.length; ++i) {
       var data = { };
@@ -1307,7 +1330,7 @@ var PlacesController = {
       var node = nodes[i];
       var self = this;
       function generateChunk(type) {
-        var suffix = i < (nodes.length - 1) ? "\n" : "";
+        var suffix = i < (nodes.length - 1) ? "\r\n" : "";
         return self.wrapNode(node, type) + suffix;
       }
       if (this.nodeIsFolder(node) || this.nodeIsQuery(node)) 
