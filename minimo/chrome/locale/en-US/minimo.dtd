@@ -70,3 +70,8 @@
 <!ENTITY findText.label              "Find string: " >
 <!ENTITY findToolbar.label           "Find..." >
 <!ENTITY nextText.label              "Next" >
+
+<!-- toolbar download -->
+<!ENTITY downloadText.label          "Download Viewer " >
+<!ENTITY downloadCancelText.label    "Cancel Download" >
+
