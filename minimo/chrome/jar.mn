@@ -17,6 +17,7 @@ minimo.jar:
 	content/minimo/toolbars/toolbar-search.xul    (content/toolbars/toolbar-search.xul)
 	content/minimo/toolbars/toolbar-view.xul      (content/toolbars/toolbar-view.xul)	
 	content/minimo/toolbars/toolbar-find.xul      (content/toolbars/toolbar-find.xul)	
+	content/minimo/toolbars/toolbar-download.xul  (content/toolbars/toolbar-download.xul)	
     content/minimo/rssview/rssload.js             (content/rssview/rssload.js)
     content/minimo/rssview/rssload.xhtml          (content/rssview/rssload.xhtml)
 	content/minimo/rssview/rss_template_html.xml  (content/rssview/rss_template_html.xml)
