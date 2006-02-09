@@ -45,6 +45,7 @@
 <?xul-overlay href="chrome://minimo/content/toolbars/toolbar-rss.xul"?>
 <?xul-overlay href="chrome://minimo/content/toolbars/toolbar-search.xul"?>
 <?xul-overlay href="chrome://minimo/content/toolbars/toolbar-find.xul"?>
+<?xul-overlay href="chrome://minimo/content/toolbars/toolbar-download.xul"?>
 
 <!DOCTYPE window [
           <!ENTITY % minimoDTD SYSTEM "chrome://minimo/locale/minimo.dtd" >
@@ -126,7 +127,8 @@
     <command id="cmd_ViewDeckSB"              oncommand="BrowserViewDeckSB()"/>
     <command id="cmd_ViewDeckSearch"          oncommand="BrowserViewDeckSearch()"/>
     <command id="cmd_ViewDeckDefault"         oncommand="BrowserViewDeckDefault()"/>
-    <command id="cmd_ViewFind"                oncommand="BrowserViewFind()"/>
+    <command id="cmd_ViewFind"                oncommand="BrowserViewFind()" />
+    <command id="cmd_ViewDownload"            oncommand="BrowserViewDownload()" />
     <command id="cmd_BrowserOpenLinkAsNewTab" oncommand="BrowserOpenLinkAsTab()" />
     <command id="cmd_BrowserHome"             oncommand="BrowserHome()" />
     <command id="cmd_BrowserBack"             oncommand="BrowserBack()" />
@@ -307,7 +309,11 @@
       <menuitem id="command_ViewFind"
                 command="cmd_ViewFind" 
                 label="&findToolbar.label;"  /> 
-      
+
+      <menuitem id="command_ViewDownload"
+                command="cmd_ViewDownload" 
+                label="&downloadText.label;"  /> 
+            
       <menuseparator/>
       
       <menuitem id="command_Quit" 
