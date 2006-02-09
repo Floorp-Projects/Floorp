@@ -1929,6 +1929,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
     gSafeMode = PR_TRUE;
 
+  // Handle -no-remote command line argument. Setup the environment to
+  // better accommodate other components and various restart scenarios.
+  if (CheckArg("no-remote"))
+    PR_SetEnv("MOZ_NO_REMOTE=1");
+
   // Handle -help and -version command line arguments.
   // They should return quickly, so we deal with them here.
   if (CheckArg("h") || CheckArg("help") || CheckArg("?")) {
