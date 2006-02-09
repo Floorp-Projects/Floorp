@@ -132,7 +132,8 @@
     <command id="cmd_ViewDeckSearch"          oncommand="BrowserViewDeckSearch()"/>
     <command id="cmd_ViewDeckDefault"         oncommand="BrowserViewDeckDefault()"/>
     <command id="cmd_ViewFind"                oncommand="BrowserViewFind()" />
-    <command id="cmd_ViewDownload"            oncommand="BrowserViewDownload()" />
+    <command id="cmd_ViewDownload"            oncommand="BrowserViewDownload(true)" />
+    <command id="cmd_ViewDownloadHidden"      oncommand="BrowserViewDownload(false)" />
     <command id="cmd_BrowserOpenLinkAsNewTab" oncommand="BrowserOpenLinkAsTab()" />
     <command id="cmd_BrowserHome"             oncommand="BrowserHome()" />
     <command id="cmd_BrowserBack"             oncommand="BrowserBack()" />
