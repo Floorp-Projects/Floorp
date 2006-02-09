@@ -496,7 +496,7 @@ nsFontPS::FindFont(PRUnichar aChar, const nsFont& aFont,
     return nsnull;
 
   if (fonts->Count() > 0) {
-    fontps *fps = (fontps)fonts->ElementAt(0);
+    fontps *fps = (fontps*)fonts->ElementAt(0);
     NS_ENSURE_TRUE(fps, nsnull);
     fontPS = fps->fontps;
   }
