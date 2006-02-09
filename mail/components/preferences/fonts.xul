@@ -63,9 +63,6 @@
   
     <preferences id="fontPreferences">
       <preference id="font.language.group"  name="font.language.group"  type="wstring"/>
-      <preference id="browser.display.screen_resolution"
-                  name="browser.display.screen_resolution"
-                  type="int"/>
       <preference id="browser.display.use_document_fonts"
                   name="browser.display.use_document_fonts"
                   type="int"/>
@@ -239,27 +236,6 @@
       <separator class="thin"/>
 
       <hbox flex="1">
-        <hbox align="center" pack="end">
-          <label accesskey="&resolution.accesskey;" control="screenResolution">&resolution.label;</label>
-          <menulist id="screenResolution" 
-                    oncommand="gFontsDialog.changeScreenResolution(this)"
-                    preference="browser.display.screen_resolution"
-                    onsyncfrompreference="return gFontsDialog.readScreenResolution();">
-            <menupopup>
-              <menuitem id="otherResolution" value="72"/>
-              <menuitem id="defaultResolution" value="96"/>
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-              <menuitem id="systemResolution" value="0" label="&resolution.system.label;"/>
-#endif
-#endif
-              <menuseparator id="resolutionSeparator"/>
-              <menuitem id="userResolution" hidden="true"/>
-              <menuitem id="chooseUserResolution" value="choose" label="&resolution.other;"/>
-            </menupopup>
-          </menulist>
-        </hbox>
-
         <spacer flex="1"/>
         <hbox align="center" pack="end">
           <label accesskey="&minSize.accesskey;" control="minSize">&minSize.label;</label>
