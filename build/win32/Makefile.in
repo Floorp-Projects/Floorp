@@ -58,7 +58,9 @@ endif
 endif
 
 ifdef REDIST_FILES
-libs:: $(addprefix $(WIN32_REDIST_DIR)/,$(REDIST_FILES))
-	$(INSTALL) $^ $(FINAL_TARGET)
+libs::
+	for file in $(REDIST_FILES) ; do \
+	  $(INSTALL) "$(WIN32_REDIST_DIR)"/$$file $(FINAL_TARGET) ; \
+	done
 endif
 

@@ -395,7 +395,7 @@ case "$target" in
         fi
 
         if test -n "$WIN32_REDIST_DIR"; then
-            WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd | sed 's, ,\\ ,g'`
+            WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
         fi
 	
         # bug #249782
@@ -7199,7 +7199,6 @@ AC_SUBST(MOZ_TOOLS_DIR)
 AC_SUBST(CYGWIN_WRAPPER)
 AC_SUBST(AS_PERL)
 AC_SUBST(WIN32_REDIST_DIR)
-AC_SUBST(WIN32_REDIST_DIR_QUOTED)
 
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
