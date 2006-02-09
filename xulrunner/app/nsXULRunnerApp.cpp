@@ -141,6 +141,12 @@ static PRBool CheckMaxVersion(const char *versionStr)
 
 /**
  * Parse application data.
+ *
+ * @returns 0, if the application initialization file was parsed successfully
+ *            and an appropriate Gecko runtime was found.
+ *          1, if the ini file was missing required fields or an appropriate
+ *            Gecko runtime wasn't found.
+ *          2, if the specified ini file could not be read.
  */
 static int LoadAppData(const char* appDataFile, nsXREAppData* aResult,
                        nsCString& vendor, nsCString& name, nsCString& version,
@@ -513,6 +519,10 @@ int main(int argc, char* argv[])
                        vendor, name, version, buildID, appID, copyright);
   if (!rv)
     rv = XRE_main(argc, argv, &appData);
+  else if (rv == 2)
+    Output(PR_TRUE, "Error: Unrecognized option specified or couldn't read "
+                    "the application initialization file.\n\n"
+                    "Try `" XULRUNNER_PROGNAME " --help' for more information.\n");
 
   NS_IF_RELEASE(appData.directory);
 
