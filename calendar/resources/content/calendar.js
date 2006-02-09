@@ -379,7 +379,14 @@ function deleteItems( SelectedItems, DoNotConfirm )
 
     startBatchTransaction();
     for (i in SelectedItems) {
-        doTransaction('delete', SelectedItems[i], SelectedItems[i].calendar, null, null);
+        var aOccurrence = SelectedItems[i];
+        if (aOccurrence.parentItem != aOccurrence) {
+            var event = aOccurrence.parentItem.clone();
+            event.recurrenceInfo.removeOccurrenceAt(aOccurrence.recurrenceId);
+            doTransaction('modify', event, event.calendar, aOccurrence.parentItem, null);
+        } else {
+            doTransaction('delete', aOccurrence, aOccurrence.calendar, null, null);
+        }
     }
     endBatchTransaction();
 }
