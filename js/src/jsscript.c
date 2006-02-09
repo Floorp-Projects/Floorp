@@ -1028,6 +1028,9 @@ js_FreeRuntimeScriptState(JSRuntime *rt)
 }
 
 #ifdef DEBUG_brendan
+#define DEBUG_SFTBL
+#endif
+#ifdef DEBUG_SFTBL
 size_t sftbl_savings = 0;
 #endif
 
@@ -1046,7 +1049,7 @@ SaveScriptFilename(JSRuntime *rt, const char *filename, uint32 flags)
     hash = JS_HashString(filename);
     hep = JS_HashTableRawLookup(table, hash, filename);
     sfe = (ScriptFilenameEntry *) *hep;
-#ifdef DEBUG_brendan
+#ifdef DEBUG_SFTBL
     if (sfe)
         sftbl_savings += strlen(sfe->filename);
 #endif
@@ -1236,7 +1239,9 @@ js_SweepScriptFilenames(JSRuntime *rt)
                                  js_script_filename_sweeper,
                                  rt);
 #ifdef DEBUG_notme
+#ifdef DEBUG_SFTBL
     printf("script filename table savings so far: %u\n", sftbl_savings);
+#endif
 #endif
 }
 
