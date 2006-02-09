@@ -77,28 +77,28 @@ void dumpPattern(nsISVGCairoSurface *surf);
 
 cairo_pattern_t *
 CairoPattern(nsISVGRendererCanvas *canvas, nsISVGPattern *aPat,
-             nsISVGGeometrySource *aSource)
+             nsISVGGeometrySource *aSource, nsISVGRendererSurface **aSurface)
 {
+  *aSurface = nsnull;
   NS_ASSERTION(aPat, "Called CairoPattern without a pattern!");
   if (!aPat)
-    return NULL;
+    return nsnull;
 
   nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(canvas);
   NS_ASSERTION(cairoCanvas, "wrong svg render context for geometry!");
-  if (!cairoCanvas) return NULL;
+  if (!cairoCanvas) return nsnull;
 
   cairo_t *ctx = cairoCanvas->GetContext();
 
   cairo_identity_matrix(ctx);
 
   // Paint it!
-  nsCOMPtr<nsISVGRendererSurface> aSurface;
   nsCOMPtr<nsIDOMSVGMatrix> pMatrix;
-  if (NS_FAILED(aPat->PaintPattern(canvas, getter_AddRefs(aSurface), getter_AddRefs(pMatrix), aSource)))
+  if (NS_FAILED(aPat->PaintPattern(canvas, aSurface, getter_AddRefs(pMatrix), aSource)))
     return nsnull;
 
   // Get the cairo surface
-  nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
+  nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(*aSurface);
   if (!cairoSurface)
     return nsnull;
 
@@ -113,6 +113,8 @@ CairoPattern(nsISVGRendererCanvas *canvas, nsISVGPattern *aPat,
 
   // Translate the pattern frame
   cairo_matrix_t pmatrix = SVGToMatrix(pMatrix);
+  cairoCanvas->AdjustMatrixForInitialTransform(&pmatrix);
+
   if (cairo_matrix_invert(&pmatrix))
     return nsnull;
 

@@ -865,7 +865,8 @@ nsSVGPathGeometryFrame::GetStrokePattern(nsISVGPattern **aPat)
     // Now have the URI.  Get the gradient 
     rv = NS_GetSVGPattern(getter_AddRefs(mStrokePattern), aServer, mContent, 
                           nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
-    NS_ADD_SVGVALUE_OBSERVER(mStrokePattern);
+    if (mStrokePattern)
+      NS_ADD_SVGVALUE_OBSERVER(mStrokePattern);
   }
   *aPat = mStrokePattern;
   return rv;
@@ -929,7 +930,8 @@ nsSVGPathGeometryFrame::GetFillPattern(nsISVGPattern **aPat)
     // Now have the URI.  Get the pattern 
     rv = NS_GetSVGPattern(getter_AddRefs(mFillPattern), aServer, mContent, 
                           nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
-    NS_ADD_SVGVALUE_OBSERVER(mFillPattern);
+    if (mFillPattern)
+      NS_ADD_SVGVALUE_OBSERVER(mFillPattern);
   }
   *aPat = mFillPattern;
   return rv;
@@ -1063,7 +1065,7 @@ void nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags,
                                            PRBool suppressInvalidation)
 {
   mUpdateFlags |= flags;
-  
+
   nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
