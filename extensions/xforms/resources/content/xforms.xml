@@ -784,6 +784,9 @@
                               parseInt(value));
           this.inputField.value = date.toLocaleFormat("%Y-%m-%d");
 
+          // check if we should update the instance data
+          this._change();
+
           this._hidePicker(true);
         ]]>
         </body>
@@ -797,7 +800,7 @@
         // first we handle events that will always toggle the picker dropdown -
         // F4 and alt-down/up
         if (event.keyCode == event.DOM_VK_F4 ||
-            event.altKey && (event.keyCode == event.DOM_VK_DOWN || 
+            event.altKey && (event.keyCode == event.DOM_VK_DOWN ||
                              event.keyCode == event.DOM_VK_UP)) {
           // first set the accessor value, since the input's value hasn't
           // been validated yet, and forcing this will.
@@ -862,13 +865,25 @@
           }
         } else {
           // pressing down if the picker is hidden will show it
-          if (event.keyCode == event.DOM_VK_DOWN)
+          if (event.keyCode == event.DOM_VK_DOWN) {
             // first set the accessor value, since the input's value hasn't
             // been validated yet, and forcing this will.
             this.accessors.setValue(this.inputField.value);
 
             this._showPicker();
+          } else {
+            // check if something changed
+            this._change();
           }
+        }
+      ]]>
+      </handler>
+
+      <handler event="keyup">
+      <![CDATA[
+        if (!this._isPickerVisible) {
+          // check if something changed
+          this._change();
         }
       ]]>
       </handler>
