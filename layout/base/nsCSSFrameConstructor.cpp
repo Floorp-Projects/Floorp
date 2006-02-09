@@ -546,7 +546,11 @@ GetIBContainingBlockFor(nsIFrame* aFrame)
       return aFrame;
     }
 
-    if (!IsFrameSpecial(parentFrame))
+    // Note that we ignore non-special frames which have a pseudo on their
+    // style context -- they're not the frames we're looking for!  In
+    // particular, they may be hiding a real parent that _is_ special.
+    if (!IsFrameSpecial(parentFrame) &&
+        !parentFrame->GetStyleContext()->GetPseudoType())
       break;
 
     aFrame = parentFrame;
@@ -9881,17 +9885,10 @@ DeletingFrameSubtree(nsPresContext*  aPresContext,
 
   nsAutoVoidArray destroyQueue;
 
-  // If it's a "special" block-in-inline frame, then we need to
-  // remember to delete our special siblings, too.  Since every one of
-  // the next-in-flows has the same special sibling, just do this
-  // once, rather than in the loop below.
-  if (IsFrameSpecial(aFrame)) {
-    nsIFrame* specialSibling;
-    GetSpecialSibling(aFrameManager, aFrame, &specialSibling);
-    if (specialSibling) {
-      DeletingFrameSubtree(aPresContext, aFrameManager, specialSibling);
-    }
-  }
+  // If it's a "special" block-in-inline frame, then we can't really deal.
+  // That really shouldn't be happening.
+  NS_ASSERTION(!IsFrameSpecial(aFrame),
+               "DeletingFrameSubtree on a special frame.  Prepare to crash.");
 
   do {
     DoDeletingFrameSubtree(aPresContext, aFrameManager, destroyQueue,
