@@ -59,8 +59,17 @@ function addCalendarToTree(aCalendar)
     // since it's not possible to compare "interface pointers" for identity
     // because of XPConnect wrapping vagaries.  Bug 325650 covers fixing
     // this the right way.  But for now...
-    boxobj.invalidate();
 
+    // trigger tree redraw by signalizing that a line was added at the top of
+    // the list
+    // a perfect solution would just invalidate the affected lines
+    boxobj.rowCountChanged(0, 1);
+    
+    // as this might lead to situations where nothing has to be changed visually
+    // the whole view should be invalidated (note that we're pretending to
+    // change line 0 only)
+    boxobj.invalidate();
+    
     updateStyleSheetForCalendar(aCalendar);
 }
 
@@ -76,6 +85,15 @@ function removeCalendarFromTree(aCalendar)
     // since it's not possible to compare "interface pointers" for identity
     // because of XPConnect wrapping vagaries.  Bug 325650 covers fixing this
     // the right way.  But for now...
+
+    // trigger tree redraw by signalizing that a line was removed from the
+    // top of the list
+    // a perfect solution would just invalidate the affected lines
+    boxobj.rowCountChanged(0, -1);
+
+    // as this might lead to situations where nothing has to be changed visually
+    // the whole view should be invalidated (note that we're pretending to
+    // change line 0 only)
     boxobj.invalidate();
 }
 
