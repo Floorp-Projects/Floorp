@@ -43,13 +43,13 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://browser/locale/metaData.dtd" >
- 
+
 <window id="metadata"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="onLoad()"
         class="dialog"
-        minwidth="350"
+        style="width: 40em; height: 10em;"
         persist="screenX screenY"
         screenX="24" screenY="24">
 
@@ -102,6 +102,11 @@
           <separator orient="vertical"/>
           <label value="&link-rev.label; "/>
           <textbox readonly="true" id="link-rev-text"/>
+        </row>
+        <row id="link-ping">
+          <separator orient="vertical"/>
+          <label value="&link-ping.label; "/>
+          <textbox readonly="true" multiline="true" id="link-ping-text"/>
         </row>
       </rows>
     </grid>

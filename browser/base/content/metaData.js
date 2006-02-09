@@ -234,6 +234,8 @@ function checkForLink(elem, htmllocalname)
     setInfo("link-type", elem.getAttribute("type"));
     setInfo("link-rel",  elem.getAttribute("rel"));
     setInfo("link-rev",  elem.getAttribute("rev"));
+    var ping = elem.ping.replace(/ /g, '\n');
+    setInfo("link-ping", ping);
 
     var target = elem.target;
 
@@ -271,6 +273,7 @@ function checkForLink(elem, htmllocalname)
     setInfo("link-type", "");
     setInfo("link-rel", "");
     setInfo("link-rev", "");
+    setInfo("link-ping", "");
 
     switch (elem.getAttributeNS(XLinkNS,"show")) {
     case "embed":
