@@ -172,13 +172,13 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
             ok = js_InitRuntimeNumberState(cx);
         if (ok)
             ok = js_InitRuntimeStringState(cx);
+#ifdef JS_THREADSAFE
+        JS_EndRequest(cx);
+#endif
         if (!ok) {
             js_DestroyContext(cx, JS_NO_GC);
             return NULL;
         }
-#ifdef JS_THREADSAFE
-        JS_EndRequest(cx);
-#endif
 
         JS_LOCK_GC(rt);
         rt->state = JSRTS_UP;
