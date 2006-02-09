@@ -83,25 +83,15 @@ void DemangleSymbol(const char * aSymbol,
 }
 
 
-#if defined(linux) && defined(__GLIBC__) && (defined(__i386) || defined(PPC)) // i386 or PPC Linux stackwalking code
+#if defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC)) // i386 or PPC Linux stackwalking code
 
-#include <setjmp.h>
-//
 
 void DumpStackToFile(FILE* aStream)
 {
-  jmp_buf jb;
-  setjmp(jb);
-
   // Stack walking code courtesy Kipp's "leaky".
 
-  // Get the frame pointer out of the jmp_buf
-  void **bp = (void**)
-#if defined(__i386) 
-    (jb[0].__jmpbuf[JB_BP]);
-#elif defined(PPC)
-    (jb[0].__jmpbuf[JB_GPR1]);
-#endif
+  // Get the frame pointer
+  void **bp = (void**) __builtin_frame_address(0);
 
   int skip = 2;
   for ( ; (void**)*bp > bp; bp = (void**)*bp) {

@@ -50,19 +50,6 @@
 
 #if defined(_WIN32)
 #include <windows.h>
-#elif defined(linux) && defined(__GLIBC__) && (defined(__i386) || defined(PPC))
-#include <setjmp.h>
-
-//
-// On glibc 2.1, the Dl_info api defined in <dlfcn.h> is only exposed
-// if __USE_GNU is defined.  I suppose its some kind of standards
-// adherence thing.
-//
-#if (__GLIBC_MINOR__ >= 1) && !defined(__USE_GNU)
-#define __USE_GNU
-#endif
-
-#include <dlfcn.h>
 #endif
 
 #ifdef HAVE_LIBDL
@@ -460,7 +447,7 @@ static PRIntn PR_CALLBACK DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aInd
 
 #endif /* NS_BUILD_REFCNT_LOGGING */
 
-nsresult
+NS_COM nsresult
 nsTraceRefcntImpl::DumpStatistics(StatisticsType type, FILE* out)
 {
   nsresult rv = NS_OK;
@@ -537,7 +524,7 @@ done:
   return rv;
 }
 
-void
+NS_COM void
 nsTraceRefcntImpl::ResetStatistics()
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -821,7 +808,7 @@ static void InitTraceLog(void)
 
 #if defined(_WIN32) && defined(_M_IX86) && !defined(WINCE) // WIN32 x86 stack walking code
 #include "nsStackFrameWin.h"
-void
+NS_COM void
 nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
 {
   DumpStackToFile(aStream);
@@ -829,9 +816,9 @@ nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
 
 // WIN32 x86 stack walking code
 // i386 or PPC Linux stackwalking code or Solaris
-#elif (defined(linux) && defined(__GLIBC__) && (defined(__i386) || defined(PPC))) || (defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386)))
+#elif (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC))) || (defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386)))
 #include "nsStackFrameUnix.h"
-void
+NS_COM void
 nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
 {
   DumpStackToFile(aStream);
@@ -839,7 +826,7 @@ nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
 
 #else // unsupported platform.
 
-void
+NS_COM void
 nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
 {
 	fprintf(aStream, "write me, dammit!\n");
