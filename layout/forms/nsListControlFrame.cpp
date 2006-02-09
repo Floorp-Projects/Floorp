@@ -1201,8 +1201,7 @@ nsListControlFrame::InitSelectionRange(PRInt32 aClickedIndex)
   GetSelectedIndex(&selectedIndex);
   if (selectedIndex >= 0) {
     // Get the end of the contiguous selection
-    nsCOMPtr<nsIDOMHTMLOptionsCollection> options =
-      getter_AddRefs(GetOptions(mContent));
+    nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
     NS_ASSERTION(options, "Collection of options is null!");
     PRUint32 numOptions;
     options->GetLength(&numOptions);
@@ -1210,7 +1209,8 @@ nsListControlFrame::InitSelectionRange(PRInt32 aClickedIndex)
     // Push i to one past the last selected index in the group
     for (i=selectedIndex+1; i < numOptions; i++) {
       PRBool selected;
-      GetOption(options, i)->GetSelected(&selected);
+      nsCOMPtr<nsIDOMHTMLOptionElement> option = GetOption(options, i);
+      option->GetSelected(&selected);
       if (!selected) {
         break;
       }
@@ -1506,24 +1506,6 @@ nsListControlFrame::GetMultiple(nsIDOMHTMLSelectElement* aSelect) const
 
 
 //---------------------------------------------------------
-// for a given piece of content it returns nsIDOMHTMLSelectElement object
-// or null 
-//---------------------------------------------------------
-nsIDOMHTMLSelectElement* 
-nsListControlFrame::GetSelect(nsIContent * aContent)
-{
-  nsIDOMHTMLSelectElement* selectElement = nsnull;
-  nsresult result = aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
-                                             (void**)&selectElement);
-  if (NS_SUCCEEDED(result) && selectElement) {
-    return selectElement;
-  } else {
-    return nsnull;
-  }
-}
-
-
-//---------------------------------------------------------
 // Returns the nsIContent object in the collection 
 // for a given index (AddRefs)
 //---------------------------------------------------------
@@ -1531,7 +1513,8 @@ already_AddRefed<nsIContent>
 nsListControlFrame::GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection, PRInt32 aIndex) 
 {
   nsIContent * content = nsnull;
-  nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(aCollection, aIndex));
+  nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = GetOption(aCollection,
+                                                              aIndex);
 
   NS_ASSERTION(optionElement != nsnull, "could not get option element by index!");
 
@@ -1550,8 +1533,7 @@ already_AddRefed<nsIContent>
 nsListControlFrame::GetOptionContent(PRInt32 aIndex) const
   
 {
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options =
-    getter_AddRefs(GetOptions(mContent));
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
   NS_ASSERTION(options.get() != nsnull, "Collection of options is null!");
 
   if (options) {
@@ -1561,20 +1543,15 @@ nsListControlFrame::GetOptionContent(PRInt32 aIndex) const
 }
 
 //---------------------------------------------------------
-// This returns the collection for nsIDOMHTMLSelectElement or
-// the nsIContent object is the select is null  (AddRefs)
+// This returns the options collection for aContent, if any
 //---------------------------------------------------------
-nsIDOMHTMLOptionsCollection* 
-nsListControlFrame::GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect)
+already_AddRefed<nsIDOMHTMLOptionsCollection>
+nsListControlFrame::GetOptions(nsIContent * aContent)
 {
   nsIDOMHTMLOptionsCollection* options = nsnull;
-  if (!aSelect) {
-    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = getter_AddRefs(GetSelect(aContent));
-    if (selectElement) {
-      selectElement->GetOptions(&options);  // AddRefs (1)
-    }
-  } else {
-    aSelect->GetOptions(&options); // AddRefs (1)
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(aContent);
+  if (selectElement) {
+    selectElement->GetOptions(&options);  // AddRefs (1)
   }
 
   return options;
@@ -1584,7 +1561,7 @@ nsListControlFrame::GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* a
 // Returns the nsIDOMHTMLOptionElement for a given index 
 // in the select's collection
 //---------------------------------------------------------
-nsIDOMHTMLOptionElement*
+already_AddRefed<nsIDOMHTMLOptionElement>
 nsListControlFrame::GetOption(nsIDOMHTMLOptionsCollection* aCollection,
                               PRInt32 aIndex)
 {
@@ -1744,8 +1721,7 @@ nsListControlFrame::GetOptionText(PRInt32 aIndex, nsAString & aStr)
 {
   aStr.SetLength(0);
   nsresult rv = NS_ERROR_FAILURE; 
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options =
-    getter_AddRefs(GetOptions(mContent));
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
 
   if (options) {
     PRUint32 numOptions;
@@ -1754,8 +1730,8 @@ nsListControlFrame::GetOptionText(PRInt32 aIndex, nsAString & aStr)
     if (numOptions == 0) {
       rv = NS_OK;
     } else {
-      nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(
-          getter_AddRefs(GetOption(options, aIndex)));
+      nsCOMPtr<nsIDOMHTMLOptionElement> optionElement =
+        GetOption(options, aIndex);
       if (optionElement) {
 #if 0 // This is for turning off labels Bug 4050
         nsAutoString text;
@@ -1807,10 +1783,9 @@ NS_IMETHODIMP
 nsListControlFrame::GetNumberOfOptions(PRInt32* aNumOptions) 
 {
   if (mContent != nsnull) {
-    nsCOMPtr<nsIDOMHTMLOptionsCollection> options =
-      getter_AddRefs(GetOptions(mContent));
+    nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
 
-    if (nsnull == options) {
+    if (!options) {
       *aNumOptions = 0;
     } else {
       PRUint32 length = 0;
@@ -1931,14 +1906,12 @@ nsListControlFrame::SetOptionsSelectedFromFrame(PRInt32 aStartIndex,
 PRBool
 nsListControlFrame::ToggleOptionSelectedFromFrame(PRInt32 aIndex)
 {
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options =
-    getter_AddRefs(GetOptions(mContent));
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
   NS_ASSERTION(options, "No options");
   if (!options) {
     return PR_FALSE;
   }
-  nsCOMPtr<nsIDOMHTMLOptionElement> option(
-      getter_AddRefs(GetOption(options, aIndex)));
+  nsCOMPtr<nsIDOMHTMLOptionElement> option = GetOption(options, aIndex);
   NS_ASSERTION(option, "No option");
   if (!option) {
     return PR_FALSE;
@@ -2966,8 +2939,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   keyEvent->GetShiftKey(&isShift);
 
   // now make sure there are options or we are wasting our time
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options =
-    getter_AddRefs(GetOptions(mContent));
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> options = GetOptions(mContent);
   NS_ENSURE_TRUE(options, NS_ERROR_FAILURE);
 
   PRUint32 numOptions = 0;
@@ -3139,7 +3111,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       PRUint32 i;
       for (i = 0; i < numOptions; i++) {
         PRUint32 index = (i + startIndex) % numOptions;
-        nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(getter_AddRefs(GetOption(options, index)));
+        nsCOMPtr<nsIDOMHTMLOptionElement> optionElement =
+          GetOption(options, index);
         if (optionElement) {
           nsAutoString text;
           if (NS_OK == optionElement->GetText(text)) {
