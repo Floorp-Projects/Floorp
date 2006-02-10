@@ -7,30 +7,35 @@ dnl AM_PATH_INTREE_SVRCORE([ROOTPATH, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]]
 dnl Test for in-tree SVRCORE, and define SVRCORE_CFLAGS and SVRCORE_LIBS
 AC_DEFUN(AM_PATH_INTREE_SVRCORE,
 [
-    svrcorelibpath=`echo $1/*.OBJ/lib | cut -f1 -d' '`
-    savedir=`pwd`
-    cd $svrcorelibpath
-    abs_svrcorelibpath=`pwd`
-    cd $savedir
-    svrcoreincpath=$1/public/svrcore
-    savedir=`pwd`
-    cd $svrcoreincpath
-    abs_svrcoreincpath=`pwd`
-    cd $savedir
-    if test -f "$abs_svrcoreincpath/svrcore.h" ; then
-        SVRCORE_CFLAGS="-I$abs_svrcoreincpath"
-    fi
-    if test -d "$abs_svrcorelibpath" ; then
-        SVRCORE_LIBS="-L$abs_svrcorelibpath"
-    fi
-    if test -n "$SVRCORE_CFLAGS" -a -n "$SVRCORE_LIBS" ; then
-        AC_MSG_CHECKING(using in-tree SVRCORE from $svrcoreincpath $svrcorelibpath)
-	    AC_SUBST(SVRCORE_CFLAGS)
-	    AC_SUBST(SVRCORE_LIBS)
-		AC_MSG_RESULT(yes)
-    else
-        AC_MSG_CHECKING(could not find in-tree SVRCORE in $1)
-		AC_MSG_RESULT(no)
+    if test -n "$HAVE_SVRCORE" ; then
+        svrcorelibpath=`echo $1/*.OBJ/lib | cut -f1 -d' '`
+        savedir=`pwd`
+        cd $svrcorelibpath
+        abs_svrcorelibpath=`pwd`
+        cd $savedir
+        svrcoreincpath=$1/public/svrcore
+        savedir=`pwd`
+        cd $svrcoreincpath
+        abs_svrcoreincpath=`pwd`
+        cd $savedir
+        if test -f "$abs_svrcoreincpath/svrcore.h" ; then
+            SVRCORE_CFLAGS="-I$abs_svrcoreincpath"
+        fi
+        if test -d "$abs_svrcorelibpath" ; then
+            SVRCORE_LIBS="-L$abs_svrcorelibpath -lsvrcore"
+        fi
+        if test -n "$SVRCORE_CFLAGS" -a -n "$SVRCORE_LIBS" ; then
+            AC_MSG_CHECKING(using in-tree SVRCORE from $svrcoreincpath $svrcorelibpath)
+            AC_SUBST(SVRCORE_CFLAGS)
+            AC_SUBST(SVRCORE_LIBS)
+            AC_MSG_RESULT(yes)
+        elif test -n "$HAVE_SVRCORE" ; then
+            AC_MSG_CHECKING(could not find in-tree SVRCORE in $1)
+            AC_MSG_RESULT(no)
+        else
+        # If user didn't ask for it, don't complain (really!)
+            AC_MSG_RESULT(no)
+        fi
     fi
 ])
 
@@ -44,21 +49,19 @@ AC_DEFUN(AM_PATH_GIVEN_SVRCORE,
     AC_ARG_WITH(svrcore, 
         [[  --with-svrcore[=PATH]              Use svrcore - optional PATH is path to svrcore lib and include dirs]],
         [   if test "$withval" = "yes"; then
+                HAVE_SVRCORE=1
                 AC_MSG_RESULT(yes)
-    	    elif test -d "$withval" -a -d "$withval/lib" -a -f "$withval/include/svrcore.h" ; then
+    	    elif test -n "$withval" -a -d "$withval" -a -d "$withval/lib" -a -f "$withval/include/svrcore.h" ; then
                 HAVE_SVRCORE=1
                 AC_MSG_RESULT([using $withval])
                 SVRCORE_CFLAGS="-I$withval/include"
                 SVRCORE_LIB_PATH="-L$withval/lib"
-            else
-                HAVE_SVRCORE=
     	    fi], HAVE_SVRCORE=)
 
     # check for --with-svrcore-inc
-    AC_MSG_CHECKING(for --with-svrcore-inc)
     AC_ARG_WITH(svrcore-inc, [  --with-svrcore-inc=PATH        svrcore include file directory],
     [
-      if test -e "$withval"/svrcore.h
+      if test -n "$withval" -a -e "$withval"/svrcore.h
       then
         AC_MSG_RESULT([using $withval])
         SVRCORE_CFLAGS="-I$withval"
@@ -67,13 +70,12 @@ AC_DEFUN(AM_PATH_GIVEN_SVRCORE,
         AC_MSG_ERROR([$withval not found])
       fi
     ],
-    AC_MSG_RESULT(no))
+    )
 
     # check for --with-svrcore-lib
-    AC_MSG_CHECKING(for --with-svrcore-lib)
     AC_ARG_WITH(svrcore-lib, [  --with-svrcore-lib=PATH        svrcore library directory],
     [
-      if test -d "$withval"
+      if test -n "$withval" -a -d "$withval"
       then
         AC_MSG_RESULT([using $withval])
         SVRCORE_LIBS="-L$withval"
@@ -82,12 +84,13 @@ AC_DEFUN(AM_PATH_GIVEN_SVRCORE,
         AC_MSG_ERROR([$withval not found])
       fi
     ],
-    AC_MSG_RESULT(no))
+    )
 
-dnl    if test -n "$SVRCORE_CFLAGS" -a -n "$SVRCORE_LIBS" ; then
-dnl	    AC_SUBST(SVRCORE_CFLAGS)
-dnl	    AC_SUBST(SVRCORE_LIBS)
-dnl    fi
+    if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS" ; then
+        AC_MSG_RESULT(no)
+    else
+        HAVE_SVRCORE=1
+    fi
 ])
 
 dnl AM_PATH_SVRCORE([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
@@ -95,30 +98,32 @@ dnl Test for system SVRCORE, and define SVRCORE_CFLAGS and SVRCORE_LIBS
 AC_DEFUN(AM_PATH_SVRCORE,
 [dnl
 
-	no_svrcore=""
-    AC_MSG_CHECKING(Trying pkg-config svrcore)
-    AC_PATH_PROG(PKG_CONFIG, pkg-config)
-    if test -n "$PKG_CONFIG"; then
-        if $PKG_CONFIG --exists svrcore; then
-            AC_MSG_CHECKING(using SVRCORE from package svrcore)
-            SVRCORE_CFLAGS=`$PKG_CONFIG --cflags-only-I svrcore`
-            SVRCORE_LIBS=`$PKG_CONFIG --libs-only-L svrcore`
+    if test -n "$HAVE_SVRCORE" ; then
+        no_svrcore=""
+        AC_MSG_CHECKING(Trying pkg-config svrcore)
+        AC_PATH_PROG(PKG_CONFIG, pkg-config)
+        if test -n "$PKG_CONFIG"; then
+            if $PKG_CONFIG --exists svrcore; then
+                AC_MSG_CHECKING(using SVRCORE from package svrcore)
+                SVRCORE_CFLAGS=`$PKG_CONFIG --cflags-only-I svrcore`
+                SVRCORE_LIBS=`$PKG_CONFIG --libs-only-L svrcore`
+            else
+#            AC_MSG_NOTICE([system SVRCORE not found])
+                no_svrcore="yes"
+            fi
         else
-            AC_MSG_ERROR([system SVRCORE not found])
-	        no_svrcore="yes"
+            no_svrcore="yes"
         fi
-    else
-	    no_svrcore="yes"
+
+        if test -z "$no_svrcore"; then
+            AC_MSG_RESULT(yes)
+            ifelse([$2], , :, [$2])     
+        else
+            AC_MSG_RESULT(no)
+        fi
+
+
+        AC_SUBST(SVRCORE_CFLAGS)
+        AC_SUBST(SVRCORE_LIBS)
     fi
-
-	if test -z "$no_svrcore"; then
-		AC_MSG_RESULT(yes)
-		ifelse([$2], , :, [$2])     
-	else
-		AC_MSG_RESULT(no)
-	fi
-
-
-	AC_SUBST(SVRCORE_CFLAGS)
-	AC_SUBST(SVRCORE_LIBS)
 ])

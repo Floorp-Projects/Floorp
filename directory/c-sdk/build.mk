@@ -175,7 +175,12 @@ DYNAMICNSPR = -l$(PLCBASE) -l$(PLDSBASE) -l$(NSPRBASE)
 endif
 
 # use the NSPRLINK macro in other makefiles to define the linker command line
+# the mozilla client build likes to set the makefile macro directly
+ifdef LIBS_ALREADY_SET
+NSPRLINK = $(NSPR_LIBS)
+else
 NSPRLINK = $(NSPR_LIBS) $(DYNAMICNSPR)
+endif
 
 # why the redundant definitions?  apparently, all of these basename/libname macros are so that
 # the ldapsdk can create a package containing all of the nspr shared libs/dlls - I don't think

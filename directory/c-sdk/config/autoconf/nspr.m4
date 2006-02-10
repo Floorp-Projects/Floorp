@@ -53,7 +53,7 @@ AC_ARG_WITH(nspr-exec-prefix,
                 NSPR_CFLAGS=`$PKG_CONFIG --cflags-only-I mozilla-nspr`
                 NSPR_LIBS=`$PKG_CONFIG --libs-only-L mozilla-nspr`
             else
-                AC_MSG_ERROR([system NSPR not found])
+                AC_MSG_CHECKING([system NSPR not found])
 		        no_nspr="yes"
             fi
         else
@@ -88,28 +88,36 @@ AC_ARG_WITH(nspr-exec-prefix,
 
 dnl AM_PATH_INTREE_NSPR([ROOTPATH, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for in-tree NSPR, and define NSPR_CFLAGS and NSPR_LIBS
+dnl First look for path/*.OBJ/include, then look for path/include
+dnl Use the cut in case there is more than one path that matches *.OBJ - just
+dnl take the first one
 AC_DEFUN(AM_PATH_INTREE_NSPR,
 [
-    nsprpath=`echo $1/*.OBJ | cut -f1 -d' '`
-    savedir=`pwd`
-    cd $nsprpath
-    abs_nsprpath=`pwd`
-    cd $savedir
-    if test -f "$abs_nsprpath/include/nspr.h" ; then
-        NSPR_CFLAGS="-I$abs_nsprpath/include"
-    fi
-    if test -d "$abs_nsprpath/lib" ; then
-        NSPR_LIBS="-L$abs_nsprpath/lib"
-    fi
+    AC_MSG_CHECKING(checking for in-tree NSPR from $1)
+    for nsprpath in "$1" "$1"/*.OBJ ; do    
+        savedir=`pwd`
+        cd $nsprpath
+        abs_nsprpath=`pwd`
+        cd $savedir
+        if test -f "$abs_nsprpath/include/nspr/nspr.h" ; then
+            NSPR_CFLAGS="-I$abs_nsprpath/include/nspr"
+        elif test -f "$abs_nsprpath/include/nspr.h" ; then
+            NSPR_CFLAGS="-I$abs_nsprpath/include"
+        fi
+        if test -d "$abs_nsprpath/lib" ; then
+            NSPR_LIBS="-L$abs_nsprpath/lib"
+        fi
+        if test -n "$NSPR_CFLAGS" -a -n "$NSPR_LIBS" ; then
+            break
+        fi
+    done
     if test -n "$NSPR_CFLAGS" -a -n "$NSPR_LIBS" ; then
-        AC_MSG_CHECKING(using in-tree NSPR from $nsprpath)
 	    AC_SUBST(NSPR_CFLAGS)
 	    AC_SUBST(NSPR_LIBS)
 		AC_MSG_RESULT(yes)
     else
-        AC_MSG_CHECKING(could not find in-tree NSPR in $nsprpath)
 		AC_MSG_RESULT(no)
-    fi
+    fi    
 ])
 
 dnl AM_PATH_GIVEN_NSPR(no args)
@@ -123,7 +131,11 @@ AC_DEFUN(AM_PATH_GIVEN_NSPR,
     AC_ARG_WITH(nspr, [  --with-nspr=PATH        Netscape Portable Runtime (NSPR) directory],
     [
         if test "$withval" = "no" ; then
+            AC_MSG_RESULT(no)
             no_nspr="yes"
+        elif test "$withval" = "yes" ; then
+            AC_MSG_RESULT(yes)
+            no_nspr="no"
         elif test -e "$withval"/include/nspr.h -a -d "$withval"/lib
         then
             AC_MSG_RESULT([using $withval])

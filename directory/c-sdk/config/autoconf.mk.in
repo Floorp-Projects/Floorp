@@ -139,6 +139,8 @@ ifdef OBJECT_MODE
 export OBJECT_MODE
 endif
 
+LIBS_ALREADY_SET=@LIBS_ALREADY_SET@
+
 # ldap-specific code (up to here, all the code came from
 # mozilla/nsprpub/config/autoconf.mk.in)
 #

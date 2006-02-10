@@ -140,8 +140,10 @@ AC_DEFUN(AM_PATH_GIVEN_NSS,
                 NSS_CFLAGS="-I$withval/include"
                 NSS_LIBS="-L$withval/lib"
             else
+		        AC_MSG_RESULT(no)
                 USE_NSS=
-    	    fi])
+    	    fi],
+        AC_MSG_RESULT(no))
 
     # check for --with-nss-inc
     AC_MSG_CHECKING(for --with-nss-inc)

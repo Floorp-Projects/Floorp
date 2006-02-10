@@ -199,100 +199,25 @@ AC_ARG_ENABLE(64bit,
     [  --enable-64bit          Enable 64-bit support (on certain platforms)],
     [ if test "$enableval" = "yes"; then
 	    USE_64=1 ; export USE_64
-      elif test "$enableval" = "no"; then
-        USE_64=
-      else
-        # if the user specified nothing, just guess based on machine type
+      fi ],
+    [
+dnl if the user specified nothing, just guess based on machine type
         arch=`uname -m`
         case $arch in
              x86_64|ppc64|ia64|s390x) USE_64=1 ; export USE_64 ;;
+             sun4u) instr_set=`optisa \`isalist\``
+                    case $instr_set in
+                         sparcv9*) USE_64=1 ; export USE_64 ;;
+                    esac
+             ;;
         esac
-      fi ])
+    ])
 
 AC_ARG_ENABLE(mdupdate,
     [  --enable-mdupdate       Enable use of certain compilers' mdupdate feature],
     [ if test "$enableval" = "yes"; then
 	    USE_MDUPDATE=1
       fi ])
-
-dnl ========================================================
-dnl = Use the NSPR copy in the system (assuming it exists) 
-dnl = rather than the one in the source tree (mozilla/nsprpub)
-dnl ========================================================
-AC_ARG_WITH(system-nspr,
-    [  --with-system-nspr   Use system installed NSPR],
-    [   if test "$withval" = "yes"; then
-            _SYSTEM_NSPR=1
-	    else
-            _SYSTEM_NSPR=
-	    fi], _SYSTEM_NSPR= )
-
-if test "$_WIN32_MSVC"; then
-    _SYSTEM_NSPR=
-fi
-
-# first, see if user has specified explicit NSPR include and lib paths
-AM_PATH_GIVEN_NSPR()
-
-# next, see if user explicitly said to use system nspr
-if test -z "$no_nspr" -a -z "$NSPR_CFLAGS" -a -z "$NSPR_LIBS" ; then
-    if test -n "$_SYSTEM_NSPR"; then
-        AM_PATH_NSPR(4.0.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
-    else
-# see if we are being built in the same build tree as nspr
-        AM_PATH_INTREE_NSPR(../../dist)
-# failing that, see if we can find nspr-config or pkg-config nspr
-        if test -z "$NSPR_CFLAGS" ; then
-            AM_PATH_NSPR(4.0.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
-        fi
-    fi
-fi
-
-if test -n "$_SYSTEM_NSPR" -a -z "$MOZ_NATIVE_NSPR"; then
-    NSPR_CFLAGS='-I$(DIST)/include/nspr'
-    NSPR_LIBS='-L$(DIST)/lib '"-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION"
-    # explicitly set libs for Visual Age C++ for OS/2
-    if test "$VACPP" = "yes"; then
-        NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
-    elif test "$_WIN32_MSVC"; then
-            NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '
-    fi
-fi
-
-dnl ========================================================
-dnl = Use the NSS copy in the system (assuming it exists) 
-dnl = rather than the one in the source tree (mozilla/security)
-dnl ========================================================
-AC_ARG_WITH(system-nss,
-    [  --with-system-nss   Use system installed NSS],
-    [   if test "$withval" = "yes"; then
-            _SYSTEM_NSS=1
-            USE_NSS=1
-	    else
-            _SYSTEM_NSS=
-	    fi], _SYSTEM_NSS= )
-
-if test "$_WIN32_MSVC"; then
-    _SYSTEM_NSS=
-fi
-
-# first, see if user has specified explicit NSS include and lib paths
-AM_PATH_GIVEN_NSS()
-
-# next, see if user explicitly said to use system nss
-if test -n "$USE_NSS" -a -z "$NSS_CFLAGS" -a -z "$NSS_LIBS" ; then
-    if test -n "$_SYSTEM_NSS"; then
-        AM_PATH_NSS(3.9.0, [MOZ_NATIVE_NSS=1], [MOZ_NATIVE_NSS=])
-    else
-# see if we are being built in the same build tree as nss
-        AM_PATH_INTREE_NSS(../../dist)
-# failing that, see if we can find nss-config or pkg-config nss
-        if test -z "$NSS_CFLAGS" ; then
-            AM_PATH_NSS(3.9.0, [MOZ_NATIVE_NSS=1], [MOZ_NATIVE_NSS=])
-        fi
-    fi
-fi
-
 
 dnl ========================================================
 dnl = svrcore gives the command line tools secure PIN management
@@ -309,29 +234,146 @@ AC_ARG_WITH(system-svrcore,
             HAVE_SVRCORE=1
             SVRCORE_LIBS=-lsvrcore
             AC_SUBST(SVRCORE_LIBS)
+dnl svrcore implies both nspr and nss
+            USE_NSS=1
+            no_nspr=no
 	    else
             _SYSTEM_SVRCORE=
 	    fi], _SYSTEM_SVRCORE= )
 
-# _SYSTEM_SVRCORE means /usr/lib and /usr/include so no need to add additional
-# include or lib paths
+dnl _SYSTEM_SVRCORE means /usr/lib and /usr/include so no need to add additional
+dnl include or lib paths
 if test -z "$_SYSTEM_SVRCORE" ; then
-   # first, see if user has specified explicit SVRCORE include and lib paths
+   dnl first, see if user has specified explicit SVRCORE include and lib paths
    AM_PATH_GIVEN_SVRCORE()
 
-   # next, see if user explicitly said to use system svrcore
-   if test -z "$SVRCORE_CFLAGS" -a -z "$SVRCORE_LIBS" ; then
-       if test -n "$_SYSTEM_SVRCORE"; then
-           AM_PATH_SVRCORE(4.0.1, [MOZ_NATIVE_SVRCORE=1], [MOZ_NATIVE_SVRCORE=])
-       else
-       # see if we are being built in the same build tree as svrcore
-           AM_PATH_INTREE_SVRCORE(../../dist)
-           # failing that, see if we can find svrcore-config or pkg-config svrcore
-           if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
+   dnl next, see if user explicitly said to use system svrcore
+   if test -n "$HAVE_SVRCORE" ; then
+dnl svrcore implies both nspr and nss
+       USE_NSS=1
+       no_nspr=no
+       if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS" ; then
+           if test -n "$_SYSTEM_SVRCORE"; then
                AM_PATH_SVRCORE(4.0.1, [MOZ_NATIVE_SVRCORE=1], [MOZ_NATIVE_SVRCORE=])
+           else
+       	       dnl see if we are being built in the same build tree as svrcore
+               AM_PATH_INTREE_SVRCORE(../../dist)
+               dnl failing that, see if we can find svrcore-config or pkg-config svrcore
+               if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
+                   AM_PATH_SVRCORE(4.0.1, [MOZ_NATIVE_SVRCORE=1], [MOZ_NATIVE_SVRCORE=])
+               fi
            fi
        fi
-    fi
+   fi
+fi
+
+if test -n "$HAVE_SVRCORE" ; then
+   if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
+      AC_MSG_ERROR([--with-svrcore specified, but no svrcore could be found])
+   fi
+fi
+
+dnl ========================================================
+dnl = Use the NSS copy in the system (assuming it exists) 
+dnl = rather than the one in the source tree (mozilla/security)
+dnl ========================================================
+AC_ARG_WITH(system-nss,
+    [  --with-system-nss   Use system installed NSS],
+    [   if test "$withval" = "yes"; then
+            _SYSTEM_NSS=1
+            USE_NSS=1
+dnl nss requires nspr
+            no_nspr=no
+	    elif test "$withval" = "no" ; then
+            _SYSTEM_NSS=no
+	    fi], _SYSTEM_NSS= )
+
+if test "$_WIN32_MSVC"; then
+    _SYSTEM_NSS=
+fi
+
+dnl first, see if user has specified explicit NSPR include and lib paths,
+dnl of if the user has explicitly disabled the use of nss
+if test -z "$_SYSTEM_NSS" -o "$_SYSTEM_NSS" = "no" ; then
+   AM_PATH_GIVEN_NSS()
+fi
+
+dnl next, see if user explicitly said to use system nss
+if test -n "$USE_NSS" -a -z "$NSS_CFLAGS" -a -z "$NSS_LIBS" ; then
+dnl nss requires nspr
+   no_nspr=no
+   if test -z "$_SYSTEM_NSS" -o "$_SYSTEM_NSS" = "no" ; then
+dnl see if we are being built in the same build tree as nss
+      AM_PATH_INTREE_NSS(../../dist)
+   fi
+dnl failing that, see if we can find nss-config or pkg-config nss
+   if test -z "$NSS_CFLAGS" -a "$_SYSTEM_NSS" != "no" ; then
+      AM_PATH_NSS(3.9.0, [MOZ_NATIVE_NSS=1], [MOZ_NATIVE_NSS=])
+   fi
+fi
+
+dnl bomb out if nss not found
+if test -n "$USE_NSS" -a -z "$NSS_CFLAGS" -a -z "$NSS_LIBS" ; then
+   AC_MSG_ERROR(Need to use NSS but no NSS was found)
+fi
+
+dnl ========================================================
+dnl = Use the NSPR copy in the system (assuming it exists) 
+dnl = rather than the one in the source tree (mozilla/nsprpub)
+dnl ========================================================
+AC_ARG_WITH(system-nspr,
+    [  --with-system-nspr   Use system installed NSPR],
+    [   if test "$withval" = "yes"; then
+            _SYSTEM_NSPR=1
+            no_nspr=no
+	    elif test "$withval" = "no"; then
+            _SYSTEM_NSPR=no
+	    fi], _SYSTEM_NSPR= )
+
+if test "$_WIN32_MSVC"; then
+    _SYSTEM_NSPR=no
+fi
+
+dnl first, see if user has specified explicit NSPR include and lib paths,
+dnl of if the user has explicitly disabled the use of nspr
+if test -z "$_SYSTEM_NSPR" -o "$_SYSTEM_NSPR" = "no" ; then
+   AM_PATH_GIVEN_NSPR()
+fi
+
+dnl next, look for in-tree nspr if user did not specify explicit system nspr
+if test "$no_nspr" == "no" -a -z "$NSPR_CFLAGS" -a -z "$NSPR_LIBS" ; then
+   if test -z "$_SYSTEM_NSPR" -o "$_SYSTEM_NSPR" = "no" ; then
+dnl see if we are being built in the same build tree as nspr
+      AM_PATH_INTREE_NSPR(../../dist)
+   fi
+dnl failing that, see if we can find nspr-config or pkg-config nspr
+   if test -z "$NSPR_CFLAGS" -a "$_SYSTEM_NSPR" != "no" ; then
+      AM_PATH_NSPR(4.0.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
+   fi
+fi
+
+dnl if we are being built as part of the mozilla client, and we could not
+dnl find NSPR by any other method, just default to the default values
+dnl used by the client build - NOTE that this sets the libpaths and the
+dnl library link commands directly, so we don't need to muck with any
+dnl cygwin path conversion stuff.  The client build also uses --with-dist-prefix
+dnl which sets $(DIST) in the makefiles
+if test -z "$NSPR_CFLAGS" -o -z "$NSPR_LIBS" ; then
+   if test -n "$MOZILLA_CLIENT" ; then
+       NSPR_CFLAGS='-I$(DIST)/include/nspr'
+       NSPR_LIBS='-L$(DIST)/lib '"-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION"
+       dnl explicitly set libs for Visual Age C++ for OS/2
+       if test "$VACPP" = "yes"; then
+          NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
+       elif test "$_WIN32_MSVC"; then
+          NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '
+       fi
+       SKIP_CYGWIN_FIXUP=1
+       LIBS_ALREADY_SET=1
+       AC_SUBST(LIBS_ALREADY_SET)
+   elif test "$no_nspr" = "no" ; then
+       AC_MSG_ERROR(Need to use NSPR but no NSPR was found)
+   fi
 fi
 
 dnl ========================================================
@@ -349,12 +391,12 @@ case "$target" in
 esac
 
 if test -n "$_WIN32_MSVC" -a -n "$USE_WINDOWS_PATHS" ; then
-    if test -n "$NSPR_CFLAGS" ; then
+    if test -n "$NSPR_CFLAGS" -a -z "$SKIP_CYGWIN_FIXUP" ; then
         path=`echo $NSPR_CFLAGS | sed -e 's/^-I//'`
         path=`cygpath -m $path`
         NSPR_CFLAGS="/I$path"
     fi
-    if test -n "$NSPR_LIBS" ; then
+    if test -n "$NSPR_LIBS" -a -z "$SKIP_CYGWIN_FIXUP" ; then
         path=`echo $NSPR_LIBS | sed -e 's/^-L//'`
         path=`cygpath -m $path`
         NSPR_LIBS="/LIBPATH:$path"
@@ -508,7 +550,7 @@ else
     DEFINES="$DEFINES -UDEBUG"
 fi
 
-# Use mozilla's nsinstall
+dnl Use mozilla's nsinstall
 if test -n "$MOZILLA_CLIENT"; then
    NSINSTALL='$(dist_bindir)/nsinstall'
 fi

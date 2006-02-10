@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os CC dist_prefix dist_bindir dist_libdir NSPR_CONFIG PKG_CONFIG NSPR_CFLAGS NSPR_LIBS NSS_CONFIG NSS_CFLAGS NSS_LIBS SVRCORE_LIBS SVRCORE_CFLAGS WHOAMI CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CFLAGS ac_ct_CC CPP RANLIB ac_ct_RANLIB AS AR LD STRIP WINDRES HOST_CC PERL EGREP HAVE_MSVC_LIB SHELL_OVERRIDE MOZILLA_CLIENT HOST_CFLAGS GNU_CC CROSS_COMPILE MOZ_OPTIMIZE USE_CPLUS USE_IPV6 USE_N32 USE_64 OBJECT_MODE GC_LEAK_DETECTOR ENABLE_STRIP USE_PTHREADS USE_BTHREADS USE_USER_PTHREADS USE_NATIVE_THREADS USE_NSPR_THREADS USE_NSS CPU_ARCH OBJ_SUFFIX LIB_SUFFIX LIB_PREFIX DLL_SUFFIX ASM_SUFFIX PROG_SUFFIX MKSHLIB DSO_CFLAGS DSO_LDOPTS OS_TARGET OS_ARCH OS_RELEASE OS_TEST DEFINES AR_FLAGS ASFLAGS FILTER IMPLIB OS_LIBS RESOLVE_LINK_SYMBOLS NOSUCHFILE MOZ_OBJFORMAT ULTRASPARC_LIBRARY ULTRASPARC_FILTER_LIBRARY OBJDIR OBJDIR_NAME NSINSTALL OPTIMIZER RC DLLFLAGS EXEFLAGS OS_DLLFLAGS CYGWIN_WRAPPER WIN_TOP_SRC LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os CC dist_prefix dist_bindir dist_libdir SVRCORE_LIBS PKG_CONFIG SVRCORE_CFLAGS NSS_CFLAGS NSS_LIBS NSS_CONFIG NSPR_CFLAGS NSPR_LIBS NSPR_CONFIG LIBS_ALREADY_SET WHOAMI CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CFLAGS ac_ct_CC CPP RANLIB ac_ct_RANLIB AS AR LD STRIP WINDRES HOST_CC PERL EGREP HAVE_MSVC_LIB SHELL_OVERRIDE MOZILLA_CLIENT HOST_CFLAGS GNU_CC CROSS_COMPILE MOZ_OPTIMIZE USE_CPLUS USE_IPV6 USE_N32 USE_64 OBJECT_MODE GC_LEAK_DETECTOR ENABLE_STRIP USE_PTHREADS USE_BTHREADS USE_USER_PTHREADS USE_NATIVE_THREADS USE_NSPR_THREADS USE_NSS CPU_ARCH OBJ_SUFFIX LIB_SUFFIX LIB_PREFIX DLL_SUFFIX ASM_SUFFIX PROG_SUFFIX MKSHLIB DSO_CFLAGS DSO_LDOPTS OS_TARGET OS_ARCH OS_RELEASE OS_TEST DEFINES AR_FLAGS ASFLAGS FILTER IMPLIB OS_LIBS RESOLVE_LINK_SYMBOLS NOSUCHFILE MOZ_OBJFORMAT ULTRASPARC_LIBRARY ULTRASPARC_FILTER_LIBRARY OBJDIR OBJDIR_NAME NSINSTALL OPTIMIZER RC DLLFLAGS EXEFLAGS OS_DLLFLAGS CYGWIN_WRAPPER WIN_TOP_SRC LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -876,13 +876,10 @@ Optional Packages:
   --with-dist-bindir=DIR  build execuatables in DIR DIST_PREFIX/bin
   --with-dist-libdir=DIR  build library files in DIR DIST_PREFIX/lib
   --with-mozilla          Compile LDAP with Mozilla support
-  --with-system-nspr   Use system installed NSPR
-  --with-nspr=PATH        Netscape Portable Runtime (NSPR) directory
-  --with-nspr-inc=PATH        Netscape Portable Runtime (NSPR) include file directory
-  --with-nspr-lib=PATH        Netscape Portable Runtime (NSPR) library directory
-  --with-nspr-prefix=PFX  Prefix where NSPR is installed
-  --with-nspr-exec-prefix=PFX
-                          Exec prefix where NSPR is installed
+  --with-system-svrcore   Use system installed SVRCORE
+  --with-svrcore[=PATH]              Use svrcore - optional PATH is path to svrcore lib and include dirs
+  --with-svrcore-inc=PATH        svrcore include file directory
+  --with-svrcore-lib=PATH        svrcore library directory
   --with-system-nss   Use system installed NSS
   --with-nss[=PATH]              Build libssldap, using NSS for crypto - optional PATH is path to NSS package
   --with-nss-inc=PATH        Netscape Portable Runtime (NSS) include file directory
@@ -890,10 +887,13 @@ Optional Packages:
   --with-nss-prefix=PFX  Prefix where NSS is installed
   --with-nss-exec-prefix=PFX
                           Exec prefix where NSS is installed
-  --with-system-svrcore   Use system installed SVRCORE
-  --with-svrcore[=PATH]              Use svrcore - optional PATH is path to svrcore lib and include dirs
-  --with-svrcore-inc=PATH        svrcore include file directory
-  --with-svrcore-lib=PATH        svrcore library directory
+  --with-system-nspr   Use system installed NSPR
+  --with-nspr=PATH        Netscape Portable Runtime (NSPR) directory
+  --with-nspr-inc=PATH        Netscape Portable Runtime (NSPR) include file directory
+  --with-nspr-lib=PATH        Netscape Portable Runtime (NSPR) library directory
+  --with-nspr-prefix=PFX  Prefix where NSPR is installed
+  --with-nspr-exec-prefix=PFX
+                          Exec prefix where NSPR is installed
   --with-pthreads         Use system pthreads library as thread subsystem
   --with-bthreads         Use system bthreads library as thread subsystem (BeOS only)
   --with-native-threads   Use native system threads as thread subsystem (Solaris only)
@@ -1659,15 +1659,19 @@ if test "${enable_64bit+set}" = set; then
   enableval="$enable_64bit"
    if test "$enableval" = "yes"; then
 	    USE_64=1 ; export USE_64
-      elif test "$enableval" = "no"; then
-        USE_64=
-      else
-        # if the user specified nothing, just guess based on machine type
+      fi
+else
+
         arch=`uname -m`
         case $arch in
              x86_64|ppc64|ia64|s390x) USE_64=1 ; export USE_64 ;;
+             sun4u) instr_set=`optisa \`isalist\``
+                    case $instr_set in
+                         sparcv9*) USE_64=1 ; export USE_64 ;;
+                    esac
+             ;;
         esac
-      fi
+
 fi;
 
 # Check whether --enable-mdupdate or --disable-mdupdate was given.
@@ -1679,23 +1683,631 @@ if test "${enable_mdupdate+set}" = set; then
 fi;
 
 
+# Check whether --with-system-svrcore or --without-system-svrcore was given.
+if test "${with_system_svrcore+set}" = set; then
+  withval="$with_system_svrcore"
+     if test "$withval" = "yes"; then
+            _SYSTEM_SVRCORE=1
+            HAVE_SVRCORE=1
+            SVRCORE_LIBS=-lsvrcore
+
+            USE_NSS=1
+            no_nspr=no
+	    else
+            _SYSTEM_SVRCORE=
+	    fi
+else
+  _SYSTEM_SVRCORE=
+fi;
+
+if test -z "$_SYSTEM_SVRCORE" ; then
+
+    echo "$as_me:$LINENO: checking for --with-svrcore" >&5
+echo $ECHO_N "checking for --with-svrcore... $ECHO_C" >&6
+
+# Check whether --with-svrcore or --without-svrcore was given.
+if test "${with_svrcore+set}" = set; then
+  withval="$with_svrcore"
+     if test "$withval" = "yes"; then
+                HAVE_SVRCORE=1
+                echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+    	    elif test -n "$withval" -a -d "$withval" -a -d "$withval/lib" -a -f "$withval/include/svrcore.h" ; then
+                HAVE_SVRCORE=1
+                echo "$as_me:$LINENO: result: using $withval" >&5
+echo "${ECHO_T}using $withval" >&6
+                SVRCORE_CFLAGS="-I$withval/include"
+                SVRCORE_LIB_PATH="-L$withval/lib"
+    	    fi
+else
+  HAVE_SVRCORE=
+fi;
+
+    # check for --with-svrcore-inc
+
+# Check whether --with-svrcore-inc or --without-svrcore-inc was given.
+if test "${with_svrcore_inc+set}" = set; then
+  withval="$with_svrcore_inc"
+
+      if test -n "$withval" -a -e "$withval"/svrcore.h
+      then
+        echo "$as_me:$LINENO: result: using $withval" >&5
+echo "${ECHO_T}using $withval" >&6
+        SVRCORE_CFLAGS="-I$withval"
+      else
+        echo
+        { { echo "$as_me:$LINENO: error: $withval not found" >&5
+echo "$as_me: error: $withval not found" >&2;}
+   { (exit 1); exit 1; }; }
+      fi
+
+fi;
+
+    # check for --with-svrcore-lib
+
+# Check whether --with-svrcore-lib or --without-svrcore-lib was given.
+if test "${with_svrcore_lib+set}" = set; then
+  withval="$with_svrcore_lib"
+
+      if test -n "$withval" -a -d "$withval"
+      then
+        echo "$as_me:$LINENO: result: using $withval" >&5
+echo "${ECHO_T}using $withval" >&6
+        SVRCORE_LIBS="-L$withval"
+      else
+        echo
+        { { echo "$as_me:$LINENO: error: $withval not found" >&5
+echo "$as_me: error: $withval not found" >&2;}
+   { (exit 1); exit 1; }; }
+      fi
+
+fi;
+
+    if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS" ; then
+        echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+    else
+        HAVE_SVRCORE=1
+    fi
+
+
+      if test -n "$HAVE_SVRCORE" ; then
+       USE_NSS=1
+       no_nspr=no
+       if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS" ; then
+           if test -n "$_SYSTEM_SVRCORE"; then
+
+    if test -n "$HAVE_SVRCORE" ; then
+        no_svrcore=""
+        echo "$as_me:$LINENO: checking Trying pkg-config svrcore" >&5
+echo $ECHO_N "checking Trying pkg-config svrcore... $ECHO_C" >&6
+        # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  ;;
+esac
+fi
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+
+if test -n "$PKG_CONFIG"; then
+  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
+echo "${ECHO_T}$PKG_CONFIG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+        if test -n "$PKG_CONFIG"; then
+            if $PKG_CONFIG --exists svrcore; then
+                echo "$as_me:$LINENO: checking using SVRCORE from package svrcore" >&5
+echo $ECHO_N "checking using SVRCORE from package svrcore... $ECHO_C" >&6
+                SVRCORE_CFLAGS=`$PKG_CONFIG --cflags-only-I svrcore`
+                SVRCORE_LIBS=`$PKG_CONFIG --libs-only-L svrcore`
+            else
+#            AC_MSG_NOTICE([system SVRCORE not found])
+                no_svrcore="yes"
+            fi
+        else
+            no_svrcore="yes"
+        fi
+
+        if test -z "$no_svrcore"; then
+            echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+            MOZ_NATIVE_SVRCORE=1
+        else
+            echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+        fi
+
+
+
+
+    fi
+
+           else
+
+    if test -n "$HAVE_SVRCORE" ; then
+        svrcorelibpath=`echo ../../dist/*.OBJ/lib | cut -f1 -d' '`
+        savedir=`pwd`
+        cd $svrcorelibpath
+        abs_svrcorelibpath=`pwd`
+        cd $savedir
+        svrcoreincpath=../../dist/public/svrcore
+        savedir=`pwd`
+        cd $svrcoreincpath
+        abs_svrcoreincpath=`pwd`
+        cd $savedir
+        if test -f "$abs_svrcoreincpath/svrcore.h" ; then
+            SVRCORE_CFLAGS="-I$abs_svrcoreincpath"
+        fi
+        if test -d "$abs_svrcorelibpath" ; then
+            SVRCORE_LIBS="-L$abs_svrcorelibpath -lsvrcore"
+        fi
+        if test -n "$SVRCORE_CFLAGS" -a -n "$SVRCORE_LIBS" ; then
+            echo "$as_me:$LINENO: checking using in-tree SVRCORE from $svrcoreincpath $svrcorelibpath" >&5
+echo $ECHO_N "checking using in-tree SVRCORE from $svrcoreincpath $svrcorelibpath... $ECHO_C" >&6
+
+
+            echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+        elif test -n "$HAVE_SVRCORE" ; then
+            echo "$as_me:$LINENO: checking could not find in-tree SVRCORE in ../../dist" >&5
+echo $ECHO_N "checking could not find in-tree SVRCORE in ../../dist... $ECHO_C" >&6
+            echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+        else
+        # If user didn't ask for it, don't complain (really!)
+            echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+        fi
+    fi
+
+                              if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
+
+    if test -n "$HAVE_SVRCORE" ; then
+        no_svrcore=""
+        echo "$as_me:$LINENO: checking Trying pkg-config svrcore" >&5
+echo $ECHO_N "checking Trying pkg-config svrcore... $ECHO_C" >&6
+        # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  ;;
+esac
+fi
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+
+if test -n "$PKG_CONFIG"; then
+  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
+echo "${ECHO_T}$PKG_CONFIG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+        if test -n "$PKG_CONFIG"; then
+            if $PKG_CONFIG --exists svrcore; then
+                echo "$as_me:$LINENO: checking using SVRCORE from package svrcore" >&5
+echo $ECHO_N "checking using SVRCORE from package svrcore... $ECHO_C" >&6
+                SVRCORE_CFLAGS=`$PKG_CONFIG --cflags-only-I svrcore`
+                SVRCORE_LIBS=`$PKG_CONFIG --libs-only-L svrcore`
+            else
+#            AC_MSG_NOTICE([system SVRCORE not found])
+                no_svrcore="yes"
+            fi
+        else
+            no_svrcore="yes"
+        fi
+
+        if test -z "$no_svrcore"; then
+            echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+            MOZ_NATIVE_SVRCORE=1
+        else
+            echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+        fi
+
+
+
+
+    fi
+
+               fi
+           fi
+       fi
+   fi
+fi
+
+if test -n "$HAVE_SVRCORE" ; then
+   if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
+      { { echo "$as_me:$LINENO: error: --with-svrcore specified, but no svrcore could be found" >&5
+echo "$as_me: error: --with-svrcore specified, but no svrcore could be found" >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+fi
+
+
+# Check whether --with-system-nss or --without-system-nss was given.
+if test "${with_system_nss+set}" = set; then
+  withval="$with_system_nss"
+     if test "$withval" = "yes"; then
+            _SYSTEM_NSS=1
+            USE_NSS=1
+            no_nspr=no
+	    elif test "$withval" = "no" ; then
+            _SYSTEM_NSS=no
+	    fi
+else
+  _SYSTEM_NSS=
+fi;
+
+if test "$_WIN32_MSVC"; then
+    _SYSTEM_NSS=
+fi
+
+if test -z "$_SYSTEM_NSS" -o "$_SYSTEM_NSS" = "no" ; then
+
+                        echo "$as_me:$LINENO: checking for --with-nss" >&5
+echo $ECHO_N "checking for --with-nss... $ECHO_C" >&6
+
+# Check whether --with-nss or --without-nss was given.
+if test "${with_nss+set}" = set; then
+  withval="$with_nss"
+     if test "$withval" = "yes"; then
+                USE_NSS=1
+		        echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+    	    elif test -d "$withval" -a -d "$withval/lib" -a -d "$withval/include" ; then
+                USE_NSS=1
+                echo "$as_me:$LINENO: result: using $withval" >&5
+echo "${ECHO_T}using $withval" >&6
+                NSS_CFLAGS="-I$withval/include"
+                NSS_LIBS="-L$withval/lib"
+            else
+		        echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                USE_NSS=
+    	    fi
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi;
+
+    # check for --with-nss-inc
+    echo "$as_me:$LINENO: checking for --with-nss-inc" >&5
+echo $ECHO_N "checking for --with-nss-inc... $ECHO_C" >&6
+
+# Check whether --with-nss-inc or --without-nss-inc was given.
+if test "${with_nss_inc+set}" = set; then
+  withval="$with_nss_inc"
+
+      if test -e "$withval"/nss.h
+      then
+        echo "$as_me:$LINENO: result: using $withval" >&5
+echo "${ECHO_T}using $withval" >&6
+        NSS_CFLAGS="-I$withval"
+        USE_NSS=1
+      else
+        echo
+        { { echo "$as_me:$LINENO: error: $withval not found" >&5
+echo "$as_me: error: $withval not found" >&2;}
+   { (exit 1); exit 1; }; }
+      fi
+
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi;
+
+    # check for --with-nss-lib
+    echo "$as_me:$LINENO: checking for --with-nss-lib" >&5
+echo $ECHO_N "checking for --with-nss-lib... $ECHO_C" >&6
+
+# Check whether --with-nss-lib or --without-nss-lib was given.
+if test "${with_nss_lib+set}" = set; then
+  withval="$with_nss_lib"
+
+      if test -d "$withval"
+      then
+        echo "$as_me:$LINENO: result: using $withval" >&5
+echo "${ECHO_T}using $withval" >&6
+        NSS_LIBS="-L$withval"
+        USE_NSS=1
+      else
+        echo
+        { { echo "$as_me:$LINENO: error: $withval not found" >&5
+echo "$as_me: error: $withval not found" >&2;}
+   { (exit 1); exit 1; }; }
+      fi
+
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi;
+
+fi
+
+if test -n "$USE_NSS" -a -z "$NSS_CFLAGS" -a -z "$NSS_LIBS" ; then
+   no_nspr=no
+   if test -z "$_SYSTEM_NSS" -o "$_SYSTEM_NSS" = "no" ; then
+
+    nsslibpath=`echo ../../dist/*.OBJ/lib | cut -f1 -d' '`
+    savedir=`pwd`
+    cd $nsslibpath
+    abs_nsslibpath=`pwd`
+    cd $savedir
+    nssincpath=../../dist/public/nss
+    savedir=`pwd`
+    cd $nssincpath
+    abs_nssincpath=`pwd`
+    cd $savedir
+    if test -f "$abs_nssincpath/nss.h" ; then
+        NSS_CFLAGS="-I$abs_nssincpath"
+    fi
+    if test -d "$abs_nsslibpath" ; then
+        NSS_LIBS="-L$abs_nsslibpath"
+    fi
+    if test -n "$NSS_CFLAGS" -a -n "$NSS_LIBS" ; then
+        echo "$as_me:$LINENO: checking using in-tree NSS from $nssincpath $nsslibpath" >&5
+echo $ECHO_N "checking using in-tree NSS from $nssincpath $nsslibpath... $ECHO_C" >&6
+
+
+		echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+    else
+        echo "$as_me:$LINENO: checking could not find in-tree NSS in ../../dist" >&5
+echo $ECHO_N "checking could not find in-tree NSS in ../../dist... $ECHO_C" >&6
+		echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+    fi
+
+   fi
+   if test -z "$NSS_CFLAGS" -a "$_SYSTEM_NSS" != "no" ; then
+
+
+# Check whether --with-nss-prefix or --without-nss-prefix was given.
+if test "${with_nss_prefix+set}" = set; then
+  withval="$with_nss_prefix"
+  nss_config_prefix="$withval"
+else
+  nss_config_prefix=""
+fi;
+
+
+# Check whether --with-nss-exec-prefix or --without-nss-exec-prefix was given.
+if test "${with_nss_exec_prefix+set}" = set; then
+  withval="$with_nss_exec_prefix"
+  nss_config_exec_prefix="$withval"
+else
+  nss_config_exec_prefix=""
+fi;
+
+	if test -n "$nss_config_exec_prefix"; then
+		nss_config_args="$nss_config_args --exec-prefix=$nss_config_exec_prefix"
+		if test -z "$NSS_CONFIG"; then
+			NSS_CONFIG=$nss_config_exec_prefix/bin/nss-config
+		fi
+	fi
+	if test -n "$nss_config_prefix"; then
+		nss_config_args="$nss_config_args --prefix=$nss_config_prefix"
+		if test -z "$NSS_CONFIG"; then
+			NSS_CONFIG=$nss_config_prefix/bin/nss-config
+		fi
+	fi
+
+    if test -z "$NSS_CONFIG" ; then
+	    unset ac_cv_path_NSS_CONFIG
+	    # Extract the first word of "nss-config", so it can be a program name with args.
+set dummy nss-config; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_NSS_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $NSS_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_NSS_CONFIG="$NSS_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_NSS_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  test -z "$ac_cv_path_NSS_CONFIG" && ac_cv_path_NSS_CONFIG="no"
+  ;;
+esac
+fi
+NSS_CONFIG=$ac_cv_path_NSS_CONFIG
+
+if test -n "$NSS_CONFIG"; then
+  echo "$as_me:$LINENO: result: $NSS_CONFIG" >&5
+echo "${ECHO_T}$NSS_CONFIG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+	    min_nss_version=3.9.0
+	    echo "$as_me:$LINENO: checking for NSS - version >= $min_nss_version (skipping)" >&5
+echo $ECHO_N "checking for NSS - version >= $min_nss_version (skipping)... $ECHO_C" >&6
+    fi
+
+	no_nss=""
+	if test "$NSS_CONFIG" = "no"; then
+        echo "$as_me:$LINENO: checking nss-config not found" >&5
+echo $ECHO_N "checking nss-config not found... $ECHO_C" >&6
+        # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  ;;
+esac
+fi
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+
+if test -n "$PKG_CONFIG"; then
+  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
+echo "${ECHO_T}$PKG_CONFIG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+        if test -n "$PKG_CONFIG"; then
+            if $PKG_CONFIG --exists nss; then
+                echo "$as_me:$LINENO: checking using NSS from package nss" >&5
+echo $ECHO_N "checking using NSS from package nss... $ECHO_C" >&6
+                NSS_CFLAGS=`$PKG_CONFIG --cflags-only-I nss`
+                NSS_LIBS=`$PKG_CONFIG --libs-only-L nss`
+            elif $PKG_CONFIG --exists mozilla-nss; then
+                echo "$as_me:$LINENO: checking using NSS from package mozilla-nss" >&5
+echo $ECHO_N "checking using NSS from package mozilla-nss... $ECHO_C" >&6
+                NSS_CFLAGS=`$PKG_CONFIG --cflags-only-I mozilla-nss`
+                NSS_LIBS=`$PKG_CONFIG --libs-only-L mozilla-nss`
+            else
+                { { echo "$as_me:$LINENO: error: system NSS not found" >&5
+echo "$as_me: error: system NSS not found" >&2;}
+   { (exit 1); exit 1; }; }
+		        no_nss="yes"
+            fi
+        else
+		    no_nss="yes"
+        fi
+	else
+        echo "$as_me:$LINENO: checking using NSS from $NSS_CONFIG" >&5
+echo $ECHO_N "checking using NSS from $NSS_CONFIG... $ECHO_C" >&6
+		NSS_CFLAGS=`$NSS_CONFIG $nss_config_args --cflags`
+		NSS_LIBS=`$NSS_CONFIG $nss_config_args --libs`
+
+				nss_config_major_version=`$NSS_CONFIG $nss_config_args --version | \
+			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
+		nss_config_minor_version=`$NSS_CONFIG $nss_config_args --version | \
+			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
+		nss_config_micro_version=`$NSS_CONFIG $nss_config_args --version | \
+			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
+	fi
+
+	if test -z "$no_nss"; then
+		echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+		MOZ_NATIVE_NSS=1
+	else
+		echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+	fi
+
+
+
+
+
+
+   fi
+fi
+
+if test -n "$USE_NSS" -a -z "$NSS_CFLAGS" -a -z "$NSS_LIBS" ; then
+   { { echo "$as_me:$LINENO: error: Need to use NSS but no NSS was found" >&5
+echo "$as_me: error: Need to use NSS but no NSS was found" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
 # Check whether --with-system-nspr or --without-system-nspr was given.
 if test "${with_system_nspr+set}" = set; then
   withval="$with_system_nspr"
      if test "$withval" = "yes"; then
             _SYSTEM_NSPR=1
-	    else
-            _SYSTEM_NSPR=
+            no_nspr=no
+	    elif test "$withval" = "no"; then
+            _SYSTEM_NSPR=no
 	    fi
 else
   _SYSTEM_NSPR=
 fi;
 
 if test "$_WIN32_MSVC"; then
-    _SYSTEM_NSPR=
+    _SYSTEM_NSPR=no
 fi
 
-# first, see if user has specified explicit NSPR include and lib paths
+if test -z "$_SYSTEM_NSPR" -o "$_SYSTEM_NSPR" = "no" ; then
 
     # check for --with-nspr
     echo "$as_me:$LINENO: checking for --with-nspr" >&5
@@ -1706,7 +2318,13 @@ if test "${with_nspr+set}" = set; then
   withval="$with_nspr"
 
         if test "$withval" = "no" ; then
+            echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
             no_nspr="yes"
+        elif test "$withval" = "yes" ; then
+            echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+            no_nspr="no"
         elif test -e "$withval"/include/nspr.h -a -d "$withval"/lib
         then
             echo "$as_me:$LINENO: result: using $withval" >&5
@@ -1775,210 +2393,42 @@ else
 echo "${ECHO_T}no" >&6
 fi;
 
-
-# next, see if user explicitly said to use system nspr
-if test -z "$no_nspr" -a -z "$NSPR_CFLAGS" -a -z "$NSPR_LIBS" ; then
-    if test -n "$_SYSTEM_NSPR"; then
-
-
-# Check whether --with-nspr-prefix or --without-nspr-prefix was given.
-if test "${with_nspr_prefix+set}" = set; then
-  withval="$with_nspr_prefix"
-  nspr_config_prefix="$withval"
-else
-  nspr_config_prefix=""
-fi;
-
-
-# Check whether --with-nspr-exec-prefix or --without-nspr-exec-prefix was given.
-if test "${with_nspr_exec_prefix+set}" = set; then
-  withval="$with_nspr_exec_prefix"
-  nspr_config_exec_prefix="$withval"
-else
-  nspr_config_exec_prefix=""
-fi;
-
-	if test -n "$nspr_config_exec_prefix"; then
-		nspr_config_args="$nspr_config_args --exec-prefix=$nspr_config_exec_prefix"
-		if test -z "$NSPR_CONFIG"; then
-			NSPR_CONFIG=$nspr_config_exec_prefix/bin/nspr-config
-		fi
-	fi
-	if test -n "$nspr_config_prefix"; then
-		nspr_config_args="$nspr_config_args --prefix=$nspr_config_prefix"
-		if test -z "$NSPR_CONFIG"; then
-			NSPR_CONFIG=$nspr_config_prefix/bin/nspr-config
-		fi
-	fi
-
-    if test -z "$NSPR_CONFIG" ; then
-	    unset ac_cv_path_NSPR_CONFIG
-	    # Extract the first word of "nspr-config", so it can be a program name with args.
-set dummy nspr-config; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_NSPR_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $NSPR_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_NSPR_CONFIG="$NSPR_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_NSPR_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  test -z "$ac_cv_path_NSPR_CONFIG" && ac_cv_path_NSPR_CONFIG="no"
-  ;;
-esac
-fi
-NSPR_CONFIG=$ac_cv_path_NSPR_CONFIG
-
-if test -n "$NSPR_CONFIG"; then
-  echo "$as_me:$LINENO: result: $NSPR_CONFIG" >&5
-echo "${ECHO_T}$NSPR_CONFIG" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
 fi
 
-	    min_nspr_version=4.0.0
-	    echo "$as_me:$LINENO: checking for NSPR - version >= $min_nspr_version (skipping)" >&5
-echo $ECHO_N "checking for NSPR - version >= $min_nspr_version (skipping)... $ECHO_C" >&6
-    fi
+if test "$no_nspr" == "no" -a -z "$NSPR_CFLAGS" -a -z "$NSPR_LIBS" ; then
+   if test -z "$_SYSTEM_NSPR" -o "$_SYSTEM_NSPR" = "no" ; then
 
-	no_nspr=""
-	if test "$NSPR_CONFIG" = "no"; then
-        echo "$as_me:$LINENO: checking nspr-config not found" >&5
-echo $ECHO_N "checking nspr-config not found... $ECHO_C" >&6
-        # Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-
-if test -n "$PKG_CONFIG"; then
-  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
-echo "${ECHO_T}$PKG_CONFIG" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-
-        if test -n "$PKG_CONFIG"; then
-            if $PKG_CONFIG --exists nspr; then
-                echo "$as_me:$LINENO: checking using NSPR from package nspr" >&5
-echo $ECHO_N "checking using NSPR from package nspr... $ECHO_C" >&6
-                NSPR_CFLAGS=`$PKG_CONFIG --cflags-only-I nspr`
-                NSPR_LIBS=`$PKG_CONFIG --libs-only-L nspr`
-            elif $PKG_CONFIG --exists mozilla-nspr; then
-                echo "$as_me:$LINENO: checking using NSPR from package mozilla-nspr" >&5
-echo $ECHO_N "checking using NSPR from package mozilla-nspr... $ECHO_C" >&6
-                NSPR_CFLAGS=`$PKG_CONFIG --cflags-only-I mozilla-nspr`
-                NSPR_LIBS=`$PKG_CONFIG --libs-only-L mozilla-nspr`
-            else
-                { { echo "$as_me:$LINENO: error: system NSPR not found" >&5
-echo "$as_me: error: system NSPR not found" >&2;}
-   { (exit 1); exit 1; }; }
-		        no_nspr="yes"
-            fi
-        else
-		    no_nspr="yes"
+    echo "$as_me:$LINENO: checking checking for in-tree NSPR from ../../dist" >&5
+echo $ECHO_N "checking checking for in-tree NSPR from ../../dist... $ECHO_C" >&6
+    for nsprpath in "../../dist" "../../dist"/*.OBJ ; do
+        savedir=`pwd`
+        cd $nsprpath
+        abs_nsprpath=`pwd`
+        cd $savedir
+        if test -f "$abs_nsprpath/include/nspr/nspr.h" ; then
+            NSPR_CFLAGS="-I$abs_nsprpath/include/nspr"
+        elif test -f "$abs_nsprpath/include/nspr.h" ; then
+            NSPR_CFLAGS="-I$abs_nsprpath/include"
         fi
-	else
-        echo "$as_me:$LINENO: checking using NSPR from $NSPR_CONFIG" >&5
-echo $ECHO_N "checking using NSPR from $NSPR_CONFIG... $ECHO_C" >&6
-		NSPR_CFLAGS=`$NSPR_CONFIG $nspr_config_args --cflags`
-		NSPR_LIBS=`$NSPR_CONFIG $nspr_config_args --libs`
-
-				nspr_config_major_version=`$NSPR_CONFIG $nspr_config_args --version | \
-			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
-		nspr_config_minor_version=`$NSPR_CONFIG $nspr_config_args --version | \
-			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
-		nspr_config_micro_version=`$NSPR_CONFIG $nspr_config_args --version | \
-			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
-	fi
-
-	if test -z "$no_nspr"; then
-		echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-		MOZ_NATIVE_NSPR=1
-	else
-		echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-	fi
-
-
-
-
-
-
-    else
-# see if we are being built in the same build tree as nspr
-
-    nsprpath=`echo ../../dist/*.OBJ | cut -f1 -d' '`
-    savedir=`pwd`
-    cd $nsprpath
-    abs_nsprpath=`pwd`
-    cd $savedir
-    if test -f "$abs_nsprpath/include/nspr.h" ; then
-        NSPR_CFLAGS="-I$abs_nsprpath/include"
-    fi
-    if test -d "$abs_nsprpath/lib" ; then
-        NSPR_LIBS="-L$abs_nsprpath/lib"
-    fi
+        if test -d "$abs_nsprpath/lib" ; then
+            NSPR_LIBS="-L$abs_nsprpath/lib"
+        fi
+        if test -n "$NSPR_CFLAGS" -a -n "$NSPR_LIBS" ; then
+            break
+        fi
+    done
     if test -n "$NSPR_CFLAGS" -a -n "$NSPR_LIBS" ; then
-        echo "$as_me:$LINENO: checking using in-tree NSPR from $nsprpath" >&5
-echo $ECHO_N "checking using in-tree NSPR from $nsprpath... $ECHO_C" >&6
 
 
 		echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
     else
-        echo "$as_me:$LINENO: checking could not find in-tree NSPR in $nsprpath" >&5
-echo $ECHO_N "checking could not find in-tree NSPR in $nsprpath... $ECHO_C" >&6
 		echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
     fi
 
-# failing that, see if we can find nspr-config or pkg-config nspr
-        if test -z "$NSPR_CFLAGS" ; then
+   fi
+   if test -z "$NSPR_CFLAGS" -a "$_SYSTEM_NSPR" != "no" ; then
 
 
 # Check whether --with-nspr-prefix or --without-nspr-prefix was given.
@@ -2113,9 +2563,8 @@ echo $ECHO_N "checking using NSPR from package mozilla-nspr... $ECHO_C" >&6
                 NSPR_CFLAGS=`$PKG_CONFIG --cflags-only-I mozilla-nspr`
                 NSPR_LIBS=`$PKG_CONFIG --libs-only-L mozilla-nspr`
             else
-                { { echo "$as_me:$LINENO: error: system NSPR not found" >&5
-echo "$as_me: error: system NSPR not found" >&2;}
-   { (exit 1); exit 1; }; }
+                echo "$as_me:$LINENO: checking system NSPR not found" >&5
+echo $ECHO_N "checking system NSPR not found... $ECHO_C" >&6
 		        no_nspr="yes"
             fi
         else
@@ -2149,778 +2598,26 @@ echo "${ECHO_T}no" >&6
 
 
 
-        fi
-    fi
+   fi
 fi
 
-if test -n "$_SYSTEM_NSPR" -a -z "$MOZ_NATIVE_NSPR"; then
-    NSPR_CFLAGS='-I$(DIST)/include/nspr'
-    NSPR_LIBS='-L$(DIST)/lib '"-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION"
-    # explicitly set libs for Visual Age C++ for OS/2
-    if test "$VACPP" = "yes"; then
-        NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
-    elif test "$_WIN32_MSVC"; then
-            NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '
-    fi
-fi
-
-
-# Check whether --with-system-nss or --without-system-nss was given.
-if test "${with_system_nss+set}" = set; then
-  withval="$with_system_nss"
-     if test "$withval" = "yes"; then
-            _SYSTEM_NSS=1
-            USE_NSS=1
-	    else
-            _SYSTEM_NSS=
-	    fi
-else
-  _SYSTEM_NSS=
-fi;
-
-if test "$_WIN32_MSVC"; then
-    _SYSTEM_NSS=
-fi
-
-# first, see if user has specified explicit NSS include and lib paths
-
-                        echo "$as_me:$LINENO: checking for --with-nss" >&5
-echo $ECHO_N "checking for --with-nss... $ECHO_C" >&6
-
-# Check whether --with-nss or --without-nss was given.
-if test "${with_nss+set}" = set; then
-  withval="$with_nss"
-     if test "$withval" = "yes"; then
-                USE_NSS=1
-		        echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    	    elif test -d "$withval" -a -d "$withval/lib" -a -d "$withval/include" ; then
-                USE_NSS=1
-                echo "$as_me:$LINENO: result: using $withval" >&5
-echo "${ECHO_T}using $withval" >&6
-                NSS_CFLAGS="-I$withval/include"
-                NSS_LIBS="-L$withval/lib"
-            else
-                USE_NSS=
-    	    fi
-fi;
-
-    # check for --with-nss-inc
-    echo "$as_me:$LINENO: checking for --with-nss-inc" >&5
-echo $ECHO_N "checking for --with-nss-inc... $ECHO_C" >&6
-
-# Check whether --with-nss-inc or --without-nss-inc was given.
-if test "${with_nss_inc+set}" = set; then
-  withval="$with_nss_inc"
-
-      if test -e "$withval"/nss.h
-      then
-        echo "$as_me:$LINENO: result: using $withval" >&5
-echo "${ECHO_T}using $withval" >&6
-        NSS_CFLAGS="-I$withval"
-        USE_NSS=1
-      else
-        echo
-        { { echo "$as_me:$LINENO: error: $withval not found" >&5
-echo "$as_me: error: $withval not found" >&2;}
-   { (exit 1); exit 1; }; }
-      fi
-
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi;
-
-    # check for --with-nss-lib
-    echo "$as_me:$LINENO: checking for --with-nss-lib" >&5
-echo $ECHO_N "checking for --with-nss-lib... $ECHO_C" >&6
-
-# Check whether --with-nss-lib or --without-nss-lib was given.
-if test "${with_nss_lib+set}" = set; then
-  withval="$with_nss_lib"
-
-      if test -d "$withval"
-      then
-        echo "$as_me:$LINENO: result: using $withval" >&5
-echo "${ECHO_T}using $withval" >&6
-        NSS_LIBS="-L$withval"
-        USE_NSS=1
-      else
-        echo
-        { { echo "$as_me:$LINENO: error: $withval not found" >&5
-echo "$as_me: error: $withval not found" >&2;}
-   { (exit 1); exit 1; }; }
-      fi
-
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi;
-
-
-# next, see if user explicitly said to use system nss
-if test -n "$USE_NSS" -a -z "$NSS_CFLAGS" -a -z "$NSS_LIBS" ; then
-    if test -n "$_SYSTEM_NSS"; then
-
-
-# Check whether --with-nss-prefix or --without-nss-prefix was given.
-if test "${with_nss_prefix+set}" = set; then
-  withval="$with_nss_prefix"
-  nss_config_prefix="$withval"
-else
-  nss_config_prefix=""
-fi;
-
-
-# Check whether --with-nss-exec-prefix or --without-nss-exec-prefix was given.
-if test "${with_nss_exec_prefix+set}" = set; then
-  withval="$with_nss_exec_prefix"
-  nss_config_exec_prefix="$withval"
-else
-  nss_config_exec_prefix=""
-fi;
-
-	if test -n "$nss_config_exec_prefix"; then
-		nss_config_args="$nss_config_args --exec-prefix=$nss_config_exec_prefix"
-		if test -z "$NSS_CONFIG"; then
-			NSS_CONFIG=$nss_config_exec_prefix/bin/nss-config
-		fi
-	fi
-	if test -n "$nss_config_prefix"; then
-		nss_config_args="$nss_config_args --prefix=$nss_config_prefix"
-		if test -z "$NSS_CONFIG"; then
-			NSS_CONFIG=$nss_config_prefix/bin/nss-config
-		fi
-	fi
-
-    if test -z "$NSS_CONFIG" ; then
-	    unset ac_cv_path_NSS_CONFIG
-	    # Extract the first word of "nss-config", so it can be a program name with args.
-set dummy nss-config; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_NSS_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $NSS_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_NSS_CONFIG="$NSS_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_NSS_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  test -z "$ac_cv_path_NSS_CONFIG" && ac_cv_path_NSS_CONFIG="no"
-  ;;
-esac
-fi
-NSS_CONFIG=$ac_cv_path_NSS_CONFIG
-
-if test -n "$NSS_CONFIG"; then
-  echo "$as_me:$LINENO: result: $NSS_CONFIG" >&5
-echo "${ECHO_T}$NSS_CONFIG" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-
-	    min_nss_version=3.9.0
-	    echo "$as_me:$LINENO: checking for NSS - version >= $min_nss_version (skipping)" >&5
-echo $ECHO_N "checking for NSS - version >= $min_nss_version (skipping)... $ECHO_C" >&6
-    fi
-
-	no_nss=""
-	if test "$NSS_CONFIG" = "no"; then
-        echo "$as_me:$LINENO: checking nss-config not found" >&5
-echo $ECHO_N "checking nss-config not found... $ECHO_C" >&6
-        # Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-
-if test -n "$PKG_CONFIG"; then
-  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
-echo "${ECHO_T}$PKG_CONFIG" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-
-        if test -n "$PKG_CONFIG"; then
-            if $PKG_CONFIG --exists nss; then
-                echo "$as_me:$LINENO: checking using NSS from package nss" >&5
-echo $ECHO_N "checking using NSS from package nss... $ECHO_C" >&6
-                NSS_CFLAGS=`$PKG_CONFIG --cflags-only-I nss`
-                NSS_LIBS=`$PKG_CONFIG --libs-only-L nss`
-            elif $PKG_CONFIG --exists mozilla-nss; then
-                echo "$as_me:$LINENO: checking using NSS from package mozilla-nss" >&5
-echo $ECHO_N "checking using NSS from package mozilla-nss... $ECHO_C" >&6
-                NSS_CFLAGS=`$PKG_CONFIG --cflags-only-I mozilla-nss`
-                NSS_LIBS=`$PKG_CONFIG --libs-only-L mozilla-nss`
-            else
-                { { echo "$as_me:$LINENO: error: system NSS not found" >&5
-echo "$as_me: error: system NSS not found" >&2;}
-   { (exit 1); exit 1; }; }
-		        no_nss="yes"
-            fi
-        else
-		    no_nss="yes"
-        fi
-	else
-        echo "$as_me:$LINENO: checking using NSS from $NSS_CONFIG" >&5
-echo $ECHO_N "checking using NSS from $NSS_CONFIG... $ECHO_C" >&6
-		NSS_CFLAGS=`$NSS_CONFIG $nss_config_args --cflags`
-		NSS_LIBS=`$NSS_CONFIG $nss_config_args --libs`
-
-				nss_config_major_version=`$NSS_CONFIG $nss_config_args --version | \
-			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
-		nss_config_minor_version=`$NSS_CONFIG $nss_config_args --version | \
-			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
-		nss_config_micro_version=`$NSS_CONFIG $nss_config_args --version | \
-			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
-	fi
-
-	if test -z "$no_nss"; then
-		echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-		MOZ_NATIVE_NSS=1
-	else
-		echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-	fi
-
-
-
-
-
-
-    else
-# see if we are being built in the same build tree as nss
-
-    nsslibpath=`echo ../../dist/*.OBJ/lib | cut -f1 -d' '`
-    savedir=`pwd`
-    cd $nsslibpath
-    abs_nsslibpath=`pwd`
-    cd $savedir
-    nssincpath=../../dist/public/nss
-    savedir=`pwd`
-    cd $nssincpath
-    abs_nssincpath=`pwd`
-    cd $savedir
-    if test -f "$abs_nssincpath/nss.h" ; then
-        NSS_CFLAGS="-I$abs_nssincpath"
-    fi
-    if test -d "$abs_nsslibpath" ; then
-        NSS_LIBS="-L$abs_nsslibpath"
-    fi
-    if test -n "$NSS_CFLAGS" -a -n "$NSS_LIBS" ; then
-        echo "$as_me:$LINENO: checking using in-tree NSS from $nssincpath $nsslibpath" >&5
-echo $ECHO_N "checking using in-tree NSS from $nssincpath $nsslibpath... $ECHO_C" >&6
-
-
-		echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    else
-        echo "$as_me:$LINENO: checking could not find in-tree NSS in ../../dist" >&5
-echo $ECHO_N "checking could not find in-tree NSS in ../../dist... $ECHO_C" >&6
-		echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-    fi
-
-# failing that, see if we can find nss-config or pkg-config nss
-        if test -z "$NSS_CFLAGS" ; then
-
-
-# Check whether --with-nss-prefix or --without-nss-prefix was given.
-if test "${with_nss_prefix+set}" = set; then
-  withval="$with_nss_prefix"
-  nss_config_prefix="$withval"
-else
-  nss_config_prefix=""
-fi;
-
-
-# Check whether --with-nss-exec-prefix or --without-nss-exec-prefix was given.
-if test "${with_nss_exec_prefix+set}" = set; then
-  withval="$with_nss_exec_prefix"
-  nss_config_exec_prefix="$withval"
-else
-  nss_config_exec_prefix=""
-fi;
-
-	if test -n "$nss_config_exec_prefix"; then
-		nss_config_args="$nss_config_args --exec-prefix=$nss_config_exec_prefix"
-		if test -z "$NSS_CONFIG"; then
-			NSS_CONFIG=$nss_config_exec_prefix/bin/nss-config
-		fi
-	fi
-	if test -n "$nss_config_prefix"; then
-		nss_config_args="$nss_config_args --prefix=$nss_config_prefix"
-		if test -z "$NSS_CONFIG"; then
-			NSS_CONFIG=$nss_config_prefix/bin/nss-config
-		fi
-	fi
-
-    if test -z "$NSS_CONFIG" ; then
-	    unset ac_cv_path_NSS_CONFIG
-	    # Extract the first word of "nss-config", so it can be a program name with args.
-set dummy nss-config; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_NSS_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $NSS_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_NSS_CONFIG="$NSS_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_NSS_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  test -z "$ac_cv_path_NSS_CONFIG" && ac_cv_path_NSS_CONFIG="no"
-  ;;
-esac
-fi
-NSS_CONFIG=$ac_cv_path_NSS_CONFIG
-
-if test -n "$NSS_CONFIG"; then
-  echo "$as_me:$LINENO: result: $NSS_CONFIG" >&5
-echo "${ECHO_T}$NSS_CONFIG" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-
-	    min_nss_version=3.9.0
-	    echo "$as_me:$LINENO: checking for NSS - version >= $min_nss_version (skipping)" >&5
-echo $ECHO_N "checking for NSS - version >= $min_nss_version (skipping)... $ECHO_C" >&6
-    fi
-
-	no_nss=""
-	if test "$NSS_CONFIG" = "no"; then
-        echo "$as_me:$LINENO: checking nss-config not found" >&5
-echo $ECHO_N "checking nss-config not found... $ECHO_C" >&6
-        # Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-
-if test -n "$PKG_CONFIG"; then
-  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
-echo "${ECHO_T}$PKG_CONFIG" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-
-        if test -n "$PKG_CONFIG"; then
-            if $PKG_CONFIG --exists nss; then
-                echo "$as_me:$LINENO: checking using NSS from package nss" >&5
-echo $ECHO_N "checking using NSS from package nss... $ECHO_C" >&6
-                NSS_CFLAGS=`$PKG_CONFIG --cflags-only-I nss`
-                NSS_LIBS=`$PKG_CONFIG --libs-only-L nss`
-            elif $PKG_CONFIG --exists mozilla-nss; then
-                echo "$as_me:$LINENO: checking using NSS from package mozilla-nss" >&5
-echo $ECHO_N "checking using NSS from package mozilla-nss... $ECHO_C" >&6
-                NSS_CFLAGS=`$PKG_CONFIG --cflags-only-I mozilla-nss`
-                NSS_LIBS=`$PKG_CONFIG --libs-only-L mozilla-nss`
-            else
-                { { echo "$as_me:$LINENO: error: system NSS not found" >&5
-echo "$as_me: error: system NSS not found" >&2;}
-   { (exit 1); exit 1; }; }
-		        no_nss="yes"
-            fi
-        else
-		    no_nss="yes"
-        fi
-	else
-        echo "$as_me:$LINENO: checking using NSS from $NSS_CONFIG" >&5
-echo $ECHO_N "checking using NSS from $NSS_CONFIG... $ECHO_C" >&6
-		NSS_CFLAGS=`$NSS_CONFIG $nss_config_args --cflags`
-		NSS_LIBS=`$NSS_CONFIG $nss_config_args --libs`
-
-				nss_config_major_version=`$NSS_CONFIG $nss_config_args --version | \
-			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
-		nss_config_minor_version=`$NSS_CONFIG $nss_config_args --version | \
-			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
-		nss_config_micro_version=`$NSS_CONFIG $nss_config_args --version | \
-			sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
-	fi
-
-	if test -z "$no_nss"; then
-		echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-		MOZ_NATIVE_NSS=1
-	else
-		echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-	fi
-
-
-
-
-
-
-        fi
-    fi
-fi
-
-
-
-# Check whether --with-system-svrcore or --without-system-svrcore was given.
-if test "${with_system_svrcore+set}" = set; then
-  withval="$with_system_svrcore"
-     if test "$withval" = "yes"; then
-            _SYSTEM_SVRCORE=1
-            HAVE_SVRCORE=1
-            SVRCORE_LIBS=-lsvrcore
-
-	    else
-            _SYSTEM_SVRCORE=
-	    fi
-else
-  _SYSTEM_SVRCORE=
-fi;
-
-# _SYSTEM_SVRCORE means /usr/lib and /usr/include so no need to add additional
-# include or lib paths
-if test -z "$_SYSTEM_SVRCORE" ; then
-   # first, see if user has specified explicit SVRCORE include and lib paths
-
-    echo "$as_me:$LINENO: checking for --with-svrcore" >&5
-echo $ECHO_N "checking for --with-svrcore... $ECHO_C" >&6
-
-# Check whether --with-svrcore or --without-svrcore was given.
-if test "${with_svrcore+set}" = set; then
-  withval="$with_svrcore"
-     if test "$withval" = "yes"; then
-                echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    	    elif test -d "$withval" -a -d "$withval/lib" -a -f "$withval/include/svrcore.h" ; then
-                HAVE_SVRCORE=1
-                echo "$as_me:$LINENO: result: using $withval" >&5
-echo "${ECHO_T}using $withval" >&6
-                SVRCORE_CFLAGS="-I$withval/include"
-                SVRCORE_LIB_PATH="-L$withval/lib"
-            else
-                HAVE_SVRCORE=
-    	    fi
-else
-  HAVE_SVRCORE=
-fi;
-
-    # check for --with-svrcore-inc
-    echo "$as_me:$LINENO: checking for --with-svrcore-inc" >&5
-echo $ECHO_N "checking for --with-svrcore-inc... $ECHO_C" >&6
-
-# Check whether --with-svrcore-inc or --without-svrcore-inc was given.
-if test "${with_svrcore_inc+set}" = set; then
-  withval="$with_svrcore_inc"
-
-      if test -e "$withval"/svrcore.h
-      then
-        echo "$as_me:$LINENO: result: using $withval" >&5
-echo "${ECHO_T}using $withval" >&6
-        SVRCORE_CFLAGS="-I$withval"
-      else
-        echo
-        { { echo "$as_me:$LINENO: error: $withval not found" >&5
-echo "$as_me: error: $withval not found" >&2;}
-   { (exit 1); exit 1; }; }
-      fi
-
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi;
-
-    # check for --with-svrcore-lib
-    echo "$as_me:$LINENO: checking for --with-svrcore-lib" >&5
-echo $ECHO_N "checking for --with-svrcore-lib... $ECHO_C" >&6
-
-# Check whether --with-svrcore-lib or --without-svrcore-lib was given.
-if test "${with_svrcore_lib+set}" = set; then
-  withval="$with_svrcore_lib"
-
-      if test -d "$withval"
-      then
-        echo "$as_me:$LINENO: result: using $withval" >&5
-echo "${ECHO_T}using $withval" >&6
-        SVRCORE_LIBS="-L$withval"
-      else
-        echo
-        { { echo "$as_me:$LINENO: error: $withval not found" >&5
-echo "$as_me: error: $withval not found" >&2;}
-   { (exit 1); exit 1; }; }
-      fi
-
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi;
-
-
-
-   # next, see if user explicitly said to use system svrcore
-   if test -z "$SVRCORE_CFLAGS" -a -z "$SVRCORE_LIBS" ; then
-       if test -n "$_SYSTEM_SVRCORE"; then
-
-	no_svrcore=""
-    echo "$as_me:$LINENO: checking Trying pkg-config svrcore" >&5
-echo $ECHO_N "checking Trying pkg-config svrcore... $ECHO_C" >&6
-    # Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-
-if test -n "$PKG_CONFIG"; then
-  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
-echo "${ECHO_T}$PKG_CONFIG" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-
-    if test -n "$PKG_CONFIG"; then
-        if $PKG_CONFIG --exists svrcore; then
-            echo "$as_me:$LINENO: checking using SVRCORE from package svrcore" >&5
-echo $ECHO_N "checking using SVRCORE from package svrcore... $ECHO_C" >&6
-            SVRCORE_CFLAGS=`$PKG_CONFIG --cflags-only-I svrcore`
-            SVRCORE_LIBS=`$PKG_CONFIG --libs-only-L svrcore`
-        else
-            { { echo "$as_me:$LINENO: error: system SVRCORE not found" >&5
-echo "$as_me: error: system SVRCORE not found" >&2;}
-   { (exit 1); exit 1; }; }
-	        no_svrcore="yes"
-        fi
-    else
-	    no_svrcore="yes"
-    fi
-
-	if test -z "$no_svrcore"; then
-		echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-		MOZ_NATIVE_SVRCORE=1
-	else
-		echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-	fi
-
-
-
-
-
-       else
-       # see if we are being built in the same build tree as svrcore
-
-    svrcorelibpath=`echo ../../dist/*.OBJ/lib | cut -f1 -d' '`
-    savedir=`pwd`
-    cd $svrcorelibpath
-    abs_svrcorelibpath=`pwd`
-    cd $savedir
-    svrcoreincpath=../../dist/public/svrcore
-    savedir=`pwd`
-    cd $svrcoreincpath
-    abs_svrcoreincpath=`pwd`
-    cd $savedir
-    if test -f "$abs_svrcoreincpath/svrcore.h" ; then
-        SVRCORE_CFLAGS="-I$abs_svrcoreincpath"
-    fi
-    if test -d "$abs_svrcorelibpath" ; then
-        SVRCORE_LIBS="-L$abs_svrcorelibpath"
-    fi
-    if test -n "$SVRCORE_CFLAGS" -a -n "$SVRCORE_LIBS" ; then
-        echo "$as_me:$LINENO: checking using in-tree SVRCORE from $svrcoreincpath $svrcorelibpath" >&5
-echo $ECHO_N "checking using in-tree SVRCORE from $svrcoreincpath $svrcorelibpath... $ECHO_C" >&6
-
-
-		echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    else
-        echo "$as_me:$LINENO: checking could not find in-tree SVRCORE in ../../dist" >&5
-echo $ECHO_N "checking could not find in-tree SVRCORE in ../../dist... $ECHO_C" >&6
-		echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-    fi
-
-           # failing that, see if we can find svrcore-config or pkg-config svrcore
-           if test -z "$SVRCORE_CFLAGS" -o -z "$SVRCORE_LIBS"; then
-
-	no_svrcore=""
-    echo "$as_me:$LINENO: checking Trying pkg-config svrcore" >&5
-echo $ECHO_N "checking Trying pkg-config svrcore... $ECHO_C" >&6
-    # Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_PKG_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-
-if test -n "$PKG_CONFIG"; then
-  echo "$as_me:$LINENO: result: $PKG_CONFIG" >&5
-echo "${ECHO_T}$PKG_CONFIG" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-
-    if test -n "$PKG_CONFIG"; then
-        if $PKG_CONFIG --exists svrcore; then
-            echo "$as_me:$LINENO: checking using SVRCORE from package svrcore" >&5
-echo $ECHO_N "checking using SVRCORE from package svrcore... $ECHO_C" >&6
-            SVRCORE_CFLAGS=`$PKG_CONFIG --cflags-only-I svrcore`
-            SVRCORE_LIBS=`$PKG_CONFIG --libs-only-L svrcore`
-        else
-            { { echo "$as_me:$LINENO: error: system SVRCORE not found" >&5
-echo "$as_me: error: system SVRCORE not found" >&2;}
-   { (exit 1); exit 1; }; }
-	        no_svrcore="yes"
-        fi
-    else
-	    no_svrcore="yes"
-    fi
-
-	if test -z "$no_svrcore"; then
-		echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-		MOZ_NATIVE_SVRCORE=1
-	else
-		echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-	fi
-
-
-
-
-
-           fi
+if test -z "$NSPR_CFLAGS" -o -z "$NSPR_LIBS" ; then
+   if test -n "$MOZILLA_CLIENT" ; then
+       NSPR_CFLAGS='-I$(DIST)/include/nspr'
+       NSPR_LIBS='-L$(DIST)/lib '"-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION"
+              if test "$VACPP" = "yes"; then
+          NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
+       elif test "$_WIN32_MSVC"; then
+          NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '
        fi
-    fi
+       SKIP_CYGWIN_FIXUP=1
+       LIBS_ALREADY_SET=1
+
+   elif test "$no_nspr" = "no" ; then
+       { { echo "$as_me:$LINENO: error: Need to use NSPR but no NSPR was found" >&5
+echo "$as_me: error: Need to use NSPR but no NSPR was found" >&2;}
+   { (exit 1); exit 1; }; }
+   fi
 fi
 
 
@@ -2929,12 +2626,12 @@ case "$target" in
 esac
 
 if test -n "$_WIN32_MSVC" -a -n "$USE_WINDOWS_PATHS" ; then
-    if test -n "$NSPR_CFLAGS" ; then
+    if test -n "$NSPR_CFLAGS" -a -z "$SKIP_CYGWIN_FIXUP" ; then
         path=`echo $NSPR_CFLAGS | sed -e 's/^-I//'`
         path=`cygpath -m $path`
         NSPR_CFLAGS="/I$path"
     fi
-    if test -n "$NSPR_LIBS" ; then
+    if test -n "$NSPR_LIBS" -a -z "$SKIP_CYGWIN_FIXUP" ; then
         path=`echo $NSPR_LIBS | sed -e 's/^-L//'`
         path=`cygpath -m $path`
         NSPR_LIBS="/LIBPATH:$path"
@@ -3118,7 +2815,6 @@ _ACEOF
     DEFINES="$DEFINES -UDEBUG"
 fi
 
-# Use mozilla's nsinstall
 if test -n "$MOZILLA_CLIENT"; then
    NSINSTALL='$(dist_bindir)/nsinstall'
 fi
@@ -10184,10 +9880,9 @@ for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
   # 1. Remove the extension, and $U if already installed.
   ac_i=`echo "$ac_i" |
 	 sed 's/\$U\././;s/\.o$//;s/\.obj$//'`
-  # 2. Prepend LIBOBJDIR.  When used with automake>=1.10 LIBOBJDIR
-  #    will be set to the directory where LIBOBJS objects are built.
-  ac_libobjs="$ac_libobjs \${LIBOBJDIR}$ac_i\$U.$ac_objext"
-  ac_ltlibobjs="$ac_ltlibobjs \${LIBOBJDIR}$ac_i"'$U.lo'
+  # 2. Add them.
+  ac_libobjs="$ac_libobjs $ac_i\$U.$ac_objext"
+  ac_ltlibobjs="$ac_ltlibobjs $ac_i"'$U.lo'
 done
 LIBOBJS=$ac_libobjs
 
@@ -10722,15 +10417,16 @@ s,@CC@,$CC,;t t
 s,@dist_prefix@,$dist_prefix,;t t
 s,@dist_bindir@,$dist_bindir,;t t
 s,@dist_libdir@,$dist_libdir,;t t
-s,@NSPR_CONFIG@,$NSPR_CONFIG,;t t
+s,@SVRCORE_LIBS@,$SVRCORE_LIBS,;t t
 s,@PKG_CONFIG@,$PKG_CONFIG,;t t
-s,@NSPR_CFLAGS@,$NSPR_CFLAGS,;t t
-s,@NSPR_LIBS@,$NSPR_LIBS,;t t
-s,@NSS_CONFIG@,$NSS_CONFIG,;t t
+s,@SVRCORE_CFLAGS@,$SVRCORE_CFLAGS,;t t
 s,@NSS_CFLAGS@,$NSS_CFLAGS,;t t
 s,@NSS_LIBS@,$NSS_LIBS,;t t
-s,@SVRCORE_LIBS@,$SVRCORE_LIBS,;t t
-s,@SVRCORE_CFLAGS@,$SVRCORE_CFLAGS,;t t
+s,@NSS_CONFIG@,$NSS_CONFIG,;t t
+s,@NSPR_CFLAGS@,$NSPR_CFLAGS,;t t
+s,@NSPR_LIBS@,$NSPR_LIBS,;t t
+s,@NSPR_CONFIG@,$NSPR_CONFIG,;t t
+s,@LIBS_ALREADY_SET@,$LIBS_ALREADY_SET,;t t
 s,@WHOAMI@,$WHOAMI,;t t
 s,@CXX@,$CXX,;t t
 s,@CXXFLAGS@,$CXXFLAGS,;t t
