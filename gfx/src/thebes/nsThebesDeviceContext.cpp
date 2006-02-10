@@ -542,7 +542,6 @@ NS_IMETHODIMP
 nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                            nsIDeviceContext *&aContext)
 {
-#if 0
     nsThebesDeviceContext *newDevCon = new nsThebesDeviceContext();
 
     if (newDevCon) {
@@ -553,21 +552,11 @@ nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
         return NS_ERROR_OUT_OF_MEMORY;
     }
     
-    //    newDevCon->mSpec = aDevice;
     NS_ADDREF(aDevice);
 
     newDevCon->mPrinter = PR_TRUE;
 
-#ifdef XP_WIN
-    HDC dc = nsnull;
-    aDevice->CreateSurfaceForPrinter((void**)&dc);
-    
-    // set deleteDC to true so that the surface will DeleteDC(dc) when it goes away
-    newDevCon->mPrintingSurface = new gfxWindowsSurface(dc, PR_TRUE);
-#else
-    // XXX
-    newDevCon->mPrintingSurface = new gfxPDFSurface("/tmp/foo.pdf", 8.5*72, 11*72);
-#endif
+    aDevice->GetSurfaceForPrinter(getter_AddRefs(newDevCon->mPrintingSurface));
 
     newDevCon->Init(nsnull);
 
@@ -583,10 +572,6 @@ nsThebesDeviceContext::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
     newDevCon->SetDevUnitsToAppUnits(1.0f / newDevCon->mAppUnitsToDevUnits);
 
     return NS_OK;
-#endif
-
-    /* we don't do printing */
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
