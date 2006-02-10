@@ -142,24 +142,25 @@
                     var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                                         .getService(Components.interfaces.nsIStringBundleService);
                     var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-                    var weekString = props.GetStringFromName("Week");
+
+                    const weekFormatter = Components.classes["@mozilla.org/calendar/weektitle-service;1"]
+                                          .getService(Components.interfaces.calIWeekTitleService);
                     for (var i = -2; i < 3; i++) {
                         var date = aDate.clone();
                         // Add/subtract I number of weeks
                         date.day = aDate.day + i*7;
                         date.normalize();
 
-                        //XXX This isn't quite right, but it's close.  We need
-                        //    to get some better dateUtils into calDateTime
-                        var weekno1 = Math.floor ((date.yearday - date.weekday) / 7);
+                        var weekno1 = weekFormatter.getWeekTitle(date);
 
                         // We'd show several weeks.  Now get the week-number of the
                         // last week that would be shown if the user clicked the label
                         date.day += 7*this.mWeeksInView;
                         date.normalize();
-                        var weekno2 = Math.floor ((date.yearday - date.weekday) / 7);
+                        var weekno2 = weekFormatter.getWeekTitle(date);
 
-                        nameArray.push(weekString + weekno1 + '-' + weekno2);
+                        var weekTitle = props.formatStringFromName('WeeksTitle', [weekno1, weekno2], 2);
+                        nameArray.push(weekTitle);
                     }
                     document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
                 ]]></body>
