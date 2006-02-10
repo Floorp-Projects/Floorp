@@ -70,14 +70,14 @@ public class PK11PubKey extends org.mozilla.jss.pkcs11.PK11Key
      * @param rawKey The bytes of the raw key.
      * @exception InvalidKeyFormatException If the raw key could not be
      *      decoded.
-     * @deprecated This method works for RSA keys but not DSA keys. Use
+     * @deprecated This method works for RSA keys but not DSA or EC keys. Use
      *      fromSPKI() instead.
      * @see #fromSPKI(byte[])
      */
     public static PK11PubKey fromRaw(PrivateKey.Type type, byte[] rawKey)
         throws InvalidKeyFormatException
     {
-        if( type == PrivateKey.Type.DSA ) {
+        if( type != PrivateKey.Type.RSA ) {
             throw new InvalidKeyFormatException(
                 "fromRaw() is broken for DSA keys. Use fromSPKI() instead.");
         }

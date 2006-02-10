@@ -48,7 +48,7 @@ import java.security.InvalidParameterException;
  * CryptoManager class.
  *
  * @author nicolson
- * @version $Revision: 1.7 $ $Date: 2004/04/25 15:02:22 $ 
+ * @version $Revision: 1.8 $ $Date: 2006/02/10 22:06:12 $ 
  * @see org.mozilla.jss.CryptoManager
  */
 public final class PK11Token implements CryptoToken {
@@ -449,9 +449,9 @@ public final class PK11Token implements CryptoToken {
 	 * @param subject subject dn of the certificate
 	 * @param keysize size of the key
 	 * @param keyType "rsa" or "dsa"
-     * @param P The DSA prime parameter
-     * @param Q The DSA sub-prime parameter
-     * @param G The DSA base parameter
+	 * @param P The DSA prime parameter
+	 * @param Q The DSA sub-prime parameter
+	 * @param G The DSA base parameter
 	 * @return String that represents a PKCS#10 b64 encoded blob with
 	 * begin/end brackets
 	 */

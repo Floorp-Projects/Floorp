@@ -71,10 +71,9 @@ public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
             return PK11PubKey.fromRaw( PrivateKey.RSA, ASN1Util.encode(seq) );
         } else if( keySpec instanceof DSAPublicKeySpec ) {
             // We need to import both the public value and the PQG parameters.
-            // The only way to get all that information to NSS is through
-            // a SubjectPublicKeyInfo. So we encode all the information
-            // into an SPKI and then throw that down to NSS.
-            // This operation is very computationally expensive and wasteful.
+            // The only way to get all that information in DER is to send 
+            // a full SubjectPublicKeyInfo. So we encode all the information
+            // into an SPKI.
 
             DSAPublicKeySpec spec = (DSAPublicKeySpec) keySpec;
 
@@ -95,6 +94,41 @@ public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
                 algID, new BIT_STRING(encodedPublicValue, 0) );
 
             return PK11PubKey.fromSPKI( ASN1Util.encode(spki) );
+  	//
+	// requires JAVA 1.5
+	//
+        //} else if( keySpec instanceof ECPublicKeySpec ) {
+        //   // We need to import both the public value and the curve.
+        //   // The only way to get all that information in DER is to send 
+        //   // a full SubjectPublicKeyInfo. So we encode all the information
+        //   // into an SPKI.
+        //
+        //  ECPublicKeySpec spec = (ECPublicKeySpec) keySpec;
+	//    AlgorithmParameters algParams = getInstance("ECParameters");
+        //
+        //    algParameters.init(spec.getECParameters());
+        //    OBJECT_IDENTIFIER oid = null;
+        //    try {
+        //        oid = SignatureAlgorithm.ECSignature.toOID();
+        //    } catch(NoSuchAlgorithmException ex ) {
+        //        Assert.notReached("no such algorithm as DSA?");
+        //    }
+        //    AlgorithmIdentifier algID = 
+        //                  new AlgorithmIdentifier(oid, ecParams.getParams() );
+        //    INTEGER publicValueX = new INTEGER(spec.getW().getAffineX());
+        //    INTEGER publicValueY = new INTEGER(spec.getW().getAffineY());
+        //    byte[] encodedPublicValue;
+        //    encodedPublicValue[0] = EC_UNCOMPRESSED_POINT;
+        //    encodedPublicValue += spec.getW().getAffineX().toByteArray();
+        //    encodedPublicValue += spec.getW().getAffineY().toByteArray();
+        //
+        //    byte[] encodedPublicValue = ASN1Util.encode(publicValue);
+        //    SubjectPublicKeyInfo spki = new SubjectPublicKeyInfo(
+        //        algID, new BIT_STRING(encodedPublicValue, 0) );
+        //
+        //   return PK11PubKey.fromSPKI( ASN1Util.encode(spki) );
+        //
+        // use the following for EC keys in 1.4.2
         } else if( keySpec instanceof X509EncodedKeySpec ) {
             //
             // SubjectPublicKeyInfo

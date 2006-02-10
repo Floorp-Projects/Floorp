@@ -62,18 +62,13 @@
 #define ERRX 1
 #define KEYTYPE_DSA_STRING "dsa"
 #define KEYTYPE_RSA_STRING "rsa"
-#define KEYTYPE_DSA 1
-#define KEYTYPE_RSA 2
+#define KEYTYPE_EC_STRING "ec"
 
 static CERTCertificateRequest* make_cert_request(JNIEnv *env, 
 			 const char *subject, SECKEYPublicKey *pubk);
 void GenerateCertRequest(JNIEnv *env, unsigned int ktype, const char *subject,
-			 int keysize, PK11SlotInfo *slot,
-			 unsigned char **b64request, PQGParams *dsaParams);
-static SECStatus GenerateKeyPair(JNIEnv *env, unsigned int ktype,
-				 PK11SlotInfo *slot,
-			 SECKEYPublicKey **pubk,
-			 SECKEYPrivateKey **privk, int keysize, PQGParams *dsaParams);
+			 PK11SlotInfo *slot,
+			 unsigned char **b64request, void *params);
 
 /* these values are taken from PK11KeyPairGenerator.java */
 #define DEFAULT_RSA_KEY_SIZE 2048
@@ -916,7 +911,9 @@ Java_org_mozilla_jss_pkcs11_PK11Token_doesAlgorithm
 	PR_ASSERT(slot != NULL);
 
     mech = JSS_getPK11MechFromAlg(env, alg);
-    PR_ASSERT( mech != CKM_INVALID_MECHANISM );
+
+    /* not an assertion, some algorithms don't have Mechanism yet */
+    /*PR_ASSERT( mech != CKM_INVALID_MECHANISM ); */
 
 	if( PK11_DoesMechanism(slot, mech) == PR_TRUE) {
 		doesMech = JNI_TRUE;
@@ -971,21 +968,25 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_generatePK10
     PQGParams *dsaParams=NULL;
     const char* c_keyType;
     jboolean k_isCopy;
-    unsigned int ktype = 0;
+    SECOidTag signType = SEC_OID_UNKNOWN;
+    PK11RSAGenParams rsaParams;
+    void *params = NULL;
 
     PR_ASSERT(env!=NULL && this!=NULL);
     /* get keytype */
     c_keyType = (*env)->GetStringUTFChars(env, keyType, &k_isCopy);
 
-    if (0 == PL_strcasecmp(c_keyType, KEYTYPE_DSA_STRING)) {
-      ktype = KEYTYPE_DSA;
-    } else if (0 == PL_strcasecmp(c_keyType, KEYTYPE_RSA_STRING)) {
-      ktype = KEYTYPE_RSA;
-    } else {
-      JSS_throw(env, INVALID_PARAMETER_EXCEPTION);
-    }
-
-    if (ktype == KEYTYPE_DSA) {
+    if (0 == PL_strcasecmp(c_keyType, KEYTYPE_RSA_STRING)) {
+      signType = SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
+      if( keysize == -1 ) {
+	rsaParams.keySizeInBits = DEFAULT_RSA_KEY_SIZE;
+      } else {
+	rsaParams.keySizeInBits = keysize;
+      }
+      rsaParams.pe = DEFAULT_RSA_PUBLIC_EXPONENT;
+      params = (void *)&rsaParams;
+    } else if (0 == PL_strcasecmp(c_keyType, KEYTYPE_DSA_STRING)) {
+      signType = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
       if (P==NULL || Q==NULL || G ==NULL) {
 	/* shouldn't happen */
 	JSS_throw(env, INVALID_PARAMETER_EXCEPTION);
@@ -999,18 +1000,23 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_generatePK10
 	if( JSS_ByteArrayToOctetString(env, P, &p) ||
 	    JSS_ByteArrayToOctetString(env, Q, &q) ||
 	    JSS_ByteArrayToOctetString(env, G, &g) )
-	  {
-	    PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
-	    goto finish;
-	  }
+	{
+	  PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
+	  goto finish;
+	}
 	dsaParams = PK11_PQG_NewParams(&p, &q, &g);
 	if(dsaParams == NULL) {
 	  JSS_throw(env, OUT_OF_MEMORY_ERROR);
 	  goto finish;
 	}
-	
       }
-    } /* end ktype == KEYTYPE_DSA */
+      params = (void *)dsaParams;
+    } else if (0 == PL_strcasecmp(c_keyType, KEYTYPE_EC_STRING)) {
+      signType = SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST;
+      /* get ec param */
+    } else {
+      JSS_throw(env, INVALID_PARAMETER_EXCEPTION);
+    }
 
     if( JSS_PK11_getTokenSlotPtr(env, this, &slot) != PR_SUCCESS) {
         PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
@@ -1027,11 +1033,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_generatePK10
     /* get subject */
     c_subject = (*env)->GetStringUTFChars(env, subject, &isCopy);
 
-    /* get keysize */
-
     /* call GenerateCertRequest() */
-    GenerateCertRequest(env, ktype, c_subject, (int) keysize, slot, &b64request,
-			dsaParams);
+    GenerateCertRequest(env, signType, c_subject, slot, &b64request, params);
 
 finish:
     if (isCopy == JNI_TRUE) {
@@ -1044,7 +1047,7 @@ finish:
       (*env)->ReleaseStringUTFChars(env, keyType, c_keyType);
     }
 
-    if (ktype == KEYTYPE_DSA) {
+    if (signType == SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST) {
       SECITEM_FreeItem(&p, PR_FALSE);
       SECITEM_FreeItem(&q, PR_FALSE);
       SECITEM_FreeItem(&g, PR_FALSE);
@@ -1065,10 +1068,10 @@ finish:
  */
 void
 GenerateCertRequest(JNIEnv *env, 
-		    unsigned int ktype, const char *subject, int keysize,
+		    SECOidTag signType, const char *subject,
 		    PK11SlotInfo *slot,
-		     unsigned char **b64request,
-		    PQGParams *dsaParams) {
+		    unsigned char **b64request,
+		    void *params) {
 
 	CERTCertificateRequest *req;
 
@@ -1078,14 +1081,28 @@ GenerateCertRequest(JNIEnv *env,
 	PRArenaPool *arena;
 	SECItem result_der, result;
 	SECItem *blob;
+	CK_MECHANISM_TYPE signMech;
+	CK_MECHANISM_TYPE keygenMech;
 
 #ifdef DEBUG      
-	printf("in GenerateCertRequest(), subject=%s, keysize = %d",
-	       subject, keysize);
+	printf("in GenerateCertRequest(), subject=%s, ",
+	       subject);
 #endif
 
-	if( GenerateKeyPair(env, ktype, slot, &pubk, &privk, keysize,
-			    dsaParams) != SECSuccess) {
+	/*
+	 * Use the tables to reduce the code of adding new
+	 * types of keys.
+	 */
+	signMech = PK11_AlgtagToMechanism(signType);
+	if (signMech == CKM_INVALID_MECHANISM) {
+#ifdef DEBUG      
+		printf("Error getting KEYGEN Mechanism.");
+#endif
+	}
+	keygenMech = PK11_GetKeyGen(signMech);
+
+	if( JSS_PK11_generateKeyPair(env, keygenMech, slot, &pubk, &privk, 
+		params, PR_FALSE, -1, -1) != SECSuccess) {
 #ifdef DEBUG      
 		printf("Error generating keypair.");
 #endif
@@ -1121,8 +1138,7 @@ GenerateCertRequest(JNIEnv *env,
 	}
 
 	rv = SEC_DerSignData(arena, &result, result_der.data, result_der.len,
-			     privk,
-                         (ktype==KEYTYPE_RSA)? SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST);
+			     privk, signType);
 	if (rv) {
 	  JSS_nativeThrowMsg(env, TOKEN_EXCEPTION,
 			     "signing of data failed");
@@ -1176,88 +1192,4 @@ make_cert_request(JNIEnv *env, const char *subject, SECKEYPublicKey *pubk)
 #endif
 
 	return req;
-}
-
-
-/******************************************************************
- *
- * G e n e r a t e K e y P a i r
- */
-static SECStatus
-GenerateKeyPair(JNIEnv *env, unsigned int ktype, PK11SlotInfo *slot, SECKEYPublicKey **pubk,
-	SECKEYPrivateKey **privk, int keysize, PQGParams *dsaParams)
-{
-
-  PK11RSAGenParams rsaParams;
-
-  if (ktype == KEYTYPE_RSA) {
-    if( keysize == -1 ) {
-      rsaParams.keySizeInBits = DEFAULT_RSA_KEY_SIZE;
-    } else {
-      rsaParams.keySizeInBits = keysize;
-    }
-    rsaParams.pe = DEFAULT_RSA_PUBLIC_EXPONENT;
-  }
-  if(PK11_Authenticate( slot, PR_FALSE /*loadCerts*/, NULL /*wincx*/)
-     != SECSuccess) {
-    JSS_nativeThrowMsg(env, TOKEN_EXCEPTION,
-		       "failure authenticating to key database");
-    return SECFailure;
-  }
-
-  if(PK11_NeedUserInit(slot)) {
-    JSS_nativeThrowMsg(env, TOKEN_EXCEPTION,
-		       "token not initialized with password");
-    return SECFailure;
-  }
-
-#ifdef DEBUG      
-  printf("key type == %d", ktype);
-#endif
-  if (ktype == KEYTYPE_RSA) {
-    *privk = PK11_GenerateKeyPair (slot,
-		   CKM_RSA_PKCS_KEY_PAIR_GEN, &rsaParams, 
-				   pubk, PR_TRUE /*isPerm*/, PR_TRUE /*isSensitive*/, NULL);
-  } else { /* dsa */
-    *privk = PK11_GenerateKeyPair (slot,
-		   CKM_DSA_KEY_PAIR_GEN, (void *)dsaParams, 
-		   pubk, PR_TRUE /*isPerm*/, PR_TRUE /*isSensitive*/, NULL);
-    }
-    if( *privk == NULL ) {
-      int errLength;
-      char *errBuf;
-      char *msgBuf;
-
-      errLength = PR_GetErrorTextLength();
-      if(errLength > 0) {
-	errBuf = PR_Malloc(errLength);
-	if(errBuf == NULL) {
-	  JSS_throw(env, OUT_OF_MEMORY_ERROR);
-	  return SECFailure;
-	}
-	PR_GetErrorText(errBuf);
-      }
-      msgBuf = PR_smprintf("Keypair Generation failed on token: %s",
-			   errLength>0? errBuf : "");
-      if(errLength>0) {
-	PR_Free(errBuf);
-      }
-
-      JSS_throwMsg(env, TOKEN_EXCEPTION, msgBuf);
-      PR_Free(msgBuf);
-      return SECFailure;
-    }
-
-
-    if (*privk != NULL && *pubk != NULL) {
-#ifdef DEBUG      
-      printf("generated public/private key pair\n");
-#endif
-    } else {
-      JSS_nativeThrowMsg(env, TOKEN_EXCEPTION,
-			 "failure generating key pair");
-      return SECFailure;
-    }
-    
-    return SECSuccess;
 }

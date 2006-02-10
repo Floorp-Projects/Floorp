@@ -168,6 +168,8 @@ public class Algorithm {
     //////////////////////////////////////////////////////////////
     static final OBJECT_IDENTIFIER ANSI_X9_ALGORITHM = 
         new OBJECT_IDENTIFIER( new long[] { 1, 2, 840, 10040, 4 } );
+    static final OBJECT_IDENTIFIER ANSI_X962_OID = 
+        new OBJECT_IDENTIFIER( new long[] { 1, 2, 840, 10045 } );
 
     // Algorithm indices.  These must be kept in sync with the
     // algorithm array in Algorithm.c.
@@ -224,5 +226,11 @@ public class Algorithm {
     protected static final short SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION=41;
     protected static final short SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION=42;
     protected static final short SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION=43;
+    protected static final short SEC_OID_ANSIX962_EC_PUBLIC_KEY=44;
+    protected static final short SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE=45;
+    protected static final short CKM_EC_KEY_PAIR_GEN=46;
+    protected static final short SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE=47;
+    protected static final short SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE=48;
+    protected static final short SEC_OID_ANSIX962_ECDSA_SHA512_SIGNATURE=49;
 
 }

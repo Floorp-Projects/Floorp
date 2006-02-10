@@ -393,18 +393,35 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapPrivWithSym
     keyType = PK11_GetKeyType(keyTypeMech, 0);
 
     /* figure out which operations to enable for this key */
-    if( keyType == CKK_RSA ) {
+    switch (keyType) {
+    case CKK_RSA:
         attribs[0] = CKA_SIGN;
         attribs[1] = CKA_DECRYPT;
         attribs[2] = CKA_SIGN_RECOVER;
         attribs[3] = CKA_UNWRAP;
         numAttribs = 4;
-    } else if(keyType == CKK_DSA) {
+	break;
+    case CKK_DSA:
         attribs[0] = CKA_SIGN;
         numAttribs = 1;
-    } else {
+	break;
+    case CKK_KEA:
+    case CKK_DH:
+    case CKK_X9_42_DH:
+        attribs[0] = CKA_DERIVE;
+        numAttribs = 1;
+	break;
+    case CKK_EC:
+        attribs[0] = CKA_SIGN;
+        attribs[1] = CKA_DERIVE;
+        numAttribs = 2;
+	break;
+    default:
         /* unknown key type */
         PR_ASSERT(PR_FALSE);
+	attribs[0] = CKA_SIGN;
+	numAttribs = 1;
+	break;
     }
 
     /* perform the unwrap */
