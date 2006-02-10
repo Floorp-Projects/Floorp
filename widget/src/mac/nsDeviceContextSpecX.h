@@ -88,6 +88,8 @@ public:
     
     NS_IMETHOD EndDocument();
     
+    NS_IMETHOD AbortDocument();
+    
     NS_IMETHOD BeginPage();
     
     NS_IMETHOD EndPage();
