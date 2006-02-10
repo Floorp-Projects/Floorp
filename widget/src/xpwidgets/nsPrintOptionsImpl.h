@@ -54,8 +54,8 @@
 /**
  *   Class nsPrintOptions
  */
-class NS_GFX nsPrintOptions : public nsIPrintOptions, public
-                              nsIPrintSettingsService
+class nsPrintOptions : public nsIPrintOptions,
+                       public nsIPrintSettingsService
 {
 public:
   NS_DECL_ISUPPORTS

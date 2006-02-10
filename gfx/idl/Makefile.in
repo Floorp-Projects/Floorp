@@ -50,10 +50,6 @@ XPIDLSRCS	= \
 		nsIFontEnumerator.idl \
 		nsIFontList.idl \
 		nsIScriptableRegion.idl \
-		nsIPrintOptions.idl \
-		nsIPrintSettings.idl \
-		nsIPrintSettingsService.idl \
-		nsIPrintSession.idl \
 		gfxIFormats.idl \
 		gfxIImageFrame.idl \
 		gfxtypes.idl \
@@ -66,18 +62,8 @@ XPIDLSRCS	+= \
 		$(NULL)
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
-XPIDLSRCS += nsIPrintSettingsX.idl \
-		nsIPrintSessionX.idl \
-		$(NULL)
-endif
-
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 XPIDLSRCS += nsIQDFlushManager.idl
-endif
-
-ifeq ($(MOZ_GFX_TOOLKIT),windows)
-XPIDLSRCS += nsIPrintSettingsWin.idl
 endif
 
 include $(topsrcdir)/config/rules.mk

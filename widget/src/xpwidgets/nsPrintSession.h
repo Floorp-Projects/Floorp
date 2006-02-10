@@ -50,8 +50,8 @@
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
-class NS_GFX nsPrintSession : public nsIPrintSession,
-                              public nsSupportsWeakReference
+class nsPrintSession : public nsIPrintSession,
+                       public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS

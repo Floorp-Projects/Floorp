@@ -48,7 +48,7 @@
 //***    nsPrintSettingsWin
 //*****************************************************************************
 class nsPrintSettingsWin : public nsPrintSettings,
-                                  public nsIPrintSettingsWin
+                           public nsIPrintSettingsWin
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

@@ -122,9 +122,6 @@ CPPSRCS = \
         nsRegion.cpp \
         nsTransform2D.cpp \
         nsScriptableRegion.cpp \
-        nsPrintOptionsImpl.cpp \
-        nsPrintSettingsImpl.cpp \
-        nsPrintSession.cpp \
         $(NULL)
 
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))

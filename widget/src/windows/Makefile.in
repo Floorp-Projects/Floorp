@@ -86,6 +86,10 @@ CPPSRCS		= \
 	nsFilePicker.cpp     \
 	nsScreenWin.cpp	\
 	nsScreenManagerWin.cpp \
+	nsPrintOptionsWin.cpp \
+	nsPrintSettingsWin.cpp \
+	nsDeviceContextSpecWin.cpp \
+	nsDeviceContextSpecFactoryW.cpp \
 	$(NULL)
 
 ifneq ($(OS_ARCH), WINCE)

@@ -68,6 +68,8 @@ EXPORTS		= \
 		nsIDragSessionBeOS.h \
 		nsIPluginWidget.h \
 		nsINativeKeyBindings.h \
+		nsIDeviceContextSpec.h \
+		nsIDeviceContextSpecFactory.h \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
@@ -96,10 +98,20 @@ XPIDLSRCS	= \
 		nsINativeScrollbar.idl \
 		nsIScreen.idl \
 		nsIScreenManager.idl \
+		nsIPrintSession.idl \
+		nsIPrintSettings.idl \
+		nsIPrintSettingsService.idl \
+		nsIPrintOptions.idl \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+XPIDLSRCS	+= nsIPrintSettingsWin.idl
+endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-XPIDLSRCS       += nsIEventSink.idl
+XPIDLSRCS	+= nsIEventSink.idl \
+		nsIPrintSettingsX.idl \
+		nsIPrintSessionX.idl
 endif
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

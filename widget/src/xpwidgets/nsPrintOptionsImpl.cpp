@@ -62,7 +62,7 @@
 
 #include "nsISimpleEnumerator.h"
 #include "nsISupportsPrimitives.h"
-#include "nsGfxCIID.h"
+#include "nsWidgetsCID.h"
 #include "stdlib.h"
 #include "nsAutoPtr.h"
 
