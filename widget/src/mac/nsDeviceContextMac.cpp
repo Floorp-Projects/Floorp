@@ -432,13 +432,15 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
     return;
   }
   
-  // we have a widget stashed inside, get a native WindowRef out of it
   nsIWidget* widget = reinterpret_cast<nsIWidget*>(mWidget);      // PRAY!
   NS_ASSERTION ( widget, "No Widget --> No Window" );
   if ( !widget ) {
     NS_IF_ADDREF(*outScreen = mPrimaryScreen.get());              // bail out with the main screen just to be safe.
     return;
-  }  
+  }
+
+#if !MOZ_WIDGET_COCOA
+  // we have a widget stashed inside, get a native WindowRef out of it
  	WindowRef window = reinterpret_cast<WindowRef>(widget->GetNativeData(NS_NATIVE_DISPLAY));
 
   StPortSetter  setter(window);
@@ -467,6 +469,10 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
   }
   else
     *outScreen = nsnull;
+#else
+  // in cocoa, we don't have a windowPtr! bail out with the main screen
+  NS_IF_ADDREF(*outScreen = mPrimaryScreen.get());
+#endif
   
 } // FindScreenForSurface
 
