@@ -431,3 +431,6 @@ xptcstubs_asm_x86_solaris_SUNW.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs
 endif
 endif
 endif
+
+libs:: $(LIBRARY)
+	$(INSTALL) $(LIBRARY) ../..

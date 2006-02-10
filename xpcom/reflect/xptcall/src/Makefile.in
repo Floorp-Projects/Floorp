@@ -59,4 +59,3 @@ FORCE_USE_PIC	= 1
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DEXPORT_XPTC_API -D_IMPL_NS_COM
-
