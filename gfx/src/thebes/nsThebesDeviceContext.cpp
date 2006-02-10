@@ -321,11 +321,9 @@ nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
     nsCOMPtr<nsIRenderingContext> pContext;
     rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
     if (NS_SUCCEEDED(rv)) {
-        gfxASurface *surface = mPrintingSurface;
-        if (surface) {
-            NS_ADDREF(surface);
-            rv = pContext->Init(this, surface);
-        } else
+        if (mPrintingSurface)
+            rv = pContext->Init(this, mPrintingSurface);
+        else
             rv = NS_ERROR_FAILURE;
 
         if (NS_SUCCEEDED(rv)) {
