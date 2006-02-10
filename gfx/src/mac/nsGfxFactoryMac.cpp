@@ -48,10 +48,6 @@
 #include "nsDeviceContextMac.h"
 #include "nsRegionMac.h"
 #include "nsScriptableRegion.h"
-#include "nsDeviceContextSpecX.h"
-#include "nsPrintOptionsX.h"
-#include "nsPrintSessionX.h"
-#include "nsDeviceContextSpecFactoryM.h"
 #include "nsBlender.h"
 #include "nsCOMPtr.h"
 #include "nsUnicodeMappingUtil.h"
@@ -70,10 +66,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDrawingSurfaceMac)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsX, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSessionX, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
@@ -128,22 +120,6 @@ static const nsModuleComponentInfo components[] =
     NS_DRAWING_SURFACE_CID,
     "@mozilla.org/gfx/drawing-surface;1",
     nsDrawingSurfaceMacConstructor },
-  { "nsDeviceContextSpec",
-    NS_DEVICE_CONTEXT_SPEC_CID,
-    "@mozilla.org/gfx/devicecontextspec;1",
-    nsDeviceContextSpecXConstructor },
-  { "nsDeviceContextSpecFactory",
-    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
-    "@mozilla.org/gfx/devicecontextspecfactory;1",
-    nsDeviceContextSpecFactoryMacConstructor },
-  { "PrintSettings Service",
-    NS_PRINTSETTINGSSERVICE_CID,
-    "@mozilla.org/gfx/printsettings-service;1",
-    nsPrintOptionsXConstructor },
-  { "Print Session",
-    NS_PRINTSESSION_CID,
-    "@mozilla.org/gfx/printsession;1",
-    nsPrintSessionXConstructor },
   { "nsFontEnumerator",
     NS_FONT_ENUMERATOR_CID,
     "@mozilla.org/gfx/fontenumerator;1",
