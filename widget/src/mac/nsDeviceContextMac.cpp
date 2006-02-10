@@ -880,8 +880,9 @@ void nsDeviceContextMac :: InitFontInfoList()
 						err = ::TECConvertText(converter, &fontName[1], fontName[0], &actualInputLength, 
 													(TextPtr)unicodeFontName , sizeof(unicodeFontName), &actualOutputLength);	
 						unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = '\0';
+						nsAutoString fontNameString(unicodeFontName);
 
-		        		FontNameKey key(unicodeFontName);
+		        		FontNameKey key(fontNameString);
 						gFontInfoList->Put(&key, (void*)fondID);
 					}
 					::ReleaseResource(fond);
