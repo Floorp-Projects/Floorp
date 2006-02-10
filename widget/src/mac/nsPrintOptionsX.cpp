@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define PM_USE_SESSION_APIS 0
 #include <PMApplication.h>
 
 #include "nsCOMPtr.h"
