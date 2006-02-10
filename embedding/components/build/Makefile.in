@@ -65,6 +65,7 @@ REQUIRES	= js \
 		  windowwatcher \
 		  webbrwsr \
 		  gfx \
+		  widget \
 		  webbrowserpersist \
 		  jsconsole \
 		  find \
