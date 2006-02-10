@@ -538,9 +538,10 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
                                                        nsIDeviceContext *&aContext)
 {
   nsresult                 rv;
-  PrintMethod              method;
 
 #ifdef HAVE_NSDEVICECONTEXTSPECGTK
+  PrintMethod              method;
+
   nsDeviceContextSpecGTK  *spec = NS_STATIC_CAST(nsDeviceContextSpecGTK *, aDevice);
   
   rv = spec->GetPrintMethod(method);

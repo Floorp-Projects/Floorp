@@ -38,7 +38,8 @@
 
 #include "nsDeviceContextSpecFactoryG.h"
 #include "nsDeviceContextSpecG.h"
-#include "nsGfxCIID.h"
+#include "nsComponentManagerUtils.h"
+#include "nsWidgetsCID.h"
 #include "plstr.h"
 
 /** -------------------------------------------------------
