@@ -1054,7 +1054,6 @@ PRBool nsDeviceContextMac::HaveFontManager90()
 //------------------------------------------------------------------------
 nsFontEnumeratorMac::nsFontEnumeratorMac()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsFontEnumeratorMac, nsIFontEnumerator)
