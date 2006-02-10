@@ -951,8 +951,10 @@ NS_LogTerm()
                "NS_LogTerm without matching NS_LogInit");
 
   if (--gInitCount == 0) {
-    nsTraceRefcntImpl::DumpStatistics();
-    nsTraceRefcntImpl::ResetStatistics();
+    if (gInitialized) {
+      nsTraceRefcntImpl::DumpStatistics();
+      nsTraceRefcntImpl::ResetStatistics();
+    }
     nsTraceRefcntImpl::Shutdown();
 #ifdef NS_IMPL_REFCNT_LOGGING
     nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
