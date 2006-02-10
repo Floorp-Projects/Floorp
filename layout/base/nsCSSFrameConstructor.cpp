@@ -7777,8 +7777,10 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     // references, things don't work right.
     // XXX FIXME XXX
     if (!hasRequiredExtentions || !hasRequiredFeatures ||
-        !hasSystemLanguage)
+        !hasSystemLanguage) {
+      *aHaltProcessing = PR_TRUE;
       return NS_OK;
+    }
   }
 
   // Make sure to keep IsSpecialContent in synch with this code
