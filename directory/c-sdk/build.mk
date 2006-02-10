@@ -431,6 +431,14 @@ RPATHFLAG_PREFIX=-Wl,-rpath,
 LDRPATHFLAG_PREFIX=-rpath
 endif # Linux
 
+ifeq ($(OS_ARCH), Darwin)
+# Darwin doesn't use RPATH.
+RPATHFLAG_PREFIX=
+RPATHFLAG=
+
+# Use the C++ compiler to link
+USE_CCC_TO_LINK=1
+endif # Darwin
 
 # Use the C++ compiler to link... or not.
 ifdef USE_CCC_TO_LINK

@@ -187,6 +187,10 @@ ifeq ($(OS_ARCH), AIX)
 PLATFORMLIBS=-ldl -brtl -lpthreads -lc_r -lm
 endif
 
+ifeq ($(OS_ARCH), Darwin)
+PLATFORMLIBS=-liconv
+endif
+
 ifdef HAVE_LIBNLS
 ifeq ($(OS_ARCH), WINNT)
 EXTRA_LIBS +=   $(LIBNLS_LIBDIR)/$(NSCNV_LIBNAME) \
