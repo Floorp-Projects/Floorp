@@ -327,7 +327,8 @@ Boolean result=false;
     mozFile->Append("PrintDialogPDE.plugin");
     mozFile->GetPath(&fullModuleName);
     nsFileSpec  file(fullModuleName);
-    
+
+#ifndef XP_MACOSX    
     const FSSpec  spec = file;
 
     FSRef ref;
@@ -349,6 +350,7 @@ Boolean result=false;
         }
       }
     }
+#endif
   }
 
   return result;
