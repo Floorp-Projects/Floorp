@@ -441,17 +441,6 @@ NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextMac :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
-{
-  aPixel = aColor;
-  return NS_OK;
-}
-
-
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *	@update 12/9/98 dwc
- */
 NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName)
 {
   	short fontNum;
