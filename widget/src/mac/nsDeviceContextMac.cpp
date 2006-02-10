@@ -201,8 +201,10 @@ NS_IMETHODIMP nsDeviceContextMac :: SupportsNativeWidgets(PRBool &aSupportsWidge
 NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   // XXX Should we push this to widget library
-  aWidth = 16 * mDevUnitsToAppUnits;
-  aHeight = 16 * mDevUnitsToAppUnits;
+  float scale;
+  GetCanonicalPixelScale(scale);
+  aWidth = 16 * mDevUnitsToAppUnits * scale;
+  aHeight = 16 * mDevUnitsToAppUnits * scale;
   return NS_OK;
 }
 
