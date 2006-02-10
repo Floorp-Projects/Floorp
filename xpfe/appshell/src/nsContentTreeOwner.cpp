@@ -701,6 +701,7 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
                                   nsIURI* aURI,
                                   const nsAString& aName,
                                   const nsACString& aFeatures,
+                                  PRBool* aWindowIsNew,
                                   nsIDOMWindow** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aParent);
@@ -785,6 +786,8 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
     return NS_OK;
   }
 
+  *aWindowIsNew = (containerPref != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW);
+  
   // Get a new rendering area from the browserDOMWin.  To make this
   // safe for cases when it'll try to return an existing window or
   // something, get it with a null URI.

@@ -650,10 +650,11 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
         NS_ASSERTION(aParent, "We've _got_ to have a parent here!");
 
         nsCOMPtr<nsIDOMWindow> newWindow;
+        PRBool windowIsNew; // Not used for anything.... yet.
         rv = provider->ProvideWindow(aParent, chromeFlags,
                                      sizeSpec.PositionSpecified(),
                                      sizeSpec.SizeSpecified(),
-                                     uriToLoad, name, features,
+                                     uriToLoad, name, features, &windowIsNew,
                                      getter_AddRefs(newWindow));
         if (NS_SUCCEEDED(rv)) {
           GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
