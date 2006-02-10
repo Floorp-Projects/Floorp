@@ -424,6 +424,7 @@ cairo_pop_group (cairo_t *cr)
 {
     cairo_surface_t *group_surface, *parent_target;
     cairo_pattern_t *group_pattern = NULL;
+    cairo_matrix_t group_matrix;
 
     /* Grab the active surfaces */
     group_surface = _cairo_gstate_get_target (cr->gstate);
