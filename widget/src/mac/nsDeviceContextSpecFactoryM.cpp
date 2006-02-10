@@ -38,7 +38,7 @@
 #include "nsDeviceContextSpecFactoryM.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintingContext.h"
-#include "nsGfxCIID.h"
+#include "nsWidgetsCID.h"
 #include "plstr.h"
 #include "nsDeviceContextSpecX.h"
 
