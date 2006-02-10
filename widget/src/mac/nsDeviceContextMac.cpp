@@ -976,7 +976,7 @@ bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aF
 	InitFontInfoList();
     FontNameKey key(aFontName);
 	aFontNum = (short)gFontInfoList->Get(&key);
-	return (aFontNum != 0) && (kFontIDSymbol != aFontNum);
+	return (aFontNum != 0);
 }
 
 
