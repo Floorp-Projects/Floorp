@@ -288,7 +288,7 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
           aID == eSystemFont_PullDownMenu ||
           aID == eSystemFont_List ||
           aID == eSystemFont_Field) {
-            aFont->name.AssignWithConversion( "sans-serif" );
+            aFont->name.Assign(NS_LITERAL_STRING("sans-serif"));
             aFont->size = NSToCoordRound(aFont->size * 0.875f); // quick hack
       }
       else if (HasAppearanceManager())
@@ -336,7 +336,7 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
       }
       else
       {
-        aFont->name.AssignWithConversion( "geneva" );
+        aFont->name.Assign(NS_LITERAL_STRING("geneva"));
       }
       break;
 
@@ -919,15 +919,15 @@ nsresult nsDeviceContextMac::CreateFontAliasTable()
     mFontAliasTable = new nsHashtable();
     if (nsnull != mFontAliasTable)
     {
-			nsAutoString  fontTimes;              fontTimes.AssignWithConversion("Times");
-			nsAutoString  fontTimesNewRoman;      fontTimesNewRoman.AssignWithConversion("Times New Roman");
-			nsAutoString  fontTimesRoman;         fontTimesRoman.AssignWithConversion("Times Roman");
-			nsAutoString  fontArial;              fontArial.AssignWithConversion("Arial");
-			nsAutoString  fontHelvetica;          fontHelvetica.AssignWithConversion("Helvetica");
-			nsAutoString  fontCourier;            fontCourier.AssignWithConversion("Courier");
-			nsAutoString  fontCourierNew;         fontCourierNew.AssignWithConversion("Courier New");
-			nsAutoString  fontUnicode;            fontUnicode.AssignWithConversion("Unicode");
-			nsAutoString  fontBitstreamCyberbit;  fontBitstreamCyberbit.AssignWithConversion("Bitstream Cyberbit");
+			nsAutoString  fontTimes;              fontTimes.Assign(NS_LITERAL_STRING("Times"));
+			nsAutoString  fontTimesNewRoman;      fontTimesNewRoman.Assign(NS_LITERAL_STRING("Times New Roman"));
+			nsAutoString  fontTimesRoman;         fontTimesRoman.Assign(NS_LITERAL_STRING("Times Roman"));
+			nsAutoString  fontArial;              fontArial.Assign(NS_LITERAL_STRING("Arial"));
+			nsAutoString  fontHelvetica;          fontHelvetica.Assign(NS_LITERAL_STRING("Helvetica"));
+			nsAutoString  fontCourier;            fontCourier.Assign(NS_LITERAL_STRING("Courier"));
+			nsAutoString  fontCourierNew;         fontCourierNew.Assign(NS_LITERAL_STRING("Courier New"));
+			nsAutoString  fontUnicode;            fontUnicode.Assign(NS_LITERAL_STRING("Unicode"));
+			nsAutoString  fontBitstreamCyberbit;  fontBitstreamCyberbit.Assign(NS_LITERAL_STRING("Bitstream Cyberbit"));
 			nsAutoString  fontNullStr;
 
       AliasFont(fontTimes, fontTimesNewRoman, fontTimesRoman, PR_FALSE);
