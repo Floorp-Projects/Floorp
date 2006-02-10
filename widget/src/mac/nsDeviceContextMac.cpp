@@ -723,7 +723,7 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDev
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextMac::BeginDocument(void)
+NS_IMETHODIMP nsDeviceContextMac::BeginDocument(PRUnichar * aTitle)
 {
 #if !TARGET_CARBON
 GrafPtr	thePort;
