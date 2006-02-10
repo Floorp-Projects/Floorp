@@ -147,6 +147,7 @@ DEFINES         += -DUSE_XIM
 
 ifdef MOZ_ENABLE_CAIRO_GFX
 DEFINES		+= -DCAIRO_GFX
+else
 EXTRA_DSO_LDOPTS += -lgfxpsshar
 endif
 
