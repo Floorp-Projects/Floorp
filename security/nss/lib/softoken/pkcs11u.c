@@ -891,6 +891,11 @@ sftk_FindDSAPrivateKeyAttribute(NSSLOWKEYPrivateKey *key,
     case CKA_BASE:
 	return sftk_NewTokenAttributeSigned(type,key->u.dsa.params.base.data,
 					key->u.dsa.params.base.len, PR_FALSE);
+    case CKA_NETSCAPE_DB:
+	return sftk_NewTokenAttributeSigned(type,
+					key->u.dsa.publicValue.data,
+					key->u.dsa.publicValue.len,
+					PR_FALSE);
     default:
 	break;
     }
@@ -925,6 +930,11 @@ sftk_FindDHPrivateKeyAttribute(NSSLOWKEYPrivateKey *key, CK_ATTRIBUTE_TYPE type)
     case CKA_BASE:
 	return sftk_NewTokenAttributeSigned(type,key->u.dh.base.data,
 					key->u.dh.base.len, PR_FALSE);
+    case CKA_NETSCAPE_DB:
+	return sftk_NewTokenAttributeSigned(type,
+					key->u.dh.publicValue.data,
+					key->u.dh.publicValue.len,
+					PR_FALSE);
     default:
 	break;
     }
@@ -959,6 +969,11 @@ sftk_FindECPrivateKeyAttribute(NSSLOWKEYPrivateKey *key, CK_ATTRIBUTE_TYPE type)
 	return sftk_NewTokenAttributeSigned(type,
 					key->u.ec.ecParams.DEREncoding.data,
 					key->u.ec.ecParams.DEREncoding.len,
+					PR_FALSE);
+    case CKA_NETSCAPE_DB:
+	return sftk_NewTokenAttributeSigned(type,
+					key->u.ec.publicValue.data,
+					key->u.ec.publicValue.len,
 					PR_FALSE);
     default:
 	break;
@@ -2749,7 +2764,7 @@ stfk_CopyTokenPrivateKey(SFTKObject *destObject,SFTKTokenObject *src_to)
     }
     /* copy the common attributes for all private keys next */
     crv = stfk_CopyTokenAttributes(destObject, src_to, commonPrivKeyAttrs,
-							commonKeyAttrsCount);
+						commonPrivKeyAttrsCount);
     if (crv != CKR_OK) {
 	goto fail;
     }
