@@ -59,8 +59,8 @@ public:
 protected:
   nsresult    _CreatePrintSettings(nsIPrintSettings **_retval);
 
-  nsresult    ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
-  nsresult    WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
+  nsresult    ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, PRUint32 aFlags);
+  nsresult    WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, PRUint32 aFlags);
 };
 
 
