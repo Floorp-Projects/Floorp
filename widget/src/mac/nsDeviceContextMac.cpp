@@ -131,21 +131,17 @@ NS_IMETHODIMP nsDeviceContextMac :: CreateRenderingContext(nsIRenderingContext *
   }
 #endif
 
-nsRenderingContextMac *pContext;
-nsresult              rv;
-GrafPtr								thePort;
+  nsRenderingContextMac *pContext;
+  nsresult              rv;
 
 	pContext = new nsRenderingContextMac();
-  if (nsnull != pContext){
+  if (nsnull != pContext) {
     NS_ADDREF(pContext);
 
-   	::GetPort(&thePort);
+    CGrafPtr  thePort;
+   	::GetPort((GrafPtr*)&thePort);
 
-    if (nsnull != thePort){
-      rv = pContext->Init(this,thePort);
-    }
-    else
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    rv = pContext->Init(this, thePort);
   }
   else
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -435,9 +431,6 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
     return;
   }
   
-  GrafPtr savedPort;
-  ::GetPort ( &savedPort );
-  
   // we have a widget stashed inside, get a native WindowRef out of it
   nsIWidget* widget = reinterpret_cast<nsIWidget*>(mWidget);      // PRAY!
   NS_ASSERTION ( widget, "No Widget --> No Window" );
@@ -446,6 +439,9 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
     return;
   }  
  	WindowRef window = reinterpret_cast<WindowRef>(widget->GetNativeData(NS_NATIVE_DISPLAY));
+
+  StPortSetter  setter(window);
+
   Rect bounds;
   ::GetWindowPortBounds ( window, &bounds );
 
@@ -456,8 +452,6 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
       NS_IF_ADDREF(*outScreen = mPrimaryScreen.get());
     }
     else {
-    	::SetPortWindowPort( window );
-
       // convert window bounds to global coordinates
       Point topLeft = { bounds.top, bounds.left };
       Point bottomRight = { bounds.bottom, bounds.right };
@@ -472,8 +466,6 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
   }
   else
     *outScreen = nsnull;
-  
-  ::SetPort ( savedPort );
   
 } // FindScreenForSurface
 
