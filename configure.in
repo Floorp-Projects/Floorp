@@ -5729,18 +5729,6 @@ else
 fi
 
 dnl ========================================================
-dnl Crash on assert
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(crash-on-assert,
-[  --enable-crash-on-assert
-                          Make NS_ASSERTION crash on Unix],
-    _CRASH_ON_ASSERT=1,
-    _CRASH_ON_ASSERT= )
-if test "$_CRASH_ON_ASSERT"; then
-    AC_DEFINE(UNIX_CRASH_ON_ASSERT)
-fi
-
-dnl ========================================================
 dnl = Enable function reordering. Off by default
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(reorder,

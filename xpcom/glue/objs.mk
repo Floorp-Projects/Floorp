@@ -45,12 +45,10 @@ XPCOM_GLUE_SRC_LCPPSRCS =        \
   nsCOMArray.cpp                 \
   nsCRTGlue.cpp                  \
   nsComponentManagerUtils.cpp    \
-  nsDebug.cpp                    \
   nsID.cpp                       \
   nsIInterfaceRequestorUtils.cpp \
   nsINIParser.cpp                \
   nsMemory.cpp                   \
-  nsTraceRefcnt.cpp              \
   nsWeakReference.cpp            \
   nsGREGlue.cpp                  \
   nsVersionComparator.cpp        \

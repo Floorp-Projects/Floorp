@@ -241,9 +241,15 @@
  * Import/Export macros for XPCOM APIs
  */
 
-#define EXPORT_XPCOM_API(type) extern "C" NS_EXPORT type NS_FROZENCALL
-#define IMPORT_XPCOM_API(type) extern "C" NS_IMPORT type NS_FROZENCALL
-#define GLUE_XPCOM_API(type) NS_HIDDEN_(type) NS_FROZENCALL
+#ifdef __cplusplus
+#define EXTERN_C extern "C"
+#else
+#define EXTERN_C
+#endif
+
+#define EXPORT_XPCOM_API(type) EXTERN_C NS_EXPORT type NS_FROZENCALL
+#define IMPORT_XPCOM_API(type) EXTERN_C NS_IMPORT type NS_FROZENCALL
+#define GLUE_XPCOM_API(type) EXTERN_C NS_HIDDEN_(type) NS_FROZENCALL
 
 #ifdef _IMPL_NS_COM
 #define XPCOM_API(type) EXPORT_XPCOM_API(type)
@@ -302,6 +308,20 @@
  * Generic XPCOM result data type
  */
 typedef PRUint32 nsresult;
+
+/**
+ * Reference count values
+ *
+ * This is the return type for AddRef() and Release() in nsISupports.
+ * IUnknown of COM returns an unsigned long from equivalent functions.
+ * The following ifdef exists to maintain binary compatibility with
+ * IUnknown.
+ */
+#if defined(XP_WIN) && PR_BYTES_PER_LONG == 4
+typedef unsigned long nsrefcnt;
+#else
+typedef PRUint32 nsrefcnt;
+#endif
 
 /**
  * The preferred symbol for null.

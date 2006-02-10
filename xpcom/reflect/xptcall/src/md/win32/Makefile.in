@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xptcmd
+MOZILLA_INTERNAL_API = 1
 
 #
 # The default is this buildable, but non-functioning code.

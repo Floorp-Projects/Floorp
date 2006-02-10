@@ -38,11 +38,10 @@
 #include "nsISupports.idl"
 
 /**  
- * nsITraceRefcnt is an interface between XPCOM Glue and XPCOM.  Users should
- * access the nsITraceRefcnt interface through the static class nsTraceRefcnt.
- * @see nsTraceRefcnt.h
- *    
- * @status UNDER_REVIEW
+ * nsITraceRefcnt is an interface between XPCOM Glue and XPCOM.
+ *
+ * @status DEPRECATED  Replaced by the NS_Log* functions.
+ * @status FROZEN
  */
 
 [uuid(273dc92f-0fe6-4545-96a9-21be77828039)]

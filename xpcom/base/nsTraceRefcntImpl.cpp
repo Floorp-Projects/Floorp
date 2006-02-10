@@ -79,11 +79,13 @@ NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define NS_IMPL_REFCNT_LOGGING
+
 #ifdef WINCE
-#undef NS_BUILD_REFCNT_LOGGING
+#undef NS_IMPL_REFCNT_LOGGING
 #endif
 
-#ifdef NS_BUILD_REFCNT_LOGGING
+#ifdef NS_IMPL_REFCNT_LOGGING
 #include "plhash.h"
 #include "prmem.h"
 
@@ -107,13 +109,22 @@ static PRBool gLogLeaksOnly;
 static void (*leakyLogAddRef)(void* p, int oldrc, int newrc);
 static void (*leakyLogRelease)(void* p, int oldrc, int newrc);
 
-static PRBool gInitialized = PR_FALSE;
+#define BAD_TLS_INDEX ((PRUintn) -1)
+
+// if gActivityTLS == BAD_TLS_INDEX, then we're
+// unitialized... otherwise this points to a NSPR TLS thread index
+// indicating whether addref activity is legal. If the PTR_TO_INT32 is 0 then
+// activity is ok, otherwise not!
+static PRUintn gActivityTLS = BAD_TLS_INDEX;
+
+static PRBool gInitialized;
+static nsrefcnt gInitCount;
+
 static FILE *gBloatLog = nsnull;
 static FILE *gRefcntsLog = nsnull;
 static FILE *gAllocLog = nsnull;
 static FILE *gLeakyLog = nsnull;
 static FILE *gCOMPtrLog = nsnull;
-static PRBool gActivityIsLegal = PR_FALSE;
 
 struct serialNumberRecord {
   PRInt32 serialNumber;
@@ -132,15 +143,11 @@ struct nsTraceRefcntStats {
   double mObjsOutstandingSquared;
 };
 
-#ifdef DEBUG_dbaron_off
   // I hope to turn this on for everybody once we hit it a little less.
-#define ASSERT_ACTIVITY_IS_LEGAL                                                \
-  NS_WARN_IF_FALSE(gActivityIsLegal,                                         \
-                   "XPCOM objects created/destroyed from static ctor/dtor")
-#else
-#define ASSERT_ACTIVITY_IS_LEGAL
-#endif
-
+#define ASSERT_ACTIVITY_IS_LEGAL                                             \
+  NS_WARN_IF_FALSE(gActivityTLS != BAD_TLS_INDEX &&                          \
+             NS_PTR_TO_INT32(PR_GetThreadPrivate(gActivityTLS)) == 0,        \
+             "XPCOM objects created/destroyed from static ctor/dtor");
 
 // These functions are copied from nsprpub/lib/ds/plhash.c, with changes
 // to the functions not called Default* to free the serialNumberRecord or
@@ -445,13 +452,13 @@ static PRIntn PR_CALLBACK DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aInd
 }
 
 
-#endif /* NS_BUILD_REFCNT_LOGGING */
+#endif /* NS_IMPL_REFCNT_LOGGING */
 
 NS_COM nsresult
 nsTraceRefcntImpl::DumpStatistics(StatisticsType type, FILE* out)
 {
   nsresult rv = NS_OK;
-#ifdef NS_BUILD_REFCNT_LOGGING
+#ifdef NS_IMPL_REFCNT_LOGGING
   if (gBloatLog == nsnull || gBloatView == nsnull) {
     return NS_ERROR_FAILURE;
   }
@@ -527,7 +534,7 @@ done:
 NS_COM void
 nsTraceRefcntImpl::ResetStatistics()
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
+#ifdef NS_IMPL_REFCNT_LOGGING
   LOCK_TRACELOG();
   if (gBloatView) {
     PL_HashTableDestroy(gBloatView);
@@ -537,7 +544,7 @@ nsTraceRefcntImpl::ResetStatistics()
 #endif
 }
 
-#ifdef NS_BUILD_REFCNT_LOGGING
+#ifdef NS_IMPL_REFCNT_LOGGING
 static PRBool LogThisType(const char* aTypeName)
 {
   void* he = PL_HashTableLookup(gTypesToLog, aTypeName);
@@ -873,7 +880,7 @@ NS_COM void
 nsTraceRefcntImpl::LoadLibrarySymbols(const char* aLibraryName,
                                   void* aLibrayHandle)
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
+#ifdef NS_IMPL_REFCNT_LOGGING
 #if defined(_WIN32) && defined(_M_IX86) /* Win32 x86 only */
   if (!gInitialized)
     InitTraceLog();
@@ -928,44 +935,37 @@ nsTraceRefcntImpl::LoadLibrarySymbols(const char* aLibraryName,
 //----------------------------------------------------------------------
 
 
-
-
-
-
-// don't use the logging ones. :-)
-NS_IMETHODIMP_(nsrefcnt) nsTraceRefcntImpl::AddRef(void)
+EXPORT_XPCOM_API(void)
+NS_LogInit()
 {
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
-  ++mRefCnt;
-  return mRefCnt;
+#ifdef NS_IMPL_REFCNT_LOGGING
+  if (++gInitCount)
+    nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
+#endif
 }
 
-NS_IMETHODIMP_(nsrefcnt) nsTraceRefcntImpl::Release(void)                                
-{                                                                             
-  NS_PRECONDITION(0 != mRefCnt, "dup release");                               
-  --mRefCnt;                                                                  
-  if (mRefCnt == 0) {                                                         
-    mRefCnt = 1; /* stabilize */                                              
-    delete this;                                                              
-    return 0;                                                                 
+EXPORT_XPCOM_API(void)
+NS_LogTerm()
+{
+  NS_ASSERTION(gInitCount > 0,
+               "NS_LogTerm without matching NS_LogInit");
+
+  if (--gInitCount == 0) {
+    nsTraceRefcntImpl::DumpStatistics();
+    nsTraceRefcntImpl::ResetStatistics();
+    nsTraceRefcntImpl::Shutdown();
+#ifdef NS_IMPL_REFCNT_LOGGING
+    nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
+    gActivityTLS = BAD_TLS_INDEX;
+#endif
   }
-  return mRefCnt;                                                             
 }
 
-NS_IMPL_QUERY_INTERFACE1(nsTraceRefcntImpl, nsITraceRefcnt)
-
-nsTraceRefcntImpl::nsTraceRefcntImpl()
+EXPORT_XPCOM_API(void)
+NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
+             const char* aClazz, PRUint32 classSize)
 {
-  /* member initializers and constructor code */
-}
-
-NS_IMETHODIMP 
-nsTraceRefcntImpl::LogAddRef(void* aPtr,
-                             nsrefcnt aRefcnt,
-                             const char* aClazz,
-                             PRUint32 classSize)
-{
-#ifdef NS_BUILD_REFCNT_LOGGING
+#ifdef NS_IMPL_REFCNT_LOGGING
   ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized)
     InitTraceLog();
@@ -996,7 +996,7 @@ nsTraceRefcntImpl::LogAddRef(void* aPtr,
     if (aRefcnt == 1 && gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog, "\n<%s> 0x%08X %d Create\n",
               aClazz, NS_PTR_TO_INT32(aPtr), serialno);
-      WalkTheStack(gAllocLog);
+      nsTraceRefcntImpl::WalkTheStack(gAllocLog);
     }
 
     if (gRefcntsLog && loggingThisType && loggingThisObject) {
@@ -1007,22 +1007,19 @@ nsTraceRefcntImpl::LogAddRef(void* aPtr,
           // Can't use PR_LOG(), b/c it truncates the line
           fprintf(gRefcntsLog,
                   "\n<%s> 0x%08X %d AddRef %d\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);       
-          WalkTheStack(gRefcntsLog);
+          nsTraceRefcntImpl::WalkTheStack(gRefcntsLog);
           fflush(gRefcntsLog);
       }
     }
     UNLOCK_TRACELOG();
   }
 #endif
-  return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsTraceRefcntImpl::LogRelease(void* aPtr,
-                          nsrefcnt aRefcnt,
-                          const char* aClazz)
+EXPORT_XPCOM_API(void)
+NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClazz)
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
+#ifdef NS_IMPL_REFCNT_LOGGING
   ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized)
     InitTraceLog();
@@ -1055,7 +1052,7 @@ nsTraceRefcntImpl::LogRelease(void* aPtr,
           // Can't use PR_LOG(), b/c it truncates the line
           fprintf(gRefcntsLog,
                   "\n<%s> 0x%08X %d Release %d\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
-          WalkTheStack(gRefcntsLog);
+          nsTraceRefcntImpl::WalkTheStack(gRefcntsLog);
           fflush(gRefcntsLog);
       }
     }
@@ -1067,7 +1064,7 @@ nsTraceRefcntImpl::LogRelease(void* aPtr,
       fprintf(gAllocLog,
               "\n<%s> 0x%08X %d Destroy\n",
               aClazz, NS_PTR_TO_INT32(aPtr), serialno);
-      WalkTheStack(gAllocLog);
+      nsTraceRefcntImpl::WalkTheStack(gAllocLog);
     }
 
     if (aRefcnt == 0 && gSerialNumbers && loggingThisType) {
@@ -1077,15 +1074,12 @@ nsTraceRefcntImpl::LogRelease(void* aPtr,
     UNLOCK_TRACELOG();
   }
 #endif
-  return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsTraceRefcntImpl::LogCtor(void* aPtr,
-                           const char* aType,
-                           PRUint32 aInstanceSize)
+EXPORT_XPCOM_API(void)
+NS_LogCtor(void* aPtr, const char* aType, PRUint32 aInstanceSize)
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
+#ifdef NS_IMPL_REFCNT_LOGGING
   ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized)
     InitTraceLog();
@@ -1110,22 +1104,19 @@ nsTraceRefcntImpl::LogCtor(void* aPtr,
     if (gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog, "\n<%s> 0x%08X %d Ctor (%d)\n",
              aType, NS_PTR_TO_INT32(aPtr), serialno, aInstanceSize);
-      WalkTheStack(gAllocLog);
+      nsTraceRefcntImpl::WalkTheStack(gAllocLog);
     }
 
     UNLOCK_TRACELOG();
   }
 #endif
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP 
-nsTraceRefcntImpl::LogDtor(void* aPtr, 
-                           const char* aType,
-                           PRUint32 aInstanceSize)
+EXPORT_XPCOM_API(void)
+NS_LogDtor(void* aPtr, const char* aType, PRUint32 aInstanceSize)
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
+#ifdef NS_IMPL_REFCNT_LOGGING
   ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized)
     InitTraceLog();
@@ -1154,21 +1145,19 @@ nsTraceRefcntImpl::LogDtor(void* aPtr,
     if (gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog, "\n<%s> 0x%08X %d Dtor (%d)\n",
              aType, NS_PTR_TO_INT32(aPtr), serialno, aInstanceSize);
-      WalkTheStack(gAllocLog);
+      nsTraceRefcntImpl::WalkTheStack(gAllocLog);
     }
 
     UNLOCK_TRACELOG();
   }
 #endif
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP 
-nsTraceRefcntImpl::LogAddCOMPtr(void* aCOMPtr,
-                            nsISupports* aObject)
+EXPORT_XPCOM_API(void)
+NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject)
 {
-#if defined(NS_BUILD_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
+#if defined(NS_IMPL_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
   // Get the most-derived object.
   void *object = dynamic_cast<void *>(aObject);
 
@@ -1176,11 +1165,11 @@ nsTraceRefcntImpl::LogAddCOMPtr(void* aCOMPtr,
   // of the object being logged.  If we're logging a specific type,
   // then 
   if (!gTypesToLog || !gSerialNumbers) {
-    return NS_OK;
+    return;
   }
   PRInt32 serialno = GetSerialNumber(object, PR_FALSE);
   if (serialno == 0) {
-    return NS_OK;
+    return;
   }
 
   if (!gInitialized)
@@ -1197,21 +1186,19 @@ nsTraceRefcntImpl::LogAddCOMPtr(void* aCOMPtr,
     if (gCOMPtrLog && loggingThisObject) {
       fprintf(gCOMPtrLog, "\n<?> 0x%08X %d nsCOMPtrAddRef %d 0x%08X\n",
               NS_PTR_TO_INT32(object), serialno, count?(*count):-1, NS_PTR_TO_INT32(aCOMPtr));
-      WalkTheStack(gCOMPtrLog);
+      nsTraceRefcntImpl::WalkTheStack(gCOMPtrLog);
     }
 
     UNLOCK_TRACELOG();
   }
 #endif
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP 
-nsTraceRefcntImpl::LogReleaseCOMPtr(void* aCOMPtr,
-                                    nsISupports* aObject)
+EXPORT_XPCOM_API(void)
+NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
 {
-#if defined(NS_BUILD_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
+#if defined(NS_IMPL_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
   // Get the most-derived object.
   void *object = dynamic_cast<void *>(aObject);
 
@@ -1219,11 +1206,11 @@ nsTraceRefcntImpl::LogReleaseCOMPtr(void* aCOMPtr,
   // of the object being logged.  If we're logging a specific type,
   // then 
   if (!gTypesToLog || !gSerialNumbers) {
-    return NS_OK;
+    return;
   }
   PRInt32 serialno = GetSerialNumber(object, PR_FALSE);
   if (serialno == 0) {
-    return NS_OK;
+    return;
   }
 
   if (!gInitialized)
@@ -1240,27 +1227,23 @@ nsTraceRefcntImpl::LogReleaseCOMPtr(void* aCOMPtr,
     if (gCOMPtrLog && loggingThisObject) {
       fprintf(gCOMPtrLog, "\n<?> 0x%08X %d nsCOMPtrRelease %d 0x%08X\n",
               NS_PTR_TO_INT32(object), serialno, count?(*count):-1, NS_PTR_TO_INT32(aCOMPtr));
-      WalkTheStack(gCOMPtrLog);
+      nsTraceRefcntImpl::WalkTheStack(gCOMPtrLog);
     }
 
     UNLOCK_TRACELOG();
   }
 #endif
-  return NS_OK;
 }
 
 NS_COM void
 nsTraceRefcntImpl::Startup()
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
-  SetActivityIsLegal(PR_TRUE);
-#endif
 }
 
 NS_COM void
 nsTraceRefcntImpl::Shutdown()
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
+#ifdef NS_IMPL_REFCNT_LOGGING
 
   if (gBloatView) {
     PL_HashTableDestroy(gBloatView);
@@ -1278,33 +1261,81 @@ nsTraceRefcntImpl::Shutdown()
     PL_HashTableDestroy(gSerialNumbers);
     gSerialNumbers = nsnull;
   }
-
-  SetActivityIsLegal(PR_FALSE);
-
 #endif
 }
 
 NS_COM void
 nsTraceRefcntImpl::SetActivityIsLegal(PRBool aLegal)
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
-  gActivityIsLegal = aLegal;
+#ifdef NS_IMPL_REFCNT_LOGGING
+  if (gActivityTLS == BAD_TLS_INDEX)
+    PR_NewThreadPrivateIndex(&gActivityTLS, nsnull);
+
+  PR_SetThreadPrivate(gActivityTLS, NS_INT32_TO_PTR(!aLegal));
 #endif
 }
 
+NS_IMPL_QUERY_INTERFACE1(nsTraceRefcntImpl, nsITraceRefcnt)
+
+NS_IMETHODIMP_(nsrefcnt) nsTraceRefcntImpl::AddRef(void)
+{
+  return 2;
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsTraceRefcntImpl::Release(void)                                
+{                                                                             
+  return 1;
+}
+
+NS_IMETHODIMP
+nsTraceRefcntImpl::LogAddRef(void *aPtr, nsrefcnt aNewRefcnt,
+                             const char *aTypeName, PRUint32 aSize)
+{
+  NS_LogAddRef(aPtr, aNewRefcnt, aTypeName, aSize);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTraceRefcntImpl::LogRelease(void *aPtr, nsrefcnt aNewRefcnt,
+                              const char *aTypeName)
+{
+  NS_LogRelease(aPtr, aNewRefcnt, aTypeName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTraceRefcntImpl::LogCtor(void *aPtr, const char *aTypeName, PRUint32 aSize)
+{
+  NS_LogCtor(aPtr, aTypeName, aSize);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTraceRefcntImpl::LogDtor(void *aPtr, const char *aTypeName, PRUint32 aSize)
+{
+  NS_LogDtor(aPtr, aTypeName, aSize);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTraceRefcntImpl::LogAddCOMPtr(void *aCOMPtr, nsISupports* aObject)
+{
+  NS_LogCOMPtrAddRef(aCOMPtr, aObject);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTraceRefcntImpl::LogReleaseCOMPtr(void *aCOMPtr, nsISupports* aObject)
+{
+  NS_LogCOMPtrRelease(aCOMPtr, aObject);
+  return NS_OK;
+}
+
+static const nsTraceRefcntImpl kTraceRefcntImpl;
 
 NS_METHOD
 nsTraceRefcntImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-  *aInstancePtr = nsnull;
-  nsITraceRefcnt* tracer = new nsTraceRefcntImpl();
-  if (!tracer)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  nsresult rv = tracer->QueryInterface(aIID, aInstancePtr);
-  if (NS_FAILED(rv)) {
-    delete tracer;
-  }
-  
-  return rv;
+  return NS_CONST_CAST(nsTraceRefcntImpl*, &kTraceRefcntImpl)->
+    QueryInterface(aIID, aInstancePtr);
 }

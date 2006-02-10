@@ -136,6 +136,16 @@ typedef void*      (* AllocFunc)(PRSize size);
 typedef void*      (* ReallocFunc)(void* ptr, PRSize size);
 typedef void       (* FreeFunc)(void* ptr);
 
+typedef void       (* DebugBreakFunc)(PRUint32 aSeverity,
+                                      const char *aStr, const char *aExpr,
+                                      const char *aFile, PRInt32 aLine);
+
+typedef void       (* xpcomVoidFunc)();
+typedef void       (* LogAddRefFunc)(void*, nsrefcnt, const char*, PRUint32);
+typedef void       (* LogReleaseFunc)(void*, nsrefcnt, const char*);
+typedef void       (* LogCtorFunc)(void*, const char*, PRUint32);
+typedef void       (* LogCOMPtrFunc)(void*, nsISupports*);
+
 // PRIVATE
 typedef nsresult   (* RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
 typedef nsresult   (* UnregisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine);
@@ -187,6 +197,18 @@ typedef struct XPCOMFunctions{
     StringGetMutableDataFunc stringGetMutableData;
     CStringGetMutableDataFunc cstringGetMutableData;
     Init3Func init3;
+
+    // Added for Mozilla 1.9
+    DebugBreakFunc debugBreakFunc;
+    xpcomVoidFunc logInitFunc;
+    xpcomVoidFunc logTermFunc;
+    LogAddRefFunc logAddRefFunc;
+    LogReleaseFunc logReleaseFunc;
+    LogCtorFunc logCtorFunc;
+    LogCtorFunc logDtorFunc;
+    LogCOMPtrFunc logCOMPtrAddRefFunc;
+    LogCOMPtrFunc logCOMPtrReleaseFunc;
+
 } XPCOMFunctions;
 
 typedef nsresult (PR_CALLBACK *GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const char* libraryPath);
