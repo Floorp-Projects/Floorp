@@ -278,7 +278,7 @@
         <xul:menuitem label="&spellNoSuggestions.label;" anonid="spell-no-suggestions" disabled="true"/>
         <xul:menuseparator anonid="spell-suggestions-separator"/>
         <xul:menuitem label="&spellAddToDictionary.label;" accesskey="&spellAddToDictionary.accesskey;" anonid="spell-add-to-dictionary" oncommand="this.parentNode.parentNode.spellui.addToDictionary();"/>
-        <xul:menuitem label="&spellEnable.label;" accesskey="&spellEnable.accesskey;" anonid="spell-check-enabled" oncommand="this.parentNode.parentNode.spellui.toggleEnabled();"/>
+        <xul:menuitem label="&spellEnable.label;" type="checkbox" accesskey="&spellEnable.accesskey;" anonid="spell-check-enabled" oncommand="this.parentNode.parentNode.spellui.toggleEnabled();"/>
         <xul:menu label="&spellDictionaries.label;" accesskey="&spellDictionaries.accesskey;" anonid="spell-dictionaries">
           <xul:menupopup anonid="spell-dictionaries-menu"
             onpopupshowing="event.stopPropagation();"

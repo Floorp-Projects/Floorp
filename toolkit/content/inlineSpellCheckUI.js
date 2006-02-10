@@ -183,6 +183,7 @@ var InlineSpellCheckerUI = {
       this.mDictionaryNames.push(list[i]);
       var item = document.createElement("menuitem");
       item.setAttribute("label", list[i]);
+      item.setAttribute("type", "checkbox");
       this.mDictionaryItems.push(item);
       if (curlang == list[i]) {
         item.setAttribute("checked", "true");
