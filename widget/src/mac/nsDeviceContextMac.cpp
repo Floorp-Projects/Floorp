@@ -685,7 +685,7 @@ nsresult nsDeviceContextMac::CreateFontAliasTable()
 
 //------------------------------------------------------------------------
 //
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /** ---------------------------------------------------
@@ -699,9 +699,9 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
 		return mPixelsPerInch;
 	initialized = PR_TRUE;
 
-  nsIPref* prefs;
-  nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
-  if (NS_SUCCEEDED(rv) && prefs) {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    if (NS_SUCCEEDED(rv) && prefs) {
 		PRInt32 intVal;
 		if (NS_SUCCEEDED(prefs->GetIntPref("browser.screen_resolution", &intVal))) {
 			mPixelsPerInch = intVal;
@@ -713,7 +713,6 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
 			mPixelsPerInch = hppi * 1.17f;
 		}
 #endif
-		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
 
 	return mPixelsPerInch;
@@ -726,14 +725,13 @@ PRBool nsDeviceContextMac::DisplayVerySmallFonts()
 		return mDisplayVerySmallFonts;
 	initialized = PR_TRUE;
 
-  nsIPref* prefs;
-  nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
-  if (NS_SUCCEEDED(rv) && prefs) {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    if (NS_SUCCEEDED(rv) && prefs) {
 		PRBool boolVal;
 		if (NS_SUCCEEDED(prefs->GetBoolPref("browser.display_very_small_fonts", &boolVal))) {
 			mDisplayVerySmallFonts = boolVal;
 		}
-		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
 
 	return mDisplayVerySmallFonts;
