@@ -235,73 +235,11 @@ static bool HasAppearanceManager()
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
+NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
 {
   nsresult status = NS_OK;
 
-  switch (anID) {
-    //---------
-    // Colors
-    //---------
-    case eSystemAttr_Color_WindowBackground:
-        *aInfo->mColor = NS_RGB(0xdd,0xdd,0xdd);
-        break;
-    case eSystemAttr_Color_WindowForeground:
-        *aInfo->mColor = NS_RGB(0x00,0x00,0x00);        
-        break;
-    case eSystemAttr_Color_WidgetBackground:
-        *aInfo->mColor = NS_RGB(0xdd,0xdd,0xdd);
-        break;
-    case eSystemAttr_Color_WidgetForeground:
-        *aInfo->mColor = NS_RGB(0x00,0x00,0x00);        
-        break;
-    case eSystemAttr_Color_WidgetSelectBackground:
-        *aInfo->mColor = NS_RGB(0x80,0x80,0x80);
-        break;
-    case eSystemAttr_Color_WidgetSelectForeground:
-        *aInfo->mColor = NS_RGB(0x00,0x00,0x80);
-        break;
-    case eSystemAttr_Color_Widget3DHighlight:
-        *aInfo->mColor = NS_RGB(0xa0,0xa0,0xa0);
-        break;
-    case eSystemAttr_Color_Widget3DShadow:
-        *aInfo->mColor = NS_RGB(0x40,0x40,0x40);
-        break;
-    case eSystemAttr_Color_TextBackground:
-        *aInfo->mColor = NS_RGB(0xff,0xff,0xff);
-        break;
-    case eSystemAttr_Color_TextForeground: 
-        *aInfo->mColor = NS_RGB(0x00,0x00,0x00);
-        break;
-    case eSystemAttr_Color_TextSelectBackground:
-        *aInfo->mColor = NS_RGB(0x00,0x00,0x80);
-        break;
-    case eSystemAttr_Color_TextSelectForeground:
-        *aInfo->mColor = NS_RGB(0xff,0xff,0xff);
-        break;
-
-    //---------
-    // Size
-    //---------
-    case eSystemAttr_Size_ScrollbarHeight : 
-        aInfo->mSize = 16;	//21;
-        break;
-    case eSystemAttr_Size_ScrollbarWidth : 
-        aInfo->mSize = 16;	//21;
-        break;
-    case eSystemAttr_Size_WindowTitleHeight:
-        aInfo->mSize = 0;
-        break;
-    case eSystemAttr_Size_WindowBorderWidth:
-        aInfo->mSize = 4;
-        break;
-    case eSystemAttr_Size_WindowBorderHeight:
-        aInfo->mSize = 4;
-        break;
-    case eSystemAttr_Size_Widget3DBorder:
-        aInfo->mSize = 4;
-        break;
-
+  switch (aID) {
     //---------
     // CSS System Fonts
     //
@@ -310,68 +248,68 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, Syst
     //   Run the testcase in bug 3371 in quirks mode and strict mode.
     //---------
         // css2
-    case eSystemAttr_Font_Caption:
-    case eSystemAttr_Font_Icon: 
-    case eSystemAttr_Font_Menu: 
-    case eSystemAttr_Font_MessageBox: 
-    case eSystemAttr_Font_SmallCaption: 
-    case eSystemAttr_Font_StatusBar: 
+    case eSystemFont_Caption:
+    case eSystemFont_Icon: 
+    case eSystemFont_Menu: 
+    case eSystemFont_MessageBox: 
+    case eSystemFont_SmallCaption: 
+    case eSystemFont_StatusBar: 
         // css3
-		case eSystemAttr_Font_Window:
-		case eSystemAttr_Font_Document:
-		case eSystemAttr_Font_Workspace:
-		case eSystemAttr_Font_Desktop:
-		case eSystemAttr_Font_Info:
-		case eSystemAttr_Font_Dialog:
-		case eSystemAttr_Font_Button:
-		case eSystemAttr_Font_PullDownMenu:
-		case eSystemAttr_Font_List:
-		case eSystemAttr_Font_Field:
+    case eSystemFont_Window:
+    case eSystemFont_Document:
+    case eSystemFont_Workspace:
+    case eSystemFont_Desktop:
+    case eSystemFont_Info:
+    case eSystemFont_Dialog:
+    case eSystemFont_Button:
+    case eSystemFont_PullDownMenu:
+    case eSystemFont_List:
+    case eSystemFont_Field:
         // moz
-    case eSystemAttr_Font_Tooltips:
-		case eSystemAttr_Font_Widget:
+    case eSystemFont_Tooltips:
+    case eSystemFont_Widget:
       float  dev2app;
       GetDevUnitsToAppUnits(dev2app);
 
-      aInfo->mFont->style       = NS_FONT_STYLE_NORMAL;
-      aInfo->mFont->weight      = NS_FONT_WEIGHT_NORMAL;
-      aInfo->mFont->decorations = NS_FONT_DECORATION_NONE;
+      aFont->style       = NS_FONT_STYLE_NORMAL;
+      aFont->weight      = NS_FONT_WEIGHT_NORMAL;
+      aFont->decorations = NS_FONT_DECORATION_NONE;
 
-      if (anID == eSystemAttr_Font_Window ||
-          anID == eSystemAttr_Font_Document ||
-          anID == eSystemAttr_Font_Button ||
-          anID == eSystemAttr_Font_PullDownMenu ||
-          anID == eSystemAttr_Font_List ||
-          anID == eSystemAttr_Font_Field) {
-            aInfo->mFont->name.AssignWithConversion( "sans-serif" );
-            aInfo->mFont->size = NSToCoordRound(aInfo->mFont->size * 0.875f); // quick hack
+      if (aID == eSystemFont_Window ||
+          aID == eSystemFont_Document ||
+          aID == eSystemFont_Button ||
+          aID == eSystemFont_PullDownMenu ||
+          aID == eSystemFont_List ||
+          aID == eSystemFont_Field) {
+            aFont->name.AssignWithConversion( "sans-serif" );
+            aFont->size = NSToCoordRound(aFont->size * 0.875f); // quick hack
       }
       else if (HasAppearanceManager())
       {
         ThemeFontID fontID = kThemeViewsFont;
-        switch (anID)
+        switch (aID)
         {
               // css2
-          case eSystemAttr_Font_Caption:       fontID = kThemeSystemFont;         break;
-          case eSystemAttr_Font_Icon:          fontID = kThemeViewsFont;          break;
-          case eSystemAttr_Font_Menu:          fontID = kThemeSystemFont;         break;
-          case eSystemAttr_Font_MessageBox:    fontID = kThemeSmallSystemFont;    break;
-          case eSystemAttr_Font_SmallCaption:  fontID = kThemeSmallEmphasizedSystemFont;  break;
-          case eSystemAttr_Font_StatusBar:     fontID = kThemeSmallSystemFont;    break;
+          case eSystemFont_Caption:       fontID = kThemeSystemFont;         break;
+          case eSystemFont_Icon:          fontID = kThemeViewsFont;          break;
+          case eSystemFont_Menu:          fontID = kThemeSystemFont;         break;
+          case eSystemFont_MessageBox:    fontID = kThemeSmallSystemFont;    break;
+          case eSystemFont_SmallCaption:  fontID = kThemeSmallEmphasizedSystemFont;  break;
+          case eSystemFont_StatusBar:     fontID = kThemeSmallSystemFont;    break;
               // css3
-          //case eSystemAttr_Font_Window:      = 'sans-serif'
-          //case eSystemAttr_Font_Document:    = 'sans-serif'
-          case eSystemAttr_Font_Workspace:     fontID = kThemeViewsFont;          break;
-          case eSystemAttr_Font_Desktop:       fontID = kThemeViewsFont;          break;
-          case eSystemAttr_Font_Info:          fontID = kThemeViewsFont;          break;
-          case eSystemAttr_Font_Dialog:        fontID = kThemeSystemFont;         break;
-          //case eSystemAttr_Font_Button:      = 'sans-serif'  ("fontID = kThemeSystemFont" in MacIE5)
-          //case eSystemAttr_Font_PullDownMenu:= 'sans-serif'  ("fontID = kThemeSystemFont" in MacIE5)
-          //case eSystemAttr_Font_List:        = 'sans-serif'
-          //case eSystemAttr_Font_Field:       = 'sans-serif'
+          //case eSystemFont_Window:      = 'sans-serif'
+          //case eSystemFont_Document:    = 'sans-serif'
+          case eSystemFont_Workspace:     fontID = kThemeViewsFont;          break;
+          case eSystemFont_Desktop:       fontID = kThemeViewsFont;          break;
+          case eSystemFont_Info:          fontID = kThemeViewsFont;          break;
+          case eSystemFont_Dialog:        fontID = kThemeSystemFont;         break;
+          //case eSystemFont_Button:      = 'sans-serif'  ("fontID = kThemeSystemFont" in MacIE5)
+          //case eSystemFont_PullDownMenu:= 'sans-serif'  ("fontID = kThemeSystemFont" in MacIE5)
+          //case eSystemFont_List:        = 'sans-serif'
+          //case eSystemFont_Field:       = 'sans-serif'
               // moz
-          case eSystemAttr_Font_Tooltips:      fontID = kThemeSmallSystemFont;    break;
-          case eSystemAttr_Font_Widget:        fontID = kThemeSmallSystemFont;    break;
+          case eSystemFont_Tooltips:      fontID = kThemeSmallSystemFont;    break;
+          case eSystemFont_Widget:        fontID = kThemeSmallSystemFont;    break;
         }
 
         Str255 fontName;
@@ -379,23 +317,23 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, Syst
         Style fontStyle;
         ::GetThemeFont(fontID, smSystemScript, fontName, &fontSize, &fontStyle);
         fontName[fontName[0]+1] = 0;
-        aInfo->mFont->name.AssignWithConversion( (char*)&fontName[1] );
-        aInfo->mFont->size = NSToCoordRound(float(fontSize) * dev2app);
+        aFont->name.AssignWithConversion( (char*)&fontName[1] );
+        aFont->size = NSToCoordRound(float(fontSize) * dev2app);
 
         if (fontStyle & bold)
-          aInfo->mFont->weight = NS_FONT_WEIGHT_BOLD;
+          aFont->weight = NS_FONT_WEIGHT_BOLD;
         if (fontStyle & italic)
-          aInfo->mFont->style = NS_FONT_STYLE_ITALIC;
+          aFont->style = NS_FONT_STYLE_ITALIC;
         if (fontStyle & underline)
-          aInfo->mFont->decorations = NS_FONT_DECORATION_UNDERLINE;
+          aFont->decorations = NS_FONT_DECORATION_UNDERLINE;
       }
       else
       {
-        aInfo->mFont->name.AssignWithConversion( "geneva" );
+        aFont->name.AssignWithConversion( "geneva" );
       }
       break;
 
-  } // switch 
+  }
 
   return status;
 }
