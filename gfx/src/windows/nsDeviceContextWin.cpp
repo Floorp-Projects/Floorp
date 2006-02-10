@@ -37,7 +37,7 @@
 
 #include "nsDeviceContextWin.h"
 #include "nsRenderingContextWin.h"
-#include "nsDeviceContextSpecWin.h"
+//#include "nsDeviceContextSpecWin.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIScreenManager.h"
@@ -696,6 +696,7 @@ BOOL CALLBACK abortproc( HDC hdc, int iError )
 NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {
+#if 0
   nsDeviceContextWin* devConWin = new nsDeviceContextWin(); //ref count 0 
   if (devConWin != nsnull) {
     // this will ref count it
@@ -724,6 +725,8 @@ NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aD
   }
 
   return devConWin->Init(dc, this); // take ownership of the DC
+#endif
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
