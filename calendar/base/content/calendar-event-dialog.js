@@ -321,7 +321,7 @@ function saveDialog(item)
     setItemProperty(item, "CLASS", getElementValue("privacy-menulist"));
 
     if (item.status == "COMPLETED" && isToDo(item)) {
-        item.completedDate = getElementValue("compeleted-date-picker");
+        item.completedDate = jsDateToDateTime(getElementValue("completed-date-picker"));
     }
 
     setItemProperty(item, "PERCENT-COMPLETE", getElementValue("percent-complete-menulist"));
