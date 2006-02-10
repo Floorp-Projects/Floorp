@@ -35,7 +35,7 @@ class nsDeviceContextMac : public DeviceContextImpl
 public:
   nsDeviceContextMac();
 
-	NS_DECL_ISUPPORTS
+	NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);  
 
