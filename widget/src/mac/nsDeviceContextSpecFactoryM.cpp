@@ -41,6 +41,7 @@
 #include "nsIPrintingContext.h"
 #include "nsGfxCIID.h"
 #include "plstr.h"
+#include "nsDeviceContextSpecMac.h"
 
 /** -------------------------------------------------------
  *  Constructor
@@ -75,21 +76,23 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryMac :: Init(void)
  *  @update   dc 12/02/98
  */
 NS_IMETHODIMP nsDeviceContextSpecFactoryMac :: CreateDeviceContextSpec(nsIWidget *aWidget,
+                                                                       nsIPrintSettings* aPrintSettings,
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
+
     nsresult rv;
     static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
-    nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
-	if (NS_SUCCEEDED(rv)) {
-	    nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(devSpec, &rv);
-	    if (NS_SUCCEEDED(rv)) {
-	        rv = printingContext->Init(aQuiet);
-	        if (NS_SUCCEEDED(rv)) {
-	            aNewSpec = devSpec;
-	            NS_ADDREF(aNewSpec);
-	        }
-	    }
-	}
-	return rv;
+    nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID,&rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(devSpec,&rv);
+      if (NS_SUCCEEDED(rv)) {
+        rv = printingContext->Init(aPrintSettings,aQuiet);
+        if (NS_SUCCEEDED(rv)) {
+          aNewSpec = devSpec;
+          NS_ADDREF(aNewSpec);
+        }
+      }
+    }
+  return rv;
 }
