@@ -38,7 +38,6 @@
 
 #include "nsDeviceContextMac.h"
 #include "nsRenderingContextMac.h"
-#include "nsDeviceContextSpecX.h"
 #include "nsIPrintingContext.h"
 #include "nsString.h"
 #include "nsHashtable.h"
