@@ -41,7 +41,7 @@
 #include "nsWidgetsCID.h"
 #include "plstr.h"
 #include "nsDeviceContextSpecX.h"
-
+#include "nsComponentManagerUtils.h"
 
 /** -------------------------------------------------------
  *  Constructor
