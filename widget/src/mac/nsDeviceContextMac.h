@@ -86,6 +86,7 @@ protected:
   nsIDeviceContextSpec  *mSpec;
   GrafPtr								mOldPort;
   nsCOMPtr<nsIScreenManager> mScreenManager;
+  nsCOMPtr<nsIScreen> mPrimaryScreen;         // cache the screen for single-monitor systems
   
 public:
   // InitFontInfoList and nsHashTable are static because GetMacFontNumber is static
