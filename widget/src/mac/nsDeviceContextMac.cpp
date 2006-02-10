@@ -47,8 +47,10 @@ PRBool nsDeviceContextMac::mDisplayVerySmallFonts = true;
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 nsDeviceContextMac :: nsDeviceContextMac()
 {
 
@@ -57,8 +59,10 @@ nsDeviceContextMac :: nsDeviceContextMac()
   
 }
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 nsDeviceContextMac :: ~nsDeviceContextMac()
 {
 }
@@ -69,8 +73,10 @@ NS_IMPL_QUERY_INTERFACE(nsDeviceContextMac, kDeviceContextIID);
 NS_IMPL_ADDREF(nsDeviceContextMac);
 NS_IMPL_RELEASE(nsDeviceContextMac);
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 {
 GDHandle			thegd;
@@ -124,8 +130,10 @@ GrafPtr								thePort;
   return rv;
 }
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
   //XXX it is very critical that this not lie!! MMP
@@ -155,8 +163,11 @@ NS_IMETHODIMP nsDeviceContextMac :: SupportsNativeWidgets(PRBool &aSupportsWidge
   return NS_OK;
 }
 
-//------------------------------------------------------------------------
 
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   // XXX Should we push this to widget library
@@ -165,6 +176,10 @@ NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarDimensions(float &aWidth, float 
   return NS_OK;
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
 {
   nsresult status = NS_OK;
@@ -250,32 +265,40 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, Syst
   return NS_OK;
 }
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
   aContext.CreateDrawingSurface(nsnull, 0, aSurface);
   return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
 {
   aDepth = mDepth;
   return NS_OK;
 }
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   aPixel = aColor;
   return NS_OK;
 }
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
 {
   nsresult result = NS_OK;
@@ -284,9 +307,10 @@ NS_IMETHODIMP nsDeviceContextMac::CreateILColorSpace(IL_ColorSpace*& aColorSpace
   return result;
 }
 
-//------------------------------------------------------------------------
-
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
 
@@ -315,8 +339,10 @@ NS_IMETHODIMP nsDeviceContextMac::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 }
 
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName)
 {
   	short fontNum;
@@ -326,8 +352,10 @@ NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName
 		return NS_ERROR_FAILURE;
 }
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
 	// FIXME:  could just union all of the GDevice rectangles together.
@@ -349,6 +377,10 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
 }
 
 
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac::GetClientRect(nsRect &aRect)
 {
 	// FIXME: equally as broken as GetDeviceSurfaceDimensions,
@@ -391,13 +423,18 @@ nsDeviceContextMac	*macDC;
 	macDC->mPixelsToTwips = 1.0f/macDC->mTwipsToPixels;
   macDC->mAppUnitsToDevUnits = macDC->mTwipsToPixels;
   macDC->mDevUnitsToAppUnits = 1.0f / macDC->mAppUnitsToDevUnits;
+  
+  macDC->mCPixelScale = macDC->mTwipsToPixels / mTwipsToPixels;
+
 	//((nsDeviceContextMac*)aContext)->Init(this);
   return NS_OK;
 }
 
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac::BeginDocument(void)
 {
 #if !TARGET_CARBON
@@ -415,8 +452,10 @@ GrafPtr	thePort;
 }
 
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 {
  	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen){
@@ -429,8 +468,10 @@ NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 }
 
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 {
 #if !TARGET_CARBON
@@ -441,8 +482,10 @@ NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 }
 
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
 {
 #if !TARGET_CARBON
@@ -497,8 +540,10 @@ nsHashKey* FontNameKey::Clone(void) const
 
 #pragma mark -
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 void nsDeviceContextMac :: InitFontInfoList()
 {
 
@@ -575,8 +620,10 @@ printf("font buffer is %s\n", buffer);
 
 
 
-//------------------------------------------------------------------------
-
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aFontNum)
 {
 	//¥TODO?: Maybe we shouldn't call that function so often. If nsFont could store the
@@ -641,6 +688,10 @@ nsresult nsDeviceContextMac::CreateFontAliasTable()
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/9/98 dwc
+ */
 PRUint32 nsDeviceContextMac::GetScreenResolution()
 {
 	static PRBool initialized = PR_FALSE;
