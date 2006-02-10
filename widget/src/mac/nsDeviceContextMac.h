@@ -67,8 +67,6 @@ public:
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
   NS_IMETHOD  GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;
 
-	void 				SetDrawingSurface(nsIDrawingSurface*  aSurface) { mSurface = aSurface; }
-
   NS_IMETHOD 	CheckFontExistence(const nsString& aFontName);
   NS_IMETHOD 	GetDepth(PRUint32& aDepth);
 
@@ -99,7 +97,6 @@ protected:
 
   void FindScreenForSurface ( nsIScreen** outScreen ) ;
 
-  nsIDrawingSurface* 			mSurface;
   Rect									mPageRect;
   nsCOMPtr<nsIDeviceContextSpec> mSpec;
   GrafPtr								mOldPort;
