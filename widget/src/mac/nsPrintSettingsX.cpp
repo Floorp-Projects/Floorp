@@ -41,7 +41,7 @@
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "plbase64.h"
 #include "prmem.h"
