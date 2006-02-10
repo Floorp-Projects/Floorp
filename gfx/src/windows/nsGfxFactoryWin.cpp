@@ -58,8 +58,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDrawingSurfaceWin)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecWin)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryWin)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableRegion)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
@@ -176,16 +174,6 @@ static const nsModuleComponentInfo components[] =
     NS_DRAWING_SURFACE_CID,
     "@mozilla.org/gfx/drawing-surface;1",
     nsDrawingSurfaceWinConstructor },
-
-  { "nsDeviceContextSpecWin",
-    NS_DEVICE_CONTEXT_SPEC_CID,
-    "@mozilla.org/gfx/devicecontextspec;1",
-    nsDeviceContextSpecWinConstructor },
-
-  { "nsDeviceContextSpecFactoryWin",
-    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
-    "@mozilla.org/gfx/devicecontextspecfactory;1",
-    nsDeviceContextSpecFactoryWinConstructor },
 
   { "nsScriptableRegion",
     NS_SCRIPTABLE_REGION_CID,

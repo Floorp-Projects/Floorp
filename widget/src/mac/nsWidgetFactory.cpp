@@ -68,6 +68,7 @@
 
 #include "nsPrintOptionsX.h"
 #include "nsPrintSessionX.h"
+#include "nsDeviceContextSpecX.h"
 #include "nsDeviceContextSpecFactoryM.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacWindow)
@@ -92,6 +93,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSessionX, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryMac)
 
 static const nsModuleComponentInfo gComponents[] =
