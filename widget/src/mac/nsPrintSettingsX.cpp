@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPrintSettingsX.h"
+#include "nsIPrintSessionX.h"
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -80,8 +81,12 @@ nsPrintSettingsX::nsPrintSettingsX(const nsPrintSettingsX& src) :
 nsPrintSettingsX::~nsPrintSettingsX()
 {
   if (mPageFormat != kPMNoPageFormat) {
-    ::PMDisposePageFormat(mPageFormat);
+    ::PMRelease(mPageFormat);
     mPageFormat = kPMNoPageFormat;
+  }
+  if (mPrintSettings != kPMNoPrintSettings) {
+    ::PMRelease(mPrintSettings);
+    mPrintSettings = kPMNoPrintSettings;
   }
 }
 
@@ -98,34 +103,34 @@ nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs)
   OSStatus status;
    
   if (mPageFormat != kPMNoPageFormat) {
-    ::PMDisposePageFormat(mPageFormat);
+    ::PMRelease(mPageFormat);
     mPageFormat = kPMNoPageFormat;
   }
   if (rhs.mPageFormat != kPMNoPageFormat) {
     PMPageFormat pageFormat;
-    status = ::PMNewPageFormat(&pageFormat);
+    status = ::PMCreatePageFormat(&pageFormat);
     if (status == noErr) {
       status = ::PMCopyPageFormat(rhs.mPageFormat, pageFormat);
       if (status == noErr)
         mPageFormat = pageFormat;
       else
-        ::PMDisposePageFormat(pageFormat);
+        ::PMRelease(pageFormat);
     }
   }
   
   if (mPrintSettings != kPMNoPrintSettings) {
-    ::PMDisposePrintSettings(mPrintSettings);
+    ::PMRelease(mPrintSettings);
     mPrintSettings = kPMNoPrintSettings;
   }
   if (rhs.mPrintSettings != kPMNoPrintSettings) {
     PMPrintSettings    printSettings;
-    status = ::PMNewPrintSettings(&printSettings);
+    status = ::PMCreatePrintSettings(&printSettings);
     if (status == noErr) {
       status = ::PMCopyPrintSettings(rhs.mPrintSettings, printSettings);
       if (status == noErr)
         mPrintSettings = printSettings;
       else
-        ::PMDisposePrintSettings(printSettings);
+        ::PMRelease(printSettings);
     }
   }
 
@@ -137,25 +142,41 @@ nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs)
 nsresult nsPrintSettingsX::Init()
 {
   OSStatus status;
+
+  PMPrintSession printSession = NULL;
+  status = ::PMCreateSession(&printSession);
   
-  status = ::PMNewPageFormat(&mPageFormat);
-  if (status != noErr)
-    return NS_ERROR_FAILURE;
-  status = ::PMNewPrintSettings(&mPrintSettings);
-  if (status != noErr)
-    return NS_ERROR_FAILURE;
-  
-  status = ::PMBegin();
-  NS_ASSERTION(status == noErr, "Error from PMBegin()");
   if (status == noErr) {
-    status = ::PMDefaultPageFormat(mPageFormat);
-    NS_ASSERTION(status == noErr, "Error from PMDefaultPageFormat()");
-    status = ::PMDefaultPrintSettings(mPrintSettings);
-    NS_ASSERTION(status == noErr, "Error from PMDefaultPrintSettings()");
-    
-    ::PMEnd();
+    // First, create a default page format
+    status = CreateDefaultPageFormat(printSession, mPageFormat);
+
+    // Then, if no error, create the default print settings
+    if (status == noErr) {
+      status = CreateDefaultPrintSettings(printSession, mPrintSettings);
+    }
+    OSStatus tempStatus = ::PMRelease(printSession);
+    if (status == noErr)
+      status = tempStatus;
   }
-  return NS_OK;
+  return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/** ---------------------------------------------------
+ */
+NS_IMETHODIMP nsPrintSettingsX::GetNativePrintSession(PMPrintSession *aNativePrintSession)
+{
+   NS_ENSURE_ARG_POINTER(aNativePrintSession);
+   *aNativePrintSession = nsnull;
+   
+   nsCOMPtr<nsIPrintSession> printSession;
+   GetPrintSession(getter_AddRefs(printSession));
+   if (!printSession)
+    return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIPrintSessionX> printSessionX(do_QueryInterface(printSession));
+   if (!printSession)
+    return NS_ERROR_FAILURE;
+
+   return printSessionX->GetNativeSession(aNativePrintSession);
 }
 
 /** ---------------------------------------------------
@@ -166,32 +187,25 @@ NS_IMETHODIMP nsPrintSettingsX::GetPMPageFormat(PMPageFormat *aPMPageFormat)
   *aPMPageFormat = kPMNoPageFormat;
   NS_ENSURE_STATE(mPageFormat != kPMNoPageFormat);
   
-  PMPageFormat    pageFormat;
-  OSStatus status = ::PMNewPageFormat(&pageFormat);
-  if (status != noErr) return NS_ERROR_FAILURE;
-
-  status = ::PMCopyPageFormat(mPageFormat, pageFormat);
-  if (status != noErr) {
-    ::PMDisposePageFormat(pageFormat);
-    return NS_ERROR_FAILURE;
-  }
-  *aPMPageFormat = pageFormat;
+  *aPMPageFormat = mPageFormat;
+  OSStatus status = noErr;
   
-  return NS_OK;
+  return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /** ---------------------------------------------------
  */
 NS_IMETHODIMP nsPrintSettingsX::SetPMPageFormat(PMPageFormat aPMPageFormat)
 {
-  NS_ENSURE_ARG(aPMPageFormat); 
-  NS_ENSURE_STATE(mPageFormat != kPMNoPageFormat);
+  NS_ENSURE_ARG(aPMPageFormat);
   
-  OSErr status = ::PMCopyPageFormat(aPMPageFormat, mPageFormat);
-  if (status != noErr)
-    return NS_ERROR_FAILURE;
-      
-  return NS_OK;
+  OSStatus status = ::PMRetain(aPMPageFormat);
+  if (status == noErr) {
+    if (mPageFormat)
+      status = ::PMRelease(mPageFormat);
+    mPageFormat = aPMPageFormat;
+  }        
+  return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /** ---------------------------------------------------
@@ -202,32 +216,25 @@ NS_IMETHODIMP nsPrintSettingsX::GetPMPrintSettings(PMPrintSettings *aPMPrintSett
   *aPMPrintSettings = kPMNoPrintSettings;
   NS_ENSURE_STATE(mPrintSettings != kPMNoPrintSettings);
   
-  PMPrintSettings    printSettings;
-  OSStatus status = ::PMNewPrintSettings(&printSettings);
-  if (status != noErr) return NS_ERROR_FAILURE;
-
-  status = ::PMCopyPrintSettings(mPrintSettings, printSettings);
-  if (status != noErr) {
-    ::PMDisposePrintSettings(printSettings);
-    return NS_ERROR_FAILURE;
-  }
-  *aPMPrintSettings = printSettings;
+  *aPMPrintSettings = mPrintSettings;
+  OSStatus status = noErr;
   
-  return NS_OK;
+  return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /** ---------------------------------------------------
  */
 NS_IMETHODIMP nsPrintSettingsX::SetPMPrintSettings(PMPrintSettings aPMPrintSettings)
 {
-  NS_ENSURE_ARG(aPMPrintSettings); 
-  NS_ENSURE_STATE(mPrintSettings != kPMNoPrintSettings);
+  NS_ENSURE_ARG(aPMPrintSettings);
   
-  OSErr status = ::PMCopyPrintSettings(aPMPrintSettings, mPrintSettings);
-  if (status != noErr)
-    return NS_ERROR_FAILURE;
-      
-  return NS_OK;
+  OSStatus status = ::PMRetain(aPMPrintSettings);
+  if (status == noErr) {
+    if (mPrintSettings)
+      status = ::PMRelease(mPageFormat);
+    mPrintSettings = aPMPrintSettings;
+  }        
+  return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /** ---------------------------------------------------
@@ -265,16 +272,15 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
   OSStatus      status;
   PMPageFormat  newPageFormat = kPMNoPageFormat;
   
-  status = ::PMNewPageFormat(&newPageFormat);
-  if (status != noErr) 
-    return NS_ERROR_FAILURE;  
-  status = ::PMUnflattenPageFormat(decodedDataHandle, &newPageFormat);
-  if (status != noErr) 
-    return NS_ERROR_FAILURE;
-
-  status = ::PMCopyPageFormat(newPageFormat, mPageFormat);
-  ::PMDisposePageFormat(newPageFormat);
-
+  status = ::PMCreatePageFormat(&newPageFormat);
+  if (status == noErr) { 
+    status = ::PMUnflattenPageFormat(decodedDataHandle, &newPageFormat);
+    if (status == noErr) {
+      if (mPageFormat)
+        status = ::PMRelease(mPageFormat);
+      mPageFormat = newPageFormat; // PMCreatePageFormat returned it with a refcnt of 1
+    }
+  }
   return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -333,5 +339,42 @@ NS_IMETHODIMP nsPrintSettingsX::_Assign(nsIPrintSettings *aPS)
     return NS_ERROR_UNEXPECTED;
   *this = *printSettingsX;
   return NS_OK;
+}
+
+//-------------------------------------------
+OSStatus nsPrintSettingsX::CreateDefaultPageFormat(PMPrintSession aSession, PMPageFormat& outFormat)
+{
+  OSStatus status;
+  PMPageFormat pageFormat;
+  
+  outFormat = kPMNoPageFormat;
+  status = ::PMCreatePageFormat(&pageFormat);
+    if (status == noErr && pageFormat != kPMNoPageFormat) {
+      status = ::PMSessionDefaultPageFormat(aSession, pageFormat);
+    if (status == noErr) {
+      outFormat = pageFormat;
+      return NS_OK;
+    }
+  }
+  return status;
+}
+  
+//-------------------------------------------
+
+OSStatus nsPrintSettingsX::CreateDefaultPrintSettings(PMPrintSession aSession, PMPrintSettings& outSettings)
+{
+  OSStatus status;
+  PMPrintSettings printSettings;
+  
+  outSettings = kPMNoPrintSettings;
+  status = ::PMCreatePrintSettings(&printSettings);
+  if (status == noErr && printSettings != kPMNoPrintSettings) {
+    status = ::PMSessionDefaultPrintSettings(aSession, printSettings);
+    if (status == noErr) {
+      outSettings = printSettings;
+      return noErr;
+    }
+  }
+  return status;  
 }
 

@@ -39,7 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define PM_USE_SESSION_APIS 0
 #include "nsDeviceContextSpecX.h"
 
 #include "prmem.h"
@@ -54,7 +53,7 @@
  *  @update   dc 12/02/98
  */
 nsDeviceContextSpecX::nsDeviceContextSpecX()
-: mPrintingContext(0)
+: mPrintSession(0)
 , mPageFormat(kPMNoPageFormat)
 , mPrintSettings(kPMNoPrintSettings)
 , mSavedPort(0)
@@ -81,19 +80,14 @@ NS_IMPL_ISUPPORTS2(nsDeviceContextSpecX, nsIDeviceContextSpec, nsIPrintingContex
 NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIPrintSettings* aPS, PRBool	aIsPrintPreview)
 {
   nsresult rv;
-  OSStatus status;
-  
-  if (!aIsPrintPreview) { 
-    status = ::PMBegin();
-    if (status != noErr)
-      return NS_ERROR_FAILURE;
-    mBeganPrinting = PR_TRUE;
-  }
-  
+    
   nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
   if (!printSettingsX)
     return NS_ERROR_NO_INTERFACE;
   
+  rv = printSettingsX->GetNativePrintSession(&mPrintSession);
+  if (NS_FAILED(rv))
+    return rv;  
   rv = printSettingsX->GetPMPageFormat(&mPageFormat);
   if (NS_FAILED(rv))
     return rv;
@@ -116,15 +110,6 @@ NS_IMETHODIMP nsDeviceContextSpecX::PrintManagerOpen(PRBool* aIsOpen)
  */
 NS_IMETHODIMP nsDeviceContextSpecX::ClosePrintManager()
 {
-  if (mPrintSettings != kPMNoPrintSettings)
-    ::PMDisposePrintSettings(mPrintSettings);
-
-  if (mPageFormat != kPMNoPageFormat)
-    ::PMDisposePageFormat(mPageFormat);
-
-  if (mBeganPrinting)
-    ::PMEnd();
-    
 	return NS_OK;
 }  
 
@@ -138,7 +123,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRInt32     aStartPage,
     status = ::PMSetLastPage(mPrintSettings, aEndPage, false);
     NS_ASSERTION(status == noErr, "PMSetLastPage failed");
 
-    status = ::PMBeginDocument(mPrintSettings, mPageFormat, &mPrintingContext);
+    status = ::PMSessionBeginDocument(mPrintSession, mPrintSettings, mPageFormat);
     if (status != noErr) return NS_ERROR_ABORT;
     
     return NS_OK;
@@ -146,8 +131,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRInt32     aStartPage,
 
 NS_IMETHODIMP nsDeviceContextSpecX::EndDocument()
 {
-    ::PMEndDocument(mPrintingContext);
-    mPrintingContext = 0;
+    ::PMSessionEndDocument(mPrintSession);
     return NS_OK;
 }
 
@@ -158,38 +142,45 @@ NS_IMETHODIMP nsDeviceContextSpecX::AbortDocument()
 
 NS_IMETHODIMP nsDeviceContextSpecX::BeginPage()
 {
-	// see http://devworld.apple.com/techpubs/carbon/graphics/CarbonPrintingManager/Carbon_Printing_Manager/Functions/PMSessionBeginPage.html
-    OSStatus status = ::PMBeginPage(mPrintingContext, NULL);
+    OSStatus status = ::PMSessionBeginPage(mPrintSession, mPageFormat, NULL);
     if (status != noErr) return NS_ERROR_ABORT;
     
     ::GetPort(&mSavedPort);
-    GrafPtr printingPort;
-    status = ::PMGetGrafPtr(mPrintingContext, &printingPort);
-    if (status != noErr) return NS_ERROR_ABORT;
-    ::SetPort(printingPort);
+    void *graphicsContext;
+    status = ::PMSessionGetGraphicsContext(mPrintSession, kPMGraphicsContextQuickdraw, &graphicsContext);
+    if (status != noErr)
+      return NS_ERROR_ABORT;
+    ::SetPort((CGrafPtr)graphicsContext);
     return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecX::EndPage()
 {
-    OSStatus status = ::PMEndPage(mPrintingContext);
+    OSStatus status = ::PMSessionEndPage(mPrintSession);
     if (mSavedPort)
     {
         ::SetPort(mSavedPort);
         mSavedPort = 0;
     }
-    if (status != noErr) return NS_ERROR_ABORT;
+    if (status != noErr)
+      return NS_ERROR_ABORT;
     return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecX::GetPrinterResolution(double* aResolution)
 {
+    PMPrinter printer;
+    OSStatus status = ::PMSessionGetCurrentPrinter(mPrintSession, &printer);
+    if (status != noErr)
+      return NS_ERROR_FAILURE;
+      
     PMResolution defaultResolution;
-    OSStatus status = ::PMGetPrinterResolution(kPMDefaultResolution, &defaultResolution);
-    if (status == noErr)
-        *aResolution = defaultResolution.hRes;
+    status = ::PMPrinterGetPrinterResolution(printer, kPMDefaultResolution, &defaultResolution);
+    if (status != noErr)
+      return NS_ERROR_FAILURE;
     
-    return (status == noErr ? NS_OK : NS_ERROR_FAILURE);
+    *aResolution = defaultResolution.hRes;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight)

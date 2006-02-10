@@ -103,7 +103,7 @@ protected:
 
 protected:
 
-    PMPrintContext    mPrintingContext;           // printing context (non-session APIs)
+    PMPrintSession    mPrintSession;              // printing context.
     PMPageFormat      mPageFormat;                // page format.
     PMPrintSettings   mPrintSettings;             // print settings.
     CGrafPtr          mSavedPort;                 // saved graphics port.
