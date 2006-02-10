@@ -417,7 +417,7 @@ void nsFileSpec::GetParent(nsFileSpec& outSpec) const
   outSpec.mPath = mPath;
   char* chars = (char*)outSpec.mPath;
   chars[outSpec.mPath.Length() - 1] = '\0'; // avoid trailing separator, if any
-  unsigned char* cp = _mbsrchr((const unsigned char*)chars, '\\');
+  unsigned char* cp = _mbsrchr((unsigned char*)chars, '\\');
   if (cp++)
     outSpec.mPath.SetLength(cp - (unsigned char*)chars); // truncate.
 } // nsFileSpec::GetParent
