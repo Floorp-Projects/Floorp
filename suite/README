@@ -3,5 +3,8 @@ mozilla/suite
 
 This module contains files for the SeaMonkey suite.
 
+Documentation about the directory structure within this module can be found at
+http://wiki.mozilla.org/SeaMonkey:Suite_Directory_Layout
+
 Consult http://www.mozilla.org/projects/seamonkey/review-and-flags.html
 for review rules on stuff in this directory, please.
