@@ -1041,8 +1041,8 @@ nsFontEnumeratorMac::nsFontEnumeratorMac()
   NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsFontEnumeratorMac,
-                  NS_GET_IID(nsIFontEnumerator));
+NS_IMPL_ISUPPORTS1(nsFontEnumeratorMac, nsIFontEnumerator)
+
 typedef struct EnumerateFamilyInfo
 {
   PRUnichar** mArray;
