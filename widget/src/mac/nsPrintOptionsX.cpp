@@ -40,7 +40,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsWatchTask.h"
 #include "nsPrintOptionsX.h"
 #include "nsPrintSettingsX.h"
 
