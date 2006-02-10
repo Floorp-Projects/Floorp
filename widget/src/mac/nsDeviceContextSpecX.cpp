@@ -324,9 +324,8 @@ FSSpec      spec;
       return false;
     }
     
-    char  *fullModuleName = nsnull;
-    mozFile->Append("Essential Files");
-    mozFile->Append("PrintDialogPDE.plugin");
+    mozFile->Append(NS_LITERAL_CSTRING("Essential Files"));
+    mozFile->Append(NS_LITERAL_CSTRING("PrintDialogPDE.plugin"));
     nsCOMPtr<nsILocalFileMac> mozMacFile(do_QueryInterface(mozFile));
     mozMacFile->GetFSSpec(&spec);
     
