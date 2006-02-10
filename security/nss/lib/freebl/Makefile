@@ -295,7 +295,7 @@ ifeq ($(CPU_ARCH),sparc)
 	endif
     endif # NS_USE_GCC
 
-    ### set MP_ flags for both GCC and Sun cc
+    ### set flags for both GCC and Sun cc
     ifdef USE_ABI32_INT32
 	# this builds for Sparc v8 pure 32-bit architecture
 	DEFINES += -DMP_USE_UINT_DIGIT -DMP_ASSEMBLY_MULTIPLY
@@ -314,6 +314,7 @@ ifeq ($(CPU_ARCH),sparc)
 	ASFILES  = mpv_sparcv8.s montmulfv8.s
 	DEFINES  += -DMP_NO_MP_WORD -DMP_USE_UINT_DIGIT -DMP_ASSEMBLY_MULTIPLY
 	DEFINES  += -DMP_USING_MONT_MULF -DMP_MONT_USE_MP_MUL
+	ECL_USE_FP = 1
     endif
     ifdef USE_ABI64_INT
 	# this builds for Sparc v9a pure 64-bit architecture
@@ -326,9 +327,9 @@ ifeq ($(CPU_ARCH),sparc)
 	ASFILES   = mpv_sparcv9.s montmulfv9.s
 	DEFINES  += -DMP_NO_MP_WORD -DMP_USE_UINT_DIGIT -DMP_ASSEMBLY_MULTIPLY
 	DEFINES  += -DMP_USING_MONT_MULF -DMP_MONT_USE_MP_MUL
+	ECL_USE_FP = 1
     endif
 
-    ECL_USE_FP = 1
 else
     # Solaris for non-sparc family CPUs
     ifdef NS_USE_GCC
