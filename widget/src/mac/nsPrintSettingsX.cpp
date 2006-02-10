@@ -228,7 +228,7 @@ NS_IMETHODIMP nsPrintSettingsX::SetPMPrintSettings(PMPrintSettings aPMPrintSetti
   OSStatus status = ::PMRetain(aPMPrintSettings);
   if (status == noErr) {
     if (mPrintSettings)
-      status = ::PMRelease(mPageFormat);
+      status = ::PMRelease(mPrintSettings);
     mPrintSettings = aPMPrintSettings;
   }        
   return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
