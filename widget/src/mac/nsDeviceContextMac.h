@@ -83,7 +83,7 @@ protected:
 
   nsDrawingSurface 			mSurface;
   Rect									mPageRect;
-  nsIDeviceContextSpec  *mSpec;
+  nsCOMPtr<nsIDeviceContextSpec> mSpec;
   GrafPtr								mOldPort;
   nsCOMPtr<nsIScreenManager> mScreenManager;
   nsCOMPtr<nsIScreen> mPrimaryScreen;         // cache the screen for single-monitor systems
