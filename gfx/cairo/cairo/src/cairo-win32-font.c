@@ -1127,6 +1127,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 	return CAIRO_STATUS_SUCCESS;
 
     if (_cairo_surface_is_win32 (generic_surface) &&
+	surface->format == CAIRO_FORMAT_RGB24 &&
 	op == CAIRO_OPERATOR_OVER &&
 	_cairo_pattern_is_opaque_solid (pattern)) {
 
@@ -1159,7 +1160,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 	cairo_surface_pattern_t mask;
 	RECT r;
 
-	tmp_surface = (cairo_win32_surface_t *)_cairo_win32_surface_create_dib (CAIRO_FORMAT_ARGB32, width, height);
+	tmp_surface = (cairo_win32_surface_t *)cairo_win32_surface_create_dib (CAIRO_FORMAT_ARGB32, width, height);
 	if (tmp_surface->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
 
@@ -1170,8 +1171,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 	FillRect (tmp_surface->dc, &r, GetStockObject (WHITE_BRUSH));
 
 	_draw_glyphs_on_surface (tmp_surface, scaled_font, RGB (0, 0, 0),
-				 dest_x - surface->base.device_x_offset,
-				 dest_y - surface->base.device_y_offset,
+				 dest_x, dest_y,
 				 glyphs, num_glyphs);
 
 	if (scaled_font->quality == CLEARTYPE_QUALITY) {

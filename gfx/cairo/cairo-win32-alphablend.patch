@@ -1,7 +1,7 @@
 Index: cairo/src/cairo-win32-surface.c
 ===================================================================
---- cairo.orig/src/cairo-win32-surface.c	2006-02-07 17:14:24.921875000 -0800
-+++ cairo/src/cairo-win32-surface.c	2006-02-09 17:57:30.562500000 -0800
+--- cairo.orig/src/cairo-win32-surface.c	2006-02-10 11:25:30.047875000 -0800
++++ cairo/src/cairo-win32-surface.c	2006-02-10 11:27:21.984375000 -0800
 @@ -132,8 +132,13 @@
      bitmap_info->bmiHeader.biPlanes = 1;
      
@@ -62,7 +62,15 @@ Index: cairo/src/cairo-win32-surface.c
      
      return CAIRO_STATUS_SUCCESS;
  }
-@@ -675,13 +688,13 @@
+@@ -665,7 +678,6 @@
+ 	return CAIRO_INT_STATUS_UNSUPPORTED;
+ 
+     if (alpha == 255 &&
+-	src->format == dst->format &&
+ 	(op == CAIRO_OPERATOR_SOURCE ||
+ 	 (src->format == CAIRO_FORMAT_RGB24 && op == CAIRO_OPERATOR_OVER))) {
+ 	
+@@ -675,13 +687,12 @@
  		     src->dc,
  		     src_x + itx, src_y + ity,
  		     SRCCOPY))
@@ -71,14 +79,15 @@ Index: cairo/src/cairo-win32-surface.c
  
  	return CAIRO_STATUS_SUCCESS;
  	
-     } else if (integer_transform &&
- 	       (src->format == CAIRO_FORMAT_RGB24 || src->format == CAIRO_FORMAT_ARGB32) &&
+-    } else if (integer_transform &&
+-	       (src->format == CAIRO_FORMAT_RGB24 || src->format == CAIRO_FORMAT_ARGB32) &&
 -	       dst->format == CAIRO_FORMAT_RGB24 &&
++    } else if ((src->format == CAIRO_FORMAT_RGB24 || src->format == CAIRO_FORMAT_ARGB32) &&
 +	       (dst->format == CAIRO_FORMAT_RGB24 || dst->format == CAIRO_FORMAT_ARGB32) &&
  	       op == CAIRO_OPERATOR_OVER) {
  
  	return _composite_alpha_blend (dst, src, alpha,
-@@ -783,10 +796,11 @@
+@@ -783,10 +794,11 @@
      HBRUSH new_brush;
      int i;
  
@@ -94,39 +103,7 @@ Index: cairo/src/cairo-win32-surface.c
  	return CAIRO_INT_STATUS_UNSUPPORTED;
  
      /* Optimize for no destination alpha (surface->pixman_image is non-NULL for all
-@@ -1007,6 +1021,31 @@
-     return surface->backend == &cairo_win32_surface_backend;
- }
- 
-+/**
-+ * cairo_win32_surface_get_dc
-+ * @surface: a #cairo_surface_t
-+ *
-+ * Returns the HDC associated with this surface, or NULL if none.
-+ * Also returns NULL if the surface is not a win32 surface.
-+ *
-+ * Return value: HDC or NULL if no HDC available.
-+ **/
-+HDC
-+cairo_win32_surface_get_dc (cairo_surface_t *surface)
-+{
-+    cairo_win32_surface_t *winsurf;
-+
-+    if (surface == NULL)
-+	return NULL;
-+
-+    if (!_cairo_surface_is_win32(surface))
-+	return NULL;
-+
-+    winsurf = (cairo_win32_surface_t *) surface;
-+
-+    return winsurf->dc;
-+}
-+
- static const cairo_surface_backend_t cairo_win32_surface_backend = {
-     _cairo_win32_surface_create_similar,
-     _cairo_win32_surface_finish,
-@@ -1026,7 +1065,17 @@
+@@ -1051,7 +1063,17 @@
      NULL, /* old_show_glyphs */
      NULL, /* get_font_options */
      _cairo_win32_surface_flush,
@@ -145,24 +122,10 @@ Index: cairo/src/cairo-win32-surface.c
  };
  
  /*
-Index: cairo/src/cairo-win32.h
-===================================================================
---- cairo.orig/src/cairo-win32.h	2006-02-07 17:14:24.922875000 -0800
-+++ cairo/src/cairo-win32.h	2006-02-07 17:15:20.390625000 -0800
-@@ -60,6 +60,9 @@
- cairo_public double
- cairo_win32_scaled_font_get_metrics_factor (cairo_scaled_font_t *scaled_font);
- 
-+cairo_public HDC
-+cairo_win32_surface_get_dc (cairo_surface_t *surface);
-+
- CAIRO_END_DECLS
- 
- #else  /* CAIRO_HAS_WIN32_SURFACE */
 Index: cairo/src/cairo-win32-font.c
 ===================================================================
---- cairo.orig/src/cairo-win32-font.c	2006-02-09 17:53:51.265625000 -0800
-+++ cairo/src/cairo-win32-font.c	2006-02-09 17:54:49.062500000 -0800
+--- cairo.orig/src/cairo-win32-font.c	2006-02-10 11:25:30.046875000 -0800
++++ cairo/src/cairo-win32-font.c	2006-02-10 11:26:38.328125000 -0800
 @@ -1127,7 +1127,6 @@
  	return CAIRO_STATUS_SUCCESS;
  

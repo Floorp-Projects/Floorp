@@ -337,9 +337,9 @@ _cairo_win32_surface_create_similar (void	    *abstract_src,
  *   be created (probably because of lack of memory)
  **/
 cairo_surface_t *
-_cairo_win32_surface_create_dib (cairo_format_t format,
-				 int	        width,
-				 int	        height)
+cairo_win32_surface_create_dib (cairo_format_t format,
+				int	       width,
+				int	       height)
 {
     return _cairo_win32_surface_create_for_dc (NULL, format, width, height);
 }
@@ -678,7 +678,6 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (alpha == 255 &&
-	src->format == dst->format &&
 	(op == CAIRO_OPERATOR_SOURCE ||
 	 (src->format == CAIRO_FORMAT_RGB24 && op == CAIRO_OPERATOR_OVER))) {
 	
@@ -692,8 +691,7 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
 
 	return CAIRO_STATUS_SUCCESS;
 	
-    } else if (integer_transform &&
-	       (src->format == CAIRO_FORMAT_RGB24 || src->format == CAIRO_FORMAT_ARGB32) &&
+    } else if ((src->format == CAIRO_FORMAT_RGB24 || src->format == CAIRO_FORMAT_ARGB32) &&
 	       (dst->format == CAIRO_FORMAT_RGB24 || dst->format == CAIRO_FORMAT_ARGB32) &&
 	       op == CAIRO_OPERATOR_OVER) {
 
