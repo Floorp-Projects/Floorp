@@ -79,7 +79,9 @@ public:
      */
     NS_IMETHOD ClosePrintManager();
 
-    NS_IMETHOD BeginDocument(PRInt32     aStartPage, 
+    NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
+                             PRUnichar*  aPrintToFileName,
+                             PRInt32     aStartPage, 
                              PRInt32     aEndPage);
     
     NS_IMETHOD EndDocument();
