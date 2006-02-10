@@ -169,6 +169,11 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndDocument()
     return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextSpecX::AbortDocument()
+{
+    return EndDocument();
+}
+
 NS_IMETHODIMP nsDeviceContextSpecX::BeginPage()
 {
 	// see http://devworld.apple.com/techpubs/carbon/graphics/CarbonPrintingManager/Carbon_Printing_Manager/Functions/PMSessionBeginPage.html
