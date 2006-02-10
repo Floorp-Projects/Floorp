@@ -24,8 +24,6 @@
 #include "nsDeviceContextSpecX.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "nsWatchTask.h"
-
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecX
@@ -130,7 +128,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginPage()
     ::GetPort(&mSavedPort);
     GrafPtr printingPort;
     status = ::PMSessionGetGraphicsContext(mPrintSession, kPMGraphicsContextQuickdraw,
-                                           &printingPort);
+                                           &(void*)printingPort);
     if (status != noErr) return NS_ERROR_FAILURE;
     ::SetPort(printingPort);
     return NS_OK;
