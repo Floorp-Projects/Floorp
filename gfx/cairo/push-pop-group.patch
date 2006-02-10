@@ -548,7 +548,7 @@ Index: src/cairo.h
 Index: src/cairoint.h
 ===================================================================
 --- src/cairoint.h.orig	2006-02-09 18:01:01.890625000 -0800
-+++ src/cairoint.h	2006-02-09 18:03:23.656250000 -0800
++++ src/cairoint.h	2006-02-09 18:51:23.265625000 -0800
 @@ -1077,9 +1077,24 @@
  cairo_private void
  _moz_cairo_gstate_set_target (cairo_gstate_t *gstate, cairo_surface_t *target);
@@ -574,11 +574,12 @@ Index: src/cairoint.h
  cairo_private cairo_status_t
  _cairo_gstate_set_source (cairo_gstate_t *gstate, cairo_pattern_t *source);
  
-@@ -2189,6 +2204,9 @@
+@@ -2189,6 +2204,10 @@
  slim_hidden_proto(cairo_save)
  slim_hidden_proto(cairo_stroke_preserve)
  slim_hidden_proto(cairo_surface_destroy)
 +slim_hidden_proto(cairo_push_group)
++slim_hidden_proto(cairo_push_group_with_content)
 +slim_hidden_proto(cairo_pop_group)
 +slim_hidden_proto(cairo_pop_group_to_source)
  slim_hidden_proto(moz_cairo_set_target)
