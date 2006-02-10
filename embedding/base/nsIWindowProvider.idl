@@ -42,7 +42,7 @@
  * a new tab, an existing window, etc) instead of just having a real new
  * toplevel window open.
  *
- * @status UNDER_REVIEW ???
+ * @status UNDER_REVIEW
  */
 
 #include "nsISupports.idl"
@@ -58,7 +58,7 @@ interface nsIURI;
  * or the provider does not provide a window, the window watcher will proceed
  * to actually open a new window.
  */
-[uuid(A4D32E30-9854-477A-83CB-FB7B8AE9273C)]
+[uuid(5119ac7f-81dd-4061-96a7-71f2cf5efee4)]
 interface nsIWindowProvider : nsISupports
 {
   /**
@@ -97,6 +97,15 @@ interface nsIWindowProvider : nsISupports
    *                  allowed to apply the feature string to the window it
    *                  returns in any way it sees fit.  See the nsIWindowWatcher
    *                  interface for details on feature strings.
+   * @param aWindowIsNew [out] Whether the window being returned was just
+   *                           created by the window provider implementation.
+   *                           This can be used by callers to keep track of which
+   *                           windows were opened by the user as opposed to
+   *                           being opened programmatically.  This should be set
+   *                           to false if the window being returned existed
+   *                           before the provideWindow() call.  The value of this
+   *                           out parameter is meaningless if provideWindow()
+   *                           returns null.
    * @return A window the caller should use or null if the caller should just
    *         create a new window.  The returned window may be newly opened by
    *         the nsIWindowProvider implementation or may be a window that
@@ -111,5 +120,6 @@ interface nsIWindowProvider : nsISupports
                              in boolean aSizeSpecified,
                              in nsIURI aURI,
                              in AString aName,
-                             in AUTF8String aFeatures);
+                             in AUTF8String aFeatures,
+                             out boolean aWindowIsNew);
 };
