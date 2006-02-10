@@ -47,6 +47,15 @@
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
 
+
+#include "CoreServices.h"
+#include "nsFileSpec.h"
+#include "nsPDECommon.h"
+
+static Boolean  LoadPrinterPlugin();
+
+static Boolean  gPlugInNotLoaded = true;
+
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecX
  *  @update   dc 12/02/98
@@ -123,19 +132,83 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIPrintSettings* aPS, PRBool	aQuiet)
   status = ::PMDefaultPrintSettings(mPrintSettings);
   if (status != noErr) return NS_ERROR_FAILURE;
 
-  if (! aQuiet)
-  {
+  if (! aQuiet) {
+  Boolean plugInExtended,accepted=false;
+  PRBool  isOn;
+  PRInt16 howToEnableFrameUI = nsIPrintSettings::kFrameEnableNone;
+  nsPrintExtensions       printData = {false,false,false,false,false,false,false,false};
+
 		::InitCursor();
 
-    Boolean accepted = false;
+    // set the values for the plugin here
+    aPS->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &isOn);
+    printData.mHaveSelection = (Boolean) isOn;
+
+    aPS->GetHowToEnableFrameUI(&howToEnableFrameUI);
+    if (howToEnableFrameUI == nsIPrintSettings::kFrameEnableAll) {
+      printData.mHaveFrames = true;
+      printData.mHaveFrameSelected = true;
+    }
+    
+    if (howToEnableFrameUI == nsIPrintSettings::kFrameEnableAsIsAndEach) {
+      printData.mHaveFrames = true;
+      printData.mHaveFrameSelected = false;
+    }
+        
+    aPS->GetShrinkToFit(&isOn);
+    printData.mShrinkToFit = isOn;    
+        
+    if( gPlugInNotLoaded ) {
+      plugInExtended = LoadPrinterPlugin();
+    }
+
+    status = PMSetPrintSettingsExtendedData(mPrintSettings,kPDE_Creator,sizeof(printData),&printData);
+
     status = ::PMPrintDialog(mPrintSettings, mPageFormat, &accepted);
+
     if (! accepted)
         return NS_ERROR_ABORT;
 
     if (status != noErr)
       return NS_ERROR_FAILURE;
-  }
 
+
+    // get the data from the plugin
+    if(status == noErr){
+      UInt32 bytesNeeded;
+
+      status = PMGetPrintSettingsExtendedData(mPrintSettings, kPDE_Creator, &bytesNeeded, NULL);
+     
+      if(status == noErr && bytesNeeded == sizeof(printData) ){
+        status = PMGetPrintSettingsExtendedData(mPrintSettings, kPDE_Creator,&bytesNeeded, &printData);        
+        
+        // set the correct data fields
+        if( printData.mPrintSelection){
+          aPS->SetPrintRange(nsIPrintSettings::kRangeSelection);
+        } else {
+          aPS->SetPrintRange(nsIPrintSettings::kRangeAllPages);
+        }
+        
+        if(printData.mPrintFrameAsIs){
+          aPS->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
+        }
+        
+        if(printData.mPrintSelectedFrame){
+          aPS->SetPrintFrameType(nsIPrintSettings::kSelectedFrame);
+        }
+
+        if(printData.mPrintFramesSeperatly){
+          aPS->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
+        }
+        
+        if(printData.mShrinkToFit){
+          aPS->SetShrinkToFit(PR_TRUE);
+        } else {
+          aPS->SetShrinkToFit(PR_FALSE);
+        }
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -227,3 +300,31 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, dou
     *aBottom = pageRect.bottom, *aRight = pageRect.right;
     return NS_OK;
 }
+
+
+
+Boolean
+LoadPrinterPlugin()
+{
+Boolean result=false;
+
+  CFBundleRef mainBundle = CFBundleGetMainBundle();
+  if(mainBundle){
+    CFURLRef pluginsURL = CFBundleCopyBundleURL(mainBundle);
+    if(pluginsURL){
+      CFURLRef myPluginsURL = CFURLCreateCopyAppendingPathComponent(NULL,pluginsURL,CFSTR("Essential Files/PrintDialogPDE.plugin"),false);
+      if (myPluginsURL){
+        CFPlugInRef	plugin = CFPlugInCreate(NULL,myPluginsURL);
+        if(plugin){
+          result = true;
+          gPlugInNotLoaded = false;
+        }
+        CFRelease(myPluginsURL);
+      } 
+      CFRelease(pluginsURL);  
+    }
+  }
+
+  return result;
+}
+
