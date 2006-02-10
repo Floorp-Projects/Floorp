@@ -80,8 +80,12 @@ nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
     return rv;
   }
 
-  (void)InitPrintSettingsFromPrefs(*_retval, PR_FALSE,
-                                   nsIPrintSettings::kInitSaveAll);
+  nsXPIDLString printerName;
+  nsresult rv = GetDefaultPrinterName(getter_Copies(printerName));
+  NS_ENSURE_SUCCESS(rv, rv);
+  (*_retval)->SetPrinterName(printerName.get());
+
+  (void)InitPrintSettingsFromPrefs(*_retval, nsIPrintSettings::kInitSaveAll);
   return rv;
 }
 
