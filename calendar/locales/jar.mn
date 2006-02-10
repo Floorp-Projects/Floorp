@@ -1,0 +1,9 @@
+#filter substitution
+
+#ifdef MOZ_SUNBIRD
+@AB_CD@.jar:
+% locale branding @AB_CD@ %locale/branding/
++   locale/branding/brand.dtd                   (%chrome/branding/brand.dtd)
++   locale/branding/brand.properties            (%chrome/branding/brand.properties)
+#endif
+#includesubst @LOCALE_SRCDIR@/extra-jar.mn
