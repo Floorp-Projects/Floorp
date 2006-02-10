@@ -75,6 +75,10 @@ public:
 
   NS_DECL_ISUPPORTS
 
+#ifdef MOZ_CAIRO_GFX
+  NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
+#endif
+
   NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aIsPrintPreview);
   NS_IMETHOD ClosePrintManager(); 
 

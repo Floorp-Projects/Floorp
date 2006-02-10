@@ -52,6 +52,10 @@
 #include "nsBidiKeyboard.h"
 #include "nsNativeKeyBindings.h"
 #include "nsScreenManagerGtk.h"
+#include "nsPrintOptionsGTK.h"
+#include "nsPrintSession.h"
+#include "nsDeviceContextSpecG.h"
+#include "nsDeviceContextSpecFactoryG.h"
 
 #ifdef NATIVE_THEME_SUPPORT
 #include "nsNativeThemeGTK.h"
@@ -81,9 +85,14 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecGTK)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryGTK)
 #ifdef NATIVE_THEME_SUPPORT
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
 #endif
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsGTK, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 
 static NS_IMETHODIMP
 nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
@@ -226,9 +235,32 @@ static const nsModuleComponentInfo components[] =
    { "Native Theme Renderer",
     NS_THEMERENDERER_CID,
     "@mozilla.org/chrome/chrome-native-theme;1",
-    nsNativeThemeGTKConstructor }
+     nsNativeThemeGTKConstructor },
 #endif
 #endif
+  { "PrintSettings Service",
+    NS_PRINTSETTINGSSERVICE_CID,
+    "@mozilla.org/gfx/printsettings-service;1",
+    nsPrintOptionsGTKConstructor },
+  { "Gtk Printer Enumerator",
+    NS_PRINTER_ENUMERATOR_CID,
+    //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
+    "@mozilla.org/gfx/printerenumerator;1",
+    nsPrinterEnumeratorGTKConstructor },
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionConstructor },
+  { "Gtk Device Context Spec",
+    NS_DEVICE_CONTEXT_SPEC_CID,
+    //    "@mozilla.org/gfx/device_context_spec/gtk;1",
+    "@mozilla.org/gfx/devicecontextspec;1",
+    nsDeviceContextSpecGTKConstructor },
+  { "Gtk Device Context Spec Factory",
+    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
+    //    "@mozilla.org/gfx/device_context_spec_factory/gtk;1",
+    "@mozilla.org/gfx/devicecontextspecfactory;1",
+    nsDeviceContextSpecFactoryGTKConstructor },
 };
 
 PR_STATIC_CALLBACK(void)

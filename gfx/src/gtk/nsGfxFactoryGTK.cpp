@@ -46,14 +46,9 @@
 #include "nsBlender.h"
 #include "nsRenderingContextGTK.h"
 #include "nsDeviceContextGTK.h"
-// aka    nsDeviceContextSpecGTK.h
-#include "nsDeviceContextSpecG.h"
-// aka    nsDeviceContextSpecFactoryGTK.h
-#include "nsDeviceContextSpecFactoryG.h"
 #include "nsScriptableRegion.h"
 #include "nsDeviceContextGTK.h"
 #include "nsImageGTK.h"
-#include "nsPrintOptionsGTK.h"
 #include "nsFontList.h"
 #include "nsRegionGTK.h"
 #include "nsGCCache.h"
@@ -67,7 +62,6 @@
 #include "nsFontMetricsGTK.h"
 #endif
 #include "nsFontMetricsUtils.h"
-#include "nsPrintSession.h"
 #include "gfxImageFrame.h"
 #ifdef MOZ_ENABLE_FREETYPE2
 #include "nsFT2FontCatalog.h"
@@ -81,12 +75,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRenderingContextGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionGTK)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecGTK)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsGTK, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 #ifdef MOZ_ENABLE_FREETYPE2
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFT2FontCatalog)
@@ -264,21 +254,6 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/blender;1",
     "@mozilla.org/gfx/blender;1",
     nsBlenderConstructor },
-  { "Gtk Device Context Spec",
-    NS_DEVICE_CONTEXT_SPEC_CID,
-    //    "@mozilla.org/gfx/device_context_spec/gtk;1",
-    "@mozilla.org/gfx/devicecontextspec;1",
-    nsDeviceContextSpecGTKConstructor },
-  { "Gtk Device Context Spec Factory",
-    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
-    //    "@mozilla.org/gfx/device_context_spec_factory/gtk;1",
-    "@mozilla.org/gfx/devicecontextspecfactory;1",
-    nsDeviceContextSpecFactoryGTKConstructor },
-  { "PrintSettings Service",
-    NS_PRINTSETTINGSSERVICE_CID,
-    //    "@mozilla.org/gfx/printsettings-service;1",
-    "@mozilla.org/gfx/printsettings-service;1",
-    nsPrintOptionsGTKConstructor },
   { "GTK Font Enumerator",
     NS_FONT_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/font_enumerator/gtk;1",
@@ -289,19 +264,10 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/fontlist;1"
     NS_FONTLIST_CONTRACTID,
     nsFontListConstructor },
-  { "Gtk Printer Enumerator",
-    NS_PRINTER_ENUMERATOR_CID,
-    //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
-    "@mozilla.org/gfx/printerenumerator;1",
-    nsPrinterEnumeratorGTKConstructor },
   { "windows image frame",
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",
     gfxImageFrameConstructor, },
-  { "Print Session",
-    NS_PRINTSESSION_CID,
-    "@mozilla.org/gfx/printsession;1",
-    nsPrintSessionConstructor },
 #ifdef MOZ_ENABLE_FREETYPE2
   { "TrueType Font Catalog Service",
     NS_FONTCATALOGSERVICE_CID,
