@@ -69,8 +69,6 @@ REQUIRES	= xpcom \
 CPPSRCS = \
         nsATSUIUtils.cpp \
         nsDeviceContextMac.cpp \
-        nsDeviceContextSpecFactoryM.cpp \
-        nsDeviceContextSpecX.cpp \
         nsDrawingSurfaceMac.cpp \
         nsFontMetricsMac.cpp \
         nsGfxFactoryMac.cpp \
@@ -82,9 +80,6 @@ CPPSRCS = \
         nsUnicodeFontMappingMac.cpp \
         nsUnicodeMappingUtil.cpp \
         nsUnicodeRenderingToolkit.cpp \
-        nsPrintOptionsX.cpp \
-        nsPrintSettingsX.cpp \
-        nsPrintSessionX.cpp \
         nsFontUtils.cpp \
         $(NULL)
 

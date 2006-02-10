@@ -97,6 +97,11 @@ MAC_LCPPSRCS = \
 		nsTSMStrategy.cpp \
 		nsScreenMac.cpp \
 		nsScreenManagerMac.cpp \
+		nsDeviceContextSpecFactoryM.cpp \
+		nsDeviceContextSpecX.cpp \
+		nsPrintOptionsX.cpp \
+		nsPrintSettingsX.cpp \
+		nsPrintSessionX.cpp \
 		$(NULL)
 
 
