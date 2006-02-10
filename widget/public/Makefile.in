@@ -112,6 +112,8 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 XPIDLSRCS	+= nsIEventSink.idl \
 		nsIPrintSettingsX.idl \
 		nsIPrintSessionX.idl
+
+EXPORTS		+= nsIPrintingContext.h
 endif
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
