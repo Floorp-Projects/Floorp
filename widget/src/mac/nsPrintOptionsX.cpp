@@ -86,8 +86,11 @@ nsPrintOptionsX::~nsPrintOptionsX()
 /** ---------------------------------------------------
  */
 NS_IMETHODIMP
-nsPrintOptionsX::ShowNativeDialog(void) 
+nsPrintOptionsX::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
 {
+
+  ReadPrefs();
+
   NS_ASSERTION(mPageFormat != kPMNoPageFormat, "No page format");
   if (mPageFormat == kPMNoPageFormat)
     return NS_ERROR_NOT_INITIALIZED;
@@ -104,6 +107,8 @@ nsPrintOptionsX::ShowNativeDialog(void)
   status = ::PMPageSetupDialog(mPageFormat, &accepted);
 
   ::PMEnd();
+
+  WritePrefs();
   
   if (status != noErr)
     return NS_ERROR_FAILURE;
