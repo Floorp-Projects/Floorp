@@ -719,6 +719,14 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
 void
 nsTextBoxFrame::UpdateAccessTitle()
 {
+    /*
+     * Note that if you change appending access key label spec,
+     * you need to maintain same logic in following methods. See bug 324159.
+     * toolkit/content/commonDialog.js (setLabelForNode)
+     * toolkit/content/widgets/text.xml (formatAccessKey)
+     * xpfe/global/resources/content/commonDialog.js (setLabelForNode)
+     * xpfe/global/resources/content/bindings/text.xml (formatAccessKey)
+     */
     PRInt32 menuAccessKey;
     nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
     if (!menuAccessKey || mAccessKey.IsEmpty())
@@ -746,16 +754,9 @@ nsTextBoxFrame::UpdateAccessTitle()
             offset--;
     }
 
-    PRInt32 len = (PRInt32)accessKeyLabel.Length();
-    if (offset >= len &&
-        Substring(mTitle, offset - len, len) == accessKeyLabel) {
-        // We don't need to append access key label. See bug 324159
-        return;
-    }
-
     if (InsertSeparatorBeforeAccessKey() && offset > 0 &&
         !NS_IS_SPACE(mTitle[offset - 1])) {
-        mTitle.Insert(NS_LITERAL_STRING(" "), (PRUint32)offset);
+        mTitle.Insert(' ', (PRUint32)offset);
         offset++;
     }
 
