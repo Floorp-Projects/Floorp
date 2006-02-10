@@ -317,7 +317,7 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, Syst
 				Style fontStyle;
 				::GetThemeFont(fontID, smSystemScript, fontName, &fontSize, &fontStyle);
 				fontName[fontName[0]+1] = 0;
-	      aInfo->mFont->name = (char*)&fontName[1];
+	      aInfo->mFont->name.AssignWithConversion( (char*)&fontName[1] );
 	      aInfo->mFont->size = fontSize;
 	      if (fontStyle & bold)
 	      	aInfo->mFont->weight = NS_FONT_WEIGHT_BOLD;
@@ -328,7 +328,7 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, Syst
 			}
 			else
 			{
-	      aInfo->mFont->name = "geneva";
+	      aInfo->mFont->name.AssignWithConversion( "geneva" );
 	      aInfo->mFont->size = 9;
 			}
 			float  dev2app;
@@ -706,7 +706,7 @@ public:
 
 FontNameKey::FontNameKey(const nsString& aString)
 {
-	mString = aString;
+	mString.Assign(aString);
 }
 
 PRUint32 FontNameKey::HashValue(void) const
@@ -842,15 +842,15 @@ nsresult nsDeviceContextMac::CreateFontAliasTable()
     mFontAliasTable = new nsHashtable();
     if (nsnull != mFontAliasTable)
     {
-			nsAutoString  fontTimes("Times");
-			nsAutoString  fontTimesNewRoman("Times New Roman");
-			nsAutoString  fontTimesRoman("Times Roman");
-			nsAutoString  fontArial("Arial");
-			nsAutoString  fontHelvetica("Helvetica");
-			nsAutoString  fontCourier("Courier");
-			nsAutoString  fontCourierNew("Courier New");
-			nsAutoString  fontUnicode("Unicode");
-			nsAutoString  fontBitstreamCyberbit("Bitstream Cyberbit");
+			nsAutoString  fontTimes;              fontTimes.AssignWithConversion("Times");
+			nsAutoString  fontTimesNewRoman;      fontTimesNewRoman.AssignWithConversion("Times New Roman");
+			nsAutoString  fontTimesRoman;         fontTimesRoman.AssignWithConversion("Times Roman");
+			nsAutoString  fontArial;              fontArial.AssignWithConversion("Arial");
+			nsAutoString  fontHelvetica;          fontHelvetica.AssignWithConversion("Helvetica");
+			nsAutoString  fontCourier;            fontCourier.AssignWithConversion("Courier");
+			nsAutoString  fontCourierNew;         fontCourierNew.AssignWithConversion("Courier New");
+			nsAutoString  fontUnicode;            fontUnicode.AssignWithConversion("Unicode");
+			nsAutoString  fontBitstreamCyberbit;  fontBitstreamCyberbit.AssignWithConversion("Bitstream Cyberbit");
 			nsAutoString  fontNullStr;
 
       AliasFont(fontTimes, fontTimesNewRoman, fontTimesRoman, PR_FALSE);
@@ -1095,7 +1095,7 @@ nsFontEnumeratorMac::EnumerateFonts(const char* aLangGroup,
 		return NS_ERROR_FAILURE;
 	}
   
-  nsAutoString GenName(aGeneric);
+  nsAutoString GenName; GenName.AssignWithConversion(aGeneric);
   EnumerateFontInfo info = { array, 0 , 0, gUtil->MapLangGroupToScriptCode(aLangGroup) ,gUtil->MapGenericFontNameType(GenName) };
   list->Enumerate ( EnumerateFont, &info);
   if (!info.mIndex) {
