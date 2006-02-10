@@ -44,6 +44,6 @@
 
 <!ENTITY hideOtherAppsCmdMac.label      "Hide Others">
 <!ENTITY hideOtherAppsCmdMac.commandkey "H">
-<!ENTITY hideOtherAppsCmdMac.modifiers  "accel,shift">
+<!ENTITY hideOtherAppsCmdMac.modifiers  "accel,alt">
 
 <!ENTITY showAllAppsCmdMac.label        "Show All">
