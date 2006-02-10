@@ -67,8 +67,7 @@ nsPrintOptionsX::~nsPrintOptionsX()
 /** ---------------------------------------------------
  *  See documentation in nsPrintOptionsImpl.h
  */
-/* nsIPrintSettings CreatePrintSettings (); */
-NS_IMETHODIMP nsPrintOptionsX::CreatePrintSettings(nsIPrintSettings **_retval)
+nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
   nsresult rv;
   nsPrintSettingsX* printSettings = new nsPrintSettingsX; // does not initially ref count
