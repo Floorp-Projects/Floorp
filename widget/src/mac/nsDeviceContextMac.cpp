@@ -924,7 +924,7 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     if (NS_SUCCEEDED(rv) && prefs) {
 		PRInt32 intVal;
-		if (NS_SUCCEEDED(prefs->GetIntPref("browser.screen_resolution", &intVal))) {
+		if (NS_SUCCEEDED(prefs->GetIntPref("browser.display.screen_resolution", &intVal))) {
 			mPixelsPerInch = intVal;
 		}
 #if 0
