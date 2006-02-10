@@ -97,7 +97,7 @@ public:
                                     nsIAppShell *aAppShell,
                                     nsIToolkit *aToolkit,
                                     nsWidgetInitData *aInitData,
-                                    nsNativeWidget aNativeParent = nsnull);
+                                    nsNativeWidget aNativeWindow = nsnull);
 
     NS_IMETHOD              Show(PRBool aState);
     
@@ -169,7 +169,7 @@ protected:
   WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]
   nsCOMPtr<nsIMenuBar> mMenuBar;
   
-  PRPackedBool         mIsDialog;       // true if the window is a dialog
+  PRPackedBool         mIsSheet;        // true if the window is a dialog
   PRPackedBool         mIsResizing;     // we originated the resize, prevent infinite recursion
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
   PRPackedBool         mVisible;        // Whether or not we're visible.
