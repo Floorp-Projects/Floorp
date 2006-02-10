@@ -59,7 +59,7 @@ nsDeviceContextSpecX::nsDeviceContextSpecX()
 , mSavedPort(0)
 , mBeganPrinting(PR_FALSE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 /** -------------------------------------------------------
