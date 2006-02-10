@@ -876,7 +876,7 @@ nsThebesRenderingContext::PushFilter(const nsRect& twRect, PRBool aAreaIsOpaque,
 
     mThebes->Save();
     mThebes->Clip(GFX_RECT_FROM_TWIPS_RECT(twRect));
-    mThebes->PushGroup();
+    mThebes->PushGroup(gfxContext::CONTENT_COLOR_ALPHA);
 
     return NS_OK;
 }

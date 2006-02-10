@@ -511,9 +511,9 @@ void gfxContext::Paint(gfxFloat alpha)
 
 // groups
 
-void gfxContext::PushGroup()
+void gfxContext::PushGroup(SurfaceContent content)
 {
-    cairo_push_group(mCairo);
+    cairo_push_group_with_content(mCairo, (cairo_content_t) content);
 }
 
 gfxPattern *gfxContext::PopGroup()

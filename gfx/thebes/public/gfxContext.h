@@ -485,7 +485,13 @@ public:
     /**
      * Groups
      */
-    void PushGroup();
+    enum SurfaceContent {
+        CONTENT_COLOR = CAIRO_CONTENT_COLOR,
+        CONTENT_ALPHA = CAIRO_CONTENT_ALPHA,
+        CONTENT_COLOR_ALPHA = CAIRO_CONTENT_COLOR_ALPHA
+    };
+
+    void PushGroup(SurfaceContent content = CONTENT_COLOR_ALPHA);
     gfxPattern *PopGroup();
     void PopGroupToSource();
 
