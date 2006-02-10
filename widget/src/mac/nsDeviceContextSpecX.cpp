@@ -76,7 +76,7 @@ NS_IMPL_ISUPPORTS2(nsDeviceContextSpecX, nsIDeviceContextSpec, nsIPrintingContex
  *  Initialize the nsDeviceContextSpecMac
  *  @update   dc 12/02/98
  */
-NS_IMETHODIMP nsDeviceContextSpecX::Init(PRBool	aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIPrintSettings* aPS, PRBool	aQuiet)
 {
   nsresult rv;
   nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1", &rv);
