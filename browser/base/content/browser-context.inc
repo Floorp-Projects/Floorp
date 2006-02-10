@@ -48,6 +48,7 @@
                 oncommand="InlineSpellCheckerUI.addToDictionary();"/>
       <menuitem id="spell-check-enabled"
                 label="&spellEnable.label;"
+                type="checkbox"
                 accesskey="&spellEnable.accesskey;"
                 oncommand="InlineSpellCheckerUI.toggleEnabled();"/>
       <menu id="spell-dictionaries"
