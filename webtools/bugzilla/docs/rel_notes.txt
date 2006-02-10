@@ -6,6 +6,8 @@ Table of Contents
 *****************
 
 - Introduction
+- Important Updates in this Point Release
+    * Version 2.20.1
 - Minimum Requirements
     * Perl
     * For MySQL Users
@@ -68,6 +70,64 @@ If you would like to contribute code to Bugzilla, read our
 Contributor's Guide at:
 
 http://www.bugzilla.org/docs/contributor.html
+
+
+Important Updates In This Point Release
+***************************************
+
+Version 2.20.1
+--------------
+
++ Many PostgreSQL fixes, including fixing whine.pl on Pg 8 
+  (bug 301062) and fixing the --regenerate option of collectstats.pl
+  for all versions of Pg (bug 316971). However, users who want full
+  PostgreSQL support are encouraged to use the 2.22 series, as 
+  certain PostgreSQL bugs were discovered that will not be fixed 
+  in 2.20 (their fixes were too complex).
+
++ In Bugzilla 2.20, the "administrator" user created by checksetup.pl
+  would not ever be sent email, because their email preferences were
+  left blank. This has been fixed for 2.20.1. However, if you created
+  this administrative user with Bugzilla 2.20, make sure to go back
+  and enable their Email Preferences. (bug 317489)
+
++ The bzdbcopy.pl script mentioned in these release notes
+  has now actually been checked-in to the 2.20 branch, and so
+  it's included in this release. (bug 291776)
+
++ When there's only one Classification, you now won't be required
+  to pick a Classification on bug entry. (bug 311489)
+
++ You can no longer add dependencies on bugs you can't see.
+  (bug 141593)
+
++ The CC list is included in "New" bug emails, again. (bug 313661)
+
++ In the original 2.20, certain scripts were not correctly using
+  the "shadow database," if it was specified. This has been fixed
+  in 2.20.1. (bug 313695)
+
++ "Saved Searches" that were saved before Bugzilla 2.20, would throw
+  an error if they contained "Days Since Bug Changed." as part of their
+  criteria. This has been fixed in Bugzilla 2.20.1. (bug 302599)
+
++ You can now successfully delete a product even when Target Milestones
+  are turned off. (bug 317025)
+
++ checksetup.pl now correctly pre-compiles templates for languages other
+  than English. (bug 304417)
+
++ The "All Closed" chart that is created by default in New Charts 
+  now actually represents all closed bugs, and not all bugs in the 
+  product. (bug 300473)
+
++ CSV bug lists with more than 1000 dates now work properly. (bug 257813)
+
++ Various bugs with upgrading from previous versions of Bugzilla 
+  have been fixed. (bug 307662, bug 311047, bug 310108)
+
++ Many, many other bug fixes. See http://www.bugzilla.org/status/changes.html
+  for details on what was fixed between 2.20 and 2.20.1.
 
 
 Minimum Requirements
@@ -357,15 +417,15 @@ Outstanding Issues
   your Status/Resolution field, you must edit checksetup.pl BEFORE YOU
   RUN IT. Find the line that starts like this:
 
-  my @states = ("UNCONFIRMED",
+  bug_status   => ["UNCONFIRMED",
 
   That's where you set the values for the Status field.
 
-  my @resolutions = ("","FIXED",
+  resolution   => ["","FIXED",
 
   And that's where you set values for the Resolution field.
 
-  Those are both near line 1786 in checksetup.pl.
+  Those are both near line 1826 in checksetup.pl.
 
   If you forget to do this, you will have to manually edit the "bug_status"
   and "resolution" tables in the database to contain the correct values.
@@ -386,7 +446,7 @@ Outstanding Issues
   Old Charts will be restricted to the groups that are marked MANDATORY for 
   the corresponding Product. There is currently no way to change this 
   restriction, and the groupings will not be updated if the group configuration
-  for the Product changes.
+  for the Product changes. This will not be fixed in the 2.20 branch.
 
 - bug 69621: If you rename or remove a keyword that is in use on bugs, you will
   need to rebuild the "keyword cache" by running sanitycheck.cgi and choosing
@@ -410,12 +470,11 @@ Outstanding Issues
   with a strange error message when you try to run checksetup.pl. Try
   upgrading your DBI using: perl -MCPAN -e'install DBI'
 
-- Bug 298659: LDAP support may be broken on Windows.
-
 - Bug 126266: Bugzilla does not use UTF-8 to display pages. This means
   that if you enter non-ASCII characters into Bugzilla, they may
   display strangely, or Bugzilla may have other problems. For a workaround,
   see: http://www.bugzilla.org/docs/tip/html/security-bugzilla.html
+  This has been fixed in the 2.22 series.
 
 - Bug 99215: Flags are not protected by "mid-air collision" detection.
   Nor are any attachment changes.
@@ -424,6 +483,7 @@ Outstanding Issues
   "mid-air collision" protection.
 
 - Bug 285614: importxml.pl may be broken in many different ways.
+  It has been fixed and completely re-written in the 2.22 series.
 
 - (No Bug Number) Note that the email interface (bug_mail.pl) in the 
   contrib/ directory has not been maintained (as it has no maintainer),
@@ -587,6 +647,24 @@ Other Changes
 - All global variables (any that start with $::, @::, or %::) will 
   be going away, eventually, hopefully they will be entirely gone 
   by Bugzilla 2.24.
+
+
+Security Fixes in 2.20 Releases
+*******************************
+
+2.20.1
+------
+
+There were three security issues discovered after the release of
+Bugzilla 2.20 that we resolved for Bugzilla 2.20.1. One SQL Injection
+(from an administrator only), one Cross-Site Scripting vulnerability
+(that mostly affects only the user who can exploit it), and one minor,
+extremely specific information leak.
+
+To see details on the vulnerabilities that were fixed, see the 
+Security Advisory at:
+
+http://www.bugzilla.org/security/2.16.10/
 
 
 Release Notes for Previous Versions
