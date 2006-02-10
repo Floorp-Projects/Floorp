@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -46,6 +47,7 @@
 #include "nsError.h"
 
 #include <windows.h>
+#include <mbstring.h>
 
 #if (_MSC_VER == 1100) || defined(__GNUC__)
 #define INITGUID
@@ -412,12 +414,12 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasSymlink)
 void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 //----------------------------------------------------------------------------------------
 {
-	outSpec.mPath = mPath;
-	char* chars = (char*)outSpec.mPath;
-	chars[outSpec.mPath.Length() - 1] = '\0'; // avoid trailing separator, if any
-    char* cp = strrchr(chars, '\\');
-    if (cp++)
-	    outSpec.mPath.SetLength(cp - chars); // truncate.
+  outSpec.mPath = mPath;
+  char* chars = (char*)outSpec.mPath;
+  chars[outSpec.mPath.Length() - 1] = '\0'; // avoid trailing separator, if any
+  unsigned char* cp = _mbsrchr((const unsigned char*)chars, '\\');
+  if (cp++)
+    outSpec.mPath.SetLength(cp - (unsigned char*)chars); // truncate.
 } // nsFileSpec::GetParent
 
 //----------------------------------------------------------------------------------------
