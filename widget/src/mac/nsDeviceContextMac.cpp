@@ -729,11 +729,11 @@ NS_IMETHODIMP nsDeviceContextMac::BeginDocument(PRUnichar * aTitle)
 #if !TARGET_CARBON
 GrafPtr	thePort;
  
- 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) {
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrintManagerOpen) {
  		::GetPort(&mOldPort);
- 		thePort = (GrafPtr)::PrOpenDoc(((nsDeviceContextSpecMac*)(this->mSpec))->mPrtRec,nsnull,nsnull);
-  	((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort = (TPrPort*)thePort;
-  	SetDrawingSurface(((nsDeviceContextSpecMac*)(this->mSpec))->mPrtRec);
+ 		thePort = (GrafPtr)::PrOpenDoc(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrtRec,nsnull,nsnull);
+  	((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrinterPort = (TPrPort*)thePort;
+  	SetDrawingSurface(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrtRec);
   	SetPort(thePort);
   }
   return NS_OK;
@@ -754,9 +754,9 @@ GrafPtr	thePort;
 NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 {
 #if !TARGET_CARBON
- 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen){
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrintManagerOpen){
  		::SetPort(mOldPort);
-		::PrCloseDoc(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
+		::PrCloseDoc(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrinterPort);
 	}
     return NS_OK;
 #else
@@ -776,8 +776,8 @@ NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 {
 #if !TARGET_CARBON
- 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
-		::PrOpenPage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort,nsnull);
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrintManagerOpen) 
+		::PrOpenPage(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrinterPort,nsnull);
   return NS_OK;
 #else
     nsresult rv = NS_ERROR_FAILURE;
@@ -796,9 +796,9 @@ NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
 {
 #if !TARGET_CARBON
- 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) {
- 		::SetPort((GrafPtr)(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort));
-		::PrClosePage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrintManagerOpen) {
+ 		::SetPort((GrafPtr)(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrinterPort));
+		::PrClosePage(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrinterPort);
 	}
     return NS_OK;
 #else
