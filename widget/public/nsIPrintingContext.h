@@ -45,8 +45,8 @@ class nsIPrintSettings;
 
 // 3d5917da-1dd2-11b2-bc7b-aa83823362e0
 #define NS_IPRINTING_CONTEXT_IID    \
-{ 0x3d5917da, 0x1dd2, 0x11b2,       \
-{ 0xbc, 0x7b, 0xaa, 0x83, 0x82, 0x33, 0x62, 0xe0 } }
+{ 0xD9853908, 0xA34D, 0x4D8B,       \
+{ 0xB4, 0xD6, 0x5D, 0xC3, 0x6E, 0x21, 0x1B, 0xDD } }
 
 class nsIPrintingContext : public nsISupports {
 public:
@@ -73,7 +73,9 @@ public:
      */
     NS_IMETHOD ClosePrintManager() = 0;
     
-    NS_IMETHOD BeginDocument(PRInt32     aStartPage, 
+    NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
+                             PRUnichar*  aPrintToFileName,
+                             PRInt32     aStartPage, 
                              PRInt32     aEndPage) = 0;
     
     NS_IMETHOD EndDocument() = 0;

@@ -682,7 +682,7 @@ NS_IMETHODIMP nsDeviceContextMac::BeginDocument(PRUnichar * aTitle,
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(mSpec);
     if (printingContext)
-        rv = printingContext->BeginDocument(aStartPage, aEndPage);
+        rv = printingContext->BeginDocument(aTitle, aPrintToFileName, aStartPage, aEndPage);
     return rv;
 }
 
