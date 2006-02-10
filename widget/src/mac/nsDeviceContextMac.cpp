@@ -275,7 +275,7 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
     case eSystemFont_Tooltips:
     case eSystemFont_Widget:
       float  dev2app;
-      GetDevUnitsToAppUnits(dev2app);
+      dev2app = DevUnitsToAppUnits();
 
       aFont->style       = NS_FONT_STYLE_NORMAL;
       aFont->weight      = NS_FONT_WEIGHT_NORMAL;
