@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define PM_USE_SESSION_APIS 0
 #include <PMApplication.h>
 
 #include "nsCOMPtr.h"
@@ -145,18 +146,20 @@ nsPrintOptionsX::GetNativeData(PRInt16 aDataType, void * *_retval)
   switch (aDataType)
   {
     case kNativeDataPrintRecord:
-      // we need to clone and pass out
-      PMPageFormat    pageFormat = kPMNoPageFormat;
-      OSStatus status = ::PMNewPageFormat(&pageFormat);
-      if (status != noErr) return NS_ERROR_FAILURE;
+      {
+        // we need to clone and pass out
+        PMPageFormat    pageFormat = kPMNoPageFormat;
+        OSStatus status = ::PMNewPageFormat(&pageFormat);
+        if (status != noErr) return NS_ERROR_FAILURE;
       
-      status = ::PMCopyPageFormat(mPageFormat, pageFormat);
-      if (status != noErr) {
-        ::PMDisposePageFormat(pageFormat);
-        return NS_ERROR_FAILURE;
+        status = ::PMCopyPageFormat(mPageFormat, pageFormat);
+        if (status != noErr) {
+          ::PMDisposePageFormat(pageFormat);
+          return NS_ERROR_FAILURE;
+        }
+      
+        *_retval = pageFormat;
       }
-      
-      *_retval = pageFormat;
       break;
       
     default:
