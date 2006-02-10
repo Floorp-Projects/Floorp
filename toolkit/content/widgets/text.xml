@@ -139,6 +139,9 @@
             var span = document.createElementNS(HTML_NS, "span");
             span.className = "accesskey";
 
+            // Note that if you change the following code, see the comment of
+            // nsTextBoxFrame::UpdateAccessTitle.
+
             // If accesskey is not in string, append in parentheses
             if (accessKeyIndex < 0) {
               // If end is colon, we should insert before colon.
