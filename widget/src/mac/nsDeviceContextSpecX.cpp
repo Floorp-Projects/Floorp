@@ -116,6 +116,8 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(PRBool	aQuiet)
 
   if (! aQuiet)
   {
+		::InitCursor();
+
     Boolean accepted = false;
     status = ::PMPrintDialog(mPrintSettings, mPageFormat, &accepted);
     if (! accepted)
