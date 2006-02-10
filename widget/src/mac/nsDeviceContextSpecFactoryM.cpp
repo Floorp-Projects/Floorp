@@ -63,7 +63,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryMac :: Init(void)
  *  Get a device context specification
  *  @update   dc 12/02/98
  */
-NS_IMETHODIMP nsDeviceContextSpecFactoryMac :: CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
+NS_IMETHODIMP nsDeviceContextSpecFactoryMac :: CreateDeviceContextSpec(nsIWidget *aWidget,
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
