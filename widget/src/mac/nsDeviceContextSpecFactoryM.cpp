@@ -41,7 +41,11 @@
 #include "nsIPrintingContext.h"
 #include "nsGfxCIID.h"
 #include "plstr.h"
+#if TARGET_CARBON
+#include "nsDeviceContextSpecX.h"
+#else
 #include "nsDeviceContextSpecMac.h"
+#endif
 
 /** -------------------------------------------------------
  *  Constructor
