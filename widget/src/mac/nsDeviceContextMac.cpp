@@ -677,6 +677,11 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDev
     nsDeviceContextMac *macDC;
 
 	aContext = new nsDeviceContextMac();
+  if(nsnull == aContext){
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(aContext);
+
 	macDC = (nsDeviceContextMac*)aContext;
 	macDC->mSpec = aDevice;
 	NS_ADDREF(aDevice);
