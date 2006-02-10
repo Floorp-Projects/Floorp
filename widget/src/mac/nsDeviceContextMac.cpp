@@ -1029,7 +1029,11 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
 		if (NS_SUCCEEDED(prefs->GetIntPref("browser.display.screen_resolution", &intVal)) && intVal > 0) {
 			mPixelsPerInch = intVal;
 		}
-#ifdef XP_MACOSX
+#if 0
+// the code here will ignore the default setting of 96dpi and
+// instead force approximately 84dpi. There's no real reason for this
+// and we shipped Camino0.7 with 96dpi and got no complaints. As
+// a result, I'm removing it, but leaving the code for posterity.
 		else {
 			short hppi, vppi;
 			::ScreenRes(&hppi, &vppi);
