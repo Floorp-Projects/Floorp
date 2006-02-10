@@ -60,10 +60,14 @@ public:
     /**
      * Initialize the nsDeviceContextSpecMac for use.  This will allocate a printrecord for use
      * @update   dc 12/02/98
-     * @param aIsPrintPreview   TRUE if doing print preview, FALSE if normal printing.
+     * @param aQuiet if PR_TRUE, prevent the need for user intervention
+     *        in obtaining device context spec. if nsnull is passed in for
+     *        the aOldSpec, this will typically result in getting a device
+     *        context spec for the default output device (i.e. default
+     *        printer).
      * @return error status
      */
-    NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aIsPrintPreview);
+    NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aQuiet);
 
     /**
      * This will tell if the printmanager is currently open
@@ -80,8 +84,7 @@ public:
      */
     NS_IMETHOD ClosePrintManager();
 
-    NS_IMETHOD BeginDocument(PRInt32     aStartPage, 
-                             PRInt32     aEndPage);
+    NS_IMETHOD BeginDocument();
     
     NS_IMETHOD EndDocument();
     
