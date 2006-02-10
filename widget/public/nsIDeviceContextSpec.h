@@ -40,14 +40,22 @@
 
 #include "nsIDeviceContext.h"
 
+#ifdef MOZ_CAIRO_GFX
+class gfxASurface;
+#endif
+
 #define NS_IDEVICE_CONTEXT_SPEC_IID   \
-{ 0x9951f910, 0x78d7, 0x11d2, \
-{ 0xa8, 0x46, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
+{ 0x001eeff2, 0x72f3, 0x4d65, \
+{ 0xb0, 0x92, 0x35, 0x88, 0xb0, 0x1e, 0x48, 0xd2 } }
 
 class nsIDeviceContextSpec : public nsISupports
 {
 public:
    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_SPEC_IID)
+
+#ifdef MOZ_CAIRO_GFX
+   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **nativeSurface) = 0;
+#endif
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDeviceContextSpec,

@@ -37,7 +37,8 @@
 
 #include "nsDeviceContextSpecFactoryW.h"
 #include "nsDeviceContextSpecWin.h"
-#include "nsGfxCIID.h"
+#include "nsComponentManagerUtils.h"
+#include "nsWidgetsCID.h"
 
 nsDeviceContextSpecFactoryWin :: nsDeviceContextSpecFactoryWin()
 {

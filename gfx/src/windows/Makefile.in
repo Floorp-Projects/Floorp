@@ -76,17 +76,9 @@ CPPSRCS		= \
 		nsFontMetricsWin.cpp \
 		nsImageWin.cpp \
 		nsRegionWin.cpp \
-		nsDeviceContextSpecWin.cpp \
-		nsDeviceContextSpecFactoryW.cpp \
 		nsGfxFactoryWin.cpp \
 		nsUnicodeRange.cpp \
 		$(NULL)
-
-ifneq ($(OS_ARCH), WINCE)
-CPPSRCS +=  nsPrintOptionsWin.cpp  \
-			nsPrintSettingsWin.cpp \
-			$(NULL)
-endif
 
 EXPORTS	= nsIRenderingContextWin.h nsIDrawingSurfaceWin.h
 
@@ -99,7 +91,7 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 ifndef WINCE
-_OS_LIBS	= winspool comdlg32
+_OS_LIBS	= comdlg32
 endif
 ifdef GNU_CC
 _OS_LIBS	+= gdi32

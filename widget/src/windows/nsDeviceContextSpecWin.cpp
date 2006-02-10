@@ -40,6 +40,8 @@
 #include <winspool.h>
 #include <tchar.h>
 
+#include "nsIWidget.h"
+
 #include "nsVoidArray.h"
 #include "nsIPrintSettingsWin.h"
 
@@ -47,8 +49,11 @@
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
-#include "nsGfxCIID.h"
+#ifdef MOZ_CAIRO_GFX
+#include "gfxWindowsSurface.h"
+#endif
 
+#include "nsUnitConversion.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 
@@ -64,7 +69,7 @@
 
 #include "prlog.h"
 #ifdef PR_LOGGING 
-extern PRLogModuleInfo * kGfxPrintingLogMod;
+PRLogModuleInfo * kGfxPrintingLogMod = PR_NewLogModule("printing-widget");
 #define PR_PL(_p1)  PR_LOG(kGfxPrintingLogMod, PR_LOG_DEBUG, _p1)
 #else
 #define PR_PL(_p1)
@@ -509,6 +514,28 @@ static void CleanAndCopyString(char*& aStr, char* aNewStr)
     PL_strcpy(aStr, aNewStr);
   }
 }
+
+#ifdef MOZ_CAIRO_GFX
+NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface)
+{
+  NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
+
+  if (mDevMode) {
+    HDC dc = ::CreateDC(mDriverName, mDeviceName, NULL, mDevMode);
+
+    // have this surface take over ownership of this DC
+    nsRefPtr<gfxASurface> newSurface = new gfxWindowsSurface(dc, PR_TRUE);
+    *surface = newSurface;
+    NS_ADDREF(*surface);
+
+    return NS_OK;
+  }
+
+  *surface = nsnull;
+
+  return NS_ERROR_FAILURE;
+}
+#endif
 
 //----------------------------------------------------------------------------------
 void nsDeviceContextSpecWin::SetDeviceName(char* aDeviceName)

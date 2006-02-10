@@ -42,6 +42,7 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintOptions.h" // For nsIPrinterEnumerator
 #include "nsIPrintSettings.h"
+#include "nsIWidget.h"
 #include <windows.h>
 
 class nsDeviceContextSpecWin : public nsIDeviceContextSpec
@@ -50,6 +51,10 @@ public:
   nsDeviceContextSpecWin();
 
   NS_DECL_ISUPPORTS
+
+#ifdef MOZ_CAIRO_GFX
+  NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
+#endif
 
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
 

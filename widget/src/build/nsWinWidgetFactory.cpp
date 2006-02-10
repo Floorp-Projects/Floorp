@@ -62,6 +62,12 @@
 #include "nsScreenManagerWin.h"
 #include "nsIGenericFactory.h"
 
+// printing
+#include "nsDeviceContextSpecWin.h"
+#include "nsDeviceContextSpecFactoryW.h"
+#include "nsPrintOptionsWin.h"
+#include "nsPrintSession.h"
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
@@ -82,6 +88,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsWin, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryWin)
+
 
 static const nsModuleComponentInfo components[] =
 {
@@ -152,6 +165,26 @@ static const nsModuleComponentInfo components[] =
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
     nsScreenManagerWinConstructor },
+  { "nsPrintOptionsWin",
+    NS_PRINTSETTINGSSERVICE_CID,
+    "@mozilla.org/gfx/printsettings-service;1",
+    nsPrintOptionsWinConstructor },
+  { "Win Printer Enumerator",
+    NS_PRINTER_ENUMERATOR_CID,
+    "@mozilla.org/gfx/printerenumerator;1",
+    nsPrinterEnumeratorWinConstructor },
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionConstructor },
+  { "nsDeviceContextSpecWin",
+    NS_DEVICE_CONTEXT_SPEC_CID,
+    "@mozilla.org/gfx/devicecontextspec;1",
+    nsDeviceContextSpecWinConstructor },
+  { "nsDeviceContextSpecFactoryWin",
+    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
+    "@mozilla.org/gfx/devicecontextspecfactory;1",
+    nsDeviceContextSpecFactoryWinConstructor },
 };
 
 

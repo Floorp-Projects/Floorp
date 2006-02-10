@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  uconv \
 		  unicharutil \
 		  view \
+		  windowwatcher \
 		  $(NULL)
 
 ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
@@ -75,6 +76,9 @@ CPPSRCS		= \
 		nsPrimitiveHelpers.cpp \
 		nsXPLookAndFeel.cpp \
 		nsClipboardHelper.cpp \
+	        nsPrintOptionsImpl.cpp \
+		nsPrintSettingsImpl.cpp \
+	        nsPrintSession.cpp \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
