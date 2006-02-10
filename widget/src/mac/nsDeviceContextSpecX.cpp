@@ -46,7 +46,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
-#include "CoreServices.h"
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecX
@@ -127,13 +126,6 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIPrintSettings* aPS, PRBool	aQuiet)
   if (! aQuiet)
   {
 		::InitCursor();
-
-		//CFStringRef pathRef = CFStringCreateWithCString(NULL,"file://Macintosh HD/Developer/Examples/Printing/App/build/PrintDialogPDE.plugin",kCFStringEncodingUTF8);
-		CFStringRef pathRef = CFStringCreateWithCString(NULL,"Developer:Examples:Printing:App:build:PrintDialogPDE.plugin",kCFStringEncodingUTF8);
-		if(pathRef){
-			CFURLRef	bundleURL=CFURLCreateWithFileSystemPath(NULL,pathRef,kCFURLPOSIXPathStyle,false);
-    	CFPlugInRef	plugin = ::CFPlugInCreate(NULL,bundleURL);
-    }
 
     Boolean accepted = false;
     status = ::PMPrintDialog(mPrintSettings, mPageFormat, &accepted);
