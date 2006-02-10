@@ -278,8 +278,8 @@ Index: src/cairo-gstate.c
 Index: src/cairo.c
 ===================================================================
 --- src/cairo.c.orig	2006-02-09 17:51:53.846750000 -0800
-+++ src/cairo.c	2006-02-09 18:04:29.265625000 -0800
-@@ -347,33 +347,132 @@
++++ src/cairo.c	2006-02-09 18:56:40.375000000 -0800
+@@ -347,33 +347,133 @@
  }
  slim_hidden_def(moz_cairo_set_target);
  
@@ -370,6 +370,7 @@ Index: src/cairo.c
 -	return;
 +    cairo_surface_t *group_surface, *parent_target;
 +    cairo_pattern_t *group_pattern = NULL;
++    cairo_matrix_t group_matrix;
 +
 +    /* Grab the active surfaces */
 +    group_surface = _cairo_gstate_get_target (cr->gstate);
@@ -398,13 +399,13 @@ Index: src/cairo.c
 +        cr->status = CAIRO_STATUS_NO_MEMORY;
 +        goto done;
 +    }
- 
--    cr->status = cairoPop (cr);
++
 +    _cairo_gstate_get_matrix (cr->gstate, &group_matrix);
 +    cairo_pattern_set_matrix (group_pattern, &group_matrix);
 +done:
 +    cairo_surface_destroy (group_surface);
-+
+ 
+-    cr->status = cairoPop (cr);
 +    return group_pattern;
  }
 -*/
@@ -426,7 +427,7 @@ Index: src/cairo.c
  
  /**
   * cairo_set_operator:
-@@ -2421,6 +2520,30 @@
+@@ -2421,6 +2521,30 @@
      if (cr->status)
  	return (cairo_surface_t*) &_cairo_surface_nil;
  
