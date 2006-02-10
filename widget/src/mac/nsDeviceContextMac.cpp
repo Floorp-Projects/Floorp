@@ -38,6 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsQuickSort.h"
 #include "nsUnicodeMappingUtil.h"
+#include "nsCarbonHelpers.h"
 
 
 PRUint32 nsDeviceContextMac::mPixelsPerInch = 96;
@@ -330,8 +331,8 @@ NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName
 NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
 	// FIXME:  could just union all of the GDevice rectangles together.
-	RgnHandle grayRgn = ::GetGrayRgn();
-	Rect bounds = (**grayRgn).rgnBBox;
+	Rect bounds;
+	::GetRegionBounds ( ::GetGrayRgn(), &bounds );
 	//aWidth = bounds.right - bounds.left;
 	//aHeight = bounds.bottom - bounds.top;
 	
@@ -352,8 +353,8 @@ NS_IMETHODIMP nsDeviceContextMac::GetClientRect(nsRect &aRect)
 {
 	// FIXME: equally as broken as GetDeviceSurfaceDimensions,
 	// this doesn't do what you want with multiple screens.
-	RgnHandle grayRgn = ::GetGrayRgn();
-	Rect bounds = (**grayRgn).rgnBBox;
+	Rect bounds;
+	::GetRegionBounds ( ::GetGrayRgn(), &bounds );
 
 	aRect.x = NSToIntRound(bounds.left * mDevUnitsToAppUnits);
 	aRect.y = NSToIntRound(bounds.top * mDevUnitsToAppUnits);
