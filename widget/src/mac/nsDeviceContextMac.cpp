@@ -523,9 +523,8 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 & outWidth,
     nsCOMPtr<nsIScreen> screen;
     FindScreenForSurface ( getter_AddRefs(screen) );
     if ( screen ) {     
-      PRInt32 width, height;
-      screen->GetWidth ( &width );
-      screen->GetHeight ( &height );
+      PRInt32 width, height, ignored;
+      screen->GetRect ( &ignored, &ignored, &width, &height );
       
       outWidth =  NSToIntRound(width * mDevUnitsToAppUnits);
       outHeight =  NSToIntRound(height * mDevUnitsToAppUnits);
@@ -543,9 +542,9 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 & outWidth,
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
- *	@update 12/9/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextMac::GetClientRect(nsRect &aRect)
+NS_IMETHODIMP
+nsDeviceContextMac::GetRect(nsRect &aRect)
 {
 	if( mSpec ) {
 	  // we have a printer device
@@ -556,15 +555,48 @@ NS_IMETHODIMP nsDeviceContextMac::GetClientRect(nsRect &aRect)
 	}
 	else {
     // we have a screen device. find the screen that the window is on and
+    // return its top/left coordinates.
+    nsCOMPtr<nsIScreen> screen;
+    FindScreenForSurface ( getter_AddRefs(screen) );
+    if ( screen ) {
+      PRInt32 x, y, width, height;
+      screen->GetRect ( &x, &y, &width, &height );
+      
+      aRect.y =  NSToIntRound(y * mDevUnitsToAppUnits);
+      aRect.x =  NSToIntRound(x * mDevUnitsToAppUnits);
+      aRect.width =  NSToIntRound(width * mDevUnitsToAppUnits);
+      aRect.height =  NSToIntRound(height * mDevUnitsToAppUnits);
+ 	  }
+	  else {
+	    NS_WARNING ( "No screen for this surface. How odd" );
+	    aRect.x = aRect.y = aRect.width = aRect.height = 0;
+	  }
+	}
+
+  return NS_OK;
+  
+} // GetDeviceTopLeft
+
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ */
+NS_IMETHODIMP nsDeviceContextMac::GetClientRect(nsRect &aRect)
+{
+	if( mSpec ) {
+	  // we have a printer device
+	  aRect.x = aRect.y = 0;
+		aRect.width = (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits;
+		aRect.height = (mPageRect.bottom-mPageRect.top)*mDevUnitsToAppUnits;
+	}
+	else {
+    // we have a screen device. find the screen that the window is on and
     // return its dimensions.
     nsCOMPtr<nsIScreen> screen;
     FindScreenForSurface ( getter_AddRefs(screen) );
     if ( screen ) {      
       PRInt32 x, y, width, height;
-      screen->GetAvailTop ( &y );
-      screen->GetAvailLeft ( &x );
-      screen->GetAvailWidth ( &width );
-      screen->GetAvailHeight ( &height );
+      screen->GetAvailRect ( &x, &y, &width, &height );
       
       aRect.y =  NSToIntRound(y * mDevUnitsToAppUnits);
       aRect.x =  NSToIntRound(x * mDevUnitsToAppUnits);
@@ -573,10 +605,7 @@ NS_IMETHODIMP nsDeviceContextMac::GetClientRect(nsRect &aRect)
 	  }
 	  else {
 	    NS_WARNING ( "No screen for this surface. How odd" );
-	    aRect.x = 0;
-	    aRect.y = 0;
-	    aRect.width = 0;
-	    aRect.height = 0;
+	    aRect.x = aRect.y = aRect.width = aRect.height = 0;
 	  }
 	}
   	
