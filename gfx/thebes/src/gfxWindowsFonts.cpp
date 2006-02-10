@@ -361,7 +361,7 @@ TRY_AGAIN_SAME_SCRIPT:
         SaveDC(aDC);
 
         gfxWindowsFont *currentFont = static_cast<gfxWindowsFont*>(mGroup->mFonts[fontIndex]);
-        currentFont->UpdateFonts(cr);
+        //currentFont->UpdateFonts(cr);
         fontFace = currentFont->CairoFontFace();
         scaledFont = currentFont->CairoScaledFont();
 

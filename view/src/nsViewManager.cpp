@@ -637,7 +637,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   ctx->Clip();
 
   if (usingDoubleBuffer)
-    ctx->PushGroup();
+    ctx->PushGroup(gfxContext::CONTENT_COLOR);
 
   nsRegion opaqueRegion;
   AddCoveringWidgetsToOpaqueRegion(opaqueRegion, mContext, aView);

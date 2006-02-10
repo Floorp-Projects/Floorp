@@ -1,7 +1,7 @@
 Index: src/cairo-gstate-private.h
 ===================================================================
---- src/cairo-gstate-private.h.orig	2006-02-07 16:54:23.625000000 -0800
-+++ src/cairo-gstate-private.h	2006-02-07 16:59:51.171875000 -0800
+--- src/cairo-gstate-private.h.orig	2006-02-09 17:51:53.843750000 -0800
++++ src/cairo-gstate-private.h	2006-02-09 18:03:23.546875000 -0800
 @@ -55,7 +55,9 @@
  
      cairo_clip_t clip;
@@ -15,8 +15,8 @@ Index: src/cairo-gstate-private.h
      cairo_matrix_t ctm_inverse;
 Index: src/cairo-gstate.c
 ===================================================================
---- src/cairo-gstate.c.orig	2006-02-07 16:55:54.671875000 -0800
-+++ src/cairo-gstate.c	2006-02-07 16:59:51.171875000 -0800
+--- src/cairo-gstate.c.orig	2006-02-09 18:01:01.859375000 -0800
++++ src/cairo-gstate.c	2006-02-09 18:03:23.562500000 -0800
 @@ -119,6 +119,8 @@
      _cairo_clip_init (&gstate->clip, target);
  
@@ -277,9 +277,9 @@ Index: src/cairo-gstate.c
  			  cairo_pattern_t *source)
 Index: src/cairo.c
 ===================================================================
---- src/cairo.c.orig	2006-02-07 16:54:23.652000000 -0800
-+++ src/cairo.c	2006-02-07 17:00:28.109375000 -0800
-@@ -347,33 +347,116 @@
+--- src/cairo.c.orig	2006-02-09 17:51:53.846750000 -0800
++++ src/cairo.c	2006-02-09 18:04:29.265625000 -0800
+@@ -347,33 +347,132 @@
  }
  slim_hidden_def(moz_cairo_set_target);
  
@@ -288,15 +288,9 @@ Index: src/cairo.c
 + * cairo_push_group:
 + * @cr: a cairo context
 + *
-+ * Pushes a temporary surface onto the rendering stack, redirecting
-+ * all rendering into it.  The surface dimensions are the size of
-+ * the current clipping bounding box.  Initially, this surface
-+ * is cleared to fully transparent black (0,0,0,1).
-+ *
-+ * cairo_push_group() calls cairo_save() so that any changes to the
-+ * graphics state will not be visible after cairo_pop_group() or
-+ * cairo_pop_group_with_alpha().  See cairo_pop_group() and
-+ * cairo_pop_group_with_alpha().
++ * Pushes a CAIRO_CONTENT_COLOR_ALPHA temporary surface onto
++ * the rendering stack, redirecting all rendering into it.
++ * See cairo_push_group_with_content().
 + */
 +
  void
@@ -304,6 +298,34 @@ Index: src/cairo.c
  {
 -    if (cr->status)
 -	return;
++    cairo_push_group_with_content (cr, CAIRO_CONTENT_COLOR_ALPHA);
++}
++slim_hidden_def(cairo_push_group);
+ 
+-    cr->status = cairoPush (cr);
+-    if (cr->status)
+-	return;
++/**
++ * cairo_push_group_with_content:
++ * @cr: a cairo context
++ * @content: a %cairo_content_t indicating the type of group that
++ *           will be created
++ *
++ * Pushes a temporary surface onto the rendering stack, redirecting
++ * all rendering into it.  The surface dimensions are the size of
++ * the current clipping bounding box.  Initially, this surface
++ * is painted with CAIRO_OPERATOR_CLEAR.
++ *
++ * cairo_push_group() calls cairo_save() so that any changes to the
++ * graphics state will not be visible after cairo_pop_group() or
++ * cairo_pop_group_with_alpha().  See cairo_pop_group() and
++ * cairo_pop_group_with_alpha().
++ */
+ 
+-    cr->status = _cairo_gstate_begin_group (cr->gstate);
++void
++cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
++{
 +    cairo_status_t status;
 +    cairo_rectangle_t extents;
 +    cairo_surface_t *group_surface = NULL;
@@ -315,17 +337,15 @@ Index: src/cairo.c
 +	goto bail;
 +
 +    group_surface = cairo_surface_create_similar (_cairo_gstate_get_target (cr->gstate),
-+						  CAIRO_CONTENT_COLOR_ALPHA,
++						  content,
 +						  extents.width,
 +						  extents.height);
 +    status = cairo_surface_status (group_surface);
 +    if (status)
 +	goto bail;
 +
-+    /* XXX hrm. How best to make sure that drawing still happens in
-+     * the right place?  Is this correct? Need to double-check the
-+     * coordinate spaces.
-+     */
++    /* Set device offsets on the new surface so that logically it appears at
++     * the same location on the parent surface. */
 +    cairo_surface_set_device_offset (group_surface, -extents.x, -extents.y);
 +
 +    /* create a new gstate for the redirect */
@@ -339,12 +359,15 @@ Index: src/cairo.c
 +    cairo_surface_destroy (group_surface);
 +    if (status)
 +	_cairo_set_error (cr, status);
-+}
-+slim_hidden_def(cairo_push_group);
-+
+ }
++slim_hidden_def(cairo_push_group_with_content);
+ 
+-void
 +cairo_pattern_t *
-+cairo_pop_group (cairo_t *cr)
-+{
+ cairo_pop_group (cairo_t *cr)
+ {
+-    if (cr->status)
+-	return;
 +    cairo_surface_t *group_surface, *parent_target;
 +    cairo_pattern_t *group_pattern = NULL;
 +
@@ -365,7 +388,7 @@ Index: src/cairo.c
 +
 +    cairo_restore (cr);
  
--    cr->status = cairoPush (cr);
+-    cr->status = _cairo_gstate_end_group (cr->gstate);
      if (cr->status)
 -	return;
 +	goto done;
@@ -376,41 +399,34 @@ Index: src/cairo.c
 +        goto done;
 +    }
  
--    cr->status = _cairo_gstate_begin_group (cr->gstate);
+-    cr->status = cairoPop (cr);
 +    _cairo_gstate_get_matrix (cr->gstate, &group_matrix);
-+    cairo_pattern_set_matrix (cr->gstate, &group_matrix);
++    cairo_pattern_set_matrix (group_pattern, &group_matrix);
 +done:
 +    cairo_surface_destroy (group_surface);
 +
 +    return group_pattern;
  }
+-*/
 +slim_hidden_def(cairo_pop_group);
- 
- void
--cairo_pop_group (cairo_t *cr)
++
++void
 +cairo_pop_group_to_source (cairo_t *cr)
- {
--    if (cr->status)
--	return;
++{
 +    cairo_pattern_t *group_pattern;
- 
--    cr->status = _cairo_gstate_end_group (cr->gstate);
--    if (cr->status)
--	return;
++
 +    group_pattern = cairo_pop_group (cr);
 +    if (!group_pattern)
 +        return;
- 
--    cr->status = cairoPop (cr);
++
 +    cairo_set_source (cr, group_pattern);
 +    cairo_pattern_destroy (group_pattern);
- }
--*/
++}
 +slim_hidden_def(cairo_pop_group_to_source);
  
  /**
   * cairo_set_operator:
-@@ -2421,6 +2504,30 @@
+@@ -2421,6 +2520,30 @@
      if (cr->status)
  	return (cairo_surface_t*) &_cairo_surface_nil;
  
@@ -443,9 +459,36 @@ Index: src/cairo.c
  
 Index: src/cairo.h
 ===================================================================
---- src/cairo.h.orig	2006-02-07 16:57:25.890625000 -0800
-+++ src/cairo.h	2006-02-07 17:00:08.843750000 -0800
-@@ -255,13 +255,14 @@
+--- src/cairo.h.orig	2006-02-09 17:51:53.847750000 -0800
++++ src/cairo.h	2006-02-09 18:04:02.390625000 -0800
+@@ -197,6 +197,26 @@
+ } cairo_status_t;
+ 
+ /**
++ * cairo_content_t
++ * @CAIRO_CONTENT_COLOR: The surface will hold color content only.
++ * @CAIRO_CONTENT_ALPHA: The surface will hold alpha content only.
++ * @CAIRO_CONTENT_COLOR_ALPHA: The surface will hold color and alpha content.
++ *
++ * @cairo_content_t is used to describe the content that a surface will
++ * contain, whether color information, alpha information (translucence
++ * vs. opacity), or both.
++ *
++ * Note: The large values here are designed to keep cairo_content_t
++ * values distinct from cairo_format_t values so that the
++ * implementation can detect the error if users confuse the two types.
++ */
++typedef enum _cairo_content {
++    CAIRO_CONTENT_COLOR		= 0x1000,
++    CAIRO_CONTENT_ALPHA		= 0x2000,
++    CAIRO_CONTENT_COLOR_ALPHA	= 0x3000
++} cairo_content_t;
++
++/**
+  * cairo_write_func_t:
+  * @closure: the output closure
+  * @data: the buffer containing the data to write
+@@ -255,13 +275,17 @@
  cairo_public void
  moz_cairo_set_target (cairo_t *cr, cairo_surface_t *target);
  
@@ -453,7 +496,9 @@ Index: src/cairo.h
  cairo_public void
  cairo_push_group (cairo_t *cr);
  
--cairo_public void
+ cairo_public void
++cairo_push_group_with_content (cairo_t *cr, cairo_content_t content);
++
 +cairo_public cairo_pattern_t *
  cairo_pop_group (cairo_t *cr);
 -*/
@@ -463,7 +508,7 @@ Index: src/cairo.h
  
  /* Modify state */
  
-@@ -996,6 +997,9 @@
+@@ -996,6 +1020,9 @@
  cairo_public cairo_surface_t *
  cairo_get_target (cairo_t *cr);
  
@@ -473,10 +518,37 @@ Index: src/cairo.h
  typedef enum _cairo_path_data_type {
      CAIRO_PATH_MOVE_TO,
      CAIRO_PATH_LINE_TO,
+@@ -1121,26 +1148,6 @@
+ 
+ /* Surface manipulation */
+ 
+-/**
+- * cairo_content_t
+- * @CAIRO_CONTENT_COLOR: The surface will hold color content only.
+- * @CAIRO_CONTENT_ALPHA: The surface will hold alpha content only.
+- * @CAIRO_CONTENT_COLOR_ALPHA: The surface will hold color and alpha content.
+- *
+- * @cairo_content_t is used to describe the content that a surface will
+- * contain, whether color information, alpha information (translucence
+- * vs. opacity), or both.
+- *
+- * Note: The large values here are designed to keep cairo_content_t
+- * values distinct from cairo_format_t values so that the
+- * implementation can detect the error if users confuse the two types.
+- */
+-typedef enum _cairo_content {
+-    CAIRO_CONTENT_COLOR		= 0x1000,
+-    CAIRO_CONTENT_ALPHA		= 0x2000,
+-    CAIRO_CONTENT_COLOR_ALPHA	= 0x3000
+-} cairo_content_t;
+-
+ cairo_public cairo_surface_t *
+ cairo_surface_create_similar (cairo_surface_t  *other,
+ 			      cairo_content_t	content,
 Index: src/cairoint.h
 ===================================================================
---- src/cairoint.h.orig	2006-02-07 16:55:54.687500000 -0800
-+++ src/cairoint.h	2006-02-07 16:59:51.265625000 -0800
+--- src/cairoint.h.orig	2006-02-09 18:01:01.890625000 -0800
++++ src/cairoint.h	2006-02-09 18:03:23.656250000 -0800
 @@ -1077,9 +1077,24 @@
  cairo_private void
  _moz_cairo_gstate_set_target (cairo_gstate_t *gstate, cairo_surface_t *target);
@@ -514,8 +586,8 @@ Index: src/cairoint.h
  CAIRO_END_DECLS
 Index: test/Makefile.am
 ===================================================================
---- test/Makefile.am.orig	2006-02-07 16:54:23.790000000 -0800
-+++ test/Makefile.am	2006-02-07 16:59:51.265625000 -0800
+--- test/Makefile.am.orig	2006-02-09 17:51:53.912750000 -0800
++++ test/Makefile.am	2006-02-09 18:03:23.671875000 -0800
 @@ -59,7 +59,8 @@
  unantialiased-shapes		\
  unbounded-operator		\
@@ -537,7 +609,7 @@ Index: test/Makefile.am
 Index: test/push-group.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ test/push-group.c	2006-02-07 16:59:51.265625000 -0800
++++ test/push-group.c	2006-02-09 18:03:23.671875000 -0800
 @@ -0,0 +1,119 @@
 +/*
 + * Copyright © 2005 Mozilla Corporation
