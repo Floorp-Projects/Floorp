@@ -915,7 +915,7 @@ bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aF
 	//				fontNum, nsFontMetricsMac::SetFont() wouldn't need to call this at all.
 	InitFontInfoList();
     FontNameKey key(aFontName);
-	aFontNum = (short)gFontInfoList->Get(&key);
+	aFontNum = (short) NS_PTR_TO_INT32(gFontInfoList->Get(&key));
 	return (aFontNum != 0);
 }
 
@@ -1116,7 +1116,7 @@ EnumerateFont(nsHashKey *aKey, void *aData, void* closure)
   PRBool match = PR_FALSE;
 #if TARGET_CARBON
   // we need to match the cast of FMFontFamily in nsDeviceContextMac :: InitFontInfoList()
-  FMFontFamily fontFamily = (FMFontFamily) aData;
+  FMFontFamily fontFamily = (FMFontFamily) NS_PTR_TO_INT32(aData);
   TextEncoding fontEncoding;
   OSStatus status = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
   if (noErr == status) {
