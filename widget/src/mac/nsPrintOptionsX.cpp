@@ -81,7 +81,7 @@ nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
   }
 
   nsXPIDLString printerName;
-  nsresult rv = GetDefaultPrinterName(getter_Copies(printerName));
+  rv = GetDefaultPrinterName(getter_Copies(printerName));
   NS_ENSURE_SUCCESS(rv, rv);
   (*_retval)->SetPrinterName(printerName.get());
 
