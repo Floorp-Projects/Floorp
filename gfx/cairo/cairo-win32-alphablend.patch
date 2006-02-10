@@ -122,15 +122,3 @@ Index: cairo/src/cairo-win32-surface.c
  };
  
  /*
-Index: cairo/src/cairo-win32-font.c
-===================================================================
---- cairo.orig/src/cairo-win32-font.c	2006-02-10 11:25:30.046875000 -0800
-+++ cairo/src/cairo-win32-font.c	2006-02-10 11:26:38.328125000 -0800
-@@ -1127,7 +1127,6 @@
- 	return CAIRO_STATUS_SUCCESS;
- 
-     if (_cairo_surface_is_win32 (generic_surface) &&
--	surface->format == CAIRO_FORMAT_RGB24 &&
- 	op == CAIRO_OPERATOR_OVER &&
- 	_cairo_pattern_is_opaque_solid (pattern)) {
- 

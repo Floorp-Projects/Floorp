@@ -1,7 +1,7 @@
 Index: src/cairo-gstate.c
 ===================================================================
---- src/cairo-gstate.c.orig	2006-02-09 17:51:58.062500000 -0800
-+++ src/cairo-gstate.c	2006-02-09 18:01:01.859375000 -0800
+--- src/cairo-gstate.c.orig	2006-02-10 11:20:53.187500000 -0800
++++ src/cairo-gstate.c	2006-02-10 14:05:49.891625000 -0800
 @@ -508,37 +508,10 @@
      return gstate->stroke_style.miter_limit;
  }
@@ -116,8 +116,8 @@ Index: src/cairo-gstate.c
  
 Index: src/cairo-path.c
 ===================================================================
---- src/cairo-path.c.orig	2006-02-09 17:51:58.063500000 -0800
-+++ src/cairo-path.c	2006-02-09 18:01:01.875000000 -0800
+--- src/cairo-path.c.orig	2006-02-10 11:20:53.188500000 -0800
++++ src/cairo-path.c	2006-02-10 11:30:54.359375000 -0800
 @@ -548,3 +548,40 @@
  
      return CAIRO_STATUS_SUCCESS;
@@ -161,8 +161,8 @@ Index: src/cairo-path.c
 +
 Index: src/cairo-surface-fallback.c
 ===================================================================
---- src/cairo-surface-fallback.c.orig	2006-02-09 17:51:58.064500000 -0800
-+++ src/cairo-surface-fallback.c	2006-02-09 18:01:54.156250000 -0800
+--- src/cairo-surface-fallback.c.orig	2006-02-10 11:20:53.190500000 -0800
++++ src/cairo-surface-fallback.c	2006-02-10 11:30:54.375000000 -0800
 @@ -214,6 +214,21 @@
       */
      _cairo_pattern_init_for_surface (&dst_pattern, dst);
@@ -296,8 +296,8 @@ Index: src/cairo-surface-fallback.c
  
 Index: src/cairo-surface.c
 ===================================================================
---- src/cairo-surface.c.orig	2006-02-09 17:51:58.066500000 -0800
-+++ src/cairo-surface.c	2006-02-09 18:01:01.875000000 -0800
+--- src/cairo-surface.c.orig	2006-02-10 11:20:53.191500000 -0800
++++ src/cairo-surface.c	2006-02-10 11:30:54.375000000 -0800
 @@ -89,6 +89,22 @@
      0					/* current_clip_serial */
  };
@@ -896,8 +896,8 @@ Index: src/cairo-surface.c
       * non-repeating sources and masks. Other sources and masks can be ignored.
 Index: src/cairo-traps.c
 ===================================================================
---- src/cairo-traps.c.orig	2006-02-09 17:51:58.068500000 -0800
-+++ src/cairo-traps.c	2006-02-09 18:01:01.890625000 -0800
+--- src/cairo-traps.c.orig	2006-02-10 11:20:53.192500000 -0800
++++ src/cairo-traps.c	2006-02-10 11:30:54.375000000 -0800
 @@ -258,6 +258,54 @@
      }
  }
@@ -960,8 +960,8 @@ Index: src/cairo-traps.c
 -
 Index: src/cairoint.h
 ===================================================================
---- src/cairoint.h.orig	2006-02-09 17:51:58.069500000 -0800
-+++ src/cairoint.h	2006-02-09 18:01:01.890625000 -0800
+--- src/cairoint.h.orig	2006-02-10 11:20:53.195500000 -0800
++++ src/cairoint.h	2006-02-10 14:05:49.896625000 -0800
 @@ -1466,6 +1466,13 @@
  			  double *x1, double *y1,
  			  double *x2, double *y2);
@@ -992,8 +992,8 @@ Index: src/cairoint.h
  _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);
 Index: test/buffer-diff.c
 ===================================================================
---- test/buffer-diff.c.orig	2006-02-09 17:51:58.078500000 -0800
-+++ test/buffer-diff.c	2006-02-09 18:01:01.890625000 -0800
+--- test/buffer-diff.c.orig	2006-02-10 11:20:53.204500000 -0800
++++ test/buffer-diff.c	2006-02-10 11:30:54.390625000 -0800
 @@ -62,7 +62,9 @@
  		  unsigned char *_buf_diff,
  		  int		width,
@@ -1173,8 +1173,8 @@ Index: test/buffer-diff.c
  	FILE *png_file = fopen (filename_diff, "wb");
 Index: test/buffer-diff.h
 ===================================================================
---- test/buffer-diff.h.orig	2006-02-09 17:51:58.083500000 -0800
-+++ test/buffer-diff.h	2006-02-09 18:01:01.890625000 -0800
+--- test/buffer-diff.h.orig	2006-02-10 11:20:53.212500000 -0800
++++ test/buffer-diff.h	2006-02-10 11:30:54.390625000 -0800
 @@ -36,7 +36,9 @@
  	     unsigned char *buf_diff,
  	     int	    width,
@@ -1224,8 +1224,8 @@ Index: test/buffer-diff.h
  #endif
 Index: test/cairo-test.c
 ===================================================================
---- test/cairo-test.c.orig	2006-02-09 17:51:58.091500000 -0800
-+++ test/cairo-test.c	2006-02-09 18:01:01.906250000 -0800
+--- test/cairo-test.c.orig	2006-02-10 11:20:53.217500000 -0800
++++ test/cairo-test.c	2006-02-10 11:30:54.421875000 -0800
 @@ -61,6 +61,8 @@
  #define CAIRO_TEST_REF_SUFFIX "-ref.png"
  #define CAIRO_TEST_DIFF_SUFFIX "-diff.png"
@@ -1409,8 +1409,8 @@ Index: test/cairo-test.c
      if (ret == CAIRO_TEST_UNTESTED)
 Index: test/imagediff.c
 ===================================================================
---- test/imagediff.c.orig	2006-02-09 17:51:58.097500000 -0800
-+++ test/imagediff.c	2006-02-09 18:01:01.906250000 -0800
+--- test/imagediff.c.orig	2006-02-10 11:20:53.225500000 -0800
++++ test/imagediff.c	2006-02-10 11:30:54.421875000 -0800
 @@ -34,48 +34,31 @@
  int 
  main (int argc, char *argv[])
@@ -1474,8 +1474,8 @@ Index: test/imagediff.c
  }
 Index: test/xlib-surface.c
 ===================================================================
---- test/xlib-surface.c.orig	2006-02-09 17:51:58.102500000 -0800
-+++ test/xlib-surface.c	2006-02-09 18:01:01.906250000 -0800
+--- test/xlib-surface.c.orig	2006-02-10 11:20:53.229500000 -0800
++++ test/xlib-surface.c	2006-02-10 11:30:54.421875000 -0800
 @@ -160,6 +160,8 @@
  				       diff_data + offset,
  				       SIZE - OFFSCREEN_OFFSET,
@@ -1494,27 +1494,3 @@ Index: test/xlib-surface.c
  				       4 * SIZE);
      }
  
-Index: src/cairo-win32-font.c
-===================================================================
---- src/cairo-win32-font.c.orig	2006-02-09 17:54:49.062500000 -0800
-+++ src/cairo-win32-font.c	2006-02-09 18:03:04.500000000 -0800
-@@ -1142,7 +1142,8 @@
- 			 ((int)solid_pattern->color.blue_short) >> 8);
- 
- 	status = _draw_glyphs_on_surface (surface, scaled_font, new_color,
--					  0, 0,
-+					  - surface->base.device_x_offset,
-+					  - surface->base.device_y_offset,
- 					  glyphs, num_glyphs);
- 	
- 	return status;
-@@ -1169,7 +1170,8 @@
- 	FillRect (tmp_surface->dc, &r, GetStockObject (WHITE_BRUSH));
- 
- 	_draw_glyphs_on_surface (tmp_surface, scaled_font, RGB (0, 0, 0),
--				 dest_x, dest_y,
-+				 dest_x - surface->base.device_x_offset,
-+				 dest_y - surface->base.device_y_offset,
- 				 glyphs, num_glyphs);
- 
- 	if (scaled_font->quality == CLEARTYPE_QUALITY) {
