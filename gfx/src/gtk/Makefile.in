@@ -72,8 +72,6 @@ ifdef MOZ_ENABLE_XPRINT
 REQUIRES	+= xprintutil
 endif
 
-CSRCS		= nsPrintdGTK.c
-
 # Code shared between GTK+, Xlib and Xprint gfx modules
 X11SHARED_LCPPSRCS = \
 		nsAntiAliasedGlyph.cpp \
@@ -93,15 +91,12 @@ endif
                 
 CPPSRCS		= \
 		nsDeviceContextGTK.cpp \
-		nsDeviceContextSpecFactoryG.cpp \
-		nsDeviceContextSpecG.cpp \
 		nsDrawingSurfaceGTK.cpp \
 		nsGfxFactoryGTK.cpp \
 		nsGraphicsStateGTK.cpp \
 		nsImageGTK.cpp \
 		nsGCCache.cpp \
 		nsRenderingContextGTK.cpp \
-		nsPrintOptionsGTK.cpp \
 		nsFontMetricsUtils.cpp \
 		$(NULL)
 

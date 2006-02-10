@@ -83,6 +83,7 @@ CSRCS		= \
 		mozcontainer.c \
 		mozdrawingarea.c \
 		keysym2ucs.c \
+		nsPrintdGTK.c \
 		$(NULL)
 
 CPPSRCS		= \
@@ -101,6 +102,9 @@ CPPSRCS		= \
 		nsNativeKeyBindings.cpp \
 		nsScreenGtk.cpp \
 		nsScreenManagerGtk.cpp \
+		nsDeviceContextSpecFactoryG.cpp \
+		nsDeviceContextSpecG.cpp \
+		nsPrintOptionsGTK.cpp \
 		$(NULL)
 
 # build our subdirs, too
@@ -143,7 +147,13 @@ DEFINES         += -DUSE_XIM
 
 ifdef MOZ_ENABLE_CAIRO_GFX
 DEFINES		+= -DCAIRO_GFX
+EXTRA_DSO_LDOPTS += -lgfxpsshar
 endif
+
+ifdef MOZ_ENABLE_POSTSCRIPT
+DEFINES         += -DUSE_POSTSCRIPT
+endif
+
 
 DEFINES		+= 
 INCLUDES	+= \

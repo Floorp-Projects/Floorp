@@ -409,6 +409,33 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
 #error "This should not happen"
 #endif
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxPDFSurface.h"
+#include "nsUnitConversion.h"
+NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurface)
+{
+  const char *path = nsnull;
+  GetPath(&path);
+
+  PRInt32 width, height;
+  GetPageSizeInTwips(&width, &height);
+  double w, h;
+  // convert twips to points
+  w = width/20;
+  h = height/20;
+
+  printf("%s, %d, %d\n", path, width, height);
+
+  gfxPDFSurface *surface = new gfxPDFSurface(path, w, h);
+  surface->SetDPI(600, 600);
+  
+  *aSurface = surface;
+  NS_ADDREF(*aSurface);
+
+  return NS_OK;
+}
+#endif
+
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecGTK
  *  @update   dc 2/15/98
