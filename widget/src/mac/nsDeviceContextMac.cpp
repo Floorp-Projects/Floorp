@@ -39,23 +39,24 @@
 #include "nsQuickSort.h"
 #include "nsUnicodeMappingUtil.h"
 #include "nsCarbonHelpers.h"
+#include "nsRegionMac.h"
+#include "nsIScreenManager.h"
+#include "nsIServiceManager.h"
 
 
 PRUint32 nsDeviceContextMac::mPixelsPerInch = 96;
 PRBool nsDeviceContextMac::mDisplayVerySmallFonts = true;
+PRUint32 nsDeviceContextMac::sNumberOfScreens = 0;
 
-
-static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
  */
 nsDeviceContextMac :: nsDeviceContextMac()
+  : mSpec(nsnull), mSurface(nsnull), mOldPort(nsnull)
 {
-
   NS_INIT_REFCNT();
-  mSpec = nsnull;
   
 }
 
@@ -73,18 +74,19 @@ nsDeviceContextMac :: ~nsDeviceContextMac()
  */
 NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 {
-GDHandle			thegd;
-PixMapHandle	thepix;
-double				pix_inch;
+  // cache the screen manager service for later
+  nsresult ignore;
+  mScreenManager = do_GetService("component://netscape/gfx/screenmanager", &ignore);
+  NS_ASSERTION ( mScreenManager, "No screen manager, we're in trouble" );
+  if ( !mScreenManager )
+    return NS_ERROR_FAILURE;
 
-	// this is a windowptr, or grafptr, native to macintosh only
-	mSurface = aNativeWidget;
+  // figure out how many monitors there are.
+  if ( !sNumberOfScreens )
+    mScreenManager->GetNumberOfScreens(&sNumberOfScreens);
 
-	// get depth and resolution
-  thegd = ::GetMainDevice();
-	thepix = (**thegd).gdPMap;					// dereferenced handle: don't move memory below!
-	mDepth = (**thepix).pixelSize;
-  pix_inch = GetScreenResolution();		//Fix2X((**thepix).hRes);
+	// get resolution
+  double pix_inch = GetScreenResolution();		//Fix2X((**thepix).hRes);
 	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(72);
 	mPixelsToTwips = 1.0f/mTwipsToPixels;
 	
@@ -275,7 +277,16 @@ NS_IMETHODIMP nsDeviceContextMac :: GetDrawingSurface(nsIRenderingContext &aCont
  */
 NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
 {
-  aDepth = mDepth;
+  nsCOMPtr<nsIScreen> screen;
+  FindScreenForSurface ( getter_AddRefs(screen) );
+  if ( screen ) {
+    PRInt32 depth;
+    screen->GetPixelDepth ( &depth );
+    aDepth = NS_STATIC_CAST ( PRUint32, depth );
+  }
+  else 
+    aDepth = 1;
+
   return NS_OK;
 }
 
@@ -346,27 +357,104 @@ NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName
 		return NS_ERROR_FAILURE;
 }
 
+
+//
+// FindScreenForSurface
+//
+// Determines which screen intersects the largest area of the given surface.
+//
+void
+nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
+{
+  // optimize for the case where we only have one monitor.
+  static nsCOMPtr<nsIScreen> sPrimaryScreen;
+  if ( !sPrimaryScreen && mScreenManager )
+    mScreenManager->GetPrimaryScreen ( getter_AddRefs(sPrimaryScreen) );  
+  if ( sNumberOfScreens == 1 ) {
+    NS_IF_ADDREF(*outScreen = sPrimaryScreen.get());
+    return;
+  }
+  
+  GrafPtr savedPort;
+  ::GetPort ( &savedPort );
+  
+  // we have a widget stashed inside, get a native WindowRef out of it
+  nsIWidget* widget = reinterpret_cast<nsIWidget*>(mWidget);      // PRAY!
+  NS_ASSERTION ( widget, "No Widget --> No Window" );
+  if ( !widget ) {
+    NS_IF_ADDREF(*outScreen = sPrimaryScreen.get());              // bail out with the main screen just to be safe.
+    return;
+  }  
+ 	WindowRef window = reinterpret_cast<WindowRef>(widget->GetNativeData(NS_NATIVE_DISPLAY));
+  Rect bounds;
+  ::GetWindowPortBounds ( window, &bounds );
+
+  nsresult rv = NS_OK;
+  if ( mScreenManager ) {
+    if ( !(bounds.top || bounds.left || bounds.bottom || bounds.right) ) {
+      NS_WARNING ( "trying to find screen for sizeless window" );
+      NS_IF_ADDREF(*outScreen = sPrimaryScreen.get());
+    }
+    else {
+      // convert window bounds to global coordinates
+      Point topLeft = { bounds.top, bounds.left };
+      Point bottomRight = { bounds.bottom, bounds.right };
+      ::LocalToGlobal ( &topLeft );
+      ::LocalToGlobal ( &bottomRight );
+      Rect globalWindowBounds = { topLeft.v, topLeft.h, bottomRight.v, bottomRight.h } ;
+        
+      // subtract out the height of title bar from the size
+      StRegionFromPool structRgn;
+      ::GetWindowStructureRgn(window, structRgn);
+      Rect structBox;
+      ::GetRegionBounds ( structRgn, &structBox );
+      PRInt32 wTitleHeight = topLeft.v - 1 - structBox.top;
+      globalWindowBounds.top -= wTitleHeight;
+      
+      mScreenManager->ScreenForRect ( globalWindowBounds.left, globalWindowBounds.top, 
+                                       globalWindowBounds.bottom - globalWindowBounds.top, 
+                                       globalWindowBounds.right - globalWindowBounds.left, outScreen );
+    }
+  }
+  else
+    *outScreen = nsnull;
+  
+  ::SetPort ( savedPort );
+  
+} // FindScreenForSurface
+
+
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
+NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 & outWidth, PRInt32 & outHeight)
 {
-	// FIXME:  could just union all of the GDevice rectangles together.
-	Rect bounds;
-	::GetRegionBounds ( ::GetGrayRgn(), &bounds );
-	//aWidth = bounds.right - bounds.left;
-	//aHeight = bounds.bottom - bounds.top;
-	
-	
-	if(mSpec) {
-		aWidth = (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits;
-		aHeight = (mPageRect.bottom-mPageRect.top)*mDevUnitsToAppUnits;
-	}else {
-		aHeight = NSToIntRound((bounds.bottom - bounds.top)*mDevUnitsToAppUnits);
-		aWidth = NSToIntRound((bounds.right - bounds.left) * mDevUnitsToAppUnits);
+	if( mSpec ) {
+	  // we have a printer device
+		outWidth = (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits;
+		outHeight = (mPageRect.bottom-mPageRect.top)*mDevUnitsToAppUnits;
 	}
-	
+	else {
+    // we have a screen device. find the screen that the window is on and
+    // return its dimensions.
+    nsCOMPtr<nsIScreen> screen;
+    FindScreenForSurface ( getter_AddRefs(screen) );
+    if ( screen ) {     
+      PRInt32 width, height;
+      screen->GetWidth ( &width );
+      screen->GetHeight ( &height );
+      
+      outWidth =  NSToIntRound(width * mDevUnitsToAppUnits);
+      outHeight =  NSToIntRound(height * mDevUnitsToAppUnits);
+ 	  }
+	  else {
+	    NS_WARNING ( "No screen for this surface. How odd" );
+	    outHeight = 0;
+	    outWidth = 0;
+	  }
+	}
+  	
 	return NS_OK;	
 }
 
@@ -377,20 +465,46 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
  */
 NS_IMETHODIMP nsDeviceContextMac::GetClientRect(nsRect &aRect)
 {
-	// FIXME: equally as broken as GetDeviceSurfaceDimensions,
-	// this doesn't do what you want with multiple screens.
-	Rect bounds;
-	::GetRegionBounds ( ::GetGrayRgn(), &bounds );
-
-	aRect.x = NSToIntRound(bounds.left * mDevUnitsToAppUnits);
-	aRect.y = NSToIntRound(bounds.top * mDevUnitsToAppUnits);
-	aRect.width = NSToIntRound((bounds.right - bounds.left) * mDevUnitsToAppUnits);
-	aRect.height = NSToIntRound((bounds.bottom - bounds.top) * mDevUnitsToAppUnits);
-	
+	if( mSpec ) {
+	  // we have a printer device
+	  aRect.x = 0;
+	  aRect.y = 0;
+		aRect.width = (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits;
+		aRect.height = (mPageRect.bottom-mPageRect.top)*mDevUnitsToAppUnits;
+	}
+	else {
+    // we have a screen device. find the screen that the window is on and
+    // return its dimensions.
+    nsCOMPtr<nsIScreen> screen;
+    FindScreenForSurface ( getter_AddRefs(screen) );
+    if ( screen ) {      
+      PRInt32 x, y, width, height;
+      screen->GetAvailTop ( &y );
+      screen->GetAvailLeft ( &x );
+      screen->GetAvailWidth ( &width );
+      screen->GetAvailHeight ( &height );
+      
+      aRect.y =  NSToIntRound(y * mDevUnitsToAppUnits);
+      aRect.x =  NSToIntRound(x * mDevUnitsToAppUnits);
+      aRect.width =  NSToIntRound(width * mDevUnitsToAppUnits);
+      aRect.height =  NSToIntRound(height * mDevUnitsToAppUnits);
+	  }
+	  else {
+	    NS_WARNING ( "No screen for this surface. How odd" );
+	    aRect.x = 0;
+	    aRect.y = 0;
+	    aRect.width = 0;
+	    aRect.height = 0;
+	  }
+	}
+  	
 	return NS_OK;	
 }
 
+
 #pragma mark -
+
+
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext)
