@@ -85,8 +85,19 @@ static const XPCOMFunctions kFrozenFunctions = {
     &NS_CStringContainerInit2_P,
     &NS_StringGetMutableData_P,
     &NS_CStringGetMutableData_P,
-    &NS_InitXPCOM3_P
-};  
+    &NS_InitXPCOM3_P,
+
+    // these functions were added post 1.8
+    &NS_DebugBreak_P,
+    &NS_LogInit_P,
+    &NS_LogTerm_P,
+    &NS_LogAddRef_P,
+    &NS_LogRelease_P,
+    &NS_LogCtor_P,
+    &NS_LogDtor_P,
+    &NS_LogCOMPtrAddRef_P,
+    &NS_LogCOMPtrRelease_P
+};
 
 EXPORT_XPCOM_API(nsresult)
 NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* /* libraryPath */)
@@ -220,6 +231,72 @@ NS_Free(void* ptr)
 {
   NS_Free_P(ptr);
 }
+
+#undef NS_DebugBreak
+EXPORT_XPCOM_API(void)
+NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
+              const char *aFile, PRInt32 aLine)
+{
+  NS_DebugBreak_P(aSeverity, aStr, aExpr, aFile, aLine);
+}
+
+#undef NS_LogInit
+EXPORT_XPCOM_API(void)
+NS_LogInit()
+{
+  NS_LogInit_P();
+}
+
+#undef NS_LogTerm
+EXPORT_XPCOM_API(void)
+NS_LogTerm()
+{
+  NS_LogTerm_P();
+}
+
+#undef NS_LogAddRef
+EXPORT_XPCOM_API(void)
+NS_LogAddRef(void* aPtr, nsrefcnt aNewRefCnt,
+             const char *aTypeName, PRUint32 aInstanceSize)
+{
+  NS_LogAddRef_P(aPtr, aNewRefCnt, aTypeName, aInstanceSize);
+}
+
+#undef NS_LogRelease
+EXPORT_XPCOM_API(void)
+NS_LogRelease(void* aPtr, nsrefcnt aNewRefCnt, const char *aTypeName)
+{
+  NS_LogRelease_P(aPtr, aNewRefCnt, aTypeName);
+}
+
+#undef NS_LogCtor
+EXPORT_XPCOM_API(void)
+NS_LogCtor(void *aPtr, const char *aTypeName, PRUint32 aInstanceSize)
+{
+  NS_LogCtor_P(aPtr, aTypeName, aInstanceSize);
+}
+
+#undef NS_LogDtor
+EXPORT_XPCOM_API(void)
+NS_LogDtor(void *aPtr, const char *aTypeName, PRUint32 aInstanceSize)
+{
+  NS_LogDtor_P(aPtr, aTypeName, aInstanceSize);
+}
+
+#undef NS_LogCOMPtrAddRef
+EXPORT_XPCOM_API(void)
+NS_LogCOMPtrAddRef(void *aCOMPtr, nsISupports* aObject)
+{
+  NS_LogCOMPtrAddRef_P(aCOMPtr, aObject);
+}
+
+#undef NS_LogCOMPtrRelease
+EXPORT_XPCOM_API(void)
+NS_LogCOMPtrRelease(void *aCOMPtr, nsISupports* aObject)
+{
+  NS_LogCOMPtrRelease_P(aCOMPtr, aObject);
+}
+
 
 /*
  * Stubs for nsXPCOMPrivate.h

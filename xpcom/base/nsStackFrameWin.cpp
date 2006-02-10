@@ -469,10 +469,10 @@ DumpStackToFile(FILE* aStream)
     walkerThread = ::CreateThread( NULL, 0, DumpStackToFileThread, (LPVOID) &data, 0, NULL ) ;
     if (walkerThread) {
         walkerReturn = ::WaitForSingleObject(walkerThread, 2000); // no timeout is never a good idea
-        CloseHandle(myThread) ;
         if (walkerReturn != WAIT_OBJECT_0) {
             PrintError("ThreadWait", aStream);
         }
+        CloseHandle(myThread);
     }
     else {
         PrintError("ThreadCreate", aStream);

@@ -58,20 +58,6 @@
     {0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46} }
 
 /**
- * Reference count values
- *
- * This is the return type for AddRef() and Release() in nsISupports.
- * IUnknown of COM returns an unsigned long from equivalent functions.
- * The following ifdef exists to maintain binary compatibility with
- * IUnknown.
- */
-#if defined(XP_WIN) && PR_BYTES_PER_LONG == 4
-typedef unsigned long nsrefcnt;
-#else
-typedef PRUint32 nsrefcnt;
-#endif
-
-/**
  * Basic component object model interface. Objects which implement
  * this interface support runtime interface discovery (QueryInterface)
  * and a reference counted memory model (AddRef/Release). This is

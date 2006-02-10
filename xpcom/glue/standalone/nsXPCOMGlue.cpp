@@ -55,10 +55,6 @@
 #define snprintf _snprintf
 #endif
 
-// functions provided by nsDebug.cpp
-nsresult GlueStartupDebug();
-void GlueShutdownDebug();
-
 static XPCOMFunctions xpcomFunctions;
 
 extern "C"
@@ -79,13 +75,6 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
 
     nsresult rv = (*func)(&xpcomFunctions, nsnull);
     if (NS_FAILED(rv)) {
-        XPCOMGlueUnload();
-        return rv;
-    }
-
-    rv = GlueStartupDebug();
-    if (NS_FAILED(rv)) {
-        memset(&xpcomFunctions, 0, sizeof(xpcomFunctions));
         XPCOMGlueUnload();
         return rv;
     }
@@ -132,8 +121,6 @@ XPCOMGlueLoadDependentLibs(const char *xpcomDir, DependentLibsCallback cb)
 extern "C"
 nsresult XPCOMGlueShutdown()
 {
-    GlueShutdownDebug();
-
     XPCOMGlueUnload();
     
     memset(&xpcomFunctions, 0, sizeof(xpcomFunctions));
@@ -451,6 +438,73 @@ NS_Free(void* ptr)
     if (xpcomFunctions.freeFunc)
         xpcomFunctions.freeFunc(ptr);
 }
+
+XPCOM_API(void)
+NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
+              const char *aFile, PRInt32 aLine)
+{
+    if (xpcomFunctions.debugBreakFunc)
+        xpcomFunctions.debugBreakFunc(aSeverity, aStr, aExpr, aFile, aLine);
+}
+
+XPCOM_API(void)
+NS_LogInit()
+{
+    if (xpcomFunctions.logInitFunc)
+        xpcomFunctions.logInitFunc();
+}
+
+XPCOM_API(void)
+NS_LogTerm()
+{
+    if (xpcomFunctions.logTermFunc)
+        xpcomFunctions.logTermFunc();
+}
+
+XPCOM_API(void)
+NS_LogAddRef(void *aPtr, nsrefcnt aNewRefCnt,
+             const char *aTypeName, PRUint32 aInstanceSize)
+{
+    if (xpcomFunctions.logAddRefFunc)
+        xpcomFunctions.logAddRefFunc(aPtr, aNewRefCnt,
+                                     aTypeName, aInstanceSize);
+}
+
+XPCOM_API(void)
+NS_LogRelease(void *aPtr, nsrefcnt aNewRefCnt, const char *aTypeName)
+{
+    if (xpcomFunctions.logReleaseFunc)
+        xpcomFunctions.logReleaseFunc(aPtr, aNewRefCnt, aTypeName);
+}
+
+XPCOM_API(void)
+NS_LogCtor(void *aPtr, const char *aTypeName, PRUint32 aInstanceSize)
+{
+    if (xpcomFunctions.logCtorFunc)
+        xpcomFunctions.logCtorFunc(aPtr, aTypeName, aInstanceSize);
+}
+
+XPCOM_API(void)
+NS_LogDtor(void *aPtr, const char *aTypeName, PRUint32 aInstanceSize)
+{
+    if (xpcomFunctions.logDtorFunc)
+        xpcomFunctions.logDtorFunc(aPtr, aTypeName, aInstanceSize);
+}
+
+XPCOM_API(void)
+NS_LogCOMPtrAddRef(void *aCOMPtr, nsISupports *aObject)
+{
+    if (xpcomFunctions.logCOMPtrAddRefFunc)
+        xpcomFunctions.logCOMPtrAddRefFunc(aCOMPtr, aObject);
+}
+
+XPCOM_API(void)
+NS_LogCOMPtrRelease(void *aCOMPtr, nsISupports *aObject)
+{
+    if (xpcomFunctions.logCOMPtrReleaseFunc)
+        xpcomFunctions.logCOMPtrReleaseFunc(aCOMPtr, aObject);
+}
+
 
 // Default GRE startup/shutdown code
 

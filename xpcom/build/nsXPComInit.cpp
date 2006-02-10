@@ -421,38 +421,17 @@ static nsIDebug* gDebug = nsnull;
 EXPORT_XPCOM_API(nsresult)
 NS_GetDebug(nsIDebug** result)
 {
-    nsresult rv = NS_OK;
-    if (!gDebug)
-    {
-        rv = nsDebugImpl::Create(nsnull, 
-                                 NS_GET_IID(nsIDebug), 
-                                 (void**)&gDebug);
-    }
-    NS_IF_ADDREF(*result = gDebug);
-    return rv;
+    return nsDebugImpl::Create(nsnull, 
+                               NS_GET_IID(nsIDebug), 
+                               (void**) result);
 }
-
-#ifdef NS_BUILD_REFCNT_LOGGING
-// gTraceRefcnt will be freed during shutdown.
-static nsITraceRefcnt* gTraceRefcnt = nsnull;
-#endif
 
 EXPORT_XPCOM_API(nsresult)
 NS_GetTraceRefcnt(nsITraceRefcnt** result)
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
-    nsresult rv = NS_OK;
-    if (!gTraceRefcnt)
-    {
-        rv = nsTraceRefcntImpl::Create(nsnull, 
-                                       NS_GET_IID(nsITraceRefcnt), 
-                                       (void**)&gTraceRefcnt);
-    }
-    NS_IF_ADDREF(*result = gTraceRefcnt);
-    return rv;
-#else
-    return NS_ERROR_NOT_INITIALIZED;
-#endif
+    return nsTraceRefcntImpl::Create(nsnull, 
+                                     NS_GET_IID(nsITraceRefcnt), 
+                                     (void**) result);
 }
 
 EXPORT_XPCOM_API(nsresult)
@@ -489,9 +468,7 @@ NS_InitXPCOM3(nsIServiceManager* *result,
      // We are not shutting down
     gXPCOMShuttingDown = PR_FALSE;
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcntImpl::Startup();
-#endif
+    NS_LogInit();
 
     // Establish the main thread here.
     rv = nsIThread::SetMainThread();
@@ -868,11 +845,7 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     NS_IF_RELEASE(gDebug);
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcntImpl::DumpStatistics();
-    nsTraceRefcntImpl::ResetStatistics();
-    nsTraceRefcntImpl::Shutdown();
-#endif
+    NS_LogTerm();
 
 #ifdef GC_LEAK_DETECTOR
     // Shutdown the Leak detector.

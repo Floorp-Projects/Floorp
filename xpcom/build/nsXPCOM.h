@@ -39,7 +39,7 @@
 #ifndef nsXPCOM_h__
 #define nsXPCOM_h__
 
-// Map frozen functions to private symbol names if not using strict API.
+/* Map frozen functions to private symbol names if not using strict API. */
 #ifdef MOZILLA_INTERNAL_API
 # define NS_InitXPCOM2               NS_InitXPCOM2_P
 # define NS_InitXPCOM3               NS_InitXPCOM3_P
@@ -55,24 +55,40 @@
 # define NS_Alloc                    NS_Alloc_P
 # define NS_Realloc                  NS_Realloc_P
 # define NS_Free                     NS_Free_P
+# define NS_DebugBreak               NS_DebugBreak_P
+# define NS_LogInit                  NS_LogInit_P
+# define NS_LogTerm                  NS_LogTerm_P
+# define NS_LogAddRef                NS_LogAddRef_P
+# define NS_LogRelease               NS_LogRelease_P
+# define NS_LogCtor                  NS_LogCtor_P
+# define NS_LogDtor                  NS_LogDtor_P
+# define NS_LogCOMPtrAddRef          NS_LogCOMPtrAddRef_P
+# define NS_LogCOMPtrRelease         NS_LogCOMPtrRelease_P
 #endif
 
 #include "nscore.h"
 #include "nsXPCOMCID.h"
 
-class nsAString;
-class nsACString;
+#ifdef __cplusplus
+#define DECL_CLASS(c) class c
+#else
+#define DECL_CLASS(c) typedef struct c c
+#endif
 
-class nsIModule;
-class nsIComponentManager;
-class nsIComponentRegistrar;
-class nsIServiceManager;
-class nsIFile;
-class nsILocalFile;
-class nsIDirectoryServiceProvider;
-class nsIMemory;
-class nsIDebug;
-class nsITraceRefcnt;
+DECL_CLASS(nsAString);
+DECL_CLASS(nsACString);
+
+DECL_CLASS(nsISupports);
+DECL_CLASS(nsIModule);
+DECL_CLASS(nsIComponentManager);
+DECL_CLASS(nsIComponentRegistrar);
+DECL_CLASS(nsIServiceManager);
+DECL_CLASS(nsIFile);
+DECL_CLASS(nsILocalFile);
+DECL_CLASS(nsIDirectoryServiceProvider);
+DECL_CLASS(nsIMemory);
+DECL_CLASS(nsIDebug);
+DECL_CLASS(nsITraceRefcnt);
 
 /**
  * Every XPCOM component implements this function signature, which is the
@@ -130,10 +146,10 @@ NS_InitXPCOM2(nsIServiceManager* *result,
  *
  * @status FROZEN
  */
-struct nsStaticModuleInfo {
+typedef struct nsStaticModuleInfo {
   const char      *name;
   nsGetModuleProc  getModule;
-};
+} nsStaticModuleInfo;
 
 /**
  * Initialises XPCOM with static components. You must call one of the
@@ -274,6 +290,8 @@ NS_GetMemoryManager(nsIMemory* *result);
  *         other error codes indicate a failure.
  */
 
+#ifdef __cplusplus
+
 XPCOM_API(nsresult)
 NS_NewLocalFile(const nsAString &path, 
                 PRBool followLinks, 
@@ -283,6 +301,8 @@ XPCOM_API(nsresult)
 NS_NewNativeLocalFile(const nsACString &path, 
                       PRBool followLinks, 
                       nsILocalFile* *result);
+
+#endif
 
 /**
  * Allocates a block of memory of a particular size. If the memory cannot
@@ -331,6 +351,107 @@ NS_Realloc(void* ptr, PRSize size);
 XPCOM_API(void)
 NS_Free(void* ptr);
 
+/**
+ * Support for warnings, assertions, and debugging breaks.
+ */
+
+enum {
+    NS_DEBUG_WARNING = 0,
+    NS_DEBUG_ASSERTION = 1,
+    NS_DEBUG_BREAK = 2,
+    NS_DEBUG_ABORT = 3
+};
+
+/**
+ * Print a runtime assertion. This function is available in both debug and
+ * release builds.
+ * 
+ * @note Based on the value of aSeverity and the XPCOM_DEBUG_BREAK
+ * environment variable, this function may cause the application to
+ * print the warning, print a stacktrace, break into a debugger, or abort
+ * immediately.
+ *
+ * @param aSeverity A NS_DEBUG_* value
+ * @param aStr   A readable error message (ASCII, may be null)
+ * @param aExpr  The expression evaluated (may be null)
+ * @param aFile  The source file containing the assertion (may be null)
+ * @param aLine  The source file line number (-1 indicates no line number)
+ */
+XPCOM_API(void)
+NS_DebugBreak(PRUint32 aSeverity,
+              const char *aStr, const char *aExpr,
+              const char *aFile, PRInt32 aLine);
+
+/**
+ * Perform a stack-walk to a debugging log under various
+ * circumstances. Used to aid debugging of leaked object graphs.
+ *
+ * The NS_Log* functions are available in both debug and release
+ * builds of XPCOM, but the output will be useless unless binary
+ * debugging symbols for all modules in the stacktrace are available.
+ */
+
+/**
+ * By default, refcount logging is enabled at NS_InitXPCOM and
+ * refcount statistics are printed at NS_ShutdownXPCOM. NS_LogInit and
+ * NS_LogTerm allow applications to enable logging earlier and delay
+ * printing of logging statistics. They should always be used as a
+ * matched pair.
+ */
+XPCOM_API(void)
+NS_LogInit();
+
+XPCOM_API(void)
+NS_LogTerm();
+
+/**
+ * Log construction and destruction of objects. Processing tools can use the
+ * stacktraces printed by these functions to identify objects that are being
+ * leaked.
+ *
+ * @param aPtr          A pointer to the concrete object.
+ * @param aTypeName     The class name of the type
+ * @param aInstanceSize The size of the type
+ */
+
+XPCOM_API(void)
+NS_LogCtor(void *aPtr, const char *aTypeName, PRUint32 aInstanceSize);
+
+XPCOM_API(void)
+NS_LogDtor(void *aPtr, const char *aTypeName, PRUint32 aInstanceSize);
+
+/**
+ * Log a stacktrace when an XPCOM object's refcount is incremented or
+ * decremented. Processing tools can use the stacktraces printed by these
+ * functions to identify objects that were leaked due to XPCOM references.
+ *
+ * @param aPtr          A pointer to the concrete object
+ * @param aNewRefCnt    The new reference count.
+ * @param aTypeName     The class name of the type
+ * @param aInstanceSize The size of the type
+ */
+XPCOM_API(void)
+NS_LogAddRef(void *aPtr, nsrefcnt aNewRefCnt,
+             const char *aTypeName, PRUint32 aInstanceSize);
+
+XPCOM_API(void)
+NS_LogRelease(void *aPtr, nsrefcnt aNewRefCnt, const char *aTypeName);
+
+/**
+ * Log reference counting performed by COMPtrs. Processing tools can
+ * use the stacktraces printed by these functions to simplify reports
+ * about leaked objects generated from the data printed by
+ * NS_LogAddRef/NS_LogRelease.
+ *
+ * @param aCOMPtr the address of the COMPtr holding a strong reference
+ * @param aObject the object being referenced by the COMPtr
+ */
+
+XPCOM_API(void)
+NS_LogCOMPtrAddRef(void *aCOMPtr, nsISupports *aObject);
+
+XPCOM_API(void)
+NS_LogCOMPtrRelease(void *aCOMPtr, nsISupports *aObject);
 
 /**
  * Categories (in the category manager service) used by XPCOM:

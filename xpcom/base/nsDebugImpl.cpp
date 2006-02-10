@@ -22,6 +22,7 @@
  * Contributor(s):
  *   IBM Corp.
  *   Henry Sobotka
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -46,6 +47,7 @@
 #include "nsError.h"
 #include "prerror.h"
 #include "prerr.h"
+#include "prenv.h"
 
 #if defined(XP_BEOS)
 /* For DEBUGGER macros */
@@ -57,42 +59,33 @@
 #include <stdlib.h>
 #endif
 
-#if defined(XP_UNIX) && !defined(UNIX_CRASH_ON_ASSERT)
-#include <signal.h>
-/* for nsTraceRefcnt::WalkTheStack() */
-#include "nsISupportsUtils.h"
 #include "nsTraceRefcntImpl.h"
+#include "nsISupportsUtils.h"
 
-#if defined(__GNUC__) && (defined(__i386) || defined(__x86_64__))
-#  define DebugBreak() { asm("int $3"); }
-#elif defined(__APPLE__) && defined(TARGET_CARBON)
-#  include "MacTypes.h"
-#  define DebugBreak() { Debugger(); }
-#else
-#  define DebugBreak()
+#if defined(XP_UNIX)
+#include <signal.h>
 #endif
+
+static void
+Abort(const char *aMsg);
+
+static void
+Break(const char *aMsg);
+
+#if defined(__APPLE__) && defined(TARGET_CARBON)
+#  include "MacTypes.h"
 #endif
 
 #if defined(XP_OS2)
-  /* Added definitions for DebugBreak() for 2 different OS/2 compilers.  Doing
-   * the int3 on purpose so that a developer can step over the
-   * instruction if so desired.  Not always possible if trapping due to exception
-   * handling IBM-AKR
-   */
-  #define INCL_WINDIALOGS  // need for WinMessageBox
-  #include <os2.h>
-  #include <string.h>
-  
-  #if defined(DEBUG)
-    #define DebugBreak() { asm("int $3"); }
-  #else
-    #define DebugBreak()
-  #endif /* DEBUG */
+#  define INCL_WINDIALOGS  // need for WinMessageBox
+#  include <os2.h>
+#  include <string.h>
 #endif /* XP_OS2 */
 
 #if defined(_WIN32)
 #include <windows.h>
 #include <signal.h>
+#include <malloc.h> // for _alloca
 #elif defined(XP_UNIX)
 #include <stdlib.h>
 #endif
@@ -129,10 +122,47 @@ PRBool InDebugger()
 
 #endif /* WIN32*/
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDebugImpl, nsIDebug)
+NS_IMPL_QUERY_INTERFACE1(nsDebugImpl, nsIDebug)
 
-nsDebugImpl::nsDebugImpl()
+NS_IMETHODIMP_(nsrefcnt)
+nsDebugImpl::AddRef()
 {
+  return 2;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsDebugImpl::Release()
+{
+  return 1;
+}
+
+NS_IMETHODIMP
+nsDebugImpl::Assertion(const char *aStr, const char *aExpr,
+                       const char *aFile, PRInt32 aLine)
+{
+  NS_DebugBreak(NS_DEBUG_ASSERTION, aStr, aExpr, aFile, aLine);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDebugImpl::Warning(const char *aStr, const char *aFile, PRInt32 aLine)
+{
+  NS_DebugBreak(NS_DEBUG_WARNING, aStr, nsnull, aFile, aLine);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDebugImpl::Break(const char *aFile, PRInt32 aLine)
+{
+  NS_DebugBreak(NS_DEBUG_BREAK, nsnull, nsnull, aFile, aLine);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDebugImpl::Abort(const char *aFile, PRInt32 aLine)
+{
+  NS_DebugBreak(NS_DEBUG_ABORT, nsnull, nsnull, aFile, aLine);
+  return NS_OK;
 }
 
 /**
@@ -150,275 +180,296 @@ static void InitLog(void)
   }
 }
 
+enum nsAssertBehavior {
+  NS_ASSERT_UNINITIALIZED,
+  NS_ASSSERT_WARN,
+  NS_ASSSERT_SUSPEND,
+  NS_ASSSERT_STACK,
+  NS_ASSSERT_TRAP,
+  NS_ASSSERT_ABORT
+};
 
+static nsAssertBehavior GetAssertBehavior()
+{
+  static nsAssertBehavior gAssertBehavior = NS_ASSERT_UNINITIALIZED;
+  if (gAssertBehavior != NS_ASSERT_UNINITIALIZED)
+    return gAssertBehavior;
 
-NS_IMETHODIMP
-nsDebugImpl::Assertion(const char *aStr, const char *aExpr, const char *aFile, PRInt32 aLine)
+#if defined(XP_WIN) || defined(XP_OS2)
+  gAssertBehavior = NS_ASSSERT_TRAP;
+#else
+  gAssertBehavior = NS_ASSSERT_WARN;
+#endif
+
+  const char *assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
+  if (!assertString || !*assertString)
+    return gAssertBehavior;
+
+   if (!strcmp(assertString, "warn"))
+     return gAssertBehavior = NS_ASSSERT_WARN;
+
+   if (!strcmp(assertString, "suspend"))
+     return gAssertBehavior = NS_ASSSERT_SUSPEND;
+
+   if (!strcmp(assertString, "stack"))
+     return gAssertBehavior = NS_ASSSERT_STACK;
+
+   if (!strcmp(assertString, "abort"))
+     return gAssertBehavior = NS_ASSSERT_ABORT;
+
+   if (!strcmp(assertString, "trap") || !strcmp(assertString, "break"))
+     return gAssertBehavior = NS_ASSSERT_TRAP;
+
+   fprintf(stderr, "Unrecognized value of XPCOM_DEBUG_BREAK\n");
+   return gAssertBehavior;
+}
+
+struct FixedBuffer
+{
+  FixedBuffer() : curlen(0) { buffer[0] = '\0'; }
+
+  char buffer[1000];
+  PRUint32 curlen;
+};
+
+static PRIntn
+StuffFixedBuffer(void *closure, const char *buf, PRUint32 len)
+{
+  FixedBuffer *fb = (FixedBuffer*) closure;
+
+  // strip the trailing null, we add it again later
+  if (buf[len - 1] == '\0')
+    --len;
+
+  if (fb->curlen + len >= sizeof(fb->buffer))
+    len = sizeof(fb->buffer) - fb->curlen - 1;
+
+  if (len) {
+    memcpy(fb->buffer + fb->curlen, buf, len);
+    fb->curlen += len;
+    fb->buffer[fb->curlen] = '\0';
+  }
+
+  return len;
+}
+
+EXPORT_XPCOM_API(void)
+NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
+              const char *aFile, PRInt32 aLine)
 {
    InitLog();
 
-   char buf[1000];
-   PR_snprintf(buf, sizeof(buf),
-              "###!!! ASSERTION: %s: '%s', file %s, line %d",
-              aStr, aExpr, aFile, aLine);
+   FixedBuffer buf;
+   PRLogModuleLevel ll = PR_LOG_WARNING;
+   const char *sevString = "WARNING";
+
+   switch (aSeverity) {
+   case NS_DEBUG_ASSERTION:
+     sevString = "\07###!!! ASSERTION";
+     ll = PR_LOG_ERROR;
+     break;
+
+   case NS_DEBUG_BREAK:
+     sevString = "\07###!!! BREAK";
+     ll = PR_LOG_ALWAYS;
+     break;
+
+   case NS_DEBUG_ABORT:
+     sevString = "\07###!!! ABORT";
+     ll = PR_LOG_ALWAYS;
+     break;
+
+   default:
+     aSeverity = NS_DEBUG_WARNING;
+   };
+
+   PR_sxprintf(StuffFixedBuffer, &buf, "%s: ", sevString);
+
+   if (aStr)
+     PR_sxprintf(StuffFixedBuffer, &buf, "%s: ", aStr);
+
+   if (aExpr)
+     PR_sxprintf(StuffFixedBuffer, &buf, "'%s', ", aExpr);
+
+   if (aFile)
+     PR_sxprintf(StuffFixedBuffer, &buf, "file %s, ", aFile);
+
+   if (aLine != -1)
+     PR_sxprintf(StuffFixedBuffer, &buf, "line %d", aLine);
 
    // Write out the assertion message to the debug log
-   PR_LOG(gDebugLog, PR_LOG_ERROR, ("%s", buf));
+   PR_LOG(gDebugLog, ll, ("%s", buf.buffer));
    PR_LogFlush();
 
    // And write it out to the stderr
-   fprintf(stderr, "%s\n", buf);
+   fprintf(stderr, "%s\n", buf.buffer);
    fflush(stderr);
 
-#if defined(_WIN32)
-   char* assertBehavior = getenv("XPCOM_DEBUG_BREAK");
-   if (assertBehavior && strcmp(assertBehavior, "warn") == 0)
-     return NS_OK;
+   switch (aSeverity) {
+   case NS_DEBUG_WARNING:
+     return;
 
-#ifndef WINCE // we really just want to crash for now
-   static int ignoreDebugger;
-   if (!ignoreDebugger) {
-     const char *shouldIgnoreDebugger = getenv("XPCOM_DEBUG_DLG");
-     ignoreDebugger = 1 + (shouldIgnoreDebugger && !strcmp(shouldIgnoreDebugger, "1"));
+   case NS_DEBUG_BREAK:
+     Break(buf.buffer);
+     return;
+
+   case NS_DEBUG_ABORT:
+     Abort(buf.buffer);
+     return;
    }
-   if((ignoreDebugger == 2) || !InDebugger())
-      {
-      DWORD code = IDRETRY;
 
-      /* Create the debug dialog out of process to avoid the crashes caused by 
-       * Windows events leaking into our event loop from an in process dialog.
-       * We do this by launching windbgdlg.exe (built in xpcom/windbgdlg).
-       * See http://bugzilla.mozilla.org/show_bug.cgi?id=54792
-       */
-      PROCESS_INFORMATION pi;
-      STARTUPINFO si;
-      char executable[MAX_PATH];
-      char* pName;
+   // Now we deal with assertions
 
-      memset(&pi, 0, sizeof(pi));
+   switch (GetAssertBehavior()) {
+   case NS_ASSSERT_WARN:
+     return;
 
-      memset(&si, 0, sizeof(si));
-      si.cb          = sizeof(si);
-      si.wShowWindow = SW_SHOW;
-
-      if(GetModuleFileName(GetModuleHandle("xpcom.dll"), executable, MAX_PATH) &&
-         NULL != (pName = strrchr(executable, '\\')) &&
-         NULL != strcpy(pName+1, "windbgdlg.exe") &&
-#ifdef DEBUG_jband
-         (printf("Launching %s\n", executable), PR_TRUE) &&
-#endif         
-         CreateProcess(executable, buf, NULL, NULL, PR_FALSE,
-                       DETACHED_PROCESS | NORMAL_PRIORITY_CLASS,
-                       NULL, NULL, &si, &pi) &&
-         WAIT_OBJECT_0 == WaitForSingleObject(pi.hProcess, INFINITE) &&
-         GetExitCodeProcess(pi.hProcess, &code))
-      {
-        CloseHandle(pi.hProcess);
-      }                         
-
-      switch(code)
-         {
-         case IDABORT:
-            //This should exit us
-            raise(SIGABRT);
-            //If we are ignored exit this way..
-            _exit(3);
-            break;
-         
-         case IDIGNORE:
-            return NS_OK;
-            // Fall Through
-         }
-      }
-#endif // WINCE
-#endif
-
-#if defined(XP_OS2)
-   char* assertBehavior = getenv("XPCOM_DEBUG_BREAK");
-   if (assertBehavior && strcmp(assertBehavior, "warn") == 0)
-     return NS_OK;
-
-      char msg[1200];
-      PR_snprintf(msg, sizeof(msg),
-                "%s\n\nClick Cancel to Debug Application.\n"
-                "Click Enter to continue running the Application.", buf);
-      ULONG code = MBID_ERROR;
-      code = WinMessageBox(HWND_DESKTOP, HWND_DESKTOP, msg, 
-                           "NSGlue_Assertion", 0,
-                           MB_ERROR | MB_ENTERCANCEL);
-
-      /* It is possible that we are executing on a thread that doesn't have a
-       * message queue.  In that case, the message won't appear, and code will
-       * be 0xFFFF.  We'll give the user a chance to debug it by calling
-       * Break()
-       * Actually, that's a really bad idea since this happens a lot with threadsafe
-       * assertions and since it means that you can't actually run the debug build
-       * outside a debugger without it crashing constantly.
-       */
-      if(( code == MBID_ENTER ) || (code == MBID_ERROR))
-      {
-         return NS_OK;
-         // If Retry, Fall Through
-      }
-#endif
-
-      Break(aFile, aLine);
-      return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsDebugImpl::Break(const char *aFile, PRInt32 aLine)
-{
-#ifndef TEMP_MAC_HACK
-  // Write out the assertion message to the debug log
-   InitLog();
-
-   PR_LOG(gDebugLog, PR_LOG_ERROR, 
-         ("###!!! Break: at file %s, line %d", aFile, aLine));
-   PR_LogFlush();
-
-  fprintf(stderr, "Break: at file %s, line %d\n",aFile, aLine);  fflush(stderr);
-  fflush(stderr);
-
-#if defined(_WIN32)
-#ifdef _M_IX86
-   ::DebugBreak();
-#endif
-#elif defined(XP_UNIX) && !defined(UNIX_CRASH_ON_ASSERT)
-    fprintf(stderr, "\07");
-
-    char *assertBehavior = getenv("XPCOM_DEBUG_BREAK");
-
-    if (!assertBehavior) {
-
-      // the default; nothing else to do
-      ;
-
-    } else if ( strcmp(assertBehavior, "suspend")== 0 ) {
-
-      // the suspend case is first because we wanna send the signal before 
-      // other threads have had a chance to get too far from the state that
-      // caused this assertion (in case they happen to have been involved).
-      //
+   case NS_ASSSERT_SUSPEND:
+#ifdef XP_UNIX
       fprintf(stderr, "Suspending process; attach with the debugger.\n");
       kill(0, SIGSTOP);
-
-    } else if ( strcmp(assertBehavior, "warn")==0 ) {
-      
-      // same as default; nothing else to do (see "suspend" case comment for
-      // why this compare isn't done as part of the default case)
-      //
-      ;
-
-    } 
-    else if ( strcmp(assertBehavior,"stack")==0 ) {
-
-      // walk the stack
-      //
-      nsTraceRefcntImpl::WalkTheStack(stderr);
-    } 
-    else if ( strcmp(assertBehavior,"abort")==0 ) {
-
-      // same as UNIX_CRASH_ON_ASSERT
-      //
-      Abort(aFile, aLine);
-
-    } else if ( strcmp(assertBehavior,"trap")==0 ) {
-
-      DebugBreak();
-
-    } else {
-
-      fprintf(stderr, "unrecognized value of XPCOM_DEBUG_BREAK env var!\n");
-
-    }    
-    fflush(stderr); // this shouldn't really be necessary, i don't think,
-                    // but maybe there's some lame stdio that buffers stderr
-
-#elif defined(XP_BEOS)
-  {
-#ifdef UNIX_CRASH_ON_ASSERT
-	char buf[2000];
-	sprintf(buf, "Break: at file %s, line %d", aFile, aLine);
-	DEBUGGER(buf);
-#endif
-  }
 #else
-  Abort(aFile, aLine);
+      Break(buf.buffer);
 #endif
-#endif // TEMP_MAC_HACK
-  return NS_OK;
+      return;
+
+   case NS_ASSSERT_STACK:
+     nsTraceRefcntImpl::WalkTheStack(stderr);
+     return;
+
+   case NS_ASSSERT_ABORT:
+     Abort(buf.buffer);
+     return;
+
+   case NS_ASSSERT_TRAP:
+     Break(buf.buffer);
+   }   
 }
 
-NS_IMETHODIMP 
-nsDebugImpl::Abort(const char *aFile, PRInt32 aLine)
+static void
+Abort(const char *aMsg)
 {
-  InitLog();
-
-   PR_LOG(gDebugLog, PR_LOG_ERROR, 
-         ("###!!! Abort: at file %s, line %d", aFile, aLine));
-   PR_LogFlush();
-   fprintf(stderr, "\07 Abort\n");  fflush(stderr);
-   fflush(stderr);
-
 #if defined(_WIN32)
-#ifdef _M_IX86
-  long* __p = (long*) 0x7;
-  *__p = 0x7;
-#else /* _M_ALPHA */
-  PR_Abort();
-#endif
+  //This should exit us
+  raise(SIGABRT);
+  //If we are ignored exit this way..
+  _exit(3);
 #elif defined(XP_UNIX)
   PR_Abort();
-#elif defined(XP_OS2)
-  DebugBreak();
-  return NS_OK;
 #elif defined(XP_BEOS)
   {
 #ifndef DEBUG_cls
-	char buf[2000];
-	sprintf(buf, "Abort: at file %s, line %d", aFile, aLine);
-	DEBUGGER(buf);
+	DEBUGGER(aMsg);
 #endif
-  } 
+  }
+#else
+  // Don't know how to abort on this platform! call Break() instead
+  Break(aMsg);
 #endif
-  return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsDebugImpl::Warning(const char* aMessage,
-                     const char* aFile, PRIntn aLine)
+// Abort() calls this function, don't call it!
+static void
+Break(const char *aMsg)
 {
-  InitLog();
+#if defined(_WIN32)
+#ifndef WINCE // we really just want to crash for now
+  static int ignoreDebugger;
+  if (!ignoreDebugger) {
+    const char *shouldIgnoreDebugger = getenv("XPCOM_DEBUG_DLG");
+    ignoreDebugger = 1 + (shouldIgnoreDebugger && !strcmp(shouldIgnoreDebugger, "1"));
+  }
+  if((ignoreDebugger == 2) || !InDebugger()) {
+    DWORD code = IDRETRY;
 
-  char buf[1000];
-  PR_snprintf(buf, sizeof(buf),
-              "WARNING: %s, file %s, line %d",
-              aMessage, aFile, aLine);
+    /* Create the debug dialog out of process to avoid the crashes caused by 
+     * Windows events leaking into our event loop from an in process dialog.
+     * We do this by launching windbgdlg.exe (built in xpcom/windbgdlg).
+     * See http://bugzilla.mozilla.org/show_bug.cgi?id=54792
+     */
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si;
+    char executable[MAX_PATH];
+    char* pName;
 
-  // Write out the warning message to the debug log
-  PR_LOG(gDebugLog, PR_LOG_ERROR, ("%s", buf));
+    memset(&pi, 0, sizeof(pi));
 
-  // And write it out to the stdout
-  fprintf(stderr, "%s\n", buf);
-  fflush(stderr);
-  return NS_OK;
+    memset(&si, 0, sizeof(si));
+    si.cb          = sizeof(si);
+    si.wShowWindow = SW_SHOW;
+
+    // 2nd arg of CreateProcess is in/out
+    char *msgCopy = (char*) _alloca(strlen(aMsg) + 1); 
+   strcpy(msgCopy, aMsg);
+
+    if(GetModuleFileName(GetModuleHandle("xpcom.dll"), executable, MAX_PATH) &&
+       NULL != (pName = strrchr(executable, '\\')) &&
+       NULL != strcpy(pName+1, "windbgdlg.exe") &&
+       CreateProcess(executable, msgCopy, NULL, NULL, PR_FALSE,
+                     DETACHED_PROCESS | NORMAL_PRIORITY_CLASS,
+                     NULL, NULL, &si, &pi) &&
+       WAIT_OBJECT_0 == WaitForSingleObject(pi.hProcess, INFINITE) &&
+       GetExitCodeProcess(pi.hProcess, &code)) {
+      CloseHandle(pi.hProcess);
+    }
+
+    switch(code) {
+    case IDABORT:
+      //This should exit us
+      raise(SIGABRT);
+      //If we are ignored exit this way..
+      _exit(3);
+         
+    case IDIGNORE:
+      return;
+    }
+  }
+
+  ::DebugBreak();
+
+#endif // WINCE
+#elif defined(XP_OS2)
+   char msg[1200];
+   PR_snprintf(msg, sizeof(msg),
+               "%s\n\nClick Cancel to Debug Application.\n"
+               "Click Enter to continue running the Application.", aMsg);
+   ULONG code = MBID_ERROR;
+   code = WinMessageBox(HWND_DESKTOP, HWND_DESKTOP, msg, 
+                        "NSGlue_Assertion", 0,
+                        MB_ERROR | MB_ENTERCANCEL);
+
+   /* It is possible that we are executing on a thread that doesn't have a
+    * message queue.  In that case, the message won't appear, and code will
+    * be 0xFFFF.  We'll give the user a chance to debug it by calling
+    * Break()
+    * Actually, that's a really bad idea since this happens a lot with threadsafe
+    * assertions and since it means that you can't actually run the debug build
+    * outside a debugger without it crashing constantly.
+    */
+   if (( code == MBID_ENTER ) || (code == MBID_ERROR))
+     return;
+
+   asm("int $3");
+#elif defined(XP_BEOS)
+   DEBUGGER(aMgr);
+#elif defined(__GNUC__) && (defined(__i386) || defined(__x86_64__))
+   asm("int $3");
+#elif defined(__APPLE__) && defined(TARGET_CARBON)
+   Debugger();
+#else
+   // don't know how to break on this platform
+#endif
 }
+
+static const nsDebugImpl kImpl;
 
 NS_METHOD
 nsDebugImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-  *aInstancePtr = nsnull;
-  nsIDebug* debug = new nsDebugImpl();
-  if (!debug)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  nsresult rv = debug->QueryInterface(aIID, aInstancePtr);
-  if (NS_FAILED(rv)) {
-    delete debug;
-  }
-  
-  return rv;
+  NS_ENSURE_NO_AGGREGATION(outer);
+
+  return NS_CONST_CAST(nsDebugImpl*, &kImpl)->
+    QueryInterface(aIID, aInstancePtr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

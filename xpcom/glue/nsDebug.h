@@ -46,44 +46,11 @@
 #include "nsError.h"
 #endif 
 
+#include "nsXPCOM.h"
+
 #ifdef DEBUG
 #define NS_DEBUG
 #endif
-
-/**
- * Namespace for debugging methods. Note that your code must use the
- * macros defined later in this file so that the debug code can be
- * conditionally compiled out.
- */
-
-PR_BEGIN_EXTERN_C
-
-/**
- * Log a warning message to the debug log.
- */
-NS_COM_GLUE void NS_FASTCALL
-NSGlue_Warning(const char *aMessage, const char *aFile, PRIntn aLine);
-
-/**
- * Abort the executing program. This works on all architectures.
- */
-NS_COM_GLUE void NS_FASTCALL
-NSGlue_Abort(const char *aFile, PRIntn aLine);
-
-/**
- * Break the executing program into the debugger. 
- */
-NS_COM_GLUE void NS_FASTCALL
-NSGlue_Break(const char* aFile, PRIntn aLine);
-
-/**
- * Log an assertion message to the debug log
- */
-NS_COM_GLUE void NS_FASTCALL
-NSGlue_Assertion(const char* aStr, const char* aExpr,
-                 const char* aFile, PRIntn aLine);
-
-PR_END_EXTERN_C
 
 #ifdef DEBUG
 
@@ -106,7 +73,7 @@ PR_END_EXTERN_C
 #define NS_ABORT_IF_FALSE(_expr, _msg)                        \
   PR_BEGIN_MACRO                                              \
     if (!(_expr)) {                                           \
-      NSGlue_Assertion(_msg, #_expr, __FILE__, __LINE__);     \
+      NS_DebugBreak(NS_DEBUG_ASSERTION, _msg, #_expr, __FILE__, __LINE__); \
     }                                                         \
   PR_END_MACRO
 
@@ -121,7 +88,7 @@ PR_END_EXTERN_C
 #define NS_WARN_IF_FALSE(_expr,_msg)                          \
   PR_BEGIN_MACRO                                              \
     if (!(_expr)) {                                           \
-      NSGlue_Assertion(_msg, #_expr, __FILE__, __LINE__);     \
+      NS_DebugBreak(NS_DEBUG_ASSERTION, _msg, #_expr, __FILE__, __LINE__); \
     }                                                         \
   PR_END_MACRO
 
@@ -132,7 +99,7 @@ PR_END_EXTERN_C
 #define NS_PRECONDITION(expr, str)                            \
   PR_BEGIN_MACRO                                              \
     if (!(expr)) {                                            \
-      NSGlue_Assertion(str, #expr, __FILE__, __LINE__);       \
+      NS_DebugBreak(NS_DEBUG_ASSERTION, str, #expr, __FILE__, __LINE__); \
     }                                                         \
   PR_END_MACRO
 
@@ -143,7 +110,7 @@ PR_END_EXTERN_C
 #define NS_ASSERTION(expr, str)                               \
   PR_BEGIN_MACRO                                              \
     if (!(expr)) {                                            \
-      NSGlue_Assertion(str, #expr, __FILE__, __LINE__);       \
+      NS_DebugBreak(NS_DEBUG_ASSERTION, str, #expr, __FILE__, __LINE__); \
     }                                                         \
   PR_END_MACRO
 
@@ -154,7 +121,7 @@ PR_END_EXTERN_C
 #define NS_POSTCONDITION(expr, str)                           \
   PR_BEGIN_MACRO                                              \
     if (!(expr)) {                                            \
-      NSGlue_Assertion(str, #expr, __FILE__, __LINE__);       \
+      NS_DebugBreak(NS_DEBUG_ASSERTION, str, #expr, __FILE__, __LINE__); \
     }                                                         \
   PR_END_MACRO
 
@@ -163,38 +130,38 @@ PR_END_EXTERN_C
  * an attempt was made to execute some unimplemented functionality.
  */
 #define NS_NOTYETIMPLEMENTED(str)                             \
-  NSGlue_Assertion(str, "NotYetImplemented", __FILE__, __LINE__)
+  NS_DebugBreak(NS_DEBUG_ASSERTION, str, "NotYetImplemented", __FILE__, __LINE__)
 
 /**
  * This macros triggers a program failure if executed. It indicates that
  * an attempt was made to execute some unimplemented functionality.
  */
 #define NS_NOTREACHED(str)                                    \
-  NSGlue_Assertion(str, "Not Reached", __FILE__, __LINE__)
+  NS_DebugBreak(NS_DEBUG_ASSERTION, str, "Not Reached", __FILE__, __LINE__)
 
 /**
  * Log an error message.
  */
 #define NS_ERROR(str)                                         \
-  NSGlue_Assertion(str, "Error", __FILE__, __LINE__)
+  NS_DebugBreak(NS_DEBUG_ASSERTION, str, "Error", __FILE__, __LINE__)
 
 /**
  * Log a warning message.
  */
 #define NS_WARNING(str)                                       \
-  NSGlue_Warning(str, __FILE__, __LINE__)
+  NS_DebugBreak(NS_DEBUG_WARNING, str, nsnull, __FILE__, __LINE__)
 
 /**
  * Trigger an abort
  */
 #define NS_ABORT()                                            \
-  NSGlue_Abort(__FILE__, __LINE__)
+  NS_DebugBreak(NS_DEBUG_ABORT, nsnull, nsnull, __FILE__, __LINE__)
 
 /**
  * Cause a break
  */
 #define NS_BREAK()                                            \
-  NSGlue_Break(__FILE__, __LINE__)
+  NS_DebugBreak(NS_DEBUG_BREAK, nsnull, nsnull, __FILE__, __LINE__)
 
 #else /* NS_DEBUG */
 

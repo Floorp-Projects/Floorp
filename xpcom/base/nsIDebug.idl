@@ -38,12 +38,8 @@
 #include "nsISupports.idl"
 
 /**
- * nsIDebug is an interface between XPCOM Glue and XPCOM.  Users should access
- * the nsIDebug interface through the static class nsDebug.
- * @see nsDebug.h
- *    
- * @status UNDER_REVIEW
- *
+ * @status DEPRECATED  Replaced by the NS_DebugBreak function.
+ * @status FROZEN
  */
 
 [scriptable, uuid(3bf0c3d7-3bd9-4cf2-a971-33572c503e1e)]
