@@ -42,6 +42,8 @@
 
 #include "nsISupports.h"
 
+class nsIPrintSettings;
+
 // 3d5917da-1dd2-11b2-bc7b-aa83823362e0
 #define NS_IPRINTING_CONTEXT_IID    \
 { 0x3d5917da, 0x1dd2, 0x11b2,       \
@@ -59,7 +61,7 @@ public:
      *        printer).
      * @return error status
     */
-    NS_IMETHOD Init(PRBool aQuiet) = 0;
+    NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aQuiet) = 0;
 
     /**
      * This will tell if the printmanager is currently open
