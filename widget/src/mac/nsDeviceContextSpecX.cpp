@@ -51,6 +51,9 @@
 #include "CoreServices.h"
 #include "nsFileSpec.h"
 #include "nsPDECommon.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryService.h"
 
 static Boolean  LoadPrinterPlugin();
 
@@ -308,20 +311,43 @@ LoadPrinterPlugin()
 {
 Boolean result=false;
 
-  CFBundleRef mainBundle = CFBundleGetMainBundle();
-  if(mainBundle){
-    CFURLRef pluginsURL = CFBundleCopyBundleURL(mainBundle);
-    if(pluginsURL){
-      CFURLRef myPluginsURL = CFURLCreateCopyAppendingPathComponent(NULL,pluginsURL,CFSTR("Essential Files/PrintDialogPDE.plugin"),false);
-      if (myPluginsURL){
-        CFPlugInRef	plugin = CFPlugInCreate(NULL,myPluginsURL);
-        if(plugin){
-          result = true;
-          gPlugInNotLoaded = false;
+  // get the relative path for the essential files folder.. then load the printer plugin
+  nsCOMPtr<nsILocalFile> mozFile;
+  nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+  if (!directoryService) {
+    return false;
+  } else {
+    directoryService->Get( NS_XPCOM_CURRENT_PROCESS_DIR,NS_GET_IID(nsIFile), getter_AddRefs(mozFile));
+    if (!mozFile) {
+      return false;
+    }
+    
+    char  *fullModuleName = nsnull;
+    mozFile->Append("Essential Files");
+    mozFile->Append("PrintDialogPDE.plugin");
+    mozFile->GetPath(&fullModuleName);
+    nsFileSpec  file(fullModuleName);
+    
+    const FSSpec  spec = file;
+
+    FSRef ref;
+    OSErr err = FSpMakeFSRef(&spec,&ref);
+    char path[512];
+
+    err = FSRefMakePath(&ref,(UInt8*)path,sizeof(path)-1);
+    
+    if(err == noErr){
+      CFStringRef pathRef = CFStringCreateWithCString(NULL,path,kCFStringEncodingUTF8);
+      if(pathRef) {
+        CFURLRef url = CFURLCreateWithFileSystemPath(NULL,pathRef,kCFURLPOSIXPathStyle,TRUE);
+        if(url !=NULL){
+          CFPlugInRef	plugin = ::CFPlugInCreate(NULL,url);    
+          if(plugin){
+            result = true;
+            gPlugInNotLoaded = false;
+          }
         }
-        CFRelease(myPluginsURL);
-      } 
-      CFRelease(pluginsURL);  
+      }
     }
   }
 
