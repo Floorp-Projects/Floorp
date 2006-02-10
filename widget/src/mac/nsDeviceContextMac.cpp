@@ -1147,10 +1147,23 @@ EnumerateFont(nsHashKey *aKey, void *aData, void* closure)
   EnumerateFontInfo* info = (EnumerateFontInfo*) closure;
   PRUnichar** array = info->mArray;
   int j = info->mCount;
-  
+  PRBool match = PR_FALSE;
+#if TARGET_CARBON
+  // we need to match the cast of FMFontFamily in nsDeviceContextMac :: InitFontInfoList()
+  FMFontFamily fontFamily = (FMFontFamily) aData;
+  TextEncoding fontEncoding;
+  OSStatus status = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
+  if (noErr == status) {
+    ScriptCode script;
+    status = ::RevertTextEncodingToScriptInfo(fontEncoding, &script, nsnull, nsnull);
+    match = ((noErr == status) && (script == info->mScript));
+  }
+#else
   short	fondID = (short) aData;
   ScriptCode script = ::FontToScript(fondID);
-	if(script == info->mScript) {
+	match = (script == info->mScript) ;
+#endif
+  if (match) {
 	  PRUnichar* str = ToNewUnicode(((FontNameKey*)aKey)->mString);
 	  if (!str) {
 	    for (j = j - 1; j >= 0; j--) {
