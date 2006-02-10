@@ -1282,3 +1282,8 @@ nsFontEnumeratorMac::HaveFontFor(const char* aLangGroup,PRBool* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFontEnumeratorMac::UpdateFontList()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
