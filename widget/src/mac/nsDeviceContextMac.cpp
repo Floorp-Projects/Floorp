@@ -23,7 +23,11 @@
 
 #include "nsDeviceContextMac.h"
 #include "nsRenderingContextMac.h"
+#if TARGET_CARBON
+#include "nsDeviceContextSpecX.h"
+#else
 #include "nsDeviceContextSpecMac.h"
+#endif
 #include "nsIPrintingContext.h"
 #include "nsString.h"
 #include "nsHashtable.h"
