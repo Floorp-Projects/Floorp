@@ -65,6 +65,7 @@ EC_DecodeParams(const SECItem *encodedParams, ECParams **ecparams);
 #define DEFAULT_RSA_PUBLIC_EXPONENT   0x10001
 #define RSA_MAX_TEST_MODULUS_BITS     4096
 #define RSA_MAX_TEST_MODULUS_BYTES    RSA_MAX_TEST_MODULUS_BITS/8
+#define RSA_MAX_TEST_EXPONENT_BYTES    8         /* rsa.c */
 
 SECStatus
 hex_from_2char(const char *c2, unsigned char *byteval)
@@ -3993,7 +3994,7 @@ loser:
 void
 rsa_siggen_test(char *reqfn)
 {
-    char buf[2*RSA_MAX_TEST_MODULUS_BYTES+1];      
+    char buf[2*RSA_MAX_TEST_MODULUS_BYTES+1];
                         /* buf holds one line from the input REQUEST file
                          * or to the output RESPONSE file.
                          * 2x for HEX output + 1 for \n
@@ -4005,7 +4006,7 @@ rsa_siggen_test(char *reqfn)
     unsigned int   shaLength = 0;           /* length of SHA */
     HASH_HashType  shaAlg = HASH_AlgNULL;   /* type of SHA Alg */
     int modulus;                                /* the Modulus size */
-    int  publicExponent  = DEFAULT_RSA_PUBLIC_EXPONENT; 
+    int  publicExponent  = DEFAULT_RSA_PUBLIC_EXPONENT;
     SECItem pe = {0, 0, 0 };
     unsigned char pubEx[4];
     int peCount = 0;
@@ -4092,11 +4093,11 @@ rsa_siggen_test(char *reqfn)
            /* set the SHA Algorithm */
            if (strncmp(&buf[i], "SHA1", 4) == 0) {
                 shaAlg = HASH_AlgSHA1;
-           } else if (strncmp(&buf[i], "SHA256", 6)) {
+           } else if (strncmp(&buf[i], "SHA256", 6) == 0) {
                 shaAlg = HASH_AlgSHA256;
-           } else if (strncmp(&buf[i], "SHA384", 6)) {
+           } else if (strncmp(&buf[i], "SHA384", 6)== 0) {
                shaAlg = HASH_AlgSHA384;
-           } else if (strncmp(&buf[i], "SHA512", 6)) {
+           } else if (strncmp(&buf[i], "SHA512", 6) == 0) {
                shaAlg = HASH_AlgSHA512;
            } else {
                fprintf(rsaresp, "ERROR: Unable to find SHAAlg type");
@@ -4219,7 +4220,7 @@ loser:
 void
 rsa_sigver_test(char *reqfn)
 {
-    char buf[2*RSA_MAX_TEST_MODULUS_BYTES+7];      
+    char buf[2*RSA_MAX_TEST_MODULUS_BYTES+7];
                         /* buf holds one line from the input REQUEST file
                          * or to the output RESPONSE file.
                          * s = 2x for HEX output + 1 for \n
@@ -4227,12 +4228,12 @@ rsa_sigver_test(char *reqfn)
     FILE *rsareq;     /* input stream from the REQUEST file */
     FILE *rsaresp;    /* output stream to the RESPONSE file */
     int i, j;
-    unsigned char    sha[HASH_LENGTH_MAX];   /* SHA digest */
-    unsigned int    shaLength;              /* actual length of the digest */
+    unsigned char   sha[HASH_LENGTH_MAX];   /* SHA digest */
+    unsigned int    shaLength = 0;              /* actual length of the digest */
     HASH_HashType   shaAlg = HASH_AlgNULL;
-    int modulus;                            /* the Modulus size */
-    unsigned char     signature[513];    /* largest signature size + '\n' */
-    unsigned int     signatureLength;   /* actual length of the signature */
+    int modulus = 0;                            /* the Modulus size */
+    unsigned char   signature[513];    /* largest signature size + '\n' */
+    unsigned int    signatureLength = 0;   /* actual length of the signature */
     PRBool keyvalid = PR_TRUE;
 
     RSAPublicKey   rsaBlapiPublicKey; /* hold RSA public key */
@@ -4255,9 +4256,6 @@ rsa_sigver_test(char *reqfn)
             if (rsaBlapiPublicKey.modulus.data) { /* n */
                 SECITEM_ZfreeItem(&rsaBlapiPublicKey.modulus, PR_FALSE);
             }
-            if (rsaBlapiPublicKey.publicExponent.data) { /* e */
-                SECITEM_ZfreeItem(&rsaBlapiPublicKey.publicExponent, PR_FALSE);
-            }
             if (sscanf(buf, "[mod = %d]", &modulus) != 1) {
                 goto loser;
             }
@@ -4273,11 +4271,6 @@ rsa_sigver_test(char *reqfn)
 
             SECITEM_AllocItem(NULL, &rsaBlapiPublicKey.modulus, flen);
             if (rsaBlapiPublicKey.modulus.data == NULL) {
-                goto loser;
-            }
-
-            SECITEM_AllocItem(NULL, &rsaBlapiPublicKey.publicExponent, flen);
-            if (rsaBlapiPublicKey.publicExponent.data == NULL) {
                 goto loser;
             }
             continue;
@@ -4310,11 +4303,11 @@ rsa_sigver_test(char *reqfn)
            /* set the SHA Algorithm */
            if (strncmp(&buf[i], "SHA1", 4) == 0) {
                 shaAlg = HASH_AlgSHA1;
-           } else if (strncmp(&buf[i], "SHA256", 6)) {
+           } else if (strncmp(&buf[i], "SHA256", 6) == 0) {
                 shaAlg = HASH_AlgSHA256;
-           } else if (strncmp(&buf[i], "SHA384", 6)) {
+           } else if (strncmp(&buf[i], "SHA384", 6) == 0) {
                shaAlg = HASH_AlgSHA384;
-           } else if (strncmp(&buf[i], "SHA512", 6)) {
+           } else if (strncmp(&buf[i], "SHA512", 6) == 0) {
                shaAlg = HASH_AlgSHA512;
            } else {
                fprintf(rsaresp, "ERROR: Unable to find SHAAlg type");
@@ -4326,21 +4319,49 @@ rsa_sigver_test(char *reqfn)
 
         /* e = ... public Key */
         if (buf[0] == 'e') {
+            unsigned char data[RSA_MAX_TEST_EXPONENT_BYTES];
+            unsigned char t;
+
+            memset(data, 0, sizeof data);
+
+            if (rsaBlapiPublicKey.publicExponent.data) { /* e */
+                SECITEM_ZfreeItem(&rsaBlapiPublicKey.publicExponent, PR_FALSE);
+            }
+
             i = 1;
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
-            if (!from_hex_str(&rsaBlapiPublicKey.publicExponent.data[0],
-                             rsaBlapiPublicKey.publicExponent.len, &buf[i])) {
+            /* skip leading zero's */
+            while (isxdigit(buf[i])) {
+                hex_from_2char(&buf[i], &t);
+                if (t == 0) {
+                    i+=2;
+                } else break;
+            }
+        
+            /* get the exponent */
+            for (j=0; isxdigit(buf[i]) && j <= sizeof RSA_MAX_TEST_EXPONENT_BYTES; i+=2,j++) {
+                hex_from_2char(&buf[i], &data[j]);
+            }
+
+            if (j == 0) { j = 1; }  /* to handle 1 byte length exponents */
+
+            SECITEM_AllocItem(NULL, &rsaBlapiPublicKey.publicExponent,  j);
+            if (rsaBlapiPublicKey.publicExponent.data == NULL) {
                 goto loser;
             }
+
+            for (i=0; i < j; i++) {
+                rsaBlapiPublicKey.publicExponent.data[i] = data[i];
+            }
+
             fputs(buf, rsaresp);
             continue;
         }
 
         /* Msg = ... */
         if (strncmp(buf, "Msg", 3) == 0) {
-
             unsigned char msg[128]; /* MAX msg 128 */
 
             memset(sha, 0, sizeof sha);
@@ -4350,7 +4371,8 @@ rsa_sigver_test(char *reqfn)
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
-            for (j=0; isxdigit(buf[i]) && j >= sizeof(msg); i+=2,j++) {
+
+            for (j=0; isxdigit(buf[i]) && j <= sizeof msg; i+=2,j++) {
                 hex_from_2char(&buf[i], &msg[j]);
             }
 
@@ -4400,16 +4422,16 @@ rsa_sigver_test(char *reqfn)
             rsa_public_key = &low_RSA_public_key;
 
             memset(signature, 0, sizeof(signature));
-
             i = 1;
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
-            if (!from_hex_str(signature,
-                             signatureLength, &buf[i])) {
-                goto loser;
+
+            for (j=0; isxdigit(buf[i]) && j <= sizeof signature; i+=2,j++) {
+                hex_from_2char(&buf[i], &signature[j]);
             }
 
+            signatureLength = j;
             fputs(buf, rsaresp);
 
             /* Perform RSA verification with the RSA public key. */
