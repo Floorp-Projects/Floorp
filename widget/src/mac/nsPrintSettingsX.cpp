@@ -63,7 +63,6 @@ nsPrintSettingsX::nsPrintSettingsX() :
   mPageFormat(kPMNoPageFormat),
   mPrintSettings(kPMNoPrintSettings)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 /** ---------------------------------------------------
@@ -72,7 +71,6 @@ nsPrintSettingsX::nsPrintSettingsX(const nsPrintSettingsX& src) :
   mPageFormat(kPMNoPageFormat),
   mPrintSettings(kPMNoPrintSettings)
 {
-  NS_INIT_ISUPPORTS();
   *this = src;
 }
 
