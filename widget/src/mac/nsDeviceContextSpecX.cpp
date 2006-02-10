@@ -309,7 +309,8 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, dou
 Boolean
 LoadPrinterPlugin()
 {
-Boolean result=false;
+Boolean     result=false;
+FSSpec      spec;
 
   // get the relative path for the essential files folder.. then load the printer plugin
   nsCOMPtr<nsILocalFile> mozFile;
@@ -325,11 +326,9 @@ Boolean result=false;
     char  *fullModuleName = nsnull;
     mozFile->Append("Essential Files");
     mozFile->Append("PrintDialogPDE.plugin");
-    mozFile->GetPath(&fullModuleName);
-    nsFileSpec  file(fullModuleName);
-
-#ifndef XP_MACOSX    
-    const FSSpec  spec = file;
+    nsCOMPtr<nsILocalFileMac> mozMacFile(do_QueryInterface(mozFile));
+    mozMacFile->GetFSSpec(&spec);
+    
 
     FSRef ref;
     OSErr err = FSpMakeFSRef(&spec,&ref);
@@ -350,7 +349,7 @@ Boolean result=false;
         }
       }
     }
-#endif
+
   }
 
   return result;
