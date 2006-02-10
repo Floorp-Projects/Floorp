@@ -47,6 +47,7 @@ EXTRA_DEPS += $(srcdir)/../objs.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue
+DIST_INSTALL	= 1
 
 REQUIRES	= string \
 		  $(NULL)
