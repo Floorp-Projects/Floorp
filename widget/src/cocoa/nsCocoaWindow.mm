@@ -82,9 +82,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
 nsCocoaWindow::nsCocoaWindow()
 : mParent(nsnull)
 , mWindow(nil)
-, mIsDialog(PR_FALSE)
+, mIsSheet(PR_FALSE)
 , mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
+, mVisible(PR_FALSE)
 {
 
 }
@@ -117,25 +118,31 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
                         nsIAppShell *aAppShell,
                         nsIToolkit *aToolkit,
                         nsWidgetInitData *aInitData,
-                        nsNativeWidget aNativeParent)
+                        nsNativeWidget aNativeWindow)
 {
   Inherited::BaseCreate(aParent, aRect, aHandleEventFunction, aContext, aAppShell,
                         aToolkit, aInitData);
   
   mParent = aParent;
   
-  if (!aNativeParent || (aInitData && aInitData->mWindowType == eWindowType_popup)) {
-    nsWindowType windowType = eWindowType_toplevel;
+  // create a window if we aren't given one, always create if this should be a popup
+  if (!aNativeWindow || (aInitData && aInitData->mWindowType == eWindowType_popup)) {
+    // decide on a window type
+    PRBool allOrDefault = PR_FALSE;
     if (aInitData) {
+      allOrDefault = aInitData->mBorderStyle == eBorderStyle_all ||
+                     aInitData->mBorderStyle == eBorderStyle_default;
       mWindowType = aInitData->mWindowType;
-      // if a toplevel window was requested without a titlebar, use a dialog windowproc
+      // if a toplevel window was requested without a titlebar, use a dialog
       if (mWindowType == eWindowType_toplevel &&
           (aInitData->mBorderStyle == eBorderStyle_none ||
-           aInitData->mBorderStyle != eBorderStyle_all && !(aInitData->mBorderStyle & eBorderStyle_title)))
-        windowType = eWindowType_dialog;
+           !allOrDefault &&
+           !(aInitData->mBorderStyle & eBorderStyle_title)))
+        mWindowType = eWindowType_dialog;
     }
     else {
-      mWindowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
+      allOrDefault = PR_TRUE;
+      mWindowType = eWindowType_toplevel;
     }
     
 #ifdef MOZ_MACBROWSER
@@ -147,20 +154,89 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     NSRect rect;
     rect.origin.x = rect.origin.y = 1.0;
     rect.size.width = rect.size.height = 1.0;
-    unsigned int features = NSTitledWindowMask | NSClosableWindowMask |
-                            NSMiniaturizableWindowMask | NSResizableWindowMask;
     
-    if (mWindowType == eWindowType_popup || mWindowType == eWindowType_invisible)
-      features = 0;
-
+    // we default to NSBorderlessWindowMask, add features if needed
+    unsigned int features = NSBorderlessWindowMask;
+    
+    // Configure the window we will create based on the window type
+    switch (mWindowType)
+    {
+      case eWindowType_popup:
+        break;
+      case eWindowType_child:
+        // In Carbon, we made this a window of type kPlainWindowClass.
+        // I think that is pretty much equiv to NSBorderlessWindowMask.
+        break;
+      case eWindowType_dialog:
+        if (aInitData) {
+          // we never give dialogs a close button
+          switch (aInitData->mBorderStyle)
+          {
+            case eBorderStyle_none:
+              break;
+            case eBorderStyle_default:
+              features |= NSTitledWindowMask;
+              break;
+            case eBorderStyle_all:
+              features |= NSTitledWindowMask;
+              features |= NSResizableWindowMask;
+              features |= NSMiniaturizableWindowMask;
+              break;
+            default:
+              if (aInitData->mBorderStyle & eBorderStyle_title) {
+                features |= NSTitledWindowMask;
+                features |= NSMiniaturizableWindowMask;
+              }
+              if (aInitData->mBorderStyle & eBorderStyle_resizeh) {
+                features |= NSResizableWindowMask;
+              }
+              break;
+          }
+        }
+        else {
+          features |= NSTitledWindowMask;
+          features |= NSMiniaturizableWindowMask;
+        }
+        break;
+      case eWindowType_sheet:
+        if (aInitData) {
+          nsWindowType parentType;
+          aParent->GetWindowType(parentType);
+          if (parentType != eWindowType_invisible) {
+            // at this point we make the window a sheet
+            mIsSheet = PR_TRUE;
+            if (aInitData->mBorderStyle & eBorderStyle_resizeh) {
+              features = NSResizableWindowMask;
+            }
+          }
+          else {
+            features = NSMiniaturizableWindowMask;
+          }
+        }
+        else {
+          features = NSMiniaturizableWindowMask;
+        }
+        break;
+      case eWindowType_toplevel:
+        features |= NSTitledWindowMask;
+        features |= NSMiniaturizableWindowMask;
+        if (allOrDefault || aInitData->mBorderStyle & eBorderStyle_close)
+          features |= NSClosableWindowMask;
+        if (allOrDefault || aInitData->mBorderStyle & eBorderStyle_resizeh)
+          features |= NSResizableWindowMask;
+        break;
+      case eWindowType_invisible:
+        break;
+      default:
+        NS_ERROR("Unhandled window type!");
+        return NS_ERROR_FAILURE;
+    }
+    
+    // create the window
     mWindow = [[NSWindow alloc] initWithContentRect:rect styleMask:features 
                                 backing:NSBackingStoreBuffered defer:NO];
     
-    // Popups will receive a "close" message when an app terminates
-    // that causes an extra release to occur.  Make sure popups
-    // are set not to release when closed.
-    if (features == 0)
-      [mWindow setReleasedWhenClosed: NO];
+    [mWindow setReleasedWhenClosed:NO];
 
     // create a quickdraw view as the toplevel content view of the window
     [mWindow setContentView:[[[NSQuickDrawView alloc] init] autorelease]];
@@ -172,7 +248,11 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
     [mWindow setDelegate:mDelegate];
     
-    mWindowMadeHere = PR_TRUE;    
+    mWindowMadeHere = PR_TRUE;
+  }
+  else {
+    mWindow = (NSWindow*)aNativeWindow;
+    mVisible = PR_TRUE;
   }
   
   return NS_OK;
@@ -182,7 +262,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
 //
 // Create a nsCocoaWindow using a native window provided by the application
 //
-NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeParent,
+NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeWindow,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -192,7 +272,7 @@ NS_IMETHODIMP nsCocoaWindow::Create(nsNativeWidget aNativeParent,
 {
   return(StandardCreate(nsnull, aRect, aHandleEventFunction,
                           aContext, aAppShell, aToolkit, aInitData,
-                            aNativeParent));
+                            aNativeWindow));
 }
 
 
