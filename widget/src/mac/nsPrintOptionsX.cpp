@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsWatchTask.h"
 #include "nsPrintOptionsX.h"
+#include "nsPrintSettingsX.h"
 #include "nsIPref.h"
 
 #include "nsGfxUtils.h"
@@ -50,37 +51,32 @@
 #include "prmem.h"
 
 
-#define MAC_OS_X_PAGE_SETUP_PREFNAME  "print.macosx.pagesetup"
-
 /** ---------------------------------------------------
  */
 nsPrintOptionsX::nsPrintOptionsX()
-: mPageFormat(kPMNoPageFormat)
 {
-  OSStatus status = ::PMNewPageFormat(&mPageFormat);
-  NS_ASSERTION(status == noErr, "Error creating print settings");
-  
-  status = ::PMBegin();
-  NS_ASSERTION(status == noErr, "Error from PMBegin()");
-
-  nsresult rv = ReadPageSetupFromPrefs();
-  if (NS_FAILED(rv))
-    ::PMDefaultPageFormat(mPageFormat);
-  else
-  {
-    Boolean valid;
-    ::PMValidatePageFormat(mPageFormat, &valid);
-  }
-  
-  ::PMEnd();  
 }
 
 /** ---------------------------------------------------
  */
 nsPrintOptionsX::~nsPrintOptionsX()
 {
-  if (mPageFormat)
-    ::PMDisposePageFormat(mPageFormat);
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsPrintOptionsImpl.h
+ */
+/* nsIPrintSettings CreatePrintSettings (); */
+NS_IMETHODIMP nsPrintOptionsX::CreatePrintSettings(nsIPrintSettings **_retval)
+{
+  nsresult rv;
+  nsPrintSettingsX* printSettings = new nsPrintSettingsX; // does not initially ref count
+  if (!printSettings)
+    return NS_ERROR_OUT_OF_MEMORY;
+  rv = printSettings->Init();
+  if (NS_FAILED(rv))
+    return rv;
+  return printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
 }
 
 /** ---------------------------------------------------
@@ -88,144 +84,51 @@ nsPrintOptionsX::~nsPrintOptionsX()
 NS_IMETHODIMP
 nsPrintOptionsX::ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings)
 {
-
-  // it doesn't really matter if this fails
-  nsresult rv = ReadPageSetupFromPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to write page setup to prefs");
-
-  NS_ASSERTION(mPageFormat != kPMNoPageFormat, "No page format");
-  if (mPageFormat == kPMNoPageFormat)
-    return NS_ERROR_NOT_INITIALIZED;
-  
-  OSStatus status = ::PMBegin();
-  if (status != noErr) return NS_ERROR_FAILURE;
-  
-  Boolean validated;
-  ::PMValidatePageFormat(mPageFormat, &validated);
-
-	::InitCursor();
-
-  Boolean   accepted = false;
-  status = ::PMPageSetupDialog(mPageFormat, &accepted);
-
-  ::PMEnd();
-
-  // it doesn't really matter if this fails
-  rv = WritePageSetupToPrefs();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to save page setup to prefs");
-  
-  if (status != noErr)
-    return NS_ERROR_FAILURE;
-    
-  if (!accepted)
-    return NS_ERROR_ABORT;
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 } 
 
 /* [noscript] voidPtr GetNativeData (in short aDataType); */
 NS_IMETHODIMP
 nsPrintOptionsX::GetNativeData(PRInt16 aDataType, void * *_retval)
 {
-  nsresult rv = NS_OK;
-  
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
-  
-  switch (aDataType)
-  {
-    case kNativeDataPrintRecord:
-      {
-        // we need to clone and pass out
-        PMPageFormat    pageFormat = kPMNoPageFormat;
-        OSStatus status = ::PMNewPageFormat(&pageFormat);
-        if (status != noErr) return NS_ERROR_FAILURE;
-      
-        status = ::PMCopyPageFormat(mPageFormat, pageFormat);
-        if (status != noErr) {
-          ::PMDisposePageFormat(pageFormat);
-          return NS_ERROR_FAILURE;
-        }
-      
-        *_retval = pageFormat;
-      }
-      break;
-      
-    default:
-      rv = NS_ERROR_FAILURE;
-      break;
-  }
 
-  return rv;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
-
 
 #pragma mark -
 
 nsresult
-nsPrintOptionsX::ReadPageSetupFromPrefs()
+nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags)
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-    
-  nsXPIDLCString  encodedData;
-  rv = prefs->GetCharPref(MAC_OS_X_PAGE_SETUP_PREFNAME, getter_Copies(encodedData));
-  if (NS_FAILED(rv))
-    return rv;
-
-  // decode the base64
-  PRInt32   encodedDataLen = nsCRT::strlen(encodedData.get());
-  char* decodedData = ::PL_Base64Decode(encodedData.get(), encodedDataLen, nsnull);
-  if (!decodedData)
-    return NS_ERROR_FAILURE;
-
-  Handle    decodedDataHandle = nsnull;
-  OSErr err = ::PtrToHand(decodedData, &decodedDataHandle, (encodedDataLen * 3) / 4);
-  PR_Free(decodedData);
-  if (err != noErr)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  StHandleOwner   handleOwner(decodedDataHandle);  
-
-  PMPageFormat  newPageFormat = kPMNoPageFormat;
-  OSStatus  status = ::PMUnflattenPageFormat(decodedDataHandle, &newPageFormat);
-  if (status != noErr) 
-    return NS_ERROR_FAILURE;
-
-  status = ::PMCopyPageFormat(newPageFormat, mPageFormat);
-  ::PMDisposePageFormat(newPageFormat);
-  newPageFormat = kPMNoPageFormat;
-
-  return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
+  
+  rv = nsPrintOptions::ReadPrefs(aPS, aPrefName, aFlags);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::ReadPrefs() failed");
+  
+  nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
+  if (!printSettingsX)
+    return NS_ERROR_NO_INTERFACE;
+  rv = printSettingsX->ReadPageFormatFromPrefs();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsIPrintSettingsX::ReadPageFormatFromPrefs() failed");
+  
+  return NS_OK;
 }
 
 nsresult
-nsPrintOptionsX::WritePageSetupToPrefs()
+nsPrintOptionsX::WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags)
 {
-  if (mPageFormat == kPMNoPageFormat)
-    return NS_ERROR_NOT_INITIALIZED;
-    
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  Handle    pageFormatHandle = nsnull;
-  OSStatus  err = ::PMFlattenPageFormat(mPageFormat, &pageFormatHandle);
-  if (err != noErr)
-    return NS_ERROR_FAILURE;
-    
-  StHandleOwner   handleOwner(pageFormatHandle);
-  StHandleLocker  handleLocker(pageFormatHandle);
   
-  nsXPIDLCString  encodedData;
-  encodedData.Adopt(::PL_Base64Encode(*pageFormatHandle, ::GetHandleSize(pageFormatHandle), nsnull));
-  if (!encodedData.get())
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return prefs->SetCharPref(MAC_OS_X_PAGE_SETUP_PREFNAME, encodedData);
+  rv = nsPrintOptions::WritePrefs(aPS, aPrefName, aFlags);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::WritePrefs() failed");
+  
+  nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
+  if (!printSettingsX)
+    return NS_ERROR_NO_INTERFACE;
+  rv = printSettingsX->WritePageFormatToPrefs();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsIPrintSettingsX::WritePageFormatToPrefs() failed");
+  
+  return NS_OK;
 }
-
-
