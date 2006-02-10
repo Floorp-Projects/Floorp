@@ -357,6 +357,7 @@ NS_IMETHODIMP nsDeviceContextMac :: GetDrawingSurface(nsIRenderingContext &aCont
  */
 NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
 {
+  /*
   nsCOMPtr<nsIScreen> screen;
   FindScreenForSurface ( getter_AddRefs(screen) );
   if ( screen ) {
@@ -366,7 +367,27 @@ NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
   }
   else 
     aDepth = 1;
-
+  */
+  
+  // The above seems correct, however, because of the way Mozilla 
+  // rendering is set upQuickDraw will get confused when
+  // blitting to a secondary screen with a different bit depth.
+  // By always returning the bit depth of the primary screen, QD
+  // can do the proper color mappings.
+   
+  static nsCOMPtr<nsIScreen> sPrimaryScreen;
+  if ( !sPrimaryScreen && mScreenManager )
+    mScreenManager->GetPrimaryScreen ( getter_AddRefs(sPrimaryScreen) );  
+    
+  if(!sPrimaryScreen) {
+    aDepth = 1;
+    return NS_OK;
+  }
+   
+  PRInt32 depth;
+  sPrimaryScreen->GetPixelDepth ( &depth );
+  aDepth = NS_STATIC_CAST ( PRUint32, depth );
+    
   return NS_OK;
 }
 
