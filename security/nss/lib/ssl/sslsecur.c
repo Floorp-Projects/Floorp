@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.34 2005/09/16 21:28:20 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: sslsecur.c,v 1.35 2006/02/10 19:39:53 rrelyea%redhat.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -632,6 +632,7 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
     SECStatus rv;
     sslSocket *ss;
     sslServerCerts  *sc;
+    SECKEYPublicKey * pubKey = NULL;
 
     ss = ssl_FindSocket(fd);
     if (!ss) {
@@ -664,7 +665,6 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
     	sc->serverCert = NULL;
     }
     if (cert) {
-	SECKEYPublicKey * pubKey;
 	sc->serverCert = CERT_DupCertificate(cert);
 	if (!sc->serverCert)
 	    goto loser;
@@ -673,8 +673,6 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 	if (!pubKey) 
 	    goto loser;
 	sc->serverKeyBits = SECKEY_PublicKeyStrengthInBits(pubKey);
-	SECKEY_DestroyPublicKey(pubKey); 
-	pubKey = NULL;
     }
 
 
@@ -723,11 +721,12 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 	if (keyCopy == NULL)
 	    goto loser;
 	SECKEY_CacheStaticFlags(keyCopy);
-        sc->serverKeyPair = ssl3_NewKeyPair(keyCopy, NULL);
+        sc->serverKeyPair = ssl3_NewKeyPair(keyCopy, pubKey);
         if (sc->serverKeyPair == NULL) {
             SECKEY_DestroyPrivateKey(keyCopy);
             goto loser;
         }
+	pubKey = NULL; /* adopted by serverKeyPair */
     }
 
     if (kea == kt_rsa && cert && sc->serverKeyBits > 512) {
@@ -748,6 +747,10 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
     return SECSuccess;
 
 loser:
+    if (pubKey) {
+	SECKEY_DestroyPublicKey(pubKey); 
+	pubKey = NULL;
+    }
     if (sc->serverCert != NULL) {
 	CERT_DestroyCertificate(sc->serverCert);
 	sc->serverCert = NULL;
