@@ -67,13 +67,18 @@ nsPrintOptionsX::~nsPrintOptionsX()
 nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
   nsresult rv;
+  *_retval = nsnull;
+
   nsPrintSettingsX* printSettings = new nsPrintSettingsX; // does not initially ref count
-  if (!printSettings)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*_retval = printSettings); // ref count
+
   rv = printSettings->Init();
   if (NS_FAILED(rv))
-    return rv;
-  return printSettings->QueryInterface(NS_GET_IID(nsIPrintSettings), (void**)_retval); // ref counts
+    NS_RELEASE(*_retval);
+
+  return rv;
 }
 
 /** ---------------------------------------------------
