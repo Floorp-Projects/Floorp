@@ -336,6 +336,7 @@ pref("browser.chrome.toolbar_tips",         true);
 pref("browser.chrome.toolbar_style",        2);
 
 pref("browser.xul.error_pages.enabled", true);
+pref("mail.attachment.store.version", 0);
 
 // Attachment download manager settings
 pref("browser.download.useDownloadDir", false);

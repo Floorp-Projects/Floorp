@@ -800,6 +800,7 @@ function delayedOnLoadMessenger()
 
   InitializeDataSources();
   InitPanes();
+  MigrateAttachmentDownloadStore();
 
   accountManager.setSpecialFolders();
   accountManager.loadVirtualFolders();
@@ -1641,3 +1642,22 @@ function GetFolderAttribute(tree, source, attribute)
     return target;
 }
 
+// Thunderbird has been storing old attachment download meta data in downloads.rdf 
+// even though there was no way to show or clean up this data. Now that we are using 
+// the new download manager in toolkit, we don't want to present this old data.
+// To migrate to the new download manager, remove downloads.rdf.
+function MigrateAttachmentDownloadStore()
+{
+  var attachmentStoreVersion = pref.getIntPref("mail.attachment.store.version");
+  if (!attachmentStoreVersion)
+  {
+    var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
+                     .getService(Components.interfaces.nsIProperties);
+    var downloadsFile = dirService.get("DLoads", Components.interfaces.nsIFile);
+    if (downloadsFile && downloadsFile.exists())
+      downloadsFile.remove(false);
+    
+    // bump the version so we don't bother doing this again.
+    pref.setIntPref("mail.attachment.store.version", 1); 
+  }
+}
