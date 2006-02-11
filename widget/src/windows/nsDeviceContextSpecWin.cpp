@@ -40,6 +40,7 @@
 #include <winspool.h>
 #include <tchar.h>
 
+#include "nsAutoPtr.h"
 #include "nsIWidget.h"
 
 #include "nsVoidArray.h"
@@ -182,8 +183,11 @@ nsDeviceContextSpecWin::nsDeviceContextSpecWin()
 
 
 //----------------------------------------------------------------------------------
+#ifdef MOZ_CAIRO_GFX
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecWin, nsIDeviceContextSpec)
-
+#else
+NS_IMPL_ISUPPORTS2(nsDeviceContextSpecWin, nsIDeviceContextSpec, nsISupportsVoid)
+#endif
 nsDeviceContextSpecWin::~nsDeviceContextSpecWin()
 {
   SetDeviceName(nsnull);
@@ -535,6 +539,23 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
 
   return NS_ERROR_FAILURE;
 }
+
+#else
+
+// nsISupportsVoid impl stuff. goes away when we turn on cairo.
+NS_IMETHODIMP nsDeviceContextSpecWin::GetData(void **data)
+{
+  NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
+
+  if (mDevMode) {
+    HDC dc = ::CreateDC(mDriverName, mDeviceName, NULL, mDevMode);
+    *data = (void*)dc;
+
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
 #endif
 
 //----------------------------------------------------------------------------------
@@ -901,7 +922,7 @@ nsPrinterEnumeratorWin::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterNa
     return NS_OK;
   }
 
-  nsCOMPtr<nsDeviceContextSpecWin> devSpecWin = new nsDeviceContextSpecWin();
+  nsRefPtr<nsDeviceContextSpecWin> devSpecWin = new nsDeviceContextSpecWin();
   if (!devSpecWin) return NS_ERROR_OUT_OF_MEMORY;
 
   if (NS_FAILED(GlobalPrinters::GetInstance()->EnumeratePrinterList())) {
