@@ -207,6 +207,7 @@ CalendarWindow.prototype.switchToDayView = function calWin_switchToDayView( )
     document.getElementById("multiweek_view_command").removeAttribute("checked");
     document.getElementById("week_view_command").removeAttribute("checked");
     document.getElementById("day_view_command").setAttribute("checked", true);
+    document.getElementById("menu-numberofweeks-inview").setAttribute("disabled", true);
     this.switchToView('day-view');
 }
 
@@ -222,6 +223,7 @@ CalendarWindow.prototype.switchToWeekView = function calWin_switchToWeekView( )
     document.getElementById("multiweek_view_command").removeAttribute("checked");
     document.getElementById("day_view_command").removeAttribute("checked");
     document.getElementById("week_view_command").setAttribute("checked", true);
+    document.getElementById("menu-numberofweeks-inview").setAttribute("disabled", true);
     this.switchToView('week-view');
 }
 
@@ -237,6 +239,7 @@ CalendarWindow.prototype.switchToMonthView = function calWin_switchToMonthView( 
     document.getElementById("multiweek_view_command").removeAttribute("checked");
     document.getElementById("day_view_command").removeAttribute("checked");
     document.getElementById("month_view_command").setAttribute("checked", true);
+    document.getElementById("menu-numberofweeks-inview").setAttribute("disabled", true);
     this.switchToView('month-view');
 }
 
@@ -251,6 +254,7 @@ CalendarWindow.prototype.switchToMultiweekView = function calWin_switchToMultiwe
     document.getElementById("week_view_command").removeAttribute("checked");
     document.getElementById("day_view_command").removeAttribute("checked");
     document.getElementById("multiweek_view_command").setAttribute("checked", true);
+    document.getElementById("menu-numberofweeks-inview").removeAttribute("disabled");
     this.switchToView('multiweek-view');
 }
 
