@@ -4824,6 +4824,7 @@ ExtensionManager.prototype = {
     switch (state) {
     case nsIXPIProgressDialog.INSTALL_DONE:
       --this._downloadCount;
+      this.removeDownload(addon.xpiURL);
       break;
     case nsIXPIProgressDialog.DIALOG_CLOSE:
       for (var i = 0; i < this._transactions.length; ++i) {
