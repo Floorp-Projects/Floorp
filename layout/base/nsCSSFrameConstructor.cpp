@@ -3952,11 +3952,6 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsFrameConstructorState& aState,
   }
   InitAndRestoreFrame(aState, aContent, parentFrame, aStyleContext, nsnull,
                       aNewFrame);
-  // if the parent frame was anonymous then reparent the style context
-  if (aIsPseudoParent) {
-    aState.mFrameManager->
-      ReParentStyleContext(aNewFrame, parentFrame->GetStyleContext());
-  }
 
   // construct additional col frames if the col frame has a span > 1
   PRInt32 span = 1;
