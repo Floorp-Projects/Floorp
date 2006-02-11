@@ -4787,9 +4787,11 @@ PresShell::IsThemeSupportEnabled()
 NS_IMETHODIMP
 PresShell::PostReflowCallback(nsIReflowCallback* aCallback)
 {
-  nsCallbackEventRequest* request = nsnull;
   void* result = AllocateFrame(sizeof(nsCallbackEventRequest));
-  request = (nsCallbackEventRequest*)result;
+  if (NS_UNLIKELY(!result)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsCallbackEventRequest* request = (nsCallbackEventRequest*)result;
 
   request->callback = aCallback;
   NS_ADDREF(aCallback);
@@ -4850,9 +4852,12 @@ PresShell::PostDOMEvent(nsIContent* aContent, nsEvent* aEvent)
 {
  // ok we have a list of events to handle. Queue them up and handle them
  // after we finish reflow.
-  nsDOMEventRequest* request = nsnull;
+
   void* result = AllocateFrame(sizeof(nsDOMEventRequest));
-  request = (nsDOMEventRequest*)result;
+  if (NS_UNLIKELY(!result)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsDOMEventRequest* request = (nsDOMEventRequest*)result;
 
   request->content = aContent;
   NS_ADDREF(aContent);
@@ -4884,10 +4889,12 @@ PresShell::PostAttributeChange(nsIContent* aContent,
 {
  // ok we have a list of events to handle. Queue them up and handle them
  // after we finish reflow.
-  nsAttributeChangeRequest* request = nsnull;
 
   void* result = AllocateFrame(sizeof(nsAttributeChangeRequest));
-  request = new (result) nsAttributeChangeRequest();
+  if (NS_UNLIKELY(!result)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsAttributeChangeRequest* request = new (result) nsAttributeChangeRequest();
 
   request->content = aContent;
   NS_ADDREF(aContent);
@@ -6394,6 +6401,7 @@ PresShell::PostReflowEvent()
   if (eventQueue != mReflowEventQueue && !mIsDestroying &&
       !mIsReflowing && mReflowCommands.Count() > 0) {
     ReflowEvent* ev = new ReflowEvent(NS_STATIC_CAST(nsIPresShell*, this));
+    // OOM note: both PostEvent and PL_DestroyEvent accept a null arg.
     if (NS_FAILED(eventQueue->PostEvent(ev))) {
       NS_ERROR("failed to post reflow event");
       PL_DestroyEvent(ev);
