@@ -548,7 +548,6 @@ protected:
   static NS_HIDDEN_(void) SetFont(nsPresContext* aPresContext,
                                   nsStyleContext* aContext,
                                   nscoord aMinFontSize,
-                                  PRBool aUseDocumentFonts,
                                   PRBool aIsGeneric,
                                   const nsRuleDataFont& aFontData,
                                   const nsFont& aDefaultFont,
@@ -560,7 +559,6 @@ protected:
                                          const nsRuleDataFont& aFontData,
                                          PRUint8 aGenericFontID,
                                          nscoord aMinFontSize,
-                                         PRBool aUseDocumentFonts,
                                          nsStyleFont* aFont);
 
   NS_HIDDEN_(void) AdjustLogicalBoxProp(nsStyleContext* aContext,
