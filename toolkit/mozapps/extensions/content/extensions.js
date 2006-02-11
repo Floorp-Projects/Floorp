@@ -405,7 +405,6 @@ XPInstallDownloadManager.prototype = {
         // not a download operation on an existing item.
         var type = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION
                                                 : nsIUpdateItem.TYPE_THEME;
-        gExtensionManager.removeDownload(aAddon.xpiURL);
         break;
       case nsIXPIProgressDialog.DIALOG_CLOSE:
         break;
