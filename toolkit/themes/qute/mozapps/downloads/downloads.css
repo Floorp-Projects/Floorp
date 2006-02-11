@@ -4,24 +4,13 @@
 
 /* Download View */
 #downloadView {
-  -moz-binding: url("chrome://mozapps/skin/downloads/downloads.xml#download-view");
   margin: 10px 10px 5px 10px;
-  -moz-appearance: listbox;
-  -moz-user-focus: normal;
 }
 
-.downloadViewInner2 {
+.downloadViewInner {
   background-image: url("chrome://mozapps/skin/downloads/viewFader.png");
   padding: 0px;
 }  
-
-.downloadViewInner1 {
-  background-color: Window;
-  background-image: url("chrome://mozapps/skin/downloads/downloadsBG.png");
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  background-position: bottom right;
-}
 
 /* Download Manager Command Bar */
 #commandBar {
@@ -30,21 +19,14 @@
 
 #cleanUpButton {
   margin: 0px;
-  -moz-user-focus: ignore;
   list-style-image: url("chrome://mozapps/skin/downloads/downloadCleanup.png");
 }
 
-#optionsButton {
-  margin: 0px;
-  -moz-user-focus: ignore;
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadOptions.png");
-}
-
-#cleanUpButton .button-icon, #optionsButton .button-icon {
-  margin-top: 0px !important;
-  margin-bottom: 0px !important;
-  -moz-margin-start: 0px !important;
-  -moz-margin-end: 5px !important;
+#cleanUpButton .button-icon {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  -moz-margin-start: 0px;
+  -moz-margin-end: 5px;
 }
 
 #cleanUpButton[disabled="true"] {
@@ -89,3 +71,23 @@ download[state="5"], download[state="6"] {
   -moz-margin-end: 10px;
 }
 
+#folderIcon {
+  width: 16px;
+  height: 16px;  
+}
+
+#folderName {
+  width: 0px;
+}
+
+#saveToFolder {
+  padding-top: 1px;
+  padding-bottom: 3px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 6px;
+}
+
+#saveToFolder .toolbarbutton-text {
+  text-align: left;
+  -moz-margin-start: 5px !important;
+}
