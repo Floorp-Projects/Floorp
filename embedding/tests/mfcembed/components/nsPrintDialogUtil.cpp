@@ -69,7 +69,7 @@ WIN_LIBS=                                       \
 #include "nsIPrintSettingsWin.h"
 #include "nsUnitConversion.h"
 #include "nsIPrintOptions.h"
-#include "nsGfxCIID.h"
+#include "nsWidgetsCID.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
