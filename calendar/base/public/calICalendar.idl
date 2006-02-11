@@ -111,8 +111,10 @@ interface calICalendar : nsISupports
   const unsigned long ITEM_FILTER_ALL_ITEMS = 0xFFFF;
 
   /** 
-   * If set, return calIItemOccurence items, otherwise return subclasses of
-   * calIItemBase.
+   * If set, return calIItemBase occurrences for all the appropriate instances,
+   * as determined by an item's recurrenceInfo.  All of these occurrences will
+   * have their parentItem set to the recurrence parent.  If not set, will 
+   * return only calIItemBase parent items.
    */
   const unsigned long ITEM_FILTER_CLASS_OCCURRENCES = 1 << 16;
 
