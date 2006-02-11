@@ -112,6 +112,12 @@ class query
             // Otherwise, we do it for  them
             $selected[] = array('field' => 'host_hostname',
                                 'title' => $config['fields']['host_hostname']);
+
+            // Showing date is good just about always, except when using a count
+            if(!isset($_GET['count'])){
+                $selected[] = array('field' => 'report_file_date',
+                                    'title' => $config['fields']['report_file_date']);
+            }
         }
         if(!isset($_GET['count']) &&
            $this->_searchQueryInput($selected, 'report_id') === false){
@@ -163,6 +169,15 @@ class query
                 }
             }
         }
+
+        /*******************
+         * PRODUCT FAMILY
+         *******************/
+        $product_family = "";
+        if(isset($_GET['product_family'])){
+            $product_family = $_GET['product_family'];
+        }
+
         /*******************
          * WHERE
          *******************/
@@ -196,11 +211,12 @@ class query
                      'show'                   => $show,
                      'page'                   => $page,
                      'count'                  => $count,
+                     'product_family'          => $product_family,
                      'artificialReportID'     => $artificialReportID
         );
     }
 
-    function doQuery($select, $where, $orderby, $show, $page, $count){
+    function doQuery($select, $where, $orderby, $show, $page, $product_family, $count){
         global $db;
 
         /************
@@ -269,6 +285,33 @@ class query
             $sql_where .= ' AND ';
         }
         $sql_where .= 'host.host_id = report_host_id ';
+
+        /*******************
+         * ORDER BY
+         *******************/
+         // product_family
+         $prodFamQuery = $db->Execute("SELECT product.product_value
+                                       FROM product
+                                       WHERE product.product_family = ".$db->quote($product_family)." ");
+         $sql_product_family = "";
+         if($prodFamQuery){
+             $prodFamCount = 0;
+             while(!$prodFamQuery->EOF){
+                 if($prodFamCount > 0){
+                     $sql_product_family .= ' OR ';
+                 }
+                 $sql_product_family .= 'report.report_product = '.$db->quote($prodFamQuery->fields['product_value']).' ';
+                 $prodFamCount++;
+                 $prodFamQuery->MoveNext();
+             }
+
+             // If we had results, wrap it in ()
+             if($prodFamCount > 0){
+                 $sql_product_family = ' AND ( '.$sql_product_family;
+                 $sql_product_family .= ')';
+             }
+         }
+         $sql_where .= $sql_product_family;
 
         /*******************
          * ORDER BY
@@ -379,6 +422,11 @@ class query
         // Show
         if(isset($query_input['show']) && !in_array('show', $omit)){
              $standard .= 'show='.$query_input['show'].'&amp;';
+        }
+
+        // ProductFam
+        if(isset($query_input['product_family']) && !in_array('product_family', $omit)){
+             $standard .= 'product_family='.$query_input['product_family'].'&amp;';
         }
 
         // Page

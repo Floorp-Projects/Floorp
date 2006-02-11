@@ -71,6 +71,7 @@ function templateStandardVars($object){
     $object->assign('app_url', $config['base_url'].'/app');
     $object->assign('charset', 'utf-8');
     $object->assign('is_admin', $securitylib->isLoggedIn());
+    $object->assign('current_product_family', urlencode($config['current_product_family']));
     return $object;
 }
 

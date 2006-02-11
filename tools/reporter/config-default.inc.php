@@ -104,12 +104,8 @@ $config['gzip']                             = false;
 // minimum version to allow to contact the service
 $config['min_vers']                        = '0.2';
 
-
-
-// products to show in the pull down on the query page
-$config['products'][0]                     = 'Firefox/1.0';
-$config['products'][1]                     = 'Firefox/1.0+';
-
+// current product family
+$config['current_product_family']          = 'Firefox/1.5';
 
 // How many items to show by default
 $config['show'] = 25;

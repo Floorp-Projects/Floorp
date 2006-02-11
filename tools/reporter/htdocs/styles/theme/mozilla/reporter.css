@@ -148,6 +148,14 @@ body {
    margin-left: 110px;
 }
 
-#report_screenshot {
-    text-align: center;
+#form {
+	float: left;
+/*	width: 9em; */
+	padding: 0 .5em;
+	text-align: right;
+	font-weight: bold;
+}
+
+#form div {
+      margin-bottom: 1em;
 }

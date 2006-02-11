@@ -39,6 +39,7 @@
 require_once('../config.inc.php');
 require_once($config['base_path'].'/includes/security.inc.php');
 require_once($config['base_path'].'/includes/iolib.inc.php');
+require_once($config['base_path'].'/includes/db.inc.php');
 require_once($config['base_path'].'/includes/contrib/smarty/libs/Smarty.class.php');
 
 // Start Session
@@ -66,8 +67,26 @@ if(isset($_GET['report_platform'])){
 if(isset($_GET['report_oscpu'])){
     $content->assign('report_oscpu',                $_GET['report_oscpu']);
 }
+
+$db = NewDBConnection($config['db_dsn']);
+$db->SetFetchMode(ADODB_FETCH_ASSOC);
+
+$productDescQuery =& $db->Execute("SELECT product.product_value, product.product_description
+                                   FROM product
+                                   ORDER BY product.product_description desc");
+if(!$productDescQuery){
+    die("DB Error");
+}
+
+$products = array();
+while (!$productDescQuery->EOF) {
+    $products[$productDescQuery->fields['product_value']] = $productDescQuery->fields['product_description'];
+    $productDescQuery->MoveNext();
+}
+
+
 if(isset($config['products'])){
-    $content->assign('product_options',             $config['products']);
+    $content->assign('product_options',             $products);
 }
 if(isset($_GET['report_product'])){
     $content->assign('report_product',              $_GET['report_product']);

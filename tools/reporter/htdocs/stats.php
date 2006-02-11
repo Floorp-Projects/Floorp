@@ -49,7 +49,7 @@ header("Cache-control: private"); //IE 6 Fix
 
 
 // Open DB
-$db = NewADOConnection($config['db_dsn']);
+$db = NewDBConnection($config['db_dsn']);
 $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
 $content = initializeTemplate();

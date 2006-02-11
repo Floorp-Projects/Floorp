@@ -32,7 +32,7 @@
                      {/if}
                  {/strip}</li>
                  <li id="stats"><a href="{$base_url}/app/stats/" title="View Statistics">Stats</a></li>
-                 <li id="top_25"><a href="{$base_url}/app/query/?show=25&amp;count=on&amp;submit_query=Search" title="Top 25 Hosts">Top 25</a></li>
+                 <li id="top_25"><a href="{$base_url}/app/query/?show=25&amp;product_family={$current_product_family}&amp;count=on&amp;submit_query=Search" title="Top 25 Hosts">Top 25</a></li>
                  <li id="query"><a href="{$base_url}/app" title="Create a new Query">Query</a></li>
              </ul>
         </div>

@@ -74,6 +74,7 @@ $result = $query->doQuery($query_input['selected'],
                           $query_input['orderby'],
                           $query_input['show'],
                           $query_input['page'],
+                          $query_input['product_family'],
                           $query_input['count']
           );
 
@@ -130,5 +131,4 @@ if(ceil($result['totalResults']/$query_input['show']) < 20){
     $content->assign('amt',            20);
 }
 displayPage($content, 'query', 'query.tpl');
-
 ?>

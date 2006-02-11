@@ -53,7 +53,7 @@ printheaders();
 // Open DB
 $db = NewDBConnection($config['db_dsn']);
 $db->SetFetchMode(ADODB_FETCH_ASSOC);
-
+          
 $reportQuery =& $db->Execute("SELECT *
                               FROM report, host
                               WHERE report.report_id = ".$db->quote($_GET['report_id'])."

@@ -41,6 +41,7 @@ require_once($config['base_path'].'/includes/iolib.inc.php');
 require_once($config['base_path'].'/includes/db.inc.php');
 require_once($config['base_path'].'/includes/security.inc.php');
 
+
 // Turn off Error Reporting
 error_reporting(0);
 
