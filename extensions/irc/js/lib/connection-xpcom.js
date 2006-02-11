@@ -339,7 +339,7 @@ function bc_accept(transport, observer)
     this.isConnected = true;
 
     // Clean up listening socket.
-    this._serverSock.close();
+    this.close();
 
     return this.isConnected;
 }

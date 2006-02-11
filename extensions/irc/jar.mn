@@ -9,6 +9,7 @@ chatzilla.jar:
 	content/chatzilla/lib/js/pref-manager.js     (js/lib/pref-manager.js)
 	content/chatzilla/lib/js/message-manager.js  (js/lib/message-manager.js)
 	content/chatzilla/lib/js/menu-manager.js     (js/lib/menu-manager.js)
+	content/chatzilla/lib/js/ident.js            (js/lib/ident.js) 
 	content/chatzilla/lib/js/irc.js              (js/lib/irc.js) 
 	content/chatzilla/lib/js/irc-debug.js        (js/lib/irc-debug.js)
 	content/chatzilla/lib/js/file-utils.js       (js/lib/file-utils.js)

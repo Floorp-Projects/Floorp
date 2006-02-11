@@ -70,6 +70,7 @@
     <script src="chrome://chatzilla/content/lib/js/irc-debug.js"/>
     <script src="chrome://chatzilla/content/lib/js/file-utils.js"/>
     <script src="chrome://chatzilla/content/lib/js/dcc.js"/>
+    <script src="chrome://chatzilla/content/lib/js/ident.js"/>
     <script src="chrome://chatzilla/content/lib/js/text-serializer.js"/>
     <script src="chrome://chatzilla/content/lib/xul/munger.js"/>
 

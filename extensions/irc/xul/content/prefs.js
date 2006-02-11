@@ -111,6 +111,12 @@ function initPrefs()
         }
     }
 
+    // Set a property so network ident prefs get the same group later:
+    client.prefManager.identGroup = ".connect";
+    // Linux and OS X won't let non-root listen on port 113.
+    if ((client.platform == "Linux") || (client.platform == "Mac"))
+        client.prefManager.identGroup = "hidden";
+
     var prefs =
         [
          ["activityFlashDelay", 200,      "global"],
@@ -145,6 +151,7 @@ function initPrefs()
          ["hasPrefs",           false,    "hidden"],
          ["font.family",        "default", "appearance.misc"],
          ["font.size",          0,        "appearance.misc"],
+         ["identd.enabled",     false,    client.prefManager.identGroup],
          ["initialURLs",        [],       "startup.initialURLs"],
          ["initialScripts",     [getURLSpecFromFile(scriptPath.path)],
                                           "startup.initialScripts"],
@@ -408,6 +415,7 @@ function getNetworkPrefManager(network)
          ["font.family",      defer, "appearance.misc"],
          ["font.size",        defer, "appearance.misc"],
          ["hasPrefs",         false, "hidden"],
+         ["identd.enabled",   defer, client.prefManager.identGroup],
          ["ignoreList",       [],    "hidden"],
          ["log",              client.prefs["networkLog"], ".log"],
          ["logFileName",      makeLogNameNetwork,         ".log"],

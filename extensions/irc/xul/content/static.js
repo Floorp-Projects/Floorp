@@ -175,6 +175,8 @@ function init()
     // Create DCC handler.
     client.dcc = new CIRCDCC(client);
 
+    client.ident = new IdentServer(client);
+
     // start logging.  nothing should call display() before this point.
     if (client.prefs["log"])
         client.openLogFile(client);

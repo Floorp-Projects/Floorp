@@ -1075,6 +1075,8 @@ function my_showtonet (e)
                 setTimeout(delayFn, 1000 * Math.random(), this);
             }
 
+            client.ident.removeNetwork(this);
+
             // Had some collision during connect.
             if (this.primServ.me.unicodeName != this.prefs["nickname"])
             {
@@ -1741,6 +1743,14 @@ function my_sconnect (e)
                               e.server.getURL(),
                               e.connectAttempt,
                               this.MAX_CONNECT_ATTEMPTS]), "INFO");
+
+    if (this.prefs["identd.enabled"])
+    {
+        if (jsenv.HAS_SERVER_SOCKETS)
+            client.ident.addNetwork(this, e.server);
+        else
+            display(MSG_IDENT_SERVER_NOT_POSSIBLE, MT_WARN);
+    }
 }
 
 CIRCNetwork.prototype.onError =
@@ -1787,6 +1797,7 @@ function my_neterror (e)
         updateProgress();
     }
 
+    client.ident.removeNetwork(this);
 
     this.display(msg, type);
 
@@ -1890,6 +1901,8 @@ function my_netdisconnect (e)
     updateTitle();
     updateProgress();
     updateSecurityIcon();
+
+    client.ident.removeNetwork(this);
 
     if ("userClose" in client && client.userClose &&
         client.getConnectionCount() == 0)
