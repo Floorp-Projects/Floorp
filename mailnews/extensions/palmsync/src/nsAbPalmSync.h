@@ -46,10 +46,6 @@
 #include "nsILocalFile.h"
 #include "nsIAbDirectory.h"
 
-#define kABFileName_PreviousSuffixLen 4
-#define kABFileName_PreviousSuffix ".na2" /* final v2 address book format */
-
-
 class nsAbPalmHotSync
 {
 public:

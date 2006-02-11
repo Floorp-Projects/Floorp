@@ -50,6 +50,10 @@
 #define kPersonalAddressbookUri    "moz-abmdbdirectory://abook.mab"
 #define kCollectedAddressbook      "history.mab"
 #define kCollectedAddressbookUri   "moz-abmdbdirectory://history.mab"
+
+#define kABFileName_PreviousSuffix ".na2" /* final v2 address book format */
+#define kABFileName_PreviousSuffixLen 4
+#define kABFileName_CurrentSuffix ".mab"  /* v3 address book extension */
 %}
 
 // used for when creating new directories
