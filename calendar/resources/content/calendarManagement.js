@@ -325,7 +325,7 @@ function updateStyleSheetForObject(object) {
     if (object.uri) {
         color = getCalendarManager().getCalendarPref(object, 'color');
         if (!color)
-            color = "#4e84c2";
+            color = "#A8C2E1";
         rule.style.backgroundColor = color;
         rule.style.color = getContrastingTextColor(color);
         return;
