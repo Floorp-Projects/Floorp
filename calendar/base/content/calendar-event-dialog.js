@@ -151,11 +151,14 @@ function loadDialog(item)
     }
 
     /* item default calendar */
-    if (item.calendar) {
+    // If this is a new item, it might not have a calendar, but a default
+    // option could well have been passed in.
+    var calendarToUse = item.calendar || window.arguments[0].calendar
+    if (calendarToUse) {
         var calendarList = document.getElementById("item-calendar");
         var calendars = getCalendarManager().getCalendars({});
         for (i in calendars) {
-            if (item.calendar.uri.equals(calendars[i].uri))
+            if (calendarToUse.uri.equals(calendars[i].uri))
                 calendarList.selectedIndex = i;
         }
     } else {
