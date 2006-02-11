@@ -215,7 +215,7 @@
         <form method="get" action="buglist.cgi">
           <input type="submit" value="Remember search"> as 
           <input type="hidden" name="newquery" 
-                 value="[% urlquerypart FILTER html %]">
+                 value="[% urlquerypart FILTER html %][% "&order=$qorder" FILTER html IF order %]">
           <input type="hidden" name="cmdtype" value="doit">
           <input type="hidden" name="remtype" value="asnamed">
           <input type="text" name="newqueryname" size="20"
