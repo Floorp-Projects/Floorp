@@ -522,24 +522,31 @@
            var stdate = aOccurrence.startDate;
            var enddate = aOccurrence.endDate;
 
-           if (stdate.timezone != this.mTimezone)
+           if (stdate.timezone != this.mTimezone) {
                stdate = stdate.getInTimezone (this.mTimezone);
+           }
 
-           if (enddate.timezone != this.mTimezone)
+           if (enddate.timezone != this.mTimezone) {
                enddate = enddate.getInTimezone (this.mTimezone);
+           }
+
+           var startHour   = stdate.hour;
+           var startMinute = stdate.minute;
+           var endHour   = enddate.hour;
+           var endMinute = enddate.minute;
 
            // Handle cases where an event begins or ends on a day other than this
            if (stdate.compare(this.mDate) == -1) {
-               stdate.hour = 0;
-               stdate.minute = 0;
+               startHour = 0;
+               startMinute = 0;
            }
            if (enddate.compare(this.mDate) == 1) {
-               enddate.hour = 24;
-               enddate.minute = 0;
+               endHour = 24;
+               endMinute = 0;
            }
 
-           return { start: stdate.hour * 60 + stdate.minute,
-                    end: enddate.hour * 60 + enddate.minute };
+           return { start: startHour * 60 + startMinute,
+                    end:   endHour   * 60 + endMinute };
         ]]></body>
       </method>
 
