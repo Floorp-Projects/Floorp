@@ -37,14 +37,13 @@
 
 #include "nsDeviceContextWin.h"
 #include "nsRenderingContextWin.h"
-//#include "nsDeviceContextSpecWin.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
 #include "nsGfxCIID.h"
 #include "nsReadableUtils.h"
-
+#include "nsISupportsPrimitives.h"
 #include "nsString.h"
 
 #if defined(DEBUG_rods) && defined(MOZ_LAYOUTDEBUG)
@@ -696,7 +695,6 @@ BOOL CALLBACK abortproc( HDC hdc, int iError )
 NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {
-#if 0
   nsDeviceContextWin* devConWin = new nsDeviceContextWin(); //ref count 0 
   if (devConWin != nsnull) {
     // this will ref count it
@@ -707,26 +705,14 @@ NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aD
   }
 
   devConWin->mSpec = aDevice;
-  NS_ADDREF(aDevice);
- 
-  char*   devicename;
-  char*   drivername;
 
-  nsDeviceContextSpecWin* devSpecWin = NS_STATIC_CAST(nsDeviceContextSpecWin*, aDevice);
-  devSpecWin->GetDeviceName(devicename); // sets pointer do not free
-  devSpecWin->GetDriverName(drivername); // sets pointer do not free
+  NS_ADDREF(aDevice);
 
   HDC dc = NULL;
-  LPDEVMODE devmode;
-  devSpecWin->GetDevMode(devmode);
-  NS_ASSERTION(devmode, "DevMode can't be NULL here");
-  if (devmode) {
-    dc = ::CreateDC(drivername, devicename, NULL, devmode);
-  }
-
+  nsCOMPtr<nsISupportsVoid> supVoid = do_QueryInterface(aDevice);
+  supVoid->GetData((void**)&dc);
+ 
   return devConWin->Init(dc, this); // take ownership of the DC
-#endif
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
