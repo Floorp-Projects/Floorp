@@ -8134,6 +8134,15 @@ nsDocShell::EnsureScriptEnvironment()
     // Note that mScriptGlobal has taken a reference to the script
     // context, so we don't have to.
 
+    // Notify observers that we've created a new outer window.
+    // The matching notification for domwindowdestroyed is in
+    // nsGlobalWindow::~nsGlobalWindow().
+    nsCOMPtr<nsIObserverService> obsSvc =
+        do_GetService("@mozilla.org/observer-service;1");
+    if (obsSvc) {
+        obsSvc->NotifyObservers(win, "domwindowcreated", nsnull);
+    }
+
     return NS_OK;
 }
 
