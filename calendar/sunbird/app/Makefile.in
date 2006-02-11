@@ -50,8 +50,6 @@ DIRS		= profile/extensions profile
 
 PREF_JS_EXPORTS = $(srcdir)/profile/sunbird.js
 
-DEFINES += -DAB_CD=$(AB_CD)
-
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = sunbird$(BIN_SUFFIX)
 else
@@ -251,9 +249,6 @@ libs::
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(DIST)/branding/default.xpm $(DESTDIR)$(mozappdir)/icons
 endif
-
-export:: brand.dtd.in
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > brand.dtd
 
 export::
 ifndef MOZ_USE_OFFICIAL_BRANDING

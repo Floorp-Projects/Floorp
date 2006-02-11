@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE	= calendar
-DIRS = libical resources base providers import-export
+DIRS = libical resources base providers import-export locales
 
 ifndef MOZ_SUNBIRD
 ifneq ($(OS_ARCH),Darwin)
