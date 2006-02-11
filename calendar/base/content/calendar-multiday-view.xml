@@ -1898,6 +1898,7 @@
               if (this.mSelectedItem) {
                   var cols = this.findColumnsForItem(this.mSelectedItem);
                   for each (col in cols) {
+                      col.header.selectOccurrence(null);
                       col.column.selectOccurrence(null);
                   }
               }
@@ -1905,8 +1906,14 @@
               if (val) {
                   var cols = this.findColumnsForItem(val);
                   if (cols.length > 0) {
+                      var start = val.startDate;
                       for each (col in cols) {
-                          col.column.selectOccurrence(val);
+                          if(start.isDate) {
+                              col.header.selectOccurrence(val);
+                          }
+                          else {
+                              col.column.selectOccurrence(val);
+                          }
                       }
                       if(this.mController.selectionManager)
                           this.mController.selectionManager.replaceSelection(val);
