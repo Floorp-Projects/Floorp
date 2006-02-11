@@ -251,6 +251,8 @@ function saveDialog(item)
     if (isEvent(item)) {
         var startDate = jsDateToDateTime(getElementValue("event-starttime"));
         var endDate = jsDateToDateTime(getElementValue("event-endtime"));
+        startDate = startDate.getInTimezone(kDefaultTimezone);
+        endDate = endDate.getInTimezone(kDefaultTimezone);
 
         var isAllDay = getElementValue("event-all-day", "checked");
         if (isAllDay) {
@@ -262,8 +264,6 @@ function saveDialog(item)
             endDate.normalize();
         }
 
-        startDate = startDate.getInTimezone(kDefaultTimezone);
-        endDate = endDate.getInTimezone(kDefaultTimezone);
         setItemProperty(item, "startDate",   startDate);
         setItemProperty(item, "endDate",     endDate);
     }
