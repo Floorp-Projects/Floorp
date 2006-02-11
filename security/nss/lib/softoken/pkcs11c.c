@@ -2474,7 +2474,7 @@ CK_RV NSC_VerifyRecover(CK_SESSION_HANDLE hSession,
     sftk_SetContextByType(session, SFTK_VERIFY_RECOVER, NULL);
 finish:
     sftk_FreeSession(session);
-    return (rv == SECSuccess)  ? CKR_OK : CKR_DEVICE_ERROR;
+    return (rv == SECSuccess)  ? CKR_OK : CKR_SIGNATURE_INVALID;
 }
 
 /*
