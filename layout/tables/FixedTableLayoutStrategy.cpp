@@ -244,8 +244,30 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aCom
     ? totalColWidth - availWidth : 0;
   // set the column widths
   for (colX = 0; colX < numCols; colX++) {
-    if (colWidths[colX] < 0) 
+    if (colWidths[colX] < 0) {
       colWidths[colX] = 0;
+      // make sure there is at least space for the border and padding of the first cell
+      nsTableCellFrame* cellFrame = mTableFrame->GetCellFrameAt(0, colX);
+      if (nsnull != cellFrame) {
+        PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(*cellFrame);
+        PRInt32 colIndex;
+        cellFrame->GetColIndex(colIndex);
+        nscoord minWidth = 0;
+        nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
+                                                                  pixelToTwips, cellFrame);
+        if (colX == colIndex )
+          minWidth += borderPadding.left;
+        if (colX == colIndex + (colSpan - 1))
+          minWidth += borderPadding.right;
+        colWidths[colX] = minWidth;
+        nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
+        colFrame->SetWidth(MIN_CON, minWidth);
+        totalColWidth += minWidth;
+        if (overAllocation > 0) {
+          overAllocation = PR_MAX(0, overAllocation - minWidth);
+        }
+      }
+    }
     // if there was too much allocated due to rounding, remove it from the last col
     if ((colX == lastColAllocated) && (overAllocation != 0)) {
       nscoord thisRemoval = nsTableFrame::RoundToPixel(overAllocation, pixelToTwips);
