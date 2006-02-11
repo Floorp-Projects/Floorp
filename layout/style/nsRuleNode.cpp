@@ -1690,7 +1690,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   
 /* static */ void
 nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
-                    nscoord aMinFontSize, PRBool aUseDocumentFonts,
+                    nscoord aMinFontSize,
                     PRBool aIsGeneric, const nsRuleDataFont& aFontData,
                     const nsFont& aDefaultFont, const nsStyleFont* aParentFont,
                     nsStyleFont* aFont, PRBool& aInherited)
@@ -1698,23 +1698,16 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   const nsFont* defaultVariableFont =
     aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID);
 
-  const nsFont* defaultFixedFont =
-    aPresContext->GetDefaultFont(kPresContext_DefaultFixedFont_ID);
-
   // font-family: string list, enum, inherit
   if (eCSSUnit_String == aFontData.mFamily.GetUnit()) {
     // set the correct font if we are using DocumentFonts OR we are overriding for XUL
     // MJA: bug 31816
-    if (aUseDocumentFonts) {
-      if (!aIsGeneric) {
-        // only bother appending fallback fonts if this isn't a fallback generic font itself
+    if (!aIsGeneric) {
+      // only bother appending fallback fonts if this isn't a fallback generic font itself
+      if (!aFont->mFont.name.IsEmpty())
         aFont->mFont.name.Append((PRUnichar)',');
-        aFont->mFont.name.Append(aDefaultFont.name);
-      }
-    }
-    else {
-      // now set to defaults
-      aFont->mFont.name = aDefaultFont.name;
+      // XXXldb Should this name be quoted?
+      aFont->mFont.name.Append(aDefaultFont.name);
     }
     aFont->mFont.familyNameQuirks =
         (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks &&
@@ -1947,7 +1940,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
                            nsStyleContext* aContext,
                            const nsRuleDataFont& aFontData,
                            PRUint8 aGenericFontID, nscoord aMinFontSize,
-                           PRBool aUseDocumentFonts, nsStyleFont* aFont)
+                           nsStyleFont* aFont)
 {
   // walk up the contexts until a context with the desired generic font
   nsAutoVoidArray contextPath;
@@ -2005,7 +1998,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     fontData.mFamily.Reset(); // avoid unnecessary operations in SetFont()
 
     nsRuleNode::SetFont(aPresContext, context, aMinFontSize,
-                        aUseDocumentFonts, PR_TRUE, fontData, *defaultFont,
+                        PR_TRUE, fontData, *defaultFont,
                         &parentFont, aFont, dummy);
 
     // XXX Not sure if we need to do this here
@@ -2022,8 +2015,20 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
   // already has the current cascading information that we want. We
   // can just compute the delta from the parent.
   nsRuleNode::SetFont(aPresContext, aContext, aMinFontSize,
-                      aUseDocumentFonts, PR_TRUE, aFontData, *defaultFont,
+                      PR_TRUE, aFontData, *defaultFont,
                       &parentFont, aFont, dummy);
+}
+
+static PRBool ExtractGeneric(const nsString& aFamily, PRBool aGeneric,
+                             void *aData)
+{
+  nsAutoString *data = NS_STATIC_CAST(nsAutoString*, aData);
+
+  if (aGeneric) {
+    *data = aFamily;
+    return PR_FALSE; // stop enumeration
+  }
+  return PR_TRUE;
 }
 
 const nsStyleStruct* 
@@ -2079,53 +2084,68 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
   if (minimumFontSize < 0)
     minimumFontSize = 0;
 
-  PRBool useDocumentFonts = PR_TRUE;
-
-  // Figure out if we are a generic font
-  PRUint8 generic = kGenericFont_NONE;
-  if (eCSSUnit_String == fontData.mFamily.GetUnit()) {
-    fontData.mFamily.GetStringValue(font->mFont.name);
-    nsFont::GetGenericID(font->mFont.name, &generic);
-
-    // MJA: bug 31816
-    // if we are not using document fonts, but this is a XUL document,
-    // then we use the document fonts anyway
-    useDocumentFonts =
-      mPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
-  }
+  PRBool useDocumentFonts =
+    mPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
 
   // See if we are in the chrome
   // We only need to know this to determine if we have to use the
   // document fonts (overriding the useDocumentFonts flag), or to
   // determine if we have to override the minimum font-size constraint.
   if ((!useDocumentFonts || minimumFontSize > 0) && IsChrome(mPresContext)) {
+    // if we are not using document fonts, but this is a XUL document,
+    // then we use the document fonts anyway
     useDocumentFonts = PR_TRUE;
     minimumFontSize = 0;
   }
 
-  // If we don't have to use document fonts, then we are only entitled
-  // to use the user's default variable-width font and fixed-width font
-  if (!useDocumentFonts) {
-    if (generic != kGenericFont_moz_fixed)
-      generic = kGenericFont_NONE;
+  // Figure out if we are a generic font
+  PRUint8 generic = kGenericFont_NONE;
+  if (eCSSUnit_String == fontData.mFamily.GetUnit()) {
+    fontData.mFamily.GetStringValue(font->mFont.name);
+    // XXXldb Do we want to extract the generic for this if it's not only a
+    // generic?
+    nsFont::GetGenericID(font->mFont.name, &generic);
+
+    // If we aren't allowed to use document fonts, then we are only entitled
+    // to use the user's default variable-width font and fixed-width font
+    if (!useDocumentFonts) {
+      // Extract the generic from the specified font family...
+      nsAutoString genericName;
+      if (!font->mFont.EnumerateFamilies(ExtractGeneric, &genericName)) {
+        // The specified font had a generic family.
+        font->mFont.name = genericName;
+        nsFont::GetGenericID(genericName, &generic);
+
+        // ... and only use it if it's -moz-fixed or monospace
+        if (generic != kGenericFont_moz_fixed &&
+            generic != kGenericFont_monospace) {
+          font->mFont.name.Truncate();
+          generic = kGenericFont_NONE;
+        }
+      } else {
+        // The specified font did not have a generic family.
+        font->mFont.name.Truncate();
+        generic = kGenericFont_NONE;
+      }
+    }
   }
 
   // Now compute our font struct
   if (generic == kGenericFont_NONE) {
     // continue the normal processing
     // our default font is the most recent generic font
+    // XXXldb Probably should be the serif/sans-serif pref instead.
     const nsFont* defaultFont =
       mPresContext->GetDefaultFont(parentFont->mFlags & NS_STYLE_FONT_FACE_MASK);
 
-    nsRuleNode::SetFont(mPresContext, aContext, minimumFontSize,
-                        useDocumentFonts, PR_FALSE,
+    nsRuleNode::SetFont(mPresContext, aContext, minimumFontSize, PR_FALSE,
                         fontData, *defaultFont, parentFont, font, inherited);
   }
   else {
     // re-calculate the font as a generic font
     inherited = PR_TRUE;
     nsRuleNode::SetGenericFont(mPresContext, aContext, fontData, generic,
-                               minimumFontSize, useDocumentFonts, font);
+                               minimumFontSize, font);
   }
   // Set our generic font's bit to inform our descendants
   font->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
