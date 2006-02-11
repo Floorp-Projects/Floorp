@@ -539,7 +539,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
 {
   nsresult                 rv;
 
-#ifdef HAVE_NSDEVICECONTEXTSPECGTK
+#if 0
   PrintMethod              method;
 
   nsDeviceContextSpecGTK  *spec = NS_STATIC_CAST(nsDeviceContextSpecGTK *, aDevice);
@@ -571,9 +571,10 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
   }
   else
 #endif /* USE_XPRINT */
+#endif
 #ifdef USE_POSTSCRIPT
-  if (method == pmPostScript) { // PostScript
-#endif /* HAVE_NSDEVICECONTEXTSPECGTK */
+//  if (method == pmPostScript) // PostScript
+  {
 
     // default/PS
     static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
@@ -596,11 +597,9 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
     rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
                               (void **)&aContext);
     return rv;
-#ifdef HAVE_NSDEVICECONTEXTSPECGTK
   }
 
 #endif /* USE_POSTSCRIPT */
-#endif /* HAVE_NSDEVICECONTEXTSPECGTK */
   NS_WARNING("no print module created.");
   return NS_ERROR_UNEXPECTED;
 }
