@@ -69,7 +69,7 @@
 
   <deck id="modes" flex="1">
     <vbox flex="1" id="clientBox">
-#expand <label id="version" value="&aboutVersion; &version; __APP_VERSION__"/>
+#expand <label id="version" value="&aboutVersion; __APP_VERSION__"/>
       <description id="copyright">&copyrightText;</description>
       <vbox id="detailsBox" align="center" flex="1">
         <spacer flex="1"/>

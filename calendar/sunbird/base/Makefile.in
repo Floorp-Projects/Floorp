@@ -42,6 +42,9 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+APP_VERSION = $(shell cat $(srcdir)/../config/version.txt)
+DEFINES += -DAPP_VERSION="$(APP_VERSION)"
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
