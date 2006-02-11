@@ -2616,7 +2616,7 @@ nsresult nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRange
 		mIMEPos.x = textEvent.theReply.mCursorPosition.x;
 		mIMEPos.y = textEvent.theReply.mCursorPosition.y +
 		            textEvent.theReply.mCursorPosition.height;
-		focusedWidget->LocalToWindowCoordinate(mIMEPos);
+		mTopLevelWidget->LocalToWindowCoordinate(mIMEPos);
 #ifdef DEBUG_TSM
 		printf("HandleTextEvent reply (%d,%d)\n", mIMEPos.x , mIMEPos.y);
 #endif
