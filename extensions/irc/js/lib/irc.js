@@ -2794,19 +2794,19 @@ function chan_userslen (mode)
 CIRCChannel.prototype.iAmOp =
 function chan_amop()
 {
-    return this.users[this.parent.me.canonicalName].isOp;
+    return this.active && this.users[this.parent.me.canonicalName].isOp;
 }
 
 CIRCChannel.prototype.iAmHalfOp =
 function chan_amhalfop()
 {
-    return this.users[this.parent.me.canonicalName].isHalfOp;
+    return this.active && this.users[this.parent.me.canonicalName].isHalfOp;
 }
 
 CIRCChannel.prototype.iAmVoice =
 function chan_amvoice()
 {
-    return this.parent.users[this.parent.parent.me.canonicalName].isVoice;
+    return this.active && this.users[this.parent.me.canonicalName].isVoice;
 }
 
 CIRCChannel.prototype.setTopic =

@@ -2748,7 +2748,7 @@ function cmdPass(e)
 
 function cmdPing (e)
 {
-    e.network.dispatch("ctcp", { target: e.target, code: "PING" });
+    e.network.dispatch("ctcp", { target: e.nickname, code: "PING" });
 }
 
 function cmdPref (e)

@@ -98,12 +98,15 @@
       <menubar id="mainmenu" persist="collapsed"
         grippytooltiptext="&Menubar.tooltip;">
 
-        <!-- File menu placeholder, see menus.js -->
-        <menu id="mainmenu:file"><menupopup/></menu>
-        
+        <!-- ChatZilla menu placeholder, see menus.js -->
+        <menu id="mainmenu:chatzilla"><menupopup/></menu>
+
+        <!-- IRC menu placeholder, see menus.js -->
+        <menu id="mainmenu:irc"><menupopup/></menu>
+
         <!-- Edit menu placeholder, see menus.js -->
         <menu id="mainmenu:edit"><menupopup/></menu>
-  
+
         <!-- View menu placeholder, see menus.js -->
         <menu id="mainmenu:view"><menupopup/></menu>
 
@@ -113,9 +116,6 @@
         <!-- Window menu -->
         <menu id="windowMenu"/>
 
-        <!-- Tools menu placeholder, see menus.js -->
-        <menu id="mainmenu:tools"><menupopup/></menu>
-        
         <!-- Help menu -->
         <!-- Mac expects a help menu with this ID, and there is nothing we can
              do about it. -->

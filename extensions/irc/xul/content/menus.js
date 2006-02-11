@@ -118,6 +118,7 @@ function initMenus()
     var Mozilla    = "(client.host == 'Mozilla')";
     var NotMozilla = "(client.host != 'Mozilla')";
     var Toolkit    = NotMozilla;
+    var XULRunner  = "(client.host == 'XULrunner')";
 
     // Useful combinations
     var ToolkitOnLinux    = "(" + Toolkit + " and " + Linux + ")";
@@ -137,8 +138,22 @@ function initMenus()
     var NetConnected    = "(cx.network and cx.network.isConnected())";
     var NetDisconnected = "(cx.network and !cx.network.isConnected())";
 
-    client.menuSpecs["mainmenu:file"] = {
-        label: MSG_MNU_FILE,
+    client.menuSpecs["mainmenu:chatzilla"] = {
+        label: MSG_MNU_CHATZILLA,
+        getContext: getDefaultContext,
+        items:
+        [
+         ["cmd-prefs",  {id: "menu_preferences"}],
+         ["print"],
+         ["save"],
+         ["-",           {visibleif: NotMac}],
+         ["exit",        {visibleif: Win}],
+         ["quit",        {visibleif: NotMac + " and " + NotWin}]
+        ]
+    };
+
+    client.menuSpecs["mainmenu:irc"] = {
+        label: MSG_MNU_IRC,
         getContext: getDefaultContext,
         items:
         [
@@ -149,18 +164,21 @@ function initMenus()
          //["manage-networks"],
          //["manage-plugins"],
          ["-"],
+         // Planned future menu items, not implemented yet.
+         //["-"]
+         //[">popup:current_networks"]
          ["leave",       {visibleif: ChannelActive}],
          ["rejoin",      {visibleif: ChannelInactive}],
-         ["delete-view", {visibleif: "!" + ChannelActive}],
          ["disconnect",  {visibleif: NetConnected}],
          ["reconnect",   {visibleif: NetDisconnected}],
+         ["-",           {visibleif: "cx.network"}],
+         ["clear-view"],
+         ["hide-view",   {enabledif: "client.viewsArray.length > 1"}],
+         ["delete-view", {enabledif: "client.viewsArray.length > 1"}],
          ["-"],
-         ["print"],
-         ["-"],
-         ["save"],
-         ["-",           {visibleif: NotMac}],
-         ["exit",        {visibleif: Win}],
-         ["quit",        {visibleif: NotMac + " and " + NotWin}]
+         ["toggle-oas",
+                 {type: "checkbox",
+                  checkedif: "isStartupURL(cx.sourceObject.getURL())"}]
         ]
     };
 
@@ -185,22 +203,7 @@ function initMenus()
          // Toolkit Linux apps get: separator, ChatZilla prefs.
          // Toolkit Mac apps get  : ChatZilla prefs (special Mac ID).
          ["-",                   {visibleif: Mozilla}],
-         ["cmd-mozilla-prefs",   {visibleif: Mozilla}],
-         ["cmd-chatzilla-prefs", {visibleif: Mozilla}],
-         ["-",                   {visibleif: ToolkitOnLinux}],
-         ["cmd-prefs",           {visibleif: ToolkitOnLinux}],
-         ["cmd-chatzilla-opts",  {visibleif: ToolkitOnMac,
-                                  id: "menu_preferences"}]
-        ]
-    };
-
-    client.menuSpecs["mainmenu:tools"] = {
-        label: MSG_MNU_TOOLS,
-        getContext: getDefaultContext,
-        items:
-        [
-         ["cmd-chatzilla-opts",
-             {visibleif: ToolkitNotOnLinux + " and " + ToolkitNotOnMac}]
+         ["cmd-mozilla-prefs",   {visibleif: Mozilla}]
         ]
     };
 
@@ -225,13 +228,18 @@ function initMenus()
         getContext: getDefaultContext,
         items:
         [
-         [">popup:showhide"],
-         ["-"],
-         ["clear-view"],
-         ["hide-view", {enabledif: "client.viewsArray.length > 1"}],
-         ["toggle-oas",
+         ["tabstrip",
                  {type: "checkbox",
-                  checkedif: "isStartupURL(cx.sourceObject.getURL())"}],
+                  checkedif: "isVisible('view-tabs')"}],
+         ["header",
+                 {type: "checkbox",
+                  checkedif: "cx.sourceObject.prefs['displayHeader']"}],
+         ["userlist",
+                 {type: "checkbox",
+                  checkedif: "isVisible('user-list-box')"}],
+         ["statusbar",
+                 {type: "checkbox",
+                  checkedif: "isVisible('status-bar')"}],
          ["-"],
          [">popup:motifs"],
          [">popup:fonts"],
@@ -256,26 +264,6 @@ function initMenus()
         items:
         [
          ["about"],
-        ]
-    };
-
-    client.menuSpecs["popup:showhide"] = {
-        label: MSG_MNU_SHOWHIDE,
-        items:
-        [
-         ["tabstrip",
-                 {type: "checkbox",
-                  checkedif: "isVisible('view-tabs')"}],
-         ["header",
-                 {type: "checkbox",
-                  checkedif: "cx.sourceObject.prefs['displayHeader']"}],
-         ["userlist",
-                 {type: "checkbox",
-                  checkedif: "isVisible('user-list-box')"}],
-         ["statusbar",
-                 {type: "checkbox",
-                  checkedif: "isVisible('status-bar')"}],
-
         ]
     };
 
@@ -337,6 +325,23 @@ function initMenus()
     };
 
 
+    client.menuSpecs["popup:usercommands"] = {
+        label: MSG_MNU_USERCOMMANDS,
+        items:
+        [
+         ["query",    {visibleif: "cx.user"}],
+         ["whois",    {visibleif: "cx.user"}],
+         ["whowas",   {visibleif: "cx.nickname && !cx.user"}],
+         ["ping",     {visibleif: "cx.user"}],
+         ["time",     {visibleif: "cx.user"}],
+         ["version",  {visibleif: "cx.user"}],
+         ["-",        {visibleif: "cx.user"}],
+         ["dcc-chat", {visibleif: "cx.user"}],
+         ["dcc-send", {visibleif: "cx.user"}],
+        ]
+    };
+
+
     client.menuSpecs["context:userlist"] = {
         getContext: getUserlistContext,
         items:
@@ -347,15 +352,14 @@ function initMenus()
                            checkedif: "client.prefs['showModeSymbols']"}],
          ["-", {visibleif: "cx.nickname"}],
          ["label-user", {visibleif: "cx.nickname", header: true}],
-         [">popup:opcommands", {visibleif: "cx.channel && " + isopish + "cx.user"}],
-         ["whois",   {visibleif: "cx.nickname"}],
-         ["query",   {visibleif: "cx.nickname"}],
-         ["version", {visibleif: "cx.nickname"}],
+         [">popup:opcommands", {visibleif: "cx.nickname",
+                                enabledif: isopish + "true"}],
+         [">popup:usercommands", {visibleif: "cx.nickname"}],
         ]
     };
 
     var urlenabled = "has('url')";
-    var urlexternal = "has('url') && cx.url.search(/^irc:/i) == -1";
+    var urlexternal = "has('url') && cx.url.search(/^ircs?:/i) == -1";
     var textselected = "getCommandEnabled('cmd_copy')";
 
     client.menuSpecs["context:messages"] = {
@@ -363,24 +367,22 @@ function initMenus()
         items:
         [
          ["goto-url", {visibleif: urlenabled}],
-         ["goto-url-newwin", {visibleif: urlexternal}],
-         ["goto-url-newtab", {visibleif: urlexternal}],
+         ["goto-url-newwin", {visibleif: urlexternal + " && !" + XULRunner}],
+         ["goto-url-newtab", {visibleif: urlexternal + " && !" + XULRunner}],
          ["cmd-copy-link-url", {visibleif: urlenabled}],
          ["cmd-copy", {visibleif: "!" + urlenabled, enabledif: textselected }],
          ["cmd-selectall", {visibleif: "!" + urlenabled }],
+         ["-", {visibleif: "cx.channel && cx.nickname"}],
+         ["label-user", {visibleif: "cx.channel && cx.nickname", header: true}],
+         [">popup:opcommands", {visibleif: "cx.channel && cx.nickname",
+                                enabledif: isopish + "cx.user"}],
+         [">popup:usercommands", {visibleif: "cx.channel && cx.nickname"}],
          ["-"],
          ["clear-view"],
          ["hide-view", {enabledif: "client.viewsArray.length > 1"}],
          ["toggle-oas",
                  {type: "checkbox",
                   checkedif: "isStartupURL(cx.sourceObject.getURL())"}],
-         ["-", {visibleif: "cx.channel && cx.nickname"}],
-         ["label-user", {visibleif: "cx.channel && cx.nickname", header: true}],
-         [">popup:opcommands", {visibleif: "cx.channel && " + isopish + "cx.user"}],
-         ["whois",   {visibleif: "cx.user"}],
-         ["whowas",  {visibleif: "cx.nickname && !cx.user"}],
-         ["query",   {visibleif: "cx.nickname"}],
-         ["version", {visibleif: "cx.nickname"}],
          ["-"],
          ["leave",       {visibleif: ChannelActive}],
          ["rejoin",      {visibleif: ChannelInactive}],
@@ -444,7 +446,6 @@ function createMenus()
     // The menus and the component bar need to be hidden on some hosts.
     var winMenu   = document.getElementById("windowMenu");
     var tasksMenu = document.getElementById("tasksMenu");
-    var toolsMenu = document.getElementById("mainmenu:tools");
     var comBar    = document.getElementById("component-bar");
 
     if (client.host != "Mozilla") {
@@ -452,12 +453,6 @@ function createMenus()
         winMenu.parentNode.removeChild(winMenu);
     } else {
         comBar.collapsed = false;
-    }
-
-    if ((client.host == "Mozilla") || (client.platform == "Linux") ||
-        (client.platform == "Mac"))
-    {
-        toolsMenu.parentNode.removeChild(toolsMenu);
     }
 }
 
