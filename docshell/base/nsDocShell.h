@@ -103,71 +103,10 @@
 #include "nsIAuthPromptProvider.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIObserver.h"
-
-/**
- * Load flag for error pages. This should be bigger than all flags on
- * nsIWebNavigation.
- */
-#define LOAD_FLAGS_ERROR_PAGE 0x8000U
-
-#define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
-#define LOAD_TYPE_HAS_FLAGS(type, flags) ((type) & ((flags) << 16))
+#include "nsDocShellLoadTypes.h"
 
 /* load commands were moved to nsIDocShell.h */
-
-/* load types are legal combinations of load commands and flags 
- *  
- * NOTE:
- *  Remember to update the IsValidLoadType function below if you change this
- *  enum to ensure bad flag combinations will be rejected.
- */
-enum LoadType {
-    LOAD_NORMAL = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_NONE),
-    LOAD_NORMAL_REPLACE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY),
-    LOAD_NORMAL_EXTERNAL = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_FROM_EXTERNAL),
-    LOAD_HISTORY = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_HISTORY, nsIWebNavigation::LOAD_FLAGS_NONE),
-    LOAD_RELOAD_NORMAL = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_NONE),
-    LOAD_RELOAD_BYPASS_CACHE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE),
-    LOAD_RELOAD_BYPASS_PROXY = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY),
-    LOAD_RELOAD_BYPASS_PROXY_AND_CACHE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY),
-    LOAD_LINK = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_LINK),
-    LOAD_REFRESH = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_REFRESH),
-    LOAD_RELOAD_CHARSET_CHANGE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE),
-    LOAD_BYPASS_HISTORY = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY),
-    LOAD_STOP_CONTENT = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_STOP_CONTENT),
-    LOAD_STOP_CONTENT_AND_REPLACE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_STOP_CONTENT | nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY),
-    /**
-     * Load type for an error page. These loads are never triggered by users of
-     * Docshell. Instead, Docshell triggers the load itself when a
-     * consumer-triggered load failed.
-     */
-    LOAD_ERROR_PAGE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, LOAD_FLAGS_ERROR_PAGE)
-
-    // NOTE: Adding a new value? Remember to update IsValidLoadType!
-};
-static inline PRBool IsValidLoadType(PRUint32 aLoadType)
-{
-    switch (aLoadType)
-    {
-    case LOAD_NORMAL:
-    case LOAD_NORMAL_REPLACE:
-    case LOAD_NORMAL_EXTERNAL:
-    case LOAD_HISTORY:
-    case LOAD_RELOAD_NORMAL:
-    case LOAD_RELOAD_BYPASS_CACHE:
-    case LOAD_RELOAD_BYPASS_PROXY:
-    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-    case LOAD_LINK:
-    case LOAD_REFRESH:
-    case LOAD_RELOAD_CHARSET_CHANGE:
-    case LOAD_BYPASS_HISTORY:
-    case LOAD_STOP_CONTENT:
-    case LOAD_STOP_CONTENT_AND_REPLACE:
-    case LOAD_ERROR_PAGE:
-        return PR_TRUE;
-    }
-    return PR_FALSE;
-}
+/* load types were moved to nsDocShellLoadTypes.h */
 
 /* internally used ViewMode types */
 enum ViewMode {

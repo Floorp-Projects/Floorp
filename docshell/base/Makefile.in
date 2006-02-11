@@ -114,6 +114,8 @@ XPIDLSRCS	= \
 		nsIWebPageDescriptor.idl	\
 		$(NULL)
 
+EXPORTS		= nsDocShellLoadTypes.h
+
 CPPSRCS		= \
 		nsDocShell.cpp		\
 		nsWebShell.cpp		\
