@@ -9330,13 +9330,19 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
       nsIListBoxObject* listboxBody = listBoxObject->GetListBoxBody();
       if (listboxBody) {
         nsListBoxBodyFrame *listBoxBodyFrame = NS_STATIC_CAST(nsListBoxBodyFrame*, listboxBody);
-        if (aOperation == CONTENT_REMOVED)
-          listBoxBodyFrame->OnContentRemoved(aPresContext, aChildFrame, aIndexInContainer);
-        else
+        if (aOperation == CONTENT_REMOVED) {
+          // Except if we have an aChildFrame and its parent is not the right
+          // thing, then we don't do this.  Pseudo frames are so much fun....
+          if (!aChildFrame || aChildFrame->GetParent() == listBoxBodyFrame) {
+            listBoxBodyFrame->OnContentRemoved(aPresContext, aChildFrame,
+                                               aIndexInContainer);
+            return PR_TRUE;
+          }
+        } else {
           listBoxBodyFrame->OnContentInserted(aPresContext, aChild);
-        //NS_RELEASE(listBoxBodyFrame); frames aren't refcounted
+          return PR_TRUE;
+        }
       }
-      return PR_TRUE;
     }
   }
 
