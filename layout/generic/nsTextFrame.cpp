@@ -2241,6 +2241,19 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
               *indexp++ = strInx;
               continue;
             }
+            // Point lam and alef to lamalef in shaped text
+            if (aTX.NeedsArabicShaping()) {
+              if (IS_LAM(ch) && IS_LAMALEF(*tp)) {
+                // No need to check for index > length, since
+                // GetContentCharAt() checks
+                PRUnichar ch1 = aTX.GetContentCharAt(mContentOffset +
+                                  indexp + 1 - aIndexBuffer->mBuffer);
+                if (IS_ALEF(ch1)) {
+                  *indexp++ = strInx;
+                  --i;
+                }
+              }
+            }
             *indexp++ = strInx++;
             // Point any capitalized German &szlig; to 'SS'
             if (caseChanged && ch == kSZLIG && *tp == PRUnichar('S')) {

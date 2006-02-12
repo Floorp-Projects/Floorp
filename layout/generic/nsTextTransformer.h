@@ -86,6 +86,40 @@ class nsIWordBreaker;
   (((_ch) == CH_SHY) || ((_ch) == '\r'))
 #endif
 
+/* Unicode codepoints that could be the first of a lam alef pair converted to
+ * a lam alef ligature by ArabicShaping()
+ */
+#define IS_LAM(_ch) \
+  (((_ch) == 0x0644) ||  /* ARABIC LETTER LAM */ \
+   ((_ch) == 0xfedf) ||  /* ARABIC LETTER LAM INITIAL FORM */ \
+   ((_ch) == 0xfee0))    /* ARABIC LETTER LAM MEDIAL FORM */  \
+
+/* Unicode codepoints that could be the second of a lam alef pair converted to
+ * a lam alef ligature by ArabicShaping()
+ */
+#define IS_ALEF(_ch) \
+  (((_ch) == 0x0622) || /* ARABIC LETTER ALEF WITH MADDA ABOVE */ \
+   ((_ch) == 0x0623) || /* ARABIC LETTER ALEF WITH HAMZA ABOVE */ \
+   ((_ch) == 0x0625) || /* ARABIC LETTER ALEF WITH HAMZA BELOW */ \
+   ((_ch) == 0x0627) || /* ARABIC LETTER ALEF */ \
+   ((_ch) == 0xfe82) || /* ARABIC LETTER ALEF WITH MADDA ABOVE FINAL FORM */ \
+   ((_ch) == 0xfe84) || /* ARABIC LETTER ALEF WITH HAMZA ABOVE FINAL FORM */ \
+   ((_ch) == 0xfe88) || /* ARABIC LETTER ALEF WITH HAMZA BELOW FINAL FORM */ \
+   ((_ch) == 0xfe8e))   /* ARABIC LETTER ALEF FINAL FORM */
+
+/* Unicode codepoints that could have been converted from a lam alef pair to a
+ * lam alef ligature by Arabic Shaping()
+ */
+#define IS_LAMALEF(_ch) (((_ch) >= 0xfef5) && ((_ch) <= 0xfefc))
+  /* FEF5 ARABIC LIGATURE LAM WITH ALEF WITH MADDA ABOVE ISOLATED FORM */
+  /* FEF6 ARABIC LIGATURE LAM WITH ALEF WITH MADDA ABOVE FINAL FORM    */
+  /* FEF7 ARABIC LIGATURE LAM WITH ALEF WITH HAMZA ABOVE ISOLATED FORM */
+  /* FEF8 ARABIC LIGATURE LAM WITH ALEF WITH HAMZA ABOVE FINAL FORM    */
+  /* FEF9 ARABIC LIGATURE LAM WITH ALEF WITH HAMZA BELOW ISOLATED FORM */
+  /* FEFA ARABIC LIGATURE LAM WITH ALEF WITH HAMZA BELOW FINAL FORM    */
+  /* FEFB ARABIC LIGATURE LAM WITH ALEF ISOLATED FORM                  */
+  /* FEFC;ARABIC LIGATURE LAM WITH ALEF FINAL FORM                     */
+
 #define IS_ASCII_CHAR(ch) ((ch&0xff80) == 0)
 
 #define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 128 // used to be 256
