@@ -1918,6 +1918,14 @@ function my_netdisconnect (e)
 CIRCNetwork.prototype.onCTCPReplyPing =
 function my_replyping (e)
 {
+    // see bug 326523
+    if (e.CTCPData.length != 13)
+    {
+        this.display(getMsg(MSG_PING_REPLY_INVALID, e.user.unicodeName),
+                     "INFO", e.user, "ME!");
+        return;
+    }
+
     var delay = formatDateOffset((new Date() - new Date(Number(e.CTCPData))) /
                                  1000);
     this.display(getMsg(MSG_PING_REPLY, [e.user.unicodeName, delay]), "INFO",
