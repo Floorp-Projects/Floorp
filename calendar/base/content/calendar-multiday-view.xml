@@ -1529,6 +1529,7 @@
       <field name="mStartMin">8*60</field>
       <field name="mEndMin">20*60</field>
       <field name="mTasksInView">true</field>
+      <field name="mTimezone">"UTC"</field>
 
       <field name="mSelectionObserver"><![CDATA[
       ({  calView: this,
@@ -1757,11 +1758,21 @@
         ]]></setter>
       </property>
 
+      <property name="timezone">
+        <getter><![CDATA[
+          return this.mTimezone;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mTimezone = val;
+          return val;
+        ]]></setter>
+      </property>
+
 
       <method name="showDate">
         <parameter name="aDate"/>
         <body><![CDATA[
-          var targetDate = aDate.clone();
+          var targetDate = aDate.getInTimezone(this.mTimezone);
           targetDate.isDate = true;
 
           if (this.mStartDate && this.mEndDate) {
@@ -1784,7 +1795,7 @@
             this.setDateRange(aDate.startOfWeek, aDate.endOfWeek);
           }
 
-          this.selectedDay = aDate;
+          this.selectedDay = targetDate;
         ]]></body>
       </method>
 
@@ -1795,11 +1806,11 @@
           //dump ("setDateRange\n");
           this.mDateList = null;
 
-          this.mStartDate = aStartDate.clone();
+          this.mStartDate = aStartDate.getInTimezone(this.mTimezone);
           this.mStartDate.isDate = true;
           this.mStartDate.makeImmutable();
 
-          this.mEndDate = aEndDate.clone();
+          this.mEndDate = aEndDate.getInTimezone(this.mTimezone);
           this.mEndDate.isDate = true;
           this.mEndDate.makeImmutable();
 

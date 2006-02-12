@@ -350,6 +350,7 @@ CalendarWindow.prototype.switchToView = function calWin_switchToView( newView )
     if (viewElement.displayCalendar != getDisplayComposite()) {
         viewElement.controller = gViewController;
         viewElement.displayCalendar = getDisplayComposite();
+        viewElement.timezone = calendarDefaultTimezone();
         this.EventSelection.addObserver(viewElement.selectionObserver);
     }
 

@@ -129,4 +129,10 @@ interface calICalendarView : nsISupports
    * Get or set the selected day.
    */
   attribute calIDateTime selectedDay;
+
+  /**
+   * Get or set the timezone that the view's elements should be displayed in.
+   * Setting this does not refresh the view.
+   */
+  attribute AUTF8String timezone;
 };

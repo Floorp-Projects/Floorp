@@ -171,6 +171,15 @@
                 ]]></setter>
             </property>
 
+            <property name="timezone">
+                <getter><![CDATA[
+                    return document.getAnonymousElementByAttribute(this, "anonid", "view-element").timezone;
+                ]]></getter>
+                <setter><![CDATA[
+                    document.getAnonymousElementByAttribute(this, "anonid", "view-element").timezone = val;
+                ]]></setter>
+            </property>
+
             <property name="selectionObserver">
                 <getter><![CDATA[
                     return document.getAnonymousElementByAttribute(this, "anonid", "view-element").mSelectionObserver;

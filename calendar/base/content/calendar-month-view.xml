@@ -622,13 +622,22 @@
         ]]></setter>
       </property>
 
+      <property name="timezone">
+        <getter><![CDATA[
+          return this.mTimezone;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mTimezone = val;
+          return val;
+        ]]></setter>
+      </property>
+
 
       <method name="showDate">
 	<parameter name="aDate"/>
 	<body><![CDATA[
 	  this.setDateRange(aDate.startOfMonth, aDate.endOfMonth);
-
-          this.selectedDay = aDate;
+          this.selectedDay = aDate.getInTimezone(this.mTimezone);
         ]]></body>
       </method>
 
@@ -636,12 +645,13 @@
         <parameter name="aStartDate"/>
         <parameter name="aEndDate"/>
         <body><![CDATA[
+          if (this.mTimezone != aStartDate.timezone) {
+            aStartDate = aStartDate.getInTimezone(this.mTimezone);
+            aEndDate = aEndDate.getInTimezone(this.mTimezone);
+          }
+
           this.mStartDate = aStartDate.startOfWeek;
           this.mEndDate = aEndDate.endOfWeek;
-
-          if (this.mTimezone != aStartDate.timezone) {
-            this.mTimezone = aStartDate.timezone;
-          }
 
           this.refresh();
         ]]></body>

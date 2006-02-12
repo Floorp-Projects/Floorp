@@ -149,6 +149,7 @@ function showCalendarView(type)
 
     if (view.displayCalendar != getCompositeCalendar()) {
         view.displayCalendar = getCompositeCalendar();
+        view.timezone = calendarDefaultTimezone();
         view.controller = ltnCalendarViewController;
     }
 

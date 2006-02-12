@@ -118,6 +118,12 @@ interface calIDecoratedView : nsISupports
   readonly attribute calIDateTime endDay;
 
   /**
+   * Get or set the timezone that the view's elements should be displayed in.
+   * Setting this does not refresh the view.
+   */
+  attribute AUTF8String timezone;
+
+  /**
    * Ensures that the given date is visible, and that the view is centered
    * around this date.  aDate becomes the selectedDay of the view.  Calling
    * this function with the current selectedDay effectively refreshes the view

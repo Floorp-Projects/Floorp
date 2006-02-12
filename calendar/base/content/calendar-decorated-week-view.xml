@@ -163,7 +163,7 @@
 
                     document.getAnonymousElementByAttribute(this, "anonid", "view-element").setDateRange(d1, d2);
 
-                    viewElement.selectedDay = aDate;
+                    viewElement.selectedDay = aDate.getInTimezone(viewElement.timezone);
                     if (this.mWorkdaysOnly) {
                         this.removeNonWorkdays();
                     }

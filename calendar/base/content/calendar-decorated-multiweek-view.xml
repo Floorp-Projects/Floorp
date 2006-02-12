@@ -122,7 +122,7 @@
                     if (this.mWorkdaysOnly) {
                         this.removeNonWorkdays();
                     }
-                    viewElement.selectedDay = aDate;
+                    viewElement.selectedDay = aDate.getInTimezone(viewElement.timezone);
                     this.setNavLabels(aDate);
                 ]]></body>
             </method>
