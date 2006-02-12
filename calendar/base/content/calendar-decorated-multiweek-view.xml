@@ -77,7 +77,8 @@
                 <parameter name="aDate"/>
                 <body><![CDATA[
                     var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
-		    viewElement.tasksInView = this.mTasksInView;
+                    viewElement.showFullMonth = false;
+                    viewElement.tasksInView = this.mTasksInView;
 
                     // Set up the preferences we're going to need to read
                     var prefService = Components.classes[

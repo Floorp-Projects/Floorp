@@ -106,6 +106,7 @@
       <!-- mItemData will always be kept sorted in display order -->
       <field name="mItemData">[]</field>
       <field name="mMonthView">null</field>
+      <field name="mShowMonthLabel">false</field>
 
       <property name="date">
         <getter>return this.mDate;</getter>
@@ -143,6 +144,34 @@
         <getter>return document.getAnonymousElementByAttribute(this, "anonid", "day-items");</getter>
       </property>
 
+      <property name="showMonthLabel">
+        <getter><![CDATA[
+          return this.mShowMonthLabel;
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.mShowMonthLabel == val) {
+            return val;
+          }
+          this.mShowMonthLabel = val;
+
+          if (!this.mDate) {
+            return val;
+          }
+          var daylabel = document.getAnonymousElementByAttribute(this, "anonid", "day-label");
+
+          if (val) {
+            var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                .getService(Components.interfaces.nsIStringBundleService);
+            var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
+            var monthName = props.GetStringFromName("month." + (this.mDate.month+1) + ".Mmm");
+            daylabel.setAttribute("value", this.mDate.day + " " + monthName);
+          } else {
+            daylabel.setAttribute("value", aDate.day);
+          }
+          return val;
+        ]]></setter>
+      </property>
+
       <method name="setDate">
         <parameter name="aDate"/>
         <body><![CDATA[
@@ -154,8 +183,7 @@
           this.mDate = aDate;
           var daylabel = document.getAnonymousElementByAttribute(this, "anonid", "day-label");
 
-          if (aDate.compare(aDate.startOfMonth) == 0 ||
-              aDate.compare(aDate.endOfMonth) == 0)
+          if (this.mShowMonthLabel)
           {
             var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                                 .getService(Components.interfaces.nsIStringBundleService);
@@ -435,6 +463,7 @@
 
       <field name="mShowDaysOutsideMonth">true</field>
       <field name="mTasksInView">true</field>
+      <field name="mShowFullMonth">true</field>
 
       <field name="mSelectionObserver"><![CDATA[
       ({  calView: this,
@@ -532,7 +561,16 @@
         <setter><![CDATA[
           this.mTasksInView = val;
         ]]></setter>
-      </property>    
+      </property>
+
+      <property name="showFullMonth">
+        <getter><![CDATA[
+          return this.mShowFullMonth;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mShowFullMonth = val;
+        ]]></setter>
+      </property>
 
       <property name="selectedItem">
         <getter><![CDATA[
@@ -825,6 +863,9 @@
             curRow.appendChild(box);
 
             box.setDate(date);
+            if (date.day == 1 || date.day == date.endOfMonth.day) {
+              box.showMonthLabel = true;
+            }
             box.monthView = this;
 
             // add the box and its data to our stored array
@@ -835,6 +876,13 @@
             };
 
             dateBoxes.push(boxdata);
+          }
+
+          // If we're not showing a full month, then add a few extra labels to
+          // help the user orient themselves in the view.
+          if (!this.mShowFullMonth) {
+            dateBoxes[0].box.showMonthLabel = true;
+            dateBoxes[dateBoxes.length-1].box.showMonthLabel = true;
           }
 
           // Store these, so that we can access them later
@@ -897,10 +945,20 @@
             box.setAttribute("class", boxClass);
 
             box.setDate(date);
+            if (date.day == 1 || date.day == date.endOfMonth.day) {
+              box.showMonthLabel = true;
+            }
 
             // The box and its data is already in the array.  We fixed the
             // date at the beginning, when we got it from the array.
             dateBoxCount++;
+          }
+
+          // If we're not showing a full month, then add a few extra labels to
+          // help the user orient themselves in the view.
+          if (!this.mShowFullMonth) {
+            this.mDateBoxes[0].showMonthLabel = true;
+            this.mDateBoxes[this.mDateBoxes.length-1].showMonthLabel = true;
           }
         ]]></body>
       </method>
