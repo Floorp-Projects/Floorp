@@ -1025,16 +1025,6 @@ const nsHTMLElement gHTMLElements[] = {
     /*contain-func*/                    0
   },
   {
-    /*tag*/                             eHTMLTag_server,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          (kSpecial|kHeadMisc), kCDATA, kNone,
-    /*special props, prop-range*/       (kNoStyleLeaksIn|kLegalOpen), kNoPropRange,
-    /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_unknown,
-    /*contain-func*/                    0
-  },
-  {
     /*tag*/                             eHTMLTag_small,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
