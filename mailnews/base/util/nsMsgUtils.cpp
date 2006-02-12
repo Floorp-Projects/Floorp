@@ -53,6 +53,8 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgImapCID.h"
 #include "nsMsgI18N.h"
+#include "nsNativeCharsetUtils.h"
+#include "nsCharTraits.h"
 #include "prprf.h"
 #include "nsNetCID.h"
 #include "nsIIOService.h"
@@ -259,6 +261,17 @@ inline PRUint32 StringHash(const nsAutoString& str)
                       str.Length() * 2);
 }
 
+// XXX : this may have other clients, in which case we'd better move it to
+//       xpcom/io/nsNativeCharsetUtils with nsAString in place of nsAutoString
+static PRBool ConvertibleToNative(const nsAutoString& str)
+{
+    nsCAutoString native;
+    nsAutoString roundTripped;
+    NS_CopyUnicodeToNative(str, native);
+    NS_CopyNativeToUnicode(native, roundTripped);
+    return str.Equals(roundTripped);
+}
+
 #if defined(XP_MAC)
   const static PRUint32 MAX_LEN = 25;
 #elif defined(XP_UNIX) || defined(XP_BEOS)
@@ -321,22 +334,25 @@ nsresult NS_MsgHashIfNecessary(nsAutoString &name)
                                   FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS ILLEGAL_FOLDER_CHARS);
 
   char hashedname[9];
-  if (illegalCharacterIndex == kNotFound) 
+  PRInt32 keptLength = -1;
+  if (illegalCharacterIndex != kNotFound) 
+      keptLength = illegalCharacterIndex;
+  else if (!ConvertibleToNative(name))
+      keptLength = 0;
+  else if (name.Length() > MAX_LEN) 
   {
-    if (name.Length() > MAX_LEN) 
-    {
-      PR_snprintf(hashedname, 9, "%08lx", (unsigned long) StringHash(name));
-      name.Truncate(MAX_LEN - 8); 
-      AppendASCIItoUTF16(hashedname, name);
-    }
+    keptLength = MAX_LEN-8; 
+    // To avoid keeping only the high surrogate of a surrogate pair
+    if (IS_HIGH_SURROGATE(name.CharAt(keptLength-1)))
+        --keptLength;
   }
-  else 
-  {
-      PR_snprintf(hashedname, 9, "%08lx",
-                (unsigned long) StringHash(name));
-      CopyASCIItoUTF16(hashedname, name);
+
+  if (keptLength >= 0) {
+    PR_snprintf(hashedname, 9, "%08lx", (unsigned long) StringHash(name));
+    name.Truncate(keptLength);
+    AppendASCIItoUTF16(hashedname, name);
   }
-  
+
   return NS_OK;
 }
 
