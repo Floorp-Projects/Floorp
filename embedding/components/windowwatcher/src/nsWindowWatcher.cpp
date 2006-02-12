@@ -839,6 +839,16 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
     }
   }
 
+  if (windowIsNew) {
+    // Notify observers that the window is open and ready.
+    // The window has not yet started to load a document.
+    nsCOMPtr<nsIObserverService> obsSvc =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (obsSvc) {
+      obsSvc->NotifyObservers(*_retval, "toplevel-window-ready", nsnull);
+    }
+  }
+
   if (uriToLoad) { // get the script principal and pass it to docshell
     JSContextAutoPopper contextGuard;
 

@@ -96,6 +96,8 @@ interface nsIWindowWatcher : nsISupports {
       @note This method should try to set the default charset for the new
             window to the default charset of aParent.  This is not guaranteed,
             however.
+      @note This method may dispatch a "toplevel-window-ready" notification
+            via nsIObserverService if the window did not already exist.
   */
   nsIDOMWindow openWindow(in nsIDOMWindow aParent, in string aUrl,
                in string aName, in string aFeatures,
