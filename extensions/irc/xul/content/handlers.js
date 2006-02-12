@@ -2498,6 +2498,47 @@ function my_unkctcp (e)
                                 "BAD-CTCP", this, e.server.me);
 }
 
+function onDCCAutoAcceptTimeout(o, folder)
+{
+    // user may have already accepted or declined
+    if (o.state.state != DCC_STATE_REQUESTED)
+        return;
+
+    if (o.TYPE == "IRCDCCChat")
+    {
+        o.accept();
+        display(getMsg(MSG_DCCCHAT_ACCEPTED, o._getParams()), "DCC-CHAT");
+    }
+    else
+    {
+        var dest, leaf, tries = 0;
+        while (true)
+        {
+            leaf = escapeFileName(o.filename);
+            if (++tries > 1)
+            {
+                // A file with the same name as the offered file already exists
+                // in the user's download folder. Add [x] before the extension.
+                // The extension is the last dot to the end of the string,
+                // unless it is one of the special-cased compression extensions,
+                // in which case the second to last dot is used. The second
+                // extension can only contain letters, to avoid mistakes like
+                // "patch-version1[2].0.gz". If no file extension is present,
+                // the [x] is just appended to the filename.
+                leaf = leaf.replace(/(\.[a-z]*\.(gz|bz2|z)|\.[^\.]*|)$/i,
+                                    "[" + tries + "]$&");
+            }
+
+            dest = getFileFromURLSpec(folder);
+            dest.append(leaf);
+            if (!dest.exists())
+                break;
+        }
+        o.accept(dest);
+        display(getMsg(MSG_DCCFILE_ACCEPTED, o._getParams()), "DCC-FILE");
+    }
+}
+
 CIRCUser.prototype.onDCCChat =
 function my_dccchat(e)
 {
@@ -2507,11 +2548,32 @@ function my_dccchat(e)
     var u = client.dcc.addUser(e.user, e.host);
     var c = client.dcc.addChat(u, e.port);
 
-    client.munger.entries[".inline-buttons"].enabled = true;
+    var str = MSG_DCCCHAT_GOT_REQUEST;
     var cmds = getMsg(MSG_DCC_COMMAND_ACCEPT, "dcc-accept " + c.id) + " " +
                getMsg(MSG_DCC_COMMAND_DECLINE, "dcc-decline " + c.id);
-    this.parent.parent.display(getMsg(MSG_DCCCHAT_GOT_REQUEST,
-                                      c._getParams().concat(cmds)),
+
+    var allowList = this.parent.parent.prefs["dcc.autoAccept.list"];
+    for (var m = 0; m < allowList.length; ++m)
+    {
+        if (hostmaskMatches(e.user, getHostmaskParts(allowList[m])))
+        {
+            var acceptDelay = client.prefs["dcc.autoAccept.delay"];
+            if (acceptDelay == 0)
+            {
+                str = MSG_DCCCHAT_ACCEPTING_NOW;
+            }
+            else
+            {
+                str = MSG_DCCCHAT_ACCEPTING;
+                cmds = [(acceptDelay / 1000), cmds];
+            }
+            setTimeout(onDCCAutoAcceptTimeout, acceptDelay, c);
+            break;
+        }
+    }
+
+    client.munger.entries[".inline-buttons"].enabled = true;
+    this.parent.parent.display(getMsg(str, c._getParams().concat(cmds)),
                                "DCC-CHAT");
     client.munger.entries[".inline-buttons"].enabled = false;
 
@@ -2522,7 +2584,7 @@ function my_dccchat(e)
 }
 
 CIRCUser.prototype.onDCCSend =
-function my_dccchat(e)
+function my_dccsend(e)
 {
     if (!jsenv.HAS_SERVER_SOCKETS || !client.prefs["dcc.enabled"])
         return;
@@ -2530,23 +2592,47 @@ function my_dccchat(e)
     var u = client.dcc.addUser(e.user, e.host);
     var f = client.dcc.addFileTransfer(u, e.port, e.file, e.size);
 
-    client.munger.entries[".inline-buttons"].enabled = true;
+    var str = MSG_DCCFILE_GOT_REQUEST;
     var cmds = getMsg(MSG_DCC_COMMAND_ACCEPT, "dcc-accept " + f.id) + " " +
                getMsg(MSG_DCC_COMMAND_DECLINE, "dcc-decline " + f.id);
-    this.parent.parent.display(getMsg(MSG_DCCFILE_GOT_REQUEST,
-                                      [e.user.unicodeName, e.host, e.port,
-                                       e.file, getSISize(e.size), cmds]),
+
+    var allowList = this.parent.parent.prefs["dcc.autoAccept.list"];
+    for (var m = 0; m < allowList.length; ++m)
+    {
+        if (hostmaskMatches(e.user, getHostmaskParts(allowList[m]),
+                            this.parent))
+        {
+            var acceptDelay = client.prefs["dcc.autoAccept.delay"];
+            if (acceptDelay == 0)
+            {
+                str = MSG_DCCFILE_ACCEPTING_NOW;
+            }
+            else
+            {
+                str = MSG_DCCFILE_ACCEPTING;
+                cmds = [(acceptDelay / 1000), cmds];
+            }
+            setTimeout(onDCCAutoAcceptTimeout, acceptDelay,
+                       f, this.parent.parent.prefs["dcc.downloadsFolder"]);
+            break;
+        }
+    }
+
+    client.munger.entries[".inline-buttons"].enabled = true;
+    this.parent.parent.display(getMsg(str,[e.user.unicodeName,
+                                           e.host, e.port, e.file,
+                                           getSISize(e.size)].concat(cmds)),
                                "DCC-FILE");
     client.munger.entries[".inline-buttons"].enabled = false;
 
-    // Pass the event over to the DCC Chat object.
+    // Pass the event over to the DCC File object.
     e.set = "dcc-file";
     e.destObject = f;
     e.destMethod = "onGotRequest";
 }
 
 CIRCUser.prototype.onDCCReject =
-function my_dccchat(e)
+function my_dccreject(e)
 {
     if (!client.prefs["dcc.enabled"])
         return;
@@ -2591,7 +2677,7 @@ function my_unkctcp(e)
 }
 
 CIRCDCCChat.prototype.onConnect =
-function my_dccdisconnect(e)
+function my_dccconnect(e)
 {
     playEventSounds("dccchat", "connect");
     this.displayHere(getMsg(MSG_DCCCHAT_OPENED, this._getParams()), "DCC-CHAT");
@@ -2717,10 +2803,19 @@ function my_dccfiledisconnect(e)
     updateProgress();
     this.updateHeader();
 
-    var tab = getTabForObject(this);
+    var msg, tab = getTabForObject(this);
     if (tab)
         tab.setAttribute("label", this.viewName + " (DONE)");
 
-    this.display(getMsg(MSG_DCCFILE_CLOSED, this._getParams()), "DCC-FILE");
+    if (this.state.dir == DCC_DIR_GETTING)
+    {
+        msg = getMsg(MSG_DCCFILE_CLOSED_SAVED,
+                     this._getParams().concat(this.localPath));
+    }
+    else
+    {
+        msg = getMsg(MSG_DCCFILE_CLOSED_SENT, this._getParams());
+    }
+    this.display(msg, "DCC-FILE");
 }
 

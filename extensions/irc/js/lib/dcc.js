@@ -648,7 +648,7 @@ function dchat_accept()
 
 // Call to make this end decline DCC Chat with target user.
 CIRCDCCChat.prototype.decline =
-function dchat_accept()
+function dchat_decline()
 {
     this.state.sendDecline();
 
@@ -1028,6 +1028,7 @@ function dfile_accept(localFile)
     this.state.sendAccept();
 
     this.localFile = new LocalFile(localFile, ">");
+    this.localPath = localFile.path;
 
     this.filestream = Components.classes["@mozilla.org/binaryoutputstream;1"];
     this.filestream = this.filestream.createInstance(nsIBinaryOutputStream);
@@ -1056,7 +1057,7 @@ function dfile_accept(localFile)
 
 // Call to make this end decline DCC File from target user.
 CIRCDCCFileTransfer.prototype.decline =
-function dfile_accept()
+function dfile_decline()
 {
     this.state.sendDecline();
 

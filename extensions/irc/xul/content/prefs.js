@@ -77,6 +77,11 @@ function initPrefs()
         mkdir(logPath);
     client.prefManager.logPath = logPath;
 
+    var downloadsPath = profilePath.clone();
+    downloadsPath.append("downloads");
+    if (!downloadsPath.exists())
+        mkdir(downloadsPath);
+
     var logDefault = client.prefManager.logPath.clone();
     logDefault.append(escapeFileName("client.log"));
 
@@ -140,6 +145,8 @@ function initPrefs()
          ["dccUserLog",         false,    "global.log"],
          ["dccUserMaxLines",    500,      "global.maxLines"],
          ["dcc.enabled",        true,     "dcc"],
+         ["dcc.autoAccept.delay", 10000,  "hidden"],
+         ["dcc.downloadsFolder", getURLSpecFromFile(downloadsPath.path), "dcc"],
          ["dcc.listenPorts",    [],       "dcc.ports"],
          ["dcc.useServerIP",    true,     "dcc"],
          ["debugMode",          "",       "global"],
@@ -408,6 +415,8 @@ function getNetworkPrefManager(network)
          ["conference.limit", defer, "appearance.misc"],
          ["connectTries",     defer, ".connect"],
          ["dcc.useServerIP",  defer, "dcc"],
+         ["dcc.downloadsFolder", defer, "dcc"],
+         ["dcc.autoAccept.list", [], "dcc.autoAccept"],
          ["defaultQuitMsg",   defer, ".connect"],
          ["desc",             defer, ".ident"],
          ["displayHeader",    client.prefs["networkHeader"],

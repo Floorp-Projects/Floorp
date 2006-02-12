@@ -76,6 +76,11 @@ function initCommands()
          ["custom-away",       cmdAway,                                      0],
          ["op",                cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
          ["dcc-accept",        cmdDCCAccept,                       CMD_CONSOLE],
+         ["dcc-accept-list",  cmdDCCAutoAcceptList, CMD_NEED_NET | CMD_CONSOLE],
+         ["dcc-accept-list-add", cmdDCCAutoAcceptAdd,
+                                                    CMD_NEED_NET | CMD_CONSOLE],
+         ["dcc-accept-list-remove", cmdDCCAutoAcceptDel,
+                                                    CMD_NEED_NET | CMD_CONSOLE],
          ["dcc-chat",          cmdDCCChat,          CMD_NEED_SRV | CMD_CONSOLE],
          ["dcc-close",         cmdDCCClose,                        CMD_CONSOLE],
          ["dcc-decline",       cmdDCCDecline,                      CMD_CONSOLE],
@@ -3896,6 +3901,87 @@ function cmdDCCList(e) {
     return true;
 }
 
+function cmdDCCAutoAcceptList(e)
+{
+    if (!jsenv.HAS_SERVER_SOCKETS)
+        return display(MSG_DCC_NOT_POSSIBLE);
+    if (!client.prefs["dcc.enabled"])
+        return display(MSG_DCC_NOT_ENABLED);
+
+    var list = e.network.prefs["dcc.autoAccept.list"];
+
+    if (list.length == 0)
+        display(MSG_DCCACCEPT_DISABLED);
+    else
+        display(getMsg(MSG_DCCACCEPT_LIST, arraySpeak(list)));
+
+    return true;
+}
+
+function cmdDCCAutoAcceptAdd(e)
+{
+    if (!jsenv.HAS_SERVER_SOCKETS)
+        return display(MSG_DCC_NOT_POSSIBLE);
+    if (!client.prefs["dcc.enabled"])
+        return display(MSG_DCC_NOT_ENABLED);
+
+    var list = e.network.prefs["dcc.autoAccept.list"];
+
+    if (!e.user && e.server)
+        e.user = e.server.getUser(e.nickname);
+
+    var mask = e.user ? "*!" + e.user.name + "@" + e.user.host : e.nickname;
+    var index = arrayIndexOf(list, mask);
+    if (index == -1)
+    {
+        list.push(mask);
+        list.update();
+        display(getMsg(MSG_DCCACCEPT_ADD, mask));
+    }
+    else
+    {
+        display(getMsg(MSG_DCCACCEPT_ADDERR,
+                       e.user ? e.user.unicodeName : e.nickname));
+    }
+    return true;
+}
+
+function cmdDCCAutoAcceptDel(e)
+{
+    if (!jsenv.HAS_SERVER_SOCKETS)
+        return display(MSG_DCC_NOT_POSSIBLE);
+    if (!client.prefs["dcc.enabled"])
+        return display(MSG_DCC_NOT_ENABLED);
+
+    var list = e.network.prefs["dcc.autoAccept.list"];
+
+    if (!e.user && e.server)
+        e.user = e.server.getUser(e.nickname);
+
+    var maskObj, newList = new Array();
+    for (var m = 0; m < list.length; ++m)
+    {
+        maskObj = getHostmaskParts(list[m]);
+        if (e.nickname == list[m] ||
+            (e.user && hostmaskMatches(e.user, maskObj, e.server)))
+        {
+            display(getMsg(MSG_DCCACCEPT_DEL, list[m]));
+        }
+        else
+        {
+            newList.push(list[m]);
+        }
+    }
+
+    if (list.length > newList.length)
+        e.network.prefs["dcc.autoAccept.list"] = newList;
+    else
+        display(getMsg(MSG_DCCACCEPT_DELERR,
+                       e.user ? e.user.unicodeName : e.nickname));
+
+    return true;
+}
+
 function cmdDCCAccept(e)
 {
     if (!jsenv.HAS_SERVER_SOCKETS)
@@ -3906,7 +3992,13 @@ function cmdDCCAccept(e)
     function accept(c)
     {
         if (c.TYPE == "IRCDCCChat")
-            return c.accept();
+        {
+            if (!c.accept())
+                return false;
+
+            display(getMsg(MSG_DCCCHAT_ACCEPTED, c._getParams()), "DCC-CHAT");
+            return true;
+        }
 
         // Accept the request passed in...
         var filename = c.filename;
@@ -3919,14 +4011,11 @@ function cmdDCCAccept(e)
                                   ["$all", ext], filename);
         if (pickerRv.reason == PICK_CANCEL)
             return false;
-        c.accept(pickerRv.file);
 
-        if (c.TYPE == "CIRCDCCChat")
-            display(getMsg(MSG_DCCCHAT_ACCEPTED, c._getParams()),
-                    "DCC-CHAT");
-        else
-            display(getMsg(MSG_DCCFILE_ACCEPTED, c._getParams()),
-                    "DCC-FILE");
+        if (!c.accept(pickerRv.file))
+            return false;
+
+        display(getMsg(MSG_DCCFILE_ACCEPTED, c._getParams()), "DCC-FILE");
         return true;
     };
 
@@ -3956,7 +4045,7 @@ function cmdDCCAccept(e)
     if (list.length == 1)
         return accept(list[0]);
 
-    // Oops, couldn't figure the user's requets out, so give them some help.
+    // Oops, couldn't figure the user's request out, so give them some help.
     display(getMsg(MSG_DCC_PENDING_MATCHES, [list.length]));
     display(MSG_DCC_MATCHES_HELP);
     return true;
@@ -3973,7 +4062,7 @@ function cmdDCCDecline(e)
     {
         // Decline the request passed in...
         c.decline();
-        if (c.TYPE == "CIRCDCCChat")
+        if (c.TYPE == "IRCDCCChat")
             display(getMsg(MSG_DCCCHAT_DECLINED, c._getParams()), "DCC-CHAT");
         else
             display(getMsg(MSG_DCCFILE_DECLINED, c._getParams()), "DCC-FILE");
