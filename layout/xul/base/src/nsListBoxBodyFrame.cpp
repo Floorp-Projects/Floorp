@@ -1318,6 +1318,9 @@ nsListBoxBodyFrame::OnContentInserted(nsPresContext* aPresContext, nsIContent* a
 void
 nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext, nsIFrame* aChildFrame, PRInt32 aIndex)
 {
+  NS_ASSERTION(!aChildFrame || aChildFrame->GetParent() == this,
+               "Removing frame that's not our child... Not good");
+  
   if (mRowCount >= 0)
     --mRowCount;
 
@@ -1436,7 +1439,12 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
   nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
   fc->RemoveMappingsForFrameSubtree(aFrame);
 
-  mFrames.RemoveFrame(aFrame);
+#ifdef DEBUG
+  PRBool removed =
+#endif
+    mFrames.RemoveFrame(aFrame);
+  NS_ASSERTION(removed,
+               "Going to destroy a frame we didn't remove.  Prepare to crash");
   if (mLayoutManager)
     mLayoutManager->ChildrenRemoved(this, aState, aFrame);
   aFrame->Destroy(presContext);
