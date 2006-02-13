@@ -145,25 +145,21 @@ nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
     mDpi = 96;
 
 #if defined(MOZ_ENABLE_GTK2)
-    if (mPrinter) {
-        mDpi = 600;
-    } else {
-        float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
-        OSVal = NSToCoordRound(float(::gdk_screen_width()) / screenWidthIn);
+    float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
+    OSVal = NSToCoordRound(float(::gdk_screen_width()) / screenWidthIn);
 
-        if (aPrefDPI > 0) {
-            // If there's a valid pref value for the logical resolution,
-            // use it.
-            mDpi = aPrefDPI;
-        } else if ((aPrefDPI == 0) || (OSVal > 96)) {
-            // Either if the pref is 0 (force use of OS value) or the OS
-            // value is bigger than 96, use the OS value.
-            mDpi = OSVal;
-        } else {
-            // if we couldn't get the pref or it's negative, and the OS
-            // value is under 96ppi, then use 96.
-            mDpi = 96;
-        }
+    if (aPrefDPI > 0) {
+        // If there's a valid pref value for the logical resolution,
+        // use it.
+        mDpi = aPrefDPI;
+    } else if ((aPrefDPI == 0) || (OSVal > 96)) {
+        // Either if the pref is 0 (force use of OS value) or the OS
+        // value is bigger than 96, use the OS value.
+        mDpi = OSVal;
+    } else {
+        // if we couldn't get the pref or it's negative, and the OS
+        // value is under 96ppi, then use 96.
+        mDpi = 96;
     }
 
 #elif defined(XP_WIN)
@@ -235,8 +231,8 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
 
     // XXX
     if (mPrinter) {
-        mWidth = mDpi * 8.5;
-        mHeight = mDpi * 11;
+        mWidth = NS_INCHES_TO_TWIPS(8.5) * mDevUnitsToAppUnits;
+        mHeight = NS_INCHES_TO_TWIPS(11) * mDevUnitsToAppUnits;
     }
     // XXX
     mDepth = 24;
