@@ -128,6 +128,7 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
 
 static GtkWidget *gProtoWindow = nsnull;
 static GtkWidget *gStockImageWidget = nsnull;
+static GnomeIconTheme *gIconTheme = nsnull;
 
 #if GTK_CHECK_VERSION(2,4,0)
 static GtkIconFactory *gIconFactory = nsnull;
@@ -182,7 +183,7 @@ moz_gtk_icon_size(const char *name)
 }
 
 nsresult
-nsIconChannel::InitWithGnome()
+nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
 {
   nsresult rv;
   
@@ -213,12 +214,12 @@ nsIconChannel::InitWithGnome()
   }
 
   nsCAutoString iconSizeString;
-  mURI->GetIconSize(iconSizeString);
+  aIconURI->GetIconSize(iconSizeString);
 
   PRUint32 iconSize;
 
   if (iconSizeString.IsEmpty()) {
-    rv = mURI->GetImageSize(&iconSize);
+    rv = aIconURI->GetImageSize(&iconSize);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetImageSize failed");
   } else {
     int size;
@@ -229,14 +230,14 @@ nsIconChannel::InitWithGnome()
   }
 
   nsCAutoString type;
-  mURI->GetContentType(type);
+  aIconURI->GetContentType(type);
 
   GnomeVFSFileInfo fileInfo = {0};
   fileInfo.refcount = 1; // In case some GnomeVFS function addrefs and releases it
 
   nsCAutoString spec;
   nsCOMPtr<nsIURI> fileURI;
-  rv = mURI->GetIconFile(getter_AddRefs(fileURI));
+  rv = aIconURI->GetIconFile(getter_AddRefs(fileURI));
   if (fileURI) {
     fileURI->GetAsciiSpec(spec);
     // Only ask gnome-vfs for a GnomeVFSFileInfo for file: uris, to avoid a
@@ -272,29 +273,31 @@ nsIconChannel::InitWithGnome()
     nsCOMPtr<nsIMIMEService> ms(do_GetService("@mozilla.org/mime;1"));
     if (ms) {
       nsCAutoString fileExt;
-      mURI->GetFileExtension(fileExt);
+      aIconURI->GetFileExtension(fileExt);
       ms->GetTypeFromExtension(fileExt, type);
     }
   }
 
   // Get the icon theme
-  GnomeIconTheme *t = gnome_icon_theme_new();
-  if (!t) {
-    gnome_vfs_file_info_clear(&fileInfo);
-    return NS_ERROR_NOT_AVAILABLE;
+  if (!gIconTheme) {
+    gIconTheme = gnome_icon_theme_new();
+    if (!gIconTheme) {
+      gnome_vfs_file_info_clear(&fileInfo);
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
- 
 
-  char* name = gnome_icon_lookup(t, NULL, spec.get(), NULL, &fileInfo, type.get(), GNOME_ICON_LOOKUP_FLAGS_NONE, NULL);
+  char* name = gnome_icon_lookup(gIconTheme, NULL, spec.get(), NULL, &fileInfo,
+                                 type.get(), GNOME_ICON_LOOKUP_FLAGS_NONE,
+                                 NULL);
   gnome_vfs_file_info_clear(&fileInfo);
   if (!name) {
-    g_object_unref(G_OBJECT(t));
     return NS_ERROR_NOT_AVAILABLE;
   }
  
-  char* file = gnome_icon_theme_lookup_icon(t, name, iconSize, NULL, NULL);
+  char* file = gnome_icon_theme_lookup_icon(gIconTheme, name, iconSize,
+                                            NULL, NULL);
   g_free(name);
-  g_object_unref(G_OBJECT(t));
   if (!file)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -321,27 +324,29 @@ nsIconChannel::InitWithGnome()
 
   // XXX Respect icon state
   
-  rv = moz_gdk_pixbuf_to_channel(scaled, mURI, getter_AddRefs(mRealChannel));
+  rv = moz_gdk_pixbuf_to_channel(scaled, aIconURI,
+                                 getter_AddRefs(mRealChannel));
   gdk_pixbuf_unref(scaled);
   return rv;
 }
 
 nsresult
-nsIconChannel::Init(nsIURI* aURI) {
-  mURI = do_QueryInterface(aURI);
-  NS_ASSERTION(mURI, "URI passed to nsIconChannel is no nsIMozIconURI!");
+nsIconChannel::Init(nsIURI* aURI)
+{
+  nsCOMPtr<nsIMozIconURI> iconURI = do_QueryInterface(aURI);
+  NS_ASSERTION(iconURI, "URI is not an nsIMozIconURI");
 
   nsCAutoString stockIcon;
-  mURI->GetStockIcon(stockIcon);
+  iconURI->GetStockIcon(stockIcon);
   if (stockIcon.IsEmpty()) {
-    return InitWithGnome();
+    return InitWithGnome(iconURI);
   }
 
   nsCAutoString iconSizeString;
-  mURI->GetIconSize(iconSizeString);
+  iconURI->GetIconSize(iconSizeString);
 
   nsCAutoString iconStateString;
-  mURI->GetIconState(iconStateString);
+  iconURI->GetIconState(iconStateString);
 
   GtkIconSize icon_size = moz_gtk_icon_size(iconSizeString.get());
    
@@ -373,7 +378,8 @@ nsIconChannel::Init(nsIURI* aURI) {
   if (!icon)
     return NS_ERROR_NOT_AVAILABLE;
   
-  nsresult rv = moz_gdk_pixbuf_to_channel(icon, mURI, getter_AddRefs(mRealChannel));
+  nsresult rv = moz_gdk_pixbuf_to_channel(icon, iconURI,
+                                          getter_AddRefs(mRealChannel));
 
   gdk_pixbuf_unref(icon);
 
@@ -382,6 +388,13 @@ nsIconChannel::Init(nsIURI* aURI) {
 
 void
 nsIconChannel::Shutdown() {
-  if (gProtoWindow)
+  if (gProtoWindow) {
     gtk_widget_destroy(gProtoWindow);
+    gProtoWindow = nsnull;
+    gStockImageWidget = nsnull;
+  }
+  if (gIconTheme) {
+    g_object_unref(G_OBJECT(gIconTheme));
+    gIconTheme = nsnull;
+  }
 }
