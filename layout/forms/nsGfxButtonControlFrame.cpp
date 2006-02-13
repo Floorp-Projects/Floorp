@@ -56,6 +56,7 @@
 #include "nsGUIEvent.h"
 
 #include "nsNodeInfoManager.h"
+#include "nsIDOMHTMLInputElement.h"
 
 const nscoord kSuggestedNotSet = -1;
 
@@ -108,45 +109,9 @@ NS_IMETHODIMP
 nsGfxButtonControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
                                                 nsISupportsArray& aChildList)
 {
-  // Get the text from the "value" attribute.
-  // If it is zero length, set it to a default value (localized)
-  nsAutoString initValue;
-  nsFormControlHelper::GetValueAttr(mContent, &initValue);
-  nsXPIDLString value;
-  value.Assign(initValue);
-  if (value.IsEmpty()) {
-    // Generate localized label.
-    // We can't make any assumption as to what the default would be
-    // because the value is localized for non-english platforms, thus
-    // it might not be the string "Reset", "Submit Query", or "Browse..."
-    nsresult rv = GetDefaultLabel(value);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Compress whitespace out of label if needed.
-  if (!GetStyleText()->WhiteSpaceIsSignificant()) {
-    value.CompressWhitespace();
-  } else if (value.Length() > 2 && value.First() == ' ' &&
-             value.CharAt(value.Length() - 1) == ' ') {
-    // This is a bit of a hack.  The reason this is here is as follows: we now
-    // have default padding on our buttons to make them non-ugly.
-    // Unfortunately, IE-windows does not have such padding, so people will
-    // stick values like " ok " (with the spaces) in the buttons in an attempt
-    // to make them look decent.  Unfortunately, if they do this the button
-    // looks way too big in Mozilla.  Worse yet, if they do this _and_ set a
-    // fixed width for the button we run into trouble because our focus-rect
-    // border/padding and outer border take up 10px of the horizontal button
-    // space or so; the result is that the text is misaligned, even with the
-    // recentering we do in nsHTMLButtonFrame::Reflow.  So to solve this, even
-    // if the whitespace is significant, single leading and trailing _spaces_
-    // (and not other whitespace) are removed.  The proper solution, of
-    // course, is to not have the focus rect painting taking up 6px of
-    // horizontal space. We should do that instead (via XBL form controls or
-    // changing the renderer) and remove this.
-    value.Cut(0, 1);
-    value.Truncate(value.Length() - 1);
-  }
-
+  nsXPIDLString label;
+  GetLabel(label);
+  
   // Add a child text content node for the label
   nsCOMPtr<nsITextContent> labelContent;
   NS_NewTextNode(getter_AddRefs(labelContent),
@@ -154,7 +119,7 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   if (labelContent) {
     // set the value of the text node and add it to the child list
     mTextContent.swap(labelContent);
-    mTextContent->SetText(value, PR_TRUE);
+    mTextContent->SetText(label, PR_FALSE);
     aChildList.AppendElement(mTextContent);
   }
   return NS_OK;
@@ -263,6 +228,52 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsXPIDLString& aString)
                                             prop, aString);
 }
 
+nsresult
+nsGfxButtonControlFrame::GetLabel(nsXPIDLString& aLabel)
+{
+  // Get the text from the "value" property on our content.
+  // If it comes out empty, set it to a default value (localized)
+  nsCOMPtr<nsIDOMHTMLInputElement> elt = do_QueryInterface(mContent);
+  nsresult rv = NS_OK;
+  if (elt) {
+    rv = elt->GetValue(aLabel);
+  }
+  if (NS_FAILED(rv) || aLabel.IsEmpty()) {
+    // Generate localized label.
+    // We can't make any assumption as to what the default would be
+    // because the value is localized for non-english platforms, thus
+    // it might not be the string "Reset", "Submit Query", or "Browse..."
+    rv = GetDefaultLabel(aLabel);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+    // Compress whitespace out of label if needed.
+  if (!GetStyleText()->WhiteSpaceIsSignificant()) {
+    aLabel.CompressWhitespace();
+  } else if (aLabel.Length() > 2 && aLabel.First() == ' ' &&
+             aLabel.CharAt(aLabel.Length() - 1) == ' ') {
+    // This is a bit of a hack.  The reason this is here is as follows: we now
+    // have default padding on our buttons to make them non-ugly.
+    // Unfortunately, IE-windows does not have such padding, so people will
+    // stick values like " ok " (with the spaces) in the buttons in an attempt
+    // to make them look decent.  Unfortunately, if they do this the button
+    // looks way too big in Mozilla.  Worse yet, if they do this _and_ set a
+    // fixed width for the button we run into trouble because our focus-rect
+    // border/padding and outer border take up 10px of the horizontal button
+    // space or so; the result is that the text is misaligned, even with the
+    // recentering we do in nsHTMLButtonFrame::Reflow.  So to solve this, even
+    // if the whitespace is significant, single leading and trailing _spaces_
+    // (and not other whitespace) are removed.  The proper solution, of
+    // course, is to not have the focus rect painting taking up 6px of
+    // horizontal space. We should do that instead (via XBL form controls or
+    // changing the renderer) and remove this.
+    aLabel.Cut(0, 1);
+    aLabel.Truncate(aLabel.Length() - 1);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsGfxButtonControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                           nsIAtom*        aAttribute,
@@ -272,10 +283,12 @@ nsGfxButtonControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
   // If the value attribute is set, update the text of the label
   if (nsHTMLAtoms::value == aAttribute) {
-    nsAutoString value;
     if (mTextContent && mContent) {
-      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value);
-      mTextContent->SetText(value, PR_TRUE);
+      nsXPIDLString label;
+      rv = GetLabel(label);
+      NS_ENSURE_SUCCESS(rv, rv);
+    
+      mTextContent->SetText(label, PR_TRUE);
     } else {
       rv = NS_ERROR_UNEXPECTED;
     }
