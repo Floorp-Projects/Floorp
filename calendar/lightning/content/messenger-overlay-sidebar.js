@@ -11,7 +11,20 @@ function ltnSelectedCalendar()
 
 function ltnDeleteSelectedCalendar()
 {
-    ltnRemoveCalendar(ltnSelectedCalendar());
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService); 
+
+    var result = {}; 
+    var calendarBundle = document.getElementById("bundle_calendar");
+    var calendar = ltnSelectedCalendar();
+    var ok = promptService.confirm(
+        window,
+        calendarBundle.getString("unsubscribeCalendarTitle"),
+        calendarBundle.getFormattedString("unsubscribeCalendarMessage",[calendar.name]),
+        result);
+   
+    if (ok) {
+        ltnRemoveCalendar(calendar);
+    }
 }
 
 function ltnEditSelectedCalendar()

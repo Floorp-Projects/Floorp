@@ -236,12 +236,24 @@ function checkCalListTarget() {
 
 function deleteCalendar(event)
 {
-    var cal = document.popupNode.calendar
-    getDisplayComposite().removeCalendar(cal.uri);
-    var calMgr = getCalendarManager();
-    calMgr.unregisterCalendar(cal);
-    // Delete file?
-    //calMgr.deleteCalendar(cal);
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService); 
+
+    var result = {}; 
+    var calendarBundle = document.getElementById("bundle_calendar");
+    var calendar = document.popupNode.calendar;
+    var ok = promptService.confirm(
+        window,
+        calendarBundle.getString("unsubscribeCalendarTitle"),
+        calendarBundle.getFormattedString("unsubscribeCalendarMessage",[calendar.name]),
+        result);
+   
+    if (ok) {
+        getDisplayComposite().removeCalendar(calendar.uri);
+        var calMgr = getCalendarManager();
+        calMgr.unregisterCalendar(calendar);
+        // Delete file?
+        //calMgr.deleteCalendar(cal);
+    }
 }
 
 /** 
