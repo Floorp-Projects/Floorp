@@ -46,6 +46,7 @@
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGTransformList.h"
 #include "nsSVGDefsFrame.h"
+#include "nsSVGUtils.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -173,7 +174,7 @@ nsSVGDefsFrame::RemoveFrame(nsIAtom*  aListName,
 
   PRBool result = mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
   if (dirty_region && outerSVGFrame)
     outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
@@ -321,21 +322,6 @@ nsSVGDefsFrame::GetBBox(nsIDOMSVGRect **_retval)
 
 //----------------------------------------------------------------------
 // nsISVGContainerFrame methods:
-
-nsISVGOuterSVGFrame *
-nsSVGDefsFrame::GetOuterSVGFrame()
-{
-  NS_ASSERTION(mParent, "null parent");
-  
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid container");
-    return nsnull;
-  }
-
-  return containerFrame->GetOuterSVGFrame();  
-}
 
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGDefsFrame::GetCanvasTM()

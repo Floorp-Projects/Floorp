@@ -438,3 +438,19 @@ nsSVGUtils::AngleBisect(float a1, float a2)
   else
     return M_PI + (a1+a2)/2;
 }
+
+nsISVGOuterSVGFrame *
+nsSVGUtils::GetOuterSVGFrame(nsIFrame *aFrame)
+{
+  nsISVGOuterSVGFrame *outerSVG = nsnull;
+
+  while (aFrame) {
+    if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG) {
+      CallQueryInterface(aFrame, &outerSVG);
+      break;
+    }
+    aFrame = aFrame->GetParent();
+  }
+
+  return outerSVG;
+}

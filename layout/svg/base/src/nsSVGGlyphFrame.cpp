@@ -190,7 +190,6 @@ protected:
                       PRBool suppressInvalidation);
   void UpdateMetrics(PRUint32 flags);
   void UpdateFragmentTree();
-  nsISVGOuterSVGFrame *GetOuterSVGFrame();
   nsISVGTextFrame *GetTextFrame();
   NS_IMETHOD Update(PRUint32 aFlags);
   
@@ -286,7 +285,7 @@ nsSVGGlyphFrame::Init(nsPresContext*  aPresContext,
   }
   
   // construct our glyphmetrics & glyphgeometry objects:
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("No outerSVGFrame");
     SetStyleContext(aPresContext, aContext);
@@ -321,7 +320,7 @@ nsSVGGlyphFrame::Update(PRUint32 aFlags)
 #ifdef DEBUG
 //  printf("** nsSVGGlyphFrame::Update\n");
 #endif
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("No outerSVGFrame");
     return NS_ERROR_FAILURE;
@@ -591,7 +590,7 @@ nsSVGGlyphFrame::NotifyRedrawUnsuspended()
     nsCOMPtr<nsISVGRendererRegion> dirty_region;
     mGeometry->Update(mGeometryUpdateFlags, getter_AddRefs(dirty_region));
     if (dirty_region) {
-      nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+      nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
       if (outerSVGFrame)
         outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
     }
@@ -1478,7 +1477,7 @@ void nsSVGGlyphFrame::UpdateGeometry(PRUint32 flags, PRBool bRedraw,
 {
   mGeometryUpdateFlags |= flags;
   
-  nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return;
@@ -1553,21 +1552,6 @@ void nsSVGGlyphFrame::UpdateFragmentTree()
     text_frame->NotifyGlyphFragmentTreeChange(this);
     mFragmentTreeDirty = PR_FALSE;
   }
-}
-
-nsISVGOuterSVGFrame *
-nsSVGGlyphFrame::GetOuterSVGFrame()
-{
-  NS_ASSERTION(mParent, "null parent");
-  
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid container");
-    return nsnull;
-  }
-
-  return containerFrame->GetOuterSVGFrame();  
 }
 
 nsISVGTextFrame *

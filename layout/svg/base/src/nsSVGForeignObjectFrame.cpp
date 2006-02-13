@@ -149,7 +149,6 @@ public:
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsISVGContainerFrame interface:
-  nsISVGOuterSVGFrame *GetOuterSVGFrame();
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
   already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
   
@@ -512,7 +511,7 @@ nsSVGForeignObjectFrame::GetCoveredRegion()
   // get a region from our mRect
   
   //  if (mRect.width==0 || mRect.height==0) return nsnull;
-  nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return nsnull;
@@ -562,7 +561,7 @@ nsSVGForeignObjectFrame::NotifyRedrawUnsuspended()
   if (mIsDirty) {
     nsCOMPtr<nsISVGRendererRegion> dirtyRegion = DoReflow();
     if (dirtyRegion) {
-      nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+      nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
       if (outerSVGFrame)
         outerSVGFrame->InvalidateRegion(dirtyRegion, PR_TRUE);
     }
@@ -627,21 +626,6 @@ nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
 
 //----------------------------------------------------------------------
 // nsISVGContainerFrame methods:
-
-nsISVGOuterSVGFrame *
-nsSVGForeignObjectFrame::GetOuterSVGFrame()
-{
-  NS_ASSERTION(mParent, "null parent");
-
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid parent");
-    return nsnull;
-  }
-  
-  return containerFrame->GetOuterSVGFrame();  
-}
 
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGForeignObjectFrame::GetCanvasTM()
@@ -724,7 +708,7 @@ void nsSVGForeignObjectFrame::Update()
 
   mIsDirty = PR_TRUE;
 
-  nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return;

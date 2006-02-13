@@ -356,7 +356,7 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas,
 
   canvas->PushClip();
 
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
 
   /* check for a clip path */
 
@@ -559,7 +559,7 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   nsresult rv;
   nsCOMPtr<nsISVGRenderer> renderer;
 
-  nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame)
     return NS_ERROR_FAILURE;
   rv = outerSVGFrame->GetRenderer(getter_AddRefs(renderer));

@@ -266,7 +266,7 @@ nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas,
     }
   }
 
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
 
   /* check for a clip path */
 
@@ -555,7 +555,7 @@ nsSVGPathGeometryFrame::WillModifySVGObservable(nsISVGValue* observable,
   // need to handle filters because we might be the topmost filtered frame and
   // the filter region could be changing.
   if (filter && mFilterRegion) {
-    nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
     if (!outerSVGFrame)
       return NS_ERROR_FAILURE;
 
@@ -1036,7 +1036,7 @@ nsSVGPathGeometryFrame::InitSVG()
   NS_ADD_SVGVALUE_OBSERVER(transforms);
 
   // construct a pathgeometry object:
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("Null outerSVGFrame");
     return NS_ERROR_FAILURE;
@@ -1066,7 +1066,7 @@ void nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags,
 {
   mUpdateFlags |= flags;
 
-  nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return;
@@ -1116,18 +1116,4 @@ void nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags,
   }
 }
 
-nsISVGOuterSVGFrame *
-nsSVGPathGeometryFrame::GetOuterSVGFrame()
-{
-  NS_ASSERTION(mParent, "null parent");
-  
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid container");
-    return nsnull;
-  }
-
-  return containerFrame->GetOuterSVGFrame();  
-}
 

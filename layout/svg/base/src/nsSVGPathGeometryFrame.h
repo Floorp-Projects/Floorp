@@ -146,7 +146,6 @@ protected:
 protected:
   NS_IMETHOD InitSVG();
   void UpdateGraphic(PRUint32 flags, PRBool suppressInvalidation = PR_FALSE);
-  nsISVGOuterSVGFrame *GetOuterSVGFrame();
   nsISVGRendererPathGeometry *GetGeometry();
 
   nsCOMPtr<nsISVGRendererRegion> mFilterRegion;

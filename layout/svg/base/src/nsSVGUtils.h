@@ -60,10 +60,14 @@ class nsISVGOuterSVGFrame;
 class nsISVGRendererSurface;
 class nsIPresShell;
 class nsISVGRendererCanvas;
+class nsISVGOuterSVGFrame;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+
+// SVG Frame state bits
+#define NS_STATE_IS_OUTER_SVG 0x00100000
 
 class nsSVGUtils
 {
@@ -147,6 +151,10 @@ public:
   static nsresult GetSurface(nsISVGOuterSVGFrame *aOuterSVGFrame,
                              nsISVGRendererCanvas *aCanvas,
                              nsISVGRendererSurface **aSurface);
+
+  /* Find the outermost SVG frame of the passed frame */
+  static nsISVGOuterSVGFrame *
+  GetOuterSVGFrame(nsIFrame *aFrame);
 
 private:
   /*
