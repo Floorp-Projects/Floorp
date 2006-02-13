@@ -88,6 +88,21 @@
                                            
                     </hbox>		
                 </groupbox>
+
+                <groupbox class='box-prefgroupitem' >
+                    <caption label="&downloadMediaCaption.label;"/>
+                    <hbox flex="1">
+                        <textbox onchange="syncPref(this)"  tabindex="51"
+                                 flex="1" 
+                                 style="margin:3px ! important;" 
+                                 id="downloadDir"
+                                 preference="browser.download.dir"
+                                 />          
+                                           
+                    </hbox>		
+                </groupbox>
+
+
             </vbox>
         </groupbox>
     </hbox>
