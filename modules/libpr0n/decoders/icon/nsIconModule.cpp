@@ -40,7 +40,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
 
-#if defined(XP_MACOSX) || defined(XP_OS2) || defined(XP_BEOS)
+#ifdef USE_ICON_DECODER
 #include "nsIconDecoder.h"
 #endif
 #include "nsIconProtocolHandler.h"
@@ -53,14 +53,14 @@
  */
 #define NS_ICONPROTOCOL_CID   { 0xd0f9db12, 0x249c, 0x11d5, { 0x99, 0x5, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } } 
 
-#if defined(XP_MACOSX) || defined(XP_OS2) || defined(XP_BEOS)
+#ifdef USE_ICON_DECODER
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconDecoder)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconProtocolHandler)
 
 static const nsModuleComponentInfo components[] =
 {
-#if defined(XP_MACOSX) || defined(XP_OS2) || defined(XP_BEOS)
+#ifdef USE_ICON_DECODER
   { "icon decoder",
     NS_ICONDECODER_CID,
     "@mozilla.org/image/decoder;2?type=image/icon",

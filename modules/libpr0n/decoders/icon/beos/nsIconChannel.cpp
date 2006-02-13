@@ -314,16 +314,17 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     return NS_ERROR_NOT_AVAILABLE;
 
   // Got a bitmap and color space info - convert data to mozilla's icon format
-  PRUint32 iconLength = 2 + iconSize * (iconSize * 3 + alphaBytesPerRow);
+  PRUint32 iconLength = 3 + iconSize * (iconSize * 3 + alphaBytesPerRow);
   uint8 *buffer = new uint8[iconLength];
   if (!buffer)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  buffer[0] = iconSize;
-  buffer[1] = iconSize;
+  uint8* destByte = buffer;
+  *(destByte++) = iconSize;
+  *(destByte++) = iconSize;
+  *(destByte++) = 1; // alpha bits per pixel
 
   // RGB data
-  uint8* destByte = buffer + 2;
   uint8* sourceByte = (uint8*)nativeIcon.Bits();
   for(PRUint32 iconRow = 0; iconRow < iconSize; iconRow++)
   {

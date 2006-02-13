@@ -91,8 +91,16 @@ CPPSRCS		= \
 		nsIconProtocolHandler.cpp \
 		$(NULL)
 
+ifdef MOZ_ENABLE_GNOMEUI
+USE_ICON_DECODER = 1
+endif
 ifeq (,$(filter-out Darwin OS2 BeOS,$(OS_ARCH)))
-CPPSRCS	+= nsIconDecoder.cpp
+USE_ICON_DECODER = 1
+endif
+
+ifdef USE_ICON_DECODER
+CPPSRCS		+= nsIconDecoder.cpp
+DEFINES		+= -DUSE_ICON_DECODER
 endif
 
 XPIDLSRCS	= nsIIconURI.idl
