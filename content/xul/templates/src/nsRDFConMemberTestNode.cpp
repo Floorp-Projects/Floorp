@@ -42,7 +42,6 @@
 #include "nsRDFCID.h"
 #include "nsIServiceManager.h"
 #include "nsResourceSet.h"
-#include "nsConflictSet.h"
 #include "nsString.h"
 
 #include "prlog.h"
@@ -51,16 +50,12 @@
 extern PRLogModuleInfo* gXULTemplateLog;
 #endif
 
-nsRDFConMemberTestNode::nsRDFConMemberTestNode(InnerNode* aParent,
-                                               nsConflictSet& aConflictSet,
-                                               nsIRDFDataSource* aDataSource,
-                                               const nsResourceSet& aMembershipProperties,
-                                               PRInt32 aContainerVariable,
-                                               PRInt32 aMemberVariable)
+nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
+                                               nsXULTemplateQueryProcessorRDF* aProcessor,
+                                               nsIAtom *aContainerVariable,
+                                               nsIAtom *aMemberVariable)
     : nsRDFTestNode(aParent),
-      mConflictSet(aConflictSet),
-      mDataSource(aDataSource),
-      mMembershipProperties(aMembershipProperties),
+      mProcessor(aProcessor),
       mContainerVariable(aContainerVariable),
       mMemberVariable(aMemberVariable)
 {
@@ -68,8 +63,9 @@ nsRDFConMemberTestNode::nsRDFConMemberTestNode(InnerNode* aParent,
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsCAutoString props;
 
-        nsResourceSet::ConstIterator last = aMembershipProperties.Last();
-        nsResourceSet::ConstIterator first = aMembershipProperties.First();
+        nsResourceSet& containmentProps = aProcessor->ContainmentProperties();
+        nsResourceSet::ConstIterator last = containmentProps.Last();
+        nsResourceSet::ConstIterator first = containmentProps.First();
         nsResourceSet::ConstIterator iter;
 
         for (iter = first; iter != last; ++iter) {
@@ -82,19 +78,27 @@ nsRDFConMemberTestNode::nsRDFConMemberTestNode(InnerNode* aParent,
             props += str;
         }
 
+        nsAutoString cvar(NS_LITERAL_STRING("(none)"));
+        if (mContainerVariable)
+            mContainerVariable->ToString(cvar);
+
+        nsAutoString mvar(NS_LITERAL_STRING("(none)"));
+        if (mMemberVariable)
+            mMemberVariable->ToString(mvar);
+
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-               ("nsRDFConMemberTestNode[%p]: parent=%p member-props=(%s) container-var=%d member-var=%d",
+               ("nsRDFConMemberTestNode[%p]: parent=%p member-props=(%s) container-var=%s member-var=%s",
                 this,
                 aParent,
                 props.get(),
-                mContainerVariable,
-                mMemberVariable));
+                NS_ConvertUTF16toUTF8(cvar).get(),
+                NS_ConvertUTF16toUTF8(mvar).get()));
     }
 #endif
 }
 
 nsresult
-nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
+nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
 {
     // XXX Uh, factor me, please!
     nsresult rv;
@@ -105,46 +109,50 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
     if (! rdfc)
         return NS_ERROR_FAILURE;
 
+    nsIRDFDataSource* ds = mProcessor->GetDataSource();
+
     InstantiationSet::Iterator last = aInstantiations.Last();
     for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
         PRBool hasContainerBinding;
-        Value containerValue;
-        hasContainerBinding = inst->mAssignments.GetAssignmentFor(mContainerVariable, &containerValue);
+        nsCOMPtr<nsIRDFNode> containerValue;
+        hasContainerBinding = inst->mAssignments.GetAssignmentFor(mContainerVariable,
+                                                                  getter_AddRefs(containerValue));
+
+        nsCOMPtr<nsIRDFResource> containerRes = do_QueryInterface(containerValue);
 
         nsCOMPtr<nsIRDFContainer> rdfcontainer;
 
-        if (hasContainerBinding) {
+        if (hasContainerBinding && containerRes) {
             // If we have a container assignment, then see if the
             // container is an RDF container (bag, seq, alt), and if
             // so, wrap it.
             PRBool isRDFContainer;
-            rv = rdfc->IsContainer(mDataSource,
-                                   VALUE_TO_IRDFRESOURCE(containerValue),
-                                   &isRDFContainer);
+            rv = rdfc->IsContainer(ds, containerRes, &isRDFContainer);
             if (NS_FAILED(rv)) return rv;
 
             if (isRDFContainer) {
                 rdfcontainer = do_CreateInstance("@mozilla.org/rdf/container;1", &rv);
                 if (NS_FAILED(rv)) return rv;
 
-                rv = rdfcontainer->Init(mDataSource, VALUE_TO_IRDFRESOURCE(containerValue));
+                rv = rdfcontainer->Init(ds, containerRes);
                 if (NS_FAILED(rv)) return rv;
             }
         }
 
         PRBool hasMemberBinding;
-        Value memberValue;
-        hasMemberBinding = inst->mAssignments.GetAssignmentFor(mMemberVariable, &memberValue);
+        nsCOMPtr<nsIRDFNode> memberValue;
+        hasMemberBinding = inst->mAssignments.GetAssignmentFor(mMemberVariable,
+                                                               getter_AddRefs(memberValue));
 
 #ifdef PR_LOGGING
         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
             const char* container = "(unbound)";
             if (hasContainerBinding)
-                VALUE_TO_IRDFRESOURCE(containerValue)->GetValueConst(&container);
+                containerRes->GetValueConst(&container);
 
             nsAutoString member(NS_LITERAL_STRING("(unbound)"));
             if (hasMemberBinding)
-                nsXULContentUtils::GetTextForNode(VALUE_TO_IRDFRESOURCE(memberValue), member);
+                nsXULContentUtils::GetTextForNode(memberValue, member);
 
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("nsRDFConMemberTestNode[%p]: FilterInstantiations() container=[%s] member=[%s]",
@@ -159,7 +167,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
             if (rdfcontainer) {
                 // RDF containers are easy. Just use the container API.
                 PRInt32 index;
-                rv = rdfcontainer->IndexOf(VALUE_TO_IRDFRESOURCE(memberValue), &index);
+                rv = rdfcontainer->IndexOf(memberValue, &index);
                 if (NS_FAILED(rv)) return rv;
 
                 if (index >= 0)
@@ -174,15 +182,16 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
                 // Othewise, we'll need to grovel through the
                 // membership properties to see if we have an
                 // assertion that indicates membership.
-                for (nsResourceSet::ConstIterator property = mMembershipProperties.First();
-                     property != mMembershipProperties.Last();
+                nsResourceSet& containmentProps = mProcessor->ContainmentProperties();
+                for (nsResourceSet::ConstIterator property = containmentProps.First();
+                     property != containmentProps.Last();
                      ++property) {
                     PRBool hasAssertion;
-                    rv = mDataSource->HasAssertion(VALUE_TO_IRDFRESOURCE(containerValue),
-                                                   *property,
-                                                   VALUE_TO_IRDFNODE(memberValue),
-                                                   PR_TRUE,
-                                                   &hasAssertion);
+                    rv = ds->HasAssertion(containerRes,
+                                          *property,
+                                          memberValue,
+                                          PR_TRUE,
+                                          &hasAssertion);
                     if (NS_FAILED(rv)) return rv;
 
                     if (hasAssertion) {
@@ -200,9 +209,9 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
             if (isconsistent) {
                 // Add a memory element to our set-of-support.
                 Element* element =
-                    nsRDFConMemberTestNode::Element::Create(mConflictSet.GetPool(),
-                                                            VALUE_TO_IRDFRESOURCE(containerValue),
-                                                            VALUE_TO_IRDFNODE(memberValue));
+                    nsRDFConMemberTestNode::Element::Create(mProcessor->GetPool(),
+                                                            containerRes,
+                                                            memberValue);
 
                 if (! element)
                     return NS_ERROR_OUT_OF_MEMORY;
@@ -253,18 +262,17 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
 #endif
 
                 Instantiation newinst = *inst;
-                newinst.AddAssignment(mMemberVariable, Value(node.get()));
+                newinst.AddAssignment(mMemberVariable, node);
 
                 Element* element =
-                    nsRDFConMemberTestNode::Element::Create(mConflictSet.GetPool(),
-                                                            VALUE_TO_IRDFRESOURCE(containerValue),
+                    nsRDFConMemberTestNode::Element::Create(mProcessor->GetPool(),
+                                                            containerRes,
                                                             node);
 
                 if (! element)
                     return NS_ERROR_OUT_OF_MEMORY;
 
                 newinst.AddSupportingElement(element);
-
                 aInstantiations.Insert(inst, newinst);
             }
         }
@@ -276,7 +284,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
             // container might have). If so, walk it backwards to get
             // the container we're in.
             nsCOMPtr<nsISimpleEnumerator> arcsin;
-            rv = mDataSource->ArcLabelsIn(VALUE_TO_IRDFNODE(memberValue), getter_AddRefs(arcsin));
+            rv = ds->ArcLabelsIn(memberValue, getter_AddRefs(arcsin));
             if (NS_FAILED(rv)) return rv;
 
             while (1) {
@@ -314,8 +322,8 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
                     // member node. Find all the people that point to
                     // it, and call them containers.
                     nsCOMPtr<nsISimpleEnumerator> sources;
-                    rv = mDataSource->GetSources(property, VALUE_TO_IRDFNODE(memberValue), PR_TRUE,
-                                                 getter_AddRefs(sources));
+                    rv = ds->GetSources(property, memberValue, PR_TRUE,
+                                        getter_AddRefs(sources));
                     if (NS_FAILED(rv)) return rv;
 
                     while (1) {
@@ -346,12 +354,12 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
 
                         // Add a new instantiation
                         Instantiation newinst = *inst;
-                        newinst.AddAssignment(mContainerVariable, Value(source.get()));
+                        newinst.AddAssignment(mContainerVariable, source);
 
                         Element* element =
-                            nsRDFConMemberTestNode::Element::Create(mConflictSet.GetPool(),
+                            nsRDFConMemberTestNode::Element::Create(mProcessor->GetPool(),
                                                                     source,
-                                                                    VALUE_TO_IRDFNODE(memberValue));
+                                                                    memberValue);
 
                         if (! element)
                             return NS_ERROR_OUT_OF_MEMORY;
@@ -369,17 +377,18 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
             // it's an open ended query on the container or member. go
             // through our containment properties to see if anything
             // applies.
-            for (nsResourceSet::ConstIterator property = mMembershipProperties.First();
-                 property != mMembershipProperties.Last();
+            nsResourceSet& containmentProps = mProcessor->ContainmentProperties();
+            for (nsResourceSet::ConstIterator property = containmentProps.First();
+                 property != containmentProps.Last();
                  ++property) {
                 nsCOMPtr<nsISimpleEnumerator> results;
                 if (hasContainerBinding) {
-                    rv = mDataSource->GetTargets(VALUE_TO_IRDFRESOURCE(containerValue), *property, PR_TRUE,
-                                                 getter_AddRefs(results));
+                    rv = ds->GetTargets(containerRes, *property, PR_TRUE,
+                                        getter_AddRefs(results));
                 }
                 else {
-                    rv = mDataSource->GetSources(*property, VALUE_TO_IRDFNODE(memberValue), PR_TRUE,
-                                                 getter_AddRefs(results));
+                    rv = ds->GetSources(*property, memberValue, PR_TRUE,
+                                        getter_AddRefs(results));
                 }
                 if (NS_FAILED(rv)) return rv;
 
@@ -395,46 +404,43 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
                     rv = results->GetNext(getter_AddRefs(isupports));
                     if (NS_FAILED(rv)) return rv;
 
-                    PRInt32 variable;
-                    Value value;
+                    nsIAtom* variable;
+                    nsCOMPtr<nsIRDFNode> value;
+                    nsCOMPtr<nsIRDFResource> valueRes;
 
                     if (hasContainerBinding) {
                         variable = mMemberVariable;
 
-                        nsCOMPtr<nsIRDFNode> member = do_QueryInterface(isupports);
-                        NS_ASSERTION(member != nsnull, "member is not an nsIRDFNode");
-                        if (! member) continue;
+                        value = do_QueryInterface(isupports);
+                        NS_ASSERTION(value != nsnull, "member is not an nsIRDFNode");
+                        if (! value) continue;
 
 #ifdef PR_LOGGING
                         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                             nsAutoString s;
-                            nsXULContentUtils::GetTextForNode(member, s);
+                            nsXULContentUtils::GetTextForNode(value, s);
 
                             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                                    ("    member => %s", NS_ConvertUTF16toUTF8(s).get()));
                         }
 #endif
-
-                        value = member.get();
                     }
                     else {
                         variable = mContainerVariable;
 
-                        nsCOMPtr<nsIRDFResource> container = do_QueryInterface(isupports);
-                        NS_ASSERTION(container != nsnull, "container is not an nsIRDFResource");
-                        if (! container) continue;
+                        valueRes = do_QueryInterface(isupports);
+                        NS_ASSERTION(valueRes != nsnull, "container is not an nsIRDFResource");
+                        if (! valueRes) continue;
 
 #ifdef PR_LOGGING
                         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                             const char* s;
-                            container->GetValueConst(&s);
+                            valueRes->GetValueConst(&s);
 
                             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                                    ("    container => %s", s));
                         }
 #endif
-
-                        value = container.get();
                     }
 
                     // Copy the original instantiation, and add it to the
@@ -446,15 +452,14 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
                     Element* element;
                     if (hasContainerBinding) {
                         element =
-                            nsRDFConMemberTestNode::Element::Create(mConflictSet.GetPool(),
-                                                                    VALUE_TO_IRDFRESOURCE(containerValue),
-                                                                    VALUE_TO_IRDFNODE(value));
+                            nsRDFConMemberTestNode::Element::Create(mProcessor->GetPool(),
+                                                                    containerRes,
+                                                                    value);
                     }
                     else {
                         element =
-                            nsRDFConMemberTestNode::Element::Create(mConflictSet.GetPool(),
-                                                                    VALUE_TO_IRDFRESOURCE(value),
-                                                                    VALUE_TO_IRDFNODE(memberValue));
+                            nsRDFConMemberTestNode::Element::Create(mProcessor->GetPool(),
+                                                                    valueRes, memberValue);
                     }
 
                     if (! element)
@@ -480,21 +485,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
     return NS_OK;
 }
 
-nsresult
-nsRDFConMemberTestNode::GetAncestorVariables(VariableSet& aVariables) const
-{
-    nsresult rv;
-
-    rv = aVariables.Add(mContainerVariable);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = aVariables.Add(mMemberVariable);
-    if (NS_FAILED(rv)) return rv;
-
-    return TestNode::GetAncestorVariables(aVariables);
-}
-
-
 PRBool
 nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
                                      nsIRDFResource* aProperty,
@@ -516,7 +506,7 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
     if (NS_FAILED(rv)) return PR_FALSE;
 
     if (! canpropagate) {
-        canpropagate = mMembershipProperties.Contains(aProperty);
+        canpropagate = mProcessor->ContainmentProperties().Contains(aProperty);
     }
 
 #ifdef PR_LOGGING
@@ -538,8 +528,8 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
 #endif
 
     if (canpropagate) {
-        aInitialBindings.AddAssignment(mContainerVariable, Value(aSource));
-        aInitialBindings.AddAssignment(mMemberVariable, Value(aTarget));
+        aInitialBindings.AddAssignment(mContainerVariable, aSource);
+        aInitialBindings.AddAssignment(mMemberVariable, aTarget);
         return PR_TRUE;
     }
 
@@ -549,9 +539,7 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
 void
 nsRDFConMemberTestNode::Retract(nsIRDFResource* aSource,
                                 nsIRDFResource* aProperty,
-                                nsIRDFNode* aTarget,
-                                nsTemplateMatchSet& aFirings,
-                                nsTemplateMatchSet& aRetractions) const
+                                nsIRDFNode* aTarget) const
 {
     PRBool canretract = PR_FALSE;
 
@@ -567,10 +555,10 @@ nsRDFConMemberTestNode::Retract(nsIRDFResource* aSource,
     if (NS_FAILED(rv)) return;
 
     if (! canretract) {
-        canretract = mMembershipProperties.Contains(aProperty);
+        canretract = mProcessor->ContainmentProperties().Contains(aProperty);
     }
 
     if (canretract) {
-        mConflictSet.Remove(Element(aSource, aTarget), aFirings, aRetractions);
+        mProcessor->RetractElement(Element(aSource, aTarget));
     }
 }

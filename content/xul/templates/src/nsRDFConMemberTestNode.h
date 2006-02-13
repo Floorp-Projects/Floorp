@@ -42,9 +42,7 @@
 #include "nscore.h"
 #include "nsRDFTestNode.h"
 #include "nsIRDFDataSource.h"
-#include "nsFixedSizeAllocator.h"
-class nsConflictSet;
-class nsResourceSet;
+#include "nsXULTemplateQueryProcessorRDF.h"
 
 /**
  * Rule network node that test if a resource is a member of an RDF
@@ -54,16 +52,12 @@ class nsResourceSet;
 class nsRDFConMemberTestNode : public nsRDFTestNode
 {
 public:
-    nsRDFConMemberTestNode(InnerNode* aParent,
-                           nsConflictSet& aConflictSet,
-                           nsIRDFDataSource* aDataSource,
-                           const nsResourceSet& aMembershipProperties,
-                           PRInt32 aContainerVariable,
-                           PRInt32 aMemberVariable);
+    nsRDFConMemberTestNode(TestNode* aParent,
+                           nsXULTemplateQueryProcessorRDF* aProcessor,
+                           nsIAtom* aContainerVariable,
+                           nsIAtom* aMemberVariable);
 
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const;
-
-    virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
 
     virtual PRBool
     CanPropagate(nsIRDFResource* aSource,
@@ -74,9 +68,7 @@ public:
     virtual void
     Retract(nsIRDFResource* aSource,
             nsIRDFResource* aProperty,
-            nsIRDFNode* aTarget,
-            nsTemplateMatchSet& aFirings,
-            nsTemplateMatchSet& aRetractions) const;
+            nsIRDFNode* aTarget) const;
 
     class Element : public MemoryElement {
     protected:
@@ -130,11 +122,9 @@ public:
     };
 
 protected:
-    nsConflictSet& mConflictSet;
-    nsCOMPtr<nsIRDFDataSource> mDataSource;
-    const nsResourceSet& mMembershipProperties;
-    PRInt32 mContainerVariable;
-    PRInt32 mMemberVariable;
+    nsXULTemplateQueryProcessorRDF* mProcessor;
+    nsCOMPtr<nsIAtom> mContainerVariable;
+    nsCOMPtr<nsIAtom> mMemberVariable;
 };
 
 #endif // nsRDFConMemberTestNode_h__

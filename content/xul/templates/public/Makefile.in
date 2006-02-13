@@ -48,6 +48,9 @@ XPIDLSRCS	= \
 		nsIXULSortService.idl \
 		nsIXULTemplateBuilder.idl \
 		nsIXULBuilderListener.idl \
+		nsIXULTemplateQueryProcessor.idl \
+		nsIXULTemplateResult.idl \
+		nsIXULTemplateRuleFilter.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

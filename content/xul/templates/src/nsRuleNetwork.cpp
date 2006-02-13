@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
+ *   Neil Deakin <enndeakin@sympatico.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -54,460 +55,26 @@
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIContent.h"
-#include "nsRuleNetwork.h"
 #include "plhash.h"
 #include "nsReadableUtils.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gXULTemplateLog;
+
+#include "nsString.h"
+#include "nsUnicharUtils.h"
+#include "nsXULContentUtils.h"
+
 #endif
+
+#include "nsRuleNetwork.h"
+#include "nsXULTemplateResultSetRDF.h"
 
 //----------------------------------------------------------------------
 //
 // nsRuleNetwork
 //
-
-static PLDHashNumber PR_CALLBACK
-HashEntry(PLDHashTable* aTable, const void* aKey)
-{
-    return nsCRT::HashCode(NS_STATIC_CAST(const PRUnichar*, aKey));
-}
-
-static PRBool PR_CALLBACK
-MatchEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aEntry, const void* aKey)
-{
-    const nsRuleNetwork::SymtabEntry* entry =
-        NS_REINTERPRET_CAST(const nsRuleNetwork::SymtabEntry*, aEntry);
-
-    return 0 == nsCRT::strcmp(entry->mSymbol, NS_STATIC_CAST(const PRUnichar*, aKey));
-}
-
-static void PR_CALLBACK
-ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
-{
-    nsRuleNetwork::SymtabEntry* entry =
-        NS_REINTERPRET_CAST(nsRuleNetwork::SymtabEntry*, aEntry);
-
-    nsCRT::free(entry->mSymbol);
-    PL_DHashClearEntryStub(aTable, aEntry);
-}
-
-PLDHashTableOps nsRuleNetwork::gOps = {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
-    HashEntry,
-    MatchEntry,
-    PL_DHashMoveEntryStub,
-    ClearEntry,
-    PL_DHashFinalizeStub
-};
-
-void
-nsRuleNetwork::Init()
-{
-    mNextVariable = 0;
-    if (!PL_DHashTableInit(&mSymtab, &gOps, nsnull,
-                           sizeof(SymtabEntry), PL_DHASH_MIN_SIZE))
-        mSymtab.ops = nsnull;
-}
-
-void
-nsRuleNetwork::Finish()
-{
-    if (mSymtab.ops)
-        PL_DHashTableFinish(&mSymtab);
-
-    // We "own" the nodes. So it's up to us to delete 'em
-    for (ReteNodeSet::Iterator node = mNodes.First(); node != mNodes.Last(); ++node)
-        delete *node;
-
-    mNodes.Clear();
-    mRoot.RemoveAllChildren();
-}
-
-
-//----------------------------------------------------------------------
-//
-// Value
-//
-
-#ifdef DEBUG
-/**
- * A debug-only implementation that verifies that 1) aValue really
- * is an nsISupports, and 2) that it really does support the IID
- * that is being asked for.
- */
-nsISupports*
-value_to_isupports(const nsIID& aIID, const Value& aValue)
-{
-    nsresult rv;
-
-    // Need to const_cast aValue because QI() & Release() are not const
-    nsISupports* isupports = NS_STATIC_CAST(nsISupports*, NS_CONST_CAST(Value&, aValue));
-    if (isupports) {
-        nsCOMPtr<nsISupports> dummy;
-        rv = isupports->QueryInterface(aIID, getter_AddRefs(dummy));
-        if (NS_FAILED(rv)) {
-            NS_ERROR("value does not support expected interface");
-        }
-    }
-    return isupports;
-}
-#endif
-
-Value::Value(const Value& aValue)
-    : mType(aValue.mType)
-{
-    MOZ_COUNT_CTOR(Value);
-
-    switch (mType) {
-    case eUndefined:
-        break;
-
-    case eISupports:
-        mISupports = aValue.mISupports;
-        NS_IF_ADDREF(mISupports);
-        break;
-
-    case eString:
-        mString = nsCRT::strdup(aValue.mString);
-        break;
-
-    case eInteger:
-        mInteger = aValue.mInteger;
-        break;
-    }
-}
-
-Value::Value(nsISupports* aISupports)
-    : mType(eISupports)
-{
-    MOZ_COUNT_CTOR(Value);
-    mISupports = aISupports;
-    NS_IF_ADDREF(mISupports);
-}
-
-Value::Value(const PRUnichar* aString)
-    : mType(eString)
-{
-    MOZ_COUNT_CTOR(Value);
-    mString = nsCRT::strdup(aString);
-}
-
-Value::Value(PRInt32 aInteger)
-    : mType(eInteger)
-{
-    MOZ_COUNT_CTOR(Value);
-    mInteger = aInteger;
-}
-
-Value&
-Value::operator=(const Value& aValue)
-{
-    Clear();
-
-    mType = aValue.mType;
-
-    switch (mType) {
-    case eUndefined:
-        break;
-
-    case eISupports:
-        mISupports = aValue.mISupports;
-        NS_IF_ADDREF(mISupports);
-        break;
-
-    case eString:
-        mString = nsCRT::strdup(aValue.mString);
-        break;
-
-    case eInteger:
-        mInteger = aValue.mInteger;
-        break;
-    }
-
-    return *this;
-}
-
-Value&
-Value::operator=(nsISupports* aISupports)
-{
-    Clear();
-
-    mType = eISupports;
-    mISupports = aISupports;
-    NS_IF_ADDREF(mISupports);
-
-    return *this;
-}
-
-Value&
-Value::operator=(const PRUnichar* aString)
-{
-    Clear();
-
-    mType = eString;
-    mString = nsCRT::strdup(aString);
-
-    return *this;
-}
-
-
-Value::~Value()
-{
-    MOZ_COUNT_DTOR(Value);
-    Clear();
-}
-
-
-void
-Value::Clear()
-{
-    switch (mType) {
-    case eInteger:
-    case eUndefined:
-        break;
-
-    case eISupports:
-        NS_IF_RELEASE(mISupports);
-        break;
-
-    case eString:
-        nsCRT::free(mString);
-        break;
-
-    }
-}
-
-
-PRBool
-Value::Equals(const Value& aValue) const
-{
-    if (mType == aValue.mType) {
-        switch (mType) {
-        case eUndefined:
-            return PR_FALSE;
-
-        case eISupports:
-            return mISupports == aValue.mISupports;
-
-        case eString:
-            return nsCRT::strcmp(mString, aValue.mString) == 0;
-
-        case eInteger:
-            return mInteger == aValue.mInteger;
-        }
-    }
-    return PR_FALSE;
-}
-
-PRBool
-Value::Equals(nsISupports* aISupports) const
-{
-    return (mType == eISupports) && (mISupports == aISupports);
-}
-
-PRBool
-Value::Equals(const PRUnichar* aString) const
-{
-    return (mType == eString) && (nsCRT::strcmp(aString, mString) == 0);
-}
-
-PRBool
-Value::Equals(PRInt32 aInteger) const
-{
-    return (mType == eInteger) && (mInteger == aInteger);
-}
-
-
-PLHashNumber
-Value::Hash() const
-{
-    PLHashNumber temp = 0;
-
-    switch (mType) {
-    case eUndefined:
-        break;
-
-    case eISupports:
-        temp = PLHashNumber(NS_PTR_TO_INT32(mISupports)) >> 2; // strip alignment bits
-        break;
-
-    case eString:
-        {
-            PRUnichar* p = mString;
-            PRUnichar c;
-            while ((c = *p) != 0) {
-                temp = (temp >> 28) ^ (temp << 4) ^ c;
-                ++p;
-            }
-        }
-        break;
-
-    case eInteger:
-        temp = mInteger;
-        break;
-    }
-
-    return temp;
-}
-
-
-Value::operator nsISupports*() const
-{
-    NS_ASSERTION(mType == eISupports, "not an nsISupports");
-    return (mType == eISupports) ? mISupports : 0;
-}
-
-Value::operator const PRUnichar*() const
-{
-    NS_ASSERTION(mType == eString, "not a string");
-    return (mType == eString) ? mString : 0;
-}
-
-Value::operator PRInt32() const
-{
-    NS_ASSERTION(mType == eInteger, "not an integer");
-    return (mType == eInteger) ? mInteger : 0;
-}
-
-#ifdef DEBUG
-#include "nsIRDFResource.h"
-#include "nsIRDFLiteral.h"
-#include "nsString.h"
-#include "nsPrintfCString.h"
-
-void
-Value::ToCString(nsACString& aResult)
-{
-    switch (mType) {
-    case eUndefined:
-        aResult = "[(undefined)]";
-        break;
-
-    case eISupports:
-        do {
-            nsCOMPtr<nsIRDFResource> res = do_QueryInterface(mISupports);
-            if (res) {
-                aResult = "[nsIRDFResource ";
-                const char* s;
-                res->GetValueConst(&s);
-                aResult += s;
-                aResult += "]";
-                break;
-            }
-
-            nsCOMPtr<nsIRDFLiteral> lit = do_QueryInterface(mISupports);
-            if (lit) {
-                aResult = "[nsIRDFLiteral \"";
-                const PRUnichar* s;
-                lit->GetValueConst(&s);
-                AppendUTF16toUTF8(s, aResult);
-                aResult += "\"]";
-                break;
-            }
-
-            aResult = "[nsISupports ";
-            aResult += nsPrintfCString("%p", mISupports);
-            aResult += "]";
-        } while (0);
-        break;
-
-    case eString:
-        aResult = "[string \"";
-        AppendUTF16toUTF8(mString, aResult);
-        aResult += "\"]";
-        break;
-
-    case eInteger:
-        aResult = "[integer ";
-        aResult += nsPrintfCString("%d", mInteger);
-        aResult += "]";
-        break;
-    }
-}
-#endif
-
-
-//----------------------------------------------------------------------
-//
-// VariableSet
-//
-
-
-VariableSet::VariableSet()
-    : mVariables(nsnull), mCount(0), mCapacity(0)
-{
-}
-
-VariableSet::~VariableSet()
-{
-    delete[] mVariables;
-}
-
-nsresult
-VariableSet::Add(PRInt32 aVariable)
-{
-    if (Contains(aVariable))
-        return NS_OK;
-
-    if (mCount >= mCapacity) {
-        PRInt32 capacity = mCapacity + 4;
-        PRInt32* variables = new PRInt32[capacity];
-        if (! variables)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        for (PRInt32 i = mCount - 1; i >= 0; --i)
-            variables[i] = mVariables[i];
-
-        delete[] mVariables;
-
-        mVariables = variables;
-        mCapacity = capacity;
-    }
-
-    mVariables[mCount++] = aVariable;
-    return NS_OK;
-}
-
-nsresult
-VariableSet::Remove(PRInt32 aVariable)
-{
-    PRInt32 i = 0;
-    while (i < mCount) {
-        if (aVariable == mVariables[i])
-            break;
-
-        ++i;
-    }
-
-    if (i >= mCount)
-        return NS_OK;
-
-    --mCount;
-
-    while (i < mCount) {
-        mVariables[i] = mVariables[i + 1];
-        ++i;
-    }
-        
-    return NS_OK;
-}
-
-PRBool
-VariableSet::Contains(PRInt32 aVariable) const
-{
-    for (PRInt32 i = mCount - 1; i >= 0; --i) {
-        if (aVariable == mVariables[i])
-            return PR_TRUE;
-    }
-
-    return PR_FALSE;
-}
-
-//----------------------------------------------------------------------=
 
 nsresult
 MemoryElementSet::Add(MemoryElement* aElement)
@@ -542,6 +109,8 @@ nsresult
 nsAssignmentSet::Add(const nsAssignment& aAssignment)
 {
     NS_PRECONDITION(! HasAssignmentFor(aAssignment.mVariable), "variable already bound");
+
+    // XXXndeakin should this just silently fail?
     if (HasAssignmentFor(aAssignment.mVariable))
         return NS_ERROR_UNEXPECTED;
 
@@ -569,7 +138,7 @@ nsAssignmentSet::Count() const
 }
 
 PRBool
-nsAssignmentSet::HasAssignment(PRInt32 aVariable, const Value& aValue) const
+nsAssignmentSet::HasAssignment(nsIAtom* aVariable, nsIRDFNode* aValue) const
 {
     for (ConstIterator assignment = First(); assignment != Last(); ++assignment) {
         if (assignment->mVariable == aVariable && assignment->mValue == aValue)
@@ -580,7 +149,7 @@ nsAssignmentSet::HasAssignment(PRInt32 aVariable, const Value& aValue) const
 }
 
 PRBool
-nsAssignmentSet::HasAssignmentFor(PRInt32 aVariable) const
+nsAssignmentSet::HasAssignmentFor(nsIAtom* aVariable) const
 {
     for (ConstIterator assignment = First(); assignment != Last(); ++assignment) {
         if (assignment->mVariable == aVariable)
@@ -591,15 +160,17 @@ nsAssignmentSet::HasAssignmentFor(PRInt32 aVariable) const
 }
 
 PRBool
-nsAssignmentSet::GetAssignmentFor(PRInt32 aVariable, Value* aValue) const
+nsAssignmentSet::GetAssignmentFor(nsIAtom* aVariable, nsIRDFNode** aValue) const
 {
     for (ConstIterator assignment = First(); assignment != Last(); ++assignment) {
         if (assignment->mVariable == aVariable) {
             *aValue = assignment->mValue;
+            NS_IF_ADDREF(*aValue);
             return PR_TRUE;
         }
     }
 
+    *aValue = nsnull;
     return PR_FALSE;
 }
 
@@ -614,9 +185,9 @@ nsAssignmentSet::Equals(const nsAssignmentSet& aSet) const
         return PR_FALSE;
 
     // XXX O(n^2)! Ugh!
+    nsCOMPtr<nsIRDFNode> value;
     for (ConstIterator assignment = First(); assignment != Last(); ++assignment) {
-        Value value;
-        if (! aSet.GetAssignmentFor(assignment->mVariable, &value))
+        if (! aSet.GetAssignmentFor(assignment->mVariable, getter_AddRefs(value)))
             return PR_FALSE;
 
         if (assignment->mValue != value)
@@ -636,7 +207,8 @@ Instantiation::Hash(const void* aKey)
     PLHashNumber result = 0;
 
     nsAssignmentSet::ConstIterator last = inst->mAssignments.Last();
-    for (nsAssignmentSet::ConstIterator assignment = inst->mAssignments.First(); assignment != last; ++assignment)
+    for (nsAssignmentSet::ConstIterator assignment = inst->mAssignments.First();
+         assignment != last; ++assignment)
         result ^= assignment->Hash();
 
     return result;
@@ -730,7 +302,7 @@ InstantiationSet::Erase(Iterator aIterator)
 
 
 PRBool
-InstantiationSet::HasAssignmentFor(PRInt32 aVariable) const
+InstantiationSet::HasAssignmentFor(nsIAtom* aVariable) const
 {
     return !Empty() ? First()->mAssignments.HasAssignmentFor(aVariable) : PR_FALSE;
 }
@@ -742,281 +314,6 @@ InstantiationSet::HasAssignmentFor(PRInt32 aVariable) const
 //   The basic node in the network.
 //
 
-
-
-//----------------------------------------------------------------------
-//
-// RootNode
-//
-
-nsresult
-RootNode::Propagate(const InstantiationSet& aInstantiations, void* aClosure)
-{
-    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-           ("RootNode[%p]: Propagate() begin", this));
-
-    ReteNodeSet::Iterator last = mKids.Last();
-    for (ReteNodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
-        kid->Propagate(aInstantiations, aClosure);
-
-    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-           ("RootNode[%p]: Propagate() end", this));
-
-    return NS_OK;
-}
-
-nsresult
-RootNode::Constrain(InstantiationSet& aInstantiations, void* aClosure)
-{
-    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-           ("RootNode[%p]: Constrain()", this));
-
-    return NS_OK;
-}
-
-
-nsresult
-RootNode::GetAncestorVariables(VariableSet& aVariables) const
-{
-    return NS_OK;
-}
-
-
-PRBool
-RootNode::HasAncestor(const ReteNode* aNode) const
-{
-    return aNode == this;
-}
-
-//----------------------------------------------------------------------
-//
-// JoinNode
-//
-//   A node that performs a join in the network.
-//
-
-JoinNode::JoinNode(InnerNode* aLeftParent,
-                   PRInt32 aLeftVariable,
-                   InnerNode* aRightParent,
-                   PRInt32 aRightVariable,
-                   Operator aOperator)
-    : mLeftParent(aLeftParent),
-      mLeftVariable(aLeftVariable),
-      mRightParent(aRightParent),
-      mRightVariable(aRightVariable),
-      mOperator(aOperator)
-{
-}
-
-nsresult
-JoinNode::Propagate(const InstantiationSet& aInstantiations, void* aClosure)
-{
-    // the add will have been propagated down from one of the parent
-    // nodes: either the left or the right. Test the other node for
-    // matches.
-    nsresult rv;
-
-    PRBool hasLeftAssignment = aInstantiations.HasAssignmentFor(mLeftVariable);
-    PRBool hasRightAssignment = aInstantiations.HasAssignmentFor(mRightVariable);
-
-    NS_ASSERTION(hasLeftAssignment ^ hasRightAssignment, "there isn't exactly one assignment specified");
-    if (! (hasLeftAssignment ^ hasRightAssignment))
-        return NS_ERROR_UNEXPECTED;
-
-    InstantiationSet instantiations = aInstantiations;
-    InnerNode* test = hasLeftAssignment ? mRightParent : mLeftParent;
-
-    {
-        // extend the assignments
-        InstantiationSet::Iterator last = instantiations.Last();
-        for (InstantiationSet::Iterator inst = instantiations.First(); inst != last; ++inst) {
-            if (hasLeftAssignment) {
-                // the left is bound
-                Value leftValue;
-                inst->mAssignments.GetAssignmentFor(mLeftVariable, &leftValue);
-                rv = inst->AddAssignment(mRightVariable, leftValue);
-            }
-            else {
-                // the right is bound
-                Value rightValue;
-                inst->mAssignments.GetAssignmentFor(mRightVariable, &rightValue);
-                rv = inst->AddAssignment(mLeftVariable, rightValue);
-            }
-
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
-    if (! instantiations.Empty()) {
-        // propagate consistency checking back up the tree
-        rv = test->Constrain(instantiations, aClosure);
-        if (NS_FAILED(rv)) return rv;
-
-        ReteNodeSet::Iterator last = mKids.Last();
-        for (ReteNodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
-            kid->Propagate(instantiations, aClosure);
-    }
-
-    return NS_OK;
-}
-
-
-nsresult
-JoinNode::GetNumBound(InnerNode* aAncestor, const InstantiationSet& aInstantiations, PRInt32* aBoundCount)
-{
-    // Compute the number of variables for an ancestor that are bound
-    // in the current instantiation set.
-    nsresult rv;
-
-    VariableSet vars;
-    rv = aAncestor->GetAncestorVariables(vars);
-    if (NS_FAILED(rv)) return rv;
-
-    PRInt32 count = 0;
-    for (PRInt32 i = vars.GetCount() - 1; i >= 0; --i) {
-        if (aInstantiations.HasAssignmentFor(vars.GetVariableAt(i)))
-            ++count;
-    }
-
-    *aBoundCount = count;
-    return NS_OK;
-}
-
-
-nsresult
-JoinNode::Bind(InstantiationSet& aInstantiations, PRBool* aDidBind)
-{
-    // Try to use the instantiation set to bind the unbound join
-    // variable. If successful, aDidBind <= PR_TRUE.
-    nsresult rv;
-
-    PRBool hasLeftAssignment = aInstantiations.HasAssignmentFor(mLeftVariable);
-    PRBool hasRightAssignment = aInstantiations.HasAssignmentFor(mRightVariable);
-
-    NS_ASSERTION(! (hasLeftAssignment && hasRightAssignment), "there is more than one assignment specified");
-    if (hasLeftAssignment && hasRightAssignment)
-        return NS_ERROR_UNEXPECTED;
-
-    if (hasLeftAssignment || hasRightAssignment) {
-        InstantiationSet::Iterator last = aInstantiations.Last();
-        for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
-            if (hasLeftAssignment) {
-                // the left is bound
-                Value leftValue;
-                inst->mAssignments.GetAssignmentFor(mLeftVariable, &leftValue);
-                rv = inst->AddAssignment(mRightVariable, leftValue);
-            }
-            else {
-                // the right is bound
-                Value rightValue;
-                inst->mAssignments.GetAssignmentFor(mRightVariable, &rightValue);
-                rv = inst->AddAssignment(mLeftVariable, rightValue);
-            }
-
-            if (NS_FAILED(rv)) return rv;
-        }
-
-        *aDidBind = PR_TRUE;
-    }
-    else {
-        *aDidBind = PR_FALSE;
-    }
-
-    return NS_OK;
-}
-
-nsresult
-JoinNode::Constrain(InstantiationSet& aInstantiations, void* aClosure)
-{
-    if (aInstantiations.Empty())
-        return NS_OK;
-
-    nsresult rv;
-    PRBool didBind;
-
-    rv = Bind(aInstantiations, &didBind);
-    if (NS_FAILED(rv)) return rv;
-
-    PRInt32 numLeftBound;
-    rv = GetNumBound(mLeftParent, aInstantiations, &numLeftBound);
-    if (NS_FAILED(rv)) return rv;
-
-    PRInt32 numRightBound;
-    rv = GetNumBound(mRightParent, aInstantiations, &numRightBound);
-    if (NS_FAILED(rv)) return rv;
-
-    InnerNode *first, *last;
-    if (numLeftBound > numRightBound) {
-        first = mLeftParent;
-        last = mRightParent;
-    }
-    else {
-        first = mRightParent;
-        last = mLeftParent;
-    }
-
-    rv = first->Constrain(aInstantiations, aClosure);
-    if (NS_FAILED(rv)) return rv;
-
-    if (! didBind) {
-        rv = Bind(aInstantiations, &didBind);
-        if (NS_FAILED(rv)) return rv;
-
-        NS_ASSERTION(didBind, "uh oh, still no assignment");
-    }
-
-    rv = last->Constrain(aInstantiations, aClosure);
-    if (NS_FAILED(rv)) return rv;
-
-    if (! didBind) {
-        // sort throught the full cross product
-        NS_NOTYETIMPLEMENTED("write me");
-    }
-
-    return NS_OK;
-}
-
-
-nsresult
-JoinNode::GetAncestorVariables(VariableSet& aVariables) const
-{
-    nsresult rv;
-
-    rv = mLeftParent->GetAncestorVariables(aVariables);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mRightParent->GetAncestorVariables(aVariables);
-    if (NS_FAILED(rv)) return rv;
-
-    
-    if (mLeftVariable) {
-        rv = aVariables.Add(mLeftVariable);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    if (mRightVariable) {
-        rv = aVariables.Add(mRightVariable);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    return NS_OK;
-}
-
-
-PRBool
-JoinNode::HasAncestor(const ReteNode* aNode) const
-{
-    if (aNode == this) {
-        return PR_TRUE;
-    }
-    else if (mLeftParent->HasAncestor(aNode) || mRightParent->HasAncestor(aNode)) {
-        return PR_TRUE;
-    }
-    else {
-        return PR_FALSE;
-    }
-}
-
 //----------------------------------------------------------------------
 //
 // TestNode
@@ -1026,31 +323,55 @@ JoinNode::HasAncestor(const ReteNode* aNode) const
 //
 
 
-TestNode::TestNode(InnerNode* aParent)
+TestNode::TestNode(TestNode* aParent)
     : mParent(aParent)
 {
 }
 
-
 nsresult
-TestNode::Propagate(const InstantiationSet& aInstantiations, void* aClosure)
+TestNode::Propagate(InstantiationSet& aInstantiations,
+                    PRBool aIsUpdate, PRBool& aTakenInstantiations)
 {
-    nsresult rv;
-
     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
            ("TestNode[%p]: Propagate() begin", this));
 
-    InstantiationSet instantiations = aInstantiations;
-    rv = FilterInstantiations(instantiations, aClosure);
-    if (NS_FAILED(rv)) return rv;
+    aTakenInstantiations = PR_FALSE;
 
-    if (! instantiations.Empty()) {
+    nsresult rv = FilterInstantiations(aInstantiations);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // if there is more than one child, each will need to be supplied with the
+    // original set of instantiations from this node, so create a copy in this
+    // case. If there is only one child, optimize and just pass the
+    // instantiations along to the child without copying
+    PRBool shouldCopy = (mKids.Count() > 1);
+
+    // See the header file for details about how instantiation ownership works.
+    if (! aInstantiations.Empty()) {
         ReteNodeSet::Iterator last = mKids.Last();
         for (ReteNodeSet::Iterator kid = mKids.First(); kid != last; ++kid) {
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("TestNode[%p]: Propagate() passing to child %p", this, kid.operator->()));
 
-            kid->Propagate(instantiations, aClosure);
+            // create a copy of the instantiations
+            if (shouldCopy) {
+                PRBool owned = PR_FALSE;
+                InstantiationSet* instantiations =
+                    new InstantiationSet(aInstantiations);
+                if (!instantiations)
+                    return NS_ERROR_OUT_OF_MEMORY;
+                rv = kid->Propagate(*instantiations, aIsUpdate, owned);
+                if (!owned)
+                    delete instantiations;
+                if (NS_FAILED(rv))
+                    return rv;
+            }
+            else {
+                rv = kid->Propagate(aInstantiations, aIsUpdate, aTakenInstantiations);
+                if (NS_FAILED(rv))
+                    return rv;
+            }
         }
     }
 
@@ -1062,24 +383,24 @@ TestNode::Propagate(const InstantiationSet& aInstantiations, void* aClosure)
 
 
 nsresult
-TestNode::Constrain(InstantiationSet& aInstantiations, void* aClosure)
+TestNode::Constrain(InstantiationSet& aInstantiations)
 {
     nsresult rv;
 
     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
            ("TestNode[%p]: Constrain() begin", this));
 
-    rv = FilterInstantiations(aInstantiations, aClosure);
+    rv = FilterInstantiations(aInstantiations);
     if (NS_FAILED(rv)) return rv;
 
-    if (! aInstantiations.Empty()) {
+    if (mParent && ! aInstantiations.Empty()) {
         // if we still have instantiations, then ride 'em on up to the
         // parent to narrow them.
 
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("TestNode[%p]: Constrain() passing to parent %p", this, mParent));
 
-        rv = mParent->Constrain(aInstantiations, aClosure);
+        rv = mParent->Constrain(aInstantiations);
     }
     else {
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
@@ -1095,21 +416,14 @@ TestNode::Constrain(InstantiationSet& aInstantiations, void* aClosure)
 }
 
 
-nsresult
-TestNode::GetAncestorVariables(VariableSet& aVariables) const
-{
-    return mParent->GetAncestorVariables(aVariables);
-}
-
-
 PRBool
 TestNode::HasAncestor(const ReteNode* aNode) const
 {
-    return aNode == this ? PR_TRUE : mParent->HasAncestor(aNode);
+    return aNode == this || (mParent && mParent->HasAncestor(aNode));
 }
 
 
-//----------------------------------------------------------------------0
+//----------------------------------------------------------------------
 
 ReteNodeSet::ReteNodeSet()
     : mNodes(nsnull), mCount(0), mCapacity(0)

@@ -40,14 +40,84 @@
 #define nsTemplateRule_h__
 
 #include "nsCOMPtr.h"
+#include "nsIAtom.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIContent.h"
+#include "nsIDOMNode.h"
+#include "nsVoidArray.h"
+#include "nsString.h"
+#include "nsIXULTemplateRuleFilter.h"
 
-class nsConflictSet;
-class nsTemplateMatch;
-class Value;
-class VariableSet;
+class nsIXULTemplateQueryProcessor;
+class nsTemplateQuerySet;
+
+class nsTemplateCondition
+{
+public:
+    // relations that may be used in a rule. They may be negated with the
+    // negate flag. Less and Greater are used for numeric comparisons and
+    // Before and After are used for string comparisons. For Less, Greater,
+    // Before, After, Startswith, Endswith, and Contains, the source is
+    // conceptually on the left of the relation and the target is on the
+    // right. For example, if the relation is Contains, that means Match if
+    // the source contains the target.
+    enum ConditionRelation {
+        eUnknown,
+        eEquals,
+        eLess,
+        eGreater,
+        eBefore,
+        eAfter,
+        eStartswith,
+        eEndswith,
+        eContains
+    };
+
+    nsTemplateCondition(nsIAtom* aSourceVariable,
+                        const nsAString& aRelation,
+                        nsIAtom* aTargetVariable,
+                        PRBool mIgnoreCase,
+                        PRBool mNegate);
+
+    nsTemplateCondition(nsIAtom* aSourceVariable,
+                        const nsAString& aRelation,
+                        const nsAString& aTargets,
+                        PRBool mIgnoreCase,
+                        PRBool mNegate,
+                        PRBool aIsMultiple);
+
+    nsTemplateCondition(const nsAString& aSource,
+                        const nsAString& aRelation,
+                        nsIAtom* aTargetVariable,
+                        PRBool mIgnoreCase,
+                        PRBool mNegate);
+
+    ~nsTemplateCondition() { MOZ_COUNT_DTOR(nsTemplateCondition); }
+
+    nsTemplateCondition* GetNext() { return mNext; }
+    void SetNext(nsTemplateCondition* aNext) { mNext = aNext; }
+
+    void SetRelation(const nsAString& aRelation);
+
+    PRBool
+    CheckMatch(nsIXULTemplateResult* aResult);
+
+    PRBool
+    CheckMatchStrings(const nsAString& aLeftString,
+                      const nsAString& aRightString);
+protected:
+
+    nsCOMPtr<nsIAtom>   mSourceVariable;
+    nsString            mSource;
+    ConditionRelation   mRelation;
+    nsCOMPtr<nsIAtom>   mTargetVariable;
+    nsStringArray       mTargetList;
+    PRPackedBool        mIgnoreCase;
+    PRPackedBool        mNegate;
+
+   nsTemplateCondition* mNext;
+};
 
 /**
  * A rule consists of:
@@ -64,85 +134,71 @@ class VariableSet;
  *
  * - Content that should be constructed when the rule is "activated".
  *
- * - Priority, which helps to determine which rule should be
- *   considered "active" if several rules "match".
- * 
  */
 class nsTemplateRule
 {
 public:
-    nsTemplateRule(nsIRDFDataSource* aDataSource,
-         nsIContent* aContent,
-         PRInt32 aPriority)
-        : mDataSource(aDataSource),
-          mContent(aContent),
-          mContainerVariable(0),
-          mMemberVariable(0),
-          mPriority(aPriority),
-          mCount(0),
-          mCapacity(0),
-          mBindings(nsnull)
-        { MOZ_COUNT_CTOR(nsTemplateRule); }
+    nsTemplateRule(nsIContent* aRuleNode,
+                   nsIContent* aAction,
+                   nsTemplateQuerySet* aQuerySet);
 
     ~nsTemplateRule();
 
     /**
-     * Return the content node that this rule was constructed from.
-     * @param aResult an out parameter, which will contain the content node
-     *   that this rule was constructed from
+     * Return the <action> node that this rule was constructed from, or its
+     * logical equivalent for shorthand syntaxes. That is, the parent node of
+     * the content that should be generated for this rule.
+     * @param aAction an out parameter, which will contain the content node
+     *   that this rule uses to generated content
      * @return NS_OK if no errors occur.
      */
-    nsresult GetContent(nsIContent** aResult) const;
+    nsresult GetAction(nsIContent** aAction) const;
 
     /**
-     * Set the variable which should be used as the "container
-     * variable" in this rule. The container variable will be bound to
-     * an RDF resource that is the parent of the member resources.
-     * @param aContainerVariable the variable that should be used as the
-     *    "container variable" in this rule
+     * Return the <rule> content node that this rule was constructed from.
+     * @param aResult an out parameter, which will contain the rule node
+     * @return NS_OK if no errors occur.
      */
-    void SetContainerVariable(PRInt32 aContainerVariable) {
-        mContainerVariable = aContainerVariable; }
+    nsresult GetRuleNode(nsIDOMNode** aResult) const;
+
+    void SetVars(nsIAtom* aRefVariable, nsIAtom* aMemberVariable)
+    {
+        mRefVariable = aRefVariable;
+        mMemberVariable = aMemberVariable;
+    }
+
+    void SetRuleFilter(nsIXULTemplateRuleFilter* aRuleFilter)
+    {
+        mRuleFilter = aRuleFilter;
+    }
+
+    nsIAtom* GetTag() { return mTag; }
+    void SetTag(nsIAtom* aTag) { mTag = aTag; }
+
+    nsIAtom* GetMemberVariable() { return mMemberVariable; }
 
     /**
-     * Retrieve the variable that this rule uses as its "container variable".
-     * @return the variable that this rule uses as its "container variable".
+     * Set the first condition for the rule. Other conditions are linked
+     * to it using the condition's SetNext method.
      */
-    PRInt32 GetContainerVariable() const {
-        return mContainerVariable; }
+    void SetCondition(nsTemplateCondition* aConditions);
 
     /**
-     * Set the variable which should be used as the "member variable"
-     * in this rule. The member variable will be bound to an RDF
-     * resource that is the child of the container resource.
-     * @param aMemberVariable the variable that should be used as the
-     *   "member variable" in this rule.
+     * Check if the result matches the rule by first looking at the conditions.
+     * If the results is accepted by the conditions, the rule filter, if any
+     * was set, is checked. If either check rejects a result, a match cannot
+     * occur for this rule and result.
      */
-    void SetMemberVariable(PRInt32 aMemberVariable) {
-        mMemberVariable = aMemberVariable; }
-
-    /**
-     * Retrieve the variable that this rule uses as its "member variable".
-     * @return the variable that this rule uses as its "member variable"
-     */
-    PRInt32 GetMemberVariable() const {
-        return mMemberVariable; }
-
-    /**
-     * Retrieve the "priority" of the rule with respect to the
-     * other rules in the template
-     * @return the rule's priority, lower values mean "use this first".
-     */
-    PRInt32 GetPriority() const {
-        return mPriority; }
+    PRBool
+    CheckMatch(nsIXULTemplateResult* aResult) const;
 
     /**
      * Determine if the rule has the specified binding
      */
     PRBool
-    HasBinding(PRInt32 aSourceVariable,
-               nsIRDFResource* aProperty,
-               PRInt32 aTargetVariable) const;
+    HasBinding(nsIAtom* aSourceVariable,
+               nsAString& aExpr,
+               nsIAtom* aTargetVariable) const;
 
     /**
      * Add a binding to the rule. A binding consists of an already-bound
@@ -152,100 +208,128 @@ public:
      *
      * @param aSourceVariable the source variable that will be used in
      *   the RDF query.
-     * @param aProperty the RDF property that will be used in the RDF
-     *   query.
+     * @param aExpr the expression that will be used in the query.
      * @param aTargetVariable the variable whose value will be bound
      *   to the RDF node that is returned when querying the binding
      * @return NS_OK if no errors occur.
      */
-    nsresult AddBinding(PRInt32 aSourceVariable,
-                        nsIRDFResource* aProperty,
-                        PRInt32 aTargetVariable);
+    nsresult AddBinding(nsIAtom* aSourceVariable,
+                        nsAString& aExpr,
+                        nsIAtom* aTargetVariable);
 
     /**
-     * Initialize a match by adding necessary binding dependencies to
-     * the conflict set. This will allow us to properly update the
-     * match later if a value should change that the match's bindings
-     * depend on.
-     * @param aConflictSet the conflict set
-     * @param aMatch the match we to initialize
-     * @return NS_OK if no errors occur.
+     * Inform the query processor of the bindings that are set for a rule.
+     * This should be called after all the bindings for a rule are compiled.
      */
-    nsresult InitBindings(nsConflictSet& aConflictSet, nsTemplateMatch* aMatch) const;
-
-    /**
-     * Compute the minimal set of changes to a match's bindings that
-     * must occur which the specified change is made to the RDF graph.
-     * @param aConflictSet the conflict set, which we may need to manipulate
-     *   to update the binding dependencies.
-     * @param aMatch the match for which we must recompute the bindings
-     * @param aSource the "source" resource in the RDF graph
-     * @param aProperty the "property" resource in the RDF graph
-     * @param aOldTarget the old "target" node in the RDF graph
-     * @param aNewTarget the new "target" node in the RDF graph.
-     * @param aModifiedVars a VariableSet, into which this routine
-     *   will assign each variable whose value has changed.
-     * @return NS_OK if no errors occurred.
-     */
-    nsresult RecomputeBindings(nsConflictSet& aConflictSet,
-                               nsTemplateMatch* aMatch,
-                               nsIRDFResource* aSource,
-                               nsIRDFResource* aProperty,
-                               nsIRDFNode* aOldTarget,
-                               nsIRDFNode* aNewTarget,
-                               VariableSet& aModifiedVars) const;
-
-    /**
-     * Compute the value to assign to an arbitrary variable in a
-     * match.  This may require us to work out several dependancies,
-     * if there are bindings set up for this rule.
-     * @param aConflictSet the conflict set; if necessary, we may add
-     *   a "binding dependency" to the conflict set, which will allow us
-     *   to correctly recompute the bindings later if they should change.
-     * @param aMatch the match that provides the "seed" variable assignments,
-     *   which we may need to extend using the rule's bindings.
-     * @param aVariable the variable for which we are to compute the
-     *   assignment.
-     * @param aValue an out parameter that will receive the value that
-     *   was assigned to aVariable, if we could find one.
-     * @return PR_TRUE if an assignment was found for aVariable, PR_FALSE
-     *   otherwise.
-     */
-    PRBool ComputeAssignmentFor(nsConflictSet& aConflictSet,
-                                nsTemplateMatch* aMatch,
-                                PRInt32 aVariable,
-                                Value* aValue) const;
-
-    /**
-     * Determine if one variable depends on another in the rule's
-     * bindings.
-     * @param aChild the dependent variable, whose value may
-     *   depend on the assignment of aParent.
-     * @param aParent the variable whose value aChild is depending on.
-     * @return PR_TRUE if aChild's assignment depends on the assignment
-     *   for aParent, PR_FALSE otherwise.
-     */
-    PRBool DependsOn(PRInt32 aChild, PRInt32 aParent) const;
+    nsresult
+    AddBindingsToQueryProcessor(nsIXULTemplateQueryProcessor* aProcessor);
 
 protected:
-    nsCOMPtr<nsIRDFDataSource> mDataSource;
-    nsCOMPtr<nsIContent> mContent;
-    PRInt32 mContainerVariable;
-    PRInt32 mMemberVariable;
-    PRInt32 mPriority;
-
-    PRInt32 mCount;
-    PRInt32 mCapacity;
 
     struct Binding {
-        PRInt32                  mSourceVariable;
-        nsCOMPtr<nsIRDFResource> mProperty;
-        PRInt32                  mTargetVariable;
+        nsCOMPtr<nsIAtom>        mSourceVariable;
+        nsCOMPtr<nsIAtom>        mTargetVariable;
+        nsString                 mExpr;
         Binding*                 mNext;
         Binding*                 mParent;
     };
 
+    // backreference to the query set which owns this rule
+    nsTemplateQuerySet* mQuerySet;
+
+    // the <rule> node, or the <template> node if there is no <rule>
+    nsCOMPtr<nsIDOMNode> mRuleNode;
+
+    // the <action> node, or, if there is no <action>, the container node
+    // which contains the content to generate
+    nsCOMPtr<nsIContent> mAction;
+
+    // the rule filter set by the builder's SetRuleFilter function
+    nsCOMPtr<nsIXULTemplateRuleFilter> mRuleFilter;
+
+    // indicates that the rule will only match when generating content 
+    // to be inserted into a container with this tag
+    nsCOMPtr<nsIAtom> mTag;
+
+    // linked-list of the bindings for the rule, owned by the rule.
     Binding* mBindings;
+
+    nsCOMPtr<nsIAtom> mRefVariable;
+    nsCOMPtr<nsIAtom> mMemberVariable;
+
+    nsTemplateCondition* mConditions; // owned by nsTemplateRule
+};
+
+/** nsTemplateQuerySet
+ *
+ *  A single <queryset> which holds the query node and the rules for it.
+ *  All builders have at least one queryset, which may be created with an
+ *  explicit <queryset> tag or implied if the tag is not used.
+ *
+ *  These queryset objects are created and owned by the builder in its
+ *  mQuerySets array.
+ */
+class nsTemplateQuerySet
+{
+protected:
+    nsVoidArray mRules; // rules owned by nsTemplateQuerySet
+
+    // a number which increments for each successive queryset. It is stored so
+    // it can be used as an optimization when updating results so that it is
+    // known where to insert them into a match.
+    PRInt32 mPriority;
+
+public:
+
+    // <query> node
+    nsCOMPtr<nsIContent> mQueryNode;
+
+    // compiled opaque query object returned by the query processor's
+    // CompileQuery call
+    nsCOMPtr<nsISupports> mCompiledQuery;
+
+    nsTemplateQuerySet(PRInt32 aPriority)
+        : mPriority(aPriority)
+    {
+        MOZ_COUNT_CTOR(nsTemplateQuerySet);
+    }
+
+    ~nsTemplateQuerySet()
+    {
+        MOZ_COUNT_DTOR(nsTemplateQuerySet);
+        Clear();
+    }
+
+    PRInt32 Priority() const
+    {
+        return mPriority;
+    }
+
+    nsresult AddRule(nsTemplateRule *aChild)
+    {
+        if (!mRules.AppendElement(aChild))
+            return NS_ERROR_OUT_OF_MEMORY;
+        return NS_OK;
+    }
+
+    PRInt32 RuleCount() const
+    {
+        return mRules.Count();
+    }
+
+    nsTemplateRule* GetRuleAt(PRInt32 aIndex)
+    {
+        return NS_STATIC_CAST(nsTemplateRule*, mRules[aIndex]);
+    }
+
+    void Clear()
+    {
+        for (PRInt32 r = mRules.Count() - 1; r >= 0; r--) {
+            nsTemplateRule* rule = NS_STATIC_CAST(nsTemplateRule* , mRules[r]);
+            delete rule;
+        }
+        mRules.Clear();
+    }
 };
 
 #endif // nsTemplateRule_h__

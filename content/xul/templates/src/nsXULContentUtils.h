@@ -59,6 +59,7 @@ class nsIRDFLiteral;
 class nsIRDFService;
 class nsINameSpaceManager;
 class nsIDateTimeFormat;
+class nsICollation;
 
 class nsXULContentUtils
 {
@@ -66,6 +67,7 @@ protected:
     static nsrefcnt gRefCnt;
     static nsIRDFService* gRDF;
     static nsIDateTimeFormat* gFormat;
+    static nsICollation *gCollation;
 
     static PRBool gDisableXULCache;
 
@@ -94,9 +96,6 @@ public:
     GetElementResource(nsIContent* aElement, nsIRDFResource** aResult);
 
     static nsresult
-    GetElementRefResource(nsIContent* aElement, nsIRDFResource** aResult);
-
-    static nsresult
     GetTextForNode(nsIRDFNode* aNode, nsAString& aResult);
 
     static nsresult
@@ -123,6 +122,12 @@ public:
         return gRDF;
     }
 
+    static nsICollation*
+    GetCollation()
+    {
+        return gCollation;
+    }
+
 #define XUL_RESOURCE(ident, uri) static nsIRDFResource* ident
 #define XUL_LITERAL(ident, val)  static nsIRDFLiteral*  ident
 #include "nsXULResourceList.h"
@@ -130,6 +135,4 @@ public:
 #undef XUL_LITERAL
 };
 
-
 #endif // nsXULContentUtils_h__
-

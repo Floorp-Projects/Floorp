@@ -43,78 +43,37 @@
 #include "nsRuleNetwork.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsIAtom.h"
+#include "nsIDOMDocument.h"
 
 class nsIXULTemplateBuilder;
-class nsIXULDocument;
-class nsConflictSet;
 
+/**
+ * The nsContentTestNode is always the top node in a query's rule network. It
+ * exists so that Constrain can filter out resources that aren't part of a
+ * result.
+ */
 class nsContentTestNode : public TestNode
 {
 public:
-    nsContentTestNode(InnerNode* aParent,
-                      nsConflictSet& aConflictSet,
-                      nsIXULDocument* aDocument,
-                      nsIXULTemplateBuilder* aBuilder,
-                      PRInt32 aContentVariable,
-                      PRInt32 aIdVariable,
-                      nsIAtom* aTag);
+    nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
+                      nsIAtom* aContentVariable);
 
     virtual nsresult
-    FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const;
+    FilterInstantiations(InstantiationSet& aInstantiations) const;
 
-    virtual nsresult
-    GetAncestorVariables(VariableSet& aVariables) const;
+    nsresult
+    Constrain(InstantiationSet& aInstantiations);
 
-    class Element : public MemoryElement {
-    private:
-        // Hide so that only Create() and Destroy() can be used to
-        // allocate and deallocate from the heap
-        static void* operator new(size_t) CPP_THROW_NEW { return 0; }
-        static void operator delete(void*, size_t) {}
-
-    public:
-        Element(nsIContent* aContent)
-            : mContent(aContent) {
-            MOZ_COUNT_CTOR(nsContentTestNode::Element); }
-
-        virtual ~Element() { MOZ_COUNT_DTOR(nsContentTestNode::Element); }
-
-        static Element*
-        Create(nsFixedSizeAllocator& aPool, nsIContent* aContent) {
-            void* place = aPool.Alloc(sizeof(Element));
-            return place ? ::new (place) Element(aContent) : nsnull; }
-
-        static void
-        Destroy(nsFixedSizeAllocator& aPool, Element* aElement) {
-            aElement->~Element();
-            aPool.Free(aElement, sizeof(*aElement)); }
-
-        virtual const char* Type() const {
-            return "nsContentTestNode::Element"; }
-
-        virtual PLHashNumber Hash() const {
-            return PLHashNumber(NS_PTR_TO_INT32(mContent.get())) >> 2; }
-
-        virtual PRBool Equals(const MemoryElement& aElement) const {
-            if (aElement.Type() == Type()) {
-                const Element& element = NS_STATIC_CAST(const Element&, aElement);
-                return mContent == element.mContent;
-            }
-            return PR_FALSE; }
-
-        virtual MemoryElement* Clone(void* aPool) const {
-            return Create(*NS_STATIC_CAST(nsFixedSizeAllocator*, aPool), mContent); }
-
-    protected:
-        nsCOMPtr<nsIContent> mContent;
-    };
+    void SetTag(nsIAtom* aTag, nsIDOMDocument* aDocument)
+    {
+        mTag = aTag;
+        mDocument = aDocument;
+    }
 
 protected:
-    nsConflictSet& mConflictSet;
-    nsIXULDocument* mDocument; // [WEAK] because we know the document will outlive us
-    nsIXULTemplateBuilder *mBuilder;
-    PRInt32 mContentVariable;
-    PRInt32 mIdVariable;
+    nsXULTemplateQueryProcessorRDF *mProcessor;
+    nsIDOMDocument* mDocument;
+    nsCOMPtr<nsIAtom> mRefVariable;
     nsCOMPtr<nsIAtom> mTag;
 };
 

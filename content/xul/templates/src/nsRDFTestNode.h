@@ -40,9 +40,9 @@
 #define nsRDFTestNode_h__
 
 #include "nsRuleNetwork.h"
+
 class nsIRDFResource;
 class nsIRDFNode;
-class nsTemplateMatchSet;
 
 /**
  * An abstract base class for all of the RDF-related tests. This interface
@@ -52,7 +52,7 @@ class nsTemplateMatchSet;
 class nsRDFTestNode : public TestNode
 {
 public:
-    nsRDFTestNode(InnerNode* aParent)
+    nsRDFTestNode(TestNode* aParent)
         : TestNode(aParent) {}
 
     /**
@@ -76,9 +76,7 @@ public:
      */
     virtual void Retract(nsIRDFResource* aSource,
                          nsIRDFResource* aProperty,
-                         nsIRDFNode* aTarget,
-                         nsTemplateMatchSet& aFirings,
-                         nsTemplateMatchSet& aRetractions) const = 0;
+                         nsIRDFNode* aTarget) const = 0;
 };
 
 #endif // nsRDFTestNode_h__

@@ -66,28 +66,27 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsClusterKey.cpp \
-		nsClusterKeySet.cpp \
-		nsConflictSet.cpp \
 		nsContentSupportMap.cpp \
-		nsContentTagTestNode.cpp \
 		nsContentTestNode.cpp \
 		nsInstantiationNode.cpp \
-		nsTreeRowTestNode.cpp \
 		nsTreeRows.cpp \
 		nsRDFConInstanceTestNode.cpp \
 		nsRDFConMemberTestNode.cpp \
 		nsRDFPropertyTestNode.cpp \
+		nsRDFBinding.cpp \
+		nsRDFQuery.cpp \
 		nsResourceSet.cpp \
 		nsRuleNetwork.cpp \
 		nsTemplateMatch.cpp \
-		nsTemplateMatchSet.cpp \
 		nsTemplateRule.cpp \
 		nsXULContentBuilder.cpp \
 		nsXULContentUtils.cpp \
 		nsXULTreeBuilder.cpp \
 		nsXULSortService.cpp \
 		nsXULTemplateBuilder.cpp \
+		nsXULTemplateQueryProcessorRDF.cpp \
+		nsXULTemplateResultRDF.cpp \
+		nsXULTemplateResultSetRDF.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

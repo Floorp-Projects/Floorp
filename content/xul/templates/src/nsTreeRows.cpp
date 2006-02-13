@@ -36,13 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsString.h"
 #include "nsTreeRows.h"
-#include "nsTemplateMatch.h"
-#include "nsTemplateRule.h"
 
 nsTreeRows::Subtree*
 nsTreeRows::EnsureSubtreeFor(Subtree* aParent,
-                                 PRInt32 aChildIndex)
+                             PRInt32 aChildIndex)
 {
     Subtree* subtree = GetSubtreeFor(aParent, aChildIndex);
 
@@ -174,20 +173,59 @@ nsTreeRows::operator[](PRInt32 aRow)
 }
 
 nsTreeRows::iterator
-nsTreeRows::Find(nsConflictSet& aConflictSet, nsIRDFResource* aMember)
+nsTreeRows::FindByResource(nsIRDFResource* aResource)
+{
+    // XXX Mmm, scan through the rows one-by-one...
+    iterator last = Last();
+    iterator iter;
+
+    nsresult rv;
+    nsAutoString resourceid;
+    PRBool stringmode = PR_FALSE;
+
+    for (iter = First(); iter != last; ++iter) {
+        if (!stringmode) {
+            nsCOMPtr<nsIRDFResource> findres;
+            rv = iter->mMatch->mResult->GetResource(getter_AddRefs(findres));
+            if (NS_FAILED(rv)) return last;
+
+            if (findres == aResource)
+                break;
+
+            if (! findres) {
+                const char *uri;
+                aResource->GetValueConst(&uri);
+                CopyUTF8toUTF16(uri, resourceid);
+
+                // set stringmode and fall through
+                stringmode = PR_TRUE;
+            }
+        }
+
+        // additional check because previous block could change stringmode
+        if (stringmode) {
+            nsAutoString findid;
+            rv = iter->mMatch->mResult->GetId(findid);
+            if (NS_FAILED(rv)) return last;
+
+            if (resourceid.Equals(findid))
+                break;
+        }
+    }
+
+    return iter;
+}
+
+nsTreeRows::iterator
+nsTreeRows::Find(nsIXULTemplateResult *aResult)
 {
     // XXX Mmm, scan through the rows one-by-one...
     iterator last = Last();
     iterator iter;
 
     for (iter = First(); iter != last; ++iter) {
-        nsTemplateMatch* match = iter->mMatch;
-
-        Value val;
-        match->GetAssignmentFor(aConflictSet, match->mRule->GetMemberVariable(), &val);
-
-        if (VALUE_TO_IRDFRESOURCE(val) == aMember)
-            break;
+        if (aResult == iter->mMatch->mResult)
+          break;
     }
 
     return iter;

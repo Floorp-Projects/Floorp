@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
+ *   Neil Deakin <enndeakin@sympatico.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -62,181 +63,33 @@
 #define nsRuleNetwork_h__
 
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
+#include "nsIAtom.h"
 #include "nsIContent.h"
+#include "nsIDOMNode.h"
 #include "plhash.h"
 #include "pldhash.h"
 #include "nsCRT.h"
+#include "nsIRDFNode.h"
 
 class nsIRDFResource;
-class nsIRDFNode;
+class nsXULTemplateResultSetRDF;
+class nsXULTemplateQueryProcessorRDF;
 
 //----------------------------------------------------------------------
 
 /**
- * A type-safe value that can be bound to a variable in the rule
- * network.
- */
-class Value {
-public:
-    enum Type { eUndefined, eISupports, eString, eInteger };
-
-protected:
-    Type mType;
-
-    union {
-        nsISupports* mISupports;
-        PRUnichar*   mString;
-        PRInt32      mInteger;
-    };
-
-    PRBool Equals(const Value& aValue) const;
-    PRBool Equals(nsISupports* aISupports) const;
-    PRBool Equals(const PRUnichar* aString) const;
-    PRBool Equals(PRInt32 aInteger) const;
-
-    void Clear();
-
-public:
-    Value() : mType(eUndefined) {
-        MOZ_COUNT_CTOR(Value); }
-
-    Value(const Value& aValue);
-    Value(nsISupports* aISupports);
-    Value(const PRUnichar* aString);
-    Value(PRInt32 aInteger);
-
-    Value& operator=(const Value& aValue);
-    Value& operator=(nsISupports* aISupports);
-    Value& operator=(const PRUnichar* aString);
-    Value& operator=(PRInt32 aInteger);
-
-    ~Value();
-
-    PRBool operator==(const Value& aValue) const { return Equals(aValue); }
-    PRBool operator==(nsISupports* aISupports) const { return Equals(aISupports); }
-    PRBool operator==(const PRUnichar* aString) const { return Equals(aString); }
-    PRBool operator==(PRInt32 aInteger) const { return Equals(aInteger); }
-
-    PRBool operator!=(const Value& aValue) const { return !Equals(aValue); }
-    PRBool operator!=(nsISupports* aISupports) const { return !Equals(aISupports); }
-    PRBool operator!=(const PRUnichar* aString) const { return !Equals(aString); }
-    PRBool operator!=(PRInt32 aInteger) const { return !Equals(aInteger); }
-
-    /**
-     * Get the value's type
-     * @return the value's type
-     */
-    Type GetType() const { return mType; }
-
-    /**
-     * Treat the Value as an nsISupports. (Note that the result
-     * is _not_ addref'd.)
-     * @return the value as an nsISupports, or null if the value is
-     *   not an nsISupports.
-     */
-    operator nsISupports*() const;
-
-    /**
-     * Treat the value as a Unicode string.
-     * @return the value as a Unicode string, or null if the value
-     *   is not a Unicode string.
-     */
-    operator const PRUnichar*() const;
-
-    /**
-     * Treat the value as an integer.
-     * @return the value as an integer, or zero if the value is
-     *   not an integer
-     */
-    operator PRInt32() const;
-
-    PLHashNumber Hash() const;
-
-#ifdef DEBUG
-    void ToCString(nsACString& aResult);
-#endif
-};
-
-#ifdef DEBUG
-nsISupports*
-value_to_isupports(const nsIID& aIID, const Value& aValue);
-
-#  define VALUE_TO_ISUPPORTS(type, v) \
-        NS_STATIC_CAST(type*, value_to_isupports(NS_GET_IID(type), (v)))
-#else
-#  define VALUE_TO_ISUPPORTS(type, v) \
-        NS_STATIC_CAST(type*, NS_STATIC_CAST(nsISupports*, (v)))
-#endif
-
-// Convenience wrappers for |Value::operator nsISupports*()|. In a
-// debug build, they expand to versions that will call QI() and verify
-// that the types are kosher. In an optimized build, they'll just cast
-// n' go. Rock on!
-#define VALUE_TO_IRDFRESOURCE(v) VALUE_TO_ISUPPORTS(nsIRDFResource, (v))
-#define VALUE_TO_IRDFNODE(v)     VALUE_TO_ISUPPORTS(nsIRDFNode, (v))
-#define VALUE_TO_ICONTENT(v)     VALUE_TO_ISUPPORTS(nsIContent, (v))
-
-//----------------------------------------------------------------------
-
-/**
- * A set of variables
- */
-class VariableSet
-{
-public:
-    VariableSet();
-    ~VariableSet();
-
-    /**
-     * Add a variable to the set
-     * @param aVariable the variable to add
-     * @returns NS_OK, unless something went wrong.
-     */
-    nsresult Add(PRInt32 aVariable);
-
-    /**
-     * Remove a variable from the set
-     * @param aVariable the variable to remove
-     * @returns NS_OK, unless something went wrong.
-     */
-    nsresult Remove(PRInt32 aVariable);
-
-    /**
-     * Determine if the set contains a variable
-     * @param aVariable the variable to test
-     * @return PR_TRUE if the set contains the variable, PR_FALSE otherwise.
-     */
-    PRBool Contains(PRInt32 aVariable) const;
-
-    /**
-     * Determine the number of variables in the set
-     * @return the number of variables in the set
-     */
-    PRInt32 GetCount() const { return mCount; }
-
-    /**
-     * Get the <i>i</i>th variable in the set
-     * @param aIndex the index to retrieve
-     * @return the <i>i</i>th variable in the set, or -1 if no such
-     *   variable exists.
-     */
-    PRInt32 GetVariableAt(PRInt32 aIndex) const { return mVariables[aIndex]; }
-
-protected:
-    PRInt32* mVariables;
-    PRInt32 mCount;
-    PRInt32 mCapacity;
-};
-
-//----------------------------------------------------------------------
-
-/**
- * A memory element that supports an instantiation
+ * A memory element that supports an instantiation. A memory element holds a
+ * set of nodes involved in an RDF test such as <member> or <triple> test. A
+ * memory element is created when a specific test matches. The query processor
+ * maintains a map between the memory elements and the results they eventually
+ * matched. When an assertion is removed from the graph, this map is consulted
+ * to determine which results will no longer match.
  */
 class MemoryElement {
 public:
-    MemoryElement() {}
-    virtual ~MemoryElement() {}
+    MemoryElement() { MOZ_COUNT_CTOR(MemoryElement); }
+    virtual ~MemoryElement() { MOZ_COUNT_DTOR(MemoryElement); }
 
     virtual const char* Type() const = 0;
     virtual PLHashNumber Hash() const = 0;
@@ -367,13 +220,13 @@ public:
  */
 class nsAssignment {
 public:
-    PRInt32 mVariable;
-    Value   mValue;
+    nsCOMPtr<nsIAtom> mVariable;
+    nsCOMPtr<nsIRDFNode> mValue;
 
-    nsAssignment() : mVariable(-1), mValue()
+    nsAssignment() : mValue()
         { MOZ_COUNT_CTOR(nsAssignment); }
 
-    nsAssignment(PRInt32 aVariable, const Value& aValue)
+    nsAssignment(nsIAtom* aVariable, nsIRDFNode* aValue)
         : mVariable(aVariable),
           mValue(aValue)
         { MOZ_COUNT_CTOR(nsAssignment); }
@@ -397,8 +250,9 @@ public:
         return mVariable != aAssignment.mVariable || mValue != aAssignment.mValue; }
 
     PLHashNumber Hash() const {
-        // XXX I have no idea if this hashing function is good or not
-        return (mValue.Hash() & 0xffff) | (mVariable << 16); }
+        // XXX I have no idea if this hashing function is good or not // XXX change this
+        PLHashNumber temp = PLHashNumber(NS_PTR_TO_INT32(mValue.get())) >> 2; // strip alignment bits
+        return (temp & 0xffff) | ((PRInt32)mVariable.get()); }
 };
 
 
@@ -524,7 +378,7 @@ public:
      * @param aValue the value to query
      * @return PR_TRUE if aVariable is bound to aValue; PR_FALSE otherwise.
      */
-    PRBool HasAssignment(PRInt32 aVariable, const Value& aValue) const;
+    PRBool HasAssignment(nsIAtom* aVariable, nsIRDFNode* aValue) const;
 
     /**
      * Determine if the assignment set contains the specified assignment
@@ -541,7 +395,7 @@ public:
      * @return PR_TRUE if the assignment set has an assignment for the variable,
      *   PR_FALSE otherwise.
      */
-    PRBool HasAssignmentFor(PRInt32 aVariable) const;
+    PRBool HasAssignmentFor(nsIAtom* aVariable) const;
 
     /**
      * Retrieve the assignment for the specified variable
@@ -551,7 +405,7 @@ public:
      * @return PR_TRUE if the variable has an assignment, PR_FALSE
      *   if there was no assignment for the variable.
      */
-    PRBool GetAssignmentFor(PRInt32 aVariable, Value* aValue) const;
+    PRBool GetAssignmentFor(nsIAtom* aVariable, nsIRDFNode** aValue) const;
 
     /**
      * Count the number of assignments in the set
@@ -574,8 +428,14 @@ public:
 //----------------------------------------------------------------------
 
 /**
- * A collection of varible-to-value bindings, with the memory elements
- * that support those bindings.
+ * A collection of variable-to-value bindings, with the memory elements
+ * that support those bindings. Essentially, an instantiation is the
+ * collection of variables and values assigned to those variables for a single
+ * result. For each RDF rule in the rule network, each instantiation is
+ * examined and either extended with additional bindings specified by the RDF
+ * rule, or removed if the rule doesn't apply (for instance if a node has no
+ * children). When an instantiation gets to the last node of the rule network,
+ * which is always an nsInstantiationNode, a result is created for it.
  *
  * An instantiation object is typically created by "extending" another
  * instantiation object. That is, using the copy constructor, and
@@ -616,7 +476,7 @@ public:
      * @return NS_OK if no errors, NS_ERROR_OUT_OF_MEMORY if there
      *   is not enough memory to perform the operation
      */
-    nsresult AddAssignment(PRInt32 aVariable, const Value& aValue) {
+    nsresult AddAssignment(nsIAtom* aVariable, nsIRDFNode* aValue) {
         mAssignments.Add(nsAssignment(aVariable, aValue));
         return NS_OK; }
 
@@ -667,6 +527,8 @@ public:
 
     class Iterator;
     friend class Iterator;
+
+    friend class nsXULTemplateResultSetRDF; // so it can get to the List
 
 protected:
     class List {
@@ -782,8 +644,7 @@ public:
 
     void Clear();
 
-    PRBool HasAssignmentFor(PRInt32 aVariable) const;
-
+    PRBool HasAssignmentFor(nsIAtom* aVariable) const;
 };
 
 //----------------------------------------------------------------------
@@ -813,13 +674,18 @@ public:
      * node must recursively call Propagate() on its children. We
      * should fix this to make the algorithm interruptable.)
      *
+     * See TestNode::Propagate for details about instantiation set ownership
+     *
      * @param aInstantiations the set of instantiations to propagate
      *   down through the network.
-     * @param aClosure any application-specific information that
-     *   needs to be passed through the network.
+     * @param aIsUpdate true if updating, false for first generation
+     * @param aTakenInstantiations true if the ownership over aInstantiations
+     *                             has been taken from the caller. If false,
+     *                             the caller owns it.
      * @return NS_OK if no errors occurred.
      */
-    virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure) = 0;
+    virtual nsresult Propagate(InstantiationSet& aInstantiations,
+                               PRBool aIsUpdate, PRBool& aTakenInstantiations) = 0;
 };
 
 //----------------------------------------------------------------------
@@ -907,6 +773,8 @@ public:
     Iterator First() { return Iterator(mNodes); }
     Iterator Last() { return Iterator(mNodes + mCount); }
 
+    PRInt32 Count() const { return mCount; }
+
 protected:
     ReteNode** mNodes;
     PRInt32 mCount;
@@ -916,12 +784,63 @@ protected:
 //----------------------------------------------------------------------
 
 /**
- * An abstract base class for an "inner node" in the rule
- * network. Adds support for children and "upward" queries.
+ * A node that applies a test condition to a set of instantiations.
+ *
+ * This class provides implementations of Propagate() and Constrain()
+ * in terms of one simple operation, FilterInstantiations(). A node
+ * that is a "simple test node" in a rule network should derive from
+ * this class, and need only implement FilterInstantiations().
  */
-class InnerNode : public ReteNode
+class TestNode : public ReteNode
 {
 public:
+    TestNode(TestNode* aParent);
+
+    /**
+     * Retrieve the test node's parent
+     * @return the test node's parent
+     */
+    TestNode* GetParent() const { return mParent; }
+
+    /**
+     * Calls FilterInstantiations() on the instantiation set, and if
+     * the resulting set isn't empty, propagates the new set down to
+     * each of the test node's children.
+     *
+     * Note that the caller of Propagate is responsible for deleting
+     * aInstantiations if necessary as described below.
+     *
+     * Propagate may be called in update or non-update mode as indicated
+     * by the aIsUpdate argument. Non-update mode is used when initially
+     * generating results, whereas update mode is used when the datasource
+     * changes and new results might be available.
+     *
+     * The last node in a chain of TestNodes is always an nsInstantiationNode.
+     * In non-update mode, this nsInstantiationNode will cache the results
+     * in the query using the SetCachedResults method. The query processor
+     * takes these cached results and creates a nsXULTemplateResultSetRDF
+     * which is the enumeration returned to the template builder. This
+     * nsXULTemplateResultSetRDF owns the instantiations and they will be
+     * deleted when the nsXULTemplateResultSetRDF goes away.
+     *
+     * In update mode, the nsInstantiationNode node will iterate over the
+     * instantiations itself and callback to the builder to update any matches
+     * and generated content. If no instantiations match, then the builder
+     * will never be called.
+     *
+     * Thus, the difference between update and non-update modes is that in
+     * update mode, the results and instantiations have been already handled
+     * whereas in non-update mode they are expected to be returned in an
+     * nsXULTemplateResultSetRDF for further processing by the builder.
+     *
+     * Regardless, aTakenInstantiations will be set to true if the
+     * ownership over aInstantiations has been transferred to a result set.
+     * If set to false, the caller is still responsible for aInstantiations.
+     * aTakenInstantiations will be set properly even if an error occurs.
+     */
+    virtual nsresult Propagate(InstantiationSet& aInstantiations,
+                               PRBool aIsUpdate, PRBool& aTakenInstantiations);
+
     /**
      * This is called by a child node on its parent to allow the
      * parent's constraints to apply to the set of instantiations.
@@ -938,24 +857,22 @@ public:
      * 
      * @param aInstantiations the set of instantiations that must
      *   be constrained
-     * @param aClosure application-specific information that needs to
-     *   be passed through the network.
      * @return NS_OK if no errors occurred
      */
-    virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure) = 0;
+    virtual nsresult Constrain(InstantiationSet& aInstantiations);
 
     /**
-     * Retrieve the set of variables that are introduced by this node
-     * and any of its ancestors. To correctly implement this method, a
-     * node must add any variables that it introduces to the variable
-     * set, and then recursively call GetAncestorVariables() on its
-     * parent (or parents).
+     * Given a set of instantiations, filter out any that are
+     * inconsistent with the test node's test, and append
+     * variable-to-value assignments and memory element support for
+     * those which do pass the test node's test.
      *
-     * @param aVariables The variable set to which the callee will add
-     *   its variables, and its ancestors variables.
-     * @return NS_OK if no errors occur.
+     * @param aInstantiations the set of instantiations to be
+     *   filtered
+     * @return NS_OK if no errors occurred.
      */
-    virtual nsresult GetAncestorVariables(VariableSet& aVariables) const = 0;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const = 0;
+    //XXX probably better named "ApplyConstraints" or "Discrminiate" or something
 
     /**
      * Determine if this node has another node as its direct ancestor.
@@ -963,7 +880,7 @@ public:
      * @return PR_TRUE if aNode is a direct ancestor of this node, PR_FALSE
      *   otherwise.
      */
-    virtual PRBool HasAncestor(const ReteNode* aNode) const = 0;
+    PRBool HasAncestor(const ReteNode* aNode) const;
 
     /**
      * Add another node as a child of this node.
@@ -979,236 +896,8 @@ public:
     nsresult RemoveAllChildren() { return mKids.Clear(); }
 
 protected:
+    TestNode* mParent;
     ReteNodeSet mKids;
 };
-
-//----------------------------------------------------------------------
-
-/**
- * The root node in the rule network.
- */
-class RootNode : public InnerNode
-{
-public:
-    // "downward" propagations
-    virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure);
-
-    // "upward" propagations
-    virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);
-
-    virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
-
-    virtual PRBool HasAncestor(const ReteNode* aNode) const;
-};
-
-//----------------------------------------------------------------------
-
-/**
- * A node that joins to paths from the root node, and binds a
- * variable from the left ancestor to a variable in the right
- * ancestor.
- */
-class JoinNode : public InnerNode
-{
-public:
-    enum Operator { eEquality };
-
-    JoinNode(InnerNode* aLeftParent,
-             PRInt32 aLeftVariable,
-             InnerNode* aRightParent,
-             PRInt32 aRightVariable,
-             Operator aOperator);
-
-    // "downward" propagations
-    virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure);
-
-    // "upward" propagations
-    virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);
-
-    virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
-
-    virtual PRBool HasAncestor(const ReteNode* aNode) const;
-
-protected:
-    InnerNode* mLeftParent;
-    PRInt32 mLeftVariable;
-    InnerNode* mRightParent;
-    PRInt32 mRightVariable;
-    Operator mOperator;
-
-    static nsresult GetNumBound(InnerNode* aAncestor, const InstantiationSet& aInstantiations, PRInt32* aBoundCount);
-
-    nsresult Bind(InstantiationSet& aInstantiations, PRBool* aDidBind);
-};
-
-
-//----------------------------------------------------------------------
-
-/**
- * A node that applies a test condition to a set of instantiations.
- *
- * This class provides implementations of Propagate() and Constrain()
- * in terms of one simple operation, FilterInstantiations(). A node
- * that is a "simple test node" in a rule network should derive from
- * this class, and need only implement FilterInstantiations() and
- * GetAncestorVariables().
- */
-class TestNode : public InnerNode
-{
-public:
-    TestNode(InnerNode* aParent);
-
-    /**
-     * Retrieve the test node's parent
-     * @return the test node's parent
-     */
-    InnerNode* GetParent() const { return mParent; }
-
-    /**
-     * Calls FilterInstantiations() on the instantiation set, and if
-     * the resulting set isn't empty, propagates the new set down to
-     * each of the test node's children.
-     */
-    virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure);
-
-    /**
-     * Calls FilterInstantiations() on the instantiation set, and if
-     * the resulting set isn't empty, propagates the new set up to the
-     * test node's parent.
-     */
-    virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);
-
-    /**
-     * Given a set of instantiations, filter out any that are
-     * inconsistent with the test node's test, and append
-     * variable-to-value assignments and memory element support for
-     * those which do pass the test node's test.
-     *
-     * @param aInstantiations the set of instantiations to be
-     *   filtered
-     * @param aClosure application-specific data that is to be passed
-     *   through the network.
-     * @return NS_OK if no errors occurred.
-     */
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const = 0; //XXX probably better named "ApplyConstraints" or "Discrminiate" or something
-
-    virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
-
-    virtual PRBool HasAncestor(const ReteNode* aNode) const;
-
-protected:
-    InnerNode* mParent;
-};
-
-//----------------------------------------------------------------------
-
-class nsRuleNetwork
-{
-public:
-    struct SymtabEntry {
-        PLDHashEntryHdr mHdr;
-        PRUnichar*      mSymbol;
-        PRInt32         mVariable;
-    };
-    
-    nsRuleNetwork() { Init(); }
-    ~nsRuleNetwork() { Finish(); }
-
-    /**
-     * Remove all the nodes from the network. The nodes will be 
-     * destroyed
-     * @return NS_OK if no errors occur
-     */ 
-    void Clear() { Finish(); Init(); }
-
-    /**
-     * Add a node to the network. The network assumes ownership of the
-     * node; it will be destroyed when the network is destroyed, or if
-     * Clear() is called.
-     *
-     * @param aNode the node to add to the network
-     * @return NS_OK if no errors occur
-     */
-    nsresult AddNode(ReteNode* aNode) { return mNodes.Add(aNode); }
-
-    /**
-     * Retrieve the root node in the rule network
-     * @return the root node in the rule network
-     */
-    RootNode* GetRoot() { return &mRoot; };
-
-    /**
-     * Create an unnamed variable
-     */
-    PRInt32 CreateAnonymousVariable() { return ++mNextVariable; }
-
-    /**
-     * Assign a symbol to a variable
-     */
-    void PutSymbol(const PRUnichar* aSymbol, PRInt32 aVariable) {
-        if (!mSymtab.ops) return;
-        NS_PRECONDITION(LookupSymbol(aSymbol) == 0, "symbol already defined");
-
-        SymtabEntry* entry =
-            NS_REINTERPRET_CAST(SymtabEntry*,
-                                PL_DHashTableOperate(&mSymtab,
-                                                     aSymbol,
-                                                     PL_DHASH_ADD));
-
-        if (entry) {
-            entry->mSymbol   = nsCRT::strdup(aSymbol);
-            entry->mVariable = aVariable;
-        } };
-                                
-    /**
-     * Lookup the variable associated with the symbol
-     */
-    PRInt32 LookupSymbol(const PRUnichar* aSymbol, PRBool aCreate = PR_FALSE) {
-        if (!mSymtab.ops) return 0;
-        SymtabEntry* entry =
-            NS_REINTERPRET_CAST(SymtabEntry*,
-                                PL_DHashTableOperate(&mSymtab,
-                                                     aSymbol,
-                                                     PL_DHASH_LOOKUP));
-
-        if (PL_DHASH_ENTRY_IS_BUSY(&entry->mHdr))
-            return entry->mVariable;
-
-        PRInt32 result = 0;
-        if (aCreate) {
-            result = CreateAnonymousVariable();
-            PutSymbol(aSymbol, result);
-        }
-
-        return result; }
-
-protected:
-    /**
-     * The root node in the network
-     */
-    RootNode mRoot;
-
-    /**
-     * Other nodes in the network
-     */
-    ReteNodeSet mNodes;
-
-    void Init();
-    void Finish();
-
-    /**
-     * Symbol table, mapping symbolic names to variable identifiers
-     */
-    PLDHashTable mSymtab;
-
-    /**
-     * The next available variable identifier
-     */
-    PRInt32 mNextVariable;
-
-    static PLDHashTableOps gOps;
-};
-
-
 
 #endif // nsRuleNetwork_h__

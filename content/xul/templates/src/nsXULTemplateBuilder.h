@@ -24,6 +24,7 @@
  *   David Hyatt <hyatt@netscape.com>
  *   Chris Waterson <waterson@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Neil Deakin <enndeakin@sympatico.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,6 +45,7 @@
 
 #include "nsStubDocumentObserver.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIContent.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
@@ -52,21 +54,20 @@
 #include "nsIRDFService.h"
 #include "nsIXULTemplateBuilder.h"
 
-#include "nsConflictSet.h"
 #include "nsFixedSizeAllocator.h"
-#include "nsResourceSet.h"
-#include "nsRuleNetwork.h"
 #include "nsVoidArray.h"
 #include "nsCOMArray.h"
+#include "nsTArray.h"
+#include "nsDataHashtable.h"
+#include "nsTemplateRule.h"
+#include "nsTemplateMatch.h"
+#include "nsIXULTemplateQueryProcessor.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gXULTemplateLog;
 #endif
 
-class nsClusterKeySet;
-class nsTemplateMatch;
-class nsTemplateRule;
 class nsIXULDocument;
 class nsIRDFCompositeDataSource;
 
@@ -75,14 +76,19 @@ class nsIRDFCompositeDataSource;
  * set of rules.
  */
 class nsXULTemplateBuilder : public nsIXULTemplateBuilder,
-                             public nsStubDocumentObserver,
-                             public nsIRDFObserver
+                             public nsStubDocumentObserver
 {
 public:
     nsXULTemplateBuilder();
     virtual ~nsXULTemplateBuilder();
 
-    nsresult Init();
+    nsresult InitGlobals();
+
+    /**
+     * Clear the template builder structures. The aIsFinal flag is set to true
+     * when the template is going away.
+     */
+    virtual void Uninit(PRBool aIsFinal);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -96,27 +102,16 @@ public:
                                   PRInt32 aModType);
     virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
 
-    // nsIRDFObserver interface
-    NS_DECL_NSIRDFOBSERVER
+    nsresult
+    UpdateResult(nsIXULTemplateResult* aOldResult,
+                 nsIXULTemplateResult* aNewResult,
+                 nsIDOMNode* aQueryNode);
 
     nsresult
     ComputeContainmentProperties();
 
     static PRBool
     IsTemplateElement(nsIContent* aContent);
-
-    /**
-     * Initialize the rule network.
-     */
-    virtual nsresult
-    InitializeRuleNetwork();
-
-    /**
-     * Initialize the rule network for handling rules that use the
-     * ``simple'' syntax.
-     */
-    virtual nsresult
-    InitializeRuleNetworkForSimpleRules(InnerNode** aChildNode) = 0;
 
     virtual nsresult
     RebuildAll() = 0; // must be implemented by subclasses
@@ -128,60 +123,100 @@ public:
     GetTemplateRoot(nsIContent** aResult);
 
     /**
-     * Compile the template's rules
+     * Compile the template's queries
      */
     nsresult
-    CompileRules();
+    CompileQueries();
 
     /**
-     * Compile a rule that's specified using the extended template
-     * syntax.
+     * Compile the template given a <template> in aTemplate. This function
+     * is called recursively to handle queries inside a queryset. For the
+     * outer pass, aIsQuerySet will be false, while the inner pass this will
+     * be true.
+     *
+     * aCanUseTemplate will be set to true if the template's queries could be
+     * compiled, and false otherwise. If false, the entire template is
+     * invalid.
+     *
+     * @param aTemplate <template> to compile
+     * @param aQuerySet first queryset
+     * @param aIsQuerySet true if 
+     * @param aPriority the queryset index, incremented when a new one is added
+     * @param aCanUseTemplate true if template is valid
      */
     nsresult
-    CompileExtendedRule(nsIContent* aRuleElement,
-                        PRInt32 aPriority,
-                        InnerNode* aParentNode);
+    CompileTemplate(nsIContent* aTemplate,
+                    nsTemplateQuerySet* aQuerySet,
+                    PRBool aIsQuerySet,
+                    PRInt32* aPriority,
+                    PRBool* aCanUseTemplate);
 
     /**
-     * Compile the <conditions> of a rule that uses the extended
-     * template syntax.
+     * Compile a query using the extended syntax. For backwards compatible RDF
+     * syntax where there is no <query>, the <conditions> becomes the query.
+     *
+     * @param aRuleElement <rule> element
+     * @param aActionElement <action> element
+     * @param aMemberVariable member variable for the query
+     * @param aTag tag specified in <content> element
+     * @param aQuerySet the queryset
+     */
+    nsresult 
+    CompileExtendedQuery(nsIContent* aRuleElement,
+                         nsIContent* aActionElement,
+                         nsIAtom* aMemberVariable,
+                         nsIAtom* aTag,
+                         nsTemplateQuerySet* aQuerySet);
+
+    /**
+     * Determine the ref variable and tag from inside a RDF query.
+     */
+    void DetermineRDFQueryRef(nsIContent* aQueryElement, nsIAtom** tag);
+
+    /**
+     * Determine the member variable from inside an action body. It will be
+     * the value of the uri attribute on a node.
      */
     nsresult
-    CompileConditions(nsTemplateRule* aRule,
-                      nsIContent* aConditions,
-                      InnerNode* aParentNode,
-                      InnerNode** aLastNode);
+    DetermineMemberVariable(nsIContent* aActionElement, nsIAtom** aMemberVariable);
 
     /**
-     * Compile a single condition from an extended template syntax
-     * rule. Subclasses may override to provide additional,
-     * subclass-specific condition processing.
+     * Compile a simple query. A simple query is one that doesn't have a
+     * <query> and should use a default query which would normally just return
+     * a list of children of the reference point.
+     *
+     * @param aRuleElement the <rule>
+     * @param aQuerySet the query set
+     * @param aCanUseTemplate true if the query is valid
      */
-    virtual nsresult
-    CompileCondition(nsIAtom* aTag,
-                     nsTemplateRule* aRule,
-                     nsIContent* aConditions,
-                     InnerNode* aParentNode,
-                     TestNode** aResult);
+    nsresult 
+    CompileSimpleQuery(nsIContent* aRuleElement,
+                       nsTemplateQuerySet* aQuerySet,
+                       PRBool* aCanUseTemplate);
 
     /**
-     * Compile a <triple> condition
-     */
-    nsresult
-    CompileTripleCondition(nsTemplateRule* aRule,
-                           nsIContent* aCondition,
-                           InnerNode* aParentNode,
-                           TestNode** aResult);
-
-    /**
-     * Compile a <member> condition
+     * Compile the <conditions> tag in a rule
+     *
+     * @param aRule template rule
+     * @param aConditions <conditions> element
      */
     nsresult
-    CompileMemberCondition(nsTemplateRule* aRule,
-                           nsIContent* aCondition,
-                           InnerNode* aParentNode,
-                           TestNode** aResult);
+    CompileConditions(nsTemplateRule* aRule, nsIContent* aConditions);
 
+    /**
+     * Compile a <where> tag in a condition. The caller should set
+     * *aCurrentCondition to null for the first condition. This value will be
+     * updated to point to the new condition before returning. The conditions
+     * will be added to the rule aRule by this method.
+     *
+     * @param aRule template rule
+     * @param aCondition <where> element
+     * @param aCurrentCondition compiled condition
+     */
+    nsresult
+    CompileWhereCondition(nsTemplateRule* aRule,
+                          nsIContent* aCondition,
+                          nsTemplateCondition** aCurrentCondition);
 
     /**
      * Compile the <bindings> for an extended template syntax rule.
@@ -196,33 +231,6 @@ public:
     CompileBinding(nsTemplateRule* aRule, nsIContent* aBinding);
 
     /**
-     * Compile a rule that's specified using the simple template
-     * syntax.
-     */
-    nsresult
-    CompileSimpleRule(nsIContent* aRuleElement, PRInt32 aPriorty, InnerNode* aParentNode);
-
-    /**
-     * Can be overridden by subclasses to handle special attribute conditions
-     * for the simple syntax.
-     * @return PR_TRUE if the condition was handled
-     */
-    virtual PRBool
-    CompileSimpleAttributeCondition(PRInt32 aNameSpaceID,
-                                    nsIAtom* aAttribute,
-                                    const nsAString& aValue,
-                                    InnerNode* aParentNode,
-                                    TestNode** aResult);
-
-    /**
-     * Parse the value of a property test assertion for a condition or a simple
-     * rule based on the parseType attribute into the appropriate literal type.
-     */
-    nsresult ParseLiteral(const nsString& aParseType, 
-                          const nsString& aValue,
-                          nsIRDFNode** aResult);
-    
-    /**
      * Add automatic bindings for simple rules
      */
     nsresult
@@ -232,6 +240,38 @@ public:
     AddBindingsFor(nsXULTemplateBuilder* aSelf,
                    const nsAString& aVariable,
                    void* aClosure);
+
+    nsresult
+    LoadDataSources(nsIDocument* aDoc);
+
+    nsresult
+    InitHTMLTemplateRoot();
+
+    /**
+     * Determine which rule matches a given result. aContainer is used for
+     * tag matching and is optional for non-content generating builders.
+     * The returned matched rule is always one of the rules owned by the
+     * query set aQuerySet.
+     *
+     * @param aContainer parent when generated content will be inserted
+     * @param aResult result to match
+     * @param aQuerySet query set to examine the rules of
+     * @param aMatchedRule [out] rule that has matched, or null if any.
+     */
+    nsresult
+    DetermineMatchedRule(nsIContent* aContainer,
+                         nsIXULTemplateResult* aResult,
+                         nsTemplateQuerySet* aQuerySet,
+                         nsTemplateRule** aMatchedRule);
+
+    /**
+     * Return true if the supplied content or the content generated from the
+     * result has the given tag.
+     */
+    PRBool
+    MatchTagForResult(nsIContent* aContent,
+                      nsIXULTemplateResult* aResult,
+                      nsIAtom* aTag);
 
     // XXX sigh, the string template foo doesn't mix with
     // operator->*() on egcs-1.1.2, so we'll need to explicitly pass
@@ -243,13 +283,7 @@ public:
                    void* aClosure);
 
     nsresult
-    LoadDataSources(nsIDocument* aDoc);
-
-    nsresult
-    InitHTMLTemplateRoot();
-
-    nsresult
-    SubstituteText(nsTemplateMatch& aMatch,
+    SubstituteText(nsIXULTemplateResult* aMatch,
                    const nsAString& aAttributeValue,
                    nsAString& aResult);
 
@@ -259,81 +293,71 @@ public:
     static void
     SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis, const nsAString& aVariable, void* aClosure);    
 
-    PRBool
-    IsAttrImpactedByVars(nsTemplateMatch& aMatch,
-                         const nsAString& aAttributeValue,
-                         const VariableSet& aModifiedVars);
-
-    static void
-    IsVarInSet(nsXULTemplateBuilder* aThis, const nsAString& aVariable, void* aClosure);
-
-    nsresult
-    SynchronizeAll(nsIRDFResource* aSource,
-                   nsIRDFResource* aProperty,
-                   nsIRDFNode* aOldTarget,
-                   nsIRDFNode* aNewTarget);
-
-    nsresult
-    Propagate(nsIRDFResource* aSource,
-              nsIRDFResource* aProperty,
-              nsIRDFNode* aTarget,
-              nsClusterKeySet& aNewKeys);
-
-    nsresult
-    FireNewlyMatchedRules(const nsClusterKeySet& aNewKeys);
-
-    nsresult
-    Retract(nsIRDFResource* aSource,
-            nsIRDFResource* aProperty,
-            nsIRDFNode* aTarget);
-
-    nsresult
-    CheckContainer(nsIRDFResource* aTargetResource, PRBool* aIsContainer, PRBool* aIsEmpty);
-
     nsresult 
     IsSystemPrincipal(nsIPrincipal *principal, PRBool *result);
 
-#ifdef PR_LOGGING
-    nsresult
-    Log(const char* aOperation,
-        nsIRDFResource* aSource,
-        nsIRDFResource* aProperty,
-        nsIRDFNode* aTarget);
-
-#define LOG(_op, _src, _prop, _targ) \
-    Log(_op, _src, _prop, _targ)
-
-#else
-#define LOG(_op, _src, _prop, _targ)
-#endif
+    /**
+     * Convenience method which gets a resource for a result. If a result
+     * doesn't have a resource set, it will create one from the result's id.
+     */
+    nsresult GetResultResource(nsIXULTemplateResult* aResult,
+                               nsIRDFResource** aResource);
 
 protected:
-    // We are an observer of the composite datasource. The cycle is
-    // broken when the document is destroyed.
     nsCOMPtr<nsIRDFDataSource> mDB;
     nsCOMPtr<nsIRDFCompositeDataSource> mCompDB;
 
-    // Circular reference, broken when the document is destroyed.
+    /**
+     * Circular reference, broken when the document is destroyed.
+     */
     nsCOMPtr<nsIContent> mRoot;
 
-    nsCOMPtr<nsIRDFDataSource> mCache;
+    /**
+     * The root result, translated from the root element's ref
+     */
+    nsCOMPtr<nsIXULTemplateResult> mRootResult;
 
     nsCOMArray<nsIXULBuilderListener> mListeners;
 
-    PRInt32     mUpdateBatchNest;
+    /**
+     * The query processor which generates results
+     */
+    nsCOMPtr<nsIXULTemplateQueryProcessor> mQueryProcessor;
 
-    // For the rule network
-    nsResourceSet mContainmentProperties;
-    PRBool        mRulesCompiled;
+    /**
+     * The list of querysets
+     */
+    nsTArray<nsTemplateQuerySet *> mQuerySets;
+
+    /**
+     * Set to true if the rules have already been compiled
+     */
+    PRBool        mQueriesCompiled;
+
+    /**
+     * The default reference and member variables.
+     */
+    nsCOMPtr<nsIAtom> mRefVariable;
+    nsCOMPtr<nsIAtom> mMemberVariable;
+
+    /**
+     * The match map contains nsTemplateMatch objects, one for each unique
+     * match found, keyed by the resource for that match. A particular match
+     * will contain a linked list of all of the matches for that unique result
+     * id. Only one is active at a time. When a match is retracted, look in
+     * the match map, remove it, and apply the next valid match in sequence to
+     * make active.
+     */
+    nsDataHashtable<nsISupportsHashKey, nsTemplateMatch*> mMatchMap;
+
+    /**
+     * Fixed size allocator used to allocate matches
+     */
+    nsFixedSizeAllocator mPool;
 
 public:
-    nsRuleNetwork    mRules;
-    PRInt32          mContainerVar;
-    nsString         mContainerSymbol;
-    PRInt32          mMemberVar;
-    nsString         mMemberSymbol;
-    nsConflictSet    mConflictSet;
-    ReteNodeSet      mRDFTests;
+
+    nsFixedSizeAllocator& GetPool() { return mPool; }
 
 protected:
     // pseudo-constants
@@ -344,7 +368,8 @@ protected:
     static nsIPrincipal*             gSystemPrincipal;
 
     enum {
-        eDontTestEmpty = (1 << 0)
+        eDontTestEmpty = (1 << 0),
+        eDontRecurse = (2 << 0)
     };
 
     PRInt32 mFlags;
@@ -381,22 +406,41 @@ protected:
     IsActivated(nsIRDFResource *aResource);
 
     /**
-     * Must be implemented by subclasses. Handle replacing aOldMatch
-     * with aNewMatch. Either aOldMatch or aNewMatch may be null.
+     * Returns true if content may be generated for a result, or false if it
+     * cannot, for example, if it would be created inside a closed container.
+     * Those results will be generated when the container is opened.
+     * If false is returned, no content should be generated. The insertion
+     * location may optionally be set for new content, depending on the
+     * builder being used. This argument is used to optimize the content
+     * builder so that it doesn't need to determined again when ReplaceMatch
+     * is called.
+     */
+    virtual PRBool
+    MayGenerateResult(nsIXULTemplateResult* aOldResult,
+                      void** aLocation) = 0;
+
+    /**
+     * Must be implemented by subclasses. Handle removing the generated
+     * output for aOldMatch and adding new output for aNewMatch. Either
+     * aOldMatch or aNewMatch may be null. aContext is the location returned
+     * from the call to MayGenerateResult.
      */
     virtual nsresult
-    ReplaceMatch(nsIRDFResource* aMember, const nsTemplateMatch* aOldMatch, nsTemplateMatch* aNewMatch) = 0;
+    ReplaceMatch(nsIXULTemplateResult* aOldResult,
+                 nsTemplateMatch* aNewMatch,
+                 nsTemplateRule* aNewMatchRule,
+                 void *aContext) = 0;
 
     /**
      * Must be implemented by subclasses. Handle change in bound
-     * variable values for aMatch. aModifiedVars contains the set
+     * variable values for aResult. aModifiedVars contains the set
      * of variables that have changed.
-     * @param aMatch the match for which variable bindings has changed.
+     * @param aResult the ersult for which variable bindings has changed.
      * @param aModifiedVars the set of variables for which the bindings
      * have changed.
      */
     virtual nsresult
-    SynchronizeMatch(nsTemplateMatch* aMatch, const VariableSet& aModifiedVars) = 0;
+    SynchronizeResult(nsIXULTemplateResult* aResult) = 0;
 };
 
 #endif // nsXULTemplateBuilder_h__
