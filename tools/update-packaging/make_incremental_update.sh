@@ -10,6 +10,33 @@
 
 print_usage() {
   notice "Usage: $(basename $0) [OPTIONS] ARCHIVE FROMDIR TODIR"
+  notice ""
+  notice "The differences between FROMDIR and TODIR will be stored in ARCHIVE."
+  notice ""
+  notice "Options:"
+  notice "  -h  show this help text"
+  notice "  -f  clobber this file in the installation"
+  notice "      Must be a path to a file to clobber in the partial update."
+  notice ""
+}
+
+check_for_forced_update() {
+  force_list="$1"
+  forced_file_chk="$2"
+
+  ## 'false'... because this is bash. Oh yay!  
+  local do_force=1
+  local f
+
+  for f in $force_list; do
+    #echo comparing $forced_file_chk to $f
+    if [ "$forced_file_chk" = "$f" ]; then
+      ## "true" *giggle*
+      do_force=0
+      break
+    fi
+  done
+  return $do_force;
 }
 
 if [ $# = 0 ]; then
@@ -17,18 +44,24 @@ if [ $# = 0 ]; then
   exit 1
 fi
 
-if [ $1 = -h ]; then
-  print_usage
-  notice ""
-  notice "The differences between FROMDIR and TODIR will be stored in ARCHIVE."
-  notice ""
-  notice "Options:"
-  notice "  -h  show this help text"
-  notice ""
-  exit 1
-fi
+requested_forced_updates=''
+
+while getopts "hf:" flag
+do
+   case "$flag" in
+      h) print_usage; exit 0
+      ;;
+      f) requested_forced_updates="$requested_forced_updates $OPTARG"
+      ;;
+      ?) print_usage; exit 1
+      ;;
+   esac
+done
 
 # -----------------------------------------------------------------------------
+
+let arg_start=$OPTIND-1
+shift $arg_start
 
 archive="$1"
 olddir="$2"
@@ -50,6 +83,12 @@ num_oldfiles=${#oldfiles[*]}
 
 for ((i=0; $i<$num_oldfiles; i=$i+1)); do
   f=${oldfiles[$i]}
+
+  # This file is created by Talkback, so we can ignore it
+  if [ "$f" = "readme.txt" ]; then
+    continue 1
+  fi
+
   # If this file exists in the new directory as well, then check if it differs.
   if [ -f "$newdir/$f" ]; then
     if ! diff "$olddir/$f" "$newdir/$f" > /dev/null; then
@@ -64,6 +103,15 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       patchfile="$workdir/$f.patch.bz2"
       patchsize=$(get_file_size "$patchfile")
       fullsize=$(get_file_size "$workdir/$f")
+
+      if check_for_forced_update "$requested_forced_updates" "$f"; then
+        echo 1>&2 "  FORCING UPDATE for file '$f'..."
+        make_add_instruction "$f" >> $manifest
+        rm -f "$patchfile"
+        archivefiles="$archivefiles \"$f\""
+        continue 1
+      fi
+
       if [ $patchsize -lt $fullsize -a "$f" != "removed-files" ]; then
         make_patch_instruction "$f" >> $manifest
         mv -f "$patchfile" "$workdir/$f.patch"
