@@ -50,13 +50,7 @@ _PR_MD_INTERVAL_INIT()
 PRIntervalTime 
 _PR_MD_GET_INTERVAL()
 {
-#if defined(__MINGW32__)
-    return time();
-#elif defined(WIN16)
-    return clock();        /* milliseconds since application start */
-#else
     return timeGetTime();  /* milliseconds since system start */
-#endif
 }
 
 PRIntervalTime 
