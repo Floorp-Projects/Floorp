@@ -41,6 +41,20 @@
 
 #include <string.h>
 
+/**
+ * Private Method to register an exit routine.  This method
+ * used to allow you to setup a callback that will be called from 
+ * the NS_ShutdownXPCOM function after all services and 
+ * components have gone away. It was fatally flawed in that the component
+ * DLL could be released before the exit function was called; it is now a
+ * stub implementation that does nothing.
+ */
+XPCOM_API(nsresult)
+NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority);
+
+XPCOM_API(nsresult)
+NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine);
+
 static const XPCOMFunctions kFrozenFunctions = {
     XPCOM_GLUE_VERSION,
     sizeof(XPCOMFunctions),
@@ -52,8 +66,8 @@ static const XPCOMFunctions kFrozenFunctions = {
     &NS_GetMemoryManager_P,
     &NS_NewLocalFile_P,
     &NS_NewNativeLocalFile_P,
-    &NS_RegisterXPCOMExitRoutine_P,
-    &NS_UnregisterXPCOMExitRoutine_P,
+    &NS_RegisterXPCOMExitRoutine,
+    &NS_UnregisterXPCOMExitRoutine,
 
     // these functions were added post 1.4
     &NS_GetDebug_P,
@@ -302,18 +316,16 @@ NS_LogCOMPtrRelease(void *aCOMPtr, nsISupports* aObject)
  * Stubs for nsXPCOMPrivate.h
  */
 
-#undef NS_RegisterXPCOMExitRoutine
 EXPORT_XPCOM_API(nsresult)
 NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority)
 {
-  return NS_RegisterXPCOMExitRoutine_P(exitRoutine, priority);
+  return NS_OK;
 }
 
-#undef NS_UnregisterXPCOMExitRoutine
 EXPORT_XPCOM_API(nsresult)
 NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 {
-  return NS_UnregisterXPCOMExitRoutine_P(exitRoutine);
+  return NS_OK;
 }
 
 /*
