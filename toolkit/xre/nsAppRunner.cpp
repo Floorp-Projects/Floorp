@@ -1877,6 +1877,18 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   InstallUnixSignalHandlers(argv[0]);
 #endif
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+  // Reset GTK_MODULES, strip atk-bridge if exists
+  // Mozilla will load libatk-bridge.so later if necessary
+  const char* gtkModules = getenv("GTK_MODULES");
+  if (gtkModules) {
+    nsCString gtkModulesStr(gtkModules);
+    gtkModulesStr.ReplaceSubstring("atk-bridge", "");
+    char* newGtkModules = strdup(gtkModulesStr.get());
+    setenv("GTK_MODULES", newGtkModules, 1);
+  }
+#endif
+
   // Unbuffer stdout, needed for tinderbox tests.
   setbuf(stdout, 0);
 
