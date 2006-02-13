@@ -390,7 +390,8 @@ nsNode3Tearoff::CompareDocumentPosition(nsIDOMNode* aOther,
                     nodeType == nsIDOMNode::CDATA_SECTION_NODE ||
                     nodeType == nsIDOMNode::ENTITY_REFERENCE_NODE ||
                     nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
-                    nodeType == nsIDOMNode::COMMENT_NODE),
+                    nodeType == nsIDOMNode::COMMENT_NODE ||
+                    nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE),
                    "Invalid node type!");
     }
   }
