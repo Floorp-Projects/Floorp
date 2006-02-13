@@ -86,6 +86,7 @@
       -->
       <preferenceitem preftype="bool"    id="network.prefetch-next" name="enablePreFetching" />
       <preferenceitem preftype="int"     id="browser.cache.disk.capacity" name="cacheSizeField" />
+      <preferenceitem preftype="string"  id="browser.download.dir" name="downloadDir" />
   </preferenceset>
   
 
