@@ -91,15 +91,36 @@
 
                 <groupbox class='box-prefgroupitem' >
                     <caption label="&downloadMediaCaption.label;"/>
+
+                      <vbox class="box-prefpadding">
+
+	                    <checkbox id="dontAskForLaunch" tabindex="53"
+	                              label="&dontAskForLaunch.label;"
+	                              preference="browser.download.progressDnlgDialog.dontAskForLaunch" 
+	                              onclick="syncPref(this)" />
+
+
                     <hbox flex="1">
-                        <textbox onchange="syncPref(this)"  tabindex="51"
+
+
+                        <textbox onchange="syncPref(this)"  tabindex="54"
                                  flex="1" 
                                  style="margin:3px ! important;" 
                                  id="downloadDir"
                                  preference="browser.download.dir"
                                  />          
-                                           
+                                          
+
+      			          <button id="chooseFolderButton" tabindex="55"
+			                        class='box-prefgroupitem'
+			                        label="Set Folder"
+			                        oncommand="downloadChooseFolder();"/>
+
+ 
                     </hbox>		
+
+                      </vbox>
+
                 </groupbox>
 
 
