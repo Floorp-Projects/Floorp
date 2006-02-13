@@ -2154,7 +2154,9 @@ void nsImapProtocol::ProcessSelectedStateURL()
                   bMessageIdsAreUids, NULL, messageSize, PR_TRUE);
               }
             }
-            if (GetServerStateParser().LastCommandSuccessful())
+            if (GetServerStateParser().LastCommandSuccessful() 
+                && m_imapAction != nsIImapUrl::nsImapMsgPreview 
+                && m_imapAction != nsIImapUrl::nsImapMsgFetchPeek)
             {
               PRUint32 uid = atoi(messageIdString); 
               PRInt32 index;
