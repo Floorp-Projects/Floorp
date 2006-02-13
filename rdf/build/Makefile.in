@@ -68,9 +68,9 @@ CPPSRCS		= \
 # XXX Note dependencies on implementation headers for factory functions
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)rdfbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)rdfdatasource_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
+		../base/src/$(LIB_PREFIX)rdfbase_s.$(LIB_SUFFIX) \
+		../datasource/src/$(LIB_PREFIX)rdfdatasource_s.$(LIB_SUFFIX) \
+		../util/src/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

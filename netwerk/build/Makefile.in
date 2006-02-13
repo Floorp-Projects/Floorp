@@ -75,16 +75,16 @@ CPPSRCS		= nsNetModule.cpp
 EXPORTS		= nsNetCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)neckobase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)neckodns_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)neckosocket_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkconv_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkcnvts_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
+		../base/src/$(LIB_PREFIX)neckobase_s.$(LIB_SUFFIX) \
+		../dns/src/$(LIB_PREFIX)neckodns_s.$(LIB_SUFFIX) \
+		../socket/base/$(LIB_PREFIX)neckosocket_s.$(LIB_SUFFIX) \
+		../streamconv/src/$(LIB_PREFIX)nkconv_s.$(LIB_SUFFIX) \
+		../streamconv/converters/$(LIB_PREFIX)nkcnvts_s.$(LIB_SUFFIX) \
+		../mime/src/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
+		../cache/src/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
+		../protocol/about/src/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
 		$(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
-			$(DIST)/lib/$(LIB_PREFIX)nk${d}_s.$(LIB_SUFFIX)) \
+			../protocol/$(d)/src/$(LIB_PREFIX)nk$(d)_s.$(LIB_SUFFIX)) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -97,12 +97,12 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../cache/src \
 		-I$(srcdir)/../protocol/about/src \
 		$(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
-			-I$(srcdir)/../protocol/${d}/src) \
+			-I$(srcdir)/../protocol/$(d)/src) \
 		$(NULL)
 
 ifdef NECKO_COOKIES
 SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/$(LIB_PREFIX)neckocookie_s.$(LIB_SUFFIX) \
+		../cookie/src/$(LIB_PREFIX)neckocookie_s.$(LIB_SUFFIX) \
                 $(NULL)
 LOCAL_INCLUDES	+= -I$(srcdir)/../cookie/src
 endif
