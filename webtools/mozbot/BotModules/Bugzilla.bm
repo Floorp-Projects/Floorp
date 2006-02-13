@@ -700,6 +700,7 @@ sub ignoringCommentsTo {
     my $self = shift;
     my ($who) = @_;
     foreach (@{$self->{'ignoreCommentsTo'}}) {
+        next unless $_; # Ignore blanks, happens when the array is empty (?)
         return 1 if $who =~ m/^(?:.*[]\s,.;:\\\/=?!()<>{}[-])?\Q$_\E(?:[]\s,.;:\\\/=?!()<>{}[-].*)?$/is;
     }
     return 0;
