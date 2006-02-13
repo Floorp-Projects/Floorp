@@ -451,7 +451,7 @@ Break(const char *aMsg)
 
    asm("int $3");
 #elif defined(XP_BEOS)
-   DEBUGGER(aMgr);
+   DEBUGGER(aMsg);
 #elif defined(__GNUC__) && (defined(__i386) || defined(__x86_64__))
    asm("int $3");
 #elif defined(__APPLE__) && defined(TARGET_CARBON)
