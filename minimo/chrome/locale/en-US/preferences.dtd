@@ -24,6 +24,8 @@
 <!ENTITY proxyPortCaption.label      "Port">
 <!ENTITY proxyURL.label              "URL">
 
+<!ENTITY downloadMediaCaption.label  "Download Media">
+
 <!-- Home pane --> 
 
 <!ENTITY homeCaption.label           "Home Page">
