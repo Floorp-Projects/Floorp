@@ -156,6 +156,36 @@ function sanitizeBookmarks() {
     document.getElementById("bookmarksSanitize").disabled=true;
 }
 
+
+function downloadChooseFolder() {
+
+     const nsIFilePicker = Components.interfaces.nsIFilePicker;
+     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+    // var bundlePreferences = document.getElementById("bundlePreferences");
+    // var title = bundlePreferences.getString("chooseDownloadFolderTitle");
+     fp.init(window, "Set Download Folder", nsIFilePicker.modeGetFolder);
+
+     const nsILocalFile = Components.interfaces.nsILocalFile;
+
+	//    var customDirPref = document.getElementById("browser.download.dir");
+	//    if (customDirPref.value)
+	//     fp.displayDirectory = customDirPref.value;
+
+     fp.appendFilters(nsIFilePicker.filterAll);
+     var returnFilePickerValue=fp.show();
+
+     alert(returnFilePickerValue);
+
+     if (returnFilePickerValue == nsIFilePicker.returnOK) {
+		//      var file = fp.file.QueryInterface(nsILocalFile);
+		//     var currentDirPref = document.getElementById("browser.download.dir");
+		//     customDirPref.value = currentDirPref.value = file;
+		//       var folderListPref = document.getElementById("browser.download.folderList");
+		//       folderListPref.value = this._fileToIndex(file);
+     }
+
+}
+
 /*
  * New Mini Pref Implementation 
  * ----------------------------
