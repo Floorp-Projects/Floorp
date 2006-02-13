@@ -499,6 +499,15 @@ nsDOMAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
 
   PRUint16 mask = 0;
 
+  PRBool sameNode = PR_FALSE;
+  IsSameNode(aOther, &sameNode);
+  if (sameNode) {
+    // If the two nodes being compared are the same node,
+    // then no flags are set on the return.
+    *aReturn = 0;
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDOMElement> el;
   GetOwnerElement(getter_AddRefs(el));
   if (!el) {
@@ -522,27 +531,36 @@ nsDOMAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
     nsCOMPtr<nsIDOMAttr> otherAttr(do_QueryInterface(aOther));
     nsCOMPtr<nsIDOMElement> otherEl;
     otherAttr->GetOwnerElement(getter_AddRefs(otherEl));
-    if (el == otherEl) {
-      PRBool sameNode = PR_FALSE;
-      IsSameNode(aOther, &sameNode);
-      if (!sameNode) {
-        // If neither of the two determining nodes is a child node and
-        // nodeType is the same for both determining nodes, then an
-        // implementation-dependent order between the determining nodes
-        // is returned.
-        mask |= nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
-      }
-
-      // If the two nodes being compared are the same node,
-      // then no flags are set on the return.
+    if (!otherEl) {
+      // This is as if they were comparing to us, and our element was null.
+      // See "if (!el)" above.
+      mask |= (nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
+               nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+    }
+    else if (el == otherEl) {
+      // If neither of the two determining nodes is a child node and
+      // nodeType is the same for both determining nodes, then an
+      // implementation-dependent order between the determining nodes
+      // is returned.
+      mask |= nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
+    }
+    else
+    {
+      // For attrs owned by elements A and B, if A != B, the right value is
+      // comparing the tree position of A and B.
+      nsCOMPtr<nsIDOM3Node> elNode3(do_QueryInterface(el));
+      PRUint16 parentMask;
+      elNode3->CompareDocumentPosition(otherEl, &parentMask);
+      // Though elements can contain each other, attributes can't.
+      parentMask &= ~(nsIDOM3Node::DOCUMENT_POSITION_CONTAINS |
+                      nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY);
+      mask |= parentMask;
     }
 
     *aReturn = mask;
 
     return NS_OK;
   }
-
-  PRBool sameNode = PR_FALSE;
 
   if (nodeType == nsIDOMNode::TEXT_NODE ||
       nodeType == nsIDOMNode::CDATA_SECTION_NODE ||
