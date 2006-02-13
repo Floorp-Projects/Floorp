@@ -882,8 +882,8 @@ interface nsINavHistoryQueryOptions : nsISupports
 interface nsINavHistoryService : nsISupports
 {
   /**
-   * This transition type means the user follwed a link and got a new toplevel
-   * window. It is not true when 
+   * This transition type means the user followed a link and got a new toplevel
+   * window.
    */
   const PRUint32 TRANSITION_LINK = 1;
 
@@ -906,6 +906,16 @@ interface nsINavHistoryService : nsISupports
    * clicked something to get there.
    */
   const PRUint32 TRANSITION_EMBED = 4;
+
+  /**
+   * Set when the transition was a permanent redirect.
+   */
+  const PRUint32 TRANSITION_REDIRECT_PERMANENT = 5;
+
+  /**
+   * Set when the transition was a temporary redirect.
+   */
+  const PRUint32 TRANSITION_REDIRECT_TEMPORARY = 6;
 
   /**
    * True if there is any history. This can be used in UI to determine whether
@@ -965,20 +975,28 @@ interface nsINavHistoryService : nsISupports
    * be commonly used other than for backup/restore type operations. If the URI
    * does not have an entry in the history database already, one will be created
    * with no visits, no title, hidden, not typed.  Adding a visit will
-   * automatically increment the visit count for the visited page.
+   * automatically increment the visit count for the visited page and will unhide
+   * it and/or mark it typed according to the transition type.
    *
    * @param aURI             Visited page
    * @param aTime            Time page was visited (microseconds)
-   * @param aReferrer        The ID of the visit that generated this one. Use 0
+   * @param aReferringVisit  The ID of the visit that generated this one. Use 0
    *                         for no referrer. This must be a valid visit already
    *                         in the DB or 0.
    * @param aTranstitionType Type of transition: one of TRANSITION_* above
-   * @param aSession         The session ID that this page belongs to. Use 0 for
+   * @param aIsRedirect      True if the given visit redirects to somewhere else.
+   *                         (ie you will create an visit out of here that is a
+   *                         redirect transition). This causes this page to be
+   *                         hidden in normal history views (unless it has been
+   *                         unhidden by visiting it with a non-redirect).
+   * @param aSessionID       The session ID that this page belongs to. Use 0 for
    *                         no session.
-   * @returns The ID of the created visit
+   * @returns The ID of the created visit. This will be 0 if the URI is not
+   *          valid for adding to history (canAddURI = false).
    */
-  PRInt64 addVisit(in nsIURI aURI, in PRTime aTime, in PRInt64 aReferrer,
-                   in PRInt32 aTransitionType, in PRInt64 aSession);
+  PRInt64 addVisit(in nsIURI aURI, in PRTime aTime, in PRInt64 aReferringVisit,
+                   in PRInt32 aTransitionType, in boolean aIsRedirect,
+                   in PRInt64 aSessionID);
 
   /**
    * This returns a new query object that you can pass to executeQuer[y/ies].
