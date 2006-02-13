@@ -22,7 +22,7 @@
 #
 
 #
-# $Id: genstats.cgi,v 1.15 2005/12/19 00:47:50 timeless%mozdev.org Exp $ 
+# $Id: genstats.cgi,v 1.16 2006/02/13 21:05:57 timeless%mozdev.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -110,8 +110,8 @@ if (!param()) {
 	print "months";
 	print p();
 
-	print "mozilla.org is considered part of Netscape? ";
-	print radio_group(-name=>"mozillaOrgAsNscp",
+	print "Mozilla is considered part of Netscape? ";
+	print radio_group(-name=>"mozillaAsNscp",
 			  "-values"=>["yes","no"],
 			  -default=>"no");
 	print p();
@@ -185,12 +185,12 @@ my $q;
 # set up the appropriate SQL to describe what an "Netscape" checkin looks 
 # like, depending on whether mozilla.org is considered Netscape
 #
-if ($F::mozillaOrgAsNscp eq "yes") {
-	$NetscapeSQL = ' regexp "[@%]netscape\\.com|[@%]mozilla\\.org"';
+IF ($f::mozillaOrgAsNscp eq "yes") {
+	$NetscapeSQL = ' regexp "[@%](netscape\\.com|mozilla\\.(org|com))"';
 } elsif ($F::mozillaOrgAsNscp eq "no" ) {
 	$NetscapeSQL = ' regexp "[@%]netscape\\.com"';
 } else {
-	die ("Internal error: mozillaOrgAsNscp not set");
+	die ("Internal error: mozillaAsNscp not set");
 }
 
 print header();
@@ -261,7 +261,7 @@ print "Though we don't generally think in these terms (a contribution is" .
 
 print p();
 print "These statistics were generated using the assumption that " .
-		" contributions from mozilla.org should " .
+		" Mozilla sponsored contributions should " .
 	        b( $F::mozillaOrgAsNscp eq "yes" ? "" : "not ") .  
 	        "be considered Netscape contributions.";
 

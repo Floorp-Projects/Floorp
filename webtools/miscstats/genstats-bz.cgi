@@ -22,7 +22,7 @@
 # 
 
 #
-# $Id: genstats-bz.cgi,v 1.2 2001/10/02 22:56:50 terry%mozilla.org Exp $ 
+# $Id: genstats-bz.cgi,v 1.3 2006/02/13 21:05:57 timeless%mozdev.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -37,7 +37,7 @@ use Date::Format;
 
 @::STATINFO = (
 
-	["Useful browser 5.0 bugs (includes NEW; excludes WORKSFORME)",
+	["Useful Gecko related bugs (includes NEW; excludes WORKSFORME)",
 					 	# statistic title
 	 "bugs",				# database
 	 "bugs.creation_ts",			# timestamp field
@@ -45,7 +45,8 @@ use Date::Format;
 	 "select bugs.bug_id from profiles,bugs where " .
 		"profiles.userid=bugs.reporter and resolution not in " .
 		"('DUPLICATE','INVALID','WORKSFORME') and product in " .
-		"('BROWSER','MailNews','NSPR','CCK')"	
+                "('Core','Mozilla Application Suite','Toolkit','Firefox'," .
+                 "'Thunderbird',','Browser','MailNews','NSPR','NSS','CCK')"
 	],
 
 	["Useful bugs (includes NEW; excludes WORKSFORME)",
@@ -58,7 +59,7 @@ use Date::Format;
 		"('DUPLICATE','INVALID','WORKSFORME')"
 	],
 
-	["Useful browser patches submitted via Bugzilla" 
+	["Useful Gecko related patches submitted via Bugzilla" 
 	                 . " (includes NEW; excludes WORKSFORME)",
 						# statistic title
 	 "bugs",				# database
@@ -68,7 +69,8 @@ use Date::Format;
 		" and profiles.userid=attachments.submitter_id and " .
 		"bugs.bug_id=attachments.bug_id and resolution not in " .
 		"('DUPLICATE','INVALID','WORKSFORME') and product in " .
-		"('BROWSER','MailNews','NSPR','CCK')"	
+		"('Core','Mozilla Application Suite','Toolkit','Firefox'," .
+                 "'Thunderbird',','Browser','MailNews','NSPR','NSS','CCK')"	
 	]
 
 );
@@ -91,8 +93,8 @@ if (!param()) {
 	print "months";
 	print p();
 
-	print "mozilla.org is considered part of Netscape? ";
-	print radio_group(-name=>"mozillaOrgAsNscp",
+	print "Mozilla is considered part of Netscape? ";
+	print radio_group(-name=>"mozillaAsNscp",
 			  "-values"=>["yes","no"],
 			  -default=>"no");
 	print p();
@@ -166,12 +168,12 @@ my $q;
 # set up the appropriate SQL to describe what an "Netscape" checkin looks 
 # like, depending on whether mozilla.org is considered Netscape
 #
-if ($F::mozillaOrgAsNscp eq "yes") {
-	$NetscapeSQL = ' regexp "[@%]netscape\\.com|[@%]mozilla\\.org"';
-} elsif ($F::mozillaOrgAsNscp eq "no" ) {
-	$NetscapeSQL = ' regexp "[@%]netscape\\.com"';
+if ($F::mozillaAsNscp eq "yes") {
+	$NetscapeSQL = ' regexp "[@%](formerly-|)(netscape\\.com|mozilla\\.(com|org))"';
+} elsif ($F::mozillaAsNscp eq "no" ) {
+	$NetscapeSQL = ' regexp "[@%](formerly-|)netscape\\.com"';
 } else {
-	die ("Internal error: mozillaOrgAsNscp not set");
+	die ("Internal error: mozillaAsNscp not set");
 }
 
 print header();
@@ -242,8 +244,8 @@ print "Though we don't generally think in these terms (a contribution is" .
 
 print p();
 print "These statistics were generated using the assumption that " .
-		" contributions from mozilla.org should " .
-	        b( $F::mozillaOrgAsNscp eq "yes" ? "" : "not ") .  
+		"Mozilla sponsored contributions should " .
+	        b( $F::mozillaAsNscp eq "yes" ? "" : "not ") .  
 	        "be considered Netscape contributions.";
 
 print p();
