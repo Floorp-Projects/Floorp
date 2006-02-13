@@ -86,7 +86,7 @@ function UIdependencyCheck() {
 	document.getElementById("networkProxyHTTP_Port").disabled=false;
   }
 
-  if(!document.getElementById("useDownloadDir").checked) {
+  if(!document.getElementById("dontAskForLaunch").checked) {
 	document.getElementById("downloadDir").disabled=true;
   } else {
 	document.getElementById("downloadDir").disabled=false;
