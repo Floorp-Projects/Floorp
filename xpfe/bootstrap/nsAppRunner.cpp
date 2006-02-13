@@ -1566,6 +1566,18 @@ int main(int argc, char* argv[])
   InstallUnixSignalHandlers(argv[0]);
 #endif
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+  // Reset GTK_MODULES, strip atk-bridge if exists
+  // Mozilla will load libatk-bridge.so later if necessary
+  const char* gtkModules = getenv("GTK_MODULES");
+  if (gtkModules) {
+    nsCString gtkModulesStr(gtkModules);
+    gtkModulesStr.ReplaceSubstring("atk-bridge", "");
+    char* newGtkModules = strdup(gtkModulesStr.get());
+    setenv("GTK_MODULES", newGtkModules, 1);
+  }
+#endif
+
 #if defined(XP_OS2)
   __pargc = &argc;
   __argv = argv;

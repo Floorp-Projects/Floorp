@@ -161,12 +161,6 @@ moz_run_program()
 		fi
 	fi
 	##
-	## Reset GTK_MODULES, strip atk-bridge if exists
-	## Mozilla will load libatk-bridge.so later if necessary
-	##
-	GTK_MODULES=`echo $GTK_MODULES | sed -e 's/atk-bridge//g'`
-	export GTK_MODULES
-	##
 	## Run the program
 	##
 	"$prog" ${1+"$@"}
