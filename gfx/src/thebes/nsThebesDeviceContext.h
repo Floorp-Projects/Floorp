@@ -149,7 +149,7 @@ private:
     float mHeightFloat;
     PRInt32 mWidth;
     PRInt32 mHeight;
-    static PRInt32 mDpi;
+    PRInt32 mDpi;
 
     PRBool mPrinter;
 

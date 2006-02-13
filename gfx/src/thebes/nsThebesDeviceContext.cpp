@@ -70,6 +70,7 @@
 #ifdef MOZ_ENABLE_GTK2
 #include "nsSystemFontsGTK2.h"
 #include "gfxPDFSurface.h"
+#include "gfxPSSurface.h"
 static nsSystemFontsGTK2 *gSystemFonts = nsnull;
 #elif XP_WIN
 #include <cairo-win32.h>
@@ -98,8 +99,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsThebesDeviceContext, DeviceContextImpl)
 
-PRInt32 nsThebesDeviceContext::mDpi;
-
 nsThebesDeviceContext::nsThebesDeviceContext()
 {
 #ifdef PR_LOGGING
@@ -114,6 +113,7 @@ nsThebesDeviceContext::nsThebesDeviceContext()
     mCPixelScale = 1.0f;
     mZoom = 1.0f;
     mDepth = 0;
+    mDpi = -1;
 
     mWidget = nsnull;
     mPrinter = PR_FALSE;
@@ -162,6 +162,14 @@ nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
         mDpi = 96;
     }
 
+    if (mPrinter) {
+        // cairo printing doesn't really have the
+        // notion of DPI so we have to use 72...
+        // XXX is this an issue? we force everything else to be 96+
+        mDpi = 72;
+        do_round = PR_FALSE;
+    }
+
 #elif defined(XP_WIN)
     // XXX we should really look at the widget for printing and such, but this widget is currently always null...
     HDC dc = GetHDC() ? GetHDC() : GetDC((HWND)nsnull);
@@ -193,34 +201,28 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
 {
     mWidget = aWidget;
 
-    static int initialized = 0;
     PRInt32 prefVal = -1;
-    if (!initialized) {
-        initialized = 1;
 
-        // Set prefVal the value of the preference
-        // "browser.display.screen_resolution"
-        // or -1 if we can't get it.
-        // If it's negative, we pretend it's not set.
-        // If it's 0, it means force use of the operating system's logical
-        // resolution.
-        // If it's positive, we use it as the logical resolution
-        nsresult res;
+    // Set prefVal the value of the preference
+    // "browser.display.screen_resolution"
+    // or -1 if we can't get it.
+    // If it's negative, we pretend it's not set.
+    // If it's 0, it means force use of the operating system's logical
+    // resolution.
+    // If it's positive, we use it as the logical resolution
+    nsresult res;
 
-        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
-        if (NS_SUCCEEDED(res) && prefs) {
-            res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal);
-            if (NS_FAILED(res)) {
-                prefVal = -1;
-            }
-            prefs->RegisterCallback("browser.display.screen_resolution", prefChanged,
-                                    (void *)this);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
+    if (NS_SUCCEEDED(res) && prefs) {
+        res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal);
+        if (NS_FAILED(res)) {
+            prefVal = -1;
         }
-
-        SetDPI(prefVal);
-    } else {
-        SetDPI(mDpi);
+        prefs->RegisterCallback("browser.display.screen_resolution", prefChanged,
+                                (void *)this);
     }
+
+    SetDPI(prefVal);
 
 #ifdef MOZ_ENABLE_GTK2
     if (getenv ("MOZ_X_SYNC")) {
@@ -231,8 +233,13 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
 
     // XXX
     if (mPrinter) {
-        mWidth = NS_INCHES_TO_TWIPS(8.5) * mDevUnitsToAppUnits;
-        mHeight = NS_INCHES_TO_TWIPS(11) * mDevUnitsToAppUnits;
+        // XXX this should use a gfxAPrintingSurface or somesuch cast.
+        // currently PDF and PS are identical here
+        gfxSize size = ((gfxPSSurface*)(mPrintingSurface.get()))->GetSize();
+        mWidth = NSFloatPointsToTwips(size.width);
+        mHeight = NSFloatPointsToTwips(size.height);
+        printf("%f %f\n", size.width, size.height);
+        printf("%d %d\n", (PRInt32)mWidth, (PRInt32)mHeight);
     }
     // XXX
     mDepth = 24;
@@ -478,8 +485,13 @@ nsThebesDeviceContext::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHei
 {
     if (mPrinter) {
         // we have a printer device
+#ifdef MOZ_ENABLE_GTK2
+        aWidth = mWidth;
+        aHeight = mHeight;
+#else
         aWidth = NSToIntRound(mWidth * mDevUnitsToAppUnits);
         aHeight = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+#endif
     } else {
         nsRect area;
         ComputeFullAreaUsingScreen(&area);
@@ -497,8 +509,13 @@ nsThebesDeviceContext::GetRect(nsRect &aRect)
         // we have a printer device
         aRect.x = 0;
         aRect.y = 0;
+#ifdef MOZ_ENABLE_GTK2
+        aRect.width = NSToIntRound(mWidth);
+        aRect.height = NSToIntRound(mHeight);
+#else
         aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
         aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+#endif
     } else
         ComputeFullAreaUsingScreen ( &aRect );
 
@@ -512,8 +529,13 @@ nsThebesDeviceContext::GetClientRect(nsRect &aRect)
         // we have a printer device
         aRect.x = 0;
         aRect.y = 0;
+#ifdef MOZ_ENABLE_GTK2
+        aRect.width = NSToIntRound(mWidth);
+        aRect.height = NSToIntRound(mHeight);
+#else
         aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
         aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+#endif
     }
     else
         ComputeClientRectUsingScreen(&aRect);
