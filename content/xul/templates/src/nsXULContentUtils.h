@@ -123,10 +123,7 @@ public:
     }
 
     static nsICollation*
-    GetCollation()
-    {
-        return gCollation;
-    }
+    GetCollation();
 
 #define XUL_RESOURCE(ident, uri) static nsIRDFResource* ident
 #define XUL_LITERAL(ident, val)  static nsIRDFLiteral*  ident
