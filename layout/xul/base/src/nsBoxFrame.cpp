@@ -1708,6 +1708,7 @@ nsBoxFrame::GetContentOf(nsIContent** aContent)
     return NS_OK;
 }
 
+#ifdef DEBUG_LAYOUT
 void
 nsBoxFrame::DrawLine(nsIRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2)
 {
@@ -1764,7 +1765,6 @@ nsBoxFrame::DrawSpacer(nsPresContext* aPresContext, nsIRenderingContext& aRender
         //DrawKnob(aPresContext, aRenderingContext, x + size - spacerSize, y, spacerSize);
 }
 
-#ifdef DEBUG_LAYOUT
 void
 nsBoxFrame::GetDebugBorder(nsMargin& aInset)
 {

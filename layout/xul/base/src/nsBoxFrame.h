@@ -274,10 +274,10 @@ private:
 #ifdef DEBUG_LAYOUT
     void GetValue(nsPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
     void GetValue(nsPresContext* aPresContext, PRInt32 a, PRInt32 b, char* value);
-#endif
     void DrawSpacer(nsPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
     void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
+#endif
     void UpdateMouseThrough();
 
     void CacheAttributes();
