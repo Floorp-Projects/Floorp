@@ -1632,7 +1632,8 @@ function vmgr_dewdropinn (sourceView, targetView, direction)
     var dest = new Object();
     dest.windowId = parsedTarget.windowId;
     dest.containerId = destContainer.getAttribute ("id");
-    dest.before = destBefore ? destBefore.getAttribute("id") : null;
+    if (destBefore)
+        dest.before = destBefore.getAttribute("id");
     this.moveView(dest, sourceView.viewId);
     this.endMultiMove();
     
