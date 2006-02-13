@@ -561,27 +561,29 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
   // Get more information about the key equivalent. Start by
   // finding the key node we need.
   NSString* keyEquiv = [@"" retain];
-  unsigned int macKeyModifiers;
-  nsCOMPtr<nsIDOMElement> keyElement;
-  domdoc->GetElementById(key, getter_AddRefs(keyElement));
-  if (keyElement) {
-    nsCOMPtr<nsIContent> keyContent (do_QueryInterface(keyElement));
-    // first grab the key equivalent character
-    nsAutoString keyChar(NS_LITERAL_STRING(" "));
-    keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
-    if (!keyChar.EqualsLiteral(" ")) {
-      keyEquiv = (NSString*)::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)keyChar.get(),
-                                                           keyChar.Length());
-      [keyEquiv autorelease];
-      keyEquiv = [[keyEquiv lowercaseString] retain];
+  unsigned int macKeyModifiers = 0;
+  if (!key.IsEmpty()) {
+    nsCOMPtr<nsIDOMElement> keyElement;
+    domdoc->GetElementById(key, getter_AddRefs(keyElement));
+    if (keyElement) {
+      nsCOMPtr<nsIContent> keyContent (do_QueryInterface(keyElement));
+      // first grab the key equivalent character
+      nsAutoString keyChar(NS_LITERAL_STRING(" "));
+      keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
+      if (!keyChar.EqualsLiteral(" ")) {
+        keyEquiv = (NSString*)::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)keyChar.get(),
+                                                             keyChar.Length());
+        [keyEquiv autorelease];
+        keyEquiv = [[keyEquiv lowercaseString] retain];
+      }
+      // now grab the key equivalent modifiers
+      nsAutoString modifiersStr;
+      keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
+      char* str = ToNewCString(modifiersStr);
+      PRUint8 geckoModifiers = MenuHelpersX::GeckoModifiersForNodeAttribute(str);
+      nsMemory::Free(str);
+      macKeyModifiers = MenuHelpersX::MacModifiersForGeckoModifiers(geckoModifiers);
     }
-    // now grab the key equivalent modifiers
-    nsAutoString modifiersStr;
-    keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
-    char* str = ToNewCString(modifiersStr);
-    PRUint8 geckoModifiers = MenuHelpersX::GeckoModifiersForNodeAttribute(str);
-    nsMemory::Free(str);
-    macKeyModifiers = MenuHelpersX::MacModifiersForGeckoModifiers(geckoModifiers);
   }
 
   // put together the actual NSMenuItem
