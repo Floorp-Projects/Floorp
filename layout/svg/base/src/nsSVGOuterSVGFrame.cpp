@@ -75,6 +75,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
 #include "nsDisplayList.h"
+#include "nsSVGUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // VMRectInvalidator: helper class for invalidating rects on the viewmanager.
@@ -246,7 +247,6 @@ public:
   NS_IMETHOD NotifyViewportChange();
   
   // nsISVGContainerFrame interface:
-  nsISVGOuterSVGFrame*GetOuterSVGFrame();
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
   already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
   
@@ -350,6 +350,9 @@ nsresult nsSVGOuterSVGFrame::Init()
 
   AddAsWidthHeightObserver();
   SuspendRedraw();
+
+  AddStateBits(NS_STATE_IS_OUTER_SVG);
+
   return NS_OK;
 }
 
@@ -654,10 +657,8 @@ nsSVGOuterSVGFrame::RemoveFrame(nsIAtom*        aListName,
 
   PRBool result = mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
-  NS_ASSERTION(outerSVGFrame, "no outer svg frame");
-  if (dirty_region && outerSVGFrame)
-    outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
+  if (dirty_region)
+    InvalidateRegion(dirty_region, PR_TRUE);
 
   NS_ASSERTION(result, "didn't find frame to delete");
   return result ? NS_OK : NS_ERROR_FAILURE;
@@ -1019,12 +1020,6 @@ nsSVGOuterSVGFrame::NotifyViewportChange()
 
 //----------------------------------------------------------------------
 // nsISVGContainerFrame methods:
-
-nsISVGOuterSVGFrame *
-nsSVGOuterSVGFrame::GetOuterSVGFrame()
-{
-  return this;
-}
 
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGOuterSVGFrame::GetCanvasTM()

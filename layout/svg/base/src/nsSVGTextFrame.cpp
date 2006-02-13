@@ -165,7 +165,6 @@ public:
   }
   
   // nsISVGContainerFrame interface:
-  nsISVGOuterSVGFrame *GetOuterSVGFrame();
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
   already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
   
@@ -430,7 +429,7 @@ nsSVGTextFrame::RemoveFrame(nsIAtom*        aListName,
   
   PRBool result = mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
 
   if (SVGFrame && outerSVGFrame) {
@@ -463,7 +462,7 @@ nsSVGTextFrame::WillModifySVGObservable(nsISVGValue* observable,
   // need to handle filters because we might be the topmost filtered frame and
   // the filter region could be changing.
   if (filter && mFilterRegion) {
-    nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
     if (!outerSVGFrame)
       return NS_ERROR_FAILURE;
 
@@ -489,7 +488,7 @@ nsSVGTextFrame::DidModifySVGObservable (nsISVGValue* observable,
       mFilterRegion = nsnull;
     }
 
-    nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
     if (!outerSVGFrame)
       return NS_ERROR_FAILURE;
     
@@ -576,7 +575,7 @@ nsSVGTextFrame::PaintSVG(nsISVGRendererCanvas* canvas,
     }
   }
 
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
 
   /* check for a clip path */
 
@@ -744,7 +743,7 @@ nsSVGTextFrame::InitialUpdate()
   }
 
 #ifdef DEBUG
-  nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return NS_ERROR_FAILURE;
@@ -872,21 +871,6 @@ nsSVGTextFrame::GetBBox(nsIDOMSVGRect **_retval)
 
 //----------------------------------------------------------------------
 // nsISVGContainerFrame methods:
-
-nsISVGOuterSVGFrame *
-nsSVGTextFrame::GetOuterSVGFrame()
-{
-  NS_ASSERTION(mParent, "null parent");
-  
-  nsISVGContainerFrame *containerFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
-  if (!containerFrame) {
-    NS_ERROR("invalid container");
-    return nsnull;
-  }
-
-  return containerFrame->GetOuterSVGFrame();  
-}
 
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGTextFrame::GetCanvasTM()

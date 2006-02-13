@@ -128,7 +128,6 @@ public:
   NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
   
   // nsISVGContainerFrame interface:
-  nsISVGOuterSVGFrame* GetOuterSVGFrame();
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
   already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
   NS_IMETHOD GetBBox(nsIDOMSVGRect **aRect);
@@ -284,19 +283,6 @@ nsSVGPatternFrame::IsFrameOfType(PRUint32 aFlags) const
 
 //----------------------------------------------------------------------
 // nsISVGContainerFrame interface:
-nsISVGOuterSVGFrame*
-nsSVGPatternFrame::GetOuterSVGFrame() {
-  NS_ASSERTION(mParent, "null parent");
-
-  nsISVGContainerFrame *container;
-  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame),
-                          (void **)&container);
-  if (!container) {
-    NS_ERROR("invalid container");
-    return nsnull;
-  }
-  return container->GetOuterSVGFrame();
-}
 
 // If our GetCanvasTM is getting called, we
 // need to return *our current* transformation
@@ -487,7 +473,7 @@ nsSVGPatternFrame::PaintPattern(nsISVGRendererCanvas* canvas,
   mBBox->GetY(&y);
   mBBox->SetX(0.0f);
   mBBox->SetY(0.0f);
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     return NS_ERROR_FAILURE;
   }

@@ -115,7 +115,7 @@ nsSVGGFrame::PaintSVG(nsISVGRendererCanvas* canvas,
     }
   }
 
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
 
   /* check for a clip path */
 
@@ -329,7 +329,7 @@ nsSVGGFrame::WillModifySVGObservable(nsISVGValue* observable,
   // need to handle filters because we might be the topmost filtered frame and
   // the filter region could be changing.
   if (filter && mFilterRegion) {
-    nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
     if (!outerSVGFrame)
       return NS_ERROR_FAILURE;
 
@@ -356,7 +356,7 @@ nsSVGGFrame::DidModifySVGObservable(nsISVGValue* observable,
       mFilterRegion = nsnull;
     }
 
-    nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
     if (!outerSVGFrame)
       return NS_ERROR_FAILURE;
 

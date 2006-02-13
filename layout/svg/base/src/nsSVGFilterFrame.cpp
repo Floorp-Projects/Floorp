@@ -384,7 +384,7 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
 
   // paint the target geometry
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   nsCOMPtr<nsISVGRenderer> renderer;
   nsCOMPtr<nsISVGRendererSurface> surface;
   outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
@@ -566,7 +566,7 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget,
   fprintf(stderr, "xform bound: %f %f  %f %f\n", xmin, ymin, xmax, ymax);
 #endif
 
-  nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   nsCOMPtr<nsISVGRenderer> renderer;
   outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
   renderer->CreateRectRegion(xmin, ymin, xmax - xmin, ymax - ymin, aRegion);
