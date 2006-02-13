@@ -336,9 +336,9 @@ pref("browser.chrome.toolbar_tips",         true);
 pref("browser.chrome.toolbar_style",        2);
 
 pref("browser.xul.error_pages.enabled", true);
-pref("mail.attachment.store.version", 0);
 
 // Attachment download manager settings
+pref("mail.attachment.store.version", 0);
 pref("browser.download.useDownloadDir", false);
 pref("browser.download.folderList", 0);
 pref("browser.download.manager.showAlertOnComplete", false);
@@ -346,10 +346,10 @@ pref("browser.download.manager.showAlertInterval", 2000);
 pref("browser.download.manager.retention", 1);
 pref("browser.download.manager.showWhenStarting", true);
 pref("browser.download.manager.useWindow", true);
-pref("browser.download.manager.closeWhenDone", false);
-pref("browser.download.manager.openDelay", 0);
+pref("browser.download.manager.closeWhenDone", true);
+pref("browser.download.manager.openDelay", 100);
 pref("browser.download.manager.focusWhenStarting", false);
-pref("browser.download.manager.flashCount", 2);
+pref("browser.download.manager.flashCount", 0);
 
 // various default search settings
 pref("browser.search.defaulturl", "chrome://navigator-region/locale/region.properties");
