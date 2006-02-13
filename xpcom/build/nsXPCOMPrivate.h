@@ -39,12 +39,6 @@
 #ifndef nsXPComPrivate_h__
 #define nsXPComPrivate_h__
 
-// Map frozen functions to private symbol names if not using strict API.
-#ifdef MOZILLA_INTERNAL_API
-# define NS_RegisterXPCOMExitRoutine        NS_RegisterXPCOMExitRoutine_P
-# define NS_UnregisterXPCOMExitRoutine      NS_UnregisterXPCOMExitRoutine_P
-#endif
-
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsStringAPI.h"
@@ -64,36 +58,6 @@ class nsIComponentLoader;
  * modules.
  */
 #define NS_XPCOM_SHUTDOWN_LOADERS_OBSERVER_ID "xpcom-shutdown-loaders"
-
-/**
- * Private Method to register an exit routine.  This method
- * allows you to setup a callback that will be called from 
- * the NS_ShutdownXPCOM function after all services and 
- * components have gone away.
- *
- * This API is for the exclusive use of the xpcom glue library.
- * 
- * Note that these APIs are NOT threadsafe and must be called on the
- * main thread.
- * 
- * @status FROZEN
- * @param exitRoutine pointer to user defined callback function
- *                    of type XPCOMExitRoutine. 
- * @param priority    higher priorities are called before lower  
- *                    priorities.
- *
- * @return NS_OK for success;
- *         other error codes indicate a failure.
- *
- */
-typedef NS_CALLBACK(XPCOMExitRoutine)(void);
-
-XPCOM_API(nsresult)
-NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority);
-
-XPCOM_API(nsresult)
-NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine);
-
 
 // PUBLIC
 typedef nsresult   (* InitFunc)(nsIServiceManager* *result, nsIFile* binDirectory, nsIDirectoryServiceProvider* appFileLocationProvider);
@@ -146,7 +110,9 @@ typedef void       (* LogReleaseFunc)(void*, nsrefcnt, const char*);
 typedef void       (* LogCtorFunc)(void*, const char*, PRUint32);
 typedef void       (* LogCOMPtrFunc)(void*, nsISupports*);
 
-// PRIVATE
+// PRIVATE AND DEPRECATED
+typedef NS_CALLBACK(XPCOMExitRoutine)(void);
+
 typedef nsresult   (* RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
 typedef nsresult   (* UnregisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine);
 

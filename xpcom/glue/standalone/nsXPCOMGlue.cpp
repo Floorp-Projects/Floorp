@@ -207,22 +207,6 @@ NS_NewNativeLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* 
 }
 
 XPCOM_API(nsresult)
-NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority)
-{
-    if (!xpcomFunctions.registerExitRoutine)
-        return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions.registerExitRoutine(exitRoutine, priority);
-}
-
-XPCOM_API(nsresult)
-NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
-{
-    if (!xpcomFunctions.unregisterExitRoutine)
-        return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions.unregisterExitRoutine(exitRoutine);
-}
-
-XPCOM_API(nsresult)
 NS_GetDebug(nsIDebug* *result)
 {
     if (!xpcomFunctions.getDebug)

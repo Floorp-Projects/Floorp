@@ -627,51 +627,6 @@ NS_InitXPCOM3(nsIServiceManager* *result,
 }
 
 
-static nsVoidArray* gExitRoutines;
-
-static void CallExitRoutines()
-{
-    if (!gExitRoutines)
-        return;
-
-    PRInt32 count = gExitRoutines->Count();
-    for (PRInt32 i = 0; i < count; i++) {
-        XPCOMExitRoutine func = (XPCOMExitRoutine) gExitRoutines->ElementAt(i);
-        func();
-    }
-    gExitRoutines->Clear();
-    delete gExitRoutines;
-    gExitRoutines = nsnull;
-}
-
-EXPORT_XPCOM_API(nsresult)
-NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority)
-{
-    // priority are not used right now.  It will need to be implemented as more
-    // classes are moved into the glue library --dougt
-    if (!gExitRoutines) {
-        gExitRoutines = new nsVoidArray();
-        if (!gExitRoutines) {
-            NS_WARNING("Failed to allocate gExitRoutines");
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    PRBool okay = gExitRoutines->AppendElement((void*)exitRoutine);
-    return okay ? NS_OK : NS_ERROR_FAILURE;
-}
-
-EXPORT_XPCOM_API(nsresult)
-NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
-{
-    if (!gExitRoutines)
-        return NS_ERROR_FAILURE;
-
-    PRBool okay = gExitRoutines->RemoveElement((void*)exitRoutine);
-    return okay ? NS_OK : NS_ERROR_FAILURE;
-}
-
-
 //
 // NS_ShutdownXPCOM()
 //
@@ -805,8 +760,6 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // Shutdown the timer thread and all timers that might still be alive before
     // shutting down the component manager
     nsTimerImpl::Shutdown();
-
-    CallExitRoutines();
 
     // Shutdown xpcom. This will release all loaders and cause others holding
     // a refcount to the component manager to release it.
