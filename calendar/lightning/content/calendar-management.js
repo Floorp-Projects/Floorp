@@ -251,9 +251,16 @@ function getCalendarManager()
     }
 
     if (activeCalendarManager.getCalendars({}).length == 0) {
-        var homeCalendar = activeCalendarManager.createCalendar("storage", makeURL("moz-profile-calendar://"));
+        var homeCalendar = activeCalendarManager.createCalendar("storage", 
+                           makeURL("moz-profile-calendar://"));
         activeCalendarManager.registerCalendar(homeCalendar);
-        homeCalendar.name = "Home";
+
+        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                            .getService(
+                             Components.interfaces.nsIStringBundleService);
+        var props = sbs.createBundle(
+                    "chrome://calendar/locale/calendar.properties");
+        homeCalendar.name = props.GetStringFromName("homeCalendarName");
 
         var composite = getCompositeCalendar();
         composite.addCalendar(homeCalendar);
