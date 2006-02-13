@@ -135,6 +135,11 @@ function isPhishingURL(aLinkNode, aSilentMode, aHref)
 function misMatchedHostWithLinkText(aLinkNode, aHrefURL, aLinkTextURL)
 {
   var linkNodeText = gatherTextUnder(aLinkNode);
+
+  // gatherTextUnder puts a space between each piece of text it gathers,
+  // so strip the spaces out (see bug 326082 for details).
+  linkNodeText = linkNodeText.replace(/ /g, "");
+
   // only worry about http and https urls
   if (linkNodeText)
   {
