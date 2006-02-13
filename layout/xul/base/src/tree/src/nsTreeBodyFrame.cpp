@@ -3679,27 +3679,8 @@ nsTreeBodyFrame::CalcColumnRect(nsRect& rect, nsTreeColumn* aCol, nscoord y, nsc
   rect.y = y;
   rect.width = aCol->GetWidth();
   rect.height = height;
-
-  if (aCol->GetNext())
-    return;
-
-  // The treecolpicker and scrollbar:
-  // - Might not be the same width (usually)
-  // - Either one or the other may be visible. 
-  //
-  // The uptake of this is the width of the last column doesn't necessarily 
-  // match the width of the last treecol element. We adjust for that here. 
-
-  if (!EnsureScrollable(PR_TRUE))
-    return;
-
-  nsRect bounds = mColScrollView->View()->GetBounds();
-  if (bounds.width == 0)
-    return;
-
-  nscoord diff = bounds.width - mInnerBox.width;
-  if (diff > 0)
-    rect.width = PR_MAX(0, rect.width - diff);
+  // Don't let the cell stick outside the inner box area
+  rect.width = PR_MAX(0, PR_MIN(rect.width, mInnerBox.width - rect.x));
 }
 
 PRBool 
