@@ -117,7 +117,7 @@ sub is_completed {
 #                                 );
   }
   
-  return scalar @results;  
+  return @results;  
 }
 
 #########################################################################
