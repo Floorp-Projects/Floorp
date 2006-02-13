@@ -315,14 +315,6 @@ nsFormControlHelper::PaintCheckMark(nsIRenderingContext& aRenderingContext,
   aRenderingContext.FillPolygon(checkedPolygon, checkpoints);
 }
 
-PRBool
-nsFormControlHelper::GetValueAttr(nsIContent* aContent, nsAString* aResult)
-{
-  NS_PRECONDITION(aResult, "Null pointer bad!");
-  return aContent->IsContentOfType(nsIContent::eHTML) &&
-         aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, *aResult);
-}
-
 //----------------------------------------------------------------------------------
 
 nsresult

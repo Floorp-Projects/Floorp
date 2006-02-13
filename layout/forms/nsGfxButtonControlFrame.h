@@ -106,6 +106,8 @@ public:
 protected:
   nsresult GetDefaultLabel(nsXPIDLString& aLabel);
 
+  nsresult GetLabel(nsXPIDLString& aLabel);
+
   PRBool IsFileBrowseButton(PRInt32 type); // Browse button of file input
 
 private:

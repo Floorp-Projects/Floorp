@@ -96,14 +96,6 @@ public:
   };
 
   /**
-   * Get the value of the form control (if it's just living in an attr)
-   * @param aContent the content to get the name of
-   * @param aResult the returned value of the form control [OUT]
-   * @return PR_TRUE if things go well
-   *         PR_FALSE if the name attribute is undefined
-   */
-  static PRBool GetValueAttr(nsIContent* aContent, nsAString* aResult);
-  /**
    * Cause the form control to reset its value
    * @param aFrame the frame who owns the form control
    * @param aPresContext the pres context
