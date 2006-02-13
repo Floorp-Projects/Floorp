@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -58,7 +59,7 @@ nsDOMTextEvent::nsDOMTextEvent(nsPresContext* aPresContext,
   //
   // extract the IME composition string
   //
-  nsTextEvent *te = NS_STATIC_CAST(nsTextEvent*, aEvent);
+  nsTextEvent *te = NS_STATIC_CAST(nsTextEvent*, mEvent);
   mText = te->theText;
 
   //
@@ -68,20 +69,20 @@ nsDOMTextEvent::nsDOMTextEvent(nsPresContext* aPresContext,
   //
   nsIPrivateTextRange** tempTextRangeList = new nsIPrivateTextRange*[te->rangeCount];
   if (tempTextRangeList) {
-      PRUint16 i;
+    PRUint16 i;
 
-      for(i = 0; i < te->rangeCount; i++) {
-        nsPrivateTextRange* tempPrivateTextRange = new
-          nsPrivateTextRange(te->rangeArray[i].mStartOffset,
-                             te->rangeArray[i].mEndOffset,
-                             te->rangeArray[i].mRangeType);
+    for(i = 0; i < te->rangeCount; i++) {
+      nsPrivateTextRange* tempPrivateTextRange = new
+        nsPrivateTextRange(te->rangeArray[i].mStartOffset,
+                           te->rangeArray[i].mEndOffset,
+                           te->rangeArray[i].mRangeType);
 
-        if (tempPrivateTextRange) {
-          NS_ADDREF(tempPrivateTextRange);
+      if (tempPrivateTextRange) {
+        NS_ADDREF(tempPrivateTextRange);
 
-          tempTextRangeList[i] = (nsIPrivateTextRange*)tempPrivateTextRange;
-        }
+        tempTextRangeList[i] = (nsIPrivateTextRange*)tempPrivateTextRange;
       }
+    }
   }
 
   // We need to create mTextRange even rangeCount is 0. 
