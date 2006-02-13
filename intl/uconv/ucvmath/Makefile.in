@@ -89,7 +89,7 @@ CPPSRCS		+= \
 EXPORTS		= nsUCvMathCID.h
 
 EXTRA_DSO_LDOPTS += \
-		$(DIST)/lib/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX) \
+		../util/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
