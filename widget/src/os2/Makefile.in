@@ -65,6 +65,7 @@ REQUIRES	= gfx \
 		  docshell \
 		  webbrowserpersist \
      		  imglib2 \
+		  unicharutil \
 		  $(NULL)
 
 ifdef BUILD_STATIC_LIBS
@@ -85,6 +86,9 @@ CPPSRCS		= \
 		nsDragService.cpp \
 		nsScreenOS2.cpp	\
 		nsScreenManagerOS2.cpp \
+		nsDeviceContextSpecOS2.cpp \
+		nsDeviceContextSpecFactoryO.cpp \
+		nsPrintOptionsOS2.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
@@ -106,6 +110,8 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_WIDGET
+
+DEFINES += -DUSE_OS2_TOOLKIT_HEADERS
 
 LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir)
 

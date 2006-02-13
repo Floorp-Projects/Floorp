@@ -1621,7 +1621,7 @@ nsresult GetTempFileName(char** outText)
   if (!pszText)
     return NS_ERROR_FAILURE;
 
-  char * pszPath;
+  const char * pszPath;
   if (!DosScanEnv("TEMP", &pszPath) || !DosScanEnv("TMP", &pszPath))
     strcpy(pszText, pszPath);
   else

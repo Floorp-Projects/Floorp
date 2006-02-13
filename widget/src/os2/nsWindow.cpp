@@ -2006,7 +2006,7 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
 
   // create a bitmap from the image data
   HBITMAP hBmp = GpiCreateBitmap(hps, &bi.head, CBM_INIT,
-                 NS_REINTERPRET_CAST(const BYTE*, aImageData),
+                 NS_REINTERPRET_CAST(BYTE*, aImageData),
                  (BITMAPINFO2*)&bi);
 
   // free the hps, then return the bitmap

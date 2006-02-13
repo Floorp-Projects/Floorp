@@ -41,6 +41,7 @@
 #include "nsDeviceContextOS2.h"
 #include "nsRenderingContextOS2.h"
 #include "nsDeviceContextSpecOS2.h"
+#include "nsPrintOS2.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIScreenManager.h"
@@ -59,6 +60,7 @@ static PRBool gIsWarp4 = NOT_SETUP;
 
 PRUint32 nsDeviceContextOS2::sNumberOfScreens = 0;
 nscoord nsDeviceContextOS2::mDpi = 120;
+
 
 nsDeviceContextOS2 :: nsDeviceContextOS2()
   : DeviceContextImpl()

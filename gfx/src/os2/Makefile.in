@@ -68,16 +68,13 @@ REQUIRES = xpcom \
 SHARED_LCPPSRCS = nsUnicodeRange.cpp
 
 CPPSRCS		= \
-		nsDeviceContextSpecOS2.cpp \
 		nsDeviceContextOS2.cpp \
 		nsDrawingSurfaceOS2.cpp \
 		nsRenderingContextOS2.cpp \
 		nsFontMetricsOS2.cpp \
 		nsImageOS2.cpp \
 		nsRegionOS2.cpp \
-		nsDeviceContextSpecFactoryO.cpp \
 		nsGfxFactoryOS2.cpp \
-		nsPrintOptionsOS2.cpp \
 		nsGfxDefs.cpp \
 		$(SHARED_LCPPSRCS) \
 		$(NULL)
@@ -104,6 +101,7 @@ LOCAL_INCLUDES = \
 		-I$(srcdir)/.. \
 		-I$(srcdir)/../shared \
 		-I$(srcdir)/../windows \
+		-I$(srcdir)/../../../widget/src/os2 \
 		$(NULL)
 
 DEFINES += -DUSE_OS2_TOOLKIT_HEADERS

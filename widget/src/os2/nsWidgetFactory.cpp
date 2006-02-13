@@ -80,6 +80,12 @@
 
 #include "nsScreenManagerOS2.h"
 
+// Printing
+#include "nsDeviceContextSpecOS2.h"
+#include "nsDeviceContextSpecFactoryO.h"
+#include "nsPrintOptionsOS2.h"
+#include "nsPrintSession.h"
+
 #include "nsFrameWindow.h" // OS/2 only
 
 // objects that just require generic constructors
@@ -97,6 +103,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsOS2, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerOS2)
 
 // component definition, will be exported using XPCOM
@@ -158,6 +169,30 @@ static const nsModuleComponentInfo components[] =
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
     nsScreenManagerOS2Constructor },
+  { "OS/2 Device Context Spec",
+    NS_DEVICE_CONTEXT_SPEC_CID,
+    //    "@mozilla.org/gfx/device_context_spec/gtk;1",
+    "@mozilla.org/gfx/devicecontextspec;1",
+    nsDeviceContextSpecOS2Constructor },
+  { "OS/2 Device Context Spec Factory",
+    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
+    //    "@mozilla.org/gfx/device_context_spec_factory/gtk;1",
+    "@mozilla.org/gfx/devicecontextspecfactory;1",
+    nsDeviceContextSpecFactoryOS2Constructor },
+  { "PrintSettings Service",
+    NS_PRINTSETTINGSSERVICE_CID,
+    //    "@mozilla.org/gfx/printsettings-service;1",
+    "@mozilla.org/gfx/printsettings-service;1",
+    nsPrintOptionsOS2Constructor },
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionConstructor },
+  { "OS/2 Printer Enumerator",
+    NS_PRINTER_ENUMERATOR_CID,
+    //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
+    "@mozilla.org/gfx/printerenumerator;1",
+    nsPrinterEnumeratorOS2Constructor },
 };
 
 PR_STATIC_CALLBACK(void)
