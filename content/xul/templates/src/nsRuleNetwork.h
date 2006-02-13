@@ -252,7 +252,7 @@ public:
     PLHashNumber Hash() const {
         // XXX I have no idea if this hashing function is good or not // XXX change this
         PLHashNumber temp = PLHashNumber(NS_PTR_TO_INT32(mValue.get())) >> 2; // strip alignment bits
-        return (temp & 0xffff) | ((PRInt32)mVariable.get()); }
+        return (temp & 0xffff) | NS_PTR_TO_INT32(mVariable.get()); }
 };
 
 
