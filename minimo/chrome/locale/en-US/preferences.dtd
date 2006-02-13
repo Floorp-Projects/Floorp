@@ -25,6 +25,7 @@
 <!ENTITY proxyURL.label              "URL">
 
 <!ENTITY downloadMediaCaption.label  "Download Media">
+<!ENTITY useDownloadDir.label        "Use Download Folder">
 
 <!-- Home pane --> 
 
