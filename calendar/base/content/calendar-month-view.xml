@@ -72,7 +72,8 @@
           }
 
           var str = null;
-          if (val instanceof Components.interfaces.calIEvent) {
+          // if val is an event and not an all day event, show start time in title
+          if (val instanceof Components.interfaces.calIEvent && !val.startDate.isDate) {
             str = formatTime(val.startDate.getInTimezone(this.calendarView.mTimezone)) 
           } else if (val instanceof Components.interfaces.calITodo) {
             // yeah, this should really be a little picture instead of a "*"
