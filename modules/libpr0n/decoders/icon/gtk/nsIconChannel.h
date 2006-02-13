@@ -71,15 +71,11 @@ class nsIconChannel : public nsIChannel {
      * Will always be non-null after a successful Init.
      */
     nsCOMPtr<nsIChannel> mRealChannel;
-    /**
-     * The moz-icon URI we're loading. Always non-null after a successful Init.
-     */
-    nsCOMPtr<nsIMozIconURI> mURI;
 
     /**
      * Called by Init if we need to use the gnomeui library.
      */
-    nsresult InitWithGnome();
+    nsresult InitWithGnome(nsIMozIconURI *aURI);
 };
 
 #endif
