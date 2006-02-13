@@ -44,17 +44,21 @@ class NS_EXPORT gfxPDFSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:
-    gfxPDFSurface(const char *filename,
-                  double width_in_points,
-                  double height_in_points);
+    /* size is in points */
+    gfxPDFSurface(const char *filename, gfxSize aSizeInPonits);
     virtual ~gfxPDFSurface();
 
     void SetDPI(double x, double y);
     void GetDPI(double *xDPI, double *yDPI);
 
+    gfxSize GetSize() {
+        gfxSize size = mSize;
+        return size;
+    }
 private:
     double mXDPI;
     double mYDPI;
+    gfxSize mSize;
 };
 
-#endif /* GFX_WINDOWSSURFACE_H */
+#endif /* GFX_PDFSURFACE_H */

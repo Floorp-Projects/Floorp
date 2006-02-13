@@ -35,16 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "gfxPDFSurface.h"
+#include "gfxPSSurface.h"
 
 #include <cairo-ps.h>
 
 THEBES_IMPL_REFCOUNTING(gfxPSSurface)
 
-gfxPSSurface::gfxPSSurface(const char *filename, double width, double height)
-    : mXDPI(-1), mYDPI(-1)
+gfxPSSurface::gfxPSSurface(const char *filename, gfxSize aSizeInPoints)
+    : mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
 {
-    Init(cairo_ps_surface_create(filename, width, height));
+    Init(cairo_ps_surface_create(filename, mSize.width, mSize.height));
 }
 
 gfxPSSurface::~gfxPSSurface()

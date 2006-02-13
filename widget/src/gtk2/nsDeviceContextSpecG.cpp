@@ -410,7 +410,9 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
 #endif
 
 #ifdef MOZ_CAIRO_GFX
+//#define USE_PDF 1
 #include "gfxPDFSurface.h"
+#include "gfxPSSurface.h"
 #include "nsUnitConversion.h"
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurface)
 {
@@ -426,7 +428,11 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
 
   printf("%s, %d, %d\n", path, width, height);
 
-  gfxPDFSurface *surface = new gfxPDFSurface(path, w, h);
+#ifdef USE_PDF
+  gfxPDFSurface *surface = new gfxPDFSurface(path, gfxSize(w, h));
+#else
+  gfxPSSurface *surface = new gfxPSSurface(path, gfxSize(w, h));
+#endif
   surface->SetDPI(600, 600);
   
   *aSurface = surface;

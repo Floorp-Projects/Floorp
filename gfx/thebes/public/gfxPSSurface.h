@@ -44,17 +44,20 @@ class NS_EXPORT gfxPSSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:
-    gfxPSSurface(const char *filename,
-                 double width_in_points,
-                 double height_in_points);
+    gfxPSSurface(const char *filename, gfxSize aSizeInPonits);
     virtual ~gfxPSSurface();
 
     void SetDPI(double x, double y);
     void GetDPI(double *xDPI, double *yDPI);
 
+    gfxSize GetSize() {
+        gfxSize size = mSize;
+        return size;
+    }
 private:
     double mXDPI;
     double mYDPI;
+    gfxSize mSize;
 };
 
-#endif /* GFX_WINDOWSSURFACE_H */
+#endif /* GFX_PSSURFACE_H */

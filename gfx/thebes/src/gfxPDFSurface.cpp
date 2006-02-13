@@ -41,10 +41,10 @@
 
 THEBES_IMPL_REFCOUNTING(gfxPDFSurface)
 
-gfxPDFSurface::gfxPDFSurface(const char *filename, double width, double height)
-    : mXDPI(-1), mYDPI(-1)
+gfxPDFSurface::gfxPDFSurface(const char *filename, gfxSize aSizeInPoints)
+    : mXDPI(-1), mYDPI(-1), mSize(aSizeInPoints)
 {
-    Init(cairo_pdf_surface_create(filename, width, height));
+    Init(cairo_pdf_surface_create(filename, mSize.width, mSize.height));
 }
 
 gfxPDFSurface::~gfxPDFSurface()
