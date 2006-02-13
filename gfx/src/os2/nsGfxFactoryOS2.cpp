@@ -44,16 +44,12 @@
 #include "nsBlender.h"
 #include "nsFontMetricsOS2.h"
 #include "nsRenderingContextOS2.h"
-#include "nsDeviceContextSpecOS2.h"
-#include "nsDeviceContextSpecFactoryO.h"
 #include "nsScriptableRegion.h"
 #include "nsDeviceContextOS2.h"
 #include "nsImageOS2.h"
 #include "nsRegionOS2.h"
-#include "nsPrintOptionsOS2.h"
-#include "nsFontList.h"
-#include "nsPrintSession.h"
 #include "gfxImageFrame.h"
+#include "nsFontList.h"
 #include "nsIServiceManager.h"
 #include "prenv.h"
 #include "nsOS2Uni.h"
@@ -69,13 +65,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRenderingContextOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionOS2)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecOS2)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsOS2, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorOS2)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
 #ifdef USE_FREETYPE
@@ -299,21 +290,6 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/blender;1",
     "@mozilla.org/gfx/blender;1",
     nsBlenderConstructor },
-  { "OS/2 Device Context Spec",
-    NS_DEVICE_CONTEXT_SPEC_CID,
-    //    "@mozilla.org/gfx/device_context_spec/gtk;1",
-    "@mozilla.org/gfx/devicecontextspec;1",
-    nsDeviceContextSpecOS2Constructor },
-  { "OS/2 Device Context Spec Factory",
-    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
-    //    "@mozilla.org/gfx/device_context_spec_factory/gtk;1",
-    "@mozilla.org/gfx/devicecontextspecfactory;1",
-    nsDeviceContextSpecFactoryOS2Constructor },
-  { "PrintSettings Service",
-    NS_PRINTSETTINGSSERVICE_CID,
-    //    "@mozilla.org/gfx/printsettings-service;1",
-    "@mozilla.org/gfx/printsettings-service;1",
-    nsPrintOptionsOS2Constructor },
   { "OS2 Font Enumerator",
     NS_FONT_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/font_enumerator/gtk;1",
@@ -324,19 +300,10 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/fontlist;1"
     NS_FONTLIST_CONTRACTID,
     nsFontListConstructor },
-  { "OS/2 Printer Enumerator",
-    NS_PRINTER_ENUMERATOR_CID,
-    //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
-    "@mozilla.org/gfx/printerenumerator;1",
-    nsPrinterEnumeratorOS2Constructor },
   { "windows image frame",
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",
     gfxImageFrameConstructor, },
-  { "Print Session",
-    NS_PRINTSESSION_CID,
-    "@mozilla.org/gfx/printsession;1",
-    nsPrintSessionConstructor }
 };
 
 PR_STATIC_CALLBACK(void)
