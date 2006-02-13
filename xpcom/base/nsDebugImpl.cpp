@@ -265,17 +265,17 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
 
    switch (aSeverity) {
    case NS_DEBUG_ASSERTION:
-     sevString = "\07###!!! ASSERTION";
+     sevString = "###!!! ASSERTION";
      ll = PR_LOG_ERROR;
      break;
 
    case NS_DEBUG_BREAK:
-     sevString = "\07###!!! BREAK";
+     sevString = "###!!! BREAK";
      ll = PR_LOG_ALWAYS;
      break;
 
    case NS_DEBUG_ABORT:
-     sevString = "\07###!!! ABORT";
+     sevString = "###!!! ABORT";
      ll = PR_LOG_ALWAYS;
      break;
 
@@ -297,11 +297,17 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
    if (aLine != -1)
      PR_sxprintf(StuffFixedBuffer, &buf, "line %d", aLine);
 
-   // Write out the assertion message to the debug log
+   // Write out the message to the debug log
    PR_LOG(gDebugLog, ll, ("%s", buf.buffer));
    PR_LogFlush();
 
-   // And write it out to the stderr
+   // errors on platforms without a debugdlg ring a bell on stderr
+#if !defined(XP_WIN) && !defined(XP_OS2)
+   if (ll != PR_LOG_WARNING)
+     fprintf(stderr, "\07");
+#endif
+
+   // Write the message to stderr
    fprintf(stderr, "%s\n", buf.buffer);
    fflush(stderr);
 
