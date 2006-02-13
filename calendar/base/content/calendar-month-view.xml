@@ -865,8 +865,13 @@
             //XXX rename these css classes
             // Set the box-class depending on if this box displays a day in the
             // main month being shown or not.
-            var boxClass = "calendar-month-day-box-" + 
+            var boxClass;
+            if (this.showFullMonth) {
+                boxClass = "calendar-month-day-box-" + 
                            (mainMonth == date.month ? "even" : "odd");
+            } else {
+                boxClass = "calendar-month-day-box-even";
+            }
             // XXX isWeekend?
             if (date.weekday == 0 || date.weekday == 6)
               boxClass = "calendar-month-day-box-weekend " + boxClass;
