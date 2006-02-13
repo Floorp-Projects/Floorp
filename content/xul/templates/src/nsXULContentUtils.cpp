@@ -142,26 +142,6 @@ nsXULContentUtils::Init()
         if (NS_FAILED(rv)) {
             return rv;
         }
-
-        // get a locale service 
-        nsCOMPtr<nsILocaleService> localeService =
-            do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsILocale> locale;
-            rv = localeService->GetApplicationLocale(getter_AddRefs(locale));
-            if (NS_SUCCEEDED(rv) && locale) {
-                nsCOMPtr<nsICollationFactory> colFactory =
-                    do_CreateInstance(kCollationFactoryCID);
-                if (colFactory) {
-                    rv = colFactory->CreateCollation(locale, &gCollation);
-                    NS_ASSERTION(NS_SUCCEEDED(rv),
-                                 "couldn't create collation instance");
-                } else
-                    NS_ERROR("couldn't create instance of collation factory");
-            } else
-                NS_ERROR("unable to get application locale");
-        } else
-            NS_ERROR("couldn't get locale factory");
     }
 
     return NS_OK;
@@ -187,6 +167,35 @@ nsXULContentUtils::Finish()
     return NS_OK;
 }
 
+nsICollation*
+nsXULContentUtils::GetCollation()
+{
+    if (!gCollation) {
+        nsresult rv;
+
+        // get a locale service 
+        nsCOMPtr<nsILocaleService> localeService =
+            do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsILocale> locale;
+            rv = localeService->GetApplicationLocale(getter_AddRefs(locale));
+            if (NS_SUCCEEDED(rv) && locale) {
+                nsCOMPtr<nsICollationFactory> colFactory =
+                    do_CreateInstance(kCollationFactoryCID);
+                if (colFactory) {
+                    rv = colFactory->CreateCollation(locale, &gCollation);
+                    NS_ASSERTION(NS_SUCCEEDED(rv),
+                                 "couldn't create collation instance");
+                } else
+                    NS_ERROR("couldn't create instance of collation factory");
+            } else
+                NS_ERROR("unable to get application locale");
+        } else
+            NS_ERROR("couldn't get locale factory");
+    }
+
+    return gCollation;
+}
 
 //------------------------------------------------------------------------
 // nsIXULContentUtils methods
