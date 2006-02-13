@@ -172,7 +172,7 @@ sub Told {
         } else {
             $self->FetchBug($event, $bug, 'bugs', {'sayAlways' => 1});
         }
-        $self->{'bugsHistory'}->{$target}->{$bug} = $event->{'time'} if $bug =~ m/^[0-9]+$/os;
+        $self->{'bugsHistory'}->{$target}->{$bug} = $event->{'time'} if $bug =~ m/^\d+$/os;
     } elsif ($message =~ m/^\s*bug-?total\s+(.+?)\s*$/osi) {
         $self->FetchBug($event, $1, 'total');
     } elsif ($self->isAdmin($event)) {
@@ -289,7 +289,7 @@ sub FetchBug {
     foreach my $bug (@bugs) {
         if($sayAlways || $self->needToFetchBug($event->{'target'}, $event->{'time'}, $bug)) {
             push @ids, $bug;
-            $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} = $event->{'time'};
+            $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} = $event->{'time'} if $bug =~ m/^\d+$/os;
         }
     }
     return unless @ids;
