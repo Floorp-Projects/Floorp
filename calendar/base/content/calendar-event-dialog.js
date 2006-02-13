@@ -441,6 +441,10 @@ function updateAccept()
     if (isEvent(window.calendarItem)) {
         startDate = jsDateToDateTime(getElementValue("event-starttime"));
         endDate = jsDateToDateTime(getElementValue("event-endtime"));
+        if (getElementValue("event-all-day", "checked")) {
+            startDate.isDate = true;
+            endDate.isDate = true;
+        }
     } else {
         startDate = getElementValue("todo-has-entrydate", "checked") ? 
             jsDateToDateTime(getElementValue("todo-entrydate")) : null;
