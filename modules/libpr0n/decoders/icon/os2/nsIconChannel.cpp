@@ -324,7 +324,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     PRUint32 cyOut    = (fShrink ? BMHeader.cy / 2 : BMHeader.cy);
     PRUint32 cbColor  = ALIGNEDBPR( cxOut, 24) * cyOut;
     PRUint32 cbMask   = ALIGNEDBPR( cxOut,  1) * cyOut;
-    PRUint32 cbOutBuf = 2 + cbColor + cbMask;
+    PRUint32 cbOutBuf = 3 + cbColor + cbMask;
     pOutBuf = (PRUint8*)nsMemory::Alloc(cbOutBuf);
     if (!pOutBuf)
       break;
@@ -353,6 +353,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     PRUint8* outPtr = pOutBuf;
     *outPtr++ = (PRUint8)cxOut;
     *outPtr++ = (PRUint8)cyOut;
+    // then the number of bits of alpha per pixel
+    *outPtr++ = (PRUint8)1;
   
     // convert the color bitmap
     pBMInfo->cbImage = cbInBuf;

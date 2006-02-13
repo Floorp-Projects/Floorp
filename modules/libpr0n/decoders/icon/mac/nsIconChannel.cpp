@@ -455,6 +455,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   nsCString iconBuffer;
   iconBuffer.Assign((char) numPixelsInRow);
   iconBuffer.Append((char) numPixelsInRow);
+  iconBuffer.Append((char) 1); // alpha bits per pixel
 
   CTabHandle cTabHandle = nsnull;
   CTabPtr colTable = nsnull;

@@ -68,8 +68,13 @@
 //     support multiple ODA calls yet.
 // (2) the format of the incoming data is as follows:
 //     The first two bytes contain the width and the height of the icon. 
-//     Followed by 3 bytes per pixel for the color bitmap row after row. (for heigh * width * 3 bytes)
-//     Followed by bit mask data (used for transparency on the alpha channel). 
+//     The third byte contains the number of bits per pixel in the alpha
+//       channel (either 1 or 8).
+//     Followed by 3 bytes per pixel for the color bitmap row after row,
+//       from top to bottom, with pixels left to right within rows, and
+//       RGB order within pixels, in platform endianness.
+//     Followed by alpha data (1 or 8 bits per pixel, see above) in the
+//       same order as the RGB data, and also in platform endianness.
 //
 //
 //////////////////////////////////////////////////////////////////////////////////////////////
