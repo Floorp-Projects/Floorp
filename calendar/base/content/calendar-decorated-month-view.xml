@@ -121,7 +121,11 @@
                     var nameArray = new Array();
                     for (var i = -2; i < 3; i++) {
                         var index = ((aDate.month + i + 12) % 12) + 1;
-                        nameArray.push(props.GetStringFromName("month."+index+".name"));
+                        if (0 == i) {
+                            nameArray.push(props.GetStringFromName("month."+index+".name") + " " + aDate.year);
+                        } else {
+                            nameArray.push(props.GetStringFromName("month."+index+".name"));
+                        }
                     }
                     document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
                 ]]></body>
