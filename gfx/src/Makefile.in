@@ -148,10 +148,12 @@ ifeq ($(OS_ARCH),OS2)
 CPPSRCS += \
         os2/nsOS2Uni.cpp \
         os2/nsPaletteOS2.cpp \
+        os2/nsPrintOS2.cpp \
         $(NULL)
 EXPORTS += \
         os2/nsOS2Uni.h \
         os2/nsPaletteOS2.h \
+        os2/nsPrintOS2.h \
         $(NULL)
 endif
 
