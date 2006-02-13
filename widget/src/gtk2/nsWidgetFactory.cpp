@@ -231,7 +231,7 @@ static const nsModuleComponentInfo components[] =
     /* XXX temporary!  Disable native theme support on linux until roc
      * lands new native theme stuff
      */
-#ifndef MOZ_ENABLE_CAIRO_GFX
+#ifndef MOZ_CAIRO_GFX
    { "Native Theme Renderer",
     NS_THEMERENDERER_CID,
     "@mozilla.org/chrome/chrome-native-theme;1",
