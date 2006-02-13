@@ -36,37 +36,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsConflictSet.h"
 #include "nsContentTestNode.h"
 #include "nsISupportsArray.h"
-#include "nsIXULDocument.h"
 #include "nsIRDFResource.h"
 #include "nsIAtom.h"
+#include "nsIDOMElement.h"
 #include "nsXULContentUtils.h"
 #include "nsPrintfCString.h"
+#include "nsIXULTemplateResult.h"
+#include "nsIXULTemplateBuilder.h"
+#include "nsXULTemplateQueryProcessorRDF.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gXULTemplateLog;
 #endif
 
-PRBool
-IsElementInBuilder(nsIContent *aContent, nsIXULTemplateBuilder *aBuilder);
-
-nsContentTestNode::nsContentTestNode(InnerNode* aParent,
-                                     nsConflictSet& aConflictSet,
-                                     nsIXULDocument* aDocument,
-                                     nsIXULTemplateBuilder* aBuilder,
-                                     PRInt32 aContentVariable,
-                                     PRInt32 aIdVariable,
-                                     nsIAtom* aTag)
-    : TestNode(aParent),
-      mConflictSet(aConflictSet),
-      mDocument(aDocument),
-      mBuilder(aBuilder),
-      mContentVariable(aContentVariable),
-      mIdVariable(aIdVariable),
-      mTag(aTag)
+nsContentTestNode::nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
+                                     nsIAtom* aRefVariable)
+    : TestNode(nsnull),
+      mProcessor(aProcessor),
+      mDocument(nsnull),
+      mRefVariable(aRefVariable),
+      mTag(nsnull)
 {
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
@@ -74,214 +66,57 @@ nsContentTestNode::nsContentTestNode(InnerNode* aParent,
         if (mTag)
             mTag->ToString(tag);
 
+        nsAutoString refvar(NS_LITERAL_STRING("(none)"));
+        if (aRefVariable)
+            aRefVariable->ToString(refvar);
+
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-               ("nsContentTestNode[%p]: parent=%p content-var=%d id-var=%d tag=%s",
-                this, aParent, mContentVariable, mIdVariable,
+               ("nsContentTestNode[%p]: ref-var=%s tag=%s",
+                this, NS_ConvertUTF16toUTF8(refvar).get(),
                 NS_ConvertUTF16toUTF8(tag).get()));
     }
 #endif
 }
 
-#ifdef PR_LOGGING
-static void
-ElementToString(nsIContent *aContent, nsString &aResult)
-{
-    aContent->Tag()->ToString(aResult);
-
-    AppendASCIItoUTF16(nsPrintfCString(18, "@%p", aContent), aResult);
-}
-#endif
-
 nsresult
-nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
+nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
 {
-    nsresult rv;
-
-    nsCOMPtr<nsISupportsArray> elements;
-    rv = NS_NewISupportsArray(getter_AddRefs(elements));
-    if (NS_FAILED(rv)) return rv;
-
-    InstantiationSet::Iterator last = aInstantiations.Last();
-    for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
-        Value contentValue;
-        PRBool hasContentBinding = inst->mAssignments.GetAssignmentFor(mContentVariable, &contentValue);
-
-        Value idValue;
-        PRBool hasIdBinding = inst->mAssignments.GetAssignmentFor(mIdVariable, &idValue);
-
-#ifdef PR_LOGGING
-        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-            nsAutoString content(NS_LITERAL_STRING("(unbound)"));
-            if (hasContentBinding)
-                ElementToString(VALUE_TO_ICONTENT(contentValue), content);
-
-            const char *id = "(unbound)";
-            if (hasIdBinding)
-                VALUE_TO_IRDFRESOURCE(idValue)->GetValueConst(&id);
-
-            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                   ("nsContentTestNode[%p]: FilterInstantiations() content=%s id=%s",
-                    this, NS_LossyConvertUTF16toASCII(content).get(), id));
-        }
-#endif
-
-        if (hasContentBinding && hasIdBinding) {
-            // both are bound, consistency check
-            PRBool consistent = PR_TRUE;
-
-            nsIContent* content = VALUE_TO_ICONTENT(contentValue);
-
-            if (mTag) {
-                // If we're supposed to be checking the tag, do it now.
-                if (content->Tag() != mTag)
-                    consistent = PR_FALSE;
-            }
-
-            if (consistent) {
-                nsCOMPtr<nsIRDFResource> resource;
-                nsXULContentUtils::GetElementRefResource(content, getter_AddRefs(resource));
-            
-                if (resource.get() != VALUE_TO_IRDFRESOURCE(idValue))
-                    consistent = PR_FALSE;
-            }
-
-            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                   ("    consistency check => %s", consistent ? "passed" : "failed"));
-
-            if (consistent) {
-                Element* element =
-                    nsContentTestNode::Element::Create(mConflictSet.GetPool(),
-                                    VALUE_TO_ICONTENT(contentValue));
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                inst->AddSupportingElement(element);
-            }
-            else {
-                aInstantiations.Erase(inst--);
-            }
-        }
-        else if (hasContentBinding) {
-            // the content node is bound, get its id
-            PRBool consistent = PR_TRUE;
-
-            nsIContent* content = VALUE_TO_ICONTENT(contentValue);
-
-            if (mTag) {
-                // If we're supposed to be checking the tag, do it now.
-                nsIAtom *tag = content->Tag();
-
-                if (tag != mTag) {
-                    consistent = PR_FALSE;
-
-                    const char *expected, *actual;
-                    mTag->GetUTF8String(&expected);
-                    tag->GetUTF8String(&actual);
-
-                    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                           ("    => tag mismatch; expected %s, actual %s",
-                            expected,
-                            actual));
-                }
-            }
-
-            if (consistent) {
-                nsCOMPtr<nsIRDFResource> resource;
-                nsXULContentUtils::GetElementRefResource(content, getter_AddRefs(resource));
-
-                if (resource) {
-#ifdef PR_LOGGING
-                    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-                        const char *str;
-                        resource->GetValueConst(&str);
-                        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                               ("    => [%s]", str));
-                    }
-#endif
-
-                    Instantiation newinst = *inst;
-                    newinst.AddAssignment(mIdVariable, Value(resource.get()));
-
-                    Element* element =
-                        nsContentTestNode::Element::Create(mConflictSet.GetPool(), content);
-
-                    if (! element)
-                        return NS_ERROR_OUT_OF_MEMORY;
-
-                    newinst.AddSupportingElement(element);
-
-                    aInstantiations.Insert(inst, newinst);
-                }
-                else {
-                    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                           ("    => element has no resource"));
-                }
-            }
-
-            aInstantiations.Erase(inst--);
-        }
-        else if (hasIdBinding) {
-            // the 'id' is bound, find elements in the content tree that match
-            const char* uri;
-            VALUE_TO_IRDFRESOURCE(idValue)->GetValueConst(&uri);
-
-            mDocument->GetElementsForID(NS_ConvertUTF8toUTF16(uri), elements);
-
-            PRUint32 count;
-            elements->Count(&count);
-
-            for (PRInt32 j = PRInt32(count) - 1; j >= 0; --j) {
-                nsISupports* isupports = elements->ElementAt(j);
-                nsCOMPtr<nsIContent> content = do_QueryInterface(isupports);
-                NS_IF_RELEASE(isupports);
-
-                if (IsElementInBuilder(content, mBuilder)) {
-                    if (mTag) {
-                        // If we've got a tag, check it to ensure
-                        // we're consistent.
-                        if (content->Tag() != mTag)
-                            continue;
-                    }
-
-#ifdef PR_LOGGING
-                    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-                        nsAutoString str;
-                        ElementToString(content, str);
-
-                        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                               ("    => %s", NS_LossyConvertUTF16toASCII(str).get()));
-                    }
-#endif                    
-
-                    Instantiation newinst = *inst;
-                    newinst.AddAssignment(mContentVariable, Value(content.get()));
-
-                    Element* element =
-                        nsContentTestNode::Element::Create(mConflictSet.GetPool(), content);
-
-                    if (! element)
-                        return NS_ERROR_OUT_OF_MEMORY;
-
-                    newinst.AddSupportingElement(element);
-
-                    aInstantiations.Insert(inst, newinst);
-                }
-            }
-
-            aInstantiations.Erase(inst--);
-        }
-    }
-
     return NS_OK;
 }
 
 nsresult
-nsContentTestNode::GetAncestorVariables(VariableSet& aVariables) const
+nsContentTestNode::Constrain(InstantiationSet& aInstantiations)
 {
-    aVariables.Add(mContentVariable);
-    aVariables.Add(mIdVariable);
+    // contrain the matches to those that have matched in the template builder
 
-    return TestNode::GetAncestorVariables(aVariables);
+    nsIXULTemplateBuilder* builder = mProcessor->GetBuilder();
+    if (!builder) {
+        aInstantiations.Clear();
+        return NS_OK;
+    }
+
+    nsresult rv;
+
+    InstantiationSet::Iterator last = aInstantiations.Last();
+    for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
+
+        nsCOMPtr<nsIRDFNode> refValue;
+        PRBool hasRefBinding = inst->mAssignments.GetAssignmentFor(mRefVariable,
+                                                                   getter_AddRefs(refValue));
+        if (hasRefBinding) {
+            nsCOMPtr<nsIRDFResource> refResource = do_QueryInterface(refValue);
+            if (refResource) {
+                PRBool generated;
+                rv = builder->HasGeneratedContent(refResource, mTag, &generated);
+                if (NS_FAILED(rv)) return rv;
+
+                if (generated)
+                    continue;
+            }
+        }
+
+        aInstantiations.Erase(inst--);
+    }
+
+    return NS_OK;
 }
-

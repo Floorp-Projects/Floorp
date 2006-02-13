@@ -40,12 +40,11 @@
 #define nsRDFConInstanceTestNode_h__
 
 #include "nscore.h"
-#include "nsRDFTestNode.h"
 #include "nsFixedSizeAllocator.h"
+#include "nsRDFTestNode.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFDataSource.h"
-class nsConflictSet;
-class nsResourceSet;
+#include "nsXULTemplateQueryProcessorRDF.h"
 
 /**
  * Rule network node that tests if a resource is an RDF container, or
@@ -56,17 +55,13 @@ class nsRDFConInstanceTestNode : public nsRDFTestNode
 public:
     enum Test { eFalse, eTrue, eDontCare };
 
-    nsRDFConInstanceTestNode(InnerNode* aParent,
-                             nsConflictSet& aConflictSet,
-                             nsIRDFDataSource* aDataSource,
-                             const nsResourceSet& aMembershipProperties,
-                             PRInt32 aContainerVariable,
+    nsRDFConInstanceTestNode(TestNode* aParent,
+                             nsXULTemplateQueryProcessorRDF* aProcessor,
+                             nsIAtom* aContainerVariable,
                              Test aContainer,
                              Test aEmpty);
 
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const;
-
-    virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
 
     virtual PRBool
     CanPropagate(nsIRDFResource* aSource,
@@ -77,9 +72,7 @@ public:
     virtual void
     Retract(nsIRDFResource* aSource,
             nsIRDFResource* aProperty,
-            nsIRDFNode* aTarget,
-            nsTemplateMatchSet& aFirings,
-            nsTemplateMatchSet& aRetractions) const;
+            nsIRDFNode* aTarget) const;
 
 
     class Element : public MemoryElement {
@@ -139,10 +132,8 @@ public:
     };
 
 protected:
-    nsConflictSet& mConflictSet;
-    nsCOMPtr<nsIRDFDataSource> mDataSource;
-    const nsResourceSet& mMembershipProperties;
-    PRInt32 mContainerVariable;
+    nsXULTemplateQueryProcessorRDF* mProcessor;
+    nsCOMPtr<nsIAtom> mContainerVariable;
     Test mContainer;
     Test mEmpty;
 };

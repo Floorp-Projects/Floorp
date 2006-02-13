@@ -40,22 +40,28 @@
 #define nsTemplateMatch_h__
 
 #include "nsFixedSizeAllocator.h"
-#include "nsResourceSet.h"
+#include "nsIContent.h"
+#include "nsIXULTemplateQueryProcessor.h"
+#include "nsIXULTemplateResult.h"
 #include "nsRuleNetwork.h"
 #include NEW_H
 
 /**
- * A "match" is a fully instantiated rule; that is, a complete and
- * consistent set of variable-to-value assignments for all the rule's
- * condition elements.
+ * A match object, where each match object is associated with one result.
+ * There will be one match list for each unique id generated. However, since
+ * there are multiple querysets and each may generate results with the same
+ * id, they are all chained together in a linked list, ordered in the same
+ * order as the respective <queryset> elements they were generated from.
+ * Only one match is active at a time, but which match is active may change
+ * as new results are added or removed. When a match is active, content is
+ * generated for that match.
  *
- * Each match also contains information about the "optional"
- * variable-to-value assignments that can be specified using the
- * <bindings> element in a rule.
+ * Matches are stored and owned by the mMatchToMap hash in the template
+ * builder.
  */
 
-class nsConflictSet;
 class nsTemplateRule;
+class nsTemplateQuerySet;
 
 class nsTemplateMatch {
 private:
@@ -64,25 +70,22 @@ private:
     void* operator new(size_t) CPP_THROW_NEW { return 0; }
     void operator delete(void*, size_t) {}
 
-protected:
-    PRInt32 mRefCnt;
-
-    nsTemplateMatch(const nsTemplateRule* aRule,
-                    const Instantiation& aInstantiation,
-                    const nsAssignmentSet& aAssignments)
-        : mRefCnt(0),
-          mRule(aRule),
-          mInstantiation(aInstantiation),
-          mAssignments(aAssignments) {}
-
 public:
+    nsTemplateMatch(nsTemplateQuerySet* aQuerySet,
+                    nsIXULTemplateResult* aResult)
+        : mRule(nsnull),
+          mQuerySet(aQuerySet),
+          mResult(aResult),
+          mNext(nsnull) {}
+
+    ~nsTemplateMatch() {}
+
     static nsTemplateMatch*
     Create(nsFixedSizeAllocator& aPool,
-           const nsTemplateRule* aRule,
-           const Instantiation& aInstantiation,
-           const nsAssignmentSet& aAssignments) {
+           nsTemplateQuerySet* aQuerySet,
+           nsIXULTemplateResult* aResult) {
         void* place = aPool.Alloc(sizeof(nsTemplateMatch));
-        return place ? ::new (place) nsTemplateMatch(aRule, aInstantiation, aAssignments) : nsnull; }
+        return place ? ::new (place) nsTemplateMatch(aQuerySet, aResult) : nsnull; }
 
     static void
     Destroy(nsFixedSizeAllocator& aPool, nsTemplateMatch* aMatch) {
@@ -90,65 +93,44 @@ public:
         aPool.Free(aMatch, sizeof(*aMatch)); }
 
     PRBool operator==(const nsTemplateMatch& aMatch) const {
-        return mRule == aMatch.mRule && mInstantiation == aMatch.mInstantiation; }
+        return mRule == aMatch.mRule && mResult == aMatch.mResult; }
 
     PRBool operator!=(const nsTemplateMatch& aMatch) const {
         return !(*this == aMatch); }
 
-    /**
-     * Get the assignment for the specified variable, computing the
-     * value using the rule's bindings, if necessary.
-     * @param aConflictSet
-     * @param aVariable the variable for which to determine the assignment
-     * @param aValue an out parameter that receives the value assigned to
-     *   aVariable.
-     * @return PR_TRUE if aVariable has an assignment, PR_FALSE otherwise.
-     */
-    PRBool GetAssignmentFor(nsConflictSet& aConflictSet, PRInt32 aVariable, Value* aValue);
+    nsresult RuleMatched(nsTemplateQuerySet* aQuerySet,
+                         nsTemplateRule* aRule,
+                         nsIXULTemplateResult* aResult);
 
     /**
-     * The rule that this match applies for.
+     * The rule that this match applies to. If the rule is null, the result
+     * has not matched a rule and no content has been generated. However, a
+     * later queryset may still have matched.
      */
-    const nsTemplateRule* mRule;
+    nsTemplateRule* mRule; // not owned
 
     /**
-     * The fully bound instantiation (variable-to-value assignments, with
-     * memory element support) that match the rule's conditions.
+     * The queryset for this rule
      */
-    Instantiation mInstantiation;
+    nsTemplateQuerySet* mQuerySet; // not owned
 
     /**
-     * Any additional assignments that apply because of the rule's
-     * bindings. These are computed lazily.
+     * The result associated with this match
      */
-    nsAssignmentSet mAssignments;
+    nsCOMPtr<nsIXULTemplateResult> mResult;
 
     /**
-     * The set of resources that the nsTemplateMatch's bindings depend on. Should the
-     * assertions relating to these resources change, then the rule will
-     * still match (i.e., this match object is still "good"); however, we
-     * may need to recompute the assignments that have been made using the
-     * rule's bindings.
+     * Matches are stored in a linked list, in priority order. This first
+     * match that has a rule set (mRule) is the active match and generates
+     * content. The next match is owned by the builder, which will delete
+     * template matches when needed.
      */
-    nsResourceSet mBindingDependencies;
-
-    PRInt32 AddRef() {
-        ++mRefCnt;
-        NS_LOG_ADDREF(this, mRefCnt, "nsTemplateMatch", sizeof(*this));
-        return mRefCnt; }
-
-    PRInt32 Release(nsFixedSizeAllocator& aPool) {
-        NS_PRECONDITION(mRefCnt > 0, "bad refcnt");
-        PRInt32 refcnt = --mRefCnt;
-        NS_LOG_RELEASE(this, mRefCnt, "nsTemplateMatch");
-        if (refcnt == 0)
-            Destroy(aPool, this);
-        return refcnt; }
+    nsTemplateMatch *mNext;
 
 private:
     nsTemplateMatch(const nsTemplateMatch& aMatch); // not to be implemented
     void operator=(const nsTemplateMatch& aMatch); // not to be implemented
 };
 
-#endif // nsConflictSet_h__
+#endif // nsTemplateMatch_h__
 

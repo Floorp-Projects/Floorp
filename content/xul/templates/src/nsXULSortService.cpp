@@ -82,7 +82,6 @@
 #include "nsIXULSortService.h"
 #include "prlog.h"
 #include "nsICollation.h"
-#include "nsCollationCID.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMXULElement.h"
 #include "nsILocale.h"
@@ -95,7 +94,6 @@
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_CID(kRDFServiceCID,          NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kCollationFactoryCID,    NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,   NS_RDFCONTAINERUTILS_CID);
 
@@ -149,8 +147,6 @@ protected:
   XULSortServiceImpl(void);
   virtual ~XULSortServiceImpl(void);
 
-  static nsICollation *gCollation;
-
   friend nsresult NS_NewXULSortService(nsIXULSortService** mgr);
 
 private:
@@ -193,7 +189,6 @@ public:
                                PRBool &bothValid, PRInt32 & sortOrder);
 };
 
-nsICollation *XULSortServiceImpl::gCollation = nsnull;
 nsIRDFService *XULSortServiceImpl::gRDFService = nsnull;
 nsIRDFContainerUtils *XULSortServiceImpl::gRDFC = nsnull;
 nsrefcnt XULSortServiceImpl::gRefCnt = 0;
@@ -220,23 +215,6 @@ XULSortServiceImpl::XULSortServiceImpl(void)
     rv = CallGetService(kRDFContainerUtilsCID, &gRDFC);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create rdf container utils");
-
-    // get a locale service 
-    nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsILocale>  locale;
-      if (NS_SUCCEEDED(rv = localeService->GetApplicationLocale(getter_AddRefs(locale))) && (locale)) {
-        nsCOMPtr<nsICollationFactory> colFactory = do_CreateInstance(kCollationFactoryCID);
-        if (colFactory) {
-          rv = colFactory->CreateCollation(locale, &gCollation);
-
-          NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create collation instance");
-        } else
-          NS_ERROR("couldn't create instance of collation factory");
-      } else
-        NS_ERROR("unable to get application locale");
-    } else
-      NS_ERROR("couldn't get locale factory");
   }
 
   ++gRefCnt;
@@ -258,8 +236,6 @@ XULSortServiceImpl::~XULSortServiceImpl(void) {
     kDescendingStr = nsnull;
     delete kNaturalStr;
     kNaturalStr = nsnull;
-
-    NS_IF_RELEASE(gCollation);
 
     NS_IF_RELEASE(gRDFService);
     NS_IF_RELEASE(gRDFC);
@@ -462,8 +438,10 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
         r->GetValue(&rkey);
         r->GetLength(&rlen);
         bothValid = PR_TRUE;
-        if (gCollation)
-          return gCollation->CompareRawSortKey(lkey, llen, rkey, rlen, &sortOrder);
+
+        nsICollation* collation = nsXULContentUtils::GetCollation();
+        if (collation)
+          return collation->CompareRawSortKey(lkey, llen, rkey, rlen, &sortOrder);
       }
     }
   }
@@ -481,18 +459,21 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
         l->GetValueConst(&luni);
         r->GetValueConst(&runi);
         bothValid = PR_TRUE;
-        if (isCollationKey1 && isCollationKey2)
-          return gCollation->CompareRawSortKey(NS_REINTERPRET_CAST(const PRUint8*, luni),
+
+        nsICollation* collation = nsXULContentUtils::GetCollation();
+        if (collation && isCollationKey1 && isCollationKey2) {
+          return collation->CompareRawSortKey(NS_REINTERPRET_CAST(const PRUint8*, luni),
                                                nsCRT::strlen(luni)*sizeof(PRUnichar),
                                                NS_REINTERPRET_CAST(const PRUint8*, runi),
                                                nsCRT::strlen(runi)*sizeof(PRUnichar),
                                                &sortOrder);
+        }
         else
         {
           nsresult rv = NS_ERROR_FAILURE;
           nsDependentString lstr(luni), rstr(runi);
-          if (gCollation)
-            rv = gCollation->CompareString(nsICollation::kCollationCaseInSensitive, lstr, rstr, &sortOrder);
+          if (collation)
+            rv = collation->CompareString(nsICollation::kCollationCaseInSensitive, lstr, rstr, &sortOrder);
           if (NS_FAILED(rv))
             sortOrder = Compare(lstr, rstr, nsCaseInsensitiveStringComparator());
           return NS_OK;

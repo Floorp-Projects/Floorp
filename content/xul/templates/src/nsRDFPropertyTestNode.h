@@ -40,11 +40,10 @@
 #define nsRDFPropertyTestNode_h__
 
 #include "nscore.h"
-#include "nsFixedSizeAllocator.h"
 #include "nsRDFTestNode.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFResource.h"
-class nsConflictSet;
+#include "nsXULTemplateQueryProcessorRDF.h"
 
 class nsRDFPropertyTestNode : public nsRDFTestNode
 {
@@ -52,36 +51,31 @@ public:
     /**
      * Both source and target unbound (?source ^property ?target)
      */
-    nsRDFPropertyTestNode(InnerNode* aParent,
-                          nsConflictSet& aConflictSet,
-                          nsIRDFDataSource* aDataSource,
-                          PRInt32 aSourceVariable,
+    nsRDFPropertyTestNode(TestNode* aParent,
+                          nsXULTemplateQueryProcessorRDF* aProcessor,
+                          nsIAtom* aSourceVariable,
                           nsIRDFResource* aProperty,
-                          PRInt32 aTargetVariable);
+                          nsIAtom* aTargetVariable);
 
     /**
      * Source bound, target unbound (source ^property ?target)
      */
-    nsRDFPropertyTestNode(InnerNode* aParent,
-                          nsConflictSet& aConflictSet,
-                          nsIRDFDataSource* aDataSource,
+    nsRDFPropertyTestNode(TestNode* aParent,
+                          nsXULTemplateQueryProcessorRDF* aProcessor,
                           nsIRDFResource* aSource,
                           nsIRDFResource* aProperty,
-                          PRInt32 aTargetVariable);
+                          nsIAtom* aTargetVariable);
 
     /**
      * Source unbound, target bound (?source ^property target)
      */
-    nsRDFPropertyTestNode(InnerNode* aParent,
-                          nsConflictSet& aConflictSet,
-                          nsIRDFDataSource* aDataSource,
-                          PRInt32 aSourceVariable,
+    nsRDFPropertyTestNode(TestNode* aParent,
+                          nsXULTemplateQueryProcessorRDF* aProcessor,
+                          nsIAtom* aSourceVariable,
                           nsIRDFResource* aProperty,
                           nsIRDFNode* aTarget);
 
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const;
-
-    virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
 
     virtual PRBool
     CanPropagate(nsIRDFResource* aSource,
@@ -92,9 +86,7 @@ public:
     virtual void
     Retract(nsIRDFResource* aSource,
             nsIRDFResource* aProperty,
-            nsIRDFNode* aTarget,
-            nsTemplateMatchSet& aFirings,
-            nsTemplateMatchSet& aRetractions) const;
+            nsIRDFNode* aTarget) const;
 
 
     class Element : public MemoryElement {
@@ -156,12 +148,11 @@ public:
     };
 
 protected:
-    nsConflictSet&             mConflictSet;
-    nsCOMPtr<nsIRDFDataSource> mDataSource;
-    PRInt32                  mSourceVariable;
+    nsXULTemplateQueryProcessorRDF* mProcessor;
+    nsCOMPtr<nsIAtom>        mSourceVariable;
     nsCOMPtr<nsIRDFResource> mSource;
     nsCOMPtr<nsIRDFResource> mProperty;
-    PRInt32                  mTargetVariable;
+    nsCOMPtr<nsIAtom>        mTargetVariable;
     nsCOMPtr<nsIRDFNode>     mTarget;
 };
 

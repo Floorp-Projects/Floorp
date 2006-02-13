@@ -12,15 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Neil Deakin
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Waterson <waterson@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,27 +34,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsTemplateMatch.h"
-#include "nsTemplateRule.h"
+#ifndef nsXULTemplateResultSetRDF_h__
+#define nsXULTemplateResultSetRDF_h__
 
-#ifdef NEED_CPP_UNUSED_IMPLEMENTATIONS
-nsTemplateMatch::nsTemplateMatch(const nsTemplateMatch& aMatch) {}
-void nsTemplateMatch::operator=(const nsTemplateMatch& aMatch) {}
-#endif
+#include "nsFixedSizeAllocator.h"
+#include "nsISimpleEnumerator.h"
+#include "nsRuleNetwork.h"
+#include "nsRDFQuery.h"
+#include "nsXULTemplateResultRDF.h"
 
-nsresult
-nsTemplateMatch::RuleMatched(nsTemplateQuerySet* aQuerySet,
-                             nsTemplateRule* aRule,
-                             nsIXULTemplateResult* aResult)
+class nsXULTemplateQueryProcessorRDF;
+class nsXULTemplateResultRDF;
+
+/**
+ * An enumerator used to iterate over a set of results.
+ */
+class nsXULTemplateResultSetRDF : public nsISimpleEnumerator
 {
-    mRule = aRule;
+private:
+    nsXULTemplateQueryProcessorRDF* mProcessor;
 
-    nsCOMPtr<nsIDOMNode> rulenode;
-    aRule->GetRuleNode(getter_AddRefs(rulenode));
-    if (rulenode) {
-        nsCOMPtr<nsIDOMNode> querynode = do_QueryInterface(aQuerySet->mQueryNode);
-        return aResult->RuleMatched(querynode, rulenode);
+    nsRDFQuery* mQuery;
+
+    const InstantiationSet* mInstantiations;
+
+    nsCOMPtr<nsIRDFResource> mResource;
+
+    InstantiationSet::List *mCurrent;
+
+    PRBool mCheckedNext;
+
+public:
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsISimpleEnumerator interface
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    nsXULTemplateResultSetRDF(nsXULTemplateQueryProcessorRDF *aProcessor,
+                              nsRDFQuery* aQuery,
+                              const InstantiationSet* aInstantiations)
+        : mProcessor(aProcessor),
+          mQuery(aQuery),
+          mInstantiations(aInstantiations),
+          mCurrent(nsnull),
+          mCheckedNext(PR_FALSE)
+    { }
+
+    ~nsXULTemplateResultSetRDF()
+    {
+        delete mInstantiations;
     }
+};
 
-    return NS_OK;
-}
+#endif // nsXULTemplateResultSetRDF_h__
