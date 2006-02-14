@@ -163,6 +163,7 @@ function downloadChooseFolder() {
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   var refLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(nsIFile );
   fp.init(window, null, nsIFilePicker.modeSave);
+  fp.defaultString="save_file_here";
   const nsILocalFile = Components.interfaces.nsILocalFile;
 
   var customDirPref = document.getElementById("downloadDir");
@@ -173,12 +174,14 @@ function downloadChooseFolder() {
    fp.displayDirectory = fileCustomDirFile;
   }
   fp.appendFilters(nsIFilePicker.filterAll);
+
   var returnFilePickerValue=fp.show();
+
   if (returnFilePickerValue == nsIFilePicker.returnOK) {
     var file = fp.file.QueryInterface(nsILocalFile);
-    var filepath = fp.file.QueryInterface(nsIFile);
+
     var currentDirPref = document.getElementById("downloadDir");
-    customDirPref.value = currentDirPref.value = file.path;
+    customDirPref.value = currentDirPref.value = file.parent.path;
   }
 
 }
