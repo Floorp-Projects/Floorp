@@ -124,11 +124,8 @@ class nsIURI;
 
 #define NS_APP_EVENT_FLAG_NONE      0x00000000
 
-// Similar to NS_EVENT_FLAG_NO_DEFAULT, but it allows focus
-#define NS_APP_EVENT_FLAG_HANDLED   0x00000001
-
 // True if the event came from a trusted source
-#define NS_APP_EVENT_FLAG_TRUSTED   0x00000002
+#define NS_APP_EVENT_FLAG_TRUSTED   0x00000001
 
 #define NS_EVENT_TYPE_NULL                   0
 

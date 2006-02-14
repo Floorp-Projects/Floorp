@@ -157,9 +157,6 @@ public:
   NS_IMETHOD    HasOriginalTarget(PRBool* aResult);
   NS_IMETHOD    SetTrusted(PRBool aTrusted);
 
-  NS_IMETHOD    IsHandled(PRBool* aHandled);
-  NS_IMETHOD    SetHandled(PRBool aHandled);
-
   static PopupControlState GetEventPopupControlState(nsEvent *aEvent);
 
   static void PopupAllowedEventsChanged();

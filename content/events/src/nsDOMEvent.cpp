@@ -602,28 +602,6 @@ nsDOMEvent::IsDispatchStopped(PRBool* aIsDispatchStopped)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::IsHandled(PRBool* aIsHandled)
-{
-  if (mEvent->internalAppFlags | NS_APP_EVENT_FLAG_HANDLED) {
-    *aIsHandled = PR_TRUE;
-  } else {
-    *aIsHandled = PR_FALSE;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMEvent::SetHandled(PRBool aHandled)
-{
-  if(aHandled)
-    mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_HANDLED;
-  else
-    mEvent->internalAppFlags &= ~NS_APP_EVENT_FLAG_HANDLED;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMEvent::GetInternalNSEvent(nsEvent** aNSEvent)
 {
   NS_ENSURE_ARG_POINTER(aNSEvent);
