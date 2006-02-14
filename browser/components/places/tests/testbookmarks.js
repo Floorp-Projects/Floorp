@@ -41,40 +41,40 @@
  *  xpcshell -f testbookmarks.js
  */
 
-const NS_STORAGE_FILE = "UStor";
-const nsIFile = Components.interfaces.nsIFile;
+const NS_APP_USER_PROFILE_50_DIR = "ProfD";
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cr = Components.results;
 
-// If there's no location registered for the storage file, register one now.
-var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-var storageFile = null;
+// If there's no location registered for the profile direcotry, register one now.
+var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+var profileDir = null;
 try {
-  storageFile = dirSvc.get(NS_STORAGE_FILE, nsIFile);
+  profileDir = dirSvc.get(NS_APP_USER_PROFILE_50_DIR, Ci.nsIFile);
 } catch (e) {}
-if (!storageFile) {
-  // Register our own provider for the storage file.  It will create the file
-  // "storage.sdb" in the current directory.
+if (!profileDir) {
+  // Register our own provider for the profile directory.
+  // It will simply return the current directory.
   var provider = {
     getFile: function(prop, persistent) {
       persistent.value = true;
-      if (prop == NS_STORAGE_FILE) {
-        var file = dirSvc.get("CurProcD", nsIFile);
-        file.append("storage.sdb");
-        return file;
+      if (prop == NS_APP_USER_PROFILE_50_DIR) {
+        return dirSvc.get("CurProcD", Ci.nsIFile);
       }
-      throw Components.results.NS_ERROR_FAILURE;
+      throw Cr.NS_ERROR_FAILURE;
     },
     QueryInterface: function(iid) {
-      if (iid.equals(Components.interfaces.nsIDirectoryServiceProvider) ||
-          iid.equals(Components.interfaces.nsISupports)) {
+      if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
+          iid.equals(Ci.nsISupports)) {
         return this;
       }
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     }
   };
-  dirSvc.QueryInterface(Components.interfaces.nsIDirectoryService).registerProvider(provider);
+  dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 }
 
-var iosvc = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
 function uri(spec) {
   return iosvc.newURI(spec, null, null);
@@ -82,7 +82,7 @@ function uri(spec) {
 
 dump("starting tests\n");
 
-var bmsvc = Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Components.interfaces.nsINavBookmarksService);
+var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
 
 var observer = {
   onBeginUpdateBatch: function() {
@@ -107,9 +107,15 @@ var observer = {
     this._itemMovedOldIndex = oldIndex;
     this._itemMovedNewIndex = newIndex;
   },
-  onItemChanged: function(uri, property) {
+  onItemChanged: function(uri, property, value) {
     this._itemChanged = uri;
     this._itemChangedProperty = property;
+    this._itemChangedValue = value;
+  },
+  onItemVisited: function(uri, visitID, time) {
+    this._itemVisited = uri;
+    this._itemVisitedID = visitID;
+    this._itemVisitedTime = time;
   },
   onItemReplaced: function(folder, oldItem, newItem) {
     this._itemReplacedFolder = folder;
@@ -137,12 +143,20 @@ var observer = {
     this._folderChanged = folder;
     this._folderChangedProperty = property;
   },
+  onSeparatorAdded: function(folder, index) {
+    this._separatorAdded = folder;
+    this._separatorAddedIndex = index;
+  },
+  onSeparatorRemoved: function(folder, index) {
+    this._separatorRemoved = folder;
+    this._separatorRemovedIndex = index;
+  },
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsINavBookmarkObserver) ||
-        iid.equals(Components.interfaces.nsISupports)) {
+    if (iid.equals(Ci.nsINavBookmarkObserver) ||
+        iid.equals(Ci.nsISupports)) {
       return this;
     }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 };
 
@@ -151,121 +165,121 @@ bmsvc.addObserver(observer, false);
 var root = bmsvc.bookmarksRoot;
 
 // add some bookmarks and folders. note that the bookmarks menu starts
-// with a single folder from the default bookmarks
-// ("Firefox and Mozilla links")
+// with two items from the default bookmarks
+// ("Quick Searches" and "Firefox and Mozilla links").
 
 bmsvc.insertItem(root, uri("http://google.com/"), -1);
 if (observer._itemAdded.spec != "http://google.com/" ||
-    observer._itemAddedFolder != root || observer._itemAddedIndex != 1) {
-  dump("insertItem notification FAILED\n");
+    observer._itemAddedFolder != root || observer._itemAddedIndex != 2) {
+  dump("insertItem notification 1 FAILED\n");
 }
 bmsvc.setItemTitle(uri("http://google.com/"), "Google");
 if (observer._itemChanged.spec != "http://google.com/" ||
     observer._itemChangedProperty != "title") {
-  dump("setItemTitle notification FAILED\n");
+  dump("setItemTitle notification 1 FAILED\n");
 }
 
-var workFolder = bmsvc.createFolder(root, "Work", 2);
+var workFolder = bmsvc.createFolder(root, "Work", 3);
 if (observer._folderAdded != workFolder ||
     observer._folderAddedParent != root ||
-    observer._folderAddedIndex != 2) {
-  dump("createFolder notification FAILED\n");
+    observer._folderAddedIndex != 3) {
+  dump("createFolder notification 1 FAILED\n");
 }
 bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), 0);
 if (observer._itemAdded.spec != "http://developer.mozilla.org/" ||
     observer._itemAddedFolder != workFolder || observer._itemAddedIndex != 0) {
-  dump("insertItem notification FAILED\n");
+  dump("insertItem notification 2 FAILED\n");
 }
 bmsvc.setItemTitle(uri("http://developer.mozilla.org/"), "DevMo");
 if (observer._itemChanged.spec != "http://developer.mozilla.org/" ||
     observer._itemChangedProperty != "title") {
-  dump("setItemTitle notification FAILED\n");
+  dump("setItemTitle notification 2 FAILED\n");
 }
 bmsvc.insertItem(workFolder, uri("http://msdn.microsoft.com/"), -1);
 if (observer._itemAdded.spec != "http://msdn.microsoft.com/" ||
     observer._itemAddedFolder != workFolder || observer._itemAddedIndex != 1) {
-  dump("insertItem notification FAILED\n");
+  dump("insertItem notification 3 FAILED\n");
 }
 bmsvc.setItemTitle(uri("http://msdn.microsoft.com/"), "MSDN");
 if (observer._itemChanged.spec != "http://msdn.microsoft.com/" ||
     observer._itemChangedProperty != "title") {
-  dump("setItemTitle notification FAILED\n");
+  dump("setItemTitle notification 2 FAILED\n");
 }
 bmsvc.removeItem(workFolder, uri("http://developer.mozilla.org/"));
 if (observer._itemRemoved.spec != "http://developer.mozilla.org/" ||
     observer._itemRemovedFolder != workFolder ||
     observer._itemRemovedIndex != 0) {
-  dump("removeItem notification FAILED\n");
+  dump("removeItem notification 1 FAILED\n");
 }
 if (observer._beginUpdateBatch != true) {
-  dump("beginUpdateBatch notification FAILED\n");
+  dump("beginUpdateBatch notification 1 FAILED\n");
 }
 observer._beginUpdateBatch = false;
 if (observer._itemMoved.spec != "http://msdn.microsoft.com/" ||
     observer._itemMovedFolder != workFolder ||
     observer._itemMovedOldIndex != 1 ||
     observer._itemMovedNewIndex != 0) {
-  dump("itemMoved notification FAILED\n");
+  dump("itemMoved notification 1 FAILED\n");
 }
 if (observer._endUpdateBatch != true) {
-  dump("endUpdateBatch notification FAILED\n");
+  dump("endUpdateBatch notification 1 FAILED\n");
 }
 observer._endUpdateBatch = false;
 bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), -1);
 if (observer._itemAdded.spec != "http://developer.mozilla.org/" ||
     observer._itemAddedFolder != workFolder || observer._itemAddedIndex != 1) {
-  dump("insertItem notification FAILED\n");
+  dump("insertItem notification 4 FAILED\n");
 }
 bmsvc.replaceItem(workFolder, uri("http://developer.mozilla.org/"),
                   uri("http://developer.mozilla.org/devnews/"));
 if (observer._itemReplaced.spec != "http://developer.mozilla.org/" ||
     observer._itemReplacedNew.spec != "http://developer.mozilla.org/devnews/" ||
     observer._itemReplacedFolder != workFolder) {
-  dump("replaceItem notification FAILED\n");
+  dump("replaceItem notification 1 FAILED\n");
 }
 var homeFolder = bmsvc.createFolder(root, "Home", -1);
 if (observer._folderAdded != homeFolder ||
-    observer._folderAddedParent != root || observer._folderAddedIndex != 3) {
-  dump("createFolder notification FAILED\n");
+    observer._folderAddedParent != root || observer._folderAddedIndex != 4) {
+  dump("createFolder notification 2 FAILED\n");
 }
 bmsvc.insertItem(homeFolder, uri("http://espn.com/"), 0);
 if (observer._itemAdded.spec != "http://espn.com/" ||
     observer._itemAddedFolder != homeFolder || observer._itemAddedIndex != 0) {
-  dump("insertItem notification FAILED\n");
+  dump("insertItem notification 5 FAILED\n");
 }
 bmsvc.setItemTitle(uri("http://espn.com/"), "ESPN");
 if (observer._itemChanged.spec != "http://espn.com/" ||
     observer._itemChangedProperty != "title") {
-  dump("setItemTitle notification FAILED\n");
+  dump("setItemTitle notification 3 FAILED\n");
 }
 bmsvc.insertItem(root, uri("place:domain=google.com&group=1"), -1);
 if (observer._itemAdded.spec != "place:domain=google.com&group=1" ||
-    observer._itemAddedFolder != root || observer._itemAddedIndex != 4) {
-  dump("insertItem notification FAILED\n");
+    observer._itemAddedFolder != root || observer._itemAddedIndex != 5) {
+  dump("insertItem notification 6 FAILED\n");
 }
 bmsvc.setItemTitle(uri("place:domain=google.com&group=1"), "Google Sites");
 if (observer._itemChanged.spec != "place:domain=google.com&group=1" ||
     observer._itemChangedProperty != "title") {
-  dump("setItemTitle notification FAILED\n");
+  dump("setItemTitle notification 4 FAILED\n");
 }
 bmsvc.moveFolder(workFolder, root, -1);
 if (observer._folderMoved != workFolder ||
     observer._folderMovedOldParent != root ||
-    observer._folderMovedOldIndex != 2 ||
+    observer._folderMovedOldIndex != 3 ||
     observer._folderMovedNewParent != root ||
-    observer._folderMovedNewIndex != 4) {
-  dump("moveFolder notification FAILED\n");
+    observer._folderMovedNewIndex != 5) {
+  dump("moveFolder notification 1 FAILED\n");
 }
 // Test expected failure of moving a folder to be its own parent
 try {
   bmsvc.moveFolder(workFolder, workFolder, -1);
-  dump("moveFolder parameter validation FAILED\n");
+  dump("moveFolder parameter validation 1 FAILED\n");
 } catch (e) {}
-if (bmsvc.indexOfItem(root, uri("http://google.com/")) != 1) {
-  dump("indexOfItem FAILED\n");
+if (bmsvc.indexOfItem(root, uri("http://google.com/")) != 2) {
+  dump("indexOfItem 1 FAILED\n");
 }
-if (bmsvc.indexOfFolder(root, workFolder) != 4) {
-  dump("indexOfFolder FAILED\n");
+if (bmsvc.indexOfFolder(root, workFolder) != 5) {
+  dump("indexOfFolder 1 FAILED\n");
 }
 // XXX test folderReadOnly
 
