@@ -28,7 +28,7 @@
 <!ENTITY downloadMediaCaption.label  "Download Media">
 <!ENTITY useDownloadDir.label        "Use Download Folder">
 <!ENTITY dontAskForLaunch.label      "Enable Automatic File Save">
-
+<!ENTITY setSaveDirectory.label      "Set Save Directory">
 
 <!-- Home pane --> 
 
