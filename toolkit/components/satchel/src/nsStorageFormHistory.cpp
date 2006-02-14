@@ -372,8 +372,13 @@ nsFormHistory::OpenDatabase()
   mStorageService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mStorageService->OpenSpecialDatabase(MOZ_STORAGE_PROFILE_STORAGE_KEY,
-                                            getter_AddRefs(mDBConn));
+  nsCOMPtr<nsIFile> formHistoryFile;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(formHistoryFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  formHistoryFile->Append(NS_LITERAL_STRING("formhistory.sqlite"));
+  rv = mStorageService->OpenDatabase(formHistoryFile, getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool exists;
