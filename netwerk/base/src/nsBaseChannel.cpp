@@ -167,6 +167,13 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, PRUint32 redirectFlags)
   return NS_OK;
 }
 
+PRBool
+nsBaseChannel::HasContentTypeHint() const
+{
+  NS_ASSERTION(!IsPending(), "HasContentTypeHint called too late");
+  return !mContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE);
+}
+
 void
 nsBaseChannel::SetContentLength64(PRInt64 len)
 {

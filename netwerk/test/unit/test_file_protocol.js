@@ -5,10 +5,13 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const PR_RDONLY = 0x1;  // see prio.h
 
+const special_type = "application/x-our-special-type";
+
 var test_index = 0;
 var test_array = [
   test_read_file,
-  test_read_dir,
+  test_read_dir_1,
+  test_read_dir_2,
   test_upload_file,
   do_test_finished
 ];
@@ -137,6 +140,11 @@ function test_read_file() {
   function on_read_complete(data) {
     dump("*** test_read_file.on_read_complete\n");
 
+    // bug 326693
+    if (chan.contentType != special_type)
+      do_throw("Type mismatch! Is <" + chan.contentType + ">, should be <" +
+               special_type + ">")
+
     /* read completed successfully.  now read data directly from file,
        and compare the result. */
     var stream = new_file_input_stream(file, false);   
@@ -146,25 +154,38 @@ function test_read_file() {
     run_next_test();
   }
 
+  chan.contentType = special_type;
   chan.asyncOpen(new Listener(on_read_complete), null);
 }
 
-function test_read_dir() {
-  dump("*** test_read_dir\n");
+function do_test_read_dir(set_type, expected_type) {
+  dump("*** test_read_dir(" + set_type + ", " + expected_type + ")\n");
 
   var file = getFile("TmpD");
   var chan = new_file_channel(file);
 
   function on_read_complete(data) {
-    dump("*** test_read_dir.on_read_complete\n");
+    dump("*** test_read_dir.on_read_complete(" + set_type + ", " + expected_type + ")\n");
 
-    /* read of directory completed successfully. */
-    if (chan.contentType != "application/http-index-format")
-      do_throw("Unexpected content type!");
+    // bug 326693
+    if (chan.contentType != expected_type)
+      do_throw("Type mismatch! Is <" + chan.contentType + ">, should be <" +
+               expected_type + ">")
+
     run_next_test();
   }
 
+  if (set_type)
+    chan.contentType = expected_type;
   chan.asyncOpen(new Listener(on_read_complete), null);
+}
+
+function test_read_dir_1() {
+  return do_test_read_dir(false, "application/http-index-format");
+}
+
+function test_read_dir_2() {
+  return do_test_read_dir(true, special_type);
 }
 
 function test_upload_file() {
@@ -183,6 +204,11 @@ function test_upload_file() {
 
   function on_upload_complete(data) {
     dump("*** test_upload_file.on_upload_complete\n");
+
+    // bug 326693
+    if (chan.contentType != special_type)
+      do_throw("Type mismatch! Is <" + chan.contentType + ">, should be <" +
+               special_type + ">")
 
     /* upload of file completed successfully. */
     if (data.length != 0)
@@ -209,6 +235,7 @@ function test_upload_file() {
     run_next_test();
   }
 
+  chan.contentType = special_type;
   chan.asyncOpen(new Listener(on_upload_complete), null);
 }
 

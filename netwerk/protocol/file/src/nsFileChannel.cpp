@@ -269,11 +269,10 @@ nsFileUploadContentStream::OnOutputStreamReady(nsIAsyncOutputStream *unused)
 
 //-----------------------------------------------------------------------------
 
-// Called to construct a blocking file input stream for the given file.  This
-// method also returns a best guess at the content-type for the data stream.
-static nsresult
-MakeFileInputStream(nsIFile *file, nsCOMPtr<nsIInputStream> &stream,
-                    nsCString &contentType)
+nsresult
+nsFileChannel::MakeFileInputStream(nsIFile *file,
+                                   nsCOMPtr<nsIInputStream> &stream,
+                                   nsCString &contentType)
 {
   // we accept that this might result in a disk hit to stat the file
   PRBool isDir;
@@ -287,11 +286,11 @@ MakeFileInputStream(nsIFile *file, nsCOMPtr<nsIInputStream> &stream,
 
   if (isDir) {
     rv = nsDirectoryIndexStream::Create(file, getter_AddRefs(stream));
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && !HasContentTypeHint())
       contentType.AssignLiteral(APPLICATION_HTTP_INDEX_FORMAT);
   } else {
     rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), file);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && !HasContentTypeHint()) {
       // Use file extension to infer content type
       nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1", &rv);
       if (NS_SUCCEEDED(rv)) {
@@ -336,7 +335,9 @@ nsFileChannel::OpenContentStream(PRBool async, nsIInputStream **result)
     // Since there isn't any content to speak of we just set the content-type
     // to something other than "unknown" to avoid triggering the content-type
     // sniffer code in nsBaseChannel.
-    SetContentType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
+    // However, don't override explicitly set types.
+    if (!HasContentTypeHint())
+      SetContentType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
   } else {
     nsCAutoString contentType;
     nsresult rv = MakeFileInputStream(file, stream, contentType);

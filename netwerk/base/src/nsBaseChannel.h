@@ -125,6 +125,12 @@ public:
   // parameter consists of the flag values defined on nsIChannelEventSink.
   nsresult Redirect(nsIChannel *newChannel, PRUint32 redirectFlags);
 
+  // Tests whether a type hint was set. Subclasses can use this to decide
+  // whether to call SetContentType.
+  // NOTE: This is only reliable if the subclass didn't itself call
+  // SetContentType, and should also not be called after OpenContentStream.
+  PRBool HasContentTypeHint() const;
+
   // The URI member should be initialized before the channel is used, and then
   // it should never be changed again until the channel is destroyed.
   nsIURI *URI() {
@@ -154,7 +160,7 @@ public:
   }
 
   // This is a short-cut to calling nsIRequest::IsPending()
-  PRBool IsPending() {
+  PRBool IsPending() const {
     return (mPump != nsnull);
   }
 
