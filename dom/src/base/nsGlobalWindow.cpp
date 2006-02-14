@@ -130,7 +130,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIFullScreen.h"
-#include "nsIStringBundle.h"
+#include "nsIScriptError.h"
 #include "nsIScriptEventManager.h" // For GetInterface()
 #include "nsIConsoleService.h"
 #include "nsIControllerContext.h"
@@ -283,12 +283,8 @@ static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID); // For window.find()
-static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
-
-static const char kDOMBundleURL[] = "chrome://global/locale/commonDialogs.properties";
-static const char kDOMSecurityWarningsBundleURL[] = "chrome://global/locale/dom/dom.properties";
 
 static const char kCryptoContractID[] = NS_CRYPTO_CONTRACTID;
 static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
@@ -3229,27 +3225,17 @@ nsGlobalWindow::MakeScriptDialogTitle(const nsAString &aInTitle,
     // the string to be prepended to titles for script
     // confirm/alert/prompt boxes.
 
-    nsCOMPtr<nsIStringBundleService> stringBundleService =
-      do_GetService(kCStringBundleServiceCID);
-
-    if (stringBundleService) {
-      nsCOMPtr<nsIStringBundle> stringBundle;
-      stringBundleService->CreateBundle(kDOMBundleURL,
-                                        getter_AddRefs(stringBundle));
-
-      if (stringBundle) {
-        nsAutoString inTitle(aInTitle);
-        nsXPIDLString tempString;
-        const PRUnichar *formatStrings[1];
-        formatStrings[0] = inTitle.get();
-        stringBundle->FormatStringFromName(
-          NS_LITERAL_STRING("ScriptDlgTitle").get(),
-          formatStrings, 1, getter_Copies(tempString));
-        if (tempString) {
-          aOutTitle = tempString.get();
-        }
-      }
-    }
+    const nsAFlatString & flatTitle = PromiseFlatString(aInTitle);
+    const PRUnichar *formatStrings[] = { flatTitle.get() };
+    
+    nsXPIDLString tempString;
+    nsContentUtils::FormatLocalizedString(
+        nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
+        "ScriptDlgTitle",
+        formatStrings, NS_ARRAY_LENGTH(formatStrings),
+        tempString);
+                                          
+    aOutTitle = tempString;
   }
 
   // Just in case
@@ -4406,25 +4392,15 @@ nsGlobalWindow::Close()
       if (!allowClose) {
         // We're blocking the close operation
         // report localized error msg in JS console
-        nsCOMPtr<nsIStringBundleService> stringBundleService =
-          do_GetService(kCStringBundleServiceCID);
-        if (stringBundleService) {
-          nsCOMPtr<nsIStringBundle> stringBundle;
-          stringBundleService->CreateBundle(kDOMSecurityWarningsBundleURL,
-                                            getter_AddRefs(stringBundle));
-          if (stringBundle) {
-            nsXPIDLString errorMsg;
-            rv = stringBundle->GetStringFromName(
-                   NS_LITERAL_STRING("WindowCloseBlockedWarning").get(),
-                   getter_Copies(errorMsg));
-            if (NS_SUCCEEDED(rv)) {
-              nsCOMPtr<nsIConsoleService> console =
-                do_GetService("@mozilla.org/consoleservice;1");
-              if (console)
-                console->LogStringMessage(errorMsg.get());
-            }
-          }
-        }
+        nsContentUtils::ReportToConsole(
+            nsContentUtils::eDOM_PROPERTIES,
+            "WindowCloseBlockedWarning",
+            nsnull, 0, // No params
+            nsnull, // No URI.  Not clear which URI we should be using
+                    // here anyway
+            EmptyString(), 0, 0, // No source, or column/line number
+            nsIScriptError::warningFlag,
+            "DOM Window");  // Better name for the category?
 
         return NS_OK;
       }
