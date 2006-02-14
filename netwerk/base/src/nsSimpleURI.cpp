@@ -231,6 +231,8 @@ nsSimpleURI::SetPassword(const nsACString &password)
 NS_IMETHODIMP
 nsSimpleURI::GetHostPort(nsACString &result)
 {
+    // Note: Audit all callers before changing this to return an empty
+    // string -- CAPS and UI code may depend on this throwing.
     return NS_ERROR_FAILURE;
 }
 
@@ -243,6 +245,8 @@ nsSimpleURI::SetHostPort(const nsACString &result)
 NS_IMETHODIMP
 nsSimpleURI::GetHost(nsACString &result)
 {
+    // Note: Audit all callers before changing this to return an empty
+    // string -- CAPS and UI code depend on this throwing.
     return NS_ERROR_FAILURE;
 }
 
@@ -255,6 +259,8 @@ nsSimpleURI::SetHost(const nsACString &host)
 NS_IMETHODIMP
 nsSimpleURI::GetPort(PRInt32 *result)
 {
+    // Note: Audit all callers before changing this to return an empty
+    // string -- CAPS and UI code may depend on this throwing.
     return NS_ERROR_FAILURE;
 }
 
