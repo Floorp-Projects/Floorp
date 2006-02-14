@@ -95,6 +95,15 @@ function UIdependencyCheck() {
 }
 
 
+/*
+ * OnReadPref callbacks 
+ */
+
+function downloadSetTextbox() {
+	var dirLocation=document.getElementById("downloadDir").value;
+	document.getElementById("downloadDirDisplay").value=dirLocation.path;
+}
+
 
 /* Live Synchronizers
  * =====
@@ -163,14 +172,15 @@ function downloadChooseFolder() {
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   var refLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(nsIFile );
   fp.init(window, null, nsIFilePicker.modeSave);
+
   fp.defaultString="save_file_here";
+
   const nsILocalFile = Components.interfaces.nsILocalFile;
 
   var customDirPref = document.getElementById("downloadDir");
 
   if (customDirPref.value) {
-   var fileCustomDirFile= refLocalFile.QueryInterface(nsILocalFile);
-   fileCustomDirFile.initWithPath(customDirPref.value);
+   var fileCustomDirFile=customDirPref.value;
    fp.displayDirectory = fileCustomDirFile;
   }
   fp.appendFilters(nsIFilePicker.filterAll);
@@ -182,6 +192,8 @@ function downloadChooseFolder() {
 
     var currentDirPref = document.getElementById("downloadDir");
     customDirPref.value = currentDirPref.value = file.parent;
+
+    document.getElementById("downloadDirDisplay").value=file.parent.path;
 
   }
 
@@ -444,8 +456,35 @@ function syncPrefLoadDOM(elementList) {
 		var prefName=elementAndPref.getAttribute("preference");
 		var prefUIType=elementAndPref.getAttribute("prefuitype");
 		var transValidator=elementAndPref.getAttribute("onsyncfrompreference");
+		var onReadPref=elementAndPref.getAttribute("onreadpref");
 
 		var prefDOMValue=null;
+
+		if (document.getElementById(prefName).getAttribute("preftype")=="file") {
+
+		    try {
+
+		            prefDOMValue = gPref.getComplexValue(prefName, Components.interfaces.nsILocalFile);
+
+                } catch (ex) { prefDOMValue=null; } 
+
+		    document.getElementById(prefName).value=prefDOMValue;
+
+			if(transValidator) {
+				preGETValue=eval(transValidator);
+				if(prefUIType=="string" || prefUIType=="int") elementAndPref.value=preGETValue;
+				if(prefUIType=="bool") elementAndPref.checked=preGETValue;
+			} else {
+				elementAndPref.value=prefDOMValue;
+			}		
+		    
+
+			if(onReadPref) {
+				eval(onReadPref);
+			}
+
+		} 
+
 
 		if (document.getElementById(prefName).getAttribute("preftype")=="string") {
 
