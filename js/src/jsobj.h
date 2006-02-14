@@ -306,7 +306,7 @@ extern JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 extern JSBool
-js_FindConstructor(JSContext *cx, JSObject *start, const char *name, jsval *vp);
+js_FindConstructor(JSContext *cx, JSObject *start, JSAtom *ctorName, jsval *vp);
 
 extern JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
@@ -454,7 +454,8 @@ extern JSBool
 js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 extern JSBool
-js_GetClassPrototype(JSContext *cx, const char *name, JSObject **protop);
+js_GetClassPrototype(JSContext *cx, JSObject *scope, JSAtom *atom,
+                     JSObject **protop);
 
 extern JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,

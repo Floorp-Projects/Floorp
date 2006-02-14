@@ -904,7 +904,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     return protos[0];
 }
 
-const JSErrorFormatString* 
+const JSErrorFormatString*
 js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale, const uintN errorNumber)
 {
     const JSErrorFormatString *errorString = NULL;
@@ -934,6 +934,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     JSErrNum errorNumber;
     JSExnType exn;
     JSBool ok;
+    JSAtom *errAtom;
     JSObject *errProto, *errObject;
     JSString *messageStr, *filenameStr;
     uintN lineno;
@@ -985,11 +986,22 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
         goto out;
 
     /*
+     * FIXME: Can runtime->atomState->lazy.nameErrorAtom be used here instead
+     * of atomizing name?
+     */
+    errAtom = js_Atomize(cx, exceptions[exn].name,
+                         strlen(exceptions[exn].name), 0);
+    if (!errAtom) {
+        ok = JS_FALSE;
+        goto out;
+    }
+
+    /*
      * Try to get an appropriate prototype by looking up the corresponding
      * exception constructor name in the scope chain of the current context's
      * top stack frame, or in the global object if no frame is active.
      */
-    ok = js_GetClassPrototype(cx, exceptions[exn].name, &errProto);
+    ok = js_GetClassPrototype(cx, NULL, errAtom, &errProto);
     if (!ok)
         goto out;
 
