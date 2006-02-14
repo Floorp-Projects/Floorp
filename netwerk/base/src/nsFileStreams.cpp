@@ -69,22 +69,6 @@
 
 #define NS_NO_INPUT_BUFFERING 1 // see http://bugzilla.mozilla.org/show_bug.cgi?id=41067
 
-#if defined(PR_LOGGING)
-//
-// Log module for nsFileTransport logging...
-//
-// To enable logging (see prlog.h for full details):
-//
-//    set NSPR_LOG_MODULES=nsFileIO:5
-//    set NSPR_LOG_FILE=nspr.log
-//
-// this enables PR_LOG_DEBUG level information and places all output in
-// the file nspr.log
-//
-PRLogModuleInfo* gFileIOLog = nsnull;
-
-#endif /* PR_LOGGING */
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileStream
 

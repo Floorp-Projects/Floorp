@@ -39,6 +39,7 @@
 
 #include "nsIndexedToHTML.h"
 #include "nsNetUtil.h"
+#include "netCore.h"
 #include "nsStringStream.h"
 #include "nsIFileURL.h"
 #include "nsEscape.h"
@@ -105,8 +106,7 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
     nsCOMPtr<nsIStringBundleService> sbs =
         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = sbs->CreateBundle("chrome://necko/locale/necko.properties",
-                           getter_AddRefs(mBundle));
+    rv = sbs->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(mBundle));
 
     mExpectAbsLoc = PR_FALSE;
 

@@ -64,7 +64,7 @@
 // this enables PR_LOG_DEBUG level information and places all output in
 // the file nspr.log
 //
-PRLogModuleInfo* gLoadGroupLog = nsnull;
+static PRLogModuleInfo* gLoadGroupLog = nsnull;
 #endif
 
 #define LOG(args) PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, args)

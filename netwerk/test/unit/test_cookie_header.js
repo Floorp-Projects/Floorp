@@ -30,7 +30,7 @@ var listener = {
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
-    if (this._iteration == 1 && Components.isSuccessCode(status))
+    if (this._iteration == 1)
       run_test_continued();
     do_test_finished();
   },
