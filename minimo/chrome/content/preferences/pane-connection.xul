@@ -129,7 +129,7 @@
                                           
                       <button id="chooseFolderButton" tabindex="55"
 			                        class='box-prefgroupitem'
-			                        label="Set Folder"
+			                        label="&setSaveDirectory.label;"
 			                        oncommand="syncPref(document.getElementById('downloadDir'));downloadChooseFolder();"/>
 
                     </hbox>		
