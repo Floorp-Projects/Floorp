@@ -38,71 +38,40 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!--
+  This file implements the "abstract" UI classes for all XForms controls. They
+  all have "pure virtual" functions that they expect to be implemented by
+  concrete application and returned in the getElementControl() call. An example
+  is the controls for XHTML in xforms-xhtml.xml.
+-->
+
+
 <!DOCTYPE bindings [
 <!ENTITY % xformsDTD SYSTEM "chrome://xforms/locale/xforms.dtd">
   %xformsDTD;
 ]>
 
 <bindings id="xformsBindings"
-   xmlns="http://www.mozilla.org/xbl"
-   xmlns:html="http://www.w3.org/1999/xhtml"
-   xmlns:xbl="http://www.mozilla.org/xbl"
-   xmlns:xforms="http://www.w3.org/2002/xforms"
-   xmlns:lazy="http://www.mozilla.org/projects/xforms/2005/lazy">
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xforms="http://www.w3.org/2002/xforms"
+          xmlns:lazy="http://www.mozilla.org/projects/xforms/2005/lazy">
 
+
+  <!-- LAZY INSTANCE MODEL -->
   <binding id="xforms-lazy-instance">
     <content><xforms:instance lazy:lazy="true"/><children/></content>
   </binding>
 
+
   <!-- BASE -->
   <binding id="xformswidget-base">
     <content><children/></content>
-    
+
     <implementation implements="nsIXFormsUIWidget">
-      <constructor>
-        this.delegate.widgetAttached();
-      </constructor>
 
-      <destructor>
-        this._delegate = null;
-        this._accessors = null;
-      </destructor>
-
-      <property name="XFORMS_NS" readonly="true">
-        <getter>
-          return "http://www.w3.org/2002/xforms";
-        </getter>
-      </property>
-
-      <field name="_delegate">null</field>
-
-      <property name="delegate" readonly="true">
-        <getter>
-          if (!this._delegate)
-            this._delegate = this.QueryInterface(Components.interfaces.nsIXFormsDelegate);
-          return this._delegate;
-        </getter>
-      </property>
-
-      <field name="_accessors">null</field>
-
-      <property name="accessors" readonly="true">
-        <getter>
-        <![CDATA[
-          if (!this._accessors && this.delegate)
-            this._accessors = this.delegate.getXFormsAccessors();
-          return this._accessors;
-        ]]>
-        </getter>
-      </property>
-
-      <property name="stringValue" readonly="true">
-        <getter>
-          var value = this.accessors.getValue();
-          return value != null ? value : "";
-        </getter>
-      </property>
-
+    <!-- nsIXFormsUIWidget interface -->
       <method name="refresh">
         <body>
           return true;
@@ -121,6 +90,30 @@
           return false;
         </body>
       </method>
+
+    <!-- interface -->
+      <property name="XFORMS_NS" readonly="true">
+        <getter>
+          return "http://www.w3.org/2002/xforms";
+        </getter>
+      </property>
+
+      <property name="accessors" readonly="true">
+        <getter>
+          <![CDATA[
+          if (!this._accessors && this.delegate)
+            this._accessors = this.delegate.getXFormsAccessors();
+          return this._accessors;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="stringValue" readonly="true">
+        <getter>
+          var value = this.accessors.getValue();
+          return value != null ? value : "";
+        </getter>
+      </property>
 
       <!-- Dispatch UI Event to the control itself -->
       <method name="dispatchDOMUIEvent">
@@ -147,67 +140,103 @@
           return true;
         </body>
       </method>
-    </implementation>
-  </binding>
 
-  <!-- OUTPUT: <DEFAULT> -->
-  <binding id="xformswidget-output"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <content>
-      <children includes="label"/>
-      <!-- XXX initialize span with a space until repeat is xbl-ized.  Part
-           of workaround for bug 322975 
+      <!--
+        Return object to operate with underliying controls. Each xforms widget
+        defines interface what should implement the object.
       -->
-      <html:span class="xf-value" anonid="content"> </html:span>
-      <children/>
-    </content>
+      <property name="control" readonly="true">
+        <getter>
+          if (!this._control) 
+            this._control = this.getControlElement();
+          return this._control;
+        </getter>
+      </property>
 
-    <implementation implements="nsIXFormsUIWidget">
-      <method name="refresh">
+      <!--
+        Each base binding for xforms widget assumes successors bindings will
+        override the method.
+      -->
+      <method name="getControlElement">
         <body>
-          // XXX changing from setting textContent to setting nodeValue of
-          // first child (text node created by space character initializer
-          // above).  Workaround for bug 322975.  Probably should be changed
-          // back after repeat is xbl-ized
-          document.getAnonymousElementByAttribute(this, "anonid", "content").firstChild.nodeValue =
-            this.stringValue;
-
-          return true;
+          throw Error("getControlElement() method isn't implemented.");
         </body>
       </method>
-    </implementation>
-  </binding>
 
-  <!-- LABEL: <DEFAULT> -->
-  <binding id="xformswidget-label"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <content>
-      <html:span anonid="content"></html:span>
-      <html:span anonid="anoncontent">
-        <children/>
-      </html:span>
-    </content>
-    <implementation implements="nsIXFormsUIWidget">
-      <method name="refresh">
-        <body>
-          var anoncontent =
-            document.getAnonymousElementByAttribute(this, "anonid", "anoncontent");
+    <!-- private -->
+      <constructor>
+        this.delegate.widgetAttached();
+      </constructor>
 
-          if (this.accessors.hasBoundNode() || this.accessors.getValue() != null) {
-            anoncontent.setAttribute("style", "display:none;");
-          } else {
-            anoncontent.removeAttribute("style");
+      <destructor>
+        this._delegate = null;
+        this._accessors = null;
+      </destructor>
+
+      <property name="delegate" readonly="true">
+        <getter>
+          if (!this._delegate) {
+            this._delegate =
+              this.QueryInterface(Components.interfaces.nsIXFormsDelegate);
           }
+          return this._delegate;
+        </getter>
+      </property>
 
-          document.getAnonymousElementByAttribute(this, "anonid", "content").textContent =
-            this.stringValue;
+      <field name="_delegate">null</field>
+      <field name="_accessors">null</field>
+      <field name="_control">null</field>
+
+    </implementation>
+  </binding>
+
+
+  <!-- OUTPUT: <DEFAULT>
+    The output widget assumes successors bindings implement getElementControl()
+    method what returns the object:
+    {
+      set value(); // set "string" value
+    }
+  -->
+  <binding id="xformswidget-output-base"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <implementation implements="nsIXFormsUIWidget">
+      <method name="refresh">
+        <body>
+          this.control.value = this.stringValue;
           return true;
         </body>
       </method>
     </implementation>
   </binding>
 
-  <!-- LABEL: <ACCESKEY SUPPORT> -->
+
+  <!-- LABEL: <DEFAULT>
+    The label widget assumes successors bindings implement getElementControl()
+    method what returns the object:
+    {
+      set value(); // set "string" value
+    }
+  -->
+  <binding id="xformswidget-label-base"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+
+    <implementation implements="nsIXFormsUIWidget">
+      <method name="refresh">
+        <body>
+          this.control.value = this.accessors.getValue();
+          return true;
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+
+
+  <!-- LABEL: <ACCESKEY SUPPORT>
+    XXX: The widget doesn't support interface based on getElementControl()
+    method (see a bug https://bugzilla.mozilla.org/show_bug.cgi?id=323845).
+  -->
   <binding id="xformswidget-label-accesskey"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
@@ -257,8 +286,8 @@
               // we create a range around the character we want and surround it
               // with an <html:u>
               var range = document.createRange();
-              range.setStart(content.firstChild, location)
-              range.setEnd(content.firstChild, location+1)
+              range.setStart(content.firstChild, location);
+              range.setEnd(content.firstChild, location+1);
 
               var u = document.createElementNS("http://www.w3.org/1999/xhtml", "u");
               range.surroundContents(u);
@@ -275,110 +304,116 @@
     </implementation>
   </binding>
 
-  <!-- INPUT: <DEFAULT> -->
-  <binding id="xformswidget-input"
+
+  <!-- INPUT: <DEFAULT>
+    The input widget assumes successors bindings implement getElementControl()
+    method what returns the object:
+    {
+      set value(); // set "string" value
+      get value(); // return "string" value
+      set readonly(); // set readonly state
+      focus(); // set focus
+    }
+  -->
+  <binding id="xformswidget-input-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <content>
-      <children includes="label"/>
-      <html:input anonid="control"
-                  class="xf-value"
-                  onblur="this.parentNode.accessors.setValue(this.value); this.parentNode.dispatchDOMUIEvent('DOMFocusOut')"
-                  onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn')"
-                  onclick="this.parentNode._change();"
-                  onkeyup="if (event.keyCode != event.DOM_VK_TAB) this.parentNode._change();"
-                  onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
-                  xbl:inherits="accesskey"/>
-      <children/>
-    </content>
 
     <implementation implements="nsIXFormsUIWidget">
-      <field name="_inputField">null</field>
-
-      <property name="inputField" readonly="true">
-        <getter>
-          if (!this._inputField) {
-            this._inputField =
-              document.getAnonymousElementByAttribute(this, "anonid", "control");
-          }
-          return this._inputField;
-        </getter>
-      </property>
-
-      <method name="_change">
-        <body>
-          if (this.getAttribute("incremental") == "true") {
-            this.accessors.setValue(this.inputField.value);
-          }
-          return true;
-        </body>
-      </method>
 
       <method name="refresh">
         <body>
-          this.inputField.value = this.stringValue;
-          if (this.accessors.isReadonly()) {
-            this.inputField.setAttribute("readonly", "readonly");
-          } else {
-            this.inputField.removeAttribute("readonly");
+          this.control.readonly = this.accessors.isReadonly();
+          // If the value has not changed, no need to update the
+          // value of the control, because f.x. that makes the textarea widget
+          // to scroll up.
+          if (this.control.value != this.stringValue) {
+            this.control.value = this.stringValue;
           }
+
           return true;
         </body>
       </method>
 
       <method name="focus">
         <body>
-          this.inputField.focus();
+          this.control.focus();
           return true;
         </body>
       </method>
+
+      <method name="updateInstanceData">
+        <parameter name="incremental"/>
+        <body>
+          if (!incremental || this.getAttribute("incremental") == "true")
+            this.accessors.setValue(this.control.value);
+        </body>
+      </method>
+
     </implementation>
   </binding>
 
-  <!-- INPUT: BOOLEAN -->
-  <binding id="xformswidget-input-boolean"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-input">
+
+  <!-- INPUT: BOOLEAN
+    The input[type="xsd:boolean"] widget assumes successors bindings implement
+    getElementControl() method what returns the object:
+    {
+      set value(); // set "boolean" value
+      get value(); // return "boolean" value
+      set readonly(); // set readonly state
+      focus(); // set focus
+    }
+  -->
+  <binding id="xformswidget-input-boolean-base"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+
     <implementation>
       <method name="refresh">
         <body>
-          this.inputField.setAttribute("type","checkbox");
           var value = this.stringValue;
           if (value == "true" || value == "1") {
-            this.inputField.setAttribute("checked", "checked");
+            this.control.value = true;
           } else {
-            this.inputField.removeAttribute("checked");
-          }
-          
-          this.inputField.value = value;
-          if (this.accessors.isReadonly()) {
-            this.inputField.setAttribute("readonly", "readonly");
-          } else {
-            this.inputField.removeAttribute("readonly");
+            this.control.value = false;
           }
 
-          <!-- Ignore Enter keypress on checkbox -->
-          this.inputField.removeAttribute("onkeypress");
-
+          this.control.readonly = this.accessors.isReadonly();
           return true;
         </body>
       </method>
 
-      <method name="_change">
+      <method name="focus">
         <body>
-          if (this.getAttribute("incremental") != "false") {
-            if (this.inputField.checked) {
+          this.control.focus();
+          return true;
+        </body>
+      </method>
+
+      <method name="updateInstanceData">
+        <parameter name="incremental"/>
+        <body>
+          <![CDATA[
+          if (!incremental || this.getAttribute("incremental") != "false") {
+            if (this.control.value) {
               this.accessors.setValue("true");
             } else {
               this.accessors.setValue("false");
             }
           }
+          ]]>
         </body>
       </method>
+
     </implementation>
+
   </binding>
 
-  <!-- INPUT: DATE -->
+
+  <!-- INPUT: DATE
+    XXX: The widget doesn't support interface based on getElementControl()
+    method (see a bug https://bugzilla.mozilla.org/show_bug.cgi?id=323845).
+  -->
   <binding id="xformswidget-input-date"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-input">
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
       <children/>
       <html:input anonid="control"
@@ -428,6 +463,26 @@
         </body>
       </method>
 
+      <method name="_change">
+        <body>
+          if (this.getAttribute("incremental") == "true") {
+            this.accessors.setValue(this.inputField.value);
+          }
+          return true;
+        </body>
+      </method>
+
+      <field name="_inputField">null</field>
+      <property name="inputField" readonly="true">
+        <getter>
+          if (!this._inputField) {
+            this._inputField =
+              document.getAnonymousElementByAttribute(this, "anonid", "control");
+          }
+          return this._inputField;
+        </getter>
+      </property>
+
       <field name="_picker">null</field>
       <property name="picker" readonly="true">
         <getter>
@@ -451,7 +506,6 @@
       </property>
 
       <field name="_dateField">null</field>
-
       <property name="dateField" readonly="true">
         <getter>
           if (!this._dateField) {
@@ -479,7 +533,6 @@
         ]]>
         </body>
       </method>
-
 
       <method name="_showPicker">
         <body>
@@ -596,7 +649,7 @@
 
             for (var y = 0; y < 7; y++) {
               cell = document.createElementNS(xhtmlNS, "td");
-              cell.setAttribute("num", this._cells.length)
+              cell.setAttribute("num", this._cells.length);
               this._cells[this._cells.length] = {row:i, col:y, node: cell};
 
               row.appendChild(cell);
@@ -641,12 +694,12 @@
                 var maxprev = this._getDaysInMonth(prevmonth, prevyear);
                 this._cells[i].node.textContent = maxprev - firstDay + i + 1;
 
-                this._cells[i].node.className = "prevMonth"
+                this._cells[i].node.className = "prevMonth";
                 showsPrevDays++;
               } else {
                 // next month
                 this._cells[i].node.textContent = i - (firstDay + totaldays) + 1;
-                this._cells[i].node.className = "nextMonth"
+                this._cells[i].node.className = "nextMonth";
               }
             } else {
               // current month
@@ -688,7 +741,7 @@
           var month, year = aYear;
 
           if (aMonth == 0) {
-            month = 11
+            month = 11;
             year--;
           } else {
             month = aMonth - 1;
@@ -705,7 +758,7 @@
           var month, year = aYear;
 
           if (aMonth == 11) {
-            month = 0
+            month = 0;
             year++;
           } else {
             month = aMonth + 1;
@@ -849,7 +902,7 @@
             } else if ((index + 1) < this._cells.length) {
               this.selectCell(index + 1);
             }
-          } else if (event.keyCode == event.DOM_VK_RETURN &&
+          } else if (event.keyCode == event.DOM_VK_RETURN && 
                      event.originalTarget.localName == "td") {
             var type = event.originalTarget.className;
             if (type == "currentMonth") {
@@ -885,7 +938,7 @@
           // check if something changed
           this._change();
         }
-      ]]>
+        ]]>
       </handler>
 
       <handler event="mousedown">
@@ -922,7 +975,10 @@
     </handlers>
   </binding>
 
- <!-- INPUT: Month -->
+  <!-- INPUT: Month
+    XXX: The widget doesn't support interface based on getElementControl()
+    method (see a bug https://bugzilla.mozilla.org/show_bug.cgi?id=323845).
+  -->
   <binding id="xformswidget-input-month"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
@@ -948,7 +1004,7 @@
           this.select.readonly = this.accessors.isReadonly();
 
           if (this.accessors.isValid())
-            this.select.value = this.stringValue.substr(2,2)
+            this.select.value = this.stringValue.substr(2,2);
           else
             this.select.value = "";
 
@@ -960,26 +1016,26 @@
       <method name="_build">
         <body>
         <![CDATA[
-         // create the select options
-         var xhtmlNS = "http://www.w3.org/1999/xhtml";
+          // create the select options
+          var xhtmlNS = "http://www.w3.org/1999/xhtml";
 
-         var date = new Date();
-         var option, monthName;
-         for (var i = 0; i < 12; i++) {
-           option = document.createElementNS(xhtmlNS, "option");
+          var date = new Date();
+          var option, monthName;
+          for (var i = 0; i < 12; i++) {
+            option = document.createElementNS(xhtmlNS, "option");
 
-           var value = i + 1;
-           if (value < 10)
-             value = "0" + value;
-           option.setAttribute("value", value);
+            var value = i + 1;
+            if (value < 10)
+              value = "0" + value;
+            option.setAttribute("value", value);
 
-           date.setMonth(i);
-           monthName = date.toLocaleFormat("%B");
+            date.setMonth(i);
+            monthName = date.toLocaleFormat("%B");
 
-           var txt = document.createTextNode(monthName);
-           option.appendChild(txt);
-           this.select.appendChild(option);
-         }
+            var txt = document.createTextNode(monthName);
+            option.appendChild(txt);
+            this.select.appendChild(option);
+          }
 
          this.refresh();
         ]]>
@@ -1016,7 +1072,10 @@
     </implementation>
   </binding>
 
-  <!-- INPUT: Day -->
+  <!-- INPUT: Day
+    XXX: The widget doesn't support interface based on getElementControl()
+    method (see a bug https://bugzilla.mozilla.org/show_bug.cgi?id=323845).
+  -->
   <binding id="xformswidget-input-day"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
@@ -1042,7 +1101,7 @@
           this.select.readonly = this.accessors.isReadonly();
 
           if (this.accessors.isValid())
-            this.select.value = this.stringValue.substr(3,2)
+            this.select.value = this.stringValue.substr(3,2);
           else
             this.select.value = "";
 
@@ -1098,7 +1157,7 @@
       <property name="select" readonly="true">
         <getter>
           if (!this._select) {
-            this._select =
+            this._select = 
               document.getAnonymousElementByAttribute(this, "anonid", "control");
           }
           return this._select;
@@ -1107,111 +1166,39 @@
     </implementation>
   </binding>
 
-  <!-- SECRET: <DEFAULT> -->
-  <binding id="xformswidget-secret"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-input">
-    <implementation>
-      <method name="refresh">
-        <body>
-          this.inputField.setAttribute("type","password");
-          this.inputField.value = this.stringValue;
-          this.inputField.readonly = this.accessors.isReadonly();
-          return true;
-        </body>
-      </method>
-    </implementation>
-  </binding>
 
-  <!-- TEXTAREA: <DEFAULT> -->
-  <binding id="xformswidget-textarea"
+  <!-- SECRET: <DEFAULT>
+    We don't need in any special base binding for secret widget. All
+    successors bindings should be extended from base binding for input widget.
+  -->
+
+  <!-- TEXTAREA: <DEFAULT>
+    We don't need in any special base binding for textarea widget. All
+    successors bindings should be extended from base binding for input widget.
+  -->
+
+  <!-- TRIGGER: <DEFAULT>
+    The trigger widget assumes successors bindings implement getElementControl()
+    method what returns the object:
+    {
+      set disabled(); // set disabled state
+      focus(); // set focus
+    }
+  -->
+  <binding id="xformswidget-trigger-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <content>
-      <children includes="label"/>
-      <html:textarea anonid="control"
-                     class="xf-value"
-                     onblur="this.parentNode.accessors.setValue(this.value); this.parentNode.dispatchDOMUIEvent('DOMFocusOut')"
-                     onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn')"
-                     onkeyup="this.parentNode._change();"
-                     xbl:inherits="accesskey"/>
-      <children/>
-    </content>
-
-    <implementation implements="nsIXFormsUIWidget">
-      <field name="_controlField">null</field>
-
-      <property name="controlField" readonly="true">
-        <getter>
-          if (!this._controlField) {
-            this._controlField =
-              document.getAnonymousElementByAttribute(this, "anonid", "control");
-          }
-          return this._controlField;
-        </getter>
-      </property>
-
-      <method name="refresh">
-        <body>
-          if (this.accessors.isReadonly()) {
-            this.controlField.setAttribute("readonly", "readonly");
-          } else {
-            this.controlField.removeAttribute("readonly");
-          }
-          // If the value has not changed, no need to update the
-          // value of the control, because that makes the textarea widget
-          // to scroll up.
-          if (this.controlField.value != this.stringValue) {
-            this.controlField.value = this.stringValue;
-          }
-          return true;
-        </body>
-      </method>
-
-      <method name="_change">
-        <body>
-          if (this.getAttribute("incremental") == "true") {
-            this.accessors.setValue(this.controlField.value);
-          }
-          return true;
-        </body>
-      </method>
-
-      <method name="focus">
-        <body>
-          this.controlField.focus();
-          return true;
-        </body>
-      </method>
-    </implementation>
-  </binding>
-
-  <!-- TRIGGER: <DEFAULT> -->
-  <binding id="xformswidget-trigger"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <content>
-      <html:button anonid="thebutton" xbl:inherits="accesskey" 
-                   onblur="this.parentNode.dispatchDOMUIEvent('DOMFocusOut')"
-                   onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn')">
-        <children/>
-      </html:button>
-    </content>
 
     <implementation implements="nsIXFormsUIWidget">
       <method name="disable">
         <parameter name="aDisable"/>
         <body>
-          var control =
-            document.getAnonymousElementByAttribute(this, "anonid", "thebutton");
-          if (aDisable) {
-            control.setAttribute("disabled", "disabled");
-          } else {
-            control.removeAttribute("disabled");
-          }
+          this.control.disabled = aDisable;
         </body>
       </method>
 
       <method name="focus">
         <body>
-          document.getAnonymousElementByAttribute(this, "anonid", "thebutton").focus();
+          this.control.focus();
           return true;
         </body>
       </method>
@@ -1219,36 +1206,13 @@
     </implementation>
   </binding>
 
-  <!-- TRIGGER: MINIMAL -->
-  <binding id="xformswidget-trigger-minimal"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <content>
-      <html:span tabindex="0" anonid="thespan" xbl:inherits="accesskey"
-                 onclick="if (!this._disabled) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
-                 onblur="this.parentNode.dispatchDOMUIEvent('DOMFocusOut')"
-                 onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn')">
-        <children/>
-      </html:span>
-    </content>
 
-    <implementation implements="nsIXFormsUIWidget">
-      <field name="_disabled">false</field>
+  <!-- TRIGGER: MINIMAL
+    We don't need in any special base binding for trigger[appearance="minimal"]
+    widget. All successors bindings should be extended from base binding for
+    default trigger widget.
+  -->
 
-      <method name="disable">
-        <parameter name="aDisable"/>
-        <body>
-          this._disabled = aDisable;
-        </body>
-      </method>
-
-      <method name="focus">
-        <body>
-          document.getAnonymousElementByAttribute(this, "anonid", "thespan").focus();
-          return true;
-        </body>
-      </method>
-    </implementation>
-  </binding>
 
   <!-- CASE: <DEFAULT> -->
   <binding id="xformswidget-case">
@@ -1260,15 +1224,16 @@
 
     <implementation implements="nsIXFormsCaseUIElement">
       <constructor>
-        this.QueryInterface(Components.interfaces.nsIXFormsCaseElement).widgetAttached();
+        this.QueryInterface(Components.interfaces.nsIXFormsCaseElement).
+          widgetAttached();
       </constructor>
 
       <field name="_container">null</field>
       <property name="container" readonly="true">
         <getter>
           if (!this._container) {
-            this._container =
-              document.getAnonymousElementByAttribute(this, "anonid", "container");
+            this._container = document.
+              getAnonymousElementByAttribute(this, "anonid", "container");
           }
           return this._container;
         </getter>
@@ -1286,10 +1251,15 @@
           return true;
         </body>
       </method>
+
     </implementation>
   </binding>
 
-  <!-- UPLOAD: <DEFAULT> -->
+
+  <!-- UPLOAD: <DEFAULT>
+    XXX: The widget doesn't support interface based on getElementControl()
+    method (see a bug https://bugzilla.mozilla.org/show_bug.cgi?id=323845).
+  -->
   <binding id="xformswidget-upload"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
@@ -1378,7 +1348,10 @@
     </implementation>
   </binding>
 
-  <!-- UPLOAD: DISABLED -->
+  <!-- UPLOAD: DISABLED
+    XXX: The widget doesn't support interface based on getElementControl()
+    method (see a bug https://bugzilla.mozilla.org/show_bug.cgi?id=323845).
+  -->
   <binding id="xformswidget-upload-disabled"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
