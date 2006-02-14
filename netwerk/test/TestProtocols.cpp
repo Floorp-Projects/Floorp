@@ -143,6 +143,19 @@ SetHttpProxy(const char *proxy)
   return NS_OK;
 }
 
+static nsresult
+SetPACFile(const char* pacURL)
+{
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs)
+  {
+    prefs->SetCharPref("network.proxy.autoconfig_url", pacURL);
+    prefs->SetIntPref("network.proxy.type", 2); // PAC file
+  }
+  LOG(("connecting using PAC file %s\n", pacURL));
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // HeaderVisitor
 //-----------------------------------------------------------------------------
@@ -801,7 +814,9 @@ main(int argc, char* argv[])
 
     nsresult rv= (nsresult)-1;
     if (argc < 2) {
-        printf("usage: %s [-verbose] [-file <name>] [-resume <startoffset> [-entityid <entityid>]] [-proxy <proxy>] [-console] <url> <url> ... \n", argv[0]);
+        printf("usage: %s [-verbose] [-file <name>] [-resume <startoffset>"
+               "[-entityid <entityid>]] [-proxy <proxy>] [-pac <pacURL>]"
+               "[-console] <url> <url> ... \n", argv[0]);
         return -1;
     }
 
@@ -858,6 +873,11 @@ main(int argc, char* argv[])
 
             if (PL_strcasecmp(argv[i], "-proxy") == 0) {
                 SetHttpProxy(argv[++i]);
+                continue;
+            }
+
+            if (PL_strcasecmp(argv[i], "-pac") == 0) {
+                SetPACFile(argv[++i]);
                 continue;
             }
 

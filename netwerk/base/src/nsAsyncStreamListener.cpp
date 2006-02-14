@@ -48,7 +48,7 @@
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 #if defined(PR_LOGGING)
-PRLogModuleInfo* gStreamEventLog = 0;
+static PRLogModuleInfo* gStreamEventLog = 0;
 #endif
 
 // prevent name conflicts
