@@ -52,6 +52,13 @@
 #include "nsBidiKeyboard.h"
 
 #include "nsScreenManagerBeOS.h" 
+// Printing:
+// aka    nsDeviceContextSpecBeOS.h 
+#include "nsDeviceContextSpecB.h"
+// aka    nsDeviceContextSpecFactoryBeOS.h
+#include "nsDeviceContextSpecFactoryB.h" 
+#include "nsPrintOptionsBeOS.h"
+#include "nsPrintSession.h"
 
 // Drag & Drop, Clipboard
 #include "nsTransferable.h"
@@ -74,7 +81,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerBeOS) 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerBeOS)
+ 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecBeOS) 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryBeOS) 
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsBeOS, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorBeOS)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -133,7 +146,30 @@ static const nsModuleComponentInfo components[] =
   { "BeOS Screen Manager", 
     NS_SCREENMANAGER_CID, 
     "@mozilla.org/gfx/screenmanager;1", 
-    nsScreenManagerBeOSConstructor }
+    nsScreenManagerBeOSConstructor },
+  { "BeOS Device Context Spec", 
+    NS_DEVICE_CONTEXT_SPEC_CID, 
+    //    "@mozilla.org/gfx/device_context_spec/beos;1", 
+    "@mozilla.org/gfx/devicecontextspec;1", 
+    nsDeviceContextSpecBeOSConstructor }, 
+  { "BeOS Device Context Spec Factory", 
+    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID, 
+    //    "@mozilla.org/gfx/device_context_spec_factory/beos;1", 
+    "@mozilla.org/gfx/devicecontextspecfactory;1", 
+    nsDeviceContextSpecFactoryBeOSConstructor }, 
+  { "BeOS Printer Enumerator",
+    NS_PRINTER_ENUMERATOR_CID,
+    //    "@mozilla.org/gfx/printer_enumerator/beos;1",
+    "@mozilla.org/gfx/printerenumerator;1",
+    nsPrinterEnumeratorBeOSConstructor },
+  { "BeOS PrintSettings Service",
+  	NS_PRINTSETTINGSSERVICE_CID,
+  	"@mozilla.org/gfx/printsettings-service;1",
+  	nsPrintOptionsBeOSConstructor },
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetBeOSModule,components)
