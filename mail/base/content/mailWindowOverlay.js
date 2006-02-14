@@ -156,6 +156,23 @@ function InitEditMessagesMenu()
   goSetMenuValue('cmd_delete', 'valueDefault');
   goSetAccessKey('cmd_delete', 'valueDefaultAccessKey');
   document.commandDispatcher.updateCommands('create-menu-edit');
+
+  // initialize the favorite Folder checkbox in the edit menu
+  var favoriteFolderMenu = document.getElementById('menu_favoriteFolder');
+  if (favoriteFolderMenu && !favoriteFolderMenu.disabled)
+  {
+    var folderTree = GetFolderTree();
+    var startIndex = {};
+    var endIndex = {};
+    folderTree.view.selection.getRangeAt(0, startIndex, endIndex);
+    if (startIndex.value >= 0)
+    {
+      var numSelected = endIndex.value - startIndex.value + 1;
+      var folderResource = GetFolderResource(folderTree, startIndex.value);
+      var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer") == 'true';
+      SetupFavoritesMenuItem(folderResource, numSelected, isServer, 'menu_favoriteFolder');
+    }
+  }
 }
 
 function InitGoMessagesMenu()
@@ -204,79 +221,71 @@ function view_init()
   document.commandDispatcher.updateCommands('create-menu-view');
 }
 
-function InitViewLayoutStyleMenu()
+function InitViewLayoutStyleMenu(event)
 {
   var paneConfig = pref.getIntPref("mail.pane_config.dynamic");
+  var layoutStyleMenuitem = event.target.childNodes[paneConfig];
+  if (layoutStyleMenuitem)
+    layoutStyleMenuitem.setAttribute("checked", "true"); 
+}
 
-  switch (paneConfig) 
-  {
-    case kClassicMailLayout:
-      id ="messagePaneClassic";
-      break;
-    case kWideMailLayout:	
-      id = "messagePaneWide";
-      break;
-    case kVerticalMailLayout:
-      id = "messagePaneVertical";
-      break;
-  }
-
-  var layoutStyleMenuitem = document.getElementById(id);
+function InitViewFolderViewsMenu(event)
+{
+  var layoutStyleMenuitem = event.target.childNodes[gCurrentFolderView];
   if (layoutStyleMenuitem)
     layoutStyleMenuitem.setAttribute("checked", "true"); 
 }
 
 function setSortByMenuItemCheckState(id, value)
 {
-    var menuitem = document.getElementById(id);
-    if (menuitem) {
-      menuitem.setAttribute("checked", value);
-    }
+  var menuitem = document.getElementById(id);
+  if (menuitem) 
+    menuitem.setAttribute("checked", value);
 }
 
 function InitViewSortByMenu()
 {
-    var sortType = gDBView.sortType;
+  var sortType = gDBView.sortType;
 
-    setSortByMenuItemCheckState("sortByDateMenuitem", (sortType == nsMsgViewSortType.byDate));
-    setSortByMenuItemCheckState("sortByFlagMenuitem", (sortType == nsMsgViewSortType.byFlagged));
-    setSortByMenuItemCheckState("sortByOrderReceivedMenuitem", (sortType == nsMsgViewSortType.byId));
-    setSortByMenuItemCheckState("sortByPriorityMenuitem", (sortType == nsMsgViewSortType.byPriority));
-    setSortByMenuItemCheckState("sortBySizeMenuitem", (sortType == nsMsgViewSortType.bySize));
-    setSortByMenuItemCheckState("sortByStatusMenuitem", (sortType == nsMsgViewSortType.byStatus));
-    setSortByMenuItemCheckState("sortBySubjectMenuitem", (sortType == nsMsgViewSortType.bySubject));
-    setSortByMenuItemCheckState("sortByUnreadMenuitem", (sortType == nsMsgViewSortType.byUnread));
-    setSortByMenuItemCheckState("sortByLabelMenuitem", (sortType == nsMsgViewSortType.byLabel));
-    setSortByMenuItemCheckState("sortByJunkStatusMenuitem", (sortType == nsMsgViewSortType.byJunkStatus));
-    setSortByMenuItemCheckState("sortBySenderMenuitem", (sortType == nsMsgViewSortType.byAuthor));
-    setSortByMenuItemCheckState("sortByRecipientMenuitem", (sortType == nsMsgViewSortType.byRecipient)); 
-    setSortByMenuItemCheckState("sortByAttachmentsMenuitem", (sortType == nsMsgViewSortType.byAttachments)); 	
+  setSortByMenuItemCheckState("sortByDateMenuitem", (sortType == nsMsgViewSortType.byDate));
+  setSortByMenuItemCheckState("sortByFlagMenuitem", (sortType == nsMsgViewSortType.byFlagged));
+  setSortByMenuItemCheckState("sortByOrderReceivedMenuitem", (sortType == nsMsgViewSortType.byId));
+  setSortByMenuItemCheckState("sortByPriorityMenuitem", (sortType == nsMsgViewSortType.byPriority));
+  setSortByMenuItemCheckState("sortBySizeMenuitem", (sortType == nsMsgViewSortType.bySize));
+  setSortByMenuItemCheckState("sortByStatusMenuitem", (sortType == nsMsgViewSortType.byStatus));
+  setSortByMenuItemCheckState("sortBySubjectMenuitem", (sortType == nsMsgViewSortType.bySubject));
+  setSortByMenuItemCheckState("sortByUnreadMenuitem", (sortType == nsMsgViewSortType.byUnread));
+  setSortByMenuItemCheckState("sortByLabelMenuitem", (sortType == nsMsgViewSortType.byLabel));
+  setSortByMenuItemCheckState("sortByJunkStatusMenuitem", (sortType == nsMsgViewSortType.byJunkStatus));
+  setSortByMenuItemCheckState("sortBySenderMenuitem", (sortType == nsMsgViewSortType.byAuthor));
+  setSortByMenuItemCheckState("sortByRecipientMenuitem", (sortType == nsMsgViewSortType.byRecipient)); 
+  setSortByMenuItemCheckState("sortByAttachmentsMenuitem", (sortType == nsMsgViewSortType.byAttachments)); 	
 
-    var sortOrder = gDBView.sortOrder;
-    var sortTypeSupportsGrouping = (sortType == nsMsgViewSortType.byAuthor 
-        || sortType == nsMsgViewSortType.byDate || sortType == nsMsgViewSortType.byPriority
-        || sortType == nsMsgViewSortType.bySubject || sortType == nsMsgViewSortType.byLabel
-        || sortType == nsMsgViewSortType.byRecipient || sortType == nsMsgViewSortType.byAccount
-        || sortType == nsMsgViewSortType.byStatus);
+  var sortOrder = gDBView.sortOrder;
+  var sortTypeSupportsGrouping = (sortType == nsMsgViewSortType.byAuthor 
+      || sortType == nsMsgViewSortType.byDate || sortType == nsMsgViewSortType.byPriority
+      || sortType == nsMsgViewSortType.bySubject || sortType == nsMsgViewSortType.byLabel
+      || sortType == nsMsgViewSortType.byRecipient || sortType == nsMsgViewSortType.byAccount
+      || sortType == nsMsgViewSortType.byStatus);
 
-    setSortByMenuItemCheckState("sortAscending", (sortOrder == nsMsgViewSortOrder.ascending));
-    setSortByMenuItemCheckState("sortDescending", (sortOrder == nsMsgViewSortOrder.descending));
+  setSortByMenuItemCheckState("sortAscending", (sortOrder == nsMsgViewSortOrder.ascending));
+  setSortByMenuItemCheckState("sortDescending", (sortOrder == nsMsgViewSortOrder.descending));
 
-    var grouped = ((gDBView.viewFlags & nsMsgViewFlagsType.kGroupBySort) != 0);
-    var threaded = ((gDBView.viewFlags & nsMsgViewFlagsType.kThreadedDisplay) != 0 && !grouped);
-    var sortThreadedMenuItem = document.getElementById("sortThreaded");
-    var sortUnthreadedMenuItem = document.getElementById("sortUnthreaded");
+  var grouped = ((gDBView.viewFlags & nsMsgViewFlagsType.kGroupBySort) != 0);
+  var threaded = ((gDBView.viewFlags & nsMsgViewFlagsType.kThreadedDisplay) != 0 && !grouped);
+  var sortThreadedMenuItem = document.getElementById("sortThreaded");
+  var sortUnthreadedMenuItem = document.getElementById("sortUnthreaded");
 
-    sortThreadedMenuItem.setAttribute("checked", threaded);
-    sortUnthreadedMenuItem.setAttribute("checked", !threaded && !grouped);
+  sortThreadedMenuItem.setAttribute("checked", threaded);
+  sortUnthreadedMenuItem.setAttribute("checked", !threaded && !grouped);
 
-    sortThreadedMenuItem.setAttribute("disabled", !gDBView.supportsThreading);
-    sortUnthreadedMenuItem.setAttribute("disabled", !gDBView.supportsThreading);
+  sortThreadedMenuItem.setAttribute("disabled", !gDBView.supportsThreading);
+  sortUnthreadedMenuItem.setAttribute("disabled", !gDBView.supportsThreading);
 
-    var groupBySortOrderMenuItem = document.getElementById("groupBySort");
+  var groupBySortOrderMenuItem = document.getElementById("groupBySort");
 
-    groupBySortOrderMenuItem.setAttribute("disabled", !gDBView.supportsThreading || !sortTypeSupportsGrouping);
-    groupBySortOrderMenuItem.setAttribute("checked", grouped);
+  groupBySortOrderMenuItem.setAttribute("disabled", !gDBView.supportsThreading || !sortTypeSupportsGrouping);
+  groupBySortOrderMenuItem.setAttribute("checked", grouped);
 }
 
 function InitViewMessagesMenu()
@@ -1103,38 +1112,42 @@ function MsgSubscribe()
 
 function ConfirmUnsubscribe(folder)
 {
-    if (!gMessengerBundle)
-        gMessengerBundle = document.getElementById("bundle_messenger");
+  if (!gMessengerBundle)
+    gMessengerBundle = document.getElementById("bundle_messenger");
 
-    var titleMsg = gMessengerBundle.getString("confirmUnsubscribeTitle");
-    var dialogMsg = gMessengerBundle.getFormattedString("confirmUnsubscribeText",
-                                        [folder.name], 1);
+  var titleMsg = gMessengerBundle.getString("confirmUnsubscribeTitle");
+  var dialogMsg = gMessengerBundle.getFormattedString("confirmUnsubscribeText",
+                                      [folder.name], 1);
 
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-    return promptService.confirm(window, titleMsg, dialogMsg);
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+  return promptService.confirm(window, titleMsg, dialogMsg);
 }
 
 function MsgUnsubscribe()
 {
-    var folder = GetFirstSelectedMsgFolder();
-    if (ConfirmUnsubscribe(folder)) {
-        UnSubscribe(folder);
-    }
+  var folder = GetFirstSelectedMsgFolder();
+  if (ConfirmUnsubscribe(folder)) {
+    UnSubscribe(folder);
+  }
+}
+
+function ToggleFavoriteFolderFlag()
+{
+  var folder = GetFirstSelectedMsgFolder();
+  folder.toggleFlag(MSG_FOLDER_FLAG_FAVORITE);
 }
 
 function MsgSaveAsFile()
 {
-    if (GetNumSelectedMessages() == 1) {
-        SaveAsFile(GetFirstSelectedMessage());
-    }
+  if (GetNumSelectedMessages() == 1)
+    SaveAsFile(GetFirstSelectedMessage());
 }
 
 function MsgSaveAsTemplate()
 {
-    var folder = GetLoadedMsgFolder();
-    if (GetNumSelectedMessages() == 1) {
-        SaveAsTemplate(GetFirstSelectedMessage(), folder);
-    }
+  var folder = GetLoadedMsgFolder();
+  if (GetNumSelectedMessages() == 1)
+    SaveAsTemplate(GetFirstSelectedMessage(), folder);
 }
 
 function MsgOpenNewWindowForMsgHdr(hdr)

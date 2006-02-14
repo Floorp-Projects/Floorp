@@ -297,15 +297,11 @@ function fillFolderPaneContextMenu()
   var canGetMessages =  (isServer && (serverType != "nntp") && (serverType !="none")) || isNewsgroup;
 
   EnableMenuItem("folderPaneContext-properties", true);
-  ShowMenuItem("folderPaneContext-getMessages", (numSelected <= 1) && canGetMessages);
-  EnableMenuItem("folderPaneContext-getMessages", true);
-
-  ShowMenuItem("folderPaneContext-openNewWindow", (numSelected <= 1) && !isServer);
-  EnableMenuItem("folderPaneContext-openNewWindow", true);
 
   SetupRenameMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
   SetupRemoveMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
   SetupCompactMenuItem(folderResource, numSelected);
+  SetupFavoritesMenuItem(folderResource, numSelected, isServer, 'folderPaneContext-favoriteFolder');
 
   ShowMenuItem("folderPaneContext-copy-location", !isServer && !isVirtualFolder);
   ShowMenuItem("folderPaneContext-emptyTrash", (numSelected <= 1) && (specialFolder == 'Trash'));
@@ -314,13 +310,8 @@ function fillFolderPaneContextMenu()
   var showSendUnsentMessages = (numSelected <= 1) 
     && (specialFolder == 'Unsent Messages' || specialFolder == 'Unsent');
   ShowMenuItem("folderPaneContext-sendUnsentMessages", showSendUnsentMessages);
-  if (showSendUnsentMessages) {
+  if (showSendUnsentMessages) 
     EnableMenuItem("folderPaneContext-sendUnsentMessages", IsSendUnsentMsgsEnabled(folderResource));
-  }
-
-  ShowMenuItem("folderPaneContext-sep-edit", (numSelected <= 1));
-
-  SetupNewMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
 
   ShowMenuItem("folderPaneContext-subscribe", (numSelected <= 1) && canSubscribeToFolder && !isVirtualFolder);
   EnableMenuItem("folderPaneContext-subscribe", !isVirtualFolder);
@@ -328,16 +319,13 @@ function fillFolderPaneContextMenu()
   // XXX: Hack for RSS servers...
   ShowMenuItem("folderPaneContext-rssSubscribe", (numSelected <= 1) && (serverType == "rss"));
   EnableMenuItem("folderPaneContext-rssSubscribe", true);
-
-  ShowMenuItem("folderPaneContext-sep1", (numSelected <= 1) && !isServer);
-// News folder context menu =============================================
-
+  
+  // News folder context menu =============================================
   ShowMenuItem("folderPaneContext-newsUnsubscribe", (numSelected <= 1) && canSubscribeToFolder && isNewsgroup);
   EnableMenuItem("folderPaneContext-newsUnsubscribe", true);
   ShowMenuItem("folderPaneContext-markNewsgroupAllRead", (numSelected <= 1) && isNewsgroup);
   EnableMenuItem("folderPaneContext-markNewsgroupAllRead", true);
-
-// End of News folder context menu =======================================
+  // End of News folder context menu =======================================
 
   ShowMenuItem("folderPaneContext-markMailFolderAllRead", (numSelected <= 1) && isMailFolder && !isVirtualFolder);
   EnableMenuItem("folderPaneContext-markMailFolderAllRead", !isVirtualFolder);
@@ -345,6 +333,10 @@ function fillFolderPaneContextMenu()
   ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1) && !isVirtualFolder);
   EnableMenuItem("folderPaneContext-searchMessages", IsCanSearchMessagesEnabled() && !isVirtualFolder);
 
+  // Hide / Show our menu separators based on the menu items we are showing.
+  ShowMenuItem("folderPaneContext-sep1", (numSelected <= 1) && !isServer);
+  ShowMenuItem('folderPaneContext-sep2', shouldShowSeparator('folderPaneContext-sep2')); 
+  ShowMenuItem("folderPaneContext-sep3", shouldShowSeparator('folderPaneContext-sep3')); // we always show the separator before properties menu item
   return(true);
 }
 
@@ -359,11 +351,6 @@ function SetupRenameMenuItem(folderResource, numSelected, isServer, serverType, 
   ShowMenuItem("folderPaneContext-rename", (numSelected <= 1) && !isServer && !isSpecialFolder && canRename);
   var folder = GetMsgFolderFromResource(folderResource);
   EnableMenuItem("folderPaneContext-rename", !isServer && folder.isCommandEnabled("cmd_renameFolder"));
-
-  if(canRename)
-  {
-    SetMenuItemLabel("folderPaneContext-rename", gMessengerBundle.getString("renameFolder"));
-  }
 }
 
 function SetupRemoveMenuItem(folderResource, numSelected, isServer, serverType, specialFolder)
@@ -381,10 +368,6 @@ function SetupRemoveMenuItem(folderResource, numSelected, isServer, serverType, 
     var folder = GetMsgFolderFromResource(folderResource);
     EnableMenuItem("folderPaneContext-remove", folder.isCommandEnabled("cmd_delete"));
   }
-  if(isMail && !isSpecialFolder)
-  {
-    SetMenuItemLabel("folderPaneContext-remove", gMessengerBundle.getString("removeFolder"));
-  }
 }
 
 function SetupCompactMenuItem(folderResource, numSelected)
@@ -394,35 +377,18 @@ function SetupCompactMenuItem(folderResource, numSelected)
   var folder = GetMsgFolderFromResource(folderResource);
   ShowMenuItem("folderPaneContext-compact", (numSelected <=1) && canCompact && !(folder.flags & MSG_FOLDER_FLAG_VIRTUAL));
   EnableMenuItem("folderPaneContext-compact", folder.isCommandEnabled("cmd_compactFolder") && !(folder.flags & MSG_FOLDER_FLAG_VIRTUAL));
-
-  if(canCompact)
-  {
-    SetMenuItemLabel("folderPaneContext-compact", gMessengerBundle.getString("compactFolder"));
-  }
 }
 
-function SetupNewMenuItem(folderResource, numSelected, isServer, serverType, specialFolder)
+function SetupFavoritesMenuItem(folderResource, numSelected, isServer, menuItemId)
 {
   var folderTree = GetFolderTree();
-  var canCreateNew = GetFolderAttribute(folderTree, folderResource, "CanCreateSubfolders") == "true";
-  var isInbox = specialFolder == "Inbox";
+  var folder = GetMsgFolderFromResource(folderResource);
+  var showItem = !isServer && (numSelected <=1);
+  ShowMenuItem(menuItemId, showItem); 
 
-  var isIMAPFolder = GetFolderAttribute(folderTree, folderResource,
-                       "ServerType") == "imap";
-
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                         .getService(Components.interfaces.nsIIOService);
-
-  var showNew = ((numSelected <=1) && (serverType != 'nntp') && canCreateNew) || isInbox;
-  ShowMenuItem("folderPaneContext-new", showNew);
-  EnableMenuItem("folderPaneContext-new", !isIMAPFolder || !ioService.offline);
-  if(showNew)
-  {
-    if(isServer || isInbox)
-      SetMenuItemLabel("folderPaneContext-new", gMessengerBundle.getString("newFolder"));
-    else
-      SetMenuItemLabel("folderPaneContext-new", gMessengerBundle.getString("newSubfolder"));
-  }
+  // adjust the checked state on the menu
+  if (showItem)
+    document.getElementById(menuItemId).setAttribute('checked',folder.getFlag(MSG_FOLDER_FLAG_FAVORITE));
 }
 
 function ShowMenuItem(id, showItem)
@@ -499,42 +465,52 @@ function fillMessagePaneContextMenu()
   SetupAddSenderToABMenuItem("messagePaneContext-addSenderToAddressBook", numSelected, (numSelected == 0 || hideMailItems));
   SetupAddAllToABMenuItem("messagePaneContext-addAllToAddressBook", numSelected, (numSelected == 0 || hideMailItems));
 
-  //Figure out separators
-  ShowMenuItem("messagePaneContext-sep-open", ShowSeparator("messagePaneContext-sep-open"));
-  ShowMenuItem("messagePaneContext-sep-reply", ShowSeparator("messagePaneContext-sep-reply"));
-  ShowMenuItem("messagePaneContext-sep-edit", ShowSeparator("messagePaneContext-sep-edit") || gContextMenu.onMailtoLink);
-  ShowMenuItem("messagePaneContext-sep-link", ShowSeparator("messagePaneContext-sep-link"));
-  ShowMenuItem("messagePaneContext-sep-copy", ShowSeparator("messagePaneContext-sep-copy"));
-  ShowMenuItem("messagePaneContext-sep-labels-1", ShowSeparator("messagePaneContext-sep-labels-1"));
-  ShowMenuItem("messagePaneContext-sep-labels-2", ShowSeparator("messagePaneContext-sep-labels-2"));
-
   ShowMenuItem( "context-addemail", gContextMenu.onMailtoLink );
   ShowMenuItem( "context-composeemailto", gContextMenu.onMailtoLink );
   
   // if we are on an image, go ahead and show this separator
-  if (gContextMenu.onLink && !gContextMenu.onMailtoLink)
-    ShowMenuItem("messagePaneContext-sep-edit", false);
+  //if (gContextMenu.onLink && !gContextMenu.onMailtoLink)
+//    ShowMenuItem("messagePaneContext-sep-edit", false);
+
+  //Figure out separators
+  ShowMenuItem("messagePaneContext-sep-link", shouldShowSeparator("messagePaneContext-sep-link"));
+  ShowMenuItem("messagePaneContext-sep-open", shouldShowSeparator("messagePaneContext-sep-open"));
+  ShowMenuItem("messagePaneContext-sep-reply", shouldShowSeparator("messagePaneContext-sep-reply"));
+  ShowMenuItem("messagePaneContext-sep-labels-1", shouldShowSeparator("messagePaneContext-sep-labels-1"));
+  ShowMenuItem("messagePaneContext-sep-labels-2", shouldShowSeparator("messagePaneContext-sep-labels-2"));
+  ShowMenuItem("messagePaneContext-sep-edit", shouldShowSeparator("messagePaneContext-sep-edit"));
+  ShowMenuItem("messagePaneContext-sep-copy", shouldShowSeparator("messagePaneContext-sep-copy"));
 }
 
-function ShowSeparator(aSeparatorID)
+// Determines whether or not the separator with the specified ID should be 
+// shown or not by determining if there are any non-hidden items between it
+// and the previous separator. You should start with the first separator in the menu.
+function shouldShowSeparator(aSeparatorID)
 {
   var separator = document.getElementById(aSeparatorID);
-  var sibling = separator.previousSibling;
-  var siblingID;
-  var siblingNextHiddenAttrib = separator.nextSibling.getAttribute("hidden");
+  if (separator) 
+  {
+    var sibling = separator.previousSibling;
+    while (sibling)
+    {
+      if (sibling.getAttribute("hidden") != "true")
+        return sibling.localName != "menuseparator" && hasAVisibleNextSibling(separator);
+      sibling = sibling.previousSibling;
+    }
+  }
+  return false;  
+}
 
-  while (sibling && sibling.localName != "menuseparator") {
-    siblingID = sibling.getAttribute("id");
-    // for some reason, context-blockimage and context-unblockimage is not
-    // hidden on the very first time the context menu is invoked.  It's only
-    // hidden on subsequent triggers of the context menu.  Since we're not
-    // using these two menuitems in mailnews, we can ignore it if encountered.
-    if ((sibling.getAttribute("hidden") != "true") && 
-        (siblingNextHiddenAttrib != "true") &&
-        (siblingID != "context-blockimage") &&
-        (siblingID != "context-unblockimage"))
+// helper function used by shouldShowSeparator
+function hasAVisibleNextSibling(aNode)
+{
+  var sibling = aNode.nextSibling;
+  while (sibling)
+  {
+    if (sibling.getAttribute("hidden") != "true" 
+        && sibling.localName != "menuseparator")
       return true;
-    sibling = sibling.previousSibling;
+    sibling = sibling.nextSibling;
   }
   return false;
 }

@@ -77,10 +77,8 @@
 <!ENTITY selectThreadCmd.label "Thread">
 <!ENTITY selectThreadCmd.accesskey "T">
 <!ENTITY selectThreadCmd.key "a">
-<!ENTITY filtersCmd.label "Message Filters...">
-<!ENTITY filtersCmd.accesskey "F">
-<!ENTITY filtersApply.label "Run Filters on Folder">
-<!ENTITY filtersApply.accesskey "R">
+<!ENTITY menuFavoriteFolder.label "Favorite Folder">
+<!ENTITY menuFavoriteFolder.accesskey "a">
 <!ENTITY folderPropsCmd.label "Properties...">
 <!ENTITY folderPropsFolderCmd.label "Folder Properties...">
 <!ENTITY folderPropsNewsgroupCmd.label "Newsgroup Properties...">
@@ -107,7 +105,6 @@
 <!ENTITY customizeToolbar.label "Customize...">
 <!ENTITY customizeToolbar.accesskey "C">
 
-<!-- Layout Style Menu -->
 <!ENTITY messagePaneLayoutStyle.label "Layout">
 <!ENTITY messagePaneLayoutStyle.accesskey "L">
 <!ENTITY messagePaneClassic.label "Classic View">
@@ -118,6 +115,17 @@
 <!ENTITY messagePaneVertical.accesskey "V">
 <!ENTITY showMessageCmd.label "Message Pane">
 <!ENTITY showMessageCmd.accesskey "M">
+
+<!ENTITY folderView.label "Folders">
+<!ENTITY folderView.accesskey "F">
+<!ENTITY allFolders.label "All">
+<!ENTITY allFolders.accesskey "A">
+<!ENTITY unreadFolders.label "Unread">
+<!ENTITY unreadFolders.accesskey "U">
+<!ENTITY favoriteFolders.label "Favorite">
+<!ENTITY favoriteFolders.accesskey "F">
+<!ENTITY recentFolders.label "Recent">
+<!ENTITY recentFolders.accesskey "R">
 
 <!-- Sort Menu -->
 <!ENTITY sortMenu.label "Sort by">
@@ -401,6 +409,10 @@
 <!ENTITY deleteJunk.accesskey "l">
 <!ENTITY javaScriptConsoleCmd.label "JavaScript Console">
 <!ENTITY javaScriptConsoleCmd.accesskey "n">
+<!ENTITY filtersCmd.label "Message Filters...">
+<!ENTITY filtersCmd.accesskey "F">
+<!ENTITY filtersApply.label "Run Filters on Folder">
+<!ENTITY filtersApply.accesskey "R">
 
 <!-- Help Menu -->
 <!ENTITY helpMenu.label "Help">
@@ -457,21 +469,16 @@
 <!ENTITY addressBookButton.tooltip "Go to the address book">
 
 <!-- Folder Pane -->
-<!ENTITY folderPaneHeader.label "Folders">
 <!ENTITY folderColumn.label "Name">
 <!ENTITY folderSizeColumn.label "Size">
 
 <!-- Folder Pane Context Menu -->
-<!ENTITY folderContextGetMessages.label "Get Messages for Account">
-<!ENTITY folderContextGetMessages.accesskey "G">
-<!ENTITY folderContextOpenNewWindow.label "Open in New Mail Window">
-<!ENTITY folderContextOpenNewWindow.accesskey "W">
 <!ENTITY folderContextRename.label "Rename">
 <!ENTITY folderContextRename.accesskey "R">
 <!ENTITY folderContextRemove.label "Delete">
 <!ENTITY folderContextRemove.accesskey "D">
-<!ENTITY folderContextCompact.label "Compact This Folder">
-<!ENTITY folderContextCompact.accesskey "F">
+<!ENTITY folderContextCompact.label "Compact">
+<!ENTITY folderContextCompact.accesskey "C">
 <!ENTITY folderContextEmptyTrash.label "Empty Trash">
 <!ENTITY folderContextEmptyTrash.accesskey "y">
 <!ENTITY folderContextSendUnsentMessages.label "Send Unsent Messages...">
@@ -482,16 +489,16 @@
 <!ENTITY folderContextMarkNewsgroupRead.accesskey "k">
 <!ENTITY folderContextMarkMailFolderRead.label "Mark Folder Read">
 <!ENTITY folderContextMarkMailFolderRead.accesskey "k">
-<!ENTITY folderContextNew.label "New Subfolder...">
-<!ENTITY folderContextNew.accesskey "N">
 <!ENTITY folderContextSubscribe.label "Subscribe...">
 <!ENTITY folderContextSubscribe.accesskey "b">
-<!ENTITY folderContextSearchMessages.label "Search Messages...">
+<!ENTITY folderContextSearchMessages.label "Search...">
 <!ENTITY folderContextSearchMessages.accesskey "S">
 <!ENTITY folderContextProperties.label "Properties...">
 <!ENTITY folderContextProperties.accesskey "P">
 <!ENTITY folderContextCopyLocation.label "Copy Folder Location">
-<!ENTITY folderContextCopyLocation.accesskey "C">
+<!ENTITY folderContextCopyLocation.accesskey "L">
+<!ENTITY folderContextFavoriteFolder.label "Favorite Folder">
+<!ENTITY folderContextFavoriteFolder.accesskey "a">
 
 <!-- Search Bar -->
 <!ENTITY viewPicker.label "View:">

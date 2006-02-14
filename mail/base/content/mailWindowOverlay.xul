@@ -693,14 +693,12 @@
 
   <popup id="folderPaneContext" onpopupshowing="return fillFolderPaneContextMenu();"
     onpopuphiding="if (event.target == this) folderPaneOnPopupHiding();">
-    <menuitem id="folderPaneContext-openNewWindow"
-        label="&folderContextOpenNewWindow.label;"
-        accesskey="&folderContextOpenNewWindow.accesskey;"
-        oncommand="MsgOpenNewWindowForFolder(null,-1);"/>
-    <menuitem id="folderPaneContext-copy-location"
-        label="&folderContextCopyLocation.label;"
-        accesskey="&folderContextCopyLocation.accesskey;"
-        oncommand="CopyFolderUrl();"/>
+    
+    <menuitem id="folderPaneContext-searchMessages"
+        label="&folderContextSearchMessages.label;"
+        accesskey="&folderContextSearchMessages.accesskey;"
+        observes="cmd_search"/>
+
     <menuitem id="folderPaneContext-subscribe"
         label="&folderContextSubscribe.label;"
         accesskey="&folderContextSubscribe.accesskey;"
@@ -709,35 +707,37 @@
         label="&folderContextUnsubscribe.label;"
         accesskey="&folderContextUnsubscribe.accesskey;"
         oncommand="MsgUnsubscribe();"/>
+    <!-- To Do: Move this to the folder properties dialog -->
+    <menuitem id="folderPaneContext-copy-location"
+        label="&folderContextCopyLocation.label;"
+        accesskey="&folderContextCopyLocation.accesskey;"
+        oncommand="CopyFolderUrl();"/> 
+    
     <menuseparator id="folderPaneContext-sep1"/>
-    <menuitem id="folderPaneContext-getMessages"
-        label="&folderContextGetMessages.label;"
-        accesskey="&folderContextGetMessages.accesskey;"
-        oncommand="MsgGetMessage();"/>
-    <menuitem id="folderPaneContext-markNewsgroupAllRead"
-        label="&folderContextMarkNewsgroupRead.label;"
-        accesskey="&folderContextMarkNewsgroupRead.accesskey;"
-        oncommand="MsgMarkAllRead();"/>
-    <menuitem id="folderPaneContext-markMailFolderAllRead"
-        label="&folderContextMarkMailFolderRead.label;"
-        accesskey="&folderContextMarkMailFolderRead.accesskey;"
-        oncommand="MsgMarkAllRead();"/>
-    <menuitem id="folderPaneContext-new"
-        label="&folderContextNew.label;"
-        accesskey="&folderContextNew.accesskey;"
-        oncommand="MsgNewFolder(NewFolder);"/>
-    <menuitem id="folderPaneContext-rename"
-        label="&folderContextRename.label;"
-        accesskey="&folderContextRename.accesskey;"
-        oncommand="MsgRenameFolder();"/>
-        <menuitem id="folderPaneContext-compact"
-              label="&folderContextCompact.label;"
-              accesskey="&folderContextCompact.accesskey;"
-        oncommand="MsgCompactFolder(false);"/>          //for one folder only
+
     <menuitem id="folderPaneContext-remove"
         label="&folderContextRemove.label;"
         accesskey="&folderContextRemove.accesskey;"
         oncommand="MsgDeleteFolder();"/>
+    <menuitem id="folderPaneContext-rename"
+        label="&folderContextRename.label;"
+        accesskey="&folderContextRename.accesskey;"
+        oncommand="MsgRenameFolder();"/>
+    
+    <menuseparator id="folderPaneContext-sep2"/>
+
+    <menuitem id="folderPaneContext-compact"
+        label="&folderContextCompact.label;"
+        accesskey="&folderContextCompact.accesskey;"
+        oncommand="MsgCompactFolder(false);"/>
+    <menuitem id="folderPaneContext-markMailFolderAllRead"
+        label="&folderContextMarkMailFolderRead.label;"
+        accesskey="&folderContextMarkMailFolderRead.accesskey;"
+        oncommand="MsgMarkAllRead();"/>
+    <menuitem id="folderPaneContext-markNewsgroupAllRead"
+        label="&folderContextMarkNewsgroupRead.label;"
+        accesskey="&folderContextMarkNewsgroupRead.accesskey;"
+        oncommand="MsgMarkAllRead();"/>
     <menuitem id="folderPaneContext-emptyTrash"
         label="&folderContextEmptyTrash.label;"
         accesskey="&folderContextEmptyTrash.accesskey;"
@@ -746,11 +746,15 @@
         label="&folderContextSendUnsentMessages.label;"
         accesskey="&folderContextSendUnsentMessages.accesskey;"
         oncommand="goDoCommand('cmd_sendUnsentMsgs')"/>
-    <menuseparator id="folderPaneContext-sep-edit"/>
-    <menuitem id="folderPaneContext-searchMessages"
-        label="&folderContextSearchMessages.label;"
-        accesskey="&folderContextSearchMessages.accesskey;"
-        observes="cmd_search"/>
+    
+    <menuseparator id="folderPaneContext-sep3"/>
+    
+    <menuitem id="folderPaneContext-favoriteFolder"
+        type="checkbox"
+        label="&folderContextFavoriteFolder.label;"
+        accesskey="&folderContextFavoriteFolder.accesskey;"
+        check="false"
+        oncommand="ToggleFavoriteFolderFlag();"/>
     <menuitem id="folderPaneContext-properties"
         label="&folderContextProperties.label;"
         accesskey="&folderContextProperties.accesskey;"
@@ -1024,35 +1028,35 @@
     <menuitem id="messagePaneContext-delete"
         command="cmd_delete"/>
     <menuseparator id="messagePaneContext-sep-edit"/>
-        <menuitem id="context-copylink"
-                  label="&copyLinkCmd.label;"
-                  accesskey="&copyLinkCmd.accesskey;"
-                  command="cmd_copyLink"/>
-        <menuitem id="context-copyimage"
-                  label="&copyImageCmd.label;"
-                  accesskey="&copyImageCmd.accesskey;"
-                  command="cmd_copyImageLocation"/>
-        <menuitem id="context-addemail"
-                  label="&AddToAddressBook.label;"
-                  accesskey="&AddToAddressBook.accesskey;"
-                  oncommand="addEmail();"/>
-        <menuitem id="context-composeemailto"
-                  label="&SendMailTo.label;"
-                  accesskey="&SendMailTo.accesskey;"
-                  oncommand="composeEmailTo();"/>
-        <menuitem id="context-copyemail"
-                  label="&copyEmailCmd.label;"
-                  accesskey="&copyEmailCmd.accesskey;"
-                  oncommand="gContextMenu.copyEmail();"/>
-        <menuseparator id="messagePaneContext-sep-copy"/>
-        <menuitem id="context-savelink"
-                  label="&saveLinkCmd.label;"
-                  accesskey="&saveLinkCmd.accesskey;"
-                  oncommand="gContextMenu.saveLink();"/>
-        <menuitem id="context-saveimage"
-                  label="&saveImageCmd.label;"
-                  accesskey="&saveImageCmd.accesskey;"
-                  oncommand="gContextMenu.saveImage();"/>
+    <menuitem id="context-copylink"
+              label="&copyLinkCmd.label;"
+              accesskey="&copyLinkCmd.accesskey;"
+              command="cmd_copyLink"/>
+    <menuitem id="context-copyimage"
+              label="&copyImageCmd.label;"
+              accesskey="&copyImageCmd.accesskey;"
+              command="cmd_copyImageLocation"/>
+    <menuitem id="context-addemail"
+              label="&AddToAddressBook.label;"
+              accesskey="&AddToAddressBook.accesskey;"
+              oncommand="addEmail();"/>
+    <menuitem id="context-composeemailto"
+              label="&SendMailTo.label;"
+              accesskey="&SendMailTo.accesskey;"
+              oncommand="composeEmailTo();"/>
+    <menuitem id="context-copyemail"
+              label="&copyEmailCmd.label;"
+              accesskey="&copyEmailCmd.accesskey;"
+              oncommand="gContextMenu.copyEmail();"/>
+    <menuseparator id="messagePaneContext-sep-copy"/>
+    <menuitem id="context-savelink"
+              label="&saveLinkCmd.label;"
+              accesskey="&saveLinkCmd.accesskey;"
+              oncommand="gContextMenu.saveLink();"/>
+    <menuitem id="context-saveimage"
+              label="&saveImageCmd.label;"
+              accesskey="&saveImageCmd.accesskey;"
+              oncommand="gContextMenu.saveImage();"/>
 
 </popup>
 
@@ -1165,49 +1169,55 @@
     <!-- Edit -->
     <menu id="menu_Edit" oncommand="CommandUpdate_UndoRedo();">
       <menupopup onpopupshowing="InitEditMessagesMenu()">
-      <menuitem id="menu_undo" label="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" observes="cmd_undo" oncommand="Undo()"/>
-      <menuitem id="menu_redo" label="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" observes="cmd_redo" oncommand="Redo()"/>
-      <menuseparator/>
-      <menuitem id="menu_cut"/>
-      <menuitem id="menu_copy"/>
-      <menuitem id="menu_paste"/>
-      <menuitem id="menu_delete" observes="cmd_delete"/>
-      <menuseparator/>
-      <menu label="&selectMenu.label;" accesskey="&selectMenu.accesskey;">
-        <menupopup>
-          <menuitem label="&all.label;" accesskey="&all.accesskey;" key="key_selectAll"
-                    command="cmd_selectAll"/>
-          <menuseparator/>
-          <menuitem label="&selectThreadCmd.label;"
-           accesskey="&selectThreadCmd.accesskey;"
-           key="key_selectThread"
-           observes="cmd_selectThread"/>
-        </menupopup>
-      </menu>
-      <menuseparator/>
-      <menu label="&find.label;" accesskey="&find.accesskey;">
-        <menupopup>
-      <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
-      <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
-      <menuitem label="&findPrevCmd.label;"  key="key_findPrev"  accesskey="&findPrevCmd.accesskey;"  observes="cmd_findPrev"/>
-          <menuseparator/>
-          <menuitem id="searchMailCmd" label="&searchMailCmd.label;" 
-                    key="key_searchMail" 
-                    accesskey="&searchMailCmd.accesskey;" 
-                    oncommand="MsgSearchMessages();"/>
-          <menuitem id="searchAddressesCmd" label="&searchAddressesCmd.label;" 
-                    accesskey="&searchAddressesCmd.accesskey;" 
-                    oncommand="MsgSearchAddresses()"/>
-        </menupopup>
-      </menu>
-      <menuseparator id="editPropertiesSeparator"/>
-      <menuitem id="menu_properties" label="&folderPropsCmd.label;"
-                accesskey="&folderPropsCmd.accesskey;"
-                observes="cmd_properties"/>
+        <menuitem id="menu_undo" label="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" observes="cmd_undo" oncommand="Undo()"/>
+        <menuitem id="menu_redo" label="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" observes="cmd_redo" oncommand="Redo()"/>
+        <menuseparator/>
+        <menuitem id="menu_cut"/>
+        <menuitem id="menu_copy"/>
+        <menuitem id="menu_paste"/>
+        <menuitem id="menu_delete" observes="cmd_delete"/>
+        <menuseparator/>
+        <menu label="&selectMenu.label;" accesskey="&selectMenu.accesskey;">
+          <menupopup>
+            <menuitem label="&all.label;" accesskey="&all.accesskey;" key="key_selectAll"
+                      command="cmd_selectAll"/>
+            <menuseparator/>
+            <menuitem label="&selectThreadCmd.label;"
+             accesskey="&selectThreadCmd.accesskey;"
+             key="key_selectThread"
+             observes="cmd_selectThread"/>
+          </menupopup>
+        </menu>
+        <menuseparator/>
+        <menu label="&find.label;" accesskey="&find.accesskey;">
+          <menupopup>
+        <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
+        <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
+        <menuitem label="&findPrevCmd.label;"  key="key_findPrev"  accesskey="&findPrevCmd.accesskey;"  observes="cmd_findPrev"/>
+            <menuseparator/>
+            <menuitem id="searchMailCmd" label="&searchMailCmd.label;" 
+                      key="key_searchMail" 
+                      accesskey="&searchMailCmd.accesskey;" 
+                      oncommand="MsgSearchMessages();"/>
+            <menuitem id="searchAddressesCmd" label="&searchAddressesCmd.label;" 
+                      accesskey="&searchAddressesCmd.accesskey;" 
+                      oncommand="MsgSearchAddresses()"/>
+          </menupopup>
+        </menu>
+        <menuseparator id="editPropertiesSeparator"/>
+        <menuitem id="menu_favoriteFolder"
+                  type="checkbox"
+                  label="&menuFavoriteFolder.label;"
+                  accesskey="&menuFavoriteFolder.accesskey;"
+                  check="false"
+                  oncommand="ToggleFavoriteFolderFlag();"/>
+        <menuitem id="menu_properties" label="&folderPropsCmd.label;"
+                  accesskey="&folderPropsCmd.accesskey;"
+                  observes="cmd_properties"/>
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-      <menuitem id="menu_accountmgr" label="&accountManagerCmd.label;" accesskey="&accountManagerCmdUnix.accesskey;" oncommand="MsgAccountManager(null);"/>
-      <menuitem id="menu_preferences" oncommand="openOptionsDialog()"/>
+        <menuitem id="menu_accountmgr" label="&accountManagerCmd.label;" accesskey="&accountManagerCmdUnix.accesskey;" oncommand="MsgAccountManager(null);"/>
+        <menuitem id="menu_preferences" oncommand="openOptionsDialog()"/>
 #endif
 #endif
       </menupopup>
@@ -1216,6 +1226,7 @@
     <!-- View -->
     <menu id="menu_View">
         <menupopup id="menu_View_Popup" onpopupshowing="view_init()">
+          
           <menu id="menu_Toolbars">
             <menupopup id="view_toolbars_popup">
               <menuitem id="menu_showMessengerToolbar"
@@ -1229,8 +1240,9 @@
               <menuitem id="menu_customizeToolbar" oncommand="CustomizeMailToolbar('mail-toolbox');" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
             </menupopup>
           </menu>
+          
           <menu id="menu_MessagePaneLayout" label="&messagePaneLayoutStyle.label;" accesskey="&messagePaneLayoutStyle.accesskey;">
-            <menupopup onpopupshowing="InitViewLayoutStyleMenu()">
+            <menupopup onpopupshowing="InitViewLayoutStyleMenu(event)">
               <menuitem id="messagePaneClassic" type="radio" label="&messagePaneClassic.label;" name="viewlayoutgroup"
                         accesskey="&messagePaneClassic.accesskey;" oncommand="ChangeMailLayout(kClassicMailLayout);"/>
               <menuitem id="messagePaneWide" type="radio" label="&messagePaneWide.label;" name="viewlayoutgroup"
@@ -1240,6 +1252,19 @@
               <menuseparator/>
               <menuitem id="menu_showMessage" type="checkbox" label="&showMessageCmd.label;" key="key_toggleMessagePane"
                         accesskey="&showMessageCmd.accesskey;" oncommand="MsgToggleMessagePane();"/>
+            </menupopup>
+          </menu>
+          
+          <menu id="menu_FolderViews" label="&folderView.label;" accesskey="&folderView.accesskey;">
+            <menupopup onpopupshowing="InitViewFolderViewsMenu(event)">
+              <menuitem id="menu_allFolders"      label="&allFolders.label;" accesskey="&allFolders.accesskey;" 
+                        type="radio" name="viewmessages" oncommand="loadFolderView(0);"/>
+              <menuitem id="menu_unreadFolders"   label="&unreadFolders.label;" accesskey="&unreadFolders.accesskey;"
+                        type="radio" name="viewmessages" oncommand="loadFolderView(1);"/>
+              <menuitem id="menu_favoriteFolders" label="&favoriteFolders.label;" accesskey="&favoriteFolders.accesskey;"
+                        type="radio" name="viewmessages" oncommand="loadFolderView(2);"/>
+              <menuitem id="menu_recentFolders"   label="&recentFolders.label;" accesskey="&recentFolders.accesskey;"
+                        type="radio" name="viewmessages" oncommand="loadFolderView(3);"/>
             </menupopup>
           </menu>
           

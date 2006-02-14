@@ -161,6 +161,13 @@ pref("xpinstall.whitelist.add.103", "addons.mozilla.org");
 pref("mail.phishing.detection.enabled", true); // enable / disable phishing detection for link clicks
 pref("mail.spellcheck.inline", true);
 
+// Folder Pane View
+// 0 == All Folders
+// 1 == Unread Folders
+// 2 == Favorite Folders
+// 3 == Most Recently Used Folders
+pref("mail.ui.folderpane.view", 0);
+
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);
 #else

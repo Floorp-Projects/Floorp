@@ -871,14 +871,17 @@ treechildren::-moz-tree-cell-text(lc-black, selected, focus) {
 
 /* ..... folder pane adjustments ..... */
 
-#folderPaneHeader {
-}
-
 #folderpane-title {
-  -moz-padding-start: 4px;
+  margin-top: 0px;
+  margin-left: 4px;
+  margin-bottom: 0px;
+  padding: 0px;
 }
 
-/* ::::: border adjustments for focus ring and joined splitters ::::: */
+#folderpane-title > .toolbarbutton-text {
+  padding-left: 8px;
+  padding-right: 8px;
+}
 
 /* ..... splitter adjustments ..... */
 

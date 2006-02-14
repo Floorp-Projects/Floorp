@@ -52,6 +52,8 @@ const kStandardPaneConfig = 0;
 const kWidePaneConfig = 1;
 const kVerticalPaneConfig = 2;
 
+const kNumFolderViews = 4; // total number of folder views
+
 // from nsMsgFolderFlags.h
 const MSG_FOLDER_FLAG_ELIDED = 0x10;
 
@@ -64,7 +66,7 @@ var gThreadAndMessagePaneSplitter = null;
 var gUnreadCount = null;
 var gTotalCount = null;
 var gCurrentPaneConfig = 0;
-
+var gCurrentFolderView;  
 var gCurrentLoadingFolderURI;
 var gCurrentFolderToReroot;
 var gCurrentLoadingFolderSortType = 0;
@@ -1016,9 +1018,9 @@ function AddToSession()
 
 function InitPanes()
 {
-    OnLoadFolderPane();
-    OnLoadThreadPane();
-    SetupCommandUpdateHandlers();
+  OnLoadFolderPane();
+  OnLoadThreadPane();
+  SetupCommandUpdateHandlers();
 }
 
 function InitializeDataSources()
@@ -1035,67 +1037,109 @@ function InitializeDataSources()
 
 function OnFolderUnreadColAttrModified(event)
 {
-    if (event.attrName == "hidden")
-    {
-        var folderNameCell = document.getElementById("folderNameCell");
-        var label = {"true": "?folderTreeName", "false": "?folderTreeSimpleName"};
-        folderNameCell.setAttribute("label", label[event.newValue]);
-    }
+  if (event.attrName == "hidden")
+  {
+    var folderNameCell = document.getElementById("folderNameCell");
+    var label = {"true": "?folderTreeName", "false": "?folderTreeSimpleName"};
+    folderNameCell.setAttribute("label", label[event.newValue]);
+  }
 }
 
 function UpdateFolderColumnVisibility()
 {
-    var folderNameCol = document.getElementById("folderNameCol");
-    var showColumns = pref.getBoolPref("mail.showFolderPaneColumns");
-    var folderUnreadCol = document.getElementById("folderUnreadCol"); 
-    var folderColumnLabel = document.getElementById("folderColumnLabel");
-    if (!showColumns)
-    {
-      var folderTotalCol = document.getElementById("folderTotalCol");
-      var folderSizeCol = document.getElementById("folderSizeCol");
-      folderUnreadCol.setAttribute("hidden", "true");
-      folderTotalCol.setAttribute("hidden", "true");
-      folderSizeCol.setAttribute("hidden", "true");
-      folderNameCol.removeAttribute("label");
-    }
-    else
-    {
-      folderNameCol.setAttribute("label", folderColumnLabel.value);
-    }
+  var folderNameCol = document.getElementById("folderNameCol");
+  var showColumns = pref.getBoolPref("mail.showFolderPaneColumns");
+  var folderUnreadCol = document.getElementById("folderUnreadCol"); 
+  var folderColumnLabel = document.getElementById("folderColumnLabel");
+  if (!showColumns)
+  {
+    var folderTotalCol = document.getElementById("folderTotalCol");
+    var folderSizeCol = document.getElementById("folderSizeCol");
+    folderUnreadCol.setAttribute("hidden", "true");
+    folderTotalCol.setAttribute("hidden", "true");
+    folderSizeCol.setAttribute("hidden", "true");
+    folderNameCol.removeAttribute("label");
+  }
+  else
+  {
+    folderNameCol.setAttribute("label", folderColumnLabel.value);
+  }
 
-    folderNameCol.setAttribute("hideheader", showColumns ? "false" : "true");
-    var folderPaneHeader = document.getElementById("folderPaneHeader");
-    folderPaneHeader.setAttribute("hidden", showColumns ? "true" : "false");
-    var folderTree = document.getElementById("folderTree");
-    folderTree.setAttribute("hidecolumnpicker", showColumns ? "false" : "true");
-    var hidden = folderUnreadCol.getAttribute("hidden");
-    if (hidden != "true")
-    {
-        var folderNameCell = document.getElementById("folderNameCell");
-        folderNameCell.setAttribute("label", "?folderTreeSimpleName");
-    }
+  folderNameCol.setAttribute("hideheader", showColumns ? "false" : "true");
+  var folderPaneHeader = document.getElementById("folderPaneHeader");
+  folderPaneHeader.setAttribute("hidden", showColumns ? "true" : "false");
+  var folderTree = document.getElementById("folderTree");
+  folderTree.setAttribute("hidecolumnpicker", showColumns ? "false" : "true");
+  var hidden = folderUnreadCol.getAttribute("hidden");
+  if (hidden != "true")
+  {
+    var folderNameCell = document.getElementById("folderNameCell");
+    folderNameCell.setAttribute("label", "?folderTreeSimpleName");
+  }
 } 
+
+function loadFolderView(aNewFolderView)
+{
+  if (gCurrentFolderView && (gCurrentFolderView == aNewFolderView))
+    return;
+
+  var folderPaneHeader = document.getElementById('folderpane-title');
+  var folderTree = GetFolderTree();
+  var database = GetFolderDatasource();
+  var nsIRDFDataSource = Components.interfaces.nsIRDFDataSource;
+
+  // Each folder pane view has the following properties: 
+  // ref-> the ref attribute for the folderTree
+  // label -> the UI label associated with the folder view
+  // datasources -> array of the data sources associated with the view
+
+  var folderViews = [ 
+                      {ref:"msgaccounts:/",           label:"folderPaneHeader",           dataSources: [accountManagerDataSource.QueryInterface(nsIRDFDataSource),
+                                                                                                        folderDataSource.QueryInterface(nsIRDFDataSource)] },
+                      {ref:"mailnewsunreadfolders:/", label:"folderPaneHeader_unread",    dataSources: [unreadFolderDataSource.QueryInterface(nsIRDFDataSource)]},
+                      {ref:"mailnewsfavefolders:/",   label:"folderPaneHeader_favorites", dataSources: [favoriteFoldersDataSource.QueryInterface(nsIRDFDataSource)]},
+                      {ref:"mailnewsrecentfolders:/", label:"folderPaneHeader_recent",    dataSources: [recentFoldersDataSource.QueryInterface(nsIRDFDataSource)]},
+                    ];
+
+  // unload the current data sources
+  if (gCurrentFolderView != undefined)
+  {
+    var dataSourcesToUnload = folderViews[gCurrentFolderView].dataSources;
+    for (index in dataSourcesToUnload)
+      database.RemoveDataSource(dataSourcesToUnload[index]);
+  }
+
+  // add the new data sources
+  var dataSourcesToAdd = folderViews[aNewFolderView].dataSources;
+  for (index in dataSourcesToAdd)
+    database.AddDataSource(dataSourcesToAdd[index]);
+
+  folderTree.setAttribute('ref', folderViews[aNewFolderView].ref);
+  folderPaneHeader.label = gMessengerBundle.getString(folderViews[aNewFolderView].label);
+
+  // reflect the new value back into prefs
+  pref.setIntPref('mail.ui.folderpane.view', gCurrentFolderView = aNewFolderView);
+}
+
+function CycleFolderView()
+{
+  // pass the call onto loadFolderView...
+  loadFolderView((gCurrentFolderView + 1) % kNumFolderViews);
+}
 
 function OnLoadFolderPane()
 {
-    UpdateFolderColumnVisibility();
-    var folderUnreadCol = document.getElementById("folderUnreadCol");
-    folderUnreadCol.addEventListener("DOMAttrModified", OnFolderUnreadColAttrModified, false);
+  UpdateFolderColumnVisibility();
+  var folderUnreadCol = document.getElementById("folderUnreadCol");
+  folderUnreadCol.addEventListener("DOMAttrModified", OnFolderUnreadColAttrModified, false);
 
-    //Add folderDataSource and accountManagerDataSource to folderPane
-    accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    var database = GetFolderDatasource();
+  loadFolderView(pref.getIntPref('mail.ui.folderpane.view'));
 
-    database.AddDataSource(accountManagerDataSource);
-    database.AddDataSource(folderDataSource);
-    var folderTree = GetFolderTree();
-    folderTree.setAttribute("ref", "msgaccounts:/");
-
-    var folderTreeBuilder = folderTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-    folderTreeBuilder.addObserver(folderObserver);
-    folderTree.addEventListener("click",FolderPaneOnClick,true);
-    folderTree.addEventListener("mousedown",TreeOnMouseDown,true);
+  var folderTree = GetFolderTree();
+  var folderTreeBuilder = folderTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+  folderTreeBuilder.addObserver(folderObserver);
+  folderTree.addEventListener("click",FolderPaneOnClick,true);
+  folderTree.addEventListener("mousedown",TreeOnMouseDown,true);
 }
 
 // builds prior to 12-08-2001 did not have the labels column
@@ -1335,9 +1379,11 @@ function FolderPaneOnClick(event)
     var elt = {};
     folderTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
     if (row.value == -1) {
-      if (event.originalTarget.localName == "treecol")
+      if (event.originalTarget.localName == "treecol") {
         // clicking on the name column in the folder pane should not sort
         event.preventBubble();
+        CycleFolderView(); // needed to cycle the folder view for the old school tree col users
+      }
       return;
     }
 
@@ -1590,15 +1636,15 @@ function EnsureFolderIndex(builder, msgFolder)
 
 function SelectFolder(folderUri)
 {
-    var folderTree = GetFolderTree();
-    var folderResource = RDF.GetResource(folderUri);
-    var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+  var folderTree = GetFolderTree();
+  var folderResource = RDF.GetResource(folderUri);
+  var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
-    // before we can select a folder, we need to make sure it is "visible"
-    // in the tree.  to do that, we need to ensure that all its
-    // ancestors are expanded
-    var folderIndex = EnsureFolderIndex(folderTree.builderView, msgFolder);
-    ChangeSelection(folderTree, folderIndex);
+  // before we can select a folder, we need to make sure it is "visible"
+  // in the tree.  to do that, we need to ensure that all its
+  // ancestors are expanded
+  var folderIndex = EnsureFolderIndex(folderTree.builderView, msgFolder);
+  ChangeSelection(folderTree, folderIndex);
 }
 
 function SelectMessage(messageUri)
@@ -1620,26 +1666,26 @@ function ReloadMessage()
 
 function GetDBView()
 {
-    return gDBView;
+  return gDBView;
 }
 
 function GetFolderResource(tree, index)
 {
-    return tree.builderView.getResourceAtIndex(index);
+  return tree.builderView.getResourceAtIndex(index);
 }
 
 function GetFolderIndex(tree, resource)
 {
-    return tree.builderView.getIndexOfResource(resource);
+  return tree.builderView.getIndexOfResource(resource);
 }
 
 function GetFolderAttribute(tree, source, attribute)
 {
-    var property = RDF.GetResource("http://home.netscape.com/NC-rdf#" + attribute);
-    var target = tree.database.GetTarget(source, property, true);
-    if (target)
-        target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-    return target;
+  var property = RDF.GetResource("http://home.netscape.com/NC-rdf#" + attribute);
+  var target = tree.database.GetTarget(source, property, true);
+  if (target)
+    target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  return target;
 }
 
 // Thunderbird has been storing old attachment download meta data in downloads.rdf 
@@ -1661,3 +1707,4 @@ function MigrateAttachmentDownloadStore()
     pref.setIntPref("mail.attachment.store.version", 1); 
   }
 }
+

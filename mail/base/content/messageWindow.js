@@ -464,6 +464,10 @@ function HideMenus()
   if (viewLayoutMenu)
     viewLayoutMenu.setAttribute("hidden", "true");
 
+  var viewFolderMenu = document.getElementById("menu_FolderViews");
+  if (viewFolderMenu)
+    viewFolderMenu.setAttribute("hidden", "true");
+
 	var viewMessagesMenu = document.getElementById('viewMessagesMenu');
 	if (viewMessagesMenu)
 		viewMessagesMenu.setAttribute("hidden", "true");
@@ -499,6 +503,13 @@ function HideMenus()
 	var menuProperties = document.getElementById('menu_properties');
 	if (menuProperties)
 		menuProperties.setAttribute("hidden", "true");
+
+  var favoriteFolder = document.getElementById('menu_favoriteFolder');
+  if (favoriteFolder)
+  {
+    favoriteFolder.disabled = true;
+    favoriteFolder.setAttribute("hidden", "true");
+  }
 
 	var compactFolderMenu = document.getElementById('menu_compactFolder');
 	if (compactFolderMenu)

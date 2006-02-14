@@ -177,7 +177,8 @@
     
       <label id="folderColumnLabel" hidden="true" value="&folderColumn.label;"/>
       <sidebarheader id="folderPaneHeader" align="center">
-        <label id="folderpane-title" value="&folderPaneHeader.label;"/>
+        <toolbarbutton id="folderpane-title" onclick="CycleFolderView();">
+        </toolbarbutton>
       </sidebarheader>
       
       <tree id="folderTree" class="plain focusring" flex="1" seltype="single" selstyle="primary"
@@ -280,7 +281,7 @@
                    sort="?folderTreeNameSort"
                    sortActive="true"
                    sortDirection="ascending"/>
-                  <splitter class="tree-splitter"/>
+          <splitter class="tree-splitter"/>
           <treecol id="folderUnreadCol"
                        persist="hidden width"
                        flex="1"
