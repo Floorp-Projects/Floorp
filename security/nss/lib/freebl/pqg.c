@@ -37,7 +37,7 @@
 /*
  * PQG parameter generation/verification.  Based on FIPS 186-1.
  *
- * $Id: pqg.c,v 1.9 2005/09/02 20:05:35 julien.pierre.bugs%sun.com Exp $
+ * $Id: pqg.c,v 1.10 2006/02/14 03:04:57 wtchang%redhat.com Exp $
  */
 
 #include "prerr.h"
@@ -322,8 +322,8 @@ makeGfromH(const mp_int *P,     /* input.  */
     CHECK_MPI_OK( mp_init(&exp) );
     CHECK_MPI_OK( mp_init(&pm1) );
     CHECK_MPI_OK( mp_sub_d(P, 1, &pm1) );        /* P - 1            */
-    if ( mp_cmp(H, &pm1) > 0)                   /* H = H mod (P-1)  */
-	CHECK_MPI_OK( mp_sub(H, &pm1, H) );
+    if ( mp_cmp(H, &pm1) >= 0)                   /* H >= P-1         */
+	CHECK_MPI_OK( mp_sub(H, &pm1, H) );      /* H = H mod (P-1)  */
     /* Let b = 2**n (smallest power of 2 greater than P).
     ** Since P-1 >= b/2, and H < b, quotient(H/(P-1)) = 0 or 1
     ** so the above operation safely computes H mod (P-1)
@@ -538,7 +538,7 @@ step_15:
     **  in certifying the proper generation of p and q."
     */
     /* Generate h. */
-    SECITEM_AllocItem(NULL, &hit, seedBytes); /* h is no longer than p */
+    SECITEM_AllocItem(NULL, &hit, L/8); /* h is no longer than p */
     if (!hit.data) goto cleanup;
     do {
 	/* loop generate h until 1<h<p-1 and (h**[(p-1)/q])mod p > 1 */
