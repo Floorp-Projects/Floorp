@@ -93,7 +93,7 @@ LOCAL_INCLUDES = \
 	$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)passwordmgr_s.$(LIB_SUFFIX) \
+	../../passwordmgr/base/$(LIB_PREFIX)passwordmgr_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 EXTRA_DSO_LIBS	= gkgfx
@@ -108,6 +108,6 @@ EXTRA_DSO_LDOPTS += \
 	$(NULL)
 
 ifdef MOZ_MORKREADER
-EXTRA_DSO_LDOPTS += $(DIST)/lib/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX)
+EXTRA_DSO_LDOPTS += $(DEPTH)/db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX)
 endif
 
