@@ -61,7 +61,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIPrincipal.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsNetCID.h"
 #include "nsICookieService.h"
@@ -333,19 +332,11 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIPrincipal> systemPrincipal;
-    nsContentUtils::GetSecurityManager()->
-      GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-    NS_ASSERTION(systemPrincipal, "No system principal");
-    
-    if (docPrincipal == systemPrincipal) {
-      // Document's principal is not a codebase, so we can't set cookies
-      return NS_OK;
-    }
-
+    // Note that a non-codebase principal (eg the system principal) will return
+    // a null URI.
     nsCOMPtr<nsIURI> codebaseURI;
     rv = docPrincipal->GetURI(getter_AddRefs(codebaseURI));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(codebaseURI, rv);
 
     nsCOMPtr<nsIPrompt> prompt;
     nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(mDocument->GetScriptGlobalObject()));
