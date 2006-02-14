@@ -926,14 +926,22 @@ nsDocShell::FirePageHideNotification(PRBool aIsUnload)
 // This takes into account subdomain checking if document.domain is set for
 // Nav 4.x compatability.
 //
-// The following was derived from nsCodeBasePrincipal::Equals but in addition
-// to the host PL_strcmp, it accepts a subdomain (nsHTMLDocument::SetDomain)
-// if the document.domain was set.
+// The following was derived from nsScriptSecurityManager::SecurityCompareURIs
+// but in addition to the host PL_strcmp, it accepts a subdomain
+// (nsHTMLDocument::SetDomain) if the document.domain was set.
+//
+// XXXbz this method also subtracts the checks for jar: URIs, default ports,
+// etc.  This should SO not be living here.  If we need a better security
+// manager method, we should add one.
 //
 static PRBool
 SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI,
                         PRBool aDocumentDomainSet)
 {
+  if (aOriginURI == aTargetURI) {
+    return PR_TRUE;
+  }
+  
   nsCAutoString targetScheme;
   nsresult rv = aTargetURI->GetScheme(targetScheme);
   NS_ENSURE_SUCCESS(rv, PR_TRUE);
@@ -942,15 +950,15 @@ SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI,
   rv = aOriginURI->GetScheme(originScheme);
   NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
-  if (strcmp(targetScheme.get(), originScheme.get()))
+  if (targetScheme != originScheme)
     return PR_FALSE; // Different schemes - check fails
 
-  if (! strcmp(targetScheme.get(), "file"))
+  if (targetScheme.EqualsLiteral("file"))
     return PR_TRUE; // All file: urls are considered to have the same origin.
 
-  if (! strcmp(targetScheme.get(), "imap") ||
-      ! strcmp(targetScheme.get(), "mailbox") ||
-      ! strcmp(targetScheme.get(), "news"))
+  if (targetScheme.EqualsLiteral("imap") ||
+      targetScheme.EqualsLiteral("mailbox") ||
+      targetScheme.EqualsLiteral("news"))
   {
 
     // Each message is a distinct trust domain; use the whole spec for comparison
@@ -962,30 +970,33 @@ SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI,
     rv = aOriginURI->GetAsciiSpec(originSpec);
     NS_ENSURE_SUCCESS(rv, PR_TRUE);
 
-    return (! strcmp(targetSpec.get(), originSpec.get())); // True if full spec is same, false otherwise
+    return (targetSpec == originSpec); // True if full spec is same, false otherwise
   }
 
-  // Compare ports.
+  // Compare ports.  Note that failure to get this means we should return
+  // false; such failure happens all the time for non-nsIURL nsIURI impls.
   int targetPort, originPort;
   rv = aTargetURI->GetPort(&targetPort);
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   rv = aOriginURI->GetPort(&originPort);
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   if (targetPort != originPort)
     return PR_FALSE; // Different port - check fails
 
-  // Need to check the hosts
+  // Need to check the hosts.  Note that failure to get this means we should
+  // return false; such failure happens all the time for non-nsIURL nsIURI
+  // impls.
   nsCAutoString targetHost;
   rv = aTargetURI->GetHost(targetHost);
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   nsCAutoString originHost;
   rv = aOriginURI->GetHost(originHost);
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-  if (!strcmp(targetHost.get(), originHost.get()))
+  if (targetHost.Equals(originHost, nsCaseInsensitiveCStringComparator()))
     return PR_TRUE; // Hosts are the same - check passed
   
   // If document.domain was set, do the relaxed check
@@ -1010,6 +1021,7 @@ SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI,
 // This routine answers: 'Is origin's document from same domain as
 // target's document?'
 // Be optimistic that domain is same - error cases all answer 'yes'.
+// XXXbz why?  That seems wrong to me
 //
 // We have to compare the URI of the actual document loaded in the
 // origin, ignoring any document.domain that was set, with the
@@ -1093,6 +1105,7 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
     // Is origin same principal or a subdomain of target's
     // document.domain Compare actual URI of origin document, not origin
     // principal's URI. (Per Nav 4.x)
+    // XXXbz what do modern browsers do?
     return SameOrSubdomainOfTarget(originDocumentURI, targetPrincipalURI,
                                    documentDomainSet);
 }
