@@ -23,30 +23,34 @@ HelperAppDlg.prototype = {
     },
     
     promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension) {
+
         var result = "";
 
         const prefSvcContractID = "@mozilla.org/preferences-service;1";
         const prefSvcIID = Components.interfaces.nsIPrefService;
         const nsIFile = Components.interfaces.nsIFile;
+        const nsILocalFile = Components.interfaces.nsILocalFile;
 
-        var folderDirFile = Components.classes["@mozilla.org/file/local;1"].createInstance(nsIFile);
 
         var branch = Components.classes[prefSvcContractID].getService(prefSvcIID)
                                                           .getBranch("browser.download.");
+
         var dir = null;
 
-        const nsILocalFile = Components.interfaces.nsILocalFile;
+	  var consoleService = Components.classes['@mozilla.org/consoleservice;1']
+                               .getService(Components.interfaces.nsIConsoleService);
+
         const kDownloadDirPref = "dir";
+
         // Try and pull in download directory pref
         try {
 
-            var dirStringPath=branch.getCharPref(kDownloadDirPref);
-            var localFileDir = folderDirFile.QueryInterface(nsILocalFile);
-            dir = localFileDir.initWithPath(dirStringPath);
-
-            //dir = branch.getComplexValue(kDownloadDirPref, nsILocalFile);
+            //var dirStringPath=branch.getCharPref(kDownloadDirPref);
+		consoleService.logStringMessage("hi");
+            dir = branch.getComplexValue(kDownloadDirPref, nsILocalFile);
+            consoleService.logStringMessage(dir);
             
-        } catch (e) { }
+        } catch (e) { consoleService.logStringMessage(e)}
 
         if (dir && dir.exists())
         {
@@ -54,7 +58,9 @@ HelperAppDlg.prototype = {
                 aDefaultFile = "download";
 
             dir.append(aDefaultFile);
-            return uniqueFile(dir);
+
+            return dir;
+
         }
 
         // Use file picker to show dialog.
