@@ -57,7 +57,7 @@ CPPSRCS =   \
 	nsSystemPrefFactory.cpp \
 	$(NULL)
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libsystem-pref_s.a
+SHARED_LIBRARY_LIBS = ../libsystem-pref_s.a
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
