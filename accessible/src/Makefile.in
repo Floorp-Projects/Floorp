@@ -44,18 +44,20 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-DIRS += atk
+PLATFORM_DIR = atk
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-DIRS += msaa
+PLATFORM_DIR = msaa
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
-DIRS += mac
+PLATFORM_DIR += mac
 else
-DIRS += other
+PLATFORM_DIR += other
 endif
 endif
 endif
+
+DIRS += $(PLATFORM_DIR)
 
 DIRS += \
   base \
@@ -68,3 +70,5 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+libs::
+	$(NSINSTALL) $(PLATFORM_DIR)/$(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX) .

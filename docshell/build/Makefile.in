@@ -99,11 +99,11 @@ CPPSRCS		= \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS= \
-		$(DIST)/lib/$(LIB_PREFIX)basedocshell_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)uriloaderbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)exthandler_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)prefetch_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)shistory_s.$(LIB_SUFFIX) \
+		../base/$(LIB_PREFIX)basedocshell_s.$(LIB_SUFFIX) \
+		$(DEPTH)/uriloader/base/$(LIB_PREFIX)uriloaderbase_s.$(LIB_SUFFIX) \
+		$(DEPTH)/uriloader/exthandler/$(LIB_PREFIX)exthandler_s.$(LIB_SUFFIX) \
+		$(DEPTH)/uriloader/prefetch/$(LIB_PREFIX)prefetch_s.$(LIB_SUFFIX) \
+		../shistory/src/$(LIB_PREFIX)shistory_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS= \
