@@ -1346,11 +1346,12 @@ function DownloadCancel(refId) {
 
 function DownloadReveal() {
  
-  alert(document.getElementById("toolbar-download-tag").getAttribute("reveal"));
+  document.getElementById("toolbar-download-tag").value=document.getElementById("toolbar-download-tag").getAttribute("reveal");
+  document.getElementById("download-button-stop").label="";
+  document.getElementById("toolbar-download-tag").inputField.style.backgroundColor="lightgreen";
+  document.getElementById("toolbar-download-tag").inputField.style.backgroundPosition=gInputBoxObject.width+20+"px 100%";
 
 }
-
-
 
 function TransferItemFactory() {
 }
@@ -1387,6 +1388,7 @@ TransferItem.prototype = {
     document.getElementById("download-button-stop").disabled=false;
     document.getElementById("toolbar-download-tag").value=aSource.spec; 
     document.getElementById("toolbar-download-tag").setAttribute("reveal",aTarget.spec);
+    document.getElementById("toolbar-download-tag").setAttribute("sourcelocation",aSource.spec);
 
   },
   
