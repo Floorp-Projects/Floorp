@@ -629,7 +629,9 @@ nsPermissionManager::Read()
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), oldPermissionsFile);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // An error path is expected when cookperm.txt is not found
+    if (NS_FAILED(rv))
+      return rv;
 
     readingOldFile = PR_TRUE;
 
