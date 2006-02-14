@@ -1717,7 +1717,7 @@ echo "${ECHO_T}yes" >&6
                 echo "$as_me:$LINENO: result: using $withval" >&5
 echo "${ECHO_T}using $withval" >&6
                 SVRCORE_CFLAGS="-I$withval/include"
-                SVRCORE_LIB_PATH="-L$withval/lib"
+                SVRCORE_LIBS="-L$withval/lib"
     	    fi
 else
   HAVE_SVRCORE=
