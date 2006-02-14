@@ -156,33 +156,25 @@ function sanitizeBookmarks() {
     document.getElementById("bookmarksSanitize").disabled=true;
 }
 
-
 function downloadChooseFolder() {
 
-     const nsIFilePicker = Components.interfaces.nsIFilePicker;
-     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    // var bundlePreferences = document.getElementById("bundlePreferences");
-    // var title = bundlePreferences.getString("chooseDownloadFolderTitle");
-     fp.init(window, "Set Download Folder", nsIFilePicker.modeGetFolder);
+  const nsIFilePicker = Components.interfaces.nsIFilePicker;
+  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+  fp.init(window, null, nsIFilePicker.modeSave);
+  const nsILocalFile = Components.interfaces.nsILocalFile;
 
-     const nsILocalFile = Components.interfaces.nsILocalFile;
+  var customDirPref = document.getElementById("downloadDir");
+  if (customDirPref.value)
+  fp.displayDirectory = customDirPref.value;
 
-	//    var customDirPref = document.getElementById("browser.download.dir");
-	//    if (customDirPref.value)
-	//     fp.displayDirectory = customDirPref.value;
+  fp.appendFilters(nsIFilePicker.filterAll);
+  var returnFilePickerValue=fp.show();
 
-     fp.appendFilters(nsIFilePicker.filterAll);
-     var returnFilePickerValue=fp.show();
-
-     alert(returnFilePickerValue);
-
-     if (returnFilePickerValue == nsIFilePicker.returnOK) {
-		//      var file = fp.file.QueryInterface(nsILocalFile);
-		//     var currentDirPref = document.getElementById("browser.download.dir");
-		//     customDirPref.value = currentDirPref.value = file;
-		//       var folderListPref = document.getElementById("browser.download.folderList");
-		//       folderListPref.value = this._fileToIndex(file);
-     }
+  if (returnFilePickerValue == nsIFilePicker.returnOK) {
+    var file = fp.file.QueryInterface(nsILocalFile);
+    var currentDirPref = document.getElementById("downloadDir");
+    customDirPref.value = currentDirPref.value = file;
+  }
 
 }
 
@@ -408,6 +400,24 @@ function syncPrefSaveDOM() {
 				gPref.setBoolPref(prefName, prefSETValue);
 				} catch (e) { } 
 			}
+
+                  if (document.getElementById(prefName).getAttribute("preftype")=="file") {
+
+                   var lf;
+	             
+                   //if (typeof(val) == "string") {
+                   //   lf = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+                   //   lf.persistentDescriptor = val;
+                   //   if (!lf.exists())
+                   //      lf.initWithPath(val);
+                   // }
+	             //else lf = prefSETValue.QueryInterface(Components.interfaces.nsILocalFile);
+
+	             lf = prefSETValue.QueryInterface(Components.interfaces.nsILocalFile);
+                   gPref.setComplexValue(prefName, Components.interfaces.nsILocalFile, lf);
+	 
+                   }	
+
 		}
 
 		psvc.savePrefFile(null);
