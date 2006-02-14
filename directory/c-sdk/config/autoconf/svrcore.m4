@@ -55,7 +55,7 @@ AC_DEFUN(AM_PATH_GIVEN_SVRCORE,
                 HAVE_SVRCORE=1
                 AC_MSG_RESULT([using $withval])
                 SVRCORE_CFLAGS="-I$withval/include"
-                SVRCORE_LIB_PATH="-L$withval/lib"
+                SVRCORE_LIBS="-L$withval/lib"
     	    fi], HAVE_SVRCORE=)
 
     # check for --with-svrcore-inc
