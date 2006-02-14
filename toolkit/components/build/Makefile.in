@@ -103,16 +103,16 @@ SHARED_LIBRARY_LIBS = \
 	$(NULL)
 
 ifdef MOZ_XPINSTALL
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)download_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../downloads/src/$(LIB_PREFIX)download_s.$(LIB_SUFFIX)
 endif
 
 ifdef ALERTS_SERVICE
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../alerts/src/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
 endif
 
 ifndef MOZ_THUNDERBIRD
 SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
+		../typeaheadfind/src/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LIBS = gkgfx
