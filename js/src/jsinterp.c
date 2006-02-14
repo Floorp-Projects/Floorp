@@ -564,6 +564,7 @@ NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
         return JS_FALSE;
 
     id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
+#if JS_HAS_XML_SUPPORT
     if (OBJECT_IS_XML(cx, thisp)) {
         JSXMLObjectOps *ops;
 
@@ -572,7 +573,9 @@ NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
         if (!thisp)
             return JS_FALSE;
         vp[1] = OBJECT_TO_JSVAL(thisp);
-    } else {
+    } else
+#endif
+    {
         if (!OBJ_GET_PROPERTY(cx, thisp, id, &v))
             return JS_FALSE;
     }
