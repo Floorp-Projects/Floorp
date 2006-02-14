@@ -3,8 +3,6 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 const nsIHelperAppLauncherDialog = Components.interfaces.nsIHelperAppLauncherDialog;
 const nsISupports = Components.interfaces.nsISupports;
 
-function DLProgressListener() {}
-
 
 function HelperAppDlg() {
 }
@@ -27,6 +25,38 @@ HelperAppDlg.prototype = {
     promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension) {
         var result = "";
 
+        const prefSvcContractID = "@mozilla.org/preferences-service;1";
+        const prefSvcIID = Components.interfaces.nsIPrefService;
+        const nsIFile = Components.interfaces.nsIFile;
+
+        var folderDirFile = Components.classes["@mozilla.org/file/local;1"].createInstance(nsIFile);
+
+        var branch = Components.classes[prefSvcContractID].getService(prefSvcIID)
+                                                          .getBranch("browser.download.");
+        var dir = null;
+
+        const nsILocalFile = Components.interfaces.nsILocalFile;
+        const kDownloadDirPref = "dir";
+        // Try and pull in download directory pref
+        try {
+
+            var dirStringPath=branch.getCharPref(kDownloadDirPref);
+            var localFileDir = folderDirFile.QueryInterface(nsILocalFile);
+            dir = localFileDir.initWithPath(dirStringPath);
+
+            //dir = branch.getComplexValue(kDownloadDirPref, nsILocalFile);
+            
+        } catch (e) { }
+
+        if (dir && dir.exists())
+        {
+            if (aDefaultFile == "")
+                aDefaultFile = "download";
+
+            dir.append(aDefaultFile);
+            return uniqueFile(dir);
+        }
+
         // Use file picker to show dialog.
         var picker = Components.classes[ "@mozilla.org/filepicker;1" ]
                                .createInstance( nsIFilePicker );
@@ -36,6 +66,23 @@ HelperAppDlg.prototype = {
 
         picker.init( parent, null, nsIFilePicker.modeSave );
         picker.defaultString = aDefaultFile;
+
+        if (aSuggestedFileExtension) {
+            // aSuggestedFileExtension includes the period, so strip it
+            picker.defaultExtension = aSuggestedFileExtension.substring(1);
+        } else {
+            try {
+                picker.defaultExtension = aLauncher.MIMEInfo.primaryExtension;
+            } catch (ex) {
+            }
+        }
+
+        var wildCardExtension = "*";
+        if ( aSuggestedFileExtension ) {
+            wildCardExtension += aSuggestedFileExtension;
+            picker.appendFilter( wildCardExtension, wildCardExtension );
+        }
+
         picker.appendFilters( nsIFilePicker.filterAll );
 
         if (picker.show() == nsIFilePicker.returnCancel || !picker.file) {
