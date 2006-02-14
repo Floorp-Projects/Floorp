@@ -2114,6 +2114,10 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
     NS_ASSERTION(aCx && aObj, "Bad call to doGetObjectPrincipal()!");
     nsIPrincipal* result = nsnull;
 
+#ifdef DEBUG
+    JSObject* origObj = aObj;
+#endif
+    
     do
     {
         const JSClass *jsClass = JS_GetClass(aCx, aObj);
@@ -2172,7 +2176,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
     } while (aObj);
 
     NS_ASSERTION(!aAllowShortCircuit ||
-                 result == doGetObjectPrincipal(aCx, aObj, PR_FALSE),
+                 result == doGetObjectPrincipal(aCx, origObj, PR_FALSE),
                  "Principal mismatch.  Not good");
     
     return result;
