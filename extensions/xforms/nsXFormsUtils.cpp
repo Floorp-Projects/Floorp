@@ -1145,11 +1145,15 @@ nsXFormsUtils::CheckSameOrigin(nsIDocument *aBaseDocument, nsIURI *aTestURI)
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(permMgr, PR_FALSE);
 
-  PRUint32 perm;
-  rv = permMgr->TestPermission(aBaseDocument->GetDocumentURI(), "xforms-load",
-                               &perm);
-  if (NS_SUCCEEDED(rv) && perm == nsIPermissionManager::ALLOW_ACTION)
-    return PR_TRUE; 
+  nsCOMPtr<nsIURI> principalURI;
+  rv = basePrincipal->GetURI(getter_AddRefs(principalURI));
+
+  if (NS_SUCCEEDED(rv)) {
+    PRUint32 perm;
+    rv = permMgr->TestPermission(principalURI, "xforms-load", &perm);
+    if (NS_SUCCEEDED(rv) && perm == nsIPermissionManager::ALLOW_ACTION)
+      return PR_TRUE;
+  }
 
   return PR_FALSE;
 }
