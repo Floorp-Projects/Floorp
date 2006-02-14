@@ -634,7 +634,7 @@ nsspkcs5_ComputeKeyAndIV(NSSPKCS5PBEParameter *pbe_param, SECItem *pwitem,
 	PORT_Memcpy(key->data, hash->data, key->len);
     }
 
-    SECITEM_FreeItem(hash, PR_TRUE);
+    SECITEM_ZfreeItem(hash, PR_TRUE);
     return key;
 
 loser:
