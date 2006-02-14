@@ -71,7 +71,7 @@ CPPSRCS = \
 LOCAL_INCLUDES = -I$(srcdir)/../base
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)universalchardet_s.$(LIB_SUFFIX) \
+		../base/$(LIB_PREFIX)universalchardet_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \

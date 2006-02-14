@@ -61,7 +61,7 @@ include $(topsrcdir)/config/config.mk
 
 LIBS		+= \
 		$(LIBS_DIR) \
-		$(DIST)/lib/$(LIB_PREFIX)universalchardet_s.$(LIB_SUFFIX) \
+		../src/base/$(LIB_PREFIX)universalchardet_s.$(LIB_SUFFIX) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
