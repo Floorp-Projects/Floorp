@@ -1173,6 +1173,14 @@
       appended to the flag name within parentheses.  For example, if Jack
       asks Jill for review, it appears as Jack: review [ ? ] (Jill).
     </para>
+
+    <para>
+      You can browse through open requests made of you and by you by selecting
+      'My Requests' from the footer. You can also look at open requests limited
+      by other requesters, requestees, products, components, and flag names from
+      this page. Note that you can use '-' for requestee to specify flags with
+      'no requestee' set.
+    </para>
   </section>
 
   <section id="whining">
