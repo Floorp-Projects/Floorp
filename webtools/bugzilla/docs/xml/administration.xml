@@ -1311,7 +1311,9 @@
              resulted in a user acquiring permanent membership in a group.
              To remove a user from a group the user was in due to a regular
              expression in version 2.16 or earlier, the user must be explicitly
-             removed from the group.</para>
+             removed from the group. This can easily be done by pressing
+             buttons named 'Remove Memberships' or 'Remove Memberships
+             included in regular expression' under the table.</para>
            </note>
            <warning>
              <para>If specifying a domain in the regexp, make sure you end
