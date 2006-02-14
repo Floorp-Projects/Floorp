@@ -66,9 +66,10 @@
 
 static CERTCertificateRequest* make_cert_request(JNIEnv *env, 
 			 const char *subject, SECKEYPublicKey *pubk);
-void GenerateCertRequest(JNIEnv *env, unsigned int ktype, const char *subject,
-			 PK11SlotInfo *slot,
-			 unsigned char **b64request, void *params);
+
+void GenerateCertRequest(JNIEnv *env, SECOidTag ktype, const char *subject,
+			 PK11SlotInfo *slot,  unsigned char **b64request, 
+                         void *params);
 
 /* these values are taken from PK11KeyPairGenerator.java */
 #define DEFAULT_RSA_KEY_SIZE 2048
