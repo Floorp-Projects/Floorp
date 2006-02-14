@@ -1,0 +1,99 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ----- BEGIN LICENSE BLOCK -----
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla JavaScript Shell project.
+ *
+ * The Initial Developer of the Original Code is 
+ * Alex Fritze.
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Alex Fritze <alex@croczilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ----- END LICENSE BLOCK ----- */
+
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+interface nsIOutputStream;
+
+%{ C++
+  // {A1764959-87D8-4249-A432-8005DE1372FC}
+#define NS_JSSHSERVER_CID \
+{ 0xa1764959, 0x87d8, 0x4249, { 0xa4, 0x32, 0x80, 0x05, 0xde, 0x13, 0x72, 0xfc } }
+
+#define NS_JSSHSERVER_CONTRACTID "@mozilla.org/jssh-server;1"
+%}
+
+[scriptable, uuid(f8b2b6bc-4f1d-42e2-af46-9a2d6ca627bf)]
+interface nsIJSShServer : nsISupports
+{
+  /* start listening for jssh connections on the given port.
+     'startupURI' specifies an optional script that will be executed for
+     new connections.
+     If 'loopbackOnly' is true, the server socket will only listen for connections on the
+     local loopback interface (localhost, 127.0.0.1). */
+  void startServerSocket(in unsigned long port, in AUTF8String startupURI,
+                         in boolean loopbackOnly);
+
+  /* stop listening for connections */
+  void stopServerSocket();
+
+  /* true if the server is currently active */
+  readonly attribute boolean serverListening;
+
+  /* Port that the server is currently listening on. Zero if the
+   * server is not active. */
+  readonly attribute unsigned long serverPort;
+
+  /* startupURI of the currently active server. Empty string if the
+   * server is not active.  */
+  readonly attribute AUTF8String serverStartupURI;
+
+  /* 'loopbackOnly' flag of the currently active server. false if the
+   * server is not active */
+  readonly attribute boolean serverLoopbackOnly;
+  
+  /* run a jssh session with the given input and output streams.
+   * 'startupURI' specifies an optional script that will be executed
+   * on session startup.
+   *  
+   * if 'input' is null, this will be a non-interactive session, with
+   * no input being collected from the input stream . The idea is that
+   * the session input is taken from startupURI. Even for
+   * non-interactive sessions, output (via 'print') can still be
+   * collected with the output stream object.
+   *
+   * if 'blocking' is 'true', then the shell will block the main ui
+   * thread. Otherwise this will be an asynchronous shell (but
+   * execution of commands will still be proxied onto the main ui
+   * thread).
+   */
+  void runShell(in nsIInputStream input, in nsIOutputStream output,
+                in string startupURI, in boolean blocking);
+};
+
