@@ -159,21 +159,26 @@ function sanitizeBookmarks() {
 function downloadChooseFolder() {
 
   const nsIFilePicker = Components.interfaces.nsIFilePicker;
+  const nsIFile = Components.interfaces.nsIFile;
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+  var refLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(nsIFile );
   fp.init(window, null, nsIFilePicker.modeSave);
   const nsILocalFile = Components.interfaces.nsILocalFile;
 
   var customDirPref = document.getElementById("downloadDir");
-  if (customDirPref.value)
-  fp.displayDirectory = customDirPref.value;
 
+  if (customDirPref.value) {
+   var fileCustomDirFile= refLocalFile.QueryInterface(nsILocalFile);
+   fileCustomDirFile.initWithPath(customDirPref.value);
+   fp.displayDirectory = fileCustomDirFile;
+  }
   fp.appendFilters(nsIFilePicker.filterAll);
   var returnFilePickerValue=fp.show();
-
   if (returnFilePickerValue == nsIFilePicker.returnOK) {
     var file = fp.file.QueryInterface(nsILocalFile);
+    var filepath = fp.file.QueryInterface(nsIFile);
     var currentDirPref = document.getElementById("downloadDir");
-    customDirPref.value = currentDirPref.value = file;
+    customDirPref.value = currentDirPref.value = file.path;
   }
 
 }
