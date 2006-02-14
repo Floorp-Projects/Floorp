@@ -6740,6 +6740,15 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
     if (owner) {
       nsPluginWindow    *window = nsnull;
       owner->GetWindow(window);
+#if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
+      // Should call GetPluginPort() here.
+      // This part is copied from nsPluginInstanceOwner::GetPluginPort(). 
+      nsCOMPtr<nsIWidget> widget;
+      ((nsPluginNativeWindow*)window)->GetPluginWidget(getter_AddRefs(widget));
+      if (widget) {
+        window->window = (nsPluginPort*) widget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+      }
+#endif
       if (window->window)
       {
         nsCOMPtr<nsIPluginInstance> inst = mInstance;
