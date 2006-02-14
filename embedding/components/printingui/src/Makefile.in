@@ -43,20 +43,24 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifneq (,$(filter gtk gtk2 xlib photon qt beos,$(MOZ_WIDGET_TOOLKIT)))
-DIRS	+= unixshared
+PLATFORM_DIR += unixshared
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-DIRS = os2
+PLATFORM_DIR = os2
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-DIRS = win
+PLATFORM_DIR = win
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS = mac
+PLATFORM_DIR = mac
 endif
+
+DIRS = $(PLATFORM_DIR)
 
 include $(topsrcdir)/config/rules.mk
 
+libs::
+	$(NSINSTALL) $(PLATFORM_DIR)/$(LIB_PREFIX)printingui_s.$(LIB_SUFFIX) .
