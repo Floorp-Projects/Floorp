@@ -19,6 +19,7 @@
 
 <!-- ConnectionsDialogPane --> 
 
+<!ENTITY networkCaption.label        "Network">
 <!ENTITY proxyCaption.label          "HTTP Proxy Settings">
 <!ENTITY useproxyCheckbox.label      "Use Proxy">
 <!ENTITY proxyPortCaption.label      "Port">
