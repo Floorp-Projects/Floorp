@@ -1,0 +1,172 @@
+2005-08-03  Alex Fritze  <alex@croczilla.com>
+
+	* nsJSShStarter.js:
+	Register as command line handler rather than hooking into profile startup.
+
+2005-01-31  Alex Fritze  <alex@croczilla.com>
+
+	* resources/content/jssh-debug.js:
+	Add explanatory notes about pushContext() & its problems with QueryInterface.
+
+2004-05-24  Alex Fritze  <alex@croczilla.com>
+
+	* resources/content/jssh-debug.js: * moz-jssh.el:
+	Fix escaping of '//.*//.*' lines in jssh-eval-* functions.
+	* jssh-debug.el:
+	Add 'time()' function.
+
+2004-05-24  Alex Fritze  <alex@croczilla.com>
+
+	* moz-jssh.el:
+	Fix escaping of '//.*//.*' lines in jssh-eval-* functions.
+
+	* jssh-debug.el:
+	Add 'time()' function.
+
+2004-05-07  Alex Fritze  <alex@croczilla.com>
+
+	* moz-jssh.el:
+	Add moz-jssh-buffer-shell function which opens a jssh shell with
+	global object given by 'moz-jssh-buffer-globalobj'.	
+	Also, moz-jssh-eval-internal is now fixed for commands strings
+	that change the context object.
+	
+	* jssh-debug.js:
+	exit() is now overriden to unwind the context stack (global
+	object stack).
+	pushContext(obj) now sandwiches the jssh object between 'obj' and
+	obj.__proto__ rather than appending it to the end of the chain. This
+	is to prevent other objects that share 'obj's prototype inheriting 
+	jssh's properties.
+
+2004-04-25  Alex Fritze  <alex@croczilla.com>
+
+	* moz-jssh.el:
+	moz-jssh-eval-buffer will now eval the given buffer on the object
+	given by the variable moz-jssh-buffer-globalobj. The idea is that
+	this variable is specified buffer-locally in the local variable
+	list of a file (e.g. in the first line between -*-'s).
+
+2004-04-21  Alex Fritze  <alex@croczilla.com>
+
+	* Makefile.in:
+	* nsJSSh.cpp:
+	* nsJSShServer.cpp:
+	Convert build to statically link the xpcom glue lib rather than
+	linking against xpcom.dll. The main reason is so that we can use a
+	debug build of the jssh component in a mozilla release build. If
+	we link a debug jssh against xpcom.dll and try to use it in a
+	non-debug Mozilla, Windows (not Linux for some reason - even in a
+	stripped build) will complain about missing nsDebug::*
+	symbols. The downside of linking in the xpcom glue lib is that it
+	increases the jssh xpi size by ~25KB, but I guess we can live with
+	that.
+ 	
+2004-04-20  Alex Fritze <alex@croczilla.com>
+
+	* Makefile.in:
+	* install.js:
+	Add XPI build. Run 'make xpi' to build dist/jssh-date-arch.xpi.
+
+	* nsJSSh.h:
+	* nsJSSh.cpp:
+	Update for nsIScriptObjectPrincipal deCOMification change.
+
+2004-03-31  Alex Fritze  <alex@croczilla.com>
+
+	* nsIJSShServer.idl:
+	* nsJSSh.cpp:
+	* nsJSShServer.cpp:
+	* jssh-debug.js:
+	Add support for blocking shells. nsIJSShServer::runShell() now
+	takes a boolean 'blocking' argument which controls whether the
+	shell will block the ui thread or not. jssh-debug.js adds a global
+	function 'jssh(startupURI)' which starts a nested blocking shell.
+
+	* nsJSSh.h:
+	Increase input buffer size to 100kB.
+
+	* nsIJSShServer.idl:
+	* nsJSSh.cpp:
+	* nsJSSh.h:
+	* nsJSShServer.cpp:
+	Remove redundant 'interactive' parameter from
+	nsIJSShServer::runShell(). The same effect of a non-interactive
+	shell can be achieved by passing 'null' as the input stream.
+
+	* nsJSSh.cpp:
+	Add new global functions:
+	getInputStream(): returns the current input stream (nsIInputStream)
+	getOutputStream(): returns the current output stream (nsIOutputStream)
+
+2004-03-30  Alex Fritze  <alex@croczilla.com>
+
+	* nsJSSh.cpp:
+	Add global 'debugBreak' function. Causes a break into the debugger
+	(debug builds only + on Linux the environment variable
+	'XPCOM_DEBUG_BREAK' needs to be set to 'trap').
+	
+	* nsJSSh.cpp:
+	Add global 'flushEventQueue' function.
+
+2004-03-26  Alex Fritze  <alex@croczilla.com>
+
+	* nsJSSh.cpp:
+	* nsJSSh.h:
+	* jssh-debug.js:
+	* Makefile.in:
+	Use a wrapped native object implementing nsIScriptObjectPrincipal
+	instead of setting a security manager for the context with
+	SetSecurityManagerForJSContext(). Fixes the security-related
+	problems described in bug 238572.	
+
+2004-03-24  Alex Fritze  <alex@croczilla.com>
+
+	* configure.xul:
+	Make the taskbarOverlay work on the jssh-server *service* rather
+	than a jssh-server instance so that it plays nice with the '-jssh'
+	commandline option.
+
+	* nsIJSShServer.idl:
+	* nsJSShServer.cpp:
+	* nsJSShServer.h:
+	Add serverListening, serverPort, serverStartupURI and
+	serverLoopbackOnly attributes to nsIJSShServer.
+
+	* nsJSShStarter.js:
+	* Makefile.in:
+	Added nsJSShStarter.js JS XPCOM component which automatically
+	starts a jssh server if mozilla is started with '-jssh'
+	
+	* moz-jssh.el:
+	Added some keybindings:
+	[(control c) m j] creates a moz-jssh buffer
+	[(control c) m e] jssh-evaluates the current buffer
+
+2004-03-15  Alex Fritze  <alex@croczilla.com>
+
+	* nsIJSShServer.idl:
+	* nsJSShServer.cpp:
+	* configure.xul:
+	Add 'loopbackOnly'-option to nsIJSShServer::startServerSocket().
+
+2004-03-14  Alex Fritze  <alex@croczilla.com>
+
+	* nsJSSh.cpp: 
+	Fix crash when foreign context objects set with 'setContextObj()'
+	get garbarge collected.
+
+	* jssh-debug.js:
+	Add functions for context pushing/popping. 'pushContext(obj)'
+	installs the jssh context into the proto chain of 'obj' and sets
+	'obj' as the current context object. 'popContext()' restores the
+	previous context object.
+
+	* moz-jssh.el:
+	Fix escaping of '//'-style comments in jssh-eval-* functions.
+
+2004-02-19  Alex Fritze  <alex@croczilla.com>
+
+	* moz-jssh.el:
+	Add moz-jssh-eval-buffer function.
+

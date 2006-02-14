@@ -1,0 +1,61 @@
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= jssh
+XPIDL_MODULE    = jssh
+LIBRARY_NAME	= jssh
+# EXPORT_LIBRARY	= 1
+FORCE_SHARED_LIB= 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsJSShServerModule
+MOZILLA_INTERNAL_API = 1
+
+REQUIRES	= \
+		xpcom \
+		js \
+		xpconnect \
+		string \
+		necko \
+		caps \
+		dom \
+		$(NULL)
+
+CPPSRCS		= \
+		nsJSShServer.cpp \
+		nsJSShModule.cpp \
+		nsJSSh.cpp \
+		$(NULL)
+
+XPIDLSRCS	= nsIJSShServer.idl \
+	          nsIJSSh.idl \
+		  $(NULL)
+
+EXTRA_DSO_LDOPTS = \
+		$(XPCOM_GLUE_LIBS) \
+		$(NSPR_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(XPCOM_LIBS) \
+		$(NULL)
+
+EXTRA_COMPONENTS = nsJSShStarter.js
+
+include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -DJS_THREADSAFE 
+
+# XXX this doesn't work anymore; possibly because of bsmedberg's checkin for bug#2888370 or thereabouts
+#DEFINES += -DXPCOM_GLUE
+
+XPI_FILE = jssh-$(shell date +%Y%m%d)-$(OS_ARCH).xpi
+
+xpi::
+	zip -j $(DIST)/$(XPI_FILE) $(srcdir)/install.js
+	cd $(DIST); zip -r $(XPI_FILE) \
+	bin/components/jssh.xpt \
+	bin/components/$(LIB_PREFIX)jssh$(DLL_SUFFIX) \
+	bin/components/nsJSShStarter.js \
+	bin/chrome/jssh.jar
