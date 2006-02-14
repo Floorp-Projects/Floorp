@@ -103,14 +103,13 @@
                     <hbox flex="1">
 
 
-                        <box onchange="syncPref(this)"  tabindex="54"
+                        <textbox onchange="syncPref(this)"  tabindex="54"
                                  flex="1" 
                                  style="margin:3px ! important;" 
                                  id="downloadDir"
                                  preference="browser.download.dir"
                                  />          
                                           
-
       			          <button id="chooseFolderButton" tabindex="55"
 			                        class='box-prefgroupitem'
 			                        label="Set Folder"
