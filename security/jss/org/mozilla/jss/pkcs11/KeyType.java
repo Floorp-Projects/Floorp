@@ -166,19 +166,6 @@ public final class KeyType {
 
     //////////////////////////////////////////////////////////////
     static public final KeyType
-    EC     = new KeyType(new Algorithm[]
-                    {
-                    SignatureAlgorithm.ECSignature,
-                    SignatureAlgorithm.ECSignatureWithSHA1Digest,
-                    SignatureAlgorithm.ECSignatureWithSHA256Digest,
-                    SignatureAlgorithm.ECSignatureWithSHA384Digest,
-                    SignatureAlgorithm.ECSignatureWithSHA512Digest
-                    },
-                    "EC"
-                );
-
-    //////////////////////////////////////////////////////////////
-    static public final KeyType
     FORTEZZA = new KeyType(new Algorithm[0], "FORTEZZA");
 
     //////////////////////////////////////////////////////////////

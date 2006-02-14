@@ -78,12 +78,10 @@ public class PK11PrivKey extends org.mozilla.jss.pkcs11.PK11Key
 
         if( kt == KeyType.RSA ) {
             return PrivateKey.Type.RSA;
-        } else if (kt == KeyType.DSA) {
-            return PrivateKey.Type.DSA;
         } else {
-            Assert._assert(kt == KeyType.EC);
-            return PrivateKey.Type.EC;
-	}
+            Assert._assert(kt == KeyType.DSA);
+            return PrivateKey.Type.DSA;
+        }
     }
 
     public String getAlgorithm() {

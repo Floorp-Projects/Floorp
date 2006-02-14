@@ -204,26 +204,6 @@ class JSSSignatureSpi extends java.security.SignatureSpi {
             super(SignatureAlgorithm.DSASignatureWithSHA1Digest);
         }
     }
-    public static class SHA1EC extends JSSSignatureSpi {
-        public SHA1EC() {
-            super(SignatureAlgorithm.ECSignatureWithSHA1Digest);
-        }
-    }
-    public static class SHA256EC extends JSSSignatureSpi {
-        public SHA256EC() {
-            super(SignatureAlgorithm.ECSignatureWithSHA256Digest);
-        }
-    }
-    public static class SHA384EC extends JSSSignatureSpi {
-        public SHA384EC() {
-            super(SignatureAlgorithm.ECSignatureWithSHA384Digest);
-        }
-    }
-    public static class SHA512EC extends JSSSignatureSpi {
-        public SHA512EC() {
-            super(SignatureAlgorithm.ECSignatureWithSHA512Digest);
-        }
-    }
     public static class MD2RSA extends JSSSignatureSpi {
         public MD2RSA() {
             super(SignatureAlgorithm.RSASignatureWithMD2Digest);

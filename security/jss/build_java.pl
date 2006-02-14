@@ -45,7 +45,6 @@ org.mozilla.jss.pkcs11.PK11KeyPairGenerator
 org.mozilla.jss.pkcs11.SigContextProxy
 org.mozilla.jss.pkcs11.PK11RSAPublicKey
 org.mozilla.jss.pkcs11.PK11DSAPublicKey
-org.mozilla.jss.pkcs11.PK11ECPublicKey
 org.mozilla.jss.pkcs11.PK11SecureRandom 
 org.mozilla.jss.provider.java.security.JSSKeyStoreSpi
 org.mozilla.jss.SecretDecoderRing.KeyManager

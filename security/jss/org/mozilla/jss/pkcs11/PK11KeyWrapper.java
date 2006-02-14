@@ -45,8 +45,6 @@ import org.mozilla.jss.util.Assert;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.interfaces.DSAPublicKey;
-//requires JAVA 1.5
-//import java.security.interfaces.ECPublicKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.RC2ParameterSpec;
 
@@ -170,8 +168,6 @@ final class PK11KeyWrapper implements KeyWrapper {
         try {
             KeyType type = KeyType.getKeyTypeFromAlgorithm(algorithm);
             if( (type == KeyType.RSA && !(key instanceof RSAPublicKey)) ||
-		// requires JAVA 1.5
-                // (type == KeyType.EC && !(key instanceof ECPublicKey)) ||
                 (type == KeyType.DSA && !(key instanceof DSAPublicKey)) ) {
                 throw new InvalidKeyException("Key is not the right type for "+
                     "this algorithm");
@@ -437,14 +433,12 @@ final class PK11KeyWrapper implements KeyWrapper {
     /**
      * Extracts the "public value" from a public key.  The public value is
      *  used to construct the key identifier (CKA_ID). Also, the internal token
-     *  stores the EC DSA and EC public value along with the private key.
+     *  stores the DSA public value along with the private key.
      */
     private static byte[]
     extractPublicValue(PublicKey publicKey, PrivateKey.Type type)
         throws InvalidKeyException
     {
-        /* this code should call a generic function wich returns the
-         * proper public value. */
         if( publicKey == null ) {
             throw new InvalidKeyException("publicKey is null");
         }
@@ -523,14 +517,12 @@ final class PK11KeyWrapper implements KeyWrapper {
 
     private static Algorithm
     algFromType(PrivateKey.Type type) {
-        if (type == PrivateKey.RSA) {
+        if(type == PrivateKey.RSA) {
             return KeyPairAlgorithm.RSAFamily;
-        } else if (type == PrivateKey.DSA) {
-            return KeyPairAlgorithm.DSAFamily;
         } else {
-            Assert._assert( type == PrivateKey.EC);
-            return KeyPairAlgorithm.ECFamily;
-	}
+            Assert._assert(type == PrivateKey.DSA);
+            return KeyPairAlgorithm.DSAFamily;
+        }
     }
 
     private static Algorithm

@@ -210,20 +210,6 @@ public class TestKeyGen {
             }
         }
 
-        // 256-bit EC
-        kpg = java.security.KeyPairGenerator.getInstance("EC", "Mozilla-JSS");
-        kpg.initialize(256);
-        keyPair = kpg.genKeyPair();
-        System.out.println("Generated 256-bit EC KeyPair!");
-
-        kpg.initialize(384);
-        keyPair = kpg.genKeyPair();
-        System.out.println("Generated 384-bit EC KeyPair!");
-
-        kpg.initialize(521);
-        keyPair = kpg.genKeyPair();
-        System.out.println("Generated 521-bit EC KeyPair!");
-
         System.out.println("TestKeyGen passed");
         System.exit(0);
       } catch (Exception e) {

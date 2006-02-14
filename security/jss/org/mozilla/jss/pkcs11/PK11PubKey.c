@@ -37,7 +37,6 @@
 #include "_jni/org_mozilla_jss_pkcs11_PublicKeyProxy.h"
 #include "_jni/org_mozilla_jss_pkcs11_PK11RSAPublicKey.h"
 #include "_jni/org_mozilla_jss_pkcs11_PK11DSAPublicKey.h"
-#include "_jni/org_mozilla_jss_pkcs11_PK11ECPublicKey.h"
 
 #include <plarena.h>
 #include <secmodt.h>
@@ -106,9 +105,6 @@ JSS_PK11_wrapPubKey(JNIEnv *env, SECKEYPublicKey **pKey)
         break;
       case dsaKey:
         keyClassName = PK11_DSA_PUBKEY_CLASS_NAME;
-        break;
-      case ecKey:
-        keyClassName = PK11_EC_PUBKEY_CLASS_NAME;
         break;
       default:
         keyClassName = PK11PUBKEY_CLASS_NAME;
@@ -262,9 +258,6 @@ Java_org_mozilla_jss_pkcs11_PK11PubKey_getKeyType
     case dsaKey:
         keyTypeFieldName = DSA_KEYTYPE_FIELD;
         break;
-    case ecKey:
-        keyTypeFieldName = EC_KEYTYPE_FIELD;
-        break;
     case fortezzaKey:
         keyTypeFieldName = FORTEZZA_KEYTYPE_FIELD;
         break;
@@ -312,9 +305,7 @@ typedef enum {
     DSA_G,
     DSA_PUBLIC,
     RSA_MODULUS,
-    RSA_PUBLIC_EXPONENT,
-    EC_CURVE,
-    EC_W
+    RSA_PUBLIC_EXPONENT
 } PublicKeyField;
 
 static jbyteArray
@@ -412,36 +403,6 @@ Java_org_mozilla_jss_pkcs11_PK11DSAPublicKey_getYByteArray
 }
 
 /**********************************************************************
- *
- * PK11ECPublicKey.getParamByteArray
- *
- * Returns the curve of this EC Public Key.  The format is a DER encoded
- * octet string in a byte array.
- *
- */
-JNIEXPORT jbyteArray JNICALL
-Java_org_mozilla_jss_pkcs11_PK11ECPublicKey_getCurveByteArray
-    (JNIEnv *env, jobject this)
-{
-    return get_public_key_info(env, this, EC_CURVE);
-}
-
-/**********************************************************************
- *
- * PK11ECPublicKey.getWByteArray
- *
- * Returns the public value (W) of this EC Public Key.  
- * The format is a 1 byte to indicate compression followed by points
- * Wx and Wy unsigned and connatonatted.
- *
- */
-JNIEXPORT jbyteArray JNICALL
-Java_org_mozilla_jss_pkcs11_PK11ECPublicKey_getWByteArray
-    (JNIEnv *env, jobject this)
-{
-    return get_public_key_info(env, this, EC_W);
-}
-/**********************************************************************
  * g e t _ p u b l i c _ k e y _ i n f o 
  *
  * Looks up a field in a PK11PubKey and converts it to a Java byte array.
@@ -487,14 +448,6 @@ get_public_key_info
     case RSA_PUBLIC_EXPONENT:
         PR_ASSERT(pubk->keyType == rsaKey);
         item = &pubk->u.rsa.publicExponent;
-        break;
-    case EC_CURVE:
-        PR_ASSERT(pubk->keyType == ecKey);
-        item = &pubk->u.ec.DEREncodedParams;
-        break;
-    case EC_W:
-        PR_ASSERT(pubk->keyType == ecKey);
-        item = &pubk->u.ec.publicValue;
         break;
     default:
         PR_ASSERT(PR_FALSE);

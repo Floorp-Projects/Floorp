@@ -76,9 +76,6 @@ JSS_PK11_wrapPrivKey(JNIEnv *env, SECKEYPrivateKey **privk)
       case dsaKey:
         className = "org/mozilla/jss/pkcs11/PK11DSAPrivateKey";
         break;
-      case ecKey:
-        className = "org/mozilla/jss/pkcs11/PK11ECPrivateKey";
-        break;
       default:
         className = "org/mozilla/jss/pkcs11/PK11PrivKey";
         break;
@@ -123,8 +120,6 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_verifyKeyIsOnToken
 	SECKEYPrivateKey *key = NULL;
 	PK11SlotInfo *slot = NULL;
 	PK11SlotInfo *keySlot = NULL;
-	PK11SlotInfo *dbSlot = NULL;
-	PK11SlotInfo *cryptoSlot = NULL;
 
 	if( JSS_PK11_getPrivKeyPtr(env, this, &key) != PR_SUCCESS) {
 		PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
@@ -137,11 +132,9 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_verifyKeyIsOnToken
 	}
 
 	keySlot = PK11_GetSlotFromPrivateKey(key);
-	dbSlot = PK11_GetInternalKeySlot();
-	if(keySlot == dbSlot) {
-		cryptoSlot = PK11_GetInternalSlot();
+	if(keySlot == PK11_GetInternalKeySlot()) {
 		/* hack for internal module */
-		if(slot != keySlot && slot != cryptoSlot) {
+		if(slot != keySlot && slot != PK11_GetInternalSlot()) {
 			JSS_throwMsg(env, NO_SUCH_ITEM_ON_TOKEN_EXCEPTION,
 				"Key is not present on this token");
 			goto finish;
@@ -155,12 +148,6 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_verifyKeyIsOnToken
 finish:
 	if(keySlot != NULL) {
 		PK11_FreeSlot(keySlot);
-	}
-        if(dbSlot != NULL) {
-		PK11_FreeSlot(dbSlot);
-	}
-        if(cryptoSlot != NULL) {
-		PK11_FreeSlot(cryptoSlot);
 	}
 }
 
@@ -212,10 +199,6 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_getKeyType
         break;
     case keaKey:
         keyTypeFieldName = KEA_KEYTYPE_FIELD;
-        break;
-    case ecKey:
-        keyTypeFieldName = EC_KEYTYPE_FIELD;
-        break;
     default:
         PR_ASSERT(PR_FALSE);
         keyTypeFieldName = NULL_KEYTYPE_FIELD;
@@ -463,19 +446,11 @@ JSS_PK11_getKeyType(JNIEnv *env, jobject keyTypeObj)
     jfieldID fieldID;
     char *fieldNames[] = {
         RSA_PRIVKEYTYPE_FIELD,
-        DSA_PRIVKEYTYPE_FIELD,
-        FORTEZZA_KEYTYPE_FIELD,
-        DH_KEYTYPE_FIELD,
-        KEA_KEYTYPE_FIELD,
-	EC_KEYTYPE_FIELD };
-    int numTypes = 6;
+        DSA_PRIVKEYTYPE_FIELD };
+    int numTypes = 2;
     KeyType keyTypes[] = {
         rsaKey,
-        dsaKey,
-	fortezzaKey,
-	dhKey,
-	keaKey,
-	ecKey };
+        dsaKey };
     jobject field;
     int i;
 

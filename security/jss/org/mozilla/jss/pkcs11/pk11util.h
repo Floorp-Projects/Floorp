@@ -127,35 +127,7 @@ JSS_PK11_wrapSymKey(JNIEnv *env, PK11SymKey **symKey);
 KeyType
 JSS_PK11_getKeyType(JNIEnv *env, jobject keyTypeObj);
 
-/***********************************************************************
- * JSS_PK11_generateKeyPair
- *
- * Create a new key pair based on the passed in mechanism and parameters
- *
- * INPUTS
- *      mechanism
- *          A PKCS#11 KeyPair Mechanism
- *      slot
- *          Slot to generate the keypair in.
- *      pubk
- *          returned public key
- *      privk
- *          returned private key key
- *      param
- *          PKCS #11 mechanism parameters
- *      temporary
- *          boolean to say if the key is temporary or permanent
- *      sensitive
- *          int to say if the key should be sensitive or not (-1 is default)
- *      extractable
- *          int to say if the key should be extractable or not (-1 is default)
- * RETURNS
- *  The SECStatus, SECSuccess of success, SECFailure on failure
- */
-SECStatus
-JSS_PK11_generateKeyPair(JNIEnv *env, CK_MECHANISM_TYPE mechanism,
-    PK11SlotInfo *slot, SECKEYPublicKey **pubk, SECKEYPrivateKey **privK,
-    void *params, PRBool temporary, jint senstive, jint extractable);
+
 
 /*=====================================================================
                        C E R T I F I C A T E S

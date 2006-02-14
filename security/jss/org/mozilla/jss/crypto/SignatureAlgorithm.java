@@ -113,20 +113,11 @@ public class SignatureAlgorithm extends Algorithm {
 
     /**********************************************************************
      * Raw DSA signing. This algorithm does not do any hashing, it merely
-     * operates on its input, which should be a hash.
+     * encrypts its input, which should be a hash.
      */
     public static final SignatureAlgorithm
     DSASignature = new SignatureAlgorithm(SEC_OID_ANSIX9_DSA_SIGNATURE, "DSA",
         null, null, ANSI_X9_ALGORITHM.subBranch(1) );
-
-    /**********************************************************************
-     * Raw EC signing. This algorithm does not do any hashing, it merely
-     * operates on its input, which should be a hash.
-     */
-    public static final SignatureAlgorithm
-    ECSignature = new SignatureAlgorithm(SEC_OID_ANSIX962_EC_PUBLIC_KEY, 
-	"EC",
-        null, null, ANSI_X962_OID.subBranch(2).subBranch(1) );
 
     //////////////////////////////////////////////////////////////////////
     public static final SignatureAlgorithm
@@ -155,34 +146,6 @@ public class SignatureAlgorithm extends Algorithm {
         new SignatureAlgorithm(SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST,
             "DSASignatureWithSHA1Digest", DSASignature, DigestAlgorithm.SHA1,
             ANSI_X9_ALGORITHM.subBranch(3) );
-
-    //////////////////////////////////////////////////////////////////////
-    public static final SignatureAlgorithm
-    ECSignatureWithSHA1Digest =
-        new SignatureAlgorithm(SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE,
-            "ECSignatureWithSHA1Digest", ECSignature, DigestAlgorithm.SHA1,
-            ANSI_X962_OID.subBranch(4).subBranch(1) );
-
-    //////////////////////////////////////////////////////////////////////
-    public static final SignatureAlgorithm
-    ECSignatureWithSHA256Digest =
-        new SignatureAlgorithm(SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE,
-            "ECSignatureWithSHA256Digest", ECSignature, DigestAlgorithm.SHA256,
-            ANSI_X962_OID.subBranch(4).subBranch(3).subBranch(2) );
-
-    //////////////////////////////////////////////////////////////////////
-    public static final SignatureAlgorithm
-    ECSignatureWithSHA384Digest =
-        new SignatureAlgorithm(SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE,
-            "ECSignatureWithSHA384Digest", ECSignature, DigestAlgorithm.SHA384,
-            ANSI_X962_OID.subBranch(4).subBranch(3).subBranch(3) );
-
-    //////////////////////////////////////////////////////////////////////
-    public static final SignatureAlgorithm
-    ECSignatureWithSHA512Digest =
-        new SignatureAlgorithm(SEC_OID_ANSIX962_ECDSA_SHA512_SIGNATURE,
-            "ECSignatureWithSHA512Digest", ECSignature, DigestAlgorithm.SHA512,
-            ANSI_X962_OID.subBranch(4).subBranch(3).subBranch(4) );
 
     //////////////////////////////////////////////////////////////////////
     public static final SignatureAlgorithm

@@ -78,7 +78,7 @@ class JSSKeyPairGeneratorSpi
         kpg.initialize(keysize, random);
     }
         
-    public KeyPair generateKeyPair()  {
+    public KeyPair generateKeyPair() {
       try {
         return kpg.genKeyPair();
       } catch(TokenException e) { 
@@ -94,11 +94,6 @@ class JSSKeyPairGeneratorSpi
     public static class DSA extends JSSKeyPairGeneratorSpi {
         public DSA() {
             super(KeyPairAlgorithm.DSA);
-        }
-    }
-    public static class EC extends JSSKeyPairGeneratorSpi {
-        public EC() {
-            super(KeyPairAlgorithm.EC);
         }
     }
 }

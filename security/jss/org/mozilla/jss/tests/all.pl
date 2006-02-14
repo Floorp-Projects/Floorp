@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -39,14 +39,12 @@ my $java;
 
 # dist <dist_dir>
 # release <java release dir> <nss release dir> <nspr release dir>
-# auto   (test the current build directory)
 
 sub usage {
     print "Usage:\n";
     print "$0 dist <dist_dir>\n";
     print "$0 release <jss release dir> <nss release dir> "
         . "<nspr release dir>\n";
-    print "$0 auto\n";
     exit(1);
 }
 
@@ -116,24 +114,6 @@ sub setup_vars {
         $testdir = `cd $dist_dir;pwd`;
         # take the last part (can be overriden if not <OS><VERSION>_<OPT|DBG>.OBJ
         $testdir = `basename $testdir`;
-        chomp $testdir;
-    } elsif( $$argv[0] eq "auto" ) {
-        my $dist_dir = `make dist_dir`;
-        my $obj_dir = `make obj_dir`;
-        chomp($dist_dir);
-        chomp($obj_dir);
-        chomp( $dist_dir = `(cd $dist_dir ; pwd)`);
-        chomp( $obj_dir = `(cd $obj_dir ; pwd)`);
-
-        $nss_lib_dir   = "$obj_dir/lib";
-        $jss_rel_dir   = "$dist_dir/classes$dbg_suffix/org";
-        $jss_classpath = "$dist_dir/xpclass$jar_dbg_suffix.jar";
-
-        $ENV{CLASSPATH} .= "$dist_dir/xpclass$jar_dbg_suffix.jar";
-        ( -f $ENV{CLASSPATH} ) or die "$ENV{CLASSPATH} does not exist";
-        #$ENV{$ld_lib_path} = $ENV{$ld_lib_path} . $pathsep . "$obj_dir/lib";
-        $ENV{$ld_lib_path} = "$obj_dir/lib";
-        $testdir = `basename $obj_dir`;
         chomp $testdir;
     } elsif( $$argv[0] eq "release" ) {
         shift @$argv;
@@ -396,11 +376,11 @@ $result and print "JSSE servers returned $result\n";
 #
 # Test JSS client communication
 #
-#print "============= Start JSS client tests\n";
-#$result = system("$java org.mozilla.jss.tests.JSS_SSLClient $testdir $pwfile $portJSSEServer bypassOff");
-#$result >>=8;
-#$result and print "JSS client returned $result\n";
-#print_case_result ($result,"JSSE server / JSS client");
+print "============= Start JSS client tests\n";
+$result = system("$java org.mozilla.jss.tests.JSS_SSLClient $testdir $pwfile $portJSSEServer bypassOff");
+$result >>=8;
+$result and print "JSS client returned $result\n";
+print_case_result ($result,"JSSE server / JSS client");
 
 $portJSSServer=$portJSSServer+1;
 
@@ -415,11 +395,11 @@ $result and print "JSS servers returned $result\n";
 #
 # Test JSSE client communication
 #
-#print "============= Start JSSE client tests\n";
-#$result = system("$java org.mozilla.jss.tests.JSSE_SSLClient $testdir $portJSSServer");
-#$result >>=8;
-#$result and print "JSSE client returned $result\n";
-#print_case_result ($result,"JSS server / JSSE client");
+print "============= Start JSSE client tests\n";
+$result = system("$java org.mozilla.jss.tests.JSSE_SSLClient $testdir $portJSSServer");
+$result >>=8;
+$result and print "JSSE client returned $result\n";
+print_case_result ($result,"JSS server / JSSE client");
 
 #
 # Test Enable FIPSMODE 

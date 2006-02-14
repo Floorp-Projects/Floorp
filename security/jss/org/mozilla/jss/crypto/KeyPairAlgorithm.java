@@ -93,15 +93,9 @@ public class KeyPairAlgorithm extends Algorithm {
     public static final Algorithm
     DSAFamily = new Algorithm(SEC_OID_ANSIX9_DSA_SIGNATURE, "DSA");
 
-    public static final Algorithm
-    ECFamily = new Algorithm(SEC_OID_ANSIX962_EC_PUBLIC_KEY, "EC");
-
     public static final KeyPairAlgorithm
     RSA = new KeyPairAlgorithm(CKM_RSA_PKCS_KEY_PAIR_GEN, "RSA", RSAFamily);
 
     public static final KeyPairAlgorithm
     DSA = new KeyPairAlgorithm(CKM_DSA_KEY_PAIR_GEN, "DSA", DSAFamily);
-
-    public static final KeyPairAlgorithm
-    EC = new KeyPairAlgorithm(CKM_EC_KEY_PAIR_GEN, "EC", ECFamily);
 }

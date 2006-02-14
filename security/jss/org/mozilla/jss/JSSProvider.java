@@ -100,32 +100,6 @@ public final class JSSProvider extends java.security.Provider {
             "org.mozilla.jss.provider.java.security.JSSSignatureSpi$SHA512RSA");
         put("Alg.Alias.Signature.SHA512/RSA", "SHA-512/RSA");
         put("Alg.Alias.Signature.SHA512withRSA", "SHA-512/RSA");
-// ECC
-        put("Signature.SHA1withEC",
-            "org.mozilla.jss.provider.java.security.JSSSignatureSpi$SHA1EC");
-        put("Alg.Alias.Signature.EC", "SHA1withEC");
-        put("Alg.Alias.Signature.ECC", "SHA1withEC");
-        put("Alg.Alias.Signature.ECDSA", "SHA1withEC");
-        put("Alg.Alias.Signature.SHA/EC", "SHA1withEC");
-        put("Alg.Alias.Signature.SHA1/EC", "SHA1withEC");
-        put("Alg.Alias.Signature.SHA-1/EC", "SHA1withEC");
-        put("Alg.Alias.Signature.SHA/ECDSA", "SHA1withEC");
-        put("Alg.Alias.Signature.SHA1/ECDSA", "SHA1withEC");
-
-        put("Signature.SHA256withEC",
-            "org.mozilla.jss.provider.java.security.JSSSignatureSpi$SHA256EC");
-        put("Alg.Alias.Signature.SHA256/EC", "SHA256withEC");
-        put("Alg.Alias.Signature.SHA-256/EC", "SHA256withEC");
-
-        put("Signature.SHA384withEC",
-            "org.mozilla.jss.provider.java.security.JSSSignatureSpi$SHA384EC");
-        put("Alg.Alias.Signature.SHA384/EC", "SHA384withEC");
-        put("Alg.Alias.Signature.SHA-384/EC", "SHA384withEC");
-
-        put("Signature.SHA512withEC",
-            "org.mozilla.jss.provider.java.security.JSSSignatureSpi$SHA512EC");
-        put("Alg.Alias.Signature.SHA512/EC", "SHA512withEC");
-        put("Alg.Alias.Signature.SHA-512/EC", "SHA384withEC");
 
         /////////////////////////////////////////////////////////////
         // Message Digesting
@@ -163,8 +137,6 @@ public final class JSSProvider extends java.security.Provider {
             "org.mozilla.jss.provider.java.security.JSSKeyPairGeneratorSpi$RSA");
         put("KeyPairGenerator.DSA",
             "org.mozilla.jss.provider.java.security.JSSKeyPairGeneratorSpi$DSA");
-        put("KeyPairGenerator.EC",
-            "org.mozilla.jss.provider.java.security.JSSKeyPairGeneratorSpi$EC");
 
         /////////////////////////////////////////////////////////////
         // KeyFactory
@@ -172,8 +144,6 @@ public final class JSSProvider extends java.security.Provider {
         put("KeyFactory.RSA",
             "org.mozilla.jss.provider.java.security.KeyFactorySpi1_2");
         put("KeyFactory.DSA",
-            "org.mozilla.jss.provider.java.security.KeyFactorySpi1_2");
-        put("KeyFactory.EC",
             "org.mozilla.jss.provider.java.security.KeyFactorySpi1_2");
 
         /////////////////////////////////////////////////////////////
