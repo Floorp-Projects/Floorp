@@ -150,7 +150,7 @@ function sanitizeAll()
     document.getElementById("privacySanitize").disabled=true;
 }
 
-function sanitizeBookmarks() {
+function sanitizeBookmarks() {set
 	// in Common.
 	BookmarksDeleteAllAndSync();
     document.getElementById("bookmarksSanitize").disabled=true;
@@ -181,7 +181,8 @@ function downloadChooseFolder() {
     var file = fp.file.QueryInterface(nsILocalFile);
 
     var currentDirPref = document.getElementById("downloadDir");
-    customDirPref.value = currentDirPref.value = file.parent.path;
+    customDirPref.value = currentDirPref.value = file.parent;
+
   }
 
 }
@@ -408,6 +409,24 @@ function syncPrefSaveDOM() {
 				gPref.setBoolPref(prefName, prefSETValue);
 				} catch (e) { } 
 			}
+
+                  if (document.getElementById(prefName).getAttribute("preftype")=="file") {
+
+                   var lf;
+	             
+                   //if (typeof(val) == "string") {
+                   //   lf = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+                   //   lf.persistentDescriptor = val;
+                   //   if (!lf.exists())
+                   //      lf.initWithPath(val);
+                   // }
+	             //else lf = prefSETValue.QueryInterface(Components.interfaces.nsILocalFile);
+
+	             lf = prefSETValue.QueryInterface(Components.interfaces.nsILocalFile);
+                   gPref.setComplexValue(prefName, Components.interfaces.nsILocalFile, lf);
+	 
+                   }	
+
 		}
 
 		psvc.savePrefFile(null);
