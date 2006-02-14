@@ -1332,8 +1332,8 @@ function DownloadSet( aCurTotalProgress, aMaxTotalProgress ) {
   var percentage = parseInt((aCurTotalProgress/aMaxTotalProgress)*parseInt(gInputBoxObject.width));
   if(percentage<0) percentage=2;
   document.getElementById("toolbar-download-tag").inputField.style.backgroundPosition=percentage+"px 100%";
-  document.getElementById("toolbar-download-tag").value=document.getElementById("minimo_properties").getString("downloadProgress")+":"+parseInt((aCurTotalProgress/aMaxTotalProgress)*100)+"%";
-  document.getElementById("toolbar-download-tag").setAttribute("currentid",refId);
+//  document.getElementById("toolbar-download-tag").value=document.getElementById("minimo_properties").getString("downloadProgress")+":"+parseInt((aCurTotalProgress/aMaxTotalProgress)*100)+"%";
+ 	 document.getElementById("toolbar-download-tag").setAttribute("currentid",refId);
 }
 
 function DownloadCancel(refId) {
@@ -1343,6 +1343,14 @@ function DownloadCancel(refId) {
   BrowserViewDownload(false);
 
 }
+
+function DownloadReveal() {
+ 
+  alert(document.getElementById("toolbar-download-tag").getAttribute("reveal"));
+
+}
+
+
 
 function TransferItemFactory() {
 }
@@ -1377,11 +1385,21 @@ TransferItem.prototype = {
     BrowserViewDownload(true);
     document.getElementById("toolbar-download-tag").cachedCancelable=aCancelable;
     document.getElementById("download-button-stop").disabled=false;
+    document.getElementById("toolbar-download-tag").value=aSource.spec; 
+    document.getElementById("toolbar-download-tag").setAttribute("reveal",aTarget.spec);
 
   },
   
   onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
 
+       if ( aStateFlags & nsIWebProgressListener.STATE_STOP ) {
+
+          document.getElementById("download-button-stop").label=document.getElementById("minimo_properties").getString("downloadButtonReveal");
+          document.getElementById("download-button-stop").setAttribute("oncommand","DownloadReveal()");
+          document.getElementById("toolbar-download-tag").inputField.style.backgroundColor="lightgreen";
+
+       }
+    
   },
   
   onProgressChange: function( aWebProgress,
@@ -1418,4 +1436,3 @@ TransferItem.prototype = {
   },
 }
   
-x
