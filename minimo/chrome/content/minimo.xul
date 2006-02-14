@@ -95,7 +95,9 @@
   
   <hbox flex="1">
     <hbox id="appcontent" flex="100%">
-      <vbox id="browserleftbar" >
+      <vbox id="browserleftbar" onclick="BrowserHomeBar()">
+         <vbox id="homebarcontainer">
+         </vbox>
       </vbox>
       <vbox id="browser" context="context" flex="1">
         <tabbrowser id="content" 
@@ -148,6 +150,7 @@
     <command id="cmd_Go"                      oncommand="URLBarEntered()" />
     <command id="cmd_BrowserBookmark"         oncommand="BrowserBookmark()" />
     <command id="cmd_BrowserBookmarkThis"     oncommand="BrowserBookmarkThis()" />
+    <command id="cmd_BrowserHomeBar"          oncommand="BrowserHomeBar()" />
     
     <!-- Keyboard Focus Handler Controls --> 
     <!-- This entire focusnavigation set is not XBLized yet, 
