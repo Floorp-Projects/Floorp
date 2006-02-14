@@ -49,7 +49,7 @@
 
 #toolbar-download-tag input {
 	background-repeat:no-repeat;
-	background-image:url(chrome://minimo/skin/transfer.jpg);
+	background-image:url(chrome://minimo/skin/transfer.gif);
 	padding:0px;
 	margin:0px;
  	border:1px solid black;
@@ -86,10 +86,10 @@ toolbar *, #appcontent *, * {
 
 
 .button-close {
-  background: #cccccc url("chrome://minimo/skin/close.png") no-repeat 50% 50%;
+  list-style-image: url("chrome://minimo/skin/close-11px.png");
   margin-right:4px ! important;
   margin-top:0px ! important;
-  border:1px outset #bbbbbb;
+
 }
 
 .button-border {
