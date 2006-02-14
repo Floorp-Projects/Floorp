@@ -286,11 +286,13 @@ function show(idPane,toolbarButtonRef) {
 
 function eventHandlerMenu(e) {
 
+/*
   if(e.charCode==109) {
   	document.getElementById("general-button").focus();
     e.preventBubble();
   } 
- 
+*/
+
    if(e.keyCode==134 || e.keyCode==70) /*SoftKey1 or HWKey1*/ {
   	document.getElementById("general-button").focus();
     e.preventBubble();
