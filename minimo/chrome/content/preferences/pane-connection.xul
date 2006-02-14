@@ -103,7 +103,7 @@
                     <hbox flex="1">
 
 
-                        <textbox onchange="syncPref(this)"  tabindex="54"
+                        <box onchange="syncPref(this)"  tabindex="54"
                                  flex="1" 
                                  style="margin:3px ! important;" 
                                  id="downloadDir"
@@ -114,7 +114,7 @@
       			          <button id="chooseFolderButton" tabindex="55"
 			                        class='box-prefgroupitem'
 			                        label="Set Folder"
-			                        oncommand="downloadChooseFolder();"/>
+			                        oncommand="syncPref(document.getElementById('downloadDir'));downloadChooseFolder();"/>
 
  
                     </hbox>		
