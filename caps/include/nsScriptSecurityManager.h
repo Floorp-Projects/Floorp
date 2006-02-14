@@ -405,9 +405,6 @@ private:
                 nsIURI* aSource, nsIURI* aTarget);
 
     nsresult
-    GetRootDocShell(JSContext* cx, nsIDocShell **result);
-
-    nsresult
     CheckPropertyAccessImpl(PRUint32 aAction,
                             nsIXPCNativeCallContext* aCallContext,
                             JSContext* cx, JSObject* aJSObject,

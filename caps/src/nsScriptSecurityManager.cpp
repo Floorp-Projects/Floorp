@@ -1516,31 +1516,6 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     return CheckSameOriginPrincipalInternal(subject, object, PR_TRUE);
 }
 
-nsresult
-nsScriptSecurityManager::GetRootDocShell(JSContext *cx, nsIDocShell **result)
-{
-    nsresult rv;
-    *result = nsnull;
-    nsIScriptContext *scriptContext = GetScriptContext(cx);
-    if (!scriptContext)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsPIDOMWindow> window =
-        do_QueryInterface(scriptContext->GetGlobalObject());
-    if (!window)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem =
-        do_QueryInterface(window->GetDocShell(), &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIDocShellTreeItem> rootItem;
-    rv = docshellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
-    if (NS_FAILED(rv)) return rv;
-
-    return rootItem->QueryInterface(NS_GET_IID(nsIDocShell), (void**)result);
-}
-
 NS_IMETHODIMP
 nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
                                            nsIPrincipal *aPrincipal,
