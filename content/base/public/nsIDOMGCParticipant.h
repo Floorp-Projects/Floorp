@@ -84,6 +84,8 @@ public:
    * closure of |AppendReachableList|.
    *
    * This will only be called on objects that are returned by GetSCCIndex.
+   *
+   * null pointers may be appended; they will be ignored by the caller.
    */
   virtual void AppendReachableList(nsCOMArray<nsIDOMGCParticipant>& aArray) = 0;
 };
