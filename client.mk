@@ -693,6 +693,55 @@ ifdef RUN_AUTOCONF_LOCALLY
 	cd $(TOPSRCDIR)/directory/c-sdk && $(AUTOCONF)
 endif
 
+CVSCO_LOGFILE_L10N := $(ROOTDIR)/cvsco-l10n.log
+CVSCO_LOGFILE_L10N := $(shell echo $(CVSCO_LOGFILE_L10N) | sed s%//%/%)
+
+l10n-checkout:
+#	@: Backup the last checkout log.
+	@if test -f $(CVSCO_LOGFILE_L10N) ; then \
+	  mv $(CVSCO_LOGFILE_L10N) $(CVSCO_LOGFILE_L10N).old; \
+	else true; \
+	fi
+	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE_L10N)
+	@echo '$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk $(MOZCONFIG_MODULES)'; \
+        cd $(ROOTDIR) && \
+	$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk $(MOZCONFIG_MODULES)
+	@cd $(ROOTDIR) && $(MAKE) -f mozilla/client.mk real_l10n-checkout
+
+EN_US_CO_DIRS := $(sort $(foreach dir,$(LOCALE_DIRS),mozilla/$(dir)/locales)) \
+  $(foreach mod,$(MOZ_PROJECT_LIST),mozilla/$(mod)/config) \
+  mozilla/client.mk        \
+  $(MOZCONFIG_MODULES)     \
+  mozilla/configure        \
+  mozilla/configure.in     \
+  mozilla/allmakefiles.sh  \
+  mozilla/build            \
+  mozilla/config           \
+  $(NULL)
+
+EN_US_CO_FILES_NS :=          \
+  mozilla/toolkit/mozapps/installer \
+  $(NULL)
+
+#	Start the checkout. Split the output to the tty and a log file.
+real_l10n-checkout:
+	@set -e; \
+	cvs_co() { set -e; echo "$$@" ; \
+	  "$$@" 2>&1 | tee -a $(CVSCO_LOGFILE_L10N); }; \
+	cvs_co $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(EN_US_CO_DIRS); \
+	cvs_co $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) -l $(EN_US_CO_FILES_NS); \
+	cvs_co $(CVSCO_LOCALES)
+	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE_L10N)
+#	@: Check the log for conflicts. ;
+	@conflicts=`egrep "^C " $(CVSCO_LOGFILE_L10N)` ;\
+	if test "$$conflicts" ; then \
+	  echo "$(MAKE): *** Conflicts during checkout." ;\
+	  echo "$$conflicts" ;\
+	  echo "$(MAKE): Refer to $(CVSCO_LOGFILE_L10N) for full log." ;\
+	  false; \
+	else true; \
+	fi
+
 #####################################################
 # First Checkout
 
