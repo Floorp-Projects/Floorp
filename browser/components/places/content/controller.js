@@ -76,6 +76,8 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
+const NHRVO = Ci.nsINavHistoryResultViewObserver;
+
 const SELECTION_CONTAINS_URI = 0x01;
 const SELECTION_CONTAINS_CONTAINER = 0x02;
 const SELECTION_IS_OPEN_CONTAINER = 0x04;
@@ -106,6 +108,8 @@ const RELOAD_ACTION_REMOVE = 2;
 // Moving items within a view, don't treat the dropped items as additional 
 // rows.
 const RELOAD_ACTION_MOVE = 3;
+
+const NEWLINE = "\r\n";
 
 function STACK(args) {
   var temp = arguments.callee.caller;
@@ -139,7 +143,8 @@ function InsertionPoint(folderId, index, orientation) {
  * Initialization Configuration for a View
  * @constructor
  */
-function ViewConfig(dropTypes, dropOnTypes, excludeItems, expandQueries, firstDropIndex, filterTransactions) {
+function ViewConfig(dropTypes, dropOnTypes, excludeItems, 
+                    expandQueries, firstDropIndex, filterTransactions) {
   this.dropTypes = dropTypes;
   this.dropOnTypes = dropOnTypes;
   this.excludeItems = excludeItems;
@@ -149,7 +154,7 @@ function ViewConfig(dropTypes, dropOnTypes, excludeItems, expandQueries, firstDr
 }
 ViewConfig.GENERIC_DROP_TYPES = [TYPE_X_MOZ_PLACE_CONTAINER,
                                  TYPE_X_MOZ_PLACE_SEPARATOR, TYPE_X_MOZ_PLACE,
-                                 TYPE_X_MOZ_URL]
+                                 TYPE_X_MOZ_URL];
 
 /**
  * Manages grouping options for a particular view type. 
@@ -420,16 +425,9 @@ var PlacesController = {
       return false;
     var nodes = this._activeView.getSelectionNodes();
     for (var i = 0; i < nodes.length; ++i) {
-      var parent = nodes[i].parent;
-      if (parent.childrenReadOnly)
+      var parent = nodes[i].parent || this._activeView.getResult().root;
+      if (this.nodeIsReadOnly(parent))
         return false;
-      try {
-        parent = parent.QueryInterface(Ci.nsINavHistoryFolderResultNode);
-        if (this._bms.getFolderReadonly(parent.folderId))
-          return false;
-      }
-      catch (e) {
-      }
     }
     return true;
   },
@@ -460,25 +458,29 @@ var PlacesController = {
   },
   
   /**
-   * Determines whether or not the paste command is enabled, based on the 
-   * content of the clipboard and the selection within the active view.
+   * Determines whether or not nodes can be inserted relative to the selection.
    */
-  _canPaste: function PC__canPaste() {
-    ASSERT(this._activeView, "No active view - cannot paste!");
+  _canInsert: function PC__canInsert() {
+    ASSERT(this._activeView, "No active view - cannot insert!");
     if (!this._activeView)
       return false;
     var nodes = this._activeView.getSelectionNodes();
     for (var i = 0; i < nodes.length; ++i) {
-      var parent = nodes[i].parent;
-      try {
-        parent = parent.QueryInterface(Ci.nsINavHistoryFolderResultNode);
-        if (this._bms.getFolderReadonly(parent.folderId))
-          return false;
-      }
-      catch (e) {
-      }
+      var parent = nodes[i].parent || this._activeView.getResult().root;
+      if (this.nodeIsReadOnly(parent))
+        return false;
     }
-    return this._hasClipboardData();
+    return true;
+  },
+  
+  /**
+   * Determines whether or not the paste command is enabled, based on the 
+   * content of the clipboard and the selection within the active view.
+   */
+  _canPaste: function PC__canPaste() {
+    if (this._canInsert()) 
+      return this._hasClipboardData();
+    return false;
   },
   
   /**
@@ -488,6 +490,7 @@ var PlacesController = {
    * @returns true if the node is a Bookmark folder, false otherwise
    */
   nodeIsFolder: function PC_nodeIsFolder(node) {
+    ASSERT(node, "null node");
     return (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER);
   },
   
@@ -498,6 +501,7 @@ var PlacesController = {
    * @returns true if the node is a Bookmark separator, false otherwise
    */
   nodeIsSeparator: function PC_nodeIsSeparator(node) {
+    ASSERT(node, "null node");
     return (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR);
   },
 
@@ -508,6 +512,7 @@ var PlacesController = {
    * @returns true if the node is a URL item, false otherwise
    */
   nodeIsURI: function PC_nodeIsURI(node) {
+    ASSERT(node, "null node");
     const NHRN = Ci.nsINavHistoryResultNode;
     return node.type == NHRN.RESULT_TYPE_URI ||
            node.type == NHRN.RESULT_TYPE_VISIT ||
@@ -521,7 +526,24 @@ var PlacesController = {
    * @returns true if the node is a Query item, false otherwise
    */
   nodeIsQuery: function PC_nodeIsQuery(node) {
+    ASSERT(node, "null node");
     return node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
+  },
+  
+  /**
+   * Determines if a node is read only (children cannot be inserted, sometimes
+   * they cannot be removed depending on the circumstance)
+   * @param   node
+   *          A NavHistoryResultNode
+   * @returns true if the node is readonly, false otherwise
+   */
+  nodeIsReadOnly: function PC_nodeIsReadOnly(node) {
+    ASSERT(node, "null node");
+    if (this.nodeIsFolder(node))
+      return this._bms.getFolderReadonly(asFolder(node).folderId);
+    else if (this.nodeIsQuery(node))
+      return asQuery(node).childrenReadOnly;
+    return false;
   },
 
   /**
@@ -606,13 +628,14 @@ var PlacesController = {
     // are still the "last-active" view. Don't barf. 
     var result = this._activeView.getResult();
     var viewIsFolder = result ? this.nodeIsFolder(result.root) : false;
+    var canInsert = this._canInsert();
 
     // Persistent Sort
-    this._setEnabled("placesCmd_sortby:name", viewIsFolder);
+    this._setEnabled("placesCmd_sortby:name", viewIsFolder && canInsert);
     // New Folder
-    this._setEnabled("placesCmd_new:folder", viewIsFolder);
+    this._setEnabled("placesCmd_new:folder", viewIsFolder && canInsert);
     // New Separator
-    this._setEnabled("placesCmd_new:separator", viewIsFolder);
+    this._setEnabled("placesCmd_new:separator", viewIsFolder && canInsert);
     // Feed Reload
     this._setEnabled("placesCmd_reload", false);
   },
@@ -925,7 +948,7 @@ var PlacesController = {
   newFolder: function PC_newFolder() {
     var view = this._activeView;
     
-    view.saveSelection(view.SAVE_SELECTION_REMOVE);
+    view.saveSelection(view.SAVE_SELECTION_INSERT);
     var ps =
         Cc["@mozilla.org/embedcomp/prompt-service;1"].
         getService(Ci.nsIPromptService);
@@ -1071,26 +1094,30 @@ var PlacesController = {
     case TYPE_X_MOZ_PLACE_CONTAINER:
     case TYPE_X_MOZ_PLACE: 
     case TYPE_X_MOZ_PLACE_SEPARATOR:
+      // Data is encoded like this:
+      // bookmarks folder: <folderId>\n<>\n<parentId>\n<indexInParent>
+      // uri:              0\n<uri>\n<parentId>\n<indexInParent>
+      // separator:        0\n<>\n<parentId>\n<indexInParent>
       var wrapped = "";
       if (this.nodeIsFolder(node))
-        wrapped += asFolder(node).folderId + "\n";
+        wrapped += asFolder(node).folderId + NEWLINE;
       else
-        wrapped += "0\n";
+        wrapped += "0" + NEWLINE;
         
       if (this.nodeIsURI(node))
-        wrapped += node.uri + "\n";
+        wrapped += node.uri + NEWLINE;
       else
-        wrapped += "\n";
+        wrapped += NEWLINE;
         
       if (this.nodeIsFolder(node.parent))
-        wrapped += asFolder(node.parent).folderId + "\n";
+        wrapped += asFolder(node.parent).folderId + NEWLINE;
       else
-        wrapped += "0\n";
+        wrapped += "0" + NEWLINE;
         
       wrapped += this.getIndexOfNode(node);
       return wrapped;
     case TYPE_X_MOZ_URL:
-      return node.uri + "\n" + node.title;
+      return node.uri + NEWLINE + node.title;
     case TYPE_HTML:
       return "<A HREF=\"" + node.uri + "\">" + node.title + "</A>";
     }
@@ -1108,7 +1135,8 @@ var PlacesController = {
    * @returns An array of objects representing each item contained by the source.
    */
   unwrapNodes: function PC_unwrapNodes(blob, type) {
-    var parts = blob.split("\r\n");
+    // We use \n here because the transferable system converts \r\n to \n
+    var parts = blob.split("\n");
     var nodes = [];
     for (var i = 0; i < parts.length; ++i) {
       var data = { };
@@ -1330,7 +1358,7 @@ var PlacesController = {
       var node = nodes[i];
       var self = this;
       function generateChunk(type) {
-        var suffix = i < (nodes.length - 1) ? "\r\n" : "";
+        var suffix = i < (nodes.length - 1) ? NEWLINE : "";
         return self.wrapNode(node, type) + suffix;
       }
       if (this.nodeIsFolder(node) || this.nodeIsQuery(node)) 
@@ -1443,13 +1471,14 @@ var PlacesControllerDragHelper = {
    *          it is being dragged over, false otherwise. 
    */
   canDrop: function PCDH_canDrop(view, orientation) {
-    var result = view.getResult();
-    if (result.readOnly || !PlacesController.nodeIsFolder(result.root))
+    var parent = view.getResult().root;
+    if (PlacesController.nodeIsReadOnly(parent) || 
+        !PlacesController.nodeIsFolder(parent))
       return false;
   
     var session = this._getSession();
     if (session) {
-      if (orientation != Ci.nsINavHistoryResultViewObserver.DROP_ON)
+      if (orientation != NHRVO.DROP_ON)
         var types = view.supportedDropTypes;
       else
         types = view.supportedDropOnTypes;
@@ -1476,7 +1505,7 @@ var PlacesControllerDragHelper = {
     var xferable = 
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
-    if (orientation != Ci.nsINavHistoryResultViewObserver.DROP_ON) 
+    if (orientation != NHRVO.DROP_ON) 
       var types = view.supportedDropTypes;
     else
       types = view.supportedDropOnTypes;    
@@ -1662,6 +1691,7 @@ PlacesInsertSeparatorTransaction.prototype = {
  * Move a Folder
  */
 function PlacesMoveFolderTransaction(id, oldContainer, oldIndex, newContainer, newIndex) {
+  ASSERT(!isNaN(id + oldContainer + oldIndex + newContainer + newIndex), "Parameter is NaN!");
   this._id = id;
   this._oldContainer = oldContainer;
   this._oldIndex = oldIndex;

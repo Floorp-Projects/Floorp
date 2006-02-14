@@ -317,13 +317,27 @@
           var min = { }, max = { };
           selection.getRangeAt(rc - 1, min, max);
           
-          const DROP_AFTER = Ci.nsINavHistoryResultViewObserver.DROP_AFTER;
-          const DROP_ON = Ci.nsINavHistoryResultViewObserver.DROP_ON;
-          var orientation = DROP_AFTER;
+          // If an open container is selected, insert into the container rather
+          // than adjacent to it.
+          var orientation = NHRVO.DROP_AFTER;
           if (this.view.isContainer(max.value) && 
               this.view.isContainerOpen(max.value))
-            orientation = DROP_ON;
-          return this._getInsertionPoint(max.value, 1, orientation);
+            orientation = NHRVO.DROP_ON;
+          
+          // If an item in the static region is selected, insert the new item 
+          // before the first drop index. 
+          var node = this.getResult().nodeForTreeIndex(max.value);
+          var container = asContainer(this.getResult().root);
+          var cc = container.childCount;
+          for (var i = 0; i < cc; ++i) {
+            if (container.getChild(i) == node && 
+                i < this.firstDropIndex) {
+              max.value = this.firstDropIndex;
+              orientation = NHRVO.DROP_BEFORE;
+              break;
+            }
+          } 
+          return this._getInsertionPoint(max.value, orientation);
         ]]></getter>
       </property>
       
@@ -331,9 +345,9 @@
         <parameter name="index"/>
         <parameter name="orientation"/>
         <body><![CDATA[ 
-          const NHRVO = Ci.nsINavHistoryResultViewObserver;
           var result = this.getResult();
           var container = result.root;
+          ASSERT(container, "null container");
           // When there's no selection, assume the container is the container
           // the view is populated from (i.e. the result's folderId).
           if (index != -1) {
@@ -354,8 +368,7 @@
               index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
             }
           }
-          var folder = container.QueryInterface(Ci.nsINavHistoryFolderResultNode);
-          return new InsertionPoint(folder.folderId, index, orientation);
+          return new InsertionPoint(asFolder(container).folderId, index, orientation);
         ]]></body>
       </method>
       
@@ -393,8 +406,39 @@
         <parameter name="xferData"/>
         <parameter name="dragAction"/>
         <body><![CDATA[ 
+          // Drag and Drop does not work while a tree view is sorted.
           if (this.getAttribute("sortActive") == "true")
-            throw Components.results.NS_OK;
+            throw Cr.NS_OK;
+          
+          // Items that are "static" - i.e. above the user-configurable area
+          // of the view - can not be moved. 
+          var nodes = this.getSelectionNodes();
+          var bms = 
+              Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+          for (var i = 0; i < nodes.length; ++i) {
+            var node = nodes[i];
+            
+            // If this node is part of a readonly folder (e.g. a livemark) it 
+            // cannot be moved, only copied, so we must change the action used
+            // by the drag session.
+            var parent = node.parent;
+            if (PlacesController.nodeIsFolder(parent) &&
+                bms.getFolderReadonly(asFolder(parent).folderId)) 
+              dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+
+            // "static" top level "special" items cannot be dragged. They are 
+            // at the root level of the view and are at a lower index in the 
+            // root container than user-configurable items. 
+            var treeIndex = this.getResult().treeIndexForNode(nodes[i]);
+            if (this.view.getLevel(treeIndex) == 0) {
+              var index = PlacesController.getIndexOfNode(nodes[i]);
+              if (index < this.firstDropIndex)
+                throw Cr.NS_OK;
+            }
+          }
+          
+          // Stuff the encoded selection into the transferable data object
           xferData.data = PlacesController.getTransferData();
           // XXXben - the drag wrapper should do this automatically. 
           if (event.ctrlKey)
@@ -416,7 +460,20 @@
         <parameter name="event"/>
         <parameter name="flavor"/>
         <parameter name="session"/>
-        <body><![CDATA[ ]]></body>
+        <body><![CDATA[ 
+          // When the user is dragging over an empty area of the tree, make 
+          // sure canDrop is set to true to indicate dropping into the bucket.
+          var row = { }, col = { }, child = { };
+          this.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, 
+                                       child);
+          if (row.value == -1) {
+            var dragService = 
+                Cc["@mozilla.org/widget/dragservice;1"].
+                getService(Ci.nsIDragService);
+            var session = dragService.getCurrentSession();
+            session.canDrop = this._viewObserver.canDrop(-1, 1);
+          }
+        ]]></body>
       </method>
       
       <!-- nsDragAndDrop -->
@@ -429,6 +486,16 @@
         ]]></body>
       </method>
       
+      <!--
+        Gets the nsINavHistoryResultNode adjacent to the specified InsertionPoint.
+        @param    insertionPoint
+                  The InsertionPoint where items are being inserted
+        @param    excludeItems
+                  true if leaf nodes should be excluded for this view, false 
+                  otherwise.
+        @returns  a nsINavHistoryResultNode that is adjacent to the specified
+                  InsertionPoint 
+        -->
       <method name="_getInsertionNode">
         <parameter name="insertionPoint"/>
         <parameter name="excludeItems"/>
@@ -446,10 +513,15 @@
         ]]></body>
       </method>
       
+      <!--
+        Gets the tree-index of the node adjacent to the specified InsertionPoint
+        @param    insertionPoint
+                  The InsertionPoint where items are being inserted
+        @returns  the tree-index of the node adjacent to the specified InsertionPoint
+        -->
       <method name="_getInsertionIndex">
         <parameter name="insertionPoint"/>
         <body><![CDATA[
-          const NHRVO = Ci.nsINavHistoryResultViewObserver;
           // Insert index of insertion and number of rows to insert
           var excludeItems = this.excludeItems;
           // This is a bit of a hack. Assume any container you drop into is 
@@ -458,7 +530,11 @@
             excludeItems = false;
           var node = this._getInsertionNode(insertionPoint, excludeItems);
           // This is the insertion index of the pivot. 
-          return this.getResult().treeIndexForNode(node);
+          if (node)
+            return this.getResult().treeIndexForNode(node);
+          else if (insertionPoint.orientation == NHRVO.DROP_ON)
+            return Ci.nsINavHistoryResult.INDEX_INVISIBLE;
+          return -1;
         ]]></body>
       </method>
       
@@ -466,31 +542,39 @@
         _self: this,
         
         canDrop: function VO_canDrop(index, orientation) {
-          var root = this._self.getResult();
-          var node = index != -1 ? root.nodeForTreeIndex(index) : root;
-          const DROP_ON = Ci.nsINavHistoryResultViewObserver.DROP_ON;
+          var result = this._self.getResult();
+          var node = index != -1 ? result.nodeForTreeIndex(index) : result.root;
           // Cannot drop before fixed items in the list. 
-          if (node.parent == root && 
+          if (node.parent == result.root && 
               PlacesController.getIndexOfNode(node) < this._self.firstDropIndex &&
-              orientation != DROP_ON)
+              orientation != NHRVO.DROP_ON)
             return false;
 
-          // Cannot drop into a read-only container
-          if (orientation == DROP_ON) {
-            if (node.containerReadOnly) {
+          if (orientation == NHRVO.DROP_ON) {
+            // The user cannot drop an item into itself or a read-only container
+            var droppingOnSelf = 
+                this._getSourceView() == this._self &&
+                this._self.view.selection.isSelected(index);
+            if (droppingOnSelf || node.containerReadOnly)
               return false;
-            }
-          } else {
-            if (node.parent && node.parent.containerReadOnly) {
-              return false;
-            }
-          }
-
+          } 
+          else if (node.parent && node.parent.containerReadOnly)
+            return false;
+          
           return PlacesControllerDragHelper.canDrop(this._self, orientation);
         },
         
+        /**
+         * Adjusts an InsertionPoint's insertion index using these rules:
+         *  XXXben define rules
+         */
         _adjustInsertionPoint: function VO__adjustInsertionPoint(insertionPoint) {
           var index = this._self._getInsertionIndex(insertionPoint);
+          
+          // If the dropped items are invisible, we don't need to adjust the 
+          // insertion point. 
+          if (index == Ci.nsINavHistoryResult.INDEX_INVISIBLE)
+            return;
         
           var selection = this._self.view.selection;
           var rc = selection.getRangeCount();
@@ -509,24 +593,48 @@
           insertionPoint.index -= selectionAbove;
         },
         
+        /**
+         * @returns the view where the drag was initiated. 
+         */
+        _getSourceView: function VO__getSourceView() {
+          var session = this._getCurrentSession();
+          var sourceView = session.sourceNode.wrappedJSObject;
+          while (sourceView && sourceView.localName != "tree")
+            sourceView = sourceView.parentNode;
+          return sourceView;
+        },
+        
+        /**
+         * @returns the current drag session.
+         */
+        _getCurrentSession: function VO__getCurrentSession() {
+          var dragService = 
+              Cc["@mozilla.org/widget/dragservice;1"].
+              getService(Ci.nsIDragService);
+          return dragService.getCurrentSession();
+        },
+        
+        /**
+         * Handles a drop operation on this view
+         * @param   index
+         *          The index at which content was dropped
+         * @param   orientation
+         *          The orientation relative to the drop index where content 
+         *          should be inserted.
+         */
         onDrop: function VO_onDrop(index, orientation) {
           LOG("VO: onDrop: " + index + ", orientation: " + orientation);
           if (!this.canDrop(index, orientation))
             return;
-            
-          var dragService = 
-              Cc["@mozilla.org/widget/dragservice;1"].
-              getService(Ci.nsIDragService);
-          var session = dragService.getCurrentSession();
-          var sourceView = session.sourceNode.wrappedJSObject;
-          while (sourceView && sourceView.localName != "tree")
-            sourceView = sourceView.parentNode;
+          
+          var sourceView = this._getSourceView();
           
           // Determine how many items will be visible in the target view after
           // the drop operation completes. This can be zero if all items are
           // dropped into a closed folder.
+          var session = this._getCurrentSession();
           var visibleInsertCount = session.numDropItems;
-          if (orientation == Ci.nsINavHistoryResultViewObserver.DROP_ON &&
+          if (orientation == NHRVO.DROP_ON &&
               this._self.view.isContainer(index) && 
               !this._self.view.isContainerOpen(index)) 
             visibleInsertCount = 0;
