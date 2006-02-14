@@ -159,7 +159,7 @@ function sanitizeAll()
     document.getElementById("privacySanitize").disabled=true;
 }
 
-function sanitizeBookmarks() {set
+function sanitizeBookmarks() {
 	// in Common.
 	BookmarksDeleteAllAndSync();
     document.getElementById("bookmarksSanitize").disabled=true;
