@@ -201,6 +201,63 @@ NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarDimensions(float &aWidth, float 
   return NS_OK;
 }
 
+// helper function to get the system font for a specific script
+#define FONTNAME_MAX_UNICHRS sizeof(fontName255) * 2
+nsresult 
+GetSystemFontForScript(ThemeFontID aFontID, ScriptCode aScriptCode,
+                       nsAFlatString& aFontName, SInt16& aFontSize,
+                       Style& aFontStyle)
+{
+  Str255 fontName255;
+  ::GetThemeFont(aFontID, aScriptCode, fontName255, &aFontSize, &aFontStyle);
+  if (fontName255[0] == 255) {
+    NS_WARNING("Too long fong name (> 254 chrs)");
+    return NS_ERROR_FAILURE;
+  }
+  fontName255[fontName255[0]+1] = 0;
+        
+  OSStatus err;
+  // the theme font could contains font name in different encoding. 
+  // we need to covert them to unicode according to the font's text encoding.
+
+  TECObjectRef converter = 0;
+  TextEncoding unicodeEncoding = 
+    ::CreateTextEncoding(kTextEncodingUnicodeDefault, 
+                         kTextEncodingDefaultVariant,
+                         kTextEncodingDefaultFormat);
+                                                              
+  FMFontFamily fontFamily;
+  TextEncoding fontEncoding = 0;
+  fontFamily = ::FMGetFontFamilyFromName(fontName255);
+  err = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
+
+  if (err != noErr) {
+    NS_WARNING("Could not get the encoding for the font.");
+    return NS_ERROR_FAILURE;
+  }
+  err = ::TECCreateConverter(&converter, fontEncoding, unicodeEncoding);
+  if (err != noErr) {
+    NS_WARNING("Could not create the converter.");
+    return NS_ERROR_FAILURE;
+  }
+  PRUnichar unicodeFontName[FONTNAME_MAX_UNICHRS + 1];
+  ByteCount actualInputLength, actualOutputLength;
+  err = ::TECConvertText(converter, &fontName255[1], fontName255[0], 
+                         &actualInputLength, 
+                         (TextPtr)unicodeFontName,
+                         FONTNAME_MAX_UNICHRS * sizeof(PRUnichar),
+                         &actualOutputLength);  
+  if (err != noErr) {
+    NS_WARNING("Could not convert the font name.");
+    return NS_ERROR_FAILURE;
+  }
+
+  ::TECDisposeConverter(converter);
+
+  unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = PRUnichar('\0');
+  aFontName = nsDependentString(unicodeFontName);
+  return NS_OK;
+}
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
@@ -281,60 +338,31 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
           default: break;
         }
 
-        Str255 fontName;
+        nsAutoString fontName;
         SInt16 fontSize;
         Style fontStyle;
 
         ScriptCode sysScript = ::GetScriptManagerVariable (smSysScript);
-        
-        // the Korean , TradChinese and SimpChinese localization return very ugly
-        // font face for theme font, the size of ASCII part in those font very small and
-        // they look very very poor on QuickDraw without anti-alias. We need to use the roman
-        // theme font instead so the user can read those UI
-        
-        if ((smKorean == sysScript) ||
-            (smTradChinese == sysScript) ||
-            (smSimpChinese == sysScript))
-          sysScript = smRoman;
-          
-        ::GetThemeFont(fontID, sysScript, fontName, &fontSize, &fontStyle);
-        fontName[fontName[0]+1] = 0;
-        
-        OSStatus err;
-        // the theme font could contains font name in different encoding. 
-        // we need ot covert them to unicode according to the font's text encoding.
-        aFont->name.Truncate(0);
-        TECObjectRef converter = 0;
-        TextEncoding fontEncoding = 0;
-        TextEncoding unicodeEncoding = ::CreateTextEncoding(kTextEncodingUnicodeDefault, 
-                                                              kTextEncodingDefaultVariant,
-                                                              kTextEncodingDefaultFormat);
-                                                              
-        FMFontFamily fontFamily;
-        fontFamily = ::FMGetFontFamilyFromName(fontName);
-        err = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
+        nsresult rv;
+        rv = GetSystemFontForScript(fontID, smRoman,
+                                    fontName, fontSize, fontStyle);
+        if (NS_FAILED(rv))
+          fontName = NS_LITERAL_STRING("Lucida Grande");
 
-        if (err == noErr)
-        {
-           err = ::TECCreateConverter(&converter, fontEncoding, unicodeEncoding);
-           if (err == noErr)
-           {
-               PRUnichar unicodeFontName[sizeof(fontName)];
-               ByteCount actualInputLength, actualOutputLength;
-               err = ::TECConvertText(converter, &fontName[1], fontName[0], 
-                                      &actualInputLength, 
-                                      (TextPtr)unicodeFontName, sizeof(unicodeFontName),
-                                      &actualOutputLength);  
-               unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = PRUnichar('\0');
-               aFont->name.Assign(unicodeFontName);
-               ::TECDisposeConverter(converter);
-           }             
+        if (sysScript != smRoman) {
+          SInt16 localFontSize;
+          Style localFontStyle;
+          nsAutoString localSysFontName;
+          rv = GetSystemFontForScript(fontID, sysScript,
+                                      localSysFontName,
+                                      localFontSize, localFontStyle);
+          if (NS_SUCCEEDED(rv) && !fontName.Equals(localSysFontName)) {
+            fontName += NS_LITERAL_STRING(",") + localSysFontName;
+            fontSize = localFontSize;
+            fontStyle = localFontStyle;
+          }
         }
-        NS_ASSERTION(!aFont->name.IsEmpty(), "empty font name");
-        if (aFont->name.IsEmpty()) 
-        {
-           aFont->name.AssignWithConversion( (char*)&fontName[1], fontName[0] );
-        }
+        aFont->name = fontName;        
         aFont->size = NSToCoordRound(float(fontSize) * dev2app);
 
         if (fontStyle & bold)
@@ -352,6 +380,7 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
 
   return status;
 }
+
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
