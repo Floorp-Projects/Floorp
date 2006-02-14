@@ -408,24 +408,6 @@ function syncPrefSaveDOM() {
 				gPref.setBoolPref(prefName, prefSETValue);
 				} catch (e) { } 
 			}
-
-                  if (document.getElementById(prefName).getAttribute("preftype")=="file") {
-
-                   var lf;
-	             
-                   //if (typeof(val) == "string") {
-                   //   lf = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-                   //   lf.persistentDescriptor = val;
-                   //   if (!lf.exists())
-                   //      lf.initWithPath(val);
-                   // }
-	             //else lf = prefSETValue.QueryInterface(Components.interfaces.nsILocalFile);
-
-	             lf = prefSETValue.QueryInterface(Components.interfaces.nsILocalFile);
-                   gPref.setComplexValue(prefName, Components.interfaces.nsILocalFile, lf);
-	 
-                   }	
-
 		}
 
 		psvc.savePrefFile(null);
