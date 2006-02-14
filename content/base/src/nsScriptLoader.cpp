@@ -67,25 +67,31 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 //
 //////////////////////////////////////////////////////////////
 
+// If aMaybeCertPrincipal is a cert principal and aNewPrincipal is not the same
+// as aMaybeCertPrincipal, downgrade aMaybeCertPrincipal to a codebase
+// principal.  Return the downgraded principal, or aMaybeCertPrincipal if no
+// downgrade was needed.
 static already_AddRefed<nsIPrincipal>
-IntersectPrincipalCerts(nsIPrincipal *aOld, nsIPrincipal *aNew)
+MaybeDowngradeToCodebase(nsIPrincipal *aMaybeCertPrincipal,
+                         nsIPrincipal *aNewPrincipal)
 {
-  NS_PRECONDITION(aOld, "Null old principal!");
-  NS_PRECONDITION(aNew, "Null new principal!");
+  NS_PRECONDITION(aMaybeCertPrincipal, "Null old principal!");
+  NS_PRECONDITION(aNewPrincipal, "Null new principal!");
 
-  nsIPrincipal *principal = aOld;
+  nsIPrincipal *principal = aMaybeCertPrincipal;
 
   PRBool hasCert;
-  aOld->GetHasCertificate(&hasCert);
+  aMaybeCertPrincipal->GetHasCertificate(&hasCert);
   if (hasCert) {
     PRBool equal;
-    aOld->Equals(aNew, &equal);
+    aMaybeCertPrincipal->Equals(aNewPrincipal, &equal);
     if (!equal) {
       nsCOMPtr<nsIURI> uri, domain;
-      aOld->GetURI(getter_AddRefs(uri));
-      aOld->GetDomain(getter_AddRefs(domain));
+      aMaybeCertPrincipal->GetURI(getter_AddRefs(uri));
+      aMaybeCertPrincipal->GetDomain(getter_AddRefs(domain));
 
-      nsContentUtils::GetSecurityManager()->GetCodebasePrincipal(uri, &principal);
+      nsContentUtils::GetSecurityManager()->GetCodebasePrincipal(uri,
+                                                                 &principal);
       if (principal && domain) {
         principal->SetDomain(domain);
       }
@@ -979,7 +985,10 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
       return NS_OK;
     }
 
-    //-- Merge the principal of the script file with that of the document
+    // -- Merge the principal of the script file with that of the document; if
+    // the script has a non-cert principal, the document's principal should be
+    // downgraded.
+    // XXXbz except usually the channel owner will be null!  Then what?
     if (channel) {
       nsCOMPtr<nsISupports> owner;
       channel->GetOwner(getter_AddRefs(owner));
@@ -989,7 +998,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
         nsIPrincipal *docPrincipal = mDocument->GetNodePrincipal();
         if (docPrincipal) {
           nsCOMPtr<nsIPrincipal> newPrincipal =
-              IntersectPrincipalCerts(docPrincipal, principal);
+              MaybeDowngradeToCodebase(docPrincipal, principal);
 
           mDocument->SetPrincipal(newPrincipal);
         } else {
