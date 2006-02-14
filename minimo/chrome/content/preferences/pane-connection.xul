@@ -120,13 +120,16 @@
 
                     <hbox flex="1">
 
-                      <textbox onchange="syncPref(this)"  tabindex="54"
-                                 flex="1" 
-                                 style="margin:3px ! important;" 
+                      <box onchange="syncPref(this)"  
                                  id="downloadDir"
                                  preference="browser.download.dir"
                                  />          
-                                          
+
+			    <textbox id="downloadDirDisplay" disabled="true"
+                               style="margin:3px ! important;"
+                               tabindex="54"
+                               flex="1" />                                          
+
                       <button id="chooseFolderButton" tabindex="55"
 			                        class='box-prefgroupitem'
 			                        label="&setSaveDirectory.label;"
