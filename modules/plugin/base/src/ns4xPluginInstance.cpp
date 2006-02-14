@@ -1138,16 +1138,18 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   }
 
   // Allocate and fill out the ws_info data
-  if (!window->ws_info) {
+  if (!window->ws_info || !mXtBin) {
+    if (!window->ws_info) {
 #ifdef NS_DEBUG
-    printf("About to create new ws_info...\n");
+      printf("About to create new ws_info...\n");
 #endif    
 
-    // allocate a new NPSetWindowCallbackStruct structure at ws_info
-    window->ws_info = (NPSetWindowCallbackStruct *)PR_MALLOC(sizeof(NPSetWindowCallbackStruct));
+      // allocate a new NPSetWindowCallbackStruct structure at ws_info
+      window->ws_info = (NPSetWindowCallbackStruct *)PR_MALLOC(sizeof(NPSetWindowCallbackStruct));
 
-    if (!window->ws_info)
-      return NS_ERROR_OUT_OF_MEMORY;
+      if (!window->ws_info)
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     ws = (NPSetWindowCallbackStruct *)window->ws_info;
 
