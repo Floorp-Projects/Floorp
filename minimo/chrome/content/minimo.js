@@ -401,7 +401,7 @@ nsBrowserStatusHandler.prototype =
    * Homebar init...
    */
    
-  bmInitXUL(document,document.getElementById("browserleftbar"));
+  bmInitXUL(document,document.getElementById("homebarcontainer"));
   document.getElementById("browserleftbar").style.display="block";
   
 }
@@ -1440,3 +1440,9 @@ TransferItem.prototype = {
   },
 }
   
+
+function BrowserHomeBar()  {
+
+    if(document.getElementById("homebarcontainer").style.display=="none") document.getElementById("homebarcontainer").style.display="block"; 
+    else document.getElementById("homebarcontainer").style.display="none";
+}
