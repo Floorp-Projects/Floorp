@@ -1825,7 +1825,7 @@ GetXMLSetting(JSContext *cx, const char *name, jsval *vp)
 {
     jsval v;
 
-    if (!js_FindConstructor(cx, NULL, js_XML_str, &v))
+    if (!js_FindConstructor(cx, NULL, cx->runtime->atomState.XMLAtom, &v))
         return JS_FALSE;
     if (!JSVAL_IS_FUNCTION(cx, v)) {
         *vp = JSVAL_VOID;

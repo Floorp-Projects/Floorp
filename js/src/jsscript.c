@@ -326,80 +326,61 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #if JS_HAS_XDR
 
 static JSBool
-XDRAtomListElement(JSXDRState *xdr, JSAtomListElement *ale)
-{
-    jsval value;
-    jsatomid index;
-
-    if (xdr->mode == JSXDR_ENCODE)
-        value = ATOM_KEY(ALE_ATOM(ale));
-
-    index = ALE_INDEX(ale);
-    if (!JS_XDRUint32(xdr, &index))
-        return JS_FALSE;
-    ALE_SET_INDEX(ale, index);
-
-    if (!JS_XDRValue(xdr, &value))
-        return JS_FALSE;
-
-    if (xdr->mode == JSXDR_DECODE) {
-        if (!ALE_SET_ATOM(ale, js_AtomizeValue(xdr->cx, value, 0)))
-            return JS_FALSE;
-    }
-    return JS_TRUE;
-}
-
-static JSBool
 XDRAtomMap(JSXDRState *xdr, JSAtomMap *map)
 {
-    uint32 length;
-    uintN i;
-    JSBool ok;
+    JSContext *cx;
+    uint32 natoms, i, index;
+    JSAtom **atoms;
+
+    cx = xdr->cx;
 
     if (xdr->mode == JSXDR_ENCODE)
-        length = map->length;
+        natoms = (uint32)map->length;
 
-    if (!JS_XDRUint32(xdr, &length))
+    if (!JS_XDRUint32(xdr, &natoms))
         return JS_FALSE;
 
-    if (xdr->mode == JSXDR_DECODE) {
-        JSContext *cx;
-        void *mark;
-        JSAtomList al;
-        JSAtomListElement *ale;
-
-        cx = xdr->cx;
-        mark = JS_ARENA_MARK(&cx->tempPool);
-        ATOM_LIST_INIT(&al);
-        for (i = 0; i < length; i++) {
-            JS_ARENA_ALLOCATE_TYPE(ale, JSAtomListElement, &cx->tempPool);
-            if (!ale ||
-                !XDRAtomListElement(xdr, ale)) {
-                if (!ale)
-                    JS_ReportOutOfMemory(cx);
-                JS_ARENA_RELEASE(&cx->tempPool, mark);
+    if (xdr->mode == JSXDR_ENCODE) {
+        atoms = map->vector;
+    } else {
+        if (natoms == 0) {
+            atoms = NULL;
+        } else {
+            atoms = (JSAtom **) JS_malloc(cx, (size_t)natoms * sizeof *atoms);
+            if (!atoms)
                 return JS_FALSE;
-            }
-            ALE_SET_NEXT(ale, al.list);
-            al.count++;
-            al.list = ale;
+#ifdef DEBUG
+            memset(atoms, 0, (size_t)natoms * sizeof *atoms);
+#endif
         }
-        ok = js_InitAtomMap(cx, map, &al);
-        JS_ARENA_RELEASE(&cx->tempPool, mark);
-        return ok;
     }
 
-    if (xdr->mode == JSXDR_ENCODE) {
-        JSAtomListElement ale;
+    for (i = 0; i != natoms; ++i) {
+        if (xdr->mode == JSXDR_ENCODE)
+            index = i;
+        if (!JS_XDRUint32(xdr, &index))
+            goto bad;
 
-        for (i = 0; i < map->length; i++) {
-            ALE_SET_ATOM(&ale, map->vector[i]);
-            ALE_SET_INDEX(&ale, i);
-            if (!XDRAtomListElement(xdr, &ale))
-                return JS_FALSE;
-        }
+        /*
+         * Assert that, when decoding, the read index is valid and points to
+         * an unoccupied element of atoms array.
+         */
+        JS_ASSERT(index < natoms);
+        JS_ASSERT(xdr->mode == JSXDR_ENCODE || !atoms[index]);
+        if (!js_XDRAtom(xdr, &atoms[index]))
+            goto bad;
+    }
+
+    if (xdr->mode == JSXDR_DECODE) {
+        map->vector = atoms;
+        map->length = natoms;
     }
     return JS_TRUE;
+
+  bad:
+    if (xdr->mode == JSXDR_DECODE)
+        JS_free(cx, atoms);
+    return JS_FALSE;
 }
 
 JSBool
