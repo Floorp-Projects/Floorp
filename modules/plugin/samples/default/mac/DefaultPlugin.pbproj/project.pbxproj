@@ -349,7 +349,7 @@
 		};
 		F5E0C34D036A12DF01A96660 = {
 			isa = PBXFileReference;
-			path = _NullPlugin.rsrc;
+			path = NullPlugin.rsrc;
 			refType = 2;
 		};
 		F5E0C34E036A12DF01A96660 = {
