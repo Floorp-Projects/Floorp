@@ -210,7 +210,7 @@ var PlacesPage = {
     
     this._places.init(new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER],
                                      ViewConfig.GENERIC_DROP_TYPES,
-                                     true, false, 3, true));
+                                     true, false, 4, true));
     this._content.init(new ViewConfig(ViewConfig.GENERIC_DROP_TYPES,
                                       ViewConfig.GENERIC_DROP_TYPES,
                                       false, false, 0, true));
