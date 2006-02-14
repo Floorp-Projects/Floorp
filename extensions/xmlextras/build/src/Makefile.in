@@ -73,9 +73,9 @@ endif
 CPPSRCS		= nsXMLExtrasModule.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)xmlextrasbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)xmlextraspointers_s.$(LIB_SUFFIX) \
-		$(NULL)
+	../../base/src/$(LIB_PREFIX)xmlextrasbase_s.$(LIB_SUFFIX) \
+	../../pointers/src/$(LIB_PREFIX)xmlextraspointers_s.$(LIB_SUFFIX) \
+	$(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../base/src \
