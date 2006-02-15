@@ -195,7 +195,28 @@ PR_BEGIN_EXTERN_C
 
 PR_END_EXTERN_C
 
-#if defined(XP_MACOSX) && defined(__POWERPC__)
+#if defined(XP_MACOSX) && defined(__i386__)
+
+// BROKEN_PLUGIN_HACK works around bugs in the version of the Macromedia
+// Flash Player plugin that is supplied with the initial consumer shipment
+// of Mac OS X for x86-based Macs.  The plugin is broken in at least
+// 10.4.4/x86 and 10.4.5/x86.
+#define BROKEN_PLUGIN_HACK
+
+// brokenPlugin is defined in the scope in which TV2FP is used.  It is
+// true when this ns4xPlugin object has loaded a plugin that contains the
+// bugs being worked around.
+//
+// The broken plugin returns entry points that are pointers to function
+// pointers, instead of just returning the function pointers.  These must
+// be dereferenced, or Mozilla will crash upon attempting to call an address
+// that doesn't contain code.  TV2FP is a convenient place to handle this,
+// since the macro is already present everywhere it's needed, and is otherwise
+// unused on x86.
+#define TV2FP(f) (brokenPlugin && f ? *(void**)f : (void*)f)
+#define FP2TV(f) (f)
+
+#elif defined(XP_MACOSX) && defined(__POWERPC__)
 
 #define TV2FP(tvp) _TV2FP((void *)tvp)
 
@@ -424,6 +445,56 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
 
   fShutdownEntry = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
 #elif defined(XP_MACOSX)
+#ifdef BROKEN_PLUGIN_HACK
+#warning BROKEN_PLUGIN_HACK is in use, enjoy your Flash movies!
+  // This is a private NSPR struct.  Define it here because it's necessary
+  // to restrict the hack to plugins that need it, and the only way to do
+  // that is to examine the bundle that was loaded.  I feel comfortable doing
+  // this because BROKEN_PLUGIN_HACK is a hack anyway, and it's not intended
+  // to be long-lived.
+  struct myPRLibrary {
+    char*                     name;
+    PRLibrary*                next;
+    int                       refCount;
+    const PRStaticLinkTable*  staticTable;
+    CFragConnectionID         connection;
+    CFBundleRef               bundle;
+    Ptr                       main;
+    CFMutableDictionaryRef    wrappers;
+    const struct mach_header* image;
+  };
+
+  // brokenPlugin indicates whether the plugin needs to be worked around
+  // because it doesn't adhere to the API used on x86.
+  PRBool brokenPlugin = PR_FALSE;
+
+  // Identify the broken plugin by a variety of attributes.
+  // Further inspection will be done before applying any workarounds.
+  struct myPRLibrary *prLibrary = (struct myPRLibrary*) aLibrary;
+
+  if (prLibrary->name && prLibrary->bundle) {
+    CFStringRef bundleIdentifier = ::CFBundleGetIdentifier(prLibrary->bundle);
+    CFStringRef bundleShortVersion =
+      (CFStringRef) ::CFBundleGetValueForInfoDictionaryKey(prLibrary->bundle,
+                      CFSTR("CFBundleShortVersionString"));
+
+    if (!strcmp(prLibrary->name,
+                "/Library/Internet Plug-Ins/Flash Player.plugin") &&
+        ::CFBundleGetVersionNumber(prLibrary->bundle) == 0x1018011 &&
+        bundleIdentifier &&
+        ::CFStringCompare(bundleIdentifier,
+                          CFSTR("com.macromedia.Flash Player.plugin"),
+                          0) == kCFCompareEqualTo &&
+        bundleShortVersion &&
+        ::CFStringCompare(bundleShortVersion,
+                          CFSTR("8.0.17"),
+                          0) == kCFCompareEqualTo) {
+      // Macromedia Flash Player plugin, version 8.0.17, bundle version 1.0.1f17
+      brokenPlugin = PR_TRUE;
+    }
+  }
+#endif /* BROKEN_PLUGIN_HACK */
+
   // call into the entry point
   NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "main");
 
@@ -442,6 +513,92 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
                                                 &np_callbacks,
                                                 &pfnShutdown),
                           aLibrary, nsnull);
+
+#ifdef BROKEN_PLUGIN_HACK
+  // The broken plugin has wrapped NPN callback function pointers in PPC
+  // TVector glue as though they were pointers to CFM TVectors.  When the
+  // x86 attempts to execute the PPC glue, it will of course fail.
+  //
+  // What's done here is a bit unorthodox.  I'm going to locate the
+  // TVector glue that the plugin created from ns4xPlugin::CALLBACKS by
+  // peeking into its symbol table, then I'm going to dissect the PPC
+  // machine code to get the target addresses and produce x86 machine code.
+  // The x86 code overwrites the PPC code in the plugin's jump table.
+  // The replacement code is of course executable.  I know I can do this,
+  // because the broken plugin builds its table of TVector glue based on
+  // what the sample NPAPI plugin does.
+  //
+  // Watch this.
+  if (brokenPlugin) {
+    PRUint32 glueFixed = 0;
+
+    // Locate the table that the plugin filled with TVector glue.
+    PRUint8* pluginsGlueTable = (PRUint8*)
+      ::CFBundleGetDataPointerForName(prLibrary->bundle,
+                                      CFSTR("gNetscapeFuncsGlueTable"));
+
+    if (pluginsGlueTable) {
+      // The table contains 40 entries.  Each entry is TVector glue of 6
+      // 4-byte words (24 bytes total).  See gPluginFuncsGlueTable in
+      // mozilla/modules/plugin/samples/default/mac/npmac.cpp .  That table
+      // accomodates 23 entries, inspection in the debugger teaches that the
+      // broken plugin's table is 40 entries long.
+      for (PRUint32 i = 0 ; i < 40 ; i++) {
+        PRUint32* gluePPC = (PRUint32*) (pluginsGlueTable + 24 * i);
+
+        // Only translate entries that are actually stored as TVector glue.
+        // There are other ways to write the glue for PPC, but this is the
+        // de facto standard, and it's what the broken plugin uses.  The
+        // PPC code means:
+        //   lis   r12,        hi16(address) ; pointer to tvector embedded
+        //   ori   r12,   r12, lo16(address) ;   as immediate params in glue
+        //   lwz    r0, 0(r12)               ; get pc from tvector
+        //   lwz    r2, 4(r12)               ; get rtoc from tvector
+        //   mtctr  r0
+        //   bctr                            ; jump to new pc
+        if ( (*gluePPC    & 0xffff0000) == 0x3d800000 &&
+            (*(gluePPC+1) & 0xffff0000) == 0x618c0000 &&
+             *(gluePPC+2)               == 0x800c0000 &&
+             *(gluePPC+3)               == 0x804c0004 &&
+             *(gluePPC+4)               == 0x7c0903a6 &&
+             *(gluePPC+5)               == 0x4e800420) {
+          // Determine the actual address of the function by stripping the
+          // TVector glue.  |address| is a usable function pointer.  Making
+          // it a pointer to an 8-bit quantity keeps the math below simple.
+          PRUint8* address = (PRUint8*) ((*gluePPC) << 16 |
+                                         *(gluePPC+1) & 0xffff);
+
+          // Build an x86 JMP instruction to jump to the desired function,
+          // and replace the TVector glue with it.  Opcode 0xe9 is a
+          // jump relative to the next instruction.  Total instruction length
+          // is 5 bytes (in 32-bit operand-size mode).  If base is address
+          // 0xfece5 and the target function is at address 0xc0ffee, then
+          // the instruction placed at base, byte for byte, should be:
+          //   0xfece5: 0xe9 0x04 0x13 0xb1 0x00: jmp 0xc0ffee
+          PRUint8* glueX86 = (PRUint8*) gluePPC;
+          *glueX86 = 0xe9;
+
+          PRInt32* offset = (PRInt32*) (glueX86+1);
+          *offset = (address - (glueX86 + 5));
+
+          // PPC TVector glue is big compared to the x86 JMP.  Clean up the
+          // rest of the space in the table entry.  Opcode 0x90 is NOP,
+          // instruction length 1 byte.  This permits clean disassembly of
+          // the entire memory region corresponding to the table.
+          memset(glueX86+5, 0x90, 19);
+
+          glueFixed++;
+        }
+      }
+    }
+
+    if (!glueFixed) {
+      // This plugin wasn't broken after all.  Avoid applying the callback
+      // dereferencing workarounds (TV2FP).
+      brokenPlugin = PR_FALSE;
+    }
+  }
+#endif /* BROKEN_PLUGIN_HACK */
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC,
                  ("NPP MainEntryProc called: return=%d\n",error));
