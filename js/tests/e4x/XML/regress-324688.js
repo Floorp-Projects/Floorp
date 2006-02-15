@@ -43,7 +43,7 @@ var summary = 'No Syntax Error when trailing space and XML.ignoreWhitespace true
 var actual = 'No Error';
 var expect = 'No Error';
 
-if (Components)
+if (typeof Components != 'undefined')
 {
     try
     {
