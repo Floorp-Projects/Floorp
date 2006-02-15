@@ -51,7 +51,7 @@
 var SECTION = "15.1.2.7";
 var VERSION = "ECMA_1";
 var TITLE   = "isFinite( x )";
-var BUGNUMBER= "77391";
+var BUGNUMBER= "none";
 
 startTest();
 
