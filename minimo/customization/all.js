@@ -1,16 +1,22 @@
-pref("general.useragent.extra.minimo", "Minimo/0.012");
+pref("general.useragent.extra.minimo", "Minimo/0.013");
+
+pref("keyword.enabled", true);
+pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");
 
 pref("browser.cache.disk.enable",           false);
 pref("browser.cache.disk.capacity",         1024);
 pref("browser.cache.memory.enable",         true);
 pref("browser.cache.memory.capacity",       1024);
+
 // -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes
 pref("browser.cache.disk_cache_ssl",        false);
+
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 pref("browser.cache.check_doc_frequency",   3);
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
-pref("browser.sessionhistory.max_total_viewers", -1);
+pref("browser.sessionhistory.max_total_viewers", 0);
 
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
@@ -163,7 +169,7 @@ pref("dom.disable_window_open_feature.status",      true);
 
 pref("dom.allow_scripts_to_close_windows",          false);
 
-pref("dom.disable_open_during_load",                false);
+pref("dom.disable_open_during_load",                true);
 pref("dom.popup_maximum",                           20);
 pref("dom.popup_allowed_events", "change click dblclick mouseup reset submit");
 pref("dom.disable_open_click_delay", 5000);
@@ -341,13 +347,6 @@ pref("network.negotiate-auth.gsslib", "");
 
 // Specify if the gss lib comes standard with the OS
 pref("network.negotiate-auth.using-native-gsslib", true);
-
-#ifdef XP_WIN
-
-// Default to using the SSPI intead of GSSAPI on windows 
-pref("network.auth.use-sspi", true);
-
-#endif
 
 // The following prefs are used to enable automatic use of the operating
 // system's NTLM implementation to silently authenticate the user with their
@@ -532,8 +531,6 @@ pref("config.use_system_prefs.accessibility", false);
 
 pref("editor.resizing.preserve_ratio",       true);
 pref("editor.positioning.offset",            0);
-
-pref("dom.max_script_run_time", 5);
 
 pref("svg.enabled", false);
 

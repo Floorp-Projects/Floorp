@@ -40,9 +40,6 @@ cp -a bin/chrome/toolkit.manifest                        minimo/chrome
 
 mkdir -p minimo/components
 
-cp -a bin/components/nsDictionary.js                     minimo/components
-cp -a bin/components/nsXmlRpcClient.js                   minimo/components
-
 cp -a bin/extensions/spatial-navigation@extensions.mozilla.org/components/* minimo/components
 
 mkdir -p minimo/greprefs

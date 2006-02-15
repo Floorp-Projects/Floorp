@@ -1138,15 +1138,18 @@ function URLBarEntered()
       BrowserSetDeck(0,document.getElementById("command_ViewDeckDefault"));
       return;
     }
+
     /* Other normal cases */ 
     
-    var fixedUpURI = gURIFixup.createFixupURI(url, 2 /*fixup url*/ );
-    gGlobalHistory.markPageAsTyped(fixedUpURI);
+    if (gURLBar.value.indexOf(" ") == -1)
+    {
+      var fixedUpURI = gURIFixup.createFixupURI(url, 2 /*fixup url*/ );
+      gGlobalHistory.markPageAsTyped(fixedUpURI);
+      gURLBar.value = fixedUpURI.spec;
+    }
     
-    gURLBar.value = fixedUpURI.spec;
-    
-    loadURI(fixedUpURI.spec);
-    
+    loadURI(gURLBar.value);
+
     content.focus();
   }
   catch(ex) {alert(ex);}
