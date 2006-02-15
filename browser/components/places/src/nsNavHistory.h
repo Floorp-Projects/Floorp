@@ -116,6 +116,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIAUTOCOMPLETESEARCH
 
+  static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID,  void **aResult);
   nsresult Init();
 
   /**
@@ -125,15 +126,12 @@ public:
    */
   static nsNavHistory* GetHistoryService()
   {
-    if (! gHistoryService) {
-      nsresult rv;
-      nsCOMPtr<nsINavHistoryService> serv(do_GetService("@mozilla.org/browser/nav-history-service;1", &rv));
-      NS_ENSURE_SUCCESS(rv, nsnull);
+    if (gHistoryService)
+      return gHistoryService;
 
-      // our constructor should have set the static variable. If it didn't,
-      // something is wrong.
-      NS_ASSERTION(gHistoryService, "History service creation failed");
-    }
+    nsCOMPtr<nsINavHistoryService> serv;
+    Create(nsnull, NS_GET_IID(nsINavHistoryService), getter_AddRefs(serv));
+
     return gHistoryService;
   }
 
