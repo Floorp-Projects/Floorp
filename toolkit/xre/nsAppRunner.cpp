@@ -1636,7 +1636,8 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
 
 static PRBool
 CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
-                   nsIFile* aXULRunnerDir, nsIFile* aAppDir)
+                   const nsCString& aOSABI, nsIFile* aXULRunnerDir,
+                   nsIFile* aAppDir)
 {
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
@@ -1652,10 +1653,11 @@ CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
 
   nsCAutoString buf;
   rv = parser.GetString("Compatibility", "LastVersion", buf);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv) || !aVersion.Equals(buf))
     return PR_FALSE;
 
-  if (!aVersion.Equals(buf))
+  rv = parser.GetString("Compatibility", "LastOSABI", buf);
+  if (NS_FAILED(rv) || !aOSABI.Equals(buf))
     return PR_FALSE;
 
   rv = parser.GetString("Compatibility", "LastPlatformDir", buf);
@@ -1702,7 +1704,8 @@ static void BuildVersion(nsCString &aBuf)
 
 static void
 WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
-             nsIFile* aXULRunnerDir, nsIFile* aAppDir)
+             const nsCString& aOSABI, nsIFile* aXULRunnerDir,
+             nsIFile* aAppDir)
 {
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
@@ -1731,6 +1734,10 @@ WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
 
   PR_Write(fd, kHeader, sizeof(kHeader) - 1);
   PR_Write(fd, aVersion.get(), aVersion.Length());
+
+  static const char kOSABIHeader[] = NS_LINEBREAK "LastOSABI=";
+  PR_Write(fd, kOSABIHeader, sizeof(kOSABIHeader) - 1);
+  PR_Write(fd, aOSABI.get(), aOSABI.Length());
 
   static const char kPlatformDirHeader[] = NS_LINEBREAK "LastPlatformDir=";
 
@@ -2127,10 +2134,17 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     nsCAutoString version;
     BuildVersion(version);
 
+#ifdef TARGET_OS_ABI
+    NS_NAMED_LITERAL_CSTRING(osABI, TARGET_OS_ABI);
+#else
+    // No TARGET_XPCOM_ABI, but at least the OS is known
+    NS_NAMED_LITERAL_CSTRING(osABI, OS_TARGET "_UNKNOWN");
+#endif
+
     // Check for version compatibility with the last version of the app this 
     // profile was started with.  The format of the version stamp is defined
     // by the BuildVersion function.
-    PRBool versionOK = CheckCompatibility(profD, version,
+    PRBool versionOK = CheckCompatibility(profD, version, osABI,
                                           dirProvider.GetGREDir(),
                                           gAppData->directory);
 
@@ -2143,7 +2157,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     //
     if (gSafeMode) {
       RemoveComponentRegistries(profD, profLD, PR_FALSE);
-      WriteVersion(profD, NS_LITERAL_CSTRING("Safe Mode"),
+      WriteVersion(profD, NS_LITERAL_CSTRING("Safe Mode"), osABI,
                    dirProvider.GetGREDir(), gAppData->directory);
     }
     else if (versionOK) {
@@ -2167,7 +2181,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       upgraded = PR_TRUE;
 
       // Write out version
-      WriteVersion(profD, version,
+      WriteVersion(profD, version, osABI,
                    dirProvider.GetGREDir(), gAppData->directory);
     }
 
