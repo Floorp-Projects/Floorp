@@ -282,6 +282,10 @@ endif
 endif
 endif
 
+ifdef MOZ_STORAGE
+tier_50_dirs += storage
+endif
+
 ifdef MOZ_XUL_APP
 ifndef BUILD_STATIC_LIBS
 tier_50_dirs += toolkit/library
@@ -294,10 +298,6 @@ endif
 
 ifdef NS_TRACE_MALLOC
 tier_50_dirs += tools/trace-malloc
-endif
-
-ifdef MOZ_STORAGE
-tier_50_dirs += storage
 endif
 
 ifdef MOZ_LDAP_XPCOM
